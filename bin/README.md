@@ -368,7 +368,7 @@ bin[610]{file,does,kind,verdict,disposition,callers,lines}:
   "mimir-log.py","'''mimir-log.py — move memory between the engram (the index) and the JSONL log","data","wired","keep",1,261
   "mimir-log.sh","mimir-log.sh — move memory between the engram and the append log (a thin door).","tool","wired","keep",2,19
   "mimir-reflect.sh","mimir-reflect — smelt the well's episodes into facts, through the LLAMA-ROUTER.","tool","wired","keep",0,35
-  "mimir.sh","mimir.sh — the well (Mimirsbrunn).","tool","wired","keep",12,131
+  "mimir.sh","mimir.sh — the well (Mimirsbrunn).","tool","wired","keep",12,164
   "mjollnir-webhook.sh","mjollnir-webhook.sh — HMAC-verified GitHub webhook → Mjollnir (W0018).","tool","wired","keep",0,74
   "mjollnir.sh","mjollnir.sh — the hammer (W0018).","tool","wired","keep",1,106
   "model-alias-check.sh","model-alias-check.sh — does every alias a body names resolve in the fleet?","tool","wired","keep",1,332

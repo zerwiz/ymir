@@ -59,38 +59,71 @@ case "$CMD" in
 
   recall)
     Q="${1-}"; shift || true
-    K=5; MODE=hybrid
-    while [ $# -gt 0 ]; do case "$1" in --k) K=${2-5}; shift 2 ;; --mode) MODE=${2-hybrid}; shift 2 ;; *) shift ;; esac; done
+    K=5; MODE=hybrid; TAG=""; ACTOR=""; SINCE=""
+    # A FILTER THE DOOR DOES NOT IMPLEMENT IS REFUSED, NEVER IGNORED. Until today
+    # `recall … --tags domain:snotra` was accepted and silently dropped, so a keeper
+    # asking for its own memory was handed the whole house's episodes and told the
+    # answer was scoped (measured 2026-10-24; plan 129 §21, the well's three gaps).
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --k) K=${2-5}; shift 2 ;;
+        --mode) MODE=${2-hybrid}; shift 2 ;;
+        --tag|--tags) TAG=${2-}; shift 2 ;;
+        --actor) ACTOR=${2-}; shift 2 ;;
+        --since) SINCE=${2-}; shift 2 ;;
+        -h|--help) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        *) printf 'error: unknown flag %s\nhelp: recall <query> [--k N] [--mode hybrid|cosine|spreading] [--tag T] [--actor A] [--since YYYY-MM-DD]\n' "$1" >&2; exit 2 ;;
+      esac
+    done
     [ -n "$Q" ] || { printf 'error: recall needs a query\nhelp: bin/records/mimir.sh recall "<query>"\n' >&2; exit 2; }
-    if bridge_up; then
-      out=$(curl -fsS --max-time 5 "$BRIDGE/recall?q=$(printf '%s' "$Q" | python3 -c 'import sys,urllib.parse;print(urllib.parse.quote(sys.stdin.read()))')&k=$K&mode=$MODE" 2>/dev/null)
-      [ -n "$out" ] && { printf '%s\n' "$out" | python3 -c 'import json,sys
-d=json.load(sys.stdin)
-rs=d.get("results",d if isinstance(d,list) else [])
-print(f"recall[{len(rs)}]{{score,source,title}}:")
-for r in rs[:20]:
-    e=r.get("episode",r); sc=r.get("score",0)
-    t=(e.get("content","").split("\n")[0] or "")[:90]
-    print(f"  {sc},{(e.get(\"agents\") or [\"well\"])[0]},{t}")' 2>/dev/null && exit 0; }
-    fi
-    # local fallback: substring search over the well
-    python3 - "$WELL" "$Q" "$K" <<'PY'
-import json,sys
-well,q,k=sys.argv[1],sys.argv[2].lower(),int(sys.argv[3])
-rows=[]
-for line in open(well, encoding='utf-8', errors='ignore'):
-    if not line.strip().startswith('{'): continue
-    try: e=json.loads(line)
-    except: continue
-    c=e.get('content','')
-    if q in c.lower(): rows.append((e,c))
-print(f"recall[{min(len(rows),k)}]{{score,source,title}}:")
-for e,c in rows[-k:][::-1]:
-    t=(c.split('\n')[0] or '').replace('#','').strip()[:90]
-    print(f"  0.5,\"{e.get('source','well')}\",\"{t}\"")
-PY
-    ;;
 
+    # ONE printer for both paths, so a filtered row looks the same whichever door found it.
+    _recall_print() {  # <json-or-empty> <localhost|bridge>
+      TAG="$TAG" ACTOR="$ACTOR" SINCE="$SINCE" WHERE="$2" python3 - "$WELL" "$Q" "$K" "$1" <<'PYR'
+import json, os, sys
+well, q, k, payload = sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4]
+tag, actor, since = os.environ.get("TAG",""), os.environ.get("ACTOR",""), os.environ.get("SINCE","")
+
+def keep(e):
+    if tag and not any(tag in (t or "") for t in (e.get("tags") or [])): return False
+    if actor and actor not in (e.get("agents") or []) and e.get("source","") != actor: return False
+    if since and str(e.get("timestamp",""))[:10] < since: return False
+    return True
+
+rows = []
+if payload.strip():
+    try:
+        d = json.loads(payload)
+    except Exception:
+        d = []
+    rs = d.get("results", d if isinstance(d, list) else [])
+    for r in rs:
+        e = r.get("episode", r)
+        if keep(e): rows.append((r.get("score", 0), e))
+if not rows:
+    # THE BRIDGE'S ANSWER IS NOT THE STORE. An episode written seconds earlier is in
+    # the file (grep proves it) and absent from the semantic index, so an empty bridge
+    # answer must fall through to the store — otherwise "nothing recorded" and "not
+    # indexed yet" become the same lie to a keeper.
+    for line in open(well, encoding="utf-8", errors="ignore"):
+        if not line.strip().startswith("{"): continue
+        try: e = json.loads(line)
+        except Exception: continue
+        if q.lower() in e.get("content","").lower() and keep(e): rows.append((0.5, e))
+    rows = rows[-k:]
+print(f"recall[{len(rows)}]{{score,source,title}}:")
+for sc, e in rows[::-1]:
+    t = (e.get("content","").split("\n")[0] or "").replace('"', "").strip()[:90]
+    src = (e.get("agents") or [e.get("source","well")])[0] if isinstance(e.get("agents"), list) else e.get("source","well")
+    print(f'  {sc},"{src}","{t}"')
+PYR
+    }
+
+    out=""
+    bridge_up && out=$(curl -fsS --max-time 5 "$BRIDGE/recall?q=$(printf '%s' "$Q" | python3 -c 'import sys,urllib.parse;print(urllib.parse.quote(sys.stdin.read()))')&k=$K&mode=$MODE" 2>/dev/null) || out=""
+    _recall_print "$out" bridge
+    exit 0
+    ;;
   observe)
     TEXT="${1-}"; shift || true
     TAGS="runtime"; SRC="brokk"
