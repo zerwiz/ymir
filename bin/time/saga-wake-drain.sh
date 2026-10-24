@@ -96,9 +96,24 @@ else
   # re-presented one week-old wake at every turn boundary (2026-10-24).
   count=$(awk 'END{print NR}' "$QUEUE")
   printf 'wake queue: %s pending\n' "${count:-0}"
+  dropped=0
   while IFS= read -r line; do
-    [ -n "$line" ] && printf 'WAKE %s\n' "$line"
+    [ -n "$line" ] || continue
+    # A WAKE FOR AN ERRAND ALREADY CLOSED IS AN ECHO, NOT NEWS. Closing an errand
+    # claims its report, and the claim writes a wake — so the closer wakes himself.
+    # Four such echoes rang tonight; this view drops them and says how many, while
+    # `ack` still clears them (2026-10-24).
+    case "$line" in
+      eindri\ *)
+        _wid="$(printf '%s' "$line" | awk '{print $2}')"
+        _last="$(tail -1 "$STATE/$_wid.status" 2>/dev/null || true)"
+        case "$_last" in
+          done:*|failed:*|stale:*) dropped=$((dropped + 1)); continue ;;
+        esac ;;
+    esac
+    printf 'WAKE %s\n' "$line"
   done <"$QUEUE"
+  [ "${dropped:-0}" -gt 0 ] && printf 'wake_echo[1]{dropped,why}:\n  %s,"errands already closed — ack clears them, they are not presented as news"\n' "$dropped"
   printf 'WAKE_ACK_REQUIRED: acknowledge handled wakes to drop them from the queue\n'
 fi
 
