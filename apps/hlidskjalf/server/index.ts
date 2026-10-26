@@ -2303,7 +2303,9 @@ function serveStatic(pathname: string): Response {
 /* ---- server -------------------------------------------------------------- */
 // Sessions are in-memory only: a gate restart ends them, and nothing on disk can
 // revive one. That is the point — no bearer is kept at rest.
+const HOST = process.env.HLIDSKJALF_HOST ?? '127.0.0.1';
 const server = Bun.serve({
+  hostname: HOST,
   port: PORT,
   async fetch(req, srv) {
     const url = new URL(req.url);
