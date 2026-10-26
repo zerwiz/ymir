@@ -99,18 +99,11 @@ else
   dropped=0
   while IFS= read -r line; do
     [ -n "$line" ] || continue
-    # A WAKE FOR AN ERRAND ALREADY CLOSED IS AN ECHO, NOT NEWS. Closing an errand
-    # claims its report, and the claim writes a wake — so the closer wakes himself.
-    # Four such echoes rang tonight; this view drops them and says how many, while
-    # `ack` still clears them (2026-10-24).
-    case "$line" in
-      eindri\ *)
-        _wid="$(printf '%s' "$line" | awk '{print $2}')"
-        _last="$(tail -1 "$STATE/$_wid.status" 2>/dev/null || true)"
-        case "$_last" in
-          done:*|failed:*|stale:*) dropped=$((dropped + 1)); continue ;;
-        esac ;;
-    esac
+    # A wake is presented until Brokk acks it. The errand's status (done/failed)
+    # does NOT make it an echo: a self-finishing worker's terminal wake is the
+    # FIRST notice Brokk gets, and dropping it on status makes the worker invisible
+    # (plan 137). Echoes from Brokk closing his own errand are still presented once
+    # and cleared by `ack` — harmless noise, not a reason to drop the real news.
     printf 'WAKE %s\n' "$line"
   done <"$QUEUE"
   [ "${dropped:-0}" -gt 0 ] && printf 'wake_echo[1]{dropped,why}:\n  %s,"errands already closed — ack clears them, they are not presented as news"\n' "$dropped"
