@@ -205,6 +205,19 @@ else
   printf 'daily-log.sh not installed\n'
 fi
 
+section "RECALL"
+# DRINK BEFORE YOU ACT (plan 136). Every session opens with a recall against the
+# well for the day's stated topic — because the discipline is hard to keep when the
+# work is urgent, and a memory never consulted is a shelf, not a mind. The door is
+# bin/records/mimir-recall-today.sh: it derives the topic (a stated one first), asks
+# the well, and says plainly when there is nothing to ask about.
+if [ -x "$SCRIPT_DIR/../records/mimir-recall-today.sh" ]; then
+  BROKK_HOME="$BROKK_HOME" BROKK_STATE_OVERRIDE="$STATE" \
+    "$SCRIPT_DIR/../records/mimir-recall-today.sh" 2>/dev/null | head -12 || printf 'recall: the well door did not answer\n'
+else
+  printf 'recall: bin/records/mimir-recall-today.sh absent — the well was not asked\n'
+fi
+
 section "SKILLS"
 # Sága's sight over the crafts. The index is the read-first artifact: it is
 # REFRESHED here so a session opens knowing every skill we hold, and never has

@@ -104,7 +104,7 @@ surface_detail_skip() {
 }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors herdr a2abridge hermes snotra voice council sessrumnir shells graphics well mcp harness arm lock gates migrations hoard autoboot vault ward)
+SURFACES=(floors herdr a2abridge hermes snotra voice council sessrumnir shells graphics well memory mcp harness arm lock gates migrations hoard autoboot vault ward)
 
 s_floors()    { [ -x "$SCRIPT_DIR/../engine/prereq-ensure.sh" ] && "$SCRIPT_DIR/../engine/prereq-ensure.sh" status >/dev/null 2>&1; }
 f_floors()    { "$SCRIPT_DIR/../engine/prereq-ensure.sh" ensure --install >/dev/null 2>&1; }
@@ -203,6 +203,28 @@ s_well()      {
   return 1
 }
 f_well()      { "$SCRIPT_DIR/../records/mimir.sh" start >/dev/null 2>&1; "$SCRIPT_DIR/../records/well-guard.sh" record >/dev/null 2>&1; }
+
+# MEMORY — the well's PRACTICE, not just its port (plan 136). `well` asks whether
+# someone is listening; `memory` asks whether there is anything worth listening to:
+# how big the store is, when it was last watered, last drunk from, last written as
+# a day, and last pruned. A well that answers and is never fed is green on `well`
+# and useless to the Allfather, which is exactly the failure this surface names.
+# The measuring lives in bin/records/mimir.sh memory (one door, stdlib only), so a
+# broken bridge still yields a report rather than a blank row.
+memory_detail() {
+  local out
+  out="$("$SCRIPT_DIR/../records/mimir.sh" memory --line 2>/dev/null)"
+  [ -n "$out" ] || { printf 'the memory door did not answer — bin/records/mimir.sh memory\n'; return 1; }
+  printf '%s\n' "$out"
+}
+s_memory()    { "$SCRIPT_DIR/../records/mimir.sh" memory --check >/dev/null 2>&1; }
+f_memory()    {
+  # The mends are: raise the well, then let the grading pass run (it only annotates
+  # and moves; it never lowers the count). A stale DAILY record is not something a
+  # healer can write honestly — the row keeps saying so.
+  "$SCRIPT_DIR/../records/mimir.sh" start >/dev/null 2>&1
+  "$SCRIPT_DIR/../records/mimir.sh" grade --apply >/dev/null 2>&1
+}
 # MCP: both A2A servers wired into opencode + pi.
 s_mcp() {
   local pi="$HOME/.pi/agent/mcp-adapter.json" oc="$ROOT/opencode.json"
@@ -423,6 +445,7 @@ detail() { # <name> -> the command that prints one short fact
     hermes)    printf '%s\n' "have hermes && echo present || echo absent" ;;
     sessrumnir)printf '%s\n' "[ -d $APP_SESSRUMNIR/out ] && echo built || echo 'not built'" ;;
     well)      printf '%s\n' well_detail ;;
+    memory)    printf '%s\n' memory_detail ;;
     mcp)       printf '%s\n' "echo 'a2abridge + engram'" ;;
     graphics)  printf '%s\n' "if [ -z \"\${DISPLAY:-}\${WAYLAND_DISPLAY:-}\" ]; then echo headless; else echo \"\$(graphics_block 2>/dev/null | sed -n '1p' | sed 's/.*{//;s/}//') · \$(graphics_policy 2>/dev/null)\"; fi" ;;
     harness)   printf '%s\n' "s_harness && echo 'deployed extensions resolve their bin/' || echo 'no live root recorded'" ;;
