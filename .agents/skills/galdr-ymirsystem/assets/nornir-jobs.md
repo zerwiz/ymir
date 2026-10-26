@@ -210,6 +210,16 @@ The raven of observation. Read-only, and **self-contained**: every source lives 
 
 ### 3.3 Muninn — memory housekeeping (`bin/time/nornir-job-memory-housekeeping.sh`, 00:30)
 
+**Appended 2026-10-26 (plan 136): the job now runs the well's grading pass.** After the
+night's backup (and only after it succeeds — `--apply` is withheld otherwise, so nothing
+is annotated or moved without a snapshot) it runs `bin/records/mimir.sh grade --apply`:
+decay by recency and access frequency, exact duplicates annotated void against the copy
+that stands, retention-expired episodes archived, and a document moved to
+`hodd/reference/` only when it declares `superseded_by:`. The episode count is checked
+and a run that lowers it is a FAILURE (Rule 20). `BROKK_WELL_GRADE=0` disables it. This
+is what makes forgetting CONTINUOUS rather than a quarterly intention — Eir's `memory`
+surface goes red when the last grading run is more than 45 days old.
+
 The raven of memory. Reports, snapshots, then (only if enabled) prunes.
 
 1. Report the engram/vector store state; if no engine is wired, say so — never fake decay.

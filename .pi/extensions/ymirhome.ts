@@ -198,18 +198,43 @@ export default function ymirhome(pi: any) {
         lesson: { type: "string", description: "what was learned, as a claim about the work" },
         tags: { type: "array", items: { type: "string" } },
         actors: { type: "array", items: { type: "string" } },
+        // THE GATE (plan 136). Before it is stored, a lesson must answer one of
+        // three questions — does it change future behaviour, is it a commitment,
+        // is it a decision with rationale — and it must say which shelf it is.
+        shape: {
+          type: "string",
+          description: "which question this answers: behaviour | commitment | decision",
+        },
+        store: {
+          type: "string",
+          description: "the shelf: episodic (an event) | semantic (a fact/preference) | procedural (a workflow)",
+        },
+        task: { type: "string", description: "what work this belongs to — raises its relevance, scopes it" },
       },
       required: ["lesson"],
     },
     execute: async (_toolCallId: string, args: any) => {
+      // ARGV, not a joined shell string: a lesson is prose, it contains quotes and
+      // apostrophes, and the old `parts.join(" ")` re-parsed it as shell words.
+      const flags: string[] = [];
+      if (args.tags?.length) flags.push("--tags", (args.tags as string[]).join(","));
+      if (args.actors?.length) flags.push("--source", String(args.actors[0]));
+      if (args.shape) flags.push("--shape", String(args.shape));
+      if (args.store) flags.push("--store", String(args.store));
+      if (args.task) flags.push("--task", String(args.task));
       try {
-        const parts = [String(args.lesson)];
-        if (args.tags?.length) parts.push(`tags: ${(args.tags as string[]).join(",")}`);
-        if (args.actors?.length) parts.push(`actors: ${(args.actors as string[]).join(",")}`);
-        run("bash", ["-c", '"$1" observe "$2"', "_", `${ROOT_BIN}/bin/records/mimir.sh`, parts.join(" ")], HOME);
-        return piOut("observed into the well. Next: ymir_note it into the plan it belongs to, or ymir_push the doc that carries it.");
+        const out = run(
+          "bash",
+          ["-c", '"$1" observe "$2" "${@:3}"', "_", `${ROOT_BIN}/bin/records/mimir.sh`, String(args.lesson), ...flags],
+          HOME,
+        );
+        return piOut(out || "observed into the well. Next: ymir_note it into the plan it belongs to, or ymir_push the doc that carries it.");
       } catch (e: any) {
-        return piOut("the well did not take it: " + String(e?.message ?? e).split("\n")[0]);
+        // The gate DROPPING a lesson is a refusal it explains — not a crash. Say
+        // what it said, because a keeper that cannot tell "stored" from "refused"
+        // will believe the well holds something it does not.
+        const msg = String(e?.stdout ?? "") || String(e?.message ?? e);
+        return piOut("the well did not take it: " + msg.split("\n").filter(Boolean).slice(-3).join(" ").trim());
       }
     },
   });

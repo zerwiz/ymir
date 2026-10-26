@@ -111,7 +111,8 @@ def engram_rows():
     try:
         for r in con.execute(
             "select id, content, timestamp, actors, tags, salience, "
-            "importance_score, agent_id from episodes order by timestamp"
+            "importance_score, agent_id, provenance, quarantined "
+            "from episodes order by timestamp"
         ):
             yield r
     finally:
@@ -139,6 +140,12 @@ def cmd_export() -> int:
                 "salience": r["salience"],
                 "importance": r["importance_score"],
                 "agent_id": r["agent_id"],
+                # The gate's own record travels WITH the episode (plan 136): where
+                # it came from, whether the writer had read untrusted content, and
+                # which shelf it belongs to. A re-seed that dropped these would
+                # restore the words and lose the trust.
+                "provenance": r["provenance"],
+                "quarantined": bool(r["quarantined"]) if r["quarantined"] is not None else False,
                 "hash": d,
             }
             fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
@@ -184,12 +191,21 @@ def cmd_reseed() -> int:
                 when = datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
             except ValueError:
                 when = None
+        # Provenance and quarantine come back with the words they belong to. The
+        # engine accepts only its own three words, so a log written by an older
+        # bridge (which knew none of this) falls back to 'external' — the honest
+        # default, and never a claim of trust the writer did not make.
+        prov = str(e.get("provenance") or "external")
+        if prov not in ("user", "tool", "external"):
+            prov = "external"
         eng.observe(
             content,
             actors=e.get("actors") or [e.get("source", "well")],
             tags=e.get("tags") or ["well"],
             salience=float(e.get("salience") or 0.5),
             timestamp=when,
+            provenance=prov,
+            quarantined=bool(e.get("quarantined")),
         )
         present.add(d)
         added += 1

@@ -11,7 +11,7 @@ vendored `fm-*` script kept byte-comparable to upstream on purpose.
 `disposition` says what happens to it: `keep`, `migrate → src/…` where the
 Python runtime already has the module, `retire` for orphans, `provenance`.
 
-bin[612]{file,does,kind,verdict,disposition,callers,lines}:
+bin[614]{file,does,kind,verdict,disposition,callers,lines}:
   "README.md","`bin/` — every file, what it does, and whether it is alive","data","tested","keep",22,-
   "README.md","Gróa — the updater, one per install","data","tested","keep",22,-
   "README.md","Gná — the one mail desk (production)","data","tested","keep",22,-
@@ -45,7 +45,7 @@ bin[612]{file,does,kind,verdict,disposition,callers,lines}:
   "brain.py","'''brain.py — the hound's judgement: read findings, apply the rules, speak, record.","tool","tested","keep",1,232
   "branch-current.sh","branch-current.sh — a branch is based on CURRENT main before it is offered.","tool","tested","keep",2,82
   "branch-guard.sh","branch-guard.sh — Rule 08: no push may land on a protected branch.","tool","tested","keep",1,78
-  "brokk","brokk — the primary agent's CLI (Brokk, the bellows-smith).","tool","tested","keep",50,74
+  "brokk","brokk — the primary agent's CLI (Brokk, the bellows-smith).","tool","tested","keep",51,74
   "brokk-classify-lib.sh","Shared wake classifier: the common source of truth for Allfather-relevant status","lib","wired","keep",1,1771
   "brokk-lease-lib.sh","brokk-lease-lib.sh - the per-task supervision lease contract (one owner).","lib","wired","keep",1,223
   "brokk-lease.sh","brokk-lease.sh - claim, release, inspect, and sweep per-task supervision leases.","tool","wired","keep",2,194
@@ -75,7 +75,7 @@ bin[612]{file,does,kind,verdict,disposition,callers,lines}:
   "converge-home-defaults.py","'''converge-home-defaults.py — converge every private home default on the one resolver.","tool","wired","keep",0,182
   "crash-sense.sh","crash-sense.sh — surface machine crashes to the Allfather on Omarchy.","tool","wired","keep",0,175
   "cron-guard.sh","cron-guard.sh — the shipped tree must satisfy its own schedule.","tool","wired","keep",0,70
-  "daily-log.sh","daily-log.sh — the day's work, recorded where the contract says it lives.","tool","wired","keep",1,104
+  "daily-log.sh","daily-log.sh — the day's work, recorded where the contract says it lives.","tool","wired","keep",2,104
   "dead-code-guard.sh","dead-code-guard.sh — code that exists and is never reached is a claim that a feature exists.","tool","wired","keep",0,256
   "defaults-guard.sh","defaults-guard.sh — ONE PLACE KNOWS WHERE THINGS LIVE.","data","tested","keep",1,171
   "design-check.sh","design-check.sh — one identity, two renderers: they must agree.","tool","wired","keep",0,93
@@ -108,7 +108,7 @@ bin[612]{file,does,kind,verdict,disposition,callers,lines}:
   "eindri-wake-lib.sh","eindri-wake-lib.sh — the ONE delivery ledger behind the Eindri push path.","lib","wired","keep",3,48
   "eindri-watch.sh","eindri-watch.sh — the control door on the Eindri→Brokk wake bridge.","tool","wired","keep",5,131
   "einherjar-spawn.sh","einherjar-spawn.sh - gather an Eindri worker (Einherjar = the chosen who are","tool","wired","keep",10,1010
-  "eir-doctor.sh","eir-doctor.sh — Eir, the healer: diagnose the running system, then mend it.","tool","wired","keep",6,484
+  "eir-doctor.sh","eir-doctor.sh — Eir, the healer: diagnose the running system, then mend it.","tool","wired","keep",6,507
   "electron-lib.sh","electron-lib.sh — is a desktop shell's runtime actually there?","lib","tested","keep",7,212
   "erindi-brief.sh","erindi-brief.sh - scaffold an Eindri worker brief at data/<task-id>/brief.md.","tool","wired","keep",4,374
   "escalate.py","'''escalate.py — the severity ladder (plan 98 §'the severity ladder').","tool","tested","keep",1,210
@@ -322,7 +322,7 @@ bin[612]{file,does,kind,verdict,disposition,callers,lines}:
   "hnitbjorg-ensure.sh","hnitbjorg-ensure.sh — ensure the vault's tooling stands and its path is sound.","tool","wired","keep",2,111
   "hnitbjorg.sh","hnitbjorg.sh — Hnitbjörg: the encrypted document vault.","tool","wired","keep",3,250
   "hoard-guard.sh","hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME).","tool","wired","keep",2,150
-  "hoard-lib.sh","hoard-lib.sh — where the operator's HOME lives, and the two roots beneath it.","lib","tested","keep",234,116
+  "hoard-lib.sh","hoard-lib.sh — where the operator's HOME lives, and the two roots beneath it.","lib","tested","keep",235,116
   "hodd-set.sh","hodd-set.sh — set ONE key in an age-encrypted secret file, with guards that make a","tool","wired","keep",0,106
   "hodd.sh","hodd.sh — the Allfather's private hoard: path, init, ls, load, tenant.","tool","tested","keep",14,120
   "home-index-check.sh","home-index-check.sh — every shelf in the home has an index, and the index is honest.","tool","wired","keep",1,82
@@ -362,13 +362,15 @@ bin[612]{file,does,kind,verdict,disposition,callers,lines}:
   "mcp-read.py","'''mcp-read.py — Gimlé MCP, phase 1: the six read tools, audited, behind a token.","tool","wired","keep",0,262
   "meet.sh","meet.sh — one command: 'put a meeting with <person> in the calendar, with a Meet link'.","tool","wired","keep",5,90
   "meeting-record-guard.sh","meeting-record-guard.sh — a meeting record is a record: if one is missing, put it back.","tool","wired","keep",1,49
-  "mimir-bridge.py","'''mimir-bridge.py — the HTTP face of the well (Mimirsbrunn / engram, :4602).","tool","wired","keep",4,372
-  "mimir-bridge.sh","mimir-bridge.sh — raise/lower the well bridge (Mimirsbrunn on :4602).","tool","wired","keep",7,137
+  "mimir-bridge.py","'''mimir-bridge.py — the HTTP face of the well (Mimirsbrunn / engram, :4602).","tool","tested","keep",4,791
+  "mimir-bridge.sh","mimir-bridge.sh — raise/lower the well bridge (Mimirsbrunn on :4602).","tool","tested","keep",8,137
   "mimir-ingest.sh","mimir-ingest.sh — ingest the repo's data material into the well (Mimirsbrunn).","tool","wired","keep",1,133
-  "mimir-log.py","'''mimir-log.py — move memory between the engram (the index) and the JSONL log","data","wired","keep",1,261
-  "mimir-log.sh","mimir-log.sh — move memory between the engram and the append log (a thin door).","tool","wired","keep",2,19
+  "mimir-log.py","'''mimir-log.py — move memory between the engram (the index) and the JSONL log","data","wired","keep",1,277
+  "mimir-log.sh","mimir-log.sh — move memory between the engram and the append log (a thin door).","tool","wired","keep",3,19
+  "mimir-policy.py","'''mimir-policy.py — the law of the well: what may be written, what it is, and","tool","tested","keep",2,1284
+  "mimir-recall-today.sh","mimir-recall-today.sh — drink before you act: the session's opening recall.","tool","wired","keep",1,113
   "mimir-reflect.sh","mimir-reflect — smelt the well's episodes into facts, through the LLAMA-ROUTER.","tool","wired","keep",0,35
-  "mimir.sh","mimir.sh — the well (Mimirsbrunn).","tool","wired","keep",13,164
+  "mimir.sh","mimir.sh — the well (Mimirsbrunn).","tool","tested","keep",16,453
   "mjollnir-webhook.sh","mjollnir-webhook.sh — HMAC-verified GitHub webhook → Mjollnir (W0018).","tool","wired","keep",0,74
   "mjollnir.sh","mjollnir.sh — the hammer (W0018).","tool","wired","keep",1,106
   "model-alias-check.sh","model-alias-check.sh — does every alias a body names resolve in the fleet?","tool","wired","keep",1,332
@@ -394,7 +396,7 @@ bin[612]{file,does,kind,verdict,disposition,callers,lines}:
   "nornir-job-git-sync.sh","nornir-job-git-sync.sh - Yggdrasil, the world-tree kept in order.","tool","wired","keep",1,153
   "nornir-job-gna-mail.sh","nornir-job-gna-mail.sh — the desk's own clock: import, then prove the desk answers.","data","wired","keep",0,114
   "nornir-job-hall-snapshot.sh","nornir-job-hall-snapshot.sh — Óðrerir: refresh the Live Hall's board.","tool","wired","keep",0,31
-  "nornir-job-memory-housekeeping.sh","nornir-job-memory-housekeeping.sh - Muninn, the raven of memory.","tool","wired","keep",0,128
+  "nornir-job-memory-housekeeping.sh","nornir-job-memory-housekeeping.sh - Muninn, the raven of memory.","tool","wired","keep",0,153
   "nornir-job-nsr-compliance.sh","nornir-job-nsr-compliance.sh — the NorthStar compliance round, nightly.","tool","wired","keep",0,54
   "nornir-job-observer.sh","nornir-job-observer.sh - Huginn, the raven of observation.","tool","wired","keep",0,181
   "nornir-job-skillopt-sleep.sh","nornir-job-skillopt-sleep.sh — SkillOpt overnight self-evolution.","tool","wired","keep",1,77
@@ -465,7 +467,7 @@ bin[612]{file,does,kind,verdict,disposition,callers,lines}:
   "runes-append.sh","runes-append.sh — the append-only Runes ledger, a THIN SHIM.","tool","tested","keep",34,117
   "runes-project.sh","runes-project.sh — the DAG projector, regenerates runes_audit.md from events.","tool","wired","keep",0,65
   "runtime-guard.sh","runtime-guard.sh — THE TREE IS NOT A RUNTIME.","data","wired","keep",0,125
-  "saga-session-start.sh","saga-session-start.sh - the one-command Brokk session start.","tool","tested","keep",3,275
+  "saga-session-start.sh","saga-session-start.sh - the one-command Brokk session start.","tool","tested","keep",3,288
   "saga-sessionstart-run.sh","saga-sessionstart-run.sh - session-open entry point for run-tier harnesses.","tool","wired","keep",0,91
   "saga-wake-drain.sh","saga-wake-drain.sh - present durable Brokk wakes, or acknowledge them.","tool","wired","keep",5,129
   "seat-identity.sh","seat-identity.sh — print a seat's primary agent and its role file.","tool","wired","keep",3,176
@@ -591,8 +593,8 @@ bin[612]{file,does,kind,verdict,disposition,callers,lines}:
   "ward-ask.sh","ward-ask.sh — Vörðr reports, then ASKS.","tool","wired","keep",1,82
   "wedge-notify.sh","wedge-notify.sh — the Ymir wedge-alarm notifier.","tool","wired","keep",1,62
   "well-door.sh","well-door.sh — the hand's door to the heart's well, raised over SSH.","tool","wired","keep",0,125
-  "well-guard.sh","well-guard.sh — the WARD behind RULES/20-the-well-appends.md.","tool","wired","keep",2,206
-  "well-selftest.sh","well-selftest.sh — prove a keeper can find its own memory, and only its own.","tool","wired","keep",0,45
+  "well-guard.sh","well-guard.sh — the WARD behind RULES/20-the-well-appends.md.","tool","wired","keep",3,206
+  "well-selftest.sh","well-selftest.sh — prove a keeper can find its own memory, and only its own —","tool","wired","keep",0,78
   "well-vault-sync.sh","well-vault-sync.sh — Kaia's memory across the Allfather's machines.","tool","wired","keep",1,105
   "where.sh","where.sh — 'which book do I read before touching this path?'","tool","wired","keep",1,101
   "who.sh","who.sh — the address book, and the one question that blocks everything: has this person an email?","tool","wired","keep",1,82
@@ -625,6 +627,6 @@ bin[612]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir.js","/**","tool","wired","keep",5,263
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
 
-**Tally.** verdict: wired=383, tested=229
+**Tally.** verdict: wired=381, tested=233
 
-**Tally.** disposition: keep=598, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/paths.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
+**Tally.** disposition: keep=600, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/paths.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1

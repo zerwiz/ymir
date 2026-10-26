@@ -100,7 +100,15 @@ Resolution order used by every script (all overridable):
 
 ## 3. The 8-stage Sága session-start digest
 
-`bin/time/saga-session-start.sh` prints **one ordered digest** and does nothing else. It composes existing scripts; it never re-implements them. The section headers it emits are `== LOCK ==`, `== BOOTSTRAP ==`, `== WAKE QUEUE ==`, `== SUPERVISION ==`, `== UPDATE ==`, `== FLEET DIGEST ==`, `== CONTEXT DIGEST ==`, `== TODAY ==`, `== ASSET ROUTING ==`, `== TOOL SURFACE ==`, `== CRON START ==`, `== NEXT STEP ==`.
+`bin/time/saga-session-start.sh` prints **one ordered digest** and does nothing else. It composes existing scripts; it never re-implements them. The section headers it emits are `== LOCK ==`, `== BOOTSTRAP ==`, `== WAKE QUEUE ==`, `== SUPERVISION ==`, `== UPDATE ==`, `== FLEET DIGEST ==`, `== CONTEXT DIGEST ==`, `== TODAY ==`, `== RECALL ==`, `== SKILLS ==`, `== MODEL CATALOG ==`, `== ASSET ROUTING ==`, `== TOOL SURFACE ==`, `== CRON START ==`, `== NEXT STEP ==`.
+
+**Appended 2026-10-26 (plan 136) — `== RECALL ==`.** The digest now opens the well
+before the work: `bin/records/mimir-recall-today.sh` derives the day's topic (a stated
+`$STATE/.session-topic` first, else the newest bullet in today's daily log, else the
+newest open forge order), asks the well scoped to the last 14 days, and prints the
+truth that goes with it — *recall is memory, not authority*. A missing topic is
+reported, never guessed, and the section is capped at twelve lines so a slow or cold
+well cannot stall the session start.
 
 | # | Stage | What it emits | Source / helper |
 |---|---|---|---|
