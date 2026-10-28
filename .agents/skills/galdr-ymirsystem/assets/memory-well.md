@@ -410,3 +410,34 @@ confident about something that is no longer true, which is worse than silence. T
 cannot become a script (it needs judgment about what still holds), so it is written here
 as law for the keeper: *when a preference moves, the operator record moves with it, and
 the moved claim is deleted, not layered.*
+
+---
+
+## 6. Two roads, one well (2026-10-28)
+
+The bridge was one command with one road, so the well was dark on every `hand`: `--start` resolved an
+interpreter, tried `import engram`, and exited 1 — and a clean skip in `prereq-ensure.sh` had been counted
+as a pass (RULES/25's 2026-10-28 section is the correction).
+
+**One verb, the role's own road.** `bin/bridge/mimir-bridge.sh --start`:
+
+| What the box can do | What `--start` does | What it prints |
+|---|---|---|
+| `import engram` works | serves the engine, as before | `4602,"<store>","started"` |
+| no engine, ssh reaches the heart | raises the door (`bin/records/well-door.sh up`: `4602` HTTP + `8317` MCP) | `4602,"door","borrowed from the heart"` |
+| no engine, no door | refuses with the repair | `no local engine under <py>, and the door to the heart did not answer` / `help: bin/records/well-door.sh status` |
+
+`--status` names the road: `up (local)` when this box owns the process (pid file alive), `up (door)` when
+something else serves the port, `down` when nothing does. `--stop` closes a borrowed door through
+`well-door.sh down`, so no ssh forward outlives the well it served.
+
+**The door's own honesty.** `bin/records/well-door.sh status` probes BOTH ends per port and says which of
+four states it is in — `answering`, `not raised (heart listens)`, `forward up, but NOTHING behind it`,
+`silent both ends`. A forward with nothing behind it is the silent door this house has been burned by.
+
+**Never a second table.** The heart is `YMIR_HEART` (default `zerwizserver`) and `WELL_HEART_HOST` (default
+`127.0.0.1` behind it) — configuration, resolved (Rule 07). The store stays one file in the hoard on the
+heart; a hand holds no second well.
+
+**Proof:** `.agents/tests/well-door.test.sh` (6 assertions — borrowed door, owned process, silent port, and
+the named refusal). How-to for a person: `docs/features/the-well-on-every-role.md`.

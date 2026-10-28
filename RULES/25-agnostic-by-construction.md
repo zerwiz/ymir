@@ -63,3 +63,33 @@ this rule — it is the likeliest place to break it.
 
 **The sentence to carry forward:** *any file a machine generates for itself belongs
 to that machine — keep it out of the shared tree, or keep it relative.*
+
+## 2026-10-28 (appended) — agnostic is not enough: the capability must be functional for the fleet
+
+**Appended at the Allfather's word** — *"this must be built so it works for this device and the fleet"*
+and *"always build agnostic and functional for the fleet"*.
+
+**Why it needed appending.** Rule 25 was satisfied by a capability that did not *crash* on another
+platform: a clean skip, a printed reason, exit 0. That is the right floor and the wrong ceiling. Measured
+on this day: `bin/bridge/mimir-bridge.sh --start` **skipped** on the one device the Allfather actually
+carries (a `hand` — Android/Termux), so the well was dark there from session start every morning while the
+skip counted as a pass. A capability that only works on the box that built it is not agnostic; it is
+unfinished with a polite refusal letter.
+
+```
+fleet_law[6]{rule,what it means}:
+  "THE FLEET IS THE TEST","a capability is done when it answers on every role in the fleet registry — heart · forge · dev · hand — and over every road those roles have (local engine, tunnel, tailnet, ssh door). One role unexercised means unproven, not portable."
+  "THE ROLE IS READ, ONCE","the role comes from the fleet registry by hostname (bin/skuld/role.sh resolve), never from what happens to be installed on the box, and never from a second table."
+  "ONE COMMAND, EVERY ROLE","the same verb must succeed on every role by taking THAT role's road. A second command, or a second flag the operator must remember, is drift: on a hand the well is borrowed through its door, elsewhere it is served — `--start` is `--start` on both."
+  "A BORROWED CAPABILITY SAYS SO","status names the road that answered — `up (local)` versus `up (door)` — because a green that hides a borrow is the false green this house has paid for twice."
+  "THE FLEET'S ABSENCE IS A STATE","when the heart is unreachable the answer is a named state with its reason and its repair (`well-door.sh status`), never a hang, a silent failure, or a fabricated zero."
+  "PROVE IT ON A SECOND MACHINE","before a capability is called done, it is exercised from another role, not from the author's own seat. The accept line names the second machine and what it printed."
+```
+
+**Enforced by** `bin/bridge/mimir-bridge.sh` (local engine, else the door — the same verb on every role) ·
+`bin/records/well-door.sh` (the hand's road, probed at both ends before it is called up) ·
+`bin/skuld/role.sh resolve` (the role, once) · `fleet.json` (the registry the role is read from) ·
+and the clean-skip convention, which stays law for a layer that genuinely does not apply — but a skip is
+never allowed to stand in for a capability the fleet still needs.
+
+**The sentence to carry forward:** *a skip is honest; a skip where the capability was needed is not done.*
