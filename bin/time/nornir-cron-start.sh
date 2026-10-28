@@ -109,6 +109,59 @@ rotate_log() {
   fi
 }
 
+# ── the schedule SHAPES (plan 140) ─────────────────────────────────────────────
+# One parser, used by the loop AND by the start-time warning, because two parsers
+# is how a row goes declared-but-dead (2026-09-24, one layer up). A shape decides
+# BOTH what fires and which STAMP it writes: a per-day job may fire once a day, a
+# per-hour job once an hour, and the stamp is what stops a 45 s loop from firing
+# the same row twice.
+is_role() { # <token> -> 0 when it is a role gate (@heart, @dev,forge)
+  case "${1-}" in @?*) ;; *) return 1 ;; esac
+  local _r
+  for _r in $(printf '%s' "${1#@}" | tr ',' ' '); do
+    case "$_r" in heart|forge|dev|hand) ;; *) return 1 ;; esac
+  done
+  return 0
+}
+
+at_valid() { # <at> -> 0 when the time token is a shape the scheduler understands
+  case "${1-}" in
+    @hourly|@daily) return 0 ;;
+    @hourly:*)
+      local _m="${1#@hourly:}"
+      case "$_m" in ''|*[!0-9]*) return 1 ;; esac
+      [ "$_m" -le 59 ] 2>/dev/null && return 0
+      return 1 ;;
+    [01][0-9]:[0-5][0-9]|2[0-3]:[0-5][0-9]) return 0 ;;
+  esac
+  return 1
+}
+
+# parse_line <line> -> "gate<TAB>at<TAB>cmd" — the role gate may sit before or after
+# the time (plan 54), and a shape may sit in either place too, so the token that is
+# a ROLE is found by what it is, never by its position.
+parse_line() {
+  local _rest="${1-}" _t1 _t2 _rest2=""
+  _t1=${_rest%% *}
+  if [ "$_t1" = "$_rest" ]; then _rest=""; else _rest=${_rest#* }; fi
+  if is_role "$_t1"; then
+    _t2=${_rest%% *}
+    if [ "$_t2" = "$_rest" ]; then _rest2=""; else _rest2=${_rest#* }; fi
+    printf '%s\t%s\t%s\n' "$_t1" "$_t2" "$_rest2"
+    return 0
+  fi
+  _t2=${_rest%% *}
+  if [ "$_t2" = "$_rest" ]; then _rest2=""; else _rest2=${_rest#* }; fi
+  if is_role "$_t2"; then
+    printf '%s\t%s\t%s\n' "$_t2" "$_t1" "$_rest2"
+  else
+    # `-` stands for 'no role gate': a leading EMPTY field would be eaten by IFS
+    # (tab is whitespace to `read`), which silently shifts every field by one.
+    printf '%s\t%s\t%s\n' "-" "$_t1" "$_rest"
+  fi
+}
+export -f is_role at_valid parse_line
+
 scheduler='
   config="$1"; log="$2"; state="$3"; home="$4"; confdir="$5"; root="$6"
   export BROKK_HOME="$home"
@@ -119,6 +172,10 @@ scheduler='
   export BROKK_ROLES="${BROKK_ROLES:-dev}"
   stamp_dir="$state/.cron-fired"
   lock_dir="$state/.cron-locks"
+  # A tab carried in a variable: fields are taken by expansion, never by `read`.
+  # On this seat `IFS=<tab> read` put the whole line in the first field, and a
+  # schedule parser that can eat a row without saying so is a schedule nobody trusts.
+  TAB=$(printf "\t")
   mkdir -p "$stamp_dir" "$lock_dir"
   while :; do
     # Retire when the session that started this scheduler is gone: a seat that
@@ -152,6 +209,7 @@ scheduler='
     fi
     now=$(date +%H:%M)
     today=$(date +%Y-%m-%d)
+    this_hour=$(date +%Y-%m-%dT%H)
     while IFS= read -r line; do
       case "$line" in ""|\#*) continue ;; esac
       # An optional role gate may sit BEFORE the time (the home config form:
@@ -160,21 +218,33 @@ scheduler='
       # silently DEAD while --status still counted it declared — on every seat,
       # the heart record jobs never fired. Both orders are one gate now (plan 54).
       gate=""; at=""; cmd=""
-      case "$line" in
-        @*)
-          gate=${line%% *}; rest=${line#* }
-          at=${rest%% *}; cmd=${rest#* }
-          ;;
-        *)
-          at=${line%% *}; rest=${line#* }
-          case "$rest" in
-            @*) gate=${rest%% *}; cmd=${rest#* } ;;
-            *)  cmd=$rest ;;
-          esac
-          ;;
-      esac
+      _parsed=$(parse_line "$line")
+      gate=${_parsed%%"$TAB"*}
+      _after=${_parsed#*"$TAB"}
+      at=${_after%%"$TAB"*}
+      cmd=${_after#*"$TAB"}
+      [ "$gate" = "-" ] && gate=""
       [ -n "$cmd" ] || continue
-      [ "$at" = "$now" ] || continue
+      # A token the scheduler cannot read is a job that would be SILENTLY dead, so
+      # it is named once (in state/.cron-invalid, which --status reports) and never
+      # fired. It is not allowed to look declared.
+      if ! at_valid "$at"; then
+        grep -qxF -- "$line" "$state/.cron-invalid" 2>/dev/null \
+          || printf "%s\n" "$line" >>"$state/.cron-invalid"
+        continue
+      fi
+      # The shape decides the fire and the STAMP (plan 140): @hourly fires at the
+      # top of every hour, @hourly:MM at that minute, @daily at 00:00, HH:MM once a
+      # day. The stamp key is derived from the shape — never guessed from the time.
+      fire=0; stamp_key=""
+      case "$at" in
+        @hourly)   stamp_key="$this_hour"; [ "${now#*:}" = "00" ] && fire=1 ;;
+        @hourly:*) _want=$(printf "%02d" "${at#@hourly:}" 2>/dev/null)
+                   stamp_key="$this_hour"; [ "${now#*:}" = "$_want" ] && fire=1 ;;
+        @daily)    stamp_key="$today"; [ "$now" = "00:00" ] && fire=1 ;;
+        *)         stamp_key="$today"; [ "$at" = "$now" ] && fire=1 ;;
+      esac
+      [ "$fire" = 1 ] || continue
       if [ -n "$gate" ]; then
         _match=0
         for _w in ${gate#@}; do
@@ -184,8 +254,8 @@ scheduler='
       fi
       key=$(printf "%s" "$cmd" | tr -c "A-Za-z0-9._-" "_")
       stamp="$stamp_dir/$key"
-      if [ -r "$stamp" ] && [ "$(cat "$stamp" 2>/dev/null)" = "$today" ]; then continue; fi
-      printf "%s\n" "$today" >"$stamp"
+      if [ -r "$stamp" ] && [ "$(cat "$stamp" 2>/dev/null)" = "$stamp_key" ]; then continue; fi
+      printf "%s\n" "$stamp_key" >"$stamp"
       ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
       printf "%s cron run: %s\n" "$ts" "$cmd" >>"$log"
       lock="$lock_dir/$key.lock"
@@ -212,16 +282,20 @@ scheduler='
         ) &
       fi
     done <"$config"
-    sleep 45
+    [ "${BROKK_CRON_ONCE:-0}" = 1 ] && exit 0
+    sleep "${BROKK_CRON_TICK:-45}"
   done
 '
 
 case "${1-}" in
   --status)
+    invalid=0
+    [ -r "$STATE/.cron-invalid" ] && invalid=$(grep -c . "$STATE/.cron-invalid" 2>/dev/null || printf '0')
+    extra=""; [ "${invalid:-0}" != 0 ] && extra=" invalid=$invalid"
     if pid=$(running_pid); then
-      printf 'cron: running pid=%s jobs=%s\n' "$pid" "$(job_count)"
+      printf 'cron: running pid=%s jobs=%s%s\n' "$pid" "$(job_count)" "$extra"
     else
-      printf 'cron: stopped jobs=%s\n' "$(job_count)"
+      printf 'cron: stopped jobs=%s%s\n' "$(job_count)" "$extra"
     fi
     exit 0
     ;;
@@ -248,6 +322,23 @@ if [ "$jobs" = "0" ]; then
   printf 'cron: no jobs configured (%s absent or empty)\n' "$CRON_CONFIG"
   exit 0
 fi
+
+# Name every line whose schedule shape the scheduler does not understand, BEFORE the
+# loop starts. A row that cannot be read is a job that will never fire, and this house
+# has already paid once for a declared-but-dead schedule (2026-09-24).
+_bad=$(
+  grep -vE '^[[:space:]]*(#|$)' "$CRON_CONFIG" 2>/dev/null | while IFS= read -r _l; do
+    _p=$(parse_line "$_l")
+    _at=${_p#*	}; _at=${_at%%	*}
+    at_valid "$_at" || printf '%s\n' "$_l"
+  done
+)
+if [ -n "$_bad" ]; then
+  printf 'cron: WARNING — %s line(s) carry a schedule shape Nornir does not understand, and will NOT fire:\n' "$(printf '%s\n' "$_bad" | grep -c .)" >&2
+  printf '%s\n' "$_bad" | sed 's/^/  /' >&2
+  printf 'cron: shapes are HH:MM · @hourly · @hourly:MM · @daily (after or before the @role gate)\n' >&2
+fi
+unset _bad _l _p _at
 
 mkdir -p "$STAMP_DIR" "$LOCK_DIR"
 rotate_log

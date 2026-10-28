@@ -604,3 +604,35 @@ failure.
   unconditional; the Anchor sync is time-bounded inside `asken` and skipped when
   Anchor is down, so the job never blocks and the roll still mirrors when it can.
 - Emits one TOON row per repository (`repo,head,acted`), then carves the Rune.
+
+---
+
+## 1.2 The schedule shapes (2026-10-28, plan 140)
+
+A row's first token is a **shape**, and the shape decides BOTH what fires and which stamp it writes. The
+stamp is what stops a 45 s loop from firing the same row twice, so a shape without its own stamp key is a row
+that either never fires or fires every tick.
+
+| shape | fires | stamp key | since |
+|---|---|---|---|
+| `HH:MM` | once a day, at that minute | `<date>` | always |
+| `@daily` | 00:00, once a day | `<date>` | 2026-10-28 |
+| `@hourly` | the top of every hour | `<date>T<HH>` | 2026-10-28 |
+| `@hourly:MM` | minute `MM` of every hour | `<date>T<HH>` | 2026-10-28 |
+
+- **The role gate parses before or after a shape** (`@heart @hourly:00 …`, `@hourly:00 @heart …`), because
+  the token is identified by what it IS (`is_role`), never by its position. The 2026-09-24 fault was a
+  position guess; this is the same lesson applied to shapes.
+- **One parser, two callers.** `parse_line` · `is_role` · `at_valid` live in the script and are `export -f`'d,
+  so the loop and the **start-time warning** agree. Two parsers is how a row goes declared-but-dead.
+- **An unreadable shape is named, not skipped.** At start: `cron: WARNING — N line(s) carry a schedule shape
+  Nornir does not understand, and will NOT fire:` with the lines under it. During the run it is recorded in
+  `state/.cron-invalid`, which `--status` reports as `invalid=<n>`.
+- **Fields are taken by expansion** (`${p%%"$TAB"*}`), never by `IFS=<tab> read`: on this seat `read` put a
+  whole line in the first field, and a parser that can eat a row without saying so cannot be trusted.
+- **Two test hooks** exist for exactly one reason — proving the schedule without waiting an hour:
+  `BROKK_CRON_TICK` (loop sleep, default 45) and `BROKK_CRON_ONCE=1` (one pass, then exit). The proof is
+  `.agents/tests/nornir-schedule-shapes.test.sh` (16 assertions, fake `date`).
+
+**Deliberately not added:** `*/N`, ranges, calendars. Nornir's value is that the whole schedule is legible in
+a minute; a general cron grammar costs that and buys an hour-shaped need nothing here has.
