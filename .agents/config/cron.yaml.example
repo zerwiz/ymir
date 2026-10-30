@@ -2,13 +2,25 @@
 # Copy to YOUR home and edit there:  cp config/cron.yaml.example $YMIR_HOME/config/cron.yaml
 # The runtime reads the operator's own schedule from $YMIR_HOME/config/cron.yaml
 # (or BROKK_CONFIG_OVERRIDE) — the tracked tree ships only this shape.
-# Format: HH:MM <command>. Started idempotently by bin/time/nornir-cron-start.sh.
+# Format: <shape> <command>. Started idempotently by bin/time/nornir-cron-start.sh.
+#
+# SHAPES (plan 140) — the shape decides both WHEN the row fires and which stamp it
+# writes, so it can never fire twice for one period:
+#   HH:MM        once a day, at that minute        (the original form, unchanged)
+#   @daily       00:00, once a day                 (no minute to guess)
+#   @hourly      the top of every hour
+#   @hourly:MM   minute MM of every hour           (give each machine its own minute,
+#                                                   so twenty boxes do not knock at once)
+# A shape the scheduler cannot read is NAMED when it starts, recorded in
+# state/.cron-invalid, and counted as `invalid=<n>` by --status. It never fires, and it
+# never looks declared.
 #
 # ROLE GATE (plan 51): prefix a job with @<role>[,<role>] so it runs only on the
 # machines whose roles match — @heart (the record), @forge (models/GPU),
 # @dev (a full body), @hand. No gate means any role. A dev body must NOT run the
 # record jobs; that is how 8 orphan seat schedulers came to run a heart's work.
-#   @heart 07:00 bin/time/nornir-job-daily-briefing.sh
+#   # @hourly:20 bin/time/well-vault-sync.sh --mode sync     # every hour, this box's minute
+@heart 07:00 bin/time/nornir-job-daily-briefing.sh
 #   07:30 bin/time/nornir-job-ungated.sh   # any role
 #
 # GATE EVERY LINE THAT BELONGS TO A ROLE. An ungated machine job runs on EVERY
