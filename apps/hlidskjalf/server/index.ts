@@ -1600,11 +1600,12 @@ function stream() {
   } catch {
     /* no ledger yet */
   }
+  let tick: ReturnType<typeof setInterval> | null = null;
   return new Response(
     new ReadableStream({
       start(controller) {
         const enc = new TextEncoder();
-        const tick = setInterval(() => {
+        tick = setInterval(() => {
           try {
             const size = statSync(RUNES).size;
             if (size > cursor) {
@@ -1629,10 +1630,9 @@ function stream() {
             /* keep streaming */
           }
         }, 2000);
-        (controller as unknown as { _tick?: ReturnType<typeof setInterval> })._tick = tick;
       },
       cancel() {
-        /* interval GC scope */
+        if (tick) { clearInterval(tick); tick = null; }
       },
     }),
     { headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-store', connection: 'keep-alive' } },
@@ -2408,8 +2408,10 @@ const server = Bun.serve({
         });
       }
       if (p === '/api/session') {
+        const reqHost = (req.headers.get('host') ?? '').toLowerCase().split(':')[0];
+        const local = reqHost === 'localhost' || reqHost === '127.0.0.1' || reqHost === '::1' || reqHost === '';
         return json({
-          authed: GATE_AUTH ? isAuthed(req) : true,
+          authed: (GATE_AUTH && !local) ? isAuthed(req) : true,
           login: seatOf(req),
           // The login surface shows "create an account" only while a live invite
           // exists — a newcomer with a code can enter, and nobody else can.
@@ -2442,7 +2444,11 @@ const server = Bun.serve({
         }
         return proxyApp(req, url, app.base, app.name);
       }
-      if (GATE_AUTH && p.startsWith('/api/') && !isAuthed(req)) return json({ error: 'unauthorized' }, 401);
+      // Login is only demanded from outside the machine: a request that arrives
+      // on loopback (the local desktop seat) is trusted without a session.
+      const reqHost = (req.headers.get('host') ?? '').toLowerCase().split(':')[0];
+      const local = reqHost === 'localhost' || reqHost === '127.0.0.1' || reqHost === '::1' || reqHost === '';
+      if (GATE_AUTH && !local && p.startsWith('/api/') && !isAuthed(req)) return json({ error: 'unauthorized' }, 401);
       if (p === '/api/health') return json({ ok: true, root: ROOT, sessions: orders().length });
       if (p === '/api/mail/accounts') {
         if (req.method !== 'GET') return json({ error: 'method not allowed' }, 405);
