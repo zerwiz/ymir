@@ -49,7 +49,7 @@ function seed(W, H) {
   for (let i = 0; i < EMBERS; i++) {
     embers.push({
       x: Math.random() * W,
-      y: H + Math.random() * H * 0.3 - 6,
+      y: H + Math.random() * 24,
       r: 1.0 + Math.random() * 1.6,
       v: 0.14 + Math.random() * 0.34,
       ph: Math.random() * 6.28,
