@@ -111,13 +111,19 @@ export default function elder(pi: ExtensionAPI) {
       }
       const abs = `${HOME}/${rel}`;
       const heading = String(args.heading);
+      const body = String(args.body);
       const stamp = new Date().toISOString().slice(0, 10);
       const dated = heading.includes(stamp) ? heading : `${heading} — ${stamp}`;
       try {
         if (!existsSync(abs)) run("mkdir", ["-p", abs.slice(0, abs.lastIndexOf("/"))]);
-        run("bash", ["-c", `printf '\n---\n\n%s\n\n' >> "$1" && cat >> "$1"`, "_", abs], HOME);
-        // body via stdin-safe append
-        run("bash", ["-c", `cat >> "$1"`, "_", abs], HOME, args.body);
+        // Write heading + body in one atomic append, then verify by reading back.
+        const content = `\n---\n\n${dated}\n\n${body}\n`;
+        run("bash", ["-c", `printf '%s' "$2" >> "$1"`, "_", abs, content], HOME);
+        // Verify: read back and check the heading is present
+        const check = readFileSync(abs, "utf8");
+        if (!check.includes(dated)) {
+          return piOut(`WARNING: append to ${rel} may have failed — heading "${dated}" not found in file. Verify manually with cat.`);
+        }
         return piOut(`appended to ${rel}\n  ${dated}\n  next: ymir_push with that one path (never -A).`);
       } catch (e: any) {
         return piOut("failed: " + String(e?.message ?? e).split("\n")[0]);
