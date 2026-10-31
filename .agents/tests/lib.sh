@@ -37,6 +37,7 @@ export FM_GATE_REFUSE_BYPASS=1
 
 # Resolve the repo root from this library's own location. Consumed by sourcing
 # test files, not by this library, so it reads as "unused" here.
+<<<<<<< /tmp/l2.txt
 # TWO levels up, not one. This file lives at .agents/tests/lib.sh, so its parent
 # is .agents/ — and `$ROOT/bin/backend/fm-wake-lib.sh` then resolved to
 # .agents/bin/backend/fm-wake-lib.sh, which has never existed. It was wrong from the
@@ -48,6 +49,17 @@ export FM_GATE_REFUSE_BYPASS=1
 # exports the real one.
 # shellcheck disable=SC2034
 ROOT="${ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+=======
+#
+# This library lives at <root>/.agents/tests/lib.sh, so the root is TWO levels up.
+# It resolved one level up instead, which made ROOT=".agents", put every fixture
+# path under "/", made $ROOT/bin unresolvable, and failed every assertion in the
+# suite - quietly, because a broken test suite that still prints lines looks like
+# a suite with failures rather than one that never ran. See
+# docs/fixes/runtime/…-the-behaviour-suite-could-not-run.md.
+# shellcheck disable=SC2034
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+>>>>>>> /tmp/l3.txt
 
 # --- reporters --------------------------------------------------------------
 
