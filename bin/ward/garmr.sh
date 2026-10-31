@@ -74,8 +74,23 @@ rules_text() {
 # rules vanish at reboot; this file is what brings them back.
 -b 8192
 -a always,exit -F arch=b64 -S execve -F auid>=1000 -F auid!=unset -k ymir-exec
--a always,exit -F arch=b64 -S kill,tkill,tgkill -F a1=15 -k ymir-browserkill
--a always,exit -F arch=b64 -S kill,tkill,tgkill -F a1=9 -k ymir-browserkill
+# THE SIGNAL THAT ENDS A BROWSER, in every way it can arrive (fixed 2026-10-31).
+# The two rules that stood here filtered `a1`, which is right for kill(2) and tkill(3) but WRONG for
+# tgkill(2): there the signal is `a2` and `a1` is the TID, so `-F a1=9` matched when a thread id was 9 —
+# i.e. never. And `pidfd_send_signal` (what systemd uses to kill a unit's processes) and the
+# `rt_*sigqueueinfo` pair were not watched at all. Eleven browser deaths left no witness; this is why.
+-a always,exit -F arch=b64 -S kill -F a1=15 -k ymir-browserkill
+-a always,exit -F arch=b64 -S kill -F a1=9 -k ymir-browserkill
+-a always,exit -F arch=b64 -S tkill -F a1=15 -k ymir-browserkill
+-a always,exit -F arch=b64 -S tkill -F a1=9 -k ymir-browserkill
+-a always,exit -F arch=b64 -S tgkill -F a2=15 -k ymir-browserkill
+-a always,exit -F arch=b64 -S tgkill -F a2=9 -k ymir-browserkill
+-a always,exit -F arch=b64 -S rt_sigqueueinfo -F a1=15 -k ymir-browserkill
+-a always,exit -F arch=b64 -S rt_sigqueueinfo -F a1=9 -k ymir-browserkill
+-a always,exit -F arch=b64 -S rt_tgsigqueueinfo -F a2=15 -k ymir-browserkill
+-a always,exit -F arch=b64 -S rt_tgsigqueueinfo -F a2=9 -k ymir-browserkill
+-a always,exit -F arch=b64 -S pidfd_send_signal -F a1=15 -k ymir-browserkill
+-a always,exit -F arch=b64 -S pidfd_send_signal -F a1=9 -k ymir-browserkill
 -w /etc/passwd -p wa -k ymir-identity
 -w /etc/shadow -p wa -k ymir-identity
 -w /etc/group -p wa -k ymir-identity
