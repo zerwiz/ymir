@@ -536,6 +536,15 @@ ear_down() {
 # ── the START edge: arm the ear on the conversation pair ───────────────────
 do_arm() {  # <snapshot> <trigger-csv> <baseline-csv> [forced-slug]
   local snap="$1" triggers="$2" baseline="$3" forced="${4:-}"
+  # THE ALLFATHER'S LAW (2026-10-31): the microphone is NEVER used to hear an
+  # online meeting. An app taking the mic on this box is almost always a Meet,
+  # Zoom or Teams call — that call is heard by the BOT (snotra-bot.sh, the Vexa
+  # participant), never by this seat's microphone. The ear stays down unless the
+  # room is LOCAL — people physically here, which must be asked for by name.
+  if [ "${SNOTRA_LOCAL_ROOM:-0}" != "1" ]; then
+    log "arm REFUSED — the mic is for a LOCAL room only; an online meeting is heard by the bot (snotra-bot.sh join <url>), never by the seat microphone"
+    return 1
+  fi
   # ONE ear at a time. The watch's loop and the manual door can both ask to arm
   # (and a trigger set can change mid-debounce); a second capture would leave the
   # first one writing into the shelf with no pid anyone holds — a lingering ear.

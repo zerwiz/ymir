@@ -80,7 +80,7 @@ bin[620]{file,does,kind,verdict,disposition,callers,lines}:
   "defaults-guard.sh","defaults-guard.sh — ONE PLACE KNOWS WHERE THINGS LIVE.","data","tested","keep",1,171
   "design-check.sh","design-check.sh — one identity, two renderers: they must agree.","tool","wired","keep",0,93
   "design-icon.sh","design-icon.sh — every app wears its own rune.","tool","wired","keep",2,299
-  "desk.py","'''desk.py — Gimlé's desk: the page behind the door.","tool","wired","keep",2,188
+  "desk.py","'''desk.py — Gimlé's desk: the page behind the door.","tool","wired","keep",2,190
   "desktop-place.sh","desktop-place.sh — put the Ymir apps on their own Hyprland desktops.","tool","tested","keep",8,320
   "desktop-verify.sh","desktop-verify.sh — the INSTALL-time guarantee: every desktop surface can run,","tool","wired","keep",2,199
   "dispatch-profile.sh","dispatch-profile.sh — decide which Eindri dispatch profile is ACTIVE, and","tool","tested","keep",2,277
@@ -478,7 +478,7 @@ bin[620]{file,does,kind,verdict,disposition,callers,lines}:
   "send.sh","send.sh — THE HOTLINE: one door a system calls when it has something to say.","tool","tested","migrate → src/ymir_runtime/send.py",57,194
   "sensitive-gate.sh","sensitive-gate.sh — one gate for every external surface of a sensitive artifact set.","tool","wired","keep",2,81
   "sessrumnir-ensure.sh","sessrumnir-ensure.sh — ensure the Sessrúmnir desktop GUI is present and runnable.","tool","wired","keep",4,132
-  "sessrumnir-launch.sh","sessrumnir.sh — launch the Sessrúmnir desktop GUI (the seat-hall).","tool","wired","keep",2,153
+  "sessrumnir-launch.sh","sessrumnir.sh — launch the Sessrúmnir desktop GUI (the seat-hall).","tool","wired","keep",2,175
   "sessrumnir-sync.sh","sessrumnir-sync.sh — pull a new pi-desktop release into the Sessrúmnir fork","tool","wired","keep",0,256
   "skill-find.sh","skill-find.sh — find the skill you need, without loading any of them.","tool","tested","keep",4,188
   "skill-index.sh","skill-index.sh — Sága's sight over the crafts: one index of EVERY skill we","tool","tested","keep",3,244
@@ -504,13 +504,13 @@ bin[620]{file,does,kind,verdict,disposition,callers,lines}:
   "snotra-autojoin.sh","snotra-autojoin.sh — read the calendar, decide which meetings Snotra joins, and join them.","tool","wired","keep",0,164
   "snotra-board.py","'''snotra-board — a place declares a board; this door makes it, once.","data","wired","keep",1,201
   "snotra-board.sh","snotra-board.sh — a place declares a board; this door makes it, once.","tool","wired","keep",1,17
-  "snotra-bot.sh","snotra-bot.sh — send Snotra into a meeting, through the Vexa API.","tool","wired","keep",1,146
-  "snotra-capture.sh","snotra-capture.sh — capture mic + system audio on the meeting seat.","tool","wired","keep",4,251
+  "snotra-bot.sh","snotra-bot.sh — send Snotra into a meeting, through the Vexa API.","tool","wired","keep",4,146
+  "snotra-capture.sh","snotra-capture.sh — capture mic + system audio on the meeting seat.","tool","wired","keep",4,262
   "snotra-card-moves.py","'''snotra-card-moves — card-movement automation rules (DEC-20261022-04).","data","wired","keep",1,369
   "snotra-card-moves.sh","snotra-card-moves.sh — card-movement automation rules (DEC-20261022-04).","tool","wired","keep",1,14
   "snotra-cdp.py","'''snotra-cdp.py — a seat browser as the meeting's mouth and ear, with no OS mixer.","tool","wired","keep",4,624
   "snotra-cron.sh","snotra-cron.sh — scheduled maintenance for the meeting system.","tool","wired","keep",1,123
-  "snotra-detect.sh","snotra-detect.sh — the ear's watch: pricks up when a call begins, and leaves","tool","tested","keep",4,1092
+  "snotra-detect.sh","snotra-detect.sh — the ear's watch: pricks up when a call begins, and leaves","tool","tested","keep",4,1101
   "snotra-dispatch.py","'''snotra-dispatch — what we did with each person: which meetings, what was sent, what came back.","data","wired","keep",1,139
   "snotra-dispatch.sh","snotra-dispatch.sh — what we did with each person: which meetings, what was sent, what came back.","tool","wired","keep",0,19
   "snotra-ensure.sh","snotra-ensure.sh — ensure the meeting ear's transcription engine is present.","tool","wired","keep",4,173
@@ -527,7 +527,7 @@ bin[620]{file,does,kind,verdict,disposition,callers,lines}:
   "snotra-layout.sh","snotra-layout.sh — a meeting folder is a standard, and a stray is a fault.","tool","wired","keep",2,21
   "snotra-letter.py","'''snotra-letter — one letter per participant, from the record, with their own tasks in it.","data","wired","keep",1,650
   "snotra-letter.sh","snotra-letter.sh — one letter per participant, from the record, carrying their own tasks.","tool","wired","keep",1,24
-  "snotra-live.sh","snotra-live.sh — THE LIVE TAIL: listen through this machine's microphone and","tool","wired","keep",2,500
+  "snotra-live.sh","snotra-live.sh — THE LIVE TAIL: listen through this machine's microphone and","tool","wired","keep",2,511
   "snotra-mail-watch.py","'''snotra-mail-watch — who has answered, and what they said (read-only; a person still promotes).","data","wired","keep",1,316
   "snotra-mail-watch.sh","snotra-mail-watch.sh — who has answered, and what they said.","tool","wired","keep",2,24
   "snotra-meet.sh","snotra-meet.sh — the meeting voice: one door, and the browser is the audio device.","tool","wired","keep",4,97

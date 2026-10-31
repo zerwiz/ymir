@@ -207,3 +207,25 @@ validation gates, rendering, card shape, and curated-over-machine precedence.
 | `followup-email.md` | the receipt, not the retelling |
 | `quality-gates.md` | the eight gates and the fail behaviour |
 | `trello-mapping.md` | boards, stages, and card shape |
+
+## Snotra's other doors (the ear, not just the record)
+
+Snotra is more than the record. Before asserting she can't do something, check
+these doors in `bin/time/snotra/`:
+
+| Door | What it does |
+|---|---|
+| `snotra-bot.sh join <meet-url>` | **The online door.** Send Snotra into a Meet/Zoom/Teams call as a participant via Vexa; she captures from inside the call. Every online meeting is heard this way — never by the microphone. |
+| `snotra-capture.sh start [seconds]` | **The local-room door only.** Capture mic + system audio for a meeting of people physically in the room. Refuses (exit 2) unless `SNOTRA_LOCAL_ROOM=1`: the Allfather's law, 2026-10-31 — *the mic is never an online meeting*. |
+| `snotra-capture.sh stop` | Stop the running capture. |
+| `snotra-bot.sh join <meet-url>` | Send Snotra into a meeting as a participant via Vexa (she captures from inside the call). |
+| `snotra-bot.sh status <id>` | Bot status. `idle` with no `bot_container_id` means the worker never spawned — not "joined". |
+| `snotra-bot.sh stop <id>` | Remove the bot. |
+| `snotra-autojoin.sh` | Read the calendar and auto-join meetings Snotra should attend. |
+| `calendar-invite.sh create ... --meet` | Create a Google Calendar event with a Meet link. |
+| `mail-send.sh draft/send` | Draft or send email via the Gmail vault grant. |
+
+**Rule:** Snotra listens two ways — locally (capture) or by joining (bot). The
+bot needs the Vexa worker running on the server to actually spawn a container;
+if `status` shows `idle` with no container, the worker is down and the bot is
+not in the call.
