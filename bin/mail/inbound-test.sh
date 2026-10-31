@@ -13,7 +13,7 @@
 #      checks that a Workspace alias exists when the address is one (§16). If any is
 #      missing the test SKIPS WITH A REASON, naming exactly what is missing.
 #   2. SEND FROM OUTSIDE, through the house's existing approved send door
-#      (bin/time/snotra/mail-send.sh — the Gmail grant). A sender on the target's own
+#      (systems/snotra/services/letters/mail-send.sh — the Gmail grant). A sender on the target's own
 #      domain proves nothing about outside mail; the door refuses that unless
 #      --allow-same-domain, and says so.
 #   3. WAIT AND ASSERT. The arrival is searched for by the To: header, and the header
@@ -41,7 +41,7 @@ export YMIR_HOME="$HOME_R"
 
 PY="$(command -v python3 || echo /usr/bin/python3)"
 DOOR="$HERE/gna_addresses.py"
-SEND_CMD="${GNA_INBOUND_SEND_CMD:-$ROOT/bin/time/snotra/mail-send.sh}"
+SEND_CMD="${GNA_INBOUND_SEND_CMD:-$ROOT/systems/snotra/services/letters/mail-send.sh}"
 WAIT="${GNA_INBOUND_WAIT:-300}"
 
 TO=""; FROM=""; MX_ONLY=0; DRY=0; SAME=0; SELFTEST=0

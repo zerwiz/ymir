@@ -427,7 +427,7 @@ bin[639]{file,does,kind,verdict,disposition,callers,lines}:
   "org_adapter.py","'''org_adapter — the abstract base class for organization tool adapters.","data","wired","keep",0,210
   "packaged-gate.sh","packaged-gate.sh — prove the PUBLISHED artifact, not the tree.","tool","wired","keep",0,103
   "participants-fill.sh","bin/time/snotra/participants-fill.sh -> systems/snotra/services/letters/participants-fill.sh — RETIRED SHIM (plan 129, 2026-10-24); execs t…","tool","wired","keep",0,16
-  "path-ledger-guard.sh","path-ledger-guard.sh — Rule 25: a path that MOVED may not be referenced again.","tool","tested","keep",0,99
+  "path-ledger-guard.sh","path-ledger-guard.sh — Rule 25: a path that MOVED may not be referenced again.","tool","tested","keep",0,121
   "paths.py","'''paths.py — ONE resolver for the assistant's two shelves (Rule 07/22).","data","tested","migrate → src/ymir_runtime/paths.py",3,56
   "people-guard.sh","people-guard.sh — the public tree holds no people.","tool","wired","keep",0,103
   "perm-guard.sh","perm-guard.sh — flag agent profiles whose permissions are self-defeating.","tool","wired","keep",0,32

@@ -121,9 +121,18 @@ moves:
   # 2026-10-24 — plan 129: Snotra is a SYSTEM, and ownership is the axis (Rule 23's appended section).
   # The old spelling is a DIRECTORY, so one entry covers every door inside it; the per-door destination
   # (which SERVICE each door went to) is declared in systems/snotra/domain.yaml and read by the migration.
+  # PARTIAL, and the ledger says so honestly (appended 2026-10-31). The move took the 51 doors
+  # that existed on 2026-10-24; work landed on the trunk AFTERWARDS (the org adapters, rules, route,
+  # grooming, card-moves, friday-synch, channel adapters — 20 files) and still lives at
+  # bin/time/snotra/. A directory-wide "superseded" entry would flag every reference to those
+  # survivors as stale, which is not a stale reference — it is an unfinished move. So the entry
+  # below keeps the destination (the shelf the rest will follow into) and the guard reads the
+  # waiver: the remaining files are named as still-current.
   - old: "bin/time/snotra/"
     new: "systems/snotra/"
     date: "2026-10-24"
     why: "ownership is the axis, plan 129 — a domain is the primary folder; a layer is a folder inside it"
     migration: "0014-systems-shelf"
+    partial: true
+    still_current: "tests test_outbound_gate.py asana_adapter.py channel_email.py channel_todo.py clickup_adapter.py jira_adapter.py linear_adapter.py monday_adapter.py notion_adapter.py org_adapter.py snotra-card-moves.py snotra-card-moves.sh snotra-friday-synch.py snotra-friday-synch.sh snotra-grooming.py snotra-grooming.sh snotra-route.py snotra-route.sh snotra-rules.py snotra-rules.sh trello_adapter.py"
     superseded: true

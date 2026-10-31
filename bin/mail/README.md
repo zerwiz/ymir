@@ -137,7 +137,7 @@ earn their place (P4). None of them may add a send path.
 
 Plan 116 P1 (drafts and approvals) is still owed, and this line is the debt written down before anyone pays it
 (today it was only a hope, which is how a hole opens): **when Gná's draft and send verbs land they must call
-`bin/time/snotra/snotra-approve.sh gate mail <draft-id>` before any send, exactly as `mail-send.sh send` does.**
+`systems/snotra/services/approve/snotra-approve.sh gate mail <draft-id>` before any send, exactly as `mail-send.sh send` does.**
 No SMTP, no `users/me/drafts/send`, no socket of her own — the gate is the only socket in the house (plan 124 §7).
 
 The two wards that keep this honest are already standing: `tests/test_gna.py::NoSendCapability` fails if a send

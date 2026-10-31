@@ -22,16 +22,16 @@ written down that Gná (the mail desk) must never grow a send path of her own. A
 
 ```bash
 # 1. compose it. This creates a Gmail DRAFT and sends nothing.
-bin/time/snotra/mail-send.sh draft --to partner@example.com --subject "OptiCat review" --body letter.md
+systems/snotra/services/letters/mail-send.sh draft --to partner@example.com --subject "OptiCat review" --body letter.md
 
 #    the door answers:  draft   r-1234567890   /tmp/....eml
 
 # 2. read it, then approve exactly those bytes
-bin/time/snotra/snotra-approve.sh approve r-1234567890
+systems/snotra/services/approve/snotra-approve.sh approve r-1234567890
 #    → approved   mail   r-1234567890   fcd5507d…
 
 # 3. send it
-bin/time/snotra/mail-send.sh send r-1234567890
+systems/snotra/services/letters/mail-send.sh send r-1234567890
 #    → sent   <message-id>
 ```
 
@@ -49,14 +49,14 @@ Google mails every attendee the moment an event is made, so the door mails **nob
 
 ```bash
 # 1. ask for it. With attendees and no word, this REFUSES and posts nothing:
-bin/time/snotra/calendar-invite.sh create --title "OptiCat review" \
+systems/snotra/services/calendar/calendar-invite.sh create --title "OptiCat review" \
     --start 2026-10-30T10:00:00 --end 2026-10-30T10:30:00 --attendees partner@example.com
 #    → calendar-invite: REFUSED — nothing was posted and no attendee was mailed.
 #      the body is held at …/approvals/pending/evt-2026_10_30T10_00_00.json
 #      to release it: …/snotra-approve.sh approve-event evt-2026_10_30T10_00_00  &&  re-run this command
 
 # 2. read the held body, approve it, then re-run the SAME command.
-bin/time/snotra/snotra-approve.sh approve-event evt-2026_10_30T10_00_00
+systems/snotra/services/approve/snotra-approve.sh approve-event evt-2026_10_30T10_00_00
 
 # 3. re-run step 1 → created … and mail all
 ```
@@ -67,14 +67,14 @@ same law: `cancel <event-id>` mails nobody, and `cancel <event-id> --notify` nee
 ## See what is waiting, approved, stale or spent
 
 ```bash
-bin/time/snotra/snotra-approve.sh list
+systems/snotra/services/approve/snotra-approve.sh list
 #    OK      mail  r-1234567890
 #    SENT    event evt-2026_10_30T10_00_00
 #    STALE   mail  r-0987654321  (STALE — the content changed after approval; approve it again)
 ```
 
 ```bash
-bin/time/snotra/snotra-approve.sh revoke <key>     # take the word back before it is used
+systems/snotra/services/approve/snotra-approve.sh revoke <key>     # take the word back before it is used
 ```
 
 ## Prove it yourself
@@ -82,8 +82,8 @@ bin/time/snotra/snotra-approve.sh revoke <key>     # take the word back before i
 Each door carries its own proofs; they run against a local server, never your mailbox:
 
 ```bash
-bin/time/snotra/mail-send.sh --self-test          # 4 proofs: refused · sent once · refused replay · stale
-bin/time/snotra/calendar-invite.sh --self-test    # 6 proofs: no mail by default · approved only · stale · cancel
+systems/snotra/services/letters/mail-send.sh --self-test          # 4 proofs: refused · sent once · refused replay · stale
+systems/snotra/services/calendar/calendar-invite.sh --self-test    # 6 proofs: no mail by default · approved only · stale · cancel
 python3 bin/time/snotra/tests/test_outbound_gate.py   # all 12, including Gná's ward
 ```
 
@@ -103,7 +103,7 @@ python3 bin/time/snotra/tests/test_outbound_gate.py   # all 12, including Gná's
 ## If it does not work
 
 - `error: google credentials missing` — the vault grant is missing on this seat: check
-  `bin/time/snotra/calendar-invite.sh status` and `mail-send.sh status`.
+  `systems/snotra/services/calendar/calendar-invite.sh status` and `mail-send.sh status`.
 - `ALREADY SENT` on the first send — the draft was already released once (by a letter run or the Hlidskjalf
   button). Compose a new draft; do not revoke to replay a stale one.
 - `UNREADABLE — cannot read the current bytes` — Gmail could not return the draft: it was discarded, or the id
