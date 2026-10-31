@@ -89,11 +89,20 @@ case "$ACTION" in
     for n in $(printf '%s\n' "${!DOMAIN_DIR[@]}" | sort); do
       [ -z "$want" ] || [ "$n" = "$want" ] || continue
       k="$(printf '%s' "${KEEPER_FIG[$n]}" | tr -d '"')"; f="$(figure_file "$k")"
-      printf '  "%s","keeper=%s","figure=%s","folder=%s"\n' "$n" "${k:-none}" "$([ -n "$f" ] && echo ok || echo MISSING)" \
-        "$([ -d "${DOMAIN_DIR[$n]}" ] && echo ok || echo MISSING)"
+      # A DECLARED DOOR THAT DOES NOT EXIST IS A LIE (Skirnir's own audit, 2026-10-31: his declaration
+      # named services/rooms-wall-test.sh while the file was room-wall-test.sh, and this check said fine).
+      doors="$(grep -oE 'services/[A-Za-z0-9._-]+\.(sh|py)' "${DOMAIN_DIR[$n]}/domain.yaml" 2>/dev/null | sort -u)"
+      missing=""
+      for door in $doors; do
+        [ -e "${DOMAIN_DIR[$n]}/$door" ] || missing="$missing $door"
+      done
+      printf '  "%s","keeper=%s","figure=%s","folder=%s","doors=%s"\n' "$n" "${k:-none}" \
+        "$([ -n "$f" ] && echo ok || echo MISSING)" "$([ -d "${DOMAIN_DIR[$n]}" ] && echo ok || echo MISSING)" \
+        "$([ -z "$missing" ] && echo ok || echo "MISSING:$missing")"
       [ -n "$f" ] || rc=1
+      [ -z "$missing" ] || rc=1
     done
-    [ "$rc" -eq 0 ] || printf 'check: a domain without a figure cannot be seated — write .agents/agents/<keeper>*.md\n' >&2
+    [ "$rc" -eq 0 ] || printf 'check: a domain that cannot honour its declaration cannot be seated — a missing figure is .agents/agents/<keeper>*.md, a missing door is a name in domain.yaml with no file\n' >&2
     exit "$rc" ;;
   brief)
     n="${1:-}"; [ -n "$n" ] || { printf 'error: brief needs a domain\n' >&2; exit 2; }

@@ -27,7 +27,7 @@ doors:
   voice: [services/ear.sh, services/mouth.sh, services/voice.sh, services/voice-handler.sh]
   knowledge: [services/skirnir.py, services/ground.py, services/research.py, services/query.sh]
   gate: [services/asks.sh, services/ask.sh, services/approve-fact.sh, services/escalate.sh, services/escalation-timer.sh]
-  rooms: [services/room.sh, services/room-squad.sh, services/rooms-wall-test.sh, services/walls-test.sh]
+  rooms: [services/room.sh, services/room-squad.sh, services/room-wall-test.sh, services/walls-test.sh]
 called_by:
   - "the Allfather, through Telegram and the desk"
   - "bin/agents/domain.sh call skirnir '<order>'"

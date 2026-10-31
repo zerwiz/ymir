@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """skirnir.py — the Allfather's assistant: a mouth with no hands.
 
+
+
 Skírnir is Freyr's messenger: he goes in his lord's place, speaks his words, and leaves the sword
 behind. That is the whole design here.
 
@@ -34,6 +36,18 @@ import sqlite3
 import subprocess
 import sys
 import time
+
+def _model_url() -> str:
+    """The model leg's ONE door (Rule 07): env -> config -> the seat's own rail.
+
+    Hardcoding http://127.0.0.1:8080 worked on heimdall and only on heimdall; on heart, forge or hand
+    the free-text leg failed while the voice doors honoured their env (Skirnir's own audit, 2026-10-31).
+    """
+    import os as _os
+    url = _os.environ.get("SKIRNIR_MODEL_URL") or _os.environ.get("OPENAI_BASE_URL") or ""
+    if url:
+        return url.rstrip("/") + "/chat/completions"
+    return "http://127.0.0.1:8080/v1/chat/completions"
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
@@ -794,7 +808,7 @@ def _rail(system: str, user: str, model: str, temperature: float = 0.0,
         if seed is not None:
             payload["seed"] = int(seed) % 2_147_483_647
         body = json.dumps(payload).encode()
-        req = urllib.request.Request("http://127.0.0.1:8080/v1/chat/completions", data=body,
+        req = urllib.request.Request(_model_url(), data=body,
                                      headers={"Content-Type": "application/json",
                                               "Authorization": f"Bearer {key}"})
         with urllib.request.urlopen(req, timeout=180) as resp:

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # escalate.sh — when Skírnir wonders, he asks the Allfather where the Allfather actually is.
 #
-#   bin/assistant/escalate.sh --tier owner --text "the question he could not answer"
+#   systems/skirnir/services/escalate.sh --tier owner --text "the question he could not answer"
 #
 # Two roads, both taken: a message in his PRIVATE chat with the assistant's own bot (so he can simply
 # reply, and the reply is a normal turn), and Hófvarpnir at HIGH (desktop + pocket) so a closed
@@ -70,7 +70,7 @@ if [ "$DRY" -eq 1 ]; then
 fi
 
 # the ask is a RECORD first, so an answer can find its way back to the person who asked
-ASK_ID="$(bash "$ROOT/bin/assistant/asks.sh" add --who "${WHO:-someone}" --chat "$CHAT" \
+ASK_ID="$(bash "$ROOT/systems/skirnir/services/asks.sh" add --who "${WHO:-someone}" --chat "$CHAT" \
   --channel "${CHANNEL:-telegram-dm}" --question "$TEXT" --context "${CONTEXT:-}" 2>/dev/null)"
 MSG="Allfather — ${WHO:-someone} asks (${TIER}, chat ${CHAT:-unknown}): “${TEXT:0:400}”. ${CONTEXT:+They said: ${CONTEXT:0:350}. }${REASON:+I could not answer it: ${REASON:0:120}. }
 Suggested reply (edit it or ignore it): “${DRAFT}”

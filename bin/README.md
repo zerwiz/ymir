@@ -11,7 +11,7 @@ vendored `fm-*` script kept byte-comparable to upstream on purpose.
 `disposition` says what happens to it: `keep`, `migrate → src/…` where the
 Python runtime already has the module, `retire` for orphans, `provenance`.
 
-bin[629]{file,does,kind,verdict,disposition,callers,lines}:
+bin[642]{file,does,kind,verdict,disposition,callers,lines}:
   "README.md","`bin/` — every file, what it does, and whether it is alive","data","tested","keep",19,-
   "README.md","Gróa — the updater, one per install","data","tested","keep",19,-
   "README.md","Gná — the one mail desk (production)","data","tested","keep",19,-
@@ -59,12 +59,15 @@ bin[629]{file,does,kind,verdict,disposition,callers,lines}:
   "calendar-ask.sh","bin/time/snotra/calendar-ask.sh -> systems/snotra/services/calendar/calendar-ask.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new do…","tool","tested","keep",1,16
   "calendar-attendees.sh","bin/time/snotra/calendar-attendees.sh -> systems/snotra/services/calendar/calendar-attendees.sh — RETIRED SHIM (plan 129, 2026-10-24); exec…","tool","wired","keep",0,16
   "calendar-auth.sh","bin/time/snotra/calendar-auth.sh -> systems/snotra/services/calendar/calendar-auth.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new…","tool","wired","keep",0,16
-  "calendar-invite.sh","bin/time/snotra/calendar-invite.sh -> systems/snotra/services/calendar/calendar-invite.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the…","tool","wired","keep",2,16
+  "calendar-invite.sh","bin/time/snotra/calendar-invite.sh -> systems/snotra/services/calendar/calendar-invite.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the…","tool","wired","keep",3,16
   "calendar-watch.sh","calendar-watch.sh — do not walk into a meeting by accident.","tool","wired","keep",0,81
   "capabilities.md","What Ymir can do — the capability register","data","wired","keep",2,28
   "capabilities.sh","A GENERATED FILE MUST BE A FUNCTION OF CONTENT ALONE (0.1.94/0.1.95/0.1.97 — three","tool","wired","keep",5,241
   "catalog.sh","catalog.sh — THE door to what this machine can serve.","tool","wired","keep",2,77
+  "channel_calendar.py","'''channel_calendar — the calendar channel for the action router.","data","orphan","retire",0,43
+  "channel_chat.py","'''channel_chat — the chat channel for the action router.","data","orphan","retire",0,41
   "channel_email.py","'''channel_email — the email channel for the action router.","data","wired","keep",0,132
+  "channel_kb.py","'''channel_kb — the knowledge base channel for the action router.","data","orphan","retire",0,41
   "channel_todo.py","'''channel_todo — the todo channel for the action router.","data","wired","keep",0,42
   "ci-verify.sh","ci-verify.sh — what CI must prove, in one command, for BOTH hosts.","tool","tested","keep",2,78
   "clickup_adapter.py","'''clickup_adapter — the ClickUp implementation of OrgAdapter.","data","wired","keep",0,177
@@ -90,7 +93,7 @@ bin[629]{file,does,kind,verdict,disposition,callers,lines}:
   "doc-sweep.sh","doc-sweep.sh — the shelf-sweeper (plan 63): find the operator's documents, inside","tool","tested","keep",0,589
   "docs-claims-guard.sh","docs-claims-guard.sh — Rule 27: a user-facing document may not name a road that is closed.","tool","wired","keep",0,40
   "docs-guard.sh","docs-guard.sh — docs/ is the PUBLIC, user-facing tree.","tool","wired","keep",3,55
-  "domain.sh","domain.sh — the ONE door that starts, reports and stops a domain's keeper.","tool","wired","keep",0,181
+  "domain.sh","domain.sh — the ONE door that starts, reports and stops a domain's keeper.","tool","wired","keep",0,190
   "doors.sh","doors.sh — a door register for ANY directory, rendered from the tree (plan 115 P7).","tool","wired","migrate → src/ymir_runtime/doors.py",0,32
   "ear.sh","bin/assistant/ear.sh -> systems/skirnir/services/ear.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
   "editor-place.sh","editor-place.sh — the editor is UNMANAGED by default: it opens on the","tool","wired","keep",3,223
@@ -119,6 +122,7 @@ bin[629]{file,does,kind,verdict,disposition,callers,lines}:
   "escalation-timer.sh","bin/assistant/escalation-timer.sh -> systems/skirnir/services/escalation-timer.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door…","tool","wired","keep",0,16
   "essence-fetch.sh","essence-fetch.sh — the npm world's self-heal: npm's packer refuses dotfolders","tool","wired","keep",2,18
   "extension-api-check.sh","extension-api-check.sh — a Ymir extension must speak Pi's ACTUAL tool API.","tool","wired","keep",1,113
+  "fathom_ingest.py","'''fathom_ingest — Fathom transcript ingestion adapter.'''","data","orphan","retire",0,48
   "feature-inventory.sh","feature-inventory.sh — every feature the system CLAIMS, in one checklist.","tool","wired","keep",0,88
   "features-guard.sh","features-guard.sh — every feature page is catalogued (Rule 14).","tool","wired","keep",0,58
   "fixes-guard.sh","fixes-guard.sh — the delivery gate reads, and it checks the RECORD.","tool","tested","keep",4,196
@@ -303,6 +307,7 @@ bin[629]{file,does,kind,verdict,disposition,callers,lines}:
   "gna_import.py","'''Gná's importer: one account, read-only, every message once.","tool","wired","keep",1,643
   "gna_judge.py","'''Gná's judge: rules first, and every verdict carries the rule that gave it.","tool","wired","keep",0,169
   "gna_store.py","'''Gná's store: one message once, and the account is the boundary.","tool","wired","keep",0,257
+  "gong_ingest.py","'''gong_ingest — Gong transcript ingestion adapter.'''","data","orphan","retire",0,50
   "google-auth.sh","bin/time/snotra/google-auth.sh -> systems/snotra/services/calendar/google-auth.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door…","tool","wired","keep",0,16
   "graphics-lib.sh","graphics-lib.sh — the machine's graphics truth, shared by every reader.","lib","wired","keep",3,167
   "groa-agent.sh","groa-agent.sh — Gróa's body on a schedule: the updater, leashed, one per install.","tool","wired","keep",1,100
@@ -345,6 +350,7 @@ bin[629]{file,does,kind,verdict,disposition,callers,lines}:
   "journal-receive.sh","journal-receive.sh — the HEART folds the bodies' journals into one record.","tool","tested","keep",1,137
   "journal-reconcile.sh","journal-reconcile.sh — push this machine's outbox to the heart, when it answers.","tool","tested","keep",2,131
   "kb-export.sh","bin/assistant/kb-export.sh -> systems/skirnir/services/kb-export.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
+  "knit_ingest.py","'''knit_ingest — Knit unified meeting API adapter.","data","orphan","retire",0,78
   "learn-home.sh","bin/assistant/learn-home.sh -> systems/skirnir/services/learn-home.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
   "learn-house.sh","bin/assistant/learn-house.sh -> systems/skirnir/services/learn-house.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says…","tool","wired","keep",0,16
   "learn-site.sh","bin/assistant/learn-site.sh -> systems/skirnir/services/learn-site.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
@@ -366,6 +372,7 @@ bin[629]{file,does,kind,verdict,disposition,callers,lines}:
   "mcp-gateway.sh","mcp-gateway.sh — the body's ONE local door in front of the record MCPs.","tool","tested","keep",4,278
   "mcp-read.py","'''mcp-read.py — Gimlé MCP, phase 1: the six read tools, audited, behind a token.","tool","wired","keep",0,262
   "meet.sh","meet.sh — one command: 'put a meeting with <person> in the calendar, with a Meet link'.","tool","wired","keep",2,90
+  "meet_ingest.py","'''meet_ingest — Google Meet transcript ingestion adapter.'''","data","orphan","retire",0,45
   "meeting-record-guard.sh","bin/time/snotra/meeting-record-guard.sh -> systems/snotra/services/approve/meeting-record-guard.sh — RETIRED SHIM (plan 129, 2026-10-24); e…","tool","wired","keep",0,16
   "mimir-bridge.py","'''mimir-bridge.py — the HTTP face of the well (Mimirsbrunn / engram, :4602).","tool","tested","keep",4,791
   "mimir-bridge.sh","mimir-bridge.sh — raise/lower the well bridge (Mimirsbrunn on :4602).","tool","tested","keep",8,171
@@ -421,6 +428,7 @@ bin[629]{file,does,kind,verdict,disposition,callers,lines}:
   "open-design.sh","open-design.sh — the Allfather's door to OpenDesign (Hnoss) on this seat.","tool","wired","keep",0,85
   "opendesign.sh","opendesign.sh — start / stop / status for OpenDesign (the design forge, Hnoss).","tool","wired","keep",0,88
   "org_adapter.py","'''org_adapter — the abstract base class for organization tool adapters.","data","wired","keep",0,244
+  "otter_ingest.py","'''otter_ingest — Otter.ai transcript ingestion adapter.'''","data","orphan","retire",0,45
   "packaged-gate.sh","packaged-gate.sh — prove the PUBLISHED artifact, not the tree.","tool","wired","keep",0,103
   "participants-fill.sh","bin/time/snotra/participants-fill.sh -> systems/snotra/services/letters/participants-fill.sh — RETIRED SHIM (plan 129, 2026-10-24); execs t…","tool","wired","keep",0,16
   "path-ledger-guard.sh","path-ledger-guard.sh — Rule 25: a path that MOVED may not be referenced again.","tool","tested","keep",0,121
@@ -455,6 +463,7 @@ bin[629]{file,does,kind,verdict,disposition,callers,lines}:
   "queue.sh","queue.sh — THE work queue, and it is DERIVED, never authored.","tool","wired","migrate → src/ymir_runtime/state/queue.py",4,195
   "rail-resolve.sh","rail-resolve.sh — the DOOR to the living rail resolver (plan 51, Parts 9a/9b/9c).","tool","tested","keep",5,72
   "ratatoskr.sh","ratatoskr.sh — Ymir's front door to the A2A engine (`a2abridge`).","tool","wired","keep",1,86
+  "readai_ingest.py","'''readai_ingest — Read AI transcript ingestion adapter.","data","orphan","retire",0,75
   "readme-claims.sh","readme-claims.sh — the user-facing documents must not claim what the tree does not hold.","tool","wired","keep",1,106
   "realm-lib.sh","realm-lib.sh — resolve the ACTIVE realm (tenant) without assuming the company's.","lib","wired","keep",5,46
   "redact.py","'''redact.py — the guardian's own ward (plan 98 §6, §'the redaction rule').","tool","wired","keep",1,112
@@ -467,7 +476,7 @@ bin[629]{file,does,kind,verdict,disposition,callers,lines}:
   "role-lib.sh","role-lib.sh — what this machine IS, and the components its role owes","lib","tested","keep",1,125
   "role.sh","role.sh — declare, read, and validate a machine's ROLE (plan 51, Phase 1).","tool","tested","keep",7,191
   "room-squad.sh","bin/assistant/room-squad.sh -> systems/skirnir/services/room-squad.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
-  "room-wall-test.sh","bin/assistant/room-wall-test.sh -> systems/skirnir/services/room-wall-test.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and…","tool","wired","keep",0,16
+  "room-wall-test.sh","bin/assistant/room-wall-test.sh -> systems/skirnir/services/room-wall-test.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and…","tool","wired","keep",1,16
   "room.sh","bin/assistant/room.sh -> systems/skirnir/services/room.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",4,16
   "rules-number-guard.sh","rules-number-guard.sh — the house law is NUMBERED, so no two rules may share a number,","tool","tested","keep",0,83
   "rules.py","'''rules.py — the judgement, deterministic and first (plan 98 §4.2).","tool","wired","keep",2,102
@@ -527,6 +536,7 @@ bin[629]{file,does,kind,verdict,disposition,callers,lines}:
   "snotra-grooming.sh","snotra-grooming.sh — the Monthly Grooming card (DEC-20261022-04).","tool","wired","keep",0,14
   "snotra-harvest.py","bin/time/snotra/snotra-harvest.py -> systems/snotra/services/ear/snotra-harvest.py — RETIRED SHIM (plan 129, 2026-10-24); execs the new doo…","tool","wired","keep",0,16
   "snotra-harvest.sh","bin/time/snotra/snotra-harvest.sh -> systems/snotra/services/ear/snotra-harvest.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new doo…","tool","wired","keep",0,16
+  "snotra-ingest.sh","snotra-ingest.sh — ingest transcripts from external sources into the meeting pipeline.","data","wired","keep",0,69
   "snotra-init.sh","bin/time/snotra/snotra-init.sh -> systems/snotra/services/record/snotra-init.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door a…","tool","wired","keep",1,16
   "snotra-iscall.sh","bin/time/snotra/snotra-iscall.sh -> systems/snotra/services/ear/snotra-iscall.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door…","tool","tested","keep",1,16
   "snotra-layout.py","bin/time/snotra/snotra-layout.py -> systems/snotra/services/record/snotra-layout.py — RETIRED SHIM (plan 129, 2026-10-24); execs the new do…","tool","wired","keep",0,16
@@ -575,12 +585,14 @@ bin[629]{file,does,kind,verdict,disposition,callers,lines}:
   "syn-watch-arm.sh","syn-watch-arm.sh — the ARM as a SERVICE, and this is its thin client.","tool","tested","keep",6,187
   "syn-watch.sh","syn-watch.sh — Sýn as a SERVICE: one supervision watcher per home, seated","tool","tested","keep",4,53
   "tailscale-sync.sh","tailscale-sync.sh — sync the Allfather's pi data across his OWN machines over","tool","wired","keep",0,205
+  "teams_ingest.py","'''teams_ingest — Microsoft Teams transcript ingestion adapter.'''","data","orphan","retire",0,50
   "telegram-bot.sh","telegram-bot.sh — the horn answers (W0036).","tool","wired","keep",0,84
   "telegram.sh","bin/assistant/telegram.sh -> systems/skirnir/services/telegram.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
   "test_gna.py","'''The proofs plan 116 asks for before the desk is shown to a human.'''","data","wired","keep",3,603
   "test_outbound_gate.py","'''The outbound gate's proofs — plan 124 §7, his word 2026-10-24:","tool","wired","keep",0,346
   "toolchain.sh","toolchain.sh — the provider wrappers (W0033).","tool","wired","keep",0,75
   "topology.sh","topology.sh — what IS this machine in the fleet, and is it talking to the heart?","tool","tested","keep",6,139
+  "transcript_ingest.py","'''transcript_ingest — the transcript ingestion adapter interface.","data","orphan","retire",0,92
   "trello-map.sh","bin/time/snotra/trello-map.sh -> systems/snotra/services/cron/trello-map.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and s…","tool","wired","keep",0,16
   "trello_adapter.py","'''trello_adapter — the Trello implementation of OrgAdapter.","data","wired","keep",0,128
   "trello_client.py","bin/time/snotra/trello_client.py -> systems/snotra/services/cron/trello_client.py — RETIRED SHIM (plan 129, 2026-10-24); execs the new door…","tool","wired","keep",1,16
@@ -641,7 +653,8 @@ bin[629]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-validate.sh","ymir-validate.sh — verify the installation actually works.","tool","wired","keep",3,296
   "ymir.js","/**","tool","wired","keep",5,263
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
+  "zoom_ingest.py","'''zoom_ingest — Zoom transcript ingestion adapter.'''","data","orphan","retire",0,56
 
-**Tally.** verdict: wired=392, tested=237
+**Tally.** verdict: wired=393, tested=237, orphan=12
 
-**Tally.** disposition: keep=616, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
+**Tally.** disposition: keep=617, retire=12, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1

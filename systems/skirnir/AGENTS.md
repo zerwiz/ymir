@@ -14,7 +14,7 @@ the rooms' state are lost if this folder is deleted.
 | the voice | `services/` — `ear.sh` · `mouth.sh` · `voice.sh` · `voice-handler.sh` · `speech-text.py` |
 | the knowledge | `services/` — `skirnir.py` · `ground.py` · `research.py` · `learn*.sh` · `query.sh` · `report.sh` |
 | the gate | `services/` — `asks.sh` · `ask.sh` · `approve-fact.sh` · `ban.sh` · `group-allow.sh` · `escalate.sh` · `escalation-timer.sh` |
-| the rooms | `services/` — `room.sh` · `room-squad.sh` · `rooms-wall-test.sh` · `walls-test.sh` · `smoke.sh` |
+| the rooms | `services/` — `room.sh` · `room-squad.sh` · `room-wall-test.sh` · `walls-test.sh` · `smoke.sh` |
 | his declaration | `domain.yaml` — folder · keeper · board · memory · doors · called_by · never |
 
 **The laws that bind you here**

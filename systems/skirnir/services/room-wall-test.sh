@@ -8,7 +8,7 @@
 # Every case runs against a THROWAWAY home (a temp dir with its own registry and record), so the
 # real rooms are never touched.
 #
-# Usage: bin/assistant/room-wall-test.sh [--verbose]
+# Usage: systems/skirnir/services/room-wall-test.sh [--verbose]
 # Exit:  0 all pass · 1 a failure
 set -u
 
@@ -39,7 +39,7 @@ check() {  # <name> <expected-rc> <actual-rc> [note]
     fail=$((fail + 1)); printf '  FAIL  %s (expected rc %s, got %s)%s\n' "$1" "$2" "$3" "${4:+ — $4}"
   fi
 }
-room() { YMIR_HOME="$TMP" bash "$ROOT/bin/assistant/room.sh" "$@" 2>/dev/null; }
+room() { YMIR_HOME="$TMP" bash "$ROOT/systems/skirnir/services/room.sh" "$@" 2>/dev/null; }
 lines() { local f="$TMP/hodd/state/assistant/rooms/test-room.jsonl"; [ -f "$f" ] && wc -l <"$f" | tr -d ' ' || echo 0; }
 
 printf 'room_wall_test[9]{case,expectation}:\n'
