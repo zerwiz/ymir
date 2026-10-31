@@ -13,6 +13,7 @@ domain: skirnir
 name: Skírnir
 figure: Skírnir — Frey's messenger, who is sent on errands and returns with news
 kind: system            # not an app: no screen of his own. The desk and Telegram may READ him.
+keeper: skirnir
 stateful: true          # he owns a knowledge base, the gate's pending asks, and the rooms' state.
 
 folder: systems/skirnir/
@@ -37,3 +38,13 @@ never:
   - "speak for the Allfather in a room he has not opened"
   - "hold a secret value — he references the vault, he never carries it"
   - "write outside systems/skirnir/ and his own memory namespace"
+
+# PLAN 101 IS LAW HERE: "the model has NO tool calls at all. The orchestrator decides what may be
+# fetched or sent, and the credentials live only there." So Skírnir is seated as a BRAIN with no hands:
+# he answers and drafts, his scripts are the doors, and any action is taken by the house — never by the
+# model in his seat. The vault is not merely forbidden here; it is unreachable by construction.
+seat:
+  tools: none                 # none | a list (read, grep, find, ls)
+  mcp: none                   # no door is wired into his seat
+  cwd: systems/skirnir/
+  may_write: false

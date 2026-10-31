@@ -16,6 +16,7 @@ domain: snotra
 name: Snotra
 figure: Snotra — the wise one of Ásgarðr; the keeper of the meeting record
 kind: system            # not an app: there is no screen of its own (plan 129 §12). Hlidskjalf may READ it.
+keeper: snotra
 stateful: true          # it owns records. Deleting the folder loses a meeting's memory, so it is a system.
 
 folder: systems/snotra/
@@ -152,3 +153,12 @@ policy:                  # plan 129 §20.2 — data, not code, until an evaluato
   - subject: keeper:*        action: ask      resource: systems/snotra/**   effect: allow
   - subject: keeper:*        action: write    resource: systems/snotra/**   effect: deny
   - subject: keeper:snotra   action: send     resource: mail:partner.*      effect: deny   # the gate holds the socket
+
+# THE SEAT (plan 149 §2): what a keeper may HOLD when it is seated — never more than its domain needs.
+# Snotra curates records, so she reads her own folder and nothing else; she does not get bash, and she
+# does not get a pen. A change to her code is an errand with a brief, not a keeper improvising.
+seat:
+  tools: [read, grep, find, ls]
+  mcp: none
+  cwd: systems/snotra/
+  may_write: false
