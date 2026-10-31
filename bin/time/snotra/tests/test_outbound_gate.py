@@ -42,9 +42,9 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
-MAIL = ROOT / "bin/time/snotra/mail-send.sh"
-CAL = ROOT / "bin/time/snotra/calendar-invite.sh"
-APPROVE = ROOT / "bin/time/snotra/snotra-approve.sh"
+MAIL = ROOT / "bin/time/snotra/mail-send.sh"  # allow-superseded-path: the SHIM is the door under test — a caller nobody has repointed must still work
+CAL = ROOT / "bin/time/snotra/calendar-invite.sh"  # allow-superseded-path: as above — the retired shim is what a stale caller still runs
+APPROVE = ROOT / "bin/time/snotra/snotra-approve.sh"  # allow-superseded-path: as above — the shim must exec the moved door
 
 # ── the two APIs, stood in for ───────────────────────────────────────────────────────
 
