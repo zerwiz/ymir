@@ -7,6 +7,6 @@
 # participant or an NDA hash.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-INIT="$ROOT/bin/time/snotra/snotra-init.sh"
+INIT="$ROOT/systems/snotra/services/record/snotra-init.sh"
 [ -x "$INIT" ] || { echo "0011: snotra-init missing — nothing touched"; exit 0; }
 "$INIT" apply

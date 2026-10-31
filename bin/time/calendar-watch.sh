@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # calendar-watch.sh — do not walk into a meeting by accident.
 #
-# Reads the calendar through Mánagandr (bin/time/snotra/calendar-ask.sh) and, when an event is
+# Reads the calendar through Mánagandr (systems/snotra/services/calendar/calendar-ask.sh) and, when an event is
 # about to start, says so through the ONE door (bin/notify/send.sh) — which means the reminder
 # reaches the session (the arm), the desktop, the phone and Telegram by the same policy as
 # everything else.
@@ -30,7 +30,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-JSON="$(bash "$ROOT/bin/time/snotra/calendar-ask.sh" what 2>/dev/null)"
+JSON="$(bash "$ROOT/systems/snotra/services/calendar/calendar-ask.sh" what 2>/dev/null)"
 [ -n "$JSON" ] || { printf 'calendar-watch[1]{state}: "the calendar did not answer"\n'; exit 1; }
 
 ROOT_DIR="$ROOT" LEAD_Q="$LEAD" DRY_Q="$DRY" JSON_Q="$JSON" python3 - <<'PY'

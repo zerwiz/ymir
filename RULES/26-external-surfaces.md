@@ -53,11 +53,11 @@ Exit `0` clean, `1` finding. Every finding is printed as
 
 ## Where it is wired
 
-- `bin/time/snotra/mail-send.sh` — the body and HTML, and every text-like attachment,
+- `systems/snotra/services/letters/mail-send.sh` — the body and HTML, and every text-like attachment,
   before the MIME is built.
-- `bin/time/snotra/snotra-trello.py` — every card name, description and checklist item,
+- `systems/snotra/snotra-trello.py` — every card name, description and checklist item,
   before the API call.
-- `bin/time/snotra/snotra-render-email.sh` / `snotra-render-pdf.sh` — the rendered letter
+- `systems/snotra/services/letters/snotra-render-email.sh` / `snotra-render-pdf.sh` — the rendered letter
   and record are checked by the send/export path that carries them.
 
 Law 26 sits beside Rule 04 (the hoard) and Rule 15 (vault confidentiality): Rule 04 says
@@ -119,3 +119,18 @@ indexed, mirrored and copied, and no correction can follow it.
 
 So `private-guard`'s silence on a name was correct and insufficient. `people-guard` covers the tree:
 **a person from the operator's registries never appears in it — a role does.**
+
+---
+
+## Correction (2026-10-24) — the paths above moved to Snotra's own shelf
+
+Appended, not rewritten (Rule 06). Plan 129 moved the meeting system out of the time shelf on 2026-10-24:
+`bin/time/snotra/<door>` became `systems/snotra/services/<service>/<door>`. The command examples in this rule were
+repointed on the same day and are live; the move's own record is `.agents/paths-ledger.yaml` (migration
+`0014-systems-shelf`) and the fix note `docs/fixes/snotra/2026-10-24-snotra-becomes-a-system.md`.
+
+What this rule names, in its new spelling:
+- the surfaces named above: `mail-send.sh`, `snotra-trello.py`, `snotra-render-email.sh`, `snotra-render-pdf.sh`
+
+A shim survives at the old path so nothing breaks while callers are repointed; it is retired by that dated fix
+note, never silently. The law in this file is unchanged — only the shelf the doors are kept on.

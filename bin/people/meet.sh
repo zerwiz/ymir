@@ -80,10 +80,10 @@ if [ "$DRY" -eq 1 ]; then
   exit 0
 fi
 
-bash "$ROOT/bin/time/snotra/calendar-invite.sh" create --title "$TITLE" --start "$START" --end "$END" \
+bash "$ROOT/systems/snotra/services/calendar/calendar-invite.sh" create --title "$TITLE" --start "$START" --end "$END" \
   --attendees "$EMAIL" --meet 2>&1 | tail -4
 if [ -n "$NOTE" ]; then
   TMP="$(mktemp)"; printf '%s\n' "$NOTE" > "$TMP"
-  bash "$ROOT/bin/time/snotra/mail-send.sh" draft --to "$EMAIL" --subject "$TITLE" --body "$TMP" 2>&1 | tail -2
+  bash "$ROOT/systems/snotra/services/letters/mail-send.sh" draft --to "$EMAIL" --subject "$TITLE" --body "$TMP" 2>&1 | tail -2
   rm -f "$TMP"
 fi

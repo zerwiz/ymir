@@ -23,5 +23,5 @@ are skipped.
 **What it does not decide.** Whether you attend. It says a meeting is starting; you say what to do
 about it.
 
-**If it does not work.** `bin/time/snotra/calendar-ask.sh probe` — if the grant has lapsed, the
+**If it does not work.** `systems/snotra/services/calendar/calendar-ask.sh probe` — if the grant has lapsed, the
 probe says so. `--dry-run` on the watcher shows what it would have said.

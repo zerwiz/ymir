@@ -1,16 +1,15 @@
 #!/usr/bin/env bash
-# snotra-board.sh — a place declares a board; this door makes it, once.
+# bin/time/snotra/snotra-board.sh -> systems/snotra/services/cron/snotra-board.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and says so.  # allow-superseded-path: this header RECORDS the move, it does not make it
 #
-#   snotra-board.sh show                 the places this home declares
-#   snotra-board.sh check  <place>       is the board there, with the lists and labels the place names?
-#   snotra-board.sh ensure <place>       create what is missing — never a duplicate, never a rename
-#
-# A board is found by NAME through trello-map.yaml. `ensure` creates it private, in the organisation the
-# house's other boards already belong to, then re-reads the board and proves the lists exist. Exit 1 when a
-# list or label the place names is still missing afterwards.
+# It exists so a caller nobody has repointed yet still works. It is retired by the dated follow-up in
+# docs/fixes/snotra/2026-10-24-snotra-becomes-a-system.md, and .agents/paths-ledger.yaml records the move.
 set -euo pipefail
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-case "${1-}" in
-  -h|--help|"") sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
-esac
-exec python3 "$ROOT/bin/time/snotra/snotra-board.py" "$@"
+_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_root="$(cd "$_d/../../.." && pwd)"
+_new="$_root/systems/snotra/services/cron/snotra-board.sh"
+if [ ! -e "$_new" ]; then
+  printf 'snotra: the door moved to systems/snotra/services/cron/snotra-board.sh and is not there\n' >&2
+  exit 127
+fi
+printf 'snotra: bin/time/snotra/ has MOVED to systems/snotra/ — call systems/snotra/services/cron/snotra-board.sh (plan 129)\n' >&2
+exec "$_new" "$@"

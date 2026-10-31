@@ -1,14 +1,14 @@
 # The pipeline — one command, and what it refuses
 
-`bin/time/snotra/snotra-pipeline.sh` runs the whole chain for a meeting folder. Everything else in this
+`systems/snotra/services/cron/snotra-pipeline.sh` runs the whole chain for a meeting folder. Everything else in this
 shelf is a step of it.
 
 ## The grammar
 
 ```bash
-bin/time/snotra/snotra-pipeline.sh run <meeting-dir> [--dry-run] [--draft] [--shrink]
-bin/time/snotra/snotra-pipeline.sh run --recent [DAYS] [--dry-run] [--draft] [--shrink]
-bin/time/snotra/snotra-pipeline.sh status <meeting-dir>
+systems/snotra/services/cron/snotra-pipeline.sh run <meeting-dir> [--dry-run] [--draft] [--shrink]
+systems/snotra/services/cron/snotra-pipeline.sh run --recent [DAYS] [--dry-run] [--draft] [--shrink]
+systems/snotra/services/cron/snotra-pipeline.sh status <meeting-dir>
 ```
 
 | switch | what it changes | what it never changes |
@@ -59,15 +59,15 @@ Every run appends **one rune** to the ledger, so an unattended night leaves a ma
 
 ```bash
 D=~/Documents/ymirhome/svartalfaheim/<company>/meetings/<YYYY-MM-DD>-<slug>
-bin/time/snotra/snotra-pipeline.sh run "$D" --dry-run     # what would happen — read it first
-bin/time/snotra/snotra-pipeline.sh run "$D" --draft       # do it, and prepare the letters
+systems/snotra/services/cron/snotra-pipeline.sh run "$D" --dry-run     # what would happen — read it first
+systems/snotra/services/cron/snotra-pipeline.sh run "$D" --draft       # do it, and prepare the letters
 ```
 
 **Then the two human acts**, in this order:
 
 1. **read the letters** in `<meeting>/letters/*.txt` — they are what goes out;
-2. **approve and send**: `bin/time/snotra/snotra-approve.sh approve <draft-id>` per letter, then
-   `bin/time/snotra/snotra-letter.sh send "$D" --approved`. Nothing sends without this.
+2. **approve and send**: `systems/snotra/services/approve/snotra-approve.sh approve <draft-id>` per letter, then
+   `systems/snotra/services/letters/snotra-letter.sh send "$D" --approved`. Nothing sends without this.
 
 **A meeting that went wrong** — the door names the sentence, and the sentence names the remedy:
 
@@ -89,12 +89,12 @@ The chain is safe to schedule: it is idempotent, locked, and writes a rune. The 
 
 ```yaml
 - at: "03:10"
-  cmd: "bin/time/snotra/snotra-pipeline.sh run --recent 1 --draft"
+  cmd: "systems/snotra/services/cron/snotra-pipeline.sh run --recent 1 --draft"
   note: "Snotra: last night's meetings → record, board, letters (drafts only)"
 ```
 
 **Two prerequisites** the job depends on, both already true on this seat: the Vexa stack running with the
-STT shim reachable (`bin/time/snotra/stt-wire.sh`), and the Trello grant in `~/.pi/agent/mcp-auth.json`.
+STT shim reachable (`systems/snotra/services/ear/stt-wire.sh`), and the Trello grant in `~/.pi/agent/mcp-auth.json`.
 A night where either is missing fails **loudly** at that step and stops — it does not half-file a meeting.
 
 ## What the pipeline deliberately does not do

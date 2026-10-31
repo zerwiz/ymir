@@ -83,7 +83,7 @@ fleet[9]{service,source,unit,port,role}:
   "skills-mcp","packages/mcp/skills/server.mjs","skills-mcp.service","8319","heart + dev"
   "skuld","tools/tickets-mcp/server.mjs","skuld.service","8320","heart"
   "snotra","tools/snotra/server.mjs","snotra.service","8321","heart (read-only minutes)"
-  "snotra-detect","bin/time/snotra/snotra-detect.sh","snotra-detect.service","—","CAPABILITY: any seat with a microphone (the ear's watch; never the heart)"
+  "snotra-detect","systems/snotra/services/ear/snotra-detect.sh","snotra-detect.service","—","CAPABILITY: any seat with a microphone (the ear's watch; never the heart)"
 ```
 
 ## OpenCode commands
@@ -108,7 +108,7 @@ commands[5]{command,purpose}:
   "bin/agents/eindri-seen.sh","bridge condition: has the smith reported? (report file, or herdr left working)"
   "bin/agents/eindri-acclaim.sh","the push path: file the report/status, mark the ONE shared ledger (bin/agents/eindri-wake-lib.sh), append the durable wake queue + desktop note; the worker's own terminal act"
   "bin/agents/eindri-handoff.sh","the handoff failsafe: sweep undelivered reports/questions into the wake queue, idempotent on the shared ledger (run on re-arm and on the 06:45 cron row)"
-  "bin/time/snotra/hall-snapshot.sh","the planning feed: real system state -> public-safe livehall.json for the Óðrerir Hall"
+  "systems/snotra/services/cron/hall-snapshot.sh","the planning feed: real system state -> public-safe livehall.json for the Óðrerir Hall"
 ```
 
 ## The marketing stack doors (provisionable — one stack, any computer)

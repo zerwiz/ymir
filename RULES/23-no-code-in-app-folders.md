@@ -53,3 +53,46 @@ what_breaks[3]{answer,home}:
 fails when a directory under `bin/` is named after an application, or when an app appears in
 `bin/` under a name that carries no function. The audit that motivated the rule (what is
 misfiled today, and where each file goes) is plan **82**.
+
+---
+
+## Appended 2026-10-24 — `systems/`: a system is not an app, and ownership is the axis
+
+Plan 129 (§12–§13, §18). This rule's opening — *"an application is something the operator opens"* — is right and
+stands. It did not cover a headless thing that **owns records and runs whether or not anyone watches**, and because
+it did not, Snotra's 75 files were filed on a *time* shelf (`bin/time/snotra/`) where no answer to "who keeps this?"  # allow-superseded-path: this sentence RECORDS the move, it does not make it
+existed. Three sentences are appended, and one axis:
+
+```
+appended[4]{rule,what_it_means}:
+  "A SYSTEM IS NOT AN APP","`systems/<system>/` holds headless, stateful systems — no UI of their own. Deleting one loses a record"
+  "AN APP MAY READ A SYSTEM, NEVER CONTAIN IT","Hlidskjalf shows Snotra's record; it does not hold Snotra's code"
+  "A SERVICE IS A PROCESS, NOT A PLACE","a service's folder sits INSIDE the system that owns it — `systems/snotra/services/ear/` — and is started by that system's door. A top-level `services/` is the same mistake in a different coat"
+  "OWNERSHIP IS THE AXIS","a domain is the primary folder; a technical layer (time, records, agents, gates, mail, people, room) becomes a folder INSIDE a domain or part of the shared kit; `bin/` is a dispatcher that shrinks"
+```
+
+**The tests that decide which shelf a thing belongs on** (measured counts in plan 129 §12):
+
+```
+kinds[7]{kind,test,where_it_lives}:
+  "APP","does the operator open it and see it?","apps/<app>/"
+  "SYSTEM","does it own state or records, and run whether or not anyone watches?","systems/<system>/"
+  "SERVICE","does something connect to it while it runs (it holds a socket)?","inside its system: systems/<system>/services/<service>/"
+  "TOOL","do you run it and does it exit?","bin/<layer>/<function>.sh"
+  "SKILL","does an agent LOAD it as procedure?","`.agents/skills/`"
+  "KEEPER","is it a named identity with a profile, bounds and a memory?","`.agents/agents/<figure>/`"
+  "DOMAIN","do a keeper, a system, a board and a memory agree on one name?","`hodd/identity/domains.yaml` binds them"
+```
+
+**A system declares itself** in `systems/<system>/domain.yaml` — folder · keeper · board · memory namespace ·
+services and their doors · what it may ask · what it may never touch · its `policy:` block (data, not code). The
+declaration is the authority for what lives in the folder; a folder that disagrees with its `domain.yaml` is drift.
+
+**The first system to land under this append is Snotra** (`systems/snotra/`, 2026-10-24): a one-line redirect was
+seated at the old path first, the callers were repointed in batches, `.agents/paths-ledger.yaml` records the move
+and `.agents/migrations/0014-systems-shelf.sh` heals an existing home. `bin/time/` now holds only the clock and the
+Nornir jobs, and its calendar door belongs to Snotra (plan 129 §18).
+
+**Still owed by this append, named rather than papered over:** a placement guard that fails when a layer directory
+outgrows its name (plan 129 §15/§18), and the same move for `bin/assistant` → `systems/skirnir/`, `bin/mail` →
+`systems/gna/`. Until the guard exists, this rule is enforced by review, not by a gate.

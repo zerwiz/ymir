@@ -1,0 +1,154 @@
+version: 1
+updated: "2026-10-24"
+
+# systems/snotra/domain.yaml — Snotra's own declaration, in the domain's folder.
+#
+# WHY THIS FILE EXISTS (plan 129 §5, §12, §13): Snotra is a SYSTEM, not an app — headless, stateful, and it owns
+# records that are lost if it is deleted. Its code sat in `bin/time/snotra/`, a time shelf it had no business in,
+# so "who keeps this?" had no answer in the folder itself. The register in the home
+# (`hodd/identity/domains.yaml`) says who is accountable; this file says what the domain IS, where its parts live,
+# and what it may never touch. Two files, one domain: the register binds, this declares.
+#
+# The shape is plan 129 §5's `domain.yaml[6]` (folder · board · memory · doors · called_by · never) plus the
+# `policy:` block of §20.2 (subject · action · resource · effect), which stays DATA until an evaluator lands.
+
+domain: snotra
+name: Snotra
+figure: Snotra — the wise one of Ásgarðr; the keeper of the meeting record
+kind: system            # not an app: there is no screen of its own (plan 129 §12). Hlidskjalf may READ it.
+stateful: true          # it owns records. Deleting the folder loses a meeting's memory, so it is a system.
+
+folder: systems/snotra/
+# The one path this keeper may write — enforced by an errand brief, checked by `bin/agents/domain.sh check`
+# when that door lands (plan 129 phase 5). Today the enforcement is the brief and this declaration.
+write:
+  - systems/snotra/**
+
+board:
+  name: snotra/projects
+  # A place declares its board; `systems/snotra/services/cron/snotra-board.sh` makes it once, from the place
+  # profile, never by hand. The board is a PROJECTION of the meeting record — the record is the truth.
+  declared_by: place profile (`board:` block)
+  made_by: systems/snotra/services/cron/snotra-board.sh
+
+memory:
+  namespace: domain:snotra
+  well: bin/records/mimir.sh        # recall · observe — the real well, scoped by tag when recall lands it
+  shelf: systems/snotra/memory/     # the curated few lines; the episodes stay in the well (Rule 20)
+
+# The doors this domain OWNS. Each one is a door a caller may run; the shim at the old path is retired by
+# .agents/paths-ledger.yaml + migration 0014-systems-shelf, never silently.
+services:
+  ear:
+    what: hearing — the watch that arms itself, the capture, the transcription, the voice
+    doors:
+      - services/ear/snotra-detect.sh      # the ear's watch (the standing door)
+      - services/ear/snotra-iscall.sh
+      - services/ear/snotra-meet.sh
+      - services/ear/snotra-capture.sh
+      - services/ear/snotra-transcribe.sh
+      - services/ear/snotra-transcribe-bot.sh
+      - services/ear/snotra-harvest.sh
+      - services/ear/snotra-live.sh        # the live tail
+      - services/ear/snotra-stream.sh
+      - services/ear/snotra-voice.py
+      - services/ear/snotra-voice-device.sh
+      - services/ear/snotra-talk.py
+      - services/ear/snotra-cdp.py
+      - services/ear/snotra-bot.sh
+      - services/ear/snotra-autojoin.sh
+      - services/ear/stt-shim.py
+      - services/ear/stt-wire.sh
+      - services/ear/snotra-ensure.sh
+      - services/ear/audio-retention.sh
+      - services/ear/snotra-audio-ladder.sh
+    processes:
+      - "stt-shim (:10300) — a service of the ear, started by its own unit"
+      - "snotra-detect — the watch; systemd supervises the service, not the keeper (plan 129 §14)"
+    container: services/ear/container/     # the whisper container's own definitions
+  record:
+    what: the record contract every transport writes through
+    doors:
+      - services/record/snotra-store.sh
+      - services/record/snotra_paths.py
+      - services/record/snotra-layout.sh
+      - services/record/snotra-provenance.sh
+      - services/record/snotra-evidence.sh
+      - services/record/snotra-mine.sh
+      - services/record/snotra-attrib.sh
+      - services/record/snotra-init.sh
+  letters:
+    what: the letters out — one per participant, from the record
+    doors:
+      - services/letters/snotra-letter.sh
+      - services/letters/snotra-render-email.sh
+      - services/letters/snotra-render-pdf.sh
+      - services/letters/mail-send.sh
+      - services/letters/participants-fill.sh
+  approve:
+    what: the operator's word, bound to the exact bytes of a letter
+    doors:
+      - services/approve/snotra-approve.sh
+      - services/approve/snotra-signoff.sh
+      - services/approve/snotra-promote.sh
+      - services/approve/meeting-record-guard.sh
+  mail-watch:
+    what: who answered, and what they said — READ-ONLY
+    doors:
+      - services/mail-watch/snotra-mail-watch.sh
+  cron:
+    what: scheduled maintenance — sync, digest, agenda, the boards it projects
+    doors:
+      - services/cron/snotra-cron.sh
+      - services/cron/snotra-pipeline.sh
+      - services/cron/snotra-trello.sh
+      - services/cron/snotra-board.sh
+      - services/cron/snotra-agenda.sh
+      - services/cron/snotra-project.sh
+      - services/cron/snotra-dispatch.sh
+      - services/cron/trello-due.sh
+      - services/cron/trello-map.sh
+      - services/cron/hall-snapshot.sh
+  tts-lease:
+    what: the voice's lease on the rail, and Ymir speaking on the desktop
+    doors:
+      - services/tts-lease/tts-lease.sh
+      - services/tts-lease/ymir-say.sh
+  calendar:
+    what: the calendar — read (Mánagandr) and the one write door
+    doors:
+      - services/calendar/calendar-ask.sh
+      - services/calendar/calendar-attendees.sh
+      - services/calendar/calendar-auth.sh
+      - services/calendar/calendar-invite.sh
+      - services/calendar/google-auth.sh
+
+# Doors Snotra does NOT own but may ASK (each answers; Snotra never edits another domain's folder).
+may_ask:
+  - bin/time/sol.sh                  # the clock — shared kit, not a domain
+  - bin/vault/hoard-lib.sh           # where the home is (Rule 07: resolve, never hardcode)
+  - bin/vault/hodd.sh                # secrets, by reference
+  - bin/records/mimir.sh             # the well
+  - bin/records/runes-append.sh      # the ledger
+  - bin/model/rail-resolve.sh        # the model rail
+  - bin/people/inbox.sh · bin/people/meet.sh   # the people doors that call Snotra's pipeline
+
+called_by:
+  - "the operator, directly (every door is a CLI with --help)"
+  - "Nornir's schedule — config/cron.yaml rows name the new paths"
+  - "bin/people/*, bin/notify/send.sh, bin/ward/*, the Hlidskjalf server and Óðrerir's feed (read-only)"
+  - "an Eindri errand, whose brief carries this domain and no other"
+
+focus:                   # what this domain must never touch — the bounds, written where the keeper reads them
+  - another domain's folder: an app's (apps/**) or another system's (systems/<other>/**)
+  - the vault: $YMIR_HOME/hodd/secrets/** — reach it only through bin/vault/hodd.sh, and never copy a value
+  - the closed vault (Hnitbjörg, Rule 15) in any form
+  - an outbound letter without an approval bound to its bytes (snotra-approve.sh is the only way through)
+  - the operator's own records outside a meeting folder
+  - any host address: no LAN or mDNS address is ever a config value (Rule 07)
+
+policy:                  # plan 129 §20.2 — data, not code, until an evaluator lands
+  - subject: keeper:snotra   action: write    resource: systems/snotra/**   effect: allow
+  - subject: keeper:*        action: ask      resource: systems/snotra/**   effect: allow
+  - subject: keeper:*        action: write    resource: systems/snotra/**   effect: deny
+  - subject: keeper:snotra   action: send     resource: mail:partner.*      effect: deny   # the gate holds the socket

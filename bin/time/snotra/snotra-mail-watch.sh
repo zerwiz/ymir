@@ -1,23 +1,15 @@
 #!/usr/bin/env bash
-# snotra-mail-watch.sh — who has answered, and what they said. READ-ONLY.
+# bin/time/snotra/snotra-mail-watch.sh -> systems/snotra/services/mail-watch/snotra-mail-watch.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and says so.  # allow-superseded-path: this header RECORDS the move, it does not make it
 #
-#   snotra-mail-watch.sh status <meeting-dir>            was each letter sent · is there a reply · what kind
-#   snotra-mail-watch.sh check  <meeting-dir> [--json]   the replies in full: sender · date · the telling line
-#   snotra-mail-watch.sh record <meeting-dir>            append what it saw to replies.jsonl + one rune
-#   snotra-mail-watch.sh register <meeting-dir> [--apply --by "<name>"]
-#                                                        every decision beside the reply that answers it;
-#                                                        --apply promotes the id-named confirms as HIS act
-#
-# It matches a thread by the letter's own subject and a sender by the record's participants — a stranger's
-# mail is never attributed to a meeting. A reply is EVIDENCE: it never promotes a decision. Only
-# `snotra-promote.sh set <ID> accept --by "<name>"` does that, and a correction is a new line in
-# promotions.jsonl, never an edit.
-#
-# needs: the vault (age key) — the same Google grant mail-send.sh uses, read scope included
-# Exit: 0 ok · 1 a fault (no grant, no letters) · 2 usage
+# It exists so a caller nobody has repointed yet still works. It is retired by the dated follow-up in
+# docs/fixes/snotra/2026-10-24-snotra-becomes-a-system.md, and .agents/paths-ledger.yaml records the move.
 set -euo pipefail
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-case "${1-}" in
-  -h|--help|"") sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
-esac
-exec python3 "$ROOT/bin/time/snotra/snotra-mail-watch.py" "$@"
+_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_root="$(cd "$_d/../../.." && pwd)"
+_new="$_root/systems/snotra/services/mail-watch/snotra-mail-watch.sh"
+if [ ! -e "$_new" ]; then
+  printf 'snotra: the door moved to systems/snotra/services/mail-watch/snotra-mail-watch.sh and is not there\n' >&2
+  exit 127
+fi
+printf 'snotra: bin/time/snotra/ has MOVED to systems/snotra/ — call systems/snotra/services/mail-watch/snotra-mail-watch.sh (plan 129)\n' >&2
+exec "$_new" "$@"

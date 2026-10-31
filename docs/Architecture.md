@@ -296,8 +296,8 @@ THE RECORD (store/serve)  the heart — minutes in the vault, synced by the home
                           road, the read-only MCP face served there.
 ```
 
-- **Snotra** — the meeting ear (plan 52). `bin/time/snotra/snotra-capture.sh` records mic +
-  system audio via PipeWire (no virtual loopback device); `bin/time/snotra/snotra-transcribe.sh`
+- **Snotra** — the meeting ear (plan 52). `systems/snotra/services/ear/snotra-capture.sh` records mic +
+  system audio via PipeWire (no virtual loopback device); `systems/snotra/services/ear/snotra-transcribe.sh`
   discovers the seat's whisper engine (env → PATH → build trees → `voxtype`),
   normalises to 16 kHz mono, and writes Markdown minutes under
   `$YMIR_HOME/hodd/life/meetings/` with a Rune per meeting. Minutes are
@@ -313,7 +313,7 @@ THE RECORD (store/serve)  the heart — minutes in the vault, synced by the home
 - **The engine is per-seat** (open-source-first, no duplicate vendored): heimdall
   and whynot carry CUDA whisper.cpp builds; omarchy's `voxtype` already bundles
   whisper (models + a full `meeting` mode) and gained `extra/whisper-cpp` only for
-  a uniform CLI. `bin/time/snotra/snotra-ensure.sh` reports and installs per-OS; the
+  a uniform CLI. `systems/snotra/services/ear/snotra-ensure.sh` reports and installs per-OS; the
   `snotra` step of `bin/engine/ymir-install.sh` and the `snotra` surface of
   `bin/agents/eir-doctor.sh` keep a fresh seat whole.
 - **First Law:** audio and transcripts are private data — the hoard, never the

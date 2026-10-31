@@ -225,15 +225,15 @@ answer is `/edit <path>` — say so plainly instead of pasting its contents.
 ## Ymir speaks on the desktop
 
 Ymir works for hours unwatched, so when something is worth knowing it says so
-where the Allfather already is. `bin/time/snotra/ymir-say.sh` is the **single owner** of that
+where the Allfather already is. `systems/snotra/services/tts-lease/ymir-say.sh` is the **single owner** of that
 manner — anything with news calls it, so the voice cannot drift.
 
 ```
-bin/time/snotra/ymir-say.sh "<headline>" ["<body>"]            # a plain note
-bin/time/snotra/ymir-say.sh --mark-done  "<what>" ["<detail>"] # a job finished (low urgency)
-bin/time/snotra/ymir-say.sh --mark-alarm "<what>" ["<detail>"] # needs his word (critical)
-bin/time/snotra/ymir-say.sh --mark-fail  "<what>" ["<detail>"] # something broke (critical)
-bin/time/snotra/ymir-say.sh status                              # what has been said
+systems/snotra/services/tts-lease/ymir-say.sh "<headline>" ["<body>"]            # a plain note
+systems/snotra/services/tts-lease/ymir-say.sh --mark-done  "<what>" ["<detail>"] # a job finished (low urgency)
+systems/snotra/services/tts-lease/ymir-say.sh --mark-alarm "<what>" ["<detail>"] # needs his word (critical)
+systems/snotra/services/tts-lease/ymir-say.sh --mark-fail  "<what>" ["<detail>"] # something broke (critical)
+systems/snotra/services/tts-lease/ymir-say.sh status                              # what has been said
 ```
 
 It speaks through Omarchy's own notifier (`omarchy-notification-send`) when

@@ -1145,7 +1145,7 @@ the logic stays in `bin/`, where a human or a cron row can run the same thing.**
 | `ymir_push` | `git` in the vault — named paths only, refuses secrets, **refuses to delete a tracked file** (Rule 11) |
 | `ymir_note` · `ymir_plan` · `ymir_daily` | the append-only operations (a dated section, the next numbered plan, today's log) |
 | `ymir_secret_keys` | key **names** only — a name may print, a value never leaves |
-| `ymir_free` | `bin/time/snotra/calendar-ask.sh` — the operator's own calendar, read-only |
+| `ymir_free` | `systems/snotra/services/calendar/calendar-ask.sh` — the operator's own calendar, read-only |
 | `ymir_dellingr` | grades documents `nýr · eldri · forn · safn`; **known defect — its age signal reads 0d, so it currently grades everything fresh. It must refuse rather than guess.** |
 
 **The shape every extension here shares** (plan 66 §8): one home (`.pi/extensions/`, with `~/.pi/agent/extensions/.ymir-root` as the root record), every tool THIN, every tool saying **no** when it cannot do the job,
@@ -1196,7 +1196,7 @@ those stay doors.
 ### Three bugs the audit found by looking, not by reading
 
 1. **A literal that bash never expands.** The calendar tool passed
-   `"${YMIR_HOME:-$HOME/Documents/ymirhome}/bin/time/snotra/calendar-ask.sh"` to `bash` as an *argument*.
+   `"${YMIR_HOME:-$HOME/Documents/ymirhome}/systems/snotra/services/calendar/calendar-ask.sh"` to `bash` as an *argument*.
    Bash does not expand variables inside an argument it was handed, so **that tool had never once
    reached the calendar on any seat** — and nothing noticed, because a broken tool and an absent
    tool look identical from outside.

@@ -12,7 +12,7 @@
 # What it does, in order, and what it does NOT do:
 #   Runes      always — the record must not depend on delivery
 #   the arm    MEDIUM+ — a wake appended to .wake-queue, so a live session sees it between turns
-#   desktop    MEDIUM+ — bin/time/snotra/ymir-say.sh (quiet hours apply to MEDIUM only)
+#   desktop    MEDIUM+ — systems/snotra/services/tts-lease/ymir-say.sh (quiet hours apply to MEDIUM only)
 #   the pocket HIGH+   — bin/ward/garmr/notify.py, which owns the ladder, budget and quiet hours
 #   telegram   HIGH+ or --ask — the Bot API directly, so it works with NO session running
 #
@@ -140,9 +140,9 @@ INNER
       :
     else
       if [ -n "$APPROVAL_ID" ]; then
-        bash "$ROOT/bin/time/snotra/ymir-say.sh" "$MESSAGE" --exec "$ROOT/bin/notify/approve.sh $APPROVAL_ID" >/dev/null 2>&1 && SAID_DESKTOP=1
+        bash "$ROOT/systems/snotra/services/tts-lease/ymir-say.sh" "$MESSAGE" --exec "$ROOT/bin/notify/approve.sh $APPROVAL_ID" >/dev/null 2>&1 && SAID_DESKTOP=1
       else
-        bash "$ROOT/bin/time/snotra/ymir-say.sh" "$MESSAGE" >/dev/null 2>&1 && SAID_DESKTOP=1
+        bash "$ROOT/systems/snotra/services/tts-lease/ymir-say.sh" "$MESSAGE" >/dev/null 2>&1 && SAID_DESKTOP=1
       fi
     fi
   fi

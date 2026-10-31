@@ -10,7 +10,7 @@ hodd/identity/places/<company>/<place>/place.yaml
 **Why a file and not code:** Synteon's meeting decided its board's shape (graded decisions, layered boards,
 the agenda as driver, reusable templates). Inmost Invest or Whynot Productions may want something else
 entirely. A door that carries one company's shape applies it to every company — so the shape is data, and
-the doors read it. **No company, board or list name appears in `bin/time/snotra/*.py`.**
+the doors read it. **No company, board or list name appears in `systems/snotra/*.py`.**
 
 ## The contract
 
@@ -125,9 +125,9 @@ a Gimlé or Jira board is never polluted with Trello-shaped cards.
 2. `hodd/identity/places/<company>/<place>/place.yaml` — the contract above. Cite decisions where they
    exist; `authority.decisions: []` means "every field is a house default", and that is allowed but must be
    stated.
-3. `bin/time/snotra/trello-map.sh` — refresh the map so the board and list names resolve.
-4. `bin/time/snotra/snotra-project.sh plan <a meeting>` — read it before writing anything.
-5. `bin/time/snotra/smoke.sh` — the last check asserts every place declares a `surface` and an `authority`.
+3. `systems/snotra/services/cron/trello-map.sh` — refresh the map so the board and list names resolve.
+4. `systems/snotra/services/cron/snotra-project.sh plan <a meeting>` — read it before writing anything.
+5. `systems/snotra/smoke.sh` — the last check asserts every place declares a `surface` and an `authority`.
 
 ## What a place may not do
 

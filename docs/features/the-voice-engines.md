@@ -14,7 +14,7 @@ Two engines make a machine able to hear and to speak:
 never in the code tree. The ensure script **adopts what already stands** and installs only what is
 missing — it never reinstalls a working engine.
 
-**One road for the ear:** whisper is owned by `bin/time/snotra/snotra-ensure.sh` (the meeting ear's
+**One road for the ear:** whisper is owned by `systems/snotra/services/ear/snotra-ensure.sh` (the meeting ear's
 engine), so `voice-ensure` delegates that half instead of growing a second whisper installer.
 
 ## What you need
@@ -47,7 +47,7 @@ bash bin/bridge/ymir-plan.sh | grep voice         # "4","engines","voice","SKIP"
 | the voice models | `$YMIR_HOME/voices/<name>.onnx` (env `YMIR_VOICES_DIR`) |
 | a venv piper, when pipx is absent | `$YMIR_HOME/.venvs/piper/bin/piper` |
 | an adopted piper | `$YMIR_PIPER_BIN`, or `piper` on `PATH`, or a known venv/pipx path |
-| the ear's engine + model | wherever Snotra seated them (`bin/time/snotra/snotra-ensure.sh status`) |
+| the ear's engine + model | wherever Snotra seated them (`systems/snotra/services/ear/snotra-ensure.sh status`) |
 
 ## Limits, stated plainly
 
@@ -63,7 +63,7 @@ bash bin/bridge/ymir-plan.sh | grep voice         # "4","engines","voice","SKIP"
 |---|---|---|
 | `voice: piper install failed` | no pipx and no working `python3 -m venv` | install `python3-venv`, or `pipx install piper-tts` |
 | `voice: voice fetch failed` | the voice name or the network | check `PIPER_VOICE_NAME`, then retry |
-| the ear reports missing | whisper is Snotra's road | `bin/time/snotra/snotra-ensure.sh status` |
+| the ear reports missing | whisper is Snotra's road | `systems/snotra/services/ear/snotra-ensure.sh status` |
 | the installer skips voice | `--skip-engines` or `YMIR_SKIP_VOICE=1` | re-run without them |
 
 ---

@@ -93,7 +93,7 @@ survives its correction. A machine may propose; only a person may promote, and `
   trello.json  dispatch.json  signoffs.json  planner.json  classification.yaml  timestamp/  access.jsonl
 ```
 
-`bin/time/snotra/snotra-layout.sh check` refuses anything else at the top level. `apply` moves a stray into
+`systems/snotra/services/record/snotra-layout.sh check` refuses anything else at the top level. `apply` moves a stray into
 `evidence/hand-built/` and writes a line into `PROVENANCE.md`. **Nothing is deleted (Rule 11).**
 
 ## Coverage — the honesty block

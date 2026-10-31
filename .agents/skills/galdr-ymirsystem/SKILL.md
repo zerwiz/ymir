@@ -75,7 +75,7 @@ assets[27]{path,load_when}:
   "assets/nornir-jobs.md","the scheduler, jobs, and Runes ledger"
   "assets/smidja.md","the smithy: install, roster/pi models, run, trace, visualizer ports, observer"
   "assets/hlidskjalf-ui.md","any change under apps/hlidskjalf"
-  "assets/odrerir-hall.md","the Óðrerir Live Hall — apps/odrerir, :4322, its window, the planning snapshot feed (bin/time/snotra/hall-snapshot.sh)"
+  "assets/odrerir-hall.md","the Óðrerir Live Hall — apps/odrerir, :4322, its window, the planning snapshot feed (systems/snotra/services/cron/hall-snapshot.sh)"
   "assets/snotra-meeting-ear.md","the meeting ear — capture (PipeWire), transcribe (whisper.cpp), minutes into the hoard, the read-only MCP face; the per-seat engine matrix and the install road"
   "assets/thing-assembly-hall.md","Þing — the meeting room (MiroTalk P2P fork on whynot): the brand files and the sessionStorage trap, the Ymir look, the deploy weld, the cache lie, the AGPL position"
   "assets/pi-boot-guide.md","the PI primary boot path"

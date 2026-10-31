@@ -8,7 +8,7 @@
 # piper for the voice, each on its own per-OS road, each with a model. Loud
 # refusals (no python/pip, no network, no model) — never a silent skip.
 #
-# The speech→text engine is owned by bin/time/snotra/snotra-ensure.sh (one whisper road), so
+# The speech→text engine is owned by systems/snotra/services/ear/snotra-ensure.sh (one whisper road), so
 # this script DELEGATES that half rather than growing a second installer.
 #
 # Usage:
@@ -31,10 +31,10 @@ VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # This script lives in the VOICE shelf (bin/voice/, Rule 12/23), so it walks up two
 # levels for the repo root and reaches its neighbours by shelf:
-#   the whisper road   bin/time/snotra/snotra-ensure.sh
+#   the whisper road   systems/snotra/services/ear/snotra-ensure.sh
 #   the home resolver  bin/vault/hoard-lib.sh
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-SNOTRA_ENSURE="$ROOT/bin/time/snotra/snotra-ensure.sh"
+SNOTRA_ENSURE="$ROOT/systems/snotra/services/ear/snotra-ensure.sh"
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   for _yc in "$ROOT/bin/vault/hoard-lib.sh" "$SCRIPT_DIR/hoard-lib.sh"; do
     [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
@@ -143,7 +143,7 @@ install_voice() {
 }
 
 install_all() {
-  # whisper (STT) — one road: bin/time/snotra/snotra-ensure.sh owns it.
+  # whisper (STT) — one road: systems/snotra/services/ear/snotra-ensure.sh owns it.
   if [ -x "$SNOTRA_ENSURE" ] && ! whisper_status >/dev/null 2>&1; then
     "$SNOTRA_ENSURE" install >/dev/null 2>&1 || true
   fi

@@ -17,9 +17,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)}"
 
 # The snapshot is runtime, never repo: it is gitignored where it lands.
-if ! "$ROOT/bin/time/snotra/hall-snapshot.sh" >/dev/null 2>&1; then
+if ! "$ROOT/systems/snotra/services/cron/hall-snapshot.sh" >/dev/null 2>&1; then
   printf 'error: hall-snapshot.sh failed — the board is stale\n'
-  printf 'help: run bin/time/snotra/hall-snapshot.sh by hand to see the reason\n'
+  printf 'help: run systems/snotra/services/cron/hall-snapshot.sh by hand to see the reason\n'
   exit 1
 fi
 

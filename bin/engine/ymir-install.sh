@@ -594,7 +594,7 @@ step_hermes() {
 # ── 3b1c. the voice engines: whisper (STT) + piper (TTS) ──────────────────────
 # Voice is a machine property: the engines and models live on the host / in the
 # hoard. This step ADOPTS what stands and installs what is missing; the whisper
-# half is owned by bin/time/snotra/snotra-ensure.sh (one road), so voice-ensure
+# half is owned by systems/snotra/services/ear/snotra-ensure.sh (one road), so voice-ensure
 # delegates it rather than growing a second whisper installer.
 step_voice() {
   [ "$SKIP_ENGINES" = 1 ] && { add voice SKIP "--skip-engines"; return; }
@@ -616,23 +616,23 @@ step_voice() {
 step_snotra() {
   role_gate snotra heart,dev "the meeting ear" || return 0
   [ "$SKIP_ENGINES" = 1 ] && { add snotra SKIP "--skip-engines"; return; }
-  if [ ! -x "$SCRIPT_DIR/../time/snotra/snotra-ensure.sh" ]; then add snotra SKIP "no snotra-ensure.sh"; return; fi
+  if [ ! -x "$SCRIPT_DIR/../../systems/snotra/services/ear/snotra-ensure.sh" ]; then add snotra SKIP "no snotra-ensure.sh"; return; fi
   if [ "$CHECK" = 1 ]; then
-    if "$SCRIPT_DIR/../time/snotra/snotra-ensure.sh" status >/dev/null 2>&1; then add snotra OK "whisper engine + model present"; else add snotra WARN "engine or model missing"; fi
+    if "$SCRIPT_DIR/../../systems/snotra/services/ear/snotra-ensure.sh" status >/dev/null 2>&1; then add snotra OK "whisper engine + model present"; else add snotra WARN "engine or model missing"; fi
     return
   fi
-  if "$SCRIPT_DIR/../time/snotra/snotra-ensure.sh" ensure --install >/dev/null 2>&1; then
+  if "$SCRIPT_DIR/../../systems/snotra/services/ear/snotra-ensure.sh" ensure --install >/dev/null 2>&1; then
     add snotra OK "whisper engine + model present"
   else
-    add snotra WARN "engine or model missing (run bin/time/snotra/snotra-ensure.sh install)"
+    add snotra WARN "engine or model missing (run systems/snotra/services/ear/snotra-ensure.sh install)"
   fi
   # The lifecycle skeleton, agnostic: shelf, operator template, register, framework,
   # cron. Never a company or a participant.
-  if [ -x "$SCRIPT_DIR/../time/snotra/snotra-init.sh" ]; then
-    if "$SCRIPT_DIR/../time/snotra/snotra-init.sh" apply >/dev/null 2>&1; then
+  if [ -x "$SCRIPT_DIR/../../systems/snotra/services/record/snotra-init.sh" ]; then
+    if "$SCRIPT_DIR/../../systems/snotra/services/record/snotra-init.sh" apply >/dev/null 2>&1; then
       add snotra-meetings OK "meetings shelf + framework + cron skeleton"
     else
-      add snotra-meetings WARN "run bin/time/snotra/snotra-init.sh apply"
+      add snotra-meetings WARN "run systems/snotra/services/record/snotra-init.sh apply"
     fi
   fi
 }

@@ -1,18 +1,15 @@
 #!/usr/bin/env bash
-# snotra-agenda.sh — the agenda card that drives the next meeting (DEC-20261022-04).
+# bin/time/snotra/snotra-agenda.sh -> systems/snotra/services/cron/snotra-agenda.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and says so.  # allow-superseded-path: this header RECORDS the move, it does not make it
 #
-#   snotra-agenda.sh plan   <meeting-dir> [--date YYYY-MM-DD]   what the card would say — no writes
-#   snotra-agenda.sh apply  <meeting-dir> [--date YYYY-MM-DD]   create/update it in the place's agenda list
-#   snotra-agenda.sh verify <meeting-dir> [--date YYYY-MM-DD]   is it there, in the right list
-#
-# The points come from the record in the room's own order: what is still `proposed` → actions due by the
-# date → **open questions last, always**. The board and the list come from the place profile; the date
-# comes from `--date` or from the place's cadence (Monday, `monday_at`). Idempotent by `record-key`.
-#
-# Exit: 0 ok · 1 drift or missing · 2 usage
+# It exists so a caller nobody has repointed yet still works. It is retired by the dated follow-up in
+# docs/fixes/snotra/2026-10-24-snotra-becomes-a-system.md, and .agents/paths-ledger.yaml records the move.
 set -euo pipefail
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-case "${1-}" in
-  -h|--help|"") sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
-esac
-exec python3 "$ROOT/bin/time/snotra/snotra-agenda.py" "$@"
+_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_root="$(cd "$_d/../../.." && pwd)"
+_new="$_root/systems/snotra/services/cron/snotra-agenda.sh"
+if [ ! -e "$_new" ]; then
+  printf 'snotra: the door moved to systems/snotra/services/cron/snotra-agenda.sh and is not there\n' >&2
+  exit 127
+fi
+printf 'snotra: bin/time/snotra/ has MOVED to systems/snotra/ — call systems/snotra/services/cron/snotra-agenda.sh (plan 129)\n' >&2
+exec "$_new" "$@"

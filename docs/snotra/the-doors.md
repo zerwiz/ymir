@@ -1,6 +1,6 @@
 # The doors — every grammar, every exit code
 
-All doors live in `bin/time/snotra/`. `-h` prints the door's own header. Exit codes are uniform:
+All doors live in `systems/snotra/`. `-h` prints the door's own header. Exit codes are uniform:
 
 ```
 0  the door did what it says
