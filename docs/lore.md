@@ -1017,7 +1017,7 @@ the latest from origin — never forcing, never stashing, advancing only a clean
 fast-forward, and skipping anything dirty, diverged, or offline — then mends the
 tree forward through its migrations and fleet preferences. **Brokk** runs her;
 **Galdr** owns the assets she must be reflected in the moment the instruction
-surface moves (`galdr-reread`); the `groa-update` skill (`/updateBrokk`) is her
+surface moves (`galdr-reread`); the `groa-update` skill (`/updateymir`) is her
 door. She lives in `bin/agents/groa-update.sh`; `bin/agents/brokk-update.sh` is her old name,
 kept as an alias.
 

@@ -31,7 +31,7 @@ skills[29]{skill,does,owner}:
   "eindri-homes","worker homes — provisioning and upkeep of Eindri homes","brokk"
   "syn-recovery","recovery — stuck-worker playbook","syn"
   "ymir-host","host ops — self-update, Omarchy desktop, Þjazi backend","brokk"
-  "groa-update","the updater shaman — self-update Brokk + every Eindri-home (/updateBrokk)","groa"
+  "groa-update","the updater shaman — self-update Brokk + every Eindri-home (/updateymir)","groa"
   "herdr-panes","terminal panes — seat/control panes, tabs, workspaces, agents (HERDR_ENV=1)","brokk"
   "ratatoskr-a2a","A2A/MCP mesh — a2abridge + wayofteams; registration","brokk"
   "hamr-adapters","harness adapters — per-harness reference","brokk"

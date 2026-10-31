@@ -635,7 +635,7 @@ Law: `RULES/06-append-only.md`.
 - **Update — Gróa (the updater shaman):** `bin/agents/groa-update.sh [--check]`
   fast-forwards Brokk and every registered Eindri-home (never forced), then
   mends forward; `bin/agents/brokk-update.sh` is her alias. Her door is the
-  `groa-update` skill (`/updateBrokk`). She reports `reread-Brokk` and
+  `groa-update` skill (`/updateymir`). She reports `reread-Brokk` and
   `galdr-reread` — when the instruction surface moved, re-read `AGENTS.md` and
   reflect it in the owning Galdr asset.
 - **Repair — Eir (the healer):** `bin/agents/eir-doctor.sh [check|fix]` composes every

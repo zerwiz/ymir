@@ -2,14 +2,14 @@
 name: ymir-update
 description: >-
   Self-update a running Brokk and its eindri-homes to the latest from origin.
-  Use when the Allfather invokes /updateBrokk (e.g. "/updateBrokk", "update Brokk", "pull the latest Brokk").
+  Use when the Allfather invokes /updateymir (e.g. "/updateymir", "update Brokk", "pull the latest Brokk").
   Fast-forwards this Brokk repo's default branch and every local or remote Eindri-home through its guarded update path (never forced, never disruptive), then re-reads AGENTS.md and nudges each updated Eindri-home to do the same, so the whole tree runs the latest bin/ and instructions.
 user-invocable: true
 metadata:
   internal: true
 ---
 
-# updateBrokk
+# updateymir
 
 Self-update Brokk in place.
 Brokk is its own repo, behind the same no-mistakes gate as any project, so new tracked material (`AGENTS.md`, `bin/`, `.agents/skills/`, and public `skills/`) reaches `main` and then sits there until each running Brokk pulls it.
