@@ -1,0 +1,24 @@
+[Unit]
+Description=Skírnir — the Allfather's assistant, on his own Telegram bot (plan 150)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+# Skírnir is a SYSTEM, and his door must ship (plan 150, his own audit 2026-10-31: the unit lived only
+# in ~/.config/systemd/user, pasted from a how-to, naming bin/assistant/telegram.py — a path that stopped
+# existing the day he moved). __YMIR_BIN_DIR__ is the DURABLE main tree, never a disposable worktree.
+Environment=YMIR_BIN_DIR=__YMIR_BIN_DIR__
+Environment=YMIR_HOME=__YMIR_HOME__
+WorkingDirectory=__YMIR_BIN_DIR__/systems/skirnir
+ExecStart=/usr/bin/python3 __YMIR_BIN_DIR__/systems/skirnir/services/telegram.py --verbose
+Restart=always
+RestartSec=5
+# A keeper with no pen: this service may read the home and speak through the Telegram bridge, and it
+# writes only inside its own domain and the home's state (Rule 07: no path is hardcoded in the unit).
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=default.target

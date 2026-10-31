@@ -47,8 +47,19 @@ no(){ printf '  FAIL  %s\n' "$1"; fail=$((fail+1)); }
 
 printf 'snotra smoke — %s\n' "${D:-no meeting}"
 
+# A GATE THAT SKIPS EVERYTHING IS NOT GREEN (the keeper's own finding, 2026-10-31). With no record to
+# exercise this suite used to SKIP every check and exit 0 — a data-shaped gate that says green by saying
+# nothing, the exact false green RULES/25 forbids. Now it FAILS and says why. A deliberately empty home
+# (a fresh seat, a CI clone) must ask for that explicitly with --allow-empty, so the skip is a decision.
+ALLOW_EMPTY=0
+case "${D:-}" in --allow-empty) ALLOW_EMPTY=1; D="";; esac
+if [ $ALLOW_EMPTY -eq 1 ] && { [ -z "${D:-}" ] || [ ! -f "$D/record.json" ]; }; then
+  printf 'snotra smoke: --allow-empty — a home with no meeting record; nothing exercised, and that is a declared skip, not a pass\n'
+  printf 'snotra smoke: 0 pass · 1 skip · 0 fail (DECLARED EMPTY)\n'
+  exit 0
+fi
 if [ -z "$D" ] || [ ! -f "$D/record.json" ]; then
-  sk "no meeting folder with a record.json was found — nothing to exercise"
+  no "no meeting folder with a record.json was found — nothing exercised. A gate that skips every check is not green: fix the data, or pass --allow-empty to declare the home empty"
 else
   out="$("$ROOT/systems/snotra/services/ear/snotra-harvest.sh" status "$D" 2>&1)"; rc=$?
   if [ $rc -eq 0 ] && printf '%s' "$out" | grep -q '^store{'; then ok "harvest status reads the bot store"
@@ -109,6 +120,12 @@ fi
 while IFS= read -r pl; do
   [ -n "$pl" ] || continue
   if grep -q '^surface: gimle' "$pl"; then sk "a place declares gimle — no adapter yet, so it is refused"; continue; fi
+  # A PLACE MAY DECLARE THAT IT HAS NO BOARD YET, and the gate says so instead of failing (the keeper's
+  # own finding, 2026-10-31: two places were failing a board check for a board nobody had made). A
+  # template is not a company; an unprovisioned place is a known gap with a name.
+  if grep -qE '^template:[[:space:]]*true' "$pl"; then sk "a template place — a template is not a company, so it has no board to check"; continue; fi
+  if grep -qE '^provisioned:[[:space:]]*false' "$pl"; then sk "a place declares provisioned: false — its board is owed, not missing"; continue; fi
+  if grep -qE '^board:[[:space:]]*(none|)$' "$pl"; then sk "a place declares no board — nothing to check"; continue; fi
   out="$("$ROOT/systems/snotra/services/cron/snotra-board.sh" check "$(python3 -c "
 import yaml,sys;print(yaml.safe_load(open('$pl')).get('place'))")" 2>&1)"; rc=$?
   [ $rc -eq 0 ] && ok "board for place: ${out##*board\{}" | cut -c1-70 || no "board missing or incomplete: ${out##*$'\n'}"

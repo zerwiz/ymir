@@ -51,8 +51,8 @@ def _state_dir() -> str:
     """$YMIR_HOME/hodd/state/assistant — resolved, never guessed (Rule 07). No home, no cache."""
     home = os.environ.get("YMIR_HOME", "").strip()
     if not home:
-        lib = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                           "vault", "hoard-lib.sh")
+        lib = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                           "bin", "vault", "hoard-lib.sh")
         try:
             import subprocess
             out = subprocess.run(["bash", "-c",

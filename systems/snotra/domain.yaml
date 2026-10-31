@@ -66,7 +66,6 @@ services:
     processes:
       - "stt-shim (:10300) — a service of the ear, started by its own unit"
       - "snotra-detect — the watch; systemd supervises the service, not the keeper (plan 129 §14)"
-    container: services/ear/container/     # the whisper container's own definitions
   record:
     what: the record contract every transport writes through
     doors:
@@ -123,6 +122,21 @@ services:
       - services/calendar/calendar-auth.sh
       - services/calendar/calendar-invite.sh
       - services/calendar/google-auth.sh
+      - services/cron/snotra-rules.sh
+      - services/cron/snotra-route.sh
+      - services/cron/snotra-grooming.sh
+      - services/cron/snotra-card-moves.sh
+      - services/cron/snotra-friday-synch.sh
+      - services/cron/org_adapter.py        # the adapter door: one shape, six org tools
+      - services/cron/asana_adapter.py
+      - services/cron/clickup_adapter.py
+      - services/cron/jira_adapter.py
+      - services/cron/linear_adapter.py
+      - services/cron/monday_adapter.py
+      - services/cron/notion_adapter.py
+      - services/cron/trello_adapter.py
+      - services/cron/channel_email.py
+      - services/cron/channel_todo.py
 
 # Doors Snotra does NOT own but may ASK (each answers; Snotra never edits another domain's folder).
 may_ask:

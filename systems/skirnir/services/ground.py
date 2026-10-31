@@ -31,7 +31,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 SN = ROOT / "bin" / "time" / "snotra"
 
 
