@@ -73,6 +73,27 @@ digest() {
   printf 'digest\t%s\n' "$out"
 }
 
+friday_synch() {
+  local d; d="$(meetings | head -1)"
+  [ -n "$d" ] || { echo "no meetings"; exit 0; }
+  bash "$ROOT/bin/time/snotra/snotra-friday-synch.sh" run "$d" >>"$LOG" 2>&1 || true
+  log "friday synch complete from $d"
+}
+
+grooming() {
+  local d; d="$(meetings | head -1)"
+  [ -n "$d" ] || { echo "no meetings"; exit 0; }
+  bash "$ROOT/bin/time/snotra/snotra-grooming.sh" run "$d" >>"$LOG" 2>&1 || true
+  log "grooming card complete from $d"
+}
+
+card_moves() {
+  for board in "Synteon — Meetings" "Documentation"; do
+    bash "$ROOT/bin/time/snotra/snotra-card-moves.sh" watch "$board" >>"$LOG" 2>&1 || true
+  done
+  log "card moves complete"
+}
+
 agenda() {
   local d; d="$(meetings | head -1)"
   [ -n "$d" ] || { echo "no meetings"; exit 0; }
@@ -94,5 +115,8 @@ case "$ACTION" in
   sync) while IFS= read -r d; do [ -n "$d" ] && sync_one "$d"; done < <(meetings); log "sync complete" ;;
   digest) digest ;;
   agenda) agenda ;;
-  *) echo "usage: snotra-cron.sh sync|digest|agenda" >&2; exit 2 ;;
+  friday-synch) friday_synch ;;
+  grooming) grooming ;;
+  card-moves) card_moves ;;
+  *) echo "usage: snotra-cron.sh sync|digest|agenda|friday-synch|grooming|card-moves" >&2; exit 2 ;;
 esac

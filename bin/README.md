@@ -11,7 +11,7 @@ vendored `fm-*` script kept byte-comparable to upstream on purpose.
 `disposition` says what happens to it: `keep`, `migrate → src/…` where the
 Python runtime already has the module, `retire` for orphans, `provenance`.
 
-bin[614]{file,does,kind,verdict,disposition,callers,lines}:
+bin[620]{file,does,kind,verdict,disposition,callers,lines}:
   "README.md","`bin/` — every file, what it does, and whether it is alive","data","tested","keep",22,-
   "README.md","Gróa — the updater, one per install","data","tested","keep",22,-
   "README.md","Gná — the one mail desk (production)","data","tested","keep",22,-
@@ -506,13 +506,19 @@ bin[614]{file,does,kind,verdict,disposition,callers,lines}:
   "snotra-board.sh","snotra-board.sh — a place declares a board; this door makes it, once.","tool","wired","keep",1,17
   "snotra-bot.sh","snotra-bot.sh — send Snotra into a meeting, through the Vexa API.","tool","wired","keep",1,146
   "snotra-capture.sh","snotra-capture.sh — capture mic + system audio on the meeting seat.","tool","wired","keep",4,251
+  "snotra-card-moves.py","'''snotra-card-moves — card-movement automation rules (DEC-20261022-04).","data","wired","keep",1,369
+  "snotra-card-moves.sh","snotra-card-moves.sh — card-movement automation rules (DEC-20261022-04).","tool","wired","keep",1,14
   "snotra-cdp.py","'''snotra-cdp.py — a seat browser as the meeting's mouth and ear, with no OS mixer.","tool","wired","keep",4,624
-  "snotra-cron.sh","snotra-cron.sh — scheduled maintenance for the meeting system.","tool","wired","keep",1,99
+  "snotra-cron.sh","snotra-cron.sh — scheduled maintenance for the meeting system.","tool","wired","keep",1,123
   "snotra-detect.sh","snotra-detect.sh — the ear's watch: pricks up when a call begins, and leaves","tool","tested","keep",4,1092
   "snotra-dispatch.py","'''snotra-dispatch — what we did with each person: which meetings, what was sent, what came back.","data","wired","keep",1,139
   "snotra-dispatch.sh","snotra-dispatch.sh — what we did with each person: which meetings, what was sent, what came back.","tool","wired","keep",0,19
   "snotra-ensure.sh","snotra-ensure.sh — ensure the meeting ear's transcription engine is present.","tool","wired","keep",4,173
   "snotra-evidence.sh","snotra-evidence.sh — timestamp, immutable copy, certification and retention.","tool","wired","keep",0,206
+  "snotra-friday-synch.py","'''snotra-friday-synch — the Friday Synch (DEC-20261022-04).","data","wired","keep",1,241
+  "snotra-friday-synch.sh","snotra-friday-synch.sh — the Friday Synch (DEC-20261022-04).","tool","wired","keep",1,14
+  "snotra-grooming.py","'''snotra-grooming — the Monthly Grooming card (DEC-20261022-04).","data","wired","keep",1,215
+  "snotra-grooming.sh","snotra-grooming.sh — the Monthly Grooming card (DEC-20261022-04).","tool","wired","keep",1,14
   "snotra-harvest.py","'''snotra-harvest — take the meeting's OWN audio out of the bot's store, and prove it.","data","wired","keep",1,546
   "snotra-harvest.sh","snotra-harvest.sh — the meeting's OWN audio, out of the bot's store, verified.","tool","wired","keep",5,27
   "snotra-init.sh","snotra-init.sh — the first-run setup for the meeting system, agnostic by construction.","tool","wired","keep",1,107
@@ -627,6 +633,6 @@ bin[614]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir.js","/**","tool","wired","keep",5,263
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
 
-**Tally.** verdict: wired=380, tested=234
+**Tally.** verdict: wired=386, tested=234
 
-**Tally.** disposition: keep=600, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/paths.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
+**Tally.** disposition: keep=606, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/paths.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
