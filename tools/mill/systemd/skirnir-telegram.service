@@ -7,7 +7,7 @@ Wants=network-online.target
 Type=simple
 Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
 # Skírnir is a SYSTEM, and his door must ship (plan 150, his own audit 2026-10-31: the unit lived only
-# in ~/.config/systemd/user, pasted from a how-to, naming bin/assistant/telegram.py — a path that stopped
+# in ~/.config/systemd/user, pasted from a how-to, naming the assistant's old shelf — a path that stopped
 # existing the day he moved). __YMIR_BIN_DIR__ is the DURABLE main tree, never a disposable worktree.
 Environment=YMIR_BIN_DIR=__YMIR_BIN_DIR__
 Environment=YMIR_HOME=__YMIR_HOME__
