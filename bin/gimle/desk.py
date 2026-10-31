@@ -64,6 +64,8 @@ TILES = [
     ("Documents", "https://affine.zerwiz.org", "pages and databases — AFFiNE"),
     ("Whiteboard", "https://whiteboard.zerwiz.org", "drawing and mind maps — Excalidraw"),
     ("Meetings", "https://affine.zerwiz.org", "the record of what was said and decided"),
+    ("Email", "https://mautic.zerwiz.org", "campaigns and email automation — Mautic"),
+    ("Social", "https://postiz.zerwiz.org", "social publishing and scheduling — Postiz"),
 ]
 
 
