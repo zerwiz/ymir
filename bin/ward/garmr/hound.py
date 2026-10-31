@@ -105,6 +105,20 @@ def parse_audit_line(line: str, current: dict) -> tuple[dict, list[dict]]:
     return current, emitted
 
 
+_EXEC_CFG: dict | None = None
+
+
+def _exec_cfg() -> dict:
+    """The exec policy, read ONCE per process (a YAML parse per audit group is its own cost)."""
+    global _EXEC_CFG
+    if _EXEC_CFG is None:
+        try:
+            _EXEC_CFG = dict((common.load_config().get("hound", {}) or {}).get("exec", {}) or {})
+        except Exception:  # a config that cannot be read must not silence the senses
+            _EXEC_CFG = {}
+    return _EXEC_CFG
+
+
 def _close(group: dict) -> list[dict]:
     key = group.get("_key", "")
     if key not in KEYS:
@@ -115,6 +129,7 @@ def _close(group: dict) -> list[dict]:
     exe = group.get("exe", "")
     ts = time.strftime("%Y-%m-%dT%H:%M:%S%z", time.localtime(group.get("_epoch", time.time())))
     findings = []
+    cfg_exec = _exec_cfg()
 
     if key == "ymir-exec":
         argv = group.get("_argv") or [exe or comm]
@@ -123,8 +138,18 @@ def _close(group: dict) -> list[dict]:
         except OSError:
             seen = set()
         first_seen = (exe or (argv[0] if argv else "")) not in seen
+        # THE EXEC POLICY (2026-10-31). Recording EVERY execve made the log a copy of the
+        # process table: measured on this box, ~17,000 execs a minute, 5 MB of findings every
+        # two minutes, 3,960 rotated files and 20 GB — and a hound at 27% of a core just
+        # writing and reading its own noise. The guardian's question is not "what ran" (the
+        # box already knows), it is "what ran that is NEW", so only a first-seen binary is
+        # recorded by default. `hound.exec_mode` makes the widening a declared decision:
+        #   first_seen (default) · all · none
+        mode = str(cfg_exec.get("mode", "first_seen") or "first_seen")
         if first_seen:
             _remember_binary(exe or (argv[0] if argv else ""))
+        if mode == "none" or (mode == "first_seen" and not first_seen):
+            return findings
         findings.append({
             "ts": ts, "sense": "audit", "kind": "exec", "pid": pid, "uid": uid, "comm": comm,
             "exe": exe, "target": redact.redact_path(exe or (argv[0] if argv else "")),
@@ -232,6 +257,13 @@ def read_audit_once(path: str) -> list[dict]:
         return findings
     with open(path, "r", errors="replace") as handle:
         for line in handle:
+            # FAST PATH (2026-10-31). auditd writes ~17,000 execve records a minute on this box;
+            # a record carries its Garmr key as `key="ymir-…"` on the same line, so a line that
+            # mentions no `ymir-` key at all cannot be one this hound wants. Skipping those
+            # before the field regex is the difference between parsing 17,000 lines a minute and
+            # parsing the few hundred that matter — the guardian's cost, not its evidence.
+            if "ymir-" not in line:
+                continue
             group, emitted = parse_audit_line(line, group)
             if emitted:
                 findings.extend(emitted)
@@ -281,12 +313,61 @@ def main() -> int:
 
     cfg = common.load_config()
     target = cfg["hound"]["findings"]
+    # ── what is KEPT LONG, what is ROTATED, and what is only COUNTED ────────────────
+    # The Allfather's question, 2026-10-31: "keep garms findings relevant and store the
+    # needed and get rid of the un needed". Three classes, three policies, all declared in
+    # config/guardian.yaml:
+    #
+    #   SECURITY  (kill · sensitive_open · file_change · listener · egress) — rare and the
+    #             reason the guardian exists. Written ALSO to the kept trace, which is rotated
+    #             by size and never pruned to zero. This is the evidence shelf.
+    #   NOVELTY   (exec of a binary never seen here) — the "new software appeared" signal.
+    #             Lives in the live trace only: relevant for weeks, not for ever.
+    #   VOLUME    (repeats of the same kind+target+comm inside `dedupe_seconds`) — collapsed
+    #             into one `rollup` row that carries a COUNT instead of thousands of rows.
+    #
+    # Nothing security-relevant is ever dropped for being old (Rule 06/11 apply to the kept
+    # trace); nothing noisy is ever stored a second time.
+    SECURITY_KINDS = {"kill", "sensitive_open", "file_change", "listener", "egress"}
+    kept_path = cfg["hound"].get("kept_findings") or "/var/log/ymir/garmr/kept.jsonl"
+    dedupe_seconds = int(cfg["hound"].get("dedupe_seconds", 300) or 0)
+    seen_recent: dict[str, float] = {}
+
+    def split(rows: list[dict]) -> list[dict]:
+        """Return the rows to append to the live trace, folding repeats into one counted row."""
+        if not dedupe_seconds:
+            return rows
+        out, folded = [], {}
+        now = time.time()
+        for row in rows:
+            key = "|".join(str(row.get(k, "")) for k in ("kind", "target", "comm"))
+            last = seen_recent.get(key)
+            if last is not None and now - last < dedupe_seconds:
+                folded[key] = folded.get(key, 0) + 1
+                continue
+            seen_recent[key] = now
+            out.append(row)
+        for key, count in folded.items():
+            kind, target, comm = (key.split("|") + ["", "", ""])[:3]
+            out.append({"ts": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "sense": "rollup",
+                        "kind": kind, "comm": comm, "target": target, "repeat": count,
+                        "note": f"{count} repeat(s) folded inside {dedupe_seconds}s"})
+        return out
+
     if args.stdout:
         sink = lambda rows: [print(common.emit(r)) for r in rows]  # noqa: E731
     else:
         def sink(rows):
-            common.rotate(target, int(cfg["hound"].get("max_bytes", 0) or 0))
-            common.append_findings(target, rows)
+            rows = split(rows)
+            for path, keep_key in ((target, "keep_rotations"), (kept_path, "keep_kept_rotations")):
+                passive = (rows if path == target else [r for r in rows if r.get("kind") in SECURITY_KINDS])
+                if path != target and not passive:
+                    continue
+                common.rotate(path, int(cfg["hound"].get("max_bytes", 0) or 0))
+                retired = common.prune_rotations(path, int(cfg["hound"].get(keep_key, 0) or 0))
+                if retired:
+                    print(f"garmr: retention retired {retired} rotated file(s) of {os.path.basename(path)}", file=sys.stderr)
+                common.append_findings(path, passive)
             try:
                 common.heartbeat(common.state_dir())
             except OSError:
