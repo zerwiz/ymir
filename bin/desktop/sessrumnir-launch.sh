@@ -58,8 +58,21 @@ WORKSPACE="${1-}"
 
 # The launcher spawns Electron as its child; track the real Electron by its
 # command line — the Sessrúmnir user-data-dir is a unique, stable identity.
-view_pids() {
+# Every process carrying the Sessrúmnir identity: the main process AND its
+# Electron helpers (gpu/utility/renderer). The helpers outlive a dead main —
+# they are re-parented to the user systemd — so this list is for REAPING only.
+all_pids() {
   pgrep -f "electron/dist/electron.*sessrumnir" 2>/dev/null || true
+}
+# The MAIN process only. An Electron helper always carries --type=; the main
+# never does. Matching the helpers here is what made `status` say "up" and
+# `start` say "already up" while the window was gone (2026-10-31).
+view_pids() {
+  local p
+  for p in $(all_pids); do
+    tr '\0' ' ' <"/proc/$p/cmdline" 2>/dev/null | grep -q -- "--type=" && continue
+    printf '%s\n' "$p"
+  done
 }
 is_running() { [ -n "$(view_pids)" ]; }
 
@@ -83,7 +96,7 @@ case "$ACTION" in
     fi
     exit 0 ;;
   stop)
-    pids="$(view_pids)"
+    pids="$(all_pids)"
     if [ -n "$pids" ]; then
       printf '%s\n' "$pids" | while IFS= read -r p; do [ -n "$p" ] && kill "$p" 2>/dev/null || true; done
       printf 'sessrumnir: stopped pid(s)=%s\n' "$(printf '%s' "$pids" | tr '\n' ',' | sed 's/,$//')"
@@ -99,6 +112,15 @@ if is_running; then
   focus_window
   printf 'sessrumnir[1]{state,pid}:\n  "already up",%s\n' "$(view_pids | head -1)"
   exit 0
+fi
+
+# A dead main leaves its helpers running as orphans of the user systemd. They
+# still carry the identity string, so reaping them before the launch is the
+# difference between a window and "started but nothing appeared".
+stale="$(all_pids)"
+if [ -n "$stale" ]; then
+  printf '%s\n' "$stale" | while IFS= read -r p; do [ -n "$p" ] && kill "$p" 2>/dev/null || true; done
+  sleep 1
 fi
 
 "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1 || {

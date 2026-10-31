@@ -112,6 +112,17 @@ list_devices() {
 do_start() {
   local SECONDS_ARG="${1:-}"
   local pair MONITOR MIC
+  # THE ALLFATHER'S LAW (2026-10-31): the microphone is NEVER used to hear an
+  # online meeting. Capture is the LOCAL ROOM door only — people physically in
+  # the room — and it must be asked for by name. An online meeting is heard by
+  # the bot (bin/time/snotra/snotra-bot.sh, the Vexa participant), which joins
+  # the call and needs no microphone on this box at all.
+  if [ "${SNOTRA_LOCAL_ROOM:-0}" != "1" ]; then
+    printf 'snotra-capture[1]{state,reason,door}:\n  "refused","the mic is for a LOCAL room only — never an online meeting","bin/time/snotra/snotra-bot.sh"\n' >&2
+    printf 'hint: an online meeting is heard by the BOT (snotra-bot.sh join <meet-url>);\n' >&2
+    printf '      capture your own room only with SNOTRA_LOCAL_ROOM=1.\n' >&2
+    return 2
+  fi
   # a dead capture leaves stale state behind; clear it before a new run
   if [ -f "$PID_FILE" ] && ! kill -0 "$(cat "$PID_FILE" 2>/dev/null)" 2>/dev/null; then
     rm -f "$PID_FILE" "$LISTENING_FILE"

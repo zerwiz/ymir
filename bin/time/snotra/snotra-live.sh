@@ -283,6 +283,17 @@ do_start() {
   slug="$(printf '%s' "$slug" | tr -c 'a-zA-Z0-9._-' '-' | sed 's/^-*//; s/-*$//')"
   [ -n "$slug" ] || slug="note"
 
+  # THE ALLFATHER'S LAW (2026-10-31): the microphone is NEVER used to hear an
+  # online meeting. The live tail is the LOCAL ROOM door — people physically in
+  # the room — and an online meeting is heard by the bot (snotra-bot.sh), which
+  # joins the call itself and needs no microphone here at all.
+  if [ "${SNOTRA_LOCAL_ROOM:-0}" != "1" ]; then
+    say "refused: the mic is for a LOCAL room only — never an online meeting"
+    say "hint: an online meeting is heard by the BOT — snotra-bot.sh join <meet-url>"
+    say "hint: tail your own room only with SNOTRA_LOCAL_ROOM=1"
+    exit 2
+  fi
+
   if alive "$(cat "$WORK/ffmpeg.pid" 2>/dev/null)"; then
     say "error: a live tail is already running — 'snotra-live.sh status', or stop it first"; exit 1
   fi
