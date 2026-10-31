@@ -256,6 +256,7 @@ def rule_b(card: dict, board_id: str, done_id: str, signoff_id: str, rec: dict, 
     has_signoff = bool(done_when and done_when.strip())
 
     # If the card is in Done and needs sign-off, move to To Sign-off
+    # NEVER auto-close: require transcript evidence + human confirmation (Reygan's challenge #2)
     if card.get("idList") == done_id and has_signoff:
         if dry:
             say(f"would-move-to-signoff {action_id} → {card.get('name', '?')[:60]}")
@@ -264,13 +265,44 @@ def rule_b(card: dict, board_id: str, done_id: str, signoff_id: str, rec: dict, 
         T.update_card(card["id"], idList=signoff_id)
         post_comment(card["id"],
             f"## Auto-move to To Sign-off\n"
-            f"**Reason:** task done but sign-off required (Rule B)\n"
+            f"**Reason:** task moved to Done but sign-off required (Rule B)\n"
             f"**Definition of done:** {done_when[:200]}\n"
-            f"**By:** snotra-card-moves\n"
+            f"**Transcript evidence:** required before close\n"
+            f"**Human confirmation:** required before close\n"
+            f"**By:** snotra-card-moves (never auto-close)\n"
             f"*Source: {action_id}*"
         )
         say(f"moved-to-signoff {action_id} → {card.get('name', '?')[:60]}")
         return "moved_to_signoff"
+
+    # If the card is in Done but no sign-off needed and not all checklist items done,
+    # move it back — never leave a card in Done without evidence
+    if card.get("idList") == done_id and not has_signoff:
+        try:
+            checklists = T.api("GET", f"/cards/{card['id']}/checklists", {"fields": "name,id"})
+            all_done = True
+            for cl in checklists:
+                items = T.api("GET", f"/checklists/{cl['id']}/checkItems", {"fields": "name,checked"})
+                for item in items:
+                    if not item.get("checked"):
+                        all_done = False
+                        break
+            if not all_done:
+                if dry:
+                    say(f"would-move-back {action_id} → {card.get('name', '?')[:60]} (incomplete checklist)")
+                    return "would-move-back"
+                T.update_card(card["id"], idList=done_id)
+                post_comment(card["id"],
+                    f"## Auto-note: sign-off outstanding\n"
+                    f"**Reason:** card in Done but checklist items not complete (Rule B)\n"
+                    f"**Transcript evidence:** required before close\n"
+                    f"**By:** snotra-card-moves (never auto-close)\n"
+                    f"*Source: {action_id}*"
+                )
+                say(f"noted-mis-move {action_id} → {card.get('name', '?')[:60]}")
+                return "noted"
+        except SystemExit:
+            pass
 
     # If the card is in Done but the action is not actually done (no definition_of_done),
     # it's a mis-move — move back and leave a note

@@ -1,7 +1,7 @@
 // room-tap — the ear that makes a running session hear a room.
 //
 // A room is an append-only record (`hodd/state/assistant/rooms/<room>.jsonl`), written only
-// through `bin/assistant/room.sh`. This extension tails those records and, when a line is
+// through `systems/skirnir/services/room.sh`. This extension tails those records and, when a line is
 // addressed to THIS agent, admits exactly one turn so the agent can answer.
 //
 // Why it exists: nothing on this box tells a LIVE Pi session anything except a human typing.
@@ -194,8 +194,8 @@ export default function (pi: ExtensionAPI) {
             "",
             `From ${speaker}: ${body}`,
             "",
-            `Answer in the room with: bin/assistant/room.sh append --room ${room.id} --speaker ${AGENT} --addressed ${speaker} --text "…"`,
-            `Read the room with: bin/assistant/room.sh list --room ${room.id} --limit 20`,
+            `Answer in the room with: systems/skirnir/services/room.sh append --room ${room.id} --speaker ${AGENT} --addressed ${speaker} --text "…"`,
+            `Read the room with: systems/skirnir/services/room.sh list --room ${room.id} --limit 20`,
           ].join("\n");
           await pi.sendUserMessage(content, { deliverAs: "followUp" });
           cursor.sent[room.id] = [...(cursor.sent[room.id] || []), Date.now()];

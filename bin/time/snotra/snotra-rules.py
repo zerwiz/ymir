@@ -39,6 +39,8 @@ HOUSE_DEFAULTS = {
     "grooming": "monthly",
     "auto_assign": True,
     "notify_on_assign": True,
+    "never_auto_close": True,
+    "identity_matching": True,
     "escalation": {"overdue_days": 3, "escalate_to": "chair"},
     "transcript_sources": [],
     "routing": {

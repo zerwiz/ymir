@@ -11,7 +11,7 @@ vendored `fm-*` script kept byte-comparable to upstream on purpose.
 `disposition` says what happens to it: `keep`, `migrate → src/…` where the
 Python runtime already has the module, `retire` for orphans, `provenance`.
 
-bin[628]{file,does,kind,verdict,disposition,callers,lines}:
+bin[629]{file,does,kind,verdict,disposition,callers,lines}:
   "README.md","`bin/` — every file, what it does, and whether it is alive","data","tested","keep",19,-
   "README.md","Gróa — the updater, one per install","data","tested","keep",19,-
   "README.md","Gná — the one mail desk (production)","data","tested","keep",19,-
@@ -90,6 +90,7 @@ bin[628]{file,does,kind,verdict,disposition,callers,lines}:
   "doc-sweep.sh","doc-sweep.sh — the shelf-sweeper (plan 63): find the operator's documents, inside","tool","tested","keep",0,589
   "docs-claims-guard.sh","docs-claims-guard.sh — Rule 27: a user-facing document may not name a road that is closed.","tool","wired","keep",0,40
   "docs-guard.sh","docs-guard.sh — docs/ is the PUBLIC, user-facing tree.","tool","wired","keep",3,55
+  "domain.sh","domain.sh — the ONE door that starts, reports and stops a domain's keeper.","tool","wired","keep",0,181
   "doors.sh","doors.sh — a door register for ANY directory, rendered from the tree (plan 115 P7).","tool","wired","migrate → src/ymir_runtime/doors.py",0,32
   "ear.sh","bin/assistant/ear.sh -> systems/skirnir/services/ear.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
   "editor-place.sh","editor-place.sh — the editor is UNMANAGED by default: it opens on the","tool","wired","keep",3,223
@@ -316,14 +317,14 @@ bin[628]{file,does,kind,verdict,disposition,callers,lines}:
   "heimdall-ssh-keys.sh","heimdall-ssh-keys.sh — Heimdall's SSH-keys surface.","tool","wired","keep",1,382
   "herdr-agents.py","'''herdr-agents.py — list the agents standing in this herdr session, as TOON.","tool","wired","keep",1,45
   "herdr-ensure.sh","herdr-ensure.sh — Þjazi: guarantee the terminal backend Ymir needs.","tool","wired","keep",4,106
-  "herdr-run.sh","herdr-run.sh — raise an Eindri in herdr, by the grain that fits the errand.","tool","tested","keep",7,569
+  "herdr-run.sh","herdr-run.sh — raise an Eindri in herdr, by the grain that fits the errand.","tool","tested","keep",8,569
   "hermes-ensure.sh","hermes-ensure.sh — ensure the Hermes agent runtime is present.","tool","wired","keep",2,89
   "hlidskjalf-agents.sh","hlidskjalf-agents.sh — WHO IS ACTUALLY STANDING, and what they are doing.","tool","wired","keep",1,182
   "hlidskjalf-usage.sh","hlidskjalf-usage.sh — what the HARNESSES spent, not just the smithy.","tool","wired","keep",0,202
   "hnitbjorg-ensure.sh","hnitbjorg-ensure.sh — ensure the vault's tooling stands and its path is sound.","tool","wired","keep",2,111
   "hnitbjorg.sh","hnitbjorg.sh — Hnitbjörg: the encrypted document vault.","tool","wired","keep",3,250
   "hoard-guard.sh","hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME).","tool","wired","keep",2,150
-  "hoard-lib.sh","hoard-lib.sh — where the operator's HOME lives, and the two roots beneath it.","lib","tested","keep",177,116
+  "hoard-lib.sh","hoard-lib.sh — where the operator's HOME lives, and the two roots beneath it.","lib","tested","keep",178,116
   "hodd-set.sh","hodd-set.sh — set ONE key in an age-encrypted secret file, with guards that make a","tool","wired","keep",0,106
   "hodd.sh","hodd.sh — the Allfather's private hoard: path, init, ls, load, tenant.","tool","tested","keep",10,120
   "home-index-check.sh","home-index-check.sh — every shelf in the home has an index, and the index is honest.","tool","wired","keep",1,82
@@ -419,7 +420,7 @@ bin[628]{file,does,kind,verdict,disposition,callers,lines}:
   "omarchy-sense.sh","omarchy-sense.sh — learn the Allfather's Omarchy machine.","tool","wired","keep",3,204
   "open-design.sh","open-design.sh — the Allfather's door to OpenDesign (Hnoss) on this seat.","tool","wired","keep",0,85
   "opendesign.sh","opendesign.sh — start / stop / status for OpenDesign (the design forge, Hnoss).","tool","wired","keep",0,88
-  "org_adapter.py","'''org_adapter — the abstract base class for organization tool adapters.","data","wired","keep",0,210
+  "org_adapter.py","'''org_adapter — the abstract base class for organization tool adapters.","data","wired","keep",0,244
   "packaged-gate.sh","packaged-gate.sh — prove the PUBLISHED artifact, not the tree.","tool","wired","keep",0,103
   "participants-fill.sh","bin/time/snotra/participants-fill.sh -> systems/snotra/services/letters/participants-fill.sh — RETIRED SHIM (plan 129, 2026-10-24); execs t…","tool","wired","keep",0,16
   "path-ledger-guard.sh","path-ledger-guard.sh — Rule 25: a path that MOVED may not be referenced again.","tool","tested","keep",0,121
@@ -511,7 +512,7 @@ bin[628]{file,does,kind,verdict,disposition,callers,lines}:
   "snotra-board.sh","bin/time/snotra/snotra-board.sh -> systems/snotra/services/cron/snotra-board.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door a…","tool","wired","keep",0,16
   "snotra-bot.sh","bin/time/snotra/snotra-bot.sh -> systems/snotra/services/ear/snotra-bot.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and sa…","tool","wired","keep",0,16
   "snotra-capture.sh","bin/time/snotra/snotra-capture.sh -> systems/snotra/services/ear/snotra-capture.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new doo…","tool","wired","keep",1,16
-  "snotra-card-moves.py","'''snotra-card-moves — card-movement automation rules (DEC-20261022-04).","data","wired","keep",1,369
+  "snotra-card-moves.py","'''snotra-card-moves — card-movement automation rules (DEC-20261022-04).","data","wired","keep",1,401
   "snotra-card-moves.sh","snotra-card-moves.sh — card-movement automation rules (DEC-20261022-04).","tool","wired","keep",0,14
   "snotra-cdp.py","bin/time/snotra/snotra-cdp.py -> systems/snotra/services/ear/snotra-cdp.py — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and sa…","tool","wired","keep",0,16
   "snotra-cron.sh","bin/time/snotra/snotra-cron.sh -> systems/snotra/services/cron/snotra-cron.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and…","tool","wired","keep",0,16
@@ -547,7 +548,7 @@ bin[628]{file,does,kind,verdict,disposition,callers,lines}:
   "snotra-render-pdf.sh","bin/time/snotra/snotra-render-pdf.sh -> systems/snotra/services/letters/snotra-render-pdf.sh — RETIRED SHIM (plan 129, 2026-10-24); execs t…","tool","wired","keep",0,16
   "snotra-route.py","'''snotra-route — the action router: from transcription to action across channels.","data","wired","keep",1,235
   "snotra-route.sh","snotra-route.sh — the action router: from transcription to action across channels.","tool","wired","keep",0,10
-  "snotra-rules.py","'''snotra-rules — the rules engine for per-board, per-project, per-company handling.","data","wired","keep",2,207
+  "snotra-rules.py","'''snotra-rules — the rules engine for per-board, per-project, per-company handling.","data","wired","keep",2,209
   "snotra-rules.sh","snotra-rules.sh — the rules engine for per-board, per-project, per-company handling.","tool","wired","keep",1,10
   "snotra-signoff.sh","bin/time/snotra/snotra-signoff.sh -> systems/snotra/services/approve/snotra-signoff.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new…","tool","wired","keep",0,16
   "snotra-store.sh","bin/time/snotra/snotra-store.sh -> systems/snotra/services/record/snotra-store.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door…","tool","wired","keep",0,16
@@ -581,7 +582,7 @@ bin[628]{file,does,kind,verdict,disposition,callers,lines}:
   "toolchain.sh","toolchain.sh — the provider wrappers (W0033).","tool","wired","keep",0,75
   "topology.sh","topology.sh — what IS this machine in the fleet, and is it talking to the heart?","tool","tested","keep",6,139
   "trello-map.sh","bin/time/snotra/trello-map.sh -> systems/snotra/services/cron/trello-map.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and s…","tool","wired","keep",0,16
-  "trello_adapter.py","'''trello_adapter — the Trello implementation of OrgAdapter.","data","wired","keep",0,110
+  "trello_adapter.py","'''trello_adapter — the Trello implementation of OrgAdapter.","data","wired","keep",0,128
   "trello_client.py","bin/time/snotra/trello_client.py -> systems/snotra/services/cron/trello_client.py — RETIRED SHIM (plan 129, 2026-10-24); execs the new door…","tool","wired","keep",1,16
   "tts-lease.sh","bin/time/snotra/tts-lease.sh -> systems/snotra/services/tts-lease/tts-lease.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door an…","tool","wired","keep",0,16
   "tui-frame-check.sh","tui-frame-check.sh — prove that what the TUI writes to the terminal fits the terminal.","tool","wired","keep",0,162
@@ -641,6 +642,6 @@ bin[628]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir.js","/**","tool","wired","keep",5,263
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
 
-**Tally.** verdict: wired=391, tested=237
+**Tally.** verdict: wired=392, tested=237
 
-**Tally.** disposition: keep=615, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
+**Tally.** disposition: keep=616, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1

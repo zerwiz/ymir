@@ -61,35 +61,35 @@ capabilities[5]{surface,count}:
 | valhalla.sh | valhalla.sh — the process hall (Valhalla). List, inspect, revive, and  | tested+named | keep (a human or a cron row must run it) |
 | workspace-provision.sh | workspace-provision.sh — carve one workspace for the operator. Single  | tested+named | keep (a human or a cron row must run it) |
 | yt-transcript.sh | yt-transcript.sh — read a video: metadata, description, and transcript | tested+named | keep (a human or a cron row must run it) |
-| adapter-test.sh | bin/assistant/adapter-test.sh -> systems/skirnir/services/adapter-test.s | tested | keep (a human or a cron row must run it) |
-| approve-fact.sh | bin/assistant/approve-fact.sh -> systems/skirnir/services/approve-fact.s | tested | keep (a human or a cron row must run it) |
-| ask.sh | bin/assistant/ask.sh -> systems/skirnir/services/ask.sh — RETIRED SHIM | tested+named | keep (a human or a cron row must run it) |
-| asks.sh | bin/assistant/asks.sh -> systems/skirnir/services/asks.sh — RETIRED SH | tested | keep (a human or a cron row must run it) |
-| backup.sh | bin/assistant/backup.sh -> systems/skirnir/services/backup.sh — RETIRE | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
-| ban.sh | bin/assistant/ban.sh -> systems/skirnir/services/ban.sh — RETIRED SHIM | tested | keep (a human or a cron row must run it) |
-| ear.sh | bin/assistant/ear.sh -> systems/skirnir/services/ear.sh — RETIRED SHIM | tested | keep (a human or a cron row must run it) |
-| escalate.sh | bin/assistant/escalate.sh -> systems/skirnir/services/escalate.sh — RE | tested | keep (a human or a cron row must run it) |
-| escalation-timer.sh | bin/assistant/escalation-timer.sh -> systems/skirnir/services/escalation | tested | keep (a human or a cron row must run it) |
-| group-add.sh | bin/assistant/group-add.sh -> systems/skirnir/services/group-add.sh —  | tested | keep (a human or a cron row must run it) |
-| group-allow.sh | bin/assistant/group-allow.sh -> systems/skirnir/services/group-allow.sh  | tested | keep (a human or a cron row must run it) |
-| kb-export.sh | bin/assistant/kb-export.sh -> systems/skirnir/services/kb-export.sh —  | tested | keep (a human or a cron row must run it) |
-| learn-home.sh | bin/assistant/learn-home.sh -> systems/skirnir/services/learn-home.sh � | tested | keep (a human or a cron row must run it) |
-| learn-house.sh | bin/assistant/learn-house.sh -> systems/skirnir/services/learn-house.sh  | tested | keep (a human or a cron row must run it) |
-| learn-site.sh | bin/assistant/learn-site.sh -> systems/skirnir/services/learn-site.sh � | tested | keep (a human or a cron row must run it) |
-| learn.sh | bin/assistant/learn.sh -> systems/skirnir/services/learn.sh — RETIRED  | tested | keep (a human or a cron row must run it) |
-| mouth.sh | bin/assistant/mouth.sh -> systems/skirnir/services/mouth.sh — RETIRED  | tested | keep (a human or a cron row must run it) |
-| prune.sh | bin/assistant/prune.sh -> systems/skirnir/services/prune.sh — RETIRED  | tested | keep (a human or a cron row must run it) |
-| query.sh | bin/assistant/query.sh -> systems/skirnir/services/query.sh — RETIRED  | tested | keep (a human or a cron row must run it) |
-| report.sh | bin/assistant/report.sh -> systems/skirnir/services/report.sh — RETIRE | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
-| research-smoke.sh | bin/assistant/research-smoke.sh -> systems/skirnir/services/research-smo | tested | keep (a human or a cron row must run it) |
-| room-squad.sh | bin/assistant/room-squad.sh -> systems/skirnir/services/room-squad.sh � | tested | keep (a human or a cron row must run it) |
-| room-wall-test.sh | bin/assistant/room-wall-test.sh -> systems/skirnir/services/room-wall-te | tested | keep (a human or a cron row must run it) |
-| room.sh | bin/assistant/room.sh -> systems/skirnir/services/room.sh — RETIRED SH | tested+named | keep (a human or a cron row must run it) |
-| smoke.sh | bin/assistant/smoke.sh -> systems/skirnir/services/smoke.sh — RETIRED  | tested+named | keep (a human or a cron row must run it) |
-| telegram.sh | bin/assistant/telegram.sh -> systems/skirnir/services/telegram.sh — RE | tested | keep (a human or a cron row must run it) |
-| voice-handler.sh | bin/assistant/voice-handler.sh -> systems/skirnir/services/voice-handler | tested | keep (a human or a cron row must run it) |
-| voice.sh | bin/assistant/voice.sh -> systems/skirnir/services/voice.sh — RETIRED  | tested | keep (a human or a cron row must run it) |
-| walls-test.sh | bin/assistant/walls-test.sh -> systems/skirnir/services/walls-test.sh � | tested | keep (a human or a cron row must run it) |
+| adapter-test.sh | systems/skirnir/services/adapter-test.sh -> systems/skirnir/services/adapter-test.s | tested | keep (a human or a cron row must run it) |
+| approve-fact.sh | systems/skirnir/services/approve-fact.sh -> systems/skirnir/services/approve-fact.s | tested | keep (a human or a cron row must run it) |
+| ask.sh | systems/skirnir/services/ask.sh -> systems/skirnir/services/ask.sh — RETIRED SHIM | tested+named | keep (a human or a cron row must run it) |
+| asks.sh | systems/skirnir/services/asks.sh -> systems/skirnir/services/asks.sh — RETIRED SH | tested | keep (a human or a cron row must run it) |
+| backup.sh | systems/skirnir/services/backup.sh -> systems/skirnir/services/backup.sh — RETIRE | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| ban.sh | systems/skirnir/services/ban.sh -> systems/skirnir/services/ban.sh — RETIRED SHIM | tested | keep (a human or a cron row must run it) |
+| ear.sh | systems/skirnir/services/ear.sh -> systems/skirnir/services/ear.sh — RETIRED SHIM | tested | keep (a human or a cron row must run it) |
+| escalate.sh | systems/skirnir/services/escalate.sh -> systems/skirnir/services/escalate.sh — RE | tested | keep (a human or a cron row must run it) |
+| escalation-timer.sh | systems/skirnir/services/escalation-timer.sh -> systems/skirnir/services/escalation | tested | keep (a human or a cron row must run it) |
+| group-add.sh | systems/skirnir/services/group-add.sh -> systems/skirnir/services/group-add.sh —  | tested | keep (a human or a cron row must run it) |
+| group-allow.sh | systems/skirnir/services/group-allow.sh -> systems/skirnir/services/group-allow.sh  | tested | keep (a human or a cron row must run it) |
+| kb-export.sh | systems/skirnir/services/kb-export.sh -> systems/skirnir/services/kb-export.sh —  | tested | keep (a human or a cron row must run it) |
+| learn-home.sh | systems/skirnir/services/learn-home.sh -> systems/skirnir/services/learn-home.sh � | tested | keep (a human or a cron row must run it) |
+| learn-house.sh | systems/skirnir/services/learn-house.sh -> systems/skirnir/services/learn-house.sh  | tested | keep (a human or a cron row must run it) |
+| learn-site.sh | systems/skirnir/services/learn-site.sh -> systems/skirnir/services/learn-site.sh � | tested | keep (a human or a cron row must run it) |
+| learn.sh | systems/skirnir/services/learn.sh -> systems/skirnir/services/learn.sh — RETIRED  | tested | keep (a human or a cron row must run it) |
+| mouth.sh | systems/skirnir/services/mouth.sh -> systems/skirnir/services/mouth.sh — RETIRED  | tested | keep (a human or a cron row must run it) |
+| prune.sh | systems/skirnir/services/prune.sh -> systems/skirnir/services/prune.sh — RETIRED  | tested | keep (a human or a cron row must run it) |
+| query.sh | systems/skirnir/services/query.sh -> systems/skirnir/services/query.sh — RETIRED  | tested | keep (a human or a cron row must run it) |
+| report.sh | systems/skirnir/services/report.sh -> systems/skirnir/services/report.sh — RETIRE | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| research-smoke.sh | systems/skirnir/services/research-smoke.sh -> systems/skirnir/services/research-smo | tested | keep (a human or a cron row must run it) |
+| room-squad.sh | systems/skirnir/services/room-squad.sh -> systems/skirnir/services/room-squad.sh � | tested | keep (a human or a cron row must run it) |
+| room-wall-test.sh | systems/skirnir/services/room-wall-test.sh -> systems/skirnir/services/room-wall-te | tested | keep (a human or a cron row must run it) |
+| room.sh | systems/skirnir/services/room.sh -> systems/skirnir/services/room.sh — RETIRED SH | tested+named | keep (a human or a cron row must run it) |
+| smoke.sh | systems/skirnir/services/smoke.sh -> systems/skirnir/services/smoke.sh — RETIRED  | tested+named | keep (a human or a cron row must run it) |
+| telegram.sh | systems/skirnir/services/telegram.sh -> systems/skirnir/services/telegram.sh — RE | tested | keep (a human or a cron row must run it) |
+| voice-handler.sh | systems/skirnir/services/voice-handler.sh -> systems/skirnir/services/voice-handler | tested | keep (a human or a cron row must run it) |
+| voice.sh | systems/skirnir/services/voice.sh -> systems/skirnir/services/voice.sh — RETIRED  | tested | keep (a human or a cron row must run it) |
+| walls-test.sh | systems/skirnir/services/walls-test.sh -> systems/skirnir/services/walls-test.sh � | tested | keep (a human or a cron row must run it) |
 | fm-afk-launch.sh | fm-afk-launch.sh - the single owner of the away-mode daemon TERMINAL lif | tested+named | keep (a human or a cron row must run it) |
 | fm-afk-return.sh | fm-afk-return.sh - deterministic away-mode return catch-up gate. | tested | keep (a human or a cron row must run it) |
 | fm-afk-start.sh | Enter away mode and run the sub-supervisor daemon in a harness-tracked | tested | keep (a human or a cron row must run it) |
@@ -548,7 +548,7 @@ capabilities[5]{surface,count}:
 | snotra-transcribe.sh | bin/time/snotra/snotra-transcribe.sh -> systems/snotra/services/ear/snot | tested+named | keep (a human or a cron row must run it) |
 | snotra-trello.sh | bin/time/snotra/snotra-trello.sh -> systems/snotra/services/cron/snotra- | tested | keep (a human or a cron row must run it) |
 | snotra-voice-device.sh | bin/time/snotra/snotra-voice-device.sh -> systems/snotra/services/ear/sn | tested | keep (a human or a cron row must run it) |
-| stt-wire.sh | bin/time/snotra/stt-wire.sh -> systems/snotra/services/ear/stt-wire.sh � | tested | keep (a human or a cron row must run it) |
+| stt-wire.sh | bin/time/snotra/stt-wire.sh -> systems/snotra/services/ear/stt-wire.sh � | tested | keep (a human or a cron row must run it) |
 | trello-map.sh | bin/time/snotra/trello-map.sh -> systems/snotra/services/cron/trello-map | tested | keep (a human or a cron row must run it) |
 | tts-lease.sh | bin/time/snotra/tts-lease.sh -> systems/snotra/services/tts-lease/tts-le | tested | keep (a human or a cron row must run it) |
 | ymir-say.sh | bin/time/snotra/ymir-say.sh -> systems/snotra/services/tts-lease/ymir-sa | tested+named | keep (a human or a cron row must run it) |

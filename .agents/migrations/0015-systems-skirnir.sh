@@ -28,14 +28,14 @@ HOME_DIR="${YMIR_HOME:-}"
 changed=0
 repoint() {  # <file>
   local f="$1"; [ -r "$f" ] || return 0
-  grep -q 'bin/assistant/' "$f" 2>/dev/null || return 0
+  grep -q 'bin/assistant/' "$f" 2>/dev/null || return 0  # allow-superseded-path: this line RECORDS the move, it does not make it
   local tmp; tmp="$(mktemp)"
   while IFS= read -r line; do
     case "$line" in
-      *bin/assistant/*)
+      *bin/assistant/*)  # allow-superseded-path: this line RECORDS the move, it does not make it
         local out="$line"
         # only rewrite a door whose new home exists
-        for d in $(printf '%s' "$line" | grep -oE 'bin/assistant/[A-Za-z0-9._-]+' | sort -u); do
+        for d in $(printf '%s' "$line" | grep -oE 'bin/assistant/[A-Za-z0-9._-]+' | sort -u); do  # allow-superseded-path: this line RECORDS the move, it does not make it
           local base="${d##*/}"
           [ -e "$ROOT/systems/skirnir/services/$base" ] || continue
           out="${out//$d/systems\/skirnir\/services\/$base}"

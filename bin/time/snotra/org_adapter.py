@@ -119,7 +119,11 @@ class OrgAdapter(abc.ABC):
     @abc.abstractmethod
     def resolve_member(self, name: str, board_id: str) -> str | None:
         """Resolve a person's name to their member id. Return None if not found.
-        Never invent a person."""
+        Never invent a person.
+
+        Identity matching (Reygan's challenge #3): if the name doesn't match
+        directly, check the speaker-to-user mapping table for this company.
+        """
         ...
 
     @abc.abstractmethod
@@ -180,6 +184,36 @@ class OrgAdapter(abc.ABC):
 
     def say(self, msg: str):
         print(msg, flush=True)
+
+
+def load_speaker_map(company: str) -> dict:
+    """Load the speaker-to-user mapping table for a company.
+
+    Returns {speaker_name: user_id} or {} if no mapping exists.
+    """
+    import os
+    from pathlib import Path
+    # Try YMIR_HOME first
+    home = os.environ.get("YMIR_HOME")
+    if not home:
+        try:
+            import subprocess
+            root = Path(__file__).resolve().parents[3]
+            out = subprocess.check_output(
+                ["bash", "-c", f'. "{root}/bin/vault/hoard-lib.sh" >/dev/null 2>&1; out=""; ymir_home_root out; printf "%s" "$out"'],
+                timeout=20).decode().strip()
+            home = out
+        except Exception:
+            home = os.path.join(os.path.expanduser("~"), "Documents", "ymirhome")
+    p = Path(home) / "hodd" / "identity" / "speaker-map" / f"{company}.yaml"
+    if not p.is_file():
+        return {}
+    try:
+        import yaml
+        data = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+        return data.get("speakers", {}) or {}
+    except Exception:
+        return {}
 
 
 def adapter_for(place: dict) -> OrgAdapter:

@@ -130,6 +130,6 @@ if os.environ["FACTS_Q"] == "1":
 PY
 
 if [ "$ACTION" = "--facts" ]; then
-  bash "$ROOT/bin/assistant/kb-export.sh" >/dev/null 2>&1 || true
+  bash "$ROOT/systems/skirnir/services/kb-export.sh" >/dev/null 2>&1 || true
   printf 'trello-map: facts written and the digest rebuilt\n'
 fi

@@ -288,7 +288,7 @@ def addressed(text: str, name: str) -> bool:
 def compose(heard: str, name: str) -> str:
     """Compose the answer.
 
-    FIRST through Skírnir's own engine (`bin/assistant/ask.sh`, tier owner): it holds
+    FIRST through Skírnir's own engine (`systems/skirnir/services/ask.sh`, tier owner): it holds
     the approved digest — who the Allfather is, what Ymir and the projects are — and the
     four walls. The rail fallback is for when that door is down, and it is then blind:
     it answers only as a generic assistant and never invents a fact.
