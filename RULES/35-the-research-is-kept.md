@@ -37,7 +37,7 @@
 ## Why
 
 Measured on the day it was adopted: `hodd/docs/research` held **1** file, `hodd/life/personal/research`
-held **5**, there was no shelf, no index and no rule — and `bin/assistant/research.py` is deliberately
+held **5**, there was no shelf, no index and no rule — and `systems/skirnir/services/research.py` is deliberately
 built so that *nothing fetched is ever learned*. That is correct for Skírnir's approved-facts digest
 (he must not learn from the web) and wrong for the house: a search paid for once was paid for again,
 and a claim in a PR had no source behind it.

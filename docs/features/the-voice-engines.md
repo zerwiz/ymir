@@ -97,7 +97,7 @@ comma unless it is a time (`12:30`), and the final sweep allows `'`.
 ### The voice
 
 `~/.local/bin/kokoro-voice` (SUPER+CTRL+U) is the **single source of truth**. It is read by F11
-(`kokoro-speak`) and by the assistant (`bin/assistant/voice.sh`); the server config is only a fallback,
+(`kokoro-speak`) and by the assistant (`systems/skirnir/services/voice.sh`); the server config is only a fallback,
 because two sources of truth produced two voices on one box.
 
 Measured on the same long answer: **af_nicole 17.4 s / 14 pauses · af_heart 10.7 s / 6 · af_bella
@@ -110,8 +110,8 @@ others remain a `kokoro-voice next` away.
 piper-clean-text <<< "the Allfather's assistant, 1,000 times at 12:30"   # must keep ' , . and digits
 kokoro-voice                          # which voice, and its grade
 kokoro-voice set af_heart             # or next / prev to cycle
-bin/assistant/audio-tighten.py in.wav out.wav   # close a model's short mid-word gaps
-bin/assistant/speech-text.py <<< "I don't hold that"   # what the assistant's mouth may say
+systems/skirnir/services/audio-tighten.py in.wav out.wav   # close a model's short mid-word gaps
+systems/skirnir/services/speech-text.py <<< "I don't hold that"   # what the assistant's mouth may say
 ```
 
 ### Limits

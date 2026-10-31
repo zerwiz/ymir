@@ -1,0 +1,39 @@
+version: 1
+updated: "2026-10-31"
+
+# systems/skirnir/domain.yaml — Skírnir's own declaration, in his own folder.
+#
+# WHY THIS FILE EXISTS (plan 150, plan 129 §5): the assistant the Allfather talks to every day was
+# `bin/assistant/` — 37 files, 3,220 lines, four different things wearing one folder name, and NOT ONE
+# figure in `.agents/agents/` owning it. "Who may change Skírnir?" had no answer in the folder itself.
+# He is not an app: there is no screen of his own (he speaks through Telegram, the desk and the door).
+# He is a SYSTEM: headless, stateful, and his knowledge is lost if the folder is deleted.
+
+domain: skirnir
+name: Skírnir
+figure: Skírnir — Frey's messenger, who is sent on errands and returns with news
+kind: system            # not an app: no screen of his own. The desk and Telegram may READ him.
+stateful: true          # he owns a knowledge base, the gate's pending asks, and the rooms' state.
+
+folder: systems/skirnir/
+# The one path this keeper may write — enforced by an errand brief, checked by `bin/agents/domain.sh check`.
+may_write: [systems/skirnir/]
+
+board: skirnir/assistant
+memory: well namespace domain:skirnir
+
+doors:
+  voice: [services/ear.sh, services/mouth.sh, services/voice.sh, services/voice-handler.sh]
+  knowledge: [services/skirnir.py, services/ground.py, services/research.py, services/query.sh]
+  gate: [services/asks.sh, services/ask.sh, services/approve-fact.sh, services/escalate.sh, services/escalation-timer.sh]
+  rooms: [services/room.sh, services/room-squad.sh, services/rooms-wall-test.sh, services/walls-test.sh]
+called_by:
+  - "the Allfather, through Telegram and the desk"
+  - "bin/agents/domain.sh call skirnir '<order>'"
+  - "the Nornir rows that name one of his doors"
+
+never:
+  - "send anything the outbound gate has not approved"
+  - "speak for the Allfather in a room he has not opened"
+  - "hold a secret value — he references the vault, he never carries it"
+  - "write outside systems/skirnir/ and his own memory namespace"

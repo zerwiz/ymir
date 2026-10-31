@@ -109,10 +109,10 @@ emit() {
   local who=$1 addr=$2 reply=${3:-} text=$4
   [ -n "$text" ] || return 1
   if [ -n "$reply" ]; then
-    bash "$ROOT/bin/assistant/room.sh" append --room "$ROOM" --speaker "$who" --role figure \
+    bash "$ROOT/systems/skirnir/services/room.sh" append --room "$ROOM" --speaker "$who" --role figure \
       --addressed "$addr" --reply-to "$reply" --text "$text" >/dev/null; rc=$?
   else
-    bash "$ROOT/bin/assistant/room.sh" append --room "$ROOM" --speaker "$who" --role figure \
+    bash "$ROOT/systems/skirnir/services/room.sh" append --room "$ROOM" --speaker "$who" --role figure \
       --addressed "$addr" --text "$text" >/dev/null; rc=$?
   fi
   if [ "$rc" = 6 ]; then
@@ -159,9 +159,9 @@ PRIOR="$(recall_block "$TASK")"
 printf 'council[3]{mode,room,chair,seats}:\n  "%s","%s","%s","%s"\n' "$MODE" "$ROOM" "$CHAIR" "$SEATS_NO_CHAIR"
 
 # the task enters the record from the Allfather, addressed to the chair
-bash "$ROOT/bin/assistant/room.sh" append --room "$ROOM" --speaker allfather --role operator \
+bash "$ROOT/systems/skirnir/services/room.sh" append --room "$ROOM" --speaker allfather --role operator \
   --addressed "$CHAIR,$SEATS_NO_CHAIR" --text "$TASK" >/dev/null
-TASK_LINE=$(bash "$ROOT/bin/assistant/room.sh" next-id --room "$ROOM"); TASK_LINE=$((TASK_LINE - 1))
+TASK_LINE=$(bash "$ROOT/systems/skirnir/services/room.sh" next-id --room "$ROOM"); TASK_LINE=$((TASK_LINE - 1))
 
 case "$MODE" in
   divide)

@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
-# ask.sh — the door to Skírnir, the Allfather's assistant.
+# bin/assistant/ask.sh -> systems/skirnir/services/ask.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.  # allow-superseded-path: this header RECORDS the move, it does not make it
 #
-#   bin/assistant/ask.sh --tier owner|collaborator|known|stranger --text "…" [--channel console]
-#
-# The engine (skirnir.py) holds the four walls; this door only exists so a human and a cron row
-# call the same thing. It has NO tool access, sends nothing, and answers from the approved digest
-# or says it does not know.
-set -u
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-exec python3 "$SCRIPT_DIR/skirnir.py" "$@"
+# It exists so a caller nobody has repointed yet still works. It is retired by the dated follow-up in
+# docs/fixes/assistant/2026-10-31-skirnir-becomes-a-system.md, and .agents/paths-ledger.yaml records the move.
+set -euo pipefail
+_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_root="$(cd "$_d/../.." && pwd)"
+_new="$_root/systems/skirnir/services/ask.sh"
+if [ ! -e "$_new" ]; then
+  printf 'skirnir: the door moved to systems/skirnir/services/ask.sh and is not there\n' >&2
+  exit 127
+fi
+printf 'skirnir: bin/assistant/ has MOVED to systems/skirnir/ — call systems/skirnir/services/ask.sh (plan 149)\n' >&2
+exec "$_new" "$@"

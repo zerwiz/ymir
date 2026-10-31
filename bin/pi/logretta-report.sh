@@ -95,7 +95,7 @@ say() {  # <speaker> <model> <prompt> [reply_to] [addressed]
       ${pers:+--append-system-prompt "$pers"} "$prompt" 2>/dev/null \
       | sed 's/^[[:space:]]*//' | grep -v '^\[' | sed '/^$/d' | head -c 2200)
   [ -n "$answer" ] || { printf '  "%s: said nothing"\n' "$who"; return 1; }
-  bash "$ROOT/bin/assistant/room.sh" append --room "$ROOM" --speaker "$who" --role figure \
+  bash "$ROOT/systems/skirnir/services/room.sh" append --room "$ROOM" --speaker "$who" --role figure \
       --addressed "$addr" ${reply:+--reply-to "$reply"} --text "$answer" >/dev/null
   printf '  "%s","%s",%s,"%s"\n' "$who" "$addr" "${#answer}" "$reply"
 }
