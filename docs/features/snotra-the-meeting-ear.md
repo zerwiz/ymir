@@ -10,14 +10,14 @@ face so an agent can read meetings without writing them.
 ## What you need
 
 - A seat with a **microphone** (a call seat); a headless heart reports a clean skip.
-- The engine: `bin/time/snotra/snotra-ensure.sh` discovers it and installs what is
+- The engine: `systems/snotra/services/ear/snotra-ensure.sh` discovers it and installs what is
   missing (whisper.cpp + one model); Arch: `pacman -S whisper-cpp`.
 
 ## Do it
 
 ```bash
-bin/time/snotra/snotra-ensure.sh status            # engine + model present?
-bin/time/snotra/snotra-ensure.sh ensure --install  # install what is missing
+systems/snotra/services/ear/snotra-ensure.sh status            # engine + model present?
+systems/snotra/services/ear/snotra-ensure.sh ensure --install  # install what is missing
 ```
 
 - **The watch** (`snotra-detect`) is raised by capability on any seat with a mic; it is

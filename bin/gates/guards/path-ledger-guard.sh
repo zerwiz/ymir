@@ -37,17 +37,32 @@ MARK="$(mktemp)"; trap 'rm -f "$MARK"' EXIT
 
 # old<tab>new per line, parsed without a YAML dependency (the file is a list of pairs).
 pairs() {
+  # THREE fields per move: old, new, and — for a PARTIAL move — the files that did not go
+  # (space-separated). A directory-wide "superseded" entry is honest only when the whole
+  # directory moved; when work landed on the trunk afterwards and stayed behind (the org
+  # adapters, rules, route, grooming, card-moves, friday-synch, channel adapters), flagging
+  # every reference to those survivors is a false alarm, and a ward that cries wolf is a ward
+  # that gets waived into silence. `partial: true` + `still_current:` in the ledger lets the
+  # guard tell an unfinished move from a stale reference (2026-10-31).
   python3 - "$LEDGER" <<'PY'
 import re, sys
-old = new = None
+entries, cur = [], {}
+def flush():
+    if cur.get("old") and cur.get("new"):
+        entries.append(cur)
 for line in open(sys.argv[1], encoding="utf-8"):
     m = re.match(r'\s*-?\s*old:\s*"?([^"\n]+)"?\s*$', line)
-    if m: old = m.group(1).strip()
+    if m:
+        flush(); cur = {"old": m.group(1).strip()}; continue
     m = re.match(r'\s*new:\s*"?([^"\n]+)"?\s*$', line)
-    if m and old:
-        new = m.group(1).strip()
-        print(f"{old}\t{new}")
-        old = new = None
+    if m and "old" in cur:
+        cur["new"] = m.group(1).strip(); continue
+    m = re.match(r'\s*still_current:\s*"?([^"\n]*)"?\s*$', line)
+    if m:
+        cur["still"] = m.group(1).strip()
+flush()
+for e in entries:
+    print(f"{e['old']}\t{e['new']}\t{e.get('still','')}")
 PY
 }
 
@@ -68,7 +83,7 @@ SEARCH_DIRS=(bin .agents tools scripts config apps packages RULES docs)
 EXCLUDES=(--exclude-dir=.git --exclude-dir=.yggdrasil --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=build)
 SELF="${BASH_SOURCE[0]}"
 
-while IFS=$'\t' read -r old new; do
+while IFS=$'\t' read -r old new still; do
   [ -n "$old" ] || continue
   grep -rns "${EXCLUDES[@]}" -e "$old" "${SEARCH_DIRS[@]/#/$ROOT/}" 2>/dev/null \
   | while IFS= read -r hit; do
@@ -79,6 +94,13 @@ while IFS=$'\t' read -r old new; do
         "$SELF"|*path-ledger-guard.sh) continue ;;   # the ward names the old paths on purpose
       esac
       printf '%s' "$rest" | grep -q 'allow-superseded-path:' && continue
+      # A file the ledger names as still CURRENT in the old directory is not a stale reference.
+      if [ -n "${still:-}" ]; then
+        # the REFERENCED path's basename, not the file doing the referencing
+        ref="$(printf '%s' "$rest" | grep -oE "$(printf '%s' "$old" | sed 's/[.[\*^$()+?{|]/\\&/g')[A-Za-z0-9._/-]*" | head -1)"
+        base="${ref##*/}"
+        case " $still " in *" $base "*) continue ;; esac
+      fi
       # If the line already carries the NEW path, the old spelling is its suffix, not a
       # reference to a moved file (bin/time/well-vault-sync.sh contains bin/well-vault-sync.sh).
       printf '%s' "$rest" | grep -qF "$new" && continue

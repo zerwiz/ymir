@@ -69,7 +69,7 @@ fi
 if curl -s -m 6 -o /dev/null -X POST http://127.0.0.1:8765/v1/audio/speech \
      -H 'content-type: application/json' -d '{"input":"x","voice":"af_nicole","response_format":"wav"}' 2>/dev/null; then
   ok "kokoro answers on :8765"
-  bash "$ROOT/bin/time/snotra/tts-lease.sh" touch >/dev/null 2>&1
+  bash "$ROOT/systems/snotra/services/tts-lease/tts-lease.sh" touch >/dev/null 2>&1
   if [ -f "$HOME/.local/share/skirnir/tts.lease" ]; then ok "the TTS lease is held"; else bad "tts lease" "no lease file"; fi
   if bash "$SCRIPT_DIR/mouth.sh" "smoke test of the voice" /tmp/smoke-voice.ogg >/dev/null 2>&1 \
      && [ -s /tmp/smoke-voice.ogg ]; then
@@ -122,27 +122,27 @@ else bad "ask ledger" "could not record an ask"; fi
 
 # ── 8 · Trello: resolve by name, never by id ─────────────────────────────────────────────────
 if [ -f "$H/hodd/identity/trello-map.yaml" ]; then
-  ARI="$(bash "$ROOT/bin/time/snotra/trello-map.sh" --resolve "control tower" "in progress" 2>/dev/null)"
+  ARI="$(bash "$ROOT/systems/snotra/services/cron/trello-map.sh" --resolve "control tower" "in progress" 2>/dev/null)"
   case "$ARI" in ari:cloud:trello::list/*) ok "the Trello id resolves by name" ;;
     *) bad "trello resolve" "${ARI:-no answer}" ;; esac
 else
-  skip "trello map" "no map yet — bin/time/snotra/trello-map.sh"
+  skip "trello map" "no map yet — systems/snotra/services/cron/trello-map.sh"
 fi
 
 # ── 9 · the meeting seat has a mouth and a guard ─────────────────────────────────────────────
 if command -v chromium >/dev/null 2>&1; then
-  if bash "$ROOT/bin/time/snotra/snotra-meet.sh" state --port 9899 >/dev/null 2>&1; then
+  if bash "$ROOT/systems/snotra/services/ear/snotra-meet.sh" state --port 9899 >/dev/null 2>&1; then
     skip "the seat" "no live seat to inspect on :9899"
   else
     ok "the seat door answers (no seat running)"
   fi
-  python3 "$ROOT/bin/time/snotra/snotra-cdp.py" seat --port 9899 >/dev/null 2>&1
+  python3 "$ROOT/systems/snotra/services/ear/snotra-cdp.py" seat --port 9899 >/dev/null 2>&1
   [ $? -eq 2 ] && ok "the seat refuses to run without a url" || bad "seat guard" "seat ran without --url"
 fi
 
 # ── 10 · the far-side ear (plan 111 · S1): a chain, not a switch ────────────────────────────
-if [ -x "$ROOT/bin/time/snotra/stt-wire.sh" ]; then
-  CHAIN="$(bash "$ROOT/bin/time/snotra/stt-wire.sh" check 2>&1)"
+if [ -x "$ROOT/systems/snotra/services/ear/stt-wire.sh" ]; then
+  CHAIN="$(bash "$ROOT/systems/snotra/services/ear/stt-wire.sh" check 2>&1)"
   case "$CHAIN" in
     *"cannot reach"*) skip "the far-side ear" "the firewall blocks the docker bridge — one scoped ufw rule closes it (see stt-wire.sh check)" ;;
     *FAIL*) bad "the far-side ear" "$(printf '%s' "$CHAIN" | grep FAIL | head -1 | sed 's/^ *//')" ;;
@@ -153,8 +153,8 @@ else
 fi
 
 # ── the meeting record: a tracked record may not go missing (Rule 11) ──────────────────────
-if [ -x "$ROOT/bin/time/snotra/meeting-record-guard.sh" ]; then
-  MG="$(bash "$ROOT/bin/time/snotra/meeting-record-guard.sh" check 2>&1)"
+if [ -x "$ROOT/systems/snotra/services/approve/meeting-record-guard.sh" ]; then
+  MG="$(bash "$ROOT/systems/snotra/services/approve/meeting-record-guard.sh" check 2>&1)"
   case "$MG" in
     *not\ a\ git\ repo*) skip "meeting records" "the meetings shelf is not in a repo here" ;;
     *'"0"'*) ok "every tracked meeting record is on disk" ;;
@@ -246,14 +246,14 @@ bash "$SCRIPT_DIR/mouth.sh" "the voice is back" /tmp/smoke-up.ogg >/dev/null 2>&
   && ok "the voice comes back after a restart" || bad "voice restart" "no voice after restarting kokoro"
 
 # ── G · the idle-stop respects the lease, and lowers a truly idle card ──────────────────────
-bash "$ROOT/bin/time/snotra/tts-lease.sh" touch >/dev/null 2>&1
+bash "$ROOT/systems/snotra/services/tts-lease/tts-lease.sh" touch >/dev/null 2>&1
 bash "$HOME/.local/bin/kokoro-idle-stop.sh" >/dev/null 2>&1
 systemctl --user is-active --quiet kokoro-serve.service \
   && ok "the idle-stop leaves the voice up while the lease is fresh" \
   || bad "idle-stop lease" "lowered the voice under a fresh lease"
 
 # ── H · the ledger, the retention rule, the backup ──────────────────────────────────────────
-bash "$ROOT/bin/time/snotra/audio-retention.sh" scan >/dev/null 2>&1 \
+bash "$ROOT/systems/snotra/services/ear/audio-retention.sh" scan >/dev/null 2>&1 \
   && ok "the retention rule scans the audio shelf" || bad "retention" "scan failed"
 
 

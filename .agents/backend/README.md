@@ -11,8 +11,8 @@ and report it truthfully*:
    upstream so a port can be checked against it. **Provenance, not Ymir's own.**
 2. **The model bridges** — Ymir's own files. They are why this index exists:
 
-backend[175]{file,does,kind,verdict,disposition,callers,lines}:
-  "README.md","`.agents/backend/` — the backend layer, file by file","data","tested","keep",22,-
+backend[176]{file,does,kind,verdict,disposition,callers,lines}:
+  "README.md","`.agents/backend/` — the backend layer, file by file","data","tested","keep",21,-
   "cmux.sh","bin/backends/cmux.sh - the cmux session-provider adapter (EXPERIMENTAL).","data","tested","keep",1,650
   "fm-afk-launch.sh","fm-afk-launch.sh - the single owner of the away-mode daemon TERMINAL lifecycle:","provenance","tested","keep",5,655
   "fm-afk-return.sh","fm-afk-return.sh - deterministic away-mode return catch-up gate.","provenance","tested","keep",3,242
@@ -85,6 +85,7 @@ backend[175]{file,does,kind,verdict,disposition,callers,lines}:
   "fm-merge-local.sh","Perform the approved local merge for a local-only ship task: fast-forward the","provenance","tested","keep",5,75
   "fm-merge-outcome-lib.sh","Shared durable, supervisor-facing outcome publication for a confirmed merge.","provenance","tested","keep",2,139
   "fm-nm-run-lib.sh","Shared no-mistakes axi run attribution primitives.","provenance","tested","keep",3,125
+  "fm-notify-lib.sh","fm-notify-lib.sh — the watcher's path to the Allfather's desktop.","provenance","tested","keep",0,147
   "fm-on.sh","Execute one tracked Firstmate command in a configured remote secondmate home.","provenance","tested","keep",22,126
   "fm-operational-input.sh","fm-operational-input.sh - canonical Firstmate operational-input protocol.","provenance","tested","keep",9,254
   "fm-peek.sh","Print the tail of a crewmate endpoint (bounded, for cheap diagnosis).","provenance","tested","keep",6,47
@@ -100,14 +101,14 @@ backend[175]{file,does,kind,verdict,disposition,callers,lines}:
   "fm-procevent-quota.sh","Quota-exhaustion process-event adapter.","provenance","tested","keep",2,291
   "fm-procevent-remote-reply.sh","Remote-secondmate reply adapter for the generic process-event runner.","provenance","tested","keep",6,578
   "fm-procevent-when.sh","Condition->action adapter for the generic process-to-event runner: register a","provenance","tested","keep",2,505
-  "fm-procevent.sh","Generic process-to-event runner: supervise a registered long-polling child","provenance","tested","keep",13,1467
+  "fm-procevent.sh","Generic process-to-event runner: supervise a registered long-polling child","provenance","tested","keep",12,1467
   "fm-project-mode.sh","Resolve a project's REGISTERED delivery posture from the data/projects.md registry.","provenance","tested","keep",6,93
   "fm-project-origin-lib.sh","Validate a project origin URL that one home hands to another.","provenance","tested","keep",2,181
   "fm-promote.sh","Promote a scout task to a ship task in place: the crewmate keeps its window,","provenance","tested","keep",6,283
   "fm-public-followup-emit.sh","fm-public-followup-emit.sh - emit ONE structured terminal work result for work","provenance","tested","keep",3,261
   "fm-public-followup-lib.sh","shellcheck shell=bash","provenance","tested","keep",8,399
   "fm-public-followup.sh","fm-public-followup.sh - the deterministic consumer and delivery owner for","provenance","tested","keep",10,1331
-  "fm-push-transition-lib.sh","Shared owner of the watcher's native push-transition escalation.","provenance","tested","keep",1,169
+  "fm-push-transition-lib.sh","Shared owner of the watcher's native push-transition escalation.","provenance","tested","keep",1,178
   "fm-quota-axi-lib.sh","shellcheck shell=bash","provenance","tested","keep",5,94
   "fm-quota-choose.sh","Choose the first quota-eligible candidate from a ranked list.","provenance","tested","keep",2,385
   "fm-remote-delta-read.sh","Blocking, non-destructive delta read for a remote secondmate append-only log.","provenance","tested","keep",3,190
@@ -170,7 +171,7 @@ backend[175]{file,does,kind,verdict,disposition,callers,lines}:
   "fm-wake-lib.sh","fm-wake-lib.sh — the vendored firstmate NAME, now a thin adapter over the ONE","provenance","tested","keep",53,60
   "fm-watch-arm.sh","Safe, home-scoped (re-)arm of the firstmate watcher, with honest verification.","provenance","tested","keep",4,603
   "fm-watch-checkpoint.sh","Run one bounded foreground watcher checkpoint for harnesses that should not","provenance","tested","keep",2,110
-  "fm-watch.sh","Firstmate watcher.","provenance","tested","keep",23,1963
+  "fm-watch.sh","Firstmate watcher.","provenance","tested","keep",23,1973
   "fm-x-dismiss.sh","Dismiss a pending X-mode mention at the relay WITHOUT replying to it.","provenance","tested","keep",1,117
   "fm-x-followup.sh","Post a completion follow-up for an X-mode-linked task, up to three within a","provenance","tested","keep",5,287
   "fm-x-lib.sh","Shared config resolution for the X-mode connector client (fm-x-poll.sh and","provenance","tested","keep",9,1001
@@ -188,4 +189,4 @@ backend[175]{file,does,kind,verdict,disposition,callers,lines}:
   "tmux.sh","bin/backends/tmux.sh - the tmux session-provider adapter.","data","tested","keep",4,358
   "zellij.sh","bin/backends/zellij.sh - the zellij session-provider adapter (EXPERIMENTAL).","data","tested","keep",1,701
 
-**Tally.** verdict: tested=163, wired=12
+**Tally.** verdict: tested=164, wired=12

@@ -5,13 +5,13 @@
 # lives, and until now nothing read a due date from it — which is how a passed deadline went
 # unnoticed. This reads the board and says one line per bucket per day, through Hófvarpnir.
 #
-#   bin/time/snotra/trello-due.sh [--dry-run] [--board NAME]
+#   systems/snotra/services/cron/trello-due.sh [--dry-run] [--board NAME]
 #
 # Exit: 0 ok (including "nothing due") · 1 the board could not be read · 2 usage.
 set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+ROOT="$(d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; s="$d"; while [ "$d" != / ] && { [ ! -d "$d/RULES" ] || [ ! -d "$d/.agents" ]; }; do d="$(dirname "$d")"; done; { [ -d "$d/RULES" ] && [ -d "$d/.agents" ]; } || d="$s"; printf '%s' "$d")"
 
 DRY=0; BOARD=""
 while [ $# -gt 0 ]; do

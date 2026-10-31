@@ -15,7 +15,7 @@ control plane: you look at it (Hlidskjalf is the seat you *act* from).
 The board is served on **:4322**. Its data comes from the **snapshot feed**:
 
 ```bash
-bin/time/snotra/hall-snapshot.sh        # writes the live-hall snapshot
+systems/snotra/services/cron/hall-snapshot.sh        # writes the live-hall snapshot
 bin/time/nornir-job-hall-snapshot.sh    # the scheduled job that refreshes it
 ```
 
@@ -33,6 +33,6 @@ The snapshot lands at `apps/odrerir/public/livehall.json`, which the board reads
 
 | What you see | What to do |
 |---|---|
-| The board is empty or stale | Run `bin/time/snotra/hall-snapshot.sh`; check the Nornir job is firing (`bin/time/nornir-cron-start.sh --status`). |
+| The board is empty or stale | Run `systems/snotra/services/cron/hall-snapshot.sh`; check the Nornir job is firing (`bin/time/nornir-cron-start.sh --status`). |
 | `:4322` refuses | The board app is not raised — raise the hall (`scripts/start.sh` raises the set). |
 | The MCP face fails | `bin/desktop/odrerir-mcp-smoke.sh` — the smoke test names the fault. |

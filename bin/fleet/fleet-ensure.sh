@@ -160,17 +160,24 @@ materialize_tools() {
   # operator's home through it, and a seat that has the command without the
   # resolver dies on an unbound YMIR_HOME the moment it runs outside a shell
   # that already knew the home.
-  # They live on their own shelves since the 2026-09-20 reorganization — resolve
-  # each where it is (the flat `bin/<name>.sh` path predates the move, so every
-  # one of them silently failed to deploy: no copies, no error).
+  # Each is resolved WHERE IT IS, as a path relative to the tree root — never
+  # assumed to be under bin/. Two moves have already taught this: the flat
+  # `bin/<name>.sh` paths predated the 2026-09-20 reorganization, and on
+  # 2026-10-24 the meeting system left the time shelf entirely for its own
+  # (`systems/snotra/`, plan 129). A list that names a path which no longer
+  # exists deploys nothing and says nothing, which is how a seat runs an old
+  # door for weeks.
   for rel in \
-    "time/snotra/snotra-capture.sh" "time/snotra/snotra-transcribe.sh" \
-    "time/snotra/snotra-detect.sh" "time/snotra/snotra-iscall.sh" \
-    "time/snotra/snotra-mine.sh" "time/snotra/snotra-ensure.sh" \
-    "time/snotra/snotra-live.sh" \
-    "vault/hoard-lib.sh" "records/runes-append.sh"; do
+    "systems/snotra/services/ear/snotra-capture.sh" \
+    "systems/snotra/services/ear/snotra-transcribe.sh" \
+    "systems/snotra/services/ear/snotra-detect.sh" \
+    "systems/snotra/services/ear/snotra-iscall.sh" \
+    "systems/snotra/services/record/snotra-mine.sh" \
+    "systems/snotra/services/ear/snotra-ensure.sh" \
+    "systems/snotra/services/ear/snotra-live.sh" \
+    "bin/vault/hoard-lib.sh" "bin/records/runes-append.sh"; do
     f="${rel##*/}"
-    [ -f "$ROOT/bin/$rel" ] && cp -f "$ROOT/bin/$rel" "$DST/$f" 2>/dev/null && chmod +x "$DST/$f" 2>/dev/null || true
+    [ -f "$ROOT/$rel" ] && cp -f "$ROOT/$rel" "$DST/$f" 2>/dev/null && chmod +x "$DST/$f" 2>/dev/null || true
   done
   # the skills mirror — the master .agents/skills tree, refreshed each ensure
   if [ -d "$ROOT/.agents/skills" ]; then

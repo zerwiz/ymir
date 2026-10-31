@@ -17,11 +17,11 @@ one heard the room.
 
 ```sh
 # 1. the store — one contract for every meeting
-bin/time/snotra/snotra-store.sh new work "roadmap" --title "Road map" \
+systems/snotra/services/record/snotra-store.sh new work "roadmap" --title "Road map" \
   --source ping --platform ping --classification confidential
-bin/time/snotra/snotra-store.sh put <id> transcript.md --as transcript
-bin/time/snotra/snotra-store.sh index
-bin/time/snotra/snotra-store.sh verify --all
+systems/snotra/services/record/snotra-store.sh put <id> transcript.md --as transcript
+systems/snotra/services/record/snotra-store.sh index
+systems/snotra/services/record/snotra-store.sh verify --all
 
 # 2. Þing on demand — raise a room where you are, then lower it
 bin/thing/ping-room.sh start --mode tailnet
@@ -29,13 +29,13 @@ bin/thing/ping-room.sh url
 bin/thing/ping-room.sh stop
 
 # 3. calendar auto-join — plan first, run later
-bin/time/snotra/snotra-autojoin.sh scan
-bin/time/snotra/snotra-autojoin.sh run            # dry run
-bin/time/snotra/snotra-autojoin.sh run --apply    # sends the bot
+systems/snotra/services/ear/snotra-autojoin.sh scan
+systems/snotra/services/ear/snotra-autojoin.sh run            # dry run
+systems/snotra/services/ear/snotra-autojoin.sh run --apply    # sends the bot
 
 # 4. the bot — Snotra joins a call through Vexa
-bin/time/snotra/snotra-bot.sh join https://meet.google.com/abc-defg-hij
-bin/time/snotra/snotra-bot.sh status <id>
+systems/snotra/services/ear/snotra-bot.sh join https://meet.google.com/abc-defg-hij
+systems/snotra/services/ear/snotra-bot.sh status <id>
 ```
 
 ## The record
@@ -72,7 +72,7 @@ Tests: `bash tests/run.sh` (61 assertions across four suites).
 
 ## Letting the assistant speak in the room
 
-**What it is.** `bin/time/snotra/snotra-stream.sh` is Ymir's voice in a meeting that runs
+**What it is.** `systems/snotra/services/ear/snotra-stream.sh` is Ymir's voice in a meeting that runs
 **on this computer**. `say` speaks one line; `talk` runs the **streaming loop** — it hears
 in ~2-second chunks, answers **only when it is named**, composes one short answer, and
 speaks it sentence by sentence (the next sentence is rendered while the current one plays).
@@ -85,12 +85,12 @@ selects *Snotra Mic* as its microphone transmits it.
 remote call heard only by the Vexa bot has no local uplink to borrow.
 
 ```bash
-bin/time/snotra/snotra-voice-device.sh ensure          # the sink + the source, idempotent
-bin/time/snotra/snotra-stream.sh status                # muted? device? is Kokoro up?
-bin/time/snotra/snotra-stream.sh say "Craig, the actions are in the mail."
-bin/time/snotra/snotra-stream.sh talk --listen <source>   # the streaming loop
-python3 bin/time/snotra/snotra-talk.py --listen-file q.wav  # replay a recording (the test door)
-bin/time/snotra/snotra-stream.sh mute                  # one command, and it holds
+systems/snotra/services/ear/snotra-voice-device.sh ensure          # the sink + the source, idempotent
+systems/snotra/services/ear/snotra-stream.sh status                # muted? device? is Kokoro up?
+systems/snotra/services/ear/snotra-stream.sh say "Craig, the actions are in the mail."
+systems/snotra/services/ear/snotra-stream.sh talk --listen <source>   # the streaming loop
+python3 systems/snotra/services/ear/snotra-talk.py --listen-file q.wav  # replay a recording (the test door)
+systems/snotra/services/ear/snotra-stream.sh mute                  # one command, and it holds
 ```
 
 **The speech law the door enforces.** The first word in a meeting is the speaker's own

@@ -30,7 +30,7 @@ export interface RuntimeInfo {
 }
 
 /* ---- the live tail (Snotra) ----------------------------------------------- *
- * The gate is a FRONT for bin/time/snotra/snotra-live.sh; these shapes are
+ * The gate is a FRONT for systems/snotra/services/ear/snotra-live.sh; these shapes are
  * what that script says, never a second opinion. `closing` is the gate's own
  * word for a stop it spawned and has not finished draining (stop takes minutes:
  * it re-transcribes the recording and asks the rail for the summary). */

@@ -211,7 +211,7 @@ validation gates, rendering, card shape, and curated-over-machine precedence.
 ## Snotra's other doors (the ear, not just the record)
 
 Snotra is more than the record. Before asserting she can't do something, check
-these doors in `bin/time/snotra/`:
+these doors — the shelves are `systems/snotra/services/` (the doors that moved in plan 129) and `bin/time/snotra/` (the survivors, still current):
 
 | Door | What it does |
 |---|---|

@@ -10,13 +10,13 @@ grant connected on this machine (`mcp({ connect: "trello" })`).
 
 ```sh
 # create or update every card for a meeting; safe to run again
-bin/time/snotra/snotra-trello.sh export "$YMIR_HOME/svartalfaheim/synteon/meetings/2026-10-20-roadmap"
+systems/snotra/services/cron/snotra-trello.sh export "$YMIR_HOME/svartalfaheim/synteon/meetings/2026-10-20-roadmap"
 
 # move the sign-off card when confirmations arrive
-bin/time/snotra/snotra-trello.sh sync "$YMIR_HOME/svartalfaheim/synteon/meetings/2026-10-20-roadmap"
+systems/snotra/services/cron/snotra-trello.sh sync "$YMIR_HOME/svartalfaheim/synteon/meetings/2026-10-20-roadmap"
 
 # what is on the board, per list
-bin/time/snotra/snotra-trello.sh doctor "$YMIR_HOME/svartalfaheim/synteon/meetings/2026-10-20-roadmap"
+systems/snotra/services/cron/snotra-trello.sh doctor "$YMIR_HOME/svartalfaheim/synteon/meetings/2026-10-20-roadmap"
 ```
 
 The board URL is written into `trello.json` beside the record and into the follow-up

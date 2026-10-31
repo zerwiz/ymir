@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# snotra-trello.sh — the meeting board, generated from the record.
+# bin/time/snotra/snotra-trello.sh -> systems/snotra/services/cron/snotra-trello.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and says so.  # allow-superseded-path: this header RECORDS the move, it does not make it
 #
-#   snotra-trello.sh export <meeting-dir>   # idempotent: board, lists, labels, members, cards
-#   snotra-trello.sh sync   <meeting-dir>   # sign-offs -> checklist + Signed
-#   snotra-trello.sh doctor [<meeting-dir>] # what is on the board
-#
-# Uses the operator's Trello OAuth grant (the same one the MCP server holds).
-# Never invents a board member: it adds the people the workspace already knows.
+# It exists so a caller nobody has repointed yet still works. It is retired by the dated follow-up in
+# docs/fixes/snotra/2026-10-24-snotra-becomes-a-system.md, and .agents/paths-ledger.yaml records the move.
 set -euo pipefail
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-if [ "${1-}" = export ] && [ -n "${2-}" ] && [ -x "$ROOT/bin/gates/guards/sensitive-gate.sh" ]; then
-  "$ROOT/bin/gates/guards/sensitive-gate.sh" "$2" --surface trello >/dev/null 2>&1 || { echo "export refused by the sensitive gate" >&2; exit 1; }
+_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_root="$(cd "$_d/../../.." && pwd)"
+_new="$_root/systems/snotra/services/cron/snotra-trello.sh"
+if [ ! -e "$_new" ]; then
+  printf 'snotra: the door moved to systems/snotra/services/cron/snotra-trello.sh and is not there\n' >&2
+  exit 127
 fi
-exec python3 "$ROOT/bin/time/snotra/snotra-trello.py" "$@"
+printf 'snotra: bin/time/snotra/ has MOVED to systems/snotra/ — call systems/snotra/services/cron/snotra-trello.sh (plan 129)\n' >&2
+exec "$_new" "$@"

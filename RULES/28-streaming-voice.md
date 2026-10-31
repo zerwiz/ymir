@@ -46,15 +46,30 @@ tracks — the client is the audio device, and behaviour is measured, never assu
 
 **Enforced by:**
 
-- **`bin/time/snotra/snotra-voice.py`** — the streaming loop (capture → ASR → endpointing → streamed
+- **`systems/snotra/services/ear/snotra-voice.py`** — the streaming loop (capture → ASR → endpointing → streamed
   answer → sentence TTS → paced push), writing its own latency per turn to
   `$YMIR_HOME/hodd/state/snotra/voice-stream.log`.
-- **`bin/time/snotra/snotra-cdp.py selftest`** — the oracle. A voice path that has not passed it may not
+- **`systems/snotra/services/ear/snotra-cdp.py selftest`** — the oracle. A voice path that has not passed it may not
   be pointed at a meeting.
-- **`bin/time/snotra/snotra-meet.sh`** — the door that joins, tests and runs; it refuses to run without
+- **`systems/snotra/services/ear/snotra-meet.sh`** — the door that joins, tests and runs; it refuses to run without
   a voice engine and frees the GPU before speaking.
 - **the room's recording** (Vexa `GET /recordings/<id>/media/<fid>/raw?type=audio`) — the judge of every
   audibility claim, transcribed, not assumed.
 
 **The duty, in one sentence:** *if Skírnir is in a room, he is streaming — hearing while they speak, and
 answering as the first sentence forms — and the numbers that prove it are in the log.*
+
+---
+
+## Correction (2026-10-24) — the paths above moved to Snotra's own shelf
+
+Appended, not rewritten (Rule 06). Plan 129 moved the meeting system out of the time shelf on 2026-10-24:
+`bin/time/snotra/<door>` became `systems/snotra/services/<service>/<door>`. The command examples in this rule were
+repointed on the same day and are live; the move's own record is `.agents/paths-ledger.yaml` (migration
+`0014-systems-shelf`) and the fix note `docs/fixes/snotra/2026-10-24-snotra-becomes-a-system.md`.
+
+What this rule names, in its new spelling:
+- the streaming loop, the CDP oracle and the door that joins them: `snotra-voice.py`, `snotra-cdp.py selftest`, `snotra-meet.sh`
+
+A shim survives at the old path so nothing breaks while callers are repointed; it is retired by that dated fix
+note, never silently. The law in this file is unchanged — only the shelf the doors are kept on.

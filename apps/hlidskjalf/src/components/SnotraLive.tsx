@@ -27,7 +27,7 @@ const newestFirst = (lines: string[]) => [...lines].reverse();
 /**
  * The ONE control for the live tail, beside the halls switcher in the topbar.
  *
- * It is a front for `bin/time/snotra/snotra-live.sh` and nothing more: no
+ * It is a front for `systems/snotra/services/ear/snotra-live.sh` and nothing more: no
  * transcription, no slice timing, no engine discovery. The script owns the
  * truth, and the surface says what the script says — including its refusals.
  */

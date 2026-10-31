@@ -25,9 +25,9 @@ without a ceiling and the cost is paid by the vault, the backups, and eventually
 ## The rule in practice
 
 ```sh
-bin/time/snotra/audio-retention.sh scan            # what audio exists, per meeting, and what would go
-bin/time/snotra/audio-retention.sh apply           # transcribe-if-needed, then delete, oldest first
-bin/time/snotra/audio-retention.sh apply --force   # delete even without a transcript (operator only)
+systems/snotra/services/ear/audio-retention.sh scan            # what audio exists, per meeting, and what would go
+systems/snotra/services/ear/audio-retention.sh apply           # transcribe-if-needed, then delete, oldest first
+systems/snotra/services/ear/audio-retention.sh apply --force   # delete even without a transcript (operator only)
 ```
 
 The nightly cron row runs `apply`; `scan` is for a human. Deleting is never silent: every removal names the
@@ -59,7 +59,7 @@ tiers[4]{tier,what_lives_there,format,when_it_empties}:
 **Measured the same night:** `4 MB of room audio → 29 KB of Opus`, `2 MB → 144 KB`. Speech loses nothing
 a transcript needs, and the shelf stops growing by hundreds of megabytes an evening.
 
-**The door that does it:** `bin/time/snotra/audio-retention.sh`
+**The door that does it:** `systems/snotra/services/ear/audio-retention.sh`
 - `scan` — what audio exists, its age, whether it has a transcript, and the verdict;
 - `apply` — compress first (Opus), then delete the source **only after the encoded file is verified non-empty**;
 - `apply --archive /run/media/$USER/<disk>` — file the Opus onto the cold shelf by month;
@@ -70,3 +70,18 @@ a transcript needs, and the shelf stops growing by hundreds of megabytes an even
 **An audio file with no transcript is KEPT, deliberately.** Measured on the first run: the two meeting
 tails that had transcripts were compressed and removed (2 files), while a 47 MB raw capture without one
 was kept — *Rule 30 refuses to trade a lost meeting for disk space.*
+
+---
+
+## Correction (2026-10-24) — the paths above moved to Snotra's own shelf
+
+Appended, not rewritten (Rule 06). Plan 129 moved the meeting system out of the time shelf on 2026-10-24:
+`bin/time/snotra/<door>` became `systems/snotra/services/<service>/<door>`. The command examples in this rule were
+repointed on the same day and are live; the move's own record is `.agents/paths-ledger.yaml` (migration
+`0014-systems-shelf`) and the fix note `docs/fixes/snotra/2026-10-24-snotra-becomes-a-system.md`.
+
+What this rule names, in its new spelling:
+- `audio-retention.sh scan` / `apply` / `apply --force` — the door this rule is enforced by
+
+A shim survives at the old path so nothing breaks while callers are repointed; it is retired by that dated fix
+note, never silently. The law in this file is unchanged — only the shelf the doors are kept on.

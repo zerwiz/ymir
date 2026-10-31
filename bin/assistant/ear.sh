@@ -35,7 +35,7 @@ ffmpeg -hide_banner -loglevel error -y -i "$FILE" \
 # live, so the mouth is raised here — in the background, overlapping the transcription and the head's
 # thinking — never on the critical path. Output goes nowhere: this file's stdout IS the transcript.
 raise_mouth() {
-  local lease="${SCRIPT_DIR}/../time/snotra/tts-lease.sh" url="${KOKORO_URL:-http://127.0.0.1:8765/v1/audio/speech}"
+  local lease="${SCRIPT_DIR}/../../systems/snotra/services/tts-lease/tts-lease.sh" url="${KOKORO_URL:-http://127.0.0.1:8765/v1/audio/speech}"
   local host="${url#*://}"; host="${host%%/*}"; local port="${host##*:}"; host="${host%%:*}"
   port="${port:-80}"
   bash "$lease" touch >/dev/null 2>&1 || true

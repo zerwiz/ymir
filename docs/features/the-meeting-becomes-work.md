@@ -21,7 +21,7 @@ choosing, and a letter went out saying "no decisions were taken".
 - A **place profile**: `hodd/identity/places/<company>/<place>/place.yaml` — this is where that company's
   board, list names, labels and cadence live. Synteon's is `synteon/documentation`; Whynot Productions'
   is `whynotproductions/projects`; Way of Teams' declares `surface: gimle`.
-- The **board map**: `hodd/identity/trello-map.yaml` (refreshed by `bin/time/snotra/trello-map.sh`).
+- The **board map**: `hodd/identity/trello-map.yaml` (refreshed by `systems/snotra/services/cron/trello-map.sh`).
 - The meeting bot's store reachable on this seat (the Vexa stack), and a Trello grant for the card doors.
 
 ## The commands
@@ -29,35 +29,35 @@ choosing, and a letter went out saying "no decisions were taken".
 ```bash
 M=~/Documents/ymirhome/svartalfaheim/synteon/meetings/2026-10-22-sync-reygan-craig
 
-bin/time/snotra/snotra-harvest.sh status   "$M"   # what the bot holds for this meeting
-bin/time/snotra/snotra-harvest.sh fetch    "$M"   # pull the audio, verify it byte-for-byte
-bin/time/snotra/snotra-harvest.sh verify   "$M"   # re-check it against the store's declaration
-bin/time/snotra/snotra-harvest.sh speakers "$M"   # split the capture log by speakerIndex → one WAV each
-bin/time/snotra/snotra-harvest.sh signal   "$M"   # audit the STT log; empty text at ok:true is a FAILURE
+systems/snotra/services/ear/snotra-harvest.sh status   "$M"   # what the bot holds for this meeting
+systems/snotra/services/ear/snotra-harvest.sh fetch    "$M"   # pull the audio, verify it byte-for-byte
+systems/snotra/services/ear/snotra-harvest.sh verify   "$M"   # re-check it against the store's declaration
+systems/snotra/services/ear/snotra-harvest.sh speakers "$M"   # split the capture log by speakerIndex → one WAV each
+systems/snotra/services/ear/snotra-harvest.sh signal   "$M"   # audit the STT log; empty text at ok:true is a FAILURE
 
-bin/time/snotra/snotra-project.sh plan     "$M"   # what would be filed, where — no writes
-bin/time/snotra/snotra-project.sh apply    "$M"   # create/update, idempotent, verified after write
-bin/time/snotra/snotra-project.sh verify   "$M"   # read the boards back and diff against the record
+systems/snotra/services/cron/snotra-project.sh plan     "$M"   # what would be filed, where — no writes
+systems/snotra/services/cron/snotra-project.sh apply    "$M"   # create/update, idempotent, verified after write
+systems/snotra/services/cron/snotra-project.sh verify   "$M"   # read the boards back and diff against the record
 
-bin/time/snotra/snotra-letter.sh  render   "$M"   # letters/<person>.md + .html — nothing sent
-bin/time/snotra/snotra-letter.sh  draft    "$M"   # one Gmail draft per participant
-bin/time/snotra/snotra-letter.sh  status   "$M"
+systems/snotra/services/letters/snotra-letter.sh  render   "$M"   # letters/<person>.md + .html — nothing sent
+systems/snotra/services/letters/snotra-letter.sh  draft    "$M"   # one Gmail draft per participant
+systems/snotra/services/letters/snotra-letter.sh  status   "$M"
 # sending needs the operator: snotra-approve.sh approve <draft-id>, then:
-bin/time/snotra/snotra-letter.sh  send     "$M" --approved
+systems/snotra/services/letters/snotra-letter.sh  send     "$M" --approved
 
-bin/time/snotra/snotra-promote.sh list  "$M"      # every candidate: proposed · approved · rejected · held
-bin/time/snotra/snotra-promote.sh check "$M"      # the engine's validator, before anything is written
-bin/time/snotra/snotra-promote.sh set   "$M" DEC-20261022-01 accept --by "Lars-Josef Lindbom" --why "confirmed"
-bin/time/snotra/snotra-promote.sh log   "$M"      # promotions.jsonl — append-only, who and when
+systems/snotra/services/approve/snotra-promote.sh list  "$M"      # every candidate: proposed · approved · rejected · held
+systems/snotra/services/approve/snotra-promote.sh check "$M"      # the engine's validator, before anything is written
+systems/snotra/services/approve/snotra-promote.sh set   "$M" DEC-20261022-01 accept --by "Lars-Josef Lindbom" --why "confirmed"
+systems/snotra/services/approve/snotra-promote.sh log   "$M"      # promotions.jsonl — append-only, who and when
 
-bin/time/snotra/snotra-agenda.sh  plan  "$M"      # the next meeting's points, from the record
-bin/time/snotra/snotra-agenda.sh  apply "$M"      # the dated agenda card, in the place's agenda list
-bin/time/snotra/snotra-agenda.sh  verify "$M"
+systems/snotra/services/cron/snotra-agenda.sh  plan  "$M"      # the next meeting's points, from the record
+systems/snotra/services/cron/snotra-agenda.sh  apply "$M"      # the dated agenda card, in the place's agenda list
+systems/snotra/services/cron/snotra-agenda.sh  verify "$M"
 
-bin/time/snotra/snotra-audio-ladder.sh plan  "$M"                 # what would shrink, and by how much
-bin/time/snotra/snotra-audio-ladder.sh apply "$M" [--offload DIR] # verify → compress → strip → report
+systems/snotra/services/ear/snotra-audio-ladder.sh plan  "$M"                 # what would shrink, and by how much
+systems/snotra/services/ear/snotra-audio-ladder.sh apply "$M" [--offload DIR] # verify → compress → strip → report
 
-bin/time/snotra/smoke.sh                                          # the gate: 6 checks, 3 verdicts
+systems/snotra/smoke.sh                                          # the gate: 6 checks, 3 verdicts
 ```
 
 ## Where the shape lives — and why the scripts name no company
@@ -73,7 +73,7 @@ list name appears in `snotra-project.py`, `snotra-letter.py` or `trello_client.p
 A place that asks for another engine is **refused, not cross-filed**:
 
 ```
-$ bin/time/snotra/snotra-project.sh plan <a wayof meeting>
+$ systems/snotra/services/cron/snotra-project.sh plan <a wayof meeting>
 snotra-project: the place wayof/projects declares surface 'gimle'; this projector speaks trello only —
 refusing rather than filing into the wrong engine
 ```
@@ -140,6 +140,6 @@ its `DEC-`/`ACT-`/`OQ-` id, and the card is idempotent by `record-key`.
 - `harvest status` says *the bot store is unreachable* → set `VEXA_API_URL` (and `VEXA_USER_ID`).
 - `harvest speakers` says *no storage credentials* → set `VEXA_S3_ACCESS_KEY`/`VEXA_S3_SECRET_KEY`, or
   `VEXA_COMPOSE_ENV` to the deployed compose `.env`.
-- `project` says *no board matches* → run `bin/time/snotra/trello-map.sh` to refresh the map.
+- `project` says *no board matches* → run `systems/snotra/services/cron/trello-map.sh` to refresh the map.
 - `project verify` reports **misfiled** → a human moved the card; the door will not move it back.
 - `ladder` refuses → there is no verified transcript yet. That refusal is the safety, not a fault.

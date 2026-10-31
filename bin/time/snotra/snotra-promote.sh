@@ -1,19 +1,15 @@
 #!/usr/bin/env bash
-# snotra-promote.sh — the register becomes law: accept · reject · hold, and the promotion is recorded.
+# bin/time/snotra/snotra-promote.sh -> systems/snotra/services/approve/snotra-promote.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and says so.  # allow-superseded-path: this header RECORDS the move, it does not make it
 #
-#   snotra-promote.sh list  <meeting-dir>                       every candidate and its state
-#   snotra-promote.sh set   <meeting-dir> <ID> accept|reject|hold --by "<name>" [--why "..."] [--dry-run]
-#   snotra-promote.sh check <meeting-dir>                       the engine's own validator, first
-#   snotra-promote.sh log   <meeting-dir>                       promotions.jsonl, oldest first
-#
-# A MACHINE MAY PROPOSE; ONLY A PERSON MAY PROMOTE. `--by` is required and is a person's name. The record
-# is validated before anything is written, the promotion is APPENDED to promotions.jsonl (never rewritten),
-# the result is read back, and setting the same state twice writes nothing.
-#
-# Exit: 0 ok · 1 refused (validation, unknown id) · 2 usage
+# It exists so a caller nobody has repointed yet still works. It is retired by the dated follow-up in
+# docs/fixes/snotra/2026-10-24-snotra-becomes-a-system.md, and .agents/paths-ledger.yaml records the move.
 set -euo pipefail
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-case "${1-}" in
-  -h|--help|"") sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
-esac
-exec python3 "$ROOT/bin/time/snotra/snotra-promote.py" "$@"
+_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_root="$(cd "$_d/../../.." && pwd)"
+_new="$_root/systems/snotra/services/approve/snotra-promote.sh"
+if [ ! -e "$_new" ]; then
+  printf 'snotra: the door moved to systems/snotra/services/approve/snotra-promote.sh and is not there\n' >&2
+  exit 127
+fi
+printf 'snotra: bin/time/snotra/ has MOVED to systems/snotra/ — call systems/snotra/services/approve/snotra-promote.sh (plan 129)\n' >&2
+exec "$_new" "$@"

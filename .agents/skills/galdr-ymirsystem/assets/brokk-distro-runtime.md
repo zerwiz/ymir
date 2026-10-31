@@ -121,7 +121,7 @@ well cannot stall the session start.
 | 6 | **CONTEXT DIGEST** | `--- realm ---`, then `data/operator.md`, `data/projects.md`, `data/learnings.md`, each delimited; `ABSENT: <path>` when missing | **`$YMIR_HOME/hodd/data/`** via `bin/vault/hoard-lib.sh` (`BROKK_DATA_OVERRIDE` wins) — never `$BROKK_HOME/data`, the code tree, which no operator record has ever occupied |
 | 6b | **TODAY** | the day's work, appended blocks under each actor | `bin/records/daily-log.sh today` → `$YMIR_HOME/hodd/memory/daily/YYYY-MM-DD.md` |
 | 7 | **CRON START** | `cron: running pid=N jobs=M` or `cron: started …` / `cron: no jobs configured …` | `bin/time/nornir-cron-start.sh` (idempotent) |
-| 7b | **TOOL SURFACE** | the Allfather's own handles: `/edit <path>`, `bin/time/snotra/ymir-say.sh`, `bin/host/omarchy-plugins.sh`, `bin/seat/herdr-run.sh` | inline |
+| 7b | **TOOL SURFACE** | the Allfather's own handles: `/edit <path>`, `systems/snotra/services/tts-lease/ymir-say.sh`, `bin/host/omarchy-plugins.sh`, `bin/seat/herdr-run.sh` | inline |
 | 8 | **NEXT STEP** | `Ascend Hlidskjalf as Brokk. Address the Allfather. Read once; act.` | closing pointer |
 
 **Read-once contract.** The digest is this turn's startup and recovery input. Brokk must **not** re-read the context/backlog/status it just printed unless a source was reported `ABSENT` or corrupt.
@@ -378,7 +378,7 @@ refused, never returned unvalidated. `load_config(path)` is the one entry
 ```
 kinds[5]{kind,schema,readers}
   "agents.yaml","agents.schema.json","bin/fleet/agents-config.sh · bin/fleet/dispatch-profile.sh · bin/model/local-model-lock.sh · bin/agents/einherjar-spawn.sh"
-  "cron.yaml","cron.schema.json","bin/time/nornir-cron-start.sh · bin/time/snotra/hall-snapshot.sh"
+  "cron.yaml","cron.schema.json","bin/time/nornir-cron-start.sh · systems/snotra/services/cron/hall-snapshot.sh"
   "fleet.json","fleet.schema.json","bin/fleet/topology.sh · bin/agents/eindri-route.sh · bin/bridge/mcp-gateway.sh · bin/model/model-placement.sh · bin/model/rail-resolve.sh"
   "eindri-dispatch.json","eindri-dispatch.schema.json","bin/fleet/dispatch-profile.sh"
   "grants.yaml","grants.schema.json","src/ymir_runtime/grants.py · bin/gates/checks/ymir-config-check.sh"
@@ -530,7 +530,7 @@ fleet_rail[5]{piece,owns}
 `bin/agents/eindri-route.sh` (a model errand follows the live set, first-alive at its
 head), `bin/gates/checks/model-alias-check.sh` (an alias is verified against the RESOLVED
 provider — a seat's name resolves against whichever box serves),
-`bin/time/snotra/snotra-transcribe.sh` (the ear's summaries ride the live rail),
+`systems/snotra/services/ear/snotra-transcribe.sh` (the ear's summaries ride the live rail),
 `bin/bridge/mcp-gateway.sh` (a `rail` verb and a `rail` row in `status`; the rail is
 never an MCP upstream — the upstream map is handed to the engine verbatim), and
 `bin/bridge/mcp-config.sh` (the resolved rail under the config's `ymir` block, advisory

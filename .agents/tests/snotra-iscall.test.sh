@@ -9,7 +9,7 @@
 set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-ISCALL="$ROOT/bin/time/snotra/snotra-iscall.sh"
+ISCALL="$ROOT/systems/snotra/services/ear/snotra-iscall.sh"
 fail=0
 ok()  { printf 'ok - %s\n' "$1"; }
 bad() { printf 'not ok - %s\n' "$1" >&2; fail=1; }

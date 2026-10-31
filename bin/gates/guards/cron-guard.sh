@@ -9,6 +9,12 @@
 # This ward refuses it, and it is the same law the cron header already states
 # ("every path must be a REPO-relative command (bin/…)").
 #
+# 2026-10-24: shipping is not running. The scheduler runs each command through
+# `bash -lc "$cmd"`, so a bare `bin/x.sh` must carry its EXECUTE bit — a 644 script
+# answers `rc=126 Permission denied`, and four Gná mail rows failed that way for a
+# day while every existence check passed. Both halves are now one ward: a job names
+# a script that ships AND can run.
+#
 #   cron-guard.sh            # check the effective cron and the shipped example
 #   cron-guard.sh --all      # same
 #   cron-guard.sh --version
@@ -47,7 +53,7 @@ if [ -n "${YMIR_CRON_FILE:-}" ]; then CRONS+=("$YMIR_CRON_FILE"); fi
 [ -f "$ROOT/config/cron.yaml" ] && CRONS+=("$ROOT/config/cron.yaml")
 [ -f "$ROOT/config/cron.yaml.example" ] && CRONS+=("$ROOT/config/cron.yaml.example")
 
-missing=0; seen=""
+missing=0; unrunnable=0; seen=""
 printf 'cron-guard[3]{finding,source,script}:\n'
 for f in ${CRONS[@]+"${CRONS[@]}"}; do
   [ -r "$f" ] || continue
@@ -55,15 +61,24 @@ for f in ${CRONS[@]+"${CRONS[@]}"}; do
     [ -n "$ref" ] || continue
     case " $seen " in *" $ref "*) continue ;; esac
     seen="$seen $ref"
-    [ -e "$ROOT/$ref" ] && continue
     case "$f" in "$ROOT"/*) src="${f#"$ROOT"/}" ;; *) src="$f" ;; esac
-    printf '  "a cron job names a script that does not ship","%s","%s"\n' "$src" "$ref"
-    missing=$((missing + 1))
+    if [ ! -e "$ROOT/$ref" ]; then
+      printf '  "a cron job names a script that does not ship","%s","%s"\n' "$src" "$ref"
+      missing=$((missing + 1))
+      continue
+    fi
+    # Existence is not runnability: the runner execs the bare path, so the execute
+    # bit is part of shipping. 644 answers rc=126 and the row never runs again.
+    if [ ! -x "$ROOT/$ref" ]; then
+      printf '  "a cron job names a script it cannot execute (no execute bit)","%s","%s"\n' "$src" "$ref"
+      unrunnable=$((unrunnable + 1))
+    fi
   done < <(grep -vE '^[[:space:]]*#' "$f" 2>/dev/null | grep -oE 'bin/[A-Za-z0-9_./-]+\.sh' | sort -u)
 done
-if [ "$missing" -eq 0 ]; then
-  printf '  "none","","every referenced script ships in the repo"\n'
+if [ "$missing" -eq 0 ] && [ "$unrunnable" -eq 0 ]; then
+  printf '  "none","","every referenced script ships in the repo and can be executed"\n'
   exit 0
 fi
-printf 'cron-guard: %s referenced script(s) do not ship in the repo\nhelp: jobs run from the REPO root, so bin/… always means the repo — a script kept only in a home cannot resolve; move it into the repo (bin/…) or reference it absolutely where the runner allows it\n' "$missing" >&2
+[ "$missing" -gt 0 ] && printf 'cron-guard: %s referenced script(s) do not ship in the repo\nhelp: jobs run from the REPO root, so bin/… always means the repo — a script kept only in a home cannot resolve; move it into the repo (bin/…) or reference it absolutely where the runner allows it\n' "$missing" >&2
+[ "$unrunnable" -gt 0 ] && printf 'cron-guard: %s referenced script(s) shipped without an execute bit\nhelp: the scheduler runs a bare `bin/…` through `bash -lc`, so the file must be executable — `chmod +x <script> && git update-index --chmod=+x <script>`; a 644 script answers rc=126 and the row silently never runs again\n' "$unrunnable" >&2
 exit 1

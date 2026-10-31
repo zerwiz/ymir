@@ -78,9 +78,9 @@ deliver() {  # <kind> <name> <path>
   esac
   eindri_queue_wake "$line"
   eindri_mark_delivered "$name" "$wake_kind"
-  if [ -x "$SCRIPT_DIR/../time/snotra/ymir-say.sh" ]; then
-    [ "$kind" = "QUESTION" ] && "$SCRIPT_DIR/../time/snotra/ymir-say.sh" alarm "Eindri $name asks — answer it" >/dev/null 2>&1 \
-                            || "$SCRIPT_DIR/../time/snotra/ymir-say.sh" note "Eindri $name reported" >/dev/null 2>&1
+  if [ -x "$SCRIPT_DIR/../../systems/snotra/services/tts-lease/ymir-say.sh" ]; then
+    [ "$kind" = "QUESTION" ] && "$SCRIPT_DIR/../../systems/snotra/services/tts-lease/ymir-say.sh" alarm "Eindri $name asks — answer it" >/dev/null 2>&1 \
+                            || "$SCRIPT_DIR/../../systems/snotra/services/tts-lease/ymir-say.sh" note "Eindri $name reported" >/dev/null 2>&1
   fi
 }
 

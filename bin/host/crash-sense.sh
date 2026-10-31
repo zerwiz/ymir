@@ -69,11 +69,11 @@ fingerprints() {
 notify() {  # <headline> <body> [urgency]
   local h="$1" b="$2" u="${3:-normal}"
   [ "$NOTIFY" = 1 ] || return 0
-  # One voice: bin/time/snotra/ymir-say.sh owns the desktop manner.
-  if [ -x "$ROOT/bin/time/snotra/ymir-say.sh" ]; then
+  # One voice: systems/snotra/services/tts-lease/ymir-say.sh owns the desktop manner.
+  if [ -x "$ROOT/systems/snotra/services/tts-lease/ymir-say.sh" ]; then
     local mark=note
     [ "$u" = critical ] && mark=alarm
-    "$ROOT/bin/time/snotra/ymir-say.sh" --mark "$mark" "$h" "$b" >/dev/null 2>&1 || true
+    "$ROOT/systems/snotra/services/tts-lease/ymir-say.sh" --mark "$mark" "$h" "$b" >/dev/null 2>&1 || true
     return 0
   fi
   if have omarchy-notification-send; then

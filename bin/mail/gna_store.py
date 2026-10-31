@@ -57,6 +57,13 @@ def _yaml(path: Path) -> dict:
         return {}
 
 
+def document() -> dict:
+    """The whole scope file, as read. `house:` rows are strings or mappings — both are
+    the same registry, and a reader that knew only one shape would mis-read a home
+    written by the other (plan 116 §15.3)."""
+    return _yaml(ACCOUNTS)
+
+
 def declared_accounts() -> dict[str, dict]:
     rows = _yaml(ACCOUNTS).get("accounts") or []
     out: dict[str, dict] = {}
@@ -67,8 +74,15 @@ def declared_accounts() -> dict[str, dict]:
 
 
 def house_addresses() -> set[str]:
-    rows = _yaml(ACCOUNTS).get("house") or []
-    return {str(a).strip().lower() for a in rows if str(a).strip()}
+    """The addresses that are the house itself. A row is a bare address (the
+    2026-10-23 shape) or a mapping carrying its route — both read here."""
+    out: set[str] = set()
+    for row in document().get("house") or []:
+        address = row.get("address") if isinstance(row, dict) else row
+        address = str(address or "").strip().lower()
+        if address:
+            out.add(address)
+    return out
 
 
 def require_account(account: str | None) -> str:
