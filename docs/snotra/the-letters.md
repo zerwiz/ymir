@@ -66,3 +66,24 @@ partners before the operator had seen it.
 - **claim to be the complete record** when the coverage block says otherwise;
 - **ascribe a decision to a person** the record has not attributed;
 - **be sent by an agent**.
+
+## Appended 2026-10-24 — the gate is a verb of the door, not of the caller
+
+The gate described above was real and it held for letters, because `snotra-letter.py send` asked it. Measured on
+2026-10-24 (plan 124 §7), it held for **nothing else**: `mail-send.sh send <draft-id>` POSTed `drafts/send`
+without asking, `calendar-invite.sh` posted with `sendUpdates=all`, and Gná's send path was an unwritten debt.
+
+Three things changed, and none of them is a new rule — they make the existing one impossible to walk past:
+
+- **`send` asks the gate itself.** `snotra-approve.sh gate mail <draft-id>` runs inside the door before the send
+  request is built; `snotra-letter.py`'s own `check` is now a courtesy that saves a doomed call, not the guard.
+- **The word is spent.** After a successful send the record carries a `.sent` sidecar and a second send is
+  refused `ALREADY SENT` — one approval, one letter.
+- **A calendar invitation is outbound mail.** `calendar-invite.sh` defaults to `sendUpdates=none` and posts
+  `all` only when an approval record matches the event's own rendered body (`snotra-approve.sh approve-event
+  evt-<key>`); `cancel --notify` is gated the same way.
+
+Every refusal and every spend is carved into the Runes. The how-to for the operator is
+`docs/features/the-outbound-gate.md`; the change record is
+`docs/fixes/snotra/2026-10-24-the-gate-is-in-every-door.md`; the proofs are
+`bin/time/snotra/tests/test_outbound_gate.py` (12, with no Google in the loop) and each door's `--self-test`.

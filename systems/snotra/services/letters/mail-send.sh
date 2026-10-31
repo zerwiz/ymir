@@ -2,36 +2,44 @@
 # mail-send.sh — the follow-up email with the record attached, as a draft or send.
 #
 # Uses the Gmail API with the vault grant (gmail.compose, gmail.send). Never sends
-# without either --send (an approved send) or --draft (default).
+# without the operator's word: `send` asks snotra-approve.sh first, and an approval
+# that does not match the draft's CURRENT bytes is a refusal (plan 124 §7).
 #
 #   mail-send.sh draft --to a@x,b@y --subject S --body FILE \
 #       [--html FILE] [--attach FILE ...] [--record ID] [--dry-run]
 #   mail-send.sh raw    <draft-id>     # the exact bytes, for an approval hash
-#   mail-send.sh send <draft-id>
+#   mail-send.sh send <draft-id>       # refused unless the approval matches those bytes
 #   mail-send.sh discard <draft-id>
 #   mail-send.sh status
+#   mail-send.sh --self-test           # prove the gate refuses, sends once, and refuses a replay
+#
+# Endpoint configuration (Rule 07): YMIR_GMAIL_API_BASE · YMIR_OAUTH_TOKEN_URL.
 set -euo pipefail
-VERSION="1.0.0"
+VERSION="1.0.1"
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
-  -h|--help|"") sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
+  -h|--help|"") sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 ACTION="${1:-draft}"; shift || true
 ROOT="$(d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; s="$d"; while [ "$d" != / ] && { [ ! -d "$d/RULES" ] || [ ! -d "$d/.agents" ]; }; do d="$(dirname "$d")"; done; { [ -d "$d/RULES" ] && [ -d "$d/.agents" ]; } || d="$s"; printf '%s' "$d")"
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true; fi
 YMIR_HOME="${YMIR_HOME:-}"; [ -n "$YMIR_HOME" ] || ymir_home_root YMIR_HOME 2>/dev/null || true
 SEC="$YMIR_HOME/hodd/secrets"
 die(){ printf 'error: %s\n' "$*" >&2; exit 1; }
+# Rule 07: an endpoint is configuration, never a constant. The two defaults are the
+# real Google doors; a test stands a local server here and proves the gate offline.
+GMAIL_API="${YMIR_GMAIL_API_BASE:-https://gmail.googleapis.com/gmail/v1}"
+OAUTH_URL="${YMIR_OAUTH_TOKEN_URL:-https://oauth2.googleapis.com/token}"
 VAL="$(age -d -i "$SEC/age.key" "$SEC/platform.env.age" 2>/dev/null || true)"
 get(){ printf '%s\n' "$VAL" | sed -n "s/^$1=//p" | head -1 | sed "s/^['\"]//; s/['\"]$//"; }
 CID="$(get GOOGLE_MCP_CLIENT_ID)"; CSEC="$(get GOOGLE_MCP_CLIENT_SECRET)"; RT="$(get SNOTRA_GOOGLE_REFRESH_TOKEN)"
 [ -n "$CID" ] && [ -n "$CSEC" ] && [ -n "$RT" ] || die "google credentials missing"
-TOKEN="$(curl -sS -m 20 -X POST https://oauth2.googleapis.com/token -d "client_id=$CID" -d "client_secret=$CSEC" -d "refresh_token=$RT" -d "grant_type=refresh_token" | python3 -c "import json,sys;print(json.load(sys.stdin).get('access_token',''))")"
+TOKEN="$(curl -sS -m 20 -X POST "$OAUTH_URL" -d "client_id=$CID" -d "client_secret=$CSEC" -d "refresh_token=$RT" -d "grant_type=refresh_token" | python3 -c "import json,sys;print(json.load(sys.stdin).get('access_token',''))")"
 [ -n "$TOKEN" ] || die "token refresh failed"
 gmail(){
   local method=$1 path=$2 body=${3-}; local tmp=""
   local a=(-sS -m 60 -X "$method" -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -w '\n%{http_code}')
   # A raw message with a PDF can exceed MAX_ARG_STRLEN; never put it in argv.
   if [ -n "$body" ]; then tmp="$(mktemp)"; printf '%s' "$body" > "$tmp"; a+=(--data-binary "@$tmp"); fi
-  local out; out="$(curl "${a[@]}" "https://gmail.googleapis.com/gmail/v1$path")"
+  local out; out="$(curl "${a[@]}" "$GMAIL_API$path")"
   [ -n "$tmp" ] && rm -f "$tmp"
   printf '%s' "$out"
 }
@@ -105,11 +113,19 @@ PY
 }
 send(){
   local id="${1-}"; [ -n "$id" ] || die "send needs a draft id"
+  local approve="$ROOT/bin/time/snotra/snotra-approve.sh"
+  # THE WORD FIRST. No send is requested until the approval record matches the draft's
+  # CURRENT RFC822 bytes; the gate prints the reason (NOT APPROVED · STALE · ALREADY SENT)
+  # and carves the refusal into the Runes itself. A door that checked nothing is how a
+  # letter reached the partners on 2026-10-23 — so the check lives here, not in a caller.
+  bash "$approve" gate mail "$id" >/dev/null || die "send refused for draft $id — the operator's word is missing, stale, or already spent; nothing was sent"
   local out code body; out="$(gmail POST "/users/me/drafts/send" "{\"id\":\"$id\"}")"; code="${out##*$'\n'}"; body="${out%$'\n'*}"
   case "$code" in 200|201) python3 - "$body" <<'PY'
 import json,sys;d=json.loads(sys.argv[1]);print(f'sent\t{d.get("id")}')
 PY
   ;; *) die "send failed (HTTP $code): $body" ;; esac
+  # The word is spent: one approval, one send. A second send is refused as ALREADY SENT.
+  bash "$approve" consume mail "$id" >/dev/null || printf 'warning: the approval was not marked spent — a replay would be possible\n' >&2
 }
 discard(){
   local id="${1-}"; [ -n "$id" ] || die "discard needs a draft id"
@@ -142,5 +158,7 @@ case "$ACTION" in
   raw) raw "$@" ;;
   discard) discard "$@" ;;
   status) status ;;
-  *) printf 'usage: mail-send.sh draft|send|status\n' >&2; exit 2 ;;
+  --self-test|self-test)
+    exec python3 "$ROOT/bin/time/snotra/tests/test_outbound_gate.py" MailGate "$@" ;;
+  *) printf 'usage: mail-send.sh draft|send|raw|discard|status|--self-test\n' >&2; exit 2 ;;
 esac
