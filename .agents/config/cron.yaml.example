@@ -40,3 +40,14 @@
 # `snotra-mail-watch.sh register <dir> --apply --by "<name>"` is the operator's act.
 # Gated @dev: the mailbox belongs to the seat that holds the letters, not the heart.
 @dev 07:10 bin/time/nornir-job-snotra-mail.sh
+
+# — Snotra: meeting rhythm automation (Plan 143 phases 3-4) —
+# Friday Synch: post status updates on This Week cards after a Friday meeting.
+# Gated @dev: the board belongs to the seat that holds the place profile.
+@dev 17:00 bin/time/snotra/snotra-friday-synch.sh run
+# Monthly Grooming: create the grooming card on Next Meeting Agenda every month.
+@dev 09:00 bin/time/snotra/snotra-grooming.sh run
+# Card-movement watcher: Rule A (This Week + member → assign+notify+steps),
+# Rule B (Done + sign-off → To Sign-off), note-on-mis-move.
+# Gated @dev: the board belongs to the seat that holds the place profile.
+@dev 10:00 bin/time/snotra/snotra-card-moves.sh watch
