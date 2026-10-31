@@ -2607,7 +2607,13 @@ const server = Bun.serve({
           cwd: ROOT,
           stdout: 'pipe',
           stderr: 'pipe',
-          env: process.env,
+          // THIS BUTTON IS THE SANCTIONED LOCAL-ROOM DOOR (the Allfather's word,
+          // 2026-10-31: "we have a button in Hlidskjalf that should activate the
+          // mic. that's the main way to the mic"). The script refuses the
+          // microphone unless the caller says the room is local, so the gate is
+          // the ONE place that says it — and it says it for a room of people
+          // physically here, never for an online meeting (that is the bot's job).
+          env: { ...process.env, SNOTRA_LOCAL_ROOM: '1' },
         });
         const out = new TextDecoder().decode(proc.stdout ?? new Uint8Array()).trim();
         const err = new TextDecoder().decode(proc.stderr ?? new Uint8Array()).trim();

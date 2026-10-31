@@ -93,8 +93,8 @@ export function SnotraLive() {
       variant: 'form',
       tone: 'ok',
       glyph: 'ᛟ',
-      title: 'Start listening',
-      body: 'The live tail writes the words into a document as they are spoken. The name becomes the filename.',
+      title: 'Start listening in this room',
+      body: 'The live tail writes the words into a document as they are spoken. The name becomes the filename. It hears THIS ROOM through the microphone only — a meeting that happens online is joined by Snotra\'s bot instead, never by the mic.',
       confirmLabel: 'Listen',
       fields: [
         { name: 'slug', label: 'Name', type: 'text', defaultValue: today() },
@@ -226,7 +226,7 @@ export function SnotraLive() {
                 ? 'The document is closed; the minutes are still being written.'
                 : listening
                   ? 'Listening — the first line arrives a few seconds after you speak.'
-                  : 'No live tail is running. The document grows here only while the ear is open.'}
+                  : 'No live tail is running. The document grows here only while the ear is open, and it hears this room\'s microphone only — an online meeting is joined by the bot, never by the mic.'}
             </p>
           )}
 

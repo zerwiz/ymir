@@ -37,8 +37,17 @@ online call, and the watcher contradicted both by arming on one.
 `SNOTRA_LOCAL_ROOM=1` is the only way the microphone opens. Anything else refuses
 and names the bot door instead:
 
+**The main way to it is a button in Hlidskjalf** — the Allfather's word, same
+evening: *"we have a button in Hlidskjalf that should activate the mic. that's the
+main way to the mic."* So the gate route `POST /api/snotra/live/start`
+(`apps/hlidskjalf/server/index.ts`) spawns the tail with `SNOTRA_LOCAL_ROOM=1`, and
+the button's own copy says it hears *this room*; the CLI marker is the fallback for
+a seat with no Hlidskjalf.
+
 | file | gate |
 |---|---|
+| `apps/hlidskjalf/server/index.ts` | `POST /api/snotra/live/start` passes `SNOTRA_LOCAL_ROOM=1` — the button is the sanctioned door |
+| `apps/hlidskjalf/src/components/SnotraLive.tsx` | the modal and the idle note name the room and point an online meeting at the bot |
 | `bin/time/snotra/snotra-capture.sh` | `do_start` refuses (exit 2) unless `SNOTRA_LOCAL_ROOM=1`, printing the TOON refusal and the bot door |
 | `bin/time/snotra/snotra-detect.sh` | `do_arm` refuses before resolving a device, logs `arm REFUSED — the mic is for a LOCAL room only …`, returns 1 |
 | `bin/time/snotra/snotra-live.sh` | `do_start` refuses (exit 2) with the same words before it touches ffmpeg |
