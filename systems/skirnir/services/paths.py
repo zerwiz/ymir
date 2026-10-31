@@ -15,7 +15,7 @@ def home() -> str:
     env = os.environ.get("YMIR_HOME")
     if env:
         return os.path.expanduser(env)
-    lib = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "vault", "hoard-lib.sh")
+    lib = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "bin", "vault", "hoard-lib.sh")
     lib = os.path.abspath(lib)
     out = subprocess.run(["bash", "-c",
                           f'. "{lib}" >/dev/null 2>&1; r=""; ymir_home_root r 2>/dev/null; printf "%s" "$r"'],

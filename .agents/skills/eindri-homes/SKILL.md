@@ -94,15 +94,15 @@ For a `--Eindri-home` spawn, `bin/agents/einherjar-spawn.sh` populates `MODEL`/`
 For a local route, an explicit per-spawn `--harness` flag, positional harness arg, or raw launch command starts clean on model and effort too, unless the caller also passes explicit `--model` or `--effort`.
 A remote route accepts only a verified harness adapter and refuses a raw launch command at the host boundary.
 When the file's tokens do apply, an explicit per-spawn `--model` or `--effort` flag always wins over the file's token for that axis.
-Because this resolves from the file on every spawn, the pin is durable across every respawn (recovery, `/updateBrokk`, restart) exactly like the harness axis itself - e.g. `config/Eindri-home-harness` containing `claude opus` keeps a Eindri-home pinned to Opus even if the primary's own default model later changes.
+Because this resolves from the file on every spawn, the pin is durable across every respawn (recovery, `/updateymir`, restart) exactly like the harness axis itself - e.g. `config/Eindri-home-harness` containing `claude opus` keeps a Eindri-home pinned to Opus even if the primary's own default model later changes.
 This is Eindri-home-only: Eindri/scout model resolution is untouched by this file.
 
 This section is the single owner of the Eindri-home sync and inherited-local-material propagation contract; `AGENTS.md` sections 3 and 4 point here.
 Before a local launch, `einherjar-spawn.sh --Eindri-home` locally fast-forwards the home to the primary Brokk checkout's current default-branch commit when it is safe; dirty, diverged, or in-flight homes launch unchanged with a warning.
 The locked session-start deferred network stage runs the same bootstrap sweep for every live local Eindri-home home, discovered from `state/<id>.meta` records with `kind=Eindri-home` (`data/eindri-homes.md` only backfills `home=` for older records).
-That no-fetch path is a purely local fast-forward of tracked files, never an origin fetch, and it never touches the gitignored operational dirs, so a Eindri-home's backlog, projects, and in-flight work are never disturbed; a linked worktree advances immediately, while a standalone clone that lacks the target receives Brokk updates through `/updateBrokk`'s origin refresh.
+That no-fetch path is a purely local fast-forward of tracked files, never an origin fetch, and it never touches the gitignored operational dirs, so a Eindri-home's backlog, projects, and in-flight work are never disturbed; a linked worktree advances immediately, while a standalone clone that lacks the target receives Brokk updates through `/updateymir`'s origin refresh.
 A remote launch and the deferred bootstrap sweep ask the configured host to fast-forward its persistent home to that host's code-root commit under the same clean and ancestry guards.
-`/updateBrokk` first updates the remote code root from its own origin, then runs that guarded home sync.
+`/updateymir` first updates the remote code root from its own origin, then runs that guarded home sync.
 SSH exit 255 preserves the route and reports unknown completion; it never triggers local respawn or failover.
 The same placement-specific launch and deferred bootstrap sweep also propagate the primary's declared inherited local material: `config/crew-dispatch.json`, `config/eindri-harness`, `config/backlog-backend`, `config/backend`, `config/herdr-presentation-spaces`, `config/startup-memory-budget`, and the one shared Allfather-preference file `data/Allfather-shared.md`.
 Because these paths are gitignored, that propagation is a separate, primary-authoritative copy independent of the tracked-files fast-forward: it re-converges every live home whether or not its tracked files advanced, and it touches only the declared items.

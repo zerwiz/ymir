@@ -2,7 +2,7 @@
 name: ymir
 description: >-
   Operating the Ymir host itself. Load the asset a task needs: self-update
-  (Brokk + every Eindri-home via /updateBrokk), Omarchy-native desktop operation
+  (Brokk + every Eindri-home via /updateymir), Omarchy-native desktop operation
   (Hyprland, shell/bar, monitors, window rules, placement, GPU/Wayland, any
   ~/.config file), and the Þjazi terminal backend (herdr/tmux selection,
   protocol floors, panes, presentation spaces). One skill for the machine.
@@ -19,7 +19,7 @@ then the asset it points to.
 
 ```
 assets[6]{path,load_when}:
-  "assets/update.md","self-update Brokk + every Eindri-home (updateBrokk / /updateBrokk)"
+  "assets/update.md","self-update Brokk + every Eindri-home (updateymir / /updateymir)"
   "assets/install.md","install/plan this host: read the computed plan, choose the home, know which root holds what"
   "assets/omarchy.md","Omarchy host: Hyprland, shell/bar, monitors, placement, GPU, ~/.config"
   "assets/thjazi.md","the terminal backend: herdr/tmux, protocol floors, panes, spaces"

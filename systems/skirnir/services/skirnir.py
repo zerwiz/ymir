@@ -50,7 +50,7 @@ def _model_url() -> str:
     return "http://127.0.0.1:8080/v1/chat/completions"
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 
 TIERS = ("owner", "collaborator", "known", "stranger")
 

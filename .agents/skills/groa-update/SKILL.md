@@ -2,8 +2,8 @@
 name: groa-update
 description: >-
   Self-update a running Brokk and its eindri-homes to the latest from origin,
-  through Gróa the updater shaman. Use when the Allfather invokes /updateBrokk
-  (e.g. "/updateBrokk", "update Brokk", "pull the latest Brokk").
+  through Gróa the updater shaman. Use when the Allfather invokes /updateymir
+  (e.g. "/updateymir", "update Brokk", "pull the latest Brokk").
   Fast-forwards this Brokk repo's default branch and every local or remote
   Eindri-home through its guarded update path (never forced, never disruptive),
   then re-reads AGENTS.md and nudges each updated Eindri-home to do the same, so
@@ -13,7 +13,7 @@ metadata:
   internal: true
 ---
 
-# Gróa — updateBrokk
+# Gróa — updateymir
 
 **Gróa** is the updater shaman — the *völva* who renews the tree. Brokk runs
 her; **Galdr** owns the assets she must be reflected in when the instruction
