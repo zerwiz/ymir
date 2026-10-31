@@ -1,40 +1,15 @@
 #!/usr/bin/env bash
-# ban.sh — refuse a chat outright, and write down why.
-#   bin/assistant/ban.sh <chat-id> --why "reason"
-#   bin/assistant/ban.sh --list
-#   bin/assistant/ban.sh --unban <chat-id>
-set -u
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-. "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
-ymir_home_root HOME_R 2>/dev/null || true
-F="$HOME_R/hodd/identity/assistant/banned.yaml"
-[ -f "$F" ] || printf 'banned: []\n' > "$F"
-case "${1:-}" in
-  --list) sed -n 's/^- //p' "$F" ;;
-  --unban) ID="${2:-}"; [ -n "$ID" ] || exit 2
-    ID="$ID" F="$F" python3 - <<'PY'
-import os, yaml, pathlib
-p = pathlib.Path(os.environ["F"]); d = yaml.safe_load(p.read_text()) or {}
-d["banned"] = [x for x in (d.get("banned") or []) if str(x) != os.environ["ID"]]
-p.write_text(yaml.safe_dump(d, sort_keys=False))
-print("unbanned", os.environ["ID"])
-PY
-    ;;
-  ""|-h|--help) sed -n '2,7p' "$0" | sed 's/^# \{0,1\}//' ;;
-  *) ID="$1"; shift; WHY=""
-    [ "${1:-}" = "--why" ] && WHY="${2:-}"
-    ID="$ID" WHY="$WHY" F="$F" python3 - <<'PY'
-import os, yaml, pathlib, time
-p = pathlib.Path(os.environ["F"]); d = yaml.safe_load(p.read_text()) or {}
-rows = [str(x) for x in (d.get("banned") or [])]
-if os.environ["ID"] not in rows:
-    rows.append(os.environ["ID"])
-d["banned"] = rows
-d.setdefault("reasons", {})[os.environ["ID"]] = {"why": os.environ["WHY"],
-                                                 "at": time.strftime("%Y-%m-%dT%H:%M:%S%z")}
-p.write_text(yaml.safe_dump(d, sort_keys=False, allow_unicode=True))
-print(f"banned {os.environ['ID']}: {os.environ['WHY'] or '(no reason given)'}")
-PY
-    ;;
-esac
+# bin/assistant/ban.sh -> systems/skirnir/services/ban.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.  # allow-superseded-path: this header RECORDS the move, it does not make it
+#
+# It exists so a caller nobody has repointed yet still works. It is retired by the dated follow-up in
+# docs/fixes/assistant/2026-10-31-skirnir-becomes-a-system.md, and .agents/paths-ledger.yaml records the move.
+set -euo pipefail
+_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_root="$(cd "$_d/../.." && pwd)"
+_new="$_root/systems/skirnir/services/ban.sh"
+if [ ! -e "$_new" ]; then
+  printf 'skirnir: the door moved to systems/skirnir/services/ban.sh and is not there\n' >&2
+  exit 127
+fi
+printf 'skirnir: bin/assistant/ has MOVED to systems/skirnir/ — call systems/skirnir/services/ban.sh (plan 149)\n' >&2
+exec "$_new" "$@"

@@ -11,13 +11,13 @@ to configure, because he has no tools.
 **The commands**
 
 ```sh
-bin/assistant/kb-export.sh                 # rebuild the digest from APPROVED facts only
-bin/assistant/kb-export.sh --list          # what is approved right now
-bin/assistant/ask.sh --tier collaborator --text "what is OptiCat?"
-bin/assistant/ask.sh --tier collaborator --sender anna@example.com --text "nda please"
-bin/assistant/voice.sh                     # talk to him: mic → whisper → Skírnir → Kokoro
-bin/assistant/voice.sh --text "who are you" # the same, without a microphone
-bin/assistant/walls-test.sh                # the red-team suite (10 assertions)
+systems/skirnir/services/kb-export.sh                 # rebuild the digest from APPROVED facts only
+systems/skirnir/services/kb-export.sh --list          # what is approved right now
+systems/skirnir/services/ask.sh --tier collaborator --text "what is OptiCat?"
+systems/skirnir/services/ask.sh --tier collaborator --sender anna@example.com --text "nda please"
+systems/skirnir/services/voice.sh                     # talk to him: mic → whisper → Skírnir → Kokoro
+systems/skirnir/services/voice.sh --text "who are you" # the same, without a microphone
+systems/skirnir/services/walls-test.sh                # the red-team suite (10 assertions)
 ```
 
 **The four walls**
@@ -47,7 +47,7 @@ the gate still runs on what it says.
 form; the model leg receives them and the gate still checks the answer. **"remember that …"** (owner
 only) writes a fact to `pending/` and asks for approval — `learn.sh` records the provenance,
 `approve-fact.sh` promotes it, `kb-export.sh` rebuilds. A chat that abuses him is **banned** outright
-(`bin/assistant/ban.sh`), not merely rate-limited. He shows **typing** for as long as he composes —
+(`systems/skirnir/services/ban.sh`), not merely rate-limited. He shows **typing** for as long as he composes —
 the indicator is re-sent every four seconds, because Telegram lapses it after about five and a cold
 model can take a minute (measured 2026-10-23: one call was not enough, and he looked dead while he
 thought). A voice note in shows **recording audio** and comes back as a **voice note**: the mouth
@@ -60,7 +60,7 @@ answering on all. groups never."*). His **private chat answers every message** �
 that is his alone. A **group answers only a message that names him** (`skirn`, `skirm`, `skrin`,
 `skírni`, `skirnir`, `brokk`, `ymir`, or `@<bot>`) or a message from the Allfather himself, and a group
 that is not on the allowlist is not answered at all. A room can be **allowed**, never made **loud**:
-`bin/assistant/group-add.sh` lists the rooms, `allow <name|id>` opens one (still name-only) and
+`systems/skirnir/services/group-add.sh` lists the rooms, `allow <name|id>` opens one (still name-only) and
 `close <name|id>` makes it silent entirely.
 
 **The canaries are DERIVED, not hand-written**: every plan title in the ledger, the vault's markers and
@@ -114,7 +114,7 @@ nothing to invoke. A separate door does the fetching — keyless, and it can onl
 API: no URL taken from a message, no redirect, no private address.
 
 ```sh
-bin/assistant/research.py --query "Kosovo Liberation Army" --limit 3   # JSON: title, domain, extract
+systems/skirnir/services/research.py --query "Kosovo Liberation Army" --limit 3   # JSON: title, domain, extract
 ```
 
 Ask him in words: *"look up …"*, *"search the web for …"*, *"research …"*. **Owner only** — a stranger
@@ -152,8 +152,8 @@ a stub), returns sources with text and no links, answers in about a second, rout
 the engine, refuses a stranger, keeps private names out, and leaves the unheld-subject refusal intact.
 
 ```sh
-bin/assistant/research-smoke.sh                                        # templates only
-bin/assistant/research-smoke.sh --model qwen3.5-9b@q4_k_s-summarizer   # with the mouth armed
+systems/skirnir/services/research-smoke.sh                                        # templates only
+systems/skirnir/services/research-smoke.sh --model qwen3.5-9b@q4_k_s-summarizer   # with the mouth armed
 ```
 
 Offline, it prints a clean SKIP and exits 0 — the box is not always on the network, and a smoke test
@@ -166,30 +166,30 @@ plus a model answer — so the door keeps a **ten-minute cache** (the same quest
 Wikipedia fallback. `--no-cache` forces a live call for the smoke test.
 
 **He knows the house itself** (2026-10-22). His digest began at 21 facts — enough to say what Ymir is
-and not much else. `bin/assistant/learn-house.sh` derives his knowledge from the house's own **public**
+and not much else. `systems/skirnir/services/learn-house.sh` derives his knowledge from the house's own **public**
 documents: every named thing in `docs/lore.md` and every row of `FEATURES.md`, one approved fact each,
 read **verbatim** (a paraphrased feature description is how a catalogue becomes a rumour).
 
 ```sh
-bin/assistant/learn-house.sh            # derive, write, rebuild the digest
-bin/assistant/learn-house.sh --dry-run  # how many facts it would write
+systems/skirnir/services/learn-house.sh            # derive, write, rebuild the digest
+systems/skirnir/services/learn-house.sh --dry-run  # how many facts it would write
 ```
 
 Measured: **21 → 120 facts** (97 derived + his own), and the questions that used to earn the honest no
 now answer — *"what is Hlidskjalf"*, *"what is Snotra"*, *"does Ymir have a ward"*, *"what is the well"*.
-The generator owns **only** what it marked (`generated_by: bin/assistant/learn-house.sh`): a fact it no
+The generator owns **only** what it marked (`generated_by: systems/skirnir/services/learn-house.sh`): a fact it no
 longer produces is removed, and nothing the Allfather approved by hand is ever touched. The lore's
 "Odin" is rewritten to "the Allfather" as it is derived — the name law binds the mouth, not just the
 prompt.
 
 **He knows the site too** (2026-10-22). *"he needs to know everything https://ymir.zerwiz.org/"* —
-`bin/assistant/learn-site.sh` fetches the house's public site (same-origin links, one level, eight pages
+`systems/skirnir/services/learn-site.sh` fetches the house's public site (same-origin links, one level, eight pages
 at most), strips it to text, cuts it into passages, and writes each passage as an approved fact marked
 `verbatim`, with its source URL.
 
 ```sh
-bin/assistant/learn-site.sh              # fetch, derive, rebuild the digest
-bin/assistant/learn-site.sh --dry-run    # how many passages it would write
+systems/skirnir/services/learn-site.sh              # fetch, derive, rebuild the digest
+systems/skirnir/services/learn-site.sh --dry-run    # how many passages it would write
 ```
 
 Measured: **187 passages from 8 pages**, and the digest now holds **307 facts** — so *"what is Gungnir"*,

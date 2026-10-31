@@ -80,7 +80,25 @@ class TrelloAdapter(OrgAdapter):
         return T.api("GET", f"/boards/{board_id}/cards", {"fields": fields, "limit": 1000})
 
     def resolve_member(self, name: str, board_id: str) -> str | None:
-        return T.resolve_member(name, board_id)
+        # Try direct match first
+        result = T.resolve_member(name, board_id)
+        if result:
+            return result
+        # Identity matching: check speaker-to-user mapping table
+        company = (self.place.get("company") or "").strip().lower()
+        if company:
+            speaker_map = load_speaker_map(company) if "load_speaker_map" in globals() else {}
+            # Import from org_adapter
+            try:
+                from org_adapter import load_speaker_map
+                speaker_map = load_speaker_map(company)
+            except ImportError:
+                speaker_map = {}
+            mapped = speaker_map.get(name.strip())
+            if mapped:
+                # Try to resolve the mapped name
+                return T.resolve_member(mapped, board_id)
+        return None
 
     def add_member(self, card_id: str, member_id: str) -> None:
         T.api("POST", f"/cards/{card_id}/idMembers", {"value": member_id})

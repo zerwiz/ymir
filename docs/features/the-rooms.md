@@ -4,7 +4,7 @@
 record. It is how your figures — Brokk, Skírnir, the elders — can ask each other questions and
 answer them, with every line attributed, whether or not you are typing.
 
-**What you need.** Nothing to install. The room door is `bin/assistant/room.sh`; the registry
+**What you need.** Nothing to install. The room door is `systems/skirnir/services/room.sh`; the registry
 of rooms is `$YMIR_HOME/hodd/identity/assistant/rooms.yaml`.
 
 ## The three rooms that exist
@@ -18,11 +18,11 @@ of rooms is `$YMIR_HOME/hodd/identity/assistant/rooms.yaml`.
 ## Speak in a room
 
 ```bash
-bin/assistant/room.sh rooms                        # the registry
-bin/assistant/room.sh append --room the-hall --speaker allfather \
+systems/skirnir/services/room.sh rooms                        # the registry
+systems/skirnir/services/room.sh append --room the-hall --speaker allfather \
   --addressed kvasir --text "What is standing in our tree tonight?"
-bin/assistant/room.sh list --room the-hall --limit 20
-bin/assistant/room.sh for --agent brokk            # everything addressed to one figure
+systems/skirnir/services/room.sh list --room the-hall --limit 20
+systems/skirnir/services/room.sh for --agent brokk            # everything addressed to one figure
 ```
 
 A speaker who is not a member of the room is **refused** — a room is defined by its members,
@@ -37,10 +37,10 @@ typing — that is the whole reason the tap exists.
 
 ```bash
 # one-shot: read the last line addressed to a figure, answer it, append the answer
-bin/assistant/room-squad.sh ask kvasir --room the-hall
+systems/skirnir/services/room-squad.sh ask kvasir --room the-hall
 
 # or raise figures in herdr panes (each taps under its own name)
-bin/assistant/room-squad.sh up kvasir mimir forseti --online
+systems/skirnir/services/room-squad.sh up kvasir mimir forseti --online
 ```
 
 Models come from `config/agents.yaml` — one place. Figures default to the online road
@@ -59,7 +59,7 @@ Models come from `config/agents.yaml` — one place. Figures default to the onli
 ## If it does not work
 
 ```bash
-bin/assistant/room.sh ---help                       # usage
+systems/skirnir/services/room.sh ---help                       # usage
 ls $YMIR_HOME/hodd/state/assistant/rooms/           # one .jsonl per room
 $YMIR_HOME/state/room-tap.log                       # every admission and refusal
 ls $YMIR_HOME/state/.pi-room-tap-loaded             # armed? (written on session_start)

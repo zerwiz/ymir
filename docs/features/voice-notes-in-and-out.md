@@ -15,7 +15,7 @@ desktop. On the desktop, F10 reads the current selection aloud and F9 holds the 
 If you need to raise the voice by hand after a long silence:
 
 ```
-bin/assistant/voice.sh test          # say a line out loud
+systems/skirnir/services/voice.sh test          # say a line out loud
 systemctl --user status kokoro-serve # is the mouth up?
 ```
 
@@ -26,4 +26,4 @@ Nothing from your voice is sent anywhere, and nothing is kept after the transcri
 **If it does not work.** If you get text back instead of a voice, the mouth could not be raised: check
 `systemctl --user status kokoro-serve` — it gives the card back after five idle minutes and is raised
 again by the next voice note or by the command above. If your note comes back empty, the ear could not
-reach its model: run `bin/assistant/ear.sh <file>` by hand and read the error it prints.
+reach its model: run `systems/skirnir/services/ear.sh <file>` by hand and read the error it prints.

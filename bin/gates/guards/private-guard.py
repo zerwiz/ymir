@@ -8,7 +8,7 @@ def ymir_home():
         return h
     root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
     # ymir_home_root takes a RESULT VARIABLE; called bare it returns 2. Every
-    # other caller already passes one (bin/ward/garmr/common.py, bin/assistant/*).
+    # other caller already passes one (bin/ward/garmr/common.py, systems/skirnir/services/*).
     out = subprocess.check_output([
         'bash', '-c',
         f'. "{root}/bin/vault/hoard-lib.sh" >/dev/null 2>&1; out=""; ymir_home_root out; printf "%s" "$out"',

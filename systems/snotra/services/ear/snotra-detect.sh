@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# bin/time/snotra/snotra-detect.sh -> systems/snotra/services/ear/snotra-detect.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and says so.  # allow-superseded-path: this header RECORDS the move, it does not make it
+# systems/snotra/services/snotra-detect.sh — the door itself (plan 129). The 'RETIRED SHIM' wording below was copied in by the move and removed 2026-10-31: this file IS the door, not a shim of one.
 #
 # It exists so a caller nobody has repointed yet still works. It is retired by the dated follow-up in
 # docs/fixes/snotra/2026-10-24-snotra-becomes-a-system.md, and .agents/paths-ledger.yaml records the move.
