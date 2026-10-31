@@ -50,7 +50,12 @@ say(){
   local t0 t1 t2; t0="$(date +%s%3N)"
   kokoro speak -v "$VOICE" -o "$wav" "$text" >/dev/null 2>&1 || die "kokoro synthesis failed"
   t1="$(date +%s%3N)"
-  paplay --device="$MIC" "$wav" || die "playback failed"
+  # The player's pid is recorded so `stop` can signal the one process this door started — never a
+  # pattern, never another hand's paplay (the pkill ward, 2026-10-31).
+  paplay --device="$MIC" "$wav" & local pp=$!
+  echo "$pp" > "${PIDFILE}.play"
+  wait "$pp" || die "playback failed"
+  rm -f "${PIDFILE}.play"
   t2="$(date +%s%3N)"
   rm -f "$wav"
   { [ -e "$ANN_FILE" ] || date -Iseconds > "$ANN_FILE"; } 2>/dev/null || true
@@ -72,8 +77,11 @@ status(){
   [ -r "$LOG" ] && tail -3 "$LOG"
 }
 stop(){
+  # NEVER kill by pattern (the pkill ward, and for good reason: `pkill -f` matches the whole
+  # command line, including the shell that runs it). The player's own pid is recorded when it is
+  # started; that is the pid this door owns, and it is the only one it may signal.
   if [ -f "$PIDFILE" ]; then kill "$(cat "$PIDFILE")" 2>/dev/null || true; rm -f "$PIDFILE"; fi
-  pkill -f "^paplay --device=$MIC" 2>/dev/null || true
+  if [ -f "${PIDFILE}.play" ]; then kill "$(cat "${PIDFILE}.play")" 2>/dev/null || true; rm -f "${PIDFILE}.play"; fi
   printf 'voice\tstopped\n'
 }
 talk(){ exec python3 "$ROOT/systems/snotra/services/ear/snotra-talk.py" "$@" ; }
