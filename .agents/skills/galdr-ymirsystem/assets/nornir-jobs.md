@@ -303,8 +303,15 @@ at sunrise. The forge address is the user's, from the home — never the tree:
 Four rows a day (`07:20 · 11:20 · 15:20 · 19:20`, any role that owns a mailbox)
 keep the desk's store current and prove the desk answers. The job imports every
 account declared in the home's `hodd/memory/mail/accounts.yaml` through
-`bin/mail/gna_import.py` (read-only Gmail; it cannot send), then probes
-`http://127.0.0.1:8490/health` with the desk's own token.
+`bin/mail/gna_import.py` (read-only, one account, `google` or `imap` — it cannot
+send), then probes `http://127.0.0.1:8490/health` with the desk's own token.
+
+Since 2026-10-24 each round also asks `bin/mail/addresses.sh --check` (plan 116
+§15.3.1) and prints a **WARN** line, plus a `gna-mail.log` row, for any address
+the house uses that cannot receive — measured that evening: `zerwiz.org` publishes
+no MX, so `gimle@`, `snotra@`, `reply+*` and `bounce+*` there are undeliverable.
+The WARN never fails the import: an address that cannot receive is a DNS or
+console fault, and the mail that DOES arrive must still be read.
 
 Its law is the one the plan was born from: **absence is a failure, not an empty
 list.** A missing scope file, an unreadable registry, a failed import or a desk
