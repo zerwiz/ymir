@@ -11,7 +11,7 @@ vendored `fm-*` script kept byte-comparable to upstream on purpose.
 `disposition` says what happens to it: `keep`, `migrate → src/…` where the
 Python runtime already has the module, `retire` for orphans, `provenance`.
 
-bin[620]{file,does,kind,verdict,disposition,callers,lines}:
+bin[634]{file,does,kind,verdict,disposition,callers,lines}:
   "README.md","`bin/` — every file, what it does, and whether it is alive","data","tested","keep",22,-
   "README.md","Gróa — the updater, one per install","data","tested","keep",22,-
   "README.md","Gná — the one mail desk (production)","data","tested","keep",22,-
@@ -30,6 +30,7 @@ bin[620]{file,does,kind,verdict,disposition,callers,lines}:
   "app-lib.sh","app-lib.sh — where an app actually lives.","lib","tested","keep",16,99
   "approve-fact.sh","approve-fact.sh — promote a pending fact into the approved digest.","tool","wired","keep",1,25
   "approve.sh","approve.sh — one gesture answers one question.","tool","wired","keep",6,61
+  "asana_adapter.py","'''asana_adapter — the Asana implementation of OrgAdapter.","data","orphan","retire",0,173
   "ask.sh","ask.sh — the door to Skírnir, the Allfather's assistant.","tool","tested","keep",9,12
   "asks.sh","asks.sh — the ledger of questions Skírnir could not answer, and the road that closes the loop.","tool","wired","keep",3,184
   "audio-retention.sh","audio-retention.sh — Rule 30 in one command: turn the sound into text, then let the sound go.","tool","wired","keep",1,188
@@ -65,7 +66,10 @@ bin[620]{file,does,kind,verdict,disposition,callers,lines}:
   "capabilities.md","What Ymir can do — the capability register","data","wired","keep",2,28
   "capabilities.sh","A GENERATED FILE MUST BE A FUNCTION OF CONTENT ALONE (0.1.94/0.1.95/0.1.97 — three","tool","wired","keep",5,241
   "catalog.sh","catalog.sh — THE door to what this machine can serve.","tool","wired","keep",2,77
+  "channel_email.py","'''channel_email — the email channel for the action router.","data","orphan","retire",0,132
+  "channel_todo.py","'''channel_todo — the todo channel for the action router.","data","orphan","retire",0,42
   "ci-verify.sh","ci-verify.sh — what CI must prove, in one command, for BOTH hosts.","tool","tested","keep",2,76
+  "clickup_adapter.py","'''clickup_adapter — the ClickUp implementation of OrgAdapter.","data","orphan","retire",0,177
   "clients.sh","clients.sh — the clients register: load, validate, and check.","tool","wired","keep",0,193
   "collaborators.sh","collaborators.sh — the people we work with: clients, collaborators, advisers, partners.","tool","wired","keep",1,245
   "common.py","'''common.py — the one resolver for Garmr's settings and paths (Rule 07).","tool","wired","keep",1,162
@@ -337,6 +341,7 @@ bin[620]{file,does,kind,verdict,disposition,callers,lines}:
   "install.sh","install.sh — seat Gná's desk on THIS machine.","data","tested","keep",30,82
   "inventory-guard.sh","inventory-guard.sh — a register that runs in no gate is a capability that is silently absent.","data","wired","keep",1,54
   "inventory.sh","inventory.sh — the honest index of the two shelves nobody can read.","tool","wired","keep",7,273
+  "jira_adapter.py","'''jira_adapter — the Jira implementation of OrgAdapter.","data","orphan","retire",0,205
   "journal-append.sh","journal-append.sh — write one idempotent entry to THIS machine's outbox.","tool","tested","keep",0,115
   "journal-receive.sh","journal-receive.sh — the HEART folds the bodies' journals into one record.","tool","tested","keep",1,137
   "journal-reconcile.sh","journal-reconcile.sh — push this machine's outbox to the heart, when it answers.","tool","tested","keep",2,131
@@ -346,6 +351,7 @@ bin[620]{file,does,kind,verdict,disposition,callers,lines}:
   "learn-site.sh","learn-site.sh — Skírnir learns the house's own public site.","tool","wired","keep",0,137
   "learn.sh","learn.sh — a fact learned in conversation, waiting for the Allfather's approval.","tool","wired","keep",1,44
   "library.sh","library.sh — the library of records: one corpus, one contract, one door (plan 115).","tool","wired","migrate → src/ymir_runtime/library.py",0,69
+  "linear_adapter.py","'''linear_adapter — the Linear implementation of OrgAdapter.","data","orphan","retire",0,159
   "llama-ensure.sh","llama-ensure.sh — stand a CUDA llama.cpp engine for local models, or adopt the","tool","wired","keep",3,163
   "local-model-lock.sh","local-model-lock.sh — serialize LOCAL model inference on one machine.","tool","tested","keep",8,132
   "logretta-council.sh","logretta-council.sh — the council's MODES: who divides the work, who is sent out, who rules.","tool","wired","keep",0,309
@@ -355,7 +361,7 @@ bin[620]{file,does,kind,verdict,disposition,callers,lines}:
   "logretta-report.sh","logretta-report.sh — the council's chain: every seat reports to the CHAIR, the chair rules.","tool","wired","keep",1,216
   "machine-profile.sh","machine-profile.sh — a body reads its OWN card (wave C, the persona loader).","tool","wired","keep",0,54
   "mail-scan.sh","mail-scan.sh — read-only: the last N hours of a mailbox, as compact JSON.","tool","wired","keep",1,66
-  "mail-send.sh","mail-send.sh — the follow-up email with the record attached, as a draft or send.","tool","wired","keep",9,147
+  "mail-send.sh","mail-send.sh — the follow-up email with the record attached, as a draft or send.","tool","wired","keep",10,147
   "mcp-config.sh","mcp-config.sh — generate the harness MCP config: ONE local gateway door.","tool","tested","keep",0,94
   "mcp-gate.sh","mcp-gate.sh — arm/disarm an on-call MCP server in the seat's pi mcp-adapter.json.","tool","wired","keep",1,65
   "mcp-gateway.sh","mcp-gateway.sh — the body's ONE local door in front of the record MCPs.","tool","tested","keep",4,278
@@ -383,6 +389,7 @@ bin[620]{file,does,kind,verdict,disposition,callers,lines}:
   "model-tune.sh","model-tune.sh — tune the chosen model for THIS host, with measured numbers.","tool","wired","keep",1,150
   "models-detect.sh","models-detect.sh — detect the LOCAL model runtimes present on this machine and","tool","wired","keep",3,168
   "models-report.sh","models-report — the user's OWN models, read from the ROOT pi home.","tool","wired","keep",1,29
+  "monday_adapter.py","'''monday_adapter — the Monday.com implementation of OrgAdapter.","data","orphan","retire",0,168
   "mouth.sh","mouth.sh — text in, a Telegram voice note out.","tool","wired","keep",4,64
   "name-registry.sh","name-registry.sh — the collision system for Ymir's names.","tool","wired","keep",3,167
   "nidhogg.sh","nidhogg.sh — Níðhöggr, the gnawer at the root.","tool","wired","keep",0,229
@@ -403,6 +410,7 @@ bin[620]{file,does,kind,verdict,disposition,callers,lines}:
   "nornir-job-snotra-mail.sh","nornir-job-snotra-mail.sh — Snotra listens for the answers.","tool","wired","keep",0,45
   "nornir-job-worktree-housekeeping.sh","nornir-job-worktree-housekeeping.sh — the daily reckoning of what the worktrees cost.","tool","wired","keep",0,40
   "notify.py","'''notify.py — the hound's mouth: one message to the phone, and a record that it landed.","tool","tested","keep",2,229
+  "notion_adapter.py","'''notion_adapter — the Notion implementation of OrgAdapter.","data","orphan","retire",0,162
   "npm-install-local-test.sh","npm-install-local-test.sh — the REAL local installation test.","tool","wired","keep",0,116
   "npm-pretest.sh","npm-pretest.sh — the pre-publish test gate (the Allfather's decree):","data","wired","keep",2,240
   "npm-publish.sh","npm-publish.sh — publish through the HOARD's npm token, every single time.","tool","wired","keep",0,161
@@ -413,6 +421,7 @@ bin[620]{file,does,kind,verdict,disposition,callers,lines}:
   "omarchy-sense.sh","omarchy-sense.sh — learn the Allfather's Omarchy machine.","tool","wired","keep",3,204
   "open-design.sh","open-design.sh — the Allfather's door to OpenDesign (Hnoss) on this seat.","tool","wired","keep",0,85
   "opendesign.sh","opendesign.sh — start / stop / status for OpenDesign (the design forge, Hnoss).","tool","wired","keep",0,88
+  "org_adapter.py","'''org_adapter — the abstract base class for organization tool adapters.","data","orphan","retire",0,210
   "packaged-gate.sh","packaged-gate.sh — prove the PUBLISHED artifact, not the tree.","tool","wired","keep",0,103
   "participants-fill.sh","participants-fill.sh — fill participant emails from the meeting's calendar event.","tool","wired","keep",0,43
   "path-ledger-guard.sh","path-ledger-guard.sh — Rule 25: a path that MOVED may not be referenced again.","tool","tested","keep",0,99
@@ -463,7 +472,7 @@ bin[620]{file,does,kind,verdict,disposition,callers,lines}:
   "room-wall-test.sh","room-wall-test.sh — the room door's assertions, deterministic and offline.","tool","wired","keep",0,94
   "room.sh","room.sh — the record of a room: append an utterance, or read what was said.","tool","wired","keep",6,288
   "rules-number-guard.sh","rules-number-guard.sh — the house law is NUMBERED, so no two rules may share a number,","tool","tested","keep",0,83
-  "rules.py","'''rules.py — the judgement, deterministic and first (plan 98 §4.2).","tool","wired","keep",0,102
+  "rules.py","'''rules.py — the judgement, deterministic and first (plan 98 §4.2).","tool","wired","keep",2,102
   "runes-append.sh","runes-append.sh — the append-only Runes ledger, a THIN SHIM.","tool","tested","keep",34,117
   "runes-project.sh","runes-project.sh — the DAG projector, regenerates runes_audit.md from events.","tool","wired","keep",0,65
   "runtime-guard.sh","runtime-guard.sh — THE TREE IS NOT A RUNTIME.","data","wired","keep",0,125
@@ -475,7 +484,7 @@ bin[620]{file,does,kind,verdict,disposition,callers,lines}:
   "seat.sh","seat.sh — seat Gróa on THIS machine, once.","tool","tested","migrate → src/ymir_runtime/seat.py",8,100
   "secret-guard.sh","secret-guard.sh — refuse to commit obvious secrets or private env files.","tool","wired","keep",3,71
   "security-audit.sh","security-audit.sh — Vörðr's eyes: WHAT IS THIS MACHINE ACTUALLY EXPOSING?","tool","tested","keep",5,243
-  "send.sh","send.sh — THE HOTLINE: one door a system calls when it has something to say.","tool","tested","migrate → src/ymir_runtime/send.py",57,194
+  "send.sh","send.sh — THE HOTLINE: one door a system calls when it has something to say.","tool","tested","migrate → src/ymir_runtime/send.py",58,194
   "sensitive-gate.sh","sensitive-gate.sh — one gate for every external surface of a sensitive artifact set.","tool","wired","keep",2,81
   "sessrumnir-ensure.sh","sessrumnir-ensure.sh — ensure the Sessrúmnir desktop GUI is present and runnable.","tool","wired","keep",4,132
   "sessrumnir-launch.sh","sessrumnir.sh — launch the Sessrúmnir desktop GUI (the seat-hall).","tool","wired","keep",2,153
@@ -502,7 +511,7 @@ bin[620]{file,does,kind,verdict,disposition,callers,lines}:
   "snotra-audio-ladder.py","'''snotra-audio-ladder — the meeting's sound gets smaller AFTER its words are safe.","data","wired","keep",1,253
   "snotra-audio-ladder.sh","snotra-audio-ladder.sh — the meeting's sound gets smaller AFTER its words are safe.","tool","wired","keep",2,19
   "snotra-autojoin.sh","snotra-autojoin.sh — read the calendar, decide which meetings Snotra joins, and join them.","tool","wired","keep",0,164
-  "snotra-board.py","'''snotra-board — a place declares a board; this door makes it, once.","data","wired","keep",1,201
+  "snotra-board.py","'''snotra-board — a place declares a board; this door makes it, once.","data","wired","keep",2,201
   "snotra-board.sh","snotra-board.sh — a place declares a board; this door makes it, once.","tool","wired","keep",1,17
   "snotra-bot.sh","snotra-bot.sh — send Snotra into a meeting, through the Vexa API.","tool","wired","keep",1,146
   "snotra-capture.sh","snotra-capture.sh — capture mic + system audio on the meeting seat.","tool","wired","keep",4,251
@@ -540,6 +549,10 @@ bin[620]{file,does,kind,verdict,disposition,callers,lines}:
   "snotra-provenance.sh","snotra-provenance.sh — a tamper-evident record of every meeting artifact.","tool","wired","keep",2,72
   "snotra-render-email.sh","snotra-render-email.sh — the follow-up letter, generated from the record.","tool","wired","keep",1,166
   "snotra-render-pdf.sh","snotra-render-pdf.sh — one printable PDF from a meeting record.","tool","wired","keep",1,78
+  "snotra-route.py","'''snotra-route — the action router: from transcription to action across channels.","data","wired","keep",1,235
+  "snotra-route.sh","snotra-route.sh — the action router: from transcription to action across channels.","tool","wired","keep",0,10
+  "snotra-rules.py","'''snotra-rules — the rules engine for per-board, per-project, per-company handling.","data","wired","keep",2,207
+  "snotra-rules.sh","snotra-rules.sh — the rules engine for per-board, per-project, per-company handling.","tool","wired","keep",1,10
   "snotra-signoff.sh","snotra-signoff.sh — the assembly signs the record, not the decision.","tool","wired","keep",2,190
   "snotra-store.sh","snotra-store.sh — ONE contract for every meeting record, whichever transport heard it.","tool","wired","keep",0,286
   "snotra-stream.sh","snotra-stream.sh — Snotra's voice into a meeting: say, and (later) the full loop.","tool","wired","keep",1,91
@@ -574,7 +587,8 @@ bin[620]{file,does,kind,verdict,disposition,callers,lines}:
   "topology.sh","topology.sh — what IS this machine in the fleet, and is it talking to the heart?","tool","tested","keep",6,139
   "trello-due.sh","trello-due.sh — a card's due date is a promise; say when it is broken.","tool","wired","keep",0,100
   "trello-map.sh","trello-map.sh — the map of our Trello, written down so Snotra can know it.","tool","wired","keep",3,136
-  "trello_client.py","'''trello_client — the Trello door, shared: the grant, the resolver, and the card verbs.","data","wired","keep",0,305
+  "trello_adapter.py","'''trello_adapter — the Trello implementation of OrgAdapter.","data","orphan","retire",0,110
+  "trello_client.py","'''trello_client — the Trello door, shared: the grant, the resolver, and the card verbs.","data","wired","keep",1,305
   "tts-lease.sh","tts-lease.sh — say 'the card is in use' so the idle-stop never lowers the voice under a conversation.","tool","wired","keep",4,32
   "tui-frame-check.sh","tui-frame-check.sh — prove that what the TUI writes to the terminal fits the terminal.","tool","wired","keep",0,162
   "ui-truth-check.sh","ui-truth-check.sh — the panel's number must equal the machine's number.","tool","wired","keep",0,77
@@ -633,6 +647,6 @@ bin[620]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir.js","/**","tool","wired","keep",5,263
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
 
-**Tally.** verdict: wired=386, tested=234
+**Tally.** verdict: wired=390, tested=234, orphan=10
 
-**Tally.** disposition: keep=606, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/paths.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
+**Tally.** disposition: keep=610, retire=10, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/paths.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
