@@ -146,6 +146,48 @@ def rotate(path: str, max_bytes: int) -> None:
         pass
 
 
+def prune_rotations(path: str, keep: int) -> int:
+    """Keep the newest `keep` rotated siblings; RETIRE the older ones.
+
+    Written 2026-10-31 at the Allfather's word: *"we cant store 20gb of findings for ever"*.
+    The rotation it complements only ever MOVED a file aside (Rule 11: never truncate, never
+    lose a record), so a noisy audit source grew without bound — 3,960 rotated files, 20 GB,
+    and a hound spending a quarter of a core reading it. This is the retention that rotation
+    was missing.
+
+    The distinction these two rules draw, and the reason both can be true at once:
+
+      * the RECORDS this house keeps by law — the runes ledger, the well, plans, fixes, the
+        hoard — are APPEND-ONLY and are never retired by a sweeper (RULES/06, RULES/20);
+      * the OBSERVATION LOG is not a record but a sensor trace, and a sensor trace without
+        a retention policy is a disk that fills and a CPU that never idles.
+
+    Retention is bounded and declared (`hound.keep_rotations`), never silent: it returns how
+    many files were retired so a caller can say so, and it never touches the live file.
+    """
+    if keep is None or int(keep) <= 0:
+        return 0
+    directory = os.path.dirname(path) or "."
+    stem = os.path.basename(path)
+    prefix = stem[:-6] if stem.endswith(".jsonl") else stem
+    try:
+        siblings = sorted(
+            (os.path.join(directory, name) for name in os.listdir(directory) if name.startswith(prefix) and name != stem),
+            key=lambda p: os.path.getmtime(p),
+            reverse=True,
+        )
+    except OSError:
+        return 0
+    retired = 0
+    for stale in siblings[max(0, int(keep)):]:
+        try:
+            os.unlink(stale)
+            retired += 1
+        except OSError:
+            continue
+    return retired
+
+
 def heartbeat(state: str, name: str = "hound") -> None:
     os.makedirs(state, exist_ok=True)
     with open(os.path.join(state, f"{name}.heartbeat"), "w") as handle:
