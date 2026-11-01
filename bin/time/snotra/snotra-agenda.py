@@ -1,15 +1,9 @@
-#!/usr/bin/env bash
-# bin/time/snotra/snotra-agenda.py -> systems/snotra/services/cron/snotra-agenda.py — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and says so.  # allow-superseded-path: this header RECORDS the move, it does not make it
-#
-# It exists so a caller nobody has repointed yet still works. It is retired by the dated follow-up in
-# docs/fixes/snotra/2026-10-24-snotra-becomes-a-system.md, and .agents/paths-ledger.yaml records the move.
-set -euo pipefail
-_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-_root="$(cd "$_d/../../.." && pwd)"
-_new="$_root/systems/snotra/services/cron/snotra-agenda.py"
-if [ ! -e "$_new" ]; then
-  printf 'snotra: the door moved to systems/snotra/services/cron/snotra-agenda.py and is not there\n' >&2
-  exit 127
-fi
-printf 'snotra: bin/time/snotra/ has MOVED to systems/snotra/ — call systems/snotra/services/cron/snotra-agenda.py (plan 129)\n' >&2
-exec python3 "$_new" "$@"
+#!/usr/bin/env python3
+# bin/time/snotra/snotra-agenda.py -> systems/snotra/services/cron/snotra-agenda.py — RETIRED SHIM (plan 129)
+import os, sys
+_new = os.path.join(os.path.dirname(__file__), "..", "..", "..", "systems/snotra/services/cron", "snotra-agenda.py")
+_new = os.path.normpath(_new)
+if not os.path.isfile(_new):
+    print(f"snotra: the door moved to systems/snotra/services/cron/snotra-agenda.py and is not there", file=sys.stderr)
+    sys.exit(127)
+exec(open(_new).read())

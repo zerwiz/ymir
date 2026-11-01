@@ -512,6 +512,18 @@ WORKSTREAMS = {
 
 
 def classify(text):
+    # Try LLM reasoning first
+    try:
+        sys.path.insert(0, os.path.dirname(__file__))
+        from reasoning_adapter import get_reasoning_adapter
+        adapter = get_reasoning_adapter({"reasoning": {"enabled": True}})
+        if adapter:
+            result = adapter.classify(text, categories=['patent', 'vertical', 'docs'])
+            if result and result.strip().lower() in ('patent', 'vertical', 'docs'):
+                return result.strip().lower()
+    except Exception:
+        pass
+    # Fallback: keyword matching
     t = (text or '').lower()
     if any(k in t for k in ('patent', 'provisional', 'filing', 'intellectual property')):
         return 'patent'
@@ -548,6 +560,19 @@ def link_workstreams(state, rec, cards):
             existing = api('GET', f'/boards/{bid}/cards', {'fields': 'name'})
             if any(ref in (c.get('name') or '') for c in existing):
                 continue
+            # LLM semantic dedup (optional)
+            try:
+                sys.path.insert(0, os.path.dirname(__file__))
+                from reasoning_adapter import get_reasoning_adapter
+                adapter = get_reasoning_adapter({"reasoning": {"enabled": True}})
+                if adapter and existing:
+                    existing_text = "\n".join(c.get('name', '') for c in existing)
+                    result = adapter.dedup(card.get('name', ''), existing_text)
+                    if result.startswith('duplicate:'):
+                        print(f"  dedup: skipping {ref} (semantic duplicate)", file=sys.stderr)
+                        continue
+            except Exception:
+                pass
             copied = api('POST', '/cards', {'idList': lid, 'idBoard': bid, 'idCardSource': card['id'], 'keepFromSource': 'all'})
             note = f"\n\n**Source:** {state.get('board')} — {card['name']}"
             api('PUT', f'/cards/{copied["id"]}', {'desc': (copied.get('desc') or '') + note})
