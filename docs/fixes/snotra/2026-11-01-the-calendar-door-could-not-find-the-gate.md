@@ -46,3 +46,21 @@ Europe/Stockholm (08:00Z), status `confirmed`, both attendees `needsAction`, and
 A note that the same one-`..`-short pattern may exist in the other Snotra doors that were moved in plan 129: a
 door that calls a sibling by path should be checked against the tree it now lives in, not the tree it was written
 in.
+
+## The same fault, twice — appended after the mail door refused
+
+The approval gate itself carried the identical error. `snotra-approve.sh` resolved its root one level short and
+pointed at `$ROOT/bin/time/snotra/mail-send.sh`, so approving a draft failed with *"cannot read the bytes"* and the
+send that followed was refused — correctly, because the word could not be recorded.
+
+```
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"       # → ~/ymir/systems
+MAIL="$ROOT/bin/time/snotra/mail-send.sh"                            # → does not exist
+```
+
+Both are now four levels up and point at `systems/snotra/services/…`. Proved end to end: the agenda letter to two
+counterparts was drafted, approved (`approved mail r6123598373090961464`), and sent (`1a19877c54a87a4b`).
+
+**The lesson is the phase-2 task, and it is now urgent:** every Snotra door that calls a sibling by path was moved
+in plan 129, and at least two of them kept the old depth. A door that cannot find its own gate is a door that
+refuses everything, and the refusal blames the wrong thing.

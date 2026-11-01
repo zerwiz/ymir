@@ -28,8 +28,8 @@
 #
 # The record lives OUTSIDE git, in the state dir: an approval is an act, not a document.
 set -euo pipefail
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-MAIL="$ROOT/bin/time/snotra/mail-send.sh"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
+MAIL="$ROOT/systems/snotra/services/letters/mail-send.sh"
 RUNES="$ROOT/bin/records/runes-append.sh"
 # shellcheck disable=SC1091
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
