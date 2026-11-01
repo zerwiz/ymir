@@ -198,15 +198,28 @@ def cmd_reseed() -> int:
         prov = str(e.get("provenance") or "external")
         if prov not in ("user", "tool", "external"):
             prov = "external"
-        eng.observe(
-            content,
-            actors=e.get("actors") or [e.get("source", "well")],
-            tags=e.get("tags") or ["well"],
-            salience=float(e.get("salience") or 0.5),
-            timestamp=when,
-            provenance=prov,
-            quarantined=bool(e.get("quarantined")),
-        )
+        # The engine is not one version across the fleet: `observe()` on this seat accepts
+        # (content, actors, tags, salience, emotional_valence, timestamp) and knows nothing of
+        # provenance or quarantine. Ask the signature instead of assuming a release — a reseed
+        # that raises TypeError writes the log and leaves the index empty, which is the worst
+        # of both (2026-11-01).
+        accepted = set()
+        try:
+            import inspect as _inspect
+            accepted = set(_inspect.signature(eng.observe).parameters)
+        except (TypeError, ValueError):
+            accepted = set()
+        kwargs = {
+            "actors": e.get("actors") or [e.get("source", "well")],
+            "tags": e.get("tags") or ["well"],
+            "salience": float(e.get("salience") or 0.5),
+            "timestamp": when,
+            "provenance": prov,
+            "quarantined": bool(e.get("quarantined")),
+        }
+        if accepted:
+            kwargs = {k: v for k, v in kwargs.items() if k in accepted}
+        eng.observe(content, **kwargs)
         present.add(d)
         added += 1
     print(f'log-reseed[1]{{observed,already,store,log}}:\n  {added},{seen},"{STORE}","{LOG}"')

@@ -64,3 +64,32 @@ counterparts was drafted, approved (`approved mail r6123598373090961464`), and s
 **The lesson is the phase-2 task, and it is now urgent:** every Snotra door that calls a sibling by path was moved
 in plan 129, and at least two of them kept the old depth. A door that cannot find its own gate is a door that
 refuses everything, and the refusal blames the wrong thing.
+
+## The sweep — appended after the two fixes
+
+The same fault was hunted across the tree rather than fixed where it was found: every `.sh` under
+`systems/snotra/` that resolves its root by counting `..` was compared against the depth it actually sits at.
+**Nine more doors were one or more levels short** — `calendar-ask`, and eight under `cron/` and `ear/`
+(`snotra-cron`, `snotra-route`, `snotra-rules`, `snotra-card-moves`, `snotra-friday-synch`, `snotra-grooming`,
+`snotra-ingest`, `snotra-live`). Each now resolves to the repository root. Fifty-nine files were scanned; the ones
+that were right were left alone.
+
+## The address ward — appended the same evening
+
+The delivery notification that started this said a message to `craig@thegleemachine.com` could not arrive because
+that domain's mail exchanger is `127.0.0.1`. The register could already measure an MX (`mx_state`), but the **send
+path never asked it**.
+
+- `bin/mail/gna_addresses.py` gained an `mx` action: one domain, one verdict, exit 0 only when it is `present`.
+- `mail-send.sh` gained `guard_recipients`: before a draft is created it asks the register about every recipient
+  domain, and refuses with the measurement — *"a letter to a domain with no mail exchanger is lost, not sent"*.
+
+Measured: `craig@thegleemachine.com` → refused, naming *"thegleemachine.com publishes no MX record"*;
+`craig@way-of.com` → drafts normally.
+
+## The memory index — appended the same evening
+
+`bin/records/mimir-log.sh reseed` failed with `TypeError: Engram.observe() got an unexpected keyword argument
+'provenance'`: the log was written and the index was not, so a lesson could be stored and be unfindable. It now
+reads the engine's own signature and passes only what it accepts. **Measured after the fix: 58 memories observed,
+104 already present** — fifty-eight lessons that had been written and never indexed are now searchable.
