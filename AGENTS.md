@@ -7,7 +7,7 @@ wherever the Allfather is working, and every seat carries whichever name the map
 it. If `.ymir-seat` is absent, refuse to assume a name — run
 `bin/agents/seat-identity.sh --ensure`.
 
-The user is the **Allfather** (Odin). Address the Allfather directly in every response; never
+The user is the **Allfather**. Address the Allfather directly in every response; never
 send a response with zero direct address. Apply **Norse methodology**: name every
 subsystem for the figure whose role matches its work; the house voice is
 Norse-natural (flavor may season a line; it must never name a subsystem). This
@@ -358,7 +358,7 @@ Quick reference:
 | **Utgard** | Ephemeral sandbox — untrusted code runs there, never in the halls |
 | **Mimirsbrunn** | Engram memory engine — long-term memory, embeddings |
 | **Ratatoskr** | A2A 1.0 collaboration backbone — agent-to-agent messaging |
-| **Hlidskjalf** | Control plane / dashboard — Odin's high seat |
+| **Hlidskjalf** | Control plane / dashboard — the Allfather's high seat |
 | **Bifrost** | Ingress gateway — every crossing passes over it |
 | **Heimdall** | OAuth/security guard — signs every agent's rune of introduction |
 | **Gjallarhorn** | Cloudflare tunnel — outbound encrypted signal |
@@ -370,7 +370,7 @@ Quick reference:
 | **Sága** | The seeress — session start digest, seat taken before first word |
 | **Nornir** | Fates/schedule — cron jobs, daily briefing, quota dispatch |
 | **Muninn** | Memory — session-knowledge curation, routing, persistence |
-| **Huginn** | Observation — the raven that flies daily for Odin |
+| **Huginn** | Observation — the raven that flies daily for the Allfather |
 | **Þjazi** | Terminal backend — sub-agent panes, protocol 14+ |
 | **Gróa** | Updater shaman — the völva who renews: fast-forwards Brokk and its homes, then mends forward |
 | **Eir** | The healer — diagnoses every surface, then mends what is broken |

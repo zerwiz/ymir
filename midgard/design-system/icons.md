@@ -20,7 +20,7 @@ icons[21]{glyph,name,unicode,figure,used_for}:
   "dagaz","Dagaz","ᛞ","day/dawn","Processes — Valhalla supervision"
   "sowilo","Sowilo","ᛊ","sun","Files — Skrymir (light on the tree)"
   "kaunan","Kaunan","ᚴ","torch","OmniChat — Kaia's flame"
-  "ansuz","Ansuz","ᚨ","Odin's breath","Óðrerir — the mead of poetry, the Live Hall"
+  "ansuz","Ansuz","ᚨ","the Allfather's breath","Óðrerir — the mead of poetry, the Live Hall"
   "ehwaz","Ehwaz","ᛖ","horse/journey","Runtime — the seat and its transit"
   "jera","Jera","ᛃ","year/harvest","Cron — the Nornir's seasons"
   "berkana","Berkanan","ᛒ","birch","Profile — the self"
@@ -30,7 +30,7 @@ icons[21]{glyph,name,unicode,figure,used_for}:
   "ratatoskr","Ratatoskr","ᛒ","the squirrel","Ratatoskr — the A2A bus"
   "mimirsbrunn","Mimirsbrunn","ᛜ","the well of wisdom","Mimirsbrunn — memory"
   "valhalla","Wunjo","ᚹ","joy","Valhalla — process health (the glyph ᚹ is drawn here)"
-  "gungnir","Gungnir","ᚦ","Odin's spear","Gungnir — skill synthesis"
+  "gungnir","Gungnir","ᚦ","the Allfather's spear","Gungnir — skill synthesis"
   "heimdall","Heimdall","ᚺ","the watchman","Heimdall — auth / the gate"
   "gjallarhorn","Gjallarhorn","ᚷ","the horn","Gjallarhorn — the tunnel and its call"
 ```
