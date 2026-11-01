@@ -7,7 +7,7 @@
   `export const PI_DESKTOP_PRODUCT_NAME = 'Pi Desktop'` — rendered as the heading on
   the home screen, the sidebar and the chat panel. That is the title the Allfather
   saw, twice, on every launch.
-- **Mended at the name:** `SESSRUMNIR_PRODUCT_NAME = 'Sessrúmnir'` (Odin's hall of
+- **Mended at the name:** `SESSRUMNIR_PRODUCT_NAME = 'Sessrúmnir'` (the Allfather's hall of
   many seats), the three rendering components walked, and the old constant kept as an
   alias so no unwalked import breaks. `tsc --noEmit` exit 0.
 - **Still owed:** 1,255 English strings, **86 of them naming Pi** ("Pi is working",

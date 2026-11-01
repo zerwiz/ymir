@@ -11,7 +11,7 @@ named for its function.
 
 | app | figure | what it is | what runs it |
 |---|---|---|---|
-| **`hlidskjalf/`** | Hlidskjalf — Odin's high seat | the master control dashboard: the one plane that shows the whole house (React 19 + Vite SPA) | `bin/desktop/…` · `scripts/start.sh` (SPA :3888, gate :3889) |
+| **`hlidskjalf/`** | Hlidskjalf — the Allfather's high seat | the master control dashboard: the one plane that shows the whole house (React 19 + Vite SPA) | `bin/desktop/…` · `scripts/start.sh` (SPA :3888, gate :3889) |
 | **`odrerir/`** | Óðrerir — the mead of poetry | the fleet's **Live Hall**, a Hlidskjalf-type app: the boards, the tickets, the plans made visible | `bin/desktop/…`→ its own deploy shim; see its README |
 | **`sessrumnir/`** | Sessrúmnir — Freyja's hall of seats | the **desktop seat**: a GUI front-end for the Pi and OMP coding agents, chat / projects / files / commands in one window (vendored fork of `pi-desktop`, Apache-2.0) | `bin/desktop/sessrumnir-launch.sh` (launch), `bin/desktop/sessrumnir-ensure.sh` (deploy) |
 | **`smidja/`** | Smíðja — the smithy | the **agent factory**, stamped from the factory's templates: roster, phases, envelopes, the trace store, and the Visualizer UI (`:8437`) | `bin/desktop/smidja-bootstrap.sh`, `bin/desktop/smidja-board.sh` |

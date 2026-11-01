@@ -10,7 +10,7 @@ fixed[7]{fault,was,now}:
   "the handoff was anonymous","'someone asked something'","the asker is resolved from the registry: *Isabella Jakobsson (@isalorain)*, or *@handle — not in the registry*"
   "he escalated before asking","straight to 'I will ask the Allfather'","he asks who/what/when first, and only passes it on after the answer"
   "the Allfather was told to ask himself","'I don't know what Isabella is working on, and I will ask the Allfather' — said TO the Allfather","the model is told who it is speaking to, and a deterministic guard replaces any such line at the owner tier"
-  "**Odin**","the model's own priors named him a god; *'Hey, Odin'* reached his DM","a NAME LAW in every model prompt — he is **Josef, Lars-Josef Lindbom, called the Allfather** — plus a deterministic scrub of Odin/Woden in every answer"
+  "**the Allfather**","the model's own priors named him a god; *'Hey, the Allfather'* reached his DM","a NAME LAW in every model prompt — he is **Josef, Lars-Josef Lindbom, called the Allfather** — plus a deterministic scrub of the Allfather/Woden in every answer"
   "one paragraph for every hello","greetings, role and identity were hardcoded templates","the model phrases them (temperature 0.5, a varying seed — the rail pins `seed = 42`, which is why identical prompts gave identical words), and the templates rotate per chat as the fallback"
   "the honest no was one sentence","49 % of his answers began with the same eight words","four phrasings per tier, seeded by chat"
 ```

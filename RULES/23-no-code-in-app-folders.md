@@ -7,7 +7,7 @@ there and nowhere else. The five, today:
 
 ```
 apps[5]{path,name,what}:
-  "apps/hlidskjalf","Hlidskjalf — Odin's high seat","the master control dashboard: the one plane that shows the whole house"
+  "apps/hlidskjalf","Hlidskjalf — the Allfather's high seat","the master control dashboard: the one plane that shows the whole house"
   "apps/odrerir","Óðrerir — the mead of poetry","the fleet's Live Hall: boards, tickets, plans made visible"
   "apps/sessrumnir","Sessrúmnir — Freyja's hall of seats","the desktop seat: a GUI front-end for the Pi and OMP coding agents (fork of pi-desktop)"
   "apps/smidja","Smíðja — the smithy","the agent factory: roster, phases, envelopes, the trace store, the Visualizer UI"

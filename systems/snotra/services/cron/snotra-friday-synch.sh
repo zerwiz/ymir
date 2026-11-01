@@ -9,5 +9,5 @@
 # gets a comment summarising its owner's progress. Cards with no progress
 # since last Friday are moved to Backlog.
 set -euo pipefail
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../" && pwd)"
 exec python3 "$ROOT/bin/time/snotra/snotra-friday-synch.py" "$@"

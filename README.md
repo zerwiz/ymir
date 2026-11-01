@@ -1095,7 +1095,7 @@ repo. Your own credentials stay `HLIDSKJALF_AUTH` in `.env.local`.
 ## Naming Law
 
 Every subsystem, component, and process is named for the figure whose role matches
-its work; the operator is the **Allfather** (Odin). The house voice is Norse-natural;
+its work; the operator is the **Allfather** . The house voice is Norse-natural;
 flavor may season a line, but an imported term never names a subsystem. The full
 component map lives in
 [`.agents/skills/galdr-ymirsystem/assets/norse-naming.md`](.agents/skills/galdr-ymirsystem/assets/norse-naming.md).

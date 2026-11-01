@@ -9,5 +9,5 @@
 # prioritised for the coming month. It creates a card on the Next Meeting
 # Agenda list with overdue, due-soon, and backlog items grouped.
 set -euo pipefail
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../" && pwd)"
 exec python3 "$ROOT/bin/time/snotra/snotra-grooming.py" "$@"

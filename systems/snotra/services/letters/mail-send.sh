@@ -44,6 +44,32 @@ gmail(){
   printf '%s' "$out"
 }
 
+# ── the address ward ─────────────────────────────────────────────────────────────────────────────
+# A letter to a domain with no mail exchanger is not sent; it is thrown away slowly, and the sender
+# learns of it hours later from a delivery notification that names a stranger's domain. Measured
+# 2026-11-01: `thegleemachine.com` publishes no MX at all (its A record is 127.0.0.1), so every
+# message to craig@thegleemachine.com was delayed and lost. The register already knows how to ask
+# DNS; this is the send path asking it before the letter leaves.
+guard_recipients(){
+  local to="${1-}" rc=0 addr domain
+  [ -n "$to" ] || return 0
+  for addr in $(printf '%s' "$to" | tr ',' '\n' | sed -n 's/.*<\([^>]*\)>.*/\1/p; s/^[[:space:]]*\([^<> ]*@[^<> ]*\)[[:space:]]*$/\1/p'); do
+    domain="${addr##*@}"
+    case "$domain" in ""|*.*) ;; *) continue ;; esac
+    local verdict
+    verdict="$(python3 "$ROOT/bin/mail/gna_addresses.py" mx --domain "$domain" 2>/dev/null || true)"
+    case "$verdict" in
+      present*) continue ;;
+      *)
+        printf 'mail-send: REFUSED — %s cannot receive mail\n' "$addr" >&2
+        printf '  %s\n' "${verdict:-$domain: the register could not measure an MX}" >&2
+        printf '  a letter to a domain with no mail exchanger is lost, not sent; fix the address or the domain\n' >&2
+        rc=1 ;;
+    esac
+  done
+  return "$rc"
+}
+
 draft(){
   local to="" subject="" body="" html="" dry=0 record="" from_record="" meeting_dir=""; local attaches=()
   while [ $# -gt 0 ]; do case "$1" in
@@ -67,6 +93,7 @@ draft(){
     [ -n "$extra" ] && to="${to:+$to,}$extra"
   fi
   [ -n "$to" ] || die "draft needs --to or --from-record with participant emails"
+  guard_recipients "$to" || die "refused: a recipient domain cannot receive mail (see above)"
   # Rule 26 + Rule 27: the sensitive gate first, then the private guard.
   if [ -n "$meeting_dir" ] && [ -x "$ROOT/bin/gates/guards/sensitive-gate.sh" ]; then
     "$ROOT/bin/gates/guards/sensitive-gate.sh" "$meeting_dir" --surface email --to "$to" >/dev/null 2>&1 || die "sensitive gate refused this meeting for email"

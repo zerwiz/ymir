@@ -305,7 +305,7 @@ bin[658]{file,does,kind,verdict,disposition,callers,lines}:
   "gladsheim-ensure.sh","gladsheim-ensure.sh — seat the fleet room, whatever shape this machine is.","tool","wired","keep",1,216
   "gladsheim.sh","gladsheim.sh — the door to Gladsheim, the fleet room.","tool","wired","keep",1,156
   "gleipnir-lock-lib.sh","gleipnir-lock-lib.sh — the session lock (Gleipnir), a THIN SHIM.","lib","tested","keep",5,164
-  "gna_addresses.py","'''Gná's register: the addresses the house USES, and whether mail can reach them.","tool","wired","keep",2,956
+  "gna_addresses.py","'''Gná's register: the addresses the house USES, and whether mail can reach them.","tool","wired","keep",2,971
   "gna_desk.py","'''Gná's desk — read-only, loopback, one account per request.","tool","wired","keep",1,254
   "gna_import.py","'''Gná's importer: one account, read-only, every message once.","tool","wired","keep",1,643
   "gna_judge.py","'''Gná's judge: rules first, and every verdict carries the rule that gave it.","tool","wired","keep",0,169
@@ -386,7 +386,7 @@ bin[658]{file,does,kind,verdict,disposition,callers,lines}:
   "mimir-bridge.py","'''mimir-bridge.py — the HTTP face of the well (Mimirsbrunn / engram, :4602).","tool","tested","keep",4,791
   "mimir-bridge.sh","mimir-bridge.sh — raise/lower the well bridge (Mimirsbrunn on :4602).","tool","tested","keep",8,171
   "mimir-ingest.sh","mimir-ingest.sh — ingest the repo's data material into the well (Mimirsbrunn).","tool","wired","keep",1,133
-  "mimir-log.py","'''mimir-log.py — move memory between the engram (the index) and the JSONL log","data","wired","keep",1,277
+  "mimir-log.py","'''mimir-log.py — move memory between the engram (the index) and the JSONL log","data","wired","keep",1,290
   "mimir-log.sh","mimir-log.sh — move memory between the engram and the append log (a thin door).","tool","wired","keep",3,19
   "mimir-policy.py","'''mimir-policy.py — the law of the well: what may be written, what it is, and","tool","tested","keep",2,1284
   "mimir-recall-today.sh","mimir-recall-today.sh — drink before you act: the session's opening recall.","tool","wired","keep",1,113

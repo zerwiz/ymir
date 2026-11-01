@@ -73,5 +73,5 @@ eindri[3]{role,norse,descriptor,domain}:
 ## Law
 
 Name every subsystem for the figure whose role matches its work. The operator is
-the **Allfather** (Odin); never name a component with an imported term. Flavor may
+the **Allfather** ; never name a component with an imported term. Flavor may
 season a line; it must never name a subsystem or leak into docs.

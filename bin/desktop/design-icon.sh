@@ -46,7 +46,7 @@ ACTION="${1:-list}"; shift || true
 APPS=(
   "apps/hlidskjalf|ehwaz|#c9973f|the seat — Hlidskjalf, the high seat of the control plane|ymir-hlidskjalf|ymir hlidskjalf|ymir-hlidskjalf|Ymir · Hlidskjalf"
   "apps/hlidskjalf-mobile|raidho|#c9973f|the road — the seat carried, Hlidskjalf on a phone|ymir-hlidskjalf-mobile|ymir hlidskjalf|ymir-hlidskjalf-mobile|Ymir · Hlidskjalf Mobile"
-  "apps/odrerir|ansuz|#c9973f|the mead — Óðrerir, the Live Hall (Odin's breath, inspiration)|ymir-odrerir|ymir odrerir|ymir-odrerir|Ymir · Óðrerir"
+  "apps/odrerir|ansuz|#c9973f|the mead — Óðrerir, the Live Hall (the Allfather's breath, inspiration)|ymir-odrerir|ymir odrerir|ymir-odrerir|Ymir · Óðrerir"
   "apps/sessrumnir|othala|#c9973f|the hall — Sessrúmnir, the seat that holds the cloth|ymir-sessrumnir|ymir sessrumnir|ymir-sessrumnir|Ymir · Sessrúmnir"
   "apps/smidja-factory/apps/visualizer|kaunan|#f59e0b|the torch — the forge's eye, Smíðja's trace|ymir-smidja|ymir smidja|ymir-smidja|Ymir · Smíðja"
 )
@@ -63,7 +63,7 @@ list() {
   printf 'runes[6]{glyph,name,meaning}:\n'
   printf '  "algiz","ᛉ","the Ymir emblem — the platform itself"\n'
   printf '  "ehwaz","ᛖ","horse/journey — the seat and its transit"\n'
-  printf '  "ansuz","ᚨ","Odin'"'"'s breath — the forge"\n'
+  printf '  "ansuz","ᚨ","the Allfather'"'"'s breath — the forge"\n'
   printf '  "sowilo","ᛊ","sun — light on the tree"\n'
   printf '  "valhalla","ᚹ","the hall"\n'
   printf '  "gjallarhorn","ᚷ","the horn — the tunnel"\n'

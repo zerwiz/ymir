@@ -4,7 +4,7 @@
 # It exists so a caller nobody has repointed yet still works. It is retired by the dated follow-up in
 # docs/fixes/snotra/2026-10-24-snotra-becomes-a-system.md, and .agents/paths-ledger.yaml records the move.
 set -euo pipefail
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../" && pwd)"
 HOME_DIR="${YMIR_HOME:-}"
 [ -n "$HOME_DIR" ] || { . "$ROOT/bin/vault/hoard-lib.sh"; ymir_home_root HOME_DIR; }
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/ymir"

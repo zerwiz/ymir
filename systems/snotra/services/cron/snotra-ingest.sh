@@ -5,7 +5,7 @@
 #   snotra-ingest.sh fetch   <source> <meeting-id> [--outdir <dir>]
 #   snotra-ingest.sh sources  # list available sources
 set -euo pipefail
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../" && pwd)"
 ACTION="${1:-sources}"
 SOURCE="${2:-}"
 shift 2 2>/dev/null || true

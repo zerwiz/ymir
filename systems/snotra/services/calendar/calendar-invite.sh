@@ -24,8 +24,8 @@ VERSION="1.1.0"
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help|"") sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 ACTION="${1-}"; shift || true
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-APPROVE="$ROOT/bin/time/snotra/snotra-approve.sh"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
+APPROVE="$ROOT/systems/snotra/services/approve/snotra-approve.sh"
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true; fi
 YMIR_HOME="${YMIR_HOME:-}"; [ -n "$YMIR_HOME" ] || ymir_home_root YMIR_HOME 2>/dev/null || true
 SEC="$YMIR_HOME/hodd/secrets"; TZ_NAME="${SO_TZ:-Europe/Helsinki}"

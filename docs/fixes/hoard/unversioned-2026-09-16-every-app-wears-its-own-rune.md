@@ -8,7 +8,7 @@ wearing the generic Ymir mark — or, worse, the old **blue** logo.
 - **`bin/desktop/design-icon.sh`** mints an app's icon from a glyph plus a house tint: a
   stone tile with the rune stroked in bronze. `list` shows the mapping.
 - Minted and wired: **Hlidskjalf** `ehwaz` ᛖ (the seat), **Óðrerir** `valhalla` ᚹ
-  (the hall), **Sessrúmnir** `sowilo` ᛊ (the sun), **Smíðja** `ansuz` ᚨ (Odin's
+  (the hall), **Sessrúmnir** `sowilo` ᛊ (the sun), **Smíðja** `ansuz` ᚨ (the Allfather's
   breath — the forge). Óðrerir already carried a forge-coloured favicon set.
 - **The blue logo is retired**: `public/logo.svg` removed, and Smíðja's *inline*
   copy in `App.vue` — the mark in its own header, still `#0f172a`/`#1e293b` —

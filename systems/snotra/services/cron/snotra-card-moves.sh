@@ -9,5 +9,5 @@
 # Rule B: done + sign-off needed → To Sign-off; mis-move to Done → move back + note.
 # Note-on-mis-move: every automated correction leaves a comment on the card.
 set -euo pipefail
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../" && pwd)"
 exec python3 "$ROOT/bin/time/snotra/snotra-card-moves.py" "$@"

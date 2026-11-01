@@ -2,7 +2,7 @@
 
 ## What it is
 
-**Hlidskjalf** is Ymir's dashboard — Odin's high seat. It is where you *see* the
+**Hlidskjalf** is Ymir's dashboard — the Allfather's high seat. It is where you *see* the
 system: the workspaces, the runs, the record, the fleet — over one page instead of a
 dozen terminals. The **gate API** behind it enforces auth, so the portal is the single
 way in.

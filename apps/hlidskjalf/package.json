@@ -3,7 +3,7 @@
   "private": false,
   "version": "0.1.0",
   "type": "module",
-  "description": "Hlidskjalf — Odin's high seat. The Ymir master control dashboard.",
+  "description": "Hlidskjalf — the Allfather's high seat. The Ymir master control dashboard.",
   "scripts": {
     "dev": "vite",
     "api": "bun run server/index.ts",

@@ -10,7 +10,7 @@ built[3]{piece,what_it_does,measured}:
   "the generator owns only its own work","a fact it marked (`generated_by: bin/assistant/learn-house.sh`) and no longer produces is removed; anything the Allfather approved by hand is untouched","11 stale facts removed on the second run, none of his"
 ```
 
-**And the name law travels with the derivation:** the lore says "Odin's high seat"; the derived fact says
+**And the name law travels with the derivation:** the lore says "the Allfather's high seat"; the derived fact says
 "the Allfather's high seat". The rule binds the mouth, not just the prompt.
 
 **Also fixed in the same pass — a fact may forbid paraphrasing.** `verbatim: true` rides from the

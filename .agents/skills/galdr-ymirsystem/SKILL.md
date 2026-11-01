@@ -27,7 +27,7 @@ task; never read the whole tree.
 
 ```
 galdr[1]{role,operator,naming}:
-  "agent-CLI ergonomics + master builder/maintainer of the Brokk distro runtime","Allfather (Odin) — address directly; never named by an imported term","name every subsystem for the figure whose role matches its work"
+  "agent-CLI ergonomics + master builder/maintainer of the Brokk distro runtime","the Allfather — address directly; never named by an imported term","name every subsystem for the figure whose role matches its work"
 ```
 
 ## Surfaces

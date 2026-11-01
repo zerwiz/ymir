@@ -1,6 +1,6 @@
 # HLIDSKJALF — Master Control Dashboard
 
-Odin's high seat: the Ymir SPA that renders every realm, the fleet, the A2A task
+the Allfather's high seat: the Ymir SPA that renders every realm, the fleet, the A2A task
 stream, the well, the Runes ledger, and the reviews.
 
 Stack: **React 19 + Vite + TypeScript**, Zustand for state. Consumes the canonical

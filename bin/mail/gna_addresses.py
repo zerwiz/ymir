@@ -836,12 +836,13 @@ def self_test() -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description="Gná's register of the addresses the house uses")
     ap.add_argument("action", nargs="?", default="list",
-                    choices=["list", "check", "honesty", "probe", "await", "aliases", "plan"])
+                    choices=["list", "check", "honesty", "probe", "mx", "await", "aliases", "plan"])
     ap.add_argument("--check", action="store_true", dest="check_flag")
     ap.add_argument("--fresh", action="store_true",
                     help="re-measure the Workspace aliases instead of reading the cache")
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--domain")
+    ap.add_argument("--mx-action", dest="mx_action", action="store_true")
     ap.add_argument("--account")
     ap.add_argument("--sender", default="")
     ap.add_argument("--allow-same-domain", action="store_true")
@@ -854,6 +855,20 @@ def main() -> int:
 
     if args.self_test:
         return self_test()
+
+    if args.action == "mx":
+        # One domain's mail exchanger, for a door that is about to send to it. The send path asks
+        # this before a letter leaves: a domain with no MX is a letter lost, not sent (2026-11-01).
+        if not args.domain:
+            print("mx needs --domain", file=sys.stderr)
+            return 2
+        mx = mx_state(args.domain)
+        if args.json:
+            print(json.dumps(mx, indent=1, ensure_ascii=False))
+        else:
+            hosts = ", ".join(mx.get("mx") or []) or mx.get("note", "")
+            print(f"{mx['state']} — {args.domain}: {hosts}")
+        return 0 if mx["state"] == "present" else 1
 
     if args.action == "probe":
         if not args.domain:

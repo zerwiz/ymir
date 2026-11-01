@@ -34,7 +34,7 @@ _root() {
     [ -d "$d/.pi" ] && [ -d "$d/RULES" ] && { printf '%s' "$d"; return 0; }
     d="$(dirname "$d")"
   done
-  printf '%s' "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+  printf '%s' "$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../" && pwd)"
 }
 ROOT="$(_root)"
 READER="$ROOT/tools/calendar/reader.mjs"

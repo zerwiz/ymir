@@ -72,7 +72,7 @@ myth-made-module:
 | Gate | Daemon | Job |
 |---|---|---|
 | **Bifrost** | ingress gateway | the burning bridge — every crossing into Ymir passes over it |
-| **Hlidskjalf** | control plane | Odin's high seat — the view of every realm |
+| **Hlidskjalf** | control plane | the Allfather's high seat — the view of every realm |
 | **Svartalfaheim** | tenant realms | the isolated dwarf-halls — `sandbox_isolated`, nothing bleeds between halls |
 | **Brokk** | agent workers | the forge itself — autonomous workers that build, audit, transform |
 | **Utgard** | ephemeral sandboxes | the walled realm — `docker_ephemeral`, sealed and destroyed after each task |
@@ -84,7 +84,7 @@ myth-made-module:
 ## IV. The Well: Mimirsbrunn, Mimir, and Kaia
 
 At the root of Yggdrasil lies **Mimirsbrunn**, the well of wisdom. **Mimir**
-guards it; whoever drinks its water receives the memory of all things. Even Odin
+guards it; whoever drinks its water receives the memory of all things. Even the Allfather
 paid an eye for a single drink.
 
 In Ymir, the water is **engram** — an open-source cognitive memory library
@@ -114,7 +114,7 @@ fires cold, but never stops the forge.
 
 The smiths forged the gods' weapons; the system ships the same by analogy:
 
-- **Gungnir** — Odin's spear, which never misses its mark. The **skill
+- **Gungnir** — the Allfather's spear, which never misses its mark. The **skill
   synthesis engine**: a skill is forged, validated in Utgard, then it hits its
   target every time.
 - **Mjölnir** — the hammer that returns. The **issue→PR pipeline**: it strikes,
@@ -126,7 +126,7 @@ The smiths forged the gods' weapons; the system ships the same by analogy:
   rune of introduction*, so no forged identity crosses either.
 - **Gjallarhorn** — Heimdall's horn. The **Cloudflare tunnel**: outbound signal
   carrying Ymir to the world.
-- **Hlidskjalf** — Odin's high seat, from which he sees all the realms. The
+- **Hlidskjalf** — the Allfather's high seat, from which he sees all the realms. The
   **dashboard**: the sovereign's view of the whole fleet — fleet graph, the A2A
   task stream, the well, the Runes, the reviews.
 - **Skrymir** — the hulking giant who once tricked Thor himself. The **web file
@@ -181,7 +181,7 @@ wears on tags and marks (design.md §2.2).
 | **Ymir Labs** | the primordial giant; the frame of the world | cyan `#38bdf8` | the platform itself: Ymir OS, Hlidskjalf, the agent fleet, Mimirsbrunn — the body everything else is carved from |
 | **Brokk Forge** | the bellows-smith who drove the forging of Mjölnir | forge amber `#f59e0b` | engineering & build tooling: WayOf Command/Runecode, softwerefactory, wayofmono, the smidja |
 | **Runestone Labs** (short: **Runir**) | the runes carved once, that cannot be un-carved | rune crimson `#f43f5e` | records & compliance: `.compliance` gates, rune auditing, docs, runbooks, research |
-| **Muninn Labs** | the raven *(memory)* that flew for Odin daily | raven violet `#8b5cf6` | memory & knowledge: Anchor/wayofteams-mcp anchor-memory, Mimirsbrunn/engram, vector RAG |
+| **Muninn Labs** | the raven *(memory)* that flew for the Allfather daily | raven violet `#8b5cf6` | memory & knowledge: Anchor/wayofteams-mcp anchor-memory, Mimirsbrunn/engram, vector RAG |
 | **Dvalin** | the dwarf smith of the finest crafted things | cold steel `#94a3b8` | crafted tools — OptiCat (HVAC Pro), Linkable, Todo, Desk, Material Files |
 | **Utgard Studios** | the realm where the giants work, outside the walls | jötun magenta `#d946ef` | creative: WhyNot Productions (soul/growth media), AiPic (video), OpenChamber, sensual dojo, sensebit |
 | **Askr** | the first man, shaped from an ash tree | ash green `#34d399` | human-centered products: Relocation Copilot, onboarding automation |
@@ -611,7 +611,7 @@ the branch's durable store and observed into Mimirsbrunn.
 ### Valknut — the load mechanism
 
 **Valknut** is the knot of the slain — three interlocking triangles, the mark
-of Odin's choice. In Ymir, Valknut is the **load mechanism** — it assembles
+of the Allfather's choice. In Ymir, Valknut is the **load mechanism** — it assembles
 the agent config, the Eindri dispatch, the harness settings, and the startup
 memory budget into a single coherent payload before the first turn.
 
@@ -676,7 +676,7 @@ fleet's job does not.
 
 ### Frigg — the consent gate
 
-**Frigg** is the queen, Odin's wife, who knows the fate of all but cannot
+**Frigg** is the queen, the Allfather's wife, who knows the fate of all but cannot
 reveal it until it comes to pass. In Ymir, Frigg is the **consent gate** —
 the authority that asks the user before any action that cannot be undone.
 
@@ -1281,7 +1281,7 @@ the *idea* of a vault; it never had the name. Now it does.
 
 ### Gunnlöð — the keeper of the mead (built)
 
-**Gunnlöð** guarded the mead that made whoever drank it a poet; Odin won three sips of it. Ymir's
+**Gunnlöð** guarded the mead that made whoever drank it a poet; the Allfather won three sips of it. Ymir's
 Gunnlöð is the **skill refiner**: she distils what a run actually did — the trajectories, the
 mistakes, the working recipe — into sharpened skill artefacts. Where Gungnir *forges* a skill,
 Gunnlöð *keeps and improves* the ones we have.
