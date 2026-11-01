@@ -21,6 +21,10 @@
 # record jobs; that is how 8 orphan seat schedulers came to run a heart's work.
 #   # @hourly:20 bin/time/well-vault-sync.sh --mode sync     # every hour, this box's minute
 @heart 07:00 bin/time/nornir-job-daily-briefing.sh
+# THE DAILY LINE (documentation design, 2026-11-01): what moved, what is blocked, what is owed, written
+# from the handoffs and the cards rather than from memory. The briefing above is the morning read; this is
+# the day's close, and it is the half that was missing for six days.
+@dev 18:00 bin/time/daily-line.sh
 #   07:30 bin/time/nornir-job-ungated.sh   # any role
 #
 # GATE EVERY LINE THAT BELONGS TO A ROLE. An ungated machine job runs on EVERY
