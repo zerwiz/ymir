@@ -179,7 +179,7 @@ Measured: **21 → 120 facts** (97 derived + his own), and the questions that us
 now answer — *"what is Hlidskjalf"*, *"what is Snotra"*, *"does Ymir have a ward"*, *"what is the well"*.
 The generator owns **only** what it marked (`generated_by: systems/skirnir/services/learn-house.sh`): a fact it no
 longer produces is removed, and nothing the Allfather approved by hand is ever touched. The lore's
-"Odin" is rewritten to "the Allfather" as it is derived — the name law binds the mouth, not just the
+"the Allfather" is rewritten to "the Allfather" as it is derived — the name law binds the mouth, not just the
 prompt.
 
 **He knows the site too** (2026-10-22). *"he needs to know everything https://ymir.zerwiz.org/"* —

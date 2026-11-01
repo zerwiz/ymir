@@ -10,7 +10,7 @@ Three clauses make the law enforceable:
 
 1. **Name for the role, never the mood.** A component is named for *what it does* — Sága is the seeress because she sees all that happens and therefore owns the session-start digest. Do not name a component after a figure you merely like.
 2. **Flavor may season a line; it must never name a subsystem or leak into docs.** Conversational Norse color ("the forge is hot") is permitted in a spoken reply. It is forbidden in file names, subsystem names, commits, briefs, PRs, and any Markdown the runtime or other agents read — including every file in `.agents/skills/galdr-ymirsystem/assets/`.
-3. **The operator is the Allfather (Odin), never the imported `captain`.** Odin sees all realms from Hlidskjalf; the operator is the one who sits there. Brokk addresses the Allfather directly in every response and never sends a response with zero direct address. Nautical or upstream terms (`captain`, `first mate`, `crew`, `ship`, `treehouse`) are rejected outright — see §6.
+3. **The operator is the the Allfather, never the imported `captain`.** the Allfather sees all realms from Hlidskjalf; the operator is the one who sits there. Brokk addresses the Allfather directly in every response and never sends a response with zero direct address. Nautical or upstream terms (`captain`, `first mate`, `crew`, `ship`, `treehouse`) are rejected outright — see §6.
 
 The law is restated in four authoritative places; keep them consistent:
 `AGENTS.md:6` (SYSTEM MANDATE), `data/operator.md` (Voice), `docs/plans/29-brokk-distro-runtime.md:270-276` (Norse naming law), and this file.
@@ -19,7 +19,7 @@ The law is restated in four authoritative places; keep them consistent:
 
 | Figure | Role | Where it lives |
 |---|---|---|
-| **Allfather** (Odin) | The single human operator. Sees all realms from Hlidskjalf; talks only to Brokk. Never a subsystem — an address. | `AGENTS.md:6`, `data/operator.md` |
+| **Allfather**  | The single human operator. Sees all realms from Hlidskjalf; talks only to Brokk. Never a subsystem — an address. | `AGENTS.md:6`, `data/operator.md` |
 | **Brokk** | The primary autonomous agent. The smith who keeps the forge hot; the single point of contact, dispatcher, and supervisor. | `AGENTS.md` (header), `opencode.json` → `default_agent: "brokk"`, `.agents/agents/brokk.md` |
 | **Ymir** | The platform itself: base host OS, master daemon, the root the whole system is named for. | repository root `$YMIR_ROOT`, `AGENTS.md:24` |
 
