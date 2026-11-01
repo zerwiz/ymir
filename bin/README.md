@@ -11,7 +11,7 @@ vendored `fm-*` script kept byte-comparable to upstream on purpose.
 `disposition` says what happens to it: `keep`, `migrate → src/…` where the
 Python runtime already has the module, `retire` for orphans, `provenance`.
 
-bin[642]{file,does,kind,verdict,disposition,callers,lines}:
+bin[645]{file,does,kind,verdict,disposition,callers,lines}:
   "README.md","`bin/` — every file, what it does, and whether it is alive","data","tested","keep",19,-
   "README.md","Gróa — the updater, one per install","data","tested","keep",19,-
   "README.md","Gná — the one mail desk (production)","data","tested","keep",19,-
@@ -466,6 +466,7 @@ bin[642]{file,does,kind,verdict,disposition,callers,lines}:
   "readai_ingest.py","bin/time/snotra/readai_ingest.py -> systems/snotra/services/cron/readai_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "readme-claims.sh","readme-claims.sh — the user-facing documents must not claim what the tree does not hold.","tool","wired","keep",1,106
   "realm-lib.sh","realm-lib.sh — resolve the ACTIVE realm (tenant) without assuming the company's.","lib","wired","keep",5,46
+  "reasoning_adapter.py","bin/time/snotra/reasoning_adapter.py -> systems/snotra/services/cron/reasoning_adapter.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "redact.py","'''redact.py — the guardian's own ward (plan 98 §6, §'the redaction rule').","tool","wired","keep",1,112
   "registers-seed.sh","registers-seed.sh — give a home the identity registers it is missing, from ONE template each.","tool","tested","keep",1,70
   "registry-lib.sh","registry-lib.sh — the ONE reader for the master project registry's row keys.","lib","tested","migrate → src/ymir_runtime/dispatch/registry.py",13,82
@@ -554,8 +555,10 @@ bin[642]{file,does,kind,verdict,disposition,callers,lines}:
   "snotra-promote.py","bin/time/snotra/snotra-promote.py -> systems/snotra/services/approve/snotra-promote.py — RETIRED SHIM (plan 129, 2026-10-24); execs the new…","tool","wired","keep",0,16
   "snotra-promote.sh","bin/time/snotra/snotra-promote.sh -> systems/snotra/services/approve/snotra-promote.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new…","tool","wired","keep",0,16
   "snotra-provenance.sh","bin/time/snotra/snotra-provenance.sh -> systems/snotra/services/record/snotra-provenance.sh — RETIRED SHIM (plan 129, 2026-10-24); execs th…","tool","wired","keep",1,16
+  "snotra-reason.sh","bin/time/snotra/snotra-reason.sh -> systems/snotra/services/ear/snotra-reason.sh — RETIRED SHIM","tool","wired","keep",0,12
   "snotra-render-email.sh","bin/time/snotra/snotra-render-email.sh -> systems/snotra/services/letters/snotra-render-email.sh — RETIRED SHIM (plan 129, 2026-10-24); exe…","tool","wired","keep",0,16
   "snotra-render-pdf.sh","bin/time/snotra/snotra-render-pdf.sh -> systems/snotra/services/letters/snotra-render-pdf.sh — RETIRED SHIM (plan 129, 2026-10-24); execs t…","tool","wired","keep",0,16
+  "snotra-render-template.py","bin/time/snotra/snotra-render-template.py -> systems/snotra/services/cron/snotra-render-template.py — RETIRED SHIM","data","wired","keep",0,10
   "snotra-route.py","bin/time/snotra/snotra-route.py -> systems/snotra/services/cron/snotra-route.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "snotra-route.sh","bin/time/snotra/snotra-route.sh -> systems/snotra/services/cron/snotra-route.sh — RETIRED SHIM","tool","wired","keep",0,12
   "snotra-rules.py","bin/time/snotra/snotra-rules.py -> systems/snotra/services/cron/snotra-rules.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
@@ -655,6 +658,6 @@ bin[642]{file,does,kind,verdict,disposition,callers,lines}:
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
   "zoom_ingest.py","bin/time/snotra/zoom_ingest.py -> systems/snotra/services/cron/zoom_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
 
-**Tally.** verdict: wired=405, tested=237
+**Tally.** verdict: wired=408, tested=237
 
-**Tally.** disposition: keep=629, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
+**Tally.** disposition: keep=632, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1

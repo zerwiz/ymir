@@ -1112,6 +1112,92 @@ def cmd_extract(args) -> int:
     base = date.fromisoformat(args.date)
     aliases = build_aliases([{"name": n} for n in data.get("participants", [])])
     cands = extract_candidates(data["segments"], base, aliases)
+
+    # Optional LLM extraction pass (improves recall, never the authority)
+    if getattr(args, "llm_extract", False):
+        try:
+            import importlib.util, os
+            # Try to find reasoning_adapter.py
+            adapter_path = None
+            for candidate in [
+                Path(__file__).resolve().parents[4] / "bin" / "time" / "snotra" / "reasoning_adapter.py",
+                Path(os.path.expanduser("~")) / "ymir" / "bin" / "time" / "snotra" / "reasoning_adapter.py",
+            ]:
+                if candidate.is_file():
+                    adapter_path = candidate
+                    break
+            if adapter_path:
+                spec = importlib.util.spec_from_file_location("reasoning_adapter", str(adapter_path))
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                # Build transcript text from segments
+                transcript = "\n".join(s.get("text", "") for s in data.get("segments", []))
+                adapter = mod.get_reasoning_adapter({
+                    "reasoning": {
+                        "enabled": True,
+                        "provider": args.llm_provider,
+                        "model": args.llm_model,
+                        "api_key": args.llm_api_key,
+                    }
+                })
+                if adapter:
+                    result = adapter.extract(transcript)
+                    try:
+                        llm_items = json.loads(result)
+                        if isinstance(llm_items, list):
+                            seen_keys = {re.sub(r"[^a-z0-9 ]", "", (a.get("statement", "") or a.get("deliverable", "")).lower())[:160]
+                                         for a in cands.get("decisions", []) + cands.get("actions", [])}
+                            for item in llm_items:
+                                if not isinstance(item, dict):
+                                    continue
+                                stmt = item.get("statement", "")
+                                key = re.sub(r"[^a-z0-9 ]", "", stmt.lower())[:160]
+                                if key in seen_keys:
+                                    continue
+                                seen_keys.add(key)
+                                if item.get("type") == "decision":
+                                    cands["decisions"].append({
+                                        "statement": stmt,
+                                        "decided_by": item.get("owner"),
+                                        "status": "proposed",
+                                        "approver_pending": True,
+                                        "evidence": {
+                                            "timestamp": item.get("timestamp") or "00:00:00",
+                                            "quote": (item.get("evidence_quote") or stmt)[:600],
+                                        },
+                                        "confidence": "medium",
+                                        "source": "llm",
+                                    })
+                                elif item.get("type") == "action":
+                                    due = item.get("due_date")
+                                    is_iso = due and len(str(due)) == 10 and due[4] == '-' and due[7] == '-'
+                                    cands["actions"].append({
+                                        "verb": "act",
+                                        "deliverable": stmt,
+                                        "owner": item.get("owner"),
+                                        "due_at": due if is_iso else None,
+                                        "date_unresolved": not is_iso,
+                                        "due_reason": "llm-extracted" if is_iso else "llm-extracted (date unresolved)",
+                                        "decide_by": None if is_iso else "next meeting",
+                                        "evidence": {
+                                            "timestamp": item.get("timestamp") or "00:00:00",
+                                            "quote": (item.get("evidence_quote") or stmt)[:600],
+                                        },
+                                        "confidence": "medium",
+                                        "score": 3,
+                                        "source": "llm",
+                                    })
+                            # Re-number IDs
+                            for i, a in enumerate(cands["actions"], 1):
+                                a["action_id"] = f"ACT-{base.strftime('%Y%m%d')}-{i:02d}"
+                            for i, d in enumerate(cands["decisions"], 1):
+                                d["decision_id"] = f"DEC-{base.strftime('%Y%m%d')}-{i:02d}"
+                            print(f"  LLM pass added {len(llm_items)} items")
+                    except (json.JSONDecodeError, Exception) as e:
+                        print(f"  LLM pass failed (fallback to deterministic): {e}", file=sys.stderr)
+        except Exception as e:
+            print(f"  LLM pass skipped: {e}", file=sys.stderr)
+
     dump_json(Path(args.out), cands)
     print(f"extracted {len(cands['decisions'])} decision candidates, "
           f"{len(cands['actions'])} action candidates -> {args.out}")
@@ -1179,6 +1265,93 @@ def cmd_pipeline(args) -> int:
         review.get("participants") or [{"name": n} for n in participants],
         review.get("aliases"))
     cands = extract_candidates(segments, base, aliases)
+    # LLM extraction pass (enabled by default if a reasoning adapter is available)
+    if not getattr(args, "llm_extract", False):
+        # Auto-enable if a reasoning adapter can be found
+        args.llm_extract = True
+    # Enable include_machine when LLM extraction is on (LLM items have source=llm, not machine)
+    if getattr(args, "llm_extract", False):
+        args.include_machine = True
+    if getattr(args, "llm_extract", False):
+        try:
+            import importlib.util, os
+            adapter_path = None
+            for candidate in [
+                Path(__file__).resolve().parents[4] / "bin" / "time" / "snotra" / "reasoning_adapter.py",
+            ]:
+                if candidate.is_file():
+                    adapter_path = candidate
+                    break
+            if adapter_path:
+                spec = importlib.util.spec_from_file_location("reasoning_adapter", str(adapter_path))
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                transcript = "\n".join(s.get("text", "") for s in segments)
+                adapter = mod.get_reasoning_adapter({
+                    "reasoning": {
+                        "enabled": True,
+                        "provider": args.llm_provider,
+                        "model": args.llm_model,
+                        "api_key": args.llm_api_key,
+                    }
+                })
+                if adapter:
+                    result = adapter.extract(transcript)
+                    try:
+                        llm_items = json.loads(result)
+                        if isinstance(llm_items, list):
+                            seen_keys = {re.sub(r"[^a-z0-9 ]", "", (a.get("statement", "") or a.get("deliverable", "")).lower())[:160]
+                                         for a in cands.get("decisions", []) + cands.get("actions", [])}
+                            for item in llm_items:
+                                if not isinstance(item, dict):
+                                    continue
+                                stmt = item.get("statement", "")
+                                key = re.sub(r"[^a-z0-9 ]", "", stmt.lower())[:160]
+                                if key in seen_keys:
+                                    continue
+                                seen_keys.add(key)
+                                if item.get("type") == "decision":
+                                    cands["decisions"].append({
+                                        "statement": stmt,
+                                        "decided_by": item.get("owner"),
+                                        "status": "proposed",
+                                        "approver_pending": True,
+                                        "evidence": {
+                                            "timestamp": item.get("timestamp") or "00:00:00",
+                                            "quote": (item.get("evidence_quote") or stmt)[:600],
+                                        },
+                                        "confidence": "medium",
+                                        "source": "llm",
+                                    })
+                                elif item.get("type") == "action":
+                                    due = item.get("due_date")
+                                    is_iso = due and len(str(due)) == 10 and due[4] == '-' and due[7] == '-'
+                                    cands["actions"].append({
+                                        "verb": "act",
+                                        "deliverable": stmt,
+                                        "owner": item.get("owner"),
+                                        "due_at": due if is_iso else None,
+                                        "date_unresolved": not is_iso,
+                                        "due_reason": "llm-extracted" if is_iso else "llm-extracted (date unresolved)",
+                                        "decide_by": None if is_iso else "next meeting",
+                                        "evidence": {
+                                            "timestamp": item.get("timestamp") or "00:00:00",
+                                            "quote": (item.get("evidence_quote") or stmt)[:600],
+                                        },
+                                        "confidence": "medium",
+                                        "score": 3,
+                                        "source": "llm",
+                                    })
+                            for i, a in enumerate(cands["actions"], 1):
+                                a["action_id"] = f"ACT-{base.strftime('%Y%m%d')}-{i:02d}"
+                            for i, d in enumerate(cands["decisions"], 1):
+                                d["decision_id"] = f"DEC-{base.strftime('%Y%m%d')}-{i:02d}"
+                            print(f"  LLM pass added {len(llm_items)} items")
+                    except (json.JSONDecodeError, Exception) as e:
+                        print(f"  LLM pass failed (fallback to deterministic): {e}", file=sys.stderr)
+        except Exception as e:
+            print(f"  LLM pass skipped: {e}", file=sys.stderr)
+
     dump_json(outdir / "candidates.json", cands)
 
     rec = merge_record(cands, review, base, include_machine=args.include_machine)
@@ -1227,6 +1400,11 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("segments")
     s.add_argument("--date", required=True)
     s.add_argument("--out", required=True)
+    s.add_argument("--llm-extract", action="store_true", dest="llm_extract",
+                   help="Run optional LLM extraction pass (improves recall)")
+    s.add_argument("--llm-provider", default="openai", dest="llm_provider")
+    s.add_argument("--llm-model", default="gpt-4o-mini", dest="llm_model")
+    s.add_argument("--llm-api-key", default=None, dest="llm_api_key")
     s.set_defaults(func=cmd_extract)
 
     s = sub.add_parser("merge")
@@ -1258,6 +1436,10 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--review", required=True)
     s.add_argument("--outdir", required=True)
     s.add_argument("--include-machine", action="store_true")
+    s.add_argument("--llm-extract", action="store_true", dest="llm_extract")
+    s.add_argument("--llm-provider", default="openai", dest="llm_provider")
+    s.add_argument("--llm-model", default="gpt-4o-mini", dest="llm_model")
+    s.add_argument("--llm-api-key", default=None, dest="llm_api_key")
     s.set_defaults(func=cmd_pipeline)
 
     args = p.parse_args(argv)

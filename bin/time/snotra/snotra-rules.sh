@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# snotra-rules.sh — the rules engine for per-board, per-project, per-company handling.
-#
-#   snotra-rules.sh load    <company> <board> [--project <project>]   effective rules
-#   snotra-rules.sh check   <company>                                  validate rules files
-#   snotra-rules.sh defaults                                           house defaults
+# bin/time/snotra/snotra-rules.sh -> systems/snotra/services/cron/snotra-rules.sh — RETIRED SHIM
 set -euo pipefail
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-exec python3 "$ROOT/bin/time/snotra/snotra-rules.py" "$@"
+_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_root="$(cd "$_d/../../.." && pwd)"
+_new="$_root/systems/snotra/services/cron/snotra-rules.sh"
+if [ ! -e "$_new" ]; then
+  printf 'snotra: the door moved to systems/snotra/services/cron/snotra-rules.sh and is not there\n' >&2
+  exit 127
+fi
+exec "$_new" "$@"
