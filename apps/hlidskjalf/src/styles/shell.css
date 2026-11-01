@@ -9,7 +9,12 @@
   --topbar-h: 56px;
   --stream-h: 192px;
   display: grid;
-  grid-template-columns: var(--rail-w) 1fr;
+  /* `1fr` is minmax(auto, 1fr): its AUTO minimum lets a wide child (a long line of
+     text, a table, a monospace row) push the whole column past the viewport — measured
+     2026-10-31 at a 1280 window: .shell became 1682px wide and the hall overflowed to
+     the right with the browser scrolling sideways. `minmax(0, 1fr)` lets the column
+     shrink, and the children below are allowed to be narrower than their content. */
+  grid-template-columns: var(--rail-w) minmax(0, 1fr);
   grid-template-rows: var(--topbar-h) minmax(0, 1fr) var(--stream-h);
   grid-template-areas:
     'rail topbar'
@@ -22,6 +27,17 @@
     var(--ymir-bg-0);
   transition: background 220ms var(--ymir-ease);
 }
+
+.shell > .rail,
+.shell > .topbar,
+.shell > .stage,
+.shell > .stream {
+  min-width: 0;   /* the grid's shrink floor: without it, a child's min-content wins */
+}
+
+/* A long unbroken line must wrap rather than widen the hall. */
+.stage, .stream, .topbar { overflow-wrap: anywhere; }
+.stage { overflow-x: auto; }   /* tables and wide rows scroll INSIDE the stage */
 
 .shell[data-density='compact'] {
   --ymir-s-body: 14px / 20px;
@@ -218,6 +234,7 @@
    TOPBAR
    ============================================================ */
 .topbar {
+  overflow: hidden;      /* the last resort: a chip is clipped, never the document */
   grid-area: topbar;
   position: relative;
   z-index: 30;
@@ -251,7 +268,8 @@
 }
 
 .search {
-  flex: 1;
+  flex: 1 1 160px;
+  min-width: 0;          /* a search box must yield before the hall scrolls sideways */
   max-width: 440px;
   display: flex;
   align-items: center;
@@ -707,10 +725,20 @@ body:has(.stream-resizer:active) .stream-resizer .grip {
    stylesheet a single step at 900 — so every size the operator actually chose
    between those two was a squeezed, half-collapsed hall (2026-10-23).
    ============================================================ */
+@media (max-width: 1400px) {
+  /* the topbar is a row of fixed-width chips; under 1400 the optional ones yield first so the
+     menus stay on screen (measured 2026-10-31: at a 1280 window .menu-wrap sat 47px past the
+     right edge and the whole hall scrolled sideways). */
+  .topbar { gap: 8px; }
+  .topbar .ws-switch .ws-chip span.label,
+  .topbar .trace-chip span.label { display: none; }
+}
+
 @media (max-width: 1280px) {
   .shell {
     --rail-w: 196px;
   }
+  .topbar .ws-switch { flex: 0 1 auto; min-width: 0; }
 }
 
 @media (max-width: 1100px) {
