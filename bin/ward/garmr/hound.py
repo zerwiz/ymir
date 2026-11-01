@@ -340,6 +340,12 @@ def main() -> int:
         out, folded = [], {}
         now = time.time()
         for row in rows:
+            # SECURITY ROWS ARE NEVER FOLDED (found 2026-10-31, minutes after the dedupe landed):
+            # a kill collapsed into a "1 repeat(s) folded" rollup row loses the very field that makes
+            # it evidence — the pid that was signalled. Volume may be counted; evidence may not.
+            if row.get("kind") in SECURITY_KINDS:
+                out.append(row)
+                continue
             key = "|".join(str(row.get(k, "")) for k in ("kind", "target", "comm"))
             last = seen_recent.get(key)
             if last is not None and now - last < dedupe_seconds:
