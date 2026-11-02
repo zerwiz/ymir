@@ -178,7 +178,7 @@ def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", type=int, default=8491)
     ap.add_argument("--bind", default="127.0.0.1")
-    ap.add_argument("--scenes", default="/home/zerwizserver/gimle/desk/data/shared-scenes")
+    ap.add_argument("--scenes", default=None)
     args = ap.parse_args(argv)
     global API_KEY
     if not API_KEY:
@@ -186,7 +186,11 @@ def main(argv):
         keyfile = os.environ.get("OPENCODE_KEY_FILE", "")
         if keyfile and os.path.exists(keyfile):
             API_KEY = open(keyfile).read().strip()
-    Handler.state = State(args.scenes)
+    scenes = args.scenes
+    if not scenes:
+        scenes = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "shared-scenes")
+        scenes = os.path.normpath(scenes)
+    Handler.state = State(scenes)
     srv = ThreadingHTTPServer((args.bind, args.port), Handler)
     print("brokk-backend on http://%s:%d" % (args.bind, args.port), flush=True)
     srv.serve_forever()
