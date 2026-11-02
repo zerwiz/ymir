@@ -176,6 +176,10 @@ shell_quote() {
 
 STATUS_FILE=$(shell_quote "$STATE/$ID.status")
 REPORT_SHELF=$(shell_quote "$STATE/eindri-reports/$ID.md")
+
+# THE HANDOFF DOOR (2026-11-01). The shelf above is where a report goes; this is the door that writes it,
+# and the brief names it so the worker does not have to remember a path. A link with no door is a hope.
+HANDOFF_CMD="bin/agents/report.sh write $ID --state done|blocked|needs-decision --changed \"<files>\" --verified \"<command → result>\" --not-verified \"<what and why>\" --next \"<one sentence>\" --pointers \"plan:<N> · card:<id>\""
 WAKE_QUEUE=$(shell_quote "$STATE/.wake-queue")
 INBOX_DIR=$(shell_quote "$STATE/$ID.inbox")
 REPORT_FILE="$DATA/$ID/report.md"

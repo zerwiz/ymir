@@ -11,7 +11,7 @@ vendored `fm-*` script kept byte-comparable to upstream on purpose.
 `disposition` says what happens to it: `keep`, `migrate → src/…` where the
 Python runtime already has the module, `retire` for orphans, `provenance`.
 
-bin[658]{file,does,kind,verdict,disposition,callers,lines}:
+bin[661]{file,does,kind,verdict,disposition,callers,lines}:
   "README.md","`bin/` — every file, what it does, and whether it is alive","data","tested","keep",21,-
   "README.md","Gróa — the updater, one per install","data","tested","keep",21,-
   "README.md","collab — Vingólf, the assembly hall","data","tested","keep",21,-
@@ -83,7 +83,8 @@ bin[658]{file,does,kind,verdict,disposition,callers,lines}:
   "converge-home-defaults.py","'''converge-home-defaults.py — converge every private home default on the one resolver.","tool","wired","keep",0,182
   "crash-sense.sh","crash-sense.sh — surface machine crashes to the Allfather on Omarchy.","tool","wired","keep",0,175
   "cron-guard.sh","cron-guard.sh — the shipped tree must satisfy its own schedule.","tool","wired","keep",0,85
-  "daily-log.sh","daily-log.sh — the day's work, recorded where the contract says it lives.","tool","wired","keep",2,104
+  "daily-line.sh","daily-line.sh — THE daily line: what moved, what is blocked, what is owed — written from the record,","tool","wired","keep",0,101
+  "daily-log.sh","daily-log.sh — the day's work, recorded where the contract says it lives.","tool","wired","keep",3,104
   "dead-code-guard.sh","dead-code-guard.sh — code that exists and is never reached is a claim that a feature exists.","tool","wired","keep",0,256
   "defaults-guard.sh","defaults-guard.sh — ONE PLACE KNOWS WHERE THINGS LIVE.","data","tested","keep",1,171
   "design-check.sh","design-check.sh — one identity, two renderers: they must agree.","tool","wired","keep",0,93
@@ -119,7 +120,7 @@ bin[658]{file,does,kind,verdict,disposition,callers,lines}:
   "einherjar-spawn.sh","einherjar-spawn.sh - gather an Eindri worker (Einherjar = the chosen who are","tool","wired","keep",10,1010
   "eir-doctor.sh","eir-doctor.sh — Eir, the healer: diagnose the running system, then mend it.","tool","wired","keep",5,507
   "electron-lib.sh","electron-lib.sh — is a desktop shell's runtime actually there?","lib","tested","keep",7,212
-  "erindi-brief.sh","erindi-brief.sh - scaffold an Eindri worker brief at data/<task-id>/brief.md.","tool","wired","keep",4,374
+  "erindi-brief.sh","erindi-brief.sh - scaffold an Eindri worker brief at data/<task-id>/brief.md.","tool","wired","keep",4,378
   "escalate.py","'''escalate.py — the severity ladder (plan 98 §'the severity ladder').","tool","tested","keep",1,210
   "escalate.sh","bin/assistant/escalate.sh -> systems/skirnir/services/escalate.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
   "escalation-timer.sh","bin/assistant/escalation-timer.sh -> systems/skirnir/services/escalation-timer.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door…","tool","wired","keep",0,16
@@ -336,9 +337,9 @@ bin[658]{file,does,kind,verdict,disposition,callers,lines}:
   "hnitbjorg-ensure.sh","hnitbjorg-ensure.sh — ensure the vault's tooling stands and its path is sound.","tool","wired","keep",2,111
   "hnitbjorg.sh","hnitbjorg.sh — Hnitbjörg: the encrypted document vault.","tool","wired","keep",3,250
   "hoard-guard.sh","hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME).","tool","wired","keep",2,150
-  "hoard-lib.sh","hoard-lib.sh — where the operator's HOME lives, and the two roots beneath it.","lib","tested","keep",179,116
+  "hoard-lib.sh","hoard-lib.sh — where the operator's HOME lives, and the two roots beneath it.","lib","tested","keep",180,116
   "hodd-set.sh","hodd-set.sh — set ONE key in an age-encrypted secret file, with guards that make a","tool","wired","keep",1,106
-  "hodd.sh","hodd.sh — the Allfather's private hoard: path, init, ls, load, tenant.","tool","tested","keep",11,120
+  "hodd.sh","hodd.sh — the Allfather's private hoard: path, init, ls, load, tenant.","tool","tested","keep",13,120
   "home-index-check.sh","home-index-check.sh — every shelf in the home has an index, and the index is honest.","tool","wired","keep",1,82
   "host-sense.sh","host-sense.sh — learn THIS machine: distro, kernel, session, desktop, and what","tool","wired","keep",5,200
   "host-watch.sh","host-watch.sh — the watcher a hand can actually have.","tool","wired","keep",1,154
@@ -455,6 +456,7 @@ bin[658]{file,does,kind,verdict,disposition,callers,lines}:
   "place-validate.sh","place-validate.sh — validate a place.yaml against the clients register and the houses.","tool","tested","keep",1,219
   "place.sh","place.sh — team PLACES: a wall, not a permission (Rule 18; plan 77 Part 10).","tool","tested","keep",9,142
   "plan-audit.sh","plan-audit.sh — the plan CONTRACT, as a check over the ledger shelf.","tool","wired","keep",1,826
+  "plane.sh","plane.sh — THE door to Plane.","tool","wired","keep",0,92
   "pr-pretest.sh","pr-pretest.sh — the PR-time gate: a REAL npm installation, locally, before","tool","wired","keep",1,59
   "prereq-ensure.sh","prereq-ensure.sh — self-healing prerequisite engine for Ymir.","tool","wired","keep",11,236
   "private-guard.py","'''private-guard — private structure and protected material never cross a surface.'''","tool","wired","keep",1,122
@@ -481,6 +483,7 @@ bin[658]{file,does,kind,verdict,disposition,callers,lines}:
   "registers-seed.sh","registers-seed.sh — give a home the identity registers it is missing, from ONE template each.","tool","tested","keep",1,70
   "registry-lib.sh","registry-lib.sh — the ONE reader for the master project registry's row keys.","lib","tested","migrate → src/ymir_runtime/dispatch/registry.py",13,82
   "repo-scrub.sh","repo-scrub.sh — purge private paths from ALL git history before going public.","tool","wired","keep",0,77
+  "report.sh","report.sh — THE handoff door.","tool","tested","keep",11,88
   "research-round.sh","research-round.sh — one reusable research errand: seat a skald or a sage, give","tool","wired","keep",0,144
   "research-smoke.sh","bin/assistant/research-smoke.sh -> systems/skirnir/services/research-smoke.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and…","tool","wired","keep",0,16
   "rodd-operational-input.sh","rodd-operational-input.sh - canonical Rödd operational-input protocol.","tool","wired","keep",1,251
@@ -671,6 +674,6 @@ bin[658]{file,does,kind,verdict,disposition,callers,lines}:
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
   "zoom_ingest.py","bin/time/snotra/zoom_ingest.py -> systems/snotra/services/cron/zoom_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
 
-**Tally.** verdict: wired=420, tested=238
+**Tally.** verdict: wired=422, tested=239
 
-**Tally.** disposition: keep=645, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
+**Tally.** disposition: keep=648, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
