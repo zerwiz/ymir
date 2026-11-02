@@ -200,6 +200,37 @@ def render(person: str, data: dict, allowed: list[str] | None = None) -> str:
 </div></body></html>"""
 
 
+DOC_ROOTS = ("md", "html", "txt")
+
+
+def doc_path(data_path: str, project: str, name: str) -> str | None:
+    """A mirrored document, or None. The mirror writes into data/docs/<project>/; until this door
+    existed those files were written and never read, and `/docs/...` through the hall answered 200
+    with the login page — a green that showed nothing (Rule 37). Only a flat file name is accepted:
+    no separators, no dots leading, no traversal, and only the three suffixes a mirrored record uses.
+    """
+    if not project or not name or "/" in name or "\\" in name or name.startswith("."):
+        return None
+    if ".." in project or "/" in project or project.startswith("."):
+        return None
+    if name.rsplit(".", 1)[-1].lower() not in DOC_ROOTS:
+        return None
+    root = os.path.join(os.path.dirname(data_path), "docs", project)
+    path = os.path.join(root, name)
+    real = os.path.realpath(path)
+    if not real.startswith(os.path.realpath(root) + os.sep):
+        return None
+    return real if os.path.isfile(real) else None
+
+
+def may_read_doc(allowed: list[str] | None, project: str) -> bool:
+    """The same membership rule as the record: None means the operator (everything), a list means
+    the places that person may see, and a project not named in it is not theirs to read."""
+    if allowed is None:
+        return True
+    return any(str(a).lower() in project.lower() or project.lower() in str(a).lower() for a in allowed)
+
+
 class Handler(BaseHTTPRequestHandler):
     data_path = ""
     server_version = "gimle-desk/1.0"
@@ -209,8 +240,26 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, "text/plain", b"ok")
         person = self.headers.get("Remote-User", "") or self.headers.get("X-Forwarded-User", "")
         allowed = places_for(person, self.data_path)
+        if self.path.startswith("/desk/docs/") or self.path.startswith("/docs/"):
+            return self._serve_doc(person, allowed)
+
         body = render(person, load(self.data_path), allowed).encode("utf-8")
         self._send(200, "text/html; charset=utf-8", body)
+
+    def _serve_doc(self, person: str, allowed):
+        rest = self.path.split("/docs/", 1)[-1].split("?")[0]
+        parts = [p for p in rest.split("/") if p]
+        if len(parts) != 2:
+            return self._send(404, "text/plain", b"not found")
+        project, name = parts
+        if not may_read_doc(allowed, project):
+            return self._send(403, "text/plain", b"not yours to read")
+        path = doc_path(self.data_path, project, name)
+        if not path:
+            return self._send(404, "text/plain", b"not found")
+        ctype = "text/markdown; charset=utf-8" if path.endswith(".md") else "text/plain; charset=utf-8"
+        with open(path, "rb") as fh:
+            return self._send(200, ctype, fh.read())
 
     def _send(self, code: int, ctype: str, body: bytes):
         self.send_response(code)
