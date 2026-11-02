@@ -380,7 +380,7 @@ bin[661]{file,does,kind,verdict,disposition,callers,lines}:
   "mcp-config.sh","mcp-config.sh — generate the harness MCP config: ONE local gateway door.","tool","tested","keep",0,94
   "mcp-gate.sh","mcp-gate.sh — arm/disarm an on-call MCP server in the seat's pi mcp-adapter.json.","tool","wired","keep",1,65
   "mcp-gateway.sh","mcp-gateway.sh — the body's ONE local door in front of the record MCPs.","tool","tested","keep",4,278
-  "mcp-read.py","'''mcp-read.py — Gimlé MCP, phase 1: the six read tools, audited, behind a token.","tool","wired","keep",0,262
+  "mcp-read.py","'''mcp-read.py — Gimlé MCP, phase 1: the six read tools, audited, behind a token.","tool","wired","keep",0,292
   "meet.sh","meet.sh — one command: 'put a meeting with <person> in the calendar, with a Meet link'.","tool","wired","keep",2,90
   "meet_ingest.py","bin/time/snotra/meet_ingest.py -> systems/snotra/services/cron/meet_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "meeting-record-guard.sh","bin/time/snotra/meeting-record-guard.sh -> systems/snotra/services/approve/meeting-record-guard.sh — RETIRED SHIM (plan 129, 2026-10-24); e…","tool","wired","keep",0,16
