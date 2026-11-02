@@ -16,6 +16,21 @@ the same record answers the MCP.
 | the board (Plane) | https://board.zerwiz.org |
 | documents (AFFiNE) | https://affine.zerwiz.org |
 | whiteboard (Excalidraw) | https://whiteboard.zerwiz.org |
+| book a time (Cal.com) | https://book.zerwiz.org |
+
+## Booking a time
+
+`book.zerwiz.org` is **Cal.com**, one calendar per member, behind the same suite. A counterpart picks a
+free slot from the member's own booking page; the meeting then lands in the calendar, and Snotra's ear
+writes its record into the desk. That is the loop: **a booking becomes a meeting, and a meeting becomes a
+record** — nobody types the minutes twice.
+
+The desk carries it as the **Book** tile, beside Board and Documents.
+
+**The booking page itself is public on purpose.** A person who has no account in the hall must still be
+able to choose a time — that is what a booking link is for. The administrative side (sign-in, event types,
+settings) is the part that belongs behind the gate; do not put the whole hostname behind Authelia or the
+only people who can book are the ones who already have an account.
 
 ## The desk
 
