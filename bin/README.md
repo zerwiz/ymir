@@ -669,7 +669,7 @@ bin[668]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-marketing-stack.sh","ymir-marketing-stack.sh — the marketing stack, provisionable on ANY computer.","tool","wired","keep",1,337
   "ymir-migrate.sh","ymir-migrate.sh — versioned STRUCTURE migrations for existing Ymir homes.","tool","tested","keep",7,76
   "ymir-plan.sh","ymir-plan.sh — THE INSTALL PLAN.","tool","wired","keep",2,447
-  "ymir-platform.sh","ymir-platform.sh — the portability layer.","tool","tested","keep",18,244
+  "ymir-platform.sh","ymir-platform.sh — the portability layer.","tool","tested","keep",18,317
   "ymir-say.sh","bin/time/snotra/ymir-say.sh -> systems/snotra/services/tts-lease/ymir-say.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and…","tool","wired","keep",10,16
   "ymir-setup-auth.sh","ymir-setup-auth.sh — set the operator's Ymir credential at first setup.","tool","wired","keep",3,121
   "ymir-state.sh","ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runtime/state/`).","tool","wired","keep",3,44
