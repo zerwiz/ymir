@@ -15,6 +15,9 @@
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# gna_import.py defaults to ~/ymir; this tree may live elsewhere. The importer
+# reads the tree's vault door by this path, so pass the real checkout.
+export YMIR_TREE="${YMIR_TREE:-$ROOT}"
 # shellcheck disable=SC1091
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 ymir_home_root HOME_R 2>/dev/null || true
