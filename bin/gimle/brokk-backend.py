@@ -74,6 +74,7 @@ def stream_upstream(messages, scene_doc):
     req.add_header("Content-Type", "application/json")
     req.add_header("Authorization", "Bearer " + API_KEY)
     req.add_header("x-opencode-session", "brokk-whiteboard")
+    req.add_header("User-Agent", "curl/8.0")
     try:
         with urllib.request.urlopen(req, timeout=120) as resp:
             buf = b""
