@@ -16,6 +16,21 @@ the same record answers the MCP.
 | the board (Plane) | https://board.zerwiz.org |
 | documents (AFFiNE) | https://affine.zerwiz.org |
 | whiteboard (Excalidraw) | https://whiteboard.zerwiz.org |
+| book a time (Cal.com) | https://book.zerwiz.org |
+
+## Booking a time
+
+`book.zerwiz.org` is **Cal.com**, one calendar per member, behind the same suite. A counterpart picks a
+free slot from the member's own booking page; the meeting then lands in the calendar, and Snotra's ear
+writes its record into the desk. That is the loop: **a booking becomes a meeting, and a meeting becomes a
+record** — nobody types the minutes twice.
+
+The desk carries it as the **Book** tile, beside Board and Documents.
+
+**The booking page itself is public on purpose.** A person who has no account in the hall must still be
+able to choose a time — that is what a booking link is for. The administrative side (sign-in, event types,
+settings) is the part that belongs behind the gate; do not put the whole hostname behind Authelia or the
+only people who can book are the ones who already have an account.
 
 ## The desk
 
@@ -41,7 +56,11 @@ refused **and recorded**. Tools whose backend is not yet wired (`find_doc`, `rea
 `isError` with the reason instead of pretending.
 
 **Limits, said plainly:** this phase is read-only; Plane's backend is the meeting record until a Plane API
-token is issued; AFFiNE and Excalidraw are not yet reachable from MCP.
+token is issued; AFFiNE is not yet reachable from MCP. Excalidraw scenes are reachable **only when their owner
+has consented to share** one: `read_scene` reads from the house's shared-scenes store, and a scene that has
+not been shared answers an honest `isError` ("scene not shared with the house — consent required"). The
+consent flow (a "Share this scene with the house" button in the panel) is the next piece; until it ships,
+a shared scene is a file dropped under `<data>/shared-scenes/<subject>/<scene>.json`.
 
 **If it does not work.** `systemctl --user status gimle-desk gimle-mcp`; `curl -H "Remote-User: you"
 http://127.0.0.1:8487/` for the desk; `curl -X POST http://127.0.0.1:8489/mcp -H 'Authorization: Bearer …'

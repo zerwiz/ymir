@@ -19,6 +19,12 @@ Sections, in the order a person actually needs them:
 from __future__ import annotations
 
 import argparse
+
+try:                      # the board is a second source; if it is down the desk keeps working
+    import plane_reader
+except Exception:         # noqa: BLE001
+    plane_reader = None
+
 import datetime
 import html
 import json
@@ -64,8 +70,7 @@ TILES = [
     ("Documents", "https://affine.zerwiz.org", "pages and databases — AFFiNE"),
     ("Whiteboard", "https://whiteboard.zerwiz.org", "drawing and mind maps — Excalidraw"),
     ("Meetings", "https://affine.zerwiz.org", "the record of what was said and decided"),
-    ("Email", "https://mautic.zerwiz.org", "campaigns and email automation — Mautic"),
-    ("Social", "https://postiz.zerwiz.org", "social publishing and scheduling — Postiz"),
+    ("Book", "https://book.zerwiz.org", "a time that suits you — Cal.com"),
 ]
 
 
@@ -84,11 +89,41 @@ def mine(rows, person: str):
     return [r for r in rows if p in (str(r.get("owner", "")) + str(r.get("who", ""))).lower()]
 
 
-def render(person: str, data: dict) -> str:
+OPERATOR_ENV = "GIMLE_OPERATOR"
+
+
+def places_for(person: str, data_path: str) -> list[str] | None:
+    """Which places this person may see — or None for 'everything' (the operator).
+
+    The map lives beside the record (`places.json`): `{"person": ["place substring", …]}`.
+    **Default deny**: a person not named in the map sees nothing; only the operator (named by
+    `GIMLE_OPERATOR`) sees every place. That is H3's fix, and it fails closed on purpose.
+    """
+    operator = os.environ.get(OPERATOR_ENV, "")
+    if operator and person.lower() == operator.lower():
+        return None
+    path = os.path.join(os.path.dirname(data_path), "places.json")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            mapping = json.load(fh)
+    except Exception:
+        return []                     # no map → nobody but the operator sees anything
+    for who, places in mapping.items():
+        if who.lower() == person.lower():
+            return [str(x) for x in places]
+    return []
+
+
+def render(person: str, data: dict, allowed: list[str] | None = None) -> str:
     today = datetime.date.today()
     horizon = today + datetime.timedelta(days=7)
     actions, decisions, questions = [], [], []
-    for m in data.get("meetings", []):
+    meetings = data.get("meetings", [])
+    if allowed is not None:
+        meetings = [m for m in meetings
+                    if any(str(m.get("title", "")).lower().startswith(a.lower()) or
+                           a.lower() in str(m.get("title", "")).lower() for a in allowed)]
+    for m in meetings:
         for a in m.get("actions", []):
             a["meeting"] = m.get("title", m.get("id", ""))
             actions.append(a)
@@ -132,6 +167,19 @@ def render(person: str, data: dict) -> str:
             body = "<ul>" + "".join(renderer(r) for r in rows[:8]) + "</ul>"
         return f'<h2>{title}</h2><div class="card">{body}</div>'
 
+    def board_row(card):
+        due = card.get("due") or ""
+        return (f'<li><b>{html.escape(card.get("name", "")[:110])}</b>'
+                f'<div class="meta">{html.escape(card.get("project", ""))}'
+                f'{(" · due " + html.escape(due)) if due else ""}</div></li>')
+
+    board_cards, board_detail = [], "the board reader is not installed"
+    if plane_reader is not None:
+        try:
+            board_cards, board_detail = plane_reader.board_for(person)
+        except Exception as exc:                       # noqa: BLE001
+            board_cards, board_detail = [], f"the board did not answer ({exc.__class__.__name__})"
+
     tiles = "".join(f'<a class="tile" href="{html.escape(url)}"><b>{html.escape(name)}</b>'
                     f'<span>{html.escape(desc)}</span></a>' for name, url, desc in TILES)
 
@@ -142,11 +190,13 @@ def render(person: str, data: dict) -> str:
 <link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,600;1,400&family=Newsreader:opsz,wght@6..72,300;6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>{CLOTH}</style></head><body><div class="wrap">
 <header><h1>The <em>desk</em></h1><span class="who">{html.escape(person or "friend")} · {today.isoformat()}</span></header>
+{section("From the board — assigned to you", board_cards, board_row)}
+<div class="meta" style="margin:-6px 0 14px 4px;opacity:.6">{html.escape(board_detail)}</div>
 {section("Due this week", mine_actions, due_row)}
 {section("Last decisions", decisions[:5], plain_row)}
 {section("Questions waiting on me", mine_questions, plain_row)}
 <h2>The places</h2><div class="tiles">{tiles}</div>
-<footer>Gimlé — the hall that outlives the fire · on Zerwiz&rsquo;s own hardware</footer>
+<footer>Gimlé — the hall that outlives the fire · on Zerwiz&rsquo;s own hardware · <a href="/manual.html" style="color:inherit;border-bottom:1px solid rgba(201,151,79,.4)">user manual</a></footer>
 </div></body></html>"""
 
 
@@ -158,7 +208,8 @@ class Handler(BaseHTTPRequestHandler):
         if self.path.startswith("/health"):
             return self._send(200, "text/plain", b"ok")
         person = self.headers.get("Remote-User", "") or self.headers.get("X-Forwarded-User", "")
-        body = render(person, load(self.data_path)).encode("utf-8")
+        allowed = places_for(person, self.data_path)
+        body = render(person, load(self.data_path), allowed).encode("utf-8")
         self._send(200, "text/html; charset=utf-8", body)
 
     def _send(self, code: int, ctype: str, body: bytes):
