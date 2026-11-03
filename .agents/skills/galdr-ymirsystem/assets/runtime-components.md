@@ -558,3 +558,7 @@ bin/time/nornir-cron-start.sh --status       # → cron: running pid=... jobs=4
 | `bin/agents/einherjar-spawn.sh` calls `hamr-harness.sh crew` | resolved 2026-09-24: the spawn resolves harness/model from the machine and never calls `hamr-harness` for the default |
 | `bin/agents/erindi-brief.sh` / `einherjar-spawn.sh` reference `.agents/sandbox/Dockerfile.utgard` and `utgard-runner:latest` | the Dockerfile and `sandcastle.config.json` exist; no image is guaranteed built, so a DECLARED utgard with no image is a LOUD refusal (never `--isolation auto` sealing off by file presence) |
 | Plan §13 says `docs/supervision-protocols/` will be created | directory does not exist in Ymir |
+
+## Seat identity profile resolution (2026-11-02)
+
+The seat-identity.sh door reads seats.yaml and resolves a private YMIR_HOME/.agents/agents profile before the distro profile, preserving established distro aliases. File, install, render and check share this resolution; missing profiles fail before the seat file is changed. Check rejects a stale profile binding. Windows uses hostname without -s and cygpath for native Python environment paths. YMIR_PYTHON overrides interpreter probing (python3 then python); PyYAML is required. Tests: tests/test_seat_identity.sh. Operator guide: docs/features/the-seat-name.md.

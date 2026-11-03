@@ -9,7 +9,8 @@
 **Ask the door, do not remember:** `bin/records/where.sh <path or topic>`.
 
 ```
-subsystems[12]{path,entry,canonical,books,doors,missing}:
+subsystems[13]{path,entry,canonical,books,doors,missing}:
+  "bin/agents/seat-identity.sh",".agents/skills/galdr-ymirsystem/SKILL.md","docs/features/the-seat-name.md",".agents/skills/galdr-ymirsystem/assets/runtime-components.md","bin/agents/seat-identity.sh --check","—"
   "apps/smidja/** | apps/smidja-factory/** | .agents/skills/smidja-factory/**","apps/smidja-factory/SKILL.md","apps/smidja-factory/AGENTS.md","apps/smidja-factory/cookbooks/ · apps/smidja-factory/skills/ · apps/smidja-factory/docs/ · apps/smidja-factory/references/","bin/desktop/smidja-{board,bootstrap,observe}.sh · scripts/electron.sh smidja","scripts/smidja (launcher: rosters/team/doctor) · roster.yaml (stacks:) · justfile · tests/local-models/"
   "apps/hlidskjalf/**","docs/features/the-thread.md",".agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md","docs/features/ · docs/design.md",".pi/extensions/ymirhome.ts · bin/desktop/app-build.sh","—"
   "apps/odrerir/**","docs/features/the-rooms.md",".agents/skills/galdr-ymirsystem/assets/odrerir-hall.md","docs/features/","bin/desktop/app-build.sh","—"
