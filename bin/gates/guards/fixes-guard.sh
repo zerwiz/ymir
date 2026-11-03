@@ -140,6 +140,10 @@ path_component() {  # <path> -> the component it belongs to, or empty
     # gate suite, so a fix to the catalogue or a feature page is a gate fix. Found on
     # 2026-11-03, when PR #493's own row had no component to name.
     FEATURES.md|docs/features/*) echo gate ;;
+    # The derived registers themselves: bin/README.md, the backend index and the
+    # capability register are the gate suite's own output — a fix that regenerates
+    # them is a gate fix (2026-11-03: they mapped to nothing and no note could cover them).
+    bin/README.md|.agents/backend/README.md|.agents/assets/agents/capabilities.md) echo gate ;;
     # The unit templates and the renderer that seats them: the seat's services, so a fix
     # here is a runtime fix. Before this row tools/{mill,web}/systemd/* mapped to NO
     # component — a correct runtime note covered nothing and the gate passed on a
