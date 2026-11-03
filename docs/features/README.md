@@ -23,3 +23,5 @@ its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
 - **Do it** — the exact commands, in order, each with what you should see.
 - **Notes & limits** — the honest caveats.
 - **If it does not work** — the common failures and their fix.
+
+- [Codex CLI workers in Herdr](codex-eindri-in-herdr.md) — Eindri with Codex native model selection and Herdr seating.

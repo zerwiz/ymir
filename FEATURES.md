@@ -177,3 +177,5 @@ page's *planned* banner is removed **by a new entry citing the old** (Rule 06).
 | Memory | Serving-engine health | Cross-platform and borrowed clients measure the active bridge database; transport, episode count and policy health remain distinct. | [Memory on every role](docs/features/the-well-on-every-role.md) |
 
 - 2026-11-02: Codex Gná bounded arm/status/poll with WSL-safe Windows routing and native thread-heartbeat delivery contract — docs/features/gna-in-codex.md.
+
+- Codex CLI Eindri harness and Herdr agent kind: native default/model selection, quoted brief input and unchanged approval boundaries. See [Codex workers in Herdr](docs/features/codex-eindri-in-herdr.md).
