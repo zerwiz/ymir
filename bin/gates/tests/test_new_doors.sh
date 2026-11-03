@@ -19,4 +19,7 @@ t "hermes-telegram: status answers"             bash -c 'bash '"$ROOT"'/bin/seat
 t "telegram-machines: no registry is loud"      bash -c '! bash '"$ROOT"'/bin/notify/telegram-machines.sh list >/dev/null 2>&1 || true'
 t "ymir-mcp: selftest"                          bash -c 'python3 '"$ROOT"'/bin/mcp/ymir-mcp.py --selftest | grep -q doors'
 t "seat-surface: check passes"                  bash -c 'bash '"$ROOT"'/bin/seat/seat-surface.sh --check >/dev/null'
+# 2026-11-04: four Pi workers were born dead because the seat settings and project discovery loaded two
+# extension trees in a worktree. The launch must name ONE tree (defined AND used) — the invariant, not a wish.
+t "spawn: a worker's pi loads one extension tree" bash -c '[ "$(grep -c pi_ext_args '"$ROOT"'/bin/agents/einherjar-spawn.sh)" -ge 2 ]'
 printf 'new doors: %s failure(s)\n' "$fail"; exit "$([ "$fail" -eq 0 ] && echo 0 || echo 1)"
