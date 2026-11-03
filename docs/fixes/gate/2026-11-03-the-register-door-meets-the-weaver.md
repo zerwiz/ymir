@@ -1,0 +1,21 @@
+## gate · 2026-11-03 — the register door meets the weaver
+
+### Why
+PR #493 ("one door for every generated register") was cut before the Þættir weave
+landed. Merging main brought two collisions of the same class this branch was built
+to end: the capability register was stale after the merge, and the branch's own
+feature page (`docs/features/one-door-for-the-registers.md`) had its catalogue row in
+the old hand-kept `FEATURES.md` — a file the merge driver re-weaves from fragments,
+so the row was dropped and the ward named it.
+
+### Mend
+- `bin/gates/registers.sh generate` — both registers regenerated through the branch's
+  own door (inventory + capabilities), not by hand.
+- The branch's catalogue row was recovered from its pre-merge `FEATURES.md` and seated
+  as a fragment under `docs/features/_catalogue/entries/` — the collision-free unit —
+  then woven (157 entries).
+- No register or catalogue was hand-edited: both answers came from their generators.
+
+### Proven
+- `registers-guard`: inventory current · capabilities current.
+- `features-guard`: every feature page catalogued, and the woven catalogue is current.
