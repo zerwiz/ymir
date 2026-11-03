@@ -21,5 +21,11 @@ A host with no entry **fails loudly** rather than inheriting another seat's name
 
 - `set` edits the roster, not a running session; re-render and restart to take effect.
 - Names are proposals until the Allfather seals them (`status: sealed`).
-- The role file is `.agents/agents/<name>.md`; a name with no role file renders a
-  warning, not a broken seat.
+- The role file is read first from `$YMIR_HOME/.agents/agents/<name>.md`, then
+  from the distro's `.agents/agents/` (including its established role aliases).
+  Install and render refuse a missing profile before changing the seat file.
+- `--file`, install, render and check use the same selection. Check also detects
+  a stale or unreadable installed profile. Reinstall after moving a profile.
+- Native Windows uses `hostname` without Unix-only flags. Python with PyYAML is
+  required; `python3` then `python` are probed. `YMIR_PYTHON` selects an explicit
+  interpreter and fails if it cannot import PyYAML.
