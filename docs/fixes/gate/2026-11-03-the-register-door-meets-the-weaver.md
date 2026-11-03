@@ -32,3 +32,10 @@ The guard judged `git diff <remote>..HEAD`, so a branch that had **merged main**
 every path main brought into the range — two correct notes could not cover it. It now
 judges the paths of **our own non-merge commits** (`git log --no-merges --name-only`):
 main's history needs no note from a branch that took it in.
+
+### A known disagreement, recorded
+The installed pre-push hook and the guard itself disagreed on this push: run with the
+same ref pair, `fixes-guard.sh` says *"ok — 3 note(s)"*; the hook says *"no fix note in
+this range"*. The push was made with the loud override and this line as its reason.
+The hook/guard mismatch is a follow-up (the hook's refs parsing, most likely), not a
+missing note.
