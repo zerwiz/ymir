@@ -118,7 +118,7 @@ unset _state_base _data_base _config_base
 
 # Adapters this platform has verified for direct launches. An adapter outside
 # this set is refused unless a raw launch command is supplied.
-VERIFIED_HARNESSES='opencode pi pi-signed'
+VERIFIED_HARNESSES='opencode pi pi-signed codex'
 
 shell_quote() {
   printf "'"
@@ -490,6 +490,12 @@ serve_ok() {  # <harness> <model> -> 0 servable
 
 resolve_harness_model() {
   local req mr mrow m5 prov h conf _m _h _first _clean _f1 _f2
+  # Codex uses its own native default and model identifiers, never Pi defaults.
+  if [ "$HARNESS" = codex ]; then
+    case "$MODEL" in */*|*" "*|-*) echo "error: Codex requires a native model id, not provider/model" >&2; exit 1 ;; esac
+    MODEL_PROV="Codex native selection (CLI validates availability)"
+    return 0
+  fi
   # (1) an explicit CONCRETE model token; harness by locality when unset
   if [ "$MODEL_SET" -eq 1 ] && [ -n "$MODEL" ] && model_is_token "$MODEL"; then
     MODEL_PROV="explicit flag (--model $MODEL)"
@@ -804,6 +810,14 @@ build_launch_command() {  # prints the worker command WITHOUT the leading exec
       # assignment through the exec.
       printf 'env OPENCODE_CONFIG_CONTENT=%s opencode %s--prompt "$(cat %s)"' \
         "$(shell_quote '{"permission":{"*":"allow"}}')" "$model_flag" "$(shell_quote "$brief_ref")"
+      ;;
+    codex)
+      if [ -n "$EFFORT" ] && [ "$EFFORT" != default ]; then
+        effort_flag="-c $(shell_quote "model_reasoning_effort=\"$EFFORT\"") "
+      fi
+      local daemon_flag=
+      [ "${YMIR_CODEX_NO_DAEMON:-0}" != 1 ] || daemon_flag="--no-daemon "
+      printf 'codex %s%s%s"$(cat %s)"' "$daemon_flag" "$model_flag" "$effort_flag" "$(shell_quote "$brief_ref")"
       ;;
     pi|pi-signed)
       printf 'pi %s%s"$(cat %s)"' "$model_flag" "$effort_flag" "$(shell_quote "$brief_ref")"

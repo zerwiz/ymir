@@ -184,4 +184,8 @@ page's *planned* banner is removed **by a new entry citing the old** (Rule 06).
 
 | Voice | F8/Escape and genuine Swedish speech in Skírnir – Tala | Supersedes the temporary Swedish text-only entry: focused-page F8 starts through consent and finishes; Escape cancels. English uses American female Kokoro af_nicole; Swedish uses the private Bengt/PowerShell 7.6.5 file contract. Verified synthetic ASR and audio in both languages; no global shortcut or invented translation. | [Guide](docs/features/talk-to-skirnir.md) |
 
+
+- Codex CLI Eindri harness and Herdr agent kind: native default/model selection, quoted brief input and unchanged approval boundaries. See [Codex workers in Herdr](docs/features/codex-eindri-in-herdr.md).
+
 - 2026-11-02: Seat identity preserves private home profiles during reinstall, checks profile drift, and probes a usable Windows Python interpreter. See [the seat name](docs/features/the-seat-name.md).
+

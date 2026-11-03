@@ -8,8 +8,8 @@
 # verified sibling — so an agent always starts. Galdr-style TOON.
 #
 # Usage:
-#   eindri-start.sh "<request>" [--role <name>] [--pane|--tab|--space] [--kind pi|opencode]
-#   eindri-start.sh "<request>" --id <task-id> [--project <dir>] [--role <name>] [--kind pi|opencode]
+#   eindri-start.sh "<request>" [--role <name>] [--pane|--tab|--space] [--kind pi|opencode|codex]
+#   eindri-start.sh "<request>" --id <task-id> [--project <dir>] [--role <name>] [--kind pi|opencode|codex]
 #       # --id names a real errand and hands it to the engine
 #       # (src/ymir_runtime/): a Yggdrasil worktree, a recorded seat, a
 #       # heartbeat. Without --id the ordinary road below seats the agent.
@@ -51,7 +51,7 @@ while [ $# -gt 0 ]; do
     --space) SEAT="--space"; shift ;;
     --tab) SEAT="--tab"; shift ;;
     --pane) SEAT="--pane"; shift ;;
-    -*) printf 'error: unknown flag %s\nhelp: bin/agents/eindri-start.sh "<request>" [--id <task-id>] [--role <name>] [--pane|--tab|--space] [--kind pi|opencode]\n' "$1" >&2; exit 2 ;;
+    -*) printf 'error: unknown flag %s\nhelp: bin/agents/eindri-start.sh "<request>" [--id <task-id>] [--role <name>] [--pane|--tab|--space] [--kind pi|opencode|codex]\n' "$1" >&2; exit 2 ;;
     *) [ -z "$REQ" ] && REQ="$1" || REQ="$REQ $1"; shift ;;
   esac
 done
@@ -98,7 +98,7 @@ mkdir -p "$STATE"
 #    rc 3 from herdr-run means "not worth a smith" — report it, do NOT fake a seat.
 seat="none"; refuse=0; rc=0
 if [ -x "$SCRIPT_DIR/../seat/herdr-run.sh" ]; then
-  "$SCRIPT_DIR/../seat/herdr-run.sh" eindri $SEAT $MAIN ${MODEL:+--model "$MODEL"} "$ROLE" -- "$REQ" >/dev/null 2>&1 || rc=$?
+  YMIR_HERDR_KIND="$KIND" "$SCRIPT_DIR/../seat/herdr-run.sh" eindri $SEAT $MAIN ${MODEL:+--model "$MODEL"} "$ROLE" -- "$REQ" >/dev/null 2>&1 || rc=$?
 fi
 if [ "$rc" = 0 ]; then
   seat="herdr"
@@ -107,8 +107,15 @@ elif [ "$rc" = 3 ]; then
 else
   command -v tmux >/dev/null 2>&1 || { printf 'eindri-start[1]{role,seat,request}:\n  "%s","none","%s"\n' "$ROLE" "$REQ"; printf 'error: no seat — herdr cannot seat and tmux is absent\n' >&2; exit 1; }
   tmux has-session -t "$SESSION" 2>/dev/null || tmux new-session -d -s "$SESSION" -n shell
+  if [ "$KIND" = codex ]; then
+    codex_daemon_flag=
+    [ "${YMIR_CODEX_NO_DAEMON:-0}" != 1 ] || codex_daemon_flag="--no-daemon "
+    printf -v codex_command 'codex %s%q' "$codex_daemon_flag" "$REQ"
+    tmux new-window -t "$SESSION" -n "$LABEL" "$codex_command" 2>/dev/null && seat="tmux:$SESSION:$LABEL"
+  else
   tmux new-window -t "$SESSION" -n "$LABEL" "bash -lc 'printf \"\\n  %s — Eindri of Ymir\\n  request: %s\\n\\n\"; case \"$KIND\" in pi) exec pi \"$REQ\" ;; *) exec \"$KIND\" ;; esac'" 2>/dev/null \
     && seat="tmux:$SESSION:$LABEL"
+  fi
 fi
 [ "$refuse" = 1 ] && { printf 'eindri-start[1]{role,seat,verdict}:\n  "%s","none","too brief — answer it in hand"\n' "$ROLE"; exit 0; }
 [ "$seat" != "none" ] || { printf 'error: could not seat %s\n' "$ROLE" >&2; exit 1; }

@@ -378,7 +378,10 @@ Seat law, read first. You are a worker figure, not the primary. There is NO huma
     # Resolve a model request (friendly or exact) to harness+provider+model.
     # local -> pi, online -> opencode. Unresolved -> report and continue default.
     MODEL_ARGS=()
-    if [ -n "$MODEL_REQ" ] && [ -x "$SCRIPT_DIR/../model/model-resolve.sh" ]; then
+    if [ "$KIND" = codex ]; then
+      case "$MODEL_REQ" in */*|*" "*|-*) echo "error: Codex requires a native model id" >&2; exit 1 ;; esac
+      [ -z "$MODEL_REQ" ] || MODEL_ARGS=(-- --model "$MODEL_REQ")
+    elif [ -n "$MODEL_REQ" ] && [ -x "$SCRIPT_DIR/../model/model-resolve.sh" ]; then
       r="$("$SCRIPT_DIR/../model/model-resolve.sh" resolve "$MODEL_REQ" 2>/dev/null | sed -n '2p')"
       case "$r" in
         ""|*unresolved*)
@@ -402,9 +405,13 @@ Seat law, read first. You are a worker figure, not the primary. There is NO huma
       esac
     fi
 
+    if [ "$KIND" = codex ] && [ "${YMIR_CODEX_NO_DAEMON:-0}" = 1 ]; then
+      if [ "${#MODEL_ARGS[@]}" -eq 0 ]; then MODEL_ARGS=(-- --no-daemon); else MODEL_ARGS+=(--no-daemon); fi
+    fi
+
     # No explicit model: use the AGENT'S configured harness+model from
     # config/agents.yaml (local->pi, online->opencode) — never default silently.
-    if [ -z "$MODEL_REQ" ] && [ -x "$SCRIPT_DIR/../fleet/agents-config.sh" ]; then
+    if [ "$KIND" != codex ] && [ -z "$MODEL_REQ" ] && [ -x "$SCRIPT_DIR/../fleet/agents-config.sh" ]; then
       _h="$("$SCRIPT_DIR/../fleet/agents-config.sh" get "$ROLE" harness 2>/dev/null)"
       _m="$("$SCRIPT_DIR/../fleet/agents-config.sh" get "$ROLE" model 2>/dev/null)"
       [ -n "$_h" ] && KIND="$_h"

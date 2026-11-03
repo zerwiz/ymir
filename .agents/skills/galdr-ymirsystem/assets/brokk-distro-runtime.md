@@ -809,3 +809,9 @@ answers an errand whose body has already ended. `bin/agents/eindri-send.sh`'s pa
 prompt may fail on an ended pane; the durable inbox is the always-true lane.
 
 galdr-reread: the naming map's Sýn + the harness-integration arm section.
+
+## Codex CLI worker adapter (2026-11-02)
+
+`codex` joins the verified Eindri harness set. The engine and legacy shell launch use `codex [--model native-id] [-c model_reasoning_effort=...] "$(cat brief)"`; the expanded brief is a single quoted argument. Explicit Codex selection bypasses Pi model inference and catalog validation: Codex owns its model ids and configured default. Provider/model tokens are refused. Herdr direct seating preserves `YMIR_HERDR_KIND=codex` and uses its Codex agent kind. No sandbox or approval bypass is added. [Operator guide](../../../../docs/features/codex-eindri-in-herdr.md). Live acceptance remains required inside a Herdr-managed pane.
+
+For a packaged Codex CLI that requires its standalone mode, set `YMIR_CODEX_NO_DAEMON=1` in the launching environment. The engine, legacy spawn, direct Herdr and tmux fallback then pass `--no-daemon`. Leave it unset for distributions that do not support that flag.

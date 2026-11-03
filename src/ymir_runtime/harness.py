@@ -15,13 +15,14 @@ old door already has, kept so a new adapter can be trialled without a code chang
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Iterable, Mapping, Sequence
 
 from . import paths, proc
 
-VERIFIED = ("opencode", "pi", "pi-signed")
+VERIFIED = ("opencode", "pi", "pi-signed", "codex")
 
 LOCAL_PROVIDER_HINTS = ("llama", "lmstudio", "apodex")
 
@@ -37,6 +38,7 @@ class HarnessSelection:
     provenance: str
     model_provenance: str
     raw_launch: str = ""
+    codex_no_daemon: bool = False
 
     @property
     def is_raw(self) -> bool:
@@ -152,7 +154,10 @@ def resolve(
         if not effort and cfg_effort:
             effort = cfg_effort
 
-    tokens = list(catalog()) if catalog is not None else list(default_catalog(runner=runner))
+    # Codex owns its native model names and default; Pi cannot validate them.
+    tokens = [] if harness == "codex" else (list(catalog()) if catalog is not None else list(default_catalog(runner=runner)))
+    if harness == "codex" and model and model != "default" and ("/" in model or any(c.isspace() for c in model) or model.startswith("-")):
+        raise ValueError("Codex requires a native model id, not a Pi provider/model token")
 
     if not harness:
         if tokens:
@@ -179,6 +184,7 @@ def resolve(
         effort=effort,
         provenance=prov,
         model_provenance=model_prov,
+        codex_no_daemon=(environ if environ is not None else os.environ).get("YMIR_CODEX_NO_DAEMON") == "1",
     )
 
 
@@ -202,6 +208,14 @@ def build_launch_command(selection: HarnessSelection, brief_ref: str) -> str:
             else ""
         )
         return f'{selection.name} {model_flag}{effort_flag}"$(cat {proc.shell_quote(brief_ref)})"'
+    if selection.name == "codex":
+        import json
+        effort_flag = (
+            "-c " + proc.shell_quote("model_reasoning_effort=" + json.dumps(selection.effort)) + " "
+            if selection.effort and selection.effort != "default" else ""
+        )
+        daemon_flag = "--no-daemon " if selection.codex_no_daemon else ""
+        return f'codex {daemon_flag}{model_flag}{effort_flag}"$(cat {proc.shell_quote(brief_ref)})"'
     if selection.name == "opencode":
         # `env` is load-bearing, not decoration. The seat writer prefixes `exec ` to
         # any shape that does not already carry it (seat.py), and `exec VAR=x cmd`

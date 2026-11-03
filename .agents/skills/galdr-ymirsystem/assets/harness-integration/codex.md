@@ -239,3 +239,9 @@ and the installed `codex plugin add --help` / `codex plugin marketplace add --he
 ## 2026-11-02 — bounded Gná arm
 
 gna_watch_arm now uses bounded canonical start/status commands with an actual Codex thread ID. Windows routes through WSL Linux Python, never native process liveness. Native Codex thread heartbeat owns automatic wake delivery; status alone does not prove it. Poll leaves events pending until the processing turn acknowledges handled work. See docs/features/gna-in-codex.md and tests/test_gna_codex.mjs.
+
+## Codex CLI as Eindri (2026-11-02)
+
+The canonical worker selector accepts `--harness codex`; `eindri-start.sh` accepts `--kind codex`. Herdr uses its native `codex` kind. Brief bytes are supplied as one quoted positional prompt, never executed. Native model selection and effort are forwarded to Codex without changing its authentication, sandbox, or approval settings. See `docs/features/codex-eindri-in-herdr.md`.
+
+For a packaged Codex CLI that requires its standalone mode, set `YMIR_CODEX_NO_DAEMON=1` in the launching environment. The engine, legacy spawn, direct Herdr and tmux fallback then pass `--no-daemon`. Leave it unset for distributions that do not support that flag.

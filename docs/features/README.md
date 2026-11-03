@@ -27,3 +27,4 @@ its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
 Voice files on Windows and WSL: [voice-files-on-windows.md](voice-files-on-windows.md).
 
 Talk to Skírnir in Hlidskjalf: [talk-to-skirnir.md](talk-to-skirnir.md).
+- [Codex CLI workers in Herdr](codex-eindri-in-herdr.md) — Eindri with Codex native model selection and Herdr seating.
