@@ -19,3 +19,10 @@ so the row was dropped and the ward named it.
 ### Proven
 - `registers-guard`: inventory current · capabilities current.
 - `features-guard`: every feature page catalogued, and the woven catalogue is current.
+
+### The map gap the push found
+`bin/gates/registers.sh` (this branch's own new door) and the woven catalogue
+(`FEATURES.md`, `docs/features/*`) mapped to **no component**, so a correct note
+could not cover the paths it described — the same defect the 2026-10-12 StartLimit
+mend named. Both now map to `gate`: the register door and the features ward live in
+the gate suite.
