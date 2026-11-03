@@ -26,3 +26,9 @@ so the row was dropped and the ward named it.
 could not cover the paths it described — the same defect the 2026-10-12 StartLimit
 mend named. Both now map to `gate`: the register door and the features ward live in
 the gate suite.
+
+### The second fault the push found: a merge is not a change
+The guard judged `git diff <remote>..HEAD`, so a branch that had **merged main** put
+every path main brought into the range — two correct notes could not cover it. It now
+judges the paths of **our own non-merge commits** (`git log --no-merges --name-only`):
+main's history needs no note from a branch that took it in.
