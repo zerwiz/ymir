@@ -183,3 +183,5 @@ page's *planned* banner is removed **by a new entry citing the old** (Rule 06).
 | Voice | Skírnir – Tala in Hlidskjalf | Explicit consent and click, local Whisper/approved-answer/Kokoro chain, transcript and playback, capture/backend stop, English speech and honest Swedish text-only mode. Separate from Snotra meeting recording. | [Guide](docs/features/talk-to-skirnir.md) |
 
 | Voice | F8/Escape and genuine Swedish speech in Skírnir – Tala | Supersedes the temporary Swedish text-only entry: focused-page F8 starts through consent and finishes; Escape cancels. English uses American female Kokoro af_nicole; Swedish uses the private Bengt/PowerShell 7.6.5 file contract. Verified synthetic ASR and audio in both languages; no global shortcut or invented translation. | [Guide](docs/features/talk-to-skirnir.md) |
+
+- 2026-11-02: Seat identity preserves private home profiles during reinstall, checks profile drift, and probes a usable Windows Python interpreter. See [the seat name](docs/features/the-seat-name.md).

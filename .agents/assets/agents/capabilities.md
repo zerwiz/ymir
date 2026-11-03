@@ -10,7 +10,7 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 ## 1 · The doors, by the job they serve
 
 capabilities[5]{surface,count}:
-  "shell doors (bin/*.sh)",680
+  "shell doors (bin/*.sh)",685
   "runtime modules (src/ymir_runtime/*.py)",56
   "skills (.agents/skills/*)",30
   "Pi extension tools",0
@@ -68,7 +68,7 @@ capabilities[5]{surface,count}:
 | ask.sh | bin/assistant/ask.sh -> systems/skirnir/services/ask.sh — RETIRED SHIM | tested+named | keep (a human or a cron row must run it) |
 | asks.sh | bin/assistant/asks.sh -> systems/skirnir/services/asks.sh — RETIRED SH | tested | keep (a human or a cron row must run it) |
 | ban.sh | bin/assistant/ban.sh -> systems/skirnir/services/ban.sh — RETIRED SHIM | tested | keep (a human or a cron row must run it) |
-| ear.sh | bin/assistant/ear.sh -> systems/skirnir/services/ear.sh — RETIRED SHIM | tested | keep (a human or a cron row must run it) |
+| ear.sh | bin/assistant/ear.sh -> systems/skirnir/services/ear.sh — RETIRED SHIM | tested+named | keep (a human or a cron row must run it) |
 | escalate.sh | bin/assistant/escalate.sh -> systems/skirnir/services/escalate.sh — RE | tested | keep (a human or a cron row must run it) |
 | escalation-timer.sh | bin/assistant/escalation-timer.sh -> systems/skirnir/services/escalation | tested | keep (a human or a cron row must run it) |
 | group-add.sh | bin/assistant/group-add.sh -> systems/skirnir/services/group-add.sh —  | tested | keep (a human or a cron row must run it) |
@@ -78,7 +78,7 @@ capabilities[5]{surface,count}:
 | learn-house.sh | bin/assistant/learn-house.sh -> systems/skirnir/services/learn-house.sh  | tested | keep (a human or a cron row must run it) |
 | learn-site.sh | bin/assistant/learn-site.sh -> systems/skirnir/services/learn-site.sh � | tested | keep (a human or a cron row must run it) |
 | learn.sh | bin/assistant/learn.sh -> systems/skirnir/services/learn.sh — RETIRED  | tested | keep (a human or a cron row must run it) |
-| mouth.sh | bin/assistant/mouth.sh -> systems/skirnir/services/mouth.sh — RETIRED  | tested | keep (a human or a cron row must run it) |
+| mouth.sh | bin/assistant/mouth.sh -> systems/skirnir/services/mouth.sh — RETIRED  | tested+named | keep (a human or a cron row must run it) |
 | prune.sh | bin/assistant/prune.sh -> systems/skirnir/services/prune.sh — RETIRED  | tested | keep (a human or a cron row must run it) |
 | query.sh | bin/assistant/query.sh -> systems/skirnir/services/query.sh — RETIRED  | tested | keep (a human or a cron row must run it) |
 | research-smoke.sh | bin/assistant/research-smoke.sh -> systems/skirnir/services/research-smo | tested | keep (a human or a cron row must run it) |
@@ -88,7 +88,7 @@ capabilities[5]{surface,count}:
 | smoke.sh | bin/assistant/smoke.sh -> systems/skirnir/services/smoke.sh — RETIRED  | tested+named | keep (a human or a cron row must run it) |
 | telegram.sh | bin/assistant/telegram.sh -> systems/skirnir/services/telegram.sh — RE | tested | keep (a human or a cron row must run it) |
 | voice-handler.sh | bin/assistant/voice-handler.sh -> systems/skirnir/services/voice-handler | tested | keep (a human or a cron row must run it) |
-| voice.sh | bin/assistant/voice.sh -> systems/skirnir/services/voice.sh — RETIRED  | tested | keep (a human or a cron row must run it) |
+| voice.sh | bin/assistant/voice.sh -> systems/skirnir/services/voice.sh — RETIRED  | tested+named | keep (a human or a cron row must run it) |
 | walls-test.sh | bin/assistant/walls-test.sh -> systems/skirnir/services/walls-test.sh � | tested | keep (a human or a cron row must run it) |
 | fm-afk-launch.sh | fm-afk-launch.sh - the single owner of the away-mode daemon TERMINAL lif | tested+named | keep (a human or a cron row must run it) |
 | fm-afk-return.sh | fm-afk-return.sh - deterministic away-mode return catch-up gate. | tested | keep (a human or a cron row must run it) |
@@ -254,11 +254,13 @@ capabilities[5]{surface,count}:
 | a2abridge-ensure.sh | a2abridge-ensure.sh — ensure the A2A mesh engine (a2abridge) is presen | tested+named | keep (a human or a cron row must run it) |
 | bifrost-bridge.sh | bifrost-bridge.sh — raise/lower the model bridge (Bifrost: the bridge  | tested | keep (a human or a cron row must run it) |
 | bifrost-ingress.sh | bifrost-ingress.sh — raise/lower the ingress stack (Bifrost · Heimdal | tested | keep (a human or a cron row must run it) |
+| constellation.sh | constellation.sh — the A2A road between two Ymir fleets, as one door. | tested+named | keep (a human or a cron row must run it) |
 | mcp-config.sh | mcp-config.sh — generate the harness MCP config: ONE local gateway doo | tested+named | keep (a human or a cron row must run it) |
 | mcp-gate.sh | mcp-gate.sh — arm/disarm an on-call MCP server in the seat's pi mcp-ad | tested | keep (a human or a cron row must run it) |
 | mcp-gateway.sh | mcp-gateway.sh — the body's ONE local door in front of the record MCPs | tested+named | keep (a human or a cron row must run it) |
 | mimir-bridge.sh | mimir-bridge.sh — raise/lower the well bridge (Mimirsbrunn on :4602). | tested+named | keep (a human or a cron row must run it) |
 | ratatoskr.sh | ratatoskr.sh — Ymir's front door to the A2A engine (`a2abridge`). | tested+named | keep (a human or a cron row must run it) |
+| test_constellation.sh | test_constellation.sh — the road's proof: a card, a grant, a token, an | tested | keep (a human or a cron row must run it) |
 | ymir-plan.sh | ymir-plan.sh — THE INSTALL PLAN. Probe this machine, print what would  | tested+named | keep (a human or a cron row must run it) |
 | collab.sh | collab.sh — Vingólf, the assembly hall: who collaborates with the hou | tested+named | keep (a human or a cron row must run it) |
 | init.sh | init.sh — put the collaboration shelf into a repository, or check the  | tested | keep (a human or a cron row must run it) |
@@ -366,6 +368,7 @@ capabilities[5]{surface,count}:
 | app-functional-guard.sh | app-functional-guard.sh — AN UPDATE THAT LEAVES AN APP UNRUNNABLE IS N | tested | keep (a human or a cron row must run it) |
 | branch-guard.sh | branch-guard.sh — Rule 08: no push may land on a protected branch. | tested+named | keep (a human or a cron row must run it) |
 | confidential-guard.sh | confidential-guard.sh — while a confidential session is live, nothing  | tested | keep (a human or a cron row must run it) |
+| constellation-grant-guard.sh | constellation-grant-guard.sh — the road's own ward. | tested+named | keep (a human or a cron row must run it) |
 | cron-guard.sh | cron-guard.sh — the shipped tree must satisfy its own schedule. | tested | keep (a human or a cron row must run it) |
 | dead-code-guard.sh | dead-code-guard.sh — code that exists and is never reached is a claim  | tested | keep (a human or a cron row must run it) |
 | defaults-guard.sh | defaults-guard.sh — ONE PLACE KNOWS WHERE THINGS LIVE. | tested+named | keep (a human or a cron row must run it) |
@@ -379,8 +382,9 @@ capabilities[5]{surface,count}:
 | home-contract-guard.sh | home-contract-guard.sh — the contract that raises a user's home is che | tested | keep (a human or a cron row must run it) |
 | identity-guard.sh | identity-guard.sh — a commit that leaves by push must not publish a pr | tested | keep (a human or a cron row must run it) |
 | inventory-guard.sh | inventory-guard.sh — a register that runs in no gate is a capability t | tested | keep (a human or a cron row must run it) |
+| language-guard.sh | language-guard.sh — two tongues: English for the work, Old Norse for t | tested+named | keep (a human or a cron row must run it) |
 | packaging-guard.sh | packaging-guard.sh — every path a shipped installer names must exist i | tested | keep (a human or a cron row must run it) |
-| path-ledger-guard.sh | path-ledger-guard.sh — Rule 25: a path that MOVED may not be reference | tested | keep (a human or a cron row must run it) |
+| path-ledger-guard.sh | path-ledger-guard.sh — Rule 25: a path that MOVED may not be reference | tested+named | keep (a human or a cron row must run it) |
 | path-legality-guard.sh | path-legality-guard.sh — a tracked path must be a name EVERY host can  | tested | keep (a human or a cron row must run it) |
 | people-guard.sh | people-guard.sh — the public tree holds no people. | tested | keep (a human or a cron row must run it) |
 | perm-guard.sh | perm-guard.sh — flag agent profiles whose permissions are self-defeati | tested | keep (a human or a cron row must run it) |

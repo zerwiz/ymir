@@ -7,7 +7,7 @@
 #   seat-identity.sh <host> --json         # machine-readable
 #   seat-identity.sh --list                # every seat and its primary
 #
-# The roster lives in $YMIR_HOME/config/agents.yaml (single source of truth).
+# The roster lives in $YMIR_HOME/hodd/identity/seats.yaml.
 # This door reads it; it does not hardcode a name (Rule 07).
 set -euo pipefail
 VERSION="1.0.0"
@@ -23,7 +23,24 @@ YMIR_HOME="${YMIR_HOME:?YMIR_HOME unresolved}"
 ROSTER="${SEAT_ROSTER:-$YMIR_HOME/hodd/identity/seats.yaml}"
 [ -r "$ROSTER" ] || { printf 'error: roster not readable: %s\n' "$ROSTER" >&2; exit 1; }
 
-SELF="${YMIR_HOST:-$(hostname -s)}"
+# Windows hostname does not support -s. Do not shorten a Windows computer name.
+SELF="${YMIR_HOST:-}"
+if [ -z "$SELF" ]; then
+  SELF="$(hostname)"
+  case "${OSTYPE:-}" in msys*|cygwin*) ;; *) SELF="${SELF%%.*}" ;; esac
+fi
+# Probe the interpreter, including its required module; Windows Store aliases
+# may exist on PATH without being executable. An explicit override fails closed.
+if [ -n "${YMIR_PYTHON:-}" ]; then
+  "$YMIR_PYTHON" -c 'import yaml' || exit 1
+else
+  for candidate in python3 python; do
+    if "$candidate" -c 'import yaml' >/dev/null 2>&1; then YMIR_PYTHON="$candidate"; break; fi
+  done
+  [ -n "${YMIR_PYTHON:-}" ] || { printf 'error: Python with PyYAML is required\n' >&2; exit 1; }
+fi
+python3(){ command "$YMIR_PYTHON" "$@"; }
+export YMIR_PYTHON
 HOST="${1-}"; MODE="name"
 case "$HOST" in
   --list) MODE="list"; HOST="" ;;
@@ -31,16 +48,6 @@ case "$HOST" in
   set) MODE="set"; HOST="${2:-$SELF}"; NEWNAME="${3-}"; NEWROLE="${4-}" ;;
   names|--names) MODE="names"; HOST="" ;;
 esac
-
-role_file(){
-  case "$1" in
-    brokk) printf 'brokk.md' ;;
-    sindri) printf 'sindri-developer.md' ;;
-    muninn) printf 'muninn-stow.md' ;;
-    mimir) printf 'mimir-planner.md' ;;
-    *) printf '%s.md' "$1" ;;
-  esac
-}
 
 if [ "$MODE" = names ]; then
   # The naming law is the source: a seat's primary must be a figure with a role file.
@@ -120,9 +127,9 @@ if [ "$MODE" = install ] && [ "$HOST" != "$SELF" ]; then
 fi
 if [ "$MODE" = install ] || [ "$MODE" = check ] || [ "$MODE" = render ]; then
   NAME="$(bash "$0" "$HOST" 2>/dev/null)" || { printf 'error: %s has no seat identity\n' "$HOST" >&2; exit 1; }
-  ROLE="$(python3 -c "import yaml,sys;d=yaml.safe_load(open('$ROSTER'));print(d['seats']['$HOST'].get('role',''))" 2>/dev/null)"
-  STATUS="$(python3 -c "import yaml;d=yaml.safe_load(open('$ROSTER'));print(d['seats']['$HOST'].get('status','proposed'))" 2>/dev/null)"
-  RF="$ROOT/.agents/agents/$(role_file "$NAME")"
+  ROLE="$(python3 -c 'import yaml,sys;d=yaml.safe_load(open(sys.argv[1]));print(d["seats"][sys.argv[2]].get("role",""))' "$ROSTER" "$HOST")"
+  STATUS="$(python3 -c 'import yaml,sys;d=yaml.safe_load(open(sys.argv[1]));print(d["seats"][sys.argv[2]].get("status","proposed"))' "$ROSTER" "$HOST")"
+  RF="$(bash "$0" --file "$HOST")"
   SEAT_FILE="$HOME/.pi/agent/extensions/.ymir-seat"
   RENDER="$HOME/.pi/agent/AGENTS.seat.md"
   case "$MODE" in
@@ -148,11 +155,18 @@ EOF
       [ -r "$SEAT_FILE" ] || { printf 'missing\t%s\n' "$SEAT_FILE"; exit 1; }
       want="$(printf 'host=%s\nprimary=%s\n' "$HOST" "$NAME")"
       have="$(printf 'host=%s\nprimary=%s\n' "$(sed -n 's/^host=//p' "$SEAT_FILE")" "$(sed -n 's/^primary=//p' "$SEAT_FILE")")"
-      if [ "$want" = "$have" ]; then printf 'ok\t%s\t%s\n' "$HOST" "$NAME"; else printf 'mismatch\t%s\t%s\n' "$SEAT_FILE" "$have"; exit 1; fi ;;
+      installed_rf="$(sed -n 's/^role_file=//p' "$SEAT_FILE")"
+      if [ "$want" = "$have" ] && [ "$installed_rf" = "$RF" ] && [ -r "$installed_rf" ]; then printf 'ok\t%s\t%s\n' "$HOST" "$NAME"; else printf 'mismatch\t%s\t%s\n' "$SEAT_FILE" "$have"; exit 1; fi ;;
   esac
   exit 0
 fi
 
+export SEAT_CODE_ROOT="$ROOT"
+case "${OSTYPE:-}" in
+  msys*|cygwin*)
+    SEAT_CODE_ROOT="$(cygpath -m "$ROOT")"
+    export YMIR_HOME="$(cygpath -m "$YMIR_HOME")" ;;
+esac
 python3 - "$ROSTER" "$HOST" "$MODE" <<'PY'
 import sys, json, os
 try: import yaml
@@ -169,7 +183,16 @@ if host not in seats:
     sys.exit(1)
 name=seats[host].get("primary")
 if mode=="name": print(name)
-elif mode=="file": print(os.path.join(os.path.dirname(roster),"..","..",".agents","agents",name+".md"))
+elif mode=="file":
+    # Private profiles override distro profiles. Never install a missing role.
+    import pathlib
+    root=pathlib.Path(os.environ["SEAT_CODE_ROOT"])
+    private=pathlib.Path(os.environ["YMIR_HOME"])/".agents"/"agents"/(name+".md")
+    aliases={"brokk":"brokk.md","sindri":"sindri-developer.md","muninn":"muninn-stow.md","mimir":"mimir-planner.md"}
+    public=root/".agents"/"agents"/aliases.get(name,name+".md")
+    selected=private if private.is_file() else public
+    if not selected.is_file() or not os.access(selected, os.R_OK): raise SystemExit("error: no readable role profile for seat primary")
+    print(selected.as_posix())
 elif mode=="json":
     print(json.dumps({"host":host, **seats[host]}, indent=2))
 PY
