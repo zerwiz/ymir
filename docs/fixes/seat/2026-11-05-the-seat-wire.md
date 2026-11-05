@@ -42,3 +42,12 @@ seat · text carrying control sequences or over 4000 characters.
 
 The MCP door (`bin/mcp/ymir-mcp.py` → `seat_wire`) and the install step, so every harness gets it from one door rather
 than a remembered shell line; and the `watch` verb that turns the gna arm into a fleet arm.
+
+## Correction, 2026-11-05 02:35 — the home is resolved, never guessed
+
+The first draft carried `HOME_DIR="${YMIR_HOME:-$HOME/Documents/ymirhome}"`: a literal fallback beside the house
+resolver, which is exactly what `defaults-guard` refuses (and it did, on the shipping branch). The home now resolves
+through `bin/vault/hoard-lib.sh` (`ymir_home_root`), and an unresolvable home is a loud refusal with a `help:` line,
+never a default.
+
+**Verified after the change:** `bin/seat/seat-wire.sh who heimdall` → `heimdall · Hœnir · w39:p5 · <session id>`.

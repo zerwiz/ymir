@@ -24,7 +24,18 @@ SELF="$(basename "$0")"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
   [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
-HOME_DIR="${YMIR_HOME:-$HOME/Documents/ymirhome}"
+# The home is resolved by the ONE resolver (Rule 07) — never guessed here. A literal
+# fallback beside the resolver is exactly what defaults-guard refuses.
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  for _cand in "$ROOT/bin/vault/hoard-lib.sh" "$ROOT/hoard-lib.sh"; do
+    [ -r "$_cand" ] && { . "$_cand"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+fi
+HOME_DIR="${YMIR_HOME:-}"
+if [ -z "$HOME_DIR" ] && command -v ymir_home_root >/dev/null 2>&1; then
+  ymir_home_root HOME_DIR
+fi
+[ -n "$HOME_DIR" ] || { printf 'seat-wire: the home does not resolve\nhelp: run bin/vault/hoard-lib.sh or set YMIR_HOME\n' >&2; exit 1; }
 SEATS_YAML="$HOME_DIR/hodd/identity/seats.yaml"
 ROOM="${SEAT_ROOM:-the-fleet}"
 SSH_TIMEOUT="${SEAT_SSH_TIMEOUT:-6}"
