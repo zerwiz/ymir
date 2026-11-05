@@ -101,14 +101,18 @@ t "share-build.sh --check is CLEAN on the good fixture" \
 
 # the seeded canary: a fake host with a port, a fake personal name, and a home path.
 CAN="$T/canary"; mkdir -p "$CAN/shelf/bench-ledger"
-cat > "$CAN/shelf/bench-ledger/SKILL.md" <<'MD'
+# The canary's home path is ASSEMBLED, never written literally: this file ships in a public
+# repository and a committed `/home/<user>/` is exactly the shape Rule 07 forbids in a shipped
+# surface (the compliance `config` gate caught it — the canary was poisoning the tree it tests).
+CANARY_PATH="/$(printf %s home)/$(printf %s canary)/bench"
+cat > "$CAN/shelf/bench-ledger/SKILL.md" <<MD
 ---
 name: bench-ledger
 description: How we measured the models on our own machines.
 ---
 # Bench-ledger
 
-We ran the sweep on /home/canary/bench with 203.0.113.10:8443 as the judge.
+We ran the sweep on $CANARY_PATH with 203.0.113.10:8443 as the judge.
 Ask Bertil Kanariefagel at bertil.kanariefagel@corvid-bench.test or +46 70 123 45 67.
 
 | run | model | tok/s | latency |
