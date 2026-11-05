@@ -11,15 +11,15 @@ vendored `fm-*` script kept byte-comparable to upstream on purpose.
 `disposition` says what happens to it: `keep`, `migrate → src/…` where the
 Python runtime already has the module, `retire` for orphans, `provenance`.
 
-bin[761]{file,does,kind,verdict,disposition,callers,lines}:
+bin[762]{file,does,kind,verdict,disposition,callers,lines}:
   "15-commits-leave-by-pull-request.md","15 — Every commit leaves by a pull request, or it lands in main","data","wired","keep",0,35
   "16-a-review-is-a-file.md","16 — A review is a file in the repository","data","wired","keep",0,32
   "17-one-agent-one-worktree.md","17 — One agent, one worktree","data","wired","keep",0,36
-  "README.md","`bin/` — every file, what it does, and whether it is alive","data","tested","keep",36,-
-  "README.md","Gróa — the updater, one per install","data","tested","keep",36,-
-  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",36,-
-  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",36,-
-  "README.md","Gná — the one mail desk (production)","data","tested","keep",36,-
+  "README.md","`bin/` — every file, what it does, and whether it is alive","data","tested","keep",37,-
+  "README.md","Gróa — the updater, one per install","data","tested","keep",37,-
+  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",37,-
+  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",37,-
+  "README.md","Gná — the one mail desk (production)","data","tested","keep",37,-
   "SKILL.md","---","data","tested","keep",23,19
   "SKILL.md","---","data","tested","keep",23,19
   "SKILL.md","---","data","tested","keep",23,18
@@ -556,6 +556,7 @@ bin[761]{file,does,kind,verdict,disposition,callers,lines}:
   "room-squad.sh","bin/assistant/room-squad.sh -> systems/skirnir/services/room-squad.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
   "room-wall-test.sh","bin/assistant/room-wall-test.sh -> systems/skirnir/services/room-wall-test.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and…","tool","wired","keep",1,16
   "room.sh","bin/assistant/room.sh -> systems/skirnir/services/room.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",5,16
+  "rules-compliance-guard.sh","rules-compliance-guard.sh — a push proves the house's own rules were followed.","tool","wired","keep",1,104
   "rules-number-guard.sh","rules-number-guard.sh — the house law is NUMBERED, so no two rules may share a number,","tool","tested","keep",1,83
   "rules.py","'''rules.py — the judgement, deterministic and first (plan 98 §4.2).","tool","wired","keep",1,102
   "runes-append.sh","runes-append.sh — the append-only Runes ledger, a THIN SHIM.","tool","tested","keep",26,117
@@ -774,6 +775,6 @@ bin[761]{file,does,kind,verdict,disposition,callers,lines}:
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
   "zoom_ingest.py","bin/time/snotra/zoom_ingest.py -> systems/snotra/services/cron/zoom_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
 
-**Tally.** verdict: wired=507, tested=254
+**Tally.** verdict: wired=508, tested=254
 
-**Tally.** disposition: keep=746, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/backend.py=2, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/worktree.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
+**Tally.** disposition: keep=747, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/backend.py=2, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/worktree.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
