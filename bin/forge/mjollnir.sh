@@ -6,11 +6,13 @@
 # Usage:
 #   mjollnir.sh run --repo <dir> --issue <n> [--mode direct-PR|no-mistakes|local-only]
 #                  [--harness <h>] [--isolation auto|on|off] [--no-spawn]
+#   mjollnir.sh run --project <id> --issue <n>   (the repo resolved from the registry)
+#   mjollnir.sh intake [--repo <id>]... [--ttl <s>] [--limit <n>] [--cache-only] [--json]
 #   mjollnir.sh status
 #   mjollnir.sh --version
 set -u
 
-VERSION="1.0.0"
+VERSION="1.1.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
   [ "$PWD" = / ] && break; cd ..; done; pwd)"
@@ -29,20 +31,41 @@ hoard_settings_dir YMIR_SETTINGS_DIR
 hoard_local_env YMIR_ENV_FILE
 hoard_state_dir YMIR_STATE_DIR
 hoard_data_dir YMIR_DATA_DIR
+HOME_DIR=""
+declare -f ymir_home_root >/dev/null 2>&1 && ymir_home_root HOME_DIR 2>/dev/null
+[ -n "$HOME_DIR" ] || HOME_DIR="${YMIR_HOME:-}"
 
 # The roots that live OUTSIDE the code tree: this machine's records and the
 # runtime state belong to the home the operator chose at installation, never in
 # the tree — a packaged install replaces its tree on upgrade (Rule 04).
 ENV_FILE="${BROKK_ENV_FILE:-$YMIR_ENV_FILE}"
 
-usage() { sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; }
 CMD="${1-}"; shift || true
 case "$CMD" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help|"") usage; exit 0 ;;
 esac
 
-REPO=""; ISSUE=""; MODE=direct-PR; HARNESS=""; ISO=auto; NOSPAWN=0; TITLE=""; BODY=""
+# intake — the hammer's EYE, before its blow (plan 207 P1).
+# WHY: measured 2026-11-06, the only issue reader in the whole tree was line 79 of this
+# script — one issue, one repo, already named by whoever spawned it. The registry held 78
+# projects and nothing read them, so "add the user's repos" could not start. `intake` reads
+# every registered repo once (issues, PRs, base health, alerts), caches it under the home,
+# and reports a source it could not read WITH ITS REASON — never a zero that means "I did
+# not look". It writes nothing to GitHub, and it never touches a working tree.
+if [ "$CMD" = intake ]; then
+  [ -x "$SCRIPT_DIR/intake.py" ] || [ -f "$SCRIPT_DIR/intake.py" ] || {
+    printf 'error: the intake engine is missing\nhelp: bin/forge/intake.py (plan 207 P1)\n' >&2; exit 1; }
+  command -v python3 >/dev/null 2>&1 || { printf 'error: python3 is required\n' >&2; exit 1; }
+  HOME_DIR=""
+  declare -f ymir_home_root >/dev/null 2>&1 && ymir_home_root HOME_DIR 2>/dev/null
+  [ -n "$HOME_DIR" ] || HOME_DIR="${YMIR_HOME:-}"
+  [ -n "$HOME_DIR" ] || { printf 'error: the home is unresolved\nhelp: bin/vault/hoard-lib.sh names it\n' >&2; exit 1; }
+  exec python3 "$SCRIPT_DIR/intake.py" --home "$HOME_DIR" "$@"
+fi
+
+REPO=""; ISSUE=""; MODE=direct-PR; HARNESS=""; ISO=auto; NOSPAWN=0; TITLE=""; BODY=""; PROJECT=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --repo) REPO=${2-}; shift 2 ;;
@@ -53,6 +76,7 @@ while [ $# -gt 0 ]; do
     --no-spawn) NOSPAWN=1; shift ;;
     --title) TITLE=${2-}; shift 2 ;;
     --body) BODY=${2-}; shift 2 ;;
+    --project) PROJECT=${2-}; shift 2 ;;
     *) shift ;;
   esac
 done
@@ -63,7 +87,7 @@ if [ "$CMD" = status ]; then
   printf '  "pending","%s"\n' "$(find "$YMIR_DATA_DIR" -maxdepth 2 -name 'brief.md' -path '*issue-*' 2>/dev/null | wc -l | tr -d ' ')"
   exit 0
 fi
-[ "$CMD" = run ] || { printf 'error: unknown command %s\nhelp: bin/forge/mjollnir.sh [run|status|--version]\n' "$CMD" >&2; exit 2; }
+[ "$CMD" = run ] || { printf 'error: unknown command %s\nhelp: bin/forge/mjollnir.sh [run|intake|status|--version]\n' "$CMD" >&2; exit 2; }
 [ -n "$ISSUE" ] || { printf 'error: run needs --issue <n>\n' >&2; exit 2; }
 
 # The `no-mistakes` posture runs through the OSS clean-PR gate engine.
@@ -71,7 +95,49 @@ if [ "$MODE" = "no-mistakes" ]; then
   command -v no-mistakes >/dev/null 2>&1 || { printf 'error: no-mistakes engine not installed\nhelp: bin/engine/ymir-install.sh (github.com/kunchenguid/no-mistakes)\n' >&2; exit 1; }
   [ -f "$ROOT/.no-mistakes.yaml" ] || printf 'warn: .no-mistakes.yaml absent — the gate uses defaults\n' >&2
 fi
-[ -n "$REPO" ] || { printf 'error: run needs --repo <dir>\n' >&2; exit 2; }
+# --project <id> — the registry names the tree, so a far repo is never remembered by path
+# (plan 207 P0/P5). An id with no clone is REFUSED with the road to take, never guessed:
+# this is the honest half of "the user can add all his repos".
+if [ -n "$PROJECT" ] && [ -z "$REPO" ]; then
+  command -v python3 >/dev/null 2>&1 || { printf 'error: python3 is required to resolve a project id\n' >&2; exit 1; }
+  _why=0
+  REPO=$(python3 - "$PROJECT" "$HOME_DIR" "$HOME" "$ROOT" <<'PY'
+import os, sys
+pid, ymir_home, home, root = sys.argv[1:5]
+try:
+    import yaml
+except ImportError:
+    sys.exit(1)
+reg = os.path.join(ymir_home, "hodd", "identity", "projects.yaml")
+try:
+    rows = (yaml.safe_load(open(reg, encoding="utf-8")) or {}).get("projects") or []
+except OSError:
+    sys.exit(1)
+row = next((r for r in rows if isinstance(r, dict) and r.get("id") == pid), None)
+if not row:
+    sys.exit(2)
+path = str(row.get("repo") or "").strip()
+if os.path.isabs(path):
+    cands = [path]
+else:
+    cands = [os.path.normpath(os.path.join(base, path or ".")) for base in (root, home, ymir_home)]
+for cand in cands:
+    if os.path.isdir(cand):
+        print(cand)
+        sys.exit(0)
+sys.exit(3)
+PY
+) || _why=$?
+  if [ -z "$REPO" ]; then
+    case "$_why" in
+      2) printf 'error: no project named %s in the registry\nhelp: bin/agents/project-git.sh list\n' "$PROJECT" >&2 ;;
+      3) printf 'error: %s names no local clone\nhelp: it can be READ (bin/forge/mjollnir.sh intake --repo %s) but not fixed until it is cloned\n' "$PROJECT" "$PROJECT" >&2 ;;
+      *) printf 'error: could not resolve --project %s (the registry is unreadable)\nhelp: bin/agents/project-git.sh doctor\n' "$PROJECT" >&2 ;;
+    esac
+    exit 1
+  fi
+fi
+[ -n "$REPO" ] || { printf 'error: run needs --repo <dir> or --project <id>\n' >&2; exit 2; }
 [ -d "$REPO" ] || { printf 'error: repo not found: %s\n' "$REPO" >&2; exit 1; }
 
 # 1. Read the issue (GitHub) unless title/body were supplied.

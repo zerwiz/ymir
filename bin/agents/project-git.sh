@@ -10,10 +10,11 @@
 # Usage:
 #   project-git.sh <project-id> [--field host|owner|repo|remote|default_branch|auth|machine|realm]
 #   project-git.sh list
+#   project-git.sh doctor [--probe] [--strict] [--json]
 #   project-git.sh --version
 set -u
 
-VERSION="1.3.0"
+VERSION="1.4.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
   [ "$PWD" = / ] && break; cd ..; done; pwd)"
@@ -21,8 +22,148 @@ ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; 
 . "$SCRIPT_DIR/../skuld/registry-lib.sh"
 REG="$(registry_projects_file)"
 
-case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
+case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 ID="${1-}"; shift || true
+
+# doctor — the registry's own truth, before anything claims a repo is workable.
+# WHY (plan 207 P0): measured 2026-11-06 — of 78 registered projects, 56 could not name a
+# remote and 67 had no local clone, so "add the user's repos" was unbuildable until the
+# registry could say which of its own rows are real. This is a DIAGNOSIS: it reads the
+# registry and the disk, writes nothing, and is offline by default (a probe is asked for).
+if [ "$ID" = doctor ]; then
+  PROBE=0; STRICT=0; JSON=0
+  while [ $# -gt 0 ]; do case "$1" in
+    --probe) PROBE=1; shift ;; --strict) STRICT=1; shift ;; --json) JSON=1; shift ;;
+    -*) printf 'error: unknown flag %s\nhelp: project-git.sh doctor [--probe] [--strict] [--json]\n' "$1" >&2; exit 2 ;;
+    *) shift ;;
+  esac; done
+  HOME_DIR=""
+  if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+    for _c in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$SCRIPT_DIR/../../vault/hoard-lib.sh"; do
+      [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
+    done; unset _c
+  fi
+  declare -f ymir_home_root >/dev/null 2>&1 && ymir_home_root HOME_DIR 2>/dev/null
+  # NEVER A GUESSED HOME (Rule 07, and defaults-guard says so). No resolver answer means the
+  # clone lookup simply has no home to look under — the rows still print, and each one says so.
+  [ -n "$HOME_DIR" ] || { printf 'note: the home is unresolved — clone lookup covers the code tree only\nhelp: bin/vault/hoard-lib.sh names the home\n' >&2; HOME_DIR=""; }
+  [ -f "$REG" ] || { printf 'error: registry not found: %s\nhelp: bin/engine/ymir-install.sh\n' "$REG" >&2; exit 1; }
+  python3 - "$REG" "$ROOT" "$HOME" "$HOME_DIR" "$PROBE" "$STRICT" "$JSON" <<'PY'
+import json, os, subprocess, sys
+
+reg, root, home, ymir_home, probe, strict, as_json = sys.argv[1:8]
+probe, strict, as_json = probe == "1", strict == "1", as_json == "1"
+try:
+    import yaml
+except ImportError:
+    sys.stderr.write("project-git doctor: pyyaml missing — the registry is YAML\n")
+    raise SystemExit(1)
+
+rows = [r for r in ((yaml.safe_load(open(reg, encoding="utf-8")) or {}).get("projects") or [])
+        if isinstance(r, dict) and r.get("id")]
+
+
+def git_block(row):
+    g = row.get("git") or {}
+    owner = str(g.get("owner") or "").strip()
+    repo = str(g.get("repo") or "").strip()
+    missing = [k for k, v in (("owner", owner), ("repo", repo)) if not v or v == "?"]
+    if not owner and not repo:
+        return "no-git", missing, ""
+    if missing:
+        return "partial", missing, ""
+    return "ok", [], f"{owner}/{repo}"
+
+
+def find_clone(row):
+    path = str(row.get("repo") or "").strip()
+    if not path:
+        return "-"
+    if os.path.isabs(path):
+        return path if os.path.isdir(path) else "-"
+    for base in [b for b in (root, home, ymir_home) if b]:
+        cand = os.path.normpath(os.path.join(base, path))
+        if os.path.isdir(cand):
+            return cand
+    return "-"
+
+
+def probe_repo(name):
+    try:
+        out = subprocess.run(
+            ["gh", "repo", "view", name, "--json", "isArchived,hasIssuesEnabled,defaultBranchRef"],
+            capture_output=True, text=True, timeout=25, check=False)
+    except FileNotFoundError:
+        return "no-gh", "unknown"
+    except subprocess.TimeoutExpired:
+        return "timeout", "unknown"
+    if out.returncode != 0:
+        return "missing", "unknown"
+    try:
+        meta = json.loads(out.stdout or "{}")
+    except json.JSONDecodeError:
+        return "unreadable", "unknown"
+    if meta.get("isArchived"):
+        return "archived", "on" if meta.get("hasIssuesEnabled") else "off"
+    return "reachable", "on" if meta.get("hasIssuesEnabled") else "off"
+
+
+out, findings, counts = [], [], {"rows": len(rows), "git-ok": 0, "git-missing": 0,
+                                "cloned": 0, "no-clone": 0, "ready": 0, "far": 0}
+for row in rows:
+    state, missing, name = git_block(row)
+    clone = find_clone(row)
+    remote, issues = "-", "-"
+    if name:
+        counts["git-ok"] += 1
+    else:
+        counts["git-missing"] += 1
+    if clone != "-":
+        counts["cloned"] += 1
+    elif name:
+        counts["no-clone"] += 1
+        findings.append({"id": row["id"], "why": "names a remote but has no local clone — readable, not workable"})
+    if state != "ok":
+        findings.append({"id": row["id"], "why": "git{} is " + ("absent" if state == "no-git" else "partial (" + ", ".join(missing) + " unset)")})
+    if name and probe:
+        remote, issues = probe_repo(name)
+    if name and remote == "-":
+        verdict = "ready" if clone != "-" else "far"
+    elif name:
+        verdict = {"reachable": "ready" if clone != "-" else "far",
+                   "archived": "archived"}.get(remote, "unreachable")
+        if verdict == "unreachable":
+            findings.append({"id": row["id"], "why": f"{name} is not reachable — {remote}"})
+    else:
+        verdict = "no-git"
+    counts[verdict] = counts.get(verdict, 0) + 1
+    out.append({"id": row["id"], "realm": row.get("realm") or row.get("workspace") or "?",
+                "git": state, "clone": clone, "remote": remote, "issues": issues, "verdict": verdict})
+
+summary = {"rows": counts["rows"], "git-ok": counts["git-ok"], "git-missing": counts["git-missing"],
+           "cloned": counts["cloned"], "no-clone": counts["no-clone"], "probe": "on" if probe else "off"}
+if as_json:
+    print(json.dumps({"rows": out, "findings": findings, "summary": summary}, indent=1))
+else:
+    print(f"registry[{len(out)}]{{id,realm,git,clone,remote,issues,verdict}}:")
+    for r in out:
+        print('  "%s","%s","%s","%s","%s","%s","%s"' % (
+            r["id"], r["realm"], r["git"], r["clone"], r["remote"], r["issues"], r["verdict"]))
+    if findings:
+        print(f"findings[{len(findings)}]{{id,why}}:")
+        for f in findings:
+            print('  "%s","%s"' % (f["id"], f["why"].replace('"', "'")))
+    print(f"summary[{len(summary)}]{{key,value}}:")
+    for k, v in summary.items():
+        print('  "%s","%s"' % (k, v))
+
+if strict and any(r["verdict"] in ("no-git", "unreachable") for r in out):
+    sys.stderr.write("project-git doctor: the registry cannot name or reach a remote for at least one row "
+                     "— the findings above name each one\n")
+    raise SystemExit(1)
+PY
+  exit $?
+fi
 FIELD=""
 while [ $# -gt 0 ]; do case "$1" in --field) FIELD=${2-}; shift 2 ;; *) shift ;; esac; done
 [ -f "$REG" ] || { printf 'error: registry not found: %s\nhelp: run bin/engine/ymir-install.sh\n' "$REG" >&2; exit 1; }
