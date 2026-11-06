@@ -10,11 +10,11 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 ## 1 · The doors, by the job they serve
 
 capabilities[5]{surface,count}:
-  "shell doors (bin/*.sh)",733
+  "shell doors (bin/*.sh)",734
   "runtime modules (src/ymir_runtime/*.py)",56
   "skills (.agents/skills/*)",30
   "Pi extension tools",0
-  "generated","2026-11-05"
+  "generated","2026-11-06"
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
@@ -338,6 +338,7 @@ capabilities[5]{surface,count}:
 | npm-publish.sh | npm-publish.sh — publish through the HOARD's npm token, every single t | tested+named | keep (a human or a cron row must run it) |
 | packaged-gate.sh | packaged-gate.sh — prove the PUBLISHED artifact, not the tree. | tested | keep (a human or a cron row must run it) |
 | pr-pretest.sh | pr-pretest.sh — the PR-time gate: a REAL npm installation, locally, be | tested+named | keep (a human or a cron row must run it) |
+| review-rules.sh | review-rules.sh — the rules floor: load what a reviewer MUST know, or  | tested | keep (a human or a cron row must run it) |
 | skillopt-setup.sh | skillopt-setup.sh — one-time SkillOpt installation for Ymir. | tested | keep (a human or a cron row must run it) |
 | utgard.sh | utgard.sh — the sealed execution barrier (Utgard, the realm outside th | tested+named | keep (a human or a cron row must run it) |
 | yggdrasil.sh | yggdrasil.sh — the worktree manager (Yggdrasil, the world-tree). | tested+named | keep (a human or a cron row must run it) |
