@@ -10,11 +10,11 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 ## 1 · The doors, by the job they serve
 
 capabilities[5]{surface,count}:
-  "shell doors (bin/*.sh)",733
+  "shell doors (bin/*.sh)",742
   "runtime modules (src/ymir_runtime/*.py)",56
   "skills (.agents/skills/*)",30
   "Pi extension tools",0
-  "generated","2026-11-05"
+  "generated","2026-11-06"
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
@@ -30,6 +30,7 @@ capabilities[5]{surface,count}:
 | eindri-acclaim-silent.sh | eindri-acclaim-silent.sh — action half of the Eindri silence bridge. | tested+named | keep (a human or a cron row must run it) |
 | eindri-acclaim.sh | eindri-acclaim.sh — action half of the Eindri→Brokk wake bridge. | tested+named | keep (a human or a cron row must run it) |
 | eindri-arm.sh | eindri-arm.sh — the Eindri's own arm (plan 42, the automation law). | tested | keep (a human or a cron row must run it) |
+| eindri-checkpoint.sh | eindri-checkpoint.sh — a herdr worker's durable checkpoint, so a dead  | tested | keep (a human or a cron row must run it) |
 | eindri-control.sh | eindri-control.sh — the CONTROL plane: allowlisted lifecycle verbs for | tested+named | keep (a human or a cron row must run it) |
 | eindri-dispatch.sh | eindri-dispatch.sh — the errand loop: ONE command per errand (plan 42 | tested | keep (a human or a cron row must run it) |
 | eindri-handoff.sh | eindri-handoff.sh — the handoff failsafe. An Eindri's work ALWAYS reac | tested+named | keep (a human or a cron row must run it) |
@@ -281,6 +282,7 @@ capabilities[5]{surface,count}:
 | display-lib.sh | display-lib.sh — the ONE place that knows the displays, and how to tal | tested | keep (a human or a cron row must run it) |
 | editor-place.sh | editor-place.sh — the editor is UNMANAGED by default: it opens on the | tested+named | keep (a human or a cron row must run it) |
 | electron-lib.sh | electron-lib.sh — is a desktop shell's runtime actually there? | tested+named | keep (a human or a cron row must run it) |
+| factory-new.sh | factory-new.sh — copy the empty factory, give it a name, and say what  | tested | keep (a human or a cron row must run it) |
 | hlidskjalf-agents.sh | hlidskjalf-agents.sh — WHO IS ACTUALLY STANDING, and what they are doi | tested+named | keep (a human or a cron row must run it) |
 | hlidskjalf-usage.sh | hlidskjalf-usage.sh — what the HARNESSES spent, not just the smithy. | tested | keep (a human or a cron row must run it) |
 | odrerir-mcp-smoke.sh | odrerir-mcp-smoke.sh — the boards' REAL smoke: tickets and plans throu | tested+named | keep (a human or a cron row must run it) |
@@ -489,6 +491,7 @@ capabilities[5]{surface,count}:
 | syn-watch.sh | syn-watch.sh — Sýn as a SERVICE: one supervision watcher per home, se | tested+named | keep (a human or a cron row must run it) |
 | tui-frame-check.sh | tui-frame-check.sh — prove that what the TUI writes to the terminal fi | tested | keep (a human or a cron row must run it) |
 | place.sh | place.sh — team PLACES: a wall, not a permission (Rule 18; plan 77 Par | tested+named | keep (a human or a cron row must run it) |
+| audit-apply.sh | audit-apply.sh — turn an audit into work, in one door. | tested | keep (a human or a cron row must run it) |
 | daily-log.sh | daily-log.sh — the day's work, recorded where the contract says it liv | tested+named | keep (a human or a cron row must run it) |
 | developers.sh | developers.sh — who can write to a repository, and who actually has. | tested | keep (a human or a cron row must run it) |
 | grade.sh | grade.sh — Dellingr: how fresh is a document? A Norse grade from measu | tested+named | keep (a human or a cron row must run it) |
@@ -503,6 +506,7 @@ capabilities[5]{surface,count}:
 | mimir-reflect.sh | mimir-reflect — smelt the well's episodes into facts, through the LLAM | tested | keep (a human or a cron row must run it) |
 | mimir.sh | mimir.sh — the well (Mimirsbrunn). Drink before you act, water it afte | tested+named | keep (a human or a cron row must run it) |
 | note.sh | note.sh — append a DATED section to an existing document in the home ( | tested+named | keep (a human or a cron row must run it) |
+| open-work.sh | open-work.sh — the open work, rendered for a HUMAN, from the record th | tested | keep (a human or a cron row must run it) |
 | plan.sh | plan.sh — the plan ledger: create the NEXT numbered plan and its index | tested+named | keep (a human or a cron row must run it) |
 | regenerate-on-merge.sh | regenerate-on-merge.sh — the merge driver for WOVEN documents (Þætti | tested | keep (a human or a cron row must run it) |
 | runes-append.sh | runes-append.sh — the append-only Runes ledger, a THIN SHIM. | tested+named | keep (a human or a cron row must run it) |
@@ -519,6 +523,8 @@ capabilities[5]{surface,count}:
 | ymir-state.sh | ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runti | tested+named | keep (a human or a cron row must run it) |
 | gladsheim-ensure.sh | gladsheim-ensure.sh — seat the fleet room, whatever shape this machine | tested | keep (a human or a cron row must run it) |
 | gladsheim.sh | gladsheim.sh — the door to Gladsheim, the fleet room. | tested | keep (a human or a cron row must run it) |
+| context.sh | context.sh — what the agent's context ACTUALLY holds, right now. | tested+named | keep (a human or a cron row must run it) |
+| core-four.sh | core-four.sh — the four dials that decide an agent's outcome, in ONE r | tested+named | keep (a human or a cron row must run it) |
 | harness-contract-install.sh | harness-contract-install.sh — every harness reads ONE contract, and an | tested | keep (a human or a cron row must run it) |
 | harness-extensions-install.sh | harness-extensions-install.sh — every harness gets the house's extensi | tested+named | keep (a human or a cron row must run it) |
 | herdr-ensure.sh | herdr-ensure.sh — Þjazi: guarantee the terminal backend Ymir needs. | tested+named | keep (a human or a cron row must run it) |
@@ -526,11 +532,13 @@ capabilities[5]{surface,count}:
 | hermes-seat.sh | hermes-seat.sh — seat Ymir's tools into Hermes, the same packets the o | tested+named | keep (a human or a cron row must run it) |
 | hermes-session-hook.sh | hermes-session-hook.sh — Hermes' session side of the Gná arm: the Sá | tested+named | keep (a human or a cron row must run it) |
 | hermes-telegram.sh | hermes-telegram.sh — seat THIS machine's Telegram bot into the Hermes  | tested+named | keep (a human or a cron row must run it) |
+| pending.sh | pending.sh — everything that is waiting on the operator, in ONE list. | tested+named | keep (a human or a cron row must run it) |
 | pi-launcher.sh | pi-launcher.sh — the ONE launcher generator for a pi seat. | tested+named | keep (a human or a cron row must run it) |
 | seat-prove.sh | seat-prove.sh — a spawn is not a seat until the agent list shows it. | tested+named | keep (a human or a cron row must run it) |
 | seat-surface.sh | seat-surface.sh — render THIS seat's own name into the AGENTS.md every | tested+named | keep (a human or a cron row must run it) |
 | seat-wire.sh | seat-wire.sh — one seat speaks into another seat's live pane, and says | tested | keep (a human or a cron row must run it) |
 | seats.sh | seats.sh — where the work actually is: panes in either backend, and th | tested+named | keep (a human or a cron row must run it) |
+| test_core_four_pending_factory.sh | The ward for the three near-loop doors: core four, pending, and the fact | tested | keep (a human or a cron row must run it) |
 | valknut-load.sh | valknut-load.sh — Valknut, the knot that binds the repo distro into ea | tested+named | keep (a human or a cron row must run it) |
 | manifest.sh | manifest.sh — a skill declares itself; the index is DERIVED from the d | tested | keep (a human or a cron row must run it) |
 | share-build.sh | share-build.sh — the built copy that may leave. Never the shelf itself | tested | keep (a human or a cron row must run it) |
