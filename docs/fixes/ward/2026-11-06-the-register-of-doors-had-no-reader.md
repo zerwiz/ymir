@@ -65,3 +65,9 @@ their road on purpose.
 
 - The fourteen unroaded rows, mended in the register (private, no PR).
 - A `--measure` run **on the heart**, where those ports actually bind, is Vörðr's first report after this lands.
+
+## CHANGE LOG
+
+- **2026-11-06** — Written with the mend. The register of doors (`$YMIR_HOME/config/services.yaml`) was read by
+  nothing in the tree, so Rule 24's first sentence stood as prose while a copied port took the mail desk down.
+  `bin/ward/services-register.sh` is the reader; Vörðr carries it as the seventh check.
