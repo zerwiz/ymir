@@ -14,7 +14,8 @@
 # Usage:
 #   utgard-box.sh build [--tag T] [--pull]          # build the box image
 #   utgard-box.sh new <name> [--repo P] [--ttl 4h] [--seal none|door|open]
-#                            [--port 3000] [--lane L] [--model M] [--image T]
+#                            [--port 3000] [--factory-port 4601] [--budget N]
+#                            [--lane L] [--model M] [--image T] [--label k=v]
 #   utgard-box.sh list                               # the estate, with time left
 #   utgard-box.sh status <name>
 #   utgard-box.sh enter <name> [-- <command…>]       # a shell, or one command
@@ -24,6 +25,11 @@
 #   utgard-box.sh stop <name> | start <name>
 #   utgard-box.sh rm <name> [--keep-volume]
 #   utgard-box.sh gc [--dry-run]                     # reclaim past-TTL boxes
+#   utgard-box.sh estate                             # every live box, both doors, who answers
+#   utgard-box.sh enter --all                        # the whole estate, one pane each
+#   utgard-box.sh factory <name>                     # seat Smidja inside the box
+#   utgard-box.sh run <name> -- <command…>           # one command, inside
+#   utgard-box.sh revoke <name>                      # take the credential back now
 #   utgard-box.sh probe [--repo P]                   # prove the three laws
 #   utgard-box.sh --version
 #
@@ -64,6 +70,12 @@ BOX_RAIL_HOST="${UTGARD_BOX_RAIL_HOST:-rail:8080}"
 BOX_RAIL_URL="${UTGARD_BOX_RAIL_URL:-$BOX_RAIL_SCHEME://$BOX_RAIL_HOST/v1}"
 # The box's only proxy: the door, by the name the box knows it by.
 BOX_PROXY_URL="$BOX_RAIL_SCHEME://door:$DOOR_PORT"
+# A box has TWO doors (§11.1): the application it made, and the factory that made
+# it. The second one is the observability system — one global visualizer cannot
+# watch five boxes, so each box fronts its own.
+FACTORY_PORT="${UTGARD_BOX_FACTORY_PORT:-4601}"
+FACTORY_DIR="${UTGARD_BOX_FACTORY_DIR:-/box/factory}"
+BUDGET_DEFAULT="${UTGARD_BOX_BUDGET:-0}"
 
 usage() { sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//'; }
 
@@ -143,9 +155,14 @@ resolve_model() {
 # One port, checked rather than counted: a reclaimed box must not take the next
 # box's door with it.
 next_free_port() {
-  local p=$URL_PORT_BASE limit=$(( URL_PORT_BASE + 200 ))
+  local p="${1:-$URL_PORT_BASE}" limit=$(( URL_PORT_BASE + 200 ))
+  local claimed
+  claimed="$("$ENGINE" ps -a --filter "label=ymir.utgard.role=box" \
+    --format '{{.Label "ymir.utgard.hostport"}} {{.Label "ymir.utgard.factoryhostport"}}' 2>/dev/null \
+    | tr ' ' '\n' | sort -u | grep -E '^[0-9]+$' || true)"
   while [ "$p" -lt "$limit" ]; do
-    if ! ss -ltn 2>/dev/null | awk '{print $4}' | grep -qE "(^|:)$p\$"; then
+    if ! printf '%s\n' "$claimed" | grep -qx "$p" \
+       && ! ss -ltn 2>/dev/null | awk '{print $4}' | grep -qE "(^|:)$p\$"; then
       printf '%s' "$p"
       return 0
     fi
@@ -234,6 +251,17 @@ start_door() {
   ensure_door_net
   "$ENGINE" rm -f "$door" >/dev/null 2>&1 || true
 
+  local budget; budget="$(label "$(cname "$name")" ymir.utgard.budget 2>/dev/null)"
+  case "$budget" in ''|-|null) budget=0 ;; esac
+  local state_vol; state_vol="$(dname "$name")-state"
+  "$ENGINE" volume inspect "$state_vol" >/dev/null 2>&1 \
+    || "$ENGINE" volume create "$state_vol" >/dev/null 2>&1 || true
+  # A volume is root-owned by default and the door runs unprivileged, so the spend
+  # is handed over before the door starts. Done EVERY time, not on creation only: a
+  # volume left root-owned by an older run would make every charge fail silently,
+  # and a budget that cannot record what it served is not a budget.
+  "$ENGINE" run --rm --user 0 -v "$state_vol:/door-state" --entrypoint chown \
+    "$TAG" -R agent:agent /door-state >/dev/null 2>&1 || true
   local -a run_args=(
     run -d --name "$door"
     --label "ymir.utgard.box=$name"
@@ -241,8 +269,10 @@ start_door() {
     --network "$net" --network-alias door
     --add-host "host.docker.internal:$(door_gateway)"
     -v "$DOOR_PY:/door.py:ro"
+    -v "$(dname "$name")-state:/door-state"
     -e "UTGARD_DOOR_MAP=$map"
     -e "UTGARD_DOOR_PORT=$DOOR_PORT"
+    -e "UTGARD_DOOR_BUDGET=$budget"
   )
   [ -n "$key" ] && run_args+=(-e "UTGARD_DOOR_KEY=$key")
 
@@ -281,6 +311,8 @@ help: $ENGINE build -f $SANDBOX/Dockerfile.box -t $TAG $SANDBOX"
 
 cmd_new() {
   local name="" repo="" ttl_raw="4h" seal="door" port="3000" lane="" model="" model_req="" image="$TAG"
+  local factory_port="$FACTORY_PORT" budget="$BUDGET_DEFAULT"
+  local -a extra_labels=()
   while [ $# -gt 0 ]; do case "$1" in
     --repo) repo=${2-}; shift 2 ;;
     --ttl) ttl_raw=${2-}; shift 2 ;;
@@ -289,6 +321,9 @@ cmd_new() {
     --lane) lane=${2-}; shift 2 ;;
     --model) model_req=${2-}; shift 2 ;;
     --image) image=${2-}; shift 2 ;;
+    --factory-port) factory_port=${2-}; shift 2 ;;
+    --budget) budget=${2-}; shift 2 ;;
+    --label) extra_labels+=(--label "${2-}"); shift 2 ;;
     -*) die "new: unknown flag $1" ;;
     *) name=$1; shift ;;
   esac; done
@@ -330,12 +365,24 @@ help: utgard box new $name --model <alias>   (see bin/model/catalog.sh)"
   esac
 
   local -a port_args=()
-  local hostport=""
-  if [ "$seal" != "none" ] && [ -n "$port" ] && [ "$port" != "0" ]; then
-    hostport="$(next_free_port)" || die "new: no free loopback port from $URL_PORT_BASE"
-    port_args=(-p "127.0.0.1:${hostport}:${port}")
+  local hostport="" factory_hostport=""
+  if [ "$seal" != "none" ]; then
+    if [ -n "$port" ] && [ "$port" != "0" ]; then
+      hostport="$(next_free_port)" || die "new: no free loopback port from $URL_PORT_BASE"
+      port_args+=(-p "127.0.0.1:${hostport}:${port}")
+    else
+      port=""
+    fi
+    if [ -n "$factory_port" ] && [ "$factory_port" != "0" ]; then
+      local floor=$(( URL_PORT_BASE ))
+      [ -n "$hostport" ] && floor=$(( hostport + 1 ))
+      factory_hostport="$(next_free_port "$floor")" || die "new: no free loopback port for the factory"
+      port_args+=(-p "127.0.0.1:${factory_hostport}:${factory_port}")
+    else
+      factory_port=""
+    fi
   else
-    port=""
+    port=""; factory_port=""
   fi
 
   local -a env_args=(
@@ -376,6 +423,10 @@ help: utgard box new $name --model <alias>   (see bin/model/catalog.sh)"
       --label "ymir.utgard.lane=${lane:--}" \
       --label "ymir.utgard.hostport=${hostport:--}" \
       --label "ymir.utgard.boxport=${port:--}" \
+      --label "ymir.utgard.factoryport=${factory_port:--}" \
+      --label "ymir.utgard.factoryhostport=${factory_hostport:--}" \
+      --label "ymir.utgard.budget=${budget:-0}" \
+      "${extra_labels[@]}" \
       -v "$v:/box" \
       --security-opt no-new-privileges \
       "$image" >/dev/null; then
@@ -429,26 +480,43 @@ seat_pi() {
 }
 
 url_of() {
-  local c hostport boxport
+  local c hostport
   c="$(cname "$1")"
   exists "$c" || return 0
   hostport="$(label "$c" ymir.utgard.hostport)"
-  boxport="$(label "$c" ymir.utgard.boxport)"
   case "$hostport" in ''|-|null) return 0 ;; esac
   printf 'http://127.0.0.1:%s' "$hostport"
+}
+
+factory_url_of() {
+  local c hostport
+  c="$(cname "$1")"
+  exists "$c" || return 0
+  hostport="$(label "$c" ymir.utgard.factoryhostport)"
+  case "$hostport" in ''|-|null) return 0 ;; esac
+  printf 'http://127.0.0.1:%s' "$hostport"
+}
+
+# What the door has served, read from the door's own state rather than a table.
+spend_of() {
+  local name="$1" out
+  out="$("$ENGINE" exec "$(dname "$name")" cat /door-state/spend.json 2>/dev/null)"
+  case "$out" in ''|null) printf '0' ;; *)
+    printf '%s' "$out" | sed -n 's/.*"served": *\([0-9]*\).*/\1/p' | head -1 ;;
+  esac
 }
 
 cmd_list() {
   local rows count
   rows="$("$ENGINE" ps -a --filter "label=ymir.utgard.role=box" \
-    --format '{{.Names}}\t{{.Status}}\t{{.Label "ymir.utgard.deadline"}}\t{{.Label "ymir.utgard.hostport"}}\t{{.Label "ymir.utgard.lane"}}' 2>/dev/null)"
+    --format '{{.Names}}\t{{.Status}}\t{{.Label "ymir.utgard.deadline"}}\t{{.Label "ymir.utgard.hostport"}}\t{{.Label "ymir.utgard.lane"}}\t{{.Label "ymir.utgard.budget"}}' 2>/dev/null)"
   count=0
   [ -n "$rows" ] && count=$(printf '%s\n' "$rows" | grep -c . || true)
-  printf 'boxes[%s]{name,seal,state,left,url,lane}:\n' "$count"
+  printf 'boxes[%s]{name,seal,state,left,app,lane,spend}:\n' "$count"
   [ -z "$rows" ] && return 0
   local t now_ c_name status seal deadline hostport lane left
   now_="$(now)"
-  while IFS=$'\t' read -r c_name status deadline hostport lane _rest; do
+  while IFS=$'\t' read -r c_name status deadline hostport lane budget _rest; do
     [ -n "$c_name" ] || continue
     t="${c_name#${PREFIX}-}"
     seal="$(seal_of "$c_name" "$t")"
@@ -483,15 +551,18 @@ cmd_status() {
   running "$c" && state="running" || state="stopped"
   left=$(( ${deadline:-0} - $(now) ))
   [ "$left" -lt 0 ] && left=0
-  printf 'box[8]{name,state,seal,model,url,left_s,ttl_s,created}:\n'
-  printf '  "%s","%s","%s","%s","%s","%s","%s","%s"\n' \
-    "$name" "$state" "$seal" "$model" "$(url_of "$name")" "$left" "${ttl:-0}" "${created:-0}"
+  local budget; budget="$(label "$c" ymir.utgard.budget)"; case "$budget" in ''|-|null) budget=0 ;; esac
+  printf 'box[9]{name,state,seal,model,app,factory,spend,left_s,ttl_s}:\n'
+  printf '  "%s","%s","%s","%s","%s","%s","%s","%s","%s"\n' \
+    "$name" "$state" "$seal" "$model" "$(url_of "$name")" "$(factory_url_of "$name")" \
+    "$(spend_of "$name")/$budget" "$left" "${ttl:-0}"
   [ "${lane:--}" = "-" ] || printf 'lane: %s\n' "$lane"
   "$ENGINE" exec "$c" bash -lc 'printf "inside: home=%s user=%s cwd=%s\n" "$HOME" "$(id -un)" "$PWD"' 2>/dev/null || true
 }
 
 cmd_enter() {
   local name="${1-}"; shift || true
+  if [ "$name" = "--all" ]; then enter_all; return $?; fi
   [ -n "$name" ] || die "enter: which box?"
   [ "${1-}" = "--" ] && shift
   local c; c="$(cname "$name")"
@@ -509,10 +580,21 @@ help: utgard box start $name"
 cmd_url() {
   local name="${1-}"
   [ -n "$name" ] || die "url: which box?"
-  local u; u="$(url_of "$name")"
-  [ -n "$u" ] || refuse "box $name has no door: its seal is 'none' or it was made without a port
-help: utgard box new $name --port 3000   (the box serves on 3000 inside)"
-  printf '%s\n' "$u"
+  local app factory
+  app="$(url_of "$name")"; factory="$(factory_url_of "$name")"
+  [ -n "$app$factory" ] || refuse "box $name has no door: its seal is 'none' or it was made without ports
+help: utgard box new $name --port 3000 --factory-port $FACTORY_PORT"
+  printf 'box[2]{door,url,answers}:\n'
+  printf '  "app","%s","%s"\n' "${app:--}" "$(answers "$app")"
+  printf '  "factory","%s","%s"\n' "${factory:--}" "$(answers "$factory")"
+}
+
+# A door that does not answer is said so, not assumed open: the second address is
+# the observability system, so it must be measured rather than advertised.
+answers() {
+  local url="${1-}"
+  [ -n "$url" ] || { printf 'no door'; return 0; }
+  if curl -s -o /dev/null -m 3 "$url" 2>/dev/null; then printf 'yes'; else printf 'not yet'; fi
 }
 
 cmd_seal() {
@@ -544,6 +626,97 @@ cmd_seal() {
   [ "$now_seal" = "$seal" ] || printf 'warn: asked for %s, the kernel says %s — restart the box\n' "$seal" "$now_seal" >&2
   [ "$seal" = door ] && { rail_reachable "$(dname "$name")" || rail_road_remedy; }
   return 0
+}
+
+# The estate, entered all at once. The outer orchestrator opens one pane per live
+# box in a single gesture — and when herdr is absent it SAYS so and prints the
+# command each pane would have run, rather than pretending the estate is open.
+enter_all() {
+  local live c t
+  live="$("$ENGINE" ps --filter "label=ymir.utgard.role=box" --format '{{.Names}}' 2>/dev/null)"
+  [ -n "$live" ] || { printf 'estate[1]{live,note}:\n  "0","no box is running — utgard box new <name>"\n'; return 0; }
+  local herdr="$ROOT/bin/seat/herdr-run.sh" ok=no
+  [ -x "$herdr" ] && "$herdr" available 2>/dev/null | grep -q '"yes"' && ok=yes
+  printf 'estate[3]{box,app,entered}:\n'
+  for c in $live; do
+    t="${c#${PREFIX}-}"
+    if [ "$ok" = yes ]; then
+      if "$herdr" run "$t" -- "$ENGINE" exec -it "$c" bash -l >/dev/null 2>&1; then
+        printf '  "%s","%s","pane"\n' "$t" "$(url_of "$t")"
+      else
+        printf '  "%s","%s","pane failed"\n' "$t" "$(url_of "$t")"
+      fi
+    else
+      printf '  "%s","%s","inline: %s exec -it %s bash -l"\n' "$t" "$(url_of "$t")" "$ENGINE" "$c"
+    fi
+  done
+  [ "$ok" = yes ] || printf 'note: herdr is not available here, so the estate is listed, not opened\n'
+}
+
+# --- the factory inside a box (P2) -------------------------------------------
+# Smidja is installed INTO the box as a copy: the factory that runs is the one the
+# box owns, so a run cannot reach back into this tree.
+cmd_factory() {
+  local name="${1-}"; [ -n "$name" ] || die "factory: which box?"
+  local c; c="$(cname "$name")"
+  exists "$c" || die "factory: no box named $name"
+  local src="$ROOT/apps/smidja"
+  [ -d "$src" ] || die "factory: no factory at apps/smidja"
+  "$ENGINE" exec "$c" bash -lc "mkdir -p $FACTORY_DIR" >/dev/null 2>&1 \
+    || die "factory: cannot make $FACTORY_DIR in $c"
+  # Only the factory itself: modules, chains, and its config shelf.
+  local part
+  for part in smidja_modules smidja_smidja_config; do
+    [ -d "$src/$part" ] || continue
+    "$ENGINE" exec "$c" bash -lc "mkdir -p $FACTORY_DIR/$part" >/dev/null 2>&1 || true
+    "$ENGINE" cp "$src/$part/." "$c:$FACTORY_DIR/$part/" >/dev/null 2>&1 \
+      || die "factory: could not copy $part into $c"
+  done
+  ( cd "$src" && ls smidja_*.py 2>/dev/null | head -40 ) | while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    "$ENGINE" cp "$src/$f" "$c:$FACTORY_DIR/$f" >/dev/null 2>&1 || true
+  done
+  local model; model="$(label "$c" ymir.utgard.model)"
+  printf 'factory[3]{box,path,model}:\n  "%s","%s","%s"\n' "$name" "$FACTORY_DIR" "${model:--}"
+  printf 'next: utgard box run %s -- python3 %s/smidja_plan_build_test.py --help\n' "$name" "$FACTORY_DIR"
+}
+
+# --- run one command inside a box, as the box's own user ----------------------
+cmd_run() {
+  local name="${1-}"; shift || true
+  [ "${1-}" = "--" ] && shift
+  [ -n "$name" ] || die "run: which box?"
+  [ "$#" -gt 0 ] || die "run: a command after -- is required"
+  local c; c="$(cname "$name")"
+  exists "$c" || die "run: no box named $name"
+  running "$c" || die "run: box $name is stopped
+help: utgard box start $name"
+  "$ENGINE" exec -i "$c" bash -lc "$*"
+}
+
+# --- revoke: take the credential back, by hand and by name --------------------
+cmd_revoke() {
+  local name="${1-}"; [ -n "$name" ] || die "revoke: which box?"
+  local door; door="$(dname "$name")"
+  if ! exists "$door"; then
+    printf 'box[3]{name,door,spent}:\n  "%s","already absent","0"\n' "$name"
+    return 0
+  fi
+  local spent; spent="$(spend_of "$name")"
+  "$ENGINE" rm -f "$door" >/dev/null 2>&1 || die "revoke: the engine refused to remove $door"
+  printf 'box[3]{name,door,spent}:\n  "%s","revoked","%s"\n' "$name" "$spent"
+}
+
+cmd_estate() {
+  cmd_list "$@"
+  local live c
+  live="$("$ENGINE" ps --filter "label=ymir.utgard.role=box" --format '{{.Names}}' 2>/dev/null)"
+  [ -n "$live" ] || return 0
+  printf 'estate[2]{box,app_answers,factory_answers}:\n'
+  for c in $live; do
+    local t; t="${c#${PREFIX}-}"
+    printf '  "%s","%s","%s"\n' "$t" "$(answers "$(url_of "$t")")" "$(answers "$(factory_url_of "$t")")"
+  done
 }
 
 cmd_pull() {
@@ -585,6 +758,9 @@ cmd_rm() {
   stop_door "$name"
   "$ENGINE" rm -f "$c" >/dev/null 2>&1 || true
   "$ENGINE" network rm "$n" >/dev/null 2>&1 || true
+  # The door's spend record belongs to the box, so it goes with the box: a spend
+  # that outlived its lane would cap the next one for a run it never made.
+  "$ENGINE" volume rm "$(dname "$name")-state" >/dev/null 2>&1 || true
   [ "$keep_volume" = 1 ] || "$ENGINE" volume rm "$v" >/dev/null 2>&1 || true
   printf 'box[2]{name,removed,volume}:\n  "%s","yes","%s"\n' "$name" \
     "$([ "$keep_volume" = 1 ] && echo kept || echo removed)"
@@ -683,8 +859,12 @@ case "$CMD" in
   start)  cmd_start "$@" ;;
   rm)     cmd_rm "$@" ;;
   gc)     cmd_gc "$@" ;;
+  estate) cmd_estate "$@" ;;
+  factory) cmd_factory "$@" ;;
+  run)    cmd_run "$@" ;;
+  revoke) cmd_revoke "$@" ;;
   probe)  cmd_probe "$@" ;;
   *)
-    printf 'error: unknown verb %s\nhelp: utgard box [build|new|list|status|enter|url|seal|pull|stop|start|rm|gc|probe]\n' "$CMD" >&2
+    printf 'error: unknown verb %s\nhelp: utgard box [build|new|list|status|enter|url|seal|pull|stop|start|rm|gc|probe|estate|factory|run|revoke]\n' "$CMD" >&2
     exit 2 ;;
 esac

@@ -89,3 +89,21 @@ bin/forge/utgard.sh box probe
 
 - **2026-11-06** — Carved. The box, the door, the three seals, and the one firewall rule that is owed before a box can
   reach the rail.
+
+## Added 2026-11-06 — the factory inside, the budget, and the estate
+
+Four things the first pass did not have, taken from the full transcript of the talk this feature answers:
+
+- **The factory runs inside the box.** `utgard box factory <name>` copies Smíðja in (its modules, its chains, its config
+  shelf), and `utgard box run <name> -- <command>` runs one command there. The image bakes the factory's Python
+  dependencies, because a box sealed to one road cannot reach PyPI — a factory that installs itself would work on the
+  host and fail in the box.
+- **A budget is part of the credential.** `--budget N` caps what the door serves. Past the cap it refuses with the number
+  it stopped at, and `box status` shows `spent/budget`. `box revoke <name>` takes the credential back at once — which is
+  also what `stop` and `rm` do.
+- **Two doors per box.** The application's port and the factory's own (default 4601). `box url` names both and says which
+  one answers right now; one global visualizer cannot watch five boxes.
+- **The estate in one gesture.** `box estate` lists every live box with both doors and who answers; `enter --all` opens
+  one pane per live box, and when herdr is absent it says so and prints what each pane would have run.
+
+Lanes — best of N — are their own page: [utgard-lanes.md](utgard-lanes.md).

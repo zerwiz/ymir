@@ -14,11 +14,18 @@ ever being trusted:
   * the door injects `Authorization`, so no key exists inside the box;
   * anything not in the map is refused by name, with the rule quoted.
 
+A budget is part of the credential, not a nicety: a key that cannot run out and
+cannot be taken back is not scope, it is trust. The door counts what it serves,
+refuses past the cap with the number it stopped at, and is revoked by dying —
+which is what `utgard box stop` and `rm` do to it.
+
 Configuration (all env, never a file, never a flag):
-  UTGARD_DOOR_MAP   "rail=<host>:<port>,gate=<host>:<port>"  the allowlist
-  UTGARD_DOOR_KEY   the bearer the door injects for the name `rail`
-  UTGARD_DOOR_PORT  the port to listen on (default 3128)
-  UTGARD_DOOR_LOG   "quiet" to keep stderr for refusals only
+  UTGARD_DOOR_MAP    "rail=<host>:<port>,gate=<host>:<port>"  the allowlist
+  UTGARD_DOOR_KEY    the bearer the door injects for the name `rail`
+  UTGARD_DOOR_PORT   the port to listen on (default 3128)
+  UTGARD_DOOR_LOG    "quiet" to keep stderr for refusals only
+  UTGARD_DOOR_BUDGET requests this door will serve before it refuses (0 = no cap)
+  UTGARD_DOOR_STATE  where the spend is written (default /door-state/spend.json)
 
 Exit: 0 stopped · 1 refused to start (bad config) · 2 usage.
 """
@@ -26,6 +33,7 @@ Exit: 0 stopped · 1 refused to start (bad config) · 2 usage.
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import sys
 
@@ -85,10 +93,62 @@ def authority_of(name: str) -> str:
 
 
 class Door:
-    def __init__(self, allow: dict[str, tuple[str, int]], key: str, quiet: bool):
+    def __init__(self, allow: dict[str, tuple[str, int]], key: str, quiet: bool,
+                 budget: int = 0, state_path: str = ""):
         self.allow = allow
         self.key = key
         self.quiet = quiet
+        self.budget = budget
+        self.state_path = state_path
+        self.served = 0
+        self.refused = 0
+        self._load()
+
+    # -- the budget: counted, written, and never exceeded ---------------------
+    def _load(self) -> None:
+        if not self.state_path:
+            return
+        try:
+            with open(self.state_path, "r", encoding="utf-8") as handle:
+                data = json.load(handle)
+            self.served = int(data.get("served", 0))
+        except (OSError, ValueError):
+            self.served = 0
+
+    def _save(self) -> None:
+        if not self.state_path:
+            return
+        try:
+            os.makedirs(os.path.dirname(self.state_path), exist_ok=True)
+            tmp = self.state_path + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as handle:
+                json.dump({"served": self.served, "refused": self.refused,
+                           "budget": self.budget}, handle)
+            os.replace(tmp, self.state_path)
+        except OSError:
+            pass
+
+    def exhausted(self) -> bool:
+        return bool(self.budget) and self.served >= self.budget
+
+    def charge(self) -> None:
+        self.served += 1
+        self._save()
+
+    def cap_refusal(self) -> bytes:
+        self.refused += 1
+        self._save()
+        body = (
+            f"door: this box has spent its budget — {self.served} of {self.budget} requests.\n"
+            "door: the road is closed until the box is re-made with a larger --budget.\n"
+        )
+        head = (
+            "HTTP/1.1 429 Too Many Requests\r\n"
+            "Content-Type: text/plain; charset=utf-8\r\n"
+            "Connection: close\r\n"
+            f"Content-Length: {len(body.encode())}\r\n\r\n"
+        )
+        return (head + body).encode()
 
     def refusal(self, why: str) -> bytes:
         body = (why + "\n") * 1
@@ -131,6 +191,12 @@ class Door:
         return buffer
 
     async def tunnel(self, authority: str, reader, writer) -> None:
+        if self.exhausted():
+            log(f"refused CONNECT {authority} — budget spent ({self.served}/{self.budget})")
+            writer.write(self.cap_refusal())
+            await writer.drain()
+            writer.close()
+            return
         name = authority_of(authority)
         route = self.allow.get(name)
         if route is None:
@@ -154,6 +220,7 @@ class Door:
             return
         if not self.quiet:
             log(f"CONNECT {authority} -> {route[0]}:{route[1]}")
+        self.charge()
         writer.write(b"HTTP/1.1 200 Connection Established\r\n\r\n")
         await writer.drain()
         await asyncio.gather(
@@ -163,6 +230,12 @@ class Door:
         )
 
     async def forward(self, method, target, version, header_lines, reader, writer) -> None:
+        if self.exhausted():
+            log(f"refused {method} {target} — budget spent ({self.served}/{self.budget})")
+            writer.write(self.cap_refusal())
+            await writer.drain()
+            writer.close()
+            return
         # Absolute-form: the client names a scheme and a NAME, never a place:
         #   GET <scheme>://<allowlisted-name>/v1/models HTTP/1.1
         if target.split(":", 1)[0].lower() not in ("http", "https") or "://" not in target:
@@ -225,6 +298,7 @@ class Door:
             log(f"{method} {name}{path} -> {route[0]}:{route[1]}")
         up_w.write(("\r\n".join(forwarded) + "\r\n\r\n").encode("latin-1"))
         await up_w.drain()
+        self.charge()
         await asyncio.gather(
             self._pump(reader, up_w),
             self._pump(up_r, writer),
@@ -264,13 +338,20 @@ async def main() -> int:
     except ValueError as exc:
         log(str(exc))
         return 1
+    try:
+        budget = int(os.environ.get("UTGARD_DOOR_BUDGET", "0") or 0)
+    except ValueError:
+        log("UTGARD_DOOR_BUDGET is not a number")
+        return 1
+    state_path = os.environ.get("UTGARD_DOOR_STATE", "/door-state/spend.json")
 
-    door = Door(allow, key, quiet)
+    door = Door(allow, key, quiet, budget=budget, state_path=state_path)
     server = await asyncio.start_server(door.handle, "0.0.0.0", port)
     log(
         f"listening on :{port} · roads: "
         + ", ".join(f"{name}->{host}:{p}" for name, (host, p) in sorted(allow.items()))
         + ("" if key else " · no key to inject")
+        + (f" · budget {door.served}/{budget}" if budget else " · no budget")
     )
     async with server:
         await server.serve_forever()

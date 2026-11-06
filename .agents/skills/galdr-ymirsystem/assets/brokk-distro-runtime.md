@@ -928,3 +928,38 @@ exit 0s with the reason (RULES/25).
 **What is still unmade, and named here so no one assumes it:** `box url` is loopback only (gate-fronting is not built);
 the estate is not spread across the fleet (a box lives where its engine is); `--repo` seeds by copy and does not sync;
 and best-of-N across boxes (`smidja lane`) is still plan 209's P3.
+
+## 2026-11-06 (2) — the box grows a factory, a budget, and lanes
+
+**P2 — Smíðja inside the box.** `utgard box factory <name>` copies the factory in (modules, config shelf, chains) and
+`utgard box run <name> -- <command>` runs one command there. The image bakes `pydantic · python-dotenv · pyyaml · rich`:
+a box sealed to one road **cannot reach PyPI**, and a factory that installs itself at run time would work on the host and
+fail in the box — the worst kind of difference, and one the test now asserts by importing the deps inside a sealed box.
+
+**P3 — lanes (`bin/forge/utgard-lane.sh`).** `new · run · board · list · rm`. One brief, N boxes differing in one declared
+way, and a **rail lease** (`flock`) around the run — because the rail is one model on one request stream, so lanes queue
+rather than thrash the swap. The board is `label · model · where · wall · last line`, and it ends in the operator's pick.
+The axis, cheapest first: **the harness**, then the model, then **where the model lives** (`@local` / `@tailnet`).
+
+**P4 — the estate.** `box estate` (both doors, who answers) and `box enter --all` (one pane per live box in one gesture),
+which says so plainly when herdr is absent rather than pretending the estate is open.
+
+**§11.1's four mechanisms, all landed:** a **budget** as part of the credential (`--budget N`, refused past the cap *with
+the count*, `box revoke` to take the key back, `status` shows `spent/budget`); the estate entered at once; **two addresses
+per box** (the app, and the factory that made it); and the lane axis widened to where the model lives.
+
+**Two faults that only running could find, both silent:**
+
+1. **A fresh Docker volume is root-owned and the door runs unprivileged**, so every charge raised `OSError`, which the door
+   swallowed — and the budget then refused at the cap while reporting `0/N`. The spend is now chowned to `agent:agent`
+   **before every door start**, not only when the volume is created: a volume left root-owned by an older run keeps the
+   same hole. *A budget that cannot record what it served is not a budget.*
+2. **Two boxes made in the same second took the same loopback port.** A port counted as free when nothing listened on it,
+   but a box that has not started its server listens on nothing. Free now means nothing listens **and** no live box claims
+   it by label.
+
+**And one correction:** `box rm` reclaims the door's state volume — a spend that outlived its lane would cap the next one
+for a run it never made.
+
+**Proved:** `tests/test_utgard_box.sh` 41 pass / 0 fail; `tests/test_utgard_lane.sh` 18 pass / 0 fail; both skip cleanly
+(exit 0) with no engine, no daemon or no image, naming the remedy (RULES/25).
