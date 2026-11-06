@@ -38,8 +38,8 @@ devices:
   #   kind: ssh
   #   ssh: you@your-mac-mini.local
   #   service: launchd
-  #   url: http://your-mac-mini.local:4850
-  #   ui: http://your-mac-mini.local:4851   # the mini serves its own UI, open to your network
+  #   url: https://<your-host>:4850
+  #   ui: https://<your-host>:4851   # the mini serves its own UI, open to your network
   #   hub_port: 4853
 
   # Optional: any Linux box with passwordless ssh and sudo, run with systemd.
@@ -48,7 +48,7 @@ devices:
   #   kind: ssh
   #   ssh: you@your-linux-box
   #   service: systemd
-  #   url: http://your-linux-box:4850
+  #   url: https://<your-host>:4850
   #   hub_port: 4855
 
   # Optional: an exe.dev VM, created for you by `just net up vm`.
