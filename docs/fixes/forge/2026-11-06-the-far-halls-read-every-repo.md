@@ -110,3 +110,9 @@ needs[1]{what,fix}:
 - `.agents/skills/galdr-ymirsystem/assets/mjollnir.md` — new asset, routed from SKILL.md and assets/README.md
 - `docs/features/mjollnir-issue-to-pr.md` + `docs/features/_catalogue/entries/02-003-…` — the user's front door
 - `$YMIR_HOME/…/plans/207-the-far-halls.md` — the plan this answers
+
+## CHANGE LOG
+
+- **2026-11-06** — written with the change (plan 207 §P0 · §P1): `doctor` on the registry door, `intake` reading
+  every registered repo, `run --project <id>`, eleven proofs, and the honest-read laws. The board (§P2) and the
+  audit (§P4) are owed and named above, not claimed.
