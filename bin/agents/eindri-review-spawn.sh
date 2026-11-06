@@ -139,7 +139,19 @@ WORKTREE="$(meta_value "$TASK_META" worktree)"
 # project's state dir is only a fallback when no task state resolved at all.
 SHARED_ROOT="$PROJECT"
 [ -n "$TASK_STATE" ] && SHARED_STATE="$TASK_STATE" || SHARED_STATE="$SHARED_ROOT/state"
-SHARED_DATA="$SHARED_ROOT/data"
+
+# ONE base, or the spawn refuses to seat at all. einherjar-spawn compares the BASES of
+# state, data and config and refuses a house that is split ("the house is split — state,
+# data and config resolve to different bases"). This script used to pass only the state
+# and data overrides, so CONFIG kept resolving from BROKK_HOME — and when the reviewed
+# project is a worktree (data base = the worktree, config base = BROKK_HOME) the bases
+# disagreed and the review never seated. Measured 2026-11-06: the eins-the-desk-everywhere
+# review spawn died rc=1 on exactly that line, after its task was already done and its PR
+# open. The state that resolved IS the house the review's records belong to, so data and
+# config are taken from its base and all three are passed together.
+SHARED_BASE="$(dirname "$SHARED_STATE")"
+SHARED_DATA="${SHARED_DATA_OVERRIDE:-$SHARED_BASE/data}"
+SHARED_CONFIG="${SHARED_CONFIG_OVERRIDE:-$SHARED_BASE/config}"
 
 # ── the anti-double marker ───────────────────────────────────────────────────
 REVIEWED_DIR="$SHARED_STATE/.reviewed"
@@ -250,8 +262,9 @@ fi
 # ── seat the judge through the einherjar road ────────────────────────────────
 # The review's records belong to the SHARED state, never the caller's seat: the
 # spawn is a Brokk-level act, and its meta/status must be read by supervision.
-if env -u BROKK_STATE_OVERRIDE -u BROKK_DATA_OVERRIDE \
-       BROKK_HOME="$SHARED_ROOT" BROKK_STATE_OVERRIDE="$SHARED_STATE" BROKK_DATA_OVERRIDE="$SHARED_DATA" \
+if env -u BROKK_STATE_OVERRIDE -u BROKK_DATA_OVERRIDE -u BROKK_CONFIG_OVERRIDE \
+       BROKK_HOME="$SHARED_ROOT" BROKK_STATE_OVERRIDE="$SHARED_STATE" \
+       BROKK_DATA_OVERRIDE="$SHARED_DATA" BROKK_CONFIG_OVERRIDE="$SHARED_CONFIG" \
        "${spawn[@]}"; then
   {
     printf 'review=%s\n' "$REVIEW_ID"
