@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test_mjollnir_intake.sh — the forge's senses (plan 207 P0/P1), proved without a network.
+# test_mjollnir_intake.sh — the forge's senses (plan 210 P0/P1), proved without a network.
 #
 # Four things are proved, and each one is a fault this house has already paid for:
 #

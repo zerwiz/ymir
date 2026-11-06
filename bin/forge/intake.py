@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """intake.py — read every registered repo once, and say honestly what could not be read.
 
-WHY (plan 207, the Allfather 2026-11-06: *"we need to have so the user can add all his
+WHY (plan 210, the Allfather 2026-11-06: *"we need to have so the user can add all his
 repos he's working on. and we wanna see issues and a lot more from the githubs
 capabilities"*): Ymir could read exactly one repository — the one it was standing in —
 because `reviews()` in Hlidskjalf took `--repo` from this tree's own origin. The registry

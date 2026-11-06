@@ -21,7 +21,7 @@ Allfather merges on GitHub (plans 203 · 205 · 206 · `RULES/08`).
 | `bin/forge/mjollnir.sh status` | what is prepared and not yet shipped | nothing |
 | `bin/forge/mjollnir-webhook.sh` | a verified GitHub `issues/opened` becomes a run (needs a public endpoint) | like `run` |
 
-## The registry is the floor (plan 207 P0)
+## The registry is the floor (plan 210 P0)
 
 `$YMIR_HOME/hodd/identity/projects.yaml` holds one row per project with a `git{}` block —
 `host · owner · repo · remote · default_branch · auth`. `auth` is a **reference** to the vault, never a
@@ -38,7 +38,7 @@ be read at all) · `unreachable`/`archived` (only with `--probe`). `--strict` ex
 Clone resolution order for a relative `repo:` — the code tree, `$HOME`, then `$YMIR_HOME`. Never guessed
 beyond those three.
 
-## Intake — the senses (plan 207 P1)
+## Intake — the senses (plan 210 P1)
 
 Five sources per repo, each failing alone:
 
@@ -79,7 +79,7 @@ change. A webhook is an option where a public door already exists — never the 
 ## Glitnir is a view, not a second reader
 
 `apps/hlidskjalf/server/index.ts` `reviews()` is the only PR reader today, and it reads **one** repo
-(`--repo` from this tree's origin, default `zerwiz/ymir`). Plan 207 P2 makes the board a **view over
+(`--repo` from this tree's origin, default `zerwiz/ymir`). Plan 210 P2 makes the board a **view over
 intake**: cards gain `project` + `repo`, a filter and a group-by-project layout, and an **Issues** stage
 beside Reviews. The tiles keep their rule: **only real PRs count** (number > 0), and a dead read is
 shown, never swallowed.
@@ -96,5 +96,5 @@ shown, never swallowed.
 
 ## Change log
 
-- **2026-11-06** — carved with plan 207 P0/P1: `doctor` on the registry door, `intake` reading every
+- **2026-11-06** — carved with plan 210 P0/P1: `doctor` on the registry door, `intake` reading every
   registered repo, `run --project <id>`, and the honest-read laws above.

@@ -26,7 +26,7 @@ case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"
 ID="${1-}"; shift || true
 
 # doctor — the registry's own truth, before anything claims a repo is workable.
-# WHY (plan 207 P0): measured 2026-11-06 — of 78 registered projects, 56 could not name a
+# WHY (plan 210 P0): measured 2026-11-06 — of 78 registered projects, 56 could not name a
 # remote and 67 had no local clone, so "add the user's repos" was unbuildable until the
 # registry could say which of its own rows are real. This is a DIAGNOSIS: it reads the
 # registry and the disk, writes nothing, and is offline by default (a probe is asked for).

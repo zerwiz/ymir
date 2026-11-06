@@ -47,7 +47,7 @@ case "$CMD" in
   -h|--help|"") usage; exit 0 ;;
 esac
 
-# intake — the hammer's EYE, before its blow (plan 207 P1).
+# intake — the hammer's EYE, before its blow (plan 210 P1).
 # WHY: measured 2026-11-06, the only issue reader in the whole tree was line 79 of this
 # script — one issue, one repo, already named by whoever spawned it. The registry held 78
 # projects and nothing read them, so "add the user's repos" could not start. `intake` reads
@@ -56,7 +56,7 @@ esac
 # not look". It writes nothing to GitHub, and it never touches a working tree.
 if [ "$CMD" = intake ]; then
   [ -x "$SCRIPT_DIR/intake.py" ] || [ -f "$SCRIPT_DIR/intake.py" ] || {
-    printf 'error: the intake engine is missing\nhelp: bin/forge/intake.py (plan 207 P1)\n' >&2; exit 1; }
+    printf 'error: the intake engine is missing\nhelp: bin/forge/intake.py (plan 210 P1)\n' >&2; exit 1; }
   command -v python3 >/dev/null 2>&1 || { printf 'error: python3 is required\n' >&2; exit 1; }
   HOME_DIR=""
   declare -f ymir_home_root >/dev/null 2>&1 && ymir_home_root HOME_DIR 2>/dev/null
@@ -96,7 +96,7 @@ if [ "$MODE" = "no-mistakes" ]; then
   [ -f "$ROOT/.no-mistakes.yaml" ] || printf 'warn: .no-mistakes.yaml absent — the gate uses defaults\n' >&2
 fi
 # --project <id> — the registry names the tree, so a far repo is never remembered by path
-# (plan 207 P0/P5). An id with no clone is REFUSED with the road to take, never guessed:
+# (plan 210 P0/P5). An id with no clone is REFUSED with the road to take, never guessed:
 # this is the honest half of "the user can add all his repos".
 if [ -n "$PROJECT" ] && [ -z "$REPO" ]; then
   command -v python3 >/dev/null 2>&1 || { printf 'error: python3 is required to resolve a project id\n' >&2; exit 1; }
