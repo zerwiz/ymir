@@ -28,15 +28,15 @@ devices:
   local:
     name: This Mac
     kind: local
-    url: http://127.0.0.1:4850
-    hub_port: 4851                    # this Mac's UI: http://localhost:4851
+    url: https://<your-host>
+    hub_port: 4851                    # this Mac's UI: https://<your-host>
 
   # An always-on Mac mini on your network: launchd services for the API and the UI, plus the crontab line.
   # Turn on Remote Login (System Settings, General, Sharing) and copy your ssh key to it first.
   # mini:
   #   name: Mac mini
   #   kind: ssh
-  #   ssh: you@your-mac-mini.local
+  #   ssh: you@<your-host>
   #   service: launchd
   #   url: https://<your-host>:4850
   #   ui: https://<your-host>:4851   # the mini serves its own UI, open to your network
@@ -57,7 +57,7 @@ devices:
   #   kind: exe-dev
   #   vm: my-news-agent
   #   service: systemd
-  #   url: http://127.0.0.1:4852          # private: reached through `just net tunnel vm`
+  #   url: https://<your-host>          # private: reached through `just net tunnel vm`
   #   tunnel: { local: 4852, remote: 4850 }   # the API, for the CLI, TUI and tests
   #   hub_port: 4854                           # its UI is https://<vm>.exe.xyz, private behind the exe.dev login
   #   create: { cpu: 2, memory: 4GB, disk: 20GB }
