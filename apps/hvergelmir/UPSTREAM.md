@@ -190,7 +190,7 @@ The same code runs everywhere. Without a `dna-network.yaml`, only `local` exists
 | Device | How it runs | Reached at |
 |---|---|---|
 | **local** (this Mac) | `just combos local`: the API and the UI as background processes, plus the every minute crontab line. `just net down local` stops all three | `http://127.0.0.1:4850`, UI at `http://localhost:4851` |
-| **mini** (an always-on Mac mini over ssh) | launchd services `dev.dna.api` and `dev.dna.hub`, plus the crontab line. Turn on Remote Login and copy your ssh key first | `http://your-mac-mini.local:4850`, UI on `:4851` |
+| **mini** (an always-on Mac mini over ssh) | launchd services `dev.dna.api` and `dev.dna.hub`, plus the crontab line. Turn on Remote Login and copy your ssh key first | `https://<host>`, UI on `:4851` |
 | **linux** (any box with ssh and sudo) | systemd `dna-api` and `dna-hub`, plus the crontab line | your host, or an ssh tunnel |
 | **vm** (an exe.dev VM) | `just net up vm` creates the VM, then deploys like a Linux box | ssh tunnel to `http://127.0.0.1:4852`; the UI at its private `https://<vm>.exe.xyz` |
 
