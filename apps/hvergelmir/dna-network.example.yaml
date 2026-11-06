@@ -36,10 +36,10 @@ devices:
   # mini:
   #   name: Mac mini
   #   kind: ssh
-  #   ssh: you@your-mac-mini.local
+  #   ssh: you@<your-host>
   #   service: launchd
-  #   url: http://your-mac-mini.local:4850
-  #   ui: http://your-mac-mini.local:4851   # the mini serves its own UI, open to your network
+  #   url: http://<your-host>:4850
+  #   ui: http://<your-host>:4851   # the mini serves its own UI, open to your network
   #   hub_port: 4853
 
   # Optional: any Linux box with passwordless ssh and sudo, run with systemd.
