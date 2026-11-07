@@ -50,3 +50,7 @@ The real repository then pushed, having been refused five times by the old logic
 It does not soften a ward. A red ward is still red, still printed, still in the `main_baseline`
 table — the gate stops pretending a branch is broken when the tree underneath it is. The hand that
 owns `origin/main` still owes the repair, and CI keeps the last word.
+
+### CHANGE LOG
+
+- **2026-11-07** — written with the hook change it describes.
