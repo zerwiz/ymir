@@ -20,7 +20,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[100]{file,does,kind,verdict,disposition,callers,lines}:
+bin[102]{file,does,kind,verdict,disposition,callers,lines}:
   "SKILL.md","---","data","tested","keep",23,19
   "SKILL.md","---","data","tested","keep",23,19
   "SKILL.md","---","data","tested","keep",23,18
@@ -28,9 +28,9 @@ bin[100]{file,does,kind,verdict,disposition,callers,lines}:
   "app-functional-guard.sh","app-functional-guard.sh — AN UPDATE THAT LEAVES AN APP UNRUNNABLE IS NOT AN UPDATE.","tool","wired","keep",1,136
   "branch-current.sh","branch-current.sh — a branch is based on CURRENT main before it is offered.","tool","tested","keep",2,82
   "branch-guard.sh","branch-guard.sh — Rule 08: no push may land on a protected branch.","tool","tested","keep",1,78
-  "capabilities.sh","A GENERATED FILE MUST BE A FUNCTION OF CONTENT ALONE (0.1.94/0.1.95/0.1.97 — three","tool","wired","keep",10,300
+  "capabilities.sh","A GENERATED FILE MUST BE A FUNCTION OF CONTENT ALONE (0.1.94/0.1.95/0.1.97 — three","tool","wired","keep",10,309
   "check-row.md","One measured row","data","wired","keep",2,10
-  "ci-verify.sh","ci-verify.sh — what CI must prove, in one command, for BOTH hosts.","tool","tested","keep",2,139
+  "ci-verify.sh","ci-verify.sh — what CI must prove, in one command, for BOTH hosts.","tool","tested","keep",2,145
   "confidential-guard.sh","confidential-guard.sh — while a confidential session is live, nothing outside the","tool","wired","keep",2,63
   "constellation-grant-guard.sh","constellation-grant-guard.sh — the road's own ward.","tool","wired","keep",1,100
   "contracts-check.sh","contracts-check.sh — the typed surfaces' proof, in one command.","tool","tested","keep",1,122
@@ -46,7 +46,7 @@ bin[100]{file,does,kind,verdict,disposition,callers,lines}:
   "feature-inventory.sh","feature-inventory.sh — every feature the system CLAIMS, in one checklist.","tool","wired","keep",0,88
   "features-guard.sh","features-guard.sh — every feature page is catalogued (Rule 14).","tool","wired","keep",2,83
   "fix-note.md","Fix note template","data","wired","keep",2,22
-  "fixes-guard.sh","fixes-guard.sh — the delivery gate reads, and it checks the RECORD.","tool","tested","keep",6,219
+  "fixes-guard.sh","fixes-guard.sh — the delivery gate reads, and it checks the RECORD.","tool","tested","keep",6,223
   "fixes.sh","fixes.sh — the fix notes.","tool","wired","keep",4,162
   "fleet-version-guard.sh","fleet-version-guard.sh — the three labels and the two trees must agree, or say so.","tool","wired","keep",1,62
   "folders.tsv","The purpose of every folder under bin/ — ONE line each, the single place it is kept.","data","wired","keep",1,39
@@ -59,7 +59,7 @@ bin[100]{file,does,kind,verdict,disposition,callers,lines}:
   "home-index-check.sh","home-index-check.sh — every shelf in the home has an index, and the index is honest.","tool","wired","keep",1,82
   "identity-guard.sh","identity-guard.sh — a commit that leaves by push must not publish a private mailbox.","tool","wired","keep",4,145
   "inventory-guard.sh","inventory-guard.sh — a register that runs in no gate is a capability that is silently absent.","tool","wired","keep",2,54
-  "inventory.sh","inventory.sh — the honest index of the two shelves nobody can read.","tool","wired","keep",13,372
+  "inventory.sh","inventory.sh — the honest index of the two shelves nobody can read.","tool","wired","keep",13,376
   "language-guard.sh","language-guard.sh — two tongues: English for the work, Old Norse for the names.","tool","wired","keep",1,270
   "model-alias-check.sh","model-alias-check.sh — does every alias a body names resolve in the fleet?","tool","wired","keep",1,332
   "model-rows-guard.sh","model-rows-guard.sh — every agent row names a model THIS machine can actually serve.","tool","wired","keep",1,106
@@ -106,6 +106,8 @@ bin[100]{file,does,kind,verdict,disposition,callers,lines}:
   "syn-turnend-guard.sh","syn-turnend-guard.sh - refuse to let a Brokk turn end blind.","tool","tested","keep",1,52
   "test_handoff_packet.sh","test_handoff_packet.sh — proves the packet door reads the schema's packet and refuses a false one.","tool","wired","keep",0,103
   "test_hermes_seat.sh","test_hermes_seat.sh — the acceptance test for plan 177 H1/H2/H3: Hermes carries the seat, the","tool","wired","keep",0,193
+  "test_mjollnir_clone.sh","test_mjollnir_clone.sh — the door that turns a FAR repo into a workable one (plan 210 P3).","tool","wired","keep",0,110
+  "test_mjollnir_intake.sh","test_mjollnir_intake.sh — the forge's senses (plan 210 P0/P1), proved without a network.","tool","wired","keep",0,179
   "test_new_doors.sh","test_new_doors.sh — the production tests for the doors built 2026-11-03.","tool","wired","keep",0,65
   "test_pr_ship_guard.sh","test_pr_ship_guard.sh — proves the ship door judges the PR and not the branch.","tool","wired","keep",0,49
   "test_registers.sh","test_registers.sh — one door for every generated register.","tool","wired","keep",0,43
@@ -122,6 +124,6 @@ bin[100]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-config-check.sh","ymir-config-check.sh — the DOOR to the config layer (`src/ymir_runtime/config/`).","tool","wired","keep",0,44
   "ymir-update-check.sh","ymir-update-check.sh — does a newer Ymir stand on npm?","tool","wired","keep",3,71
 
-**Tally.** verdict: wired=82, tested=18
+**Tally.** verdict: wired=84, tested=18
 
-**Tally.** disposition: keep=98, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1
+**Tally.** disposition: keep=100, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1

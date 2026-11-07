@@ -23,7 +23,7 @@ folder rewrites one file instead of colliding on every branch.
 bin[16]{file,does,kind,verdict,disposition,callers,lines}:
   "agent-model.sh","agent-model.sh — WHICH MODEL, ON THIS SEAT.","tool","wired","keep",7,293
   "apodex-smoke-test.sh","apodex-smoke-test — validate an Apodex endpoint (GGUF via llama-router).","tool","wired","keep",0,119
-  "catalog.sh","catalog.sh — THE door to what this machine can serve.","tool","wired","keep",6,77
+  "catalog.sh","catalog.sh — THE door to what this machine can serve.","tool","wired","keep",7,77
   "jev-doors.sh","jev-doors.sh — where the decision models answer, in one read.","tool","wired","keep",1,81
   "llama-ensure.sh","llama-ensure.sh — stand a CUDA llama.cpp engine for local models, or adopt the","tool","wired","keep",3,163
   "local-model-lock.sh","local-model-lock.sh — serialize LOCAL model inference on one machine.","tool","tested","keep",8,132

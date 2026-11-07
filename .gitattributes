@@ -2,6 +2,14 @@
 # WOVEN documents (Þættir, plan 174): a merge conflict is answered by re-weaving.
 FEATURES.md merge=regenerate
 bin/README.md merge=regenerate
+# The per-folder indexes and capability fragments: same rule. A conflict INSIDE one folder is
+# two hands in that folder, and the answer is still to regenerate the register from the tree
+# rather than leave markers in a derived file (measured 2026-11-06: main carried the residue
+# of exactly such a merge — half a branch name in capabilities.md and 844 stale rows in
+# bin/README.md, and every branch then conflicted with it).
+bin/INDEX.md merge=regenerate
+bin/*/INDEX.md merge=regenerate
+.agents/assets/agents/capabilities/*.md merge=regenerate
 # The register is a TREE (plan 211): a folder's rows live in bin/<folder>/INDEX.md and a
 # capability fragment, so a hand touches ONE fragment and never the front door. The fragments
 # deliberately take a normal text merge — a conflict inside one folder is two hands in the same

@@ -85,6 +85,8 @@
 | seat-woven-driver.sh | seat-woven-driver.sh — seat the engine behind `merge=regenerate`, and  | tested | keep (a human or a cron row must run it) |
 | test_handoff_packet.sh | test_handoff_packet.sh — proves the packet door reads the schema's pac | tested | keep (a human or a cron row must run it) |
 | test_hermes_seat.sh | test_hermes_seat.sh — the acceptance test for plan 177 H1/H2/H3: Herme | tested+named | keep (a human or a cron row must run it) |
+| test_mjollnir_clone.sh | test_mjollnir_clone.sh — the door that turns a FAR repo into a workabl | tested | keep (a human or a cron row must run it) |
+| test_mjollnir_intake.sh | test_mjollnir_intake.sh — the forge's senses (plan 210 P0/P1), proved  | tested | keep (a human or a cron row must run it) |
 | test_new_doors.sh | test_new_doors.sh — the production tests for the doors built 2026-11-0 | tested | keep (a human or a cron row must run it) |
 | test_pr_ship_guard.sh | test_pr_ship_guard.sh — proves the ship door judges the PR and not the | tested | keep (a human or a cron row must run it) |
 | test_registers.sh | test_registers.sh — one door for every generated register. | tested | keep (a human or a cron row must run it) |
