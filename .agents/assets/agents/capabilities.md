@@ -19,13 +19,14 @@ surfaces[4]{surface,where}:
 `.agents/assets/agents/capabilities/`, generated in the same run, so a change in one folder
 rewrites one file instead of colliding with every other branch (plan 211).
 
-capability_folders[31]{folder,index}:
+capability_folders[32]{folder,index}:
   "agents",".agents/assets/agents/capabilities/agents.md"
   "assistant",".agents/assets/agents/capabilities/assistant.md"
   "backend",".agents/assets/agents/capabilities/backend.md"
   "boards",".agents/assets/agents/capabilities/boards.md"
   "bridge",".agents/assets/agents/capabilities/bridge.md"
   "collab",".agents/assets/agents/capabilities/collab.md"
+  "day",".agents/assets/agents/capabilities/day.md"
   "desktop",".agents/assets/agents/capabilities/desktop.md"
   "engine",".agents/assets/agents/capabilities/engine.md"
   "fleet",".agents/assets/agents/capabilities/fleet.md"

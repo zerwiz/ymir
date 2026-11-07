@@ -30,13 +30,14 @@ cause on every branch is designed out (plan 211).
 Counts live in each folder's own index; this page lists the folders.
 
 
-folders[33]{folder,what,index}:
+folders[34]{folder,what,index}:
   "agents","the Einherjar and Eindri doors — spawn, brief, sweep, recover","bin/agents/INDEX.md"
   "assistant","Skirnir's mouth and the assistant doors an answer comes through","bin/assistant/INDEX.md"
   "backend","the model and harness bridges (indexed at .agents/backend/README.md)","bin/backend/INDEX.md"
   "boards","the board doors — what is queued, claimed and shown","bin/boards/INDEX.md"
   "bridge","the wires between engines: mimir, well-door, constellation","bin/bridge/INDEX.md"
   "collab","the collaboration kit and what a counterpart is given","bin/collab/INDEX.md"
+  "day","(no purpose recorded)","bin/day/INDEX.md"
   "desktop","raise and lower the desktop seats (Smidja board, Sessrumnir, place)","bin/desktop/INDEX.md"
   "engine","install, migrate, update, ensure — the machine's own upkeep","bin/engine/INDEX.md"
   "fleet","the fleet registry, roles, agents-config and the sync doors","bin/fleet/INDEX.md"

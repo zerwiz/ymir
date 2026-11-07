@@ -24,6 +24,7 @@ contents[15]{piece,path,what_it_does}:
   "the module-test guard","`scripts/gates/new-module-test.sh`","a new module with no test naming it — and no line in `.module-test.allow` — is refused at the push"
   "the workbench skill","`.agents/skills/smidr-the-workbench/`","the craft taught to a guest hand: the slice, the note, the five things never changed quietly, and what each refusal means"
   "the collaborator door","`docs/collaborator-door.md` · `scripts/collab-connect.sh`","how a hand that is not on our network connects: a public card, a short-lived JWT scoped to one skill, a grant, a Rune per call — and the five refusals a door must still make"
+  "the advantage gate","`scripts/advantage-audit.sh` · `docs/advantage.md`","a claim about why we win carries its evidence or it is refused: the VRIO screen, the teardown taken from lost deals, and the check that fails a page of adjectives"
 ```
 
 Plus the rules that govern them (`RULES/15`, `16`, `17`) and `docs/gates.md`, which explains what each refuses **and what it deliberately

@@ -23,7 +23,7 @@ folder rewrites one file instead of colliding on every branch.
 bin[27]{file,does,kind,verdict,disposition,callers,lines}:
   "adapter-test.sh","bin/assistant/adapter-test.sh -> systems/skirnir/services/adapter-test.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and say…","tool","wired","keep",0,16
   "approve-fact.sh","bin/assistant/approve-fact.sh -> systems/skirnir/services/approve-fact.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and say…","tool","wired","keep",0,16
-  "ask.sh","bin/assistant/ask.sh -> systems/skirnir/services/ask.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","tested","keep",10,16
+  "ask.sh","bin/assistant/ask.sh -> systems/skirnir/services/ask.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","tested","keep",11,16
   "asks.sh","bin/assistant/asks.sh -> systems/skirnir/services/asks.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
   "ban.sh","bin/assistant/ban.sh -> systems/skirnir/services/ban.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
   "ear.sh","bin/assistant/ear.sh -> systems/skirnir/services/ear.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
