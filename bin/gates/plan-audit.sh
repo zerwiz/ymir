@@ -253,6 +253,19 @@ PY
     say "  a row with no status:                   FAIL (it passed a stateless row)"; rc=1
   else say "  a row with no status:                   ok (it bit)"; fi
 
+  # the PROSE row — the shape this ledger's own rows use — must be read, status and all.
+  # 2026-11-07: it was not, so 24 honest rows were reported as stateless.
+  sed -i 's#^| 11 | A plan | `11-bare.md` |$#- **Plan 11** — [A plan](11-bare.md) · opened 2026-01-01 · **open** — the prose shape#' \
+    "$shelf/README.md"
+  prose_ok="$(bash "${BASH_SOURCE[0]}" --json --shelf "$shelf" 2>&1 | python3 -c '
+import json,sys
+d=json.load(sys.stdin)
+rows=[r for r in d["rows"] if r["file"]=="11-bare.md"]
+print("ok" if rows and all(r["status"].get("row") for r in rows) else "FAIL")' 2>/dev/null)"
+  if [ "$prose_ok" = ok ]; then
+    say "  a prose row with a status:              ok (it read the token)"; else
+    say "  a prose row with a status:              FAIL (a prose row is invisible to it)"; rc=1; fi
+
   # the RATCHET: a recorded gap must stop failing, and a NEW one must still bite
   if YMIR_STATE_DIR="$tmp/state" bash "${BASH_SOURCE[0]}" --baseline --shelf "$shelf" >/dev/null 2>&1; then
     if YMIR_STATE_DIR="$tmp/state" bash "${BASH_SOURCE[0]}" --check --shelf "$shelf" >/dev/null 2>&1; then
@@ -597,8 +610,20 @@ def rows_of(readme_lines):
         if m: names.append(os.path.basename(m.group('p').strip()))
         for t in RE_TICKED.findall(l):
             names.append(os.path.basename(t.strip()))
-        cells = [c.strip() for c in l.strip().strip('|').split('|')]
-        numcell = cells[0].strip('* ') if cells else ''
+        # A cell is separated by a pipe (the table shape) OR by a middle dot (the prose
+        # shape: `- **Plan 217** — [title](file.md) · opened 2026-11-07 · **open** — …`).
+        # WHY (2026-11-07): only `|` was read, so every prose row on the ymir shelf (24 of
+        # them, plans 188–217) was reported as "carries no status" while carrying one — a
+        # gate that tested the fixture's shape and not the shelf's. Read the token, not the
+        # spelling around it.
+        raw_cells = [c.strip() for c in l.strip().strip('|').split('|')]
+        cells = []
+        for c in raw_cells:
+            cells.extend(x.strip() for x in c.split('\u00b7'))
+        # the number cell is the FIRST PIPE cell, untouched: `20 · twin a` is a suffixed row
+        # and its suffix is what frees a shared number, so splitting it would break Rule 06's
+        # twin rule. Only the STATUS scan reads the dot-separated pieces.
+        numcell = raw_cells[0].strip('* ') if raw_cells else ''
         status = ''
         for c in cells:
             plain = c.strip('* ').lower()
@@ -606,6 +631,11 @@ def rows_of(readme_lines):
                 if plain == w or plain.startswith(w + ' ') or plain.startswith(w + '—') or plain.startswith(w + ' -'):
                     status = w; break
             if status: break
+        if not status:
+            # a status may be bold anywhere on the line, which is how a prose row marks it
+            for w in STATUS_WORDS:
+                if re.search(r'\*\*' + re.escape(w) + r'(?:\*\*|\b)', l.lower()):
+                    status = w; break
         if not status:
             # a status may be a parenthetical in the title cell, e.g. "(paused mid-flight)"
             joined = ' '.join(cells).lower()
