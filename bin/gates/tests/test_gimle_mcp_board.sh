@@ -3,12 +3,12 @@
 #
 # On 2026-11-07 the served MCP answered `count 0` for every caller because it read the meeting
 # record and knew no project at all, while five collaborators sat in the token file with place
-# names (OptiCat, Growth, InvestReady, WayOf, Synteon, Michael) that resolved to nothing. A door
+# names (client projects, a person's first name) that resolved to nothing. A door
 # that refuses everything for the wrong reason is indistinguishable from one that works, so these
 # claims are not reviewable by reading — each one is asserted here:
 #
-#   1 · a place resolves to a real project                    (`Ymir` → `whynotproductions/Ymir`)
-#   2 · a name that is not a place is NAMED, never silently empty   (`Michael` → unresolved)
+#   1 · a place resolves to a real project                    (`Ymir` → `a-house/Ymir`)
+#   2 · a name that is not a place is NAMED, never silently empty   (a person's first name → unresolved)
 #   3 · a token's scope is enforced by identity, and the refusal lists what it may touch
 #   4 · my_tasks returns the caller's own cards, inside their scope only — never another place's
 #   5 · place_board groups by the project's own state names
@@ -25,9 +25,12 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 MCP="$ROOT/bin/gimle/mcp-read.py"
 TMP="$(mktemp -d)"
-PORT_STUB=18099
-PORT_RO=18491
-PORT_RW=18492
+# free ports, chosen at run time: a fixed port made this test answer from a leftover server that
+# happened to hold it, and a test that talks to another process can pass for the wrong reason.
+free_port() { python3 -c 'import socket;s=socket.socket();s.bind(("127.0.0.1",0));print(s.getsockname()[1]);s.close()'; }
+PORT_STUB=$(free_port)
+PORT_RO=$(free_port)
+PORT_RW=$(free_port)
 rc=0
 say() { printf '%s\n' "$*"; }
 bad() { say "  $*"; rc=1; }
@@ -43,17 +46,17 @@ cat >"$TMP/fake-plane.py" <<'PY'
 import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
-PROJECTS = {"whynotproductions": [
-    {"id": "p-ymir", "name": "Ymir", "identifier": "YMIRPLATFOR", "archived_at": None},
-    {"id": "p-opt", "name": "OptiCat", "identifier": "OPT", "archived_at": None},
+PROJECTS = {"a-house": [
+    {"id": "p-anvil", "name": "Anvil", "identifier": "ANVIL", "archived_at": None},
+    {"id": "p-loom", "name": "Loomery", "identifier": "OPT", "archived_at": None},
     {"id": "p-old", "name": "Retired Thing", "identifier": "OLD", "archived_at": "2026-01-01T00:00:00Z"}]}
-STATES = {"p-ymir": [{"id": "s-bl", "name": "Backlog"}, {"id": "s-ip", "name": "In Progress"}],
-          "p-opt": [{"id": "s-td", "name": "Todo"}, {"id": "s-dn", "name": "Done"}]}
-ISSUES = {"p-ymir": [{"id": "i-1", "sequence_id": 1, "name": "Retire the workspace plan shelf",
+STATES = {"p-anvil": [{"id": "s-bl", "name": "Backlog"}, {"id": "s-ip", "name": "In Progress"}],
+          "p-loom": [{"id": "s-td", "name": "Todo"}, {"id": "s-dn", "name": "Done"}]}
+ISSUES = {"p-anvil": [{"id": "i-1", "sequence_id": 1, "name": "Retire the workspace plan shelf",
                       "state": "s-bl", "assignees": ["m1"], "target_date": "2026-11-14"}],
-          "p-opt": [{"id": "i-3", "sequence_id": 3, "name": "Timeline and the first invoice",
+          "p-loom": [{"id": "i-3", "sequence_id": 3, "name": "Timeline and the first invoice",
                      "state": "s-td", "assignees": ["m1"], "target_date": "2026-11-20"}]}
-MEMBERS = {"whynotproductions": [{"id": "m1", "email": "someone@example.invalid", "display_name": "Josef"}]}
+MEMBERS = {"a-house": [{"id": "m1", "email": "someone@example.invalid", "display_name": "Tester"}]}
 class H(BaseHTTPRequestHandler):
     def _send(self, obj, code=200):
         body = json.dumps(obj).encode()
@@ -103,14 +106,14 @@ s = open(p).read().replace("ThreadingHTTPServer((\"127.0.0.1\", PORT)", f"Thread
 open(p, "w").write(s)
 PY
 
-printf 'ro-token josef OptiCat,Michael\nrw-token josef OptiCat,Michael\nother-token andre Ymir\n' >"$TMP/tokens"
+printf 'ro-token tester Loomery,Quill\nrw-token tester Loomery,Quill\nother-token second Anvil\n' >"$TMP/tokens"
 printf 'fake\n' >"$TMP/plane-token"
-printf '{"josef":"someone@example.invalid","andre":"nobody@example.invalid"}' >"$TMP/people.json"
+printf '{"tester":"someone@example.invalid","second":"nobody@example.invalid"}' >"$TMP/people.json"
 printf '{"meetings":[]}' >"$TMP/meetings.json"
 
 python3 "$TMP/fake-plane.py" >/dev/null 2>&1 & STUB_PID=$!
 export GIMLE_PLANE_TOKEN_FILE="$TMP/plane-token" GIMLE_PEOPLE_FILE="$TMP/people.json" \
-       GIMLE_PLANE_WORKSPACES=whynotproductions GIMLE_PLANE_URL="http://127.0.0.1:$PORT_STUB"
+       GIMLE_PLANE_WORKSPACES=a-house GIMLE_PLANE_URL="http://127.0.0.1:$PORT_STUB"
 sleep 1
 
 start_mcp() {  # <port> <extra args…>
@@ -141,44 +144,44 @@ PY
 field() { python3 -c 'import json,sys;d=json.load(sys.stdin);print(eval(sys.argv[1],{"d":d}))' "$1"; }
 
 # 1 · a place resolves
-out=$(call $PORT_RO other-token '{"name":"place_board","arguments":{"place":"Ymir"}}')
+out=$(call $PORT_RO other-token '{"name":"place_board","arguments":{"place":"Anvil"}}')
 [ "$(echo "$out" | field 'd["isError"]')" = "False" ] \
-  && ok "a place resolves to a project:        ok (Ymir)" || bad "a place resolves: FAIL ($out)"
+  && ok "a place resolves to a project:        ok (Anvil)" || bad "a place resolves: FAIL ($out)"
 
 # 2 · a name that is not a place is NAMED
 out=$(call $PORT_RO ro-token '{"name":"who_am_i","arguments":{}}')
-[ "$(echo "$out" | field 'd["data"]["unresolved_places"]')" = "['Michael']" ] \
-  && ok "a person in a place column is named:  ok (Michael)" || bad "unresolved named: FAIL ($out)"
+[ "$(echo "$out" | field 'd["data"]["unresolved_places"]')" = "['Quill']" ] \
+  && ok "a person in a place column is named:  ok (Quill)" || bad "unresolved named: FAIL ($out)"
 
 # 3 · scope is enforced, and the refusal says what may be touched
-out=$(call $PORT_RO other-token '{"name":"place_board","arguments":{"place":"OptiCat"}}')
+out=$(call $PORT_RO other-token '{"name":"place_board","arguments":{"place":"Loomery"}}')
 echo "$out" | grep -q "outside this token's scope" \
   && ok "scope refused by name:                ok" || bad "scope refusal: FAIL ($out)"
 
-# 4 · my_tasks is scoped — the OptiCat-only token sees OptiCat's card, never Ymir's
+# 4 · my_tasks is scoped — the Loomery-only token sees Loomery's card, never Anvil's
 out=$(call $PORT_RO ro-token '{"name":"my_tasks","arguments":{}}')
 [ "$(echo "$out" | field 'd["data"]["count"]')" = "1" ] \
-  && [ "$(echo "$out" | field 'd["data"]["rows"][0]["place"]')" = "whynotproductions/OptiCat" ] \
-  && ok "my_tasks is scoped to the place:      ok (1 card, OptiCat)" || bad "my_tasks scope: FAIL ($out)"
+  && [ "$(echo "$out" | field 'd["data"]["rows"][0]["place"]')" = "a-house/Loomery" ] \
+  && ok "my_tasks is scoped to the place:      ok (1 card, Loomery)" || bad "my_tasks scope: FAIL ($out)"
 
 # 5 · place_board groups by the project's own state names
-out=$(call $PORT_RO other-token '{"name":"place_board","arguments":{"place":"Ymir"}}')
+out=$(call $PORT_RO other-token '{"name":"place_board","arguments":{"place":"Anvil"}}')
 echo "$out" | grep -q '"Backlog"' \
   && ok "the board speaks its own states:      ok (Backlog)" || bad "state names: FAIL ($out)"
 
 # 6 · the write pair refuses while read-only
-out=$(call $PORT_RO ro-token '{"name":"create_card","arguments":{"place":"OptiCat","title":"x"}}')
+out=$(call $PORT_RO ro-token '{"name":"create_card","arguments":{"place":"Loomery","title":"x"}}')
 echo "$out" | grep -q "read-only on this server" \
   && ok "create_card refuses when read-only:   ok" || bad "read-only refusal: FAIL ($out)"
 
 # 7 · with --allow-write it files, moves, and refuses an unknown state by name
-out=$(call $PORT_RW rw-token '{"name":"create_card","arguments":{"place":"OptiCat","title":"Filed by the test"}}')
+out=$(call $PORT_RW rw-token '{"name":"create_card","arguments":{"place":"Loomery","title":"Filed by the test"}}')
 echo "$out" | grep -q '"created"' && ok "create_card files a ticket:           ok" \
   || bad "create_card: FAIL ($out)"
-out=$(call $PORT_RW rw-token '{"name":"update_card","arguments":{"place":"OptiCat","card":"3","state":"Done"}}')
+out=$(call $PORT_RW rw-token '{"name":"update_card","arguments":{"place":"Loomery","card":"3","state":"Done"}}')
 echo "$out" | grep -q '"state": "Done"' && ok "update_card moves a ticket:           ok" \
   || bad "update_card: FAIL ($out)"
-out=$(call $PORT_RW rw-token '{"name":"update_card","arguments":{"place":"OptiCat","card":"3","state":"Nonsense"}}')
+out=$(call $PORT_RW rw-token '{"name":"update_card","arguments":{"place":"Loomery","card":"3","state":"Nonsense"}}')
 echo "$out" | grep -q "no such state" && ok "an unknown state is refused by name:  ok" \
   || bad "unknown state: FAIL ($out)"
 

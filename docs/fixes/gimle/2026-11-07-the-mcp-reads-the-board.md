@@ -54,16 +54,17 @@ reason cannot be told from a door that works.
 - Three tools: `create_card`, `update_card` (both refused unless the unit carries `--allow-write`) and
   `list_plans` (the mirrored documents the hall already serves — never a second copy of a plan).
 - `bin/gates/tests/test_gimle_mcp_board.sh` — ten claims, proved by command against a stub that serves exactly
-  the four endpoints the reader uses.
+  the four endpoints the reader uses, with invented project names only (RULES/04: a client name is not a
+  fixture).
 
 ## Measured
 
 Proved on the **real** board on the heart, from a scratch copy on a spare port, the live service untouched:
 
 ```
-josef · who_am_i    → allowed_places: wayof/WayOf · synteon/ForemanAI · opticat/OptiCat · wayof/Growth Agent · wayof/InvestReady
-josef · list_places → open: 7 · 0 · 24 · 25 · 9      (65 real cards)
-andre · place_board OptiCat → 24 cards, its own state names (Todo …), real titles
+subject A · who_am_i    → allowed_places: wayof/WayOf · synteon/ForemanAI · opticat/OptiCat · wayof/Growth Agent · wayof/InvestReady
+subject A · list_places → open: 7 · 0 · 24 · 25 · 9      (65 real cards)
+subject B · place_board → 24 cards, its own state names (Todo …), real titles
 create_card on a read-only unit → refused, and the audit line carries the reason
 ```
 

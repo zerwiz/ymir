@@ -697,8 +697,8 @@ def main(argv):
                     help="directory of consented shared Excalidraw scenes (default: <data dir>/../shared-scenes)")
     ap.add_argument("--plane", action="store_true",
                     help="read the board (Plane) as truth for places, cards and owners — the desk's own reader")
-    ap.add_argument("--workspaces", default="whynotproductions,wayof,synteon,opticat,inmostinvest",
-                    help="the board workspaces a place may name (csv)")
+    ap.add_argument("--workspaces", default="",
+                    help="the board workspaces a place may name (csv; default: the reader's own GIMLE_PLANE_WORKSPACES)")
     ap.add_argument("--allow-write", action="store_true",
                     help="let create_card and update_card act; without it the board door is read-only")
     ap.add_argument("--docs", default="",
@@ -713,7 +713,10 @@ def main(argv):
         try:
             sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
             import plane_reader  # the desk's reader — one door for both faces of the hall
-            board = Board(plane_reader, [w.strip() for w in args.workspaces.split(",") if w.strip()], docs)
+            # Rule 07: the workspaces are the READER's, from one place (GIMLE_PLANE_WORKSPACES), so the
+            # desk and the MCP can never disagree about which boards exist.
+            named = args.workspaces or ",".join(getattr(plane_reader, "WORKSPACES", []))
+            board = Board(plane_reader, [w.strip() for w in named.split(",") if w.strip()], docs)
         except Exception as exc:  # noqa: BLE001
             sys.stderr.write(f"mcp: the board backend is not available ({exc.__class__.__name__}: {exc})\n")
     Handler.state = State(args.data, args.tokens, args.audit, scenes,
