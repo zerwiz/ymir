@@ -8,7 +8,7 @@
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 KIT="$HERE/kit"
-VERSION="1.1.0"
+VERSION="1.0.1"
 
 mode=""; repo=""
 for a in "$@"; do
@@ -37,20 +37,6 @@ printf '  missing: %s\n' "${#missing[@]}"
 printf '  different (a local rule wins; it is reported, never replaced): %s\n' "${#differ[@]}"
 [ "${#differ[@]}" -gt 0 ] && printf '    %s\n' "${differ[@]}"
 
-# A gate written after an `exit 0` is a gate that never runs — the fault this kit itself carried until 2026-11-06.
-dead_gates=""
-for hook in "$repo"/.githooks/*; do
-  [ -f "$hook" ] || continue
-  first_exit=$(grep -n '^[[:space:]]*exit 0' "$hook" 2>/dev/null | head -1 | cut -d: -f1)
-  [ -n "$first_exit" ] || continue
-  after=$(tail -n "+$((first_exit + 1))" "$hook" | grep -cE '^[[:space:]]*(bash|npm|sh) ')
-  [ "$after" -gt 0 ] && dead_gates="$dead_gates $(basename "$hook"):$after"
-done
-if [ -n "$dead_gates" ]; then
-  printf '  DEAD GATES (a check written after an exit 0 — it never runs):%s\n' "$dead_gates"
-  printf '    fix: move every refusal above the first exit; the kit version already does\n'
-fi
-
 if [ "$mode" = apply ]; then
   for rel in "${missing[@]:-}"; do
     [ -n "$rel" ] || continue
@@ -59,11 +45,8 @@ if [ "$mode" = apply ]; then
     chmod +x "$repo/$rel" 2>/dev/null || true
   done
   # a manifest so the next run knows what it installed and when
-  # what the kit CARRIES and what this run ADDED — a manifest that says "files: 0" on a refresh reads as an
-  # empty kit. Appended 2026-11-06, after the first install that had nothing missing said exactly that.
-  carried="$(cd "$KIT" && find . -type f ! -name README.md | grep -c . | tr -d ' ')"
-  printf '{\n  "kit": "%s",\n  "applied": "%s",\n  "files": %s,\n  "installed_this_run": %s\n}\n' \
-    "$VERSION" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$carried" \
+  printf '{\n  "kit": "%s",\n  "applied": "%s",\n  "files": %s\n}\n' \
+    "$VERSION" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     "$(printf '%s\n' "${missing[@]:-}" | grep -c . | tr -d ' ')" > "$repo/.collab-kit.json"
   # the hooks only run if git is told where they are
   git -C "$repo" config core.hooksPath .githooks
