@@ -85,3 +85,32 @@ sudo bash bin/ward/garmr.sh install
 
 run from a tree carrying this change. Until it runs, `audit-rules.service` stays red — correctly
 red now, because the ruleset it will load is one that can actually load.
+
+## Appended 2026-11-05 — arming it proved the note wrong on one detail, and found two more faults
+
+The ward is armed. `audit-rules.service` reports `Result=success`, `ExecMainStatus=0`, and 24 rules
+sit in the kernel including `-w /home/heimdall/.ssh/authorized_keys -p wa -k ymir-identity`.
+
+**The correction.** I wrote above that generated line 23 was `-w /etc/cron.d`. It was not. `augenrules`
+prepends a **three-line header** to the generated `/etc/audit/audit.rules` — visible only once the file
+exists — so generated line 23 was `ymir.rules` line **20**: `-w $YMIR_HOME/.ssh/authorized_keys`, a
+hoard path this seat has never had. That was the rule that disarmed the house. `/etc/cron.d` was the
+*next* one waiting, at generated line 26. Both were real; I named the second when it was the first.
+
+**Two more faults, both found because arming is the real test:**
+
+1. **The unit could never be restarted, even with a correct file.** `garmr.sh install` primes the rules
+   with `auditctl` line by line, then `augenrules` tries to load the same set and refuses every rule
+   with `Error sending add rule data request (Rule exists)`. So the file was right and the service was
+   still red — a green state that was unreachable by design. The ruleset now begins with **`-D`**, the
+   standard first line of an audit file, which makes a load idempotent.
+2. **`$HOME` under sudo is root's.** The house's own advice is `sudo bash bin/ward/garmr.sh install`,
+   and `sudo` resets `HOME=/root` — so the one watch meant to witness a key being added pointed at
+   `/root/.ssh/authorized_keys`, which does not exist, and was silently guarded away. The operator is
+   named by `SUDO_USER`, and that is whose `~/.ssh` is watched now. Proven by installing with
+   `HOME=/heimdall-nohome`: the rule still came out as `/home/heimdall/.ssh/authorized_keys`.
+
+What the ward watches now — every path verified to exist at generation time: `passwd`, `shadow`,
+`group`, `sudoers`, `sudoers.d`, the operator's `authorized_keys`, the two systemd unit directories,
+and the hoard's `evidence`, `life/meetings` and `secrets` shelves. Nothing watched that is not there,
+so nothing can disarm the rest.
