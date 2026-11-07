@@ -18,3 +18,7 @@ because `bin/day/` was a new door the register had never counted. Regenerated th
 - `.agents/assets/agents/capabilities.md`
 - `.agents/assets/agents/capabilities/day.md`
 - `bin/README.md`, `bin/*/INDEX.md`, `.agents/backend/README.md`
+
+### CHANGE LOG
+
+- **2026-11-07** — written with the ward message and the regenerated register.
