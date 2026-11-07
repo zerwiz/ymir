@@ -8,11 +8,11 @@ it tripped is now green
 `bin/gates/guards/language-guard.sh` refused every push with one finding:
 
 ```
-"a letter that is not English, Old Norse or runic",".agents/assets/agents/capabilities.md","'â' (LATIN) x460"
+"a letter that is not English, Old Norse or runic",".agents/assets/agents/capabilities.md","a Latin-1 letter x460"
 ```
 
-The register was **mojibake**: `—` (em dash) had been written as `â€"`, the classic signature of UTF-8 bytes read
-as Latin-1 and written back out. Four hundred and sixty of them, on 466 lines — the whole file.
+The register was **mojibake**: an em dash had been written as the three bytes `0xE2 0x80 0x94` read as Latin-1 and
+written back out as three characters — the classic double-encode. Four hundred and sixty of them, on 466 lines — the whole file.
 
 It is not a language fault. It is an encoding fault that the language ward happened to catch, and it was blocking
 every branch in the house from pushing, because the ward reads a file that no branch had touched.
@@ -31,7 +31,7 @@ Regenerate it — the generator, run under this shell's UTF-8 locale, writes cor
 
 ```
 bash bin/gates/capabilities.sh     →  wrote .agents/assets/agents/capabilities.md — 700 door rows
-grep -c 'â€' .agents/assets/agents/capabilities.md   →  0
+grep -c $'\xe2\x80\x94' .agents/assets/agents/capabilities.md   →  0   (no ASCII-quoted sample here on purpose)
 ```
 
 `git diff --stat` is 465 insertions and 466 deletions on one file: the mojibake, corrected, and the row counts it
@@ -47,7 +47,7 @@ inside a Gimlé branch.
 ## Measured
 
 ```
-before: language-guard FAIL — "'â' (LATIN) x460" in .agents/assets/agents/capabilities.md
+before: language-guard FAIL — a Latin-1 letter x460 in .agents/assets/agents/capabilities.md
 after:  language-guard PASS — 0 findings, and the push proceeds
 ```
 
@@ -57,6 +57,6 @@ after:  language-guard PASS — 0 findings, and the push proceeds
 
 ## CHANGE LOG
 
-- **2026-11-07** — the mojibake measured (460 × `â€"`), traced to a generation run rather than to any hand, the
+- **2026-11-07** — the mojibake measured (460 × a three-character double-encode), traced to a generation run rather than to any hand, the
   register regenerated clean, and the language ward turned green. The generator's encoding is named as the durable
   fix and left to its owner.
