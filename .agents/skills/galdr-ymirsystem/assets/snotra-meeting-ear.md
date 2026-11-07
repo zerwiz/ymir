@@ -544,3 +544,33 @@ also uses explicit UTF-8 for its text pipes: Windows locale encoding otherwise
 encoded accented answer text differently from the child's UTF-8 stdin, failing
 before Kokoro synthesis. A Unicode-answer regression exercises the real cleaner
 under PYTHONIOENCODING=utf-8; ASCII-only smoke cannot prove this boundary.
+
+## The letter templates (2026-11-07)
+
+A letter that leaves the house should read as well in Gmail as it does in a terminal, so the mail doors
+now point at a shelf of **vendored, pinned, licence-clean** HTML templates rather than at advice:
+
+```
+systems/snotra/services/letters/templates/
+├── leemunroe-simple/email.html      MIT · one column, one call to action
+├── cerberus/{fluid,responsive,hybrid}.html  MIT · the Outlook-safe hybrid patterns
+├── mailgun-transactional/{action,alert,billing}.html  MIT · act · notice · invoice
+└── README.md                        provenance (repo + pinned sha + date), the house rules, how to update
+```
+
+**How a letter uses one.** `mail-send.sh draft … --html FILE` already sends `multipart/alternative`, so the
+plain `--body` is the real words and the HTML is the same words dressed. Both `mail-send.sh --help` and
+`snotra-letter.sh --help` name the shelf, so a hand that has never read this asset still finds it. Cerberus'
+files carry `via.placeholder.com` images that must be removed before sending; every template must pass
+`private-guard check --surface email --to <address>` like any other body.
+
+**The rules a template does not relax:** inline CSS only · tables, never flex or grid · no JavaScript · no
+tracking pixel, remote font or third-party image · 600 px column, legible at 320 px and with images off ·
+nothing private inside a template (the shelf is in a public repository) · no password, internal address,
+vault path or fleet name in any letter.
+
+**Licences travel with the code.** Each folder keeps its upstream `LICENSE`/`LICENSE.txt`; deleting one while
+the markup beside it is used breaks MIT's one condition. Updating means re-downloading from the **pinned
+commit** recorded in `templates/README.md`, never from a default branch.
+
+Owner doc: `systems/snotra/services/letters/templates/README.md`.

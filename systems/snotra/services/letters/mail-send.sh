@@ -5,6 +5,10 @@
 # without the operator's word: `send` asks snotra-approve.sh first, and an approval
 # that does not match the draft's CURRENT bytes is a refusal (plan 124 §7).
 #
+# TEMPLATES: systems/snotra/services/letters/templates/ — vendored, pinned, licence-clean
+# HTML letter templates (Cerberus · leemunroe · Mailgun). Send --html from one of them so a
+# letter reads as well in Gmail as in a terminal; read that folder's README first.
+#
 #   mail-send.sh draft --to a@x,b@y --subject S --body FILE \
 #       [--html FILE] [--attach FILE ...] [--record ID] [--dry-run]
 #   mail-send.sh raw    <draft-id>     # the exact bytes, for an approval hash
@@ -17,7 +21,7 @@
 set -euo pipefail
 VERSION="1.0.1"
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
-  -h|--help|"") sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
+  -h|--help|"") sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 ACTION="${1:-draft}"; shift || true
 ROOT="$(d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; s="$d"; while [ "$d" != / ] && { [ ! -d "$d/RULES" ] || [ ! -d "$d/.agents" ]; }; do d="$(dirname "$d")"; done; { [ -d "$d/RULES" ] && [ -d "$d/.agents" ]; } || d="$s"; printf '%s' "$d")"
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true; fi
