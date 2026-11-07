@@ -1,12 +1,6 @@
 ---
 name: bragi
-description: >-
-  Bragi — the skald. The marketing craft: web research and crawling with
-  Firecrawl (firecrawl.dev) and agentic browser actions with browser-use
-  (github.com/browser-use/browser-use) — for SEO, content, competitive intel,
-  campaigns, and posting. Use when the task is marketing, growth, content,
-  social, or outreach. Keywords — marketing, seo, content, campaign, social,
-  competitor, crawl, scrape, firecrawl, browser-use.
+description: "Bragi — the skald, the marketing craft. Web research and crawling with Firecrawl, agentic browser actions with browser-use, and the case for why we win: competitive advantage, positioning, a why-us page, a competitor teardown, and the evidence gate that refuses a claim with no measurement. Use when the task is marketing, growth, content, social, outreach, SEO, or competitive positioning. Keywords — marketing, seo, content, campaign, social, competitor, competitive advantage, positioning, why us, teardown, evidence, crawl, scrape, firecrawl, browser-use."
 argument-hint: "[research | seo | content | campaign | competitor | post]"
 ---
 
@@ -157,3 +151,22 @@ video_road[3]{step,verb,why}:
 **Where it lands:** the scraped/transcribed source goes to the marketing
 workspace (`$YMIR_HOME/workspaces/marketing/`), beside the Firecrawl output —
 the same shelf the daily scrape round fills (plan 49).
+
+## 7. Competitive advantage — the teardown, the screen, and the evidence gate
+
+Why we win is a **research** question before it is a copywriting one, and a claim about it
+is a lie until it carries a measurement.
+
+- **The asset:** `assets/competitive-advantage.md` — the VRIO screen, the competitive set
+  taken from deals we lost rather than from listicles, the one-page teardown with every
+  fact dated and the rival's words verbatim, the two files (internal with limits, client
+  with evidence), and the cadence.
+- **The method, in the kit:** `bin/collab/kit/docs/advantage.md` — installed into a
+  standardised repository as `docs/advantage.md`.
+- **The gate:** `bin/collab/kit/scripts/advantage-audit.sh` — refuses a page whose claim
+  has no evidence, naming the line. `--strict --check` is the door a client-facing page
+  must pass before it is sent.
+- **The law:** a claim with an empty evidence line is deleted, never softened.
+
+Load it when the task is positioning, a "why us", a competitor teardown, or the question
+"what is our competitive advantage?".
