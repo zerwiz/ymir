@@ -1,18 +1,37 @@
 #!/usr/bin/env bash
 # The cheap checks, so a commit never carries a broken tree.
+#
+# It runs only the checks this project DECLARES (`package.json` scripts `check` and `typecheck`). A project
+# with no package.json — every Elixir repository in the house — is not a project that failed the doctor; it
+# is a project that never had one. The old shape asked npm on any machine where npm was installed, which
+# refused every commit in an Elixir repository and was mistaken for a fault in the tree.
 set -u
-if ! command -v npm >/dev/null 2>&1; then exit 0; fi
 
-printf 'pre-commit: the doctor\n'
-npm run --silent check || {
-  printf '\npre-commit refused: a ward found a fault (see the FAIL row above)\nhelp: fix it, or commit with --no-verify and say why in the message\n' >&2
-  exit 1
+declares() {
+  [ -f package.json ] || return 1
+  if command -v node >/dev/null 2>&1; then
+    node -e 'const s=(require("./package.json").scripts)||{};process.exit(s[process.argv[1]]?0:1)' "$1" 2>/dev/null
+    return $?
+  fi
+  grep -q "\"$1\"[[:space:]]*:" package.json 2>/dev/null
 }
 
-printf 'pre-commit: typecheck\n'
-npm run --silent typecheck || {
-  printf '\npre-commit refused: a type error — the contract and a consumer disagree\n' >&2
-  exit 1
-}
+command -v npm >/dev/null 2>&1 || exit 0
+
+if declares check; then
+  printf 'pre-commit: the doctor\n'
+  npm run --silent check || {
+    printf '\npre-commit refused: a ward found a fault (see the FAIL row above)\nhelp: fix it, or commit with --no-verify and say why in the message\n' >&2
+    exit 1
+  }
+fi
+
+if declares typecheck; then
+  printf 'pre-commit: typecheck\n'
+  npm run --silent typecheck || {
+    printf '\npre-commit refused: a type error — the contract and a consumer disagree\n' >&2
+    exit 1
+  }
+fi
 
 exit 0

@@ -11,11 +11,7 @@ vendored `fm-*` script kept byte-comparable to upstream on purpose.
 `disposition` says what happens to it: `keep`, `migrate → src/…` where the
 Python runtime already has the module, `retire` for orphans, `provenance`.
 
-
-bin[783]{file,does,kind,verdict,disposition,callers,lines}:
-
-bin[774]{file,does,kind,verdict,disposition,callers,lines}:
-
+bin[789]{file,does,kind,verdict,disposition,callers,lines}:
   "15-commits-leave-by-pull-request.md","15 — Every commit leaves by a pull request, or it lands in main","data","wired","keep",0,35
   "16-a-review-is-a-file.md","16 — A review is a file in the repository","data","wired","keep",0,32
   "17-one-agent-one-worktree.md","17 — One agent, one worktree","data","wired","keep",0,36
@@ -80,7 +76,7 @@ bin[774]{file,does,kind,verdict,disposition,callers,lines}:
   "calendar-watch.sh","calendar-watch.sh — do not walk into a meeting by accident.","tool","wired","keep",0,81
   "capabilities.md","What Ymir can do — the capability register","data","wired","keep",6,28
   "capabilities.sh","A GENERATED FILE MUST BE A FUNCTION OF CONTENT ALONE (0.1.94/0.1.95/0.1.97 — three","tool","wired","keep",9,257
-  "catalog.sh","catalog.sh — THE door to what this machine can serve.","tool","wired","keep",4,77
+  "catalog.sh","catalog.sh — THE door to what this machine can serve.","tool","wired","keep",5,77
   "channel_calendar.py","bin/time/snotra/channel_calendar.py -> systems/snotra/services/cron/channel_calendar.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "channel_chat.py","bin/time/snotra/channel_chat.py -> systems/snotra/services/cron/channel_chat.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "channel_email.py","bin/time/snotra/channel_email.py -> systems/snotra/services/cron/channel_email.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
@@ -148,7 +144,7 @@ bin[774]{file,does,kind,verdict,disposition,callers,lines}:
   "eindri-start.sh","eindri-start.sh — start an Eindri as the Allfather asks.","tool","wired","keep",1,130
   "eindri-wake-lib.sh","eindri-wake-lib.sh — the ONE delivery ledger behind the Eindri push path.","lib","wired","keep",5,48
   "eindri-watch.sh","eindri-watch.sh — the control door on the Eindri→Brokk wake bridge.","tool","wired","keep",5,131
-  "einherjar-spawn.sh","einherjar-spawn.sh - gather an Eindri worker (Einherjar = the chosen who are","tool","wired","keep",15,1098
+  "einherjar-spawn.sh","einherjar-spawn.sh - gather an Eindri worker (Einherjar = the chosen who are","tool","wired","keep",15,1107
   "eir-doctor.sh","eir-doctor.sh — Eir, the healer: diagnose the running system, then mend it.","tool","wired","keep",8,629
   "electron-lib.sh","electron-lib.sh — is a desktop shell's runtime actually there?","lib","tested","keep",7,212
   "erindi-brief.sh","erindi-brief.sh - scaffold an Eindri worker brief at data/<task-id>/brief.md.","tool","wired","keep",4,382
@@ -361,9 +357,7 @@ bin[774]{file,does,kind,verdict,disposition,callers,lines}:
   "groa-update.sh","groa-update.sh — Gróa, the völva who renews.","tool","wired","keep",10,324
   "group-add.sh","bin/assistant/group-add.sh -> systems/skirnir/services/group-add.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
   "group-allow.sh","bin/assistant/group-allow.sh -> systems/skirnir/services/group-allow.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says…","tool","wired","keep",0,16
-
-  "guards.sh","guards.sh — every TREE ward, in one command.","tool","wired","keep",12,105
-
+  "guards.sh","guards.sh — every TREE ward, in one command.","tool","wired","keep",13,105
   "hall-snapshot.sh","bin/time/snotra/hall-snapshot.sh -> systems/snotra/services/cron/hall-snapshot.sh — RETIRED SHIM","tool","wired","keep",1,12
   "hall.sh","hall.sh — the whole house in ONE read: the seat, the doors, the queue, the last runes.","tool","wired","keep",1,16
   "hamr-harness.sh","hamr-harness.sh - detect the agent harness (Hamr) this process tree runs on.","tool","wired","keep",1,247
@@ -391,7 +385,7 @@ bin[774]{file,does,kind,verdict,disposition,callers,lines}:
   "hnitbjorg-ensure.sh","hnitbjorg-ensure.sh — ensure the vault's tooling stands and its path is sound.","tool","wired","keep",2,111
   "hnitbjorg.sh","hnitbjorg.sh — Hnitbjörg: the encrypted document vault.","tool","wired","keep",3,250
   "hoard-guard.sh","hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME).","tool","wired","keep",3,150
-  "hoard-lib.sh","hoard-lib.sh — where the operator's HOME lives, and the two roots beneath it.","lib","tested","keep",203,116
+  "hoard-lib.sh","hoard-lib.sh — where the operator's HOME lives, and the two roots beneath it.","lib","tested","keep",210,116
   "hodd-set.sh","hodd-set.sh — set ONE key in an age-encrypted secret file, with guards that make a","tool","wired","keep",4,106
   "hodd.sh","hodd.sh — the Allfather's private hoard: path, init, ls, load, tenant.","tool","tested","keep",32,135
   "home-contract-check.sh","home-contract-check.sh — the contract that raises a home is itself checked.","tool","wired","keep",2,160
@@ -402,7 +396,7 @@ bin[774]{file,does,kind,verdict,disposition,callers,lines}:
   "host-watch.sh","host-watch.sh — the watcher a hand can actually have.","tool","wired","keep",1,154
   "hound.py","'''hound.py — Garmr's senses: what executes, who touches the sensitive shelves,","tool","tested","keep",1,460
   "housekeeping.sh","housekeeping.sh — what the worktrees cost, what is already safe to forget, and what has","tool","tested","keep",2,365
-  "housewatch.sh","housewatch.sh — the quiet parts of the house, checked on a timer so they cannot go quiet.","tool","wired","keep",0,137
+  "housewatch.sh","housewatch.sh — the quiet parts of the house, checked on a timer so they cannot go quiet.","tool","wired","keep",0,160
   "huginn-research-worker.sh","huginn-research-worker — Apodex-powered research worker (Eindri).","tool","wired","keep",0,136
   "identity-guard.sh","identity-guard.sh — a commit that leaves by push must not publish a private mailbox.","tool","wired","keep",4,145
   "inbound-test.sh","inbound-test.sh — THE acceptance test for 'people can mail us' (plan 116 §15.3.4).","tool","wired","keep",3,141
@@ -474,7 +468,7 @@ bin[774]{file,does,kind,verdict,disposition,callers,lines}:
   "name-registry.sh","name-registry.sh — the collision system for Ymir's names.","tool","wired","keep",3,167
   "nidhogg.sh","nidhogg.sh — Níðhöggr, the gnawer at the root.","tool","wired","keep",0,229
   "no-delete-guard.sh","no-delete-guard.sh — Rule 11, ENFORCED.","tool","wired","keep",4,90
-  "nornir-cron-start.sh","nornir-cron-start.sh - ensure Brokk's scheduled jobs are running (idempotent).","tool","tested","keep",6,404
+  "nornir-cron-start.sh","nornir-cron-start.sh - ensure Brokk's scheduled jobs are running (idempotent).","tool","tested","keep",7,404
   "nornir-job-asken-handoff.sh","nornir-job-asken-handoff.sh — the rollover, on the schedule.","tool","wired","keep",0,63
   "nornir-job-bragi-scrape.sh","nornir-job-bragi-scrape.sh — Bragi, on the loom: the scheduled scrape round.","tool","wired","keep",0,154
   "nornir-job-daily-briefing.sh","nornir-job-daily-briefing.sh - the 07:00 Sága daily seeing.","tool","wired","keep",1,219
@@ -536,8 +530,8 @@ bin[774]{file,does,kind,verdict,disposition,callers,lines}:
   "pr-pretest.sh","pr-pretest.sh — the PR-time gate: a REAL npm installation, locally, before","tool","wired","keep",1,59
   "pr-seal.sh","pr-seal.sh — the seat's own PR is sealed by the seat, and the word arrives through Gná.","tool","wired","keep",1,324
   "pr-ship-guard.sh","pr-ship-guard.sh — Rule 08, the ship door: the BRANCH is a smith's to push; the PR is not.","tool","wired","keep",2,175
-  "pre-commit","The cheap checks, so a commit never carries a broken tree.","tool","tested","keep",15,19
-  "pre-push","Three gates: never push a protected branch, never push a red tree, and never push a behaviour change without its note.","tool","tested","keep",15,38
+  "pre-commit","The cheap checks, so a commit never carries a broken tree.","tool","tested","keep",15,38
+  "pre-push","Three gates: never push a protected branch, never push a red tree, and never push a behaviour change","tool","tested","keep",15,55
   "prereq-ensure.sh","prereq-ensure.sh — self-healing prerequisite engine for Ymir.","tool","wired","keep",12,354
   "private-data.sh","private-data — the repository is public; the operator's machine is not.","tool","wired","keep",1,39
   "private-guard.py","'''private-guard — private structure and protected material never cross a surface.'''","tool","wired","keep",2,122
@@ -808,12 +802,6 @@ bin[774]{file,does,kind,verdict,disposition,callers,lines}:
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
   "zoom_ingest.py","bin/time/snotra/zoom_ingest.py -> systems/snotra/services/cron/zoom_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
 
+**Tally.** verdict: wired=533, tested=256
 
-**Tally.** verdict: wired=527, tested=256
-
-**Tally.** disposition: keep=768, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/backend.py=2, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/worktree.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
-
-**Tally.** verdict: wired=520, tested=254
-
-**Tally.** disposition: keep=759, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/backend.py=2, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/worktree.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1
-
+**Tally.** disposition: keep=774, migrate → src/ymir_runtime/send.py=3, migrate → src/ymir_runtime/backend.py=2, migrate → src/ymir_runtime/state/lock.py=2, migrate → src/ymir_runtime/seat.py=1, migrate → src/ymir_runtime/harness.py=1, migrate → src/ymir_runtime/watch.py=1, migrate → src/ymir_runtime/worktree.py=1, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/library.py=1, migrate → src/ymir_runtime/dispatch/registry.py=1

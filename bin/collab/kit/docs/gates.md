@@ -7,9 +7,9 @@ Two layers: **wards** (`npm run check`, twenty of them, in `scripts/wards/`) pro
 
 ```
 hooks[3]{hook,refuses,why}:
-  "**pre-commit**","a red ward, a type error, **a credential**, **a machine path or a real address**","a secret in a commit is a secret in every clone, and a history rewrite is the only cure"
+  "**pre-commit**","a red ward, a type error, **a credential**, **a machine path or a real address** — but **only the checks the project declares** (`package.json` scripts `check`, `typecheck`); a repository with no `package.json` is not a failed doctor","a secret in a commit is a secret in every clone, and a history rewrite is the only cure"
   "**commit-msg**","a subject that says nothing","a commit that cannot be read six months later is a commit nobody trusts"
-  "**pre-push**","a push to `master` or `main`, and a push of a red tree","merges are the Allfather's, and the branch guard is the reminder"
+  "**pre-push**","a push to `master` or `main`, a branch with no pull request, and a push of a red tree — the declared `check` and `test` scripts, where a project has them","merges are the Allfather's, and the branch guard is the reminder"
 ```
 
 ## The gates themselves
