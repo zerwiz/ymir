@@ -16,7 +16,11 @@ capabilities[5]{surface,count}:
 
   "shell doors (bin/*.sh)",769
 
+
+  "shell doors (bin/*.sh)",769
+
   "shell doors (bin/*.sh)",768
+
 
 
   "runtime modules (src/ymir_runtime/*.py)",56
@@ -61,6 +65,7 @@ capability_folders[31]{folder,doors,index}:
   "vault",9,".agents/assets/agents/capabilities/vault.md"
   "voice",1,".agents/assets/agents/capabilities/voice.md"
   "ward",13,".agents/assets/agents/capabilities/ward.md"
+
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
@@ -697,6 +702,35 @@ capability_folders[31]{folder,doors,index}:
 | trello-map.sh | bin/time/snotra/trello-map.sh -> systems/snotra/services/cron/trello-map | tested | keep (a human or a cron row must run it) |
 | tts-lease.sh | bin/time/snotra/tts-lease.sh -> systems/snotra/services/tts-lease/tts-le | tested | keep (a human or a cron row must run it) |
 | ymir-say.sh | bin/time/snotra/ymir-say.sh -> systems/snotra/services/tts-lease/ymir-sa | tested+named | keep (a human or a cron row must run it) |
+
+| sol.sh | sol.sh — Sól, the sun's wheel: THE clock and date door. | tested+named | keep (a human or a cron row must run it) |
+| test_event_trigger.sh | test_event_trigger.sh — a smithy may be started by a person, the clock | tested+named | keep (a human or a cron row must run it) |
+| well-vault-sync.sh | well-vault-sync.sh — Kaia's memory across the Allfather's machines. | tested+named | keep (a human or a cron row must run it) |
+| confidential.sh | confidential.sh — a session where vault work has no route off the vaul | tested+named | keep (a human or a cron row must run it) |
+| gleipnir-lock-lib.sh | gleipnir-lock-lib.sh — the session lock (Gleipnir), a THIN SHIM. | tested+named | keep (a human or a cron row must run it) |
+| hnitbjorg-ensure.sh | hnitbjorg-ensure.sh — ensure the vault's tooling stands and its path i | tested+named | keep (a human or a cron row must run it) |
+| hnitbjorg.sh | hnitbjorg.sh — Hnitbjörg: the encrypted document vault. | tested+named | keep (a human or a cron row must run it) |
+| hoard-lib.sh | hoard-lib.sh — where the operator's HOME lives, and the two roots bene | tested+named | keep (a human or a cron row must run it) |
+| hodd-set.sh | hodd-set.sh — set ONE key in an age-encrypted secret file, with guards | tested | keep (a human or a cron row must run it) |
+| hodd.sh | hodd.sh — the Allfather's private hoard: path, init, ls, load, tenant. | tested+named | keep (a human or a cron row must run it) |
+| phone-lib.sh | phone-lib.sh — reach the operator's phone storage for the vault's phon | tested | keep (a human or a cron row must run it) |
+| push.sh | push.sh — commit and push NAMED paths in the home (never `git add -A`) | tested+named | keep (a human or a cron row must run it) |
+| voice-ensure.sh | voice-ensure.sh — ensure the voice engines: whisper.cpp (speech → te | tested+named | keep (a human or a cron row must run it) |
+| garmr-bite-test.sh | garmr-bite-test.sh — the laws of the bite, proven offline (no real bit | tested | keep (a human or a cron row must run it) |
+| garmr-bite.sh | garmr-bite.sh — GARMR'S TEETH. The hound may contain, within a written | tested | keep (a human or a cron row must run it) |
+| garmr-canary.sh | garmr-canary.sh — the deletion tripwire: files that must never vanish. | tested | keep (a human or a cron row must run it) |
+| garmr-smoke.sh | garmr-smoke.sh — GARMR's smoke test. Is the hound listening, or merely | tested | keep (a human or a cron row must run it) |
+| garmr.sh | garmr.sh — GARMR, the hound at the gate: the door to Ymir's guardian. | tested | keep (a human or a cron row must run it) |
+| harden.sh | harden.sh — Vörðr's hands: the MENDS, written out, and the safe ones | tested | keep (a human or a cron row must run it) |
+| host-watch.sh | host-watch.sh — the watcher a hand can actually have. | tested | keep (a human or a cron row must run it) |
+| security-audit.sh | security-audit.sh — Vörðr's eyes: WHAT IS THIS MACHINE ACTUALLY EXPO | tested | keep (a human or a cron row must run it) |
+| services-register.sh | services-register.sh — is the register of doors READ, or is it prose? | tested | keep (a human or a cron row must run it) |
+| verdr.sh | verdr.sh — VÖRÐR, the warden: the standing report. | tested | keep (a human or a cron row must run it) |
+| vidarr-agent.sh | vidarr-agent.sh — seat the DEFENDER as a live pi agent on the fast roa | tested | keep (a human or a cron row must run it) |
+| vidarr.sh | vidarr.sh — VÍÐARR, the silent avenger: the defender's own door. | tested+named | keep (a human or a cron row must run it) |
+| ward-answer.sh | ward-answer.sh — answer a ward decision. close · keep (with a reason) | tested | keep (a human or a cron row must run it) |
+| ward-ask.sh | ward-ask.sh — Vörðr reports, then ASKS. A finding is not a decision. | tested | keep (a human or a cron row must run it) |
+
 | sol.sh | sol.sh â€” SÃ³l, the sun's wheel: THE clock and date door. | tested+named | keep (a human or a cron row must run it) |
 | test_event_trigger.sh | test_event_trigger.sh â€” a smithy may be started by a person, the clock | tested+named | keep (a human or a cron row must run it) |
 | well-vault-sync.sh | well-vault-sync.sh â€” Kaia's memory across the Allfather's machines. | tested+named | keep (a human or a cron row must run it) |
@@ -723,6 +757,7 @@ capability_folders[31]{folder,doors,index}:
 | vidarr.sh | vidarr.sh â€” VÃÃARR, the silent avenger: the defender's own door. | tested+named | keep (a human or a cron row must run it) |
 | ward-answer.sh | ward-answer.sh â€” answer a ward decision. close Â· keep (with a reason) | tested | keep (a human or a cron row must run it) |
 | ward-ask.sh | ward-ask.sh â€” VÃ¶rÃ°r reports, then ASKS. A finding is not a decision. | tested | keep (a human or a cron row must run it) |
+
 
 
 ## 1b Â· The engine â€” src/ymir_runtime/*.py (the part a bin-only register skipped)

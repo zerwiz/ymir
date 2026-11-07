@@ -61,6 +61,13 @@ guards="ok"
 if [ -x "$ROOT/bin/gates/guards.sh" ]; then
   bash "$ROOT/bin/gates/guards.sh" >/dev/null 2>&1 || guards="a gate ward is failing"
 fi
+# The register of doors: a name nobody reads is not a door (Rule 24, 2026-11-06).
+# HIGH only — an unnamed row, a class off Rule 18's list, or a port claimed twice.
+register="ok"
+if [ -x "$ROOT/bin/ward/services-register.sh" ]; then
+  bash "$ROOT/bin/ward/services-register.sh" check --measure >/dev/null 2>&1 \
+    || register="a door is unnamed, a class is off the list, or a port is claimed twice"
+fi
 keys="$(grep -c '^ssh-' "$HOME/.ssh/authorized_keys" 2>/dev/null || echo 0)"
 tunnels="$(ls -1 "$HOME/.cloudflared"/config-*.yml 2>/dev/null | wc -l | tr -d ' ')"
 
@@ -80,10 +87,11 @@ write_report() {
 **Verdict:** $verdict · $crit critical · $high high
 
 \`\`\`
-warden[6]{check,state}:
+warden[7]{check,state}:
   "clock","$clock (ntp_synchronized=$sync)"
   "the well","$well"
   "the gate wards","$guards"
+  "the register of doors","$register"
   "ssh keys authorized","$keys"
   "public tunnels configured","$tunnels"
   "local time","$local_now"
