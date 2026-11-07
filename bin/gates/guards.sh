@@ -80,8 +80,10 @@ done
 # is printed where the finding is read.
 if [ "$fail" -ne 0 ] && [ "${#failed[@]}" -gt 0 ] && git -C "$ROOT" rev-parse --verify -q origin/main >/dev/null 2>&1; then
   wt="$(mktemp -d "${TMPDIR:-/tmp}/guards-main-XXXXXX")"
+  measured=0
+  also=0
   if git -C "$ROOT" worktree add -q --detach "$wt/main" origin/main 2>/dev/null; then
-    also=0
+    measured=1
     printf 'main_baseline[%s]{ward,on_main,verdict}:\n' "${#failed[@]}"
     for w in "${failed[@]}"; do
       if [ -r "$wt/main/bin/gates/guards/$w" ] && ! ( cd "$wt/main" && timeout 120 bash "bin/gates/guards/$w" check ) >/dev/null 2>&1; then
@@ -95,6 +97,25 @@ if [ "$fail" -ne 0 ] && [ "${#failed[@]}" -gt 0 ] && git -C "$ROOT" rev-parse --
     [ "$also" -gt 0 ] && printf 'guards: %s of %s failing ward(s) are red on origin/main, not on this branch\n' "$also" "${#failed[@]}" >&2
   fi
   rm -rf "$wt" 2>/dev/null || true
+
+  # THE DECISION, and it used to be missing (2026-11-06).
+  # The block above measured whose fault a failure is and then refused anyway, so a house whose
+  # `origin/main` was red could push NOTHING — every branch was blocked by a fault it had not
+  # caused, and the deadlock was absolute: the repair could not be pushed either. Measured that
+  # night: a branch green on every ward was refused five times with `1 of 1 failing ward(s) are
+  # red on origin/main, not on this branch`, which is the gate stating its own exception and then
+  # walking past it.
+  #
+  # The rule now: if every failing ward is ALSO red on origin/main, the branch is clear and the
+  # push proceeds, with the finding printed loudly so nobody reads the branch as green. If any
+  # failure is the branch's own, the refusal stands. If the baseline could not be measured (no
+  # origin/main, or the throwaway worktree would not come up), the refusal stands too — unknown
+  # is not permission, which is the one thing that must never soften.
+  if [ "$measured" -eq 1 ] && [ "$also" -eq "${#failed[@]}" ]; then
+    printf 'guards: CLEARED — every failing ward (%s) is red on origin/main, not on this branch\n' "$also" >&2
+    printf 'guards: the push proceeds; origin/main is the thing that needs the hand\n' >&2
+    exit 0
+  fi
 fi
 
 if [ "$fail" -eq 0 ]; then
