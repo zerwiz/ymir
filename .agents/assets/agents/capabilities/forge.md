@@ -14,7 +14,7 @@
 | gjallarhorn-purge.sh | gjallarhorn-purge.sh — purge the Cloudflare edge cache for a hostname. | tested+named | keep (a human or a cron row must run it) |
 | gjallarhorn-tunnel.sh | gjallarhorn-tunnel.sh — raise/lower the `ymir` Cloudflare tunnel (Gjal | tested+named | keep (a human or a cron row must run it) |
 | housekeeping.sh | housekeeping.sh — what the worktrees cost, what is already safe to for | tested+named | keep (a human or a cron row must run it) |
-| mjollnir-webhook.sh | mjollnir-webhook.sh — HMAC-verified GitHub webhook → Mjollnir (W0018 | tested | keep (a human or a cron row must run it) |
+| mjollnir-webhook.sh | mjollnir-webhook.sh — HMAC-verified GitHub webhook → Mjollnir (W0018 | tested+named | keep (a human or a cron row must run it) |
 | mjollnir.sh | mjollnir.sh — the hammer (W0018). An issue becomes a PR: read the issu | tested+named | keep (a human or a cron row must run it) |
 | essence-fetch.sh | essence-fetch.sh — the npm world's self-heal: npm's packer refuses dot | tested | keep (a human or a cron row must run it) |
 | npm-install-local-test.sh | npm-install-local-test.sh — the REAL local installation test. | tested | keep (a human or a cron row must run it) |
@@ -29,5 +29,6 @@
 | review-watch.sh | review-watch.sh — the missing trigger: a PR that arrives is a question | tested | keep (a human or a cron row must run it) |
 | ship.sh | ship.sh — the reviewer's merge: the one door that puts a judged PR on  | tested | keep (a human or a cron row must run it) |
 | skillopt-setup.sh | skillopt-setup.sh — one-time SkillOpt installation for Ymir. | tested | keep (a human or a cron row must run it) |
+| utgard-box.sh | utgard-box.sh — a whole computer for one run, outside the wall. | tested+named | keep (a human or a cron row must run it) |
 | utgard.sh | utgard.sh — the sealed execution barrier (Utgard, the realm outside th | tested+named | keep (a human or a cron row must run it) |
 | yggdrasil.sh | yggdrasil.sh — the worktree manager (Yggdrasil, the world-tree). | tested+named | keep (a human or a cron row must run it) |

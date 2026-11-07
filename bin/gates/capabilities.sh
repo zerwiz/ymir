@@ -137,7 +137,13 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 
 EOM
 
-printf 'capabilities[5]{surface,count}:\n  "shell doors (bin/*.sh)",%s\n  "runtime modules (src/ymir_runtime/*.py)",%s\n  "skills (.agents/skills/*)",%s\n  "Pi extension tools",%s\n  "generated","%s"\n\n' "$shells" "$pys" "$skills" "$tools" "$(date -u +%Y-%m-%d)"
+# NO COUNTS AND NO DATE ON THIS PAGE (2026-11-06). Both made it change without a change:
+# every added door moved `shell doors`, and every new DAY moved the stamp — so two branches
+# cut on either side of midnight, or on either side of one new door, rewrote this file and
+# collided. The counts are in the fragments that hold the rows; this page is the map, and a
+# map changes when a folder appears, not when a door does.
+printf 'surfaces[4]{surface,where}:\n  "shell doors","bin/<folder>/INDEX.md — one row per door, with its verdict"\n  "runtime modules","§1b below — src/ymir_runtime/*.py"\n  "skills",".agents/skills/* — named in the fragment that owns the job"\n  "Pi extension tools","§2 below — the shared registration lib"\n\n'
+
 printf '**The rows live in the tree.** Each folder of `bin/` has its own fragment under\n`.agents/assets/agents/capabilities/`, generated in the same run, so a change in one folder\nrewrites one file instead of colliding with every other branch (plan 211).\n\n'
 # READDIR ORDER IS NOT AN ORDER. `for f in bin/*.sh` yields whatever the filesystem
 # returns first — ext4 hashes it, overlayfs in CI does not — so two machines built the
@@ -181,10 +187,13 @@ for f in $(find bin -name '*.sh' -not -path '*/.git/*' -not -path 'bin/collab/ki
   printf '%s\t%s\n' "$_folder" "$v" >> "$FRAG_SUM"
 done
 
-printf 'capability_folders[%s]{folder,doors,index}:\n' "$(awk -F'\t' '{print $1}' "$FRAG_SUM" | sort -u | wc -l | tr -d ' ')"
+# NO PER-FOLDER DOOR COUNT ON THIS PAGE (2026-11-06). A count changes whenever a door is
+# added ANYWHERE, so every branch rewrote this file and every pair of branches collided —
+# the very collision the fragments exist to end. The count belongs in the fragment that
+# holds the rows; this page lists the folders and their indexes, and nothing else.
+printf 'capability_folders[%s]{folder,index}:\n' "$(awk -F'\t' '{print $1}' "$FRAG_SUM" | sort -u | wc -l | tr -d ' ')"
 for _fold in $(awk -F'\t' '{print $1}' "$FRAG_SUM" | sort -u); do
-  _doors=$(awk -F'\t' -v f="$_fold" '$1==f' "$FRAG_SUM" | wc -l | tr -d ' ')
-  printf '  "%s",%s,".agents/assets/agents/capabilities/%s.md"\n' "$_fold" "$_doors" "$_fold"
+  printf '  "%s",".agents/assets/agents/capabilities/%s.md"\n' "$_fold" "$_fold"
 done
 printf '\n## 1b · The engine — src/ymir_runtime/*.py (the part a bin-only register skipped)\n\n'
 printf '| module | what it owns | tested | reachable from a door |\n|---|---|---|---|\n'

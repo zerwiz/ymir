@@ -20,9 +20,9 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[26]{file,does,kind,verdict,disposition,callers,lines}:
+bin[29]{file,does,kind,verdict,disposition,callers,lines}:
   "essence-fetch.sh","essence-fetch.sh — the npm world's self-heal: npm's packer refuses dotfolders","tool","wired","keep",2,18
-  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",337,77
+  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",342,77
   "github-deploy.sh","github-deploy.sh — zero-trust deploys (W0035).","data","wired","keep",0,96
   "gjallarhorn-expose.sh","gjallarhorn-expose.sh — put EVERY app on its own public hostname (Gjallarhorn).","tool","wired","keep",0,152
   "gjallarhorn-notify.sh","gjallarhorn-notify.sh — the horn (W0036).","tool","wired","keep",1,73
@@ -30,24 +30,27 @@ bin[26]{file,does,kind,verdict,disposition,callers,lines}:
   "gjallarhorn-tunnel.sh","gjallarhorn-tunnel.sh — raise/lower the `ymir` Cloudflare tunnel (Gjallarhorn).","tool","wired","keep",0,87
   "handoff-packet.py","'''handoff-packet.py — the door to the one artefact that crosses from a smith to the reviewer.","tool","wired","keep",3,433
   "housekeeping.sh","housekeeping.sh — what the worktrees cost, what is already safe to forget, and what has","tool","tested","keep",2,365
+  "intake.py","'''intake.py — read every registered repo once, and say honestly what could not be read.","tool","wired","keep",2,433
   "mjollnir-webhook.sh","mjollnir-webhook.sh — HMAC-verified GitHub webhook → Mjollnir (W0018).","tool","wired","keep",0,74
-  "mjollnir.sh","mjollnir.sh — the hammer (W0018).","tool","wired","keep",1,106
+  "mjollnir.sh","mjollnir.sh — the hammer (W0018).","tool","wired","keep",4,215
   "npm-install-local-test.sh","npm-install-local-test.sh — the REAL local installation test.","tool","wired","keep",0,116
   "npm-pretest.sh","npm-pretest.sh — the pre-publish test gate (the Allfather's decree):","data","wired","keep",3,240
   "npm-publish.sh","npm-publish.sh — publish through the HOARD's npm token, every single time.","tool","wired","keep",0,161
   "packaged-gate.sh","packaged-gate.sh — prove the PUBLISHED artifact, not the tree.","tool","wired","keep",0,103
   "pr-pretest.sh","pr-pretest.sh — the PR-time gate: a REAL npm installation, locally, before","tool","wired","keep",1,59
   "review-rules.sh","review-rules.sh — the rules floor: load what a reviewer MUST know, or refuse to review.","tool","wired","keep",3,139
-  "review-seat.sh","review-seat.sh — the reviewer's SEAT: pi in a herdr pane, on the heart, on a loop.","tool","wired","keep",1,244
+  "review-seat.sh","review-seat.sh — the reviewer's SEAT: pi in a herdr pane, on the heart, on a loop.","tool","wired","keep",1,321
   "review-shelf.sh","review-shelf.sh — where a packet LANDS, and the waiting rule that keeps it honest.","tool","wired","keep",0,167
   "review-verdict.sh","review-verdict.sh — the judge's ONE act of writing: its verdict, and nothing else.","tool","wired","keep",0,132
   "review-watch.sh","review-watch.sh — the missing trigger: a PR that arrives is a question the owner is asked.","tool","wired","keep",0,273
   "ship.sh","ship.sh — the reviewer's merge: the one door that puts a judged PR on main.","tool","wired","keep",4,203
   "skillopt-setup.sh","skillopt-setup.sh — one-time SkillOpt installation for Ymir.","tool","wired","keep",1,77
   "smith-gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","wired","keep",1,77
-  "utgard.sh","utgard.sh — the sealed execution barrier (Utgard, the realm outside the wall).","tool","wired","keep",4,113
+  "utgard-box-door.py","'''utgard-box-door.py — the one road out of a box.","tool","wired","keep",1,288
+  "utgard-box.sh","utgard-box.sh — a whole computer for one run, outside the wall.","tool","wired","keep",1,691
+  "utgard.sh","utgard.sh — the sealed execution barrier (Utgard, the realm outside the wall).","tool","wired","keep",4,122
   "yggdrasil.sh","yggdrasil.sh — the worktree manager (Yggdrasil, the world-tree).","tool","tested","keep",6,176
 
-**Tally.** verdict: wired=23, tested=3
+**Tally.** verdict: wired=26, tested=3
 
-**Tally.** disposition: keep=26
+**Tally.** disposition: keep=29

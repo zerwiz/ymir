@@ -314,16 +314,20 @@ for shelf, rows in shelves.items():
         front.append("run, so a change in one folder rewrites one file — the collision this file used to\n")
         front.append("cause on every branch is designed out (plan 211).\n")
         front.append("")
-        door_total = len(rows)
-        front.append(f"`bin/` holds **{len(groups)}** indexes over **{door_total}** files.\n")
+        # NO COUNTS ON THIS PAGE (2026-11-06). It used to print a per-folder file count, so
+        # adding ONE door anywhere rewrote this file on every branch — the collision the tree
+        # was meant to end. A count belongs where the rows are: each folder's own index keeps
+        # its tally, and this page only lists the folders. Adding a door now touches one
+        # fragment; adding a FOLDER is the only thing that touches this page.
+        front.append("Counts live in each folder's own index; this page lists the folders.\n")
         front.append("")
-        front.append(f"folders[{len(groups) + 1}]{{folder,files,what,index}}:")
+        front.append(f"folders[{len(groups) + 1}]{{folder,what,index}}:")
         for key in sorted(groups):
             rel = "bin/INDEX.md" if key == "root" else f"bin/{key}/INDEX.md"
             purpose = "the root-level doors" if key == "root" else FOLDER_PURPOSE.get(key, "(no purpose recorded)")
             esc = lambda s: str(s).replace('"', "'")
-            front.append(f'  "{key}","{len(groups[key])}","{esc(purpose)}","{rel}"')
-        front.append(f'  "TOTAL","{door_total}","every door in the shelf","—"')
+            front.append(f'  "{key}","{esc(purpose)}","{rel}"')
+        front.append('  "TOTAL","every door in the shelf","—"')
         front.append("")
         front.append("A folder with no row in `bin/gates/registers/folders.tsv` is not an error — it\n")
         front.append("renders `(no purpose recorded)`, and adding the line there is the one place the\n")
