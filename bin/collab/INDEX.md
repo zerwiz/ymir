@@ -20,12 +20,14 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[34]{file,does,kind,verdict,disposition,callers,lines}:
+bin[36]{file,does,kind,verdict,disposition,callers,lines}:
   "15-commits-leave-by-pull-request.md","15 — Every commit leaves by a pull request, or it lands in main","data","wired","keep",0,35
   "16-a-review-is-a-file.md","16 — A review is a file in the repository","data","wired","keep",0,32
   "17-one-agent-one-worktree.md","17 — One agent, one worktree","data","wired","keep",0,36
   "README.md","collab — Vingólf, the assembly hall","data","tested","keep",42,-
   "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",42,-
+  "advantage-audit.sh","advantage-audit.sh — is every claim we make backed by evidence, or only by confidence?","tool","wired","keep",2,141
+  "advantage.md","Competitive advantage — how we research it, and how we are allowed to state it","data","wired","keep",0,125
   "checks.sh","checks.sh — run this repository's own cheap checks, whatever language it is written in.","tool","wired","keep",3,72
   "collab-connect.sh","collab-connect.sh — what a collaborator pastes, and the token the house mints.","tool","wired","keep",1,39
   "collab.sh","collab.sh — Vingólf, the assembly hall: who collaborates with the house, on which surface, and at which rung.","tool","wired","keep",6,65
@@ -56,6 +58,6 @@ bin[34]{file,does,kind,verdict,disposition,callers,lines}:
   "who.py","'''who.py — the roll: who was invited into the house's collaboration surfaces, and are they using them?","tool","wired","keep",2,393
   "worktree.sh","worktree.sh — one agent, one worktree.","tool","wired","migrate → src/ymir_runtime/worktree.py",1,45
 
-**Tally.** verdict: wired=30, tested=4
+**Tally.** verdict: wired=32, tested=4
 
-**Tally.** disposition: keep=33, migrate → src/ymir_runtime/worktree.py=1
+**Tally.** disposition: keep=35, migrate → src/ymir_runtime/worktree.py=1
