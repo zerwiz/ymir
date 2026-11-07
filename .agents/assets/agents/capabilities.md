@@ -10,11 +10,66 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 ## 1 · The doors, by the job they serve
 
 capabilities[5]{surface,count}:
+
   "shell doors (bin/*.sh)",773
+
+
+  "shell doors (bin/*.sh)",769
+
+
+  "shell doors (bin/*.sh)",769
+
+
+  "shell doors (bin/*.sh)",769
+
+  "shell doors (bin/*.sh)",768
+
+
+
+
   "runtime modules (src/ymir_runtime/*.py)",56
   "skills (.agents/skills/*)",30
   "Pi extension tools",0
   "generated","2026-11-07"
+
+gisters-are-a-tree
+**The rows live in the tree.** Each folder of `bin/` has its own fragment under
+`.agents/assets/agents/capabilities/`, generated in the same run, so a change in one folder
+rewrites one file instead of colliding with every other branch (plan 211).
+
+capability_folders[31]{folder,doors,index}:
+  "agents",49,".agents/assets/agents/capabilities/agents.md"
+  "assistant",27,".agents/assets/agents/capabilities/assistant.md"
+  "backend",156,".agents/assets/agents/capabilities/backend.md"
+  "boards",1,".agents/assets/agents/capabilities/boards.md"
+  "bridge",15,".agents/assets/agents/capabilities/bridge.md"
+  "collab",7,".agents/assets/agents/capabilities/collab.md"
+  "desktop",23,".agents/assets/agents/capabilities/desktop.md"
+  "engine",18,".agents/assets/agents/capabilities/engine.md"
+  "fleet",12,".agents/assets/agents/capabilities/fleet.md"
+  "forge",23,".agents/assets/agents/capabilities/forge.md"
+  "gates",83,".agents/assets/agents/capabilities/gates.md"
+  "gimle",2,".agents/assets/agents/capabilities/gimle.md"
+  "host",12,".agents/assets/agents/capabilities/host.md"
+  "identity",4,".agents/assets/agents/capabilities/identity.md"
+  "mail",4,".agents/assets/agents/capabilities/mail.md"
+  "model",16,".agents/assets/agents/capabilities/model.md"
+  "notify",12,".agents/assets/agents/capabilities/notify.md"
+  "people",5,".agents/assets/agents/capabilities/people.md"
+  "pi",17,".agents/assets/agents/capabilities/pi.md"
+  "place",1,".agents/assets/agents/capabilities/place.md"
+  "records",30,".agents/assets/agents/capabilities/records.md"
+  "room",2,".agents/assets/agents/capabilities/room.md"
+  "root",2,".agents/assets/agents/capabilities/root.md"
+  "seat",21,".agents/assets/agents/capabilities/seat.md"
+  "skills",2,".agents/assets/agents/capabilities/skills.md"
+  "skuld",7,".agents/assets/agents/capabilities/skuld.md"
+  "thing",1,".agents/assets/agents/capabilities/thing.md"
+  "time",84,".agents/assets/agents/capabilities/time.md"
+  "vault",9,".agents/assets/agents/capabilities/vault.md"
+  "voice",1,".agents/assets/agents/capabilities/voice.md"
+  "ward",13,".agents/assets/agents/capabilities/ward.md"
+
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
@@ -78,22 +133,22 @@ capabilities[5]{surface,count}:
 | group-add.sh | bin/assistant/group-add.sh -> systems/skirnir/services/group-add.sh —  | tested | keep (a human or a cron row must run it) |
 | group-allow.sh | bin/assistant/group-allow.sh -> systems/skirnir/services/group-allow.sh  | tested | keep (a human or a cron row must run it) |
 | kb-export.sh | bin/assistant/kb-export.sh -> systems/skirnir/services/kb-export.sh —  | tested | keep (a human or a cron row must run it) |
-| learn-home.sh | bin/assistant/learn-home.sh -> systems/skirnir/services/learn-home.sh � | tested | keep (a human or a cron row must run it) |
+| learn-home.sh | bin/assistant/learn-home.sh -> systems/skirnir/services/learn-home.sh � | tested | keep (a human or a cron row must run it) |
 | learn-house.sh | bin/assistant/learn-house.sh -> systems/skirnir/services/learn-house.sh  | tested | keep (a human or a cron row must run it) |
-| learn-site.sh | bin/assistant/learn-site.sh -> systems/skirnir/services/learn-site.sh � | tested | keep (a human or a cron row must run it) |
+| learn-site.sh | bin/assistant/learn-site.sh -> systems/skirnir/services/learn-site.sh � | tested | keep (a human or a cron row must run it) |
 | learn.sh | bin/assistant/learn.sh -> systems/skirnir/services/learn.sh — RETIRED  | tested | keep (a human or a cron row must run it) |
 | mouth.sh | bin/assistant/mouth.sh -> systems/skirnir/services/mouth.sh — RETIRED  | tested+named | keep (a human or a cron row must run it) |
 | prune.sh | bin/assistant/prune.sh -> systems/skirnir/services/prune.sh — RETIRED  | tested | keep (a human or a cron row must run it) |
 | query.sh | bin/assistant/query.sh -> systems/skirnir/services/query.sh — RETIRED  | tested | keep (a human or a cron row must run it) |
 | research-smoke.sh | bin/assistant/research-smoke.sh -> systems/skirnir/services/research-smo | tested | keep (a human or a cron row must run it) |
-| room-squad.sh | bin/assistant/room-squad.sh -> systems/skirnir/services/room-squad.sh � | tested | keep (a human or a cron row must run it) |
+| room-squad.sh | bin/assistant/room-squad.sh -> systems/skirnir/services/room-squad.sh � | tested | keep (a human or a cron row must run it) |
 | room-wall-test.sh | bin/assistant/room-wall-test.sh -> systems/skirnir/services/room-wall-te | tested | keep (a human or a cron row must run it) |
 | room.sh | bin/assistant/room.sh -> systems/skirnir/services/room.sh — RETIRED SH | tested+named | keep (a human or a cron row must run it) |
 | smoke.sh | bin/assistant/smoke.sh -> systems/skirnir/services/smoke.sh — RETIRED  | tested+named | keep (a human or a cron row must run it) |
 | telegram.sh | bin/assistant/telegram.sh -> systems/skirnir/services/telegram.sh — RE | tested+named | keep (a human or a cron row must run it) |
 | voice-handler.sh | bin/assistant/voice-handler.sh -> systems/skirnir/services/voice-handler | tested | keep (a human or a cron row must run it) |
 | voice.sh | bin/assistant/voice.sh -> systems/skirnir/services/voice.sh — RETIRED  | tested+named | keep (a human or a cron row must run it) |
-| walls-test.sh | bin/assistant/walls-test.sh -> systems/skirnir/services/walls-test.sh � | tested | keep (a human or a cron row must run it) |
+| walls-test.sh | bin/assistant/walls-test.sh -> systems/skirnir/services/walls-test.sh � | tested | keep (a human or a cron row must run it) |
 | fm-afk-launch.sh | fm-afk-launch.sh - the single owner of the away-mode daemon TERMINAL lif | tested+named | keep (a human or a cron row must run it) |
 | fm-afk-return.sh | fm-afk-return.sh - deterministic away-mode return catch-up gate. | tested | keep (a human or a cron row must run it) |
 | fm-afk-start.sh | Enter away mode and run the sub-supervisor daemon in a harness-tracked | tested | keep (a human or a cron row must run it) |
@@ -649,10 +704,11 @@ capabilities[5]{surface,count}:
 | snotra-transcribe.sh | bin/time/snotra/snotra-transcribe.sh -> systems/snotra/services/ear/snot | tested+named | keep (a human or a cron row must run it) |
 | snotra-trello.sh | bin/time/snotra/snotra-trello.sh -> systems/snotra/services/cron/snotra- | tested | keep (a human or a cron row must run it) |
 | snotra-voice-device.sh | bin/time/snotra/snotra-voice-device.sh -> systems/snotra/services/ear/sn | tested | keep (a human or a cron row must run it) |
-| stt-wire.sh | bin/time/snotra/stt-wire.sh -> systems/snotra/services/ear/stt-wire.sh � | tested | keep (a human or a cron row must run it) |
+| stt-wire.sh | bin/time/snotra/stt-wire.sh -> systems/snotra/services/ear/stt-wire.sh � | tested | keep (a human or a cron row must run it) |
 | trello-map.sh | bin/time/snotra/trello-map.sh -> systems/snotra/services/cron/trello-map | tested | keep (a human or a cron row must run it) |
 | tts-lease.sh | bin/time/snotra/tts-lease.sh -> systems/snotra/services/tts-lease/tts-le | tested | keep (a human or a cron row must run it) |
 | ymir-say.sh | bin/time/snotra/ymir-say.sh -> systems/snotra/services/tts-lease/ymir-sa | tested+named | keep (a human or a cron row must run it) |
+
 | sol.sh | sol.sh — Sól, the sun's wheel: THE clock and date door. | tested+named | keep (a human or a cron row must run it) |
 | test_event_trigger.sh | test_event_trigger.sh — a smithy may be started by a person, the clock | tested+named | keep (a human or a cron row must run it) |
 | well-vault-sync.sh | well-vault-sync.sh — Kaia's memory across the Allfather's machines. | tested+named | keep (a human or a cron row must run it) |
@@ -674,13 +730,45 @@ capabilities[5]{surface,count}:
 | harden.sh | harden.sh — Vörðr's hands: the MENDS, written out, and the safe ones | tested | keep (a human or a cron row must run it) |
 | host-watch.sh | host-watch.sh — the watcher a hand can actually have. | tested | keep (a human or a cron row must run it) |
 | security-audit.sh | security-audit.sh — Vörðr's eyes: WHAT IS THIS MACHINE ACTUALLY EXPO | tested | keep (a human or a cron row must run it) |
+
+| services-register.sh | services-register.sh — is the register of doors READ, or is it prose? | tested | keep (a human or a cron row must run it) |
+
 | verdr.sh | verdr.sh — VÖRÐR, the warden: the standing report. | tested | keep (a human or a cron row must run it) |
 | vidarr-agent.sh | vidarr-agent.sh — seat the DEFENDER as a live pi agent on the fast roa | tested | keep (a human or a cron row must run it) |
 | vidarr.sh | vidarr.sh — VÍÐARR, the silent avenger: the defender's own door. | tested+named | keep (a human or a cron row must run it) |
 | ward-answer.sh | ward-answer.sh — answer a ward decision. close · keep (with a reason) | tested | keep (a human or a cron row must run it) |
 | ward-ask.sh | ward-ask.sh — Vörðr reports, then ASKS. A finding is not a decision. | tested | keep (a human or a cron row must run it) |
 
-## 1b · The engine — src/ymir_runtime/*.py (the part a bin-only register skipped)
+| sol.sh | sol.sh â€” SÃ³l, the sun's wheel: THE clock and date door. | tested+named | keep (a human or a cron row must run it) |
+| test_event_trigger.sh | test_event_trigger.sh â€” a smithy may be started by a person, the clock | tested+named | keep (a human or a cron row must run it) |
+| well-vault-sync.sh | well-vault-sync.sh â€” Kaia's memory across the Allfather's machines. | tested+named | keep (a human or a cron row must run it) |
+| confidential.sh | confidential.sh â€” a session where vault work has no route off the vaul | tested+named | keep (a human or a cron row must run it) |
+| gleipnir-lock-lib.sh | gleipnir-lock-lib.sh â€” the session lock (Gleipnir), a THIN SHIM. | tested+named | keep (a human or a cron row must run it) |
+| hnitbjorg-ensure.sh | hnitbjorg-ensure.sh â€” ensure the vault's tooling stands and its path i | tested+named | keep (a human or a cron row must run it) |
+| hnitbjorg.sh | hnitbjorg.sh â€” HnitbjÃ¶rg: the encrypted document vault. | tested+named | keep (a human or a cron row must run it) |
+| hoard-lib.sh | hoard-lib.sh â€” where the operator's HOME lives, and the two roots bene | tested+named | keep (a human or a cron row must run it) |
+| hodd-set.sh | hodd-set.sh â€” set ONE key in an age-encrypted secret file, with guards | tested | keep (a human or a cron row must run it) |
+| hodd.sh | hodd.sh â€” the Allfather's private hoard: path, init, ls, load, tenant. | tested+named | keep (a human or a cron row must run it) |
+| phone-lib.sh | phone-lib.sh â€” reach the operator's phone storage for the vault's phon | tested | keep (a human or a cron row must run it) |
+| push.sh | push.sh â€” commit and push NAMED paths in the home (never `git add -A`) | tested+named | keep (a human or a cron row must run it) |
+| voice-ensure.sh | voice-ensure.sh â€” ensure the voice engines: whisper.cpp (speech â†’ te | tested+named | keep (a human or a cron row must run it) |
+| garmr-bite-test.sh | garmr-bite-test.sh â€” the laws of the bite, proven offline (no real bit | tested | keep (a human or a cron row must run it) |
+| garmr-bite.sh | garmr-bite.sh â€” GARMR'S TEETH. The hound may contain, within a written | tested | keep (a human or a cron row must run it) |
+| garmr-canary.sh | garmr-canary.sh â€” the deletion tripwire: files that must never vanish. | tested | keep (a human or a cron row must run it) |
+| garmr-smoke.sh | garmr-smoke.sh â€” GARMR's smoke test. Is the hound listening, or merely | tested | keep (a human or a cron row must run it) |
+| garmr.sh | garmr.sh â€” GARMR, the hound at the gate: the door to Ymir's guardian. | tested | keep (a human or a cron row must run it) |
+| harden.sh | harden.sh â€” VÃ¶rÃ°r's hands: the MENDS, written out, and the safe ones | tested | keep (a human or a cron row must run it) |
+| host-watch.sh | host-watch.sh â€” the watcher a hand can actually have. | tested | keep (a human or a cron row must run it) |
+| security-audit.sh | security-audit.sh â€” VÃ¶rÃ°r's eyes: WHAT IS THIS MACHINE ACTUALLY EXPO | tested | keep (a human or a cron row must run it) |
+| verdr.sh | verdr.sh â€” VÃ–RÃR, the warden: the standing report. | tested | keep (a human or a cron row must run it) |
+| vidarr-agent.sh | vidarr-agent.sh â€” seat the DEFENDER as a live pi agent on the fast roa | tested | keep (a human or a cron row must run it) |
+| vidarr.sh | vidarr.sh â€” VÃÃARR, the silent avenger: the defender's own door. | tested+named | keep (a human or a cron row must run it) |
+| ward-answer.sh | ward-answer.sh â€” answer a ward decision. close Â· keep (with a reason) | tested | keep (a human or a cron row must run it) |
+| ward-ask.sh | ward-ask.sh â€” VÃ¶rÃ°r reports, then ASKS. A finding is not a decision. | tested | keep (a human or a cron row must run it) |
+
+
+
+## 1b Â· The engine â€” src/ymir_runtime/*.py (the part a bin-only register skipped)
 
 | module | what it owns | tested | reachable from a door |
 |---|---|---|---|

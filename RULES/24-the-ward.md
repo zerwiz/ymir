@@ -72,3 +72,41 @@ cross_house_law[5]{rule,why}:
 Two houses that share nothing still each keep their own gate, their own suite and their own law. The road
 carries the one request a grant names and its answer, and both sides file the same message as a rune — a road
 with one ledger is a rumour.
+
+## Appended 2026-11-06 — a door names its ROAD, and a name nobody reads is not a door
+
+Two sentences, each paid for on one evening.
+
+### 1. A door declares its road
+
+The ward had words for ssh roads and none for a *service's*: a row could say `host: board.<domain>` and leave the
+reader to guess whether that name was published on the tailnet, through a tunnel, or nowhere at all. A road is a
+property of a **deployment**, never of an application — the same app is a window on one machine and a tailnet door on
+another.
+
+```
+road_law[5]{rule,what it means}
+  "EVERY DOOR DECLARES ITS ROAD","window (published nowhere) · tailnet · tunnel · none. A row with a host or a port and no road is an assumption, and an assumption is a finding."
+  "NONE IS A ROAD","the default. A seat that is not published says `none` out loud; silence is not the same word."
+  "A LAN ADDRESS IS NEVER A ROAD","no `192.168.*`, `10.*`, `172.16-31.*` and no `.local` name is a service road (RULES/network N1)"
+  "A TUNNEL IS A ROAD ONLY BEHIND A GATE","never a second way around one. Different users have different roads — a tailnet for one, a tunnel for another — and the gate stands in front of both"
+  "THE ROAD IS NAMED WHERE IT ANSWERED","status says `up (local)`, `up (gate, tunnel)`, `up (gate, tailnet)` — a green that hides the road is the false green this house has paid for twice (Rule 25)"
+```
+
+### 2. A name counts only when the ward reads it
+
+Measured 2026-11-06: **nothing** in the tree read the register of doors (`$YMIR_HOME/config/services.yaml`) — not the
+audit, not a guard, not a script. The register was prose, so "a door is named" was prose too. That cost a live
+service the day before: a copied port put the share door and the mail desk on one number, the desk stopped, and every
+unit still showed green.
+
+```
+register_law[3]{rule,why}
+  "A PORT IS CLAIMED FROM THE REGISTER BEFORE IT IS BOUND","a copied number is how a live service dies; the register is the claim, and a duplicate is a finding"
+  "THE REGISTER IS PRIVATE, THE READER SHIPS","`$YMIR_HOME/config/services.yaml` is the home's; `bin/ward/services-register.sh` ships in the repo. The shape travels, the values do not (Rule 26)"
+  "STRUCTURE ALWAYS, SOCKETS ON REQUEST","a dev seat runs a handful of a fleet's rows, so port measurement is asked for explicitly (`--measure`) by the warden ON THE HOST that runs them"
+```
+
+**Enforced by:** `bin/ward/services-register.sh` (`check`, `--measure`; HIGH on an unnamed row, a class outside
+Rule 18's six, or a port claimed twice) · wired into Vörðr's nightly walk, so a register nobody reads fails a report
+instead of failing a person.

@@ -56,3 +56,28 @@ down first**, so no shell is left watching a port that has just vanished.
 ---
 
 *Append-only. A correction is a new entry citing the old one.*
+
+## Appended 2026-11-06 — one login, and the surface chooses its home
+
+**At the Allfather's word:** *"no login on runned on the computer locally or in electron. only if the user are
+hosting them up"* — said while four seats were being stood up on a shared machine, and said because 09.2 had left a
+gap: it fixed *how many* logins a seat has, never *whose*.
+
+The gap was live in the tree. Hlidskjalf held its own password book (`HLIDSKJALF_AUTH`), its own accounts and invite
+codes, **and** acted as the doorman for the other seats by hostname (`SMIDJA_HOST`, `ODRERIR_HOST`, `PRIMARY_HOST`),
+so a seat's identity was decided by whichever app a browser reached first. Two locks and three ways in.
+
+```
+login_law[4]{surface,login,where the identity comes from}
+  "run locally, or in a window","NONE","the machine's own two feet — loopback is the operator's own hand. No prompt, no cookie, no ceremony for a local run."
+  "hosted, behind a gate","the gate's, and only the gate's","the forward-auth header (`Remote-User`), honoured ONLY from the door's own address, refused and logged otherwise"
+  "hosted, with no gate of its own","the seat's own login — the one case it was written for","its own credential store, which is OFF whenever a gate stands in front"
+  "never","two logins on one seat","a house with two locks starts trusting the weaker one"
+```
+
+**What this forbids:** a seat that asks for a password on its own machine; a seat that is the doorman for another
+seat; an app that honours `Remote-User` from a peer that is not the door; a login that is neither the gate's nor the
+seat's own.
+
+**Enforced by:** `bin/ward/services-register.sh` (a hosted row declares its road and its gate) · each app's own door
+mode (P2 of plan 208) · and 09.1's rule, which already refuses a shell that is handed a public hostname.

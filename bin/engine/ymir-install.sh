@@ -1382,6 +1382,11 @@ step_gates() {
   local hooks="$ROOT/.git/hooks" pre_commit="$ROOT/.git/hooks/pre-commit" pre_push="$ROOT/.git/hooks/pre-push"
   if [ ! -d "$hooks" ]; then add gates SKIP "not a git checkout"; return; fi
   if [ "$CHECK" = 1 ]; then
+    if [ -x "$SCRIPT_DIR/../gates/seat-woven-driver.sh" ] && "$SCRIPT_DIR/../gates/seat-woven-driver.sh" --check >/dev/null 2>&1; then
+      add woven-driver OK "the reweave driver is seated"
+    else
+      add woven-driver WARN "the merge=regenerate driver is not seated — bash bin/gates/seat-woven-driver.sh"
+    fi
     if [ -x "$pre_commit" ] && [ -x "$pre_push" ]; then
       add gates OK "pre-commit + pre-push installed"
     else
@@ -1398,6 +1403,10 @@ step_gates() {
   [ -x "$SCRIPT_DIR/../gates/guards/fixes-guard.sh" ] && "$SCRIPT_DIR/../gates/guards/fixes-guard.sh" --install >/dev/null 2>&1 || true
   # Seat the ward on the PRIVATE home too — every install layer, every machine.
   [ -x "$SCRIPT_DIR/../gates/guards/hoard-guard.sh" ] && "$SCRIPT_DIR/../gates/guards/hoard-guard.sh" --install >/dev/null 2>&1 || true
+  # Seat the WOVEN-DOCUMENT merge driver (plan 211). `.gitattributes` has promised
+  # `merge=regenerate` since plan 174; measured 2026-11-06, the promise pointed at a worktree
+  # that no longer existed, so every generated register collided on every branch.
+  [ -x "$SCRIPT_DIR/../gates/seat-woven-driver.sh" ] && "$SCRIPT_DIR/../gates/seat-woven-driver.sh" >/dev/null 2>&1 || true
   if [ -x "$pre_commit" ] && [ -x "$pre_push" ]; then add gates OK "pre-commit + pre-push installed"
   else add gates WARN "could not write .git/hooks — gates are dormant"; fi
   local hh; hh="${YMIR_HOME}/.git/hooks/pre-commit"

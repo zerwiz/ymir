@@ -10,9 +10,9 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 case "$path" in
   FEATURES.md|*/FEATURES.md)
     bash "$root/bin/records/weave-features.sh" >/dev/null || exit 1 ;;
-  bin/README.md|*/bin/README.md|.agents/backend/README.md|*/.agents/backend/README.md)
+  bin/README.md|*/bin/README.md|bin/INDEX.md|*/bin/INDEX.md|bin/*/INDEX.md|*/bin/*/INDEX.md|.agents/backend/README.md|*/.agents/backend/README.md)
     bash "$root/bin/gates/inventory.sh" >/dev/null || exit 1 ;;
-  .agents/assets/agents/capabilities.md|*/.agents/assets/agents/capabilities.md)
+  .agents/assets/agents/capabilities.md|*/.agents/assets/agents/capabilities.md|.agents/assets/agents/capabilities/*.md|*/.agents/assets/agents/capabilities/*.md)
     bash "$root/bin/gates/capabilities.sh" >/dev/null || exit 1 ;;
   *)
     exit 1 ;;   # not a woven document — let git keep the conflict
