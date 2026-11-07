@@ -10,11 +10,11 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 ## 1 · The doors, by the job they serve
 
 capabilities[5]{surface,count}:
-  "shell doors (bin/*.sh)",770
+  "shell doors (bin/*.sh)",771
   "runtime modules (src/ymir_runtime/*.py)",56
   "skills (.agents/skills/*)",30
   "Pi extension tools",0
-  "generated","2026-11-06"
+  "generated","2026-11-07"
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
@@ -349,7 +349,7 @@ capabilities[5]{surface,count}:
 | ship.sh | ship.sh — the reviewer's merge: the one door that puts a judged PR on  | tested | keep (a human or a cron row must run it) |
 | skillopt-setup.sh | skillopt-setup.sh — one-time SkillOpt installation for Ymir. | tested | keep (a human or a cron row must run it) |
 | utgard-box.sh | utgard-box.sh — a whole computer for one run, outside the wall. | tested+named | keep (a human or a cron row must run it) |
-| utgard-lane.sh | utgard-lane.sh — best of N: one brief, many boxes, one board. | uncalled+named | keep (a human or a cron row must run it) |
+| utgard-lane.sh | utgard-lane.sh — best of N: one brief, many boxes, one board. | tested+named | keep (a human or a cron row must run it) |
 | utgard.sh | utgard.sh — the sealed execution barrier (Utgard, the realm outside th | tested+named | keep (a human or a cron row must run it) |
 | yggdrasil.sh | yggdrasil.sh — the worktree manager (Yggdrasil, the world-tree). | tested+named | keep (a human or a cron row must run it) |
 | branch-current.sh | branch-current.sh — a branch is based on CURRENT main before it is off | tested | keep (a human or a cron row must run it) |
