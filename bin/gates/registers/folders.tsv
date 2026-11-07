@@ -1,0 +1,38 @@
+# The purpose of every folder under bin/ — ONE line each, the single place it is kept.
+# Read by bin/gates/inventory.sh when it writes the front door (bin/README.md) and each
+# folder's own index (bin/<folder>/INDEX.md). A folder missing here is not an error: the
+# index renders "(no purpose recorded)" and the fix is a line in this file.
+#
+# folder<TAB>what the folder is for
+agents	the Einherjar and Eindri doors — spawn, brief, sweep, recover
+assistant	Skirnir's mouth and the assistant doors an answer comes through
+backend	the model and harness bridges (indexed at .agents/backend/README.md)
+boards	the board doors — what is queued, claimed and shown
+bridge	the wires between engines: mimir, well-door, constellation
+collab	the collaboration kit and what a counterpart is given
+data	readers and writers of the home's data shelves
+desktop	raise and lower the desktop seats (Smidja board, Sessrumnir, place)
+engine	install, migrate, update, ensure — the machine's own upkeep
+fleet	the fleet registry, roles, agents-config and the sync doors
+forge	Yggdrasil worktrees, Utgard sandboxes, Mjollnir and the deploy doors
+gates	the wards, the checks and the registers (this one included)
+gimle	the hall — desk, MCP, share, deploy, projector
+host	the machine itself: packages, plugins, monitors, host facts
+identity	who and what the house is — seats, operator, projects
+mail	the one mail desk — addresses, import, send, inbound proof
+mcp	the MCP faces and their tokens
+model	the catalogue, the resolver and the rail
+notify	how the house speaks — telegram, desktop, format
+people	the collaborators and their profiles
+pi	the Pi harness surfaces and the watch arming
+place	where something belongs — the placement oracle
+records	the ledger, the well, the plans, the docs and the daily log
+room	the rooms a fleet talks in
+seat	the seat renderer and the seat's own doors
+skills	the skill shelves and their discovery
+skuld	tickets, plans and the queue's reading
+thing	a thing's lifecycle — ping, observe, retire
+time	Sol the clock, Managandr the calendar, Nornir the schedule
+vault	the vault: hoard, secrets, confidential sessions
+voice	the voice: speak, dictate, translation
+ward	Vordr, Garmr, Vidarr and the security doors
