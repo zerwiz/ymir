@@ -54,7 +54,7 @@ Nornir jobs run, and how it is all verified. A runtime change not reflected in
 ## Routing (load one row)
 
 ```
-assets[27]{path,load_when}:
+assets[28]{path,load_when}:
   "assets/principles.md","the 10 CLI design principles (full doctrine)"
   "assets/build-method.md","building/maintaining the runtime; forging a skill"
   "assets/registry.md","skills, tools, commands, Eindri profiles, aett, schemas"
@@ -75,6 +75,7 @@ assets[27]{path,load_when}:
   "assets/porting-upstream-to-norse.md","porting a validated upstream into Norse"
   "assets/eindri-orchestration.md","spawn/brief/supervise Eindri workers"
   "assets/nornir-jobs.md","the scheduler, jobs, and Runes ledger"
+  "assets/mjollnir.md","the forge: the registry doctor, intake (reading every repo), run --project, Glitnir as a view, the honest-read laws"
   "assets/smidja.md","the smithy: install, roster/pi models, run, trace, visualizer ports, observer"
   "assets/hlidskjalf-ui.md","any change under apps/hlidskjalf"
   "assets/odrerir-hall.md","the Óðrerir Live Hall — apps/odrerir, :4322, its window, the planning snapshot feed (systems/snotra/services/cron/hall-snapshot.sh)"

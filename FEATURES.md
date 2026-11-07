@@ -63,6 +63,7 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 | Area | Feature | What it gives you | how-to |
 |---|---|---|---|
 | Work | Mjollnir (issue → PR) | GitHub issue → isolated worker → tests → PR; a human always seals | [docs/features/mjollnir-issue-to-pr.md](docs/features/mjollnir-issue-to-pr.md) |
+| Work | The far halls — read every registered repo | `doctor` names which projects can name a remote and which have a clone; `intake` reads issues, PRs, base health and security alerts across every registered repo, cached, and names any source it could not read instead of reporting zero | [docs/features/mjollnir-issue-to-pr.md](docs/features/mjollnir-issue-to-pr.md) |
 | Factory | Smíðja + Völundr | Repeatable agent+code pipelines: rosters, bounded phases, typed envelopes, trace | [docs/features/smidja-and-volundr.md](docs/features/smidja-and-volundr.md) |
 | Tickets | Skuld (ticket hall) | The project ledger of tickets and plans, on the heart | [docs/features/skuld-the-ticket-hall.md](docs/features/skuld-the-ticket-hall.md) |
 | Collaboration | Ratatoskr (A2A 1.0) | Agent-to-agent tasks over an open protocol; agent cards, lifecycle | [docs/features/ratatoskr-a2a.md](docs/features/ratatoskr-a2a.md) |

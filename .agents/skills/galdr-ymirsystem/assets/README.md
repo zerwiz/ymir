@@ -8,7 +8,7 @@ galdr[1]{role}:
 ## Routing
 
 ```
-assets[29]{path,load_when}:
+assets[30]{path,load_when}:
   "principles.md","the 10 CLI design principles (full doctrine)"
   "build-method.md","building/maintaining the runtime; forging a new skill"
   "registry.md","skills, tools, commands, Eindri profiles, aett, schemas"
@@ -26,6 +26,7 @@ assets[29]{path,load_when}:
   "harness-integration/claude-code.md","building/using the Claude Code adapter"
   "harness-integration/cursor.md","building/using the Cursor adapter"
   "harness-integration/codex.md","building/using the Codex adapter"
+  "mjollnir.md","the forge: registry doctor, intake (reading every registered repo), run --project, Glitnir as a view, honest-read laws"
   "smidja.md","the smithy: install, roster/pi models, run, trace, visualizer ports, observer"
   "porting-upstream-to-norse.md","porting a validated upstream into Norse form"
   "eindri-orchestration.md","spawning/briefing/supervising Eindri workers"

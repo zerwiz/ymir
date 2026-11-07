@@ -411,7 +411,7 @@ bin[807]{file,does,kind,verdict,disposition,callers,lines}:
   "garmr-smoke.sh","garmr-smoke.sh — GARMR's smoke test.","tool","wired","keep",0,180
   "garmr.sh","garmr.sh — GARMR, the hound at the gate: the door to Ymir's guardian.","tool","wired","keep",4,266
   "gates.md","The gates — what stops what, and why each exists","data","wired","keep",0,68
-  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",337,77
+  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",340,77
   "git-clobber-guard.sh","git-clobber-guard.sh — no command that throws away uncommitted work.","tool","wired","keep",0,86
   "github-deploy.sh","github-deploy.sh — zero-trust deploys (W0035).","data","wired","keep",0,96
   "gjallarhorn-expose.sh","gjallarhorn-expose.sh — put EVERY app on its own public hostname (Gjallarhorn).","tool","wired","keep",0,152
@@ -465,7 +465,7 @@ bin[807]{file,does,kind,verdict,disposition,callers,lines}:
   "hoard-guard.sh","hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME).","tool","wired","keep",3,150
   "hoard-lib.sh","hoard-lib.sh — where the operator's HOME lives, and the two roots beneath it.","lib","tested","keep",220,116
   "hodd-set.sh","hodd-set.sh — set ONE key in an age-encrypted secret file, with guards that make a","tool","wired","keep",4,106
-  "hodd.sh","hodd.sh — the Allfather's private hoard: path, init, ls, load, tenant.","tool","tested","keep",34,135
+  "hodd.sh","hodd.sh — the Allfather's private hoard: path, init, ls, load, tenant.","tool","tested","keep",35,135
   "home-contract-check.sh","home-contract-check.sh — the contract that raises a home is itself checked.","tool","wired","keep",2,160
   "home-contract-guard.sh","home-contract-guard.sh — the contract that raises a user's home is checked (Rule 42).","tool","wired","keep",1,57
   "home-index-check.sh","home-index-check.sh — every shelf in the home has an index, and the index is honest.","tool","wired","keep",1,82
@@ -481,8 +481,9 @@ bin[807]{file,does,kind,verdict,disposition,callers,lines}:
   "inbox-watch.sh","inbox-watch.sh — notice when someone answers, without a human opening a mail client.","tool","wired","keep",0,114
   "inbox.sh","inbox.sh — read the mail that matters to a collaborator, and prove you can answer it.","tool","tested","keep",2,121
   "init.sh","init.sh — put the collaboration shelf into a repository, or check the one it has.","tool","wired","keep",5,124
-  "install.sh","install.sh — seat Gná's desk on THIS machine.","data","tested","keep",38,82
+  "install.sh","install.sh — seat Gná's desk on THIS machine.","data","tested","keep",39,82
   "intake-gate.sh","intake-gate.sh — is this message signal, or noise?","tool","wired","keep",0,79
+  "intake.py","'''intake.py — read every registered repo once, and say honestly what could not be read.","tool","wired","keep",2,433
   "inventory-guard.sh","inventory-guard.sh — a register that runs in no gate is a capability that is silently absent.","tool","wired","keep",2,54
   "inventory.sh","inventory.sh — the honest index of the two shelves nobody can read.","tool","wired","keep",11,285
   "jev-doors.sh","jev-doors.sh — where the decision models answer, in one read.","tool","wired","keep",1,81
@@ -532,7 +533,7 @@ bin[807]{file,does,kind,verdict,disposition,callers,lines}:
   "mimir-reflect.sh","mimir-reflect — smelt the well's episodes into facts, through the LLAMA-ROUTER.","tool","wired","keep",0,35
   "mimir.sh","mimir.sh — the well (Mimirsbrunn).","tool","tested","keep",18,510
   "mjollnir-webhook.sh","mjollnir-webhook.sh — HMAC-verified GitHub webhook → Mjollnir (W0018).","tool","wired","keep",0,74
-  "mjollnir.sh","mjollnir.sh — the hammer (W0018).","tool","wired","keep",1,106
+  "mjollnir.sh","mjollnir.sh — the hammer (W0018).","tool","wired","keep",4,215
   "model-alias-check.sh","model-alias-check.sh — does every alias a body names resolve in the fleet?","tool","wired","keep",1,332
   "model-fetch.sh","model-fetch.sh — fetch a chosen model into the operator's models directory.","tool","wired","keep",1,124
   "model-fit.sh","model-fit.sh — choose the best local model for THE USER'S hardware, probed at","tool","wired","keep",2,155
@@ -620,7 +621,7 @@ bin[807]{file,does,kind,verdict,disposition,callers,lines}:
   "private-guard.sh","private-guard.sh — private structure and NDA material never cross a surface.","tool","tested","keep",2,10
   "profile.sh","profile.sh — what THIS user's machine actually is, probed not assumed.","tool","tested","keep",4,97
   "project-and-publish.sh","project-and-publish.sh — project the meeting record, then hand it to the desk on the server.","tool","wired","keep",0,43
-  "project-git.sh","project-git.sh — resolve a project's GitHub block from the master registry","tool","tested","keep",4,74
+  "project-git.sh","project-git.sh — resolve a project's GitHub block from the master registry","tool","tested","keep",8,317
   "project.py","'''project.py — the projector: a meeting's record becomes the desk's data, and (optionally) cards.","tool","wired","keep",2,146
   "projects-validate.sh","projects-validate.sh — validate projects.yaml, including the optional client field.","tool","tested","keep",0,122
   "prompt.md","You are the Ymir update agent for ONE install.","data","tested","keep",3,25
@@ -812,6 +813,8 @@ bin[807]{file,does,kind,verdict,disposition,callers,lines}:
   "test_hermes_seat.sh","test_hermes_seat.sh — the acceptance test for plan 177 H1/H2/H3: Hermes carries the seat, the","tool","wired","keep",0,193
   "test_lock_ask.sh","The ward for bin/seat/lock-ask.sh — a read-only agent asks the lock owner, and only the","tool","wired","keep",0,150
   "test_mimir_bridge_health.py","﻿import importlib.util,json,subprocess,sys,tempfile,threading,unittest","data","wired","keep",0,29
+  "test_mjollnir_clone.sh","test_mjollnir_clone.sh — the door that turns a FAR repo into a workable one (plan 210 P3).","tool","wired","keep",0,110
+  "test_mjollnir_intake.sh","test_mjollnir_intake.sh — the forge's senses (plan 210 P0/P1), proved without a network.","tool","wired","keep",0,179
   "test_new_doors.sh","test_new_doors.sh — the production tests for the doors built 2026-11-03.","tool","wired","keep",0,65
   "test_outbound_gate.py","'''The outbound gate's proofs — plan 124 §7, his word 2026-10-24:","tool","wired","keep",0,346
   "test_pr_ship_guard.sh","test_pr_ship_guard.sh — proves the ship door judges the PR and not the branch.","tool","wired","keep",0,49
@@ -877,7 +880,7 @@ bin[807]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-engine-ensure.sh","ymir-engine-ensure.sh — materialize the engine's private python home.","tool","tested","keep",2,67
   "ymir-engine.sh","ymir-engine.sh — the DOOR to the engine (`src/ymir_runtime/`).","tool","wired","keep",4,61
   "ymir-fleet.sh","ymir-fleet.sh — FLEET MODE, one command for npm users.","tool","wired","keep",0,19
-  "ymir-install.sh","ymir-install.sh — THE FIRST SETUP.","tool","tested","keep",28,1809
+  "ymir-install.sh","ymir-install.sh — THE FIRST SETUP.","tool","tested","keep",29,1809
   "ymir-invite.sh","ymir-invite — hand someone a way in to your Ymir, and take it back.","tool","wired","keep",3,113
   "ymir-isolation.sh","ymir-isolation.sh — capability-probed confinement for a single agent command.","data","wired","keep",0,89
   "ymir-marketing-stack.sh","ymir-marketing-stack.sh — the marketing stack, provisionable on ANY computer.","tool","wired","keep",1,337
@@ -897,6 +900,7 @@ bin[807]{file,does,kind,verdict,disposition,callers,lines}:
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
   "zoom_ingest.py","bin/time/snotra/zoom_ingest.py -> systems/snotra/services/cron/zoom_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
 
+**Tally.** verdict: wired=554, tested=258
 
 **Tally.** verdict: wired=550, tested=258
 
