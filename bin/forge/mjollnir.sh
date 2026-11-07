@@ -8,6 +8,7 @@
 #                  [--harness <h>] [--isolation auto|on|off] [--no-spawn]
 #   mjollnir.sh run --project <id> --issue <n>   (the repo resolved from the registry)
 #   mjollnir.sh intake [--repo <id>]... [--ttl <s>] [--limit <n>] [--cache-only] [--json]
+#   mjollnir.sh clone <id> [--dir <path>] [--from <url>]
 #   mjollnir.sh status
 #   mjollnir.sh --version
 set -u
@@ -63,6 +64,48 @@ if [ "$CMD" = intake ]; then
   [ -n "$HOME_DIR" ] || HOME_DIR="${YMIR_HOME:-}"
   [ -n "$HOME_DIR" ] || { printf 'error: the home is unresolved\nhelp: bin/vault/hoard-lib.sh names it\n' >&2; exit 1; }
   exec python3 "$SCRIPT_DIR/intake.py" --home "$HOME_DIR" "$@"
+fi
+
+# clone — a FAR repo becomes a workable one (plan 210 P3).
+# WHY: `intake` reads any registered repo without a tree, but a FIX needs one, and the first
+# measurement found 67 of 78 rows with no clone at all. The door writes to exactly the path
+# `project-git.sh --field clone` prints — one resolver, so the diagnosis and the door cannot
+# disagree — and it refuses three things it must never do: clone over an existing tree, clone
+# into the public code tree (Rule 04: the tree ships, a workspace does not), and clone a row
+# that cannot name a remote (a guess about which repo a row means is worse than a refusal).
+if [ "$CMD" = clone ]; then
+  CID="${1-}"; shift || true
+  CDIR=""; CFROM=""
+  while [ $# -gt 0 ]; do case "$1" in
+    --dir) CDIR=${2-}; shift 2 ;; --from) CFROM=${2-}; shift 2 ;;
+    *) printf 'error: unknown flag %s\nhelp: bin/forge/mjollnir.sh clone <id> [--dir <path>] [--from <url>]\n' "$1" >&2; exit 2 ;;
+  esac; done
+  [ -n "$CID" ] || { printf 'error: clone needs a project id\nhelp: bin/agents/project-git.sh list\n' >&2; exit 2; }
+  PG="$SCRIPT_DIR/../agents/project-git.sh"
+  [ -r "$PG" ] || { printf 'error: the registry door is missing: %s\n' "$PG" >&2; exit 1; }
+  C_OWNER="$(bash "$PG" "$CID" --field owner 2>/dev/null || true)"
+  C_NAME="$(bash "$PG" "$CID" --field repo 2>/dev/null || true)"
+  C_BRANCH="$(bash "$PG" "$CID" --field default_branch 2>/dev/null || true)"
+  C_HOST="$(bash "$PG" "$CID" --field host 2>/dev/null || true)"
+  DEST="${CDIR:-$(bash "$PG" "$CID" --field clone 2>/dev/null || true)}"
+  [ -n "$DEST" ] || { printf 'error: %s cannot name a remote\nhelp: bin/agents/project-git.sh doctor names the row — a git{} block is what a clone needs\n' "$CID" >&2; exit 1; }
+  case "$DEST" in
+    "$ROOT"/*) printf 'error: %s resolves inside the public tree (%s)\nhelp: a hall lives under the private home — the tree ships, a workspace does not (Rule 04)\n' "$CID" "$DEST" >&2; exit 1 ;;
+  esac
+  [ -e "$DEST" ] && { printf 'error: %s already exists at %s\nhelp: use it (it is already a hall) or name another --dir\n' "$CID" "$DEST" >&2; exit 1; }
+  URL="${CFROM:-https://${C_HOST:-github.com}/$C_OWNER/$C_NAME.git}"
+  mkdir -p "$(dirname "$DEST")"
+  err="$(mktemp)"
+  if ! git clone --quiet ${C_BRANCH:+--branch "$C_BRANCH"} "$URL" "$DEST" 2>"$err"; then
+    why="$(tail -1 "$err" 2>/dev/null | cut -c1-200)"; rm -f "$err"
+    printf 'error: clone failed — %s\nhelp: the remote is %s (a private repo needs gh auth: bin/vault/hodd.sh emit secrets/platform.env)\n' "${why:-git refused}" "$URL" >&2
+    rmdir "$DEST" 2>/dev/null || true
+    exit 1
+  fi
+  rm -f "$err"
+  printf 'hall[1]{project,path,branch,remote}:\n  "%s","%s","%s","%s"\n' \
+    "$CID" "$DEST" "$(git -C "$DEST" branch --show-current 2>/dev/null)" "$URL"
+  exit 0
 fi
 
 REPO=""; ISSUE=""; MODE=direct-PR; HARNESS=""; ISO=auto; NOSPAWN=0; TITLE=""; BODY=""; PROJECT=""

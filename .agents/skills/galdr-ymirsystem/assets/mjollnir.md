@@ -17,6 +17,7 @@ Allfather merges on GitHub (plans 203 · 205 · 206 · `RULES/08`).
 |---|---|---|
 | `bin/agents/project-git.sh doctor [--probe] [--strict] [--json]` | which registry rows can name a remote, which have a clone, which are unreachable | nothing |
 | `bin/forge/mjollnir.sh intake [--repo <id>]… [--ttl <s>] [--limit <n>] [--cache-only] [--json]` | what is open across every registered repo: issues, PRs, base health, alerts | a cache under `$YMIR_HOME/state/intake/` |
+| `bin/forge/mjollnir.sh clone <id> [--dir <path>] [--from <url>]` | a far repo becomes a workable one, in the canonical hall | a tree |
 | `bin/forge/mjollnir.sh run --project <id> --issue <n>` | one issue becomes one worktree, one branch, one PR | a worktree, a branch |
 | `bin/forge/mjollnir.sh status` | what is prepared and not yet shipped | nothing |
 | `bin/forge/mjollnir-webhook.sh` | a verified GitHub `issues/opened` becomes a run (needs a public endpoint) | like `run` |
@@ -65,10 +66,25 @@ authority; nothing here is a second copy of an issue body.
 **Budget.** `--limit` (default 20) caps repos read per run; the rest are `deferred` and named. A run over
 22 readable repos takes ~85 s cold and 0 calls warm.
 
-## Reading a repo without a clone
+## Reading a repo without a clone, and cloning it (P3)
 
 `intake` needs no working tree — it reads through `gh`. **Fixing** does: `run --project <id>` refuses an
-id with no clone and names the road (`intake --repo <id>` reads it; clone it to fix it).
+id with no clone and names the road.
+
+`bin/forge/mjollnir.sh clone <id>` gives it hands. The destination is resolved by **one** resolver,
+`project-git.sh paths`, which `doctor` also reads — so the diagnosis and the door can never disagree:
+
+1. the registry row's own `repo:` path, under the code tree, `$HOME`, then `$YMIR_HOME`;
+2. else the canonical hall `$YMIR_HOME/halls/<owner>/<repo>`.
+
+Three refusals, each worse than no clone: cloning over an existing tree; a destination **inside the
+public code tree** (Rule 04 — the tree ships, a workspace does not); and a row that cannot name a
+remote (a guess is worse than a named fault). A failed clone removes what it created.
+
+**The fault this door found:** `project-git.sh` read only the *inline* `git: {…}` shape, so every field
+of every nested-block row returned `""` and four consumers carried on with nothing. It now reads both
+shapes, and `--field path|clone` **refuses** rather than printing a blank line
+(`docs/fixes/runtime/2026-11-06-the-registry-fields-read-both-shapes.md`).
 
 ## The webhook vs the clock
 

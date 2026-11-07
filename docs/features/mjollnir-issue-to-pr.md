@@ -66,8 +66,17 @@ A source it could not read is **named with its reason** (`denied — the token h
 alerts`), never counted as zero. A `100+` means "at least a hundred, the read is capped". A `needs[]` row
 tells you the one command that fixes a credential gap.
 
-**Fixing a repo that is not cloned:** `intake` needs no working tree, `run` does. Register it, read it, then
-clone it before `run --project <id> --issue <n>`.
+**Fixing a repo that is not cloned:** `intake` needs no working tree, `run` does. Clone it first — it lands
+under your home, never in the Ymir tree:
+
+```bash
+bin/forge/mjollnir.sh clone ndroi          # lands in $YMIR_HOME/halls/<owner>/<repo>
+bin/forge/mjollnir.sh clone ndroi --dir ~/CodeP/ndroi
+bin/agents/project-git.sh ndroi --field path   # where the tree is (or refuses)
+```
+
+It refuses to clone over an existing tree, refuses a destination inside the Ymir repo, and refuses a
+project whose registry row cannot name a remote — that row needs a `git{}` block, which `doctor` names.
 
 ## Notes and limits
 
