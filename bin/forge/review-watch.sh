@@ -155,10 +155,10 @@ rows=()
 for repo in "${REPOS[@]}"; do
   [ -n "$repo" ] || continue
   prs="$(gh pr list -R "$repo" --state open --limit 100 \
-          --json number,title,headRefOid,mergeable,isDraft,statusCheckRollup,author 2>/dev/null)" \
+          --json number,title,headRefOid,mergeable,headRefName,isDraft,statusCheckRollup,author 2>/dev/null)" \
     || die "gh pr list failed for $repo — no PR list, no watch (a refusal, not an empty repo)"
   [ -n "$prs" ] || prs="[]"
-  while IFS=$'\t' read -r num title head mergeable draft ci author; do
+  while IFS=$'\t' read -r num title head mergeable branch draft ci author; do
     [ -n "$num" ] || continue
     SEEN=$((SEEN + 1))
     marker="$STATE/.reviewed/raised-pr-$num.$head"
@@ -168,6 +168,31 @@ for repo in "${REPOS[@]}"; do
       rows+=("$(printf 'pr[6]{repo,n,head,state,why,raised}:\n  "%s","%s","%s","%s","%s","%s"' \
         "$repo" "$num" "${head:0:12}" "$mergeable" "draft — a draft is not offered for review" "no")")
       continue
+    fi
+    # ── a head that cannot merge is a SMITH's errand, in the code ─────────────────────────────
+    # Plan 203 §4: the reviewer never edits, so a CONFLICTING head is a dead end for it. Before
+    # this, the loop repeated "CONFLICTING" every ten minutes until a human noticed. The Allfather,
+    # 2026-11-07: "this must be in the code to happen automatically." Gated by the same switch, so
+    # a dev body never seats a smith on its own; a marker per head stops a re-seat every tick.
+    if [ "$mergeable" = "CONFLICTING" ] && [ "${YMIR_REVIEW_SELF:-auto}" != 0 ] && [ "$DRY" != 1 ]; then
+      smarker="$STATE/.reviewed/smithed-pr-$num.$head"
+      if [ ! -f "$smarker" ]; then
+        roles_c="$(bash "$ROOT/bin/fleet/topology.sh" --json 2>/dev/null | python3 -c 'import json,sys
+try: d=json.load(sys.stdin)
+except Exception: d={}
+print(",".join(d.get("roles") or []))' 2>/dev/null || true)"
+        case ",$roles_c," in *,heart,*)
+          errand="$(sed -e "s|@BRANCH@|${branch:-HEAD}|g" -e "s|@PR@|$num|g" "$ROOT/bin/forge/conflict-errand.md" 2>/dev/null || true)"
+          if [ -n "$errand" ] && [ -x "$ROOT/bin/seat/herdr-run.sh" ] \
+             && bash "$ROOT/bin/seat/herdr-run.sh" eindri "conflict-smith-$num" -- "$errand" >/dev/null 2>&1; then
+            mkdir -p "$STATE/.reviewed" 2>/dev/null || true
+            : >"$smarker" 2>/dev/null || true
+            rows+=("$(printf 'pr[6]{repo,n,head,state,why,raised}:\n  "%s","%s","%s","%s","%s","%s"' \
+              "$repo" "$num" "${head:0:12}" "$mergeable" "conflicting — a smith was seated to clear it" "yes")")
+            continue
+          fi ;;
+        esac
+      fi
     fi
     question="PR #$num ($repo) is open at head ${head:0:12}: mergeable=$mergeable ci=$ci. May I judge it — run the rules floor and the gates here, and give a verdict?"
     if [ "$DRY" = 1 ]; then
@@ -203,6 +228,7 @@ for p in prs:
     author = (p.get("author") or {}).get("login") or "?"
     print("\t".join([str(p.get("number")), (p.get("title") or "")[:80].replace("\t", " "),
                      p.get("headRefOid") or "", p.get("mergeable") or "UNKNOWN",
+                     p.get("headRefName") or "",
                      "true" if p.get("isDraft") else "false", ci, author]))
 ')
 done

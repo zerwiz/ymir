@@ -21,11 +21,12 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[3]{file,does,kind,verdict,disposition,callers,lines}:
+bin[4]{file,does,kind,verdict,disposition,callers,lines}:
+  "README.md","`bin/` — every file, what it does, and whether it is alive","data","tested","keep",60,-
   "bitrate-gate.sh","bitrate-gate.sh — a diffusion clip that 'completes' is not a clip that worked.","tool","wired","keep",0,82
   "brokk","brokk — the primary agent's CLI (Brokk, the bellows-smith).","tool","tested","keep",60,74
   "no-delete-guard.sh","no-delete-guard.sh — Rule 11, ENFORCED.","tool","wired","keep",4,90
 
-**Tally.** verdict: wired=2, tested=1
+**Tally.** verdict: tested=2, wired=2
 
-**Tally.** disposition: keep=3
+**Tally.** disposition: keep=4
