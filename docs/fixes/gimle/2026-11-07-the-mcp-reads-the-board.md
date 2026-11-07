@@ -86,3 +86,11 @@ the Allfather's word because it is the moment the door becomes reachable from ou
 - `bin/gimle/mcp-read.py` — the board backend, three tools, the scope and audit corrections.
 - `bin/gates/tests/test_gimle_mcp_board.sh` — the proof.
 - `docs/features/gimle-the-hall.md` · `docs/features/_catalogue/entries/00-001-team-giml-…md` — the page and its row.
+
+## CHANGE LOG
+
+- **2026-11-07** — the fault measured (the served MCP answered `count 0` and `"no such place in the record"` while
+  the desk read nine assigned cards); the six mechanism faults named and fixed; `--plane` and the `Board` backend
+  added; `create_card`, `update_card`, `list_plans` built; ten-case self-test added; proved on the real board from
+  a scratch copy on a spare port. Nothing deployed — the live unit keeps its read-only face until the operator's
+  word.
