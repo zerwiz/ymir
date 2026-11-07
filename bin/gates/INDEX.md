@@ -52,7 +52,7 @@ bin[102]{file,does,kind,verdict,disposition,callers,lines}:
   "folders.tsv","The purpose of every folder under bin/ — ONE line each, the single place it is kept.","data","wired","keep",1,39
   "fresh-base-check.sh","fresh-base-check.sh — does this work start on the LATEST codebase?","tool","wired","keep",1,74
   "git-clobber-guard.sh","git-clobber-guard.sh — no command that throws away uncommitted work.","tool","wired","keep",0,86
-  "guards.sh","guards.sh — every TREE ward, in one command.","tool","wired","keep",13,105
+  "guards.sh","guards.sh — every TREE ward, in one command.","tool","wired","keep",13,126
   "hoard-guard.sh","hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME).","tool","wired","keep",3,150
   "home-contract-check.sh","home-contract-check.sh — the contract that raises a home is itself checked.","tool","wired","keep",2,160
   "home-contract-guard.sh","home-contract-guard.sh — the contract that raises a user's home is checked (Rule 42).","tool","wired","keep",1,57
