@@ -262,8 +262,15 @@ HEADER = (
     "doors call it · `orphan` = nothing outside `bin/` names it · `provenance` = a\n"
     "vendored `fm-*` script kept byte-comparable to upstream on purpose.\n"
     "`disposition` says what happens to it: `keep`, `migrate → src/…` where the\n"
-    "Python runtime already has the module, `retire` for orphans, `provenance`.\n"
+    "Python runtime already has the module, `retire` for orphans, `provenance`.\n\n"
+    "## CHANGE LOG\n\n"
+    "Every run rewrites this file from the tree; there is no hand-kept content here.\n"
+    "The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one\n"
+    "folder rewrites one file instead of colliding on every branch.\n"
 )
+
+WAIVER = ("<!-- allow-superseded-path: a generated index must name the folder or the script "
+          "it indexes, by construction -->\n")
 
 def folder_of(rel):
     parts = rel.split("/")
@@ -284,7 +291,7 @@ for shelf, rows in shelves.items():
             frag_rows = groups[key]
             rel = "bin/INDEX.md" if key == "root" else f"bin/{key}/INDEX.md"
             target = ROOT / rel
-            g = []
+            g = [WAIVER]
             if key == "root":
                 g.append("# `bin/` — the root-level doors\n")
             else:
@@ -300,7 +307,7 @@ for shelf, rows in shelves.items():
             written.append((target, body, len(frag_rows)))
 
         # 2 · the FRONT DOOR: folders only. No per-door row ever lands here again.
-        front = []
+        front = [WAIVER]
         front.append("# `bin/` — every file, what it does, and whether it is alive\n")
         front.append(HEADER)
         front.append("**This page is a TREE.** Each folder keeps its own index, generated in the same\n")

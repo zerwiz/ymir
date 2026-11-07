@@ -4,6 +4,10 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | adapter-test.sh | bin/assistant/adapter-test.sh -> systems/skirnir/services/adapter-test.s | tested | keep (a human or a cron row must run it) |
 | approve-fact.sh | bin/assistant/approve-fact.sh -> systems/skirnir/services/approve-fact.s | tested | keep (a human or a cron row must run it) |
 | ask.sh | bin/assistant/ask.sh -> systems/skirnir/services/ask.sh — RETIRED SHIM | tested+named | keep (a human or a cron row must run it) |

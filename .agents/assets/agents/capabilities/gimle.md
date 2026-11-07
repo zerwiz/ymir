@@ -4,5 +4,9 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | deploy.sh | deploy.sh — put a merged tree on the desk host, and prove which commit | tested+named | keep (a human or a cron row must run it) |
 | project-and-publish.sh | project-and-publish.sh — project the meeting record, then hand it to t | tested | keep (a human or a cron row must run it) |

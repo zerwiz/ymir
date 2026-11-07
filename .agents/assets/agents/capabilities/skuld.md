@@ -4,6 +4,10 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | realm-lib.sh | realm-lib.sh — resolve the ACTIVE realm (tenant) without assuming the  | tested+named | keep (a human or a cron row must run it) |
 | registry-lib.sh | registry-lib.sh — the ONE reader for the master project registry's row | tested+named | keep (a human or a cron row must run it) |
 | role-lib.sh | role-lib.sh — what this machine IS, and the components its role owes | tested+named | keep (a human or a cron row must run it) |

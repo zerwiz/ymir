@@ -4,4 +4,8 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | place.sh | place.sh — team PLACES: a wall, not a permission (Rule 18; plan 77 Par | tested+named | keep (a human or a cron row must run it) |

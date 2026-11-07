@@ -4,6 +4,10 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | garmr-bite-test.sh | garmr-bite-test.sh — the laws of the bite, proven offline (no real bit | tested | keep (a human or a cron row must run it) |
 | garmr-bite.sh | garmr-bite.sh — GARMR'S TEETH. The hound may contain, within a written | tested | keep (a human or a cron row must run it) |
 | garmr-canary.sh | garmr-canary.sh — the deletion tripwire: files that must never vanish. | tested | keep (a human or a cron row must run it) |

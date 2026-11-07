@@ -4,6 +4,10 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | approve.sh | approve.sh — one gesture answers one question. | tested+named | keep (a human or a cron row must run it) |
 | intake-gate.sh | intake-gate.sh — is this message signal, or noise? One decision call,  | tested | keep (a human or a cron row must run it) |
 | mail.sh | mail.sh — the operator-only mail door: a system tells the Allfather, a | tested+named | keep (a human or a cron row must run it) |

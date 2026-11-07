@@ -4,6 +4,10 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | brokk-wake-grant.sh | shellcheck source=bin/time/brokk-wake-lib.sh | tested+named | keep (a human or a cron row must run it) |
 | brokk-wake-lib.sh | Shared durable wake queue and portable lock helpers. | tested+named | keep (a human or a cron row must run it) |
 | calendar-watch.sh | calendar-watch.sh — do not walk into a meeting by accident. | tested | keep (a human or a cron row must run it) |

@@ -4,6 +4,10 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | app-build.sh | app-build — build the in-tree apps (plan 35). | tested+named | keep (a human or a cron row must run it) |
 | app-lib.sh | app-lib.sh — where an app actually lives. | tested+named | keep (a human or a cron row must run it) |
 | design-icon.sh | design-icon.sh — every app wears its own rune. | tested+named | keep (a human or a cron row must run it) |

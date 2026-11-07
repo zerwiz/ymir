@@ -4,5 +4,9 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | bitrate-gate.sh | bitrate-gate.sh — a diffusion clip that "completes" is not a clip that | tested | keep (a human or a cron row must run it) |
 | no-delete-guard.sh | no-delete-guard.sh — Rule 11, ENFORCED. A tracked file is never delete | tested | keep (a human or a cron row must run it) |

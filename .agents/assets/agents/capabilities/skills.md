@@ -4,5 +4,9 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | manifest.sh | manifest.sh — a skill declares itself; the index is DERIVED from the d | tested | keep (a human or a cron row must run it) |
 | share-build.sh | share-build.sh — the built copy that may leave. Never the shelf itself | tested | keep (a human or a cron row must run it) |

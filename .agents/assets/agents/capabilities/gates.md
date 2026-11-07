@@ -4,6 +4,10 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | branch-current.sh | branch-current.sh — a branch is based on CURRENT main before it is off | tested | keep (a human or a cron row must run it) |
 | contracts-check.sh | contracts-check.sh — the typed surfaces' proof, in one command. | tested | keep (a human or a cron row must run it) |
 | design-check.sh | design-check.sh — one identity, two renderers: they must agree. | tested | keep (a human or a cron row must run it) |
@@ -78,7 +82,7 @@
 | plan-audit.sh | plan-audit.sh — the plan CONTRACT, as a check over the ledger shelf. | tested | keep (a human or a cron row must run it) |
 | registers.sh | registers.sh — every generated register, through one door. | tested | keep (a human or a cron row must run it) |
 | repo-scrub.sh | repo-scrub.sh — purge private paths from ALL git history before going  | tested | keep (a human or a cron row must run it) |
-| seat-woven-driver.sh | seat-woven-driver.sh — seat the engine behind `merge=regenerate`, and  | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| seat-woven-driver.sh | seat-woven-driver.sh — seat the engine behind `merge=regenerate`, and  | tested | keep (a human or a cron row must run it) |
 | test_handoff_packet.sh | test_handoff_packet.sh — proves the packet door reads the schema's pac | tested | keep (a human or a cron row must run it) |
 | test_hermes_seat.sh | test_hermes_seat.sh — the acceptance test for plan 177 H1/H2/H3: Herme | tested+named | keep (a human or a cron row must run it) |
 | test_new_doors.sh | test_new_doors.sh — the production tests for the doors built 2026-11-0 | tested | keep (a human or a cron row must run it) |

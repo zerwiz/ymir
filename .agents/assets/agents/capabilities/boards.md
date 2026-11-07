@@ -4,4 +4,8 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | plane.sh | plane.sh — THE door to Plane. No agent talks to the Plane API without  | tested | keep (a human or a cron row must run it) |

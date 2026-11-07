@@ -4,6 +4,10 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | a2a-front.sh | a2a-front.sh — the thin door to bin/bridge/a2a-front.py (Rule 23: one  | tested | keep (a human or a cron row must run it) |
 | a2a-mcp.sh | a2a-mcp.sh — install/verify the Ymir MCP servers into the harnesses so | tested+named | keep (a human or a cron row must run it) |
 | a2a-serve.sh | a2a-serve.sh — run the a2a-sdk A2A 1.0 server for a seated Eindri. | tested | keep (a human or a cron row must run it) |

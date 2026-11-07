@@ -4,6 +4,10 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | fm-afk-launch.sh | fm-afk-launch.sh - the single owner of the away-mode daemon TERMINAL lif | tested+named | keep (a human or a cron row must run it) |
 | fm-afk-return.sh | fm-afk-return.sh - deterministic away-mode return catch-up gate. | tested | keep (a human or a cron row must run it) |
 | fm-afk-start.sh | Enter away mode and run the sub-supervisor daemon in a harness-tracked | tested | keep (a human or a cron row must run it) |

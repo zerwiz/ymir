@@ -4,6 +4,10 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | collab.sh | collab.sh — Vingólf, the assembly hall: who collaborates with the hou | tested+named | keep (a human or a cron row must run it) |
 | init.sh | init.sh — put the collaboration shelf into a repository, or check the  | tested | keep (a human or a cron row must run it) |
 | letter.sh | letter.sh — the collaboration letter, rendered from a template and lef | tested+named | keep (a human or a cron row must run it) |

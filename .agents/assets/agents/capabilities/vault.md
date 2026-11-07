@@ -4,6 +4,10 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | confidential.sh | confidential.sh — a session where vault work has no route off the vaul | tested+named | keep (a human or a cron row must run it) |
 | gleipnir-lock-lib.sh | gleipnir-lock-lib.sh — the session lock (Gleipnir), a THIN SHIM. | tested+named | keep (a human or a cron row must run it) |
 | hnitbjorg-ensure.sh | hnitbjorg-ensure.sh — ensure the vault's tooling stands and its path i | tested+named | keep (a human or a cron row must run it) |

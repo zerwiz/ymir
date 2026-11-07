@@ -4,6 +4,10 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | autoboot-lib.sh | autoboot-lib.sh — the boot policy: fleet roles → the Ymir programs t | tested+named | keep (a human or a cron row must run it) |
 | hermes-ensure.sh | hermes-ensure.sh — ensure the Hermes agent runtime is present. | tested+named | keep (a human or a cron row must run it) |
 | home-seed.sh | home-seed.sh — make a home that a fresh user can understand, and offer | tested+named | keep (a human or a cron row must run it) |

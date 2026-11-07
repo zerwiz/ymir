@@ -4,6 +4,10 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | audit-apply.sh | audit-apply.sh — turn an audit into work, in one door. | tested | keep (a human or a cron row must run it) |
 | daily-log.sh | daily-log.sh — the day's work, recorded where the contract says it liv | tested+named | keep (a human or a cron row must run it) |
 | developers.sh | developers.sh — who can write to a repository, and who actually has. | tested | keep (a human or a cron row must run it) |

@@ -4,4 +4,8 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | ping-room.sh | ping-room.sh — Þing on demand: raise a MiroTalk room on the computer  | tested+named | keep (a human or a cron row must run it) |

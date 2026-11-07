@@ -4,6 +4,10 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | bootstrap-macos.sh | bootstrap-macos.sh — give a macOS operator the Linux host Ymir needs. | tested+named | keep (a human or a cron row must run it) |
 | browser-watch.sh | browser-watch.sh — record when a browser leaves, so a disappearance is | tested | keep (a human or a cron row must run it) |
 | crash-sense.sh | crash-sense.sh — surface machine crashes to the Allfather on Omarchy. | tested+named | keep (a human or a cron row must run it) |

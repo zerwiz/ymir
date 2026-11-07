@@ -4,6 +4,10 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | clients.sh | clients.sh — the clients register: load, validate, and check. | tested+named | keep (a human or a cron row must run it) |
 | place-validate.sh | place-validate.sh — validate a place.yaml against the clients register | tested+named | keep (a human or a cron row must run it) |
 | projects-validate.sh | projects-validate.sh — validate projects.yaml, including the optional  | tested+named | keep (a human or a cron row must run it) |

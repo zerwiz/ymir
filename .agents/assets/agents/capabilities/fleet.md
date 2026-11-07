@@ -4,6 +4,10 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | agents-config.sh | agents-config.sh — one YAML for the Allfather's agent/harness/model co | tested+named | keep (a human or a cron row must run it) |
 | dispatch-profile.sh | dispatch-profile.sh — decide which Eindri dispatch profile is ACTIVE,  | tested+named | keep (a human or a cron row must run it) |
 | fleet-apply.sh | fleet-apply.sh — apply fleet-wide preferences to every registered Eind | tested+named | keep (a human or a cron row must run it) |

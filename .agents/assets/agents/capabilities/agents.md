@@ -4,6 +4,10 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | agent-run.sh | agent-run.sh — run one agent's errand through the harness the Allfathe | tested+named | keep (a human or a cron row must run it) |
 | brokk-classify-lib.sh | Shared wake classifier: the common source of truth for Allfather-relevan | tested+named | keep (a human or a cron row must run it) |
 | brokk-lease-lib.sh | brokk-lease-lib.sh - the per-task supervision lease contract (one owner) | tested+named | keep (a human or a cron row must run it) |

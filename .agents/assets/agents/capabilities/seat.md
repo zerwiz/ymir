@@ -4,6 +4,10 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | context.sh | context.sh — what the agent's context ACTUALLY holds, right now. | tested+named | keep (a human or a cron row must run it) |
 | core-four.sh | core-four.sh — the four dials that decide an agent's outcome, in ONE r | tested+named | keep (a human or a cron row must run it) |
 | harness-contract-install.sh | harness-contract-install.sh — every harness reads ONE contract, and an | tested | keep (a human or a cron row must run it) |

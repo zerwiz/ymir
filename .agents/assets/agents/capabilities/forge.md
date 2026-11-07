@@ -4,6 +4,10 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | github-deploy.sh | github-deploy.sh — zero-trust deploys (W0035). Sync secrets from the l | tested+named | keep (a human or a cron row must run it) |
 | gjallarhorn-expose.sh | gjallarhorn-expose.sh — put EVERY app on its own public hostname (Gjal | tested+named | keep (a human or a cron row must run it) |
 | gjallarhorn-notify.sh | gjallarhorn-notify.sh — the horn (W0036). Unified push: Telegram + a w | tested+named | keep (a human or a cron row must run it) |

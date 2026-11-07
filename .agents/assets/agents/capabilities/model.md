@@ -4,6 +4,10 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | agent-model.sh | agent-model.sh — WHICH MODEL, ON THIS SEAT. One resolver, and a refusa | tested | keep (a human or a cron row must run it) |
 | apodex-smoke-test.sh | apodex-smoke-test — validate an Apodex endpoint (GGUF via llama-router | tested+named | keep (a human or a cron row must run it) |
 | catalog.sh | catalog.sh — THE door to what this machine can serve. | tested+named | keep (a human or a cron row must run it) |

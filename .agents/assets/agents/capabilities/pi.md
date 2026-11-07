@@ -4,6 +4,10 @@
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
+
+## CHANGE LOG
+
+- **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | arm.sh | arm.sh — the Gná arm, honestly: what the watch is, and whether THIS h | tested+named | keep (a human or a cron row must run it) |
 | logretta-council.sh | logretta-council.sh — the council's MODES: who divides the work, who i | tested | keep (a human or a cron row must run it) |
 | logretta-debate.sh | logretta-debate.sh — the council's second round: seats answering SEATS | tested | keep (a human or a cron row must run it) |
