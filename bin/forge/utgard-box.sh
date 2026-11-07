@@ -16,6 +16,7 @@
 #   utgard-box.sh new <name> [--repo P] [--ttl 4h] [--seal none|door|open]
 #                            [--port 3000] [--factory-port 4601] [--budget N]
 #                            [--lane L] [--model M] [--image T] [--label k=v]
+#                            [--no-harness]   (the agents are seated by default)
 #   utgard-box.sh list                               # the estate, with time left
 #   utgard-box.sh status <name>
 #   utgard-box.sh enter <name> [-- <command…>]       # a shell, or one command
@@ -28,6 +29,7 @@
 #   utgard-box.sh estate                             # every live box, both doors, who answers
 #   utgard-box.sh enter --all                        # the whole estate, one pane each
 #   utgard-box.sh factory <name>                     # seat Smidja inside the box
+#   utgard-box.sh harness <name> [--from DIR]        # seat the agents, skills, commands
 #   utgard-box.sh run <name> -- <command…>           # one command, inside
 #   utgard-box.sh revoke <name>                      # take the credential back now
 #   utgard-box.sh probe [--repo P]                   # prove the three laws
@@ -313,6 +315,7 @@ cmd_new() {
   local name="" repo="" ttl_raw="4h" seal="door" port="3000" lane="" model="" model_req="" image="$TAG"
   local factory_port="$FACTORY_PORT" budget="$BUDGET_DEFAULT"
   local -a extra_labels=()
+  local want_harness=1
   while [ $# -gt 0 ]; do case "$1" in
     --repo) repo=${2-}; shift 2 ;;
     --ttl) ttl_raw=${2-}; shift 2 ;;
@@ -324,6 +327,7 @@ cmd_new() {
     --factory-port) factory_port=${2-}; shift 2 ;;
     --budget) budget=${2-}; shift 2 ;;
     --label) extra_labels+=(--label "${2-}"); shift 2 ;;
+    --no-harness) want_harness=0; shift ;;
     -*) die "new: unknown flag $1" ;;
     *) name=$1; shift ;;
   esac; done
@@ -449,6 +453,11 @@ help: utgard box seal $name none   (a box with no road is still a box)"
   fi
 
   seat_pi "$name" "$model"
+  # A box with `pi` and no agents is a computer with no one in it: the harness is
+  # seated at birth, so the first thing anyone does in a box works.
+  if [ "$want_harness" = 1 ]; then
+    cmd_harness "$name" >/dev/null 2>&1 || printf 'warn: the box has pi but no agent files — run utgard box harness %s\n' "$name" >&2
+  fi
 
   printf 'box[8]{name,container,seal,model,model_from,url,ttl,deadline}:'
   printf '\n'
@@ -719,6 +728,56 @@ cmd_estate() {
   done
 }
 
+# --- the harness inside a box (the agents, not the factory) -------------------
+# A box with `pi` and no agents is a computer with no one in it. This seats the
+# Way-Of harness: the seat's own agent files, its skills and its commands, and the
+# project's shipped skill shelf, so an agent in the box can find its craft by the
+# same door it uses on the host. A COPY, never a mount, and never a fetch: a box
+# sealed to one road cannot reach a git forge, so what it runs is what was put in.
+cmd_harness() {
+  local name="" from="$HOME/.pi/agent" skills="$ROOT/.agents/skills"
+  while [ $# -gt 0 ]; do case "$1" in
+    --from) from=${2-}; shift 2 ;;
+    --skills) skills=${2-}; shift 2 ;;
+    -*) die "harness: unknown flag $1" ;;
+    *) name=$1; shift ;;
+  esac; done
+  [ -n "$name" ] || die "harness: which box?
+help: utgard box harness <name> [--from ~/.pi/agent] [--skills .agents/skills]"
+  local c; c="$(cname "$name")"
+  exists "$c" || die "harness: no box named $name"
+  [ -d "$from" ] || die "harness: no harness at $from
+help: utgard box harness $name --from <a pi agent dir with agents/ and skills/>"
+
+  local part seated=""
+  # A TAR through the door, not `docker cp`: a copied path lands root-owned inside
+  # the container, so the agent could read its own harness and never replace it.
+  for part in agents skills commands; do
+    [ -d "$from/$part" ] || continue
+    if tar -C "$from/$part" -cf - . 2>/dev/null | "$ENGINE" exec -i "$c" bash -lc \
+         "mkdir -p \"\$HOME/.pi/agent/$part\" && tar -xf - -C \"\$HOME/.pi/agent/$part\"" >/dev/null 2>&1; then
+      seated="$seated $part"
+    fi
+  done
+  [ -n "$seated" ] || die "harness: could not seat any of agents, skills or commands in $c"
+
+  # The project's shipped craft, where an agent inside the box will look for it.
+  if [ -d "$skills" ]; then
+    tar -C "$skills" -cf - . 2>/dev/null | "$ENGINE" exec -i "$c" bash -lc \
+      'mkdir -p /box/work/.agents/skills && tar -xf - -C /box/work/.agents/skills' >/dev/null 2>&1 \
+      || printf 'warn: the project skill shelf did not seat\n' >&2
+  fi
+
+  local na ns
+  na="$("$ENGINE" exec "$c" bash -lc 'ls "$HOME/.pi/agent/agents" 2>/dev/null | wc -l' 2>/dev/null | tr -d ' ')"
+  ns="$("$ENGINE" exec "$c" bash -lc 'ls "$HOME/.pi/agent/skills" 2>/dev/null | wc -l' 2>/dev/null | tr -d ' ')"
+  printf 'harness[4]{box,agents,skills,seated}:\n  "%s","%s","%s","%s"\n' \
+    "$name" "${na:-0}" "${ns:-0}" "$(printf '%s' "$seated" | sed 's/^ //;s/ /+/g')"
+  if [ "${na:-0}" = 0 ]; then
+    printf 'warn: the box still has no agent files — check --from\n' >&2
+  fi
+}
+
 cmd_pull() {
   local name="${1-}" inner="${2-}" dest="${3-}"
   [ -n "$name" ] && [ -n "$inner" ] || die "pull: utgard box pull <name> <path-in-box> [dest]"
@@ -796,7 +855,7 @@ cmd_probe() {
   esac; done
   local name="probe-$(date +%s)"
   printf 'probe[1]{box,built_from}:\n  "%s","%s"\n' "$name" "${repo:-nothing}"
-  cmd_new "$name" --ttl 5m --seal door --port 0 --repo "$repo" >/dev/null \
+  cmd_new "$name" --ttl 5m --seal door --port 0 --no-harness --repo "$repo" >/dev/null \
     || die "probe: the box would not start — the probe cannot prove anything without a box"
   local c; c="$(cname "$name")"
 
@@ -863,8 +922,9 @@ case "$CMD" in
   factory) cmd_factory "$@" ;;
   run)    cmd_run "$@" ;;
   revoke) cmd_revoke "$@" ;;
+  harness) cmd_harness "$@" ;;
   probe)  cmd_probe "$@" ;;
   *)
-    printf 'error: unknown verb %s\nhelp: utgard box [build|new|list|status|enter|url|seal|pull|stop|start|rm|gc|probe|estate|factory|run|revoke]\n' "$CMD" >&2
+    printf 'error: unknown verb %s\nhelp: utgard box [build|new|list|status|enter|url|seal|pull|stop|start|rm|gc|probe|estate|factory|harness|run|revoke]\n' "$CMD" >&2
     exit 2 ;;
 esac

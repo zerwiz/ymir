@@ -107,3 +107,13 @@ Four things the first pass did not have, taken from the full transcript of the t
   one pane per live box, and when herdr is absent it says so and prints what each pane would have run.
 
 Lanes — best of N — are their own page: [utgard-lanes.md](utgard-lanes.md).
+
+## Added 2026-11-06 (later) — the agents are in the box
+
+A box used to install `pi` and nothing to be: no agents, no skills, no commands. `utgard box new` now seats the harness
+with the box — the seat's own agent files, its skills and its commands, plus the project's skill shelf at
+`/box/work/.agents/skills`. `utgard box harness <name> --from <dir>` seats a different one; `--no-harness` makes a bare
+box on purpose.
+
+The copy travels as a tar extracted by the box's own user, so the agent owns its harness and can replace it — and it is
+never a mount, so nothing inside can write home.

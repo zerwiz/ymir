@@ -963,3 +963,26 @@ for a run it never made.
 
 **Proved:** `tests/test_utgard_box.sh` 41 pass / 0 fail; `tests/test_utgard_lane.sh` 18 pass / 0 fail; both skip cleanly
 (exit 0) with no engine, no daemon or no image, naming the remedy (RULES/25).
+
+## 2026-11-06 (3) — a box with pi and no agents is a computer with no one in it
+
+**The fault the Allfather named:** *"none of the utgard agents works."* Measured: a fresh box had **no `~/.pi/agent`
+tree at all** — no agents, no skills, no commands. The box installed the harness binary and nothing for it to be. Not a
+proxy fault, not a lane fault: there were no agents in the box.
+
+**The fix:** `utgard box new` seats the harness at birth — the seat's own `~/.pi/agent/{agents,skills,commands}` and the
+project shelf at `/box/work/.agents/skills` (24 agents · 3 harness skills · 32 project skills on this seat).
+`utgard box harness <name> [--from DIR] [--skills DIR]` seats it again or seats another; `--no-harness` is the deliberate
+bare box.
+
+**Three rules the implementation had to obey, each for a reason already paid for:**
+
+1. **A tar through the door, never `docker cp`** — a copied path lands root-owned inside the container, so the agent could
+   read its harness and never replace it. The tar is extracted by the box's own user: owned by the agent.
+2. **Never a mount** — a mount lets the box write home; a copy cannot.
+3. **Never a fetch** — a box sealed to one road cannot reach a git forge, so what it runs is what was put in. That also
+   makes the harness a *deliberate* lane axis rather than a thing that drifts between runs.
+
+**Proved:** `tests/test_utgard_box.sh` 46 pass / 0 fail (a new box has its agents; the shelf is inside; the harness is the
+agent's own; `--no-harness` is bare). **Still owed, and named rather than implied:** the road (one firewall rule) and one
+real `pi -p` turn inside a box asserting an answer.

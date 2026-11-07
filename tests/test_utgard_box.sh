@@ -178,6 +178,24 @@ case "$u" in http://127.0.0.1:*) ok "url is a loopback door ($u)" ;; *) bad "url
 "$ENGINE" volume inspect "${PREFIX}-b2-work" >/dev/null 2>&1 && ok "--keep-volume keeps the work" || bad "--keep-volume keeps the work"
 "$ENGINE" volume rm "${PREFIX}-b2-work" >/dev/null 2>&1 || true
 
+# --- the harness: a box with pi and no agents is a computer with no one in it --
+"$BOX" new b5 --ttl 10m --seal none --model stub-model >/dev/null 2>&1 \
+  && ok "a fifth box, to look inside it" || bad "a fifth box, to look inside it"
+agents="$("$ENGINE" exec "${PREFIX}-b5" bash -lc 'ls "$HOME/.pi/agent/agents" 2>/dev/null | wc -l' 2>/dev/null | tr -d ' ')"
+[ "${agents:-0}" -gt 0 ] && ok "a new box arrives WITH its agents ($agents files)" \
+  || bad "a new box arrives WITH its agents (got ${agents:-0})"
+shelf="$("$ENGINE" exec "${PREFIX}-b5" bash -lc 'ls /box/work/.agents/skills 2>/dev/null | wc -l' 2>/dev/null | tr -d ' ')"
+[ "${shelf:-0}" -gt 0 ] && ok "the project skill shelf is inside, where an agent looks for it ($shelf)" \
+  || bad "the project skill shelf is inside (got ${shelf:-0})"
+owner="$("$ENGINE" exec "${PREFIX}-b5" bash -lc 'stat -c %U "$HOME/.pi/agent/agents"' 2>/dev/null)"
+[ "$owner" = "agent" ] && ok "the harness is the agent's own to read and replace" \
+  || bad "the harness is the agent's own (owner '$owner')"
+
+"$BOX" new b6 --ttl 10m --seal none --model stub-model --no-harness >/dev/null 2>&1
+none="$("$ENGINE" exec "${PREFIX}-b6" bash -lc 'ls "$HOME/.pi/agent/agents" 2>/dev/null | wc -l' 2>/dev/null | tr -d ' ')"
+[ "${none:-0}" = "0" ] && ok "--no-harness makes a bare box, and says so" || bad "--no-harness makes a bare box (got ${none:-0})"
+"$BOX" rm b5 >/dev/null 2>&1; "$BOX" rm b6 >/dev/null 2>&1
+
 # --- P2 · the factory inside a box -------------------------------------------
 "$BOX" new b4 --ttl 10m --seal door --port 3000 --model stub-model --budget 2 >/dev/null 2>&1 \
   && ok "a fourth box, with two doors and a budget" || bad "a fourth box, with two doors and a budget"

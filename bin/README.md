@@ -759,7 +759,7 @@ bin[810]{file,does,kind,verdict,disposition,callers,lines}:
   "update-notes.sh","update-notes.sh — WHAT CHANGED FOR YOU, since your last update.","tool","wired","keep",2,76
   "usage-ratchet.sh","usage-ratchet.sh — PROVE the doors are used, and fail when the unused pile grows.","tool","wired","keep",1,99
   "utgard-box-door.py","'''utgard-box-door.py — the one road out of a box.","tool","wired","keep",1,369
-  "utgard-box.sh","utgard-box.sh — a whole computer for one run, outside the wall.","tool","wired","keep",2,871
+  "utgard-box.sh","utgard-box.sh — a whole computer for one run, outside the wall.","tool","wired","keep",2,931
   "utgard-lane.sh","utgard-lane.sh — best of N: one brief, many boxes, one board.","tool","wired","keep",1,227
   "utgard.sh","utgard.sh — the sealed execution barrier (Utgard, the realm outside the wall).","tool","wired","keep",4,128
   "valhalla.sh","valhalla.sh — the process hall (Valhalla).","tool","wired","keep",0,116
