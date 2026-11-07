@@ -55,6 +55,9 @@ ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 # collision it saves. The ward (bin/gates/guards/weave-guard.sh) is what REFUSES drift; CI keeps
 # the last word. A weave that fails does not block here — the ward says its piece at push and CI.
 WOVEN="FEATURES.md bin/README.md .agents/backend/README.md .agents/assets/agents/capabilities.md"
+# The register is a TREE (plan 211): its rows live in fragment files that are also generated,
+# so a secret pasted into a fragment must be caught exactly as one in the front door is.
+WOVEN_DIRS="bin .agents/assets/agents/capabilities"
 wov_hash() { git hash-object -- "$ROOT/$1" 2>/dev/null || printf 'absent'; }
 weave_woven_files() {
   local f was now pre=""

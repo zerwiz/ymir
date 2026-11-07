@@ -80,7 +80,12 @@ say() { printf 'path-ledger-guard[1]{finding,file,line,superseded_by}:\n  "%s","
 # record is excepted — docs/fixes is one file per fix, append-only — and a line may be
 # waived in writing with `allow-superseded-path:` and a reason.
 SEARCH_DIRS=(bin .agents tools scripts config apps packages RULES docs)
-EXCLUDES=(--exclude-dir=.git --exclude-dir=.yggdrasil --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=build)
+# A GENERATED INDEX NAMES WHAT IT INDEXES (plan 211, 2026-11-06). `bin/<folder>/INDEX.md` and the
+# capability fragments are written by bin/gates/inventory.sh and bin/gates/capabilities.sh, so the
+# folder's name in them is a heading, not a reference a hand left behind — and a generator cannot
+# avoid it: it must say which folder the rows belong to. Excluded by SHAPE, never by list.
+EXCLUDES=(--exclude-dir=.git --exclude-dir=.yggdrasil --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=build
+          --exclude=INDEX.md --exclude-dir=capabilities)
 SELF="${BASH_SOURCE[0]}"
 
 while IFS=$'\t' read -r old new still; do

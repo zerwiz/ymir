@@ -159,3 +159,5 @@ moves:
     date: "2026-10-31"
     why: "ownership is the axis, plan 150 — the assistant is a SYSTEM with a keeper, not a layer's folder"
     migration: "0015-systems-skirnir"
+    partial: true
+    still_current: "INDEX.md adapter-test.sh approve-fact.sh ask.sh asks.sh ban.sh ear.sh escalate.sh escalation-timer.sh group-add.sh group-allow.sh kb-export.sh learn-home.sh learn-house.sh learn-site.sh learn.sh mouth.sh prune.sh query.sh research-smoke.sh room-squad.sh room-wall-test.sh room.sh smoke.sh telegram.sh voice-handler.sh voice.sh walls-test.sh"

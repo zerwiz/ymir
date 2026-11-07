@@ -143,7 +143,8 @@ path_component() {  # <path> -> the component it belongs to, or empty
     # a fix to them is a gate fix (2026-11-03 — they mapped to nothing and a correct
     # note could not cover the push; the same class the 2026-10-12 StartLimit mend found).
     FEATURES.md|docs/features/*) echo gate ;;
-    bin/README.md|.agents/backend/README.md|.agents/assets/agents/capabilities.md) echo gate ;;
+    bin/README.md|bin/INDEX.md|bin/*/INDEX.md) echo gate ;;
+    .agents/backend/README.md|.agents/assets/agents/capabilities.md|.agents/assets/agents/capabilities/*) echo gate ;;
     # The unit templates and the renderer that seats them: the seat's services, so a fix
     # here is a runtime fix. Before this row tools/{mill,web}/systemd/* mapped to NO
     # component — a correct runtime note covered nothing and the gate passed on a
@@ -158,6 +159,10 @@ path_component() {  # <path> -> the component it belongs to, or empty
     .agents/skills/galdr-ymirsystem/assets/smidja.md|.agents/skills/smidja-factory/*) echo smidja ;;
     .agents/skills/galdr-ymirsystem/assets/snotra-meeting-ear.md|bin/snotra*|tools/snotra/*) echo snotra ;;
     tools/tickets-mcp/*|bin/desktop/odrerir*|apps/odrerir/*) echo odrerir ;;
+    # The forge: worktrees, the sandbox, and now boxes. Before this row bin/forge/* mapped
+    # to NO component, so a correct forge note could never cover a forge path and the gate
+    # could only warn (2026-11-06, found while shipping the Utgard boxes).
+    bin/forge/*|.agents/sandbox/*) echo forge ;;
   esac
 }
 covered=0
