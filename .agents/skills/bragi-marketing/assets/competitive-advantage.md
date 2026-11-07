@@ -76,3 +76,7 @@ that is the whole point, and it is the only kind of refusal worth having.
 - the gate: `bin/collab/kit/scripts/advantage-audit.sh` (installed as
   `scripts/advantage-audit.sh`)
 - research engines: this skill's §1 — Firecrawl and browser-use
+
+## CHANGE LOG
+
+- **2026-11-06** — written with the gate: the VRIO screen, the teardown from lost deals, and the line that fails a page of adjectives.

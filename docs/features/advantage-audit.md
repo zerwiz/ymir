@@ -1,7 +1,7 @@
 # The advantage gate — every claim carries its evidence, or it does not go out
 
 **What it is.** A small tool for a hard rule: a claim about what we are better at is deleted,
-never softened, when its evidence line is empty. `scripts/advantage-audit.sh` walks a
+never softened, when its evidence line is empty. `bin/collab/kit/scripts/advantage-audit.sh` walks a
 document of claims, finds the `**Evidence:**` line inside every section, and refuses the
 page when that line is missing, a placeholder, or too thin to check.
 
@@ -29,8 +29,8 @@ bin/collab/kit/scripts/advantage-audit.sh --json <doc.md>        # for a board o
 bin/collab/kit/scripts/advantage-audit.sh --skip "Title" <doc.md> # a section that is not a claim
 ```
 
-In a repository that has the collaboration kit installed, the same door is
-`scripts/advantage-audit.sh`.
+In a repository that has the collaboration kit installed, the kit's own copy is
+`bin/collab/kit/scripts/advantage-audit.sh` — the kit installs that same file into the project it standardises.
 
 **What counts as evidence.** A date, a number, a link to a record, a signed acceptance, or a
 named person who will defend it. What does not: ⟨…⟩, <…>, TBD, TODO, `____`, "to be
@@ -46,7 +46,7 @@ measured", "n/a". Those are reported as `PLACEHOLDER`, which fails.
 - It reads markdown sections, not prose paragraphs. A claim buried mid-paragraph is invisible
   to it.
 - It is not a spell-checker for positioning. It does not know whether the advantage is
-  actually rare — that is the VRIO screen in `docs/advantage.md`.
+  actually rare — that is the VRIO screen in `bin/collab/kit/docs/advantage.md`.
 
 **If it does not work.**
 
@@ -56,6 +56,10 @@ measured", "n/a". Those are reported as `PLACEHOLDER`, which fails.
   the text, usually where a second number was meant to go.
 - *Wrong section audited* — add `--skip "The exact heading"`.
 
-**The method behind it.** `docs/advantage.md` — the VRIO screen, the competitive set taken
+**The method behind it.** `bin/collab/kit/docs/advantage.md` — the VRIO screen, the competitive set taken
 from won and lost deals, the one-page teardown with every fact dated, and the cadence. The
 skill that loads it is `bragi-marketing`, `assets/competitive-advantage.md`.
+
+## CHANGE LOG
+
+- **2026-11-06** — the page opened with the gate (plan 207).

@@ -122,3 +122,7 @@ refusal.
   engagements — <https://amitkoth.com/productizing-ai-services/>,
   <https://www.beltcourse.com/blog/build-a-category-of-one-ai-agency-offers-pricing-and-markets-that-actually-buy>
 - Niche as the precondition for a specialist rate — <https://vibeengines.com/handbook/ai-consultant>
+
+## CHANGE LOG
+
+- **2026-11-06** — the method opened with the gate (plan 207).

@@ -71,3 +71,7 @@ Law: `RULES/04` (the hoard), `RULES/15` (the vault), and the reasoning in plan 2
   the door is telling the truth, not failing.
 - **`missed` is large** — the scheduler runs only while a session is open, so a job due at 07:00 with
   no session at 07:00 is missed by design. That is the finding, not a bug in the report.
+
+## CHANGE LOG
+
+- **2026-11-06** — the page opened with the door (plan 207).
