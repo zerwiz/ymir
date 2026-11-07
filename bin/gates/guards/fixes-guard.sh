@@ -143,7 +143,8 @@ path_component() {  # <path> -> the component it belongs to, or empty
     # a fix to them is a gate fix (2026-11-03 — they mapped to nothing and a correct
     # note could not cover the push; the same class the 2026-10-12 StartLimit mend found).
     FEATURES.md|docs/features/*) echo gate ;;
-    bin/README.md|.agents/backend/README.md|.agents/assets/agents/capabilities.md) echo gate ;;
+    bin/README.md|bin/INDEX.md|bin/*/INDEX.md) echo gate ;;
+    .agents/backend/README.md|.agents/assets/agents/capabilities.md|.agents/assets/agents/capabilities/*) echo gate ;;
     # The unit templates and the renderer that seats them: the seat's services, so a fix
     # here is a runtime fix. Before this row tools/{mill,web}/systemd/* mapped to NO
     # component — a correct runtime note covered nothing and the gate passed on a

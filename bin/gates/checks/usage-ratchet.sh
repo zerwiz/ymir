@@ -27,15 +27,19 @@ _root() {
 }
 ROOT="$(_root)"
 cd "$ROOT" || exit 2
+# THE REGISTER IS A TREE (plan 211): the front door carries folders, the rows live in
+# .agents/assets/agents/capabilities/<folder>.md. A count that read one file would read zero.
 REG=".agents/assets/agents/capabilities.md"
+REGDIR=".agents/assets/agents/capabilities"
 REC=".agents/assets/agents/usage-baseline.json"
 STRICT=0; ACCEPT=""
 case "${1:-}" in --strict) STRICT=1 ;; --accept) ACCEPT="${2:-}" ;; esac
 
 [ -f "$REG" ] || { echo "usage-ratchet: no register — run bin/gates/capabilities.sh" >&2; exit 1; }
+[ -d "$REGDIR" ] || { echo "usage-ratchet: the register has no fragments — run bin/gates/capabilities.sh" >&2; exit 1; }
 
 # counts come from the REGISTER (generated), not from a second recount that can disagree
-c() { grep -oE "\| $1 \|" "$REG" | wc -l | tr -d ' '; }
+c() { grep -hoE "\| $1 \|" "$REGDIR"/*.md 2>/dev/null | wc -l | tr -d ' '; }
 UNUSED_BIN=$(( $(c "uncalled") ))
 NAMED_ONLY=$(( $(c "uncalled\+named") ))
 TESTED=$(( $(c "tested") + $(c "tested\+named") ))

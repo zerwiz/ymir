@@ -13,12 +13,54 @@ capabilities[5]{surface,count}:
 
   "shell doors (bin/*.sh)",769
 
+
+  "shell doors (bin/*.sh)",769
+
   "shell doors (bin/*.sh)",768
+
 
   "runtime modules (src/ymir_runtime/*.py)",56
   "skills (.agents/skills/*)",30
   "Pi extension tools",0
   "generated","2026-11-07"
+
+gisters-are-a-tree
+**The rows live in the tree.** Each folder of `bin/` has its own fragment under
+`.agents/assets/agents/capabilities/`, generated in the same run, so a change in one folder
+rewrites one file instead of colliding with every other branch (plan 211).
+
+capability_folders[31]{folder,doors,index}:
+  "agents",49,".agents/assets/agents/capabilities/agents.md"
+  "assistant",27,".agents/assets/agents/capabilities/assistant.md"
+  "backend",156,".agents/assets/agents/capabilities/backend.md"
+  "boards",1,".agents/assets/agents/capabilities/boards.md"
+  "bridge",15,".agents/assets/agents/capabilities/bridge.md"
+  "collab",7,".agents/assets/agents/capabilities/collab.md"
+  "desktop",23,".agents/assets/agents/capabilities/desktop.md"
+  "engine",18,".agents/assets/agents/capabilities/engine.md"
+  "fleet",12,".agents/assets/agents/capabilities/fleet.md"
+  "forge",23,".agents/assets/agents/capabilities/forge.md"
+  "gates",83,".agents/assets/agents/capabilities/gates.md"
+  "gimle",2,".agents/assets/agents/capabilities/gimle.md"
+  "host",12,".agents/assets/agents/capabilities/host.md"
+  "identity",4,".agents/assets/agents/capabilities/identity.md"
+  "mail",4,".agents/assets/agents/capabilities/mail.md"
+  "model",16,".agents/assets/agents/capabilities/model.md"
+  "notify",12,".agents/assets/agents/capabilities/notify.md"
+  "people",5,".agents/assets/agents/capabilities/people.md"
+  "pi",17,".agents/assets/agents/capabilities/pi.md"
+  "place",1,".agents/assets/agents/capabilities/place.md"
+  "records",30,".agents/assets/agents/capabilities/records.md"
+  "room",2,".agents/assets/agents/capabilities/room.md"
+  "root",2,".agents/assets/agents/capabilities/root.md"
+  "seat",21,".agents/assets/agents/capabilities/seat.md"
+  "skills",2,".agents/assets/agents/capabilities/skills.md"
+  "skuld",7,".agents/assets/agents/capabilities/skuld.md"
+  "thing",1,".agents/assets/agents/capabilities/thing.md"
+  "time",84,".agents/assets/agents/capabilities/time.md"
+  "vault",9,".agents/assets/agents/capabilities/vault.md"
+  "voice",1,".agents/assets/agents/capabilities/voice.md"
+  "ward",13,".agents/assets/agents/capabilities/ward.md"
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
@@ -681,6 +723,7 @@ capabilities[5]{surface,count}:
 | vidarr.sh | vidarr.sh â€” VÃÃARR, the silent avenger: the defender's own door. | tested+named | keep (a human or a cron row must run it) |
 | ward-answer.sh | ward-answer.sh â€” answer a ward decision. close Â· keep (with a reason) | tested | keep (a human or a cron row must run it) |
 | ward-ask.sh | ward-ask.sh â€” VÃ¶rÃ°r reports, then ASKS. A finding is not a decision. | tested | keep (a human or a cron row must run it) |
+
 
 ## 1b Â· The engine â€” src/ymir_runtime/*.py (the part a bin-only register skipped)
 
