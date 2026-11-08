@@ -15,6 +15,8 @@ catch.
 
 from __future__ import annotations
 
+import shutil
+
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -90,6 +92,16 @@ def ensure(
         )
     if not path.is_dir():
         raise EngineError(f"Yggdrasil worktree missing after create: {path}")
+    # ONE EXTENSION HOME (RULES/13). A worktree is a copy of the project, so its
+    # `.pi/extensions/` collides with the project's own: pi walks up the tree, finds
+    # both, and refuses to start every tool twice over — "Tool X conflicts". The seat
+    # then never stands, and a seat that never stands reads as `working` to a sweep.
+    # Measured 2026-11-08: three errands died this way, and no judge could seat.
+    shim = path / ".pi" / "extensions"
+    if shim.is_dir():
+        shutil.rmtree(shim, ignore_errors=True)
+        # assume-unchanged so the deliberate deletion never rides in the worker's commit
+        runner(["git", "-C", str(path), "update-index", "--assume-unchanged", ".pi/extensions"])
     return Worktree(seat_id, path, chosen, True, head_of(path, runner=runner))
 
 

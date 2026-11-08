@@ -34,6 +34,28 @@ class EnsureTest(unittest.TestCase):
             self.assertFalse(second.created)
             self.assertEqual(first.path, second.path)
 
+    def test_a_new_worktree_carries_no_second_extension_tree(self) -> None:
+        """RULES/13: one extension home. A worktree that copies the project's
+        `.pi/extensions/` makes pi load every tool twice and refuse to start — the
+        seat then never stands, and a seat that never stands reads as `working`.
+        Measured 2026-11-08: three errands died this way and no judge could seat."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            repo = make_repo(root / "repo")
+            ext = repo / ".pi" / "extensions" / "demo"
+            ext.mkdir(parents=True)
+            (ext / "index.ts").write_text("export default {}\n")
+            (repo / ".pi" / "extensions" / "README.md").write_text("the project's own\n")
+            import subprocess
+            subprocess.run(["git", "-C", str(repo), "add", "-A"], check=True)
+            subprocess.run(["git", "-C", str(repo), "commit", "-qm", "an extension tree"], check=True)
+
+            made = worktree.ensure("errand-ext", repo, repo / ".yggdrasil")
+            self.assertFalse((made.path / ".pi" / "extensions").exists(),
+                             "the worktree must not carry a second extension tree")
+            self.assertTrue((repo / ".pi" / "extensions" / "demo" / "index.ts").exists(),
+                            "the project's own tree is untouched")
+
     def test_refuses_a_directory_that_is_not_a_worktree(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
