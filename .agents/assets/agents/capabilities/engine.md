@@ -13,6 +13,10 @@
 | home-seed.sh | home-seed.sh — make a home that a fresh user can understand, and offer | tested+named | keep (a human or a cron row must run it) |
 | prereq-ensure.sh | prereq-ensure.sh — self-healing prerequisite engine for Ymir. | tested+named | keep (a human or a cron row must run it) |
 | prove-install.sh | prove-install.sh — THE INSTALL CLAUSE, proven or NAMED as a gap. | tested | keep (a human or a cron row must run it) |
+| release-build.sh | release-build.sh — forge an IMMUTABLE release from one commit (plan 22 | tested+named | keep (a human or a cron row must run it) |
+| release-flip.sh | release-flip.sh — make one release live, in ONE rename, health first ( | tested+named | keep (a human or a cron row must run it) |
+| release-health.sh | release-health.sh — can THIS directory serve the apps? (plan 221, P2) | tested+named | keep (a human or a cron row must run it) |
+| release-lib.sh | release-lib.sh — the ONE place that knows where a release lives and ho | tested | keep (a human or a cron row must run it) |
 | runtime-deploy.sh | runtime-deploy.sh — move the PINNED runtime checkout to the merged tre | tested | keep (a human or a cron row must run it) |
 | version-stamp.sh | version-stamp.sh — a seat says exactly which build it runs (2026-09-22 | tested | keep (a human or a cron row must run it) |
 | ymir-autoboot.sh | ymir-autoboot.sh — the boot proof: what this seat's roles OWE, and whe | tested+named | keep (a human or a cron row must run it) |

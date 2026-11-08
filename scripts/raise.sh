@@ -9,6 +9,7 @@
 #   scripts/raise.sh              # services + every desktop shell
 #   scripts/raise.sh --web        # the services only
 #   scripts/raise.sh --desktop    # the shells only
+#   scripts/raise.sh --root       # print the tree this script resolves
 
 # ── THE APPS RUN FROM MAIN, NOT FROM A WORKTREE (the Allfather, 2026-11-08: "are this the full apps. not
 # just the start buttons?"). The launcher entries were only the visible half: the RUNTIME is this script,
@@ -23,7 +24,6 @@ if [ -z "${YMIR_ALLOW_WORKTREE_RUNTIME:-}" ]; then
     exec bash "$_canon/${BASH_SOURCE[0]#"$(cd "$_mt" && pwd)"/}" "$@"
   fi
 fi
-
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -33,6 +33,8 @@ WHAT="all"
 case "${1-}" in
   --web) WHAT=web ;;
   --desktop) WHAT=desktop ;;
+  # --root: where this script thinks the tree is (plan 221 P0 proves a release with it)
+  --root) printf '%s\n' "$ROOT"; exit 0 ;;
   -h|--help|"") sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
 esac
 

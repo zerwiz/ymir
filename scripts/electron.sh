@@ -11,6 +11,7 @@
 #   electron.sh start --both                  # both apps, separate processes
 #   electron.sh stop
 #   electron.sh status
+#   electron.sh --root                        # print the tree this script resolves
 #   electron.sh --version
 
 # ── THE APPS RUN FROM MAIN, NOT FROM A WORKTREE (the Allfather, 2026-11-08: "are this the full apps. not
@@ -88,7 +89,13 @@ NO_INSTALL=0
 VIEW="${YMIR_DESKTOP_VIEW:-hlidskjalf}"
 VIEWS=(hlidskjalf smidja odrerir)
 
-case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
+case "${1-}" in
+  -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
+  # --root: where this script thinks the tree is. A release is proved by asking its
+  # OWN script (plan 221 P0), never by recomputing the answer beside it.
+  --root) printf '%s\n' "$ROOT"; exit 0 ;;
+  -h|--help|"") sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+esac
 ACTION="${1:-start}"; shift || true
 while [ $# -gt 0 ]; do case "$1" in
   --no-install) NO_INSTALL=1; shift ;;

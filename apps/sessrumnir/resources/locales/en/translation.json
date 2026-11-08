@@ -136,7 +136,13 @@
         "running": "running"
       }
     },
-    "waitingForResponse": "Waiting for response..."
+    "waitingForResponse": "Waiting for response...",
+    "sidePanel": {
+      "shrank": "Panel narrowed to fit",
+      "closed": "Panel closed to fit",
+      "shrankHint": "The window can spare less than this panel asked for, so the panel was narrowed. Drag the divider, or widen the window.",
+      "closedHint": "There is no room for a side panel and the chat's own {{min}}px floor at this width, so the panel was closed. Widen the window to open it again."
+    }
   },
   "commandGroups": {
     "commands": "Commands",

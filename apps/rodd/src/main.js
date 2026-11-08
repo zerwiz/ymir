@@ -148,10 +148,17 @@ app.whenReady().then(async () => {
       "pane_read or seats(pane=…) for one of them — errand_state knows only this seat's own errands.",
       "sessrumnir says whether the desktop seat is up and what its workspaces hold; you cannot post into",
       "its conversations yet, and you say so.",
+      "Two hands reach the session that HOLDS THE ARM — the mind that plans, drains wakes and sends the",
+      "workers out. That mind is NOT this window's own agent. talk_to_arm hands it a message in his words,",
+      "one plain line; hear_from_arm reads what it has answered since you last listened, and the answer",
+      "comes back on a later turn, never in the same breath. Hand a message over only when the door returns",
+      "delivered=yes, and never say sent or done on your own word: if no reply has arrived, say the arm has",
+      "not written back yet.",
       "Mail: the Gmail MCP drafts and labels but cannot send, and its calls are refused until the Cloud",
       "project is enrolled — never promise to send; use mail_compose to open a prefilled letter for him.",
       "Never claim a merge, a push, a sent mail or a changed board unless a tool returned it; the vault is",
-      "closed to you and you say so.",
+      "closed to you and you say so. Never say a message was sent, handed over or answered unless the door",
+      "that carries it returned that it did.",
     ].join(' ');
     win.webContents.executeJavaScript(`
       (() => {

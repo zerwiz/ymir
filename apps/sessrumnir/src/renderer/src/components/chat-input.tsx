@@ -418,7 +418,7 @@ export function ChatInput(): React.JSX.Element {
         </div>
       )}
 
-      <div className="pointer-events-auto relative flex flex-col rounded-2xl border border-border-strong bg-surface/95 shadow-lg shadow-black/25 backdrop-blur-sm focus-within:border-border-strong-hover transition-colors">
+      <div className="composer-shell pointer-events-auto relative flex flex-col rounded-2xl border border-border-strong bg-surface/95 shadow-lg shadow-black/25 backdrop-blur-sm focus-within:border-border-strong-hover transition-colors">
         {/* Subagent strip sits on the top edge, inset ~5% each side so the pill
             width doesn't look like it grew with the fleet UI. */}
         <div className="pointer-events-auto absolute bottom-full left-[5%] right-[5%] z-20 mb-0">
@@ -632,12 +632,14 @@ export function ChatInput(): React.JSX.Element {
           }}
         />
 
-        <div className="font-chat flex items-center gap-0.5 px-1.5 pb-1.5 pt-0">
-          <ComposerPermissionMenu value={permissionMode} onChange={setPermissionMode} />
+        <div className="chat-composer-actions font-chat flex items-center gap-0.5 px-1.5 pb-1.5 pt-0">
+          <div className="chat-composer-permission">
+            <ComposerPermissionMenu value={permissionMode} onChange={setPermissionMode} />
+          </div>
           <button
             onClick={handleAttachFile}
             disabled={isDisabled}
-            className="hover:bg-highlight-strong flex items-center justify-center rounded-md p-1.5 text-dim hover:text-secondary transition-colors disabled:opacity-50"
+            className="chat-composer-secondary hover:bg-highlight-strong flex items-center justify-center rounded-md p-1.5 text-dim hover:text-secondary transition-colors disabled:opacity-50"
             title={t('common.attachFile')}
             aria-label={t('common.attachFile')}
           >
@@ -645,7 +647,7 @@ export function ChatInput(): React.JSX.Element {
           </button>
           <button
             onClick={() => setNotePickerOpen(true)}
-            className="hover:bg-highlight-strong flex items-center justify-center rounded-md p-1.5 text-dim hover:text-secondary transition-colors"
+            className="chat-composer-secondary hover:bg-highlight-strong flex items-center justify-center rounded-md p-1.5 text-dim hover:text-secondary transition-colors"
             title={t('chat.insertNote.titleWithShortcut')}
             aria-label={t('chat.insertNote.ariaLabel')}
           >
@@ -653,7 +655,7 @@ export function ChatInput(): React.JSX.Element {
           </button>
           <button
             onClick={() => toggleFileSearch()}
-            className="hover:bg-highlight-strong flex items-center justify-center rounded-md p-1.5 text-dim hover:text-secondary transition-colors"
+            className="chat-composer-secondary hover:bg-highlight-strong flex items-center justify-center rounded-md p-1.5 text-dim hover:text-secondary transition-colors"
             title={t('chat.searchWorkspace.titleWithShortcut')}
             aria-label={t('chat.searchWorkspace.ariaLabel')}
           >
@@ -673,7 +675,7 @@ export function ChatInput(): React.JSX.Element {
                 }
               }}
               disabled={isDisabled || isStreaming}
-              className="hover:bg-highlight-strong flex items-center justify-center rounded-md p-1.5 text-dim hover:text-secondary transition-colors disabled:opacity-50"
+              className="chat-composer-secondary hover:bg-highlight-strong flex items-center justify-center rounded-md p-1.5 text-dim hover:text-secondary transition-colors disabled:opacity-50"
               title={isDisabled ? t('chat.council.startEngineFirst') : t('chat.council.planWithCouncil')}
               aria-label={t('chat.council.planWithCouncil')}
             >
@@ -681,7 +683,7 @@ export function ChatInput(): React.JSX.Element {
             </button>
           )}
 
-          <span className="ml-auto mr-1 hidden text-[11px] text-faint sm:inline">
+          <span className="chat-composer-hint ml-auto mr-1 text-[11px] text-faint">
             {isStreaming ? (
               <span className="text-warning animate-pulse">{t('chat.composer.streaming')}</span>
             ) : (
@@ -690,9 +692,9 @@ export function ChatInput(): React.JSX.Element {
           </span>
 
           {!isDisabled && (
-            <div className="flex h-6 shrink-0 items-center gap-0 rounded-md bg-card/60 ring-1 ring-inset ring-border-strong/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+            <div className="chat-composer-model flex h-6 shrink-0 items-center gap-0 rounded-md bg-card/60 ring-1 ring-inset ring-border-strong/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
               <ModelSelector compact />
-              <div className="h-3.5 w-px bg-border" aria-hidden="true" />
+              <div className="chat-composer-thinking h-3.5 w-px bg-border" aria-hidden="true" />
               <ThinkingLevelSelector />
             </div>
           )}
