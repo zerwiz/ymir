@@ -40,6 +40,7 @@ if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
   unset _ya _yac
 fi
 app_dir hlidskjalf APP_HLIDSKJALF || APP_HLIDSKJALF=""
+app_dir rodd APP_RODD || APP_RODD=""
 app_dir sessrumnir APP_SESSRUMNIR || APP_SESSRUMNIR=""
 app_dir odrerir APP_ODRERIR || APP_ODRERIR=""
 
@@ -104,7 +105,7 @@ launcher_root() {
 # where this checkout lives is a fact about the machine, not about Ymir.
 install_entries() {
   local dst="$HOME/.local/share/applications" n=0
-  local dirs=("$APP_HLIDSKJALF/electron" "$APP_SESSRUMNIR/resources" "$APP_ODRERIR/electron")
+  local dirs=("$APP_HLIDSKJALF/electron" "$APP_SESSRUMNIR/resources" "$APP_ODRERIR/electron" "$APP_RODD/electron")
   if [ "$(ymir_os)" != linux ] && [ "$(ymir_os)" != wsl ]; then
     printf 'skip: desktop entries are Omarchy/Linux-shaped; this host is %s\n' "$(ymir_os)" >&2
     return 0

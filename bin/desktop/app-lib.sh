@@ -42,6 +42,7 @@ app_class() {  # <surface> → the WM class the app presents
     smidja)     printf '%s' 'ymir-smidja' ;;
     odrerir)    printf '%s' 'ymir-odrerir' ;;
     sessrumnir) printf '%s' 'ymir-sessrumnir' ;;
+    rodd)       printf '%s' 'ymir-rodd' ;;
     *)          printf '%s' "ymir-${1-}" ;;
   esac
 }

@@ -1,0 +1,20 @@
+# apps/rodd — the app's own build artifacts
+node_modules/
+ui/node_modules/
+
+# vendored SDK bundle and the VAD/onnx runtime assets are BUILT at install time
+# (`npm run ui:install`), never committed — 6 MB of minified SDK and 41 MB of wasm do
+# not belong in a repository.
+ui/vendor/
+ui/.npmrc
+
+# the vendored project's own docs stay out of this repository (attribution lives in README)
+ui/README.md
+ui/CONTEXT.md
+ui/DESIGN.md
+ui/docs/
+ui/livekit/
+
+# the vendored UI is FETCHED by setup.sh at a pinned tag, never committed (RULES/39: no
+# addresses in this tree, and upstream ships its own server with ws:// strings in it)
+ui/
