@@ -1020,9 +1020,47 @@ invitation to ask, never a grant.
 `local_clone`, then the repo), then the repository's own git remote, then the directory name. A worktree's
 basename is an errand's name, never a project's.
 
+## The release model — the apps run from a release behind one symlink (plan 221, P0–P2)
+
+The runtime is the tree a process was **started from**, and that tree is where hands and agents check
+branches out. So the apps do not run from `~/ymir`; they run from a release, and one symlink names the
+live one. Build and health happen entirely off to the side — the flip is the last act.
+
+```
+layout[4]{path,what,who writes it}:
+  "~/ymir-releases/<12-char-sha>/","one commit's tree: symlinks materialised into real files, dependencies and assets built INSIDE it, a manifest naming its own sha","bin/engine/release-build.sh"
+  "~/ymir-shared/","the SHARED shelf: state · logs · run (pids) · cache, plus links to the hoard and the vault. Every release links here and writes nothing of its own","release-build.sh, once"
+  "~/ymir-current","a SYMLINK to exactly one release — the only thing the world may point at","bin/engine/release-flip.sh, by atomic rename"
+  "~/.local/state/ymir/releases.log","one line per act: from · to · health · window · result (flipped | rolled-back | refused)","release-flip.sh"
+```
+
+```
+doors[3]{door,verb,laws}:
+  "bin/engine/release-build.sh <sha>","export · resolve symlinks · install dependencies · build assets · land Electron · write the manifest · link the shelf","stages under a temporary name and renames into place; a link whose target escapes the release is a REFUSAL, not a copy; retention is three, pruned BY AGE BEFORE a build"
+  "bin/engine/release-health.sh <dir> [--live]","is THIS directory a release that can serve?","asks the release's own scripts (--root) and refuses a tree that does not declare it rather than executing an unknown flag; attributes each service by the serving pid's cwd and by the root the gate reports; --live raises them on probe ports (canonical + 10000)"
+  "bin/engine/release-flip.sh <sha>","health first, then the link, then a watch window","ln -s <release> <link>.tmp && mv -T — ONE rename; a rm before the ln is a phase failure (§10), not a style note; a release that degrades inside the window is flipped BACK by the door, and the log says why"
+```
+
+**Why the scripts answer `--root`.** `scripts/{start,electron,raise}.sh` print the tree they resolve, so a
+release is proved by **asking its own script** rather than by a caller recomputing the same arithmetic.
+The health door looks for the `--root` **case arm** before it uses the flag: an older tree falls through
+to its default action, and `start.sh`'s default action raises the whole hall.
+
+**Configuration (Rule 07).** `$YMIR_HOME/config/releases.env`:
+`YMIR_RELEASES_DIR` · `YMIR_CURRENT_LINK` · `YMIR_SHARED_DIR` · `YMIR_RELEASES_KEEP` · `YMIR_RELEASES_LOG` ·
+`YMIR_FLIP_WINDOW`; defaults `~/ymir-releases` · `~/ymir-current` · `~/ymir-shared` · `3` ·
+`~/.local/state/ymir/releases.log` · `5`. `YMIR_RELEASE_PROBE_BASE` moves the `--live` probe ports.
+
+**Not built yet:** P3 (launchers and units re-seated to `~/ymir-current`), P4 (the scheduled updater
+becoming a releaser), P5 (containers, where a runtime exists). Until P3, nothing points at the symlink.
+
 ## CHANGE LOG
 
 - **2026-11-08** — Appended with the capability: the canon, the estate door, the widening of `domain.sh`,
   the tree ward, the kit shelf and its two gates, the card, and the first two estates measured (Ymir 6 held
   · 12 unheld; Inmost's Control Tower 4 held · 14 unheld, its tenancy ground refused by name at the gate).
   Plan 219; fix note `docs/fixes/collab/2026-11-08-the-kit-carries-the-inventory.md`.
+- **2026-11-08** — Appended with the capability: the release model (build · health · flip), the shared
+  shelf, the one-rename law with its forbidden form, the automatic rollback inside the watch window, the
+  retention rule, and the `--root` contract that lets a release be proved by its own scripts. Plan 221
+  P0–P2; fix note `docs/fixes/runtime/1.0.5-the-apps-run-from-a-release-behind-one-symlink.md`.
