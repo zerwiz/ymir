@@ -39,6 +39,8 @@ if [ -n "$base" ] && [ "$base" != "$head" ]; then
   [ -x scripts/gates/fixes-guard.sh ] && { bash scripts/gates/fixes-guard.sh "$base" "$head" || exit 1; }
   [ -x scripts/gates/referee-guard.sh ] && { bash scripts/gates/referee-guard.sh "$base" "$head" || exit 1; }
   [ -x scripts/gates/new-module-test.sh ] && { bash scripts/gates/new-module-test.sh "$base" "$head" || exit 1; }
+  # Seated in 1.2.0: an area nobody holds must not receive changes quietly (RULES/18).
+  [ -x scripts/gates/areas-guard.sh ] && { bash scripts/gates/areas-guard.sh "$base" "$head" || exit 1; }
 fi
 
 if [ -f scripts/checks.sh ]; then

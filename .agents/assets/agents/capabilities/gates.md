@@ -35,9 +35,10 @@
 | doors.sh | doors.sh — a door register for ANY directory, rendered from the tree ( | tested | keep (a human or a cron row must run it) |
 | feature-inventory.sh | feature-inventory.sh — every feature the system CLAIMS, in one checkli | tested | keep (a human or a cron row must run it) |
 | fixes.sh | fixes.sh — the fix notes. ONE FILE PER FIX, and nothing to fold. | tested+named | keep (a human or a cron row must run it) |
-| guards.sh | guards.sh — every TREE ward, in one command. | tested | keep (a human or a cron row must run it) |
+| guards.sh | guards.sh — every TREE ward, in one command. | tested+named | keep (a human or a cron row must run it) |
 | app-folder-guard.sh | app-folder-guard.sh — Rule 23: no code in an application's folder, and | tested | keep (a human or a cron row must run it) |
 | app-functional-guard.sh | app-functional-guard.sh — AN UPDATE THAT LEAVES AN APP UNRUNNABLE IS N | tested | keep (a human or a cron row must run it) |
+| areas-guard.sh | areas-guard (tree ward) — the canon and the copy that travels must not | tested+named | keep (a human or a cron row must run it) |
 | branch-guard.sh | branch-guard.sh — Rule 08: no push may land on a protected branch. | tested+named | keep (a human or a cron row must run it) |
 | confidential-guard.sh | confidential-guard.sh — while a confidential session is live, nothing  | tested | keep (a human or a cron row must run it) |
 | constellation-grant-guard.sh | constellation-grant-guard.sh — the road's own ward. | tested+named | keep (a human or a cron row must run it) |

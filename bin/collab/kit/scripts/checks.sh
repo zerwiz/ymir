@@ -21,7 +21,18 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT" || exit 2
 
 what="${1:-doctor}"
-case "$what" in doctor|test) ;; *) printf 'usage: checks.sh doctor|test\n' >&2; exit 2 ;; esac
+case "$what" in doctor|test|areas) ;; *) printf 'usage: checks.sh doctor|test|areas\n' >&2; exit 2 ;; esac
+
+# the areas shelf is the repository's own record, not a test of its code: it needs no toolchain and
+# it answers on every repository that carries it. Seated in kit 1.2.0; a repository without areas/
+# gets the door's own clean skip rather than a refusal invented here.
+if [ "$what" = areas ]; then
+  if [ -x scripts/areas.sh ]; then
+    exec bash scripts/areas.sh check
+  fi
+  printf 'checks[areas]: skipped — no scripts/areas.sh in this repository (kit older than 1.2.0)\n'
+  exit 0
+fi
 
 skipped() {
   printf 'checks[%s]: skipped — %s; this is a skip, not a pass\n' "$what" "$1"

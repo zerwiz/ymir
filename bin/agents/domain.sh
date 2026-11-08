@@ -28,9 +28,14 @@ usage(){ sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; }
 declare -A DOMAIN_DIR KEEPER_FIG
 load_domains(){
   local d name keeper
-  for d in "$ROOT"/systems/*/domain.yaml; do
+  local globs=("$ROOT"/systems/*/domain.yaml)
+  # AREAS_SCOPE (plan 219): the same door reads a PROJECT's areas instead of a system's domains.
+  # `bin/agents/areas.sh` writes the seating shim in the home's state and points this door at it, so
+  # an area is briefed and seated by the one implementation that already exists — never a second one.
+  [ -n "${AREAS_SCOPE:-}" ] && globs=("$AREAS_SCOPE"/areas/*.yaml)
+  for d in "${globs[@]}"; do
     [ -r "$d" ] || continue
-    name="$(sed -n 's/^domain:[[:space:]]*//p' "$d" | head -1)"
+    name="$(sed -n 's/^area:[[:space:]]*//p;s/^domain:[[:space:]]*//p' "$d" | head -1)"
     keeper="$(sed -n 's/^  keeper:[[:space:]]*//p;s/^keeper:[[:space:]]*//p' "$d" | head -1)"
     [ -n "$name" ] || name="$(basename "$(dirname "$d")")"
     [ -n "$keeper" ] || keeper="$name"   # a declaration may leave it implicit: the domain keeps itself
@@ -58,6 +63,15 @@ brief_for(){  # <domain>
     printf '\n## Your figure\n\n    NONE — no file matches .agents/agents/%s*.md. Say so before you act.\n' "${keeper:-?}"
   fi
   [ -r "$dir/AGENTS.md" ] && { printf '\n## The house rules in this folder\n\n'; sed -n 's/^/    /p' "$dir/AGENTS.md"; }
+  # AREAS_SCOPE (plan 219): an area's brief names exactly what the keeper may write, from the
+  # declaration, because a keeper that has to guess its boundary will cross it.
+  local mw
+  mw="$(sed -n 's/^may_write:[[:space:]]*\[\(.*\)\][[:space:]]*$/\1/p' "$dir/domain.yaml" 2>/dev/null | head -1)"
+  if [ -n "${AREAS_SCOPE:-}" ]; then
+    printf '\n## What you may write\n\n'
+    if [ -n "$mw" ]; then printf '%s\n' "$mw" | tr ',' '\n' | sed 's/[" ]//g' | sed '/^$/d' | sed 's/^/    /p'; \
+    else printf '    NOTHING is claimed for this area yet. Write nothing; say what must be claimed first.\n'; fi
+  fi
   printf '\n## How you work\n\n'
   printf '    You keep %s. You may write in %s and nowhere else.\n' "$name" "${dir#"$ROOT"/}/"
   printf '    You ask other domains through their doors; you never edit their folders.\n'

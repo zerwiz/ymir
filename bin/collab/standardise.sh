@@ -8,7 +8,11 @@
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 KIT="$HERE/kit"
-VERSION="1.1.0"
+# 1.2.0 (2026-11-08, RULES/18 + plan 219): the kit carries the areas shelf — `areas/canon.yaml`,
+# `areas/TEMPLATE.yaml`, `scripts/areas.{sh,py}`, `scripts/gates/areas-guard.sh`, `docs/areas.md`,
+# and RULES/18. A behaviour change to a gate is a referee change, so it arrives with a fix note and a
+# version, never silently.
+VERSION="1.2.0"
 
 mode=""; repo=""
 for a in "$@"; do
@@ -36,6 +40,15 @@ printf '  missing: %s\n' "${#missing[@]}"
 [ "${#missing[@]}" -gt 0 ] && printf '    %s\n' "${missing[@]}"
 printf '  different (a local rule wins; it is reported, never replaced): %s\n' "${#differ[@]}"
 [ "${#differ[@]}" -gt 0 ] && printf '    %s\n' "${differ[@]}"
+
+# the estate: what the repository's own areas shelf answers, read by the door it carries. A repository
+# without the shelf gets the door's own clean skip instead of a verdict invented here.
+if [ -x "$repo/scripts/areas.sh" ] && [ -d "$repo/areas" ]; then
+  estate="$(cd "$repo" && bash scripts/areas.sh estate 2>/dev/null | tail -1 | tr -d ' ')"
+  [ -n "$estate" ] && printf '  areas: %s  (areas,held,unproved,waived,na,unheld)\n' "$estate"
+else
+  printf '  areas: not adopted — `bash scripts/areas.sh init` after this install\n'
+fi
 
 # A gate written after an `exit 0` is a gate that never runs — the fault this kit itself carried until 2026-11-06.
 dead_gates=""
