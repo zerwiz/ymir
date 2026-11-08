@@ -12,7 +12,7 @@ KIT="$HERE/kit"
 # `areas/TEMPLATE.yaml`, `scripts/areas.{sh,py}`, `scripts/gates/areas-guard.sh`, `docs/areas.md`,
 # and RULES/18. A behaviour change to a gate is a referee change, so it arrives with a fix note and a
 # version, never silently.
-VERSION="1.2.0"
+VERSION="1.3.0"
 
 mode=""; repo=""
 for a in "$@"; do

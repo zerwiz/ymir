@@ -6,14 +6,23 @@
 # printed skip, never a silent pass — and never a refusal it cannot satisfy.
 set -u
 
+notify() {
+  [ -x scripts/notify-arm.sh ] && bash scripts/notify-arm.sh "$1" "$2" >/dev/null 2>&1
+  return 0
+}
+
 if [ ! -f scripts/checks.sh ]; then
   printf 'pre-commit: scripts/checks.sh is missing — this repository carries an older kit; nothing was checked\n' >&2
   exit 0
 fi
 
-bash scripts/checks.sh doctor || {
-  printf '\npre-commit refused: a check found a fault (see the line above)\nhelp: fix it, or commit with --no-verify and say why in the message\n' >&2
+if ! out="$(bash scripts/checks.sh doctor 2>&1)"; then
+  printf '%s\n' "$out" >&2
+  msg="pre-commit refused: a check found a fault — fix it, or commit with --no-verify and say why in the message"
+  printf '\n%s\n' "$msg" >&2
+  notify checks "$out"
   exit 1
-}
+fi
+[ -n "$out" ] && printf '%s\n' "$out" >&2
 
 exit 0

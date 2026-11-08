@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # A commit says what and why; "wip" does not.
 set -u
+
+notify() {
+  [ -x scripts/notify-arm.sh ] && bash scripts/notify-arm.sh "$1" "$2" >/dev/null 2>&1
+  return 0
+}
+
 message_file="${1:-}"
 [ -r "$message_file" ] || exit 0
 subject=$(head -1 "$message_file" | tr -d '\r')
@@ -12,10 +18,12 @@ esac
 
 if [ "$words" -lt 3 ]; then
   printf 'commit-msg refused: "%s" is too short.\nhelp: say what changed and why — one imperative line, then a paragraph.\n' "$subject" >&2
+  notify commit-msg "a commit subject was refused as too short: \"$subject\""
   exit 1
 fi
 if printf '%s' "$subject" | grep -qiE '^(wip|update|updates|changes|fix|fixes|misc|temp|test)$'; then
   printf 'commit-msg refused: "%s" says nothing a reader can use.\n' "$subject" >&2
+  notify commit-msg "a commit subject was refused as saying nothing: \"$subject\""
   exit 1
 fi
 exit 0
