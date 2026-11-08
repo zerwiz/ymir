@@ -71,7 +71,7 @@ bin[54]{file,does,kind,verdict,disposition,callers,lines}:
   "skill-find.sh","skill-find.sh — find the skill you need, without loading any of them.","tool","tested","keep",4,188
   "skill-index.sh","skill-index.sh — Sága's sight over the crafts: one index of EVERY skill we","tool","tested","keep",3,244
   "skill-vendor-sync.sh","skill-vendor-sync.sh — keep imported third-party skill packs current.","tool","wired","keep",0,113
-  "spam-guard.sh","spam-guard.sh — a model that loops is a fault, and the agent holding the Gná arm hears of it.","tool","wired","keep",0,173
+  "spam-guard.sh","spam-guard.sh — a model that loops is a fault, and the agent holding the Gná arm hears of it.","tool","wired","keep",0,191
   "valhalla.sh","valhalla.sh — the process hall (Valhalla).","tool","wired","keep",0,116
   "workspace-provision.sh","workspace-provision.sh — carve one workspace for the operator.","tool","wired","keep",0,82
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85

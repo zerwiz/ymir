@@ -29,7 +29,15 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
   [ "$PWD" = / ] && break; cd ..; done; pwd)}"
-STATE_DIR="${YMIR_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/ymir}"
+# the seat state is NAMED, never guessed (RULES/07 · 39): YMIR_STATE_DIR, then XDG, and if neither is set the
+# job refuses to run rather than inventing a home path — a scheduled job with nowhere to write its brief is a
+# job that would fail silently at 03:41.
+if [ -n "${YMIR_STATE_DIR:-}" ]; then STATE_DIR="$YMIR_STATE_DIR"
+elif [ -n "${XDG_STATE_HOME:-}" ]; then STATE_DIR="$XDG_STATE_HOME/ymir"
+else
+  printf 'nornir-groa: no seat state named (YMIR_STATE_DIR or XDG_STATE_HOME) — refusing rather than guessing\n' >&2
+  exit 3
+fi
 mkdir -p "$STATE_DIR" 2>/dev/null || true
 
 dry=0; no_agent=0
