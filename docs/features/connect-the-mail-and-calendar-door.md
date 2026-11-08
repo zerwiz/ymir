@@ -86,7 +86,31 @@ the register `$YMIR_HOME/hodd/memory/mail/accounts.yaml` · the event log
 `bin/vault/hodd-set.sh`. Plan 221 is the design; `docs/fixes/mail/2026-11-08-the-connect-door.md` is what was
 measured while building it.
 
+**One record of what happened to your mailbox**
+
+`bin/mail/ledger.sh tail` shows the letters that went out and came in — and, folded in from the connect
+door's own log, every grant made and every grant revoked. So one command answers "what has this mailbox
+done", and a door that was opened or shut can never hide behind a quiet inbox.
+
+```
+bin/mail/ledger.sh tail 20      # letters + grants, newest last, one row each
+bin/mail/ledger.sh digest       # counts per day, both directions
+```
+
+The two files stay separate on disk because they are written by different hands and are each append-only
+(Rule 06); one of them is never rewritten to fold the other in. The reading is what is shared.
+
+**A guest gets mail, not a calendar**
+
+An app password opens IMAP, POP and SMTP. It does **not** open Google calendar: the CalDAV endpoint refuses
+Basic authentication outright and demands OAuth 2.0 (asked on 2026-11-08, answered by a `PROPFIND` that came
+back `401 loginRequired`, with no Basic challenge offered at all). So the three-field road is mail-only, and
+nothing in this house promises a guest a calendar. A guest's calendar is a Workspace seat and one sign-in.
+
+
 ## CHANGE LOG
 
 - **2026-11-08** — First cut: the four verbs, the two roads (one sign-in, three fields), the limits that are
   promises, and the failure lines a person actually sees.
+- **2026-11-08 (appended)** — Added how to read the one mail record (`ledger.sh tail` now folds the connect
+  events in) and the CalDAV answer, so the page never leaves a guest expecting a calendar it cannot have.

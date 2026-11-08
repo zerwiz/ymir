@@ -8,6 +8,11 @@
 # design. This door exists so the guard is the code, not the operator's care.
 #
 #   bin/vault/hodd-set.sh KEY VALUE [FILE]     # FILE defaults to secrets/platform.env
+#   bin/vault/hodd-set.sh --stdin KEY [FILE]   # the VALUE arrives on stdin, so it never
+#                                              # appears in a process listing (a token, a
+#                                              # password); same guards, same report
+#   bin/vault/hodd-set.sh --del KEY [FILE]     # remove ONE key — revocation as a verb;
+#                                              # refuses to empty the file, keeps the backup
 #   bin/vault/hodd-set.sh --get KEY [FILE]     # print one value (never the file)
 #   bin/vault/hodd-set.sh --list [FILE]        # print the KEY NAMES only
 #
@@ -18,7 +23,7 @@
 #   3. the old file is kept as a timestamped backup beside it;
 #   4. the write is atomic (temp file + mv), mode 0600, and any plaintext temp is shredded.
 #
-# Exit: 0 ok · 1 a guard refused · 2 usage.
+# Exit: 0 ok · 1 a guard refused · 2 usage · 3 --del found no such key.
 set -u
 VERSION="1.0.0"
 
@@ -38,6 +43,8 @@ case "${1:-}" in
   -h|--help) usage; exit 0 ;;
   --version|-v) printf '%s\n' "$VERSION"; exit 0 ;;
   --get) mode="get"; key="${2:-}"; rel="${3:-$rel}" ;;
+  --stdin|--set-stdin) mode="stdin"; key="${2:-}"; rel="${3:-$rel}" ;;
+  --del|--delete) mode="del"; key="${2:-}"; rel="${3:-$rel}" ;;
   --list) mode="list"; rel="${2:-$rel}" ;;
   "") usage >&2; exit 2 ;;
   *) key="$1"; value="${2:-}"; rel="${3:-$rel}" ;;
@@ -74,7 +81,21 @@ case "$mode" in
 esac
 
 [ -n "$key" ] || { usage >&2; exit 2; }
+case "$key" in *[!A-Za-z0-9_]*|[0-9]*) printf 'error: %s is not a key name\n' "$key" >&2; exit 2 ;; esac
 
+if [ "$mode" = "stdin" ]; then
+  # The value never touches argv: a token on a command line is visible to every
+  # process of the same user, and a mail grant is exactly that kind of secret.
+  value="$(cat)"
+  [ -n "$value" ] || { printf 'error: --stdin received nothing — nothing written\n' >&2; exit 1; }
+  mode="set"
+fi
+
+if [ "$mode" = "del" ]; then
+  grep -qE "^${key}=" "$work/current" \
+    || { printf 'hodd-set[1]{action,key}:\n  "absent","%s"\n' "$key"; exit 3; }
+  grep -vE "^${key}=" "$work/current" > "$work/next"
+else
 # ── replace or append, idempotently ───────────────────────────────────────────────
 awk -v k="$key" -v v="$value" '
   BEGIN { done = 0 }
@@ -82,10 +103,18 @@ awk -v k="$key" -v v="$value" '
   { print }
   END { if (!done) print k "=" v }
 ' "$work/current" > "$work/next"
+fi
 
 keys_after="$(grep -cE '^[A-Za-z_][A-Za-z0-9_]*=' "$work/next" || true)"
-[ "${keys_after:-0}" -ge "${keys_before:-0}" ] \
-  || { printf 'error: the edit would LOSE keys (%s → %s) — refused\n' "$keys_before" "$keys_after" >&2; exit 1; }
+if [ "$mode" = "del" ]; then
+  [ "${keys_after:-0}" -ge 1 ] \
+    || { printf 'error: %s is the only key — deleting it would empty the vault, refused\n' "$key" >&2; exit 1; }
+  [ "${keys_after:-0}" -eq "$((keys_before - 1))" ] \
+    || { printf 'error: --del would leave %s keys, not %s — refused\n' "$keys_after" "$((keys_before - 1))" >&2; exit 1; }
+else
+  [ "${keys_after:-0}" -ge "${keys_before:-0}" ] \
+    || { printf 'error: the edit would LOSE keys (%s → %s) — refused\n' "$keys_before" "$keys_after" >&2; exit 1; }
+fi
 
 # ── guard 2 and 3: re-encrypt, decrypt again, compare; keep the old ───────────────
 recipient="$(age-keygen -y "$HOARD/secrets/age.key" 2>/dev/null || true)"
@@ -101,5 +130,5 @@ backup="$secret.bak-$(date -u +%Y%m%dT%H%M%SZ)"
 [ -s "$secret" ] && cp -p "$secret" "$backup"
 install -m 600 "$work/next.age" "$secret.new" && mv "$secret.new" "$secret"
 
-printf 'hodd-set[3]{file,key,keys}:\n  "%s","%s","%s → %s"\n  "backup","%s",""\n' \
-  "$rel" "$key" "$keys_before" "$keys_after" "$(basename "$backup" 2>/dev/null)"
+printf 'hodd-set[4]{file,action,key,keys}:\n  "%s","%s","%s","%s → %s"\n  "backup","%s",""\n' \
+  "$rel" "${mode}" "$key" "$keys_before" "$keys_after" "$(basename "$backup" 2>/dev/null)"

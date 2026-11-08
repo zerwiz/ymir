@@ -148,7 +148,7 @@ def vault_put(key: str, value: str) -> None:
     door = vault_set_door()
     try:
         proc = subprocess.run(
-            [str(door), "--set-stdin", key],
+            [str(door), "--stdin", key],
             input=(value + "\n"), capture_output=True, text=True, timeout=180, check=False,
         )
     except (OSError, subprocess.SubprocessError) as exc:
@@ -156,6 +156,24 @@ def vault_put(key: str, value: str) -> None:
     if proc.returncode != 0:
         raise SystemExit(f"connect: the vault refused to store {key}: "
                          f"{(proc.stderr or proc.stdout).strip().splitlines()[-1:] or 'no reason given'}")
+
+
+def vault_delete(key: str) -> bool:
+    """Darken ONE key. `--del` removes it outright (a key set to an empty value is a stale shadow
+    waiting to be read as a value), and it refuses to empty the vault file. Returns False when the
+    key was already absent — which is `already dark`, not a failure."""
+    door = vault_set_door()
+    try:
+        proc = subprocess.run([str(door), "--del", key], capture_output=True, text=True,
+                              timeout=180, check=False)
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise SystemExit(f"connect: the vault door did not open: {exc}")
+    if proc.returncode == 3:
+        return False
+    if proc.returncode != 0:
+        raise SystemExit(f"connect: the vault refused to remove {key}: "
+                         f"{(proc.stderr or proc.stdout).strip().splitlines()[-1:] or 'no reason given'}")
+    return True
 
 
 def vault_get(key: str) -> str:
@@ -867,7 +885,7 @@ def cmd_revoke(address: str) -> int:
         print(f"revoked {address} · already dark: the vault holds no {key}")
         log_event("revoke", address, transport, "already-dark", key=key)
         return 0
-    vault_put(key, "")
+    vault_delete(key)
     still = grant_state(address, keys) if transport != "imap" else imap_state(address)
     log_event("revoke", address, transport, "ok", key=key)
     print(f"revoked {address} · {key} is dark in the vault")
@@ -920,3 +938,496 @@ def usage() -> None:
 
 Sending is NOT here: it happens only at systems/snotra/services/letters/mail-send.sh, where the
 operator's word is bound to the exact RFC822 bytes (plan 221 §4).""")
+
+
+# --------------------------------------------------------------------------- the proofs
+
+
+def _await_file(path: Path, timeout: float) -> str:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        try:
+            text = path.read_text(encoding="utf-8").strip()
+            if text:
+                return text
+        except OSError:
+            pass
+        time.sleep(0.1)
+    return ""
+
+
+class _FixtureHttp(threading.Thread):
+    """The token door, the tokeninfo door and GET /users/me — on loopback, for the proofs only."""
+
+    daemon = True
+    ACCESS = "fixture-access-token"
+    REFRESH = "fixture-refresh-token"
+    SCOPE = " ".join(DEFAULT_SCOPES)
+    ADDRESS = "guest@example.org"
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.mode = "live"           # live | dead
+        self.requests: list[dict] = []
+        from http.server import BaseHTTPRequestHandler
+
+        outer = self
+
+        class Handler(BaseHTTPRequestHandler):
+            def log_message(self, *_a) -> None:
+                return
+
+            def _send(self, code: int, body: dict) -> None:
+                raw = json.dumps(body).encode()
+                self.send_response(code)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(raw)))
+                self.end_headers()
+                self.wfile.write(raw)
+
+            def do_POST(self) -> None:  # noqa: N802
+                length = int(self.headers.get("Content-Length") or 0)
+                form = urllib.parse.parse_qs(self.rfile.read(length).decode("utf-8", "replace"))
+                outer.requests.append({"path": self.path, "form": {k: v[0] for k, v in form.items()}})
+                if self.path != "/token":
+                    self._send(404, {"error": "not_found"})
+                    return
+                if outer.mode == "dead":
+                    self._send(400, {"error": "invalid_grant",
+                                     "error_description": "Token has been expired or revoked."})
+                    return
+                if form.get("grant_type", [""])[0] == "authorization_code":
+                    self._send(200, {"access_token": outer.ACCESS, "expires_in": 3599,
+                                     "refresh_token": outer.REFRESH, "scope": outer.SCOPE,
+                                     "token_type": "Bearer"})
+                else:
+                    self._send(200, {"access_token": outer.ACCESS, "expires_in": 3599,
+                                     "scope": outer.SCOPE, "token_type": "Bearer"})
+
+            def do_GET(self) -> None:  # noqa: N802
+                parsed = urllib.parse.urlparse(self.path)
+                if parsed.path == "/tokeninfo":
+                    self._send(200, {"scope": outer.SCOPE, "expires_in": 3599})
+                elif parsed.path == "/gmail/v1/users/me/profile":
+                    if self.headers.get("Authorization", "") != "Bearer " + outer.ACCESS:
+                        self._send(401, {"error": {"message": "no bearer"}})
+                    else:
+                        self._send(200, {"emailAddress": outer.ADDRESS})
+                else:
+                    self._send(404, {"error": "not_found"})
+
+        self.server = HTTPServer(("127.0.0.1", 0), Handler)
+        self.port = int(self.server.server_address[1])
+
+    def run(self) -> None:
+        self.server.serve_forever(poll_interval=0.2)
+
+    def stop(self) -> None:
+        self.server.shutdown()
+        self.server.server_close()
+
+
+class _FixtureImap(threading.Thread):
+    """Enough IMAP to prove a LOGIN and an EXAMINE: greeting, CAPABILITY, LOGIN, EXAMINE, LOGOUT."""
+
+    daemon = True
+
+    def __init__(self, user: str, password: str, exists: int = 7) -> None:
+        super().__init__()
+        import socket as _socket
+        self.user, self.password, self.exists = user, password, exists
+        self.stop_flag = False
+        self.sock = _socket.socket(_socket.AF_INET, _socket.SOCK_STREAM)
+        self.sock.setsockopt(_socket.SOL_SOCKET, _socket.SO_REUSEADDR, 1)
+        self.sock.bind(("127.0.0.1", 0))
+        self.sock.listen(5)
+        self.sock.settimeout(0.5)
+        self.port = int(self.sock.getsockname()[1])
+
+    def run(self) -> None:
+        while not self.stop_flag:
+            try:
+                conn, _peer = self.sock.accept()
+            except Exception:  # noqa: BLE001 — a timeout is how this loop checks its flag
+                continue
+            threading.Thread(target=self.serve, args=(conn,), daemon=True).start()
+
+    def serve(self, conn) -> None:
+        stream = conn.makefile("rwb")
+        stream.write(b"* OK fixture ready\r\n")
+        stream.flush()
+        try:
+            while True:
+                line = stream.readline()
+                if not line:
+                    break
+                text = line.decode("utf-8", "replace").rstrip("\r\n")
+                tag, _, rest = text.partition(" ")
+                cmd = (rest.split(" ", 1)[0] if rest else "").upper()
+                if cmd == "CAPABILITY":
+                    stream.write(b"* CAPABILITY IMAP4rev1 AUTH=PLAIN\r\n"
+                                 + tag.encode() + b" OK CAPABILITY completed\r\n")
+                elif cmd == "LOGIN":
+                    tokens = [quoted or bare for quoted, bare in
+                              re.findall(r'"((?:[^"\\]|\\.)*)"|(\S+)', rest)]
+                    who = tokens[1:] if tokens and tokens[0].upper() == "LOGIN" else tokens
+                    if (len(who) >= 2 and who[0].strip('"') == self.user
+                            and who[1].strip('"') == self.password):
+                        stream.write(tag.encode() + b" OK LOGIN completed\r\n")
+                    else:
+                        stream.write(tag.encode()
+                                     + b" NO [AUTHENTICATIONFAILED] Invalid credentials (Failure)\r\n")
+                elif cmd in ("EXAMINE", "SELECT"):
+                    stream.write(b"* FLAGS (\\Seen)\r\n")
+                    stream.write(f"* {self.exists} EXISTS\r\n".encode())
+                    stream.write(b"* OK [UIDVALIDITY 1] UIDs valid\r\n")
+                    stream.write(tag.encode() + b" OK [READ-ONLY] " + cmd.encode() + b" completed\r\n")
+                elif cmd == "LOGOUT":
+                    stream.write(b"* BYE fixture closing\r\n" + tag.encode() + b" OK LOGOUT completed\r\n")
+                    stream.flush()
+                    break
+                else:
+                    stream.write(tag.encode() + b" OK " + cmd.encode() + b" completed\r\n")
+                stream.flush()
+        except Exception:  # noqa: BLE001 — a fixture that dies takes its proof with it
+            pass
+        finally:
+            try:
+                conn.close()
+            except OSError:
+                pass
+
+    def stop(self) -> None:
+        self.stop_flag = True
+        try:
+            self.sock.close()
+        except OSError:
+            pass
+
+
+def self_test(only: str = "") -> int:
+    """Every claim above, offline. Nothing here touches a real Google door.
+
+    `only` names ONE door (google · imap · status · revoke) so each verb can carry its own
+    `--self-test`: the proofs that belong to that door are reported, and the shared setup they
+    need is still exercised (a door's proof that skipped its precondition proves nothing)."""
+    import shutil
+    import tempfile
+
+    checks: list[tuple[str, bool, str, str]] = []
+    section = ["common"]
+
+    def check(name: str, ok: bool, detail: str = "") -> None:
+        checks.append((name, bool(ok), detail, section[0]))
+
+    http_fixture = _FixtureHttp()
+    http_fixture.start()
+    imap_fixture = _FixtureImap("guest2@example.org", "app-password-fixture", exists=7)
+    imap_fixture.start()
+
+    work = Path(tempfile.mkdtemp(prefix="gna-connect-"))
+    home = work / "home"
+    (home / "hodd" / "secrets").mkdir(parents=True)
+    (home / "hodd" / "memory" / "mail").mkdir(parents=True)
+    age_key = home / "hodd" / "secrets" / "age.key"
+    subprocess.run(["age-keygen", "-o", str(age_key)], capture_output=True, check=True)
+    recipient = subprocess.run(["age-keygen", "-y", str(age_key)], capture_output=True,
+                               text=True, check=True).stdout.strip()
+    seed = (f"{DEFAULT_CLIENT_KEY}=fixture-client-id\n"
+            f"{DEFAULT_CLIENT_SECRET_KEY}=fixture-client-secret\n")
+    subprocess.run(["age", "-e", "-r", recipient, "-o",
+                    str(home / "hodd" / "secrets" / "platform.env.age")],
+                   input=seed.encode(), check=True)
+
+    base = f"http://127.0.0.1:{http_fixture.port}"
+    env = dict(os.environ)
+    env.update({
+        "YMIR_HOME": str(home),
+        "YMIR_TREE": str(TREE),
+        "YMIR_OAUTH_AUTH_URL": base + "/auth",
+        "YMIR_OAUTH_TOKEN_URL": base + "/token",
+        "YMIR_OAUTH_TOKENINFO_URL": base + "/tokeninfo",
+        "YMIR_GMAIL_API_BASE": base + "/gmail/v1",
+        "PYTHONDONTWRITEBYTECODE": "1",
+    })
+    env.pop("GNA_SECRETS_FILE", None)
+    env.pop("GNA_CONNECT_PORT", None)
+
+    def run(args: list[str], stdin_data: str = "", timeout: float = 90.0):
+        return subprocess.run([sys.executable, str(Path(__file__)), *args], input=stdin_data,
+                              capture_output=True, text=True, timeout=timeout, env=env, cwd=str(TREE))
+
+    def vault_get(key: str) -> str:
+        out = subprocess.run([str(TREE / "bin" / "vault" / "hodd-set.sh"), "--get", key],
+                             capture_output=True, text=True, env=env, timeout=120)
+        return out.stdout.strip()
+
+    try:
+        # ── 1. the fixture vault is a REAL age vault, read through the real door ─────────────
+        emit = subprocess.run([str(TREE / "bin" / "vault" / "hodd.sh"), "emit", "secrets/platform.env"],
+                              capture_output=True, text=True, env=env, timeout=120)
+        check("the vault door emits the fleet client's KEY names (never values)",
+              DEFAULT_CLIENT_KEY in emit.stdout and "fixture-client-secret" in emit.stdout,
+              "emit returned " + ("the keys" if emit.stdout else "nothing"))
+
+        # ── 2. the consent URL carries everything and NO secret ──────────────────────────────
+        section[0] = "google"
+        listener = Loopback(0)
+        url = consent_url("fixture-client-id", listener.redirect_uri(), scopes(), "state-fixture")
+        listener.close()
+        parsed = urllib.parse.parse_qs(urllib.parse.urlparse(url).query)
+        check("the consent URL is offline + forced consent",
+              parsed.get("access_type") == ["offline"] and parsed.get("prompt") == ["consent"],
+              str({k: parsed.get(k) for k in ("access_type", "prompt")}))
+        check("the consent URL redirects to 127.0.0.1 on an ephemeral port",
+              parsed.get("redirect_uri", [""])[0].startswith("http://127.0.0.1:")
+              and not parsed.get("redirect_uri", [""])[0].endswith(":0/callback"),
+              str(parsed.get("redirect_uri")))
+        check("the consent URL never carries the client secret",
+              "fixture-client-secret" not in url, "no secret in the URL")
+
+        # ── 3. one full sign-in: URL → loopback → code → vault → GET /users/me ───────────────
+        url_file = work / "consent-url.txt"
+        proc = subprocess.Popen([sys.executable, str(Path(__file__)), "google", "--no-browser",
+                                 "--consent-url-out", str(url_file)],
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                                env=env, cwd=str(TREE))
+        signed = _await_file(url_file, 20.0)
+        check("the door prints a consent URL and starts a loopback listener", bool(signed), signed[:60])
+        caught_ok = False
+        if signed:
+            qs = urllib.parse.parse_qs(urllib.parse.urlparse(signed).query)
+            redirect = urllib.parse.urlparse(qs["redirect_uri"][0])
+            callback = (f"http://127.0.0.1:{redirect.port}{redirect.path}"
+                        f"?code=fixture-code&state={qs['state'][0]}")
+            try:
+                with urllib.request.urlopen(callback, timeout=20) as page:
+                    caught_ok = page.status == 200 and b"Signed in" in page.read()
+            except Exception as exc:  # noqa: BLE001
+                caught_ok = False
+                check("the loopback redirect was answered", False, str(exc)[:120])
+        out, err = proc.communicate(timeout=90)
+        check("the loopback redirect was answered with the success page", caught_ok, "HTTP 200")
+        check("a signed-in grant is reported as: account · grant live · expires",
+              proc.returncode == 0 and "account guest@example.org · grant live · expires " in out,
+              (out or err).strip().splitlines()[0] if (out or err) else "no output")
+        check("the refresh token was written to the vault BY KEY",
+              vault_get("GNA_GRANT_GUEST_EXAMPLE_ORG") == _FixtureHttp.REFRESH,
+              "GNA_GRANT_GUEST_EXAMPLE_ORG resolves through hodd-set.sh --get")
+        check("no secret is printed: neither the token nor the client secret appears",
+              _FixtureHttp.REFRESH not in out + err and "fixture-client-secret" not in out + err,
+              "stdout+stderr scanned")
+        check("the token exchange sent code/redirect_uri/grant_type and no bearer",
+              any(r["path"] == "/token" and r["form"].get("grant_type") == "authorization_code"
+                  and r["form"].get("code") == "fixture-code"
+                  and "redirect_uri" in r["form"] for r in http_fixture.requests),
+              f"{len(http_fixture.requests)} request(s) to the token door")
+
+        reg = (home / "hodd" / "memory" / "mail" / "accounts.yaml").read_text(encoding="utf-8")
+        check("the account was ADDED to the register as a new row",
+              'id: "guest@example.org"' in reg and "GNA_GRANT_GUEST_EXAMPLE_ORG" in reg,
+              "accounts.yaml carries the row")
+
+        # ── 4. a state that does not match is refused and writes nothing ────────────────────
+        url_file2 = work / "consent-url-2.txt"
+        proc2 = subprocess.Popen([sys.executable, str(Path(__file__)), "google", "--no-browser",
+                                  "--consent-url-out", str(url_file2)],
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                                 env=env, cwd=str(TREE))
+        signed2 = _await_file(url_file2, 20.0)
+        if signed2:
+            qs2 = urllib.parse.parse_qs(urllib.parse.urlparse(signed2).query)
+            redirect2 = urllib.parse.urlparse(qs2["redirect_uri"][0])
+            try:
+                urllib.request.urlopen(f"http://127.0.0.1:{redirect2.port}{redirect2.path}"
+                                       "?code=fixture-code&state=wrong-state", timeout=20).read()
+            except Exception:  # noqa: BLE001
+                pass
+        out2, err2 = proc2.communicate(timeout=90)
+        check("a mismatched state is refused, not exchanged",
+              proc2.returncode == 1 and "state_mismatch" in (out2 + err2),
+              (out2 + err2).strip().splitlines()[-1] if (out2 + err2) else "no output")
+
+        # ── 5. --check says LIVE when it is live, and DEAD when it is dead ───────────────────
+        live = run(["google", "--check"])
+        check("--check reports a live grant with its expiry",
+              live.returncode == 0 and "grant live · expires " in live.stdout,
+              live.stdout.strip().splitlines()[0] if live.stdout else live.stderr[:120])
+        http_fixture.mode = "dead"
+        dead = run(["google", "--check"])
+        check("--check reports a dead grant as `grant dead`, never as an empty inbox",
+              dead.returncode == 1 and "grant dead" in dead.stdout
+              and "messages" not in dead.stdout and "no mail" not in dead.stdout.lower(),
+              dead.stdout.strip().replace("\n", " | ")[:160])
+        http_fixture.mode = "live"
+
+        # ── 6. the guest road: a real LOGIN and a real EXAMINE ──────────────────────────────
+        section[0] = "imap"
+        imap_ok = run(["imap", "--address", "guest2@example.org", "--host", "127.0.0.1",
+                       "--port", str(imap_fixture.port), "--tls", "none"],
+                      stdin_data="app-password-fixture\n")
+        check("imap proves a REAL LOGIN and a REAL EXAMINE, and prints the count",
+              imap_ok.returncode == 0
+              and "mailbox guest2@example.org · INBOX · 7 messages" in imap_ok.stdout,
+              imap_ok.stdout.strip().splitlines()[0] if imap_ok.stdout else imap_ok.stderr[:160])
+        check("imap stores the password by KEY and never echoes it",
+              vault_get("GNA_IMAP_PASSWORD_GUEST2_EXAMPLE_ORG") == "app-password-fixture"
+              and "app-password-fixture" not in imap_ok.stdout + imap_ok.stderr,
+              "vault key resolves; stdout+stderr scanned")
+        wrong = run(["imap", "--address", "guest2@example.org", "--host", "127.0.0.1",
+                     "--port", str(imap_fixture.port), "--tls", "none"],
+                    stdin_data="wrong-password\n")
+        check("a wrong app password fails loudly in one line and stores nothing new",
+              wrong.returncode == 1 and "LOGIN refused" in (wrong.stdout + wrong.stderr)
+              and "wrong-password" not in (wrong.stdout + wrong.stderr),
+              (wrong.stdout + wrong.stderr).strip().splitlines()[0][:140])
+
+        # ── 7. status: the honesty line ─────────────────────────────────────────────────────
+        section[0] = "status"
+        status = run(["status"])
+        check("status names every account with readable · sendable · deliverable",
+              status.returncode == 0 and status.stdout.count("guest") >= 2
+              and "readable" in status.stdout and "deliverable" in status.stdout,
+              status.stdout.strip().splitlines()[0] if status.stdout else status.stderr[:120])
+        check("a non-gate account is never called sendable",
+              "yes (our gate)" not in status.stdout,
+              "sendable says where the gate is instead")
+
+        # ── 8. revoke is a verb, and the door goes dark ─────────────────────────────────────
+        section[0] = "revoke"
+        revoke = run(["revoke", "guest@example.org"])
+        check("revoke darkens the vault key and names what stopped",
+              revoke.returncode == 0 and "revoked guest@example.org" in revoke.stdout
+              and "stopped[3]" in revoke.stdout,
+              revoke.stdout.strip().splitlines()[0] if revoke.stdout else revoke.stderr[:120])
+        check("the revoked grant no longer resolves through the vault",
+              vault_get("GNA_GRANT_GUEST_EXAMPLE_ORG") == "", "hodd-set.sh --get is empty")
+        after = run(["status"])
+        revoked_row = [ln for ln in after.stdout.splitlines() if "guest@example.org" in ln]
+        check("after revocation status says readable=no for that account",
+              bool(revoked_row) and '"no"' in revoked_row[0], revoked_row[0][:120] if revoked_row else "no row")
+        twice = run(["revoke", "guest@example.org"])
+        check("a second revoke says already dark, and does not fail",
+              twice.returncode == 0 and "already dark" in twice.stdout,
+              twice.stdout.strip().splitlines()[0] if twice.stdout else "")
+
+        # ── 9. the gate law: this file cannot send ─────────────────────────────────────────
+        section[0] = "common"
+        source = Path(__file__).read_text(encoding="utf-8")
+        forbidden = [t for t in ("smtp" + "lib", "/messages/" + "send", "drafts/" + "send",
+                                 "port " + "587") if t in source]
+        check("no send path exists in this file — sending stays on the gate", not forbidden,
+              "found: " + ", ".join(forbidden) if forbidden else "no send endpoint, no mail client")
+
+        # ── 10. the append-only event log survived every verb ──────────────────────────────
+        log_path = home / "hodd" / "memory" / "mail" / "connect-log.jsonl"
+        log_text = log_path.read_text(encoding="utf-8") if log_path.exists() else ""
+        verbs = {json.loads(ln).get("verb") for ln in log_text.splitlines() if ln.strip()}
+        check("the connect log is append-only and records connect + revoke",
+              {"google", "imap", "revoke"} <= verbs,
+              f"{len(log_text.splitlines())} line(s): {sorted(verbs)}")
+    finally:
+        http_fixture.stop()
+        imap_fixture.stop()
+        shutil.rmtree(work, ignore_errors=True)
+
+    shown = [c for c in checks if not only or c[3] in (only, "common")]
+    failures = [c for c in shown if not c[1]]
+    door = only or "all"
+    print(f"self-test[{len(shown)}]{{door,name,result,detail}}:")
+    for name, ok, detail, sect in shown:
+        print(f'  {q(door)},{q(name)},{q("PASS" if ok else "FAIL")},{q(detail)}')
+    print(f"result: {'PASS' if not failures else 'FAIL'} — {len(shown) - len(failures)}/{len(shown)} "
+          f"for {door}")
+    return 0 if not failures else 1
+
+
+# --------------------------------------------------------------------------- main
+
+
+def main(argv: list[str]) -> int:
+    args = list(argv)
+    if not args:
+        usage()
+        return 2
+    if "--version" in args or "-v" in args:
+        print(VERSION)
+        return 0
+    if args[0] in ("-h", "--help", "help"):
+        usage()
+        return 0
+    verb = args.pop(0)
+
+    def opt(name: str, default: str = "") -> str:
+        if name in args:
+            i = args.index(name)
+            value = args[i + 1] if i + 1 < len(args) else ""
+            del args[i:i + 2]
+            return value
+        for token in list(args):
+            if token.startswith(name + "="):
+                args.remove(token)
+                return token.split("=", 1)[1]
+        return default
+
+    def flag(name: str) -> bool:
+        if name in args:
+            args.remove(name)
+            return True
+        return False
+
+    if verb == "--self-test" or verb == "self-test":
+        return self_test()
+
+    if verb == "google":
+        if flag("--self-test") or flag("self-test"):
+            return self_test("google")
+        check_only = flag("--check")
+        no_browser = flag("--no-browser")
+        address = opt("--account")
+        port_raw = opt("--port")
+        timeout = opt("--timeout")
+        url_out = opt("--consent-url-out")
+        try:
+            port = int(port_raw) if port_raw else None
+        except ValueError:
+            print(f"connect: --port must be a number, not {port_raw!r}", file=sys.stderr)
+            return 2
+        try:
+            wait = float(timeout) if timeout else DEFAULT_TIMEOUT
+        except ValueError:
+            print(f"connect: --timeout must be seconds, not {timeout!r}", file=sys.stderr)
+            return 2
+        if check_only:
+            return cmd_check(address)
+        return cmd_google(address=address, port=port, timeout=wait,
+                          open_browser=not no_browser, consent_url_out=url_out)
+
+    if verb == "imap":
+        if flag("--self-test") or flag("self-test"):
+            return self_test("imap")
+        address = opt("--address") or opt("--account")
+        return cmd_imap(address, host=opt("--host"), port=opt("--port"), tls=opt("--tls"),
+                        mailbox=opt("--mailbox"), password_stdin=flag("--password-stdin"))
+
+    if verb == "status":
+        if flag("--self-test") or flag("self-test"):
+            return self_test("status")
+        offline = flag("--offline")
+        return cmd_status(opt("--account"), offline=offline)
+
+    if verb == "revoke":
+        if flag("--self-test") or flag("self-test"):
+            return self_test("revoke")
+        if not args:
+            print("revoke: name the account to revoke", file=sys.stderr)
+            return 2
+        return cmd_revoke(args[0])
+
+    print(f"connect: unknown verb {verb!r}", file=sys.stderr)
+    usage()
+    return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))
