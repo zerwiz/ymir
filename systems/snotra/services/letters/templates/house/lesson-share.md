@@ -30,3 +30,7 @@ diagram that flatters the source.>
 
 Append the row: `bin/mail/ledger.sh out --to <address> --subject "<subject>" --gmail <id> --attachments <n>`.
 A letter that is not in the ledger did not happen, as far as the next session knows.
+
+## CHANGE LOG
+
+- **2026-11-08** — Carved with `bin/mail/ledger.sh`, the record of what left and what arrived.

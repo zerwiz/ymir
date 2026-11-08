@@ -41,10 +41,6 @@ mkdir -p "$MAIL_DIR"
 
 now_iso() { date -u '+%Y-%m-%dT%H:%M:%SZ'; }
 one_line() { printf '%s' "${1-}" | tr '\t\r\n' '   ' | cut -c1-400; }
-json_str() {  # a JSON string, escaped by python so a quote in a subject cannot break the row
-  python3 -c 'import json,sys;print(json.dumps(sys.argv[1]))' "$1"
-}
-
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help|"") usage; exit 0 ;; esac
 CMD="${1-}"; shift || true

@@ -24,3 +24,7 @@ If it is easier to say no, say no — a no closes the loop and costs us both les
 
 A follow-up is read on a phone, between other things. Anything longer than the ask is read as pressure and answered later,
 which means never. One ask, one line, an exit that is not a rebuke.
+
+## CHANGE LOG
+
+- **2026-11-08** — Carved with `bin/mail/ledger.sh`, the record of what left and what arrived.

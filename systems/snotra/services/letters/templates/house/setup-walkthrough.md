@@ -36,3 +36,7 @@ services answer".>
 ## After sending
 
 `bin/mail/ledger.sh out --to <address> --subject "<subject>" --gmail <id>`.
+
+## CHANGE LOG
+
+- **2026-11-08** — Carved with `bin/mail/ledger.sh`, the record of what left and what arrived.

@@ -30,3 +30,7 @@ letters[4]{file,when,what_it_carries}:
 The letters themselves are not kept here. `bin/mail/ledger.sh` records what left and what arrived — the direction, the
 person, the subject, the moment — and that record lives in the home, never in this repo. A template is public; a
 correspondence is not.
+
+## CHANGE LOG
+
+- **2026-11-08** — Carved with `bin/mail/ledger.sh`, the record of what left and what arrived.
