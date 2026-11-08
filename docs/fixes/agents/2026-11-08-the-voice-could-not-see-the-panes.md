@@ -48,3 +48,8 @@ through a file, and the reason is written in the comment beside it.
   but a line in the tool's own answer would be better.
 - Sessrúmnir has **no door at all** for the voice (Electron IPC only): the same class of fault, one app
   further out. Named in plan 132 §43.4 and owed its own face.
+
+## CHANGE LOG
+
+- **2026-11-08** — written. The seats door, the voice's 35th hand, and the two briefs that now name it, after
+  four spoken questions the voice answered from the wrong shelf.
