@@ -26,3 +26,17 @@ caught, the excuses staying narrow, and the shipped tree passing its own scan.
 
 - 2026-11-08 · seven prose strings in `bin/voice/voice_tools.py` reworded; the `todo-<name>.md` filename
   excuse added to `mocks-scan.sh` with its reason written beside the other six; the probe re-run green.
+
+## Second gate on the same branch, found by the first push
+
+The push after the mocks fix was refused by `docs-claims-guard`, and the debt was this branch's, not
+`main`'s: `docs/features/rodd-the-voice.md:37` names `apps/rodd/ui`, which no checkout holds — it is
+created by `apps/rodd/setup.sh` at run time, because the face is fetched and never committed. The
+claim is true and the road is not closed, so it is waived **on the line, in writing**, with the guard's
+own mechanism (`<!-- stale-ok: … -->`) rather than by a bare path in the waiver file: the reason travels
+with the claim.
+
+## CHANGE LOG
+
+- 2026-11-08 · `docs/features/rodd-the-voice.md` line 37 waived in writing for a runtime-created path;
+  `docs-claims-guard` re-run green over 189 pages.
