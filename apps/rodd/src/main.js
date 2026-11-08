@@ -35,8 +35,12 @@ function startUiServer() {
   return new Promise((resolve, reject) => {
     const port = 7800 + Math.floor(Math.random() * 90);
     const env = { ...process.env, SPEECH_TO_SPEECH_URL: process.env.SPEECH_TO_SPEECH_URL || '' };
+    // the interpreter is named ONCE, and it is logged: when the spawn silently dies the
+    // shell must be able to read which python and which directory it was asked for
+    const py = process.env.RODD_PYTHON || path.join(process.env.HOME || '', 'venvs/s2s/bin/python');   // allow-home-default: the seat's own venv
+    console.log('[rodd] ui server:', JSON.stringify(py), '-m uvicorn --app-dir', JSON.stringify(UI), 'port', port);
     const proc = execFile(
-      process.env.RODD_PYTHON || path.join(process.env.HOME || '', 'venvs/s2s/bin/python')   // allow-home-default: the seat's own venv,
+      py,
       ['-m', 'uvicorn', '--app-dir', UI, 'server:app', '--host', '127.0.0.1', '--port', String(port)],
       { env, cwd: UI, timeout: 0 },
       (err) => { if (err) console.error('[rodd] ui server exited:', err.message); },
@@ -93,6 +97,11 @@ function restartHost(url) {
 
 app.whenReady().then(async () => {
   Menu.setApplicationMenu(null);
+  // The face offers the camera only when the head can see: start.sh says which head it
+  // raised (RODD_CAMERA=1 with the vision head), and a picture sent to a text-only head
+  // is answered `500 image input is not supported` — for that turn AND every turn after
+  // it, because the image stays in the conversation. One snapshot ended a session.
+  console.log('[rodd] camera', process.env.RODD_CAMERA === '1' ? 'on (the head can see)' : 'off (text-only head)');
 
   // A voice window without a microphone is a picture of a voice. Electron denies
   // getUserMedia unless the seat asks for it: grant media on this loopback origin only.
@@ -130,6 +139,8 @@ app.whenReady().then(async () => {
       "him; send nothing until he approves the steps. To give work to a worker use hand_over — first call",
       "WITHOUT confirm so he is asked out loud, and only call again with confirm=true after he says yes.",
       "Check context_left on a long conversation so you summarise before the window fills.",
+      "cron_jobs says whether the schedule is running and what is on it; plans reads the numbered plan",
+      "ledger (a PLAN is not an ERRAND); research sends Huginn out — ask him out loud first, then confirm.",
       "Never claim a merge, a push, a sent mail or a changed board unless a tool returned it; the vault is",
       "closed to you and you say so.",
     ].join(' ');
@@ -178,7 +189,7 @@ app.whenReady().then(async () => {
   win.webContents.on('did-fail-load', (_e, code, desc, url) => {
     try { fs.appendFileSync(logPath, `FAIL-LOAD ${code} ${desc} ${url}\n`); } catch {}
   });
-  await win.loadURL(`http://127.0.0.1:${port}/`);
+  await win.loadURL(`http://127.0.0.1:${port}/?camera=${process.env.RODD_CAMERA === '1' ? '1' : '0'}`);
   win.on('closed', () => { try { proc.kill(); } catch {} });
 });
 

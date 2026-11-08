@@ -24,9 +24,9 @@ bin[7]{file,does,kind,verdict,disposition,callers,lines}:
   "house.css","/* house.css — Rödd's face, in the Allfather's hall.","data","wired","keep",0,54
   "model-sync.sh","model-sync.sh — take the voice models over the LOCAL NETWORK, never from the internet.","tool","wired","keep",0,99
   "voice-door.sh","voice-door.sh — the real-time voice door: speak to Ymir on whatever seat you are at.","tool","wired","keep",0,383
-  "voice-ensure.sh","voice-ensure.sh — ensure the voice engines: whisper.cpp (speech → text) and","tool","wired","keep",3,164
-  "voice-toolbox.py","'''voice-toolbox.py — the house's hands for a browser face.","data","wired","keep",0,117
-  "voice_tools.py","'''voice-tools.py — the hands of the voice.","data","wired","keep",2,1550
+  "voice-ensure.sh","voice-ensure.sh — ensure the voice engines: whisper.cpp (speech → text) and","tool","wired","keep",3,190
+  "voice-toolbox.py","'''voice-toolbox.py — the house's hands for a browser face.","tool","wired","keep",0,119
+  "voice_tools.py","'''voice-tools.py — the hands of the voice.","tool","wired","keep",2,1765
   "ymir-vad.py","'''","tool","wired","keep",0,135
 
 **Tally.** verdict: wired=7

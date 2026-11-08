@@ -89,15 +89,38 @@ find_voice() {
 
 whisper_status() { [ -x "$SNOTRA_ENSURE" ] && "$SNOTRA_ENSURE" status 2>/dev/null; }
 
+# --- Rödd's face (the voice's window) ----------------------------------------
+# The face is FETCHED, never committed (RULES/39), so a fresh clone — and any clone whose
+# pinned tag moved — carries no window. It is therefore part of the install and the
+# repair surface, not something the operator has to remember: `voice-ensure install` and
+# `eir fix` both build it, and `status` names it when it is missing or stale.
+RODD_SETUP="$ROOT/apps/rodd/setup.sh"
+face_status() {
+  if [ ! -x "$RODD_SETUP" ]; then printf 'absent'; return 0; fi
+  "$RODD_SETUP" --check 2>/dev/null || printf 'missing'
+}
+
+ensure_face() {
+  local fst; fst="$(face_status)"
+  [ "$fst" = present ] && return 0
+  [ "$fst" = absent ] && { printf 'rodd: apps/rodd/setup.sh is absent — this tree carries no face\n' >&2; return 1; }
+  have npm || { printf 'rodd: npm is required to build the face (node is not on PATH)\n' >&2; return 1; }
+  printf 'rodd: building the face (%s) …\n' "$fst" >&2
+  "$RODD_SETUP" >&2 || { printf 'rodd: the face build failed — run apps/rodd/setup.sh by hand\n' >&2; return 1; }
+}
+
 status() {
-  local p v wstt ws="missing" ps="missing"
+  local p v wstt ws="missing" ps="missing" fs
   whisper_status >/dev/null 2>&1 && ws="present"
   p="$(find_piper || true)"; v="$(find_voice || true)"
   [ -n "$p" ] && ps="present"
+  fs="$(face_status)"
   printf 'voice[1]{stt,tts,piper,voice}:\n'
   printf '  "whisper.cpp (%s)","piper (%s)","%s","%s"\n' \
     "$ws" "$ps" "${p:-—}" "${v:-—}"
-  [ "$ws" = "present" ] && [ "$ps" = "present" ]
+  printf 'rodd[1]{face,means}:\n'
+  printf '  "%s","the voice window; built by apps/rodd/setup.sh, never committed"\n' "$fs"
+  [ "$ws" = "present" ] && [ "$ps" = "present" ] && [ "$fs" = "present" ]
 }
 
 # --- install ----------------------------------------------------------------
@@ -150,6 +173,9 @@ install_all() {
   # piper (TTS) — adopt, else install, then its voice.
   if [ -z "$(find_piper || true)" ]; then install_piper || true; fi
   if [ -z "$(find_voice || true)" ]; then install_voice || true; fi
+  # the face (the window): fetched at the pinned tag, built here so a fresh install and an
+  # update both end with a window that opens
+  ensure_face || true
 }
 
 case "$CMD" in

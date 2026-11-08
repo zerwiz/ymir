@@ -25,7 +25,7 @@ bin[134]{file,does,kind,verdict,disposition,callers,lines}:
   "audio-retention.sh","bin/time/snotra/audio-retention.sh -> systems/snotra/services/ear/audio-retention.sh — RETIRED SHIM","tool","wired","keep",0,12
   "brokk-wake-grant.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",0,128
   "brokk-wake-lib.sh","Shared durable wake queue and portable lock helpers.","lib","tested","keep",4,1883
-  "calendar-ask.sh","bin/time/snotra/calendar-ask.sh -> systems/snotra/services/calendar/calendar-ask.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new do…","tool","tested","keep",4,16
+  "calendar-ask.sh","bin/time/snotra/calendar-ask.sh -> systems/snotra/services/calendar/calendar-ask.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new do…","tool","tested","keep",5,16
   "calendar-attendees.sh","bin/time/snotra/calendar-attendees.sh -> systems/snotra/services/calendar/calendar-attendees.sh — RETIRED SHIM (plan 129, 2026-10-24); exec…","tool","wired","keep",0,16
   "calendar-auth.sh","bin/time/snotra/calendar-auth.sh -> systems/snotra/services/calendar/calendar-auth.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new…","tool","wired","keep",0,16
   "calendar-invite.sh","bin/time/snotra/calendar-invite.sh -> systems/snotra/services/calendar/calendar-invite.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the…","tool","wired","keep",2,16
@@ -51,7 +51,7 @@ bin[134]{file,does,kind,verdict,disposition,callers,lines}:
   "meet_ingest.py","bin/time/snotra/meet_ingest.py -> systems/snotra/services/cron/meet_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "meeting-record-guard.sh","bin/time/snotra/meeting-record-guard.sh -> systems/snotra/services/approve/meeting-record-guard.sh — RETIRED SHIM (plan 129, 2026-10-24); e…","tool","wired","keep",0,16
   "monday_adapter.py","bin/time/snotra/monday_adapter.py -> systems/snotra/services/cron/monday_adapter.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
-  "nornir-cron-start.sh","nornir-cron-start.sh - ensure Brokk's scheduled jobs are running (idempotent).","tool","tested","keep",7,404
+  "nornir-cron-start.sh","nornir-cron-start.sh - ensure Brokk's scheduled jobs are running (idempotent).","tool","tested","keep",8,404
   "nornir-job-asken-handoff.sh","nornir-job-asken-handoff.sh — the rollover, on the schedule.","tool","wired","keep",0,63
   "nornir-job-bragi-scrape.sh","nornir-job-bragi-scrape.sh — Bragi, on the loom: the scheduled scrape round.","tool","wired","keep",0,154
   "nornir-job-daily-briefing.sh","nornir-job-daily-briefing.sh - the 07:00 Sága daily seeing.","tool","wired","keep",1,219
@@ -137,7 +137,7 @@ bin[134]{file,does,kind,verdict,disposition,callers,lines}:
   "snotra-transcribe-bot.sh","bin/time/snotra/snotra-transcribe-bot.sh -> systems/snotra/services/ear/snotra-transcribe-bot.sh — RETIRED SHIM","tool","wired","keep",0,12
   "snotra-transcribe.sh","bin/time/snotra/snotra-transcribe.sh -> systems/snotra/services/ear/snotra-transcribe.sh — RETIRED SHIM","tool","wired","keep",1,12
   "snotra-trello.py","bin/time/snotra/snotra-trello.py -> systems/snotra/services/cron/snotra-trello.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
-  "snotra-trello.sh","bin/time/snotra/snotra-trello.sh -> systems/snotra/services/cron/snotra-trello.sh — RETIRED SHIM","tool","wired","keep",0,12
+  "snotra-trello.sh","bin/time/snotra/snotra-trello.sh -> systems/snotra/services/cron/snotra-trello.sh — RETIRED SHIM","tool","wired","keep",1,12
   "snotra-voice-device.sh","bin/time/snotra/snotra-voice-device.sh -> systems/snotra/services/ear/snotra-voice-device.sh — RETIRED SHIM","tool","wired","keep",0,12
   "snotra-voice.py","bin/time/snotra/snotra-voice.py -> systems/snotra/services/ear/snotra-voice.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "snotra_paths.py","bin/time/snotra/snotra_paths.py -> systems/snotra/services/record/snotra_paths.py — RETIRED SHIM (plan 129)","tool","wired","keep",1,10

@@ -452,6 +452,51 @@ TOOLS = [
             "additionalProperties": False,
         },
     },
+    {
+        "type": "function",
+        "name": "cron_jobs",
+        "description": (
+            "The house's schedule (Nornir cron): whether the scheduler is running, every job and its "
+            "hour, what last fired, and the log's last lines. Use it for 'are the cron jobs running' "
+            "or 'what is scheduled'. Read-only."
+        ),
+        "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+    },
+    {
+        "type": "function",
+        "name": "plans",
+        "description": (
+            "The plan ledger. A PLAN is not an ERRAND: plans are numbered design records in the home. "
+            "Call with no arguments to list them, with `query` to find the ones about a subject, or "
+            "with `number` to read one."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "a word or subject to find in the ledger"},
+                "number": {"type": "string", "description": "a plan number, e.g. 132"},
+            },
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
+        "name": "research",
+        "description": (
+            "Send Huginn (the raven) to research a question on the web and write a sourced report "
+            "into the home. It seats a worker, so it needs his spoken yes first: call WITHOUT "
+            "confirm, ask him out loud, then call again with confirm=true and the same question."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "question": {"type": "string", "description": "the question to research, in his words"},
+                "confirm": {"type": "boolean", "description": "true only after he says yes out loud"},
+            },
+            "required": ["question"],
+            "additionalProperties": False,
+        },
+    },
 ]
 
 
@@ -1547,3 +1592,173 @@ NEW_TOOLS["sessions_list"] = _tool_sessions_list
 NEW_TOOLS["session_read"] = _tool_session_read
 NEW_TOOLS["session_digest"] = _tool_session_digest
 NEW_TOOLS["find_session"] = _tool_find_session
+
+
+# ── the schedule, the ledger, and the raven ───────────────────────────────────
+# Three things he asked for out loud on 2026-11-08 that the voice had no hand for:
+# *"what is going on on the cron jobs"*, *"what is Northern Italy doing"* (a plan, not an
+# errand), and *"can you do online research?"*. Each one is a DOOR he already had from the
+# terminal, given to the voice — never a second implementation of the same thing.
+
+def _home_config(name: str) -> Path:
+    """The operator's own config shelf, resolved (RULES/04: never the repo's example)."""
+    for cand in (_home() / "config" / name, ROOT / "config" / name):
+        if cand.is_file():
+            return cand
+    return _home() / "config" / name
+
+
+async def _tool_cron_jobs(args):
+    """Is the schedule running, what is on it, and what last fired — read, never written."""
+    parts = []
+    code, out = _run([_door("time/nornir-cron-start.sh"), "--status"], timeout=25)
+    parts.append(_clean(out, 200) if out.strip() else "the scheduler gave no answer")
+
+    jobs = []
+    cfg = _home_config("cron.yaml")
+    if cfg.is_file():
+        try:
+            for line in cfg.read_text(errors="ignore").splitlines():
+                s = line.strip()
+                if not s or s.startswith("#"):
+                    continue
+                toks = s.split()
+                gate = ""
+                if toks and toks[0].startswith("@"):      # "@heart 06:00 bin/…" — the role comes FIRST
+                    gate = toks[0]
+                    toks = toks[1:]
+                if len(toks) >= 2 and ":" in toks[0]:
+                    job = Path(toks[1]).name
+                    jobs.append(f"{toks[0]} {job}" + (f" {gate}" if gate else ""))
+        except Exception:
+            pass
+    if jobs:
+        parts.append(f"{len(jobs)} jobs on the schedule: " + ", ".join(jobs[:14])
+                     + (" …" if len(jobs) > 14 else ""))
+
+    fired_dir = ROOT / "state" / ".cron-fired"
+    if fired_dir.is_dir():
+        import datetime as _dt
+        recent = []
+        for f in sorted(fired_dir.iterdir(), key=lambda p: p.stat().st_mtime)[-5:]:
+            try:
+                recent.append(f"{f.name} at {_dt.datetime.fromtimestamp(f.stat().st_mtime):%m-%d %H:%M}")
+            except Exception:
+                continue
+        if recent:
+            parts.append("last fired: " + " · ".join(recent))
+
+    log = ROOT / "state" / "cron.log"
+    if log.is_file():
+        try:
+            tail = [ln for ln in log.read_text(errors="ignore").splitlines()[-6:] if ln.strip()]
+            if tail:
+                parts.append("the log's last lines: " + " | ".join(tail[-4:])[:300])
+        except Exception:
+            pass
+    return ToolResult("The schedule: " + ". ".join(p for p in parts if p) + ".")
+
+
+async def _tool_plans(args):
+    """The plan ledger: search it, or open one plan. A plan is not an errand and the voice
+    kept confusing the two."""
+    query = str(args.get("query") or "").strip()
+    number = str(args.get("number") or "").strip()
+    home = _home()
+    shelves = sorted(home.glob("svartalfaheim/*/projects/*/plans"))
+    if not shelves:
+        return ToolResult("No plan ledger is reachable from the home on this seat.")
+
+    if number:
+        num = str(number).lstrip("0")
+        for shelf in shelves:
+            for f in shelf.glob("*.md"):
+                if f.name.split("-", 1)[0].lstrip("0") == num:
+                    text = f.read_text(errors="ignore")
+                    head = [ln for ln in text.splitlines()[:60]]
+                    return ToolResult(f"Plan {num} — {f.stem}:\n" + "\n".join(head)[:2200])
+        return ToolResult(f"No plan numbered {num} is in the ledger.")
+
+    # Search the SHELVES, not one door's tail: `plan.sh list` prints the newest rows, and a
+    # question is usually about an older plan than the last twenty.
+    rows: list[tuple[str, str]] = []
+    for shelf in shelves:
+        for f in shelf.glob("*.md"):
+            if f.name.lower() in ("readme.md", "queue.md", "questions.md", "register.md"):
+                continue
+            title = ""
+            try:
+                for ln in f.read_text(errors="ignore").splitlines()[:12]:
+                    if ln.startswith("# "):
+                        title = ln[2:].strip()
+                        break
+            except Exception:
+                pass
+            rows.append((f.name.split("-", 1)[0], f"{title or f.stem} ({f.stem})"))
+    # newest first, by the number the name carries
+    def _num(pair: tuple[str, str]) -> int:
+        try:
+            return int(pair[0].lstrip("0") or 0)
+        except Exception:
+            return 0
+    rows.sort(key=_num, reverse=True)
+    if query:
+        q = query.replace("-", " ").lower()
+        rows = [r for r in rows if q in (r[1] + " " + r[0]).replace("-", " ").lower()]
+    if not rows:
+        return ToolResult(f"No plan in the ledger mentions {query!r}." if query
+                          else "The ledger listed nothing.")
+    shown = [f"{n} · {t}" for n, t in rows[:14]]
+    return ToolResult(
+        (f"Plans mentioning {query!r}:" if query else "The plan ledger (newest first):")
+        + "\n- " + "\n- ".join(shown)
+        + "\nopen one with plans(number='<n>')")
+
+
+async def _tool_research(args):
+    """Send Huginn out on a question — READ ONLY research, and never on a spoken word alone:
+    the same two-phase gate hand_over carries, because it still seats a worker."""
+    question = str(args.get("question") or "").strip()
+    if not question:
+        raise ValueError("research needs a question")
+    role = _role_for("huginn") or "researcher"
+    pending_path = _home() / "hodd" / "state" / "voice" / "pending-research.json"
+    if not args.get("confirm"):
+        try:
+            pending_path.parent.mkdir(parents=True, exist_ok=True)
+            pending_path.write_text(json.dumps(
+                {"question": question,
+                 "asked_at": __import__("datetime").datetime.now().isoformat(timespec="seconds")}))
+        except Exception:
+            pass
+        _log("research.awaiting_confirmation", question=question[:160])
+        return ToolResult(
+            "NOT SENT. Ask him out loud in one short sentence: \"Shall I send Huginn to research "
+            f"{question[:80]}\". Only if he says yes, call research again with confirm=true and the "
+            "same question.", create_response=True)
+    try:
+        pending = json.loads(pending_path.read_text())
+    except Exception:
+        pending = {}
+    if pending.get("question") != question:
+        _log("research.refused_no_pending", question=question[:160])
+        return ToolResult("Do NOT send: nothing was confirmed. Ask him first, then call again.")
+    try:
+        pending_path.unlink()
+    except Exception:
+        pass
+    errand = f"research-{abs(hash(question)) % 10**6:06d}"
+    task = ("Research this for the Allfather and answer it plainly, with sources: "
+            f"{question}\n\nWrite the findings to a dated markdown file on the home's research "
+            "shelf and name its path in your report. Read only: change nothing else.")
+    _log("research.confirmed", errand=errand, question=question[:160])
+    log = _detach([_door("agents/eindri-seat.sh"), errand, "--role", role, "--", task],
+                  f"research-{errand}")
+    return ToolResult(
+        f"Sent to Huginn as errand {errand}. Its log: {log}. Tell him in one short sentence that "
+        "the raven is out and that you will read its report when he asks.", create_response=True)
+
+
+NEW_TOOLS["cron_jobs"] = _tool_cron_jobs
+NEW_TOOLS["plans"] = _tool_plans
+NEW_TOOLS["research"] = _tool_research

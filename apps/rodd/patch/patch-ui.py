@@ -34,7 +34,10 @@ HOUSE_BRIEF = " ".join([
     "todo_done, todo_reopen, todo_update; home_recent lists what the house wrote lately;",
     "last_session brings back the previous conversation, search_sessions searches every past session;",
     "recall before answering about past work or a decision; remember to keep a durable lesson;",
-    "context_left on a long conversation.",
+    "context_left on a long conversation; cron_jobs for the schedule and whether it is running;",
+    "plans for the numbered plan ledger — a PLAN is not an ERRAND, so when he asks what a plan is",
+    "doing, read the plan (plans(number=...)) and say so; research sends Huginn out on a question",
+    "(read-only, and only after he says yes out loud, then confirm=true).",
     "For any request with more than one step, call plan_write first and read the numbered steps back",
     "to him; send nothing until he approves the steps. To give work to a worker use hand_over: first",
     "call WITHOUT confirm so he is asked out loud, and only call again with confirm=true after he",
@@ -64,6 +67,26 @@ EMBER = """<canvas id="ember-bg" aria-hidden="true"
   <script type="module">
     import { startEmbers } from './ember.js';
     startEmbers(document.getElementById('ember-bg'));
+  </script>
+"""
+
+CAMERA_HOOK = """  <!-- rodd: camera follows the head — one snapshot on a text-only head would poison
+       the conversation (the rail answers 500 image-input-not-supported), so the face
+       only offers the camera when the head it was raised against can see -->
+  <script>
+  (function () {
+    try {
+      var m = new URLSearchParams(location.search).get("camera");
+      if (m !== "0" && m !== "1") return;
+      var key = "s2s.ws.tools";
+      var tools = {};
+      try { tools = JSON.parse(localStorage.getItem(key) || "{}") || {}; } catch (e) { tools = {}; }
+      tools.camera_snapshot = (m === "1");
+      localStorage.setItem(key, JSON.stringify(tools));
+      document.documentElement.classList.toggle("rodd-text-only", m !== "1");
+      document.documentElement.dataset.roddCamera = m;
+    } catch (e) {}
+  })();
   </script>
 """
 
@@ -109,6 +132,8 @@ def patch_html() -> None:
     s = re.sub(r"<title>.*?</title>", "<title>Rödd · the voice of Ymir</title>", s, count=1, flags=re.S)
     if "house.css" not in s:
         s = s.replace("</head>", '  <link rel="stylesheet" href="house.css" />\n  </head>', 1)
+    if 'rodd: camera follows the head' not in s:
+        s = s.replace("<head>", "<head>\n" + CAMERA_HOOK, 1)
     if 'id="ember-bg"' not in s:
         marker = '<script src="vendor/openai-realtime-agents.umd.js"></script>'
         s = s.replace(marker, EMBER + marker, 1)

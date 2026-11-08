@@ -24,8 +24,8 @@ bin[36]{file,does,kind,verdict,disposition,callers,lines}:
   "15-commits-leave-by-pull-request.md","15 — Every commit leaves by a pull request, or it lands in main","data","wired","keep",0,35
   "16-a-review-is-a-file.md","16 — A review is a file in the repository","data","wired","keep",0,32
   "17-one-agent-one-worktree.md","17 — One agent, one worktree","data","wired","keep",0,36
-  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",42,-
-  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",42,-
+  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",43,-
+  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",43,-
   "advantage-audit.sh","advantage-audit.sh — is every claim we make backed by evidence, or only by confidence?","tool","wired","keep",2,141
   "advantage.md","Competitive advantage — how we research it, and how we are allowed to state it","data","wired","keep",0,129
   "checks.sh","checks.sh — run this repository's own cheap checks, whatever language it is written in.","tool","wired","keep",3,92
