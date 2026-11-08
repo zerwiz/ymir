@@ -45,6 +45,7 @@
 | cron-guard.sh | cron-guard.sh — the shipped tree must satisfy its own schedule. | tested | keep (a human or a cron row must run it) |
 | dead-code-guard.sh | dead-code-guard.sh — code that exists and is never reached is a claim  | tested | keep (a human or a cron row must run it) |
 | defaults-guard.sh | defaults-guard.sh — ONE PLACE KNOWS WHERE THINGS LIVE. | tested+named | keep (a human or a cron row must run it) |
+| desktop-main-guard.sh | desktop-main-guard — no launcher may point into a worktree. | tested | keep (a human or a cron row must run it) |
 | docs-claims-guard.sh | docs-claims-guard.sh — Rule 27: a user-facing document may not name a  | tested | keep (a human or a cron row must run it) |
 | docs-guard.sh | docs-guard.sh — docs/ is the PUBLIC, user-facing tree. Block operator- | tested | keep (a human or a cron row must run it) |
 | features-guard.sh | features-guard.sh — every feature page is catalogued (Rule 14). | tested | keep (a human or a cron row must run it) |

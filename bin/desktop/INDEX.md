@@ -20,12 +20,12 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[23]{file,does,kind,verdict,disposition,callers,lines}:
+bin[24]{file,does,kind,verdict,disposition,callers,lines}:
   "app-build.sh","app-build — build the in-tree apps (plan 35).","tool","wired","keep",2,57
   "app-lib.sh","app-lib.sh — where an app actually lives.","lib","tested","keep",15,100
-  "design-icon.sh","design-icon.sh — every app wears its own rune.","tool","wired","keep",2,299
+  "design-icon.sh","design-icon.sh — every app wears its own rune.","tool","wired","keep",2,319
   "desktop-place.sh","desktop-place.sh — put the Ymir apps on their own Hyprland desktops.","tool","tested","keep",8,321
-  "desktop-verify.sh","desktop-verify.sh — the INSTALL-time guarantee: every desktop surface can run,","tool","wired","keep",2,199
+  "desktop-verify.sh","desktop-verify.sh — the INSTALL-time guarantee: every desktop surface can run,","tool","wired","keep",3,199
   "display-lib.sh","display-lib.sh — the ONE place that knows the displays, and how to talk to the","lib","wired","keep",2,176
   "editor-place.sh","editor-place.sh — the editor is UNMANAGED by default: it opens on the","tool","wired","keep",3,223
   "electron-lib.sh","electron-lib.sh — is a desktop shell's runtime actually there?","lib","tested","keep",7,212
@@ -33,9 +33,10 @@ bin[23]{file,does,kind,verdict,disposition,callers,lines}:
   "factory-new.sh","factory-new.sh — copy the empty factory, give it a name, and say what to fill in.","tool","wired","keep",1,28
   "hlidskjalf-agents.sh","hlidskjalf-agents.sh — WHO IS ACTUALLY STANDING, and what they are doing.","tool","wired","keep",1,182
   "hlidskjalf-usage.sh","hlidskjalf-usage.sh — what the HARNESSES spent, not just the smithy.","tool","wired","keep",0,238
+  "main-tree.sh","main-tree.sh — THE TREE THE LAUNCHERS POINT AT, which is never a worktree.","tool","wired","keep",3,32
   "odrerir-mcp-smoke.sh","odrerir-mcp-smoke.sh — the boards' REAL smoke: tickets and plans through the","tool","wired","keep",0,157
   "sessrumnir-ensure.sh","sessrumnir-ensure.sh — ensure the Sessrúmnir desktop GUI is present and runnable.","tool","wired","keep",4,132
-  "sessrumnir-launch.sh","sessrumnir.sh — launch the Sessrúmnir desktop GUI (the seat-hall).","tool","wired","keep",2,175
+  "sessrumnir-launch.sh","sessrumnir.sh — launch the Sessrúmnir desktop GUI (the seat-hall).","tool","wired","keep",2,190
   "sessrumnir-sync.sh","sessrumnir-sync.sh — pull a new pi-desktop release into the Sessrúmnir fork","tool","wired","keep",0,256
   "smidja-board.sh","smidja-board.sh — Smíðja's board, by one name.","tool","wired","keep",1,145
   "smidja-bootstrap.sh","smidja-bootstrap.sh — make the Smíðja visualizer ready on a fresh install.","tool","wired","keep",3,105
@@ -45,6 +46,6 @@ bin[23]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-marketing-stack.sh","ymir-marketing-stack.sh — the marketing stack, provisionable on ANY computer.","tool","wired","keep",1,337
   "ymir-style.sh","ymir-style.sh — the cloth of the terminal halls.","tool","wired","keep",5,158
 
-**Tally.** verdict: wired=20, tested=3
+**Tally.** verdict: wired=21, tested=3
 
-**Tally.** disposition: keep=23
+**Tally.** disposition: keep=24

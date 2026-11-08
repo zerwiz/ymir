@@ -153,6 +153,26 @@ install_all() {
       # The door, never a path: a launcher entry outlives the tree that wrote it,
       # and `ymir <door>` reaches whichever install is live. (The CLI is on PATH
       # from npm's global bin, and from bin/ in a clone — ymir.js is a bin entry.)
+      # THE APPS RUN FROM MAIN, NEVER FROM A WORKTREE (the Allfather, 2026-11-08: "the apps run time must be
+      # locked to main. otherwise they might break if the user are swithing threes"). Measured the same day:
+      # every entry pointed into ~/ymir/.yggdrasil/<errand>/… and the buttons failed. The rewrite lives HERE,
+      # at the one place an Exec line is written, so no caller can seat a launcher into a working copy.
+      case "$exec" in
+        */.yggdrasil/*)
+          _canon="$(bash "$(dirname "${BASH_SOURCE[0]}")/main-tree.sh" 2>/dev/null || true)"
+          if [ -n "${_canon:-}" ]; then
+            case "$exec" in
+              "$_canon"/*) : ;;
+              *)
+                _tail="${exec#*/.yggdrasil/}"
+                _tail="${_tail#*/}"
+                exec="$_canon/$_tail"
+                printf 'design-icon: the launcher pointed into a worktree — seated from MAIN instead: %s\n' "$exec" >&2
+                ;;
+            esac
+          fi
+          ;;
+      esac
       printf 'Exec=%s\n' "$exec"
       printf 'Icon=%s\n' "$iconname"
       printf 'Terminal=false\nCategories=Development;Utility;\n'

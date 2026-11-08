@@ -27,7 +27,7 @@
 | eindri-handoff.sh | eindri-handoff.sh — the handoff failsafe. An Eindri's work ALWAYS reac | tested+named | keep (a human or a cron row must run it) |
 | eindri-heartbeat.sh | eindri-heartbeat.sh — condition half of the Eindri silence bridge. | tested+named | keep (a human or a cron row must run it) |
 | eindri-liveness.sh | eindri-liveness.sh — the sweep's second question: is the pane still a  | tested+named | keep (a human or a cron row must run it) |
-| eindri-notify.sh | eindri-notify.sh — the ARM-HOLDER'S INBOX: inject one line into the se | tested | keep (a human or a cron row must run it) |
+| eindri-notify.sh | eindri-notify.sh — the ARM-HOLDER'S INBOX: inject one line into the se | tested+named | keep (a human or a cron row must run it) |
 | eindri-review-spawn.sh | eindri-review-spawn.sh — the review spine. FORSETI the Judge is sent a | tested+named | keep (a human or a cron row must run it) |
 | eindri-role.sh | eindri-role.sh — the right smith for the right metal. | tested+named | keep (a human or a cron row must run it) |
 | eindri-route.sh | eindri-route.sh — which machine should host an errand, by its nature? | tested+named | keep (a human or a cron row must run it) |
@@ -56,6 +56,7 @@
 | skill-find.sh | skill-find.sh — find the skill you need, without loading any of them. | tested+named | keep (a human or a cron row must run it) |
 | skill-index.sh | skill-index.sh — Sága's sight over the crafts: one index of EVERY ski | tested | keep (a human or a cron row must run it) |
 | skill-vendor-sync.sh | skill-vendor-sync.sh — keep imported third-party skill packs current. | tested | keep (a human or a cron row must run it) |
+| spam-guard.sh | spam-guard.sh — a model that loops is a fault, and the agent holding t | tested | keep (a human or a cron row must run it) |
 | valhalla.sh | valhalla.sh — the process hall (Valhalla). List, inspect, revive, and  | tested+named | keep (a human or a cron row must run it) |
 | workspace-provision.sh | workspace-provision.sh — carve one workspace for the operator. Single  | tested+named | keep (a human or a cron row must run it) |
 | yt-transcript.sh | yt-transcript.sh — read a video: metadata, description, and transcript | tested+named | keep (a human or a cron row must run it) |
