@@ -9,3 +9,14 @@
   --error:#c2584a; --success:#96a0a8;
   --voice-user:#96a0a8; --voice-assistant:#c9973f; --voice-tool:#9a8f75;
 }
+
+/* ── the camera follows the head ───────────────────────────────────────────────
+   The shell opens the face with ?camera=0 when the head it raised cannot see (the
+   fast MoE), and the hook in index.html marks <html class="rodd-text-only">. A
+   camera switch on a text-only head is a trap: one snapshot puts an image part in
+   the conversation, the rail answers `500 image input is not supported`, and every
+   later turn in that session fails. So the switch is absent, not disabled, and the
+   self-view goes with it. Raise the voice with --vision to get both back. */
+html.rodd-text-only #tool-cam-row,
+html.rodd-text-only #tool-cam-hint,
+html.rodd-text-only #cam-pip { display: none !important; }

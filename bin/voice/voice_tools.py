@@ -452,6 +452,193 @@ TOOLS = [
             "additionalProperties": False,
         },
     },
+    {
+        "type": "function",
+        "name": "mail_compose",
+        "description": (
+            "Write a letter and OPEN it as a prefilled Gmail compose in his own browser. It sends "
+            "nothing — his hand presses Send. Use this instead of any 'send' tool: Google's Gmail MCP "
+            "has no send tool, and its calls are refused until the Cloud project is enrolled."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "to": {"type": "string", "description": "the recipient's address"},
+                "subject": {"type": "string"},
+                "body": {"type": "string", "description": "the letter, in his voice"},
+            },
+            "required": ["to", "subject", "body"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
+        "name": "sessrumnir",
+        "description": (
+            "The desktop seat: is Sessrúmnir running, which workspaces it shows, and how many Pi "
+            "sessions the active one holds. Read-only. Say plainly that it has no door to send "
+            "into the app's own conversations yet."
+        ),
+        "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+    },
+    {
+        "type": "function",
+        "name": "seats",
+        "description": (
+            "Where the work actually is: the herdr panes on this seat, how many carry a live agent, "
+            "which are working, and their directories. With `pane` it reads that pane's recent output. "
+            "Use this — never the errand status files — when he asks how many agents are active."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "pane": {"type": "string", "description": "a pane id (e.g. w39:p5) to read instead of listing"},
+                "lines": {"type": "integer", "description": "how many lines of that pane"},
+            },
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
+        "name": "ls",
+        "description": "List a directory — in your own documents, the home or the Ymir tree. Never the secrets shelf.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "a path, home-relative such as hodd/docs, or absolute"},
+                "all": {"type": "boolean", "description": "include dotfiles"},
+            },
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
+        "name": "read",
+        "description": "Read a file with line control (from/lines). For his notes, plans, code and ledgers.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string"},
+                "from": {"type": "integer", "description": "first line (1-based)"},
+                "lines": {"type": "integer", "description": "how many lines to read"},
+            },
+            "required": ["path"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
+        "name": "edit",
+        "description": (
+            "Write a file: whole-file `content`, or one occurrence `old` -> `new`. It changes things, so it "
+            "asks him out loud first: call WITHOUT confirm, ask, then call again with confirm=true."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string"},
+                "content": {"type": "string", "description": "the whole new file body"},
+                "old": {"type": "string", "description": "text to replace (one occurrence)"},
+                "new": {"type": "string", "description": "replacement text"},
+                "confirm": {"type": "boolean", "description": "true only after he says yes out loud"},
+            },
+            "required": ["path"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
+        "name": "bash",
+        "description": (
+            "Run a shell command on this seat from the Ymir tree. Ask him out loud first (no confirm, then "
+            "confirm=true). Never for secrets, force-push, merge, sudo, or anything destructive — those are refused."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "command": {"type": "string"},
+                "cwd": {"type": "string", "description": "working directory (default the Ymir tree)"},
+                "timeout": {"type": "integer", "description": "seconds (max 300)"},
+                "confirm": {"type": "boolean", "description": "true only after he says yes out loud"},
+            },
+            "required": ["command"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
+        "name": "mcp_tools",
+        "description": "List the MCP servers this seat can reach, or one server's tools (chrome-devtools, gimle, well, trello …).",
+        "parameters": {
+            "type": "object",
+            "properties": {"server": {"type": "string", "description": "a server name; omit to list them all"}},
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
+        "name": "mcp",
+        "description": (
+            "Call one tool on an MCP server — the browser (chrome-devtools), the board, the well, Gimle and the "
+            "rest. Read-only tools run at once; anything that can change state asks him out loud first."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "server": {"type": "string"},
+                "tool": {"type": "string"},
+                "args": {"type": "object", "description": "the tool's own arguments"},
+                "confirm": {"type": "boolean", "description": "true only after he says yes out loud"},
+            },
+            "required": ["server", "tool"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
+        "name": "cron_jobs",
+        "description": (
+            "The house's schedule (Nornir cron): whether the scheduler is running, every job and its "
+            "hour, what last fired, and the log's last lines. Use it for 'are the cron jobs running' "
+            "or 'what is scheduled'. Read-only."
+        ),
+        "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+    },
+    {
+        "type": "function",
+        "name": "plans",
+        "description": (
+            "The plan ledger. A PLAN is not an ERRAND: plans are numbered design records in the home. "
+            "Call with no arguments to list them, with `query` to find the ones about a subject, or "
+            "with `number` to read one."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "a word or subject to find in the ledger"},
+                "number": {"type": "string", "description": "a plan number, e.g. 132"},
+            },
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
+        "name": "research",
+        "description": (
+            "Send Huginn (the raven) to research a question on the web and write a sourced report "
+            "into the home. It seats a worker, so it needs his spoken yes first: call WITHOUT "
+            "confirm, ask him out loud, then call again with confirm=true and the same question."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "question": {"type": "string", "description": "the question to research, in his words"},
+                "confirm": {"type": "boolean", "description": "true only after he says yes out loud"},
+            },
+            "required": ["question"],
+            "additionalProperties": False,
+        },
+    },
 ]
 
 
@@ -680,8 +867,10 @@ async def _execute(name, arguments):
                     claim = "unreadable"
                 rows.append(f"- {f.stem}: {claim}")
             if not rows:
-                return ToolResult("No errand has a recorded state on this seat yet.")
-            return ToolResult("Errands this seat knows (claimed state):\n" + "\n".join(rows[:12]))
+                return ToolResult("No errand has a RECORDED state on this seat yet — that is not the same "
+                                  "as nothing running: call seats to see the panes, where agents actually sit.")
+            return ToolResult("Errands this seat has RECORDED (claimed state) — the panes may hold more; "
+                              "call seats for what is actually working:\n" + "\n".join(rows[:12]))
 
         parts = []
         claim_file = state_dir / f"{errand}.status"
@@ -1379,8 +1568,11 @@ async def _tool_errand_state(args):
             except Exception:
                 claim = "unreadable"
             rows.append(f"- {f.stem}: {claim}")
-        return ToolResult("Errands this seat knows:\n" + "\n".join(rows[:12]) if rows
-                          else "No errand has a recorded state on this seat yet.")
+        return ToolResult(
+            ("Errands this seat has RECORDED (claimed state) — the panes hold more; call seats for what "
+             "is actually working:\n" + "\n".join(rows[:12])) if rows
+            else "No errand has a RECORDED state on this seat — that is not the same as nothing running: "
+                 "call seats to see the panes where agents actually sit.")
     parts = []
     claim_file = state_dir / f"{errand}.status"
     if claim_file.is_file():
@@ -1547,3 +1739,544 @@ NEW_TOOLS["sessions_list"] = _tool_sessions_list
 NEW_TOOLS["session_read"] = _tool_session_read
 NEW_TOOLS["session_digest"] = _tool_session_digest
 NEW_TOOLS["find_session"] = _tool_find_session
+
+
+# ── the schedule, the ledger, and the raven ───────────────────────────────────
+# Three things he asked for out loud on 2026-11-08 that the voice had no hand for:
+# *"what is going on on the cron jobs"*, *"what is Northern Italy doing"* (a plan, not an
+# errand), and *"can you do online research?"*. Each one is a DOOR he already had from the
+# terminal, given to the voice — never a second implementation of the same thing.
+
+def _home_config(name: str) -> Path:
+    """The operator's own config shelf, resolved (RULES/04: never the repo's example)."""
+    for cand in (_home() / "config" / name, ROOT / "config" / name):
+        if cand.is_file():
+            return cand
+    return _home() / "config" / name
+
+
+async def _tool_cron_jobs(args):
+    """Is the schedule running, what is on it, and what last fired — read, never written."""
+    parts = []
+    code, out = _run([_door("time/nornir-cron-start.sh"), "--status"], timeout=25)
+    parts.append(_clean(out, 200) if out.strip() else "the scheduler gave no answer")
+
+    jobs = []
+    cfg = _home_config("cron.yaml")
+    if cfg.is_file():
+        try:
+            for line in cfg.read_text(errors="ignore").splitlines():
+                s = line.strip()
+                if not s or s.startswith("#"):
+                    continue
+                toks = s.split()
+                gate = ""
+                if toks and toks[0].startswith("@"):      # "@heart 06:00 bin/…" — the role comes FIRST
+                    gate = toks[0]
+                    toks = toks[1:]
+                if len(toks) >= 2 and ":" in toks[0]:
+                    job = Path(toks[1]).name
+                    jobs.append(f"{toks[0]} {job}" + (f" {gate}" if gate else ""))
+        except Exception:
+            pass
+    if jobs:
+        parts.append(f"{len(jobs)} jobs on the schedule: " + ", ".join(jobs[:14])
+                     + (" …" if len(jobs) > 14 else ""))
+
+    fired_dir = ROOT / "state" / ".cron-fired"
+    if fired_dir.is_dir():
+        import datetime as _dt
+        recent = []
+        for f in sorted(fired_dir.iterdir(), key=lambda p: p.stat().st_mtime)[-5:]:
+            try:
+                recent.append(f"{f.name} at {_dt.datetime.fromtimestamp(f.stat().st_mtime):%m-%d %H:%M}")
+            except Exception:
+                continue
+        if recent:
+            parts.append("last fired: " + " · ".join(recent))
+
+    log = ROOT / "state" / "cron.log"
+    if log.is_file():
+        try:
+            tail = [ln for ln in log.read_text(errors="ignore").splitlines()[-6:] if ln.strip()]
+            if tail:
+                parts.append("the log's last lines: " + " | ".join(tail[-4:])[:300])
+        except Exception:
+            pass
+    return ToolResult("The schedule: " + ". ".join(p for p in parts if p) + ".")
+
+
+async def _tool_plans(args):
+    """The plan ledger: search it, or open one plan. A plan is not an errand and the voice
+    kept confusing the two."""
+    query = str(args.get("query") or "").strip()
+    number = str(args.get("number") or "").strip()
+    home = _home()
+    shelves = sorted(home.glob("svartalfaheim/*/projects/*/plans"))
+    if not shelves:
+        return ToolResult("No plan ledger is reachable from the home on this seat.")
+
+    if number:
+        num = str(number).lstrip("0")
+        for shelf in shelves:
+            for f in shelf.glob("*.md"):
+                if f.name.split("-", 1)[0].lstrip("0") == num:
+                    text = f.read_text(errors="ignore")
+                    head = [ln for ln in text.splitlines()[:60]]
+                    return ToolResult(f"Plan {num} — {f.stem}:\n" + "\n".join(head)[:2200])
+        return ToolResult(f"No plan numbered {num} is in the ledger.")
+
+    # Search the SHELVES, not one door's tail: `plan.sh list` prints the newest rows, and a
+    # question is usually about an older plan than the last twenty.
+    rows: list[tuple[str, str]] = []
+    for shelf in shelves:
+        for f in shelf.glob("*.md"):
+            if f.name.lower() in ("readme.md", "queue.md", "questions.md", "register.md"):
+                continue
+            title = ""
+            try:
+                for ln in f.read_text(errors="ignore").splitlines()[:12]:
+                    if ln.startswith("# "):
+                        title = ln[2:].strip()
+                        break
+            except Exception:
+                pass
+            rows.append((f.name.split("-", 1)[0], f"{title or f.stem} ({f.stem})"))
+    # newest first, by the number the name carries
+    def _num(pair: tuple[str, str]) -> int:
+        try:
+            return int(pair[0].lstrip("0") or 0)
+        except Exception:
+            return 0
+    rows.sort(key=_num, reverse=True)
+    if query:
+        q = query.replace("-", " ").lower()
+        rows = [r for r in rows if q in (r[1] + " " + r[0]).replace("-", " ").lower()]
+    if not rows:
+        return ToolResult(f"No plan in the ledger mentions {query!r}." if query
+                          else "The ledger listed nothing.")
+    shown = [f"{n} · {t}" for n, t in rows[:14]]
+    return ToolResult(
+        (f"Plans mentioning {query!r}:" if query else "The plan ledger (newest first):")
+        + "\n- " + "\n- ".join(shown)
+        + "\nopen one with plans(number='<n>')")
+
+
+async def _tool_research(args):
+    """Send Huginn out on a question — READ ONLY research, and never on a spoken word alone:
+    the same two-phase gate hand_over carries, because it still seats a worker."""
+    question = str(args.get("question") or "").strip()
+    if not question:
+        raise ValueError("research needs a question")
+    role = _role_for("huginn") or "researcher"
+    pending_path = _home() / "hodd" / "state" / "voice" / "pending-research.json"
+    if not args.get("confirm"):
+        try:
+            pending_path.parent.mkdir(parents=True, exist_ok=True)
+            pending_path.write_text(json.dumps(
+                {"question": question,
+                 "asked_at": __import__("datetime").datetime.now().isoformat(timespec="seconds")}))
+        except Exception:
+            pass
+        _log("research.awaiting_confirmation", question=question[:160])
+        return ToolResult(
+            "NOT SENT. Ask him out loud in one short sentence: \"Shall I send Huginn to research "
+            f"{question[:80]}\". Only if he says yes, call research again with confirm=true and the "
+            "same question.", create_response=True)
+    try:
+        pending = json.loads(pending_path.read_text())
+    except Exception:
+        pending = {}
+    if pending.get("question") != question:
+        _log("research.refused_no_pending", question=question[:160])
+        return ToolResult("Do NOT send: nothing was confirmed. Ask him first, then call again.")
+    try:
+        pending_path.unlink()
+    except Exception:
+        pass
+    errand = f"research-{abs(hash(question)) % 10**6:06d}"
+    task = ("Research this for the Allfather and answer it plainly, with sources: "
+            f"{question}\n\nWrite the findings to a dated markdown file on the home's research "
+            "shelf and name its path in your report. Read only: change nothing else.")
+    _log("research.confirmed", errand=errand, question=question[:160])
+    log = _detach([_door("agents/eindri-seat.sh"), errand, "--role", role, "--", task],
+                  f"research-{errand}")
+    return ToolResult(
+        f"Sent to Huginn as errand {errand}. Its log: {log}. Tell him in one short sentence that "
+        "the raven is out and that you will read its report when he asks.", create_response=True)
+
+
+NEW_TOOLS["cron_jobs"] = _tool_cron_jobs
+NEW_TOOLS["plans"] = _tool_plans
+NEW_TOOLS["research"] = _tool_research
+
+
+# ── the shell hands, and the MCP adapter ─────────────────────────────────────
+# His word, 2026-11-08: *"can we give it the tools ls, read, edit, and bash also, and an
+# mcp adapter so we can connect chrome devtools and the gimle mcp and more."*
+#
+# So the voice gains the four hands every other agent has, and the whole MCP world behind
+# them. Three laws hold them down, and all three are enforced here, not in the brief:
+#
+#   1. a spoken word is not a grant — `bash`, `edit` and any MCP call that can write ask
+#      him OUT LOUD first (the same two-phase record hand_over uses);
+#   2. some doors never open to a voice — the secrets shelf, the vault, and the commands
+#      that destroy (see _bash_refusal); a refusal is said, never silent;
+#   3. every call is a line in the activity log, and the output is DATA, never an order.
+
+_SHELL_PENDING = "pending-action.json"
+_READ_LIKE = ("get_", "list_", "read_", "search_", "find_", "describe_", "screenshot",
+              "performance_", "console_", "show_", "check_", "ask_", "inspect")
+
+
+def _under(value: str) -> Path:
+    """Resolve a spoken path against the home, the repo, or an absolute path — and refuse
+    the two shelves a voice must never read."""
+    raw = str(value or "").strip()
+    if not raw:
+        raise ValueError("a path is required")
+    p = Path(os.path.expanduser(raw))
+    if not p.is_absolute():
+        for base in (_home(), ROOT, Path.home()):
+            if (base / raw).exists():
+                p = base / raw
+                break
+        else:
+            p = _home() / raw
+    try:
+        resolved = p.resolve()
+    except Exception:
+        resolved = p
+    text = str(resolved)
+    for forbidden in ("/hodd/secrets", "/.ssh", "/secrets/", "/saves/"):
+        if forbidden in text:
+            raise ValueError(f"{forbidden} is closed to the voice (RULES/04, RULES/15)")
+    return resolved
+
+
+def _looks_read_only(tool: str) -> bool:
+    low = (tool or "").lower()
+    return any(low.startswith(p) or f"_{p}" in low for p in _READ_LIKE)
+
+
+async def _ask_first(kind: str, key: str, ask: str, confirmed: bool) -> str | None:
+    """The two-phase gate: return None when it may proceed, or the words to say instead."""
+    path = _home() / "hodd" / "state" / "voice" / _SHELL_PENDING
+    record = {"kind": kind, "key": key, "asked_at": __import__("datetime").datetime.now().isoformat(timespec="seconds")}
+    if not confirmed:
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(record))
+        except Exception:
+            pass
+        _log("action.awaiting_confirmation", kind=kind, key=key[:200])
+        return ("NOT DONE. Say this to him in one short sentence and wait for a spoken yes: "
+                f"\"{ask}\" Then call again with confirm=true and the same arguments.")
+    try:
+        pending = json.loads(path.read_text())
+    except Exception:
+        pending = {}
+    if pending.get("kind") != kind or pending.get("key") != key:
+        _log("action.refused_no_pending", kind=kind, key=key[:200])
+        return "Do NOT do that: nothing was confirmed. Ask him out loud first, then call again."
+    try:
+        path.unlink()
+    except Exception:
+        pass
+    _log("action.confirmed", kind=kind, key=key[:200])
+    return None
+
+
+def _bash_refusal(cmd: str) -> str | None:
+    """The commands a voice may never run, and the shelves it may never open."""
+    import re as _re
+    low = cmd.lower()
+    hard = [
+        (r"\brm\s+(-[a-z]*\s+)*-?[rf]{1,2}\s+/(\s|$)", "deleting from the filesystem root"),
+        (r"\bmkfs|\bdd\s+.*of=/dev/", "writing a filesystem or a raw device"),
+        (r"\bsudo\b|\bdoas\b", "raising privilege"),
+        (r"git\s+push\s+.*--force|git\s+push\s+.*-f\b", "force-pushing"),
+        (r"git\s+merge|git\s+reset\s+--hard|git\s+clean\s+-[a-z]*f", "rewriting the tree"),
+        (r"--no-verify", "skipping a gate"),
+        (r"curl[^|]*\|\s*(ba)?sh|wget[^|]*\|\s*(ba)?sh", "piping the network into a shell"),
+        (r"hodd/secrets|\.age\b|age\.key|id_rsa|\.ssh/", "the secrets shelf or a key"),
+        (r"\b(shutdown|reboot|systemctl\s+poweroff)\b", "taking the machine down"),
+        (r"\bpasswd\b|chmod\s+777|chown\s+-R\s+/", "changing access to the machine"),
+    ]
+    for pattern, why in hard:
+        if _re.search(pattern, low):
+            return why
+    return None
+
+
+async def _tool_ls(args):
+    target = str(args.get("path") or ".")
+    p = _under(target)
+    if not p.exists():
+        return ToolResult(f"No such path: {target}")
+    if p.is_file():
+        return ToolResult(f"{target} is a file ({p.stat().st_size} bytes) — read it with read(path=…).")
+    rows = []
+    try:
+        for child in sorted(p.iterdir(), key=lambda c: (not c.is_dir(), c.name.lower()))[:80]:
+            if child.name.startswith(".") and not args.get("all"):
+                continue
+            size = "" if child.is_dir() else f"  {child.stat().st_size // 1024 or 1}K"
+            rows.append(f"{child.name}{'/' if child.is_dir() else ''}{size}")
+    except Exception as exc:
+        return ToolResult(f"Could not list {target}: {exc}")
+    return ToolResult(f"{p} — {len(rows)} entries:\n" + "\n".join(rows))
+
+
+async def _tool_read(args):
+    p = _under(str(args.get("path") or ""))
+    if not p.is_file():
+        return ToolResult(f"No such file: {args.get('path')}")
+    text = p.read_text(errors="ignore")
+    lines = text.splitlines()
+    start = max(1, int(args.get("from") or 1))
+    count = int(args.get("lines") or (120 if args.get("from") else 200))
+    chunk = lines[start - 1:start - 1 + count]
+    tail = f"\n… ({len(lines)} lines total; read from={start + count} for more)" if start - 1 + count < len(lines) else ""
+    return ToolResult(f"{p} (lines {start}-{start + len(chunk) - 1} of {len(lines)}):\n" + "\n".join(chunk)[:3500] + tail)
+
+
+async def _tool_edit(args):
+    raw = str(args.get("path") or "").strip()
+    if not raw:
+        raise ValueError("edit needs a path")
+    p = _under(raw)
+    old = args.get("old")
+    new = args.get("new")
+    content = args.get("content")
+    exists = p.is_file()
+    if not exists and content is None:
+        return ToolResult(f"{raw} does not exist; to create it, give content=… (nothing was written).")
+    key = f"{p}|{(old or '')[:60]}|{(new or content or '')[:60]}"
+    asked = await _ask_first("edit", key, f"Shall I write {raw}?" if content is not None
+                             else f"Shall I change {raw}?", bool(args.get("confirm")))
+    if asked:
+        return ToolResult(asked)
+    try:
+        if content is not None:
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(str(content))
+            return ToolResult(f"Wrote {len(str(content))} characters to {raw}.")
+        if old is None:
+            raise ValueError("edit needs content, or old+new")
+        current = p.read_text(errors="ignore")
+        if str(old) not in current:
+            return ToolResult(f"{raw} does not contain that text; nothing was changed (read it first).")
+        p.write_text(current.replace(str(old), str(new or ""), 1))
+        return ToolResult(f"Changed one occurrence in {raw}.")
+    except Exception as exc:
+        return ToolResult(f"The edit failed: {exc}")
+
+
+async def _tool_bash(args):
+    cmd = str(args.get("command") or "").strip()
+    if not cmd:
+        raise ValueError("bash needs a command")
+    why = _bash_refusal(cmd)
+    if why:
+        _log("bash.refused", command=cmd[:200], why=why)
+        return ToolResult(f"Refused: {why}. That door is closed to the voice — say so to him plainly.")
+    asked = await _ask_first("bash", cmd, f"Shall I run: {cmd[:120]}", bool(args.get("confirm")))
+    if asked:
+        return ToolResult(asked)
+    cwd = str(args.get("cwd") or ROOT)
+    timeout = min(int(args.get("timeout") or 60), 300)
+    try:
+        proc = subprocess.run(["bash", "-lc", cmd], capture_output=True, text=True,
+                              timeout=timeout, cwd=cwd, env={**os.environ, "YMIR_VOICE": "1"})
+    except subprocess.TimeoutExpired:
+        return ToolResult(f"`{cmd[:80]}` did not finish in {timeout}s; it was stopped.")
+    out = ((proc.stdout or "") + (proc.stderr or "")).strip()
+    body = out[:2200] + ("\n… (truncated)" if len(out) > 2200 else "")
+    return ToolResult(f"`{cmd[:100]}` exited {proc.returncode}:\n{body or '(no output)'}")
+
+
+async def _tool_mcp_tools(args):
+    import voice_mcp
+    server = str(args.get("server") or "").strip()
+    found = voice_mcp.servers()
+    if not server:
+        rows = [f"{name} ({'http' if s.get('url') else 'stdio'})" for name, s in found.items()]
+        return ToolResult("MCP servers on this seat: " + ", ".join(rows))
+    try:
+        table = voice_mcp.tools(server)
+    except voice_mcp.McpError as exc:
+        return ToolResult(str(exc))
+    rows = [f"{t.get('name')} — {(t.get('description') or '').splitlines()[0][:110]}" for t in table]
+    return ToolResult(f"{server}: {len(rows)} tools:\n- " + "\n- ".join(rows[:40]))
+
+
+async def _tool_mcp(args):
+    import voice_mcp
+    server = str(args.get("server") or "").strip()
+    tool = str(args.get("tool") or "").strip()
+    if not server or not tool:
+        raise ValueError("mcp needs a server and a tool (mcp_tools lists them)")
+    payload = args.get("args") or {}
+    if isinstance(payload, str):
+        try:
+            payload = json.loads(payload)
+        except Exception:
+            raise ValueError("args must be a JSON object")
+    write_like = not _looks_read_only(tool)
+    if write_like:
+        asked = await _ask_first("mcp", f"{server}/{tool}/{json.dumps(payload, sort_keys=True)[:120]}",
+                                 f"Shall I call {tool} on {server} — it can change things?", bool(args.get("confirm")))
+        if asked:
+            return ToolResult(asked)
+    try:
+        out = voice_mcp.call(server, tool, payload)
+    except voice_mcp.McpError as exc:
+        _log("mcp.error", server=server, tool=tool, error=str(exc)[:200])
+        return ToolResult(f"{server}/{tool} failed: {exc}")
+    return ToolResult(out[:3500])
+
+
+NEW_TOOLS["ls"] = _tool_ls
+NEW_TOOLS["read"] = _tool_read
+NEW_TOOLS["edit"] = _tool_edit
+NEW_TOOLS["bash"] = _tool_bash
+NEW_TOOLS["mcp_tools"] = _tool_mcp_tools
+NEW_TOOLS["mcp"] = _tool_mcp
+
+
+async def _tool_seats(args):
+    """Where the work actually is: the herdr panes and the agents seated in them.
+
+    He asked, out loud, "how many agents are active in herdr" and the voice answered from the
+    errand status files — which is a different question. This reads the pane backend itself
+    through bin/seat/seats.sh (one implementation for a human, the terminal and the voice).
+    """
+    pane = str(args.get("pane") or "").strip()
+    if pane:
+        import re as _re
+        code, out = _run(["herdr", "pane", "read", pane, "--source", "recent",
+                          "--lines", str(max(5, min(int(args.get("lines") or 20), 60))), "--format", "text"],
+                         timeout=30)
+        if code != 0 or not out.strip():
+            return ToolResult(f"Pane {pane} is silent or gone.")
+        clean = _re.sub(r"\x1b\[[0-9;?]*[a-zA-Z]", "", out)
+        rows = [ln.rstrip() for ln in clean.splitlines() if ln.strip()]
+        return ToolResult(f"Pane {pane}, last {len(rows)} lines:\n" + "\n".join(rows[-40:])[:1800])
+    code, out = _run([_door("seat/seats.sh"), "brief"], timeout=45)
+    if code != 0 or not out.strip():
+        return ToolResult("The pane backend gave no answer (herdr and tmux are both silent here).")
+    # the summary line is what he asks for; keep the panes to the live ones and the focused shell
+    lines = [ln for ln in out.splitlines() if ln.strip()]
+    head = lines[:2]
+    live = [ln for ln in lines[2:] if '"shell"' not in ln]
+    shells = len([ln for ln in lines[2:] if '"shell"' in ln])
+    body = head + live[:14]
+    if shells:
+        body.append(f'  # …and {shells} plain shell pane(s) with no agent seated')
+    return ToolResult("\n".join(body))
+
+
+NEW_TOOLS["seats"] = _tool_seats
+
+
+async def _tool_sessrumnir(args):
+    """The desktop seat (Sessrúmnir): is it up, which workspaces does it show, and how many Pi
+    sessions does the active one hold — read from its own store, with the missing half named.
+
+    Sessrúmnir speaks Electron IPC and publishes no door (plan 132 §43.4), so the voice can READ
+    what the app is showing but cannot yet SEND into one of its sessions. This tool says both,
+    because a voice that pretends to have posted into the app is worse than one that says so.
+    """
+    import datetime as _dt
+    import glob
+    import json as _json
+    store = Path(os.path.expanduser("~/.config/sessrumnir"))
+    parts: list[str] = []
+
+    running = subprocess.run(["bash", "-lc",
+                              "ps -eo args | grep -c '[s]essrumnir' || true"],
+                             capture_output=True, text=True, timeout=20).stdout.strip()
+    try:
+        n = int(running or 0)
+    except Exception:
+        n = 0
+    parts.append("the app is " + ("running" if n else "not running"))
+
+    active_path = ""
+    try:
+        ws = _json.loads((store / "workspaces.json").read_text()).get("workspaces") or []
+        active_id = _json.loads((store / "workspaces.json").read_text()).get("activeWorkspaceId")
+    except Exception:
+        ws, active_id = [], ""
+    if ws:
+        rows = []
+        for w in ws[:8]:
+            mark = "*" if w.get("id") == active_id else " "
+            when = ""
+            try:
+                when = _dt.datetime.fromtimestamp((w.get("lastActiveAt") or 0) / 1000).strftime("%m-%d %H:%M")
+            except Exception:
+                pass
+            rows.append(f'{mark} {w.get("name")} — {w.get("path")} ({w.get("kind")}, {when})')
+            if w.get("id") == active_id:
+                active_path = str(w.get("path") or "")
+        parts.append(f"workspaces ({len(ws)}): " + " · ".join(rows))
+    else:
+        parts.append("no workspaces file is readable")
+
+    sessions_root = Path(os.path.expanduser("~/.pi/agent/sessions"))
+    count, newest = 0, ""
+    if sessions_root.is_dir() and active_path:
+        slug = active_path.replace("/", "-").strip("-")
+        cands = [d for d in sessions_root.iterdir() if d.is_dir() and slug in d.name]
+        if not cands:
+            cands = sorted(sessions_root.iterdir(), key=lambda d: d.stat().st_mtime, reverse=True)[:1]
+        if cands:
+            files = sorted(glob.glob(str(cands[0] / "*.jsonl")), key=os.path.getmtime, reverse=True)
+            count = len(files)
+            if files:
+                newest = _dt.datetime.fromtimestamp(os.path.getmtime(files[0])).strftime("%m-%d %H:%M")
+    parts.append(f"{count} Pi session(s) in the active workspace's shelf"
+                 + (f", newest {newest}" if newest else ""))
+    parts.append("I can read this; sending a line into one of the app's own sessions has no door yet")
+    return ToolResult("Sessrúmnir — " + ". ".join(parts) + ".")
+
+
+NEW_TOOLS["sessrumnir"] = _tool_sessrumnir
+
+
+async def _tool_mail_compose(args):
+    """Open a real, prefilled Gmail compose in his own browser — the only honest way a voice
+    can put a letter in front of the Allfather, because Google's MCP has no send tool at all
+    (measured 2026-11-08: create_draft · list_drafts · get_draft · threads · labels · trash —
+    and every call is refused until the Cloud project is enrolled in the Preview Program).
+
+    It SENDS NOTHING. It opens the compose window with the letter written; his hand presses Send.
+    """
+    import urllib.parse
+    to = str(args.get("to") or "").strip()
+    subject = str(args.get("subject") or "").strip()
+    body = str(args.get("body") or "").strip()
+    if not (to and subject and body):
+        raise ValueError("mail_compose needs to, subject and body")
+    query = urllib.parse.urlencode({"view": "cm", "fs": "1", "to": to, "su": subject, "body": body})
+    url = "https://mail.google.com/mail/?" + query
+    opened = "not opened"
+    for cmd in (["chromium", '--profile-directory=Profile 1', url], ["xdg-open", url]):
+        if shutil.which(cmd[0]):
+            try:
+                subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                 start_new_session=True)
+                opened = f"opened in {Path(cmd[0]).name}"
+                break
+            except Exception:
+                continue
+    _log("mail.compose_opened", to=to, subject=subject[:120], opened=opened)
+    return ToolResult(
+        f"The letter is written and {opened} — a Gmail compose window with {to}, "
+        f"\"{subject}\", and the body filled in. It is NOT sent: sending is his hand on Send. "
+        "Say that out loud in one short sentence.")
+
+
+NEW_TOOLS["mail_compose"] = _tool_mail_compose
