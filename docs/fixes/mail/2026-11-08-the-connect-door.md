@@ -39,18 +39,18 @@ line and stores nothing; `revoke` darkens the key and `status` then says `readab
 
 ```
 $ bin/mail/connect.sh google --check
-account josef@way-of.com · grant live · expires 2026-11-08T21:36:26Z
+account <the operator's mailbox> · grant live · expires 2026-11-08T21:36:26Z
 
 $ bin/mail/connect.sh status
 accounts[1]{account,transport,readable,sendable,deliverable,grant,checked,detail}:
-  "josef@way-of.com","google","yes","no — the grant carries no gmail.send","yes","live",…,"1 aspmx.l.google.com, …"
+  "<the operator's mailbox>","google","yes","no — the grant carries no gmail.send","yes","live",…,"1 aspmx.l.google.com, …"
 ```
 
 `python3 bin/mail/tests/test_gna.py` → **37 tests, OK** (36 before; the new one is below).
 
 ## The finding that costs the gate its send
 
-The register's row for `josef@way-of.com` said, measured 2026-10-23, that the grant carries *gmail.readonly ·
+The register's row for the operator's own mailbox said, measured 2026-10-23, that the grant carries *gmail.readonly ·
 gmail.compose · gmail.send · calendar.events*. Measured **from the token itself** on 2026-11-08
 (`oauth2.googleapis.com/tokeninfo`, through `refresh_token`):
 
@@ -141,3 +141,8 @@ bound to the exact RFC822 bytes (plan 221 §4).
 - **2026-11-08** — First cut: the four verbs with their proofs, the live `--check`/`status` on this seat, the
   measured scope finding (no `gmail.send`), the CalDAV answer with its exact request and response, the send
   guard split with its reason, and the four owed items.
+- **2026-11-08 (correction, appended)** — the operator's own address was printed three times in the section
+  above. It is personal data: it belongs in the home, and a public fix note may say *the operator* and nothing
+  more (RULES/04, and the same correction made on 2026-11-03 in `unversioned-2026-10-23-the-ward-read-a-message-as-code.md`).
+  Redacted in place, above; the measurement and the finding are unchanged, and `bin/gates/guards/public-data-guard.sh`
+  now reports no finding in this file.
