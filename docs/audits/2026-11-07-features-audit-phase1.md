@@ -29,3 +29,8 @@ Only `docs/features/README.md` is unreferenced — expected, it is the index.
 
 Phase 1: **stands**. The catalogue is whole and woven. Three how-to debt items to
 carry into Phase 7 (codebase audit) and then into follow-up plans.
+## CHANGE LOG
+
+- **2026-11-08** — the document was committed by the catalogue-audit pane without its change log, and
+  `rules-compliance-guard` (RULES/06) refused the branch that carried it. The section is added here, in the
+  author's own record, rather than the document being rewritten.
