@@ -65,6 +65,15 @@ write_one(){  # <id> [flags]
     printf '```\n'
   } >>"$f"
   printf 'report[1]{id,file,state}:\n  "%s","%s","%s"\n' "$id" "${f#"$ROOT"/}" "$state"
+  # THE LINE ALSO REACHES THE ARM HOLDER'S CHAT (added 2026-11-08 at the Allfather's word: *"why arent
+  # they injecting in to your session chat? ... they are writing handoff in files now instead"*).
+  # A report that only lands on a shelf has not reached anybody: the lock holder reads panes, not files.
+  # It never fails the report — the shelf write above is the durable record; this is the delivery.
+  if [ -x "$ROOT/bin/agents/eindri-notify.sh" ]; then
+    "$ROOT/bin/agents/eindri-notify.sh" --from "$id" -- \
+      "reported ${state:-state-unknown}: $(printf '%s' "${next:-$changed}" | cut -c1-160)" >/dev/null 2>&1 \
+      || printf 'report: the line was written but NOT injected — nobody held a pane (bin/agents/eindri-notify.sh --status)\n' >&2
+  fi
 }
 
 case "${1:-}" in

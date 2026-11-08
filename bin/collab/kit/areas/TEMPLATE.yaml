@@ -1,0 +1,43 @@
+# areas/TEMPLATE.yaml — what one area's declaration looks like.
+#
+# Copy it to `areas/<area>.yaml` (or run `bash scripts/areas.sh init`, which writes one file per
+# canon area). Then answer it. Nothing here is enforced until the area is `held` and work touches it.
+#
+# THE FOUR STATES
+#   unheld   nobody has taken it. Legal in the file. Refused by the gate once a change touches a
+#            path in `may_write` — an area nobody holds is not a green area.
+#   held     a named keeper, and at least one piece of evidence. A `held` with no evidence is
+#            reported as UNPROVED and is not a pass.
+#   waived   a named person waived it, with a reason and an end date. Silence and a decision must
+#            never look alike.
+#   na       it does not apply to this project, with a reason.
+
+version: 1
+area: tenancy                    # the canon id — one file per area, named after it
+project: my-project
+state: unheld                    # unheld | held | waived | na
+
+keeper: unclaimed                # who holds it: a person, a role, or unclaimed
+lens: ""                         # what this keeper weighs — isolation, cost, correctness, speed
+
+# The folders this keeper may write WHEN SEATED. The gate refuses a push that changes one of these
+# paths while the area is unheld, and names the area instead of the author. Empty is honest: it
+# claims nothing.
+may_write: []
+
+# What closes the area: a test that runs, a figure that was measured, a document a stranger read.
+# A path here is checked for existence; a claim with no artefact is refused.
+evidence: []
+
+# The canon's questions, answered in this project's own words. An open answer ("") is honest.
+# A question that is closed while this file says otherwise is the fault the baton reports.
+answers:
+  - q: "can one tenant read a row that belongs to another, by any route we expose?"
+    a: ""
+
+# Only for `waived` — who waived it, why, and until when. A waiver with no name is refused.
+waived_by: ""
+why: ""
+until: ""
+
+closed: ""                       # the date the evidence last proved it

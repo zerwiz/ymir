@@ -1,0 +1,138 @@
+# areas/canon.yaml — the plain face of the canon: what every project must answer for.
+#
+# Carried by the collaboration kit so a repository that is not ours still knows the questions.
+# NO HOUSE FIGURE IS NAMED HERE, ON PURPOSE (RULES/48): the keeper's name is Ymir's business; the
+# questions are everyone's. Generated from Ymir's `.agents/areas.yaml` — regenerate rather than edit:
+#   bin/agents/areas.sh canon --kit
+
+version: 1
+updated: "2026-11-08"
+states: [held, waived, na]
+
+areas:
+  - id: data
+    name: "the database"
+    owns: "schema, constraints, indexes, seeds, the money type, the migration path"
+    question: "can a new machine build this database from the repo alone, and can every migration be rolled back?"
+    evidence:
+      - "one entry point that builds the schema from empty"
+      - "a rollback proved on a scratch database, with the command that proves it"
+  - id: tenancy
+    name: "multi-tenancy and isolation"
+    owns: "the tenant on the token, scoping at query time, per-tenant limits, the leakage test"
+    question: "can one tenant read a row that belongs to another, by any route we expose?"
+    evidence:
+      - "the strategy declared — attribute, schema or context — with its cost written down"
+      - "a leakage test per exposed route, not one test for the concept"
+  - id: identity
+    name: "identity and access"
+    owns: "login, sessions, roles, policies, invitations, the refusal the server makes"
+    question: "is every action authorised by the server, with the interface only hiding what the server refuses?"
+    evidence:
+      - "a policy per resource"
+      - "a test per role that must be refused, not a test that a permitted role passes"
+  - id: api
+    name: "the backend contract"
+    owns: "endpoints, versioning, the error shape, pagination, idempotency, the written contract"
+    question: "can a caller see the contract without reading the code, and does a failure say what failed?"
+    evidence:
+      - "a written contract, versioned with the code"
+      - "one error shape and one pagination shape, used everywhere"
+  - id: frontend
+    name: "the interface"
+    owns: "screens, and for each one its empty, loading, error and narrow state; keyboard paths"
+    question: "does every screen answer for its empty, its loading, its failure and its narrow width?"
+    evidence:
+      - "a state per screen, enumerated in the repository"
+      - "a keyboard path and a contrast check that runs"
+  - id: design
+    name: "design and content"
+    owns: "the system, the tokens, the words, the rules of the look"
+    question: "is every screen made of declared pieces, with its words already written in the repo?"
+    evidence:
+      - "a token and primitives table"
+      - "the copy in the repository, not in a designer's head"
+  - id: jobs
+    name: "background work and scheduling"
+    owns: "queues, retries, idempotency, dead letters, clocks, the twice-at-once case"
+    question: "if this job runs twice at the same moment, what breaks?"
+    evidence:
+      - "an idempotency key per worker"
+      - "a dead-letter path that is visible to a human"
+  - id: integrations
+    name: "integrations and contracts"
+    owns: "third parties, webhooks, keys BY REFERENCE, and what happens when they fail"
+    question: "what happens when the third party is down, slow, or answers twice?"
+    evidence:
+      - "a timeout, a retry and a quarantine path per integration"
+      - "keys named by reference, never stored"
+  - id: money
+    name: "money and ledger correctness"
+    owns: "rounding, tax, currencies, the reconciliation, the append-only entry"
+    question: "does every öre reconcile, and is a corrected entry appended and never edited?"
+    evidence:
+      - "integer or numeric money with the unit named"
+      - "a reconciliation test, and a correction proved as an append"
+  - id: observability
+    name: "observability and operations"
+    owns: "logs, traces, metrics, alerts, runbooks"
+    question: "when this breaks at 03:00, what tells us, and what exactly do we read?"
+    evidence:
+      - "one trace end to end through the request"
+      - "an alert that fires and a runbook that an outsider can follow"
+  - id: ward
+    name: "security and the wards"
+    owns: "secrets, injection, dependencies, the gate on the door"
+    question: "what may not be committed, and what refuses it?"
+    evidence:
+      - "the repository's own guard wired into the commit and the push"
+      - "one real refusal recorded, so the guard is known to run"
+  - id: tests
+    name: "testing and quality"
+    owns: "the pyramid, fixtures, seeds, the flaky policy, the regression test"
+    question: "is the one test that would have caught the last bug in the repository?"
+    evidence:
+      - "a count by layer, and the command that runs them"
+      - "a regression test named for each fix note"
+  - id: delivery
+    name: "delivery and CI"
+    owns: "branch, pull request, the gates, the fix note, one open pull request"
+    question: "how does a change leave this project, and who seals it?"
+    evidence:
+      - "the pipeline, green on the default branch"
+      - "the delivery posture declared — who merges"
+  - id: docs
+    name: "documentation and records"
+    owns: "the how-to, the decisions, the tickets, the baton"
+    question: "can a stranger run this without asking a question?"
+    evidence:
+      - "a page per user-facing feature"
+      - "a decision log, and tickets that carry their pull request"
+  - id: perf
+    name: "performance and capacity"
+    owns: "budgets, the N+1, pagination, the load"
+    question: "what is the slowest thing a user waits for, and what is the number?"
+    evidence:
+      - "a budget per critical path"
+      - "a measured figure, dated"
+  - id: privacy
+    name: "privacy and compliance"
+    owns: "personal data, retention, region, NDA material, the vault"
+    question: "what personal data do we hold, where does it live, and when may it leave?"
+    evidence:
+      - "a data map: what class of data, which store, how long"
+      - "the vault door for anything under NDA, and nothing of it elsewhere"
+  - id: fleet
+    name: "fleet and agnosticism"
+    owns: "every role answers — heart, forge, dev, hand — with its road named"
+    question: "does this work on a machine that is not the one that built it?"
+    evidence:
+      - "the same verb answering on a second role, naming the road it took"
+      - "no host, path or port assumed in code"
+  - id: agents
+    name: "agent integration"
+    owns: "the well, MCP, A2A, skills — the project usable BY agents"
+    question: "can an agent recall this project's knowledge and act on it without a human translating?"
+    evidence:
+      - "a memory namespace the project's work is written into"
+      - "a door an agent can call, or a card it can read"

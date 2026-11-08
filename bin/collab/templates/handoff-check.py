@@ -150,6 +150,30 @@ def write_new(origin, to, note):
     print("handoff: fill in the seven sections before you stop — the check refuses an empty one")
 
 
+def estate_line():
+    """One line from the repository's own areas shelf, or nothing when it was never adopted."""
+    import subprocess
+    repo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    door = os.path.join(repo, "scripts", "areas.sh")
+    if not os.path.exists(door):
+        return ""
+    try:
+        out = subprocess.run(["bash", door, "estate"], capture_output=True, text=True, timeout=20)
+    except Exception:
+        return ""
+    if out.returncode != 0:
+        return "areas: the shelf cannot be read — run `bash scripts/areas.sh check`"
+    row = [ln for ln in out.stdout.splitlines() if ln.strip().startswith(tuple("0123456789"))]
+    if not row:
+        return ""
+    parts = row[0].strip().split(",")
+    if len(parts) != 6:
+        return ""
+    areas, held, unproved, waived, na, unheld = parts
+    return (f"areas: {areas} · {held} held · {unproved} unproved · {waived} waived · {na} na · "
+            f"{unheld} unheld")
+
+
 def main():
     parser = argparse.ArgumentParser(add_help=True)
     parser.add_argument("--check", action="store_true")
@@ -168,6 +192,13 @@ def main():
     problems = check(args.max_age_days)
     for problem in problems:
         print("handoff: %s" % problem, file=sys.stderr)
+    # The estate line (kit 1.2.0, RULES/18): what the areas shelf answers, printed and NEVER a reason
+    # to fail the baton. The baton's seven headings are a contract three repositories already honour;
+    # a new heading would be a raid, not a standardisation. An unanswered estate is a warning here and
+    # a refusal at the push, where it can be acted on.
+    estate = estate_line()
+    if estate:
+        print("handoff: %s" % estate)
     if problems:
         print("handoff: %d problem(s)" % len(problems), file=sys.stderr)
         return 1
