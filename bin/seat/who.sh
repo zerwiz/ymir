@@ -37,8 +37,16 @@ def agents():
     d = herdr("agent", "list")
     return (d.get("result") or {}).get("agents") or []
 
+def state_dir():
+    """The seat's state, RESOLVED not restated (RULES/07): YMIR_STATE_DIR first, then XDG, then HOME."""
+    d = os.environ.get("YMIR_STATE_DIR")
+    if d:
+        return d
+    xdg = os.environ.get("XDG_STATE_HOME") or os.path.join(os.environ.get("HOME", ""), ".local", "state")
+    return os.path.join(xdg, "ymir")
+
 def lock_owner():
-    p = os.path.join(os.environ.get("HOME", ""), ".local/state/ymir/brokk.lock")
+    p = os.path.join(state_dir(), "brokk.lock")
     try:
         return "".join(c for c in open(p).read() if c.isdigit())
     except Exception:
