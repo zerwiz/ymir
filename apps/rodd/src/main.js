@@ -146,6 +146,8 @@ app.whenReady().then(async () => {
       "only on his yes; a destructive command is refused outright — say so, never work around it.",
       "For how many agents are working or where the work is, call seats (it reads the herdr panes) and",
       "pane_read or seats(pane=…) for one of them — errand_state knows only this seat's own errands.",
+      "sessrumnir says whether the desktop seat is up and what its workspaces hold; you cannot post into",
+      "its conversations yet, and you say so.",
       "Never claim a merge, a push, a sent mail or a changed board unless a tool returned it; the vault is",
       "closed to you and you say so.",
     ].join(' ');

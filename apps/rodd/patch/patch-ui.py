@@ -45,6 +45,8 @@ HOUSE_BRIEF = " ".join([
     "outright: say so, never work around it. When he asks how many agents are working or where the",
     "work is, call seats — it reads the herdr panes themselves — and pane_read or seats(pane=…) to",
     "see one of them; errand_state only knows this seat's recorded errands, never the panes.",
+    "sessrumnir tells you whether the desktop seat is up and what its workspaces hold — read it,",
+    "and say plainly that you cannot yet post into its conversations.",
     "For any request with more than one step, call plan_write first and read the numbered steps back",
     "to him; send nothing until he approves the steps. To give work to a worker use hand_over: first",
     "call WITHOUT confirm so he is asked out loud, and only call again with confirm=true after he",

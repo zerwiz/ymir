@@ -454,6 +454,16 @@ TOOLS = [
     },
     {
         "type": "function",
+        "name": "sessrumnir",
+        "description": (
+            "The desktop seat: is Sessrúmnir running, which workspaces it shows, and how many Pi "
+            "sessions the active one holds. Read-only. Say plainly that it has no door to send "
+            "into the app's own conversations yet."
+        ),
+        "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+    },
+    {
+        "type": "function",
         "name": "seats",
         "description": (
             "Where the work actually is: the herdr panes on this seat, how many carry a live agent, "
@@ -838,8 +848,10 @@ async def _execute(name, arguments):
                     claim = "unreadable"
                 rows.append(f"- {f.stem}: {claim}")
             if not rows:
-                return ToolResult("No errand has a recorded state on this seat yet.")
-            return ToolResult("Errands this seat knows (claimed state):\n" + "\n".join(rows[:12]))
+                return ToolResult("No errand has a RECORDED state on this seat yet — that is not the same "
+                                  "as nothing running: call seats to see the panes, where agents actually sit.")
+            return ToolResult("Errands this seat has RECORDED (claimed state) — the panes may hold more; "
+                              "call seats for what is actually working:\n" + "\n".join(rows[:12]))
 
         parts = []
         claim_file = state_dir / f"{errand}.status"
@@ -1537,8 +1549,11 @@ async def _tool_errand_state(args):
             except Exception:
                 claim = "unreadable"
             rows.append(f"- {f.stem}: {claim}")
-        return ToolResult("Errands this seat knows:\n" + "\n".join(rows[:12]) if rows
-                          else "No errand has a recorded state on this seat yet.")
+        return ToolResult(
+            ("Errands this seat has RECORDED (claimed state) — the panes hold more; call seats for what "
+             "is actually working:\n" + "\n".join(rows[:12])) if rows
+            else "No errand has a RECORDED state on this seat — that is not the same as nothing running: "
+                 "call seats to see the panes where agents actually sit.")
     parts = []
     claim_file = state_dir / f"{errand}.status"
     if claim_file.is_file():
@@ -2144,3 +2159,69 @@ async def _tool_seats(args):
 
 
 NEW_TOOLS["seats"] = _tool_seats
+
+
+async def _tool_sessrumnir(args):
+    """The desktop seat (Sessrúmnir): is it up, which workspaces does it show, and how many Pi
+    sessions does the active one hold — read from its own store, with the missing half named.
+
+    Sessrúmnir speaks Electron IPC and publishes no door (plan 132 §43.4), so the voice can READ
+    what the app is showing but cannot yet SEND into one of its sessions. This tool says both,
+    because a voice that pretends to have posted into the app is worse than one that says so.
+    """
+    import datetime as _dt
+    import glob
+    import json as _json
+    store = Path(os.path.expanduser("~/.config/sessrumnir"))
+    parts: list[str] = []
+
+    running = subprocess.run(["bash", "-lc",
+                              "ps -eo args | grep -c '[s]essrumnir' || true"],
+                             capture_output=True, text=True, timeout=20).stdout.strip()
+    try:
+        n = int(running or 0)
+    except Exception:
+        n = 0
+    parts.append("the app is " + ("running" if n else "not running"))
+
+    active_path = ""
+    try:
+        ws = _json.loads((store / "workspaces.json").read_text()).get("workspaces") or []
+        active_id = _json.loads((store / "workspaces.json").read_text()).get("activeWorkspaceId")
+    except Exception:
+        ws, active_id = [], ""
+    if ws:
+        rows = []
+        for w in ws[:8]:
+            mark = "*" if w.get("id") == active_id else " "
+            when = ""
+            try:
+                when = _dt.datetime.fromtimestamp((w.get("lastActiveAt") or 0) / 1000).strftime("%m-%d %H:%M")
+            except Exception:
+                pass
+            rows.append(f'{mark} {w.get("name")} — {w.get("path")} ({w.get("kind")}, {when})')
+            if w.get("id") == active_id:
+                active_path = str(w.get("path") or "")
+        parts.append(f"workspaces ({len(ws)}): " + " · ".join(rows))
+    else:
+        parts.append("no workspaces file is readable")
+
+    sessions_root = Path(os.path.expanduser("~/.pi/agent/sessions"))
+    count, newest = 0, ""
+    if sessions_root.is_dir() and active_path:
+        slug = active_path.replace("/", "-").strip("-")
+        cands = [d for d in sessions_root.iterdir() if d.is_dir() and slug in d.name]
+        if not cands:
+            cands = sorted(sessions_root.iterdir(), key=lambda d: d.stat().st_mtime, reverse=True)[:1]
+        if cands:
+            files = sorted(glob.glob(str(cands[0] / "*.jsonl")), key=os.path.getmtime, reverse=True)
+            count = len(files)
+            if files:
+                newest = _dt.datetime.fromtimestamp(os.path.getmtime(files[0])).strftime("%m-%d %H:%M")
+    parts.append(f"{count} Pi session(s) in the active workspace's shelf"
+                 + (f", newest {newest}" if newest else ""))
+    parts.append("I can read this; sending a line into one of the app's own sessions has no door yet")
+    return ToolResult("Sessrúmnir — " + ". ".join(parts) + ".")
+
+
+NEW_TOOLS["sessrumnir"] = _tool_sessrumnir
