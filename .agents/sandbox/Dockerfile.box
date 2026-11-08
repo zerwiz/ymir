@@ -27,6 +27,8 @@ RUN apt-get update \
       less \
       openssh-client \
       python3 \
+      python3-pip \
+      python3-venv \
       ripgrep \
       tini \
  && rm -rf /var/lib/apt/lists/*
@@ -35,6 +37,13 @@ RUN apt-get update \
 RUN npm install -g "$PI_PACKAGE" \
  && npm cache clean --force \
  && pi --version
+
+# The factory's own dependencies, baked in rather than fetched: a box sealed to
+# one road cannot reach PyPI, so a factory that installs itself is a factory that
+# fails in the box and works on the host — the worst kind of difference.
+RUN pip3 install --no-cache-dir --break-system-packages \
+      pydantic python-dotenv pyyaml rich \
+ && python3 -c "import pydantic, dotenv, yaml, rich; print('factory deps ready')"
 
 # One unprivileged user, one writable volume, nothing else. The box's whole
 # persistent state is /box; it is a named volume, never a host directory.

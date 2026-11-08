@@ -69,6 +69,15 @@ AUDIT_LOG="/var/log/audit/audit.log"
 # ONE file holds the rules, so a reboot cannot disarm the house (Rule 24).
 rules_text() {
   local home="$1"
+  # Whose ~/.ssh is watched: the operator's, never root's. `sudo bash garmr.sh install`
+  # — the house's own advice — runs with HOME=/root, so $HOME pointed the one watch
+  # that witnesses a key being added at /root/.ssh/authorized_keys, which does not
+  # exist. SUDO_USER is who actually asked.
+  local _op_home=""
+  if [ -n "${SUDO_USER:-}" ]; then
+    _op_home="$(getent passwd "$SUDO_USER" 2>/dev/null | cut -d: -f6)"
+  fi
+  [ -n "$_op_home" ] || _op_home="$HOME"
   # QUOTED heredoc: the block carries explanatory backticks (`a1`, `a2`, `pidfd_send_signal`),
   # and unquoted they were command substitution — every install printed "a1: command not
   # found" and blanked the very comment that explains the rules. Nothing here needs to
@@ -76,6 +85,12 @@ rules_text() {
   cat <<'RULES'
 # Ymir — Garmr's senses. Installed by bin/ward/garmr.sh install. Runtime-only
 # rules vanish at reboot; this file is what brings them back.
+#
+# -D FIRST, or the unit can never be restarted: garmr.sh primes these same rules with
+# auditctl line by line, and augenrules then refuses every one of them with "Error
+# sending add rule data request (Rule exists)" — so `audit-rules.service` failed even
+# with a correct file, and the green state was unreachable by design.
+-D
 -b 8192
 -a always,exit -F arch=b64 -S execve -F auid>=1000 -F auid!=unset -k ymir-exec
 # THE SIGNAL THAT ENDS A BROWSER, in every way it can arrive (fixed 2026-10-31).
@@ -109,7 +124,7 @@ RULES
   for p in /etc/passwd /etc/shadow /etc/group /etc/sudoers /etc/sudoers.d; do
     [ -e "$p" ] && printf -- '-w %s -p wa -k ymir-identity\n' "$p"
   done
-  for p in "$HOME/.ssh/authorized_keys" "$home/.ssh/authorized_keys"; do
+  for p in "$_op_home/.ssh/authorized_keys" "$home/.ssh/authorized_keys"; do
     [ -e "$p" ] && printf -- '-w %s -p wa -k ymir-identity\n' "$p"
   done
   for p in /etc/systemd/system /etc/systemd/user /etc/cron.d /etc/crontab /var/spool/cron; do

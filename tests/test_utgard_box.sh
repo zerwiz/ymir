@@ -153,8 +153,8 @@ esac
 
 # law 3 — a record, a door, a harvest, and a vanishing point
 "$BOX" list 2>/dev/null | grep -q '^  "b1"' && ok "list shows the box" || bad "list shows the box"
-u="$("$BOX" url b1 2>/dev/null)"
-case "$u" in http://127.0.0.1:*) ok "url is a loopback door ($u)" ;; *) bad "url is a loopback door (got '$u')" ;; esac
+u="$("$BOX" url b1 2>/dev/null | sed -n 's/^  "app","\([^"]*\)".*/\1/p')"
+case "$u" in http://127.0.0.1:*) ok "url is a loopback door ($u)" ;; *) bad "url is a loopback door (got '${u:0:60}')" ;; esac
 "$ENGINE" exec "${PREFIX}-b1" bash -lc 'mkdir -p /box/work && echo harvest > /box/work/out.txt' >/dev/null 2>&1
 "$BOX" pull b1 /box/work/out.txt "$TMP" >/dev/null 2>&1
 [ -f "$TMP/out.txt" ] && ok "pull brings the harvest home" || bad "pull brings the harvest home"
@@ -177,6 +177,55 @@ case "$u" in http://127.0.0.1:*) ok "url is a loopback door ($u)" ;; *) bad "url
 "$BOX" rm b2 --keep-volume >/dev/null 2>&1
 "$ENGINE" volume inspect "${PREFIX}-b2-work" >/dev/null 2>&1 && ok "--keep-volume keeps the work" || bad "--keep-volume keeps the work"
 "$ENGINE" volume rm "${PREFIX}-b2-work" >/dev/null 2>&1 || true
+
+# --- the harness: a box with pi and no agents is a computer with no one in it --
+"$BOX" new b5 --ttl 10m --seal none --model stub-model >/dev/null 2>&1 \
+  && ok "a fifth box, to look inside it" || bad "a fifth box, to look inside it"
+agents="$("$ENGINE" exec "${PREFIX}-b5" bash -lc 'ls "$HOME/.pi/agent/agents" 2>/dev/null | wc -l' 2>/dev/null | tr -d ' ')"
+[ "${agents:-0}" -gt 0 ] && ok "a new box arrives WITH its agents ($agents files)" \
+  || bad "a new box arrives WITH its agents (got ${agents:-0})"
+shelf="$("$ENGINE" exec "${PREFIX}-b5" bash -lc 'ls /box/work/.agents/skills 2>/dev/null | wc -l' 2>/dev/null | tr -d ' ')"
+[ "${shelf:-0}" -gt 0 ] && ok "the project skill shelf is inside, where an agent looks for it ($shelf)" \
+  || bad "the project skill shelf is inside (got ${shelf:-0})"
+owner="$("$ENGINE" exec "${PREFIX}-b5" bash -lc 'stat -c %U "$HOME/.pi/agent/agents"' 2>/dev/null)"
+[ "$owner" = "agent" ] && ok "the harness is the agent's own to read and replace" \
+  || bad "the harness is the agent's own (owner '$owner')"
+
+"$BOX" new b6 --ttl 10m --seal none --model stub-model --no-harness >/dev/null 2>&1
+none="$("$ENGINE" exec "${PREFIX}-b6" bash -lc 'ls "$HOME/.pi/agent/agents" 2>/dev/null | wc -l' 2>/dev/null | tr -d ' ')"
+[ "${none:-0}" = "0" ] && ok "--no-harness makes a bare box, and says so" || bad "--no-harness makes a bare box (got ${none:-0})"
+"$BOX" rm b5 >/dev/null 2>&1; "$BOX" rm b6 >/dev/null 2>&1
+
+# --- P2 · the factory inside a box -------------------------------------------
+"$BOX" new b4 --ttl 10m --seal door --port 3000 --model stub-model --budget 2 >/dev/null 2>&1 \
+  && ok "a fourth box, with two doors and a budget" || bad "a fourth box, with two doors and a budget"
+"$BOX" factory b4 >/dev/null 2>&1 && ok "factory seats Smidja in the box" || bad "factory seats Smidja in the box"
+fmods="$("$BOX" run b4 -- 'ls /box/factory 2>/dev/null | head -3' 2>/dev/null)"
+case "$fmods" in *smidja*) ok "the box holds the factory's own files" ;; *) bad "the box holds the factory's own files (got '${fmods:0:40}')" ;; esac
+deps="$("$BOX" run b4 -- 'python3 -c "import pydantic, yaml, rich; print(chr(100)+chr(101)+chr(112)+chr(115)+chr(32)+chr(111)+chr(107))"' 2>/dev/null)"
+[ "$deps" = "deps ok" ] && ok "the factory's python deps are baked in (a sealed box cannot reach PyPI)" \
+  || bad "the factory's python deps are baked in (got '$deps')"
+
+# --- P3 · a budget is part of the credential ---------------------------------
+first="$("$ENGINE" exec "${PREFIX}-b4" bash -lc 'curl -s -o /dev/null -w "%{http_code}" -m 20 "$OPENAI_BASE_URL/models"' 2>/dev/null)"
+"$ENGINE" exec "${PREFIX}-b4" bash -lc 'curl -s -o /dev/null -m 20 "$OPENAI_BASE_URL/models"' >/dev/null 2>&1
+third="$("$ENGINE" exec "${PREFIX}-b4" bash -lc 'curl -s -m 20 "$OPENAI_BASE_URL/models"' 2>/dev/null)"
+[ "$first" = "200" ] && ok "a budgeted box is served before its cap" || bad "a budgeted box is served before its cap (got '$first')"
+case "$third" in
+  *"spent its budget"*) ok "past the cap the door refuses, and says the number" ;;
+  *) bad "past the cap the door refuses, and says the number (got '${third:0:60}')" ;;
+esac
+sline="$("$BOX" status b4 2>/dev/null | sed -n 2p)"
+case "$sline" in *'"2/2"'*) ok "status shows what the door has spent" ;; *) bad "status shows what the door has spent (got: ${sline:0:120})" ;; esac
+
+# --- P4 · two doors, and the estate read at once -----------------------------
+youter="$("$BOX" url b4 2>/dev/null | grep -c '"app"\|"factory"')"
+[ "$youter" = "2" ] && ok "url names BOTH doors (the app and the factory)" || bad "url names BOTH doors (got ${youter:-0} lines)"
+"$BOX" estate 2>/dev/null | grep -q 'factory_answers' && ok "estate reads both doors per box" || bad "estate reads both doors per box"
+"$BOX" enter --all 2>/dev/null | grep -q "estate\[" && ok "enter --all is one gesture over the estate" || bad "enter --all is one gesture over the estate"
+"$BOX" revoke b4 >/dev/null 2>&1 && ok "revoke takes the credential back" || bad "revoke takes the credential back"
+"$ENGINE" inspect "${PREFIX}-b4-door" >/dev/null 2>&1 && bad "the door is gone after revoke" || ok "the door is gone after revoke"
+"$BOX" rm b4 >/dev/null 2>&1
 
 printf 'utgard-box-tests: %s pass, %s fail, %s skip\n' "$pass" "$fail" "$skip"
 [ "$fail" = 0 ]

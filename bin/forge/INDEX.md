@@ -20,7 +20,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[29]{file,does,kind,verdict,disposition,callers,lines}:
+bin[30]{file,does,kind,verdict,disposition,callers,lines}:
   "essence-fetch.sh","essence-fetch.sh — the npm world's self-heal: npm's packer refuses dotfolders","tool","wired","keep",2,18
   "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",344,77
   "github-deploy.sh","github-deploy.sh — zero-trust deploys (W0035).","data","wired","keep",0,96
@@ -46,11 +46,12 @@ bin[29]{file,does,kind,verdict,disposition,callers,lines}:
   "ship.sh","ship.sh — the reviewer's merge: the one door that puts a judged PR on main.","tool","wired","keep",4,203
   "skillopt-setup.sh","skillopt-setup.sh — one-time SkillOpt installation for Ymir.","tool","wired","keep",1,77
   "smith-gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","wired","keep",1,77
-  "utgard-box-door.py","'''utgard-box-door.py — the one road out of a box.","tool","wired","keep",1,288
-  "utgard-box.sh","utgard-box.sh — a whole computer for one run, outside the wall.","tool","wired","keep",1,691
-  "utgard.sh","utgard.sh — the sealed execution barrier (Utgard, the realm outside the wall).","tool","wired","keep",4,122
+  "utgard-box-door.py","'''utgard-box-door.py — the one road out of a box.","tool","wired","keep",1,369
+  "utgard-box.sh","utgard-box.sh — a whole computer for one run, outside the wall.","tool","wired","keep",2,931
+  "utgard-lane.sh","utgard-lane.sh — best of N: one brief, many boxes, one board.","tool","wired","keep",1,227
+  "utgard.sh","utgard.sh — the sealed execution barrier (Utgard, the realm outside the wall).","tool","wired","keep",4,128
   "yggdrasil.sh","yggdrasil.sh — the worktree manager (Yggdrasil, the world-tree).","tool","tested","keep",6,176
 
-**Tally.** verdict: wired=26, tested=3
+**Tally.** verdict: wired=27, tested=3
 
-**Tally.** disposition: keep=29
+**Tally.** disposition: keep=30

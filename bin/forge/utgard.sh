@@ -9,9 +9,10 @@
 #   utgard.sh build [--tag <name>]
 #   utgard.sh status
 #   utgard.sh run <worktree> -- <command...> [--network none|on] [--cpus N] [--memory M] [--timeout S]
-#   utgard.sh box <new|list|status|enter|url|seal|pull|stop|start|rm|gc|probe> …
+#   utgard.sh box <new|list|status|enter|url|seal|pull|stop|start|rm|gc|probe|estate|factory|run|revoke> …
 #       a WHOLE COMPUTER for one run (the workshop), where `run` is a thirty-second
 #       sealed command (the locker). See bin/forge/utgard-box.sh.
+#   utgard.sh lane <new|run|board|list|rm> …   # best of N: one brief, many boxes, one board
 #   utgard.sh sandcastle <args…>   # the sandcastle engine (Docker/Podman/Vercel)
 #   utgard.sh --version
 #
@@ -48,6 +49,11 @@ fi
 # door because it has its own laws (see bin/forge/utgard-box.sh).
 if [ "$CMD" = "box" ]; then
   exec "$SCRIPT_DIR/utgard-box.sh" "$@"
+fi
+
+# `lane` is best-of-N: many boxes, one brief, one lease, one board.
+if [ "$CMD" = "lane" ]; then
+  exec "$SCRIPT_DIR/utgard-lane.sh" "$@"
 fi
 
 # shellcheck source=bin/fleet/ymir-platform.sh
@@ -116,6 +122,6 @@ case "$CMD" in
     ;;
 
   *)
-    printf 'error: unknown command %s\nhelp: bin/forge/utgard.sh [build|status|run|box|sandcastle|--version]\n' "$CMD" >&2
+    printf 'error: unknown command %s\nhelp: bin/forge/utgard.sh [build|status|run|box|lane|sandcastle|--version]\n' "$CMD" >&2
     exit 2 ;;
 esac
