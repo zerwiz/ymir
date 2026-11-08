@@ -79,3 +79,8 @@ it, so the change could not pass quietly.
 `areas/` is not yet in the ymir tree's own commit, Control Tower's branch is **not committed or
 pushed** (the Allfather's word rules that), and the four repositories on 1.1.0 still need their
 one-branch, one-PR re-seat, theirs to merge.
+
+## CHANGE LOG
+
+- **2026-11-08** — written with the kit branch; the section was added when the consolidated push
+  (`rules-compliance-guard`, RULES/06) asked for it. Appended, never a rewrite.

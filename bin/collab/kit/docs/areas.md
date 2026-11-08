@@ -73,3 +73,8 @@ The override is loud and deliberate: `YMIR_SKIP_AREAS_GUARD=1 git push …` and 
 fails, run it directly (`python3 scripts/areas.py check`) — it needs nothing but python3. If the gate
 refuses a push that has nothing to do with the named area, the `may_write` prefix is too wide: narrow
 it in that area's file, in the same pull request.
+
+## CHANGE LOG
+
+- **2026-11-08** — written with the kit branch; this section was added when the consolidated push asked
+  for it (RULES/06).

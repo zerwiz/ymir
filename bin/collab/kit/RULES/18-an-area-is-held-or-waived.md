@@ -27,3 +27,8 @@ with no name is a disappearance.
 **Correction, never erasure.** An area that stops being held is set back to `unheld` with a dated
 line saying why, or waived with its end date. The file is the record of what the project answered
 and when — so it is appended to, not rewritten into whatever is convenient today.
+
+## CHANGE LOG
+
+- **2026-11-08** — written on the branch that carried it; this section was added when the
+  consolidated pull request asked for it (RULES/06). Appended, never a rewrite.

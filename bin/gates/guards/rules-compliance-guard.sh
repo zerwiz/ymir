@@ -92,7 +92,9 @@ while IFS= read -r f; do
   done < <(grep -nE '(\b192\.168\.[0-9]+\.|\b10\.[0-9]+\.[0-9]+\.[0-9]+|\.local\b|http://)' "$tmp" 2>/dev/null \
              | grep -vE '127\.0\.0\.1|localhost|<[a-z-]+>' \
              | grep -vE 'http://\$\{?[A-Za-z_]+' \
-             | grep -vE "http://%s|http://\{host\}|http://\{h\}|f\"http://" | head -20)   # a format/f-string host is not an address
+             | grep -vE "http://%s|http://\{host\}|http://\{h\}|f\"http://" \
+             | grep -vE '(~|\$HOME|")\.local/|/\.local/' \
+             | grep -vE 'https?://\*' | head -20)   # a format host and a case-glob (http://*) are not addresses; XDG's ~/.local is a PATH (2026-11-08)
   rm -f "$tmp"
 done <<EOF
 $added

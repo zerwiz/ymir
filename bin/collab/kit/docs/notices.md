@@ -70,3 +70,8 @@ The **estate** line is answered by the house's own door for every registered pro
 **orchestrator** is only as real as its declaration: no project declares one yet, so notices reach the arm and
 record `orchestrator=none`. Naming it per project — a seat id, or the card address that answers — is one line in
 that project's `areas/agents.yaml`.
+
+## CHANGE LOG
+
+- **2026-11-08** — written with the kit branch; this section was added when the consolidated push asked
+  for it (RULES/06).
