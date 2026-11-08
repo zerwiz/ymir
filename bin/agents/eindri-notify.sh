@@ -74,6 +74,7 @@ if [ -z "$pane" ]; then
 fi
 
 # ── 3 · speak it into that session ─────────────────────────────────────────────────────────────────
+if [ "${YMIR_NO_INJECT:-0}" = "1" ]; then dry=1; fi   # a test run never shouts into the chat
 if [ "${dry:-0}" = 1 ]; then
   # PROVE THE ROAD WITHOUT SHOUTING (added 2026-11-08: the smoke suite ran three times and left three
   # lines in the holder's chat, which is noise in the one window that must stay readable).

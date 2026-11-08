@@ -19,7 +19,7 @@
 #
 # Endpoint configuration (Rule 07): YMIR_GMAIL_API_BASE · YMIR_OAUTH_TOKEN_URL.
 set -euo pipefail
-VERSION="1.0.1"
+VERSION="1.0.2"
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help|"") sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 ACTION="${1:-draft}"; shift || true
@@ -150,13 +150,46 @@ send(){
   # and carves the refusal into the Runes itself. A door that checked nothing is how a
   # letter reached the partners on 2026-10-23 — so the check lives here, not in a caller.
   bash "$approve" gate mail "$id" >/dev/null || die "send refused for draft $id — the operator's word is missing, stale, or already spent; nothing was sent"
-  local out code body; out="$(gmail POST "/users/me/drafts/send" "{\"id\":\"$id\"}")"; code="${out##*$'\n'}"; body="${out%$'\n'*}"
-  case "$code" in 200|201) python3 - "$body" <<'PY'
-import json,sys;d=json.loads(sys.argv[1]);print(f'sent\t{d.get("id")}')
+  local out code body sent_id=""; out="$(gmail POST "/users/me/drafts/send" "{\"id\":\"$id\"}")"; code="${out##*$'\n'}"; body="${out%$'\n'*}"
+  case "$code" in 200|201) sent_id="$(python3 - "$body" <<'PY'
+import json,sys
+try:
+    d = json.loads(sys.argv[1])
+except Exception:
+    d = {}
+print(d.get("id", ""))
 PY
+)"; printf 'sent\t%s\n' "$sent_id"
   ;; *) die "send failed (HTTP $code): $body" ;; esac
   # The word is spent: one approval, one send. A second send is refused as ALREADY SENT.
   bash "$approve" consume mail "$id" >/dev/null || printf 'warning: the approval was not marked spent — a replay would be possible\n' >&2
+  # RECORD IT, now: the ledger knows the letter from the moment it leaves, not from the next import.
+  # The headers are read back from the draft that was actually sent, so the record says what left
+  # rather than what we believe we asked for. A ledger that fails must never fail a sent letter.
+  local ledger="$ROOT/bin/mail/ledger.sh"
+  if [ -x "$ledger" ] && [ -n "$sent_id" ]; then
+    local meta hdrs to subject natt
+    meta="$(gmail GET "/users/me/drafts/$id?format=metadata" 2>/dev/null || true)"
+    hdrs="$(printf '%s' "${meta%$'\n'*}" | python3 -c '
+import json, sys
+try:
+    d = json.load(sys.stdin)
+except Exception:
+    sys.exit(0)
+msg = d.get("message", {}) or {}
+payload = msg.get("payload", {}) or {}
+hs = {h.get("name", "").lower(): h.get("value", "") for h in payload.get("headers", []) or []}
+n = sum(1 for p in payload.get("parts", []) or [] if p.get("filename"))
+print(hs.get("to", ""))
+print(hs.get("subject", ""))
+print(n)
+' 2>/dev/null || true)"
+    to="$(printf '%s' "$hdrs" | sed -n 1p)"; subject="$(printf '%s' "$hdrs" | sed -n 2p)"; natt="$(printf '%s' "$hdrs" | sed -n 3p)"
+    if [ -n "$to" ]; then
+      bash "$ledger" out --to "$to" --subject "${subject:-draft $id}" --gmail "$sent_id" --attachments "${natt:-0}" >/dev/null 2>&1 \
+        || printf 'warning: the letter was sent but the ledger did not record it\n' >&2
+    fi
+  fi
 }
 discard(){
   local id="${1-}"; [ -n "$id" ] || die "discard needs a draft id"

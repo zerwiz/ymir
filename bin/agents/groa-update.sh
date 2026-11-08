@@ -51,6 +51,10 @@ REMOTE=""; BRANCH=""; CHECK=0
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help) sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 while [ $# -gt 0 ]; do
+  # AN EMPTY ARGUMENT IS NOT A FLAG (2026-11-08). Three harness surfaces passed `""` to mean "no flag"
+  # for update, and this door read it as an unknown flag and exited 2 — so Gróa reported a hard failure
+  # while doing the whole job. A door that only one caller understands is not a door for the fleet.
+  if [ -z "${1-}" ]; then shift; continue; fi
   case "$1" in
     --check) CHECK=1; shift ;;
     --remote) REMOTE=${2-}; shift 2 ;;
