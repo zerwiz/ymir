@@ -11,7 +11,9 @@
 #
 #   ledger.sh out --to A[,B] --subject S [--gmail ID] [--approval AP] [--attachments N] [--record ID]
 #   ledger.sh in  [--limit N]          # fold the desk's store into the same view (read-only)
-#   ledger.sh tail [N]                 # both directions, newest first (default 20)
+#   ledger.sh tail [N]                 # both directions, newest first (default 20) — the connect
+#                                      # door's own append-only log is folded in, so one view holds
+#                                      # every grant made and every grant revoked
 #   ledger.sh digest [--days N]        # counts per day, both directions
 #   ledger.sh self-test                # proves append-only, and that a row cannot be rewritten
 #
@@ -37,6 +39,9 @@ command -v hoard_root >/dev/null 2>&1 && hoard_root HOARD
 MAIL_DIR="${YMIR_MAIL_DIR:-$HOARD/memory/mail}"
 LEDGER="${YMIR_MAIL_LEDGER:-$MAIL_DIR/ledger.jsonl}"
 STORE="${YMIR_MAIL_STORE:-$MAIL_DIR/messages.jsonl}"
+# The connect door keeps its own append-only event log (bin/mail/gna_connect.py). It is NOT forked
+# here — this door only reads it, so `tail` is the one place a person looks. Resolved, never assumed.
+CONNECT="${YMIR_MAIL_CONNECT_LOG:-$MAIL_DIR/connect-log.jsonl}"
 mkdir -p "$MAIL_DIR"
 
 now_iso() { date -u '+%Y-%m-%dT%H:%M:%SZ'; }
@@ -124,8 +129,8 @@ PY
 
 cmd_tail() {
   local n="${1:-20}"
-  python3 - "$LEDGER" "$STORE" "$n" <<'PY'
-import json, sys
+  python3 - "$LEDGER" "$STORE" "$n" "$CONNECT" <<'PY'
+import json, os, sys
 
 def who(value):
     if isinstance(value, str):
@@ -136,7 +141,7 @@ def who(value):
         return ", ".join(who(v) for v in value if v)
     return ""
 
-ledger, store, n = sys.argv[1], sys.argv[2], int(sys.argv[3])
+ledger, store, n, connect = sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4]
 rows = []
 for path, direction_default in ((ledger, "out"), (store, "in")):
     try:
@@ -162,6 +167,26 @@ for path, direction_default in ((ledger, "out"), (store, "in")):
             "who": person,
             "subject": (m.get("subject") or "")[:78],
             "gmail_id": m.get("gmail_id") or m.get("id") or m.get("message_id") or "",
+        })
+# The connect door's events: a grant made, or a grant revoked. A press of the button is an act on
+# the mailbox, so it belongs in the same record as the letters — otherwise `tail` shows letters and
+# silently hides that the door was opened or shut.
+if os.path.exists(connect):
+    for line in open(connect, encoding="utf-8", errors="replace"):
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            m = json.loads(line)
+        except ValueError:
+            continue
+        verb = str(m.get("verb") or "connect")
+        rows.append({
+            "ts": m.get("at") or m.get("ts") or "",
+            "dir": "revoke" if verb == "revoke" else "connect",
+            "who": str(m.get("account") or "")[:38],
+            "subject": str(m.get("result") or "") + (" · " + str(m.get("transport")) if m.get("transport") else ""),
+            "gmail_id": "",
         })
 # One message, one row. Both the store and this ledger may name the same letter — the store when the
 # importer reads the sent folder, this ledger at the moment of sending. Dedupe on the message id, and
@@ -227,6 +252,17 @@ assert rows[1]["subject"] == 'a "quoted" subject', rows[1]
 assert all(r["direction"] == "out" for r in rows)
 print("ok   : a quote in a subject cannot break a row")
 PY
+  # The connect door's log is folded in, never forked: one row per grant, visible in `tail`.
+  printf '{"at":"%s","verb":"google","account":"c@example.com","transport":"google","result":"ok"}\n' \
+    "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" > "$tmp/connect-log.jsonl"
+  local seen
+  seen="$(YMIR_MAIL_DIR="$tmp" YMIR_MAIL_LEDGER="$tmp/ledger.jsonl" \
+    YMIR_MAIL_STORE="$tmp/none.jsonl" YMIR_MAIL_CONNECT_LOG="$tmp/connect-log.jsonl" \
+    bash "$0" tail 20)"
+  case "$seen" in
+    *'"connect","c@example.com"'*) printf 'ok   : the connect log appears in the one view\n' ;;
+    *) printf 'FAIL : the connect log is invisible to tail\n  %s\n' "$seen"; rm -rf "$tmp"; exit 1 ;;
+  esac
   printf 'ok   : the ledger is append-only by construction (the door has no edit verb)\n'
   rm -rf "$tmp"
   printf 'ledger-self-test: pass\n'
