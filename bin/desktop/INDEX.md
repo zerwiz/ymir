@@ -20,14 +20,15 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[24]{file,does,kind,verdict,disposition,callers,lines}:
+bin[25]{file,does,kind,verdict,disposition,callers,lines}:
   "app-build.sh","app-build — build the in-tree apps (plan 35).","tool","wired","keep",2,57
-  "app-lib.sh","app-lib.sh — where an app actually lives.","lib","tested","keep",15,100
+  "app-lib.sh","app-lib.sh — where an app actually lives.","lib","tested","keep",16,100
   "design-icon.sh","design-icon.sh — every app wears its own rune.","tool","wired","keep",2,319
   "desktop-place.sh","desktop-place.sh — put the Ymir apps on their own Hyprland desktops.","tool","tested","keep",8,321
   "desktop-verify.sh","desktop-verify.sh — the INSTALL-time guarantee: every desktop surface can run,","tool","wired","keep",4,199
   "display-lib.sh","display-lib.sh — the ONE place that knows the displays, and how to talk to the","lib","wired","keep",2,176
   "editor-place.sh","editor-place.sh — the editor is UNMANAGED by default: it opens on the","tool","wired","keep",3,223
+  "electron-ensure.sh","electron-ensure.sh — the Electron runtime is PRESENT and ANSWERS, or it is fetched.","tool","wired","keep",4,260
   "electron-lib.sh","electron-lib.sh — is a desktop shell's runtime actually there?","lib","tested","keep",8,212
   "factory-check.sh","factory-check.sh — a factory may only reach what it NAMES.","tool","wired","keep",1,40
   "factory-new.sh","factory-new.sh — copy the empty factory, give it a name, and say what to fill in.","tool","wired","keep",1,28
@@ -46,6 +47,6 @@ bin[24]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-marketing-stack.sh","ymir-marketing-stack.sh — the marketing stack, provisionable on ANY computer.","tool","wired","keep",1,337
   "ymir-style.sh","ymir-style.sh — the cloth of the terminal halls.","tool","wired","keep",5,158
 
-**Tally.** verdict: wired=21, tested=3
+**Tally.** verdict: wired=22, tested=3
 
-**Tally.** disposition: keep=24
+**Tally.** disposition: keep=25
