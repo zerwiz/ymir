@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
   DEFAULT_FILE_PANE_WIDTH,
+  MIN_CHAT_CENTER_WIDTH,
   DEFAULT_SIDE_PANEL_WIDTH,
   MAX_SIDE_PANEL_WIDTH,
   MIN_EDITOR_PANE_WIDTH,
@@ -133,8 +134,11 @@ test('the side panel is clamped to its own bounds', () => {
 test('the side panel never exceeds the available column width', () => {
   // A narrow chat column (half-width window) must cap a wide panel, or the
   // flex parent's overflow-hidden clips the right edge outside the window.
-  const metrics = resolveSidePanelMetrics(TREE_AND_EDITOR, 1200, 400, 500)
-  assert.equal(metrics.contentWidth, 500)
+  // Plan 222 S2: the cap is not the whole column — the chat keeps its own floor
+  // (MIN_CHAT_CENTER_WIDTH) before the panel is given anything.
+  const metrics = resolveSidePanelMetrics(TREE_AND_EDITOR, 1200, 400, 800)
+  assert.equal(metrics.contentWidth, 800 - MIN_CHAT_CENTER_WIDTH)
+  assert.equal(metrics.fit, 'shrunk')
   // The file tree keeps its floor even when the column is too narrow for both
   // panes at once — the panel stays inside the window, never past it.
   assert.ok(metrics.filePaneWidth >= MIN_FILE_PANE_WIDTH)
@@ -142,10 +146,58 @@ test('the side panel never exceeds the available column width', () => {
 })
 
 test('a lone file tree is capped by the available column width', () => {
-  const metrics = resolveSidePanelMetrics(FILE_TREE_ONLY, 1200, 900, 520)
-  assert.equal(metrics.contentWidth, 520)
-  assert.equal(metrics.filePaneWidth, 520)
-  assert.equal(metrics.maxFilePaneWidth, 520)
+  const metrics = resolveSidePanelMetrics(FILE_TREE_ONLY, 1200, 900, 1000)
+  assert.equal(metrics.contentWidth, 1000 - MIN_CHAT_CENTER_WIDTH)
+  assert.equal(metrics.filePaneWidth, 1000 - MIN_CHAT_CENTER_WIDTH)
+  assert.equal(metrics.maxFilePaneWidth, 1000 - MIN_CHAT_CENTER_WIDTH)
+})
+
+// ─── The chat's floor: the panel is a guest, never the owner (plan 222 S2) ───
+
+test('the panel never takes the width the chat needs', () => {
+  // The invariant he can see: make the window narrower than the panel wants and
+  // the panel gives way first, because a half-read sentence is worse than a
+  // narrow file tree.
+  for (const panes of [FILE_TREE_ONLY, TREE_AND_EDITOR, TREE_AND_IMAGE, EDITOR_ONLY]) {
+    for (let available = 320; available <= 2000; available += 40) {
+      const metrics = resolveSidePanelMetrics(panes, 1200, 900, available)
+      if (metrics.fit === 'closed') {
+        assert.equal(metrics.contentWidth, 0, `closed panel kept a width at ${available}`)
+        continue
+      }
+      assert.ok(
+        metrics.contentWidth <= available - MIN_CHAT_CENTER_WIDTH,
+        `panel ${metrics.contentWidth} left less than ${MIN_CHAT_CENTER_WIDTH} of ${available} for ${JSON.stringify(panes)}`
+      )
+      assert.ok(metrics.contentWidth >= MIN_SIDE_PANEL_WIDTH)
+    }
+  }
+})
+
+test('a column too narrow for both closes the panel and says so', () => {
+  // 500 px: 360 for the panel plus the chat's 320 does not fit. The panel closes
+  // rather than squeezing the chat to a column of single words.
+  const metrics = resolveSidePanelMetrics(TREE_AND_EDITOR, 1200, 400, 500)
+  assert.equal(metrics.fit, 'closed')
+  assert.equal(metrics.contentWidth, 0)
+  assert.equal(metrics.filePaneWidth, 0)
+  assert.equal(metrics.maxSidePanelWidth, 0)
+})
+
+test('the panel reports whether it was drawn whole or narrowed', () => {
+  assert.equal(resolveSidePanelMetrics(EDITOR_ONLY, 640, 300, 1400).fit, 'full')
+  assert.equal(resolveSidePanelMetrics(EDITOR_ONLY, 1200, 300, 1400).fit, 'shrunk')
+  assert.equal(resolveSidePanelMetrics(EDITOR_ONLY, 640, 300, 300).fit, 'closed')
+})
+
+test('the editor floor gives way before the chat floor does', () => {
+  // 800 px column: the panel may have 480. The editor's 360 px floor cannot also
+  // hold, so it is reduced to what is left beside the file tree — and the two
+  // floors together still add up to the panel, never past it.
+  const metrics = resolveSidePanelMetrics(TREE_AND_EDITOR, 1200, 900, 800)
+  assert.equal(metrics.contentWidth, 480)
+  assert.ok(metrics.editorPaneMinWidth < MIN_EDITOR_PANE_WIDTH)
+  assert.equal(metrics.filePaneWidth + metrics.editorPaneMinWidth, metrics.contentWidth)
 })
 
 test('no available width keeps the fixed 1280 ceiling', () => {

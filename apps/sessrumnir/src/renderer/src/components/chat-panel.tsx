@@ -14,8 +14,7 @@ import { ResizeHandle } from './resize-handle'
 import {
   DEFAULT_FILE_PANE_WIDTH,
   DEFAULT_SIDE_PANEL_WIDTH,
-  MAX_SIDE_PANEL_WIDTH,
-  MIN_EDITOR_PANE_WIDTH,
+  MIN_CHAT_CENTER_WIDTH,
   MIN_FILE_PANE_WIDTH,
   clamp,
   resolveSidePanelMetrics,
@@ -180,12 +179,18 @@ export function ChatPanel(): React.JSX.Element {
     contentWidth: sidePanelContentWidth,
     filePaneWidth: effectiveFilePaneWidth,
     maxFilePaneWidth,
+    maxSidePanelWidth,
+    editorPaneMinWidth,
+    fit: sidePanelFit,
   } = resolveSidePanelMetrics(
     { showFileTree, showEditor, showImage },
     sidePanelWidth,
     filePaneWidth,
     panelWidth
   )
+  // The panel is a guest in this column: when there is no room for both it and
+  // the chat's own floor, it is not drawn at all — and the toolbar says so.
+  const sidePanelDrawn = showSidePanel && sidePanelFit !== 'closed'
 
   return (
     <div ref={panelRef} className="flex flex-1 flex-col overflow-hidden">
@@ -194,15 +199,21 @@ export function ChatPanel(): React.JSX.Element {
         <div className="chat-center relative z-0 flex flex-1 flex-col overflow-hidden">
           {/* The hearth — the landing's fire-dots behind the chat column */}
           <EmberBackground className="pointer-events-none absolute inset-0 -z-10" />
-          {/* Toolbar */}
-          <div className="flex items-center justify-between border-b border-border px-3 py-1.5">
-            <div className="flex items-center gap-0.5">
-              {/* Workspace path — always visible */}
+          {/* Toolbar — its branches are asked of the PANE (see `.chat-center` in
+              index.css), never of the window: a 400 px pane in a 1400 px window
+              has the same 400 px of toolbar as a 400 px window does. */}
+          <div className="chat-toolbar flex items-center justify-between gap-2 border-b border-border px-3 py-1.5">
+            <div className="chat-toolbar-actions flex min-w-0 items-center gap-0.5">
+              {/* Workspace path — always visible, and the first thing to give way
+                  when the pane is too narrow to hold the buttons beside it. */}
               {activeWorkspace && (
-                <div className="flex items-center gap-1.5 mr-2 px-2 py-0.5 rounded bg-card/60" title={activeWorkspace.path}>
+                <div className="chat-workspace-chip mr-2 flex min-w-0 items-center gap-1.5 rounded bg-card/60 px-2 py-0.5" title={activeWorkspace.path}>
                   <FolderTree size={12} className="text-dim shrink-0" />
-                  <span className="text-xs text-muted max-w-[300px] truncate">
-                    {activeWorkspace.name}: {activeWorkspace.path}
+                  <span className="chat-workspace-name truncate text-xs text-muted">
+                    {activeWorkspace.name}
+                  </span>
+                  <span className="chat-workspace-path truncate text-xs text-muted">
+                    : {activeWorkspace.path}
                   </span>
                 </div>
               )}
@@ -253,6 +264,24 @@ export function ChatPanel(): React.JSX.Element {
                 title={t('common.workflowRuns')}
               />
             </div>
+            {/* Which way the panel gave way — a panel that vanished unannounced
+                is a bug report waiting to happen. */}
+            {showSidePanel && sidePanelFit !== 'full' && (
+              <span
+                className="chat-panel-fit shrink-0 truncate text-[11px] text-dim"
+                data-panel-fit={sidePanelFit}
+                aria-live="polite"
+                title={
+                  sidePanelFit === 'closed'
+                    ? t('chat.sidePanel.closedHint', { min: MIN_CHAT_CENTER_WIDTH })
+                    : t('chat.sidePanel.shrankHint')
+                }
+              >
+                {sidePanelFit === 'closed'
+                  ? t('chat.sidePanel.closed')
+                  : t('chat.sidePanel.shrank')}
+              </span>
+            )}
           </div>
 
           <div className="relative flex min-h-0 flex-1 flex-col">
@@ -292,7 +321,7 @@ export function ChatPanel(): React.JSX.Element {
                               : t('chat.emptyState.chooseProject', { agent: engineLabel })}
                       </p>
                     </div>
-                    <div className="w-full max-w-3xl">
+                    <div className="w-full min-w-0 max-w-3xl">
                       {piStatus === 'running' && (
                         <div className="mb-4 flex flex-wrap justify-center gap-2 px-4">
                           {EXAMPLE_PROMPTS.map((prompt) => (
@@ -330,7 +359,7 @@ export function ChatPanel(): React.JSX.Element {
                     ) : (
                       <NowContext.Provider value={now}>
                         <div
-                          className="mx-auto max-w-5xl px-4 pt-6"
+                          className="mx-auto w-full min-w-0 max-w-5xl px-4 pt-6"
                           style={{ paddingBottom: composerPadPx }}
                         >
                           {renderItems.map((item) =>
@@ -377,11 +406,11 @@ export function ChatPanel(): React.JSX.Element {
                     ref={composerWrapRef}
                     className="pointer-events-none absolute inset-x-0 bottom-0 z-10 pb-3 pt-8 bg-gradient-to-t from-chat-column via-chat-column/80 to-transparent"
                   >
-                    <div className="pointer-events-auto mx-auto w-full max-w-5xl px-4">
+                    <div className="pointer-events-auto mx-auto w-full min-w-0 max-w-5xl px-4">
                       <CouncilPanels />
                     </div>
                     {reattachedMidTurn && (
-                      <div className="pointer-events-auto mx-auto mb-2 w-full max-w-5xl px-4">
+                      <div className="pointer-events-auto mx-auto mb-2 w-full min-w-0 max-w-5xl px-4">
                         <div className="flex items-center gap-2.5 rounded-md bg-accent px-4 py-2.5 text-sm text-inverse shadow-lg shadow-black/30">
                           <Loader2 size={16} className="shrink-0 animate-spin" />
                           <span className="shrink-0 font-medium">
@@ -402,8 +431,12 @@ export function ChatPanel(): React.JSX.Element {
         </div>
 
         {/* Side panel */}
-        {showSidePanel && (
-          <div className="relative flex border-l border-border bg-app" style={{ width: sidePanelContentWidth }}>
+        {sidePanelDrawn && (
+          <div
+            data-side-panel={sidePanelFit}
+            className="relative flex border-l border-border bg-app"
+            style={{ width: sidePanelContentWidth }}
+          >
             <ResizeHandle
               onResize={(delta) => {
                 if (showFileTreeOnly) {
@@ -415,14 +448,14 @@ export function ChatPanel(): React.JSX.Element {
                 }
 
                 setSidePanelWidth((width) =>
-                  clamp(width - delta, minSidePanelWidth, MAX_SIDE_PANEL_WIDTH)
+                  clamp(width - delta, minSidePanelWidth, maxSidePanelWidth)
                 )
               }}
             />
             <div className="flex min-w-0 flex-1 overflow-hidden">
               {showFileTree && (
                 <>
-                  <div className="flex min-w-0 shrink-0 flex-col overflow-hidden" style={{ width: effectiveFilePaneWidth }}>
+                  <div className="flex min-w-0 flex-col overflow-hidden" style={{ width: effectiveFilePaneWidth }}>
                     <FileTree />
                   </div>
                   {(showEditor || showImage) && (
@@ -449,8 +482,9 @@ export function ChatPanel(): React.JSX.Element {
                     // outer panel's border-l is the left edge (avoids doubling).
                     showFileTree && 'border-l border-border'
                   )}
-                  // The same constant the file pane's ceiling reserves for.
-                  style={{ minWidth: MIN_EDITOR_PANE_WIDTH }}
+                  // Its floor only while the panel can afford it — a 360 px
+                  // editor in a 480 px panel would leave the file tree nothing.
+                  style={{ minWidth: editorPaneMinWidth }}
                 >
                   <FilePreview />
                 </div>
@@ -458,7 +492,7 @@ export function ChatPanel(): React.JSX.Element {
               {showImage && (
                 <div
                   className="flex flex-1 flex-col overflow-hidden"
-                  style={{ minWidth: MIN_EDITOR_PANE_WIDTH }}
+                  style={{ minWidth: editorPaneMinWidth }}
                 >
                   <ImageViewer />
                 </div>
