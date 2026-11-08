@@ -25,10 +25,10 @@ bin[24]{file,does,kind,verdict,disposition,callers,lines}:
   "app-lib.sh","app-lib.sh — where an app actually lives.","lib","tested","keep",15,100
   "design-icon.sh","design-icon.sh — every app wears its own rune.","tool","wired","keep",2,319
   "desktop-place.sh","desktop-place.sh — put the Ymir apps on their own Hyprland desktops.","tool","tested","keep",8,321
-  "desktop-verify.sh","desktop-verify.sh — the INSTALL-time guarantee: every desktop surface can run,","tool","wired","keep",3,199
+  "desktop-verify.sh","desktop-verify.sh — the INSTALL-time guarantee: every desktop surface can run,","tool","wired","keep",4,199
   "display-lib.sh","display-lib.sh — the ONE place that knows the displays, and how to talk to the","lib","wired","keep",2,176
   "editor-place.sh","editor-place.sh — the editor is UNMANAGED by default: it opens on the","tool","wired","keep",3,223
-  "electron-lib.sh","electron-lib.sh — is a desktop shell's runtime actually there?","lib","tested","keep",7,212
+  "electron-lib.sh","electron-lib.sh — is a desktop shell's runtime actually there?","lib","tested","keep",8,212
   "factory-check.sh","factory-check.sh — a factory may only reach what it NAMES.","tool","wired","keep",1,40
   "factory-new.sh","factory-new.sh — copy the empty factory, give it a name, and say what to fill in.","tool","wired","keep",1,28
   "hlidskjalf-agents.sh","hlidskjalf-agents.sh — WHO IS ACTUALLY STANDING, and what they are doing.","tool","wired","keep",1,182
