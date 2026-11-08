@@ -24,6 +24,11 @@ ROSTER="${SEAT_ROSTER:-$YMIR_HOME/hodd/identity/seats.yaml}"
 [ -r "$ROSTER" ] || { printf 'error: roster not readable: %s\n' "$ROSTER" >&2; exit 1; }
 
 SELF="${YMIR_HOST:-$(hostname -s)}"
+# Both documented orders are accepted: `--file nidavellir` and `nidavellir --file`.
+# The second used to fall through to the name, silently answering the wrong question.
+case "${2-}" in
+  --file|--json|--install|--check|--render|--ensure) set -- "${2-}" "${1-}" ;;
+esac
 HOST="${1-}"; MODE="name"
 case "$HOST" in
   --list) MODE="list"; HOST="" ;;
@@ -32,14 +37,35 @@ case "$HOST" in
   names|--names) MODE="names"; HOST="" ;;
 esac
 
-role_file(){
-  case "$1" in
-    brokk) printf 'brokk.md' ;;
-    sindri) printf 'sindri-developer.md' ;;
-    muninn) printf 'muninn-stow.md' ;;
-    mimir) printf 'mimir-planner.md' ;;
-    *) printf '%s.md' "$1" ;;
-  esac
+# The role file is RECORDED, never composed from the seat's name.
+# A seat's name and the figure whose card it reads are two different facts: on the
+# counsellor seat the primary answers as its own name and reads `.agents/agents/brokk.md`.
+# Composing `<name>.md` invented files that never existed (`.agents/agents/Hávi.md`) and,
+# worse, pointed a seat at the DEVELOPER's card when the names happened to collide
+# (2026-11-07). The roster's `role_file:` is the source; the name is only a fallback.
+role_file(){  # <name> [host] -> the profile file name
+  local n=$1 h=${2-} rf="" f
+  if [ -n "$h" ] && [ -r "$ROSTER" ]; then
+    rf="$(python3 - "$ROSTER" "$h" <<'PY' 2>/dev/null || true
+import sys, yaml
+try: d = yaml.safe_load(open(sys.argv[1])) or {}
+except Exception: d = {}
+print((d.get("seats", {}).get(sys.argv[2]) or {}).get("role_file") or "")
+PY
+)"
+  fi
+  if [ -z "$rf" ]; then
+    if [ -r "$ROOT/.agents/agents/$n.md" ]; then
+      rf="$n.md"
+    else
+      # the craft rides in the file name: kvasir -> kvasir-scout.md, forseti -> forseti-reviewer.md
+      for f in "$ROOT/.agents/agents/$n"-*.md; do
+        [ -r "$f" ] && { rf="${f##*/}"; break; }
+      done
+    fi
+  fi
+  [ -n "$rf" ] || rf="$n.md"     # unresolved: the caller's readability check reports it
+  printf '%s' "${rf##*/}"
 }
 
 if [ "$MODE" = names ]; then
@@ -122,7 +148,10 @@ if [ "$MODE" = install ] || [ "$MODE" = check ] || [ "$MODE" = render ]; then
   NAME="$(bash "$0" "$HOST" 2>/dev/null)" || { printf 'error: %s has no seat identity\n' "$HOST" >&2; exit 1; }
   ROLE="$(python3 -c "import yaml,sys;d=yaml.safe_load(open('$ROSTER'));print(d['seats']['$HOST'].get('role',''))" 2>/dev/null)"
   STATUS="$(python3 -c "import yaml;d=yaml.safe_load(open('$ROSTER'));print(d['seats']['$HOST'].get('status','proposed'))" 2>/dev/null)"
-  RF="$ROOT/.agents/agents/$(role_file "$NAME")"
+  RF="$ROOT/.agents/agents/$(role_file "$NAME" "$HOST")"
+  # A role file that does not exist is said out loud, never rendered as if it were read.
+  [ -r "$RF" ] || printf 'warn: the role file for %s is missing (%s) — declare `role_file:` in %s\n' \
+    "$HOST" "$RF" "$ROSTER" >&2
   SEAT_FILE="$HOME/.pi/agent/extensions/.ymir-seat"
   RENDER="$HOME/.pi/agent/AGENTS.seat.md"
   case "$MODE" in
@@ -163,6 +192,13 @@ EOF
   exit 0
 fi
 
+if [ "$MODE" = file ]; then
+  HOST="${HOST:-$SELF}"
+  NAME="$(bash "$0" "$HOST" 2>/dev/null)" || { printf 'error: %s has no seat identity\n' "$HOST" >&2; exit 1; }
+  printf '%s\n' "$ROOT/.agents/agents/$(role_file "$NAME" "$HOST")"
+  exit 0
+fi
+
 python3 - "$ROSTER" "$HOST" "$MODE" <<'PY'
 import sys, json, os
 try: import yaml
@@ -179,7 +215,6 @@ if host not in seats:
     sys.exit(1)
 name=seats[host].get("primary")
 if mode=="name": print(name)
-elif mode=="file": print(os.path.join(os.path.dirname(roster),"..","..",".agents","agents",name+".md"))
 elif mode=="json":
     print(json.dumps({"host":host, **seats[host]}, indent=2))
 PY

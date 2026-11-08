@@ -34,6 +34,7 @@ docs/fixes/agents/2026-10-22-memory-voice-and-the-window.md | detector | the fix
 
 # ── quotations: a person's own words, kept as spoken ────────────────────────────
 assets/Ymir.md | quotation | a transcript of the operator's own session, kept as it was spoken — a quotation is never translated
+docs/fixes/agents/2026-11-08-the-seat-role-file-was-composed-from-the-seat-name.md | quotation | the Allfather's own words on the two seats, typed as he typed them — a quotation is never tidied
 
 # ── tables: the letters are the subject, not prose ──────────────────────────────
 midgard/design-system/runes.md | table | the rune-to-letter transliteration table: each rune beside the letter it stands for
