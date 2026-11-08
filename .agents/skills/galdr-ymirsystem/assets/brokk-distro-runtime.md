@@ -986,3 +986,43 @@ bare box.
 **Proved:** `tests/test_utgard_box.sh` 46 pass / 0 fail (a new box has its agents; the shelf is inside; the harness is the
 agent's own; `--no-harness` is bare). **Still owed, and named rather than implied:** the road (one firewall rule) and one
 real `pi -p` turn inside a box asserting an answer.
+
+---
+
+## The estate — areas, keepers and the coverage gate (appended 2026-11-08, plan 219)
+
+A project's work is divided into **areas**, and every area is declared in the project's OWN repository
+(`areas/<area>.yaml`) in one of four states: `held` (a named keeper and evidence), `waived` (a name, a
+reason, an end date), `na` (a reason), or `unheld` (nobody has it — legal, printed, and refused the
+moment a change touches that ground).
+
+**Two shelves, one law.** `.agents/areas.yaml` is the **canon**: eighteen areas, the question each must
+answer, the evidence that closes it, and which of our figures may keep it. `bin/collab/kit/areas/canon.yaml`
+is the **plain face** that travels into repositories that are not ours — the questions travel, the figures
+stay home (RULES/48). `bin/gates/guards/areas-guard.sh` refuses drift between the two, a canon naming a
+figure with no card, and then this tree's own shelf.
+
+```
+doors[5]{door,verbs,notes}:
+  "bin/agents/areas.sh","canon · init · list · check · estate · brief · call · status · stop · claim · waive","the estate door. It does not fork the seat: it writes a SEATING SHIM in the home's state ($STATE/areas-estate/<project>/areas/<area>.yaml), names a house figure there, and points `bin/agents/domain.sh` at it with AREAS_SCOPE"
+  "bin/agents/domain.sh","unchanged verbs","widened: reads `areas/*.yaml` as well as `systems/*/domain.yaml`, and an area's brief prints exactly what the keeper may write, from the declaration"
+  "bin/gates/guards/areas-guard.sh","check","canon ↔ kit copy agreement · figures exist · fields present · then this tree's own `areas/` through the estate door. Wired into bin/gates/guards.sh"
+  "bin/collab/kit/scripts/areas.sh (guest)","init · list · check · estate · paths · claim · waive","the repository's own door, stdlib python only; `claim <area> --unheld --path …` scopes ground nobody holds"
+  "bin/collab/kit/scripts/gates/{areas,a2a}-guard.sh","the range","refuses a change under unheld ground, and a card that changed into something invalid"
+```
+
+**The card.** `bin/collab/kit/scripts/a2a.sh card --write` generates `.well-known/agent-card.json` from the
+shelf: one skill per **held** area, `a2a` 1.0 required fields, both `url` (0.3) and `supportedInterfaces`
+(1.0), a declared bearer-grant scheme. Unpublished is a printed state; loopback is a fault; a card is an
+invitation to ask, never a grant.
+
+**Project identity** — given a path, the project id comes from the registry (`clones.<host>`, then
+`local_clone`, then the repo), then the repository's own git remote, then the directory name. A worktree's
+basename is an errand's name, never a project's.
+
+## CHANGE LOG
+
+- **2026-11-08** — Appended with the capability: the canon, the estate door, the widening of `domain.sh`,
+  the tree ward, the kit shelf and its two gates, the card, and the first two estates measured (Ymir 6 held
+  · 12 unheld; Inmost's Control Tower 4 held · 14 unheld, its tenancy ground refused by name at the gate).
+  Plan 219; fix note `docs/fixes/collab/2026-11-08-the-kit-carries-the-inventory.md`.

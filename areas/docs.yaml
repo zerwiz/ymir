@@ -1,0 +1,30 @@
+# areas/docs.yaml — documentation and records
+#
+# A project answers every canon area: held · waived · na. `held` needs evidence.
+# `unheld` is legal in the file and is what the gate refuses once work touches the area.
+# This file is the project's own record; the canon of questions lives in Ymir.
+
+version: 1
+area: docs
+project: ymir-platform
+state: held
+
+keeper: Reginn the elder
+lens: records
+
+# the folders this keeper may write. The gate refuses a push that changes one of these
+# paths while the area is unheld. Empty = nothing is claimed yet.
+may_write: ["docs/features/"]
+
+evidence: ["docs/features/ — one page per feature", "FEATURES.md — woven by bin/records/weave-features.sh"]
+
+# the canon's questions, with this project's answers. An open answer is honest; a blank is not.
+answers:
+  - q: "can a stranger run this without asking a question?"
+    a: ""
+  - q: "a page per user-facing feature"
+    a: ""
+  - q: "a decision log, and tickets that carry their pull request"
+    a: ""
+
+closed: ""                    # the date the evidence last proved it

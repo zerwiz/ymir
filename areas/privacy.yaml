@@ -1,0 +1,30 @@
+# areas/privacy.yaml — privacy and compliance
+#
+# A project answers every canon area: held · waived · na. `held` needs evidence.
+# `unheld` is legal in the file and is what the gate refuses once work touches the area.
+# This file is the project's own record; the canon of questions lives in Ymir.
+
+version: 1
+area: privacy
+project: ymir-platform
+state: unheld                 # unheld | held | waived | na
+
+keeper: unclaimed             # who holds it — a person, a role, or unclaimed
+lens: ""                      # what this keeper weighs, e.g. isolation, cost, correctness
+
+# the folders this keeper may write. The gate refuses a push that changes one of these
+# paths while the area is unheld. Empty = nothing is claimed yet.
+may_write: []
+
+evidence: []                  # what closes it: a test, a run, a document, a measured figure
+
+# the canon's questions, with this project's answers. An open answer is honest; a blank is not.
+answers:
+  - q: "what personal data do we hold, where does it live, and when may it leave?"
+    a: ""
+  - q: "a data map: what class of data, which store, how long"
+    a: ""
+  - q: "the vault door for anything under NDA, and nothing of it elsewhere"
+    a: ""
+
+closed: ""                    # the date the evidence last proved it
