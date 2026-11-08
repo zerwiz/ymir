@@ -56,6 +56,7 @@
 | skill-find.sh | skill-find.sh — find the skill you need, without loading any of them. | tested+named | keep (a human or a cron row must run it) |
 | skill-index.sh | skill-index.sh — Sága's sight over the crafts: one index of EVERY ski | tested | keep (a human or a cron row must run it) |
 | skill-vendor-sync.sh | skill-vendor-sync.sh — keep imported third-party skill packs current. | tested | keep (a human or a cron row must run it) |
+| spam-guard.sh | spam-guard.sh — a model that loops is a fault, and the agent holding t | tested | keep (a human or a cron row must run it) |
 | valhalla.sh | valhalla.sh — the process hall (Valhalla). List, inspect, revive, and  | tested+named | keep (a human or a cron row must run it) |
 | workspace-provision.sh | workspace-provision.sh — carve one workspace for the operator. Single  | tested+named | keep (a human or a cron row must run it) |
 | yt-transcript.sh | yt-transcript.sh — read a video: metadata, description, and transcript | tested+named | keep (a human or a cron row must run it) |

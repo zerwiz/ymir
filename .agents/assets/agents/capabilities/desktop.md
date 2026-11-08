@@ -20,6 +20,7 @@
 | factory-new.sh | factory-new.sh — copy the empty factory, give it a name, and say what  | tested | keep (a human or a cron row must run it) |
 | hlidskjalf-agents.sh | hlidskjalf-agents.sh — WHO IS ACTUALLY STANDING, and what they are doi | tested+named | keep (a human or a cron row must run it) |
 | hlidskjalf-usage.sh | hlidskjalf-usage.sh — what the HARNESSES spent, not just the smithy. | tested | keep (a human or a cron row must run it) |
+| main-tree.sh | main-tree.sh — THE TREE THE LAUNCHERS POINT AT, which is never a workt | tested | keep (a human or a cron row must run it) |
 | odrerir-mcp-smoke.sh | odrerir-mcp-smoke.sh — the boards' REAL smoke: tickets and plans throu | tested+named | keep (a human or a cron row must run it) |
 | sessrumnir-ensure.sh | sessrumnir-ensure.sh — ensure the Sessrúmnir desktop GUI is present a | tested+named | keep (a human or a cron row must run it) |
 | sessrumnir-launch.sh | sessrumnir.sh — launch the Sessrúmnir desktop GUI (the seat-hall). | tested+named | keep (a human or a cron row must run it) |
