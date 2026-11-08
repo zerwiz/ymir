@@ -71,6 +71,11 @@ gate liveness-grace "the sweep never calls a live seat dead inside the settling 
 gate public-data "RULES/04 — a secret, a name, a topology or a mailbox is refused, and the ward is proved to refuse" \
      bash "$ROOT/bin/gates/checks/public-data-ward.test.sh"
 
+# The mocks gate was an inline pipeline with no test, so every exclusion it grew arrived as a false red on
+# legitimate code and was judged by eye. The scan is a file now, and this proves it bites AND stays narrow.
+gate mocks-vocabulary "the mocks scan catches a half-built door and excuses only vocabulary" \
+     bash "$ROOT/.agents/tests/mocks-scan.test.sh"
+
 # Rule 11 — a tracked file is MOVED, never deleted. RULES/11 says the ward runs here; until
 # 2026-11-03 nothing in this file called it, so a deletion passed CI unseen. The range is the
 # PR's base when there is one, and an honest SKIP (not a green) when this checkout has no base.

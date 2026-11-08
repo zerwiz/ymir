@@ -19,7 +19,7 @@ t "context verdict is one of four" bash -c "bash $root/bin/seat/context.sh --jso
 t "context refuses an unreadable session" bash -c "! bash $root/bin/seat/context.sh --session /nope.jsonl"
 t "working-now is counted" bash -c "bash $root/bin/seat/core-four.sh --json | python3 -c 'import json,sys; d=json.load(sys.stdin); assert d[\"working_now\"][\"panes\"]>=0'"
 t "factory refuses an unfilled door list" bash -c "T=\$(mktemp -d); bash $root/bin/desktop/factory-new.sh smoke --out \$T >/dev/null; ! bash $root/bin/desktop/factory-check.sh \$T/smoke.yaml"
-t "factory-check names the refusal" bash -c "T=\$(mktemp -d); bash $root/bin/desktop/factory-new.sh smoke --out \$T >/dev/null; bash $root/bin/desktop/factory-check.sh \$T/smoke.yaml 2>&1 | grep -q 'unfilled placeholder'"
+t "factory-check names the refusal" bash -c "T=\$(mktemp -d); bash $root/bin/desktop/factory-new.sh smoke --out \$T >/dev/null; bash $root/bin/desktop/factory-check.sh \$T/smoke.yaml 2>&1 | grep -q 'unfilled field'"
 printf 'near-loop doors: %s ok / %s fail\n' "$ok" "$fail"
 rm -f /tmp/.t.$$
 [ "$fail" = 0 ]

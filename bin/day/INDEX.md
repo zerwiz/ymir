@@ -21,9 +21,9 @@ The tree replaced a single register on 2026-11-06 (plan 211) so that a change in
 folder rewrites one file instead of colliding on every branch.
 
 bin[2]{file,does,kind,verdict,disposition,callers,lines}:
-  "day.py","'''day.py — the day's door: his acts, and what the house measured, each with its as_of.","tool","wired","keep",1,412
+  "day.py","'''day.py — the day's door: his acts, and what the house measured, each with its as_of.","tool","tested","keep",1,412
   "day.sh","day.sh — the day's door: one read of his acts and the house's measured facts.","tool","wired","keep",3,29
 
-**Tally.** verdict: wired=2
+**Tally.** verdict: tested=1, wired=1
 
 **Tally.** disposition: keep=2

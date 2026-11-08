@@ -25,7 +25,7 @@ if not doors:
     problems.append(("no scope.doors", "a factory with no door list can reach nothing, and is refused"))
 for d in doors:
     if d.startswith("<") and d.endswith(">"):
-        problems.append(("an unfilled placeholder", f"'{d}' is still the template's placeholder, not a door"))
+        problems.append(("an unfilled field", f"'{d}' is still the template's blank, not a door"))
         continue
     if d in ("*", "all", "any"):
         problems.append(("wildcard door", f"'{d}' is not a capability list — name the doors"))
