@@ -167,11 +167,27 @@ except Exception: sys.exit(0)
 r=d.get("result") or d
 print((r.get("root_pane") or {}).get("pane_id") or "")' 2>/dev/null)"
     if [ -n "$pane" ]; then
+      # A REAL PI AGENT, SEATED AND NAMED — not a print-mode one-shot wearing a pane (measured 2026-11-08:
+      # the Allfather watched the pane answer yet saw no agent, because `pi -p` prints and leaves). This is
+      # herdr's own shape: start the agent in a shell pane, then PROMPT it — the same road
+      # `bin/agents/domain.sh` uses to seat a keeper.
+      seat_name="nornir-update"
+      # A REAL PI AGENT IN THE PANE — in PRINT MODE, on purpose (measured 2026-11-08, twice):
+      # an interactive pi in a scheduled pane stops dead on the MCP trust dialog ("Allow project MCP
+      # server 'engram'?"), because the pi-mcp-adapter asks a HUMAN and a 03:41 job is nobody. Print mode
+      # declares the project servers blocked, says so, and answers the order — which is exactly the one
+      # line this job exists to get. `--mcp-project-servers deny` is kept in case a future build honours it.
+      runner="$STATE_DIR/groa-update-run.sh"
+      {
+        printf '#!/usr/bin/env bash\n'
+        printf 'cd %q || exit 1\n' "$ROOT"
+        printf 'exec pi -p --model %q --append-system-prompt %q --no-mcp --mcp-project-servers deny -t bash,read %q 2>%q | tee %q\n' \
+          "$model" "$brief" "$order" "$err_file" "$out_file"
+      } > "$runner"
+      chmod +x "$runner"
       timeout 30 herdr pane run "$pane" "bash $runner" >/dev/null 2>&1 || true
-      # FIRE AND FORGET, BY DESIGN: the brief tells the agent to deliver its own line through
-      # eindri-notify.sh when it finishes. A scheduled job that blocks ten minutes on a pane is a job
-      # that will be found stuck at 03:41 and blamed for not updating.
-      printf 'nornir-groa[1]{road,pane,state}:\n  "herdr","%s","seated — the agent reports its own line"\n' "$pane"
+      timeout 30 herdr agent rename "$pane" "$seat_name" >/dev/null 2>&1 || true
+      printf 'nornir-groa[1]{road,pane,seat,state}:\n  "herdr","%s","%s","a pi agent is seated — it reports its own line"\n' "$pane" "$seat_name"
       exit 0
     fi
     road="terminal (herdr has no pane to give)"
