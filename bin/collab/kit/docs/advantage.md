@@ -98,7 +98,7 @@ scripts/advantage-audit.sh --json <doc.md>                   # for a board or a 
 ```
 
 It reads a document of claims, finds the `**Evidence:**` line inside each section, and
-refuses when the line is empty, a placeholder, or too thin to check. Exit 1 means the page
+refuses when the line is empty, an unfilled blank, or too thin to check. Exit 1 means the page
 is not ready to send — and it names the line to fix, which is the only useful kind of
 refusal.
 

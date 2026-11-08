@@ -3,7 +3,7 @@
 
 A box has no internet. It has ONE peer: this door. The door is a plain HTTP
 proxy that answers only the names it was told, and it holds the model
-credential so the box never does — the box is handed a placeholder key and the
+credential so the box never does — the box is handed a throwaway key and the
 door swaps in the real one on the way to the rail.
 
 That is the whole design, and it is the reason a box can run an agent without
