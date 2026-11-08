@@ -20,7 +20,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[26]{file,does,kind,verdict,disposition,callers,lines}:
+bin[27]{file,does,kind,verdict,disposition,callers,lines}:
   "codex-plugin-install.mjs","// Valknut's Codex door.","data","wired","keep",3,125
   "context.sh","context.sh — what the agent's context ACTUALLY holds, right now.","tool","wired","keep",2,114
   "core-four.sh","core-four.sh — the four dials that decide an agent's outcome, in ONE read.","tool","wired","keep",3,160
@@ -45,9 +45,10 @@ bin[26]{file,does,kind,verdict,disposition,callers,lines}:
   "test_lock_ask.sh","The ward for bin/seat/lock-ask.sh — a read-only agent asks the lock owner, and only the","tool","wired","keep",0,150
   "valknut-load.sh","valknut-load.sh — Valknut, the knot that binds the repo distro into each tool's","tool","tested","keep",8,717
   "verify-seat.sh","verify-seat.sh — is this seat actually whole?","tool","tested","keep",3,177
+  "who.sh","who.sh — WHO IS WHERE: every agent in a pane, its project, its errand, and who holds the lock.","tool","wired","keep",2,133
   "whose-tree.sh","whose-tree.sh — whose code am I standing in?","tool","wired","keep",0,118
   "ymir-mcp.py","'''ymir-mcp.py — Ymir's own doors over MCP: the tools Pi has as extensions, for","tool","tested","keep",4,276
 
-**Tally.** verdict: wired=20, tested=6
+**Tally.** verdict: wired=21, tested=6
 
-**Tally.** disposition: keep=26
+**Tally.** disposition: keep=27

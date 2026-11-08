@@ -28,4 +28,5 @@
 | test_core_four_pending_factory.sh | The ward for the three near-loop doors: core four, pending, and the fact | tested | keep (a human or a cron row must run it) |
 | test_lock_ask.sh | The ward for bin/seat/lock-ask.sh — a read-only agent asks the lock ow | tested | keep (a human or a cron row must run it) |
 | valknut-load.sh | valknut-load.sh — Valknut, the knot that binds the repo distro into ea | tested+named | keep (a human or a cron row must run it) |
+| who.sh | who.sh — WHO IS WHERE: every agent in a pane, its project, its errand, | tested | keep (a human or a cron row must run it) |
 | whose-tree.sh | whose-tree.sh — whose code am I standing in? | tested | keep (a human or a cron row must run it) |

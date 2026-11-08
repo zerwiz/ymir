@@ -21,7 +21,7 @@ The tree replaced a single register on 2026-11-06 (plan 211) so that a change in
 folder rewrites one file instead of colliding on every branch.
 
 bin[12]{file,does,kind,verdict,disposition,callers,lines}:
-  "README.md","Gná — the one mail desk (production)","data","tested","keep",44,-
+  "README.md","Gná — the one mail desk (production)","data","tested","keep",45,-
   "addresses.sh","addresses.sh — THE register of the mail addresses the house uses, and whether mail can reach them.","tool","wired","keep",3,61
   "gna_addresses.py","'''Gná's register: the addresses the house USES, and whether mail can reach them.","tool","wired","keep",2,971
   "gna_desk.py","'''Gná's desk — read-only, loopback, one account per request.","tool","wired","keep",1,254
