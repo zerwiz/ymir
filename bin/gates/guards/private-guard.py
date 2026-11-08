@@ -57,6 +57,25 @@ def allowed(surface, to):
         return bool(recipients) and recipients <= AUTHORIZED
     return False
 
+# A PICTURE IS NOT A TRANSCRIPT. Scanning compressed bytes for path-shaped text
+# finds accidents in the pixel data: a legitimate PNG of a hand-drawn board was
+# refused for "private hoard path" at byte 7792 of its compressed stream, and no
+# sentence in that image was ever a path. The text rules exist to catch what a
+# model or a reader would SEE; on binary media there is nothing to see in the
+# bytes, so the scan is skipped LOUDLY and the operator's approval - which is
+# bound to the exact bytes of what leaves - is what judges the content.
+BINARY_EXT = {
+    '.png', '.jpg', '.jpeg', '.webp', '.gif', '.bmp', '.ico', '.tiff', '.heic',
+    '.mp3', '.wav', '.ogg', '.m4a', '.flac', '.mp4', '.mov', '.webm', '.mkv',
+    '.zip', '.gz', '.tar', '.bz2', '.xz', '.7z',
+    '.gguf', '.onnx', '.safetensors', '.bin', '.pt', '.pth',
+}
+
+def looks_binary(raw, path):
+    if path.lower().rsplit('.', 1)[-1] and ('.' + path.lower().rsplit('.', 1)[-1]) in BINARY_EXT:
+        return True
+    return b'\x00' in raw[:8192]
+
 def check_file(path, surface, to):
     global FIND
     raw = b''
@@ -80,6 +99,10 @@ def check_file(path, surface, to):
             except Exception:
                 print(f'{path}: PDF not inspected (pdftotext missing)', file=sys.stderr)
                 return
+    elif looks_binary(raw, path):
+        print(f'{path}: binary media — the text scan is skipped; the operator\'s approval, '
+              'bound to these exact bytes, is what judges it', file=sys.stderr)
+        return
     else:
         text = raw.decode('utf-8', 'replace')
     lines = text.splitlines() or ['']
