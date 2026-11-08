@@ -102,10 +102,10 @@ CONFIG="${BROKK_CONFIG_OVERRIDE:-$BROKK_HOME/config}"
 _state_base="$(dirname "$STATE")"
 _data_base="$(dirname "$DATA")"
 _config_base="$(dirname "$CONFIG")"
-if [ "$_state_base" != "$_data_base" ] || [ "$_state_base" != "$_config_base" ]; then
+# DATA and CONFIG carry the roster and the records: they are ONE house, always.
+if [ "$_data_base" != "$_config_base" ]; then
   {
-    echo "error: the house is split — state, data and config resolve to different bases."
-    echo "  state: $STATE"
+    echo "error: the house is split — data and config resolve to different bases."
     echo "  data:  $DATA"
     echo "  config:$CONFIG"
     echo "help: move the whole house with BROKK_HOME (or BROKK_ROOT_OVERRIDE),"
@@ -113,6 +113,17 @@ if [ "$_state_base" != "$_data_base" ] || [ "$_state_base" != "$_config_base" ];
     echo "      errand with two homes names a worktree its worker is not sitting in."
   } >&2
   exit 1
+fi
+# A STATE beside a different base is a SEAT, not a split (2026-11-08). Every seat now
+# runs with its own state dir (.local/state/ymir/seats/<id>) while data and config stay
+# in the one home — and the old three-way check refused that, so a seat could not spawn
+# an Eindri or seat a review judge at all ("the house is split", measured on the
+# atomic-runtime seat when its own done line tried to seat Forseti). The law that
+# mattered is kept: data and config are one house. The seat's state is named aloud,
+# because a silent divergence is exactly what this guard exists to prevent.
+if [ "$_state_base" != "$_data_base" ]; then
+  printf 'note: state is the seat'"'"'s own (%s); data and config are one house (%s) — a seat, not a split\n' \
+    "$STATE" "$_data_base" >&2
 fi
 unset _state_base _data_base _config_base
 
