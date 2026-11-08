@@ -31,6 +31,7 @@ ymir-start — raise the Hlidskjalf control plane and the rest of the standing h
 
   scripts/start.sh                 # raise everything that is down (idempotent)
   scripts/start.sh --foreground    # run the SPA in THIS terminal instead of detaching
+  scripts/start.sh --root          # print the tree this script resolves, then exit
   scripts/start.sh --help          # this text
   scripts/start.sh --version
 
@@ -48,6 +49,10 @@ EOF
 case "${1-}" in
   -h|--help)    usage; exit 0 ;;
   --version)    printf 'ymir-start 1.0.0\n'; exit 0 ;;
+  # --root: WHERE THIS SCRIPT THINKS IT LIVES. A release proves itself with it —
+  # "a release whose own scripts resolve inside it" is plan 221 P0's accept line,
+  # and a caller that recomputes the answer proves only its own arithmetic.
+  --root)       printf '%s\n' "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"; exit 0 ;;
 esac
 
 # --- portability shim: bin/fleet/ymir-platform.sh --------------------------------

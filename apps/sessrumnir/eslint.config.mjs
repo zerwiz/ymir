@@ -72,4 +72,28 @@ export default tseslint.config(
       '@typescript-eslint/no-require-imports': 'off',
     },
   },
+  // Node ESM scripts: the layout probe's runner drives headless Chromium from
+  // Node, so it needs node globals and module syntax.
+  {
+    files: ['scripts/probe-chat-widths.mjs', 'scripts/probe/**/*.mjs'],
+    languageOptions: {
+      sourceType: 'module',
+      globals: { ...globals.node, WebSocket: 'readonly' },
+    },
+  },
+  // The layout probe's page side runs in the renderer, not in Node: it is a
+  // script inside a browser page and speaks the browser's globals.
+  {
+    files: ['scripts/probe/**/*.js'],
+    languageOptions: {
+      sourceType: 'script',
+      globals: { ...globals.browser },
+    },
+  },
+  {
+    files: ['scripts/probe/**/*.{ts,tsx}'],
+    languageOptions: {
+      globals: { ...globals.browser },
+    },
+  },
 )

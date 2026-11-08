@@ -169,3 +169,68 @@ head key is read by NAME from the vault (or from the seat's own pi auth for its 
   that needs OAuth says so. Verified with the tools themselves: Chrome DevTools over MCP read the live page,
   its 34-tool list and its clean console; the gates were walked through the toolbox
   (`bash` → NOT DONE then ran on confirm; `rm -rf /` → refused). Plan: 132 §41.
+
+## 2026-11-08 — talking to the arm: the one hand Rödd was missing
+
+### What it is
+
+Rödd could act, but it could not **reach the session that holds the arm** — the mind that drains
+wakes, sends the workers out and answers. It drives its own pi session, and two sessions with no
+wire cannot talk. It has that wire now, in two hands:
+
+- `talk_to_arm` — hands the arm holder a message in your words;
+- `hear_from_arm` — reads what the arm has answered since Rödd last listened.
+
+Both call **one door**, `bin/voice/rodd-arm.sh`, so a person, a script and the voice all take the
+same road.
+
+### What you need
+
+Nothing to install: no port, no socket, no daemon. The door reads the **arm lease**
+(`$YMIR_HOME/state/.arm.lease`) and appends into the queue that lease names — the same durable
+queue Sága drains at the start of a turn.
+
+### The commands
+
+```bash
+bin/voice/rodd-arm.sh who            # who holds the arm, the state dir, and the heartbeat's age
+bin/voice/rodd-arm.sh tell "text"    # hand the arm holder a message
+bin/voice/rodd-arm.sh hear [n]       # read the arm's unread replies (default 20, `all` for every one)
+bin/voice/rodd-arm.sh room           # where the room is and how many replies it holds
+bin/voice/rodd-arm.sh --check        # the one-line verdict, for a health surface
+bin/voice/rodd-arm.sh --self-test    # prove the door against a synthetic lease in a temp state
+```
+
+### The three laws it holds
+
+1. **Nobody armed, nothing sent.** With no lease, a dead pid, a reused pid or a heartbeat older than
+   `BROKK_WATCH_HEARTBEAT_STALE_SECONDS` (60 s), the door says `no arm is held` and exits 3 — and
+   `tell` writes nothing at all. Rödd then says that to your face instead of "sent".
+2. **The lease names the state, never a path in the code.** Two state shelves exist on some seats;
+   only the one named in `state=` is drained by the arm. A lease naming a directory that is not
+   there is refused, never created.
+3. **One writer per file.** The arm writes `rodd/room.jsonl`; Rödd only reads it, advancing a byte
+   cursor. Reading never truncates, so a reply is never destroyed by being heard.
+
+### Limits
+
+- It is **not synchronous**. The arm answers on a later turn — Rödd says "the arm has not written
+  back yet" until a reply lands in the room.
+- One message per call, as one plain line: tabs and newlines are flattened (the queue is
+  tab-separated).
+- A voice still cannot merge, push, spend or unseal anything by talking to the arm.
+
+### If it does not work
+
+- `no arm is held` while a window is open → `bin/voice/rodd-arm.sh who` names why: no lease, a dead
+  pid, a leftover lease (pid reused), a stale heartbeat, or a `state=` that is not a directory.
+- the arm never answers → `bin/voice/rodd-arm.sh room` says how many lines the room holds; the arm
+  writes `rodd/room.jsonl` under its own `state=`, and only when it chooses to.
+- Proved by `bin/voice/tests/test_rodd_arm.sh` (28 checks) and the door's own `--self-test`
+  (38 checks), both run by `bin/gates/ci-verify.sh`.
+
+### CHANGE LOG
+
+- **2026-11-08** — added at the Allfather's word (*"can we also make a tool for rödd so you and rödd
+  are connected … to the gna arm holder"*). Plan 223; fix note
+  `docs/fixes/voice/2026-11-08-rodd-knocks-on-the-arm.md`.
