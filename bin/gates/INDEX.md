@@ -75,7 +75,7 @@ bin[105]{file,does,kind,verdict,disposition,callers,lines}:
   "plan.md","Plan template","data","tested","keep",9,28
   "portability-ratchet.sh","portability-ratchet.sh — the GNU-only callers may go DOWN, never up.","tool","wired","keep",1,102
   "pr-ship-guard.sh","pr-ship-guard.sh — Rule 08, the ship door: the BRANCH is a smith's to push; the PR is not.","tool","wired","keep",2,175
-  "private-guard.py","'''private-guard — private structure and protected material never cross a surface.'''","tool","wired","keep",2,122
+  "private-guard.py","'''private-guard — private structure and protected material never cross a surface.'''","tool","wired","keep",2,145
   "private-guard.sh","private-guard.sh — private structure and NDA material never cross a surface.","tool","tested","keep",2,10
   "public-data-guard.sh","public-data-guard.sh — the TREE scan for RULES/04: templates and logic, and nothing private.","tool","wired","keep",2,19
   "public-data-ward.test.sh","public-data-ward.test.sh — prove the RULES/04 ward BITES.","tool","wired","keep",2,66
