@@ -104,7 +104,7 @@ export default function eir(pi: ExtensionAPI) {
     },
     execute: async (_toolCallId: string, args: any) => {
       const mode = String(args?.mode ?? "check");
-      const r = run("agents/groa-update.sh", [mode === "update" ? "" : "--check"], 600_000);
+      const r = run("agents/groa-update.sh", mode === "update" ? [] : ["--check"], 600_000);
       const note =
         mode === "update" && r.rc !== 0
           ? `\n  Gróa did not finish cleanly (exit ${r.rc}). The seat may be partly renewed — read the output before running it again.`

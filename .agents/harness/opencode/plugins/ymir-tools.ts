@@ -259,7 +259,7 @@ export default Plugin.define({
         output: Schema.Struct({ text: Schema.String }),
         execute: async ({ mode = "check" }) => {
           try {
-            const r = await runShell("bash", [`${root}/bin/agents/groa-update.sh`, mode === "update" ? "" : "--check"], root, 600_000)
+            const r = await runShell("bash", [`${root}/bin/agents/groa-update.sh`, ...(mode === "update" ? [] : ["--check"])], root, 600_000)
             const note = mode === "update" && !r.includes("exit 0") 
               ? `\n  Gróa did not finish cleanly. The seat may be partly renewed — read the output before running it again.`
               : ""
