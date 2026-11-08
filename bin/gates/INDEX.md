@@ -20,12 +20,13 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[103]{file,does,kind,verdict,disposition,callers,lines}:
+bin[105]{file,does,kind,verdict,disposition,callers,lines}:
   "SKILL.md","---","data","tested","keep",23,19
   "SKILL.md","---","data","tested","keep",23,19
   "SKILL.md","---","data","tested","keep",23,18
   "app-folder-guard.sh","app-folder-guard.sh — Rule 23: no code in an application's folder, and no","tool","tested","keep",1,131
   "app-functional-guard.sh","app-functional-guard.sh — AN UPDATE THAT LEAVES AN APP UNRUNNABLE IS NOT AN UPDATE.","tool","wired","keep",1,136
+  "areas-guard.sh","areas-guard (tree ward) — the canon and the copy that travels must not drift.","tool","wired","keep",7,118
   "branch-current.sh","branch-current.sh — a branch is based on CURRENT main before it is offered.","tool","tested","keep",2,82
   "branch-guard.sh","branch-guard.sh — Rule 08: no push may land on a protected branch.","tool","tested","keep",1,78
   "capabilities.sh","A GENERATED FILE MUST BE A FUNCTION OF CONTENT ALONE (0.1.94/0.1.95/0.1.97 — three","tool","wired","keep",10,309
@@ -104,6 +105,7 @@ bin[103]{file,does,kind,verdict,disposition,callers,lines}:
   "syn-guard-pretool-check.sh","syn-guard-pretool-check.sh - PreToolUse seatbelt for the runtime's load-bearing","tool","tested","keep",0,84
   "syn-spawn-pretool-check.sh","syn-spawn-pretool-check.sh - PreToolUse seatbelt for spawning and for typing.","data","wired","keep",0,59
   "syn-turnend-guard.sh","syn-turnend-guard.sh - refuse to let a Brokk turn end blind.","tool","tested","keep",1,52
+  "test_areas_and_injection.sh","test_areas_and_injection.sh — the smoke suite for plan 219 and the arm-holder's inbox.","tool","wired","keep",0,108
   "test_gimle_mcp_board.sh","test_gimle_mcp_board.sh — the Gimlé MCP's board face, proved by command.","tool","wired","keep",0,195
   "test_handoff_packet.sh","test_handoff_packet.sh — proves the packet door reads the schema's packet and refuses a false one.","tool","wired","keep",0,103
   "test_hermes_seat.sh","test_hermes_seat.sh — the acceptance test for plan 177 H1/H2/H3: Hermes carries the seat, the","tool","wired","keep",0,193
@@ -125,6 +127,6 @@ bin[103]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-config-check.sh","ymir-config-check.sh — the DOOR to the config layer (`src/ymir_runtime/config/`).","tool","wired","keep",0,44
   "ymir-update-check.sh","ymir-update-check.sh — does a newer Ymir stand on npm?","tool","wired","keep",3,71
 
-**Tally.** verdict: wired=85, tested=18
+**Tally.** verdict: wired=87, tested=18
 
-**Tally.** disposition: keep=101, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1
+**Tally.** disposition: keep=103, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1

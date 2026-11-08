@@ -1,0 +1,30 @@
+# areas/ward.yaml — security and the wards
+#
+# A project answers every canon area: held · waived · na. `held` needs evidence.
+# `unheld` is legal in the file and is what the gate refuses once work touches the area.
+# This file is the project's own record; the canon of questions lives in Ymir.
+
+version: 1
+area: ward
+project: ymir-platform
+state: held
+
+keeper: Vidarr the warden
+lens: ward
+
+# the folders this keeper may write. The gate refuses a push that changes one of these
+# paths while the area is unheld. Empty = nothing is claimed yet.
+may_write: ["bin/gates/guards/"]
+
+evidence: ["bin/gates/guards/ — thirty wards, wired in bin/gates/guards.sh", ".githooks/pre-push — the wards run before every push"]
+
+# the canon's questions, with this project's answers. An open answer is honest; a blank is not.
+answers:
+  - q: "what may not be committed, and what refuses it?"
+    a: ""
+  - q: "the repository's own guard wired into the commit and the push"
+    a: ""
+  - q: "one real refusal recorded, so the guard is known to run"
+    a: ""
+
+closed: ""                    # the date the evidence last proved it

@@ -35,9 +35,10 @@
 | doors.sh | doors.sh — a door register for ANY directory, rendered from the tree ( | tested | keep (a human or a cron row must run it) |
 | feature-inventory.sh | feature-inventory.sh — every feature the system CLAIMS, in one checkli | tested | keep (a human or a cron row must run it) |
 | fixes.sh | fixes.sh — the fix notes. ONE FILE PER FIX, and nothing to fold. | tested+named | keep (a human or a cron row must run it) |
-| guards.sh | guards.sh — every TREE ward, in one command. | tested | keep (a human or a cron row must run it) |
+| guards.sh | guards.sh — every TREE ward, in one command. | tested+named | keep (a human or a cron row must run it) |
 | app-folder-guard.sh | app-folder-guard.sh — Rule 23: no code in an application's folder, and | tested | keep (a human or a cron row must run it) |
 | app-functional-guard.sh | app-functional-guard.sh — AN UPDATE THAT LEAVES AN APP UNRUNNABLE IS N | tested | keep (a human or a cron row must run it) |
+| areas-guard.sh | areas-guard (tree ward) — the canon and the copy that travels must not | tested+named | keep (a human or a cron row must run it) |
 | branch-guard.sh | branch-guard.sh — Rule 08: no push may land on a protected branch. | tested+named | keep (a human or a cron row must run it) |
 | confidential-guard.sh | confidential-guard.sh — while a confidential session is live, nothing  | tested | keep (a human or a cron row must run it) |
 | constellation-grant-guard.sh | constellation-grant-guard.sh — the road's own ward. | tested+named | keep (a human or a cron row must run it) |
@@ -83,6 +84,7 @@
 | registers.sh | registers.sh — every generated register, through one door. | tested | keep (a human or a cron row must run it) |
 | repo-scrub.sh | repo-scrub.sh — purge private paths from ALL git history before going  | tested | keep (a human or a cron row must run it) |
 | seat-woven-driver.sh | seat-woven-driver.sh — seat the engine behind `merge=regenerate`, and  | tested | keep (a human or a cron row must run it) |
+| test_areas_and_injection.sh | test_areas_and_injection.sh — the smoke suite for plan 219 and the arm | tested | keep (a human or a cron row must run it) |
 | test_gimle_mcp_board.sh | test_gimle_mcp_board.sh — the Gimlé MCP's board face, proved by comma | tested | keep (a human or a cron row must run it) |
 | test_handoff_packet.sh | test_handoff_packet.sh — proves the packet door reads the schema's pac | tested | keep (a human or a cron row must run it) |
 | test_hermes_seat.sh | test_hermes_seat.sh — the acceptance test for plan 177 H1/H2/H3: Herme | tested+named | keep (a human or a cron row must run it) |

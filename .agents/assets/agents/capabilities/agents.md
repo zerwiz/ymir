@@ -9,6 +9,7 @@
 
 - **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | agent-run.sh | agent-run.sh — run one agent's errand through the harness the Allfathe | tested+named | keep (a human or a cron row must run it) |
+| areas.sh | areas.sh — the estate door: a project's areas, their keepers, and the  | tested+named | keep (a human or a cron row must run it) |
 | brokk-classify-lib.sh | Shared wake classifier: the common source of truth for Allfather-relevan | tested+named | keep (a human or a cron row must run it) |
 | brokk-lease-lib.sh | brokk-lease-lib.sh - the per-task supervision lease contract (one owner) | tested+named | keep (a human or a cron row must run it) |
 | brokk-lease.sh | brokk-lease.sh - claim, release, inspect, and sweep per-task supervision | tested+named | keep (a human or a cron row must run it) |
@@ -16,7 +17,7 @@
 | brokk-send.sh | brokk-send.sh — send a one-line steer to a running Brokk/Eindri-home. | tested+named | keep (a human or a cron row must run it) |
 | brokk-timeout-lib.sh | brokk-timeout-lib.sh - the single owner of bounded command execution. | tested+named | keep (a human or a cron row must run it) |
 | brokk-update.sh | brokk-update.sh — back-compat alias. | tested+named | keep (a human or a cron row must run it) |
-| domain.sh | domain.sh — the ONE door that starts, reports and stops a domain's kee | tested | keep (a human or a cron row must run it) |
+| domain.sh | domain.sh — the ONE door that starts, reports and stops a domain's kee | tested+named | keep (a human or a cron row must run it) |
 | eindri-acclaim-silent.sh | eindri-acclaim-silent.sh — action half of the Eindri silence bridge. | tested+named | keep (a human or a cron row must run it) |
 | eindri-acclaim.sh | eindri-acclaim.sh — action half of the Eindri→Brokk wake bridge. | tested+named | keep (a human or a cron row must run it) |
 | eindri-arm.sh | eindri-arm.sh — the Eindri's own arm (plan 42, the automation law). | tested | keep (a human or a cron row must run it) |
@@ -26,6 +27,7 @@
 | eindri-handoff.sh | eindri-handoff.sh — the handoff failsafe. An Eindri's work ALWAYS reac | tested+named | keep (a human or a cron row must run it) |
 | eindri-heartbeat.sh | eindri-heartbeat.sh — condition half of the Eindri silence bridge. | tested+named | keep (a human or a cron row must run it) |
 | eindri-liveness.sh | eindri-liveness.sh — the sweep's second question: is the pane still a  | tested+named | keep (a human or a cron row must run it) |
+| eindri-notify.sh | eindri-notify.sh — the ARM-HOLDER'S INBOX: inject one line into the se | tested | keep (a human or a cron row must run it) |
 | eindri-review-spawn.sh | eindri-review-spawn.sh — the review spine. FORSETI the Judge is sent a | tested+named | keep (a human or a cron row must run it) |
 | eindri-role.sh | eindri-role.sh — the right smith for the right metal. | tested+named | keep (a human or a cron row must run it) |
 | eindri-route.sh | eindri-route.sh — which machine should host an errand, by its nature? | tested+named | keep (a human or a cron row must run it) |

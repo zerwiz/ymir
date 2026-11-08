@@ -37,7 +37,7 @@ bin[34]{file,does,kind,verdict,disposition,callers,lines}:
   "mimir-policy.py","'''mimir-policy.py — the law of the well: what may be written, what it is, and","tool","tested","keep",3,1301
   "mimir-recall-today.sh","mimir-recall-today.sh — drink before you act: the session's opening recall.","tool","wired","keep",1,113
   "mimir-reflect.sh","mimir-reflect — smelt the well's episodes into facts, through the LLAMA-ROUTER.","tool","wired","keep",0,35
-  "mimir.sh","mimir.sh — the well (Mimirsbrunn).","tool","tested","keep",18,510
+  "mimir.sh","mimir.sh — the well (Mimirsbrunn).","tool","tested","keep",19,510
   "note.sh","note.sh — append a DATED section to an existing document in the home (append-only, Rule 06).","tool","wired","keep",1,16
   "open-work.sh","open-work.sh — the open work, rendered for a HUMAN, from the record the doors read.","tool","wired","keep",2,80
   "plan.sh","plan.sh — the plan ledger: create the NEXT numbered plan and its index row.","tool","tested","keep",7,83
