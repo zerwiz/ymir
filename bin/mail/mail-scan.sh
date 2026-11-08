@@ -1,17 +1,21 @@
 #!/usr/bin/env bash
 # mail-scan.sh — read-only: the last N hours of a mailbox, as compact JSON.
 #
-#   mail-scan.sh [--hours 24] [--max 40] [--account primary]
+#   mail-scan.sh [--hours 24] [--max 40] [--scope inbox|sent|drafts|all] [--account primary]
+#
+# The SCOPE decides what is read: `inbox` (the default) is unread inbox only; `sent`
+# and `drafts` are what the house has written; `all` is everything but chats.
 #
 # It can only READ. There is no send, no draft, no modify in this file — the
 # secretary's first law is that the sender does not exist in her hands.
 set -uo pipefail
 
 ROOT="${YMIR_TREE:-$HOME/ymir}"
-HOURS=24; MAX=40
+HOURS=24; MAX=40; SCOPE=inbox
 while [ $# -gt 0 ]; do case "$1" in
   --hours) HOURS="${2-}"; shift 2 ;;
   --max) MAX="${2-}"; shift 2 ;;
+  --scope) SCOPE="${2-}"; shift 2 ;;
   --account) shift 2 ;;
   *) echo "usage: mail-scan.sh [--hours N] [--max N]" >&2; exit 2 ;;
 esac; done
@@ -26,8 +30,14 @@ TOKEN="$(curl -sS -m 20 -X POST https://oauth2.googleapis.com/token \
   | python3 -c 'import json,sys;print(json.load(sys.stdin).get("access_token",""))')"
 [ -n "$TOKEN" ] || { echo '{"error":"token refresh failed"}' >&2; exit 1; }
 
-# unread in the inbox, newest first — the desk's raw material
-Q="is:unread in:inbox newer_than:${HOURS}h"
+# what to read, decided by the SCOPE — the desk's raw material is unread inbox
+case "$SCOPE" in
+  inbox)  Q="is:unread in:inbox newer_than:${HOURS}h" ;;
+  sent)   Q="in:sent newer_than:${HOURS}h" ;;
+  drafts) Q="in:drafts newer_than:${HOURS}h" ;;
+  all)    Q="newer_than:${HOURS}h -in:chats" ;;
+  *) echo "usage: --scope inbox|sent|drafts|all" >&2; exit 2 ;;
+esac
 LIST="$(curl -sS -m 30 -G "https://gmail.googleapis.com/gmail/v1/users/me/messages" \
   -H "Authorization: Bearer $TOKEN" \
   --data-urlencode "q=$Q" --data-urlencode "maxResults=$MAX")"

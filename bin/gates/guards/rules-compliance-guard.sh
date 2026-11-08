@@ -50,6 +50,10 @@ is_meta() { case "$1" in RULES/README.md|docs/features/_catalogue/*|bin/README.m
 while IFS= read -r f; do
   [ -n "$f" ] || continue
   case "$f" in *.md) ;; *) continue ;; esac
+  # A symlink is a LINK, not a document (Rule 02): the harness agent dirs are links into
+  # .agents/agents/, and judging the target twice — once as a link, once as itself — reports
+  # a history the target either has or does not, in a place that cannot hold one.
+  [ -L "$f" ] && continue
   is_meta "$f" && continue
   is_shape "$f" && continue
   grep -qiE '^#+ *change[ -]?log' "$f" 2>/dev/null || \

@@ -228,11 +228,57 @@ export function Skirnir() {
     }
   }
 
+  const [rodd, setRodd] = useState<{ ok: boolean; status?: string } | null>(null);
+  const [roddLog, setRoddLog] = useState('');
+  const [roddBusy, setRoddBusy] = useState(false);
+  useEffect(() => {
+    let live = true;
+    const look = async () => {
+      try {
+        const r = await fetch('/api/rodd/status', { credentials: 'include', headers: desktopHeaders() });
+        const d = await r.json() as { ok: boolean; status?: string };
+        if (live) setRodd(d);
+      } catch { if (live) setRodd({ ok: false, status: 'the gate did not answer' }); }
+    };
+    void look();
+    const timer = setInterval(() => void look(), 5000);
+    return () => { live = false; clearInterval(timer); };
+  }, []);
+  async function roddActivity() {
+    try {
+      const r = await fetch('/api/rodd/log', { credentials: 'include', headers: desktopHeaders() });
+      const d = await r.json() as { ok: boolean; activity?: string; error?: string };
+      setRoddLog(d.activity ?? d.error ?? 'nothing recorded yet');
+    } catch (e) { setRoddLog((e as Error).message); }
+  }
+  async function roddAction(action: 'start' | 'stop') {
+    setRoddBusy(true);
+    try {
+      await fetch(`/api/rodd/${action}`, { method: 'POST', credentials: 'include', headers: desktopHeaders() });
+      const r = await fetch('/api/rodd/status', { credentials: 'include', headers: desktopHeaders() });
+      setRodd(await r.json() as { ok: boolean; status?: string });
+    } catch (e) { setError((e as Error).message); }
+    finally { setRoddBusy(false); }
+  }
+
   return <>
     <div className="stage-head"><div>
       <h1 className="stage-title">Skírnir – Tala</h1>
       <p className="stage-deck">One question at a time · approved knowledge · local voice engines</p>
     </div></div>
+    <section className="panel" aria-label="Rödd — the live voice" style={{ maxWidth: 840 }}>
+      <div className="panel-body" style={{ display: 'grid', gap: 12 }}>
+        <h2 style={{ marginTop: 0 }}>Rödd — the live voice</h2>
+        <p className="muted" style={{ margin: 0 }}>A real-time conversation, seated in a herdr pane: it hears you while you speak, answers out loud, and can hand work to a worker. The machine with the card hosts it; you can sit anywhere.</p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+          <button className="btn btn-primary" style={{ minHeight: 44 }} disabled={roddBusy} onClick={() => void roddAction('start')}>Start Rödd</button>
+          <button className="btn" style={{ minHeight: 44 }} disabled={roddBusy} onClick={() => void roddAction('stop')}>Stop Rödd</button>
+          <button className="btn" style={{ minHeight: 44 }} onClick={() => void roddActivity()}>Show what it has done</button>
+        </div>
+        <pre className="mono" style={{ margin: 0, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', color: rodd?.ok ? 'var(--ymir-text-1)' : 'var(--ymir-danger)' }}>{rodd?.status ?? 'asking the gate…'}</pre>
+        {roddLog && <pre data-testid="rodd-activity" className="mono" style={{ margin: 0, maxHeight: 260, overflow: 'auto', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>{roddLog}</pre>}
+      </div>
+    </section>
     <section className="panel" aria-label="Talk with Skírnir" style={{ maxWidth: 840 }}>
       <div className="panel-body" style={{ display: 'grid', gap: 20 }}>
         <div><h2 style={{ marginTop: 0 }}>Talk with Skírnir</h2>

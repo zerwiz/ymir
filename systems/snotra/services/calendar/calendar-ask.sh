@@ -104,8 +104,10 @@ if [ -z "${MANAGANDR_NO_VAULT:-}" ] && [ -z "$FIXTURE" ] && [ -z "${MANAGANDR_FI
   # The vault names the Google client GOOGLE_OAUTH_*; the reader asks for
   # MANAGANDR_CLIENT_*. Map the one to the other here (Rule 07: one resolver, no
   # second copy of the secret). Never printed.
-  : "${MANAGANDR_CLIENT_ID:=${GOOGLE_OAUTH_CLIENT_ID:-}}"
-  : "${MANAGANDR_CLIENT_SECRET:=${GOOGLE_OAUTH_CLIENT_SECRET:-}}"
+  # The vault has named the Google client GOOGLE_MCP_* since the mail door was built;
+  # accept all three spellings here rather than copying a secret (Rule 07: one resolver).
+  : "${MANAGANDR_CLIENT_ID:=${GOOGLE_OAUTH_CLIENT_ID:-${GOOGLE_MCP_CLIENT_ID:-}}}"
+  : "${MANAGANDR_CLIENT_SECRET:=${GOOGLE_OAUTH_CLIENT_SECRET:-${GOOGLE_MCP_CLIENT_SECRET:-}}}"
   export MANAGANDR_CLIENT_ID MANAGANDR_CLIENT_SECRET
 fi
 
