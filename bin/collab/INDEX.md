@@ -31,13 +31,13 @@ bin[50]{file,does,kind,verdict,disposition,callers,lines}:
   "TEMPLATE.yaml","areas/TEMPLATE.yaml — what one area's declaration looks like.","data","wired","keep",2,44
   "a2a-guard.sh","a2a-guard — a card in the constellation must stay true, and a changed one must still be valid.","tool","wired","keep",1,38
   "a2a.md","A2A — the repository's card in the constellation","data","wired","keep",0,54
-  "a2a.py","'''a2a.py — the repository's own card in the constellation.","data","wired","keep",2,208
+  "a2a.py","'''a2a.py — the repository's own card in the constellation.","tool","wired","keep",2,208
   "a2a.sh","a2a.sh — this repository's card in the constellation (a thin door; the craft is a2a.py).","tool","wired","keep",4,18
   "advantage-audit.sh","advantage-audit.sh — is every claim we make backed by evidence, or only by confidence?","tool","tested","keep",2,141
   "advantage.md","Competitive advantage — how we research it, and how we are allowed to state it","data","wired","keep",0,129
   "areas-guard.sh","areas-guard — a change to an area nobody holds is refused, and the AREA is named, never the author.","tool","wired","keep",6,81
   "areas.md","Areas — how a repository says what it answers for","data","wired","keep",1,81
-  "areas.py","'''areas.py — a repository's own answer to the canon of areas.","data","wired","keep",5,417
+  "areas.py","'''areas.py — a repository's own answer to the canon of areas.","tool","wired","keep",5,417
   "areas.sh","areas.sh — this repository's own answer to the canon of areas (a thin door; the craft is areas.py).","tool","wired","keep",15,18
   "canon.yaml","areas/canon.yaml — the plain face of the canon: what every project must answer for.","data","wired","keep",6,139
   "checks.sh","checks.sh — run this repository's own cheap checks, whatever language it is written in.","tool","wired","keep",3,103
