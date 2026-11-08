@@ -97,7 +97,7 @@ else
   ok "no pane to inject into — the door named the broken link instead of pretending"
 fi
 rid="smoke-report-$$"   # removed below; never left behind
-report_out="$(bash bin/agents/report.sh write "$rid" --state "done" --changed "no behaviour — smoke test" --verified "the door answered" --next "delete this report" --pointers "bin/gates/tests/test_areas_and_injection.sh" 2>&1)"
+report_out="$(YMIR_NO_INJECT=1 bash bin/agents/report.sh write "$rid" --state "done" --changed "no behaviour — smoke test" --verified "the door answered" --next "delete this report" --pointers "bin/gates/tests/test_areas_and_injection.sh" 2>&1)"
 printf '%s' "$report_out" | grep -q "report\[1\]" && ok "report.sh still writes its shelf" || no "report.sh writes its shelf" "$report_out"
 ls "$HOME/Documents/ymirhome/state/eindri-reports/$rid.md" >/dev/null 2>&1 && rm -f "$HOME/Documents/ymirhome/state/eindri-reports/$rid.md" && ok "the report file exists and was cleaned up" \
   || ok "the report file is written (shelf path varies on this host)"
