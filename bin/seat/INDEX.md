@@ -46,8 +46,8 @@ bin[26]{file,does,kind,verdict,disposition,callers,lines}:
   "valknut-load.sh","valknut-load.sh — Valknut, the knot that binds the repo distro into each tool's","tool","tested","keep",8,717
   "verify-seat.sh","verify-seat.sh — is this seat actually whole?","tool","tested","keep",3,177
   "whose-tree.sh","whose-tree.sh — whose code am I standing in?","tool","wired","keep",0,118
-  "ymir-mcp.py","'''ymir-mcp.py — Ymir's own doors over MCP: the tools Pi has as extensions, for","tool","wired","keep",4,276
+  "ymir-mcp.py","'''ymir-mcp.py — Ymir's own doors over MCP: the tools Pi has as extensions, for","tool","tested","keep",4,276
 
-**Tally.** verdict: wired=21, tested=5
+**Tally.** verdict: wired=20, tested=6
 
 **Tally.** disposition: keep=26
