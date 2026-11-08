@@ -96,7 +96,76 @@ def _remote(spec: dict) -> bool:
     return bool(spec.get("url"))
 
 
+# ── the harness's own grants, borrowed not copied ─────────────────────────────
+# The seat already holds OAuth grants for the Google MCP servers (gmail · drive · docs)
+# and for trello: Pi minted them once, in a browser, and keeps them in
+# ~/.pi/agent/mcp-auth.json keyed by `mcp__<name>|<url>`. A voice that asked him to
+# consent a second time for the same account would be a worse guest than the harness.
+# So the token is READ from that store and, when it has expired, REFRESHED in memory
+# for this process only — the store is the harness's to rewrite, never ours.
+
+_AUTH_CACHE: dict[str, str] = {}
+
+
+def _pi_auth_path() -> Path:
+    return Path.home() / ".pi" / "agent" / "mcp-auth.json"
+
+
+def _pi_auth(name: str, url: str) -> str:
+    """A bearer token for this server, refreshed in memory if the stored one has expired."""
+    key = f"mcp__{name}|{url}"
+    if key in _AUTH_CACHE:
+        return _AUTH_CACHE[key]
+    try:
+        store = json.loads(_pi_auth_path().read_text())
+    except Exception:
+        return ""
+    entry = store.get(key) or {}
+    tokens = entry.get("tokens") or {}
+    access = str(tokens.get("access_token") or "")
+    expires_at = entry.get("tokensExpireAt") or 0
+    import time as _time
+    fresh_enough = access and (not expires_at or _time.time() < (expires_at / 1000) - 60)
+    if fresh_enough:
+        _AUTH_CACHE[key] = access
+        return access
+    refresh = str(tokens.get("refresh_token") or "")
+    client = entry.get("clientInformation") or {}
+    token_endpoint = (entry.get("discovery") or {}).get("token_endpoint") or "https://oauth2.googleapis.com/token"
+    if not (refresh and client.get("client_id")):
+        return access          # nothing to refresh with: use it and let the server refuse in words
+    import urllib.error
+    import urllib.parse
+    import urllib.request
+    body = urllib.parse.urlencode({
+        "grant_type": "refresh_token",
+        "refresh_token": refresh,
+        "client_id": client["client_id"],
+        **({"client_secret": client["client_secret"]} if client.get("client_secret") else {}),
+    }).encode()
+    req = urllib.request.Request(token_endpoint, data=body, method="POST",
+                                 headers={"Content-Type": "application/x-www-form-urlencoded"})
+    try:
+        with urllib.request.urlopen(req, timeout=25) as resp:
+            payload = json.loads(resp.read().decode("utf-8", "ignore"))
+    except Exception as exc:
+        raise McpError(f"{name} needs a fresh sign-in: its grant could not be refreshed ({exc}). "
+                       "Ask the harness to re-authorise that server once.") from None
+    new = str(payload.get("access_token") or "")
+    if not new:
+        raise McpError(f"{name} needs a fresh sign-in: the refresh returned no token")
+    _AUTH_CACHE[key] = new
+    return new
+
+
 # ── one JSON-RPC exchange, per transport ─────────────────────────────────────
+
+def _server_name(url: str) -> str:
+    """Which declared server this URL belongs to — so the harness's grant key is found."""
+    for name, spec in servers().items():
+        if spec.get("url") == url:
+            return name
+    return url
 
 class McpError(RuntimeError):
     pass
@@ -115,6 +184,8 @@ def _rpc_http(spec: dict, messages: list[dict], timeout: int) -> list[dict]:
     for key, value in (spec.get("headers") or {}).items():
         headers[key] = str(value)
     auth = os.environ.get(spec.get("token_env", ""), "") if spec.get("token_env") else ""
+    if not auth:
+        auth = _pi_auth(_server_name(spec.get("url", "")), spec["url"])
     if auth:
         headers.setdefault("Authorization", f"Bearer {auth}")
     body = json.dumps(messages[0] if len(messages) == 1 else messages).encode()

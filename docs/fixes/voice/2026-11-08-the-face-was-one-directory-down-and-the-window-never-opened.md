@@ -222,3 +222,24 @@ measurements[5]{what,result}:
   voice's server list — its URL and token must be read, not guessed.
 - A spoken end-to-end confirm for `edit`/`bash`/`mcp` (his voice → the tool) was not exercised.
 - The OAuth servers (trello · gmail · drive · docs) need a harness-side grant the voice cannot do.
+
+## Addition (2026-11-08, after the calendar grant) — Google's MCP, borrowed not re-consented
+
+His word: *"can't we just connect google's MCP also to him"*. The servers were already declared
+(gmail · drive · docs · trello), but the adapter had no way to authenticate to them: it only knew a token
+from an environment variable.
+
+`bin/voice/voice_mcp.py` now reads the harness's own store, `~/.pi/agent/mcp-auth.json` (keyed
+`mcp__<name>|<url>`), uses the access token while it is live, and **refreshes it in memory for that process
+only** when it has expired — the store stays Pi's to rewrite, and nothing is copied into the tree.
+
+```
+measured[4]{server,tools,what_answered}:
+  "gmail","23","authenticated, list returned; a CALL is refused by Google until Cloud project 463322445860 is enrolled in the Workspace Developer Preview Program"
+  "drive","8","authenticated, list returned; `search_files` → `The caller does not have permission` (same wall)"
+  "docs","2","authenticated, list returned; not exercised"
+  "trello","—","token live to 15:45 today; same refresh path available"
+```
+
+So the road is open and the wall is Google's, not ours: the enrolment is the operator's grant to give in a
+browser. Proved through the toolbox (the window's path): `mcp_tools gmail` → `gmail: 23 tools`.
