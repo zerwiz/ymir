@@ -1,6 +1,7 @@
 # apps/rodd — the app's own build artifacts
 node_modules/
 ui/node_modules/
+.engine/
 
 # vendored SDK bundle and the VAD/onnx runtime assets are BUILT at install time
 # (`npm run ui:install`), never committed — 6 MB of minified SDK and 41 MB of wasm do

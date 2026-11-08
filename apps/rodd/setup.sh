@@ -19,18 +19,48 @@ APP="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TAG="${RODD_UI_TAG:-v1.1.0}"
 REPO="${RODD_UI_REPO:-https://github.com/huggingface/speech-to-speech}"
 UI="$APP/ui"
+# the engine checkout is a STAGING shelf, never the served face — and never inside the tree:
+# a scanner that walks this repo counted its worklets as dead code (dead-code-guard, 2026-11-08)
+ENGINE="${RODD_ENGINE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/ymir/rodd-engine}"   # allow-home-default: a cache, overridable
+STAMP="$UI/.rodd-face"     # which tag the served face was dressed from
 say() { printf '%-42s %s\n' "$1" "$2"; }
 
-if [ ! -d "$UI/.git" ]; then
-  rm -rf "$UI"
+# `--check` is the question every installer and every updater asks: is the face present,
+# and is it the face this tree pins? One word answers it, and the exit code says whether
+# anything needs building.
+case "${1:-}" in
+  --check)
+    if [ ! -f "$UI/index.html" ]; then printf 'missing\n'; exit 1; fi
+    if [ "$(cat "$STAMP" 2>/dev/null)" != "$TAG" ]; then printf 'stale:%s\n' "$TAG"; exit 1; fi
+    printf 'present\n'; exit 0 ;;
+  -h|--help) sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+esac
+
+# The engine repository is NOT the face. At the pinned tag the browser face is its own
+# `demo/` directory (index.html · server.py · main.js · worklets/), and the client that
+# main.js serves must be that directory's contents at `ui/`. Cloning the engine straight
+# into `ui/` is what produced "patch-ui: no UI at …/ui": the face sat one level down the
+# whole time, and `npm ci` ran against a root that carries no package.json.
+if [ ! -f "$STAMP" ] || [ "$(cat "$STAMP" 2>/dev/null)" != "$TAG" ]; then
+  rm -rf "$ENGINE"
+  mkdir -p "$(dirname "$ENGINE")"
   say "fetching the face" "$REPO @ $TAG"
-  git clone --depth 1 --branch "$TAG" "$REPO" "$UI" >/dev/null 2>&1 || { say "clone failed" "$REPO"; exit 1; }
+  git clone --depth 1 --branch "$TAG" "$REPO" "$ENGINE" >/dev/null 2>&1 || { say "clone failed" "$REPO"; exit 1; }
+  [ -d "$ENGINE/demo" ] || { say "this tag carries no demo/" "$TAG"; exit 1; }
+  rm -rf "$UI"
+  mkdir -p "$UI"
+  cp -a "$ENGINE/demo/." "$UI/"
+  printf '%s\n' "$TAG" > "$STAMP"
 else
-  say "face already fetched" "$(git -C "$UI" describe --tags 2>/dev/null || echo "$TAG")"
+  say "face already fetched" "$TAG"
 fi
 
-say "installing the UI's dependencies" "(npm ci — the SDK bundle and wasm live here)"
-( cd "$UI" && npm ci --silent >/dev/null 2>&1 ) || { say "npm ci failed" "run it by hand in $UI"; exit 1; }
+if [ ! -d "$UI/node_modules" ]; then
+  say "installing the UI's dependencies" "(npm ci — the SDK bundle and wasm live here)"
+  ( cd "$UI" && npm ci --silent >/dev/null 2>&1 ) || { say "npm ci failed" "run it by hand in $UI"; exit 1; }
+else
+  say "dependencies already installed" "(npm ci — skipped)"
+fi
 
 mkdir -p "$UI/vendor"
 BUNDLE="$UI/node_modules/@openai/agents-realtime/dist/bundle/openai-realtime-agents.umd.js"

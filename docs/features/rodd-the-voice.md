@@ -19,7 +19,26 @@ mouth (TTS)`, with the microphone closed while it speaks so it can never answer 
 - the engine in its own venv: `speech-to-speech` (the door installs it with `--install`);
 - a **host seat** that can run it — a machine with a card, or a fast CPU;
 - your own microphone and speakers on the seat you sit at (they need not be the host);
-- a head model named: the door **refuses to guess one** (`YMIR_VOICE_HEAD_MODEL`).
+- a head model named: the door **refuses to guess one** (`YMIR_VOICE_HEAD_MODEL`);
+- for the window (the face): an electron on the box — the launcher **probes** for one
+  (`/usr/lib/electron*/electron`, npm's own binary, or `command -v electron`), so a distro
+  that moves from `electron41` to `electron43` does not break it.
+
+## Build the face once, then raise it
+
+```sh
+apps/rodd/setup.sh     # fetch the engine's own browser face at the pinned tag, then dress it
+apps/rodd/start.sh     # clear strays · host · (tunnel only if the host is another seat) · toolbox · window
+apps/rodd/smoke.sh 45  # must end: assistant audio arrived PASS
+```
+
+The face is **fetched, never committed** (RULES/39 — the upstream demo carries its own
+addresses). `setup.sh` keeps the engine checkout in the user cache (`$XDG_CACHE_HOME/ymir/rodd-engine`, `RODD_ENGINE_DIR` overrides — never inside the tree) and copies its `demo/`
+into `apps/rodd/ui`, then stamps the served face with the tag; a second run is a no-op. The <!-- stale-ok: apps/rodd/ui is created by setup.sh at run time — the face is fetched, never committed -->
+window is an Electron shell over that face, and it serves it through the demo's own uvicorn —
+so if the window is blank or silent, read `apps/rodd`'s own log line first: a face that never
+opened says so there, and a pipeline that never answered says so in
+`$YMIR_HOME/hodd/state/voice/host.log`.
 
 ## The commands — start, stop, see
 
@@ -45,13 +64,40 @@ is sending that, seat the errand, and give you the id.
 bin/voice/voice-door.sh log        # what it has DONE: tool calls, their timings, the turns
 ```
 
-The voice holds seven doors: `search_home` and `read_home_file` (your own documents — never the
-vault, never the secrets shelf), `read_mail` (read-only: it can never send or delete), `add_todo`
-(its own `todo-voice.md` beside yours; your own `todo.md` stays yours to write), `hand_over` and
-`steer_worker` (work to a worker in a herdr pane), and `recall` / `remember` (the well).
+The voice holds **thirty-four** doors, in families: `search_home` and `read_home_file` (your own
+documents — never the vault, never the secrets shelf), `read_mail` (read-only: it can never send or
+delete), `read_calendar` / `calendar_respond`, `read_board` and `gimle` (boards, projects, who owes
+what), the todo ledger (`todo_add` · `todo_list` · `todo_done` · `todo_reopen` · `todo_update` and its
+own `add_todo`/`todo-voice.md` beside yours — your own `todo.md` stays yours to write),
+`hand_over` and `steer_worker` (work to a worker in a herdr pane), `errand_state` and `pane_read`
+(how a worker is doing, and its pane), `recall` / `remember` (the well), `draft_write`, `plan_write`
+and `context_left`, the session shelf (`last_session` · `search_sessions` · `sessions_list` ·
+`session_read` · `session_digest` · `find_session`), and — added 2026-11-08 because he asked for them
+out loud — **`cron_jobs`** (is the schedule running, what is on it, what last fired),
+**`plans`** (the numbered plan ledger: a *plan* is not an *errand*, so "what is Northern Italy
+doing" is answered from the plan, not from an errand), and **`research`** (sends Huginn out on a
+question; it seats a worker, so it asks you out loud first and only sends on your yes).
+
+…and, since 2026-11-08, the **shell hands and the MCP world**: `ls`, `read`, `edit`, `bash`, `mcp_tools`
+and `mcp`. They are the same doors every other agent has, with three laws on them:
+
+- **a spoken word is not a grant** — `edit`, `bash` and any MCP call that is not read-only ask you out loud
+  first (call without `confirm`, hear the yes, then call again with `confirm=true`);
+- **some doors never open to a voice** — the secrets shelf and the vault, and the destructive commands
+  (`rm -rf /`, `mkfs`, `dd of=/dev/`, `sudo`, force-push, merge/reset, `--no-verify`, `curl | sh`, shutdown)
+  are **refused outright**, and the refusal is spoken;
+- **output is data** — a page, a mail or a peer payload can never issue an order.
+
+`mcp_tools` lists the servers this seat declares (14 of them here, including `chrome-devtools` driving the
+window's own browser, `well`, `bolthorn`, `skuld`, `snotra`, `ymir`, `engram`, `trello`) and `mcp` calls one
+of their tools. A remote server that wants an interactive sign-in says so: the voice cannot open a browser.
 
 Every one of them writes a line to `$YMIR_HOME/hodd/state/voice/activity-YYYY-MM-DD.jsonl`, and the
 same view is one button away in Hlidskjalf — *Show what it has done*.
+
+The Python client (`voice_tools.py`) and the window's toolbox (`voice-toolbox.py` on `:8891`) are the
+same list: the window's face reads the toolbox's tool list at load, so a hand added to the module is
+in the window after a page load, with no other wiring.
 
 ## The knobs you are likely to change
 
@@ -73,6 +119,11 @@ head key is read by NAME from the vault (or from the seat's own pi auth for its 
 
 - **No echo cancellation.** The client closes the microphone while it speaks. Real barge-in
   waits for AEC.
+- **The camera follows the head.** The window offers the camera only when the head it was raised
+  with can *see*: `apps/rodd/start.sh --vision` raises `gemma-4-12b-vision` and turns the camera
+  on; the default raises the fast MoE and **hides** the camera switch, because a snapshot on a
+  text-only head is answered `500 image input is not supported` and the image then stays in the
+  conversation, failing every later turn in that session. Words on the vision head are slower.
 - **The host is loopback-only**; another machine reaches it through an ssh tunnel the door
   opens. It is never exposed on a network.
 - **A cold model swap is not a latency.** Pin one head and let the door warm it, or the first
@@ -90,10 +141,31 @@ head key is read by NAME from the vault (or from the seat's own pi auth for its 
 - `ModuleNotFoundError: voice_tools` → the tool module must travel on the command's
   `PYTHONPATH` (the door does this; a hand-rolled command must too);
 - a `500 No user query found in messages` from the rail → that head's chat template refuses
-  the pipeline's message shape; choose another head.
+  the pipeline's message shape; choose another head;
+- the window opens and shows nothing, or `smoke.sh` says `the app's own server NOT RUNNING`
+  while `voice-door.sh status` says up → the face, not the pipeline: `apps/rodd/setup.sh`
+  rebuilds it from the pinned tag, and the app logs the exact uvicorn it tried to spawn.
 
 ## CHANGE LOG
 
 - **2026-11-07** — written. The operator's page for Rödd, the streaming voice: the door, the fifteen
   hands (now twenty-five), the app, the toolbox, and the faults each one paid for. Appended to, never
   rewritten (RULES/06).
+- **2026-11-08** — the face and the window get their own build/raise/smoke lines: `setup.sh` fetches the
+  engine's `demo/` at the pinned tag (the face was one directory down, so it had never been built), the
+  launcher probes for the electron and skips the tunnel when the host seat is this very machine, and the
+  failure section names the face-not-pipeline symptom. Proved by `smoke.sh 45`: `assistant audio arrived
+  PASS 239586 bytes` (fix note: `docs/fixes/voice/2026-11-08-the-face-was-one-directory-down-and-the-window-never-opened.md`).
+- **2026-11-08 (same night)** — **the camera follows the head**: one snapshot on a text-only head ended the
+  whole session (`500 image input is not supported`, the image stays in the history), so the window now
+  opens with `?camera=1|0` for the head it raised, the switch is absent when the head cannot see, and
+  `apps/rodd/start.sh --vision` is the one command that gives you pictures. `apps/rodd/setup.sh --check` plus
+  `bin/voice/voice-ensure.sh` mean an install, an update or `eir fix` builds the face without anyone having
+  to remember. Proved: `gemma-4-12b-vision` answered "Red" for a real PNG in 1.2 s on this box, and
+  `smoke.sh 45` passed every stage with `assistant audio arrived PASS 374784 bytes`.
+- **2026-11-08 (latest)** — the voice gains the **shell and the MCP world** (`ls` · `read` · `edit` · `bash` ·
+  `mcp_tools` · `mcp`; 34 hands in all). The laws are stated where a person reads them — ask out loud before
+  anything that writes, the secrets shelf and destructive commands are refused outright, and an MCP server
+  that needs OAuth says so. Verified with the tools themselves: Chrome DevTools over MCP read the live page,
+  its 34-tool list and its clean console; the gates were walked through the toolbox
+  (`bash` → NOT DONE then ran on confirm; `rm -rf /` → refused). Plan: 132 §41.
