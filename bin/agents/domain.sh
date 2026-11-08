@@ -25,7 +25,7 @@ mkdir -p "$STATE" 2>/dev/null || true
 
 usage(){ sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; }
 
-declare -A DOMAIN_DIR KEEPER_FIG
+declare -A DOMAIN_DIR KEEPER_FIG DOMAIN_FILE
 load_domains(){
   local d name keeper
   local globs=("$ROOT"/systems/*/domain.yaml)
@@ -40,6 +40,7 @@ load_domains(){
     [ -n "$name" ] || name="$(basename "$(dirname "$d")")"
     [ -n "$keeper" ] || keeper="$name"   # a declaration may leave it implicit: the domain keeps itself
     DOMAIN_DIR["$name"]="$(dirname "$d")"
+    DOMAIN_FILE["$name"]="$d"
     KEEPER_FIG["$name"]="$keeper"
   done
 }
@@ -54,8 +55,9 @@ brief_for(){  # <domain>
   local name="$1" dir="${DOMAIN_DIR[$1]:-}" keeper="${KEEPER_FIG[$1]:-}" fig
   fig="$(figure_file "$keeper")"
   printf '# Brief — you are %s, keeper of the %s domain\n\n' "${keeper:-its keeper}" "$name"
-  printf '## The declaration (`%s`)\n\n' "${dir#"$ROOT"/}/domain.yaml"
-  sed -n 's/^/    /p' "$dir/domain.yaml"
+  decl="${DOMAIN_FILE[$1]:-$dir/domain.yaml}"
+  printf '## The declaration (`%s`)\n\n' "$decl"
+  sed -n 's/^/    /p' "$decl"
   if [ -n "$fig" ]; then
     printf '\n## Your figure (`%s`)\n\n' "${fig#"$ROOT"/}"
     sed -n 's/^/    /p' "$fig"
@@ -63,10 +65,12 @@ brief_for(){  # <domain>
     printf '\n## Your figure\n\n    NONE — no file matches .agents/agents/%s*.md. Say so before you act.\n' "${keeper:-?}"
   fi
   [ -r "$dir/AGENTS.md" ] && { printf '\n## The house rules in this folder\n\n'; sed -n 's/^/    /p' "$dir/AGENTS.md"; }
+  [ -r "$(dirname "$decl")/../AGENTS.md" ] && [ "$(dirname "$decl")/../AGENTS.md" != "$dir/AGENTS.md" ] && { \
+    printf '\n## The house rules of the estate\n\n'; sed -n 's/^/    /p' "$(dirname "$decl")/../AGENTS.md"; }
   # AREAS_SCOPE (plan 219): an area's brief names exactly what the keeper may write, from the
   # declaration, because a keeper that has to guess its boundary will cross it.
   local mw
-  mw="$(sed -n 's/^may_write:[[:space:]]*\[\(.*\)\][[:space:]]*$/\1/p' "$dir/domain.yaml" 2>/dev/null | head -1)"
+  mw="$(sed -n 's/^may_write:[[:space:]]*\[\(.*\)\][[:space:]]*$/\1/p' "${DOMAIN_FILE[$1]:-$dir/domain.yaml}" 2>/dev/null | head -1)"
   if [ -n "${AREAS_SCOPE:-}" ]; then
     printf '\n## What you may write\n\n'
     if [ -n "$mw" ]; then printf '%s\n' "$mw" | tr ',' '\n' | sed 's/[" ]//g' | sed '/^$/d' | sed 's/^/    /p'; \
@@ -128,6 +132,12 @@ case "$ACTION" in
     [ -n "$n" ] || { printf 'error: call needs a domain\n' >&2; exit 2; }
     [ -n "${DOMAIN_DIR[$n]:-}" ] || { printf 'error: no such domain: %s\n' "$n" >&2; exit 2; }
     dir="${DOMAIN_DIR[$n]}"; k="$(printf '%s' "${KEEPER_FIG[$n]}" | tr -d '"')"
+    # AREAS_SCOPE (plan 219): the shim lives in our state, the WORK lives in `folder:` of the
+    # declaration. A keeper that stands in the shim cannot see the repository it keeps.
+    if [ -n "${AREAS_SCOPE:-}" ]; then
+      _f="$(sed -n 's/^folder:[[:space:]]*//p' "${DOMAIN_FILE[$n]}" 2>/dev/null | head -1)"
+      [ -n "$_f" ] && [ -d "$_f" ] && dir="$_f"
+    fi
     [ -n "$(figure_file "$k")" ] || { printf 'domain[1]{domain,refused}: " \n  "%s","no figure: write .agents/agents/%s*.md first"\n' "$n" "$k" >&2; exit 1; }
     brief="$(brief_for "$n")"
     bf="$STATE/$n.brief.md"; printf '%s\n' "$brief" >"$bf"
@@ -146,6 +156,7 @@ case "$ACTION" in
       ""|none|None|NONE) seat_args+=(--no-tools --no-mcp) ;;
       *)                 seat_args+=(--tools "$seat_tools" --no-mcp) ;;
     esac
+    decl_now="${DOMAIN_FILE[$n]}"
     if [ "$headless" = 1 ]; then
       printf 'domain[1]{domain,state,mode,brief}:\n  "%s","seated","headless","%s"\n' "$n" "${bf#"$ROOT"/}"
       ( cd "$dir" && exec pi -p "${seat_args[@]}" --append-system-prompt "$bf" "$opening" ) ; exit $?

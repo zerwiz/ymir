@@ -24,7 +24,7 @@ bin[15]{file,does,kind,verdict,disposition,callers,lines}:
   "approve.sh","approve.sh — one gesture answers one question.","tool","wired","keep",3,61
   "intake-gate.sh","intake-gate.sh — is this message signal, or noise?","tool","wired","keep",0,79
   "mail.sh","mail.sh — the operator-only mail door: a system tells the Allfather, and nobody else.","tool","wired","keep",4,203
-  "send.sh","send.sh — THE HOTLINE: one door a system calls when it has something to say.","tool","tested","migrate → src/ymir_runtime/send.py",51,194
+  "send.sh","send.sh — THE HOTLINE: one door a system calls when it has something to say.","tool","tested","migrate → src/ymir_runtime/send.py",52,194
   "telegram-buttons.mjs","// telegram-buttons.mjs — the one place that knows Telegram's button grammar.","tool","wired","keep",1,368
   "telegram-buttons.sh","telegram-buttons.sh — make a Telegram button that actually renders.","tool","wired","keep",3,46
   "telegram-format.py","'''telegram-format — make a reply readable on a phone before it is sent.","tool","wired","keep",2,147
