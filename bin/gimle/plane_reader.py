@@ -64,6 +64,72 @@ def _rows(payload):
     return payload.get("results", [])
 
 
+# ── the cache the MCP shares with the desk ────────────────────────────────────────────────────────
+# One reader for both faces of the hall (plan 217): the desk asks *what is assigned to me*, the MCP asks
+# *what is in this place* and *who owes what*. Both go through these functions, so a fault in the reader
+# is a fault in one place and a fix is too. Plane rate-limits hard (error_code 5900): read once, keep it.
+_pcache: dict = {}
+
+
+def _cached(key, fn, ttl=None):
+    now = time.time()
+    hit = _pcache.get(key)
+    if hit and now - hit[0] < (ttl if ttl is not None else CACHE_SECONDS):
+        return hit[1]
+    value = fn()
+    _pcache[key] = (now, value)
+    return value
+
+
+def projects(slug: str) -> list:
+    """The workspace's live projects."""
+    def read():
+        rows = _rows(_get(f"/api/v1/workspaces/{slug}/projects/?per_page=50"))
+        return [p for p in rows if not p.get("archived_at")]
+    return _cached(("projects", slug), read)
+
+
+def states(slug: str, project_id: str) -> list:
+    """The project's state groups (Backlog, Todo, In Progress, Done, Cancelled, or its own names)."""
+    return _cached(("states", slug, project_id),
+                   lambda: _rows(_get(f"/api/v1/workspaces/{slug}/projects/{project_id}/states/")))
+
+
+def issues(slug: str, project_id: str, per_page: int = 100) -> list:
+    """The project's issues, as Plane returns them."""
+    return _cached(("issues", slug, project_id, per_page),
+                   lambda: _rows(_get(
+                       f"/api/v1/workspaces/{slug}/projects/{project_id}/issues/?per_page={per_page}")))
+
+
+def members(slug: str) -> dict:
+    """member id → the best human name the board holds (display_name, else email, else the id)."""
+    def read():
+        out = {}
+        for m in _rows(_get(f"/api/v1/workspaces/{slug}/members/?per_page=100")):
+            if m.get("id"):
+                out[m["id"]] = (m.get("display_name") or m.get("email") or m["id"])
+        return out
+    return _cached(("members", slug), read)
+
+
+def write(method: str, path: str, body=None):
+    """The one door for a write to the board (plan 217 §3: a target is named, never guessed).
+
+    GET lives in `_get`; this is the shape a create or an update needs. It is deliberately the only
+    place in this file that sends a body, so a write can be found by grepping for one word.
+    """
+    token = _token()
+    if not token:
+        raise RuntimeError("no plane token")
+    data = json.dumps(body).encode() if body is not None else None
+    req = urllib.request.Request(PLANE_BASE + path, method=method, data=data,
+                                 headers={"X-Api-Key": token, "Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=20) as resp:
+        raw = resp.read().decode()
+        return json.loads(raw) if raw else {}
+
+
 def _refresh():
     global _last_refresh
     now = time.time()

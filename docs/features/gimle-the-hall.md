@@ -63,25 +63,48 @@ waiting on me**, then the tiles. It reads a JSON the projector writes and trusts
 bin/gimle/desk.py --port 8487 --data /srv/gimle-desk/meetings.json
 ```
 
-## The MCP (read-only phase)
+## The MCP
 
-`bin/gimle/mcp-read.py` is one MCP server for the suite, JSON-RPC over `POST /mcp`:
+`bin/gimle/mcp-read.py` is one MCP server for the suite, JSON-RPC over `POST /mcp`. With `--plane` it reads
+**the board** as truth for places, cards and owners — through the same `plane_reader.py` the desk uses, so the
+two faces of the hall can never disagree about what a board holds.
 
 ```
 who_am_i · list_places · my_tasks · place_board · meeting_record · who_owes_what · find_doc · read_scene
+create_card · update_card      (only when the server is started with --allow-write)
+list_plans                     (the mirrored plan documents the hall serves at /desk/docs)
 ```
 
-Auth is `Authorization: Bearer <token>` (one token per line in `mcp-tokens`, as `<token> <subject>`). Every
-call is appended to `access.jsonl` as `at · subject · tool · verdict · why`; a call without a valid token is
-refused **and recorded**. Tools whose backend is not yet wired (`find_doc`, `read_scene`) answer an honest
-`isError` with the reason instead of pretending.
+**A place is a project on the board**, named `<workspace>/<project>` (`whynotproductions/Ymir`). A token's
+place column holds the short names people use (`Ymir`, `OptiCat`, `Growth`); the server resolves each to the
+one project it names and answers `unresolved_places` for anything that is not a place at all — a person in a
+place column is refused by name, never answered with an empty board.
 
-**Limits, said plainly:** this phase is read-only; Plane's backend is the meeting record until a Plane API
-token is issued; AFFiNE is not yet reachable from MCP. Excalidraw scenes are reachable **only when their owner
-has consented to share** one: `read_scene` reads from the house's shared-scenes store, and a scene that has
-not been shared answers an honest `isError` ("scene not shared with the house — consent required"). The
-consent flow (a "Share this scene with the house" button in the panel) is the next piece; until it ships,
-a shared scene is a file dropped under `<data>/shared-scenes/<subject>/<scene>.json`.
+**Scope is the place on the token**, enforced by identity, and a refusal says which places the caller may
+touch. `my_tasks` returns only cards inside those places.
+
+**Write is off by default.** Without `--allow-write`, `create_card` and `update_card` answer a plain refusal
+naming the flag; with it, a card is filed or moved and the audit line carries the reason either way.
+
+Auth is `Authorization: Bearer <token>` (one token per line in `mcp-tokens`, as `<token> <subject> <places>
+[fleet]`; a subject may hold more than one token). Every call is appended to `access.jsonl` as `at · subject ·
+fleet · tool · verdict · why`, and a refusal records the reason — a read-only door and a missing place are
+different faults and must read differently. A call without a valid token is refused **and recorded**.
+
+```bash
+# read the board
+python3 bin/gimle/mcp-read.py --port 8489 --plane \
+  --data ~/gimle/desk/data/meetings.json --tokens ~/gimle/desk/etc/mcp-tokens \
+  --audit ~/gimle/desk/data/access.jsonl --docs ~/gimle/desk/data/docs
+
+bin/gates/tests/test_gimle_mcp_board.sh     # the board face, proved against a stub
+```
+
+**Limits, said plainly.** The MCP is bound to `127.0.0.1` on the heart and is **not** yet published on a
+hostname, so a collaborator on another machine cannot reach it — that is plan 217's G0. `find_doc` and
+`read_scene` still answer an honest `isError` with their reason (`AFFiNE` has no token in the house's hands;
+a scene must be shared with consent). `list_plans` reads the mirrored documents and says so when a project has
+no mirror yet.
 
 **If it does not work.** `systemctl --user status gimle-desk gimle-mcp`; `curl -H "Remote-User: you"
 http://127.0.0.1:8487/` for the desk; `curl -X POST http://127.0.0.1:8489/mcp -H 'Authorization: Bearer …'
