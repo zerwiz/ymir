@@ -16,6 +16,7 @@ import { dirname, extname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { homedir } from 'node:os';
 import { createVoiceHandler, voiceAccess } from './voice.ts';
+import { createRoddHandler } from './rodd.ts';
 import {
   findAccount,
   invitesOpen,
@@ -49,6 +50,7 @@ const HOME_DIR = process.env.YMIR_HOME ?? (() => {
 })();
 const HOARD = process.env.YMIR_HOARD ?? join(process.env.YMIR_HOME ?? join(homedir(), 'Documents', 'ymirhome'), 'hodd');
 const RUNES = join(HOARD, 'memory/runes_audit.md');
+const rodd = createRoddHandler({ root: ROOT, home: process.env.SKIRNIR_HOME ?? HOME_DIR });
 const voice = createVoiceHandler({ root: ROOT, home: process.env.SKIRNIR_HOME ?? HOME_DIR,
   temp: process.env.SKIRNIR_VOICE_TMP ?? join(HOARD, 'state/runtime/skirnir-voice') });
 const WELL = join(ROOT, '.agents/memory/well/episodes.jsonl');
@@ -2452,6 +2454,13 @@ const server = Bun.serve({
       const reqHost = (req.headers.get('host') ?? '').toLowerCase().split(':')[0];
       const local = reqHost === 'localhost' || reqHost === '127.0.0.1' || reqHost === '::1' || reqHost === '';
       if (GATE_AUTH && !local && p.startsWith('/api/') && !isAuthed(req)) return json({ error: 'unauthorized' }, 401);
+      if (p === '/api/rodd' || p.startsWith('/api/rodd/')) {
+        const login = loginOf(req);
+        const owner = isDesktopSeat(req) || !login || login === ((GATE_AUTH || '').split(':')[0] || 'operator');
+        const refusal = voiceAccess(req, REQUEST_IP.get(req) ?? '', owner);
+        if (refusal) return refusal;
+        return rodd(req);
+      }
       if (p.startsWith('/api/skirnir/voice/')) {
         const login = loginOf(req);
         const owner = isDesktopSeat(req) || !login || login === ((GATE_AUTH || '').split(':')[0] || 'operator');

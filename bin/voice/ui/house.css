@@ -1,0 +1,53 @@
+/* house.css — Rödd's face, in the Allfather's hall.
+   Palette and type are the CANONICAL design tokens (midgard/design-system/tokens.css):
+   stone, bone, bronze; Cormorant / Newsreader / IBM Plex Mono. Nothing invented,
+   nothing about the protocol, the pipeline or the tools changed. */
+
+:root {
+  --bg: #0e0c09;              /* stone — the ground */
+  --bg-elev: #151209;         /* panel */
+  --bg-elev-2: #1a1610;       /* panel2 — elevated */
+  --border: #2b241a;          /* line */
+  --border-strong: #7d5f2a;   /* bronze-deep */
+  --text: #cfc3a9;            /* bone */
+  --text-dim: rgba(207, 195, 169, 0.82);
+  --text-faint: #6b6250;      /* bone-faint */
+
+  --accent: #c9973f;          /* bronze — Rödd's own voice */
+  --accent-2: #96a0a8;        /* steel — the Allfather speaking */
+  --listening: #96a0a8;
+  --speaking: #c9973f;
+  --processing: #9a8f75;      /* bone-dim — the house thinking */
+  --error: #c2584a;           /* blood-lit */
+  --success: #96a0a8;
+
+  --voice-user: #96a0a8;
+  --voice-assistant: #c9973f;
+  --voice-tool: #9a8f75;
+
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --house-head: "Cormorant", "Noto Sans Runic", Georgia, serif;
+  --house-body: "Newsreader", Georgia, "Noto Sans Runic", serif;
+  --house-rune: "Noto Sans Runic", "Segoe UI Historic", serif;
+}
+
+body, p, .ident-blurb, .blurb, button, input, textarea, select {
+  font-family: var(--house-body);
+}
+h1, h2, h3, .ident-title, .title { font-family: var(--house-head); letter-spacing: 0.02em; }
+
+body { background: var(--bg); color: var(--text); }
+
+/* the house marks its own: Raido above the orb, and a bone rule under the brand */
+.orb-wrap::before {
+  content: "\16B1";
+  position: absolute; top: -2.4em; left: 50%; transform: translateX(-50%);
+  font-family: var(--house-rune); font-size: 1.5rem; color: var(--accent);
+  opacity: 0.6;
+}
+.brand { border-bottom: 1px solid var(--border); }
+.ident-title { color: var(--accent); }
+.ident-blurb { color: var(--text-dim); }
+.house-state, .pipe-note, .status, .tag {
+  font-family: var(--font-mono); letter-spacing: 0.08em;
+}

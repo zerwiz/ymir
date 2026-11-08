@@ -1,0 +1,11 @@
+/* house.css — Rödd's colours only. Layout, bubbles and type stay the engine's.
+   Palette: the canonical Ymir cloth (midgard/design-system/tokens.css). */
+:root {
+  --bg:#0e0c09; --bg-elev:#151209; --bg-elev-2:#1a1610;
+  --border:#2b241a; --border-strong:#7d5f2a;
+  --text:#cfc3a9; --text-dim:rgba(207,195,169,.82); --text-faint:#6b6250;
+  --accent:#c9973f; --accent-2:#96a0a8;
+  --listening:#96a0a8; --speaking:#c9973f; --processing:#9a8f75;
+  --error:#c2584a; --success:#96a0a8;
+  --voice-user:#96a0a8; --voice-assistant:#c9973f; --voice-tool:#9a8f75;
+}

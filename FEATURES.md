@@ -93,6 +93,7 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 | Desktop | Sessrúmnir (desktop shell) | The desktop app for the portal | [docs/features/sessrumnir-the-desktop.md](docs/features/sessrumnir-the-desktop.md) |
 | Ingress | Bifrost + Heimdall + Gjallarhorn | Routing, OAuth guard, and the outbound tunnel | [docs/features/bifrost-and-heimdall-the-doors.md](docs/features/bifrost-and-heimdall-the-doors.md) |
 | The near loop | The four dials · what is blocked on you · who is working now | One page in Óðrerir (`#/near`) answering "what waits on me" and "what are this agent's four dials" | [docs/features/near-loop.md](docs/features/near-loop.md) |
+| Voice | Rödd — speak with Ymir (`voice-door`) | Talk to the house and hear it answer: streaming ear on the card, a MoE head, a mouth that streams, and hands that hand work to a worker (Sindri, Bragi, Huginn) in a herdr pane | [docs/features/rodd-the-voice.md](docs/features/rodd-the-voice.md) |
 
 ## Fleet & models
 

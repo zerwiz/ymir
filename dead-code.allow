@@ -23,3 +23,7 @@ apps/hvergelmir/apps/dna-client-browser/fe/src/client/layout.ts    # todo: vendo
 apps/hvergelmir/apps/dna-client-browser/fe/src/client/pin.ts    # todo: vendored upstream, retained verbatim
 apps/hvergelmir/apps/dna-client-browser/fe/src/client/route.ts    # todo: vendored upstream, retained verbatim
 apps/hvergelmir/apps/dna-client-browser/fe/src/components/cards/props.ts    # todo: vendored upstream, retained verbatim
+apps/rodd/ui/worklets/mic-capture.js    # consumer: the browser AudioWorklet — added by URL (audioWorklet.addModule), never imported
+apps/rodd/ui/worklets/audio-playback.js # consumer: the browser AudioWorklet — added by URL (audioWorklet.addModule), never imported
+apps/rodd/ui/vendor/openai-realtime-agents.umd.js  # consumer: ui/index.html loads it by <script src> (the SDK bundle the page needs at runtime)
+bin/forge/review-shelf.sh    # ticket:plan-205 — not this branch's file; `packet_field` is consumed by the review loop that plan 205 is still building

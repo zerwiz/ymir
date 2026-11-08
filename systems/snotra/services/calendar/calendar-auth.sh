@@ -29,7 +29,10 @@ get(){ printf '%s\n' "$VAL" | sed -n "s/^$1=//p" | head -1 | sed "s/^['\"]//; s/
 CID="$(get GOOGLE_MCP_CLIENT_ID)"; CSEC="$(get GOOGLE_MCP_CLIENT_SECRET)"
 [ -n "$CID" ] && [ -n "$CSEC" ] || { printf 'error: GOOGLE_MCP_CLIENT_ID/SECRET missing from the vault\n' >&2; exit 1; }
 PORT="${CALENDAR_AUTH_PORT:-8765}"; REDIRECT="http://127.0.0.1:$PORT/callback"
-SCOPE="https://www.googleapis.com/auth/calendar.events.readonly"
+case "${CALENDAR_WRITE:-0}" in
+  1|yes|true) SCOPE="https://www.googleapis.com/auth/calendar.events" ;;   # read AND write: accept/decline
+  *)          SCOPE="https://www.googleapis.com/auth/calendar.events.readonly" ;;
+esac
 VERIFIER="$(python3 -c 'import secrets,base64;print(base64.urlsafe_b64encode(secrets.token_bytes(48)).rstrip(b"=").decode())')"
 CHALLENGE="$(python3 -c "import hashlib,base64,sys;print(base64.urlsafe_b64encode(hashlib.sha256(sys.argv[1].encode()).digest()).rstrip(b'=').decode())" "$VERIFIER")"
 STATE="$(python3 -c 'import secrets;print(secrets.token_urlsafe(24))')"
@@ -70,7 +73,15 @@ TOK="$(curl -sS -m 30 -X POST https://oauth2.googleapis.com/token \
 RT="$(printf '%s' "$TOK" | python3 -c "import json,sys;print(json.load(sys.stdin).get('refresh_token',''))" 2>/dev/null)"
 [ -n "$RT" ] || { printf 'error: no refresh token — %s\n' "$TOK" >&2; exit 1; }
 TMP=$(mktemp); chmod 600 "$TMP"; trap 'shred -u "$TMP" 2>/dev/null || rm -f "$TMP"' EXIT
-age -d -i "$SEC/age.key" -o "$TMP" "$SEC/platform.env.age"
+age -d -i "$SEC/age.key" -o "$TMP" "$SEC/platform.env.age" || true
+# A vault that decrypts to nothing must NEVER be re-encrypted: on 2026-11-07 this door
+# wrote an empty manifest over the whole vault (restored from its own backup). Refuse
+# rather than overwrite, and say how many keys were expected.
+if [ "$(grep -c '^' "$TMP" 2>/dev/null || echo 0)" -lt 10 ]; then
+  printf 'error: refusing to write the vault — the decrypted manifest held %s line(s)\n' "$(grep -c '^' "$TMP" 2>/dev/null || echo 0)" >&2
+  printf 'hint: the old vault is untouched; check age.key and the backup beside it\n' >&2
+  exit 1
+fi
 python3 - "$TMP" "$RT" <<'PY'
 import re,sys,shlex
 p,val=sys.argv[1],sys.argv[2]
