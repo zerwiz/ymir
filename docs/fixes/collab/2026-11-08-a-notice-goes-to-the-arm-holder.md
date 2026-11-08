@@ -24,6 +24,21 @@ built[4]{piece,what,proved}:
   "the wiring","all three hooks call the door on every refusal — pr-guard, protected branch, fixes/referee/new-module/areas guards, checks, and commit-msg","commit-msg \"wip\" and a failing `check` each delivered a KIT line"
 ```
 
+## One law, two names — and one implementation per scope
+
+**The law.** This door's *"no arm, no shout"* and `bin/agents/eindri-notify.sh`'s *"written but NOT injected"* are
+the same rule, not two: **a notice that reached only a file has not reached anybody.** A silent non-delivery is the
+fault both exist to end. The next hand should read one law here, not two.
+
+**The scope.** On a Ymir **seat** the house already knows the lock and the panes — `bin/agents/eindri-notify.sh`
+(lock record → owner pid → `herdr pane process-info` → a turn through `eindri-send.sh`), landed by the lock holder
+in `dfc0d869`. A seat therefore **delegates**: `notify-arm.sh` injects through that door and keeps no second
+resolver. Only in a **guest repository** — a clone with no Ymir at hand — does it fall back to the arm's own inbox
+(`<state>/.wake-queue`). Same rule, one implementation per scope.
+
+Measured: with a seat door present the notice was handed over and **nothing** was written to the wake queue; with
+no seat door the queue took exactly one line.
+
 ## The laws it holds
 
 1. **It never breaks a git operation** — every failure exits 0, explains itself only under `KIT_NOTIFY_DEBUG=1`,
@@ -36,9 +51,10 @@ built[4]{piece,what,proved}:
 ## The measurements
 
 ```
-measured[4]{case,answer}:
+measured[5]{case,answer}:
+  "seat door present","delegated to eindri-notify.sh; the wake queue received nothing (no double delivery)"
+  "no seat door (guest repo)","one line queued in the arm's own inbox"
   "live arm, areas refusal","3 lines queued: the refusal, the estate, the remedy"
-  "live arm, commit-msg/checks refusal","1 line queued per refusal, printed to the terminal unchanged"
   "no arm","silent, exit 0 (say it only under KIT_NOTIFY_DEBUG=1)"
   "no arm + KIT_NOTIFY_STRICT=1","refused, exit 1, naming that no receiver took the notice"
 ```

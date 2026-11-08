@@ -13,7 +13,16 @@
 #   the seat   $YMIR_HOME/bin/agents/brokk-send.sh <id>   (a registered home, when one is named)
 #   the card   <repo>/.well-known/agent-card.json         (where a project's orchestrator answers)
 #
+# ONE LAW, TWO NAMES. This door's "no arm, no shout" and the house door's "written but NOT injected" are the same
+# rule: a notice that reached only a file has not reached anybody. A silent non-delivery is the fault.
+#
+# ONE IMPLEMENTATION PER SCOPE (the lock holder, 2026-11-08). On a Ymir SEAT the house already knows the lock and
+# the panes — `bin/agents/eindri-notify.sh` (lock record → owner pid → herdr pane → a turn) — so this door
+# DELEGATES to it and carries no second resolver. Only in a GUEST repository, where no Ymir is at hand, does it
+# fall back to the arm's own inbox below. Same rule, one implementation per scope.
+#
 # DELIVERY, in the order it is attempted — every step is resolved, never guessed:
+#   0 · the seat            bin/agents/eindri-notify.sh --from kit -- "<line>"  (when a Ymir is at hand)
 #   1 · the arm holder      one line appended to <state>/.wake-queue. The drain prints it as
 #                           `WAKE KIT …` in the arm holder's chat window. This is the house's durable lane.
 #   2 · the estate          the project's AREAS estate, asked of the house's own door
@@ -69,6 +78,15 @@ arm_live() {
 # ---- the estate: what this project's areas actually say ------------------------------------------------
 # The house's own door answers, never a second parser. `areas.sh estate <path>` resolves the project from the
 # repository's own path, so no id is guessed and no registry is restated here.
+# The house's own injection door, when this is a seat and not a guest repository.
+seat_door() {
+  local c
+  for c in "${YMIR_CODE_ROOT:-}/bin/agents/eindri-notify.sh" "$HOME/ymir/bin/agents/eindri-notify.sh"; do
+    [ -n "$c" ] && [ -x "$c" ] && { printf '%s\n' "$c"; return 0; }
+  done
+  return 1
+}
+
 area_door() {
   local c
   for c in "${YMIR_CODE_ROOT:-}/bin/agents/areas.sh" "$HOME/ymir/bin/agents/areas.sh"; do
@@ -156,16 +174,36 @@ first="$(printf '%s' "$message" | tr '\n' ' ' | sed 's/  */ /g' | cut -c1-240)"
 line="KIT $repo · $gate · $first"
 
 ok=0
-deliver_arm && ok=1
 
 # the estate travels with the refusal, and the remedy is named when the gate named an area
+estate_text=""; remedy_text=""
 if facts="$(estate_facts)"; then
   set -- $facts; project="${1:-}"; areas="${2:-0}"; held="${3:-0}"; unproved="${4:-0}"; waived="${5:-0}"; na="${6:-0}"; unheld="${7:-0}"
-  queue_append "KIT $repo · estate · areas: $areas · $held held · $unproved unproved · $waived waived · $na na · $unheld unheld ($project)" && ok=1
+  estate_text="areas: $areas · $held held · $unproved unproved · $waived waived · $na na · $unheld unheld ($project)"
   area="$(named_area)"
   if [ -n "$area" ] && [ -n "$project" ]; then
-    queue_append "KIT $repo · remedy · $area is unheld — shape it, then apply it: bash bin/agents/areas.sh call $project $area (or carry the file in a held area)" && ok=1
+    remedy_text="$area is unheld — shape it, then apply it: bash bin/agents/areas.sh call $project $area (or carry the file in a held area)"
   fi
+fi
+
+# 0 · THE SEAT: one implementation per scope — delegate to the house's own door when it is here
+if door="$(seat_door)"; then
+  text="$line"
+  [ -n "$estate_text" ] && text="$text | estate · $estate_text"
+  [ -n "$remedy_text" ] && text="$text | remedy · $remedy_text"
+  if bash "$door" --from kit -- "$text" >/dev/null 2>&1; then
+    say "delegated to the house's door: $door"
+    ok=1
+  else
+    say "the house's door did not inject ($door) — falling back to the arm's own inbox"
+  fi
+fi
+
+# 1 · THE ARM'S OWN INBOX: the guest road, and the seat's fallback — never both, or one notice arrives twice
+if [ "$ok" = 0 ]; then
+  deliver_arm && ok=1
+  [ -n "$estate_text" ] && { queue_append "KIT $repo · estate · $estate_text" && ok=1; }
+  [ -n "$remedy_text" ] && { queue_append "KIT $repo · remedy · $remedy_text" && ok=1; }
 fi
 
 deliver_orchestrator && ok=1
