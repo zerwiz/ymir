@@ -30,11 +30,11 @@ you open Google Gmail so I can see the email you're sending?"* Two faults were s
 
 - `create_draft` through the adapter → refused with the enrolment message (recorded above, not paraphrased).
 - `mail_compose` through the toolbox (the window's own path) → *"The letter is written and opened in
-  chromium — a Gmail compose window with strongness13@gmail.com, 'Next steps: the road between houses',
+  chromium — a Gmail compose window addressed to him, 'Next steps: the road between houses',
   and the body filled in. It is NOT sent…"* — and a Chrome compose window stood open on his desktop.
 - the live page over Chrome DevTools MCP: `37 tools | mail_compose: true`.
-- the recipient's address came from `hodd/identity/collaborators.yaml` (Sebastian · `strongness13@gmail.com`,
-  the address he actually signs into the Board with) — never from a guess.
+- the recipient's address came from `hodd/identity/collaborators.yaml` (Sebastian's row, the address he actually signs into the Board
+  with) — the address itself stays in the home, never in this public tree — never from a guess.
 
 ## Not verified / owed
 
@@ -47,3 +47,7 @@ you open Google Gmail so I can see the email you're sending?"* Two faults were s
 
 - **2026-11-08** — written. A tool that does not exist, a refusal read as an outage, and the honest hand
   that replaced both.
+
+- **2026-11-08 (the same note, a moment later)** — the recipient's address was written into this public note
+  and the public-data guard refused the push. Redacted here; the address lives in
+  `hodd/identity/collaborators.yaml` in the home, which is where a private value belongs (RULES/04).
