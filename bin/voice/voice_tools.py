@@ -454,6 +454,25 @@ TOOLS = [
     },
     {
         "type": "function",
+        "name": "mail_compose",
+        "description": (
+            "Write a letter and OPEN it as a prefilled Gmail compose in his own browser. It sends "
+            "nothing — his hand presses Send. Use this instead of any 'send' tool: Google's Gmail MCP "
+            "has no send tool, and its calls are refused until the Cloud project is enrolled."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "to": {"type": "string", "description": "the recipient's address"},
+                "subject": {"type": "string"},
+                "body": {"type": "string", "description": "the letter, in his voice"},
+            },
+            "required": ["to", "subject", "body"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
         "name": "sessrumnir",
         "description": (
             "The desktop seat: is Sessrúmnir running, which workspaces it shows, and how many Pi "
@@ -2225,3 +2244,39 @@ async def _tool_sessrumnir(args):
 
 
 NEW_TOOLS["sessrumnir"] = _tool_sessrumnir
+
+
+async def _tool_mail_compose(args):
+    """Open a real, prefilled Gmail compose in his own browser — the only honest way a voice
+    can put a letter in front of the Allfather, because Google's MCP has no send tool at all
+    (measured 2026-11-08: create_draft · list_drafts · get_draft · threads · labels · trash —
+    and every call is refused until the Cloud project is enrolled in the Preview Program).
+
+    It SENDS NOTHING. It opens the compose window with the letter written; his hand presses Send.
+    """
+    import urllib.parse
+    to = str(args.get("to") or "").strip()
+    subject = str(args.get("subject") or "").strip()
+    body = str(args.get("body") or "").strip()
+    if not (to and subject and body):
+        raise ValueError("mail_compose needs to, subject and body")
+    query = urllib.parse.urlencode({"view": "cm", "fs": "1", "to": to, "su": subject, "body": body})
+    url = "https://mail.google.com/mail/?" + query
+    opened = "not opened"
+    for cmd in (["chromium", '--profile-directory=Profile 1', url], ["xdg-open", url]):
+        if shutil.which(cmd[0]):
+            try:
+                subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                 start_new_session=True)
+                opened = f"opened in {Path(cmd[0]).name}"
+                break
+            except Exception:
+                continue
+    _log("mail.compose_opened", to=to, subject=subject[:120], opened=opened)
+    return ToolResult(
+        f"The letter is written and {opened} — a Gmail compose window with {to}, "
+        f"\"{subject}\", and the body filled in. It is NOT sent: sending is his hand on Send. "
+        "Say that out loud in one short sentence.")
+
+
+NEW_TOOLS["mail_compose"] = _tool_mail_compose

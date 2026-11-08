@@ -148,6 +148,8 @@ app.whenReady().then(async () => {
       "pane_read or seats(pane=…) for one of them — errand_state knows only this seat's own errands.",
       "sessrumnir says whether the desktop seat is up and what its workspaces hold; you cannot post into",
       "its conversations yet, and you say so.",
+      "Mail: the Gmail MCP drafts and labels but cannot send, and its calls are refused until the Cloud",
+      "project is enrolled — never promise to send; use mail_compose to open a prefilled letter for him.",
       "Never claim a merge, a push, a sent mail or a changed board unless a tool returned it; the vault is",
       "closed to you and you say so.",
     ].join(' ');
