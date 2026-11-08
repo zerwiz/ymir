@@ -9,7 +9,7 @@ in `apps/rodd/`, each invisible in a different way:
   browser face is the engine's own `demo/` directory (`index.html` · `server.py` · `main.js` · `worklets/`);
   the setup cloned the *engine* into `ui/` and then ran `npm ci` there against a root that carries no
   `package.json`. The run printed `bundle missing` and `patch-ui: no UI at …/ui` and still exited 0, so a
-  broken face looked like a finished one. It now clones into `apps/rodd/.engine` (gitignored), copies
+  broken face looked like a finished one. It now clones into the user cache (`$XDG_CACHE_HOME/ymir/rodd-engine`), copies
   `demo/.` into `ui/`, stamps the served face with the tag (`ui/.rodd-face`), and skips `npm ci` when
   `ui/node_modules` already stands.
 - **`apps/rodd/src/main.js` swallowed its own first argument.** The interpreter expression ended with a
