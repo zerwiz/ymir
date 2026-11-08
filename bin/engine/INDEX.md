@@ -26,10 +26,10 @@ bin[23]{file,does,kind,verdict,disposition,callers,lines}:
   "home-seed.sh","home-seed.sh — make a home that a fresh user can understand, and offer to keep it in git.","tool","tested","keep",9,236
   "prereq-ensure.sh","prereq-ensure.sh — self-healing prerequisite engine for Ymir.","tool","wired","keep",12,354
   "prove-install.sh","prove-install.sh — THE INSTALL CLAUSE, proven or NAMED as a gap.","tool","wired","keep",0,166
-  "release-build.sh","release-build.sh — forge an IMMUTABLE release from one commit (plan 221, P0).","tool","wired","keep",2,298
+  "release-build.sh","release-build.sh — forge an IMMUTABLE release from one commit (plan 221, P0).","tool","wired","keep",2,341
   "release-flip.sh","release-flip.sh — make one release live, in ONE rename, health first (plan 221, P1)","tool","wired","keep",2,209
-  "release-health.sh","release-health.sh — can THIS directory serve the apps?","tool","wired","keep",2,312
-  "release-lib.sh","release-lib.sh — the ONE place that knows where a release lives and how a flip happens.","lib","wired","keep",3,235
+  "release-health.sh","release-health.sh — can THIS directory serve the apps?","tool","wired","keep",2,322
+  "release-lib.sh","release-lib.sh — the ONE place that knows where a release lives and how a flip happens.","lib","wired","keep",3,230
   "runtime-deploy.sh","runtime-deploy.sh — move the PINNED runtime checkout to the merged tree, and prove what is running.","tool","wired","keep",2,96
   "version-stamp.sh","version-stamp.sh — a seat says exactly which build it runs (2026-09-22).","tool","wired","keep",0,25
   "ymir-autoboot.sh","ymir-autoboot.sh — the boot proof: what this seat's roles OWE, and whether","tool","wired","keep",4,165

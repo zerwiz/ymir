@@ -203,11 +203,6 @@ release_manifest() {  # <dir> <key> → the value, empty when absent
   sed -n "s/.*\"${key}\": *\"\{0,1\}\([^\",]*\)\"\{0,1\}.*/\1/p" "$f" | head -1
 }
 
-# Which services the hall serves, and on which port — one list, three doors read it.
-release_services() {
-  printf 'gate 3889 /api/health\nspa 3888 /\nvisualizer 8437 /\nhall 4322 /\n'
-}
-
 # Attribution: a port is served by a pid, and that pid's cwd names the tree it runs
 # from. A service "answering" is not a service answering FROM THIS DIRECTORY; the
 # cwd (and, for the gate, the root it reports) is what proves it.

@@ -154,7 +154,7 @@ NOW="$(release_current || true)"
 [ "$NOW" = "$ID" ] || die "the link moved but names '${NOW:-nothing}', not $ID"
 say "swap[1]{link,target,method}:"
 say "  \"$YMIR_CURRENT_LINK\",\"$DIR\",\"ln -s …tmp + mv $(release_mv_flag) (one rename)\""
-release_log "flip" "from=${PREV:-none}" "to=$ID" "health=ok" "window=${WATCH:+${WINDOW}s}${WATCH:-0}" "result=flipped"
+release_log "flip" "from=${PREV:-none}" "to=$ID" "health=ok" "window=$([ "$WATCH" = 1 ] && printf '%ss' "$WINDOW" || printf 'none')" "result=flipped"
 
 # ── 3. THE WINDOW: did the release degrade after it went live? ──────────────
 # The 3am path: the door checks its own work and undoes it, rather than waiting
