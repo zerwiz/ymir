@@ -7,15 +7,37 @@
 # note, never change the referee in silence, never add a module with no test, and never push a red tree.
 set -u
 
+# A gate's message belongs to the ARM HOLDER, not to whoever typed the command (2026-11-08). The door resolves
+# the arm and the project's orchestrator; with no arm it is silent by construction, and it never fails a push.
+notify() {
+  [ -x scripts/notify-arm.sh ] && bash scripts/notify-arm.sh "$1" "$2" >/dev/null 2>&1
+  return 0
+}
+
+# gate <name> <command…> — run it, keep its words, and hand a refusal to the arm as well as to the terminal.
+gate() {
+  local name="$1"; shift
+  local out
+  if out="$("$@" 2>&1)"; then
+    [ -n "$out" ] && printf '%s\n' "$out" >&2
+    return 0
+  fi
+  printf '%s\n' "$out" >&2
+  notify "$name" "$out"
+  exit 1
+}
+
 protected="master main"
 while read -r _local_ref _local_sha remote_ref _remote_sha; do
-  bash scripts/gates/pr-guard.sh "${1:-origin}" "$_local_ref" "$remote_ref" "$_remote_sha" || exit 1
+  gate pr-guard bash scripts/gates/pr-guard.sh "${1:-origin}" "$_local_ref" "$remote_ref" "$_remote_sha"
   case "$remote_ref" in
     refs/heads/*)
       branch="${remote_ref#refs/heads/}"
       for p in $protected; do
         if [ "$branch" = "$p" ]; then
-          printf 'pre-push refused: %s is protected — open a pull request; the operator seals merges\n' "$branch" >&2
+          msg="pre-push refused: $branch is protected — open a pull request; the operator seals merges"
+          printf '%s\n' "$msg" >&2
+          notify protected-branch "$msg"
           exit 1
         fi
       done
@@ -36,17 +58,19 @@ base="$(range_base || true)"
 head="$(git rev-parse HEAD 2>/dev/null || echo HEAD)"
 
 if [ -n "$base" ] && [ "$base" != "$head" ]; then
-  [ -x scripts/gates/fixes-guard.sh ] && { bash scripts/gates/fixes-guard.sh "$base" "$head" || exit 1; }
-  [ -x scripts/gates/referee-guard.sh ] && { bash scripts/gates/referee-guard.sh "$base" "$head" || exit 1; }
-  [ -x scripts/gates/new-module-test.sh ] && { bash scripts/gates/new-module-test.sh "$base" "$head" || exit 1; }
+  [ -x scripts/gates/fixes-guard.sh ] && gate fixes-guard bash scripts/gates/fixes-guard.sh "$base" "$head"
+  [ -x scripts/gates/referee-guard.sh ] && gate referee-guard bash scripts/gates/referee-guard.sh "$base" "$head"
+  [ -x scripts/gates/new-module-test.sh ] && gate new-module-test bash scripts/gates/new-module-test.sh "$base" "$head"
   # Seated in 1.2.0: an area nobody holds must not receive changes quietly (RULES/18).
-  [ -x scripts/gates/areas-guard.sh ] && { bash scripts/gates/areas-guard.sh "$base" "$head" || exit 1; }
+  [ -x scripts/gates/areas-guard.sh ] && gate areas-guard bash scripts/gates/areas-guard.sh "$base" "$head"
 fi
 
 if [ -f scripts/checks.sh ]; then
   printf 'pre-push: the checks\n'
   bash scripts/checks.sh test || {
-    printf '\npre-push refused: a check failed\nhelp: fix it, or push with --no-verify and say why in the commit\n' >&2
+    msg="pre-push refused: a check failed — fix it, or push with --no-verify and say why in the commit"
+    printf '\n%s\n' "$msg" >&2
+    notify checks "$msg"
     exit 1
   }
 else
