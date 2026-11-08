@@ -83,13 +83,20 @@ case_ "6 · a worker's line reaches the arm holder's chat"
 status="$(bash bin/agents/eindri-notify.sh --status 2>&1)"; src=$?
 printf '%s' "$status" | grep -q "lock_owner" && ok "the three links resolve: $status" || no "the three links resolve" "$status"
 if [ "$src" -eq 0 ]; then
-  out="$(bash bin/agents/eindri-notify.sh --from smoke-test -- "smoke: an injected line (ignore)" 2>&1)"; irc=$?
-  { [ "$irc" -eq 0 ] && printf '%s' "$out" | grep -q "injected"; } && ok "a line is injected into the holder's pane" \
-    || no "a line is injected into the holder's pane" "$out"
+  # A smoke test must not shout into the one window that has to stay readable: it proves the road with
+  # --dry, and a REAL injection happens only when the operator asks for it (SMOKE_INJECT=1).
+  out="$(bash bin/agents/eindri-notify.sh --dry --from smoke-test -- "smoke: a resolved line" 2>&1)"; irc=$?
+  { [ "$irc" -eq 0 ] && printf '%s' "$out" | grep -q "dry-inject"; } && ok "the road resolves without shouting into the chat" \
+    || no "the road resolves without shouting" "$out"
+  if [ "${SMOKE_INJECT:-0}" = "1" ]; then
+    out="$(bash bin/agents/eindri-notify.sh --from smoke-test -- "smoke: an injected line (ignore)" 2>&1)"
+    printf '%s' "$out" | grep -q "injected" && ok "SMOKE_INJECT=1: a line really lands in the pane" \
+      || no "SMOKE_INJECT=1: a line really lands" "$out"
+  fi
 else
   ok "no pane to inject into — the door named the broken link instead of pretending"
 fi
-rid="smoke-report-$$"
+rid="smoke-report-$$"   # removed below; never left behind
 report_out="$(bash bin/agents/report.sh write "$rid" --state "done" --changed "no behaviour — smoke test" --verified "the door answered" --next "delete this report" --pointers "bin/gates/tests/test_areas_and_injection.sh" 2>&1)"
 printf '%s' "$report_out" | grep -q "report\[1\]" && ok "report.sh still writes its shelf" || no "report.sh writes its shelf" "$report_out"
 ls "$HOME/Documents/ymirhome/state/eindri-reports/$rid.md" >/dev/null 2>&1 && rm -f "$HOME/Documents/ymirhome/state/eindri-reports/$rid.md" && ok "the report file exists and was cleaned up" \

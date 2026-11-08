@@ -16,6 +16,7 @@
 #
 #   eindri-notify.sh --from <name> -- "<one line>"
 #   eindri-notify.sh --status                 # which pane would receive, and whether the lock owner is live
+#   eindri-notify.sh --dry --from <name> -- "<one line>"   # resolve everything, inject nothing
 #
 # Refuses loudly when it cannot inject, and says which of the three links broke: a silent success would
 # be the same fault it exists to fix. Exit: 0 injected · 1 could not inject · 2 usage.
@@ -30,6 +31,7 @@ while [ $# -gt 0 ]; do
     --from) from="${2-}"; shift 2 ;;
     --from=*) from="${1#--from=}"; shift ;;
     --status) status=1; shift ;;
+    --dry) dry=1; shift ;;
     --) shift; line="${*:-}"; break ;;
     *) line="${line:+$line }$1"; shift ;;
   esac
@@ -72,6 +74,15 @@ if [ -z "$pane" ]; then
 fi
 
 # ── 3 · speak it into that session ─────────────────────────────────────────────────────────────────
+if [ "${dry:-0}" = 1 ]; then
+  # PROVE THE ROAD WITHOUT SHOUTING (added 2026-11-08: the smoke suite ran three times and left three
+  # lines in the holder's chat, which is noise in the one window that must stay readable).
+  printf 'dry-inject[1]{from,pane,owner}:
+  "%s","%s","%s"
+' "$from" "$pane" "$owner"
+  exit 0
+fi
+
 export BROKK_INJECT_MARK=1
 if timeout 60 "$ROOT/bin/agents/eindri-send.sh" "$pane" "[${from}] ${line}" >/dev/null 2>&1; then
   printf 'injected[1]{from,pane,owner}:\n  "%s","%s","%s"\n' "$from" "$pane" "$owner"

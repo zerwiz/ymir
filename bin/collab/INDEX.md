@@ -25,20 +25,20 @@ bin[48]{file,does,kind,verdict,disposition,callers,lines}:
   "16-a-review-is-a-file.md","16 — A review is a file in the repository","data","wired","keep",0,32
   "17-one-agent-one-worktree.md","17 — One agent, one worktree","data","wired","keep",0,36
   "18-an-area-is-held-or-waived.md","18 — An area is held, waived or never (an area is never silently nobody's)","data","wired","keep",0,30
-  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",44,-
-  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",44,-
-  "README.md","areas/ — what this repository answers for","data","tested","keep",44,-
+  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",45,-
+  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",45,-
+  "README.md","areas/ — what this repository answers for","data","tested","keep",45,-
   "TEMPLATE.yaml","areas/TEMPLATE.yaml — what one area's declaration looks like.","data","wired","keep",2,44
-  "a2a-guard.sh","a2a-guard — a card in the constellation must stay true, and a changed one must still be valid.","tool","wired","keep",0,38
+  "a2a-guard.sh","a2a-guard — a card in the constellation must stay true, and a changed one must still be valid.","tool","wired","keep",1,38
   "a2a.md","A2A — the repository's card in the constellation","data","wired","keep",0,49
-  "a2a.py","'''a2a.py — the repository's own card in the constellation.","data","wired","keep",1,208
-  "a2a.sh","a2a.sh — this repository's card in the constellation (a thin door; the craft is a2a.py).","tool","wired","keep",3,18
+  "a2a.py","'''a2a.py — the repository's own card in the constellation.","data","wired","keep",2,208
+  "a2a.sh","a2a.sh — this repository's card in the constellation (a thin door; the craft is a2a.py).","tool","wired","keep",4,18
   "advantage-audit.sh","advantage-audit.sh — is every claim we make backed by evidence, or only by confidence?","tool","tested","keep",2,141
   "advantage.md","Competitive advantage — how we research it, and how we are allowed to state it","data","wired","keep",0,129
-  "areas-guard.sh","areas-guard — a change to an area nobody holds is refused, and the AREA is named, never the author.","tool","wired","keep",5,81
+  "areas-guard.sh","areas-guard — a change to an area nobody holds is refused, and the AREA is named, never the author.","tool","wired","keep",6,81
   "areas.md","Areas — how a repository says what it answers for","data","wired","keep",1,76
-  "areas.py","'''areas.py — a repository's own answer to the canon of areas.","data","wired","keep",4,417
-  "areas.sh","areas.sh — this repository's own answer to the canon of areas (a thin door; the craft is areas.py).","tool","wired","keep",12,18
+  "areas.py","'''areas.py — a repository's own answer to the canon of areas.","data","wired","keep",5,417
+  "areas.sh","areas.sh — this repository's own answer to the canon of areas (a thin door; the craft is areas.py).","tool","wired","keep",13,18
   "canon.yaml","areas/canon.yaml — the plain face of the canon: what every project must answer for.","data","wired","keep",6,139
   "checks.sh","checks.sh — run this repository's own cheap checks, whatever language it is written in.","tool","wired","keep",3,103
   "collab-connect.sh","collab-connect.sh — what a collaborator pastes, and the token the house mints.","tool","wired","keep",1,39
