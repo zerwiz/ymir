@@ -19,7 +19,9 @@ APP="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TAG="${RODD_UI_TAG:-v1.1.0}"
 REPO="${RODD_UI_REPO:-https://github.com/huggingface/speech-to-speech}"
 UI="$APP/ui"
-ENGINE="$APP/.engine"      # the engine checkout: a staging shelf, never the served face
+# the engine checkout is a STAGING shelf, never the served face — and never inside the tree:
+# a scanner that walks this repo counted its worklets as dead code (dead-code-guard, 2026-11-08)
+ENGINE="${RODD_ENGINE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/ymir/rodd-engine}"   # allow-home-default: a cache, overridable
 STAMP="$UI/.rodd-face"     # which tag the served face was dressed from
 say() { printf '%-42s %s\n' "$1" "$2"; }
 
@@ -41,6 +43,7 @@ esac
 # whole time, and `npm ci` ran against a root that carries no package.json.
 if [ ! -f "$STAMP" ] || [ "$(cat "$STAMP" 2>/dev/null)" != "$TAG" ]; then
   rm -rf "$ENGINE"
+  mkdir -p "$(dirname "$ENGINE")"
   say "fetching the face" "$REPO @ $TAG"
   git clone --depth 1 --branch "$TAG" "$REPO" "$ENGINE" >/dev/null 2>&1 || { say "clone failed" "$REPO"; exit 1; }
   [ -d "$ENGINE/demo" ] || { say "this tag carries no demo/" "$TAG"; exit 1; }
