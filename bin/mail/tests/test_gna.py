@@ -580,21 +580,48 @@ class InboundChain(unittest.TestCase):
 
 
 class NoSendCapability(unittest.TestCase):
+    # The REAL send paths: a Gmail send endpoint, an SMTP session, a draft that a second call
+    # would push. Nothing in this directory may carry one of these, ever.
     FORBIDDEN = (
         r"messages/send",
         r"\bsmtplib\b",
         r"users/me/drafts",
-        r"mail-send\.sh",
-        r"gmail\.send",
     )
 
+    # Two more strings that are VOCABULARY, not a path: the scope name a grant must carry for the
+    # gate to send at all, and the gate's own filename. They are allowed in exactly ONE file —
+    # the connect door — because a door that MINTS a grant has to say which authority it asks for
+    # and has to say where sending really happens, or a reader is left believing it happens here.
+    # The allow is not a hole: that file is still subject to FORBIDDEN, and the proof below
+    # refuses any line that names sending AND carries a transport call.
+    VOCABULARY = (r"mail-send\.sh", r"gmail\.send")
+    VOCABULARY_IN = {"gna_connect.py"}
+
+    def _files(self):
+        return sorted(AGENT_DIR.glob("gna_*.py")) + [AGENT_DIR / "mail-scan.sh"]
+
     def test_no_file_here_can_send(self):
-        for path in sorted(AGENT_DIR.glob("gna_*.py")) + [AGENT_DIR / "mail-scan.sh"]:
+        for path in self._files():
             text = path.read_text(encoding="utf-8")
-            for pattern in self.FORBIDDEN:
+            patterns = list(self.FORBIDDEN)
+            if path.name not in self.VOCABULARY_IN:
+                patterns += list(self.VOCABULARY)
+            for pattern in patterns:
                 self.assertIsNone(
                     re.search(pattern, text),
                     f"{path.name} carries a send path: {pattern}",
+                )
+
+    def test_a_file_that_names_sending_never_calls_it(self):
+        """Naming the scope and the gate is allowed only where no transport rides the same line."""
+        for name in sorted(self.VOCABULARY_IN):
+            path = AGENT_DIR / name
+            for line in path.read_text(encoding="utf-8").splitlines():
+                if not re.search(r"mail-send\.sh|gmail\.send", line):
+                    continue
+                self.assertIsNone(
+                    re.search(r"urlopen|_post_form|_get_json|curl|subprocess|smtp", line),
+                    f"{name}: a line names sending AND carries a transport call: {line.strip()}",
                 )
 
 

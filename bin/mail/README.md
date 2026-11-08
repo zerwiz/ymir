@@ -17,6 +17,8 @@ bin/mail/gna_import.py    the importer: the Gmail API OR IMAP, read-only, one ac
 bin/mail/gna_addresses.py the register behind the door: DNS MX by hand, routing, arrival proofs
 bin/mail/addresses.sh     the addresses the house USES, and whether mail can reach them (--check)
 bin/mail/gna_desk.py      the desk: 127.0.0.1:8494, token + account scope, GET only
+bin/mail/connect.sh       the connect door: one sign-in (google) or three fields (imap), status, revoke
+bin/mail/gna_connect.py   the verbs behind it: consent URL, loopback catcher, the vault write, the proofs
 bin/mail/inbound-test.sh  the acceptance test: send from outside, assert the arrival, or skip
 bin/mail/mail-scan.sh     the earlier one-shot read (kept — it proved the door opened)
 bin/mail/install.sh       seats the desk as a systemd USER unit, restart-always
@@ -143,3 +145,17 @@ No SMTP, no `users/me/drafts/send`, no socket of her own — the gate is the onl
 The two wards that keep this honest are already standing: `tests/test_gna.py::NoSendCapability` fails if a send
 pattern appears in any file here, and
 `bin/time/snotra/tests/test_outbound_gate.py::GnaOwed` fails if a send in `bin/` does not name the gate.
+
+## Appended 2026-11-08 — the connect door, and the count above is stale
+
+`bin/mail/connect.sh` is the door a PERSON uses (plan 221): `google` takes one sign-in and writes the grant to
+the vault by key, `google --check` is the boot check that says `grant dead` rather than showing a quiet inbox,
+`imap` is the three-field guest road proved by a real LOGIN and a real EXAMINE, `status` is the honesty line
+(`readable · sendable · deliverable`), and `revoke` is a verb. Each verb carries `--self-test`; the whole door
+is 25 offline proofs. It cannot send, and a proof says so.
+
+Corrections by append (Rule 06): the map above said `tests/` holds **16 proofs** and it holds **37** at this
+line; and `NoSendCapability` now forbids the *paths* (`messages/send`, `smtplib`, `users/me/drafts`) in every
+file while allowing the **vocabulary** (`gmail.send`, `mail-send.sh`) in `gna_connect.py` only — a door that
+mints a grant must name the authority it asks for and say where sending really happens. The reason and the
+second proof that enforces it are in `docs/fixes/mail/2026-11-08-the-connect-door.md`.
