@@ -191,6 +191,19 @@ if [ -x "$SCRIPT_DIR/groa-agent/seat.sh" ]; then
     "$SCRIPT_DIR/groa-agent/seat.sh" --quiet </dev/null >/dev/null 2>&1 || true
 fi
 
+# The Electron runtime is MENDS-FORWARD after every update (the Allfather, 2026-11-08:
+# "all updates on all machines must solve this better for all kind of users"). npm 11+
+# gates the postinstall, so an update can install the package and leave no binary; the
+# ensure door lands it from the machine's own cache, or from the network behind a mirror.
+# Never fatal, never silent: it prints a line and Eir judges the result below.
+if [ -x "$SCRIPT_DIR/../desktop/electron-ensure.sh" ]; then
+  if eo="$("$SCRIPT_DIR/../desktop/electron-ensure.sh" ensure --root "$ROOT" --quiet 2>&1)"; then
+    printf 'electron: every installed surface answers --version\n'
+  else
+    printf 'electron: NOT mended — %s\n' "$(printf '%s' "$eo" | grep -m1 '"FAIL"' || printf 'see bin/desktop/electron-ensure.sh status')"
+  fi
+fi
+
 # Eir checks after every update, so a desktop that cannot open is REPORTED and
 # never silently dead (P8, 2026-09-24). The update is never blocked on a
 # broken surface — the report is the loudness; the Nornir job keeps the watch

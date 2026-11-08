@@ -26,7 +26,7 @@ bin[23]{file,does,kind,verdict,disposition,callers,lines}:
   "home-seed.sh","home-seed.sh — make a home that a fresh user can understand, and offer to keep it in git.","tool","tested","keep",9,236
   "prereq-ensure.sh","prereq-ensure.sh — self-healing prerequisite engine for Ymir.","tool","wired","keep",12,354
   "prove-install.sh","prove-install.sh — THE INSTALL CLAUSE, proven or NAMED as a gap.","tool","wired","keep",0,166
-  "release-build.sh","release-build.sh — forge an IMMUTABLE release from one commit (plan 221, P0).","tool","wired","keep",2,346
+  "release-build.sh","release-build.sh — forge an IMMUTABLE release from one commit (plan 221, P0).","tool","wired","keep",3,322
   "release-flip.sh","release-flip.sh — make one release live, in ONE rename, health first (plan 221, P1)","tool","wired","keep",2,209
   "release-health.sh","release-health.sh — can THIS directory serve the apps?","tool","wired","keep",2,330
   "release-lib.sh","release-lib.sh — the ONE place that knows where a release lives and how a flip happens.","lib","wired","keep",3,230
@@ -37,7 +37,7 @@ bin[23]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-edit.sh","ymir-edit.sh — open a file in the Allfather's editor, on its own desktop.","tool","tested","keep",0,177
   "ymir-engine-ensure.sh","ymir-engine-ensure.sh — materialize the engine's private python home.","tool","tested","keep",2,67
   "ymir-engine.sh","ymir-engine.sh — the DOOR to the engine (`src/ymir_runtime/`).","tool","wired","keep",4,61
-  "ymir-install.sh","ymir-install.sh — THE FIRST SETUP.","tool","tested","keep",29,1818
+  "ymir-install.sh","ymir-install.sh — THE FIRST SETUP.","tool","tested","keep",29,1828
   "ymir-invite.sh","ymir-invite — hand someone a way in to your Ymir, and take it back.","tool","wired","keep",3,113
   "ymir-isolation.sh","ymir-isolation.sh — capability-probed confinement for a single agent command.","data","wired","keep",0,89
   "ymir-migrate.sh","ymir-migrate.sh — versioned STRUCTURE migrations for existing Ymir homes.","tool","tested","keep",7,76

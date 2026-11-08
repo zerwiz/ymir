@@ -266,7 +266,13 @@ s_shells() {
   return 0
 }
 f_shells() {
-  printf 'eir: the shells need mending — bin/engine/ymir-install.sh (the desktop step) mends them; or by hand:\n' >&2
+  # The healer MENDS: a gated postinstall is the ordinary case on npm 11+, and telling
+  # the user to run the installer by hand was the fault this surface kept reporting
+  # (2026-11-08: "electron are missing errors" after every update).
+  if [ -x "$SCRIPT_DIR/../desktop/electron-ensure.sh" ]; then
+    "$SCRIPT_DIR/../desktop/electron-ensure.sh" ensure --root "$ROOT" --quiet >/dev/null 2>&1 && return 0
+  fi
+  printf 'eir: the shells still need mending after electron-ensure — the row it printed names the road\n' >&2
   electron_remedy >&2
   return 1
 }

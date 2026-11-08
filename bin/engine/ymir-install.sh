@@ -1185,8 +1185,18 @@ step_spa() {
   # the sibling package — never one hardcoded path.
   if [ "$(electron_runtime_state "$app" "$ROOT" "$(app_pkg hlidskjalf)" 2>/dev/null || echo absent)" = ok ]; then
     add hlidskjalf OK "installed + built + electron (served on :3888)"
+  elif [ "$CHECK" = 1 ]; then
+    add hlidskjalf WARN "installed + built, but electron has no binary — run: bin/desktop/electron-ensure.sh ensure"
   else
-    add hlidskjalf WARN "installed + built, but electron has no binary — npm rebuild electron"
+    # A gated postinstall is the normal case on npm 11+, so the install MENDS it
+    # here rather than telling the user to do it by hand (the Allfather, 2026-11-08:
+    # "electron are missing errors"). One door, four callers.
+    if [ -x "$ROOT/bin/desktop/electron-ensure.sh" ] && \
+       "$ROOT/bin/desktop/electron-ensure.sh" ensure --root "$ROOT" --quiet >/dev/null 2>&1; then
+      add hlidskjalf OK "installed + built + electron (mended from a gated postinstall)"
+    else
+      add hlidskjalf WARN "installed + built, but electron has no binary — run: bin/desktop/electron-ensure.sh ensure"
+    fi
   fi
 }
 
