@@ -122,6 +122,12 @@ skip() {  # <why>
   exit 0
 }
 
+# Give the claim back. DEFINED HERE, ABOVE ITS FIRST USE: it used to sit 70 lines
+# below, and bash cannot call a function it has not yet reached — so the "no PR"
+# path printed `release_claim: command not found` and the acclaim read the spawn as
+# FAILED, when it had only decided not to seat a judge (measured 2026-11-08).
+release_claim() { [ "${DRY:-0}" -eq 0 ] && rmdir "${REVIEW_SPAWNED:-}" 2>/dev/null || true; }
+
 # ── the guards: off, a review of a review, an already-reviewed task ──────────
 [ "$AUTO" = off ] && skip "YMIR_AUTO_REVIEW=off (the loud override)"
 case "$ID" in
@@ -250,7 +256,6 @@ mkdir -p "$REVIEWED_DIR" 2>/dev/null || true
 if [ "$DRY" -eq 0 ] && ! mkdir "$REVIEW_SPAWNED" 2>/dev/null; then
   skip "a review spawn is already in flight for this task"
 fi
-release_claim() { [ "$DRY" -eq 0 ] && rmdir "$REVIEW_SPAWNED" 2>/dev/null || true; }
 
 
 # ── the judge's seat: the roster resolves the figure's harness ───────────────
