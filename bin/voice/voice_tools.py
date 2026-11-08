@@ -454,6 +454,23 @@ TOOLS = [
     },
     {
         "type": "function",
+        "name": "seats",
+        "description": (
+            "Where the work actually is: the herdr panes on this seat, how many carry a live agent, "
+            "which are working, and their directories. With `pane` it reads that pane's recent output. "
+            "Use this — never the errand status files — when he asks how many agents are active."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "pane": {"type": "string", "description": "a pane id (e.g. w39:p5) to read instead of listing"},
+                "lines": {"type": "integer", "description": "how many lines of that pane"},
+            },
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
         "name": "ls",
         "description": "List a directory — in your own documents, the home or the Ymir tree. Never the secrets shelf.",
         "parameters": {
@@ -2092,3 +2109,38 @@ NEW_TOOLS["edit"] = _tool_edit
 NEW_TOOLS["bash"] = _tool_bash
 NEW_TOOLS["mcp_tools"] = _tool_mcp_tools
 NEW_TOOLS["mcp"] = _tool_mcp
+
+
+async def _tool_seats(args):
+    """Where the work actually is: the herdr panes and the agents seated in them.
+
+    He asked, out loud, "how many agents are active in herdr" and the voice answered from the
+    errand status files — which is a different question. This reads the pane backend itself
+    through bin/seat/seats.sh (one implementation for a human, the terminal and the voice).
+    """
+    pane = str(args.get("pane") or "").strip()
+    if pane:
+        import re as _re
+        code, out = _run(["herdr", "pane", "read", pane, "--source", "recent",
+                          "--lines", str(max(5, min(int(args.get("lines") or 20), 60))), "--format", "text"],
+                         timeout=30)
+        if code != 0 or not out.strip():
+            return ToolResult(f"Pane {pane} is silent or gone.")
+        clean = _re.sub(r"\x1b\[[0-9;?]*[a-zA-Z]", "", out)
+        rows = [ln.rstrip() for ln in clean.splitlines() if ln.strip()]
+        return ToolResult(f"Pane {pane}, last {len(rows)} lines:\n" + "\n".join(rows[-40:])[:1800])
+    code, out = _run([_door("seat/seats.sh"), "brief"], timeout=45)
+    if code != 0 or not out.strip():
+        return ToolResult("The pane backend gave no answer (herdr and tmux are both silent here).")
+    # the summary line is what he asks for; keep the panes to the live ones and the focused shell
+    lines = [ln for ln in out.splitlines() if ln.strip()]
+    head = lines[:2]
+    live = [ln for ln in lines[2:] if '"shell"' not in ln]
+    shells = len([ln for ln in lines[2:] if '"shell"' in ln])
+    body = head + live[:14]
+    if shells:
+        body.append(f'  # …and {shells} plain shell pane(s) with no agent seated')
+    return ToolResult("\n".join(body))
+
+
+NEW_TOOLS["seats"] = _tool_seats

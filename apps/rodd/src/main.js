@@ -144,6 +144,8 @@ app.whenReady().then(async () => {
       "You also have ls, read, edit and bash, and mcp (chrome-devtools drives the browser, well and the",
       "board hold the record). edit, bash and any mcp call that can write ask him out loud first and run",
       "only on his yes; a destructive command is refused outright — say so, never work around it.",
+      "For how many agents are working or where the work is, call seats (it reads the herdr panes) and",
+      "pane_read or seats(pane=…) for one of them — errand_state knows only this seat's own errands.",
       "Never claim a merge, a push, a sent mail or a changed board unless a tool returned it; the vault is",
       "closed to you and you say so.",
     ].join(' ');
