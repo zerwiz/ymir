@@ -327,7 +327,12 @@ mv -- "$STAGE" "$DEST" || die "cannot move the staged release into $DEST"
 trap - EXIT INT TERM
 
 # The release must answer for itself before we call it built.
-own="$(bash "$DEST/scripts/electron.sh" --root 2>/dev/null || true)"
+# Ask, never assume: a tree that predates --root would fall through to the
+# script's default action, and `electron.sh`'s default action opens a window.
+own=""
+if grep -qE '^[[:space:]]*--root\)' "$DEST/scripts/electron.sh" 2>/dev/null; then
+  own="$(bash "$DEST/scripts/electron.sh" --root 2>/dev/null || true)"
+fi
 say "release-built[1]{sha,dir,size,files,deps,electron,assets,symlinks,own_root}:"
 say "  \"$ID\",\"$DEST\",\"$(release_human "$size")\",$files,\"$deps_status${deps_road:+ via $deps_road}\",\"$electron_status\",\"${assets_built:-none}\",$resolved_count,\"${own:-unresolved}\""
 if [ "$(release_real "$own")" != "$(release_real "$DEST")" ]; then

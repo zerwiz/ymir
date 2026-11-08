@@ -169,6 +169,14 @@ fi
 own_bad=""; own_ok=""
 for s in scripts/electron.sh scripts/start.sh scripts/raise.sh; do
   [ -f "$REAL_DIR/$s" ] || { own_bad="$own_bad $s(missing)"; continue; }
+  # NEVER run a script with a flag it does not declare. A tree that predates
+  # `--root` falls through its own case to its DEFAULT action — so asking an old
+  # `start.sh --root` would RAISE THE WHOLE HALL from inside a read-only check.
+  # The flag is looked for before it is used.
+  if ! grep -qE '^[[:space:]]*--root\)' "$REAL_DIR/$s" 2>/dev/null; then
+    own_bad="$own_bad $s(does not answer --root)"
+    continue
+  fi
   got="$(bash "$REAL_DIR/$s" --root 2>/dev/null | head -1)"
   if [ -n "$got" ] && [ "$(release_real "$got")" = "$REAL_DIR" ]; then
     own_ok="$own_ok $s"
