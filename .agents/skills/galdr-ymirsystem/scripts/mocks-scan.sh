@@ -23,8 +23,10 @@
 #     `skill`). A NAME, not a stub.
 #   · the collab kit's `advantage-audit.sh` — its regex and its verdict ARE the vocabulary; the file's whole
 #     job is to detect those words in a document, so naming them is the behaviour, not a stub.
-#   · a path ending in `todo.md` — the operator's own note file (`hodd/life/personal/me/todo.md`). A
-#     FILENAME, not a stub; `bin/gates/guards/public-guard.sh` already allows `TODO.md` for the same reason.
+#   · a path ending in `todo.md` or `todo-<name>.md` — the operator's own note file
+#     (`hodd/life/personal/me/todo.md`) and the lists the voice keeps beside it
+#     (`todo-voice.md`). A FILENAME, not a stub; `bin/gates/guards/public-guard.sh`
+#     already allows `TODO.md` for the same reason.
 #
 # Exit: 0 no hits · 1 hits printed · 2 usage.
 set -uo pipefail
@@ -40,7 +42,7 @@ hits="$(grep -rnE '\b(mock|stub|placeholder|todo)\b' "$ROOT/bin" 2>/dev/null \
   | grep -vE 'seeded[ |·]+(stub|defaulted)|stub[ |·]+defaulted' \
   | grep -vE 'consumer:.*todo:|todo:.*consumer:' \
   | grep -vE '^[^:]*bin/(mcp|seat)/ymir-mcp\.py:[0-9]+:' \
-  | grep -viE 'todo\.md' \
+  | grep -viE 'todo[-a-z]*\.md' \
   | grep -vE '^[^:]*bin/collab/kit/scripts/advantage-audit\.sh:[0-9]+:' || true)"
 
 
