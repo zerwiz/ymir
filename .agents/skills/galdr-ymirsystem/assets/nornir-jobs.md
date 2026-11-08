@@ -668,3 +668,31 @@ nornir_smithy_rows[4]{rule,why}:
 ```
 The scheduler is unchanged: same parser, same stamps, same role gate. Restart it after an
 install (`bin/time/nornir-cron-start.sh --stop` then again) — it reads the file at start.
+
+## The scheduled self-update (2026-11-08, the Allfather's word)
+
+`bin/time/nornir-job-groa-update.sh` — shipped in `config/cron.yaml.example` as `03:41 bin/time/nornir-job-groa-update.sh`,
+so **every installation** keeps itself current from `main`.
+
+It is a SPAWNER, not a fetch. It writes a **generated brief** from this machine's own facts — role, checkout, branch,
+head, commits behind `main`, dirty paths, registered Eindri-homes, the model resolved from `config/agents.yaml`, and
+the `YMIR_AUTO_UPDATE=0` opt-out — then spawns one pi agent with that brief as its system prompt. **The agent decides
+the road and runs `bin/agents/groa-update.sh`**, which remains the only door that moves anything: fast-forward when
+clean and on `main`, `--check` only when dirty or on a branch, an honest "offline" otherwise. Never force, never reset,
+never stash, never clean.
+
+```
+roads[3]{road,when,note}:
+  "herdr","herdr present","a tab `nornir:auto-update` runs the runner script — FIRE AND FORGET; the brief tells the agent to deliver its own line with bin/agents/eindri-notify.sh"
+  "terminal","no herdr","`pi -p --model <resolved> -t bash,read --no-mcp`, bounded at 420s — pi.dev's documented print mode"
+  "fallback","no pi, or no model resolved","Gróa run directly and said so: a machine that cannot start a brain must still move"
+```
+
+The line the agent prints is one shape — `groa: <moved|current|check-only|offline> · <from> → <to> · <why>` — injected
+into the arm holder's chat, and carved into Runes only when something actually moved. `--dry` writes the brief and
+prints the facts without spawning; `--no-agent` forces the direct road.
+
+## CHANGE LOG
+
+- **2026-11-08** — Appended with the job, its three roads, the model resolved from the home, and the four faults found
+  by running it.

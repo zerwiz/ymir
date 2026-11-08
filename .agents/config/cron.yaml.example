@@ -90,3 +90,11 @@
 # after the trigger was turned off.
 #   bin/time/event-trigger.sh --list            # who may start each smithy
 #   bin/time/event-trigger.sh --install-cron    # write the rows it declares
+
+# — THE MACHINE KEEPS ITSELF CURRENT (2026-11-08, the Allfather's word: "all ymir installations runs an
+# auto update nornir job on running groa to update latest from main") —
+# Gróa fast-forwards this checkout and every registered Eindri-home from main, then mends forward. She
+# never forces: a dirty tree, a non-default branch and an offline box are SKIPS she names, never faults.
+# Give your own minute so twenty boxes do not knock at once; hourly is fine on a small fleet
+# (`@hourly:41`) and a hand on a metered link can opt out entirely with YMIR_AUTO_UPDATE=0.
+03:41 bin/time/nornir-job-groa-update.sh
