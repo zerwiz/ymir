@@ -21,7 +21,7 @@ any of them is broken:
 
 ```
 links[3]{link,how}:
-  "lock → owner","~/.local/state/ymir/brokk.lock holds the pid of the session that owns the seat"
+  "lock → owner","the seat’s lock record holds the pid of the session that owns the seat"
   "owner → pane","herdr pane process-info over herdr agent list: which pane hosts that pid"
   "pane → turn","bin/agents/eindri-send.sh → herdr agent prompt, i.e. a new turn in that session"
 ```

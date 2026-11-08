@@ -46,3 +46,7 @@ door that can refuse.
 This kit does **not** run a server. The card is a file; serving it is the repository's own business
 (a static file behind its door, or the platform it already runs). The kit guarantees only what it can:
 the card is generated from the record, it is valid, and it does not lie or leak.
+
+## CHANGE LOG
+
+- **2026-11-08** — Opened with the card: protocol, skills, the grant scheme, and the five rules a card obeys.

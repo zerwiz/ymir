@@ -52,3 +52,7 @@ a skip is a pass, a silent green is a lie.
 **What this is not.** It is not a second backlog, not a checklist to tick once, and not a way to
 claim work is done. `held` without evidence is reported as **unproved**, on the baton and on every
 status line, until the evidence lands.
+
+## CHANGE LOG
+
+- **2026-11-08** — Opened with kit 1.2.0: the eighteen areas, their states, and the two doors.

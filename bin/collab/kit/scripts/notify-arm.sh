@@ -58,7 +58,7 @@ repo="$(basename "$root")"
 resolve_state() {
   local c
   for c in "${YMIR_STATE_DIR:-}" "${YMIR_HOME:+$YMIR_HOME/state}" \
-           "$HOME/Documents/ymirhome/state" "$HOME/ymirhome/state"; do
+           "${YMIR_HOME:+$YMIR_HOME/state}"; do
     [ -n "$c" ] && [ -d "$c" ] && { printf '%s\n' "$c"; return 0; }
   done
   return 1
@@ -140,7 +140,10 @@ deliver_orchestrator() {
       say "orchestrator URL declared but the repository carries no card"; return 1 ;;
     *)
       # a seat id in a registered home
-      local send="${YMIR_HOME:-$HOME/Documents/ymirhome}/../ymir/bin/agents/brokk-send.sh"
+      # THE HOARD IS RESOLVED, NEVER GUESSED (RULES/07): YMIR_HOME, or the Ymir seat this kit is
+      # running inside; a guest repository has neither and the door is silent instead of guessing.
+      local seat="${YMIR_HOME:+$YMIR_HOME/../ymir}"
+      local send="${seat:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." 2>/dev/null && pwd)}/bin/agents/brokk-send.sh"
       [ -n "${YMIR_CODE_ROOT:-}" ] && [ -x "$YMIR_CODE_ROOT/bin/agents/brokk-send.sh" ] && send="$YMIR_CODE_ROOT/bin/agents/brokk-send.sh"
       if [ -x "$send" ] && bash "$send" "$target" "$line" >/dev/null 2>&1; then
         say "delivered to the seat '$target' through brokk-send.sh"; return 0

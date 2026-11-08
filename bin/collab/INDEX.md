@@ -20,7 +20,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[48]{file,does,kind,verdict,disposition,callers,lines}:
+bin[50]{file,does,kind,verdict,disposition,callers,lines}:
   "15-commits-leave-by-pull-request.md","15 — Every commit leaves by a pull request, or it lands in main","data","wired","keep",0,35
   "16-a-review-is-a-file.md","16 — A review is a file in the repository","data","wired","keep",0,32
   "17-one-agent-one-worktree.md","17 — One agent, one worktree","data","wired","keep",0,36
@@ -38,7 +38,7 @@ bin[48]{file,does,kind,verdict,disposition,callers,lines}:
   "areas-guard.sh","areas-guard — a change to an area nobody holds is refused, and the AREA is named, never the author.","tool","wired","keep",6,81
   "areas.md","Areas — how a repository says what it answers for","data","wired","keep",1,76
   "areas.py","'''areas.py — a repository's own answer to the canon of areas.","data","wired","keep",5,417
-  "areas.sh","areas.sh — this repository's own answer to the canon of areas (a thin door; the craft is areas.py).","tool","wired","keep",13,18
+  "areas.sh","areas.sh — this repository's own answer to the canon of areas (a thin door; the craft is areas.py).","tool","wired","keep",15,18
   "canon.yaml","areas/canon.yaml — the plain face of the canon: what every project must answer for.","data","wired","keep",6,139
   "checks.sh","checks.sh — run this repository's own cheap checks, whatever language it is written in.","tool","wired","keep",3,103
   "collab-connect.sh","collab-connect.sh — what a collaborator pastes, and the token the house mints.","tool","wired","keep",1,39
@@ -56,6 +56,8 @@ bin[48]{file,does,kind,verdict,disposition,callers,lines}:
   "init.sh","init.sh — put the collaboration shelf into a repository, or check the one it has.","tool","wired","keep",5,124
   "letter.sh","letter.sh — the collaboration letter, rendered from a template and left as a DRAFT in the gate.","tool","wired","keep",3,79
   "new-module-test.sh","new-module-test.sh — a new module arrives with a test, or with a reason it does not need one.","tool","wired","keep",2,31
+  "notices.md","Where a gate's words go — the arm holder's window, and the project's orchestrator","data","wired","keep",0,73
+  "notify-arm.sh","notify-arm.sh — hand a gate's message to the ARM HOLDER, never to whoever happened to type the command.","tool","wired","keep",4,217
   "pr-check.sh","pr-check — is every commit that exists proposed for review?","tool","tested","keep",6,26
   "pr-guard.sh","pr-guard — a branch that exists on the remote must have a pull request.","tool","wired","keep",1,35
   "private-data.sh","private-data — the repository is public; the operator's machine is not.","tool","wired","keep",1,41
@@ -70,6 +72,6 @@ bin[48]{file,does,kind,verdict,disposition,callers,lines}:
   "who.py","'''who.py — the roll: who was invited into the house's collaboration surfaces, and are they using them?","tool","wired","keep",2,393
   "worktree.sh","worktree.sh — one agent, one worktree.","tool","wired","migrate → src/ymir_runtime/worktree.py",1,45
 
-**Tally.** verdict: wired=42, tested=6
+**Tally.** verdict: wired=44, tested=6
 
-**Tally.** disposition: keep=47, migrate → src/ymir_runtime/worktree.py=1
+**Tally.** disposition: keep=49, migrate → src/ymir_runtime/worktree.py=1

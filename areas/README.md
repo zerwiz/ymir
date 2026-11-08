@@ -5,3 +5,7 @@ and the evidence that closes it. `bash scripts/areas.sh check` names what is una
 `scripts/gates/areas-guard.sh` refuses a change to an area nobody holds.
 
 A waiver names who waived it and until when. An empty answer is honest; a silent one is not.
+
+## CHANGE LOG
+
+- **2026-11-08** — Opened with the shelf: eighteen areas, four states, the gate and the card.

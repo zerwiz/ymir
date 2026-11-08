@@ -27,3 +27,7 @@ with no name is a disappearance.
 **Correction, never erasure.** An area that stops being held is set back to `unheld` with a dated
 line saying why, or waived with its end date. The file is the record of what the project answered
 and when — so it is appended to, not rewritten into whatever is convenient today.
+
+## CHANGE LOG
+
+- **2026-11-08** — Written as RULES/18 of the collaboration kit, with the areas shelf it governs.
