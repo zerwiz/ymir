@@ -11,7 +11,12 @@
  *   · the messages are `fixtures.ts`, chosen to carry the two things that set a
  *     width floor (an unbreakable token, a code block);
  *   · `?pane=<px>` pins the panel to that many pixels inside a wider window,
- *     which is how a 400-pixel chat in a 1400-pixel window is measured at all.
+ *     which is how a 400-pixel chat in a 1400-pixel window is measured at all;
+ *   · `?panel=files|image` opens the side panel, so the width it takes from the
+ *     chat is measured rather than assumed. The image pane is chosen over the
+ *     code pane because both carry the same 360px floor and the image viewer does
+ *     not mount a text editor (CodeMirror needs a real document — see the note in
+ *     `BASELINE.md`).
  *
  * The runner (`scripts/probe-chat-widths.mjs`) builds this entry with esbuild and
  * drives it once per width in headless Chromium.
@@ -50,9 +55,23 @@ useAppStore.setState({
   messages: PROBE_MESSAGES,
   currentView: 'chat',
   sidebarOpen: false,
-  chatSidePanel: panel === 'files' ? 'files' : panel === 'diff' ? 'diff' : null,
+  chatSidePanel: panel === 'image' ? 'files' : panel === 'files' ? 'files' : null,
+  // The second pane is what gives the side panel its widest floor: the file tree
+  // alone is one pane, a tree beside a preview is two.
+  previewTarget:
+    panel === 'image'
+      ? { kind: 'image', name: 'probe.png', path: '/probe/probe.png' }
+      : null,
 })
 
-createRoot(root).render(
-  createElement(I18nextProvider, { i18n }, createElement(ChatPanel))
-)
+type ProbeErrorSink = { __probeErrors?: string[] }
+
+createRoot(root, {
+  // A render that throws leaves an empty root, which would measure as a clean
+  // layout. The failure is carried into the report instead.
+  onUncaughtError: (error) => {
+    const sink = window as unknown as ProbeErrorSink
+    sink.__probeErrors = sink.__probeErrors ?? []
+    sink.__probeErrors.push(String((error as Error)?.stack ?? error))
+  },
+}).render(createElement(I18nextProvider, { i18n }, createElement(ChatPanel)))

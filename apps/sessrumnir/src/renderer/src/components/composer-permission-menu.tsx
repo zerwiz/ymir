@@ -51,14 +51,16 @@ export function ComposerPermissionMenu({ value, onChange }: ComposerPermissionMe
         type="button"
         onClick={() => setIsOpen((open) => !open)}
         className={clsx(
-          'flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors',
+          'flex min-w-0 items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors',
           isTrusted
             ? 'bg-warning/15 text-warning hover:bg-warning/35'
             : 'hover:bg-highlight-strong text-secondary hover:text-primary'
         )}
         title={t(PERMISSION_MODE_DESCRIPTION_KEYS[mode]).replace(/\.$/, '')}
       >
-        {t(PERMISSION_MODE_LABEL_KEYS[mode])}
+        {/* The mode name gives way before the row wraps: a wrapped permission
+            label is a two-line composer in a narrow pane. */}
+        <span className="truncate">{t(PERMISSION_MODE_LABEL_KEYS[mode])}</span>
         <ChevronUp
           size={12}
           className={clsx(

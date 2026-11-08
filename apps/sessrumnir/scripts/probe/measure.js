@@ -95,6 +95,7 @@
     if (!root) {
       return { error: 'probe-root missing' }
     }
+    var pageErrors = (global.__probeErrors || []).slice()
 
     var rootRect = root.getBoundingClientRect()
     var crosses = []
@@ -157,6 +158,31 @@
       }
     }
 
+    // The two behaviours the fix is supposed to produce, stated as numbers: the
+    // prose wraps (its box is as wide as its pane, its height is more than one
+    // line, its content is not wider than the box) and the code block scrolls
+    // inside itself instead of widening the column.
+    var proseNode = document.querySelector('#probe-root .markdown-body p')
+    var prose = null
+    if (proseNode) {
+      var proseStyle = getComputedStyle(proseNode)
+      var proseLineHeight = parseFloat(proseStyle.lineHeight) || 0
+      prose = {
+        width: round(proseNode.getBoundingClientRect().width),
+        lines: proseLineHeight ? round(proseNode.getBoundingClientRect().height / proseLineHeight) : null,
+        contentOverflow: round(proseNode.scrollWidth - proseNode.clientWidth),
+      }
+    }
+    var preNode = document.querySelector('#probe-root pre')
+    var code = null
+    if (preNode) {
+      code = {
+        width: round(preNode.clientWidth),
+        contentWidth: round(preNode.scrollWidth),
+        scrolls: preNode.scrollWidth > preNode.clientWidth + EPSILON,
+      }
+    }
+
     var doc = document.scrollingElement || document.documentElement
     // The chain a reader actually sees, so a number in the table can be traced
     // to the box that produced it.
@@ -189,10 +215,38 @@
         height: round(composerRect.height),
         lines: composerText && lineHeight ? round(composerText.clientHeight / lineHeight) : null,
         textOverflow: composerText ? round(composerText.scrollWidth - composerText.clientWidth) : null,
+        // Its own rows, so "one line" can be read off the parts rather than
+        // inferred from a total height.
+        parts: Array.prototype.filter
+          .call(composer.children, function (child) {
+            return getComputedStyle(child).display !== 'none'
+          })
+          .map(function (child) {
+            var r = child.getBoundingClientRect()
+            return {
+              el: child.tagName.toLowerCase() + '.' + (child.getAttribute('class') || '').split(' ')[0],
+              width: round(r.width),
+              height: round(r.height),
+              contentOverflow: round(child.scrollWidth - child.clientWidth),
+            }
+          }),
       }
     }
 
+    // What the side panel did with the room it had, and what it says about it.
+    var panelNode = document.querySelector('#probe-root [data-side-panel]')
+    var fitNode = document.querySelector('#probe-root [data-panel-fit]')
+    var panel = {
+      drawn: Boolean(panelNode),
+      fit: panelNode ? panelNode.getAttribute('data-side-panel') : null,
+      width: panelNode ? round(panelNode.getBoundingClientRect().width) : 0,
+      // The sentence the toolbar shows, so "says whether it shrank or closed" is
+      // checked as text and not as intent.
+      says: fitNode ? fitNode.textContent.trim() : null,
+    }
+
     return {
+      pageErrors: pageErrors,
       viewportWidth: global.innerWidth,
       rootWidth: round(rootRect.width),
       paneWidth: root.dataset.pane ? Number(root.dataset.pane) : null,
@@ -200,27 +254,76 @@
       boxes: boxes,
       crosses: crosses,
       wider: wider,
+      prose: prose,
+      code: code,
+      panel: panel,
       composer: composerFacts,
     }
   }
 
-  function publish() {
+  /**
+   * Publish what is on screen right now.
+   *
+   * Called once as soon as the panel exists and again after the faces have
+   * loaded, because a headless dump can beat a later measurement to the DOM: a
+   * report that arrives is worth more than a perfect one that never does. The
+   * `settled` flag says which publish this was, so a caller can insist on the
+   * final one instead of trusting an early reading.
+   */
+  function publish(settled) {
     var payload
     try {
       payload = run()
     } catch (error) {
       payload = { error: String(error && error.message ? error.message : error) }
     }
+    payload.settled = Boolean(settled)
     var sink = document.getElementById('probe-result')
     if (!sink) return
     sink.textContent = JSON.stringify(payload)
   }
 
-  // Fonts decide the wrap; measure the faces the app actually ships.
-  var ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()
-  ready.then(function () {
-    requestAnimationFrame(function () {
-      requestAnimationFrame(publish)
+  // React's first render is scheduled, not synchronous, so measuring on `load`
+  // would sometimes catch an empty root and report a layout that is not there.
+  // Wait for the chat column to exist, then for the faces the app ships (the wrap
+  // depends on them), then publish.
+  function waitForChat(remaining) {
+    if (document.querySelector('#probe-root .chat-center')) return Promise.resolve()
+    if (remaining <= 0) return Promise.resolve()
+    return new Promise(function (resolve) {
+      requestAnimationFrame(function () {
+        resolve(waitForChat(remaining - 1))
+      })
     })
+  }
+
+  // A font that never settles must not hold the measurement hostage: the wrap is
+  // decided by the faces that did load, and a report is worth more than a perfect
+  // one that never arrives.
+  function withTimeout(promise, ms) {
+    return Promise.race([
+      promise,
+      new Promise(function (resolve) {
+        setTimeout(resolve, ms)
+      }),
+    ])
+  }
+
+  function whenPainted() {
+    var fonts = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()
+    return withTimeout(fonts, 1500).then(function () {
+      return new Promise(function (resolve) {
+        requestAnimationFrame(function () {
+          requestAnimationFrame(resolve)
+        })
+      })
+    })
+  }
+
+  waitForChat(90).then(function () {
+    publish(false)
+    return whenPainted()
+  }).then(function () {
+    publish(true)
   })
 })(window)

@@ -144,6 +144,11 @@
      rise in front of it, from the bottom, as the landing's do. */
   .chat-center {
     position: relative;
+    /* The chat column is the QUERY ROOT for its own layout. The app is split into
+       panes, so the window may be 1400 px while this pane is 400: a media query
+       answers a question nobody asked. Every branch below is asked of the pane. */
+    container-type: inline-size;
+    container-name: chat;
     /* The ember canvas sits at z-index -10. Without a stacking context on this node a
        negative layer sinks BEHIND an ancestor's background — here the app root's
        `bg-app` — so the hearth was painted under the room and never seen. `isolate`
@@ -161,6 +166,92 @@
   .chat-center > .border-b { border-bottom-color: var(--color-chat-column-border); }
   .chat-center > .border-t { border-top-color: var(--color-chat-column-border); }
 
+  /* ─── The chat pane reflows on its own width, not the window's ───────────────
+     He runs Sessrúmnir and Rödd side by side, so the chat is routinely narrower
+     than the glass. Three pane widths are asked about, and nothing here moves a
+     desktop layout: the header's path gives way, the composer drops the
+     affordances it cannot fit, the message gutters tighten. The same rules apply
+     to a 400 px pane in a 1400 px window and to a 400 px window. */
+  /* The keyboard hint is a courtesy of a wide pane; in a narrow one it costs
+     three wrapped lines in the composer. It is shown only where it fits. */
+  .chat-composer-hint {
+    display: none;
+  }
+
+  @container chat (min-width: 620px) {
+    .chat-composer-hint {
+      display: inline;
+    }
+  }
+
+  @container chat (max-width: 620px) {
+    /* The path is the first thing to go: the name says which project this is, and
+       the path is available on hover either way. */
+    .chat-workspace-path {
+      display: none;
+    }
+  }
+
+  @container chat (max-width: 520px) {
+    /* Message gutters: 12 px of gap and a 28 px avatar become 8 px and 20 px, so
+       the prose of a message gains real line length exactly where it is scarce. */
+    .chat-message-row {
+      gap: 0.5rem;
+    }
+
+    .chat-message-row > :first-child {
+      flex: 0 0 1.25rem;
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+
+    .chat-toolbar {
+      gap: 0.25rem;
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+    }
+  }
+
+  @container chat (max-width: 440px) {
+    /* The composer keeps one line: the send/stop button, the model chip and the
+       draft stay; the secondary affordances stand down rather than spill out of
+       the pane. Each of them is also reachable from the toolbar or a shortcut. */
+    .chat-composer-secondary {
+      display: none;
+    }
+
+    .chat-composer-actions {
+      gap: 0;
+      padding-left: 0.25rem;
+      padding-right: 0.25rem;
+    }
+
+    .chat-toolbar-actions {
+      gap: 0;
+    }
+
+    /* The model chip is the last thing that refuses to shrink; when even it
+       cannot fit the thinking selector goes, because the model is the answer to
+       "what am I talking to" and the thinking level is not. */
+    .chat-composer-model {
+      min-width: 0;
+    }
+  }
+
+  @container chat (max-width: 380px) {
+    .chat-composer-thinking {
+      display: none;
+    }
+  }
+
+  @container chat (max-width: 360px) {
+    /* At the very narrow, the permission mode stands down too: it is the same
+       picker the review panel offers, and a composer that stays one line is worth
+       more than a shortcut to a setting. */
+    .chat-composer-permission {
+      display: none;
+    }
+  }
   /* Native Chromium select popups otherwise fall back to the OS light palette
      even when the app has a dark theme. Keep the popup and its text on the
      same semantic tokens as the rest of the launcher. */
@@ -191,6 +282,13 @@
     font-size: 0.9375rem;
     line-height: 1.6;
     color: var(--color-primary);
+    /* Permission to break a word that has no spaces in it. `anywhere` — not
+       `break-word` — because only `anywhere` also lowers the element's
+       min-content width, and min-content is what a flex child refuses to shrink
+       below. Without it one long identifier sets a floor the pane cannot go
+       under, and the sentence beside it leaves the right edge. A code block is
+       exempt: it scrolls inside itself (`.markdown-body pre`). */
+    overflow-wrap: anywhere;
   }
 
   .markdown-body p {
@@ -303,6 +401,10 @@
     padding: 0.25em 0.5em;
     border: 1px solid var(--color-border);
     text-align: left;
+    /* A cell wraps its own words rather than widening the table. The table as a
+       whole still scrolls inside its wrapper when its columns genuinely do not
+       fit — that is the one overflow this document allows. */
+    overflow-wrap: anywhere;
   }
 
   .markdown-body th {

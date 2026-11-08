@@ -379,7 +379,7 @@ function AssistantMessage({
         {/* Attributed (standalone) turn: Bot avatar + provider·model header, with
             the thinking block tucked under it. */}
         {showModelHeader && (
-          <div className="flex items-start gap-3">
+          <div className="chat-message-row flex items-start gap-3">
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-card">
               <Bot size={14} className="text-muted" />
             </div>
@@ -418,7 +418,7 @@ function AssistantMessage({
           {message.toolCalls!.map((tc) => {
             const RowIcon = toolCallIconFor(tc.name)
             return (
-              <div key={tc.id} className="flex items-start gap-3">
+              <div key={tc.id} className="chat-message-row flex items-start gap-3">
                 {/* Center the icon on the box's header row (h-8 ≈ py-2 + text-xs). */}
                 <div className="flex h-8 w-7 shrink-0 items-center justify-center">
                   <div className="flex h-7 w-7 items-center justify-center rounded-full bg-card">
@@ -438,7 +438,7 @@ function AssistantMessage({
 
   return (
     <div className={clsx('group animate-fade-in', isGroupedPureThinking ? '-mt-2 mb-2' : 'mb-4')}>
-      <div className="flex items-start gap-3">
+      <div className="chat-message-row flex items-start gap-3">
         {/* Avatar — the Bot avatar for a prose turn, except inside a tool group
             (the group shows one shared header above) where it keeps an empty
             spacer so its body stays aligned with the icon-avatared rows.

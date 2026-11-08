@@ -29,7 +29,7 @@
  * clean skip, never a false green: the reason is printed and, in --json mode,
  * carried as `{ "status": "skip", "reason": "…" }`.
  */
-import { spawnSync } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import os from 'node:os'
@@ -147,48 +147,135 @@ async function buildPage(outDir) {
   return { bundle, bundleCss: existsSync(bundleCss) ? bundleCss : null }
 }
 
-function readResult(dom) {
-  const match = dom.match(/<pre id="probe-result"[^>]*>([\s\S]*?)<\/pre>/)
-  if (!match) return { error: 'no result block in the rendered page' }
-  const text = match[1]
-    .trim()
-    .replace(/&quot;/g, '"')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&#39;/g, "'")
-  if (!text) return { error: 'the page never wrote a result (it did not finish measuring)' }
-  try {
-    return JSON.parse(text)
-  } catch (error) {
-    return { error: `unreadable result: ${String(error)}` }
-  }
-}
-
-function measureCase({ chromium, pageUrl, width, height, label }) {
-  // A headless dump can beat the page's own measurement to the DOM under load, so
-  // an empty result is retried rather than reported as a layout finding.
-  let result = { error: 'not measured' }
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    const stdout = run(chromium, [
+/**
+ * Drive one page in headless Chromium over the DevTools protocol.
+ *
+ * `--dump-dom` was the first road and it is a lottery: the dump happens when the
+ * page's own load settles, which can be before or after the measurement is
+ * written, and the same case passed and failed on alternate runs. So the browser
+ * is asked instead — the page is opened once, polled until it reports a settled
+ * measurement, and closed. A measurement that is never written is then a real
+ * fault rather than a race.
+ */
+async function measureInBrowser({ chromium, pageUrl, width, height }) {
+  const profile = await fs.mkdtemp(path.join(os.tmpdir(), 'sessrumnir-probe-profile-'))
+  const child = spawn(
+    chromium,
+    [
       '--headless=new',
       '--no-sandbox',
       '--disable-gpu',
+      '--user-data-dir=' + profile,
       '--force-device-scale-factor=1',
       '--window-size=' + width + ',' + height,
-      '--virtual-time-budget=' + (4000 + attempt * 2000),
-      '--dump-dom',
-      pageUrl,
-    ])
-    result = readResult(stdout)
-    if (!result.error) break
+      '--remote-debugging-port=0',
+      '--no-first-run',
+      '--no-default-browser-check',
+      'about:blank',
+    ],
+    { stdio: ['ignore', 'ignore', 'pipe'] }
+  )
+
+  try {
+    const browserWs = await new Promise((resolve, reject) => {
+      let buffered = ''
+      const timer = setTimeout(() => reject(new Error('chromium did not open a debugging port')), 30000)
+      child.stderr.setEncoding('utf8')
+      child.stderr.on('data', (chunk) => {
+        buffered += chunk
+        const match = buffered.match(/DevTools listening on (ws:\/\/\S+)/)
+        if (match) {
+          clearTimeout(timer)
+          resolve(match[1])
+        }
+      })
+      child.on('exit', (code) => {
+        clearTimeout(timer)
+        reject(new Error(`chromium exited (${code}) before opening a debugging port`))
+      })
+    })
+
+    const { port } = new URL(browserWs)
+    const opened = await fetch(`http://127.0.0.1:${port}/json/new?${encodeURIComponent(pageUrl)}`, {
+      method: 'PUT',
+    })
+    if (!opened.ok) throw new Error(`could not open a page: HTTP ${opened.status}`)
+    const target = await opened.json()
+
+    const socket = new WebSocket(target.webSocketDebuggerUrl)
+    await new Promise((resolve, reject) => {
+      socket.addEventListener('open', resolve, { once: true })
+      socket.addEventListener('error', () => reject(new Error('the page socket refused')), { once: true })
+    })
+
+    let sequence = 0
+    const pending = new Map()
+    socket.addEventListener('message', (event) => {
+      const message = JSON.parse(String(event.data))
+      const waiter = pending.get(message.id)
+      if (waiter) {
+        pending.delete(message.id)
+        waiter(message)
+      }
+    })
+    const send = (method, params) =>
+      new Promise((resolve) => {
+        sequence += 1
+        pending.set(sequence, resolve)
+        socket.send(JSON.stringify({ id: sequence, method, params }))
+      })
+
+    const read = async () => {
+      const answer = await send('Runtime.evaluate', {
+        expression: 'document.getElementById("probe-result").textContent',
+        returnByValue: true,
+      })
+      const value = answer.result?.result?.value
+      if (!value) return null
+      try {
+        return JSON.parse(value)
+      } catch {
+        return null
+      }
+    }
+
+    const deadline = Date.now() + 30000
+    let early = null
+    while (Date.now() < deadline) {
+      const measured = await read()
+      if (measured?.error) return measured
+      if (measured?.settled) return measured
+      if (measured) early = measured
+      await new Promise((resolve) => setTimeout(resolve, 100))
+    }
+    socket.close()
+    return early ?? { error: 'the page never wrote a measurement' }
+  } finally {
+    child.kill('SIGKILL')
+    // The browser may still be writing its profile as it dies; a leftover
+    // directory in tmp is not a reason to fail a measurement.
+    await fs
+      .rm(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 })
+      .catch(() => {})
   }
-  return { case: label, ...result }
+}
+
+async function measureCase({ chromium, pageUrl, width, height, label }) {
+  try {
+    return { case: label, ...(await measureInBrowser({ chromium, pageUrl, width, height })) }
+  } catch (error) {
+    return { case: label, error: String(error && error.message ? error.message : error) }
+  }
 }
 
 function offendersOf(result) {
   if (!result || result.error) return 0
-  return (result.crosses?.length ?? 0) + (result.wider?.length ?? 0) + (result.pageOverflow > 0 ? 1 : 0)
+  return (
+    (result.crosses?.length ?? 0) +
+    (result.wider?.length ?? 0) +
+    (result.pageOverflow > 0 ? 1 : 0) +
+    (result.pageErrors?.length ?? 0)
+  )
 }
 
 function printHuman(results) {
@@ -197,7 +284,11 @@ function printHuman(results) {
       console.log(`${result.case}: ERROR ${result.error}`)
       continue
     }
-    const verdict = offendersOf(result) === 0 ? 'clean' : 'OFFENDERS'
+    if (result.settled === false) {
+      console.log('  warning: this reading was taken before the page settled')
+    }
+    for (const message of result.pageErrors ?? []) console.log(`  page-error ${message}`)
+    const verdict = offendersOf(result) === 0 && !(result.pageErrors ?? []).length ? 'clean' : 'OFFENDERS'
     const pane = result.rootWidth !== result.viewportWidth ? ` pane=${result.rootWidth}` : ''
     console.log(
       `${result.case}: viewport=${result.viewportWidth}${pane} pageOverflow=${result.pageOverflow} crosses=${result.crosses.length} wider=${result.wider.length} ${verdict}`
@@ -208,10 +299,30 @@ function printHuman(results) {
     for (const item of result.wider) {
       console.log(`  is-wider ${item.el}  (content ${item.over}px wider than ${item.clientWidth}px)`)
     }
+    if (result.panel) {
+      console.log(
+        `  panel drawn=${result.panel.drawn} fit=${result.panel.fit ?? 'none'} width=${result.panel.width} says=${JSON.stringify(result.panel.says)}`
+      )
+    }
+    if (result.prose) {
+      console.log(
+        `  prose ${result.prose.width}px wide, ${result.prose.lines} lines, contentOverflow=${result.prose.contentOverflow}`
+      )
+    }
+    if (result.code) {
+      console.log(
+        `  code ${result.code.width}px box, ${result.code.contentWidth}px content, scrolls=${result.code.scrolls}`
+      )
+    }
     if (result.composer) {
       console.log(
         `  composer ${result.composer.width}px wide, ${result.composer.height}px tall, lines=${result.composer.lines}, textOverflow=${result.composer.textOverflow}`
       )
+      for (const part of result.composer.parts ?? []) {
+        console.log(
+          `    ${part.el} ${part.width}x${part.height} overflow=${part.contentOverflow}`
+        )
+      }
     }
   }
 }
@@ -279,19 +390,22 @@ async function main() {
       }
     }
 
-    results = cases.map((testCase) => {
+    results = []
+    for (const testCase of cases) {
       const query = []
       if (testCase.pane) query.push(`pane=${testCase.pane}`)
       if (testCase.panel) query.push(`panel=${testCase.panel}`)
       const url = pathToFileURL(pagePath).href + (query.length ? `?${query.join('&')}` : '')
-      return measureCase({
-        chromium,
-        pageUrl: url,
-        width: testCase.width,
-        height: 900,
-        label: testCase.label,
-      })
-    })
+      results.push(
+        await measureCase({
+          chromium,
+          pageUrl: url,
+          width: testCase.width,
+          height: 900,
+          label: testCase.label,
+        })
+      )
+    }
   } finally {
     if (!args.keep) await fs.rm(outDir, { recursive: true, force: true })
     else console.log(`build kept at ${outDir}`)
