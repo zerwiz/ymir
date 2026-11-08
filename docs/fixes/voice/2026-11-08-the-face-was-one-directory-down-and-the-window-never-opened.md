@@ -178,3 +178,47 @@ three, and say the thing the voice kept getting wrong: **a PLAN is not an ERRAND
 - A confirmed `research` dispatch through the window was not exercised end to end (the gate's refusal was).
 - `plans` reads every shelf on every call: on a large ledger that is fine at speech speed, but it is a
   directory walk, not an index — a ledger index door would be the right next step.
+
+## Addition (2026-11-08, last of the night) — the shell hands and the MCP adapter: 25 → 34
+
+His word: *"can we give it the tools ls, read, edit, and bash also, an mcp adapter so we can connect chrome
+devtools and the gimle mcp and more … after that build it. use dev tools until you know all works."*
+
+### What landed
+
+- **`bin/voice/voice_mcp.py` (new)** — the MCP adapter, a client for both transports MCP uses: stdio
+  (newline JSON-RPC over a child process) and streamable HTTP (JSON-RPC or SSE over POST). It keeps no table
+  of its own: the servers are the seat's own declaration, merged later-wins from `.pi/mcp-adapter.json` →
+  `~/.pi/agent/mcp.json` → `<home>/config/voice-mcp.json`. **14 servers** resolve; `chrome-devtools` (added
+  to the home config, attached to the window's own CDP port) reports **32 tools**. A server that will not
+  start, and a tool that refuses, are said in words; a remote OAuth server says it needs an interactive
+  sign-in the voice cannot perform.
+- **Six hands in `voice_tools.py`** (34 tools now): `ls`, `read`, `edit`, `bash`, `mcp_tools`, `mcp`.
+- **Three laws, enforced in code, not in the brief:**
+  1. *a spoken word is not a grant* — `edit`, `bash` and any MCP call that is not read-only write a
+     `pending-action.json` and answer **NOT DONE, ask him out loud**; a confirm that does not match the
+     pending record is refused;
+  2. *some doors never open to a voice* — the secrets shelf, `.ssh`, `.age`, and the destructive commands are
+     refused outright, and the refusal is a spoken sentence (`_bash_refusal`);
+  3. *output is data* — every call is a line in `hodd/state/voice/activity-*.jsonl`.
+
+### Verified with the tools themselves (Chrome DevTools over MCP)
+
+```
+measurements[5]{what,result}:
+  "devtools → the page","list_pages: Rödd · the voice of Ymir at http://127.0.0.1:7830/?camera=1"
+  "devtools → the page's own tool list","the live page fetched the toolbox: `34 tools | shell: ls,read,edit,bash,mcp_tools,mcp`"
+  "devtools → the camera law in the live DOM","text-only=none · vision=flex (the switch is absent when the head cannot see)"
+  "devtools → console","<no console messages found> on a clean load"
+  "the gates, through the toolbox (the window's own path)","`bash` without confirm → NOT DONE; with confirm → ran (exit 0); `rm -rf /` → refused outright; `mcp list_pages` (read-only) → ran; `mcp navigate_page` (write) → NOT DONE"
+```
+
+`apps/rodd/smoke.sh 45` after all of it: every stage PASS, `assistant audio arrived PASS 337920 bytes`,
+`live window (socket · accepted · audio) PASS`.
+
+### Owed
+
+- Gimlé's MCP (`bin/gimle/mcp-read.py`, deployed to the heart behind a bearer token) is not yet in the
+  voice's server list — its URL and token must be read, not guessed.
+- A spoken end-to-end confirm for `edit`/`bash`/`mcp` (his voice → the tool) was not exercised.
+- The OAuth servers (trello · gmail · drive · docs) need a harness-side grant the voice cannot do.

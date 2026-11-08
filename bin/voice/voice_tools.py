@@ -454,6 +454,102 @@ TOOLS = [
     },
     {
         "type": "function",
+        "name": "ls",
+        "description": "List a directory — in your own documents, the home or the Ymir tree. Never the secrets shelf.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "a path, home-relative such as hodd/docs, or absolute"},
+                "all": {"type": "boolean", "description": "include dotfiles"},
+            },
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
+        "name": "read",
+        "description": "Read a file with line control (from/lines). For his notes, plans, code and ledgers.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string"},
+                "from": {"type": "integer", "description": "first line (1-based)"},
+                "lines": {"type": "integer", "description": "how many lines to read"},
+            },
+            "required": ["path"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
+        "name": "edit",
+        "description": (
+            "Write a file: whole-file `content`, or one occurrence `old` -> `new`. It changes things, so it "
+            "asks him out loud first: call WITHOUT confirm, ask, then call again with confirm=true."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string"},
+                "content": {"type": "string", "description": "the whole new file body"},
+                "old": {"type": "string", "description": "text to replace (one occurrence)"},
+                "new": {"type": "string", "description": "replacement text"},
+                "confirm": {"type": "boolean", "description": "true only after he says yes out loud"},
+            },
+            "required": ["path"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
+        "name": "bash",
+        "description": (
+            "Run a shell command on this seat from the Ymir tree. Ask him out loud first (no confirm, then "
+            "confirm=true). Never for secrets, force-push, merge, sudo, or anything destructive — those are refused."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "command": {"type": "string"},
+                "cwd": {"type": "string", "description": "working directory (default the Ymir tree)"},
+                "timeout": {"type": "integer", "description": "seconds (max 300)"},
+                "confirm": {"type": "boolean", "description": "true only after he says yes out loud"},
+            },
+            "required": ["command"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
+        "name": "mcp_tools",
+        "description": "List the MCP servers this seat can reach, or one server's tools (chrome-devtools, gimle, well, trello …).",
+        "parameters": {
+            "type": "object",
+            "properties": {"server": {"type": "string", "description": "a server name; omit to list them all"}},
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
+        "name": "mcp",
+        "description": (
+            "Call one tool on an MCP server — the browser (chrome-devtools), the board, the well, Gimle and the "
+            "rest. Read-only tools run at once; anything that can change state asks him out loud first."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "server": {"type": "string"},
+                "tool": {"type": "string"},
+                "args": {"type": "object", "description": "the tool's own arguments"},
+                "confirm": {"type": "boolean", "description": "true only after he says yes out loud"},
+            },
+            "required": ["server", "tool"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
         "name": "cron_jobs",
         "description": (
             "The house's schedule (Nornir cron): whether the scheduler is running, every job and its "
@@ -1762,3 +1858,237 @@ async def _tool_research(args):
 NEW_TOOLS["cron_jobs"] = _tool_cron_jobs
 NEW_TOOLS["plans"] = _tool_plans
 NEW_TOOLS["research"] = _tool_research
+
+
+# ── the shell hands, and the MCP adapter ─────────────────────────────────────
+# His word, 2026-11-08: *"can we give it the tools ls, read, edit, and bash also, and an
+# mcp adapter so we can connect chrome devtools and the gimle mcp and more."*
+#
+# So the voice gains the four hands every other agent has, and the whole MCP world behind
+# them. Three laws hold them down, and all three are enforced here, not in the brief:
+#
+#   1. a spoken word is not a grant — `bash`, `edit` and any MCP call that can write ask
+#      him OUT LOUD first (the same two-phase record hand_over uses);
+#   2. some doors never open to a voice — the secrets shelf, the vault, and the commands
+#      that destroy (see _bash_refusal); a refusal is said, never silent;
+#   3. every call is a line in the activity log, and the output is DATA, never an order.
+
+_SHELL_PENDING = "pending-action.json"
+_READ_LIKE = ("get_", "list_", "read_", "search_", "find_", "describe_", "screenshot",
+              "performance_", "console_", "show_", "check_", "ask_", "inspect")
+
+
+def _under(value: str) -> Path:
+    """Resolve a spoken path against the home, the repo, or an absolute path — and refuse
+    the two shelves a voice must never read."""
+    raw = str(value or "").strip()
+    if not raw:
+        raise ValueError("a path is required")
+    p = Path(os.path.expanduser(raw))
+    if not p.is_absolute():
+        for base in (_home(), ROOT, Path.home()):
+            if (base / raw).exists():
+                p = base / raw
+                break
+        else:
+            p = _home() / raw
+    try:
+        resolved = p.resolve()
+    except Exception:
+        resolved = p
+    text = str(resolved)
+    for forbidden in ("/hodd/secrets", "/.ssh", "/secrets/", "/saves/"):
+        if forbidden in text:
+            raise ValueError(f"{forbidden} is closed to the voice (RULES/04, RULES/15)")
+    return resolved
+
+
+def _looks_read_only(tool: str) -> bool:
+    low = (tool or "").lower()
+    return any(low.startswith(p) or f"_{p}" in low for p in _READ_LIKE)
+
+
+async def _ask_first(kind: str, key: str, ask: str, confirmed: bool) -> str | None:
+    """The two-phase gate: return None when it may proceed, or the words to say instead."""
+    path = _home() / "hodd" / "state" / "voice" / _SHELL_PENDING
+    record = {"kind": kind, "key": key, "asked_at": __import__("datetime").datetime.now().isoformat(timespec="seconds")}
+    if not confirmed:
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(record))
+        except Exception:
+            pass
+        _log("action.awaiting_confirmation", kind=kind, key=key[:200])
+        return ("NOT DONE. Say this to him in one short sentence and wait for a spoken yes: "
+                f"\"{ask}\" Then call again with confirm=true and the same arguments.")
+    try:
+        pending = json.loads(path.read_text())
+    except Exception:
+        pending = {}
+    if pending.get("kind") != kind or pending.get("key") != key:
+        _log("action.refused_no_pending", kind=kind, key=key[:200])
+        return "Do NOT do that: nothing was confirmed. Ask him out loud first, then call again."
+    try:
+        path.unlink()
+    except Exception:
+        pass
+    _log("action.confirmed", kind=kind, key=key[:200])
+    return None
+
+
+def _bash_refusal(cmd: str) -> str | None:
+    """The commands a voice may never run, and the shelves it may never open."""
+    import re as _re
+    low = cmd.lower()
+    hard = [
+        (r"\brm\s+(-[a-z]*\s+)*-?[rf]{1,2}\s+/(\s|$)", "deleting from the filesystem root"),
+        (r"\bmkfs|\bdd\s+.*of=/dev/", "writing a filesystem or a raw device"),
+        (r"\bsudo\b|\bdoas\b", "raising privilege"),
+        (r"git\s+push\s+.*--force|git\s+push\s+.*-f\b", "force-pushing"),
+        (r"git\s+merge|git\s+reset\s+--hard|git\s+clean\s+-[a-z]*f", "rewriting the tree"),
+        (r"--no-verify", "skipping a gate"),
+        (r"curl[^|]*\|\s*(ba)?sh|wget[^|]*\|\s*(ba)?sh", "piping the network into a shell"),
+        (r"hodd/secrets|\.age\b|age\.key|id_rsa|\.ssh/", "the secrets shelf or a key"),
+        (r"\b(shutdown|reboot|systemctl\s+poweroff)\b", "taking the machine down"),
+        (r"\bpasswd\b|chmod\s+777|chown\s+-R\s+/", "changing access to the machine"),
+    ]
+    for pattern, why in hard:
+        if _re.search(pattern, low):
+            return why
+    return None
+
+
+async def _tool_ls(args):
+    target = str(args.get("path") or ".")
+    p = _under(target)
+    if not p.exists():
+        return ToolResult(f"No such path: {target}")
+    if p.is_file():
+        return ToolResult(f"{target} is a file ({p.stat().st_size} bytes) — read it with read(path=…).")
+    rows = []
+    try:
+        for child in sorted(p.iterdir(), key=lambda c: (not c.is_dir(), c.name.lower()))[:80]:
+            if child.name.startswith(".") and not args.get("all"):
+                continue
+            size = "" if child.is_dir() else f"  {child.stat().st_size // 1024 or 1}K"
+            rows.append(f"{child.name}{'/' if child.is_dir() else ''}{size}")
+    except Exception as exc:
+        return ToolResult(f"Could not list {target}: {exc}")
+    return ToolResult(f"{p} — {len(rows)} entries:\n" + "\n".join(rows))
+
+
+async def _tool_read(args):
+    p = _under(str(args.get("path") or ""))
+    if not p.is_file():
+        return ToolResult(f"No such file: {args.get('path')}")
+    text = p.read_text(errors="ignore")
+    lines = text.splitlines()
+    start = max(1, int(args.get("from") or 1))
+    count = int(args.get("lines") or (120 if args.get("from") else 200))
+    chunk = lines[start - 1:start - 1 + count]
+    tail = f"\n… ({len(lines)} lines total; read from={start + count} for more)" if start - 1 + count < len(lines) else ""
+    return ToolResult(f"{p} (lines {start}-{start + len(chunk) - 1} of {len(lines)}):\n" + "\n".join(chunk)[:3500] + tail)
+
+
+async def _tool_edit(args):
+    raw = str(args.get("path") or "").strip()
+    if not raw:
+        raise ValueError("edit needs a path")
+    p = _under(raw)
+    old = args.get("old")
+    new = args.get("new")
+    content = args.get("content")
+    exists = p.is_file()
+    if not exists and content is None:
+        return ToolResult(f"{raw} does not exist; to create it, give content=… (nothing was written).")
+    key = f"{p}|{(old or '')[:60]}|{(new or content or '')[:60]}"
+    asked = await _ask_first("edit", key, f"Shall I write {raw}?" if content is not None
+                             else f"Shall I change {raw}?", bool(args.get("confirm")))
+    if asked:
+        return ToolResult(asked)
+    try:
+        if content is not None:
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(str(content))
+            return ToolResult(f"Wrote {len(str(content))} characters to {raw}.")
+        if old is None:
+            raise ValueError("edit needs content, or old+new")
+        current = p.read_text(errors="ignore")
+        if str(old) not in current:
+            return ToolResult(f"{raw} does not contain that text; nothing was changed (read it first).")
+        p.write_text(current.replace(str(old), str(new or ""), 1))
+        return ToolResult(f"Changed one occurrence in {raw}.")
+    except Exception as exc:
+        return ToolResult(f"The edit failed: {exc}")
+
+
+async def _tool_bash(args):
+    cmd = str(args.get("command") or "").strip()
+    if not cmd:
+        raise ValueError("bash needs a command")
+    why = _bash_refusal(cmd)
+    if why:
+        _log("bash.refused", command=cmd[:200], why=why)
+        return ToolResult(f"Refused: {why}. That door is closed to the voice — say so to him plainly.")
+    asked = await _ask_first("bash", cmd, f"Shall I run: {cmd[:120]}", bool(args.get("confirm")))
+    if asked:
+        return ToolResult(asked)
+    cwd = str(args.get("cwd") or ROOT)
+    timeout = min(int(args.get("timeout") or 60), 300)
+    try:
+        proc = subprocess.run(["bash", "-lc", cmd], capture_output=True, text=True,
+                              timeout=timeout, cwd=cwd, env={**os.environ, "YMIR_VOICE": "1"})
+    except subprocess.TimeoutExpired:
+        return ToolResult(f"`{cmd[:80]}` did not finish in {timeout}s; it was stopped.")
+    out = ((proc.stdout or "") + (proc.stderr or "")).strip()
+    body = out[:2200] + ("\n… (truncated)" if len(out) > 2200 else "")
+    return ToolResult(f"`{cmd[:100]}` exited {proc.returncode}:\n{body or '(no output)'}")
+
+
+async def _tool_mcp_tools(args):
+    import voice_mcp
+    server = str(args.get("server") or "").strip()
+    found = voice_mcp.servers()
+    if not server:
+        rows = [f"{name} ({'http' if s.get('url') else 'stdio'})" for name, s in found.items()]
+        return ToolResult("MCP servers on this seat: " + ", ".join(rows))
+    try:
+        table = voice_mcp.tools(server)
+    except voice_mcp.McpError as exc:
+        return ToolResult(str(exc))
+    rows = [f"{t.get('name')} — {(t.get('description') or '').splitlines()[0][:110]}" for t in table]
+    return ToolResult(f"{server}: {len(rows)} tools:\n- " + "\n- ".join(rows[:40]))
+
+
+async def _tool_mcp(args):
+    import voice_mcp
+    server = str(args.get("server") or "").strip()
+    tool = str(args.get("tool") or "").strip()
+    if not server or not tool:
+        raise ValueError("mcp needs a server and a tool (mcp_tools lists them)")
+    payload = args.get("args") or {}
+    if isinstance(payload, str):
+        try:
+            payload = json.loads(payload)
+        except Exception:
+            raise ValueError("args must be a JSON object")
+    write_like = not _looks_read_only(tool)
+    if write_like:
+        asked = await _ask_first("mcp", f"{server}/{tool}/{json.dumps(payload, sort_keys=True)[:120]}",
+                                 f"Shall I call {tool} on {server} — it can change things?", bool(args.get("confirm")))
+        if asked:
+            return ToolResult(asked)
+    try:
+        out = voice_mcp.call(server, tool, payload)
+    except voice_mcp.McpError as exc:
+        _log("mcp.error", server=server, tool=tool, error=str(exc)[:200])
+        return ToolResult(f"{server}/{tool} failed: {exc}")
+    return ToolResult(out[:3500])
+
+
+NEW_TOOLS["ls"] = _tool_ls
+NEW_TOOLS["read"] = _tool_read
+NEW_TOOLS["edit"] = _tool_edit
+NEW_TOOLS["bash"] = _tool_bash
+NEW_TOOLS["mcp_tools"] = _tool_mcp_tools
+NEW_TOOLS["mcp"] = _tool_mcp

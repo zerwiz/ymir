@@ -141,6 +141,9 @@ app.whenReady().then(async () => {
       "Check context_left on a long conversation so you summarise before the window fills.",
       "cron_jobs says whether the schedule is running and what is on it; plans reads the numbered plan",
       "ledger (a PLAN is not an ERRAND); research sends Huginn out — ask him out loud first, then confirm.",
+      "You also have ls, read, edit and bash, and mcp (chrome-devtools drives the browser, well and the",
+      "board hold the record). edit, bash and any mcp call that can write ask him out loud first and run",
+      "only on his yes; a destructive command is refused outright — say so, never work around it.",
       "Never claim a merge, a push, a sent mail or a changed board unless a tool returned it; the vault is",
       "closed to you and you say so.",
     ].join(' ');

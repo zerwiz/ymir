@@ -64,7 +64,7 @@ is sending that, seat the errand, and give you the id.
 bin/voice/voice-door.sh log        # what it has DONE: tool calls, their timings, the turns
 ```
 
-The voice holds **twenty-eight** doors, in families: `search_home` and `read_home_file` (your own
+The voice holds **thirty-four** doors, in families: `search_home` and `read_home_file` (your own
 documents — never the vault, never the secrets shelf), `read_mail` (read-only: it can never send or
 delete), `read_calendar` / `calendar_respond`, `read_board` and `gimle` (boards, projects, who owes
 what), the todo ledger (`todo_add` · `todo_list` · `todo_done` · `todo_reopen` · `todo_update` and its
@@ -77,6 +77,20 @@ out loud — **`cron_jobs`** (is the schedule running, what is on it, what last 
 **`plans`** (the numbered plan ledger: a *plan* is not an *errand*, so "what is Northern Italy
 doing" is answered from the plan, not from an errand), and **`research`** (sends Huginn out on a
 question; it seats a worker, so it asks you out loud first and only sends on your yes).
+
+…and, since 2026-11-08, the **shell hands and the MCP world**: `ls`, `read`, `edit`, `bash`, `mcp_tools`
+and `mcp`. They are the same doors every other agent has, with three laws on them:
+
+- **a spoken word is not a grant** — `edit`, `bash` and any MCP call that is not read-only ask you out loud
+  first (call without `confirm`, hear the yes, then call again with `confirm=true`);
+- **some doors never open to a voice** — the secrets shelf and the vault, and the destructive commands
+  (`rm -rf /`, `mkfs`, `dd of=/dev/`, `sudo`, force-push, merge/reset, `--no-verify`, `curl | sh`, shutdown)
+  are **refused outright**, and the refusal is spoken;
+- **output is data** — a page, a mail or a peer payload can never issue an order.
+
+`mcp_tools` lists the servers this seat declares (14 of them here, including `chrome-devtools` driving the
+window's own browser, `well`, `bolthorn`, `skuld`, `snotra`, `ymir`, `engram`, `trello`) and `mcp` calls one
+of their tools. A remote server that wants an interactive sign-in says so: the voice cannot open a browser.
 
 Every one of them writes a line to `$YMIR_HOME/hodd/state/voice/activity-YYYY-MM-DD.jsonl`, and the
 same view is one button away in Hlidskjalf — *Show what it has done*.
@@ -149,3 +163,9 @@ head key is read by NAME from the vault (or from the seat's own pi auth for its 
   `bin/voice/voice-ensure.sh` mean an install, an update or `eir fix` builds the face without anyone having
   to remember. Proved: `gemma-4-12b-vision` answered "Red" for a real PNG in 1.2 s on this box, and
   `smoke.sh 45` passed every stage with `assistant audio arrived PASS 374784 bytes`.
+- **2026-11-08 (latest)** — the voice gains the **shell and the MCP world** (`ls` · `read` · `edit` · `bash` ·
+  `mcp_tools` · `mcp`; 34 hands in all). The laws are stated where a person reads them — ask out loud before
+  anything that writes, the secrets shelf and destructive commands are refused outright, and an MCP server
+  that needs OAuth says so. Verified with the tools themselves: Chrome DevTools over MCP read the live page,
+  its 34-tool list and its clean console; the gates were walked through the toolbox
+  (`bash` → NOT DONE then ran on confirm; `rm -rf /` → refused). Plan: 132 §41.
