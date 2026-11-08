@@ -6,6 +6,10 @@
 #   snotra-letter.sh status <meeting-dir>            who has a letter, a draft, an approval, a send
 #   snotra-letter.sh send   <meeting-dir> --approved  send — needs the operator's word AND an approval
 #
+# TEMPLATES: the rendered letters/<person>.html is plain by design. To dress a letter, start from
+# systems/snotra/services/letters/templates/ (vendored MIT templates — Cerberus, leemunroe, Mailgun)
+# and keep the words: a template is a shape, never a place to keep facts.
+#
 # WHAT SHAPES A LETTER: the meeting's record (the only source) and the PLACE's profile
 # (`places/<company>/<place>/place.yaml`) for the sign-off window and the cadence. No company's wording,
 # task list or deadline lives in this script — a second place writes its own profile and the letter
@@ -18,6 +22,6 @@
 set -euo pipefail
 ROOT="$(d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; s="$d"; while [ "$d" != / ] && { [ ! -d "$d/RULES" ] || [ ! -d "$d/.agents" ]; }; do d="$(dirname "$d")"; done; { [ -d "$d/RULES" ] && [ -d "$d/.agents" ]; } || d="$s"; printf '%s' "$d")"
 case "${1-}" in
-  -h|--help|"") sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+  -h|--help|"") sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
 esac
 exec python3 "$ROOT/systems/snotra/services/letters/snotra-letter.py" "$@"
