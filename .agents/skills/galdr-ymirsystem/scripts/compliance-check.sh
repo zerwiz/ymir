@@ -123,12 +123,7 @@ fi
 # that switches on `"$kind"` is reading that vocabulary, not shipping a stub — the same doctrine that already excuses
 # the `consumer:` / `todo:` pair. The exclusion matches the KIND LIST itself (in either separator form: `seeded|stub|defaulted`
 # or `seeded · stub · defaulted · …`), so a line that merely names the vocabulary is excused and a real stub is not.
-mock_hits=$(grep -rnE '\b(mock|stub|placeholder|todo)\b' "$ROOT/bin" 2>/dev/null \
-  | grep -viE '^[^:]+:[0-9]+:[[:space:]]*#' \
-  | grep -v 'PUBLIC=' \
-  | grep -vE 'seeded[ |·]+(stub|defaulted)|stub[ |·]+defaulted' \
-  | grep -vE 'consumer:.*todo:|todo:.*consumer:' \
-  | grep -vE '^[^:]*bin/mcp/ymir-mcp\.py:[0-9]+:' || true)   # mirrors Pi's own tool names (todo · subagent · skill) — a NAME, not a stub
+mock_hits="$(bash "$GALDR/scripts/mocks-scan.sh" "$ROOT" 2>/dev/null || true)"
 if [ -z "$mock_hits" ]; then
   add mocks "no mocks in shipped runtime" PASS "bin/ clean"
 else
