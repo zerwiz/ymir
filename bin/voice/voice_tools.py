@@ -189,7 +189,7 @@ TOOLS = [
     {
         "type": "function",
         "name": "todo_add",
-        "description": "Add a task to the todo ledger; returns its short id. Optional due, priority, project.",
+        "description": "Add a task to this voice's ledger; returns its short id. Optional due, priority, project.",
         "parameters": {"type": "object", "properties": {
             "item": {"type": "string"}, "due": {"type": "string"},
             "priority": {"type": "string"}, "project": {"type": "string"}},
@@ -198,7 +198,7 @@ TOOLS = [
     {
         "type": "function",
         "name": "todo_list",
-        "description": "The todo ledger: open tasks with ids, due dates and priorities — or the done ones.",
+        "description": "This voice's ledger: open tasks with ids, due dates and priorities — or the done ones.",
         "parameters": {"type": "object", "properties": {
             "status": {"type": "string"}, "project": {"type": "string"}},
             "additionalProperties": False},
@@ -206,7 +206,7 @@ TOOLS = [
     {
         "type": "function",
         "name": "todo_done",
-        "description": "Mark a todo done by its id or by words that match one item.",
+        "description": "Mark a task done by its id or by words that match one item.",
         "parameters": {"type": "object", "properties": {"id": {"type": "string"}},
                        "required": ["id"], "additionalProperties": False},
     },
@@ -327,7 +327,7 @@ TOOLS = [
         "type": "function",
         "name": "search_home",
         "description": (
-            "Search the Allfather's own home (his documents, notes, plans and todo) for a phrase. "
+            "Search the Allfather's own home (his documents, notes, plans and task lists) for a phrase. "
             "Use this whenever he asks about his own files, notes, plans or lists."
         ),
         "parameters": {
@@ -1173,7 +1173,7 @@ async def _execute(name, arguments):
         with path.open("a", encoding="utf-8") as fh:
             fh.write(f"- [ ] {item}  ({ _dt.date.today().isoformat()} · by voice)\n")
         return ToolResult(
-            f"Added to the voice's own todo list beside his (todo-voice.md): {item}", create_response=True)
+            f"Added to the voice's own task list beside his (todo-voice.md): {item}", create_response=True)
 
     if name == "recall":
         query = str(args.get("query", "")).strip()
@@ -1408,7 +1408,7 @@ def _todo_render():
         return " · ".join(bits)
 
     import datetime as _dt
-    rows = ["# The voice's todo ledger", "",
+    rows = ["# The voice's task ledger", "",
             f"_rendered {_dt.datetime.now():%Y-%m-%d %H:%M} · derived from "
             "`hodd/state/voice/todos.jsonl` — a view, never the record_", "",
             f"## Open ({len(opened)})", ""]
@@ -1463,7 +1463,7 @@ async def _tool_todo_list(args):
     elif status == "done":
         tasks = [t for t in tasks if t["status"] == "done"]
     if not tasks:
-        return ToolResult(f"Nothing {status} on the todo ledger" + (f" for {project}" if project else "") + ".")
+        return ToolResult(f"Nothing {status} in the ledger" + (f" for {project}" if project else "") + ".")
     rows = [f"- {t['id']} · {t['item'][:90]}" + (f" · due {t['due']}" if t["due"] else "")
             + (f" · {t['priority']}" if t["priority"] != "medium" else "")
             + (f" · {t['project']}" if t["project"] else "") for t in tasks[:15]]

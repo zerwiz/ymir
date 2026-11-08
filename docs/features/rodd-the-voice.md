@@ -34,7 +34,7 @@ apps/rodd/smoke.sh 45  # must end: assistant audio arrived PASS
 
 The face is **fetched, never committed** (RULES/39 — the upstream demo carries its own
 addresses). `setup.sh` keeps the engine checkout in the user cache (`$XDG_CACHE_HOME/ymir/rodd-engine`, `RODD_ENGINE_DIR` overrides — never inside the tree) and copies its `demo/`
-into the face's own `ui/` directory beside the app, then stamps it with the tag; a second run is a no-op. The
+into `apps/rodd/ui`, then stamps the served face with the tag; a second run is a no-op. The <!-- stale-ok: apps/rodd/ui is created by setup.sh at run time — the face is fetched, never committed -->
 window is an Electron shell over that face, and it serves it through the demo's own uvicorn —
 so if the window is blank or silent, read `apps/rodd`'s own log line first: a face that never
 opened says so there, and a pipeline that never answered says so in
