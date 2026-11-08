@@ -10,6 +10,7 @@ that does not exist rather than at a live worker.
 """
 import asyncio
 import json
+import os
 import sys
 import time
 import traceback
@@ -44,7 +45,17 @@ SAFE = {
     "todo_update": {"id": "Tool test — tick me", "priority": "medium"},
     "add_todo": {"item": "Tool test — legacy add"},
     "recall": {"query": "rodd voice"},
+    # plan 223 — this one WRITES into the live arm's queue, so the suite points it at a lease
+    # that is not there and proves the door's refusal instead. A smoke run must never leave a
+    # message in the arm holder's inbox.
+    "talk_to_arm": {"text": "tool test — the smoke suite; no answer is expected"},
+    "hear_from_arm": {"count": 3},
     "remember": {"note": "Tool test: the voice's tools were exercised end to end on 2026-11-07."},
+}
+
+
+SAFE_ENV = {
+    "talk_to_arm": {"RODD_ARM_LEASE": "/nonexistent-state/.arm.lease"},
 }
 
 
@@ -68,11 +79,19 @@ async def main() -> int:
         started = time.perf_counter()
         err = None
         out = ""
+        saved = {k: os.environ.get(k) for k in SAFE_ENV.get(name, {})}
+        os.environ.update(SAFE_ENV.get(name, {}))
         try:
             res = await voice_tools.execute_tool(name, args)
             out = str(getattr(res, "output", res))
         except Exception as exc:  # a tool that raises is a finding
             err = f"{type(exc).__name__}: {exc}"
+        finally:
+            for key, was in saved.items():
+                if was is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = was
         ms = int((time.perf_counter() - started) * 1000)
         results.append({"tool": name, "verdict": verdict(name, out, err, ms), "ms": ms,
                         "output": (out or err or "")[:400]})

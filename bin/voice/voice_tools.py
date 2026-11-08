@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -591,6 +592,38 @@ TOOLS = [
                 "confirm": {"type": "boolean", "description": "true only after he says yes out loud"},
             },
             "required": ["server", "tool"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
+        "name": "talk_to_arm",
+        "description": (
+            "Hand the session that HOLDS THE ARM a message — the mind that plans, drains wakes and "
+            "dispatches errands. It is not this window's own agent. One command a turn: the arm answers "
+            "on a later turn through hear_from_arm. It refuses when nobody is armed, and then nothing was sent."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "text": {"type": "string", "description": "the message, in his words, as one plain line"},
+            },
+            "required": ["text"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
+        "name": "hear_from_arm",
+        "description": (
+            "Read what the arm holder has answered since you last listened. Reply with what it says, or say "
+            "plainly that no answer has arrived yet — never that it is done."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "count": {"type": "integer", "description": "how many replies to read (default 20)"},
+            },
             "additionalProperties": False,
         },
     },
@@ -1906,6 +1939,73 @@ async def _tool_research(args):
         "the raven is out and that you will read its report when he asks.", create_response=True)
 
 
+async def _tool_talk_to_arm(args):
+    """Hand the ARM HOLDER a message (plan 223).
+
+    Rödd drives its OWN pi session, so it can act but cannot reach the mind that plans. The one
+    door for that is `bin/voice/rodd-arm.sh`: it resolves the arm LEASE, appends a `signal` wake
+    into the state dir the LEASE names, and REFUSES (exit 3) when nobody is holding — which is
+    what stops the voice from saying "sent" to a session that is not there.
+    """
+    text = str(args.get("text") or "").strip()
+    if not text:
+        raise ValueError("talk_to_arm needs text")
+    code, out = _run([_door("voice/rodd-arm.sh"), "tell", text], timeout=40)
+    if code == 0:
+        return ToolResult(
+            "Handed to the arm. Tell him it was handed over, and that the answer comes back on a "
+            "later turn — do NOT say it is done, answered or fixed. " + _clean(out, 300))
+    if code == 3:
+        return ToolResult(
+            "REFUSED — nobody is holding the arm, so NOTHING was handed over: "
+            + _clean(out, 260) + " Tell him that plainly, in one short sentence.")
+    return ToolResult("The arm door failed: " + _clean(out, 260))
+
+
+async def _tool_hear_from_arm(args):
+    """Read the arm holder's replies from its own room (plan 223).
+
+    The room is written by the ARM and read by this door only: one writer per file. Reading
+    advances a byte cursor, so a reply is never lost by being heard and never repeated.
+    """
+    count = args.get("count") or 20
+    try:
+        count = max(1, int(count))
+    except (TypeError, ValueError):
+        count = 20
+    code, out = _run([_door("voice/rodd-arm.sh"), "hear", str(count)], timeout=40)
+    if code == 3:
+        return ToolResult(
+            "No arm is held, so there is no conversation to read: " + _clean(out, 260)
+            + " Tell him nobody is holding the arm right now.")
+    if code != 0:
+        return ToolResult("The arm door failed: " + _clean(out, 260))
+
+    unread = None
+    m = re.search(r'"hear","[^"]*","[^"]*","(\d+)"', out)
+    if m:
+        unread = int(m.group(1))
+    replies = []
+    for line in out.splitlines():
+        line = line.strip()
+        if not line.startswith('"'):
+            continue
+        fields = re.findall(r'"((?:[^"\\]|\\.)*)"', line)
+        if len(fields) != 3 or line.count(",") < 2:
+            continue
+        at, sender, text = (json.loads('"' + f + '"') for f in fields)
+        replies.append((at, sender, text))
+    if not replies:
+        return ToolResult(
+            "No answer yet. Say exactly that — the arm has not written back. Do not guess, and do "
+            "not say the work is done; it is still with the arm.")
+    said = " · ".join(
+        f"{sender} at {at}: {text}" if at else f"{sender}: {text}" for at, sender, text in replies)
+    return ToolResult("The arm answered: " + said + ("" if unread is None else f" ({unread} unread in all)."))
+
+
+NEW_TOOLS["talk_to_arm"] = _tool_talk_to_arm
+NEW_TOOLS["hear_from_arm"] = _tool_hear_from_arm
 NEW_TOOLS["cron_jobs"] = _tool_cron_jobs
 NEW_TOOLS["plans"] = _tool_plans
 NEW_TOOLS["research"] = _tool_research

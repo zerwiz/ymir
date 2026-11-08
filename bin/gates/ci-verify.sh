@@ -108,6 +108,8 @@ gate capability "the capability register is current"           bash "$ROOT/bin/g
 gate home-index "the home's shelves are navigable"             bash "$ROOT/bin/gates/checks/home-index-check.sh"
 gate triggers    "a smithy starts by a person, the clock or an event — and nothing arms itself" \
                bash "$ROOT/bin/time/tests/test_event_trigger.sh"
+gate voice-arm   "Rödd knocks on the arm, and refuses when nobody is holding it (plan 223)" \
+               bash "$ROOT/bin/voice/tests/test_rodd_arm.sh"
 gate usage      "no door became unused since the baseline"    bash "$ROOT/bin/gates/checks/usage-ratchet.sh"
 gate portability "GNU-only callers may fall, never rise (RULES/05)"    bash "$ROOT/bin/gates/checks/portability-ratchet.sh" check
 gate inventory  "the bin/backend index is current"            bash "$ROOT/bin/gates/inventory.sh" --check
