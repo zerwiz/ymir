@@ -591,7 +591,17 @@ if [ "$MODE_PI" = 1 ]; then
   # is already gone.
   if [ -d "$HOME/.pi/agent" ]; then
     contract="$HOME/.pi/agent/AGENTS.md"
-    if [ -e "$contract" ]; then
+    # The seat render OWNS this file on a seated machine (bin/seat/seat-surface.sh): it
+    # writes the seat's own name above the SAME contract text into AGENTS.seat.md. Both
+    # writers used to point AGENTS.md at their own target and the last one won — so a
+    # `valknut-load --all` after a render silently erased the machine's name, which is
+    # the very thing every machine was promised (2026-11-03). The seat file wins.
+    seat_contract="$HOME/.pi/agent/AGENTS.seat.md"
+    if [ -r "$seat_contract" ]; then
+      ln -sfn "$seat_contract" "$contract" 2>/dev/null \
+        && add pi-global-contract "$contract" "the seat render — names this machine's agent" \
+        || add pi-global-contract "$contract" "ERROR"
+    elif [ -e "$contract" ]; then
       case "$ROOT" in
         */.yggdrasil/*) add pi-global-contract "$contract" "kept — a worktree deploy never repoints a live contract" ;;
         *) ln -sfn "$ROOT/AGENTS.md" "$contract" 2>/dev/null \

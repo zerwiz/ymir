@@ -73,6 +73,9 @@ agents:
   groa:    { model: opencode-go/deepseek-v4.1-flash }
   volundr: { model: opencode-go/deepseek-v4.1-flash }
   elder:   { model: opencode-go/deepseek-v4.1-flash }
+  # The Allfather's assistant: the voice in and out of the house — Telegram, the desk,
+  # a door call from another system. Headless by design; he is never a window.
+  skirnir: { model: opencode-go/deepseek-v4.1-flash }
 
 # How many LOCAL models this machine may run at once (most boxes: 1).
 local_concurrency: 1

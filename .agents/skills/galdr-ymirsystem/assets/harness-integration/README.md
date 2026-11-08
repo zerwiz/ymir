@@ -1509,3 +1509,35 @@ ymir_packet[3]{fact,value,note}
 
 The per-harness matrix stays where it is measured (§4 and plan 177 §10 in the home); this section names
 the doors, so a code change and its asset agree.
+
+## The published formats, read rather than assumed (2026-11-08)
+
+His word: *"read online so you know the formatters work for www.pi.dev and opencode."* Two readers consume the one
+canonical card in `.agents/agents/*.md`; both were read from the published documentation, and both were measured
+against this tree rather than trusted.
+
+**OpenCode v2** — `opencode.ai/docs/agents` and `/docs/migrate-v1`:
+
+```
+opencode_agent_format[6]{fact,law,measured}
+  "location",".opencode/agents/<name>.md is the preferred V2 path; a nested path becomes a namespaced id","24 links, ids from the LINK filename (bragi.md -> bragi), not the profile filename"
+  "mode","primary | subagent | all — and an OMITTED mode on a custom agent DEFAULTS TO primary","galdr.md carried no mode and was therefore seated in the switcher by accident, not by intent; it now says all"
+  "frontmatter","V1 frontmatter is deprecated but translated automatically; a file is read whole as V1 or whole as V2","all 24 cards are V1 (name/description/permission map); `opencode debug agents` shows the map translated to the ordered V2 array: permission.bash.* -> {action: shell, resource, effect}"
+  "mixing","a file using ANY of permissions · request · system · disabled is read as V2, and its V1 name/tools/permission/temperature are IGNORED with a warning","never add a V2 key to a V1 card; convert a card whole or not at all"
+  "caching","the background service caches the agent set","`opencode debug agents --standalone` reads the file; the service-backed answer was stale for a whole edit"
+  "the seat list","the switcher offers primary and all; subagents are reached by name","35 then 36 agents loaded, 3 selectable — no limit, the mode is the seat"
+```
+
+**Pi (pi.dev)** — `pi.dev/docs/latest/configuration`, `/cli`, `/skills`:
+
+```
+pi_surface_format[5]{fact,law,measured}
+  "no agent loader","`<agent-dir>/agents/` and `.pi/agents/` are NOT in Pi's configuration tables — Pi core loads no agent directory at all","`.pi/agents/` is a vestigial link shelf; the figures reach Pi through `.pi/extensions/ymir-subagents.ts`, which reads `.agents/agents/` itself (see 'Pi has no agent loader' above)"
+  "the file letters","`--system-prompt` and `--append-system-prompt` take <text|path>; an existing file is read, not echoed","bin/seat/herdr-run.sh passes the card PATH — correct as written"
+  "skills","Pi implements the Agent Skills spec: SKILL.md with name + description (<=1024 chars); MALFORMED files and description-less skills are NOT loaded","44 SKILL.md under .agents/skills; all load except four vendored copies under nsr-compliance/assets/, which carry no frontmatter by design so they are not phantom skills"
+  "frontmatter parser",".pi/extensions/ymir-subagents.ts scans frontmatter line by line — flat scalar keys only, no YAML dependency","measured against all 24 cards: every name and description resolves; nested maps (permission, capabilities) are skipped by the same rule"
+  "one rule for both readers","keep card frontmatter FLAT and single-line: a folded description or a nested scalar that matters would be read by OpenCode's YAML and silently dropped by Pi's line scan","a card is written for the weaker reader"
+```
+
+The law that comes out of it: **one card, two readers, and the card is written for the weaker reader.** OpenCode
+parses YAML; Pi scans lines. Anything a line scan cannot see does not reach Pi, however valid it is as YAML.

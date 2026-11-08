@@ -2,6 +2,30 @@
 name: galdr
 description: Galdr — agent-CLI ergonomics and the master builder/maintainer of the Ymir (Brokk distro) runtime. Use when building, modifying, or reviewing any agent-facing CLI, or when building/maintaining any Ymir subsystem across harnesses (OpenCode, Pi, Claude Code, Cursor, Codex). Load its assets[] row for the task before editing a governed path.
 domain: brokkforge
+# OpenCode v2: an omitted `mode` on a custom agent DEFAULTS TO `primary` (docs/agents#mode).
+# This figure was therefore seated in the Tab switcher by omission, not by intent. `all` says
+# what Galdr is: a builder you may send anywhere, and may sit in when the work is its own.
+mode: all
+permission:
+  read: allow
+  edit: allow
+  write: allow
+  glob: allow
+  grep: allow
+  bash:
+    "*": ask
+    "ls *": allow
+    "rg *": allow
+    "grep *": allow
+    "cat *": allow
+    "find *": allow
+    "git status*": allow
+    "git diff*": allow
+    "git log*": allow
+    "git show*": allow
+    "bash -n *": allow
+    "bash .agents/skills/galdr-ymirsystem/scripts/*": allow
+  skill: allow
 allowed-tools: read,write,bash,glob,grep
 role: builder
 norse_name: Galdr
@@ -54,7 +78,7 @@ Nornir jobs run, and how it is all verified. A runtime change not reflected in
 ## Routing (load one row)
 
 ```
-assets[27]{path,load_when}:
+assets[28]{path,load_when}:
   "assets/principles.md","the 10 CLI design principles (full doctrine)"
   "assets/build-method.md","building/maintaining the runtime; forging a skill"
   "assets/registry.md","skills, tools, commands, Eindri profiles, aett, schemas"
@@ -75,6 +99,7 @@ assets[27]{path,load_when}:
   "assets/porting-upstream-to-norse.md","porting a validated upstream into Norse"
   "assets/eindri-orchestration.md","spawn/brief/supervise Eindri workers"
   "assets/nornir-jobs.md","the scheduler, jobs, and Runes ledger"
+  "assets/mjollnir.md","the forge: the registry doctor, intake (reading every repo), run --project, Glitnir as a view, the honest-read laws"
   "assets/smidja.md","the smithy: install, roster/pi models, run, trace, visualizer ports, observer"
   "assets/hlidskjalf-ui.md","any change under apps/hlidskjalf"
   "assets/odrerir-hall.md","the Óðrerir Live Hall — apps/odrerir, :4322, its window, the planning snapshot feed (systems/snotra/services/cron/hall-snapshot.sh)"

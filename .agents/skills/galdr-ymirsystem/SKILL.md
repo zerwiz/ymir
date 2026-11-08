@@ -2,6 +2,30 @@
 name: galdr
 description: Galdr — agent-CLI ergonomics and the master builder/maintainer of the Ymir (Brokk distro) runtime. Use when building, modifying, or reviewing any agent-facing CLI, or when building/maintaining any Ymir subsystem across harnesses (OpenCode, Pi, Claude Code, Cursor, Codex). Load its assets[] row for the task before editing a governed path.
 domain: brokkforge
+# OpenCode v2: an omitted `mode` on a custom agent DEFAULTS TO `primary` (docs/agents#mode).
+# This figure was therefore seated in the Tab switcher by omission, not by intent. `all` says
+# what Galdr is: a builder you may send anywhere, and may sit in when the work is its own.
+mode: all
+permission:
+  read: allow
+  edit: allow
+  write: allow
+  glob: allow
+  grep: allow
+  bash:
+    "*": ask
+    "ls *": allow
+    "rg *": allow
+    "grep *": allow
+    "cat *": allow
+    "find *": allow
+    "git status*": allow
+    "git diff*": allow
+    "git log*": allow
+    "git show*": allow
+    "bash -n *": allow
+    "bash .agents/skills/galdr-ymirsystem/scripts/*": allow
+  skill: allow
 allowed-tools: read,write,bash,glob,grep
 role: builder
 norse_name: Galdr

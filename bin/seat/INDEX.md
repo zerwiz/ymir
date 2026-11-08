@@ -38,12 +38,12 @@ bin[26]{file,does,kind,verdict,disposition,callers,lines}:
   "pending.sh","pending.sh — everything that is waiting on the operator, in ONE list.","tool","wired","keep",4,91
   "pi-launcher.sh","pi-launcher.sh — the ONE launcher generator for a pi seat.","tool","tested","keep",1,155
   "seat-prove.sh","seat-prove.sh — a spawn is not a seat until the agent list shows it.","tool","tested","keep",1,79
-  "seat-surface.sh","seat-surface.sh — render THIS seat's own name into the AGENTS.md every harness reads.","tool","wired","keep",5,212
+  "seat-surface.sh","seat-surface.sh — render THIS seat's own name into the AGENTS.md every harness reads.","tool","wired","keep",6,212
   "seat-wire.sh","seat-wire.sh — one seat speaks into another seat's live pane, and says who it is.","tool","wired","keep",1,382
   "seats.sh","seats.sh — where the work actually is: panes in either backend, and the dead shells named.","tool","wired","keep",3,34
   "test_core_four_pending_factory.sh","The ward for the three near-loop doors: core four, pending, and the factory preset.","tool","wired","keep",0,26
   "test_lock_ask.sh","The ward for bin/seat/lock-ask.sh — a read-only agent asks the lock owner, and only the","tool","wired","keep",0,150
-  "valknut-load.sh","valknut-load.sh — Valknut, the knot that binds the repo distro into each tool's","tool","tested","keep",8,707
+  "valknut-load.sh","valknut-load.sh — Valknut, the knot that binds the repo distro into each tool's","tool","tested","keep",8,717
   "verify-seat.sh","verify-seat.sh — is this seat actually whole?","tool","tested","keep",3,177
   "whose-tree.sh","whose-tree.sh — whose code am I standing in?","tool","wired","keep",0,118
   "ymir-mcp.py","'''ymir-mcp.py — Ymir's own doors over MCP: the tools Pi has as extensions, for","tool","wired","keep",4,276
