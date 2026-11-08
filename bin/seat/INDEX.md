@@ -45,7 +45,7 @@ bin[27]{file,does,kind,verdict,disposition,callers,lines}:
   "test_lock_ask.sh","The ward for bin/seat/lock-ask.sh — a read-only agent asks the lock owner, and only the","tool","wired","keep",0,150
   "valknut-load.sh","valknut-load.sh — Valknut, the knot that binds the repo distro into each tool's","tool","tested","keep",8,717
   "verify-seat.sh","verify-seat.sh — is this seat actually whole?","tool","tested","keep",3,177
-  "who.sh","who.sh — WHO IS WHERE: every agent in a pane, its project, its errand, and who holds the lock.","tool","wired","keep",2,141
+  "who.sh","who.sh — WHO IS WHERE: every agent in a pane, its project, its errand, and who holds the lock.","tool","wired","keep",3,141
   "whose-tree.sh","whose-tree.sh — whose code am I standing in?","tool","wired","keep",0,118
   "ymir-mcp.py","'''ymir-mcp.py — Ymir's own doors over MCP: the tools Pi has as extensions, for","tool","tested","keep",4,276
 

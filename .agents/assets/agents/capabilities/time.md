@@ -22,6 +22,7 @@
 | nornir-job-forgejo-git.sh | nornir-job-forgejo-git.sh — the local git round: issues and PRs on the | tested+named | keep (a human or a cron row must run it) |
 | nornir-job-git-sync.sh | nornir-job-git-sync.sh - Yggdrasil, the world-tree kept in order. | tested+named | keep (a human or a cron row must run it) |
 | nornir-job-gna-mail.sh | nornir-job-gna-mail.sh — the desk's own clock: import, then prove the  | tested+named | keep (a human or a cron row must run it) |
+| nornir-job-groa-update.sh | nornir-job-groa-update.sh — every installation keeps itself current, a | tested+named | keep (a human or a cron row must run it) |
 | nornir-job-hall-snapshot.sh | nornir-job-hall-snapshot.sh — Óðrerir: refresh the Live Hall's board | tested+named | keep (a human or a cron row must run it) |
 | nornir-job-memory-housekeeping.sh | nornir-job-memory-housekeeping.sh - Muninn, the raven of memory. | tested+named | keep (a human or a cron row must run it) |
 | nornir-job-nsr-compliance.sh | nornir-job-nsr-compliance.sh — the NorthStar compliance round, nightly | tested+named | keep (a human or a cron row must run it) |

@@ -42,7 +42,7 @@ bin[34]{file,does,kind,verdict,disposition,callers,lines}:
   "open-work.sh","open-work.sh — the open work, rendered for a HUMAN, from the record the doors read.","tool","wired","keep",2,80
   "plan.sh","plan.sh — the plan ledger: create the NEXT numbered plan and its index row.","tool","tested","keep",8,83
   "regenerate-on-merge.sh","regenerate-on-merge.sh — the merge driver for WOVEN documents (Þættir, plan 174).","tool","wired","keep",3,21
-  "runes-append.sh","runes-append.sh — the append-only Runes ledger, a THIN SHIM.","tool","tested","keep",28,117
+  "runes-append.sh","runes-append.sh — the append-only Runes ledger, a THIN SHIM.","tool","tested","keep",30,117
   "runes-project.sh","runes-project.sh — the DAG projector, regenerates runes_audit.md from events.","tool","wired","keep",0,65
   "test_mimir_bridge_health.py","﻿import importlib.util,json,subprocess,sys,tempfile,threading,unittest","data","wired","keep",0,29
   "vor-crew-state.sh","vor-crew-state.sh - deterministic read of an Eindri worker's CURRENT state.","tool","wired","keep",2,125

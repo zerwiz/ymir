@@ -27,7 +27,7 @@
 | eindri-handoff.sh | eindri-handoff.sh — the handoff failsafe. An Eindri's work ALWAYS reac | tested+named | keep (a human or a cron row must run it) |
 | eindri-heartbeat.sh | eindri-heartbeat.sh — condition half of the Eindri silence bridge. | tested+named | keep (a human or a cron row must run it) |
 | eindri-liveness.sh | eindri-liveness.sh — the sweep's second question: is the pane still a  | tested+named | keep (a human or a cron row must run it) |
-| eindri-notify.sh | eindri-notify.sh — the ARM-HOLDER'S INBOX: inject one line into the se | tested | keep (a human or a cron row must run it) |
+| eindri-notify.sh | eindri-notify.sh — the ARM-HOLDER'S INBOX: inject one line into the se | tested+named | keep (a human or a cron row must run it) |
 | eindri-review-spawn.sh | eindri-review-spawn.sh — the review spine. FORSETI the Judge is sent a | tested+named | keep (a human or a cron row must run it) |
 | eindri-role.sh | eindri-role.sh — the right smith for the right metal. | tested+named | keep (a human or a cron row must run it) |
 | eindri-route.sh | eindri-route.sh — which machine should host an errand, by its nature? | tested+named | keep (a human or a cron row must run it) |

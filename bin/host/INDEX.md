@@ -31,7 +31,7 @@ bin[13]{file,does,kind,verdict,disposition,callers,lines}:
   "host-sense.sh","host-sense.sh — learn THIS machine: distro, kernel, session, desktop, and what","tool","wired","keep",5,200
   "machine-profile.sh","machine-profile.sh — a body reads its OWN card (wave C, the persona loader).","tool","wired","keep",0,54
   "omarchy-hook-install.sh","omarchy-hook-install.sh — let Ymir notice when Omarchy updates.","tool","wired","keep",1,62
-  "omarchy-install.sh","omarchy-install.sh — the Omarchy installation layer (Rule 05).","tool","wired","keep",1,163
+  "omarchy-install.sh","omarchy-install.sh — the Omarchy installation layer (Rule 05).","tool","wired","keep",3,163
   "omarchy-plugins.sh","omarchy-plugins.sh — the Omarchy plugins Ymir suggests, and installs on consent.","tool","wired","keep",2,189
   "omarchy-sense.sh","omarchy-sense.sh — learn the Allfather's Omarchy machine.","tool","wired","keep",3,204
 

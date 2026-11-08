@@ -9,6 +9,21 @@
 #   sessrumnir.sh status
 #   sessrumnir.sh stop
 #   sessrumnir.sh --version
+
+# ── THE APPS RUN FROM MAIN, NOT FROM A WORKTREE (the Allfather, 2026-11-08: "are this the full apps. not
+# just the start buttons?"). The launcher entries were only the visible half: the RUNTIME is this script,
+# its node_modules, its built assets and the processes it raises. So a worktree re-executes the canonical
+# tree's copy of this very script, and everything below it — Electron, the assets, the API — comes from main.
+if [ -z "${YMIR_ALLOW_WORKTREE_RUNTIME:-}" ]; then
+  _mt="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  _canon="$(bash "$(cd "$_mt/.." && pwd)/bin/desktop/main-tree.sh" "$_mt" 2>/dev/null || true)"
+  if [ -n "${_canon:-}" ] && [ "$_canon" != "$(cd "$_mt" && pwd)" ]; then
+    printf '%s: running from a WORKTREE — the app runtime is locked to main (%s), re-executing there\n' \
+      "$(basename "$0")" "$_canon" >&2
+    exec bash "$_canon/${BASH_SOURCE[0]#"$(cd "$_mt" && pwd)"/}" "$@"
+  fi
+fi
+
 set -u
 
 VERSION="1.0.0"

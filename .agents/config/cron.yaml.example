@@ -98,3 +98,9 @@
 # Give your own minute so twenty boxes do not knock at once; hourly is fine on a small fleet
 # (`@hourly:41`) and a hand on a metered link can opt out entirely with YMIR_AUTO_UPDATE=0.
 03:41 bin/time/nornir-job-groa-update.sh
+
+# — A MODEL THAT LOOPS IS A FAULT (the Allfather, 2026-11-08: "this are not allwod. ths bust be notifiet do
+# the agent that hold the gna arm") — one look at every seated agent's mouth, every twenty minutes. It names
+# the pane and the symptom, tells the arm holder, carves a rune, and stops nothing unless told --stop.
+# 0,20,40 * * * is not a shape Nornir reads: use three hourly rows on this machine's own minute.
+@hourly:47 bin/agents/spam-guard.sh

@@ -104,6 +104,15 @@ from \`main\` and then mends forward. You run her; she does the moving.
 - behind > 0, clean, on main → run her. Then say the two shas.
 - offline or the fetch failed → say so, and force nothing.
 
+## After the update: the DESKTOP DOORS
+
+The Allfather's law: *"they all ned to point to main … the apps run time must be locked to main. otherwise
+they might break if the user are swithing threes"*. So after Gróa has run, and with the same one line of
+output, check them: `bash bin/desktop/desktop-verify.sh` and `bash bin/gates/guards/desktop-main-guard.sh`.
+If either complains, re-seat the launchers **from the canonical tree** — `bash bin/desktop/main-tree.sh`
+names it — by running `bash bin/host/omarchy-install.sh` inside it. Put the outcome in your one line:
+`· desktop ok` or `· desktop RE-SEATED`.
+
 ## How you report — this is the whole of your output
 
 ONE line, no prose, no headings, in this exact shape:
