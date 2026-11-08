@@ -41,14 +41,28 @@ if [ -x scripts/doctor.sh ] || [ -x scripts/test.sh ]; then
 fi
 
 # 2 — node
-if [ -f package.json ] && command -v npm >/dev/null 2>&1; then
-  if [ "$what" = doctor ]; then
-    step npm run --silent check
-    step npm run --silent typecheck
-  else
-    step npm run --silent test
+# 2 — node: only the checks this project DECLARES. A package.json that declares no check is not a failed
+# doctor — it is a project whose tree check is written elsewhere, and the hook must not refuse what it cannot
+# name. Measured 2026-11-07: `npm run --silent check` in a repository with no such script answers 254, and the
+# hook read that as "a check found a fault" while no check had run.
+declares() {
+  if command -v node >/dev/null 2>&1; then
+    node -e 'const s=(require("./package.json").scripts)||{};process.exit(s[process.argv[1]]?0:1)' "$1" 2>/dev/null
+    return $?
   fi
-  exit 0
+  grep -q "\"$1\"[[:space:]]*:" package.json 2>/dev/null
+}
+
+if [ -f package.json ] && command -v npm >/dev/null 2>&1; then
+  ran=0
+  if [ "$what" = doctor ]; then
+    if declares check;     then step npm run --silent check;     ran=1; fi
+    if declares typecheck; then step npm run --silent typecheck; ran=1; fi
+  else
+    if declares test; then step npm run --silent test; ran=1; fi
+  fi
+  [ "$ran" = 1 ] && exit 0
+  # nothing declared: fall through to the next lane rather than refusing
 fi
 
 # 3 — elixir
@@ -67,5 +81,11 @@ if [ -f mix.exs ] && ! command -v mix >/dev/null 2>&1; then
 fi
 if [ -f package.json ] && ! command -v npm >/dev/null 2>&1; then
   skipped "this is a Node repository and npm is not installed on this machine"
+fi
+if [ -f package.json ] && command -v npm >/dev/null 2>&1; then
+  if [ "$what" = doctor ]; then
+    skipped "this is a Node repository and its package.json declares no check or typecheck script"
+  fi
+  skipped "this is a Node repository and its package.json declares no test script"
 fi
 skipped "no package.json, no mix.exs and no scripts/doctor.sh"
