@@ -70,4 +70,4 @@ unresolved`). Pre-existing, unrelated, and named rather than quietly passed.
 ## CHANGE LOG
 
 - **2026-11-09** — window states with a reason and an arithmetic size parse; pending ages from
-  the record and whole paths (plan 227).
+  the record and whole paths (plan 229).

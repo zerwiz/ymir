@@ -52,4 +52,4 @@ test is deliberately not run in a friendly one.
 ## CHANGE LOG
 
 - **2026-11-09** — binary resolution by probe with `PI_BIN` as the one documented override;
-  `--which-pi` and a check line that names the channel (plan 227).
+  `--which-pi` and a check line that names the channel (plan 229).

@@ -53,7 +53,7 @@ for p in (() if model else (os.path.expanduser("~/.pi/agent/settings.json"),
         break
 
 # --- context: window and compaction thresholds -----------------------------
-# THREE STATES, NEVER A SILENT ZERO (plan 227, 2026-11-09). A seat may run a local
+# THREE STATES, NEVER A SILENT ZERO (plan 229, 2026-11-09). A seat may run a local
 # model, an online one, or a model nobody has heard of; another user on this box has
 # their own settings and their own catalogue. So: exact (a registry names the
 # window), approximate (the catalogue ROUNDS it: '1M', '65.5K', '200K'), or unknown

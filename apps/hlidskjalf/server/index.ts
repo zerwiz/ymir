@@ -2531,7 +2531,7 @@ const server = Bun.serve({
         }));
       }
       if (p === '/api/context') {
-        // THIS SESSION'S SHAPE, one read (plan 227). The governed asset has declared this
+        // THIS SESSION'S SHAPE, one read (plan 229). The governed asset has declared this
         // door since plan 199 and the gate never served it (404 "no route"), so the near
         // board's window card lost its session line while bin/seat/context.sh sat behind it
         // answering correctly. A carrier, like its neighbours: run the door, cache briefly,

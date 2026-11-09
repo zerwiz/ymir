@@ -16,7 +16,7 @@
 #
 # The harness rule follows from the catalogue rather than from prose: a model pi lists is pi's to serve.
 #
-# THE BINARY IS PROBED, NEVER ASSUMED (2026-11-09, plan 227). A bare `pi` is a promise
+# THE BINARY IS PROBED, NEVER ASSUMED (2026-11-09, plan 229). A bare `pi` is a promise
 # that the caller's PATH is an interactive one — and the gate is not: its unit sets
 # PATH=$HOME/.bun/bin:/usr/bin:/bin, where a npm-global or a mise-shimmed pi is
 # invisible. The dial then read the window as zero and painted "—" (measured on this

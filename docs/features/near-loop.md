@@ -116,7 +116,7 @@ numbers repeat the living ones.
 ## CHANGE LOG
 
 - **2026-11-06** — changelog section added at the merge so RULES/46 can read it.
-- **2026-11-09** — plan 227: the doors work on a machine whose PATH is not an interactive one
+- **2026-11-09** — plan 229: the doors work on a machine whose PATH is not an interactive one
   (the gate's own), `/api/context` is served instead of promised, the window reads
   exact/approximate/unknown-with-a-reason instead of `—`, pending cards carry real ages and
   whole paths, and the page stops advertising scores no door computes.

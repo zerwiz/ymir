@@ -58,4 +58,4 @@ carrier must never depend on an interactive PATH.
 
 - **2026-11-09** — `/api/context` served (15 s carrier, `cwd: ROOT`), core-four given `cwd`;
   the near board renders exact/approximate/unknown-with-a-reason and stops advertising jev
-  scores it does not compute (plan 227).
+  scores it does not compute (plan 229).

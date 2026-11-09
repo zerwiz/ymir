@@ -154,7 +154,7 @@ export default function NearBoard() {
     }
     const c = dials.data;
     const ctx = live.state === 'ok' ? live.data : undefined;
-    // Three states, never a silent zero (plan 227): exact · approximate · unknown with a
+    // Three states, never a silent zero (plan 229): exact · approximate · unknown with a
     // reason. A seat may run a local model, an online one, or one nobody has heard of —
     // and another user on the same box has their own answer.
     const windowKnown = c.context.known ?? c.context.window > 0;

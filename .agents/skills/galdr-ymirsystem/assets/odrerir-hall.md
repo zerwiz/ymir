@@ -305,7 +305,7 @@ Laws that hold it honest:
 - The cloth is `hall.css` as everywhere else: the card block uses `--hall-*` and `--ymir-*`
   tokens only. **No new palette, no raw hex.**
 
-### The near loop works on every machine (2026-11-09, plan 227)
+### The near loop works on every machine (2026-11-09, plan 229)
 
 Audited live, then repaired. Three faults stood between the near loop and its own promise,
 and all three were of one kind: a door that answered in an interactive shell and died under

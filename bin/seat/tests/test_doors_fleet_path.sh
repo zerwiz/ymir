@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The ward for plan 227 — the near loop on a machine that is not this shell.
+# The ward for plan 229 — the near loop on a machine that is not this shell.
 #
 # WHY THIS TEST LOOKS ODD: the faults it guards against pass in an interactive shell and
 # die under a systemd unit. `hlidskjalf-gate.service` sets

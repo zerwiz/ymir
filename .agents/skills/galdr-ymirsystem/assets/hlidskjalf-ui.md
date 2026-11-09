@@ -39,7 +39,7 @@ near_loop[4]{route,door,ttl}:
   "/api/plans","the plan ledger read as FILES (not Skuld's table) — README index row carries each state","30 s"
 ```
 
-All four are **served** as of 2026-11-09 (plan 227). `/api/context` was declared here on
+All four are **served** as of 2026-11-09 (plan 229). `/api/context` was declared here on
 2026-11-06 and never implemented — the gate answered `no route /api/context` on this seat and
 on the heart, so the near board's window card silently lost its session line. Each carrier now
 passes `cwd: ROOT` and an explicit timeout, so a carrier never inherits the caller's directory.
