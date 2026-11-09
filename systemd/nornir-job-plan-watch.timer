@@ -1,0 +1,8 @@
+[Unit]
+Description=Plan watch timer
+[Timer]
+OnCalendar=*-*-* 07:30:00
+Persistent=true
+Unit=nornir-job-plan-watch.service
+[Install]
+WantedBy=timers.target
