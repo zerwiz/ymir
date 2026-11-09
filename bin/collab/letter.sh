@@ -4,8 +4,10 @@
 #   letter.sh --to <address> --person "<name>" [--projects "a, b"] [--from "<sender>"]
 #             [--attach FILE ...] [--template FILE] [--dry-run]
 #
-# It drafts; it never sends. Sending is the operator's word, and it goes through the approval gate:
+# It drafts; it never sends. Sending is the operator's word, and it goes through the approval gate —
+# two acts, in this order:
 #
+#   bash systems/snotra/services/approve/snotra-approve.sh approve <draft-id>
 #   systems/snotra/services/letters/mail-send.sh send <draft-id>
 #
 # The rendered letter is kept in the hoard (`hodd/state/collab/letters/`) so the record of what was asked

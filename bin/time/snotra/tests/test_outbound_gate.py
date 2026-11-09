@@ -36,6 +36,8 @@ import sys
 import tempfile
 import threading
 import unittest
+from email import policy
+from email.parser import BytesParser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
@@ -94,6 +96,12 @@ def make_server(api: Api) -> ThreadingHTTPServer:
             if u.path == "/gmail/v1/users/me/drafts/send":
                 api.sends.append(json.loads(body or b"{}").get("id", ""))
                 return self._json(200, {"id": "m-" + api.sends[-1]})
+            if u.path == "/gmail/v1/users/me/drafts":
+                payload = json.loads(body or b"{}")
+                raw = (payload.get("message") or {}).get("raw") or ""
+                did = f"r-auto-{len(api.drafts) + 1}"
+                api.drafts[did] = base64.urlsafe_b64decode(raw) if raw else b""
+                return self._json(200, {"id": did, "message": {"id": "m-" + did}})
             if u.path == "/calendar/v3/calendars/primary/events":
                 q = parse_qs(u.query)
                 api.events.append({"body": json.loads(body or b"{}"),
@@ -230,9 +238,51 @@ class MailGate(Case):
         self.assertEqual(self.api.sends, [])
         self.assertIn("REFUSED mail r-3: STALE", self.ledger())
 
+    def _drafted(self, *args: str) -> bytes:
+        """Draft with --dry-run and return the exact bytes the door would have sent.
+
+        --dry-run writes the .eml and posts nothing, so this needs no stand-in draft endpoint; the only
+        thing it asks the network for is the recipient's MX, which is why a machine with no resolver
+        SKIPs rather than failing (Rule 25: a clean skip is a pass, and it says which).
+        """
+        r = self.run_script(MAIL, "draft", *args, "--dry-run")
+        if "cannot receive mail" in r.stderr or "could not measure an MX" in r.stderr:
+            self.skipTest("no resolver to measure the recipient's MX from this machine")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        line = [l for l in r.stdout.splitlines() if l.startswith("eml\t")]
+        self.assertTrue(line, f"the door printed no draft path: {r.stdout}{r.stderr}")
+        return Path(line[-1].split("\t", 1)[1]).read_bytes()
+
+    def test_5_a_letter_is_dressed_by_default(self):
+        """The words are the caller's; the dress is the house's, and nobody has to remember it."""
+        body = self.tmp / "letter.md"
+        body.write_text("Hi partner,\n\nA sentence with **weight**.\n\nJosef\n", encoding="utf-8")
+        raw = self._drafted("--to", "partner@gmail.com", "--subject", "A plain letter",
+                            "--body", str(body), "--footer", "Growth Agent \u00b7 sent by Josef")
+        message = BytesParser(policy=policy.default).parsebytes(raw)
+        self.assertEqual(message.get_content_type(), "multipart/alternative", "the letter went out undressed")
+        parts = {p.get_content_type(): p.get_content()
+                 for p in message.walk() if p.get_content_maintype() != "multipart"}
+        self.assertIn("text/html", parts, "there is no HTML half in the message")
+        self.assertIn("A sentence with", parts["text/plain"])
+        self.assertIn("<strong>weight</strong>", parts["text/html"], "the words were not dressed, they were changed")
+        self.assertIn("Growth Agent \u00b7 sent by Josef", parts["text/html"], "the footer never reached the letter")
+        for demo in ("htmlemail.io", "Company Inc", "This is preheader text"):
+            self.assertNotIn(demo, parts["text/html"], f"a vendored demo line travelled with a real letter: {demo}")
+
+    def test_6_plain_is_the_deliberate_opt_out(self):
+        body = self.tmp / "plain.md"
+        body.write_text("Machine to machine. No paragraph needs a typeface.\n", encoding="utf-8")
+        raw = self._drafted("--to", "partner@gmail.com", "--subject", "A bare note",
+                            "--body", str(body), "--plain")
+        message = BytesParser(policy=policy.default).parsebytes(raw)
+        self.assertEqual(message.get_content_type(), "text/plain", "--plain still carried an HTML half")
+
     def test_4_the_gate_is_a_verb_of_the_door_not_a_caller_habit(self):
         """`send` must not depend on anyone remembering to call `check` first."""
-        text = MAIL.read_text(encoding="utf-8")
+        # the SHIM is what a stale caller still runs, but the send path lives in the moved door — a test that
+        # reads the shim finds no send() and proves nothing (this one was red from the move until 2026-11-09)
+        text = (ROOT / "systems/snotra/services/letters/mail-send.sh").read_text(encoding="utf-8")
         send_body = text.split("send(){", 1)[1].split("\ndiscard(){", 1)[0]
         self.assertIn("gate mail", send_body, "the approval check is not inside the send door")
         self.assertLess(send_body.index("gate mail"), send_body.index("drafts/send"),
@@ -310,7 +360,8 @@ class CalendarGate(Case):
 
     def test_6_the_default_value_is_none_in_the_tool_itself(self):
         """A default that only the tests see is not a default: read the door."""
-        text = CAL.read_text(encoding="utf-8")
+        # the moved door holds the default; the shim only execs it (red from the plan-129 move until 2026-11-09)
+        text = (ROOT / "systems/snotra/services/calendar/calendar-invite.sh").read_text(encoding="utf-8")
         self.assertNotIn("sendUpdates=all\"", text, "an unapproved sendUpdates=all is still spellable")
         self.assertIn('local send_updates="none"', text)
         self.assertEqual(text.count("send_updates=\"all\""), 2,

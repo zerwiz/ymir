@@ -574,3 +574,31 @@ the markup beside it is used breaks MIT's one condition. Updating means re-downl
 commit** recorded in `templates/README.md`, never from a default branch.
 
 Owner doc: `systems/snotra/services/letters/templates/README.md`.
+
+## Mail is dressed by default (2026-11-09)
+
+His word: *"we need to make so all emails in ymir are using some of the templates we have. we are mailing it ugly emails
+from ymir to often."* A shelf nobody has to remember is a shelf that gets used, so the dressing moved from the hand to
+the door.
+
+```
+dress[5]{where,what,opt_out}:
+  "`systems/snotra/services/letters/letter-html.py`","the renderer: a plain body becomes a designed letter, inside `leemunroe-simple`","`--self-test` proves eleven behaviours, including that an unknown template is refused by name"
+  "`mail-send.sh draft`","renders `--body` when `--html` is absent","`--plain` · `--html FILE` · `--template NAME`"
+  "`bin/notify/mail.sh`","the operator's own notification door uses the same renderer, so a notice and a letter look like one house","`--plain`; a renderer that fails says so on stderr and the notice still leaves"
+  "the template's demo lines","removed on render: the sample preheader, the fictional company address, the htmlemail.io credit","a real letter carries no demo"
+  "the words","never rewritten — headings, lists, `**bold**` and bare URLs are dressed, nothing is added but the `--footer` the caller passes","an absent footer adds nothing rather than inventing an identity"
+```
+
+**The limit is stated in the code, not discovered in a letter.** Only `leemunroe-simple` carries the four markers the
+renderer edits (preheader · main content · address line · powered-by). The Cerberus and Mailgun files are one-line HTML
+with no such markers, so re-rendering them would be rewriting them: they stay a hand-dressed `--html` path, and
+`letter-html.py` refuses their names with the reason and the remedy.
+
+**Two gates were red from the plan-129 move and are now green.** `test_outbound_gate.py` read the retired shims
+(`bin/time/snotra/mail-send.sh`, `calendar-invite.sh`) for the door's own behaviour, so `MailGate.test_4` and
+`CalendarGate.test_6` proved nothing and failed. Both now read the moved doors; `bin/collab/letter.sh` names the approval
+door in its header, so `GnaOwed.test_2` — which flags any file that spells a send without naming the gate — stops
+flagging a letter that only ever drafts. Fourteen tests pass.
+
+Owner docs: `systems/snotra/services/letters/templates/README.md` · `docs/features/letter-templates.md`.
