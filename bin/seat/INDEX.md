@@ -42,6 +42,7 @@ bin[27]{file,does,kind,verdict,disposition,callers,lines}:
   "seat-wire.sh","seat-wire.sh — one seat speaks into another seat's live pane, and says who it is.","tool","wired","keep",1,382
   "seats.sh","seats.sh — where the work actually is: panes in either backend, and the dead shells named.","tool","wired","keep",4,67
   "test_core_four_pending_factory.sh","The ward for the three near-loop doors: core four, pending, and the factory preset.","tool","wired","keep",0,26
+  "test_doors_fleet_path.sh","The ward for plan 227: every near-loop door answers on a machine whose PATH is not an interactive one — the gate's own PATH — and an unlisted model reads as unknown, never as zero.","tool","wired","keep",0,120
   "test_lock_ask.sh","The ward for bin/seat/lock-ask.sh — a read-only agent asks the lock owner, and only the","tool","wired","keep",0,150
   "valknut-load.sh","valknut-load.sh — Valknut, the knot that binds the repo distro into each tool's","tool","tested","keep",8,717
   "verify-seat.sh","verify-seat.sh — is this seat actually whole?","tool","tested","keep",3,177

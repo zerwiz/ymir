@@ -22,6 +22,10 @@ It lives in **Óðrerir, the live hall** at `#/near`.
 - Ymir installed, and the gate API up (`:3889`).
 - The three seat doors on the checkout:
   `bin/seat/core-four.sh`, `bin/seat/pending.sh`, `bin/seat/context.sh`.
+- A `pi` binary somewhere the doors can find it. They **probe** for it — `PI_BIN`, then
+  `PATH`, then the usual install channels (npm-global, mise, a per-user bin, Homebrew) — so
+  a desktop seat and a server seat with different install channels both answer. Nothing is
+  installed for you; `bin/model/catalog.sh --which-pi` says which one answered.
 - The hall raised for the screen itself: `scripts/start.sh` raises Óðrerir on
   `:4322`.
 
@@ -78,10 +82,20 @@ numbers repeat the living ones.
 
 - **It reads; it does not act.** Nothing on this page approves, merges, sends or
   starts work. *Dismiss* hides a card from your view only.
-- **Scores are jev's.** The cards carry the Hype · Facts · Signal vocabulary
-  vendored from `pi-durable-news-agent` (MIT). No classification has been run for
-  these items yet, so a card says **Not ranked yet** instead of inventing a
-  number.
+- **Scores are jev's, and none is live yet.** The cards carry the Hype · Facts · Signal
+  vocabulary vendored from `pi-durable-news-agent` (MIT). No ranking door is wired, so a
+  card says **Not ranked yet** instead of inventing a number — and the page says so rather
+  than advertising scores it does not have. The rail itself is read with
+  `bin/model/jev-doors.sh list`.
+- **The window has three honest states, never a silent zero.** *exact* when a provider
+  registry names it, *approximate* (`≈`) when it comes from the catalog's rounded suffix
+  (`1M`, `65.5K`), and *unknown* — printed with the reason and the door that stayed silent
+  — when nothing on this machine names it. **Every computer runs different models and every
+  user may run different ones**, so the page reads *this* seat's settings and catalog and
+  never a shared table.
+- **Ages come from the record.** A pending card shows the date the line carries, or the
+  date of the shelf it names; where the record has no date, the card shows none rather than
+  a guess.
 - **A door that cannot answer says so.** Each block fills on its own, so one slow
   door never blanks the page; a failed door paints an *unread* card naming the
   door and the reason.
@@ -94,10 +108,15 @@ numbers repeat the living ones.
 |---|---|
 | A block says *did not answer* | Run that door by hand — `bin/seat/core-four.sh --json`; the card names the door in its source. |
 | The dials card shows `unset` | The harness settings name no model; check `~/.pi/agent/settings.json`. |
-| The window is `—` | The model is not in the seat's registry and not in the catalog — `bin/model/catalog.sh --has <provider>/<model>`. |
+| The window says *unknown* | The card names the reason. Usually this model is in neither the seat's registry nor the catalog — `bin/model/catalog.sh --has <provider>/<model>`, and `bin/model/catalog.sh --which-pi` to see whether the catalogue could be read at all. |
+| The window is `≈` | The window came from the catalog's rounded form (`1M`), not an exact registry entry. That is the honest number; a provider's exact `contextWindow` wins when it exists. |
 | The plans board is empty | The ledger is empty or `YMIR_PLANS_DIR` is wrong; check `$YMIR_HOME/svartalfaheim/*/projects/ymir/plans/`. |
 | `#/near` shows the old three doors | The hall is serving a stale `dist/` — rebuild: `cd apps/odrerir && npm run build`. |
 
 ## CHANGE LOG
 
 - **2026-11-06** — changelog section added at the merge so RULES/46 can read it.
+- **2026-11-09** — plan 227: the doors work on a machine whose PATH is not an interactive one
+  (the gate's own), `/api/context` is served instead of promised, the window reads
+  exact/approximate/unknown-with-a-reason instead of `—`, pending cards carry real ages and
+  whole paths, and the page stops advertising scores no door computes.

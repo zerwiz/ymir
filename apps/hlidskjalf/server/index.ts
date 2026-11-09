@@ -2524,7 +2524,25 @@ const server = Bun.serve({
           try {
             const { execFileSync } = await import('node:child_process');
             const script = new URL('../../../bin/seat/core-four.sh', import.meta.url).pathname;
-            return JSON.parse(execFileSync('bash', [script, '--json'], { timeout: 30_000 }).toString().trim());
+            return JSON.parse(execFileSync('bash', [script, '--json'], { timeout: 30_000, cwd: ROOT }).toString().trim());
+          } catch (e) {
+            return { error: String(e).slice(0, 160) };
+          }
+        }));
+      }
+      if (p === '/api/context') {
+        // THIS SESSION'S SHAPE, one read (plan 227). The governed asset has declared this
+        // door since plan 199 and the gate never served it (404 "no route"), so the near
+        // board's window card lost its session line while bin/seat/context.sh sat behind it
+        // answering correctly. A carrier, like its neighbours: run the door, cache briefly,
+        // never re-implement what the door knows.
+        return json(await memoAsync('context', 15_000, async () => {
+          try {
+            const { execFileSync } = await import('node:child_process');
+            const script = new URL('../../../bin/seat/context.sh', import.meta.url).pathname;
+            return JSON.parse(
+              execFileSync('bash', [script, '--json'], { timeout: 30_000, cwd: ROOT }).toString().trim(),
+            );
           } catch (e) {
             return { error: String(e).slice(0, 160) };
           }

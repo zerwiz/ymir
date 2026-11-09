@@ -39,6 +39,18 @@ near_loop[4]{route,door,ttl}:
   "/api/plans","the plan ledger read as FILES (not Skuld's table) — README index row carries each state","30 s"
 ```
 
+All four are **served** as of 2026-11-09 (plan 227). `/api/context` was declared here on
+2026-11-06 and never implemented — the gate answered `no route /api/context` on this seat and
+on the heart, so the near board's window card silently lost its session line. Each carrier now
+passes `cwd: ROOT` and an explicit timeout, so a carrier never inherits the caller's directory.
+
+**A carrier must not depend on an interactive PATH.** The gate's unit sets
+`Environment=PATH=%h/.bun/bin:/usr/bin:/bin`; any door that reaches for a bare binary (`pi`,
+`gh`, `herdr`) is invisible there and answers empty. The doors resolve their own binaries —
+`bin/model/catalog.sh --which-pi` says which channel answered — and
+`bin/seat/tests/test_doors_fleet_path.sh` runs every near-loop door under that trimmed PATH so
+the fault cannot return quietly. That test is the gate for this surface; it is not optional.
+
 **The read is bounded, and that is load-bearing.** A door may start its own child
 (`core-four.sh` asks `bin/model/catalog.sh`), and a grandchild can hold the stdout pipe open
 after `timeout` kills the shell — so a plain `await new Response(proc.stdout).text()` never
