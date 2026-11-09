@@ -17,6 +17,11 @@
 # send: a FAIL line and a non-zero exit, never silence. Silence is how the mail desk was blind
 # for a night (hodd/docs/diagnostics/2026-11-05-why-the-mail-door-was-blind.md).
 #
+# DRESSED BY DEFAULT (2026-11-09, his word: *"we are mailing it ugly emails from ymir to often"*): the
+# notice is rendered into the house letter template by systems/snotra/services/letters/letter-html.py, so
+# the plain text and the styled text are the same words. `--plain` says so on purpose, and a renderer that
+# fails says so on stderr and still sends the notice — a broken typeface must not swallow a message.
+#
 # Usage:
 #   mail.sh --kind merged|ask --subject "…" --body FILE [--ref <path-or-url>] [--dry-run] [--json]
 #   mail.sh --kind merged --subject "…" --body-text "one paragraph"
@@ -67,7 +72,7 @@ vault_get() {  # <KEY>
   printf '%s' "$val"
 }
 
-KIND=""; SUBJECT=""; BODY_FILE=""; BODY_TEXT=""; REF=""; DRY=0; JSON=0
+KIND=""; SUBJECT=""; BODY_FILE=""; BODY_TEXT=""; REF=""; DRY=0; JSON=0; PLAIN=0
 while [ $# -gt 0 ]; do case "$1" in
   --kind) KIND="${2:-}"; shift 2 ;;
   --kind=*) KIND="${1#--kind=}"; shift ;;
@@ -79,6 +84,7 @@ while [ $# -gt 0 ]; do case "$1" in
   --ref) REF="${2:-}"; shift 2 ;;
   --ref=*) REF="${1#--ref=}"; shift ;;
   --dry-run) DRY=1; shift ;;
+  --plain) PLAIN=1; shift ;;
   --json) JSON=1; shift ;;
   --status) KIND=__status; shift ;;
   --address) KIND=__address; shift ;;
@@ -147,10 +153,10 @@ This door may only address the operator. A merge record, a question, or nothing 
 
 PAYLOAD_FILE="$(mktemp)"
 trap 'rm -f "$PAYLOAD_FILE"' EXIT
-python3 - "$ADDR" "$SUBJECT_LINE" "$BODY" "$FOOTER" "$REF" "$PAYLOAD_FILE" <<'PY' || die "the message could not be built"
-import base64, json, sys
+python3 - "$ADDR" "$SUBJECT_LINE" "$BODY" "$FOOTER" "$REF" "$PAYLOAD_FILE" "$ROOT/systems/snotra/services/letters/letter-html.py" "$PLAIN" <<'PY' || die "the message could not be built"
+import base64, json, os, subprocess, sys
 from email.message import EmailMessage
-to, subject, body, footer, ref, out = sys.argv[1:7]
+to, subject, body, footer, ref, out, renderer, plain = sys.argv[1:9]
 msg = EmailMessage()
 msg["To"] = to
 msg["Subject"] = subject
@@ -159,6 +165,19 @@ if ref:
     msg["X-Ymir-Ref"] = ref
 text = body + ("\n\nReference: " + ref if ref else "") + "\n\n" + footer + "\n"
 msg.set_content(text)
+# The notice is dressed in the same template a letter is, so the house does not send two kinds of mail.
+# A renderer that cannot run is reported on stderr and the notice still leaves: the words are the point.
+if plain != "1" and os.path.isfile(renderer):
+    try:
+        dressed = subprocess.run([sys.executable, renderer, "--subject", subject, "--footer", footer, "-"],
+                                 input=text, capture_output=True, text=True, timeout=30)
+        if dressed.returncode == 0 and dressed.stdout.strip():
+            msg.add_alternative(dressed.stdout, subtype="html")
+        else:
+            print("mail: the letter renderer failed, so this notice is plain text: "
+                  + (dressed.stderr.strip().splitlines() or ["no reason given"])[0], file=sys.stderr)
+    except Exception as exc:  # noqa: BLE001 — a typeface must never cost a message
+        print(f"mail: the letter renderer could not run ({exc}); this notice is plain text", file=sys.stderr)
 raw = base64.urlsafe_b64encode(bytes(msg)).decode()
 json.dump({"message": {"raw": raw}}, open(out, "w"))
 PY

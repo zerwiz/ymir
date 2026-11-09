@@ -80,7 +80,7 @@ bin[136]{file,does,kind,verdict,disposition,callers,lines}:
   "smoke.sh","bin/time/snotra/smoke.sh -> systems/snotra/tests/smoke.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and says so.","tool","tested","keep",7,16
   "snotra-agenda.py","bin/time/snotra/snotra-agenda.py -> systems/snotra/services/cron/snotra-agenda.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "snotra-agenda.sh","bin/time/snotra/snotra-agenda.sh -> systems/snotra/services/cron/snotra-agenda.sh — RETIRED SHIM","tool","wired","keep",0,12
-  "snotra-approve.sh","bin/time/snotra/snotra-approve.sh -> systems/snotra/services/approve/snotra-approve.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new…","tool","wired","keep",1,16
+  "snotra-approve.sh","bin/time/snotra/snotra-approve.sh -> systems/snotra/services/approve/snotra-approve.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new…","tool","wired","keep",2,16
   "snotra-attrib.py","bin/time/snotra/snotra-attrib.py -> systems/snotra/services/record/snotra-attrib.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "snotra-attrib.sh","bin/time/snotra/snotra-attrib.sh -> systems/snotra/services/record/snotra-attrib.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new do…","tool","wired","keep",0,16
   "snotra-audio-ladder.py","bin/time/snotra/snotra-audio-ladder.py -> systems/snotra/services/ear/snotra-audio-ladder.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
