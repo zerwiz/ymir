@@ -54,7 +54,7 @@ bin[135]{file,does,kind,verdict,disposition,callers,lines}:
   "nornir-cron-start.sh","nornir-cron-start.sh - ensure Brokk's scheduled jobs are running (idempotent).","tool","tested","keep",8,404
   "nornir-job-asken-handoff.sh","nornir-job-asken-handoff.sh — the rollover, on the schedule.","tool","wired","keep",0,63
   "nornir-job-bragi-scrape.sh","nornir-job-bragi-scrape.sh — Bragi, on the loom: the scheduled scrape round.","tool","wired","keep",0,154
-  "nornir-job-daily-briefing.sh","nornir-job-daily-briefing.sh - the 07:00 Sága daily seeing.","tool","wired","keep",1,219
+  "nornir-job-daily-briefing.sh","nornir-job-daily-briefing.sh - the 07:00 Sága daily seeing.","tool","wired","keep",1,239
   "nornir-job-doctor.sh","nornir-job-doctor.sh — Eir, the healer, on the schedule.","tool","wired","keep",0,35
   "nornir-job-forgejo-git.sh","nornir-job-forgejo-git.sh — the local git round: issues and PRs on the forge.","tool","wired","keep",0,87
   "nornir-job-git-sync.sh","nornir-job-git-sync.sh - Yggdrasil, the world-tree kept in order.","tool","wired","keep",1,153
@@ -141,7 +141,7 @@ bin[135]{file,does,kind,verdict,disposition,callers,lines}:
   "snotra-trello.sh","bin/time/snotra/snotra-trello.sh -> systems/snotra/services/cron/snotra-trello.sh — RETIRED SHIM","tool","wired","keep",1,12
   "snotra-voice-device.sh","bin/time/snotra/snotra-voice-device.sh -> systems/snotra/services/ear/snotra-voice-device.sh — RETIRED SHIM","tool","wired","keep",0,12
   "snotra-voice.py","bin/time/snotra/snotra-voice.py -> systems/snotra/services/ear/snotra-voice.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
-  "snotra_paths.py","bin/time/snotra/snotra_paths.py -> systems/snotra/services/record/snotra_paths.py — RETIRED SHIM (plan 129)","tool","wired","keep",1,10
+  "snotra_paths.py","bin/time/snotra/snotra_paths.py -> systems/snotra/services/record/snotra_paths.py — RETIRED SHIM (plan 129)","tool","wired","keep",2,10
   "sol.sh","sol.sh — Sól, the sun's wheel: THE clock and date door.","tool","tested","keep",2,244
   "stt-shim.py","bin/time/snotra/stt-shim.py -> systems/snotra/services/ear/stt-shim.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "stt-wire.sh","bin/time/snotra/stt-wire.sh -> systems/snotra/services/ear/stt-wire.sh — RETIRED SHIM","tool","wired","keep",0,12

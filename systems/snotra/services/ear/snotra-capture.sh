@@ -4,16 +4,36 @@
 # It exists so a caller nobody has repointed yet still works. It is retired by the dated follow-up in
 # docs/fixes/snotra/2026-10-24-snotra-becomes-a-system.md, and .agents/paths-ledger.yaml records the move.
 set -euo pipefail
-_d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-_root="$(cd "$_d/../../.." && pwd)"
-_new="$_root/systems/snotra/services/ear/snotra-capture.sh"
-if [ ! -e "$_new" ]; then
-  printf 'snotra: the door moved to systems/snotra/services/ear/snotra-capture.sh and is not there\n' >&2
-  exit 127
+# THIS FILE IS THE DOOR (2026-11-04, the same fault the watch had): the retired
+# shim's path guard was copied in by the move and computed its target three
+# levels up from systems/snotra/services/ear — that is <repo>/systems, never the
+# repo root — so the door always concluded it was missing and answered
+#
+#   snotra: the door moved to systems/snotra/services/ear/snotra-capture.sh and is not there
+#
+# with exit 127. Measured 2026-11-09: `snotra-capture.sh status` — the ear had no
+# status answer at all, and the two hotlines below could never fire. Removed here:
+# a door has nothing to point at.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)"
+[ -d "$ROOT/RULES" ] || ROOT=""
+# The ONE resolver (Rule 07): env -> the recorded choice. A systemd unit runs with
+# YMIR_HOME unset, so `ymir_home_root` is a function that only exists after this
+# sourcing — a move that drops it is a door that cannot find the hoard.
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  for _yc in "$SCRIPT_DIR/hoard-lib.sh" ${ROOT:+"$ROOT/bin/vault/hoard-lib.sh"}; do
+    [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _yc
 fi
 if [ -z "${YMIR_HOME:-}" ] && command -v ymir_home_root >/dev/null 2>&1; then
   ymir_home_root YMIR_HOME
 fi
+[ -n "${YMIR_HOME:-}" ] || {
+  printf 'error: the hoard home could not be resolved — bin/vault/hoard-lib.sh was not found\n' >&2
+  printf 'help: seat the ear with bin/fleet/fleet-ensure.sh ensure, or set YMIR_HOME\n' >&2
+  exit 1
+}
 
 YMIR_HOME="${YMIR_HOME}"
 HOARD="$YMIR_HOME/hodd/life/meetings"
@@ -31,6 +51,10 @@ say() { printf '%s\n' "$*"; }
 # meeting was recorded, transcribed and filed with no word to the Allfather — his words:
 # "i dont get any notifications of this at all now". This is the missing sentence.
 say_hotline() {  # <severity> <one line> <stable key>
+  # `$ROOT` used to be undefined here (the move dropped it), so under `set -u` this
+  # function died on the first call and took the whole capture with it. It is
+  # defined above now, and a flat install without a tree simply skips the door.
+  [ -n "${ROOT:-}" ] || return 0
   local door="$ROOT/bin/notify/send.sh"
   [ -x "$door" ] || return 0
   "$door" --source snotra --severity "$1" --message "$2" --key "$3" >/dev/null 2>&1 || true

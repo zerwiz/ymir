@@ -574,3 +574,45 @@ the markup beside it is used breaks MIT's one condition. Updating means re-downl
 commit** recorded in `templates/README.md`, never from a default branch.
 
 Owner doc: `systems/snotra/services/letters/templates/README.md`.
+
+---
+
+## 2026-11-09 — the ear's one door, and the ladder that finishes (plan 228 §2 · §3 · §5)
+
+**The law this section exists for** (plan 112): *a silent failure is indistinguishable from working.*
+On 2026-11-08 the ear had no status door, the pipeline stopped after the transcript, and the index nobody
+could query held three meetings. What follows is the shape that replaces all three silences.
+
+```
+doors[5]{command,answers,writes,notes}:
+  "bin/records/snotra-what.sh now","armed or idle · **the rule that decided** · since · until · `no call seen in 24h` when the watch is up and quiet","nothing (reads `.snotra-detect.json`, `.snotra-pid`, `.snotra-outfile`, the decision log, the meeting folders)","`--brief` is the one line the 07:00 brief carries · `--json` for machines"
+  "bin/records/snotra-what.sh last|plan|week","the last capture (when · how long · who spoke · the minutes · **FINISHED** or **STOPPED AT <step>: <reason>**) · the ladder's steps and the one it is blocked at · the week's counts","nothing","`--meeting <id>` narrows `last`/`plan`"
+  "bin/records/snotra-what.sh off|on","his hand","`state/.snotra-off` (JSON: off · reason · ts · by) — **the watch reads it and refuses to arm**","`off` without `--reason` is refused: an off with no reason is a silence again"
+  "bin/records/meetings.sh list|show|totals|json|brief|plans|state","the shelf as one index, derived from the folders","nothing (the folders are the record)","`brief` is the ONE line · `plans <id>` is the join through a plan header's `from_meeting:`"
+  "systems/snotra/services/record/snotra-ladder.sh run <id|folder>","the upper rungs","the meeting folder, through `snotra-store.sh` — the one writer","`--self-test` proves a failed rung is reported and a finished one is not"
+```
+
+**The ladder, in order, each rung idempotent.** `transcribe` (the transcript lands in the folder) →
+`minutes` (**composed by the model** from the transcript *and the people present*; never a template) →
+`promises` (every promise becomes a todo in the same act, through `bin/records/todos.sh`, keyed on the meeting
+and the promise so a re-run files nothing twice) → `recorded`. A rung that fails writes
+`stopped at <step>: <reason>` into the meeting's own `.state` — through
+`snotra-store.sh state <id> stopped-at <step> <reason>` — and fires the hotline at HIGH.
+
+**The seven transitions** (each `bin/notify/send.sh --source snotra`, each keyed per event so the hotline's own
+dedupe cannot swallow it): **arm** · **leave** (`snotra-detect.sh`) · **capture start** · **capture stop**
+(`snotra-capture.sh`) · **transcript ready** · **minutes filed** · **a step that FAILED** (`snotra-ladder.sh`).
+
+**Rule 07 in the ladder.** The rail comes from `bin/model/rail-resolve.sh`, the key from
+`bin/vault/hodd.sh emit secrets/platform.env`, the model from `SNOTRA_RAIL_MODEL` → `RAIL_MODEL` → the
+resolver's first listed model. Measured 2026-11-09 on heimdall: `models[0]` is `apodex-1.0-mini` and it
+answered **HTTP 500**; the seat's own drop-in names `qwen3.5-9b@q4_k_s-summarizer`, which composes in ~50 s.
+A model that 500s is **a stop, never minutes**.
+
+**Two traps already paid for here.** A door that lives in `systems/snotra/services/ear/` must NOT carry the
+retired shim's path guard: three levels up from that folder is `<repo>/systems`, so the guard always concludes
+the door is missing and exits 127 (the watch, 2026-11-04; the capture, 2026-11-09). And `finalize()` must build
+a **folder** through the store, not flat files beside it — a meeting is a folder or it is not a record.
+
+**The extension point for a new rung:** add it to `snotra-ladder.sh`, write its result through the store, and
+give it a hotline key AND a `stopped at <step>` — a rung with neither is a rung that will fail silently.

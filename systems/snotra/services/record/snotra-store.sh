@@ -14,12 +14,14 @@
 #   snotra-store.sh new <workspace> <slug> [options]
 #   snotra-store.sh put <id> <file> --as transcript|audio|minutes|decisions|actions|cards|corrections
 #   snotra-store.sh state <id> <captured|transcribed|recorded|dispatched>
+#   snotra-store.sh state <id> stopped-at <step> <reason>   # a failed rung names itself
 #   snotra-store.sh index
 #   snotra-store.sh list [--workspace w] [--json]
 #   snotra-store.sh verify [<id>|--all]
 #   snotra-store.sh path <id>
 #
-# Options for `new`: --title T --date YYYY-MM-DD --source ear|bot|ping|telegram|manual
+# Options for `new`: --title T --date YYYY-MM-DD --started ISO --duration SECONDS
+#                   --source ear|bot|ping|telegram|manual
 #                   --platform google_meet|zoom|teams|jitsi|ping|telegram|local|other
 #                   --classification internal|confidential|restricted|private
 #                   --account personal|work --consent announced|objected|not_recorded
@@ -80,6 +82,7 @@ find_meeting() {
 
 cmd_new() {
   local workspace="" slug="" title="" mdate="" source="manual" platform="local" class="internal" account="" consent="not_recorded"
+  local started="" duration=""
   workspace="${1-}"; slug="${2-}"; shift 2 2>/dev/null || true
   [ -n "$workspace" ] && [ -n "$slug" ] || usage
   case "$workspace" in work|personal) ;; *) die "workspace must be work or personal" ;; esac
@@ -92,6 +95,8 @@ cmd_new() {
       --classification) class="${2-}"; shift 2 ;;
       --account) account="${2-}"; shift 2 ;;
       --consent) consent="${2-}"; shift 2 ;;
+      --started) started="${2-}"; shift 2 ;;
+      --duration) duration="${2-}"; shift 2 ;;
       *) die "unknown option: $1" ;;
     esac
   done
@@ -112,15 +117,23 @@ cmd_new() {
     telegram) local transport="telegram" ;;
     *) local transport="local" ;;
   esac
-  python3 - "$dir/meeting.json" "$id" "$workspace" "$account" "$title" "$mdate" "$source" "$transport" "$platform" "$class" "$consent" "$(hostname)" <<'PY'
+  # `--started` / `--duration` are the ear's own facts (an armed capture knows both);
+  # without them the record falls back to the date, which is what a hand-made record has.
+  python3 - "$dir/meeting.json" "$id" "$workspace" "$account" "$title" "$mdate" "$source" "$transport" "$platform" "$class" "$consent" "$(hostname)" "$started" "$duration" <<'PY'
 import json,sys,datetime
-p,mid,ws,acct,title,mdate,src,tr,plat,cls,consent,host=sys.argv[1:]
-json.dump({
+p,mid,ws,acct,title,mdate,src,tr,plat,cls,consent,host,started,duration=sys.argv[1:]
+rec = {
  "schema":1,"id":mid,"workspace":ws,"account":acct or None,"title":title,
- "started_at":mdate+"T00:00:00","source":src,"transport":tr,"platform":plat,
+ "started_at":started or (mdate+"T00:00:00"),"source":src,"transport":tr,"platform":plat,
  "classification":cls,"consent":consent,"state":"captured",
  "created_by":host,"created_at":datetime.datetime.now().astimezone().isoformat(timespec="seconds")
-}, open(p,"w"), indent=2)
+}
+if duration:
+    try:
+        rec["duration_seconds"] = int(float(duration))
+    except Exception:
+        pass
+json.dump(rec, open(p,"w"), indent=2)
 open(p,"a").write("\n")
 PY
   printf '%s\t%s\n' "$(hostname)" "$$" > "$dir/.owner"
@@ -167,8 +180,22 @@ cmd_put() {
 
 cmd_state() {
   local id="${1-}" want="${2-}"; [ -n "$id" ] && [ -n "$want" ] || usage
-  case "$want" in captured|transcribed|recorded|dispatched) ;; *) die "bad state: $want" ;; esac
   local dir; dir="$(find_meeting "$id")" || die "meeting not found: $id"
+  # A step that FAILED says so in the meeting's own state (plan 228 §3 · F2):
+  #   state <id> stopped-at <step> <reason>   ->  `.state` = `stopped at <step>: <reason>`
+  # Silent is the one thing a failure may not be, so the reason is mandatory.
+  if [ "$want" = "stopped-at" ]; then
+    local step="${3-}" reason="${4-}"
+    [ -n "$step" ] || die "stopped-at needs a step (transcribe|minutes|promises|todos)"
+    [ -n "$reason" ] || reason="no reason was given"
+    printf 'stopped at %s: %s\n' "$step" "$reason" > "$dir/.state"
+    json_set "$dir/meeting.json" state '"stopped"'
+    json_set "$dir/meeting.json" stopped_at "\"$step\"" 2>/dev/null || true
+    json_set "$dir/meeting.json" stop_reason "\"$(printf '%s' "$reason" | tr '"' "'")\"" 2>/dev/null || true
+    printf 'state\t%s\tstopped at %s: %s\n' "$id" "$step" "$reason"
+    return 0
+  fi
+  case "$want" in captured|transcribed|recorded|dispatched) ;; *) die "bad state: $want (captured|transcribed|recorded|dispatched|stopped-at <step> <reason>)" ;; esac
   printf '%s\n' "$want" > "$dir/.state"
   json_set "$dir/meeting.json" state "\"$want\""
   printf 'state\t%s\t%s\n' "$id" "$want"

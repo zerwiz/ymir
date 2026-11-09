@@ -193,6 +193,26 @@ else
 fi
 emit ""
 
+# ---- The ear and the meetings (plan 228 §8 — the three lines he reads) ------
+# Added 2026-11-09: the brief said nothing about his calls, so a week of meetings that
+# produced no minutes read exactly like a week with no meetings. ONE row each, both
+# derived from the same folds the doors read — never a second record, and never fatal:
+# a brief that cannot reach a shelf says so rather than failing the 07:00 job.
+if [ -x "$SCRIPT_DIR/../records/snotra-what.sh" ]; then
+  emit "## The ear"
+  emit ""
+  ear_line="$("$SCRIPT_DIR/../records/snotra-what.sh" now --brief 2>/dev/null | head -1)"
+  [ -n "$ear_line" ] && emit "- $ear_line" || emit "- the ear did not answer"
+  emit ""
+fi
+if [ -x "$SCRIPT_DIR/../records/meetings.sh" ]; then
+  emit "## The meetings"
+  emit ""
+  meetings_line="$("$SCRIPT_DIR/../records/meetings.sh" brief 2>/dev/null | head -1)"
+  [ -n "$meetings_line" ] && emit "- $meetings_line" || emit "- the meeting shelf did not answer"
+  emit ""
+fi
+
 # ---- Next step ------------------------------------------------------------
 emit "## Next"
 emit ""

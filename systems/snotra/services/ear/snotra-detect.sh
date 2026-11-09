@@ -34,15 +34,34 @@ if [ -z "${YMIR_HOME:-}" ]; then
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# the tree this door lives in (a flat ~/.fleet install has no RULES/.agents, so ROOT may be
+# empty there — the hotline is simply skipped, never guessed).
+ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)"
+[ -d "$ROOT/RULES" ] || ROOT=""
+RECORD_DIR="$SCRIPT_DIR/../record"
 YMIR_HOME="${YMIR_HOME}"
 HOARD="$YMIR_HOME/hodd"
-MEETINGS="$HOARD/workspaces/meetings"
+MEETINGS="$HOARD/workspaces/meetings"   # the ear's own shelf for audio + flat artefacts
 STATE_DIR="${YMIR_STATE_DIR:-$YMIR_HOME/state}"
 STATE_FILE="$STATE_DIR/.snotra-detect.json"
 DETECT_LOG="$STATE_DIR/.snotra-detect.log"
 CAPTURE_STATE="$STATE_DIR/.snotra-pid"
 CAPTURE_OUT="$STATE_DIR/.snotra-outfile"
 LATEST_FILE="$STATE_DIR/.snotra-meetings-latest"
+# HIS HAND (plan 228 §2): `snotra-what.sh off --reason …` writes this file; the watch
+# reads it and will not arm. The unit is never edited by hand, and an `off` with no
+# reason is a silence again — the door refuses one.
+OFF_FILE="$STATE_DIR/.snotra-off"
+
+# ── the hotline, through the ONE door (plan 100 · plan 228 §2) ──────────────
+# Seven transitions must speak: arm · leave · capture start · capture stop ·
+# transcript ready · minutes filed · a step that FAILED. Two (start/stop) live in
+# snotra-capture.sh, three in the ladder, and arm/leave are here. Each key is
+# unique per event so the hotline's own dedupe never swallows a real one.
+hotline() {  # <severity> <one line> <stable key>
+  [ -n "$ROOT" ] && [ -x "$ROOT/bin/notify/send.sh" ] || return 0
+  "$ROOT/bin/notify/send.sh" --source snotra --severity "$1" --message "$2" --key "$3" >/dev/null 2>&1 || true
+}
 
 POLL_SECONDS="${SNOTRA_POLL_SECONDS:-2}"
 # The shortest gap between two ticks. See the loop in run(): a tick opens its own
@@ -470,6 +489,15 @@ do_arm() {  # <snapshot> <trigger-csv> <baseline-csv> [forced-slug]
     log "arm REFUSED — the mic is for a LOCAL room only; an online meeting is heard by the bot (snotra-bot.sh join <url>), never by the seat microphone"
     return 1
   fi
+  # HIS HAND: `off --reason …` is a refusal the watch obeys, and it says why in
+  # its own log rather than arming into a room he asked it to leave alone.
+  if [ -e "$OFF_FILE" ]; then
+    log "arm REFUSED — the ear is off by his hand: $(python3 -c 'import json,sys
+try: d=json.load(open(sys.argv[1]))
+except Exception: d={}
+print(d.get("reason","no reason recorded"))' "$OFF_FILE" 2>/dev/null || printf 'no reason recorded')"
+    return 1
+  fi
   # ONE ear at a time. The watch's loop and the manual door can both ask to arm
   # (and a trigger set can change mid-debounce); a second capture would leave the
   # first one writing into the shelf with no pid anyone holds — a lingering ear.
@@ -523,6 +551,7 @@ do_arm() {  # <snapshot> <trigger-csv> <baseline-csv> [forced-slug]
   # must not cost the card a whisper for a meeting that is not being heard.
   ear_up
   say "snotra: the ear is listening — ${base}"
+  hotline INFO "the ear is armed — ${app:-a local room} took the mic (slug $slug); it leaves when the room goes quiet" "snotra-arm-${base}"
   return 0
 }
 
@@ -539,6 +568,7 @@ do_leave() {  # <reason>
   [ -n "$slug" ] || slug="impromptu"
 
   log "LEAVE edge ($reason) — stopping the ear"
+  hotline MEDIUM "the ear is leaving the call ($reason) — finalising the recording" "snotra-leave-$(date -u +%Y%m%dT%H%M%SZ)"
   "$(door snotra-capture.sh)" stop >>"$DETECT_LOG" 2>&1 || true
   local i=0
   while capture_alive && [ "$i" -lt 30 ]; do
@@ -583,17 +613,52 @@ do_leave() {  # <reason>
   ear_down
 }
 
+# ── the ladder, from a recording that just ended (plan 228 §3 · F2) ─────────
+# Before this, finalize wrote three FLAT files into one shelf
+# ($MEETINGS/<date>-<lane>-<slug>.md · .transcript.txt · .actions.md), so a meeting
+# was not a folder, the store contract (plan 111: meeting.json · transcript.md ·
+# minutes.md · .state) was never used, the minutes were a template with
+# "(pending AI summary)", and nothing ever turned a promise into work. Measured
+# 2026-11-09: 3 meetings · 2 transcripts · 0 minutes · 0 promises.
+#
+# Now: one folder per meeting (the store, the ONE writer), the transcript in it,
+# and the ladder finishes the rest — minutes composed by the model from the
+# transcript AND the people present, every promise filed as a todo in the same
+# act, and a rung that fails writing `stopped at <step>: <reason>` into the
+# meeting's own `.state` while the hotline says so out loud.
 finalize() {  # <wav> <slug> <topic> <reason> <armed> <sink> <mic>
   local wav="$1" slug="$2" topic="$3" reason="$4" armed="$5" sink="$6" mic="$7"
-  local date base minutes transcript actions
+  local date dur_secs=0 dur_label="0s" started ws dir="" id="" minutes actions transcript counts="0"
+  local store="$RECORD_DIR/snotra-store.sh" ladder="$RECORD_DIR/snotra-ladder.sh"
   date="$(date +%Y-%m-%d)"
-  base="${date}-${LANE}-${slug}"
-  minutes="$MEETINGS/${base}.md"
-  transcript="$MEETINGS/${base}.transcript.txt"
-  actions="$MEETINGS/${base}.actions.md"
+  ws="${SNOTRA_WORKSPACE:-work}"
+  case "${armed:-}" in
+    ''|*[!0-9]*) ;;
+    *)
+      dur_secs=$(( $(date +%s) - armed ))
+      if [ "$dur_secs" -ge 60 ]; then dur_label="$(( dur_secs / 60 ))m"; else dur_label="${dur_secs}s"; fi ;;
+  esac
+  started="$(date -u -d "@${armed:-$(date +%s)}" +%Y-%m-%dT%H:%M:%S 2>/dev/null || date -u +%Y-%m-%dT%H:%M:%S)"
 
-  log "finalize — $base (mic='$mic' sink='${sink:-?}')"
+  if [ -x "$store" ]; then
+    dir="$(bash "$store" new "$ws" "$slug" --title "$topic" --date "$date" --source ear \
+             --platform local --started "$started" --duration "$dur_secs" 2>>"$DETECT_LOG" | tail -1)"
+    [ -d "${dir:-/nonexistent}" ] && id="$(basename "$dir")"
+  fi
+  if [ -z "$id" ]; then
+    log "finalize: the meeting record could not be created — the pipeline cannot finish"
+    say "snotra: the ear left; the meeting record could not be created (see $DETECT_LOG)"
+    hotline HIGH "the ear left a call and its record could not be created — the meeting is unfiled" \
+      "snotra-record-failed-$(date -u +%Y%m%dT%H%M%SZ)"
+    state_clear
+    return 1
+  fi
+  case "$wav" in /*) ;; *) wav="$(cd "$(dirname "$wav")" && pwd)/$(basename "$wav")" ;; esac
+  minutes="$dir/minutes.md"; actions="$dir/actions.md"; transcript="$dir/transcript.md"
+  log "finalize — $id (mic='$mic' sink='${sink:-?}', ${dur_label}, $reason)"
+  say "snotra: meeting recorded — $id ($dur_label)"
 
+  # rung 1 · the transcript (the ear's own engine; a seat without one uses the fleet lane)
   local rail_model
   rail_model="${SNOTRA_RAIL_MODEL:-${RAIL_MODEL:-}}"
   if [ -z "$rail_model" ] && [ -x "$(door rail-resolve.sh)" ]; then
@@ -604,50 +669,41 @@ except Exception: d={}
 m=(d.get("serving") or {}).get("models") or []
 print(m[0] if m else "")' 2>/dev/null || true)"
   fi
-
-  local ok=0
   if [ -x "$(door snotra-transcribe.sh)" ]; then
-    SNOTRA_MINUTES_FILE="$minutes" \
+    SNOTRA_MINUTES_FILE="$TMP_DIR/transcribe-flat.md" \
     SNOTRA_TRANSCRIPT_FILE="$transcript" \
     RAIL_MODEL="$rail_model" \
-      bash "$(door snotra-transcribe.sh)" "$wav" "$topic" >>"$DETECT_LOG" 2>&1 && ok=1
-  fi
-  if [ "$ok" != 1 ]; then
-    log "finalize: transcription did not complete — the recording is kept at $wav"
-    say "snotra: the ear left; transcription failed (recording kept: $wav)"
+      bash "$(door snotra-transcribe.sh)" "$wav" "$topic" >>"$DETECT_LOG" 2>&1 || \
+      log "finalize: the transcriber did not complete — the ladder will say where it stopped"
   fi
 
-  if [ -x "$(door snotra-mine.sh)" ] && [ -s "$transcript" ]; then
-    bash "$(door snotra-mine.sh)" "$transcript" "$actions" "$minutes" >>"$DETECT_LOG" 2>&1 || true
+  # rungs 2-4 · minutes, promises, todos — or the stop that names itself
+  if [ -x "$ladder" ]; then
+    bash "$ladder" run "$dir" --title "$topic" \
+      --people "the room (local capture: me on channel 0, the room on channel 1)" \
+      >>"$DETECT_LOG" 2>&1 || log "finalize: the ladder stopped — see the meeting's .state"
+  else
+    log "finalize: no ladder at $ladder — the pipeline cannot finish"
+    if [ -x "$store" ]; then bash "$store" state "$id" stopped-at minutes "the ladder is missing from this tree ($ladder)" >/dev/null 2>&1 || true; fi
   fi
 
-  # `grep -c` prints 0 and exits 1 when nothing matches — never let a second 0
-  # ride along, or the wake reads "0 0 actions".
-  local counts="0"
-  if [ -s "$actions" ]; then
-    counts="$(grep -c '^- ' "$actions" 2>/dev/null || true)"
-    [ -n "$counts" ] || counts="0"
+  if [ -s "$minutes" ]; then
+    counts="$(grep -c '^- \[ \]' "$actions" 2>/dev/null || true)"; [ -n "$counts" ] || counts="0"
+    printf '%s\n' "$minutes" >"$LATEST_FILE" 2>/dev/null || true
+    deliver "$minutes" "$actions" "$slug" "$counts" "$dur_label" "$reason"
+  else
+    local stop
+    stop="$(cat "$dir/.state" 2>/dev/null || printf 'no state was written')"
+    printf '%s\n' "$dir" >"$LATEST_FILE" 2>/dev/null || true
+    log "finalize: the ladder stopped — $stop"
+    say "snotra: the ladder stopped — $stop"
+    local state_door
+    state_door="$(door ymir-state.sh)"
+    if [ -x "$state_door" ]; then
+      timeout 20 "$state_door" queue append check "meeting:$slug" \
+        "check: $LANE meeting $id did not finish — $stop" >/dev/null 2>&1 || true
+    fi
   fi
-
-  # A short call is seconds, not "0m": say the truth at both scales.
-  local dur_secs=0 dur_label="0s"
-  case "${armed:-}" in
-    ''|*[!0-9]*) ;;
-    *)
-      dur_secs=$(( $(date +%s) - armed ))
-      if [ "$dur_secs" -ge 60 ]; then dur_label="$(( dur_secs / 60 ))m"; else dur_label="${dur_secs}s"; fi
-      ;;
-  esac
-
-  if [ -x "$(door runes-append.sh)" ]; then
-    "$(door runes-append.sh)" snotra meeting.captured \
-      --message "snotra: $LANE meeting captured and delivered — $minutes ($dur_label, $reason)" \
-      >/dev/null 2>&1 || true
-  fi
-
-  printf '%s\n' "$minutes" >"$LATEST_FILE" 2>/dev/null || true
-
-  deliver "$minutes" "$actions" "$slug" "$counts" "$dur_label" "$reason"
   state_clear
 }
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # plan.sh — the plan ledger: create the NEXT numbered plan and its index row.
 #
-#   plan.sh new <slug> --title "<title>" [--realm R] [--project P]
+#   plan.sh new <slug> --title "<title>" [--realm R] [--project P] [--from-meeting ID]
 #   plan.sh list                      # the ledger's rows (number · title · status)
 #   plan.sh next                      # the number the next plan would take (read-only)
 #
@@ -70,12 +70,30 @@ case "${1:-}" in
   list) grep -hE '^\| [0-9]+ \|' "$LEDGER/README.md" 2>/dev/null | sed -E 's/^\| ([0-9]+) \| \[([^]]*)\].*/#\1 \2/' | tail -20 ;;
   new)
     slug="${2:-}"; shift 2 2>/dev/null || true
-    title=""; while [ $# -gt 0 ]; do case "$1" in --title) title="$2"; shift 2 ;; --realm) REALM="$2"; shift 2 ;; --project) PROJECT="$2"; shift 2 ;; *) shift ;; esac; done
+    title=""; from_meeting=""
+    while [ $# -gt 0 ]; do case "$1" in
+      --title) title="$2"; shift 2 ;;
+      --realm) REALM="$2"; shift 2 ;;
+      --project) PROJECT="$2"; shift 2 ;;
+      --from-meeting) from_meeting="$2"; shift 2 ;;
+      *) shift ;; esac; done
     [ -n "$slug" ] && [ -n "$title" ] || { printf 'plan: new needs <slug> and --title\n' >&2; exit 2; }
     refuse_stale_ledger || exit 1
+    # THE JOIN (plan 228 §5 · F5): a plan a meeting produced says so in its header, so
+    # "what came out of the Nordic call" answers with plan numbers. A join to a meeting
+    # that does not exist is refused, never written — a dangling id is worse than none.
+    if [ -n "$from_meeting" ]; then
+      _paths="$ROOT/systems/snotra/services/record/snotra_paths.py"
+      if [ -r "$_paths" ] && ! python3 "$_paths" --folders 2>/dev/null | grep -q "/$from_meeting\$\|/$from_meeting/"; then
+        printf 'plan: from_meeting: %s — no meeting folder on this shelf carries that id\n' "$from_meeting" >&2
+        printf 'help: bin/records/meetings.sh list   # the meetings that exist\n' >&2
+        exit 1
+      fi
+    fi
     n="$(next_number)"; n="${n:-1}"; f="$LEDGER/${n}-${slug}.md"
     [ -e "$f" ] && { printf 'plan: %s exists\n' "$f" >&2; exit 1; }
     printf '# Plan %s - %s\n\n**Opened %s.**\n' "$n" "$title" "$(date +%F)" > "$f"
+    [ -n "$from_meeting" ] && printf '\nfrom_meeting: %s\n' "$from_meeting" >> "$f"
     printf '| %s | [%s](%s) | opened |\n' "$n" "$title" "$(basename "$f")" >> "$LEDGER/README.md"
     printf 'created %s\n' "$f" ;;
   *) printf 'error: unknown action %s\nhelp: plan.sh [new <slug> --title <t> | list | next]\n' "$1" >&2; exit 2 ;;

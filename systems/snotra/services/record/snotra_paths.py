@@ -41,9 +41,53 @@ def shelves() -> list[Path]:
     out += sorted(h.glob("svartalfaheim/*/meetings"))
     out += sorted(h.glob("svartalfaheim/*/projects/*/meetings"))
     out += sorted(h.glob("svartalfaheim/*/workspace/*/meetings"))
+    # An intake shelf (`.inbox/<name>`) is where a meeting LANDS before a lane
+    # sort files it. Three of this home's real meetings arrived that way and no
+    # door could see them, so a meeting the operator knows he had was reported as
+    # "0 minutes" — the same fault as an unscanned shelf, one level up.
+    out += sorted(p for p in h.glob("svartalfaheim/*/.inbox/*") if p.is_dir())
+    out += sorted(p for p in h.glob("svartalfaheim/.inbox/*") if p.is_dir())
     out += sorted(h.glob("hodd/life/meetings/*"))
     out += sorted(h.glob("hodd/workspaces/meetings/*"))
     return [p for p in out if p.is_dir()]
+
+
+def folders(since_days: int | None = None) -> list[Path]:
+    """Every folder that IS a meeting — it holds a `meeting.json`, the store contract.
+
+    Newest first, ordered by the meeting's own `started_at` (never by file mtime: the record
+    is the authority on when a meeting happened). `since_days` filters on that same date, so a
+    door counting a week counts a week of meetings, not a week of touches.
+    """
+    import datetime as _dt
+    import json
+    import time
+
+    cutoff = (time.time() - since_days * 86400) if since_days else None
+    found: list[tuple[float, Path]] = []
+    for shelf in shelves():
+        for p in shelf.rglob("meeting.json"):
+            d = p.parent
+            try:
+                meta = json.loads(p.read_text(encoding="utf-8", errors="replace"))
+            except Exception:  # noqa: BLE001 — a broken record is still a folder
+                meta = {}
+            stamp = (meta.get("started_at") or meta.get("start") or meta.get("created_at") or "")[:19]
+            try:
+                when = _dt.datetime.fromisoformat(stamp).timestamp() if stamp else p.stat().st_mtime
+            except Exception:  # noqa: BLE001
+                when = p.stat().st_mtime
+            if cutoff and when < cutoff:
+                continue
+            found.append((when, d))
+    seen: set[Path] = set()
+    ordered: list[Path] = []
+    for _when, d in sorted(found, key=lambda x: x[0], reverse=True):
+        if d in seen:
+            continue
+        seen.add(d)
+        ordered.append(d)
+    return ordered
 
 
 def meetings(since_days: int | None = None) -> list[Path]:
@@ -65,6 +109,13 @@ if __name__ == "__main__":
     if "--shelves" in sys.argv:
         for s in shelves():
             print(s)
+    elif "--folders" in sys.argv:
+        days = None
+        if "--since-days" in sys.argv:
+            i = sys.argv.index("--since-days")
+            days = int(sys.argv[i + 1]) if len(sys.argv) > i + 1 else None
+        for m in folders(days):
+            print(m)
     elif "--recent" in sys.argv:
         days = int(sys.argv[sys.argv.index("--recent") + 1]) if len(sys.argv) > sys.argv.index("--recent") + 1 else 2
         for m in meetings(days):
