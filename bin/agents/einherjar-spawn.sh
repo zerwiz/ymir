@@ -351,7 +351,24 @@ if [ "$RELAUNCH" -eq 1 ]; then
       HARNESS_PROV="recorded in the task record (relaunch)"
     fi
   fi
-  BRIEF="$DATA/$ID/brief.md"
+  # ── ONE AGENT PER ID (audit 2026-11-09: seven agents happened) ────────────────
+# A spawn that fails AFTER the engine has launched a pane leaves that agent alive. Retrying
+# then puts a SECOND agent in the same worktree, where the two clobber each other's files and
+# the one that yields writes nothing. Nothing refused it, because nothing counted AGENTS —
+# only ids. This does: if a live herdr pane is already working in this errand's worktree, the
+# spawn refuses and names it. A refusal that names the ghost is cheaper than a rebuild.
+if command -v herdr >/dev/null 2>&1; then
+  _wt_existing="$PROJECT_DIR/.yggdrasil/$ID"
+  _live="$(herdr agent-status 2>/dev/null | grep -F "$_wt_existing" | grep -v '(deleted)' | head -1 || true)"
+  if [ -n "${_live:-}" ] && [ "${FORCE_RELAUNCH:-0}" != 1 ]; then
+    printf 'refused: an agent already stands in %s\n' "$_wt_existing" >&2
+    printf '  pane: %s\n' "$(printf '%s' "$_live" | cut -c1-140)" >&2
+    printf 'help: talk to it (bin/agents/eindri-send.sh %s "…"), or close that pane first.\n' "$ID" >&2
+    printf 'note: a second agent in one worktree overwrites the first — the 2026-11-09 audit.\n' >&2
+    exit 3
+  fi
+fi
+BRIEF="$DATA/$ID/brief.md"
   [ -f "$BRIEF" ] || { echo "error: no brief at $BRIEF; regenerate it: bin/agents/erindi-brief.sh $ID --relaunch" >&2; exit 1; }
 else
   [ "${#POS[@]}" -ge 2 ] || { echo "error: <project-dir> is required for a fresh spawn" >&2; exit 2; }
