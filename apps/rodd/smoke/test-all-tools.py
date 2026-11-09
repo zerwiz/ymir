@@ -50,12 +50,19 @@ SAFE = {
     # message in the arm holder's inbox.
     "talk_to_arm": {"text": "tool test — the smoke suite; no answer is expected"},
     "hear_from_arm": {"count": 3},
+    # plan 231 R1 — the four hands Rödd was given. `eindri_send` is pointed at a pane that does
+    # not exist so the suite proves the door's FAILED, never a real worker's inbox.
+    "arm_who": {},
+    "eindri_list": {},
+    "eindri_send": {"target": "no-such-pane", "line": "tool test — not a live worker"},
+    "calendar_write": {"action": "status"},
     "remember": {"note": "Tool test: the voice's tools were exercised end to end on 2026-11-07."},
 }
 
 
 SAFE_ENV = {
     "talk_to_arm": {"RODD_ARM_LEASE": "/nonexistent-state/.arm.lease"},
+    "arm_who": {"RODD_ARM_LEASE": "/nonexistent-state/.arm.lease"},
 }
 
 

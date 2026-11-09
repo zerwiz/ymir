@@ -45,13 +45,13 @@ mkdir -p "$STATE_DIR" 2>/dev/null || true
 printf '%s\twedge\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$CHANNEL" "$SUMMARY" >>"$LOG" 2>/dev/null || true
 
 fired=0
-# Speak through the one voice: systems/snotra/services/tts-lease/ymir-say.sh owns the desktop manner.
-if [ -x "$ROOT/systems/snotra/services/tts-lease/ymir-say.sh" ]; then
-  "$ROOT/systems/snotra/services/tts-lease/ymir-say.sh" --mark-alarm "wedge: escalation stuck" "$SUMMARY" >/dev/null 2>&1 && fired=1
-elif command -v omarchy-notification-send >/dev/null 2>&1; then
-  omarchy-notification-send -u critical -g "" "Ymir wedge: escalation stuck" "$SUMMARY" >/dev/null 2>&1 && fired=1
-elif command -v notify-send >/dev/null 2>&1; then
-  notify-send -u critical "Ymir wedge: escalation stuck" "$SUMMARY" >/dev/null 2>&1 && fired=1
+# Every message carries a TARGET, and the target really opens (plan 230): the one door that
+# shows a toast also owns the click, so no subsystem calls the notifier itself any more. The click here
+# opens the alarm log the line above was just written to — the thing he would want to read.
+if [ -x "$ROOT/bin/notify/open-target.sh" ]; then
+  "$ROOT/bin/notify/open-target.sh" toast --app Ymir --glyph '!' --urgency critical \
+    --title "Ymir wedge: escalation stuck" --body "$SUMMARY" \
+    --target "file:$LOG" >/dev/null 2>&1 && fired=1
 fi
 
 # The durable line above already recorded it; a silent host is not a failure of
