@@ -32,7 +32,7 @@
 | ymir-update-check.sh | ymir-update-check.sh — does a newer Ymir stand on npm? One answer, cac | tested+named | keep (a human or a cron row must run it) |
 | ci-verify.sh | ci-verify.sh — what CI must prove, in one command, for BOTH hosts. | tested+named | keep (a human or a cron row must run it) |
 | doc-sweep.sh | doc-sweep.sh — the shelf-sweeper (plan 63): find the operator's docume | tested | keep (a human or a cron row must run it) |
-| doors.sh | doors.sh — a door register for ANY directory, rendered from the tree ( | tested | keep (a human or a cron row must run it) |
+| doors.sh | doors.sh — a door register for ANY directory, rendered from the tree ( | tested+named | keep (a human or a cron row must run it) |
 | feature-inventory.sh | feature-inventory.sh — every feature the system CLAIMS, in one checkli | tested | keep (a human or a cron row must run it) |
 | fixes.sh | fixes.sh — the fix notes. ONE FILE PER FIX, and nothing to fold. | tested+named | keep (a human or a cron row must run it) |
 | guards.sh | guards.sh — every TREE ward, in one command. | tested+named | keep (a human or a cron row must run it) |
