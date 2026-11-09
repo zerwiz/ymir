@@ -148,7 +148,7 @@ bin[136]{file,does,kind,verdict,disposition,callers,lines}:
   "stt-wire.sh","bin/time/snotra/stt-wire.sh -> systems/snotra/services/ear/stt-wire.sh — RETIRED SHIM","tool","wired","keep",0,12
   "teams_ingest.py","bin/time/snotra/teams_ingest.py -> systems/snotra/services/cron/teams_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "test_event_trigger.sh","test_event_trigger.sh — a smithy may be started by a person, the clock, or an","tool","wired","keep",1,251
-  "test_outbound_gate.py","'''The outbound gate's proofs — plan 124 §7, his word 2026-10-24:","tool","wired","keep",0,360
+  "test_outbound_gate.py","'''The outbound gate's proofs — plan 124 §7, his word 2026-10-24:","tool","wired","keep",0,459
   "transcript_ingest.py","bin/time/snotra/transcript_ingest.py -> systems/snotra/services/cron/transcript_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "trello-map.sh","bin/time/snotra/trello-map.sh -> systems/snotra/services/cron/trello-map.sh — RETIRED SHIM","tool","wired","keep",0,12
   "trello_adapter.py","bin/time/snotra/trello_adapter.py -> systems/snotra/services/cron/trello_adapter.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
