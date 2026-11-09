@@ -125,11 +125,11 @@ bin[108]{file,does,kind,verdict,disposition,callers,lines}:
   "usage-ratchet.sh","usage-ratchet.sh — PROVE the doors are used, and fail when the unused pile grows.","tool","wired","keep",1,103
   "vault-guard.sh","vault-guard.sh — nothing may copy content OUT of the vault (Rule 15).","tool","wired","keep",2,101
   "weave-guard.sh","weave-guard.sh — an index that does not name every file it indexes is refused.","tool","wired","keep",2,85
-  "wedge-notify.sh","wedge-notify.sh — the Ymir wedge-alarm notifier.","tool","wired","keep",1,62
+  "wedge-notify.sh","wedge-notify.sh — the Ymir wedge-alarm notifier.","tool","tested","keep",2,61
   "workflow-check.sh","workflow-check.sh — every GitHub Actions workflow must PARSE, before CI is asked to run.","tool","wired","keep",1,78
   "ymir-config-check.sh","ymir-config-check.sh — the DOOR to the config layer (`src/ymir_runtime/config/`).","tool","wired","keep",0,44
   "ymir-update-check.sh","ymir-update-check.sh — does a newer Ymir stand on npm?","tool","wired","keep",3,71
 
-**Tally.** verdict: wired=90, tested=18
+**Tally.** verdict: wired=89, tested=19
 
 **Tally.** disposition: keep=106, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1
