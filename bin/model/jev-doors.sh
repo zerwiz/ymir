@@ -26,7 +26,7 @@ HOST="${JEV_DOOR_HOST:-}"   # never a default host: the operator names the door 
 #   3 · the fleet registry's forge, else heart — the models machine, read once (Rule 25)
 #   4 · nothing                           — reported as `no-host`, never as `down`
 if [ -z "$HOST" ] && [ -r "$REG" ]; then
-  HOST="$(grep -m1 '^host:' "$REG" | cut -d: -f2- | sed 's/^[[:space:]]*//; s/[[:space:]]*$//' | tr -d "\"'")"
+  HOST="$(grep -m1 '^host:' "$REG" | cut -d: -f2- | sed 's/[[:space:]]*#.*$//; s/^[[:space:]]*//; s/[[:space:]]*$//' | tr -d "\"'")"
 fi
 if [ -z "$HOST" ] && [ -r "$ROOT/bin/skuld/fleet-host.sh" ]; then
   HOST="$(bash "$ROOT/bin/skuld/fleet-host.sh" forge 2>/dev/null || true)"

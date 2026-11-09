@@ -337,3 +337,18 @@ different users run different models. So nothing here assumes a model, a window 
 — it reads that seat's own. The guard is `bin/seat/tests/test_doors_fleet_path.sh`, which runs
 every near-loop door under a **deliberately trimmed PATH** (the gate's), because the fault class
 this fixes passes in a shell and dies under a unit.
+
+### The board ranks — with a measured judge (2026-11-09, plan 229)
+
+`#/near` no longer advertises scores it does not have. Once the operator's queue arrives the
+board asks `POST /api/rank` (gate) with `{items:[{id,text}]}`; the gate runs `bin/seat/rank.sh`
+and applies jev's own `rankHfs` from `src/vendor/jev/policy.ts`. A card gets `hfs` only when its
+item came back scored, so a dark door leaves every card at **Not ranked yet** — the board never
+fills the slot with a number.
+
+**Which judge, and why it is not a preference:** measured on the heart, 2026-11-09, on the
+canonical "charged twice → which desk" case — `julia-1` 7.86 decisions/sec and **wrong**
+(shipping 0.85); `laya` 1.77/sec and **right** (billing 0.83, and 1.00 confident at twelve
+options); `kev-4b` 0.21/sec and the most accurate (billing 0.99) but 14 s at twelve options, so
+twenty cards would take 95 s. Hence `rank.sh` prefers **laya**, escalates to **kev-4b**, and
+puts **julia-1** last. The footer names the door that spoke.

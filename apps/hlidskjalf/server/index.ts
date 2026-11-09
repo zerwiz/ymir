@@ -2530,6 +2530,48 @@ const server = Bun.serve({
           }
         }));
       }
+      if (p === '/api/rank' && req.method === 'POST') {
+        // THE HALL MAY RANK (2026-11-09, plan 229 — his word: "fix it all then").
+        // Transport is bin/seat/rank.sh: one `score` question per jev category, asked of a
+        // decision door. The POLICY is jev's own, imported from the vendored copy
+        // (apps/odrerir/src/vendor/jev/policy.ts) rather than re-derived here — a second table
+        // of thresholds is how one question gets two answers. A dark door yields no scores at
+        // all, so the cards keep saying "Not ranked yet".
+        const body = (await req.json().catch(() => ({}))) as { items?: { id?: string; text?: string }[] };
+        const items = (body.items ?? []).filter((i) => i && i.id && i.text).slice(0, 40);
+        if (!items.length) return json({ error: 'rank needs items: [{id, text}]' }, 400);
+        const seed = `rank:${Bun.hash(JSON.stringify(items)).toString(36)}`;
+        return json(await memoAsync(seed, 120_000, async () => {
+          try {
+            const { execFileSync } = await import('node:child_process');
+            const script = new URL('../../../bin/seat/rank.sh', import.meta.url).pathname;
+            const out = execFileSync('bash', [script], {
+              input: JSON.stringify(items),
+              timeout: 120_000,
+              cwd: ROOT,
+            }).toString().trim();
+            const raw = JSON.parse(out) as {
+              door?: string;
+              answers?: Record<string, Record<string, unknown>>;
+              failed?: string[];
+              error?: string;
+            };
+            if (raw.error || !raw.answers) return { error: raw.error ?? 'rank: no answers', ranked: {} };
+            const { rankHfs } = await import('../../odrerir/src/vendor/jev/policy.ts');
+            const ranked: Record<string, unknown> = {};
+            for (const [id, answers] of Object.entries(raw.answers)) {
+              try {
+                ranked[id] = rankHfs(answers as never);
+              } catch {
+                // A card with no usable answer stays unranked — never a zero in its place.
+              }
+            }
+            return { door: raw.door, ranked, failed: raw.failed ?? [] };
+          } catch (e) {
+            return { error: String(e).slice(0, 160), ranked: {} };
+          }
+        }));
+      }
       if (p === '/api/context') {
         // THIS SESSION'S SHAPE, one read (plan 229). The governed asset has declared this
         // door since plan 199 and the gate never served it (404 "no route"), so the near

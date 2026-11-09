@@ -44,6 +44,16 @@ All four are **served** as of 2026-11-09 (plan 229). `/api/context` was declared
 on the heart, so the near board's window card silently lost its session line. Each carrier now
 passes `cwd: ROOT` and an explicit timeout, so a carrier never inherits the caller's directory.
 
+**The ranking door (2026-11-09, plan 229).** `POST /api/rank` is the fifth near-loop
+carrier, and the only one that takes a body: `{items:[{id,text}]}` → `{door, ranked, failed}`.
+It is a **carrier over two owners**: `bin/seat/rank.sh` is the transport (one `score` question
+per jev category, asked of a decision door), and the *policy* is jev's own, imported from the
+vendored `apps/odrerir/src/vendor/jev/policy.ts` — `rankHfs` turns the answers into
+`ranked · primary · scores · labels · suspectCombo`. Never re-derive those thresholds here: a
+second table of them is how one question gets two answers. A dark door returns `{error, ranked:{}}`
+and the cards keep `Not ranked yet`; the door that spoke is named in the response and in the
+board's footer, so a score is always traceable to its judge.
+
 **A carrier must not depend on an interactive PATH.** The gate's unit sets
 `Environment=PATH=%h/.bun/bin:/usr/bin:/bin`; any door that reaches for a bare binary (`pi`,
 `gh`, `herdr`) is invisible there and answers empty. The doors resolve their own binaries —
