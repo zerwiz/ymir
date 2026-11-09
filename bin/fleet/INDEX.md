@@ -20,7 +20,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[12]{file,does,kind,verdict,disposition,callers,lines}:
+bin[13]{file,does,kind,verdict,disposition,callers,lines}:
   "agents-config.sh","agents-config.sh — one YAML for the Allfather's agent/harness/model combination.","tool","wired","keep",14,310
   "dispatch-profile.sh","dispatch-profile.sh — decide which Eindri dispatch profile is ACTIVE, and","tool","tested","keep",2,277
   "fleet-apply.sh","fleet-apply.sh — apply fleet-wide preferences to every registered Eindri-home.","tool","wired","keep",1,83
@@ -29,11 +29,12 @@ bin[12]{file,does,kind,verdict,disposition,callers,lines}:
   "fleet-version.sh","fleet-version.sh — is the fleet on ONE version?","tool","tested","keep",1,99
   "hamr-harness.sh","hamr-harness.sh - detect the agent harness (Hamr) this process tree runs on.","tool","wired","keep",1,247
   "huginn-research-worker.sh","huginn-research-worker — Apodex-powered research worker (Eindri).","tool","wired","keep",0,136
+  "roads.sh","Fleet roads — OUTPUT of the registry (hodd/data/fleet.json).","tool","wired","keep",1,121
   "tailscale-sync.sh","tailscale-sync.sh — sync the Allfather's pi data across his OWN machines over","tool","wired","keep",0,205
   "topology.sh","topology.sh — what IS this machine in the fleet, and is it talking to the heart?","tool","tested","keep",7,139
   "ymir-fleet.sh","ymir-fleet.sh — FLEET MODE, one command for npm users.","tool","wired","keep",0,19
   "ymir-platform.sh","ymir-platform.sh — the portability layer.","tool","tested","keep",26,336
 
-**Tally.** verdict: wired=8, tested=4
+**Tally.** verdict: wired=9, tested=4
 
-**Tally.** disposition: keep=12
+**Tally.** disposition: keep=13

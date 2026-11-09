@@ -76,6 +76,7 @@
 | secret-guard.sh | secret-guard.sh — refuse to commit obvious secrets or private env file | tested+named | keep (a human or a cron row must run it) |
 | sensitive-gate.sh | sensitive-gate.sh — one gate for every external surface of a sensitive | tested | keep (a human or a cron row must run it) |
 | skills-share-guard.sh | skills-share-guard.sh — nothing private crosses the skills door. | tested | keep (a human or a cron row must run it) |
+| ssh-roads-guard.sh | (no header line) | tested | keep (a human or a cron row must run it) |
 | subsystem-docs-guard.sh | subsystem-docs-guard.sh — the books a subsystem names must exist, and  | tested | keep (a human or a cron row must run it) |
 | syn-turnend-guard.sh | syn-turnend-guard.sh - refuse to let a Brokk turn end blind. | tested+named | keep (a human or a cron row must run it) |
 | vault-guard.sh | vault-guard.sh — nothing may copy content OUT of the vault (Rule 15). | tested+named | keep (a human or a cron row must run it) |
@@ -86,6 +87,7 @@
 | repo-scrub.sh | repo-scrub.sh — purge private paths from ALL git history before going  | tested | keep (a human or a cron row must run it) |
 | seat-woven-driver.sh | seat-woven-driver.sh — seat the engine behind `merge=regenerate`, and  | tested | keep (a human or a cron row must run it) |
 | test_areas_and_injection.sh | test_areas_and_injection.sh — the smoke suite for plan 219 and the arm | tested | keep (a human or a cron row must run it) |
+| test_fleet_roads.sh | good block passes | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
 | test_gimle_mcp_board.sh | test_gimle_mcp_board.sh — the Gimlé MCP's board face, proved by comma | tested | keep (a human or a cron row must run it) |
 | test_handoff_packet.sh | test_handoff_packet.sh — proves the packet door reads the schema's pac | tested | keep (a human or a cron row must run it) |
 | test_hermes_seat.sh | test_hermes_seat.sh — the acceptance test for plan 177 H1/H2/H3: Herme | tested+named | keep (a human or a cron row must run it) |
