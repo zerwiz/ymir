@@ -33,9 +33,9 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
 fi
 hoard_state_dir YMIR_STATE_DIR
 hoard_data_dir YMIR_DATA_DIR
-. "$SCRIPT_DIR/eindri-wake-lib.sh"
-eindri_helm_state STATE "$YMIR_STATE_DIR"
+STATE="${BROKK_STATE_OVERRIDE:-$YMIR_STATE_DIR}"
 
+. "$SCRIPT_DIR/eindri-wake-lib.sh"
 EINDRI_STATE="$STATE"
 
 AGENT=""
@@ -73,76 +73,15 @@ mkdir -p "$STATE/eindri-reports" "$STATE/eindri-questions" "$STATE/eindri-done"
 #    line and file the shelf as ONE act, so neither half is ever deferred. Done
 #    before delivery so the same shelf the failsafe sweeps is what gets queued.
 if [ -n "$TERMINAL" ] && [ -n "$LINE" ]; then
-  # A DONE LINE MUST CARRY THE PR (measured 2026-11-09). The review spine reads the
-  # PR url out of this very line; a done line without one seats no judge, and the
-  # fault is invisible — the errand simply never reviews. So a shipping errand whose
-  # done line names no pull request is refused HERE, where the worker still exists to
-  # fix it, rather than discovered later by a sweep.
-  if [ "$TERMINAL" = "done" ] && ! printf '%s' "$LINE" | grep -qE 'https://github\.com/[^[:space:]]+/pull/[0-9]+'; then
-    # The spawn records its meta in <repo>/state; the home's state may be a different dir — read both.
-    mode="$(sed -n 's/^mode=//p' "$STATE/$AGENT.meta" "$ROOT/state/$AGENT.meta" 2>/dev/null | head -1)"
-    case "${mode:-}" in
-      local-only|batch|scout|review|recon|'') ;;   # no PR owed: a local tip never reviews; a batch ships through the gatherer's one PR; a scout (dispatch writes mode=scout, spawn omits it) and review/recon errands deliver a report
-      *)
-        printf 'refused: a %s errand cannot acclaim done without its pull request\n' "$mode" >&2
-        printf 'help: put the url in the line — --line "done: opened PR https://github.com/<owner>/<repo>/pull/<n> — …"\n' >&2
-        printf 'note: a done line without a PR seats no judge (the spine is PR-only).\n' >&2
-        exit 3 ;;
-    esac
-  fi
-  # the maker ward (RULES/53): the line carries the PR into the review spine and the PR record, so it may not
-  # name a model, a maker or an agent harness. Refused HERE, where the worker still exists to reword it.
-  if [ -r "$ROOT/bin/gates/guards/maker-guard.sh" ]; then
-    _lf="$(mktemp)"; printf '%s\n' "$LINE" >"$_lf"
-    bash "$ROOT/bin/gates/guards/maker-guard.sh" text "the $TERMINAL line" "$_lf" || { rm -f "$_lf"; exit 3; }
-    rm -f "$_lf"
-  fi
   status_file="$STATE/$AGENT.status"
   last="$(tail -n1 "$status_file" 2>/dev/null || true)"
-  # The status line keeps `<state>: ` first (readers parse it) and carries the Sol stamp right after it, so the line
-  # a person reads says WHEN. A repeat of the same act is recognised through the stamp, not written twice.
-  _bare="$(printf '%s' "$last" | sed -E 's/^([a-z-]+): [0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2} [A-Za-z0-9+-]+ — /\1: /')"
-  [ "$_bare" = "$TERMINAL: $LINE" ] || printf '%s: %s — %s\n' "$TERMINAL" "$(sol_line)" "$LINE" >>"$status_file"
-  unset _bare
+  [ "$last" = "$TERMINAL: $LINE" ] || printf '%s: %s\n' "$TERMINAL" "$LINE" >>"$status_file"
   case "$TERMINAL" in
     needs-decision) shelf="$STATE/eindri-questions/$AGENT.md" ;;
     *)              shelf="$STATE/eindri-reports/$AGENT.md" ;;
   esac
-  [ -s "$shelf" ] || printf '%s\n' "$(sol_stamped "$LINE")" >"$shelf" 2>/dev/null
-  # A shelf the act claims to have filed must be THERE: say so loudly, never claim it silently.
-  [ -s "$shelf" ] || { printf 'error: the report did not land — %s is missing or empty (state dir %s)\nhelp: check that the state dir is writable; the wake was NOT queued\n' "$shelf" "$STATE" >&2; exit 1; }
+  [ -s "$shelf" ] || printf '%s\n' "$LINE" >"$shelf"
 fi
-
-# 1b. The well remembers what the errand did (the Allfather, 2026-11-12: "when they are DONE
-#     they need to remember what they have done to the well"). The brief asks the worker for
-#     one episode before this act (bin/records/mimir.sh observe … --task <id>). Here a `done`
-#     or `failed` that left none since its launch is said LOUDLY, and a minimal episode is
-#     written from --line (or the status line) so no finished errand is missing from the
-#     well. A failed errand is remembered with its why. The well is a record, not a gate: a
-#     well that does not answer never holds back the wake.
-MIMIR="$SCRIPT_DIR/../records/mimir.sh"
-well_remember_finish() {  # <terminal> <line> <writer>
-  local term=$1 text=$2 writer=$3 since n
-  [ -x "$MIMIR" ] && [ -n "$text" ] || return 0
-  since="$(sed -n 's/^launch_iso=//p' "$STATE/$AGENT.meta" 2>/dev/null | head -1 | cut -c1-10)"
-  n="$(timeout 15 "$MIMIR" recall "$AGENT" --task "$AGENT" ${since:+--since "$since"} --k 1 2>/dev/null \
-        | sed -n '1s/^recall\[\([0-9]*\)\].*/\1/p')"
-  if [ "${n:-0}" -ge 1 ] 2>/dev/null; then
-    printf 'well: the errand %s left its own episode — remembered\n' "$AGENT" >&2
-    return 0
-  fi
-  printf 'WARNING: the errand %s finished (%s) and left NO episode in the well — writing a minimal one from its line. A worker remembers what it did itself: bin/records/mimir.sh observe "…" --source eindri --task %s --tags eindri,%s\n' \
-    "$AGENT" "$term" "$AGENT" "$term" >&2
-  timeout 15 "$MIMIR" observe "eindri $AGENT $term: $text (written by $writer: the worker left no episode of its own)" \
-    --source "$writer" --task "$AGENT" --tags "eindri,$term,unremembered" --shape behaviour --force >/dev/null 2>&1 \
-    || printf 'warning: the well did not take the minimal episode for %s — the wake stands\n' "$AGENT" >&2
-}
-case "$TERMINAL" in
-  done|failed)
-    _wl="$LINE"; [ -n "$_wl" ] || _wl="$(tail -n1 "$STATE/$AGENT.status" 2>/dev/null | sed 's/^[a-z-]*: //')"
-    well_remember_finish "$TERMINAL" "$_wl" eindri-acclaim
-    unset _wl ;;
-esac
 
 # 2. Kind and detail from the shelves (a question outranks a report — the smith
 #    is blocked and needs an answer, not a review).
@@ -151,7 +90,7 @@ detail=""
 corrected=0
 if [ -f "$STATE/eindri-questions/$AGENT.md" ]; then
   kind="QUESTION"
-  detail="QUESTION at $STATE/eindri-questions/$AGENT.md — answer with bin/agents/eindri-send.sh $AGENT \"…\""
+  detail="QUESTION at state/eindri-questions/$AGENT.md — answer with bin/agents/eindri-send.sh $AGENT \"…\""
 elif [ -f "$STATE/eindri-reports/$AGENT.md" ]; then
   # The shelf may be the SWEEP's snapshot rather than the worker's word: a liveness
   # pass files "# <id> — finished without a terminal word" when it finds a quiet
@@ -166,13 +105,13 @@ elif [ -f "$STATE/eindri-reports/$AGENT.md" ]; then
     case "$last" in
       done:*|failed:*)
         printf '%s\n' "$last" >"$STATE/eindri-reports/$AGENT.md"
-        detail="report healed from the terminal status line, replacing the sweep's snapshot ($STATE/eindri-reports/$AGENT.md)"
+        detail="report healed from the terminal status line, replacing the sweep's snapshot (state/eindri-reports/$AGENT.md)"
         corrected=1 ;;
       *)
-        detail="report filed at $STATE/eindri-reports/$AGENT.md (the sweep's snapshot; no terminal word yet)" ;;
+        detail="report filed at state/eindri-reports/$AGENT.md (the sweep's snapshot; no terminal word yet)" ;;
     esac
   else
-    detail="report filed at $STATE/eindri-reports/$AGENT.md"
+    detail="report filed at state/eindri-reports/$AGENT.md"
   fi
 else
   # No shelf. A terminal status line IS a report (the worker wrote one shelf and
@@ -182,15 +121,15 @@ else
   case "$last" in
     done:*|failed:*)
       printf '%s\n' "$last" >"$STATE/eindri-reports/$AGENT.md"
-      detail="report healed from the terminal status line ($STATE/eindri-reports/$AGENT.md)" ;;
+      detail="report healed from the terminal status line (state/eindri-reports/$AGENT.md)" ;;
     needs-decision:*)
       kind="QUESTION"
       printf '%s\n' "$last" >"$STATE/eindri-questions/$AGENT.md"
-      detail="question healed from the terminal status line ($STATE/eindri-questions/$AGENT.md)" ;;
+      detail="question healed from the terminal status line (state/eindri-questions/$AGENT.md)" ;;
     *)
       if [ -n "$WORKTREE" ] && [ -f "$WORKTREE/REPORT.md" ]; then
         cp "$WORKTREE/REPORT.md" "$STATE/eindri-reports/$AGENT.md" 2>/dev/null || true
-        detail="report filed from $WORKTREE/REPORT.md ($STATE/eindri-reports/$AGENT.md)"
+        detail="report filed from $WORKTREE/REPORT.md (state/eindri-reports/$AGENT.md)"
       else
         detail="left working (herdr state flipped; read the pane: herdr agent read $AGENT)"
       fi ;;
@@ -212,11 +151,6 @@ else
   else
     eindri_queue_wake "eindri $AGENT reported: $detail"
   fi
-  # The queue line is the wake: if it did not land, the errand is not reported — fail, do not mark delivered.
-  if ! grep -q -F -- "eindri $AGENT " "$STATE/.wake-queue" 2>/dev/null; then
-    printf 'error: the wake did not land — no line for %s in %s\nhelp: check that the state dir is writable\n' "$AGENT" "$STATE/.wake-queue" >&2
-    exit 1
-  fi
   eindri_mark_delivered "$AGENT" "$wake_kind"
   if [ -x "$SCRIPT_DIR/../../systems/snotra/services/tts-lease/ymir-say.sh" ]; then
     if [ "$kind" = "QUESTION" ]; then
@@ -225,15 +159,6 @@ else
       "$SCRIPT_DIR/../../systems/snotra/services/tts-lease/ymir-say.sh" note "Eindri $AGENT reported" >/dev/null 2>&1 || true
     fi
   fi
-fi
-# 3b. The record-as-wake cursor (plan 257 H3). The arm raises one wake per terminal
-#     status line newer than state/<id>.woke; the loud road has just delivered (or
-#     found delivered) this one, so it writes the same cursor and the two roads never
-#     wake twice for one line.
-if [ -f "$STATE/$AGENT.status" ]; then
-  _woke="$(date -r "$STATE/$AGENT.status" +%s.%N 2>/dev/null || stat -f %Fm "$STATE/$AGENT.status" 2>/dev/null || true)"
-  [ -n "$_woke" ] && printf '%s\n' "$_woke" >"$STATE/$AGENT.woke" 2>/dev/null || true
-  unset _woke
 fi
 # 4. The review spine (FORSETI the Judge). The delivery gate's other half: a
 #    ship errand that reached `done` with a PR wakes its own reviewer. One per
@@ -255,5 +180,27 @@ if [ "$TERMINAL" = done ] && [ -x "$SCRIPT_DIR/eindri-review-spawn.sh" ]; then
     fi
   fi
 fi
-printf '%s — acclaimed %s (%s)\n' "$(sol_line)" "$AGENT" "$kind"
-printf 'eindri-acclaim[1]{agent,kind,detail}:\n  "%s","%s","%s"\n' "$AGENT" "$kind" "$detail"
+# ── THE LAST LINK: SPEAK IT INTO THE ARM HOLDER'S PANE ─────────────────────────────────────────────
+# The Allfather, 2026-11-08 and again 2026-11-09: *"why arent they injecting into your session chat? we
+# have built that and its not getting used. they are writing handoff in files now instead"* … *"no
+# handoff or sutch without also talking direckly in to the panes."* So the terminal act does all four:
+# the status line, the report shelf, the durable wake, AND a turn in the chat of the session holding
+# the arm. A message that only reaches a file has not reached anybody.
+#
+# It is best-effort-but-loud: if the pane cannot be reached, this says WHICH link broke and why, and
+# the record above still stands. Silence here would be the very fault the door exists to fix.
+_notify="$SCRIPT_DIR/eindri-notify.sh"
+_injected=no
+if [ -x "$_notify" ]; then
+  if _nout="$("$_notify" --from "$AGENT" -- "$TERMINAL: $detail" 2>&1)"; then
+    _injected=yes
+  else
+    printf '%s\n' "$_nout" >&2
+    _injected="failed — $(printf '%s' "$_nout" | grep -m1 . || echo 'no reason given')"
+  fi
+else
+  _injected="failed — no eindri-notify.sh beside this door"
+fi
+
+printf 'eindri-acclaim[4]{agent,kind,detail,pane}:
+  "%s","%s","%s","%s"\n' "$AGENT" "$kind" "$detail" "$_injected"

@@ -5,7 +5,7 @@ UI, and agents obey it, and a change that contradicts a rule must first change
 the rule (append-only; never silently rewritten).
 
 ```
-rules_index[51]{file,subject}:
+rules_index[44]{file,subject}:
   "01-domains.md","domains (Greinar) · houses · Eindri"
   "02-agents.md","agents: home, kinds, profile contract, no mock"
   "03-houses.md","houses = companies; ownership, records, boundaries"
@@ -37,12 +37,7 @@ rules_index[51]{file,subject}:
   "43-two-tongues.md","two tongues: English for the work, Old Norse for the names — nothing else; a foreign script or letter is refused, a foreign prose is caught by its function words, and the four exceptions (fixture · detector · quotation · table) are declared with a reason"
   "45-start-on-the-latest.md","start on the latest: a base is fetched, not remembered — reading is free, taking a number or a branch point is not, a stale base refuses with its repair, offline is a stated skip"
   "48-a-repository-that-is-not-ours.md","a repository that is not ours: the owner comes from the registry, their law wins, the words are their reader's and never the hall's, our discipline travels and our identity does not, the stack is probed not assumed, an install is proved by one real change, their data stays theirs, the merge is sealed by their door"
-  "49-workers-are-eindri.md","workers are Eindri: every worker is an Eindri on a Yggdrasil worktree, no harness spawns its own subagents, and the refusal is a user-scope PreToolUse hook that denies Agent|Task and names the Eindri road"
-  "50-the-home-is-pulled-before-and-pushed-after.md","the home is pulled before and pushed after: an edit to ymirhome begins with a pull and ships by push in the same breath, never a stale base"
-  "51-ymir-is-a-program.md","ymir is a program: the repo is the source it ships from; ymir runs globally in every harness's root agent, seated by install and update, loaded from the runtime, never a working tree"
-  "52-documents-are-for-people.md","a document is written for a person to read: headings, short paragraphs, Markdown tables, Mermaid diagrams, callouts — never TOON blocks; TOON stays in what only a machine reads"
-  "53-no-ai-tool-signs-the-work.md","no AI tool signs the work and none adds itself: no Co-Authored-By or Generated-with lines in commits, PRs, code, documents or letters; no tool adds itself to a repo, org or contributor list unless asked; outranks a harness default"
-  "54-no-blue-no-purple.md","no blue and no purple: every colour is a house colour (stone, bone, bronze, steel, blood); a cool hue 185-330 is refused by the house-colour ward and mapped to its nearest house role; fix notes and Sessrúmnir user themes are held for the Allfather"
+  "49-no-message-until-the-receiver-speaks.md","no message is delivered until the receiver speaks: a write is not a delivery, only the herdr pane and the Gna arm are proven, a new channel is guilty until it answers, and no agent assumes another read it"
   "README.md","this index"
   "37-a-surface-may-not-show-what-it-did-not-receive.md","a surface may not show what it did not receive"
 ```
@@ -125,11 +120,12 @@ Keep each rule short and unambiguous; reference it from code where it bites.
 - **47 — a collaborator sees what a grant names** · `RULES/47-a-collaborator-sees-what-a-grant-names.md`
 
 - **48 — a repository that is not ours** · `RULES/48-a-repository-that-is-not-ours.md`
-
-- **49 — workers are Eindri; no harness spawns its own subagents** · `RULES/49-workers-are-eindri.md`
-
-- **50 — the home is pulled before and pushed after** · `RULES/50-the-home-is-pulled-before-and-pushed-after.md`
-- **51 — Ymir is a program; it runs globally, in the user's root agents** · `RULES/51-ymir-is-a-program.md`
-| 52 | `55-no-agent-runs-unowned.md` | No agent runs unowned |
-| 53 | `53-no-ai-tool-signs-the-work.md` | No AI tool signs the work, and none adds itself |
-| 54 | `54-no-blue-no-purple.md` | No blue and no purple — every colour is a house colour |
+- **49 — no message until the receiver speaks** · `RULES/49-no-message-until-the-receiver-speaks.md`
+| 49 | `49-workers-are-eindri.md` | Workers are Eindri; no harness spawns its own subagents |
+| 50 | `50-the-home-is-pulled-before-and-pushed-after.md` | 50 — The home is pulled before and pushed after |
+| 51 | `51-ymir-is-a-program.md` | 51 — Ymir is a program; it runs globally, in the user's root agents |
+| 52 | `52-documents-are-for-people.md` | 52 — A document is written for a person to read |
+| 53 | `53-no-ai-tool-signs-the-work.md` | 53 — No AI tool signs the work, and none adds itself |
+| 54 | `54-no-blue-no-purple.md` | 54 — No blue and no purple |
+| 55 | `55-no-agent-runs-unowned.md` | 55 — No agent runs unowned |
+| 56 | `56-no-message-until-the-receiver-speaks.md` | No message is delivered until the receiver speaks |

@@ -44,25 +44,58 @@ owner="$(tr -dc '0-9' < "$lock" | head -c 12)"
 [ -n "$owner" ] || { printf 'eindri-notify: the lock record names no pid\n' >&2; exit 1; }
 
 # ── 2 · the pane that hosts it ─────────────────────────────────────────────────────────────────────
-pane=""
-if command -v herdr >/dev/null 2>&1; then
-  while IFS= read -r p; do
-    [ -n "$p" ] || continue
-    info="$(timeout 15 herdr pane process-info --pane "$p" 2>/dev/null || true)"
-    case "$info" in
-      *"\"pid\": $owner"*|*"\"pid\":$owner"*|*" $owner "*) pane="$p"; break ;;
-    esac
-  done < <(timeout 20 herdr agent list 2>/dev/null \
-            | python3 -c 'import json,sys
+# THE LOCK NAMES A SESSION, NOT A PROCESS (measured 2026-11-09). `.lock` holds the harness session pid,
+# and the pane that hosts it runs `pi` under its own pid — so matching only `pane process-info`'s pid
+# found nothing (`pane":"NOT FOUND"`) and EVERY injection this door was built for quietly failed. The
+# lease carries the session id; the pi session file name carries it too. So: match the pid first, then
+# the session id, and say which link was used.
+pane=""; pane_via=""
+# LINK 0 — the arm holder may name its own pane. Written by the seat at session start; a pane id is the
+# only thing herdr can answer for certain, and every other link here is an inference. If it exists, trust it.
+if [ -z "${STATE:-}" ]; then
+  . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
+  if declare -f ymir_home_root >/dev/null 2>&1; then ymir_home_root _h 2>/dev/null; [ -n "${_h:-}" ] && STATE="$_h/state"; fi
+fi
+lease="${STATE:-$HOME/Documents/ymirhome/state}/.arm.lease"
+session=""
+[ -r "$lease" ] || lease="$(dirname "$(dirname "$lock")")/.arm.lease"
+[ -r "$lease" ] && session="$(sed -nE 's/.*session=([0-9]+).*/\1/p' "$lease" | head -1)"
+if [ -z "$pane" ] && [ -r "$lease" ]; then
+  _st="$(sed -nE 's/.*state=([^ ]+).*/\1/p' "$lease" | head -1)"
+  for _cand in "${_st:-}/.arm.pane" "${STATE:-}/.arm.pane"; do
+    [ -r "$_cand" ] || continue
+    _p="$(head -1 "$_cand" | tr -dc '[:alnum:]:._-')"
+    [ -n "$_p" ] && { pane="$_p"; pane_via="the arm holder named its pane ($_cand)"; break; }
+  done
+fi
+if [ -z "$pane" ] && command -v herdr >/dev/null 2>&1; then
+  map="$(timeout 20 herdr agent list 2>/dev/null \
+          | python3 -c 'import json,sys
 try: d=json.load(sys.stdin)
 except Exception: raise SystemExit(0)
 for a in (d.get("result") or {}).get("agents") or []:
-    print(a.get("pane_id") or "")' 2>/dev/null)
+    s=a.get("agent_session") or {}
+    print("%s\t%s" % (a.get("pane_id") or "", s.get("value") or ""))' 2>/dev/null)"
+  while IFS=$'\t' read -r p sess; do
+    [ -n "$p" ] || continue
+    info="$(timeout 15 herdr pane process-info --pane "$p" 2>/dev/null || true)"
+    case "$info" in
+      *"\"pid\": $owner"*|*"\"pid\":$owner"*|*" $owner "*)
+        pane="$p"; pane_via="the lock pid"; break ;;
+    esac
+    if [ -z "$pane" ] && [ -n "$session" ] && [ -n "$sess" ]; then
+      case "$sess" in
+        *"$session"*) pane="$p"; pane_via="the lease's session id" ;;
+      esac
+    fi
+  done <<EOF
+$map
+EOF
 fi
 
 if [ "${status:-0}" = 1 ]; then
   alive="no"; kill -0 "$owner" 2>/dev/null && alive="yes"
-  printf 'arm-holder[1]{lock_owner,alive,pane}:\n  "%s","%s","%s"\n' "$owner" "$alive" "${pane:-NOT FOUND}"
+  printf 'arm-holder[2]{lock_owner,alive,pane,via}:\n  "%s","%s","%s","%s"\n' "$owner" "$alive" "${pane:-NOT FOUND}" "${pane_via:-nothing matched}"
   [ -n "$pane" ] && exit 0 || exit 1
 fi
 
