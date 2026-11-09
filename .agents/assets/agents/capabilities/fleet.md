@@ -16,6 +16,7 @@
 | fleet-version.sh | fleet-version.sh — is the fleet on ONE version? (plan 51, Phase 2) | tested+named | keep (a human or a cron row must run it) |
 | hamr-harness.sh | hamr-harness.sh - detect the agent harness (Hamr) this process tree runs | tested+named | keep (a human or a cron row must run it) |
 | huginn-research-worker.sh | huginn-research-worker — Apodex-powered research worker (Eindri). | tested | keep (a human or a cron row must run it) |
+| roads.sh | Fleet roads — OUTPUT of the registry (hodd/data/fleet.json). Never han | tested | keep (a human or a cron row must run it) |
 | tailscale-sync.sh | tailscale-sync.sh — sync the Allfather's pi data across his OWN machin | tested+named | keep (a human or a cron row must run it) |
 | topology.sh | topology.sh — what IS this machine in the fleet, and is it talking to  | tested+named | keep (a human or a cron row must run it) |
 | ymir-fleet.sh | ymir-fleet.sh — FLEET MODE, one command for npm users. Raise (or repor | tested | keep (a human or a cron row must run it) |
