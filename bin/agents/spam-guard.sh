@@ -99,8 +99,15 @@ for p in $panes; do
       # wherever `.arm.lease` says `state=`, which on this fleet is the hoard — two state shelves exist and
       # only the lease-named one is read. Measured: writing to the XDG shelf left the queue at 13 lines
       # while the arm read the hoard's.
-      lease_state="$(sed -n 's/.*state=\([^ ]*\).*/\1/p' "$HOME/Documents/ymirhome/state/.arm.lease" 2>/dev/null | head -1)"
-      ( export EINDRI_STATE="${lease_state:-${EINDRI_STATE:-${YMIR_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/ymir}}}"
+      # the hoard comes from the ONE resolver, never a guessed path (defaults-guard, RULES/07)
+      _hoard="$(bash -c '. "$1/bin/vault/hoard-lib.sh" >/dev/null 2>&1; ymir_home_root o; printf %s "$o"' _ "$ROOT" 2>/dev/null || true)"
+      lease_state="$(sed -n 's/.*state=\([^ ]*\).*/\1/p' "${_hoard:+$_hoard/state/.arm.lease}" 2>/dev/null | head -1)"
+      if [ -z "${lease_state:-}" ] && [ -z "${EINDRI_STATE:-}" ] && [ -z "${YMIR_STATE_DIR:-}" ] && [ -z "${XDG_STATE_HOME:-}" ]; then
+        printf 'spam-guard: no seat state is named (lease · EINDRI_STATE · YMIR_STATE_DIR · XDG_STATE_HOME) — the wake was NOT queued\n' >&2
+        _no_queue=1
+      fi
+      ( [ "${_no_queue:-0}" = 1 ] && exit 0
+        export EINDRI_STATE="${lease_state:-${EINDRI_STATE:-${YMIR_STATE_DIR:-${XDG_STATE_HOME}/ymir}}}"
         . "$ROOT/bin/agents/eindri-wake-lib.sh" >/dev/null 2>&1
         eindri_queue_wake "WAKE spam-guard: pane $p — $why (not allowed; the arm holder was told)" ) || true
     fi
@@ -152,7 +159,9 @@ for x in (r.get("panes") or []): print(x.get("pane_id") or "")' 2>/dev/null); do
     n=$((n+1))
     printf '  file  %s  markup x%s  (%s)\n' "$(basename "$f")" "$c" "$(date -r "$f" +%H:%M)"
   done < <(find "$HOME/.pi/agent/sessions" -name '*.jsonl' -mmin "-$(( ${hours:-48} * 60 ))" 2>/dev/null | head -400)
-  for d in "$HOME/.local/share/opencode" "$HOME/.opencode"; do
+  # the opencode store is looked at only where the operator NAMES it: guessing another harness's
+  # shelf is how a guard grows a home path in its own source (RULES/39).
+  for d in ${OPENCODE_STATE_DIR:+$OPENCODE_STATE_DIR} ${OPENCODE_CONFIG_DIR:+$OPENCODE_CONFIG_DIR}; do
     [ -d "$d" ] || continue
     while IFS= read -r f; do
       c="$(timeout 20 grep -c 'DSML' "$f" 2>/dev/null || true)"

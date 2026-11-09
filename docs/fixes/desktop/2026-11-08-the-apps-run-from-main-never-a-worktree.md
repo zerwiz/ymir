@@ -30,7 +30,7 @@ tree writes the entries becomes the tree the buttons point at.
 lock[3]{piece,path,what it does}:
   "the resolver","bin/desktop/main-tree.sh","`git rev-parse --git-common-dir` names the canonical checkout; `--check` exits 1 inside a worktree. A caller that cannot resolve it refuses instead of guessing"
   "the lock, at the writer","bin/desktop/design-icon.sh","the ONE place an `Exec=` line is written. A path containing `/.yggdrasil/` is rewritten to the canonical tree and the rewrite is said aloud, so no caller can seat a launcher into a working copy"
-  "the ward","bin/gates/guards/desktop-main-guard.sh","judges the INSTALLED shelf (~/.local/share/applications): any ymir entry whose Exec points into a worktree is refused, with the one command that fixes it. Skips cleanly where nothing is installed"
+  "the ward","bin/gates/guards/desktop-main-guard.sh","judges the INSTALLED shelf (the launcher shelf): any ymir entry whose Exec points into a worktree is refused, with the one command that fixes it. Skips cleanly where nothing is installed"
 ```
 
 Wired into `bin/gates/guards.sh` (44 wards). And the scheduled updater's brief now carries the law: after
@@ -43,7 +43,7 @@ complains — `· desktop ok` or `· desktop RE-SEATED` in its one line.
 bin/desktop/main-tree.sh /…/.yggdrasil/areas-of-a-project   → /home/zerwizomar/ymir
 bin/desktop/main-tree.sh --check /…/.yggdrasil/areas-of-a-project → "this is a WORKTREE", exit 1
 bin/gates/guards/desktop-main-guard.sh                      → 5 launcher(s), every one seated from a real tree
-grep -l yggdrasil ~/.local/share/applications/*.desktop     → nothing
+grep -l yggdrasil over the launcher shelf (the entries)   → nothing
 ```
 
 All five entries now read `/home/zerwizomar/ymir/…`, re-seated from the main tree with

@@ -15,6 +15,7 @@
 | desktop-verify.sh | desktop-verify.sh — the INSTALL-time guarantee: every desktop surface  | tested+named | keep (a human or a cron row must run it) |
 | display-lib.sh | display-lib.sh — the ONE place that knows the displays, and how to tal | tested | keep (a human or a cron row must run it) |
 | editor-place.sh | editor-place.sh — the editor is UNMANAGED by default: it opens on the | tested+named | keep (a human or a cron row must run it) |
+| electron-ensure.sh | electron-ensure.sh — the Electron runtime is PRESENT and ANSWERS, or i | tested | keep (a human or a cron row must run it) |
 | electron-lib.sh | electron-lib.sh — is a desktop shell's runtime actually there? | tested+named | keep (a human or a cron row must run it) |
 | factory-check.sh | factory-check.sh — a factory may only reach what it NAMES. | tested | keep (a human or a cron row must run it) |
 | factory-new.sh | factory-new.sh — copy the empty factory, give it a name, and say what  | tested | keep (a human or a cron row must run it) |

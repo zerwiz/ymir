@@ -179,43 +179,19 @@ else
   say "  \"none\",\"skipped\",\"$deps_reason\""
 fi
 
-# ── 4b. the DESKTOP runtime's own postinstall ────────────────────────────────
-# npm 11+ gates install scripts, and Electron's postinstall is what downloads the
-# binary — so a perfect web build can ship no window at all (the fault named in
-# scripts/electron.sh). A release must carry the runtime it promises, so the
-# package's own installer is run INSIDE the release, and what really happened is
-# recorded. `node_modules/electron/dist/locales` alone is a 200 MB lie.
+# ── 4b. the DESKTOP runtime, by the ONE door that lands it ───────────────────
+# npm 11+ gates Electron's postinstall, and the package's own install.js is not enough
+# (measured 2026-11-08: it exits 0 having unpacked only locales/). bin/desktop/electron-ensure.sh
+# tries four verified roads — npm rebuild, install.js, the machine's cache, the artifact for
+# THIS platform — and is called by the installer, the updater and Eir too, so a release mends
+# exactly the way every other tree on every machine mends.
 electron_status="skipped"
 if [ -d "$STAGE/node_modules/electron" ]; then
-  ebin="$STAGE/node_modules/electron/dist/electron"
-  if [ -x "$ebin" ]; then
+  if [ -x "$STAGE/bin/desktop/electron-ensure.sh" ] \
+     && bash "$STAGE/bin/desktop/electron-ensure.sh" ensure --root "$STAGE" --quiet >/dev/null 2>&1; then
     electron_status="present"
   else
-    ev="$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$STAGE/node_modules/electron/package.json" 2>/dev/null | head -1)"
-    # tier 1 — npm's own roads (they can empty dist/ when the gated download fails)
-    ( cd "$STAGE" && npm rebuild electron >/dev/null 2>&1 ) || true
-    if [ ! -x "$ebin" ] && [ -f "$STAGE/node_modules/electron/install.js" ] && command -v node >/dev/null 2>&1; then
-      ( cd "$STAGE/node_modules/electron" && node install.js >/dev/null 2>&1 ) || true
-    fi
-    # tier 2 — THE ZIP ROAD, from the machine's own cache first, then the network.
-    # install.js can exit 0 and leave dist/ holding only locales/; the zip road is
-    # what actually lands the runtime (bin/desktop/electron-lib.sh's proven order).
-    if [ ! -x "$ebin" ] && [ -n "$ev" ] && command -v unzip >/dev/null 2>&1; then
-      zip=""
-      for z in "$HOME/.cache/electron"/*/"electron-v$ev-linux-x64.zip"; do
-        [ -s "$z" ] && { zip="$z"; break; }
-      done
-      if [ -z "$zip" ] && command -v curl >/dev/null 2>&1; then
-        zip="$(mktemp /tmp/electron-XXXXXX.zip 2>/dev/null || true)"
-        curl -sL -m 540 -o "$zip" "https://github.com/electron/electron/releases/download/v$ev/electron-v$ev-linux-x64.zip" \
-          && [ -s "$zip" ] || { rm -f "$zip"; zip=""; }
-      fi
-      if [ -n "$zip" ]; then
-        ( cd "$STAGE/node_modules/electron" && unzip -oq "$zip" -d dist >/dev/null 2>&1 ) || true
-        case "$zip" in /tmp/electron-*) rm -f "$zip" ;; esac
-      fi
-    fi
-    if [ -x "$ebin" ]; then electron_status="mended"; else electron_status="absent"; fi
+    electron_status="absent"
   fi
 fi
 say "electron[1]{status}:"
@@ -327,7 +303,12 @@ mv -- "$STAGE" "$DEST" || die "cannot move the staged release into $DEST"
 trap - EXIT INT TERM
 
 # The release must answer for itself before we call it built.
-own="$(bash "$DEST/scripts/electron.sh" --root 2>/dev/null || true)"
+# Ask, never assume: a tree that predates --root would fall through to the
+# script's default action, and `electron.sh`'s default action opens a window.
+own=""
+if grep -qE '^[[:space:]]*--root\)' "$DEST/scripts/electron.sh" 2>/dev/null; then
+  own="$(bash "$DEST/scripts/electron.sh" --root 2>/dev/null || true)"
+fi
 say "release-built[1]{sha,dir,size,files,deps,electron,assets,symlinks,own_root}:"
 say "  \"$ID\",\"$DEST\",\"$(release_human "$size")\",$files,\"$deps_status${deps_road:+ via $deps_road}\",\"$electron_status\",\"${assets_built:-none}\",$resolved_count,\"${own:-unresolved}\""
 if [ "$(release_real "$own")" != "$(release_real "$DEST")" ]; then
