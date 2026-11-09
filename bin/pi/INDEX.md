@@ -30,7 +30,7 @@ bin[17]{file,does,kind,verdict,disposition,callers,lines}:
   "open-design.sh","open-design.sh — the Allfather's door to OpenDesign (Hnoss) on this seat.","tool","wired","keep",0,85
   "opendesign.sh","opendesign.sh — start / stop / status for OpenDesign (the design forge, Hnoss).","tool","wired","keep",2,88
   "pi-agent.sh","pi-agent.sh — run a Ymir agent on a LOCAL model with ITS OWN persona/mission","tool","wired","keep",0,83
-  "pi-ensure.sh","pi-ensure.sh — ensure the Pi packages Ymir depends on.","tool","wired","keep",2,106
+  "pi-ensure.sh","pi-ensure.sh — ensure the Pi packages Ymir depends on.","tool","wired","keep",3,106
   "pi-local.sh","pi-local.sh — run a Pi agent on a LOCAL model, reusable.","tool","wired","keep",0,53
   "pi-model-agnostic.sh","pi-model-agnostic — pi must not EXPECT any model.","tool","wired","keep",0,72
   "pi-model-wire.sh","pi-model-wire.sh — wire a chosen local model into the operator's pi.","tool","wired","keep",1,152
