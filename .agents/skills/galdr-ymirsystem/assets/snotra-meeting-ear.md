@@ -595,9 +595,9 @@ renderer edits (preheader · main content · address line · powered-by). The Ce
 with no such markers, so re-rendering them would be rewriting them: they stay a hand-dressed `--html` path, and
 `letter-html.py` refuses their names with the reason and the remedy.
 
-**Two gates were red from the plan-129 move and are now green.** `test_outbound_gate.py` read the retired shims
-(`bin/time/snotra/mail-send.sh`, `calendar-invite.sh`) for the door's own behaviour, so `MailGate.test_4` and
-`CalendarGate.test_6` proved nothing and failed. Both now read the moved doors; `bin/collab/letter.sh` names the approval
+**Two gates were red from the plan-129 move and are now green.** `test_outbound_gate.py` read the retired shims rather
+than the moved doors — `systems/snotra/services/letters/mail-send.sh` and `systems/snotra/services/calendar/calendar-invite.sh`
+— so `MailGate.test_4` and `CalendarGate.test_6` proved nothing and failed. Both now read the moved doors; `bin/collab/letter.sh` names the approval
 door in its header, so `GnaOwed.test_2` — which flags any file that spells a send without naming the gate — stops
 flagging a letter that only ever drafts. Fourteen tests pass.
 
