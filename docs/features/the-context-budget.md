@@ -52,3 +52,7 @@ context_left[9]{tokens,window,percent,compact_at,remaining,user_turns,per_turn,t
   there, or pick a model that declares one.
 - Nothing answers and no reading is published — the seat's runtime does not carry the extension yet; run
   `bin/agents/groa-update.sh` (or the install step) on that seat.
+
+## CHANGE LOG
+
+- **2026-11-09** — the page was written with the feature (plan 231 §the six hands; the context budget).

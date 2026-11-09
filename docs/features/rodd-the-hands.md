@@ -48,3 +48,7 @@ systems/snotra/services/calendar/calendar-write.sh move <event-id> --to 2026-11-
 - `Nobody is armed` — no session is draining wakes; the line went nowhere and the answer says so.
 - `herdr did not answer` — herdr is not running in this terminal; the list is never invented.
 - `no seat named …` — run `seats` first; the wire will not guess which seat you meant.
+
+## CHANGE LOG
+
+- **2026-11-09** — the page was written with the feature (plan 231 §the six hands; the context budget).
