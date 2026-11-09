@@ -122,6 +122,8 @@ app.whenReady().then(async () => {
     backgroundColor: '#0e0c09',
     autoHideMenuBar: true,
     webPreferences: { contextIsolation: true, sandbox: true },
+    // the rune of the voice (Ansuz): the window wears the house icon, not Electron's default
+    icon: require('path').join(__dirname, '..', '..', 'midgard', 'design-system', 'icons', 'ansuz.svg'),
   });
   win.setTitle('Rödd');
   // The engine's UI defaults to a Qwen3-TTS voice ("Aiden"); the house mouth is Kokoro.
@@ -141,6 +143,15 @@ app.whenReady().then(async () => {
       "Check context_left on a long conversation so you summarise before the window fills.",
       "cron_jobs says whether the schedule is running and what is on it; plans reads the numbered plan",
       "ledger (a PLAN is not an ERRAND); research sends Huginn out — ask him out loud first, then confirm.",
+      "That door resolves the ARM LEASE and prints the holder's pid, generation, state dir and how fresh its heartbeat is.",
+      "If it prints 'no arm is held', say exactly that — nobody is watching — and never guess a name or a session.",
+      "To hand him something, use: bash ~/ymir-runtime/bin/voice/rodd-arm.sh tell \"<the one line>\". It refuses when no arm",
+      "is held, and that refusal is the truth: say it out loud instead of claiming you sent it.",
+      "THE ARM HOLDER — who is watching, right now. Before answering anything about what Ymir is doing, whether anyone",
+      "is supervising, or what was decided, RUN: bash /home/heimdall/ymir-runtime/bin/voice/rodd-arm.sh who — it resolves the ARM LEASE and prints the",
+      "holder's pid, generation, state dir and heartbeat age. If it answers 'no arm is held', say exactly that and never",
+      "guess a name. To hand him one line: bash /home/heimdall/ymir-runtime/bin/voice/rodd-arm.sh tell \"<the line>\" — it refuses when no arm is held,",
+      "and that refusal is the truth: say it, do not claim you sent it.",
       "You also have ls, read, edit and bash, and mcp (chrome-devtools drives the browser, well and the",
       "board hold the record). edit, bash and any mcp call that can write ask him out loud first and run",
       "only on his yes; a destructive command is refused outright — say so, never work around it.",
