@@ -9,6 +9,13 @@
 # and prints the truth: used · window · remaining · the compaction thresholds · and
 # whether a compaction has already fired in this session.
 #
+# ONE COUNTER (2026-11-09). A LIVE pi session publishes its own reading — the harness's
+# number, from `ctx.getContextUsage()` — to <home>/hodd/state/context-left/<session>.json,
+# written by `.pi/extensions/context-left`. When such a reading names THIS session file and
+# the session is still alive, this door prints it verbatim: one counter, not two. Only when
+# no live reading exists (a finished session, a seat without the extension) does it read the
+# transcript itself, and then the answer carries no "live harness reading" claim.
+#
 # The window comes from bin/seat/core-four.sh (which asks the provider registry, or the
 # model catalog for a hosted model). No second table of windows exists here.
 set -u
@@ -34,6 +41,48 @@ if [ -z "$WINDOW" ]; then
   WINDOW="$(bash "$ROOT/bin/seat/core-four.sh" --json 2>/dev/null | python3 -c 'import json,sys
 try: print(json.load(sys.stdin)["context"]["window"])
 except Exception: print(0)')"
+fi
+
+# ── a LIVE reading from the extension wins ───────────────────────────────────
+_published() {   # <session-file> <json?> → the extension's reading, or nothing
+  local sf="$1" want_json="$2" home dir
+  home="$(bash -c '. "$1" 2>/dev/null; ymir_home_root H; printf "%s" "$H"' _ "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null | tail -1)"
+  [ -n "$home" ] || return 1
+  dir="$home/hodd/state/context-left"
+  [ -d "$dir" ] || return 1
+  WANT_JSON="$want_json" python3 - "$dir" "$sf" <<'PYPUB'
+import glob, json, os, sys
+directory, session_file = sys.argv[1], os.path.abspath(sys.argv[2])
+want_json = os.environ.get("WANT_JSON") == "1"
+best = None
+for path in glob.glob(os.path.join(directory, "*.json")):
+    try:
+        rec = json.load(open(path, encoding="utf-8", errors="ignore"))
+    except Exception:
+        continue
+    if not isinstance(rec, dict) or rec.get("ok") is not True:
+        continue
+    named = str(rec.get("session_file") or "")
+    if not named or os.path.abspath(named) != session_file:
+        continue
+    try:
+        os.kill(int(rec.get("pid")), 0)          # a reading from an exited session is history
+    except Exception:
+        continue
+    if best is None or str(rec.get("at") or "") > str(best.get("at") or ""):
+        best = rec
+if best is None:
+    sys.exit(1)
+if want_json:
+    print(json.dumps({"source": "live harness reading (pi extension)", **best}))
+else:
+    print(best.get("rendered") or "")
+PYPUB
+}
+
+if _pub="$(_published "$SESSION" "$JSON")"; then
+  printf '%s\n' "$_pub"
+  exit 0
 fi
 
 python3 - "$SESSION" "$WINDOW" "$JSON" "$ROOT" <<'PY'

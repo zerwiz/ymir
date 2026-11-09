@@ -9,7 +9,7 @@
 
 - **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | addresses.sh | addresses.sh — THE register of the mail addresses the house uses, and  | tested+named | keep (a human or a cron row must run it) |
-| connect.sh | connect.sh — THE connect door: one button to a signed-in mailbox, and  | tested | keep (a human or a cron row must run it) |
+| connect.sh | connect.sh — THE connect door: one button to a signed-in mailbox, and  | tested+named | keep (a human or a cron row must run it) |
 | inbound-test.sh | inbound-test.sh — THE acceptance test for "people can mail us" (plan 1 | tested | keep (a human or a cron row must run it) |
 | install.sh | install.sh — seat Gná's desk on THIS machine. Idempotent: one desk pe | tested+named | keep (a human or a cron row must run it) |
 | ledger.sh | ledger.sh — the one mail record: what went out, what came in, and when | tested | keep (a human or a cron row must run it) |

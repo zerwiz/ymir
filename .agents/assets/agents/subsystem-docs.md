@@ -9,7 +9,7 @@
 **Ask the door, do not remember:** `bin/records/where.sh <path or topic>`.
 
 ```
-subsystems[14]{path,entry,canonical,books,doors,missing}:
+subsystems[15]{path,entry,canonical,books,doors,missing}:
   "bin/ward/**","docs/features/the-guardian.md","RULES/24-the-ward.md","RULES/39-the-manner-and-the-alarm.md · docs/fixes/ward/ (one file per fix)","bin/ward/garmr.sh status|off|on · bin/ward/garmr-smoke.sh · .agents/tests/garmr.test.sh","the off/on turns land in a root-only /var/log/ymir/garmr/pause.log that no operator surface reads"
   "bin/gates/**","docs/features/the-wards-the-delivery-gate.md","RULES/08-delivery-gate.md","docs/features/the-wards-the-delivery-gate.md · docs/fixes/gates/ (one file per fix) · plan 203 §14 (the ship door)","bin/gates/guards.sh --list · bin/gates/guards.sh · bin/gates/tests/","a per-ward ledger: which law each ward enforces, and where its own test lives"
   "hodd/docs/collaboration/** (home)","docs/features/fleet-wire.md","docs/features/collaborator-door.md","# the home shelf: the doors register, the fleet-wire runbook, the onboarding sheet (in $YMIR_HOME)","plans 154 · 158 · 184 · 192","the public MCP face for a collaborator tenant (plan 192 §9)"

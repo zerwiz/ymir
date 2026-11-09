@@ -96,9 +96,14 @@ PY
 calendar_refresh_grant() {
   CAL_TOKEN=""; CAL_TOKEN_WHY=""
   local cid csec rt body
-  cid="$(calendar_vault_value "$CAL_CLIENT_KEY")" || { CAL_TOKEN_WHY="$CAL_VAULT_WHY"; return 1; }
-  csec="$(calendar_vault_value "$CAL_SECRET_KEY")" || { CAL_TOKEN_WHY="$CAL_VAULT_WHY"; return 1; }
-  rt="$(calendar_vault_value "$CAL_GRANT_KEY")" || { CAL_TOKEN_WHY="$CAL_VAULT_WHY"; return 1; }
+  # Ask the vault in THIS shell first. A read that fails inside a command substitution sets its
+  # reason in that subshell, where the parent can never see it — measured 2026-11-09 while
+  # reconciling Rödd's hands: `calendar-grant.sh: line 99: CAL_VAULT_WHY: unbound variable`, under
+  # `set -u`, at the exact moment the door needed to say why it could not read the grant.
+  calendar_vault_load || { CAL_TOKEN_WHY="${CAL_VAULT_WHY:-the vault did not open}"; return 1; }
+  cid="$(calendar_vault_value "$CAL_CLIENT_KEY")" || { CAL_TOKEN_WHY="${CAL_VAULT_WHY:-the vault holds no $CAL_CLIENT_KEY}"; return 1; }
+  csec="$(calendar_vault_value "$CAL_SECRET_KEY")" || { CAL_TOKEN_WHY="${CAL_VAULT_WHY:-the vault holds no $CAL_SECRET_KEY}"; return 1; }
+  rt="$(calendar_vault_value "$CAL_GRANT_KEY")" || { CAL_TOKEN_WHY="${CAL_VAULT_WHY:-the vault holds no $CAL_GRANT_KEY}"; return 1; }
   [ -n "$cid" ] && [ -n "$csec" ] && [ -n "$rt" ] || {
     CAL_TOKEN_WHY="the vault holds no $CAL_CLIENT_KEY / $CAL_SECRET_KEY / $CAL_GRANT_KEY"
     return 1; }

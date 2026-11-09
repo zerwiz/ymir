@@ -36,8 +36,9 @@
 | audio-retention.sh | bin/time/snotra/audio-retention.sh -> systems/snotra/services/ear/audio- | tested | keep (a human or a cron row must run it) |
 | calendar-ask.sh | bin/time/snotra/calendar-ask.sh -> systems/snotra/services/calendar/cale | tested+named | keep (a human or a cron row must run it) |
 | calendar-attendees.sh | bin/time/snotra/calendar-attendees.sh -> systems/snotra/services/calenda | tested | keep (a human or a cron row must run it) |
-| calendar-auth.sh | bin/time/snotra/calendar-auth.sh -> systems/snotra/services/calendar/cal | tested | keep (a human or a cron row must run it) |
+| calendar-auth.sh | bin/time/snotra/calendar-auth.sh -> systems/snotra/services/calendar/cal | tested+named | keep (a human or a cron row must run it) |
 | calendar-invite.sh | bin/time/snotra/calendar-invite.sh -> systems/snotra/services/calendar/c | tested+named | keep (a human or a cron row must run it) |
+| calendar-write.sh | bin/time/snotra/calendar-write.sh -> systems/snotra/services/calendar/ca | tested+named | keep (a human or a cron row must run it) |
 | google-auth.sh | bin/time/snotra/google-auth.sh -> systems/snotra/services/calendar/googl | tested | keep (a human or a cron row must run it) |
 | hall-snapshot.sh | bin/time/snotra/hall-snapshot.sh -> systems/snotra/services/cron/hall-sn | tested+named | keep (a human or a cron row must run it) |
 | mail-send.sh | bin/time/snotra/mail-send.sh -> systems/snotra/services/letters/mail-sen | tested+named | keep (a human or a cron row must run it) |

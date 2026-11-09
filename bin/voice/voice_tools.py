@@ -120,6 +120,17 @@ def _clean(text: str, limit: int = 400) -> str:
     return " · ".join(lines)[:limit]
 
 
+def _pid_alive(pid: int) -> bool:
+    """Is the process that published a reading still standing? A reading from a
+    session that has exited is history, not a live budget (os.kill(pid, 0) is the
+    whole test — signal 0 is a permission probe, never a kill)."""
+    try:
+        os.kill(int(pid), 0)
+        return True
+    except Exception:
+        return False
+
+
 def _door(name: str) -> str:
     return str(ROOT / "bin" / name)
 
@@ -292,7 +303,8 @@ TOOLS = [
         "description": (
             "How much conversation the head is carrying: the tokens of the last turn, the window the model holds, "
             "and how many turns until the engine compacts. Use it when a task needs a long conversation, or before "
-            "planning something multi-step, so you can summarise early instead of being cut off."
+            "planning something multi-step, so you can summarise early instead of being cut off. It reads the reading "
+            "the pi seat's own extension publishes, and says so plainly when there is none."
         ),
         "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
     },
@@ -736,6 +748,74 @@ TOOLS = [
             "additionalProperties": False,
         },
     },
+    {
+        "type": "function",
+        "name": "arm_who",
+        "description": (
+            "Who is holding the arm — the session that drains wakes, dispatches errands and answers. "
+            "Use when he asks 'who is watching', or before handing a line over."
+        ),
+        "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+    },
+    {
+        "type": "function",
+        "name": "arm_tell",
+        "description": (
+            "Hand one line to the session that holds the arm, so the live session sees it between turns. "
+            "It refuses, in words, when nobody is armed — it never claims a line was sent to no one."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {"text": {"type": "string", "description": "one line to hand over"}},
+            "required": ["text"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
+        "name": "eindri_list",
+        "description": (
+            "The workers standing in herdr: each pane, its state, and where it is working. Use before "
+            "sending anything to a worker, or when he asks what the house is doing right now."
+        ),
+        "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+    },
+    {
+        "type": "function",
+        "name": "eindri_send",
+        "description": (
+            "Send one line to a worker already seated in herdr, and then read what its pane shows. "
+            "Call eindri_list first so the target is a pane that really holds a worker."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "target": {"type": "string", "description": "the worker's pane (w49:p1) or its agent name"},
+                "line": {"type": "string", "description": "one line of instruction"},
+            },
+            "required": ["target", "line"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
+        "name": "seat_wire",
+        "description": (
+            "The Sessrúmnir seat wire: enumerate the seats the desktop shell holds, hand one a line, or read "
+            "the last answer it gave. A seat only answers while Sessrúmnir is running, and this says so."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "action": {"type": "string", "enum": ["seats", "send", "read"]},
+                "seat": {"type": "string", "description": "the seat's name or id; 'active' when omitted"},
+                "line": {"type": "string", "description": "for send: one line into that seat"},
+                "chars": {"type": "integer", "description": "for read: how many characters of the answer"},
+            },
+            "required": ["action"],
+            "additionalProperties": False,
+        },
+    },
 ]
 
 
@@ -907,50 +987,62 @@ async def _execute(name, arguments):
 
 
     if name == "context_left":
+        # ONE COUNTER, ONE SOURCE (2026-11-09). The pi extension
+        # `.pi/extensions/context-left/` is the only thing that measures a pi session: it
+        # asks the harness for the token count and the model's window, derives the turns
+        # until compaction, and PUBLISHES that reading to
+        # <home>/hodd/state/context-left/<session>.json. This tool repeats it. It keeps no
+        # counter of its own, because two counters disagree and then neither is trusted.
         import json as _json
-        import re as _re
-        candidates = []
-        seat = str(os.environ.get("YMIR_VOICE_HOST_SEAT") or "").strip()
-        if seat:
-            candidates.append(seat)
+        state_dir = _home() / "hodd" / "state" / "context-left"
+        readings = []
         try:
-            fleet = _json.loads((_home() / "hodd" / "data" / "fleet.json").read_text())
-            candidates += [h for h in (fleet.get("ear") or []) if h not in candidates]
-            if fleet.get("heart") and fleet["heart"] not in candidates:
-                candidates.append(fleet["heart"])
+            files = sorted(state_dir.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)[:20]
         except Exception:
-            pass
-        heart = ""
-        chat_size = int(os.environ.get("YMIR_VOICE_CHAT_SIZE", "12"))
-        remote = (
-            'h=$(bash -lc ". ~/ymir/bin/vault/hoard-lib.sh >/dev/null 2>&1; ymir_home_root YMIR_HOME >/dev/null 2>&1; printf %s \"\\$YMIR_HOME\"" 2>/dev/null); d="$h/hodd/state/voice/host.log"; '
-            'tail -n 400 "$d" 2>/dev/null | grep -o "Token usage (response):[^,]*" | tail -1; '
-            "awk '/Client session_/{c=0} /USER:/{c++} END{print c+0}' \"$d\" 2>/dev/null"
-        )
-        code, out = 1, ""
-        for candidate in candidates or ([heart] if heart else []):
-            code, out = _run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=6", candidate, remote], timeout=40)
-            if code == 0 and "Token usage" in (out or ""):
-                heart = candidate
-                break
-        last_input, turns = None, None
-        if code == 0 and out:
-            m = _re.search(r"input=(\d+)", out)
-            last_input = int(m.group(1)) if m else None
-            nums = [int(x) for x in _re.findall(r"^\s*(\d+)\s*$", out, _re.M)]
-            turns = nums[0] if nums else None
-        parts = []
-        if last_input is not None:
-            parts.append(f"last turn carried {last_input} tokens")
-        if turns is not None:
-            parts.append(f"{turns} user turns have been spoken in this session")
-        parts.append(f"the engine keeps {chat_size} turns, then summarises older ones in the background (compaction is on)")
-        if last_input:
-            parts.append("at roughly a thousand tokens a turn, plan to summarise or save a plan by the "
-                         f"{max(1, chat_size - 2)}th turn")
-        if not parts:
-            return ToolResult("No session log could be read; assume the window is small and summarise early.")
-        return ToolResult("Context: " + "; ".join(parts) + ".")
+            files = []
+        for path in files:
+            try:
+                record = _json.loads(path.read_text(encoding="utf-8", errors="ignore"))
+            except Exception:
+                continue
+            if not isinstance(record, dict):
+                continue
+            pid = record.get("pid")
+            live = isinstance(pid, int) and _pid_alive(pid)
+            readings.append((record, path, live))
+
+        if not readings:
+            return ToolResult(
+                "I cannot answer that: the pi seat has published no context reading at "
+                f"{state_dir}. The number comes from the harness's own state, through the "
+                "context-left extension, and I will not estimate it. Ask again once a pi "
+                "session has taken a turn in this seat.")
+
+        record, path, live = next(((r, p, l) for (r, p, l) in readings if l), readings[0])
+        rendered = str(record.get("rendered") or "").strip()
+        taken = str(record.get("at") or "")
+        age_min = None
+        try:
+            import datetime as _dt
+            when = _dt.datetime.fromisoformat(taken.replace("Z", "+00:00"))
+            age_min = int((_dt.datetime.now(_dt.timezone.utc) - when.astimezone(_dt.timezone.utc)).total_seconds() // 60)
+        except Exception:
+            age_min = None
+        if record.get("ok") is False:
+            return ToolResult(
+                f"The pi seat cannot measure it, and says why: {record.get('reason')} "
+                f"(reading taken {taken or 'at an unrecorded time'}).")
+        if not rendered:
+            return ToolResult(
+                f"A reading exists at {path} but carries no rendered answer — that is a fault in the "
+                "extension, not an unknown window. Re-run it rather than guessing here.")
+        fresh = ""
+        if age_min is None:
+            fresh = f" (taken {taken or 'at an unrecorded time'})"
+        elif age_min > 30:
+            fresh = f" (taken {age_min} minutes ago — ask the seat to refresh it)"
+        origin = "this seat" if live else "a session that has since exited"
+        return ToolResult(f"{rendered}{fresh}\nreading published by the pi extension, from {origin}.")
 
     if name == "errand_state":
         errand = str(args.get("id") or "").strip()
@@ -2082,8 +2174,8 @@ async def _tool_arm_who(args):
             + _clean(out, 400))
     if code == 3:
         return ToolResult(
-            "Nobody is holding the arm — say exactly that, and that a message handed over now "
-            "would reach nobody: " + _clean(out, 260))
+            "Nobody is armed — no session is holding the arm, so a message handed over now would "
+            "reach nobody. Say that plainly, do not claim it was sent: " + _clean(out, 260))
     return ToolResult("The arm door failed: " + _clean(out, 260))
 
 
@@ -2571,3 +2663,84 @@ async def _tool_mail_compose(args):
 
 
 NEW_TOOLS["mail_compose"] = _tool_mail_compose
+
+
+# ── Rödd's other hands (plan 231) ─────────────────────────────────────────────
+# The voice had a toolbox of 37 tools and none of them could reach the arm holder, a
+# herdr Eindri, or a Sessrúmnir seat — and it could not make or move a meeting. Six
+# hands close that, one door each, and every one of them refuses in words rather than
+# reporting a thing it did not do.
+
+async def _tool_arm_tell(args):
+    text = str(args.get("text") or "").strip()
+    if not text:
+        raise ValueError("arm_tell needs the line to hand over")
+    code, out = _run([_door("voice/rodd-arm.sh"), "tell", text], timeout=25)
+    if code == 0:
+        return ToolResult(f"Handed to the session holding the arm: {text!r}. {_clean(out, 160)}")
+    if code == 3:
+        return ToolResult("Nobody is armed, so nothing was handed over — say that, do not claim it was sent.")
+    return ToolResult(f"Not delivered: {_clean(out, 240)}", create_response=True)
+
+
+async def _tool_eindri_list(args):
+    """Every worker standing in herdr, with its pane and state — from the one reader."""
+    code, out = _run(["python3", str(ROOT / "bin" / "seat" / "herdr-agents.py")], timeout=30)
+    if code != 0 or not out.strip():
+        return ToolResult("herdr did not answer, so I cannot say who is working — do not guess a list.")
+    return ToolResult("The workers standing in herdr (pane, state, where they work):\n" + _clean(out, 1600))
+
+
+async def _tool_eindri_send(args):
+    """One line to a seated worker, then what its pane shows afterwards."""
+    import time as _time
+    target = str(args.get("target") or "").strip()
+    line = str(args.get("line") or "").strip()
+    if not target or not line:
+        raise ValueError("eindri_send needs a target and a line")
+    code, out = _run([_door("agents/eindri-send.sh"), target, line], timeout=40)
+    if code != 0:
+        return ToolResult(f"herdr did not take the line for {target}: {_clean(out, 240)}. "
+                          "Call eindri_list to see which panes actually hold a worker.")
+    wait = float(os.environ.get("YMIR_VOICE_REPLY_WAIT", "8"))
+    try:
+        _time.sleep(max(0.0, min(wait, 30)))
+    except Exception:
+        pass
+    read_code, tail = _run(["herdr", "agent", "read", target, "--lines", "40"], timeout=30)
+    import re as _re
+    clean = _re.sub(r"\x1b\[[0-9;?]*[a-zA-Z]", "", tail or "")
+    rows = [ln.rstrip() for ln in clean.splitlines() if ln.strip()]
+    spoke = ("What its pane shows now (the answer may still be streaming):\n" + "\n".join(rows[-25:])[:1400]
+             if read_code == 0 and rows else "Its pane gave nothing to read yet.")
+    return ToolResult(f"Sent to {target}: {line!r}.\n{spoke}")
+
+
+async def _tool_seat_wire(args):
+    """The Sessrúmnir seat wire: enumerate the seats, hand one a line, read its answer."""
+    action = str(args.get("action") or "seats").strip().lower()
+    door = _door("seat/sessrumnir-wire.sh")
+    if action == "seats":
+        code, out = _run([door, "seats"], timeout=40)
+    elif action == "send":
+        seat = str(args.get("seat") or "active").strip()
+        line = str(args.get("line") or "").strip()
+        if not line:
+            raise ValueError("seat_wire send needs a line")
+        code, out = _run([door, "send", seat, line], timeout=60)
+    elif action == "read":
+        argv = [door, "read", str(args.get("seat") or "active").strip()]
+        if args.get("chars"):
+            argv += ["--chars", str(int(args["chars"]))]
+        code, out = _run(argv, timeout=40)
+    else:
+        raise ValueError("seat_wire action must be seats, send or read")
+    if code == 3:
+        return ToolResult("Sessrúmnir's shell is not answering, so no seat can be reached right now. "
+                          f"{_clean(out, 300)}")
+    return ToolResult(_clean(out, 1500) if out.strip() else "The seat wire said nothing, which is not an answer.",
+                      create_response=action != "send")
+
+
+NEW_TOOLS["arm_tell"] = _tool_arm_tell
+NEW_TOOLS["seat_wire"] = _tool_seat_wire
