@@ -1064,3 +1064,4 @@ becoming a releaser), P5 (containers, where a runtime exists). Until P3, nothing
   shelf, the one-rename law with its forbidden form, the automatic rollback inside the watch window, the
   retention rule, and the `--root` contract that lets a release be proved by its own scripts. Plan 221
   P0–P2; fix note `docs/fixes/runtime/1.0.5-the-apps-run-from-a-release-behind-one-symlink.md`.
+- update-loop: bin/engine/update-loop.sh
