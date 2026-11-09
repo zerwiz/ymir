@@ -234,3 +234,50 @@ bin/voice/rodd-arm.sh --self-test    # prove the door against a synthetic lease 
 - **2026-11-08** — added at the Allfather's word (*"can we also make a tool for rödd so you and rödd
   are connected … to the gna arm holder"*). Plan 223; fix note
   `docs/fixes/voice/2026-11-08-rodd-knocks-on-the-arm.md`.
+
+## 2026-11-09 — four hands, and a boot that no longer crashes
+
+His word: *"rödd need sessions … rödd have no tools to talk to eindris … rödd need to be able to
+make and move meetings in my calendar."* Plan 231. Measured first: Rödd was **not** toolless — its
+log shows `toolbox {"ok": true, "tools": 37}`. It lacked the handles, and its window died on a boot
+path, not on a compositor.
+
+### The four hands it now has
+
+```
+hand              asks                          answers with
+arm_who           bin/voice/rodd-arm.sh who     the holder's pid, generation and heartbeat age — or "nobody holds the arm"
+eindri_list       herdr agent list              every seated worker: pane · state · directory
+eindri_send       bin/agents/eindri-send.sh     the door's own `sent` or `FAILED`; a FAILED is never spoken as sent
+calendar_write    calendar-write.sh             the event it made or moved, or the scope it lacks, by name
+```
+
+Say "who is holding the arm", "what are the workers doing", "tell the one in w49 that…", or "move
+my eleven o'clock to two" and it reaches for those doors. A refusal is **spoken**, never hidden:
+the voice says the arm is not held, or that the calendar grant has no `calendar.events`, instead of
+claiming a message was sent or a meeting was made.
+
+The calendar hand is `docs/features/make-and-move-meetings.md`; it refuses by scope and never
+writes to a local calendar.
+
+### The boot is a sentence, not a crash
+
+The window spawns the demo's own uvicorn. When that spawn failed it used to wait the full deadline
+and then reject into an unhandled promise — which Electron answers with a crash (the SIGTRAP in the
+core file). Now: the last twenty stderr lines are kept, a missing interpreter is caught at once,
+**one** console line names the interpreter and the directory, the app pauses and retries **once**,
+and then a window shows *"The UI server did not start"* with the log path and the last lines, and
+the process exits with code 1. Prove it without a display:
+`node apps/rodd/smoke/test-boot-path.mjs`.
+
+### Limits
+
+- `eindri_send` delivers one line and returns the door's word; the worker's answer arrives later, in
+  its pane — read it with `pane_read`.
+- `calendar_write` can only write when the grant carries `calendar.events`. Until the grant is
+  re-consented (`bin/mail/connect.sh google`) it refuses, and says so — the read side is unaffected.
+
+### CHANGE LOG
+
+- **2026-11-09** — the four hands and the boot path (plan 231 R1/R3); fix note
+  `docs/fixes/voice/2026-11-09-rodd-gets-his-four-hands.md`.

@@ -69,18 +69,19 @@ fingerprints() {
 notify() {  # <headline> <body> [urgency]
   local h="$1" b="$2" u="${3:-normal}"
   [ "$NOTIFY" = 1 ] || return 0
-  # One voice: systems/snotra/services/tts-lease/ymir-say.sh owns the desktop manner.
-  if [ -x "$ROOT/systems/snotra/services/tts-lease/ymir-say.sh" ]; then
-    local mark=note
-    [ "$u" = critical ] && mark=alarm
-    "$ROOT/systems/snotra/services/tts-lease/ymir-say.sh" --mark "$mark" "$h" "$b" >/dev/null 2>&1 || true
+  # One door: bin/notify/open-target.sh shows the toast AND owns the click (plan 230). A crash
+  # has no page of its own, so the click opens the process board — where the dead thing is seen.
+  local glyph="•"
+  [ "$u" = critical ] && glyph="✗"
+  if [ -x "$ROOT/bin/notify/open-target.sh" ]; then
+    "$ROOT/bin/notify/open-target.sh" toast --app Ymir --glyph "$glyph" --urgency "$u" \
+      --title "$h" --body "$b" --target "yl:processes" >/dev/null 2>&1 || true
     return 0
   fi
-  if have omarchy-notification-send; then
-    omarchy-notification-send -u "$u" -g "" "$h" "$b" >/dev/null 2>&1 || true
-  elif have notify-send; then
-    notify-send -u "$u" "$h" "$b" >/dev/null 2>&1 || true
-  fi
+  # the record above already holds it; a tree with no notify door says so instead of inventing
+  # a second spout (plan 230 N2: no subsystem sends its own toast)
+  printf 'crash-sense: the notify door is missing (%s) — the crash is recorded, not shown\n' \
+    "$ROOT/bin/notify/open-target.sh" >&2
 }
 
 case "$ACTION" in
@@ -130,7 +131,7 @@ d = json.load(sys.stdin)["new"]
 for c in d[-3:]:
     print(c["comm"] + "\t" + c["sig"] + "\t" + c["when"] + "\t" + c["pid"])
 ' | while IFS=$'\t' read -r comm sig when pid; do
-        notify "Process crashed: $comm" "$sig at $when (pid $pid) — run bin/host/crash-sense.sh status, or ask Brokk to diagnose." "critical"
+        notify "Process crashed: $comm" "$sig at $when (pid $pid) — ask Brokk to diagnose, or run bin/host/crash-sense.sh status." "critical"
       done
     fi
 

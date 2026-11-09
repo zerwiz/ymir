@@ -3,7 +3,11 @@
 #
 #   bin/notify/send.sh --source <errand|garmr|snotra|cron|people|trello|ward|engine> \
 #       --severity INFO|MEDIUM|HIGH|CRITICAL --message "one line" \
-#       [--key <stable-id>] [--record <id>] [--ask] [--dry-run] [--no-telegram]
+#       [--key <stable-id>] [--record <id>] [--target <kind>:<value>] [--ask] [--dry-run] [--no-telegram]
+#
+# --target is plan 230: every message carries something to OPEN (file: · plan: · pr: · yl:), and
+# the desktop leg hands it to bin/notify/open-target.sh, which owns both the toast and the click.
+# A message with no target is still allowed — it says `(no link)` in its own title.
 #
 # Why one door (plan 100): every subsystem used to invent its own spout — a desktop popup,
 # a file, or nothing at all — and 16 of 20 events spoke to nobody. This is the one sentence
@@ -32,7 +36,7 @@ ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 ymir_home_root HOME_R 2>/dev/null || true
 [ -n "${HOME_R:-}" ] || { printf 'error: the home is unresolved\n' >&2; exit 1; }
 
-SOURCE=""; SEVERITY="MEDIUM"; MESSAGE=""; KEY=""; RECORD=""; ASK=0; DRY=0; NO_TG=0
+SOURCE=""; SEVERITY="MEDIUM"; MESSAGE=""; KEY=""; RECORD=""; TARGET=""; ASK=0; DRY=0; NO_TG=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --source) SOURCE="${2:-}"; shift 2 ;;
@@ -40,6 +44,7 @@ while [ $# -gt 0 ]; do
     --message) MESSAGE="${2:-}"; shift 2 ;;
     --key) KEY="${2:-}"; shift 2 ;;
     --record) RECORD="${2:-}"; shift 2 ;;
+    --target) TARGET="${2:-}"; shift 2 ;;
     --ask) ASK=1; shift ;;
     --dry-run) DRY=1; shift ;;
     --no-telegram) NO_TG=1; shift ;;
@@ -103,7 +108,8 @@ if [ "$DRY" = 0 ]; then
     bash "$ROOT/bin/records/runes-append.sh" "$SOURCE" notify \
       --message "suppressed (duplicate ${KEY}): ${MESSAGE}" >/dev/null 2>&1 && SAID_RUNE=1
   else
-    bash "$ROOT/bin/records/runes-append.sh" "$SOURCE" notify --message "$LINE" >/dev/null 2>&1 && SAID_RUNE=1
+    bash "$ROOT/bin/records/runes-append.sh" "$SOURCE" notify \
+      --message "$LINE$([ -n "$TARGET" ] && printf ' (opens %s)' "$TARGET")" >/dev/null 2>&1 && SAID_RUNE=1
   fi
 fi
 
@@ -140,9 +146,11 @@ INNER
       :
     else
       if [ -n "$APPROVAL_ID" ]; then
-        bash "$ROOT/systems/snotra/services/tts-lease/ymir-say.sh" "$MESSAGE" --exec "$ROOT/bin/notify/approve.sh $APPROVAL_ID" >/dev/null 2>&1 && SAID_DESKTOP=1
+        bash "$ROOT/systems/snotra/services/tts-lease/ymir-say.sh" "$MESSAGE" --exec "$ROOT/bin/notify/approve.sh $APPROVAL_ID" \
+          ${TARGET:+--target "$TARGET"} >/dev/null 2>&1 && SAID_DESKTOP=1
       else
-        bash "$ROOT/systems/snotra/services/tts-lease/ymir-say.sh" "$MESSAGE" >/dev/null 2>&1 && SAID_DESKTOP=1
+        bash "$ROOT/systems/snotra/services/tts-lease/ymir-say.sh" "$MESSAGE" \
+          ${TARGET:+--target "$TARGET"} >/dev/null 2>&1 && SAID_DESKTOP=1
       fi
     fi
   fi

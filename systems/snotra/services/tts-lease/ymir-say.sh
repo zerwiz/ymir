@@ -17,8 +17,9 @@
 #   systems/snotra/services/tts-lease/ymir-say.sh status                   # what has been said, and where it went
 #   systems/snotra/services/tts-lease/ymir-say.sh --version
 #
-# The desktop notifier is Omarchy's own when present, else notify-send. With
-# neither, the line is still recorded — a silent host is not a lost message.
+# The desktop notifier is the house's notify door when present (`bin/notify/open-target.sh`,
+# which also owns the click, plan 230), and with neither, the line is still recorded — a silent
+# host is not a lost message. Nothing here calls the notifier itself: one door owns the toast.
 set -u
 
 VERSION="1.0.0"
@@ -59,23 +60,30 @@ esac
 URGENCY="normal"
 GLYPH=""
 MARK="note"
+TARGET=""
+EXEC_CMDS=()
 case "${1-}" in
   --mark-done)  MARK="done";  URGENCY="low";      GLYPH="✓"; set -- "${2:-A job finished}" "${3:-}" ;;
   --mark-alarm) MARK="alarm"; URGENCY="critical"; GLYPH="!"; set -- "${2:-Needs your word}" "${3:-}" ;;
   --mark-fail)  MARK="fail";  URGENCY="critical"; GLYPH="✗"; set -- "${2:-Something went wrong}" "${3:-}" ;;
 esac
 
-HEADLINE="${1:-}"
-BODY="${2:-}"
-shift 2 2>/dev/null || true
+# ONE parser for the flags, wherever they sit: a call like `<message> --exec <cmd>` used to lose
+# the click entirely (the flag was eaten before EXEC_ARGS looked at it), which is how an approval
+# toast became a toast that could not approve anything (measured 2026-11-09, plan 230/231).
+POS=()
 while [ $# -gt 0 ]; do
   case "$1" in
     --urgency) URGENCY=${2:-normal}; shift 2 ;;
     --glyph)   GLYPH=${2:-}; shift 2 ;;
     --mark)    MARK=${2:-note}; shift 2 ;;
-    *) shift ;;
+    --target)  TARGET=${2:-}; shift 2 ;;
+    --exec)    EXEC_CMDS+=("${2:-}"); shift 2 ;;
+    *)         POS+=("$1"); shift ;;
   esac
 done
+HEADLINE="${POS[0]:-}"
+BODY="${POS[1]:-}"
 
 [ -n "$HEADLINE" ] || { printf 'error: ymir-say needs a headline\nhelp: systems/snotra/services/tts-lease/ymir-say.sh "<headline>" ["<body>"]\n' >&2; exit 2; }
 
@@ -89,23 +97,17 @@ TITLE="$GLYPH $WHO — $HEADLINE"
 fired=0
 # A click can run a command (`--exec`), which is how an approval becomes one gesture.
 EXEC_ARGS=()
-for _a in "$@"; do
-  case "$_a" in --exec) _want=1; continue ;; esac
-  if [ "${_want:-0}" = 1 ]; then EXEC_ARGS+=(--exec "$_a"); _want=0; fi
-done
-if command -v omarchy-notification-send >/dev/null 2>&1; then
-  if [ -n "$BODY" ]; then
-    omarchy-notification-send -u "$URGENCY" -g "$GLYPH" "$TITLE" "$BODY" "${EXEC_ARGS[@]}" >/dev/null 2>&1 && fired=1
-  else
-    omarchy-notification-send -u "$URGENCY" -g "$GLYPH" "$TITLE" >/dev/null 2>&1 && fired=1
-  fi
-fi
-if [ "$fired" = 0 ] && command -v notify-send >/dev/null 2>&1; then
-  if [ -n "$BODY" ]; then
-    notify-send -u "$URGENCY" "$TITLE" "$BODY" >/dev/null 2>&1 && fired=1
-  else
-    notify-send -u "$URGENCY" "$TITLE" >/dev/null 2>&1 && fired=1
-  fi
+for _c in "${EXEC_CMDS[@]:-}"; do [ -n "$_c" ] && EXEC_ARGS+=(--exec "$_c"); done
+
+# ONE door shows the toast and owns the click (plan 230). A message with no target says `(no
+# link)` in its title, which is the whole point: he learns at a glance which few are dead ends.
+NOTIFY_DOOR="$ROOT/bin/notify/open-target.sh"
+if [ -x "$NOTIFY_DOOR" ]; then
+  args=(toast --app "$WHO" --glyph "$GLYPH" --urgency "$URGENCY" --title "$TITLE")
+  [ -n "$BODY" ] && args+=(--body "$BODY")
+  [ -n "$TARGET" ] && args+=(--target "$TARGET")
+  [ ${#EXEC_ARGS[@]} -gt 0 ] && args+=("${EXEC_ARGS[@]}")
+  "$NOTIFY_DOOR" "${args[@]}" >/dev/null 2>&1 && fired=1
 fi
 
 # The durable line was written either way; only report the channel's fate.
@@ -113,5 +115,5 @@ if [ "$fired" = 1 ]; then
   printf 'ymir-say[1]{mark,urgency,channel}:\n  "%s","%s","desktop"\n' "$MARK" "$URGENCY"
   exit 0
 fi
-printf 'ymir-say[1]{mark,urgency,channel}:\n  "%s","%s","record only (no desktop notifier)"\n' "$MARK" "$URGENCY"
+printf 'ymir-say[1]{mark,urgency,channel}:\n  "%s","%s","record only (no notify door or no desktop notifier)"\n' "$MARK" "$URGENCY"
 exit 0

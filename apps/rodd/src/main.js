@@ -31,35 +31,110 @@ const TYPES = {
 // same-origin endpoints the front-end expects (/api/config, /api/session, the search
 // proxy). Re-implementing those by hand was the fault: the client must talk to the
 // server the project ships. So the app SPAWNS that server, on an ephemeral port.
-function startUiServer() {
+//
+// A FAILED BOOT IS A SENTENCE, NOT A REJECTION (plan 231 R3). This used to `reject('ui
+// server did not answer')` into an unhandled promise, which Electron answered with the
+// SIGTRAP we read in a core file — the crash was the boot path, not the compositor. Now a
+// failed spawn keeps the last twenty stderr lines, prints the interpreter and the directory
+// in ONE console line, tries once more after a pause, and then shows the reason in the
+// window and exits. No silent retry loop, no crash, one message.
+const BOOT_TIMEOUT_MS = Number(process.env.RODD_BOOT_TIMEOUT_MS || 20000);   // one documented default
+const BOOT_RETRY_PAUSE_MS = Number(process.env.RODD_BOOT_RETRY_PAUSE_MS || 1500);
+
+// the interpreter, named ONCE: env wins, then the seat's own venv (Rule 07)
+function defaultPython() {
+  return process.env.RODD_PYTHON || path.join(process.env.HOME || '', 'venvs/s2s/bin/python');   // allow-home-default: the seat's own venv
+}
+
+function startUiServer(attempt = 1) {
   return new Promise((resolve, reject) => {
     const port = 7800 + Math.floor(Math.random() * 90);
     const env = { ...process.env, SPEECH_TO_SPEECH_URL: process.env.SPEECH_TO_SPEECH_URL || '' };
     // the interpreter is named ONCE, and it is logged: when the spawn silently dies the
     // shell must be able to read which python and which directory it was asked for
-    const py = process.env.RODD_PYTHON || path.join(process.env.HOME || '', 'venvs/s2s/bin/python');   // allow-home-default: the seat's own venv
-    console.log('[rodd] ui server:', JSON.stringify(py), '-m uvicorn --app-dir', JSON.stringify(UI), 'port', port);
+    const py = defaultPython();
+    const dir = UI;
+    const logPath = path.join(app.getPath('temp'), 'rodd-uiserver.log');
+    console.log(`[rodd] ui server (attempt ${attempt}):`, JSON.stringify(py), '-m uvicorn --app-dir', JSON.stringify(dir), 'port', port);
+    const tail = [];
+    let settled = false;
+    const remember = (d) => {
+      String(d).split('\n').filter(Boolean).forEach((line) => tail.push(line.slice(0, 300)));
+      while (tail.length > 20) tail.shift();
+    };
+    const fail = (why) => {
+      if (settled) return;
+      settled = true;
+      reject(Object.assign(new Error(why), { py, dir, port, tail: tail.slice(-20), log: logPath }));
+    };
     const proc = execFile(
       py,
-      ['-m', 'uvicorn', '--app-dir', UI, 'server:app', '--host', '127.0.0.1', '--port', String(port)],
-      { env, cwd: UI, timeout: 0 },
+      ['-m', 'uvicorn', '--app-dir', dir, 'server:app', '--host', '127.0.0.1', '--port', String(port)],
+      { env, cwd: dir, timeout: 0 },
       (err) => { if (err) console.error('[rodd] ui server exited:', err.message); },
     );
-    proc.stderr.on('data', (d) => { try { fs.appendFileSync(path.join(app.getPath('temp'), 'rodd-uiserver.log'), d); } catch {} });
-    const deadline = Date.now() + 30000;
+    // a missing interpreter is an 'error' event, not stderr — the very case that used to hang
+    // for the full deadline and then reject into the void
+    proc.on('error', (err) => fail(`the interpreter did not start: ${err.message}`));
+    proc.stderr.on('data', (d) => {
+      remember(d);
+      try { fs.appendFileSync(logPath, d); } catch {}
+    });
+    const deadline = Date.now() + BOOT_TIMEOUT_MS;
     const wait = () => {
+      if (settled) return;
       const req = http.get({ host: '127.0.0.1', port, path: '/api/config', timeout: 1500 }, (res) => {
         res.resume();
-        if (res.statusCode === 200) resolve({ port, proc });
-        else retry();
+        if (res.statusCode === 200) {
+          if (settled) return;
+          settled = true;
+          console.log('[rodd] ui server answered on port', port);
+          resolve({ port, proc });
+        } else { retry(); }
       });
       req.on('error', retry);
       req.on('timeout', () => { req.destroy(); retry(); });
     };
-    const retry = () => { if (Date.now() > deadline) reject(new Error('ui server did not answer')); else setTimeout(wait, 400); };
+    const retry = () => {
+      if (settled) return;
+      if (Date.now() > deadline) fail(`the ui server did not answer within ${Math.round(BOOT_TIMEOUT_MS / 1000)}s`);
+      else setTimeout(wait, 400);
+    };
     setTimeout(wait, 600);
-    app.on('before-quit', () => { try { proc.kill(); } catch {} });
   });
+}
+
+// One console line that names the interpreter, the directory and what it last said.
+function bootFailureLine(err) {
+  const py = (err && err.py) || defaultPython();
+  const dir = (err && err.dir) || UI;
+  const said = (err && err.tail && err.tail.length) ? err.tail.join(' | ') : ((err && err.message) || 'no output');
+  return `[rodd] UI SERVER FAILED — python ${JSON.stringify(py)} dir ${JSON.stringify(dir)} — ${said}`;
+}
+
+// The sentence he can read, in the window he is looking at, instead of a core dump.
+function showBootFailure(err) {
+  err = err || new Error('the UI server did not start');
+  err.py = err.py || defaultPython();
+  err.dir = err.dir || UI;
+  err.log = err.log || path.join(app.getPath('temp'), 'rodd-uiserver.log');
+  const said = (err.tail && err.tail.length ? err.tail : [err.message || '']).join('\n');
+  const html = `<!doctype html><meta charset="utf-8"><title>Rödd — the UI server did not start</title>
+<style>body{background:#0e0c09;color:#e8e0d0;font:16px/1.5 system-ui,sans-serif;padding:2.5rem;max-width:52rem}
+code,pre{background:#1a1712;color:#cdbfa4}h1{font-size:1.25rem;font-weight:600}</style>
+<h1>The UI server did not start.</h1>
+<p>python <code>${String(err.py || '').replace(/</g, '&lt;')}</code><br>
+dir <code>${String(err.dir || '').replace(/</g, '&lt;')}</code></p>
+<p>The log: <code>${String(err.log || '').replace(/</g, '&lt;')}</code></p>
+<pre>${String(said).replace(/</g, '&lt;').slice(0, 4000)}</pre>
+<p>Nothing else was started. Close this window to exit; the voice pipeline is untouched.</p>`;
+  const win = new BrowserWindow({
+    width: 860, height: 620, title: 'Rödd — the UI server did not start',
+    backgroundColor: '#0e0c09', autoHideMenuBar: true,
+    webPreferences: { contextIsolation: true, sandbox: true },
+  });
+  win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+  process.exitCode = 1;
 }
 
 function probeSlot(url) {
@@ -116,7 +191,26 @@ app.whenReady().then(async () => {
     callback(local && ['media', 'audioCapture', 'display-capture', 'clipboard-read', 'clipboard-sanitized-write'].includes(permission));
   });
 
-  const { port, proc } = await startUiServer();
+  // ONE retry after a pause, then the sentence and a clean exit (plan 231 R3).
+  let started = null;
+  let lastError = null;
+  for (const attempt of [1, 2]) {
+    try {
+      started = await startUiServer(attempt);
+      break;
+    } catch (err) {
+      lastError = err;
+      console.error(bootFailureLine(err));
+      if (attempt === 1) await new Promise((r) => setTimeout(r, BOOT_RETRY_PAUSE_MS));
+    }
+  }
+  if (!started) {
+    // a sentence in the window he is looking at, and an exit — never a rejection, never a loop
+    showBootFailure(lastError);
+    return;
+  }
+  const { port, proc } = started;
+  app.on('before-quit', () => { try { proc.kill(); } catch {} });
   const win = new BrowserWindow({
     width: 1180, height: 820, title: 'Rödd',
     backgroundColor: '#0e0c09',
@@ -218,6 +312,22 @@ app.whenReady().then(async () => {
   });
   await win.loadURL(`http://127.0.0.1:${port}/?camera=${process.env.RODD_CAMERA === '1' ? '1' : '0'}`);
   win.on('closed', () => { try { proc.kill(); } catch {} });
+}).catch((err) => {
+  // anything that escapes the boot path is still a sentence and an exit, never a crash
+  console.error(bootFailureLine(err));
+  try { showBootFailure(err); } catch { app.exit(1); }
 });
 
 app.on('window-all-closed', () => app.quit());
+
+// Electron answers an unhandled rejection with a crash (the SIGTRAP in the core); a boot fault
+// must be a line in the log and a clean exit instead. These two guards are the last resort
+// BEHIND the handled path above, and they name what happened before they stop.
+process.on('unhandledRejection', (reason) => {
+  console.error('[rodd] unhandled rejection — ' + (reason && reason.message ? reason.message : String(reason)));
+  app.exit(1);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[rodd] uncaught exception — ' + (err && err.stack ? err.stack.split('\n')[0] : String(err)));
+  app.exit(1);
+});
