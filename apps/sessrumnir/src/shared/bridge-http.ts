@@ -87,7 +87,7 @@ export function createHttpBridge(): PiDesktopAPI {
   const commands = {
     prompt: (message: string, options?: { images?: unknown[]; streamingBehavior?: string }) => invoke('pi:prompt', message, options),
     steer: (message: string, images?: unknown[]) => invoke('pi:steer', message, images),
-    followUp: (message: string) => invoke('pi:follow-up', message),
+    followUp: (message: string, images?: unknown[]) => invoke('pi:follow-up', message, images),
     abort: () => invoke('pi:abort'),
     bash: (command: string) => invoke('pi:bash', command),
     abortBash: () => invoke('pi:abort-bash'),

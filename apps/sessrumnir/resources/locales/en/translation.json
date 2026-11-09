@@ -44,7 +44,9 @@
       "placeholderIdle": "Ask {{agent}} anything — / for commands",
       "placeholderNotRunning": "{{agent}} agent is not running...",
       "placeholderSteering": "Type to steer the agent...",
+      "placeholderQueued": "Message queues after this turn — Ctrl/⌘+Enter or Alt+Enter interrupts now",
       "shiftEnterNewline": "Shift+Enter newline",
+      "interruptHint": "Ctrl/⌘+Enter or Alt+Enter interrupts the run now",
       "streaming": "Streaming…"
     },
     "council": {

@@ -102,7 +102,7 @@ export interface PiDesktopAPI {
   commands: {
     prompt(message: string, options?: { images?: PromptImage[]; streamingBehavior?: string }): Promise<unknown>
     steer(message: string, images?: PromptImage[]): Promise<unknown>
-    followUp(message: string): Promise<unknown>
+    followUp(message: string, images?: PromptImage[]): Promise<unknown>
     abort(): Promise<unknown>
     bash(command: string): Promise<unknown>
     abortBash(): Promise<unknown>

@@ -159,3 +159,79 @@ test('external prompt mid-stream preserves streaming state', () => {
   assert.equal(state.streamingThinking, 'partial thought')
   assert.equal(state.streamingToolCalls.size, 1)
 })
+
+// Sending while the agent is already working must QUEUE (a Pi follow-up, which
+// enters only after the run finishes its pending work) and never steer into the
+// running turn — that interruption is a deliberate gesture in the composer
+// (Ctrl/Cmd+Enter or Alt+Enter → sendSteer), not what a plain Enter does.
+test('a message sent while streaming is queued as a follow-up, not steered', async () => {
+  const calls: string[] = []
+  ;(globalThis as unknown as { window: { piDesktop: typeof piDesktopStub } }).window.piDesktop = {
+    ...piDesktopStub,
+    commands: {
+      prompt: async () => { calls.push('prompt') },
+      steer: async () => { calls.push('steer') },
+      followUp: async () => { calls.push('followUp') },
+    },
+  }
+
+  useAppStore.setState({ isStreaming: true })
+  await useAppStore.getState().sendPrompt('typed while the agent works')
+
+  assert.deepEqual(calls, ['followUp'], 'streaming send must queue, never steer')
+})
+
+// The same send when the agent is idle is a normal prompt.
+test('a message sent while idle goes straight in as a prompt', async () => {
+  const calls: string[] = []
+  ;(globalThis as unknown as { window: { piDesktop: typeof piDesktopStub } }).window.piDesktop = {
+    ...piDesktopStub,
+    commands: {
+      prompt: async () => { calls.push('prompt') },
+      steer: async () => { calls.push('steer') },
+      followUp: async () => { calls.push('followUp') },
+    },
+  }
+
+  useAppStore.setState({ isStreaming: false })
+  await useAppStore.getState().sendPrompt('idle message')
+
+  assert.deepEqual(calls, ['prompt'])
+})
+
+// Attachments must survive the wait: images travel with the follow-up.
+test('images ride along with a queued follow-up', async () => {
+  const seen: unknown[] = []
+  ;(globalThis as unknown as { window: { piDesktop: typeof piDesktopStub } }).window.piDesktop = {
+    ...piDesktopStub,
+    commands: {
+      prompt: async () => {},
+      steer: async () => {},
+      followUp: async (...args: unknown[]) => { seen.push(args[1]) },
+    },
+  }
+
+  const image = { type: 'image' as const, mimeType: 'image/png', data: 'AAAA' }
+  useAppStore.setState({ isStreaming: true })
+  await useAppStore.getState().sendPrompt('with a screenshot', { images: [image] })
+
+  assert.deepEqual(seen, [[image]])
+})
+
+// The deliberate interruption keeps working, and also carries images.
+test('sendSteer still steers, with images', async () => {
+  const seen: unknown[] = []
+  ;(globalThis as unknown as { window: { piDesktop: typeof piDesktopStub } }).window.piDesktop = {
+    ...piDesktopStub,
+    commands: {
+      prompt: async () => {},
+      steer: async (...args: unknown[]) => { seen.push(args) },
+      followUp: async () => {},
+    },
+  }
+
+  const image = { type: 'image' as const, mimeType: 'image/png', data: 'BBBB' }
+  await useAppStore.getState().sendSteer('stop and look', [image])
+
+  assert.deepEqual(seen, [['stop and look', [image]]])
+})
