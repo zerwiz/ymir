@@ -15,6 +15,7 @@
  */
 
 import { WorkspaceManager } from './main/workspace-manager'
+import { readFile } from 'node:fs/promises'
 import { SessionTagManager } from './main/session-tags'
 import { ArchivedSessionsManager } from './main/archived-sessions'
 import { TerminalService } from './main/terminal-service'
@@ -164,6 +165,56 @@ async function handleRequest(req: Request): Promise<Response> {
   return new Response('Not found', { status: 404 })
 }
 
+// ─── The seat wire (plan 231) ────────────────────────────────────────────────
+
+/**
+ * A seat is one workspace plus the agent session it runs. Three channels are the
+ * whole wire — list the seats, hand one a line, read the last answer it gave — and
+ * `bin/seat/sessrumnir-wire.sh` is the door that speaks them, so a voice or another
+ * agent can reach a seat someone opened by hand.
+ */
+function seatById(id: string | undefined): { id: string; name: string; path: string } | null {
+  if (!workspaceManager) return null
+  if (!id || id === 'active') return workspaceManager.getActiveWorkspace()
+  const seats = workspaceManager.getWorkspaces()
+  return seats.find((s) => s.id === id || s.name === id || s.path === id) ?? null
+}
+
+/**
+ * The last assistant text recorded in a session file. Read from pi's own transcript
+ * (JSONL, one entry per line) rather than from a remembered copy, so the answer is
+ * the session's, not this server's idea of it.
+ */
+async function readLastAssistantText(sessionPath: string): Promise<string> {
+  try {
+    const raw = await readFile(sessionPath, 'utf8')
+    let text = ''
+    for (const line of raw.split('\n')) {
+      const trimmed = line.trim()
+      if (!trimmed) continue
+      let entry: any
+      try {
+        entry = JSON.parse(trimmed)
+      } catch {
+        continue
+      }
+      if (entry?.type !== 'message' || entry?.message?.role !== 'assistant') continue
+      const content = entry.message.content
+      const parts: string[] =
+        typeof content === 'string'
+          ? [content]
+          : Array.isArray(content)
+            ? content.filter((c: any) => c?.type === 'text' && typeof c.text === 'string').map((c: any) => c.text)
+            : []
+      const joined = parts.join('\n').trim()
+      if (joined) text = joined
+    }
+    return text
+  } catch {
+    return ''
+  }
+}
+
 // ─── Handler routing ────────────────────────────────────────────────────────
 
 /**
@@ -250,6 +301,53 @@ async function routeToHandler(channel: string, args: unknown[]): Promise<unknown
     const _maxDepth = (args[0] as number) || 2
     // Simplified: return empty tree
     return { name: '', path: '', type: 'directory' as const, children: [] }
+  }
+
+  // ── The seat wire: enumerate, hand a line, read the answer (plan 231) ──
+  if (channel === 'seat:list') {
+    const activeId = wm.getActiveWorkspaceId()
+    return wm.getWorkspaces().map((ws) => {
+      const pi = wm.getPiManager(ws.id)
+      const status = pi ? pi.getStatus() : null
+      return {
+        id: ws.id,
+        name: ws.name,
+        path: ws.path,
+        active: ws.id === activeId,
+        status: status ? status.status : 'stopped',
+        pid: status ? status.pid : null,
+      }
+    })
+  }
+
+  if (channel === 'seat:prompt') {
+    const seatArg = args[0] as string | undefined
+    const message = args[1] as string | undefined
+    if (typeof message !== 'string' || !message.trim()) throw new Error('seat:prompt needs a line to send')
+    const seat = seatById(seatArg)
+    if (!seat) throw new Error(`no seat named ${seatArg ?? 'active'} — call seat:list`)
+    const pi = wm.getPiManager(seat.id)
+    if (!pi) throw new Error(`seat ${seat.name} holds no live agent — start it in Sessrúmnir first`)
+    await pi.sendCommand({ type: 'prompt', message })
+    return { sent: true, seat: seat.name }
+  }
+
+  if (channel === 'seat:last-answer') {
+    const seatArg = args[0] as string | undefined
+    const charsArg = args[1] as number | undefined
+    const seat = seatById(seatArg)
+    if (!seat) throw new Error(`no seat named ${seatArg ?? 'active'} — call seat:list`)
+    const limit = typeof charsArg === 'number' && charsArg > 0 ? charsArg : 900
+    const sessions = await wm.listSessions(seat.path)
+    const newest = Array.isArray(sessions) && sessions.length > 0 ? sessions[0] : null
+    if (!newest) return { seat: seat.name, text: '', detail: 'that seat has no session on disk yet' }
+    const answer = await readLastAssistantText(newest.path)
+    return {
+      seat: seat.name,
+      at: newest.lastModified ? new Date(newest.lastModified).toISOString() : '',
+      text: answer.slice(-limit),
+      detail: answer ? '' : 'no assistant answer is recorded in the newest session yet',
+    }
   }
 
   // ── Default: unknown channel ───────────────────────────────────────────

@@ -684,6 +684,99 @@ TOOLS = [
             "additionalProperties": False,
         },
     },
+    {
+        "type": "function",
+        "name": "arm_who",
+        "description": (
+            "Who is holding the arm — the session that drains wakes, dispatches errands and answers. "
+            "Use when he asks 'who is watching', or before handing a line over."
+        ),
+        "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+    },
+    {
+        "type": "function",
+        "name": "arm_tell",
+        "description": (
+            "Hand one line to the session that holds the arm, so the live session sees it between turns. "
+            "It refuses, in words, when nobody is armed — it never claims a line was sent to no one."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {"text": {"type": "string", "description": "one line to hand over"}},
+            "required": ["text"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
+        "name": "eindri_list",
+        "description": (
+            "The workers standing in herdr: each pane, its state, and where it is working. Use before "
+            "sending anything to a worker, or when he asks what the house is doing right now."
+        ),
+        "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+    },
+    {
+        "type": "function",
+        "name": "eindri_send",
+        "description": (
+            "Send one line to a worker already seated in herdr, and then read what its pane shows. "
+            "Call eindri_list first so the target is a pane that really holds a worker."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "target": {"type": "string", "description": "the worker's pane (w49:p1) or its agent name"},
+                "line": {"type": "string", "description": "one line of instruction"},
+            },
+            "required": ["target", "line"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
+        "name": "seat_wire",
+        "description": (
+            "The Sessrúmnir seat wire: enumerate the seats the desktop shell holds, hand one a line, or read "
+            "the last answer it gave. A seat only answers while Sessrúmnir is running, and this says so."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "action": {"type": "string", "enum": ["seats", "send", "read"]},
+                "seat": {"type": "string", "description": "the seat's name or id; 'active' when omitted"},
+                "line": {"type": "string", "description": "for send: one line into that seat"},
+                "chars": {"type": "integer", "description": "for read: how many characters of the answer"},
+            },
+            "required": ["action"],
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
+        "name": "calendar_write",
+        "description": (
+            "Make a meeting or move one in his own Google calendar. Pass `action: scopes` first when unsure "
+            "whether the grant may write: without calendar.events the door REFUSES and names the scope, and "
+            "nothing is created. Times are ISO (2026-11-10T14:00:00); --minutes defaults to 30."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "action": {"type": "string", "enum": ["create", "move", "scopes"]},
+                "title": {"type": "string", "description": "for create: the meeting's title, in his words"},
+                "when": {"type": "string", "description": "for create: ISO date-time it starts"},
+                "to": {"type": "string", "description": "for move: ISO date-time it moves to"},
+                "event": {"type": "string", "description": "for move: the Google event id"},
+                "minutes": {"type": "integer", "description": "length in minutes (default 30)"},
+                "attendees": {"type": "string", "description": "comma-separated addresses"},
+                "meet": {"type": "boolean", "description": "for create: add a Meet link"},
+                "notify": {"type": "boolean", "description": "for move: mail the attendees (needs his word)"},
+            },
+            "required": ["action"],
+            "additionalProperties": False,
+        },
+    },
 ]
 
 
@@ -2404,3 +2497,137 @@ async def _tool_mail_compose(args):
 
 
 NEW_TOOLS["mail_compose"] = _tool_mail_compose
+
+
+# ── Rödd's other hands (plan 231) ─────────────────────────────────────────────
+# The voice had a toolbox of 37 tools and none of them could reach the arm holder, a
+# herdr Eindri, or a Sessrúmnir seat — and it could not make or move a meeting. Six
+# hands close that, one door each, and every one of them refuses in words rather than
+# reporting a thing it did not do.
+
+async def _tool_arm_who(args):
+    code, out = _run([_door("voice/rodd-arm.sh"), "who"], timeout=25)
+    if code == 0 and out.strip():
+        return ToolResult("The arm is held — this is who is watching, from the lease itself:\n" + _clean(out, 600))
+    if code == 3:
+        return ToolResult("Nobody is armed: no session is holding the arm, so a message would go to no one. "
+                          "Say that plainly instead of sending.")
+    return ToolResult(f"The arm door did not answer: {_clean(out, 200)}", create_response=True)
+
+
+async def _tool_arm_tell(args):
+    text = str(args.get("text") or "").strip()
+    if not text:
+        raise ValueError("arm_tell needs the line to hand over")
+    code, out = _run([_door("voice/rodd-arm.sh"), "tell", text], timeout=25)
+    if code == 0:
+        return ToolResult(f"Handed to the session holding the arm: {text!r}. {_clean(out, 160)}")
+    if code == 3:
+        return ToolResult("Nobody is armed, so nothing was handed over — say that, do not claim it was sent.")
+    return ToolResult(f"Not delivered: {_clean(out, 240)}", create_response=True)
+
+
+async def _tool_eindri_list(args):
+    """Every worker standing in herdr, with its pane and state — from the one reader."""
+    code, out = _run(["python3", str(ROOT / "bin" / "seat" / "herdr-agents.py")], timeout=30)
+    if code != 0 or not out.strip():
+        return ToolResult("herdr did not answer, so I cannot say who is working — do not guess a list.")
+    return ToolResult("The workers standing in herdr (pane, state, where they work):\n" + _clean(out, 1600))
+
+
+async def _tool_eindri_send(args):
+    """One line to a seated worker, then what its pane shows afterwards."""
+    import time as _time
+    target = str(args.get("target") or "").strip()
+    line = str(args.get("line") or "").strip()
+    if not target or not line:
+        raise ValueError("eindri_send needs a target and a line")
+    code, out = _run([_door("agents/eindri-send.sh"), target, line], timeout=40)
+    if code != 0:
+        return ToolResult(f"herdr did not take the line for {target}: {_clean(out, 240)}. "
+                          "Call eindri_list to see which panes actually hold a worker.")
+    wait = float(os.environ.get("YMIR_VOICE_REPLY_WAIT", "8"))
+    try:
+        _time.sleep(max(0.0, min(wait, 30)))
+    except Exception:
+        pass
+    read_code, tail = _run(["herdr", "agent", "read", target, "--lines", "40"], timeout=30)
+    import re as _re
+    clean = _re.sub(r"\x1b\[[0-9;?]*[a-zA-Z]", "", tail or "")
+    rows = [ln.rstrip() for ln in clean.splitlines() if ln.strip()]
+    spoke = ("What its pane shows now (the answer may still be streaming):\n" + "\n".join(rows[-25:])[:1400]
+             if read_code == 0 and rows else "Its pane gave nothing to read yet.")
+    return ToolResult(f"Sent to {target}: {line!r}.\n{spoke}")
+
+
+async def _tool_seat_wire(args):
+    """The Sessrúmnir seat wire: enumerate the seats, hand one a line, read its answer."""
+    action = str(args.get("action") or "seats").strip().lower()
+    door = _door("seat/sessrumnir-wire.sh")
+    if action == "seats":
+        code, out = _run([door, "seats"], timeout=40)
+    elif action == "send":
+        seat = str(args.get("seat") or "active").strip()
+        line = str(args.get("line") or "").strip()
+        if not line:
+            raise ValueError("seat_wire send needs a line")
+        code, out = _run([door, "send", seat, line], timeout=60)
+    elif action == "read":
+        argv = [door, "read", str(args.get("seat") or "active").strip()]
+        if args.get("chars"):
+            argv += ["--chars", str(int(args["chars"]))]
+        code, out = _run(argv, timeout=40)
+    else:
+        raise ValueError("seat_wire action must be seats, send or read")
+    if code == 3:
+        return ToolResult("Sessrúmnir's shell is not answering, so no seat can be reached right now. "
+                          f"{_clean(out, 300)}")
+    return ToolResult(_clean(out, 1500) if out.strip() else "The seat wire said nothing, which is not an answer.",
+                      create_response=action != "send")
+
+
+async def _tool_calendar_write(args):
+    """Make or move a meeting — and refuse, naming the scope, when the grant cannot."""
+    action = str(args.get("action") or "").strip().lower()
+    door = str(ROOT / "systems" / "snotra" / "services" / "calendar" / "calendar-write.sh")
+    if action == "scopes":
+        argv = [door, "scopes"]
+    elif action == "create":
+        title = str(args.get("title") or "").strip()
+        when = str(args.get("when") or "").strip()
+        if not title or not when:
+            raise ValueError("calendar_write create needs a title and a when (ISO date-time)")
+        argv = [door, "create", "--title", title, "--when", when]
+        if args.get("minutes"):
+            argv += ["--minutes", str(int(args["minutes"]))]
+        if args.get("attendees"):
+            argv += ["--attendees", str(args["attendees"])]
+        if args.get("meet"):
+            argv.append("--meet")
+    elif action == "move":
+        event = str(args.get("event") or "").strip()
+        to = str(args.get("to") or "").strip()
+        if not event or not to:
+            raise ValueError("calendar_write move needs the event id and --to (ISO date-time)")
+        argv = [door, "move", event, "--to", to]
+        if args.get("minutes"):
+            argv += ["--minutes", str(int(args["minutes"]))]
+        if args.get("notify"):
+            argv.append("--notify")
+    else:
+        raise ValueError("calendar_write action must be create, move or scopes")
+    code, out = _run(argv, timeout=120)
+    if code == 3:
+        return ToolResult("The calendar refused, and it says why — read this out loud rather than promising "
+                          "a meeting:\n" + _clean(out, 700))
+    if code != 0:
+        return ToolResult(f"The calendar door failed: {_clean(out, 500)}")
+    return ToolResult(_clean(out, 900) or "The calendar door returned nothing.")
+
+
+NEW_TOOLS["arm_who"] = _tool_arm_who
+NEW_TOOLS["arm_tell"] = _tool_arm_tell
+NEW_TOOLS["eindri_list"] = _tool_eindri_list
+NEW_TOOLS["eindri_send"] = _tool_eindri_send
+NEW_TOOLS["seat_wire"] = _tool_seat_wire
+NEW_TOOLS["calendar_write"] = _tool_calendar_write
