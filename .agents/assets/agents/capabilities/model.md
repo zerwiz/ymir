@@ -24,3 +24,4 @@
 | models-detect.sh | models-detect.sh — detect the LOCAL model runtimes present on this mac | tested | keep (a human or a cron row must run it) |
 | models-report.sh | models-report — the user's OWN models, read from the ROOT pi home. | tested | keep (a human or a cron row must run it) |
 | rail-resolve.sh | rail-resolve.sh — the DOOR to the living rail resolver (plan 51, Parts | tested+named | keep (a human or a cron row must run it) |
+| test_jev_doors.sh | The ward for bin/model/jev-doors.sh — the door register that told four | tested | keep (a human or a cron row must run it) |
