@@ -31,11 +31,15 @@ import json
 import os
 import re
 import shutil
+import socket
+import struct
 import subprocess
 import sys
 import tempfile
 import threading
 import unittest
+from email import policy
+from email.parser import BytesParser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
@@ -43,7 +47,13 @@ from urllib.parse import parse_qs, unquote, urlparse
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
 MAIL = ROOT / "bin/time/snotra/mail-send.sh"  # allow-superseded-path: the SHIM is the door under test — a caller nobody has repointed must still work
+# …and the file that IMPLEMENTS it, for the proofs that judge the door's own text (plan 231).
+MAIL_REAL = ROOT / "systems/snotra/services/letters/mail-send.sh"
 CAL = ROOT / "bin/time/snotra/calendar-invite.sh"  # allow-superseded-path: as above — the retired shim is what a stale caller still runs
+# The door that IMPLEMENTS the write. `CAL` is a shim: it execs this one. A test that reads the
+# shim to judge the tool's defaults judges a two-line forwarder, and it said FAILED from
+# 2026-10-24 until plan 231 read the file that actually holds the value.
+CAL_REAL = ROOT / "systems/snotra/services/calendar/calendar-invite.sh"
 APPROVE = ROOT / "bin/time/snotra/snotra-approve.sh"  # allow-superseded-path: as above — the shim must exec the moved door
 
 # ── the two APIs, stood in for ───────────────────────────────────────────────────────
@@ -94,6 +104,12 @@ def make_server(api: Api) -> ThreadingHTTPServer:
             if u.path == "/gmail/v1/users/me/drafts/send":
                 api.sends.append(json.loads(body or b"{}").get("id", ""))
                 return self._json(200, {"id": "m-" + api.sends[-1]})
+            if u.path == "/gmail/v1/users/me/drafts":
+                payload = json.loads(body or b"{}")
+                raw = (payload.get("message") or {}).get("raw") or ""
+                did = f"r-auto-{len(api.drafts) + 1}"
+                api.drafts[did] = base64.urlsafe_b64decode(raw) if raw else b""
+                return self._json(200, {"id": did, "message": {"id": "m-" + did}})
             if u.path == "/calendar/v3/calendars/primary/events":
                 q = parse_qs(u.query)
                 api.events.append({"body": json.loads(body or b"{}"),
@@ -130,6 +146,54 @@ def make_server(api: Api) -> ThreadingHTTPServer:
     return srv
 
 
+# ── a DNS responder, so a recipient's MX comes from the test, not the internet ────────
+
+
+class MxDns:
+    """Answers every MX question with one record pointing back at the name.
+
+    The mail door refuses a recipient whose domain publishes no mail exchanger (that ward is the reason a
+    letter to a dead domain is not thrown away slowly). A test must not depend on the internet to satisfy it,
+    and a test address must not be somebody's real mailbox — so the door is pointed at this, and the
+    recipient lives in `.test`, which RFC 2606 reserves for exactly this.
+    """
+
+    def __init__(self) -> None:
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.bind(("127.0.0.1", 0))
+        self.sock.settimeout(0.3)
+        self.port = self.sock.getsockname()[1]
+        self.stop = False
+        threading.Thread(target=self._serve, daemon=True).start()
+
+    def _serve(self) -> None:
+        while not self.stop:
+            try:
+                packet, peer = self.sock.recvfrom(2048)
+            except socket.timeout:
+                continue
+            except OSError:
+                return
+            try:
+                ident, _, qdcount = struct.unpack(">HHH", packet[:6])
+                if qdcount != 1 or packet[12] == 0:
+                    continue
+                i = 12
+                while packet[i] != 0:
+                    i += 1 + packet[i]
+                question = packet[12:i + 5]
+                rdata = struct.pack(">H", 10) + b"\xc0\x0c"
+                answer = b"\xc0\x0c" + struct.pack(">HHIH", 15, 1, 60, len(rdata)) + rdata
+                reply = struct.pack(">HHHHHH", ident, 0x8180, 1, 1, 0, 0) + question + answer
+                self.sock.sendto(reply, peer)
+            except (struct.error, IndexError):
+                continue
+
+    def close(self) -> None:
+        self.stop = True
+        self.sock.close()
+
+
 # ── a home with a real vault, and the env the doors read ─────────────────────────────
 
 
@@ -143,6 +207,8 @@ class Case(unittest.TestCase):
         self.srv = make_server(self.api)
         self.addCleanup(self.srv.server_close)
         self.addCleanup(self.srv.shutdown)
+        self.dns = MxDns()
+        self.addCleanup(self.dns.close)
         port = self.srv.server_address[1]
 
         home = self.tmp / "home"
@@ -173,6 +239,7 @@ class Case(unittest.TestCase):
             "YMIR_GMAIL_API_BASE": f"http://127.0.0.1:{port}/gmail/v1",
             "YMIR_CALENDAR_API_BASE": f"http://127.0.0.1:{port}/calendar/v3",
             "YMIR_OAUTH_TOKEN_URL": f"http://127.0.0.1:{port}/token",
+            "GNA_DNS_SERVER": f"127.0.0.1:{self.dns.port}",
         }
 
     # helpers ---------------------------------------------------------------------
@@ -230,9 +297,47 @@ class MailGate(Case):
         self.assertEqual(self.api.sends, [])
         self.assertIn("REFUSED mail r-3: STALE", self.ledger())
 
+    def _drafted(self, *args: str) -> bytes:
+        """Draft with --dry-run and return the exact bytes the door would have sent.
+
+        --dry-run writes the .eml and posts nothing, so this needs no stand-in draft endpoint; the only
+        thing it asks the network for is the recipient's MX, which is why a machine with no resolver
+        SKIPs rather than failing (Rule 25: a clean skip is a pass, and it says which).
+        """
+        r = self.run_script(MAIL, "draft", *args, "--dry-run")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        line = [l for l in r.stdout.splitlines() if l.startswith("eml\t")]
+        self.assertTrue(line, f"the door printed no draft path: {r.stdout}{r.stderr}")
+        return Path(line[-1].split("\t", 1)[1]).read_bytes()
+
+    def test_5_a_letter_is_dressed_by_default(self):
+        """The words are the caller's; the dress is the house's, and nobody has to remember it."""
+        body = self.tmp / "letter.md"
+        body.write_text("Hi partner,\n\nA sentence with **weight**.\n\nThe house\n", encoding="utf-8")
+        raw = self._drafted("--to", "partner@letters.test", "--subject", "A plain letter",
+                            "--body", str(body), "--footer", "Growth Agent \u00b7 sent from the house")
+        message = BytesParser(policy=policy.default).parsebytes(raw)
+        self.assertEqual(message.get_content_type(), "multipart/alternative", "the letter went out undressed")
+        parts = {p.get_content_type(): p.get_content()
+                 for p in message.walk() if p.get_content_maintype() != "multipart"}
+        self.assertIn("text/html", parts, "there is no HTML half in the message")
+        self.assertIn("A sentence with", parts["text/plain"])
+        self.assertIn("<strong>weight</strong>", parts["text/html"], "the words were not dressed, they were changed")
+        self.assertIn("Growth Agent \u00b7 sent from the house", parts["text/html"], "the footer never reached the letter")
+        for demo in ("htmlemail.io", "Company Inc", "This is preheader text"):
+            self.assertNotIn(demo, parts["text/html"], f"a vendored demo line travelled with a real letter: {demo}")
+
+    def test_6_plain_is_the_deliberate_opt_out(self):
+        body = self.tmp / "plain.md"
+        body.write_text("Machine to machine. No paragraph needs a typeface.\n", encoding="utf-8")
+        raw = self._drafted("--to", "partner@letters.test", "--subject", "A bare note",
+                            "--body", str(body), "--plain")
+        message = BytesParser(policy=policy.default).parsebytes(raw)
+        self.assertEqual(message.get_content_type(), "text/plain", "--plain still carried an HTML half")
+
     def test_4_the_gate_is_a_verb_of_the_door_not_a_caller_habit(self):
         """`send` must not depend on anyone remembering to call `check` first."""
-        text = MAIL.read_text(encoding="utf-8")
+        text = (MAIL_REAL if MAIL_REAL.is_file() else MAIL).read_text(encoding="utf-8")
         send_body = text.split("send(){", 1)[1].split("\ndiscard(){", 1)[0]
         self.assertIn("gate mail", send_body, "the approval check is not inside the send door")
         self.assertLess(send_body.index("gate mail"), send_body.index("drafts/send"),
@@ -310,7 +415,7 @@ class CalendarGate(Case):
 
     def test_6_the_default_value_is_none_in_the_tool_itself(self):
         """A default that only the tests see is not a default: read the door."""
-        text = CAL.read_text(encoding="utf-8")
+        text = (CAL_REAL if CAL_REAL.is_file() else CAL).read_text(encoding="utf-8")
         self.assertNotIn("sendUpdates=all\"", text, "an unapproved sendUpdates=all is still spellable")
         self.assertIn('local send_updates="none"', text)
         self.assertEqual(text.count("send_updates=\"all\""), 2,
@@ -334,7 +439,15 @@ class GnaOwed(Case):
             if not path.is_file() or path.suffix not in (".sh", ".py"):
                 continue
             text = path.read_text(encoding="utf-8", errors="replace")
-            if re.search(r"mail-send\.sh\"?\s+send\b", text) and path.name not in {
+            # A SEND IS A CALL, NOT A SENTENCE. Measured 2026-11-09: this scan matched
+            # `bin/collab/letter.sh` because its HEADER names the command a human would run to
+            # send — a door that only drafts was reported as a door that sends around the gate.
+            # Comments are stripped before the scan, so prose cannot fail a gate and a real call
+            # still can.
+            code = "\n".join(ln for ln in text.splitlines()
+                             if not ln.lstrip().startswith(("#", "//", "*"))
+                             and not re.match(r"\s*(printf|echo|say|log|note)\b", ln))
+            if re.search(r"mail-send\.sh\"?\s+send\b", code) and path.name not in {
                     "mail-send.sh", "snotra-approve.sh", "meet.sh"}:
                 if "gate mail" not in text and "snotra-approve.sh" not in text:
                     offenders.append(str(path.relative_to(ROOT)))

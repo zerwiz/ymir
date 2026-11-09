@@ -6,11 +6,14 @@
 # that does not match the draft's CURRENT bytes is a refusal (plan 124 §7).
 #
 # TEMPLATES: systems/snotra/services/letters/templates/ — vendored, pinned, licence-clean
-# HTML letter templates (Cerberus · leemunroe · Mailgun). Send --html from one of them so a
-# letter reads as well in Gmail as in a terminal; read that folder's README first.
+# HTML letter templates (Cerberus · leemunroe · Mailgun). A letter is DRESSED BY DEFAULT: the words
+# in --body are rendered into leemunroe-simple by letter-html.py, so nobody has to remember to make a
+# letter look deliberate. `--plain` says so on purpose; `--html FILE` takes a letter dressed by hand in
+# another template; read that folder's README first.
 #
 #   mail-send.sh draft --to a@x,b@y --subject S --body FILE \
-#       [--html FILE] [--attach FILE ...] [--record ID] [--dry-run]
+#       [--html FILE | --template NAME | --plain] [--footer LINE] \
+#       [--attach FILE ...] [--record ID] [--dry-run]
 #   mail-send.sh raw    <draft-id>     # the exact bytes, for an approval hash
 #   mail-send.sh send <draft-id>       # refused unless the approval matches those bytes
 #   mail-send.sh discard <draft-id>
@@ -19,9 +22,9 @@
 #
 # Endpoint configuration (Rule 07): YMIR_GMAIL_API_BASE · YMIR_OAUTH_TOKEN_URL.
 set -euo pipefail
-VERSION="1.0.2"
+VERSION="1.0.3"
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
-  -h|--help|"") sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
+  -h|--help|"") sed -n '2,23p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 ACTION="${1:-draft}"; shift || true
 ROOT="$(d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; s="$d"; while [ "$d" != / ] && { [ ! -d "$d/RULES" ] || [ ! -d "$d/.agents" ]; }; do d="$(dirname "$d")"; done; { [ -d "$d/RULES" ] && [ -d "$d/.agents" ]; } || d="$s"; printf '%s' "$d")"
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true; fi
@@ -75,12 +78,15 @@ guard_recipients(){
 }
 
 draft(){
-  local to="" subject="" body="" html="" dry=0 record="" from_record="" meeting_dir=""; local attaches=()
+  local to="" subject="" body="" html="" dry=0 record="" from_record="" meeting_dir="" plain=0 template="leemunroe-simple" footer=""; local attaches=()
   while [ $# -gt 0 ]; do case "$1" in
     --to) to="${2-}"; shift 2 ;;
     --subject) subject="${2-}"; shift 2 ;;
     --body) body="${2-}"; shift 2 ;;
     --html) html="${2-}"; shift 2 ;;
+    --template) template="${2-}"; shift 2 ;;
+    --footer) footer="${2-}"; shift 2 ;;
+    --plain) plain=1; shift ;;
     --meeting-dir) meeting_dir="${2-}"; shift 2 ;;
     --attach) attaches+=("${2-}"); shift 2 ;;
     --record) record="${2-}"; shift 2 ;;
@@ -91,6 +97,17 @@ draft(){
   # --body is a FILE (the help says so). Read it; a plain string still works.
   if [ -f "$body" ]; then body="$(cat "$body")"; fi
   [ -n "$html" ] && [ -f "$html" ] && html="$(cat "$html")"
+  # A letter leaves dressed. The words stay exactly the words; this only puts them inside a template, so the
+  # house does not depend on any one hand remembering to style what it sends. --plain is the deliberate
+  # opt-out, and --html is a letter dressed by hand in one of the templates this script cannot re-render.
+  if [ -z "$html" ] && [ "$plain" != 1 ]; then
+    local render="$ROOT/systems/snotra/services/letters/letter-html.py"
+    [ -f "$render" ] || die "the letter renderer is missing: $render (pass --html FILE or --plain)"
+    local -a dress=(--subject "$subject" --template "$template")
+    [ -n "$footer" ] && dress+=(--footer "$footer")
+    html="$(printf '%s' "$body" | python3 "$render" "${dress[@]}" -)" || die "the letter could not be dressed in $template — pass --html FILE, or --plain"
+    [ -n "$html" ] || die "the letter renderer returned nothing — pass --html FILE, or --plain"
+  fi
   if [ -n "$from_record" ]; then
     [ -r "$from_record" ] || die "record not readable: $from_record"
     local extra; extra="$(python3 -c 'import json,sys;d=json.load(open(sys.argv[1]));print(",".join(p["email"] for p in d.get("participants",[]) if p.get("email")))' "$from_record")"
