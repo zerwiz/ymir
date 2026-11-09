@@ -4,7 +4,14 @@ FILE="${1:-${SSH_CONFIG:-$HOME/.ssh/config}}"
 if [ ! -e "$FILE" ]; then
   echo "PASS: no ssh config ($FILE)"; exit 0
 fi
-YMIR_HOME="${YMIR_HOME:-$HOME/Documents/ymirhome}"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+# The home is RESOLVED, never guessed (Rule 07) — the same door every other ward uses.
+# shellcheck disable=SC1091
+. "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
+[ -n "${YMIR_HOME:-}" ] || ymir_home_root YMIR_HOME 2>/dev/null || true
+if [ -z "${YMIR_HOME:-}" ]; then
+  echo "SKIP: the home is unresolved — set YMIR_HOME, or run from a checkout"; exit 0
+fi
 REG="$YMIR_HOME/hodd/data/fleet.json"
 python3 - "$FILE" "$REG" <<'PY'
 import json,sys,re

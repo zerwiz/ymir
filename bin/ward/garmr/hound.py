@@ -439,6 +439,12 @@ def main() -> int:
         return 0
 
     poll = int(cfg["hound"].get("poll_seconds", 60))
+    # OFF is a standing word: a service started by hand, or raised by a stray
+    # `systemctl start`, must not quietly begin watching behind it.
+    if common.is_off():
+        print("garmr: the hound is OFF at the Allfather's word — nothing watched "
+              "(bin/ward/garmr.sh on)", file=sys.stderr)
+        return 0
     last_poll = 0.0
     seen: set[str] = set()
     while True:

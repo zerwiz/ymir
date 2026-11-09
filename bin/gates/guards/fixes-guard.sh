@@ -163,6 +163,10 @@ path_component() {  # <path> -> the component it belongs to, or empty
     # to NO component, so a correct forge note could never cover a forge path and the gate
     # could only warn (2026-11-06, found while shipping the Utgard boxes).
     bin/forge/*|.agents/sandbox/*) echo forge ;;
+    # The ward: the hound, its senses and its switch. Before this row bin/ward/* mapped to
+    # NO component, so a correct ward note could never cover a ward path — the same defect
+    # the forge and bin/skuld rows above fixed (found 2026-11-09 while shipping the switch).
+    bin/ward/*|.agents/tests/garmr.test.sh) echo ward ;;
   esac
 }
 covered=0
