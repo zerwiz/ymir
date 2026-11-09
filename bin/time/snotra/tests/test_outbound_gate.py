@@ -47,7 +47,13 @@ from urllib.parse import parse_qs, unquote, urlparse
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
 MAIL = ROOT / "bin/time/snotra/mail-send.sh"  # allow-superseded-path: the SHIM is the door under test — a caller nobody has repointed must still work
+# …and the file that IMPLEMENTS it, for the proofs that judge the door's own text (plan 231).
+MAIL_REAL = ROOT / "systems/snotra/services/letters/mail-send.sh"
 CAL = ROOT / "bin/time/snotra/calendar-invite.sh"  # allow-superseded-path: as above — the retired shim is what a stale caller still runs
+# The door that IMPLEMENTS the write. `CAL` is a shim: it execs this one. A test that reads the
+# shim to judge the tool's defaults judges a two-line forwarder, and it said FAILED from
+# 2026-10-24 until plan 231 read the file that actually holds the value.
+CAL_REAL = ROOT / "systems/snotra/services/calendar/calendar-invite.sh"
 APPROVE = ROOT / "bin/time/snotra/snotra-approve.sh"  # allow-superseded-path: as above — the shim must exec the moved door
 
 # ── the two APIs, stood in for ───────────────────────────────────────────────────────
@@ -331,9 +337,7 @@ class MailGate(Case):
 
     def test_4_the_gate_is_a_verb_of_the_door_not_a_caller_habit(self):
         """`send` must not depend on anyone remembering to call `check` first."""
-        # the SHIM is what a stale caller still runs, but the send path lives in the moved door — a test that
-        # reads the shim finds no send() and proves nothing (this one was red from the move until 2026-11-09)
-        text = (ROOT / "systems/snotra/services/letters/mail-send.sh").read_text(encoding="utf-8")
+        text = (MAIL_REAL if MAIL_REAL.is_file() else MAIL).read_text(encoding="utf-8")
         send_body = text.split("send(){", 1)[1].split("\ndiscard(){", 1)[0]
         self.assertIn("gate mail", send_body, "the approval check is not inside the send door")
         self.assertLess(send_body.index("gate mail"), send_body.index("drafts/send"),
@@ -411,8 +415,7 @@ class CalendarGate(Case):
 
     def test_6_the_default_value_is_none_in_the_tool_itself(self):
         """A default that only the tests see is not a default: read the door."""
-        # the moved door holds the default; the shim only execs it (red from the plan-129 move until 2026-11-09)
-        text = (ROOT / "systems/snotra/services/calendar/calendar-invite.sh").read_text(encoding="utf-8")
+        text = (CAL_REAL if CAL_REAL.is_file() else CAL).read_text(encoding="utf-8")
         self.assertNotIn("sendUpdates=all\"", text, "an unapproved sendUpdates=all is still spellable")
         self.assertIn('local send_updates="none"', text)
         self.assertEqual(text.count("send_updates=\"all\""), 2,
@@ -436,7 +439,15 @@ class GnaOwed(Case):
             if not path.is_file() or path.suffix not in (".sh", ".py"):
                 continue
             text = path.read_text(encoding="utf-8", errors="replace")
-            if re.search(r"mail-send\.sh\"?\s+send\b", text) and path.name not in {
+            # A SEND IS A CALL, NOT A SENTENCE. Measured 2026-11-09: this scan matched
+            # `bin/collab/letter.sh` because its HEADER names the command a human would run to
+            # send — a door that only drafts was reported as a door that sends around the gate.
+            # Comments are stripped before the scan, so prose cannot fail a gate and a real call
+            # still can.
+            code = "\n".join(ln for ln in text.splitlines()
+                             if not ln.lstrip().startswith(("#", "//", "*"))
+                             and not re.match(r"\s*(printf|echo|say|log|note)\b", ln))
+            if re.search(r"mail-send\.sh\"?\s+send\b", code) and path.name not in {
                     "mail-send.sh", "snotra-approve.sh", "meet.sh"}:
                 if "gate mail" not in text and "snotra-approve.sh" not in text:
                     offenders.append(str(path.relative_to(ROOT)))

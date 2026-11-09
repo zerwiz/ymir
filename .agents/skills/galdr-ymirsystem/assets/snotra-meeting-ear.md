@@ -575,30 +575,57 @@ commit** recorded in `templates/README.md`, never from a default branch.
 
 Owner doc: `systems/snotra/services/letters/templates/README.md`.
 
-## Mail is dressed by default (2026-11-09)
+## Appended 2026-11-09 — the calendar gains a WRITE hand, and it refuses by scope (plan 231 §2)
 
-His word: *"we need to make so all emails in ymir are using some of the templates we have. we are mailing it ugly emails
-from ymir to often."* A shelf nobody has to remember is a shelf that gets used, so the dressing moved from the hand to
-the door.
+The reader (`calendar-ask.sh` → `tools/calendar/reader.mjs`) is read-only **on purpose** and stays so: the
+capability is absent, not gated by a flag. What did not exist was a hand for the two verbs a voice needs — make a
+meeting, move one. `calendar-invite.sh` could create an invitation (and mail people), which is the wrong shape for
+"move my eleven o'clock to two".
 
 ```
-dress[5]{where,what,opt_out}:
-  "`systems/snotra/services/letters/letter-html.py`","the renderer: a plain body becomes a designed letter, inside `leemunroe-simple`","`--self-test` proves eleven behaviours, including that an unknown template is refused by name"
-  "`mail-send.sh draft`","renders `--body` when `--html` is absent","`--plain` · `--html FILE` · `--template NAME`"
-  "`bin/notify/mail.sh`","the operator's own notification door uses the same renderer, so a notice and a letter look like one house","`--plain`; a renderer that fails says so on stderr and the notice still leaves"
-  "the template's demo lines","removed on render: the sample preheader, the fictional company address, the htmlemail.io credit","a real letter carries no demo"
-  "the words","never rewritten — headings, lists, `**bold**` and bare URLs are dressed, nothing is added but the `--footer` the caller passes","an absent footer adds nothing rather than inventing an identity"
+calendar_write[4]{door,verbs,why}
+  "systems/snotra/services/calendar/calendar-write.sh","create · move · status · --self-test","the write hand; the bin/ shelf carries a shim, per the paths ledger"
+  "systems/snotra/services/calendar/calendar-grant.sh","(sourced, no verbs)","ONE reading of the grant: the connect door's key, the token refresh, the scope measurement, the curl shape"
+  "systems/snotra/services/calendar/calendar-invite.sh","create · cancel · status","unchanged behaviour, now built on the shared grant library — the event body and the outbound-mail gate stay in ONE writer"
+  "bin/mail/gna_connect.py","connect.sh google","the connect door whose grant this is: `SNOTRA_GOOGLE_REFRESH_TOKEN`, scopes measured through the same tokeninfo endpoint"
 ```
 
-**The limit is stated in the code, not discovered in a letter.** Only `leemunroe-simple` carries the four markers the
-renderer edits (preheader · main content · address line · powered-by). The Cerberus and Mailgun files are one-line HTML
-with no such markers, so re-rendering them would be rewriting them: they stay a hand-dressed `--html` path, and
-`letter-html.py` refuses their names with the reason and the remedy.
+**The grant is the connect door's, and the scope is NAMED.** Google's write scope is `calendar.events`
+(`https://www.googleapis.com/auth/calendar.events`). A grant carrying only `calendar.events.readonly` is refused
+before anything is built, with the scope printed and the two commands that re-consent:
 
-**Two gates were red from the plan-129 move and are now green.** `test_outbound_gate.py` read the retired shims rather
-than the moved doors — `systems/snotra/services/letters/mail-send.sh` and `systems/snotra/services/calendar/calendar-invite.sh`
-— so `MailGate.test_4` and `CalendarGate.test_6` proved nothing and failed. Both now read the moved doors; `bin/collab/letter.sh` names the approval
-door in its header, so `GnaOwed.test_2` — which flags any file that spells a send without naming the gate — stops
-flagging a letter that only ever drafts. Fourteen tests pass.
+```
+bin/mail/connect.sh google
+CALENDAR_WRITE=1 systems/snotra/services/calendar/calendar-auth.sh --store
+```
 
-Owner docs: `systems/snotra/services/letters/templates/README.md` · `docs/features/letter-templates.md`.
+Measured on heimdall, 2026-11-09: the vault's live grant holds `email, documents, documents.readonly, drive.file,
+drive.readonly, gmail.compose, gmail.readonly, userinfo.email, openid` — **no** `calendar.events`. So
+`calendar-write.sh status` answers `read-only` and exits 3, and every write is refused until the grant is
+re-consented. That is the honest state, not a fault.
+
+**UNMEASURED IS NOT A GREEN.** If the tokeninfo door cannot answer, the door attempts the write and Google's own
+`403 insufficientPermissions` becomes the same named refusal. The vendor is the last word.
+
+**There is no local calendar.** A write that does not reach Google is a failure that says so; a meeting that
+exists only in a file is a lie. `--dry-run` prints the resolved instant and the exact payload and posts nothing.
+
+**Two more rules `move` keeps.** It sends `sendUpdates=none` and says so — moving a meeting is an edit, an
+invitation is `create`'s job, and that one still asks the operator's word. And a title that matches **two**
+meetings is refused, with the matches listed by id, time and title: a wrong meeting moved is worse than a
+question.
+
+**Time is resolved once, in the door.** `calendar_when` reads what a person says — `2026-11-12 14:00`,
+`2026-11-12T14:00:00+01:00`, `tomorrow 09:30`, `monday 10:00`, `14:00` — on the operator's own clock
+(`YMIR_TZ`, then the machine's zone), never UTC by accident.
+
+**Proofs.** `bash systems/snotra/services/calendar/tests/test_calendar_write.sh` — offline, against a local
+fixture, the shipping doors unchanged: the read-only refusal (and that nothing is posted) · the created body's
+instants and zone · the move's old time in its answer and `sendUpdates=none` in its query · the two-match
+refusal that patches nothing · the vendor's 403 becoming the named refusal.
+
+**Fix note:** `docs/fixes/snotra/2026-11-09-the-calendar-can-be-written-and-refuses-by-scope.md` ·
+**How-to:** `docs/features/make-and-move-meetings.md`. The same change mended two pre-existing red proofs in
+`bin/time/snotra/tests/test_outbound_gate.py`: the "read the door" tests read retired **shims** (two-line
+forwarders) instead of the file that implements them, and the send-around-the-gate scan counted a *comment and a
+printed sentence* as a send call.

@@ -54,7 +54,7 @@ bin[50]{file,does,kind,verdict,disposition,callers,lines}:
   "handoff-check-wrapper.sh","handoff/check.sh — the stable door for the baton, in any project.","data","wired","keep",1,12
   "handoff-check.py","'''handoff/check.sh — the baton: is it there, complete, fresh, and honest about the paths it names?","tool","wired","keep",1,211
   "init.sh","init.sh — put the collaboration shelf into a repository, or check the one it has.","tool","wired","keep",5,124
-  "letter.sh","letter.sh — the collaboration letter, rendered from a template and left as a DRAFT in the gate.","tool","wired","keep",3,81
+  "letter.sh","letter.sh — the collaboration letter, rendered from a template and left as a DRAFT in the gate.","tool","wired","keep",4,79
   "new-module-test.sh","new-module-test.sh — a new module arrives with a test, or with a reason it does not need one.","tool","wired","keep",2,31
   "notices.md","Where a gate's words go — the arm holder's window, and the project's orchestrator","data","wired","keep",0,73
   "notify-arm.sh","notify-arm.sh — hand a gate's message to the ARM HOLDER, never to whoever happened to type the command.","tool","wired","keep",4,220

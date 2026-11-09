@@ -64,19 +64,15 @@ digest() {
   mv "$tmp" "$out"
   local summary; summary="$(tail -n +4 "$out" | wc -l)"
   log "digest written: $out"
-  if command -v notify-send >/dev/null 2>&1; then
-    # A NOTIFICATION YOU CANNOT CLICK IS A DEAD END (the Allfather, 2026-11-09: "i cant click it so
-    # nothing happends"). The digest now offers the default action, and the click opens the file.
-    # `--wait` blocks until the toast is dismissed or actioned, so it is backgrounded, never inline.
-    if notify-send --help 2>&1 | grep -q -- "--action"; then
-      ( notify-send -a Snotra --wait --action=default=Open "Meeting digest" \
-          "$(grep -c '^|' "$out") rows · $out" >/tmp/snotra-digest.action 2>/dev/null || true
-        if grep -qi open /tmp/snotra-digest.action 2>/dev/null; then
-          command -v xdg-open >/dev/null 2>&1 && xdg-open "$out" >/dev/null 2>&1 || true
-        fi ) &
-    else
-      notify-send -a Snotra "Meeting digest" "$(grep -c '^|' "$out") rows · $out" 2>/dev/null || true
-    fi
+  # Every message carries a TARGET (plan 230): the digest opens as a file, and the one notify
+  # door owns the toast and the click. This used to be a bare libnotify call that looked
+  # clickable and did nothing — a dead affordance is a lie about capability. (A click was mended
+  # inline here on 2026-11-09 by 71c0b7d0; that fix is SUBSUMED, not lost: the click still opens
+  # the digest, and now every other message gets one through the same door.)
+  if [ -x "$ROOT/bin/notify/open-target.sh" ]; then
+    "$ROOT/bin/notify/open-target.sh" toast --app Snotra --glyph '✓' --urgency normal \
+      --title "Meeting digest" --body "$(grep -c '^|' "$out") rows" \
+      --target "file:$out" >/dev/null 2>&1 || true
   fi
   printf 'digest\t%s\n' "$out"
 }

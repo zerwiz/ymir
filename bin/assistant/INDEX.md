@@ -20,11 +20,12 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[27]{file,does,kind,verdict,disposition,callers,lines}:
+bin[28]{file,does,kind,verdict,disposition,callers,lines}:
   "adapter-test.sh","bin/assistant/adapter-test.sh -> systems/skirnir/services/adapter-test.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and say…","tool","wired","keep",0,16
   "approve-fact.sh","bin/assistant/approve-fact.sh -> systems/skirnir/services/approve-fact.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and say…","tool","wired","keep",0,16
   "ask.sh","bin/assistant/ask.sh -> systems/skirnir/services/ask.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","tested","keep",12,16
   "asks.sh","bin/assistant/asks.sh -> systems/skirnir/services/asks.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
+  "assistant-brief.sh","bin/assistant/assistant-brief.sh -> systems/skirnir/services/assistant-brief.sh — the SHIM (plan 227 S1.5).","tool","wired","keep",0,19
   "ban.sh","bin/assistant/ban.sh -> systems/skirnir/services/ban.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
   "ear.sh","bin/assistant/ear.sh -> systems/skirnir/services/ear.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
   "escalate.sh","bin/assistant/escalate.sh -> systems/skirnir/services/escalate.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
@@ -49,6 +50,6 @@ bin[27]{file,does,kind,verdict,disposition,callers,lines}:
   "voice.sh","bin/assistant/voice.sh -> systems/skirnir/services/voice.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
   "walls-test.sh","bin/assistant/walls-test.sh -> systems/skirnir/services/walls-test.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
 
-**Tally.** verdict: wired=25, tested=2
+**Tally.** verdict: wired=26, tested=2
 
-**Tally.** disposition: keep=27
+**Tally.** disposition: keep=28
