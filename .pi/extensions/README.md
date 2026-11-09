@@ -45,6 +45,7 @@ are **retired**.
 | `excalidraw/index.ts` | the excalidraw door | the team whiteboard fork: read its `tickets/` from the files, and probe/raise/lower its board, text-to-diagram bridge and room server |
 | `ymirhome.ts` | the ymirhome door | the door into `$YMIR_HOME` |
 | `ymir-subagents.ts` | the Eindri roster | exposes every `.agents/agents/*.md` figure through a `subagent` tool |
+| `context-left/index.ts` | the seat's own budget | `context_left` — the tokens of the last turn, the window the model holds, and the turns until compaction, from the harness's own state; publishes the reading so the voice repeats it instead of keeping a second counter |
 | `todo.ts` | — | the todo surface |
 | `nidhogg-notice-gate.ts` | **Níðhöggr** (the loop-breaker) | the console ward: a multi-line `console.warn`/`console.error` is reported by its first line, shown once per session, and the whole text appended to `<state>/pi-notices.log` — so a foreign extension's native-load failure cannot paint over the editor (`ctx.ui.notify`, not raw stderr) |
 | `open-editor.ts` | — | `/edit [path]` and `ctrl+shift+e` — open files in the operator's editor |
