@@ -67,19 +67,20 @@ fingerprints() {
 }
 
 notify() {  # <headline> <body> [urgency]
-  local h="$1" b="$2" u="${3:-normal}"
+  local h="$1" b="$2" u="${3:-normal}" sev="MEDIUM"
   [ "$NOTIFY" = 1 ] || return 0
-  # One voice: systems/snotra/services/tts-lease/ymir-say.sh owns the desktop manner.
+  [ "$u" = critical ] && sev="HIGH"
+  # ONE spout (plan 230): the hotline owns the toast. A crash has no file to open until a
+  # diagnosis writes one, so this message honestly carries NO target — its title says
+  # `(no link)` rather than offering a click that goes nowhere.
+  if [ -x "$ROOT/bin/notify/send.sh" ]; then
+    bash "$ROOT/bin/notify/send.sh" --source engine --severity "$sev" --message "$h — $b" >/dev/null 2>&1 || true
+    return 0
+  fi
   if [ -x "$ROOT/systems/snotra/services/tts-lease/ymir-say.sh" ]; then
     local mark=note
     [ "$u" = critical ] && mark=alarm
     "$ROOT/systems/snotra/services/tts-lease/ymir-say.sh" --mark "$mark" "$h" "$b" >/dev/null 2>&1 || true
-    return 0
-  fi
-  if have omarchy-notification-send; then
-    omarchy-notification-send -u "$u" -g "" "$h" "$b" >/dev/null 2>&1 || true
-  elif have notify-send; then
-    notify-send -u "$u" "$h" "$b" >/dev/null 2>&1 || true
   fi
 }
 

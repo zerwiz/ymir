@@ -64,19 +64,12 @@ digest() {
   mv "$tmp" "$out"
   local summary; summary="$(tail -n +4 "$out" | wc -l)"
   log "digest written: $out"
-  if command -v notify-send >/dev/null 2>&1; then
-    # A NOTIFICATION YOU CANNOT CLICK IS A DEAD END (the Allfather, 2026-11-09: "i cant click it so
-    # nothing happends"). The digest now offers the default action, and the click opens the file.
-    # `--wait` blocks until the toast is dismissed or actioned, so it is backgrounded, never inline.
-    if notify-send --help 2>&1 | grep -q -- "--action"; then
-      ( notify-send -a Snotra --wait --action=default=Open "Meeting digest" \
-          "$(grep -c '^|' "$out") rows · $out" >/tmp/snotra-digest.action 2>/dev/null || true
-        if grep -qi open /tmp/snotra-digest.action 2>/dev/null; then
-          command -v xdg-open >/dev/null 2>&1 && xdg-open "$out" >/dev/null 2>&1 || true
-        fi ) &
-    else
-      notify-send -a Snotra "Meeting digest" "$(grep -c '^|' "$out") rows · $out" 2>/dev/null || true
-    fi
+  # ONE spout (plan 230): the digest is a message whose TARGET is the digest itself, so
+  # a click opens it. No subsystem draws its own toast any more.
+  if [ -x "$ROOT/bin/notify/send.sh" ]; then
+    bash "$ROOT/bin/notify/send.sh" --source snotra --severity MEDIUM \
+      --message "Meeting digest: $(grep -c '^|' "$out") rows" --key "snotra:digest:$out" \
+      --target "file:$out" >/dev/null 2>&1 || true
   fi
   printf 'digest\t%s\n' "$out"
 }

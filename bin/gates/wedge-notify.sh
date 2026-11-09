@@ -45,13 +45,12 @@ mkdir -p "$STATE_DIR" 2>/dev/null || true
 printf '%s\twedge\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$CHANNEL" "$SUMMARY" >>"$LOG" 2>/dev/null || true
 
 fired=0
-# Speak through the one voice: systems/snotra/services/tts-lease/ymir-say.sh owns the desktop manner.
-if [ -x "$ROOT/systems/snotra/services/tts-lease/ymir-say.sh" ]; then
-  "$ROOT/systems/snotra/services/tts-lease/ymir-say.sh" --mark-alarm "wedge: escalation stuck" "$SUMMARY" >/dev/null 2>&1 && fired=1
-elif command -v omarchy-notification-send >/dev/null 2>&1; then
-  omarchy-notification-send -u critical -g "" "Ymir wedge: escalation stuck" "$SUMMARY" >/dev/null 2>&1 && fired=1
-elif command -v notify-send >/dev/null 2>&1; then
-  notify-send -u critical "Ymir wedge: escalation stuck" "$SUMMARY" >/dev/null 2>&1 && fired=1
+# ONE spout (plan 230): the hotline owns the toast, the pocket and the record, and the
+# alarm carries the durable log as its TARGET — so the click opens the line that names
+# what wedged. Nothing here draws its own notification.
+if [ -x "$ROOT/bin/notify/send.sh" ]; then
+  bash "$ROOT/bin/notify/send.sh" --source ward --severity HIGH \
+    --message "wedge ($CHANNEL): $SUMMARY" --key "wedge:$CHANNEL" --target "file:$LOG" >/dev/null 2>&1 && fired=1
 fi
 
 # The durable line above already recorded it; a silent host is not a failure of
