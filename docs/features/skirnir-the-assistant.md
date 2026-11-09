@@ -195,3 +195,57 @@ systems/skirnir/services/learn-site.sh --dry-run    # how many passages it would
 Measured: **187 passages from 8 pages**, and the digest now holds **307 facts** — so *"what is Gungnir"*,
 *"what are the ten laws"*, *"what is the watch"* answer from the site's own words. The generator owns
 only what it marked, so a re-run replaces its own facts and never touches a hand-approved one.
+
+## He answers, and he knows what is happening (2026-11-09)
+
+**The fault this ends.** Asked for `status` he replied *"WaveTerm Troubleshooting Guide — status Open."*
+— a **document title** matched by keyword and passed off as an answer. The model was already in his code
+and was never reached on the answer path, so a strong model changed nothing. Now a matched fact goes to
+the mouth and comes back composed, and the mouth sees **only the matched facts**: never the vault, never an
+NDA shelf, never another tenant, never even the rest of his book.
+
+**His database is the record, compiled.** Three things, in this order: the plan ledger read live, the git
+and errand record read live, and one **dated briefing** that ties them together in sentences and is
+observed into the one well under a stable tag (`assistant-briefing`). A copy of the plans would be stale
+the hour it was written, so the briefing names the record each line came from.
+
+```sh
+systems/skirnir/services/assistant-brief.sh refresh        # compile today's briefing, file it, observe it
+systems/skirnir/services/assistant-brief.sh show [date]    # print one
+systems/skirnir/services/assistant-brief.sh recall "what did we decide about the microphone"
+systems/skirnir/services/assistant-brief.sh status         # what he knows, and whether it is STALE
+bin/assistant/assistant-brief.sh refresh                   # the same door at the path its siblings use
+```
+
+It reads every source through the door that already owns it — `bin/gates/plan-audit.sh` and the ledger
+index for the plans, `bin/agents/eindri-liveness.sh` for the errands, `gh pr list` for what shipped,
+`bin/records/daily-log.sh` for the days, `bin/records/ymir-state.sh runes path` for the record, and
+`bin/records/mimir.sh` for the well. Nothing is re-implemented. The briefing lands at
+`$YMIR_HOME/hodd/memory/assistant/briefing/<date>.md`, appended (Rule 06): a second refresh the same day
+is a new dated section, never a rewrite.
+
+**Say it in his own words.** On Telegram: *"update skirnirs database"*, `/update`, `status`, and any
+"what did we decide / what shipped / what is in flight" question. A nightly Nornir row at **05:40** keeps
+it warm before the 07:00 briefing.
+
+**The bounds, which did not move.**
+
+```
+bounds[4]{rule}:
+  "the briefing never leaves for a collaborator","any tier but owner is refused by name, at the door and in the answer"
+  "no vault, no NDA, no other tenant","the door reads the plan ledger, the errands, the PRs and the daily log — and nothing else is even named in it"
+  "an answer about this week cites the briefing's date","a stale database is visible in the sentence, never hidden behind confidence"
+  "the gate still runs first","no URL, no link, no image, no code block, the intent allowlist, the canaries — before any model call, unchanged; a stranger never reaches a model at all"
+```
+
+**If it does not work.** `assistant-brief.sh status` says what he knows and whether it is stale. A refresh
+that answers nothing says so and overwrites nothing. A model that is not configured is not an outage: the
+answer is the matched reference **said as a reference** — "That is the reference I hold — I could not put
+it in my own words just now."
+
+**CHANGE LOG**
+
+- **2026-11-09** — the answer path (compose from the matched facts, a labelled fallback, public-only for
+  anyone but the Allfather), his database (`assistant-brief.sh`, four verbs, the dated briefing in the
+  well), the Telegram fixes (a rate limit tells him to wait; a poison message, a failed poll and a lost
+  offset can no longer leave him deaf). Plan 227 §§1, S1.5.

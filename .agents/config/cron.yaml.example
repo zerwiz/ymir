@@ -20,6 +20,11 @@
 # @dev (a full body), @hand. No gate means any role. A dev body must NOT run the
 # record jobs; that is how 8 orphan seat schedulers came to run a heart's work.
 #   # @hourly:20 bin/time/well-vault-sync.sh --mode sync     # every hour, this box's minute
+# SKÍRNIR'S DATABASE (plan 227 §S1.5.3): the assistant compiles the house's current state into ONE dated
+# briefing — the plan ledger, the errands alive and dead, the week's merged PRs, the decisions and the
+# runes — and observes it into the well. 05:40, so the 07:00 briefing and the assistant share one text.
+# His own phrase "update skirnirs database" (and /update) runs the same door on demand.
+@dev 05:40 systems/skirnir/services/assistant-brief.sh refresh
 @heart 07:00 bin/time/nornir-job-daily-briefing.sh
 # THE DAILY LINE (documentation design, 2026-11-01): what moved, what is blocked, what is owed, written
 # from the handoffs and the cards rather than from memory. The briefing above is the morning read; this is
