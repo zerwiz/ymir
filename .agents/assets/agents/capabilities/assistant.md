@@ -12,6 +12,7 @@
 | approve-fact.sh | bin/assistant/approve-fact.sh -> systems/skirnir/services/approve-fact.s | tested | keep (a human or a cron row must run it) |
 | ask.sh | bin/assistant/ask.sh -> systems/skirnir/services/ask.sh — RETIRED SHIM | tested+named | keep (a human or a cron row must run it) |
 | asks.sh | bin/assistant/asks.sh -> systems/skirnir/services/asks.sh — RETIRED SH | tested | keep (a human or a cron row must run it) |
+| assistant-brief.sh | bin/assistant/assistant-brief.sh -> systems/skirnir/services/assistant-b | tested | keep (a human or a cron row must run it) |
 | ban.sh | bin/assistant/ban.sh -> systems/skirnir/services/ban.sh — RETIRED SHIM | tested | keep (a human or a cron row must run it) |
 | ear.sh | bin/assistant/ear.sh -> systems/skirnir/services/ear.sh — RETIRED SHIM | tested+named | keep (a human or a cron row must run it) |
 | escalate.sh | bin/assistant/escalate.sh -> systems/skirnir/services/escalate.sh — RE | tested | keep (a human or a cron row must run it) |

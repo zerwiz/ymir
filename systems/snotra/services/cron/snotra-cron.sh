@@ -64,11 +64,14 @@ digest() {
   mv "$tmp" "$out"
   local summary; summary="$(tail -n +4 "$out" | wc -l)"
   log "digest written: $out"
-  # ONE spout (plan 230): the digest is a message whose TARGET is the digest itself, so
-  # a click opens it. No subsystem draws its own toast any more.
-  if [ -x "$ROOT/bin/notify/send.sh" ]; then
-    bash "$ROOT/bin/notify/send.sh" --source snotra --severity MEDIUM \
-      --message "Meeting digest: $(grep -c '^|' "$out") rows" --key "snotra:digest:$out" \
+  # Every message carries a TARGET (plan 230): the digest opens as a file, and the one notify
+  # door owns the toast and the click. This used to be a bare libnotify call that looked
+  # clickable and did nothing — a dead affordance is a lie about capability. (A click was mended
+  # inline here on 2026-11-09 by 71c0b7d0; that fix is SUBSUMED, not lost: the click still opens
+  # the digest, and now every other message gets one through the same door.)
+  if [ -x "$ROOT/bin/notify/open-target.sh" ]; then
+    "$ROOT/bin/notify/open-target.sh" toast --app Snotra --glyph '✓' --urgency normal \
+      --title "Meeting digest" --body "$(grep -c '^|' "$out") rows" \
       --target "file:$out" >/dev/null 2>&1 || true
   fi
   printf 'digest\t%s\n' "$out"

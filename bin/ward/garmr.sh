@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # garmr.sh — GARMR, the hound at the gate: the door to Ymir's guardian.
 #
-#   garmr.sh status              # what is armed, what is running, what has been judged
+#   garmr.sh status              # what is armed, what is running, OFF or ON
+#   garmr.sh off | on            # the ONE switch: turn the guardian off, and back on  [root]
 #   garmr.sh install [--dry-run] # arm the senses (auditd) and seat the two units  [root]
 #   garmr.sh start|stop|restart  # the hound (system) and the brain (user)
 #   garmr.sh judge [--dry-run]   # run the judgement once, now
@@ -20,7 +21,9 @@ ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 GARMR="$ROOT/bin/ward/garmr"
 PY="$(command -v python3 || echo /usr/bin/python3)"
 
-usage() { sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'; }
+# the usage is the header itself, read until the first line that is not a comment,
+# so adding a verb can never print `set -u` as if it were help (it did).
+usage() { awk 'NR>1 && /^#/ { sub(/^# ?/, ""); print; next } NR>1 { exit }' "$0"; }
 
 # Under sudo, HOME is root's and the hoard cannot resolve: adopt the operator's.
 RUN_UID="${SUDO_UID:-$(id -u)}"
@@ -65,6 +68,35 @@ HOME_DIR="$(hoard)"
 STATE="$HOME_DIR/hodd/state/garmr"
 FINDINGS="/var/log/ymir/garmr/findings.jsonl"
 AUDIT_LOG="/var/log/audit/audit.log"
+# THE SWITCH has one authority and one readable copy. The authority is ROOT's marker, so no
+# ordinary process can silence the hound; the copy is the surfaces' REPORT, because Hlidskjalf
+# and housewatch read the HOME and a root-only path left them saying "all clear" over a paused
+# hound. The copy is never the gate: a file the operator can write must not be able to silence
+# a guardian, or it is a switch the intruder flips first.
+MARKER="/var/log/ymir/garmr/PAUSED"
+MIRROR="$STATE/PAUSED"
+
+is_off() { [ -f "$MARKER" ]; }                      # the gate: root's word only
+reports_off() { [ -f "$MARKER" ] || [ -f "$MIRROR" ]; }   # what the surfaces may say
+
+write_mirror() {  # <text> — the operator-readable copy of root's word
+  mkdir -p "$STATE" 2>/dev/null || return 0
+  printf '%s\n' "$1" > "$MIRROR" 2>/dev/null || return 0
+  chmod 0644 "$MIRROR" 2>/dev/null || true
+  if [ "$(id -u)" -eq 0 ] && [ -n "${SUDO_USER:-}" ]; then
+    chown "$SUDO_USER:" "$MIRROR" 2>/dev/null || true
+  fi
+}
+
+mode_text() {
+  if reports_off; then
+    local since
+    since="$(cat "$MARKER" 2>/dev/null || cat "$MIRROR" 2>/dev/null || echo unknown)"
+    printf 'OFF (since %s) — the units are disabled, so a reboot will not raise him' "$since"
+  else
+    printf 'ON — watching'
+  fi
+}
 
 # ONE file holds the rules, so a reboot cannot disarm the house (Rule 24).
 rules_text() {
@@ -167,6 +199,10 @@ arm_senses() {
 
 seat_units() {
   local render="$SCRIPT_DIR/../../tools/mill/systemd"
+  # OFF is a standing word, not a moment: while the marker stands, a refresh may re-render
+  # the units but must never enable or start them — otherwise Groa, install, or a reboot
+  # quietly raises a guardian the Allfather put down (and it did, every update).
+  local off=0; is_off && off=1
   # The units must run the PINNED runtime, never the checkout an agent happens to be
   # standing in (runtime-pinned-guard). Resolve it once, and fall back to this tree
   # only when no pinned checkout exists.
@@ -184,9 +220,13 @@ seat_units() {
     sed "s|__YMIR_ROOT__|$unit_root|g" "$render/garmr-arm.service" \
       | "${run[@]}" tee /etc/systemd/system/garmr-arm.service >/dev/null
     "${run[@]}" systemctl daemon-reload
-    "${run[@]}" systemctl enable garmr-arm.service
-    "${run[@]}" systemctl restart garmr-arm.service
-    "${run[@]}" systemctl enable --now garmr-hound.service
+    if [ "$off" = 1 ]; then
+      "${run[@]}" systemctl disable garmr-arm.service garmr-hound.service >/dev/null 2>&1 || true
+    else
+      "${run[@]}" systemctl enable garmr-arm.service
+      "${run[@]}" systemctl restart garmr-arm.service
+      "${run[@]}" systemctl enable --now garmr-hound.service
+    fi
   else
     printf 'garmr: the hound needs root, and sudo is not available without a password here; its two system units were left alone (run: sudo -v, then garmr.sh install)\n' >&2
   fi
@@ -195,22 +235,31 @@ seat_units() {
     > "$HOME/.config/systemd/user/garmr-brain.service"
   cp "$render/garmr-brain.timer" "$HOME/.config/systemd/user/garmr-brain.timer"
   as_operator systemctl --user daemon-reload
-  as_operator systemctl --user enable --now garmr-brain.timer
+  if [ "$off" = 1 ]; then
+    as_operator systemctl --user disable garmr-brain.timer >/dev/null 2>&1 || true
+    printf 'garmr: units re-rendered and left OFF at the Allfather word — `garmr.sh on` raises him\n'
+  else
+    as_operator systemctl --user enable --now garmr-brain.timer
+  fi
 }
 
 status() {
   local hound brain judged=0
-  hound="$(systemctl is-active garmr-hound.service 2>/dev/null || echo unknown)"
-  brain="$(systemctl --user is-active garmr-brain.timer 2>/dev/null || echo unknown)"
+  # `systemctl is-active` PRINTS the state and exits non-zero when it is not active, so the old
+  # `|| echo unknown` printed two lines ("inactive" then "unknown") — a status line that argues
+  # with itself. Ask, then fill in only when it said nothing.
+  hound="$(systemctl is-active garmr-hound.service 2>/dev/null || true)"; [ -n "$hound" ] || hound=unknown
+  brain="$(systemctl --user is-active garmr-brain.timer 2>/dev/null || true)"; [ -n "$brain" ] || brain=unknown
   [ -f "$STATE/judged.jsonl" ] && judged="$(wc -l < "$STATE/judged.jsonl" | tr -d ' ')"
   printf 'garmr{seals}:\n'
+  printf '  mode                    %s\n' "$(mode_text)"
   printf '  hound (system)          %s\n' "$hound"
   printf '  brain timer (user)      %s\n' "$brain"
-  printf '  audit rules armed       %s\n' "$(sudo -n auditctl -l 2>/dev/null | grep -c ymir- || echo '0 (or no sudo)')"
+  printf '  audit rules armed       %s\n' "$(sudo -n auditctl -l 2>/dev/null | grep -c ymir- || true)"
   printf '  findings file           %s\n' "$([ -f "$FINDINGS" ] && wc -l < "$FINDINGS" | tr -d ' ' || echo 'none yet')"
   printf '  judged                  %s\n' "$judged"
   printf '  heartbeat               %s\n' "$(cat "$STATE/hound.heartbeat" 2>/dev/null || echo 'never')"
-  printf '  paused                  %s\n' "$([ -f /var/log/ymir/garmr/PAUSED ] && echo "yes (root marker, since $(cat /var/log/ymir/garmr/PAUSED))" || echo no)"
+  printf '  paused                  %s\n' "$(reports_off && echo yes || echo no)"
   printf '  config                  %s\n' "$(GARMR_PRINT_CONFIG=1 "$PY" - <<'PY' 2>/dev/null
 import sys, os
 sys.path.insert(0, os.path.join(os.environ.get('ROOT','.'), 'bin/ward/garmr'))
@@ -236,39 +285,81 @@ verify() {
   return "$fails"
 }
 
-case "$cmd" in
-  pause|resume)
-    # The on/off switch is ROOT's. A guardian an ordinary process can silence is a
-    # guardian that can be silenced by the thing it watches.
-    if [ "$(id -u)" -ne 0 ]; then
-      printf 'refused: pausing or resuming the hound needs root.\n' >&2
-      printf 'help: sudo bin/ward/garmr.sh %s\n' "$cmd" >&2
-      exit 1
-    fi
-    marker="/var/log/ymir/garmr/PAUSED"
-    log="/var/log/ymir/garmr/pause.log"
-    mkdir -p /var/log/ymir/garmr
-    if [ "$cmd" = "pause" ]; then
-      date -Iseconds > "$marker"
-      printf '%s\tpaused\tby uid %s\n' "$(date -Iseconds)" "${SUDO_UID:-$UID}" >> "$log"
-      systemctl stop garmr-hound.service 2>/dev/null || true
-      as_operator systemctl --user stop garmr-brain.timer 2>/dev/null || true
-      printf 'garmr: PAUSED by root at %s — the state is written down, and the tower will say so\n' "$(date -Iseconds)"
+# ── THE SWITCH ─────────────────────────────────────────────────────────────────
+# One word each way: `off` and `on`. `pause` and `resume` are the same switch under its
+# older names, kept so an old script, an old runbook or an old habit still works.
+#
+# off  = root's marker + its readable copy, the two system units and the user timer STOPPED
+#        and DISABLED, so a reboot, a `refresh` by Groa, or a re-install cannot raise him.
+# on   = the marker cleared, the units enabled again and started.
+#
+# It is ROOT's on purpose. A guardian an ordinary process can silence is a guardian the
+# intruder silences first — the smoke test asserts a non-root `off` is refused.
+# What `off` does NOT do: unload the kernel's audit rules (they are auditd's, they cost
+# almost nothing, and forgetting them is how a seat ends up deaf after a quiet week).
+set_switch() {  # <off|on>
+  local want="$1"
+  local marker="$MARKER"
+  local log="/var/log/ymir/garmr/pause.log"
+  # --dry-run: the plan without root, so the Allfather can see the turn before he makes it.
+  if [ "$dry" = 1 ]; then
+    local now; now="$(date -Iseconds)"
+    if [ "$want" = off ]; then
+      printf 'would: write %s and %s with "%s"\n' "$marker" "$MIRROR" "$now"
+      printf 'would: append "%s\toff\tby uid %s" to %s\n' "$now" "${SUDO_UID:-$UID}" "$log"
+      printf 'would: systemctl stop+disable garmr-hound.service garmr-arm.service\n'
+      printf 'would: systemctl --user stop+disable garmr-brain.timer\n'
     else
-      if [ -f "$marker" ]; then
-        printf '%s\tresumed\twas paused since %s\n' "$(date -Iseconds)" "$(cat "$marker")" >> "$log"
-      fi
-      rm -f "$marker"
-      systemctl start garmr-hound.service 2>/dev/null || true
-      as_operator systemctl --user start garmr-brain.timer 2>/dev/null || true
-      printf 'garmr: resumed\n'
-    fi ;;
+      printf 'would: append the on-line to %s, then remove %s and %s\n' "$log" "$marker" "$MIRROR"
+      printf 'would: systemctl enable+start garmr-arm.service garmr-hound.service\n'
+      printf 'would: systemctl --user enable --now garmr-brain.timer\n'
+    fi
+    return 0
+  fi
+  if [ "$(id -u)" -ne 0 ]; then
+    printf 'refused: turning the guardian %s needs root — the marker is root-owned on purpose.\n' "$want" >&2
+    printf 'help: sudo bin/ward/garmr.sh %s   (or %s --dry-run to see the plan)\n' "$want" "$want" >&2
+    exit 1
+  fi
+  mkdir -p /var/log/ymir/garmr
+  local now; now="$(date -Iseconds)"
+  if [ "$want" = off ]; then
+    printf '%s\n' "$now" > "$marker"
+    write_mirror "$now"
+    printf '%s\toff\tby uid %s\n' "$now" "${SUDO_UID:-$UID}" >> "$log"
+    systemctl stop garmr-hound.service garmr-arm.service 2>/dev/null || true
+    systemctl disable garmr-hound.service garmr-arm.service 2>/dev/null || true
+    as_operator systemctl --user stop garmr-brain.timer 2>/dev/null || true
+    as_operator systemctl --user disable garmr-brain.timer 2>/dev/null || true
+    printf 'garmr: OFF at %s — the hound and the judgement are down, the units are disabled,\n' "$now"
+    printf 'garmr: so a reboot will not raise him. The kernel audit rules stay loaded.\n'
+    printf 'garmr: `sudo bin/ward/garmr.sh on` wakes him.\n'
+  else
+    printf '%s\ton\twas off since %s\n' "$now" "$(cat "$marker" 2>/dev/null || cat "$MIRROR" 2>/dev/null || echo unknown)" >> "$log"
+    rm -f "$marker" "$MIRROR"
+    systemctl enable garmr-arm.service garmr-hound.service 2>/dev/null || true
+    systemctl start garmr-arm.service 2>/dev/null || true
+    systemctl start garmr-hound.service 2>/dev/null || true
+    as_operator systemctl --user enable --now garmr-brain.timer 2>/dev/null || true
+    printf 'garmr: ON at %s — the hound is up, the judgement ticks, and the units are enabled again\n' "$now"
+  fi
+}
+
+case "$cmd" in
+  on|off|pause|resume)
+    case "$cmd" in off|pause) want=off ;; *) want=on ;; esac
+    set_switch "$want" ;;
   refresh)
     seat_units
     printf 'garmr: units re-rendered and reloaded (rules untouched)\n' ;;
   status)  status ;;
-  install) arm_senses; seat_units; echo "garmr: senses armed, units seated" ;;
-  start)   sudo systemctl start garmr-hound.service; systemctl --user start garmr-brain.timer ;;
+  install) arm_senses; seat_units; is_off && echo "garmr: the senses are armed but the hound stays OFF at your word (garmr.sh on)" || echo "garmr: senses armed, units seated" ;;
+  start)
+    if is_off; then
+      printf 'refused: the hound is OFF at the Allfather word — `sudo bin/ward/garmr.sh on` raises him.\n' >&2
+      exit 1
+    fi
+    sudo systemctl start garmr-hound.service; systemctl --user start garmr-brain.timer ;;
   stop)    sudo systemctl stop garmr-hound.service; systemctl --user stop garmr-brain.timer ;;
   restart) sudo systemctl restart garmr-hound.service; systemctl --user restart garmr-brain.timer ;;
   judge)   "$PY" "$GARMR/brain.py" --once ${dry:+--dry-run} ;;
@@ -276,5 +367,5 @@ case "$cmd" in
   verify)  verify ;;
   tail)    "$PY" "$GARMR/brain.py" --file "$FINDINGS" --once --dry-run | tail -n "${1:-20}" ;;
   -h|--help) usage ;;
-  *) printf 'error: unknown command %s\nhelp: garmr.sh [status|install|start|stop|restart|judge|once|verify|tail]\n' "$cmd" >&2; exit 2 ;;
+  *) printf 'error: unknown command %s\nhelp: garmr.sh [status|off|on|install|start|stop|restart|judge|once|verify|tail]\n' "$cmd" >&2; exit 2 ;;
 esac

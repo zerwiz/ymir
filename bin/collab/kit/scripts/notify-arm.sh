@@ -54,6 +54,16 @@ say() { [ "$DEBUG" = 1 ] && printf 'notify-arm: %s\n' "$*" >&2; return 0; }
 
 root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 repo="$(basename "$root")"
+# ---- the home, resolved by the house's own door ---------------------------------------------------------
+# THE HOARD IS ASKED, NEVER ASSUMED (RULES/07). When this kit runs inside a Ymir the resolver answers;
+# a guest repository carries no home, and this door then carries none rather than inventing one.
+_kit_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." 2>/dev/null && pwd)"
+if [ -z "${YMIR_HOME:-}" ] && [ -r "$_kit_root/bin/vault/hoard-lib.sh" ]; then
+  # shellcheck disable=SC1091
+  . "$_kit_root/bin/vault/hoard-lib.sh" 2>/dev/null || true
+  # shellcheck disable=SC2317
+  command -v ymir_home_root >/dev/null 2>&1 && { ymir_home_root YMIR_HOME 2>/dev/null || true; }
+fi
 # ---- where the arm lives -----------------------------------------------------------------------------
 resolve_state() {
   local c

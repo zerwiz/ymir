@@ -1,53 +1,62 @@
-# Every message opens something
+# Every message opens — a toast that goes somewhere
+
+> A notification that looks clickable and does nothing is worse than one that plainly cannot be
+> clicked: it teaches you to stop trying. So every message the house shows carries a **target**,
+> and one door — `bin/notify/open-target.sh` — both shows the toast and opens the target.
 
 ## What it is
 
-Every notification the house sends now carries a **target**: the thing it is about. Click the toast and it
-opens — the digest, the plan, the pull request, the hall's own page. A message that has nothing to open says
-so in its own title, `(no link)`, so you learn at a glance which few are dead ends instead of clicking and
-being disappointed.
+One door with two jobs. It **sends** the desktop toast, and it **opens** what the toast points at
+when you click. Every subsystem that used to call a notifier itself now goes through it, so the
+manner cannot drift and a dead link cannot hide.
+
+A target is one of four kinds:
+
+- a **file** — `file:<path>`, absolute or home-relative (`hodd/…` resolves inside your home);
+- a **plan** — `plan:230`, resolved to that number's file in the plan ledger;
+- a **pull request** — `pr:https://…`, opened in your own browser;
+- a **Hlidskjalf route** — `yl:fleet`, opened at `http://127.0.0.1:3888/#/fleet`.
 
 ## What you need
 
-A desktop with a notification daemon (Omarchy's own notifier, or `notify-send`), and a browser or editor for
-`xdg-open` to hand the target to.
+Nothing new: `xdg-open` (or `open` on macOS) for opening, and either Omarchy's own
+`omarchy-notification-send` or `notify-send` for the toast. If neither notifier exists the message
+is still recorded — a silent host is not a lost message.
 
-## Do it
+## The commands
 
-Send yourself a message with a target:
-
-```
-bin/notify/send.sh --source notify --severity INFO --message "a plan to read" --target plan:230
-```
-
-The toast says what it opens; click it and the plan opens. The four kinds:
-
-```
-file:<path>      a file under the home or the tree
-plan:<number>    the ledger file for that plan number
-pr:<url>         a GitHub pull request, opened in your own browser
-yl://<route>     a Hlidskjalf page (only while the gate answers)
+```sh
+bin/notify/open-target.sh --check                      # what this seat can open and show with
+bin/notify/open-target.sh resolve plan 230              # does it exist? prints the file, changes nothing
+bin/notify/open-target.sh file hodd/docs/INDEX.md       # open it now
+bin/notify/open-target.sh toast --title "Meeting digest" --body "3 rows" --target file:<digest.md>
+bin/notify/send.sh --source snotra --severity MEDIUM --message "the digest is ready" \
+    --target file:<digest.md>                          # the hotline carries the target too
 ```
 
-Verify a target without opening anything:
+## Limits — what it will not do
 
-```
-bin/notify/open-target.sh --check plan:230
-bin/notify/open-target.sh --check file:hodd/memory/daily/2026-11-09.md
-```
-
-## Notes & limits
-
-- A missing target is refused and filed as a finding — it is never offered as a click.
-- A `yl://` route is refused while the gate is down (`gate-down`); the door does not open a dead URL.
-- One toast door draws every toast (`bin/notify/desktop.sh`), so no subsystem can invent its own behaviour:
-  `grep -rn notify-send` finds only `bin/notify/`.
-- An approval still works as a click that **runs** something (`--exec`), which is how "approve" is one
-  gesture.
+- **A message with no target says so in its title**: `(no link)`. That is deliberate; you learn at
+  a glance which few messages are dead ends.
+- **A target that has gone says `(target missing)`**, opens nothing, and files one finding with the
+  hotline so the dead link gets fixed instead of clicked again.
+- **A route is not a promise.** `yl:` opens the gate's own URL; if the gate is down the door says
+  so (exit 4) and opens nothing.
+- A file opens in your editor when `$VISUAL`/`$EDITOR` is set, otherwise in the desktop's default
+  handler.
 
 ## If it does not work
 
-- The toast appears but has no action — the notification daemon does not support actions; the target is
-  still printed in the message and in the ledger line.
-- `no-opener` — set `YMIR_OPEN_CMD` to your opener (default `xdg-open`).
-- `target missing` in the title — the path moved; the finding is in the runes ledger.
+`open-target.sh --check` names each piece and whether it answers: the opener, the editor, the gate
+and the notifier. If the click does nothing, run `open-target.sh resolve <kind> <value>` — it is the
+same resolver the click uses, and it says what it found.
+
+## Files
+
+`bin/notify/open-target.sh` · `bin/notify/send.sh` · `bin/notify/tests/test_open_target.sh`
+
+## CHANGE LOG
+
+- **2026-11-09** — written with the door it describes (plan 230 N1/N2, plan 231 R4):
+  the four target kinds, the three-way title rule, `send.sh --target`, and the four
+  senders repointed at it.

@@ -111,3 +111,57 @@ is using the real microphone.
 `snotra-voice-device.sh ensure`; no voice means `systemctl --user start kokoro-serve` and
 `journalctl --user -u kokoro-serve`; silence in the room means the client is not listening
 to *Snotra Mic*.
+
+## The ladder — transcript → minutes → promises → todos
+
+**What it is.** `bin/records/snotra-ladder.sh` finishes what the ear starts. The ear recorded and
+transcribed and then **stopped**, and nothing said so: measured 2026-11-09 the shelf held
+`3 meetings · 2 transcripts · 0 minutes · 0 promises`. The ladder now walks four rungs and
+names the one it cannot pass.
+
+```sh
+bin/records/snotra-ladder.sh steps                     # what the four rungs are, and what each proves
+bin/records/snotra-ladder.sh run <id-or-folder>        # one meeting
+bin/records/snotra-ladder.sh run --pending             # every transcript with no minutes
+bin/records/snotra-ladder.sh status <id>               # where this meeting stands
+bin/records/snotra-ladder.sh --self-test               # a finished run and a failed step, proven
+```
+
+```
+ladder[4]{step,what}:
+  "transcript","the words beside the recording (transcribed on the seat when only audio exists)"
+  "minutes","composed BY THE MODEL from the transcript and the people present, into that meeting's own folder"
+  "promises","every promise the minutes carry, written as actions.md in the same folder"
+  "todos","every promise filed on the board in the same act (bin/records/todos.sh)"
+```
+
+**A step that fails says so.** It writes `stopped at <step>: <reason>` into the meeting's own
+`.state`, fires the hotline, and exits non-zero — so a meeting that failed at transcription
+never looks finished. A rung that is already done is not redone twice, and a promise filed once
+is not filed again (the board is keyed per meeting and rung).
+
+**The minutes are the model's, not a template's.** Which model is the seat's own choice
+(`SNOTRA_RAIL_MODEL` in the watch unit's drop-in, then `RAIL_MODEL`, then the rail's first
+served model); the rail URL and the key resolve through `bin/model/rail-resolve.sh` and the
+vault. If no rail answers, the rung FAILS with the reason rather than inventing minutes.
+
+## The index — what your calls produced
+
+`bin/records/meetings.sh` reads the folders and derives one row per meeting; it is never a
+second record. Beyond `list · show · totals` it answers:
+
+```sh
+bin/records/meetings.sh json            # the same rows, machine-readable (one shape for every reader)
+bin/records/meetings.sh brief           # the ONE line the daily brief carries
+bin/records/meetings.sh state <id>      # finished, or `stopped at <step>: <reason>`
+bin/records/meetings.sh plans <id>      # the plans this meeting produced
+```
+
+**The join both ways.** A plan written out of a meeting carries `from_meeting: <id>` in its
+header — `bin/records/plan.sh new <slug> --title "<title>" --from-meeting <id>` writes it, and
+`bin/records/plan.sh from-meeting <id>` reads it back. `meetings.sh plans <id>` refuses rather
+than guessing when no plan names the meeting.
+
+**If it does not work.** `meetings.sh totals` is the ground truth: `with_minutes` at 0 means the
+ladder has not run (or stopped — `meetings.sh state <id>` says which). An empty `plans` answer
+means no plan header names that meeting yet.

@@ -126,8 +126,7 @@ def _escalate(finding: dict, severity: str, context: list[dict], cfg: dict) -> d
 def paused() -> bool:
     """Paused is ROOT's word: the marker lives in the hound's own state, so a
     process running as the operator cannot silence the judgement."""
-    return os.path.exists(common.pause_marker()) or os.path.exists(
-        os.path.join(common.state_dir(), "PAUSED"))
+    return common.is_off()
 
 
 def judge(rows: list[dict], cfg: dict, dry_run: bool = False,

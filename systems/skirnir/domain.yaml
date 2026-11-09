@@ -1,5 +1,5 @@
 version: 1
-updated: "2026-10-31"
+updated: "2026-11-09"
 
 # systems/skirnir/domain.yaml — Skírnir's own declaration, in his own folder.
 #
@@ -26,6 +26,7 @@ memory: well namespace domain:skirnir
 doors:
   voice: [services/ear.sh, services/mouth.sh, services/voice.sh, services/voice-handler.sh]
   knowledge: [services/skirnir.py, services/ground.py, services/research.py, services/query.sh]
+  database: [services/assistant-brief.sh, services/assistant_brief.py]   # plan 227 §S1.5 — the dated briefing, four verbs
   gate: [services/asks.sh, services/ask.sh, services/approve-fact.sh, services/escalate.sh, services/escalation-timer.sh]
   rooms: [services/room.sh, services/room-squad.sh, services/room-wall-test.sh, services/walls-test.sh]
 called_by:

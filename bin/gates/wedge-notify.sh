@@ -45,12 +45,13 @@ mkdir -p "$STATE_DIR" 2>/dev/null || true
 printf '%s\twedge\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$CHANNEL" "$SUMMARY" >>"$LOG" 2>/dev/null || true
 
 fired=0
-# ONE spout (plan 230): the hotline owns the toast, the pocket and the record, and the
-# alarm carries the durable log as its TARGET — so the click opens the line that names
-# what wedged. Nothing here draws its own notification.
-if [ -x "$ROOT/bin/notify/send.sh" ]; then
-  bash "$ROOT/bin/notify/send.sh" --source ward --severity HIGH \
-    --message "wedge ($CHANNEL): $SUMMARY" --key "wedge:$CHANNEL" --target "file:$LOG" >/dev/null 2>&1 && fired=1
+# Every message carries a TARGET, and the target really opens (plan 230): the one door that
+# shows a toast also owns the click, so no subsystem calls the notifier itself any more. The click here
+# opens the alarm log the line above was just written to — the thing he would want to read.
+if [ -x "$ROOT/bin/notify/open-target.sh" ]; then
+  "$ROOT/bin/notify/open-target.sh" toast --app Ymir --glyph '!' --urgency critical \
+    --title "Ymir wedge: escalation stuck" --body "$SUMMARY" \
+    --target "file:$LOG" >/dev/null 2>&1 && fired=1
 fi
 
 # The durable line above already recorded it; a silent host is not a failure of

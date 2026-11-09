@@ -126,10 +126,14 @@ i=0; while [ "$i" -lt 40 ]; do
   curl -sS -m 1 -o /dev/null "http://127.0.0.1:$PORT/tokeninfo" 2>/dev/null && break; i=$((i+1)); sleep 0.1
 done
 
+# The door resolves its grant through the vault by KEY (or through CALENDAR_SECRETS_FILE, the
+# fixture road the door itself documents): secrets are read by key, never handed as values.
+printf 'GOOGLE_MCP_CLIENT_ID=fixture\nGOOGLE_MCP_CLIENT_SECRET=fixture\nSNOTRA_GOOGLE_REFRESH_TOKEN=fixture\n' \
+  > "$TMP/secrets.env"
 CAL_OUT="$(YMIR_OAUTH_TOKEN_URL="http://127.0.0.1:$PORT/token" \
            YMIR_OAUTH_TOKENINFO_URL="http://127.0.0.1:$PORT/tokeninfo" \
-           YMIR_CALENDAR_CLIENT_ID=fixture YMIR_CALENDAR_CLIENT_SECRET=fixture \
-           YMIR_CALENDAR_REFRESH_TOKEN=fixture YMIR_CALENDAR_INVITE_DOOR="$TMP/never-called" \
+           CALENDAR_SECRETS_FILE="$TMP/secrets.env" \
+           YMIR_CALENDAR_INVITE_DOOR="$TMP/never-called" \
            python3 - "$VT" <<'PY' 2>&1
 import asyncio, importlib.util, sys
 spec = importlib.util.spec_from_file_location("voice_tools", sys.argv[1])

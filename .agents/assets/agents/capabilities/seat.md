@@ -26,6 +26,7 @@
 | seat-surface.sh | seat-surface.sh — render THIS seat's own name into the AGENTS.md every | tested+named | keep (a human or a cron row must run it) |
 | seat-wire.sh | seat-wire.sh — one seat speaks into another seat's live pane, and says | tested | keep (a human or a cron row must run it) |
 | seats.sh | seats.sh — where the work actually is: panes in either backend, and th | tested+named | keep (a human or a cron row must run it) |
+| sessrumnir-wire.sh | sessrumnir-wire.sh — the seat wire: talk to a Sessrúmnir seat, and re | tested | keep (a human or a cron row must run it) |
 | test_core_four_pending_factory.sh | The ward for the three near-loop doors: core four, pending, and the fact | tested | keep (a human or a cron row must run it) |
 | test_doors_fleet_path.sh | The ward for plan 229 — the near loop on a machine that is not this sh | tested+named | keep (a human or a cron row must run it) |
 | test_lock_ask.sh | The ward for bin/seat/lock-ask.sh — a read-only agent asks the lock ow | tested | keep (a human or a cron row must run it) |

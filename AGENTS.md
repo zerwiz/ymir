@@ -733,3 +733,27 @@ It now probes: a local engine is served; otherwise it raises the door (`bin/reco
 the heart) and says `4602,"door","borrowed from the heart"`. Same command on every role, and the path is
 being carried through **plan 138** (Vár, the pledge book, inside Vörðr's ward) and its sibling plan for
 the door itself.
+
+## 2026-11-09 — the gate proves a change once, not every repair of it
+
+At the Allfather's word: *"if we need to fix a pr we dont need to push it thru the gates again, cuz it
+has already been proven to be good."*
+
+A pull request is judged **when it is first offered**, and that judgement stands. When a PR is already
+approved — or already proven green — and a repair is pushed into the same branch (a stale woven
+catalogue, a register one line behind, a renamed guard, a typo in a fix note, a rebase onto a moved
+main), the repair does **not** re-earn the whole suite:
+
+- the **pre-push wards still run**, because they are cheap and they judge the tree the push comes from;
+- the heavy **CI suite (`bin/gates/ci-verify.sh`) does not hold the merge** of a repair to an
+  already-approved PR;
+- what the repair **still carries** is its own fix note, and its own test when it changed behaviour —
+  that is the record, and the record is not the gate.
+
+The reason is plain: a gate exists to stop unproven work reaching main, and a repair of work already
+proven is not new work. Five minutes of proof re-run over a one-line change teaches nothing and spends
+the operator's hours.
+
+**What this does not excuse.** A repair that changes behaviour beyond the fix — a new door, a new
+default, a new claim on the system, a new public surface — is *new work* and earns its own proof. The
+word "fix" is not a licence to slip a feature in behind an approval.

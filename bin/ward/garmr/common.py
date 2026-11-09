@@ -94,6 +94,22 @@ def pause_marker() -> str:
     return "/var/log/ymir/garmr/PAUSED"
 
 
+def is_off() -> bool:
+    """The GATE: root's marker only.
+
+    A guardian an ordinary process can silence is a guardian the intruder silences first,
+    so `off` is root's word and nothing else is. The operator-readable copy of it is
+    `reports_off()` below — a REPORT, never an authority: it exists so the tower and
+    housewatch can *say* OFF (they read the HOME), not so they can *be* the switch.
+    """
+    return os.path.exists(pause_marker())
+
+
+def reports_off() -> bool:
+    """What the surfaces report: root's word, or the copy it left behind for them."""
+    return is_off() or os.path.exists(os.path.join(state_dir(), "PAUSED"))
+
+
 def config_path() -> str:
     env = os.environ.get("GARMR_CONFIG")
     if env:

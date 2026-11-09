@@ -1,16 +1,13 @@
 #!/usr/bin/env bash
 # send.sh — THE HOTLINE: one door a system calls when it has something to say.
 #
-#   bin/notify/send.sh --source <errand|garmr|snotra|cron|people|trello|ward|engine|notify> \
+#   bin/notify/send.sh --source <errand|garmr|snotra|cron|people|trello|ward|engine> \
 #       --severity INFO|MEDIUM|HIGH|CRITICAL --message "one line" \
-#       [--key <stable-id>] [--record <id>] [--ask] [--dry-run] [--no-telegram] \
-#       [--target <spec>]
+#       [--key <stable-id>] [--record <id>] [--target <kind>:<value>] [--ask] [--dry-run] [--no-telegram]
 #
-# --target is what the message OPENS when he clicks it (plan 230):
-#   file:<path> · plan:<number> · pr:<url> · yl://<route>   — resolved by
-# bin/notify/open-target.sh, the one door that knows how. A message without a target
-# gets `(no link)` in its title, so a dead end is visible at a glance instead of
-# teaching him that clicks do nothing.
+# --target is plan 230: every message carries something to OPEN (file: · plan: · pr: · yl:), and
+# the desktop leg hands it to bin/notify/open-target.sh, which owns both the toast and the click.
+# A message with no target is still allowed — it says `(no link)` in its own title.
 #
 # Why one door (plan 100): every subsystem used to invent its own spout — a desktop popup,
 # a file, or nothing at all — and 16 of 20 events spoke to nobody. This is the one sentence
@@ -39,7 +36,7 @@ ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 ymir_home_root HOME_R 2>/dev/null || true
 [ -n "${HOME_R:-}" ] || { printf 'error: the home is unresolved\n' >&2; exit 1; }
 
-SOURCE=""; SEVERITY="MEDIUM"; MESSAGE=""; KEY=""; RECORD=""; ASK=0; DRY=0; NO_TG=0; TARGET=""
+SOURCE=""; SEVERITY="MEDIUM"; MESSAGE=""; KEY=""; RECORD=""; TARGET=""; ASK=0; DRY=0; NO_TG=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --source) SOURCE="${2:-}"; shift 2 ;;
@@ -47,17 +44,17 @@ while [ $# -gt 0 ]; do
     --message) MESSAGE="${2:-}"; shift 2 ;;
     --key) KEY="${2:-}"; shift 2 ;;
     --record) RECORD="${2:-}"; shift 2 ;;
+    --target) TARGET="${2:-}"; shift 2 ;;
     --ask) ASK=1; shift ;;
     --dry-run) DRY=1; shift ;;
     --no-telegram) NO_TG=1; shift ;;
-    --target) TARGET="${2:-}"; shift 2 ;;
     -h|--help) sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     --version|-v) printf '%s\n' "$VERSION"; exit 0 ;;
     *) printf 'error: unknown argument %s\n' "$1" >&2; exit 2 ;;
   esac
 done
 
-[ -n "$SOURCE" ] || { printf 'error: --source is required\nhelp: errand | garmr | snotra | cron | people | trello | ward | engine | notify\n' >&2; exit 2; }
+[ -n "$SOURCE" ] || { printf 'error: --source is required\nhelp: errand | garmr | snotra | cron | people | trello | ward | engine\n' >&2; exit 2; }
 [ -n "$MESSAGE" ] || { printf 'error: --message is required\n' >&2; exit 2; }
 case "$SEVERITY" in INFO|MEDIUM|HIGH|CRITICAL) ;; *) printf 'error: severity must be INFO|MEDIUM|HIGH|CRITICAL\n' >&2; exit 2 ;; esac
 
@@ -96,30 +93,12 @@ print(verdict)
 PY
 )"
 
-# ── the target: verified once, then handed to every leg that can carry it ──────
-OPEN_TARGET_STATE="none"; OPEN_TARGET_PATH=""
-if [ -n "$TARGET" ]; then
-  _t="$(bash "$ROOT/bin/notify/open-target.sh" --check "$TARGET" 2>/dev/null || true)"
-  OPEN_TARGET_PATH="$(printf '%s' "$_t" | sed -n 's/^  "[^"]*","[^"]*","\([^"]*\)","[^"]*"$/\1/p' | head -1)"
-  if [ -n "$OPEN_TARGET_PATH" ]; then OPEN_TARGET_STATE="resolved"
-  else OPEN_TARGET_STATE="missing"; MESSAGE="$MESSAGE (target missing: $TARGET)"; fi
-fi
-
 LINE="[${SOURCE}/${SEVERITY}] ${MESSAGE}"
 SAID_RUNE=0; SAID_ARM=0; SAID_DESKTOP=0; SAID_PHONE=0; SAID_TG=0
 
 if [ "$DECISION" = "collapse" ] && [ "$SEVERITY" != "CRITICAL" ]; then
   MESSAGE="more than 8 ${SOURCE} events this hour — see the record"
-  # ── the target: verified once, then handed to every leg that can carry it ──────
-OPEN_TARGET_STATE="none"; OPEN_TARGET_PATH=""
-if [ -n "$TARGET" ]; then
-  _t="$(bash "$ROOT/bin/notify/open-target.sh" --check "$TARGET" 2>/dev/null || true)"
-  OPEN_TARGET_PATH="$(printf '%s' "$_t" | sed -n 's/^  "[^"]*","[^"]*","\([^"]*\)","[^"]*"$/\1/p' | head -1)"
-  if [ -n "$OPEN_TARGET_PATH" ]; then OPEN_TARGET_STATE="resolved"
-  else OPEN_TARGET_STATE="missing"; MESSAGE="$MESSAGE (target missing: $TARGET)"; fi
-fi
-
-LINE="[${SOURCE}/${SEVERITY}] ${MESSAGE}"
+  LINE="[${SOURCE}/${SEVERITY}] ${MESSAGE}"
   DECISION="send"
 fi
 
@@ -129,7 +108,8 @@ if [ "$DRY" = 0 ]; then
     bash "$ROOT/bin/records/runes-append.sh" "$SOURCE" notify \
       --message "suppressed (duplicate ${KEY}): ${MESSAGE}" >/dev/null 2>&1 && SAID_RUNE=1
   else
-    bash "$ROOT/bin/records/runes-append.sh" "$SOURCE" notify --message "$LINE" >/dev/null 2>&1 && SAID_RUNE=1
+    bash "$ROOT/bin/records/runes-append.sh" "$SOURCE" notify \
+      --message "$LINE$([ -n "$TARGET" ] && printf ' (opens %s)' "$TARGET")" >/dev/null 2>&1 && SAID_RUNE=1
   fi
 fi
 
@@ -140,8 +120,8 @@ if [ "$DECISION" = "send" ]; then
 
   # ── the arm: a wake the live session drains ─────────────────────────────────
   if [ "$SEVERITY" != "INFO" ] && [ "$DRY" = 0 ]; then
-    printf '%s notify %s %s %s%s%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$SOURCE" "$SEVERITY" "$MESSAGE" \
-      "${RECORD:+ (record $RECORD)}" "${OPEN_TARGET_PATH:+ (open $OPEN_TARGET_PATH)}" >> "$WAKE_QUEUE" 2>/dev/null && SAID_ARM=1
+    printf '%s notify %s %s %s%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$SOURCE" "$SEVERITY" "$MESSAGE" \
+      "${RECORD:+ (record $RECORD)}" >> "$WAKE_QUEUE" 2>/dev/null && SAID_ARM=1
   fi
 
   # ── an approval: the message becomes a question a click can answer ─────────
@@ -165,14 +145,12 @@ INNER
     if [ "$QUIET" = 1 ] && [ "$SEVERITY" = "MEDIUM" ]; then
       :
     else
-      _dargs=()
-      [ "$OPEN_TARGET_STATE" = "resolved" ] && _dargs=(--target "$TARGET")
       if [ -n "$APPROVAL_ID" ]; then
-        bash "$ROOT/bin/notify/desktop.sh" --title "[$SOURCE] $SEVERITY" --body "$MESSAGE" \
-          --exec "$ROOT/bin/notify/approve.sh $APPROVAL_ID" "${_dargs[@]}" >/dev/null 2>&1 && SAID_DESKTOP=1
+        bash "$ROOT/systems/snotra/services/tts-lease/ymir-say.sh" "$MESSAGE" --exec "$ROOT/bin/notify/approve.sh $APPROVAL_ID" \
+          ${TARGET:+--target "$TARGET"} >/dev/null 2>&1 && SAID_DESKTOP=1
       else
-        bash "$ROOT/bin/notify/desktop.sh" --title "[$SOURCE] $SEVERITY" --body "$MESSAGE" \
-          "${_dargs[@]}" >/dev/null 2>&1 && SAID_DESKTOP=1
+        bash "$ROOT/systems/snotra/services/tts-lease/ymir-say.sh" "$MESSAGE" \
+          ${TARGET:+--target "$TARGET"} >/dev/null 2>&1 && SAID_DESKTOP=1
       fi
     fi
   fi
@@ -201,7 +179,7 @@ INNER
         if curl -s -m 10 -o /dev/null -w '%{http_code}' \
           "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
           --data-urlencode "chat_id=${TELEGRAM_OWNER_ID}" \
-          --data-urlencode "text=${LINE}${RECORD:+ · record $RECORD}${OPEN_TARGET_PATH:+ · open: $OPEN_TARGET_PATH}" \
+          --data-urlencode "text=${LINE}${RECORD:+ · record $RECORD}" \
           -d "disable_web_page_preview=true" 2>/dev/null | grep -q '^200$'; then
           SAID_TG=1
         fi
@@ -213,7 +191,6 @@ fi
 printf 'notify[1]{decision,source,severity,rune,arm,desktop,pocket,telegram}:\n'
 printf '  "%s","%s","%s","%s","%s","%s","%s","%s"\n' \
   "$DECISION" "$SOURCE" "$SEVERITY" "$SAID_RUNE" "$SAID_ARM" "$SAID_DESKTOP" "$SAID_PHONE" "$SAID_TG"
-printf 'target[2]{state,resolved}:\n  "%s","%s"\n' "$OPEN_TARGET_STATE" "$OPEN_TARGET_PATH"
 
 # A message nobody heard is a failure — except a deliberate duplicate, which is the point.
 if [ "$DECISION" = "duplicate" ]; then exit 0; fi

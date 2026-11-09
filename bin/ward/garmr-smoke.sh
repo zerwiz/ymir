@@ -163,12 +163,19 @@ else
   row "findings" FAIL "no findings file — the senses have written nothing"
 fi
 
-# 6 · the on/off switch is root's (a non-root pause must be refused)
+# 6 · the on/off switch is root's, and the plan is readable without it
 if [ "$(id -u)" -ne 0 ]; then
-  if bash "$ROOT/bin/ward/garmr.sh" pause >/dev/null 2>&1; then
-    row "pause guarded" FAIL "a non-root process could pause the hound — stop and fix this"
+  for verb in off on pause; do
+    if bash "$ROOT/bin/ward/garmr.sh" "$verb" >/dev/null 2>&1; then
+      row "$verb guarded" FAIL "a non-root process could turn the guardian $verb — stop and fix this"
+    else
+      row "$verb guarded" PASS "a non-root $verb is refused"
+    fi
+  done
+  if bash "$ROOT/bin/ward/garmr.sh" off --dry-run 2>/dev/null | grep -q 'would: systemctl stop+disable'; then
+    row "off --dry-run" PASS "the plan prints without root"
   else
-    row "pause guarded" PASS "a non-root pause is refused"
+    row "off --dry-run" FAIL "the plan did not print — the turn cannot be understood before it is made"
   fi
 fi
 

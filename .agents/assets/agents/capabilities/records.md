@@ -17,6 +17,7 @@
 | journal-receive.sh | journal-receive.sh — the HEART folds the bodies' journals into one rec | tested+named | keep (a human or a cron row must run it) |
 | journal-reconcile.sh | journal-reconcile.sh — push this machine's outbox to the heart, when i | tested | keep (a human or a cron row must run it) |
 | library.sh | library.sh — the library of records: one corpus, one contract, one doo | tested+named | keep (a human or a cron row must run it) |
+| meetings.sh | meetings.sh — one report over every meeting the house has, whatever re | tested | keep (a human or a cron row must run it) |
 | mimir-ingest.sh | mimir-ingest.sh — ingest the repo's data material into the well (Mimir | tested+named | keep (a human or a cron row must run it) |
 | mimir-log.sh | mimir-log.sh — move memory between the engram and the append log (a th | tested+named | keep (a human or a cron row must run it) |
 | mimir-recall-today.sh | mimir-recall-today.sh — drink before you act: the session's opening re | tested+named | keep (a human or a cron row must run it) |
@@ -28,6 +29,9 @@
 | regenerate-on-merge.sh | regenerate-on-merge.sh — the merge driver for WOVEN documents (Þætti | tested | keep (a human or a cron row must run it) |
 | runes-append.sh | runes-append.sh — the append-only Runes ledger, a THIN SHIM. | tested+named | keep (a human or a cron row must run it) |
 | runes-project.sh | runes-project.sh — the DAG projector, regenerates runes_audit.md from  | tested | keep (a human or a cron row must run it) |
+| snotra-ladder.sh | snotra-ladder.sh — the meeting ladder: transcript → minutes → prom | tested | keep (a human or a cron row must run it) |
+| snotra-what.sh | snotra-what.sh — Snotra's own voice: what the ear is doing, said in on | tested | keep (a human or a cron row must run it) |
+| todos.sh | todos.sh — THE task board of the house, one writer for one file. | tested | keep (a human or a cron row must run it) |
 | vor-crew-state.sh | vor-crew-state.sh - deterministic read of an Eindri worker's CURRENT sta | tested+named | keep (a human or a cron row must run it) |
 | weave-features.sh | weave-features.sh — FEATURES.md is WOVEN from fragments, never hand-ed | tested+named | keep (a human or a cron row must run it) |
 | weave.sh | weave.sh — the dispatcher for every WOVEN document and every INDEX (Þ | tested+named | keep (a human or a cron row must run it) |

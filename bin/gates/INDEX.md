@@ -48,7 +48,7 @@ bin[108]{file,does,kind,verdict,disposition,callers,lines}:
   "feature-inventory.sh","feature-inventory.sh — every feature the system CLAIMS, in one checklist.","tool","wired","keep",0,88
   "features-guard.sh","features-guard.sh — every feature page is catalogued (Rule 14).","tool","wired","keep",2,83
   "fix-note.md","Fix note template","data","wired","keep",2,22
-  "fixes-guard.sh","fixes-guard.sh — the delivery gate reads, and it checks the RECORD.","tool","tested","keep",6,223
+  "fixes-guard.sh","fixes-guard.sh — the delivery gate reads, and it checks the RECORD.","tool","tested","keep",6,227
   "fixes.sh","fixes.sh — the fix notes.","tool","wired","keep",4,162
   "fleet-version-guard.sh","fleet-version-guard.sh — the three labels and the two trees must agree, or say so.","tool","wired","keep",1,62
   "folders.tsv","The purpose of every folder under bin/ — ONE line each, the single place it is kept.","data","wired","keep",1,39
@@ -99,7 +99,7 @@ bin[108]{file,does,kind,verdict,disposition,callers,lines}:
   "skill.yaml","name: rune-counting","data","wired","keep",3,11
   "skill.yaml","name: word-weaving","data","wired","keep",3,9
   "skills-share-guard.sh","skills-share-guard.sh — nothing private crosses the skills door.","tool","wired","keep",3,165
-  "ssh-roads-guard.sh","FILE='${1:-${SSH_CONFIG:-$HOME/.ssh/config}}'","tool","wired","keep",1,44
+  "ssh-roads-guard.sh","FILE='${1:-${SSH_CONFIG:-$HOME/.ssh/config}}'","tool","wired","keep",1,51
   "subsystem-docs-guard.sh","subsystem-docs-guard.sh — the books a subsystem names must exist, and every governed path must name books.","tool","wired","keep",2,82
   "syn-arm-pretool-check.sh","syn-arm-pretool-check.sh - PreToolUse seatbelt for watcher-arm bash commands.","tool","tested","keep",2,58
   "syn-asset-pretool-check.sh","syn-asset-pretool-check.sh — PreToolUse seatbelt for governed paths.","tool","wired","keep",0,91
@@ -125,11 +125,11 @@ bin[108]{file,does,kind,verdict,disposition,callers,lines}:
   "usage-ratchet.sh","usage-ratchet.sh — PROVE the doors are used, and fail when the unused pile grows.","tool","wired","keep",1,103
   "vault-guard.sh","vault-guard.sh — nothing may copy content OUT of the vault (Rule 15).","tool","wired","keep",2,101
   "weave-guard.sh","weave-guard.sh — an index that does not name every file it indexes is refused.","tool","wired","keep",2,85
-  "wedge-notify.sh","wedge-notify.sh — the Ymir wedge-alarm notifier.","tool","tested","keep",2,61
+  "wedge-notify.sh","wedge-notify.sh — the Ymir wedge-alarm notifier.","tool","wired","keep",1,62
   "workflow-check.sh","workflow-check.sh — every GitHub Actions workflow must PARSE, before CI is asked to run.","tool","wired","keep",1,78
   "ymir-config-check.sh","ymir-config-check.sh — the DOOR to the config layer (`src/ymir_runtime/config/`).","tool","wired","keep",0,44
   "ymir-update-check.sh","ymir-update-check.sh — does a newer Ymir stand on npm?","tool","wired","keep",3,71
 
-**Tally.** verdict: wired=89, tested=19
+**Tally.** verdict: wired=90, tested=18
 
 **Tally.** disposition: keep=106, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1
