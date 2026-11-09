@@ -55,3 +55,9 @@ bin/notify/mail.sh --kind merged --subject "PR #45 is open" --body-text "…"   
 
 `snotra-letter.py` (the meeting letter generator) still builds its own plain layout — dressing it is a separate change,
 named on the feature page rather than quietly assumed.
+
+## CHANGE LOG
+
+- **2026-11-09** — Written with the change it records: a letter is dressed by default (`letter-html.py`, `mail-send.sh`
+  1.0.3, `bin/notify/mail.sh`), the two gates that had been red since the plan-129 move are repointed at the moved
+  doors, and the tests answer their own DNS so the suite depends on neither the internet nor somebody's real mailbox.
