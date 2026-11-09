@@ -25,7 +25,7 @@ bin[28]{file,does,kind,verdict,disposition,callers,lines}:
   "approve-fact.sh","bin/assistant/approve-fact.sh -> systems/skirnir/services/approve-fact.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and say…","tool","wired","keep",0,16
   "ask.sh","bin/assistant/ask.sh -> systems/skirnir/services/ask.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","tested","keep",12,16
   "asks.sh","bin/assistant/asks.sh -> systems/skirnir/services/asks.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
-  "assistant-brief.sh","bin/assistant/assistant-brief.sh -> systems/skirnir/services/assistant-brief.sh — the SHIM (plan 227 S1.5).","tool","wired","keep",0,18
+  "assistant-brief.sh","bin/assistant/assistant-brief.sh -> systems/skirnir/services/assistant-brief.sh — the SHIM (plan 227 S1.5).","tool","wired","keep",0,19
   "ban.sh","bin/assistant/ban.sh -> systems/skirnir/services/ban.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
   "ear.sh","bin/assistant/ear.sh -> systems/skirnir/services/ear.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
   "escalate.sh","bin/assistant/escalate.sh -> systems/skirnir/services/escalate.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
