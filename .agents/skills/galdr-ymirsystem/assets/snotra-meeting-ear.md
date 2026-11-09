@@ -574,3 +574,58 @@ the markup beside it is used breaks MIT's one condition. Updating means re-downl
 commit** recorded in `templates/README.md`, never from a default branch.
 
 Owner doc: `systems/snotra/services/letters/templates/README.md`.
+
+## Appended 2026-11-09 — the calendar gains a WRITE hand, and it refuses by scope (plan 231 §2)
+
+The reader (`calendar-ask.sh` → `tools/calendar/reader.mjs`) is read-only **on purpose** and stays so: the
+capability is absent, not gated by a flag. What did not exist was a hand for the two verbs a voice needs — make a
+meeting, move one. `calendar-invite.sh` could create an invitation (and mail people), which is the wrong shape for
+"move my eleven o'clock to two".
+
+```
+calendar_write[4]{door,verbs,why}
+  "systems/snotra/services/calendar/calendar-write.sh","create · move · status · --self-test","the write hand; the bin/ shelf carries a shim, per the paths ledger"
+  "systems/snotra/services/calendar/calendar-grant.sh","(sourced, no verbs)","ONE reading of the grant: the connect door's key, the token refresh, the scope measurement, the curl shape"
+  "systems/snotra/services/calendar/calendar-invite.sh","create · cancel · status","unchanged behaviour, now built on the shared grant library — the event body and the outbound-mail gate stay in ONE writer"
+  "bin/mail/gna_connect.py","connect.sh google","the connect door whose grant this is: `SNOTRA_GOOGLE_REFRESH_TOKEN`, scopes measured through the same tokeninfo endpoint"
+```
+
+**The grant is the connect door's, and the scope is NAMED.** Google's write scope is `calendar.events`
+(`https://www.googleapis.com/auth/calendar.events`). A grant carrying only `calendar.events.readonly` is refused
+before anything is built, with the scope printed and the two commands that re-consent:
+
+```
+bin/mail/connect.sh google
+CALENDAR_WRITE=1 systems/snotra/services/calendar/calendar-auth.sh --store
+```
+
+Measured on heimdall, 2026-11-09: the vault's live grant holds `email, documents, documents.readonly, drive.file,
+drive.readonly, gmail.compose, gmail.readonly, userinfo.email, openid` — **no** `calendar.events`. So
+`calendar-write.sh status` answers `read-only` and exits 3, and every write is refused until the grant is
+re-consented. That is the honest state, not a fault.
+
+**UNMEASURED IS NOT A GREEN.** If the tokeninfo door cannot answer, the door attempts the write and Google's own
+`403 insufficientPermissions` becomes the same named refusal. The vendor is the last word.
+
+**There is no local calendar.** A write that does not reach Google is a failure that says so; a meeting that
+exists only in a file is a lie. `--dry-run` prints the resolved instant and the exact payload and posts nothing.
+
+**Two more rules `move` keeps.** It sends `sendUpdates=none` and says so — moving a meeting is an edit, an
+invitation is `create`'s job, and that one still asks the operator's word. And a title that matches **two**
+meetings is refused, with the matches listed by id, time and title: a wrong meeting moved is worse than a
+question.
+
+**Time is resolved once, in the door.** `calendar_when` reads what a person says — `2026-11-12 14:00`,
+`2026-11-12T14:00:00+01:00`, `tomorrow 09:30`, `monday 10:00`, `14:00` — on the operator's own clock
+(`YMIR_TZ`, then the machine's zone), never UTC by accident.
+
+**Proofs.** `bash systems/snotra/services/calendar/tests/test_calendar_write.sh` — offline, against a local
+fixture, the shipping doors unchanged: the read-only refusal (and that nothing is posted) · the created body's
+instants and zone · the move's old time in its answer and `sendUpdates=none` in its query · the two-match
+refusal that patches nothing · the vendor's 403 becoming the named refusal.
+
+**Fix note:** `docs/fixes/snotra/2026-11-09-the-calendar-can-be-written-and-refuses-by-scope.md` ·
+**How-to:** `docs/features/make-and-move-meetings.md`. The same change mended two pre-existing red proofs in
+`bin/time/snotra/tests/test_outbound_gate.py`: the "read the door" tests read retired **shims** (two-line
+forwarders) instead of the file that implements them, and the send-around-the-gate scan counted a *comment and a
+printed sentence* as a send call.

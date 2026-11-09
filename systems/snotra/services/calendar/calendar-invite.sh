@@ -24,22 +24,18 @@ VERSION="1.1.0"
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help|"") sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 ACTION="${1-}"; shift || true
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
 APPROVE="$ROOT/systems/snotra/services/approve/snotra-approve.sh"
-if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true; fi
-YMIR_HOME="${YMIR_HOME:-}"; [ -n "$YMIR_HOME" ] || ymir_home_root YMIR_HOME 2>/dev/null || true
-SEC="$YMIR_HOME/hodd/secrets"; TZ_NAME="${SO_TZ:-Europe/Helsinki}"
+# The grant, the token and the scope are read by ONE library, shared with calendar-write.sh:
+# the connect door's key, the connect door's tokeninfo, never a second copy of a secret.
+# shellcheck source=calendar-grant.sh
+. "$SCRIPT_DIR/calendar-grant.sh"
+TZ_NAME="${SO_TZ:-${YMIR_TZ:-$(calendar_zone)}}"
 die(){ printf 'error: %s\n' "$*" >&2; exit 1; }
-# Rule 07: an endpoint is configuration, never a constant.
-CAL_API="${YMIR_CALENDAR_API_BASE:-https://www.googleapis.com/calendar/v3}"
-OAUTH_URL="${YMIR_OAUTH_TOKEN_URL:-https://oauth2.googleapis.com/token}"
-VAL="$(age -d -i "$SEC/age.key" "$SEC/platform.env.age" 2>/dev/null || true)"
-get(){ printf '%s\n' "$VAL" | sed -n "s/^$1=//p" | head -1 | sed "s/^['\"]//; s/['\"]$//"; }
-CID="$(get GOOGLE_MCP_CLIENT_ID)"; CSEC="$(get GOOGLE_MCP_CLIENT_SECRET)"; RT="$(get SNOTRA_GOOGLE_REFRESH_TOKEN)"
-[ -n "$CID" ] && [ -n "$CSEC" ] && [ -n "$RT" ] || die "google credentials missing from the vault"
-TOKEN="$(curl -sS -m 20 -X POST "$OAUTH_URL" -d "client_id=$CID" -d "client_secret=$CSEC" -d "refresh_token=$RT" -d "grant_type=refresh_token" | python3 -c "import json,sys;print(json.load(sys.stdin).get('access_token',''))")"
-[ -n "$TOKEN" ] || die "could not refresh the access token"
-api(){ local method=$1 path=$2 body=${3-}; local a=(-sS -m 30 -X "$method" -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -w '\n%{http_code}'); [ -n "$body" ] && a+=(-d "$body"); curl "${a[@]}" "$CAL_API$path"; }
+calendar_refresh_grant || die "the calendar grant could not be read — $CAL_TOKEN_WHY"
+TOKEN="$CAL_TOKEN"
+api(){ calendar_api "$@" || true; local out="$CAL_BODY"$'\n'"$CAL_CODE"; printf '%s' "$out"; }
 
 # the event's stable name: the word is bound to a name, so an edit reads STALE and not
 # "never seen". A record id when the meeting has one, else the start instant.
@@ -74,6 +70,9 @@ create(){
     --dry-run) dry=1; shift ;;
     *) die "unknown option: $1" ;; esac; done
   [ -n "$title" ] && [ -n "$start" ] && [ -n "$end" ] || die "create needs --title --start --end"
+  # A write door proves it may write BEFORE it builds a body: a grant that cannot write is
+  # refused by name (`calendar.events`), never discovered at a 403 after an approval was spent.
+  calendar_require_write || exit 3
   if [ -n "$from_record" ]; then
     [ -r "$from_record" ] || die "record not readable: $from_record"
     local extra; extra="$(python3 -c 'import json,sys;d=json.load(open(sys.argv[1]));print(",".join((p.get("name") or "")+" <"+p["email"]+">" for p in d.get("participants",[]) if p.get("email")))' "$from_record")"
@@ -139,6 +138,7 @@ cancel(){
   while [ $# -gt 0 ]; do case "$1" in
     --notify) notify=1; shift ;;
     *) id="${1-}"; shift ;; esac; done
+  calendar_require_write || exit 3
   [ -n "$id" ] || die "cancel needs an event id"
   local send_updates="none" key="evt-${id}-cancel" payload_file=""
   if [ "$notify" = 1 ]; then
