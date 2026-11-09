@@ -96,6 +96,27 @@ write_charter() {
     printf '2. %s/RULES/ — the house law (04 · 06 · 07 · 08 · 25 · 43 · 44)\n' "$clone"
     printf '3. %s/.review-rules.yaml — this project'"'"'s own declarations (a missing one is a REFUSAL)\n' "$clone"
     printf '4. plan 203 §12 (the reviewer on the heart) and plan 206 (the loop, the mouth, the switch)\n'
+    printf '\n## YOUR MOUTH — a verdict nobody receives is not a verdict (plan 206 §12)\n\n'
+    printf 'You answer in a pane, and a pane is not a delivery. So every act that matters ends with ONE call:\n\n'
+    printf '  bash %s/bin/notify/send.sh --source review --severity HIGH --message "<one line: PR #, verdict, why, what happens next>"\n' "$ROOT"
+    printf '\nA PASS is INFO; a REFUSE is HIGH because it stops work. That call carves the Runes entry and puts the\n'
+    printf 'line in the arm'"'"'s wake queue, so the next session sees it without opening your pane. If it fails, say so\n'
+    printf 'out loud in one line — never finish silently.\n\n'
+    printf '## TALKING TO THE OTHER HANDS\n\n'
+    printf 'They are in the same herdr workspace as you, one tab each. To hand work back or ask a peer:\n\n'
+    printf '  herdr agent list                      # who is standing, and their names\n'
+    printf '  herdr agent prompt <name> "<one line>"  # speak into that seat\n\n'
+    printf 'The smith you need is named for its errand (`repair-smith-<pr>`, `conflict-smith-<pr>`). Name it and ask.\n'
+    printf '\n## WHAT A VERDICT MUST CONTAIN (the Allfather: "your not delivering enough info")\n\n'
+    printf 'A verdict that says "ready" is a mouth that says nothing. The report file must carry four fields:\n\n'
+    printf '  What was judged: PR #, branch, head sha\n'
+    printf '  What I ran: the floor (ruleset/seat/at), the wards (tally), the tests (command and tail)\n'
+    printf '  Verdict: PASS | REFUSE | NEEDS-REWORK — and the ONE reason, quoting rule/file/line on a refusal\n'
+    printf '  Next: who must act, and on what\n\n'
+    printf 'Write it with `bin/forge/review-verdict.sh write <pr> --head <sha> --verdict … --reason … --finding …`\n'
+    printf 'so the loop delivers it; the file alone is also delivered by bin/forge/verdict-watch.sh.\n'
+
+
     printf '   in %s\n\n' "$HOME_DIR/svartalfaheim/whynotproductions/projects/ymir/plans"
     printf '## What you may do\n\n'
     printf -- '- read everything; run the gates and the tests YOURSELF on the fetched head\n'
@@ -146,6 +167,13 @@ cmd_ensure() {
     cmd_status "$clone"; return 0
   fi
   # The model is resolved for THIS seat, and named only if the catalogue lists it.
+  # A SEAT CARRIES NO SECOND TOOLKIT: the clone ships its own `.pi/extensions` and settings.json
+  # already names the primary's, so pi refuses to start with 40+ "Tool … conflicts" (measured
+  # 2026-11-07, twice: on the operator's terminal and again after `git reset --hard` restored it).
+  if [ -d "$clone/.pi/extensions" ]; then
+    mv "$clone/.pi/extensions" "$clone/.pi/extensions.seat-hidden" 2>/dev/null \
+      && printf 'review-seat: the clone'"'"'s own extensions set aside (settings.json loads the primary'"'"'s)\n' >&2
+  fi
   local model; model="$(bash "$ROOT/bin/model/agent-model.sh" forseti --plain 2>/dev/null || true)"
   [ -n "$model" ] || die "no model resolved for the judge on this seat — bin/model/agent-model.sh forseti --explain"
   local charter; charter="$(write_charter "$clone")"
@@ -169,25 +197,33 @@ cmd_ensure() {
     ENV_ARGS=(--env "BROKK_MACHINE_STATE_DIR=$seat_state" --env "BROKK_STATE_OVERRIDE=$seat_state")
   fi
 
-  local ws_out ws
-  ws_out="$(herdr workspace create --cwd "$clone" --label "$WORKSPACE_LABEL" --no-focus \
-              "${ENV_ARGS[@]}" 2>/dev/null)" \
-    || die "herdr workspace create failed — is a herdr server running here?"
-  ws="$(printf '%s' "$ws_out" | python3 -c 'import json,sys;d=json.load(sys.stdin);print(d.get("result",{}).get("workspace",{}).get("workspace_id",""))' 2>/dev/null || true)"
-  [ -n "$ws" ] || die "herdr created no workspace (its answer: $(printf '%s' "$ws_out" | head -c 200))"
+  # ONE ROOM, SHARED: the judge and every smith live together in the workspace labelled
+  # `$WORKSPACE_LABEL` ("review"), one TAB each — never beside the operator, never a workspace per
+  # seat. The Allfather, 2026-11-07: "its only the smith. not the reviwer" — because this door made
+  # its OWN workspace and the room he was watching held only smiths.
+  local ws
+  ws="$(herdr workspace list 2>/dev/null | python3 -c '
+import json,sys
+want=sys.argv[1]
+for w in json.load(sys.stdin).get("result",{}).get("workspaces",[]):
+    if (w.get("label") or "")==want: print(w.get("workspace_id")); break
+' "$WORKSPACE_LABEL" 2>/dev/null || true)"
+  if [ -z "$ws" ]; then
+    local ws_out
+    ws_out="$(herdr workspace create --cwd "$clone" --label "$WORKSPACE_LABEL" --no-focus \
+                "${ENV_ARGS[@]}" 2>/dev/null)" \
+      || die "herdr workspace create failed — is a herdr server running here?"
+    ws="$(printf '%s' "$ws_out" | python3 -c 'import json,sys;d=json.load(sys.stdin);print(d.get("result",{}).get("workspace",{}).get("workspace_id",""))' 2>/dev/null || true)"
+  fi
+  [ -n "$ws" ] || die "no '$WORKSPACE_LABEL' workspace and none could be created"
 
   local pane_out
-  pane_out="$(herdr pane list 2>/dev/null | python3 -c '
-import json, sys
-ws = sys.argv[1]
-d = json.load(sys.stdin)
-for p in d.get("result", {}).get("panes", []):
-    if p.get("workspace_id") == ws:
-        print(p.get("pane_id")); break
-' "$ws" 2>/dev/null || true)"
-  [ -n "$pane_out" ] || die "the new workspace has no pane — nothing to seat pi in"
+  pane_out="$(herdr tab create --workspace "$ws" --cwd "$clone" 2>/dev/null \
+    | python3 -c 'import json,sys;d=json.load(sys.stdin);print(d.get("result",{}).get("root_pane",{}).get("pane_id",""))' 2>/dev/null || true)"
+  [ -n "$pane_out" ] || die "the room $ws gave no pane for the judge"
 
-  herdr agent start pi --kind pi --pane "$pane_out" -- --model "$model" \
+  # The name must be unique among live agents: 'pi' collided with every seat already in the room.
+  herdr agent start reviewer --kind pi --pane "$pane_out" -- --model "$model" \
     --append-system-prompt "$ROLE_FILE" --append-system-prompt "$charter" >/dev/null 2>&1 \
     || die "herdr agent start failed for pane $pane_out (model $model)"
   # Seating without verifying leaves an idle agent — the hard contract of the herdr skill.

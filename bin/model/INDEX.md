@@ -22,7 +22,7 @@ The tree replaced a single register on 2026-11-06 (plan 211) so that a change in
 folder rewrites one file instead of colliding on every branch.
 
 bin[19]{file,does,kind,verdict,disposition,callers,lines}:
-  "agent-model.sh","agent-model.sh — WHICH MODEL, ON THIS SEAT.","tool","wired","keep",8,305
+  "agent-model.sh","agent-model.sh — WHICH MODEL, ON THIS SEAT.","tool","wired","keep",9,305
   "apodex-smoke-test.sh","apodex-smoke-test — validate an Apodex endpoint (GGUF via llama-router).","tool","wired","keep",0,119
   "catalog.sh","catalog.sh — THE door to what this machine can serve.","tool","wired","keep",17,135
   "free-models.sh","free-models.sh — the free models a harness can serve on this machine, and the one to use.","tool","wired","keep",2,74
