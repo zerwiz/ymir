@@ -28,7 +28,7 @@ bin[135]{file,does,kind,verdict,disposition,callers,lines}:
   "calendar-ask.sh","bin/time/snotra/calendar-ask.sh -> systems/snotra/services/calendar/calendar-ask.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new do…","tool","tested","keep",5,16
   "calendar-attendees.sh","bin/time/snotra/calendar-attendees.sh -> systems/snotra/services/calendar/calendar-attendees.sh — RETIRED SHIM (plan 129, 2026-10-24); exec…","tool","wired","keep",0,16
   "calendar-auth.sh","bin/time/snotra/calendar-auth.sh -> systems/snotra/services/calendar/calendar-auth.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new…","tool","wired","keep",0,16
-  "calendar-invite.sh","bin/time/snotra/calendar-invite.sh -> systems/snotra/services/calendar/calendar-invite.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the…","tool","wired","keep",2,16
+  "calendar-invite.sh","bin/time/snotra/calendar-invite.sh -> systems/snotra/services/calendar/calendar-invite.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the…","tool","tested","keep",2,16
   "calendar-watch.sh","calendar-watch.sh — do not walk into a meeting by accident.","tool","wired","keep",0,81
   "channel_calendar.py","bin/time/snotra/channel_calendar.py -> systems/snotra/services/cron/channel_calendar.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "channel_chat.py","bin/time/snotra/channel_chat.py -> systems/snotra/services/cron/channel_chat.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
@@ -92,7 +92,7 @@ bin[135]{file,does,kind,verdict,disposition,callers,lines}:
   "snotra-card-moves.py","bin/time/snotra/snotra-card-moves.py -> systems/snotra/services/cron/snotra-card-moves.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "snotra-card-moves.sh","bin/time/snotra/snotra-card-moves.sh -> systems/snotra/services/cron/snotra-card-moves.sh — RETIRED SHIM","tool","wired","keep",0,12
   "snotra-cdp.py","bin/time/snotra/snotra-cdp.py -> systems/snotra/services/ear/snotra-cdp.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
-  "snotra-cron.sh","bin/time/snotra/snotra-cron.sh -> systems/snotra/services/cron/snotra-cron.sh — RETIRED SHIM","tool","wired","keep",0,12
+  "snotra-cron.sh","bin/time/snotra/snotra-cron.sh -> systems/snotra/services/cron/snotra-cron.sh — RETIRED SHIM","tool","tested","keep",1,12
   "snotra-detect.sh","bin/time/snotra/snotra-detect.sh -> systems/snotra/services/ear/snotra-detect.sh — RETIRED SHIM","tool","tested","keep",1,12
   "snotra-dispatch.py","bin/time/snotra/snotra-dispatch.py -> systems/snotra/services/cron/snotra-dispatch.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "snotra-dispatch.sh","bin/time/snotra/snotra-dispatch.sh -> systems/snotra/services/cron/snotra-dispatch.sh — RETIRED SHIM","tool","wired","keep",0,12
@@ -154,9 +154,9 @@ bin[135]{file,does,kind,verdict,disposition,callers,lines}:
   "trello_client.py","bin/time/snotra/trello_client.py -> systems/snotra/services/cron/trello_client.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "tts-lease.sh","bin/time/snotra/tts-lease.sh -> systems/snotra/services/tts-lease/tts-lease.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door an…","tool","wired","keep",0,16
   "well-vault-sync.sh","well-vault-sync.sh — Kaia's memory across the Allfather's machines.","tool","wired","keep",1,105
-  "ymir-say.sh","bin/time/snotra/ymir-say.sh -> systems/snotra/services/tts-lease/ymir-say.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and…","tool","wired","keep",10,16
+  "ymir-say.sh","bin/time/snotra/ymir-say.sh -> systems/snotra/services/tts-lease/ymir-say.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and…","tool","tested","keep",9,16
   "zoom_ingest.py","bin/time/snotra/zoom_ingest.py -> systems/snotra/services/cron/zoom_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
 
-**Tally.** verdict: wired=127, tested=8
+**Tally.** verdict: wired=124, tested=11
 
 **Tally.** disposition: keep=135

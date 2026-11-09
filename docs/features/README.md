@@ -16,7 +16,16 @@ its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
 | The outbound gate (nothing leaves until you have read it) | [the-outbound-gate.md](the-outbound-gate.md) |
 | The collaboration doors (who is with us, and how far) | [the-collaboration-doors.md](the-collaboration-doors.md) |
 
-**Newest doors** — built 2026-11-04, catalogued the same day:
+**Newest doors** — built 2026-11-09, catalogued the same day:
+
+- The agent's own context budget — how much room is left before compaction:
+  [the-context-budget.md](the-context-budget.md)
+- Rödd's hands — the voice reaches the arm, herdr, the seats and the calendar:
+  [rodd-the-hands.md](rodd-the-hands.md)
+- Every message opens something — or says in its title that it cannot:
+  [every-message-opens.md](every-message-opens.md)
+
+**Earlier doors** — built 2026-11-04, catalogued the same day:
 
 - The records shelf — plans, notes, headers, grades, placement, and the weaver:
   [the-records-shelf.md](the-records-shelf.md)
