@@ -32,7 +32,7 @@ bin[16]{file,does,kind,verdict,disposition,callers,lines}:
   "telegram-members.sh","telegram-members.sh — who is actually in a Telegram chat, as far as the Bot API will say.","tool","wired","keep",0,151
   "telegram-roster.py","'''telegram-roster.py — who speaks in a chat, remembered.","tool","wired","keep",1,235
   "telegram-roster.sh","telegram-roster.sh — who speaks in a chat, remembered (thin door over the tool).","tool","wired","keep",3,28
-  "telegram-seat.sh","telegram-seat.sh — WHICH BOT IS WHOSE, and a repair when a journal disagrees.","tool","wired","keep",0,144
+  "telegram-seat.sh","telegram-seat.sh — WHICH BOT IS WHOSE, and a repair when a journal disagrees.","tool","wired","keep",0,143
   "test_telegram_buttons.sh","test_telegram_buttons.sh — the button grammar, proved both ways.","tool","wired","keep",0,77
   "test_telegram_format.sh","The ward for telegram-format: reads well, protects structure, refuses jargon.","tool","wired","keep",0,27
   "test_telegram_roster.sh","test_telegram_roster.sh — the roster records who speaks, once, per chat.","tool","wired","keep",0,52
