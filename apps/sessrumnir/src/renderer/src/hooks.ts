@@ -406,7 +406,8 @@ export function isAbortShortcut(event: { key: string; defaultPrevented: boolean 
 export function useChatKeyboard(
   onSend: (message: string) => void,
   onAbort: () => void,
-  inputRef: React.RefObject<HTMLTextAreaElement | null>
+  inputRef: React.RefObject<HTMLTextAreaElement | null>,
+  onInterrupt?: (message: string) => void
 ): void {
   const isStreaming = useAppStore((state) => state.isStreaming)
 
@@ -418,20 +419,37 @@ export function useChatKeyboard(
         return
       }
 
-      // Enter: send message (without Shift)
-      if (e.key === 'Enter' && !e.shiftKey && document.activeElement === inputRef.current) {
-        e.preventDefault()
-        const value = inputRef.current?.value.trim()
-        if (value) {
-          onSend(value)
-          if (inputRef.current) inputRef.current.value = ''
+      // Enter sends — and while the agent is working that send is QUEUED as a
+      // follow-up (it enters only when the run finishes its pending work).
+      // Ctrl/Cmd+Enter or Alt+Enter is the deliberate interruption: it steers
+      // into the current run instead.
+      if (e.key === 'Enter' && document.activeElement === inputRef.current) {
+        const wantsInterrupt = (e.ctrlKey || e.metaKey || e.altKey) && !e.shiftKey
+
+        if (wantsInterrupt && onInterrupt) {
+          e.preventDefault()
+          const steered = inputRef.current?.value.trim()
+          if (steered) {
+            onInterrupt(steered)
+            if (inputRef.current) inputRef.current.value = ''
+          }
+          return
+        }
+
+        if (!e.shiftKey) {
+          e.preventDefault()
+          const value = inputRef.current?.value.trim()
+          if (value) {
+            onSend(value)
+            if (inputRef.current) inputRef.current.value = ''
+          }
         }
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isStreaming, onSend, onAbort, inputRef])
+  }, [isStreaming, onSend, onAbort, inputRef, onInterrupt])
 }
 
 /** A Pi built-in that maps to a GUI action rather than being inserted as text. */

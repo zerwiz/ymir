@@ -55,7 +55,7 @@ function createBridge(): PiDesktopAPI {
       commands: {
         prompt: (message, options) => ipcRenderer.invoke(IPC_CHANNELS.PI_PROMPT, message, options),
         steer: (message, images) => ipcRenderer.invoke(IPC_CHANNELS.PI_STEER, message, images),
-        followUp: (message) => ipcRenderer.invoke(IPC_CHANNELS.PI_FOLLOW_UP, message),
+        followUp: (message, images) => ipcRenderer.invoke(IPC_CHANNELS.PI_FOLLOW_UP, message, images),
         abort: () => ipcRenderer.invoke(IPC_CHANNELS.PI_ABORT),
         bash: (command) => ipcRenderer.invoke(IPC_CHANNELS.PI_BASH, command),
         abortBash: () => ipcRenderer.invoke(IPC_CHANNELS.PI_ABORT_BASH),

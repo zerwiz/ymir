@@ -426,8 +426,8 @@ interface AppActions {
 
   // Prompts
   sendPrompt: (message: string, options?: { images?: PromptImage[]; attachments?: DisplayAttachment[] }) => Promise<void>
-  sendSteer: (message: string) => Promise<void>
-  sendFollowUp: (message: string) => Promise<void>
+  sendSteer: (message: string, images?: PromptImage[]) => Promise<void>
+  sendFollowUp: (message: string, images?: PromptImage[]) => Promise<void>
   runCouncil: (request: string) => Promise<void>
   approveCouncilPlan: () => Promise<void>
   reviseCouncilPlan: (feedback: string) => Promise<void>
@@ -1086,9 +1086,12 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
 
     try {
       if (isStreaming) {
-        // Queue as steering during streaming, carrying any image attachments.
+        // A message typed while the agent is working is QUEUED, not injected:
+        // Pi's follow-up enters only after the current run has finished all its
+        // tool calls. Interrupting on purpose is a separate, deliberate gesture
+        // (Ctrl/Cmd+Enter or Alt+Enter in the composer), never the default.
         recordLocalEcho(message)
-        await window.piDesktop.commands.steer(message, options?.images)
+        await window.piDesktop.commands.followUp(message, options?.images)
       } else {
         const prompt = settings?.permissionMode === 'plan-readonly'
           ? buildPlanningPrompt(message)
@@ -1109,12 +1112,12 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
     }
   },
 
-  sendSteer: async (message) => {
+  sendSteer: async (message, images) => {
     try {
       // Steers are intentionally not rendered as bubbles; record the echo so
       // the message_start handler does not render one as an external prompt.
       recordLocalEcho(message)
-      await window.piDesktop.commands.steer(message)
+      await window.piDesktop.commands.steer(message, images)
     } catch (err) {
       get().addMessage({
         id: generateId(),
@@ -1125,11 +1128,11 @@ export const useAppStore = create<AppState & AppActions>((set, get) => ({
     }
   },
 
-  sendFollowUp: async (message) => {
+  sendFollowUp: async (message, images) => {
     try {
       // Same as sendSteer: suppress the echo-rendered external bubble.
       recordLocalEcho(message)
-      await window.piDesktop.commands.followUp(message)
+      await window.piDesktop.commands.followUp(message, images)
     } catch (err) {
       get().addMessage({
         id: generateId(),

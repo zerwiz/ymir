@@ -78,6 +78,7 @@ export function ChatInput(): React.JSX.Element {
   const { t } = useTranslation()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const sendPrompt = useAppStore((state) => state.sendPrompt)
+  const sendSteer = useAppStore((state) => state.sendSteer)
   const abort = useAppStore((state) => state.abort)
   const isStreaming = useAppStore((state) => state.isStreaming)
   const piStatus = useAppStore((state) => state.piStatus)
@@ -257,16 +258,12 @@ export function ChatInput(): React.JSX.Element {
     [builtins, resetComposer, resizeTextarea]
   )
 
-  const handleSend = useCallback(
-    async (message: string) => {
-      // Record the raw prompt (pre-attachment-inlining) for ↑/↓ recall, and
-      // reset any in-progress history navigation.
-      recordPrompt(message)
-      historyIndex.current = -1
-      draft.current = ''
-
-      // Text attachments are inlined into the prompt; image attachments are
-      // sent as Pi image blocks so the model actually sees them.
+  /**
+   * Assemble the outbound prompt once, for both gestures: text attachments are
+   * inlined into the message, image attachments travel as Pi image blocks.
+   */
+  const buildOutbound = useCallback(
+    (message: string) => {
       const textAttachments = attachments.filter((a) => a.kind === 'text')
       const imageAttachments = attachments.filter(
         (a): a is Extract<Attachment, { kind: 'image' }> => a.kind === 'image'
@@ -286,6 +283,23 @@ export function ChatInput(): React.JSX.Element {
           .join('')
       }
 
+      return { fullMessage, images, displayAttachments }
+    },
+    [attachments]
+  )
+
+  const handleSend = useCallback(
+    async (message: string) => {
+      // Record the raw prompt (pre-attachment-inlining) for ↑/↓ recall, and
+      // reset any in-progress history navigation.
+      recordPrompt(message)
+      historyIndex.current = -1
+      draft.current = ''
+
+      // While the agent is working this is QUEUED (a Pi follow-up) by the store;
+      // attachments must survive the wait, which is why they are carried here.
+      const { fullMessage, images, displayAttachments } = buildOutbound(message)
+
       sendPrompt(
         fullMessage,
         images.length > 0 ? { images, attachments: displayAttachments } : undefined
@@ -293,7 +307,23 @@ export function ChatInput(): React.JSX.Element {
       setAttachments([])
       resetComposer()
     },
-    [sendPrompt, attachments, recordPrompt, resetComposer]
+    [sendPrompt, buildOutbound, recordPrompt, resetComposer]
+  )
+
+  // The deliberate interruption: Ctrl/Cmd+Enter or Alt+Enter steers into the
+  // running turn instead of waiting for it to finish.
+  const handleInterrupt = useCallback(
+    async (message: string) => {
+      recordPrompt(message)
+      historyIndex.current = -1
+      draft.current = ''
+
+      const { fullMessage, images } = buildOutbound(message)
+      await sendSteer(fullMessage, images.length > 0 ? images : undefined)
+      setAttachments([])
+      resetComposer()
+    },
+    [sendSteer, buildOutbound, recordPrompt, resetComposer]
   )
 
   const handleAbort = useCallback(() => {
@@ -407,7 +437,7 @@ export function ChatInput(): React.JSX.Element {
     setAttachments((prev) => prev.filter((_, i) => i !== index))
   }, [])
 
-  useChatKeyboard(handleSend, handleAbort, textareaRef)
+  useChatKeyboard(handleSend, handleAbort, textareaRef, handleInterrupt)
 
   return (
     <div className="pointer-events-none mx-auto w-full max-w-3xl px-4">
@@ -505,7 +535,7 @@ export function ChatInput(): React.JSX.Element {
             isDisabled
               ? t('chat.composer.placeholderNotRunning', { agent: engineLabel })
               : isStreaming
-                ? t('chat.composer.placeholderSteering')
+                ? t('chat.composer.placeholderQueued')
                 : t('chat.composer.placeholderIdle', { agent: engineLabel })
           }
           disabled={isDisabled}

@@ -116,9 +116,11 @@ export function registerPiHandlers(ctx: IpcContext): void {
     return getActivePi().sendCommand(cmd)
   })
 
-  ipcMain.handle(IPC_CHANNELS.PI_FOLLOW_UP, async (_event, message: unknown) => {
+  ipcMain.handle(IPC_CHANNELS.PI_FOLLOW_UP, async (_event, message: unknown, images?: unknown) => {
     if (!isString(message)) throw new Error('message must be a string')
-    return getActivePi().sendCommand({ type: 'follow_up', message })
+    const cmd: Record<string, unknown> = { type: 'follow_up', message }
+    if (Array.isArray(images) && images.length > 0) cmd.images = images
+    return getActivePi().sendCommand(cmd)
   })
 
   ipcMain.handle(IPC_CHANNELS.PI_ABORT, async () => {
