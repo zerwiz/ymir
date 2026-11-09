@@ -1,6 +1,6 @@
 {
   "defaultProvider": "opencode-go",
-  "defaultModel": "deepseek-v4-flash",
-  "theme": "dark",
+  "defaultModel": "deepseek-v4.1-flash",
+  "theme": "omarchy-system",
   "packages": []
 }
