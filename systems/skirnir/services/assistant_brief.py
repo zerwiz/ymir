@@ -314,7 +314,7 @@ def prs_read(window_from: str) -> dict:
 
 
 # ── the decisions: the house's own daily log, by its door ────────────────────────────────────────
-def decisions_read(window_from: str, plans: dict, prs: dict) -> dict:
+def decisions_read(window_from: str, plans: dict) -> dict:
     days_raw = run(["bash", door("bin", "records", "daily-log.sh"), "list"], timeout=60)
     days = sorted({m.group(0) for m in re.finditer(r"\d{4}-\d{2}-\d{2}", days_raw)}, reverse=True)
     entries = []
@@ -549,7 +549,7 @@ def verb_refresh(tier: str) -> int:
     plans = plans_read(window_from)
     errands = errands_read(window_from)
     prs = prs_read(window_from)
-    decisions = decisions_read(window_from, plans.get("plans") or {}, prs)
+    decisions = decisions_read(window_from, plans.get("plans") or {})
     runes = runes_read(window_from)
     text, counts = render(day, stamp, window_from, plans, errands, prs, decisions, runes)
 
