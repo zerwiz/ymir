@@ -32,3 +32,7 @@ eight canary classes.
 ### Files
 
 - `bin/gates/tests/test_skills_mcp.sh`
+
+## CHANGE LOG
+
+- **2026-11-09** — the note was carried into the integration branch whole, its history with it.

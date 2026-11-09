@@ -59,3 +59,7 @@ no status, and are now a true reading rather than a mix of true and false.
 ## Files
 
 - `bin/gates/plan-audit.sh` — the cell split, the bold-token scan, and the new self-test case.
+
+## CHANGE LOG
+
+- **2026-11-09** — the note was carried into the integration branch whole, its history with it.

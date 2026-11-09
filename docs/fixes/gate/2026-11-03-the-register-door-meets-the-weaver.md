@@ -39,3 +39,7 @@ same ref pair, `fixes-guard.sh` says *"ok — 3 note(s)"*; the hook says *"no fi
 this range"*. The push was made with the loud override and this line as its reason.
 The hook/guard mismatch is a follow-up (the hook's refs parsing, most likely), not a
 missing note.
+
+## CHANGE LOG
+
+- **2026-11-09** — the note was carried into the integration branch whole, its history with it.

@@ -38,3 +38,7 @@ needs before fetching anything — the shapes a skill ships and the skills it na
 ### Files
 
 - `bin/skills/manifest.sh`
+
+## CHANGE LOG
+
+- **2026-11-09** — the note was carried into the integration branch whole, its history with it.

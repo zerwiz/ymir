@@ -22,3 +22,7 @@ house's own law (Rule 06: a correction is a new entry, not an edit).
   change*.
 - The register door's own wards: registers current (inventory · capabilities), the
   woven catalogue current, its row seated as a fragment.
+
+## CHANGE LOG
+
+- **2026-11-09** — the note was carried into the integration branch whole, its history with it.
