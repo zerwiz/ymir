@@ -90,6 +90,8 @@ interface HarnessFacts {
   contextWindow: number | null;
   model: string;
   session: string;
+  /** The transcript pi persists for this session — how a reader (bin/seat/context.sh) matches it. */
+  sessionFile: string;
   userTurns: number | null;
   lastTurnTokens: number | null;
 }
@@ -109,10 +111,13 @@ function gather(ctx: any): HarnessFacts {
   const model = String(ctx?.model?.id ?? ctx?.model?.modelId ?? ctx?.model?.name ?? "");
 
   let session = "";
+  let sessionFile = "";
   try {
     session = String(ctx?.sessionManager?.getSessionId?.() ?? "");
+    sessionFile = String(ctx?.sessionManager?.getSessionFile?.() ?? "");
   } catch {
     session = "";
+    sessionFile = "";
   }
 
   let userTurns: number | null = null;
@@ -144,6 +149,7 @@ function gather(ctx: any): HarnessFacts {
     contextWindow,
     model,
     session,
+    sessionFile,
     userTurns,
     lastTurnTokens,
   };
@@ -167,6 +173,7 @@ function publish(home: string, reading: Reading, extra: Record<string, unknown>)
       version: 1,
       published_by: ".pi/extensions/context-left",
       pid: process.pid,
+      session_file: extra.sessionFile ?? "",
       ...extra,
       ...reading,
       rendered: renderReading(reading),
@@ -201,7 +208,12 @@ export default function contextLeft(pi: ExtensionAPI) {
       at: new Date().toISOString(),
     };
     const reading = deriveReading(snapshot);
-    const file = publish(home, reading, { cwd, root, home: home || null });
+    const file = publish(home, reading, {
+      cwd,
+      root,
+      home: home || null,
+      sessionFile: facts.sessionFile,
+    });
     return { reading, snapshot, file };
   }
 

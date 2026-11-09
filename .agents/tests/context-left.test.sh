@@ -75,7 +75,11 @@ function ctx(tokens, contextWindow, userTurns, inputTokens) {
     cwd: process.cwd(),
     model: { id: "test/model-a", contextWindow },
     getContextUsage: () => ({ tokens, contextWindow, percent: contextWindow ? (tokens / contextWindow) * 100 : null }),
-    sessionManager: { getSessionId: () => "session-under-test", getEntries: () => entries },
+    sessionManager: {
+      getSessionId: () => "session-under-test",
+      getSessionFile: () => process.env.TEST_SESSION_FILE || "",
+      getEntries: () => entries,
+    },
   };
 }
 
@@ -93,9 +97,15 @@ const final = await tool.execute("call-4", {}, undefined, undefined, ctx(120000,
 runs.final = final.content[0].text;
 runs.turn_end_publishes = handlers.some((h) => h.name === "turn_end");
 console.log(JSON.stringify(runs));
+// A publisher that has already exited is history, not a live budget: the door checks the
+// pid. `HOLD_MS` keeps this process standing so the live-reading path can be proved.
+const hold = Number(process.env.HOLD_MS || 0);
+if (hold > 0) await new Promise((r) => setTimeout(r, hold));
 JS
 
-OUT="$(cd "$TMP" && YMIR_HOME="$HOME_R" YMIR_ROOT="$ROOT" HOME="$TMP" node "$TMP/harness.mjs" "$EXT/index.ts" 2>"$TMP/err")"
+printf 'session under test\n' > "$TMP/session-under-test.jsonl"
+OUT="$(cd "$TMP" && TEST_SESSION_FILE="$TMP/session-under-test.jsonl" YMIR_HOME="$HOME_R" YMIR_ROOT="$ROOT" HOME="$TMP" \
+  node "$TMP/harness.mjs" "$EXT/index.ts" 2>"$TMP/err")"
 if [ -z "$OUT" ]; then
   bad "the extension loads and answers (node said: $(head -3 "$TMP/err" | tr '\n' ' '))"
 else
@@ -151,6 +161,32 @@ else
   bad "the reading is published at hodd/state/context-left/<session>.json"
 fi
 
+# ── 4b. the house's own context door prefers the live reading ────────────────
+DOOR="$ROOT/bin/seat/context.sh"
+if [ -x "$DOOR" ]; then
+  ( cd "$TMP" && TEST_SESSION_FILE="$TMP/session-under-test.jsonl" HOLD_MS=20000 YMIR_HOME="$HOME_R" YMIR_ROOT="$ROOT" HOME="$TMP" \
+      node "$TMP/harness.mjs" "$EXT/index.ts" >/dev/null 2>&1 & echo $! > "$TMP/holder.pid" )
+  i=0; while [ "$i" -lt 60 ] && [ ! -s "$HOME_R/hodd/state/context-left/session-under-test.json" ]; do i=$((i+1)); sleep 0.1; done
+  LIVE="$(YMIR_HOME="$HOME_R" bash "$DOOR" --session "$TMP/session-under-test.jsonl" --json 2>&1)"
+  case "$LIVE" in
+    *"live harness reading (pi extension)"*) ok "bin/seat/context.sh prints the live extension reading, not a second count" ;;
+    *) bad "bin/seat/context.sh prefers the live reading (got: $(printf '%s' "$LIVE" | head -2 | tr '\n' ' '))" ;;
+  esac
+  case "$LIVE" in
+    *'"tokens": 120000'*) ok "the door's numbers are the extension's own" ;;
+    *) bad "the door's numbers are the extension's own (got: $(printf '%s' "$LIVE" | head -2 | tr '\n' ' '))" ;;
+  esac
+  kill "$(cat "$TMP/holder.pid" 2>/dev/null)" 2>/dev/null || true
+  rm -f "$HOME_R/hodd/state/context-left/"*.json
+  FALLBACK="$(YMIR_HOME="$HOME_R" bash "$DOOR" --session "$TMP/session-under-test.jsonl" --json 2>&1)"
+  case "$FALLBACK" in
+    *"live harness reading"*) bad "with no published reading the door must not claim a live one" ;;
+    *) ok "with no published reading the door falls back and makes no live claim" ;;
+  esac
+else
+  printf '# skip: bin/seat/context.sh is absent\n'
+fi
+
 # ── 5. one source of truth: the voice repeats it, and keeps no counter ────────
 VT="$ROOT/bin/voice/voice_tools.py"
 grep -q 'hodd/state/context-left\|"context-left"' "$VT" 2>/dev/null \
@@ -169,6 +205,8 @@ print("ok - the context_left block keeps no counter of its own; it repeats the p
 PY
 [ $? -eq 0 ] || fail=1
 
+OUT2="$(cd "$TMP" && TEST_SESSION_FILE="$TMP/session-under-test.jsonl" YMIR_HOME="$HOME_R" YMIR_ROOT="$ROOT" HOME="$TMP" \
+  node "$TMP/harness.mjs" "$EXT/index.ts" 2>/dev/null)"
 VOICE_OUT="$(YMIR_HOME="$HOME_R" python3 - "$VT" <<'PY' 2>&1
 import asyncio, importlib.util, sys, pathlib
 spec = importlib.util.spec_from_file_location("voice_tools", sys.argv[1])
