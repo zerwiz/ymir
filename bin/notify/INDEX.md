@@ -20,7 +20,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[15]{file,does,kind,verdict,disposition,callers,lines}:
+bin[16]{file,does,kind,verdict,disposition,callers,lines}:
   "approve.sh","approve.sh — one gesture answers one question.","tool","wired","keep",3,61
   "intake-gate.sh","intake-gate.sh — is this message signal, or noise?","tool","wired","keep",0,79
   "mail.sh","mail.sh — the operator-only mail door: a system tells the Allfather, and nobody else.","tool","wired","keep",4,203
@@ -32,11 +32,12 @@ bin[15]{file,does,kind,verdict,disposition,callers,lines}:
   "telegram-members.sh","telegram-members.sh — who is actually in a Telegram chat, as far as the Bot API will say.","tool","wired","keep",0,151
   "telegram-roster.py","'''telegram-roster.py — who speaks in a chat, remembered.","tool","wired","keep",1,235
   "telegram-roster.sh","telegram-roster.sh — who speaks in a chat, remembered (thin door over the tool).","tool","wired","keep",3,28
+  "telegram-seat.sh","telegram-seat.sh — WHICH BOT IS WHOSE, and a repair when a journal disagrees.","tool","wired","keep",0,144
   "test_telegram_buttons.sh","test_telegram_buttons.sh — the button grammar, proved both ways.","tool","wired","keep",0,77
   "test_telegram_format.sh","The ward for telegram-format: reads well, protects structure, refuses jargon.","tool","wired","keep",0,27
   "test_telegram_roster.sh","test_telegram_roster.sh — the roster records who speaks, once, per chat.","tool","wired","keep",0,52
   "test_telegram_templates.sh","The ward for the Telegram templates: every shape here must be one the bridge can render","tool","wired","keep",0,19
 
-**Tally.** verdict: wired=14, tested=1
+**Tally.** verdict: wired=15, tested=1
 
-**Tally.** disposition: keep=14, migrate → src/ymir_runtime/send.py=1
+**Tally.** disposition: keep=15, migrate → src/ymir_runtime/send.py=1

@@ -101,7 +101,6 @@ say('journals', rows or [('none', 'no journal on disk', '')])
 
 # ── 3 · other consumers, by NAME (a system's own door) ───────────────────────────────────────────────
 others = []
-vault = os.path.join(os.path.expanduser('~/.local/state'), '')  # placeholder, never used
 try:
     out = os.popen(f'cd {root} && bash bin/vault/hodd.sh emit secrets/platform.env 2>/dev/null').read()
     for line in out.splitlines():

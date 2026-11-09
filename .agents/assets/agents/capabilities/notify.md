@@ -16,6 +16,7 @@
 | telegram-machines.sh | telegram-machines.sh — Telegram across the FLEET: each machine's own b | tested+named | keep (a human or a cron row must run it) |
 | telegram-members.sh | telegram-members.sh — who is actually in a Telegram chat, as far as th | tested | keep (a human or a cron row must run it) |
 | telegram-roster.sh | telegram-roster.sh — who speaks in a chat, remembered (thin door over  | tested | keep (a human or a cron row must run it) |
+| telegram-seat.sh | telegram-seat.sh — WHICH BOT IS WHOSE, and a repair when a journal dis | tested | keep (a human or a cron row must run it) |
 | test_telegram_buttons.sh | test_telegram_buttons.sh — the button grammar, proved both ways. | tested | keep (a human or a cron row must run it) |
 | test_telegram_format.sh | The ward for telegram-format: reads well, protects structure, refuses ja | tested | keep (a human or a cron row must run it) |
 | test_telegram_roster.sh | test_telegram_roster.sh — the roster records who speaks, once, per cha | tested | keep (a human or a cron row must run it) |

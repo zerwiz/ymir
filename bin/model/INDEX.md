@@ -20,11 +20,11 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[16]{file,does,kind,verdict,disposition,callers,lines}:
+bin[17]{file,does,kind,verdict,disposition,callers,lines}:
   "agent-model.sh","agent-model.sh — WHICH MODEL, ON THIS SEAT.","tool","wired","keep",7,293
   "apodex-smoke-test.sh","apodex-smoke-test — validate an Apodex endpoint (GGUF via llama-router).","tool","wired","keep",0,119
   "catalog.sh","catalog.sh — THE door to what this machine can serve.","tool","wired","keep",10,135
-  "jev-doors.sh","jev-doors.sh — where the decision models answer, in one read.","tool","wired","keep",1,81
+  "jev-doors.sh","jev-doors.sh — where the decision models answer, in one read.","tool","wired","keep",4,163
   "llama-ensure.sh","llama-ensure.sh — stand a CUDA llama.cpp engine for local models, or adopt the","tool","wired","keep",3,163
   "local-model-lock.sh","local-model-lock.sh — serialize LOCAL model inference on one machine.","tool","tested","keep",8,132
   "model-fetch.sh","model-fetch.sh — fetch a chosen model into the operator's models directory.","tool","wired","keep",1,124
@@ -37,7 +37,8 @@ bin[16]{file,does,kind,verdict,disposition,callers,lines}:
   "models-detect.sh","models-detect.sh — detect the LOCAL model runtimes present on this machine and","tool","wired","keep",3,168
   "models-report.sh","models-report — the user's OWN models, read from the ROOT pi home.","tool","wired","keep",1,29
   "rail-resolve.sh","rail-resolve.sh — the DOOR to the living rail resolver (plan 51, Parts 9a/9b/9c).","tool","tested","keep",5,72
+  "test_jev_doors.sh","The ward for bin/model/jev-doors.sh — the door register that told four lies in a row.","tool","wired","keep",0,54
 
-**Tally.** verdict: wired=12, tested=4
+**Tally.** verdict: wired=13, tested=4
 
-**Tally.** disposition: keep=16
+**Tally.** disposition: keep=17
