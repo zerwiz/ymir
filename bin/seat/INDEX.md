@@ -20,10 +20,10 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[27]{file,does,kind,verdict,disposition,callers,lines}:
+bin[28]{file,does,kind,verdict,disposition,callers,lines}:
   "codex-plugin-install.mjs","// Valknut's Codex door.","data","wired","keep",3,125
-  "context.sh","context.sh — what the agent's context ACTUALLY holds, right now.","tool","wired","keep",2,114
-  "core-four.sh","core-four.sh — the four dials that decide an agent's outcome, in ONE read.","tool","wired","keep",3,160
+  "context.sh","context.sh — what the agent's context ACTUALLY holds, right now.","tool","wired","keep",3,114
+  "core-four.sh","core-four.sh — the four dials that decide an agent's outcome, in ONE read.","tool","wired","keep",4,204
   "harness-contract-install.sh","harness-contract-install.sh — every harness reads ONE contract, and an update keeps it true.","tool","wired","keep",1,81
   "harness-extensions-install.sh","harness-extensions-install.sh — every harness gets the house's extensions and packages, on install AND on update.","tool","wired","keep",1,191
   "herdr-agents.py","'''herdr-agents.py — list the agents standing in this herdr session, as TOON.","tool","wired","keep",4,85
@@ -35,13 +35,14 @@ bin[27]{file,does,kind,verdict,disposition,callers,lines}:
   "hermes-telegram.sh","hermes-telegram.sh — seat THIS machine's Telegram bot into the Hermes gateway (the machine agent's ear).","tool","wired","keep",2,150
   "lock-ask.sh","lock-ask.sh — a read-only agent asks the LOCK OWNER for work, and the owner answers.","tool","wired","keep",3,367
   "lock-hold.sh","lock-hold.sh — a PRIMARY THAT DOES NOT EXIT: hold this machine's session lock, for the seat's life.","tool","wired","keep",0,53
-  "pending.sh","pending.sh — everything that is waiting on the operator, in ONE list.","tool","wired","keep",4,91
+  "pending.sh","pending.sh — everything that is waiting on the operator, in ONE list.","tool","wired","keep",5,117
   "pi-launcher.sh","pi-launcher.sh — the ONE launcher generator for a pi seat.","tool","tested","keep",1,155
   "seat-prove.sh","seat-prove.sh — a spawn is not a seat until the agent list shows it.","tool","tested","keep",1,79
   "seat-surface.sh","seat-surface.sh — render THIS seat's own name into the AGENTS.md every harness reads.","tool","wired","keep",6,212
   "seat-wire.sh","seat-wire.sh — one seat speaks into another seat's live pane, and says who it is.","tool","wired","keep",1,382
   "seats.sh","seats.sh — where the work actually is: panes in either backend, and the dead shells named.","tool","wired","keep",4,67
   "test_core_four_pending_factory.sh","The ward for the three near-loop doors: core four, pending, and the factory preset.","tool","wired","keep",0,26
+  "test_doors_fleet_path.sh","The ward for plan 229 — the near loop on a machine that is not this shell.","tool","wired","keep",0,85
   "test_lock_ask.sh","The ward for bin/seat/lock-ask.sh — a read-only agent asks the lock owner, and only the","tool","wired","keep",0,150
   "valknut-load.sh","valknut-load.sh — Valknut, the knot that binds the repo distro into each tool's","tool","tested","keep",8,717
   "verify-seat.sh","verify-seat.sh — is this seat actually whole?","tool","tested","keep",3,177
@@ -49,6 +50,6 @@ bin[27]{file,does,kind,verdict,disposition,callers,lines}:
   "whose-tree.sh","whose-tree.sh — whose code am I standing in?","tool","wired","keep",0,118
   "ymir-mcp.py","'''ymir-mcp.py — Ymir's own doors over MCP: the tools Pi has as extensions, for","tool","tested","keep",4,276
 
-**Tally.** verdict: wired=21, tested=6
+**Tally.** verdict: wired=22, tested=6
 
-**Tally.** disposition: keep=27
+**Tally.** disposition: keep=28

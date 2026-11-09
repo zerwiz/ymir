@@ -11,7 +11,7 @@
 | agent-model.sh | agent-model.sh — WHICH MODEL, ON THIS SEAT. One resolver, and a refusa | tested | keep (a human or a cron row must run it) |
 | apodex-smoke-test.sh | apodex-smoke-test — validate an Apodex endpoint (GGUF via llama-router | tested+named | keep (a human or a cron row must run it) |
 | catalog.sh | catalog.sh — THE door to what this machine can serve. | tested+named | keep (a human or a cron row must run it) |
-| jev-doors.sh | jev-doors.sh — where the decision models answer, in one read. | tested | keep (a human or a cron row must run it) |
+| jev-doors.sh | jev-doors.sh — where the decision models answer, in one read. | tested+named | keep (a human or a cron row must run it) |
 | llama-ensure.sh | llama-ensure.sh — stand a CUDA llama.cpp engine for local models, or a | tested+named | keep (a human or a cron row must run it) |
 | local-model-lock.sh | local-model-lock.sh — serialize LOCAL model inference on one machine. | tested+named | keep (a human or a cron row must run it) |
 | model-fetch.sh | model-fetch.sh — fetch a chosen model into the operator's models direc | tested+named | keep (a human or a cron row must run it) |

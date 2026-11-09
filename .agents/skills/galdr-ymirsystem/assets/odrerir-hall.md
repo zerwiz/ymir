@@ -304,3 +304,36 @@ Laws that hold it honest:
 - **A door that fails paints an *unread* card** naming the door and the reason.
 - The cloth is `hall.css` as everywhere else: the card block uses `--hall-*` and `--ymir-*`
   tokens only. **No new palette, no raw hex.**
+
+### The near loop works on every machine (2026-11-09, plan 229)
+
+Audited live, then repaired. Three faults stood between the near loop and its own promise,
+and all three were of one kind: a door that answered in an interactive shell and died under
+a unit.
+
+- **The window dial was blind wherever the gate runs as a service.**
+  `bin/seat/core-four.sh` reads the catalog for a window, and `bin/model/catalog.sh` called a
+  **bare `pi`**. `hlidskjalf-gate.service` sets `Environment=PATH=%h/.bun/bin:/usr/bin:/bin`,
+  where a npm-global pi (a dev seat) and a mise-shimmed pi (the heart) are both invisible — so
+  the catalog answered nothing, the window became `0`, and the dial painted `—`. The catalog
+  now **probes** for its binary: `PI_BIN`, then PATH, then the documented channels
+  (`~/.npm-global/bin`, the two mise shim channels, a per-user bin directory,
+  `~/.bun/bin`, `/usr/local/bin`, `/opt/homebrew/bin`, `/usr/bin`). It reports which answered
+  (`catalog.sh --which-pi`) and installs nothing — the boundary `bin/pi/pi-ensure.sh` drew.
+- **`/api/context` was documented here since plan 199 and never served.** The gate answered
+  `no route /api/context`, so the window card lost its session line while
+  `bin/seat/context.sh` sat behind it returning real numbers. The route now exists as a
+  carrier beside `core-four` and `pending` (15 s TTL, `cwd: ROOT`, explicit timeout, `error`
+  object on failure).
+- **The board painted a fact as a number in two places.** A model the catalog cannot place is
+  no longer a zero: `context.known` is false, `context.reason` names which door was silent, and
+  the card prints *window unknown* with that reason. A window read from the catalog's rounded
+  suffix (`1M`, `65.5K`) is marked `approx` and printed `≈`. The footer no longer advertises
+  jev's Hype · Facts · Signal as live: no ranking door is wired, so it says so and points at
+  `bin/model/jev-doors.sh list`.
+
+**The law this encodes, at the Allfather's word:** every computer runs different models and
+different users run different models. So nothing here assumes a model, a window or a catalogue
+— it reads that seat's own. The guard is `bin/seat/tests/test_doors_fleet_path.sh`, which runs
+every near-loop door under a **deliberately trimmed PATH** (the gate's), because the fault class
+this fixes passes in a shell and dies under a unit.

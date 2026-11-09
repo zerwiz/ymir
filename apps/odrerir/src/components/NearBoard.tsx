@@ -22,7 +22,18 @@ import CardView, { type CardShape, type NearCard, shapeOf } from './CardView';
 
 interface CoreFour {
   model: string;
-  context: { window: number; auto_compact_at: number; force_compact_at: number };
+  context: {
+    window: number;
+    auto_compact_at: number;
+    force_compact_at: number;
+    /** exact window? absent on an older gate — treated as "known if > 0" */
+    known?: boolean;
+    /** the catalogue ROUNDS (1M, 65.5K); the board prints it as approximate */
+    approx?: boolean;
+    source?: string;
+    /** why the window is unknown — the reason, never a zero painted as a fact */
+    reason?: string;
+  };
   prompt: { file: string; what: string; lines: number }[];
   tools: { extensions: number; mcp_servers: number; total: number };
 }
@@ -143,6 +154,13 @@ export default function NearBoard() {
     }
     const c = dials.data;
     const ctx = live.state === 'ok' ? live.data : undefined;
+    // Three states, never a silent zero (plan 229): exact · approximate · unknown with a
+    // reason. A seat may run a local model, an online one, or one nobody has heard of —
+    // and another user on the same box has their own answer.
+    const windowKnown = c.context.known ?? c.context.window > 0;
+    const windowTitle = windowKnown
+      ? `${c.context.approx ? '≈ ' : ''}${num(c.context.window)} tokens`
+      : 'window unknown';
     const cards: NearCard[] = [
       {
         id: 'dial-model',
@@ -164,24 +182,31 @@ export default function NearBoard() {
         id: 'dial-window',
         shape: 'brief',
         category: 'window',
-        title: `${num(c.context.window)} tokens`,
-        lines: [
-          {
-            kind: 'summary',
-            text: `auto-compact at ${num(c.context.auto_compact_at)} · force-compact at ${num(c.context.force_compact_at)}`,
-          },
-          ...(ctx
-            ? [
-                {
-                  kind: 'why' as const,
-                  text: `this session: ${num(ctx.context_used)} used, ${ctx.percent}% of the window, ${num(
-                    ctx.remaining,
-                  )} left — ${ctx.verdict}`,
-                },
-              ]
-            : []),
-        ],
-        source: 'core-four · agent-runtime.env',
+        title: windowTitle,
+        lines: windowKnown
+          ? [
+              {
+                kind: 'summary',
+                text: `auto-compact at ${num(c.context.auto_compact_at)} · force-compact at ${num(c.context.force_compact_at)}`,
+              },
+              ...(ctx
+                ? [
+                    {
+                      kind: 'why' as const,
+                      text: `this session: ${num(ctx.context_used)} used, ${ctx.percent}% of the window, ${num(
+                        ctx.remaining,
+                      )} left — ${ctx.verdict}`,
+                    },
+                  ]
+                : []),
+            ]
+          : [
+              {
+                kind: 'why',
+                text: c.context.reason || 'neither the catalogue nor a provider registry names a window for this model',
+              },
+            ],
+        source: `core-four · ${c.context.source === 'catalogue' ? 'catalogue (rounded)' : c.context.source || 'agent-runtime.env'}`,
         sourceHref: '/api/context',
         age: ctx ? `${ctx.turns} turns` : undefined,
         actions: [openDoor('/api/context'), { label: 'dismiss', kind: 'dismiss', title: 'hide this card from this view only', onAct: () => dismiss('dial-window') }],
@@ -364,8 +389,9 @@ export default function NearBoard() {
       {block('ᛉ', 'working now', 'the agents and panes standing, and the trees in flight — read, never started from here', liveCards)}
 
       <p className="mono dim" style={{ fontSize: '.68rem', padding: '0 0 .6rem' }}>
-        scores are jev's (Hype · Facts · Signal); a card with no classification says so rather than
-        inventing a number
+        cards carry no score: jev's Hype · Facts · Signal exist in the vendored policy, but no
+        ranking door is wired yet, so a card with no classification says so — read the rail with{' '}
+        <span className="mono">bin/model/jev-doors.sh list</span> rather than trusting a number here
       </p>
     </>
   );

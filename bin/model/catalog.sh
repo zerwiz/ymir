@@ -11,16 +11,61 @@
 #   catalog.sh              every model, TOON (provider · model · context · max-out)
 #   catalog.sh --providers  the providers and how many models each serves
 #   catalog.sh --has <provider/model>   exit 0 when the pair is listed, 1 when it is not
+#   catalog.sh --which-pi   which harness binary answered, and by which channel
 #   catalog.sh --check      exit 0 when the catalogue can be read at all; 1 (loudly) when it cannot
 #
 # The harness rule follows from the catalogue rather than from prose: a model pi lists is pi's to serve.
+#
+# THE BINARY IS PROBED, NEVER ASSUMED (2026-11-09, plan 229). A bare `pi` is a promise
+# that the caller's PATH is an interactive one — and the gate is not: its unit sets
+# PATH=$HOME/.bun/bin:/usr/bin:/bin, where a npm-global or a mise-shimmed pi is
+# invisible. The dial then read the window as zero and painted "—" (measured on this
+# seat and on the heart). So the binary is resolved here, once, by channel: PI_BIN,
+# then PATH, then the documented install channels below. It is REPORTED, never
+# installed, and the operator's PATH, rc and npm config are never edited — the same
+# boundary bin/pi/pi-ensure.sh drew on 2026-09-30.
 set -euo pipefail
 
-usage() { sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'; }
+
+# The documented channels, in one place. A seat that keeps pi somewhere else names it
+# with PI_BIN — one documented override, never a second table (Rule 07). macOS,
+# Homebrew, mise, npm-global, a hand-installed binary: all reachable, none assumed.
+pi_channels() {
+  printf '%s\n' \
+    "$HOME/.npm-global/bin/pi" \
+    "$HOME/.local/share/mise/shims/pi" \
+    "$HOME/.mise/shims/pi" \
+    "$HOME/.local/bin/pi" \
+    "$HOME/.bun/bin/pi" \
+    /usr/local/bin/pi \
+    /opt/homebrew/bin/pi \
+    /usr/bin/pi
+}
+
+PI_BIN_RESOLVED=""
+PI_CHANNEL=""
+pi_bin() {  # prints the answering binary, empty when there is none
+  [ -n "$PI_BIN_RESOLVED" ] && { printf '%s' "$PI_BIN_RESOLVED"; return 0; }
+  if [ -n "${PI_BIN:-}" ]; then
+    if [ -x "$PI_BIN" ]; then PI_BIN_RESOLVED="$PI_BIN"; PI_CHANNEL="PI_BIN"; printf '%s' "$PI_BIN_RESOLVED"; return 0; fi
+    printf 'catalog: PI_BIN=%s is not executable\n' "$PI_BIN" >&2
+    return 1
+  fi
+  local c
+  if c="$(command -v pi 2>/dev/null)" && [ -n "$c" ]; then
+    PI_BIN_RESOLVED="$c"; PI_CHANNEL="PATH"; printf '%s' "$c"; return 0
+  fi
+  while IFS= read -r c; do
+    if [ -x "$c" ]; then PI_BIN_RESOLVED="$c"; PI_CHANNEL="probed"; printf '%s' "$c"; return 0; fi
+  done < <(pi_channels)
+  return 1
+}
 
 read_catalog() {  # prints raw `pi --list-models`
-  local out
-  out="$(pi --list-models 2>/dev/null)" || return 1
+  local out bin
+  bin="$(pi_bin)" || return 1
+  out="$("$bin" --list-models 2>/dev/null)" || return 1
   [ -n "$out" ] || return 1
   printf '%s\n' "$out"
 }
@@ -61,15 +106,28 @@ case "${1:-}" in
     printf 'has[1]{model,state}:\n  "%s","NOT IN THE CATALOG"\n' "$want"
     printf 'help: catalog.sh --providers — and a model this machine cannot serve is a refusal, not a guess\n' >&2
     exit 1 ;;
+  --which-pi)
+    # Called in THIS shell (not a subshell) so the resolved globals survive.
+    if pi_bin >/dev/null; then bin="$PI_BIN_RESOLVED"
+      printf 'catalog_pi[1]{path,channel,version}:\n  "%s","%s","%s"\n' "$bin" "$PI_CHANNEL" \
+        "$("$bin" --version 2>/dev/null | head -1 | tr -d '"')"
+      exit 0
+    fi
+    printf 'catalog_pi[1]{path,channel,version}:\n  "","none",""\n' >&2
+    printf 'error: no pi on PATH and none on the documented channels\n' >&2
+    printf 'help: name yours with PI_BIN=/path/to/pi — this door never installs one\n' >&2
+    exit 1 ;;
   --check)
+    pi_bin >/dev/null 2>&1 || true   # resolve in THIS shell so the channel is reportable
     if read_catalog >/dev/null; then
       n="$(read_catalog | awk 'NR>1 && NF>=2' | wc -l)"
-      printf 'check{catalog}:\n  pi catalogue readable                 PASS -> %s models\n' "$n"
+      printf 'check{catalog}:\n  pi catalogue readable                 PASS -> %s models\n  pi resolved by                        %s -> %s\n' "$n" "${PI_CHANNEL:-unknown}" "${PI_BIN_RESOLVED:-unknown}"
       exit 0
     fi
     printf 'check{catalog}:\n  pi catalogue readable                 FAIL\n' >&2
     printf 'error: this machine cannot say what it can serve — `pi --list-models` answered nothing\n' >&2
-    printf 'help: a machine that cannot answer this must say so loudly, never serve a guess\n' >&2
+    printf 'tried: PATH, then %s\n' "$(pi_channels | tr '\n' ' ')" >&2
+    printf 'help: name yours with PI_BIN=/path/to/pi; a machine that cannot answer this must say so loudly, never serve a guess\n' >&2
     exit 1 ;;
   -h|--help) usage ;;
   *) printf 'error: unknown verb %s\n' "$1" >&2; usage >&2; exit 2 ;;

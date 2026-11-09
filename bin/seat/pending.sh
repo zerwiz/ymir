@@ -35,12 +35,38 @@ try:
 except Exception:
     pass
 
-# 2 · the wake queue — a line in it is a message the seat has not answered yet
+# 2 · the wake queue — a line in it is a message the seat has not answered yet.
+# The age is the LINE'S OWN when it carries one (many do: `at=2026-11-06T…`, or a
+# run id `ask-20261106T204447Z`), never a guess from the file's mtime — every line
+# shares one mtime and painting them all the same age would be an invention. The cut
+# is 160 characters so a shelf and a path survive whole: at 90 the cards read
+# "…/Documents/ymi", which names nothing a hand can open.
+def age_of(line):
+    m = re.search(r"(20\d{2}-\d{2}-\d{2})", line)
+    if m:
+        return m.group(1)
+    m = re.search(r"\b(\d{4})(\d{2})(\d{2})T\d{6}Z", line)
+    if m:
+        return f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
+    # Next best truth: the line names a shelf ("report filed at /…/x.md"). That file's
+    # own mtime is its real date, and the card already prints the path beside it.
+    m = re.search(r"(/[^\s()]+)", line)
+    if m:
+        p = m.group(1).rstrip('.,;')
+        try:
+            if os.path.exists(p):
+                import datetime
+                return datetime.date.fromtimestamp(os.path.getmtime(p)).isoformat()
+        except Exception:
+            pass
+    return ""
+
 q = os.path.join(state, ".wake-queue")
 if os.path.exists(q):
     for line in open(q, errors="ignore"):
-        if line.strip():
-            add("wake", line.strip()[:90], ".wake-queue")
+        s = line.strip()
+        if s:
+            add("wake", s[:160], ".wake-queue", age_of(s))
 
 # 3 · mail drafts — a drafted letter waits for a word before it leaves
 try:
@@ -48,7 +74,7 @@ try:
                          capture_output=True, text=True, timeout=25).stdout
     for line in out.splitlines():
         if "draft" in line.lower() and ("r-" in line or "waiting" in line.lower()):
-            add("mail draft", line.strip()[:90], "mail-send status")
+            add("mail draft", line.strip()[:160], "mail-send status")
 except Exception:
     pass
 
