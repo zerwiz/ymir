@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """test_mind.py — Skírnir has a mind that ANSWERS, and his gate is never weakened for it.
 
 The four walls this file exists to hold, one test class each (plan 227 §1, the fault measured

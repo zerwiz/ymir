@@ -25,3 +25,8 @@ door was in the tree.
 A generated register records a file's SIZE, so any later edit to a registered door must re-run the
 generator **in the same commit** — otherwise the last commit of a branch is always the one that makes the
 index stale. Regenerate last, then commit.
+
+## CHANGE LOG
+
+- **2026-11-09** — Written when CI's `inventory` gate refused the branch: a generated register records a
+  file's size, so the generator must be re-run in the same commit as the last edit to a registered door.

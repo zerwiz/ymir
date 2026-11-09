@@ -95,3 +95,11 @@ untested"*. It is both: the cron row at 05:40 and the phrase `update skirnirs da
 `.agents/skills/*/{SKILL.md,assets/*.md}` and the repo root `AGENTS.md`, and Skírnir has no skill on that
 shelf — the gap is the shelf's, not this door's. Recorded rather than papered over: a register that says
 "decide" about a called, tested door is telling the truth about its own reach.
+
+## CHANGE LOG
+
+- **2026-11-09** — Written with the change it records: the answer path, his database (`assistant-brief.sh`,
+  four verbs, the dated briefing in the well), and the Telegram fixes. Plan 227 §§1, S1.5.
+- **2026-11-09 (2)** — Appended after the first push: `rules-compliance-guard` wanted shebangs and the
+  executable bit on the three new test files (they live on a door shelf), and a CHANGE LOG on this note.
+  Both corrected; the note's content is unchanged.

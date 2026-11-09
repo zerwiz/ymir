@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """test_telegram.py — the two faults that made Skírnir look deaf (plan 227 §S1.5, 2026-11-09).
 
   1 · `telegram: rate limited (too fast)` went to stderr and the Allfather's message vanished with no

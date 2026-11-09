@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """test_brief.py — Skírnir's DATABASE (plan 227 §S1.5): one dated briefing, four verbs, and the bound.
 
 The acceptance line the plan sets:
