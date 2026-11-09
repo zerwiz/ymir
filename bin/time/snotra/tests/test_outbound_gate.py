@@ -31,6 +31,8 @@ import json
 import os
 import re
 import shutil
+import socket
+import struct
 import subprocess
 import sys
 import tempfile
@@ -138,6 +140,54 @@ def make_server(api: Api) -> ThreadingHTTPServer:
     return srv
 
 
+# ── a DNS responder, so a recipient's MX comes from the test, not the internet ────────
+
+
+class MxDns:
+    """Answers every MX question with one record pointing back at the name.
+
+    The mail door refuses a recipient whose domain publishes no mail exchanger (that ward is the reason a
+    letter to a dead domain is not thrown away slowly). A test must not depend on the internet to satisfy it,
+    and a test address must not be somebody's real mailbox — so the door is pointed at this, and the
+    recipient lives in `.test`, which RFC 2606 reserves for exactly this.
+    """
+
+    def __init__(self) -> None:
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.bind(("127.0.0.1", 0))
+        self.sock.settimeout(0.3)
+        self.port = self.sock.getsockname()[1]
+        self.stop = False
+        threading.Thread(target=self._serve, daemon=True).start()
+
+    def _serve(self) -> None:
+        while not self.stop:
+            try:
+                packet, peer = self.sock.recvfrom(2048)
+            except socket.timeout:
+                continue
+            except OSError:
+                return
+            try:
+                ident, _, qdcount = struct.unpack(">HHH", packet[:6])
+                if qdcount != 1 or packet[12] == 0:
+                    continue
+                i = 12
+                while packet[i] != 0:
+                    i += 1 + packet[i]
+                question = packet[12:i + 5]
+                rdata = struct.pack(">H", 10) + b"\xc0\x0c"
+                answer = b"\xc0\x0c" + struct.pack(">HHIH", 15, 1, 60, len(rdata)) + rdata
+                reply = struct.pack(">HHHHHH", ident, 0x8180, 1, 1, 0, 0) + question + answer
+                self.sock.sendto(reply, peer)
+            except (struct.error, IndexError):
+                continue
+
+    def close(self) -> None:
+        self.stop = True
+        self.sock.close()
+
+
 # ── a home with a real vault, and the env the doors read ─────────────────────────────
 
 
@@ -151,6 +201,8 @@ class Case(unittest.TestCase):
         self.srv = make_server(self.api)
         self.addCleanup(self.srv.server_close)
         self.addCleanup(self.srv.shutdown)
+        self.dns = MxDns()
+        self.addCleanup(self.dns.close)
         port = self.srv.server_address[1]
 
         home = self.tmp / "home"
@@ -181,6 +233,7 @@ class Case(unittest.TestCase):
             "YMIR_GMAIL_API_BASE": f"http://127.0.0.1:{port}/gmail/v1",
             "YMIR_CALENDAR_API_BASE": f"http://127.0.0.1:{port}/calendar/v3",
             "YMIR_OAUTH_TOKEN_URL": f"http://127.0.0.1:{port}/token",
+            "GNA_DNS_SERVER": f"127.0.0.1:{self.dns.port}",
         }
 
     # helpers ---------------------------------------------------------------------
@@ -246,8 +299,6 @@ class MailGate(Case):
         SKIPs rather than failing (Rule 25: a clean skip is a pass, and it says which).
         """
         r = self.run_script(MAIL, "draft", *args, "--dry-run")
-        if "cannot receive mail" in r.stderr or "could not measure an MX" in r.stderr:
-            self.skipTest("no resolver to measure the recipient's MX from this machine")
         self.assertEqual(r.returncode, 0, r.stderr)
         line = [l for l in r.stdout.splitlines() if l.startswith("eml\t")]
         self.assertTrue(line, f"the door printed no draft path: {r.stdout}{r.stderr}")
@@ -256,9 +307,9 @@ class MailGate(Case):
     def test_5_a_letter_is_dressed_by_default(self):
         """The words are the caller's; the dress is the house's, and nobody has to remember it."""
         body = self.tmp / "letter.md"
-        body.write_text("Hi partner,\n\nA sentence with **weight**.\n\nJosef\n", encoding="utf-8")
-        raw = self._drafted("--to", "partner@gmail.com", "--subject", "A plain letter",
-                            "--body", str(body), "--footer", "Growth Agent \u00b7 sent by Josef")
+        body.write_text("Hi partner,\n\nA sentence with **weight**.\n\nThe house\n", encoding="utf-8")
+        raw = self._drafted("--to", "partner@letters.test", "--subject", "A plain letter",
+                            "--body", str(body), "--footer", "Growth Agent \u00b7 sent from the house")
         message = BytesParser(policy=policy.default).parsebytes(raw)
         self.assertEqual(message.get_content_type(), "multipart/alternative", "the letter went out undressed")
         parts = {p.get_content_type(): p.get_content()
@@ -266,14 +317,14 @@ class MailGate(Case):
         self.assertIn("text/html", parts, "there is no HTML half in the message")
         self.assertIn("A sentence with", parts["text/plain"])
         self.assertIn("<strong>weight</strong>", parts["text/html"], "the words were not dressed, they were changed")
-        self.assertIn("Growth Agent \u00b7 sent by Josef", parts["text/html"], "the footer never reached the letter")
+        self.assertIn("Growth Agent \u00b7 sent from the house", parts["text/html"], "the footer never reached the letter")
         for demo in ("htmlemail.io", "Company Inc", "This is preheader text"):
             self.assertNotIn(demo, parts["text/html"], f"a vendored demo line travelled with a real letter: {demo}")
 
     def test_6_plain_is_the_deliberate_opt_out(self):
         body = self.tmp / "plain.md"
         body.write_text("Machine to machine. No paragraph needs a typeface.\n", encoding="utf-8")
-        raw = self._drafted("--to", "partner@gmail.com", "--subject", "A bare note",
+        raw = self._drafted("--to", "partner@letters.test", "--subject", "A bare note",
                             "--body", str(body), "--plain")
         message = BytesParser(policy=policy.default).parsebytes(raw)
         self.assertEqual(message.get_content_type(), "text/plain", "--plain still carried an HTML half")
