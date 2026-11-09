@@ -93,7 +93,7 @@ def main() -> int:
                         "errors": [{"reason": "insufficientPermissions"}],
                         "status": "PERMISSION_DENIED"}})
                 record("create", body)
-                return self._json(200, {"id": "ev-created", "htmlLink": "http://example.invalid/ev",
+                return self._json(200, {"id": "ev-created", "htmlLink": "https://example.invalid/ev",
                                         "hangoutLink": ""})
             return self._empty(404)
 

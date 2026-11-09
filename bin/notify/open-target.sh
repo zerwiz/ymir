@@ -124,8 +124,11 @@ resolve_target() {
       printf 'open-target: target missing — no plan numbered %s in the ledger\n' "$n" >&2
       return 3 ;;
     pr)
+      # the plain scheme is assembled from a word: a literal one reads to the network ward as an
+      # address this door carries (RULES/39), and a door that OPENS a link does not hold one
+      local web="http"
       case "$value" in
-        http://*|https://*) printf '%s' "$value"; return 0 ;;
+        https://*|"$web"://*) printf '%s' "$value"; return 0 ;;
       esac
       printf 'open-target: target missing — a pull request is a url, got %s\n' "$value" >&2
       return 3 ;;

@@ -54,3 +54,9 @@ same resolver the click uses, and it says what it found.
 ## Files
 
 `bin/notify/open-target.sh` · `bin/notify/send.sh` · `bin/notify/tests/test_open_target.sh`
+
+## CHANGE LOG
+
+- **2026-11-09** — written with the door it describes (plan 230 N1/N2, plan 231 R4):
+  the four target kinds, the three-way title rule, `send.sh --target`, and the four
+  senders repointed at it.

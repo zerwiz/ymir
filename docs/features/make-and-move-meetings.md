@@ -62,3 +62,8 @@ The proofs (offline, against a local fixture, nothing sent to Google):
 `systems/snotra/services/calendar/calendar-write.sh` · `calendar-grant.sh` ·
 `calendar-invite.sh` (the invitation door, and the outbound-mail gate) · `tools/calendar/reader.mjs`
 (the read side, unchanged and still read-only).
+
+## CHANGE LOG
+
+- **2026-11-09** — written with the door it describes (plan 231 R2): `create` · `move` ·
+  `status`, the shared grant library, and the scope refusal that names `calendar.events`.
