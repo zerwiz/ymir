@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
 # plan.sh — the plan ledger: create the NEXT numbered plan and its index row.
 #
-#   plan.sh new <slug> --title "<title>" [--realm R] [--project P]
+#   plan.sh new <slug> --title "<title>" [--realm R] [--project P] [--from-meeting <id>]
 #   plan.sh list                      # the ledger's rows (number · title · status)
 #   plan.sh next                      # the number the next plan would take (read-only)
+#   plan.sh from-meeting <id>         # the plans a meeting produced (reads the headers)
+#
+# `--from-meeting <id>` writes `from_meeting: <id>` into the plan's HEADER, in the same act
+# as the plan is created — the join from a meeting to what it produced (plan 228 §5 · F5).
+# The reverse join lives in `bin/records/meetings.sh plans <id>`, which reads these headers
+# and refuses rather than guessing when a plan carries none.
 #
 # THE LEDGER (the house law): svartalfaheim/<realm>/projects/<project>/plans/ in the HOME.
 # Numbering is after the index's highest; a number is never reused. Extracted from the Pi
@@ -70,13 +76,43 @@ case "${1:-}" in
   list) grep -hE '^\| [0-9]+ \|' "$LEDGER/README.md" 2>/dev/null | sed -E 's/^\| ([0-9]+) \| \[([^]]*)\].*/#\1 \2/' | tail -20 ;;
   new)
     slug="${2:-}"; shift 2 2>/dev/null || true
-    title=""; while [ $# -gt 0 ]; do case "$1" in --title) title="$2"; shift 2 ;; --realm) REALM="$2"; shift 2 ;; --project) PROJECT="$2"; shift 2 ;; *) shift ;; esac; done
+    title=""; from_meeting=""
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --title) title="${2-}"; shift 2 ;;
+        --realm) REALM="${2-}"; shift 2 ;;
+        --project) PROJECT="${2-}"; shift 2 ;;
+        --from-meeting) from_meeting="${2-}"; shift 2 ;;
+        *) shift ;;
+      esac
+    done
     [ -n "$slug" ] && [ -n "$title" ] || { printf 'plan: new needs <slug> and --title\n' >&2; exit 2; }
     refuse_stale_ledger || exit 1
     n="$(next_number)"; n="${n:-1}"; f="$LEDGER/${n}-${slug}.md"
     [ -e "$f" ] && { printf 'plan: %s exists\n' "$f" >&2; exit 1; }
-    printf '# Plan %s - %s\n\n**Opened %s.**\n' "$n" "$title" "$(date +%F)" > "$f"
+    {
+      printf '# Plan %s - %s\n' "$n" "$title"
+      [ -n "$from_meeting" ] && printf 'from_meeting: %s\n' "$from_meeting"
+      printf '\n**Opened %s.**\n' "$(date +%F)"
+    } > "$f"
     printf '| %s | [%s](%s) | opened |\n' "$n" "$title" "$(basename "$f")" >> "$LEDGER/README.md"
     printf 'created %s\n' "$f" ;;
-  *) printf 'error: unknown action %s\nhelp: plan.sh [new <slug> --title <t> | list | next]\n' "$1" >&2; exit 2 ;;
+  from-meeting)
+    # The join, read back out of the ledger: which plans a meeting produced. It refuses
+    # rather than guessing — a plan with no `from_meeting:` header is never assumed to be one.
+    want="${2:-}"; [ -n "$want" ] || { printf 'plan: from-meeting needs a meeting id\n' >&2; exit 2; }
+    found=0
+    for p in "$LEDGER"/*.md; do
+      [ -e "$p" ] || continue
+      [ "$(basename "$p")" = "README.md" ] && continue
+      if head -20 "$p" | grep -qE "^\**from_meeting\**\s*:\s*\`?$want\`?\s*$"; then
+        printf '  "%s","%s"\n' "$want" "$(basename "$p")"
+        found=$((found+1))
+      fi
+    done
+    if [ "$found" = 0 ]; then
+      printf 'plan: no plan header names meeting %s (from_meeting: %s)\n' "$want" "$want" >&2
+      exit 1
+    fi ;;
+  *) printf 'error: unknown action %s\nhelp: plan.sh [new <slug> --title <t> [--from-meeting <id>] | list | next | from-meeting <id>]\n' "$1" >&2; exit 2 ;;
 esac

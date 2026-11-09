@@ -574,3 +574,45 @@ the markup beside it is used breaks MIT's one condition. Updating means re-downl
 commit** recorded in `templates/README.md`, never from a default branch.
 
 Owner doc: `systems/snotra/services/letters/templates/README.md`.
+
+## Appended 2026-11-09 — the ear speaks, and the ladder finishes (plan 228 §2–§3, §5)
+
+*"i dont get any notifications of this at all now"* — and the day's measurement: `3 meetings · 2
+transcripts · 0 minutes · 0 promises`. Three doors now close that gap, and the faults behind them
+are recorded in `docs/fixes/snotra/2026-11-09-the-ear-could-not-say-what-it-did.md` and
+`…-the-ladder-finishes-or-names-its-stop.md`.
+
+```
+doors[3]{door,does,reads}:
+  "bin/records/snotra-what.sh","the ear's own voice: now (armed/idle · the rule that decided · since · until) · last (FINISHED or STOPPED AT a step) · plan (the rungs, and the blocked one) · week (counts) · off/on (his hand, reason recorded)","the watch's `.snotra-detect.json`, its decision log, the capture's pid/outfile/mode markers, the meeting folders — never a record of its own"
+  "bin/records/snotra-ladder.sh","transcript → minutes (BY THE MODEL, from the transcript and the people present) → promises → todos, and `stopped at <step>: <reason>` into the meeting's own `.state` when a rung fails","the meeting folder, the seat's rail model (SNOTRA_RAIL_MODEL → RAIL_MODEL → the rail's first served), `bin/records/todos.sh`"
+  "bin/records/meetings.sh","the index, DERIVED from the folders: list · show · totals · json · brief · state · plans","every `meeting.json` under the home, and each folder's `.state` and artefacts"
+```
+
+**The seven transitions** now reach the hotline (`bin/notify/send.sh --source snotra`): armed ·
+left · capture started · capture stopped · transcript ready · minutes filed · a step that FAILED.
+Two of them were already written and never fired — `say_hotline()` used a `$ROOT` the capture door
+never set, inside a file whose top still carried the retired shim's path guard (which exited 127
+on every invocation, so the door was dead and the watch was calling it). Both are mended.
+
+**The device law, restated.** The refusal is about the **microphone**, not about the name of a
+mode: no microphone resolved (`SNOTRA_MIC=` empty) means the internal stream — the sink monitor —
+and the ear may arm for any call because no device is opened; a microphone resolved means a LOCAL
+room, asked for by name (`SNOTRA_LOCAL_ROOM=1`). The operator's env wins over the snapshot
+(`${VAR-default}`), so a seat's drop-in is never overridden by detection. `.snotra-mode` records
+which of the two a capture used, and `snotra-capture.sh status` prints it.
+
+**A silent ear is reported as silent:** a watch active with nothing captured in 24h prints
+`no call seen in 24h` in `now` and in the 07:00 brief (`nornir-job-daily-briefing.sh`).
+
+**The join both ways (F5):** a plan written out of a meeting carries `from_meeting: <id>` in its
+header (`plan.sh new … --from-meeting <id>`); `plan.sh from-meeting <id>` and
+`meetings.sh plans <id>` read it back and refuse rather than guessing.
+
+**Tests:** `bin/records/snotra-what.sh --self-test` (fixture state), `bin/records/snotra-ladder.sh
+--self-test` (a finished run and a stopped one), and `tests/test_snotra_ladder.sh` (24 checks:
+a failed step is reported in `.state`, on the hotline and in `last`/`plan`; a finished one is not).
+
+**Not built here:** `snotra-ladder.sh run --pending` is the sweep for transcripts with no minutes,
+but no cron row was added — scheduling is his. The board's store
+(`$YMIR_HOME/state/todos.json`) still sits on the home's gitignored runtime shelf.

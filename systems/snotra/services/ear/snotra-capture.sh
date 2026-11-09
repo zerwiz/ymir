@@ -1,26 +1,41 @@
 #!/usr/bin/env bash
-# systems/snotra/services/snotra-capture.sh — the door itself (plan 129). The 'RETIRED SHIM' wording below was copied in by the move and removed 2026-10-31: this file IS the door, not a shim of one.
+# systems/snotra/services/ear/snotra-capture.sh — THE capture door (plan 129).
 #
-# It exists so a caller nobody has repointed yet still works. It is retired by the dated follow-up in
-# docs/fixes/snotra/2026-10-24-snotra-becomes-a-system.md, and .agents/paths-ledger.yaml records the move.
+#   snotra-capture.sh start [seconds] | stop | status | devices
+#
+# THE DOOR THAT WAS DEAD (fixed 2026-11-09, plan 228 · F1). This file is the door, not a shim —
+# but the move from bin/time/snotra/ copied a shim preamble in on top of it, and the preamble
+# computed its target as `$_d/../../..` (from `systems/snotra/services/ear` that is `<repo>/systems`,
+# not the repo root). So EVERY invocation — `start`, `stop`, `status` — printed
+#   *snotra: the door moved to systems/snotra/services/ear/snotra-capture.sh and is not there*
+# and exited 127. The watch was alive, the ear was not: `snotra-detect.sh` armed, called this
+# door, and got a 127 nobody read. The microphone was never opened, and every capture since the
+# move was a refusal reported as a door move. The preamble is gone; the door is the door.
 set -euo pipefail
+# The repo root, found by walking up to the tree that carries RULES/ and .agents/ — never a
+# fixed number of `../`. In a flat fleet install (~/.fleet) there is no tree, and the hotline
+# is then simply absent rather than a wrong path (RULES/25: a clean skip is a pass).
 _d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-_root="$(cd "$_d/../../.." && pwd)"
-_new="$_root/systems/snotra/services/ear/snotra-capture.sh"
-if [ ! -e "$_new" ]; then
-  printf 'snotra: the door moved to systems/snotra/services/ear/snotra-capture.sh and is not there\n' >&2
-  exit 127
+ROOT="$_d"
+while [ "$ROOT" != / ] && { [ ! -d "$ROOT/RULES" ] || [ ! -d "$ROOT/.agents" ]; }; do ROOT="$(dirname "$ROOT")"; done
+[ -d "$ROOT/RULES" ] || ROOT=""
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  for _lib in ${ROOT:+"$ROOT/bin/vault/hoard-lib.sh"} "$_d/hoard-lib.sh"; do
+    [ -r "$_lib" ] && . "$_lib" 2>/dev/null && break
+  done
 fi
 if [ -z "${YMIR_HOME:-}" ] && command -v ymir_home_root >/dev/null 2>&1; then
   ymir_home_root YMIR_HOME
 fi
+[ -n "${YMIR_HOME:-}" ] || { printf 'snotra-capture: the home is unresolved — bin/vault/hoard-lib.sh answered nothing\n' >&2; exit 2; }
 
 YMIR_HOME="${YMIR_HOME}"
 HOARD="$YMIR_HOME/hodd/life/meetings"
-STATE_DIR="$YMIR_HOME/state"
+STATE_DIR="${YMIR_STATE_DIR:-$YMIR_HOME/state}"
 LISTENING_FILE="$STATE_DIR/.snotra-listening"
 PID_FILE="$STATE_DIR/.snotra-pid"
 OUTFILE_STATE="$STATE_DIR/.snotra-outfile"
+MODE_FILE="$STATE_DIR/.snotra-mode"
 
 mkdir -p "$HOARD" "$STATE_DIR"
 
@@ -31,8 +46,8 @@ say() { printf '%s\n' "$*"; }
 # meeting was recorded, transcribed and filed with no word to the Allfather — his words:
 # "i dont get any notifications of this at all now". This is the missing sentence.
 say_hotline() {  # <severity> <one line> <stable key>
-  local door="$ROOT/bin/notify/send.sh"
-  [ -x "$door" ] || return 0
+  local door="${ROOT:+$ROOT/bin/notify/send.sh}"
+  [ -n "$door" ] && [ -x "$door" ] || return 0
   "$door" --source snotra --severity "$1" --message "$2" --key "$3" >/dev/null 2>&1 || true
 }
 
@@ -92,17 +107,6 @@ list_devices() {
 do_start() {
   local SECONDS_ARG="${1:-}"
   local pair MONITOR MIC
-  # THE ALLFATHER'S LAW (2026-10-31): the microphone is NEVER used to hear an
-  # online meeting. Capture is the LOCAL ROOM door only — people physically in
-  # the room — and it must be asked for by name. An online meeting is heard by
-  # the bot (bin/time/snotra/snotra-bot.sh, the Vexa participant), which joins
-  # the call and needs no microphone on this box at all.
-  if [ "${SNOTRA_LOCAL_ROOM:-0}" != "1" ]; then
-    printf 'snotra-capture[1]{state,reason,door}:\n  "refused","the mic is for a LOCAL room only — never an online meeting","bin/time/snotra/snotra-bot.sh"\n' >&2
-    printf 'hint: an online meeting is heard by the BOT (snotra-bot.sh join <meet-url>);\n' >&2
-    printf '      capture your own room only with SNOTRA_LOCAL_ROOM=1.\n' >&2
-    return 2
-  fi
   # a dead capture leaves stale state behind; clear it before a new run
   if [ -f "$PID_FILE" ] && ! kill -0 "$(cat "$PID_FILE" 2>/dev/null)" 2>/dev/null; then
     rm -f "$PID_FILE" "$LISTENING_FILE"
@@ -110,6 +114,26 @@ do_start() {
   pair="$(resolve_devices)"
   MONITOR="$(printf '%s' "$pair" | sed -n 1p)"
   MIC="$(printf '%s' "$pair" | sed -n 2p)"
+
+  # THE ALLFATHER'S LAW (2026-10-31, sharpened 2026-11-09): the MICROPHONE is never
+  # opened to hear a call. *"we should lissen internally"* — the internal stream is
+  # the sink monitor, and a monitor tap competes with nothing: the client that owns
+  # the call keeps it. Opening the physical device is what took the mic from Discord
+  # mid-call. So the refusal is about the DEVICE, not about the name of the mode:
+  #   · no microphone resolved (SNOTRA_MIC= or no default source) → the internal
+  #     stream only → allowed, always, and no device is opened;
+  #   · a microphone resolved → a LOCAL room, people physically here → allowed only
+  #     when it is asked for by name (SNOTRA_LOCAL_ROOM=1);
+  #   · otherwise → refused, with the door that does it properly (the bot).
+  if [ -n "$MIC" ] && [ "${SNOTRA_LOCAL_ROOM:-0}" != "1" ]; then
+    printf 'snotra-capture[2]{state,reason,door}:\n  "refused","a microphone would be opened and no LOCAL room was asked for — a call is heard by the BOT","snotra-bot.sh join <meet-url>"\n  "allowed","set SNOTRA_MIC= to listen to the internal stream only (the sink monitor), or SNOTRA_LOCAL_ROOM=1 for a room you are in","-"\n' >&2
+    return 2
+  fi
+  if [ -z "$MONITOR" ] && [ -z "$MIC" ]; then
+    printf 'error: no audio device resolved; run %s devices\n' "$(basename "$0")" >&2
+    exit 1
+  fi
+  printf '%s\n' "$([ -n "$MIC" ] && printf 'room — the sink monitor and the microphone' || printf 'internal — the sink monitor only, no microphone opened')" > "${MODE_FILE:-/dev/null}" 2>/dev/null || true
 
   local DATESTAMP OUTFILE
   DATESTAMP=$(date +%Y-%m-%d_%H%M%S)
@@ -221,11 +245,15 @@ do_status() {
     if kill -0 "$PID" 2>/dev/null; then
       say "Snotra capture ACTIVE (pid $PID)"
       say "  Listening indicator: $LISTENING_FILE = $(cat "$LISTENING_FILE" 2>/dev/null || echo unknown)"
+      say "  Listening to:        $(cat "$MODE_FILE" 2>/dev/null || echo 'unknown mode')"
+      say "  Chosen monitor:      $(resolve_devices | sed -n 1p)"
+      say "  Chosen mic:          $(resolve_devices | sed -n 2p)"
       return 0
     fi
   fi
   say "Snotra capture: idle"
   say "  Listening indicator: absent"
+  say "  Last mode:           $(cat "$MODE_FILE" 2>/dev/null || echo 'never captured here')"
   return 1
 }
 

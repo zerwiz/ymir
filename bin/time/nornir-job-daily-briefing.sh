@@ -124,6 +124,28 @@ else
 fi
 emit ""
 
+# ---- 1b. The ear and the meetings (plan 228 §2 · F1, §5 · F5) ----------------
+# Three lines in the order he reads them, each from the door that owns it: the ear's
+# own voice (which can say "no call seen in 24h") and the meetings index (which is
+# derived from the folders). A door that cannot answer says so; it never prints a 0.
+emit "### The ear and the meetings"
+emit ""
+_snotra_what="$ROOT/bin/records/snotra-what.sh"
+if [ -x "$_snotra_what" ] || [ -r "$_snotra_what" ]; then
+  ear_line="$(bash "$_snotra_what" now --brief 2>/dev/null | head -1)"
+  emit "- ${ear_line:-ear: the door answered nothing}"
+else
+  emit "- ear: the door is missing (bin/records/snotra-what.sh)"
+fi
+_meetings="$ROOT/bin/records/meetings.sh"
+if [ -r "$_meetings" ]; then
+  meet_line="$(bash "$_meetings" brief 2>/dev/null | head -1)"
+  emit "- ${meet_line:-meetings: the door answered nothing}"
+else
+  emit "- meetings: the door is missing (bin/records/meetings.sh)"
+fi
+emit ""
+
 # ---- 2. Fleet & state -----------------------------------------------------
 emit "## 2. Fleet & State"
 emit ""

@@ -42,3 +42,43 @@ systems/snotra/services/ear/snotra-ensure.sh ensure --install  # install what is
 | `status` shows the engine missing | `snotra-ensure.sh ensure --install` (per‑OS road printed). |
 | The watch never fires | The seat has no mic — expected on a headless seat; check the `fleet` step's capability raise. |
 | No minutes in the hoard | The pipeline did not complete — check the job log and the hoard's minutes path. |
+
+## Is it listening? — the ear's own voice
+
+**What it is.** `bin/records/snotra-what.sh` — Snotra says what it is doing, in the sentence
+it never used to say. Before this door the ear took the microphone for three days and said
+nothing, and a watch that had stopped was indistinguishable from one that worked.
+
+**What you need.** Nothing beyond `$YMIR_HOME`. It reads the state files the watch already
+writes (`.snotra-detect.json`, its decision log, the capture's pid/outfile markers) and the
+meeting folders — it keeps no record of its own.
+
+```sh
+bin/records/snotra-what.sh now            # armed/idle · the rule that decided · since · until
+bin/records/snotra-what.sh now --brief    # the one line the 07:00 daily brief carries
+bin/records/snotra-what.sh last           # the last capture: when, how long, who, where the minutes are,
+                                          # and whether the pipeline FINISHED or STOPPED AT a step
+bin/records/snotra-what.sh plan <id>      # the four rungs, and the one it is blocked at
+bin/records/snotra-what.sh week           # the last 7 days: captures, meetings, minutes, promises
+bin/records/snotra-what.sh off --reason "…"   # his hand: the watch will not arm; the reason is recorded
+bin/records/snotra-what.sh on             # his hand lifted
+```
+
+**Every step speaks.** The ear sends seven events to the hotline
+(`bin/notify/send.sh --source snotra`): it **armed** · it **left** · the **capture started** ·
+the **capture stopped** · the **transcript is ready** · the **minutes were filed** · and any step
+that **FAILED** (with the reason). Before this, two of the seven were wired to a door whose root
+was computed wrongly, so the whole set was silent.
+
+**A silent ear is reported as silent.** A watch that is active with nothing captured in 24 hours
+prints `no call seen in 24h` in `now` and in the daily brief — the sentence that would have
+saved three days of dropped calls.
+
+**What it refuses to do.** It never opens a microphone to say what it is doing, and `off` never
+edits the unit: the reason is written into the state file (`$YMIR_HOME/state/.snotra-off`) and
+the watch reads it and refuses to arm.
+
+**If it does not work.** `bin/records/snotra-what.sh --self-test` builds a fixture state and
+proves every verb (including `off`/`on` and the silence line) without touching the house's own
+state. If `now` says `not watching`, the unit is not running: `systemctl --user status
+snotra-detect.service` (the unit name is `SNOTRA_WATCH_UNIT` if yours differs).
