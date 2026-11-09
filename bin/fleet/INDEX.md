@@ -29,7 +29,7 @@ bin[13]{file,does,kind,verdict,disposition,callers,lines}:
   "fleet-version.sh","fleet-version.sh — is the fleet on ONE version?","tool","tested","keep",1,99
   "hamr-harness.sh","hamr-harness.sh - detect the agent harness (Hamr) this process tree runs on.","tool","wired","keep",1,247
   "huginn-research-worker.sh","huginn-research-worker — Apodex-powered research worker (Eindri).","tool","wired","keep",0,136
-  "roads.sh","Fleet roads — OUTPUT of the registry (hodd/data/fleet.json).","tool","wired","keep",1,121
+  "roads.sh","Fleet roads — OUTPUT of the registry (hodd/data/fleet.json).","tool","wired","keep",1,131
   "tailscale-sync.sh","tailscale-sync.sh — sync the Allfather's pi data across his OWN machines over","tool","wired","keep",0,205
   "topology.sh","topology.sh — what IS this machine in the fleet, and is it talking to the heart?","tool","tested","keep",7,139
   "ymir-fleet.sh","ymir-fleet.sh — FLEET MODE, one command for npm users.","tool","wired","keep",0,19

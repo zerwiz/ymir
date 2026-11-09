@@ -48,7 +48,7 @@ bin[108]{file,does,kind,verdict,disposition,callers,lines}:
   "feature-inventory.sh","feature-inventory.sh — every feature the system CLAIMS, in one checklist.","tool","wired","keep",0,88
   "features-guard.sh","features-guard.sh — every feature page is catalogued (Rule 14).","tool","wired","keep",2,83
   "fix-note.md","Fix note template","data","wired","keep",2,22
-  "fixes-guard.sh","fixes-guard.sh — the delivery gate reads, and it checks the RECORD.","tool","tested","keep",6,223
+  "fixes-guard.sh","fixes-guard.sh — the delivery gate reads, and it checks the RECORD.","tool","tested","keep",6,227
   "fixes.sh","fixes.sh — the fix notes.","tool","wired","keep",4,162
   "fleet-version-guard.sh","fleet-version-guard.sh — the three labels and the two trees must agree, or say so.","tool","wired","keep",1,62
   "folders.tsv","The purpose of every folder under bin/ — ONE line each, the single place it is kept.","data","wired","keep",1,39
@@ -99,7 +99,7 @@ bin[108]{file,does,kind,verdict,disposition,callers,lines}:
   "skill.yaml","name: rune-counting","data","wired","keep",3,11
   "skill.yaml","name: word-weaving","data","wired","keep",3,9
   "skills-share-guard.sh","skills-share-guard.sh — nothing private crosses the skills door.","tool","wired","keep",3,165
-  "ssh-roads-guard.sh","FILE='${1:-${SSH_CONFIG:-$HOME/.ssh/config}}'","tool","wired","keep",1,44
+  "ssh-roads-guard.sh","FILE='${1:-${SSH_CONFIG:-$HOME/.ssh/config}}'","tool","wired","keep",1,51
   "subsystem-docs-guard.sh","subsystem-docs-guard.sh — the books a subsystem names must exist, and every governed path must name books.","tool","wired","keep",2,82
   "syn-arm-pretool-check.sh","syn-arm-pretool-check.sh - PreToolUse seatbelt for watcher-arm bash commands.","tool","tested","keep",2,58
   "syn-asset-pretool-check.sh","syn-asset-pretool-check.sh — PreToolUse seatbelt for governed paths.","tool","wired","keep",0,91

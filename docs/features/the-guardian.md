@@ -13,10 +13,10 @@ feature: the senses are the kernel's own audit log.
 **The commands**
 
 ```sh
-bin/ward/garmr.sh status      # what is armed, what is running, what has been judged
+bin/ward/garmr.sh status      # what is armed, what is running, OFF or ON
 sudo bin/ward/garmr.sh install   # arm the senses and seat the two services (once)
-bin/ward/garmr.sh pause       # stop watching for now (e.g. while you work on something noisy)
-bin/ward/garmr.sh resume      # start again
+sudo bin/ward/garmr.sh off        # turn the guardian off, and keep him off
+sudo bin/ward/garmr.sh on         # wake him again
 bin/ward/garmr.sh judge       # apply the rules to the newest findings, now
 bin/ward/garmr.sh tail 20     # the newest judgements, HIGH and CRITICAL first
 bin/ward/garmr.sh verify      # prove it is not silently dead
@@ -24,11 +24,28 @@ bin/ward/garmr-smoke.sh       # the reusable 9-check smoke test (running ≠ arm
 bin/ward/garmr.sh refresh     # re-render the units after an update (Gróa runs this)
 ```
 
-**On and off.** `sudo bin/ward/garmr.sh pause` stops the senses and skips the judgement; it
-leaves a **root-owned** marker so the status says plainly **paused**, never "all clear", and
-writes the pause to `/var/log/ymir/garmr/pause.log`. `resume` starts it again. **Both need root
-on purpose** — a guardian an ordinary process can silence is a guardian the intruder silences
-first; the smoke test asserts that a non-root pause is refused. `install` is idempotent.
+**On and off.** One word each way, and it is a **standing** word, not a moment:
+
+```sh
+sudo bin/ward/garmr.sh off     # turn the guardian off (and keep him off)
+bin/ward/garmr.sh status       # says plainly: OFF (since …) — not "all clear"
+sudo bin/ward/garmr.sh on      # wake him
+bin/ward/garmr.sh off --dry-run   # see exactly what the turn will do, no root needed
+```
+
+`off` stops the hound and the judgement, writes a **root-owned** marker (that marker is the gate —
+no ordinary process can silence him) plus a readable **copy** the tower and housewatch use to
+*say* `OFF`; a report the operator can write is never the switch, or the intruder flips it first.
+It also **disables** the units — so a reboot, a re-install, or an update by Gróa will not quietly
+raise a guardian you put down. `on` clears both, enables the units and starts them. The kernel
+audit rules stay loaded while he is off (they are auditd's, they cost almost nothing, and
+forgetting them is how a seat ends up deaf after a quiet week); he stops **watching and judging**,
+not un-seeing what the kernel already wrote.
+
+`pause` and `resume` are the same switch under its older names and still work. **Every one of
+these needs root on purpose** — a guardian an ordinary process can silence is a guardian the
+intruder silences first, and the smoke test asserts that a non-root `off` is refused. `install`
+is idempotent, and it leaves a hound that is OFF still off.
 
 **Where you see it.** The Hlidskjalf topbar carries a **ᛉ hound** chip: green when it is
 watching and quiet, amber at HIGH, red at CRITICAL, and a loud **silent** state if the

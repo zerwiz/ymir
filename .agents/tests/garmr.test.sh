@@ -187,7 +187,25 @@ out="$(YMIR_HOME="$TMP/home" GARMR_STATE_DIR="$TMP/state7" GARMR_NTFY_URL=http:/
 case "$out" in *'"channel": "ntfy"'*) pass "the ntfy leg sends too" ;; *) fail "ntfy send" "$out" ;; esac
 post="$(tail -1 "$CAP" 2>/dev/null)"
 case "$post" in *ntfytoken*|*"Bearer ntfytoken"*) pass "ntfy authenticates when a token is set" ;; *) fail "ntfy auth" "$post" ;; esac
-kill "$PUSH_PID" 2>/dev/null
+echo "garmr.test — the switch: off is one word, two files, and every reader agrees"
+# a clean seat: no marker anywhere means ON
+out="$(YMIR_HOME="$TMP/home" GARMR_STATE_DIR="$TMP/switch1" GARMR_PAUSE_MARKER="$TMP/switch1/PAUSED" \
+  PYTHONPATH="$GARMR" python3 -c 'import common; print(common.is_off())')"
+case "$out" in True*) fail "switch clean" "a clean state read as OFF" ;; *) pass "no marker: the hound is on" ;; esac
+# the operator-readable copy (what the tower and housewatch read) is a REPORT, never the gate
+mkdir -p "$TMP/switch2"; printf 'now\n' > "$TMP/switch2/PAUSED"
+out="$(YMIR_HOME="$TMP/home" GARMR_STATE_DIR="$TMP/switch2" GARMR_PAUSE_MARKER="$TMP/switch2/root-marker" \
+  PYTHONPATH="$GARMR" python3 -c 'import common; print(common.reports_off(), common.is_off())')"
+case "$out" in "True False") pass "the copy reports OFF and cannot silence the hound" ;; *) fail "switch copy" "$out" ;; esac
+# root's marker is the authority, and the copy is only its echo
+mkdir -p "$TMP/switch3"; printf 'now\n' > "$TMP/switch3/root-marker"
+out="$(YMIR_HOME="$TMP/home" GARMR_STATE_DIR="$TMP/switch3" GARMR_PAUSE_MARKER="$TMP/switch3/root-marker" \
+  PYTHONPATH="$GARMR" python3 -c 'import common; print(common.reports_off(), common.is_off())')"
+case "$out" in "True True") pass "root's marker is the gate" ;; *) fail "switch authority" "$out" ;; esac
+# a guardian raised while OFF must not start watching behind the word
+out="$(YMIR_HOME="$TMP/home" GARMR_STATE_DIR="$TMP/switch3" GARMR_PAUSE_MARKER="$TMP/switch3/root-marker" \
+  timeout 20 python3 "$GARMR/hound.py" 2>&1)"
+case "$out" in *"is OFF at the Allfather"*) pass "the hound refuses to watch while OFF" ;; *) fail "hound off gate" "$out" ;; esac
 
 echo
 if [ "$fails" -eq 0 ]; then

@@ -2,7 +2,17 @@
 # Fleet roads — OUTPUT of the registry (hodd/data/fleet.json). Never hand-edited.
 set -u
 
-YMIR_HOME="${YMIR_HOME:-$HOME/Documents/ymirhome}"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# The home is RESOLVED, never guessed (Rule 07): the one resolver answers, and a seat that
+# cannot answer is told so instead of silently reading a path this machine may not have.
+# shellcheck disable=SC1091
+. "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
+[ -n "${YMIR_HOME:-}" ] || ymir_home_root YMIR_HOME 2>/dev/null || true
+if [ -z "${YMIR_HOME:-}" ]; then
+  printf 'error: the home is unresolved — set YMIR_HOME, or run from a checkout\n' >&2
+  printf 'help: bin/vault/hoard-lib.sh must be able to answer\n' >&2
+  exit 2
+fi
 REG="$YMIR_HOME/hodd/data/fleet.json"
 
 python3 - "$REG" "$@" <<'PY'
