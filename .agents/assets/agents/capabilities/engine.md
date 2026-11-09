@@ -18,6 +18,7 @@
 | release-health.sh | release-health.sh — can THIS directory serve the apps? (plan 221, P2) | tested+named | keep (a human or a cron row must run it) |
 | release-lib.sh | release-lib.sh — the ONE place that knows where a release lives and ho | tested | keep (a human or a cron row must run it) |
 | runtime-deploy.sh | runtime-deploy.sh — move the PINNED runtime checkout to the merged tre | tested | keep (a human or a cron row must run it) |
+| update-loop.sh | update-loop.sh — the heart keeps itself on latest main (plan 233 §10) | tested+named | keep (a human or a cron row must run it) |
 | version-stamp.sh | version-stamp.sh — a seat says exactly which build it runs (2026-09-22 | tested | keep (a human or a cron row must run it) |
 | ymir-autoboot.sh | ymir-autoboot.sh — the boot proof: what this seat's roles OWE, and whe | tested+named | keep (a human or a cron row must run it) |
 | ymir-config.sh | ymir-config.sh — the operator's own preferences, honoured and remember | tested | keep (a human or a cron row must run it) |

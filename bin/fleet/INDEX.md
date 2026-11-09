@@ -33,7 +33,7 @@ bin[13]{file,does,kind,verdict,disposition,callers,lines}:
   "tailscale-sync.sh","tailscale-sync.sh — sync the Allfather's pi data across his OWN machines over","tool","wired","keep",0,205
   "topology.sh","topology.sh — what IS this machine in the fleet, and is it talking to the heart?","tool","tested","keep",7,139
   "ymir-fleet.sh","ymir-fleet.sh — FLEET MODE, one command for npm users.","tool","wired","keep",0,19
-  "ymir-platform.sh","ymir-platform.sh — the portability layer.","tool","tested","keep",26,336
+  "ymir-platform.sh","ymir-platform.sh — the portability layer.","tool","tested","keep",27,336
 
 **Tally.** verdict: wired=9, tested=4
 
