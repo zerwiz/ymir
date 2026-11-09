@@ -29,7 +29,7 @@ bin[10]{file,does,kind,verdict,disposition,callers,lines}:
   "voice-ensure.sh","voice-ensure.sh — ensure the voice engines: whisper.cpp (speech → text) and","tool","wired","keep",3,190
   "voice-toolbox.py","'''voice-toolbox.py — the house's hands for a browser face.","tool","wired","keep",0,119
   "voice_mcp.py","'''voice_mcp.py — the voice's MCP adapter: every server this seat knows, as hands.","tool","wired","keep",0,396
-  "voice_tools.py","'''voice-tools.py — the hands of the voice.","tool","wired","keep",3,2383
+  "voice_tools.py","'''voice-tools.py — the hands of the voice.","tool","wired","keep",3,2574
   "ymir-vad.py","'''","tool","wired","keep",0,135
 
 **Tally.** verdict: wired=10

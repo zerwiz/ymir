@@ -37,17 +37,111 @@ import subprocess
 import sys
 import time
 
+def _config_path() -> str:
+    """Skírnir's own settings file (Rule 07): `SKIRNIR_CONFIG`, else the home's config shelf."""
+    env = os.environ.get("SKIRNIR_CONFIG")
+    if env:
+        return os.path.expanduser(env)
+    try:
+        return os.path.join(home(), "config", "skirnir.yaml")
+    except SystemExit:
+        return ""
+
+
+_ASSISTANT_CONFIG: dict | None = None
+
+
+def assistant_config() -> dict:
+    """His settings, read once. `model` and `model_url` live here; the code names no model."""
+    global _ASSISTANT_CONFIG
+    if _ASSISTANT_CONFIG is None:
+        _ASSISTANT_CONFIG = {}
+        path = _config_path()
+        if path and os.path.isfile(path):
+            try:
+                import yaml
+                with open(path) as fh:
+                    data = yaml.safe_load(fh) or {}
+                if isinstance(data, dict):
+                    _ASSISTANT_CONFIG = data
+            except Exception:
+                pass
+    return _ASSISTANT_CONFIG
+
+
 def _model_url() -> str:
-    """The model leg's ONE door (Rule 07): env -> config -> the seat's own rail.
+    """The model leg's ONE door (Rule 07): env -> his config -> the seat's own rail.
 
     Hardcoding http://127.0.0.1:8080 worked on heimdall and only on heimdall; on heart, forge or hand
     the free-text leg failed while the voice doors honoured their env (Skirnir's own audit, 2026-10-31).
+    A hand-run of this file had no env at all, which is how a strong model sat unused while he echoed
+    a document title — so the config file is read too, and the rail literal is the LAST resort only.
     """
     import os as _os
-    url = _os.environ.get("SKIRNIR_MODEL_URL") or _os.environ.get("OPENAI_BASE_URL") or ""
+    url = (_os.environ.get("SKIRNIR_MODEL_URL") or _os.environ.get("OPENAI_BASE_URL")
+           or str(assistant_config().get("model_url") or ""))
     if url:
-        return url.rstrip("/") + "/chat/completions"
+        return url.rstrip("/") + ("/chat/completions" if not url.rstrip("/").endswith("/chat/completions")
+                                   else "")
     return "http://127.0.0.1:8080/v1/chat/completions"
+
+
+def configured_mouth(explicit: str = "") -> tuple[str, str]:
+    """WHICH MODEL ANSWERS, from configuration and never from a literal (Rule 07).
+
+    Order: `--model` · `SKIRNIR_MODEL` · `$YMIR_HOME/config/skirnir.yaml`'s `model:`.
+    An EMPTY model is an honest answer as well: no mouth is configured, so nothing is composed and
+    the matched fact is spoken AS A REFERENCE rather than passed off as an answer (his fault,
+    measured 2026-11-09: `status` returned "WaveTerm Troubleshooting Guide — status Open").
+    """
+    for value, source in ((explicit, "flag"),
+                          (os.environ.get("SKIRNIR_MODEL", ""), "env:SKIRNIR_MODEL"),
+                          (str(assistant_config().get("model") or ""), "config:skirnir.yaml")):
+        if (value or "").strip():
+            return value.strip(), source
+    return "", "none"
+
+
+_RAIL_KEY: str | None = None
+
+
+def _vault_value(key: str) -> str:
+    """A key NAME read through the vault door. The value never leaves this process."""
+    door = os.path.join(ROOT, "bin", "vault", "hodd.sh")
+    if not os.path.isfile(door):
+        return ""
+    try:
+        out = subprocess.run(["bash", door, "emit", "secrets/platform.env"],
+                             capture_output=True, text=True, timeout=30).stdout
+    except Exception:
+        return ""
+    for line in out.splitlines():
+        m = re.match(rf"^(?:export )?{re.escape(key)}=(.*)$", line)
+        if m:
+            return m.group(1).strip().strip("'\"")
+    return ""
+
+
+def _rail_key() -> str:
+    """The rail's key BY REFERENCE (Rule 07): the vault, then the env, then the seat's own registry.
+
+    The name of the key is configuration too (`SKIRNIR_MODEL_KEY_REF`), so a different rail on a
+    different seat needs no code change.
+    """
+    global _RAIL_KEY
+    if _RAIL_KEY is not None:
+        return _RAIL_KEY
+    value = (os.environ.get("SKIRNIR_MODEL_KEY") or os.environ.get("OPENAI_API_KEY") or "").strip()
+    if not value:
+        value = _vault_value(os.environ.get("SKIRNIR_MODEL_KEY_REF") or "LLAMA_SWAP_API_KEY")
+    if not value:
+        try:
+            auth = json.load(open(os.path.expanduser("~/.pi/agent/auth.json")))
+            value = (auth.get("llama-swap") or {}).get("key", "") or ""
+        except Exception:
+            value = ""
+    _RAIL_KEY = value
+    return value
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
@@ -225,6 +319,18 @@ def sounds_like_refusal(text: str) -> bool:
 PITCH_RE = re.compile(r"\bymir\b.*\b(tell|explain|describe|introduce|present|sell|pitch|about)\b|"
                       r"\b(tell|explain|describe|introduce|present|sell|pitch)\b.*\bymir\b|"
                       r"\b(introduce yourself|what are you|tell them about (it|the house|the system))\b", re.I)
+# THE DATABASE, in his own words (plan 227 §S1.5.3): "update skirnirs database", and `/update`.
+BRIEF_UPDATE_RE = re.compile(
+    r"^\s*/?update\b(?!\s+(me|it|them)\b)|"
+    r"\b(update|refresh|rebuild|renew|reload)\b[^.?]{0,30}\b(database|briefing|brief|knowledge|brain|mind)\b|"
+    r"\b(database|briefing)\b[^.?]{0,20}\b(update|refresh|rebuild)\b", re.I)
+BRIEF_STATUS_RE = re.compile(
+    r"^(status|state of the house|what do you know now|how fresh|how current|when did you last|briefing status)\b", re.I)
+BRIEF_ASK_RE = re.compile(
+    r"\b(what did we decide|what did he decide|what did you decide|what has been decided|what was decided|"
+    r"what happened (this|last) week|what happens? (this|last) week|what shipped|what landed|"
+    r"what is in flight|what'?s in flight|what is new|what changed (this|last) week|decisions? (this|last) week)\b",
+    re.I)
 INTERROGATIVE = re.compile(
     r"^(what|who|why|how|when|where|which|whose|can|could|do|does|did|is|are|was|were|will|would|"
     r"should|may|might|have|has|am)\b")
@@ -794,12 +900,7 @@ def _rail(system: str, user: str, model: str, temperature: float = 0.0,
     """One call to the rail. No tools, no credential in the prompt, nothing but text in and out."""
     try:
         import urllib.request
-        key = ""
-        try:
-            auth = json.load(open(os.path.expanduser("~/.pi/agent/auth.json")))
-            key = (auth.get("llama-swap") or {}).get("key", "")
-        except Exception:
-            pass
+        key = _rail_key()
         payload = {"model": model, "temperature": temperature, "max_tokens": 200,
                            "messages": [{"role": "system", "content": system},
                                         {"role": "user", "content": user}]}
@@ -921,6 +1022,147 @@ def model_answer(question: str, facts: dict, model: str,
               f"FACTS:\n{context}")
     return _rail(system + "\n" + VOICE, question, model, temperature=0.35,
                  seed=int(time.time()) ^ abs(hash(question)) % 100000)
+
+
+def model_view(facts: dict, tier: str) -> dict:
+    """What a MOUTH may see of the book at this tier: `model_context`'s classes, then public-only.
+
+    Anyone but the Allfather hears the public book and nothing else (plan 227 §S1.5.4), and this is
+    the ONE place that is decided — so the unmatched-question path and the matched-fact path cannot
+    drift apart and quietly disagree.
+    """
+    view = model_context(facts)
+    if tier == "owner":
+        return view
+    return {k: v for k, v in view.items() if str(v.get("class", "public")).lower() == "public"}
+
+
+def model_safe(fact: dict, tier: str) -> bool:
+    """May a MODEL ever phrase this fact, for this tier? (plan 101 §5; plan 227 §S1.5.4.)
+
+    Never `verbatim` material (said exactly or not at all), never NDA/contracted/restricted/internal,
+    and — for anyone but the Allfather — only a `public` fact. His tier hears the model-safe classes.
+    """
+    if fact.get("verbatim"):
+        return False
+    klass = str(fact.get("class", "public")).lower()
+    if tier == "owner":
+        return klass in MODEL_SAFE_CLASSES
+    return klass == "public"
+
+
+def fact_reference(claim: str, tier: str, paraphrased: bool = True) -> str:
+    """The matched fact SAID AS A REFERENCE — never dressed up as a composed answer.
+
+    HIS FAULT, measured 2026-11-09: asked for `status` he answered "WaveTerm Troubleshooting Guide —
+    status Open." — a document title matched by keyword and passed off as an answer. A reference is
+    worse than nothing only when it pretends to be an answer, so the reference says what it is. There
+    are two reasons it stays a reference and they are NOT the same sentence:
+
+      * `paraphrased` — a mouth could have phrased it and none did (no model, or the rail was down);
+      * not — the record forbids paraphrase (`internal`, `verbatim`, an NDA class), so the words are
+        read exactly as they stand and saying "I could not phrase it" would be a lie about the reason.
+    """
+    claim = (claim or "").strip()
+    if not claim:
+        return say_unknown(tier)
+    if not paraphrased:
+        return (f"{claim} Those are the record's own words — not mine to put in my own mouth."
+                if tier == "owner" else
+                f"{claim} Those are the record's own words, not a spoken answer.")
+    if tier == "owner":
+        return f"{claim} That is the reference I hold — I could not put it in my own words just now."
+    return f"{claim} That is a reference from what I hold, not a spoken answer."
+
+
+LIMIT_WORDS = {
+    "contacts": "who the Allfather works with",
+    "nda": "material under NDA",
+    "contracted": "contracted material",
+    "restricted": "restricted material",
+    "internal": "the house's internal record",
+}
+
+
+def say_limit(tier: str, klass: str) -> str:
+    """A refusal that NAMES the limit — because "I don't know" would be a lie here.
+
+    The fact WAS found. What is true is that this room may not hear it, and a person who is told
+    which door is closed stops asking the same question with different words.
+    """
+    what = LIMIT_WORDS.get(klass, "material that is not public")
+    if tier == "stranger":
+        return (f"I hold something about that, but it is {what}, and I speak only the house's public "
+                f"facts to someone I have not been introduced to. I won't guess and I won't paraphrase it.")
+    return (f"I hold something about that, but it is {what} — that belongs to him, not to the room. "
+            f"Ask me what is public, or leave the question with me and he will come back to you.")
+
+
+def compose_fact(question: str, matched: dict, mouth: str, recent: list[tuple[str, str]] | None,
+                 tier: str) -> str | None:
+    """A SHORT ANSWER composed from the matched facts — and from nothing else.
+
+    THE RULE the mouth obeys here (plan 227 §1): it sees ONLY these facts. Not the vault, not an NDA
+    shelf, not another tenant, not even the rest of the digest — `model_context` narrows the classes,
+    `model_safe` narrows them again per tier, and the bundle is what the match actually found.
+
+    A STRANGER NEVER REACHES A MODEL. That is checked here as well as at the call site, because a
+    guard that lives in one place is a guard that can be removed from one place.
+    """
+    if not mouth or tier not in MODEL_TIERS:
+        return None
+    safe = {slug: fact for slug, fact in model_view(matched, tier).items() if model_safe(fact, tier)}
+    if not safe:
+        return None
+    said = model_answer(question, safe, mouth, recent, tier)
+    if not said or sounds_like_refusal(said):
+        return None
+    return said
+
+
+def brief_door(verb: str, arg: str = "") -> str:
+    """The database door (plan 227 §S1.5): `refresh` · `show` · `recall` · `status`.
+
+    Read through the door that owns it, never re-implemented here: the briefing is compiled by
+    `systems/skirnir/services/assistant-brief.sh` from the doors that own each source.
+    """
+    door = os.path.join(HERE, "assistant-brief.sh")
+    if not os.path.isfile(door):
+        return ""
+    args = ["bash", door, verb, "--tier", "owner"]
+    if arg:
+        args.insert(3, arg)
+    try:
+        return subprocess.run(args, capture_output=True, text=True, timeout=240).stdout or ""
+    except Exception:
+        return ""
+
+
+def toon_rows(raw: str) -> list[list[str]]:
+    """The rows of a TOON block — the format every door in this house prints for an agent.
+
+    A TOON row mixes quoted text with bare numbers (`"refresh","2026-11-09","x.md",1,3,…`), so the
+    split must honour the quotes: splitting on the literal `","` returned four fields for a
+    twelve-field row and every count read as text (measured 2026-11-09, this file's own first run).
+    """
+    rows = []
+    for line in (raw or "").splitlines():
+        s = line.strip()
+        if not s.startswith('"'):
+            continue
+        fields, buf, in_quotes = [], [], False
+        for ch in s:
+            if ch == '"':
+                in_quotes = not in_quotes
+                continue
+            if ch == "," and not in_quotes:
+                fields.append("".join(buf).strip())
+                buf = []
+                continue
+            buf.append(ch)
+        fields.append("".join(buf).strip())
+        rows.append(fields)
+    return rows
 
 
 def gate(answer: str, canaries: list[str]) -> tuple[bool, str]:
@@ -1064,8 +1306,10 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
     facts = {k: v for k, v in facts.items() if audience_ok(v, allowed, channel)}
     dh = digest_hash(facts)
     canaries = load_canaries(tier)
-    # the mouth is named ONCE, before any branch can ask whether it is armed
-    mouth = model or os.environ.get("SKIRNIR_MODEL") or ""
+    # the mouth is named ONCE, before any branch can ask whether it is armed — and it is named from
+    # CONFIGURATION (Rule 07), never from a literal: `--model`, SKIRNIR_MODEL, then his own config file.
+    mouth, mouth_from = configured_mouth(model)
+    fixed = False            # a reply composed from a LIVE door: the model must not re-phrase it
     question = text.strip()
     key = re.sub(r"[^a-z0-9 ]", "", question.lower()).strip()
     if language == "sv":
@@ -1134,9 +1378,22 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
     if (m_tell or m_answer) and intent == "unknown":
         kind, intent = "answer_ask", "answer-ask"
 
+    # THE DATABASE (plan 227 §S1.5). His word — "update skirnirs database" — and `/update`. This runs
+    # BEFORE the ACTION guard, because "update …" is otherwise a request he must refuse as an action:
+    # keeping his own briefing current is not acting for him, it is remembering.
+    if tier == "owner" and intent == "unknown":
+        if BRIEF_UPDATE_RE.search(question):
+            kind, intent = "brief_refresh", "brief-refresh"
+        elif BRIEF_STATUS_RE.match(key.strip()):
+            kind, intent = "brief_status", "brief-status"
+        elif BRIEF_ASK_RE.search(question) and len(key.split()) >= 3:
+            kind, intent = "brief_ask", "brief-ask"
+
     # An ACTION request is neither a question nor a fact: he is a mouth, not a hand (plan 101 §4).
     # It must be caught before retrieval, or a word like "send" matches a fact and reads as consent.
-    if ACTION.match(key.strip()):
+    # (the database verbs above are NOT actions: keeping his own briefing current is remembering,
+    #  not acting for him — and "update …" would otherwise be swallowed whole by the "update" verb)
+    if ACTION.match(key.strip()) and kind not in ("brief_refresh", "brief_status", "brief_ask"):
         kind, intent = "action", "action"
 
     # THE OPEN WEB. Owner only, by a named verb, and it never touches the digest: what comes back is
@@ -1539,6 +1796,71 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
                              "still open and I'll keep it.")
                     print(f"skirnir: delivery failed — {sent.stderr[:200]}", file=sys.stderr)
                     intent, denied = "unknown", True
+    elif kind == "brief_refresh":
+        # HIS OWN PHRASE, in the chat he already talks in (plan 227 §S1.5.3). The door compiles the
+        # live record and files today's briefing; this branch answers with its one-line summary and
+        # adds nothing the door did not measure.
+        raw = brief_door("refresh")
+        rows = toon_rows(raw)
+        if rows and len(rows[0]) >= 12:
+            reply = rows[0][11].rstrip()
+            if not reply.endswith("."):
+                reply += "."
+            if rows[0][10] != "stored":
+                reply += ("The well did not take a new copy — it already holds this briefing, so "
+                          "recall answers from the copy it has.")
+        else:
+            reply = ("I could not compile my database just now — the briefing door answered nothing. "
+                     "Nothing was overwritten; the last briefing still stands.")
+        intent, fixed = "brief-refresh", True
+    elif kind == "brief_ask":
+        # A QUESTION ABOUT THE RECORD — "what did we decide about the microphone". The well is asked
+        # first (the briefing's own tag), then the wider store; the answer CITES the briefing's date,
+        # because a database that has gone stale must be visible in the sentence, not hidden behind
+        # confidence (plan 227 §S1.5.4).
+        rows = toon_rows(brief_door("recall", question))
+        dated = [(r[0], r[1]) for r in rows if len(r) >= 2 and r[0] not in ("", "none")]
+        if dated:
+            newest = max(day for day, _ in dated)
+            # ONE ROW PER PLAN, and two at most: the plan, the decision and the date fit in a
+            # sentence, and a briefing read out in full is the context, not the answer
+            # (measured 2026-11-09 — three rows of one plan answered as a paragraph).
+            picked, plans_seen = [], set()
+            for _day, said in dated:
+                found = set(re.findall(r"\bplan (\d+)\b", said)) | set(re.findall(r"^\W*(\d{3}) ·", said))
+                if found and found <= plans_seen and picked:
+                    continue
+                if len(picked) >= 2:
+                    break
+                plans_seen |= found
+                picked.append(said)
+            reply = f"From my briefing of {newest}: " + " · ".join(picked)
+            if len(reply) > 600:
+                reply = reply[:599].rstrip() + "…"
+            intent = f"brief:{newest}"
+        else:
+            status = toon_rows(brief_door("status"))
+            line = status[0][6] if status and len(status[0]) >= 7 else ""
+            reply = ("My database holds no briefing that covers that." +
+                     (f" {line}" if line else "") +
+                     " Say 'update your database' and I will compile the week from the plans, the "
+                     "errands and the record.")
+            intent = "brief-empty"
+        used, fixed = [], True
+    elif kind == "brief_status":
+        # THE FAULT THIS ANSWERS (2026-11-09): asked for `status` he returned a document title. Now
+        # `status` means what it should mean for him — what his own database knows, and how fresh it is.
+        rows = toon_rows(brief_door("status"))
+        line = rows[0][6] if rows and len(rows[0]) >= 7 else ""
+        flight = ""
+        shown = brief_door("show") if line else ""
+        if "## What is in flight" in shown:
+            tail = shown.split("## What is in flight", 1)[1].split("##", 1)[0]
+            bullets = [b.strip()[2:].strip() for b in tail.splitlines() if b.strip().startswith("- ")]
+            if bullets:
+                flight = " In flight: " + " ".join(bullets[:2])
+        reply = (line or "I have no briefing yet, so I am answering from the plans and the well alone.") + flight
+        intent, fixed = "brief-status", True
     elif kind == "action":
         if tier == "owner":
             reply = ("I don't act for you — nothing sent, nothing booked, nothing changed. That is "
@@ -1611,11 +1933,15 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
         reply = said if (said and not sounds_like_refusal(said)) else pick(ROLE_LINES, chat or "role")
     elif intent.startswith("fact:") and used and used[0] in facts:
         funt = facts[used[0]]
-        reply = funt["claim"]
         kls = str(funt.get("class", "public")).lower()
-        if kls not in ("public", "logistics") and tier != "owner":
-            reply = say_unknown(tier, seed=chat or "chat")
-            intent = "unknown"
+        if tier != "owner" and kls != "public":
+            # A COLLEAGUE MAY HEAR THE PUBLIC BOOK AND NOTHING ELSE — and the refusal NAMES the limit,
+            # because "I don't know" would be a lie when the truth is "that one is his, not the room's".
+            # `fixed`: a limit is not a draft for a model to re-phrase into something permissive.
+            reply = say_limit(tier, kls)
+            intent, fixed = "unknown", True
+        else:
+            reply = funt["claim"]
     elif used and used[0] in facts:
         fact = facts[used[0]]
         reply = fact["claim"]
@@ -1648,10 +1974,15 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
     # the approved facts, the question and the last turns — no tools, no credential, no vault — and
     # everything it says still runs through the gate below. A rail that is down is not an outage:
     # the verbatim claim or the honest no is already in `reply`, and that is what gets said.
-    if mouth and tier in MODEL_TIERS and not pitched:
-        safe = model_context(facts)
+    #
+    # THE ANSWER PATH (this is what "his still broken" was, measured 2026-11-09): a MATCHED FACT is a
+    # reference, not an answer. So the matched facts — and only they — go to the mouth, which composes
+    # a short answer. When no mouth answers, the reference stays the reply AND SAYS SO: a title is worse
+    # than nothing only when it pretends to be an answer.
+    if mouth and tier in MODEL_TIERS and not pitched and not fixed:
+        recent = history(chat)
         if intent == "unknown":
-            said = model_answer(question, safe, mouth, history(chat), tier)
+            said = model_answer(question, model_view(facts, tier), mouth, recent, tier)
             if said:
                 reply = said
                 # if it says it does not hold the fact, it stays a REFUSAL: he must be told
@@ -1659,13 +1990,16 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
                 if intent == "unknown" and tier == "owner":
                     # a model may not invent an addressee: the Allfather IS the addressee
                     reply = say_unknown("owner", seed=chat or "owner")
-        elif used and used[0] in facts \
-                and not any(facts[u].get("verbatim") for u in used if u in facts) \
-                and str(facts[used[0]].get("class", "public")).lower() in MODEL_SAFE_CLASSES:
+        elif used and used[0] in facts:
             bundle = {slug: facts[slug] for slug in used if slug in facts}
-            said = model_answer(question, bundle, mouth, history(chat), tier)
-            if said and not sounds_like_refusal(said):
+            said = compose_fact(question, bundle, mouth, recent, tier)
+            if said:
                 reply, intent = said, f"model:{used[0]}"
+    # ONE REFERENCE, SAID AS ONE. A fact a model MAY phrase, but no mouth phrased it: the claim is
+    # spoken with its label, so nobody mistakes a document title for an answer.
+    if not fixed and used and used[0] in facts and reply == facts[used[0]].get("claim"):
+        reply = fact_reference(str(facts[used[0]].get("claim") or ""), tier,
+                               paraphrased=model_safe(facts[used[0]], tier))
 
     if language == "sv":
         if kind == "inventory" and tier == "owner":

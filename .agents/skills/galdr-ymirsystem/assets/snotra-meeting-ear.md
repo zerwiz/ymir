@@ -575,44 +575,57 @@ commit** recorded in `templates/README.md`, never from a default branch.
 
 Owner doc: `systems/snotra/services/letters/templates/README.md`.
 
-## Appended 2026-11-09 — the ear speaks, and the ladder finishes (plan 228 §2–§3, §5)
+## Appended 2026-11-09 — the calendar gains a WRITE hand, and it refuses by scope (plan 231 §2)
 
-*"i dont get any notifications of this at all now"* — and the day's measurement: `3 meetings · 2
-transcripts · 0 minutes · 0 promises`. Three doors now close that gap, and the faults behind them
-are recorded in `docs/fixes/snotra/2026-11-09-the-ear-could-not-say-what-it-did.md` and
-`…-the-ladder-finishes-or-names-its-stop.md`.
+The reader (`calendar-ask.sh` → `tools/calendar/reader.mjs`) is read-only **on purpose** and stays so: the
+capability is absent, not gated by a flag. What did not exist was a hand for the two verbs a voice needs — make a
+meeting, move one. `calendar-invite.sh` could create an invitation (and mail people), which is the wrong shape for
+"move my eleven o'clock to two".
 
 ```
-doors[3]{door,does,reads}:
-  "bin/records/snotra-what.sh","the ear's own voice: now (armed/idle · the rule that decided · since · until) · last (FINISHED or STOPPED AT a step) · plan (the rungs, and the blocked one) · week (counts) · off/on (his hand, reason recorded)","the watch's `.snotra-detect.json`, its decision log, the capture's pid/outfile/mode markers, the meeting folders — never a record of its own"
-  "bin/records/snotra-ladder.sh","transcript → minutes (BY THE MODEL, from the transcript and the people present) → promises → todos, and `stopped at <step>: <reason>` into the meeting's own `.state` when a rung fails","the meeting folder, the seat's rail model (SNOTRA_RAIL_MODEL → RAIL_MODEL → the rail's first served), `bin/records/todos.sh`"
-  "bin/records/meetings.sh","the index, DERIVED from the folders: list · show · totals · json · brief · state · plans","every `meeting.json` under the home, and each folder's `.state` and artefacts"
+calendar_write[4]{door,verbs,why}
+  "systems/snotra/services/calendar/calendar-write.sh","create · move · status · --self-test","the write hand; the bin/ shelf carries a shim, per the paths ledger"
+  "systems/snotra/services/calendar/calendar-grant.sh","(sourced, no verbs)","ONE reading of the grant: the connect door's key, the token refresh, the scope measurement, the curl shape"
+  "systems/snotra/services/calendar/calendar-invite.sh","create · cancel · status","unchanged behaviour, now built on the shared grant library — the event body and the outbound-mail gate stay in ONE writer"
+  "bin/mail/gna_connect.py","connect.sh google","the connect door whose grant this is: `SNOTRA_GOOGLE_REFRESH_TOKEN`, scopes measured through the same tokeninfo endpoint"
 ```
 
-**The seven transitions** now reach the hotline (`bin/notify/send.sh --source snotra`): armed ·
-left · capture started · capture stopped · transcript ready · minutes filed · a step that FAILED.
-Two of them were already written and never fired — `say_hotline()` used a `$ROOT` the capture door
-never set, inside a file whose top still carried the retired shim's path guard (which exited 127
-on every invocation, so the door was dead and the watch was calling it). Both are mended.
+**The grant is the connect door's, and the scope is NAMED.** Google's write scope is `calendar.events`
+(`https://www.googleapis.com/auth/calendar.events`). A grant carrying only `calendar.events.readonly` is refused
+before anything is built, with the scope printed and the two commands that re-consent:
 
-**The device law, restated.** The refusal is about the **microphone**, not about the name of a
-mode: no microphone resolved (`SNOTRA_MIC=` empty) means the internal stream — the sink monitor —
-and the ear may arm for any call because no device is opened; a microphone resolved means a LOCAL
-room, asked for by name (`SNOTRA_LOCAL_ROOM=1`). The operator's env wins over the snapshot
-(`${VAR-default}`), so a seat's drop-in is never overridden by detection. `.snotra-mode` records
-which of the two a capture used, and `snotra-capture.sh status` prints it.
+```
+bin/mail/connect.sh google
+CALENDAR_WRITE=1 systems/snotra/services/calendar/calendar-auth.sh --store
+```
 
-**A silent ear is reported as silent:** a watch active with nothing captured in 24h prints
-`no call seen in 24h` in `now` and in the 07:00 brief (`nornir-job-daily-briefing.sh`).
+Measured on heimdall, 2026-11-09: the vault's live grant holds `email, documents, documents.readonly, drive.file,
+drive.readonly, gmail.compose, gmail.readonly, userinfo.email, openid` — **no** `calendar.events`. So
+`calendar-write.sh status` answers `read-only` and exits 3, and every write is refused until the grant is
+re-consented. That is the honest state, not a fault.
 
-**The join both ways (F5):** a plan written out of a meeting carries `from_meeting: <id>` in its
-header (`plan.sh new … --from-meeting <id>`); `plan.sh from-meeting <id>` and
-`meetings.sh plans <id>` read it back and refuse rather than guessing.
+**UNMEASURED IS NOT A GREEN.** If the tokeninfo door cannot answer, the door attempts the write and Google's own
+`403 insufficientPermissions` becomes the same named refusal. The vendor is the last word.
 
-**Tests:** `bin/records/snotra-what.sh --self-test` (fixture state), `bin/records/snotra-ladder.sh
---self-test` (a finished run and a stopped one), and `tests/test_snotra_ladder.sh` (24 checks:
-a failed step is reported in `.state`, on the hotline and in `last`/`plan`; a finished one is not).
+**There is no local calendar.** A write that does not reach Google is a failure that says so; a meeting that
+exists only in a file is a lie. `--dry-run` prints the resolved instant and the exact payload and posts nothing.
 
-**Not built here:** `snotra-ladder.sh run --pending` is the sweep for transcripts with no minutes,
-but no cron row was added — scheduling is his. The board's store
-(`$YMIR_HOME/state/todos.json`) still sits on the home's gitignored runtime shelf.
+**Two more rules `move` keeps.** It sends `sendUpdates=none` and says so — moving a meeting is an edit, an
+invitation is `create`'s job, and that one still asks the operator's word. And a title that matches **two**
+meetings is refused, with the matches listed by id, time and title: a wrong meeting moved is worse than a
+question.
+
+**Time is resolved once, in the door.** `calendar_when` reads what a person says — `2026-11-12 14:00`,
+`2026-11-12T14:00:00+01:00`, `tomorrow 09:30`, `monday 10:00`, `14:00` — on the operator's own clock
+(`YMIR_TZ`, then the machine's zone), never UTC by accident.
+
+**Proofs.** `bash systems/snotra/services/calendar/tests/test_calendar_write.sh` — offline, against a local
+fixture, the shipping doors unchanged: the read-only refusal (and that nothing is posted) · the created body's
+instants and zone · the move's old time in its answer and `sendUpdates=none` in its query · the two-match
+refusal that patches nothing · the vendor's 403 becoming the named refusal.
+
+**Fix note:** `docs/fixes/snotra/2026-11-09-the-calendar-can-be-written-and-refuses-by-scope.md` ·
+**How-to:** `docs/features/make-and-move-meetings.md`. The same change mended two pre-existing red proofs in
+`bin/time/snotra/tests/test_outbound_gate.py`: the "read the door" tests read retired **shims** (two-line
+forwarders) instead of the file that implements them, and the send-around-the-gate scan counted a *comment and a
+printed sentence* as a send call.

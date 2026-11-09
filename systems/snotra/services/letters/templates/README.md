@@ -43,6 +43,34 @@ templates[7]{path,source,pinned,licence,best_for,watch}:
 Each folder carries its upstream `LICENSE`/`LICENSE.txt`. **Do not delete those files** while the code
 beside them is used: MIT requires the notice to travel with the copy.
 
+## A letter is dressed by default (2026-11-09)
+
+His word: *"we need to make so all emails in ymir are using some of the templates we have. we are mailing it ugly emails
+from ymir to often."* So the door does it, not the hand:
+
+```sh
+systems/snotra/services/letters/mail-send.sh draft --to a@x --subject S --body letter.md [--footer "…"]
+#                                                   ^ no --html: letter-html.py renders leemunroe-simple
+```
+
+- **`--plain`** is the deliberate opt-out: a machine-to-machine note needs no typeface.
+- **`--html FILE`** still takes a letter dressed by hand in one of the seven — the only way to use Cerberus or Mailgun
+  until a renderer row exists for them.
+- **`--template NAME`** selects another renderer-supported layout. There is exactly one today (`leemunroe-simple`), and
+  `letter-html.py` **refuses** an unknown name with the reason and the remedy rather than dressing a letter in the wrong
+  shape. It edits four markers — preheader, main content, address line, powered-by — and the other files have none.
+- **The demo lines go.** A rendered letter carries no sample preheader, no fictional company address and no upstream
+  credit: those belong to the template's demo, never to a letter a person receives.
+- **The words are not rewritten.** Headings, lists, `**bold**` and bare URLs are dressed; nothing is added except the
+  `--footer` line the caller passes, and an absent footer adds nothing.
+- **`bin/notify/mail.sh`** (the operator's own notification door) uses the same renderer, so a notice and a letter look
+  like they came from the same house. A renderer that fails says so on stderr and the notice still leaves: a typeface
+  must never cost a message.
+
+Proof: `python3 systems/snotra/services/letters/letter-html.py --self-test` (eleven checks) and
+`python3 bin/time/snotra/tests/test_outbound_gate.py MailGate` (a dressed draft, and a `--plain` one, read off the exact
+bytes).
+
 ## The house rules a letter must still obey
 
 - **Inline CSS only**, on the elements themselves; no `<style>` block is trusted across clients, though the
