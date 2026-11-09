@@ -105,6 +105,24 @@ log() {
 
 have() { command -v "$1" >/dev/null 2>&1; }
 
+# ── the hotline (plan 100, wired here 2026-11-09 — plan 228 §2 · F1) ────────
+# The ear's two ends are news: it ARMED (something is being heard, and where the
+# audio is going) and it LEFT (the call is over and what happened to it). Neither
+# was ever said, so a watch that armed and a watch that refused read the same from
+# the outside. The door is resolved like every other fleet door; absent, this is a
+# clean skip and the log still carries the line.
+say_hotline() {  # <severity> <message> <key>
+  local door="" root
+  root="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  while [ "$root" != / ] && { [ ! -d "$root/RULES" ] || [ ! -d "$root/.agents" ]; }; do root="$(dirname "$root")"; done
+  [ -d "$root/RULES" ] && door="$root/bin/notify/send.sh"
+  if [ -z "$door" ] && [ -n "${SNOTRA_DOORS_DIR:-}" ]; then
+    door="$SNOTRA_DOORS_DIR/notify/send.sh"
+  fi
+  [ -n "$door" ] && [ -x "$door" ] || return 0
+  "$door" --source snotra --severity "$1" --message "$2" --key "$3" >/dev/null 2>&1 || true
+}
+
 # ── the doors ───────────────────────────────────────────────────────────────
 # The watch is seated from the seat's own materialized copy (%h/.fleet, exactly
 # as the ear's engine is), while the fleet doors it calls live in the durable
@@ -461,13 +479,23 @@ ear_down() {
 # ── the START edge: arm the ear on the conversation pair ───────────────────
 do_arm() {  # <snapshot> <trigger-csv> <baseline-csv> [forced-slug]
   local snap="$1" triggers="$2" baseline="$3" forced="${4:-}"
-  # THE ALLFATHER'S LAW (2026-10-31): the microphone is NEVER used to hear an
-  # online meeting. An app taking the mic on this box is almost always a Meet,
-  # Zoom or Teams call — that call is heard by the BOT (snotra-bot.sh, the Vexa
-  # participant), never by this seat's microphone. The ear stays down unless the
-  # room is LOCAL — people physically here, which must be asked for by name.
-  if [ "${SNOTRA_LOCAL_ROOM:-0}" != "1" ]; then
-    log "arm REFUSED — the mic is for a LOCAL room only; an online meeting is heard by the bot (snotra-bot.sh join <url>), never by the seat microphone"
+  # THE ALLFATHER'S LAW (2026-10-31, sharpened 2026-11-09: "we should lissen
+  # internally"): the MICROPHONE is never opened to hear a call. The internal
+  # stream — the sink monitor — carries every remote participant and competes with
+  # nothing; the physical device is what a call loses when we take it. So the law
+  # is about the DEVICE:
+  #   · SNOTRA_MIC set to empty (or no default source) → the monitor only → the ear
+  #     may arm for any call, and opens no microphone at all;
+  #   · a microphone resolved → a LOCAL room, people physically here, asked for by
+  #     name with SNOTRA_LOCAL_ROOM=1;
+  #   · otherwise → refused, and the log says so in a sentence that names the bot.
+  # The operator's env WINS over the snapshot (a `${VAR-default}` keeps an empty
+  # value as a value): the seat's policy is not silently overridden by detection.
+  local _want_mic="${SNOTRA_MIC-__unset__}"
+  if [ "$_want_mic" != "__unset__" ] && [ -z "$_want_mic" ]; then
+    : # the internal stream only — allowed, no device is opened
+  elif [ "${SNOTRA_LOCAL_ROOM:-0}" != "1" ]; then
+    log "arm REFUSED — a microphone would be opened and no LOCAL room was asked for; an online meeting is heard internally (SNOTRA_MIC=) or by the bot (snotra-bot.sh join <url>)"
     return 1
   fi
   # ONE ear at a time. The watch's loop and the manual door can both ask to arm
@@ -501,8 +529,8 @@ do_arm() {  # <snapshot> <trigger-csv> <baseline-csv> [forced-slug]
   outfile="$MEETINGS/${base}.wav"
 
   log "START edge — app '${app:-?}' (pid ${pid:-?}) took the mic; pair mic='$mic' sink='${sink:-default}'; slug=$slug"
-  SNOTRA_MONITOR="${sink:+$sink.monitor}" \
-  SNOTRA_MIC="$mic" \
+  SNOTRA_MONITOR="${SNOTRA_MONITOR-${sink:+$sink.monitor}}" \
+  SNOTRA_MIC="${SNOTRA_MIC-$mic}" \
   SNOTRA_TOPIC="$topic" \
   SNOTRA_OUTFILE="$outfile" \
   SNOTRA_MAX_SECONDS="$MAX_SECONDS" \
@@ -523,6 +551,8 @@ do_arm() {  # <snapshot> <trigger-csv> <baseline-csv> [forced-slug]
   # must not cost the card a whisper for a meeting that is not being heard.
   ear_up
   say "snotra: the ear is listening — ${base}"
+  say_hotline INFO "the ear armed — ${app:-a call} is being heard, listening to $(cat "$STATE_DIR/.snotra-mode" 2>/dev/null || echo 'the resolved devices')" \
+    "snotra-arm-${base}"
   return 0
 }
 
@@ -539,6 +569,8 @@ do_leave() {  # <reason>
   [ -n "$slug" ] || slug="impromptu"
 
   log "LEAVE edge ($reason) — stopping the ear"
+  say_hotline INFO "the ear left the call ($reason) — the recording is being finalized, nobody has to guess whether it is still listening" \
+    "snotra-leave-$(date -u +%Y%m%dT%H%M%SZ)"
   "$(door snotra-capture.sh)" stop >>"$DETECT_LOG" 2>&1 || true
   local i=0
   while capture_alive && [ "$i" -lt 30 ]; do
@@ -554,6 +586,8 @@ do_leave() {  # <reason>
   fi
   if [ -z "$outfile" ] || [ ! -f "$outfile" ]; then
     log "leave: no recording on disk — nothing to finalize"
+    say_hotline MEDIUM "the ear left and nothing was recorded — this call has no audio to mine" \
+      "snotra-leave-empty-$(date -u +%Y%m%dT%H%M%SZ)"
     state_clear
     ear_down
     return 1
@@ -569,6 +603,8 @@ do_leave() {  # <reason>
   case "${secs:-}" in ''|*[!0-9]*) secs=$(( ${bytes:-0} / 192000 )) ;; esac
   if [ "${secs:-0}" -lt "$MIN_SECONDS" ]; then
     log "leave: recording ${secs}s is below the ${MIN_SECONDS}s meeting floor — kept, not mined ($outfile)"
+    say_hotline INFO "the ear left: ${secs}s was too short to be a meeting (the recording is kept)" \
+      "snotra-leave-short-$(date -u +%Y%m%dT%H%M%SZ)"
     say "snotra: the ear left; ${secs}s was too short to be a meeting (kept: $outfile)"
     state_clear
     # Still lowered: the recording is kept on the shelf, but nothing will
