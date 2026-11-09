@@ -31,7 +31,7 @@ bin[38]{file,does,kind,verdict,disposition,callers,lines}:
   "journal-reconcile.sh","journal-reconcile.sh — push this machine's outbox to the heart, when it answers.","tool","tested","keep",2,131
   "layout.py","'''layout.py — the placement oracle and the home's shelves, as ONE door.","tool","wired","keep",3,182
   "library.sh","library.sh — the library of records: one corpus, one contract, one door (plan 115).","tool","wired","migrate → src/ymir_runtime/library.py",0,69
-  "meetings.sh","meetings.sh — one report over every meeting the house has, whatever recorded it.","tool","wired","keep",4,305
+  "meetings.sh","meetings.sh — one report over every meeting the house has, whatever recorded it.","tool","wired","keep",4,313
   "mimir-ingest.sh","mimir-ingest.sh — ingest the repo's data material into the well (Mimirsbrunn).","tool","wired","keep",1,133
   "mimir-log.py","'''mimir-log.py — move memory between the engram (the index) and the JSONL log","data","wired","keep",1,290
   "mimir-log.sh","mimir-log.sh — move memory between the engram and the append log (a thin door).","tool","wired","keep",3,19

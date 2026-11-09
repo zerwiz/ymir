@@ -23,7 +23,15 @@ if [ -z "$HOARD" ]; then
   # shellcheck disable=SC1091
   . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
   ymir_home_root _home 2>/dev/null || true
-  HOARD="${_home:-${YMIR_HOME:-$HOME/Documents/ymirhome}}/hodd"
+  HOARD="${_home:-${YMIR_HOME:-}}/hodd"
+  # The home is RESOLVED, never guessed (Rule 07): a seat whose resolver cannot answer is told
+  # so. The literal fallback that stood here named one machine's path, so a seat without the
+  # hoard in that exact place read an empty shelf and called it "no meetings".
+  [ -n "${_home:-${YMIR_HOME:-}}" ] || {
+    printf 'error: the home is unresolved — set YMIR_HOME, or run from a checkout\n' >&2
+    printf 'help: bin/vault/hoard-lib.sh must be able to answer\n' >&2
+    exit 2
+  }
 fi
 HOME_DIR="$(dirname "$HOARD")"
 SINCE="1970-01-01"
