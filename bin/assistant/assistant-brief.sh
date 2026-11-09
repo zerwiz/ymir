@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # bin/assistant/assistant-brief.sh -> systems/skirnir/services/assistant-brief.sh — the SHIM (plan 227 S1.5).
 #
-# The Allfather named this path when he asked for the database ("the door bin/assistant/assistant-brief.sh"),
-# and bin/assistant/ is the shelf a human and a cron row call. The behaviour lives once, in
+# The Allfather named this path when he asked for the database, and this shelf is where a human and a
+# cron row call it.  # allow-superseded-path: this header RECORDS the move, it does not make it
+# The behaviour lives once, in
 # systems/skirnir/, where plan 149 moved it — so this file names the move and execs the real door.
 #
 #   refresh · show [date] · recall <question> · status   (see the engine's help)

@@ -214,7 +214,7 @@ systems/skirnir/services/assistant-brief.sh refresh        # compile today's bri
 systems/skirnir/services/assistant-brief.sh show [date]    # print one
 systems/skirnir/services/assistant-brief.sh recall "what did we decide about the microphone"
 systems/skirnir/services/assistant-brief.sh status         # what he knows, and whether it is STALE
-bin/assistant/assistant-brief.sh refresh                   # the same door at the path its siblings use
+bin/assistant/assistant-brief.sh refresh                   # allow-superseded-path: the shelf he is called from (plan 149 moved the code; this is the shim)
 ```
 
 It reads every source through the door that already owns it — `bin/gates/plan-audit.sh` and the ledger
