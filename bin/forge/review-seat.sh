@@ -57,7 +57,7 @@ DEFAULT_CLONE="${YMIR_REVIEW_CLONE:-$HOME/review/ymir}"
 
 die()    { printf 'review-seat: %s\n' "$*" >&2; exit 1; }
 usage()  { printf 'review-seat: %s\n' "$*" >&2; exit 2; }
-refuse() { printf 'review-seat: REFUSED — %s\n' "$*" >&3; exit 3; }
+refuse() { printf 'review-seat: REFUSED — %s\n' "$*" >&2; exit 3; }
 
 # The honest probe is the SERVER answering, not a variable: a herdr CLI reaches its server from
 # a pane, from a timer and over ssh, and refusing on HERDR_ENV alone would refuse every one of
