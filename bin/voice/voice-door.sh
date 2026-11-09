@@ -232,6 +232,20 @@ cmd_host() {
     return 1
   fi
   hk="$(head_key || true)"
+  # THE MICROPHONE IS NEVER TAKEN FROM A CALL (the Allfather, 2026-11-09: "the mic should not be used").
+  # The voice host opens the default source for VAD. If another client is already capturing — Discord, a
+  # Meet, Zoom, anything — starting the host competes for that device and the call loses it, which is the
+  # disconnect loop we spent a night chasing. So: refuse while someone else holds the microphone, and say
+  # whose it is. Nothing is measured by guessing; `pactl` is asked.
+  if command -v pactl >/dev/null 2>&1; then
+    local holder
+    holder="$(pactl list source-outputs 2>/dev/null | sed -n 's/^\s*application.name = "//p' | tr -d '"' | grep -viE '^(speech-to-speech|ymir-voice|parecord|pw-record)$' | head -1)"
+    if [ -n "${holder:-}" ]; then
+      err "refused: '$holder' holds the microphone — the voice host will not take it from a live call"
+      err "hint: leave the call first, or stop it, then raise the voice door again"
+      return 3
+    fi
+  fi
   local cu; cu="$(cuda_lib_path || true)"
   mkdir -p "$STATE_DIR"
   systemctl --user stop "$UNIT" 2>/dev/null || true

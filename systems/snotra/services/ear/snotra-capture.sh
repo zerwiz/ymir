@@ -26,6 +26,17 @@ mkdir -p "$HOARD" "$STATE_DIR"
 
 say() { printf '%s\n' "$*"; }
 
+# ── the hotline (plan 100): a capture nobody hears about is a capture nobody uses ──
+# Measured 2026-11-09: nothing under systems/snotra/ ever called bin/notify/send.sh, so a
+# meeting was recorded, transcribed and filed with no word to the Allfather — his words:
+# "i dont get any notifications of this at all now". This is the missing sentence.
+say_hotline() {  # <severity> <one line> <stable key>
+  local door="$ROOT/bin/notify/send.sh"
+  [ -x "$door" ] || return 0
+  "$door" --source snotra --severity "$1" --message "$2" --key "$3" >/dev/null 2>&1 || true
+}
+
+
 # pactl is the portable surface (PipeWire serves the PulseAudio protocol on
 # every seat); fall back to wpctl when pactl is absent.
 have_pactl() { command -v pactl >/dev/null 2>&1; }
@@ -105,6 +116,7 @@ do_start() {
   OUTFILE="${SNOTRA_OUTFILE:-$HOARD/meeting-${DATESTAMP}.wav}"
   mkdir -p "$(dirname "$OUTFILE")" 2>/dev/null || true
 
+  say_hotline INFO "listening to a call — capture starting ($(basename "$OUTFILE"))" "snotra-capture-start-$DATESTAMP"
   say "Snotra capture starting…"
   say "  Sink monitor: ${MONITOR:-(none)}"
   say "  Mic source:   ${MIC:-(none)}"
@@ -195,6 +207,8 @@ do_stop() {
     if kill -0 "$PID" 2>/dev/null; then
       kill "$PID" 2>/dev/null
       say "Snotra capture stopped (pid $PID)"
+      # The call is over: say where the sound went, so the transcript is not a secret.
+      say_hotline HIGH "call captured — the audio is ready to transcribe" "snotra-capture-stop-$(date -u +%Y%m%dT%H%M%SZ)"
     fi
   fi
   rm -f "$PID_FILE" "$LISTENING_FILE"
