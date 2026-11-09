@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import CardView, { type CardShape, type NearCard, shapeOf } from './CardView';
+import type { HfsResult } from '../vendor/jev/policy';
 
 /**
  * NearBoard — the near-loop screen: the three questions an agent's own loop cannot
@@ -125,6 +126,11 @@ export default function NearBoard() {
   const [agents, setAgents] = useState<Door<AgentRow[]>>({ state: 'loading' });
   const [trees, setTrees] = useState<Door<Worktree[]>>({ state: 'loading' });
   const [hidden, setHidden] = useState<Record<string, true>>({});
+  /** jev's verdict per card, once a judge door has actually scored it (plan 229).
+   *  Empty means no door answered — the card then says "Not ranked yet", and the hall
+   *  never fills that slot with a number of its own. */
+  const [ranks, setRanks] = useState<Record<string, HfsResult>>({});
+  const [rankDoor, setRankDoor] = useState<string>('');
   const [at, setAt] = useState<number>(Date.now());
 
   // EACH DOOR FILLS ITS OWN BLOCK. A door may take seconds (it spawns a script), and
@@ -143,6 +149,38 @@ export default function NearBoard() {
   useEffect(() => {
     read();
   }, [read]);
+
+  // RANKING IS ASKED, NEVER ASSUMED (plan 229, his word "fix it all then"). Once the
+  // operator's queue has arrived, ask the gate to score it: one `score` question per jev
+  // category, put to a decision door, judged by jev's own policy on the server. A dark
+  // door returns no scores at all, which is the honest answer — the cards then keep the
+  // "Not ranked yet" that jev's policy prescribes rather than a fabricated figure.
+  useEffect(() => {
+    if (pending.state !== 'ok') return;
+    const items = pending.data.items.map((it, i) => ({
+      id: `pending-${i}`,
+      text: `${it.kind}: ${it.what} — ${it.where}`.slice(0, 1500),
+    }));
+    if (items.length === 0) return;
+    const ctl = new AbortController();
+    fetch('/api/rank', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ items }),
+      signal: AbortSignal.any([ctl.signal, AbortSignal.timeout(120_000)]),
+    })
+      .then((r) => (r.ok ? r.json() : { ranked: {} }))
+      .then((d: { ranked?: Record<string, HfsResult>; door?: string; error?: string }) => {
+        setRanks(d?.ranked ?? {});
+        setRankDoor(d?.error ? '' : d?.door ?? '');
+      })
+      .catch(() => {
+        setRanks({});
+        setRankDoor('');
+      });
+    return () => ctl.abort();
+  }, [pending]);
 
   const dismiss = useCallback((id: string) => setHidden((h) => ({ ...h, [id]: true })), []);
 
@@ -273,6 +311,7 @@ export default function NearBoard() {
         source: it.where,
         sourceHref: '/api/pending',
         age: it.since || undefined,
+        hfs: ranks[id],
         actions: [
           { label: 'open', kind: 'open', title: `open ${it.kind}`, href },
           { label: 'dismiss', kind: 'dismiss', title: 'hide this card from this view only', onAct: () => dismiss(id) },
@@ -280,7 +319,7 @@ export default function NearBoard() {
         glyph: 'ᚱ',
       };
     });
-  }, [pending, dismiss]);
+  }, [pending, dismiss, ranks]);
 
   /** Who is standing, and the trees in flight. */
   const liveCards = useMemo<NearCard[]>(() => {
@@ -389,9 +428,12 @@ export default function NearBoard() {
       {block('ᛉ', 'working now', 'the agents and panes standing, and the trees in flight — read, never started from here', liveCards)}
 
       <p className="mono dim" style={{ fontSize: '.68rem', padding: '0 0 .6rem' }}>
-        cards carry no score: jev's Hype · Facts · Signal exist in the vendored policy, but no
-        ranking door is wired yet, so a card with no classification says so — read the rail with{' '}
-        <span className="mono">bin/model/jev-doors.sh list</span> rather than trusting a number here
+        scores are jev's (Hype · Facts · Signal), judged by a decision door and ranked by jev's
+        own policy
+        {rankDoor ? ` — this page: ${rankDoor}` : ''}
+        {Object.keys(ranks).length === 0
+          ? ' · no judgment is live, so every card says so rather than inventing a number'
+          : ''}
       </p>
     </>
   );
