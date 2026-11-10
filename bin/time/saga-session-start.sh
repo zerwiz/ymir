@@ -138,6 +138,29 @@ else
   printf 'wake queue: 0 pending (drain not installed)\n'
 fi
 
+section "SEATS"
+# TAKING THE ARM SWEEPS THE HALL. The Allfather's law (2026-11-10): a finished seat
+# is closed AUTOMATICALLY, not by an operator who remembers to tidy up. Every
+# session start is the moment the sweep runs — one door, one TOON row of what it
+# closed, nothing closed that a live agent stands in.
+if [ -x "$ROOT/bin/seat/seat-reap.sh" ]; then
+  BROKK_HOME="$BROKK_HOME" BROKK_STATE_OVERRIDE="$STATE" \
+    bash "$ROOT/bin/seat/seat-reap.sh" --sweep 2>/dev/null \
+    || printf 'sweep: the seat door did not answer (bin/seat/seat-reap.sh --list says why)\n'
+else
+  printf 'sweep: bin/seat/seat-reap.sh absent — dead Eindri workspaces are not closed\n'
+fi
+# A LATE BOOT IS STILL A SEAT. A record whose proof gave up (`seat=no`) but whose
+# pane now holds an agent is corrected here, its watch armed, and the arm told —
+# otherwise an errand declared dead runs on with nobody watching it.
+if [ -x "$ROOT/bin/seat/seat-adopt.sh" ]; then
+  adopt_out="$(BROKK_HOME="$BROKK_HOME" BROKK_STATE_OVERRIDE="$STATE" \
+    bash "$ROOT/bin/seat/seat-adopt.sh" --all 2>/dev/null || true)"
+  case "$adopt_out" in
+    *adopted:*) printf '%s\n' "$adopt_out" ;;
+  esac
+fi
+
 section "SUPERVISION"
 printf 'harness next step: arm supervision via the installed harness adapter; never run bin/pi/syn-watch-arm.sh by hand.\n'
 

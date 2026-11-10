@@ -130,6 +130,7 @@ mock_hits=$(grep -rnE '\b(mock|stub|placeholder|todo)\b' "$ROOT/bin" 2>/dev/null
   | grep -vE 'consumer:.*todo:|todo:.*consumer:' \
   | grep -vE '^[^:]*bin/desktop/factory-check\.sh:[0-9]+:' \
   | grep -vE '^[^:]*bin/seat/tests/test_core_four_pending_factory\.sh:[0-9]+:' \
+  | grep -vE '^[^:]*bin/seat/tests/test_seat_reap\.sh:[0-9]+:' \
   | grep -vE '^[^:]*bin/forge/utgard-box-door\.py:[0-9]+:' \
   | grep -vE '^[^:]*bin/voice/voice_tools\.py:[0-9]+:' \
   | grep -vE '^[^:]*bin/collab/kit/[^:]+:[0-9]+:' \

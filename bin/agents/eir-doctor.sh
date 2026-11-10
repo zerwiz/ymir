@@ -111,7 +111,7 @@ surface_detail_skip() {
 }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir shells graphics well memory mail mcp harness arm lock gates migrations hoard autoboot vault ward)
+SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir shells graphics well memory mail mcp harness arm lock gates migrations hoard autoboot vault ward seats)
 
 # ── the three surfaces the 2026-11-03 Windows audit found, and the rule they read ──────────
 # A SEAT IS NOT UPDATED BY A PULL. The checkout moves; the installed hooks, the PATH a later
@@ -129,6 +129,51 @@ s_seatpaths() {
   return 0
 }
 f_seatpaths() { "$SCRIPT_DIR/../engine/prereq-ensure.sh" --persist-path >/dev/null 2>&1; }
+
+# ── seats: the two faults of 2026-11-10, plus the sweep that closes finished seats ──
+# (a) `~/.pi/agent/extensions/.ymir-root` must never name a LINKED WORKTREE — a root is a
+#     home, a worktree is an errand, and the errand dies. (b) no Eindri worktree may carry
+#     the broken `rm -rf .pi/extensions` + assume-unchanged state that made git report all
+#     45 extension files as deleted. (c) the sweep that closes finished seats must be
+#     seated on every harness this host actually runs.
+# One test for a linked worktree: --git-common-dir and --git-dir resolve to different
+# paths (the same expression lives in bin/seat/valknut-load.sh and migration 0018).
+_is_linked_worktree() {  # <path>
+  local p=${1:-.} common own
+  common="$(git -C "$p" rev-parse --git-common-dir 2>/dev/null)" || return 1
+  own="$(git -C "$p" rev-parse --git-dir 2>/dev/null)" || return 1
+  [ -n "$common" ] && [ -n "$own" ] || return 1
+  [ "$(CDPATH='' cd "$p" && CDPATH='' cd "$common" 2>/dev/null && pwd -P)" \
+    = "$(CDPATH='' cd "$p" && CDPATH='' cd "$own" 2>/dev/null && pwd -P)" ] && return 1
+  return 0
+}
+s_seats() {
+  local pointer="${PI_EXT_HOME:-$HOME/.pi/agent/extensions}/.ymir-root" line
+  if [ -r "$pointer" ]; then
+    while IFS= read -r line; do
+      [ -n "$line" ] || continue
+      case "$line" in */.yggdrasil/*|*/.yggdrasil) return 1 ;; esac
+      [ -d "$line" ] && _is_linked_worktree "$line" && return 1
+    done <"$pointer"
+  fi
+  local wt dirty
+  while IFS= read -r wt; do
+    [ -n "$wt" ] || continue
+    case "$wt" in */.yggdrasil/*) ;; *) continue ;; esac
+    [ -d "$wt" ] || continue
+    dirty="$(git -C "$wt" status --porcelain 2>/dev/null | grep -c '^\( \{0,1\}\)D  *\.pi/extensions/')"
+    [ "${dirty:-0}" = 0 ] || return 1
+  done < <(git -C "$ROOT" worktree list --porcelain 2>/dev/null | awk '/^worktree /{print substr($0,10)}')
+  [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ] || return 1
+  "$SCRIPT_DIR/../seat/seat-reap.sh" --check >/dev/null 2>&1
+}
+f_seats() {
+  # The two structural faults are the migration's to mend (one door, called by install,
+  # by Gróa and by Eir alike); the harness hooks are the sweep door's own.
+  [ -x "$SCRIPT_DIR/../engine/ymir-migrate.sh" ] && "$SCRIPT_DIR/../engine/ymir-migrate.sh" apply >/dev/null 2>&1
+  [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ] && "$SCRIPT_DIR/../seat/seat-reap.sh" --install >/dev/null 2>&1
+  s_seats
+}
 s_hooks() {
   local hooks; hooks="$(cd "$ROOT" && git rev-parse --git-path hooks 2>/dev/null || printf '.git/hooks')"
   case "$hooks" in /*) ;; *) hooks="$ROOT/$hooks" ;; esac
@@ -570,6 +615,7 @@ detail() { # <name> -> the command that prints one short fact
     hoard)     printf '%s\n' "printf 'hoard %s' \"\$(_hoard_root)\" ; [ -d \"\$YMIR_HOME/identity\" ] && printf ' +flat-duplicate' ; printf '\n'" ;;
     autoboot)  printf '%s\n' "$SCRIPT_DIR/../engine/ymir-autoboot.sh verify >/dev/null 2>&1 && echo 'boot proven' || echo 'boot gap — bin/engine/ymir-autoboot.sh verify'" ;;
     seatpaths) printf '%s\n' "printf '%s' \"$(seat_profile)\" ; grep -qF \"$HOME/.bun/bin\" \"$(seat_profile)\" 2>/dev/null && printf ' carries the marked block' || printf ' does not carry ~/.bun/bin — a unit or validator will not find bun'" ;;
+    seats)     printf '%s\n' "printf 'root record: '; grep -c . \"${PI_EXT_HOME:-\$HOME/.pi/agent/extensions}/.ymir-root\" 2>/dev/null || printf 0; printf ' root(s), '; git -C $ROOT worktree list --porcelain 2>/dev/null | grep -c '^worktree ' | sed 's/^/worktrees: /'; true" ;;
     hooks)     printf '%s\n' "printf 'installed hooks' ; [ -x \"$(cd "$ROOT" && git rev-parse --git-path hooks 2>/dev/null || printf '.git/hooks')/pre-commit\" ] && printf ' present' || printf ' MISSING — a guarded deletion and a staged secret would both pass'" ;;
     packaging) printf '%s\n' "bash \"$SCRIPT_DIR/../gates/guards/packaging-guard.sh\" check 2>&1 | grep -o 'the File directive names a file that does not exist: [^)]*' | head -1 || printf 'every named input exists'" ;;
   esac

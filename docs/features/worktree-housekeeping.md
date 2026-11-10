@@ -55,3 +55,26 @@ bin/forge/housekeeping.sh clean --yes --merged-only   # only work already IN ori
 | `refused:"…" changed to keep:dirty` | something wrote into the tree between the plan and the act | commit or discard it, then re-run |
 | `kept-branch:"…" (git refused — not merged)` | the branch has unique commits | push it, or merge it into `main` first |
 | nothing is reclaimable | everything is genuinely unpushed | push or merge — that is the finding, not a failure |
+
+## What counts as "in use" — corrected 2026-11-10
+
+The report used to ask only whether some **process** stood inside a worktree. An Eindri
+exits into a bare shell, and herdr restores that shell after a restart — so the shell's
+own working directory kept its worktree `keep:in-use` forever, and 80 trees under
+`.yggdrasil/` could never be reclaimed.
+
+Now it asks whether an **agent** stands there (`bin/seat/herdr-agents.py`, the one
+reader of `herdr agent list`):
+
+- **a live agent** — `keep:in-use`, never touched;
+- **a bare shell, no agent** — the tree is judged by the ordinary verdicts
+  (`reclaimable:merged`, `keep:unpushed:N`, …) and the report says
+  ``bare shell, no agent`` so you know why it moved;
+- **when the agent list cannot be read at all** the old answer stands (`keep:in-use`),
+  because assuming a seat is dead is the irreversible direction.
+
+On `clean --yes` a bare shell is closed first — through
+`bin/seat/seat-reap.sh --shell`, which refuses a live agent — and if it will not close
+the worktree is left alone. The same door closes a finished errand's whole herdr
+workspace when the arm takes the helm; see
+[the seats and the arm](the-seats-and-the-arm.md).
