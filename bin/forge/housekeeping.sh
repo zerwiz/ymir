@@ -45,8 +45,8 @@ set -u
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
-  [ "$PWD" = / ] && break; cd ..; done; pwd)"
+ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)}"
 
 CMD="report"; YES=0; JSON=0; MERGED_ONLY=0
 for a in "$@"; do
@@ -146,6 +146,29 @@ in_use() {  # <abs-path> → exit 0 when a live process stands inside it
   return 1
 }
 
+# A process standing inside a tree is NOT proof the tree is in use. Measured
+# 2026-11-10: an Eindri exits to a bare shell, herdr restores that shell after a
+# restart, and the shell's cwd kept the worktree `keep:in-use` forever — 80 trees
+# under .yggdrasil/ that nothing would ever reclaim. The question is not "is a
+# process here", it is "does an AGENT stand here", and only one door can answer
+# that: bin/seat/herdr-agents.py, the ONE reader of `herdr agent list`.
+#
+# When the door cannot answer, the OLD answer stands (live): an unknown seat is
+# never assumed dead, because assuming dead is the irreversible direction.
+AGENT_PROBE=unknown
+if [ -x "$SCRIPT_DIR/../seat/herdr-agents.py" ] \
+   && python3 "$SCRIPT_DIR/../seat/herdr-agents.py" --json >/dev/null 2>&1; then
+  AGENT_PROBE=ok
+fi
+agent_here() {  # <abs-path> → 0 when an agent stands here (or cannot be ruled out)
+  [ "$AGENT_PROBE" = ok ] || return 0
+  python3 "$SCRIPT_DIR/../seat/herdr-agents.py" --find --cwd "$1" >/dev/null 2>&1
+}
+bare_shell() {  # <abs-path> → 0 when a process holds it but no agent does
+  [ "$AGENT_PROBE" = ok ] || return 1
+  in_use "$1" && ! agent_here "$1"
+}
+
 # verdict <path> <branch> → one of the five, with a count where useful
 verdict() {
   local path=$1 br=$2
@@ -154,7 +177,10 @@ verdict() {
   [ "$br" = "(detached)" ] && { printf 'keep:detached'; return; }
 
   if [ -n "$(git -C "$path" status --porcelain 2>/dev/null)" ]; then printf 'keep:dirty'; return; fi
-  if in_use "$path"; then printf 'keep:in-use'; return; fi
+  # A bare shell is a dead seat, not a live one: the tree goes on to be judged by
+  # whether any of its work is missing from the remote (below). A LIVE agent is
+  # the one thing that stops the judgement here.
+  if in_use "$path" && agent_here "$path"; then printf 'keep:in-use'; return; fi
 
   local head up_name ahead
   head="$(git -C "$path" rev-parse HEAD 2>/dev/null)" || { printf 'keep:unreadable'; return; }
@@ -203,6 +229,9 @@ while IFS=$'\t' read -r path br; do
   idx="${path#$ROOT/.yggdrasil/}"
   detail=""
   case "$v" in keep:*) detail="$(own_diffstat "$br")" ;; esac
+  if [ "$v" != "main-worktree" ] && bare_shell "$path"; then
+    detail="bare shell, no agent${detail:+ · $detail}"
+  fi
   LINES+=("$(printf "%s\t%s\t%s\t%s\t%s\t%s" "$idx" "$br" "$v" "${s:-?}" "$path" "$detail")")
 done < <(wt_rows)
 
@@ -320,6 +349,18 @@ if [ "$CMD" = "clean" ]; then
     # Double guard: re-ask the verdict immediately before touching it.
     now="$(verdict "$full" "$b")"
     case "$now" in reclaimable:*) ;; *) printf '  refused:"%s" changed to %s\n' "$p" "$now"; continue ;; esac
+    # A bare shell standing in it is a dead seat, not a live one: close the seat
+    # first (this door refuses a live agent), then reclaim. If it will not close,
+    # the tree is left alone — never a cwd yanked out from under a process.
+    if bare_shell "$full"; then
+      if [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ] \
+         && "$SCRIPT_DIR/../seat/seat-reap.sh" --shell "$full" >/dev/null 2>&1; then
+        printf '  closed-bare-shell:"%s"\n' "$p"
+      else
+        printf '  refused:"%s" a bare shell holds it and would not close (bin/seat/seat-reap.sh --shell)%s\n' "$p" ""
+        continue
+      fi
+    fi
     if git worktree remove "$full" 2>/dev/null; then
       printf '  removed-worktree:"%s" (%s)\n' "$p" "$s"; removed=$((removed + 1))
     else

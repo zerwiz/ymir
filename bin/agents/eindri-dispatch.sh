@@ -50,6 +50,18 @@ LOCK="$DATA/backlog.lock"
 
 say() { printf '%s\n' "$*"; }
 
+# THE SEAT IS PART OF THE CLOSE. Measured 2026-11-10: `close` moved the backlog to
+# review and left the herdr workspace `eindri-<id>` standing, so a finished errand
+# kept a pane — and after a herdr restart, a restored bare shell — in the hall
+# forever. One door closes it (bin/seat/seat-reap.sh), and it refuses a live agent.
+seat_close() { # <id> <why>
+  local id=$1 why=${2:-handoff}
+  [ -n "$id" ] || return 0
+  [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ] || return 0
+  "$SCRIPT_DIR/../seat/seat-reap.sh" "$id" >/dev/null 2>&1 || true
+  return 0
+}
+
 meta_write() { # <id> <key=value>...
   local id=$1; shift
   mkdir -p "$STATE"
@@ -322,6 +334,10 @@ cmd_close() {
   mv_state=review
   backlog_set_status "$id" "$mv_state" "${note:-worker-done, awaiting verdict}"
   printf 'closed=%s\nnote=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$note" > "$STATE/$id.close"
+  # The worker is done: its seat is closed only when no agent stands in it — the
+  # rehearsal for the review close, and the one that frees the workspace of an
+  # errand the arm is already holding for its handoff ack.
+  seat_close "$id" close
   say "closed $id → review (the verdict is Brokk/Forseti's, never the arm's)"
 }
 
@@ -339,6 +355,10 @@ cmd_review() {
     fail) st=failed ;;
   esac
   backlog_set_status "$id" "$st" "forseti: $verdict $note"
+  # The handoff ACK is the moment the seat is retired: the verdict is recorded, the
+  # work is Brokk's, and no one is going to type into that pane again. A `return`
+  # keeps the seat — the work went back to the worker.
+  case "$verdict" in pass|fail) seat_close "$id" review ;; esac
   say "reviewed $id → $verdict (handoff ack — the arm retires now)"
 }
 

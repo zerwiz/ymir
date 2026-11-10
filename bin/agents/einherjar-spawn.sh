@@ -793,11 +793,31 @@ fi
 # Keep pi from loading extensions twice: a worktree is a copy of the project, so
 # its .pi/extensions/ collides with the project's own (pi walks up the tree and
 # loads both, failing with "Tool X conflicts"). Drop the worktree's copy so pi
-# resolves extensions from the project home (~/ymir/.pi/extensions) only. Mark
-# the path assume-unchanged so the deletion never leaks into the worker's commit.
-if [ -d "$WT/.pi/extensions" ]; then
-  rm -rf "$WT/.pi/extensions"
-  git -C "$WT" update-index --assume-unchanged .pi/extensions 2>/dev/null || true
+# resolves extensions from the project home (~/ymir/.pi/extensions) only.
+#
+# HOW it is dropped is law, and the first shape was wrong (measured 2026-11-10):
+# `rm -rf .pi/extensions` followed by `git update-index --assume-unchanged
+# .pi/extensions` — but assume-unchanged is a PER-FILE bit and does nothing for a
+# directory, so every Eindri worktree reported all 45 extension files as DELETED,
+# and one `git add -A` (or `commit -a`) inside a worker would have deleted every
+# pi extension from the repository. This is now git's own mechanism, the same
+# per-worktree sparse-checkout bin/forge/yggdrasil.sh uses: the pattern file and
+# `core.sparseCheckout` live in THIS worktree's own gitdir, so no other checkout
+# changes, and `git status` is clean.
+#
+# The order matters: the stale assume-unchanged bit is cleared FIRST (a worktree
+# cut by an older spawner still carries it), then sparse-checkout owns the path.
+# Both run every time, because the fault is in the INDEX of old worktrees even when
+# the directory is long gone.
+git -C "$WT" update-index --no-assume-unchanged .pi/extensions 2>/dev/null || true
+if ! git -C "$WT" sparse-checkout set --no-cone '/*' '!/.pi/extensions/' >/dev/null 2>&1; then
+  echo "error: could not exclude .pi/extensions from $WT — two extension homes, no seat" >&2
+  echo "help: git -C $WT sparse-checkout set --no-cone '/*' '!/.pi/extensions/'" >&2
+  exit 1
+fi
+if [ -e "$WT/.pi/extensions" ] && [ ! -L "$WT/.pi/extensions" ]; then
+  echo "error: $WT still carries its own .pi/extensions — two extension homes, no seat" >&2
+  exit 1
 fi
 
 # A linked worktree's .git file points at the project's common git dir. Mount
@@ -1007,6 +1027,13 @@ launch_herdr() {  # -> prints pane id
   [ -n "$ws" ] || { echo "error: could not resolve a herdr workspace id from: $out" >&2; return 1; }
   pane=$(herdr pane list --workspace "$ws" 2>/dev/null | sed -n 's/.*"pane_id"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)
   [ -n "$pane" ] || { echo "error: no pane found in herdr workspace $ws" >&2; return 1; }
+  # THE WORKSPACE ID IS RECORDED, not just used: a heredoc'd subshell cannot hand a
+  # variable back to the caller, so the id rides a file that the close hook reads.
+  # Without it a finished seat could only be found by its label, and a label is a
+  # string two errands can share (measured 2026-11-10: nine `eindri-*` workspaces
+  # outlived their errands because nothing knew which workspace was whose).
+  mkdir -p "$STATE" 2>/dev/null || true
+  printf '%s' "$ws" >"$STATE/.$ID.ws" 2>/dev/null || true
   herdr pane send-text "$pane" "$PANE_CMD" 2>/dev/null || true
   herdr pane send-keys "$pane" Enter 2>/dev/null || true
   printf '%s\n' "$pane"
@@ -1017,6 +1044,9 @@ if [ "$RESOLVED_BACKEND" = tmux ]; then
 else
   RUN_TARGET=$(launch_herdr) || exit 1
 fi
+# The workspace the close hook will address (empty for tmux, which addresses a window).
+WS_ID=""
+[ -r "$STATE/.$ID.ws" ] && { WS_ID="$(cat "$STATE/.$ID.ws" 2>/dev/null)"; rm -f "$STATE/.$ID.ws"; }
 
 # --- PROVE THE SEAT: a spawn is not a seat until `herdr agent list` shows it --
 # Measured 2026-11-05 (plan 190 §4.1): this dispatcher printed `spawned …
@@ -1049,11 +1079,19 @@ SEAT_PROVEN=no
 SEAT_PANE=$RUN_TARGET
 SEAT_STATE=unknown
 SEAT_NOTE=""
-SEAT_SETTLE="${YMIR_SEAT_SETTLE:-25}"
+# THE WAIT IS THE SEAT-PROVE DOOR'S OWN DEFAULT, and it is now 120 seconds (the
+# Allfather, 2026-11-10: "make the seat-prove wait LONGER" — sixty seconds, his own
+# correction the same evening). Measured: a pi boot on a loaded rail regularly takes
+# longer than 25 s, so the door declared `no agent`
+# while the agent was still coming up, the errand was recorded failed, the arm was
+# never armed, and the brief was never delivered. One value, not two: the default
+# lives in bin/seat/seat-prove.sh and this road passes `--settle` only when the
+# operator actually set YMIR_SEAT_SETTLE.
+SEAT_SETTLE="${YMIR_SEAT_SETTLE:-}"
 # ONE proof door, shared with the engine (src/ymir_runtime/seat.py), so the two
 # roads cannot disagree about whether a seat is standing.
 if seat_out=$("$SCRIPT_DIR/../seat/seat-prove.sh" "$RUN_TARGET" "$WT" \
-    --backend "$RESOLVED_BACKEND" --settle "$SEAT_SETTLE" 2>"$STATE/.$ID.seat-prove"); then
+    --backend "$RESOLVED_BACKEND" ${SEAT_SETTLE:+--settle "$SEAT_SETTLE"} 2>"$STATE/.$ID.seat-prove"); then
   SEAT_PROVEN=yes
   SEAT_PANE=${seat_out%%$'\t'*}
   SEAT_STATE=$(printf '%s' "$seat_out" | cut -f2)
@@ -1070,7 +1108,7 @@ else
       "$ID" "$RUN_TARGET" "$LOCK_WAITER_PIDS" >&2
     printf 'seat-queued: the worker is ALIVE and waiting for the model lock — do not treat it as dead, and do not relaunch it.\n' >&2
   else
-    printf 'seat[1]{id,state,pane,settle}:\n  "%s","UNPROVEN","%s","%ss"\n' "$ID" "$RUN_TARGET" "$SEAT_SETTLE" >&2
+    printf 'seat[1]{id,state,pane,settle}:\n  "%s","UNPROVEN","%s","%ss"\n' "$ID" "$RUN_TARGET" "${SEAT_SETTLE:-60}" >&2
     printf 'seat-unproven: the launch produced NO agent — state/%s.meta recorded pane %s but no agent stands there or in %s. The errand is not seated; do not steer it.\n' \
       "$ID" "$RUN_TARGET" "$WT" >&2
   fi
@@ -1108,6 +1146,7 @@ META_TMP="$STATE/.$ID.meta.${BASHPID:-$$}"
   printf 'backend=%s\n' "$RESOLVED_BACKEND"
   printf 'backend_reason=%s\n' "$BACKEND_WHY"
   printf 'window=%s\n' "$RUN_TARGET"
+  printf 'workspace=%s\n' "${WS_ID:-}"
   printf 'seat=%s\n' "$SEAT_PROVEN"
   printf 'seat_pane=%s\n' "$SEAT_PANE"
   printf 'seat_state=%s\n' "$SEAT_STATE"
@@ -1164,11 +1203,18 @@ fi
 # the seat (bin/notify/send.sh) instead of a cheerful summary line.
 if [ "$SEAT_PROVEN" != yes ]; then
   printf 'failed: the launch produced NO agent — pane %s (%s backend) holds no agent after %ss and no agent stands in %s (herdr agent list)\n' \
-    "$SEAT_PANE" "$RESOLVED_BACKEND" "$SEAT_SETTLE" "$WT" >> "$STATE/$ID.status" 2>/dev/null || true
+    "$SEAT_PANE" "$RESOLVED_BACKEND" "${SEAT_SETTLE:-60}" "$WT" >> "$STATE/$ID.status" 2>/dev/null || true
   printf 'seat=unproven pane=%s\n' "$SEAT_PANE" >> "$META" 2>/dev/null || true
   if [ -x "$ROOT/bin/notify/send.sh" ]; then
     bash "$ROOT/bin/notify/send.sh" --source seat --severity HIGH --key "seat-unproven:$ID:$SPAWN_GEN" \
       --message "seat $ID launched with NO agent in pane $SEAT_PANE — the errand is not running" >/dev/null 2>&1 || true
+  fi
+  # AND THE ARM, not just the desktop. A note nobody is holding does not rouse the
+  # session; the durable wake queue does (the Allfather, 2026-11-10). One helper, so
+  # this road and the engine's road cannot write two different grammars.
+  if [ -x "$ROOT/bin/seat/seat-wake.sh" ]; then
+    BROKK_HOME="$BROKK_HOME" BROKK_STATE_OVERRIDE="$STATE" bash "$ROOT/bin/seat/seat-wake.sh" "$ID" failed \
+      --pane "$SEAT_PANE" --worktree "$WT" --settle "${SEAT_SETTLE:-60}" >/dev/null 2>&1 || true
   fi
   [ "$SEAT_QUEUED" = yes ] && exit 0
   printf 'error: %s is NOT seated — do not steer pane %s\nhelp: read the pane tail, then relaunch with a fresh launcher\n' "$ID" "$SEAT_PANE" >&2

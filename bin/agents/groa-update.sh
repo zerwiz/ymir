@@ -146,6 +146,18 @@ printf 'galdr-reread: %s\n' "$reread"
 # A check must not redeploy harnesses, migrate the home or restart services.
 # The Codex checker proves the source, enabled registration and installed cache.
 if [ "$CHECK" = 1 ]; then
+  # The two faults of 2026-11-10 are REPORTED by a check and mended only by a real
+  # update (the migration). A check that repaired the tree would hide the state it
+  # exists to report — and the Allfather's law is that the mend arrives on an
+  # INSTALLATION or an UPDATE, not on a look.
+  if [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ]; then
+    if "$SCRIPT_DIR/../seat/seat-reap.sh" --verify >/dev/null 2>&1; then
+      printf 'seat-reap: seated and clean (migration 0018 applied)\n'
+    else
+      printf 'seat-reap: PENDING — a real update mends it (bin/engine/ymir-migrate.sh apply → migration 0018)\n'
+      "$SCRIPT_DIR/../seat/seat-reap.sh" --verify 2>&1 | sed 's/^/  /' | head -6
+    fi
+  fi
   if command -v codex >/dev/null 2>&1; then
     command -v node >/dev/null 2>&1 || { printf 'FAIL — node is required to check the Codex plugin.\n' >&2; exit 1; }
     node "$ROOT/bin/seat/codex-plugin-install.mjs" --check || exit 1
@@ -176,6 +188,16 @@ if [ -n "${NUDGE_IDS# }" ]; then printf 'nudge-eindri-homes: %s\n' "${NUDGE_IDS#
 
 # Heal this home forward (structure migrations) after every update.
 [ -x "$SCRIPT_DIR/../engine/ymir-migrate.sh" ] && "$SCRIPT_DIR/../engine/ymir-migrate.sh" apply >/dev/null 2>&1 || true
+# The seat sweep's hook, re-seated after every update (the Allfather, 2026-11-10: it comes
+# on INSTALLATIONS AND UPDATES, for pi, opencode and claude seats alike). The migration
+# above heals the two structural faults; this seats the door that closes finished seats.
+if [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ]; then
+  if "$SCRIPT_DIR/../seat/seat-reap.sh" --install >/dev/null 2>&1; then
+    printf 'seat-reap: the sweep is seated on every harness on this host\n'
+  else
+    printf 'seat-reap: a harness on this host is NOT seated — bin/seat/seat-reap.sh --check names it\n'
+  fi
+fi
 # the hound's units are rendered from the repo, so an update re-seats them
 # A refresh that waits on a console, a polkit prompt or a missing unit must not
 # stall the whole update: bound it, detach it, and never let it hold our fds.

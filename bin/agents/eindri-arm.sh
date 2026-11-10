@@ -72,6 +72,14 @@ while :; do
 
   # handoff DELIVERED? the review verdict exists = Brokk has the work
   if [ -f "$STATE/$ID.review" ]; then
+    # THE ARM RETIRES, AND THE SEAT GOES WITH IT. A verdict is a handoff ack: the
+    # work is Brokk's and the pane will never be typed into again. The door refuses
+    # a live agent, so a worker still standing keeps its seat, and `state/<id>.
+    # seat-closed` only keeps this call from repeating — it is never a retirement
+    # trigger (the arm holds until the VERDICT, not until the seat is tidy).
+    if [ ! -f "$STATE/$ID.seat-closed" ] && [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ]; then
+      "$SCRIPT_DIR/../seat/seat-reap.sh" "$ID" >/dev/null 2>&1 || true
+    fi
     say "arm: handoff delivered for $ID (review verdict present) — retiring"
     rm -f "$ARM"
     exit 0
@@ -87,6 +95,11 @@ while :; do
   if [ "$closed" = 1 ] && [ "$close_fired" = 0 ]; then
     close_fired=1
     say "arm: close hook for $ID (worker done) — holding until Brokk's handoff ack"
+    # The worker's own process is gone; if the pane holds only a bare shell, the
+    # workspace can go NOW and the handoff needs no pane (it lives in state/).
+    if [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ]; then
+      "$SCRIPT_DIR/../seat/seat-reap.sh" "$ID" >/dev/null 2>&1 || true
+    fi
     if [ -x "$SCRIPT_DIR/eindri-dispatch.sh" ]; then
       BROKK_HOME="$BROKK_HOME" BROKK_DATA_OVERRIDE="$DATA" BROKK_STATE_OVERRIDE="$STATE" \
         "$SCRIPT_DIR/eindri-dispatch.sh" close "$ID" --verdict pass --note "auto-closed by the arm" \

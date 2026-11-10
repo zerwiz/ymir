@@ -1541,3 +1541,28 @@ pi_surface_format[5]{fact,law,measured}
 
 The law that comes out of it: **one card, two readers, and the card is written for the weaker reader.** OpenCode
 parses YAML; Pi scans lines. Anything a line scan cannot see does not reach Pi, however valid it is as YAML.
+
+## The seat sweep is a HARNESS contract (2026-11-10)
+
+A finished Eindri must not leave a workspace behind, and the sweep that closes it has to
+reach a live session on every harness. `bin/seat/seat-reap.sh` is the one door:
+
+| harness | what carries the sweep |
+|---|---|
+| **pi** | the watch extension (`gna-pi-watch`) delivers the Sága digest, and the digest's `SEATS` section sweeps |
+| **opencode** | the syn-watch plugin relays the same digest; `bin/pi/syn-watch-arm.sh` also sweeps as the helm is taken |
+| **claude** | a real `SessionStart` hook, merged into `~/.claude/settings.json` (backup kept, other keys untouched) |
+
+`bin/engine/ymir-install.sh` seats it (`seats` step), `bin/agents/groa-update.sh`
+re-seats it after every update, and `bin/agents/eir-doctor.sh`'s `seats` surface checks
+it. `bin/seat/seat-reap.sh --check` names any present harness that is NOT seated.
+
+**Two rules this encodes.**
+
+- **A root is a home; a worktree is an errand.** `bin/seat/valknut-load.sh` never
+  records a linked worktree in `~/.pi/agent/extensions/.ymir-root` (test:
+  `git rev-parse --git-common-dir` differs from `--git-dir`) and prunes any an older
+  seat recorded — a deployed extension resolving through a dead worktree fails at 127.
+- **A worktree excludes `.pi/extensions` by git's own rule**, never by deleting files:
+  `git sparse-checkout set --no-cone '/*' '!/.pi/extensions/'`. `--assume-unchanged` is a
+  per-FILE bit and left every worktree reporting 45 deletions.

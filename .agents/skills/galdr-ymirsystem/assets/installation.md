@@ -1396,3 +1396,28 @@ sets on every run.
 Both facts are asserted, not asserted-about: `install` and `groa-update` are the two doors that deliver
 the seat, the packet and `.hermes.md`, and the test renders from the tree it stands in — so a second
 checkout re-rendering the machine's SOUL.md from older code shows up as a red row, not as a mystery.
+
+## The `seats` step — the sweep that closes finished seats (2026-11-10)
+
+`bin/engine/ymir-install.sh` seats the sweep that closes a finished Eindri's herdr
+workspace, per harness:
+
+- **apply** — `bin/seat/seat-reap.sh --install` writes/verifies the session-start hook
+  for every harness on the host (pi's watch extension, opencode's syn-watch plugin,
+  claude's `SessionStart` entry merged into `~/.claude/settings.json` with a backup
+  kept). A harness that is present and could NOT be seated is a `WARN` naming it —
+  never a green over a hall that keeps its dead panes.
+- **`--check`** — reports `seats OK` or `seats WARN "<n> fault(s) — a real
+  install/update heals it"`, and mends NOTHING. A check that repaired the tree would
+  hide the state it exists to report.
+
+The structural half is the migration: `.agents/migrations/0018-a-worktree-is-not-a-root.sh`
+prunes a `.yggdrasil/` / linked-worktree path out of
+`~/.pi/agent/extensions/.ymir-root` (keeping `<pointer>.pre-0018`) and switches every
+affected Eindri worktree from the broken `rm -rf .pi/extensions` + `--assume-unchanged`
+state to the per-worktree sparse-checkout exclusion, so `git status` is clean and a
+worker's `git add -A` cannot delete the extension tree.
+
+`bin/engine/ymir-migrate.sh apply` runs it, and both `ymir-install.sh` and
+`bin/agents/groa-update.sh` call `apply` — so a home installed before the fix is healed
+by the next install or the next update, on every substrate (Rule 25).
