@@ -10,3 +10,6 @@ A register of broken functions. Each finding is one append-only line.
 - `bin/seat/broken.sh count --class`
 
 Data lives at `$YMIR_HOME/hodd/state/broken.md`, append-only. A close appends a closing line; it never rewrites the original.
+## CHANGE LOG
+
+- **2026-11-10** — written with the change it describes.
