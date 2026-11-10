@@ -5,7 +5,14 @@ _root() { local d; d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; while [ "$
 ROOT="$(_root)"
 PLAN_DIR="${YMIR_PLAN_DIR:-}"
 if [ -z "$PLAN_DIR" ]; then
-  _h="${YMIR_HOME:-}"; [ -z "$_h" ] && _h="$(bash "$ROOT/bin/vault/hodd.sh" path 2>/dev/null || true)"
+  # The home is RESOLVED through the one resolver (Rule 07), never read straight from the
+  # environment: `hodd.sh path` answers, and a seat that cannot answer is told so rather than
+  # computing a plan ledger at `/svartalfaheim/...` (a path on the root of the filesystem).
+  # shellcheck disable=SC1091
+  . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
+  _h="${YMIR_HOME:-}"
+  [ -z "$_h" ] && command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root _h 2>/dev/null || true
+  [ -n "$_h" ] || { printf 'behind: the home is unresolved — set YMIR_HOME, or run from a checkout\n' >&2; exit 2; }
   PLAN_DIR="$_h/svartalfaheim/whynotproductions/projects/ymir/plans"
 fi
 python3 - "$PLAN_DIR" <<'PY'
