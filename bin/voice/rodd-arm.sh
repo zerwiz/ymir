@@ -6,7 +6,7 @@
 # answers. This is the door for both halves of that conversation (plan 223):
 #
 #   who           resolve the arm lease: holder pid, gen, mode, state dir, heartbeat age
-#   tell <text>   append a wake of kind `signal` into the state dir the LEASE names
+#   tell [--from <name>] <text>   append a wake of kind `signal` into the state dir the LEASE names
 #   hear [n]      read the arm's replies from <state>/rodd/room.jsonl, and advance the cursor
 #
 # THE LEASE IS THE AUTHORITY, NEVER A PATH. Two state shelves exist on some seats, and only the
@@ -166,6 +166,15 @@ unique_key() {  # <epoch>
 }
 
 cmd_tell() {
+  # --from <name> names the sender (an Eindri, another seat); the default stays Rödd, the voice.
+  # RODD_FROM does the same from the environment. 2026-11-11: nine agents' roll-call knocks all
+  # arrived signed "Rödd (the voice)", and the arm holder could not tell them apart.
+  local from="${RODD_FROM:-Rödd (the voice)}"
+  if [ "${1:-}" = "--from" ]; then
+    [ -n "${2:-}" ] || die 'tell --from needs a name: rodd-arm.sh tell --from w4F-p1 "..."'
+    from="$2"; shift 2
+  fi
+  case "$from" in *$'\e'*) die 'refusing a sender name carrying an escape sequence' ;; esac
   local text="$*"
   [ -n "${text//[[:space:]]/}" ] || die 'tell needs a message: rodd-arm.sh tell "the window is too wide"'
   case "$text" in *$'\e'*) die 'refusing a message carrying an escape sequence — one plain line only' ;; esac
@@ -177,7 +186,7 @@ cmd_tell() {
   local epoch key payload
   epoch="$(now)"
   key="$(unique_key "$epoch")"
-  payload="Rödd (the voice) to the arm holder: $(flatten "$text")"
+  payload="$(flatten "$from") to the arm holder: $(flatten "$text")"
   "$STATE_DOOR" queue append signal "$key" "$payload" --queue "$QUEUE" --epoch "$epoch" >/dev/null 2>&1 \
     || die "the queue write to $QUEUE failed — nothing was handed over, and nothing claims it was"
   printf 'rodd-arm-tell[1]{verb,delivered,key,state_dir,queue,epoch,chars}:\n'
