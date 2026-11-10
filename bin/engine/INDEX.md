@@ -31,7 +31,7 @@ bin[24]{file,does,kind,verdict,disposition,callers,lines}:
   "release-health.sh","release-health.sh — can THIS directory serve the apps?","tool","wired","keep",3,330
   "release-lib.sh","release-lib.sh — the ONE place that knows where a release lives and how a flip happens.","lib","wired","keep",4,230
   "runtime-deploy.sh","runtime-deploy.sh — move the PINNED runtime checkout to the merged tree, and prove what is running.","tool","wired","keep",2,96
-  "update-loop.sh","update-loop.sh — the heart keeps itself on latest main (plan 233 §10)","tool","wired","keep",0,189
+  "update-loop.sh","update-loop.sh — the heart keeps itself on latest main (plan 233 §10)","tool","wired","keep",1,189
   "version-stamp.sh","version-stamp.sh — a seat says exactly which build it runs (2026-09-22).","tool","wired","keep",0,25
   "ymir-autoboot.sh","ymir-autoboot.sh — the boot proof: what this seat's roles OWE, and whether","tool","wired","keep",4,165
   "ymir-config.sh","ymir-config.sh — the operator's own preferences, honoured and remembered.","tool","wired","keep",2,77

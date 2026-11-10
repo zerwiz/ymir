@@ -22,11 +22,15 @@
 | npm-publish.sh | npm-publish.sh — publish through the HOARD's npm token, every single t | tested+named | keep (a human or a cron row must run it) |
 | packaged-gate.sh | packaged-gate.sh — prove the PUBLISHED artifact, not the tree. | tested | keep (a human or a cron row must run it) |
 | pr-pretest.sh | pr-pretest.sh — the PR-time gate: a REAL npm installation, locally, be | tested+named | keep (a human or a cron row must run it) |
+| pr-open.sh | (no header line) | tested | keep (a human or a cron row must run it) |
+| pr-patterns.sh | pr-patterns.sh — the ONE place the forbidden-pattern list lives. | tested | keep (a human or a cron row must run it) |
+| review-mend.sh | review-mend.sh — the refusal becomes a router (plan 233 §13/13a/13b) | tested | keep (a human or a cron row must run it) |
 | review-rules.sh | review-rules.sh — the rules floor: load what a reviewer MUST know, or  | tested | keep (a human or a cron row must run it) |
 | review-seat.sh | review-seat.sh — the reviewer's SEAT: pi in a herdr pane, on the heart | tested | keep (a human or a cron row must run it) |
 | review-shelf.sh | review-shelf.sh — where a packet LANDS, and the waiting rule that keep | tested | keep (a human or a cron row must run it) |
 | review-verdict.sh | review-verdict.sh — the judge's ONE act of writing: its verdict, and n | tested | keep (a human or a cron row must run it) |
 | review-watch.sh | review-watch.sh — the missing trigger: a PR that arrives is a question | tested | keep (a human or a cron row must run it) |
+| ship-watch.sh | ship-watch.sh — the delivery loop: settle branches, then ship proved P | tested | keep (a human or a cron row must run it) |
 | ship.sh | ship.sh — the reviewer's merge: the one door that puts a judged PR on  | tested | keep (a human or a cron row must run it) |
 | skillopt-setup.sh | skillopt-setup.sh — one-time SkillOpt installation for Ymir. | tested | keep (a human or a cron row must run it) |
 | utgard-box.sh | utgard-box.sh — a whole computer for one run, outside the wall. | tested+named | keep (a human or a cron row must run it) |
