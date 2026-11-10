@@ -25,9 +25,9 @@ bin[50]{file,does,kind,verdict,disposition,callers,lines}:
   "16-a-review-is-a-file.md","16 — A review is a file in the repository","data","wired","keep",0,32
   "17-one-agent-one-worktree.md","17 — One agent, one worktree","data","wired","keep",0,36
   "18-an-area-is-held-or-waived.md","18 — An area is held, waived or never (an area is never silently nobody's)","data","wired","keep",0,34
-  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",48,-
-  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",48,-
-  "README.md","areas/ — what this repository answers for","data","tested","keep",48,-
+  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",49,-
+  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",49,-
+  "README.md","areas/ — what this repository answers for","data","tested","keep",49,-
   "TEMPLATE.yaml","areas/TEMPLATE.yaml — what one area's declaration looks like.","data","wired","keep",2,44
   "a2a-guard.sh","a2a-guard — a card in the constellation must stay true, and a changed one must still be valid.","tool","wired","keep",1,38
   "a2a.md","A2A — the repository's card in the constellation","data","wired","keep",0,53
@@ -66,7 +66,7 @@ bin[50]{file,does,kind,verdict,disposition,callers,lines}:
   "reviews-shelf.sh","reviews-shelf — a review nobody can find is a review that did not happen.","tool","wired","keep",0,35
   "reviews.sh","reviews.sh — a review is a file in the repository, so the next hand gets it without asking anyone.","tool","wired","keep",1,70
   "secret-scan.sh","secret-scan — a credential must never enter this repository, and a hook is cheaper than a history rewrite.","tool","wired","keep",1,37
-  "ship.sh","ship.sh — the house's git discipline as one door: branch, commit named paths, merge to the base, push.","tool","wired","keep",4,63
+  "ship.sh","ship.sh — the house's git discipline as one door: branch, commit named paths, merge to the base, push.","tool","wired","keep",5,63
   "standardise.sh","standardise.sh — put the collaboration kit into a repository, or say what is missing.","tool","wired","keep",1,89
   "test_collab.sh","test_collab.sh — the proofs for bin/collab (Vingólf).","data","wired","keep",0,93
   "who.py","'''who.py — the roll: who was invited into the house's collaboration surfaces, and are they using them?","tool","wired","keep",2,393
