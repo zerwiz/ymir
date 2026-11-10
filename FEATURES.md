@@ -21,7 +21,6 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 
 ## Core — install, run, operate
 
-| Record | **One door for every generated register** (`bin/gates/registers.sh` · `bin/gates/guards/registers-guard.sh`) | Two registers describe the tree — the `bin/` inventory and the capability register — written by two generators and checked by two gates, so a change that adds a door half-regenerated the tree and went red only in CI, where the pusher cannot see it (that is how four collaborators' PRs showed a failure that was ours). One door owns the list: `list` · `generate` · `check`; a seated ward calls it, so a push and CI judge the same set; a generator that fails is named, never skipped. Records the order that works — write, stage, generate, commit, push — because the inventory enumerates tracked files | [One door for the registers](docs/features/one-door-for-the-registers.md) |
 | Team | **Gimlé — the hall, the desk and the MCP** (`bin/gimle/`) | One door behind Authelia; a desk showing due this week, last decisions and questions waiting on you; one MCP for the suite that reads **the board** (Plane) as truth for places, cards and owners — the same reader the desk uses — with per-person, per-place tokens, an audit of every call, and a write pair (`create_card`, `update_card`) that stays shut until the unit is started with `--allow-write` | [docs/features/gimle-the-hall.md](docs/features/gimle-the-hall.md) |
 | Area | Feature | What it gives you | how-to |
 |---|---|---|---|
@@ -48,15 +47,6 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 | Utgard boxes | A whole computer for one run, outside the wall | A durable agent box with no host credentials, one road out, and a door that holds the key | [docs/features/utgard-boxes.md](docs/features/utgard-boxes.md) |
 | Utgard lanes | Best of N: one brief, many boxes, one board | The same brief to several declared configurations, one rail lease, a board you read in under a minute — and the pick stays his | [docs/features/utgard-lanes.md](docs/features/utgard-lanes.md) |
 | Atomic releases | The apps run from a release, never a moving tree | `bin/engine/release-{build,health,flip}.sh` — build, prove, flip in one rename | [docs/features/atomic-releases.md](docs/features/atomic-releases.md) |
-| Update loop | `bin/engine/update-loop.sh` | The heart keeps itself on latest main | [docs/features/update-loop.md](docs/features/update-loop.md) |
-
-## CHANGE LOG
-
-- **2026-11-10** — written with the change it describes.
-| broken register | `bin/seat/broken.sh` | register of broken functions, append-only |
-## CHANGE LOG
-
-- **2026-11-10** — written with the change it describes.
 
 ## Memory & secrets
 
@@ -239,10 +229,4 @@ page's *planned* banner is removed **by a new entry citing the old** (Rule 06).
 
 | Voice | F8/Escape and genuine Swedish speech in Skírnir – Tala | Supersedes the temporary Swedish text-only entry: focused-page F8 starts through consent and finishes; Escape cancels. English uses American female Kokoro af_nicole; Swedish uses the private Bengt/PowerShell 7.6.5 file contract. Verified synthetic ASR and audio in both languages; no global shortcut or invented translation. | [Guide](docs/features/talk-to-skirnir.md) |
 | Runtime | **The registers are a tree, one folder at a time** (`bin/gates/inventory.sh` · `bin/gates/capabilities.sh` · `bin/gates/seat-woven-driver.sh`) | `bin/README.md` and `capabilities.md` were one file each, rewritten whole whenever anything under `bin/` changed, so every branch rewrote the same lines and five of six open PRs conflicted at once. They are now a tree: `bin/INDEX.md` plus `bin/<folder>/INDEX.md`, and `capabilities/<folder>.md` behind two front doors of folders only (786 → 66 lines over 34 indexes; 732 → 137 over 31 fragments). Folder purposes live in one file, `bin/gates/registers/folders.tsv`. The `merge=regenerate` driver was declared since plan 174 and pointed into a deleted worktree, so no reweave ever ran: `bin/gates/seat-woven-driver.sh` seats it to this checkout, `--prove` proves it on a real scratch conflict, and the install step `gates` seats it with Eir reporting `woven-driver` | [Guide](docs/features/the-registers-are-a-tree.md) |
-| Runtime | **The clocks** (`bin/seat/clocks.sh`) | Seats plan-watch, ship-watch and update-loop as user systemd timers: daily 07:30 (persistent), every 5 min, every 15 min. Refuses a missing ExecStart; status shows the last journal line | — |
-
-See docs/features/the-clocks.md
-
-## CHANGE LOG
-
-- **2026-11-10** — written with the change it describes.
+| Runtime | **Roster count** (`bin/seat/roster.sh`) | Counts seats: list/line/--check/--json. | [Guide](docs/features/roster.md) |
