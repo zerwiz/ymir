@@ -70,3 +70,32 @@ path and a seat that has not still has the old one — and this correction tells
 which. The block above is left as the record of what the law used to say; it is not the current
 shelf. **A plan written before today and read after it names the old path** — the plans themselves
 are history and are not rewritten; the law is corrected, once, here.
+
+---
+
+## 2026-11-10 — the ledger has four shelves, because a plan belongs to whoever owns the work
+
+His word: *"its not an ymir plan. we need to update ymir so machines and other projects and companies can make plans
+also. not only for ymir. this must come in installations and updates of ymir."* (plan 240.)
+
+Until today the ledger resolved one shape — `svartalfaheim/<realm>/projects/<project>/plans/` — so a machine, a
+company (realm) and the Allfather's own work had no shelf, and a laptop repair was numbered among the ymir project's
+plans. `bin/records/plan.sh` now takes `--scope` and `--owner`:
+
+```
+scopes[4]{scope,path,created by the tool}:
+  "project (default)","svartalfaheim/<realm>/projects/<project>/plans/","never — an unknown project is a typo, not a shelf"
+  "realm (a company)","svartalfaheim/<realm>/plans/","yes, on first use, with its index"
+  "machine","hodd/machines/<host>/plans/","yes — owner defaults to this host"
+  "personal","hodd/plans/","yes — the Allfather's own shelf, now with an index"
+```
+
+**What does not change:** numbering is still after *that shelf's* highest and a number is never reused within a
+shelf; the Rule 45 fresh-ledger refusal still guards `new` on every scope; `hodd/plans/` is still **not** the ymir
+ledger — it is the *personal* scope's shelf, and it now carries an index like the others.
+
+Every plan header carries `owner:` and `owner_name:`, so a plan moved between shelves keeps its provenance.
+`plan.sh list --all` and `plan.sh next --all` walk every shelf. `.agents/migrations/0018-plan-scopes.sh` creates the
+three new shelves (idempotently, seeding an index only where none exists), and it ships the way every structure
+change ships: `bin/engine/ymir-install.sh` and `bin/agents/groa-update.sh` both run `bin/engine/ymir-migrate.sh
+apply`, so a fresh home is born able to plan for a machine and an old home gains the shelves on its next update.
