@@ -1134,7 +1134,7 @@ because assuming a seat is dead is the irreversible direction.
 gains a `seats` step (and NAMES the faults under `--check`); `bin/agents/groa-update.sh`
 re-seats the sweep after every update and reports it under `--check`;
 `bin/agents/eir-doctor.sh` has a `seats` surface whose fix mode calls the migration.
-`.agents/migrations/0018-a-worktree-is-not-a-root.sh` heals homes installed earlier:
+`.agents/migrations/0019-a-worktree-is-not-a-root.sh` heals homes installed earlier:
 it prunes linked-worktree paths from `~/.pi/agent/extensions/.ymir-root` (backup kept)
 and switches affected Eindri worktrees to the sparse-checkout exclusion.
 
@@ -1162,5 +1162,5 @@ a per-FILE bit that left 45 deletions in every worker's `git status`.
 - update-loop: bin/engine/update-loop.sh
 - **2026-11-10** — Appended with the capability: the seat sweep (`bin/seat/seat-reap.sh`), the
   recorded workspace id, the agent-aware housekeeping verdict, the worktree-is-not-a-root rule,
-  migration 0018 and the install/update/Eir wiring. Fix note
+  migration 0019 and the install/update/Eir wiring. Fix note
   `docs/fixes/agents/2026-11-10-the-arm-closes-finished-seats.md`.

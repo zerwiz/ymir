@@ -1230,13 +1230,13 @@ step_loaders() {
     if [ "$CHECK" = 1 ]; then
       add loaders OK "valknut-load.sh present"
       # The two faults of 2026-11-10 are NOT healed by --check: they are NAMED here and
-      # mended by migration 0018 on a real install/update. A check that repaired the
+      # mended by migration 0019 on a real install/update. A check that repaired the
       # tree would hide exactly the state it exists to report.
       if [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ]; then
         if out="$("$SCRIPT_DIR/../seat/seat-reap.sh" --verify 2>&1)"; then
           add seats OK "seat-reap wired; no worktree reports an extension deletion; no worktree recorded as a root"
         else
-          add seats WARN "$(printf '%s' "$out" | sed -n 's/^seat-reap: //p' | head -1) — a real install/update heals it (migration 0018)"
+          add seats WARN "$(printf '%s' "$out" | sed -n 's/^seat-reap: //p' | head -1) — a real install/update heals it (migration 0019)"
         fi
       fi
     else

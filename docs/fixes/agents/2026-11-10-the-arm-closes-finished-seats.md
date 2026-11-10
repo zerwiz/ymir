@@ -68,9 +68,9 @@ installed earlier.
   reclaim. Dirty and unpushed trees are untouched, as before.
 - **`valknut-load.sh`** never records a linked worktree as a root, and prunes any that
   an older seat recorded (`git rev-parse --git-common-dir` differs from `--git-dir`).
-- **`.agents/migrations/0018-a-worktree-is-not-a-root.sh`** heals homes installed
+- **`.agents/migrations/0019-a-worktree-is-not-a-root.sh`** heals homes installed
   earlier: it prunes linked-worktree paths from `~/.pi/agent/extensions/.ymir-root`
-  (keeping `<pointer>.pre-0018` as a backup) and switches every affected worktree to the
+  (keeping `<pointer>.pre-0019` as a backup) and switches every affected worktree to the
   sparse-checkout exclusion.
 - **`ymir-install.sh`** adds a `seats` step that seats the sweep per harness (pi,
   opencode, claude) and, in `--check`, NAMES the faults instead of mending them.
@@ -92,7 +92,7 @@ installed earlier.
 - `bin/pi/syn-watch-arm.sh`
 - `bin/time/saga-session-start.sh`
 - `bin/engine/ymir-install.sh`
-- `.agents/migrations/0018-a-worktree-is-not-a-root.sh`
+- `.agents/migrations/0019-a-worktree-is-not-a-root.sh`
 
 ### Verified
 

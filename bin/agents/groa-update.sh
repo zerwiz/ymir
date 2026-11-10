@@ -152,9 +152,9 @@ if [ "$CHECK" = 1 ]; then
   # INSTALLATION or an UPDATE, not on a look.
   if [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ]; then
     if "$SCRIPT_DIR/../seat/seat-reap.sh" --verify >/dev/null 2>&1; then
-      printf 'seat-reap: seated and clean (migration 0018 applied)\n'
+      printf 'seat-reap: seated and clean (migration 0019 applied)\n'
     else
-      printf 'seat-reap: PENDING — a real update mends it (bin/engine/ymir-migrate.sh apply → migration 0018)\n'
+      printf 'seat-reap: PENDING — a real update mends it (bin/engine/ymir-migrate.sh apply → migration 0019)\n'
       "$SCRIPT_DIR/../seat/seat-reap.sh" --verify 2>&1 | sed 's/^/  /' | head -6
     fi
   fi

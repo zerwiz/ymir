@@ -123,28 +123,16 @@ fi
 # that switches on `"$kind"` is reading that vocabulary, not shipping a stub — the same doctrine that already excuses
 # the `consumer:` / `todo:` pair. The exclusion matches the KIND LIST itself (in either separator form: `seeded|stub|defaulted`
 # or `seeded · stub · defaulted · …`), so a line that merely names the vocabulary is excused and a real stub is not.
-mock_hits=$(grep -rnE '\b(mock|stub|placeholder|todo)\b' "$ROOT/bin" 2>/dev/null \
-  | grep -viE '^[^:]+:[0-9]+:[[:space:]]*#' \
-  | grep -v 'PUBLIC=' \
-  | grep -vE 'seeded[ |·]+(stub|defaulted)|stub[ |·]+defaulted' \
-  | grep -vE 'consumer:.*todo:|todo:.*consumer:' \
-  | grep -vE '^[^:]*bin/desktop/factory-check\.sh:[0-9]+:' \
-  | grep -vE '^[^:]*bin/seat/tests/test_core_four_pending_factory\.sh:[0-9]+:' \
-  | grep -vE '^[^:]*bin/seat/tests/test_seat_reap\.sh:[0-9]+:' \
-  | grep -vE '^[^:]*bin/forge/utgard-box-door\.py:[0-9]+:' \
-  | grep -vE '^[^:]*bin/voice/voice_tools\.py:[0-9]+:' \
-  | grep -vE '^[^:]*bin/collab/kit/[^:]+:[0-9]+:' \
-  | grep -vE '^[^:]*bin/day/day\.py:[0-9]+:' \
-  | grep -vE '^[^:]*ymir-mcp\.py:[0-9]+:' || true)   # mirrors Pi's own tool names (todo · subagent · skill) — a NAME, not a stub
-                                                  # (path-agnostic: the door moved bin/mcp/ -> bin/seat/ and left its exclusion behind, 2026-11-08)
-# The exclusions above are NAMES and DETECTORS, not stubs (2026-11-08): factory-check.sh is the
-# door that REFUSES an unfilled placeholder and names the fault it refuses (its own test asserts
-# that wording); utgard-box-door.py's docstring explains why a box is handed a stand-in key;
-# voice_tools.py and day.py NAME the todo ledger (`todo.md`, `todo-voice.md`, "the todo list") —
-# a feature's name, the same reason ymir-mcp.py is excused for mirroring Pi's tool names; and
-# bin/collab/kit/ is the advantage audit refusing a placeholder as evidence. The gate is about
-# shipped BEHAVIOUR: a diagnostic or a feature NAME is documentation. Every excluded file still
-# ships behaviour, so a real stub in one is caught by its own test rather than by this grep.
+# The scan itself lives in .agents/skills/galdr-ymirsystem/scripts/mocks-scan.sh — ONE
+# implementation with a probe beside it (.agents/tests/mocks-scan.test.sh). This row
+# used to carry its own copy of the pipeline, so an excuse added to one drifted from the
+# other and the house had two answers to one question.
+SCAN="$GALDR/scripts/mocks-scan.sh"
+if [ -f "$SCAN" ]; then
+  mock_hits="$(bash "$SCAN" "$ROOT" 2>/dev/null || true)"
+else
+  mock_hits="(the mocks scan is missing at $SCAN)"
+fi
 if [ -z "$mock_hits" ]; then
   add mocks "no mocks in shipped runtime" PASS "bin/ clean"
 else
