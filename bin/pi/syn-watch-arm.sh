@@ -92,6 +92,17 @@ fi
 
 [ -x "$WATCH" ] || { printf 'watcher: FAILED - the arm service door is missing: %s\n' "$WATCH" >&2; exit 1; }
 
+# ── taking the arm closes the seats the hall has finished with ───────────────
+# The sweep rides the ARM ROAD, not only the digest: a session that takes the helm
+# is exactly the moment the house is observed, and a dead `eindri-*` workspace is
+# something the next hand must not inherit. It is a statement, never a blocker:
+# one TOON row, and a door that cannot answer costs nothing.
+if [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ]; then
+  _sweep="$(BROKK_HOME="$BROKK_HOME" BROKK_STATE_OVERRIDE="$STATE" \
+    bash "$SCRIPT_DIR/../seat/seat-reap.sh" --sweep 2>/dev/null | sed -n '1,3p' || true)"
+  [ -n "$_sweep" ] && printf 'sweep: %s\n' "$(printf '%s' "$_sweep" | tr '\n' ' ')"
+fi
+
 # ── the helm ────────────────────────────────────────────────────────────────
 # A live-session contract: enter a VACANT helm (no owner, or an owner verifiably
 # gone) through the lib's acquire; only a genuinely live other session is refused.
