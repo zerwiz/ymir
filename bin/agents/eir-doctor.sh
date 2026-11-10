@@ -603,6 +603,9 @@ for s in "${SURFACES[@]}"; do
   if [ -n "$named" ]; then
     state="$named"
     case "$state" in
+      # `mail` speaks three words, and one of them is `ok`. The catch-all below counted a HEALTHY
+      # desk as broken — measured 2026-11-10: every surface said ok, and the header said "broken 1".
+      ok)           : ;;
       unconfigured) unconfigured=$((unconfigured+1)) ;;
       *)            broken=$((broken+1)) ;;
     esac
