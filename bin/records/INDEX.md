@@ -45,7 +45,7 @@ bin[40]{file,does,kind,verdict,disposition,callers,lines}:
   "plan-state.sh","plan-state.sh — read and write the Status/Owner header of every plan in the ledger.","tool","wired","keep",1,83
   "plan.sh","plan.sh — the plan ledger: create the NEXT numbered plan and its index row.","tool","tested","keep",8,119
   "regenerate-on-merge.sh","regenerate-on-merge.sh — the merge driver for WOVEN documents (Þættir, plan 174).","tool","wired","keep",3,21
-  "runes-append.sh","runes-append.sh — the append-only Runes ledger, a THIN SHIM.","tool","tested","keep",31,117
+  "runes-append.sh","runes-append.sh — the append-only Runes ledger, a THIN SHIM.","tool","tested","keep",32,117
   "runes-project.sh","runes-project.sh — the DAG projector, regenerates runes_audit.md from events.","tool","wired","keep",0,65
   "snotra-ladder.sh","snotra-ladder.sh — the meeting ladder: transcript → minutes → promises → todos, and a stop that says so.","tool","wired","keep",0,611
   "snotra-what.sh","snotra-what.sh — Snotra's own voice: what the ear is doing, said in one sentence.","tool","wired","keep",1,640
