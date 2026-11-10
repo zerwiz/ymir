@@ -48,6 +48,11 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 | Utgard boxes | A whole computer for one run, outside the wall | A durable agent box with no host credentials, one road out, and a door that holds the key | [docs/features/utgard-boxes.md](docs/features/utgard-boxes.md) |
 | Utgard lanes | Best of N: one brief, many boxes, one board | The same brief to several declared configurations, one rail lease, a board you read in under a minute — and the pick stays his | [docs/features/utgard-lanes.md](docs/features/utgard-lanes.md) |
 | Atomic releases | The apps run from a release, never a moving tree | `bin/engine/release-{build,health,flip}.sh` — build, prove, flip in one rename | [docs/features/atomic-releases.md](docs/features/atomic-releases.md) |
+| Update loop | `bin/engine/update-loop.sh` | The heart keeps itself on latest main | [docs/features/update-loop.md](docs/features/update-loop.md) |
+
+## CHANGE LOG
+
+- **2026-11-10** — written with the change it describes.
 | broken register | `bin/seat/broken.sh` | register of broken functions, append-only |
 ## CHANGE LOG
 
