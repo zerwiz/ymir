@@ -22,6 +22,7 @@
 | pending.sh | pending.sh — everything that is waiting on the operator, in ONE list. | tested+named | keep (a human or a cron row must run it) |
 | pi-launcher.sh | pi-launcher.sh — the ONE launcher generator for a pi seat. | tested+named | keep (a human or a cron row must run it) |
 | rank.sh | rank.sh — ask a jev judge to score items on jev's three categories. | tested+named | keep (a human or a cron row must run it) |
+| roster.sh | (no header line) | tested | keep (a human or a cron row must run it) |
 | seat-prove.sh | seat-prove.sh — a spawn is not a seat until the agent list shows it. | tested+named | keep (a human or a cron row must run it) |
 | seat-surface.sh | seat-surface.sh — render THIS seat's own name into the AGENTS.md every | tested+named | keep (a human or a cron row must run it) |
 | seat-wire.sh | seat-wire.sh — one seat speaks into another seat's live pane, and says | tested | keep (a human or a cron row must run it) |
