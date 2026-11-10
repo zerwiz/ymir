@@ -47,13 +47,23 @@ ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/
 # The operator's settings and secrets live in the home they chose, never in the
 # code tree — a packaged install replaces its tree on upgrade, and a credential
 # must never sit in a tree that ships (Rule 04).
+# The resolver is found from the TREE, not from this file's own folder: the lib lives at
+# bin/vault/hoard-lib.sh and this door sits five levels down in systems/snotra/services/cron/.
+# Before 2026-11-10 the search only looked beside the script, so every call below died with
+# "hoard_settings_dir: command not found" and the cron row reported rc=2 on every run.
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
-  _yr="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  for _yc in "$_yr/hoard-lib.sh" "$_yr/../vault/hoard-lib.sh" "$_yr/../../vault/hoard-lib.sh"; do
+  for _yc in "$ROOT/bin/vault/hoard-lib.sh" "$ROOT/../bin/vault/hoard-lib.sh"; do
     [ -r "$_yc" ] && { . "$_yc"; YMIR_HOARD_LIB_LOADED=1; break; }
   done
-  unset _yr _yc
+  unset _yc
 fi
+command -v hoard_settings_dir >/dev/null 2>&1 || {
+  printf 'hall-snapshot: the hoard resolver is missing (bin/vault/hoard-lib.sh) — refusing to guess\n' >&2
+  exit 78
+}
+ymir_home_root _snapshot_home 2>/dev/null || true
+[ -n "${_snapshot_home:-}" ] && YMIR_HOME="${YMIR_HOME:-$_snapshot_home}"
+unset _snapshot_home
 hoard_settings_dir YMIR_SETTINGS_DIR
 hoard_local_env YMIR_ENV_FILE
 hoard_state_dir YMIR_STATE_DIR
@@ -74,7 +84,11 @@ cron_file="$YMIR_SETTINGS_DIR/cron.yaml"
 runes=$(grep -c '^{' "$runes_file" 2>/dev/null || echo 0)
 projects=$(grep -E '^  - id:' "$projects_file" 2>/dev/null | sed -E 's/^  - id: *([^ ]+).*/\1/' | tr '\n' ' ')
 loom=$(grep -cE '^[0-9]{2}:[0-9]{2} ' "$cron_file" 2>/dev/null || echo 0)
-wake=$(wc -l <"$STATE/.wake-queue" 2>/dev/null | tr -d '[:space:]'); [ -n "$wake" ] || wake=0
+# A queue that is not there is a queue with nothing waiting — not a fault, and a snapshot
+# door must not create runtime state as a side effect of being read.
+wake=0
+[ -f "$STATE/.wake-queue" ] && wake=$(wc -l <"$STATE/.wake-queue" 2>/dev/null | tr -d '[:space:]')
+[ -n "$wake" ] || wake=0
 
 # --- the smiths and their errands (herdr x when-sources) ---
 # The herdr schema names a session's identity in `agent` (not `name`); the
