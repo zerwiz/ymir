@@ -87,6 +87,9 @@
 | repo-scrub.sh | repo-scrub.sh — purge private paths from ALL git history before going  | tested | keep (a human or a cron row must run it) |
 | seat-woven-driver.sh | seat-woven-driver.sh — seat the engine behind `merge=regenerate`, and  | tested | keep (a human or a cron row must run it) |
 | test_areas_and_injection.sh | test_areas_and_injection.sh — the smoke suite for plan 219 and the arm | tested | keep (a human or a cron row must run it) |
+| test_arm_talk.sh | bogus host refused with road named | tested | keep (a human or a cron row must run it) |
+| test_broken.sh | add appends | tested | keep (a human or a cron row must run it) |
+| test_ci_parity.sh | test_ci_parity.sh — a push run and a pull_request run on one sha print | tested | keep (a human or a cron row must run it) |
 | test_fleet_roads.sh | good block passes | tested | keep (a human or a cron row must run it) |
 | test_gimle_mcp_board.sh | test_gimle_mcp_board.sh — the Gimlé MCP's board face, proved by comma | tested | keep (a human or a cron row must run it) |
 | test_handoff_packet.sh | test_handoff_packet.sh — proves the packet door reads the schema's pac | tested | keep (a human or a cron row must run it) |
@@ -94,6 +97,8 @@
 | test_mjollnir_clone.sh | test_mjollnir_clone.sh — the door that turns a FAR repo into a workabl | tested | keep (a human or a cron row must run it) |
 | test_mjollnir_intake.sh | test_mjollnir_intake.sh — the forge's senses (plan 210 P0/P1), proved  | tested | keep (a human or a cron row must run it) |
 | test_new_doors.sh | test_new_doors.sh — the production tests for the doors built 2026-11-0 | tested | keep (a human or a cron row must run it) |
+| test_plan_state.sh | plan missing headers -> finding | tested | keep (a human or a cron row must run it) |
+| test_plan_watch.sh | dry-run prints arithmetic, sends nothing | tested | keep (a human or a cron row must run it) |
 | test_pr_ship_guard.sh | test_pr_ship_guard.sh — proves the ship door judges the PR and not the | tested | keep (a human or a cron row must run it) |
 | test_registers.sh | test_registers.sh — one door for every generated register. | tested | keep (a human or a cron row must run it) |
 | test_skills_mcp.sh | test_skills_mcp.sh — the skills door, proved by command. | tested | keep (a human or a cron row must run it) |
