@@ -36,7 +36,7 @@ bin[22]{file,does,kind,verdict,disposition,callers,lines}:
   "notify.py","'''notify.py — the hound's mouth: one message to the phone, and a record that it landed.","tool","tested","keep",4,229
   "redact.py","'''redact.py — the guardian's own ward (plan 98 §6, §'the redaction rule').","tool","wired","keep",2,112
   "rules.py","'''rules.py — the judgement, deterministic and first (plan 98 §4.2).","tool","wired","keep",1,102
-  "security-audit.sh","security-audit.sh — Vörðr's eyes: WHAT IS THIS MACHINE ACTUALLY EXPOSING?","tool","tested","keep",5,243
+  "security-audit.sh","security-audit.sh — Vörðr's eyes: WHAT IS THIS MACHINE ACTUALLY EXPOSING?","tool","tested","keep",5,312
   "services-register.sh","services-register.sh — is the register of doors READ, or is it prose?","tool","wired","keep",1,173
   "verdr.sh","verdr.sh — VÖRÐR, the warden: the standing report.","tool","tested","keep",1,135
   "vidarr-agent.sh","vidarr-agent.sh — seat the DEFENDER as a live pi agent on the fast road.","tool","wired","keep",0,71
