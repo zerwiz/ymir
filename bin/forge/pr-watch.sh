@@ -27,7 +27,8 @@ while [ $# -gt 0 ]; do case "$1" in --dry-run) DRY=1; shift;; --hours) HOURS="${
 # A watcher nobody starts is a watcher that never speaks. `--install-timer` seats a user unit that
 # runs this door every 5 minutes, so a PR is announced within minutes of arriving, with or without
 # anyone remembering to look.
-if [ "${1-}" = "--install-timer" ]; then
+for _a in "$@"; do [ "$_a" = "--install-timer" ] && TIMER=1; done
+if [ "${TIMER:-0}" = 1 ]; then
   U="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"; mkdir -p "$U"
   cat >"$U/pr-watch.service" <<UNIT
 [Unit]
