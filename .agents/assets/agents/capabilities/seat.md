@@ -9,7 +9,6 @@
 
 - **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | arm-talk.sh | arm-talk.sh — the heart speaks into every seat's pane, over that seat' | tested | keep (a human or a cron row must run it) |
-| broken.sh | broken.sh — the register of broken things (RULES/50). | tested | keep (a human or a cron row must run it) |
 | claims.sh | claims.sh — a seat declares what it is building (plan number, branch,  | tested | keep (a human or a cron row must run it) |
 | clocks.sh | bin/seat/clocks.sh — seat the three loops: plan-watch, ship-watch, upd | tested | keep (a human or a cron row must run it) |
 | context.sh | context.sh — what the agent's context ACTUALLY holds, right now. | tested+named | keep (a human or a cron row must run it) |
