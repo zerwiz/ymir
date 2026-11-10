@@ -20,7 +20,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[33]{file,does,kind,verdict,disposition,callers,lines}:
+bin[32]{file,does,kind,verdict,disposition,callers,lines}:
   "codex-plugin-install.mjs","// Valknut's Codex door.","data","wired","keep",3,125
   "context.sh","context.sh — what the agent's context ACTUALLY holds, right now.","tool","tested","keep",3,163
   "core-four.sh","core-four.sh — the four dials that decide an agent's outcome, in ONE read.","tool","wired","keep",4,204
@@ -39,7 +39,6 @@ bin[33]{file,does,kind,verdict,disposition,callers,lines}:
   "pi-launcher.sh","pi-launcher.sh — the ONE launcher generator for a pi seat.","tool","tested","keep",1,155
   "rank.sh","rank.sh — ask a jev judge to score items on jev's three categories.","tool","wired","keep",1,122
   "roster.sh","HERE='$(cd -- '$(dirname -- '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",5,120
-  "roster_impl.py","import json, os, subprocess, sys","data","orphan","retire",0,114
   "seat-prove.sh","seat-prove.sh — a spawn is not a seat until the agent list shows it.","tool","tested","keep",1,79
   "seat-surface.sh","seat-surface.sh — render THIS seat's own name into the AGENTS.md every harness reads.","tool","wired","keep",6,212
   "seat-wire.sh","seat-wire.sh — one seat speaks into another seat's live pane, and says who it is.","tool","wired","keep",1,382
@@ -55,6 +54,6 @@ bin[33]{file,does,kind,verdict,disposition,callers,lines}:
   "whose-tree.sh","whose-tree.sh — whose code am I standing in?","tool","wired","keep",0,118
   "ymir-mcp.py","'''ymir-mcp.py — Ymir's own doors over MCP: the tools Pi has as extensions, for","tool","tested","keep",5,276
 
-**Tally.** verdict: wired=25, tested=7, orphan=1
+**Tally.** verdict: wired=25, tested=7
 
-**Tally.** disposition: keep=32, retire=1
+**Tally.** disposition: keep=32
