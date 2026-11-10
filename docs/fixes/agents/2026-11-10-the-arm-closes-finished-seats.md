@@ -160,3 +160,17 @@ Verified in the same ward (`bin/seat/tests/test_seat_reap.sh`, 53 cases): the wa
 written once and a second call is a no-op; an adopted record is corrected, its status says
 `working: adopted`, and the arm is woken exactly once; the settle is one number, in
 `seat-prove.sh`, and the runtime asset names it.
+
+### Appended — a worktree is not a ROOT, part two (found while seating this PR's review)
+
+The engine told `bin/seat/pi-launcher.sh` where the extension pins live by passing
+`roots.root`. A seat whose `BROKK_HOME` is a Yggdrasil worktree — the ordinary shape for an
+errand that spawns another — has no `.pi/extensions` of its own BY DESIGN (the
+sparse-checkout exclusion this same change introduces), so the generator refused every
+such seat with *"holds no .pi/extensions tree"*, and this PR's own review judge could not
+be seated until it was fixed.
+
+`src/ymir_runtime/seat.py` now asks git which tree the checkout belongs to
+(`git rev-parse --path-format=absolute --git-common-dir`) when the named root carries no
+extension tree, and names the MAIN tree's pins. Verified by seating the review judge:
+`review-spawn … target=w4J:p1 … "seated"`.

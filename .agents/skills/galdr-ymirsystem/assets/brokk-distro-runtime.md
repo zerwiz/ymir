@@ -1138,6 +1138,11 @@ re-seats the sweep after every update and reports it under `--check`;
 it prunes linked-worktree paths from `~/.pi/agent/extensions/.ymir-root` (backup kept)
 and switches affected Eindri worktrees to the sparse-checkout exclusion.
 
+**A worktree is not a root, in the engine too.** `src/ymir_runtime/seat.py` names the
+MAIN tree's `.pi/extensions` to `bin/seat/pi-launcher.sh` when `roots.root` is itself a
+worktree (`git rev-parse --path-format=absolute --git-common-dir`), because a worktree has
+no extension tree of its own by design and the generator refuses a seat that names one.
+
 **A worktree is not a root.** `valknut-load.sh` refuses to record a linked worktree in
 `.ymir-root` (the one test: `git rev-parse --git-common-dir` differs from `--git-dir`),
 and prunes any an older seat recorded. `einherjar-spawn.sh` excludes `.pi/extensions`
