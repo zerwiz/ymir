@@ -441,11 +441,190 @@ def ymir_telegram(action: str = "list", machine: str = "", text: str = "") -> st
         return _run(["bash", str(ROOT / "bin" / "seat" / "hermes-telegram.sh"), "status"], 60)
     return _run(["bash", str(ROOT / "bin" / "notify" / "telegram-machines.sh"), "list"], 60)
 
+# ── the pi-extension doors a non-pi harness was missing (2026-11-10) ─────────────────────
+# Each is a thin call to the bin/ door (or the fork script) the pi extension itself calls,
+# so the behaviour has one home. Doors that are pi-SESSION state are deliberately absent:
+#   context_left        pi's own context gauge — `ymir_context` above reads the number on disk
+#   logretta_sit        the council's rounds are orchestrated inside the extension (no CLI yet)
+#   excalidraw_tickets, excalidraw_servers  their logic lives in the extension's TS modules
+# `skuld_branch_report` IS ported below — its durable write is `skuld-branch-outcome.sh append`;
+# the branch's merge note into the Allfather-facing conversation stays the branch extension's.
+
+
+@mcp.tool()
+def brokk_branch_outcomes(recent: int = 20) -> str:
+    """Read the supervision branch's durable outcome store: what fleet events it handled, each verdict and summary."""
+    n = str(max(1, int(recent or 20)))
+    out = _run(["bash", str(ROOT / "bin" / "skuld" / "skuld-branch-outcome.sh"), "list", "--recent", n], 60)
+    return "(no branch outcomes recorded)" if out == "(no output)" else out
+
+
+@mcp.tool()
+def skuld_ticket(state: str = "", limit: int = 20) -> str:
+    """The tickets: what is queued, in flight, or closed — read from the DERIVED work queue (bin/gates/queue.sh)."""
+    q = _run(["bash", str(ROOT / "bin" / "gates" / "queue.sh"), "--check"], 120)
+    lines = [l for l in q.splitlines() if l.startswith("| ")]
+    head = next((l for l in lines if l.startswith("| # ")), None)
+    want = state.lower().strip()
+    body = [l for l in lines if l != head and (not want or want in l.lower())]
+    rows = []
+    for l in body[: max(1, int(limit or 20))]:
+        c = [x.strip() for x in l.split("|")]
+        if len(c) < 4:
+            continue
+        rows.append(f'  "{c[3] or c[2]}","{c[2][:78]}"')
+    return "\n".join([f"tickets[{len(rows)}]{{state,what}}:", *rows, "",
+                      "derived from register.md + questions.md — a queue that is authored rots."])
+
+
+@mcp.tool()
+def skuld_plan(topic: str = "", realm: str = "", project: str = "ymir") -> str:
+    """What is planned: the plan ledger in the home (one row per plan file, with its headline). Omit topic for the shelf."""
+    shelf = os.environ.get("YMIR_PLAN_DIR", "")
+    if not shelf:
+        base = _home() / "svartalfaheim" / (realm or "whynotproductions")
+        cands = [base / "projects" / project / "plans", base / "workspace" / project / "plans"]
+        shelf = str(next((c for c in cands if c.is_dir()), cands[0]))
+    d = Path(shelf)
+    def _num(n: str) -> int:
+        h = n.split("-")[0]
+        return int(h) if h.isdigit() else 10**9
+    names = sorted((p.name for p in d.glob("*.md")), key=lambda n: (_num(n), n)) if d.is_dir() else []
+    t = topic.lower().strip()
+    hit = [n for n in names if not t or t in n.lower()]
+    if not hit:
+        return f'no plan matches{f" {topic!r}" if t else ""} in {shelf}\nthe shelf holds: {len(names)} files'
+    rows = [f"plans[{len(hit)}]{{file,headline}}:"]
+    for n in hit:
+        try:
+            lines = (d / n).read_text(errors="replace").splitlines()
+            head = (lines[2] if len(lines) > 2 else (lines[0] if lines else ""))[:88]
+        except OSError:
+            head = ""
+        rows.append(f'  "{n}","{head.replace(chr(34), chr(39))}"')
+    rows += ["", "state and what is owed: bin/gates/queue.sh --check · why it exists: ymir_rule <topic>"]
+    return "\n".join(rows)
+
+
+@mcp.tool()
+def skuld_branch_report(task: str, verdict: str, summary: str, wake: str = "", silent: bool = False) -> str:
+    """Record one handled fleet event in the durable branch-outcome store (append-only).
+    verdict is routine | Allfather; silent is true only for a fleet-wide no-change heartbeat.
+    The branch's merge note into the Allfather-facing conversation stays the branch extension's."""
+    task, verdict, summary = task.strip(), verdict.strip(), summary.strip()
+    if not task or not summary:
+        return "skuld_branch_report REFUSED — task and summary are required"
+    if verdict not in ("routine", "Allfather"):
+        return "skuld_branch_report REFUSED — verdict must be routine or Allfather"
+    if silent and not (task == "fleet" and verdict == "routine"):
+        return "skuld_branch_report REFUSED — silent is only a fleet-wide routine heartbeat"
+    argv = ["bash", str(ROOT / "bin" / "skuld" / "skuld-branch-outcome.sh"), "append",
+            "--task", task, "--verdict", verdict, "--summary", summary,
+            "--silent", "true" if silent else "false"]
+    if wake.strip():
+        argv += ["--wake", wake.strip()]
+    out = _run(argv, 60)
+    return f"branch outcome recorded (seq {out})." if out.strip().isdigit() else out
+
+
+@mcp.tool()
+def constellation_list() -> str:
+    """The Ymir mesh: every peer in the agent-card registry, with its endpoint and skills (invalid cards are named)."""
+    return _run(["bash", str(ROOT / "bin" / "bridge" / "constellation.sh"), "list"], 60)
+
+
+@mcp.tool()
+def constellation_card(peer: str) -> str:
+    """One peer's agent card exactly as the registry holds it. Read-only."""
+    if not peer.strip():
+        return "constellation_card REFUSED — peer is required"
+    return _run(["bash", str(ROOT / "bin" / "bridge" / "constellation.sh"), "show", peer.strip()], 60)
+
+
+@mcp.tool()
+def constellation_ask(peer: str, skill: str) -> str:
+    """Check whether a peer declares a skill and what grant a call would need. No call is ever sent:
+    a call needs a grant (per pair, per skill) and a short-lived skill-scoped token."""
+    peer, skill = peer.strip(), skill.strip()
+    if not peer or not skill:
+        return "constellation_ask REFUSED — both peer and skill are required"
+    door = str(ROOT / "bin" / "bridge" / "constellation.sh")
+    card = _run(["bash", door, "show", peer], 60)
+    grants = _run(["bash", door, "grants", "--peer", peer], 60)
+    declared = skill in card
+    return "\n".join([
+        f'constellation_ask REFUSED — no call is sent to "{peer}" for skill "{skill}".',
+        f"the peer {'declares' if declared else 'does NOT declare'} that skill in its card.",
+        f"a call needs a grant: bin/bridge/constellation.sh grant {peer} {skill}, then a token from `mint`.",
+        "", "grants on record for this peer:", grants,
+    ])
+
+
+@mcp.tool()
+def logretta_stack() -> str:
+    """The council's roster: is the stack seated on this machine, and does it validate?"""
+    return _run(["bash", str(ROOT / "bin" / "pi" / "logretta-ensure.sh"), "status"], 60)
+
+
+def _excalidraw_root() -> Path:
+    return Path(os.environ.get("EXCALIDRAW_ROOT") or (Path.home() / "CodeP" / "excalidraw"))
+
+
+@mcp.tool()
+def excalidraw_diagram(action: str = "create", spec: dict | None = None, out: str = "",
+                       path: str = "", columns: int = 0) -> str:
+    """Write an .excalidraw scene from a spec ({nodes:[{id,label?,shape?}], edges?}) or describe one (action=describe, path)."""
+    root = _excalidraw_root()
+    script = root / "server" / "diagram" / "write.mjs"
+    if not script.exists():
+        return f"no diagram writer at {script} — set EXCALIDRAW_ROOT to the fork's checkout."
+    if action == "describe":
+        if not path:
+            return "action=describe needs a path."
+        return _run(["node", str(script), "--describe", path], 60)
+    if not spec or not isinstance(spec.get("nodes"), list):
+        return "action=create needs spec.nodes — an array of {id, label?, shape?}."
+    dest = out or str(root / "diagram.excalidraw")
+    argv = ["node", str(script), "--out", dest] + (["--columns", str(columns)] if columns else [])
+    try:
+        import json as _json
+        p = subprocess.run(argv, input=_json.dumps(spec), capture_output=True, text=True, timeout=60)
+        text = "\n".join(x for x in ((p.stdout or "").strip(), (p.stderr or "").strip()) if x) or "(no output)"
+        return text if p.returncode == 0 else f"{text}\n(exit {p.returncode})"
+    except Exception as exc:
+        return f"failed: {exc}"
+
+
+@mcp.tool()
+def excalidraw_app(action: str = "status") -> str:
+    """The Excalidraw desktop app over its local dev server: status (default), start, or stop."""
+    root = _excalidraw_root()
+    if action == "status":
+        import urllib.request
+        try:
+            with urllib.request.urlopen("http://127.0.0.1:7311/", timeout=1.2) as r:
+                return f"the app's dev server answers on :7311 ({r.status})."
+        except Exception as exc:
+            return f"the app is not up on :7311 ({exc})."
+    if action not in ("start", "stop"):
+        return "action must be status | start | stop"
+    script = root / "scripts" / f"{action}.sh"
+    if not script.exists():
+        return f"missing {script} — set EXCALIDRAW_ROOT to the fork's checkout."
+    subprocess.Popen([str(script)], cwd=str(root), stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                     stderr=subprocess.DEVNULL, start_new_session=True)
+    return f"{action}.sh launched (detached). Check with action=status in a few seconds."
+
+
 if __name__ == "__main__":
     import sys as _sys
     if "--selftest" in _sys.argv:
-        # production check: every door is registered and answers without a model
-        names = [n for n in dir() if n.startswith("ymir_") or n == "todo"]
+        # production check: every door is registered and answers without a model. The names
+        # come from the server's own registry, so a door added under a new prefix is counted.
+        try:
+            names = [t.name for t in mcp._tool_manager.list_tools()]
+        except Exception:
+            names = [n for n in dir() if n.startswith("ymir_") or n == "todo"]
         print("doors:", len(names), ", ".join(sorted(names)))
         print(_run(["bash", str(ROOT / "bin" / "vault" / "hodd.sh"), "path"]))
         raise SystemExit(0)

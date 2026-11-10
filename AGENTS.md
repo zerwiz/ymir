@@ -154,6 +154,24 @@ mandate{operator,brokk,eindri}:
 - Anything plan-sized is written first (plans live in the hoard); nothing heavy is improvised
   directly in main.
 
+### Appended 2026-11-10 — workers are Eindri; Claude Code never spawns its own subagents
+
+The Allfather's word: *"Claude Code never spawns its own subagents — workers are Eindri."*
+
+Every worker in this house is an **Eindri**, sent out through `bin/agents/eindri-start.sh` (or
+`bin/agents/agent-run.sh <figure> "<task>"`), seated on a Yggdrasil worktree, armed, and in Utgard
+when the work is untrusted. A harness's private subagent is none of those things: no worktree, no
+sandbox, no Rune, no seat the Allfather can find. So no harness may spawn one.
+
+For Claude Code the refusal is mechanical, in **every** project: `.claude/hooks/eindri-only.sh` is a
+user-scope `PreToolUse` hook on `Agent|Task`. It denies the spawn and names the Eindri road.
+`bin/seat/harness-extensions-install.sh` seats it (the install runs that installer; Gróa's update
+re-verifies it; Eir's `claudehooks` surface fails when it is stale). A worker that cannot reach the
+Eindri road does the task inline, or asks the Allfather — never a shadow worker.
+
+The full law is **Rule 49** (`RULES/49-workers-are-eindri.md`), cross-referenced from
+`RULES/02-agents.md`.
+
 ## Manual (load the row the task needs)
 
 ```

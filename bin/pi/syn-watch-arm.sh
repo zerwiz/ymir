@@ -104,6 +104,50 @@ if [ -z "$lock_owner" ] || ! gleipnir_pid_alive "$lock_owner"; then
   fi
 fi
 
+# A client attaches ONLY when this shell's session holds the helm (2026-11-10). The
+# acquire block above SKIPS a live owner, and the client used to attach anyway — so a
+# second session that never held the helm still received wakes. Only the failed-acquire
+# branch exited read-only; a live stranger session did not. The gate is the whole rule:
+# a session that does not own the helm is read-only, whatever else happened above.
+# The test is EXACTLY the acquire contract — the recorded owner is this session's pid —
+# because `gleipnir_lock_owned` walks the ancestry instead and misreads an explicit
+# BROKK_SESSION_PID (acquire uses session pid; owned does not). One definition, here.
+gleipnir_session_pid _sess
+sess="${_sess:-$$}"
+gleipnir_lock_owner _helm
+if [ -z "$_helm" ] || [ "$_helm" != "$sess" ]; then
+  printf 'watcher: read-only - this session does not hold the helm (another live session does)\n' >&2
+  exit 0
+fi
+
+# ONE client per session (2026-11-10). Every Stop spawns a new client, and the earlier
+# clients of the SAME session used to wait beside it, so one signal rewoke the session
+# five times (measured: one Claude pid had five clients waiting). A new client retires
+# its own session's older clients. Another session's clients are never touched — the
+# helm gate above already refused a session that does not hold it.
+clients="$STATE/.arm.clients"
+mkdir -p "$clients" 2>/dev/null || true
+client_file="$clients/$sess.pids"
+_is_arm_client() { grep -qa 'syn-watch-arm' "/proc/$1/cmdline" 2>/dev/null; }
+if [ -r "$client_file" ]; then
+  while IFS= read -r _p; do
+    case "$_p" in ''|*[!0-9]*) continue ;; esac
+    [ "$_p" = "$$" ] && continue
+    if gleipnir_pid_alive "$_p" && _is_arm_client "$_p"; then
+      kill "$_p" 2>/dev/null || true
+      printf 'watcher: retired an older client %s of this session\n' "$_p" >&2
+    fi
+  done < "$client_file"
+fi
+printf '%s\n' "$$" > "$client_file"
+cleanup_client() {
+  [ -r "$client_file" ] || return 0
+  grep -vx "$$" "$client_file" > "$client_file.tmp.$$" 2>/dev/null \
+    && mv "$client_file.tmp.$$" "$client_file" 2>/dev/null \
+    || rm -f "$client_file.tmp.$$"
+}
+trap cleanup_client EXIT
+
 lease_alive() {
   local pid st state
   [ -r "$LEASE" ] || return 1

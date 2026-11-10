@@ -721,7 +721,7 @@ step_a2a() {
     add a2a WARN "engine absent — run bin/bridge/a2abridge-ensure.sh ensure --install (offline?)"
   fi
   if [ -x "$SCRIPT_DIR/../bridge/a2a-mcp.sh" ] && "$SCRIPT_DIR/../bridge/a2a-mcp.sh" install >/dev/null 2>&1; then
-    add a2a-mcp OK "a2abridge + engram wired into pi + opencode"
+    add a2a-mcp OK "a2abridge + the well door wired into pi + opencode"
   else
     add a2a-mcp WARN "run bin/bridge/a2a-mcp.sh install to wire the mesh"
   fi
@@ -1059,6 +1059,12 @@ step_sandbox() {
 }
 
 # ── 5. memory (well + harness MCP) ───────────────────────────────────────────
+# engram is Kaia's engine only (the Allfather, 2026-11-10). A harness reaches memory
+# through the WELL DOOR — this body's gateway, `/mcp/well` — never a direct
+# `engram-mcp --db` stdio server, which writes the seat's own file and never reaches
+# the heart. So the health metric is the door, and a direct engram is a LEAK: the
+# step seats every harness from pi's one set (bin/bridge/mcp-config.sh seat — a named
+# merge, backups kept) and reports any engram it still finds.
 step_memory() {
   role_gate memory heart,dev "the well (the record's store · a body's door)" || return 0
   # The well is ONE memory and it lives in the hoard — always.
@@ -1068,13 +1074,28 @@ step_memory() {
     . "$SCRIPT_DIR/../vault/hoard-lib.sh" 2>/dev/null || true
     hoard_memory_store db
   fi
-  local mcp=0
+  local door=0 leak=0 f
   [ "$CHECK" = 0 ] && "$SCRIPT_DIR/../bridge/mimir-bridge.sh" --start >/dev/null 2>&1 || true
-  for f in "$ROOT/opencode.json" "$HOME/.config/opencode/opencode.json" "$HOME/.pi/agent/settings.json" "$HOME/.claude.json" "$HOME/.cursor/mcp.json"; do
-    [ -f "$f" ] && grep -q '"engram"' "$f" 2>/dev/null && mcp=$((mcp+1))
+  if [ "$CHECK" = 0 ] && [ -x "$SCRIPT_DIR/../bridge/mcp-config.sh" ]; then
+    "$SCRIPT_DIR/../bridge/mcp-config.sh" seat >/dev/null 2>&1 \
+      || add memory-door WARN "a harness could not be seated — run bin/bridge/mcp-config.sh seat --check"
+  fi
+  for f in "$ROOT/opencode.json" "$HOME/.config/opencode/opencode.json" "$HOME/.pi/agent/mcp.json" "$HOME/.pi/agent/mcp-adapter.json" "$HOME/.claude.json" "$HOME/.cursor/mcp.json" "$HOME/.codex/config.toml" "$HOME/.hermes/config.yaml"; do
+    [ -f "$f" ] || continue
+    grep -q '/mcp/well' "$f" 2>/dev/null && door=$((door+1))
   done
+  # A leak is read from the seating door itself (it parses each format), never by a
+  # grep that would also match a tool name or a line of history in a harness's file.
+  if [ -x "$SCRIPT_DIR/../bridge/mcp-config.sh" ]; then
+    leak="$("$SCRIPT_DIR/../bridge/mcp-config.sh" seat --check 2>/dev/null | grep -c 'direct engram' || true)"
+    leak="${leak:-0}"
+  fi
   local store="absent"; [ -f "$db" ] && store="present"
-  add memory OK "engram store $store · MCP in $mcp harness configs"
+  if [ "$leak" -gt 0 ]; then
+    add memory WARN "engram store $store · well door in $door harness configs · DIRECT engram in $leak — run bin/bridge/mcp-config.sh seat"
+  else
+    add memory OK "engram store $store · well door in $door harness configs · no direct engram"
+  fi
 }
 
 # ── 5a2. the record — the heart's offices (plan 51 P1) ───────────────────────
@@ -1227,7 +1248,17 @@ step_council() {
 # ── 6. loaders ───────────────────────────────────────────────────────────────
 step_loaders() {
   if [ -x "$SCRIPT_DIR/../seat/valknut-load.sh" ]; then
-    if [ "$CHECK" = 1 ]; then add loaders OK "valknut-load.sh present"; else
+    if [ "$CHECK" = 1 ]; then
+      add loaders OK "valknut-load.sh present"
+      # The harness extensions and hook wiring are checked, never written, in --check mode.
+      if [ -x "$SCRIPT_DIR/../seat/harness-extensions-install.sh" ]; then
+        if "$SCRIPT_DIR/../seat/harness-extensions-install.sh" --check >/dev/null 2>&1; then
+          add harness-extensions OK "every harness present carries the house's extensions and the three Claude hooks"
+        else
+          add harness-extensions WARN "a harness differs — run bin/seat/harness-extensions-install.sh --check"
+        fi
+      fi
+    else
       # Rule: a seat that cannot be seated is not installed. This warned and
       # carried on, which is how a capability exists in the repo and is silently
       # absent on the machine (plan 66 §7).
@@ -1238,6 +1269,19 @@ step_loaders() {
         add loaders OK "agents/skills/extensions loaded"
       else
         add loaders FAIL "the seat could not be seated — run bin/seat/valknut-load.sh --status"
+      fi
+
+      # The harness EXTENSIONS and HOOK WIRING (RULES/13, and the Allfather's law 2026-11-10):
+      # every harness present gets the house's hook scripts, and Claude gets three USER-scope
+      # hooks — the AGENTS.md loader, the Eindri-only PreToolUse, and the global Gná arm. They
+      # are installed here, mended by Gróa's update, and checked by Eir; a harness that is
+      # absent is a clean skip (RULES/25).
+      if [ -x "$SCRIPT_DIR/../seat/harness-extensions-install.sh" ]; then
+        if "$SCRIPT_DIR/../seat/harness-extensions-install.sh" >/dev/null 2>&1; then
+          add harness-extensions OK "every harness present carries the house's extensions and hook wiring"
+        else
+          add harness-extensions WARN "a harness differs — run bin/seat/harness-extensions-install.sh and read its rows"
+        fi
       fi
 
       # The Gná arm's SESSION SIDE, per harness (plan 177 H4). A harness with a hook surface is

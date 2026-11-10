@@ -21,10 +21,10 @@ The tree replaced a single register on 2026-11-06 (plan 211) so that a change in
 folder rewrites one file instead of colliding on every branch.
 
 bin[17]{file,does,kind,verdict,disposition,callers,lines}:
-  "arm.sh","arm.sh — the Gná arm, honestly: what the watch is, and whether THIS harness can arm it.","tool","tested","keep",34,217
+  "arm.sh","arm.sh — the Gná arm, honestly: what the watch is, and whether THIS harness can arm it.","tool","tested","keep",36,217
   "logretta-council.sh","logretta-council.sh — the council's MODES: who divides the work, who is sent out, who rules.","tool","wired","keep",0,309
   "logretta-debate.sh","logretta-debate.sh — the council's second round: seats answering SEATS, not the Allfather.","tool","wired","keep",1,118
-  "logretta-ensure.sh","logretta-ensure.sh — seat the council's roster on this machine.","tool","tested","keep",6,117
+  "logretta-ensure.sh","logretta-ensure.sh — seat the council's roster on this machine.","tool","tested","keep",7,117
   "logretta-panes.sh","logretta-panes.sh — the council, in herdr: one pane per seat, so it can be watched.","tool","wired","keep",0,118
   "logretta-report.sh","logretta-report.sh — the council's chain: every seat reports to the CHAIR, the chair rules.","tool","wired","keep",1,216
   "open-design.sh","open-design.sh — the Allfather's door to OpenDesign (Hnoss) on this seat.","tool","wired","keep",0,85
@@ -35,7 +35,7 @@ bin[17]{file,does,kind,verdict,disposition,callers,lines}:
   "pi-model-agnostic.sh","pi-model-agnostic — pi must not EXPECT any model.","tool","wired","keep",0,72
   "pi-model-wire.sh","pi-model-wire.sh — wire a chosen local model into the operator's pi.","tool","wired","keep",1,152
   "pi-seat.sh","pi-seat.sh — seat a Pi agent in a VISIBLE herdr pane, optionally on a local","tool","wired","keep",1,115
-  "syn-watch-arm.sh","syn-watch-arm.sh — the ARM as a SERVICE, and this is its thin client.","tool","tested","keep",8,187
+  "syn-watch-arm.sh","syn-watch-arm.sh — the ARM as a SERVICE, and this is its thin client.","tool","tested","keep",9,231
   "syn-watch.sh","syn-watch.sh — Sýn as a SERVICE: one supervision watcher per home, seated","tool","tested","keep",6,53
   "tui-frame-check.sh","tui-frame-check.sh — prove that what the TUI writes to the terminal fits the terminal.","tool","wired","keep",0,162
 
