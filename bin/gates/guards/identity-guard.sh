@@ -57,6 +57,11 @@ allowed() {  # <address> — may this address leave by push?
   case "$1" in
     *@users.noreply.github.com) return 0 ;;
     *@ymir|*@ymir.local|*@zerwiz.org) return 0 ;;
+    # GitHub's own web committer (2026-11-10). When a branch is updated through the API, GitHub
+    # writes a commit whose COMMITTER is noreply@github.com. That address names nobody; the AUTHOR
+    # line is still judged.
+    noreply@github.com) return 0 ;;
+    web-flow) return 0 ;;
   esac
   return 1
 }
