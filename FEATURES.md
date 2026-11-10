@@ -21,6 +21,7 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 
 ## Core — install, run, operate
 
+| Record | **One door for every generated register** (`bin/gates/registers.sh` · `bin/gates/guards/registers-guard.sh`) | Two registers describe the tree — the `bin/` inventory and the capability register — written by two generators and checked by two gates, so a change that adds a door half-regenerated the tree and went red only in CI, where the pusher cannot see it (that is how four collaborators' PRs showed a failure that was ours). One door owns the list: `list` · `generate` · `check`; a seated ward calls it, so a push and CI judge the same set; a generator that fails is named, never skipped. Records the order that works — write, stage, generate, commit, push — because the inventory enumerates tracked files | [One door for the registers](docs/features/one-door-for-the-registers.md) |
 | Team | **Gimlé — the hall, the desk and the MCP** (`bin/gimle/`) | One door behind Authelia; a desk showing due this week, last decisions and questions waiting on you; one MCP for the suite that reads **the board** (Plane) as truth for places, cards and owners — the same reader the desk uses — with per-person, per-place tokens, an audit of every call, and a write pair (`create_card`, `update_card`) that stays shut until the unit is started with `--allow-write` | [docs/features/gimle-the-hall.md](docs/features/gimle-the-hall.md) |
 | Area | Feature | What it gives you | how-to |
 |---|---|---|---|
@@ -47,6 +48,15 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 | Utgard boxes | A whole computer for one run, outside the wall | A durable agent box with no host credentials, one road out, and a door that holds the key | [docs/features/utgard-boxes.md](docs/features/utgard-boxes.md) |
 | Utgard lanes | Best of N: one brief, many boxes, one board | The same brief to several declared configurations, one rail lease, a board you read in under a minute — and the pick stays his | [docs/features/utgard-lanes.md](docs/features/utgard-lanes.md) |
 | Atomic releases | The apps run from a release, never a moving tree | `bin/engine/release-{build,health,flip}.sh` — build, prove, flip in one rename | [docs/features/atomic-releases.md](docs/features/atomic-releases.md) |
+| Update loop | `bin/engine/update-loop.sh` | The heart keeps itself on latest main | [docs/features/update-loop.md](docs/features/update-loop.md) |
+
+## CHANGE LOG
+
+- **2026-11-10** — written with the change it describes.
+| broken register | `bin/seat/broken.sh` | register of broken functions, append-only |
+## CHANGE LOG
+
+- **2026-11-10** — written with the change it describes.
 
 ## Memory & secrets
 
@@ -60,6 +70,13 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 | Vault | FIDO2 unlock | Open the vault with a hardware security key (a physical touch) | [docs/features/fido2-unlock-the-vault.md](docs/features/fido2-unlock-the-vault.md) |
 | Vault | **Confidential session** | Work on vault content with **no route off the vault** — confined workdir, doors off, model tier (local/none/remote), `--airlock` for no network | [docs/features/confidential-session.md](docs/features/confidential-session.md) |
 | Vault | **The home push door** (`bin/vault/push.sh`) | Commit and push the private home **by named path**, never `git add -A`: it stages only the paths you give it, so a scratch file written seconds earlier cannot be swept in — the fault that once cost a history rewrite. `--dry-run` prints the exact `git status` for those paths and changes nothing; a no-op answers `nothing to push` and exits 0; and a tracked file deleted among the named paths is **refused**, because a document is retired by MOVING it to `hodd/reference/`, never by deleting it (Rule 11). One commit per push, then `origin main` | [The home push door](docs/features/the-home-push-door.md) |
+| Vault | **Home sync** (`bin/vault/home-sync.sh`) | Pull before an edit, push right after: `begin` merges origin, `ship` commits named paths and pushes with merge-and-retry on a lost race; append-only records merge by union via migration 0018 (RULES/50) | — |
+
+See docs/features/the-home-push-door.md
+
+## CHANGE LOG
+
+- **2026-11-10** — written with the change it describes.
 | Memory | Codex selected WSL well | A private route selects a WSL well, verifies its store and refuses fallback writes when it is unavailable. | [docs/features/the-well-recall-and-remember.md](docs/features/the-well-recall-and-remember.md) |
 
 ## Agents, work & collaboration
@@ -94,6 +111,20 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 | Meetings | **Snotra speaks, and the ladder finishes** (`bin/records/snotra-what.sh` · `snotra-ladder.sh` · `meetings.sh`) | The ear says what it is doing (`now · last · plan · week · off/on`), all seven pipeline steps fire the hotline, a watch active with nothing captured in 24h says `no call seen in 24h`, and every transcript becomes minutes composed by the model, promises, and todos — or a `stopped at <step>: <reason>` that names itself | [docs/features/snotra-the-meeting-ear.md](docs/features/snotra-the-meeting-ear.md) · [docs/features/snotra-meetings.md](docs/features/snotra-meetings.md) |
 | Agents | **The context budget — every seat can see its own remaining context** (`bin/seat/context.sh` · `.pi/extensions/context-left/` · [how-to](docs/features/the-context-budget.md)) | Only the voice could ask how much conversation it was carrying; a pi seat — the counsellor, every Eindri, every seat in Sessrúmnir — had no such tool, which is why work ran into the window without warning (two errands ended "25 minutes at the context ceiling"). A shipped extension now registers `context_left` for every seat: the tokens of the last turn and the window come from the harness's own state (`ctx.getContextUsage()`, `ctx.model.contextWindow`), and the turns until compaction are derived from the session's own spending — never from a rule of thumb. It publishes each reading to `<home>/hodd/state/context-left/<session>.json` on every call and every `turn_end`, one file per session so there is one writer per file; `bin/voice/voice_tools.py`'s `context_left` and `bin/seat/context.sh` both repeat that reading instead of keeping a second counter, and the door still falls back to the transcript for a finished session — saying that it is the fallback. An unknown window and an unmeasured token count are REFUSED by name. Proved by `.agents/tests/context-left.test.sh` (the remainder shrinks 163,616 → 93,616 as the session spends; both unknowns refused; the door prints the live reading, and makes no live claim without one) | [docs/features/the-context-budget.md](docs/features/the-context-budget.md) |
 | Voice | **Rödd's hands — the voice reaches the arm, herdr, the seats and the calendar** (`bin/voice/rodd-arm.sh` · `bin/seat/herdr-agents.py` · `bin/seat/sessrumnir-wire.sh` · `systems/snotra/services/calendar/calendar-write.sh` · [how-to](docs/features/rodd-the-hands.md)) | Rödd had 37 tools and not one could reach the house: no way to ask who holds the arm, no way to list or speak to a herdr Eindri, no way to reach a Sessrúmnir seat, and no write door on the calendar at all (plan 231). Six hands close it, one door each: `arm_who`/`arm_tell` wrap `rodd-arm.sh` and refuse in words when nobody is armed; `eindri_list` reads herdr through its one reader and `eindri_send` sends then reports what the pane shows; `seat_wire` speaks a new door over three channels added to `apps/sessrumnir/src/web-server.ts` (`seat:list`, `seat:prompt`, `seat:last-answer`), refusing a silent shell with the port and the raiser named; `calendar_write` drives `calendar-write.sh`, whose `create` is handed to the one write door (`calendar-invite.sh`, approval gate intact) and whose `move` reports the OLD time beside the new and mails nobody unless `--notify` passes the word. **The grant is measured from the token itself**: this seat's carries no `calendar.events`, so every live create and move REFUSES naming the scope and the command that re-mints it (measured 2026-11-09). Proved by `.agents/tests/rodd-hands.test.sh`, `calendar-write.sh --self-test` and `sessrumnir-wire.sh --self-test` | [docs/features/rodd-the-hands.md](docs/features/rodd-the-hands.md) |
+| Agents | **Agent census** (`bin/agents/agent-census.sh`) | Every harness process, herdr pane, finished-errand pane and worktree on this machine, read at every session start by the arm holder | — |
+
+See docs/features/agents-on-this-machine.md
+
+## CHANGE LOG
+
+- **2026-11-10** — written with the change it describes.
+| Voice | **The Allfather's todos** (`bin/voice/todos.sh`) | Rödd's task ledger read by the arm holder at session start, personal items first; read-only | — |
+
+See docs/features/the-allfathers-todos.md
+
+## CHANGE LOG
+
+- **2026-11-10** — written with the change it describes.
 
 ## Surfaces — what you look at
 
@@ -229,4 +260,16 @@ page's *planned* banner is removed **by a new entry citing the old** (Rule 06).
 
 | Voice | F8/Escape and genuine Swedish speech in Skírnir – Tala | Supersedes the temporary Swedish text-only entry: focused-page F8 starts through consent and finishes; Escape cancels. English uses American female Kokoro af_nicole; Swedish uses the private Bengt/PowerShell 7.6.5 file contract. Verified synthetic ASR and audio in both languages; no global shortcut or invented translation. | [Guide](docs/features/talk-to-skirnir.md) |
 | Runtime | **The registers are a tree, one folder at a time** (`bin/gates/inventory.sh` · `bin/gates/capabilities.sh` · `bin/gates/seat-woven-driver.sh`) | `bin/README.md` and `capabilities.md` were one file each, rewritten whole whenever anything under `bin/` changed, so every branch rewrote the same lines and five of six open PRs conflicted at once. They are now a tree: `bin/INDEX.md` plus `bin/<folder>/INDEX.md`, and `capabilities/<folder>.md` behind two front doors of folders only (786 → 66 lines over 34 indexes; 732 → 137 over 31 fragments). Folder purposes live in one file, `bin/gates/registers/folders.tsv`. The `merge=regenerate` driver was declared since plan 174 and pointed into a deleted worktree, so no reweave ever ran: `bin/gates/seat-woven-driver.sh` seats it to this checkout, `--prove` proves it on a real scratch conflict, and the install step `gates` seats it with Eir reporting `woven-driver` | [Guide](docs/features/the-registers-are-a-tree.md) |
+| Forge | **Finding tally — the reviewer's learning as a count** (`bin/forge/finding-log.sh` · `bin/forge/finding-tally.sh`) | Appends one JSONL line per finding and tallies by class across two windows, opening one card at threshold. | [Guide](docs/features/finding-tally.md) |
+
+## CHANGE LOG
+
+- **2026-11-10** — written with the change it describes.
 | Runtime | **Roster count** (`bin/seat/roster.sh`) | Counts seats: list/line/--check/--json. | [Guide](docs/features/roster.md) |
+| Runtime | **The clocks** (`bin/seat/clocks.sh`) | Seats plan-watch, ship-watch and update-loop as user systemd timers: daily 07:30 (persistent), every 5 min, every 15 min. Refuses a missing ExecStart; status shows the last journal line | — |
+
+See docs/features/the-clocks.md
+
+## CHANGE LOG
+
+- **2026-11-10** — written with the change it describes.

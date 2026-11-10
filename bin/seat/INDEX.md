@@ -20,12 +20,17 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[32]{file,does,kind,verdict,disposition,callers,lines}:
+bin[37]{file,does,kind,verdict,disposition,callers,lines}:
+  "arm-talk.sh","arm-talk.sh — the heart speaks into every seat's pane, over that seat's own road (plan 234 P1).","tool","wired","keep",1,193
+  "broken.sh","broken.sh — the register of broken things (RULES/50).","tool","tested","keep",1,165
+  "claims.sh","claims.sh — a seat declares what it is building (plan number, branch, errand id, host).","tool","wired","keep",4,95
+  "clocks.sh","bin/seat/clocks.sh — seat the three loops: plan-watch, ship-watch, update-loop.","tool","wired","keep",0,116
   "codex-plugin-install.mjs","// Valknut's Codex door.","data","wired","keep",3,125
   "context.sh","context.sh — what the agent's context ACTUALLY holds, right now.","tool","tested","keep",3,163
   "core-four.sh","core-four.sh — the four dials that decide an agent's outcome, in ONE read.","tool","wired","keep",4,204
+  "fleet-plans.sh","fleet-plans.sh — read every LIVE host's claims over the tailnet; merge; report collisions + dark hosts.","tool","wired","keep",0,92
   "harness-contract-install.sh","harness-contract-install.sh — every harness reads ONE contract, and an update keeps it true.","tool","wired","keep",1,81
-  "harness-extensions-install.sh","harness-extensions-install.sh — every harness gets the house's extensions and packages, on install AND on update.","tool","wired","keep",1,191
+  "harness-extensions-install.sh","harness-extensions-install.sh — every harness gets the house's extensions and packages, on install AND on update.","tool","wired","keep",1,205
   "herdr-agents.py","'''herdr-agents.py — list the agents standing in this herdr session, as TOON.","tool","wired","keep",5,85
   "herdr-ensure.sh","herdr-ensure.sh — Þjazi: guarantee the terminal backend Ymir needs.","tool","wired","keep",4,106
   "herdr-run.sh","herdr-run.sh — raise an Eindri in herdr, by the grain that fits the errand.","tool","tested","keep",12,569
@@ -52,8 +57,8 @@ bin[32]{file,does,kind,verdict,disposition,callers,lines}:
   "verify-seat.sh","verify-seat.sh — is this seat actually whole?","tool","tested","keep",3,177
   "who.sh","who.sh — WHO IS WHERE: every agent in a pane, its project, its errand, and who holds the lock.","tool","wired","keep",3,141
   "whose-tree.sh","whose-tree.sh — whose code am I standing in?","tool","wired","keep",0,118
-  "ymir-mcp.py","'''ymir-mcp.py — Ymir's own doors over MCP: the tools Pi has as extensions, for","tool","tested","keep",5,276
+  "ymir-mcp.py","'''ymir-mcp.py — Ymir's own doors over MCP: the tools Pi has as extensions, for","tool","tested","keep",6,276
 
-**Tally.** verdict: wired=25, tested=7
+**Tally.** verdict: wired=29, tested=8
 
-**Tally.** disposition: keep=32
+**Tally.** disposition: keep=37

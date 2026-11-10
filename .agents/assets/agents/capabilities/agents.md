@@ -8,6 +8,7 @@
 ## CHANGE LOG
 
 - **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
+| agent-census.sh | agent-census.sh — how many agents are running on THIS machine, and whi | tested | keep (a human or a cron row must run it) |
 | agent-run.sh | agent-run.sh — run one agent's errand through the harness the Allfathe | tested+named | keep (a human or a cron row must run it) |
 | areas.sh | areas.sh — the estate door: a project's areas, their keepers, and the  | tested+named | keep (a human or a cron row must run it) |
 | brokk-classify-lib.sh | Shared wake classifier: the common source of truth for Allfather-relevan | tested+named | keep (a human or a cron row must run it) |

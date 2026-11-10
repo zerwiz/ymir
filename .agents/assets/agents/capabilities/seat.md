@@ -8,8 +8,13 @@
 ## CHANGE LOG
 
 - **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
+| arm-talk.sh | arm-talk.sh — the heart speaks into every seat's pane, over that seat' | tested | keep (a human or a cron row must run it) |
+| broken.sh | broken.sh — the register of broken things (RULES/50). | tested | keep (a human or a cron row must run it) |
+| claims.sh | claims.sh — a seat declares what it is building (plan number, branch,  | tested | keep (a human or a cron row must run it) |
+| clocks.sh | bin/seat/clocks.sh — seat the three loops: plan-watch, ship-watch, upd | tested | keep (a human or a cron row must run it) |
 | context.sh | context.sh — what the agent's context ACTUALLY holds, right now. | tested+named | keep (a human or a cron row must run it) |
 | core-four.sh | core-four.sh — the four dials that decide an agent's outcome, in ONE r | tested+named | keep (a human or a cron row must run it) |
+| fleet-plans.sh | fleet-plans.sh — read every LIVE host's claims over the tailnet; merge | tested | keep (a human or a cron row must run it) |
 | harness-contract-install.sh | harness-contract-install.sh — every harness reads ONE contract, and an | tested | keep (a human or a cron row must run it) |
 | harness-extensions-install.sh | harness-extensions-install.sh — every harness gets the house's extensi | tested+named | keep (a human or a cron row must run it) |
 | herdr-ensure.sh | herdr-ensure.sh — Þjazi: guarantee the terminal backend Ymir needs. | tested+named | keep (a human or a cron row must run it) |

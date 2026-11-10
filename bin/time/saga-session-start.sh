@@ -141,6 +141,24 @@ fi
 section "SUPERVISION"
 printf 'harness next step: arm supervision via the installed harness adapter; never run bin/pi/syn-watch-arm.sh by hand.\n'
 
+section "THE ALLFATHER'S TODOS"
+# The voice keeps his task ledger (hodd/state/voice/todos.jsonl); the arm holder must read it, or a
+# todo spoken to Rödd never reaches the hand that can act on it (2026-11-10). Read-only door.
+if [ -x "$SCRIPT_DIR/../voice/todos.sh" ]; then
+  bash "$SCRIPT_DIR/../voice/todos.sh" --digest 2>/dev/null || printf 'todos: unreadable\n'
+else
+  printf 'todos: door not installed (bin/voice/todos.sh)\n'
+fi
+
+section "AGENTS ON THIS MACHINE"
+# The arm holder is his right hand on the machine: it must know exactly what runs beside it —
+# every harness process, every herdr pane, and every errand pane whose work already ended.
+if [ -x "$SCRIPT_DIR/../agents/agent-census.sh" ]; then
+  bash "$SCRIPT_DIR/../agents/agent-census.sh" --digest 2>/dev/null || printf 'census: failed\n'
+else
+  printf 'census: door not installed (bin/agents/agent-census.sh)\n'
+fi
+
 section "UPDATE"
 # Does a newer Ymir stand on npm? The CLI told the USER; the RUNTIME had no such
 # sense, so a session could run for days on an old tree and never know a fix had
