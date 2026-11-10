@@ -328,9 +328,13 @@ def seat(
             )
 
     prompt_path, prompt_body = _prompt_for(roots, errand, seat_id, brief_text or errand.request, runner=runner)
-    # The generator is told WHERE the seat stands: the extension set is the worktree's,
-    # never the primary checkout's (plan 190 §4.1).
-    launch_cmd = harness.build_launch_command(selection, str(prompt_path), launch_cwd=tree.path, runner=runner)
+    # The generator is told WHERE THE PINS LIVE, and that is the project tree, never
+    # the worktree: the spawn deletes the worktree's `.pi/extensions` so pi does not
+    # load one tool twice (the one-home change), and a door that removed what it then
+    # demanded refused every pi dispatch — "holds no .pi/extensions tree" (measured
+    # 2026-11-09). `cd` still goes to the worktree: the launch script does that, and
+    # this argument only decides which extension set is named (RULES/13).
+    launch_cmd = harness.build_launch_command(selection, str(prompt_path), launch_cwd=roots.root, runner=runner)
     script = _launch_script(roots, seat_id, tree.path, launch_cmd, lock=errand.lock)
     pane_cmd = f"bash {proc.shell_quote(str(script))}"
 

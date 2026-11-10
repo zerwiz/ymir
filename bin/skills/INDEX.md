@@ -21,7 +21,7 @@ The tree replaced a single register on 2026-11-06 (plan 211) so that a change in
 folder rewrites one file instead of colliding on every branch.
 
 bin[2]{file,does,kind,verdict,disposition,callers,lines}:
-  "manifest.sh","manifest.sh — a skill declares itself; the index is DERIVED from the declarations.","tool","wired","keep",2,404
+  "manifest.sh","manifest.sh — a skill declares itself; the index is DERIVED from the declarations.","tool","wired","keep",2,411
   "share-build.sh","share-build.sh — the built copy that may leave.","data","wired","keep",2,413
 
 **Tally.** verdict: wired=2

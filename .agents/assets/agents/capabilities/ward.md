@@ -15,6 +15,7 @@
 | garmr.sh | garmr.sh — GARMR, the hound at the gate: the door to Ymir's guardian. | tested | keep (a human or a cron row must run it) |
 | harden.sh | harden.sh — Vörðr's hands: the MENDS, written out, and the safe ones | tested | keep (a human or a cron row must run it) |
 | host-watch.sh | host-watch.sh — the watcher a hand can actually have. | tested | keep (a human or a cron row must run it) |
+| house-status.sh | house-status.sh — the heart's answer: what it hosts, and whether it is | tested | keep (a human or a cron row must run it) |
 | security-audit.sh | security-audit.sh — Vörðr's eyes: WHAT IS THIS MACHINE ACTUALLY EXPO | tested | keep (a human or a cron row must run it) |
 | services-register.sh | services-register.sh — is the register of doors READ, or is it prose? | tested | keep (a human or a cron row must run it) |
 | verdr.sh | verdr.sh — VÖRÐR, the warden: the standing report. | tested | keep (a human or a cron row must run it) |

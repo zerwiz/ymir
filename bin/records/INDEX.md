@@ -20,8 +20,9 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[38]{file,does,kind,verdict,disposition,callers,lines}:
+bin[40]{file,does,kind,verdict,disposition,callers,lines}:
   "audit-apply.sh","audit-apply.sh — turn an audit into work, in one door.","tool","wired","keep",0,96
+  "behind.sh","behind.sh — the arithmetic of being behind: opened/closed this week, net, stale-30d, unbuilt phases.","tool","wired","keep",0,43
   "daily-log.sh","daily-log.sh — the day's work, recorded where the contract says it lives.","tool","wired","keep",3,104
   "developers.sh","developers.sh — who can write to a repository, and who actually has.","tool","wired","keep",0,108
   "grade.sh","grade.sh — Dellingr: how fresh is a document?","tool","wired","keep",2,29
@@ -41,6 +42,7 @@ bin[38]{file,does,kind,verdict,disposition,callers,lines}:
   "mimir.sh","mimir.sh — the well (Mimirsbrunn).","tool","tested","keep",19,510
   "note.sh","note.sh — append a DATED section to an existing document in the home (append-only, Rule 06).","tool","wired","keep",1,16
   "open-work.sh","open-work.sh — the open work, rendered for a HUMAN, from the record the doors read.","tool","wired","keep",2,80
+  "plan-state.sh","plan-state.sh — read and write the Status/Owner header of every plan in the ledger.","tool","wired","keep",1,83
   "plan.sh","plan.sh — the plan ledger: create the NEXT numbered plan and its index row.","tool","tested","keep",8,119
   "regenerate-on-merge.sh","regenerate-on-merge.sh — the merge driver for WOVEN documents (Þættir, plan 174).","tool","wired","keep",3,21
   "runes-append.sh","runes-append.sh — the append-only Runes ledger, a THIN SHIM.","tool","tested","keep",31,117
@@ -51,7 +53,7 @@ bin[38]{file,does,kind,verdict,disposition,callers,lines}:
   "todos.sh","todos.sh — THE task board of the house, one writer for one file.","tool","wired","keep",1,180
   "vor-crew-state.sh","vor-crew-state.sh - deterministic read of an Eindri worker's CURRENT state.","tool","wired","keep",2,125
   "weave-features.sh","weave-features.sh — FEATURES.md is WOVEN from fragments, never hand-edited.","tool","wired","keep",6,51
-  "weave.sh","weave.sh — the dispatcher for every WOVEN document and every INDEX (Þættir, plan 174/175).","tool","wired","keep",5,91
+  "weave.sh","weave.sh — the dispatcher for every WOVEN document and every INDEX (Þættir, plan 174/175).","tool","wired","keep",6,92
   "well-door.sh","well-door.sh — the hand's door to the heart's well, raised over SSH.","tool","tested","keep",1,125
   "well-guard.sh","well-guard.sh — the WARD behind RULES/20-the-well-appends.md.","tool","wired","keep",3,206
   "well-selftest.sh","well-selftest.sh — prove a keeper can find its own memory, and only its own —","tool","wired","keep",0,78
@@ -60,6 +62,6 @@ bin[38]{file,does,kind,verdict,disposition,callers,lines}:
   "wyrd-db.sh","wyrd-db.sh — the database layer (W0040).","tool","wired","keep",0,49
   "ymir-state.sh","ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runtime/state/`).","tool","wired","keep",6,44
 
-**Tally.** verdict: wired=30, tested=8
+**Tally.** verdict: wired=32, tested=8
 
-**Tally.** disposition: keep=37, migrate → src/ymir_runtime/library.py=1
+**Tally.** disposition: keep=39, migrate → src/ymir_runtime/library.py=1

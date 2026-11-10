@@ -64,12 +64,37 @@ UFW_OUT="$(src ufw.out cat /etc/ufw/user.rules)"
 UFW_DEFAULT="$(src ufw-default.out cat /etc/default/ufw)"
 SSHD_T="$(src sshd-T.out sshd -T)"
 SSHD_CONF="$(src sshd-conf.out cat /etc/ssh/sshd_config)"
+# THE DROP-INS ARE THE EFFECTIVE ANSWER. Omarchy and this house both write
+# /etc/ssh/sshd_config.d/*.conf, and sshd reads them AFTER the base file — so an unprivileged
+# audit that reads only /etc/ssh/sshd_config reported "PasswordAuthentication is at its default"
+# on a machine that had said `no` twice. Measured 2026-11-10. The drop-ins are world-readable,
+# so there is no excuse for not reading them.
+SSHD_DROPS="$(src sshd-drops.out sh -c 'cat /etc/ssh/sshd_config.d/*.conf 2>/dev/null')"
+# THE OPERATOR'S WORD, written down: a wide bind that is deliberate stops being a finding.
+# One line per port: `<port> <why>`; `#` comments. Read from the home, never from the repo.
+PORT_NOTE="${SECURITY_AUDIT_PORT_NOTE:-}"
+if [ -z "$PORT_NOTE" ]; then
+  # THE HOME IS RESOLVED, NEVER GUESSED (Rule 07): the one resolver answers, so this ward reads the
+  # same note the rest of the house writes.
+  _root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+  # shellcheck disable=SC1091
+  . "$_root/bin/vault/hoard-lib.sh" 2>/dev/null || true
+  _home=""
+  command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root _home 2>/dev/null || true
+  [ -n "$_home" ] && [ -r "$_home/config/declared-ports.txt" ] && PORT_NOTE="$_home/config/declared-ports.txt"
+fi
+declared_why() {  # <port> -> the operator's reason, or empty
+  [ -n "$PORT_NOTE" ] && [ -r "$PORT_NOTE" ] || return 0
+  awk -v want="$1" 'BEGIN{IGNORECASE=0} /^[[:space:]]*#/ {next} $1==want { $1=""; sub(/^[[:space:]]+/,""); print; exit }' "$PORT_NOTE" 2>/dev/null
+}
 AUTHZ="$(src authz.out cat "$HOME/.ssh/authorized_keys")"
 DOCKER_PS="$(src docker.out docker ps --format '{{.Names}}|{{.Ports}}')"
 CFG_DIR="${FIXTURES:+$FIXTURES/cloudflared}"; [ -n "$CFG_DIR" ] || CFG_DIR="$HOME/.cloudflared"
 CLIENTS="$(src clients.out hyprctl clients -j)"
 
 findings=0 crit=0 high=0
+NOTES=()
+note_wide() { NOTES+=("$1|$2|$3"); }
 F_ROWS=""
 add() {  # <severity> <what> <detail> <remedy>
   local sev="$1" what="$2" detail="$3" remedy="$4"
@@ -78,6 +103,23 @@ add() {  # <severity> <what> <detail> <remedy>
   F_ROWS="${F_ROWS}  \"${sev}\",\"${what}\",\"${detail}\",\"${remedy}\"\n"
 }
 none() { printf 'security-audit[1]{severity,what,detail,remedy}:\n  "none","","nothing above the floor","—"\n'; }
+# A declared wide bind is not a fault, but it is not SILENCE either: the operator wrote a reason,
+# and the report says so on every run, so the reason is read as often as the findings are.
+notes_out() {
+  [ "${#NOTES[@]}" -eq 0 ] && return 0
+  # one line per port: an IPv4 and an IPv6 socket are the same door
+  local uniq=(); local n
+  for n in "${NOTES[@]}"; do
+    case " ${uniq[*]:-} " in *" $n "*) continue ;; esac
+    uniq+=("$n")
+  done
+  NOTES=("${uniq[@]}")
+  printf 'security-audit-notes[%s]{port,process,why}:\n' "${#NOTES[@]}"
+  for n in "${NOTES[@]}"; do
+    IFS='|' read -r p pr w <<< "$n"
+    printf '  "%s","%s","%s"\n' "$p" "$pr" "$w"
+  done
+}
 
 # ── 1 · the doors: what listens, and for whom ─────────────────────────────────
 # A wide bind is not automatically wrong — it is wrong when nothing says WHY.
@@ -97,6 +139,8 @@ if [ -n "$SS_OUT" ]; then
     local_addr="$(printf '%s' "$line" | grep -oE '(0\.0\.0\.0|\[::\]|\*|::|127\.0\.0\.1):[0-9*]+' | head -1)"
     [ -n "$local_addr" ] || continue
     port="${local_addr##*:}"
+    # `0.0.0.0:*` is a unix/raw socket or an ephemeral UDP one: no port, no door to knock on.
+    case "$port" in ''|'*') continue ;; esac
     bind="${local_addr%:*}"
     proc="$(printf '%s' "$line" | sed -nE 's/.*users:\(\("([^"]+)".*/\1/p')"
     case "$bind" in
@@ -114,11 +158,23 @@ if [ -n "$SS_OUT" ]; then
         3[3-9][0-9][0-9][0-9]|*) ;; esac ;; esac
     case "$port" in
       8080) add MEDIUM "the model rail is on every interface" "0.0.0.0:$port ($proc)" "it is keyed and restricted in ufw — keep it that way; a firewall slip exposes a model service" ;;
-      22)   add HIGH "ssh on every interface" "0.0.0.0:$port ($proc)" "ufw allows 22 from ANY source — narrow it to the LAN and tailscale0 (bin/ward/harden.sh plan)" ;;
+      22)   if printf '%s' "$UFW_OUT" | grep -qE 'dport 22|dport 22$' && \
+                printf '%s' "$UFW_OUT" | grep -E 'dport 22' | grep -qvE -- '-s |tailscale'; then
+             add HIGH "ssh answers the whole network" "0.0.0.0:$port ($proc)" "ufw allows 22 with no source — narrow it to the LAN and tailscale0 (bin/ward/harden.sh plan)"
+           elif [ -n "$(declared_why 22)" ]; then
+             :
+           else
+             note_wide "22" "$proc" "sshd binds every interface; ufw restricts it to the LAN and the tailnet — a bind is not a door while the wall holds"
+           fi ;;
       3888) add MEDIUM "the hall's SPA is on every interface" "0.0.0.0:$port ($proc)" "ufw does not allow it today; bind it to loopback or the tailnet so a firewall change cannot expose the UI" ;;
       3889|3881) add HIGH "the control plane is on every interface" "0.0.0.0:$port ($proc)" "ufw allows it from ANY address — narrow it to the tailnet and the tunnel (bin/ward/harden.sh plan)" ;;
       80|443|8000|8008|3003) add HIGH "a service is on every interface" "0.0.0.0:$port ($proc)" "name why it must be reachable, or bind it to the tailnet" ;;
-      *)   add MEDIUM "an unnamed wide bind" "0.0.0.0:$port ($proc)" "write down why it listens on every interface, or bind it to loopback" ;;
+      *)   why="$(declared_why "$port")"
+           if [ -n "$why" ]; then
+             note_wide "$port" "$proc" "declared: $why"
+           else
+             add MEDIUM "an unnamed wide bind" "0.0.0.0:$port ($proc)" "write down why it listens on every interface in config/declared-ports.txt, or bind it to loopback"
+           fi ;;
     esac
   done < <(printf '%s\n' "$SS_OUT" | awk 'NR>1 && /LISTEN/' | sort -u -k5,5)
 fi
@@ -139,7 +195,11 @@ if [ -n "$UFW_OUT" ]; then
       *"-i tailscale0"*) continue ;;           # tailnet only
     esac
     case "$port" in
-      53317) add MEDIUM "a peer-transfer port answers the whole network" "ufw: --dport $port with no source (LocalSend)" "keep it if the operator uses it deliberately — write that down here and in the port note" ;;
+      53317) if [ -n "$(declared_why 53317)" ]; then
+               note_wide "53317" "LocalSend" "declared: $(declared_why 53317)"
+             else
+               add MEDIUM "a peer-transfer port answers the whole network" "ufw: --dport $port with no source (LocalSend)" "keep it if the operator uses it deliberately — write it in config/declared-ports.txt"
+             fi ;;
       *)     add HIGH "a port is allowed from ANY address" "ufw: --dport $port with no source" "narrow it to the LAN subnet and tailscale0, or say why the world may knock" ;;
     esac
   done < <(printf '%s\n' "$UFW_OUT" | grep -E 'dport' | sort -u || true)
@@ -154,9 +214,15 @@ if [ -n "$SSHD_T" ]; then
   [ "$KEYCOUNT" = "0" ] && add CRITICAL "no ssh key is authorized" "authorized_keys holds no 'ssh-' line" "seat a key BEFORE turning passwords off, or you will lock yourself out"
   case "$RK" in yes) add HIGH "root may log in with a password" "PermitRootLogin yes" "set it to prohibit-password" ;; esac
 else
-  # No sshd -T (no root): say what the file says, honestly.
-  case "$SSHD_CONF" in
-    *'#PasswordAuthentication yes'*) add MEDIUM "the sshd password policy is at its default" "sshd_config leaves PasswordAuthentication commented (compiled default applies)" "run the audit with root for the effective value: sudo bin/ward/security-audit.sh" ;;
+  # No sshd -T (no root): read the BASE FILE **and the drop-ins**, which is where the answer
+  # actually lives. The last word wins, as it does for sshd.
+  PA_EFF="$(printf '%s\n%s\n' "$SSHD_CONF" "$SSHD_DROPS" | sed -nE 's/^[[:space:]]*PasswordAuthentication[[:space:]]+([a-zA-Z]+).*/\1/ip' | tail -1)"
+  case "$PA_EFF" in
+    no|NO)   : ;;   # keys only — nothing to report
+    yes|YES) add HIGH "sshd accepts PASSWORDS" "PasswordAuthentication yes (base file or a drop-in)" "keys only: a drop-in with 'PasswordAuthentication no' (bin/ward/harden.sh plan)" ;;
+    *) case "$SSHD_CONF" in
+         *'#PasswordAuthentication yes'*) add MEDIUM "the sshd password policy is at its default" "no drop-in sets PasswordAuthentication; the compiled default applies" "run the audit with root for the effective value: sudo bin/ward/security-audit.sh" ;;
+       esac ;;
   esac
 fi
 
@@ -229,12 +295,15 @@ if [ "$JSON" = 1 ]; then
 else
   if [ "$QUIET" = 1 ] && [ "$crit" = 0 ] && [ "$high" = 0 ]; then
     none
+    notes_out
   elif [ "$findings" = 0 ]; then
     none
+    notes_out
   else
     printf 'security-audit[%s]{severity,what,detail,remedy}:\n' "$findings"
     printf '%b' "$F_ROWS" | grep -v '"NONE_LINE"'
     printf 'security-audit: %s finding(s) — %s critical, %s high\n' "$findings" "$crit" "$high"
+    notes_out
   fi
 fi
 

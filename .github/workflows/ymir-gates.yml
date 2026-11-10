@@ -28,7 +28,11 @@ jobs:
       # commit only, so the base branch is fetched here — without it the no-delete gate could
       # only skip, and RULES/11 names CI as one of the three places it runs.
       - name: The base, for the Rule 11 range
-        if: github.event_name == 'pull_request'
-        run: git fetch --no-tags --depth=1 origin "+refs/heads/${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}"
+        run: git fetch --no-tags --depth=1 origin "+refs/heads/${{ github.base_ref || 'main' }}:refs/remotes/origin/${{ github.base_ref || 'main' }}"
       - name: The gates
         run: bash bin/gates/ci-verify.sh
+      - name: PR identity ward
+        if: github.event_name == 'pull_request'
+        run: bash bin/gates/guards/pr-identity-guard.sh --ci
+        env:
+          GITHUB_EVENT_PATH: ${{ github.event_path }}

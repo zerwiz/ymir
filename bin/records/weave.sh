@@ -11,8 +11,9 @@
 # CHECKS completeness — every rule, plan and feature page must have a row — and names the gap.
 set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+if [ -n "${YMIR_PLAN_DIR:-}" ]; then LEDGER="$YMIR_PLAN_DIR"; else
 hoard="$(bash "$ROOT/bin/vault/hodd.sh" path 2>/dev/null || true)"; HOME_DIR="$(dirname "${hoard:-/}")"
-LEDGER="$(find "$HOME_DIR/svartalfaheim" -maxdepth 4 -type d -path '*/projects/ymir/plans' 2>/dev/null | head -1)"
+LEDGER="$(find "$HOME_DIR/svartalfaheim" -maxdepth 4 -type d -path '*/projects/ymir/plans' 2>/dev/null | head -1)"; fi
 bad=0
 # A ROW IS NOT A MENTION IN A COMMENT. `grep -qF` alone counted a row that had been commented out
 # (`#  "01-domains.md"`) as present — proved while wiring weave-guard on 2026-11-04, and that is
