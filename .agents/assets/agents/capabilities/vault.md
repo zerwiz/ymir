@@ -15,5 +15,6 @@
 | hoard-lib.sh | hoard-lib.sh — where the operator's HOME lives, and the two roots bene | tested+named | keep (a human or a cron row must run it) |
 | hodd-set.sh | hodd-set.sh — set ONE key in an age-encrypted secret file, with guards | tested | keep (a human or a cron row must run it) |
 | hodd.sh | hodd.sh — the Allfather's private hoard: path, init, ls, load, tenant. | tested+named | keep (a human or a cron row must run it) |
+| home-sync.sh | home-sync.sh — the one door for editing the home: pull first, ship rig | tested | keep (a human or a cron row must run it) |
 | phone-lib.sh | phone-lib.sh — reach the operator's phone storage for the vault's phon | tested | keep (a human or a cron row must run it) |
 | push.sh | push.sh — commit and push NAMED paths in the home (never `git add -A`) | tested+named | keep (a human or a cron row must run it) |

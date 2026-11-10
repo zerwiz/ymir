@@ -119,7 +119,7 @@ bin[113]{file,does,kind,verdict,disposition,callers,lines}:
   "test_mjollnir_intake.sh","test_mjollnir_intake.sh — the forge's senses (plan 210 P0/P1), proved without a network.","tool","wired","keep",0,179
   "test_new_doors.sh","test_new_doors.sh — the production tests for the doors built 2026-11-03.","tool","wired","keep",0,65
   "test_plan_state.sh","ROOT='$(cd '$(dirname '${BASH_SOURCE[0]}')/../..' && pwd)'; ROOT='$(cd '$ROOT/..' && pwd)'","tool","wired","keep",0,22
-  "test_plan_watch.sh","ROOT='$(cd '$(dirname '$0')/../../..' && pwd)'","tool","orphan","retire",0,23
+  "test_plan_watch.sh","ROOT='$(cd '$(dirname '$0')/../../..' && pwd)'","tool","wired","keep",0,23
   "test_pr_ship_guard.sh","test_pr_ship_guard.sh — proves the ship door judges the PR and not the branch.","tool","wired","keep",0,49
   "test_registers.sh","test_registers.sh — one door for every generated register.","tool","wired","keep",0,43
   "test_skills_mcp.sh","test_skills_mcp.sh — the skills door, proved by command.","tool","wired","keep",0,270
@@ -135,6 +135,6 @@ bin[113]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-config-check.sh","ymir-config-check.sh — the DOOR to the config layer (`src/ymir_runtime/config/`).","tool","wired","keep",0,44
   "ymir-update-check.sh","ymir-update-check.sh — does a newer Ymir stand on npm?","tool","wired","keep",3,71
 
-**Tally.** verdict: wired=94, tested=18, orphan=1
+**Tally.** verdict: wired=95, tested=18
 
-**Tally.** disposition: keep=110, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, retire=1
+**Tally.** disposition: keep=111, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1
