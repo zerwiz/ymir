@@ -64,7 +64,8 @@ esac
 
 # ── The checks ────────────────────────────────────────────────────────────────
 # Every shape that caused, or could cause, a real leak.
-SECRET_SHAPES='(AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----|-----BEGIN OPENSSH PRIVATE KEY-----|(ghp|gho|ghs|ghr)_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{20,}|sk-[A-Za-z0-9]{20,}|xox[baprs]-[A-Za-z0-9-]+|AIza[0-9A-Za-z_-]{35}|npm_[A-Za-z0-9]{30,})'
+# sk- is anchored to a non-letter (2026-11-10): unanchored, it read a Swedish compound (…isk- followed by a long word) as a key.
+SECRET_SHAPES='(AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----|-----BEGIN OPENSSH PRIVATE KEY-----|(ghp|gho|ghs|ghr)_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{20,}|(^|[^A-Za-z0-9])sk-[A-Za-z0-9]{20,}|xox[baprs]-[A-Za-z0-9-]+|AIza[0-9A-Za-z_-]{35}|npm_[A-Za-z0-9]{30,})'
 
 # Filenames that must never be tracked: plaintext vault files, scratch backups,
 # anything that is a copy of a secret under another name.

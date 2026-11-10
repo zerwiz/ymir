@@ -33,7 +33,7 @@ bin[20]{file,does,kind,verdict,disposition,callers,lines}:
   "constellation-grants.py","'''constellation-grants.py — the grants shelf on the A2A road, in the existing shape.","tool","wired","keep",1,177
   "constellation-tool.mjs","// constellation-tool.mjs — the machine half of the constellation road.","tool","wired","keep",2,288
   "constellation.sh","constellation.sh — the A2A road between two Ymir fleets, as one door.","tool","wired","keep",1,368
-  "mcp-config.sh","mcp-config.sh — generate the harness MCP config: ONE local gateway door.","tool","tested","keep",0,94
+  "mcp-config.sh","mcp-config.sh — generate the harness MCP config: ONE local gateway door.","tool","tested","keep",1,119
   "mcp-gate.sh","mcp-gate.sh — arm/disarm an on-call MCP server in the seat's pi mcp-adapter.json.","tool","wired","keep",1,65
   "mcp-gateway.sh","mcp-gateway.sh — the body's ONE local door in front of the record MCPs.","tool","tested","keep",4,278
   "mimir-bridge.py","'''mimir-bridge.py — the HTTP face of the well (Mimirsbrunn / engram, :4602).","tool","tested","keep",4,807

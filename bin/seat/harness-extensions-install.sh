@@ -130,6 +130,20 @@ PY
       [ "$mode" = "check" ] && stale=$((stale+1))
     fi
   fi
+  # The doors (plan 239 P1): the same MCP set Pi carries, seated through `claude mcp add`.
+  if [ -x "$ROOT/bin/bridge/mcp-config.sh" ]; then
+    if [ "$mode" = "check" ]; then
+      if bash "$ROOT/bin/bridge/mcp-config.sh" claude --check >/dev/null 2>&1; then
+        say "  \"claude-mcp\",\"current\",\"ymir · engram · well seated\""
+      else
+        say "  \"claude-mcp\",\"stale\",\"a Ymir door is missing — bin/bridge/mcp-config.sh claude\""; stale=$((stale+1))
+      fi
+    elif bash "$ROOT/bin/bridge/mcp-config.sh" claude >/dev/null 2>&1; then
+      say "  \"claude-mcp\",\"current\",\"ymir · engram · well seated (user scope)\""
+    else
+      say "  \"claude-mcp\",\"stale\",\"mcp-config.sh claude could not seat every door\""
+    fi
+  fi
 else
   say "  \"claude\",\"absent\",\"no claude on this host\""; absent=$((absent+1))
 fi

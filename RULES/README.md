@@ -5,7 +5,7 @@ UI, and agents obey it, and a change that contradicts a rule must first change
 the rule (append-only; never silently rewritten).
 
 ```
-rules_index[44]{file,subject}:
+rules_index[45]{file,subject}:
   "01-domains.md","domains (Greinar) · houses · Eindri"
   "02-agents.md","agents: home, kinds, profile contract, no mock"
   "03-houses.md","houses = companies; ownership, records, boundaries"
@@ -119,3 +119,5 @@ Keep each rule short and unambiguous; reference it from code where it bites.
 - **47 — a collaborator sees what a grant names** · `RULES/47-a-collaborator-sees-what-a-grant-names.md`
 
 - **48 — a repository that is not ours** · `RULES/48-a-repository-that-is-not-ours.md`
+
+- **50 — the home is pulled before and pushed after** · `RULES/50-the-home-is-pulled-before-and-pushed-after.md`
