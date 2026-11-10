@@ -20,7 +20,8 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[32]{file,does,kind,verdict,disposition,callers,lines}:
+bin[33]{file,does,kind,verdict,disposition,callers,lines}:
+  "arm-talk.sh","arm-talk.sh — the heart speaks into every seat's pane, over that seat's own road (plan 234 P1).","tool","wired","keep",1,193
   "clocks.sh","bin/seat/clocks.sh — seat the three loops: plan-watch, ship-watch, update-loop.","tool","wired","keep",0,116
   "codex-plugin-install.mjs","// Valknut's Codex door.","data","wired","keep",3,125
   "context.sh","context.sh — what the agent's context ACTUALLY holds, right now.","tool","tested","keep",3,163
@@ -54,6 +55,6 @@ bin[32]{file,does,kind,verdict,disposition,callers,lines}:
   "whose-tree.sh","whose-tree.sh — whose code am I standing in?","tool","wired","keep",0,118
   "ymir-mcp.py","'''ymir-mcp.py — Ymir's own doors over MCP: the tools Pi has as extensions, for","tool","tested","keep",5,276
 
-**Tally.** verdict: wired=25, tested=7
+**Tally.** verdict: wired=26, tested=7
 
-**Tally.** disposition: keep=32
+**Tally.** disposition: keep=33
