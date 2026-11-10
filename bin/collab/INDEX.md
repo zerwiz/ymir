@@ -66,7 +66,7 @@ bin[50]{file,does,kind,verdict,disposition,callers,lines}:
   "reviews-shelf.sh","reviews-shelf — a review nobody can find is a review that did not happen.","tool","wired","keep",0,35
   "reviews.sh","reviews.sh — a review is a file in the repository, so the next hand gets it without asking anyone.","tool","wired","keep",1,70
   "secret-scan.sh","secret-scan — a credential must never enter this repository, and a hook is cheaper than a history rewrite.","tool","wired","keep",1,37
-  "ship.sh","ship.sh — the house's git discipline as one door: branch, commit named paths, merge to the base, push.","tool","wired","keep",4,63
+  "ship.sh","ship.sh — the house's git discipline as one door: branch, commit named paths, merge to the base, push.","tool","wired","keep",5,63
   "standardise.sh","standardise.sh — put the collaboration kit into a repository, or say what is missing.","tool","wired","keep",1,89
   "test_collab.sh","test_collab.sh — the proofs for bin/collab (Vingólf).","data","wired","keep",0,93
   "who.py","'''who.py — the roll: who was invited into the house's collaboration surfaces, and are they using them?","tool","wired","keep",2,393

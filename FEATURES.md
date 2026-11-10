@@ -48,10 +48,6 @@ its row here and write its page (see `AGENTS.md` → *Feature how-tos*).
 | Utgard boxes | A whole computer for one run, outside the wall | A durable agent box with no host credentials, one road out, and a door that holds the key | [docs/features/utgard-boxes.md](docs/features/utgard-boxes.md) |
 | Utgard lanes | Best of N: one brief, many boxes, one board | The same brief to several declared configurations, one rail lease, a board you read in under a minute — and the pick stays his | [docs/features/utgard-lanes.md](docs/features/utgard-lanes.md) |
 | Atomic releases | The apps run from a release, never a moving tree | `bin/engine/release-{build,health,flip}.sh` — build, prove, flip in one rename | [docs/features/atomic-releases.md](docs/features/atomic-releases.md) |
-| broken register | `bin/seat/broken.sh` | register of broken functions, append-only |
-## CHANGE LOG
-
-- **2026-11-10** — written with the change it describes.
 
 ## Memory & secrets
 
@@ -234,6 +230,11 @@ page's *planned* banner is removed **by a new entry citing the old** (Rule 06).
 
 | Voice | F8/Escape and genuine Swedish speech in Skírnir – Tala | Supersedes the temporary Swedish text-only entry: focused-page F8 starts through consent and finishes; Escape cancels. English uses American female Kokoro af_nicole; Swedish uses the private Bengt/PowerShell 7.6.5 file contract. Verified synthetic ASR and audio in both languages; no global shortcut or invented translation. | [Guide](docs/features/talk-to-skirnir.md) |
 | Runtime | **The registers are a tree, one folder at a time** (`bin/gates/inventory.sh` · `bin/gates/capabilities.sh` · `bin/gates/seat-woven-driver.sh`) | `bin/README.md` and `capabilities.md` were one file each, rewritten whole whenever anything under `bin/` changed, so every branch rewrote the same lines and five of six open PRs conflicted at once. They are now a tree: `bin/INDEX.md` plus `bin/<folder>/INDEX.md`, and `capabilities/<folder>.md` behind two front doors of folders only (786 → 66 lines over 34 indexes; 732 → 137 over 31 fragments). Folder purposes live in one file, `bin/gates/registers/folders.tsv`. The `merge=regenerate` driver was declared since plan 174 and pointed into a deleted worktree, so no reweave ever ran: `bin/gates/seat-woven-driver.sh` seats it to this checkout, `--prove` proves it on a real scratch conflict, and the install step `gates` seats it with Eir reporting `woven-driver` | [Guide](docs/features/the-registers-are-a-tree.md) |
+| Forge | **Finding tally — the reviewer's learning as a count** (`bin/forge/finding-log.sh` · `bin/forge/finding-tally.sh`) | Appends one JSONL line per finding and tallies by class across two windows, opening one card at threshold. | [Guide](docs/features/finding-tally.md) |
+
+## CHANGE LOG
+
+- **2026-11-10** — written with the change it describes.
 | Runtime | **The clocks** (`bin/seat/clocks.sh`) | Seats plan-watch, ship-watch and update-loop as user systemd timers: daily 07:30 (persistent), every 5 min, every 15 min. Refuses a missing ExecStart; status shows the last journal line | — |
 
 See docs/features/the-clocks.md
