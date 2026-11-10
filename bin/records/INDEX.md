@@ -22,7 +22,7 @@ folder rewrites one file instead of colliding on every branch.
 
 bin[40]{file,does,kind,verdict,disposition,callers,lines}:
   "audit-apply.sh","audit-apply.sh — turn an audit into work, in one door.","tool","wired","keep",0,96
-  "behind.sh","behind.sh — the arithmetic of being behind: opened/closed this week, net, stale-30d, unbuilt phases.","tool","wired","keep",0,36
+  "behind.sh","behind.sh — the arithmetic of being behind: opened/closed this week, net, stale-30d, unbuilt phases.","tool","wired","keep",0,43
   "daily-log.sh","daily-log.sh — the day's work, recorded where the contract says it lives.","tool","wired","keep",3,104
   "developers.sh","developers.sh — who can write to a repository, and who actually has.","tool","wired","keep",0,108
   "grade.sh","grade.sh — Dellingr: how fresh is a document?","tool","wired","keep",2,29
