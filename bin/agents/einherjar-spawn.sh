@@ -129,7 +129,7 @@ unset _state_base _data_base _config_base
 
 # Adapters this platform has verified for direct launches. An adapter outside
 # this set is refused unless a raw launch command is supplied.
-VERIFIED_HARNESSES='opencode pi pi-signed'
+VERIFIED_HARNESSES='claude opencode pi pi-signed'
 
 shell_quote() {
   printf "'"
@@ -890,6 +890,19 @@ build_launch_command() {  # prints the worker command WITHOUT the leading exec
       printf 'env OPENCODE_CONFIG_CONTENT=%s opencode run %s--auto "$(cat %s)"' \
         "$(shell_quote '{"permission":{"*":"allow"}}')" "$model_flag" "$(shell_quote "$brief_ref")"
       ;;
+    claude)
+      # Plan 239 P5b/P5c — the same shape as src/ymir_runtime/harness.py (one shape, two
+      # callers; the parity test holds it). Interactive, so the seat stays steerable; the
+      # shipped worker profile lets it edit and run without a prompt and denies the
+      # Allfather's moves. A missing profile is a refusal, never a bare `claude`.
+      local profile="$ROOT/.agents/harnesses/claude-worker.settings.json"
+      if [ ! -f "$profile" ]; then
+        echo "error: the Claude worker profile is missing at $profile — a Claude seat without it stops at its first permission prompt (plan 239 P5c)" >&2
+        return 1
+      fi
+      printf 'claude --permission-mode acceptEdits --settings %s %s"$(cat %s)"' \
+        "$(shell_quote "$profile")" "$model_flag" "$(shell_quote "$brief_ref")"
+      ;;
     pi|pi-signed)
       # `-ne` plus every extension named ONCE from the worktree — the door's shape, never ours.
       local pi_args=()
@@ -913,7 +926,13 @@ build_launch_command() {  # prints the worker command WITHOUT the leading exec
   esac
 }
 
-LAUNCH_CMD=$(build_launch_command "$BRIEF_REF")
+# A launch line that could not be built is a refusal, not an empty pane: before this, a
+# generator that failed printed nothing, the seat script ran `exec ` with no command, and
+# the worker was born dead while the dispatcher said `spawned` (plan 239 P5c, 2026-11-11).
+LAUNCH_CMD=$(build_launch_command "$BRIEF_REF") || {
+  echo "error: no launch line could be built for harness '$HARNESS' — refused (see the reason above)" >&2
+  exit 1
+}
 {
   printf '#!/usr/bin/env bash\n'
   printf 'set -eu\n'

@@ -21,7 +21,7 @@ from typing import Callable, Iterable, Mapping, Sequence
 
 from . import paths, proc
 
-VERIFIED = ("opencode", "pi", "pi-signed")
+VERIFIED = ("claude", "opencode", "pi", "pi-signed")
 
 LOCAL_PROVIDER_HINTS = ("llama", "lmstudio", "apodex")
 
@@ -125,6 +125,7 @@ def resolve(
     """Resolve harness, model and effort for one errand, with provenance."""
     environ = dict(env) if env is not None else None
     required = bool(harness) or bool(model)
+    explicit_model = model
     raw_launch = harness if " " in harness else ""
     if raw_launch:
         argv0 = next(
@@ -152,6 +153,27 @@ def resolve(
         if not effort and cfg_effort:
             effort = cfg_effort
 
+    if harness == "claude":
+        # Claude serves Anthropic models only (this plan's "not a gap"): a machine-wide
+        # model from config/eindri-harness, or any `provider/model` token, belongs to
+        # pi or opencode and kills the seat — measured 2026-11-11, foreman-process-3 came
+        # up on "opencode-go/deepseek-v4.1-flash" and refused its first turn (plan 239 P5b).
+        if "/" in model:
+            if model == explicit_model:
+                raise ValueError(
+                    f"harness 'claude' cannot serve model '{model}' — Claude takes an Anthropic "
+                    "model name or alias (sonnet, opus, haiku), never a provider/model token"
+                )
+            model = ""
+        return HarnessSelection(
+            name="claude",
+            model=model,
+            effort="",
+            provenance=prov or "explicit flag (--harness)",
+            model_provenance="explicit flag (--model)" if (model and model == explicit_model) else (
+                "config/eindri-harness (this machine)" if model else "none — the harness default is served"
+            ),
+        )
     tokens = list(catalog()) if catalog is not None else list(default_catalog(runner=runner))
 
     if not harness:
@@ -248,4 +270,35 @@ def build_launch_command(
             + proc.shell_quote('{"permission":{"*":"allow"}}')
             + f' opencode {model_flag}--prompt "$(cat {proc.shell_quote(brief_ref)})"'
         )
+    if selection.name == "claude":
+        # An Eindri on Claude (plan 239 P5b) is interactive, so the seat stays visible
+        # in herdr and can be steered; the brief is its first turn. It is launched
+        # with the shipped worker profile (P5c): edits and commands run without a
+        # prompt (an unattended worker that stops at a prompt is a dead seat, measured
+        # 2026-11-11, pane w4M:p1), and the Allfather's moves — a push to main, a merge,
+        # a force-push, `git add -A`, a discard of unrecorded work — are denied.
+        profile = claude_worker_profile(launch_cwd)
+        return (
+            f"claude --permission-mode acceptEdits --settings {proc.shell_quote(str(profile))} "
+            f'{model_flag}"$(cat {proc.shell_quote(brief_ref)})"'
+        )
     raise ValueError(f"no launch shape for harness '{selection.name}'")
+
+
+CLAUDE_WORKER_PROFILE = Path(".agents") / "harnesses" / "claude-worker.settings.json"
+
+
+def claude_worker_profile(root: str | Path | None) -> Path:
+    """The Claude worker's permission profile, from the Ymir tree; refuse when absent.
+
+    A Claude seat launched without it stops at its first permission prompt and
+    nobody is watching — so a missing profile is a refusal, never a bare `claude`.
+    """
+    base = Path(root) if root else Path(__file__).resolve().parents[2]
+    profile = base / CLAUDE_WORKER_PROFILE
+    if not profile.is_file():
+        raise ValueError(
+            f"the Claude worker profile is missing at {profile} — a Claude seat without it "
+            "stops at its first permission prompt (plan 239 P5c)"
+        )
+    return profile
