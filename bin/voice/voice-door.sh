@@ -255,6 +255,7 @@ cmd_host() {
     --setenv=VIRTUAL_ENV="$VENV" \
     --setenv=PATH="$VENV/bin:/usr/local/bin:/usr/bin:/bin" \
     --setenv=HF_HUB_DISABLE_XET=1 \
+    ${CUDA_VISIBLE_DEVICES+--setenv=CUDA_VISIBLE_DEVICES="$CUDA_VISIBLE_DEVICES"} \
     ${cu:+--setenv=LD_LIBRARY_PATH="$cu"} \
     --property=StandardOutput=append:"$STATE_DIR/host.log" \
     --property=StandardError=append:"$STATE_DIR/host.log" \

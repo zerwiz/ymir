@@ -41,7 +41,7 @@ bin[54]{file,does,kind,verdict,disposition,callers,lines}:
   "eindri-handoff.sh","eindri-handoff.sh — the handoff failsafe.","tool","wired","keep",4,202
   "eindri-heartbeat.sh","eindri-heartbeat.sh — condition half of the Eindri silence bridge.","tool","wired","keep",3,106
   "eindri-liveness.sh","eindri-liveness.sh — the sweep's second question: is the pane still a worker?","tool","wired","keep",2,248
-  "eindri-notify.sh","eindri-notify.sh — the ARM-HOLDER'S INBOX: inject one line into the session that holds the lock.","tool","wired","keep",5,94
+  "eindri-notify.sh","eindri-notify.sh — the ARM-HOLDER'S INBOX: inject one line into the session that holds the lock.","tool","wired","keep",6,94
   "eindri-review-spawn.sh","eindri-review-spawn.sh — the review spine.","tool","tested","keep",2,340
   "eindri-role.sh","eindri-role.sh — the right smith for the right metal.","tool","wired","keep",2,117
   "eindri-route.sh","eindri-route.sh — which machine should host an errand, by its nature?","tool","tested","keep",0,108

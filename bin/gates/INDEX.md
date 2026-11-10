@@ -20,7 +20,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[108]{file,does,kind,verdict,disposition,callers,lines}:
+bin[110]{file,does,kind,verdict,disposition,callers,lines}:
   "SKILL.md","---","data","tested","keep",23,19
   "SKILL.md","---","data","tested","keep",23,19
   "SKILL.md","---","data","tested","keep",23,18
@@ -31,7 +31,7 @@ bin[108]{file,does,kind,verdict,disposition,callers,lines}:
   "branch-guard.sh","branch-guard.sh — Rule 08: no push may land on a protected branch.","tool","tested","keep",1,78
   "capabilities.sh","A GENERATED FILE MUST BE A FUNCTION OF CONTENT ALONE (0.1.94/0.1.95/0.1.97 — three","tool","wired","keep",10,309
   "check-row.md","One measured row","data","wired","keep",2,10
-  "ci-verify.sh","ci-verify.sh — what CI must prove, in one command, for BOTH hosts.","tool","tested","keep",3,152
+  "ci-verify.sh","ci-verify.sh — what CI must prove, in one command, for BOTH hosts.","tool","tested","keep",4,152
   "confidential-guard.sh","confidential-guard.sh — while a confidential session is live, nothing outside the","tool","wired","keep",2,63
   "constellation-grant-guard.sh","constellation-grant-guard.sh — the road's own ward.","tool","wired","keep",1,100
   "contracts-check.sh","contracts-check.sh — the typed surfaces' proof, in one command.","tool","tested","keep",1,122
@@ -108,6 +108,8 @@ bin[108]{file,does,kind,verdict,disposition,callers,lines}:
   "syn-spawn-pretool-check.sh","syn-spawn-pretool-check.sh - PreToolUse seatbelt for spawning and for typing.","data","wired","keep",0,59
   "syn-turnend-guard.sh","syn-turnend-guard.sh - refuse to let a Brokk turn end blind.","tool","tested","keep",1,52
   "test_areas_and_injection.sh","test_areas_and_injection.sh — the smoke suite for plan 219 and the arm-holder's inbox.","tool","wired","keep",0,108
+  "test_arm_talk.sh","ROOT='$(cd '$(dirname '$0')/../../..' && pwd)'","tool","wired","keep",0,19
+  "test_ci_parity.sh","test_ci_parity.sh — a push run and a pull_request run on one sha print the same verdict.","tool","wired","keep",0,10
   "test_fleet_roads.sh","LANIP='192.''168.''68.''106'","tool","wired","keep",0,52
   "test_gimle_mcp_board.sh","test_gimle_mcp_board.sh — the Gimlé MCP's board face, proved by command.","tool","wired","keep",0,195
   "test_handoff_packet.sh","test_handoff_packet.sh — proves the packet door reads the schema's packet and refuses a false one.","tool","wired","keep",0,103
@@ -130,6 +132,6 @@ bin[108]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-config-check.sh","ymir-config-check.sh — the DOOR to the config layer (`src/ymir_runtime/config/`).","tool","wired","keep",0,44
   "ymir-update-check.sh","ymir-update-check.sh — does a newer Ymir stand on npm?","tool","wired","keep",3,71
 
-**Tally.** verdict: wired=90, tested=18
+**Tally.** verdict: wired=92, tested=18
 
-**Tally.** disposition: keep=106, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1
+**Tally.** disposition: keep=108, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1
