@@ -27,6 +27,7 @@
 | nornir-job-memory-housekeeping.sh | nornir-job-memory-housekeeping.sh - Muninn, the raven of memory. | tested+named | keep (a human or a cron row must run it) |
 | nornir-job-nsr-compliance.sh | nornir-job-nsr-compliance.sh — the NorthStar compliance round, nightly | tested+named | keep (a human or a cron row must run it) |
 | nornir-job-observer.sh | nornir-job-observer.sh - Huginn, the raven of observation. | tested+named | keep (a human or a cron row must run it) |
+| nornir-job-plan-watch.sh | nornir-job-plan-watch.sh — the clock that watches the master plan. | tested | keep (a human or a cron row must run it) |
 | nornir-job-skillopt-sleep.sh | nornir-job-skillopt-sleep.sh — SkillOpt overnight self-evolution. | tested | keep (a human or a cron row must run it) |
 | nornir-job-snotra-mail.sh | nornir-job-snotra-mail.sh — Snotra listens for the answers. | tested+named | keep (a human or a cron row must run it) |
 | nornir-job-worktree-housekeeping.sh | nornir-job-worktree-housekeeping.sh — the daily reckoning of what the  | tested | keep (a human or a cron row must run it) |

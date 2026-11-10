@@ -9,6 +9,7 @@
 
 - **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | audit-apply.sh | audit-apply.sh — turn an audit into work, in one door. | tested | keep (a human or a cron row must run it) |
+| behind.sh | behind.sh — the arithmetic of being behind: opened/closed this week, n | tested | keep (a human or a cron row must run it) |
 | daily-log.sh | daily-log.sh — the day's work, recorded where the contract says it liv | tested+named | keep (a human or a cron row must run it) |
 | developers.sh | developers.sh — who can write to a repository, and who actually has. | tested | keep (a human or a cron row must run it) |
 | grade.sh | grade.sh — Dellingr: how fresh is a document? A Norse grade from measu | tested+named | keep (a human or a cron row must run it) |
@@ -25,6 +26,7 @@
 | mimir.sh | mimir.sh — the well (Mimirsbrunn). Drink before you act, water it afte | tested+named | keep (a human or a cron row must run it) |
 | note.sh | note.sh — append a DATED section to an existing document in the home ( | tested+named | keep (a human or a cron row must run it) |
 | open-work.sh | open-work.sh — the open work, rendered for a HUMAN, from the record th | tested | keep (a human or a cron row must run it) |
+| plan-state.sh | plan-state.sh — read and write the Status/Owner header of every plan i | tested | keep (a human or a cron row must run it) |
 | plan.sh | plan.sh — the plan ledger: create the NEXT numbered plan and its index | tested+named | keep (a human or a cron row must run it) |
 | regenerate-on-merge.sh | regenerate-on-merge.sh — the merge driver for WOVEN documents (Þætti | tested | keep (a human or a cron row must run it) |
 | runes-append.sh | runes-append.sh — the append-only Runes ledger, a THIN SHIM. | tested+named | keep (a human or a cron row must run it) |
