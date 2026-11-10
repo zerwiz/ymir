@@ -20,7 +20,8 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[31]{file,does,kind,verdict,disposition,callers,lines}:
+bin[32]{file,does,kind,verdict,disposition,callers,lines}:
+  "claims.sh","SELF='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",2,103
   "codex-plugin-install.mjs","// Valknut's Codex door.","data","wired","keep",3,125
   "context.sh","context.sh — what the agent's context ACTUALLY holds, right now.","tool","tested","keep",3,163
   "core-four.sh","core-four.sh — the four dials that decide an agent's outcome, in ONE read.","tool","wired","keep",4,204
@@ -53,6 +54,6 @@ bin[31]{file,does,kind,verdict,disposition,callers,lines}:
   "whose-tree.sh","whose-tree.sh — whose code am I standing in?","tool","wired","keep",0,118
   "ymir-mcp.py","'''ymir-mcp.py — Ymir's own doors over MCP: the tools Pi has as extensions, for","tool","tested","keep",5,276
 
-**Tally.** verdict: wired=24, tested=7
+**Tally.** verdict: wired=25, tested=7
 
-**Tally.** disposition: keep=31
+**Tally.** disposition: keep=32
