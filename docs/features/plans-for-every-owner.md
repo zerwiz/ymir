@@ -61,3 +61,8 @@ In a chat with the agent, the same thing: `ymir_plan` takes `scope` and `owner`.
 - `plan: unknown scope …` — the four scopes are `project`, `realm`, `machine`, `personal`.
 
 *Feature page written 2026-11-10 with plan 240; the law behind it is `.agents/skills/elder-home/assets/ledger.md`.*
+
+## CHANGE LOG
+
+- **2026-11-10** — Written with plan 240. Four scopes (`project` · `realm` · `machine` · `personal`), per-shelf
+  numbering, shelves created by install and update. The law: `.agents/skills/elder-home/assets/ledger.md`.
