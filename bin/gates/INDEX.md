@@ -31,7 +31,7 @@ bin[116]{file,does,kind,verdict,disposition,callers,lines}:
   "branch-guard.sh","branch-guard.sh — Rule 08: no push may land on a protected branch.","tool","tested","keep",1,78
   "capabilities.sh","A GENERATED FILE MUST BE A FUNCTION OF CONTENT ALONE (0.1.94/0.1.95/0.1.97 — three","tool","wired","keep",10,309
   "check-row.md","One measured row","data","wired","keep",2,10
-  "ci-verify.sh","ci-verify.sh — what CI must prove, in one command, for BOTH hosts.","tool","tested","keep",4,152
+  "ci-verify.sh","ci-verify.sh — what CI must prove, in one command, for BOTH hosts.","tool","tested","keep",5,152
   "confidential-guard.sh","confidential-guard.sh — while a confidential session is live, nothing outside the","tool","wired","keep",2,63
   "constellation-grant-guard.sh","constellation-grant-guard.sh — the road's own ward.","tool","wired","keep",1,100
   "contracts-check.sh","contracts-check.sh — the typed surfaces' proof, in one command.","tool","tested","keep",1,122
@@ -110,8 +110,8 @@ bin[116]{file,does,kind,verdict,disposition,callers,lines}:
   "syn-turnend-guard.sh","syn-turnend-guard.sh - refuse to let a Brokk turn end blind.","tool","tested","keep",1,52
   "test_areas_and_injection.sh","test_areas_and_injection.sh — the smoke suite for plan 219 and the arm-holder's inbox.","tool","wired","keep",0,108
   "test_arm_talk.sh","ROOT='$(cd '$(dirname '$0')/../../..' && pwd)'","tool","wired","keep",0,19
+  "test_broken.sh","export YMIR_HOME='${YMIR_HOME:-/home/zerwizserver/Documents/ymirhome}'","tool","wired","keep",0,25
   "test_ci_parity.sh","test_ci_parity.sh — a push run and a pull_request run on one sha print the same verdict.","tool","wired","keep",0,10
-  "test_finding_tally.sh","ROOT='$(cd '$(dirname '$0')/../../..' && pwd)'","tool","wired","keep",0,29
   "test_fleet_roads.sh","LANIP='192.''168.''68.''106'","tool","wired","keep",0,52
   "test_gimle_mcp_board.sh","test_gimle_mcp_board.sh — the Gimlé MCP's board face, proved by command.","tool","wired","keep",0,195
   "test_handoff_packet.sh","test_handoff_packet.sh — proves the packet door reads the schema's packet and refuses a false one.","tool","wired","keep",0,103
@@ -120,7 +120,7 @@ bin[116]{file,does,kind,verdict,disposition,callers,lines}:
   "test_mjollnir_intake.sh","test_mjollnir_intake.sh — the forge's senses (plan 210 P0/P1), proved without a network.","tool","wired","keep",0,179
   "test_new_doors.sh","test_new_doors.sh — the production tests for the doors built 2026-11-03.","tool","wired","keep",0,65
   "test_plan_state.sh","ROOT='$(cd '$(dirname '${BASH_SOURCE[0]}')/../..' && pwd)'; ROOT='$(cd '$ROOT/..' && pwd)'","tool","wired","keep",0,22
-  "test_plan_watch.sh","ROOT='$(cd '$(dirname '$0')/../../..' && pwd)'","tool","orphan","retire",0,23
+  "test_plan_watch.sh","ROOT='$(cd '$(dirname '$0')/../../..' && pwd)'","tool","wired","keep",0,23
   "test_pr_identity.sh","ROOT='$(cd '$(dirname '$0')/../../..' && pwd)'; cd '$ROOT'","tool","orphan","retire",0,50
   "test_pr_ship_guard.sh","test_pr_ship_guard.sh — proves the ship door judges the PR and not the branch.","tool","wired","keep",0,49
   "test_registers.sh","test_registers.sh — one door for every generated register.","tool","wired","keep",0,43
@@ -138,6 +138,6 @@ bin[116]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-config-check.sh","ymir-config-check.sh — the DOOR to the config layer (`src/ymir_runtime/config/`).","tool","wired","keep",0,44
   "ymir-update-check.sh","ymir-update-check.sh — does a newer Ymir stand on npm?","tool","wired","keep",3,71
 
-**Tally.** verdict: wired=95, tested=18, orphan=3
+**Tally.** verdict: wired=96, tested=18, orphan=2
 
-**Tally.** disposition: keep=111, retire=3, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1
+**Tally.** disposition: keep=112, retire=2, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1
