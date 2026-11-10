@@ -273,19 +273,26 @@ write_index() { # <out> <root>...
         vis="$(yget "$d/skill.yaml" visibility)"
         ver="$(yget "$d/skill.yaml" version)"
         desc="$(yget "$d/skill.yaml" description)"
-        rows+=("$(printf '%s\t%s\t%s\t%s\t%s\t%s\t%s' "$name" "$kind" "$owner" "$vis" "$ver" "${d#"$root"/}" "$desc")")
+        # templates[] and requires[] travel into the index too: they are what a reader needs
+        # to know before fetching anything (the shapes we ship, the skills this one names).
+        tpl="$(ylist "$d/skill.yaml" templates | paste -sd ',' -)"
+        req="$(ylist "$d/skill.yaml" requires | paste -sd ',' -)"
+        rows+=("$(printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' \
+          "$name" "$kind" "$owner" "$vis" "$ver" "${d#"$root"/}" "$desc" "$tpl" "$req")")
       done < <(find_skill_dirs "$root")
     done
     printf 'count: %s\n' "${#rows[@]}"
     printf 'skills:\n'
     if [ "${#rows[@]}" -gt 0 ]; then
-      printf '%s\n' "${rows[@]}" | sort | while IFS=$'\t' read -r name kind owner vis ver rel desc; do
+      printf '%s\n' "${rows[@]}" | sort | while IFS=$'\t' read -r name kind owner vis ver rel desc tpl req; do
         printf '  - name: %s\n' "$name"
         printf '    kind: %s\n' "${kind:-unknown}"
         printf '    owner: %s\n' "${owner:-unknown}"
         printf '    visibility: %s\n' "${vis:-unknown}"
         printf '    version: %s\n' "${ver:-0.0.0}"
         printf '    path: %s\n' "$rel"
+        [ -n "$tpl" ] && printf '    templates: [%s]\n' "$tpl"
+        [ -n "$req" ] && printf '    requires: [%s]\n' "$req"
         printf '    description: %s\n' "${desc}" | sed 's/[[:space:]]*$//'
       done
     fi

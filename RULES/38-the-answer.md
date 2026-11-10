@@ -57,3 +57,45 @@ runes row or a tool answer is correct and stays exactly as it is.
 
 Enforced by reading, not by a ward — the ward is that he says "this is hard to read",
 and the next answer is prose.
+
+
+## Appended 2026-11-04 — a table that IS the answer must be readable
+
+His word, after reading a card catalogue built from dense `cards[16]{…}` rows: *"make the tables human readable"*.
+The law above bans **column tables in his reading** — that ban stands, and an answer is still prose before it is
+anything else. This amendment settles the other half, which was never written down:
+
+```
+human_tables[4]{rule,why}:
+  "a document is not a reply","in a file — a register, a catalogue, a plan — a table is often the right shape; the ban above is about the reply, not the shelf",
+  "when a table is the answer, it is Markdown","pipe tables with a header row and a heading above them, one fact per column; never a dense one-line TOON row a human has to parse",
+  "machine shapes stay machine-facing","a `key[n]{a,b,c}:` block is for an agent or a gate to read; if a person will read it, render the same data as a table with words in the headers",
+  "the test is one glance","if the Allfather must decode a schema to find a price, the table is wrong — the same data, same honesty, plainly laid out"
+```
+
+The doctrine behind it: **the shape follows the reader.** A machine reads columns because they are unambiguous; a
+person reads a table with headings and units because the eye can find the row it wants. Writing a person's document as
+a machine block is not rigour — it is a second language in the wrong room.
+
+
+### And a diagram is Mermaid
+
+His word, the same night: *"and also add to use mermaids for humans."* When a document must show a **shape** — how the
+fleet fits together, how data moves, which machine holds what — it is drawn in **Mermaid**, never in ASCII art and
+never as prose that the reader has to hold in their head. A Mermaid block renders on GitHub, in the editor, and in any
+viewer the house reads; it is text in the file, a picture on the page. The same test applies as for tables: if the
+reader must trace the words to see the shape, the drawing is wrong.
+
+
+#### Correction — a diagram is a diagram; Mermaid is one tool that draws many
+
+His word, correcting the paragraph above: *"diagrams are not mermaids. diagrams are diagrams. mermaid is Mermaid.
+Mermaid can be used for a lot of things."* Both halves are true and the wording above blurred them.
+
+- **The concept is the diagram.** When a document must show a shape — how the fleet fits together, how a request
+  moves, what state a thing is in — it is *drawn*. That requirement stands whether or not Mermaid exists.
+- **Mermaid is the house's tool for drawing it**, not a synonym for the drawing. One syntax, many diagram kinds:
+  flowchart for a flow, sequence for a conversation between parts, state for a lifecycle, class and ER for data,
+  gantt and timeline for a schedule, mindmap for a structure, quadrant for a comparison.
+- **So the rule is:** draw what must be seen; draw it in Mermaid when a diagram is what is needed; never ASCII art, and
+  never prose the reader has to trace to find the shape.
