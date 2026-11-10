@@ -62,9 +62,9 @@ command -v gh >/dev/null 2>&1 || { printf 'pr-watch: gh missing\n' >&2; exit 1; 
 NOW=$(date +%s)
 prs=$(gh pr list --repo "$REPO" --state open --json number,title,author,mergeStateStatus,createdAt,headRefName 2>/dev/null) || { printf 'pr-watch: gh pr list failed for %s\n' "$REPO" >&2; exit 1; }
 [ -n "$prs" ] || prs='[]'
-python3 - "$SEEN" "$NOW" "$HOURS" "$DRY" "$STATUS" "$REPO" <<PY
+python3 - "$SEEN" "$NOW" "$HOURS" "$DRY" "$STATUS" "$REPO" "$ROOT" <<PY
 import json,sys,os,subprocess,datetime
-seen_path,now,hours,dry,status,repo = sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4]=='1', sys.argv[5]=='1', sys.argv[6]
+seen_path,now,hours,dry,status,repo,root = sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4]=='1', sys.argv[5]=='1', sys.argv[6], sys.argv[7]
 prs = json.loads('''$prs''')
 seen = {}
 if os.path.exists(seen_path):
@@ -92,7 +92,7 @@ if status:
     print(f"pr-watch[1]{{repo,open,would_say}}:\n  \"{repo}\",\"{len(prs)}\",\"{len(out)}\"")
 if out and not dry:
     body = "\n".join("• " + l for l in out)
-    subprocess.run([os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),'bin/notify/send.sh'), '--to', 'telegram', body], check=False)
+    subprocess.run([os.path.join(root,'bin/notify/send.sh'), '--to', 'telegram', body], check=False)
 json.dump(seen, open(seen_path,'w'), indent=1)
 print("\n".join(out) if out else "pr-watch: nothing new (silence is the healthy signal)")
 PY
