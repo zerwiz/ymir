@@ -197,3 +197,40 @@ The live-seat refusal was tested on a real working pane and made no change to it
 the dead-shell close was **not** run in this pass — closing another errand's shell is
 not this door's debt to pay. The 4 `DEAD` panes this run reported are real and are
 the operator's to close.
+
+## The sweep — a finished seat closes itself (2026-11-10)
+
+`bin/seat/seat-reap.sh` is the fourth door: the one that CLOSES a finished seat
+instead of describing it.
+
+```sh
+bin/seat/seat-reap.sh --list        # what a sweep would close — closes nothing
+bin/seat/seat-reap.sh --sweep       # close every agentless eindri-* workspace whose errand is over
+bin/seat/seat-reap.sh <errand-id>   # close that one seat, by the id recorded in state/<id>.meta
+bin/seat/seat-reap.sh --shell <worktree>   # close the bare shell standing in a worktree
+bin/seat/seat-reap.sh --install     # seat the sweep on every harness on this host
+bin/seat/seat-reap.sh --check       # is it seated? exit 1 when a present harness is not
+bin/seat/seat-reap.sh --verify      # the two structural faults, reported and not mended
+```
+
+**It is automatic, by law.** Taking the arm sweeps the hall: the Sága digest has a
+`SEATS` section, and the arm road (`bin/pi/syn-watch-arm.sh`) sweeps as it takes the
+helm. The errand's own close also closes its seat — `bin/agents/eindri-dispatch.sh
+close`, a terminal review verdict, and the arm's retirement all call the same door.
+
+**What it will not do.** It never closes a workspace a live agent stands in: it asks
+`bin/seat/herdr-agents.py` (the one reader of `herdr agent list`), asks again
+immediately before the irreversible step, and the pane close itself refuses a live
+agent. A review verdict of `return` keeps the seat, because the work went back to the
+worker.
+
+**And the worktree follows.** `bin/forge/housekeeping.sh` now asks whether an AGENT
+stands in a tree, not whether a process does. An idle shell is no longer `keep:in-use`,
+so the tree is judged by whether any of its work is missing from the remote — and a
+bare shell is closed (through `seat-reap.sh --shell`, which refuses a live agent)
+before anything is reclaimed. `keep:dirty` and `keep:unpushed` are untouched, as
+always.
+
+**If it does not work.** `bin/seat/seat-reap.sh --check` names the harness it cannot
+seat; `--verify` names a `.ymir-root` that records a worktree, or a worktree that still
+reports its extensions deleted — `bin/engine/ymir-migrate.sh apply` mends both.

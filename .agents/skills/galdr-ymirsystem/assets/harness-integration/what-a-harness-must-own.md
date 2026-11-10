@@ -176,3 +176,10 @@ traps[5]{trap,truth}:
 - **2026-11-04** — written after Sebastian's #508 exposed the shape: one harness's plugin API moved and
   five guards plus twenty hand-written tools had to be considered at once. Counts in §3–§4 were taken
   from this checkout with `grep` on the extension/plugin/MCP sources, not estimated.
+
+## Correction 2026-11-10 (append-only) — §3's claude row was false
+
+§3 says `ymir-install.sh` "seeds MCP config for … `~/.claude.json`". Measured on heimdall: `step_memory` only **counts**
+configs that already carry `"engram"`; it never wrote one, and `~/.claude.json` held no Ymir server. Fixed by
+`bin/bridge/mcp-config.sh claude` (seated by `harness-extensions-install.sh` and migration 0018). See plan 239 and
+`docs/fixes/harness/2026-11-10-claude-gets-the-doors-and-the-seatbelt.md`.

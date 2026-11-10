@@ -138,8 +138,49 @@ else
   printf 'wake queue: 0 pending (drain not installed)\n'
 fi
 
+section "SEATS"
+# TAKING THE ARM SWEEPS THE HALL. The Allfather's law (2026-11-10): a finished seat
+# is closed AUTOMATICALLY, not by an operator who remembers to tidy up. Every
+# session start is the moment the sweep runs — one door, one TOON row of what it
+# closed, nothing closed that a live agent stands in.
+if [ -x "$ROOT/bin/seat/seat-reap.sh" ]; then
+  BROKK_HOME="$BROKK_HOME" BROKK_STATE_OVERRIDE="$STATE" \
+    bash "$ROOT/bin/seat/seat-reap.sh" --sweep 2>/dev/null \
+    || printf 'sweep: the seat door did not answer (bin/seat/seat-reap.sh --list says why)\n'
+else
+  printf 'sweep: bin/seat/seat-reap.sh absent — dead Eindri workspaces are not closed\n'
+fi
+# A LATE BOOT IS STILL A SEAT. A record whose proof gave up (`seat=no`) but whose
+# pane now holds an agent is corrected here, its watch armed, and the arm told —
+# otherwise an errand declared dead runs on with nobody watching it.
+if [ -x "$ROOT/bin/seat/seat-adopt.sh" ]; then
+  adopt_out="$(BROKK_HOME="$BROKK_HOME" BROKK_STATE_OVERRIDE="$STATE" \
+    bash "$ROOT/bin/seat/seat-adopt.sh" --all 2>/dev/null || true)"
+  case "$adopt_out" in
+    *adopted:*) printf '%s\n' "$adopt_out" ;;
+  esac
+fi
+
 section "SUPERVISION"
 printf 'harness next step: arm supervision via the installed harness adapter; never run bin/pi/syn-watch-arm.sh by hand.\n'
+
+section "THE ALLFATHER'S TODOS"
+# The voice keeps his task ledger (hodd/state/voice/todos.jsonl); the arm holder must read it, or a
+# todo spoken to Rödd never reaches the hand that can act on it (2026-11-10). Read-only door.
+if [ -x "$SCRIPT_DIR/../voice/todos.sh" ]; then
+  bash "$SCRIPT_DIR/../voice/todos.sh" --digest 2>/dev/null || printf 'todos: unreadable\n'
+else
+  printf 'todos: door not installed (bin/voice/todos.sh)\n'
+fi
+
+section "AGENTS ON THIS MACHINE"
+# The arm holder is his right hand on the machine: it must know exactly what runs beside it —
+# every harness process, every herdr pane, and every errand pane whose work already ended.
+if [ -x "$SCRIPT_DIR/../agents/agent-census.sh" ]; then
+  bash "$SCRIPT_DIR/../agents/agent-census.sh" --digest 2>/dev/null || printf 'census: failed\n'
+else
+  printf 'census: door not installed (bin/agents/agent-census.sh)\n'
+fi
 
 section "UPDATE"
 # Does a newer Ymir stand on npm? The CLI told the USER; the RUNTIME had no such

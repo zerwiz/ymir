@@ -33,6 +33,7 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
 fi
 hoard_state_dir YMIR_STATE_DIR
 hoard_data_dir YMIR_DATA_DIR
+hoard_settings_dir YMIR_SETTINGS_DIR
 STATE="${BROKK_STATE_OVERRIDE:-$YMIR_STATE_DIR}"
 SEATS="$STATE/herdr-seats"
 SESSION="${YMIR_HERDR_SESSION:-brokk}"
@@ -67,6 +68,39 @@ fi
 ROLE="${ROLE:-eindri}"
 SLUG="$(printf '%s' "$REQ" | tr 'A-Z' 'a-z' | tr -cs 'a-z0-9' '-' | sed -E 's/^-|-$//g' | cut -c1-24)"
 LABEL="${ROLE}-${SLUG:-task}"
+
+# 2b. WHICH MODEL — resolved for the ROLE, by the one resolver, and never silently.
+# Measured 2026-11-10: without `--model` the road fell through to whatever the
+# launcher defaulted to, which was brokk's row for every errand — a smith ran on the
+# counsellor's model, and a machine overlay could pin a LOCAL model for a worker
+# without a word said. The order of authority is bin/model/agent-model.sh's (the ONE
+# resolver): explicit --model, then YMIR_<AGENT>_MODEL, then the machine overlay, then
+# the fleet's agents.yaml, then the tier. This door only ASKS it, and records who
+# answered.
+MODEL_SOURCE=""; MODEL_NOTE=""
+if [ -z "$MODEL" ] && [ -x "$SCRIPT_DIR/../model/agent-model.sh" ]; then
+  resolved="$("$SCRIPT_DIR/../model/agent-model.sh" "$ROLE" --json 2>/dev/null || true)"
+  if [ -n "$resolved" ]; then
+    MODEL="$(printf '%s' "$resolved" | sed -n 's/.*"model"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)"
+    MODEL_SOURCE="$(printf '%s' "$resolved" | sed -n 's/.*"source"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)"
+  fi
+fi
+[ -n "$MODEL_SOURCE" ] || { [ -n "$MODEL" ] && MODEL_SOURCE="explicit --model" || MODEL_SOURCE="unresolved"; }
+# A machine overlay that pins a LOCAL model for an errand is said out loud: the
+# overlay is this machine's word, and a worker on a local rail is a fact the
+# Allfather — and the arm — must be able to see without reading a config.
+case "$MODEL_SOURCE" in
+  *overlay*)
+    lprov="$(sed -n 's/^local_providers:[[:space:]]*\[\(.*\)\].*/\1/p' "$YMIR_SETTINGS_DIR/agents.yaml" 2>/dev/null | tr ',' '\n' | tr -d ' \"' | paste -sd'|' -)"
+    if [ -n "$lprov" ] && printf '%s' "$MODEL" | grep -qE "^(${lprov})/"; then
+      MODEL_NOTE="a machine overlay ($MODEL_SOURCE) pinned a LOCAL model for this errand"
+    else
+      MODEL_NOTE="chosen by the machine overlay ($MODEL_SOURCE)"
+    fi ;;
+  *fleet*|*agents.yaml*) MODEL_NOTE="chosen by the fleet's agents.yaml" ;;
+  *explicit*)            MODEL_NOTE="the operator's --model" ;;
+  *)                     MODEL_NOTE="$MODEL_SOURCE" ;;
+esac
 
 # 3. The engine owns the errand when the caller names one (plan 58, Phase 1).
 #    With --id an errand is a real seat — worktree, harness, record, heartbeat.
@@ -127,3 +161,6 @@ fi
 printf '%s\t%s\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$ROLE" "$seat" "$REQ" >>"$SEATS"
 printf 'eindri-start[1]{role,seat,a2a,request,label}:\n'
 printf '  "%s","%s","%s","%s","%s"\n' "$ROLE" "$seat" "${A2A_URL:-none}" "$REQ" "$LABEL"
+# The model row is always printed: which model, and WHO decided — a seat that cannot
+# say where its model came from cannot be trusted to have chosen it deliberately.
+printf 'model[1]{agent,model,decided_by}:\n  "%s","%s","%s"\n' "$ROLE" "${MODEL:-default}" "${MODEL_NOTE:-$MODEL_SOURCE}"

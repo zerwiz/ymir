@@ -1054,6 +1054,96 @@ to its default action, and `start.sh`'s default action raises the whole hall.
 **Not built yet:** P3 (launchers and units re-seated to `~/ymir-current`), P4 (the scheduled updater
 becoming a releaser), P5 (containers, where a runtime exists). Until P3, nothing points at the symlink.
 
+
+## The seat proof waits 60 seconds — `YMIR_SEAT_SETTLE` (2026-11-10)
+
+A spawn is not a seat until `bin/seat/seat-prove.sh` sees an agent in the pane or in the
+worktree (plan 189 §18.2 — a pane is not an agent). The WAIT is that door's own value:
+
+```
+YMIR_SEAT_SETTLE   60 seconds (shipped default, the Allfather's correction 2026-11-10)
+```
+
+**One value, not two.** The default lives in `bin/seat/seat-prove.sh`; the shell spawner
+(`bin/agents/einherjar-spawn.sh`) and the engine (`src/ymir_runtime/seat.py`) pass
+`--settle` ONLY when the operator set `YMIR_SEAT_SETTLE`, so there is no second number to
+drift. The shipped default was 25 s, which is shorter than a pi boot on a loaded rail:
+the door said "no agent", the errand was recorded `seat=no` / `failed:`, its arm was never
+armed, and its brief was never delivered — while the agent came up a minute later in the
+very pane the record named.
+
+**Three things follow from a proof.**
+
+1. **A queued worker is alive.** The rail serves one resident model, so a second errand
+   waits on `bin/model/local-model-lock.sh` before its pi starts. `seat-prove.sh` watches
+   for such a waiter in the worktree and RESETS its clock while one stands, so the wait is
+   bounded by progress and not by the wall.
+2. **A failure reaches the ARM.** `bin/seat/seat-wake.sh <id> failed|adopted` writes one
+   durable line into the operator's `state/.wake-queue` — the road the helm-holding session
+   drains — for both seat roads. `bin/notify/send.sh` is a desktop note and is not the arm;
+   it may ride along, it may not stand in.
+3. **A late boot is adopted, not buried.** `bin/seat/seat-adopt.sh <id>` re-asks the agent
+   reader for a record whose seat was never proven; when an agent now stands there it
+   corrects the meta (`seat=yes`, the pane the agent ACTUALLY uses), arms the silence
+   watch, and writes the `adopted` wake. `-—all` does it at every session start, in the
+   digest's `SEATS` section.
+
+All three ship with install and update (RULES/05): the doors live in `bin/`, the digest
+section is in `bin/time/saga-session-start.sh`, which every harness runs.
+
+## The seat closes itself — `bin/seat/seat-reap.sh` (2026-11-10)
+
+An errand's herdr workspace is raised by `einherjar-spawn.sh launch_herdr` as
+`eindri-<id>`, and its id is now RECORDED in `state/<id>.meta` (`workspace=`). Nothing
+else may create that workspace without recording it: an unrecorded workspace can only
+be found by its label, and a label is a string two errands can share.
+
+**The one closer.** `bin/seat/seat-reap.sh` owns every close:
+
+```
+seat-reap.sh <id>            # that errand's seat, by recorded workspace id (then by label)
+seat-reap.sh --sweep         # every agentless eindri-* whose errand is closed or recordless
+seat-reap.sh --list          # what a sweep would close; closes nothing
+seat-reap.sh --shell <path>  # the bare shell standing in a worktree
+seat-reap.sh --install|--check   # the sweep seated per harness (pi, opencode, claude)
+seat-reap.sh --verify        # the two structural faults, reported, never mended
+```
+
+**Liveness is asked, never guessed.** `bin/seat/herdr-agents.py` is the ONE reader of
+`herdr agent list`; `herdr pane list` is read by this door alone (for `--shell`). The
+close itself reuses `bin/seat/seats.sh close` and `herdr workspace close`, and it
+re-reads the agent list immediately before the irreversible step. A live agent is
+always refused; a review verdict of `return` keeps the seat.
+
+**Who calls it**, and this list is the whole contract:
+
+- `bin/agents/eindri-dispatch.sh` — `close`, and `review` on a terminal verdict;
+- `bin/agents/eindri-arm.sh` — the close hook and retirement (a tidy seat is never a
+  handoff ack: the arm holds for `state/<id>.review`);
+- `bin/time/saga-session-start.sh` — the `SEATS` section, one TOON row of what closed;
+- `bin/pi/syn-watch-arm.sh` — the arm road, as the helm is taken;
+- `bin/forge/housekeeping.sh` — before reclaiming a worktree a bare shell holds.
+
+**`housekeeping.sh` asks about agents, not processes.** `keep:in-use` means an agent
+stands there. A bare shell with no agent no longer holds a tree hostage; the tree is
+judged by the ordinary verdicts, `keep:dirty` and `keep:unpushed` are still never
+touched, and an unreadable agent list falls back to the old answer (`keep:in-use`)
+because assuming a seat is dead is the irreversible direction.
+
+**Seated by install and update, mended for old homes.** `bin/engine/ymir-install.sh`
+gains a `seats` step (and NAMES the faults under `--check`); `bin/agents/groa-update.sh`
+re-seats the sweep after every update and reports it under `--check`;
+`bin/agents/eir-doctor.sh` has a `seats` surface whose fix mode calls the migration.
+`.agents/migrations/0018-a-worktree-is-not-a-root.sh` heals homes installed earlier:
+it prunes linked-worktree paths from `~/.pi/agent/extensions/.ymir-root` (backup kept)
+and switches affected Eindri worktrees to the sparse-checkout exclusion.
+
+**A worktree is not a root.** `valknut-load.sh` refuses to record a linked worktree in
+`.ymir-root` (the one test: `git rev-parse --git-common-dir` differs from `--git-dir`),
+and prunes any an older seat recorded. `einherjar-spawn.sh` excludes `.pi/extensions`
+by that same sparse-checkout rule instead of `rm -rf` + `--assume-unchanged`, which was
+a per-FILE bit that left 45 deletions in every worker's `git status`.
+
 ## CHANGE LOG
 
 - **2026-11-08** — Appended with the capability: the canon, the estate door, the widening of `domain.sh`,
@@ -1064,3 +1154,8 @@ becoming a releaser), P5 (containers, where a runtime exists). Until P3, nothing
   shelf, the one-rename law with its forbidden form, the automatic rollback inside the watch window, the
   retention rule, and the `--root` contract that lets a release be proved by its own scripts. Plan 221
   P0–P2; fix note `docs/fixes/runtime/1.0.5-the-apps-run-from-a-release-behind-one-symlink.md`.
+- update-loop: bin/engine/update-loop.sh
+- **2026-11-10** — Appended with the capability: the seat sweep (`bin/seat/seat-reap.sh`), the
+  recorded workspace id, the agent-aware housekeeping verdict, the worktree-is-not-a-root rule,
+  migration 0018 and the install/update/Eir wiring. Fix note
+  `docs/fixes/agents/2026-11-10-the-arm-closes-finished-seats.md`.

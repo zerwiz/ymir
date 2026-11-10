@@ -29,7 +29,14 @@ case "${1-}" in
 esac
 
 PANE="${1-}"; CWD="${2-}"; shift 2 2>/dev/null || true
-BACKEND="herdr"; SETTLE="${YMIR_SEAT_SETTLE:-25}"
+BACKEND="herdr"
+# THE ONE DEFAULT (the Allfather, 2026-11-10: "make the seat-prove wait LONGER",
+# then corrected the same evening to sixty seconds). 25 s was shorter than a pi boot
+# on a loaded rail, so a live seat was read as `no agent`, the errand recorded
+# failed, and its arm was never armed. Every road — the spawner and the engine —
+# passes `--settle` only when the operator set YMIR_SEAT_SETTLE, so this value is
+# the shipped truth and there is not a second copy of it to drift.
+SETTLE="${YMIR_SEAT_SETTLE:-60}"
 while [ $# -gt 0 ]; do
   case "$1" in
     --backend) BACKEND="${2-}"; shift 2 ;;
@@ -42,6 +49,23 @@ done
   exit 2
 }
 
+# A worker queued on the local-model lock is ALIVE, not absent (measured 2026-11-04):
+# the rail serves one resident model, so a second errand waits on
+# bin/model/local-model-lock.sh before its pi ever starts. This door used to read that
+# wait as "no agent" and fail a worker that was about to boot. While such a waiter
+# stands in the worktree the clock is RESET, so the wait is bounded by progress and
+# not by the wall.
+lock_waiters() {  # <worktree> — pids waiting on the local-model lock in that tree
+  local wt=$1 pid found=""
+  for pid in /proc/[0-9]*; do
+    [ "$(readlink "$pid/cwd" 2>/dev/null)" = "$wt" ] || continue
+    tr '\0' ' ' <"$pid/cmdline" 2>/dev/null | grep -qE 'local-model[.-]lock' || continue
+    found="$found ${pid#/proc/}"
+  done
+  printf '%s' "${found# }"
+}
+
+queued=0
 deadline=$(( $(date +%s) + SETTLE ))
 while :; do
   if [ "$BACKEND" = tmux ]; then
@@ -66,13 +90,20 @@ while :; do
     fi
   fi
   [ "$(date +%s)" -ge "$deadline" ] && break
+  waiters="$(lock_waiters "$CWD")"
+  if [ -n "$waiters" ]; then
+    queued=1
+    deadline=$(( $(date +%s) + SETTLE ))   # a queued worker is a worker on its way
+    printf 'seat-prove: queued on the local-model lock (%s) — still waiting, this is not a dead seat\n' "$waiters" >&2
+  fi
   sleep 2
 done
 
 if [ "$BACKEND" = tmux ]; then
-  printf 'seat-prove: no agent in tmux pane %s after %ss (the pane holds no foreground harness)\n' "$PANE" "$SETTLE" >&2
+  printf 'seat-prove: no agent in tmux pane %s after %ss%s (the pane holds no foreground harness)\n' \
+    "$PANE" "$SETTLE" "$([ "$queued" = 1 ] && echo ', though it was queued on the model lock')" >&2
 else
-  printf 'seat-prove: no agent in pane %s after %ss, and none with foreground cwd %s (herdr agent list)\n' \
-    "$PANE" "$SETTLE" "$CWD" >&2
+  printf 'seat-prove: no agent in pane %s after %ss%s, and none with foreground cwd %s (herdr agent list)\n' \
+    "$PANE" "$SETTLE" "$([ "$queued" = 1 ] && echo ', though it was queued on the model lock')" "$CWD" >&2
 fi
 exit 1

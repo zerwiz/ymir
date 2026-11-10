@@ -199,10 +199,16 @@ def _prove_seat(
     door = Path(__file__).resolve().parents[2] / "bin" / "seat" / "seat-prove.sh"
     if not door.is_file():
         return placed.target, "unchecked", "bin/seat/seat-prove.sh is missing — the seat was not proved"
-    settle = environ.get("YMIR_SEAT_SETTLE", "25")
-    completed = runner(
-        [str(door), placed.target, str(launch_cwd), "--backend", placed.backend, "--settle", settle]
-    )
+    # THE WAIT IS THE DOOR'S OWN DEFAULT — 60 seconds, and it is not repeated here.
+    # Measured 2026-11-10: 25 s was shorter than a pi boot on a loaded rail, so a live
+    # seat was read as `no agent`, the errand recorded failed (`seat=no`), the arm was
+    # never armed and the brief was never delivered. `--settle` rides ONLY when the
+    # operator set YMIR_SEAT_SETTLE, so there is one shipped number, in one file.
+    settle = environ.get("YMIR_SEAT_SETTLE", "")
+    argv = [str(door), placed.target, str(launch_cwd), "--backend", placed.backend]
+    if settle:
+        argv += ["--settle", settle]
+    completed = runner(argv)
     if not proc.ok(completed):
         lines = (completed.stderr or "").strip().splitlines()
         return "", (lines[-1] if lines else "unproven"), ""
@@ -219,6 +225,34 @@ def _prove_seat(
         if "not in the pane" in extra:
             note = extra.split("seat-prove: ", 1)[-1]
     return pane or placed.target, state or "unknown", note
+
+
+def _seat_wake(
+    roots,
+    seat_id: str,
+    kind: str,
+    pane: str,
+    worktree: str,
+    why: str,
+    environ: Mapping[str, str],
+    runner: proc.Runner,
+) -> None:
+    """Tell the ARM, not a desktop: write the durable wake (bin/seat/seat-wake.sh).
+
+    ONE helper for both seat roads. Best effort by design — a wake that fails must never
+    turn a seat failure into a different failure, so a missing door or a broken queue costs
+    nothing here and everything is already in the status line and the record.
+    """
+    door = Path(__file__).resolve().parents[2] / "bin" / "seat" / "seat-wake.sh"
+    if not door.is_file():
+        return
+    aw = dict(environ)
+    aw.setdefault("BROKK_STATE_OVERRIDE", str(roots.state))
+    try:
+        runner([str(door), seat_id, kind, "--pane", pane or "", "--worktree", worktree or "",
+                "--why", why or ""], env=aw)
+    except Exception:  # noqa: BLE001 - the wake is a courtesy the record already carries
+        pass
 
 
 def seat(
@@ -328,9 +362,13 @@ def seat(
             )
 
     prompt_path, prompt_body = _prompt_for(roots, errand, seat_id, brief_text or errand.request, runner=runner)
-    # The generator is told WHERE the seat stands: the extension set is the worktree's,
-    # never the primary checkout's (plan 190 §4.1).
-    launch_cmd = harness.build_launch_command(selection, str(prompt_path), launch_cwd=tree.path, runner=runner)
+    # The generator is told WHERE THE PINS LIVE, and that is the project tree, never
+    # the worktree: the spawn deletes the worktree's `.pi/extensions` so pi does not
+    # load one tool twice (the one-home change), and a door that removed what it then
+    # demanded refused every pi dispatch — "holds no .pi/extensions tree" (measured
+    # 2026-11-09). `cd` still goes to the worktree: the launch script does that, and
+    # this argument only decides which extension set is named (RULES/13).
+    launch_cmd = harness.build_launch_command(selection, str(prompt_path), launch_cwd=roots.root, runner=runner)
     script = _launch_script(roots, seat_id, tree.path, launch_cmd, lock=errand.lock)
     pane_cmd = f"bash {proc.shell_quote(str(script))}"
 
@@ -433,6 +471,11 @@ def seat(
             f"failed: the launch produced NO agent — pane {placed.target} holds no agent and none "
             f"stands in {tree.path} ({seat_state})",
         )
+        # THE ARM MUST HEAR IT (the Allfather, 2026-11-10). A desktop note is not a wake:
+        # the helm-holding session drains state/.wake-queue, and this road used to notify
+        # nothing at all, so a seat that never proved left the session believing a worker
+        # was running. ONE helper, shared with the shell spawner (bin/seat/seat-wake.sh).
+        _seat_wake(roots, seat_id, "failed", placed.target, tree.path, seat_state, environ, runner)
         raise EngineError(
             f"seat '{seat_id}' was launched into {placed.target} but NO agent stands there or in "
             f"{tree.path} — the errand is not running ({seat_state})"

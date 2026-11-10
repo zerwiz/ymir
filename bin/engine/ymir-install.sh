@@ -1227,7 +1227,19 @@ step_council() {
 # ── 6. loaders ───────────────────────────────────────────────────────────────
 step_loaders() {
   if [ -x "$SCRIPT_DIR/../seat/valknut-load.sh" ]; then
-    if [ "$CHECK" = 1 ]; then add loaders OK "valknut-load.sh present"; else
+    if [ "$CHECK" = 1 ]; then
+      add loaders OK "valknut-load.sh present"
+      # The two faults of 2026-11-10 are NOT healed by --check: they are NAMED here and
+      # mended by migration 0018 on a real install/update. A check that repaired the
+      # tree would hide exactly the state it exists to report.
+      if [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ]; then
+        if out="$("$SCRIPT_DIR/../seat/seat-reap.sh" --verify 2>&1)"; then
+          add seats OK "seat-reap wired; no worktree reports an extension deletion; no worktree recorded as a root"
+        else
+          add seats WARN "$(printf '%s' "$out" | sed -n 's/^seat-reap: //p' | head -1) — a real install/update heals it (migration 0018)"
+        fi
+      fi
+    else
       # Rule: a seat that cannot be seated is not installed. This warned and
       # carried on, which is how a capability exists in the repo and is silently
       # absent on the machine (plan 66 §7).
@@ -1251,6 +1263,20 @@ step_loaders() {
         else
           add arm WARN "Hermes session hook not seated — run bin/pi/arm.sh hook hermes --install"
         fi
+      fi
+
+      # THE SWEEP THAT CLOSES FINISHED SEATS, seated per harness (2026-11-10). The
+      # Allfather's law: it comes on INSTALLATIONS AND UPDATES, for pi, opencode and
+      # claude seats alike. The door names every harness it cannot seat instead of
+      # reporting a clean green over a hall that keeps its dead panes.
+      if [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ]; then
+        if "$SCRIPT_DIR/../seat/seat-reap.sh" --install >/dev/null 2>&1; then
+          add seats OK "the seat sweep is seated on every harness on this host"
+        else
+          add seats WARN "$(   "$SCRIPT_DIR/../seat/seat-reap.sh" --check 2>&1   | sed -n 's/.*"\([a-z]*\)","NOT SEATED","\(.*\)"/\1: \2/p' | tr '\n' ' ') — bin/seat/seat-reap.sh --check names the rest"
+        fi
+      else
+        add seats SKIP "no bin/seat/seat-reap.sh in this tree"
       fi
 
       # The phone gateway (plan 68 P1). Installed and UPDATED, not just written: a capability

@@ -142,3 +142,18 @@ push.sh msgonly                                 → usage, exit 2
 
 The temporary origin's log afterwards: `d92a1d5 test: append` on top of `e277c32
 init` — two commits, only the named file, nothing swept in.
+
+## Appended 2026-11-10 — it pulls first now (RULES/50)
+
+`push.sh` is now an alias of **`bin/vault/home-sync.sh ship`**. Before it commits it fetches and merges `origin/main`;
+if another seat pushed in between, it merges and retries (five tries) instead of failing. It never force-pushes.
+
+```bash
+bin/vault/home-sync.sh begin       # pull before you edit
+bin/vault/home-sync.sh status      # ahead / behind / dirty
+bin/vault/home-sync.sh ship "memory: today's log" hodd/memory/daily/2026-11-10.md
+```
+
+**If it refuses with a conflict list:** two seats changed the same lines of a hand-written file. The tree is left as it
+was; merge by hand (append-only records keep both sides), then `ship` again. Append-only logs and the generated mirror
+merge on their own through the home's `.gitattributes` (seated by migration 0018 on install and update).

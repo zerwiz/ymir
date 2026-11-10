@@ -195,3 +195,18 @@ GROK_AGENT=1 bash -c '[ -z "${GROK_AGENT:-}${GROK_HOOK_EVENT:-}" ] || exit 0; ec
 Upstream Brokk registers two `PreToolUse` entries (`Bash` matcher → `fm-arm-pretool-check.sh --claude`, `fm-cd-pretool-check.sh --claude`). To close the gap, add the equivalent `PreToolUse` block calling `bin/gates/checks/syn-arm-pretool-check.sh --claude` and `bin/gates/checks/syn-cd-pretool-check.sh --claude`. Do not assume the seatbelt is active until it is added and smoke-tested.
 
 **Skills.** This harness reads project skills from `.claude/skills/`; `bin/seat/valknut-load.sh` binds it to the one tree (`.claude/skills -> ../.agents/skills`). Never copy a `SKILL.md` in — a copy is drift, and a nested `SKILL.md` with frontmatter is loaded as a phantom skill.
+
+## 8. Appended 2026-11-10 — the seatbelt and the doors (plan 239 P1–P2)
+
+§1, §2 and §7 above are the record of what was true before this date. Now:
+
+- `.claude/settings.json` carries a **`PreToolUse`** block (matcher `Bash`) calling
+  `bin/gates/checks/claude-pretool.sh`, which reads Claude's stdin payload and runs `syn-arm-pretool-check.sh` and
+  `syn-cd-pretool-check.sh --command <cmd>`; a refusal is exit 2 with the reason on stderr. The asset seatbelt is not
+  wired yet (it takes a path).
+- **MCP:** `bin/bridge/mcp-config.sh claude` seats `ymir`, `engram`, `well` at user scope via `claude mcp add`; the
+  installer's claude row reports `claude-mcp`, and migration 0018 seats it on existing homes.
+- **Appended 2026-11-10 (later):** the Stop hook's second command is now `bin/gates/checks/claude-stop-arm.sh` —
+  helm-only, single-flight (`flock` on `<state>/.claude-arm.<session>.lock`), and its wake banner carries the drain
+  order and `bin/voice/rodd-room.sh reply`. Proven end to end before the wrapper: Rödd's wake roused an idle Claude
+  primary (plan 239 §Proof).

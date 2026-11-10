@@ -445,9 +445,36 @@ add() { T+=("$1"); P+=("$2"); S+=("$3"); }
 # prefix) is skipped by the reader, so deploying from a worktree never strands a
 # machine on a dead path. Prints `recorded` when the file changed, `unchanged`
 # when it did not.
+# Is this checkout a LINKED worktree (git worktree / Yggdrasil)? The one test git
+# itself offers: in a linked worktree `--git-common-dir` names the main repo's git
+# directory while `--git-dir` names this worktree's own, so the two differ. In a
+# normal checkout they are the same path.
+is_linked_worktree() {  # <path>
+  local p=${1:-.} common own
+  common="$(git -C "$p" rev-parse --git-common-dir 2>/dev/null)" || return 1
+  own="$(git -C "$p" rev-parse --git-dir 2>/dev/null)" || return 1
+  [ -n "$common" ] && [ -n "$own" ] || return 1
+  [ "$(CDPATH='' cd "$p" && CDPATH='' cd "$common" 2>/dev/null && pwd -P)" \
+    = "$(CDPATH='' cd "$p" && CDPATH='' cd "$own" 2>/dev/null && pwd -P)" ] && return 1
+  return 0
+}
+
+# Records THIS checkout's root in ~/.pi/agent/extensions/.ymir-root so the deployed
+# extensions can find their bin/ from anywhere (pi discovers the extension files by
+# absolute path; the root is not otherwise knowable from inside them).
 ymir_root_record() {
   local pointer="$PI_EXT_HOME/.ymir-root" tmp line
   [ -d "$PI_EXT_HOME" ] || return 0
+  # A LINKED WORKTREE IS NEVER A ROOT. Measured 2026-11-10: `--pi` run from a
+  # .yggdrasil/ worktree recorded that transient path as the third root, and the
+  # deployed extensions then resolved bin/ through a directory that dies with the
+  # errand. `git rev-parse --git-common-dir` differs from `--git-dir` exactly when
+  # this checkout is a linked worktree (git worktree / Yggdrasil), so that is the
+  # test — the path is pruned rather than recorded, and the real root keeps serving.
+  if is_linked_worktree "$ROOT" || case "$ROOT" in */.yggdrasil/*|*/.yggdrasil) true ;; *) false ;; esac; then
+    printf 'not-recorded'
+    return 0
+  fi
   tmp="$(mktemp 2>/dev/null)" || return 0
   printf '%s\n' "$ROOT" >"$tmp"
   # PRUNE DEAD ROOTS. Measured 2026-10-04: `.ymir-root` carried FOUR roots and TWO of them were
@@ -455,7 +482,8 @@ ymir_root_record() {
   # first recorded root that really holds bin/pi/syn-watch-arm.sh", so a worktree that survives here
   # after it is deleted from disk will eventually be picked — and every door an extension calls
   # through it fails at 127. This list is a cache of places that USED to be real; a cache of dead
-  # places is worse than no cache.
+  # places is worse than no cache. A LINKED WORKTREE is pruned even while it still exists, because
+  # a root is a home and a worktree is an errand.
   if [ -r "$pointer" ]; then
     while IFS= read -r line; do
       [ -n "$line" ] || continue
@@ -463,6 +491,8 @@ ymir_root_record() {
       grep -qxF -- "$line" "$tmp" 2>/dev/null && continue
       # keep a root only while it still IS a root
       [ -x "$line/bin/pi/syn-watch-arm.sh" ] || continue
+      is_linked_worktree "$line" && continue
+      case "$line" in */.yggdrasil/*|*/.yggdrasil) continue ;; esac
       printf '%s\n' "$line" >>"$tmp"
     done <"$pointer"
   fi
