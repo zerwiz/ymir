@@ -20,17 +20,18 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[23]{file,does,kind,verdict,disposition,callers,lines}:
+bin[24]{file,does,kind,verdict,disposition,callers,lines}:
   "autoboot-lib.sh","autoboot-lib.sh — the boot policy: fleet roles → the Ymir programs they owe.","lib","wired","keep",3,260
   "hermes-ensure.sh","hermes-ensure.sh — ensure the Hermes agent runtime is present.","tool","wired","keep",3,89
   "home-seed.sh","home-seed.sh — make a home that a fresh user can understand, and offer to keep it in git.","tool","tested","keep",9,236
   "prereq-ensure.sh","prereq-ensure.sh — self-healing prerequisite engine for Ymir.","tool","wired","keep",12,354
   "prove-install.sh","prove-install.sh — THE INSTALL CLAUSE, proven or NAMED as a gap.","tool","wired","keep",0,166
-  "release-build.sh","release-build.sh — forge an IMMUTABLE release from one commit (plan 221, P0).","tool","wired","keep",3,322
-  "release-flip.sh","release-flip.sh — make one release live, in ONE rename, health first (plan 221, P1)","tool","wired","keep",2,209
-  "release-health.sh","release-health.sh — can THIS directory serve the apps?","tool","wired","keep",2,330
-  "release-lib.sh","release-lib.sh — the ONE place that knows where a release lives and how a flip happens.","lib","wired","keep",3,230
+  "release-build.sh","release-build.sh — forge an IMMUTABLE release from one commit (plan 221, P0).","tool","wired","keep",4,322
+  "release-flip.sh","release-flip.sh — make one release live, in ONE rename, health first (plan 221, P1)","tool","wired","keep",3,209
+  "release-health.sh","release-health.sh — can THIS directory serve the apps?","tool","wired","keep",3,330
+  "release-lib.sh","release-lib.sh — the ONE place that knows where a release lives and how a flip happens.","lib","wired","keep",4,230
   "runtime-deploy.sh","runtime-deploy.sh — move the PINNED runtime checkout to the merged tree, and prove what is running.","tool","wired","keep",2,96
+  "update-loop.sh","update-loop.sh — the heart keeps itself on latest main (plan 233 §10)","tool","wired","keep",1,189
   "version-stamp.sh","version-stamp.sh — a seat says exactly which build it runs (2026-09-22).","tool","wired","keep",0,25
   "ymir-autoboot.sh","ymir-autoboot.sh — the boot proof: what this seat's roles OWE, and whether","tool","wired","keep",4,165
   "ymir-config.sh","ymir-config.sh — the operator's own preferences, honoured and remembered.","tool","wired","keep",2,77
@@ -45,6 +46,6 @@ bin[23]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-validate.sh","ymir-validate.sh — verify the installation actually works.","tool","wired","keep",4,332
   "ymir.js","/**","tool","wired","keep",5,263
 
-**Tally.** verdict: wired=18, tested=5
+**Tally.** verdict: wired=19, tested=5
 
-**Tally.** disposition: keep=23
+**Tally.** disposition: keep=24
