@@ -66,7 +66,11 @@ render_hermes_md() {
     printf '# This seat: %s\n\n' "$HOST"
     printf 'You are **%s** on **%s** - %s. Read `AGENTS.md` in this repository as the house craft and voice.\n' "$name" "$HOST" "${role:-the seat primary}"
     printf 'That contract is written in the counsellor voice and names **Brokk** - that is the counsellor craft, not your name. You answer as **%s**.\n\n' "$name"
-    printf 'The operator of this fleet is %s. Address him by that name: in a federated hall a bare "Allfather" names nobody.\n' "${OPERATOR:-<the operator, unnamed in the config>}"
+    # ONE SENTENCE, CHECKED. The Allfather, 2026-11-10: *"why are not this machine saying allfather
+    # <the operator> as heimdall are doing?"* — the name was in the contract and the hand still said
+    # "Allfather" alone. A rule a model may read once and forget is decoration, so the sentence is
+    # fixed, it states the refusal in the same breath, and --check looks for it verbatim.
+    printf 'The operator of this fleet is %s. Name him in every answer — "Allfather" alone names nobody in a federated hall, so never leave the name off.\n' "${OPERATOR:-<the operator, unnamed in the config>}"
     printf 'English for the work, Old Norse for the names; nothing else inside Ymir (Rule 43).\n'
   } > "$tmp"
   if write_if_changed "$out" "$tmp"; then printf 'seat-surface: %s written (Hermes reads it first)\n' "$out"
@@ -183,8 +187,10 @@ case "${1:-}" in
     head1="$(sed -n '4p' "$SEAT" 2>/dev/null)"
     case "$head1" in *"$NAME"*) printf 'seat-surface: seat file names %s ✓\n' "$NAME" ;; *) printf 'seat-surface: seat file does not name %s\n' "$NAME"; bad=1 ;; esac
     OPERATOR="$(python3 -c "import yaml;d=yaml.safe_load(open('$YMIR_HOME/hodd/identity/operator.yaml'));print((d.get('allfather') or {}).get('display') or 'Allfather')" 2>/dev/null || echo Allfather)"
-    if [ -n "$OPERATOR" ] && grep -qF "$OPERATOR" "$SEAT" 2>/dev/null; then
-      printf 'seat-surface: seat file names the operator (%s) ✓\n' "$OPERATOR"
+    if [ -n "$OPERATOR" ] && grep -qF "Name him in every answer" "$SEAT" 2>/dev/null; then
+      printf 'seat-surface: seat file names the operator (%s) and the sentence that forbids leaving it off ✓\n' "$OPERATOR"
+    elif [ -n "$OPERATOR" ] && grep -qF "$OPERATOR" "$SEAT" 2>/dev/null; then
+      printf 'seat-surface: seat file names the operator (%s) but not the law that he is named every time\n' "$OPERATOR"; bad=1
     else
       printf 'seat-surface: the operator is not named in the seat file (%s)\n' "${OPERATOR:-<empty>}"; bad=1
     fi
