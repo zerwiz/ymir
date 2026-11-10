@@ -24,7 +24,7 @@ bin[36]{file,does,kind,verdict,disposition,callers,lines}:
   "essence-fetch.sh","essence-fetch.sh — the npm world's self-heal: npm's packer refuses dotfolders","tool","wired","keep",2,18
   "finding-log.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",1,64
   "finding-tally.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",1,140
-  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",393,77
+  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",395,77
   "github-deploy.sh","github-deploy.sh — zero-trust deploys (W0035).","data","wired","keep",0,96
   "gjallarhorn-expose.sh","gjallarhorn-expose.sh — put EVERY app on its own public hostname (Gjallarhorn).","tool","wired","keep",0,152
   "gjallarhorn-notify.sh","gjallarhorn-notify.sh — the horn (W0036).","tool","wired","keep",1,73

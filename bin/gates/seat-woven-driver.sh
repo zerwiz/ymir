@@ -39,7 +39,11 @@ esac
 
 [ -x "$DRIVER" ] || { printf 'seat-woven-driver: no driver at %s\n' "$DRIVER" >&2; exit 2; }
 
-want="$DRIVER %O %A %B %L %P"
+# RELATIVE, never "$DRIVER": .git/config is SHARED by every worktree, and git runs a merge driver from
+# the top of the worktree that is merging. An absolute path seats whichever checkout ran this last —
+# on 2026-11-10 it pointed into a nested, reaped-to-be errand worktree and every rebase ran that
+# stale copy (a minute per conflicted index). A relative path follows the tree being merged.
+want="bash bin/records/regenerate-on-merge.sh %O %A %B %L %P"
 have="$(git -C "$ROOT" config --get "merge.$KEY.driver" 2>/dev/null || true)"
 declared="$(git -C "$ROOT" config --get "merge.$KEY.name" 2>/dev/null || true)"
 

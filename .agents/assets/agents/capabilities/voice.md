@@ -10,6 +10,8 @@
 - **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | model-sync.sh | model-sync.sh — take the voice models over the LOCAL NETWORK, never fr | tested | keep (a human or a cron row must run it) |
 | rodd-arm.sh | rodd-arm.sh — Rödd knocks on the arm, and hears the answer. | tested | keep (a human or a cron row must run it) |
+| rodd-room.sh | rodd-room.sh — the ARM HOLDER's half of Rödd's room: the one writer o | tested+named | keep (a human or a cron row must run it) |
 | test_rodd_arm.sh | test_rodd_arm.sh — Rödd may knock on the arm, and only on a LIVE arm: | tested | keep (a human or a cron row must run it) |
+| todos.sh | todos.sh — the Allfather's task ledger, READ by anyone who must know i | tested | keep (a human or a cron row must run it) |
 | voice-door.sh | voice-door.sh — the real-time voice door: speak to Ymir on whatever se | tested | keep (a human or a cron row must run it) |
 | voice-ensure.sh | voice-ensure.sh — ensure the voice engines: whisper.cpp (speech → te | tested+named | keep (a human or a cron row must run it) |

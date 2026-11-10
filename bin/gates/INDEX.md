@@ -20,7 +20,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[119]{file,does,kind,verdict,disposition,callers,lines}:
+bin[120]{file,does,kind,verdict,disposition,callers,lines}:
   "SKILL.md","---","data","tested","keep",23,19
   "SKILL.md","---","data","tested","keep",23,19
   "SKILL.md","---","data","tested","keep",23,18
@@ -33,6 +33,7 @@ bin[119]{file,does,kind,verdict,disposition,callers,lines}:
   "check-row.md","One measured row","data","wired","keep",2,10
   "ci-verify.sh","ci-verify.sh — what CI must prove, in one command, for BOTH hosts.","tool","tested","keep",5,152
   "claude-pretool.sh","claude-pretool.sh — Claude Code's PreToolUse seam onto the house's pre-tool checks (plan 239 P2).","tool","wired","keep",0,27
+  "claude-stop-arm.sh","claude-stop-arm.sh — Claude Code's Stop-hook arm: ONE client per session, only for the helm,","tool","wired","keep",0,47
   "confidential-guard.sh","confidential-guard.sh — while a confidential session is live, nothing outside the","tool","wired","keep",2,63
   "constellation-grant-guard.sh","constellation-grant-guard.sh — the road's own ward.","tool","wired","keep",1,100
   "contracts-check.sh","contracts-check.sh — the typed surfaces' proof, in one command.","tool","tested","keep",1,122
@@ -93,7 +94,7 @@ bin[119]{file,does,kind,verdict,disposition,callers,lines}:
   "rules-number-guard.sh","rules-number-guard.sh — the house law is NUMBERED, so no two rules may share a number,","tool","tested","keep",1,83
   "runtime-guard.sh","runtime-guard.sh — THE TREE IS NOT A RUNTIME.","data","wired","keep",1,125
   "runtime-pinned-guard.sh","runtime-pinned-guard.sh — a unit that executes from a WORKING tree is a machine running whatever branch","tool","wired","keep",1,77
-  "seat-woven-driver.sh","seat-woven-driver.sh — seat the engine behind `merge=regenerate`, and PROVE it runs.","tool","wired","keep",1,97
+  "seat-woven-driver.sh","seat-woven-driver.sh — seat the engine behind `merge=regenerate`, and PROVE it runs.","tool","wired","keep",1,101
   "secret-guard.sh","secret-guard.sh — refuse to commit obvious secrets or private env files.","tool","wired","keep",5,120
   "sensitive-gate.sh","sensitive-gate.sh — one gate for every external surface of a sensitive artifact set.","tool","wired","keep",0,81
   "share.yaml","The share list for the skills-MCP fixtures — three invented skills, nothing real.","data","wired","keep",2,13
@@ -141,6 +142,6 @@ bin[119]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-config-check.sh","ymir-config-check.sh — the DOOR to the config layer (`src/ymir_runtime/config/`).","tool","wired","keep",0,44
   "ymir-update-check.sh","ymir-update-check.sh — does a newer Ymir stand on npm?","tool","wired","keep",3,71
 
-**Tally.** verdict: wired=101, tested=18
+**Tally.** verdict: wired=102, tested=18
 
-**Tally.** disposition: keep=117, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1
+**Tally.** disposition: keep=118, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1

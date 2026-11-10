@@ -10,6 +10,7 @@
 - **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | branch-current.sh | branch-current.sh — a branch is based on CURRENT main before it is off | tested | keep (a human or a cron row must run it) |
 | claude-pretool.sh | claude-pretool.sh — Claude Code's PreToolUse seam onto the house's pre | tested+named | keep (a human or a cron row must run it) |
+| claude-stop-arm.sh | claude-stop-arm.sh — Claude Code's Stop-hook arm: ONE client per sessi | tested+named | keep (a human or a cron row must run it) |
 | contracts-check.sh | contracts-check.sh — the typed surfaces' proof, in one command. | tested | keep (a human or a cron row must run it) |
 | design-check.sh | design-check.sh — one identity, two renderers: they must agree. | tested | keep (a human or a cron row must run it) |
 | extension-api-check.sh | extension-api-check.sh — a Ymir extension must speak Pi's ACTUAL tool  | tested+named | keep (a human or a cron row must run it) |
@@ -65,6 +66,7 @@
 | people-guard.sh | people-guard.sh — the public tree holds no people. | tested | keep (a human or a cron row must run it) |
 | perm-guard.sh | perm-guard.sh — flag agent profiles whose permissions are self-defeati | tested | keep (a human or a cron row must run it) |
 | pkill-guard.sh | pkill-guard.sh — no blanket kill in the tree, and the audit that finds | tested | keep (a human or a cron row must run it) |
+| pr-identity-guard.sh | (no header line) | tested | keep (a human or a cron row must run it) |
 | pr-ship-guard.sh | pr-ship-guard.sh — Rule 08, the ship door: the BRANCH is a smith's to  | tested | keep (a human or a cron row must run it) |
 | private-guard.sh | private-guard.sh — private structure and NDA material never cross a su | tested | keep (a human or a cron row must run it) |
 | public-data-guard.sh | public-data-guard.sh — the TREE scan for RULES/04: templates and logic | tested | keep (a human or a cron row must run it) |
@@ -89,7 +91,9 @@
 | seat-woven-driver.sh | seat-woven-driver.sh — seat the engine behind `merge=regenerate`, and  | tested | keep (a human or a cron row must run it) |
 | test_areas_and_injection.sh | test_areas_and_injection.sh — the smoke suite for plan 219 and the arm | tested | keep (a human or a cron row must run it) |
 | test_arm_talk.sh | bogus host refused with road named | tested | keep (a human or a cron row must run it) |
+| test_broken.sh | add appends | tested | keep (a human or a cron row must run it) |
 | test_ci_parity.sh | test_ci_parity.sh — a push run and a pull_request run on one sha print | tested | keep (a human or a cron row must run it) |
+| test_finding_tally.sh | ensure config | tested | keep (a human or a cron row must run it) |
 | test_fleet_roads.sh | good block passes | tested | keep (a human or a cron row must run it) |
 | test_gimle_mcp_board.sh | test_gimle_mcp_board.sh — the Gimlé MCP's board face, proved by comma | tested | keep (a human or a cron row must run it) |
 | test_handoff_packet.sh | test_handoff_packet.sh — proves the packet door reads the schema's pac | tested | keep (a human or a cron row must run it) |
@@ -99,8 +103,11 @@
 | test_new_doors.sh | test_new_doors.sh — the production tests for the doors built 2026-11-0 | tested | keep (a human or a cron row must run it) |
 | test_plan_state.sh | plan missing headers -> finding | tested | keep (a human or a cron row must run it) |
 | test_plan_watch.sh | dry-run prints arithmetic, sends nothing | tested | keep (a human or a cron row must run it) |
+| test_pr_identity.sh | complete body passes | tested | keep (a human or a cron row must run it) |
 | test_pr_ship_guard.sh | test_pr_ship_guard.sh — proves the ship door judges the PR and not the | tested | keep (a human or a cron row must run it) |
 | test_registers.sh | test_registers.sh — one door for every generated register. | tested | keep (a human or a cron row must run it) |
+| test_review_mend.sh | dry-run on PR 624 (missing CHANGE LOG) -> rung per finding + next: | tested | keep (a human or a cron row must run it) |
+| test_roster.sh | (no header line) | tested | keep (a human or a cron row must run it) |
 | test_skills_mcp.sh | test_skills_mcp.sh — the skills door, proved by command. | tested | keep (a human or a cron row must run it) |
 | toolchain.sh | toolchain.sh — the provider wrappers (W0033). A typed front door to th | tested+named | keep (a human or a cron row must run it) |
 | wedge-notify.sh | wedge-notify.sh — the Ymir wedge-alarm notifier. | tested+named | keep (a human or a cron row must run it) |

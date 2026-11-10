@@ -206,3 +206,7 @@ Upstream Brokk registers two `PreToolUse` entries (`Bash` matcher → `fm-arm-pr
   wired yet (it takes a path).
 - **MCP:** `bin/bridge/mcp-config.sh claude` seats `ymir`, `engram`, `well` at user scope via `claude mcp add`; the
   installer's claude row reports `claude-mcp`, and migration 0018 seats it on existing homes.
+- **Appended 2026-11-10 (later):** the Stop hook's second command is now `bin/gates/checks/claude-stop-arm.sh` —
+  helm-only, single-flight (`flock` on `<state>/.claude-arm.<session>.lock`), and its wake banner carries the drain
+  order and `bin/voice/rodd-room.sh reply`. Proven end to end before the wrapper: Rödd's wake roused an idle Claude
+  primary (plan 239 §Proof).

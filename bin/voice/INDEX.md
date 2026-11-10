@@ -20,18 +20,20 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[10]{file,does,kind,verdict,disposition,callers,lines}:
+bin[12]{file,does,kind,verdict,disposition,callers,lines}:
   "house.css","/* house.css — Rödd's face, in the Allfather's hall.","data","wired","keep",0,54
   "model-sync.sh","model-sync.sh — take the voice models over the LOCAL NETWORK, never from the internet.","tool","wired","keep",0,99
-  "rodd-arm.sh","rodd-arm.sh — Rödd knocks on the arm, and hears the answer.","tool","wired","keep",2,447
+  "rodd-arm.sh","rodd-arm.sh — Rödd knocks on the arm, and hears the answer.","tool","wired","keep",3,447
+  "rodd-room.sh","rodd-room.sh — the ARM HOLDER's half of Rödd's room: the one writer of <state>/rodd/room.jsonl.","tool","wired","keep",1,40
   "test_rodd_arm.sh","test_rodd_arm.sh — Rödd may knock on the arm, and only on a LIVE arm: the whole point of","tool","wired","keep",1,122
+  "todos.sh","todos.sh — the Allfather's task ledger, READ by anyone who must know it (the arm holder first).","tool","wired","keep",3,57
   "voice-door.sh","voice-door.sh — the real-time voice door: speak to Ymir on whatever seat you are at.","tool","wired","keep",0,398
   "voice-ensure.sh","voice-ensure.sh — ensure the voice engines: whisper.cpp (speech → text) and","tool","wired","keep",3,190
   "voice-toolbox.py","'''voice-toolbox.py — the house's hands for a browser face.","tool","wired","keep",0,119
   "voice_mcp.py","'''voice_mcp.py — the voice's MCP adapter: every server this seat knows, as hands.","tool","wired","keep",0,396
-  "voice_tools.py","'''voice-tools.py — the hands of the voice.","tool","tested","keep",3,2747
+  "voice_tools.py","'''voice-tools.py — the hands of the voice.","tool","tested","keep",4,2747
   "ymir-vad.py","'''","tool","wired","keep",0,135
 
-**Tally.** verdict: wired=9, tested=1
+**Tally.** verdict: wired=11, tested=1
 
-**Tally.** disposition: keep=10
+**Tally.** disposition: keep=12

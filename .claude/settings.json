@@ -20,7 +20,7 @@
           },
           {
             "type": "command",
-            "command": "[ -z \"${GROK_AGENT:-}${GROK_HOOK_EVENT:-}\" ] || exit 0; out=$(exec \"$CLAUDE_PROJECT_DIR\"/bin/pi/syn-watch-arm.sh --restart); rc=$?; case \"$out\" in *signal:*|*stale:*|*check:*|*heartbeat:*) printf '%s\n' \"$out\" >&2; exit 2;; esac; exit $rc",
+            "command": "[ -z \"${GROK_AGENT:-}${GROK_HOOK_EVENT:-}\" ] || exit 0; exec \"$CLAUDE_PROJECT_DIR\"/bin/gates/checks/claude-stop-arm.sh",
             "asyncRewake": true,
             "timeout": 28800
           }

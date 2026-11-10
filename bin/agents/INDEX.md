@@ -20,8 +20,9 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[54]{file,does,kind,verdict,disposition,callers,lines}:
+bin[55]{file,does,kind,verdict,disposition,callers,lines}:
   "README.md","Gróa — the updater, one per install","data","tested","keep",49,-
+  "agent-census.sh","agent-census.sh — how many agents are running on THIS machine, and which of them are stale.","tool","wired","keep",1,163
   "agent-run.sh","agent-run.sh — run one agent's errand through the harness the Allfather chose.","tool","wired","keep",2,44
   "areas.sh","areas.sh — the estate door: a project's areas, their keepers, and the seam to the seat.","tool","wired","keep",15,393
   "brokk-classify-lib.sh","Shared wake classifier: the common source of truth for Allfather-relevant status","lib","wired","keep",1,1771
@@ -76,6 +77,6 @@ bin[54]{file,does,kind,verdict,disposition,callers,lines}:
   "workspace-provision.sh","workspace-provision.sh — carve one workspace for the operator.","tool","wired","keep",0,82
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
 
-**Tally.** verdict: wired=43, tested=11
+**Tally.** verdict: wired=44, tested=11
 
-**Tally.** disposition: keep=52, migrate → src/ymir_runtime/send.py=1, migrate → src/ymir_runtime/seat.py=1
+**Tally.** disposition: keep=53, migrate → src/ymir_runtime/send.py=1, migrate → src/ymir_runtime/seat.py=1
