@@ -2,7 +2,7 @@
 
 ### What
 - **`bin/agents/skill-index.sh`** gains `--root`, `--root-check`, `--adopt-box` and `--root-path`. `--root` links
-  every skill of every shelf, by name, into the store `${XDG_DATA_HOME:-~/.local/share}/ymir/skills` (links, never
+  every skill of every shelf, by name, into the store `$XDG_DATA_HOME/ymir/skills` (XDG's data home; links, never
   copies; the shipped shelf wins a clash; stale links are removed). It writes the ONE root skill
   `~/.agents/skills/ymir/SKILL.md`, a quoted one-line description over a generated index (name · trigger · absolute
   path, grouped by shelf, shipped first), and links `~/.claude/skills/ymir` to it. It is deterministic, so an

@@ -12,9 +12,10 @@ per skill, giving the name, a one-line trigger and the absolute path to its `SKI
 the line that fits the task, and reads that one skill by path. That costs about two hundred bytes per turn, not two
 hundred descriptions.
 
-Behind it is the **store**, `~/.local/share/ymir/skills`. It holds one link per skill, gathered from every shelf, in
+Behind it is the **store**, `$XDG_DATA_HOME/ymir/skills` (XDG's data home, which most systems leave at its default
+under your home directory). It holds one link per skill, gathered from every shelf, in
 a directory no harness scans. When two shelves hold the same name, the shipped skill wins on purpose. A machine's own
-skills (the **box** shelf) live in `~/.local/share/ymir/box-skills`.
+skills (the **box** shelf) live beside it, in `$XDG_DATA_HOME/ymir/box-skills`.
 
 ## Where each harness finds it
 

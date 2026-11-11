@@ -9,7 +9,7 @@
 #
 # A home installed before this day needs three things a `git pull` cannot give it:
 #   1. box skills moved OUT of ~/.agents/skills (pi walks it recursively) into the box shelf
-#      ~/.local/share/ymir/box-skills — CARRIED INTACT (RULES/06): the copy is compared file for
+#      $XDG_DATA_HOME/ymir/box-skills (XDG's data home) — CARRIED INTACT (RULES/06): the copy is compared file for
 #      file before the source is gone, and nothing already in the box is overwritten;
 #   2. the store, the root skill and Claude's link seated (bin/agents/skill-index.sh --root);
 #   3. the retired repo link `.claude/skills` removed from the checkout this runs in, where it
