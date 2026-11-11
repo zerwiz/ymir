@@ -241,7 +241,15 @@ section "TODAY"
 # ($YMIR_HOME/hodd/memory/daily/YYYY-MM-DD.md) — the record a random document in
 # hodd/docs is not.
 if [ -x "$SCRIPT_DIR/../records/daily-log.sh" ]; then
-  BROKK_HOME="$BROKK_HOME" "$SCRIPT_DIR/../records/daily-log.sh" today 2>/dev/null | head -24 || printf 'no entries yet\n'
+  # The NEWEST work is at the bottom of the day: show the tail, and say how much came before it. (2026-11-11: `head -24`
+  # showed only the morning, so a session opened at night never saw the evening's work — "why don't the agents update
+  # the saga?")
+  _today="$(BROKK_HOME="$BROKK_HOME" "$SCRIPT_DIR/../records/daily-log.sh" today 2>/dev/null || true)"
+  if [ -z "$_today" ]; then printf 'no entries yet\n'; else
+    _n="$(printf '%s\n' "$_today" | wc -l | tr -d ' ')"
+    [ "$_n" -gt 40 ] && printf '(%s earlier lines today — daily-log.sh today shows all)\n' "$((_n - 40))"
+    printf '%s\n' "$_today" | tail -40
+  fi
 else
   printf 'daily-log.sh not installed\n'
 fi

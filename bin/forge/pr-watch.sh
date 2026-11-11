@@ -92,7 +92,7 @@ for n in list(seen):
 if status:
     print(f"pr-watch[1]{{repo,open,would_say}}:\n  \"{repo}\",\"{len(prs)}\",\"{len(out)}\"")
 delivered = True
-if out and not dry:
+if out and not dry and prs:
     body = "\n".join("• " + l for l in out)
     first = body.split('\n')[0][:180]
     r = subprocess.run([os.path.join(root,'bin/notify/send.sh'),

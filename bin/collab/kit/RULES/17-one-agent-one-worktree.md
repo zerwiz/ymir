@@ -33,3 +33,27 @@ gigabyte for nothing. A build output is *not* shared, and must not be.
 
 **Which agent is which.** A worktree named `sebastian-c1` is a name, not an identity; the branch's commits carry their own author. This
 rule prevents collision, not confusion — and the baton is what prevents confusion.
+
+## 2026-11-11 — only a code change needs a worktree; a handoff does not (appended)
+
+At the Allfather's word: *"only handoffs don't need a new worktree. only code changes need a new worktree."*
+
+The rule above stands for every **code change**: an agent forges it in `.yggdrasil/<id>/` on its own branch, and it
+leaves by a pull request. A **handoff** is not a code change. It is the baton, written at the end of a session for the
+next hand, and it must reach the shared branch at once or the next hand reads a stale one.
+
+| The change | Worktree | Pull request | Pushed to |
+|---|---|---|---|
+| code, tests, plans, documents, configuration | yes, `.yggdrasil/<id>/` | yes, and the operator merges | its own branch |
+| **only** `handoff/CURRENT.md` and `handoff/log/` | no, written in the main tree | no | the default branch, directly |
+
+**What enforces it.** The kit's `.githooks/pre-push` lets a push to `main` or `master` through when every file it changes
+is under `handoff/`, and says so. A push that carries anything else alongside the baton is refused as before. The
+checks (`scripts/checks.sh`) still run on a handoff push, so a baton the check refuses still cannot land.
+
+**What it does not excuse.** A handoff that also fixes "one small thing" in code is a code change. Split it: the code
+goes by worktree and pull request, the baton goes straight in.
+
+## CHANGE LOG
+
+- 2026-11-11 — review-mend: added missing heading for #666

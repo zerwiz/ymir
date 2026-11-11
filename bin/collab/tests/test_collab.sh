@@ -96,5 +96,21 @@ if diff -rq "$_root/.agents/skills/bragi-documents/assets/templates" "$_d/kit/do
 else no "the kit's templates match the bragi-documents skill — copy assets/templates/ into kit/docs/templates/"; fi
 [ -f "$_d/kit/RULES/20-documents-are-for-people.md" ] && ok "the kit carries RULES/20" || no "the kit carries RULES/20"
 
+# ---- 9 · a push of only the baton reaches main; code beside it does not (kit RULES/17, 2026-11-11) ---
+_h="$(mktemp -d)"
+git init -q --bare "$_h/remote.git"
+git init -q -b main "$_h/w" && (
+  cd "$_h/w" && git config user.email t@example.invalid && git config user.name t
+  mkdir -p handoff .githooks && cp "$_d/kit/.githooks/pre-push" .githooks/pre-push && chmod +x .githooks/pre-push
+  echo one > handoff/CURRENT.md && echo code > app.txt && git add -A && git commit -qm "first commit of the fixture"
+  git remote add origin "$_h/remote.git" && git push -q --no-verify origin main 2>/dev/null
+  git config core.hooksPath .githooks
+)
+( cd "$_h/w" && echo two > handoff/CURRENT.md && git commit -qam "the baton for the next hand" && git push -q origin main ) >/dev/null 2>&1 \
+  && ok "a push carrying only handoff/ reaches main" || no "a push carrying only handoff/ reaches main"
+( cd "$_h/w" && echo three > handoff/CURRENT.md && echo more >> app.txt && git commit -qam "the baton and a code change" && git push -q origin main ) >/dev/null 2>&1 \
+  && no "a push with code beside the baton is refused at main" || ok "a push with code beside the baton is refused at main"
+rm -rf "$_h"
+
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

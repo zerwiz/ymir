@@ -3,7 +3,7 @@
 # here — and every gate is reachable: a gate after an `exit` is a gate that never ran. That fault lived in this hook until
 # 2026-11-06 (docs/fixes/collab/); the order below is the repair.
 #
-# Six gates: never push a protected branch, never push work nobody can review, never push a behaviour change without its
+# Six gates: never push a protected branch (a push carrying only the handoff is not code, and goes in), never push work nobody can review, never push a behaviour change without its
 # note, never change the referee in silence, never add a module with no test, and never push a red tree.
 set -u
 
@@ -28,7 +28,25 @@ gate() {
 }
 
 protected="master main"
+# handoff_only <old-sha> <new-sha> — true when the push changes nothing but the baton (handoff/).
+handoff_only() {
+  case "${1:-}" in ""|0000000000000000000000000000000000000000) return 1 ;; esac
+  local touched
+  touched="$(git diff --name-only "$1" "$2" 2>/dev/null)" || return 1
+  [ -n "$touched" ] && ! printf '%s\n' "$touched" | grep -qv '^handoff/'
+}
+
 while read -r _local_ref _local_sha remote_ref _remote_sha; do
+  # A handoff is not a code change (RULES/17, appended 2026-11-11): a push to the protected branch that carries only
+  # the baton (handoff/CURRENT.md and handoff/log/) goes straight in from the main tree — no worktree, no pull request.
+  # Every other change still needs its worktree and its PR, and the checks below still run on the baton.
+  case "$remote_ref" in
+    refs/heads/master|refs/heads/main)
+      if handoff_only "$_remote_sha" "$_local_sha"; then
+        printf 'pre-push: %s carries only the handoff — a baton needs no worktree and no pull request\n' "${remote_ref#refs/heads/}" >&2
+        continue
+      fi ;;
+  esac
   gate pr-guard bash scripts/gates/pr-guard.sh "${1:-origin}" "$_local_ref" "$remote_ref" "$_remote_sha"
   case "$remote_ref" in
     refs/heads/*)
