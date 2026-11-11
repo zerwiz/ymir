@@ -70,3 +70,7 @@ says `pass`, the collision is not there and the door is standing aside on purpos
 
 If the door is missing, `bin/seat/harness-extensions-install.sh --check` says so, and
 `bin/seat/valknut-load.sh --check` fails the extension-home line until it is seated.
+
+## CHANGE LOG
+
+- **2026-11-11** — written with the change (one extension home for a hand-started pi).
