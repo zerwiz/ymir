@@ -17,6 +17,10 @@
 #   daily-line.sh                 # append today's line to the vault's daily log
 #   daily-line.sh --date 2026-11-01
 #   daily-line.sh --dry-run       # print it, write nothing
+#
+# Since plan 252 it also says WHAT MOVED today (bin/time/daily_moved.py): commits in the home and in every project
+# checked out on this seat, mail sent, meetings recorded — only what earlier runs today did not log, so it may run
+# several times a day; a run with nothing new writes nothing.
 set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 STATE="${YMIR_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/ymir}"
@@ -90,9 +94,28 @@ else
 fi
 if [ -z "${CARDS// }" ]; then CARDS="cards: 0 — no board on this seat"; fi
 
+# 3) what moved today, from the record (plan 252): commits in the home and in every project checked out here, mail
+#    sent, meetings recorded. It returns only what earlier runs today did not log, so this can run several times a day.
+MOVED=""
+HOME_DIR="${YMIR_HOME:-}"
+if [ -z "$HOME_DIR" ] && [ -r "$ROOT/bin/vault/hoard-lib.sh" ]; then
+  . "$ROOT/bin/vault/hoard-lib.sh" >/dev/null 2>&1 || true
+  command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root HOME_DIR
+fi
+if [ -n "$HOME_DIR" ] && [ -d "$HOME_DIR" ]; then
+  MOVED="$(python3 "$ROOT/bin/time/daily_moved.py" --home "$HOME_DIR" --root "$ROOT" --state "$STATE" --date "$DAY" \
+    $( [ "$DRY" = 1 ] && printf -- '--dry-run' ) 2>/dev/null || true)"
+fi
+
+# Nothing new since the last run: write nothing (a log of empty lines is noise, not a record).
+if [ -z "${MOVED// }" ] && printf '%s' "$BODY" | grep -q '^handoffs today: 0' && printf '%s' "$CARDS" | grep -q '^cards: 0'; then
+  printf 'daily-line[1]{day,appended}:\n  "%s",false\n' "$DAY"; exit 0
+fi
+
 ENTRY="daily line${CARDS:+
 $CARDS}${BODY:+
-$BODY}"
+$BODY}${MOVED:+
+$MOVED}"
 if [ "$DRY" = 1 ]; then
   printf '%s\n' "$ENTRY"; exit 0
 fi
