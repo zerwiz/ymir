@@ -209,3 +209,25 @@ bin/data/
 
 # The seat identity Hermes loads (machine-local; never published)
 .hermes.md
+
+# ── GENERATED REGISTERS: BUILT, NEVER VERSIONED (plan 243 part A, 2026-11-11) ──
+# The Allfather: *"the index systems are idiotic. we are having so much merge problems."*
+# Measured that night: 33 INDEX.md files and ~34 generated registers tracked; 394 INDEX.md
+# file-changes on main in 14 days; every PR rewrote them at the same sorted position, so
+# every two open PRs conflicted (#649: 10 generated files + 1 register). On main at 3f263f69,
+# 12 of the 35 inventory files were ALREADY stale — so every push was refused for drift it
+# did not cause.
+#
+# So they leave git and are BUILT where they are read: by an install, by an update, by the
+# session start (cached — skipped when the tree hash is unchanged), and on demand by any
+# reader that finds one missing. The ONE door is `bin/gates/registers.sh generate`.
+#
+# The SOURCES stay tracked and are what a gate judges: the doors' own headers, the folder map
+# (bin/gates/registers/folders.tsv), the feature pages, and docs/features/_catalogue/.
+/FEATURES.md
+/bin/README.md
+/bin/INDEX.md
+/bin/*/INDEX.md
+/.agents/backend/README.md
+/.agents/assets/agents/capabilities.md
+/.agents/assets/agents/capabilities/
