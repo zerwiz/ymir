@@ -88,5 +88,13 @@ grep -qs '{{name}}' "$_d/letters/collaboration-files.md" && ok "the template car
 bash "$_d/ship.sh" --repo "$repo" --branch b1 --message m --path nope.txt >/dev/null 2>&1 \
   && no "ship refuses an empty path" || ok "ship refuses an empty path"
 
+
+# ---- 8 · the kit's template shelf is the Bragi skill's, byte for byte (RULES/52, kit RULES/20) ------
+_root="$(cd "$_d/../.." && pwd)"
+if diff -rq "$_root/.agents/skills/bragi-documents/assets/templates" "$_d/kit/docs/templates" >/dev/null 2>&1; then
+  ok "the kit's templates match the bragi-documents skill"
+else no "the kit's templates match the bragi-documents skill — copy assets/templates/ into kit/docs/templates/"; fi
+[ -f "$_d/kit/RULES/20-documents-are-for-people.md" ] && ok "the kit carries RULES/20" || no "the kit carries RULES/20"
+
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

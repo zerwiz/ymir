@@ -24,14 +24,13 @@ updated: "2026-11-11"
 ---
 ```
 
-```
-document_status[5]{status,meaning}:
-  "draft","being written; nobody has been asked to read it"
-  "review","the reviewer has been asked and is reading it"
-  "accepted","agreed; it is the current word"
-  "superseded","replaced; it names its successor and is kept, never deleted"
-  "record","a dated record of what happened, not a living statement"
-```
+| Status | Meaning |
+|---|---|
+| draft | being written; nobody has been asked to read it |
+| review | the reviewer has been asked and is reading it |
+| accepted | agreed; it is the current word |
+| superseded | replaced; it names its successor and is kept, never deleted |
+| record | a dated record of what happened, not a living statement |
 
 `docs/fixes/` and `docs/kit/` are skipped by the status script: fix notes are records of their day, and the kit's
 own documents are copied in as shipped.

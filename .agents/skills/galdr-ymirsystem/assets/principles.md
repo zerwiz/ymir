@@ -383,3 +383,11 @@ if (!tryFastPath(process.argv.slice(2), { version: VERSION })) {
 - **Mirror:** `.agents/skills/tyr-check/assets/principles.md`.
 - When a principle changes, update the manifest block at the top and this body in
   the same edit; Tyr judges the pair for drift.
+
+---
+
+## Appended 2026-11-11 — principle 1 is about stdout, not about documents
+
+Principle 1 (TOON output) governs what a **CLI prints for an agent to read**. It never governed documents, and it
+does not now. A plan, an architecture page, a README or a rule is written for a person under `RULES/52`, with Markdown
+tables and Mermaid diagrams, not TOON. A tool may still print TOON. The page that explains the tool may not.

@@ -5,7 +5,7 @@ UI, and agents obey it, and a change that contradicts a rule must first change
 the rule (append-only; never silently rewritten).
 
 ```
-rules_index[46]{file,subject}:
+rules_index[48]{file,subject}:
   "01-domains.md","domains (Greinar) · houses · Eindri"
   "02-agents.md","agents: home, kinds, profile contract, no mock"
   "03-houses.md","houses = companies; ownership, records, boundaries"
@@ -40,6 +40,7 @@ rules_index[46]{file,subject}:
   "49-workers-are-eindri.md","workers are Eindri: every worker is an Eindri on a Yggdrasil worktree, no harness spawns its own subagents, and the refusal is a user-scope PreToolUse hook that denies Agent|Task and names the Eindri road"
   "50-the-home-is-pulled-before-and-pushed-after.md","the home is pulled before and pushed after: an edit to ymirhome begins with a pull and ships by push in the same breath, never a stale base"
   "51-ymir-is-a-program.md","ymir is a program: the repo is the source it ships from; ymir runs globally in every harness's root agent, seated by install and update, loaded from the runtime, never a working tree"
+  "52-documents-are-for-people.md","a document is written for a person to read: headings, short paragraphs, Markdown tables, Mermaid diagrams, callouts — never TOON blocks; TOON stays in what only a machine reads"
   "README.md","this index"
   "37-a-surface-may-not-show-what-it-did-not-receive.md","a surface may not show what it did not receive"
 ```
@@ -127,3 +128,4 @@ Keep each rule short and unambiguous; reference it from code where it bites.
 
 - **50 — the home is pulled before and pushed after** · `RULES/50-the-home-is-pulled-before-and-pushed-after.md`
 - **51 — Ymir is a program; it runs globally, in the user's root agents** · `RULES/51-ymir-is-a-program.md`
+- **52 — a document is written for a person to read** · `RULES/52-documents-are-for-people.md`

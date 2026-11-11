@@ -99,3 +99,18 @@ Mermaid can be used for a lot of things."* Both halves are true and the wording 
   gantt and timeline for a schedule, mindmap for a structure, quadrant for a comparison.
 - **So the rule is:** draw what must be seen; draw it in Mermaid when a diagram is what is needed; never ASCII art, and
   never prose the reader has to trace to find the shape.
+
+---
+
+## Appended 2026-11-11 — the clause that sent TOON into documents is withdrawn
+
+**What this rule said:** TOON blocks, tables and code fences are banned from answers, and *"those belong in files,
+ledgers, fix notes, and agent-facing output"*. The Scope section said *"a TOON block in a plan, a fix note … is correct
+and stays exactly as it is."*
+
+**What was wrong:** agents read that as permission, then as instruction, to write every document in TOON. On
+2026-11-11 the Allfather said of a day's architecture pages and plans: *"i cant read what is says in simple ways."*
+
+**What holds now:** answers stay as this rule says. **Documents a person reads are governed by Rule 52**
+(`52-documents-are-for-people.md`). They use headings, short paragraphs, Markdown tables, Mermaid diagrams and
+callouts, and never TOON. TOON stays only where only a machine reads: tool output, a parsed registry, a ledger row.
