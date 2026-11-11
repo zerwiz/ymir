@@ -1653,3 +1653,7 @@ an older home.
 the recorded helm owner IS this session's pid (the acquire contract) — a live other owner no longer
 lets a stranger attach; and a new client retires its own session's older clients, so one signal
 cannot rewake a session N times. Proved by `bin/gates/tests/test_arm_client_helm.sh`.
+
+## CHANGE LOG
+
+- 2026-11-12 — review-mend: added missing heading for #673
