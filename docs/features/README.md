@@ -36,6 +36,8 @@ its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
   [the-records-shelf.md](the-records-shelf.md)
 - The seats and the arm — where the work is, the hall in one read, who can be woken:
   [the-seats-and-the-arm.md](the-seats-and-the-arm.md)
+- Build a fleet — the home, each machine by role, the arm-holder checklist, and how two fleets speak:
+  [build-a-fleet.md](build-a-fleet.md)
 - Telegram across the fleet — a bot per machine, and the road between them:
   [telegram-across-the-fleet.md](telegram-across-the-fleet.md)
 - The home push door — named paths only, never `-A`:
