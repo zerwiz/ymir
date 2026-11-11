@@ -24,7 +24,7 @@ bin[38]{file,does,kind,verdict,disposition,callers,lines}:
   "essence-fetch.sh","essence-fetch.sh — the npm world's self-heal: npm's packer refuses dotfolders","tool","wired","keep",2,18
   "finding-log.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",1,64
   "finding-tally.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",1,140
-  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",400,77
+  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",403,77
   "github-deploy.sh","github-deploy.sh — zero-trust deploys (W0035).","data","wired","keep",0,96
   "gjallarhorn-expose.sh","gjallarhorn-expose.sh — put EVERY app on its own public hostname (Gjallarhorn).","tool","wired","keep",0,152
   "gjallarhorn-notify.sh","gjallarhorn-notify.sh — the horn (W0036).","tool","wired","keep",1,73
@@ -42,7 +42,7 @@ bin[38]{file,does,kind,verdict,disposition,callers,lines}:
   "pr-open.sh","source '$(dirname '$0')/pr-patterns.sh'","tool","wired","keep",2,45
   "pr-patterns.sh","pr-patterns.sh — the ONE place the forbidden-pattern list lives.","data","wired","keep",3,49
   "pr-pretest.sh","pr-pretest.sh — the PR-time gate: a REAL npm installation, locally, before","tool","wired","keep",1,59
-  "pr-watch.sh","pr-watch.sh — TELL HIM a PR arrived.","tool","wired","keep",0,100
+  "pr-watch.sh","pr-watch.sh — TELL HIM a PR arrived.","tool","wired","keep",0,110
   "queue-warden.sh","queue-warden.sh — get every open PR into main, or block with a named reason.","tool","wired","keep",1,155
   "review-mend.sh","review-mend.sh — the refusal becomes a router (plan 233 §13/13a/13b)","tool","wired","keep",2,107
   "review-rules.sh","review-rules.sh — the rules floor: load what a reviewer MUST know, or refuse to review.","tool","wired","keep",3,139
