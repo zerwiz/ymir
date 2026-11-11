@@ -142,3 +142,12 @@ Allfather can find. So a harness must never spawn one. Claude Code's `Agent`/`Ta
 `.claude/hooks/eindri-only.sh` (a user-scope `PreToolUse` hook), and every worker goes out through
 `bin/agents/eindri-start.sh` or `bin/agents/agent-run.sh`. The full law is **Rule 49**
 (`RULES/49-workers-are-eindri.md`); the wiring is seated by `bin/seat/harness-extensions-install.sh`.
+
+## Appended 2026-11-11 — the links also reach the root agents (RULES/51)
+
+The canonical files in `.agents/agents/` and `.agents/skills/` stay the source of truth, and harness directories stay
+**links, never copies** — but under RULES/51 the harness that matters is the user's **root** agent, not this checkout.
+So the links are seated in each harness's root by install and update, pointing at the **pinned runtime**, and a
+repository-local harness link (such as `.claude/skills -> ../.agents/skills`) is retired where it would make a session
+inside the checkout load a second copy of what the root already carries (plan 248 §4). Edit the canonical file; never a
+link.

@@ -36,3 +36,20 @@ and 246.
 ## CHANGE LOG
 
 - **2026-11-11** — written at the operator's word.
+
+## Appended 2026-11-11 — the contract once, and the skills as one
+
+At the operator's word (*"follow the rules … and ymir's rules"*), the two designs of plan 248 become law here, so no
+build can do them another way.
+
+```
+laws_more[6]{rule,why}:
+  "ONE CONTRACT PER ROOT","the seat render in each root agent is the one always-loaded contract; a session must never load the same law twice (measured: 47 KB render + 48 KB repo copy). The repo AGENTS.md is the developer page and stays lean"
+  "CLAUDE.md IS A LINK","in every repository Ymir runs, CLAUDE.md is a symlink to AGENTS.md — one file, every harness's name for it"
+  "ONE YMIR SKILL IN EVERY ROOT","each harness root lists exactly one Ymir skill, `ymir` (~/.agents/skills/ymir, linked from ~/.claude/skills/ymir); its SKILL.md is the generated index of every skill, by path"
+  "THE STORE IS NEVER SCANNED","the full skill store lives outside every directory a harness searches (pi searches ~/.agents/skills and ~/.pi/agent/skills RECURSIVELY) — otherwise every description returns to every turn"
+  "BOX FACTS STAY ON THE BOX","a machine's own contract sections (addresses, keys, hardware) live on that machine, never in a repo"
+  "THE BUDGET IS MEASURED","what a session start injects is summed per harness by one door, and a ward refuses an always-loaded set over its budget"
+```
+
+The order of work, the measurements and the online reading behind each line are plan 248 in the home ledger.

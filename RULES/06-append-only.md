@@ -136,3 +136,11 @@ docs/fixes/<component>/<version>-<slug>.md     ONE FILE PER FIX
 - The `append_only[]` table above still names `CHANGELOG.md`: that row is
   **superseded by this amendment** and remains readable as the history of the law,
   never edited in place.
+
+## Appended 2026-11-11 — a contract may be slimmed by MOVING, never by losing (RULES/51)
+
+The always-loaded contracts (`AGENTS.md`, a seat render, a machine's contract) may shed text that duplicates another
+file — a lore table, a rules list, a provider table, a directory tree — **only by moving it**: the text is carried
+intact into the file it duplicates (or a new home beside it), the contract keeps a dated pointer naming where it went,
+and the move is verified by name before and after, like any move under this rule. A section that is stale is not
+deleted: it moves with its correction. Nothing is lost; the always-loaded set gets lighter.
