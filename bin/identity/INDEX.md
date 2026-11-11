@@ -21,10 +21,10 @@ The tree replaced a single register on 2026-11-06 (plan 211) so that a change in
 folder rewrites one file instead of colliding on every branch.
 
 bin[4]{file,does,kind,verdict,disposition,callers,lines}:
-  "clients.sh","clients.sh — the clients register: load, validate, and check.","tool","tested","keep",1,197
-  "place-validate.sh","place-validate.sh — validate a place.yaml against the clients register and the houses.","tool","tested","keep",1,219
+  "clients.sh","clients.sh — the clients register: load, validate, and check.","tool","tested","keep",0,197
+  "place-validate.sh","place-validate.sh — validate a place.yaml against the clients register and the houses.","tool","tested","keep",0,219
   "projects-validate.sh","projects-validate.sh — validate projects.yaml, including the optional client field.","tool","tested","keep",0,122
-  "registers-seed.sh","registers-seed.sh — give a home the identity registers it is missing, from ONE template each.","tool","tested","keep",1,72
+  "registers-seed.sh","registers-seed.sh — give a home the identity registers it is missing, from ONE template each.","tool","tested","keep",0,72
 
 **Tally.** verdict: tested=4
 

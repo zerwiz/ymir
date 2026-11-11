@@ -20,7 +20,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[37]{file,does,kind,verdict,disposition,callers,lines}:
+bin[38]{file,does,kind,verdict,disposition,callers,lines}:
   "essence-fetch.sh","essence-fetch.sh — the npm world's self-heal: npm's packer refuses dotfolders","tool","wired","keep",2,18
   "finding-log.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",1,64
   "finding-tally.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",1,140
@@ -42,6 +42,7 @@ bin[37]{file,does,kind,verdict,disposition,callers,lines}:
   "pr-open.sh","source '$(dirname '$0')/pr-patterns.sh'","tool","wired","keep",2,45
   "pr-patterns.sh","pr-patterns.sh — the ONE place the forbidden-pattern list lives.","data","wired","keep",3,49
   "pr-pretest.sh","pr-pretest.sh — the PR-time gate: a REAL npm installation, locally, before","tool","wired","keep",1,59
+  "pr-watch.sh","pr-watch.sh — TELL HIM a PR arrived.","tool","wired","keep",0,110
   "queue-warden.sh","queue-warden.sh — get every open PR into main, or block with a named reason.","tool","wired","keep",1,155
   "review-mend.sh","review-mend.sh — the refusal becomes a router (plan 233 §13/13a/13b)","tool","wired","keep",2,107
   "review-rules.sh","review-rules.sh — the rules floor: load what a reviewer MUST know, or refuse to review.","tool","wired","keep",3,139
@@ -56,9 +57,9 @@ bin[37]{file,does,kind,verdict,disposition,callers,lines}:
   "utgard-box-door.py","'''utgard-box-door.py — the one road out of a box.","tool","wired","keep",1,369
   "utgard-box.sh","utgard-box.sh — a whole computer for one run, outside the wall.","tool","wired","keep",2,931
   "utgard-lane.sh","utgard-lane.sh — best of N: one brief, many boxes, one board.","tool","wired","keep",1,227
-  "utgard.sh","utgard.sh — the sealed execution barrier (Utgard, the realm outside the wall).","tool","wired","keep",4,128
+  "utgard.sh","utgard.sh — the sealed execution barrier (Utgard, the realm outside the wall).","tool","wired","keep",3,128
   "yggdrasil.sh","yggdrasil.sh — the worktree manager (Yggdrasil, the world-tree).","tool","tested","keep",7,176
 
-**Tally.** verdict: wired=34, tested=3
+**Tally.** verdict: wired=35, tested=3
 
-**Tally.** disposition: keep=37
+**Tally.** disposition: keep=38

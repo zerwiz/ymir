@@ -25,17 +25,17 @@ bin[17]{file,does,kind,verdict,disposition,callers,lines}:
   "apodex-smoke-test.sh","apodex-smoke-test — validate an Apodex endpoint (GGUF via llama-router).","tool","wired","keep",0,119
   "catalog.sh","catalog.sh — THE door to what this machine can serve.","tool","wired","keep",10,135
   "jev-doors.sh","jev-doors.sh — where the decision models answer, in one read.","tool","wired","keep",4,163
-  "llama-ensure.sh","llama-ensure.sh — stand a CUDA llama.cpp engine for local models, or adopt the","tool","wired","keep",3,163
+  "llama-ensure.sh","llama-ensure.sh — stand a CUDA llama.cpp engine for local models, or adopt the","tool","wired","keep",2,163
   "local-model-lock.sh","local-model-lock.sh — serialize LOCAL model inference on one machine.","tool","tested","keep",9,132
-  "model-fetch.sh","model-fetch.sh — fetch a chosen model into the operator's models directory.","tool","wired","keep",1,124
-  "model-fit.sh","model-fit.sh — choose the best local model for THE USER'S hardware, probed at","tool","wired","keep",2,155
-  "model-hardware.sh","model-hardware.sh — profile THIS machine for local models and record the","tool","wired","keep",1,98
+  "model-fetch.sh","model-fetch.sh — fetch a chosen model into the operator's models directory.","tool","wired","keep",0,124
+  "model-fit.sh","model-fit.sh — choose the best local model for THE USER'S hardware, probed at","tool","wired","keep",1,155
+  "model-hardware.sh","model-hardware.sh — profile THIS machine for local models and record the","tool","wired","keep",0,98
   "model-placement.sh","model-placement.sh — which machine hosts the models, and is the rail up?","tool","tested","keep",0,96
-  "model-register.sh","model-register.sh — register the chosen model with Ymir, in the hoard.","tool","wired","keep",1,96
+  "model-register.sh","model-register.sh — register the chosen model with Ymir, in the hoard.","tool","wired","keep",0,96
   "model-resolve.sh","model-resolve.sh — resolve a human model request to a concrete harness+model.","tool","tested","keep",3,165
-  "model-tune.sh","model-tune.sh — tune the chosen model for THIS host, with measured numbers.","tool","wired","keep",1,150
-  "models-detect.sh","models-detect.sh — detect the LOCAL model runtimes present on this machine and","tool","wired","keep",3,168
-  "models-report.sh","models-report — the user's OWN models, read from the ROOT pi home.","tool","wired","keep",1,29
+  "model-tune.sh","model-tune.sh — tune the chosen model for THIS host, with measured numbers.","tool","wired","keep",0,150
+  "models-detect.sh","models-detect.sh — detect the LOCAL model runtimes present on this machine and","tool","wired","keep",2,168
+  "models-report.sh","models-report — the user's OWN models, read from the ROOT pi home.","tool","wired","keep",0,29
   "rail-resolve.sh","rail-resolve.sh — the DOOR to the living rail resolver (plan 51, Parts 9a/9b/9c).","tool","tested","keep",6,72
   "test_jev_doors.sh","The ward for bin/model/jev-doors.sh — the door register that told four lies in a row.","tool","wired","keep",0,54
 

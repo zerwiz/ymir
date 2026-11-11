@@ -22,30 +22,30 @@ folder rewrites one file instead of colliding on every branch.
 
 bin[25]{file,does,kind,verdict,disposition,callers,lines}:
   "app-build.sh","app-build — build the in-tree apps (plan 35).","tool","wired","keep",2,57
-  "app-lib.sh","app-lib.sh — where an app actually lives.","lib","tested","keep",16,100
-  "design-icon.sh","design-icon.sh — every app wears its own rune.","tool","wired","keep",2,319
-  "desktop-place.sh","desktop-place.sh — put the Ymir apps on their own Hyprland desktops.","tool","tested","keep",8,321
-  "desktop-verify.sh","desktop-verify.sh — the INSTALL-time guarantee: every desktop surface can run,","tool","wired","keep",4,199
+  "app-lib.sh","app-lib.sh — where an app actually lives.","lib","tested","keep",14,100
+  "design-icon.sh","design-icon.sh — every app wears its own rune.","tool","wired","keep",1,319
+  "desktop-place.sh","desktop-place.sh — put the Ymir apps on their own Hyprland desktops.","tool","tested","keep",7,321
+  "desktop-verify.sh","desktop-verify.sh — the INSTALL-time guarantee: every desktop surface can run,","tool","wired","keep",3,199
   "display-lib.sh","display-lib.sh — the ONE place that knows the displays, and how to talk to the","lib","wired","keep",2,176
   "editor-place.sh","editor-place.sh — the editor is UNMANAGED by default: it opens on the","tool","wired","keep",3,223
-  "electron-ensure.sh","electron-ensure.sh — the Electron runtime is PRESENT and ANSWERS, or it is fetched.","tool","wired","keep",4,260
-  "electron-lib.sh","electron-lib.sh — is a desktop shell's runtime actually there?","lib","tested","keep",8,212
+  "electron-ensure.sh","electron-ensure.sh — the Electron runtime is PRESENT and ANSWERS, or it is fetched.","tool","wired","keep",2,260
+  "electron-lib.sh","electron-lib.sh — is a desktop shell's runtime actually there?","lib","tested","keep",6,212
   "factory-check.sh","factory-check.sh — a factory may only reach what it NAMES.","tool","wired","keep",1,40
   "factory-new.sh","factory-new.sh — copy the empty factory, give it a name, and say what to fill in.","tool","wired","keep",1,28
   "hlidskjalf-agents.sh","hlidskjalf-agents.sh — WHO IS ACTUALLY STANDING, and what they are doing.","tool","wired","keep",1,182
   "hlidskjalf-usage.sh","hlidskjalf-usage.sh — what the HARNESSES spent, not just the smithy.","tool","wired","keep",0,238
   "main-tree.sh","main-tree.sh — THE TREE THE LAUNCHERS POINT AT, which is never a worktree.","tool","wired","keep",3,32
   "odrerir-mcp-smoke.sh","odrerir-mcp-smoke.sh — the boards' REAL smoke: tickets and plans through the","tool","wired","keep",0,157
-  "sessrumnir-ensure.sh","sessrumnir-ensure.sh — ensure the Sessrúmnir desktop GUI is present and runnable.","tool","wired","keep",4,132
-  "sessrumnir-launch.sh","sessrumnir.sh — launch the Sessrúmnir desktop GUI (the seat-hall).","tool","wired","keep",2,190
+  "sessrumnir-ensure.sh","sessrumnir-ensure.sh — ensure the Sessrúmnir desktop GUI is present and runnable.","tool","wired","keep",2,132
+  "sessrumnir-launch.sh","sessrumnir.sh — launch the Sessrúmnir desktop GUI (the seat-hall).","tool","wired","keep",1,190
   "sessrumnir-sync.sh","sessrumnir-sync.sh — pull a new pi-desktop release into the Sessrúmnir fork","tool","wired","keep",0,256
   "smidja-board.sh","smidja-board.sh — Smíðja's board, by one name.","tool","wired","keep",1,145
-  "smidja-bootstrap.sh","smidja-bootstrap.sh — make the Smíðja visualizer ready on a fresh install.","tool","wired","keep",3,105
-  "smidja-lib.sh","smidja-lib.sh — where the smithy's parts actually live.","lib","wired","keep",4,69
+  "smidja-bootstrap.sh","smidja-bootstrap.sh — make the Smíðja visualizer ready on a fresh install.","tool","wired","keep",2,105
+  "smidja-lib.sh","smidja-lib.sh — where the smithy's parts actually live.","lib","wired","keep",3,69
   "smidja-observe.sh","smidja-observe.sh — the smithy's trace, read-only (W0075).","data","wired","keep",1,88
   "telegram-bot.sh","telegram-bot.sh — the horn answers (W0036).","tool","wired","keep",0,84
   "ymir-marketing-stack.sh","ymir-marketing-stack.sh — the marketing stack, provisionable on ANY computer.","tool","wired","keep",1,337
-  "ymir-style.sh","ymir-style.sh — the cloth of the terminal halls.","tool","wired","keep",5,158
+  "ymir-style.sh","ymir-style.sh — the cloth of the terminal halls.","tool","wired","keep",3,158
 
 **Tally.** verdict: wired=22, tested=3
 

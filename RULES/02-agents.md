@@ -133,3 +133,12 @@ pinned_runtime[5]{rule,why}
 
 This is the same sentence the Gimlé suite learned the hard way on 2026-11-02: a deployment is a version, not a copy.
 The suite was fixed first because its drift was visible in the desk; the runtime has been drifting where nobody looks.
+
+## Appended 2026-11-10 — workers are Eindri, and no harness spawns its own
+
+The two kinds of agent above are the whole of it: a primary and the Eindri workers. A harness's own
+subagent is **neither** — it is not on a worktree, not in Utgard, not in the Rune, and not a seat the
+Allfather can find. So a harness must never spawn one. Claude Code's `Agent`/`Task` tool is refused by
+`.claude/hooks/eindri-only.sh` (a user-scope `PreToolUse` hook), and every worker goes out through
+`bin/agents/eindri-start.sh` or `bin/agents/agent-run.sh`. The full law is **Rule 49**
+(`RULES/49-workers-are-eindri.md`); the wiring is seated by `bin/seat/harness-extensions-install.sh`.

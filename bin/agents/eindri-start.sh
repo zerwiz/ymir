@@ -8,8 +8,8 @@
 # verified sibling — so an agent always starts. Galdr-style TOON.
 #
 # Usage:
-#   eindri-start.sh "<request>" [--role <name>] [--pane|--tab|--space] [--kind pi|opencode]
-#   eindri-start.sh "<request>" --id <task-id> [--project <dir>] [--role <name>] [--kind pi|opencode]
+#   eindri-start.sh "<request>" [--role <name>] [--pane|--tab|--space] [--kind pi|opencode|claude]
+#   eindri-start.sh "<request>" --id <task-id> [--project <dir>] [--role <name>] [--kind pi|opencode|claude]
 #       # --id names a real errand and hands it to the engine
 #       # (src/ymir_runtime/): a Yggdrasil worktree, a recorded seat, a
 #       # heartbeat. Without --id the ordinary road below seats the agent.
@@ -52,7 +52,7 @@ while [ $# -gt 0 ]; do
     --space) SEAT="--space"; shift ;;
     --tab) SEAT="--tab"; shift ;;
     --pane) SEAT="--pane"; shift ;;
-    -*) printf 'error: unknown flag %s\nhelp: bin/agents/eindri-start.sh "<request>" [--id <task-id>] [--role <name>] [--pane|--tab|--space] [--kind pi|opencode]\n' "$1" >&2; exit 2 ;;
+    -*) printf 'error: unknown flag %s\nhelp: bin/agents/eindri-start.sh "<request>" [--id <task-id>] [--role <name>] [--pane|--tab|--space] [--kind pi|opencode|claude]\n' "$1" >&2; exit 2 ;;
     *) [ -z "$REQ" ] && REQ="$1" || REQ="$REQ $1"; shift ;;
   esac
 done
@@ -123,6 +123,16 @@ if [ -n "$TASK_ID" ] && [ -z "$SEAT" ] && [ -z "$MAIN" ] \
       "$TASK_ID" "$engine_rc" "$TASK_ID" "$PROJECT_DIR" >&2
     exit 1
   fi
+  # The ordinary road seats pi or opencode only. When the caller asked for any other
+  # harness (claude, or a raw launch command), seating "the ordinary way" silently
+  # REPLACED it — measured 2026-11-11: a Claude errand the engine declined came up as
+  # an idle pi named mimir (plan 239 P5e). A swapped harness is a half-seat; refuse.
+  case "$KIND" in
+    pi|opencode) ;;
+    *)
+      printf 'error: the engine declined %s and the ordinary road cannot seat harness %s — refused rather than seating a different harness\nhelp: fix the reason above (e.g. give the request a "# Task" section) and retry\n' "$TASK_ID" "$KIND" >&2
+      exit 1 ;;
+  esac
   printf 'engine: cannot own %s — seating the ordinary way\n' "$TASK_ID" >&2
 fi
 

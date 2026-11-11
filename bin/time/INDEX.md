@@ -77,8 +77,8 @@ bin[137]{file,does,kind,verdict,disposition,callers,lines}:
   "reasoning_adapter.py","bin/time/snotra/reasoning_adapter.py -> systems/snotra/services/cron/reasoning_adapter.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "saga-session-start.sh","saga-session-start.sh - the one-command Brokk session start.","tool","tested","keep",7,329
   "saga-sessionstart-run.sh","saga-sessionstart-run.sh - session-open entry point for run-tier harnesses.","tool","wired","keep",0,91
-  "saga-wake-drain.sh","saga-wake-drain.sh - present durable Brokk wakes, or acknowledge them.","tool","wired","keep",7,136
-  "smoke.sh","bin/time/snotra/smoke.sh -> systems/snotra/tests/smoke.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and says so.","tool","tested","keep",7,16
+  "saga-wake-drain.sh","saga-wake-drain.sh - present durable Brokk wakes, or acknowledge them.","tool","wired","keep",7,150
+  "smoke.sh","bin/time/snotra/smoke.sh -> systems/snotra/tests/smoke.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and says so.","tool","tested","keep",6,16
   "snotra-agenda.py","bin/time/snotra/snotra-agenda.py -> systems/snotra/services/cron/snotra-agenda.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "snotra-agenda.sh","bin/time/snotra/snotra-agenda.sh -> systems/snotra/services/cron/snotra-agenda.sh — RETIRED SHIM","tool","wired","keep",0,12
   "snotra-approve.sh","bin/time/snotra/snotra-approve.sh -> systems/snotra/services/approve/snotra-approve.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new…","tool","wired","keep",2,16
@@ -98,7 +98,7 @@ bin[137]{file,does,kind,verdict,disposition,callers,lines}:
   "snotra-detect.sh","bin/time/snotra/snotra-detect.sh -> systems/snotra/services/ear/snotra-detect.sh — RETIRED SHIM","tool","tested","keep",1,12
   "snotra-dispatch.py","bin/time/snotra/snotra-dispatch.py -> systems/snotra/services/cron/snotra-dispatch.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "snotra-dispatch.sh","bin/time/snotra/snotra-dispatch.sh -> systems/snotra/services/cron/snotra-dispatch.sh — RETIRED SHIM","tool","wired","keep",0,12
-  "snotra-ensure.sh","bin/time/snotra/snotra-ensure.sh -> systems/snotra/services/ear/snotra-ensure.sh — RETIRED SHIM","tool","wired","keep",4,12
+  "snotra-ensure.sh","bin/time/snotra/snotra-ensure.sh -> systems/snotra/services/ear/snotra-ensure.sh — RETIRED SHIM","tool","wired","keep",2,12
   "snotra-evidence.sh","bin/time/snotra/snotra-evidence.sh -> systems/snotra/services/record/snotra-evidence.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the ne…","tool","wired","keep",0,16
   "snotra-friday-synch.py","bin/time/snotra/snotra-friday-synch.py -> systems/snotra/services/cron/snotra-friday-synch.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "snotra-friday-synch.sh","bin/time/snotra/snotra-friday-synch.sh -> systems/snotra/services/cron/snotra-friday-synch.sh — RETIRED SHIM","tool","wired","keep",0,12
@@ -107,7 +107,7 @@ bin[137]{file,does,kind,verdict,disposition,callers,lines}:
   "snotra-harvest.py","bin/time/snotra/snotra-harvest.py -> systems/snotra/services/ear/snotra-harvest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "snotra-harvest.sh","bin/time/snotra/snotra-harvest.sh -> systems/snotra/services/ear/snotra-harvest.sh — RETIRED SHIM","tool","wired","keep",0,12
   "snotra-ingest.sh","bin/time/snotra/snotra-ingest.sh -> systems/snotra/services/cron/snotra-ingest.sh — RETIRED SHIM","tool","wired","keep",0,12
-  "snotra-init.sh","bin/time/snotra/snotra-init.sh -> systems/snotra/services/record/snotra-init.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door a…","tool","wired","keep",1,16
+  "snotra-init.sh","bin/time/snotra/snotra-init.sh -> systems/snotra/services/record/snotra-init.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door a…","tool","wired","keep",0,16
   "snotra-iscall.sh","bin/time/snotra/snotra-iscall.sh -> systems/snotra/services/ear/snotra-iscall.sh — RETIRED SHIM","tool","tested","keep",1,12
   "snotra-layout.py","bin/time/snotra/snotra-layout.py -> systems/snotra/services/record/snotra-layout.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "snotra-layout.sh","bin/time/snotra/snotra-layout.sh -> systems/snotra/services/record/snotra-layout.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new do…","tool","wired","keep",0,16

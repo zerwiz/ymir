@@ -46,14 +46,14 @@ bin[50]{file,does,kind,verdict,disposition,callers,lines}:
   "collaboration-files.md","Subject: One set of files in every project — can we work this way?","data","wired","keep",2,50
   "collaborator-door.md","The collaborator door — how a hand that is not on our network talks to the house","data","wired","keep",0,74
   "fixes-components.sh","The components of this product — one directory of notes each, and no invented names.","tool","wired","keep",1,4
-  "fixes-guard.sh","fixes-guard — a behaviour change leaves a note, or says why it did not need one.","tool","tested","keep",6,29
+  "fixes-guard.sh","fixes-guard — a behaviour change leaves a note, or says why it did not need one.","tool","tested","keep",4,29
   "fixes.sh","fixes.sh — the fix notes.","tool","wired","keep",4,81
   "gates.md","The gates — what stops what, and why each exists","data","wired","keep",0,51
   "handoff-README.md","handoff — the baton","data","wired","keep",1,91
   "handoff-TEMPLATE.md","Handoff — <from> → <to>","data","wired","keep",1,46
   "handoff-check-wrapper.sh","handoff/check.sh — the stable door for the baton, in any project.","data","wired","keep",1,12
   "handoff-check.py","'''handoff/check.sh — the baton: is it there, complete, fresh, and honest about the paths it names?","tool","wired","keep",1,211
-  "init.sh","init.sh — put the collaboration shelf into a repository, or check the one it has.","tool","wired","keep",5,124
+  "init.sh","init.sh — put the collaboration shelf into a repository, or check the one it has.","tool","wired","keep",4,124
   "letter.sh","letter.sh — the collaboration letter, rendered from a template and left as a DRAFT in the gate.","tool","wired","keep",4,81
   "new-module-test.sh","new-module-test.sh — a new module arrives with a test, or with a reason it does not need one.","tool","wired","keep",1,31
   "notices.md","Where a gate's words go — the arm holder's window, and the project's orchestrator","data","wired","keep",0,73

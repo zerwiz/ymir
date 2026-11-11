@@ -109,7 +109,7 @@ t ".hermes.md: names the operator"                 grep -qF "$OPERATOR" "$HERMES
 # ── 5. the packet is SEATED in Hermes, and the door answers ─────────────────────────────────
 t "hermes: mcp list names the ymir packet"         bash -c 'hermes mcp list 2>/dev/null | grep -q "ymir"'
 t "packet: --selftest lists the doors"             bash -c '"$1" "$2/bin/mcp/ymir-mcp.py" --selftest | grep -q "^doors:"' _ "$(command -v python3)" "$ROOT"
-t "packet: registers 30 doors and ymir_where"      bash -c '"$1" "$2/bin/mcp/ymir-mcp.py" --selftest | head -1 | grep -q "ymir_where" && "$1" "$2/bin/mcp/ymir-mcp.py" --selftest | head -1 | grep -qE "^doors: 3[0-9]"' _ "$(command -v python3)" "$ROOT"
+t "packet: registers 30+ doors and ymir_where"     bash -c '"$1" "$2/bin/mcp/ymir-mcp.py" --selftest | head -1 | grep -q "ymir_where" && "$1" "$2/bin/mcp/ymir-mcp.py" --selftest | head -1 | grep -qE "^doors: [3-9][0-9]"' _ "$(command -v python3)" "$ROOT"
 t "packet: the seated ymir server points at a runnable door" bash -c 'python3 - "${YMIR_MCP_ADAPTER:-$HOME/.pi/agent/mcp-adapter.json}" <<"PY"
 import json, os, sys
 cfg = sys.argv[1]
