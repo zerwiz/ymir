@@ -107,3 +107,7 @@ Three details that matter and are easy to get wrong:
 
 **See also:** [`the-wards-the-delivery-gate.md`](the-wards-the-delivery-gate.md) ·
 [`finding-tally.md`](finding-tally.md) · `RULES/46-a-push-proves-the-rules.md`
+
+## CHANGE LOG
+
+- **2026-11-11** — written with the change it describes (plan 243 / plan 192 §11).
