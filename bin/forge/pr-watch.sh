@@ -22,12 +22,13 @@ H=""; declare -f ymir_home_root >/dev/null 2>&1 && ymir_home_root H 2>/dev/null
 STATE="${H:-$HOME/Documents/ymirhome}/state"; mkdir -p "$STATE"
 SEEN="$STATE/pr-watch.json"; REPO="${PR_WATCH_REPO:-zerwiz/ymir}"
 DRY=0; HOURS=1; STATUS=0
+ORIG=("$@")
 while [ $# -gt 0 ]; do case "$1" in --dry-run) DRY=1; shift;; --hours) HOURS="${2:-1}"; shift 2;; --status) STATUS=1; shift;; *) shift;; esac; done
 # ── the clock ──────────────────────────────────────────────────────────────────────────────────
 # A watcher nobody starts is a watcher that never speaks. `--install-timer` seats a user unit that
 # runs this door every 5 minutes, so a PR is announced within minutes of arriving, with or without
 # anyone remembering to look.
-for _a in "$@"; do [ "$_a" = "--install-timer" ] && TIMER=1; done
+for _a in "${ORIG[@]}"; do [ "$_a" = "--install-timer" ] && TIMER=1; done
 if [ "${TIMER:-0}" = 1 ]; then
   U="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"; mkdir -p "$U"
   cat >"$U/pr-watch.service" <<UNIT
