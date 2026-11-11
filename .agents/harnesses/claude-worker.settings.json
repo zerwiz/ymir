@@ -1,0 +1,12 @@
+{
+  "$comment": "The permission profile every Claude Eindri is launched with (plan 239 P5c). A worker runs unattended in its own Yggdrasil worktree, so it may edit and run commands without a prompt (the same latitude opencode workers get from OPENCODE_CONFIG_CONTENT permission *:allow), while the moves that only the Allfather makes, or that destroy unrecorded work, are denied. Deny rules win over allow rules.",
+  "permissions": {
+    "allow": ["Read", "Edit", "Write", "Glob", "Grep", "Bash", "WebFetch", "WebSearch", "TodoWrite"],
+    "deny": [
+      "Bash(git push origin main:*)", "Bash(git push origin master:*)", "Bash(git push -f:*)", "Bash(git push --force:*)",
+      "Bash(git push origin +*)", "Bash(gh pr merge:*)", "Bash(git merge:*)", "Bash(git add -A:*)", "Bash(git add .:*)",
+      "Bash(git commit -a:*)", "Bash(git reset --hard:*)", "Bash(git clean -f:*)", "Bash(git checkout -- :*)",
+      "Bash(git stash:*)", "Bash(rm -rf:*)", "Bash(sudo:*)", "Agent", "Task"
+    ]
+  }
+}

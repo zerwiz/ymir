@@ -111,7 +111,7 @@ surface_detail_skip() {
 }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir shells graphics well memory mail mcp harness arm lock gates migrations hoard autoboot vault ward seats)
+SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir shells graphics well memory mail mcp harness claudehooks arm lock gates migrations hoard autoboot vault ward)
 
 # ── the three surfaces the 2026-11-03 Windows audit found, and the rule they read ──────────
 # A SEAT IS NOT UPDATED BY A PULL. The checkout moves; the installed hooks, the PATH a later
@@ -129,51 +129,6 @@ s_seatpaths() {
   return 0
 }
 f_seatpaths() { "$SCRIPT_DIR/../engine/prereq-ensure.sh" --persist-path >/dev/null 2>&1; }
-
-# ── seats: the two faults of 2026-11-10, plus the sweep that closes finished seats ──
-# (a) `~/.pi/agent/extensions/.ymir-root` must never name a LINKED WORKTREE — a root is a
-#     home, a worktree is an errand, and the errand dies. (b) no Eindri worktree may carry
-#     the broken `rm -rf .pi/extensions` + assume-unchanged state that made git report all
-#     45 extension files as deleted. (c) the sweep that closes finished seats must be
-#     seated on every harness this host actually runs.
-# One test for a linked worktree: --git-common-dir and --git-dir resolve to different
-# paths (the same expression lives in bin/seat/valknut-load.sh and migration 0018).
-_is_linked_worktree() {  # <path>
-  local p=${1:-.} common own
-  common="$(git -C "$p" rev-parse --git-common-dir 2>/dev/null)" || return 1
-  own="$(git -C "$p" rev-parse --git-dir 2>/dev/null)" || return 1
-  [ -n "$common" ] && [ -n "$own" ] || return 1
-  [ "$(CDPATH='' cd "$p" && CDPATH='' cd "$common" 2>/dev/null && pwd -P)" \
-    = "$(CDPATH='' cd "$p" && CDPATH='' cd "$own" 2>/dev/null && pwd -P)" ] && return 1
-  return 0
-}
-s_seats() {
-  local pointer="${PI_EXT_HOME:-$HOME/.pi/agent/extensions}/.ymir-root" line
-  if [ -r "$pointer" ]; then
-    while IFS= read -r line; do
-      [ -n "$line" ] || continue
-      case "$line" in */.yggdrasil/*|*/.yggdrasil) return 1 ;; esac
-      [ -d "$line" ] && _is_linked_worktree "$line" && return 1
-    done <"$pointer"
-  fi
-  local wt dirty
-  while IFS= read -r wt; do
-    [ -n "$wt" ] || continue
-    case "$wt" in */.yggdrasil/*) ;; *) continue ;; esac
-    [ -d "$wt" ] || continue
-    dirty="$(git -C "$wt" status --porcelain 2>/dev/null | grep -c '^\( \{0,1\}\)D  *\.pi/extensions/')"
-    [ "${dirty:-0}" = 0 ] || return 1
-  done < <(git -C "$ROOT" worktree list --porcelain 2>/dev/null | awk '/^worktree /{print substr($0,10)}')
-  [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ] || return 1
-  "$SCRIPT_DIR/../seat/seat-reap.sh" --check >/dev/null 2>&1
-}
-f_seats() {
-  # The two structural faults are the migration's to mend (one door, called by install,
-  # by Gróa and by Eir alike); the harness hooks are the sweep door's own.
-  [ -x "$SCRIPT_DIR/../engine/ymir-migrate.sh" ] && "$SCRIPT_DIR/../engine/ymir-migrate.sh" apply >/dev/null 2>&1
-  [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ] && "$SCRIPT_DIR/../seat/seat-reap.sh" --install >/dev/null 2>&1
-  s_seats
-}
 s_hooks() {
   local hooks; hooks="$(cd "$ROOT" && git rev-parse --git-path hooks 2>/dev/null || printf '.git/hooks')"
   case "$hooks" in /*) ;; *) hooks="$ROOT/$hooks" ;; esac
@@ -382,16 +337,20 @@ f_memory()    {
   "$SCRIPT_DIR/../records/mimir.sh" start >/dev/null 2>&1
   "$SCRIPT_DIR/../records/mimir.sh" grade --apply >/dev/null 2>&1
 }
-# MCP: both A2A servers wired into opencode + pi.
+# MCP: the well door + the mesh wired into every harness present.
 s_mcp() {
   local pi="$HOME/.pi/agent/mcp-adapter.json" oc="$ROOT/opencode.json"
-  # The live MCP surfaces: the OpenCode config must still bind engram (the well),
-  # and the Pi config must parse and carry the fleet servers. If the A2A mesh
-  # engine (a2abridge) is seated, its bridge must be wired too — a seated engine
-  # with no bridge is the silent half; the deeper connection proof lives in
-  # smoke_test.sh (2026-09-23).
+  # The live MCP surfaces: the OpenCode config must bind the WELL DOOR (the gateway's
+  # /mcp/well — engram is Kaia's engine only, 2026-11-10, and a direct engram server is a
+  # leak that never reaches the heart), and the Pi config must parse and carry the fleet
+  # servers. If the A2A mesh engine (a2abridge) is seated, its bridge must be wired too —
+  # a seated engine with no bridge is the silent half; the deeper connection proof lives
+  # in smoke_test.sh (2026-09-23). The other harnesses are read by the seating door.
   [ -f "$pi" ] || [ -f "$oc" ] || return 1
-  if [ -f "$oc" ]; then grep -q '"engram"' "$oc" 2>/dev/null || return 1; fi
+  if [ -f "$oc" ]; then grep -q '/mcp/well' "$oc" 2>/dev/null || return 1; fi
+  if [ -x "$SCRIPT_DIR/../bridge/mcp-config.sh" ]; then
+    "$SCRIPT_DIR/../bridge/mcp-config.sh" seat --check 2>/dev/null | grep -q 'direct engram' && return 1
+  fi
   if [ -f "$pi" ]; then
     grep -q '"mcpServers"' "$pi" 2>/dev/null || return 1
     command -v python3 >/dev/null 2>&1 && ! python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$pi" 2>/dev/null && return 1
@@ -401,7 +360,10 @@ s_mcp() {
   fi
   return 0
 }
-f_mcp()       { [ -x "$SCRIPT_DIR/../bridge/a2a-mcp.sh" ] && "$SCRIPT_DIR/../bridge/a2a-mcp.sh" install >/dev/null 2>&1; }
+f_mcp()       {
+  [ -x "$SCRIPT_DIR/../bridge/a2a-mcp.sh" ] && "$SCRIPT_DIR/../bridge/a2a-mcp.sh" install >/dev/null 2>&1
+  [ -x "$SCRIPT_DIR/../bridge/mcp-config.sh" ] && "$SCRIPT_DIR/../bridge/mcp-config.sh" seat >/dev/null 2>&1
+}
 # Harness: the Pi extensions are DEPLOYED away from this tree, so a copy cannot
 # find bin/ by walking up — it reads the root recorded beside it (`.ymir-root`,
 # written by bin/seat/valknut-load.sh, resolved by .pi/extensions/lib/ymir-home.ts).
@@ -422,6 +384,19 @@ s_harness() {
   return 1
 }
 f_harness()   { [ -x "$SCRIPT_DIR/../seat/valknut-load.sh" ] && "$SCRIPT_DIR/../seat/valknut-load.sh" --pi >/dev/null 2>&1 && s_harness; }
+# Claude hooks (2026-11-10): every Claude seat in the fleet carries THREE user-scope hooks, seated
+# by bin/seat/harness-extensions-install.sh — the AGENTS.md loader (Claude reads CLAUDE.md, never
+# a project's AGENTS.md), the Eindri-only PreToolUse (Claude must never spawn its own subagents),
+# and the global Gná arm (a seat in any project takes a wake). A host with no Claude is healthy:
+# nothing to wire. A Claude present with a stale or absent entry is a NAMED failure.
+s_claudehooks() {
+  command -v claude >/dev/null 2>&1 || return 0
+  [ -x "$SCRIPT_DIR/../seat/harness-extensions-install.sh" ] || return 1
+  local out
+  out="$("$SCRIPT_DIR/../seat/harness-extensions-install.sh" --check 2>/dev/null)" || true
+  ! printf '%s\n' "$out" | grep -q '"claude-[^"]*","stale"'
+}
+f_claudehooks() { [ -x "$SCRIPT_DIR/../seat/harness-extensions-install.sh" ] && "$SCRIPT_DIR/../seat/harness-extensions-install.sh" >/dev/null 2>&1 && s_claudehooks; }
 # Arm: Sýn as a SERVICE (plan 58, Phase 2) — one standing watcher per home that
 # idles when no session is seated, never retires with one. The surface is the
 # arm's own door (bin/pi/syn-watch.sh): a live lease with a fresh heartbeat is
@@ -604,9 +579,10 @@ detail() { # <name> -> the command that prints one short fact
     well)      printf '%s\n' well_detail ;;
     memory)    printf '%s\n' memory_detail ;;
     mail)      printf '%s\n' mail_detail ;;
-    mcp)       printf '%s\n' "echo 'a2abridge + engram'" ;;
+    mcp)       printf '%s\n' "echo 'a2abridge + the well door'" ;;
     graphics)  printf '%s\n' "if [ -z \"\${DISPLAY:-}\${WAYLAND_DISPLAY:-}\" ]; then echo headless; else echo \"\$(graphics_block 2>/dev/null | sed -n '1p' | sed 's/.*{//;s/}//') · \$(graphics_policy 2>/dev/null)\"; fi" ;;
     harness)   printf '%s\n' "s_harness && echo 'deployed extensions resolve their bin/' || echo 'no live root recorded'" ;;
+    claudehooks) printf '%s\n' "command -v claude >/dev/null 2>&1 && echo 'the three Claude hooks: AGENTS.md · Eindri-only · the Gná arm' || echo 'no claude on this host'" ;;
     arm)       printf '%s\n' "$SCRIPT_DIR/../pi/syn-watch.sh status --detail 2>/dev/null | head -1 || echo 'arm door missing'" ;;
     gates)     printf '%s\n' "s_gates && echo 'pre-push hook: the worktree that pushes' || echo 'installed hook is stale — bin/gates/guards/fixes-guard.sh --install'" ;;
     lock)      printf '%s\n' "cat $STATE/.lock 2>/dev/null | tr -d '[:space:]' | sed 's/^/pid /' || echo none" ;;
@@ -615,7 +591,6 @@ detail() { # <name> -> the command that prints one short fact
     hoard)     printf '%s\n' "printf 'hoard %s' \"\$(_hoard_root)\" ; [ -d \"\$YMIR_HOME/identity\" ] && printf ' +flat-duplicate' ; printf '\n'" ;;
     autoboot)  printf '%s\n' "$SCRIPT_DIR/../engine/ymir-autoboot.sh verify >/dev/null 2>&1 && echo 'boot proven' || echo 'boot gap — bin/engine/ymir-autoboot.sh verify'" ;;
     seatpaths) printf '%s\n' "printf '%s' \"$(seat_profile)\" ; grep -qF \"$HOME/.bun/bin\" \"$(seat_profile)\" 2>/dev/null && printf ' carries the marked block' || printf ' does not carry ~/.bun/bin — a unit or validator will not find bun'" ;;
-    seats)     printf '%s\n' "printf 'root record: '; grep -c . \"${PI_EXT_HOME:-\$HOME/.pi/agent/extensions}/.ymir-root\" 2>/dev/null || printf 0; printf ' root(s), '; git -C $ROOT worktree list --porcelain 2>/dev/null | grep -c '^worktree ' | sed 's/^/worktrees: /'; true" ;;
     hooks)     printf '%s\n' "printf 'installed hooks' ; [ -x \"$(cd "$ROOT" && git rev-parse --git-path hooks 2>/dev/null || printf '.git/hooks')/pre-commit\" ] && printf ' present' || printf ' MISSING — a guarded deletion and a staged secret would both pass'" ;;
     packaging) printf '%s\n' "bash \"$SCRIPT_DIR/../gates/guards/packaging-guard.sh\" check 2>&1 | grep -o 'the File directive names a file that does not exist: [^)]*' | head -1 || printf 'every named input exists'" ;;
   esac

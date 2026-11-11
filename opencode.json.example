@@ -127,7 +127,7 @@
     ]
   },
   "mcp": {
-    "engram": {
+    "well": {
       "type": "remote",
       "url": "http://127.0.0.1:8316/mcp/well",
       "enabled": true

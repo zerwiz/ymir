@@ -158,6 +158,8 @@ the well extension's `session_start` probe finds it up even on a re-emit or nudg
 
 Dispatch is **fail-closed**: `bin/agents/einherjar-spawn.sh` refuses any harness outside the verified set `opencode pi pi-signed` unless a raw launch command (a `--harness` value containing whitespace) is supplied as the deliberate escape hatch.
 
+*Appended 2026-11-11 (plan 239 P5):* the verified set is now `claude opencode pi pi-signed`, in both `src/ymir_runtime/harness.py` (`VERIFIED`) and the spawner. A Claude seat is launched with `.agents/harnesses/claude-worker.settings.json`; when the engine declines an errand, `eindri-start.sh` refuses a harness the ordinary road cannot seat instead of swapping it for pi.
+
 ## 4. Gleipnir — the per-home session lock
 
 Gleipnir is the impossible chain that binds one live Brokk session per home so a second session cannot mutate shared state.

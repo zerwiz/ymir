@@ -16,6 +16,11 @@ its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
 | The outbound gate (nothing leaves until you have read it) | [the-outbound-gate.md](the-outbound-gate.md) |
 | The collaboration doors (who is with us, and how far) | [the-collaboration-doors.md](the-collaboration-doors.md) |
 
+**Built 2026-11-10:**
+
+- The well door for every harness — one MCP set for pi, opencode, Claude, Cursor, Codex and Hermes, and
+  Claude Code loads the project's AGENTS.md: [the-well-door-for-every-harness.md](the-well-door-for-every-harness.md)
+
 **Newest doors** — built 2026-11-09, catalogued the same day:
 
 - The agent's own context budget — how much room is left before compaction:

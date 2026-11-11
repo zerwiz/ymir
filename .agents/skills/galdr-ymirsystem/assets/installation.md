@@ -1397,27 +1397,43 @@ Both facts are asserted, not asserted-about: `install` and `groa-update` are the
 the seat, the packet and `.hermes.md`, and the test renders from the tree it stands in — so a second
 checkout re-rendering the machine's SOUL.md from older code shows up as a red row, not as a mystery.
 
-## The `seats` step — the sweep that closes finished seats (2026-11-10)
 
-`bin/engine/ymir-install.sh` seats the sweep that closes a finished Eindri's herdr
-workspace, per harness:
+## 2026-11-10 — the a2a and memory steps seat the well door, not engram
 
-- **apply** — `bin/seat/seat-reap.sh --install` writes/verifies the session-start hook
-  for every harness on the host (pi's watch extension, opencode's syn-watch plugin,
-  claude's `SessionStart` entry merged into `~/.claude/settings.json` with a backup
-  kept). A harness that is present and could NOT be seated is a `WARN` naming it —
-  never a green over a hall that keeps its dead panes.
-- **`--check`** — reports `seats OK` or `seats WARN "<n> fault(s) — a real
-  install/update heals it"`, and mends NOTHING. A check that repaired the tree would
-  hide the state it exists to report.
+The `a2a` row above says `bin/bridge/a2a-mcp.sh install wires a2abridge + engram into pi + opencode`. The
+`memory` row says the step "reports MCP coverage". Both rows are kept as the record. Both are corrected here.
+engram is Kaia's engine only, so a harness reaches memory through this body's gateway at `/mcp/well` and never
+through a direct `engram-mcp` server.
 
-The structural half is the migration: `.agents/migrations/0018-a-worktree-is-not-a-root.sh`
-prunes a `.yggdrasil/` / linked-worktree path out of
-`~/.pi/agent/extensions/.ymir-root` (keeping `<pointer>.pre-0018`) and switches every
-affected Eindri worktree from the broken `rm -rf .pi/extensions` + `--assume-unchanged`
-state to the per-worktree sparse-checkout exclusion, so `git status` is clean and a
-worker's `git add -A` cannot delete the extension tree.
+```
+install_steps_corrected[2]{step,now}:
+  "a2a","a2a-mcp.sh install wires a2abridge + the WELL DOOR into pi + opencode, and drops a direct engram it finds (backup kept)"
+  "memory","raises the bridge, then bin/bridge/mcp-config.sh seat — pi's one MCP set into every harness present (pi · opencode · claude · cursor · codex · hermes); OK counts the well door, WARN names a direct engram still seated"
+```
 
-`bin/engine/ymir-migrate.sh apply` runs it, and both `ymir-install.sh` and
-`bin/agents/groa-update.sh` call `apply` — so a home installed before the fix is healed
-by the next install or the next update, on every substrate (Rule 25).
+An update heals an older seat through migration `.agents/migrations/0020-the-well-door.sh`. `--check` never
+writes: `step_memory` only reads `mcp-config.sh seat --check`. The full account is in the harness-integration
+asset (§"2026-11-10 — the well door for every harness").
+
+## 2026-11-10 (second) — the loaders step now seats every harness, and the Claude hooks ride install and update
+
+The `loaders` step seated Pi/OpenCode with `valknut-load.sh --all`, but it never called
+`bin/seat/harness-extensions-install.sh` — so the harness extensions and the Claude hook wiring were
+committed and never seated by an install. Corrected: `step_loaders` now runs the installer (and
+`--check` verifies it), so these arrive on install and are re-mended on every update:
+
+```
+harness_hooks_seated[4]{piece,where,seated_by}:
+  "the AGENTS.md loader","~/.claude/hooks/load-agents-md.sh + one named SessionStart entry","harness-extensions-install.sh (called by step_loaders and Gróa)"
+  "the Eindri-only ward","~/.claude/hooks/eindri-only.sh + one named PreToolUse(Agent|Task) entry","harness-extensions-install.sh"
+  "the global Gná arm","~/.claude/hooks/ymir-arm.sh + one named asyncRewake Stop entry","harness-extensions-install.sh"
+  "the MCP set","every harness present (bin/bridge/mcp-config.sh seat)","step_memory; migration 0018; Eir f_mcp"
+```
+
+Migrations: `0020-the-well-door` (the MCP set and engram removal) and `0021-the-claude-hooks` (the
+three hooks). Both are idempotent and run by `ymir-migrate.sh apply`, which install runs at its end and
+Gróa runs on every update. Eir's `claudehooks` surface checks the hooks; its `mcp` surface checks the
+set. A host without a given harness is a clean skip (RULES/25).
+
+The law that the Eindri-only hook enforces is `RULES/49-workers-are-eindri.md`; it is stated for a
+Claude agent under `AGENTS.md` *Dispatch-first* (which `CLAUDE.md` imports).

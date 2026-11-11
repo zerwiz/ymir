@@ -37,6 +37,20 @@ FMQ="$SCRIPT_DIR/../../state/procevent/.wake-queue"
 case "${1:-drain}" in
   -h|--help) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
   ack|--ack)
+    # THE HELM OWNS THE ACK (2026-11-11). The home's queue is drained by the session that holds
+    # the lock; a second session (another Claude, a stale watcher's rewake) that acks it eats the
+    # helm's wakes. When the lease names THIS state dir and a live session holds the lock, only that
+    # session may ack. Eindri-homes keep their own state dirs and are untouched. YMIR_ACK_ANY=1 is
+    # the loud override.
+    _lease="$STATE/.arm.lease"
+    if [ -z "${YMIR_ACK_ANY:-}" ] && [ -r "$_lease" ] && grep -qE "(^| )state=$STATE( |$)" "$_lease" 2>/dev/null; then
+      _owner="$(bash "$SCRIPT_DIR/../records/ymir-state.sh" lock owner 2>/dev/null | tr -d '[:space:]')"
+      if [ -n "$_owner" ] && [ -d "/proc/$_owner" ] \
+         && ! bash "$SCRIPT_DIR/../records/ymir-state.sh" lock owned --shell-pid "$$" >/dev/null 2>&1; then
+        printf 'error: the arm is held by session %s; this queue is its to acknowledge, not yours\nhelp: tell the arm holder over the arm (bin/voice/rodd-arm.sh tell --from <you> "...") — YMIR_ACK_ANY=1 overrides\n' "$_owner" >&2
+        exit 3
+      fi
+    fi
     # Consume EXACTLY what the last drain PRESENTED — never a wake that arrived
     # after it. The old full-truncate ate undrained wakes (the ack race) and let
     # the sweep's re-presentation ring with an empty hand — the ghost wakes the

@@ -59,6 +59,23 @@ class ResolveTest(unittest.TestCase):
         self.assertFalse(selection.is_verified)
         self.assertIn("escape hatch", selection.provenance)
 
+    def test_claude_drops_a_machine_model_meant_for_pi_or_opencode(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            config = Path(tmp)
+            (config / "eindri-harness").write_text("opencode opencode-go/deepseek-v4.1-flash\n", encoding="utf-8")
+            selection = harness.resolve(harness="claude", config_dir=config, catalog=lambda: [])
+        self.assertEqual(selection.name, "claude")
+        self.assertEqual(selection.model, "")
+
+    def test_claude_refuses_an_explicit_provider_model_token(self) -> None:
+        with self.assertRaises(ValueError) as caught:
+            harness.resolve(harness="claude", model="llama-swap/qwen@iq3", catalog=lambda: [])
+        self.assertIn("cannot serve model", str(caught.exception))
+
+    def test_claude_keeps_an_explicit_anthropic_alias(self) -> None:
+        selection = harness.resolve(harness="claude", model="sonnet", catalog=lambda: [])
+        self.assertEqual(selection.model, "sonnet")
+
     def test_an_unservable_model_is_refused(self) -> None:
         with self.assertRaises(ValueError):
             harness.resolve(harness="pi", model="openai/not-in-catalog", catalog=lambda: ["llama-swap/q@iq3"])
@@ -130,9 +147,12 @@ class BuildLaunchCommandTest(unittest.TestCase):
         CONTRACT rather than the string — any shape that fails to parse after the
         prefix is a shape that cannot seat an agent.
         """
-        for name, model in (("opencode", "openai/gpt-5"), ("pi", None), ("pi-signed", None)):
+        for name, model in (("opencode", "openai/gpt-5"), ("pi", None), ("pi-signed", None), ("claude", "sonnet")):
+            # claude reads its worker profile from the Ymir tree, pi its pins from self.cwd
             shape = harness.build_launch_command(
-                harness.HarnessSelection(name, model or "", "", "", ""), "/d/prompt.md", self.cwd
+                harness.HarnessSelection(name, model or "", "", "", ""),
+                "/d/prompt.md",
+                None if name == "claude" else self.cwd,
             )
             with self.subTest(harness=name):
                 proc_ok = subprocess.run(
@@ -143,6 +163,37 @@ class BuildLaunchCommandTest(unittest.TestCase):
                     ["bash", "-n"], input=f"{shape}\n", text=True, capture_output=True
                 )
                 self.assertEqual(bare_ok.returncode, 0, f"unparseable on its own: {shape}")
+
+    def test_claude_is_a_verified_harness(self) -> None:
+        self.assertIn("claude", harness.VERIFIED)
+
+    def test_claude_shape_carries_the_worker_profile_and_the_brief(self) -> None:
+        selection = harness.HarnessSelection("claude", "sonnet", "", "", "")
+        shape = harness.build_launch_command(selection, "/d/prompt.md")
+        profile = harness.claude_worker_profile(None)
+        self.assertEqual(
+            shape,
+            f"claude --permission-mode acceptEdits --settings '{profile}' "
+            "--model 'sonnet' \"$(cat '/d/prompt.md')\"",
+        )
+
+    def test_the_shipped_claude_profile_denies_the_allfathers_moves(self) -> None:
+        import json
+
+        profile = json.loads(harness.claude_worker_profile(None).read_text(encoding="utf-8"))
+        deny = profile["permissions"]["deny"]
+        for rule in ("Bash(git push origin main:*)", "Bash(gh pr merge:*)", "Bash(git add -A:*)",
+                     "Bash(git push --force:*)", "Bash(git reset --hard:*)"):
+            with self.subTest(rule=rule):
+                self.assertIn(rule, deny)
+
+    def test_a_claude_seat_without_its_profile_is_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as empty:
+            with self.assertRaises(ValueError) as caught:
+                harness.build_launch_command(
+                    harness.HarnessSelection("claude", "", "", "", ""), "/d/prompt.md", empty
+                )
+        self.assertIn("worker profile is missing", str(caught.exception))
 
     def test_raw_launch_substitutes_the_brief_reference(self) -> None:
         selection = harness.HarnessSelection("bash", "", "", "", "", "bash -c 'run __BRIEF__'")
