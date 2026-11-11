@@ -842,6 +842,27 @@ hand-made subset. Naming differs by harness and must be respected:
 > which is why the mechanism is a named path and not a second home. Law:
 > `RULES/13-pi-extensions.md`, correction 2026-10-10.
 
+> **A named path is only one home when the session is not standing in ANOTHER checkout
+> (2026-11-11).** This machine carries two full checkouts of one repository — the working
+> tree `~/ymir` and the pinned runtime `~/ymir-runtime` (`$YMIR_HOME/config/runtime.env`) —
+> and the settings name the runtime. pi de-duplicates on `path.resolve` alone, so a bare `pi`
+> started at `~/ymir` took the working tree's tree from discovery AND the runtime's from the
+> settings: 44 tool-name conflicts, and not one extension loaded. A **dispatched** worker
+> never met it (`bin/agents/einherjar-spawn.sh` hands the pane the `-ne` + one `-e` per pin
+> shape from `bin/seat/pi-launcher.sh`); the seat started by hand had no door.
+>
+> `bin/seat/pi-door.sh` is that door, and it is the same shape: a caller that already names
+> its extensions is handed through; a directory with no `.pi/extensions` is handed through; a
+> settings entry for the *same* tree is handed through; a settings entry for a *different*
+> checkout opens the session with discovery off and names **that directory's own tree** once,
+> carrying the settings `packages` explicitly. `bin/seat/harness-extensions-install.sh` seats
+> it as `~/.pi/agent/bin/pi` (first on `PATH`) on install and on every update and reports the
+> copy `stale` when it has moved — a copy, never a symlink, because a symlink into a checkout
+> dies with the branch. `bin/seat/valknut-load.sh --check` therefore accepts a settings entry
+> naming another tree **only** while that door is seated, since the door is what reconciles
+> the launch. Measured: `44` conflicts in `~/ymir` before, `0` after; `0` in a sparse
+> worktree and in the runtime before and after. Law: `RULES/13-pi-extensions.md`.
+
 > **Rebind on every install, update and merge (2026-09-23).** The harnesses load
 their surfaces from their **own** homes — Pi reads `${HOME}/.pi/agent/extensions/`
 — so a change merged into the repo is INVISIBLE to a running harness until the

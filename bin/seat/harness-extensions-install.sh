@@ -11,6 +11,7 @@
 #
 # WHAT IT DOES, per harness, from the descriptors in `.agents/harnesses/`:
 #   pi        the settings `extensions[]` entry, resolved by realpath (bin/seat/valknut-load.sh --global)
+#             AND the one-home door (bin/seat/pi-door.sh) seated as ~/.pi/agent/bin/pi
 #   opencode  the plugin set copied into ~/.config/opencode/plugins
 #   claude    the hook scripts into ~/.claude/hooks  (the JSON wiring is NAMED, never merged blind)
 #   codex     hooks.json and the skills links under ~/.codex
@@ -64,19 +65,53 @@ copy_tree() {  # <src-dir> <dst-dir> <label> — copy only what differs, keep on
 
 printf 'harness_extensions[%s]{harness,state,detail}:\n' 6
 
-# ── pi: the settings entry that makes the extensions load from any directory ──
+# ── pi: the settings entry that makes the extensions load from any directory, and
+#        the DOOR that keeps a seat started by hand to ONE home (2026-11-11) ──────
+# pi's loader takes `<cwd>/.pi/extensions` AND every directory the settings name, and
+# de-duplicates on the resolved path alone — so a hand-started `pi` in one checkout
+# while the settings name another loaded 44 colliding extensions and refused them all
+# (RULES/13). bin/seat/pi-door.sh is installed as `pi`, first on PATH, and hands such a
+# launch one home; everywhere else it hands the launch through untouched.
+PI_DOOR_DST="$HOME/.pi/agent/bin/pi"
+pi_door_state() {
+  [ -f "$ROOT/bin/seat/pi-door.sh" ] && [ -x "$PI_DOOR_DST" ] || { printf 'absent'; return 0; }
+  cmp -s "$ROOT/bin/seat/pi-door.sh" "$PI_DOOR_DST" && printf 'current' || printf 'stale'
+}
+pi_door_seat() {
+  mkdir -p "$HOME/.pi/agent/bin" 2>/dev/null || return 1
+  cp -p "$ROOT/bin/seat/pi-door.sh" "$PI_DOOR_DST" 2>/dev/null || return 1
+  chmod 0755 "$PI_DOOR_DST"
+}
+
 if command -v pi >/dev/null 2>&1; then
+  state="current"; detail=""
   if [ "$mode" = "check" ]; then
     if grep -q "$ROOT/.pi/extensions" "$HOME/.pi/agent/settings.json" 2>/dev/null; then
-      say "  \"pi\",\"current\",\"settings extensions[] → $ROOT/.pi/extensions\""
+      detail="settings extensions[] → $ROOT/.pi/extensions"
     else
-      say "  \"pi\",\"stale\",\"settingsextensions[] does not name this checkout\""; stale=$((stale+1))
+      state="stale"; detail="settings extensions[] does not name this checkout"; stale=$((stale+1))
     fi
   else
-    bash "$ROOT/bin/seat/valknut-load.sh" --global >/dev/null 2>&1 \
-      && say "  \"pi\",\"synced\",\"settings extensions[] → $ROOT/.pi/extensions\"" \
-      || say "  \"pi\",\"skip\",\"valknut-load could not bind the seat\""
+    if bash "$ROOT/bin/seat/valknut-load.sh" --global >/dev/null 2>&1; then
+      state="synced"; detail="settings extensions[] → $ROOT/.pi/extensions"
+    else
+      state="skip"; detail="valknut-load could not bind the seat"
+    fi
   fi
+  case "$(pi_door_state)" in
+    current) detail="$detail · one-home door current" ;;
+    stale)   detail="$detail · one-home door stale"
+             [ "$mode" = "check" ] && { stale=$((stale+1)); [ "$state" = current ] && state="stale"; } ;;
+    absent)  if [ "$mode" = "check" ]; then
+               detail="$detail · one-home door ABSENT (a seat started in another checkout loads two homes)"
+               stale=$((stale+1)); [ "$state" = current ] && state="stale"
+             elif pi_door_seat; then
+               detail="$detail · one-home door seated → $PI_DOOR_DST"
+             else
+               detail="$detail · one-home door NOT seated ($PI_DOOR_DST is not writable)"
+             fi ;;
+  esac
+  say "  \"pi\",\"$state\",\"$detail\""
 else
   say "  \"pi\",\"absent\",\"no pi on this host\""; absent=$((absent+1))
 fi
