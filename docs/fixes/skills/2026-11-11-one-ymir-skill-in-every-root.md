@@ -30,7 +30,7 @@
 His word, 2026-11-11: *"it's enough with one skill to the main harnesses … have all skills in one folder, with a
 SKILL.md that is indexing all things."* RULES/51: *ONE YMIR SKILL IN EVERY ROOT*, *THE STORE IS NEVER SCANNED*.
 Measured before this change, a root agent outside the repo listed none of Ymir's ~200 skills. Inside the repo, Claude
-listed all 34 shipped skills through the repo link, about 15 KB per turn. heimdall's `~/.agents/skills/modeltesting` sat
+listed all 34 shipped skills through the repo link, about 15 KB per turn. A box skill (`~/.agents/skills/modeltesting` on the counsellor's seat) sat
 in a directory pi walks recursively.
 
 ### Verified
@@ -40,7 +40,7 @@ in a directory pi walks recursively.
   `--root` writing nothing; a scanned store refused; a body-only word found; an unfindable skill named; the render
   sentence matching the check.
 - **Throwaway HOME, runtime cloned from the branch commit** (the real `~/.claude`, `~/.pi`, `~/.agents`,
-  `~/.local/share` untouched, verified absent afterwards). After migration 0022 and `harness-extensions-install`,
+  `$XDG_DATA_HOME` untouched, verified absent afterwards). After migration 0022 and `harness-extensions-install`,
   pi's own session loader (`DefaultResourceLoader`) lists `omarchy, ymir` from `~` and from an unrelated git project.
   That is one Ymir skill, and it adds 246 bytes to pi's skills prompt. Claude's root holds `omarchy, ymir`
   (front matter 107 bytes). The index holds 198 paths with 0 unresolved, and `modeltesting` was carried into the box
@@ -57,7 +57,7 @@ in a directory pi walks recursively.
 - OpenCode and Codex read `~/.agents/skills` natively (plan 248, read online). Neither binary is on this box, so
   neither was run.
 - Second-machine proof (plan 248 P7) and the per-harness byte meter (P6) are owed.
-- The box contract on heimdall (`~/CLAUDE.md`) still names `~/.agents/skills/modeltesting` and
+- The counsellor seat's box contract (`~/CLAUDE.md`) still names `~/.agents/skills/modeltesting` and
   `~/.pi/agent/skills/modeltesting`. After migration 0022 runs there, that skill lives at
-  `~/.local/share/ymir/box-skills/modeltesting` and is reached through the `ymir` index. The box contract is
+  `$XDG_DATA_HOME/ymir/box-skills/modeltesting` and is reached through the `ymir` index. The box contract is
   append-only and outside this repo, so it gets a dated line from the seat.
