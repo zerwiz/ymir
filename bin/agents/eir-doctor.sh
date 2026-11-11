@@ -111,7 +111,7 @@ surface_detail_skip() {
 }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir shells graphics well memory mail mcp harness claudehooks arm lock gates migrations hoard autoboot vault ward)
+SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir hnoss shells graphics well memory mail mcp harness claudehooks arm lock gates migrations hoard autoboot vault ward seats)
 
 # ── the three surfaces the 2026-11-03 Windows audit found, and the rule they read ──────────
 # A SEAT IS NOT UPDATED BY A PULL. The checkout moves; the installed hooks, the PATH a later
@@ -213,6 +213,12 @@ f_council()   { "$SCRIPT_DIR/../pi/logretta-ensure.sh" ensure >/dev/null 2>&1; }
 f_snotra()    { "$SCRIPT_DIR/../../systems/snotra/services/ear/snotra-ensure.sh" ensure --install >/dev/null 2>&1; }
 s_sessrumnir(){ [ -x "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" ] && "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" status >/dev/null 2>&1; }
 f_sessrumnir(){ "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1; }
+# Hnoss — the design smithy's model door (2026-11-10). The MCP bridge is only as good as
+# the door it reaches a model through; a hand-placed launcher plus a rail/BYOK mismatch
+# made every design generation die silently. The ensure door seats the launcher and the
+# pi MCP entry, and REFUSES a provider it has no door for instead of falling back.
+s_hnoss()     { [ -x "$SCRIPT_DIR/../pi/hnoss-ensure.sh" ] && "$SCRIPT_DIR/../pi/hnoss-ensure.sh" status >/dev/null 2>&1; }
+f_hnoss()     { "$SCRIPT_DIR/../pi/hnoss-ensure.sh" ensure >/dev/null 2>&1; }
 # The boot law (2026-09-24): every role-owed program enabled and standing. The
 # mend for a stopped boot IS the raise — re-materialize, re-enable, re-verify.
 s_autoboot()  { [ -x "$SCRIPT_DIR/../engine/ymir-autoboot.sh" ] && "$SCRIPT_DIR/../engine/ymir-autoboot.sh" verify >/dev/null 2>&1; }
