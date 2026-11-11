@@ -33,47 +33,22 @@ case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help) sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
   --install)
+    # ONE HOME FOR THE HOOK TEXT (plan 243, 2026-11-11). This used to generate a SECOND hook
+    # body here, and the two drifted: `.githooks/pre-push` ran the tree wards only, while this
+    # copy ran the whole chain — so which gates a push met depended on whether the seat had set
+    # `core.hooksPath`. Measured that day: the checkout doing the work had no hooksPath, so the
+    # generated copy ran and the shipped one was dead text. The shipped file IS the hook; the
+    # install copies it, and a missing file is a refusal rather than a silently different gate.
     H="$(git rev-parse --git-path hooks)/pre-push"
-    mkdir -p "$(dirname "$H")"
-    cat >"$H" <<EOF
-#!/usr/bin/env bash
-# pre-push — the delivery gate. Installed by bin/gates/guards/fixes-guard.sh --install.
-#   1. guards       — the TREE wards: the tree is not a runtime, and one place knows where
-#                     things live. First, because it is fast and a dirty tree should fail
-#                     before anything else is argued about.
-#   2. branch-guard — never push a protected branch.
-#   3. fixes-guard  — every push carries a fix note for what it changed.
-#   4. branch-current — the branch is based on CURRENT main before it is offered
-#                     (a branch six commits behind main arrives with conflicts and
-#                     stale rule numbers; caught 2026-10-18 by asking "did you pull")
-set -u
-# Judge the checkout the push comes FROM, not the one that installed the hook. Git runs a
-# pre-push hook with cwd at the pushing worktree's root, and this hook used to bake in the
-# installing checkout's absolute path: when that worktree was reclaimed, the hook pointed at
-# a directory that no longer existed and every push died with "No such file or directory"
-# (measured 2026-10-20). A hook that names a path a cleanup can remove is a gate that can
-# be deleted by housekeeping.
-ROOT="\$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-refs="\$(mktemp)"; trap 'rm -f "\$refs"' EXIT
-cat >"\$refs"
-"\$ROOT/bin/gates/guards.sh" || exit 1
-"\$ROOT/bin/gates/guards/branch-guard.sh" <"\$refs" || exit 1
-"\$ROOT/bin/gates/guards/fixes-guard.sh" <"\$refs" || exit 1
-# Rule 11 — a tracked file is MOVED, never deleted. RULES/11 said this ran "in the pre-commit
-# and pre-push chains and in CI"; on 2026-11-03 it ran in none of them, and a collaborator's
-# deletion walked through a green tree. Judged against the merged base; a repo with no
-# origin/main skips cleanly rather than failing every push.
-if git rev-parse -q --verify origin/main >/dev/null 2>&1; then
-  "\$ROOT/bin/no-delete-guard.sh" --base origin/main || exit 1
-  # Rule 04/39 — a commit's author line is DATA IN THIS REPOSITORY, and this repository is public.
-  # Measured 2026-11-03: the operator's personal mailbox was the author of 1,236 commits, because
-  # git records whatever `user.email` says and nothing watched it. This refusal is the watch.
-  "\$ROOT/bin/gates/guards/identity-guard.sh" --base origin/main || exit 1
-fi
-"\$ROOT/bin/gates/branch-current.sh" check || exit 1
-EOF
-    chmod +x "$H"
-    printf 'fixes-guard[1]{gate,result}:\n  "hook","installed at %s"\n' "${H#"$ROOT"/}"
+    case "$H" in /*) ;; *) H="$ROOT/$H" ;; esac
+    mkdir -p "$(dirname "$H")" || exit 1
+    SRC="$ROOT/.githooks/pre-push"
+    if [ ! -r "$SRC" ]; then
+      printf 'error: %s is missing\nhelp: the pre-push hook has one home and it is that file\n' "$SRC" >&2
+      exit 1
+    fi
+    cp "$SRC" "$H" && chmod +x "$H" || exit 1
+    printf 'fixes-guard[1]{gate,result}:\n  "hook","installed from .githooks/pre-push at %s"\n' "${H#"$ROOT"/}"
     exit 0 ;;
   --check) ;;
   "") ;;

@@ -15,4 +15,15 @@
 # Exit: 0 clean · 1 findings · 2 usage.
 set -u
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+
+# SCOPED (plan 243 §3, part B · 2026-11-11). This is the ward whose whole-tree walk made the
+# pre-push slow — 5,476 files, 22.5 s, and the answer for 5,475 of them could not have changed.
+# guards.sh hands a scoped ward the changed paths as arguments, and the scan is per file, so a
+# one-file push reads one file. With no paths it still walks the whole tree, which is what CI
+# (`guards.sh --full`) and a person typing the ward by hand both do: nothing is scoped away.
+args=("$@")
+[ "${args[0]-}" = check ] && args=("${args[@]:1}")
+if [ "${#args[@]}" -gt 0 ]; then
+  exec python3 "$ROOT/bin/gates/guards/public-guard.py" "${args[@]}"
+fi
 exec python3 "$ROOT/bin/gates/guards/public-guard.py" --tree
