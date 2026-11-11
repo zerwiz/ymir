@@ -2,7 +2,7 @@
 set -u
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
 cd "$ROOT" || exit 1
-export YMIR_HOME="${YMIR_HOME:-/home/zerwizserver/Documents/ymirhome}"
+export YMIR_HOME="${YMIR_HOME:-$HOME/Documents/ymirhome}"
 # ensure config
 mkdir -p "$YMIR_HOME/config" "$YMIR_HOME/state"
 # clean findings for test

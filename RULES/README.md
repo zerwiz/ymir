@@ -128,4 +128,4 @@ Keep each rule short and unambiguous; reference it from code where it bites.
 
 - **50 — the home is pulled before and pushed after** · `RULES/50-the-home-is-pulled-before-and-pushed-after.md`
 - **51 — Ymir is a program; it runs globally, in the user's root agents** · `RULES/51-ymir-is-a-program.md`
-- **52 — a document is written for a person to read** · `RULES/52-documents-are-for-people.md`
+| 52 | `52-no-agent-runs-unowned.md` | No agent runs unowned |
