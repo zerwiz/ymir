@@ -34,12 +34,20 @@ esac
 fail=0
 printf 'ci_verify[4]{gate,status,detail}:\n'
 
+# THE VERDICT, IN A FILE (plan 243 §3, part E). When CI is red on main, the sweep must be able
+# to name the ward and the commit that broke it without re-running a five-minute suite over the
+# failure. So every failing gate is written here as `gate<TAB>what`, and the ward gate's own
+# table is kept beside it (`<verdict>.wards`) — bin/gates/main-red-issue.sh reads both.
+VERDICT="${YMIR_CI_VERDICT:-${TMPDIR:-/tmp}/ymir-ci-verdict.txt}"
+: >"$VERDICT" 2>/dev/null || VERDICT=/dev/null
+
 gate() {  # <name> <description> <command...>
   local name="$1" what="$2"; shift 2
   local out; out="$( "$@" 2>&1 )" && rc=0 || rc=$?
   if [ "$rc" -eq 0 ]; then
     printf '  "%s","PASS","%s"\n' "$name" "$what"
   else
+    printf '%s\t%s\n' "$name" "$what" >>"$VERDICT" 2>/dev/null || true
     printf '  "%s","FAIL","%s"\n' "$name" "$what"
     # The failing gate's own tail — the single-line swallow hid WHICH check
     # died inside (e.g. pr-pretest's hull/sandbox/app-boot rows). Print the
@@ -57,7 +65,12 @@ if [ -x "$ROOT/bin/records/weave-features.sh" ]; then
   "$ROOT/bin/records/weave-features.sh" --install >/dev/null 2>&1 || \
     printf '  "%s","NOTE","%s"\n' weave-driver "the merge driver could not be seated in this clone"
 fi
-gate ward        "the tree wards (runtime, defaults)"   bash "$ROOT/bin/gates/guards.sh"
+# THE WHOLE TREE, EVERY WARD (plan 243 §3, part E). `--full` is the CI posture: no diff scope,
+# no budget, no cache, and the wards the pre-push moved here (inventory, registers, docs-claims,
+# language, dead-code) all run. This is why a local skip is still safe — nothing is judged only
+# by a hook a pusher may not have installed.
+ward_check() { bash "$ROOT/bin/gates/guards.sh" --full 2>&1 | tee "$VERDICT.wards"; return "${PIPESTATUS[0]}"; }
+gate ward        "every tree ward, the whole tree (guards.sh --full)" ward_check
 gate dead-code-paths "the dead-code ward judges normal and Yggdrasil checkouts" \
      python3 "$ROOT/tests/test_dead_code_worktrees.py"
 # 2026-11-06 — the sweep judged a LIVE errand dead 3m59s after launch, because herdr

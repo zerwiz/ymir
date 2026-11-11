@@ -4,6 +4,14 @@ name: The gates
 # command, bin/gates/ci-verify.sh, so the checks have exactly one home and cannot drift between
 # hosts. If a host needs a different runner label, that is one line in one file and no
 # change to what is proved.
+#
+# THIS IS THE REQUIRED CHECK (plan 243 §3, part E, 2026-11-11). The pre-push hook is the fast
+# filter in front of it: it judges what a push ADDS, inside a 60 s budget, and prints a fault it
+# did not cause as `inherited`. Nothing may be judged ONLY there — this workflow runs the whole
+# tree, every ward (`bin/gates/ci-verify.sh` → `guards.sh --full`) on every PR and on main, so a
+# pusher who never installed a hook, a fork, and a machine whose seat step failed all meet the
+# same gate. Branch protection should require the `gates` job;
+# `bin/gates/require-check.sh` prints (or with --apply, seats) that setting.
 on:
   push:
   pull_request:
@@ -31,8 +39,24 @@ jobs:
         run: git fetch --no-tags --depth=1 origin "+refs/heads/${{ github.base_ref || 'main' }}:refs/remotes/origin/${{ github.base_ref || 'main' }}"
       - name: The gates
         run: bash bin/gates/ci-verify.sh
+        env:
+          # ci-verify writes every failing gate here, plus the ward table beside it, so the
+          # red-main step can name the ward without re-running the suite (plan 243 part E).
+          YMIR_CI_VERDICT: ${{ runner.temp }}/ci-verdict.txt
+      # The PR-only ward's one home. It judges a pull request body, so it cannot answer before
+      # the PR exists — which is why `guards.sh` names it and skips it rather than failing a
+      # push with `no pull requests found for branch "check"` (measured 2026-11-11).
       - name: PR identity ward
         if: github.event_name == 'pull_request'
         run: bash bin/gates/guards/pr-identity-guard.sh --ci
         env:
           GITHUB_EVENT_PATH: ${{ github.event_path }}
+      # MAIN IS NEVER LEFT RED SILENTLY (plan 243 §3, part D). The pre-push passes a fault it did
+      # not cause — this is what owns it: ONE issue, naming the ward and the newest commit that
+      # touched the file, appended to rather than duplicated when main goes red again.
+      - name: Main is red — one issue names the ward and the commit
+        if: failure() && github.ref == 'refs/heads/main'
+        run: bash bin/gates/main-red-issue.sh --apply
+        env:
+          YMIR_CI_VERDICT: ${{ runner.temp }}/ci-verdict.txt
+          GH_TOKEN: ${{ github.token }}

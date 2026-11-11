@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+#
+# cache: tree — this ward's verdict is a pure function of the tracked tree (no $YMIR_HOME read,
+# no service, no clock, no network), so bin/gates/guards.sh may cache its PASS against the
+# content it judged and an unchanged file is never re-scanned (plan 243 §3, part F). A ward
+# that reads anything outside the tree must NOT carry this line: a cache that hides a real
+# finding is the one thing this house does not ship.
+# cache: tree
 # runtime-guard.sh — THE TREE IS NOT A RUNTIME.
 #
 # A lock, not a wish. The running system writes state, and the source tree is not
