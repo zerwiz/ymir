@@ -28,8 +28,11 @@
 | pi-launcher.sh | pi-launcher.sh — the ONE launcher generator for a pi seat. | tested+named | keep (a human or a cron row must run it) |
 | rank.sh | rank.sh — ask a jev judge to score items on jev's three categories. | tested+named | keep (a human or a cron row must run it) |
 | roster.sh | (no header line) | tested | keep (a human or a cron row must run it) |
+| seat-adopt.sh | seat-adopt.sh — a late boot is still a seat. | tested+named | keep (a human or a cron row must run it) |
 | seat-prove.sh | seat-prove.sh — a spawn is not a seat until the agent list shows it. | tested+named | keep (a human or a cron row must run it) |
+| seat-reap.sh | seat-reap.sh — the hand that closes a finished seat. | tested+named | keep (a human or a cron row must run it) |
 | seat-surface.sh | seat-surface.sh — render THIS seat's own name into the AGENTS.md every | tested+named | keep (a human or a cron row must run it) |
+| seat-wake.sh | seat-wake.sh — the seat's word to the ARM, not to a desktop. | tested+named | keep (a human or a cron row must run it) |
 | seat-wire.sh | seat-wire.sh — one seat speaks into another seat's live pane, and says | tested | keep (a human or a cron row must run it) |
 | seats.sh | seats.sh — where the work actually is: panes in either backend, and th | tested+named | keep (a human or a cron row must run it) |
 | sessrumnir-wire.sh | sessrumnir-wire.sh — the seat wire: talk to a Sessrúmnir seat, and re | tested | keep (a human or a cron row must run it) |
@@ -37,6 +40,7 @@
 | test_doors_fleet_path.sh | The ward for plan 229 — the near loop on a machine that is not this sh | tested+named | keep (a human or a cron row must run it) |
 | test_lock_ask.sh | The ward for bin/seat/lock-ask.sh — a read-only agent asks the lock ow | tested | keep (a human or a cron row must run it) |
 | test_rank.sh | The ward for bin/seat/rank.sh — the hall's ranking transport. | tested | keep (a human or a cron row must run it) |
+| test_seat_reap.sh | The ward for "the arm closes finished Eindri seats" (2026-11-10). | tested | keep (a human or a cron row must run it) |
 | valknut-load.sh | valknut-load.sh — Valknut, the knot that binds the repo distro into ea | tested+named | keep (a human or a cron row must run it) |
 | who.sh | who.sh — WHO IS WHERE: every agent in a pane, its project, its errand, | tested | keep (a human or a cron row must run it) |
 | whose-tree.sh | whose-tree.sh — whose code am I standing in? | tested | keep (a human or a cron row must run it) |
