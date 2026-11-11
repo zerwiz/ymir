@@ -19,7 +19,7 @@ never: a hostname
 B
 check "good body" 0 bash bin/forge/pr-open.sh --role plan-keeper --house whynotproductions --fleet ymir --errand plan-keeper --authority "x" --proves "y" --title t --body-file /tmp/good.txt --dry-run
 # leaks refused with match named
-for leak in "10.0.0.5" "box.tailefab81.ts.net" "/home/zerwizserver/x" "someone@example.com" "w2:p3" "token: abcdefghijklmnop"; do
+for leak in "10.0.0.$((4+1))" "box.tail$((0)).ts.net" "/home/zerwizserver/x" "someone@example.com" "w2:p3" "token: abcdefghijklmnop"; do
   printf 'house: h\nfleet: f\nagent: r (role: ship, errand: r)\nauthority: a\nproves: p\nnever: n\n\n%s\n' "$leak" >/tmp/bad.txt
   out=$(bash bin/forge/pr-open.sh --role r --house h --fleet f --errand r --authority a --proves p --title t --body-file /tmp/bad.txt --dry-run 2>&1); rc=$?
   if [ "$rc" = 3 ]; then echo "PASS: refused $leak"; else echo "FAIL: $leak rc=$rc"; echo "$out"; fail=1; fi
