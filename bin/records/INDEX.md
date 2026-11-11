@@ -53,14 +53,14 @@ bin[40]{file,does,kind,verdict,disposition,callers,lines}:
   "todos.sh","todos.sh — THE task board of the house, one writer for one file.","tool","wired","keep",3,180
   "vor-crew-state.sh","vor-crew-state.sh - deterministic read of an Eindri worker's CURRENT state.","tool","wired","keep",2,125
   "weave-features.sh","weave-features.sh — FEATURES.md is WOVEN from fragments, never hand-edited.","tool","wired","keep",7,51
-  "weave.sh","weave.sh — the dispatcher for every WOVEN document and every INDEX (Þættir, plan 174/175).","tool","wired","keep",7,92
+  "weave.sh","weave.sh — the dispatcher for every WOVEN document and every INDEX (Þættir, plan 174/175).","tool","wired","keep",8,92
   "well-door.sh","well-door.sh — the hand's door to the heart's well, raised over SSH.","tool","tested","keep",1,125
   "well-guard.sh","well-guard.sh — the WARD behind RULES/20-the-well-appends.md.","tool","wired","keep",3,206
   "well-selftest.sh","well-selftest.sh — prove a keeper can find its own memory, and only its own —","tool","wired","keep",0,78
   "where.sh","where.sh — 'which book do I read before touching this path?'","tool","wired","keep",1,101
   "workspace-rag.sh","workspace-rag.sh — memory over the realm workspaces (W0038).","tool","wired","keep",0,165
   "wyrd-db.sh","wyrd-db.sh — the database layer (W0040).","tool","wired","keep",0,49
-  "ymir-state.sh","ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runtime/state/`).","tool","wired","keep",9,44
+  "ymir-state.sh","ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runtime/state/`).","tool","wired","keep",10,44
 
 **Tally.** verdict: wired=32, tested=8
 

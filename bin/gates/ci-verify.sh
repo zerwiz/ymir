@@ -76,6 +76,15 @@ gate public-data "RULES/04 — a secret, a name, a topology or a mailbox is refu
 gate mocks-vocabulary "the mocks scan catches a half-built door and excuses only vocabulary" \
      bash "$ROOT/.agents/tests/mocks-scan.test.sh"
 
+# A RED MAIN MUST SHOUT (plan 243 part E, 2026-11-11). The gate on main was red for four
+# consecutive commits and nothing in the house said so — every hand pushed into it and every
+# push failed for drift it had not caused. `bin/gates/main-red.sh` is the alarm; this is the
+# proof that it BITES (a finding names the gate and quotes the ward) and that it stays QUIET
+# where it must (a green log files nothing, no token calls no API, and only a main push may
+# open the issue).
+gate main-red "the alarm for a red main names the ward and never fires for a pull request" \
+     bash "$ROOT/bin/gates/tests/test_main_red.sh"
+
 # Rule 11 — a tracked file is MOVED, never deleted. RULES/11 says the ward runs here; until
 # 2026-11-03 nothing in this file called it, so a deletion passed CI unseen. The range is the
 # PR's base when there is one, and an honest SKIP (not a green) when this checkout has no base.
