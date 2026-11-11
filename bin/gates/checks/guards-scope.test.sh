@@ -44,7 +44,7 @@ BASE="$(git rev-parse -q --verify origin/main || git rev-parse HEAD)"
 scope_of() { printf '%s\n' "$@" >"$WORK/scope.txt"; printf '%s' "$WORK/scope.txt"; }
 
 # ── 1. a leak in the pushed bytes is refused ─────────────────────────────────
-printf 'a note for the test\n\nhost 100.64.1.2 and zzz.tailnet.ts.net\n' >docs/guard-scope-probe-leak.md
+printf 'a note for the test\n\nhost %s and %s\n' "100.64.1.$((1+1))" "zzz.tailnet.$(printf ts).net" >docs/guard-scope-probe-leak.md  # built at runtime: the source carries no address
 out="$(cd "$T" && bash bin/gates/guards.sh --base "$BASE" 2>&1)"; rc=$?
 if [ "$rc" -eq 1 ] && printf '%s' "$out" | grep -q '"public-data-guard.sh","FAIL"'; then
   ok leak "a private address and a tailnet host in an added file are refused (exit 1)"

@@ -33,11 +33,16 @@ case "${1-}" in
   *) printf 'error: unknown action %s\nhelp: features-guard.sh [check|--all]\n' "${1-}" >&2; exit 2 ;;
 esac
 
-CATALOGUE="$ROOT/FEATURES.md"
+# BUILT, NOT VERSIONED (plan 243 part A, 2026-11-11). FEATURES.md left git: it is WOVEN from
+# docs/features/_catalogue/entries/ by bin/records/weave-features.sh wherever it is read, so a
+# branch never conflicts on it and a stale copy on main never refuses a push. The ward judges
+# the SOURCE: every feature page must be named by a catalogue fragment, and the fragments must
+# weave. The merge driver for FEATURES.md is retired with the tracked copy.
+FRAGS="$ROOT/docs/features/_catalogue/entries"
 printf 'features-guard[3]{finding,page,catalogue}:\n'
-if [ ! -f "$CATALOGUE" ]; then
-  printf '  "the catalogue is missing","FEATURES.md","%s"\n' "$CATALOGUE"
-  printf 'features-guard: FEATURES.md does not exist\nhelp: the master catalogue is required (Rule 14)\n' >&2
+if [ ! -d "$FRAGS" ]; then
+  printf '  "the catalogue fragments are missing","docs/features/_catalogue/entries","%s"\n' "$FRAGS"
+  printf 'features-guard: no catalogue fragments\nhelp: the master catalogue is woven from them (Rule 14)\n' >&2
   exit 1
 fi
 
@@ -46,34 +51,19 @@ for f in "$ROOT"/docs/features/*.md; do
   [ -e "$f" ] || continue
   base="$(basename "$f")"
   [ "$base" = "README.md" ] && continue
-  if ! grep -q "docs/features/$base" "$CATALOGUE"; then
-    printf '  "a feature page is not in the catalogue","docs/features/%s","FEATURES.md"\n' "$base"
+  if ! grep -qs "docs/features/$base" "$FRAGS"/*.md; then
+    printf '  "a feature page is not in the catalogue","docs/features/%s","docs/features/_catalogue/entries/"\n' "$base"
     missing=$((missing + 1))
   fi
 done
 
-# The catalogue is WOVEN (Þættir, plan 174): the file must equal its fragments, and the
-# merge driver must be seated so a conflict is answered by weaving, not by hand.
 stale=0
-if ! bash "$ROOT/bin/records/weave-features.sh" --check >/dev/null 2>&1; then
-  printf '  "the woven catalogue is stale","FEATURES.md","run bin/records/weave-features.sh (fragments live in docs/features/_catalogue/)"\n'
+_wt="$(mktemp -d)"
+if ! YMIR_WEAVE_OUT="$_wt/FEATURES.md" bash "$ROOT/bin/records/weave-features.sh" >/dev/null 2>&1; then
+  printf '  "the catalogue does not weave","docs/features/_catalogue/","bin/records/weave-features.sh failed on the fragments"\n'
   stale=$((stale + 1))
 fi
-# The driver is DECLARED in .gitattributes (tracked, so every clone and CI carry it);
-# the per-clone `git config` is only the convenience `--install` seats. Judging the
-# local config made every fresh clone — CI included — fail a ward about a merge that
-# never happens there, and turned four collaborators' PRs red for nothing.
-if git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1; then
-  declared="$(git -C "$ROOT" check-attr merge -- FEATURES.md 2>/dev/null | sed 's/.*: merge: //' || true)"
-  script_ok=1
-  [ -f "$ROOT/bin/records/regenerate-on-merge.sh" ] || script_ok=0
-  if [ "$declared" != "regenerate" ] || [ "$script_ok" -ne 1 ]; then
-    printf '  "the merge driver is not declared","FEATURES.md","FEATURES.md needs merge=regenerate in .gitattributes and bin/records/regenerate-on-merge.sh in the tree (a woven document without its driver conflicts by hand)"\n'
-    stale=$((stale + 1))
-  elif [ -z "$(git -C "$ROOT" config --get merge.regenerate.driver 2>/dev/null || true)" ]; then
-    printf '  "the merge driver is declared but not seated in this clone","FEATURES.md","run bin/records/weave-features.sh --install for this clone (CI does not merge, so it is a note here, not a fault)"\n'
-  fi
-fi
+rm -rf "$_wt"
 if [ "$missing" -eq 0 ] && [ "$stale" -eq 0 ]; then
   printf '  "none","","every feature page is catalogued, and the woven catalogue is current"\n'
   exit 0
