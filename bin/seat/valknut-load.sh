@@ -32,19 +32,21 @@ PI_GLOBAL="${HOME}/.pi/agent/agents"
 # extensions read back.
 # A pinned runtime wins over the working tree (RULES/02 §7): the extensions a harness loads must be the ones
 # a deployment proved, never whatever branch an agent left checked out. $YMIR_HOME/config/runtime.env names it.
-_pin=""
-_hoard="${YMIR_HOME:-}"
-if [ -z "$_hoard" ] && [ -r "$ROOT/bin/vault/hoard-lib.sh" ]; then
-  . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
-  command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root _hoard 2>/dev/null || true
+#
+# The pin is read through ONE door, bin/seat/runtime-root.sh (plan 248 P2, 2026-11-11). This file used to read
+# runtime.env with `sed`, which kept `YMIR_RUNTIME_DIR="$HOME/ymir-runtime"` as the literal text `$HOME/…` — a
+# directory that never exists — so the pin was silently ignored and pi's ROOT settings were bound to the
+# working tree this script ran from. The door sources the file, so `$HOME` means what the operator wrote.
+YMIR_RUNTIME_ROOT=""; YMIR_RUNTIME_SOURCE="checkout"; YMIR_RUNTIME_REASON=""
+if [ -r "$ROOT/bin/seat/runtime-root.sh" ]; then
+  # shellcheck disable=SC1091
+  . "$ROOT/bin/seat/runtime-root.sh"
+  ymir_runtime_resolve "$ROOT"
 fi
-if [ -n "$_hoard" ] && [ -r "$_hoard/config/runtime.env" ]; then
-  _pin=$(sed -n 's/^YMIR_RUNTIME_DIR="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' "$_hoard/config/runtime.env" | head -1)
+if [ "$YMIR_RUNTIME_SOURCE" = "pinned" ] && [ -d "$YMIR_RUNTIME_ROOT/.pi/extensions" ]; then
+  PI_EXT_SRC="${PI_EXT_SRC:-$YMIR_RUNTIME_ROOT/.pi/extensions}"
 fi
-unset _hoard
-[ -n "$_pin" ] && [ -d "$_pin/.pi/extensions" ] && PI_EXT_SRC="${PI_EXT_SRC:-$_pin/.pi/extensions}"
 PI_EXT_SRC="${PI_EXT_SRC:-$ROOT/.pi/extensions}"
-unset _pin
 PI_EXT_HOME="${PI_EXT_HOME:-${HOME}/.pi/agent/extensions}"
 PI_SETTINGS="${PI_SETTINGS:-${HOME}/.pi/agent/settings.json}"
 OC_LOCAL="$ROOT/.opencode/agents"
@@ -288,6 +290,32 @@ if [ "$MODE_CHECK" = "1" ]; then
       printf '  %-46s %s\n' "project home holds extensions" "FAIL — $PI_EXT_SRC is absent and this is no worktree of the seat"
       fails=$((fails+1)) ;;
   esac
+  # A PINNED runtime serves, so the resolver above no longer looks at this tree's own copy — but a linked
+  # worktree that carries one is still a second home for a session started inside it (2026-11-11).
+  if [ "$PI_EXT_SRC" != "$ROOT/.pi/extensions" ] && [ -d "$ROOT/.pi/extensions" ] && [ ! -L "$ROOT/.pi/extensions" ] \
+     && [ "$(git -C "$ROOT" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" \
+          != "$(git -C "$ROOT" rev-parse --path-format=absolute --git-dir 2>/dev/null)" ]; then
+    printf '  %-46s %s\n' "the worktree carries no second tree" "FAIL — git -C $ROOT sparse-checkout set --no-cone '/*' '!/.pi/extensions/'"
+    fails=$((fails+1))
+  fi
+  # ROOT AGENTS LOAD THE RUNTIME, NEVER A WORKING TREE (plan 248 P2, RULES/51). Every path pi's root config
+  # holds — settings extensions[], the MCP doors, the .ymir-root record — is judged by the one ward. A path into
+  # any Ymir checkout that is not the runtime is REFUSED with the remedy named; the fallback to the checkout
+  # when nothing is pinned is allowed, and said so.
+  if [ -r "$ROOT/bin/seat/runtime-roots.py" ] && command -v python3 >/dev/null 2>&1 && [ -n "$YMIR_RUNTIME_ROOT" ]; then
+    if _wt="$(python3 "$ROOT/bin/seat/runtime-roots.py" scan --runtime "$YMIR_RUNTIME_ROOT" \
+                --source "$YMIR_RUNTIME_SOURCE" --only pi 2>/dev/null)"; then
+      printf '  %-46s %s\n' "pi's root names no working tree" "PASS -> $YMIR_RUNTIME_ROOT ($YMIR_RUNTIME_SOURCE)"
+    else
+      while IFS= read -r _row; do
+        printf '  %-46s %s\n' "pi's root names a working tree" "FAIL — $_row"
+      done < <(printf '%s\n' "$_wt" | grep '"working-tree"' | sed 's/^ *"pi",//')
+      printf '  %-46s %s\n' "remedy" "bin/seat/runtime-root.sh repoint --only pi  (or bin/seat/harness-extensions-install.sh)"
+      fails=$((fails+1))
+    fi
+    [ "$YMIR_RUNTIME_SOURCE" = "checkout" ] && printf '  %-46s %s\n' "runtime" "NOTE — $YMIR_RUNTIME_REASON"
+    unset _wt _row
+  fi
   # From here on, the tree that SERVES this session: the seated tree when the
   # worktree is sparse, else this tree's own.
   n_src=0
@@ -476,12 +504,19 @@ ymir_root_record() {
   # errand. `git rev-parse --git-common-dir` differs from `--git-dir` exactly when
   # this checkout is a linked worktree (git worktree / Yggdrasil), so that is the
   # test — the path is pruned rather than recorded, and the real root keeps serving.
-  if is_linked_worktree "$ROOT" || case "$ROOT" in */.yggdrasil/*|*/.yggdrasil) true ;; *) false ;; esac; then
+  if [ "$YMIR_RUNTIME_SOURCE" != "pinned" ] && { is_linked_worktree "$ROOT" || case "$ROOT" in */.yggdrasil/*|*/.yggdrasil) true ;; *) false ;; esac; }; then
     printf 'not-recorded'
     return 0
   fi
   tmp="$(mktemp 2>/dev/null)" || return 0
-  printf '%s\n' "$ROOT" >"$tmp"
+  # The PINNED runtime is the root the deployed extensions resolve first (plan 248 P2): a root agent loads
+  # the runtime, so its bin/ is the runtime's too. The checkout this ran from is recorded only when nothing
+  # is pinned.
+  if [ "$YMIR_RUNTIME_SOURCE" = "pinned" ] && [ -x "$YMIR_RUNTIME_ROOT/bin/pi/syn-watch-arm.sh" ]; then
+    printf '%s\n' "$YMIR_RUNTIME_ROOT" >"$tmp"
+  else
+    printf '%s\n' "$ROOT" >"$tmp"
+  fi
   # PRUNE DEAD ROOTS. Measured 2026-10-04: `.ymir-root` carried FOUR roots and TWO of them were
   # `.yggdrasil/` worktrees that no longer exist. Every resolver that reads this file asks "the
   # first recorded root that really holds bin/pi/syn-watch-arm.sh", so a worktree that survives here
@@ -493,6 +528,8 @@ ymir_root_record() {
     while IFS= read -r line; do
       [ -n "$line" ] || continue
       [ "$line" = "$ROOT" ] && continue
+      # pinned: the runtime is THE root; another checkout kept here is a working tree a root agent would load
+      [ "$YMIR_RUNTIME_SOURCE" = "pinned" ] && continue
       grep -qxF -- "$line" "$tmp" 2>/dev/null && continue
       # keep a root only while it still IS a root
       [ -x "$line/bin/pi/syn-watch-arm.sh" ] || continue

@@ -10,8 +10,11 @@
 # at all. A user's agent therefore drifts from the house the moment they pull.
 #
 # WHAT IT DOES, per harness, from the descriptors in `.agents/harnesses/`:
-#   pi        the settings `extensions[]` entry, resolved by realpath (bin/seat/valknut-load.sh --global)
-#             AND the one-home door (bin/seat/pi-door.sh) seated as ~/.pi/agent/bin/pi
+#   pi        the settings `extensions[]` entry → the PINNED runtime's tree (bin/seat/valknut-load.sh --global),
+#             the one-home door (bin/seat/pi-door.sh) seated as ~/.pi/agent/bin/pi, and the pi ROOT SET:
+#             the npm packages named once in .agents/harnesses/pi.yaml + ro · todo · open-editor (bin/pi/pi-ensure.sh)
+#   roots     every harness root config: a path into a working tree is re-pointed at the runtime (install)
+#             or refused with the remedy (--check) — bin/seat/runtime-root.sh, plan 248 P2
 #   opencode  the plugin set copied into ~/.config/opencode/plugins
 #   claude    the hook scripts into ~/.claude/hooks  (the JSON wiring is NAMED, never merged blind)
 #   codex     hooks.json and the skills links under ~/.codex
@@ -22,19 +25,23 @@ set -uo pipefail
 _d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(CDPATH='' cd "$_d" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
-# A PINNED runtime wins over the working tree (RULES/02 §7): the extensions a harness loads must be the
-# ones a deployment proved, not whatever branch an agent left checked out.
-. "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
-home=""; declare -f ymir_home_root >/dev/null 2>&1 && ymir_home_root home 2>/dev/null
-[ -n "$home" ] || home="${YMIR_HOME:-}"
-[ -n "$home" ] && [ -r "$home/config/runtime.env" ] && . "$home/config/runtime.env"
-if [ -n "${YMIR_RUNTIME_DIR:-}" ] && [ -d "$YMIR_RUNTIME_DIR/.git" ]; then
-  ROOT="$YMIR_RUNTIME_DIR"
+# A PINNED runtime wins over the working tree (RULES/02 §7, RULES/51): the extensions a harness loads must be
+# the ones a deployment proved, not whatever branch an agent left checked out. ONE door resolves it
+# (bin/seat/runtime-root.sh, plan 248 P2); a fallback to the checkout is printed as its own row, never silent.
+# SELF is this script's own tree: the ward (runtime-roots.py) and the package door are run from here, so a
+# runtime older than this change is still judged by the current ward.
+SELF="$ROOT"
+YMIR_RUNTIME_ROOT="$ROOT"; YMIR_RUNTIME_SOURCE="checkout"; YMIR_RUNTIME_REASON="no runtime door in this tree"
+if [ -r "$SELF/bin/seat/runtime-root.sh" ]; then
+  # shellcheck disable=SC1091
+  . "$SELF/bin/seat/runtime-root.sh"
+  ymir_runtime_resolve "$SELF"
 fi
+[ "$YMIR_RUNTIME_SOURCE" = "pinned" ] && ROOT="$YMIR_RUNTIME_ROOT"
 
 mode="install"
 case "${1:-}" in
-  -h|--help) sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+  -h|--help) awk 'NR>1 && /^#/{sub(/^# ?/,""); print; next} NR>1{exit}' "$0"; exit 0 ;;
   --check|check) mode="check" ;;
   ""|install|--install) ;;
   *) printf 'error: unknown action %s\nhelp: harness-extensions-install.sh [--check]\n' "$1" >&2; exit 2 ;;
@@ -63,7 +70,8 @@ copy_tree() {  # <src-dir> <dst-dir> <label> — copy only what differs, keep on
   return 0
 }
 
-printf 'harness_extensions[%s]{harness,state,detail}:\n' 6
+printf 'harness_extensions[%s]{harness,state,detail}:\n' 8
+say "  \"runtime\",\"$YMIR_RUNTIME_SOURCE\",\"$ROOT — $YMIR_RUNTIME_REASON\""
 
 # ── pi: the settings entry that makes the extensions load from any directory, and
 #        the DOOR that keeps a seat started by hand to ONE home (2026-11-11) ──────
@@ -86,13 +94,15 @@ pi_door_seat() {
 if command -v pi >/dev/null 2>&1; then
   state="current"; detail=""
   if [ "$mode" = "check" ]; then
-    if grep -q "$ROOT/.pi/extensions" "$HOME/.pi/agent/settings.json" 2>/dev/null; then
+    if grep -qF "\"$ROOT/.pi/extensions\"" "$HOME/.pi/agent/settings.json" 2>/dev/null; then
       detail="settings extensions[] → $ROOT/.pi/extensions"
     else
-      state="stale"; detail="settings extensions[] does not name this checkout"; stale=$((stale+1))
+      state="stale"; detail="settings extensions[] does not name the runtime's tree ($ROOT/.pi/extensions)"; stale=$((stale+1))
     fi
   else
-    if bash "$ROOT/bin/seat/valknut-load.sh" --global >/dev/null 2>&1; then
+    # PI_EXT_SRC is named, not left to the runtime's own valknut-load to resolve: a runtime deployed before
+    # plan 248 P2 read runtime.env with sed and fell back to the working tree.
+    if PI_EXT_SRC="$ROOT/.pi/extensions" bash "$ROOT/bin/seat/valknut-load.sh" --global >/dev/null 2>&1; then
       state="synced"; detail="settings extensions[] → $ROOT/.pi/extensions"
     else
       state="skip"; detail="valknut-load could not bind the seat"
@@ -112,6 +122,23 @@ if command -v pi >/dev/null 2>&1; then
              fi ;;
   esac
   say "  \"pi\",\"$state\",\"$detail\""
+  # THE PI ROOT SET (plan 248 P3): the npm packages named ONCE, in .agents/harnesses/pi.yaml, installed by the
+  # same door on install AND update; and ro · todo · open-editor proved present in the tree the root loads.
+  if [ -x "$SELF/bin/pi/pi-ensure.sh" ]; then
+    if [ "$mode" = "check" ]; then
+      _pe="$(PI_DESCRIPTOR="$SELF/.agents/harnesses/pi.yaml" bash "$SELF/bin/pi/pi-ensure.sh" status 2>&1)"; _rc=$?
+    else
+      _pe="$(PI_DESCRIPTOR="$SELF/.agents/harnesses/pi.yaml" bash "$SELF/bin/pi/pi-ensure.sh" ensure --install 2>&1)"; _rc=$?
+    fi
+    _miss="$(printf '%s\n' "$_pe" | grep -E '"(absent)"' | sed 's/^ *"\([^"]*\)".*/\1/' | paste -sd' ' -)"
+    if [ "$_rc" = 0 ]; then
+      say "  \"pi-root\",\"current\",\"packages from the pi descriptor + ro · todo · open-editor from $ROOT/.pi/extensions\""
+    else
+      say "  \"pi-root\",\"stale\",\"missing: ${_miss:-see bin/pi/pi-ensure.sh status}\""
+      [ "$mode" = "check" ] && stale=$((stale+1))
+    fi
+    unset _pe _rc _miss
+  fi
 else
   say "  \"pi\",\"absent\",\"no pi on this host\""; absent=$((absent+1))
 fi
@@ -297,6 +324,30 @@ if command -v cursor-agent >/dev/null 2>&1 || command -v cursor >/dev/null 2>&1;
   copy_tree "$ROOT/.cursor/rules" "$HOME/.cursor/rules" "cursor-rules" || true
 else
   say "  \"cursor\",\"absent\",\"no cursor on this host\""; absent=$((absent+1))
+fi
+
+# ── every root: no working tree (plan 248 P2, RULES/51) ──────────────────────
+# Last, so it judges what every block above just wrote: a path into any Ymir checkout that is not the runtime
+# — the working tree, a Yggdrasil worktree, a second clone — in ANY harness root config is re-pointed at the
+# runtime's twin on install, and REFUSED on --check with the remedy named. A path with no twin is held and
+# named, never guessed (an errand's worktree that has not landed is the Allfather's to re-point or drop).
+if [ -r "$SELF/bin/seat/runtime-roots.py" ] && command -v python3 >/dev/null 2>&1; then
+  _act=repoint; [ "$mode" = "check" ] && _act=scan
+  _rr="$(python3 "$SELF/bin/seat/runtime-roots.py" "$_act" --runtime "$ROOT" --source "$YMIR_RUNTIME_SOURCE" 2>&1)"
+  while IFS= read -r _row; do
+    case "$_row" in
+      *'"working-tree"'*) say "  \"roots\",\"stale\",$(printf '%s' "$_row" | sed 's/^ *"[^"]*","[^"]*","working-tree",//')"
+                          stale=$((stale+1)) ;;
+      *'"held"'*)         say "  \"roots\",\"held\",$(printf '%s' "$_row" | sed 's/^ *"[^"]*","[^"]*","held",//')"
+                          [ "$mode" = "check" ] && stale=$((stale+1)) ;;
+      *'"repointed"'*)    say "  \"roots\",\"synced\",$(printf '%s' "$_row" | sed 's/^ *"[^"]*","[^"]*","repointed",//')"
+                          changed=$((changed+1)) ;;
+      *'"fail"'*)         say "  \"roots\",\"fail\",$(printf '%s' "$_row" | sed 's/^ *"[^"]*","[^"]*","fail",//')" ;;
+    esac
+  done <<< "$_rr"
+  printf '%s\n' "$_rr" | grep -qE '"(working-tree|held|fail)"' \
+    || say "  \"roots\",\"current\",\"every harness root config names the runtime ($ROOT), no working tree\""
+  unset _act _rr _row
 fi
 
 if [ "$mode" = "check" ] && [ "$stale" -gt 0 ]; then

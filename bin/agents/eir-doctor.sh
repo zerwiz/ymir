@@ -111,7 +111,7 @@ surface_detail_skip() {
 }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir hnoss shells graphics well memory mail mcp harness claudehooks arm lock gates migrations hoard autoboot vault ward seats)
+SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir hnoss shells graphics well memory mail mcp harness roots claudehooks arm lock gates migrations hoard autoboot vault ward seats)
 
 # ── the three surfaces the 2026-11-03 Windows audit found, and the rule they read ──────────
 # A SEAT IS NOT UPDATED BY A PULL. The checkout moves; the installed hooks, the PATH a later
@@ -435,6 +435,21 @@ s_harness() {
   return 1
 }
 f_harness()   { [ -x "$SCRIPT_DIR/../seat/valknut-load.sh" ] && "$SCRIPT_DIR/../seat/valknut-load.sh" --pi >/dev/null 2>&1 && s_harness; }
+# Roots (plan 248 P2, RULES/51 — 2026-11-11): a root agent loads the PINNED runtime, never a working tree.
+# Every harness root config Ymir writes (pi settings + MCP + .ymir-root, ~/.claude.json, OpenCode, Cursor,
+# Codex) is judged by the one ward; a path into a checkout that is not the runtime is a NAMED failure, and the
+# mend is the same door install and update use. A host with no root config is healthy: nothing to judge.
+s_roots() {
+  [ -x "$SCRIPT_DIR/../seat/runtime-root.sh" ] || return 1
+  "$SCRIPT_DIR/../seat/runtime-root.sh" scan >/dev/null 2>&1
+}
+roots_detail() {
+  local dir n
+  dir="$("$SCRIPT_DIR/../seat/runtime-root.sh" --dir 2>/dev/null)"
+  n="$("$SCRIPT_DIR/../seat/runtime-root.sh" scan 2>/dev/null | grep -cE '"(working-tree)"')"
+  printf 'runtime %s · %s working-tree path(s) in the root configs\n' "${dir:-unresolved}" "${n:-0}"
+}
+f_roots() { [ -x "$SCRIPT_DIR/../seat/harness-extensions-install.sh" ] && "$SCRIPT_DIR/../seat/harness-extensions-install.sh" >/dev/null 2>&1; s_roots; }
 # Claude hooks (2026-11-10): every Claude seat in the fleet carries THREE user-scope hooks, seated
 # by bin/seat/harness-extensions-install.sh — the AGENTS.md loader (Claude reads CLAUDE.md, never
 # a project's AGENTS.md), the Eindri-only PreToolUse (Claude must never spawn its own subagents),
@@ -633,6 +648,7 @@ detail() { # <name> -> the command that prints one short fact
     mcp)       printf '%s\n' "echo 'a2abridge + the well door'" ;;
     graphics)  printf '%s\n' "if [ -z \"\${DISPLAY:-}\${WAYLAND_DISPLAY:-}\" ]; then echo headless; else echo \"\$(graphics_block 2>/dev/null | sed -n '1p' | sed 's/.*{//;s/}//') · \$(graphics_policy 2>/dev/null)\"; fi" ;;
     harness)   printf '%s\n' "s_harness && echo 'deployed extensions resolve their bin/' || echo 'no live root recorded'" ;;
+    roots)     printf '%s\n' roots_detail ;;
     claudehooks) printf '%s\n' "command -v claude >/dev/null 2>&1 && echo 'the three Claude hooks: AGENTS.md · Eindri-only · the Gná arm' || echo 'no claude on this host'" ;;
     arm)       printf '%s\n' "$SCRIPT_DIR/../pi/syn-watch.sh status --detail 2>/dev/null | head -1 || echo 'arm door missing'" ;;
     gates)     printf '%s\n' "s_gates && echo 'pre-push hook: the worktree that pushes' || echo 'installed hook is stale — bin/gates/guards/fixes-guard.sh --install'" ;;
