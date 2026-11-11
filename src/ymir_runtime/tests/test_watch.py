@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 import time
 import unittest
+import unittest.mock
 from pathlib import Path
 
 from ymir_runtime import proc, watch
@@ -101,6 +102,50 @@ class LeaseTest(ArmTestCase):
         watch.release_lease(self.paths, pid=os.getpid())
         self.assertFalse(watch.lease_alive(self.paths))
 
+    def test_write_lease_records_the_declared_role(self) -> None:
+        self.assertTrue(
+            watch.write_lease(self.paths, pid=os.getpid(), mode="daemon", role="rodd", session="none", generation=1)
+        )
+        self.assertEqual(watch.read_lease(self.paths.lease)["role"], "rodd")
+
+    def test_a_lease_with_no_role_reads_unknown(self) -> None:
+        self.lease()  # the helper writes no role= field
+        self.assertEqual(watch.read_lease(self.paths.lease).get("role", "unknown"), "unknown")
+
+    def test_role_never_overloads_mode(self) -> None:
+        self.lease(mode="systemd", role="rodd")
+        lease = watch.read_lease(self.paths.lease)
+        self.assertEqual(lease["mode"], "systemd")
+        self.assertEqual(lease["role"], "rodd")
+
+
+class RoleResolutionTest(ArmTestCase):
+    def test_a_declared_role_wins(self) -> None:
+        env = dict(self.env, BROKK_ARM_ROLE="rodd")
+        self.assertEqual(watch.resolve_role(self.paths, env, session=str(os.getpid())), "rodd")
+
+    def test_no_session_is_unknown(self) -> None:
+        self.assertEqual(watch.resolve_role(self.paths, self.env, session="none"), "unknown")
+        self.assertEqual(watch.resolve_role(self.paths, self.env, session=""), "unknown")
+
+    def test_the_sidecar_names_the_holder_only_for_its_own_session(self) -> None:
+        self.paths.role.write_text("role=rodd session=424242\n", encoding="utf-8")
+        self.assertEqual(watch.resolve_role(self.paths, self.env, session="424242"), "rodd")
+        # a different live session must not inherit the stale sidecar
+        self.assertNotEqual(watch.resolve_role(self.paths, self.env, session=str(os.getpid())), "rodd")
+
+    def test_a_pi_comm_derives_counsellor(self) -> None:
+        with unittest.mock.patch.object(watch, "_session_comm", return_value="pi"):
+            self.assertEqual(watch.resolve_role(self.paths, self.env, session="424242"), "counsellor")
+
+    def test_a_known_harness_comm_keeps_its_name(self) -> None:
+        with unittest.mock.patch.object(watch, "_session_comm", return_value="claude"):
+            self.assertEqual(watch.resolve_role(self.paths, self.env, session="424242"), "claude")
+
+    def test_an_unreadable_comm_is_unknown_never_guessed(self) -> None:
+        with unittest.mock.patch.object(watch, "_session_comm", return_value=""):
+            self.assertEqual(watch.resolve_role(self.paths, self.env, session="424242"), "unknown")
+
 
 class HeartbeatTest(ArmTestCase):
     def test_touch_then_age_is_inside_the_window(self) -> None:
@@ -190,15 +235,15 @@ class StatusTest(ArmTestCase):
     def test_status_reports_healthy_with_rc_zero_and_a_gap_with_rc_one(self) -> None:
         body, code = watch.status_lines(self.paths, env=self.env)
         self.assertEqual(code, 1)
-        self.assertTrue(body.startswith("syn-watch[1]{state,mode,unit,pid,heartbeat_age,stale_seconds,session,armed,state_dir}:\n"))
+        self.assertTrue(body.startswith("syn-watch[1]{state,mode,role,unit,pid,heartbeat_age,stale_seconds,session,armed,state_dir}:\n"))
         self.assertIn('"down","none"', body)
 
-    def test_the_toon_row_has_nine_fields(self) -> None:
+    def test_the_toon_row_has_ten_fields(self) -> None:
         self.lease(session="none")
         watch.heartbeat_touch(self.paths)
         self.paths.armed.touch()
         row = watch.status_row(self.paths, env=self.env, runner=Recorder())
-        self.assertEqual(row.count('"'), 18)
+        self.assertEqual(row.count('"'), 20)
 
 
 class SessionOwnerTest(ArmTestCase):

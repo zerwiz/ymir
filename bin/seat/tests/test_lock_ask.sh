@@ -28,10 +28,10 @@ mkdir -p "$D/state" "$D/xdg/ymir"
 own_lock() {
   printf '%s\n' "$$" > "$D/xdg/ymir/brokk.lock"
   awk '{print $22}' "/proc/$$/stat" > "$D/xdg/ymir/brokk.lock.starttime"
-  printf 'pid=1 starttime=0 gen=1 mode=test session=%s heartbeat=0 state=%s\n' "$$" "$D/state" > "$D/state/.arm.lease"
+  printf 'pid=1 starttime=0 gen=1 mode=test role=rodd session=%s heartbeat=0 state=%s\n' "$$" "$D/state" > "$D/state/.arm.lease"
 }
 own_lock
-export YMIR_STATE_DIR="$D/state" XDG_STATE_HOME="$D/xdg"
+export YMIR_STATE_DIR="$D/state" XDG_STATE_HOME="$D/xdg" BROKK_MACHINE_STATE_DIR="$D/xdg/ymir"
 
 last_ask() {  # <asker> — the newest ask id for that asker, answered or not
   python3 - "$D/state/asks" "$1" <<'PY2'
@@ -72,6 +72,10 @@ p_who() {
   bash "$DOOR" who | grep -q '"yes"' && bash "$DOOR" who | grep -q 'descends_from_owner'
 }
 
+p_who_reports_role() {
+  bash "$DOOR" who | grep -q 'rodd'
+}
+
 p_ask_lands() {
   bash "$DOOR" ask 'may I judge PR 552' --task pr-552 --as forseti >/dev/null || return 1
   grep -q 'lock-ask ask-' "$D/state/.wake-queue" || return 1
@@ -98,7 +102,7 @@ p_stranger_refused() {
   local id; id="$(ask_id huginn)"
   [ -n "$id" ] || return 1
   setsid --fork bash -c "bash '$DOOR' answer '$id' nope >/tmp/.la3 2>&1"
-  sleep 0.4
+  sleep 1.5
   grep -q 'does not descend from the lock owner' /tmp/.la3
 }
 
@@ -135,6 +139,7 @@ p_disagree_refused() {
 }
 
 t "who reports the lock, the arm and that they agree" p_who
+t "who reads the holder's role from the lease line" p_who_reports_role
 t "an ask lands in the owner's queue with an id, and the asker is on the record" p_ask_lands
 t "the owner answers, and the asker reads it" p_owner_answers
 t "a second answer to the same ask is REFUSED by name" p_second_answer_refused

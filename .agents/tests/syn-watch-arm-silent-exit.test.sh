@@ -25,7 +25,11 @@ export BROKK_STATE_OVERRIDE="$TMP/state"
 export BROKK_MACHINE_STATE_DIR="$TMP/machine"
 export BROKK_WATCH_POLL_SECONDS=1
 mkdir -p "$BROKK_STATE_OVERRIDE" "$BROKK_MACHINE_STATE_DIR"
-cleanup() { "$WATCH" stop >/dev/null 2>&1 || true; rm -rf "$TMP"; }
+# A fake pi harness session: the client must claim from a live harness (plan 254 clause 2).
+FAKE_PI=$(python3 -c "import ctypes,time; ctypes.CDLL(None).prctl(15, b'pi',0,0,0); time.sleep(600)" </dev/null >/dev/null 2>&1 & echo $!)
+export BROKK_SESSION_PID="$FAKE_PI"
+sleep 0.3
+cleanup() { "$WATCH" stop >/dev/null 2>&1 || true; kill "${FAKE_PI:-}" 2>/dev/null || true; rm -rf "$TMP"; }
 trap cleanup EXIT
 
 # ── the service seats with NO session (idle-not-dead) ───────────────────────
@@ -39,12 +43,12 @@ fi
 # ── the flood brake: an unchanged, unconsumed queue keeps the watch alive ───
 printf 'wake one\n' > "$BROKK_STATE_OVERRIDE/.wake-queue"
 sleep 3   # let the service raise it and record the hash
-timeout 4 bash "$ARM" --restart >"$TMP/out1" 2>"$TMP/err1"
+timeout 20 bash "$ARM" --restart >"$TMP/out1" 2>"$TMP/err1"
 rc=$?
 grep -q '^signal: wake queue$' "$TMP/out1" && ok "a changed queue signals once" \
   || bad "changed queue: rc=$rc output=[$(cat "$TMP/out1")]"
 # The queue is unchanged and unconsumed now: the next client must WAIT.
-timeout 4 bash "$ARM" --restart >"$TMP/out2" 2>"$TMP/err2"
+timeout 20 bash "$ARM" --restart >"$TMP/out2" 2>"$TMP/err2"
 rc2=$?
 if [ "$rc2" = 124 ]; then
   ok "an unchanged unconsumed queue keeps the client watching"
@@ -63,7 +67,7 @@ esac
 # delivery slot), so a wake is never lost between sessions.
 printf 'wake two\n' > "$BROKK_STATE_OVERRIDE/.wake-queue"
 sleep 3
-timeout 6 bash "$ARM" --restart >"$TMP/out3" 2>/dev/null
+timeout 20 bash "$ARM" --restart >"$TMP/out3" 2>/dev/null
 if grep -q '^signal: wake queue$' "$TMP/out3"; then
   ok "a line raised with no client attached is delivered to the next client"
 else

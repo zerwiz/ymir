@@ -25,6 +25,7 @@
 #
 # CLI (unchanged, so every harness adapter works as it stands):
 #   syn-watch-arm.sh --restart
+#   syn-watch-arm.sh --holder <role>     # declare whose helm (rodd, counsellor, or a harness name)
 #   syn-watch-arm.sh --handling-delivered <generation> --watcher-pid <pid>
 #
 # `BROKK_WATCH_INLINE=1` keeps the watch loop in this process — the pre-service
@@ -72,6 +73,18 @@ if [ "${1-}" = "--handling-delivered" ]; then
   printf 'watcher: handling delivered generation=%s watcher-pid=%s\n' "$generation" "$watcher_pid"
   exit 0
 fi
+
+# ── the holder's role (plan 254) ────────────────────────────────────────────
+# `--holder <role>` or `BROKK_ARM_ROLE` declares WHOSE helm this is; otherwise the
+# session's own harness comm names it (pi → counsellor, the rest keep their name).
+HOLDER_ROLE=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --holder) HOLDER_ROLE="${2-}"; shift 2 ;;
+    --holder=*) HOLDER_ROLE="${1#--holder=}"; shift ;;
+    *) shift ;;
+  esac
+done
 
 mkdir -p "$STATE"
 
@@ -130,6 +143,39 @@ if [ -z "$_helm" ] || [ "$_helm" != "$sess" ]; then
   printf 'watcher: read-only - this session does not hold the helm (another live session does)\n' >&2
   exit 0
 fi
+
+# ── the helm's role (plan 254) ──────────────────────────────────────────────
+# Clause 2: the claimant must be a live harness in HARNESS_COMMS. Clause 3: the
+# role must be one it can work — rodd, counsellor, or a harness name. Anything
+# else is refused LOUDLY with the failing clause named, never silently inherited.
+role_from_comm() {
+  local comm=""
+  comm="$(cat "/proc/$1/comm" 2>/dev/null || true)"
+  case "$comm" in
+    pi) printf 'counsellor' ;;
+    opencode|claude|cursor|codex|grok|kimi|muse|hermes) printf '%s' "$comm" ;;
+    *) printf 'unknown' ;;
+  esac
+}
+role_is_known() {
+  case "$1" in
+    rodd|counsellor|pi|opencode|claude|cursor|codex|grok|kimi|muse|hermes) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+comm="$(cat "/proc/$sess/comm" 2>/dev/null || true)"
+case "$comm" in
+  pi|opencode|claude|cursor|codex|grok|kimi|muse|hermes) : ;;
+  *) printf 'watcher: refused — clause 2: the claimant (pid %s, comm %s) is not a live harness in HARNESS_COMMS\n' "$sess" "${comm:-unknown}" >&2; exit 1 ;;
+esac
+ROLE="${HOLDER_ROLE:-${BROKK_ARM_ROLE:-}}"
+[ -n "$ROLE" ] || ROLE="$(role_from_comm "$sess")"
+if ! role_is_known "$ROLE"; then
+  printf 'watcher: refused — clause 3: role %s is not one this seat can work (rodd, counsellor, or a harness name); declare BROKK_ARM_ROLE or --holder\n' "$ROLE" >&2
+  exit 1
+fi
+printf 'role=%s session=%s\n' "$ROLE" "$sess" > "$STATE/.arm.role" 2>/dev/null || true
+printf 'watcher: helm role=%s session=%s\n' "$ROLE" "$sess"
 
 # ONE client per session (2026-11-10). Every Stop spawns a new client, and the earlier
 # clients of the SAME session used to wait beside it, so one signal rewoke the session
