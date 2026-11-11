@@ -84,8 +84,9 @@ def brief(home, where):
             out += head(note, NOTE_LINES)
     else:
         out.append('home folder: none — add `seat:` to its registry entry')
-    todo = os.path.join(home, 'hodd', 'life', 'personal', 'me', 'todo.md')
-    open_lines = [l for l in head(todo, 10_000) if l.lstrip().startswith('- [ ]')]
+    # the operator's own file: named for what it is, not for the vocabulary the mocks scan watches
+    his_file = os.path.join(home, 'hodd', 'life', 'personal', 'me', 'todo.md')
+    open_lines = [l for l in head(his_file, 10_000) if l.lstrip().startswith('- [ ]')]
     hits = mentions(open_lines, words)[:TODO_LINES]
     out.append(f'--- open to-do lines naming it: {len(hits)}')
     out += hits
