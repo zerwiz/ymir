@@ -279,7 +279,12 @@ skills_gaps=""
 grep -q '\.agents/skills' "$ROOT/opencode.json.example" 2>/dev/null \
   || skills_gaps="$skills_gaps opencode(skills.paths missing from opencode.json.example)"
 [ -d "$ROOT/.agents/skills" ] || skills_gaps="$skills_gaps .agents/skills(missing tree)"
-for hd in .claude .codex .cursor; do
+#   claude — appended 2026-11-11 (plan 248 P3b, RULES/51 + RULES/02 as amended): NOT
+#            linked. Its ROOT carries the one `ymir` skill (~/.claude/skills/ymir),
+#            so a repo `.claude/skills` link would list every shipped skill twice —
+#            its presence is now the gap.
+[ -L "$ROOT/.claude/skills" ] && skills_gaps="$skills_gaps .claude/skills(retired link present — the root ymir skill serves Claude)"
+for hd in .codex .cursor; do
   [ -d "$ROOT/$hd" ] || continue
   if [ ! -L "$ROOT/$hd/skills" ]; then
     skills_gaps="$skills_gaps ${hd}/skills(absent)"
@@ -296,7 +301,7 @@ harness_detail=""
 [ -n "$phantom" ] && harness_detail="$harness_detail phantom skills:$phantom"
 [ -n "$skills_gaps" ] && harness_detail="$harness_detail skills not bound:$skills_gaps"
 if [ -z "$harness_detail" ]; then
-  add harnesses "harness surfaces + skill discovery" PASS "$harness_links agent links resolve; skills bound (opencode config · pi native · claude/codex/cursor linked); no phantom skills"
+  add harnesses "harness surfaces + skill discovery" PASS "$harness_links agent links resolve; skills bound (opencode config · pi native · claude by the root ymir skill · codex/cursor linked); no phantom skills"
 else
   add harnesses "harness surfaces + skill discovery" FAIL "$harness_detail"
 fi

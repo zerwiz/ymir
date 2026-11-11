@@ -1,0 +1,4 @@
+---
+section: agents-work-collaboration
+---
+| Skills | **One Ymir skill in every root** (`bin/agents/skill-index.sh --root`) | Every harness's root lists exactly one Ymir skill, `ymir`, at `~/.agents/skills/ymir`; pi, OpenCode and Codex read it natively, and Claude reads it through the link `~/.claude/skills/ymir`. Its SKILL.md is the generated index of every skill on every shelf (name, one-line trigger, absolute path), so a turn carries one description instead of two hundred. The paths go into an unscanned store, `~/.local/share/ymir/skills`, which holds one link per skill, and a shipped skill wins a name clash. Install and update seat it through `harness-extensions-install`, and every session start rebuilds it. eir-doctor's `rootskill` row judges it. Migration 0022 moves box skills out of `~/.agents/skills`, intact, and retires the repo link `.claude/skills` | [One Ymir skill in every root](docs/features/one-ymir-skill.md) |

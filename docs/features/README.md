@@ -42,6 +42,8 @@ its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
   [telegram-across-the-fleet.md](telegram-across-the-fleet.md)
 - The home push door — named paths only, never `-A`:
   [the-home-push-door.md](the-home-push-door.md)
+- One Ymir skill in every root — the index of every skill, by path:
+  [one-ymir-skill.md](one-ymir-skill.md)
 
 ## The shape of a page
 

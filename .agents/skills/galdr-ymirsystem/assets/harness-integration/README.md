@@ -1638,3 +1638,33 @@ an older home.
 the recorded helm owner IS this session's pid (the acquire contract) — a live other owner no longer
 lets a stranger attach; and a new client retires its own session's older clients, so one signal
 cannot rewake a session N times. Proved by `bin/gates/tests/test_arm_client_helm.sh`.
+
+## Appended 2026-11-11 — one Ymir skill in every root, one unscanned store behind it (plan 248 P3b, RULES/51)
+
+Every skill a harness lists puts its description into every turn. So a root agent lists exactly **one** Ymir skill, `ymir`,
+and its `SKILL.md` is the generated index of every skill on every shelf: name · one-line trigger · absolute path.
+
+```
+root_skill[6]{part,where,owner}:
+  "the root skill","~/.agents/skills/ymir/SKILL.md (pi, OpenCode, Codex read it natively)","bin/agents/skill-index.sh --root"
+  "Claude's view","~/.claude/skills/ymir -> ~/.agents/skills/ymir (Claude reads one level deep)","bin/agents/skill-index.sh --root"
+  "the store","${XDG_DATA_HOME:-~/.local/share}/ymir/skills — one LINK per skill, shipped shelf wins a clash; never under a scanned dir","bin/agents/skill-index.sh --root (refuses a scanned store)"
+  "the box shelf","${XDG_DATA_HOME:-~/.local/share}/ymir/box-skills — a machine's own skills, moved out of ~/.agents/skills intact","bin/agents/skill-index.sh --adopt-box · migration 0022"
+  "seated by","install (step loaders) and update (Gróa) through bin/seat/harness-extensions-install.sh row `ymir-skill`; rebuilt at session start (bin/time/saga-session-start.sh)","—"
+  "judged by","bin/agents/skill-index.sh --root-check · eir-doctor surface `rootskill` · harness-extensions-install --check","—"
+```
+
+- The shipped shelf is read from the **pinned runtime** (`$YMIR_HOME/config/runtime.env`) when one is pinned, never a
+  working tree; the index names the runtime as its tool root, so a seat started in a worktree does not flip it.
+- The index is **generated, never versioned**, and deterministic (no clock in it): an unchanged shelf writes nothing.
+- The repo link `.claude/skills -> ../.agents/skills` is **retired** (RULES/02 as amended): `valknut-load.sh` no longer
+  binds it for Claude and removes a leftover of exactly that shape. Codex and Cursor keep their project links.
+- The rendered root contract (`bin/agents/seat-identity.sh` render, checked by `bin/seat/seat-surface.sh --check`)
+  carries the sentence *for any craft, load the `ymir` skill and follow its index*.
+- The front matter is **quoted YAML**: the description holds `: `, and pi drops a skill whose front matter does not
+  parse without a word (found by the throwaway-HOME proof).
+- Measured in a throwaway HOME (pi's own `DefaultResourceLoader`, from `~` and from an unrelated project): pi lists one
+  `ymir` skill, adding 246 bytes to its skills prompt; Claude's root holds one `ymir` entry (107 bytes of front matter);
+  198 index paths, all resolved.
+
+How-to: `docs/features/one-ymir-skill.md`.
