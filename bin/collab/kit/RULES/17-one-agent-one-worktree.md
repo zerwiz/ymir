@@ -53,3 +53,7 @@ checks (`scripts/checks.sh`) still run on a handoff push, so a baton the check r
 
 **What it does not excuse.** A handoff that also fixes "one small thing" in code is a code change. Split it: the code
 goes by worktree and pull request, the baton goes straight in.
+
+## CHANGE LOG
+
+- 2026-11-11 — review-mend: added missing heading for #666
