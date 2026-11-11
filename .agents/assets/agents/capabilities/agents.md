@@ -21,10 +21,10 @@
 | domain.sh | domain.sh — the ONE door that starts, reports and stops a domain's kee | tested+named | keep (a human or a cron row must run it) |
 | eindri-acclaim-silent.sh | eindri-acclaim-silent.sh — action half of the Eindri silence bridge. | tested+named | keep (a human or a cron row must run it) |
 | eindri-acclaim.sh | eindri-acclaim.sh — action half of the Eindri→Brokk wake bridge. | tested+named | keep (a human or a cron row must run it) |
-| eindri-arm.sh | eindri-arm.sh — the Eindri's own arm (plan 42, the automation law). | tested | keep (a human or a cron row must run it) |
+| eindri-arm.sh | eindri-arm.sh — the Eindri's own arm (plan 42, the automation law). | tested+named | keep (a human or a cron row must run it) |
 | eindri-checkpoint.sh | eindri-checkpoint.sh — a herdr worker's durable checkpoint, so a dead  | tested | keep (a human or a cron row must run it) |
 | eindri-control.sh | eindri-control.sh — the CONTROL plane: allowlisted lifecycle verbs for | tested+named | keep (a human or a cron row must run it) |
-| eindri-dispatch.sh | eindri-dispatch.sh — the errand loop: ONE command per errand (plan 42 | tested | keep (a human or a cron row must run it) |
+| eindri-dispatch.sh | eindri-dispatch.sh — the errand loop: ONE command per errand (plan 42 | tested+named | keep (a human or a cron row must run it) |
 | eindri-handoff.sh | eindri-handoff.sh — the handoff failsafe. An Eindri's work ALWAYS reac | tested+named | keep (a human or a cron row must run it) |
 | eindri-heartbeat.sh | eindri-heartbeat.sh — condition half of the Eindri silence bridge. | tested+named | keep (a human or a cron row must run it) |
 | eindri-liveness.sh | eindri-liveness.sh — the sweep's second question: is the pane still a  | tested+named | keep (a human or a cron row must run it) |
