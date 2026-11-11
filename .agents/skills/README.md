@@ -38,6 +38,8 @@ skills[29]{skill,does,owner}:
   "pr-ops","pull requests — create, update, check status, request merge","brokk"
   "hnoss-design","design — artifacts via OpenDesign (prototypes, decks, dashboards, image, video)","hnoss"
   "bragi-marketing","marketing — research/crawl (Firecrawl), agentic browser (browser-use)","bragi"
+  "bragi-documents","documents — the skald's written artefacts: briefs, one-pagers, letters","bragi"
+  "snotra-letters","letters — the mail templates and the letter door's own craft","snotra"
   "bragi-translation","translation — speech→text (whisper.cpp) + text→text (the llama router); carries words between tongues","bragi"
   "elder-home","the keeper — home records: the plan ledger, documentation, and memory (Reginn, the keeper who remembers)","elder"
   "snotra-meeting-outcomes","meeting record — transcript to minutes, decision log, owned actions, per-person briefs, Trello payloads","snotra"
