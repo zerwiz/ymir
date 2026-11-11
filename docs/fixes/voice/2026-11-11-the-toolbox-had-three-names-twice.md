@@ -51,3 +51,10 @@ could see the fault, and only as an error they had no reason to attribute to a d
 **Not proven here:** a live Rödd session against the engine (the realtime host answers only while
 `bin/voice/voice-door.sh` has a seat), and the Allfather's own ear. What is proven is that the refusal which
 stopped him cannot be raised by this toolbox again.
+
+## CHANGE LOG
+
+- **2026-11-11** — carved. The duplicate `arm_who` / `eindri_list` / `eindri_send` specs removed (48 declared
+  names → 45 distinct), the import-time guard added to `voice_tools.py`, and the uniqueness claim added to
+  `rodd-hands.test.sh`. Found when a Rödd session refused to open with
+  `Duplicate Realtime tool names found: 'arm_who' (2 function tools), 'eindri_list' (2 function tools) …`.
