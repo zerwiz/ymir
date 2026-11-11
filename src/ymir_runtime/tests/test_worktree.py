@@ -53,6 +53,18 @@ class EnsureTest(unittest.TestCase):
             made = worktree.ensure("errand-ext", repo, repo / ".yggdrasil")
             self.assertFalse((made.path / ".pi" / "extensions").exists(),
                              "the worktree must not carry a second extension tree")
+            # AND THE TREE MUST BE CLEAN. A directory removed behind git's back leaves
+            # every file reported DELETED — `--assume-unchanged` is a per-FILE bit and
+            # does nothing for a directory, so the old shape was green in this ward and
+            # dirty in every worker's `git status` (Forseti, PR #639 follow-up). The
+            # ward now fails on the fault it could not see, and a worker's `git add -A`
+            # can no longer delete the extension tree from the repository.
+            status = subprocess.run(
+                ["git", "-C", str(made.path), "status", "--porcelain"],
+                capture_output=True, text=True, check=True,
+            )
+            self.assertEqual(status.stdout.strip(), "",
+                             f"the worktree must be clean after the exclusion, got:\n{status.stdout}")
             self.assertTrue((repo / ".pi" / "extensions" / "demo" / "index.ts").exists(),
                             "the project's own tree is untouched")
 

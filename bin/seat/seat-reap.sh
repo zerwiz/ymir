@@ -191,6 +191,40 @@ stale_errand() {
   [ "$age" -gt "${SEAT_REAP_STALE_SECONDS:-7200}" ]
 }
 
+# ── the settling grace (the house law, tests/test_eindri_liveness_grace.sh) ───
+# A recordless workspace is NOT a dead one: einherjar-spawn.sh raises the herdr
+# workspace at launch_herdr and writes the first status only AFTER the seat is
+# proved — up to the whole seat-settle wait (60 s) later. A sweep that closed a
+# recordless workspace on sight would kill a seat that is still booting, which is
+# exactly the false-death the liveness grace was written to stop (2026-11-06).
+#
+# The age is measured from the launch stamp the spawner writes beside the record
+# (state/.<id>.launched), then from the meta's `launched`, then from the
+# worktree's own mtime. When NO timestamp can be found the workspace is KEPT and
+# said so: an unmeasurable seat is assumed live, because assuming dead is the
+# irreversible direction.
+grace_seconds() { printf '%s' "${YMIR_SEAT_SETTLE:-60}"; }
+
+recordless_age() { # <id> -> age in seconds on stdout; 1 when no stamp exists
+  local id=$1 d stamp launched wt now
+  now=$(date +%s)
+  while IFS= read -r d; do
+    if [ -r "$d/.$id.launched" ]; then
+      stamp="$(head -n1 "$d/.$id.launched" 2>/dev/null | tr -dc '0-9')"
+      [ -n "$stamp" ] && { printf '%s' "$((now - stamp))"; return 0; }
+    fi
+  done < <(state_dirs)
+  launched="$(meta_key "$id" launched 2>/dev/null || true)"
+  case "$launched" in ''|*[!0-9]*) ;; *) printf '%s' "$((now - launched))"; return 0 ;; esac
+  wt="$(meta_key "$id" worktree 2>/dev/null || true)"
+  [ -n "$wt" ] || wt="$ROOT/.yggdrasil/$id"
+  if [ -d "$wt" ]; then
+    stamp=$(stat -c %Y "$wt" 2>/dev/null || stat -f %m "$wt" 2>/dev/null || true)
+    case "$stamp" in ''|*[!0-9]*) ;; *) printf '%s' "$((now - stamp))"; return 0 ;; esac
+  fi
+  return 1
+}
+
 # ── one close ────────────────────────────────────────────────────────────────
 # close_seat <id> <ws> <pane> <why> -> prints one TOON row; 0 closed, 1 refused/failed
 close_seat() {
@@ -278,7 +312,20 @@ sweep() { # <do-it: 0|1>
     if closed_errand "$id"; then
       why="errand closed, no agent"
     elif [ -z "$(record "$id" status 2>/dev/null || true)" ]; then
-      # The heartbeat is the record of life: a meta with no status has never breathed.
+      # THE HEARTBEAT IS THE RECORD OF LIFE — but a seat takes time to breathe.
+      # Inside the settling grace the workspace is SETTLING and nothing is closed
+      # (tests/test_eindri_liveness_grace.sh is the law this honours).
+      age="$(recordless_age "$id" 2>/dev/null || true)"
+      if [ -z "$age" ]; then
+        n_kept=$((n_kept + 1))
+        kept_rows+=("$(printf '  "%s","%s","%s","no live record and no timestamp — kept (an unmeasurable seat is assumed live)"' "$id" "$ws" "$pane")")
+        continue
+      fi
+      if [ "$age" -lt "$(grace_seconds)" ]; then
+        n_kept=$((n_kept + 1))
+        kept_rows+=("$(printf '  "%s","%s","%s","SETTLING — %ss old, inside the %ss grace"' "$id" "$ws" "$pane" "$age" "$(grace_seconds)")")
+        continue
+      fi
       why="no live record"
     elif stale_errand "$id"; then
       why="record stale, no agent"
@@ -366,7 +413,7 @@ verify() {
   done < <(git -C "$ROOT" worktree list --porcelain 2>/dev/null | awk '/^worktree /{print substr($0,10)}')
   [ "$n_bad" = 0 ] && printf '  "worktrees","ok","no worktree reports an extension deletion"\n'
   if [ $((bad + n_bad)) -gt 0 ]; then
-    printf 'seat-reap: %s fault(s) — mend: bin/engine/ymir-migrate.sh apply (migration 0018)\n' "$((bad + n_bad))" >&2
+    printf 'seat-reap: %s fault(s) — mend: bin/engine/ymir-migrate.sh apply (migration 0019)\n' "$((bad + n_bad))" >&2
     return 1
   fi
   return 0

@@ -1258,6 +1258,16 @@ step_loaders() {
           add harness-extensions WARN "a harness differs — run bin/seat/harness-extensions-install.sh --check"
         fi
       fi
+      # The two faults of 2026-11-10 are NOT healed by --check: they are NAMED here and
+      # mended by migration 0019 on a real install/update. A check that repaired the
+      # tree would hide exactly the state it exists to report.
+      if [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ]; then
+        if out="$("$SCRIPT_DIR/../seat/seat-reap.sh" --verify 2>&1)"; then
+          add seats OK "seat-reap wired; no worktree reports an extension deletion; no worktree recorded as a root"
+        else
+          add seats WARN "$(printf '%s' "$out" | sed -n 's/^seat-reap: //p' | head -1) — a real install/update heals it (migration 0019)"
+        fi
+      fi
     else
       # Rule: a seat that cannot be seated is not installed. This warned and
       # carried on, which is how a capability exists in the repo and is silently

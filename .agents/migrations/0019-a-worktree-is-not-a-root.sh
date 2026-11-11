@@ -23,7 +23,7 @@
 #
 # WHAT IT DOES — two idempotent repairs, nothing else:
 #   1. prune every linked-worktree / `.yggdrasil/` path from `.ymir-root`, keeping a
-#      dated backup beside it (`<pointer>.pre-0018`) before the first rewrite;
+#      dated backup beside it (`<pointer>.pre-0019`) before the first rewrite;
 #   2. for every worktree under `.yggdrasil/` that still shows the broken state,
 #      switch it to the sparse-checkout exclusion and DELETE NOTHING from the index
 #      by hand — git owns the skip-worktree bit.
@@ -72,9 +72,9 @@ if [ -r "$pointer" ]; then
     printf '%s\n' "$line" >>"$tmp"
   done <"$pointer"
   if [ "$pruned" -gt 0 ]; then
-    cp "$pointer" "$pointer.pre-0018" 2>/dev/null || true
+    cp "$pointer" "$pointer.pre-0019" 2>/dev/null || true
     mv "$tmp" "$pointer"
-    say "root record: pruned $pruned linked-worktree path(s) from .ymir-root (backup: $(basename "$pointer").pre-0018)"
+    say "root record: pruned $pruned linked-worktree path(s) from .ymir-root (backup: $(basename "$pointer").pre-0019)"
   else
     rm -f "$tmp"
     say "root record: clean — no worktree is recorded as a root"
