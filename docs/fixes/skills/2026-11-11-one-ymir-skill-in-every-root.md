@@ -61,3 +61,7 @@ in a directory pi walks recursively.
   `~/.pi/agent/skills/modeltesting`. After migration 0022 runs there, that skill lives at
   `$XDG_DATA_HOME/ymir/box-skills/modeltesting` and is reached through the `ymir` index. The box contract is
   append-only and outside this repo, so it gets a dated line from the seat.
+
+### CHANGE LOG
+
+- **2026-11-11** — written with plan 248 P3b.

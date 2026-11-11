@@ -72,3 +72,7 @@ bin/agents/eir-doctor.sh check            # the `rootskill` row says whether the
 - **`skill-find --check` prints UNFINDABLE:** that skill has no `description:` in its front matter. Add one line.
 
 Law: RULES/51 (*one Ymir skill in every root*, *the store is never scanned*). Plan 248 P3b in the home ledger.
+
+## CHANGE LOG
+
+- **2026-11-11** — written with plan 248 P3b (the one Ymir skill and its store).
