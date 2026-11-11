@@ -234,3 +234,44 @@ always.
 **If it does not work.** `bin/seat/seat-reap.sh --check` names the harness it cannot
 seat; `--verify` names a `.ymir-root` that records a worktree, or a worktree that still
 reports its extensions deleted — `bin/engine/ymir-migrate.sh apply` mends both.
+
+## The discriminator — a finished agent is no longer "a live agent" (2026-11-11)
+
+The 2026-11-10 sweep closed only *agentless* seats. A finished worker is still a live
+process at an idle prompt, so the old `agent_in_workspace → keep` kept it forever. The
+sweep now asks the one reader for the agent's STATE and names one of three verdicts:
+
+- **working** — the agent reports `working` → kept, never touched, and a working
+  sample resets the idle grace;
+- **finished** — the record is terminal (done · failed · accepted · returned · closed)
+  and the agent has reported `idle` continuously for `SEAT_REAP_IDLE_GRACE`
+  (default 600 seconds, stamped in `state/<id>.idle-since`) → retired;
+- **undecided** — no record, a fresh record, a `needs-decision` record, or a flapping
+  state → kept, with the reason named. A `needs-decision` seat waits on you and is
+  never reaped, whatever its age.
+
+The retire verb ends the agent, THEN closes the seat, escalating in order and never
+starting with a kill: the harness's own exit (`/quit` for pi and codex, `/exit` for
+claude · opencode · cursor · grok · kimi · muse), a bounded wait (default 20 seconds),
+the close doors behind the dirty/unpushed worktree guard, and only then a TERM to the
+agent's own pid. One runes line records each retirement.
+
+The digest's `SEATS` section now prints the verdict breakdown —
+`closed 0 · retired 0 · kept 19 (18 finished-idle, 1 working)` — instead of a bare
+count, and a seat kept three sweeps running raises a `check:` line into the wake
+queue.
+
+**Orphan panes.** `seats.sh brief` names the bare shells that are NOT errands — your
+own working directories — in their own `orphans[]` row. A sweep never touches them;
+`bin/seat/seat-reap.sh --close-pane <pane-id>` is the ONLY door that closes one.
+
+```bash
+bin/seat/seats.sh brief                     # … then the orphans[] row
+bin/seat/seat-reap.sh --close-pane w21:p1   # close that one bare shell, his word, never a sweep
+bin/agents/eir-doctor.sh check              # the seatreap surface fails if a seat has
+                                            # been kept finished-idle past a day
+```
+
+The five cases are proven in `bin/seat/tests/test_seat_reap.sh`: working kept,
+finished retired, needs-decision kept, dirty worktree refused, grace-not-yet-elapsed
+kept — 70 assertions, all green.

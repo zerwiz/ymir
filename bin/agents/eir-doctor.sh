@@ -111,7 +111,7 @@ surface_detail_skip() {
 }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir hnoss shells graphics well memory mail mcp harness claudehooks arm roddhelm lock gates migrations hoard autoboot vault ward seats)
+SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir hnoss shells graphics well memory mail mcp harness claudehooks arm roddhelm lock gates migrations hoard autoboot vault ward seats seatreap)
 
 # ── the three surfaces the 2026-11-03 Windows audit found, and the rule they read ──────────
 # A SEAT IS NOT UPDATED BY A PULL. The checkout moves; the installed hooks, the PATH a later
@@ -173,6 +173,29 @@ f_seats() {
   [ -x "$SCRIPT_DIR/../engine/ymir-migrate.sh" ] && "$SCRIPT_DIR/../engine/ymir-migrate.sh" apply >/dev/null 2>&1
   [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ] && "$SCRIPT_DIR/../seat/seat-reap.sh" --install >/dev/null 2>&1
   s_seats
+}
+# ── seatreap (plan 255): a seat kept as finished-idle past a day is the fault the
+# sweep exists to clear. Where herdr is absent there is no seat to judge — a clean
+# skip with its reason, never a guess (RULES/25).
+s_seatreap() {
+  have herdr || return 0
+  local door="$SCRIPT_DIR/../seat/seat-reap.sh" now d f base id age
+  [ -x "$door" ] || return 1
+  now="$(date +%s)"
+  for d in "$STATE" "$ROOT/state"; do
+    [ -d "$d" ] || continue
+    for f in "$d"/.*.idle-since; do
+      [ -f "$f" ] || continue
+      base="${f##*/}"; base="${base#.}"; id="${base%.idle-since}"
+      age=$(( now - $(head -n1 "$f" 2>/dev/null | tr -dc '0-9') ))
+      [ "${age:-0}" -gt 86400 ] && return 1
+    done
+  done
+  return 0
+}
+f_seatreap() {
+  [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ] && "$SCRIPT_DIR/../seat/seat-reap.sh" --sweep >/dev/null 2>&1
+  s_seatreap
 }
 s_hooks() {
   local hooks; hooks="$(cd "$ROOT" && git rev-parse --git-path hooks 2>/dev/null || printf '.git/hooks')"
@@ -649,6 +672,8 @@ detail() { # <name> -> the command that prints one short fact
     autoboot)  printf '%s\n' "$SCRIPT_DIR/../engine/ymir-autoboot.sh verify >/dev/null 2>&1 && echo 'boot proven' || echo 'boot gap — bin/engine/ymir-autoboot.sh verify'" ;;
     seatpaths) printf '%s\n' "printf '%s' \"$(seat_profile)\" ; grep -qF \"$HOME/.bun/bin\" \"$(seat_profile)\" 2>/dev/null && printf ' carries the marked block' || printf ' does not carry ~/.bun/bin — a unit or validator will not find bun'" ;;
     hooks)     printf '%s\n' "printf 'installed hooks' ; [ -x \"$(cd "$ROOT" && git rev-parse --git-path hooks 2>/dev/null || printf '.git/hooks')/pre-commit\" ] && printf ' present' || printf ' MISSING — a guarded deletion and a staged secret would both pass'" ;;
+    seats)     printf '%s\n' "printf 'the seat wire' ; [ -x $SCRIPT_DIR/../seat/seat-reap.sh ] && $SCRIPT_DIR/../seat/seat-reap.sh --list 2>/dev/null | head -1" ;;
+    seatreap)  printf '%s\n' "printf 'a finished-idle seat kept past a day' ; for f in $STATE/.*.idle-since $ROOT/state/.*.idle-since; do [ -f \$f ] && echo \$(basename \$f); done" ;;
     packaging) printf '%s\n' "bash \"$SCRIPT_DIR/../gates/guards/packaging-guard.sh\" check 2>&1 | grep -o 'the File directive names a file that does not exist: [^)]*' | head -1 || printf 'every named input exists'" ;;
   esac
 }
