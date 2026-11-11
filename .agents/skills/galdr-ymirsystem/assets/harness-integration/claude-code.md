@@ -210,3 +210,8 @@ Upstream Brokk registers two `PreToolUse` entries (`Bash` matcher → `fm-arm-pr
   helm-only, single-flight (`flock` on `<state>/.claude-arm.<session>.lock`), and its wake banner carries the drain
   order and `bin/voice/rodd-room.sh reply`. Proven end to end before the wrapper: Rödd's wake roused an idle Claude
   primary (plan 239 §Proof).
+- **Appended 2026-11-11:** Claude is a **verified Eindri harness** (plan 239 P5a–c, P5e). `--harness claude` /
+  `--kind claude` seats it through the one generator: `claude --permission-mode acceptEdits --settings
+  .agents/harnesses/claude-worker.settings.json [--model alias] "$(cat <brief>)"`. The profile lets the worker edit and
+  run without a prompt and denies the Allfather's moves; a missing profile refuses the seat. Claude takes Anthropic
+  aliases only — a machine `provider/model` token is dropped, an explicit one refused. Still owed: P5d, P5f, P5g.
