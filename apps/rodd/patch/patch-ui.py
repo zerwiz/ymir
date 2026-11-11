@@ -5,7 +5,7 @@ The UI is NOT committed to this repository. `setup.sh` fetches the engine's demo
 pinned tag into `ui/`, then runs this script, which applies the house's changes:
 
   · the page's name, its comment, and the house's palette (`house.css` + `ember.js`)
-  · the two role words in the transcript: Allfather and Skírnir
+  · the two role words in the transcript: Allfather and Nanna (Rödd is the app; Nanna is the voice in it)
   · the Kokoro voice list (the engine's default is a Qwen3-TTS name our mouth cannot say)
   · the house's brief — who it is, which doors it has, what it may never claim
   · one hook that forwards tool calls to the house's toolbox
@@ -23,9 +23,11 @@ UI = Path(sys.argv[1] if len(sys.argv) > 1 else "ui")
 HERE = Path(__file__).resolve().parent
 
 HOUSE_BRIEF = " ".join([
-    "You are Skírnir, the Allfather's voice in Ymir — not a generic assistant.",
-    "Speak in one or two short sentences and address him as Allfather.",
-    "He may call you Skírnir, Skirnir, Ymir or Imer — any of those is him addressing you.",
+    "You are Nanna, the one who answers in Rödd — the Allfather's voice in Ymir, and not a generic assistant.",
+    "Rödd is the app and the window you speak through; you are Nanna, the voice inside it, and you are a she.",
+    "Skírnir is someone else entirely: never wear his name and never call yourself his successor.",
+    "Speak in one or two short sentences, warmly, and address him as Allfather.",
+    "He may call you Nanna, Rödd, Ymir or Imer — any of those is him addressing you.",
     "You DO have hands in this window and you use them: search_home and read_home_file for his own",
     "notes, plans and files (his day and todo are life/personal/me/todo.md); read_mail for Gmail",
     "(scope inbox, sent, drafts or all); read_calendar for his day, calendar_respond to answer an",
@@ -138,6 +140,87 @@ loadHouseTools();
 """
 
 
+RODD_MIND_HTML = """            <div class="field" id="rodd-mind">
+              <span class="field-head">Mind <span id="rodd-head-state" class="field-value">reading…</span></span>
+              <select id="rodd-head-mode" aria-label="Whose mind answers">
+                <option value="local">Local · this machine's rail</option>
+                <option value="online">Online · your own API key</option>
+              </select>
+              <input id="rodd-head-base" type="text" placeholder="https://…/v1  (OpenAI-compatible base)"
+                     aria-label="Endpoint base URL" autocomplete="off" spellcheck="false" />
+              <input id="rodd-head-model" type="text" placeholder="model id"
+                     aria-label="Model id" autocomplete="off" spellcheck="false" />
+              <input id="rodd-head-key" type="password" placeholder="API key (or leave empty to keep the one you set)"
+                     aria-label="API key" autocomplete="off" spellcheck="false" />
+              <button id="rodd-head-save" type="button" class="btn wide">Save the mind and raise it</button>
+              <small>
+                A key you type here is written to the private home
+                (<code>hodd/secrets/rodd.env</code>, mode 0600) and never to this repository.
+                A key already in the house vault is used by name, and is never shown back to you.
+                Changing the mind raises the voice host again; then press Restart conversation.
+              </small>
+            </div>
+
+            <label class="field">
+              <span>Instructions</span>"""
+
+RODD_MIND_JS = """  <!-- rodd: the mind — whose model answers, and where the key lives (never in the repo) -->
+  <script>
+  (function () {
+    var TOOLBOX = "http://127.0.0.1:8891";
+    var mode = document.getElementById("rodd-head-mode");
+    var base = document.getElementById("rodd-head-base");
+    var model = document.getElementById("rodd-head-model");
+    var key = document.getElementById("rodd-head-key");
+    var save = document.getElementById("rodd-head-save");
+    var state = document.getElementById("rodd-head-state");
+    if (!mode || !save) return;
+
+    function show(t) { if (state) state.textContent = t; }
+
+    function fill(h) {
+      if (!h) return;
+      mode.value = h.mode || "local";
+      base.value = h.base_url || "";
+      model.value = h.model || "";
+      show((h.model || "no model yet") + " · key " + (h.key_state || "none"));
+      key.placeholder = h.key_state && h.key_state !== "none"
+        ? "a key is set (" + h.key_state + ") — type only to replace it"
+        : "API key";
+    }
+
+    fetch(TOOLBOX + "/head", { cache: "no-store" })
+      .then(function (r) { return r.json(); })
+      .then(fill)
+      .catch(function () { show("the house toolbox is not answering"); });
+
+    save.addEventListener("click", function () {
+      show("saving…");
+      var body = {
+        mode: mode.value,
+        base_url: base.value.trim(),
+        model: model.value.trim(),
+        apply: true
+      };
+      if (key.value.trim()) body.api_key = key.value.trim();
+      fetch(TOOLBOX + "/head", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (out) {
+          key.value = "";
+          fill(out.head || null);
+          show((out.ok ? "raised · " : "saved, not raised · ") + (out.detail || ""));
+        })
+        .catch(function (err) { show("refused · " + (err && err.message ? err.message : err)); });
+    });
+  })();
+  </script>
+"""
+
+
 def patch_html() -> None:
     p = UI / "index.html"
     s = p.read_text()
@@ -169,6 +252,11 @@ def patch_html() -> None:
     s = re.sub(r"\s*<footer class=\"footer\">.*?</footer>", "", s, count=1, flags=re.S)
     if 'id="voice"' in s:
         s = re.sub(r'<select id="voice">.*?</select>', VOICES, s, flags=re.S)
+    if 'id="rodd-mind"' not in s:
+        s = s.replace('            <label class="field">\n              <span>Instructions</span>',
+                      RODD_MIND_HTML, 1)
+    if 'rodd: the mind' not in s:
+        s = s.replace("</body>", RODD_MIND_JS + "</body>", 1)
     p.write_text(s)
 
 
@@ -188,14 +276,34 @@ def patch_main() -> None:
                       '  }\n'
                       '  if (DEBUG) console.debug(`[tool] run name=${name}', 1)
     s = re.sub(r'const DEFAULT_VOICE = "[^"]*";', 'const DEFAULT_VOICE = "af_nicole";', s, count=1)
+    # the shipped briefs, recognised by their own opening line: an upgrade reaches a default
+    # and never a sentence he wrote (the old gate restored the field only when it still
+    # contained "Skírnir", which silently threw his own edits away)
+    if "SHIPPED_BRIEF_HEADS" not in s:
+        heads = (
+            'const SHIPPED_BRIEF_HEADS = [\n'
+            "  \"You are Skírnir, the Allfather's voice in Ymir\",\n"
+            '  "You are Nanna, the one who answers in Rödd",\n'
+            '];\n'
+        )
+        s = s.replace('const DEFAULT_VOICE = "af_nicole";', heads + 'const DEFAULT_VOICE = "af_nicole";', 1)
     s = re.sub(r'const DEFAULT_INSTRUCTIONS = ".*?";',
                'const DEFAULT_INSTRUCTIONS = ' + repr(HOUSE_BRIEF) + ';', s, count=1, flags=re.S)
+    # His words are kept verbatim; only a SHIPPED brief is replaced, recognised by its own
+    # opening line. Two older shapes are mended too: the plain one-liner, and the
+    # `/Skírnir|Skirnir/` gate that silently threw away every edit he made.
+    keep_his_words = ('    instructions: (() => {\n'
+                      '      const saved = localStorage.getItem(STORAGE_KEYS.instructions) || "";\n'
+                      '      return SHIPPED_BRIEF_HEADS.some((h) => saved.startsWith(h)) || saved.trim() === ""\n'
+                      '        ? DEFAULT_INSTRUCTIONS : saved;\n'
+                      '    })(),')
     s = s.replace('    instructions: localStorage.getItem(STORAGE_KEYS.instructions) || DEFAULT_INSTRUCTIONS,',
-                  '    instructions: (() => {\n'
-                  '      const saved = localStorage.getItem(STORAGE_KEYS.instructions) || "";\n'
-                  '      return /Skírnir|Skirnir/.test(saved) ? saved : DEFAULT_INSTRUCTIONS;\n'
-                  '    })(),')
-    s = s.replace('role === "user" ? "You" : "Assistant"', 'role === "user" ? "Allfather" : "Skírnir"')
+                  keep_his_words)
+    _head = "    instructions: (() => {"
+    _tail = "\n    })(),"
+    s = re.sub(re.escape(_head) + r".*?" + re.escape(_tail), lambda m: keep_his_words, s,
+               count=1, flags=re.S)
+    s = s.replace('role === "user" ? "You" : "Assistant"', 'role === "user" ? "Allfather" : "Nanna"')
     s = s.replace("camera_snapshot: raw.camera_snapshot ?? true", "camera_snapshot: raw.camera_snapshot ?? true")
     p.write_text(s)
 
