@@ -2,3 +2,7 @@
 section: agents-work-collaboration
 ---
 | Records | **The daily log writes itself — what moved today, from the record** (`bin/time/daily-line.sh` · `bin/time/daily_moved.py` · [how-to](docs/features/the-daily-log.md)) | His word, 2026-11-11: *"make so Ymir home always is updating the daily log"*. Measured: a day with three pull requests, five mails and a recorded meeting left seven typed lines, because the daily line was not scheduled and read only handoffs and cards. The daily line now adds what moved: home commits (housekeeping left out), commits in every project checked out on the seat and in Ymir, mail sent, meeting records added — only what earlier runs that day did not log, and nothing when nothing is new, so it runs three times a day. Proved by `daily_moved.py --self-test` (a fixture home and repository: every source read, noise left out, a second run adds nothing) | [docs/features/the-daily-log.md](docs/features/the-daily-log.md) |
+
+## CHANGE LOG
+
+- 2026-11-11 — review-mend: added missing heading for #669
