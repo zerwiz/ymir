@@ -1,3 +1,10 @@
+---
+title: "Areas — held, waived or never"
+status: "accepted"
+owner: "the project's collaboration-kit owner"
+updated: "2026-11-11"
+---
+
 # Areas — how a repository says what it answers for
 
 **What this is.** Eighteen areas of work that every software project has to answer for, whether or not
@@ -77,3 +84,8 @@ it in that area's file, in the same pull request.
 ## CHANGE LOG
 
 - **2026-11-08** — Opened with the shelf: the four states, the doors, and the gate.
+
+## References
+
+- `RULES/18-an-area-is-held-or-waived.md`, `areas/canon.yaml`, `scripts/areas.sh`
+- `docs/headers.md` — the header and References format this document follows
