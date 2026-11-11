@@ -1,0 +1,4 @@
+---
+section: core-install-run-operate
+---
+| Core | **Your agents load Ymir from the runtime** (`bin/seat/runtime-root.sh`) | Every harness root config Ymir writes (pi's settings, MCP doors and `.ymir-root`, Claude Code's user-scope MCP, OpenCode, Cursor, Codex) loads the PINNED runtime from `$YMIR_HOME/config/runtime.env`, never a working tree, so a session opened in `~` or in an unrelated project runs Ymir. `scan` names a working-tree path, `repoint` moves it to the runtime's twin (backup kept) and holds a path with no twin. pi's root carries `ro`, `todo`, `open-editor` and the rest of the extensions, plus the npm packages named once in `.agents/harnesses/pi.yaml` (`bin/pi/pi-ensure.sh`). Install, update, Eir's `roots` surface and migration `0022` all go through `bin/seat/harness-extensions-install.sh` | [Your agents load Ymir from the runtime](docs/features/roots-load-the-runtime.md) |

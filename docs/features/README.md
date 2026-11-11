@@ -16,6 +16,12 @@ its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
 | The outbound gate (nothing leaves until you have read it) | [the-outbound-gate.md](the-outbound-gate.md) |
 | The collaboration doors (who is with us, and how far) | [the-collaboration-doors.md](the-collaboration-doors.md) |
 
+**Built 2026-11-11:**
+
+- Your agents load Ymir from the runtime, in every folder — every harness root names the pinned runtime, never a
+  working tree, and pi's root carries ro · todo · open-editor and its packages:
+  [roots-load-the-runtime.md](roots-load-the-runtime.md)
+
 **Built 2026-11-10:**
 
 - The well door for every harness — one MCP set for pi, opencode, Claude, Cursor, Codex and Hermes, and

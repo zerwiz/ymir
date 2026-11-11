@@ -132,7 +132,7 @@ if command -v pi >/dev/null 2>&1; then
     fi
     _miss="$(printf '%s\n' "$_pe" | grep -E '"(absent)"' | sed 's/^ *"\([^"]*\)".*/\1/' | paste -sd' ' -)"
     if [ "$_rc" = 0 ]; then
-      say "  \"pi-root\",\"current\",\"packages from the pi descriptor + ro · todo · open-editor from $ROOT/.pi/extensions\""
+      say "  \"pi-root\",\"current\",\"the pi descriptor's packages + its root_extensions, from $ROOT/.pi/extensions\""
     else
       say "  \"pi-root\",\"stale\",\"missing: ${_miss:-see bin/pi/pi-ensure.sh status}\""
       [ "$mode" = "check" ] && stale=$((stale+1))

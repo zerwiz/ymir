@@ -1638,3 +1638,27 @@ an older home.
 the recorded helm owner IS this session's pid (the acquire contract) — a live other owner no longer
 lets a stranger attach; and a new client retires its own session's older clients, so one signal
 cannot rewake a session N times. Proved by `bin/gates/tests/test_arm_client_helm.sh`.
+
+### 2026-11-11 — root agents load the pinned runtime; pi's root carries Ymir's set (plan 248 P2 + P3, RULES/51)
+
+A harness's **root** (its global config in `$HOME`) is where Ymir runs. That root must load the **pinned runtime**
+(`$YMIR_HOME/config/runtime.env`), never a working tree. Measured today: pi's root settings named `~/ymir/.pi/extensions`.
+`valknut-load.sh` read `runtime.env` with `sed`, so `$HOME/ymir-runtime` stayed literal and the pin was ignored.
+The ymir MCP door in pi, Claude, OpenCode and Cursor named the working tree too.
+
+```
+roots_runtime[6]{piece,where,what}:
+  "the reader","bin/seat/runtime-root.sh","sources runtime.env (so $HOME expands); YMIR_RUNTIME_ROOT/SOURCE/REASON; a fallback to the checkout is always said"
+  "the ward","bin/seat/runtime-roots.py (runtime-root.sh scan|repoint)","every root config: pi settings + mcp-adapter/mcp.json + .ymir-root, ~/.claude.json user mcpServers, ~/.claude/settings.json, opencode.json, ~/.cursor/mcp.json, ~/.codex/{hooks.json,config.toml}"
+  "the refusals","valknut-load.sh --check · harness-extensions-install.sh --check","a working-tree path is FAIL/stale with the remedy named (runtime-root.sh repoint, or the installer)"
+  "the mend","harness-extensions-install.sh (install, Gróa, Eir roots, migration 0022)","binds pi's root with PI_EXT_SRC named; re-points every root to the runtime's twin LAST; a twinless path is held, never guessed"
+  "the pi root set","the pi descriptor .agents/harnesses/pi.yaml","root_extensions: ro · todo · open-editor; packages: pi-mcp-adapter · pi-web-access · @llblab/pi-telegram · @juicesharp/rpiv-ask-user-question — named ONCE"
+  "the package door","bin/pi/pi-ensure.sh","reads the descriptor (refuses to guess without it), installs through `pi install`, proves the root set stands in the runtime's tree and the settings name it"
+```
+
+A checkout is recognised by its own marks: `RULES/` beside `bin/seat/valknut-load.sh`. So a fork, a second clone or
+a Yggdrasil worktree is caught without a list of names. `.ymir-root` now leads with the runtime when one is pinned.
+The one-home door (`pi-door.sh`, PR #654) is unchanged and coherent with this. A session started inside a checkout
+still gets that checkout's tree, once. In every other folder the root's runtime serves. Ward:
+`bin/seat/tests/test_roots_load_the_runtime.sh` (throwaway HOME). Feature page: `docs/features/roots-load-the-runtime.md`.
+Fix note: `docs/fixes/seat/2026-11-11-roots-load-the-runtime.md`.

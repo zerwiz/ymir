@@ -1444,3 +1444,18 @@ set. A host without a given harness is a clean skip (RULES/25).
 
 The law that the Eindri-only hook enforces is `RULES/49-workers-are-eindri.md`; it is stated for a
 Claude agent under `AGENTS.md` *Dispatch-first* (which `CLAUDE.md` imports).
+
+## 2026-11-11 — the roots load the runtime (plan 248 P2 + P3, migration 0022)
+
+`step_loaders` → `harness-extensions-install.sh` now also does two jobs:
+
+- It **re-points every harness root config** at the pinned runtime. That covers pi's settings, MCP doors and
+  `.ymir-root`, Claude's user-scope MCP, OpenCode, Cursor and Codex. It uses `bin/seat/runtime-root.sh repoint`.
+  A path with no twin in the runtime is held and named.
+- It **installs the pi root set**: the npm packages named once in `.agents/harnesses/pi.yaml`, installed with
+  `bin/pi/pi-ensure.sh`, and a proof that `ro`, `todo` and `open-editor` stand in the runtime's tree.
+
+`step_models` still calls `pi-ensure.sh ensure --install`, and that now reads the same descriptor. `--check`
+refuses a working-tree path. Gróa's update and Eir's new `roots` surface use the same door. Migration
+`0022-roots-load-the-runtime` heals an older home. The change is portable core (bash, python3, awk), so every
+platform layer reaches it by the same road (RULES/05).
