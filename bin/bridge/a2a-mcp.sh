@@ -2,7 +2,7 @@
 # a2a-mcp.sh — install/verify the Ymir MCP servers into the harnesses so every
 # agent can use the mesh, the memory well, and the control plane at once.
 #
-#   bin/bridge/a2a-mcp.sh install            # add a2abridge + engram (+wayofteams if present) to pi + opencode
+#   bin/bridge/a2a-mcp.sh install            # add a2abridge + the well door (+wayofteams if present) to pi + opencode
 #   bin/bridge/a2a-mcp.sh install --project  # scoped: write the REPO's .pi/mcp-adapter.json + opencode.json, never ~/.pi
 #   bin/bridge/a2a-mcp.sh show [--project]   # what is wired, in the chosen scope
 #   bin/bridge/a2a-mcp.sh --version
@@ -11,6 +11,13 @@
 # keeps everything inside the repo (`.pi/mcp-adapter.json` + `opencode.json`) so a Pi used
 # in other areas is left untouched — launch it with `pi --mcp-config .pi/mcp-adapter.json`
 # to pick the repo up.
+#
+# The well (2026-11-10, the Allfather's law): engram is Kaia's engine only. The memory
+# server wired here is the WELL DOOR — this body's gateway (`/mcp/well` on :8316), which
+# journals every write and carries it to the heart — never a direct `engram-mcp --db`
+# stdio server. An `engram` entry an older install wrote is removed on the next install
+# (the file is backed up first). The other harnesses get the same set from
+# bin/bridge/mcp-config.sh seat.
 set -u
 # The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
@@ -57,16 +64,9 @@ done
 if [ "$PROJECT" = 1 ]; then PI_MCP="$ROOT/.pi/mcp-adapter.json"; else PI_MCP="$HOME/.pi/agent/mcp-adapter.json"; fi
 
 WOTES="$(command -v wayofteams-mcp 2>/dev/null || true)"
-ENGRAM_BIN="${ENGRAM_BIN:-$HOME/.local/bin/engram-mcp}"
-# The well is ONE memory and it lives in the hoard — always. An explicit
-# ENGRAM_DB is the operator's escape hatch; without it the hoard decides.
-if [ -n "${ENGRAM_DB:-}" ]; then
-  ENGRAM_DB_ABS="$ENGRAM_DB"
-else
-  . "$SCRIPT_DIR/../vault/hoard-lib.sh" 2>/dev/null || true
-  hoard_memory_store ENGRAM_DB_ABS
-fi
-ENGRAM_DB="$ENGRAM_DB_ABS"
+# The well door: this body's MCP gateway, never the engine (engram is Kaia's).
+GATEWAY_PORT="${MCP_GATEWAY_PORT:-${YMIR_MCP_GATEWAY_PORT:-8316}}"
+WELL_URL="http://127.0.0.1:$GATEWAY_PORT/mcp/well"
 
 # The Teams plane (WayOfTeams) and Anchor memory are REMOTE MCP servers, named by
 # URL. The URL is credential-ish, so it comes from the environment — never the
@@ -84,10 +84,25 @@ platform_env_val() {  # <KEY>
 TEAMS_URL="${WAYOFTEAMS_MCP_URL:-}";  [ -n "$TEAMS_URL" ]  || TEAMS_URL="$(platform_env_val WAYOFTEAMS_MCP_URL)"
 ANCHOR_URL="${ANCHOR_MCP_URL:-}";     [ -n "$ANCHOR_URL" ] || ANCHOR_URL="$(platform_env_val ANCHOR_MCP_URL)"
 
-python3 - "$ROOT" "$PI_MCP" "$OC" "$A2AB" "$DIR" "$ADVERT" "$WOTES" "$ACTION" "$ENGRAM_BIN" "$ENGRAM_DB" "$TEAMS_URL" "$ANCHOR_URL" "$A2A_BIND" <<'PY'
-import sys, os, json
-(root, pi_path, oc_path, a2ab, durl, advert, wotes, action, engram_bin, engram_db,
- teams_url, anchor_url, a2a_bind) = sys.argv[1:14]
+python3 - "$ROOT" "$PI_MCP" "$OC" "$A2AB" "$DIR" "$ADVERT" "$WOTES" "$ACTION" "$WELL_URL" "$TEAMS_URL" "$ANCHOR_URL" "$A2A_BIND" <<'PY'
+import sys, os, json, shutil, datetime
+(root, pi_path, oc_path, a2ab, durl, advert, wotes, action, well_url,
+ teams_url, anchor_url, a2a_bind) = sys.argv[1:13]
+stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+
+def direct_engram(name, spec):
+    """A harness-facing engram: the name, or any stdio that runs engram-mcp."""
+    if name == "engram":
+        return True
+    if not isinstance(spec, dict):
+        return False
+    cmd = spec.get("command")
+    parts = (cmd if isinstance(cmd, list) else [cmd or ""]) + list(spec.get("args") or [])
+    return any(os.path.basename(str(p)).startswith("engram-mcp") for p in parts)
+
+def backup(p):
+    if os.path.exists(p):
+        shutil.copy2(p, f"{p}.bak-{stamp}")
 
 def load(p, default):
     try: return json.load(open(p))
@@ -100,9 +115,9 @@ ones = {
         "oc":  {"type": "local", "command": [a2ab, "bridge", "-bind", a2a_bind, "-advertise-host", advert],
                 "environment": {"A2A_DIRECTORY": durl, "A2A_ADVERTISE_HOST": advert}},
     },
-    "engram": {
-        "pi":  {"command": engram_bin, "args": ["--db", engram_db]},
-        "oc":  {"type": "local", "command": [engram_bin, "--db", engram_db], "environment": {}},
+    "well": {
+        "pi":  {"url": well_url},
+        "oc":  {"type": "remote", "url": well_url},
     },
 }
 # The Teams plane: a URL (remote) wins over a local `wayofteams-mcp` binary.
@@ -145,6 +160,11 @@ if action != "install":
 # pi mcp-adapter.json
 pid = load(pi_path, {"mcpServers": {}})
 pid.setdefault("mcpServers", {})
+dropped = [n for n, s in list(pid["mcpServers"].items()) if direct_engram(n, s)]
+if dropped:
+    backup(pi_path)
+for n in dropped:
+    del pid["mcpServers"][n]
 for name, spec in ones.items():
     pid["mcpServers"][name] = spec["pi"]
 os.makedirs(os.path.dirname(pi_path), exist_ok=True)
@@ -158,10 +178,16 @@ if pi_path.endswith("mcp-adapter.json"):
 # opencode.json mcp block
 ocd = load(oc_path, {"mcp": {}})
 ocd.setdefault("mcp", {})
+oc_dropped = [n for n, s in list(ocd["mcp"].items()) if direct_engram(n, s)]
+if oc_dropped:
+    backup(oc_path)
+for n in oc_dropped:
+    del ocd["mcp"][n]
 for name, spec in ones.items():
     entry = spec["oc"]; entry["enabled"] = True
     ocd["mcp"][name] = entry
 json.dump(ocd, open(oc_path, "w"), indent=2); open(oc_path, "a").write("\n")
 
-print(f'a2a-mcp[1]{{action,servers}}:\n  "install","{",".join(ones)}"')
+gone = sorted(set(dropped) | set(oc_dropped))
+print(f'a2a-mcp[1]{{action,servers,dropped}}:\n  "install","{",".join(ones)}","{",".join(gone) or "-"}"')
 PY

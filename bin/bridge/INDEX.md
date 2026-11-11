@@ -20,10 +20,10 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[20]{file,does,kind,verdict,disposition,callers,lines}:
+bin[21]{file,does,kind,verdict,disposition,callers,lines}:
   "a2a-front.py","'''a2a-front — the ward in front of the A2A door, for hands that are not on our tailnet.","tool","wired","keep",2,289
   "a2a-front.sh","a2a-front.sh — the thin door to bin/bridge/a2a-front.py (Rule 23: one executor, a shell face).","tool","wired","keep",0,6
-  "a2a-mcp.sh","a2a-mcp.sh — install/verify the Ymir MCP servers into the harnesses so every","tool","wired","keep",5,168
+  "a2a-mcp.sh","a2a-mcp.sh — install/verify the Ymir MCP servers into the harnesses so every","tool","wired","keep",4,194
   "a2a-serve.py","a2a-serve.py — a real A2A 1.0 server (a2a-sdk) whose agent is a seated Eindri:","tool","wired","keep",2,104
   "a2a-serve.sh","a2a-serve.sh — run the a2a-sdk A2A 1.0 server for a seated Eindri.","tool","wired","keep",1,9
   "a2a-talk.sh","a2a-talk.sh — list A2A agents and talk to one (bidirectional reply).","tool","wired","keep",0,69
@@ -32,9 +32,10 @@ bin[20]{file,does,kind,verdict,disposition,callers,lines}:
   "bifrost-ingress.sh","bifrost-ingress.sh — raise/lower the ingress stack (Bifrost · Heimdall · Gjallarhorn).","tool","wired","keep",0,79
   "constellation-grants.py","'''constellation-grants.py — the grants shelf on the A2A road, in the existing shape.","tool","wired","keep",1,177
   "constellation-tool.mjs","// constellation-tool.mjs — the machine half of the constellation road.","tool","wired","keep",2,288
-  "constellation.sh","constellation.sh — the A2A road between two Ymir fleets, as one door.","tool","wired","keep",1,368
-  "mcp-config.sh","mcp-config.sh — generate the harness MCP config: ONE local gateway door.","tool","tested","keep",1,119
-  "mcp-gate.sh","mcp-gate.sh — arm/disarm an on-call MCP server in the seat's pi mcp-adapter.json.","tool","wired","keep",1,65
+  "constellation.sh","constellation.sh — the A2A road between two Ymir fleets, as one door.","tool","wired","keep",2,368
+  "mcp-config-seat.py","'''mcp-config-seat.py — seat ONE MCP server set into every harness on this host.","tool","wired","keep",1,515
+  "mcp-config.sh","mcp-config.sh — generate the harness MCP config: ONE local gateway door.","tool","tested","keep",5,108
+  "mcp-gate.sh","mcp-gate.sh — arm/disarm an on-call MCP server in the seat's pi mcp-adapter.json.","tool","wired","keep",0,65
   "mcp-gateway.sh","mcp-gateway.sh — the body's ONE local door in front of the record MCPs.","tool","tested","keep",4,278
   "mimir-bridge.py","'''mimir-bridge.py — the HTTP face of the well (Mimirsbrunn / engram, :4602).","tool","tested","keep",4,807
   "mimir-bridge.sh","mimir-bridge.sh — raise/lower the well bridge (Mimirsbrunn on :4602).","tool","tested","keep",8,171
@@ -42,6 +43,6 @@ bin[20]{file,does,kind,verdict,disposition,callers,lines}:
   "test_constellation.sh","test_constellation.sh — the road's proof: a card, a grant, a token, and the refusals.","tool","wired","keep",0,102
   "ymir-plan.sh","ymir-plan.sh — THE INSTALL PLAN.","tool","wired","keep",3,456
 
-**Tally.** verdict: wired=16, tested=4
+**Tally.** verdict: wired=17, tested=4
 
-**Tally.** disposition: keep=20
+**Tally.** disposition: keep=21

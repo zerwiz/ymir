@@ -113,20 +113,90 @@ fi
 # ── claude: the hook SCRIPTS; the JSON wiring is named, never merged blind ────
 if command -v claude >/dev/null 2>&1; then
   copy_tree "$ROOT/.claude/hooks" "$HOME/.claude/hooks" "claude-hooks" || true
+  # THREE user-scope hooks, each wired as ONE NAMED entry in ~/.claude/settings.json, so they
+  # serve EVERY project on the machine and never a single repo:
+  #   SessionStart  load-agents-md.sh  Claude Code reads CLAUDE.md, never a project's AGENTS.md
+  #   PreToolUse    eindri-only.sh      (Agent|Task) workers are Eindri, never Claude subagents
+  #   Stop          ymir-arm.sh         (asyncRewake) the Gná arm reaches a seat in ANY project
+  # An entry whose hook command names the script is current; none is added on install (one
+  # backup kept per run) and reported stale on --check. Nothing else in the file moves.
+  if [ -f "$ROOT/.claude/hooks/load-agents-md.sh" ]; then
+    _wired="$(python3 - "$HOME/.claude/settings.json" "$mode" <<'PY' 2>/dev/null
+import json, os, shutil, sys, datetime
+dst, mode = sys.argv[1], sys.argv[2]
+
+# (name, event, fragment, entry) — entry is the exact object to append when absent.
+desired = [
+    ("claude-agents-md", "SessionStart", "load-agents-md.sh", {
+        "hooks": [{"type": "command",
+                   "command": 'bash "$HOME/.claude/hooks/load-agents-md.sh"', "timeout": 5}]}),
+    ("claude-eindri-only", "PreToolUse", "eindri-only.sh", {
+        "matcher": "Agent|Task",
+        "hooks": [{"type": "command",
+                   "command": 'bash "$HOME/.claude/hooks/eindri-only.sh"', "timeout": 10}]}),
+    ("claude-ymir-arm", "Stop", "ymir-arm.sh", {
+        "hooks": [{"type": "command",
+                   "command": 'bash "$HOME/.claude/hooks/ymir-arm.sh"',
+                   "asyncRewake": True, "timeout": 28800}]}),
+]
+
+try:
+    doc = json.load(open(dst)) if os.path.exists(dst) else {}
+    if not isinstance(doc, dict):
+        raise ValueError
+except Exception:
+    for name, _e, _f, _x in desired:
+        print(f"{name}|skip|~/.claude/settings.json does not parse — left untouched")
+    raise SystemExit
+
+changed = False
+for name, event, frag, entry in desired:
+    hooks = doc.get("hooks") if isinstance(doc.get("hooks"), dict) else {}
+    entries = hooks.get(event) or []
+    if any(frag in (h.get("command") or "") for e in entries for h in (e.get("hooks") or [])):
+        print(f"{name}|current|{event} already names {frag}")
+        continue
+    if mode == "check":
+        print(f"{name}|stale|no {event} entry names {frag}")
+        continue
+    doc.setdefault("hooks", {}).setdefault(event, []).append(entry)
+    changed = True
+    print(f"{name}|wired|one {event} entry added for {frag} (backup kept)")
+
+if changed and mode != "check":
+    try:
+        if os.path.exists(dst):
+            shutil.copy2(dst, dst + ".bak-" + datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d-%H%M%S"))
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        json.dump(doc, open(dst, "w"), indent=2)
+        open(dst, "a").write("\n")
+    except Exception as exc:
+        print(f"claude-hooks|fail|could not write {dst}: {exc}")
+PY
+)"
+    while IFS='|' read -r _hn _hs _hd; do
+      [ -n "$_hn" ] || continue
+      case "$_hs" in
+        wired)   say "  \"$_hn\",\"synced\",\"$_hd\""; changed=$((changed+1)) ;;
+        stale)   say "  \"$_hn\",\"stale\",\"$_hd\""; stale=$((stale+1)) ;;
+        current) say "  \"$_hn\",\"current\",\"$_hd\"" ;;
+        *)       say "  \"$_hn\",\"$_hs\",\"$_hd\"" ;;
+      esac
+    done <<< "$_wired"
+    unset _wired
+  fi
   if [ -f "$ROOT/.claude/settings.json" ]; then
-    if [ "$(command -v python3)" ] && python3 - "$ROOT/.claude/settings.json" "$HOME/.claude/settings.json" <<'PY'
+    # The house's own hooks live in the PROJECT-scope file, which Claude auto-loads inside this
+    # repo; they are deliberately not mirrored into the user file (they name $CLAUDE_PROJECT_DIR).
+    # So the honest check is that the file parses — the three user-scope hooks are checked above.
+    if [ "$(command -v python3)" ] && python3 - "$ROOT/.claude/settings.json" <<'PY'
 import json, sys
-src, dst = sys.argv[1], sys.argv[2]
-want = json.load(open(src)).get("hooks")
-have = {}
-try: have = json.load(open(dst)).get("hooks") or {}
-except Exception: pass
-sys.exit(0 if want == have else 3)
+json.load(open(sys.argv[1]))
 PY
     then
-      say "  \"claude\",\"current\",\"hooks wired in ~/.claude/settings.json\""
+      say "  \"claude-house\",\"current\",\"the house's project-scope hooks parse (auto-loaded in this repo)\""
     else
-      say "  \"claude\",\"stale\",\"hooks.json wiring differs — merge by hand, never blindly (the file is yours)\""
+      say "  \"claude-house\",\"stale\",\"the house's .claude/settings.json does not parse\""
       [ "$mode" = "check" ] && stale=$((stale+1))
     fi
   fi
@@ -134,12 +204,12 @@ PY
   if [ -x "$ROOT/bin/bridge/mcp-config.sh" ]; then
     if [ "$mode" = "check" ]; then
       if bash "$ROOT/bin/bridge/mcp-config.sh" claude --check >/dev/null 2>&1; then
-        say "  \"claude-mcp\",\"current\",\"ymir · engram · well seated\""
+        say "  \"claude-mcp\",\"current\",\"the well-door set is seated (no engram)\""
       else
         say "  \"claude-mcp\",\"stale\",\"a Ymir door is missing — bin/bridge/mcp-config.sh claude\""; stale=$((stale+1))
       fi
     elif bash "$ROOT/bin/bridge/mcp-config.sh" claude >/dev/null 2>&1; then
-      say "  \"claude-mcp\",\"current\",\"ymir · engram · well seated (user scope)\""
+      say "  \"claude-mcp\",\"current\",\"the well-door set is seated (user scope, no engram)\""
     else
       say "  \"claude-mcp\",\"stale\",\"mcp-config.sh claude could not seat every door\""
     fi

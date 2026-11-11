@@ -5,7 +5,7 @@ UI, and agents obey it, and a change that contradicts a rule must first change
 the rule (append-only; never silently rewritten).
 
 ```
-rules_index[45]{file,subject}:
+rules_index[46]{file,subject}:
   "01-domains.md","domains (Greinar) · houses · Eindri"
   "02-agents.md","agents: home, kinds, profile contract, no mock"
   "03-houses.md","houses = companies; ownership, records, boundaries"
@@ -37,6 +37,8 @@ rules_index[45]{file,subject}:
   "43-two-tongues.md","two tongues: English for the work, Old Norse for the names — nothing else; a foreign script or letter is refused, a foreign prose is caught by its function words, and the four exceptions (fixture · detector · quotation · table) are declared with a reason"
   "45-start-on-the-latest.md","start on the latest: a base is fetched, not remembered — reading is free, taking a number or a branch point is not, a stale base refuses with its repair, offline is a stated skip"
   "48-a-repository-that-is-not-ours.md","a repository that is not ours: the owner comes from the registry, their law wins, the words are their reader's and never the hall's, our discipline travels and our identity does not, the stack is probed not assumed, an install is proved by one real change, their data stays theirs, the merge is sealed by their door"
+  "49-workers-are-eindri.md","workers are Eindri: every worker is an Eindri on a Yggdrasil worktree, no harness spawns its own subagents, and the refusal is a user-scope PreToolUse hook that denies Agent|Task and names the Eindri road"
+  "50-the-home-is-pulled-before-and-pushed-after.md","the home is pulled before and pushed after: an edit to ymirhome begins with a pull and ships by push in the same breath, never a stale base"
   "README.md","this index"
   "37-a-surface-may-not-show-what-it-did-not-receive.md","a surface may not show what it did not receive"
 ```
@@ -119,5 +121,7 @@ Keep each rule short and unambiguous; reference it from code where it bites.
 - **47 — a collaborator sees what a grant names** · `RULES/47-a-collaborator-sees-what-a-grant-names.md`
 
 - **48 — a repository that is not ours** · `RULES/48-a-repository-that-is-not-ours.md`
+
+- **49 — workers are Eindri; no harness spawns its own subagents** · `RULES/49-workers-are-eindri.md`
 
 - **50 — the home is pulled before and pushed after** · `RULES/50-the-home-is-pulled-before-and-pushed-after.md`

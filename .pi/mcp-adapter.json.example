@@ -1,12 +1,5 @@
 {
   "mcpServers": {
-    "engram": {
-      "command": "__YMIR_HOME__/.local/bin/engram-mcp",
-      "args": [
-        "--db",
-        "__YMIR_HOME__/hodd/memory/kaia.engram"
-      ]
-    },
     "ymir": {
       "command": "python3",
       "args": [

@@ -1542,27 +1542,78 @@ pi_surface_format[5]{fact,law,measured}
 The law that comes out of it: **one card, two readers, and the card is written for the weaker reader.** OpenCode
 parses YAML; Pi scans lines. Anything a line scan cannot see does not reach Pi, however valid it is as YAML.
 
-## The seat sweep is a HARNESS contract (2026-11-10)
 
-A finished Eindri must not leave a workspace behind, and the sweep that closes it has to
-reach a live session on every harness. `bin/seat/seat-reap.sh` is the one door:
+## 2026-11-10 — the well door for every harness (corrects §13's per-harness `engram` table)
 
-| harness | what carries the sweep |
-|---|---|
-| **pi** | the watch extension (`gna-pi-watch`) delivers the Sága digest, and the digest's `SEATS` section sweeps |
-| **opencode** | the syn-watch plugin relays the same digest; `bin/pi/syn-watch-arm.sh` also sweeps as the helm is taken |
-| **claude** | a real `SessionStart` hook, merged into `~/.claude/settings.json` (backup kept, other keys untouched) |
+§13 above says the MCP server is `engram-mcp --db <store> --agent-id <harness>`, registered per harness under
+the name `engram`. That table is kept as the record of what was built. **It is superseded.** The law, stated
+2026-11-10: **engram is Kaia's engine only.** A harness reaches memory through the **well door**, which is this
+body's MCP gateway at `http://127.0.0.1:8316/mcp/well` (`bin/bridge/mcp-gateway.sh`). The gateway journals each
+write and carries it to the heart. A direct `engram-mcp --db` stdio server writes the seat's own file, skips the
+journal, and never reaches the heart. That makes it a **leak**, not a registration.
 
-`bin/engine/ymir-install.sh` seats it (`seats` step), `bin/agents/groa-update.sh`
-re-seats it after every update, and `bin/agents/eir-doctor.sh`'s `seats` surface checks
-it. `bin/seat/seat-reap.sh --check` names any present harness that is NOT seated.
+**One set, generated per harness.** The source is pi's `~/.pi/agent/mcp-adapter.json`.
+`bin/bridge/mcp-config.sh seat` (executor `bin/bridge/mcp-config-seat.py`) takes that set, drops any direct
+engram, points `well`/`bolthorn`/`skuld` at the gateway, and writes the set in each harness's own format:
 
-**Two rules this encodes.**
+```
+mcp_seat_targets[6]{harness,where,how}:
+  "pi","~/.pi/agent/mcp-adapter.json + mcp.json","the source itself; specs kept whole, engram dropped, record doors re-pointed"
+  "opencode","~/.config/opencode/opencode.json (+ repo opencode.json)","mcp{} — type local|remote, enabled"
+  "claude","user scope","claude mcp add-json/remove --scope user — never a blind edit of ~/.claude.json"
+  "cursor","~/.cursor/mcp.json","mcpServers{}"
+  "codex","~/.codex/config.toml","ONE marked block; `ymir` left to the Codex plugin; the operator's own tables kept"
+  "hermes","~/.hermes/config.yaml","direct engram pruned; the adds stay with bin/seat/hermes-seat.sh"
+```
 
-- **A root is a home; a worktree is an errand.** `bin/seat/valknut-load.sh` never
-  records a linked worktree in `~/.pi/agent/extensions/.ymir-root` (test:
-  `git rev-parse --git-common-dir` differs from `--git-dir`) and prunes any an older
-  seat recorded — a deployed extension resolving through a dead worktree fails at 127.
-- **A worktree excludes `.pi/extensions` by git's own rule**, never by deleting files:
-  `git sparse-checkout set --no-cone '/*' '!/.pi/extensions/'`. `--assume-unchanged` is a
-  per-FILE bit and left every worktree reporting 45 deletions.
+It merges by name: only the set's names and a stale engram are touched, and every changed file gets a
+`.bak-<UTC>`. A server whose spec holds a literal secret (an inline `clientSecret`, a token) is **held**. It is
+named in the output and never copied into another harness. A harness that is absent is a clean skip (RULES/25).
+`seat --check` exits 1 on drift. The names `gmail`, `drive` and `docs` are **retired** for every harness, pi
+included: they are removed where found and never seated (`YMIR_MCP_RETIRED` replaces the list).
+
+Callers: `step_memory` (the installer), `f_mcp` (Eir), and migration `0020-the-well-door` (one heal on update).
+`bin/bridge/a2a-mcp.sh install` now wires `well` and no longer wires `engram`. `mcp-config.sh write` is the pi
+half of the same named merge; it no longer replaces the whole file.
+
+**Left alone, on purpose.** Kaia's own direct use stays: `bin/bridge/mimir-bridge.py`, `bin/records/mimir*.sh`,
+the well guard, housekeeping, the vault sync and `hoard-lib.sh`. `ymir-well.ts` drinks over the HTTP bridge on
+`:4602`, which on a `hand` is the door to the heart. It is not an engram MCP server. A confidential session
+(`bin/vault/confidential.sh`) points `ENGRAM_DB` inside the vault, and it must never journal to the heart
+(Rule 15), so it is not routed through the gateway.
+
+**Claude Code and AGENTS.md.** Claude Code reads `CLAUDE.md` and never a project's `AGENTS.md`.
+`.claude/hooks/load-agents-md.sh` is a SessionStart hook. It prints `$CLAUDE_PROJECT_DIR/AGENTS.md` as
+`additionalContext`, and skips when `CLAUDE.md` links to it or `@AGENTS.md`-imports it.
+`bin/seat/harness-extensions-install.sh` copies it to `~/.claude/hooks/` and wires exactly ONE named
+SessionStart entry in `~/.claude/settings.json`. It is current when an entry names `load-agents-md.sh`. When no
+entry does, install adds one and keeps a backup, and `--check` reports it stale. Nothing else in the file is
+merged.
+
+**The MCP packet's new doors** (`bin/mcp/ymir-mcp.py`) are the pi-extension tools a non-pi harness lacked:
+`brokk_branch_outcomes`, `skuld_plan`, `skuld_ticket`, `constellation_list/card/ask`, `logretta_stack`,
+`excalidraw_diagram` and `excalidraw_app`. Each is a thin call to the door the extension calls. Not ported:
+`context_left` and `skuld_branch_report` are pi-session state (`ymir_context` reads the context number from
+disk). `logretta_sit`, `excalidraw_tickets` and `excalidraw_servers` keep their logic in the extension's
+TypeScript and need a CLI face first.
+
+### 2026-11-10 (second) — the Eindri ward, the global arm, and who seats them
+
+Two user-scope Claude hooks join the AGENTS.md loader, and all three are owned by
+`bin/seat/harness-extensions-install.sh` (named entries; idempotent; backup per run):
+
+```
+claude_hooks[3]{event,script,why}:
+  "SessionStart","load-agents-md.sh","Claude reads CLAUDE.md, never a project's AGENTS.md"
+  "PreToolUse (Agent|Task)","eindri-only.sh","workers are Eindri; a harness subagent is not a seat (RULES/49) — the hook denies and names bin/agents/eindri-start.sh"
+  "Stop (asyncRewake)","ymir-arm.sh","the Gná arm reaches a Claude seat in ANY project, resolved from ~/.pi/agent/extensions/.ymir-root; inside ~/ymir it no-ops (the repo's own settings arm it)"
+```
+
+`step_loaders` in `ymir-install.sh` now calls the installer (it did not before), Gróa's update
+re-verifies it, Eir's `claudehooks` surface fails on a stale entry, and migration `0021` seats them in
+an older home.
+
+**The arm client, corrected the same day** (`bin/pi/syn-watch-arm.sh`): a client attaches only when
+the recorded helm owner IS this session's pid (the acquire contract) — a live other owner no longer
+lets a stranger attach; and a new client retires its own session's older clients, so one signal
+cannot rewake a session N times. Proved by `bin/gates/tests/test_arm_client_helm.sh`.
