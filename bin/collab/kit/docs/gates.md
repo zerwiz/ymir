@@ -1,3 +1,10 @@
+---
+title: "The gates — what stops what"
+status: "accepted"
+owner: "the project's collaboration-kit owner"
+updated: "2026-11-11"
+---
+
 # The gates — what stops what, and why each exists
 
 Two layers: **wards** (`npm run check`, twenty of them, in `scripts/wards/`) prove the repository is coherent; **gates**
@@ -48,3 +55,8 @@ borrowed[4]{gate,what_it_does,verdict}:
 
 **The rule for adding a gate:** it must catch something that has actually happened or that would be unrecoverable if it did. A gate
 nobody has ever triggered is a tax on every commit.
+
+## References
+
+- `scripts/gates/`, `.githooks/`, `RULES/15-commits-leave-by-pull-request.md`, `RULES/19-plan-validate-execute.md`
+- `docs/headers.md` — the header and References format this document follows

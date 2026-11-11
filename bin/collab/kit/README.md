@@ -1,6 +1,6 @@
 # The collaboration kit — the same discipline in every repository
 
-**What it is.** Fifteen small pieces that make a repository reviewable by a stranger: a baton, fix notes, a review shelf, five gates, three
+**What it is.** Nineteen small pieces that make a repository reviewable by a stranger: a baton, fix notes, a review shelf, five gates, three
 hooks, and the two tools that keep them honest. They are the ones this house actually uses — not a template somebody imagined.
 
 **Why a kit instead of a paragraph in each repo.** Two products already carry slightly different versions of the same rules, because each
@@ -8,7 +8,7 @@ was written in the moment. A kit is how they stay the same, and how the next rep
 beginning.
 
 ```
-contents[15]{piece,path,what_it_does}:
+contents[19]{piece,path,what_it_does}:
   "the baton","`handoff/{TEMPLATE.md,check.sh,check.py}` + `handoff/CURRENT.md`","where the work is, what is blocked, and who is blocked for — rewritten at every hand"
   "the fix notes","`scripts/fixes.sh` · `scripts/fixes-components.sh` · `docs/fixes/`","one file per fix, never a changelog; a note says what was wrong, why, and what was run"
   "the review shelf","`scripts/reviews.sh` · `docs/audit/`","a review is a file named for its pull request, listed, and named by the baton"
@@ -25,9 +25,13 @@ contents[15]{piece,path,what_it_does}:
   "the workbench skill","`.agents/skills/smidr-the-workbench/`","the craft taught to a guest hand: the slice, the note, the five things never changed quietly, and what each refusal means"
   "the collaborator door","`docs/collaborator-door.md` · `scripts/collab-connect.sh`","how a hand that is not on our network connects: a public card, a short-lived JWT scoped to one skill, a grant, a Rune per call — and the five refusals a door must still make"
   "the advantage gate","`scripts/advantage-audit.sh` · `docs/advantage.md`","a claim about why we win carries its evidence or it is refused: the VRIO screen, the teardown taken from lost deals, and the check that fails a page of adjectives"
+  "the status script","`scripts/status.py`","reads every plan, ticket and document header and prints their status; `--check` fails on a malformed header; it takes the plan prefix from `plans/.prefix` or the plan file names, never assumes one"
+  "the header format","`docs/headers.md`","the header every document, plan and ticket opens with, the statuses, and the rule that each ends with a References section"
+  "plan, validate, execute","`RULES/19-plan-validate-execute.md`","no implementation before the area owner named in `AGENTS.md` has validated the plan; documentation and planning are allowed at any time"
+  "the tickets shelf","`plans/tickets/{README.md,TEMPLATE.md}`","a ticket is one unit of work under a validated plan, never a plan itself; several tickets may share one plan"
 ```
 
-Plus the rules that govern them (`RULES/15`, `16`, `17`) and `docs/gates.md`, which explains what each refuses **and what it deliberately
+Plus the rules that govern them (`RULES/15`, `16`, `17`, `18`, `19`) and `docs/gates.md`, which explains what each refuses **and what it deliberately
 does not**.
 
 ## Install it

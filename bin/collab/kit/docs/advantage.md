@@ -1,3 +1,10 @@
+---
+title: "Competitive advantage — research and evidence"
+status: "accepted"
+owner: "the project's collaboration-kit owner"
+updated: "2026-11-11"
+---
+
 # Competitive advantage — how we research it, and how we are allowed to state it
 
 **In every repository, the same two failures.** A studio says it is "senior, fast and
@@ -126,3 +133,8 @@ refusal.
 ## CHANGE LOG
 
 - **2026-11-06** — the method opened with the gate (plan 207).
+
+## References
+
+- `scripts/advantage-audit.sh`, `docs/gates.md`
+- `docs/headers.md` — the header and References format this document follows

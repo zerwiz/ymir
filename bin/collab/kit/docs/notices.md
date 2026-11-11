@@ -1,3 +1,10 @@
+---
+title: "Where a gate's words go"
+status: "accepted"
+owner: "the project's collaboration-kit owner"
+updated: "2026-11-11"
+---
+
 # Where a gate's words go — the arm holder's window, and the project's orchestrator
 
 **The fault this ends.** A gate printed its refusal at whoever typed `git commit` or `git push`. If that is the
@@ -70,3 +77,8 @@ The **estate** line is answered by the house's own door for every registered pro
 **orchestrator** is only as real as its declaration: no project declares one yet, so notices reach the arm and
 record `orchestrator=none`. Naming it per project — a seat id, or the card address that answers — is one line in
 that project's `areas/agents.yaml`.
+
+## References
+
+- `scripts/notify-arm.sh`, `docs/gates.md`
+- `docs/headers.md` — the header and References format this document follows
