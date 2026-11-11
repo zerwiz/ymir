@@ -38,3 +38,7 @@ a finding with both sides printed.
   live seats, a process that is an agent and not a seat, or a roster file older than the arm's last cycle.
 - The arm runs it first in every cycle (plan 233 §12a) and opens an incident for an UNOWNED agent.
 - A closure is a Rune: who closed which seat, why, and what it had done.
+
+## CHANGE LOG
+
+- **2026-11-11** — written at the Allfather's word ("we cannot have any rogue agents running around"), and renumbered from 51 when 51 was found already taken.
