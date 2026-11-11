@@ -18,3 +18,7 @@ machine (Tailscale, keys, install by role, seat naming, harnesses, models, updat
 checklist; plans; how two fleets speak arm to arm through each operator's own Cloudflare Tunnel and Access service
 token plus a countersigned grant; and what stands today versus what is being built. Catalogue entry `04-008`, index row
 in `docs/features/README.md`.
+
+## CHANGE LOG
+
+- **2026-11-11** — written (Hœnir, arm holder on the counsellor seat) at the operator's word: a partner fleet needs one guide from zero.

@@ -61,7 +61,7 @@ the fleet chat room (planned). A channel that can't prove itself is marked UNPRO
 ## 4 · How the agents work on one machine
 
 - **herdr** is the terminal multiplexer. Every agent runs in a pane, in a workspace, in a tab.
-- **The seat primary** holds the **lock** (`~/.local/state/ymir/brokk.lock`) and the **arm**
+- **The seat primary** holds the **lock** and the **arm**
   (`state/.arm.lease`). Only the lock holder drains and acknowledges the queue. Any harness can hold it: Pi, Claude
   Code, OpenCode.
 - **Session start:** the first thing a seat runs is `bin/time/saga-session-start.sh`. It prints the digest: the
@@ -222,3 +222,7 @@ answers by knocking back. **Acceptance:** the first knock appears in the other q
 
 **Related:** [install-ymir.md](install-ymir.md) · [fleet-wire.md](fleet-wire.md) · [the-seats-and-the-arm.md](the-seats-and-the-arm.md) ·
 [the-home-push-door.md](the-home-push-door.md) · [constellation-the-road-between-fleets.md](constellation-the-road-between-fleets.md)
+
+## CHANGE LOG
+
+- **2026-11-11** — written (Hœnir, arm holder on the counsellor seat) at the operator's word: a partner fleet needs one guide from zero.
