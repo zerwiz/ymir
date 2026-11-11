@@ -81,3 +81,11 @@ is visible in the surface's own settings — never inferred.
 5. Run `bin/gates/guards/house-look-guard.sh`; if your raw-hex count is not zero, say why in your README.
 
 **The cloth is a single file and a single fire; everything else is an opinion about them.**
+
+## CHANGE LOG
+
+- **2026-11-11** — Written, after he asked whether the other apps' UI and their use of the Ember had ever
+  been audited. They had not. This page carries the audit (six degrees of adherence, and the fact that no
+  app reads the live desktop theme), the two-layer rule (house identity in `tokens.css`, the machine's
+  theme as an opt-in overlay), the three forms of drift, the per-app guard, and the five-line rule for the
+  next surface.
