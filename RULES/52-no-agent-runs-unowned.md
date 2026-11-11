@@ -1,4 +1,4 @@
-# Rule 51 — No agent runs unowned
+# 52 — No agent runs unowned
 
 **Added 2026-11-09** at the Allfather's word: *"we cannot have any rogue agents running around"* — and, the
 same night: *"the gna hold must always check and know how many agents are running on the machine."*
