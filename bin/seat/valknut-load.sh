@@ -538,8 +538,10 @@ link_agent_dir() {  # <target-dir> <rel-prefix>
 #   pi       — discovery, natively: it walks up from the cwd looking for
 #              `.agents/skills` (and `~/.agents/skills`), so it needs NO link,
 #              and a second root under `.pi/` would only invite double-loading
-#   claude · codex · cursor — project skills live under the harness dir, so each
+#   codex · cursor — project skills live under the harness dir, so each
 #              gets `<harness>/skills -> ../.agents/skills`
+#   claude   — NOT linked (2026-11-11, plan 248 P3b): its root carries the one
+#              `ymir` skill, whose index names every skill by path
 link_skills() {  # <harness-dir>  → binds <harness-dir>/skills
   local dir=$1
   [ -d "$dir" ] || return 1
@@ -563,10 +565,16 @@ if [ "$MODE_STATUS" = 1 ]; then
   else
     add pi-ext-root "$PI_EXT_HOME/.ymir-root" "ERROR no recorded root holds bin/pi/syn-watch-arm.sh — deployed extensions cannot find their bin/ (run: bin/seat/valknut-load.sh --pi)"
   fi
-  for hd in .claude .codex .cursor; do
+  for hd in .codex .cursor; do
     [ -d "$ROOT/$hd" ] || continue
     [ -L "$ROOT/$hd/skills" ] && add "$hd-skills" "$ROOT/$hd/skills" linked || add "$hd-skills" "$ROOT/$hd/skills" absent
   done
+  # Claude's skills come from its ROOT (the one `ymir` skill), never a repo link (plan 248 P3b)
+  if [ -L "$ROOT/.claude/skills" ]; then
+    add .claude-skills "$ROOT/.claude/skills" "ERROR a repo link doubles the root ymir skill — bin/seat/valknut-load.sh retires it"
+  else
+    add .claude-skills "$HOME/.claude/skills/ymir" "$([ -L "$HOME/.claude/skills/ymir" ] && printf 'root ymir skill' || printf 'root ymir skill absent — bin/agents/skill-index.sh --root')"
+  fi
 fi
 
 if [ "$MODE_OPENCODE" = 1 ]; then
@@ -724,12 +732,21 @@ if [ "$MODE_STATUS" = 0 ]; then
   # link (it discovers `.agents/skills` by walking up); opencode reaches that
   # tree through `skills.paths`. claude, codex and cursor each get one link, so
   # all of them read the ONE skills tree.
+  #
+  # Appended 2026-11-11 (plan 248 P3b, RULES/51 + RULES/02): Claude is NOT linked any
+  # more. Its root already carries the ONE `ymir` skill (~/.claude/skills/ymir, seated by
+  # bin/agents/skill-index.sh --root), so a repo-local `.claude/skills` link made a
+  # session inside the checkout list all the shipped skills a second time. A leftover
+  # link of exactly that shape is removed; anything else there is left untouched.
   linked=""
-  for hd in .claude .codex .cursor; do
+  for hd in .codex .cursor; do
     [ -d "$ROOT/$hd" ] || continue
     link_skills "$ROOT/$hd" >/dev/null 2>&1 && linked="$linked $hd"
   done
   [ -n "$linked" ] && add harness-skills "$SKILLS" "linked into:$linked"
+  if [ -L "$ROOT/.claude/skills" ] && [ "$(readlink "$ROOT/.claude/skills")" = "../.agents/skills" ]; then
+    rm -f "$ROOT/.claude/skills" && add claude-skills "$ROOT/.claude/skills" "retired — the root ymir skill serves Claude (plan 248)"
+  fi
 
   # …and AGENTS for the same harnesses, plus opencode, so every tool loads every
   # agent — never a hand-made subset.

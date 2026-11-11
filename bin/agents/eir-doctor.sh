@@ -111,7 +111,7 @@ surface_detail_skip() {
 }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir hnoss shells graphics well memory mail mcp harness claudehooks arm lock gates migrations hoard autoboot vault ward seats)
+SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir hnoss shells graphics well memory mail mcp harness claudehooks rootskill arm lock gates migrations hoard autoboot vault ward seats)
 
 # ── the three surfaces the 2026-11-03 Windows audit found, and the rule they read ──────────
 # A SEAT IS NOT UPDATED BY A PULL. The checkout moves; the installed hooks, the PATH a later
@@ -448,6 +448,13 @@ s_claudehooks() {
   ! printf '%s\n' "$out" | grep -q '"claude-[^"]*","stale"'
 }
 f_claudehooks() { [ -x "$SCRIPT_DIR/../seat/harness-extensions-install.sh" ] && "$SCRIPT_DIR/../seat/harness-extensions-install.sh" >/dev/null 2>&1 && s_claudehooks; }
+# The one Ymir skill (plan 248 P3b, RULES/51): every root lists exactly ONE Ymir skill,
+# `ymir` (~/.agents/skills/ymir, linked from ~/.claude/skills/ymir), whose SKILL.md is the
+# generated index of every skill by path into ~/.local/share/ymir/skills, a store no harness
+# scans. Stale is NAMED: an index behind its shelves, a store link missing, Claude's link
+# absent, or a box skill still sitting in a scanned shelf (the mend for that is migration 0022).
+s_rootskill() { [ -x "$SCRIPT_DIR/skill-index.sh" ] && "$SCRIPT_DIR/skill-index.sh" --root-check >/dev/null 2>&1; }
+f_rootskill() { [ -x "$SCRIPT_DIR/skill-index.sh" ] && "$SCRIPT_DIR/skill-index.sh" --root >/dev/null 2>&1; s_rootskill; }
 # Arm: Sýn as a SERVICE (plan 58, Phase 2) — one standing watcher per home that
 # idles when no session is seated, never retires with one. The surface is the
 # arm's own door (bin/pi/syn-watch.sh): a live lease with a fresh heartbeat is
@@ -634,6 +641,7 @@ detail() { # <name> -> the command that prints one short fact
     graphics)  printf '%s\n' "if [ -z \"\${DISPLAY:-}\${WAYLAND_DISPLAY:-}\" ]; then echo headless; else echo \"\$(graphics_block 2>/dev/null | sed -n '1p' | sed 's/.*{//;s/}//') · \$(graphics_policy 2>/dev/null)\"; fi" ;;
     harness)   printf '%s\n' "s_harness && echo 'deployed extensions resolve their bin/' || echo 'no live root recorded'" ;;
     claudehooks) printf '%s\n' "command -v claude >/dev/null 2>&1 && echo 'the three Claude hooks: AGENTS.md · Eindri-only · the Gná arm' || echo 'no claude on this host'" ;;
+    rootskill) printf '%s\n' "echo 'the one ymir skill in every root, over the unscanned store (bin/agents/skill-index.sh --root-check)'" ;;
     arm)       printf '%s\n' "$SCRIPT_DIR/../pi/syn-watch.sh status --detail 2>/dev/null | head -1 || echo 'arm door missing'" ;;
     gates)     printf '%s\n' "s_gates && echo 'pre-push hook: the worktree that pushes' || echo 'installed hook is stale — bin/gates/guards/fixes-guard.sh --install'" ;;
     lock)      printf '%s\n' "cat $STATE/.lock 2>/dev/null | tr -d '[:space:]' | sed 's/^/pid /' || echo none" ;;

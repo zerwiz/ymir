@@ -16,6 +16,7 @@
 #   claude    the hook scripts into ~/.claude/hooks  (the JSON wiring is NAMED, never merged blind)
 #   codex     hooks.json and the skills links under ~/.codex
 #   cursor    the rules into ~/.cursor/rules
+#   every root  the ONE `ymir` skill (~/.agents/skills/ymir, ~/.claude/skills/ymir) over an unscanned store (plan 248 P3b)
 # A harness that is not installed is a clean SKIP with its reason, never a failure (RULES/25).
 set -uo pipefail
 
@@ -63,7 +64,7 @@ copy_tree() {  # <src-dir> <dst-dir> <label> — copy only what differs, keep on
   return 0
 }
 
-printf 'harness_extensions[%s]{harness,state,detail}:\n' 6
+printf 'harness_extensions[%s]{harness,state,detail}:\n' 7
 
 # ── pi: the settings entry that makes the extensions load from any directory, and
 #        the DOOR that keeps a seat started by hand to ONE home (2026-11-11) ──────
@@ -297,6 +298,30 @@ if command -v cursor-agent >/dev/null 2>&1 || command -v cursor >/dev/null 2>&1;
   copy_tree "$ROOT/.cursor/rules" "$HOME/.cursor/rules" "cursor-rules" || true
 else
   say "  \"cursor\",\"absent\",\"no cursor on this host\""; absent=$((absent+1))
+fi
+
+# ── every root: the ONE Ymir skill and its unscanned store (plan 248 P3b) ────
+# ~/.agents/skills/ymir is read natively by pi, OpenCode and Codex; Claude gets
+# ~/.claude/skills/ymir as a link. Its SKILL.md is the generated index of every
+# skill on every shelf, by path into ~/.local/share/ymir/skills — a store no harness
+# scans, so the per-turn cost is one description, not two hundred (RULES/51).
+SKIDX="$ROOT/bin/agents/skill-index.sh"
+if [ -f "$SKIDX" ] && grep -q -- '--root-check' "$SKIDX" 2>/dev/null; then
+  if [ "$mode" = "check" ]; then
+    if _ro="$(bash "$SKIDX" --root-check 2>&1)"; then
+      say "  \"ymir-skill\",\"current\",\"$(printf '%s' "$_ro" | tail -1 | tr '"' "'")\""
+    else
+      say "  \"ymir-skill\",\"stale\",\"$(printf '%s' "$_ro" | head -1 | tr '"' "'") — bin/agents/skill-index.sh --root\""
+      stale=$((stale+1))
+    fi
+  elif _ro="$(bash "$SKIDX" --root 2>&1)"; then
+    say "  \"ymir-skill\",\"synced\",\"$(printf '%s' "$_ro" | tail -1 | tr '"' "'")\""
+  else
+    say "  \"ymir-skill\",\"stale\",\"$(printf '%s' "$_ro" | head -1 | tr '"' "'")\""
+  fi
+  unset _ro
+else
+  say "  \"ymir-skill\",\"skip\",\"$ROOT predates the one Ymir skill (plan 248 P3b) — the next update seats it\""
 fi
 
 if [ "$mode" = "check" ] && [ "$stale" -gt 0 ]; then

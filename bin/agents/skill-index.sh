@@ -59,6 +59,33 @@ fi
 HOMESKILLS="$HOME_ROOT/.agents/skills"
 PISKILLS="$HOME/.pi/agent/skills"
 
+# A PINNED runtime wins for the shipped shelf (RULES/02 §7, RULES/51): the skills a
+# root agent is pointed at are the ones a deployment proved, never whatever branch a
+# working tree has checked out. The machine-only shelf stays the canonical checkout's
+# (it is gitignored, so the runtime clone never carries it).
+TOOLROOT="$ROOT"   # where the root skill tells an agent the tools live: the runtime when pinned
+if [ -r "$HOME_ROOT/config/runtime.env" ]; then
+  _rt="$( . "$HOME_ROOT/config/runtime.env" >/dev/null 2>&1; printf '%s' "${YMIR_RUNTIME_DIR:-}")"
+  [ -n "$_rt" ] && [ -d "$_rt/.agents/skills" ] && { SHIPS="$_rt/.agents/skills"; TOOLROOT="$_rt"; }
+  unset _rt
+fi
+
+# ── plan 248 P3b: ONE Ymir skill in every root, ONE unscanned store behind it ──
+# The STORE gathers every skill of every shelf as a LINK (never a copy) by name,
+# in a directory NO harness scans — pi walks ~/.agents/skills and ~/.pi/agent/skills
+# RECURSIVELY, so a store there would put every description back into every turn.
+# The BOX shelf is where a machine's own skills live once they leave a scanned
+# directory (migration 0022 carries them, intact). The ROOT skill `ymir` is the
+# only one a harness lists: pi, OpenCode and Codex read ~/.agents/skills natively;
+# Claude reads ~/.claude/skills one level deep, so it gets a link.
+DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+STORE="${YMIR_SKILL_STORE:-$DATA_HOME/ymir/skills}"
+BOXSKILLS="${YMIR_BOX_SKILLS:-$DATA_HOME/ymir/box-skills}"
+AGENTS_ROOT="$HOME/.agents/skills"
+ROOT_SKILL="$AGENTS_ROOT/ymir"
+CLAUDE_LINK="$HOME/.claude/skills/ymir"
+ROOT_DESC="Ymir's craft: load this, read the index, then open the one skill the task needs."
+
 # The index is private data (it names paths in the private home), so it lives in
 # the home. The human inventory is the home's document shelf.
 INDEX="$HOMESKILLS/skills.yaml"
@@ -108,8 +135,17 @@ _mtime() {
 # --- the generic walk -------------------------------------------------------
 # Every SKILL.md under a shelf, at any depth. No pack is known by name.
 walk() {
-  local shelf="$1"
+  local shelf="$1" follow=""
   [ -d "$shelf" ] || return 0
+  # The box and the pi shelves are made of LINKS (pi's are links into ~/.agents or
+  # /usr/share); a plain find stops at a symlinked directory, so those two follow
+  # links, bounded in depth so a link loop cannot run away.
+  case "$shelf" in "$PISKILLS"|"$BOXSKILLS") follow=1 ;; esac
+  if [ -n "$follow" ]; then
+    find -L "$shelf" -maxdepth 4 -iname 'SKILL.md' -not -path '*/.git/*' -not -path '*/node_modules/*' \
+      2>/dev/null | LC_ALL=C sort
+    return 0
+  fi
   find "$shelf" -iname 'SKILL.md' \
     -not -path '*/.git/*' -not -path '*/node_modules/*' \
     -not -path '*/.yggdrasil/*' -not -path '*/dist/*' -not -path '*/build/*' \
@@ -141,6 +177,7 @@ collect() {
   emit_rows ships  "$SHIPS"
   emit_rows local  "$LOCALS"
   emit_rows home   "$HOMESKILLS"
+  emit_rows box    "$BOXSKILLS"
   emit_rows pi     "$PISKILLS"
 }
 
@@ -153,13 +190,14 @@ write_inventory() {
     printf -- '- **Generated:** %s · **Owner:** Brokk · **Generator:** `bin/agents/skill-index.sh` · **Machine index:** `$YMIR_HOME/.agents/skills/skills.yaml`\n' "$(date -Iseconds)"
     printf -- '- **This file is regenerated, never hand-edited.** The machine reads `skills.yaml`; this page is its human twin.\n'
     printf -- '- **Read the index first.** `bin/agents/skill-find.sh` reads it before grepping; a skill absent from it is a skill nobody finds.\n\n'
-    printf -- '**Totals: %s skills across 4 shelves.**\n\n' "$total"
+    printf -- '**Totals: %s skills across 5 shelves.**\n\n' "$total"
     local sid label
-    for sid in ships local home pi; do
+    for sid in ships local home box pi; do
       case "$sid" in
         ships) label="Ships with Ymir (\`.agents/skills/\`)" ;;
         local) label="This machine only (\`.agents/skills-local/\`)" ;;
         home)  label="The home shelf — own craft + imported packs (\`\$YMIR_HOME/.agents/skills/\`)" ;;
+        box)   label="This box — its own skills, out of every scanned shelf (\`~/.local/share/ymir/box-skills/\`)" ;;
         pi)    label="Harness-wide (\`~/.pi/agent/skills/\`)" ;;
       esac
       printf '## %s\n\n' "$label"
@@ -190,6 +228,7 @@ write_index() {
     printf '  - {id: ships, count: %s}\n' "$(printf '%s\n' "$rows" | awk -F'\t' '$1=="ships"' | grep -c . || true)"
     printf '  - {id: local, count: %s}\n' "$(printf '%s\n' "$rows" | awk -F'\t' '$1=="local"' | grep -c . || true)"
     printf '  - {id: home,  count: %s}\n' "$(printf '%s\n' "$rows" | awk -F'\t' '$1=="home"'  | grep -c . || true)"
+    printf '  - {id: box,   count: %s}\n' "$(printf '%s\n' "$rows" | awk -F'\t' '$1=="box"'   | grep -c . || true)"
     printf '  - {id: pi,    count: %s}\n' "$(printf '%s\n' "$rows" | awk -F'\t' '$1=="pi"'    | grep -c . || true)"
     printf 'skills:\n'
     printf '%s\n' "$rows" | while IFS=$'\t' read -r sid root pack name path desc; do
@@ -203,8 +242,195 @@ write_index() {
   } > "$INDEX"
 }
 
+# --- plan 248 P3b: the store, the one root skill, the box ------------------
+# _scanned <path> -> 0 when the path lies inside a directory a harness scans for
+# skills. The store and the box must never be there (RULES/51 "THE STORE IS NEVER
+# SCANNED"); a store a harness walks is 200 descriptions back in every turn.
+_scanned() {
+  local p="$1" d
+  for d in "$AGENTS_ROOT" "$PISKILLS" "$HOME/.claude/skills" "$HOME/.config/opencode/skills" "$HOME/.codex/skills"; do
+    case "$p/" in "$d"/*) return 0 ;; esac
+  done
+  return 1
+}
+
+# _safe_name <name> -> a directory-safe link name (a skill name is the link name)
+_safe_name() { printf '%s' "$1" | tr -c 'A-Za-z0-9._-' '-' | sed 's/^-*//; s/-*$//'; }
+
+# _trigger <description> -> one line: the first sentence, at most 140 characters
+_trigger() {
+  local d="$1" t
+  t="${d%%. *}"; [ "$t" = "$d" ] || t="$t."
+  if [ "${#t}" -gt 140 ]; then t="${t:0:139}…"; fi
+  printf '%s' "$t"
+}
+
+# plan_store <rows> -> "name\tdir\tshelf\tpack\tfile\tdesc" for every skill that
+# wins its name, in shelf order (a shipped skill wins a clash on purpose). Shadowed
+# rows are left out; the caller counts them from the difference.
+plan_store() {
+  printf '%s\n' "$1" | awk -F'\t' 'NF>=6 { print }' | while IFS=$'\t' read -r sid _root pack name path desc; do
+    n="$(_safe_name "$name")"; [ -n "$n" ] || n="$(_safe_name "$(basename "$(dirname "$path")")")"
+    [ "$n" = "ymir" ] && n="ymir-$sid"   # the root skill's name is reserved for the index itself
+    printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$n" "$(dirname "$path")" "$sid" "$pack" "$(basename "$path")" "$desc"
+  done | awk -F'\t' '!seen[$1]++'
+}
+
+# render_root <planned> -> the ymir SKILL.md on stdout. Deterministic: no clock in
+# it, so --root-check can compare bytes and a rebuild that changes nothing writes nothing.
+render_root() {
+  local planned="$1" total all="$2"
+  total="$(printf '%s\n' "$planned" | grep -c . || true)"
+  printf -- '---\nname: ymir\ndescription: %s\n---\n\n' "$ROOT_DESC"
+  printf '# Ymir — every skill, by path\n\n'
+  printf 'GENERATED by `%s/bin/agents/skill-index.sh` on install, update and session start — never edit it, never version it.\n\n' "$TOOLROOT"
+  printf 'How to use it: find the ONE line whose trigger fits the task, then read that SKILL.md by its path — and only that one.\n'
+  printf 'Every path lives in the store `%s` (links, never scanned by a harness), so no other Ymir skill rides in your turn.\n' "$STORE"
+  printf 'To search the full bodies instead: `bash %s/bin/agents/skill-find.sh "<words>"`.\n\n' "$TOOLROOT"
+  printf '%s skills; %s more are shadowed by an earlier shelf of the same name (a shipped skill always wins).\n' \
+    "$total" "$(( all - total ))"
+  local sid label _lastpack=""
+  for sid in ships local home box pi; do
+    case "$sid" in
+      ships) label="Ships with Ymir" ;;
+      local) label="This machine only (skills-local)" ;;
+      home)  label="The home — your own craft and imported packs" ;;
+      box)   label="This box" ;;
+      pi)    label="Harness-wide (pi)" ;;
+    esac
+    # a count, not `grep -q`: under pipefail an early-closing grep fails the pipe
+    [ "$(printf '%s\n' "$planned" | awk -F'\t' -v s="$sid" '$3==s { n++ } END { print n+0 }')" -gt 0 ] || continue
+    printf '\n## %s\n\n' "$label"
+    printf '%s\n' "$planned" | awk -F'\t' -v s="$sid" '$3==s { print $4 "\t" $1 "\t" $5 "\t" $6 }' \
+      | LC_ALL=C sort -t$'\t' -k1,1 -k2,2 \
+      | while IFS=$'\t' read -r pack n file desc; do
+          if [ "$sid" = home ] && [ "$pack" != "$_lastpack" ] && [ "$pack" != "." ] && [ "$pack" != "$n" ]; then
+            printf '\n### %s\n\n' "$pack"
+          fi
+          _lastpack="$pack"
+          printf -- '- **%s** · %s · `%s/%s/%s`\n' "$n" "$(_trigger "$desc")" "$STORE" "$n" "$file"
+        done
+  done
+}
+
+# build_root [check] -> seat (or, with "check", only judge) the store, the root
+# skill and Claude's link. Prints one TOON-ish row per part; exit 1 when stale.
+build_root() {
+  local mode="${1:-install}" rows planned all bad=0 tmp n dir cur want f
+  if _scanned "$STORE" || _scanned "$BOXSKILLS"; then
+    printf 'root-skill: REFUSED — the store (%s) or box (%s) lies inside a scanned skills directory\n' "$STORE" "$BOXSKILLS" >&2
+    return 2
+  fi
+  rows="$(collect)"
+  all="$(printf '%s\n' "$rows" | grep -c . || true)"
+  planned="$(plan_store "$rows")"
+
+  # 1. the store: one link per winning name; stale or foreign links removed
+  if [ "$mode" != check ]; then mkdir -p "$STORE" 2>/dev/null || { printf 'root-skill: %s is not writable\n' "$STORE" >&2; return 1; }; fi
+  if [ -d "$STORE" ]; then
+    for f in "$STORE"/* "$STORE"/.[!.]*; do
+      [ -e "$f" ] || [ -L "$f" ] || continue
+      n="$(basename "$f")"
+      want="$(printf '%s\n' "$planned" | awk -F'\t' -v n="$n" '$1==n { print $2; exit }')"
+      if [ ! -L "$f" ]; then printf 'root-skill: %s is not a link — left untouched (the store holds links only)\n' "$f" >&2; continue; fi
+      cur="$(readlink "$f")"
+      if [ -z "$want" ] || [ "$cur" != "$want" ]; then
+        if [ "$mode" = check ]; then bad=1; printf 'store: stale link %s\n' "$n"; else rm -f "$f"; fi
+      fi
+    done
+  fi
+  while IFS=$'\t' read -r n dir _; do
+    [ -n "$n" ] || continue
+    if [ ! -L "$STORE/$n" ] || [ "$(readlink "$STORE/$n")" != "$dir" ]; then
+      if [ "$mode" = check ]; then bad=1; printf 'store: missing link %s\n' "$n"; else ln -sfn "$dir" "$STORE/$n"; fi
+    fi
+  done <<< "$planned"
+
+  # 2. the one root skill: its SKILL.md IS the index
+  tmp="$(mktemp)"; render_root "$planned" "$all" > "$tmp"
+  if [ -L "$ROOT_SKILL" ] || { [ -e "$ROOT_SKILL" ] && [ ! -d "$ROOT_SKILL" ]; }; then
+    printf 'root-skill: %s is not a directory — left untouched\n' "$ROOT_SKILL" >&2; bad=1
+  elif ! cmp -s "$tmp" "$ROOT_SKILL/SKILL.md" 2>/dev/null; then
+    if [ "$mode" = check ]; then bad=1; printf 'root: %s/SKILL.md is stale or absent\n' "$ROOT_SKILL"
+    else mkdir -p "$ROOT_SKILL" && cp "$tmp" "$ROOT_SKILL/SKILL.md"; fi
+  fi
+  rm -f "$tmp"
+
+  # 3. Claude reads ~/.claude/skills one level deep — the same skill, by a link
+  if [ -d "$HOME/.claude" ] || command -v claude >/dev/null 2>&1; then
+    if [ "$(readlink "$CLAUDE_LINK" 2>/dev/null)" != "$ROOT_SKILL" ]; then
+      if [ "$mode" = check ]; then bad=1; printf 'claude: %s does not link to %s\n' "$CLAUDE_LINK" "$ROOT_SKILL"
+      elif [ -e "$CLAUDE_LINK" ] && [ ! -L "$CLAUDE_LINK" ]; then
+        printf 'root-skill: %s is a real directory — left untouched\n' "$CLAUDE_LINK" >&2; bad=1
+      else mkdir -p "$(dirname "$CLAUDE_LINK")" && ln -sfn "$ROOT_SKILL" "$CLAUDE_LINK"; fi
+    fi
+  fi
+
+  # 4. a box skill still sitting in a scanned shelf is NAMED (migration 0022 moves it)
+  for f in "$AGENTS_ROOT"/*; do
+    [ -d "$f" ] && [ ! -L "$f" ] && [ "$f" != "$ROOT_SKILL" ] || continue
+    find "$f" -maxdepth 3 -iname SKILL.md 2>/dev/null | grep -q . || continue
+    bad=1; printf 'box: %s is a skill in a scanned shelf — bin/agents/skill-index.sh --adopt-box (migration 0022) moves it\n' "$f"
+  done
+
+  if [ "$mode" = check ]; then
+    [ "$bad" = 0 ] && printf 'root-skill current: one `ymir` skill, %s skills in the store\n' "$(printf '%s\n' "$planned" | grep -c . || true)"
+  else
+    printf 'root-skill: %s (index of %s skills) · store %s' "$ROOT_SKILL/SKILL.md" "$(printf '%s\n' "$planned" | grep -c . || true)" "$STORE"
+    [ -L "$CLAUDE_LINK" ] && printf ' · claude link %s' "$CLAUDE_LINK"
+    printf '\n'
+  fi
+  return "$bad"
+}
+
+# adopt_box -> move every real skill directory out of ~/.agents/skills (the shared
+# root pi scans recursively) into the box shelf, carried INTACT (RULES/06): the file
+# count is verified before the source is gone, and nothing is overwritten. Links
+# that pointed at the old place (pi's shelf, Claude's) are removed, because left
+# behind they would either dangle or put the skill back into every turn.
+adopt_box() {
+  local f n dst before after l moved=0
+  _scanned "$BOXSKILLS" && { printf 'adopt-box: REFUSED — the box (%s) lies inside a scanned directory\n' "$BOXSKILLS" >&2; return 2; }
+  [ -d "$AGENTS_ROOT" ] || { printf 'adopt-box: no %s — nothing to move\n' "$AGENTS_ROOT"; return 0; }
+  for f in "$AGENTS_ROOT"/*; do
+    [ -d "$f" ] && [ ! -L "$f" ] && [ "$f" != "$ROOT_SKILL" ] || continue
+    find "$f" -maxdepth 3 -iname SKILL.md 2>/dev/null | grep -q . || continue
+    n="$(basename "$f")"; dst="$BOXSKILLS/$n"
+    if [ -e "$dst" ] || [ -L "$dst" ]; then
+      printf 'adopt-box: %s already exists — %s left where it is (nothing is overwritten)\n' "$dst" "$f" >&2; continue
+    fi
+    before="$(find "$f" -type f | wc -l)"
+    mkdir -p "$BOXSKILLS" || return 1
+    if cp -a "$f" "$dst"; then
+      after="$(find "$dst" -type f | wc -l)"
+      if [ "$before" = "$after" ] && diff -rq "$f" "$dst" >/dev/null 2>&1; then
+        rm -rf "$f"
+      else
+        printf 'adopt-box: copy of %s is not whole (%s files vs %s) — the source is KEPT\n' "$f" "$before" "$after" >&2
+        rm -rf "$dst"; continue
+      fi
+    else
+      printf 'adopt-box: could not copy %s — the source is KEPT\n' "$f" >&2; continue
+    fi
+    for l in "$PISKILLS/$n" "$HOME/.claude/skills/$n" "$HOME/.config/opencode/skills/$n"; do
+      [ -L "$l" ] && [ "$(readlink "$l")" = "$f" ] && rm -f "$l"
+    done
+    printf 'adopt-box: %s -> %s (%s files, intact)\n' "$f" "$dst" "$before"
+    moved=$((moved+1))
+  done
+  printf 'adopt-box: %s skill(s) moved into the box\n' "$moved"
+}
+
 # --- modes ------------------------------------------------------------------
 case "${1:-}" in
+  --root)
+    build_root install; exit $? ;;
+  --root-check)
+    build_root check; exit $? ;;
+  --adopt-box)
+    adopt_box; rc=$?; [ "$rc" = 0 ] && { build_root install >/dev/null; true; }; exit "$rc" ;;
+  --root-path)
+    printf '%s\n' "$ROOT_SKILL/SKILL.md"; exit 0 ;;
   --check)
     # "Can't be just dead": the index must exist, be newer than the newest
     # SKILL.md on any shelf, and name every skill the live walk finds.

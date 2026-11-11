@@ -26,6 +26,11 @@ bad() { printf 'not ok - %s\n' "$1" >&2; fail=1; }
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
+# A throwaway HOME for every case: the root skill, the store and the box live under
+# $HOME / $XDG_DATA_HOME, and a test must never write the operator's real ones.
+export HOME="$TMP/fakehome" XDG_DATA_HOME="$TMP/fakehome/.local/share"
+unset YMIR_SKILL_STORE YMIR_BOX_SKILLS
+mkdir -p "$HOME"
 
 # A scratch repo the tools can root at, with the two doors and a stub resolver.
 # `_root()` walks up to `.pi` + `RULES`, so both must exist or the tool roots at
@@ -134,6 +139,102 @@ if grep -q 'path: "/' "$INDEX_FILE"; then
   bad "the index wrote an absolute machine path (not portable)"
 else
   ok "the index stores shelf-relative paths only — no machine path"
+fi
+
+# ── 6. plan 248 P3b: ONE ymir skill in every root, ONE unscanned store ───────
+mkdir -p "$HOME/.claude" "$HOME/.agents/skills/boxy" "$HOME/.pi/agent/skills" "$REPO/.agents/skills/clash" \
+         "$YMIR_HOME/.agents/skills/clash"
+printf -- '---\nname: boxy\ndescription: A box skill left in a scanned shelf.\n---\nbody word: fjallagrasa\n' \
+  > "$HOME/.agents/skills/boxy/SKILL.md"
+printf 'asset\n' > "$HOME/.agents/skills/boxy/notes.txt"
+ln -s "$HOME/.agents/skills/boxy" "$HOME/.pi/agent/skills/boxy"
+printf -- '---\nname: clash\ndescription: The shipped one.\n---\n' > "$REPO/.agents/skills/clash/SKILL.md"
+printf -- '---\nname: clash\ndescription: The home one.\n---\n' > "$YMIR_HOME/.agents/skills/clash/SKILL.md"
+ROOTSK="$HOME/.agents/skills/ymir/SKILL.md"
+# the scratch repo's copies, so the shipped shelf is $REPO/.agents/skills, not this checkout's
+RIDX="$REPO/bin/agents/skill-index.sh"; RFIND="$REPO/bin/agents/skill-find.sh"
+STORE_DIR="$XDG_DATA_HOME/ymir/skills"
+
+if bash "$RIDX" --root-check 2>/dev/null | grep -q '^box: .*boxy'; then
+  ok "--root-check names a box skill sitting in a scanned shelf"
+else
+  bad "--root-check did not name the box skill in ~/.agents/skills"
+fi
+
+bash "$RIDX" --adopt-box >/dev/null 2>&1
+if [ ! -e "$HOME/.agents/skills/boxy" ] && [ -f "$XDG_DATA_HOME/ymir/box-skills/boxy/SKILL.md" ] \
+   && [ -f "$XDG_DATA_HOME/ymir/box-skills/boxy/notes.txt" ] && [ ! -L "$HOME/.pi/agent/skills/boxy" ]; then
+  ok "--adopt-box carries a box skill intact out of the scanned shelf and drops the dangling pi link"
+else
+  bad "--adopt-box did not move the box skill whole"
+fi
+
+bash "$RIDX" --root >/dev/null 2>&1
+n_root="$(find "$HOME/.agents/skills" -mindepth 1 -maxdepth 1 | wc -l | tr -d ' ')"
+if [ "$n_root" = 1 ] && [ -f "$ROOTSK" ] && [ "$(readlink "$HOME/.claude/skills/ymir")" = "$HOME/.agents/skills/ymir" ]; then
+  ok "each root lists exactly one Ymir skill (~/.agents/skills/ymir; Claude by link)"
+else
+  bad "the roots do not carry exactly one ymir skill (found $n_root in ~/.agents/skills)"
+fi
+
+unres=0; npaths=0
+while IFS= read -r pth; do
+  npaths=$((npaths+1)); [ -r "$pth" ] || { unres=$((unres+1)); printf '  unresolved %s\n' "$pth" >&2; }
+done < <(grep -o '`/[^`]*SKILL.md`' "$ROOTSK" | tr -d '`')
+if [ "$npaths" -ge 4 ] && [ "$unres" = 0 ]; then
+  ok "the index resolves every path ($npaths) through the store"
+else
+  bad "the index has $unres unresolved of $npaths paths"
+fi
+
+if [ "$(readlink "$STORE_DIR/clash")" = "$REPO/.agents/skills/clash" ]; then
+  ok "a shipped skill wins a name clash in the store"
+else
+  bad "the store linked clash to $(readlink "$STORE_DIR/clash") — the shipped shelf must win"
+fi
+
+desc_bytes="$(sed -n '2,3p' "$ROOTSK" | wc -c | tr -d ' ')"
+if [ "$desc_bytes" -le 220 ] && grep -q '^description: .\{20,\}' "$ROOTSK"; then
+  ok "the per-turn cost is one name and one description line ($desc_bytes bytes)"
+else
+  bad "the root skill's front matter is $desc_bytes bytes — it must stay ~200"
+fi
+
+before="$(stat -c %Y "$ROOTSK" 2>/dev/null || stat -f %m "$ROOTSK")"
+sleep 1; bash "$RIDX" --root >/dev/null 2>&1
+after="$(stat -c %Y "$ROOTSK" 2>/dev/null || stat -f %m "$ROOTSK")"
+if bash "$RIDX" --root-check >/dev/null 2>&1 && [ "$before" = "$after" ]; then
+  ok "--root-check is green and a second --root writes nothing (idempotent by content)"
+else
+  bad "the root is not stable across a rebuild"
+fi
+
+if YMIR_SKILL_STORE="$HOME/.agents/skills/store" bash "$RIDX" --root >/dev/null 2>&1; then
+  bad "a store inside a scanned directory was accepted"
+else
+  [ ! -e "$HOME/.agents/skills/store" ] && ok "a store inside a scanned directory is refused" \
+    || bad "a refused store still left a directory in the scanned shelf"
+fi
+
+if bash "$RFIND" fjallagrasa 2>/dev/null | grep -q 'boxy'; then
+  ok "skill-find searches full bodies and reaches the box shelf"
+else
+  bad "skill-find did not find a word that lives only in a box skill's body"
+fi
+
+mkdir -p "$YMIR_HOME/.agents/skills/nodesc"; printf '# no front matter\n' > "$YMIR_HOME/.agents/skills/nodesc/SKILL.md"
+if bash "$RFIND" --check 2>&1 >/dev/null | grep -q 'nodesc/SKILL.md'; then
+  ok "skill-find --check names an unfindable skill"
+else
+  bad "skill-find --check did not name a skill with no description"
+fi
+
+# the root contract carries the one sentence, and the check reads the same words
+if grep -qF 'load the \`ymir\` skill and follow its index' "$ROOT/bin/agents/seat-identity.sh" \
+   && grep -qF 'load the `ymir` skill and follow its index' "$ROOT/bin/seat/seat-surface.sh"; then
+  ok "the seat render sends every craft to the ymir skill, and seat-surface --check looks for it"
+else
+  bad "the render sentence and the seat-surface check disagree"
 fi
 
 printf '\n%s\n' "----------------------------------------"

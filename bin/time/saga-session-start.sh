@@ -269,7 +269,15 @@ if [ -x "$SCRIPT_DIR/../agents/skill-index.sh" ]; then
   YMIR_HOME="${YMIR_HOME:-}" "$SCRIPT_DIR/../agents/skill-index.sh" >/dev/null 2>&1 || true
   SKILL_IDX="$(YMIR_HOME="${YMIR_HOME:-}" "$SCRIPT_DIR/../agents/skill-index.sh" --print 2>/dev/null | head -1)"
   SKILL_TOT="$(grep -m1 '^total:' "$SKILL_IDX" 2>/dev/null | sed 's/^total:[[:space:]]*//')"
-  printf 'index: %s (%s skills across 4 shelves)\n' "$SKILL_IDX" "${SKILL_TOT:-?}"
+  printf 'index: %s (%s skills across 5 shelves)\n' "$SKILL_IDX" "${SKILL_TOT:-?}"
+  # plan 248 P3b: the ONE root skill `ymir` and its unscanned store are rebuilt here too
+  # (idempotent by content — an unchanged index and unchanged links write nothing).
+  if "$SCRIPT_DIR/../agents/skill-index.sh" --root >/dev/null 2>&1; then
+    printf 'root skill: %s (the one Ymir skill every harness lists; its body is the index)\n' \
+      "$("$SCRIPT_DIR/../agents/skill-index.sh" --root-path 2>/dev/null)"
+  else
+    printf 'root skill: stale — bin/agents/skill-index.sh --root-check names why\n'
+  fi
   printf 'read the index, or ask: bin/agents/skill-find.sh "<words>" | --where <name> | --list\n'
   printf 'a stale index fails loudly: bin/agents/skill-index.sh --check\n'
 else
