@@ -112,6 +112,7 @@ lease_field() {  # <field>
 arm_pid()     { lease_field pid; }
 arm_session() { lease_field session; }
 arm_state()   { lease_field state; }
+arm_role()    { local r; r="$(lease_field role)"; [ -n "$r" ] || r=unknown; printf '%s' "$r"; }
 
 # ── who is asking ──────────────────────────────────────────────────────────────────────────────
 seat_primary() {
@@ -156,7 +157,7 @@ cmd_who() {
   lp="$(lock_path)"
   pid="$(lock_owner_pid || true)"; pst="$(lock_starttime || true)"
   live=no; [ -n "$pid" ] && pid_alive_since "$pid" "$pst" && live=yes
-  lpid="$(arm_pid || true)"; lsession="$(arm_session || true)"; lstate="$(arm_state || true)"
+  lpid="$(arm_pid || true)"; lsession="$(arm_session || true)"; lstate="$(arm_state || true)"; lrole="$(arm_role || true)"
   agree=unknown
   case "${lsession:-}" in
     ""|none|null) agree="unknown (the arm names no session)" ;;
@@ -166,8 +167,8 @@ cmd_who() {
       fi ;;
   esac
   me="$(self_agent)"
-  printf 'lock[7]{lock,owner_pid,live,arm_pid,arm_session,agree,queue}:\n  "%s","%s","%s","%s","%s","%s","%s/.wake-queue"\n' \
-    "$lp" "${pid:-none}" "$live" "${lpid:-none}" "${lsession:-none}" "$agree" "${lstate:-$STATE}"
+  printf 'lock[8]{lock,owner_pid,live,arm_pid,arm_role,arm_session,agree,queue}:\n  "%s","%s","%s","%s","%s","%s","%s","%s/.wake-queue"\n' \
+    "$lp" "${pid:-none}" "$live" "${lpid:-none}" "$lrole" "${lsession:-none}" "$agree" "${lstate:-$STATE}"
   printf 'me[1]{agent,descends_from_owner}:\n  "%s","%s"\n' "${me:-unknown}" \
     "$(if [ -n "$pid" ] && is_descendant_of "$pid" "$$"; then printf yes; else printf no; fi)"
   case "$agree" in

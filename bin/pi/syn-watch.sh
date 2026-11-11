@@ -30,7 +30,8 @@
 #   .watch.heartbeat    epoch seconds, touched every cycle (the liveness door)
 #   .supervision-armed  the armed marker the turn-end guard reads (inert without it)
 #   .arm.lease          pid=<pid> starttime=<st> gen=<n> mode=<systemd|daemon>
-#                       session=<pid|none> heartbeat=<epoch> state=<dir>
+#                       role=<counsellor|rodd|claude|opencode|…> session=<pid|none>
+#                       heartbeat=<epoch> state=<dir>
 #   .arm.event          the raised-but-undelivered actionable line (one line)
 #   .arm.wake           append-only journal of every line this arm has raised
 #

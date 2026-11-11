@@ -18,7 +18,7 @@ The state, all under the resolved state dir (Rule 04: the home, never the tree):
 
     .watch.heartbeat    epoch seconds, touched every cycle (the liveness door)
     .supervision-armed  the armed marker the turn-end guard reads
-    .arm.lease          pid=… starttime=… gen=… mode=… session=… heartbeat=… state=…
+    .arm.lease          pid=… starttime=… gen=… mode=… role=… session=… heartbeat=… state=…
     .arm.event          the raised-but-undelivered line (the delivery slot)
     .arm.wake           append-only journal of every line this arm has raised
     .arm.gen            the recovery-generation counter
@@ -42,6 +42,7 @@ from typing import Callable, Mapping, Sequence
 
 from . import paths as paths_mod
 from . import proc
+from .state import lock as lock_mod
 
 VERSION = "1.0.0"
 
@@ -56,6 +57,12 @@ STALE = "stale"
 DOWN = "down"
 
 WATCH_DOOR = ("bin", "pi", "syn-watch.sh")
+
+# The lease's `role=` names the holder's declared duty set (plan 254), beside the
+# service shape `mode=`. A Pi seat holds as `counsellor`; Rödd's helm declares
+# `rodd`; the other harnesses keep their own comm name. `unknown` means no holder
+# declared and no harness could be read — never a guess.
+ROLE_BY_COMM = {"pi": "counsellor"}
 
 # ── the cadence law ─────────────────────────────────────────────────────────
 # A condition that has not changed is not news. The queue signal carries its own
@@ -91,6 +98,10 @@ class ArmPaths:
     @property
     def lease(self) -> Path:
         return self.state / ".arm.lease"
+
+    @property
+    def role(self) -> Path:
+        return self.state / ".arm.role"
 
     @property
     def event(self) -> Path:
@@ -185,6 +196,53 @@ def read_lease(path: Path) -> dict[str, str]:
     return values
 
 
+def _session_comm(pid: str) -> str:
+    """The harness comm of a session pid, or "" — /proc/<pid>/comm is the truth."""
+    try:
+        return Path(f"/proc/{pid}/comm").read_text(encoding="utf-8", errors="replace").strip()
+    except OSError:
+        return ""
+
+
+def _sidecar_role(path: Path, session: str) -> str:
+    """The declared role from the arm client's sidecar, only for THIS session."""
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace").strip()
+    except OSError:
+        return ""
+    fields = dict(token.partition("=")[::2] for token in text.split() if "=" in token)
+    if fields.get("session") == session:
+        return fields.get("role", "")
+    return ""
+
+
+def resolve_role(
+    paths: ArmPaths,
+    env: Mapping[str, str],
+    *,
+    session: str = "",
+) -> str:
+    """The lease's `role=` — the holder's declared duty set, never guessed.
+
+    Order: `BROKK_ARM_ROLE` (the daemon's own env, inline mode) → the arm
+    client's sidecar (the service path) → the session's harness comm. No holder,
+    no declaration and no readable harness is `unknown`.
+    """
+    if not session or session == "none" or not session.isdigit():
+        return "unknown"
+    declared = (env.get("BROKK_ARM_ROLE") or "").strip()
+    if not declared:
+        declared = _sidecar_role(paths.role, session)
+    if declared:
+        return declared
+    comm = _session_comm(session)
+    if comm in ROLE_BY_COMM:
+        return ROLE_BY_COMM[comm]
+    if comm in lock_mod.HARNESS_COMMS:
+        return comm
+    return "unknown"
+
+
 def write_lease(
     paths: ArmPaths,
     *,
@@ -192,6 +250,7 @@ def write_lease(
     mode: str,
     session: str,
     generation: int,
+    role: str = "unknown",
     now: float | None = None,
     stat_reader: Callable[[int], str] | None = None,
 ) -> bool:
@@ -199,7 +258,7 @@ def write_lease(
     starttime = proc.proc_starttime(pid, stat_reader=stat_reader or proc._proc_stat) or "0"
     stamp = int(now if now is not None else time.time())
     body = (
-        f"pid={pid} starttime={starttime} gen={generation} mode={mode} "
+        f"pid={pid} starttime={starttime} gen={generation} mode={mode} role={role} "
         f"session={session} heartbeat={stamp} state={paths.state}\n"
     )
     paths.state.mkdir(parents=True, exist_ok=True)
@@ -471,10 +530,18 @@ def cycle(
         except OSError:
             pass
     session = session_owner(paths, env=env, runner=runner, stat_reader=stat_reader)
+    role = resolve_role(paths, env, session=session)
     lease = read_lease(paths.lease)
     generation = int(lease["gen"]) if lease.get("gen", "").isdigit() else 0
     write_lease(
-        paths, pid=mine, mode=mode, session=session, generation=generation, now=now, stat_reader=stat_reader
+        paths,
+        pid=mine,
+        mode=mode,
+        role=role,
+        session=session,
+        generation=generation,
+        now=now,
+        stat_reader=stat_reader,
     )
     sweep_handoff(paths, env=env, runner=runner)
     line = raise_line(paths)
@@ -561,16 +628,19 @@ def status_row(
     lease = read_lease(paths.lease)
     if alive:
         mode = lease.get("mode", "unknown")
+        role = lease.get("role", "unknown")
         pid = lease.get("pid", "")
         session = lease.get("session", "none")
     else:
         mode = "none"
+        role = "unknown"
         pid = ""
         session = session_owner(paths, env=env, runner=runner, stat_reader=stat_reader)
     armed = "yes" if paths.armed.exists() else "no"
     cells = [
         state,
         mode,
+        role,
         unit_state(paths, runner=runner),
         pid or "none",
         str(heartbeat_age(paths, now=now)),
@@ -594,7 +664,7 @@ def status_lines(
     state = status_state(paths, stat_reader=stat_reader, now=now)
     healthy = state in (UP, IDLE)
     body = (
-        "syn-watch[1]{state,mode,unit,pid,heartbeat_age,stale_seconds,session,armed,state_dir}:\n"
+        "syn-watch[1]{state,mode,role,unit,pid,heartbeat_age,stale_seconds,session,armed,state_dir}:\n"
         + status_row(paths, env=env, runner=runner, stat_reader=stat_reader, now=now)
     )
     return body, 0 if healthy else 1
@@ -613,6 +683,7 @@ def status_detail(
     lease = read_lease(paths.lease)
     line = (
         f"arm={state} mode={lease.get('mode', 'unknown') if alive else 'none'} "
+        f"role={lease.get('role', 'unknown') if alive else 'unknown'} "
         f"unit={unit_state(paths, runner=runner)} pid={lease.get('pid', 'none') if alive else 'none'} "
         f"heartbeat={heartbeat_age(paths, now=now)}s "
         f"session={session_owner(paths, env=env, runner=runner, stat_reader=stat_reader)}"
@@ -770,7 +841,15 @@ def run_daemon(
     generation = next_generation(paths)
     install = signal_installer or _install_traps
     install(lambda: release_lease(paths, pid=mine))
-    if not write_lease(paths, pid=mine, mode=mode, session="none", generation=generation, stat_reader=stat_reader):
+    if not write_lease(
+        paths,
+        pid=mine,
+        mode=mode,
+        role=resolve_role(paths, env, session="none"),
+        session="none",
+        generation=generation,
+        stat_reader=stat_reader,
+    ):
         say_err(f"cannot write lease {paths.lease}")
         return 1
     for marker in (paths.armed, paths.heartbeat):
