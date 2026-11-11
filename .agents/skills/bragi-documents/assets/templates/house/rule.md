@@ -23,3 +23,9 @@ Written {date} at {whose word}:
 ## References
 
 - {The rules it rests on or amends, and the fix note that shipped it.}
+
+## CHANGE LOG
+
+<!-- Append-only (RULES/06): add a dated line for every change; never rewrite an old one. -->
+
+- **YYYY-MM-DD** — Written.

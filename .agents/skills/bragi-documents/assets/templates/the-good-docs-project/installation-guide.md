@@ -190,3 +190,9 @@ Communicating with the product engineers and programmers is essential to keep th
 ---
 
 > Explore other templates from [The Good Docs Project](https://thegooddocsproject.dev/). Use our [feedback form](https://thegooddocsproject.dev/feedback/?template=Installation%20guide) to give feedback on this template.
+
+## CHANGE LOG
+
+<!-- Append-only (RULES/06): add a dated line for every change; never rewrite an old one. -->
+
+- **YYYY-MM-DD** — Written.

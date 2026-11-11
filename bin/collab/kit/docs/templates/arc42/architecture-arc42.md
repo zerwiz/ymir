@@ -199,3 +199,9 @@ Mapping of Building Blocks to Infrastructure
 |--------------|--------------------|
 | *\<Term-1\>* | *\<definition-1\>* |
 | *\<Term-2\>* | *\<definition-2\>* |
+
+## CHANGE LOG
+
+<!-- Append-only (RULES/06): add a dated line for every change; never rewrite an old one. -->
+
+- **YYYY-MM-DD** — Written.

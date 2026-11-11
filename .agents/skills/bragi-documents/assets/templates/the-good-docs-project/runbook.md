@@ -137,3 +137,9 @@ Follow the decision tree to determine steps for escalation:
 - Refer to "Recovering sensitive information" section in [Recovery process guide](https://example.com/article2.html) to {Recovery Process}.
 
 {Explore other templates from [The Good Docs Project](https://gitlab.com/tgdp/templates). Use our [feedback form](https://thegooddocsproject.dev/feedback/) to give feedback on this template.}
+
+## CHANGE LOG
+
+<!-- Append-only (RULES/06): add a dated line for every change; never rewrite an old one. -->
+
+- **YYYY-MM-DD** — Written.

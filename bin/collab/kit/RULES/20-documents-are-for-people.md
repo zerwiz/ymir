@@ -35,3 +35,7 @@ kept, and the change log says so.
 - `docs/headers.md` — the header every document opens with
 - `RULES/19-plan-validate-execute.md` — plans and tickets
 - Ymir `RULES/52-documents-are-for-people.md` — the house law this rule carries
+
+## CHANGE LOG
+
+- **2026-11-11** — Written at the Allfather's word: documents are for people — tables, Mermaid and callouts, never TOON.

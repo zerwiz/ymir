@@ -21,3 +21,9 @@ Chosen option: "{title of option 1}", because {justification. e.g., only option,
 * Good, because {positive consequence, e.g., improvement of one or more desired qualities, …}
 * Bad, because {negative consequence, e.g., compromising one or more desired qualities, …}
 * … <!-- numbers of consequences can vary -->
+
+## CHANGE LOG
+
+<!-- Append-only (RULES/06): add a dated line for every change; never rewrite an old one. -->
+
+- **YYYY-MM-DD** — Written.

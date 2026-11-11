@@ -88,3 +88,7 @@ The first screen of every document tells the reader four things:
 - The C4 model with Mermaid: <https://dev.to/surgbc/using-github-and-mermaidjs-to-document-software-architecture-using-c4-model-57fn>
 - Diagrams as code, and when to use which tool: <https://dev.to/levi_liu/diagrams-as-code-in-2026-mermaid-plantuml-d2-excalidraw-when-to-use-what-4mo9>
 - Federal plain language guidelines (sentence length, active voice, headings): <https://webarchive.library.unt.edu/web/20120915090932/http:/www.plainlanguage.gov/howto/guidelines/FederalPLGuidelines/TOC.cfm>
+
+## CHANGE LOG
+
+- **2026-11-11** — Written at the Allfather's word: documents are for people — tables, Mermaid and callouts, never TOON.

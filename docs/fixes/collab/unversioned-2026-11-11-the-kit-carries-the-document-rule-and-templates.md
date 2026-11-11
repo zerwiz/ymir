@@ -29,3 +29,7 @@ the kit"*, and for the same in the Bragi skill.
 - `bin/collab/kit/RULES/20-documents-are-for-people.md` · `bin/collab/kit/docs/templates/**`
 - `bin/collab/kit/README.md` · `bin/collab/kit/docs/headers.md`
 - `bin/collab/standardise.sh` · `bin/collab/tests/test_collab.sh`
+
+## CHANGE LOG
+
+- **2026-11-11** — Written at the Allfather's word: documents are for people — tables, Mermaid and callouts, never TOON.

@@ -37,3 +37,7 @@ Until it exists, the reviewer refuses it.
 - `RULES/52-documents-are-for-people.md` · `RULES/38-the-answer.md` · `RULES/README.md` · `AGENTS.md`
 - `.agents/skills/bragi-documents/SKILL.md` · `.agents/skills/bragi-documents/assets/templates/**`
 - `.agents/skills/galdr-ymirsystem/assets/principles.md`
+
+## CHANGE LOG
+
+- **2026-11-11** — Written at the Allfather's word: documents are for people — tables, Mermaid and callouts, never TOON.

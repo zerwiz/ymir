@@ -123,3 +123,7 @@ is **format only**: every fact, number and link is kept, and the document's chan
 3. Every table has an introducing sentence and three or more columns' worth of facts per row.
 4. Every diagram renders: paste it into <https://mermaid.live> or view it on GitHub.
 5. Read the first screen aloud. If it does not sound like a person talking, rewrite it.
+
+## CHANGE LOG
+
+- **2026-11-11** — Written at the Allfather's word: documents are for people — tables, Mermaid and callouts, never TOON.
