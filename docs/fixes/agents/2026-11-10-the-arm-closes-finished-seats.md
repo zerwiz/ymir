@@ -68,7 +68,7 @@ installed earlier.
   reclaim. Dirty and unpushed trees are untouched, as before.
 - **`valknut-load.sh`** never records a linked worktree as a root, and prunes any that
   an older seat recorded (`git rev-parse --git-common-dir` differs from `--git-dir`).
-- **`.agents/migrations/0018-a-worktree-is-not-a-root.sh`** heals homes installed
+- **`.agents/migrations/0019-a-worktree-is-not-a-root.sh`** heals homes installed
   earlier: it prunes linked-worktree paths from `~/.pi/agent/extensions/.ymir-root`
   (keeping `<pointer>.pre-0018` as a backup) and switches every affected worktree to the
   sparse-checkout exclusion.
@@ -92,7 +92,7 @@ installed earlier.
 - `bin/pi/syn-watch-arm.sh`
 - `bin/time/saga-session-start.sh`
 - `bin/engine/ymir-install.sh`
-- `.agents/migrations/0018-a-worktree-is-not-a-root.sh`
+- `.agents/migrations/0019-a-worktree-is-not-a-root.sh`
 
 ### Verified
 
@@ -160,3 +160,43 @@ Verified in the same ward (`bin/seat/tests/test_seat_reap.sh`, 53 cases): the wa
 written once and a second call is a no-op; an adopted record is corrected, its status says
 `working: adopted`, and the arm is woken exactly once; the settle is one number, in
 `seat-prove.sh`, and the runtime asset names it.
+
+### Appended — a worktree is not a ROOT, part two (found while seating this PR's review)
+
+The engine told `bin/seat/pi-launcher.sh` where the extension pins live by passing
+`roots.root`. A seat whose `BROKK_HOME` is a Yggdrasil worktree — the ordinary shape for an
+errand that spawns another — has no `.pi/extensions` of its own BY DESIGN (the
+sparse-checkout exclusion this same change introduces), so the generator refused every
+such seat with *"holds no .pi/extensions tree"*, and this PR's own review judge could not
+be seated until it was fixed.
+
+`src/ymir_runtime/seat.py` now asks git which tree the checkout belongs to
+(`git rev-parse --path-format=absolute --git-common-dir`) when the named root carries no
+extension tree, and names the MAIN tree's pins. Verified by seating the review judge:
+`review-spawn … target=w4J:p1 … "seated"`.
+
+### Appended — correction (2026-11-11): the migration is 0019, and the engine road was still broken
+
+Two corrections to the sections above. Per Rule 06 they are appended, never edited into the
+landed lines — the sentence that says `0018-a-worktree-is-not-a-root.sh` stays exactly as it
+was written, and this is what replaces it.
+
+**The id.** `origin/main` already carries `.agents/migrations/0018-the-home-pulls-first.sh`,
+so two migrations at one number is a silent no-op for whoever applies second. The file this
+errand adds is **`.agents/migrations/0019-a-worktree-is-not-a-root.sh`**, and its backup is
+`<pointer>.pre-0019`. Every reader that looks for the number (the fix note's own references
+above, `bin/engine/ymir-install.sh`, `bin/agents/groa-update.sh`, `bin/agents/eir-doctor.sh`,
+`bin/seat/seat-reap.sh`) has been pointed at 0019 in the change that renumbers it.
+
+**The second road.** The first section says the extension tree is excluded "by the
+sparse-checkout exclusion instead of `rm -rf` + `--assume-unchanged`" — and that was true of
+`bin/agents/einherjar-spawn.sh` only. `src/ymir_runtime/worktree.py` — the ENGINE road, the
+one that seats most errands — still did `shutil.rmtree(...)` followed by
+`git update-index --assume-unchanged .pi/extensions`, the per-FILE bit that does nothing for
+a directory. Measured by Forseti (PR #639 follow-up, 2026-11-11) on the judge's own seat at
+`e1703c22`: every engine-seated errand was born with all 45 extension files reported
+DELETED. The engine now runs the same two commands in the same order (clear the stale bit,
+then `sparse-checkout set --no-cone '/*' '!/.pi/extensions/'`), refuses to return a worktree
+that still carries the tree, and
+`src/ymir_runtime/tests/test_worktree.py` asserts `git status --porcelain` is EMPTY rather
+than only that the directory is gone — so the ward can see the fault it was blind to.

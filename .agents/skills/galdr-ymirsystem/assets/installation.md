@@ -1411,7 +1411,7 @@ workspace, per harness:
   install/update heals it"`, and mends NOTHING. A check that repaired the tree would
   hide the state it exists to report.
 
-The structural half is the migration: `.agents/migrations/0018-a-worktree-is-not-a-root.sh`
+The structural half is the migration: `.agents/migrations/0019-a-worktree-is-not-a-root.sh`
 prunes a `.yggdrasil/` / linked-worktree path out of
 `~/.pi/agent/extensions/.ymir-root` (keeping `<pointer>.pre-0018`) and switches every
 affected Eindri worktree from the broken `rm -rf .pi/extensions` + `--assume-unchanged`

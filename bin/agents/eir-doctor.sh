@@ -137,7 +137,7 @@ f_seatpaths() { "$SCRIPT_DIR/../engine/prereq-ensure.sh" --persist-path >/dev/nu
 #     45 extension files as deleted. (c) the sweep that closes finished seats must be
 #     seated on every harness this host actually runs.
 # One test for a linked worktree: --git-common-dir and --git-dir resolve to different
-# paths (the same expression lives in bin/seat/valknut-load.sh and migration 0018).
+# paths (the same expression lives in bin/seat/valknut-load.sh and migration 0019).
 _is_linked_worktree() {  # <path>
   local p=${1:-.} common own
   common="$(git -C "$p" rev-parse --git-common-dir 2>/dev/null)" || return 1

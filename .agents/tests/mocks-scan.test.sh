@@ -53,6 +53,24 @@ else
   ok "a real stub is caught (and the gate exits non-zero)"
 fi
 
+# ── a DECLARED FIXTURE is excused, and a stub beside it is not ───────────────────────────────────
+    # bin/seat/tests/test_seat_reap.sh stands a `herdr` in a temp dir so the seat CLOSER can be
+    # proved without touching a live workspace. The scan names that one file; a `stub` in the
+    # directory NEXT to it must still be caught, or the excuse has become a hole.
+mkdir -p "$TMP/fixture/bin/seat/tests" "$TMP/fixture/bin/door"
+printf 'export STUB_DIR="$T/stub"; # the fixture herdr answers from here\n' > "$TMP/fixture/bin/seat/tests/test_seat_reap.sh"
+if bash "$SCAN" "$TMP/fixture" >/dev/null 2>&1; then
+  ok "a declared fixture (bin/seat/tests/test_seat_reap.sh) is excused"
+else
+  bad "the declared fixture was reported: $(bash "$SCAN" "$TMP/fixture" 2>&1 | head -n1)"
+fi
+printf 'handler = "stub"\n' > "$TMP/fixture/bin/door/neighbour.sh"
+if bash "$SCAN" "$TMP/fixture" >/dev/null 2>&1; then
+  bad "the fixture excuse leaked: a stub beside it was not caught"
+else
+  ok "the fixture excuse stays narrow: a stub in the same tree is still caught"
+fi
+
 # ── the excuses are narrow ──────────────────────────────────────────────────────────────────────
 printf 'x = "todo"\n' > "$TMP/narrow/bin/door/lone.py"
 printf 'def todo(action="list"):\n    pass\n' > "$TMP/narrow/bin/seat/ymir-mcp-extra.py"

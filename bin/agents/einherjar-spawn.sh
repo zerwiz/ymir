@@ -1034,6 +1034,12 @@ launch_herdr() {  # -> prints pane id
   # outlived their errands because nothing knew which workspace was whose).
   mkdir -p "$STATE" 2>/dev/null || true
   printf '%s' "$ws" >"$STATE/.$ID.ws" 2>/dev/null || true
+  # The LAUNCH STAMP: the workspace now exists and the first status does not until the
+  # seat is proved (up to the whole settle wait). A sweep that closed a recordless
+  # workspace on sight would kill a seat that is still booting, so the age of this
+  # stamp is the settling grace's clock (bin/seat/seat-reap.sh, and the house law
+  # tests/test_eindri_liveness_grace.sh).
+  date +%s >"$STATE/.$ID.launched" 2>/dev/null || true
   herdr pane send-text "$pane" "$PANE_CMD" 2>/dev/null || true
   herdr pane send-keys "$pane" Enter 2>/dev/null || true
   printf '%s\n' "$pane"
@@ -1079,7 +1085,7 @@ SEAT_PROVEN=no
 SEAT_PANE=$RUN_TARGET
 SEAT_STATE=unknown
 SEAT_NOTE=""
-# THE WAIT IS THE SEAT-PROVE DOOR'S OWN DEFAULT, and it is now 120 seconds (the
+# THE WAIT IS THE SEAT-PROVE DOOR'S OWN DEFAULT, and it is now 60 seconds (the
 # Allfather, 2026-11-10: "make the seat-prove wait LONGER" — sixty seconds, his own
 # correction the same evening). Measured: a pi boot on a loaded rail regularly takes
 # longer than 25 s, so the door declared `no agent`

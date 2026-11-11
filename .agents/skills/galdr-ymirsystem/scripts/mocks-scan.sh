@@ -23,6 +23,11 @@
 #     `skill`). A NAME, not a stub.
 #   · the collab kit's `advantage-audit.sh` — its regex and its verdict ARE the vocabulary; the file's whole
 #     job is to detect those words in a document, so naming them is the behaviour, not a stub.
+#   · ONE declared FIXTURE: `bin/seat/tests/test_seat_reap.sh` stands a `herdr` on PATH
+#     (a temp file the ward writes, never shipped behaviour) so the seat CLOSER can be
+#     proved without closing — or refusing to close — a live workspace that belongs to
+#     somebody else's errand. Declared here rather than hidden in the ward: a fixture the
+#     scan knows about is a fixture, one it does not is a stub.
 #   · a path ending in `todo.md` or `todo-<name>.md` — the operator's own note file
 #     (`hodd/life/personal/me/todo.md`) and the lists the voice keeps beside it
 #     (`todo-voice.md`). A FILENAME, not a stub; `bin/gates/guards/public-guard.sh`
@@ -43,7 +48,8 @@ hits="$(grep -rnE '\b(mock|stub|placeholder|todo)\b' "$ROOT/bin" 2>/dev/null \
   | grep -vE 'consumer:.*todo:|todo:.*consumer:' \
   | grep -vE '^[^:]*bin/(mcp|seat)/ymir-mcp\.py:[0-9]+:' \
   | grep -viE 'todo[-a-z]*\.md' \
-  | grep -vE '^[^:]*bin/collab/kit/scripts/advantage-audit\.sh:[0-9]+:' || true)"
+  | grep -vE '^[^:]*bin/collab/kit/scripts/advantage-audit\.sh:[0-9]+:' \
+  | grep -vE '^[^:]*bin/seat/tests/test_seat_reap\.sh:[0-9]+:' || true)"
 
 
 if [ -z "$hits" ]; then

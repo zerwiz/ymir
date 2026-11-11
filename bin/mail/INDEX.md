@@ -21,7 +21,7 @@ The tree replaced a single register on 2026-11-06 (plan 211) so that a change in
 folder rewrites one file instead of colliding on every branch.
 
 bin[15]{file,does,kind,verdict,disposition,callers,lines}:
-  "README.md","Gná — the one mail desk (production)","data","tested","keep",49,-
+  "README.md","Gná — the one mail desk (production)","data","tested","keep",50,-
   "addresses.sh","addresses.sh — THE register of the mail addresses the house uses, and whether mail can reach them.","tool","wired","keep",5,61
   "connect.sh","connect.sh — THE connect door: one button to a signed-in mailbox, and the honest line per account.","tool","wired","keep",3,71
   "gna_addresses.py","'''Gná's register: the addresses the house USES, and whether mail can reach them.","tool","wired","keep",2,971
@@ -32,7 +32,7 @@ bin[15]{file,does,kind,verdict,disposition,callers,lines}:
   "gna_notify.py","'''gna_notify.py — tell the arm about mail that arrived, once, as it arrives.","tool","wired","keep",1,208
   "gna_store.py","'''Gná's store: one message once, and the account is the boundary.","tool","wired","keep",0,257
   "inbound-test.sh","inbound-test.sh — THE acceptance test for 'people can mail us' (plan 116 §15.3.4).","tool","wired","keep",3,141
-  "install.sh","install.sh — seat Gná's desk on THIS machine.","data","tested","keep",42,82
+  "install.sh","install.sh — seat Gná's desk on THIS machine.","data","tested","keep",43,82
   "ledger.sh","ledger.sh — the one mail record: what went out, what came in, and when.","tool","wired","keep",0,279
   "mail-scan.sh","mail-scan.sh — read-only: the last N hours of a mailbox, as compact JSON.","tool","wired","keep",2,76
   "test_gna.py","'''The proofs plan 116 asks for before the desk is shown to a human.'''","data","wired","keep",3,630
