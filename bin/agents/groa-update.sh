@@ -226,6 +226,17 @@ if [ -x "$SCRIPT_DIR/../desktop/electron-ensure.sh" ]; then
   fi
 fi
 
+# Hnoss's model door is MENDS-FORWARD too: the launcher, the pi MCP entry and the
+# Bifrost door that reaches pi's provider are seated by the ensure door, so an update
+# never leaves a design generation on a stale hand-copy (2026-11-10). Never fatal.
+if [ -x "$SCRIPT_DIR/../pi/hnoss-ensure.sh" ]; then
+  if ho="$("$SCRIPT_DIR/../pi/hnoss-ensure.sh" ensure 2>&1)"; then
+    printf 'hnoss: model door seated — %s\n' "$(printf '%s' "$ho" | grep -m1 '^\[hnoss\]' | sed 's/^\[hnoss\] //' || printf 'launcher + pi MCP entry')"
+  else
+    printf 'hnoss: NOT mended — %s\n' "$(printf '%s' "$ho" | tail -1)"
+  fi
+fi
+
 # Eir checks after every update, so a desktop that cannot open is REPORTED and
 # never silently dead (P8, 2026-09-24). The update is never blocked on a
 # broken surface — the report is the loudness; the Nornir job keeps the watch

@@ -103,3 +103,60 @@ Allfather's registry. Two traps + the truth:
 (best value for `default`), so pi's own config decides. `opencode` is also
 available (mounted as `opencode-cli`) if a different CLI is wanted; never
 seed a named cloud model into `agentModels`.
+
+## THE MODEL DOOR — 2026-11-10 (the addendum that makes generation work)
+
+The Studio and the MCP bridge reach a model by two different roads, and conflating them is
+what hid the fault for months.
+
+**The Studio's own composer** spawns an agent CLI inside the container; `agentId: pi`
+means pi's registry decides, and that was already right (see *the model truth* above).
+
+**The MCP path** (`od_generate_design`) never touches an agent. It composes the design
+system prompt locally and POSTs it to the daemon's `/api/proxy/<provider>/stream`, which
+forwards it to `BYOK_BASE_URL` with `BYOK_API_KEY`. So every model call from an MCP client
+is decided by the launcher's `BYOK_*`, and nothing else.
+
+```
+byok_road[4]{step,where,what}:
+  "1","open-design-mcp","compose the design prompt, POST /api/proxy/openai/stream {baseUrl, apiKey, model, systemPrompt, maxTokens, messages}"
+  "2","od daemon","thin pass-through: forwards to baseUrl with the bearer key, transcodes the SSE back"
+  "3","the door","bin/pi/hnoss-mcp-launch.sh chose it: a models.json rail, or Bifrost for a pi built-in provider"
+  "4","the provider","opencode-go / deepseek-v4.1-flash — and the log says so on every request"
+```
+
+**Three faults, all measured on this seat 2026-11-10:**
+
+1. **A provider built INTO pi has no `models.json` entry.** `opencode-go` is one. The old
+   launcher missed the lookup, fell back to `http://127.0.0.1:8080/v1` (the rail) and
+   paired it with `deepseek-v4.1-flash`. The door now asks Bifrost for such a provider.
+2. **The gateway wants `x-opencode-session`.** Both endpoints answer
+   `400 MissingSessionID` without it, and `open-design-mcp` cannot send a custom header.
+   Bifrost already does — which is why the bridge, not the URL, is the answer.
+3. **The image's Node heap is 192 MB.** A real page (a ~40 kB system prompt plus a
+   streamed document) died with `FATAL ERROR: Ineffective mark-compacts near heap limit`;
+   the client saw only `OD daemon unreachable`. Worse, `bin/pi/open-design.sh` ran Compose
+   from whatever directory it was called in, and Compose v2 reads `.env` from the caller's
+   directory — so `~/opendesign/deploy/.env` was ignored entirely. The door now passes
+   `--env-file` and the deployment sets `NODE_OPTIONS=--max-old-space-size=1024`,
+   `OPEN_DESIGN_MEM_LIMIT=1536m`.
+
+**The door's own words** (ask it, never guess):
+
+```
+bin/pi/hnoss-ensure.sh status        # four rows: server · launcher · pi MCP entry · model door
+bin/pi/hnoss-mcp-launch.sh --resolve # the door it WOULD take; no bridge raised, no network
+bin/pi/hnoss-mcp-launch.sh --print   # raise the door, then print it
+bin/bridge/bifrost-bridge.sh --status --port 4613   # the live provider, read from the process
+```
+
+Hnoss's bridge lives on **`:4613`** (`YMIR_HNOSS_BRIDGE_PORT`), deliberately beside the
+shared `:4603` door: the provider is a per-caller fact, and the pid/log files are
+port-scoped so two instances coexist without one `--stop` killing the other.
+
+**Prove a generation is on the model you asked for** — the log names it:
+
+```
+grep 'model=' "$YMIR_HOME/state/model-bridge-4613.log"    # model=deepseek-v4.1-flash provider=opencode-go
+docker logs open-design-open-design-1 | grep 'proxy:openai'  # [proxy:openai] POST 127.0.0.1 model=deepseek-v4.1-flash
+```

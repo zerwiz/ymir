@@ -542,6 +542,21 @@ step_models() {
   fi
 }
 
+# ── 3a2b. Hnoss, the design door ────────────────────────────────────────────
+# The OpenDesign MCP bridge is SEATED here — the shipped launcher, the pi MCP entry and
+# its own Bifrost model door — so a design generation reaches the provider pi itself
+# uses. Before 2026-11-10 that launcher was a hand-file in ~/.local/bin: no install
+# seated it, no update mended it, and it paired the local rail with an online model,
+# so every design generation died silently. A machine with no design studio owes
+# nothing and reports a clean skip.
+step_hnoss() {
+  local hn="$SCRIPT_DIR/../pi/hnoss-ensure.sh"
+  [ -x "$hn" ] || { add hnoss SKIP "no bin/pi/hnoss-ensure.sh"; return 0; }
+  if [ "$CHECK" = 1 ]; then add hnoss OK "would seat the Hnoss model door + pi MCP entry"; return; fi
+  if "$hn" ensure --install >/dev/null 2>&1; then add hnoss OK "model door + pi MCP entry seated"
+  else add hnoss WARN "not seated — run bin/pi/hnoss-ensure.sh ensure --install (it names the refusal)"; fi
+}
+
 # ── 3a3. the local model: engine, the user's model, pi, ymir ────────────────
 # Installation stands a local brain up for THIS hardware (plan 57). It ADOPTS an
 # existing CUDA llama.cpp engine (never rebuilds what stands), chooses the best
@@ -1793,6 +1808,7 @@ run_step step_clients "the client register"
 run_step step_apps "apps"
 run_step step_engines "engines"
 run_step step_models "models"
+run_step step_hnoss "Hnoss, the design door"
 run_step step_local_model "the local model"
 run_step step_hermes "hermes"
 run_step step_profile "the machine's profile"

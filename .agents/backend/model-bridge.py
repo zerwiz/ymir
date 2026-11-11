@@ -21,12 +21,15 @@ Endpoints (OpenAI-compatible):
     POST /v1/chat/completions                -> proxied (JSON or SSE stream)
 
 Usage:
-    python3 model-bridge.py [--port 4603] [--env /path/.env] [--provider NAME]
+    python3 model-bridge.py [--port 4603] [--env /path/.env] [--provider NAME] [--bind HOST]
+    python3 model-bridge.py --providers      # the provider names this bridge can serve
 
 Env:
     YMIR_MODEL_PROVIDER       opencode-go | lmstudio | openai-compatible
     YMIR_MODEL_BASE_URL       override the provider's base URL
     YMIR_MODEL_API_KEY        credential for the selected provider
+    YMIR_MODEL_BIND           listen address (default 127.0.0.1); a containerised
+                              client on another network names the interface it sees
     OPENCODE_GO_API_KEY       credential when provider=opencode-go
     LMSTUDIO_BASE_URL         default http://127.0.0.1:1234/v1
     OPENCODE_GO_BASE_URL      default https://opencode.ai/zen/go/v1
@@ -78,6 +81,7 @@ MODELS = [
 KEY = ""
 BASE_URL = ""
 PROVIDER = "opencode-go"
+BIND = "127.0.0.1"
 
 # The gateway sits behind Cloudflare, which BANS the signature of a scripted
 # client (Python-urllib/3.x) with error 1010: "banned your access based on your
@@ -120,12 +124,18 @@ def resolve_base_url(env: dict, spec: dict) -> str:
     return v or spec["base_url"]
 
 
-def resolve_key(env: dict, spec: dict) -> str:
+def resolve_key(env: dict, spec: dict) -> tuple[str, str]:
+    """(key, where it came from). The second half is REPORTED, never implied: a
+    bridge that says 'key from <env file>' while it really read the environment
+    is a small lie in the one place an operator looks to understand the door."""
     for name in spec["key_env"]:
-        v = env.get(name) or os.environ.get(name)
+        v = env.get(name)
         if v:
-            return v
-    return ""
+            return v, f"{name} in the env file"
+        v = os.environ.get(name)
+        if v:
+            return v, f"{name} in the environment"
+    return "", "no key"
 
 
 def is_https(url: str) -> bool:
@@ -183,6 +193,9 @@ class Handler(BaseHTTPRequestHandler):
             # opencode-go rejects the `opencode-go/` prefix; strip provider prefixes.
             if PROVIDER == "opencode-go" and "/" in mid and mid.split("/", 1)[0] != "openai":
                 req["model"] = mid.split("/", 1)[1]
+            # Name the model on every request: a generation is only PROVEN to have
+            # used a model when the door says which one it forwarded (2026-11-10).
+            print(f"[bridge] model={req['model']} provider={PROVIDER} stream={bool(req.get('stream'))}", flush=True)
             body = json.dumps(req).encode()
             self._proxy(body, req.get("stream", False))
         except Exception as e:
@@ -370,16 +383,24 @@ def main() -> int:
                     str(__import__("pathlib").Path(__file__).resolve().parents[1] / ".env")))
     ap.add_argument("--provider", default=None,
                     help="opencode-go | lmstudio | openai-compatible")
+    ap.add_argument("--bind", default=os.environ.get("YMIR_MODEL_BIND", "127.0.0.1"),
+                    help="listen address (default 127.0.0.1, or YMIR_MODEL_BIND)")
+    ap.add_argument("--providers", action="store_true",
+                    help="print the provider names this bridge can serve, one per line")
     args = ap.parse_args()
     if getattr(args, "self_test", False):
         return _self_test()
+    if args.providers:
+        print("\n".join(PROVIDERS))
+        return 0
 
-    global KEY, BASE_URL, PROVIDER
+    global KEY, BASE_URL, PROVIDER, BIND
+    BIND = args.bind
     env = load_env(args.env)
     PROVIDER = resolve_provider(env, args.provider)
     spec = PROVIDERS[PROVIDER]
     BASE_URL = resolve_base_url(env, spec)
-    KEY = resolve_key(env, spec)
+    KEY, KEY_SOURCE = resolve_key(env, spec)
 
     if spec["requires_key"] and not KEY:
         print(f"[bridge] ERROR: provider '{PROVIDER}' requires a key. Set "
@@ -392,11 +413,11 @@ def main() -> int:
         return 1
 
     host, path = split_url(BASE_URL)
-    keynote = "no key required" if not KEY else f"key from {args.env}"
-    print(f"[bridge] provider '{PROVIDER}' on 127.0.0.1:{args.port}/v1 "
+    keynote = "no key required" if not KEY else f"key from {KEY_SOURCE}"
+    print(f"[bridge] provider '{PROVIDER}' on {BIND}:{args.port}/v1 "
           f"-> {host}{path.rstrip('/')}/chat/completions ({keynote})", flush=True)
 
-    srv = ThreadingHTTPServer(("127.0.0.1", args.port), Handler)
+    srv = ThreadingHTTPServer((BIND, args.port), Handler)
     try:
         srv.serve_forever()
     except KeyboardInterrupt:

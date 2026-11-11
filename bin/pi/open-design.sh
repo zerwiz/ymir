@@ -25,7 +25,15 @@ CONTAINER="${OD_CONTAINER:-open-design}"
 BASE="http://127.0.0.1:${PORT}"
 
 compose() {
-  docker compose -f "${DEPLOY_DIR}/${COMPOSE_FILE}" "$@"
+  # The deployment's own `.env` is passed explicitly: Compose v2 reads `.env` from the
+  # CALLER's directory, so a door run from a repo tree silently applied every default
+  # (measured 2026-11-10: NODE_OPTIONS stayed --max-old-space-size=192 and the daemon
+  # died of heap exhaustion mid-generation while `.env` named a larger heap).
+  if [ -r "${DEPLOY_DIR}/.env" ]; then
+    docker compose --env-file "${DEPLOY_DIR}/.env" -f "${DEPLOY_DIR}/${COMPOSE_FILE}" "$@"
+  else
+    docker compose -f "${DEPLOY_DIR}/${COMPOSE_FILE}" "$@"
+  fi
 }
 
 api() { curl -s -m "${OD_API_TIMEOUT:-10}" "$@"; }
