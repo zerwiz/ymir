@@ -40,6 +40,26 @@ while [ $# -gt 0 ]; do
 done
 
 say() { [ "$QUIET" = 1 ] || printf '%s\n' "$*"; }
+# plan 255 · S3: the close hand's answer is no longer swallowed. A refusal prints
+# one line; a seat kept three sweeps running raises a `check:` line into the wake
+# queue — an actionable line, never a bare count.
+seat_reap_visible() {  # <id>
+  local id=$1 out n
+  [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ] || return 0
+  out="$(BROKK_HOME="$BROKK_HOME" BROKK_STATE_OVERRIDE="$STATE" "$SCRIPT_DIR/../seat/seat-reap.sh" "$id" 2>&1)" || true
+  case "$out" in
+    *refused*|*"no herdr workspace"*|*"needs-decision"*)
+      say "arm: seat close refused for $id — $(printf '%s' "$out" | tail -1 | sed 's/^ *//')"
+      n="$(cat "$STATE/$id.seat-kept" 2>/dev/null || true)"
+      case "$n" in ''|*[!0-9]*) n=0 ;; esac
+      n=$((n+1)); printf '%s' "$n" >"$STATE/$id.seat-kept"
+      if [ "$n" -ge 3 ]; then
+        printf 'check: seat %s kept %s sweeps running — %s\n' "$id" "$n" "$(printf '%s' "$out" | tail -1 | sed 's/^ *//')" >>"$STATE/.wake-queue"
+      fi
+      ;;
+  esac
+  return 0
+}
 ARM="$STATE/$ID.arm"
 DONE_MARK="$STATE/$ID.done"
 INBOX="$DATA/$ID/inbox"
@@ -78,7 +98,7 @@ while :; do
     # seat-closed` only keeps this call from repeating — it is never a retirement
     # trigger (the arm holds until the VERDICT, not until the seat is tidy).
     if [ ! -f "$STATE/$ID.seat-closed" ] && [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ]; then
-      "$SCRIPT_DIR/../seat/seat-reap.sh" "$ID" >/dev/null 2>&1 || true
+      seat_reap_visible "$ID"
     fi
     say "arm: handoff delivered for $ID (review verdict present) — retiring"
     rm -f "$ARM"
@@ -98,7 +118,7 @@ while :; do
     # The worker's own process is gone; if the pane holds only a bare shell, the
     # workspace can go NOW and the handoff needs no pane (it lives in state/).
     if [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ]; then
-      "$SCRIPT_DIR/../seat/seat-reap.sh" "$ID" >/dev/null 2>&1 || true
+      seat_reap_visible "$ID"
     fi
     if [ -x "$SCRIPT_DIR/eindri-dispatch.sh" ]; then
       BROKK_HOME="$BROKK_HOME" BROKK_DATA_OVERRIDE="$DATA" BROKK_STATE_OVERRIDE="$STATE" \
