@@ -1,15 +1,55 @@
 #!/usr/bin/env bash
 # pre-push — the local half of "a push proves the rules" (RULES/46).
-# The BINDING half is CI (ymir-gates.yml → bin/gates/ci-verify.sh): it runs for every
-# pusher, including a fork that never installed a hook. This hook is the convenience.
-# Seated by: git config core.hooksPath .githooks   (install step `gates`)
+#
+# THE BINDING HALF IS CI. `.github/workflows/ymir-gates.yml` runs `bin/gates/ci-verify.sh`
+# → `bin/gates/guards.sh --full` for every pull request and for main itself, so a pusher
+# who never installed a hook (a fork, a fresh clone, a machine where the seat step failed)
+# is judged exactly the same. This hook is the FAST FILTER in front of it: it judges what
+# the push ADDS, concurrently, inside a hard budget, and it never refuses a push for a
+# fault in a file the push did not touch (plan 243 §3, parts B/C/D).
+#
+# One home for this text: the install step (`bin/seat/...`, `bin/engine/ymir-install.sh`)
+# seats it with `git config core.hooksPath .githooks`, and
+# `bin/gates/guards/fixes-guard.sh --install` copies THIS file into .git/hooks/pre-push for
+# a checkout that has no hooksPath. Two hand-written hook bodies was two gates that could
+# disagree; measured 2026-11-11, one of them ran the tree wards only.
+#
+#   YMIR_PREPUSH_BUDGET   seconds the wards may spend (default 60)
+#   YMIR_SKIP_FIXES_GUARD=1  the loud override for the fix-note requirement
 set -u
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root" || exit 0
-[ -x bin/gates/guards.sh ] || { echo "pre-push: no guards door; skipping (CI still checks)"; exit 0; }
-bash bin/gates/guards.sh || {
+
+if [ ! -r bin/gates/guards.sh ]; then
+  echo "pre-push: no guards door in this checkout; skipping (CI still judges the PR)" >&2
+  exit 0
+fi
+
+BUDGET="${YMIR_PREPUSH_BUDGET:-60}"
+refs="$(mktemp)"; trap 'rm -f "$refs"' EXIT
+cat >"$refs"
+
+# 1. the tree wards — diff-scoped, concurrent, budgeted. A ward that cannot scope is CI's.
+YMIR_PREPUSH_BUDGET="$BUDGET" bash bin/gates/guards.sh || {
   echo
   echo "pre-push: a ward refused this push — see the FAIL row above."
   echo "help: run the failing ward directly; it names the file and the line."
+  echo "help: a finding in a file this push did not touch prints INHERITED and never blocks."
   exit 1
 }
+
+# 2. the four that judge the PUSH rather than the tree. Each is under 0.1 s (measured
+# 2026-11-11), so they are not budgeted — a gate that can be timed out is a gate a slow
+# machine can walk through. branch-guard is first and unconditional: Rule 08 is not a
+# matter of taste.
+bash bin/gates/guards/branch-guard.sh <"$refs" || exit 1
+bash bin/gates/guards/fixes-guard.sh <"$refs" || exit 1
+
+if git rev-parse -q --verify origin/main >/dev/null 2>&1; then
+  # Rule 11 — a tracked file is MOVED, never deleted.
+  bash bin/no-delete-guard.sh --base origin/main || exit 1
+  # Rule 04/39 — a commit's author line is DATA IN THIS REPOSITORY, and this repository is public.
+  bash bin/gates/guards/identity-guard.sh --base origin/main || exit 1
+fi
+
+bash bin/gates/branch-current.sh check || exit 1
