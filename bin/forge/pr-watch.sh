@@ -94,7 +94,10 @@ if status:
 delivered = True
 if out and not dry:
     body = "\n".join("• " + l for l in out)
-    r = subprocess.run([os.path.join(root,'bin/notify/send.sh'), '--to', 'telegram', body], check=False)
+    first = body.split('\n')[0][:180]
+    r = subprocess.run([os.path.join(root,'bin/notify/send.sh'),
+                        '--source','engine','--severity','MEDIUM','--message',first,
+                        '--key','pr-watch','--target','pr:%s' % prs[0]['number']], check=False)
     delivered = (r.returncode == 0)
 # RULES/49: a write is not a delivery. A line is recorded as announced only when the send RETURNED 0;
 # otherwise it is announced again next pass, because a message that never arrived must not be remembered
