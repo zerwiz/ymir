@@ -25,9 +25,9 @@ bin[50]{file,does,kind,verdict,disposition,callers,lines}:
   "16-a-review-is-a-file.md","16 — A review is a file in the repository","data","wired","keep",0,32
   "17-one-agent-one-worktree.md","17 — One agent, one worktree","data","wired","keep",0,36
   "18-an-area-is-held-or-waived.md","18 — An area is held, waived or never (an area is never silently nobody's)","data","wired","keep",0,34
-  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",49,-
-  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",49,-
-  "README.md","areas/ — what this repository answers for","data","tested","keep",49,-
+  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",50,-
+  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",50,-
+  "README.md","areas/ — what this repository answers for","data","tested","keep",50,-
   "TEMPLATE.yaml","areas/TEMPLATE.yaml — what one area's declaration looks like.","data","wired","keep",2,44
   "a2a-guard.sh","a2a-guard — a card in the constellation must stay true, and a changed one must still be valid.","tool","wired","keep",1,38
   "a2a.md","A2A — the repository's card in the constellation","data","wired","keep",0,53
