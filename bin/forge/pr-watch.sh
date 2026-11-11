@@ -64,7 +64,7 @@ NOW=$(date +%s)
 prs=$(gh pr list --repo "$REPO" --state open --json number,title,author,mergeStateStatus,createdAt,headRefName 2>/dev/null) || { printf 'pr-watch: gh pr list failed for %s\n' "$REPO" >&2; exit 1; }
 [ -n "$prs" ] || prs='[]'
 python3 - "$SEEN" "$NOW" "$HOURS" "$DRY" "$STATUS" "$REPO" "$ROOT" <<PY
-import json,sys,os,subprocess,datetime
+import json,sys,os,subprocess,datetime,hashlib
 seen_path,now,hours,dry,status,repo,root = sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4]=='1', sys.argv[5]=='1', sys.argv[6], sys.argv[7]
 prs = json.loads('''$prs''')
 seen = {}
@@ -97,7 +97,7 @@ if out and not dry:
     first = body.split('\n')[0][:180]
     r = subprocess.run([os.path.join(root,'bin/notify/send.sh'),
                         '--source','engine','--severity','MEDIUM','--message',first,
-                        '--key','pr-watch','--target','pr:%s' % prs[0]['number']], check=False)
+                        '--key','pr-watch-'+hashlib.sha1(body.encode()).hexdigest()[:12],'--target','pr:%s' % prs[0]['number']], check=False)
     delivered = (r.returncode == 0)
 # RULES/49: a write is not a delivery. A line is recorded as announced only when the send RETURNED 0;
 # otherwise it is announced again next pass, because a message that never arrived must not be remembered
