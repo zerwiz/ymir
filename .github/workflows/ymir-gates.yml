@@ -1,62 +1,141 @@
-name: The gates
+name: The gate
 
+# CI IS THE GATE (plan 243 part E, 2026-11-11).
+#
 # One room, two doors. GitHub Actions and Forgejo Actions are two hosts for the SAME
-# command, bin/gates/ci-verify.sh, so the checks have exactly one home and cannot drift between
-# hosts. If a host needs a different runner label, that is one line in one file and no
+# command, bin/gates/ci-verify.sh, so the checks have exactly one home and cannot drift
+# between hosts. If a host needs a different runner label that is one line here and no
 # change to what is proved.
 #
-# THIS IS THE REQUIRED CHECK (plan 243 §3, part E, 2026-11-11). The pre-push hook is the fast
-# filter in front of it: it judges what a push ADDS, inside a 60 s budget, and prints a fault it
-# did not cause as `inherited`. Nothing may be judged ONLY there — this workflow runs the whole
-# tree, every ward (`bin/gates/ci-verify.sh` → `guards.sh --full`) on every PR and on main, so a
-# pusher who never installed a hook, a fork, and a machine whose seat step failed all meet the
-# same gate. Branch protection should require the `gates` job;
-# `bin/gates/require-check.sh` prints (or with --apply, seats) that setting.
+# WHAT CHANGED AND WHY (measured 2026-11-11, plan 243 §2):
+#   · the job had no stable name, so nobody could make it a REQUIRED status check — and a
+#     gate that is not required is a gate that a red merge walks past. It is `whole-tree`
+#     now, and it is the name to require in branch protection.
+#   · `push:` with no filter ran the full suite on every throwaway branch too. It runs on
+#     main (where it feeds the main-red alarm) and on every pull request (the delivery road).
+#     A branch nobody opened a PR for is not delivered, and was costing 10 minutes a push.
+#   · there was no `concurrency`, so three pushes in ten minutes queued three ten-minute
+#     runs, each proving a tree nobody would merge.
+#   · a red main was announced NOWHERE. `bin/gates/main-red.sh` opens or updates exactly one
+#     issue labelled `main-red` naming the failing ward, its finding and the commit that
+#     broke it — and closes it when main is green again. Issues are opened for MAIN only: a
+#     red pull request is the pull request's own business and shows in its own checks.
+#
+# THE TWO SIBLING PARTS (plan 243 A/B/C/D/F) land in the same plan and are NOT here: the
+# generated files leaving git, the diff-scoped parallel pre-push, and the content-hash ward
+# cache. This file calls ci-verify.sh — one home — so those land once, in that door, and CI
+# inherits them without a second copy of the list.
 on:
-  push:
   pull_request:
+  push:
+    branches: [main]
+
+# The alarm writes an issue. Nothing else needs a write, so nothing else gets one.
+permissions:
+  contents: read
+  issues: write
+
+# A superseded pull request run proves a tree nobody will merge; cancel it. A main run is
+# never cancelled — the last-green commit is what attributes the next red to a commit.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  gates:
+  # THE REQUIRED CHECK. This job name is the contract with branch protection: rename it and
+  # the protection points at a check that no longer exists, which GitHub reads as satisfied.
+  whole-tree:
+    name: whole-tree
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      # The node version is PINNED, not inherited. The runner's preinstalled Node
-      # was a version that cannot run the contract tests at all: those tests are
-      # TypeScript (`node --test packages/contracts/test/`), and type stripping
-      # is only on by default from Node 22.18 / 23.6. The gate therefore failed
-      # on correct code with a test error no seat could reproduce. A gate whose
-      # result depends on whatever the runner shipped is not a gate.
+        with:
+          # Full history on main, because the alarm must name the commit that broke main and
+          # that lives between the last green run and this one. A pull request is judged on
+          # its own merge commit and needs one commit, not three thousand.
+          fetch-depth: ${{ github.event_name == 'push' && 0 || 1 }}
+
+      # The node version is PINNED, not inherited. The runner's preinstalled Node was a
+      # version that cannot run the contract tests at all: those tests are TypeScript
+      # (`node --test packages/contracts/test/`), and type stripping is only on by default
+      # from Node 22.18 / 23.6. A gate whose result depends on whatever the runner shipped
+      # is not a gate. `cache: npm` is keyed on the lockfile, so the install is a restore.
       - name: Seat the node
         uses: actions/setup-node@v4
         with:
           node-version: '24'
+          cache: npm
+
+      # THE WARD CACHE. Part F of plan 243 has the wards key a verdict on a file's content, and
+      # this is where that verdict survives between runs: a cache restored here means an
+      # unchanged file is never re-scanned twice. It is restored even when the key misses
+      # (restore-keys), because the wards key on content and not on this run's tree.
+      - name: Cache the ward verdicts
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ymir
+          key: ward-cache-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            ward-cache-${{ runner.os }}-
+
       # Rule 11 is judged against the range a PR adds. actions/checkout fetches the merge
       # commit only, so the base branch is fetched here — without it the no-delete gate could
       # only skip, and RULES/11 names CI as one of the three places it runs.
       - name: The base, for the Rule 11 range
         run: git fetch --no-tags --depth=1 origin "+refs/heads/${{ github.base_ref || 'main' }}:refs/remotes/origin/${{ github.base_ref || 'main' }}"
-      - name: The gates
-        run: bash bin/gates/ci-verify.sh
+
+      # The one command. `continue-on-error` is deliberate: the alarm below must still run on
+      # a red tree, and the verdict is re-stated at the end where it cannot be swallowed.
+      - name: The whole-tree gate
+        id: gate
+        continue-on-error: true
         env:
-          # ci-verify writes every failing gate here, plus the ward table beside it, so the
-          # red-main step can name the ward without re-running the suite (plan 243 part E).
-          YMIR_CI_VERDICT: ${{ runner.temp }}/ci-verdict.txt
-      # The PR-only ward's one home. It judges a pull request body, so it cannot answer before
-      # the PR exists — which is why `guards.sh` names it and skips it rather than failing a
-      # push with `no pull requests found for branch "check"` (measured 2026-11-11).
+          YMIR_GUARD_CACHE: ${{ github.workspace }}/../.cache/ymir/guards
+        run: |
+          set -o pipefail
+          bash bin/gates/ci-verify.sh 2>&1 | tee "${RUNNER_TEMP}/gate.log"
+
       - name: PR identity ward
         if: github.event_name == 'pull_request'
         run: bash bin/gates/guards/pr-identity-guard.sh --ci
         env:
           GITHUB_EVENT_PATH: ${{ github.event_path }}
-      # MAIN IS NEVER LEFT RED SILENTLY (plan 243 §3, part D). The pre-push passes a fault it did
-      # not cause — this is what owns it: ONE issue, naming the ward and the newest commit that
-      # touched the file, appended to rather than duplicated when main goes red again.
-      - name: Main is red — one issue names the ward and the commit
-        if: failure() && github.ref == 'refs/heads/main'
-        run: bash bin/gates/main-red-issue.sh --apply
+
+      # The run page says what failed, in the page — so reading a red does not mean reading
+      # four thousand log lines on a phone.
+      - name: Say it in the run page
+        if: always()
+        run: bash bin/gates/main-red.sh summary --log "${RUNNER_TEMP}/gate.log" >> "$GITHUB_STEP_SUMMARY" || true
+
+      # THE ALARM — main only. One issue, updated while main is red, naming the ward, the
+      # finding and the commit that broke it. A red pull request opens nothing: it is already
+      # red in its own checks and it is the author's to fix.
+      - name: main is red — open or update the one issue
+        if: steps.gate.outcome == 'failure' && github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
-          YMIR_CI_VERDICT: ${{ runner.temp }}/ci-verdict.txt
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          bash bin/gates/main-red.sh open \
+            --log "${RUNNER_TEMP}/gate.log" \
+            --sha "${{ github.sha }}" \
+            --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+      - name: main is green — close it
+        if: steps.gate.outcome == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          bash bin/gates/main-red.sh close \
+            --sha "${{ github.sha }}" \
+            --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+      # The verdict, restated where it cannot be swallowed by the alarm's success.
+      - name: The gate's verdict
+        if: steps.gate.outcome == 'failure'
+        run: |
+          echo "the whole-tree gate is red — see the FAIL rows above, and bin/gates/main-red.sh summary" >&2
+          exit 1

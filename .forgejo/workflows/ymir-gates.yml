@@ -1,18 +1,64 @@
-name: The gates
+name: The gate
 
 # One room, two doors. Forgejo Actions and GitHub Actions are two hosts for the SAME
 # command, bin/gates/ci-verify.sh, so the checks have exactly one home and cannot drift between
-# hosts. If this runner needs a different label, that is one line here and no change to
-# what is proved.
+# hosts. If this runner needs a different label, that is one line here and no change to what
+# is proved.
+#
+# It is kept in step with .github/workflows/ymir-gates.yml by plan 243 part E (2026-11-11): the
+# same job name (`whole-tree`), the same triggers (every pull request, and `main`), and the same
+# verdict restated at the end where the tail of a log cannot swallow it.
+#
+# THE ONE DELIBERATE DIFFERENCE — the main-red alarm. On a red `main` push GitHub opens or
+# updates ONE issue labelled `main-red` (bin/gates/main-red.sh). That door speaks GitHub's issue
+# API and reads GitHub's run history for the last green commit, and this host has neither: its
+# runs are visible on its own run page and nowhere else. So this host GATES and does not ALARM,
+# and says so here rather than pretending. Nothing about a merge is weakened — a mirror host
+# with no required check cannot seal one.
 on:
-  push:
   pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: gate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  gates:
+  whole-tree:
+    name: whole-tree
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: The gates
-        run: bash bin/gates/ci-verify.sh
+        with:
+          fetch-depth: ${{ github.event_name == 'push' && 0 || 1 }}
+      - name: Seat the node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Cache the ward verdicts
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ymir
+          key: ward-cache-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            ward-cache-${{ runner.os }}-
+      - name: The base, for the Rule 11 range
+        run: git fetch --no-tags --depth=1 origin "+refs/heads/${{ github.base_ref || 'main' }}:refs/remotes/origin/${{ github.base_ref || 'main' }}"
+      - name: The whole-tree gate
+        id: gate
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          bash bin/gates/ci-verify.sh 2>&1 | tee "${RUNNER_TEMP}/gate.log"
+      - name: Say it in the run page
+        if: always()
+        run: bash bin/gates/main-red.sh summary --log "${RUNNER_TEMP}/gate.log" >> "${GITHUB_STEP_SUMMARY:-/dev/stdout}" || true
+      - name: The gate's verdict
+        if: steps.gate.outcome == 'failure'
+        run: |
+          echo "the whole-tree gate is red — see the FAIL rows above, and bin/gates/main-red.sh summary" >&2
+          exit 1
