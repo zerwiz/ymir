@@ -28,3 +28,7 @@ One unit of work, in a few sentences: what changes and where.
 
 - The plan this ticket belongs to: `plans/<PREFIX>-<plan>-*.md`
 - The documents and code paths it rests on.
+
+## CHANGE LOG
+
+- **2026-11-11** — written by the errand that shipped it; CHANGE LOG section added when the branch was merged for one PR.

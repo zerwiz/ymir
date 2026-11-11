@@ -75,3 +75,7 @@ The first body claimed *"mocks PASS"*. At the published tip that was **false**: 
 pipeline, while `.agents/tests/mocks-scan.test.sh` — the gate's real probe — failed.
 Both now run the same scan, and both pass because the fixture is declared rather than
 because a second copy of the gate was blind to it.
+
+## CHANGE LOG
+
+- **2026-11-11** — written by the errand that shipped it; CHANGE LOG section added when the branch was merged for one PR.

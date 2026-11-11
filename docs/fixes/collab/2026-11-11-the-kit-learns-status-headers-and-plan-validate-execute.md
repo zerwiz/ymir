@@ -50,3 +50,7 @@ bin/collab/tests/test_collab.sh → 21 passed, 1 failed ("a complete baton passe
 The kit's text still uses Ymir's house vocabulary, which business projects refuse; a plain-words variant is
 proposed in the delivery report, not written here. A guard that reads a pull request body for its ticket is not
 part of this change.
+
+## CHANGE LOG
+
+- **2026-11-11** — written by the errand that shipped it; CHANGE LOG section added when the branch was merged for one PR.

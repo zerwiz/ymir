@@ -90,11 +90,11 @@ commit in an Elixir project.
 
 ## Plan, validate, then execute (2026-11-11)
 
-The kit also carries the status of work. `scripts/status.py` reads the header of every plan, ticket and
+The kit also carries the status of work. `bin/collab/kit/scripts/status.py` reads the header of every plan, ticket and
 document and prints a table; `--check` fails on a missing or malformed header, and on a ticket past Open whose plan
-is not Validated. `RULES/19-plan-validate-execute.md` is the law behind it — no implementation before the area
+is not Validated. `bin/collab/kit/RULES/19-plan-validate-execute.md` is the law behind it — no implementation before the area
 owner named in the project's `AGENTS.md` has validated the plan — and `plans/tickets/` is where the units of work
-live: several tickets may share one plan. `docs/headers.md` explains the header, the statuses and the References
+live: several tickets may share one plan. `bin/collab/kit/docs/headers.md` explains the header, the statuses and the References
 rule. All of it arrives with `bin/collab/standardise.sh --apply <repo>` (kit 1.4.0); the prefix of the plans is read
 from `plans/.prefix` or from the plan file names. If `status.py --check` fails, it names the file and what its
 header lacks.

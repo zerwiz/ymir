@@ -30,8 +30,8 @@ Documents (`docs/**/*.md`, except `docs/fixes/` and `docs/kit/`) should carry th
   ---
   title: "The tenant architecture"
   status: "review"        # draft | review | accepted | superseded
-  owner: "Josef Lindbom"
-  reviewer: "Craig Martin"
+  owner: "Ada Owner"
+  reviewer: "Ben Reviewer"
   updated: "2026-11-11"
   ---
 

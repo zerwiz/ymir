@@ -44,3 +44,7 @@ not Validated or later.
 ## References
 
 - `RULES/19-plan-validate-execute.md` · `docs/headers.md` · `scripts/status.py`
+
+## CHANGE LOG
+
+- **2026-11-11** — written by the errand that shipped it; CHANGE LOG section added when the branch was merged for one PR.

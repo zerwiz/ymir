@@ -55,3 +55,7 @@ reader cannot check.
 - `RULES/19-plan-validate-execute.md` — what validation means and who gives it
 - `plans/tickets/README.md` — the ticket header
 - `scripts/status.py` — the reader and the checker
+
+## CHANGE LOG
+
+- **2026-11-11** — written by the errand that shipped it; CHANGE LOG section added when the branch was merged for one PR.
