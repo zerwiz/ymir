@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 0018-plan-scopes — a plan belongs to whoever owns the work (plan 240).
+# 0022-plan-scopes — a plan belongs to whoever owns the work (plan 240).
 #
 # The law this migration serves: the plan ledger resolved only ONE shape —
 # svartalfaheim/<realm>/projects/<project>/plans/ — so a machine, a company (realm) and the
@@ -19,7 +19,7 @@ set -uo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 hoard="$(bash "$ROOT/bin/vault/hodd.sh" path 2>/dev/null || true)"
-[ -n "$hoard" ] || { printf '0018-plan-scopes: no home — nothing to do\n'; exit 0; }
+[ -n "$hoard" ] || { printf '0022-plan-scopes: no home — nothing to do\n'; exit 0; }
 HOME_DIR="$(dirname "$hoard")"
 
 made=0; kept=0
@@ -90,6 +90,6 @@ PY
 )
 fi
 
-printf '0018-plan-scopes: shelves created %s · indices kept %s\n' "$made" "$kept"
-printf '0018-plan-scopes: a plan now belongs to whoever owns the work (project · realm · machine · personal)\n'
+printf '0022-plan-scopes: shelves created %s · indices kept %s\n' "$made" "$kept"
+printf '0022-plan-scopes: a plan now belongs to whoever owns the work (project · realm · machine · personal)\n'
 exit 0

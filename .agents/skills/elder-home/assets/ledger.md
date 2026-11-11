@@ -95,7 +95,7 @@ shelf; the Rule 45 fresh-ledger refusal still guards `new` on every scope; `hodd
 ledger — it is the *personal* scope's shelf, and it now carries an index like the others.
 
 Every plan header carries `owner:` and `owner_name:`, so a plan moved between shelves keeps its provenance.
-`plan.sh list --all` and `plan.sh next --all` walk every shelf. `.agents/migrations/0018-plan-scopes.sh` creates the
+`plan.sh list --all` and `plan.sh next --all` walk every shelf. `.agents/migrations/0022-plan-scopes.sh` creates the
 three new shelves (idempotently, seeding an index only where none exists), and it ships the way every structure
 change ships: `bin/engine/ymir-install.sh` and `bin/agents/groa-update.sh` both run `bin/engine/ymir-migrate.sh
 apply`, so a fresh home is born able to plan for a machine and an old home gains the shelves on its next update.

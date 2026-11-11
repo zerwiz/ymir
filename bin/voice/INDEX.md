@@ -23,7 +23,7 @@ folder rewrites one file instead of colliding on every branch.
 bin[12]{file,does,kind,verdict,disposition,callers,lines}:
   "house.css","/* house.css — Rödd's face, in the Allfather's hall.","data","wired","keep",0,54
   "model-sync.sh","model-sync.sh — take the voice models over the LOCAL NETWORK, never from the internet.","tool","wired","keep",0,99
-  "rodd-arm.sh","rodd-arm.sh — Rödd knocks on the arm, and hears the answer.","tool","wired","keep",3,447
+  "rodd-arm.sh","rodd-arm.sh — Rödd knocks on the arm, and hears the answer.","tool","wired","keep",4,456
   "rodd-room.sh","rodd-room.sh — the ARM HOLDER's half of Rödd's room: the one writer of <state>/rodd/room.jsonl.","tool","wired","keep",1,40
   "test_rodd_arm.sh","test_rodd_arm.sh — Rödd may knock on the arm, and only on a LIVE arm: the whole point of","tool","wired","keep",1,122
   "todos.sh","todos.sh — the Allfather's task ledger, READ by anyone who must know it (the arm holder first).","tool","wired","keep",3,57
