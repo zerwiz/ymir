@@ -78,6 +78,29 @@ are the only way to use the Cerberus and Mailgun layouts:
 - The renderer only re-renders `leemunroe-simple`. The Cerberus and Mailgun files are one-line HTML with no content
   markers, so rewriting them would mean rewriting them: dress one by hand and pass it with `--html`.
 
+## The house letter design — thirteen letter types, themed (added 2026-11-11)
+
+**Most letters should start here.** Write the words with a few markers and the house designs them:
+
+    L=systems/snotra/services/letters
+    python3 $L/letter-design.py --types        # update, decision request, agenda, meeting record, follow-up, request,
+                                               # notice, quote, welcome, weekly digest, introduction, thank-you, house notice
+    python3 $L/letter-design.py --themes       # ymir (dark, Ymir's own colours), ymir-light, plain, and your own
+    cp $L/templates/house/types/update.md /tmp/letter.md     # fill in the {{placeholders}}
+    python3 $L/letter-design.py /tmp/letter.md > /tmp/preview.html   # look at it in a browser
+    bash $L/mail-send.sh draft --to someone@example.com --subject "…" --body /tmp/letter.md
+
+A body that opens with a `theme:` header is designed automatically; the plain-text twin is the same words. The blocks:
+`## heading`, paragraphs, `- lists`, `1. **title** — detail`, `| tables |`, `> quotes`, `::: callout`, `::: note Title`,
+`::: warning Title`, `::: card 1 | Owner | Title`, `::: stats`, `::: button Label | https://…` (all but `button` end with
+`:::`). `python3 $L/letter-design.py --gallery /tmp/gallery` renders every type in every theme for a look.
+
+**Your own companies' themes and private letter types** go in your home, not in this repository:
+`$YMIR_HOME/hodd/identity/letters/themes.yaml` (each theme `extends:` a shipped one) and
+`$YMIR_HOME/hodd/identity/letters/types/`.
+
+Agents find all of this through the skill `snotra-letters`.
+
 ## If it does not work
 
 - **The draft is refused** with a `private-guard` finding: the letter carries something private (a machine path, an
@@ -88,6 +111,8 @@ are the only way to use the Cerberus and Mailgun layouts:
 
 ## CHANGE LOG
 
+- **2026-11-11** — the house letter design: `letter-design.py`, thirteen letter types, themes from Ymir's design tokens
+  and from the home, designed by default when a body opens with `theme:`; the skill `snotra-letters` names every shelf.
 - **2026-11-09** — a letter is dressed by default. `mail-send.sh draft` renders `--body` into `leemunroe-simple`
   (`letter-html.py`), `--plain` is the deliberate opt-out, `--template` names another renderer-supported layout, and
   `bin/notify/mail.sh` dresses the operator's notifications the same way. The three manual steps remain for the
