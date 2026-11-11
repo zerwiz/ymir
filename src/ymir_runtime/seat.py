@@ -368,7 +368,22 @@ def seat(
     # demanded refused every pi dispatch — "holds no .pi/extensions tree" (measured
     # 2026-11-09). `cd` still goes to the worktree: the launch script does that, and
     # this argument only decides which extension set is named (RULES/13).
-    launch_cmd = harness.build_launch_command(selection, str(prompt_path), launch_cwd=roots.root, runner=runner)
+    # A WORKTREE IS NOT A ROOT (2026-11-10). The generator is told where the pins
+    # live, and a seat whose BROKK_HOME is a Yggdrasil worktree — the ordinary shape
+    # for an errand that spawns another — has no `.pi/extensions` of its own by
+    # design (the sparse-checkout exclusion), so naming it refused every seat with
+    # "holds no .pi/extensions tree". The pins live in the MAIN tree; git answers
+    # which one that is from a linked worktree in one command.
+    pins_root = roots.root
+    if not (pins_root / ".pi" / "extensions").is_dir():
+        common = runner(
+            ["git", "-C", str(roots.root), "rev-parse", "--path-format=absolute", "--git-common-dir"]
+        )
+        if proc.ok(common) and (common.stdout or "").strip():
+            candidate = Path((common.stdout or "").strip()).parent
+            if (candidate / ".pi" / "extensions").is_dir():
+                pins_root = candidate
+    launch_cmd = harness.build_launch_command(selection, str(prompt_path), launch_cwd=pins_root, runner=runner)
     script = _launch_script(roots, seat_id, tree.path, launch_cmd, lock=errand.lock)
     pane_cmd = f"bash {proc.shell_quote(str(script))}"
 

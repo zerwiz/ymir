@@ -30,7 +30,7 @@ case "${1:-} ${2:-}" in
 esac
 STUB
 chmod +x "$T/bin/herdr"
-export STUB_DIR="$T/stub"; mkdir -p "$STUB_DIR"
+export STUB_DIR="$T/fixtures"; mkdir -p "$STUB_DIR"
 printf '{"result":{"workspaces":[]}}' >"$STUB_DIR/workspaces.json"
 printf '{"result":{"panes":[]}}' >"$STUB_DIR/panes.json"
 printf '{"result":{"agents":[]}}' >"$STUB_DIR/agents.json"
@@ -49,6 +49,8 @@ printf 'failed: the launch produced NO agent\n' >"$T/state/alpha.status"
 printf 'id=beta\nworkspace=wB\nseat_pane=wB:p1\nworktree=%s\n' "$T/repo/.yggdrasil/beta" >"$T/state/beta.meta"
 printf 'working: a live agent stands here\n' >"$T/state/beta.status"
 printf 'id=gamma\nworkspace=wC\n' >"$T/state/gamma.meta"     # recordless: no status at all
+# gamma was launched an hour ago, so the settling grace has passed
+printf '%s\n' "$(( $(date +%s) - 3600 ))" >"$T/state/.gamma.launched"
 printf 'id=fresh\nworkspace=wF\nworktree=%s\n' "$T/repo/.yggdrasil/fresh" >"$T/state/fresh.meta"
 printf 'working: young\n' >"$T/state/fresh.status"
 
@@ -157,11 +159,11 @@ t "a dirty worktree is still kept" bash -c "cd $T/hk/.yggdrasil/merged && echo d
 
 # 7. the migration: a worktree path is pruned from the root record, with a backup
 printf '%s\n%s\n' "$T/repo" "$T/repo/.yggdrasil/alpha" >"$T/home/.pi/agent/extensions/.ymir-root"
-t "the migration runs" bash -c "HOME=$T/home YMIR_HOME=$T/home BROKK_ROOT_OVERRIDE=$T/repo bash $root/.agents/migrations/0018-a-worktree-is-not-a-root.sh >/dev/null"
+t "the migration runs" bash -c "HOME=$T/home YMIR_HOME=$T/home BROKK_ROOT_OVERRIDE=$T/repo bash $root/.agents/migrations/0019-a-worktree-is-not-a-root.sh >/dev/null"
 t "the worktree path is pruned" bash -c "! grep -q yggdrasil $T/home/.pi/agent/extensions/.ymir-root"
 t "the real root survives" bash -c "grep -qx $T/repo $T/home/.pi/agent/extensions/.ymir-root"
-t "a backup was kept" bash -c "test -f $T/home/.pi/agent/extensions/.ymir-root.pre-0018"
-t "a second run is clean" bash -c "HOME=$T/home YMIR_HOME=$T/home BROKK_ROOT_OVERRIDE=$T/repo bash $root/.agents/migrations/0018-a-worktree-is-not-a-root.sh | grep -q 'root record: clean'"
+t "a backup was kept" bash -c "test -f $T/home/.pi/agent/extensions/.ymir-root.pre-0019"
+t "a second run is clean" bash -c "HOME=$T/home YMIR_HOME=$T/home BROKK_ROOT_OVERRIDE=$T/repo bash $root/.agents/migrations/0019-a-worktree-is-not-a-root.sh | grep -q 'root record: clean'"
 
 # 8. the migration heals a worktree that reports its extensions deleted
 if [ -d "$T/hk/.git" ] || [ -f "$T/hk/.git" ]; then
@@ -172,7 +174,7 @@ if [ -d "$T/hk/.git" ] || [ -f "$T/hk/.git" ]; then
   rm -rf "$T/hk/.yggdrasil/merged/.pi/extensions"
   ( cd "$T/hk/.yggdrasil/merged" && git update-index --assume-unchanged .pi/extensions 2>/dev/null )
   t "the fault is visible first" bash -c "test -n \"\$(git -C $T/hk/.yggdrasil/merged status --porcelain | grep 'D  *\\.pi/extensions')\" || true"
-  t "the migration heals it" bash -c "HOME=$T/home YMIR_HOME=$T/home BROKK_ROOT_OVERRIDE=$T/hk bash $root/.agents/migrations/0018-a-worktree-is-not-a-root.sh | grep -qE 'healed to the sparse-checkout exclusion|already clean'"
+  t "the migration heals it" bash -c "HOME=$T/home YMIR_HOME=$T/home BROKK_ROOT_OVERRIDE=$T/hk bash $root/.agents/migrations/0019-a-worktree-is-not-a-root.sh | grep -qE 'healed to the sparse-checkout exclusion|already clean'"
   t "git status is clean after the mend" bash -c "test -z \"\$(git -C $T/hk/.yggdrasil/merged status --porcelain)\""
 fi
 
@@ -222,6 +224,37 @@ t "seat-prove carries the one default" bash -c "grep -q 'YMIR_SEAT_SETTLE:-60' $
 t "the spawner does not carry a second default" bash -c "! grep -q 'YMIR_SEAT_SETTLE:-25' $root/bin/agents/einherjar-spawn.sh"
 t "the engine passes --settle only when the operator set it" bash -c "grep -q 'if settle:' $root/src/ymir_runtime/seat.py"
 t "the runtime asset names the number" bash -c "grep -q 'YMIR_SEAT_SETTLE' $root/.agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md"
+
+
+# ── 14. the settling grace: a booting seat is never swept (house law) ────────
+# tests/test_eindri_liveness_grace.sh: inside the grace a quiet seat is SETTLING
+# and nothing is corrected. The spawner raises the workspace before it writes any
+# status, so a recordless workspace younger than YMIR_SEAT_SETTLE is a seat that
+# is still coming up.
+printf 'id=settling\nworkspace=wST\n' >"$T/state/settling.meta"
+printf '%s\n' "$(date +%s)" >"$T/state/.settling.launched"
+printf 'id=unstamped\nworkspace=wUN\n' >"$T/state/unstamped.meta"
+cat >"$STUB_DIR/workspaces.json" <<JSON
+{"result":{"workspaces":[
+ {"workspace_id":"wST","label":"eindri-settling","agent_status":"unknown"},
+ {"workspace_id":"wUN","label":"eindri-unstamped","agent_status":"unknown"}
+]}}
+JSON
+cat >"$STUB_DIR/panes.json" <<JSON
+{"result":{"panes":[
+ {"pane_id":"wST:p1","cwd":"$T/repo/.yggdrasil/settling"},
+ {"pane_id":"wUN:p1","cwd":"$T/repo/.yggdrasil/unstamped"}
+]}}
+JSON
+rm -f "$STUB_DIR/closed"
+t "a freshly launched recordless seat is SETTLING, not closed" bash -c "PATH=$T/bin:\$PATH HOME=$T/home BROKK_HOME=$T/repo BROKK_STATE_OVERRIDE=$T/state bash $root/bin/seat/seat-reap.sh --sweep | grep -q 'SETTLING'"
+t "the settling seat was NOT closed" bash -c "! grep -qx wST $STUB_DIR/closed"
+t "an unmeasurable seat is kept, not closed" bash -c "! grep -qx wUN $STUB_DIR/closed"
+t "and the sweep says why it was kept" bash -c "PATH=$T/bin:\$PATH HOME=$T/home BROKK_HOME=$T/repo BROKK_STATE_OVERRIDE=$T/state bash $root/bin/seat/seat-reap.sh --list | grep -q 'no timestamp'"
+# the same seat, an hour later, is a dead one
+printf '%s\n' "$(( $(date +%s) - 3600 ))" >"$T/state/.settling.launched"
+t "past the grace the same seat IS closed" bash -c "PATH=$T/bin:\$PATH HOME=$T/home BROKK_HOME=$T/repo BROKK_STATE_OVERRIDE=$T/state bash $root/bin/seat/seat-reap.sh --sweep >/dev/null; grep -qx wST $STUB_DIR/closed"
+t "the spawner stamps the launch" bash -c "grep -q 'launched' $root/bin/agents/einherjar-spawn.sh && grep -q '\.\$ID\.launched' $root/bin/agents/einherjar-spawn.sh"
 
 printf 'seat reap: %s ok / %s fail\n' "$ok" "$fail"
 [ "$fail" = 0 ]

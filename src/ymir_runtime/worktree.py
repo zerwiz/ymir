@@ -15,7 +15,6 @@ catch.
 
 from __future__ import annotations
 
-import shutil
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -97,11 +96,27 @@ def ensure(
     # both, and refuses to start every tool twice over — "Tool X conflicts". The seat
     # then never stands, and a seat that never stands reads as `working` to a sweep.
     # Measured 2026-11-08: three errands died this way, and no judge could seat.
+    #
+    # HOW the copy goes is law, and this road carried the WRONG shape until 2026-11-11
+    # (Forseti, PR #639 follow-up): `shutil.rmtree` followed by
+    # `git update-index --assume-unchanged .pi/extensions` — assume-unchanged is a
+    # PER-FILE bit that does nothing for a directory, so every engine-seated errand was
+    # born with all 45 extension files reported DELETED, and one `git add -A` in a
+    # worker would have deleted the extension tree from the repository. The shell road
+    # (bin/agents/einherjar-spawn.sh) was healed to git's own per-worktree mechanism;
+    # this is the same mechanism, in the same order, for the engine road.
     shim = path / ".pi" / "extensions"
-    if shim.is_dir():
-        shutil.rmtree(shim, ignore_errors=True)
-        # assume-unchanged so the deliberate deletion never rides in the worker's commit
-        runner(["git", "-C", str(path), "update-index", "--assume-unchanged", ".pi/extensions"])
+    runner(["git", "-C", str(path), "update-index", "--no-assume-unchanged", ".pi/extensions"])
+    excluded = runner(
+        ["git", "-C", str(path), "sparse-checkout", "set", "--no-cone", "/*", "!/.pi/extensions/"]
+    )
+    if not proc.ok(excluded):
+        raise EngineError(
+            f"could not exclude .pi/extensions from {path} — two extension homes, no seat: "
+            f"{(excluded.stderr or '').strip()}"
+        )
+    if shim.exists() or shim.is_symlink():
+        raise EngineError(f"{path} still carries its own .pi/extensions — two extension homes, no seat")
     return Worktree(seat_id, path, chosen, True, head_of(path, runner=runner))
 
 

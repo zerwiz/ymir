@@ -152,9 +152,9 @@ if [ "$CHECK" = 1 ]; then
   # INSTALLATION or an UPDATE, not on a look.
   if [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ]; then
     if "$SCRIPT_DIR/../seat/seat-reap.sh" --verify >/dev/null 2>&1; then
-      printf 'seat-reap: seated and clean (migration 0018 applied)\n'
+      printf 'seat-reap: seated and clean (migration 0019 applied)\n'
     else
-      printf 'seat-reap: PENDING — a real update mends it (bin/engine/ymir-migrate.sh apply → migration 0018)\n'
+      printf 'seat-reap: PENDING — a real update mends it (bin/engine/ymir-migrate.sh apply → migration 0019)\n'
       "$SCRIPT_DIR/../seat/seat-reap.sh" --verify 2>&1 | sed 's/^/  /' | head -6
     fi
   fi
@@ -223,6 +223,17 @@ if [ -x "$SCRIPT_DIR/../desktop/electron-ensure.sh" ]; then
     printf 'electron: every installed surface answers --version\n'
   else
     printf 'electron: NOT mended — %s\n' "$(printf '%s' "$eo" | grep -m1 '"FAIL"' || printf 'see bin/desktop/electron-ensure.sh status')"
+  fi
+fi
+
+# Hnoss's model door is MENDS-FORWARD too: the launcher, the pi MCP entry and the
+# Bifrost door that reaches pi's provider are seated by the ensure door, so an update
+# never leaves a design generation on a stale hand-copy (2026-11-10). Never fatal.
+if [ -x "$SCRIPT_DIR/../pi/hnoss-ensure.sh" ]; then
+  if ho="$("$SCRIPT_DIR/../pi/hnoss-ensure.sh" ensure 2>&1)"; then
+    printf 'hnoss: model door seated — %s\n' "$(printf '%s' "$ho" | grep -m1 '^\[hnoss\]' | sed 's/^\[hnoss\] //' || printf 'launcher + pi MCP entry')"
+  else
+    printf 'hnoss: NOT mended — %s\n' "$(printf '%s' "$ho" | tail -1)"
   fi
 fi
 

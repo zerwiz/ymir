@@ -282,6 +282,14 @@ if [ ! -s "$TMP" ]; then
   rm -f "$TMP"; exit 1
 fi
 if [ "$MODE" = "--check" ]; then
+  # BUILT, NOT VERSIONED (plan 243 part A, 2026-11-11): the register left git, so there is no
+  # committed copy to diff. The SOURCE is judged instead — the register must render from the
+  # tracked tree (checked just above: an empty render is a refusal). A stale local copy is
+  # rebuilt by the reader, never blamed on the pusher.
+  if ! git -C "$ROOT" ls-files --error-unmatch "$OUT" >/dev/null 2>&1; then
+    echo "capabilities --check: built, not versioned — the register renders from the tree ($(grep -c '^  "' "$TMP" || true) folder rows)"
+    rm -f "$TMP"; exit 0
+  fi
   if [ ! -f "$OUT" ] || ! diff -q "$OUT" "$TMP" >/dev/null 2>&1; then
     echo "capabilities --check: $OUT is STALE — run bin/gates/capabilities.sh" >&2
     echo "capabilities_check[2]{diff,first_lines}:" >&2

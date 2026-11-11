@@ -289,16 +289,30 @@ def todo(action: str = "list", content: str = "", index: int = -1) -> str:
 
 
 @mcp.tool()
-def ymir_plan(slug: str, title: str = "", action: str = "new", realm: str = "", project: str = "ymir") -> str:
-    """The plan ledger: create the NEXT numbered plan with its index row (action=new), list it, or show the next number."""
+def ymir_plan(slug: str, title: str = "", action: str = "new", realm: str = "", project: str = "ymir",
+              scope: str = "project", owner: str = "") -> str:
+    """The plan ledger — a plan belongs to whoever owns the work (plan 240).
+
+    scope=project (default, --realm/--project) · realm (a company) · machine (a computer, owner = its hostname)
+    · personal (the Allfather's own, under hodd/plans/). action=new creates the NEXT number for THAT shelf with its
+    index row; action=list/next accept --all to walk every shelf.
+    """
+    sh = ["bash", str(ROOT / "bin" / "records" / "plan.sh")]
     if action == "new":
         if not slug or not title:
             return "new needs slug and title"
-        argv = ["bash", str(ROOT / "bin" / "records" / "plan.sh"), "new", slug, "--title", title, "--project", project]
+        argv = sh + ["new", slug, "--title", title, "--project", project, "--scope", scope]
         if realm:
             argv += ["--realm", realm]
+        if owner:
+            argv += ["--owner", owner]
         return _run(argv, 60)
-    return _run(["bash", str(ROOT / "bin" / "records" / "plan.sh"), action], 60)
+    argv = sh + [action]
+    if scope and scope != "project":
+        argv += ["--scope", scope]
+    if owner:
+        argv += ["--owner", owner]
+    return _run(argv, 60)
 
 
 @mcp.tool()
