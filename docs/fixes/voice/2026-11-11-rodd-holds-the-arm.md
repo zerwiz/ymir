@@ -49,3 +49,10 @@
   54 tests OK (`role=` written and read; `mode=` not overloaded; the sidecar names the holder only for
   its own session).
 - `bin/records/weave-features.sh --check` — the fragments weave (217 entries).
+
+## CHANGE LOG
+
+- **2026-11-11** — carved. The lease gains `role=` (identity, never overloaded onto `mode=`) and four readers
+  report it; the one arm client gains `--holder` with the three-clause claim; Nanna's duty loop lands in
+  `bin/voice/rodd-helm.sh`; `rodd-arm.sh` gains `hold`/`release`; the `roddhelm` Eir surface, the harness-integration
+  paragraph, the woven catalogue and this fix note follow (plan 254).
