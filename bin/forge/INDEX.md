@@ -20,9 +20,11 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[31]{file,does,kind,verdict,disposition,callers,lines}:
+bin[37]{file,does,kind,verdict,disposition,callers,lines}:
   "essence-fetch.sh","essence-fetch.sh — the npm world's self-heal: npm's packer refuses dotfolders","tool","wired","keep",2,18
-  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",383,77
+  "finding-log.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",1,64
+  "finding-tally.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",1,140
+  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",397,77
   "github-deploy.sh","github-deploy.sh — zero-trust deploys (W0035).","data","wired","keep",0,96
   "gjallarhorn-expose.sh","gjallarhorn-expose.sh — put EVERY app on its own public hostname (Gjallarhorn).","tool","wired","keep",0,152
   "gjallarhorn-notify.sh","gjallarhorn-notify.sh — the horn (W0036).","tool","wired","keep",1,73
@@ -37,7 +39,11 @@ bin[31]{file,does,kind,verdict,disposition,callers,lines}:
   "npm-pretest.sh","npm-pretest.sh — the pre-publish test gate (the Allfather's decree):","data","wired","keep",3,240
   "npm-publish.sh","npm-publish.sh — publish through the HOARD's npm token, every single time.","tool","wired","keep",0,161
   "packaged-gate.sh","packaged-gate.sh — prove the PUBLISHED artifact, not the tree.","tool","wired","keep",0,103
+  "pr-open.sh","source '$(dirname '$0')/pr-patterns.sh'","tool","wired","keep",2,45
+  "pr-patterns.sh","pr-patterns.sh — the ONE place the forbidden-pattern list lives.","data","wired","keep",3,49
   "pr-pretest.sh","pr-pretest.sh — the PR-time gate: a REAL npm installation, locally, before","tool","wired","keep",1,59
+  "queue-warden.sh","queue-warden.sh — get every open PR into main, or block with a named reason.","tool","wired","keep",1,155
+  "review-mend.sh","review-mend.sh — the refusal becomes a router (plan 233 §13/13a/13b)","tool","wired","keep",2,107
   "review-rules.sh","review-rules.sh — the rules floor: load what a reviewer MUST know, or refuse to review.","tool","wired","keep",3,139
   "review-seat.sh","review-seat.sh — the reviewer's SEAT: pi in a herdr pane, on the heart, on a loop.","tool","wired","keep",1,321
   "review-shelf.sh","review-shelf.sh — where a packet LANDS, and the waiting rule that keeps it honest.","tool","wired","keep",0,167
@@ -53,6 +59,6 @@ bin[31]{file,does,kind,verdict,disposition,callers,lines}:
   "utgard.sh","utgard.sh — the sealed execution barrier (Utgard, the realm outside the wall).","tool","wired","keep",4,128
   "yggdrasil.sh","yggdrasil.sh — the worktree manager (Yggdrasil, the world-tree).","tool","tested","keep",6,176
 
-**Tally.** verdict: wired=28, tested=3
+**Tally.** verdict: wired=34, tested=3
 
-**Tally.** disposition: keep=31
+**Tally.** disposition: keep=37
