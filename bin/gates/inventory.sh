@@ -388,7 +388,10 @@ def shelf_paths(shelf_dir):
     return {p[len(prefix):] for p in tracked
             if p.startswith(prefix)
             and not any(part.startswith(".") for part in p[len(prefix):].split("/"))
-            and p[len(prefix):] != "INDEX.md"}
+            # An INDEX.md is a SHELF'S OWN INDEX at any depth, not a door: naming it in the
+            # register it belongs to is circular. Measured 2026-11-11: the vendored collab kit's
+            # docs/templates/INDEX.md was the one file no row could honestly name.
+            and not p.endswith("/INDEX.md") and p[len(prefix):] != "INDEX.md"}
 
 findings = []
 for shelf, shelf_dir in (("bin", "bin"), (".agents/backend", ".agents/backend")):
