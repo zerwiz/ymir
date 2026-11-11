@@ -34,9 +34,11 @@ SHELVES = [("plans", "plans"), ("docs", "documents"), ("meetings", "meetings"), 
 
 
 def home_dir(arg: str | None) -> Path:
-    h = Path(arg or os.environ.get("YMIR_HOME") or os.path.expanduser("~/Documents/ymirhome"))
-    if not h.is_dir():
-        raise SystemExit(f"atlas: YMIR_HOME is unresolved ({h}) — nothing is guessed")
+    # The home is resolved by bin/vault/hoard-lib.sh (atlas.sh exports it) — never guessed here (RULES/07).
+    raw = arg or os.environ.get("YMIR_HOME", "")
+    h = Path(raw) if raw else None
+    if not h or not h.is_dir():
+        raise SystemExit("atlas: YMIR_HOME is unresolved — run bin/records/atlas.sh (it asks the resolver), or pass --home")
     return h
 
 
