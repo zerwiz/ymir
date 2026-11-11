@@ -91,9 +91,16 @@ for n in list(seen):
         out.append(f"PR #{n} left the queue (merged or closed): {seen.pop(n).get('title','')[:70]}")
 if status:
     print(f"pr-watch[1]{{repo,open,would_say}}:\n  \"{repo}\",\"{len(prs)}\",\"{len(out)}\"")
+delivered = True
 if out and not dry:
     body = "\n".join("• " + l for l in out)
-    subprocess.run([os.path.join(root,'bin/notify/send.sh'), '--to', 'telegram', body], check=False)
+    r = subprocess.run([os.path.join(root,'bin/notify/send.sh'), '--to', 'telegram', body], check=False)
+    delivered = (r.returncode == 0)
+# RULES/49: a write is not a delivery. A line is recorded as announced only when the send RETURNED 0;
+# otherwise it is announced again next pass, because a message that never arrived must not be remembered
+# as sent. (The first version of this door marked three PRs as announced while the sender was failing.)
+if not delivered:
+    seen = {k: {kk: vv for kk, vv in v.items() if kk != 'announced'} for k, v in seen.items()}
 json.dump(seen, open(seen_path,'w'), indent=1)
 print("\n".join(out) if out else "pr-watch: nothing new (silence is the healthy signal)")
 PY
