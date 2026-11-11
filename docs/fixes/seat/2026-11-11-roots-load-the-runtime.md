@@ -82,3 +82,7 @@ The live seat's own roots are not re-pointed. That happens on its next update, o
 `bin/seat/harness-extensions-install.sh`. The hnoss errand path will be **held** until that errand lands or is
 dropped. P3b (the one `ymir` skill), P4 (every harness's full root set) and P5 (the contract in the root) are the
 next phases of plan 248.
+
+## CHANGE LOG
+
+- **2026-11-11** — written with the fix (plan 248 P2 + P3, errand roots-load-the-runtime).
