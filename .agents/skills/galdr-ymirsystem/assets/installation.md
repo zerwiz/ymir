@@ -1411,6 +1411,13 @@ install_steps_corrected[2]{step,now}:
   "memory","raises the bridge, then bin/bridge/mcp-config.sh seat — pi's one MCP set into every harness present (pi · opencode · claude · cursor · codex · hermes); OK counts the well door, WARN names a direct engram still seated"
 ```
 
+The structural half is the migration: `.agents/migrations/0019-a-worktree-is-not-a-root.sh`
+prunes a `.yggdrasil/` / linked-worktree path out of
+`~/.pi/agent/extensions/.ymir-root` (keeping `<pointer>.pre-0018`) and switches every
+affected Eindri worktree from the broken `rm -rf .pi/extensions` + `--assume-unchanged`
+state to the per-worktree sparse-checkout exclusion, so `git status` is clean and a
+worker's `git add -A` cannot delete the extension tree.
+
 An update heals an older seat through migration `.agents/migrations/0020-the-well-door.sh`. `--check` never
 writes: `step_memory` only reads `mcp-config.sh seat --check`. The full account is in the harness-integration
 asset (§"2026-11-10 — the well door for every harness").

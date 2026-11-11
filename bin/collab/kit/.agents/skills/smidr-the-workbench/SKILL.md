@@ -1,6 +1,6 @@
 ---
 name: smidr-the-workbench
-description: Smíðr — the craft, taught at the bench: how a hand from another house works inside this repository, from the branch to the pull request, without breaking its law or its gates. Use when you are a contributor's agent in a repository that is not yours, before your first branch, before a fix, before you open the pull request, and when a gate refuses you.
+description: "Smíðr — the craft, taught at the bench: how a hand from another house works inside this repository, from the branch to the pull request, without breaking its law or its gates. Use when you are a contributor's agent in a repository that is not yours, before your first branch, before a fix, before you open the pull request, and when a gate refuses you."
 domain: collab
 allowed-tools: read,write,bash,glob,grep
 role: craftsman
