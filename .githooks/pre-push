@@ -50,6 +50,8 @@ if git rev-parse -q --verify origin/main >/dev/null 2>&1; then
   bash bin/no-delete-guard.sh --base origin/main || exit 1
   # Rule 04/39 — a commit's author line is DATA IN THIS REPOSITORY, and this repository is public.
   bash bin/gates/guards/identity-guard.sh --base origin/main || exit 1
+  # Rule 53 — no AI tool signs the work: no Co-Authored-By naming a model, no "Generated with" footer.
+  bash bin/gates/guards/attribution-guard.sh --base origin/main || exit 1
 fi
 
 bash bin/gates/branch-current.sh check || exit 1
