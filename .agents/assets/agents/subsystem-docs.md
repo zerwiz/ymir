@@ -32,3 +32,7 @@ subsystems[17]{path,entry,canonical,books,doors,missing}:
 
 **A `missing` cell is a fact, not a footnote:** the book names a door or a file that this tree does not
 have. That is a ticket (`hodd/docs/tickets/`), never a reason to improvise the thing the book describes.
+
+## CHANGE LOG
+
+- 2026-11-11 — review-mend: added missing heading for #668
