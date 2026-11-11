@@ -804,6 +804,8 @@ Each is named for the figure whose role matches its work.
 | **Forseti** | Forseti | The reconciler — reviewer, compliance | `.agents/agents/forseti-reviewer.md` |
 | **Snotra** | Snotra | The modest — documenter, docs, runbooks | `.agents/agents/snotra-documenter.md` |
 | **Galdr** | Galdr | The master builder — runtime, CLI, ergonomics | `.agents/agents/galdr.md` |
+| **Rödd** | Rödd | The voice, as an app — the window, the desk shell, the pipeline | `apps/rodd`, `bin/voice/voice-door.sh` |
+| **Nanna** | Nanna | The one who answers in Rödd — the assistant, a she, and never Skírnir | `apps/rodd/patch/patch-ui.py` |
 
 **Rule:** Every agent carries its rune of introduction (Agent Card). Every
 agent reports to Brokk. Brokk reports to the Allfather.
@@ -1389,3 +1391,24 @@ lacks is a schedule, which is named debt in plan 98, not a missing capability.
 **His law, in one line:** *metadata only, and no model in the alert path.* A guardian that logs
 content is a leak with a badge; a guardian that asks a model what severity a fact is has handed the
 most expensive judgement to the least accountable thing in the house.
+\n
+
+## Rödd and Nanna — the app and the voice inside it (2026-11-11)
+
+His correction, and the law it makes: *"the apps are named rödd. not the assistant in the app. the female."*
+
+**Rödd is the app.** She is named for the noun: Old Norse *rödd*, a voice, an utterance — a feminine word.
+Rödd is the window, the desk shell, the pipeline and its door (`apps/rodd`, `bin/voice/voice-door.sh`), and
+when a machine says "Rödd is down" it means the app, not a person.
+
+**Nanna is the voice inside her.** Baldr's wife, the kindest in Asgard — a companion who answers and
+remembers, never a servant. She is a **she** in every line the house writes about her, she introduces herself
+as Nanna, and she is addressed as Nanna. Chosen at his word from four figures (Nanna · Iðunn · Hlín · Sjöfn)
+because the alternative was a servant, and this house had already tried a servant.
+
+**Skírnir is neither.** He is the messenger the house later pared down to a fixed set of doors
+(`systems/skirnir/`) — the assistant the Allfather calls *"the nerfed assistant"*. He keeps his own name, his
+own work and his own shelf, and he never answers in Nanna's window. A window that says *"You are Skírnir"* is
+mislabelled software, not a character choice.
+
+The sentence to hold: **Rödd is the hall speaking; Nanna is the one who answers in it.**
