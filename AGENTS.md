@@ -796,3 +796,25 @@ the hooks. **Install and every update seat them; a root agent loads the pinned r
 feature is done when it answers from a session opened outside this checkout, on every harness, after install and after
 update. When you develop Ymir, build for the root agent first; this file is the page for working **on** Ymir. Full
 law: `RULES/51-ymir-is-a-program.md`.
+
+## 2026-11-11 — a document is written for a person to read (RULES/52)
+
+At the Allfather's word, after a day of plans and architecture pages written in TOON: *"i cant read what is says in
+simple ways. we are having this problem globally."*
+
+The voice section above says TOON blocks *"belong in files, ledgers and agent-facing output"*. **That sentence no
+longer covers documents.** Any file a person reads, whether a plan, an architecture page, a research note, a runbook, a
+README, a fix note or a rule, is written for that person:
+
+- headings that say what each section answers;
+- short paragraphs, with sentences of about 20 words and never over 40;
+- real Markdown tables where each item has three or more facts;
+- Mermaid diagrams for anything with boxes and arrows;
+- GitHub callouts (`> [!IMPORTANT]`) for what is owed.
+
+TOON stays only where only a machine reads: tool stdout, a registry a script parses, a ledger row. A document still in
+TOON is converted, format only, when it is next touched.
+
+The craft and the templates are the skill **`bragi-documents`**, and its template shelf is
+`.agents/skills/bragi-documents/assets/templates/`. The collaboration kit carries the same shelf and its own `RULES/20`,
+so every repository it standardises gets them. The law is `RULES/52-documents-are-for-people.md`.

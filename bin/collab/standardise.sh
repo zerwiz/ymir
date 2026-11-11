@@ -14,7 +14,10 @@ KIT="$HERE/kit"
 # version, never silently.
 # 1.4.0 (2026-11-11, RULES/19): the kit carries `scripts/status.py`, `docs/headers.md`, RULES/19 and the
 # `plans/tickets/` shelf; every kit document carries the header and a References section.
-VERSION="1.4.0"
+# 1.5.0 (2026-11-11, RULES/20 + Ymir RULES/52): the kit carries `RULES/20` and the `docs/templates/` shelf (house
+# templates, The Good Docs Project, MADR, arc42, each with its licence); the kit README and `docs/headers.md` are
+# converted from TOON blocks to Markdown tables — format only, every fact kept.
+VERSION="1.5.0"
 
 mode=""; repo=""
 for a in "$@"; do
