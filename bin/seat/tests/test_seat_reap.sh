@@ -30,7 +30,7 @@ case "${1:-} ${2:-}" in
 esac
 STUB
 chmod +x "$T/bin/herdr"
-export STUB_DIR="$T/stub"; mkdir -p "$STUB_DIR"
+export STUB_DIR="$T/fixtures"; mkdir -p "$STUB_DIR"
 printf '{"result":{"workspaces":[]}}' >"$STUB_DIR/workspaces.json"
 printf '{"result":{"panes":[]}}' >"$STUB_DIR/panes.json"
 printf '{"result":{"agents":[]}}' >"$STUB_DIR/agents.json"

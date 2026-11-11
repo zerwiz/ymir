@@ -17,7 +17,7 @@ ARM="$ROOT/bin/pi/syn-watch-arm.sh"
 fail=0
 pass() { echo "PASS: $1"; }
 bad()  { echo "FAIL: $1"; fail=1; }
-alive() {  # <pid> — running (not a reaped-or-zombie stub still awaiting wait)
+alive() {  # <pid> — running (not a reaped-or-zombie child still awaiting wait)
   local p=$1 st
   kill -0 "$p" 2>/dev/null || return 1
   st="$(awk '{print $3}' "/proc/$p/stat" 2>/dev/null)"
