@@ -193,6 +193,12 @@ else
   bad "the store linked clash to $(readlink "$STORE_DIR/clash") — the shipped shelf must win"
 fi
 
+# the front matter must PARSE as YAML — pi drops a skill whose front matter does not, silently
+if python3 -c 'import sys,yaml; t=open(sys.argv[1]).read().split("---")[1]; d=yaml.safe_load(t); sys.exit(0 if d.get("name")=="ymir" and d.get("description") else 1)' "$ROOTSK" 2>/dev/null; then
+  ok "the root skill's front matter parses as YAML (name ymir, a description)"
+else
+  bad "the root skill's front matter does not parse — a harness would drop it"
+fi
 desc_bytes="$(sed -n '2,3p' "$ROOTSK" | wc -c | tr -d ' ')"
 if [ "$desc_bytes" -le 220 ] && grep -q '^description: .\{20,\}' "$ROOTSK"; then
   ok "the per-turn cost is one name and one description line ($desc_bytes bytes)"
