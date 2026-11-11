@@ -784,3 +784,15 @@ the operator's hours.
 **What this does not excuse.** A repair that changes behaviour beyond the fix — a new door, a new
 default, a new claim on the system, a new public surface — is *new work* and earns its own proof. The
 word "fix" is not a licence to slip a feature in behind an approval.
+
+## 2026-11-11 — Ymir is a program, and it runs globally (RULES/51)
+
+At the operator's word: *"ymir are the logic. the tools. the programs."* · *"ymir must work GLOBALLY on the users
+computers."* This repository is the **source** Ymir is built and shipped from; it is **not** where Ymir is used.
+Ymir runs in the user's **root agents** — the global agent of every harness they have (pi, Claude Code, OpenCode,
+Codex, Cursor, and any harness to come) — and in their home, so a session opened in `~` or in any project has all of
+it: the contract, the extensions (on pi at least `ro`, ask-user, `todo`, `open-editor`), the MCP doors, the skills and
+the hooks. **Install and every update seat them; a root agent loads the pinned runtime, never a working tree.** A
+feature is done when it answers from a session opened outside this checkout, on every harness, after install and after
+update. When you develop Ymir, build for the root agent first; this file is the page for working **on** Ymir. Full
+law: `RULES/51-ymir-is-a-program.md`.
