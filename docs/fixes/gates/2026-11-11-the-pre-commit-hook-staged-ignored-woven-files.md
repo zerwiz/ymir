@@ -16,3 +16,10 @@ re-seated with `bin/gates/guards/secret-guard.sh --install`.
 ## Proof
 Before: committing the letter-design change printed the ignored-path hint and left `git log` unchanged. After the
 fix and the re-seat: the same commit lands.
+
+## CHANGE LOG
+
+- **2026-11-11** — written with the change (nidavellir, plan 250).
+- **2026-11-11** — the same branch also widened `rules-compliance-guard.sh`'s template exemption (`is_shape`) to
+  `systems/snotra/services/letters/templates/*`: a letter template is a shape mailed to a reader, exactly like
+  `.agents/templates/*`, so a CHANGE LOG inside it would be mailed too.

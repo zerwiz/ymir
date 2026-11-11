@@ -24,3 +24,7 @@ keeps in the home (`hodd/identity/letters/themes.yaml`) — company names and co
 `python3 systems/snotra/services/letters/letter-design.py --self-test` → `ok (13 types × 7 themes)` with the operator's
 home themes, `ok (13 types × 3 themes)` without a home. A `mail-send.sh draft --dry-run` of a typed letter produced
 `multipart/alternative` with the designed HTML and a plain part without the header.
+
+## CHANGE LOG
+
+- **2026-11-11** — written with the change (nidavellir, plan 250).

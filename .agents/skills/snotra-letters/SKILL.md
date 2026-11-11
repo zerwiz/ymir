@@ -55,3 +55,7 @@ separated by a blank line: `## heading` · paragraphs (`**bold**`, `` `code` ``,
 - **A new letter type** that is generic goes in `templates/house/types/` (public, placeholders only); one with a
   company's or a person's details goes in the home.
 - Proof: `python3 systems/snotra/services/letters/letter-design.py --self-test` (every type in every theme).
+
+## CHANGE LOG
+
+- **2026-11-11** — first written with the house letter design (plan 250 §7): the four template shelves, the letter types, the themes, the markers.
