@@ -21,22 +21,22 @@ The tree replaced a single register on 2026-11-06 (plan 211) so that a change in
 folder rewrites one file instead of colliding on every branch.
 
 bin[50]{file,does,kind,verdict,disposition,callers,lines}:
-  "15-commits-leave-by-pull-request.md","15 — Every commit leaves by a pull request, or it lands in main","data","wired","keep",0,35
+  "15-commits-leave-by-pull-request.md","15 — Every commit leaves by a pull request, or it lands in main","data","wired","keep",1,35
   "16-a-review-is-a-file.md","16 — A review is a file in the repository","data","wired","keep",0,32
   "17-one-agent-one-worktree.md","17 — One agent, one worktree","data","wired","keep",0,36
-  "18-an-area-is-held-or-waived.md","18 — An area is held, waived or never (an area is never silently nobody's)","data","wired","keep",0,34
-  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",49,-
-  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",49,-
-  "README.md","areas/ — what this repository answers for","data","tested","keep",49,-
+  "18-an-area-is-held-or-waived.md","18 — An area is held, waived or never (an area is never silently nobody's)","data","wired","keep",1,34
+  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",50,-
+  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",50,-
+  "README.md","areas/ — what this repository answers for","data","tested","keep",50,-
   "TEMPLATE.yaml","areas/TEMPLATE.yaml — what one area's declaration looks like.","data","wired","keep",2,44
-  "a2a-guard.sh","a2a-guard — a card in the constellation must stay true, and a changed one must still be valid.","tool","wired","keep",1,38
-  "a2a.md","A2A — the repository's card in the constellation","data","wired","keep",0,53
-  "a2a.py","'''a2a.py — the repository's own card in the constellation.","tool","wired","keep",2,208
+  "a2a-guard.sh","a2a-guard — a card in the constellation must stay true, and a changed one must still be valid.","tool","wired","keep",2,38
+  "a2a.md","---","data","wired","keep",1,65
+  "a2a.py","'''a2a.py — the repository's own card in the constellation.","tool","wired","keep",3,208
   "a2a.sh","a2a.sh — this repository's card in the constellation (a thin door; the craft is a2a.py).","tool","wired","keep",4,18
   "advantage-audit.sh","advantage-audit.sh — is every claim we make backed by evidence, or only by confidence?","tool","tested","keep",2,141
-  "advantage.md","Competitive advantage — how we research it, and how we are allowed to state it","data","wired","keep",0,129
+  "advantage.md","---","data","wired","keep",0,141
   "areas-guard.sh","areas-guard — a change to an area nobody holds is refused, and the AREA is named, never the author.","tool","wired","keep",6,81
-  "areas.md","Areas — how a repository says what it answers for","data","wired","keep",1,80
+  "areas.md","---","data","wired","keep",2,92
   "areas.py","'''areas.py — a repository's own answer to the canon of areas.","tool","wired","keep",5,417
   "areas.sh","areas.sh — this repository's own answer to the canon of areas (a thin door; the craft is areas.py).","tool","wired","keep",15,18
   "canon.yaml","areas/canon.yaml — the plain face of the canon: what every project must answer for.","data","wired","keep",6,139
@@ -44,11 +44,11 @@ bin[50]{file,does,kind,verdict,disposition,callers,lines}:
   "collab-connect.sh","collab-connect.sh — what a collaborator pastes, and the token the house mints.","tool","wired","keep",1,39
   "collab.sh","collab.sh — Vingólf, the assembly hall: who collaborates with the house, on which surface, and at which rung.","tool","wired","keep",6,65
   "collaboration-files.md","Subject: One set of files in every project — can we work this way?","data","wired","keep",2,50
-  "collaborator-door.md","The collaborator door — how a hand that is not on our network talks to the house","data","wired","keep",0,74
+  "collaborator-door.md","---","data","wired","keep",0,86
   "fixes-components.sh","The components of this product — one directory of notes each, and no invented names.","tool","wired","keep",1,4
   "fixes-guard.sh","fixes-guard — a behaviour change leaves a note, or says why it did not need one.","tool","tested","keep",6,29
   "fixes.sh","fixes.sh — the fix notes.","tool","wired","keep",4,81
-  "gates.md","The gates — what stops what, and why each exists","data","wired","keep",0,51
+  "gates.md","---","data","wired","keep",3,63
   "handoff-README.md","handoff — the baton","data","wired","keep",1,91
   "handoff-TEMPLATE.md","Handoff — <from> → <to>","data","wired","keep",1,46
   "handoff-check-wrapper.sh","handoff/check.sh — the stable door for the baton, in any project.","data","wired","keep",1,12
@@ -56,7 +56,7 @@ bin[50]{file,does,kind,verdict,disposition,callers,lines}:
   "init.sh","init.sh — put the collaboration shelf into a repository, or check the one it has.","tool","wired","keep",5,124
   "letter.sh","letter.sh — the collaboration letter, rendered from a template and left as a DRAFT in the gate.","tool","wired","keep",4,81
   "new-module-test.sh","new-module-test.sh — a new module arrives with a test, or with a reason it does not need one.","tool","wired","keep",1,31
-  "notices.md","Where a gate's words go — the arm holder's window, and the project's orchestrator","data","wired","keep",0,73
+  "notices.md","---","data","wired","keep",0,85
   "notify-arm.sh","notify-arm.sh — hand a gate's message to the ARM HOLDER, never to whoever happened to type the command.","tool","wired","keep",4,230
   "pr-check.sh","pr-check — is every commit that exists proposed for review?","tool","tested","keep",6,26
   "pr-guard.sh","pr-guard — a branch that exists on the remote must have a pull request.","tool","wired","keep",1,35
@@ -67,7 +67,7 @@ bin[50]{file,does,kind,verdict,disposition,callers,lines}:
   "reviews.sh","reviews.sh — a review is a file in the repository, so the next hand gets it without asking anyone.","tool","wired","keep",1,70
   "secret-scan.sh","secret-scan — a credential must never enter this repository, and a hook is cheaper than a history rewrite.","tool","wired","keep",1,37
   "ship.sh","ship.sh — the house's git discipline as one door: branch, commit named paths, merge to the base, push.","tool","wired","keep",5,63
-  "standardise.sh","standardise.sh — put the collaboration kit into a repository, or say what is missing.","tool","wired","keep",1,89
+  "standardise.sh","standardise.sh — put the collaboration kit into a repository, or say what is missing.","tool","wired","keep",1,91
   "test_collab.sh","test_collab.sh — the proofs for bin/collab (Vingólf).","data","wired","keep",0,93
   "who.py","'''who.py — the roll: who was invited into the house's collaboration surfaces, and are they using them?","tool","wired","keep",2,393
   "worktree.sh","worktree.sh — one agent, one worktree.","tool","wired","migrate → src/ymir_runtime/worktree.py",1,45

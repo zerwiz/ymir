@@ -1,3 +1,10 @@
+---
+title: "The collaborator door"
+status: "accepted"
+owner: "the project's collaboration-kit owner"
+updated: "2026-11-11"
+---
+
 # The collaborator door — how a hand that is not on our network talks to the house
 
 **What it is.** One door, three layers, and one law: *a collaborator is a counterpart, never a seat.*
@@ -71,3 +78,8 @@ bin/collab/kit/scripts/collab-connect.sh mint --peer andre --skill well-recall -
 ## CHANGE LOG
 
 - **2026-11-05** — first written (Hœnir) with the ward and the kit.
+
+## References
+
+- `scripts/collab-connect.sh`, `docs/a2a.md`, `docs/gates.md`
+- `docs/headers.md` — the header and References format this document follows
