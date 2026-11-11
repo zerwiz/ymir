@@ -311,11 +311,16 @@ if [ "$MODE_CHECK" = "1" ]; then
   if [ -n "$vroot" ]; then printf '  %-46s %s\n' ".ymir-root record" "PASS -> $vroot"
   else printf '  %-46s %s\n' ".ymir-root record" "FAIL — run: bin/seat/valknut-load.sh --pi"; fails=$((fails+1)); fi
   # Global reach: the user settings must name the tree that serves this session, or
-  # the extensions load only when a session happens to sit inside the repo.
+  # the extensions load only when a session happens to sit inside the repo — UNLESS the
+  # one-home door is seated, which reconciles a bare `pi` at launch (2026-11-11): a seat
+  # started in a checkout the settings do not name then loads THAT checkout's tree once
+  # instead of two homes. Either answer is one home; neither is a fault.
   if PI_EXT_SRC="$PI_EXT_SERVING" pi_settings_extension_root_present; then
     printf '  %-46s %s\n' "pi settings name the extensions tree" "PASS -> $PI_EXT_SERVING"
+  elif [ -x "${HOME}/.pi/agent/bin/pi" ] && grep -q 'pi-door' "${HOME}/.pi/agent/bin/pi" 2>/dev/null; then
+    printf '  %-46s %s\n' "pi settings name the extensions tree" "PASS -> reconciled by the one-home door"
   else
-    printf '  %-46s %s\n' "pi settings name the extensions tree" "FAIL — run: bin/seat/valknut-load.sh --pi"; fails=$((fails+1))
+    printf '  %-46s %s\n' "pi settings name the extensions tree" "FAIL — run: bin/seat/valknut-load.sh --pi, or seat the door (bin/seat/harness-extensions-install.sh)"; fails=$((fails+1))
   fi
   printf 'check{pi-extension-check}:
 '
