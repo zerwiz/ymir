@@ -136,7 +136,7 @@ Get started with {version number} by {write the first step a user needs to start
 Example: To begin the system updates:
 
 1. Choose the version number.
-2. Download the update at [link](http://example.com).
+2. Download the update at [link](https://example.com).
 3. Double-click the update file.
 4. Additional steps as needed.
 
