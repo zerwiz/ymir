@@ -13,6 +13,7 @@
 #
 #   mail-send.sh draft --to a@x,b@y --subject S --body FILE \
 #       [--html FILE | --template NAME | --plain] [--footer LINE] \
+#       (a --body that opens with a `theme:` header is rendered by letter-design.py — the house letter design)
 #       [--attach FILE ...] [--record ID] [--dry-run]
 #   mail-send.sh raw    <draft-id>     # the exact bytes, for an approval hash
 #   mail-send.sh send <draft-id>       # refused unless the approval matches those bytes
@@ -100,6 +101,15 @@ draft(){
   # A letter leaves dressed. The words stay exactly the words; this only puts them inside a template, so the
   # house does not depend on any one hand remembering to style what it sends. --plain is the deliberate
   # opt-out, and --html is a letter dressed by hand in one of the templates this script cannot re-render.
+  # A letter that opens with a `theme:` header is written for the house letter design (plan 250 §7): it is rendered
+  # by letter-design.py — the blocks, the themes, the letter types — and its plain twin is the same words without
+  # the header. `letter-design.py --types` lists the letter types; `--themes` the themes (company themes live in the home).
+  if [ -z "$html" ] && [ "$plain" != 1 ] && printf '%s' "$body" | head -6 | grep -qE '^theme:[[:space:]]*[A-Za-z]'; then
+    local design="$ROOT/systems/snotra/services/letters/letter-design.py"
+    [ -f "$design" ] || die "the letter design renderer is missing: $design"
+    html="$(printf '%s' "$body" | python3 "$design" -)" || die "the letter could not be designed — run letter-design.py on it to see why"
+    body="$(printf '%s' "$body" | awk 'NR==1 && /^---$/ {h=1; next} h && /^---$/ {h=0; next} !h')"
+  fi
   if [ -z "$html" ] && [ "$plain" != 1 ]; then
     local render="$ROOT/systems/snotra/services/letters/letter-html.py"
     [ -f "$render" ] || die "the letter renderer is missing: $render (pass --html FILE or --plain)"

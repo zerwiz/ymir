@@ -63,6 +63,9 @@ case "${1-}" in
            printf 'library: cannot resolve the research shelf — set YMIR_RESEARCH_ROOT or seat the home (bin/vault/hoard-lib.sh)\n' >&2
            exit 2
          fi
-         exec python3 "$ROOT/src/ymir_runtime/library.py" research --root "$R" "$@" ;;
+         # The subcommand comes first: `research keep --root R ...`. Passing --root before it made every
+         # `library.sh research keep ...` fail with "unknown subcommand ''" (found 2026-11-11, plan 250).
+         SUB="${1-}"; [ $# -gt 0 ] && shift
+         exec python3 "$ROOT/src/ymir_runtime/library.py" research "$SUB" --root "$R" "$@" ;;
   *) printf 'error: unknown command %s\nhelp: library.sh check|ask|index|research|self-test\n' "$1" >&2; exit 2 ;;
 esac
