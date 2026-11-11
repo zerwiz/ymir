@@ -108,12 +108,23 @@ remote() { # remote <dest> <command…>
 
 # --- verbs ---------------------------------------------------------------------------
 cmd_seats() {
-  local name primary host user dest reach seat_primary
+  local name primary host user dest reach seat_primary self
   local found=0
+  self="$(self_seat 2>/dev/null || hostname 2>/dev/null || true)"
   printf 'seats[%s]{seat,primary,reachable,door}:\n' "$(registry_rows | wc -l | tr -d ' ')"
   while IFS=$'\t' read -r name primary host user; do
     [ -n "$name" ] || continue
     found=1
+    # A seat is measured by a LOCAL probe when it IS this machine (Rule 25: probe, never
+    # assume; and never a false red). This row read `unreachable` on heimdall because the
+    # table reached for the seat you are standing on over ssh — and this host's own key is
+    # not in its own authorized_keys, so the door that answers for everybody else refused
+    # the machine itself. The wire does not need a key to talk to itself.
+    if [ -n "$self" ] && [ "$name" = "$self" ]; then
+      reach="up (self)"
+      printf '  "%s","%s","%s","local — this machine"\n' "$name" "$primary" "$reach"
+      continue
+    fi
     dest="$(resolve_dest "$host" "$user")"
     if remote "$dest" true >/dev/null 2>&1; then reach=up; else reach=unreachable; fi
     printf '  "%s","%s","%s","ssh %s"\n' "$name" "$primary" "$reach" "$dest"
