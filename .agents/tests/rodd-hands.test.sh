@@ -151,5 +151,37 @@ case "$CAL_OUT" in
   *) ok "calendar_write never reached the write door — nothing was created" ;;
 esac
 
+# ── 5. every tool name is unique → the realtime session can start ──────────────
+# The realtime client refuses a session that carries two tools of one name
+# ("Duplicate Realtime tool names found: 'arm_who' (2 function tools) …") and refuses
+# BEFORE any audio — so Rödd opened a window that could never speak. Two branches each
+# added arm_who / eindri_list / eindri_send and the merge kept both copies. Caught here,
+# at the gate, instead of in his ear.
+DUP_OUT="$(python3 - "$VT" <<'PY' 2>&1
+import ast, collections, sys
+src = open(sys.argv[1], encoding="utf-8").read()
+tree = ast.parse(src)
+names = []
+for node in tree.body:
+    if isinstance(node, ast.Assign) and any(getattr(t, "id", "") == "TOOLS" for t in node.targets):
+        for elt in node.value.elts:
+            for kv in elt.keys:
+                if getattr(kv, "value", "") == "name":
+                    names.append(elt.values[elt.keys.index(kv)].value)
+dupes = sorted(n for n, c in collections.Counter(names).items() if c > 1)
+print("dupes:" + ",".join(dupes))
+print("count:%d" % len(names))
+PY
+)"
+case "$DUP_OUT" in
+  *dupes:*)
+    if printf '%s\n' "$DUP_OUT" | grep -qx 'dupes:'; then
+      ok "every voice tool name is unique"
+    else
+      bad "voice tool names repeat — the realtime session will refuse to start: $(printf '%s\n' "$DUP_OUT" | grep '^dupes:' | cut -d: -f2-)"
+    fi ;;
+  *) bad "the toolbox could not be read to check its names (got: $(printf '%s' "$DUP_OUT" | head -2 | tr '\n' ' '))" ;;
+esac
+
 [ "$fail" -eq 0 ] && printf '1..1 # all claims proved\n'
 exit "$fail"

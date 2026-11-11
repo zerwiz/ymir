@@ -664,8 +664,9 @@ TOOLS = [
         "name": "eindri_send",
         "description": (
             "Send one line to a worker already seated in herdr (a pane id from eindri_list), as a new "
-            "turn it will act on. The door answers `sent` or `FAILED`; say exactly which, never that the "
-            "work is done. Its answer appears later in its pane — read it with pane_read."
+            "turn it will act on, and then read what its pane shows. The door answers `sent` or "
+            "`FAILED`; say exactly which, never that the work is done. Its answer appears later in its "
+            "pane — read it with pane_read."
         ),
         "parameters": {
             "type": "object",
@@ -750,15 +751,6 @@ TOOLS = [
     },
     {
         "type": "function",
-        "name": "arm_who",
-        "description": (
-            "Who is holding the arm — the session that drains wakes, dispatches errands and answers. "
-            "Use when he asks 'who is watching', or before handing a line over."
-        ),
-        "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
-    },
-    {
-        "type": "function",
         "name": "arm_tell",
         "description": (
             "Hand one line to the session that holds the arm, so the live session sees it between turns. "
@@ -768,32 +760,6 @@ TOOLS = [
             "type": "object",
             "properties": {"text": {"type": "string", "description": "one line to hand over"}},
             "required": ["text"],
-            "additionalProperties": False,
-        },
-    },
-    {
-        "type": "function",
-        "name": "eindri_list",
-        "description": (
-            "The workers standing in herdr: each pane, its state, and where it is working. Use before "
-            "sending anything to a worker, or when he asks what the house is doing right now."
-        ),
-        "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
-    },
-    {
-        "type": "function",
-        "name": "eindri_send",
-        "description": (
-            "Send one line to a worker already seated in herdr, and then read what its pane shows. "
-            "Call eindri_list first so the target is a pane that really holds a worker."
-        ),
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "target": {"type": "string", "description": "the worker's pane (w49:p1) or its agent name"},
-                "line": {"type": "string", "description": "one line of instruction"},
-            },
-            "required": ["target", "line"],
             "additionalProperties": False,
         },
     },
@@ -817,6 +783,30 @@ TOOLS = [
         },
     },
 ]
+
+
+def _duplicate_tool_names(tools):
+    seen, dupes = set(), []
+    for tool in tools:
+        name = tool.get("name")
+        if name in seen:
+            dupes.append(name)
+        seen.add(name)
+    return sorted(set(dupes))
+
+
+# A voice session is refused outright when two tools carry one name — the realtime client
+# says `Duplicate Realtime tool names found: 'arm_who' (2 function tools) …` and refuses
+# BEFORE any audio, so Rödd opens a window that can never speak. It happened twice: two
+# branches each added arm_who / eindri_list / eindri_send (880973fe over dd4e3b12) and the
+# merge kept both copies. Caught here, at import, the fault names itself once and the
+# toolbox is mended in one place — instead of a window that silently does nothing.
+_DUPLICATE_TOOL_NAMES = _duplicate_tool_names(TOOLS)
+if _DUPLICATE_TOOL_NAMES:
+    raise RuntimeError(
+        "voice tool names must be unique — a realtime session refuses duplicates: "
+        + ", ".join(_DUPLICATE_TOOL_NAMES)
+    )
 
 
 CREATE_RESPONSE = True  # a plain return value is spoken back unless overridden per call
