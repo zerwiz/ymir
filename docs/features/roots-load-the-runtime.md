@@ -63,3 +63,7 @@ before 2026-11-11 is fixed by migration `0022-roots-load-the-runtime`. `bin/agen
   because it has no `bin/seat` or `RULES/`. Run `bin/engine/runtime-deploy.sh`.
 - `scan` still lists a path after `repoint`: it is held. Read its row.
 - pi still shows "Tool … conflicts": run `bin/seat/valknut-load.sh --check`. Its rows name the second home.
+
+## CHANGE LOG
+
+- **2026-11-11** — written with the feature (plan 248 P2 + P3).
