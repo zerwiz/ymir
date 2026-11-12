@@ -518,6 +518,22 @@ serve_ok() {  # <harness> <model> -> 0 servable
 
 resolve_harness_model() {
   local req mr mrow m5 prov h conf _m _h _first _clean _f1 _f2
+  # (0) Claude serves Anthropic models only (2026-11-12). It never takes pi's or opencode's
+  # model, from the machine default or anywhere else: that handed every Claude seat
+  # `opencode-go/deepseek-v4.1-flash`, which it cannot serve. And `--model opus` is a
+  # Claude alias, not a request for bin/model/model-resolve.sh, which knows only the pi
+  # catalogue and refused it. An unnamed model is the allow-list's `defaults.claude`
+  # (bin/model/model-allow.sh), filled in by the gate below.
+  if [ "$HARNESS" = claude ]; then
+    MODEL_LOCAL=no
+    if [ "$MODEL_SET" -eq 1 ] && [ -n "$MODEL" ] && [ "$MODEL" != default ]; then
+      MODEL_PROV="explicit flag (--model $MODEL)"
+    else
+      MODEL=""
+      MODEL_PROV="the allow-list's claude default (bin/model/model-allow.sh default claude)"
+    fi
+    return 0
+  fi
   # (1) an explicit CONCRETE model token; harness by locality when unset
   if [ "$MODEL_SET" -eq 1 ] && [ -n "$MODEL" ] && model_is_token "$MODEL"; then
     MODEL_PROV="explicit flag (--model $MODEL)"
@@ -538,6 +554,13 @@ resolve_harness_model() {
     fi
     MODEL="${prov}/${m5}"
     MODEL_PROV="bin/model/model-resolve.sh resolve \"$req\" (confidence=$conf)"
+    if [ "$h" = claude ] && { [ -z "$HARNESS" ] || [ "$HARNESS" = claude ]; }; then
+      # a Claude alias or id resolved to Claude: the bare id, never a catalogue token
+      HARNESS=claude; HARNESS_PROV="bin/model/model-resolve.sh (a Claude model)"
+      MODEL=$m5; MODEL_LOCAL=no
+      unset _clean _f1 _f2
+      return 0
+    fi
     if [ -z "$HARNESS" ] && [ -n "$h" ] && [ "$h" != default ]; then
       HARNESS=$h
       HARNESS_PROV="bin/model/model-resolve.sh (resolved harness)"
@@ -554,6 +577,11 @@ resolve_harness_model() {
           _h=$("$SCRIPT_DIR/../fleet/agents-config.sh" get brokk harness 2>/dev/null | sed -n '1p')
           HARNESS=$_h
           [ -n "$HARNESS" ] && HARNESS_PROV="config/agents.yaml via bin/fleet/agents-config.sh (harness rule)"
+        fi
+        if [ "$HARNESS" = claude ]; then  # never hand Claude another harness's model (step 0)
+          MODEL=""; MODEL_LOCAL=no
+          MODEL_PROV="the allow-list's claude default (bin/model/model-allow.sh default claude)"
+          return 0
         fi
       fi
     fi
@@ -609,6 +637,49 @@ else
     echo "error: harness '$HARNESS' executable not found on PATH; install it or select a verified harness" >&2
     exit 1
   fi
+fi
+
+# --- the allow-list: only the models this fleet approved (2026-11-12) ---------
+# On 2026-11-11 workers sent out on a pro model spent a month of cloud credit in one
+# night. Every model the spawn resolved is put to the operator's allow-list
+# (bin/model/model-allow.sh, the list in the home) BEFORE anything is created. A model
+# the list does not allow is refused, by name and with the remedy. A dated grant in the
+# same file allows a model on purpose, and the use is logged. A raw launch command is
+# put to the same list for any `--model`/`-m` it names. No variable here allows a model.
+ALLOW_DOOR="$SCRIPT_DIR/../model/model-allow.sh"
+allow_gate() {  # <harness> <model> — refuses (exit 1) or rewrites MODEL to the allowed id
+  local h=$1 m=$2 out rc=0 verdict allowed_model rule reason
+  [ -x "$ALLOW_DOOR" ] || { echo "error: the allow-list door is missing at $ALLOW_DOOR — refused, because an unread list is no list" >&2; exit 1; }
+  if [ "$DRY" -eq 1 ]; then
+    out=$("$ALLOW_DOOR" check "$m" --harness "$h" 2>/dev/null) || rc=$?
+  else
+    out=$("$ALLOW_DOOR" check "$m" --harness "$h" --for "$ID" 2>/dev/null) || rc=$?
+  fi
+  IFS=$'\x1f' read -r verdict allowed_model rule reason < <(printf '%s\n' "$out" | python3 -c '
+import json, sys
+rows = sys.stdin.read().splitlines()
+cells = json.loads("[" + rows[1].strip() + "]") if len(rows) > 1 else ["", "", "", "refused", "", "the door gave no answer"]
+print("\x1f".join([cells[3], cells[2], cells[4], cells[5]]))' 2>/dev/null) || true
+  if [ "$rc" -ne 0 ] || [ "$verdict" = refused ] || [ -z "$verdict" ]; then
+    echo "refused: ${reason:-the allow-list refused model '${m:-<harness default>}' for harness '$h'}" >&2
+    printf '%s\n' "$out" | sed -n 's/^help: /help: /p' >&2
+    echo "help: bin/model/model-allow.sh list   (the list is $("$ALLOW_DOOR" path 2>/dev/null))" >&2
+    exit 1
+  fi
+  case "$verdict" in
+    granted)   echo "note: model '$allowed_model' runs on a grant ($rule): $reason — the use is logged" >&2
+               MODEL_PROV="${MODEL_PROV:-} · granted ($rule)" ;;
+    unpoliced) echo "warning: $reason" >&2 ;;
+  esac
+  [ -z "$RAW_LAUNCH" ] && [ -n "$allowed_model" ] && MODEL=$allowed_model
+  return 0
+}
+if [ -n "$RAW_LAUNCH" ]; then
+  _raw_model=$(printf '%s' "$RAW_LAUNCH" | awk '{for(i=1;i<NF;i++) if ($i=="--model"||$i=="-m") {print $(i+1); exit} for(i=1;i<=NF;i++) if ($i ~ /^--model=/) {sub(/^--model=/,"",$i); print $i; exit}}' | tr -d "'\"")
+  if [ -n "$_raw_model" ]; then allow_gate "$HARNESS" "$_raw_model"; fi
+  unset _raw_model
+else
+  allow_gate "$HARNESS" "${MODEL:-}"
 fi
 
 # --- isolation: the brief DECLARES it; the spawn validates it (D2) ----------

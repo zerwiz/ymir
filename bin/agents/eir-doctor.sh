@@ -111,7 +111,7 @@ surface_detail_skip() {
 }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir hnoss shells graphics well memory mail mcp harness claudehooks arm roddhelm lock gates migrations hoard autoboot vault ward seats seatreap)
+SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir hnoss shells graphics well memory mail mcp harness claudehooks arm roddhelm lock gates migrations hoard autoboot vault ward seats seatreap models)
 
 # ── the three surfaces the 2026-11-03 Windows audit found, and the rule they read ──────────
 # A SEAT IS NOT UPDATED BY A PULL. The checkout moves; the installed hooks, the PATH a later
@@ -320,6 +320,23 @@ print(",".join(d.get("accounts") or []))' 2>/dev/null)"
   esac
 }
 s_mail()      { [ "$(mail_state)" = ok ]; }
+# ── the allow-list (2026-11-12): only the models this operator approved run as Eindri ────────
+# Broken when a seat still working, or a configured default (agents.yaml, pi's settings), names a
+# model the list refuses. The mend is the operator's word (the list, a grant, or stopping the seat),
+# never a rewrite by the doctor, so f_models only says where to look.
+s_models()    { "$SCRIPT_DIR/../model/model-allow.sh" audit "$STATE" >/dev/null 2>&1; }
+f_models()    { return 1; }
+models_detail() {
+  local out n
+  if ! "$SCRIPT_DIR/../model/model-allow.sh" list >/dev/null 2>&1; then printf 'the allow-list does not read — bin/model/model-allow.sh list'; return; fi
+  if "$SCRIPT_DIR/../model/model-allow.sh" list 2>/dev/null | sed -n 2p | grep -q unpoliced; then
+    printf 'unpoliced — no allow-list at %s (template: config/models-allowed.yaml.example)' "$("$SCRIPT_DIR/../model/model-allow.sh" path)"; return
+  fi
+  out="$("$SCRIPT_DIR/../model/model-allow.sh" audit "$STATE" 2>/dev/null)"
+  n="$(printf '%s\n' "$out" | sed -n '1s/.*\[\([0-9]*\)\].*/\1/p')"
+  if [ "${n:-0}" = 0 ]; then printf 'every live seat and configured default is on the allow-list'
+  else printf '%s off the allow-list: %s' "$n" "$(printf '%s\n' "$out" | sed -n '2,4p' | cut -d'"' -f2,6 | tr '"' '=' | paste -sd' ' -)"; fi
+}
 f_mail()      { [ -x "$ROOT/bin/mail/install.sh" ] && "$ROOT/bin/mail/install.sh" >/dev/null 2>&1; }
 # The desktop shells (P8, 2026-09-24): the RESOLVER answers — app-local,
 # workspace-hoisted, or the sibling package (bin/desktop/electron-lib.sh). ABSENT for
@@ -658,6 +675,7 @@ detail() { # <name> -> the command that prints one short fact
     well)      printf '%s\n' well_detail ;;
     memory)    printf '%s\n' memory_detail ;;
     mail)      printf '%s\n' mail_detail ;;
+    models)    printf '%s\n' models_detail ;;
     mcp)       printf '%s\n' "echo 'a2abridge + the well door'" ;;
     graphics)  printf '%s\n' "if [ -z \"\${DISPLAY:-}\${WAYLAND_DISPLAY:-}\" ]; then echo headless; else echo \"\$(graphics_block 2>/dev/null | sed -n '1p' | sed 's/.*{//;s/}//') · \$(graphics_policy 2>/dev/null)\"; fi" ;;
     harness)   printf '%s\n' "s_harness && echo 'deployed extensions resolve their bin/' || echo 'no live root recorded'" ;;

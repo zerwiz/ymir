@@ -29,7 +29,7 @@ run() {
     opencode) # `--agent` works when the agent is a primary (apply emits primaries)
               opencode run --agent "$AGENT" "$TASK" && exit 0
               exec opencode run -m "$MODEL" "$TASK" ;;
-    claude)   exec claude -p --model "$MODEL" "$TASK" ;;
+    claude)   exec claude -p ${MODEL:+--model "$MODEL"} "$TASK" ;;
     codex)    exec codex exec "$TASK" ;;
     gemini)   exec gemini -p "$TASK" ;;
     qwen)     exec qwen -p "$TASK" ;;
@@ -37,6 +37,24 @@ run() {
     *)        printf 'error: harness not wired: %s\nhelp: pick pi|opencode|claude|codex|gemini|qwen|hermes in config/agents.yaml\n' "$HARNESS" >&2; exit 1 ;;
   esac
 }
+
+# The allow-list (2026-11-12): only the models this operator approved may run. Claude
+# never takes another harness's `provider/model`, so the list's `defaults.claude` is
+# used. A model the list refuses never launches (bin/model/model-allow.sh).
+if [ "$HARNESS" = claude ]; then case "$MODEL" in */*|default) MODEL="" ;; esac; fi
+ALLOW_OUT="$("$SCRIPT_DIR/../model/model-allow.sh" check "$MODEL" --harness "$HARNESS" --for "agent-run:$AGENT" 2>/dev/null)"
+ALLOW_RC=$?
+ALLOW_ROW="$(printf '%s\n' "$ALLOW_OUT" | python3 -c '
+import json, sys
+rows = sys.stdin.read().splitlines()
+c = json.loads("[" + rows[1].strip() + "]") if len(rows) > 1 else ["", "", "", "refused", "", "the allow-list door gave no answer"]
+print("\x1f".join([c[3], c[2], c[5]]))' 2>/dev/null)"
+IFS=$'\x1f' read -r ALLOW_VERDICT ALLOW_MODEL ALLOW_WHY <<<"$ALLOW_ROW"
+if [ "$ALLOW_RC" -ne 0 ] || [ "${ALLOW_VERDICT:-refused}" = refused ]; then
+  printf 'refused: %s (%s on %s)\nhelp: bin/model/model-allow.sh list\n' "${ALLOW_WHY:-the allow-list refused this model}" "$AGENT" "$HARNESS" >&2
+  exit 3
+fi
+[ -n "$ALLOW_MODEL" ] && MODEL="$ALLOW_MODEL"
 
 have "$HARNESS" || { printf 'error: harness %s is not on PATH (%s)\n' "$HARNESS" "$AGENT" >&2; exit 1; }
 printf 'agent-run[1]{agent,harness,model}:\n  "%s","%s","%s"\n' "$AGENT" "$HARNESS" "$MODEL" >&2
