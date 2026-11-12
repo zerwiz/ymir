@@ -41,6 +41,7 @@ if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
 fi
 app_dir hlidskjalf APP_HLIDSKJALF || APP_HLIDSKJALF=""
 app_dir rodd APP_RODD || APP_RODD=""
+app_dir bilskirnir APP_BILSKIRNIR || APP_BILSKIRNIR=""
 app_dir sessrumnir APP_SESSRUMNIR || APP_SESSRUMNIR=""
 app_dir odrerir APP_ODRERIR || APP_ODRERIR=""
 
@@ -105,7 +106,7 @@ launcher_root() {
 # where this checkout lives is a fact about the machine, not about Ymir.
 install_entries() {
   local dst="$HOME/.local/share/applications" n=0
-  local dirs=("$APP_HLIDSKJALF/electron" "$APP_SESSRUMNIR/resources" "$APP_ODRERIR/electron" "$APP_RODD/electron")
+  local dirs=("$APP_HLIDSKJALF/electron" "$APP_SESSRUMNIR/resources" "$APP_ODRERIR/electron" "$APP_RODD/electron" "$APP_BILSKIRNIR/electron")
   if [ "$(ymir_os)" != linux ] && [ "$(ymir_os)" != wsl ]; then
     printf 'skip: desktop entries are Omarchy/Linux-shaped; this host is %s\n' "$(ymir_os)" >&2
     return 0
@@ -118,14 +119,25 @@ install_entries() {
     return 1
   }
   mkdir -p "$dst" || return 1
-  local src found=0
+  local src found=0 want
   for src in "${dirs[@]}"; do
     [ -d "$src" ] || continue
     found=1
     for f in "$src"/*.desktop.in; do
       [ -e "$f" ] || continue
+      # an entry whose Exec names a door the launch root does not carry is a button that lies:
+      # skip it (Bilskirnir is in the tree before every packaged root has it)
+      want="$(sed -nE "s|^Exec=(bash )?__YMIR_ROOT__/([^ ]+).*|\\2|p" "$f" | head -1)"
+      if [ -n "$want" ] && [ ! -e "$root/$want" ]; then
+        printf 'skip: %s — %s is not in %s\n' "$(basename "$f" .in)" "$want" "$root" >&2; continue
+      fi
       sed -e "s|__YMIR_ROOT__|$root|g" "$f" >"$dst/$(basename "$f" .in)" && n=$((n+1))
     done
+    # an app that ships its own icon theme (icons/hicolor/<size>/apps/<name>.png) seats it, so its
+    # entry's themed Icon= resolves at every size the launcher asks for
+    if [ -d "$src/icons/hicolor" ]; then
+      mkdir -p "$HOME/.local/share/icons/hicolor" && cp -r "$src/icons/hicolor/." "$HOME/.local/share/icons/hicolor/"
+    fi
   done
   [ "$found" = 1 ] || { printf 'error: no launcher templates found\n' >&2; return 1; }
   printf 'entries[%s]{installed_to}\:\n  "%s","%s"\n' "$n" "$n" "$dst"

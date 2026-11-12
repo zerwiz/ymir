@@ -190,23 +190,31 @@ PY
 fi
 
 # ── 7. the launcher entry: the hall opens like the other apps, from the menu ────
-# Only where a desktop exists (Rule 25: probe, never assume); a server host gets a clean skip.
+# The same template the house's desktop layer renders (bin/desktop/desktop-place.sh entries), so the two
+# writers can never disagree: electron/ymir-bilskirnir.desktop.in with __YMIR_ROOT__ = this tree, and the
+# bronze Ymir mark seated in the icon theme at every size the launcher asks for. Only where a desktop
+# exists (Rule 25: probe, never assume) — a server host gets a clean skip.
 DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 DESK="$DATA_HOME/applications/ymir-bilskirnir.desktop"
-ICON_DST="$DATA_HOME/icons/hicolor/512x512/apps/ymir-bilskirnir.png"
-want_desk="$(sed "s#__APP__#$APP#g" "$APP/electron/bilskirnir.desktop.in" 2>/dev/null)"
+REPO="$(dirname "$(dirname "$APP")")"
+want_desk="$(sed "s|__YMIR_ROOT__|$REPO|g" "$APP/electron/ymir-bilskirnir.desktop.in" 2>/dev/null)"
 if [ "${BILSKIRNIR_DESKTOP:-1}" = 0 ]; then
   say "launcher entry skipped (BILSKIRNIR_DESKTOP=0)"
 elif [ -z "${WAYLAND_DISPLAY:-}${DISPLAY:-}" ] && [ ! -d "$DATA_HOME/applications" ]; then
   say "no desktop on this host — no launcher entry"
 elif [ "$CHECK" = 1 ]; then
-  [ "$(cat "$DESK" 2>/dev/null)" = "$want_desk" ] && say "launcher entry current" || say "launcher entry missing or stale (not required)"
+  if [ "$(cat "$DESK" 2>/dev/null)" = "$want_desk" ] && [ -f "$DATA_HOME/icons/hicolor/256x256/apps/ymir-bilskirnir.png" ]; then
+    say "launcher entry current (Bilskirnir, the bronze mark)"
+  else
+    say "launcher entry missing or stale — re-run setup.sh"; fail=1
+  fi
 else
-  mkdir -p "$(dirname "$DESK")" "$(dirname "$ICON_DST")"
+  mkdir -p "$(dirname "$DESK")" "$DATA_HOME/icons/hicolor"
   printf '%s\n' "$want_desk" > "$DESK"
-  cp "$APP/electron/icon.png" "$ICON_DST"
+  cp -r "$APP/electron/icons/hicolor/." "$DATA_HOME/icons/hicolor/"
   command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$(dirname "$DESK")" >/dev/null 2>&1
-  say "launcher entry seated (Ymir · Bilskirnir)"
+  command -v gtk-update-icon-cache >/dev/null 2>&1 && gtk-update-icon-cache -q -t -f "$DATA_HOME/icons/hicolor" >/dev/null 2>&1
+  say "launcher entry seated (Bilskirnir, the bronze mark)"
 fi
 
 [ "$fail" = 0 ] && { say "ready"; exit 0; } || { say "not ready"; exit 1; }

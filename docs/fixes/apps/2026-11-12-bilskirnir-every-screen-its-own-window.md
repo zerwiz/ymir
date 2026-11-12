@@ -66,3 +66,10 @@ Stored colour keys still work and wear the nearest house hue.
   in an update manifest, and the cloud's fixed link-local metadata address in Orgo's own guide. Neither is a house
   address; the ward now passes those two shapes and nothing else. The vendored documents and the how-to page gained the
   CHANGE LOG the append-only law asks for (component: gates).
+- **2026-11-12** — the launcher entry rides the house's desktop road (the Allfather: *"coming in like an icon on
+  updates and installations into the desktop as the other apps"*). `electron/ymir-bilskirnir.desktop.in` is rendered by
+  `bin/desktop/desktop-place.sh` like the other halls' and by `setup.sh` on install and every Gróa update; the bronze
+  mark ships as an icon theme from 16 to 512 px. Proof: the desktop app database lists `ymir-bilskirnir.desktop |
+  Bilskirnir | ymir-bilskirnir | shown` beside the other Ymir apps, and `gtk-launch ymir-bilskirnir` opened the window
+  (class `ymir-bilskirnir`, title `Bilskirnir`). `setup.sh --check` now fails on a missing entry, so Eir names it
+  (component: desktop).

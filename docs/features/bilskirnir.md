@@ -34,7 +34,7 @@ apps/bilskirnir/setup.sh --check     # is the install current?
 `start.sh` raises the pieces in the one order that works: setup, Nanna's gateway, the face, the server, and then the
 window. A piece that already answers is kept, never restarted. `--stop` lowers only what `start.sh` itself raised.
 
-The launcher entry **Ymir · Bilskirnir** is seated by the setup door wherever a desktop exists.
+The launcher entry **Bilskirnir**, with the bronze Ymir mark, is seated by install and refreshed by every Gróa update wherever a desktop exists. Open it from the app launcher like the other halls.
 
 ## On every screen
 
@@ -77,3 +77,4 @@ It fails when the page scrolls sideways or the composer leaves the screen.
 ## CHANGE LOG
 
 - **2026-11-12** — first written: every screen, its own window, install and Gróa, the house's words.
+- **2026-11-12** — the launcher entry is named Bilskirnir and rides the house's desktop road.

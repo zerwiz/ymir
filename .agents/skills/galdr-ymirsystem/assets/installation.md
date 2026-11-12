@@ -1469,3 +1469,19 @@ The window is opened by `apps/bilskirnir/start.sh` (gateway, face, server, Elect
 > [!NOTE]
 > The step is a `WARN`, never a `FAIL`, when the door does not finish: the hall is one application, and an install
 > must not stop the rest of the house because of it. The row names the command to run by hand.
+
+### 2026-11-12 (later) — Bilskirnir's launcher entry rides the house's desktop road
+
+At the Allfather's word: *"the new application also coming in like an icon on updates and installations into the
+desktop as the other apps."* The entry is now a template like the other halls': `apps/bilskirnir/electron/ymir-bilskirnir.desktop.in`
+(`__YMIR_ROOT__`, name "Bilskirnir", `Icon=ymir-bilskirnir`, class `ymir-bilskirnir`, opening `start.sh` and so the
+Electron window). The bronze Ymir mark ships as an icon theme at 16 to 512 px plus the scalable SVG under
+`apps/bilskirnir/electron/icons/hicolor/`.
+
+| Writer | When |
+|---|---|
+| `bin/desktop/desktop-place.sh entries` and `apply` (the Omarchy layer, and any Linux desktop) | install's Omarchy layer; it now renders Bilskirnir's template and seats any app's `icons/hicolor` tree. An entry whose `Exec` door is missing from the launch root is skipped, never written as a dead button |
+| `apps/bilskirnir/setup.sh` (step 7) | the install step `bilskirnir` and every Gróa update; the same template, so the two writers agree |
+| `setup.sh --check` | fails when a desktop exists and the entry or its icon is missing or stale, so Eir's `bilskirnir` surface names it |
+
+A host with no display and no applications directory is a clean skip (RULES/05, RULES/25).
