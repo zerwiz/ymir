@@ -84,7 +84,8 @@ daemon_state() {
   fi
 }
 
-have_server() { command -v open-design-mcp >/dev/null 2>&1; }
+# on PATH, or in npm's global prefix (a timer's or ssh's PATH does not carry ~/.npm-global/bin — plan 275)
+have_server() { command -v open-design-mcp >/dev/null 2>&1 || [ -x "$(npm prefix -g 2>/dev/null)/bin/open-design-mcp" ]; }
 
 # The engine is ADOPTED, never forced (open-source first): a machine that has no design
 # studio owes no bridge, and a clean skip with its reason is a pass (RULES/25). A machine

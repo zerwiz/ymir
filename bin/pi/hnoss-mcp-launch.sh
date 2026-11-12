@@ -226,5 +226,8 @@ if [ "$PRINT_ONLY" = 1 ]; then
   exit 0
 fi
 
-command -v open-design-mcp >/dev/null 2>&1 || die "open-design-mcp is not on PATH — npm i -g open-design-mcp"
-exec open-design-mcp "$@"
+# on PATH, else npm's global prefix: a harness that starts this door may not carry ~/.npm-global/bin (plan 275)
+ODM="$(command -v open-design-mcp 2>/dev/null)"
+[ -n "$ODM" ] || { _g="$(npm prefix -g 2>/dev/null)/bin/open-design-mcp"; [ -x "$_g" ] && ODM="$_g"; }
+[ -n "$ODM" ] || die "open-design-mcp is not installed — npm i -g open-design-mcp"
+exec "$ODM" "$@"
