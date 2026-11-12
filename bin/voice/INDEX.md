@@ -21,25 +21,26 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[17]{file,does,kind,verdict,disposition,callers,lines}:
+bin[18]{file,does,kind,verdict,disposition,callers,lines}:
   "head-proxy.py","'''head-proxy.py — a loopback OpenAI-compatible door in front of an online head.","tool","wired","keep",1,173
   "house.css","/* house.css — Rödd's face, in the Allfather's hall.","data","wired","keep",1,54
   "model-sync.sh","model-sync.sh — take the voice models over the LOCAL NETWORK, never from the internet.","tool","wired","keep",0,99
-  "rodd-arm.sh","rodd-arm.sh — Rödd knocks on the arm, and hears the answer.","tool","wired","keep",7,535
+  "rodd-arm.sh","rodd-arm.sh — Rödd knocks on the arm, and hears the answer.","tool","wired","keep",7,564
   "rodd-head.py","'''rodd-head.py — whose mind answers in Rödd's window, and where that key lives.","tool","tested","keep",3,234
-  "rodd-helm.sh","rodd-helm.sh — Nanna's duty loop: she holds the helm and carries its five duties.","tool","wired","keep",2,218
+  "rodd-helm.sh","rodd-helm.sh — Nanna's duty loop: she holds the helm and carries its five duties.","tool","wired","keep",2,227
   "rodd-room.sh","rodd-room.sh — the ARM HOLDER's half of Rödd's room: the one writer of <state>/rodd/room.jsonl.","tool","wired","keep",1,43
-  "test_rodd_arm.sh","test_rodd_arm.sh — Rödd may knock on the arm, and only on a LIVE arm: the whole point of","tool","wired","keep",1,194
-  "test_rodd_helm.sh","test_rodd_helm.sh — Nanna's duty loop and the one-client role claim, headless (plan 254).","tool","wired","keep",0,170
+  "test_rodd_arm.sh","test_rodd_arm.sh — Rödd may knock on the arm, and only on a LIVE arm: the whole point of","tool","wired","keep",2,196
+  "test_rodd_helm.sh","test_rodd_helm.sh — Nanna's duty loop and the one-client role claim, headless (plan 254).","tool","wired","keep",0,176
   "test_rodd_pin.sh","test_rodd_pin.sh — plan 257 H7: Rödd runs the PINNED runtime, never a working tree.","tool","wired","keep",0,55
-  "todos.sh","todos.sh — the Allfather's task ledger, READ by anyone who must know it (the arm holder first).","tool","wired","keep",3,57
-  "voice-door.sh","voice-door.sh — the real-time voice door: speak to Ymir on whatever seat you are at.","tool","tested","keep",2,450
+  "test_voice_beside_call.sh","test_voice_beside_call.sh — plan 271 pieces 1 and 2, proven on stand-ins, nothing raised.","tool","wired","keep",0,48
+  "todos.sh","todos.sh — the Allfather's task ledger, READ by anyone who must know it (the arm holder first).","tool","wired","keep",6,57
+  "voice-door.sh","voice-door.sh — the real-time voice door: speak to Ymir on whatever seat you are at.","tool","tested","keep",3,467
   "voice-ensure.sh","voice-ensure.sh — ensure the voice engines: whisper.cpp (speech → text) and","tool","wired","keep",3,190
-  "voice-toolbox.py","'''voice-toolbox.py — the house's hands for a browser face.","tool","wired","keep",1,230
+  "voice-toolbox.py","'''voice-toolbox.py — the house's hands for a browser face.","tool","wired","keep",1,280
   "voice_mcp.py","'''voice_mcp.py — the voice's MCP adapter: every server this seat knows, as hands.","tool","wired","keep",0,396
   "voice_tools.py","'''voice-tools.py — the hands of the voice.","tool","tested","keep",4,2817
   "ymir-vad.py","'''","tool","wired","keep",0,135
 
-**Tally.** verdict: wired=14, tested=3
+**Tally.** verdict: wired=15, tested=3
 
-**Tally.** disposition: keep=17
+**Tally.** disposition: keep=18
