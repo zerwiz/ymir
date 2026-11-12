@@ -17,6 +17,28 @@ set -u
 APP="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 HOME_DIR="${BILSKIRNIR_DATA_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/ymir/bilskirnir}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
+
+# With no home yet, the REAL hall is chosen, not whichever checkout runs first: every Bilskirnir checkout on this
+# machine is a candidate (this one, the main tree, the pinned runtime), and the one with the largest database —
+# the most agents and conversations — donates its state. The others set theirs aside when they run.
+donor="$APP"
+if [ ! -e "$HOME_DIR/data" ]; then
+  best=0
+  for c in "$APP" "${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}/apps/bilskirnir" ${BILSKIRNIR_CANDIDATES:-}; do
+    db="$c/data/grokbot.db"
+    [ -f "$db" ] && [ ! -L "$c/data" ] || continue
+    # never take a hall from under a running server: its own start will link it when it next runs
+    [ "$c" != "$APP" ] && [ -f "$c/data/run/server.pid" ] && kill -0 "$(cat "$c/data/run/server.pid" 2>/dev/null)" 2>/dev/null && continue
+    sz=$(stat -c %s "$db" 2>/dev/null || echo 0)
+    [ "$sz" -gt "$best" ] && { best=$sz; donor="$(cd "$c" && pwd)"; }
+  done
+  _mt="$APP"; while [ "$_mt" != / ] && [ ! -f "$_mt/bin/desktop/main-tree.sh" ]; do _mt="$(dirname "$_mt")"; done
+  _canon="$(bash "$_mt/bin/desktop/main-tree.sh" "$_mt" 2>/dev/null || true)"
+  db="${_canon:-/nonexistent}/apps/bilskirnir/data/grokbot.db"
+  if [ -f "$db" ] && [ ! -L "${_canon}/apps/bilskirnir/data" ]; then
+    sz=$(stat -c %s "$db" 2>/dev/null || echo 0); [ "$sz" -gt "$best" ] && donor="${_canon}/apps/bilskirnir"
+  fi
+fi
 check=0; [ "${1:-}" = "--check" ] && check=1
 
 state=0
@@ -35,6 +57,10 @@ for name in data .env; do
   mkdir -p "$HOME_DIR"
   if [ -e "$there" ]; then
     # the home already has it: keep this checkout's copy beside it, never lose it
+    [ -e "$here" ] || [ -L "$here" ] && mv "$here" "$here.aside-$STAMP"
+  elif [ "$donor" != "$APP" ] && { [ -e "$donor/$name" ] && [ ! -L "$donor/$name" ]; }; then
+    # another checkout holds the real hall: it moves into the home, and is linked where it was
+    mv "$donor/$name" "$there" && ln -s "$there" "$donor/$name"
     [ -e "$here" ] || [ -L "$here" ] && mv "$here" "$here.aside-$STAMP"
   elif [ -e "$here" ] && [ ! -L "$here" ]; then
     mv "$here" "$there"

@@ -93,6 +93,8 @@ gate rodd-face-follows "Rödd's face is re-dressed when its patches change" \
      bash "$ROOT/apps/rodd/smoke/test_face_follows_patches.sh"
 gate hall-data-home "two checkouts of the hall share one data home and nothing is lost" \
      bash "$ROOT/apps/bilskirnir/tests/data-home.sh"
+gate hall-keeps-changes "the first agent keeps the user's soul lines and config additions across setup" \
+     bash "$ROOT/apps/bilskirnir/tests/keeps-user-changes.sh"
 # RULES/04 — the public tree carries TEMPLATES and LOGIC. The ward is in the list above; this is
 # the proof that it BITES (a ward never seen to refuse is decoration, and this one wore that coat).
 gate public-data "RULES/04 — a secret, a name, a topology or a mailbox is refused, and the ward is proved to refuse" \

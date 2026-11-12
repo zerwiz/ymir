@@ -58,7 +58,17 @@ ENGINE="$APP/data/engines/$SLUG"
 say "the hall's assistant is $NAME ($LABEL); the house and the Allfather are read from the home"
 
 # ── 2. the soul, rendered from the home ─────────────────────────────────────────
-render_soul() { python3 "$APP/house/house.py" soul --full --name "$NAME" --role "$ROLE"; }
+# Her soul keeps the user's own words (plan 275): the house's part sits in a managed block refreshed in place, the
+# same road every other agent takes. A soul that is still the untouched full render carries nothing of the user's.
+render_soul() {
+  local ex="$ENGINE/SOUL.md" full
+  full="$(python3 "$APP/house/house.py" soul --full --name "$NAME" --role "$ROLE")"
+  if [ -f "$ex" ] && [ "$(cat "$ex")" != "$full" ]; then
+    python3 "$APP/house/house.py" soul --name "$NAME" --role "$ROLE" --existing "$ex"
+  else
+    python3 "$APP/house/house.py" soul --name "$NAME" --role "$ROLE"
+  fi
+}
 want_soul="$(render_soul)"
 if [ "$CHECK" = 1 ]; then
   [ "$(cat "$ENGINE/SOUL.md" 2>/dev/null)" = "$want_soul" ] && say "soul current" || { say "soul stale or missing"; fail=1; }
@@ -106,13 +116,21 @@ esac
 MODEL="$(printf '%s' "$BLOCK" | sed -n 's/^  default: "\(.*\)"$/\1/p')"
 if [ "$CHECK" = 0 ]; then
   umask 077
-  { printf '# Rendered by apps/bilskirnir/setup.sh — the first agent'"'"'s own Hermes home. Do not edit; re-run setup.\n'
+  { printf '# Rendered by apps/bilskirnir/setup.sh — the first agent'"'"'s own Hermes home. The house refreshes its own parts on every setup; what you add is kept.\n'
     [ -n "$BLOCK" ] && printf '%s\n' "$BLOCK"
     # The house parts — Ymir's MCP doors, the house hands, the toolsets, the browser pinned to her own
     # screen when she has a desk, the Sága session hook — from the one renderer every agent shares.
     if [ "$DESK_UP" = 1 ]; then python3 "$APP/house/house.py" parts --browser "http://$DESK_HOST:9299"
     else python3 "$APP/house/house.py" parts; fi
-  } > "$ENGINE/config.yaml"
+  } > "$ENGINE/config.yaml.rendered"
+  # an update refreshes the house's parts and keeps what the user added (plan 275): merged, never overwritten
+  if [ -f "$ENGINE/config.yaml" ]; then
+    python3 "$APP/house/house.py" merge --existing "$ENGINE/config.yaml" --rendered "$ENGINE/config.yaml.rendered" > "$ENGINE/config.yaml.next" \
+      && mv "$ENGINE/config.yaml.next" "$ENGINE/config.yaml"
+  else
+    mv "$ENGINE/config.yaml.rendered" "$ENGINE/config.yaml"
+  fi
+  rm -f "$ENGINE/config.yaml.rendered" "$ENGINE/config.yaml.next"
   # the hook runs only with the operator's consent, given once for the machine's Hermes — carried here
   [ -f "$HOME/.hermes/shell-hooks-allowlist.json" ] && cp "$HOME/.hermes/shell-hooks-allowlist.json" "$ENGINE/shell-hooks-allowlist.json"
   [ -f "$ENGINE/.env" ] || printf 'API_SERVER_ENABLED=true\nAPI_SERVER_KEY=%s\nAPI_SERVER_PORT=%s\nAPI_SERVER_HOST=127.0.0.1\n' \
