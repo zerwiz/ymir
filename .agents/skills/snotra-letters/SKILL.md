@@ -36,6 +36,7 @@ python3 $L/letter-design.py --themes                # the themes (shipped + the 
 cp $L/templates/house/types/update.md /tmp/letter.md   # start from a type; fill the {{placeholders}}
 python3 $L/letter-design.py /tmp/letter.md > /tmp/letter.html   # preview in a browser
 bash $L/mail-send.sh draft --to a@x --subject "…" --body /tmp/letter.md   # designed automatically (theme: header)
+bash $L/mail-send.sh draft --to a@x --body /tmp/reply.md --reply-to <gmail-message-id>   # a reply, inside its thread
 # sending needs the operator's approval of those exact bytes: snotra-approve.sh approve <draft> → mail-send.sh send <draft>
 ```
 
@@ -65,6 +66,7 @@ separated by a blank line: `## heading` · paragraphs (`**bold**`, `` `code` ``,
 
 ## CHANGE LOG
 
+- **2026-11-12 (evening)** — `--reply-to`: a reply joins the thread it answers; the subject defaults to `Re: …`.
 - **2026-11-12 (later)** — the made-by line links Ymir's homepage and shows its address.
 - **2026-11-12** — `made_by`: every letter says it was made with Ymir and by which agent; the house theme with no
   company name; no stock sign-off the operator did not write.

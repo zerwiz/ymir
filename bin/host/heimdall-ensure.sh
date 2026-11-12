@@ -15,6 +15,14 @@
 #   heimdall-ensure.sh install                # = ensure --install
 #   heimdall-ensure.sh --version
 #
+# WHOSE KEYS (2026-11-12). The ward admits ONLY the GitHub user(s) the operator
+# names: HEIMDALL_GH_USERS, or the recorded file ($XDG_CONFIG_HOME/heimdall/gh-users).
+# It never infers a user from the checkout's remote, and it never adds a built-in
+# user: on a collaborator's machine that hands the upstream owner SSH access. With
+# no user named, `ensure` refuses to arm (no keys written, no timer) and says how.
+# The ward script is copied from THIS tree; a URL is fetched only when
+# HEIMDALL_DISTRO_URL is set on purpose.
+#
 # Exit: 0 armed/present, 1 not armed, 2 usage.
 set -u
 
@@ -25,21 +33,14 @@ VERSION="1.0.0"
 WARD_DEST="${HEIMDALL_WARD_DEST:-$HOME/.local/bin/host/heimdall-ssh-keys.sh}"
 CONF_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/heimdall"
 USERS_FILE="$CONF_DIR/gh-users"
-DISTRO_URL="${HEIMDALL_DISTRO_URL:-https://raw.githubusercontent.com/zerwiz/ymir/main/bin/host/heimdall-ssh-keys.sh}"
+# The ward script ships in this tree; a remote copy is fetched only when asked for.
+LOCAL_WARD="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/heimdall-ssh-keys.sh"
+DISTRO_URL="${HEIMDALL_DISTRO_URL:-}"
 # The GitHub user(s) whose keys the seat admits. Resolved: env > recorded file
-# > the owner of this distro checkout's remote > empty (reported honestly).
+# > empty (reported honestly). Never the remote's owner, never a built-in name.
 gh_users_of() {
   if [ -n "${HEIMDALL_GH_USERS:-}" ]; then printf '%s\n' ${HEIMDALL_GH_USERS}; return 0; fi
-  if [ -s "$USERS_FILE" ]; then cat "$USERS_FILE"; return 0; fi
-  if command -v git >/dev/null 2>&1; then
-    local url
-    url="$(git -C "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)" config --get remote.origin.url 2>/dev/null || true)"
-    case "$url" in
-      *github.com*)
-        printf '%s\n' "$url" | sed -E 's#^.*github\.com[/:]([^/]+)/.*#\1#' | grep -v '^$' && return 0
-        ;;
-    esac
-  fi
+  if [ -s "$USERS_FILE" ]; then grep -v '^[[:space:]]*\(#\|$\)' "$USERS_FILE"; return 0; fi
   return 1
 }
 
@@ -86,23 +87,29 @@ ensure_openssh() {  # only with --install; honest WARN, never a silent lockout
 }
 
 fetch_ward() {
-  command -v curl >/dev/null 2>&1 || { printf 'heimdall: curl missing — cannot fetch the ward\nhelp: copy bin/host/heimdall-ssh-keys.sh to %s and re-run\n' "$WARD_DEST" >&2; return 1; }
   mkdir -p "$(dirname "$WARD_DEST")"
-  curl -fsSL --max-time 30 "$DISTRO_URL" -o "$WARD_DEST.tmp" || { rm -f "$WARD_DEST.tmp"; return 1; }
+  if [ -z "$DISTRO_URL" ]; then
+    [ -r "$LOCAL_WARD" ] || { printf 'heimdall: no ward script beside this one (%s)\n' "$LOCAL_WARD" >&2; return 1; }
+    cp "$LOCAL_WARD" "$WARD_DEST.tmp" || { rm -f "$WARD_DEST.tmp"; return 1; }
+  else
+    command -v curl >/dev/null 2>&1 || { printf 'heimdall: curl missing — cannot fetch %s\n' "$DISTRO_URL" >&2; return 1; }
+    curl -fsSL --max-time 30 "$DISTRO_URL" -o "$WARD_DEST.tmp" || { rm -f "$WARD_DEST.tmp"; return 1; }
+  fi
   chmod +x "$WARD_DEST.tmp" && mv "$WARD_DEST.tmp" "$WARD_DEST"
 }
 
 ensure() {
   local users="" failed=0
   [ "$DO_OPENSSH" = 1 ] && { ensure_openssh || { printf 'heimdall: sshd could not be installed — console sudo required\n' >&2; return 1; }; }
-  ward_present || { fetch_ward || { printf 'heimdall: ward could not be fetched (offline?) — re-run later; the guard stands unarmed until then\n' >&2; return 1; }; }
-  "$WARD_DEST" add --quiet zerwiz 2>/dev/null || true   # refresh merges GitHub keys; no-op if already current
-  users="$(gh_users_of)"
-  [ -n "$users" ] || { printf 'heimdall: no GitHub user recorded — set HEIMDALL_GH_USERS or %s\nhelp: printf '"'"'<user>'"'"' > %s; then re-run ensure\n' "$USERS_FILE" "$USERS_FILE" >&2; }
-  if [ -n "$users" ]; then
-    # shellcheck disable=SC2086
-    "$WARD_DEST" add --quiet $users >/dev/null 2>&1 || failed=1
+  users="$(gh_users_of 2>/dev/null || true)"
+  if [ -z "$users" ]; then
+    # Refuse to arm: no keys written, no timer. Guessing a user is how a stranger gets in.
+    printf 'heimdall: no GitHub user named — the ward stays unarmed (no keys written, no timer)\nhelp: printf '"'"'<your-github-user>\\n'"'"' > %s (or HEIMDALL_GH_USERS=<user>), then re-run ensure\n' "$USERS_FILE" >&2
+    return 1
   fi
+  ward_present || { fetch_ward || { printf 'heimdall: ward could not be installed — re-run later; the guard stands unarmed until then\n' >&2; return 1; }; }
+  # shellcheck disable=SC2086
+  "$WARD_DEST" add --quiet $users >/dev/null 2>&1 || failed=1
   "$WARD_DEST" timer install >/dev/null 2>&1 || failed=1
   if [ "$failed" = 1 ]; then printf 'heimdall: ward present but could not be fully armed (offline? no user bus?) — run %s add <user> and %s timer install later\n' "$WARD_DEST" "$WARD_DEST" >&2; return 1; fi
   status

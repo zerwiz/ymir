@@ -200,13 +200,20 @@ if command -v claude >/dev/null 2>&1; then
   #   SessionStart  load-agents-md.sh  Claude Code reads CLAUDE.md, never a project's AGENTS.md
   #   PreToolUse    eindri-only.sh      (Agent|Task) workers are Eindri, never Claude subagents
   #   PreToolUse    nda-write.sh        (Write|Edit|MultiEdit) company/client names never enter the public tree (RULES/04)
-  #   Stop          ymir-arm.sh         (asyncRewake) the Gná arm reaches a seat in ANY project
+  #   Stop          ymir-arm.sh         (asyncRewake) the Gná arm reaches a seat in ANY project — OPT-IN
+  # The global arm is OPT-IN (2026-11-12): it wakes every Claude session on the machine, in every
+  # repository and with whatever permissions it holds, to act on the wake queue — and Gná writes lines
+  # derived from inbound mail into that queue. Seated only when YMIR_CLAUDE_GLOBAL_ARM=1 or
+  # $YMIR_HOME/config/claude-global-arm reads `on`; inside the house the project hook arms it anyway.
   # An entry whose hook command names the script is current; none is added on install (one
   # backup kept per run) and reported stale on --check. Nothing else in the file moves.
   if [ -f "$ROOT/.claude/hooks/load-agents-md.sh" ]; then
-    _wired="$(python3 - "$HOME/.claude/settings.json" "$mode" <<'PY' 2>/dev/null
+    _arm_opt="off"
+    if [ "${YMIR_CLAUDE_GLOBAL_ARM:-}" = 1 ]; then _arm_opt="on"
+    elif [ -n "${YMIR_HOME:-}" ] && [ "$(tr -d '[:space:]' < "$YMIR_HOME/config/claude-global-arm" 2>/dev/null)" = on ]; then _arm_opt="on"; fi
+    _wired="$(python3 - "$HOME/.claude/settings.json" "$mode" "$_arm_opt" <<'PY' 2>/dev/null
 import json, os, shutil, sys, datetime
-dst, mode = sys.argv[1], sys.argv[2]
+dst, mode, arm_opt = sys.argv[1], sys.argv[2], sys.argv[3]
 
 # (name, event, fragment, entry) — entry is the exact object to append when absent.
 desired = [
@@ -242,6 +249,10 @@ for name, event, frag, entry in desired:
     entries = hooks.get(event) or []
     if any(frag in (h.get("command") or "") for e in entries for h in (e.get("hooks") or [])):
         print(f"{name}|current|{event} already names {frag}")
+        continue
+    if name == "claude-ymir-arm" and arm_opt != "on":
+        # opt-in: never added unasked, never reported stale; an operator's existing entry is left alone
+        print(f"{name}|opt-in|not seated — YMIR_CLAUDE_GLOBAL_ARM=1 or config/claude-global-arm=on seats it")
         continue
     if mode == "check":
         print(f"{name}|stale|no {event} entry names {frag}")

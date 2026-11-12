@@ -27,8 +27,7 @@ if [ -z "${YMIR_ALLOW_WORKTREE_RUNTIME:-}" ]; then
   while [ "$_root" != / ] && [ ! -f "$_root/bin/desktop/main-tree.sh" ]; do _root="$(dirname "$_root")"; done
   _canon="$(bash "$_root/bin/desktop/main-tree.sh" "$_root" 2>/dev/null || true)"
   if [ -n "${_canon:-}" ] && [ "$_canon" != "$_root" ] && [ -f "$_canon/${_self#"$_root"/}" ]; then
-    printf '%s: running from a WORKTREE — the app runtime is locked to main (%s), re-executing there
-' \
+    printf '%s: running from a WORKTREE — the app runtime is locked to main (%s), re-executing there\n' \
       "$(basename "$0")" "$_canon" >&2
     exec bash "$_canon/${_self#"$_root"/}" "$@"
   fi

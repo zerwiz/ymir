@@ -95,6 +95,32 @@ def soul(name, role, description='', existing=None, full=False):
     return mine + '\n\n' + block
 
 
+def merge_config(existing_text, rendered_text):
+    """Plan 275: an update refreshes the house's parts and keeps what the user added (2026-11-12, his word:
+    "are the agents that get set in Nanna, and all updates in Bilskirnir, staying if users make changes?").
+    The rendered config wins for every key it sets; a top-level key only the user set is kept; a tool server the
+    user added is kept beside the house's; toolsets are the union, the house's first."""
+    import yaml
+    new = yaml.safe_load(rendered_text) or {}
+    old = yaml.safe_load(existing_text) or {}
+    if not isinstance(old, dict):
+        return rendered_text
+    for k, v in old.items():
+        if k not in new:
+            new[k] = v
+    if isinstance(old.get('mcp_servers'), dict):
+        new.setdefault('mcp_servers', {})
+        for k, v in old['mcp_servers'].items():
+            new['mcp_servers'].setdefault(k, v)
+    ot = (old.get('platform_toolsets') or {}).get('api_server') if isinstance(old.get('platform_toolsets'), dict) else None
+    if isinstance(ot, list):
+        nt = new.setdefault('platform_toolsets', {}).setdefault('api_server', [])
+        for t in ot:
+            if t not in nt:
+                nt.append(t)
+    return yaml.safe_dump(new, sort_keys=False, allow_unicode=True)
+
+
 def parts(browser=''):
     r = runtime_dir()
     gw = os.environ.get('BILSKIRNIR_MCP_GATEWAY') or 'http://127.0.0.1:8316'
@@ -119,13 +145,14 @@ def parts(browser=''):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('cmd', choices=['names', 'parts', 'soul'])
+    ap.add_argument('cmd', choices=['names', 'parts', 'soul', 'merge'])
     ap.add_argument('--name', default='')
     ap.add_argument('--role', default='')
     ap.add_argument('--description', default='')
     ap.add_argument('--browser', default='')
     ap.add_argument('--existing', default='')
     ap.add_argument('--full', action='store_true')
+    ap.add_argument('--rendered', default='')
     ap.add_argument('--json', action='store_true')
     a = ap.parse_args()
     if a.cmd == 'names':
@@ -138,6 +165,12 @@ def main():
         else:
             import yaml
             sys.stdout.write(yaml.safe_dump(p, sort_keys=False, default_flow_style=None, width=1000))
+    elif a.cmd == 'merge':
+        try:
+            existing = open(a.existing).read() if a.existing else ''
+        except OSError:
+            existing = ''
+        sys.stdout.write(merge_config(existing, open(a.rendered).read()))
     else:
         n = names()
         name = a.name or n['name']
