@@ -275,6 +275,28 @@ def patch_main() -> None:
                       '    return { output: house.output };\n'
                       '  }\n'
                       '  if (DEBUG) console.debug(`[tool] run name=${name}', 1)
+    # plan 271: a failure is a sentence and one action, never `[object Event]`
+    if "roddWhy" not in s:
+        s = s.replace('import { $, truncateError, DEBUG } from "./ui/dom.js";',
+                      'import { $, truncateError, DEBUG } from "./ui/dom.js";\nimport { roddWhy, sayWhy, recover, postLoss, noteFatalDuringRecovery } from "./why.js";', 1)
+        s = s.replace('  const message = err instanceof Error ? err.message : String(err);\n  try {\n    await teardown();',
+                      '  if (noteFatalDuringRecovery()) { try { await teardown(); } catch {} return; }\n'
+                      '  const why = await roddWhy(err);\n  const message = sayWhy(why);\n  try {\n    await teardown();', 1)
+        # plan 259 B2e: the stream is re-opened in place, the loss said in words with the time, one record
+        s = s.replace('    setCaption(truncateError(message), "error");\n  }\n}',
+                      '    setCaption(truncateError(message), "error");\n  }\n'
+                      '  void recover({ err, why, restart: () => doStart(), say: (t, k) => setCaption(t, k), post: postLoss });\n}', 1)
+        s = s.replace('  micStream = await navigator.mediaDevices.getUserMedia(micConstraints());\n  return micStream;',
+                      '  micStream = await navigator.mediaDevices.getUserMedia(micConstraints());\n'
+                      '  // the device vanishing under a live call ends the track: that is a loss to name and re-open\n'
+                      '  for (const t of micStream.getAudioTracks()) {\n'
+                      '    t.addEventListener("ended", () => { if (micStream) void onFatalError(new Error("microphone stream lost (track ended)")); });\n'
+                      '  }\n  return micStream;', 1)
+        s = s.replace('    console.warn("[main] server error (non-fatal):", msg);',
+                      '    console.warn("[main] server error (non-fatal):", msg);\n'
+                      '    if (/\\b(400|401|403|404|500)\\b|api key|model not found/i.test(msg)) {\n'
+                      '      void roddWhy(detail.error).then((w) => setCaption(sayWhy(w), "error"));\n'
+                      '    }', 1)
     s = re.sub(r'const DEFAULT_VOICE = "[^"]*";', 'const DEFAULT_VOICE = "af_nicole";', s, count=1)
     # the shipped briefs, recognised by their own opening line: an upgrade reaches a default
     # and never a sentence he wrote (the old gate restored the field only when it still
@@ -312,7 +334,7 @@ def main() -> int:
     if not (UI / "index.html").is_file():
         print(f"patch-ui: no UI at {UI} — run setup.sh first", file=sys.stderr)
         return 2
-    for name in ("house.css", "ember.js"):
+    for name in ("house.css", "ember.js", "why.js"):
         shutil.copy2(HERE / name, UI / name)
     patch_html()
     patch_main()

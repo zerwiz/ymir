@@ -16,8 +16,13 @@
 #   4 · server    the hall's own server, which also serves the face
 #   5 · window    the Electron shell, which waits for the server and opens it
 #
-# A piece that is already answering is KEPT, never restarted: the hall may be in use. --stop lowers
-# only the processes whose pid this script wrote under data/run/; it never kills by pattern.
+# A piece that is already answering AND is ours is KEPT, never restarted: the hall may be in use.
+# Ours means the listener sits in the process group of the pid this script wrote under data/run/, or
+# its working directory is inside this app's tree. A port held by anything else is a STRANGER: it is
+# named by pid and directory, never "kept". A stranger that is another Bilskirnir tree of this user
+# is lowered and replaced; any other stranger is refused with the exact command to lower it.
+# The server counts as up only when GET / serves the built face, not merely when the port answers.
+# --stop lowers only the processes whose pid this script wrote under data/run/; never by pattern.
 #
 # Settings (RULES/07), each with one documented default:
 #   PORT (in .env)            the server's port                 (8787)
@@ -52,8 +57,57 @@ resolve_electron() {
   command -v electron 2>/dev/null
 }
 
+face_up() { curl -s --max-time 2 -w '\n%{http_code}' "$1/" 2>/dev/null | awk 'BEGIN{b="";c=""} {if(c!="")b=b c "\n"; c=$0} END{exit !(c ~ /^2/ && tolower(b) ~ /<!doctype html|<div id=/)}'; }
 up() { curl -s -o /dev/null -w '%{http_code}' --max-time 2 "$1" 2>/dev/null | grep -q '^2'; }
 gateway_up() { up "http://127.0.0.1:$HPORT/health" || up "http://127.0.0.1:$HPORT/v1/models"; }
+# Who listens on a port: the pids, one per line (ss first, lsof as a fallback; empty when free or unknown).
+listeners() {
+  { ss -ltnpH "sport = :$1" 2>/dev/null | grep -o 'pid=[0-9]*' | cut -d= -f2
+    command -v ss >/dev/null 2>&1 || lsof -tiTCP:"$1" -sTCP:LISTEN 2>/dev/null; } | sort -un
+}
+port_free() { [ -z "$(listeners "$1")" ]; }
+pid_cwd() { readlink "/proc/$1/cwd" 2>/dev/null; }
+under() { case "$1/" in "$2"/*) return 0 ;; esac; return 1; }
+# ours: the listener is in the group of the pid we wrote, or works inside our own tree (or our engine home).
+is_ours() {
+  local name="$1" pid="$2" lead cwd
+  if [ -f "$RUN/$name.pid" ]; then
+    lead="$(cat "$RUN/$name.pid")"
+    [ "$(ps -o pgid= -p "$pid" 2>/dev/null | tr -d ' ')" = "$lead" ] && return 0
+  fi
+  cwd="$(pid_cwd "$pid")"; [ -n "$cwd" ] || return 1
+  under "$cwd" "$APP" && return 0
+  [ -n "$ENGINE" ] && under "$cwd" "$ENGINE" && return 0
+  return 1
+}
+# Another Bilskirnir tree of this same user: the process is ours by uid and works in .../apps/bilskirnir/...
+is_sibling_tree() {
+  local pid="$1" cwd; cwd="$(pid_cwd "$pid")"
+  [ "$(stat -c %u "/proc/$pid" 2>/dev/null)" = "$(id -u)" ] || return 1
+  case "$cwd/" in */apps/bilskirnir/*) return 0 ;; esac; return 1
+}
+# claim <name> <port> <label>: 0 = ours and answering (keep) · 1 = free (raise it) · 2 = refused.
+# A stranger that is a sibling Bilskirnir tree is lowered here, and the port reads as free.
+claim() {
+  local name="$1" port="$2" label="$3" pids pid cwd mine=0 stranger="" i
+  pids="$(listeners "$port")"
+  [ -n "$pids" ] || return 1
+  for pid in $pids; do
+    if is_ours "$name" "$pid"; then mine=1; else stranger="$pid"; fi
+  done
+  [ -z "$stranger" ] && [ "$mine" = 1 ] && return 0
+  cwd="$(pid_cwd "$stranger")"
+  if is_sibling_tree "$stranger"; then
+    say "$label :$port" "held by another Bilskirnir tree (pid $stranger, ${cwd:-?}) — lowering it"
+    kill "$stranger" 2>/dev/null
+    for i in 1 2 3 4 5 6 7 8 9 10; do port_free "$port" && break; sleep 0.5; done
+    port_free "$port" && return 1
+    say "$label :$port" "still held by pid $stranger after SIGTERM — lower it: kill -9 $stranger"; return 2
+  fi
+  say "$label :$port" "STRANGER on the port: pid $stranger (${cwd:-cwd unreadable}), not this app's — refusing to keep or kill it"
+  say "  to lower it" "kill $stranger   (then run apps/bilskirnir/start.sh again)"
+  return 2
+}
 alive() { [ -f "$RUN/$1.pid" ] && kill -0 "$(cat "$RUN/$1.pid")" 2>/dev/null; }
 window_up() { alive window; }
 # Every piece runs in its own session whose leader writes its own pid, so --stop can lower the whole
@@ -78,7 +132,7 @@ lower() {
 }
 
 case "${1:-}" in
-  -h|--help) sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+  -h|--help) sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
   --stop)
     for n in window server web gateway; do lower "$n"; done
     say "the hall" "lowered (what this script raised)"
@@ -86,7 +140,11 @@ case "${1:-}" in
   --check)
     ok=0
     gateway_up && say "Nanna's gateway :$HPORT" "answers" || { say "Nanna's gateway :$HPORT" "silent"; ok=1; }
-    up "$URL/api/health" && say "the server :$PORT" "answers" || { say "the server :$PORT" "silent"; ok=1; }
+    if up "$URL/api/health"; then
+      say "the server :$PORT" "answers"
+      face_up "$URL" && say "the face at $URL/" "served" || { say "the face at $URL/" "NOT served — a server without the built face (a stranger?)"; ok=1; }
+      for pid in $(listeners "$PORT"); do is_ours server "$pid" || { say "the server :$PORT" "pid $pid is a STRANGER ($(pid_cwd "$pid"))"; ok=1; }; done
+    else say "the server :$PORT" "silent"; ok=1; fi
     [ -f "$APP/web/dist/index.html" ] && say "the face" "built (web/dist)" || say "the face" "not built — the server serves the API only"
     window_up && say "the window" "open" || say "the window" "closed"
     e="$(resolve_electron)"; say "electron" "${e:-none found}"
@@ -105,8 +163,10 @@ else
 fi
 
 # 2 · Nanna's gateway, in her own Hermes home (never ~/.hermes)
-if gateway_up; then
-  say "Nanna's gateway :$HPORT" "already answers — kept"
+claim gateway "$HPORT" "Nanna's gateway"; gc=$?
+if [ "$gc" = 2 ]; then exit 1
+elif [ "$gc" = 0 ] && gateway_up; then
+  say "Nanna's gateway :$HPORT" "already answers — kept (ours)"
 elif ! command -v "$HERMES_BIN" >/dev/null 2>&1; then
   say "Nanna's gateway" "no '$HERMES_BIN' on PATH — the hall opens, and Nanna stays silent"
 else
@@ -116,7 +176,9 @@ fi
 
 # 3 · the face
 if [ "$MODE" = "dev" ]; then
-  if up "http://127.0.0.1:$WEB_PORT/"; then say "the face (Vite) :$WEB_PORT" "already answers — kept"
+  claim web "$WEB_PORT" "the face (Vite)"; wc=$?
+  [ "$wc" = 2 ] && exit 1
+  if [ "$wc" = 0 ] && up "http://127.0.0.1:$WEB_PORT/"; then say "the face (Vite) :$WEB_PORT" "already answers — kept (ours)"
   else
     GROKBOT_API="$URL" spawn web "$APP/web" npx vite --port "$WEB_PORT"
     wait_for "up http://127.0.0.1:$WEB_PORT/" 30 && say "the face (Vite) :$WEB_PORT" "raised" || say "the face (Vite)" "not answering — see data/run/web.log"
@@ -131,11 +193,18 @@ else
 fi
 
 # 4 · the server
-if up "$URL/api/health"; then
-  say "the server :$PORT" "already answers — kept"
+claim server "$PORT" "the server"; sc=$?
+[ "$sc" = 2 ] && exit 1
+if [ "$sc" = 0 ] && up "$URL/api/health" && { [ "$MODE" = "dev" ] || face_up "$URL"; }; then
+  say "the server :$PORT" "already answers and serves the face — kept (ours)"
+elif [ "$sc" = 0 ]; then
+  say "the server :$PORT" "ours, but not serving the face — lower it: apps/bilskirnir/start.sh --stop"; exit 1
 else
   spawn server "$APP/server" npx tsx --env-file=../.env src/index.ts
   wait_for "up $URL/api/health" 40 && say "the server :$PORT" "raised" || { say "the server :$PORT" "FAILED — see data/run/server.log"; exit 1; }
+  if [ "$MODE" != "dev" ] && ! wait_for "face_up $URL" 10; then
+    say "the server :$PORT" "answers but GET / is not the face — see data/run/server.log and web/dist"; exit 1
+  fi
 fi
 
 OPEN_URL="$URL"; [ "$MODE" = "dev" ] && OPEN_URL="http://127.0.0.1:$WEB_PORT"

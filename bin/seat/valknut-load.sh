@@ -32,19 +32,12 @@ PI_GLOBAL="${HOME}/.pi/agent/agents"
 # extensions read back.
 # A pinned runtime wins over the working tree (RULES/02 §7): the extensions a harness loads must be the ones
 # a deployment proved, never whatever branch an agent left checked out. $YMIR_HOME/config/runtime.env names it.
+# The pin comes from the ONE resolver (bin/pi/arm-pin-lib.sh): it expands the literal `$HOME` runtime.env
+# carries, which a bare sed did not — so the pin was silently ignored and a Gróa run from a working tree
+# bound that tree into the seat's settings (2026-11-12, 44 refused extensions). The pin wins whichever
+# checkout runs this loader; the working tree is the answer only on a machine with no pin.
 _pin=""
-_hoard="${YMIR_HOME:-}"
-if [ -z "$_hoard" ] && [ -r "$ROOT/bin/vault/hoard-lib.sh" ]; then
-  . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
-  command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root _hoard 2>/dev/null || true
-fi
-if [ -n "$_hoard" ] && [ -r "$_hoard/config/runtime.env" ]; then
-  _pin=$(sed -n 's/^YMIR_RUNTIME_DIR="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' "$_hoard/config/runtime.env" | head -1)
-fi
-# The operator's home, resolved once through hoard-lib: `__YMIR_HOME__` in a rendered config means THIS,
-# never $HOME (a render that used $HOME pointed engram at ~/hodd/memory/kaia.engram).
-YMIR_HOME_RESOLVED="$_hoard"
-unset _hoard
+[ -r "$ROOT/bin/pi/arm-pin-lib.sh" ] && . "$ROOT/bin/pi/arm-pin-lib.sh" 2>/dev/null && arm_pin_dir _pin
 [ -n "$_pin" ] && [ -d "$_pin/.pi/extensions" ] && PI_EXT_SRC="${PI_EXT_SRC:-$_pin/.pi/extensions}"
 PI_EXT_SRC="${PI_EXT_SRC:-$ROOT/.pi/extensions}"
 unset _pin

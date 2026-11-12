@@ -244,7 +244,7 @@ lease_alive() {
   [ -r "$LEASE" ] || return 1
   pid=$(sed -n 's/^pid=\([^ ]*\).*/\1/p' "$LEASE" | head -1)
   st=$(sed -n 's/.*starttime=\([^ ]*\).*/\1/p' "$LEASE" | head -1)
-  state=$(sed -n 's/.* state=//p' "$LEASE" | head -1)
+  state=$(awk '{ for (i = 1; i <= NF; i++) if (index($i, "state=") == 1) { print substr($i, 7); exit } }' "$LEASE" 2>/dev/null)
   case "$pid" in ''|*[!0-9]*) return 1 ;; esac
   [ "$state" = "$STATE" ] || return 1
   gleipnir_pid_alive "$pid" "$st"
