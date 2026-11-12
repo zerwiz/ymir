@@ -139,6 +139,40 @@ class Judge(unittest.TestCase):
             self.assertIn(verdict["classification"], gna_judge.CLASSES)
             self.assertIn(verdict["proposed_action"], gna_judge.ACTIONS)
 
+    def test_calendar_mail_is_answered_in_the_calendar(self):
+        # 2026-11-12: about 60 of 100 "you owe a reply" conversations were invitations and RSVPs
+        for subject in ("Invitation: Friday synch @ Weekly from 8am", "Updated invitation with note: Team @ Wed",
+                        "Accepted: Nda Sign @ Thu Oct 15", "Declined: Weekly review @ Mon",
+                        "Tentatively Accepted: Weekly review", "Canceled event: API keys @ Thu"):
+            verdict = gna_judge.judge(record(**{"subject": subject, "body_text": "can you join?"}), self.people)
+            self.assertEqual(verdict["proposed_action"], "archive", subject)
+            self.assertEqual(verdict["matched_by"], "calendar", subject)
+        verdict = gna_judge.judge(record(**{"subject": "Re: an invitation to talk", "body_text": "Can you?"}),
+                                  self.people)
+        self.assertNotEqual(verdict["matched_by"], "calendar", "a word in the subject is not an invitation")
+
+    def test_a_calendar_thread_does_not_hand_down_archive(self):
+        parent = record(id="m0", classification="meeting", proposed_action="archive", person_id="craig-martin")
+        verdict = gna_judge.judge(record(id="m2", subject="Re: the plan", body_text="Could you send it?"),
+                                  self.people, parent)
+        self.assertNotEqual(verdict["matched_by"], "thread")
+        self.assertEqual(verdict["proposed_action"], "create_card")
+
+    def test_every_no_reply_spelling_is_bulk(self):
+        for sender in ("mail-noreply@example.com", "no-reply-eyql6js@mail.example.com", "noreply@example.com"):
+            verdict = gna_judge.judge(record(**{"from": {"email": sender}, "subject": "Tips", "body_text": "what"}),
+                                      self.people)
+            self.assertEqual(verdict["proposed_action"], "archive", sender)
+
+    def test_a_question_word_without_a_question_is_not_a_question(self):
+        known = {"from": {"email": "craig@example.com"}, "subject": "Notes", "body_text": "Here is what we did."}
+        self.assertEqual(gna_judge.judge(record(**known), self.people)["classification"], "notice")
+        known["body_text"] = "What do you think?"
+        self.assertEqual(gna_judge.judge(record(**known), self.people)["classification"], "question")
+        known["body_text"] = "Here is what we did.\n\nOn Mon, Craig wrote:\n> what time?"
+        self.assertEqual(gna_judge.judge(record(**known), self.people)["classification"], "notice",
+                         "a question mark in the quoted reply is not his correspondent's question")
+
 
 class Desk(unittest.TestCase):
     @classmethod

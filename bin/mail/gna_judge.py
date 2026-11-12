@@ -30,13 +30,49 @@ _ACTION_OF = {
     "other": "reply_needed",
 }
 
-_NOREPLY = re.compile(r"^(no-?reply|do-?not-?reply|notifications?|bounce|mailer-daemon)@", re.IGNORECASE)
+_NOREPLY = re.compile(
+    r"^(no-?reply|do-?not-?reply|mail-?no-?reply|notifications?|bounce|mailer-daemon)([-+._][^@]*)?@", re.IGNORECASE)
+
+# Calendar machinery: an invitation, its updates and every RSVP. The answer to one lives in the
+# calendar, never in a reply mail, so none of them is a mail the operator owes (2026-11-12: of 100
+# conversations marked "you owe a reply", about 60 were these).
+_CALENDAR = re.compile(
+    r"^\s*(invitation|updated invitation(?: with note)?|accepted|declined|tentatively accepted|"
+    r"canceled event|cancelled event|canceled|cancelled|new event|event updated|"
+    r"inbjudan|uppdaterad inbjudan|accepterad|avböjd|inställd)\b[^:]{0,40}:",
+    re.IGNORECASE)
+_ZOOM = re.compile(r"\bzoom meeting\b|\bteams meeting\b", re.IGNORECASE)
+
+
+def calendar_mail(record: dict) -> str:
+    """Say why this mail is calendar machinery, or return ''."""
+    subject = record.get("subject") or ""
+    m = _CALENDAR.match(subject)
+    if m:
+        return f"subject opens with \u201c{m.group(1)}:\u201d"
+    for a in record.get("attachments") or []:
+        if isinstance(a, dict) and ((a.get("mime") or "").startswith("text/calendar")
+                                    or (a.get("name") or "").lower().endswith(".ics")):
+            return "carries a calendar invitation (.ics)"
+    if _ZOOM.search(subject) and "?" not in subject:
+        return "a meeting service's scheduling mail"
+    return ""
+
+
+def _asks(text: str) -> bool:
+    """A question is only a question when a question mark stands in the writer's own words
+    (the part above any quoted reply)."""
+    own = re.split(r"\n(?:On .{0,120}wrote:|Den .{0,120}skrev:|-{2,} ?Original|>)", text or "", maxsplit=1)[0]
+    return "?" in own
 
 
 def first_hit(text: str) -> tuple[str, str] | None:
-    """The earliest match in this text, by class priority — with the word that fired."""
+    """The earliest match in this text, by class priority — with the word that fired.
+    The question words (how, what, when …) fire only where the text actually asks."""
     best = None
     for kind in _PRIORITY:
+        if kind == "question" and not _asks(text):
+            continue
         m = re.search(_TOKENS[kind], text or "", re.IGNORECASE)
         if m and (best is None or m.start() < best[0]):
             best = (m.start(), kind, m.group(0))
@@ -103,9 +139,32 @@ def judge(record: dict, people: dict[str, dict], thread: dict | None = None,
             "evidence": f"house address {sender}: Ymir wrote to its own mailbox, no human asked",
         }
 
+    calendar = calendar_mail(record)
+    if calendar:
+        person = people.get(sender) or {}
+        return {
+            "classification": "meeting",
+            "confidence": 0.85,
+            "proposed_action": "archive",
+            "matched_by": "calendar",
+            "evidence": f"calendar mail from {sender or '(none)'}: {calendar}; it is answered in the calendar, not by a reply",
+            "person_id": person.get("id"),
+            "project_id": person.get("project") or None,
+        }
+
+    if _NOREPLY.search(sender):
+        return {
+            "classification": "notice",
+            "confidence": 0.82,
+            "proposed_action": "archive",
+            "matched_by": "bulk",
+            "evidence": f"no-reply sender: {sender} — nobody can be answered there",
+        }
+
     person = people.get(sender)
     hit = _tokens(record)
-    if thread and thread.get("classification") and thread.get("person_id") == (person or {}).get("id"):
+    if (thread and thread.get("classification") and thread.get("proposed_action") != "archive"
+            and thread.get("person_id") == (person or {}).get("id")):
         return {
             "classification": thread["classification"],
             "confidence": min(0.9, float(thread.get("confidence") or 0.7)),

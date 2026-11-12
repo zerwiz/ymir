@@ -26,7 +26,7 @@ bin[48]{file,does,kind,verdict,disposition,callers,lines}:
   "atlas.sh","atlas.sh — one page at the top of the home that says where we have it all (plan 251).","tool","wired","keep",1,19
   "audit-apply.sh","audit-apply.sh — turn an audit into work, in one door.","tool","wired","keep",0,96
   "behind.sh","behind.sh — the arithmetic of being behind: opened/closed this week, net, stale-30d, unbuilt phases.","tool","wired","keep",0,43
-  "comms.py","'''comms.py — every communication, in, out and owed, and the to-do they move (plan 261).","tool","wired","keep",4,863
+  "comms.py","'''comms.py — every communication, in, out and owed, and the to-do they move (plan 261).","tool","wired","keep",4,1021
   "comms.sh","comms.sh — the one read door over every communication: in, out and owed (plan 261).","tool","wired","keep",2,19
   "daily-log.sh","daily-log.sh — the day's work, recorded where the contract says it lives.","tool","wired","keep",4,104
   "developers.sh","developers.sh — who can write to a repository, and who actually has.","tool","wired","keep",0,108
@@ -57,7 +57,7 @@ bin[48]{file,does,kind,verdict,disposition,callers,lines}:
   "runes-project.sh","runes-project.sh — the DAG projector, regenerates runes_audit.md from events.","tool","wired","keep",0,65
   "snotra-ladder.sh","snotra-ladder.sh — the meeting ladder: transcript → minutes → promises → todos, and a stop that says so.","tool","wired","keep",0,611
   "snotra-what.sh","snotra-what.sh — Snotra's own voice: what the ear is doing, said in one sentence.","tool","wired","keep",1,640
-  "test_comms.py","'''The proofs plan 261 asks for: the record, the owed list, the to-do proposals, the brief,","tool","wired","keep",0,340
+  "test_comms.py","'''The proofs plan 261 asks for: the record, the owed list, the to-do proposals, the brief,","tool","wired","keep",0,424
   "test_mimir_bridge_health.py","﻿import importlib.util,json,subprocess,sys,tempfile,threading,unittest","data","wired","keep",0,29
   "todos.sh","todos.sh — THE task board of the house, one writer for one file.","tool","wired","keep",3,180
   "vor-crew-state.sh","vor-crew-state.sh - deterministic read of an Eindri worker's CURRENT state.","tool","wired","keep",2,125

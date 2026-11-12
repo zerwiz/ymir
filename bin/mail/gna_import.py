@@ -492,6 +492,42 @@ def _finish(record: dict, by_email: dict[str, dict], seen: list[dict]) -> dict:
     return record
 
 
+_VERDICT = ("classification", "confidence", "proposed_action", "matched_by", "evidence")
+
+
+def rejudge(account: str, dry_run: bool = False) -> dict:
+    """Judge every stored inbound message again with today's rules, and append a new row for
+    each verdict that changed. The store is append-only, so the old verdict stays in the
+    history and the newest row wins. Read state (read_at, handled_at) is carried over."""
+    by_email, _ = people_book()
+    house = gna_store.house_addresses()
+    rows = sorted(gna_store.latest(account), key=lambda r: r.get("received_at") or "")
+    seen: list[dict] = []
+    changed: list[dict] = []
+    moves: dict[str, int] = {}
+    for row in rows:
+        if row.get("direction") == "out":
+            seen.append(row)
+            continue
+        thread = next((r for r in reversed(seen) if r.get("thread_key") == row.get("thread_key")
+                       and r.get("direction") != "out"), None)
+        verdict = gna_judge.judge(row, by_email, thread, house=house)
+        new = dict(row)
+        new.update(verdict)
+        seen.append(new)
+        if all(new.get(k) == row.get(k) for k in _VERDICT):
+            continue
+        move = f"{row.get('proposed_action')}->{new.get('proposed_action')}"
+        moves[move] = moves.get(move, 0) + 1
+        new.pop("ingested_at", None)
+        new["actor"] = "gna-rejudge"
+        new["rejudged_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        changed.append(new)
+    written = {"written": 0} if dry_run else gna_store.append(changed)
+    return {"account": account, "judged": sum(1 for r in rows if r.get("direction") != "out"),
+            "changed": len(changed), "moves": moves, "dry_run": dry_run, **written}
+
+
 def self_test() -> int:
     """The refusals and the parse, proven without a network.
 
@@ -578,6 +614,8 @@ def main() -> int:
     ap.add_argument("--days", type=int, default=7)
     ap.add_argument("--max", type=int, default=200)
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--rejudge", action="store_true",
+                    help="judge the stored mail again with today's rules; appends only the changed verdicts")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
@@ -587,6 +625,9 @@ def main() -> int:
         ap.error("--account is required")
 
     account = gna_store.require_account(args.account)
+    if args.rejudge:
+        print(json.dumps(rejudge(account, args.dry_run), ensure_ascii=False, indent=None if args.json else 1))
+        return 0
     records = collect(account, args.days, args.max)
 
     classes: dict[str, int] = {}
