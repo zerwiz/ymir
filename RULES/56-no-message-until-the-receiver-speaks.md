@@ -47,3 +47,7 @@ not a message lost in transit; it is a sender who believes it arrived.
 - `bin/agents/erindi-brief.sh` teaches every errand that a file-only report has reached nobody.
 - The audit lives in plan 234 (`plans/234-the-fleets-voice.md`): one row per channel, the command that
   proves it, and whether it answered today.
+
+## CHANGE LOG
+
+- **2026-11-12** — the rule was written on 2026-11-09 as 49, refused with its branch, and delivered here as 56 (49 and 50 were taken while it waited).
