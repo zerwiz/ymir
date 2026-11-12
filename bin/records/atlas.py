@@ -152,6 +152,8 @@ def render(home: Path) -> tuple[str, list[str]]:
            "- **How we work (runbooks, for people and agents):** `hodd/docs/runbooks/`",
            "- **What we learned (research):** `hodd/library/research/INDEX.md`",
            "- **Today and earlier days:** `hodd/memory/daily/`",
+           "- **Letter templates and designs:** `bash hodd/bin/views.sh templates`",
+           "- **Every email in the inbox (the mail index):** `bash hodd/bin/views.sh mail --fetch`",
            "", "## The companies", ""]
     summary = ["| company | status | board | projects | plans last changed | open decisions |", "|---|---|---|---|---|---|"]
     sections = []

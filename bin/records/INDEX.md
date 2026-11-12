@@ -22,7 +22,7 @@ The tree replaced a single register on 2026-11-06 (plan 211) so that a change in
 folder rewrites one file instead of colliding on every branch.
 
 bin[48]{file,does,kind,verdict,disposition,callers,lines}:
-  "atlas.py","'''atlas.py — one page at the top of the home that says where we have it all (plan 251).","tool","wired","keep",1,275
+  "atlas.py","'''atlas.py — one page at the top of the home that says where we have it all (plan 251).","tool","wired","keep",1,277
   "atlas.sh","atlas.sh — one page at the top of the home that says where we have it all (plan 251).","tool","wired","keep",1,19
   "audit-apply.sh","audit-apply.sh — turn an audit into work, in one door.","tool","wired","keep",0,96
   "behind.sh","behind.sh — the arithmetic of being behind: opened/closed this week, net, stale-30d, unbuilt phases.","tool","wired","keep",0,43

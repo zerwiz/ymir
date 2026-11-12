@@ -16,6 +16,8 @@ The letter's header (first lines, between --- and ---):
   kicker: a small line above the title      title: the big line      subtitle: the line under it
   preheader: the inbox preview text         footer: the small print at the bottom
   use: what this letter type is for (shown by --types)
+  made_by: the line under the footer naming who prepared the letter — default "Made with Ymir by <the
+           seat's agent>" (the name from ~/.pi/agent/extensions/.ymir-seat, never a machine name); "off" removes it
 
 The blocks (separated by a blank line):
   ## heading                                 a section title
@@ -37,6 +39,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import html
+import os
 import re
 import sys
 from pathlib import Path
@@ -324,7 +327,9 @@ def render(text: str, theme: str | None = None) -> str:
         first = False
     footer = meta.get("footer", "")
     out.append(f'<tr><td style="padding:22px 32px;border-top:1px solid {t["line"]};font-family:{SANS};font-size:12px;'
-               f'line-height:1.5;color:{t["muted"]};">{inline(footer, t) if footer else E(t["label"])}</td></tr>')
+               f'line-height:1.5;color:{t["muted"]};">{inline(footer, t) if footer else E(t["label"])}'
+               + (f'<div style="margin-top:6px;font-size:11px;letter-spacing:0.3px;">{E(made)}</div>' if (made := made_by_line(meta)) else "")
+               + '</td></tr>')
     fonts = ('<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Newsreader:'
              'opsz,wght@6..72,400;6..72,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">')
     return (f'<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
@@ -335,6 +340,30 @@ def render(text: str, theme: str | None = None) -> str:
             f'<tr><td align="center" style="padding:24px 12px;"><table role="presentation" width="600" cellpadding="0" cellspacing="0" '
             f'bgcolor="{t["sheet"]}" style="max-width:600px;width:100%;background:{t["sheet"]};border-radius:14px;overflow:hidden;'
             f'border:1px solid {t["line"]};">{"".join(out)}</table></td></tr></table></body></html>')
+
+
+def made_by_line(meta: dict) -> str:
+    """The line that says the letter was prepared with Ymir, and by which agent (Rule 44: an agent says whose it is).
+
+    The agent's name is the seat's sealed `primary=` from ~/.pi/agent/extensions/.ymir-seat (or YMIR_AGENT_NAME).
+    The machine is never named (Rule 39). `made_by: off` in the header removes the line; any other value replaces it.
+    """
+    want = meta.get("made_by", "").strip()
+    if want.lower() in ("off", "no", "none", "false"):
+        return ""
+    if want:
+        return want
+    agent = os.environ.get("YMIR_AGENT_NAME", "").strip()
+    if not agent:
+        seat = Path(os.path.expanduser("~/.pi/agent/extensions/.ymir-seat"))
+        try:
+            fields = dict(l.split("=", 1) for l in seat.read_text(encoding="utf-8").splitlines() if "=" in l)
+        except OSError:
+            fields = {}
+        # Rule 44: an unsealed name is rendered as unnamed, never invented — so only a sealed seat signs.
+        if fields.get("status", "").strip() == "sealed":
+            agent = fields.get("primary", "").strip()
+    return f"Made with Ymir by {agent}" if agent else "Made with Ymir"
 
 
 def type_files() -> list[Path]:
@@ -381,6 +410,12 @@ def self_test() -> int:
     h = render("---\ntheme: ymir\ntitle: <b>x</b>\n---\nA & B <i>", None)
     if "<b>x</b>" in h or "<i>" in h:
         failures.append("markup in the words is not escaped")
+    os.environ["YMIR_AGENT_NAME"] = "TestAgent"
+    if "Made with Ymir by TestAgent" not in render("---\ntheme: plain\ntitle: t\n---\nHi", None):
+        failures.append("the made-by line does not name the agent")
+    if "Made with Ymir" in render("---\ntheme: plain\ntitle: t\nmade_by: off\n---\nHi", None):
+        failures.append("made_by: off does not remove the line")
+    del os.environ["YMIR_AGENT_NAME"]
     y = themes()["ymir"]
     if y["accent"].lower() != ymir_tokens()["bronze"].lower():
         failures.append("the ymir theme does not read its bronze from the design tokens")
