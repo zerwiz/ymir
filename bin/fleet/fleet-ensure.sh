@@ -562,6 +562,50 @@ raise_verify() {  # <owed...>
   return "$ver"
 }
 
+# ── where the heart's doors listen (ticket ymir/80) ─────────────────────────────
+# Three cases, decided by the role and the fleet registry, never by a guess:
+#   · a single machine, or a heart with no other host: loopback only (the template default);
+#   · a heart serving a fleet with a tailnet address: loopback AND that address — the hands reach
+#     Skuld, skills, Snotra and Ratatoskr over the tailnet; the LAN never;
+#   · a heart serving a fleet with no tailnet: loopback only, and said — the house never widens to
+#     the LAN by itself (no credential stands on these doors). Collaborators come through Gimlé's
+#     own tunnel and sign-in, never through these doors.
+# An operator's own YMIR_FLEET_BIND in fleet.env is never overwritten.
+heart_bind() {
+  case " $AUTOBOOT_HOST_ROLES " in *" heart "*) ;; *) return 0 ;; esac
+  local envf="$HOME/.config/ymir/fleet.env" tail
+  if [ -f "$envf" ] && grep -qE '^YMIR_FLEET_BIND=' "$envf"; then
+    say "fleet: the doors' bind is the operator's (fleet.env) — left as it is"; return 0
+  fi
+  tail="$(python3 - "$AUTOBOOT_FLEET_REGISTRY" "$AUTOBOOT_HOST" <<'PY' 2>/dev/null
+import json, sys
+try: doc = json.load(open(sys.argv[1]))
+except Exception: sys.exit(0)
+hosts = doc.get("hosts") or {}
+me = hosts.get(sys.argv[2]) or hosts.get(doc.get("heart") or "") or {}
+if len(hosts) > 1:
+    name = (me.get("tailnet") or "").split("://")[-1].split(":")[0].split("/")[0]
+    if name:
+        # a listener needs an address, not a name that only resolves once MagicDNS is up
+        import socket
+        try: print(socket.gethostbyname(name))
+        except OSError: print(name)
+PY
+)"
+  if [ -z "$tail" ]; then
+    say "fleet: the heart's doors stay on loopback — no other host, or no tailnet address in the registry (the LAN is never opened by itself)"
+    return 0
+  fi
+  mkdir -p "$(dirname "$envf")"
+  {
+    printf '# written by bin/fleet/fleet-ensure.sh (ticket ymir/80): this heart serves a fleet over its tailnet.\n'
+    printf '# Loopback for its own clients, the tailnet for its hands, never the LAN. Edit to change; never overwritten.\n'
+    printf 'YMIR_FLEET_BIND="127.0.0.1 %s"\n' "$tail"
+    printf 'YMIR_FLEET_BIND_SHARED=%s\n' "$tail"
+  } >>"$envf"
+  say "fleet: the heart's doors listen on loopback + $tail (tailnet) — written to $envf"
+}
+
 # ── the seat's pi mcp-adapter.json wiring (the doors the harness drinks from) ──────
 wire_mcp() {  # every record MCP is fronted by THIS seat's own gateway
   # (bin/bridge/mcp-gateway.sh, :8316): the harness points at one local door, and the
@@ -633,6 +677,7 @@ ensure() {
   say "fleet: $AUTOBOOT_HOST owes (${AUTOBOOT_HOST_ROLES}): $owed"
   mkdir -p "$HOME/.config/systemd/user"
   materialize_tools
+  [ "${CHECK_ONLY:-0}" = 1 ] || heart_bind
   web_app_dirs
   if [ "$CHECK_ONLY" = 1 ]; then
     say "fleet: (check) would materialize + raise: $owed"

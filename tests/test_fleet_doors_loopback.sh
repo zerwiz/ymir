@@ -24,18 +24,19 @@ for u in cards skills-mcp skuld ratatoskr snotra; do
   grep -q '^Environment=YMIR_FLEET_BIND=127.0.0.1$' "$f" && grep -q '^EnvironmentFile=-%h/.config/ymir/fleet.env$' "$f" \
     && ok "$u.service: loopback default, widened only by fleet.env" || bad "$u.service: no loopback default"
 done
-grep -q -- '--bind \${YMIR_FLEET_BIND}' "$U/cards.service" && ok "cards binds \${YMIR_FLEET_BIND}" || bad "cards ignores the bind"
-grep -q -- '--host \${YMIR_FLEET_BIND}' "$U/skills-mcp.service" && ok "skills-mcp binds \${YMIR_FLEET_BIND}" || bad "skills-mcp ignores the bind"
+grep -q -- '--bind \${YMIR_FLEET_BIND_SHARED}' "$U/cards.service" && ok "cards binds \${YMIR_FLEET_BIND_SHARED}" || bad "cards ignores the bind"
+grep -q -- '--host \${YMIR_FLEET_BIND_SHARED}' "$U/skills-mcp.service" && ok "skills-mcp binds \${YMIR_FLEET_BIND_SHARED}" || bad "skills-mcp ignores the bind"
 
 # 2. the servers default to loopback and carry no wildcard CORS
 for s in tools/tickets-mcp/server.mjs tools/snotra/server.mjs; do
   f="$ROOT/$s"
   grep -q '"0.0.0.0"' "$f" && bad "$s listens on 0.0.0.0" || ok "$s has no hardcoded 0.0.0.0"
   grep -q 'listen(PORT, BIND)' "$f" && ok "$s listens on BIND" || bad "$s does not listen on BIND"
+  grep -q 'BINDS.slice(1)' "$f" && ok "$s listens on every address in the list" || bad "$s takes one address only"
   grep -q '"access-control-allow-origin": "\*"' "$f" && bad "$s sends wildcard CORS" || ok "$s sends no wildcard CORS"
   grep -q 'if (!originAllowed(req)) { res.writeHead(403)' "$f" && ok "$s refuses a foreign origin" || bad "$s does not refuse a foreign origin"
 done
-grep -q 'hostname: HOST' "$ROOT/packages/a2a/ratatoskr/server.ts" && grep -q '|| "127.0.0.1"' "$ROOT/packages/a2a/ratatoskr/server.ts" \
+grep -q 'HOSTS.map((hostname)' "$ROOT/packages/a2a/ratatoskr/server.ts" && grep -q '|| "127.0.0.1"' "$ROOT/packages/a2a/ratatoskr/server.ts" \
   && ok "Ratatoskr binds a loopback-default HOST" || bad "Ratatoskr binds every interface"
 
 # 3. no database password ships in the Skuld unit
@@ -50,5 +51,13 @@ grep -q 'npm ci --omit=dev --ignore-scripts' "$E" && ok "dependencies install wi
 
 # 5. the agent card does not publish the LAN address by default
 grep -q 'hostname -I' "$E" && bad "the agent card still publishes the LAN address" || ok "the agent card URL is loopback unless named"
+
+# 6. the heart stays reachable for its fleet (ticket ymir/80): loopback + tailnet, never the LAN by itself
+grep -q '^heart_bind()' "$E" && grep -q 'heart_bind$' "$E" && ok "the fleet step decides the heart's bind" || bad "nothing sets the heart's bind"
+grep -qF 'YMIR_FLEET_BIND="127.0.0.1 %s"' "$E" && ok "a fleet heart listens on loopback + its tailnet" || bad "a fleet heart is not given its tailnet"
+grep -qF "grep -qE '^YMIR_FLEET_BIND=' \"\$envf\"" "$E" && ok "the operator's own bind is never overwritten" || bad "the operator's bind may be overwritten"
+grep -q '"lan"' "$E" && sed -n '/^heart_bind()/,/^}/p' "$E" | grep -q '"lan"' && bad "the heart's bind reads the LAN address" || ok "the heart's bind never reads the LAN address"
+grep -q '_own = (hh.get("tailnet")' "$ROOT/bin/bridge/mcp-gateway.sh" && ok "the heart's gateway falls back to its own tailnet address" || bad "the heart's gateway knows loopback only"
+grep -q 'test_fleet_doors_loopback.sh' "$ROOT/tests/run.sh" && ok "this test is registered in tests/run.sh" || bad "this test is not registered in tests/run.sh"
 
 exit "$fail"

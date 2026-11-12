@@ -110,7 +110,12 @@ def mk(addr, port, suffix="/mcp"):
 # the heart's reachable addresses: tailnet first, LAN fallback, loopback on the heart
 heart_addrs = []
 if is_heart:
+    # loopback first; then the heart's own tailnet address, where a single-listener door (skills,
+    # cards) listens when the heart serves a fleet (YMIR_FLEET_BIND_SHARED, ticket ymir/80)
     heart_addrs = ["127.0.0.1"]
+    _own = (hh.get("tailnet") or "").split("://")[-1].split(":")[0]
+    if _own and _own not in heart_addrs:
+        heart_addrs.append(_own)
 else:
     for a in (hh.get("tailnet"), hh.get("lan")):
         if a and a not in heart_addrs:
