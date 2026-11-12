@@ -87,6 +87,8 @@ surface_skip() {
     # The desk is a systemd user unit: a substrate without systemd (a hand) cannot
     # owe it — and the arm's own door already names that gap.
     mail)       return 0 ;;
+    # a hand runs no arm service and no Rödd window: there is no pin for it to owe
+    armpin)     return 0 ;;
   esac
   return 1
 }
@@ -111,7 +113,7 @@ surface_detail_skip() {
 }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir hnoss shells graphics well memory mail mcp harness claudehooks arm roddhelm lock gates migrations hoard autoboot vault ward seats)
+SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir hnoss shells graphics well memory mail mcp harness claudehooks arm armpin roddhelm lock gates migrations hoard autoboot vault ward seats)
 
 # ── the three surfaces the 2026-11-03 Windows audit found, and the rule they read ──────────
 # A SEAT IS NOT UPDATED BY A PULL. The checkout moves; the installed hooks, the PATH a later
@@ -456,6 +458,12 @@ f_claudehooks() { [ -x "$SCRIPT_DIR/../seat/harness-extensions-install.sh" ] && 
 # a dead watch costs — and the mend is to seat the service again.
 s_arm()      { [ -x "$SCRIPT_DIR/../pi/syn-watch.sh" ] && "$SCRIPT_DIR/../pi/syn-watch.sh" status >/dev/null 2>&1; }
 f_arm()      { [ -x "$SCRIPT_DIR/../pi/syn-watch.sh" ] && "$SCRIPT_DIR/../pi/syn-watch.sh" start >/dev/null 2>&1 && s_arm; }
+# armpin (plan 257 H8): the arm service, every arm client and Rödd execute the PINNED runtime,
+# and the pin is current, clean and on its branch. A pin 166 commits behind is a number on the
+# board, not a smell. No auto-mend here: moving the pin restarts the units, and that is Gróa's
+# update (bin/agents/groa-update.sh) or bin/engine/runtime-deploy.sh, never a look.
+s_armpin() { [ -x "$SCRIPT_DIR/../pi/arm-pin.sh" ] && "$SCRIPT_DIR/../pi/arm-pin.sh" check >/dev/null 2>&1; }
+f_armpin() { s_armpin; }
 # roddhelm: the lease names a known holder role, the room is writable, and the
 # drain door answers (plan 254 B6). The check is rodd-helm.sh --check; there is
 # no safe auto-mend — a role is the holder's declaration, never invented.
@@ -640,6 +648,7 @@ detail() { # <name> -> the command that prints one short fact
     harness)   printf '%s\n' "s_harness && echo 'deployed extensions resolve their bin/' || echo 'no live root recorded'" ;;
     claudehooks) printf '%s\n' "command -v claude >/dev/null 2>&1 && echo 'the three Claude hooks: AGENTS.md · Eindri-only · the Gná arm' || echo 'no claude on this host'" ;;
     arm)       printf '%s\n' "$SCRIPT_DIR/../pi/syn-watch.sh status --detail 2>/dev/null | head -1 || echo 'arm door missing'" ;;
+    armpin)    printf '%s\n' "$SCRIPT_DIR/../pi/arm-pin.sh check --no-fetch 2>/dev/null | sed -n '2p' | sed 's/^ *//; s/\"//g' || echo 'arm-pin door missing'" ;;
     roddhelm)  printf '%s\n' "$SCRIPT_DIR/../voice/rodd-helm.sh --check 2>&1 | head -1 || echo 'rodd-helm door missing'" ;;
     gates)     printf '%s\n' "s_gates && echo 'pre-push hook: the worktree that pushes' || echo 'installed hook is stale — bin/gates/guards/fixes-guard.sh --install'" ;;
     lock)      printf '%s\n' "cat $STATE/.lock 2>/dev/null | tr -d '[:space:]' | sed 's/^/pid /' || echo none" ;;
