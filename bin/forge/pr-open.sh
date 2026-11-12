@@ -29,6 +29,15 @@ full="$sig"
 [ -n "$body" ] && full="$sig
 
 $body"
+# A body that opens with a MERGE WITH A MERGE COMMIT banner (a gathered batch) keeps it as the
+# PR's first line, above the signature, so the button's reader sees it before anything else.
+case "$body" in
+  "MERGE WITH A MERGE COMMIT"*)
+    banner=${body%%$'\n'*}; rest=${body#"$banner"}
+    full="$banner
+
+$sig$rest" ;;
+esac
 # check forbidden patterns
 tmp=$(mktemp); printf '%s\n' "$full" > "$tmp"
 if m=$(pr_pattern_match "$tmp"); then
@@ -38,7 +47,13 @@ rm -f "$tmp"
 if [ "$dry" = 1 ]; then
   printf '%s\n' "$full"; echo "DRY RUN OK"; exit 0
 fi
-printf '%s\n' "$full" > /tmp/pr-body.$$.md
-url=$(gh pr create --title "$title" --body-file /tmp/pr-body.$$.md)
-rm -f /tmp/pr-body.$$.md
+pbody=$(mktemp)
+printf '%s\n' "$full" > "$pbody"
+url=$(gh pr create --title "$title" --body-file "$pbody"); grc=$?
+rm -f "$pbody"
+url=$(printf '%s\n' "$url" | grep -Eo 'https://[^[:space:]]+/pull/[0-9]+' | tail -1)
+# An empty URL is a failure, never a PR: gh refused, the shim refused, or nothing printed.
+if [ "$grc" -ne 0 ] || [ -z "$url" ]; then
+  echo "error: no pull request was opened (gh pr create exit $grc, no PR URL printed)" >&2; exit 1
+fi
 echo "$url"

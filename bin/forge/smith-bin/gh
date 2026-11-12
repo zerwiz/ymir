@@ -17,6 +17,10 @@
 # Install (a spawn prepends this directory to the agent's PATH):
 #   bin/forge/smith-gh --install <dir>     # writes <dir>/gh -> this script
 #
+# THE ONE OPENING (2026-11-12): in a direct-PR errand the spawn exports YMIR_SMITH_PR=direct, and
+# then — only then — a smith may `gh pr create` (its own branch's PR, which Glitnir reviews). Merge,
+# close, reopen, repo delete and releases stay refused in every mode: the Allfather seals the merge.
+#
 # Usage: gh <anything>   (this is the shim; it is reached as `gh`)
 # Exit: the real gh's exit code · 1 on a refused ship act · 2 on a missing gh.
 set -u
@@ -66,7 +70,8 @@ esac
 
 if is_smith; then
   case "${1:-} ${2:-}" in
-    "pr create"|"pr merge"|"pr close"|"pr reopen"|"repo delete"|"release create"|"release delete")
+    "pr create") [ "${YMIR_SMITH_PR:-}" = direct ] || refuse "gh $1 $2" ;;
+    "pr merge"|"pr close"|"pr reopen"|"repo delete"|"release create"|"release delete")
       refuse "gh $1 $2" ;;
   esac
 fi

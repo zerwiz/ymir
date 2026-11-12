@@ -236,3 +236,6 @@ bin/data/
 /home-*.txt
 /*-inventory.txt
 /*-inventory.md
+
+# git's merge-driver temp inputs, left behind when a merge driver is interrupted (2026-11-12)
+.merge_file_*

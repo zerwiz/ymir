@@ -14,11 +14,12 @@ allow:
   - llama-swap/*            # the local rail costs nothing
   - llamacpp-*/*
   # - opencode-go/<the one cloud model you pay for>
-  # - claude/<the one Claude model your Eindri may use>
+  - claude/claude-sonnet-5-5   # Claude Eindri run Sonnet 5.5 (opus only for --effort high and above)
+  # - claude/claude-opus-5-5   # uncomment to let heavy errands run on Opus
 
 # The model a harness gets when the spawn names none.
-defaults: {}
-  # claude: <claude-model-id>
+defaults:
+  claude: claude-sonnet-5-5
 
 # Special permission: one model, on purpose, on the record. Every field is required;
 # a grant past its `expires` date is ignored. `uses` (optional) caps the launches.

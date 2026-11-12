@@ -111,7 +111,9 @@ run_one() {
   GH_TOKEN_FOR_PUSH="$(gh auth token)" GIT_ASKPASS="$ASKPASS" YMIR_SKIP_FIXES_GUARD=1 git push https://github.com:443/zerwiz/ymir.git "HEAD:$branch" >/tmp/qw-push-$n.log 2>&1 || { printf '  blocked: push failed\n'; cat /tmp/qw-push-$n.log | tail -3; cd "$ROOT"; return; }
   # step 6 merge
   . "$ROOT/bin/forge/merge-method.sh"
-  if gh pr merge "$n" "$(merge_flag_for_pr "$n")" --delete-branch >/tmp/qw-mergepr-$n.log 2>&1; then
+  _qw_flag="$(merge_flag_for_pr "$n")"
+  refuse_squash_of_gather "$n" "$_qw_flag" || { printf '  blocked: a gathered batch is never squashed\n'; cd "$ROOT"; return; }
+  if gh pr merge "$n" "$_qw_flag" --delete-branch >/tmp/qw-mergepr-$n.log 2>&1; then
     printf '  merged\n'
     bash "$ROOT/bin/records/runes-append.sh" engine merge --message "queue-warden merged PR $n" >/dev/null 2>&1 || true
     bash "$ROOT/bin/agents/eindri-notify.sh" --from queue-warden -- "merged PR $n" >/dev/null 2>&1 || true

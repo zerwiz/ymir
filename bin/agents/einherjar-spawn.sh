@@ -724,7 +724,11 @@ print("\x1f".join([cells[3], cells[2], cells[4], cells[5]]))' 2>/dev/null) || tr
                MODEL_PROV="${MODEL_PROV:-} · granted ($rule)" ;;
     unpoliced) echo "warning: $reason" >&2 ;;
   esac
-  [ -z "$RAW_LAUNCH" ] && [ -n "$allowed_model" ] && MODEL=$allowed_model
+  # A Claude seat is launched on the family ALIAS it was resolved to (`--model sonnet`), so no
+  # pane needs a /model switch; the list was still asked for the exact id above.
+  if [ -z "$RAW_LAUNCH" ] && [ -n "$allowed_model" ]; then
+    case "$h:$MODEL" in claude:sonnet|claude:opus|claude:haiku|claude:fable) ;; *) MODEL=$allowed_model ;; esac
+  fi
   return 0
 }
 if [ -n "$RAW_LAUNCH" ]; then
@@ -741,6 +745,8 @@ fi
 # brief's `Isolation: herdr|utgard — <why>` line. A declared utgard with no
 # image is a LOUD refusal; an explicit --isolation off against a declared
 # utgard is refused too (the declaration is never silently downgraded).
+# A direct-PR errand may open its own PR through the smith gh shim (never merge it).
+SMITH_PR_ENV=; [ "${KIND:-ship}" = ship ] && [ "${MODE:-}" = direct-PR ] && SMITH_PR_ENV=1
 ISOLATION_DECLARED=herdr
 ISOLATION_REASON="no Isolation: line in the brief — herdr is the ordinary road"
 _isoline=$(grep -m1 -E '^[[:space:]]*#?[[:space:]]*Isolation:[[:space:]]+(herdr|utgard)([^A-Za-z0-9]|$)' "$BRIEF" 2>/dev/null || true)
@@ -1158,7 +1164,7 @@ launch_herdr() {  # -> prints pane id
     mkdir -p "$STATE" 2>/dev/null || true
     [ -n "$REUSE_WS" ] && printf '%s' "$REUSE_WS" >"$STATE/.$ID.ws" 2>/dev/null || true
     date +%s >"$STATE/.$ID.launched" 2>/dev/null || true
-    herdr pane send-text "$REUSE_PANE" "YMIR_SMITH=$(shell_quote "$ID") PATH=$(shell_quote "$ROOT/bin/forge/smith-bin:$PATH") $PANE_CMD" 2>/dev/null || {
+    herdr pane send-text "$REUSE_PANE" "YMIR_SMITH=$(shell_quote "$ID")${SMITH_PR_ENV:+ YMIR_SMITH_PR=direct} PATH=$(shell_quote "$ROOT/bin/forge/smith-bin:$PATH") $PANE_CMD" 2>/dev/null || {
       echo "error: could not reach the errand's own seat $REUSE_PANE" >&2; return 1; }
     herdr pane send-keys "$REUSE_PANE" Enter 2>/dev/null || true
     echo "relaunch: reused the errand's seat $REUSE_PANE — no second pane" >&2
@@ -1176,6 +1182,7 @@ launch_herdr() {  # -> prints pane id
     --env "BROKK_MACHINE_STATE_DIR=$SEAT_STATE_DIR" \
     --env "BROKK_STATE_OVERRIDE=$SEAT_STATE_DIR" \
     --env "YMIR_SMITH=$ID" \
+    --env "YMIR_SMITH_PR=${SMITH_PR_ENV:+direct}" \
     --env "PATH=$ROOT/bin/forge/smith-bin:$PATH" 2>/dev/null) || {
     echo "error: herdr workspace create failed (is a herdr server running? try: herdr)" >&2
     return 1
