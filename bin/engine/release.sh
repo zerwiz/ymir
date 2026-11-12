@@ -168,8 +168,9 @@ flip() {
   keep_cur="$(readlink -f "$CUR")"; keep_prev="$(cat "$BASE/previous" 2>/dev/null)"
   for r in $(ls -1dt "$REL"/*/ 2>/dev/null); do
     r="${r%/}"; [ "$r" = "$keep_cur" ] || [ "$r" = "$keep_prev" ] && continue
-    n=$((n+1)); [ "$n" -gt "$KEEP" ] && rm -rf "$r" && say "pruned	$r"
+    n=$((n+1)); if [ "$n" -gt "$KEEP" ]; then rm -rf "$r" && say "pruned	$r"; fi
   done
+  return 0
 }
 rollback() {
   local p; p="$(cat "$BASE/previous" 2>/dev/null)"
