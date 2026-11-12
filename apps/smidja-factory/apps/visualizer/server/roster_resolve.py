@@ -20,8 +20,8 @@ import sys
 from pathlib import Path
 
 ROLE_COLORS = {
-    "orchestrator": "#c084fc", "planner": "#a78bfa", "builder": "#22d3ee",
-    "scout": "#fbbf24", "reviewer": "#fb7185", "documenter": "#e879f9",
+    "orchestrator": "#eca654", "planner": "#96a0a8", "builder": "#c9973f",
+    "scout": "#fbbf24", "reviewer": "#fb7185", "documenter": "#cfc3a9",
 }
 
 

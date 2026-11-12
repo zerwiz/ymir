@@ -181,3 +181,6 @@ that looks worse after the cloth was dressed wrongly — undo and map fewer thin
 
 - **2026-11-12** — Written at the Allfather's word, from the three reference apps as they stand; no app was changed.
 - **2026-11-12** — Added "Dressing an app you did not write — the Rödd way", at his word that the cloth must not be painted on.
+- **2026-11-12** — The cloth has no blue and no purple (RULES/54): `house-colour-guard.sh` refuses a cool hue anywhere
+  in the repo and names the house colour it becomes; the house accents for Muninn, Dvalin, Utgard and Mannheim moved
+  to steel, bone, blood and faint bone.

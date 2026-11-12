@@ -3,7 +3,7 @@
   <rect width="512" height="512" rx="32" fill="#090b10"/>
 
   <!-- Master Consolidated Stave Path -->
-  <g fill="none" stroke="#e2e8f0" stroke-width="6" stroke-linecap="square" stroke-linejoin="miter">
+  <g fill="none" stroke="#f0e6cd" stroke-width="6" stroke-linecap="square" stroke-linejoin="miter">
     
     <!-- 1. PRIMARY AXIS CROSS (N-S and E-W Main Stems) -->
     <path d="M 256 80 V 432 M 80 256 H 432" />
@@ -48,6 +48,6 @@
     <path d="M 102 118 L 116 128 M 148 136 L 162 146" stroke-width="4" />
 
     <!-- 11. CENTER NEXUS -->
-    <circle cx="256" cy="256" r="4" fill="#e2e8f0" />
+    <circle cx="256" cy="256" r="4" fill="#f0e6cd" />
   </g>
 </svg>

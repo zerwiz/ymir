@@ -178,14 +178,14 @@ wears on tags and marks (design.md §2.2).
 
 | House | Name-sake | Seal | What the house does today |
 |---|---|---|---|
-| **Ymir Labs** | the primordial giant; the frame of the world | cyan `#38bdf8` | the platform itself: Ymir OS, Hlidskjalf, the agent fleet, Mimirsbrunn — the body everything else is carved from |
+| **Ymir Labs** | the primordial giant; the frame of the world | forge bronze `#c9973f` | the platform itself: Ymir OS, Hlidskjalf, the agent fleet, Mimirsbrunn — the body everything else is carved from |
 | **Brokk Forge** | the bellows-smith who drove the forging of Mjölnir | forge amber `#f59e0b` | engineering & build tooling: WayOf Command/Runecode, softwerefactory, wayofmono, the smidja |
 | **Runestone Labs** (short: **Runir**) | the runes carved once, that cannot be un-carved | rune crimson `#f43f5e` | records & compliance: `.compliance` gates, rune auditing, docs, runbooks, research |
-| **Muninn Labs** | the raven *(memory)* that flew for the Allfather daily | raven violet `#8b5cf6` | memory & knowledge: the house memory plane and its MCP door, Mimirsbrunn/engram, vector RAG |
-| **Dvalin** | the dwarf smith of the finest crafted things | cold steel `#94a3b8` | crafted tools — OptiCat (HVAC Pro), Linkable, Todo, Desk, Material Files |
-| **Utgard Studios** | the realm where the giants work, outside the walls | jötun magenta `#d946ef` | creative: WhyNot Productions (soul/growth media), AiPic (video), OpenChamber, sensual dojo, sensebit |
+| **Muninn Labs** | the raven *(memory)* that flew for the Allfather daily | raven steel `#96a0a8` | memory & knowledge: the house memory plane and its MCP door, Mimirsbrunn/engram, vector RAG |
+| **Dvalin** | the dwarf smith of the finest crafted things | worn bone `#9a8f75` | crafted tools — OptiCat (HVAC Pro), Linkable, Todo, Desk, Material Files |
+| **Utgard Studios** | the realm where the giants work, outside the walls | jötun blood `#c2584a` | creative: WhyNot Productions (soul/growth media), AiPic (video), OpenChamber, sensual dojo, sensebit |
 | **Askr** | the first man, shaped from an ash tree | ash green `#34d399` | human-centered products: Relocation Copilot, onboarding automation |
-| **Mannheim** | *(holding — reserving a clan name with no myth yet)* | slate `#64748b` | holding; allocated when a new venture claims it |
+| **Mannheim** | *(holding — reserving a clan name with no myth yet)* | faint bone `#6b6250` | holding; allocated when a new venture claims it |
 
 > Houses are **names in the mythos, not subsystems** — they are the ventures the
 > fleet ships under, mapped per ENTRY-004. A house may be split or merged only by

@@ -51,9 +51,9 @@ const ICONS: Record<string, unknown> = {
 
 .chip.running {
   color: var(--blue);
-  border-color: rgba(108, 182, 255, 0.45);
-  background: rgba(108, 182, 255, 0.09);
-  box-shadow: 0 0 12px rgba(108, 182, 255, 0.18);
+  border-color: rgba(236, 166, 84, 0.45);
+  background: rgba(236, 166, 84, 0.09);
+  box-shadow: 0 0 12px rgba(236, 166, 84, 0.18);
 }
 
 .chip.running .chip-icon {

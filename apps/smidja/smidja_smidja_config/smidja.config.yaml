@@ -47,7 +47,7 @@ agents:
   - name: planner
     model: ${SMIDJA_PLANNER_MODEL:-${SMIDJA_LOCAL_MODEL:-}}
     thinking: high
-    color: "#a78bfa"                 # optional hex — the agent's lane color in the visualizer
+    color: "#96a0a8"                 # optional hex — the agent's lane color in the visualizer
     purpose: Turn a request into a plan the builder can implement without asking questions.
     prompt_engineering:
       system: apps/smidja/smidja_data/prompt_engineering/planner/system.md
@@ -69,7 +69,7 @@ agents:
       - subagent_remove
 
   - name: builder
-    color: "#22d3ee"
+    color: "#c9973f"
     purpose: Implement the plan exactly; report every changed file in the envelope.
     prompt_engineering:
       system: apps/smidja/smidja_data/prompt_engineering/builder/system.md
@@ -130,7 +130,7 @@ agents:
 
   - name: documenter
     model: ${SMIDJA_DOCUMENTER_MODEL:-${SMIDJA_LOCAL_MODEL:-}}
-    color: "#e879f9"
+    color: "#cfc3a9"
     purpose: Write up the change that was just made, from the diff; document only.
     prompt_engineering:
       system: apps/smidja/smidja_data/prompt_engineering/documenter/system.md

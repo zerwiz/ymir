@@ -77,7 +77,7 @@ def home_themes(base: dict) -> dict:
       acme:
         extends: ymir-light
         label: Acme
-        band: "#123456"
+        band: "#57411a"
     """
     h = home_dir()
     f = (h / "hodd/identity/letters/themes.yaml") if h else None
@@ -133,7 +133,7 @@ def shipped_themes() -> dict:
     }
 
 
-BADGES = ["#7a4fa3", "#2f6f9e", "#2f7d5b", "#a0522d", "#8a6d1f", "#5b6b7a", "#9c3d5f", "#3f6f6a"]
+BADGES = ["#6b6250", "#7d5f2a", "#2f7d5b", "#a0522d", "#8a6d1f", "#5b6b7a", "#9c3d5f", "#3f6f6a"]
 
 
 def badge(name: str, t: dict) -> str:

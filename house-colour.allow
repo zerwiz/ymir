@@ -1,0 +1,35 @@
+# house-colour.allow — where a blue or purple colour may stand, and why (RULES/54).
+#
+# The house wears stone, bone, bronze, steel and blood (midgard/design-system/tokens.css).
+# Blue and purple are not in the cloth, and bin/gates/guards/house-colour-guard.sh refuses
+# them everywhere EXCEPT the paths below. One line per entry:
+#
+#     path-or-glob | class | reason
+#
+# class is one of exactly three:
+#   held       an area the Allfather has not yet ruled on. The ward NAMES every colour here
+#              on each run, so the hold is visible and never forgotten. It is lifted by his
+#              word, not by a hand.
+#   fixture    a test whose assertion is the colour itself (a theme engine must prove it can
+#              read a blue user theme, so the test carries one)
+#   specimen   the law, or its ward, that has to NAME what it refuses
+#
+# A path that matches no tracked file is a finding: a rotten allow line is a lie.
+
+# ── held: waiting for the Allfather's word (named in the PR of 2026-11-12) ────────
+docs/fixes/** | held | append-only records (RULES/06) — a correction is a new note, never a rewrite of an old one
+apps/sessrumnir/src/renderer/src/themes/nord.json | held | a Sessrúmnir USER theme, blue by design (Nord); the house themes are fensalir and sessrumnir
+apps/sessrumnir/src/renderer/src/themes/breeze-dark.json | held | a Sessrúmnir USER theme, blue by design (KDE Breeze)
+apps/sessrumnir/src/renderer/src/themes/breeze-light.json | held | a Sessrúmnir USER theme, blue by design (KDE Breeze)
+apps/sessrumnir/src/renderer/src/themes/breeze-claudius.json | held | a Sessrúmnir USER theme, blue by design (Breeze variant)
+apps/sessrumnir/src/renderer/src/themes/dark.json | held | a Sessrúmnir USER theme (the upstream Pi dark), blue by design
+apps/sessrumnir/src/renderer/src/themes/light.json | held | a Sessrúmnir USER theme (the upstream Pi light), blue by design
+
+# ── fixtures: the theme engine must read any user's colours, blue ones included ──
+apps/sessrumnir/src/**/*.test.ts | fixture | Sessrúmnir's theme engine tests parse user themes; their colours are test data, and several assert the held Nord theme
+
+# ── specimens: the law has to name what it refuses ───────────────────────────────
+RULES/54-no-blue-no-purple.md | specimen | the rule names the band and the families it refuses
+bin/gates/guards/house-colour-guard.py | specimen | the ward's own map names the cool CSS colour words it replaces
+bin/gates/guards/house-colour-guard.sh | specimen | the self-test plants a blue to prove the ward refuses it
+house-colour.allow | specimen | this file names the themes it holds

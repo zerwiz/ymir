@@ -22,7 +22,7 @@ Thinking levels are Pi's reasoning effort: `off | minimal | low | medium | high 
 
 ```yaml
   - name: builder
-    color: "#22d3ee"      # hex; the starter roster ships violet/cyan/amber/green
+    color: "#c9973f"      # hex; the starter roster ships violet/cyan/amber/green
 ```
 
 Purely cosmetic and safe to change mid-project: the color rides the `agent_start` event and the `agent_sessions` row, so the visualizer picks it up on the next run without touching past sessions. Omit the key to let the UI's fallback palette choose.

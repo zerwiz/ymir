@@ -33,7 +33,7 @@ agents:
     coding_agent: pi
     model: google/gemini-3.6-flash
     thinking: high
-    color: "#a78bfa"               # optional hex — this agent's lane color in the visualizer
+    color: "#cfc3a9"               # optional hex — this agent's lane color in the visualizer
     purpose: Turn a request into a plan the builder can implement without asking questions.
     prompt_engineering:
       system: smidja/smidja_data/prompt_engineering/planner/system.md

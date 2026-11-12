@@ -70,7 +70,7 @@ role_defaults:
     purpose: <one sentence from the interview>
     tools: [read, bash, edit, write, grep, find, ls]   # or the list from Q4
     writes: [specs/]            # [] = read-only; omit = any (minus protected)
-    color: "#22d3ee"            # optional lane swatch
+    color: "#c9973f"            # optional lane swatch
 ```
 
 Rules (origin `references/config.md`):
