@@ -49,7 +49,8 @@ while [ $# -gt 0 ]; do case "$1" in --install) DO_INSTALL=1; shift ;; *) shift ;
 [ "$CMD" = install ] && DO_INSTALL=1
 
 app_dir() { [ -d "$APP" ] && [ -f "$APP/package.json" ]; }
-deps_present() { [ -d "$APP/node_modules" ] && [ -x "$APP/node_modules/.bin/electron" ]; }
+# the app's deps are installed and the ONE resolver finds its Electron (app-local or hoisted to the root, plan 275 S10)
+deps_present() { [ -d "$APP/node_modules" ] && electron_bin "$APP" "$ROOT" sessrumnir >/dev/null 2>&1; }
 built_present() { [ -f "$APP/out/main/index.js" ]; }
 
 status() {

@@ -73,6 +73,8 @@ electron_bin() {  # <app-dir> [root] [pkg] → prints the binary; exit 0 found /
   local app="${1-}" root="${2-}"; local pkg="${3:-${app##*/}}" c
   [ -n "$app" ] && [ -d "$app" ] || return 1
   [ -z "$root" ] && root="$(electron_root "$app")"
+  # physical paths on both sides (plan 275): a pin that is a LINK to a release must not read as a foreign root
+  app="$(cd "$app" && pwd -P)"; [ -d "$root" ] && root="$(cd "$root" && pwd -P)"
   local a="$app"
   # (1)+(2): walk up from the app, checking node_modules/electron at each stop —
   # and when a stop IS a node_modules dir, checking electron directly inside it.
@@ -94,6 +96,8 @@ electron_pkg_dir() {  # <app-dir> [root] [pkg]
   local app="${1-}" root="${2-}"; local pkg="${3:-${app##*/}}" c
   [ -n "$app" ] && [ -d "$app" ] || return 1
   [ -z "$root" ] && root="$(electron_root "$app")"
+  # physical paths on both sides (plan 275): a pin that is a LINK to a release must not read as a foreign root
+  app="$(cd "$app" && pwd -P)"; [ -d "$root" ] && root="$(cd "$root" && pwd -P)"
   local a="$app"
   while [ -n "$a" ] && [ "$a" != "/" ]; do
     _electron_foreign_root "$a" "$root" && break
