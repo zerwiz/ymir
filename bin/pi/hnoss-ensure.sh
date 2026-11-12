@@ -64,6 +64,14 @@ write_shim() {  # <old-path>
   [ -n "$old" ] || return 0
   case "$old" in */hnoss-mcp-launch.sh) ;; *) return 0 ;; esac
   [ -d "$(dirname "$old")" ] && [ -w "$(dirname "$old")" ] || return 0
+  # plan 275 (2026-11-12): never write a shim over a SHIPPED launcher. A config that names another Ymir checkout's
+  # own bin/pi/hnoss-mcp-launch.sh (the working tree, a worktree, an old pin) is pointed at a file git tracks; the
+  # shim replaced it with an `exec` of the same path (a loop) and left that tree dirty, which then blocked its update.
+  [ "$(readlink -f "$old" 2>/dev/null)" = "$(readlink -f "$LAUNCHER" 2>/dev/null)" ] && return 0
+  if git -C "$(dirname "$old")" ls-files --error-unmatch "$old" >/dev/null 2>&1; then
+    printf 'hnoss: %s is a shipped launcher in another checkout — left untouched (re-seat the config instead)\n' "$old"
+    return 0
+  fi
   printf '#!/bin/sh\n# Seated by bin/pi/hnoss-ensure.sh — the shipped launcher is the source\n# of truth; this path exists only so an older config keeps working.\nexec "%s" "$@"\n' "$LAUNCHER" >"$old" \
     && chmod 755 "$old" && printf 'hnoss: shim → %s\n' "$old"
 }
