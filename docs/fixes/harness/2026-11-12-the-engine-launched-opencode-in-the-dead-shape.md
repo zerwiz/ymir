@@ -27,3 +27,7 @@ and its test pinned the broken line under the name "matches the shell road".
 `opencode-launcher.sh run --model free "reply with the single word OK"` answered `OK` on opencode v2.2.7.
 `python3 -m unittest ymir_runtime.tests.test_harness` — 27 tests, OK. The full runtime suite has the same 11
 failures on `main` before and after this change.
+
+## CHANGE LOG
+
+- **2026-11-12** — note written: the engine moved to `opencode run`, and `bin/seat/opencode-launcher.sh` made the one door.

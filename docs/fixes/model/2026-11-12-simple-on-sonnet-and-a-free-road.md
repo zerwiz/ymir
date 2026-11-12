@@ -30,3 +30,7 @@ Two gaps, found the night Pi's paid tokens ran out with two hours to their refre
 Dry runs of `einherjar-spawn.sh`: plain Claude → `sonnet`; `--effort high` → `opus`; `--model free` →
 `opencode/deepseek-v4.1-flash-free`; `--harness pi --model free` → `opencode-go/longcat-2.5-free`. Unit tests in
 `test_harness.py` cover each case.
+
+## CHANGE LOG
+
+- **2026-11-12** — note written: Claude by weight (sonnet, opus for heavy effort), `--model free` for pi and opencode, and the Claude road in `eindri-start.sh` mended.
