@@ -73,6 +73,23 @@ mkdir -p "$STATE/eindri-reports" "$STATE/eindri-questions" "$STATE/eindri-done"
 #    line and file the shelf as ONE act, so neither half is ever deferred. Done
 #    before delivery so the same shelf the failsafe sweeps is what gets queued.
 if [ -n "$TERMINAL" ] && [ -n "$LINE" ]; then
+  # A DONE LINE MUST CARRY THE PR (measured 2026-11-09). The review spine reads the
+  # PR url out of this very line; a done line without one seats no judge, and the
+  # fault is invisible — the errand simply never reviews. So a shipping errand whose
+  # done line names no pull request is refused HERE, where the worker still exists to
+  # fix it, rather than discovered later by a sweep.
+  if [ "$TERMINAL" = "done" ] && ! printf '%s' "$LINE" | grep -qE 'https://github\.com/[^[:space:]]+/pull/[0-9]+'; then
+    # The spawn records its meta in <repo>/state; the home's state may be a different dir — read both.
+    mode="$(sed -n 's/^mode=//p' "$STATE/$AGENT.meta" "$ROOT/state/$AGENT.meta" 2>/dev/null | head -1)"
+    case "${mode:-}" in
+      local-only|batch|'') ;;   # a local tip never reviews; a batch errand ships through the gatherer's one PR; a scout has no mode
+      *)
+        printf 'refused: a %s errand cannot acclaim done without its pull request\n' "$mode" >&2
+        printf 'help: put the url in the line — --line "done: opened PR https://github.com/<owner>/<repo>/pull/<n> — …"\n' >&2
+        printf 'note: a done line without a PR seats no judge (the spine is PR-only).\n' >&2
+        exit 3 ;;
+    esac
+  fi
   status_file="$STATE/$AGENT.status"
   last="$(tail -n1 "$status_file" 2>/dev/null || true)"
   [ "$last" = "$TERMINAL: $LINE" ] || printf '%s: %s\n' "$TERMINAL" "$LINE" >>"$status_file"
@@ -80,7 +97,9 @@ if [ -n "$TERMINAL" ] && [ -n "$LINE" ]; then
     needs-decision) shelf="$STATE/eindri-questions/$AGENT.md" ;;
     *)              shelf="$STATE/eindri-reports/$AGENT.md" ;;
   esac
-  [ -s "$shelf" ] || printf '%s\n' "$LINE" >"$shelf"
+  [ -s "$shelf" ] || printf '%s\n' "$LINE" >"$shelf" 2>/dev/null
+  # A shelf the act claims to have filed must be THERE: say so loudly, never claim it silently.
+  [ -s "$shelf" ] || { printf 'error: the report did not land — %s is missing or empty (state dir %s)\nhelp: check that the state dir is writable; the wake was NOT queued\n' "$shelf" "$STATE" >&2; exit 1; }
 fi
 
 # 1b. The well remembers what the errand did (the Allfather, 2026-11-12: "when they are DONE
@@ -121,7 +140,7 @@ detail=""
 corrected=0
 if [ -f "$STATE/eindri-questions/$AGENT.md" ]; then
   kind="QUESTION"
-  detail="QUESTION at state/eindri-questions/$AGENT.md — answer with bin/agents/eindri-send.sh $AGENT \"…\""
+  detail="QUESTION at $STATE/eindri-questions/$AGENT.md — answer with bin/agents/eindri-send.sh $AGENT \"…\""
 elif [ -f "$STATE/eindri-reports/$AGENT.md" ]; then
   # The shelf may be the SWEEP's snapshot rather than the worker's word: a liveness
   # pass files "# <id> — finished without a terminal word" when it finds a quiet
@@ -136,13 +155,13 @@ elif [ -f "$STATE/eindri-reports/$AGENT.md" ]; then
     case "$last" in
       done:*|failed:*)
         printf '%s\n' "$last" >"$STATE/eindri-reports/$AGENT.md"
-        detail="report healed from the terminal status line, replacing the sweep's snapshot (state/eindri-reports/$AGENT.md)"
+        detail="report healed from the terminal status line, replacing the sweep's snapshot ($STATE/eindri-reports/$AGENT.md)"
         corrected=1 ;;
       *)
-        detail="report filed at state/eindri-reports/$AGENT.md (the sweep's snapshot; no terminal word yet)" ;;
+        detail="report filed at $STATE/eindri-reports/$AGENT.md (the sweep's snapshot; no terminal word yet)" ;;
     esac
   else
-    detail="report filed at state/eindri-reports/$AGENT.md"
+    detail="report filed at $STATE/eindri-reports/$AGENT.md"
   fi
 else
   # No shelf. A terminal status line IS a report (the worker wrote one shelf and
@@ -152,15 +171,15 @@ else
   case "$last" in
     done:*|failed:*)
       printf '%s\n' "$last" >"$STATE/eindri-reports/$AGENT.md"
-      detail="report healed from the terminal status line (state/eindri-reports/$AGENT.md)" ;;
+      detail="report healed from the terminal status line ($STATE/eindri-reports/$AGENT.md)" ;;
     needs-decision:*)
       kind="QUESTION"
       printf '%s\n' "$last" >"$STATE/eindri-questions/$AGENT.md"
-      detail="question healed from the terminal status line (state/eindri-questions/$AGENT.md)" ;;
+      detail="question healed from the terminal status line ($STATE/eindri-questions/$AGENT.md)" ;;
     *)
       if [ -n "$WORKTREE" ] && [ -f "$WORKTREE/REPORT.md" ]; then
         cp "$WORKTREE/REPORT.md" "$STATE/eindri-reports/$AGENT.md" 2>/dev/null || true
-        detail="report filed from $WORKTREE/REPORT.md (state/eindri-reports/$AGENT.md)"
+        detail="report filed from $WORKTREE/REPORT.md ($STATE/eindri-reports/$AGENT.md)"
       else
         detail="left working (herdr state flipped; read the pane: herdr agent read $AGENT)"
       fi ;;
@@ -181,6 +200,11 @@ else
     eindri_queue_wake "eindri $AGENT CORRECTED: the sweep's snapshot was a guess — $detail"
   else
     eindri_queue_wake "eindri $AGENT reported: $detail"
+  fi
+  # The queue line is the wake: if it did not land, the errand is not reported — fail, do not mark delivered.
+  if ! grep -q -F -- "eindri $AGENT " "$STATE/.wake-queue" 2>/dev/null; then
+    printf 'error: the wake did not land — no line for %s in %s\nhelp: check that the state dir is writable\n' "$AGENT" "$STATE/.wake-queue" >&2
+    exit 1
   fi
   eindri_mark_delivered "$AGENT" "$wake_kind"
   if [ -x "$SCRIPT_DIR/../../systems/snotra/services/tts-lease/ymir-say.sh" ]; then

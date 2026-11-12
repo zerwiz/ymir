@@ -17,6 +17,9 @@
 # (bin/pi/syn-watch-arm.sh's own contract), and an older client of the same session
 # is retired by a new one so a signal cannot rewake the seat more than once.
 [ -z "${GROK_AGENT:-}${GROK_HOOK_EVENT:-}" ] || exit 0
+# An Eindri worker (a Yggdrasil worktree or a seat directory) never takes the arm — one helm.
+# Without this the hook printed "stale: no live lease" in every worker pane and blocked each stop, a loop.
+case "$(readlink -f "${CLAUDE_PROJECT_DIR:-$PWD}")" in */.yggdrasil/*|*/.local/state/ymir/seats/*) exit 0 ;; esac
 root=""
 while IFS= read -r r; do
   [ -x "$r/bin/pi/syn-watch-arm.sh" ] && { root="$r"; break; }

@@ -11,6 +11,7 @@
 #   todos.sh add "<what>" [--meeting <id>] [--source <s>] [--tag <t>] [--key <stable>]   -> "#<n>"
 #   todos.sh list [--open] [--meeting <id>] [--json]                    -> one row per todo
 #   todos.sh done <n>                                                  -> status = done
+#   todos.sh reopen <n>                                                -> status = pending
 #   todos.sh remove <n>
 #   todos.sh open                                                      -> the count only
 #
@@ -139,7 +140,7 @@ for i, t in rows:
 print("count: %d" % len(rows))
 PY
     ;;
-  done|remove)
+  done|reopen|remove)
     n="${1-}"
     case "$n" in ''|*[!0-9]*) printf 'todos: %s needs an index (see `todos.sh list`)\n' "$ACTION" >&2; exit 2 ;; esac
     python3 - "$STORE" "$n" "$ACTION" <<'PY'
@@ -155,6 +156,9 @@ if idx < 0 or idx >= len(items):
 if action == "remove":
     gone = items.pop(idx)
     print("removed: %s" % gone.get("content", ""))
+elif action == "reopen":
+    items[idx]["status"] = "pending"
+    print("#%d reopened: %s" % (idx, items[idx].get("content", "")))
 else:
     items[idx]["status"] = "done"
     print("#%d done: %s" % (idx, items[idx].get("content", "")))
