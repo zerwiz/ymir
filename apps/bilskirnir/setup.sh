@@ -15,8 +15,10 @@
 # Settings (RULES/07), each with one documented default:
 #   YMIR_HOME            the home                       (~/Documents/ymirhome)
 #   YMIR_HOST            whose roster row to read       (hostname -s)
-#   BILSKIRNIR_MODEL     the first agent's model        (qwen3.6-35b-a3b@q4_k_xl-mtp)
-#   BILSKIRNIR_BASE_URL  the model's OpenAI endpoint    (http://127.0.0.1:8080/v1, the rail)
+#   BILSKIRNIR_MODEL     the first agent's model        (unset: what Settings > Models chose, else what the agent
+#                                                        already has, else the first allowed model the detector finds)
+#   BILSKIRNIR_BASE_URL  that model's OpenAI endpoint   (unset: the endpoint of the provider that lists it)
+#   BILSKIRNIR_LOCAL_PORTS  local servers to look for   (ollama:11434,lmstudio:1234,llamacpp:8080,vllm:8000)
 #   BILSKIRNIR_HERMES_PORT  the agent's gateway port    (8642)
 #   YMIR_RUNTIME_DIR     the pinned runtime the Ymir MCP door runs from (~/ymir-runtime, else this tree)
 #   BILSKIRNIR_MCP_GATEWAY  the record doors (well, skuld, bolthorn)  (http://127.0.0.1:8316)
@@ -29,12 +31,10 @@
 set -u
 APP="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CHECK=0; [ "${1-}" = "--check" ] && CHECK=1
-case "${1-}" in -h|--help) sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
+case "${1-}" in -h|--help) sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 
 YMIR_HOME="${YMIR_HOME:-$HOME/Documents/ymirhome}"
 HOST="${YMIR_HOST:-$(hostname -s)}"
-MODEL="${BILSKIRNIR_MODEL:-qwen3.6-35b-a3b@q4_k_xl-mtp}"
-BASE_URL="${BILSKIRNIR_BASE_URL:-http://127.0.0.1:8080/v1}"
 HPORT="${BILSKIRNIR_HERMES_PORT:-8642}"
 RUNTIME="${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}"; [ -f "$RUNTIME/bin/mcp/ymir-mcp.py" ] || RUNTIME="$(dirname "$(dirname "$APP")")"
 GATEWAY="${BILSKIRNIR_MCP_GATEWAY:-http://127.0.0.1:8316}"
@@ -118,13 +118,28 @@ else
 fi
 
 # ── 4. the agent's own Hermes home: model and gateway (never ~/.hermes) ─────────
-rail_key() { python3 -c "import json,os;print(json.load(open(os.path.expanduser('~/.pi/agent/auth.json')))['llama-swap']['key'])" 2>/dev/null; }
+# The model comes from the detector (server/src/models/detect.ts): what the user already has — keys in the
+# environment, pi's and OpenCode's configs, Hermes' own, local servers — judged by the operator's allow-list when
+# one exists (bin/model/model-allow.sh). BILSKIRNIR_MODEL / BILSKIRNIR_BASE_URL still win. Nothing here needs pi.
+model_block() {
+  command -v node >/dev/null 2>&1 || return 9
+  local args=(--model-block --agent primary --config "$ENGINE/config.yaml")
+  [ -n "${BILSKIRNIR_MODEL:-}" ] && args+=(--model "$BILSKIRNIR_MODEL")
+  [ -n "${BILSKIRNIR_BASE_URL:-}" ] && args+=(--base-url "$BILSKIRNIR_BASE_URL")
+  node "$APP/server/src/models/detect.ts" "${args[@]}" 2> "$RUN_TMP"
+}
+RUN_TMP="$(mktemp)"; trap 'rm -f "$RUN_TMP"' EXIT
+BLOCK="$(model_block)"; BRC=$?
+case "$BRC" in
+  0) why="$(grep -v -e ExperimentalWarning -e 'trace-warnings' "$RUN_TMP" | tail -1)" ;;
+  3) why="no model found yet — open Settings > Models in the hall and use one you already have, or set BILSKIRNIR_MODEL"; BLOCK="" ;;
+  *) why="the model detector could not run (needs node 22.18 or newer) — set BILSKIRNIR_MODEL and BILSKIRNIR_BASE_URL"; BLOCK="" ;;
+esac
+MODEL="$(printf '%s' "$BLOCK" | sed -n 's/^  default: "\(.*\)"$/\1/p')"
 if [ "$CHECK" = 0 ]; then
   umask 077
-  KEY="$(rail_key)"
   { printf '# Rendered by apps/bilskirnir/setup.sh — the first agent'"'"'s own Hermes home. Do not edit; re-run setup.\n'
-    printf 'model:\n  default: "%s"\n  provider: "custom"\n  base_url: "%s"\n' "$MODEL" "$BASE_URL"
-    [ -n "$KEY" ] && printf '  api_key: "%s"\n' "$KEY"
+    [ -n "$BLOCK" ] && printf '%s\n' "$BLOCK"
     # Ymir's MCP doors — the same ones every root agent has (RULES/51): the house door (todo, the daily
     # log, the Gná arm, plans, the hall) from the pinned runtime, and the gateway's record doors.
     printf 'mcp_servers:\n'
@@ -151,10 +166,14 @@ if [ "$CHECK" = 0 ]; then
   [ -f "$HOME/.hermes/shell-hooks-allowlist.json" ] && cp "$HOME/.hermes/shell-hooks-allowlist.json" "$ENGINE/shell-hooks-allowlist.json"
   [ -f "$ENGINE/.env" ] || printf 'API_SERVER_ENABLED=true\nAPI_SERVER_KEY=%s\nAPI_SERVER_PORT=%s\nAPI_SERVER_HOST=127.0.0.1\n' \
     "$(head -c 24 /dev/urandom | base64 | tr -d '/+=')" "$HPORT" > "$ENGINE/.env"
-  [ -n "$KEY" ] || say "no rail key found in ~/.pi/agent/auth.json — the agent will not reach the model until one is"
-  say "agent home: data/engines/$SLUG (model $MODEL)"
+  say "agent home: data/engines/$SLUG (${MODEL:-no model yet})"
+  say "model: $why"
 else
-  grep -q "default: \"$MODEL\"" "$ENGINE/config.yaml" 2>/dev/null && grep -q "ymir-mcp.py" "$ENGINE/config.yaml" && say "agent home current (model and Ymir's MCP doors)" || { say "agent home missing or on another model"; fail=1; }
+  if [ -n "$MODEL" ]; then
+    grep -q "default: \"$MODEL\"" "$ENGINE/config.yaml" 2>/dev/null && grep -q "ymir-mcp.py" "$ENGINE/config.yaml" && say "agent home current (model $MODEL and Ymir's MCP doors)" || { say "agent home missing or on another model"; fail=1; }
+  else
+    grep -q "ymir-mcp.py" "$ENGINE/config.yaml" 2>/dev/null && say "agent home current (no model chosen yet: $why)" || { say "agent home missing"; fail=1; }
+  fi
   if [ "$DESK_UP" = 1 ]; then
     grep -q "cdp_url: \"http://$DESK_HOST:9299\"" "$ENGINE/config.yaml" 2>/dev/null && say "agent's browser drives her desk" || { say "agent's browser is not pinned to her desk — re-run setup.sh"; fail=1; }
   fi

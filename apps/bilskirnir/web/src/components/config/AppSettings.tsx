@@ -11,10 +11,12 @@ import { Icon } from '../Icon';
 import { ToolkitLogo } from '../ToolkitLogo';
 import { Glyph } from './glyphs';
 import { ConfirmButton } from './ui';
+import { ModelsSection } from './ModelsSection';
 
 const SECTIONS: { id: AppSection; label: string }[] = [
   { id: 'general', label: 'General' },
   { id: 'computer', label: 'Computer' },
+  { id: 'models', label: 'Models' },
   { id: 'permissions', label: 'Permissions' },
   { id: 'apps', label: 'Connected apps' },
   { id: 'account', label: 'Account' },
@@ -47,6 +49,7 @@ export function AppSettings() {
         <div className="app-settings__page">
           {section === 'general' && <GeneralSection />}
           {section === 'computer' && <ComputerSection />}
+          {section === 'models' && <ModelsSection />}
           {section === 'permissions' && <PermissionsSection />}
           {section === 'apps' && <AppsSection />}
           {section === 'account' && <AccountSection />}
@@ -57,7 +60,7 @@ export function AppSettings() {
   );
 }
 
-function PageHead({ title, sub }: { title: string; sub?: string }) {
+export function PageHead({ title, sub }: { title: string; sub?: string }) {
   return (
     <div className="app-settings__head">
       <h1>{title}</h1>

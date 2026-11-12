@@ -421,6 +421,40 @@ export async function restartEngine(botId: string): Promise<void> {
   provisionEngine(botId);
 }
 
+/**
+ * Reload an agent's gateway so a new model takes effect. A managed engine restarts as always. The primary
+ * is reloaded only when its home is the app's own (data/engines/…, as setup.sh seats it): the machine's
+ * ~/.hermes serves messaging too and is never touched from here.
+ */
+export async function reloadEngine(botId: string): Promise<'restarted' | 'not-ours'> {
+  const kind = engineKind(botId);
+  if (kind === 'managed') { await restartEngine(botId); return 'restarted'; }
+  if (kind !== 'primary') return 'not-ours';
+  const home = env.hermesHome;
+  if (!path.resolve(home).startsWith(path.resolve(env.enginesDir) + path.sep)) return 'not-ours';
+  const pid = gatewayPid(home);
+  if (pid) {
+    const signal = (sig: NodeJS.Signals) => { try { process.kill(-pid, sig); } catch { try { process.kill(pid, sig); } catch { /* gone */ } } };
+    signal('SIGTERM');
+    for (let i = 0; i < 40; i++) {
+      await new Promise((r) => setTimeout(r, 250));
+      try { process.kill(pid, 0); } catch { break; }
+    }
+    try { process.kill(pid, 0); signal('SIGKILL'); } catch { /* down */ }
+  }
+  optionsCache.delete(botId);
+  fs.mkdirSync(path.join(home, 'logs'), { recursive: true });
+  const log = fs.openSync(path.join(home, 'logs', 'gateway.out.log'), 'a');
+  const child = spawn(env.hermesBin, ['gateway', 'run', '--no-supervise'], {
+    cwd: home, detached: true, stdio: ['ignore', log, log],
+    env: { ...process.env, HERMES_HOME: home },
+  });
+  fs.closeSync(log);
+  child.once('error', (e) => console.warn(`[engine] could not run ${env.hermesBin}: ${e.message}`));
+  child.unref();
+  return 'restarted';
+}
+
 /** The bot is gone: stop its gateway and delete its home. The primary agent is left alone. */
 export async function removeEngine(botId: string): Promise<void> {
   const home = homeFor(botId);
