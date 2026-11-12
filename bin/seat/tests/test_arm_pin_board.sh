@@ -41,10 +41,10 @@ t "current, clean, every surface inside: ok" [ "$rc" -eq 0 ]
 t "ok names 0 behind" grep -q '0 behind' <<<"$out"
 
 # 3
-printf 'arm-client(pid 2)\t/home/someone/ymir/bin/pi/syn-watch-arm.sh\n' >>"$T/supervisors"
+printf 'arm-client(pid 2)\t%s/tree/ymir/bin/pi/syn-watch-arm.sh\n' "$T" >>"$T/supervisors"
 out="$(bash "$DOOR" check --no-fetch)"; rc=$?
 t "a working-tree arm client fails the check" [ "$rc" -eq 1 ]
-t "it is named" grep -q '"runs outside the pin","arm-client(pid 2) executes /home/someone/ymir' <<<"$out"
+t "it is named" grep -qF "\"runs outside the pin\",\"arm-client(pid 2) executes $T/tree/ymir" <<<"$out"
 
 # 4
 printf 'arm-client(pid 1)\t%s/bin/pi/syn-watch-arm.sh\n' "$T/pin" >"$T/supervisors"
