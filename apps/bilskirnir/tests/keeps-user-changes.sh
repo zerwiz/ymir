@@ -38,7 +38,7 @@ EOF
 cat > "$T/rendered.yaml" <<'EOF'
 mcp_servers:
   ymir: {command: python3, args: [ymir-mcp.py]}
-  well: {url: http://example.invalid/well}
+  well: {url: https://example.invalid/well}
 platform_toolsets:
   api_server: [web, terminal, file]
 EOF
