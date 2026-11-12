@@ -208,8 +208,28 @@ else
   # door reads his choice only when no head is forced, so his online mind was never used, heimdall's rail answered
   # `400 model not found`, the engine exited after 18 s, and Rödd never spoke on either machine.
   HEAD="${RODD_HEAD_MODEL:-}"; RODD_CAMERA=0
+  # her eyes (plan 275, 2026-11-12, his question: "Why can't she look through the webcam anymore?"): the camera is
+  # offered whenever the mind behind her can SEE — a model whose name says vision, or one the open catalog
+  # (models.dev, cached in the home) lists with image input. His opencode go mind, deepseek-v4.1-flash, takes images;
+  # the old rule offered the camera only with --vision, which forced the local vision model instead of his mind.
+  _mind="${HEAD:-$(python3 "$ROOT/bin/voice/rodd-head.py" env 2>/dev/null | sed -n 's/^RODD_VOICE_HEAD_MODEL=//p' | head -1)}"
+  if [ -n "$_mind" ] && python3 - "$_mind" "${YMIR_HOME:-$HOME/Documents/ymirhome}/state/models.dev.json" <<'PY' 2>/dev/null
+import json, re, sys
+mind, cat = sys.argv[1], sys.argv[2]
+if re.search(r"vision|-vl\b|vl-|llava|minicpm-v", mind, re.I): sys.exit(0)
+try:
+    d = json.load(open(cat))
+except Exception:
+    sys.exit(1)
+for prov in d.values():
+    m = (prov.get("models") or {}).get(mind)
+    if m and "image" in ((m.get("modalities") or {}).get("input") or []):
+        sys.exit(0)
+sys.exit(1)
+PY
+  then RODD_CAMERA=1; fi
   if [ -n "$HEAD" ]; then say "head" "$HEAD (RODD_HEAD_MODEL)"
-  else say "head" "the mind chosen in Rödd's settings ($(python3 "$ROOT/bin/voice/rodd-head.py" env 2>/dev/null | sed -n 's/^RODD_VOICE_HEAD_MODEL=//p' | head -1))"; fi
+  else say "head" "the mind chosen in Rödd's settings ($(python3 "$ROOT/bin/voice/rodd-head.py" env 2>/dev/null | sed -n 's/^RODD_VOICE_HEAD_MODEL=//p' | head -1))$([ "$RODD_CAMERA" = 1 ] && echo ' — it can see: the camera is offered')"; fi
 fi
 export RODD_CAMERA
 if is_local_seat "$seat"; then
