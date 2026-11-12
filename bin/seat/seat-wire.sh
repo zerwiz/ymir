@@ -290,7 +290,7 @@ l="$h/state/.arm.lease"
 if [ ! -r "$l" ]; then printf 'nolease\t%s\n' "$l"; exit 0; fi
 pid=$(sed -n 's/^pid=\([^ ]*\).*/\1/p' "$l" | head -1)
 st=$(sed -n 's/.*starttime=\([^ ]*\).*/\1/p' "$l" | head -1)
-dir=$(sed -n 's/.* state=//p' "$l" | head -1)
+dir=$(awk '{ for (i = 1; i <= NF; i++) if (index($i, "state=") == 1) { print substr($i, 7); exit } }' "$l" 2>/dev/null)
 if [ -z "$dir" ]; then printf 'nostate\t%s\n' "$l"; exit 0; fi
 alive=0
 case "$pid" in

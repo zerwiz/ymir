@@ -361,8 +361,20 @@ def parse_sets(items: list[str]) -> dict[str, str]:
 
 
 def retarget(text: str, roots: list[str], pin: Path) -> str:
+    pin_s = str(pin)
     for r in roots:  # longest first, so a worktree path is not eaten by its parent tree
-        text = text.replace(r, str(pin))
+        # A root matches only as a whole path component: never inside a longer name
+        # (`~/ymir` inside `~/ymir-runtime`), and never where the pin already stands.
+        rx = re.compile(r"(?<![\w.\-/%$])" + re.escape(r) + r"(?![\w.\-])")
+        out, last = [], 0
+        for m in rx.finditer(text):
+            if text.startswith(pin_s, m.start()) and not re.match(r"[\w.\-]", text[m.start() + len(pin_s):m.start() + len(pin_s) + 1] or " "):
+                continue  # already on the pin (the pin may live under the tree it replaces)
+            out.append(text[last:m.start()])
+            out.append(pin_s)
+            last = m.end()
+        out.append(text[last:])
+        text = "".join(out)
     return text
 
 
