@@ -221,6 +221,8 @@ BODY="$(mktemp)"; trap 'rm -f "$BODY"' EXIT
   printf 'One batch, gathered by `bin/forge/gather.sh` (RULES/08, the batch road): every errand below\n'
   printf 'committed on its own branch and never pushed; the helm merged them in one worktree from\n'
   printf 'fresh `%s/%s` and the gates ran once on head `%s`.\n\n' "$REMOTE" "$BASE" "${HEAD_SHA:0:12}"
+  printf '**Merge with a merge commit, not squash:** squashing erases each errand'"'"'s history and leaves git\n'
+  printf 'thinking the branches are unmerged. `bin/forge/merge-method.sh` picks the flag for the tools.\n\n'
   printf '| Branch | Errand | Acclaim |\n|---|---|---|\n'
   grep -E '^merged=' "$MANIFEST" | while IFS=$'\t' read -r br id acc; do
     printf '| `%s` | %s | %s |\n' "${br#merged=}" "$id" "$(printf '%s' "$acc" | tr '|' '/')"
