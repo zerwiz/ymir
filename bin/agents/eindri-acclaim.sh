@@ -73,6 +73,23 @@ mkdir -p "$STATE/eindri-reports" "$STATE/eindri-questions" "$STATE/eindri-done"
 #    line and file the shelf as ONE act, so neither half is ever deferred. Done
 #    before delivery so the same shelf the failsafe sweeps is what gets queued.
 if [ -n "$TERMINAL" ] && [ -n "$LINE" ]; then
+  # A DONE LINE MUST CARRY THE PR (measured 2026-11-09). The review spine reads the
+  # PR url out of this very line; a done line without one seats no judge, and the
+  # fault is invisible — the errand simply never reviews. So a shipping errand whose
+  # done line names no pull request is refused HERE, where the worker still exists to
+  # fix it, rather than discovered later by a sweep.
+  if [ "$TERMINAL" = "done" ] && ! printf '%s' "$LINE" | grep -qE 'https://github\.com/[^[:space:]]+/pull/[0-9]+'; then
+    # The spawn records its meta in <repo>/state; the home's state may be a different dir — read both.
+    mode="$(sed -n 's/^mode=//p' "$STATE/$AGENT.meta" "$ROOT/state/$AGENT.meta" 2>/dev/null | head -1)"
+    case "${mode:-}" in
+      local-only|batch|'') ;;   # a local tip never reviews; a batch errand ships through the gatherer's one PR; a scout has no mode
+      *)
+        printf 'refused: a %s errand cannot acclaim done without its pull request\n' "$mode" >&2
+        printf 'help: put the url in the line — --line "done: opened PR https://github.com/<owner>/<repo>/pull/<n> — …"\n' >&2
+        printf 'note: a done line without a PR seats no judge (the spine is PR-only).\n' >&2
+        exit 3 ;;
+    esac
+  fi
   status_file="$STATE/$AGENT.status"
   last="$(tail -n1 "$status_file" 2>/dev/null || true)"
   [ "$last" = "$TERMINAL: $LINE" ] || printf '%s: %s\n' "$TERMINAL" "$LINE" >>"$status_file"

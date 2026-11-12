@@ -77,4 +77,11 @@ rm -f "$gr/calls"; rm -f "$gr/ymirhome/hodd/state/groa-agent.pid"
 FAKE_OUT="BEHIND: none\\nUPDATED: nothing\\nMIGRATIONS: none" "${GA[@]}" >/dev/null 2>&1
 chk "nothing behind, nothing moved: no record, no noise" "0" "$(cat "$gr/calls" 2>/dev/null | wc -l)"
 
+# 8. A shipping errand's done line must carry its pull request; batch and local-only errands are exempt.
+mkdir -p "$st"
+printf 'mode=direct-PR\n' > "$st/ship1.meta"; printf 'mode=batch\n' > "$st/bat1.meta"
+BROKK_STATE_OVERRIDE="$st" bash "$work/ac/bin/agents/eindri-acclaim.sh" ship1 --terminal done --line "done: nothing to show" >/dev/null 2>&1; chk "a direct-PR done line with no PR is refused (rc 3)" "3" "$?"
+BROKK_STATE_OVERRIDE="$st" bash "$work/ac/bin/agents/eindri-acclaim.sh" ship1 --terminal done --line "done: opened PR https://github.com/o/r/pull/7" >/dev/null 2>&1; chk "with its PR url it passes" "0" "$?"
+BROKK_STATE_OVERRIDE="$st" bash "$work/ac/bin/agents/eindri-acclaim.sh" bat1 --terminal done --line "done: committed on the branch" >/dev/null 2>&1; chk "a batch errand needs no PR" "0" "$?"
+
 echo "$ok passed, $fail failed"; [ "$fail" -eq 0 ]
