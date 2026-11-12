@@ -70,3 +70,7 @@ roles it belongs on.
 | `OFF-PIN` for a unit | Run `bin/engine/units.sh write`. |
 | `UNREGISTERED` | The unit names a Ymir tree but nobody registered it. Add it to `config/units.yaml`. |
 | The pre-push ward `runtime-pinned` refuses a push | Run `bin/engine/units.sh write`, then push again. |
+
+## CHANGE LOG
+
+- **2026-11-12** — Opened.
