@@ -177,6 +177,41 @@ document.addEventListener("keyup", (e) => { if (e.code === "Space" && !pttTyping
 window.__roddPTT = { on: pttOn, set: (v) => localStorage.setItem(PTT_KEY, v ? "1" : "0"), hold: pttHold };
 """
 
+HIDE_CAM = """  <!-- rodd: hide the camera — a button on the preview hides it, a chip brings it back (his word, 2026-11-12) -->
+  <button id="rodd-cam-hide" type="button" class="rodd-cam-btn" title="Hide the camera preview" aria-label="Hide the camera preview">Hide</button>
+  <button id="rodd-cam-show" type="button" class="rodd-cam-btn" title="Show the camera preview" aria-label="Show the camera preview">Show camera</button>
+  <style>
+    .rodd-cam-btn { position: fixed; z-index: 2147483000; display: none; font: 500 12px/1 var(--font, system-ui); padding: 6px 10px;
+      border-radius: 999px; border: 1px solid rgba(201,151,63,.45); background: rgba(14,12,9,.82); color: #e8dcc4; cursor: pointer; }
+    .rodd-cam-btn:hover { border-color: #c9973f; }
+    body.cam-on:not(.rodd-cam-hidden) #rodd-cam-hide { display: block; }
+    body.cam-on.rodd-cam-hidden #rodd-cam-show { display: block; }
+    body.rodd-cam-hidden #cam-pip { display: none !important; }
+  </style>
+  <script>
+  (function () {
+    var KEY = "rodd.camHidden";
+    var hide = document.getElementById("rodd-cam-hide"), show = document.getElementById("rodd-cam-show");
+    var pip = document.getElementById("cam-pip"), last = null;
+    function set(h) { document.body.classList.toggle("rodd-cam-hidden", h); try { localStorage.setItem(KEY, h ? "1" : "0"); } catch (e) {} place(); }
+    function place() {
+      // the Hide button sits on the preview's top corner; the Show chip where the preview was
+      var r = pip && pip.getBoundingClientRect();
+      if (r && r.height) last = r; else r = last;   // a hidden preview has no box: use where it last was
+      var top = r && r.height ? r.top + 6 : 72, right = r && r.width ? (innerWidth - r.right) + 6 : 16;
+      hide.style.top = top + "px"; hide.style.right = right + "px";
+      show.style.top = (r && r.height ? r.bottom - 34 : 72) + "px"; show.style.right = (r && r.width ? innerWidth - r.left - 120 : 16) + "px";
+    }
+    hide.addEventListener("click", function () { set(true); });
+    show.addEventListener("click", function () { set(false); });
+    var saved = "0"; try { saved = localStorage.getItem(KEY) || "0"; } catch (e) {}
+    document.body.classList.toggle("rodd-cam-hidden", saved === "1");
+    new MutationObserver(place).observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    addEventListener("resize", place); setTimeout(place, 500); setInterval(place, 2000);
+  })();
+  </script>
+"""
+
 RODD_MIND_HTML = """            <div class="field" id="rodd-mind">
               <label class="field-head"><input id="rodd-ptt" type="checkbox" />
                 Hold to talk — hold the orb, the mic button or Space; the microphone is closed between turns,
@@ -398,6 +433,10 @@ def patch_html() -> None:
     else:
         s = s.replace('            <label class="field">\n              <span>Instructions</span>',
                       RODD_MIND_HTML, 1)
+    if "rodd: hide the camera" in s:
+        s = re.sub(r"  <!-- rodd: hide the camera.*?</script>\n", lambda _m: HIDE_CAM, s, count=1, flags=re.S)
+    else:
+        s = s.replace("</body>", HIDE_CAM + "</body>", 1)
     if 'rodd: the mind' in s:
         s = re.sub(r'  <!-- rodd: the mind.*?</script>\n', lambda _m: RODD_MIND_JS, s, count=1, flags=re.S)
     else:
