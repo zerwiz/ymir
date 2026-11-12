@@ -224,6 +224,12 @@ else
   # (models.dev, cached in the home) lists with image input. His opencode go mind, deepseek-v4.1-flash, takes images;
   # the old rule offered the camera only with --vision, which forced the local vision model instead of his mind.
   _mind="${HEAD:-$(python3 "$ROOT/bin/voice/rodd-head.py" env 2>/dev/null | sed -n 's/^RODD_VOICE_HEAD_MODEL=//p' | head -1)}"
+  # the engine may run on another machine (nidavellir talks to heimdall's): then the mind that answers is THAT
+  # machine's choice, so it is asked there — nidavellir judged by its own empty setting and hid the camera (plan 275)
+  if [ -z "$HEAD" ] && ! is_local_seat "$seat"; then
+    _remote="$(ssh -o BatchMode=yes -o ConnectTimeout=5 "$seat" 'd=${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}; python3 $d/bin/voice/rodd-head.py env' 2>/dev/null | sed -n 's/^RODD_VOICE_HEAD_MODEL=//p' | head -1)"
+    [ -n "$_remote" ] && _mind="$_remote"
+  fi
   if [ -n "$_mind" ] && python3 - "$_mind" "${YMIR_HOME:-$HOME/Documents/ymirhome}/state/models.dev.json" <<'PY' 2>/dev/null
 import json, re, sys
 mind, cat = sys.argv[1], sys.argv[2]
@@ -240,7 +246,7 @@ sys.exit(1)
 PY
   then RODD_CAMERA=1; fi
   if [ -n "$HEAD" ]; then say "head" "$HEAD (RODD_HEAD_MODEL)"
-  else say "head" "the mind chosen in Rödd's settings ($(python3 "$ROOT/bin/voice/rodd-head.py" env 2>/dev/null | sed -n 's/^RODD_VOICE_HEAD_MODEL=//p' | head -1))$([ "$RODD_CAMERA" = 1 ] && echo ' — it can see: the camera is offered')"; fi
+  else say "head" "the mind chosen in Rödd's settings (${_mind:-none chosen})$([ "$RODD_CAMERA" = 1 ] && echo ' — it can see: the camera is offered')"; fi
 fi
 export RODD_CAMERA
 if is_local_seat "$seat"; then

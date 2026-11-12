@@ -70,6 +70,9 @@ if [ -r "${XDG_CONFIG_HOME:-$HOME/.config}/ymir/voice.env" ]; then
   while IFS='=' read -r _k _v; do
     case "$_k" in YMIR_VOICE_[A-Z_]*) [ -n "${!_k:-}" ] || export "$_k=$(printf '%s' "$_v" | tr -d "\"'")" ;; esac
   done < <(grep -E '^[[:space:]]*YMIR_VOICE_[A-Z_]+=' "${XDG_CONFIG_HOME:-$HOME/.config}/ymir/voice.env")
+  # read before: the host was resolved above this block, so a machine that names ITSELF as the voice host was
+  # still sent to the fleet's first ear (nidavellir to heimdall)
+  HOST_MACHINE="${YMIR_VOICE_HOST:-$HOST_MACHINE}"
 fi
 STT_DEVICE="${YMIR_VOICE_STT_DEVICE:-cpu}"
 STT_COMPUTE="${YMIR_VOICE_STT_COMPUTE:-int8}"
