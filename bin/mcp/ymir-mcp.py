@@ -300,29 +300,26 @@ def todo(action: str = "list", content: str = "", index: int = -1) -> str:
 
 
 @mcp.tool()
-def ymir_plan(slug: str, title: str = "", action: str = "new", realm: str = "", project: str = "ymir",
-              scope: str = "project", owner: str = "") -> str:
-    """The plan ledger — a plan belongs to whoever owns the work (plan 240).
+def ymir_plan(slug: str = "", title: str = "", action: str = "new", realm: str = "", project: str = "",
+              scope: str = "project", owner: str = "", new_shelf: bool = False) -> str:
+    """The plan ledger: a plan is filed on the shelf of whoever owns the work.
 
-    scope=project (default, --realm/--project) · realm (a company) · machine (a computer, owner = its hostname)
-    · personal (the Allfather's own, under hodd/plans/). action=new creates the NEXT number for THAT shelf with its
-    index row; action=list/next accept --all to walk every shelf.
+    action: new (slug+title) · list · next · shelves (every realm and project, and whether it has a shelf).
+    scope: project (realm+project; the project is found in any realm, refused if ambiguous or unknown) ·
+    realm (a company, owner=<realm>) · machine · personal. new_shelf opens a known project's first shelf.
     """
-    sh = ["bash", str(ROOT / "bin" / "records" / "plan.sh")]
+    argv = ["bash", str(ROOT / "bin" / "records" / "plan.sh"), action]
     if action == "new":
         if not slug or not title:
             return "new needs slug and title"
-        argv = sh + ["new", slug, "--title", title, "--project", project, "--scope", scope]
-        if realm:
-            argv += ["--realm", realm]
-        if owner:
-            argv += ["--owner", owner]
-        return _run(argv, 60)
-    argv = sh + [action]
-    if scope and scope != "project":
-        argv += ["--scope", scope]
-    if owner:
-        argv += ["--owner", owner]
+        argv += [slug, "--title", title]
+        if new_shelf:
+            argv += ["--new-shelf"]
+    if action != "shelves":
+        argv += ["--scope", scope or "project"]
+        for flag, val in (("--realm", realm), ("--project", project), ("--owner", owner)):
+            if val:
+                argv += [flag, val]
     return _run(argv, 60)
 
 

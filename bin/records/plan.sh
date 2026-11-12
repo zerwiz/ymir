@@ -5,6 +5,8 @@
 #   plan.sh list                      # the ledger's rows (number · title · status)
 #   plan.sh next                      # the number the next plan would take (read-only)
 #   plan.sh from-meeting <id>         # the plans a meeting produced (reads the headers)
+#   plan.sh shelves                   # every realm and project folder, and whether it has a shelf
+#   add --new-shelf to `new` to open a known project's first shelf (never for an unknown one)
 #
 # `--from-meeting <id>` writes `from_meeting: <id>` into the plan's HEADER, in the same act
 # as the plan is created — the join from a meeting to what it produced (plan 228 §5 · F5).
@@ -30,12 +32,70 @@ hoard="$(bash "$ROOT/bin/vault/hodd.sh" path 2>/dev/null || true)"
 HOME_DIR="$(dirname "$hoard")"
 REALM="${YMIR_REALM:-work}"; PROJECT="${YMIR_PROJECT:-ymir}"
 SCOPE="${YMIR_PLAN_SCOPE:-project}"; OWNER=""
-LEDGER="$HOME_DIR/svartalfaheim/$REALM/projects/$PROJECT/plans"
-[ -d "$LEDGER" ] || LEDGER="$HOME_DIR/svartalfaheim/$REALM/workspace/$PROJECT/plans"
-# the ledger is found, never guessed: the project may live under any realm (work, a house realm)
-[ -d "$LEDGER" ] || LEDGER="$(find "$HOME_DIR/svartalfaheim" -maxdepth 4 -type d -path "*/projects/$PROJECT/plans" 2>/dev/null | head -1)"
-[ -d "$LEDGER" ] || LEDGER="$(find "$HOME_DIR/svartalfaheim" -maxdepth 4 -type d -path "*/workspace/$PROJECT/plans" 2>/dev/null | head -1)"
-[ -d "$LEDGER" ] || { printf 'plan: no ledger for %s/%s (looked in projects/ and workspace/)\n' "$REALM" "$PROJECT" >&2; exit 1; }
+REALM_GIVEN=0     # 1 when --realm is passed: then the realm is a fact, not a preference
+NEW_SHELF=0       # 1 when --new-shelf is passed: a known project may get its first shelf
+LEDGER=""
+
+# ── the project's shelf is FOUND, after the arguments are read, never guessed ──
+# WHY (2026-11-12): the shelf was resolved at the top of this file from the defaults, before
+# `--realm` and `--project` were parsed, so `plan.sh new … --realm R --project P` filed the
+# plan in the DEFAULT project's ledger. Three stubs for three other projects landed as plans
+# 280–282 of another project's ledger. It also made every command fail in a home that has no
+# project of the default name, which is any user's home but one. Now: any realm, any project,
+# found by its folder; a name in two realms is refused with both named; a project folder with
+# no shelf is refused unless --new-shelf says to open one.
+resolve_project_ledger() {   # <project> — sets LEDGER or explains and returns 2
+  local p="$1" base="$HOME_DIR/svartalfaheim" k d hits=() dirs=()
+  [ -n "$p" ] || { printf 'plan: no project named (--project P)\n' >&2; return 2; }
+  if [ -n "$REALM" ]; then
+    for k in projects workspace; do
+      [ -d "$base/$REALM/$k/$p/plans" ] && { LEDGER="$base/$REALM/$k/$p/plans"; return 0; }
+    done
+  fi
+  if [ "$REALM_GIVEN" = 0 ]; then
+    mapfile -t dirs < <(find "$base" -mindepth 3 -maxdepth 3 -type d \( -path "$base/*/projects/$p" -o -path "$base/*/workspace/$p" \) 2>/dev/null | sed -E 's#/(projects|workspace)/[^/]+$##' | sort -u)
+    if [ "${#dirs[@]}" -gt 1 ]; then
+      printf 'plan: REFUSED — a project called %s is in more than one realm; name it with --realm:\n' "$p" >&2
+      for d in "${dirs[@]}"; do printf '  %s\n' "${d#$HOME_DIR/}" >&2; done
+      return 2
+    fi
+    dirs=()
+    for k in projects workspace; do
+      mapfile -t hits < <(find "$base" -mindepth 4 -maxdepth 4 -type d -path "$base/*/$k/$p/plans" 2>/dev/null | sort)
+      [ "${#hits[@]}" = 1 ] && { LEDGER="${hits[0]}"; return 0; }
+      if [ "${#hits[@]}" -gt 1 ]; then
+        printf 'plan: REFUSED — the project %s has a shelf in more than one realm; name it with --realm:\n' "$p" >&2
+        for d in "${hits[@]}"; do printf '  %s\n' "${d#$HOME_DIR/}" >&2; done
+        return 2
+      fi
+    done
+  fi
+  # no shelf: is there a project folder at all?
+  if [ "$REALM_GIVEN" = 1 ]; then
+    for k in projects workspace; do [ -d "$base/$REALM/$k/$p" ] && dirs+=("$base/$REALM/$k/$p"); done
+  else
+    mapfile -t dirs < <(find "$base" -mindepth 3 -maxdepth 3 -type d \( -path "$base/*/projects/$p" -o -path "$base/*/workspace/$p" \) 2>/dev/null | sort)
+  fi
+  if [ "${#dirs[@]}" = 0 ]; then
+    printf 'plan: REFUSED — no project folder called %s%s; a plan is never filed for a project that does not exist.\n' "$p" "$([ "$REALM_GIVEN" = 1 ] && printf ' in the realm %s' "$REALM")" >&2
+    printf 'plan: see every project and its shelf with  plan.sh shelves\n' >&2
+    return 2
+  fi
+  if [ "${#dirs[@]}" -gt 1 ]; then
+    printf 'plan: REFUSED — a project folder called %s is in more than one realm; name it with --realm:\n' "$p" >&2
+    for d in "${dirs[@]}"; do printf '  %s\n' "${d#$HOME_DIR/}" >&2; done
+    return 2
+  fi
+  if [ "$NEW_SHELF" = 1 ]; then
+    LEDGER="${dirs[0]}/plans"
+    mkdir -p "$LEDGER" || { printf 'plan: cannot create %s\n' "$LEDGER" >&2; return 2; }
+    [ -f "$LEDGER/README.md" ] || printf '# %s — the plans\n\nOne file per plan, numbered in order, never renumbered. A plan is appended to, never rewritten.\n\n| # | Plan | State |\n|---|---|---|\n' "$p" > "$LEDGER/README.md"
+    printf 'plan: opened the first shelf for %s at %s\n' "$p" "${LEDGER#$HOME_DIR/}" >&2
+    return 0
+  fi
+  printf 'plan: REFUSED — the project %s (%s) has no plans shelf yet; open one with --new-shelf\n' "$p" "${dirs[0]#$HOME_DIR/}" >&2
+  return 2
+}
 
 # ── the scopes (plan 240) — a plan belongs to whoever owns the work ───────────
 seed_shelf_index() {   # <scope> <owner> — the shelf's own index, written once
@@ -68,7 +128,7 @@ seed_shelf_index() {   # <scope> <owner> — the shelf's own index, written once
 set_ledger_for_scope() {   # <scope> <owner> — resolve (and, where legal, create) the shelf
   local scope="$1" owner="$2"
   case "$scope" in
-    project) : ;;                      # resolved above, unchanged, never created here
+    project) resolve_project_ledger "$owner" || return 2 ;;
     realm|company)
       [ -n "$owner" ] || { printf 'plan: --scope realm needs --owner <realm>\n' >&2; return 2; }
       LEDGER="$HOME_DIR/svartalfaheim/$owner/plans" ;;
@@ -134,12 +194,14 @@ case "${1:-}" in
     shift; while [ $# -gt 0 ]; do case "$1" in
       --scope) SCOPE="${2-}"; shift 2 ;;
       --owner) OWNER="${2-}"; shift 2 ;;
+      --realm) REALM="${2-}"; REALM_GIVEN=1; shift 2 ;;
+      --project) PROJECT="${2-}"; shift 2 ;;
       --all) SCOPE="all"; shift ;;
       *) shift ;;
     esac; done
     if [ "$SCOPE" = all ]; then
       printf 'shelves[5]{scope,owner,path,next}\n'
-      for d in "$HOME_DIR"/svartalfaheim/*/plans "$HOME_DIR"/svartalfaheim/*/projects/*/plans \
+      for d in "$HOME_DIR"/svartalfaheim/*/plans "$HOME_DIR"/svartalfaheim/*/projects/*/plans "$HOME_DIR"/svartalfaheim/*/workspace/*/plans \
                "$HOME_DIR"/hodd/machines/*/plans "$HOME_DIR"/hodd/plans; do
         [ -d "$d" ] || continue
         LEDGER="$d"
@@ -154,6 +216,8 @@ case "${1:-}" in
     shift; ALL=0; while [ $# -gt 0 ]; do case "$1" in
       --scope) SCOPE="${2-}"; shift 2 ;;
       --owner) OWNER="${2-}"; shift 2 ;;
+      --realm) REALM="${2-}"; REALM_GIVEN=1; shift 2 ;;
+      --project) PROJECT="${2-}"; shift 2 ;;
       --all) ALL=1; shift ;;
       *) shift ;;
     esac; done
@@ -176,8 +240,9 @@ case "${1:-}" in
     while [ $# -gt 0 ]; do
       case "$1" in
         --title) title="${2-}"; shift 2 ;;
-        --realm) REALM="${2-}"; shift 2 ;;
+        --realm) REALM="${2-}"; REALM_GIVEN=1; shift 2 ;;
         --project) PROJECT="${2-}"; shift 2 ;;
+        --new-shelf) NEW_SHELF=1; shift ;;
         --scope) SCOPE="${2-}"; shift 2 ;;
         --owner) OWNER="${2-}"; shift 2 ;;
         --from-meeting) from_meeting="${2-}"; shift 2 ;;
@@ -198,7 +263,25 @@ case "${1:-}" in
     } > "$f"
     printf '| %s | [%s](%s) | opened |\n' "$n" "$title" "$(basename "$f")" >> "$LEDGER/README.md"
     printf 'created %s\n  shelf: %s (%s)\n' "$f" "$LEDGER" "$SCOPE" ;;
+  shelves)
+    # Every realm and every project folder in this home, and whether each has a plans shelf.
+    # Read from the folders, so it holds for any user's home and any number of projects.
+    printf 'shelves{realm,project,shelf,plans}\n'
+    base="$HOME_DIR/svartalfaheim"
+    for r in "$base"/*/; do
+      [ -d "$r" ] || continue; r="${r%/}"; rn="$(basename "$r")"
+      if [ -d "$r/plans" ]; then
+        printf '  "%s","-","%s","%s"\n' "$rn" "${r#$HOME_DIR/}/plans" "$(find "$r/plans" -maxdepth 1 -name '*.md' ! -name README.md | wc -l)"
+      else printf '  "%s","-","none","0"\n' "$rn"; fi
+      for d in "$r"/projects/*/ "$r"/workspace/*/; do
+        [ -d "$d" ] || continue; d="${d%/}"
+        if [ -d "$d/plans" ]; then
+          printf '  "%s","%s","%s","%s"\n' "$rn" "$(basename "$d")" "${d#$HOME_DIR/}/plans" "$(find "$d/plans" -maxdepth 1 -name '*.md' ! -name README.md | wc -l)"
+        else printf '  "%s","%s","none","0"\n' "$rn" "$(basename "$d")"; fi
+      done
+    done ;;
   from-meeting)
+    set_ledger_for_scope "$SCOPE" "${OWNER:-$PROJECT}" || exit 2
     # The join, read back out of the ledger: which plans a meeting produced. It refuses
     # rather than guessing — a plan with no `from_meeting:` header is never assumed to be one.
     want="${2:-}"; [ -n "$want" ] || { printf 'plan: from-meeting needs a meeting id\n' >&2; exit 2; }
@@ -215,5 +298,5 @@ case "${1:-}" in
       printf 'plan: no plan header names meeting %s (from_meeting: %s)\n' "$want" "$want" >&2
       exit 1
     fi ;;
-  *) printf 'error: unknown action %s\nhelp: plan.sh [new <slug> --title <t> [--from-meeting <id>] | list | next | from-meeting <id>]\n' "$1" >&2; exit 2 ;;
+  *) printf 'error: unknown action %s\nhelp: plan.sh [new <slug> --title <t> [--realm R] [--project P] [--new-shelf] [--from-meeting <id>] | list | next | shelves | from-meeting <id>]\n' "$1" >&2; exit 2 ;;
 esac
