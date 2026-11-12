@@ -92,6 +92,41 @@ fi
 
 # 3. fixer errand
 printf 'next: fixer:%s\n' "${ERRAND_ID:-review-mend-$PR}"
+
+# ── THE REFUSAL CALLS SOMEONE (2026-11-12) ────────────────────────────────────────────────────────
+# The Allfather, for the hundredth time: *"why dont he call anyone to resolve the problems."* Until now
+# this door NAMED a fixer and did nothing — `next: fixer:<id>` was a promise no one kept, and a REFUSE
+# sat until a hand noticed. A refusal now SEATS the fixer: its own worktree, its own brief carrying the
+# findings verbatim, its own pane — through the one spawn path, exactly as a hand would.
+# `--no-seat` keeps the old behaviour for a dry run or a test.
+SEAT=1
+for _a in "$@"; do [ "$_a" = "--no-seat" ] && SEAT=0; done
+if [ "$DRY" = "0" ] && [ "$SEAT" = "1" ] && [ -x "$ROOT/bin/agents/einherjar-spawn.sh" ]; then
+  _id="${ERRAND_ID:-review-mend-$PR}"
+  _findings="$(mktemp)"
+  { printf '# Task\n\nThe judge refused PR %s. Its findings, verbatim, are below: fix every one, prove each\nwith the command its ward names, push to the same branch, and report.\n\n```\n' "$PR"
+    printf '%s\n' "${FINDINGS:-see state/eindri-reports/pr-$PR.md}"
+    printf '```\n' ; } > "$_findings"
+  if bin/agents/erindi-brief.sh "$_id" ymir --mode direct-PR >/dev/null 2>&1; then
+    _brief="$ROOT/data/$_id/brief.md"
+    if [ -f "$_brief" ]; then
+      python3 - "$_brief" "$_findings" <<'PYSEAT'
+import sys
+b,f=sys.argv[1],sys.argv[2]
+t=open(b,encoding="utf-8").read(); task=open(f,encoding="utf-8").read()
+t=t.replace("# Task\n{TASK}", "# Task\n\n"+task.strip()+"\n",1)
+open(b,"w",encoding="utf-8").write(t)
+PYSEAT
+    fi
+    ( cd "$ROOT" && git worktree add -f ".yggdrasil/$_id" -b "eindri/$_id" origin/main >/dev/null 2>&1; ( cd ".yggdrasil/$_id" && git checkout -- .pi/extensions 2>/dev/null ) )
+    if out="$(bash "$ROOT/bin/agents/einherjar-spawn.sh" "$_id" "$ROOT" --mode direct-PR --harness pi --force 2>&1)"; then
+      printf 'seated[2]{errand,pane}:\n  "%s","%s"\n' "$_id" "$(printf '%s' "$out" | sed -n 's/.*target=\([^ ]*\).*/\1/p' | head -1)"
+    else
+      printf 'seat: REFUSED — %s\n' "$(printf '%s' "$out" | grep -m1 . )" >&2
+    fi
+  fi
+  rm -f "$_findings"
+fi
 # brief path
 printf 'brief: bin/agents/erindi-brief.sh -> %s\n' "state/eindri-reports/pr-$PR.md"
 
