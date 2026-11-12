@@ -167,6 +167,13 @@ cmd_who() {
       fi ;;
   esac
   me="$(self_agent)"
+  # WHO holds this helm, what it is for, which machine, which pin — ONE row, read from
+  # the lease (plans 254 B1b/B1c · 257 H8). The row is owned by bin/seat/helm-identity.sh
+  # so this door, rodd-arm.sh and the digest answer with the same words.
+  local helm_door="$ROOT/bin/seat/helm-identity.sh"
+  if [ -x "$helm_door" ]; then
+    bash "$helm_door" 2>/dev/null || printf 'helm[1]{seat,role,charter,host,fleetrole,fleet,pin,behind,gen,pid,heartbeat_age_s,identity,missing,state_dir,queue,room}:\n  "no arm is held","%s"\n' "${lpid:+no}"
+  fi
   printf 'lock[8]{lock,owner_pid,live,arm_pid,arm_role,arm_session,agree,queue}:\n  "%s","%s","%s","%s","%s","%s","%s","%s/.wake-queue"\n' \
     "$lp" "${pid:-none}" "$live" "${lpid:-none}" "$lrole" "${lsession:-none}" "$agree" "${lstate:-$STATE}"
   printf 'me[1]{agent,descends_from_owner}:\n  "%s","%s"\n' "${me:-unknown}" \
