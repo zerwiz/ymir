@@ -412,6 +412,22 @@ Seat law, read first. You are a worker figure, not the primary. There is NO huma
       printf 'herdr-run[1]{agent,harness,model}:\n  "%s","%s","%s"\n' "$ROLE" "${_h:-?}" "${_m:-?}" >&2
     fi
 
+    # The allow-list (2026-11-12): the model this seat would launch on is put to the
+    # operator's list (bin/model/model-allow.sh) before any pane opens. A refused model
+    # is exit 1 with the reason; no variable allows one. A seat with no model named runs
+    # pi's own default, which Eir's `models` surface audits.
+    _allow_m=""
+    for ((_i=0; _i<${#MODEL_ARGS[@]}; _i++)); do
+      [ "${MODEL_ARGS[$_i]}" = --model ] && _allow_m="${MODEL_ARGS[$((_i+1))]:-}"
+    done
+    if [ -n "$_allow_m" ]; then
+      if ! _allow_out="$("$SCRIPT_DIR/../model/model-allow.sh" check "$_allow_m" --harness "$KIND" --for "herdr-run:${ROLE:-seat}" 2>/dev/null)"; then
+        printf 'refused: the allow-list does not allow model %s for %s\n%s\nhelp: bin/model/model-allow.sh list\n' "$_allow_m" "$KIND" "$_allow_out" >&2
+        exit 1
+      fi
+    fi
+    unset _allow_m _allow_out _i
+
     # The figure's own file. Without it pi loads only AGENTS.md (which describes
     # Brokk) and EVERY seat believes it is Brokk — proven 2026-09-23: a seat
     # told nothing answered "I am Brokk, the Allfather's counsellor". pi reads

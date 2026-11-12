@@ -224,6 +224,14 @@ The pane is a view; the checkpoint is the record. A restart reads the checkpoint
 EOF
 )
 
+# The well remembers what an errand DID (the Allfather, 2026-11-12: "when they are DONE they
+# need to remember what they have done to the well"). One episode, written by the worker
+# before its terminal act; eindri-acclaim.sh writes a minimal one from --line and warns
+# loudly when the worker forgot.
+WELL_STEP="- Remember what you did in the well — one episode, before the terminal act:
+     \`bin/records/mimir.sh observe \"<what was built · the PR or report · the lesson for the next worker · what is left>\" --source eindri --task $ID --tags eindri,done --shape behaviour\`
+   A failed errand is remembered too: \`--tags eindri,failed\`, and say why."
+
 # The isolation/verification preamble, shared by every brief. herdr is the
 # ordinary road; Utgard is named only as the exception with its trigger.
 ISOLATION_SETUP=$(cat <<EOF
@@ -282,6 +290,7 @@ $INBOX_SECTION
 - \`test -s $REPORT_FILE\` exits 0 (the report exists and is non-empty). Record its size with \`wc -c $REPORT_FILE\`.
 - \`grep -E '^(done|recommend|conclusion|findings):' $REPORT_FILE\` finds the stand-alone conclusion — what you did, what you found, the evidence (commands, output, file:line), and what you recommend.
    (A prose judgment "reads well" cannot be a command — read it yourself and say so in the report.)
+$WELL_STEP
 - Run the terminal act — one command; it files your report shelf and appends the durable wake: \`bin/agents/eindri-acclaim.sh $ID --terminal done --line "{one-line conclusion}"\`.
 - \`grep -c "$ID" $WAKE_QUEUE\` prints at least 1 (your wake is in the durable queue).
 - Stop.
@@ -304,6 +313,7 @@ case "$MODE" in
 - \`gh pr create --fill\` opens the pull request and prints its URL.
 - \`gh pr view --json url -q .url\` prints the same URL; record it as the evidence.
    (A prose PR description that "reads well" cannot be a command — read it yourself and say so.)
+$WELL_STEP
 - Run the terminal act — one command; it writes the status line, files the report shelf, and appends the durable wake:
      \`bin/agents/eindri-acclaim.sh $ID --terminal done --line "opened PR <url>"\`
 - \`grep -c "$ID" $WAKE_QUEUE\` prints at least 1 (your wake is in the durable queue; Brokk is woken with no arm and no sweep).
@@ -318,6 +328,7 @@ EOF
 - \`git branch --show-current\` prints \`eindri/$ID\` (you are on the right branch).
 - \`git diff --quiet\` exits 0 (everything committed).
 - \`git status --porcelain\` lists only the scratch files you intend to leave; record the list.
+$WELL_STEP
 - Run the terminal act — one command; it writes the status line, files the report shelf, and appends the durable wake:
      \`bin/agents/eindri-acclaim.sh $ID --terminal done --line "ready in branch eindri/$ID"\`
 - \`grep -c "$ID" $WAKE_QUEUE\` prints at least 1 (your wake is in the durable queue).
@@ -332,6 +343,7 @@ EOF
 - \`no-mistakes doctor\` reports the repo is initialized here (run \`no-mistakes init\` first if not).
 - \`git push -u origin eindri/$ID\` succeeds — the pipeline branch reaches the remote.
 - The \`no-mistakes\` pipeline run prints its PR URL and a status; record both.
+$WELL_STEP
 - Run the terminal act — one command; it writes the status line, files the report shelf, and appends the durable wake:
      \`bin/agents/eindri-acclaim.sh $ID --terminal done --line "<PR url> (pipeline <status>)"\`
 - \`grep -c "$ID" $WAKE_QUEUE\` prints at least 1 (your wake is in the durable queue).

@@ -36,7 +36,34 @@ case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
 ACTION="${1:-resolve}"; shift || true
 REQ="${*:-}"
 
-python3 - "$ROOT" "$CFG" "$ACTION" "$REQ" <<'PY'
+ALLOW="$SCRIPT_DIR/model-allow.sh"
+allow_cell() {  # <harness> <model> -> "<verdict>\t<model>\t<reason>" from the allow-list door
+  "$ALLOW" check "$2" --harness "$1" 2>/dev/null | python3 -c '
+import json, sys
+rows = sys.stdin.read().splitlines()
+c = json.loads("[" + rows[1].strip() + "]") if len(rows) > 1 else ["", "", "", "refused", "", "the allow-list door gave no answer"]
+print("\x1f".join([c[3], c[2], c[5]]))'
+}
+
+# A Claude model is Claude's to serve (2026-11-12): `opus` is a Claude alias, and the
+# pi catalogue below has never heard of it, so it came back "unresolved". The allow-list
+# names the one id the alias stands for.
+if [ "$ACTION" = resolve ]; then
+  case "$(printf '%s' "$REQ" | tr '[:upper:]' '[:lower:]')" in
+    opus|sonnet|haiku|fable|claude-*|claude/*|anthropic/*)
+      IFS=$'\x1f' read -r _v _m _why < <(allow_cell claude "$REQ")
+      if [ "$_v" = refused ] || [ -z "$_v" ]; then
+        printf 'model-resolve[1]{request,resolution,ask}:\n  "%s","refused","no"\n' "$REQ"
+        printf 'allow: refused — %s\nhelp: bin/model/model-allow.sh list\n' "${_why:-no answer}"
+        exit 3
+      fi
+      printf 'model-resolve[1]{request,locality,harness,provider,model,confidence}:\n  "%s","online","claude","claude","%s","exact"\n' "$REQ" "$_m"
+      printf 'allow: %s — %s\n' "$_v" "$_why"
+      exit 0 ;;
+  esac
+fi
+
+OUT="$(python3 - "$ROOT" "$CFG" "$ACTION" "$REQ" <<'PY'
 import sys, os, re, subprocess
 root, cfg_path, action, req = sys.argv[1:5]
 try:
@@ -162,3 +189,19 @@ print(f'model-resolve[1]{{request,resolution,ask}}:\n  "{req}","unresolved","yes
 print('help: bin/model/model-resolve.sh list  — or ask the Allfather with ask_user_question')
 sys.exit(0)
 PY
+)"
+RC=$?
+printf '%s\n' "$OUT"
+[ "$RC" -eq 0 ] || exit "$RC"
+# Every concrete answer carries the allow-list's verdict, and a refused one exits 3:
+# a model the fleet did not approve is never handed on as a resolution (2026-11-12).
+if [ "$ACTION" = resolve ]; then
+  _row=$(printf '%s\n' "$OUT" | sed -n '2p')
+  case "$_row" in *'"unresolved"'*|"") exit 0 ;; esac
+  _cells=$(printf '%s' "$_row" | tr -d '"')
+  IFS=',' read -r _rq _loc _h _p _mm _conf <<<"$_cells"
+  IFS=$'\x1f' read -r _v _m _why < <(allow_cell "$_h" "$_p/$_mm")
+  printf 'allow: %s — %s\n' "${_v:-refused}" "${_why:-no answer}"
+  [ "$_v" = refused ] || [ -z "$_v" ] && exit 3
+fi
+exit 0

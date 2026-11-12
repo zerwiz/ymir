@@ -1151,6 +1151,27 @@ and prunes any an older seat recorded. `einherjar-spawn.sh` excludes `.pi/extens
 by that same sparse-checkout rule instead of `rm -rf` + `--assume-unchanged`, which was
 a per-FILE bit that left 45 deletions in every worker's `git status`.
 
+## Approved models — the allow-list at every spawn door (2026-11-12)
+
+A worker may run only on a model the operator's allow-list allows. The list is the
+operator's own file in the home, `<home>/config/models-allowed.yaml`; the tree ships only
+`config/models-allowed.yaml.example`. The rule has one home, `src/ymir_runtime/allow.py`,
+and one shell door, `bin/model/model-allow.sh`.
+
+| Door | Where it asks |
+|---|---|
+| `bin/agents/einherjar-spawn.sh` | after harness and model resolution, before the engine hand-off and the worktree; a raw launch's `--model` too |
+| `src/ymir_runtime/seat.py` | after `harness.resolve`, before `worktree.ensure`; a refusal is an `EngineError` (exit 1), never the exit-4 hinge |
+| `bin/seat/herdr-run.sh`, `bin/agents/agent-run.sh` | before the pane or the harness runs |
+| `bin/model/model-resolve.sh`, `bin/model/agent-model.sh` | every resolution carries the verdict; `agent-model` picks only from allowed rows |
+| `bin/agents/eir-doctor.sh` | surface `models`: live seats, `agents.yaml` rows and pi's default |
+
+The Claude harness never takes another harness's model. With no `--model` it gets the list's
+`defaults.claude`, and a family alias such as `opus` resolves to the allowed id. A grant
+(model, reason, granted-by, granted-at, expires, optional `uses`) allows one model on purpose.
+Its uses are counted per errand in `<state>/model-allow.log`. No environment variable allows a
+model. A list that does not parse fails closed. No list at all is `unpoliced`, which Eir reports.
+
 ## CHANGE LOG
 
 - **2026-11-08** — Appended with the capability: the canon, the estate door, the widening of `domain.sh`,
@@ -1166,3 +1187,7 @@ a per-FILE bit that left 45 deletions in every worker's `git status`.
   recorded workspace id, the agent-aware housekeeping verdict, the worktree-is-not-a-root rule,
   migration 0019 and the install/update/Eir wiring. Fix note
   `docs/fixes/agents/2026-11-10-the-arm-closes-finished-seats.md`.
+- **2026-11-12** — Appended with the capability: the model allow-list and its grants
+  (`bin/model/model-allow.sh`, `src/ymir_runtime/allow.py`), enforced at the spawner, the engine,
+  herdr-run, agent-run, the resolver and agent-model; Claude defaults to its own allowed model; Eir's
+  `models` surface. Fix note `docs/fixes/model/2026-11-12-only-approved-models-spawn.md`.

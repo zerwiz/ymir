@@ -19,12 +19,12 @@ import os
 import random
 import re
 import time
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any, Mapping
 
 from . import backend as backend_mod
-from . import container, harness, heartbeat, paths, proc, worktree as worktree_mod
+from . import allow, container, harness, heartbeat, paths, proc, worktree as worktree_mod
 from .errors import EngineError, EngineRefusal
 
 SAFE_ID = re.compile(r"^[A-Za-z0-9._-]+$")
@@ -318,11 +318,6 @@ def seat(
         raise EngineRefusal(plan.refusal, "bin/agents/einherjar-spawn.sh keeps this road until the sandbox module owns it")
 
     try:
-        tree = worktree_mod.ensure(seat_id, project, roots.wt_root, runner=runner)
-    except Exception as exc:  # noqa: BLE001 - the caller must see the plain why
-        raise EngineRefusal(str(exc), "check the project worktree and the .yggdrasil root") from exc
-
-    try:
         selection = harness.resolve(
             harness=errand.harness,
             model=errand.model,
@@ -333,6 +328,30 @@ def seat(
         )
     except ValueError as exc:
         raise EngineRefusal(str(exc), "pass an explicit --model provider/model that this machine serves") from exc
+
+    # The allow-list (2026-11-12): only the models this operator approved may run as an
+    # Eindri. A refusal is an EngineError, not the strangler's hinge — the old road must
+    # not run a model the list refused. It is asked before the worktree is made.
+    if not selection.is_raw:
+        verdict = allow.enforce(selection.model, harness=selection.name, task=seat_id, env=environ)
+        if not verdict.ok:
+            raise EngineError(
+                f"refused: {verdict.reason}" + (f" (remedy: {verdict.remedy})" if verdict.remedy else "")
+            )
+        if verdict.model and verdict.model != selection.model:
+            selection = replace(
+                selection,
+                model=verdict.model,
+                model_provenance=f"{selection.model_provenance or 'the harness default'} -> the allow-list ({verdict.rule or verdict.verdict})",
+            )
+        elif verdict.verdict == "granted":
+            selection = replace(selection, model_provenance=f"{selection.model_provenance} · granted ({verdict.rule})")
+
+    try:
+        tree = worktree_mod.ensure(seat_id, project, roots.wt_root, runner=runner)
+    except Exception as exc:  # noqa: BLE001 - the caller must see the plain why
+        raise EngineRefusal(str(exc), "check the project worktree and the .yggdrasil root") from exc
+
 
     if not selection.is_verified and not selection.is_raw:
         raise EngineRefusal(
