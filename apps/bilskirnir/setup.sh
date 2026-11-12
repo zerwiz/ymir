@@ -181,14 +181,26 @@ managed() {
 }
 ENVF="$APP/.env"
 if [ "$CHECK" = 0 ]; then
-  if [ ! -f "$ENVF" ]; then
-    umask 077
-    { printf 'PORT=8787\nAPP_URL=http://localhost:5173\nSERVER_URL=http://localhost:8787\n'
-      printf 'SESSION_SECRET=%s\n' "$(head -c 32 /dev/urandom | base64 | tr -d '/+=')"
-      printf '# Local use: no sign-in, loopback only. Hosting elsewhere needs a login (plan 259).\nDEV_LOGIN=0\nHOST=127.0.0.1\nLOCAL_OPERATOR=allfather@localhost\nALLOWED_EMAILS=allfather@localhost\n'
-      printf 'HERMES_BIN=hermes\nHQ_LOCAL=0\nMAX_BOTS=4\nORGO_API_KEY=unset\nORGO_COMPUTER_ID=\nCOMPOSIO_API_KEY=unset\nXAI_API_KEY=unset\n'
-    } > "$ENVF"
-  fi
+  # Every base setting that is ABSENT is added; a value already there (the operator's) is never touched. It used to
+  # write them only when the file was missing — so an .env that existed but was empty (the data home creates one)
+  # kept no session secret and no keys, and the server died at start (nidavellir, 2026-11-12: `Missing env
+  # COMPOSIO_API_KEY`). The secret is generated once, here, and never printed.
+  umask 077; [ -f "$ENVF" ] || : > "$ENVF"
+  python3 - "$ENVF" <<'PY'
+import os, re, sys, base64
+p = sys.argv[1]; s = open(p).read()
+have = {m.group(1) for m in re.finditer(r'(?m)^([A-Z][A-Z0-9_]*)=', s)}
+base = [('PORT', '8787'), ('APP_URL', 'http://localhost:5173'), ('SERVER_URL', 'http://localhost:8787'),
+        ('SESSION_SECRET', base64.b64encode(os.urandom(32)).decode().translate({ord(c): None for c in '/+='})),
+        ('DEV_LOGIN', '0'), ('HOST', '127.0.0.1'), ('LOCAL_OPERATOR', 'allfather@localhost'),
+        ('ALLOWED_EMAILS', 'allfather@localhost'), ('HERMES_BIN', 'hermes'), ('HQ_LOCAL', '0'), ('MAX_BOTS', '4'),
+        ('ORGO_API_KEY', 'unset'), ('ORGO_COMPUTER_ID', ''), ('COMPOSIO_API_KEY', 'unset'), ('XAI_API_KEY', 'unset')]
+add = [f'{k}={v}' for k, v in base if k not in have]
+if add:
+    head = '# Local use: no sign-in, loopback only. Hosting elsewhere needs a login (plan 259).\n' if 'HOST' not in have else ''
+    open(p, 'w').write(s.rstrip('\n') + ('\n' if s.strip() else '') + head + '\n'.join(add) + '\n')
+print(len(add))
+PY
   # drop the old hand-set lines and the previous managed block, then append the fresh one
   python3 - "$ENVF" <<'PY'
 import sys, re
