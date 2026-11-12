@@ -147,12 +147,13 @@ def mail_fact() -> dict:
 
 def log_fact() -> dict:
     """Today's daily log against his list (plan 274): entries, those marked open, those not listed yet."""
-    todo = home() / "hodd/life/personal/me/todo.md"
+    list_file = home() / "hodd/life/personal/me/todo.md"
+    if not list_file.is_file():                         # no list is said, never counted as an empty one
+        return {"unable": "no to-do list at hodd/life/personal/me/todo.md"}
     try:
         sys.path.insert(0, str(repo_root() / "bin" / "records"))
         import comms  # noqa: PLC0415
-        text = todo.read_text(encoding="utf-8") if todo.is_file() else ""
-        j = comms.log_join(text)
+        j = comms.log_join(list_file.read_text(encoding="utf-8"))
     except Exception as exc:
         return {"unable": f"the comms door could not read the daily log ({exc.__class__.__name__})"}
     j["source"] = "the daily log (hodd/memory/daily) and his list"
@@ -307,7 +308,7 @@ def render(as_json: bool, quiet: bool, carry: bool = False) -> int:
         print("  today's log: %d entries · %d marked open, %d of them not on your list yet"
               % (lg["entries"], lg["open"], lg["not_listed"]))
         if lg["not_listed"]:
-            print("    comms.sh todo-matches offers them; nothing is written without your yes")
+            print("    bin/records/comms.sh offers them as proposals; nothing is written without your yes")
     print()
     print("THE CLOCK · %s" % clock.get("source", ""))
     if "unable" in clock:
