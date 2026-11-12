@@ -21,6 +21,7 @@
 #   YMIR_RUNTIME_DIR     the pinned runtime the Ymir MCP door runs from (~/ymir-runtime, else this tree)
 #   BILSKIRNIR_MCP_GATEWAY  the record doors (well, skuld, bolthorn)  (http://127.0.0.1:8316)
 #   BILSKIRNIR_SESSION_HOOK the house's Hermes session hook (~/.hermes/agent-hooks/ymir-session-hook.sh)
+#   BILSKIRNIR_VOICE     the voice road: house | xai     (house — see server/src/voice-house.ts for its parts)
 set -u
 APP="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CHECK=0; [ "${1-}" = "--check" ] && CHECK=1
@@ -183,6 +184,34 @@ c.execute("UPDATE bots SET name=?, label=? WHERE is_primary=1 AND (name<>? OR la
 c.commit()
 PY
   say "the first agent in the app is $NAME"
+fi
+
+# ── 7. the voice: the house's own ear and mouth (BILSKIRNIR_VOICE=house, the default) ──
+# Reported, never raised: Rödd's engine is the voice door's to raise (bin/voice/voice-door.sh host), and
+# Kokoro's unit wakes on the first preview. A missing ear (whisper) fails the check, because dictation is the
+# composer's own button; a lowered engine or a sleeping Kokoro is said, not failed, since they wake on demand.
+ROAD="$(printf '%s' "${BILSKIRNIR_VOICE:-house}" | tr 'A-Z' 'a-z')"
+if [ "$ROAD" = "xai" ]; then
+  say "voice road: xai (xAI's cloud) — needs XAI_API_KEY in .env"
+else
+  WCLI="${BILSKIRNIR_WHISPER_CLI:-$HOME/whisper.cpp.src/build/bin/whisper-cli}"
+  WMODEL="${BILSKIRNIR_WHISPER_MODEL:-$HOME/whisper.cpp/models/ggml-small.en.bin}"
+  KOKORO="${BILSKIRNIR_KOKORO_URL:-http://127.0.0.1:8765}"
+  RT="${BILSKIRNIR_REALTIME_URL:-ws://127.0.0.1:${YMIR_VOICE_PORT:-8890}/v1/realtime}"
+  RT_HTTP="$(printf '%s' "$RT" | sed -E 's#^ws#http#; s#/v1/realtime.*$##')"
+  say "voice road: house (whisper in, Rödd's engine, Kokoro out — nothing reaches xAI)"
+  if [ -x "$WCLI" ] && [ -f "$WMODEL" ] && command -v "${BILSKIRNIR_FFMPEG:-ffmpeg}" >/dev/null 2>&1; then
+    say "voice ear: whisper.cpp ready ($(basename "$WMODEL"))"
+  else
+    say "voice ear: missing — dictation needs whisper-cli ($WCLI), its model ($WMODEL) and ffmpeg"; fail=1
+  fi
+  if curl -fsS -m 2 "$KOKORO/health" >/dev/null 2>&1; then say "voice mouth: Kokoro answers at $KOKORO"
+  else say "voice mouth: Kokoro asleep at $KOKORO (the unit ${BILSKIRNIR_KOKORO_UNIT:-kokoro-serve.service} wakes on the first preview)"; fi
+  if pool="$(curl -fsS -m 2 "$RT_HTTP/v1/pool" 2>/dev/null)"; then
+    say "voice call: Rödd's engine answers ($(printf '%s' "$pool" | python3 -c 'import sys,json; j=json.load(sys.stdin); print(f"{j.get(\"size\",0)-j.get(\"in_use\",0)} of {j.get(\"size\",0)} seats free")' 2>/dev/null || echo up))"
+  else
+    say "voice call: Rödd's engine is not raised — voice chat waits for: bin/voice/voice-door.sh host"
+  fi
 fi
 
 [ "$fail" = 0 ] && { say "ready"; exit 0; } || { say "not ready"; exit 1; }

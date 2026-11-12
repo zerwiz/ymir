@@ -15,7 +15,15 @@ export interface VoiceSession {
   session: Record<string, unknown>;
 }
 
-export interface VoiceOptions { voices: VoiceOption[]; languages: { code: string; name: string }[]; speeds: number[] }
+export interface VoiceOptions {
+  /** 'house' = the house's own ear and mouth; 'xai' = xAI's cloud. */
+  road?: 'house' | 'xai';
+  /** The voice a bot speaks in when its saved voice is not one this road can say. */
+  defaultVoice?: string;
+  voices: VoiceOption[];
+  languages: { code: string; name: string }[];
+  speeds: number[];
+}
 
 async function post<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`/api/voice${path}`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });

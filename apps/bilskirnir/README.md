@@ -44,7 +44,7 @@ The interface is modeled on Grok Bot. Underneath, every bot is a Hermes agent, s
 | **Your existing Hermes agent, kept as it is** | The first bot is the Hermes agent already running on the computer. Its messaging channels, skills and memory keep working; the app only calls its API. |
 | **Connected apps with approvals** | Bots ask for the app they need and you connect it through Composio. Actions that write (send, post, delete) wait for your OK on a card in the chat. |
 | **Model and subscription per bot** | Pick the provider and model in the bot's Engine panel, or sign in to a subscription on the bot's own screen. |
-| **Voice** | Talk to a bot with xAI's realtime voice modes. Real work is handed to the same bot, with the same memory and tools. |
+| **Voice** | Talk to a bot, or dictate into the composer, in the house's own voice: whisper.cpp hears, Rödd's realtime engine thinks, Kokoro speaks. Real work is handed to the same bot, with the same memory and tools. xAI's voice remains as an opt-in road. |
 | **Research on X** | Every bot has an `x_search` tool, backed by xAI. |
 | **Routines, tasks and a Library** | Recurring jobs on a schedule, a task list per bot, and a place where bots save the files they make. |
 
@@ -73,7 +73,8 @@ flowchart LR
   H2 -- "MCP /mcp/&lt;bot&gt;" --> S
   S --> O["Orgo computer<br/>one screen per bot"]
   S --> C["Composio<br/>connected apps"]
-  S --> X["xAI<br/>voice · X search"]
+  S --> V["the house voice<br/>whisper · Rödd's engine · Kokoro"]
+  S -.-> X["xAI<br/>X search · voice (opt-in)"]
 ```
 
 - **One computer, one screen per bot.** All bots live on a single Orgo Linux computer. The first bot uses the computer's main screen; each further bot gets an Orgo screen of its own. Orgo allows four screens per computer, so four bots.
@@ -155,8 +156,37 @@ The keys you need:
 |---|---|
 | `ORGO_API_KEY`, `ORGO_COMPUTER_ID` | The computer and its screens |
 | `COMPOSIO_API_KEY` | Connected apps |
-| `XAI_API_KEY` | Voice and `x_search` |
+| `XAI_API_KEY` | `x_search`, and voice only on the xAI road (`BILSKIRNIR_VOICE=xai`) |
 | `SESSION_SECRET` | Sign-in sessions and the tokens agents use to reach `/mcp` |
+
+## Voice — the house road
+
+Voice runs on the house's own parts by default (`BILSKIRNIR_VOICE=house`). Nothing is sent to xAI.
+
+| Part | What it does | Where it comes from |
+|---|---|---|
+| The mic button in the composer | Records in the browser and puts the words in the composer | whisper.cpp (`whisper-cli`, model `ggml-small.en.bin`), run by the server |
+| Voice chat | A live call with the bot, which hands real work to itself | Rödd's realtime engine (`speech-to-speech`, `:8890`), reached through the server's relay at `/api/voice/realtime` |
+| The voice list and Preview | The Kokoro voices, Rödd's five first; Nanna speaks as `af_nicole` | Kokoro (`kokoro-serve.service`, `:8765`), woken on the first preview |
+
+**Before a call, raise the engine:** `bin/voice/voice-door.sh host`. The engine has one seat, so a call waits while Rödd holds it. The hall says so instead of failing silently.
+
+**Check what answers:** `apps/bilskirnir/setup.sh --check` reports the ear, the mouth and the engine. A missing ear fails the check; a sleeping Kokoro or a lowered engine is reported, because both are raised on demand.
+
+**Settings**, each with one default:
+
+| Setting | Default |
+|---|---|
+| `BILSKIRNIR_VOICE` | `house` (`xai` brings back xAI's cloud voice, which needs `XAI_API_KEY`) |
+| `BILSKIRNIR_WHISPER_CLI`, `BILSKIRNIR_WHISPER_MODEL` | `~/whisper.cpp.src/build/bin/whisper-cli`, `~/whisper.cpp/models/ggml-small.en.bin` |
+| `BILSKIRNIR_WHISPER_GPU` | `on` (`off` keeps whisper on the CPU) |
+| `BILSKIRNIR_KOKORO_URL`, `BILSKIRNIR_KOKORO_UNIT` | `http://127.0.0.1:8765`, `kokoro-serve.service` (empty = never start it) |
+| `BILSKIRNIR_VOICE_DEFAULT` | `af_nicole` — the voice a bot uses when its saved voice is not a Kokoro voice |
+| `BILSKIRNIR_REALTIME_URL` | `ws://127.0.0.1:8890/v1/realtime` (or `YMIR_VOICE_PORT`) |
+
+**Limits.** The house road speaks English: the ear is `small.en`, so the language list offers English and auto-detect only. A call summary on the house road is a plain line made from the call itself, not a model's summary.
+
+**Test it:** `DB_PATH=/tmp/hv.db COMPOSIO_API_KEY=x ORGO_API_KEY=x SESSION_SECRET=x npx tsx tests/house-voice.mts` proves each part (Kokoro speaks, whisper hears it back, the relay carries frames) and, when the engine is raised, that it accepts the hall's session.
 
 ## Models and subscriptions
 
