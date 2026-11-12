@@ -331,10 +331,26 @@ fi
 # owns that move (bin/engine/runtime-deploy.sh) — a moved pin whose services still run the
 # old code is the same lie as a stale one. Bounded and never fatal; the line is the record.
 if [ "$PIN_MOVED" = 1 ] && [ -x "$SCRIPT_DIR/../engine/runtime-deploy.sh" ]; then
-  if ro="$(gstep pin-deploy "${YMIR_GROA_PIN_TIMEOUT:-180}" setsid "$SCRIPT_DIR/../engine/runtime-deploy.sh" </dev/null 2>&1)"; then
+  # a pin that is a link to a release builds a whole new release before it flips (plan 275 S9): minutes, not seconds
+  _pin_dir="${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}"; _pin_limit=180; [ -L "$_pin_dir" ] && _pin_limit=1800
+  if ro="$(gstep pin-deploy "${YMIR_GROA_PIN_TIMEOUT:-$_pin_limit}" setsid "$SCRIPT_DIR/../engine/runtime-deploy.sh" </dev/null 2>&1)"; then
     printf 'pin: moved and every unit settled — %s\n' "$(printf '%s' "$ro" | tail -1)"
   else
     printf 'pin: moved, but a unit did not settle — %s\n' "$(printf '%s' "$ro" | grep -m1 FAIL || printf '%s' "$ro" | tail -1)"
+  fi
+fi
+
+# Every app's shortcut, on every platform, from the one command (plan 275 S11–S12): written by every update, so a
+# shortcut can never be older than the code it opens. Linux entries always; Windows Start-menu shortcuts from WSL;
+# ~/Applications on macOS. The check names what is owed; it is never fatal to the update.
+if [ -x "$SCRIPT_DIR/../desktop/shortcuts.sh" ]; then
+  if [ "$CHECK" = 1 ]; then
+    if "$SCRIPT_DIR/../desktop/shortcuts.sh" --check >/dev/null 2>&1; then printf 'shortcuts: every app has its shortcut\n'
+    else printf 'shortcuts: owed — bin/desktop/shortcuts.sh writes them\n'; fi
+  elif so="$(gstep shortcuts 60 "$SCRIPT_DIR/../desktop/shortcuts.sh" 2>&1)"; then
+    printf 'shortcuts: %s written (%s)\n' "$(printf '%s' "$so" | grep -c '"written"')" "$(printf '%s' "$so" | sed -n '2p' | tr -d ' "')"
+  else
+    printf 'shortcuts: FAILED — %s\n' "$(printf '%s' "$so" | grep -m1 -E 'OWED|FAIL' | tr -d '"')"
   fi
 fi
 
