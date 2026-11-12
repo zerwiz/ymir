@@ -4,6 +4,7 @@ import { TasksIsland } from './config/TasksView';
 import type { Bot } from '@shared/types';
 import { BotAvatarFor } from '../avatar/BotAvatar';
 import { displayName, useStore } from '../store';
+import { DRAWER_QUERY, useMedia } from '../lib/media';
 import { api } from '../lib/api';
 import { Icon } from './Icon';
 import { Menu } from './Menu';
@@ -11,6 +12,16 @@ import { Menu } from './Menu';
 function initials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   return ((parts[0]?.[0] ?? '') + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase() || '?';
+}
+
+/** On a narrow screen the rooms list is a drawer; this opens it from the chat's own header. */
+export function RoomsButton() {
+  const set = useStore((s) => s.set);
+  return (
+    <button type="button" className="icon-btn icon-btn--bordered chat__rooms-btn" onClick={() => set({ drawerOpen: true })} aria-label="Show the rooms" title="The rooms">
+      <Icon name="sidebar" opacity={0.66} />
+    </button>
+  );
 }
 
 export function TrafficLights() {
@@ -25,8 +36,8 @@ export function TrafficLights() {
 
 function previewFor(bot: Bot, running: boolean, awaiting: string | null) {
   if (awaiting) return `Waiting for you: ${awaiting}`;
-  if (running && !bot.lastPreview) return 'Working…';
-  return bot.lastPreview ?? 'No messages yet';
+  if (running && !bot.lastPreview) return 'At work…';
+  return bot.lastPreview ?? 'Nothing said yet';
 }
 
 const BotRow = memo(function BotRow({ bot, selected, running, awaiting, onSelect }: { bot: Bot; selected: boolean; running: boolean; awaiting: string | null; onSelect: (id: string) => void }) {
@@ -53,11 +64,13 @@ export function Sidebar() {
   const inTasks = useConfigUI((s) => s.view === 'tasks');
   const selectedBotId = inTasks ? null : storeSelectedBotId; // nothing highlighted while the Tasks view is open
   const user = useStore((s) => s.user);
-  const collapsed = useStore((s) => s.sidebarCollapsed);
+  const narrow = useMedia(DRAWER_QUERY);
+  // in the drawer the rooms are always shown in full; the folded rail is a wide-screen habit
+  const collapsed = useStore((s) => s.sidebarCollapsed) && !narrow;
   const set = useStore((s) => s.set);
   const storeSelectBot = useStore((s) => s.selectBot);
-  // Picking a bot (even the one already selected) leaves the Tasks view.
-  const selectBot = useCallback((id: string) => { useConfigUI.getState().setView('chat'); storeSelectBot(id); }, [storeSelectBot]);
+  // Picking a bot (even the one already selected) leaves the Tasks view, and closes the drawer.
+  const selectBot = useCallback((id: string) => { useConfigUI.getState().setView('chat'); storeSelectBot(id); set({ drawerOpen: false }); }, [storeSelectBot, set]);
   const setModal = useStore((s) => s.setModal);
   const [accountMenu, setAccountMenu] = useState(false);
   const logout = async () => { await api.logout().catch(() => {}); location.reload(); };
@@ -68,8 +81,11 @@ export function Sidebar() {
   return (
     <aside className={`sidebar${collapsed ? ' is-collapsed' : ''}`}>
       <div className="sidebar__titlebar">
+        <button type="button" className="icon-btn icon-btn--plain sidebar__close" onClick={() => set({ drawerOpen: false })} aria-label="Close the rooms" title="Close">
+          <Icon name="close" size={14} opacity={0.66} />
+        </button>
         <div className="sidebar__controls">
-          <button type="button" className="icon-btn icon-btn--plain" onClick={() => set({ sidebarCollapsed: !collapsed })} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} title="Toggle sidebar (⌘B)">
+          <button type="button" className="icon-btn icon-btn--plain sidebar__collapse" onClick={() => set({ sidebarCollapsed: !collapsed })} aria-label={collapsed ? 'Widen the rooms' : 'Fold the rooms'} title="Fold or widen the rooms (⌘B)">
             <Icon name="sidebar" opacity={0.66} />
           </button>
           {!collapsed && (
@@ -77,7 +93,7 @@ export function Sidebar() {
               <button type="button" className="icon-btn" onClick={() => setModal('search')} aria-label="Search" title="Search (⌘K)">
                 <Icon name="search" opacity={0.66} />
               </button>
-              <button type="button" className="icon-btn" onClick={() => setModal('create')} aria-label="New Bot" title="New Bot">
+              <button type="button" className="icon-btn" onClick={() => setModal('create')} aria-label="New agent" title="New agent">
                 <Icon name="plus" opacity={0.66} />
               </button>
             </>
@@ -112,8 +128,8 @@ export function Sidebar() {
             <button type="button" className="bot-list__empty" onClick={() => setModal('create')}>
               <span className="bot-list__empty-plus"><Icon name="plus" size={14} opacity={0.66} /></span>
               <span>
-                <span className="bot-row__name">Create a Bot</span>
-                <span className="bot-row__preview">Give it a job, like research or inbox triage</span>
+                <span className="bot-row__name">Seat an agent</span>
+                <span className="bot-row__preview">Give it an errand, like research or the inbox</span>
               </span>
             </button>
           )}
@@ -135,7 +151,7 @@ export function Sidebar() {
                 items={[
                   { label: 'Settings', hint: '⌘,', onSelect: () => useConfigUI.getState().openAppSettings() },
                   { label: 'Connect apps', onSelect: () => setModal('apps') },
-                  { label: 'Log out', danger: true, onSelect: logout },
+                  { label: 'Leave the hall', danger: true, onSelect: logout },
                 ]}
               >
                 <div className="menu__header">{user?.email}</div>

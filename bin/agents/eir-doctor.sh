@@ -80,7 +80,7 @@ surface_skip() {
     # vault is a server-side property (Rule 15/16), never the roaming seat's.
     vault)      return 0 ;;
     # The Electron shells are not built for Android; the seat is the harness.
-    shells|sessrumnir) return 0 ;;
+    shells|sessrumnir|bilskirnir) return 0 ;;
     # No systemd on Android: there is no boot unit to enable. The Pi watcher owns
     # supervision here, and `ymir-autoboot.sh verify` already names the gap.
     autoboot)   return 0 ;;
@@ -103,7 +103,7 @@ surface_ok() {
 surface_detail_skip() {
   case "$1" in
     vault)      printf '%s\n' 'not this seat (no cryptsetup/loop devices on Android)' ;;
-    shells|sessrumnir) printf '%s\n' 'not this seat (desktop shells are not built for bionic)' ;;
+    shells|sessrumnir|bilskirnir) printf '%s\n' 'not this seat (desktop shells are not built for bionic)' ;;
     autoboot)   printf '%s\n' 'not this seat (no systemd; the Pi watcher owns supervision)' ;;
     mail)       printf '%s\n' 'not this seat (no systemd: the desk is a user unit)' ;;
     *)          printf '%s\n' 'skip' ;;
@@ -111,7 +111,7 @@ surface_detail_skip() {
 }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir hnoss shells graphics well memory mail mcp harness claudehooks arm roddhelm lock gates migrations hoard autoboot vault ward seats seatreap)
+SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir bilskirnir hnoss shells graphics well memory mail mcp harness claudehooks arm roddhelm lock gates migrations hoard autoboot vault ward seats seatreap)
 
 # ── the three surfaces the 2026-11-03 Windows audit found, and the rule they read ──────────
 # A SEAT IS NOT UPDATED BY A PULL. The checkout moves; the installed hooks, the PATH a later
@@ -236,6 +236,10 @@ f_council()   { "$SCRIPT_DIR/../pi/logretta-ensure.sh" ensure >/dev/null 2>&1; }
 f_snotra()    { "$SCRIPT_DIR/../../systems/snotra/services/ear/snotra-ensure.sh" ensure --install >/dev/null 2>&1; }
 s_sessrumnir(){ [ -x "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" ] && "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" status >/dev/null 2>&1; }
 f_sessrumnir(){ "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1; }
+# Bilskirnir, the business hall (plan 259): healthy when its setup door's --check passes (agent home,
+# soul, .env, dependencies); the repair is the door itself. A tree without the app is not owed it.
+s_bilskirnir(){ [ -x "$ROOT/apps/bilskirnir/setup.sh" ] || return 0; "$ROOT/apps/bilskirnir/setup.sh" --check >/dev/null 2>&1; }
+f_bilskirnir(){ [ -x "$ROOT/apps/bilskirnir/setup.sh" ] && "$ROOT/apps/bilskirnir/setup.sh" >/dev/null 2>&1; }
 # Hnoss — the design smithy's model door (2026-11-10). The MCP bridge is only as good as
 # the door it reaches a model through; a hand-placed launcher plus a rail/BYOK mismatch
 # made every design generation die silently. The ensure door seats the launcher and the
@@ -655,6 +659,7 @@ detail() { # <name> -> the command that prints one short fact
     a2abridge) printf '%s\n' "have a2abridge && a2abridge --version 2>/dev/null | head -1 || echo 'engine absent'" ;;
     hermes)    printf '%s\n' "have hermes && echo present || echo absent" ;;
     sessrumnir)printf '%s\n' "[ -d $APP_SESSRUMNIR/out ] && echo built || echo 'not built'" ;;
+    bilskirnir)printf '%s\n' "[ -x $ROOT/apps/bilskirnir/setup.sh ] && { $ROOT/apps/bilskirnir/setup.sh --check 2>&1 | tail -1; } || echo 'not in this tree'" ;;
     well)      printf '%s\n' well_detail ;;
     memory)    printf '%s\n' memory_detail ;;
     mail)      printf '%s\n' mail_detail ;;

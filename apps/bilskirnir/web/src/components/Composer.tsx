@@ -47,7 +47,7 @@ export function Composer({ bot, running }: { bot: Bot; running: boolean }) {
       setText('');
       drafts.delete(bot.id);
     } catch (e) {
-      setError((e as Error).message || 'Message failed to send');
+      setError((e as Error).message || 'The word did not reach them');
     } finally {
       setSending(false);
       ref.current?.focus();
@@ -102,12 +102,12 @@ export function Composer({ bot, running }: { bot: Bot; running: boolean }) {
             className="composer__input"
             rows={1}
             value={text}
-            placeholder={`Message ${displayName(bot)}`}
+            placeholder={`Write to ${displayName(bot)}`}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); }
             }}
-            aria-label={`Message ${bot.name}`}
+            aria-label={`Write to ${bot.name}`}
           />
         </div>
         <div className="composer__right">
@@ -140,7 +140,7 @@ export function Composer({ bot, running }: { bot: Bot; running: boolean }) {
               onClick={hasText ? send : () => startCall(bot.id)}
               disabled={hasText && sending}
               aria-label={hasText ? 'Send' : `Start voice chat with ${bot.name}`}
-              title={hasText ? 'Send (Enter)' : 'Start voice chat'}
+              title={hasText ? 'Send (Enter)' : 'Speak aloud'}
             >
               <Icon name={hasText ? 'arrow_up' : 'voice_a'} size={16} />
             </button>

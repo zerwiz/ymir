@@ -73,7 +73,7 @@ export function VoiceCallBar() {
     : v.status === 'error' ? v.error ?? 'Call ended'
     : v.speaking ? 'Speaking'
     : v.listening ? 'Listening'
-    : working ? 'Working on it…'
+    : working ? 'At work on it…'
     : v.thinking ? 'Thinking…'
     : v.muted ? 'Muted'
     : 'Listening';

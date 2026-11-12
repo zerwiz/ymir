@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { AvatarColor, AvatarShape, Bot, Memory, Routine, Skill } from '@shared/types';
-import { BotAvatar, BotAvatarFor, PICKER_SHAPES } from '../../avatar/BotAvatar';
-import { COLOR_ORDER, botVars, palette } from '../../lib/colors';
+import type { AvatarColor, Bot, Memory, Routine, Skill } from '@shared/types';
+import { BotAvatar, BotAvatarFor } from '../../avatar/BotAvatar';
+import { COLOR_NAMES, COLOR_ORDER, botVars, palette } from '../../lib/colors';
 import { configApi, type BotSettingsBundle } from '../../lib/configApi';
 import { useConfigUI, useVersion, type BotSettingsTab } from '../../configStore';
 import { useStore } from '../../store';
@@ -64,7 +64,7 @@ export function BotSettingsModal() {
         <button type="button" className="modal__close" onClick={onClose} aria-label="Close"><Icon name="close" size={14} opacity={0.68} /></button>
       </div>
       <div className="bot-settings__body" style={botVars(bot.avatarColor)}>
-        <nav className="cfg-nav" aria-label="Bot settings sections">
+        <nav className="cfg-nav" aria-label="Agent settings sections">
           {tabs.map((t) => (
             <button key={t.id} type="button" className={`cfg-nav__item${target.tab === t.id ? ' is-active' : ''}`} onClick={() => setTab(t.id)} aria-current={target.tab === t.id || undefined}>
               <span>{t.label}</span>
@@ -125,13 +125,13 @@ function GeneralTab({ bot, onClose }: { bot: Bot; onClose: () => void }) {
         <div className="cfg-look">
           <BotAvatar shape={draft.avatarShape} color={draft.avatarColor} size={72} />
           <div className="cfg-look__text">
-            <div className="cfg-look__name">{draft.name || 'New Bot'}</div>
+            <div className="cfg-look__name">{draft.name || 'New agent'}</div>
             <button type="button" className="cfg-btn cfg-btn--secondary" onClick={() => setPicker(!picker)} aria-expanded={picker}>
               {picker ? 'Done' : 'Change look'}
             </button>
           </div>
         </div>
-        {picker && <LookPicker shape={draft.avatarShape} color={draft.avatarColor} onShape={(s) => put('avatarShape', s)} onColor={(c) => put('avatarColor', c)} />}
+        {picker && <LookPicker color={draft.avatarColor} onColor={(c) => put('avatarColor', c)} />}
       </section>
 
       <section className="cfg-section cfg-grid">
@@ -145,16 +145,16 @@ function GeneralTab({ bot, onClose }: { bot: Bot; onClose: () => void }) {
 
       <section className="cfg-section">
         <Field label="About" htmlFor="cfg-about">
-          <textarea id="cfg-about" className="text-input cfg-textarea" rows={2} value={draft.description} maxLength={500} placeholder="What is this Bot for?" onChange={(e) => put('description', e.target.value)} />
+          <textarea id="cfg-about" className="text-input cfg-textarea" rows={2} value={draft.description} maxLength={500} placeholder="What is this agent for?" onChange={(e) => put('description', e.target.value)} />
         </Field>
-        <Field label="Instructions" htmlFor="cfg-instructions" hint={`Standing guidance ${draft.name || 'this Bot'} always follows, like tone, priorities or things to avoid. It also learns from chat, skills and memories.`}>
+        <Field label="Instructions" htmlFor="cfg-instructions" hint={`Standing guidance ${draft.name || 'this agent'} always follows, like tone, priorities or things to avoid. It also learns from the room, its skills and its memories.`}>
           <textarea id="cfg-instructions" className="text-input cfg-textarea cfg-textarea--tall" rows={7} value={draft.instructions} maxLength={8000} placeholder="e.g. Keep updates to three bullets. Never email anyone outside the team without asking." onChange={(e) => put('instructions', e.target.value)} />
         </Field>
         <Field label="Thinking effort" hint={EFFORT_HINT[draft.effort]}>
           <Segmented label="Thinking effort" value={draft.effort} options={EFFORTS} onChange={(v) => put('effort', v)} />
         </Field>
         <Field label="Used as">
-          <Segmented label="Bot type" value={draft.mode} options={[{ value: 'personal', label: 'Personal assistant' }, { value: 'teammate', label: 'Teammate' }]} onChange={(v) => put('mode', v)} />
+          <Segmented label="Whose it is" value={draft.mode} options={[{ value: 'personal', label: 'Yours alone' }, { value: 'teammate', label: 'The whole house’s' }]} onChange={(v) => put('mode', v)} />
         </Field>
       </section>
 
@@ -170,7 +170,7 @@ function GeneralTab({ bot, onClose }: { bot: Bot; onClose: () => void }) {
           <div className="cfg-row">
             <div className="cfg-row__text">
               <div className="cfg-row__title">New conversation</div>
-              <div className="cfg-row__sub">Clears the chat. Memories, skills and routines stay.</div>
+              <div className="cfg-row__sub">Clears the room. Memories, skills and routines stay.</div>
             </div>
             <ConfirmButton className="cfg-btn cfg-btn--secondary" confirmLabel="Start fresh" onConfirm={async () => { await configApi.fresh(bot.id); flash('Started a new conversation'); }}>
               Start new
@@ -180,7 +180,7 @@ function GeneralTab({ bot, onClose }: { bot: Bot; onClose: () => void }) {
             <div className="cfg-row">
               <div className="cfg-row__text">
                 <div className="cfg-row__title">Make primary</div>
-                <div className="cfg-row__sub">Your go-to Bot. It reaches out first and keeps the others on track.</div>
+                <div className="cfg-row__sub">The first you speak to. It reaches out first and keeps the others on course.</div>
               </div>
               <button type="button" className="cfg-btn cfg-btn--secondary" onClick={() => configApi.makePrimary(bot.id).then(() => flash(`${bot.name} is now your primary Bot`)).catch((e) => flash(e.message, 'error'))}>Make primary</button>
             </div>
@@ -189,12 +189,12 @@ function GeneralTab({ bot, onClose }: { bot: Bot; onClose: () => void }) {
       </section>
 
       <section className="cfg-section">
-        <div className="cfg-section__label">Danger zone</div>
+        <div className="cfg-section__label">For good</div>
         <div className="cfg-card">
           <div className="cfg-row">
             <div className="cfg-row__text">
               <div className="cfg-row__title">Delete {bot.name}</div>
-              <div className="cfg-row__sub">{bot.isPrimary ? 'Make another Bot primary first.' : 'Removes its chat, memories, skills and routines for good.'}</div>
+              <div className="cfg-row__sub">{bot.isPrimary ? 'Make another agent first in the hall before this one goes.' : 'Removes its chat, memories, skills and routines for good.'}</div>
             </div>
             <ConfirmButton
               disabled={bot.isPrimary}
@@ -218,26 +218,14 @@ function GeneralTab({ bot, onClose }: { bot: Bot; onClose: () => void }) {
   );
 }
 
-const SHAPE_ROWS = [PICKER_SHAPES.slice(0, 7), PICKER_SHAPES.slice(7)];
-
-function LookPicker({ shape, color, onShape, onColor }: { shape: AvatarShape; color: AvatarColor; onShape: (s: AvatarShape) => void; onColor: (c: AvatarColor) => void }) {
+// Every agent wears the Ymir mark, so the look is its hue alone: six house hues, shown as the ring around the mark.
+function LookPicker({ color, onColor }: { color: AvatarColor; onColor: (c: AvatarColor) => void }) {
   return (
     <div className="cfg-picker">
-      <div className="shape-grid" role="radiogroup" aria-label="Character shape">
-        {SHAPE_ROWS.map((row, i) => (
-          <div key={i} className="shape-grid__row">
-            {row.map((s) => (
-              <button key={s} type="button" role="radio" aria-checked={shape === s} aria-label={s} className="shape-cell" onClick={() => onShape(s)}>
-                <BotAvatar shape={s} color={color} size={34} ring={shape === s} />
-              </button>
-            ))}
-          </div>
-        ))}
-      </div>
-      <div className="swatches" role="radiogroup" aria-label="Character color">
+      <div className="swatches" role="radiogroup" aria-label="The agent's hue">
         <div className="swatches__row">
           {COLOR_ORDER.map((c) => (
-            <button key={c} type="button" role="radio" aria-checked={color === c} aria-label={c} className="swatch-cell" onClick={() => onColor(c)}>
+            <button key={c} type="button" role="radio" aria-checked={color === c} aria-label={COLOR_NAMES[c]} title={COLOR_NAMES[c]} className="swatch-cell" onClick={() => onColor(c)}>
               <span className={`swatch${color === c ? ' is-selected' : ''}`} style={{ background: palette(c).fill }} />
             </button>
           ))}
@@ -341,7 +329,7 @@ function MemoriesTab({ bot, data, onChange }: { bot: Bot; data: BotSettingsBundl
         <input className="text-input" placeholder="Search memories" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search memories" />
       )}
       {!data ? <div className="cfg-empty">Loading…</div> : memories.length === 0 ? (
-        <div className="cfg-empty">{q ? 'No memories match.' : `Nothing yet. Tell ${bot.name} about yourself, or just chat. It’ll pick things up.`}</div>
+        <div className="cfg-empty">{q ? 'No memories match.' : `Nothing yet. Tell ${bot.name} about yourself, or just talk. It picks things up.`}</div>
       ) : (
         <div className="cfg-list">
           {memories.map((m) => (

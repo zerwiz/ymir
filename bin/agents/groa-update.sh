@@ -158,6 +158,14 @@ if [ "$CHECK" = 1 ]; then
       "$SCRIPT_DIR/../seat/seat-reap.sh" --verify 2>&1 | sed 's/^/  /' | head -6
     fi
   fi
+  # Bilskirnir, the business hall (plan 259): a look only — setup.sh --check changes nothing.
+  if [ -x "$ROOT/apps/bilskirnir/setup.sh" ]; then
+    if "$ROOT/apps/bilskirnir/setup.sh" --check >/dev/null 2>&1; then
+      printf 'bilskirnir: current (agent home, soul, .env, dependencies)\n'
+    else
+      printf 'bilskirnir: stale — a real update re-runs apps/bilskirnir/setup.sh\n'
+    fi
+  fi
   if command -v codex >/dev/null 2>&1; then
     command -v node >/dev/null 2>&1 || { printf 'FAIL — node is required to check the Codex plugin.\n' >&2; exit 1; }
     node "$ROOT/bin/seat/codex-plugin-install.mjs" --check || exit 1
@@ -178,6 +186,17 @@ if [ -x "$SCRIPT_DIR/../agents/seat-identity.sh" ]; then
   # the woven documents are answered by a merge driver — an update seats it too
   if [ -x "$SCRIPT_DIR/../records/weave-features.sh" ]; then
     "$SCRIPT_DIR/../records/weave-features.sh" --install >/dev/null 2>&1 && printf 'weave-driver: the woven documents merge by re-weaving\n'
+  fi
+fi
+# Bilskirnir, the business hall (plan 259; the Allfather: "This application must be able to be installed
+# and have common updates of Ymir when Gróa updates"). After the fast-forward its setup door renders the
+# agent's soul from the home, rewrites the managed .env block, and reinstalls dependencies only when the
+# lock file moved — so a running hall keeps its floor. A failed setup is named, never silent.
+if [ -x "$ROOT/apps/bilskirnir/setup.sh" ]; then
+  if "$ROOT/apps/bilskirnir/setup.sh" >/dev/null 2>&1; then
+    printf 'bilskirnir: refreshed from the home (apps/bilskirnir/setup.sh)\n'
+  else
+    printf 'bilskirnir: setup did not finish — run apps/bilskirnir/setup.sh and read its lines\n'
   fi
 fi
 if [ -n "${NUDGE_IDS# }" ]; then printf 'nudge-eindri-homes: %s\n' "${NUDGE_IDS# }"; else printf 'nudge-eindri-homes: none\n'; fi

@@ -27,7 +27,7 @@ roomsApi.post('/', async (c) => {
   const user = c.get('user');
   const { name, botIds } = await c.req.json<{ name: string; botIds: string[] }>();
   const valid = (botIds ?? []).filter((id) => db.prepare("SELECT 1 FROM bots WHERE id=? AND user_id=? AND COALESCE(kind,'agent')<>'room' AND COALESCE(hidden,0)=0").get(id, user.id));
-  if (!name?.trim() || valid.length < 2) return c.json({ error: 'A group needs a name and at least 2 Bots.' }, 400);
+  if (!name?.trim() || valid.length < 2) return c.json({ error: 'A shared room needs a name and at least two agents.' }, 400);
   const { createRoom } = await import('./agent/rooms.js');
   const id = createRoom(user.id, name.trim(), [...new Set(valid)]);
   return c.json({ id });

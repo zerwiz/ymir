@@ -34,7 +34,7 @@ export function AppSettings() {
   return createPortal(
     <div className="app-settings" role="dialog" aria-modal="true" aria-label="Settings">
       <aside className="app-settings__nav">
-        <button type="button" className="app-settings__back" onClick={close}><Glyph name="arrow_left" size={14} /> Back to Bots</button>
+        <button type="button" className="app-settings__back" onClick={close}><Glyph name="arrow_left" size={14} /> Back to the hall</button>
         <div className="app-settings__heading">Settings</div>
         {SECTIONS.map((s) => (
           <button key={s.id} type="button" className={`cfg-nav__item${section === s.id ? ' is-active' : ''}`} onClick={() => open(s.id)} aria-current={section === s.id || undefined}>
@@ -127,15 +127,15 @@ function ComputerSection() {
 
   return (
     <>
-      <PageHead title="Computer" sub="Your Bots share one cloud computer. Each Bot works on its own screen." />
+      <PageHead title="Computer" sub="Your agents share one computer. Each works on its own screen." />
       <section className="cfg-section">
         <div className="cfg-card">
           <div className="cfg-row">
             <span className={`computer-status-dot is-${running ? 'on' : transitioning ? 'busy' : 'off'}`} aria-hidden />
             <div className="cfg-row__text">
-              <div className="cfg-row__title">Bots’ computer · {computerStatusText(computer ?? null)}</div>
+              <div className="cfg-row__title">The agents’ computer · {computerStatusText(computer ?? null)}</div>
               <div className="cfg-row__sub">
-                {details ? `Goes to sleep after ${details.hibernation.idleMinutes} idle minutes when nobody is watching. Starts again on its own once a Bot has work.` : 'Checking…'}
+                {details ? `Goes to sleep after ${details.hibernation.idleMinutes} idle minutes when nobody is watching. Starts again on its own once an agent has work.` : 'Checking…'}
               </div>
             </div>
             {running || status === 'suspending' ? (
@@ -153,14 +153,14 @@ function ComputerSection() {
         <div className="cfg-section__label">Screens in use{details && maxScreens ? ` · ${details.screens.length} of ${maxScreens}` : ''}</div>
         <div className="cfg-card">
           {!details ? <div className="cfg-empty cfg-empty--flat">Loading…</div> : details.screens.length === 0 ? (
-            <div className="cfg-empty cfg-empty--flat">No Bot has used the computer yet.</div>
+            <div className="cfg-empty cfg-empty--flat">No agent has used the computer yet.</div>
           ) : details.screens.map((s) => {
             const bot = byId.get(s.botId);
             return (
               <div key={s.botId} className="cfg-row">
                 {bot ? <BotAvatarFor bot={bot} size={28} /> : <span className="cfg-row__ph" />}
                 <div className="cfg-row__text">
-                  <div className="cfg-row__title">{bot?.name ?? 'Removed Bot'}</div>
+                  <div className="cfg-row__title">{bot?.name ?? 'Removed agent'}</div>
                   <div className="cfg-row__sub">{screenLabel(s.screenId)} · used {relativeShort(s.lastUsedAt) === 'now' ? 'just now' : `${relativeShort(s.lastUsedAt)}${/^\d/.test(relativeShort(s.lastUsedAt)) ? ' ago' : ''}`}</div>
                 </div>
                 <ConfirmButton
@@ -176,7 +176,7 @@ function ComputerSection() {
             );
           })}
         </div>
-        <div className="cfg-field__hint">Reset closes every window on that Bot’s screen, so it starts clean next time.{maxScreens ? ` Up to ${maxScreens} Bots can have a screen at once${details && details.screens.length >= maxScreens ? '; reset one to free it for another Bot' : ''}.` : ''}</div>
+        <div className="cfg-field__hint">Reset closes every window on that agent’s screen, so it starts clean next time.{maxScreens ? ` Up to ${maxScreens} agents can have a screen at once${details && details.screens.length >= maxScreens ? '; reset one to free it for another agent' : ''}.` : ''}</div>
       </section>
     </>
   );
@@ -197,7 +197,7 @@ function PermissionsSection() {
   useEffect(() => { load(); }, [load]);
   return (
     <>
-      <PageHead title="Permissions" sub="Actions your Bots can take without asking first. Remove one and they’ll ask again next time." />
+      <PageHead title="Permissions" sub="What your agents may do without asking first. Remove one and they ask again next time." />
       <section className="cfg-section">
         <div className="cfg-card">
           {policies === null ? <div className="cfg-empty cfg-empty--flat">Loading…</div> : policies.length === 0 ? (
@@ -229,13 +229,13 @@ function AppsSection() {
   const openApps = () => { useConfigUI.getState().closeAppSettings(); useStore.getState().setModal('apps'); };
   return (
     <>
-      <PageHead title="Connected apps" sub="Apps your Bots can use for you, like email, calendar and docs." />
+      <PageHead title="Connected apps" sub="Apps your agents may use for you, like mail, the calendar and documents." />
       <section className="cfg-section">
         <div className="cfg-card">
           <div className="cfg-row">
             <div className="cfg-row__text">
               <div className="cfg-row__title">{apps === null ? 'Checking…' : apps.length ? `${apps.length} app${apps.length === 1 ? '' : 's'} connected` : 'No apps connected yet'}</div>
-              <div className="cfg-row__sub">Bots ask before doing anything that changes data in an app.</div>
+              <div className="cfg-row__sub">Agents ask before they change anything in an app.</div>
             </div>
             <button type="button" className="cfg-btn cfg-btn--primary" onClick={openApps}>{apps?.length ? 'Manage apps' : 'Connect apps'}</button>
           </div>
@@ -273,7 +273,7 @@ function AccountSection() {
               <div className="cfg-row__sub">{user?.email}</div>
             </div>
             <button type="button" className="cfg-btn cfg-btn--secondary" disabled={busy} onClick={async () => { setBusy(true); await configApi.logout().catch(() => {}); location.reload(); }}>
-              {busy ? 'Signing out…' : 'Sign out'}
+              {busy ? 'Leaving…' : 'Leave the hall'}
             </button>
           </div>
         </div>

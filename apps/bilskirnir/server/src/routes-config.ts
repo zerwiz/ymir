@@ -144,7 +144,7 @@ configApi.post('/bots/:id/engine/login', async (c) => {
   const b = ownBot(user.id, c.req.param('id'));
   if (!b) return c.json({ error: 'not found' }, 404);
   const home = engineHome(b.id);
-  if (!home) return c.json({ error: 'This bot has no agent.' }, 409);
+  if (!home) return c.json({ error: 'This room has no agent behind it.' }, 409);
   // The agent's files are on the machine this server runs on; a terminal on another machine cannot reach them.
   if (!box.local) return c.json({ error: 'Sign-in opens a terminal on the computer. It works once the app runs on that computer.' }, 409);
   const { provider } = await c.req.json<{ provider?: string }>().catch(() => ({} as { provider?: string }));

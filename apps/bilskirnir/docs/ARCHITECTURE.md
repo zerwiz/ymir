@@ -80,3 +80,7 @@ Secrets live in `.env` on the server and in each Hermes home.
 | Orgo | The computer, its screens, VNC, and a public URL for the app |
 | Composio | Sign-in, connectors, triggers |
 | xAI | Research on X (`x_search`), realtime voice, TTS, dictation |
+
+## CHANGE LOG
+
+- **2026-11-12** — vendored from Bot HQ (MIT) into `apps/bilskirnir` (plan 259); kept as upstream wrote it, and from here appended, never rewritten.

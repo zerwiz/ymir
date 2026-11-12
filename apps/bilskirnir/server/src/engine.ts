@@ -395,7 +395,7 @@ export function ownScreenOn(botId: string): boolean {
 /** Ask Hermes to stop that private screen. Hermes refuses while a person is using it; the refusal is passed on. */
 export function stopOwnScreen(botId: string): Promise<void> {
   const home = engineHome(botId);
-  if (!home) return Promise.reject(new Error('This bot has no agent.'));
+  if (!home) return Promise.reject(new Error('This room has no agent behind it.'));
   return new Promise((resolve, reject) => {
     execFile(env.hermesBin, ['computer-use', 'screen', 'stop'], { env: { ...process.env, HERMES_HOME: home }, timeout: 60_000 }, (err, stdout, stderr) => {
       if (!ownScreenOn(botId)) return resolve();
@@ -481,7 +481,7 @@ export async function engineInfo(botId: string): Promise<EngineInfo> {
   if (!b) throw new Error('bot not found');
   const kind = engineKind(botId);
   const base: EngineInfo = { botId, profile: kind === 'primary' ? 'default' : botId, status: 'stopped', error: null, model: b.model ?? null, provider: b.provider ?? null, version: null, providers: [], ownScreen: kind ? ownScreenOn(botId) : false };
-  if (!kind) return { ...base, status: 'error', error: 'This bot has no agent.' };
+  if (!kind) return { ...base, status: 'error', error: 'This room has no agent behind it.' };
 
   let e: { url: string; key: string };
   if (kind === 'primary') e = { url: env.hermesUrl, key: primaryKey() };

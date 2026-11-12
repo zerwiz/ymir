@@ -3,12 +3,12 @@ import type { ActivityKind, LiveState, Row } from '@shared/types';
 /** textKind → phrase table from docs/research/03-ui-design.md §2.4. Arrays rotate. */
 const PHRASES: Record<string, string[]> = {
   thinking: ['Thinking it through', 'Mulling it over', 'Putting it together'],
-  working: ['Getting it done', 'Making progress', 'Working on it', 'Handling it', 'Chipping away'],
+  working: ['Forging it', 'Making progress', 'Working on it', 'Handling it', 'Hammering at it'],
   searching_web: ['Digging around'],
   reading_web: ['Doing some reading'],
   browsing_web: ['Clicking through pages'],
   reading_file: ['Reading the file'],
-  drafting_file: ['Jotting it down'],
+  drafting_file: ['Carving it down'],
   organizing_files: ['Moving files over'],
   on_your_computer: ['Working on your computer'],
   on_its_computer: ['Clicking around'],
@@ -17,7 +17,7 @@ const PHRASES: Record<string, string[]> = {
   coding: ['Writing some code'],
   generating_photo: ['Sketching something up'],
   generating_video: ['Filming a clip'],
-  messaging_assistant: ['Checking with another Bot'],
+  messaging_assistant: ['Checking with another agent'],
   messaging: ['Sending a message'],
   connecting_app: ['Working in a connected app'],
   waiting_for_you: ['Needs your input'],
@@ -42,7 +42,7 @@ export function activityPhrase(live: LiveState, rows: Row[], tick: number): stri
   const kind = a.kind as ActivityKind;
   if (kind === 'messaging_named') {
     const name = messagedName(live, rows);
-    return name ? `Checking with ${name}` : 'Checking with another Bot';
+    return name ? `Checking with ${name}` : 'Checking with another agent';
   }
   if (kind === 'connecting_service') return nice(a.detail) ? `Working in ${a.detail}` : 'Working in a connected app';
   const list = PHRASES[kind] ?? PHRASES.working;

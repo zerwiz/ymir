@@ -68,11 +68,11 @@ export function LibraryTab({ bot }: { bot: Bot }) {
               <button type="button" className="cfg-btn cfg-btn--secondary" onClick={() => load(true)} disabled={loading}>{loading ? 'Waking…' : 'Wake and show files'}</button>
             </div>
           ) : !list && loading ? (
-            <div className="panel-empty">Looking for files…</div>
+            <div className="panel-empty">Looking through the shelf…</div>
           ) : list?.status === 'error' ? (
             <div className="panel-empty">Couldn’t reach the computer. {list.error ? <span className="lib-err">{list.error}</span> : null}</div>
           ) : !list?.files.length ? (
-            <div className="panel-empty panel-empty--center">{path ? 'This folder is empty.' : `Files that ${bot.name} creates, like reports and notes, are kept here.`}</div>
+            <div className="panel-empty panel-empty--center">{path ? 'This shelf is empty.' : `Files that ${bot.name} creates, like reports and notes, are kept here.`}</div>
           ) : (
             list.files.map((f) => (
               <div key={f.name} className={`lib-row${f.isDir ? ' is-dir' : ''}`}>

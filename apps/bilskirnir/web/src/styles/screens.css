@@ -1,0 +1,111 @@
+/* screens.css — the hall fits every screen (plan 259, appended 2026-11-12: "Must work on the mobile also").
+   Bot HQ is a fixed three-column window: rooms 350 · chat (424 minimum) · details 360. It narrows here by stages,
+   and nothing above this file changes for a wide window:
+
+     wider than 1180   three columns, as Bot HQ drew them
+     861 – 1180        the details stop being a column and slide over the chat, with a veil behind
+     601 – 860         the rooms list becomes a drawer, opened from the chat's own header
+     600 and under     one column, the chat first; the details cover the whole screen; the composer
+                       sits on the safe area so a phone's home bar never hides it
+
+   The colours stay the cloth's (house.css): only geometry lives here. Imported after house.css. */
+
+/* the window follows the screen that is really there, not the one the browser imagines behind its bars */
+html, body, #root { height: 100%; }
+@supports (height: 100dvh) { html, body, #root { height: 100dvh; } }
+
+/* the buttons that only exist when a column has been folded away */
+.chat__rooms-btn { display: none; }
+.shell-veil { display: none; }
+.sidebar__close { display: none; }
+
+/* ── 1 · the details become an overlay ─────────────────────────────────────────── */
+@media (max-width: 1180px) {
+  .chat { min-width: 0; }
+  .details {
+    position: fixed; top: 0; right: 0; bottom: 0; z-index: 40;
+    width: min(360px, 100%); height: auto;
+    background: color-mix(in srgb, var(--ymir-bg-0) 96%, transparent);
+    box-shadow: var(--ymir-shadow-raise, 0 0 40px #0009);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .app.has-details .shell-veil,
+  .app.has-drawer .shell-veil {
+    display: block; position: fixed; inset: 0; z-index: 30;
+    background: var(--color-bg-scrim); animation: fade 160ms ease-out;
+  }
+}
+
+/* ── 2 · the rooms list becomes a drawer ───────────────────────────────────────── */
+@media (max-width: 860px) {
+  .sidebar,
+  .sidebar.is-collapsed {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 50;
+    width: min(320px, 86vw); height: auto;
+    background: color-mix(in srgb, var(--ymir-bg-1) 97%, transparent);
+    transform: translateX(-102%); visibility: hidden;
+    transition: transform 0.22s var(--ease-out), visibility 0s linear 0.22s;
+    padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
+  }
+  .app.has-drawer .sidebar {
+    transform: none; visibility: visible;
+    transition: transform 0.22s var(--ease-out), visibility 0s;
+    box-shadow: var(--ymir-shadow-raise, 0 0 40px #0009);
+  }
+  /* in the drawer the rooms are always shown in full: the collapsed rail is a wide-screen habit */
+  .sidebar .sidebar__titlebar { justify-content: space-between; padding: 12px 12px 12px 16px; height: 60px; }
+  .sidebar__collapse { display: none; }
+  .sidebar__close { display: inline-flex; }
+  .chat__rooms-btn { display: inline-flex; position: absolute; left: 12px; top: 12px; }
+  .tasks-view .chat__rooms-btn { position: static; }
+  .tasks-view__title { margin-right: auto; }
+  .chat__pill-anchor { max-width: calc(100% - 200px); }
+}
+
+/* ── 3 · a phone: one column, the chat first ───────────────────────────────────── */
+@media (max-width: 600px) {
+  .details { width: 100%; border-left: 0; }
+  .chat__header { height: calc(56px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); }
+  .chat__rooms-btn { top: calc(10px + env(safe-area-inset-top)); left: 10px; }
+  .chat__header-right { top: calc(10px + env(safe-area-inset-top)); right: 10px; }
+  .chat__pill-anchor { max-width: calc(100% - 112px); }
+  .chat__pill { padding: 5.5px 11px 5.5px 5.5px; }
+  .share-btn { display: none; }
+  .transcript { padding: calc(60px + env(safe-area-inset-top)) 10px 12px; }
+  .bubble { max-width: 100%; }
+  .composer-area {
+    padding: 0 max(10px, env(safe-area-inset-left)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-right));
+  }
+  /* 16px stops a phone from zooming the page when the composer takes focus */
+  .composer__input { font-size: 16px; }
+  .empty-chat { padding: 32px 16px; }
+
+  /* modals become sheets that fit the screen */
+  .modal-root { padding: 8px; padding-bottom: max(8px, env(safe-area-inset-bottom)); align-items: flex-end; }
+  .modal { width: 100% !important; max-width: 100%; max-height: calc(100dvh - 16px); }
+  .shape-grid__row { flex-wrap: wrap; }
+
+  /* the settings pages: the menu goes on top and scrolls sideways, the page takes the rest */
+  .app-settings { flex-direction: column; padding-top: env(safe-area-inset-top); }
+  .app-settings__nav {
+    flex-direction: row; align-items: center; width: 100%; padding: 8px 10px; gap: 4px;
+    overflow-x: auto; scrollbar-width: none; border-right: 0; border-bottom: 0.5px solid var(--color-border-tertiary);
+  }
+  .app-settings__nav::-webkit-scrollbar { display: none; }
+  .app-settings__back { margin: 0 6px 0 0; flex-shrink: 0; }
+  .app-settings__heading { display: none; }
+  .app-settings__nav > * { flex-shrink: 0; }
+  .app-settings__page { padding: 24px 16px calc(48px + env(safe-area-inset-bottom)); }
+  .bot-settings { width: 100%; height: calc(100dvh - 16px); }
+  .bot-settings__body { flex-direction: column; }
+  .cfg-nav { flex-direction: row; width: 100%; overflow-x: auto; border-right: 0; border-bottom: 0.5px solid var(--color-border-tertiary); padding: 8px; scrollbar-width: none; }
+  .cfg-nav > * { flex-shrink: 0; width: auto; }
+
+  .tasks-view__header { padding: calc(10px + env(safe-area-inset-top)) 12px 10px; height: auto; }
+  .tasks-view__inner { padding: 16px 12px calc(40px + env(safe-area-inset-bottom)); }
+  .card { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar, .app.has-drawer .sidebar { transition: none; }
+}

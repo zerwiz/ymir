@@ -71,7 +71,7 @@ export function EngineSettings({ bot }: { bot: Bot }) {
         <div className="panel-empty engine__empty">
           {phase === 'loading' ? 'Checking…' : (
             <>
-              <span>Engine unavailable</span>
+              <span>The engine is silent</span>
               <button type="button" className="link-btn link-btn--small" onClick={() => load()}>Try again</button>
             </>
           )}

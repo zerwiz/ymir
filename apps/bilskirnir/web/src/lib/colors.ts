@@ -6,25 +6,34 @@ import type { AvatarColor } from '@shared/types';
  */
 export interface BotPalette { fill: string; bubble: string; action: string; hover: string }
 
-// No blue and no purple in this house (2026-11-12, the Allfather). The four cool names keep their keys
-// (bots in the database carry them) but wear house hues: cyan→moss, blue→steel, violet→umber, magenta→rust.
+// The house's hues only (2026-11-12, the Allfather: "make the colour swatches house hues only (stone, bone,
+// bronze, rust, moss, steel — never blue or purple)"). The keys stay as Bot HQ named them, because agents in
+// the database carry them; what each key WEARS is a house hue, and only six are offered. Older keys that a
+// stored agent may still carry (brown, orange, cyan, violet, magenta) fall to the nearest house hue.
 export const BOT_COLORS: Record<AvatarColor, BotPalette> = {
-  // Black follows the theme (ink on light, light ink on dark), so it uses tokens instead of hex.
+  // bone follows the theme's ink (bone on stone), so it uses tokens instead of hex
   black: { fill: 'var(--color-ink)', bubble: 'var(--color-bubble-user)', action: 'var(--color-primary)', hover: 'var(--color-bg-primary-hover)' },
-  brown: { fill: '#A06B39', bubble: '#86592E', action: '#9D6937', hover: '#86592E' },
-  red: { fill: '#FB2B3E', bubble: '#C82532', action: '#E72E3B', hover: '#C82532' },
-  orange: { fill: '#FD690F', bubble: '#D2550A', action: '#EE620D', hover: '#D2550A' },
-  yellow: { fill: '#F59312', bubble: '#C2730B', action: '#DA830E', hover: '#C2730B' },
-  green: { fill: '#14C16F', bubble: '#0D9655', action: '#10AB61', hover: '#0D9655' },
+  gray: { fill: '#8A8170', bubble: '#5E5747', action: '#7A7262', hover: '#5E5747' },     // stone
+  yellow: { fill: '#C9973F', bubble: '#7D5F2A', action: '#B5873A', hover: '#7D5F2A' },   // bronze
+  red: { fill: '#A0523D', bubble: '#7C3A30', action: '#8E4636', hover: '#7C3A30' },      // rust
+  green: { fill: '#7D8F6A', bubble: '#64744F', action: '#71825D', hover: '#64744F' },    // moss
+  blue: { fill: '#96A0A8', bubble: '#5F686E', action: '#7E8890', hover: '#5F686E' },     // steel
+  // kept for agents that already carry them — never offered
+  brown: { fill: '#8A6A4A', bubble: '#6E533A', action: '#7C5F42', hover: '#6E533A' },
+  orange: { fill: '#B5762F', bubble: '#8A5A24', action: '#A06A2B', hover: '#8A5A24' },
   cyan: { fill: '#7D8F6A', bubble: '#64744F', action: '#71825D', hover: '#64744F' },
-  blue: { fill: '#96A0A8', bubble: '#5F686E', action: '#7E8890', hover: '#5F686E' },
   violet: { fill: '#8A6A4A', bubble: '#6E533A', action: '#7C5F42', hover: '#6E533A' },
   magenta: { fill: '#A0523D', bubble: '#7C3A30', action: '#8E4636', hover: '#7C3A30' },
-  gray: { fill: '#959595', bubble: '#6E6E6E', action: '#7A7A7A', hover: '#6E6E6E' },
 };
 
-/** Swatch order in the Create New Bot picker. */
-export const COLOR_ORDER: AvatarColor[] = ['black', 'brown', 'red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'violet', 'magenta', 'gray'];
+/** The six hues offered when an agent is seated, in the house's order. */
+export const COLOR_ORDER: AvatarColor[] = ['gray', 'black', 'yellow', 'red', 'green', 'blue'];
+
+/** What each hue is called where a person reads it (the key is an identifier and stays). */
+export const COLOR_NAMES: Record<AvatarColor, string> = {
+  gray: 'Stone', black: 'Bone', yellow: 'Bronze', red: 'Rust', green: 'Moss', blue: 'Steel',
+  brown: 'Umber', orange: 'Deep bronze', cyan: 'Moss', violet: 'Umber', magenta: 'Rust',
+};
 
 export const palette = (c: AvatarColor | string | undefined): BotPalette => BOT_COLORS[(c as AvatarColor) ?? 'black'] ?? BOT_COLORS.black;
 

@@ -1,6 +1,7 @@
 import type { AvatarColor, AvatarShape, Bot } from '@shared/types';
 import { Icon } from '../components/Icon';
 import { SHAPES, type ShapeDef } from './shapes.gen';
+import { palette } from '../lib/colors';
 // The one mark, from the design system (Vite serves it from outside this folder; see vite.config fs.allow).
 import ymirMark from '@design/ymir-mark.svg?url';
 
@@ -43,12 +44,18 @@ export function runeFor(name?: string) {
   return RUNES[ch] ?? RUNES[ch.normalize('NFD').charAt(0)] ?? 'ᛉ';
 }
 
-export function BotAvatar({ size, star, ring, className, title }: Props) {
+// Every agent wears the same mark, so its COLOUR is what tells agents apart: a ring of its hue around the
+// mark and a soft glow of the same (the Allfather, 2026-11-12: "show an agent's colour as a ring or glow
+// around its mark so agents stay distinct in the rail and the chat"). `ring` (a chosen swatch) doubles it.
+export function BotAvatar({ size, star, ring, color, className, title }: Props) {
+  const hue = palette(color).fill;
+  const w = Math.max(1.5, Math.round(size * 0.05 * 2) / 2);
+  const glow = `0 0 ${Math.round(size * 0.22)}px color-mix(in srgb, ${hue} ${ring ? 70 : 45}%, transparent)`;
   return (
     <span className={`bot-avatar ${className ?? ''}`} style={{ width: size, height: size }} title={title} role="img" aria-label={title}>
       <img src={ymirMark} alt="" width={size} height={size} draggable={false}
         style={{ position: 'absolute', inset: 0, width: size, height: size, borderRadius: size * 0.08,
-          boxShadow: ring ? '0 0 0 2px var(--ymir-cyan-1, #c9973f)' : '0 2px 8px rgba(0,0,0,0.55)' }} />
+          boxShadow: `0 0 0 ${ring ? w * 2 : w}px ${hue}, ${glow}` }} />
       {star && (
         <span className="bot-avatar__star" style={{ width: size * 0.2667, height: size * 0.2667 }}>
           <Icon name="star" size={size * 0.1333} color="#FFFFFF" />
