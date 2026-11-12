@@ -29,3 +29,13 @@ wait and moves nothing; once the server stops, the next start takes the real hal
 ## CHANGE LOG
 
 - **2026-11-12** — every root is a candidate, and a busy real hall is waited for, never replaced.
+
+## Appended 2026-11-12 16:02 CET — the hall lives in the Ymir home (RULES/04)
+
+The Allfather: *"read Ymir's rules now. Databases in the public repo?"* Nothing was tracked in git, but the hall's
+database, engines (keys in `config.yaml`) and `.env` lived inside the public repository's working tree, and PR #704
+moved them to `~/.local/share/ymir/bilskirnir` — outside the repo, but outside the home too. RULES/04: private data
+lives under `$YMIR_HOME`. The default is now `$YMIR_HOME/bilskirnir` (resolved through `bin/vault/hoard-lib.sh`), the
+house's precedent being Smíðja's databases in `$YMIR_HOME/smidja/`; the home's `.gitignore` carries `bilskirnir/`
+beside `smidja/`, because a live database and keys never ride the home's git. The XDG folder is only the fallback on a
+machine with no Ymir home.

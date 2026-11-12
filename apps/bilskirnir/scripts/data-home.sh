@@ -7,7 +7,7 @@
 #
 #   apps/bilskirnir/scripts/data-home.sh [--check]
 #
-# The home is BILSKIRNIR_DATA_HOME, else ${XDG_DATA_HOME:-~/.local/share}/ymir/bilskirnir. It holds `data/` and
+# The home is BILSKIRNIR_DATA_HOME, else $YMIR_HOME/bilskirnir (RULES/04), else the XDG data folder. It holds `data/` and
 # `.env`; the checkout gets two links. Nothing is ever deleted:
 #   · no home yet, the checkout has real state  → the state MOVES into the home, then is linked
 #   · a home exists, the checkout has its own   → the checkout's copy is set aside as <name>.aside-<stamp>, then linked
@@ -15,7 +15,17 @@
 # --check prints `linked` (exit 0) or what would change (exit 1), and changes nothing.
 set -u
 APP="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-HOME_DIR="${BILSKIRNIR_DATA_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/ymir/bilskirnir}"
+# RULES/04: private data lives in the user's home (YMIR_HOME), never in the public tree and never beside it —
+# the house's precedent is Smíðja's databases in $YMIR_HOME/smidja/, ignored by the home's git like this one.
+# The XDG folder is only the fallback for a machine with no Ymir home at all.
+_yh=""
+_root="$APP"; while [ "$_root" != / ] && [ ! -r "$_root/bin/vault/hoard-lib.sh" ]; do _root="$(dirname "$_root")"; done
+if [ -r "$_root/bin/vault/hoard-lib.sh" ]; then
+  . "$_root/bin/vault/hoard-lib.sh" 2>/dev/null && declare -f ymir_home_root >/dev/null 2>&1 && ymir_home_root _yh 2>/dev/null
+fi
+[ -n "$_yh" ] || _yh="${YMIR_HOME:-}"
+HOME_DIR="${BILSKIRNIR_DATA_HOME:-${_yh:+$_yh/bilskirnir}}"
+HOME_DIR="${HOME_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/ymir/bilskirnir}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 
 # With no home yet, the REAL hall is chosen, not whichever checkout runs first: every Bilskirnir checkout on this
