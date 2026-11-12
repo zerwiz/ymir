@@ -10,7 +10,7 @@ from pathlib import Path
 
 from ymir_runtime import heartbeat, paths
 from ymir_runtime.seat import _worth_a_smith, seat as seat_verb, task_section
-from ymir_runtime.errors import EngineError, EngineRefusal
+from ymir_runtime.errors import EngineError, EngineRefusal, NoHelm
 from ymir_runtime.seat import Errand
 from ymir_runtime.tests.support import (
     Recorder,
@@ -233,23 +233,33 @@ class HelmGateTest(unittest.TestCase):
         return Errand(**base)
 
     def test_no_lease_is_refused(self) -> None:
-        with self.assertRaises(EngineRefusal) as caught:
+        with self.assertRaises(NoHelm) as caught:
             seat_verb(self._errand(), runner=Recorder(), env=self.env, probe=available)
         self.assertIn("no helm, no errand", str(caught.exception))
         self.assertIn("YMIR_DISPATCH_NO_HELM=1", str(caught.exception))
         # refused BEFORE anything is created — no meta, no worktree
         self.assertFalse(heartbeat.meta_path(self.state, "errand-one").exists())
 
+    def test_no_helm_is_a_hard_refusal_not_the_strangler_hinge(self) -> None:
+        # exit 4 would send einherjar-spawn.sh down the old road and seat the worker anyway
+        self.assertFalse(issubclass(NoHelm, EngineRefusal))
+        from ymir_runtime import __main__ as cli
+        code = cli.main(
+            ["seat", "errand-one", "--project", str(self.repo), "--harness", "pi", "--backend", "tmux"],
+            env=self.env, runner=Recorder(), probe=available,
+        )
+        self.assertEqual(code, 1)
+
     def test_a_dead_pid_is_refused(self) -> None:
         write_lease(self.state, pid=99999999, starttime="")
-        with self.assertRaises(EngineRefusal) as caught:
+        with self.assertRaises(NoHelm) as caught:
             seat_verb(self._errand(), runner=Recorder(), env=self.env, probe=available)
         self.assertIn("not alive", str(caught.exception))
 
     def test_a_reused_pid_is_refused(self) -> None:
         # the pid is alive (this test process) but the starttime is not its own
         write_lease(self.state, starttime="1")
-        with self.assertRaises(EngineRefusal) as caught:
+        with self.assertRaises(NoHelm) as caught:
             seat_verb(self._errand(), runner=Recorder(), env=self.env, probe=available)
         self.assertIn("reused pid", str(caught.exception))
 
@@ -257,7 +267,7 @@ class HelmGateTest(unittest.TestCase):
         lease = write_lease(self.state)
         body = " ".join(t for t in lease.read_text().split() if not t.startswith("heartbeat="))
         lease.write_text(body + "\n", encoding="utf-8")
-        with self.assertRaises(EngineRefusal) as caught:
+        with self.assertRaises(NoHelm) as caught:
             seat_verb(self._errand(), runner=Recorder(), env=self.env, probe=available)
         self.assertIn("no heartbeat", str(caught.exception))
 
@@ -287,13 +297,13 @@ class HelmGateTest(unittest.TestCase):
 
     def test_a_stale_heartbeat_is_refused(self) -> None:
         write_lease(self.state, heartbeat=int(time.time()) - 120)
-        with self.assertRaises(EngineRefusal) as caught:
+        with self.assertRaises(NoHelm) as caught:
             seat_verb(self._errand(), runner=Recorder(), env=self.env, probe=available)
         self.assertIn("stale", str(caught.exception))
 
     def test_a_foreign_state_is_refused(self) -> None:
         write_lease(self.state, state_dir=str(self.tmp / "elsewhere"))
-        with self.assertRaises(EngineRefusal) as caught:
+        with self.assertRaises(NoHelm) as caught:
             seat_verb(self._errand(), runner=Recorder(), env=self.env, probe=available)
         self.assertIn("not this house", str(caught.exception))
 

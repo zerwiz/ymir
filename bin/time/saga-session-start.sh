@@ -163,6 +163,12 @@ fi
 
 section "SUPERVISION"
 printf 'harness next step: arm supervision via the installed harness adapter; never run bin/pi/syn-watch-arm.sh by hand.\n'
+# The pin's age in one line (plan 257 H8): the arm, its clients and Rödd run the pinned
+# runtime, and a stale pin is a number on the board — never fetched here, so the digest
+# stays fast; `bin/pi/arm-pin.sh check` (Eir's armpin) fetches and names every finding.
+if [ -x "$ROOT/bin/pi/arm-pin.sh" ]; then
+  "$ROOT/bin/pi/arm-pin.sh" status 2>/dev/null || true
+fi
 
 section "THE ALLFATHER'S TODOS"
 # The voice keeps his task ledger (hodd/state/voice/todos.jsonl); the arm holder must read it, or a

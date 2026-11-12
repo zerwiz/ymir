@@ -25,7 +25,7 @@ from typing import Any, Mapping
 
 from . import backend as backend_mod
 from . import container, harness, heartbeat, paths, proc, worktree as worktree_mod
-from .errors import EngineError, EngineRefusal
+from .errors import EngineError, EngineRefusal, NoHelm
 
 SAFE_ID = re.compile(r"^[A-Za-z0-9._-]+$")
 KINDS = ("ship", "scout")
@@ -341,7 +341,7 @@ def _helm_gate(
     override = "or set YMIR_DISPATCH_NO_HELM=1 to dispatch without one (it is recorded in the meta)"
     if not lease:
         looked = " or ".join(str(c) for c in candidates)
-        raise EngineRefusal(
+        raise NoHelm(
             f"no helm, no errand — no arm lease at {looked}",
             f"seat a helm first (bin/pi/syn-watch-arm.sh --restart from a session, or bin/pi/syn-watch.sh start), {override}",
         )
@@ -349,7 +349,7 @@ def _helm_gate(
     leased_state = lease.get("state", "")
     house = {_real(roots.state), _real(shelf)}
     if not leased_state or _real(leased_state) not in house:
-        raise EngineRefusal(
+        raise NoHelm(
             f"no helm, no errand — the arm lease at {lease_path} names state={leased_state or 'missing'}, "
             f"which is not this house ({roots.state})",
             f"seat from the house the arm watches, {override}",
@@ -358,7 +358,7 @@ def _helm_gate(
     pid = lease.get("pid", "")
     starttime = lease.get("starttime", "")
     if not pid.isdigit() or not starttime or not proc.pid_alive(pid, starttime, stat_reader=stat_reader):
-        raise EngineRefusal(
+        raise NoHelm(
             f"no helm, no errand — lease pid {pid or 'missing'} is not alive with its recorded "
             f"starttime {starttime or 'missing'} (a reused pid is not a helm)",
             f"re-seat the arm (bin/pi/syn-watch.sh restart), {override}",
@@ -373,19 +373,19 @@ def _helm_gate(
     moment = int(now if now is not None else time.time())
     beat = lease.get("heartbeat", "")
     if not beat.isdigit():
-        raise EngineRefusal(
+        raise NoHelm(
             f"no helm, no errand — the arm lease at {lease_path} carries no heartbeat",
             f"re-seat the arm (bin/pi/syn-watch.sh restart), {override}",
         )
     if moment - int(beat) > stale:
-        raise EngineRefusal(
+        raise NoHelm(
             f"no helm, no errand — the arm heartbeat is stale ({moment - int(beat)}s > {stale}s)",
             f"re-seat the arm (bin/pi/syn-watch.sh restart), {override}",
         )
 
     record_root = Path(leased_state)
     if not record_root.is_dir() or not os.access(record_root, os.W_OK):
-        raise EngineRefusal(
+        raise NoHelm(
             f"no helm, no errand — the arm's shelf {record_root} is unreachable (missing or not writable)",
             "mend the home's state directory, then seat again",
         )

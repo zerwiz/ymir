@@ -35,6 +35,8 @@ pin_behind() { gother -C "$PIN" rev-list --count "HEAD..origin/$BRANCH" 2>/dev/n
 # The supervising processes, as "<what> <path it executes>" lines. Paths are read from
 # /proc/<pid>/cmdline (NUL-separated), so an argument with spaces is still one argument.
 supervisors() {
+  # a test hands a recorded table (`<what>\t<path>` lines) instead of the live one
+  if [ -n "${ARM_PIN_SUPERVISORS:-}" ]; then cat "$ARM_PIN_SUPERVISORS" 2>/dev/null; return 0; fi
   local pid args
   for pid in $(pgrep -f 'syn-watch-arm\.sh|apps/rodd|uvicorn' 2>/dev/null); do
     [ "$pid" = "$$" ] && continue
