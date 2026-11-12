@@ -24,13 +24,12 @@ ROOT="$(CDPATH='' cd "$_d" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]
 
 # A PINNED runtime wins over the working tree (RULES/02 §7): the extensions a harness loads must be the
 # ones a deployment proved, not whatever branch an agent left checked out.
-. "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
-home=""; declare -f ymir_home_root >/dev/null 2>&1 && ymir_home_root home 2>/dev/null
-[ -n "$home" ] || home="${YMIR_HOME:-}"
-[ -n "$home" ] && [ -r "$home/config/runtime.env" ] && . "$home/config/runtime.env"
-if [ -n "${YMIR_RUNTIME_DIR:-}" ] && [ -d "$YMIR_RUNTIME_DIR/.git" ]; then
-  ROOT="$YMIR_RUNTIME_DIR"
+_pin=""
+[ -r "$ROOT/bin/pi/arm-pin-lib.sh" ] && . "$ROOT/bin/pi/arm-pin-lib.sh" 2>/dev/null && arm_pin_dir _pin
+if [ -n "$_pin" ] && [ -d "$_pin/.git" ]; then
+  ROOT="$_pin"
 fi
+unset _pin
 
 mode="install"
 case "${1:-}" in
@@ -83,6 +82,37 @@ pi_door_seat() {
   chmod 0755 "$PI_DOOR_DST"
 }
 
+# The door must WIN on PATH, not merely exist: measured 2026-11-12, `which -a pi` named the npm and mise
+# copies first, so a hand-started pi bypassed the door. One marked block, written to the profile the
+# operator's shell reads AND to its interactive rc (which runs later and re-prepends), puts the door's
+# directory first. YMIR_PI_DOOR_PATH=print writes nothing and prints the exact block instead.
+PI_DOOR_MARK="# >>> ymir pi door >>>"; PI_DOOR_MARK_END="# <<< ymir pi door <<<"
+pi_door_block() {
+  printf '%s\n%s\n%s\n' "$PI_DOOR_MARK" \
+    'case ":$PATH:" in ":$HOME/.pi/agent/bin:"*) ;; *) export PATH="$HOME/.pi/agent/bin:$PATH" ;; esac' "$PI_DOOR_MARK_END"
+}
+pi_door_files() {  # the profile and rc files this operator's shell reads
+  case "${SHELL##*/}" in
+    zsh) printf '%s\n' "$HOME/.zprofile" "$HOME/.zshrc" ;;
+    *)   printf '%s\n' "$HOME/.profile" "$HOME/.bashrc" ;;
+  esac
+}
+pi_door_path_state() {  # written | absent
+  local f any=0
+  for f in $(pi_door_files); do
+    [ -f "$f" ] && grep -qF "$PI_DOOR_MARK" "$f" 2>/dev/null || { printf 'absent'; return 0; }
+  done
+  printf 'written'
+}
+pi_door_path_seat() {  # write the block into each file that lacks it; never rewrite a line of the operator's
+  local f
+  for f in $(pi_door_files); do
+    grep -qF "$PI_DOOR_MARK" "$f" 2>/dev/null && continue
+    [ -w "$(dirname "$f")" ] || return 1
+    { [ -s "$f" ] && printf '\n'; pi_door_block; } >>"$f" 2>/dev/null || return 1
+  done
+}
+
 if command -v pi >/dev/null 2>&1; then
   state="current"; detail=""
   if [ "$mode" = "check" ]; then
@@ -111,7 +141,24 @@ if command -v pi >/dev/null 2>&1; then
                detail="$detail · one-home door NOT seated ($PI_DOOR_DST is not writable)"
              fi ;;
   esac
-  say "  \"pi\",\"$state\",\"$detail\""
+  if [ "${YMIR_PI_DOOR_PATH:-}" = print ]; then
+    detail="$detail · PATH block (not written):"
+    say "  \"pi\",\"$state\",\"$detail\""
+    pi_door_block | sed 's/^/    # /'
+  else
+    case "$(pi_door_path_state)" in
+      written) detail="$detail · door first on PATH (profile block written)" ;;
+      absent)  if [ "$mode" = "check" ]; then
+                 detail="$detail · door NOT first on PATH (no profile block)"
+                 stale=$((stale+1)); [ "$state" = current ] && state="stale"
+               elif pi_door_path_seat; then
+                 detail="$detail · door first on PATH (profile block written: $(pi_door_files | tr '\n' ' '))"
+               else
+                 detail="$detail · door PATH block NOT written (profile not writable)"
+               fi ;;
+    esac
+    say "  \"pi\",\"$state\",\"$detail\""
+  fi
 else
   say "  \"pi\",\"absent\",\"no pi on this host\""; absent=$((absent+1))
 fi
