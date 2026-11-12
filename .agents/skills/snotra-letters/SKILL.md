@@ -56,7 +56,8 @@ separated by a blank line: `## heading` · paragraphs (`**bold**`, `` `code` ``,
   company's or a person's details goes in the home.
 - **Every letter says who prepared it.** The renderer ends each letter with `Made with Ymir by <agent>`,
   the agent's name from the seat's `.ymir-seat` (never a machine name). `made_by: <text>` replaces it; `made_by: off`
-  removes it. Do not add a second signature of your own.
+  removes it. "Ymir" links to Ymir's homepage and the address is shown after it (`made_by_url:` or
+  `YMIR_HOMEPAGE_URL` changes it). Do not add a second signature of your own.
 - **The house's own letters** use the operator's house theme from the home (a theme with an empty `label:` shows no
   company name at the bottom). A footer line is the letter's own words; never add a stock sign-off the operator did
   not write.
@@ -64,6 +65,7 @@ separated by a blank line: `## heading` · paragraphs (`**bold**`, `` `code` ``,
 
 ## CHANGE LOG
 
+- **2026-11-12 (later)** — the made-by line links Ymir's homepage and shows its address.
 - **2026-11-12** — `made_by`: every letter says it was made with Ymir and by which agent; the house theme with no
   company name; no stock sign-off the operator did not write.
 - **2026-11-11** — first written with the house letter design (plan 250 §7): the four template shelves, the letter types, the themes, the markers.

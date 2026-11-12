@@ -106,10 +106,12 @@ have it and are on it), `accept`, `decline`, `proposal`, `partnership`, `invitat
 `apology`, `feedback-request`, `reminder`, `investor-update` and `goodbye`. `letter-design.py --types` lists them all
 with what each is for.
 
-**Who prepared the letter.** Every designed letter ends with a small line under its footer, `Made with Ymir ·
-prepared by <agent>`, where the agent is the name your own seat carries (from `~/.pi/agent/extensions/.ymir-seat`).
-No machine name appears. Write `made_by: <your text>` in the letter's header to change it, or `made_by: off` to
-remove it.
+**Who prepared the letter.** Every designed letter ends with a small line under its footer, `Made with Ymir by
+<agent> · ymir.zerwiz.org`, where the agent is the name your own seat carries (from `~/.pi/agent/extensions/.ymir-seat`).
+"Ymir" and the address both link to Ymir's homepage, and the address is written out for mail programs that strip
+links. No machine name appears. Write `made_by: <your text>` in the letter's header to change the words,
+`made_by_url: <address>` (or the `YMIR_HOMEPAGE_URL` environment variable) to change the link, or `made_by: off` to
+remove the line.
 
 **A theme with no company name.** A theme in your home with `label: ""` leaves the bottom of the letter free of any
 company name. Use it for letters you send as yourself rather than for a company.
@@ -126,6 +128,7 @@ Agents find all of this through the skill `snotra-letters`.
 
 ## CHANGE LOG
 
+- **2026-11-12 (later)** — the made-by line links to Ymir's homepage and shows its address.
 - **2026-11-12** — seventeen letter types for outreach and replies (30 in all).
 - **2026-11-12** — every letter says it was made with Ymir and by which agent (`made_by:`); a home theme with an
   empty label shows no company name.
