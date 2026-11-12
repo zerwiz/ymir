@@ -67,3 +67,7 @@ ls $YMIR_HOME/state/.pi-room-tap-loaded             # armed? (written on session
 
 If a figure never answers: `room-tap` is not armed in its session (renew it), or the line was
 not addressed to that figure's exact name, or the room's hourly cap is spent.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

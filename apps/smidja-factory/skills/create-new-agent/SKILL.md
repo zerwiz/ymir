@@ -123,3 +123,7 @@ spawns — that's the design, not a bug.
 4. **tools = capability, writes = boundary.** State both honestly.
 5. **A 4B role must never be orchestrator/planner/reviewer.**
 6. Validate before you trust it; add it to a team + smoke to see it live.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

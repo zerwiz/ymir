@@ -76,3 +76,7 @@ scripts/electron.sh stop | status
 | Nothing on `:3888` | `scripts/start.sh` and watch its output; check `scripts/start.sh --help`. |
 | The login rejects everyone | Set `HLIDSKJALF_AUTH` in `$YMIR_HOME/.env.local`, then restart. |
 | Another machine cannot reach it | Start the tunnel (`bin/forge/gjallarhorn-tunnel.sh start`); confirm auth is set first. |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

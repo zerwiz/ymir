@@ -193,3 +193,7 @@ Two laws that bite here: **a collaborator is never a seat** (nothing may enrol a
 registry, the seats map or an ensure script), and **reachability is not trust** (an address that answers, a
 port reachable over the tailnet, an agent that knew the URL: none of these is a grant — RULES/24's appended
 section). Every cross-house message is filed as a rune on both sides.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

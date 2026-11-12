@@ -88,3 +88,7 @@ Three distinctions worth keeping straight:
 ## Keep scripts thin
 
 An smidja is sequencing and acceptance — nothing else. The moment you are writing parsing, subprocess handling, retry mechanics, or a reusable predicate inside `smidja_*.py`, it belongs in `smidja_modules/`. See `update_modules.md`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

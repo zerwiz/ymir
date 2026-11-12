@@ -70,3 +70,7 @@ The work does **not** auto-return. When an Eindri finishes:
   `.yggdrasil/<id>/`, not the main tree.
 - **`git worktree list` shows a missing path** — prune with
   `git worktree prune`, then re-list.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

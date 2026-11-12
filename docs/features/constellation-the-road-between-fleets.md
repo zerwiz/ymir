@@ -91,3 +91,7 @@ with a place-scoped token, never a member of your team.
   `keygen` with the `kid` on the card.
 - *"node is required"* / *"PyYAML is required"* — install them; the door names the
   missing piece rather than guessing.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

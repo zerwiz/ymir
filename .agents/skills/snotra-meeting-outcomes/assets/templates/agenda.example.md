@@ -31,3 +31,7 @@ and a needed-by date, an action with one owner and one date, or a recorded decis
 
 ## 6. Close (3 min)
 Secretary for the record · sign-off window (two business days) · next meeting date.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

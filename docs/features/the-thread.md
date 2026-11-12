@@ -73,3 +73,7 @@ The status route answers without opening anything:
 | `the pty broker did not answer` | `node` is not on the gate's PATH, or the socket dir is not writable | run the gate with a PATH that has `node`; check `$XDG_RUNTIME_DIR` |
 | `terminal limit reached (4)` | four shells open | close one; they are listed in the status strip |
 | a shell opens and dies at once | `node-pty` was never compiled on this machine | `cd apps/hlidskjalf/node_modules/node-pty && npx node-gyp rebuild` |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

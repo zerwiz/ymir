@@ -88,3 +88,7 @@ in writing with the reason (it runs inside a throwaway three-way merge repo).
 
 **The safe habit, in one line:** commit before experimenting, or revert a **hunk** with
 `git diff <file> | git apply -R`; never let a command decide what to throw away.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

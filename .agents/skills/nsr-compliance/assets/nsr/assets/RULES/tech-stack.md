@@ -6,3 +6,7 @@
 4. **Cross-platform** — stacks run on Mac/Linux/Windows or are containerized with pinned images.
 5. **License & cost vetting** — before adopting a new stack.
 6. **Consistency over novelty** — prefer the existing stack for a category.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

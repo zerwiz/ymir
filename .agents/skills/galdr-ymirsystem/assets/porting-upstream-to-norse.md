@@ -299,3 +299,7 @@ the historical record.
 - **Never edit `$BROKK_UPSTREAM`.** It is provenance; Ymir reads it and never writes to it (`AGENTS.md:96`, plan 29 §9 "NOT").
 - **Re-run §7 gates** after any change to a ported script, and keep the naming audit (§7.5) clean of new imported terms.
 - **Keep the coupling audit (§3) current:** a new upstream mechanism is generic or coupled, and this document must say which before it is copied.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

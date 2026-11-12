@@ -48,3 +48,7 @@ Any write past the edge is a `FAIL` with the row, the column and the bytes, and 
 - It passes, but your screen still tears — the tear is then in a component that only renders mid-turn
   (a widget or a loader). Capture it with `PI_TUI_WRITE_LOG=/tmp/pi.log pi`, reproduce, and replay the
   log with this script's scanner.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

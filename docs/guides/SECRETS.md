@@ -61,3 +61,7 @@ bin/secret-guard.sh                                    # must pass on the staged
 Rotate it first, then clean: the value is in the history and in every clone, so
 the credential must be considered spent. `git rm --cached` hides it from the next
 commit and does not un-leak it.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

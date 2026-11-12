@@ -40,3 +40,7 @@ bin/ward/garmr.sh verify      # a silent guardian is a CRITICAL, not a quiet nig
 bin/ward/garmr-bite.sh status # the switch, the rules file, the bites taken
 bin/ward/vidarr.sh incident list
 ```
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

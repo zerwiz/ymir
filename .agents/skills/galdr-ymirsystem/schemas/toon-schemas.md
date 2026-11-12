@@ -188,3 +188,7 @@ compliance:
 5. **Help hints**: Include "--full" escape hatch reference
 6. **Error format**: Structured errors in TOON, never raw stack traces
 7. **Exit codes**: 0 = success (including no-ops), 1 = error, 2 = usage error
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

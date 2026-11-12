@@ -267,3 +267,7 @@ Given we already run disler's SSSF and the NorthStar ruleset, treat this researc
 
 **The video that started this research**
 - "First loops, now software factories? I can't keep up..." — https://m.youtube.com/watch?v=ucWRQ1yf6HE
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

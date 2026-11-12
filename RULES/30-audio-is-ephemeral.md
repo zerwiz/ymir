@@ -85,3 +85,7 @@ What this rule names, in its new spelling:
 
 A shim survives at the old path so nothing breaks while callers are repointed; it is retired by that dated fix
 note, never silently. The law in this file is unchanged — only the shelf the doors are kept on.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

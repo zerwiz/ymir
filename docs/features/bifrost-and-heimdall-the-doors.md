@@ -52,3 +52,7 @@ One key published to your GitHub opens every warded computer; the ward refreshes
 | A session 401s / the model never answers | `bin/bridge/bifrost-bridge.sh` — the bridge is down. |
 | SSH stopped working on a seat | `bin/host/heimdall-ensure.sh status`; the key may be unpinned or GitHub unreachable. |
 | The gateway does not answer | It is not raised — raise the set (`scripts/start.sh`). |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

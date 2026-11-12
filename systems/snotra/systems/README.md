@@ -14,3 +14,7 @@ A file lands here when it is a *shape* — a schema, a template, a contract a do
 because it is about a meeting: **code belongs in `services/`, records belong in the home.** When a shape changes,
 the code that enforces it changes in the same pass, and this shelf is updated in the same pass or it is the second
 place that disagrees.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

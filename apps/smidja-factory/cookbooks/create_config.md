@@ -96,3 +96,7 @@ trigger:
 
 `apps/smidja-factory/templates/smidja.config.yaml` is the ONE config template — `make_config.py` copies it, `install.py` stamps it, and the trigger block above is part of it. A `factory.yaml`, a `roster.yaml` or a wrapper that repeats `roster`, `chain` or `trigger` is a **second copy of the truth**, and the two will disagree the first time one is edited. A factory-level file may **reference** this config (a path, a name, a `--config` argument); it may not restate it. `bin/time/tests/test_event_trigger.sh` fails if a second shape appears in the tree.
 
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

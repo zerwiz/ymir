@@ -319,3 +319,7 @@ bin/pi/syn-watch-arm.sh --handling-delivered test-gen --watcher-pid 12345
 - **`vordr` and `rodd` use different extensions** (`.mjs` vs `.ts`) deliberately: Vörðr is a plain Node child, so it cannot import the Pi TypeScript lib.
 
 **Skills.** Pi discovers skills **natively** — it walks up from the cwd to `.agents/skills` (and `~/.agents/skills`), and `--skill <path>` adds more; `--no-skills` disables discovery. No link and no config: a second root under `.pi/` would double-load the same skill.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

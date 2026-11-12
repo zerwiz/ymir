@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """notify.py — the hound's mouth: one message to the phone, and a record that it landed.
 
     notify.py --severity CRITICAL --line "…" [--rune <id>] [--test]

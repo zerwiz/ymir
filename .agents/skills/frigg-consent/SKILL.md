@@ -54,3 +54,7 @@ Do not relay reviewer labels or gate output as if they settled the decision.
 - A new finding in the same causal theme requires the Allfather before another fix round when prior fixes are accreting machinery around a questionable abstraction.
 - A genuinely security-sensitive action requires the Allfather under the stronger existing boundary even if it is otherwise within scope.
 - Complex architecture explicitly requested by the Allfather stays within scope and does not escalate merely because it is complex.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

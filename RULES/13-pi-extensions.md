@@ -213,3 +213,7 @@ harness_law[6]{rule,what_it_means}
 **Why one home still matters.** This rule's original subject — one home per extension, `index.ts` per multi-file
 extension, `valknut-load --check` as the gate — was written to stop two load paths seating nobody. The same fault
 returns at a larger scale: two *harness* paths, one of them undocumented, is two halves of the house that never meet.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

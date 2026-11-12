@@ -110,3 +110,7 @@ python3 bin/time/snotra/tests/test_outbound_gate.py   # all 12, including Gná's
   is not a draft. `snotra-approve.sh list` shows what still exists.
 - A calendar refusal you cannot clear — the held body tells you the key; approve that key, then re-run the
   **same** command. If you changed any flag since, approve the key again after the re-run.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

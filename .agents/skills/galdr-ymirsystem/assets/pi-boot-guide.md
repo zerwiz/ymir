@@ -56,3 +56,7 @@ bash bin/fleet/hamr-harness.sh eindri     # prints the effective Eindri harness
 - **Mirror:** `.agents/skills/tyr-check/assets/pi-boot-guide.md`.
 - The runtime itself is specified in `assets/brokk-distro-runtime.md`; this asset is
   the PI boot view only.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

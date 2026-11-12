@@ -51,3 +51,7 @@ theirs[6]: the places · the suite (Nextcloud Hub: Files · Talk · Calendar · 
    a team surface. *The place's* record — what was decided there — may be shown to its members.
 4. **One host, two planes.** The server may run both, but that changes nothing: a service still
    belongs to one class (Rule 18) and one plane, and therefore to one gate.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

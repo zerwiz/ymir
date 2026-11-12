@@ -993,3 +993,7 @@ The real Swedish contract proof lives under apps/hlidskjalf/scripts and is
 invoked by npm run test:voice:contract. It is an explicit file-only CLI, not
 an unused server module or an automatically run unit test. Its required
 private home/audio/report settings and synthetic-only boundary are unchanged.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

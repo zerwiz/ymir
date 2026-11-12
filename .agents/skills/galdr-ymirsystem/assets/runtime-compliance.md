@@ -499,3 +499,7 @@ The doors that moved and the systems they joined are listed in
 ## 2026-11-02 — Codex plugin delivery
 
 The shared CI entrypoint `bin/gates/ci-verify.sh` runs `node --test tests/test_codex_plugin.mjs tests/test_codex_install.mjs`. The MCP tests exercise the real stdio process, tool discovery and input/error boundaries. The installer tests cover materialization and refresh through Codex itself when its CLI is present. A skipped live CLI test is not evidence of installed Codex behavior; acceptance must name a real CLI run. Existing Bash governance gates still apply to the installer and updater.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

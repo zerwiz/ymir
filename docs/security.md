@@ -220,3 +220,7 @@ phases[9]{id,name,deliverable}:
 - [`bin/ward/security-audit.sh`](../bin/ward/security-audit.sh) · [`bin/ward/verdr.sh`](../bin/ward/verdr.sh) · [`bin/ward/harden.sh`](../bin/ward/harden.sh) — the eyes, the warden, the mends.
 - [`RULES/15-vault-confidential.md`](../RULES/15-vault-confidential.md) · [`RULES/16-confidential-session.md`](../RULES/16-confidential-session.md) — the agent-side half.
 - [`docs/Architecture.md`](Architecture.md) — where the ward sits among the realms.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -88,3 +88,7 @@ teaches it, one door writes it, and a ward proves the three still agree.*
 **Related:** Rule 22 (the home has a layout — this rule is how the layout is *raised*),
 Rule 04 (the repo ships craft, the home holds data), Rule 25 (a move is a migration),
 Rule 37 (a surface may not show what it did not receive), Rule 14 (a feature owes a how-to).
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

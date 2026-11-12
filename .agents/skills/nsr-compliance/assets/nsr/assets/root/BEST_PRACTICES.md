@@ -25,3 +25,7 @@ Code quality, patterns & design guidelines index. Category-specific standards li
 - **Platform portability** — POSIX bash, forward slashes, LF endings (Mac/Linux/Windows) — validated by `check_platform.sh`.
 - **Stack consistency** — follow `TECH_STACK.md`; one primary stack per feature; pin versions.
 - **Docs-before-production** — every hosting (`docs/HOSTING/`) and developer (`docs/DEVELOPER_SETUP/`) documented before going live.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

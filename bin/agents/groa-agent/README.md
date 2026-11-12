@@ -97,3 +97,7 @@ bin/agents/groa-agent/seat.sh          # on that machine
 It installs OpenCode if absent, writes the runner to `~/.local/bin/`, installs
 `groa-agent.timer` (daily, with a per-host stagger minute), and runs one
 `check` to prove the leash works. Idempotent: run it again after an update.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

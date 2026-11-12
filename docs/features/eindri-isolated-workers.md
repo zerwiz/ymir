@@ -88,3 +88,7 @@ bin/agents/eindri-start.sh "<the errand>" --role <name> --kind opencode --model 
 | The status says `working` but nothing happens | `bin/agents/eindri-liveness.sh check` names the verdict and the pane; `sweep` corrects the record and wakes the seat. A fresh seat reads `SETTLING` for its first 10 minutes — that is the grace, not a stall. |
 | An OpenCode pane says `Unrecognized flag` | Something launched `opencode` by hand with `--model`. Use `bin/seat/opencode-launcher.sh print`; `bin/agents/eir-doctor.sh check` names the `opencode` surface if the installed OpenCode no longer takes `--prompt` and `--auto`. |
 | `seat=no` in `state/<id>.meta` | The launch produced no agent — read `state/<id>.status` (it says which pane), fix the cause, relaunch. |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

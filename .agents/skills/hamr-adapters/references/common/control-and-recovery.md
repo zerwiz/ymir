@@ -35,3 +35,7 @@ Deterministic relaunch instead trusts instructions on disk, not a private sessio
 
 `../stuck-Eindri-recovery/SKILL.md` owns worker recovery and `../Eindri-home-provisioning/SKILL.md` owns Eindri-home recovery; both preserve recorded work.
 The router's recovery scenarios select the additional common references for replacement profiles and eindri-homes.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

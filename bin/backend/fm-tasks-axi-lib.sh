@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # shellcheck shell=bash
 # Shared tasks-axi backend selection and compatibility probe for bootstrap,
 # teardown, and secondmate backlog handoff.

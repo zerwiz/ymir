@@ -89,3 +89,7 @@ a2a-today[3]{piece,state}:
   "directory registration + return","OPEN — a served Eindri is not yet listed in the directory"
 ```
 See the private plan `$YMIR_HOME/docs/ratatoskr.md` for the registration spec.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

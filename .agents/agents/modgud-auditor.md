@@ -86,3 +86,7 @@ verdict[3]{field,shape}:
   "refused","the claim that did not, and the exact evidence that would change the answer"
   "severity","blocker · high · medium · low — matched to the evidence, never to the mood"
 ```
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -48,3 +48,7 @@ bin/desktop/desktop-place.sh       # prefers an EMPTY desktop
 | First run hangs | It is building; let it finish, or run `sessrumnir-ensure.sh` and read the output. |
 | A blank window | Rebuild: `sessrumnir-ensure.sh ensure --install`. |
 | It opens on the wrong desktop | `bin/desktop/desktop-place.sh` to place it deliberately. |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

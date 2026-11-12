@@ -71,3 +71,7 @@ that have none.
 | `research check` says *index stale* | the index is derived | `bin/records/library.sh research index` |
 | `research keep` refuses your finding | no `--source` | add the page, or record it as a **negative result** with `--negative` |
 | `doors.sh --check` says STALE | the tree changed since the register was rendered | `bin/gates/doors.sh --root <dir>` and commit it with the change |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -658,3 +658,7 @@ refusal that patches nothing · the vendor's 403 becoming the named refusal.
 `bin/time/snotra/tests/test_outbound_gate.py`: the "read the door" tests read retired **shims** (two-line
 forwarders) instead of the file that implements them, and the send-around-the-gate scan counted a *comment and a
 printed sentence* as a send call.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

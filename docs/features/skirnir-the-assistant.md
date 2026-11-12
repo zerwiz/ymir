@@ -256,3 +256,7 @@ it in my own words just now."
   anyone but the Allfather), his database (`assistant-brief.sh`, four verbs, the dated briefing in the
   well), the Telegram fixes (a rate limit tells him to wait; a poison message, a failed poll and a lost
   offset can no longer leave him deaf). Plan 227 §§1, S1.5.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

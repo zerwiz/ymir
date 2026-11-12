@@ -11,3 +11,7 @@ objection: <what is wrong or missing>
 names the correction; it is not a re-vote. Grade A decisions need every participant's
 explicit confirm; Grade B the Approver and affected owners; Grade C accepts silence after
 two business days. The Chair signs last; corrections are appended, never rewritten.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

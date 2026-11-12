@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # shellcheck shell=bash
 # Fused backlog transitions for the scripts that own a task's physical record.
 # Usage: . bin/backend/fm-tasks-axi-lib.sh; . bin/backend/fm-backlog-transition-lib.sh

@@ -97,3 +97,7 @@ the plan's `purity` row exists to catch.
 
 **Rule for a new host feature:** resolve every path through `bin/vault/hoard-lib.sh`;
 never name `$ROOT/data`, `$ROOT/state`, `$ROOT/config` or `$ROOT/.env.local`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

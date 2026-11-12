@@ -61,3 +61,7 @@ Verified in `~/.pi/agent/models.json` (the registry pi resolves):
 
 Dispatch with `subagent_create(task=<full task>, thinking=low|medium|high|xhigh,
 model=<optional>)`. Omit `model` to inherit your own model.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

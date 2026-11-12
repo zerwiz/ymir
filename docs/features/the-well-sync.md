@@ -40,3 +40,7 @@ keeps the memory checkpointed.
 | `push failed (non-fast-forward?)` | Pull first (`--mode pull`), or push by hand; it will not force. |
 | `pull failed (dirty tree or divergence)` | Resolve the home by hand, then re‑run. |
 | No well in the vault | Create the home/engram first; the well lives in the hoard (Rule 04). |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

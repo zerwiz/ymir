@@ -13,3 +13,7 @@ Master registry. No feature may be implemented without being registered here, an
 - Every feature has a matching skill directory under `.agents/skills/features/`.
 - Every feature maps to a stack in `TECH_STACK.md`.
 - Keep in sync via `.compliance/gates/verify_docs.py`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

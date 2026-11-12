@@ -61,3 +61,7 @@ bin/engine/ymir-install.sh          # prereqs, tree, engines, hermes, sandbox, m
    provider keys — `$YMIR_HOME/secrets/platform.env` only.
 3. **No mock.** A tool reported present must be real; `bin/engine/ymir-install.sh --check`
    tells the truth.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -40,3 +40,7 @@ The installer runs `apply` as part of the `snotra` step, and the versioned migra
 - It cannot know an NDA; add each protected document's SHA-256 and the authorised
   addresses to the confidential register.
 - It does not send mail or create a board.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

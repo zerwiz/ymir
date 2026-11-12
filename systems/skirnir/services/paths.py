@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """paths.py — ONE resolver for the assistant's two shelves (Rule 07/22).
 
 Knowledge and policy are the operator's OWN records — approved facts, who may hear what, which groups

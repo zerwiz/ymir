@@ -43,3 +43,7 @@ A row of `...` marks an elided excerpt and is reported `ELIDED` (not a failure).
 
 - **Owner:** Brokk. **Router:** `.agents/skills/galdr-ymirsystem/SKILL.md`.
 - Extend a gate by adding to `compliance-check.sh` and a row to its `checks` block.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

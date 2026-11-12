@@ -32,3 +32,7 @@ Kind regards,
 - Full statements, not fragments: "We are moving the filing to 27 November"
   survives forwarding; "filing → Nov" does not.
 - The email is a receipt, not a retelling. No recap of the discussion.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

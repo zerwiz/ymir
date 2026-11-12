@@ -80,3 +80,7 @@ carries its own `.env.realm` and never touches another without the word.
 ## Notes to Brokk
 
 - …   # anything the operator wants the agent to know here
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

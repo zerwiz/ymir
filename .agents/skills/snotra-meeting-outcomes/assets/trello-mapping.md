@@ -35,3 +35,7 @@ Due:        ISO date
   meeting file.
 - Board names are read from the record; when a board does not exist, the card
   goes to `Inbox` and the mismatch is reported, never guessed.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -86,3 +86,7 @@ Load one cookbook per request — this overview is the only one you read up fron
 | Run and monitor a workflow | `how_to_prompt_for_the_eng.md`, then `run_adw.md` |
 
 References, loaded when you need the spec: `references/config.md` (full config schema), `references/handoff.md` (envelope + session layout), `references/observability.md` (events, db tables, polling).
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

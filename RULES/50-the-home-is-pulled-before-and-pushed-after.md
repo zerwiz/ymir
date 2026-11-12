@@ -41,3 +41,7 @@ A number (a plan, a rule, a ticket) is an allocation. Allocate it **after** `beg
 - Migration `.agents/migrations/0018-the-home-pulls-first.sh` — writes the marked merge-rules block into the home's
   `.gitattributes`, seats the `ours` driver, and ships it. Run by `ymir-install.sh`, `/updateymir` (Gróa) and
   `eir-doctor fix`, so every seat gets it on install and on update.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

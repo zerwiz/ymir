@@ -48,3 +48,7 @@ Ways to open it, beyond the passphrase:
 | `could not open` | Wrong passphrase, or the wrong key — try the passphrase. |
 | A commit is refused by `vault-guard` | A file copies vault content verbatim — keep it inside the vault (Rule 15). |
 | The mount is busy on `close` | A file in it is open — close it, then `close` again. |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

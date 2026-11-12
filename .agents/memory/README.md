@@ -44,3 +44,7 @@ interleaving entries.
 
 1. **Hot** — `svartalfaheim/<realm>/workspace/*.md`
 2. **Deep** — the engram store, indexed from workspace changes
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

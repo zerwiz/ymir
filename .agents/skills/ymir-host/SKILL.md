@@ -33,3 +33,7 @@ Rule 06 (append-only) governs the memory: the Runes ledger, the
 changelog, `$YMIR_HOME/hodd/docs/append-only-log.md` and the rules are appended to, never
 rewritten — and a move must carry every one of them plus the hoard.
 Law: `RULES/06-append-only.md`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

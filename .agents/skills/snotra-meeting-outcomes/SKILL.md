@@ -229,3 +229,7 @@ these doors — the shelves are `systems/snotra/services/` (the doors that moved
 bot needs the Vexa worker running on the server to actually spawn a container;
 if `status` shows `idle` with no container, the worker is down and the bot is
 not in the call.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

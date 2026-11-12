@@ -18,3 +18,7 @@ Deterministic scripted automation layer. Zero ad-hoc shell commands — every op
 - Scripts exit `0` on success, non-zero on failure.
 - Each skill dir has a `SKILL.md` manifest.
 - Every project ships the full skill set per `docs/project-skills.md`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

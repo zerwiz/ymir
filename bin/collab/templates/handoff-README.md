@@ -88,3 +88,7 @@ personae (`Allfather`, `Brokk`, `Eindri`, `Galdr`, `Sága`, `Hlidskjalf`, `Mími
 `Yggdrasil`, `Utgard`, `Bifrost`, `runes`, `the well`) unless the line that carries one waives it in
 writing with `allow-house-word:` — the same shape as every other waiver in this house: on the line it
 waives, never by widening the rule.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

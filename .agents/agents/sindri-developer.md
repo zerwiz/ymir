@@ -113,3 +113,7 @@ Inspect, profile, and debug the running app with **Chrome DevTools**
 (profiles/CPU), **Sources** (breakpoints), **Console**, **Application**
 (storage/service workers), **Lighthouse**, and the **Chrome DevTools MCP** for
 agent-driven inspection. Engage it before claiming a UI/behavior works.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

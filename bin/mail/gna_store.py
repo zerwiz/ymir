@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Gná's store: one message once, and the account is the boundary.
 
 Every read takes an account. An account that is not declared in

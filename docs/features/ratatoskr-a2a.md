@@ -41,3 +41,7 @@ The **Agent Card** is served at `/.well-known/agent-card.json` (the heart's node
 | `status` shows the directory down | `bin/bridge/ratatoskr.sh directory start` (or `service`). |
 | No A2A tools in a harness | `bin/bridge/a2a-mcp.sh install`, then re‑bind the harness. |
 | A peer cannot see you | Federation needs the cert + the tailnet; check `cert` and your tailnet. |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

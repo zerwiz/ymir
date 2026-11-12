@@ -121,3 +121,7 @@ truth is `RULES/`:
 
 In the code the eight are `DOMAINS` (`DomainId`/`DomainDef`) and an agent carries
 `domain` (not `house`) — see `apps/hlidskjalf/src/data/realms.ts` and `AgentCard`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -34,3 +34,7 @@ that is a human judgement, and the notes field is where you write down what you 
 
 **If it does not work.** `check` first: it names the record and the field. If `email` refuses, the
 message says which gate refused — a guard, a consent flag, or a missing address.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

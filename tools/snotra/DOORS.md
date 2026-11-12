@@ -8,3 +8,7 @@ doors[1]{file,does,kind,executable,lines}:
   "server.mjs","snotra — the meeting ear MCP face. Read-only access to stored meeting minutes","server","no","201"
 
 **Tally.** server=1
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

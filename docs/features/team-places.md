@@ -42,3 +42,7 @@ symlink into your private files is caught. That is the denial that proves the wa
   membership by SSO. Those are plan 77 steps 77.1–77.5.
 
 **See also:** [`distinct-gates.md`](distinct-gates.md) — the classes a place belongs to.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

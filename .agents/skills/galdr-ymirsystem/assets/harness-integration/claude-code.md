@@ -215,3 +215,7 @@ Upstream Brokk registers two `PreToolUse` entries (`Bash` matcher → `fm-arm-pr
   .agents/harnesses/claude-worker.settings.json [--model alias] "$(cat <brief>)"`. The profile lets the worker edit and
   run without a prompt and denies the Allfather's moves; a missing profile refuses the seat. Claude takes Anthropic
   aliases only — a machine `provider/model` token is dropped, an explicit one refused. Still owed: P5d, P5f, P5g.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

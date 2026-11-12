@@ -97,3 +97,7 @@ project whose registry row cannot name a remote — that row needs a `git{}` blo
 | Auth failure | Ensure the `$YMIR_HOME/hodd/secrets/platform.env` credentials are present and valid (`bin/vault/hodd.sh emit secrets/platform.env`). |
 | Refused: no Utgard image | `bin/forge/utgard.sh build`, or run with `--isolation off` (deliberately). |
 | A PR opened but CI red | This is Glitnir's read — the change is not ready; fix on the branch, do not merge. |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

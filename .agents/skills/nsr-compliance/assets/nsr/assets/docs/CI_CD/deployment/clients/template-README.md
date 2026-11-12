@@ -9,3 +9,7 @@ Per-client deployment for a client.
 ## Rules
 - Deploy via `docs/CI_CD/deployment/deploy.sh --env <env> --target client:<name>`.
 - Client-specific branding/features come from these templates.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

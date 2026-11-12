@@ -391,3 +391,7 @@ if (!tryFastPath(process.argv.slice(2), { version: VERSION })) {
 Principle 1 (TOON output) governs what a **CLI prints for an agent to read**. It never governed documents, and it
 does not now. A plan, an architecture page, a README or a rule is written for a person under `RULES/52`, with Markdown
 tables and Mermaid diagrams, not TOON. A tool may still print TOON. The page that explains the tool may not.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

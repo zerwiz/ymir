@@ -25,3 +25,7 @@ One row per action. The register is the queue; the minutes are the narrative.
 - An action whose date is unresolved cannot be marked done; it must first be
   dated or dropped by the owner.
 - Dropping an action is a decision, and is recorded in the decision log.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

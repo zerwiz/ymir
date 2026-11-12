@@ -153,3 +153,7 @@ A new gate dropped in `.compliance/gates/` is auto-run by every `--gates`/`--pla
 ## 9. When It Is NOT Worth It
 
 A one-off feature that will not be run repeatedly → prompt an agent directly; do not build a feature slot. The compliance earns its keep when the same workflow runs often (agents, CI, or repeated automation) and you need verification, metering, and safe autonomy.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

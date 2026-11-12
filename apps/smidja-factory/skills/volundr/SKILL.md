@@ -230,3 +230,7 @@ Deep references: `MEMORY.md` (full memory-system deep dive) ·
    set `SMIDJA_PROJECT_DIR` or cd to the repo when it matters.
 6. **Bridge is optional** — `smidja_orchestrate.py` catches bridge failures and
    proceeds cold (`(no prior memory yet — first run)`).
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

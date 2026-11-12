@@ -72,3 +72,7 @@ never an edit. A HIGH also speaks on the desktop (`ymir-say`).
 | `unknown (timedatectl absent)` | no systemd-timesyncd | `bin/time/sol.sh check` names it; the clock matters to every record |
 | the audit cannot read `sshd -T` | not root | `sudo bin/ward/security-audit.sh check` |
 | a tunnel probe says "could not probe" | offline, or no `curl` | run it from a machine that can reach the internet |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

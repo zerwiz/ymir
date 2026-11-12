@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # shellcheck shell=bash
 # Shared "supervision missing" predicate.
 # Usage: . bin/backend/fm-supervision-lib.sh

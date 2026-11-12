@@ -77,3 +77,7 @@ this opener** when it is found, so a file you ask for lands on the right display
 | `placement skipped` | no window manager answered | you are not in a Hyprland session (or `$YMIR_HYPRCTL` is wrong) |
 | it opened twice | the editor does not put the file name in its window title | report it: reuse matches on class + file name |
 | the wrong screen | the role resolved elsewhere | name the monitor directly, or record `~/.config/ymir/displays.conf` |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

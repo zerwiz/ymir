@@ -41,3 +41,7 @@ empty or the literal string `undefined`, or when an episode has no vector (in th
 but invisible to recall). `record` rolls the checkpoint forward after a passing check;
 Eir composes it as the `well` surface, so a loss is reported the next time anyone
 diagnoses the house. `well-guard.sh --self-test` proves the ward bites.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

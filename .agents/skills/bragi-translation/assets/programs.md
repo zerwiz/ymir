@@ -161,3 +161,7 @@ ffmpeg -y -i ~/Downloads/"WhatsApp Ptt 2026-09-19 at 19.49.37.ogg" \
 # 4. translate (next step per the Allfather's word) — the llama router recipe above
 # 5. record — hodd/docs/translation/records/2026-09-19-<slug>.md
 ```
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

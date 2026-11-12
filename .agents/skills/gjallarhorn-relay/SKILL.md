@@ -281,3 +281,7 @@ Treat a public loop as closed only after `retire`.
 - Never inline mention-influenced reply text into a shell command; always go through `--text-file` or stdin.
 - The reply length authority is the relay (it trims), but a tight reply is on you.
 - Never edit `bin/brokk-x-poll.sh`, `bin/brokk-x-reply.sh`, or the watcher to "answer faster"; the cadence is handled by the locked session-start bootstrap step.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

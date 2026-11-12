@@ -72,3 +72,7 @@ reaching into his folder.
 
 Plans 101 and 112 (the presence, and the five silent failures), lifted into ownership by plan 150 on the
 shape plan 129 proved with Snotra.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

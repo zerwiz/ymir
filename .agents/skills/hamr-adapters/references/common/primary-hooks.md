@@ -38,3 +38,7 @@ Read it before changing session-open behavior.
 Follow only that rendered protocol.
 When changing a watcher adapter, update its file under `../../../docs/supervision-protocols/`, update `../../../docs/turnend-guard.md` if shared idle or turn-end behavior changed, and refresh the tool fact.
 An identity without a dedicated protocol uses its documented unsupported or unknown boundary; never invent one from a similar TUI.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -344,3 +344,7 @@ tests/fm-afk-pi-herdr-return-e2e.test.sh
 
 Real Herdr tests use the named lab helper and default-session tripwire.
 [`verification/runtime-backends.md`](verification/runtime-backends.md#herdr) records the active version, CLI, projection, event, and lifecycle evidence without task-specific chronology.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

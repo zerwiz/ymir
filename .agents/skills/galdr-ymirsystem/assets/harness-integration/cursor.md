@@ -191,3 +191,7 @@ bin/gates/checks/syn-cd-pretool-check.sh  --cursor --command 'cd ../..';        
 Plan 29 §7 describes Cursor as "run interactive only (no headless turn-end)". The code matches that limitation, but it **also** implements a `sessionStart` `additional_context` injection and a `stop` `followup_message`. So Cursor is a full session-open + turn-end surface interactively — not merely a runner.
 
 **Skills.** This harness reads project skills from `.cursor/skills/`; `bin/seat/valknut-load.sh` binds it to the one tree (`.cursor/skills -> ../.agents/skills`). Never copy a `SKILL.md` in — a copy is drift, and a nested `SKILL.md` with frontmatter is loaded as a phantom skill.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

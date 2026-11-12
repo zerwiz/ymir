@@ -86,3 +86,7 @@ first (`bin/bridge/mimir-bridge.sh --start` on the heart).
 `well-door: could not forward 4602 (ssh zerwizserver)` — ssh itself failed: no route, no key, or a
 passphrase prompt. Test it plainly with `ssh zerwizserver true`; the door runs ssh in batch mode, so a key
 that needs a password will never open it.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

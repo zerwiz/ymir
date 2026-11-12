@@ -38,3 +38,7 @@ exactly the fault this standard was written for: one folder once carried four ge
   `services/record/snotra-evidence.sh` timestamps, certifies and applies a retention rule.
 - **A record is restored, not recreated.** `meeting-record-guard.sh` puts a missing record back rather than
   letting a door write a new empty one over the loss.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -33,3 +33,7 @@ bin/notify/telegram-format.py --check < draft.md
 
 `telegram-format: unknown argument` — read `--help`. A line still long after formatting means a single word longer than the
 limit, which it will not split.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

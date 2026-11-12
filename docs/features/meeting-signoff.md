@@ -31,3 +31,7 @@ history. A dry run is `sync "$OUT" --dry-run`.
   is confirmed or abstained, so the Chair must check an A record before signing.
 - A live reply has not yet been exercised in production; the parser returns
   `no replies found` on a clean inbox.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

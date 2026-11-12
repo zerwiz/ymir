@@ -60,3 +60,7 @@ Three shapes, two hook mechanisms, one plugin event API. Parse **one** normalise
 - **Zed and MCP.** Zed stores servers as `context_servers` inside `settings.json`; a block copied from another
   client (`mcpServers`) does nothing.
 - **A user's own `settings.json`.** The installer *names* it and refuses to merge blind — that file is theirs.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

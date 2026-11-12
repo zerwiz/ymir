@@ -67,3 +67,7 @@ a key. Models named `opencode-go/...` run through `opencode`.
 
 Add it under `providers.<name>.models` (or a new `providers` entry). If it's a
 new server, add the id to `.agents/skills/galdr-ymirsystem/assets/registry.md`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -184,3 +184,7 @@ workhorse, `opencode/big-pickle` free, `opencode/nemotron-3-ultra-free`
 reasoning). `claude_code` is schema-valid but stubbed until v2. The visualizer
 ships in `apps/visualizer/` (see Current runtime above) — `just ui` / `smidja ui`
 starts it; sqlite probing also works while it runs.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -96,3 +96,7 @@ Nornir jobs, and its calendar door belongs to Snotra (plan 129 §18).
 **Still owed by this append, named rather than papered over:** a placement guard that fails when a layer directory
 outgrows its name (plan 129 §15/§18), and the same move for `bin/assistant` → `systems/skirnir/`, `bin/mail` →
 `systems/gna/`. Until the guard exists, this rule is enforced by review, not by a gate.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

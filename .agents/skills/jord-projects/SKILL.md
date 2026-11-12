@@ -90,3 +90,7 @@ If any dependency or unlanded work exists, stop and report it before changing an
 Never issue a raw removal command from Brokk.
 Once that preflight confirms none of the above and the Allfather's approval is concrete, AGENTS.md hard rule 1's Allfather-approved project operation exception authorizes Brokk to remove the clone directly and update its registry entry to match.
 When a clone has already been removed through an approved removal, or the registry is provably stale because no clone exists, remove its registry line so navigation matches reality.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

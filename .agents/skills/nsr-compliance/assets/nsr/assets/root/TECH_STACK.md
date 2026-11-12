@@ -26,3 +26,7 @@ Authoritative stack-to-feature mapping. One primary stack per feature; pin versi
 - Pin versions; no floating/latest in production.
 - No new stack without updating this file AND `FEATURES.md`.
 - Stacks must run on Mac/Linux/Windows (or be containerized).
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

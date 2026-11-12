@@ -25,3 +25,7 @@ never inherit another operator's data. Keep it that way.
 Do not open a public issue. Report privately to the maintainers (GitHub
 Security Advisory on the repository), including steps to reproduce and the
 affected version. We will acknowledge and coordinate a fix before disclosure.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -212,3 +212,7 @@ every other `*-ensure.sh`.
 **A seat that already has a forge is left alone.** `ensure` adopts a running door
 rather than fighting it — the same doctrine as the local-model ensure, which
 adopts a standing CUDA `llama-server` and never rebuilds one.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

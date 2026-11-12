@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # shellcheck shell=bash
 # Shared fast-forward machinery for firstmate self-sync.
 # Usage: . bin/backend/fm-ff-lib.sh   (after FM_ROOT and FM_HOME are set)

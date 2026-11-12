@@ -39,3 +39,7 @@ systemd.
   scheduler.
 - The audit still reports `nothing watches this host` → the heartbeat is older than 26h; refresh
   it.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # shellcheck shell=bash
 # Shared quota-axi compatibility floor for the bootstrap diagnostic.
 # Usage: . bin/backend/fm-quota-axi-lib.sh

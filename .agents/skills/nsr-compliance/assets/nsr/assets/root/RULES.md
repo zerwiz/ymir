@@ -35,3 +35,7 @@ Core enforcement & execution rules. Detail lives in `RULES/`.
 | Data & Setup | `setup.sh`, `seed.sh`, `migrate.sh` | Deterministic state prep |
 | Source Control | `safe_commit.sh`, `sync.sh` | Safe git operations |
 | Diagnostics | `audit.sh`, `logs.sh` | Health & telemetry |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

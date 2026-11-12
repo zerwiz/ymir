@@ -38,3 +38,7 @@ one at five). A cron failure, a Trello due date and the rest follow in plan 100.
 **If it does not work.** `--dry-run` prints the decision and all five legs; a `0` on a leg means that
 leg did not answer. If everything is `0`, the message was still written to Runes — the door fails
 loudly rather than silently.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -76,3 +76,7 @@ related[1]{path,load_when}:
 - **Owner:** Brokk. **Router:** `.agents/skills/galdr-ymirsystem/SKILL.md`.
 - Add a row here the moment an asset is created; remove one only when superseded.
 - Keep the mirror under `tyr-check/assets/` in sync (`diff -rq` must be clean).
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

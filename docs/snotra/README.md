@@ -86,3 +86,7 @@ $YMIR_HOME/hodd/memory/runes_audit.md  every pipeline run appends a rune
 Not yet built, and named rather than hidden: **the Gimlé adapter** (a place declaring `surface: gimle` is
 refused, never cross-filed) · **per-speaker naming** (three tracks exist; naming is a reviewed alias match) ·
 **the 24 decisions across both meetings are still `proposed`** — the register awaits a person's signature.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

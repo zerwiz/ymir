@@ -113,3 +113,7 @@ snotra-pipeline.sh run <meeting-dir>            # the whole chain, locked, logge
 trello-map.sh [--show|--resolve "<board>" "<list>"]   # the board map, refreshed by hand
 meeting-record-guard.sh check|fix               # a tracked record missing from disk is restored
 ```
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Gná's judge: rules first, and every verdict carries the rule that gave it.
 
 Six classes and six actions, no more. The judge never calls a model. A message

@@ -61,3 +61,7 @@ This Agreement shall be governed by the laws of the jurisdiction in which the Pr
 ## Agreement
 
 By downloading, installing, using, modifying, or distributing this software, or by submitting a pull request, issue, or any other Contribution to the Project, you acknowledge that you have read, understood, and agree to be bound by the terms of this Agreement.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

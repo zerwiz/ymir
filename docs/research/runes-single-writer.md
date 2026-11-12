@@ -176,3 +176,7 @@ honest record that two seats were writing at once, and Rule 06 forbids the alter
 - **Fix note** `docs/fixes/agents/unversioned-2026-10-06-the-errand-door-reported-every-verdict-wrong.md`
   — the three silent failures met on the way to filing the plan. Same species of bug: **silence
   shaped exactly like success.**
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

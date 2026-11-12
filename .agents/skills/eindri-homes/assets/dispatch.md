@@ -78,3 +78,7 @@ Every Eindri is seated in a **secure Yggdrasil worktree** by default
 Allfather explicitly asks to help in main — pass `--main` to
 `bin/agents/eindri-start.sh` / `bin/seat/herdr-run.sh`. Anything else that seats an agent
 (`pi-seat.sh`, the tmux fallback) must isolate the same way.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

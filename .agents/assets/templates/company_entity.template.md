@@ -35,3 +35,7 @@ Standing mode for house projects: `no-mistakes` | `direct-PR` | `local-only`
 
 Realm-scoped only — a house card never reaches across realms. Split or merge a
 house only by a new append-only entry.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

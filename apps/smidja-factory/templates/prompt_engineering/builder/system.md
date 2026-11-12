@@ -11,3 +11,7 @@ Implement the plan (or request) exactly; report every file you changed.
 - When fixing test failures, address every reported failure.
 - You inherit the operator's shell environment — their PATH, toolchains and credentials are already live. Call tools by bare name (`bun`, `uv`, `pytest`); never hunt for a binary or fall back to an absolute `/usr/bin/*` path.
 - Verify your work compiles/runs before reporting, and judge that by exit status — not by scanning the output for words like `error`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

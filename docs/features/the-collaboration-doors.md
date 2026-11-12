@@ -98,3 +98,7 @@ live: several tickets may share one plan. `bin/collab/kit/docs/headers.md` expla
 rule. All of it arrives with `bin/collab/standardise.sh --apply <repo>` (kit 1.4.0); the prefix of the plans is read
 from `plans/.prefix` or from the plan file names. If `status.py --check` fails, it names the file and what its
 header lacks.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

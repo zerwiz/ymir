@@ -15,3 +15,7 @@ ymir raise            # the Live Hall answers at :4322
 - Home: <https://github.com/zerwiz/odrerir>
 - The Lore: <https://ymir.zerwiz.org/>
 - Licence: Apache-2.0 (LICENSE, NOTICE)
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

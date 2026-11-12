@@ -23,3 +23,7 @@ git-ops/
 
 - Git actions (branching, committing, rebasing) MUST go through these scripts — no bare `git commit -m ...`.
 - Pre-commit gates (lint, tests) run inside `safe_commit.sh` before anything is committed.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

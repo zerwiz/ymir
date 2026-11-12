@@ -128,3 +128,7 @@ ymir/
 4. **Realm-scoped anything** belongs under `svartalfaheim/<realm>/` — never at platform root; cross-realm shared assets go to `midgard/`.
 5. **Everything governed is documented**: every subsystem's code change updates its owning Galdr asset in the same change; every fix gets one append-only note in `docs/fixes/<component>/`.
 6. **Every change leaves by PR** (Rule 08) — never a direct push to main; the Allfather's approval is the merge.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -58,3 +58,7 @@ node tools/ymir-gateway/session.test.mjs     # 12 checks, no network, no agent n
 
 That last paragraph is the whole point of this file: a seam that *looks* right and was never called
 is precisely what the rest of this project's history is made of.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

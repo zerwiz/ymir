@@ -34,3 +34,7 @@ High-level system overview. Detail lives in `docs/` and `docs/features/`.
 ## Detail
 
 Deep-dive specs live in `docs/` — `docs/features/` for features, `docs/research/` for background.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

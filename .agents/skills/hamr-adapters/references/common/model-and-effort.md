@@ -40,3 +40,7 @@ An account-reaching listing that omits a model is concrete unsupported evidence;
 An unreachable surface establishes nothing; report uncertainty instead of a verdict.
 
 For a matched profile array, return to `quota-array-dispatch` only after establishing every candidate's harness support, provider relationship, and uncertainty.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

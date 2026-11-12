@@ -342,3 +342,7 @@ measurer of *time* — he counts the months and governs the course of the moon �
 which is exactly the role of a calendar: the schedule that Nornir keeps and the
 calendar the Allfather reads in Hlidskjalf. Do not use it for benchmarking or
 for anything that merely reports a rate per second.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -115,3 +115,7 @@ cat <proj>/smidja/smidja_data/sessions/<id>/kaia_notes.md                      #
 - Pipeline internals / smidja / configs: `smidja`
 - Roster/model definitions: `smidja/smidja_smidja_config/{roster,models}.yaml`
 - Nemotron fallback + surfaces: `START_SMIDJA.md` → "online models fallback"
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

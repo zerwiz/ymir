@@ -37,3 +37,7 @@ the Allfather cannot steer what was never seated. The army is the Einherjar; the
 - `.agents/migrations/0021-the-claude-hooks.sh` — seats it into a home installed before this rule.
 - `bin/seat/harness-extensions-install.sh` — the one owner of the wiring.
 - `bin/agents/eindri-start.sh`, `bin/agents/agent-run.sh` — the Eindri road the refusal names.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -30,3 +30,7 @@ Rules:
 
 Every finding is shown to the secretary. Nothing is auto-resolved. A rejected
 finding is recorded with its reason, so the next pass does not repeat it.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

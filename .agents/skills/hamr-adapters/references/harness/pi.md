@@ -73,3 +73,7 @@ pi --model <m> -ne -e <worktree>/.pi/extensions/<entry> [ … one -e per entry �
 - The npm packages the seat settings declare are re-stated as `-e npm:<pkg>`, because `-ne` disables package
   discovery too (the quiet loss of `pi-mcp-adapter` would be a second false green).
 - Delivery is not proof: read `state/<id>.status` for a `working:` line before believing a worker started.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

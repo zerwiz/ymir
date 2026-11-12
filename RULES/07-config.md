@@ -99,3 +99,7 @@ config_gate[3]{class,what_it_catches}:
 Comments, templates (`*.example`), `CHANGELOG*`, and `assets/reference/`
 (provenance) are exempt by intent — they document, they do not configure.
 
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

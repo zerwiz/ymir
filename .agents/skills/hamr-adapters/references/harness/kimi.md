@@ -49,3 +49,7 @@ The global hook touches `state/<id>.turn-ended` only when the Stop payload's `cw
 A guarded silent hook cannot be verified from absence of effect, so prove invocation with an unguarded probe before concluding it did not fire.
 The guarded turn-end signal remains a wake notification.
 Standalone Kimi has no busy-state source until one is live-verified.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

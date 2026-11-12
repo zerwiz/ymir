@@ -144,3 +144,7 @@ Use this as the acceptance gate for "is this project compliance-ready?":
 - StrongDM — dark compliance: https://www.strongdm.com/blog/the-strongdm-software-compliance-building-software-with-ai
 - TrueFoundry — agentic enterprise guide: https://www.truefoundry.com/blog/software-compliance-agentic-enterprise-guide
 - GitClear — AI code quality research: https://www.gitclear.com/ai_assistant_code_quality_2025_research
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

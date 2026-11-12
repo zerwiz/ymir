@@ -155,3 +155,7 @@ Any part can be overridden with `--config` / `--chain` / `--model` /
 - `smidja memory <project>` — hybrid-recall what worked for that project.
 - Kaia reads this before dispatching, so she biases toward what passed there
   before instead of starting cold.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

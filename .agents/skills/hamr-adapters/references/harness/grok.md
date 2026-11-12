@@ -67,3 +67,7 @@ Grok also loads Claude project settings, so Claude entries for Grok-covered even
 Project-local hooks require launch-time `--trust`; without it the guard steps aside and `../../../bin/brokk-guard.sh` is the next-command alarm.
 Watcher supervision remains tracked background notification around `../../../bin/pi/syn-watch-arm.sh`, not Pi-style extension ownership.
 PreToolUse blocks directly, but every `$VAR` in a hook command needs inline `:-default` or Grok refuses the hook.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

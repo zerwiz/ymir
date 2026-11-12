@@ -20,3 +20,7 @@ Built by a distributed team on Mac, Linux, and Windows, shipped via the WayOfNor
 - Deployments: `docs/CI_CD/deployment/`
 - Work with agents: `docs/working-with-agents.md`
 - Project skills: `docs/project-skills.md`
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

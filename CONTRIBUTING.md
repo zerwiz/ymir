@@ -69,3 +69,7 @@ contributors who may access the private repo and YMIR_HOME data:
 Members with private-data access must keep realm boundaries
 sacred and never share another operator's secrets, tokens, or
 tenant material (Rule 04).
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

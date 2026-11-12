@@ -131,3 +131,7 @@ systems/skirnir/services/speech-text.py <<< "I don't hold that"   # what the ass
 1. `piper-clean-text` round-trip first — if the apostrophe is gone, no voice can save it.
 2. `kokoro-voice` — is the voice the one you think it is?
 3. `curl -s -o /tmp/a.wav -X POST http://127.0.0.1:8765/v1/audio/speech -H 'content-type: application/json' -d '{"input":"the Allfather'"'"'s assistant","voice":"af_nicole","response_format":"wav"}'` and play `/tmp/a.wav`: that bypasses every door and tests the engine alone.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -377,3 +377,7 @@ final state
 instead shows `outcome: <checks-passed|passed|passed-with-skips|failed|cancelled>` with no
 `findings` table. Field names and exact columns can vary by step and version,
 so read the actual `findings` header rather than assuming this layout.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

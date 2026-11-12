@@ -470,3 +470,7 @@ and `observe` operations instead of reading or writing the local fallback log.
 Even a valid empty bridge response remains an empty bridge response under this
 mode. This is used when a client explicitly selects a WSL well owned by a
 different home; it does not move or reconcile either home's existing records.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

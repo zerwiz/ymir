@@ -135,3 +135,7 @@ Say these boundaries plainly wherever the behavior is described.
 
 A wake is not news by itself.
 Report what the source actually produced and what it changes, never the event line, the result path, or the runner.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

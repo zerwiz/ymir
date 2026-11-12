@@ -126,3 +126,7 @@ one brain: pi's provider decides both.
 ("Blackwater Forge — Hero"), and `state/model-bridge-4613.log` names it —
 `model=deepseek-v4.1-flash provider=opencode-go` on a `200`. Runbook and the four things
 that can break: `DESIGN.md` → *THE MODEL DOOR (2026-11-10)*.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

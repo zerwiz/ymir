@@ -62,3 +62,7 @@ This touches only the Brokk repo and its own worktrees, never anything under `pr
 - **Eindri-homes are never disrupted.**
   A local or remote Eindri-home gets a tracked-files fast-forward only when its own checkout is safe to advance, plus a gentle re-read nudge when it changed.
   It is never torn down, interrupted, or forced.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

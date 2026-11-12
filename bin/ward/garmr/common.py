@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """common.py — the one resolver for Garmr's settings and paths (Rule 07).
 
 Nothing here forks a second opinion about where the home is: it asks the same

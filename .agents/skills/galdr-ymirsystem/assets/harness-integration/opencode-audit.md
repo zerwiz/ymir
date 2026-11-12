@@ -191,3 +191,7 @@ OpenCode needs **global plugin discovery**. Options:
 3. **Use OpenCode agents + bash tool** for pi's CLI commands
 4. **Document the limitation**: OpenCode plugins = session lifecycle + tool guards only
 5. **For full pi experience, use pi** — OpenCode is the coding agent, pi is the system harness
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

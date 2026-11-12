@@ -103,3 +103,7 @@ Both are wired into `bin/seat/herdr-run.sh` and `bin/pi/pi-seat.sh`. **Note:**
 `herdr agent start` has no `--env`; set the variable when the pane or tab is
 created so the shell inherits it. Do not hand-roll a seat with a bare `pi` in the
 main home — that is exactly what breaks both laws.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

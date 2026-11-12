@@ -289,3 +289,7 @@ Every name explains the machine's job. Full lore: `docs/lore.md`
 *This directory is the operational heart of Ymir. Every file here has a
 purpose named in the old tongue because the old words carry the meaning the
 machine already lives by.*
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

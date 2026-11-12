@@ -291,3 +291,7 @@ outside this worktree. Their read-side twins above were.
 Most documents in a working home carry no header yet — that is a real debt the door
 reports by count, not a defect in the door, and `apply` is how it is paid down one
 shelf at a time.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

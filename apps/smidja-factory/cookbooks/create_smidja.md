@@ -118,3 +118,7 @@ if __name__ == "__main__":
 1. `uv run smidja/smidja_<name>.py "a tiny real request"` — watch it go green end to end.
 2. Check the trace: `sqlite3 smidja/smidja_data/smidja.db "select seq,name,kind,owner,status from phases where smidja_id='<id>' order by seq;"`
 3. Read the final `envelope.json` — is the output type earning its fields, or should it be sharper?
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

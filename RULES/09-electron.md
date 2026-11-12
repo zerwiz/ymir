@@ -81,3 +81,7 @@ seat's own.
 
 **Enforced by:** `bin/ward/services-register.sh` (a hosted row declares its road and its gate) · each app's own door
 mode (P2 of plan 208) · and 09.1's rule, which already refuses a shell that is handed a public hostname.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

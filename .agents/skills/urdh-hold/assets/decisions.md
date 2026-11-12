@@ -13,3 +13,7 @@ metadata:
 The separate decision concept was collapsed into the one primitive the Allfather cares about: a task held for the Allfather.
 Read and follow `.agents/skills/Allfather-hold-lifecycle/SKILL.md`; it owns the completion gate, the recorded-answer rule, and every command this skill used to describe.
 Where an older brief says `bin/brokk-decision-hold.sh`, that command still works as a one-release compatibility shim over `bin/brokk-Allfather-hold.sh`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

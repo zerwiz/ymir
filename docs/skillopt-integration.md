@@ -319,3 +319,7 @@ Gunnlöð is also listed in `.agents/skills/galdr-ymirsystem/assets/registry.md`
    (different from the target model). Local or cloud? This is a config
    decision in `config/agents.yaml` (e.g., a strong reasoning model for
    editing, while workers run cheaper models).
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

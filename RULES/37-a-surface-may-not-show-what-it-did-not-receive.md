@@ -62,3 +62,7 @@ already legislated the *door* half of this (a door fails loudly; a clean skip is
 Rule 06 (append-only), Rule 11 (never delete), Rule 25 (a clean skip is a pass), Rule 26 (the well appends),
 Rule 30 (audio is ephemeral — and is never called a transcript), Rule 33 (the ear hears the meeting, not the room),
 Rule 32 (*the send is the operator's* — number claimed by another open change), whose incident is the letter half of this rule.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

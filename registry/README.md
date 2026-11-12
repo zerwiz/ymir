@@ -15,3 +15,7 @@ memory, companies). It is deliberately untracked:
   are tracked, so the runtime has a shape without carrying private content.
 - `bin/gates/guards/secret-guard.sh` blocks a commit that stages a private env file or an
   obvious secret. Wire it once with `bin/gates/guards/secret-guard.sh --install`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

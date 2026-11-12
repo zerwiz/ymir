@@ -108,3 +108,7 @@ bin/engine/ymir-install.sh --check
   matching is the acceptance test.
 
 Rollback at any point: `mv ~/ymir ~/ymir-failed && mv ~/ymir-old ~/ymir`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

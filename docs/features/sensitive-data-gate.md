@@ -33,3 +33,7 @@ Surfaces: `private`, `email`, `trello`, `chat`, `public`, `model`.
 
 Local hash chain only; no qualified eIDAS timestamp, no WORM store, no off-host log, no
 ACL yet. Those are plan 94.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

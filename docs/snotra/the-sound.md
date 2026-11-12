@@ -62,3 +62,7 @@ fixed on 2026-10-23:
 - **Rule 11** — a superseded capture is *moved*, never deleted: the 22 Oct room-mic opus lives on in
   `evidence/` as a secondary source, labelled as such in the record's `coverage`;
 - **a fix without a test is a claim** — `smoke.sh` asserts the ladder refuses to shrink without a transcript.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -421,3 +421,7 @@ seat that has a home, never a pass.
 until the Allfather decides on a rewrite (see the fix note `docs/fixes/gates/2026-11-12-the-nda-gate.md`).
 
 A change that contradicts this entry must change the rule first (append-only; never silently rewritten).
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

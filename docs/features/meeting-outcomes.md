@@ -78,3 +78,7 @@ python3 .agents/skills/snotra-meeting-outcomes/tests/test_meeting_outcomes.py
 ```
 
 21 tests, no dependencies.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

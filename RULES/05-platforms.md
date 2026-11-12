@@ -145,3 +145,7 @@ What that proves, and what it does not, in one breath: **the bootstrapper-and-cl
 Windows**; the **packaged** door does not exist yet — no tagged `.exe`, no signed artefact, and the
 winget/scoop manifests still carry placeholder hashes. The installer workflow has still never run
 in CI, so the honest table above gains a row that is true as of today and expires in thirty days.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

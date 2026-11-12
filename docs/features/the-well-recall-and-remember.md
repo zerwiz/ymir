@@ -141,3 +141,7 @@ Optional string fields `service` and `url` choose a systemd user service and a
 loopback HTTP origin. Environment variables override the corresponding fields;
 their names and the full contract are in the Codex harness asset. After updating
 the plugin, open a new Codex session to load its changed tool code.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

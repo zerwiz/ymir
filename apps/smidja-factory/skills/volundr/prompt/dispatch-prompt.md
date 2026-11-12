@@ -89,3 +89,7 @@ opencode-agent-only (`ocrd` profile) — they run when the smidja runs under
 `thinking` is REQUIRED on every dispatch: `low` simple tasks · `medium` routine ·
 `high` complex multi-step · `xhigh` hardest/accuracy-critical. **Omit `model`
 to inherit the parent model**; pass it explicitly to build a mixed chain.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -61,3 +61,7 @@ The skill is self-contained: it carries every template (`assets/`) and every aut
 - Every hosting (`docs/HOSTING/`) and every developer (`docs/DEVELOPER_SETUP/`) documented.
 - TECH_STACK.md maps every feature to a pinned stack.
 - Deterministic gates pass/fail by exit code (`$? == 0`).
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

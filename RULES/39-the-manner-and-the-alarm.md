@@ -37,3 +37,7 @@ summarising an internal path, port or machine name to anyone who did not already
 **Enforced by** `bin/ward/garmr.sh` (bite + canary) · `bin/ward/vidarr.sh` (incidents, switches,
 evidence, report) · `bin/ward/verdr.sh` (the warden's scheduled report) · the gate (a public
 surface asks for a credential, Rule 24) · and the session start, which reports an open incident.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

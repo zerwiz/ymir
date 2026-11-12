@@ -70,3 +70,7 @@ node tools/tickets-mcp/ledger.mjs --pending   # the ones that wait his word
 ```
 
 If the home cannot be read, the answer says so and fails; it never reports an empty shelf.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

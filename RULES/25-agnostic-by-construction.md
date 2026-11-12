@@ -173,3 +173,7 @@ global_law[4]{rule,evidence}
 ```
 
 A house that only works where its own repository happens to be checked out is a house for its author.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

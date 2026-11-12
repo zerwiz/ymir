@@ -231,3 +231,7 @@ The agenda therefore ends:
 
 The rendered `agenda-next.md` and the Trello `Agenda` card carry this automatically; the
 meeting and agenda cards have all four members.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

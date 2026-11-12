@@ -34,3 +34,7 @@ real window (a plain `start` on a stale pid is a no-op).
 
 - `scripts/electron.sh`: a stray `local` outside a function (stop path) and the
   smidja pid-file write — both flagged; harden `status` to check the renderer.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

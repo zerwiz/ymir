@@ -538,3 +538,7 @@ Before delivering a change:
 6. Ensure consistency (naming, API shape, structure)
 7. Run `npm run typecheck`, `npm run lint`, and `npm run build`
 8. Update `MEMORY.md` when the work introduces decisions or known issues worth recording (it is a long-lived log, not a per-change requirement)
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

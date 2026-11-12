@@ -99,3 +99,7 @@ Every plan header carries `owner:` and `owner_name:`, so a plan moved between sh
 three new shelves (idempotently, seeding an index only where none exists), and it ships the way every structure
 change ships: `bin/engine/ymir-install.sh` and `bin/agents/groa-update.sh` both run `bin/engine/ymir-migrate.sh
 apply`, so a fresh home is born able to plan for a machine and an old home gains the shelves on its next update.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

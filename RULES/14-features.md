@@ -45,3 +45,7 @@ and the ward **`bin/gates/guards/features-guard.sh`** (seated in `guards.sh`'s
 `WARDS`) refuses a `docs/features/*.md` page that the `FEATURES.md` catalogue does
 not name. When a feature's command, flag, or limit moves, the page moves in the same
 change.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

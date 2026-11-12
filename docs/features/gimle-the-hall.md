@@ -110,3 +110,7 @@ no mirror yet.
 http://127.0.0.1:8487/` for the desk; `curl -X POST http://127.0.0.1:8489/mcp -H 'Authorization: Bearer …'
 -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'` for the MCP. 401 means the token is not in the file; a
 recorded refusal means it is.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -218,3 +218,7 @@ All three roads then `herdr agent start <name> --kind <kind> --pane <pane>` and
 `herdr agent prompt`. Use panes by default so agents are visible side by side,
 tabs to group parallel work, spaces to isolate an errand. `herdr-run.sh close-all`
 tears the recorded seats down.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

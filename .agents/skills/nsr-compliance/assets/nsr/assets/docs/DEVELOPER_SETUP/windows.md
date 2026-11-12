@@ -12,3 +12,7 @@ Use WSL2 (recommended) or Git Bash for POSIX automation.
 - LF line endings (rejected by `check_platform.sh` if CRLF).
 - No `C:\...` absolute paths (rejected by `check_paths.sh`).
 - No `taskkill`/`pkill` in project scripts.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

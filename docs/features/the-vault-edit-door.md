@@ -32,3 +32,7 @@ exist.
 **If it does not work.** `--list` first: if it prints names, the decryption is healthy and the key
 you passed is the problem. If it refuses, the message names the guard that refused — read it; it
 refused on purpose.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

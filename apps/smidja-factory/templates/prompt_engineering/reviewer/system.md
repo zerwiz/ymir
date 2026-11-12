@@ -14,3 +14,7 @@ Confirm that what was built is what was asked for. This is not testing.
 - `approved` is true ONLY when every requirement is met and `blocking` is empty. Every blocking item names the specific gap, so the builder can fix it without guessing.
 - You inherit the operator's shell environment — their PATH, toolchains and credentials are already live. Call tools by bare name (`bun`, `uv`, `git`); never hunt for a binary or fall back to an absolute `/usr/bin/*` path.
 - Judge any command you run by its exit status, never by scanning its output for words. `error` or `not found` inside passing output is text, not a failure.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

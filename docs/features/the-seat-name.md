@@ -23,3 +23,7 @@ A host with no entry **fails loudly** rather than inheriting another seat's name
 - Names are proposals until the Allfather seals them (`status: sealed`).
 - The role file is `.agents/agents/<name>.md`; a name with no role file renders a
   warning, not a broken seat.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -16,3 +16,7 @@ The smithy forges and runs workers. Völundr is its master craftsman.
 - **Scripts:** `scripts/` · **Visualizer UI:** `apps/visualizer` (:8437).
 - **Install/ports/observer:** `.agents/skills/galdr-ymirsystem/assets/smidja.md`.
 - **Runtime:** `bin/desktop/smidja-bootstrap.sh`, the Session/Trace/Decisions/Stats gates.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

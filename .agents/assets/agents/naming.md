@@ -76,3 +76,7 @@ eindri[3]{role,norse,descriptor,domain}:
 Name every subsystem for the figure whose role matches its work. The operator is
 the **Allfather** ; never name a component with an imported term. Flavor may
 season a line; it must never name a subsystem or leak into docs.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

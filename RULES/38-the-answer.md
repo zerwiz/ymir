@@ -114,3 +114,7 @@ and stays exactly as it is."*
 **What holds now:** answers stay as this rule says. **Documents a person reads are governed by Rule 52**
 (`52-documents-are-for-people.md`). They use headings, short paragraphs, Markdown tables, Mermaid diagrams and
 callouts, and never TOON. TOON stays only where only a machine reads: tool output, a parsed registry, a ledger row.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

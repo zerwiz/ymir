@@ -34,3 +34,7 @@ herdr-profile.toml, einherjar-spawn.schema.json, supervision-tree.yml).
 Run `bin/time/saga-session-start.sh` exactly once at session start; if the harness
 injected the Sága digest, do not run it again. Start the Nornir jobs if the digest
 reports them stopped.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -30,3 +30,7 @@ Verify detection in `../../../bin/fleet/hamr-harness.sh`, launch in `../../../bi
 Also verify primary integration through `references/common/primary-hooks.md`, model discovery through `references/common/model-and-effort.md`, and one tool record.
 A value remains unreachable until its executable owner, portable regression, applicable credentialed live guard, and verification record land together.
 `../Brokk-coding-guidelines/SKILL.md` owns harness-dependent proof.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

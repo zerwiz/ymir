@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Shared Windows/WSL bridge. Sourced by the existing file-only ear and mouth doors.
 native_voice_available() {
   command -v powershell.exe >/dev/null 2>&1 && {

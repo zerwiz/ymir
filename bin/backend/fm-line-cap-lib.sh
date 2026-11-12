@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # shellcheck shell=bash
 # Shared per-line cap for agent-facing digest lines.
 # Usage: . bin/backend/fm-line-cap-lib.sh; fm_cap_line "<line>" [<max>]

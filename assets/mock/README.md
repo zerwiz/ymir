@@ -14,3 +14,7 @@ still seed from `src/data/mock.ts`.
 
 Law: `AGENTS.md` §Operational laws — *"No mocks, no examples, no placeholders in
 shipped runtime or deliverables."* This directory is the archive, not the runtime.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

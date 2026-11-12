@@ -66,3 +66,7 @@ ward with the `chmod` in the message.
 |---|---|
 | `a cron job names a script it cannot execute (no execute bit)` | `chmod +x <script> && git update-index --chmod=+x <script>` |
 | A cron row that fires and does nothing | `grep rc= state/cron.log` — `rc=126` is this fault, `rc=127` is a path that does not exist |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

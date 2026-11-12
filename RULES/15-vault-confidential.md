@@ -65,3 +65,7 @@ a screenshot, a spoken summary, or a paste into a remote model. Those are the
 the floor, it does not replace the rule.
 
 Confirmed by the Allfather 2026-10-11.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

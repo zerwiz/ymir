@@ -35,3 +35,7 @@ quarterly half day (strategy, roles, the A decisions). A question from a higher 
 parked, not decided, in a lower one.
 
 The generic framework and templates ship with the `snotra-meeting-outcomes` skill under `assets/meeting-framework.example.md` and `assets/templates/`; a house copies and adopts them.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

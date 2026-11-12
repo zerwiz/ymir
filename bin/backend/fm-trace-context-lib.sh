@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # shellcheck shell=bash
 # Native W3C trace-context propagation for firstmate spawns (default-off).
 #

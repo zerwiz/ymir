@@ -98,3 +98,7 @@ Reusable gates live in `gates.py`; genuine one-offs can be defined inline at the
 ## Before you finish
 
 Run the smoke smidja — `uv run smidja/smidja_prompt.py "ping"` — since every module change rides the same path a real run does.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

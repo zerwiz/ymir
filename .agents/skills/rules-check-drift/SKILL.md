@@ -79,3 +79,7 @@ If nothing drifted: **"The rules file is still accurate for these changes — no
 - **Lean by default.** When in doubt, suggest nothing.
 - **Run it before every merge** (or as part of `/piv-review-changes`) so your rules never drift
   behind the code.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

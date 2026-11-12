@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 ﻿import importlib.util,json,subprocess,sys,tempfile,threading,unittest
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer

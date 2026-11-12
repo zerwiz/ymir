@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """rules.py — the judgement, deterministic and first (plan 98 §4.2).
 
 A rule is a sentence with an allow-list. A model is never asked what severity a

@@ -64,3 +64,7 @@ Brokk stays the primary; beside it Ymir seats specialists, each bound by
 | No digest on start | The session-start surface is not seated for that harness — `bin/seat/valknut-load.sh --check`, then re-bind. |
 | The model never answers | The bridge/model rail is down — `bin/agents/eir-doctor.sh fix` (the `well`/`harness` surfaces), or check the rail. |
 | Wrong harness runs | It is reading `config/agents.yaml`; change it with `bin/fleet/agents-config.sh` and `apply`. |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

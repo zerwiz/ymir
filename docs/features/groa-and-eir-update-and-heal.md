@@ -65,3 +65,7 @@ ymir eir       # what stands, and mending
 | `--check` shows nothing moving | You are already current; or you are on a non‑default branch (Gróa skips it). |
 | Eir lists a broken surface | Run `fix`; if it stays broken, the row's remedy names the door (`bin/…-ensure.sh`). |
 | A surface mends but breaks again | Something upstream owns it — `bin/agents/eir-doctor.sh` names the component; take it there. |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
