@@ -235,56 +235,67 @@ def ymir_errand(action: str, id: str, project: str = "", mode: str = "direct-PR"
     return "action must be start | read | close"
 
 
-# --- todo: a Ymir todo store, so every harness has the same board -------------
-def _todo_path() -> Path:
-    p = _home() / "state" / "todos.json"
-    p.parent.mkdir(parents=True, exist_ok=True)
-    return p
+# --- the house task board: ONE writer, and it is a door in bin/ ---------------
+# Plan 228 §3 (F2): this face does not own the file; it CALLS `bin/records/todos.sh`,
+# the one writer of `<home>/state/todos.json`. Two boards is one board too many.
+def _tasks_door() -> Path:
+    return ROOT / "bin" / "records" / "todos.sh"
 
 
-def _todo_load() -> list:
-    import json
-    p = _todo_path()
-    if not p.exists():
-        return []
+def _door_run(door: Path, *args: str) -> tuple[int, str]:
+    """Run the door; return (exit code, text) so a failure is never reported as success."""
     try:
-        return json.loads(p.read_text())
+        out = subprocess.run(["bash", str(door), *args], capture_output=True, text=True,
+                             timeout=60, cwd=str(ROOT))
+        return out.returncode, ((out.stdout or "").strip() or (out.stderr or "").strip())
+    except Exception as exc:  # never hang a harness
+        return 1, f"failed: {exc}"
+
+
+def _door_indexes(door: Path) -> list[int]:
+    rc, listing = _door_run(door, "list", "--json")
+    if rc != 0:
+        return []
+    import json
+    try:
+        data = json.loads(listing)
     except Exception:
         return []
-
-
-def _todo_save(items: list) -> None:
-    import json
-    _todo_path().write_text(json.dumps(items, indent=2))
+    rows = data if isinstance(data, list) else data.get("todos", [])
+    return list(range(len(rows)))
 
 
 @mcp.tool()
 def todo(action: str = "list", content: str = "", index: int = -1) -> str:
-    """The house todo board, shared by every harness: list · add · update · remove · clear."""
-    items = _todo_load()
+    """The house task board, shared by every harness: list · add · update · remove · clear."""
+    door = _tasks_door()
+    if not door.exists():
+        return f"the task door is missing: {door} (bin/records/todos.sh)"
     if action == "list":
-        if not items:
-            return "(no todos)"
-        return "\n".join(f"{i}. [{t.get('status','pending')}] {t.get('content','')}" for i, t in enumerate(items))
+        return _door_run(door, "list")[1] or "(no todos)"
     if action == "add":
         if not content:
             return "add needs content"
-        items.append({"content": content, "status": "pending"})
-        _todo_save(items)
-        return f"added #{len(items)-1}: {content}"
-    if action in ("update", "remove"):
-        if index < 0 or index >= len(items):
-            return f"no todo at index {index}"
-        if action == "remove":
-            gone = items.pop(index)
-            _todo_save(items)
-            return f"removed: {gone.get('content','')}"
-        items[index]["status"] = content or items[index].get("status", "pending")
-        _todo_save(items)
-        return f"#{index} -> {items[index]['status']}"
+        return _door_run(door, "add", content)[1]
+    if action == "update":
+        if index < 0:
+            return "update needs an index (see `list`)"
+        want = (content or "done").strip().lower()
+        verb = "done" if want in ("done", "closed", "complete", "completed") else "reopen"
+        return _door_run(door, verb, str(index))[1]
+    if action == "remove":
+        if index < 0:
+            return "remove needs an index (see `list`)"
+        return _door_run(door, "remove", str(index))[1]
     if action == "clear":
-        _todo_save([])
-        return "cleared"
+        # From the highest index down, so a removal never shifts a row still to be removed.
+        idxs = _door_indexes(door)
+        if not idxs:
+            return "(no tasks to clear)"
+        failed = [str(i) for i in reversed(idxs) if _door_run(door, "remove", str(i))[0] != 0]
+        if failed:
+            return f"clear failed: could not remove #{', #'.join(failed)}"
+        return f"cleared {len(idxs)} task(s)"
     return "action must be list | add | update | remove | clear"
 
 

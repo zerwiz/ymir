@@ -82,7 +82,7 @@ if [ -n "$TERMINAL" ] && [ -n "$LINE" ]; then
     # The spawn records its meta in <repo>/state; the home's state may be a different dir — read both.
     mode="$(sed -n 's/^mode=//p' "$STATE/$AGENT.meta" "$ROOT/state/$AGENT.meta" 2>/dev/null | head -1)"
     case "${mode:-}" in
-      local-only|batch|'') ;;   # a local tip never reviews; a batch errand ships through the gatherer's one PR; a scout has no mode
+      local-only|batch|scout|review|recon|'') ;;   # no PR owed: a local tip never reviews; a batch ships through the gatherer's one PR; a scout (dispatch writes mode=scout, spawn omits it) and review/recon errands deliver a report
       *)
         printf 'refused: a %s errand cannot acclaim done without its pull request\n' "$mode" >&2
         printf 'help: put the url in the line — --line "done: opened PR https://github.com/<owner>/<repo>/pull/<n> — …"\n' >&2

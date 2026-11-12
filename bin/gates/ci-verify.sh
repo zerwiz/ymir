@@ -79,6 +79,10 @@ gate dead-code-paths "the dead-code ward judges normal and Yggdrasil checkouts" 
 # both ways (SETTLING inside the window, DEAD past it).
 gate liveness-grace "the sweep never calls a live seat dead inside the settling grace" \
      bash "$ROOT/tests/test_eindri_liveness_grace.sh"
+# The "everything up" wards: worker seats are never the helm, the rendered config resolves the home
+# (and refuses when it cannot), the one task-board writer, the acclaim PR guard (scout exempt).
+gate everything-up "seat wards: stop hook, hoard-resolved config, one-writer todos, acclaim PR guard" \
+     bash "$ROOT/bin/seat/tests/test_everything_up.sh"
 # RULES/04 — the public tree carries TEMPLATES and LOGIC. The ward is in the list above; this is
 # the proof that it BITES (a ward never seen to refuse is decoration, and this one wore that coat).
 gate public-data "RULES/04 — a secret, a name, a topology or a mailbox is refused, and the ward is proved to refuse" \

@@ -19,8 +19,8 @@
 # re-runs a meeting, a retry after a timeout). It prints `exists #<n>` and exits 0, so
 # a caller can tell "filed now" from "was already filed" without reading the store.
 #
-# The board has ONE writer (this door). `bin/seat/ymir-mcp.py` and `bin/mcp/ymir-mcp.py`
-# READ the same store in this shape; they never write it.
+# The board has ONE writer (this door). `bin/mcp/ymir-mcp.py` (the one MCP face)
+# READS the same store in this shape; it never writes it.
 #
 # The store is `$YMIR_HOME/state/todos.json` (Rule 07: resolved, never hardcoded)
 # — an array of `{"content": ..., "status": "pending"|"done", ...}`. The optional
