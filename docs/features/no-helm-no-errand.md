@@ -52,3 +52,7 @@ another house, and an arm shelf that cannot be written.
   `YMIR_RUNTIME_DIR` in `runtime.env`, or run `bin/engine/runtime-deploy.sh`.
 - **`armpin` is broken:** read `bin/pi/arm-pin.sh check`. A dirty pin is never moved by an
   update; look at its uncommitted files first.
+
+## CHANGE LOG
+
+- **2026-11-12** — Written, and carried into main by the gathered batch; from here appended, never rewritten.

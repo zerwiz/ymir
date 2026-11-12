@@ -54,3 +54,7 @@ broken relay. Send `Control+l`. The relay was never at fault.
 - The live hall (worktree `house-cloth`) still runs the old code until this branch is merged and it restarts.
 - Nanna's Chrome profile on the desk was first made with the old accent; its tab strip keeps Chromium's
   light theme until the profile is reset.
+
+## CHANGE LOG
+
+- **2026-11-12** — Written, and carried into main by the gathered batch; from here appended, never rewritten.

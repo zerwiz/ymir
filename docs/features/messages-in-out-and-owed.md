@@ -81,3 +81,7 @@ or an accepted invitation, so the proposal says what it saw and asks you.
 
 *Where this sits:* plan 261 · [the mail desk](gna-the-one-mail-desk.md) · [the hotline](the-hotline.md) ·
 [your todos](the-allfathers-todos.md).
+
+## CHANGE LOG
+
+- **2026-11-12** — Written, and carried into main by the gathered batch; from here appended, never rewritten.

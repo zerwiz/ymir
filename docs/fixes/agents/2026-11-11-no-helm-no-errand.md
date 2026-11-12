@@ -45,3 +45,7 @@
   uvicorn 121707) retire only when their sessions re-arm with this code from a current pin.
 - `ymir-rodd.service` is rendered by `apps/rodd/start.sh --install-unit`; it is not installed
   on this box by this change.
+
+## CHANGE LOG
+
+- **2026-11-12** — Written, and carried into main by the gathered batch; from here appended, never rewritten.

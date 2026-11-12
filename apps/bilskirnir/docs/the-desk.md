@@ -91,3 +91,7 @@ cannot speak, and they give no second screen.
 
 Where this sits: [ARCHITECTURE.md](ARCHITECTURE.md) · `house/desk.sh` · `house/desk/` · `server/src/desk-local.ts` ·
 `server/src/machine.ts` · the fix note `docs/fixes/bilskirnir/2026-11-12-the-hall-has-its-own-desk.md`.
+
+## CHANGE LOG
+
+- **2026-11-12** — Written, and carried into main by the gathered batch; from here appended, never rewritten.

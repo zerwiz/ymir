@@ -18,3 +18,7 @@ never replaced. So every run of the test suite — and every worker running the 
 ## Proof
 
 `bash bin/voice/tests/test_rodd_helm.sh` → `17 passed, 0 failed`, and no alarm on the desktop.
+
+## CHANGE LOG
+
+- **2026-11-12** — Written, and carried into main by the gathered batch; from here appended, never rewritten.

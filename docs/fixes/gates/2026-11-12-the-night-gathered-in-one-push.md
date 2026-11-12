@@ -42,3 +42,7 @@ is resolved, so the lease never carries them twice.
 > [!IMPORTANT]
 > `desktop-main-guard` judges this machine's installed launchers, not the tree. The seated Bilskirnir launcher
 > points into an errand worktree. Only `bin/host/omarchy-install.sh` from main can mend it, after this lands.
+
+## CHANGE LOG
+
+- **2026-11-12** — Written, and carried into main by the gathered batch; from here appended, never rewritten.
