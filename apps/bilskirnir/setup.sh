@@ -221,15 +221,23 @@ fi
 
 # ── 7. the launcher entry: the hall opens like the other apps, from the menu ────
 # The same template the house's desktop layer renders (bin/desktop/desktop-place.sh entries), so the two
-# writers can never disagree: electron/ymir-bilskirnir.desktop.in with __YMIR_ROOT__ = this tree, and the
+# writers can never disagree: electron/ymir-bilskirnir.desktop.in with __YMIR_ROOT__ = the pin, and the
 # bronze Ymir mark seated in the icon theme at every size the launcher asks for. Only where a desktop
 # exists (Rule 25: probe, never assume) — a server host gets a clean skip.
 DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 DESK="$DATA_HOME/applications/ymir-bilskirnir.desktop"
 REPO="$(dirname "$(dirname "$APP")")"
-want_desk="$(sed "s|__YMIR_ROOT__|$REPO|g" "$APP/electron/ymir-bilskirnir.desktop.in" 2>/dev/null)"
+# The launcher runs the PINNED runtime, never the tree setup ran from (plan 269, RULES/02 §7): on
+# 2026-11-12 this entry pointed into an errand worktree. One resolver, the arm pin's; the default
+# ~/ymir-runtime applies once install has seated it.
+PINROOT=""
+[ -r "$REPO/bin/pi/arm-pin-lib.sh" ] && . "$REPO/bin/pi/arm-pin-lib.sh" && arm_pin_dir PINROOT
+[ -n "$PINROOT" ] || PINROOT="$HOME/ymir-runtime"
+want_desk="$(sed "s|__YMIR_ROOT__|$PINROOT|g" "$APP/electron/ymir-bilskirnir.desktop.in" 2>/dev/null)"
 if [ "${BILSKIRNIR_DESKTOP:-1}" = 0 ]; then
   say "launcher entry skipped (BILSKIRNIR_DESKTOP=0)"
+elif [ ! -e "$PINROOT/apps/bilskirnir/start.sh" ]; then
+  say "launcher entry skipped — the pinned runtime ($PINROOT) does not carry Bilskirnir yet (bin/engine/runtime-deploy.sh moves it)"
 elif [ -z "${WAYLAND_DISPLAY:-}${DISPLAY:-}" ] && [ ! -d "$DATA_HOME/applications" ]; then
   say "no desktop on this host — no launcher entry"
 elif [ "$CHECK" = 1 ]; then

@@ -1,0 +1,132 @@
+# units.yaml — the ONE register of every Ymir systemd user unit and desktop launcher (plan 269).
+#
+# Every Ymir service and app runs from the PINNED runtime, never from the tree it was installed
+# from (RULES/02 §7, RULES/51). This file says WHAT is installed; `bin/engine/units.sh` is the one
+# writer that renders it against the pin. Nothing here names a machine path (RULE 07):
+#   - a command is written RELATIVE to the runtime root. A word that starts with bin/ apps/
+#     scripts/ systems/ tools/ or src/ is prefixed with the pin when the unit is rendered.
+#   - `${NAME}` is a variable: `vars:` gives its default, `units.sh write <name> --set NAME=value`
+#     overrides it for one seat (a port, a clone path).
+#
+# Two kinds of entry:
+#   render  the register describes the whole unit and the writer owns the file.
+#   adopt   another installer writes the file; the writer only moves its paths onto the pin
+#           (an old line is logged, never lost) and the check judges it.
+#
+# Desktop launchers and an app's own unit templates are NOT listed here by hand: they are
+# discovered from apps/*/{electron,resources}/*.desktop.in and *.service.in, so a new app joins by
+# shipping its template. `units.sh list` prints every app under apps/ and what it seats.
+#
+# roles: the fleet roles the unit belongs on (heart forge dev hand), or `all`. A seat whose role
+# is not resolved owes everything (a clean install owes before it knows).
+version: 1
+
+launchers:
+  # discovered from the apps; the roles that carry a desktop
+  roles: [dev, hand, forge]
+  templates: ["apps/*/electron/*.desktop.in", "apps/*/resources/*.desktop.in"]
+  unit_templates: ["apps/*/electron/*.service.in", "apps/*/resources/*.service.in"]
+
+units:
+  # ── rendered by the writer ────────────────────────────────────────────────
+  - name: gna-desk
+    mode: render
+    kind: service
+    roles: all
+    description: "Gna — the one mail desk (read-only, loopback)"
+    workdir: "."
+    exec: "/usr/bin/env python3 bin/mail/gna_desk.py --port ${GNA_DESK_PORT}"
+    env: { GNA_DESK_PORT: "${GNA_DESK_PORT}", YMIR_TREE: "@ROOT@" }
+    vars: { GNA_DESK_PORT: "8494" }
+    restart: always
+    extra: ["RestartSec=5", "NoNewPrivileges=true", "PrivateTmp=true"]
+    unit_extra: ["After=network-online.target"]
+    wanted_by: default.target
+    # the fleet step renders this unit from tools/mill/systemd/gna-desk.service on the seats that owe it;
+    # where that file exists the writer only moves its paths onto the pin
+    if_present: adopt
+
+  - name: queue-warden
+    mode: render
+    kind: timer
+    roles: [heart, forge, dev]
+    description: "queue-warden — get every open PR into main"
+    workdir: "."
+    exec: "/usr/bin/env bash bin/forge/queue-warden.sh run"
+    timer: { description: "queue-warden — every 10 minutes", boot: 3min, every: 10min, accuracy: 30s }
+
+  - name: issue-watch
+    mode: render
+    kind: timer
+    roles: [heart, forge, dev]
+    description: "issue-watch — read the issues"
+    workdir: "."
+    exec: "/usr/bin/env bash bin/forge/issue-watch.sh"
+    timer: { description: "issue-watch — every 5 minutes", boot: 4min, every: 5min, accuracy: 30s }
+
+  - name: review-watch
+    mode: render
+    kind: timer
+    roles: [heart, forge, dev]
+    description: "review-watch — ask the lock owner about every unjudged open PR (plan 206)"
+    workdir: "."
+    exec: "/usr/bin/env bash bin/forge/review-watch.sh"
+    vars: { REVIEW_INTERVAL: "10min" }
+    timer: { description: "review-watch — the review loop's clock (every ${REVIEW_INTERVAL})", boot: 3min, every: "${REVIEW_INTERVAL}", accuracy: 30s }
+
+  - name: ship-watch
+    mode: render
+    kind: timer
+    roles: [heart, forge, dev]
+    description: "ship-watch — settle and ship proved PRs"
+    workdir: "."
+    exec: "/usr/bin/env bash bin/forge/ship-watch.sh"
+    timer: { description: "ship-watch — every 5 minutes", boot: 3min, every: 5min, accuracy: 30s }
+
+  - name: pr-watch
+    mode: render
+    kind: timer
+    roles: [heart, forge, dev]
+    description: "pr-watch — tell the operator a PR arrived"
+    workdir: "."
+    exec: "/usr/bin/env bash bin/forge/pr-watch.sh"
+    timer: { description: "pr-watch — every 5 minutes", boot: 2min, every: 5min, accuracy: 30s }
+
+  - name: review-seat
+    mode: render
+    kind: timer
+    roles: [heart, forge, dev]
+    description: "review-seat keeper — ensure the reviewer's herdr seat exists (idempotent)"
+    workdir: "${CLONE}"
+    exec: "/usr/bin/env bash bin/forge/review-seat.sh ensure --clone ${CLONE}${PRIMARY}"
+    vars: { CLONE: "@ROOT@", PRIMARY: "" }
+    timer: { description: "review-seat keeper — every 5 minutes", boot: 2min, every: 5min, accuracy: 20s }
+
+  - name: review-loop
+    mode: render
+    kind: timer
+    roles: [heart, forge, dev]
+    description: "review loop — judge the review shelf (plan 205 §2.5)"
+    exec: "/bin/bash bin/forge/review-shelf.sh tick"
+    timer: { description: "review loop every 30 minutes — one wake per (packet, head), never a flood", boot: 5min, every: 30min }
+
+  # ── adopted: written by their own installers, moved onto the pin here ────────
+  - { name: bifrost,           mode: adopt, kind: service, roles: all }
+  - { name: calendar-watch,    mode: adopt, kind: service, roles: all }
+  - { name: garmr-brain,       mode: adopt, kind: service, roles: all }
+  - { name: housewatch,        mode: adopt, kind: service, roles: all }
+  - { name: mcp-gateway,       mode: adopt, kind: service, roles: all }
+  - { name: mimir,             mode: adopt, kind: service, roles: all }
+  - { name: nornir,            mode: adopt, kind: service, roles: all }
+  - { name: skirnir-telegram,  mode: adopt, kind: service, roles: all }
+  - { name: skirnir-timer,     mode: adopt, kind: service, roles: all }
+  - { name: ymir-syn-watch,    mode: adopt, kind: service, roles: all }
+  - { name: gimle-project,     mode: adopt, kind: service, roles: all, restart: false }
+  - { name: stt-shim,          mode: adopt, kind: service, roles: all, restart: false }
+  - { name: hlidskjalf-spa,    mode: adopt, kind: service, roles: [heart, dev] }
+  - { name: hlidskjalf-gate,   mode: adopt, kind: service, roles: [heart, dev] }
+  - { name: smidja,            mode: adopt, kind: service, roles: [heart, dev] }
+  - { name: snotra-detect,     mode: adopt, kind: service, roles: all, restart: false }
+  - { name: snotra-ear,        mode: adopt, kind: service, roles: all, restart: false }
+  # Gróa's agent names the WORKING tree on purpose: it is the checkout she fast-forwards
+  - { name: groa-agent,        mode: adopt, kind: service, roles: all, restart: false, keep: [YMIR_REPO] }

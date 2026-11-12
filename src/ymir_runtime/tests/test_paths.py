@@ -90,7 +90,20 @@ class ResolveTest(unittest.TestCase):
 
     def test_runtime_pin_dir_is_empty_when_runtime_env_is_absent(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            env = {"YMIR_HOME": tmp, "YMIR_SETTINGS_DIR": str(Path(tmp) / "config")}
+            env = {"YMIR_HOME": tmp, "YMIR_SETTINGS_DIR": str(Path(tmp) / "config"), "HOME": tmp}
+            self.assertEqual(paths.runtime_pin_dir(env), Path(""))
+
+    def test_runtime_pin_dir_defaults_to_the_seated_checkout(self) -> None:
+        # plan 269: once install has seated ~/ymir-runtime, it is the pin with no runtime.env at all
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "ymir-runtime" / ".git").mkdir(parents=True)
+            env = {"YMIR_HOME": tmp, "YMIR_SETTINGS_DIR": str(Path(tmp) / "config"), "HOME": tmp}
+            self.assertEqual(paths.runtime_pin_dir(env), Path(tmp) / "ymir-runtime")
+
+    def test_runtime_pin_dir_default_never_names_an_unseated_path(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "ymir-runtime").mkdir()  # a directory is not a seated checkout
+            env = {"YMIR_HOME": tmp, "YMIR_SETTINGS_DIR": str(Path(tmp) / "config"), "HOME": tmp}
             self.assertEqual(paths.runtime_pin_dir(env), Path(""))
 
     def test_the_engine_root_wins_over_brokk_home(self) -> None:

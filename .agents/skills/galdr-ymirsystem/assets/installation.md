@@ -467,11 +467,13 @@ and the fix, never a shrug.
 ## The steps
 
 ```
-install[36]{step,what,self-heals}:
+install[38]{step,what,self-heals}:
   "panes","the run shown in a herdr pane","bin/seat/herdr-run.sh sits a pane beside the caller when inside herdr; inline otherwise — a pane that cannot be raised never loses the work"
   "prereqs","git python3 bun docker|podman gh · mcp<2","bin/engine/prereq-ensure.sh installs bun+uv+mcp in user space; engram is an honest optional SKIP"
   "memory-well","the engram engine (Mimirsbrunn)","optional; reported with the exact next command, never a fake fix"
   "home","the home the operator CHOOSES, recorded under ~/.config/ymir/home","asks once, records the answer; --check never writes, --yes takes what is recorded, else the documented default"
+  "runtime","the PINNED runtime — ~/ymir-runtime, a checkout that only ever stands on main (plan 269)","bin/engine/runtime-seat.sh: clones the pin from origin/main when absent, appends YMIR_RUNTIME_DIR/YMIR_RUNTIME_BRANCH to <home>/config/runtime.env (never rewrites an operator's line), installs its dependency closure (runtime-deploy.sh --no-restart), then bin/engine/units.sh write puts every unit and launcher on it. Idempotent; a non-git directory at the pin path is a FAIL naming it; --check changes nothing. Every service and app runs from this checkout from the first install — before this step a fresh machine ran them from its working tree"
+  "units","every unit and launcher on the pin — the late sweep","steps between `runtime` and the end (fleet, Gróa, Bilskirnir, the spa) write units of their own, so bin/engine/units.sh write runs last: any Ymir unit or launcher still on a working tree is moved onto the pin and its old line is logged to <state>/units-replaced.log. The register is config/units.yaml (render units, adopted units; launchers and app unit templates are DISCOVERED from apps/*/{electron,resources}/*.{desktop,service}.in). --check runs units.sh check, which exits 1 on a unit off the pin or not in the register"
   "tree","workspace/{work,personal}/<domains>, companies/, workspaces.yaml, projects.yaml, and the hoard OUTSIDE the repo (secrets/ · docs/ · identity/ · tenants/ at the hoard root under the chosen home)","creates if missing; hoard_root resolves through bin/vault/hoard-lib.sh so no script can point the hoard inside the checkout (Rule 04), and an empty secrets/platform.env (0600) is seeded so bin/vault/hodd.sh emit resolves"
   "clients","the client register — the companies a house SERVES, beside the houses it IS (plan 128)","seeds hodd/identity/{clients,companies}.yaml from registry/*.yaml.example when absent through ONE door — bin/identity/registers-seed.sh (one source each, never an inline heredoc; an existing register is never touched) and then reads the ONE door — bin/identity/clients.sh validate for the register's shape, bin/identity/place-validate.sh --all for every place's client_of/served_by relation; a place whose client_of names no resolvable client, or an absent register beside a place that declares one, is a FAIL naming the file and the fix — absent is a red, not a shrug"
   "apps","the app repos (the app split) — hlidskjalf · hlidskjalf-mobile · odrerir · sessrumnir · smidja","reads $HOARD/identity/projects.yaml (never guesses a remote); clones a missing apps/<path> from its registered git{} block, fast-forwards a present one, and stamps the smithy engine (apps/smidja) from the cloned factory's templates"
@@ -1485,3 +1487,22 @@ Electron window). The bronze Ymir mark ships as an icon theme at 16 to 512 px pl
 | `setup.sh --check` | fails when a desktop exists and the entry or its icon is missing or stale, so Eir's `bilskirnir` surface names it |
 
 A host with no display and no applications directory is a clean skip (RULES/05, RULES/25).
+
+## The pinned runtime and the one register of units (plan 269, 2026-11-12)
+
+Every Ymir systemd user unit and desktop launcher runs from `~/ymir-runtime` (RULES/02 §7, RULES/51), never from
+the tree an installer ran in. Three doors carry that:
+
+- `config/units.yaml` is the one register. An entry is `render` (the register describes the whole unit; the
+  writer owns the file) or `adopt` (another installer writes it; the writer only moves its paths). Commands are
+  written relative to the runtime root and carry no machine path (Rule 07). `if_present: adopt` keeps a
+  fleet-rendered unit (gna-desk) in the fleet's shape.
+- `bin/engine/units.sh write|check|list` is the one writer. The root is resolved once: `$YMIR_RUNTIME_DIR`, then
+  `<home>/config/runtime.env`, then `~/ymir-runtime` once seated — the same answer as `runtime_pin_dir()`
+  (`src/ymir_runtime/paths.py`) and `arm_pin_dir` (`bin/pi/arm-pin-lib.sh`), never a third resolver.
+- `bin/engine/runtime-seat.sh` is the install step and Gróa's seating door.
+
+An installer that used to write its own unit (`bin/mail/install.sh`, the forge watchers, Bilskirnir's setup)
+keeps its entry point and calls the writer. A new app joins by shipping `apps/<name>/electron/<name>.desktop.in`.
+The Omarchy/Linux layer is first-class; a host with no systemd skips the unit step with a named line (RULES/05).
+Eir's `runtimepin` surface checks it; the fix note is `docs/fixes/engine/`.

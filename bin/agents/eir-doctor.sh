@@ -74,6 +74,8 @@ surface_skip() {
   # The mail desk is a systemd user unit; a substrate without systemd cannot owe it
   # (a hand). A clean skip with its reason is a pass (RULES/25).
   if [ "$1" = mail ] && [ "$PLATFORM" = termux ]; then return 0; fi
+  # No systemd, no unit to keep on the pin (RULES/05: a clean, named skip on another platform layer).
+  if [ "$1" = runtimepin ] && ! command -v systemctl >/dev/null 2>&1; then return 0; fi
   [ "$ROLE" = "hand" ] || return 1
   case "$1" in
     # Hnitbjörg needs cryptsetup + loop devices; a hand has neither, and by law the
@@ -91,6 +93,7 @@ surface_skip() {
     mail)       return 0 ;;
     # a hand runs no arm service and no Rödd window: there is no pin for it to owe
     armpin)     return 0 ;;
+    runtimepin) return 0 ;;
   esac
   return 1
 }
@@ -110,13 +113,14 @@ surface_detail_skip() {
     shells|sessrumnir|bilskirnir) printf '%s\n' 'not this seat (desktop shells are not built for bionic)' ;;
     autoboot)   printf '%s\n' 'not this seat (no systemd; the Pi watcher owns supervision)' ;;
     armpin)     printf '%s\n' 'not this seat (a hand runs no pinned runtime)' ;;
+    runtimepin) printf '%s\n' 'not this seat (no systemd: no unit to keep on the pin)' ;;
     mail)       printf '%s\n' 'not this seat (no systemd: the desk is a user unit)' ;;
     *)          printf '%s\n' 'skip' ;;
   esac
 }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir bilskirnir hnoss shells graphics well memory mail mcp harness claudehooks opencode arm armpin roddhelm lock gates migrations hoard autoboot vault ward seats seatreap models)
+SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir bilskirnir hnoss shells graphics well memory mail mcp harness claudehooks opencode arm armpin runtimepin roddhelm lock gates migrations hoard autoboot vault ward seats seatreap models)
 
 # ── the three surfaces the 2026-11-03 Windows audit found, and the rule they read ──────────
 # A SEAT IS NOT UPDATED BY A PULL. The checkout moves; the installed hooks, the PATH a later
@@ -521,6 +525,16 @@ f_arm()      { [ -x "$SCRIPT_DIR/../pi/syn-watch.sh" ] && "$SCRIPT_DIR/../pi/syn
 # which restarts and proves the units, then the judge is asked again.
 s_armpin()   { [ -x "$SCRIPT_DIR/../seat/armpin.sh" ] && "$SCRIPT_DIR/../seat/armpin.sh" check >/dev/null 2>&1; }
 f_armpin()   { [ -x "$SCRIPT_DIR/../engine/runtime-deploy.sh" ] && "$SCRIPT_DIR/../engine/runtime-deploy.sh" >/dev/null 2>&1; s_armpin; }
+# runtimepin (plan 269): EVERY Ymir systemd unit and desktop launcher on this machine runs from the pinned
+# runtime and is in the one register (config/units.yaml). armpin judges the pin's age and the arm; this
+# judges the whole fleet of units — one in a working tree is the fault the pre-push ward `runtime-pinned`
+# refused a collaborator's push for. The mend is the one writer: bin/engine/units.sh write.
+s_runtimepin() { [ -x "$SCRIPT_DIR/../engine/units.sh" ] && "$SCRIPT_DIR/../engine/units.sh" check >/dev/null 2>&1; }
+f_runtimepin() {
+  [ -x "$SCRIPT_DIR/../engine/runtime-seat.sh" ] || return 1
+  "$SCRIPT_DIR/../engine/runtime-seat.sh" >/dev/null 2>&1
+  s_runtimepin
+}
 # roddhelm: the lease names a known holder role, the room is writable, and the
 # drain door answers (plan 254 B6). The check is rodd-helm.sh --check; there is
 # no safe auto-mend — a role is the holder's declaration, never invented.
@@ -709,6 +723,7 @@ detail() { # <name> -> the command that prints one short fact
     opencode)  printf '%s\n' "command -v opencode >/dev/null 2>&1 && $SCRIPT_DIR/../seat/opencode-launcher.sh check 2>&1 | sed -n '2p' | sed -E 's/^ *\"[a-z]+\",//; s/\"//g' || echo 'no opencode on this host'" ;;
     arm)       printf '%s\n' "$SCRIPT_DIR/../pi/syn-watch.sh status --detail 2>/dev/null | head -1 || echo 'arm door missing'" ;;
     armpin)    printf '%s\n' "$SCRIPT_DIR/../seat/armpin.sh --detail 2>/dev/null | head -1 || echo 'armpin door missing'" ;;
+    runtimepin) printf '%s\n' "$SCRIPT_DIR/../engine/units.sh check 2>&1 | grep -E 'OFF-PIN|UNREGISTERED|ABSENT' | head -2 | tr -d '\"' | paste -sd';' - | grep . || echo 'every unit and launcher is on the pin'" ;;
     roddhelm)  printf '%s\n' "$SCRIPT_DIR/../voice/rodd-helm.sh --check 2>&1 | head -1 || echo 'rodd-helm door missing'" ;;
     gates)     printf '%s\n' "s_gates && echo 'pre-push hook: the worktree that pushes' || echo 'installed hook is stale — bin/gates/guards/fixes-guard.sh --install'" ;;
     lock)      printf '%s\n' "cat $STATE/.lock 2>/dev/null | tr -d '[:space:]' | sed 's/^/pid /' || echo none" ;;

@@ -186,6 +186,45 @@ PLAN
   esac
 }
 
+# ── 0c. the pinned runtime (plan 269) ─────────────────────────────────────────
+# Every Ymir service and app runs from ~/ymir-runtime, a checkout that only ever stands on main, from the
+# FIRST install (RULES/02 §7, RULES/51). Before this step existed the pin was seated by hand, so a fresh
+# machine ran every service from its working tree — and the pre-push ward `runtime-pinned` refused the
+# first push. The step seats the pin, records it in <home>/config/runtime.env, and has the one writer
+# (bin/engine/units.sh, register config/units.yaml) put every unit and launcher on it. Idempotent.
+step_runtime() {
+  local door="$SCRIPT_DIR/runtime-seat.sh" out rc
+  [ -x "$door" ] || { add runtime SKIP "no bin/engine/runtime-seat.sh in this tree"; return; }
+  have git || { add runtime FAIL "git is required to seat the pinned runtime"; return; }
+  if [ "$CHECK" = 1 ]; then
+    if out="$("$door" --check 2>&1)"; then add runtime OK "the pinned runtime stands and every unit and launcher is on it"
+    else add runtime WARN "$(printf '%s' "$out" | tail -1 | cut -f1,3 | tr '\t' ' ') — a full run seats it"; fi
+    return
+  fi
+  out="$("$door" 2>&1)"; rc=$?
+  if [ "$rc" = 0 ]; then
+    add runtime OK "$(printf '%s' "$out" | tail -1 | cut -f2-3 | tr '\t' ' ')"
+  else
+    add runtime FAIL "$(printf '%s' "$out" | grep -m1 '^FAIL' | cut -f2-3 | tr '\t' ' ') — bin/engine/runtime-seat.sh shows it"
+  fi
+}
+
+# The sweep: steps after "the pinned runtime" (fleet, Gróa, Bilskirnir, the spa) write their own units, so
+# the last word is the one writer's. Anything still on a working tree is moved onto the pin, with its old
+# line logged (plan 269).
+step_units() {
+  local door="$SCRIPT_DIR/units.sh" out
+  [ -x "$door" ] || { add units SKIP "no bin/engine/units.sh in this tree"; return; }
+  have systemctl || { add units SKIP "no systemd on this host — units are another platform layer's business (Rule 05)"; return; }
+  if [ "$CHECK" = 1 ]; then
+    if "$door" check >/dev/null 2>&1; then add units OK "every Ymir unit and launcher is on the pin and in the register"
+    else add units WARN "a unit or launcher is off the pin — a full run moves it (bin/engine/units.sh check names it)"; fi
+    return
+  fi
+  if out="$("$door" write 2>&1)"; then add units OK "every Ymir unit and launcher written against the pin"
+  else add units WARN "$(printf '%s' "$out" | grep -m1 'FAIL' | tr -d '"') — bin/engine/units.sh check names it"; fi
+}
+
 # ── 1. prereqs ───────────────────────────────────────────────────────────────
 #
 # Self-healing: `bin/engine/prereq-ensure.sh` provisions what it can in user space
@@ -1834,6 +1873,7 @@ run_step step_panes "panes"
 run_step step_prereqs "prerequisites"
 run_step step_home "home"
 run_step step_tree "workspace tree"
+run_step step_runtime "the pinned runtime"
 run_step step_clients "the client register"
 run_step step_apps "apps"
 run_step step_engines "engines"
@@ -1871,6 +1911,7 @@ run_step step_vault "the vault"
 run_step step_garmr "the hound"
 run_step step_gates "gates"
 run_step step_marks "marks"
+run_step step_units "every unit on the pin"
 # Migrations MOVE private data — that is a write, and `--check` promises none.
 # Only a real run heals the home forward; the preview leaves it untouched.
 if [ "$CHECK" = 0 ]; then bin/engine/ymir-migrate.sh apply >/dev/null 2>&1 || true; fi
