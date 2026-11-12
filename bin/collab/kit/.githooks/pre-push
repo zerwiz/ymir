@@ -79,6 +79,8 @@ if [ -n "$base" ] && [ "$base" != "$head" ]; then
   [ -x scripts/gates/fixes-guard.sh ] && gate fixes-guard bash scripts/gates/fixes-guard.sh "$base" "$head"
   [ -x scripts/gates/referee-guard.sh ] && gate referee-guard bash scripts/gates/referee-guard.sh "$base" "$head"
   [ -x scripts/gates/new-module-test.sh ] && gate new-module-test bash scripts/gates/new-module-test.sh "$base" "$head"
+  # Seated in 1.6.0: a commit message never names a model, a maker or an agent harness (RULES/53).
+  [ -x scripts/gates/maker-guard.sh ] && gate maker-guard bash scripts/gates/maker-guard.sh range "$base" "$head"
   # Seated in 1.2.0: an area nobody holds must not receive changes quietly (RULES/18).
   [ -x scripts/gates/areas-guard.sh ] && gate areas-guard bash scripts/gates/areas-guard.sh "$base" "$head"
 fi

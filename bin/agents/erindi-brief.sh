@@ -294,6 +294,7 @@ The report is the only thing that survives, so anything worth keeping must be in
 3. $STATUS_SECTION
 4. If you hit the same obstacle twice, append \`blocked: {why}\` and stop; Brokk will help.
 5. If a decision belongs to the Allfather (product choices, destructive actions), append \`needs-decision: {summary of options}\` and stop. Brokk will reply with the decision.
+6. No AI attribution anywhere you write: no co-author trailer, no "generated with" line, and no model, model-maker or agent-harness name in a commit message, PR title, PR body or status line (RULES/53). Say "the agent harness" or "the worker"; a path or flag stays in \`backticks\`. A ward refuses the rest.
 
 $INBOX_SECTION
 
@@ -411,6 +412,7 @@ $ISOLATION_SETUP
 3. $STATUS_SECTION
 4. If you hit the same obstacle twice, append \`blocked: {why}\` and stop; Brokk will help.
 5. If a decision belongs to the Allfather (product choices, destructive actions), append \`needs-decision: {summary of options}\` and stop. Brokk will reply with the decision.
+6. No AI attribution anywhere you write: no co-author trailer, no "generated with" line, and no model, model-maker or agent-harness name in a commit message, PR title, PR body or status line (RULES/53). Say "the agent harness" or "the worker"; a path or flag stays in \`backticks\`. A ward refuses the rest.
 
 $INBOX_SECTION
 

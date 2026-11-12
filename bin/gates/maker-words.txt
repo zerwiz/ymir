@@ -1,0 +1,35 @@
+# maker-words.txt — the word list for bin/forge/maker-names.py (RULES/53).
+#
+# One matcher, one list. A client repository tunes it by editing its own copy of this file
+# (the kit ships it); an entry is   word | kind | reason   and a line with no reason is ignored.
+# Matched as WHOLE WORDS, case-insensitively, in prose only: a fenced block or a `backticked`
+# span is code and is never judged. Model ids and aliases are not listed here — the matcher
+# reads them from the machine's model catalog (bin/model/catalog.sh) where one exists.
+# Append only (Rule 06): a retired word is struck by a dated comment, never deleted.
+claude | maker | Anthropic's model family and its harness
+anthropic | maker | the model maker
+opus | model | an Anthropic model tier
+sonnet | model | an Anthropic model tier
+haiku | model | an Anthropic model tier
+fable | model | an Anthropic model tier
+openai | maker | the model maker
+chatgpt | model | an OpenAI product
+gpt | model | an OpenAI model family
+gemini | model | Google's model family
+deepseek | maker | a model maker and family
+qwen | model | Alibaba's model family
+llama | model | Meta's model family
+gemma | model | Google's open model family
+mistral | maker | a model maker and family
+grok | model | xAI's model family
+xai | maker | the model maker
+kimi | model | Moonshot's model family
+glm | model | Zhipu's model family
+apodex | model | a model family
+copilot | harness | GitHub's coding agent
+codex | harness | OpenAI's coding agent
+cursor | harness | an agent harness
+opencode | harness | an agent harness
+hermes | harness | an agent harness
+aider | harness | an agent harness
+pi | harness | an agent harness

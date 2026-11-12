@@ -45,6 +45,9 @@ python3 bin/gates/guards/nda-guard.py push <"$refs" || {
   exit 1
 }
 
+# 1c. the maker ward over every NEW commit message in the pushed range (RULES/53) — never history.
+bash bin/gates/guards/maker-guard.sh push <"$refs" || exit 1
+
 # 2. the four that judge the PUSH rather than the tree. Each is under 0.1 s (measured
 # 2026-11-11), so they are not budgeted — a gate that can be timed out is a gate a slow
 # machine can walk through. branch-guard is first and unconditional: Rule 08 is not a

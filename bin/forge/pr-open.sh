@@ -43,6 +43,11 @@ tmp=$(mktemp); printf '%s\n' "$full" > "$tmp"
 if m=$(pr_pattern_match "$tmp"); then
   rm -f "$tmp"; echo "refused: $m" >&2; exit 3
 fi
+# the title is judged by the same matcher (RULES/53) — a body is not the only place a name can land
+printf '%s\n' "$title" > "$tmp"
+if m=$(pr_maker_match "$tmp"); then
+  rm -f "$tmp"; echo "refused: PR title: $m" >&2; exit 3
+fi
 rm -f "$tmp"
 if [ "$dry" = 1 ]; then
   printf '%s\n' "$full"; echo "DRY RUN OK"; exit 0

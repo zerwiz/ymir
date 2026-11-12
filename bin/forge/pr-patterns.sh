@@ -33,10 +33,20 @@ pr_pattern_check_line() {
   if printf '%s' "$line" | grep -Eiq '(bearer|token|secret|api[_-]?key)[[:space:]]*[:=][[:space:]]*[A-Za-z0-9._-]{8,}'; then echo "token"; return; fi
 }
 
+# pr_maker_match <file> -> prints the refusal and returns 0 when prose names an AI maker or product
+# (RULES/53). The word list lives in bin/forge/maker-names.py — one matcher, never a second.
+pr_maker_match() {
+  local here; here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  local out; out="$(python3 "$here/maker-names.py" scan "$1" "${@:2}" 2>&1)" && return 1
+  printf '%s\n' "$out" | head -1
+  return 0
+}
+
 pr_pattern_match() {
   # arg: file path or - for stdin
   local src="${1:--}"
   local f; if [ "$src" = "-" ]; then f=/dev/stdin; else f="$src"; fi
+  if [ "$f" != /dev/stdin ] && m=$(pr_maker_match "$f"); then printf '%s\n' "$m"; return 0; fi
   while IFS= read -r line || [ -n "$line" ]; do
     local r; r=$(pr_pattern_check_line "$line")
     if [ -n "$r" ]; then
