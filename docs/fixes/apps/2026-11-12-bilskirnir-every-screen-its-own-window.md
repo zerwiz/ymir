@@ -59,6 +59,6 @@ Stored colour keys still work and wear the nearest house hue.
 ## CHANGE LOG
 
 - **2026-11-12** — every screen, the window, install and Gróa, the words, the hue rings (Hœnir, as Eindri).
-- **2026-11-12** — the push was refused by `rules-compliance-guard.sh` (RULES/39 N1/N7) for the line that names the XDG
-  data path `$HOME/.local/share`: the ward read `.local` as an mDNS host. Narrowed to `\.local\b([^/]|$)`, so a
-  host name is still caught and the XDG path segment is not (component: gates).
+- **2026-11-12** — the push was refused by `rules-compliance-guard.sh` (RULES/39 N1/N7) for the line in `setup.sh`
+  that names the XDG data directory under the home: the ward read that path segment as an mDNS host name. Narrowed so an
+  mDNS host name is still caught and the XDG path segment is not (component: gates).
