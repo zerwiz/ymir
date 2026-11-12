@@ -91,7 +91,8 @@ while IFS= read -r f; do
   git diff -U0 "$BASE..$HEAD" -- "$f" 2>/dev/null | grep '^+' | grep -v '^+++' >"$tmp" || { rm -f "$tmp"; continue; }
   while IFS= read -r hit; do
     say "$f" "added" "RULES/39 · network N1/N7" "address or plain-HTTP URL in a new line: ${hit:0:90}"
-  done < <(grep -nE '(\b192\.168\.[0-9]+\.|\b10\.[0-9]+\.[0-9]+\.[0-9]+|\.local\b|http://)' "$tmp" 2>/dev/null \
+  # `.local` is an mDNS name only when it ends a host; `~/.local/share` is the XDG data path (2026-11-12)
+  done < <(grep -nE '(\b192\.168\.[0-9]+\.|\b10\.[0-9]+\.[0-9]+\.[0-9]+|\.local\b([^/]|$)|http://)' "$tmp" 2>/dev/null \
              | grep -vE '127\.0\.0\.1|localhost|<[a-z-]+>' \
              | grep -vE 'http://\$\{?[A-Za-z_]+' \
              | grep -vE "http://%s|http://\{host\}|http://\{h\}|f\"http://" | head -20)   # a format/f-string host is not an address
