@@ -11,7 +11,7 @@ t() { local d="$1"; shift; if "$@" >/dev/null 2>&1; then pass=$((pass+1)); echo 
 
 STATE="$T/state"; mkdir -p "$STATE"; LEASE="$STATE/.arm.lease"
 st="$(awk '{print $22}' /proc/$$/stat)"
-printf 'pid=%s starttime=%s state=%s seat=Hoenir charter=work host=heimdall machine=heimdall fleetrole=dev fleet=rodd pin=3b1ba7a0 pin_behind=0 identity=ok missing=\n' "$$" "$st" "$STATE" >"$LEASE"
+printf 'pid=%s starttime=%s state=%s seat=Hoenir charter=work host=seat-host machine=seat-host fleetrole=dev fleet=rodd pin=3b1ba7a0 pin_behind=0 identity=ok missing=\n' "$$" "$st" "$STATE" >"$LEASE"
 
 gleipnir_pid_alive() { kill -0 "$1" 2>/dev/null; }
 eval "$(sed -n '/^lease_alive() {/,/^}/p;/^lease_part() {/,/^}/p' "$ROOT/bin/pi/syn-watch-arm.sh")"
@@ -21,7 +21,7 @@ t "lease_part: a later field reads whole" test "$(lease_part pin_behind)" = "0"
 printf 'pid=%s starttime=%s state=%s/other seat=x\n' "$$" "$st" "$STATE" >"$LEASE"
 if lease_alive; then fail=$((fail+1)); echo "  FAIL lease_alive: another state refused"; else pass=$((pass+1)); echo "  ok   lease_alive: another state refused"; fi
 
-printf 'pid=%s starttime=%s state=%s seat=Hoenir host=heimdall identity=ok missing=\n' "$$" "$st" "$STATE" >"$LEASE"
+printf 'pid=%s starttime=%s state=%s seat=Hoenir host=seat-host identity=ok missing=\n' "$$" "$st" "$STATE" >"$LEASE"
 dir="$(awk '{ for (i = 1; i <= NF; i++) if (index($i, "state=") == 1) { print substr($i, 7); exit } }' "$LEASE")"
 t "seat-wire: the state token is exactly the dir" test "$dir" = "$STATE"
 pat="s/.* state"; pat="${pat}=//p"

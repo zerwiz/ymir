@@ -60,7 +60,7 @@ public/js/brand.js           the client DEFAULT (fallback) brand
 ### The deploy weld (after any fork change)
 
 ```
-ssh whynot
+ssh <server-seat>
 cd ~/thing/mirotalk
 git pull --ff-only origin master
 cp app/src/config.template.js app/src/config.js     # the unit skips npm prestart

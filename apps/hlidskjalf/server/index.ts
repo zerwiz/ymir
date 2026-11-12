@@ -17,6 +17,7 @@ import { spawnSync } from 'node:child_process';
 import { homedir } from 'node:os';
 import { createVoiceHandler, voiceAccess } from './voice.ts';
 import { createRoddHandler } from './rodd.ts';
+import { serverSeats as resolveServerSeats } from './server-seats.ts';
 import {
   findAccount,
   invitesOpen,
@@ -1211,23 +1212,12 @@ async function cron() {
   };
 }
 
-// The server crons the board must show beside the local ones (plan 54,
-// 2026-09-24): whynot and zerwizserver are the fleet's servers (the hoard's
-// machines.md; ~/.ssh/config hosts `whynot` and `server` → zerwizserver).
-// One ssh round-trip per seat — read-on-demand, machine-local, BatchMode only.
-const DEFAULT_SERVER_SEATS = [
-  { seat: 'whynot', host: 'whynot' },
-  { seat: 'zerwizserver', host: 'server' },
-];
+// The server crons the board must show beside the local ones (plan 54, 2026-09-24). The seats are the
+// fleet's heart and forge hosts, read from the registry in the hoard — never names in this public file
+// (plan 278; YMIR_CRON_SERVER_SEATS still wins). One ssh round-trip per seat — read-on-demand,
+// machine-local, BatchMode only.
 function serverSeats(): { seat: string; host: string }[] {
-  const env = process.env.YMIR_CRON_SERVER_SEATS;
-  if (env) {
-    return env.split(/\s+/).filter(Boolean).map((e) => {
-      const [seat, host] = e.split(':');
-      return { seat, host: host ?? seat };
-    });
-  }
-  return DEFAULT_SERVER_SEATS;
+  return resolveServerSeats(HOARD);
 }
 
 async function cronSeats() {

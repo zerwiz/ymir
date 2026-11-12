@@ -112,6 +112,36 @@ bash bin/gates/guards/pr-ship-guard.sh check              # judge every open PR
 reviewer open its own from the pushed branch. A `SKIP` line is not a failure; it names what is
 missing (no registry, no `gh`, no network) and the gate resumes once that exists.
 
+
+## The public ward names machines too (plan 278)
+
+The public ward (`bin/gates/guards/public-guard.py`, the one CI runs) judges a fifth class: a **fleet
+machine named as a host**. That means the name after `@`, `ssh`, `host=` or a URL scheme, or before a port, an mDNS suffix
+or a tailnet suffix. The names are read when the ward runs, from your fleet registry in the home
+(`$YMIR_HOME/hodd/data/fleet.json`). They are never written in the ward, and the ward never prints them.
+
+The same word in prose is not judged, because a machine may share its name with a figure of the lore.
+Generic names such as `localhost` are never judged.
+
+Every run now prints its scope first, so a silent pass cannot hide a scan that judged nothing:
+
+```text
+public_guard_scope[1]{judged,exempt,words,machines,machine_class}:
+  "5748","242","2","6","advisory"
+```
+
+The machine class is **advisory** for now: findings are counted and listed, and the ward still passes.
+Make it binding when you are ready:
+
+```bash
+python3 bin/gates/guards/public-guard.py --tree --strict-names
+YMIR_PUBLIC_GUARD_STRICT=1 bash bin/gates/guards.sh --full
+```
+
+What it still finds after the sweep of 2026-11-12 is in append-only fix notes. Those are history, and are
+corrected by a new note, never rewritten.
+
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-12** — The public ward gained the machine class, its scope line and `--strict-names` (plan 278).
