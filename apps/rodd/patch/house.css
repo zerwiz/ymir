@@ -20,3 +20,8 @@
 html.rodd-text-only #tool-cam-row,
 html.rodd-text-only #tool-cam-hint,
 html.rodd-text-only #cam-pip { display: none !important; }
+
+/* plan 275 (2026-11-12): the line under the title stays on one row on a normal window — the vendor face capped it at
+   48 characters, so "Speak with the house — its own ear, its own head, its own voice." always broke in two. A narrow
+   window still wraps it. */
+.brand .ident .ident-blurb { max-width: none; }   /* more specific than the vendor rule, which loads after this file */

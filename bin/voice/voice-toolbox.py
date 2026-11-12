@@ -118,6 +118,34 @@ def _models() -> dict:
     return out
 
 
+def _provider_door(args: list[str], stdin: str = "") -> dict:
+    """The house's ONE provider door (Bilskirnir's choose.ts), run through its own tsx. A key goes in on
+    standard input, never as an argument, and the answer names where it was kept, never the key."""
+    app = REPO / "apps" / "bilskirnir"
+    tsx = app / "node_modules" / ".bin" / "tsx"
+    if not tsx.exists():
+        return {"ok": False, "detail": "the provider door is not installed here (apps/bilskirnir has no dependencies yet)"}
+    try:
+        r = subprocess.run([str(tsx), str(app / "server" / "src" / "models" / "choose.ts"), *args],
+                           input=stdin, capture_output=True, text=True, timeout=60, cwd=str(app))
+        return json.loads((r.stdout or "").strip().splitlines()[-1])
+    except Exception as exc:
+        return {"ok": False, "detail": f"the provider door did not answer: {str(exc)[:160]}"}
+
+
+_PRESETS_CACHE: dict = {"at": 0.0, "data": None}
+
+
+def _presets() -> dict:
+    import time
+    if _PRESETS_CACHE["data"] is not None and time.time() - _PRESETS_CACHE["at"] < 3600:
+        return _PRESETS_CACHE["data"]
+    d = _provider_door(["--presets"])
+    if "presets" in d:
+        _PRESETS_CACHE.update(at=time.time(), data=d)
+    return d
+
+
 def _try_mind(base_url: str, model: str, key: str) -> tuple[bool, str]:
     """One word to the chosen mind before it is saved: a mind that does not answer is never written."""
     import urllib.request
@@ -204,6 +232,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(200, _desk())
         if self.path.startswith("/head/models"):
             return self._json(200, _models())
+        if self.path.startswith("/head/presets"):
+            return self._json(200, _presets())
         if self.path.startswith("/head"):
             r = _rodd_head().resolve()
             r.pop("key", None)          # a secret is never returned to a window
@@ -228,7 +258,7 @@ class Handler(BaseHTTPRequestHandler):
                     "parameters": t.get("parameters", {"type": "object", "properties": {}}),
                 })
             return self._json(200, {"tools": defs})
-        return self._json(404, {"error": "unknown path", "paths": ["/tools", "/tool", "/head", "/head/models", "/settings", "/memory", "/health", "/desk", "/loss"]})
+        return self._json(404, {"error": "unknown path", "paths": ["/tools", "/tool", "/head", "/head/models", "/head/presets", "/head/provider", "/settings", "/memory", "/health", "/desk", "/loss"]})
 
     def do_POST(self) -> None:  # noqa: N802
         length = int(self.headers.get("Content-Length") or 0)
@@ -237,6 +267,35 @@ class Handler(BaseHTTPRequestHandler):
             payload = json.loads(raw)
         except Exception:
             payload = {}
+
+        if self.path.startswith("/session"):
+            # one press of the orb is one session; the window hands it over when it ends (plan 275)
+            try:
+                return self._json(200, voice_tools.save_session(payload))
+            except Exception as exc:
+                return self._json(200, {"ok": False, "detail": str(exc)[:200]})
+
+        if self.path.startswith("/head/provider"):
+            # add a provider with a key pasted once: kept in the private home, tested by the door's own detection
+            args = ["--add"]
+            if payload.get("preset"):
+                args += ["--preset", str(payload["preset"])]
+            if payload.get("name"):
+                args += ["--name", str(payload["name"])]
+            if payload.get("base_url"):
+                args += ["--base-url", str(payload["base_url"])]
+            key = str(payload.get("api_key") or "").strip()
+            if key:
+                args.append("--key-stdin")
+            out = _provider_door(args, stdin=key)
+            _MODELS_CACHE.update(at=0.0, data=None)          # the new provider shows at once
+            if out.get("ok"):
+                prov_id = (out.get("provider") or {}).get("id", "")
+                found = next((x for x in _models().get("providers", []) if x["id"] == prov_id), None)
+                out["models"] = len(found["models"]) if found else 0
+                out["detail"] = (f"{(out.get('provider') or {}).get('name', prov_id)} added — key kept in {out.get('keyStoredIn') or 'the place it already was'}; "
+                                 + (f"{out['models']} models you may choose" if found else "it did not answer with models yet (check the key, or the allow-list)"))
+            return self._json(200, out)
 
         if self.path.startswith("/head"):
             # the mode, the endpoint, the model, the NAME of a key — or a key typed here,

@@ -221,9 +221,11 @@ if is_local_seat "$seat"; then
   # llama-server already claims that, and torch OOMs the moment it touches CUDA
   # ("Tried to allocate 2.00 MiB ... 1.75 MiB is free", 2026-11-09 07:38). Kokoro and
   # Whisper on the CPU cost a beat and leave the head its memory.
-  CUDA_VISIBLE_DEVICES="${YMIR_VOICE_CUDA:-}" \
-  YMIR_VOICE_HOST="$seat" ${HEAD:+YMIR_VOICE_HEAD_MODEL="$HEAD"} \
-  YMIR_VOICE_STT_DEVICE="${YMIR_VOICE_STT_DEVICE:-cpu}" YMIR_VOICE_STT_COMPUTE="${YMIR_VOICE_STT_COMPUTE:-int8}" \
+  # the head is passed only when one is forced (an expansion cannot be an assignment prefix, so `env` carries it)
+  head_env=(); [ -n "$HEAD" ] && head_env=("YMIR_VOICE_HEAD_MODEL=$HEAD")
+  env CUDA_VISIBLE_DEVICES="${YMIR_VOICE_CUDA:-}" \
+    YMIR_VOICE_HOST="$seat" "${head_env[@]}" \
+    YMIR_VOICE_STT_DEVICE="${YMIR_VOICE_STT_DEVICE:-cpu}" YMIR_VOICE_STT_COMPUTE="${YMIR_VOICE_STT_COMPUTE:-int8}" \
     "$ROOT/bin/voice/voice-door.sh" host --now 2>&1 | tail -1
 else
   ssh -o BatchMode=yes -o ConnectTimeout=6 "$seat" \

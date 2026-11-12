@@ -200,8 +200,56 @@ TOOLS = [
     },
     {
         "type": "function",
+        "name": "fleet",
+        "description": ("The fleet — every machine he owns (heimdall, nidavellir, zerwizserver the heart, whynot, …): "
+                        "whether it answers and by which road, the Ymir it runs and how old, its load, failed services, "
+                        "the voice engine, and its last nightly update. Use it for 'how is the fleet', 'is the server up', "
+                        "'which machines are behind'. `seats` is only the worker panes on this one machine."),
+        "parameters": {"type": "object", "properties": {"host": {"type": "string", "description": "optional: one machine"}},
+                       "additionalProperties": False},
+    },
+    {
+        "type": "function",
+        "name": "now",
+        "description": ("The real date and time right now, in his own time zone, from the house's clock (Sól). Call "
+                        "it before saying the time, the day, 'good morning' or 'tonight', or anything 'today'."),
+        "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+    },
+    {
+        "type": "function",
+        "name": "letter_types",
+        "description": ("The house's letter templates: every letter type (welcome, follow-up, answer, request, "
+                        "proposal, …) with what it is for, and the themes (ymir-light, inmost, wayof, veyral, …). "
+                        "Use it FIRST whenever he asks for an email or a letter; then letter_template, then letter_draft."),
+        "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+    },
+    {
+        "type": "function",
+        "name": "letter_template",
+        "description": ("One letter type's template: a header (theme, title, …) and blocks with {{placeholders}}. "
+                        "Fill every placeholder in his words, keep the header and the ::: blocks, then pass the whole "
+                        "filled text to letter_draft."),
+        "parameters": {"type": "object", "properties": {
+            "type": {"type": "string", "description": "a letter type from letter_types, e.g. welcome"},
+            "theme": {"type": "string", "description": "optional: a theme to put in the header (the company's own)"}},
+            "required": ["type"], "additionalProperties": False},
+    },
+    {
+        "type": "function",
+        "name": "letter_draft",
+        "description": ("Put a designed letter in his Gmail DRAFTS (it is never sent; he sends it himself). `body` is "
+                        "the filled template from letter_template, header included; it is rendered in the house design."),
+        "parameters": {"type": "object", "properties": {
+            "to": {"type": "string", "description": "one or more addresses, comma-separated"},
+            "subject": {"type": "string"},
+            "body": {"type": "string", "description": "the filled template, starting with its --- header"},
+            "reply_to": {"type": "string", "description": "optional: a Gmail message id to answer inside its thread"}},
+            "required": ["to", "subject", "body"], "additionalProperties": False},
+    },
+    {
+        "type": "function",
         "name": "todo_add",
-        "description": "Add a task to this voice's ledger; returns its short id. Optional due, priority, project.",
+        "description": "Add an item to HIS to-do list (hodd/life/personal/me/todo.md, the one to-do; under 'Added in conversation'); returns its short id. Optional due, priority, project.",
         "parameters": {"type": "object", "properties": {
             "item": {"type": "string"}, "due": {"type": "string"},
             "priority": {"type": "string"}, "project": {"type": "string"}},
@@ -210,7 +258,7 @@ TOOLS = [
     {
         "type": "function",
         "name": "todo_list",
-        "description": "This voice's ledger: open tasks with ids, due dates and priorities — or the done ones.",
+        "description": "HIS to-do list (hodd/life/personal/me/todo.md, the one to-do): its open items with short ids and the section each is in — or the done ones. `project` filters by section or words.",
         "parameters": {"type": "object", "properties": {
             "status": {"type": "string"}, "project": {"type": "string"}},
             "additionalProperties": False},
@@ -218,21 +266,21 @@ TOOLS = [
     {
         "type": "function",
         "name": "todo_done",
-        "description": "Mark a task done by its id or by words that match one item.",
+        "description": "Tick an item in his to-do (todo.md) done, by its id or by words that match it.",
         "parameters": {"type": "object", "properties": {"id": {"type": "string"}},
                        "required": ["id"], "additionalProperties": False},
     },
     {
         "type": "function",
         "name": "todo_reopen",
-        "description": "Put a done task back on the open list.",
+        "description": "Put a ticked item in his to-do (todo.md) back to open.",
         "parameters": {"type": "object", "properties": {"id": {"type": "string"}},
                        "required": ["id"], "additionalProperties": False},
     },
     {
         "type": "function",
         "name": "todo_update",
-        "description": "Change a task's due date, priority, project or wording.",
+        "description": "Change an item in his to-do (todo.md): new wording, a due date, a priority or a project.",
         "parameters": {"type": "object", "properties": {
             "id": {"type": "string"}, "due": {"type": "string"}, "priority": {"type": "string"},
             "project": {"type": "string"}, "item": {"type": "string"}},
@@ -432,7 +480,7 @@ TOOLS = [
     {
         "type": "function",
         "name": "add_todo",
-        "description": "Append one item to the voice's todo list beside his (hodd/life/personal/me/todo-voice.md); his own todo.md is written by him alone.",
+        "description": "Add one item to his to-do list (todo.md) — the same as todo_add.",
         "parameters": {
             "type": "object",
             "properties": {"item": {"type": "string", "description": "the task, in his own words"}},
@@ -617,7 +665,7 @@ TOOLS = [
         ),
         "parameters": {
             "type": "object",
-            "properties": {
+            "properties": {"host": {"type": "string", "description": "optional: the machine whose arm holder this is for (heimdall, nidavellir, zerwizserver, …); default this machine"}, 
                 "text": {"type": "string", "description": "the message, in his words, as one plain line"},
             },
             "required": ["text"],
@@ -633,7 +681,7 @@ TOOLS = [
         ),
         "parameters": {
             "type": "object",
-            "properties": {
+            "properties": {"host": {"type": "string", "description": "optional: the machine whose arm holder this is for (heimdall, nidavellir, zerwizserver, …); default this machine"}, 
                 "count": {"type": "integer", "description": "how many replies to read (default 20)"},
             },
             "additionalProperties": False,
@@ -647,7 +695,7 @@ TOOLS = [
             "errands. It answers with that session's pid, generation and how fresh its heartbeat is, "
             "or says plainly that nobody is holding it. Ask before handing anything over."
         ),
-        "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+        "parameters": {"type": "object", "properties": {"host": {"type": "string", "description": "optional: one machine; with no host, every machine in the fleet"}}, "additionalProperties": False},
     },
     {
         "type": "function",
@@ -758,7 +806,7 @@ TOOLS = [
         ),
         "parameters": {
             "type": "object",
-            "properties": {"text": {"type": "string", "description": "one line to hand over"}},
+            "properties": {"host": {"type": "string", "description": "optional: the machine whose arm holder this is for (heimdall, nidavellir, zerwizserver, …); default this machine"}, "text": {"type": "string", "description": "one line to hand over"}},
             "required": ["text"],
             "additionalProperties": False,
         },
@@ -1377,6 +1425,8 @@ async def _execute(name, arguments):
         return ToolResult(f"Marked {answer} on \"{match.get('summary')}\"; the organiser is notified.", create_response=True)
 
     if name == "add_todo":
+        # one to-do (plan 275, 2026-11-12): the old road wrote todo-voice.md beside his file; it now adds to his
+        return await _tool_todo_add(args)
         import datetime as _dt
         item = str(args.get("item", "")).strip()
         if not item:
@@ -1500,6 +1550,69 @@ async def _tool_home_recent(args):
                       + "\n".join(f"- {stamp(t)} · {rel} ({size} B)" for t, rel, size in rows[:14]))
 
 
+# ── sessions as memory (plan 275, 2026-11-12) ──────────────────────────────────────────────────────────────────
+# His word: "every time I talk to Nanna, that should be a session … needs to be a memory". One press of the orb is one
+# session; Stop (or closing the window) ends it, and the window hands the whole conversation to the toolbox, which
+# keeps it here: one readable file per session and one index line, in the private home. last_session and
+# search_sessions read these first, and the engine's raw log only as a fallback.
+
+def _sessions_dir():
+    return _home() / "hodd" / "memory" / "rodd" / "sessions"
+
+
+def save_session(payload: dict) -> dict:
+    import datetime as _dt
+    import json as _json
+    import re as _re
+    turns = [t for t in (payload.get("turns") or []) if str(t.get("text") or "").strip()]
+    if not turns:
+        return {"ok": False, "detail": "an empty session is not kept"}
+    sid = _re.sub(r"[^A-Za-z0-9-]", "", str(payload.get("id") or ""))[:40] or _dt.datetime.now().strftime("%H%M%S")
+    def _local(v):
+        # the window stamps in UTC ("…Z"); a session is kept in HIS time zone (23:13, not 22:13)
+        try:
+            return _dt.datetime.fromisoformat(str(v).replace("Z", "+00:00")).astimezone().isoformat(timespec="seconds")
+        except Exception:
+            return _dt.datetime.now().astimezone().isoformat(timespec="seconds")
+    started = _local(payload.get("started") or "")
+    ended = _local(payload.get("ended") or "")
+    for t in turns:
+        t["at"] = _local(t.get("at") or "")
+    day = started[:10]
+    d = _sessions_dir() / day
+    d.mkdir(parents=True, exist_ok=True)
+    f = d / f"{started[11:19].replace(':', '')}-{sid[:8]}.md"
+    first = next((t["text"] for t in turns if t.get("who") == "Allfather"), turns[0]["text"])
+    body = [f"# Rödd · a conversation with Nanna — {started[:16].replace('T', ' ')}", "",
+            f"- started: {started}", f"- ended: {ended}", f"- turns: {len(turns)}", f"- mind: {payload.get('mind') or ''}", "",
+            "## The conversation", ""]
+    for t in turns:
+        body.append(f"**{t.get('who') or '?'}** ({str(t.get('at') or '')[11:19]}): {str(t['text']).strip()}")
+        body.append("")
+    tmp = f.with_name(f.name + ".tmp")
+    tmp.write_text("\n".join(body), encoding="utf-8")
+    tmp.replace(f)
+    with (_sessions_dir() / "index.jsonl").open("a", encoding="utf-8") as fh:
+        fh.write(_json.dumps({"id": sid, "started": started, "ended": ended, "turns": len(turns),
+                              "first": first[:200], "file": str(f.relative_to(_home()))}) + "\n")
+    # the house's memory: one episode in the well, so every agent can recall it (never blocks the window)
+    try:
+        mimir = Path(__file__).resolve().parents[2] / "bin" / "records" / "mimir.sh"
+        if mimir.is_file():
+            subprocess.Popen(["bash", str(mimir), "observe",
+                              f"Rödd session {started[:16].replace('T', ' ')}, {len(turns)} turns — he began: {first[:160]} (record: {f.relative_to(_home())})",
+                              "--source", "rodd", "--tags", "rodd,session"],
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+    except Exception:
+        pass
+    return {"ok": True, "file": str(f.relative_to(_home())), "turns": len(turns)}
+
+
+def _session_files():
+    root = _sessions_dir()
+    return sorted(root.glob("*/*.md")) if root.is_dir() else []
+
+
 def _session_log() -> str:
     remote = ('h=$(bash -lc ". ~/ymir/bin/vault/hoard-lib.sh >/dev/null 2>&1; ymir_home_root YMIR_HOME >/dev/null 2>&1; printf %s \"\\$YMIR_HOME\"" 2>/dev/null); d="$h/hodd/state/voice/host.log"; cat "$d" 2>/dev/null')
     seat = str(os.environ.get("YMIR_VOICE_HOST_SEAT") or "").strip()
@@ -1511,13 +1624,32 @@ def _session_log() -> str:
             seat = ""
     if not seat:
         return ""
+    # plan 275 (2026-11-12): when the voice host IS this machine, read its log here. Asking over ssh meant ssh to
+    # itself, which a seat with no key for its own login refuses, so "last_session" and "search_sessions" answered
+    # "could not be read" on heimdall for every conversation.
+    import socket as _socket
+    local = _home() / "hodd" / "state" / "voice" / "host.log"
+    if seat in (_socket.gethostname().split(".")[0], "localhost", "127.0.0.1") or not seat:
+        try:
+            return local.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            return ""
     code, out = _run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=6", seat, remote], timeout=45)
+    if code != 0 and local.is_file():
+        return local.read_text(encoding="utf-8", errors="replace")
     return out if code == 0 else ""
 
 
 async def _tool_last_session(args):
     import re as _re
     turns = int(args.get("turns") or 12)
+    files = _session_files()
+    if files:
+        text = files[-1].read_text(encoding="utf-8", errors="replace")
+        lines = [l for l in text.splitlines() if l.startswith("**")]
+        head = files[-1].relative_to(_home())
+        return ToolResult(f"The last kept conversation ({head}, {len(lines)} turns; showing the last {min(turns, len(lines))}):\n"
+                          + "\n".join(l.replace("**", "") for l in lines[-turns:]))
     log = _session_log()
     if not log.strip():
         return ToolResult("The host's session log could not be read; say so plainly.")
@@ -1527,7 +1659,7 @@ async def _tool_last_session(args):
     for text in lines[:cut]:
         m = _re.search(r"(USER:|ASSISTANT:)\s*(.*)", text)
         if m:
-            said.append(("Allfather" if m.group(1) == "USER:" else "Skírnir") + ": " + m.group(2)[:180])
+            said.append(("Allfather" if m.group(1) == "USER:" else "Nanna") + ": " + m.group(2)[:180])
     if not said:
         return ToolResult("No earlier spoken turns are in the host's log yet.")
     return ToolResult(f"The conversation before this session — {min(turns, len(said))} of {len(said)} turns:\n"
@@ -1553,7 +1685,7 @@ async def _tool_search_sessions(args):
         if query.lower() in line.lower():
             m = _re.search(r"(USER:|ASSISTANT:)\s*(.*)", line)
             if m:
-                who = "Allfather" if m.group(1) == "USER:" else "Skírnir"
+                who = "Allfather" if m.group(1) == "USER:" else "Nanna"
                 hits.append(f"[session {session} · {stamp}] {who}: {m.group(2)[:200]}")
     if not hits:
         return ToolResult(f"Nothing about {query!r} appears in any recorded voice session.")
@@ -1641,82 +1773,235 @@ def _todo_append(ev):
         fh.write(_json.dumps(ev, ensure_ascii=False) + "\n")
 
 
+# ── the to-do: ONE record, his own todo.md (plan 275, 2026-11-12) ──────────────────────────────────────────────
+# Three to-do stores had grown: his hodd/life/personal/me/todo.md (43 open items), this voice's own ledger
+# (hodd/state/voice/todos.jsonl, five test rows) and the MCP task board. These tools pointed at the voice's ledger
+# and told her his file was "written by him alone", so asked about his to-do she knew nothing, edited the file raw,
+# and offered to build a fourth system. His word: "It's always written by a machine. It's your file." So the tools
+# read and write todo.md itself: every `- [ ]` / `- [x]` line is an item with a short, stable id; an added item goes
+# under "## Added in conversation" in his half, dated; a tick, a reopen or new wording changes that line in place.
+# The file is written whole and renamed into place, so a reader never sees half of it. The old ledger is left as it was.
+
+def _todo_file():
+    return _home() / "hodd" / "life" / "personal" / "me" / "todo.md"
+
+
+def _todo_items():
+    import hashlib as _h
+    import re as _re
+    path = _todo_file()
+    lines = path.read_text(encoding="utf-8").splitlines() if path.is_file() else []
+    items, section = [], ""
+    for n, line in enumerate(lines):
+        if line.startswith("## ") or line.startswith("# "):
+            section = line.lstrip("# ").strip()
+            continue
+        m = _re.match(r"^- \[( |x|X)\] (.*)$", line)
+        if not m:
+            continue
+        text = m.group(2)
+        # the item's words: its continuation lines belong to it
+        k = n + 1
+        while k < len(lines) and lines[k].startswith("      ") and not lines[k].lstrip().startswith("- ["):
+            text += " " + lines[k].strip()
+            k += 1
+        plain = _re.sub(r"[*`_]", "", text)
+        tid = "t" + _h.sha1(m.group(2).encode()).hexdigest()[:5]
+        items.append({"id": tid, "line": n, "end": k - 1, "status": "done" if m.group(1) in "xX" else "open",
+                      "item": plain, "section": section})
+    return lines, items
+
+
+def _todo_write(lines):
+    path = _todo_file()
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    tmp.replace(path)
+
+
 def _todo_find(needle):
     needle = (needle or "").strip().lower()
-    tasks = _todo_state()
-    for t in tasks:
+    lines, items = _todo_items()
+    for t in items:
         if t["id"] == needle:
-            return t
-    for t in tasks:
+            return lines, t
+    for t in items:
         if needle and needle in t["item"].lower():
-            return t
-    return None
+            return lines, t
+    return lines, None
+
+
+def _stamp():
+    import datetime as _dt
+    return _dt.datetime.now().strftime("%Y-%m-%d %H:%M")
 
 
 async def _tool_todo_add(args):
-    import datetime as _dt
     item = str(args.get("item") or "").strip()
     if not item:
         raise ValueError("todo_add needs an item")
-    tid = "t" + _dt.datetime.now().strftime("%H%M%S") + str(abs(hash(item)) % 100)[:2]
-    _todo_append({"ts": _dt.datetime.now().isoformat(timespec="seconds"), "action": "add", "id": tid,
-                  "item": item, "due": str(args.get("due") or ""),
-                  "priority": (str(args.get("priority") or "medium")).lower(),
-                  "project": str(args.get("project") or "")})
-    _todo_render()
-    return ToolResult(f"Added as {tid}: {item}. Say the id so he can tick it later.", create_response=True)
+    lines, _ = _todo_items()
+    notes = [f"added by Nanna, {_stamp()}"]
+    for k in ("due", "priority", "project"):
+        v = str(args.get(k) or "").strip()
+        if v:
+            notes.append(f"{k} {v}")
+    entry = f"- [ ] **{item}** *({'; '.join(notes)})*"
+    head = "## Added in conversation"
+    if head in lines:
+        at = lines.index(head) + 1
+        while at < len(lines) and lines[at].strip() == "":
+            at += 1
+        lines.insert(at, entry)
+    else:
+        # in his half, before "Held, deliberately" (or before the derived half)
+        at = next((n for n, l in enumerate(lines) if l.startswith("## Held")), None)
+        if at is None:
+            at = next((n for n, l in enumerate(lines) if l.startswith("# The derived half")), len(lines))
+        lines[at:at] = [head, "", entry, ""]
+    _todo_write(lines)
+    _, items = _todo_items()
+    tid = next((t["id"] for t in items if item in t["item"]), "?")
+    return ToolResult(f"Added to his to-do (todo.md, under 'Added in conversation') as {tid}: {item}.", create_response=True)
 
 
 async def _tool_todo_list(args):
     status = str(args.get("status") or "open").lower()
-    project = str(args.get("project") or "").strip().lower()
-    tasks = _todo_state()
-    if project:
-        tasks = [t for t in tasks if project in t["project"].lower()]
-    if status == "open":
-        tasks = [t for t in tasks if t["status"] == "open"]
-    elif status == "done":
-        tasks = [t for t in tasks if t["status"] == "done"]
-    if not tasks:
-        return ToolResult(f"Nothing {status} in the ledger" + (f" for {project}" if project else "") + ".")
-    rows = [f"- {t['id']} · {t['item'][:90]}" + (f" · due {t['due']}" if t["due"] else "")
-            + (f" · {t['priority']}" if t["priority"] != "medium" else "")
-            + (f" · {t['project']}" if t["project"] else "") for t in tasks[:15]]
-    return ToolResult(f"{len(tasks)} task(s) {status}:\n" + "\n".join(rows))
+    want = str(args.get("project") or "").strip().lower()
+    _, items = _todo_items()
+    if want:
+        items = [t for t in items if want in t["section"].lower() or want in t["item"].lower()]
+    if status in ("open", "done"):
+        items = [t for t in items if t["status"] == status]
+    if not items:
+        return ToolResult(f"Nothing {status} in his to-do" + (f" about {want}" if want else "") + ".")
+    rows = [f"- {t['id']} · {t['item'][:110]}" + (f"  [{t['section'][:40]}]" if t["section"] else "") for t in items[:20]]
+    more = f"\n(and {len(items) - 20} more)" if len(items) > 20 else ""
+    return ToolResult(f"His to-do (todo.md): {len(items)} {status}:\n" + "\n".join(rows) + more)
+
+
+def _todo_mark(args, to_done: bool, verb: str):
+    import re as _re
+    lines, t = _todo_find(str(args.get("id") or ""))
+    if not t:
+        return ToolResult(f"No item in his to-do matches {args.get('id')!r}; list the open ones and ask which.")
+    lines[t["line"]] = _re.sub(r"^- \[( |x|X)\]", "- [x]" if to_done else "- [ ]", lines[t["line"]], count=1)
+    lines[t["end"]] = lines[t["end"]] + f" *({verb} by Nanna, {_stamp()})*"   # the note at the item's end
+    _todo_write(lines)
+    return ToolResult(f"{verb.capitalize()} in his to-do: {t['item'][:90]}.", create_response=True)
 
 
 async def _tool_todo_done(args):
-    import datetime as _dt
-    t = _todo_find(str(args.get("id") or ""))
-    if not t:
-        return ToolResult(f"No task matches {args.get('id')!r}; list the open ones and ask which.")
-    _todo_append({"ts": _dt.datetime.now().isoformat(timespec="seconds"), "action": "done", "id": t["id"]})
-    _todo_render()
-    return ToolResult(f"Ticked {t['id']}: {t['item'][:80]}.", create_response=True)
+    return _todo_mark(args, True, "ticked")
 
 
 async def _tool_todo_reopen(args):
-    import datetime as _dt
-    t = _todo_find(str(args.get("id") or ""))
-    if not t:
-        return ToolResult(f"No task matches {args.get('id')!r}; list the open ones and ask which.")
-    _todo_append({"ts": _dt.datetime.now().isoformat(timespec="seconds"), "action": "reopen", "id": t["id"]})
-    _todo_render()
-    return ToolResult(f"Back open: {t['item'][:80]}.", create_response=True)
+    return _todo_mark(args, False, "reopened")
 
 
 async def _tool_todo_update(args):
-    import datetime as _dt
-    t = _todo_find(str(args.get("id") or ""))
+    import re as _re
+    lines, t = _todo_find(str(args.get("id") or ""))
     if not t:
-        return ToolResult(f"No task matches {args.get('id')!r}; list the open ones and ask which.")
-    fields = {k: str(args.get(k) or "") for k in ("due", "priority", "project", "item")}
+        return ToolResult(f"No item in his to-do matches {args.get('id')!r}; list the open ones and ask which.")
+    fields = {k: str(args.get(k) or "").strip() for k in ("item", "due", "priority", "project")}
     if not any(fields.values()):
-        return ToolResult("Nothing to change — give a due date, a priority, a project or new wording.")
-    _todo_append({"ts": _dt.datetime.now().isoformat(timespec="seconds"), "action": "update",
-                  "id": t["id"], **{k: v for k, v in fields.items() if v}})
-    _todo_render()
-    return ToolResult("Updated " + t["id"] + ": " + ", ".join(f"{k} → {v}" for k, v in fields.items() if v), create_response=True)
+        return ToolResult("Nothing to change — give new wording, a due date, a priority or a project.")
+    line = lines[t["line"]]
+    if fields["item"]:
+        m = _re.match(r"^(- \[[ xX]\] )(.*)$", line)
+        line = m.group(1) + f"**{fields['item']}**"
+    notes = [f"{k} {v}" for k, v in fields.items() if v and k != "item"]
+    lines[t["line"]] = line
+    lines[t["end"]] = lines[t["end"]] + f" *({'; '.join(notes + ['updated by Nanna, ' + _stamp()])})*"
+    _todo_write(lines)
+    return ToolResult("Updated in his to-do: " + ", ".join(f"{k} → {v}" for k, v in fields.items() if v), create_response=True)
+
+
+# ── the fleet (plan 232 R6, plan 253; built 2026-11-12 under plan 275): asked "what is going on in the fleet", she
+# could only read this machine's worker panes. bin/fleet/fleet-status.sh is the one fleet answer.
+async def _tool_fleet(args):
+    door = Path(__file__).resolve().parents[2] / "bin" / "fleet" / "fleet-status.sh"
+    cmd = ["bash", str(door)] + ([str(args["host"])] if args.get("host") else [])
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=40)
+    except Exception as exc:
+        return ToolResult(f"The fleet status did not answer: {exc}")
+    return ToolResult("The fleet, measured now (host · role · road · ymir · pin · load · failed services · voice · last update):\n"
+                      + (r.stdout.strip() or r.stderr.strip()[:300]))
+
+
+# ── the time (plan 275, 2026-11-12): she was never told it, so every conversation she guessed — "good morning" at
+# eleven at night. The house's one clock door is Sól (bin/time/sol.sh).
+async def _tool_now(args):
+    import datetime as _dt
+    now = _dt.datetime.now().astimezone()
+    part = ("night" if now.hour < 5 or now.hour >= 22 else "morning" if now.hour < 12
+            else "afternoon" if now.hour < 18 else "evening")
+    return ToolResult(f"It is {now:%A %d %B %Y, %H:%M} ({now.tzname()}) — {part}.")
+
+
+# ── the house's letters (plan 275, 2026-11-12) ─────────────────────────────────────────────────────────────────
+# Asked for a welcome letter to a collaborator "with the right template", the voice spent 26 tool calls in 107 s
+# searching the home and opened a plain Gmail compose: the house's letter door (systems/snotra/services/letters —
+# the letter types, the company themes, the designer, and mail-send.sh, which puts a designed draft in Gmail and never
+# sends without his approval) was not in her hands. These three tools are that door.
+
+def _letters_dir():
+    return Path(__file__).resolve().parents[2] / "systems" / "snotra" / "services" / "letters"
+
+
+async def _tool_letter_types(args):
+    d = _letters_dir()
+    out = []
+    for flag in ("--types", "--themes"):
+        r = subprocess.run(["python3", str(d / "letter-design.py"), flag], capture_output=True, text=True, timeout=30)
+        out.append(r.stdout.strip())
+    return ToolResult("Letter types (type · theme · what it is for):\n" + out[0] + "\n\nThemes:\n" + out[1])
+
+
+async def _tool_letter_template(args):
+    import re as _re
+    kind = _re.sub(r"[^a-z0-9-]", "", str(args.get("type") or "").lower())
+    candidates = [_letters_dir() / "templates" / "house" / "types" / f"{kind}.md",
+                  _home() / "hodd" / "identity" / "letters" / "types" / f"{kind}.md"]
+    path = next((c for c in candidates if c.is_file()), None)
+    if not path:
+        return ToolResult(f"No letter type {kind!r}; call letter_types for the list.")
+    text = path.read_text(encoding="utf-8")
+    theme = _re.sub(r"[^a-z0-9-]", "", str(args.get("theme") or "").lower())
+    if theme:
+        text = _re.sub(r"(?m)^theme:.*$", f"theme: {theme}", text, count=1)
+    return ToolResult(f"The {kind} template (fill every {{{{placeholder}}}}, keep the header and the ::: blocks):\n\n{text}")
+
+
+async def _tool_letter_draft(args):
+    import tempfile as _tf
+    to = str(args.get("to") or "").strip()
+    subject = str(args.get("subject") or "").strip()
+    body = str(args.get("body") or "")
+    if not (to and subject and body.strip()):
+        return ToolResult("letter_draft needs to, subject and the filled body.")
+    if "{{" in body:
+        return ToolResult("The letter still has {{placeholders}} — fill every one before drafting.")
+    with _tf.NamedTemporaryFile("w", suffix=".md", delete=False, encoding="utf-8") as fh:
+        fh.write(body)
+        f = fh.name
+    cmd = ["bash", str(_letters_dir() / "mail-send.sh"), "draft", "--to", to, "--subject", subject, "--body", f]
+    if args.get("reply_to"):
+        cmd += ["--reply-to", str(args["reply_to"])]
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    finally:
+        try:
+            os.unlink(f)
+        except OSError:
+            pass
+    tail = (r.stdout + r.stderr).strip().splitlines()[-3:]
+    if r.returncode != 0:
+        return ToolResult("The draft was not made: " + " ".join(tail)[:300], create_response=True)
+    return ToolResult(f"The letter is in his Gmail drafts, designed — to {to}, '{subject}'. It was not sent. " + " ".join(tail)[:200],
+                      create_response=True)
 
 
 NEW_TOOLS = {
@@ -1725,6 +2010,11 @@ NEW_TOOLS = {
     "home_recent": _tool_home_recent,
     "last_session": _tool_last_session,
     "search_sessions": _tool_search_sessions,
+    "fleet": _tool_fleet,
+    "now": _tool_now,
+    "letter_types": _tool_letter_types,
+    "letter_template": _tool_letter_template,
+    "letter_draft": _tool_letter_draft,
     "todo_add": _tool_todo_add,
     "todo_list": _tool_todo_list,
     "todo_done": _tool_todo_done,
@@ -1880,7 +2170,7 @@ def _sessions() -> list[dict]:
             cur["at"] = m_time.group(1)
         m = _re.search(r"(USER:|ASSISTANT:)\s*(.*)", line)
         if m:
-            who = "Allfather" if m.group(1) == "USER:" else "Skírnir"
+            who = "Allfather" if m.group(1) == "USER:" else "Nanna"
             cur["lines"].append(who + ": " + m.group(2)[:200])
             if not cur["first"]:
                 cur["first"] = m.group(2)[:80]
@@ -2121,6 +2411,37 @@ async def _tool_research(args):
         "the raven is out and that you will read its report when he asks.", create_response=True)
 
 
+# ── the arm, fleet-wide (plan 275, 2026-11-12) ──────────────────────────────────────────────────────────────────
+# His question: "Why can't we talk with all arm holders in the whole fleet?" The arm tools read only THIS machine's
+# lease. Every machine has the same door (bin/voice/rodd-arm.sh) behind its own lease, and the fleet's roads are in
+# the registry (hodd/data/fleet.json: user and tailnet name), the same roads bin/fleet/fleet-status.sh walks. So a
+# `host` reaches that machine's arm holder; with no host, `arm_who` asks every machine.
+
+def _fleet_hosts():
+    import json as _json
+    try:
+        d = _json.loads((_home() / "hodd" / "data" / "fleet.json").read_text())
+    except Exception:
+        return {}
+    return {k: v for k, v in (d.get("hosts") or {}).items() if v.get("user") and v.get("tailnet")}
+
+
+def _arm_run(host, verb, *rest, timeout=40):
+    import shlex as _shlex
+    import socket as _socket
+    me = _socket.gethostname().split(".")[0]
+    host = str(host or "").strip().lower()
+    if not host or host == me:
+        return _run([_door("voice/rodd-arm.sh"), verb, *rest], timeout=timeout)
+    h = _fleet_hosts().get(host)
+    if not h:
+        return 2, f"no road to {host!r} in the fleet registry (known: {', '.join(sorted(_fleet_hosts())) or 'none'})"
+    remote = "d=${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}; [ -f $d/bin/voice/rodd-arm.sh ] || d=$HOME/ymir; cd $d && bash bin/voice/rodd-arm.sh " + " ".join(
+        _shlex.quote(x) for x in (verb, *rest))
+    return _run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=6", f"{h['user']}@{h['tailnet']}",
+                 "bash -lc " + _shlex.quote(remote)], timeout=timeout)
+
+
 async def _tool_talk_to_arm(args):
     """Hand the ARM HOLDER a message (plan 223).
 
@@ -2132,10 +2453,10 @@ async def _tool_talk_to_arm(args):
     text = str(args.get("text") or "").strip()
     if not text:
         raise ValueError("talk_to_arm needs text")
-    code, out = _run([_door("voice/rodd-arm.sh"), "tell", text], timeout=40)
+    code, out = _arm_run(args.get("host"), "tell", text, timeout=40)
     if code == 0:
         return ToolResult(
-            "Handed to the arm. Tell him it was handed over, and that the answer comes back on a "
+            "Handed to the arm" + (f" on {args.get('host')}" if args.get("host") else "") + ". Tell him it was handed over, and that the answer comes back on a "
             "later turn — do NOT say it is done, answered or fixed. " + _clean(out, 300))
     if code == 3:
         return ToolResult(
@@ -2155,7 +2476,7 @@ async def _tool_hear_from_arm(args):
         count = max(1, int(count))
     except (TypeError, ValueError):
         count = 20
-    code, out = _run([_door("voice/rodd-arm.sh"), "hear", str(count)], timeout=40)
+    code, out = _arm_run(args.get("host"), "hear", str(count), timeout=40)
     if code == 3:
         return ToolResult(
             "No arm is held, so there is no conversation to read: " + _clean(out, 260)
@@ -2193,7 +2514,26 @@ async def _tool_arm_who(args):
     anyone is holding it. `bin/voice/rodd-arm.sh who` resolves the LEASE (never a path): the
     holder's pid, its generation and its heartbeat age, or `no arm is held` and exit 3.
     """
-    code, out = _run([_door("voice/rodd-arm.sh"), "who"], timeout=30)
+    if not args.get("host"):
+        # every machine at once: who holds each arm, and how fresh
+        import concurrent.futures as _cf
+        import socket as _socket
+        names = sorted(set(_fleet_hosts()) | {_socket.gethostname().split(".")[0]})
+        with _cf.ThreadPoolExecutor(max_workers=8) as ex:
+            got = dict(zip(names, ex.map(lambda n: _arm_run(n, "who", timeout=20), names)))
+        rows = []
+        for n in names:
+            code, out = got[n]
+            m = re.search(r'"([^"]*)","([^"]*)",[^\n]*?"(\d+)",(?:"[^"]*",)*?"(\d+)"', out or "")
+            if code == 0:
+                rows.append(f"{n}: held — {_clean(out, 220)}")
+            elif code == 3:
+                rows.append(f"{n}: nobody holds the arm")
+            else:
+                rows.append(f"{n}: no answer ({_clean(out, 80)})")
+        return ToolResult("The arm on every machine (a holder named 'unnamed' with role 'unknown' is the engine's watch, "
+                          "not an agent — a message there waits unread):\n" + "\n".join(rows))
+    code, out = _arm_run(args.get("host"), "who", timeout=30)
     if code == 0:
         return ToolResult(
             "The arm is held — say who and how fresh the heartbeat is, in one short sentence: "
@@ -2701,7 +3041,7 @@ async def _tool_arm_tell(args):
     text = str(args.get("text") or "").strip()
     if not text:
         raise ValueError("arm_tell needs the line to hand over")
-    code, out = _run([_door("voice/rodd-arm.sh"), "tell", text], timeout=25)
+    code, out = _arm_run(args.get("host"), "tell", text, timeout=25)
     if code == 0:
         return ToolResult(f"Handed to the session holding the arm: {text!r}. {_clean(out, 160)}")
     if code == 3:

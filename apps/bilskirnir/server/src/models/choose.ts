@@ -121,3 +121,28 @@ export async function choose(agentKey: string, home: string, input: ChooseInput,
 }
 
 export { modelBlock };
+
+// ---------- the command line: Rödd's Mind and any other Ymir app add a provider through this one door ----------
+//   node server/src/models/choose.ts --presets                          every provider that can be added (no keys)
+//   node server/src/models/choose.ts --add --preset <id> --key-stdin    add one; the key is read from standard input,
+//                                                                       never an argument, so no process list shows it
+//   node server/src/models/choose.ts --add --name N --base-url U [--key-stdin]   any other OpenAI-compatible endpoint
+// The key is written to the user's private home ($YMIR_HOME/hodd/secrets/bilskirnir-providers.env, 0600), never to
+// this public repository, and the answer carries where it went, never the key (plan 275, 2026-11-12).
+import { pathToFileURL as _toUrl } from 'node:url';
+if (process.argv[1] && import.meta.url === _toUrl(path.resolve(process.argv[1])).href) {
+  const argv = process.argv.slice(2);
+  const arg = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
+  const say = (o: unknown, code: number) => { fs.writeSync(1, JSON.stringify(o) + '\n'); process.exit(code); };
+  if (argv.includes('--presets')) {
+    say({ presets: PRESETS.map(({ id, name, baseUrl, needsKey, local, keyHint, envKey }) => ({ id, name, baseUrl, needsKey, local: !!local, keyHint, envKey })) }, 0);
+  } else if (argv.includes('--add')) {
+    const key = argv.includes('--key-stdin') ? fs.readFileSync(0, 'utf8').trim() : '';
+    addProvider({ preset: arg('--preset'), name: arg('--name'), baseUrl: arg('--base-url'), key })
+      .then((r) => say({ ok: true, provider: { id: r.provider.id, name: r.provider.name, baseUrl: r.provider.baseUrl }, keyStoredIn: r.keyStoredIn }, 0))
+      .catch((e) => say({ ok: false, detail: String(e?.message ?? e) }, 1));
+  } else {
+    fs.writeSync(2, 'usage: choose.ts --presets | --add --preset <id> --key-stdin | --add --name N --base-url U [--key-stdin]\n');
+    process.exit(2);
+  }
+}
