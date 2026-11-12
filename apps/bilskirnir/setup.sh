@@ -148,10 +148,35 @@ else
   fi
 fi
 
+# ── the ear, found where this machine keeps it (plan 275 S16, 2026-11-12) ──
+# The paths were heimdall's own (~/whisper.cpp.src/build/bin, ~/whisper.cpp/models), so on nidavellir, where
+# whisper-cpp comes from the package manager (/usr/bin/whisper-cli) and the model sits in ~/.local/share, the hall
+# called its ear missing and refused to open at all. An explicit setting wins; else the first that exists.
+find_ear() {
+  WCLI="${BILSKIRNIR_WHISPER_CLI:-}"
+  if [ -z "$WCLI" ]; then
+    for c in "$HOME/whisper.cpp.src/build/bin/whisper-cli" "$(command -v whisper-cli 2>/dev/null)" "$(command -v whisper-cpp 2>/dev/null)"; do
+      [ -n "$c" ] && [ -x "$c" ] && { WCLI="$c"; break; }
+    done
+  fi
+  WMODEL="${BILSKIRNIR_WHISPER_MODEL:-}"
+  if [ -z "$WMODEL" ]; then
+    for d in "$HOME/whisper.cpp/models" "${XDG_DATA_HOME:-$HOME/.local/share}/whisper.cpp/models" /usr/share/whisper.cpp/models /usr/share/whisper/models; do
+      for m in ggml-small.en.bin ggml-base.en.bin ggml-small.bin ggml-base.bin; do
+        [ -f "$d/$m" ] && { WMODEL="$d/$m"; break 2; }
+      done
+    done
+  fi
+}
+find_ear
+
 # ── 5. the app's .env: one managed block, the rest is the operator's ────────────
 managed() {
   printf '# >>> managed by setup.sh (from the home) — re-run setup.sh, do not edit\n'
   printf 'PRIMARY_BOT_NAME=%s\nPRIMARY_BOT_LABEL=%s\nHERMES_HOME_PRIMARY=%s\nHERMES_URL=http://127.0.0.1:%s\n' "$NAME" "$LABEL" "$ENGINE" "$HPORT"
+  # the ear as this machine has it, so the server needs no machine's path of its own
+  [ -n "$WCLI" ] && printf 'BILSKIRNIR_WHISPER_CLI=%s\n' "$WCLI"
+  [ -n "$WMODEL" ] && printf 'BILSKIRNIR_WHISPER_MODEL=%s\n' "$WMODEL"
   printf '# <<< managed by setup.sh\n'
 }
 ENVF="$APP/.env"
@@ -245,14 +270,12 @@ fi
 
 # ── 8. the voice: the house's own ear and mouth (BILSKIRNIR_VOICE=house, the default) ──
 # Reported, never raised: Rödd's engine is the voice door's to raise (bin/voice/voice-door.sh host), and
-# Kokoro's unit wakes on the first preview. A missing ear (whisper) fails the check, because dictation is the
-# composer's own button; a lowered engine or a sleeping Kokoro is said, not failed, since they wake on demand.
+# Kokoro's unit wakes on the first preview. Nothing here fails the check: a missing ear turns dictation off, a
+# lowered engine or a sleeping Kokoro is said — the hall opens either way (plan 275 S16, 2026-11-12).
 ROAD="$(printf '%s' "${BILSKIRNIR_VOICE:-house}" | tr 'A-Z' 'a-z')"
 if [ "$ROAD" = "xai" ]; then
   say "voice road: xai (xAI's cloud) — needs XAI_API_KEY in .env"
 else
-  WCLI="${BILSKIRNIR_WHISPER_CLI:-$HOME/whisper.cpp.src/build/bin/whisper-cli}"
-  WMODEL="${BILSKIRNIR_WHISPER_MODEL:-$HOME/whisper.cpp/models/ggml-small.en.bin}"
   KOKORO="${BILSKIRNIR_KOKORO_URL:-http://127.0.0.1:8765}"
   RT="${BILSKIRNIR_REALTIME_URL:-ws://127.0.0.1:${YMIR_VOICE_PORT:-8890}/v1/realtime}"
   RT_HTTP="$(printf '%s' "$RT" | sed -E 's#^ws#http#; s#/v1/realtime.*$##')"
@@ -260,7 +283,8 @@ else
   if [ -x "$WCLI" ] && [ -f "$WMODEL" ] && command -v "${BILSKIRNIR_FFMPEG:-ffmpeg}" >/dev/null 2>&1; then
     say "voice ear: whisper.cpp ready ($(basename "$WMODEL"))"
   else
-    say "voice ear: missing — dictation needs whisper-cli ($WCLI), its model ($WMODEL) and ffmpeg"; fail=1
+    # a missing ear turns dictation off; it never keeps the hall shut (plan 275 S16)
+    say "voice ear: not found — dictation is off until whisper-cli, a ggml model and ffmpeg are present (BILSKIRNIR_WHISPER_CLI / BILSKIRNIR_WHISPER_MODEL)"
   fi
   if curl -fsS -m 2 "$KOKORO/health" >/dev/null 2>&1; then say "voice mouth: Kokoro answers at $KOKORO"
   else say "voice mouth: Kokoro asleep at $KOKORO (the unit ${BILSKIRNIR_KOKORO_UNIT:-kokoro-serve.service} wakes on the first preview)"; fi
