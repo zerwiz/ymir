@@ -3,12 +3,15 @@ import { WebSocket, WebSocketServer } from 'ws';
 import { db } from './db.js';
 import { userFromCookieHeader } from './lib/auth.js';
 import { vncAuthResponse } from './lib/des.js';
-import { orgo } from './orgo.js';
+import { env } from './env.js';
+import { machine } from './machine.js';
+import { deskConfig, rfbPortFor, TcpUpstream } from './desk-local.js';
 import { readyScreen, screenFor } from './computer.js';
 import { viewerClosed, viewerOpened } from './idle.js';
 
 /**
- * VNC relay: browser <-> our server <-> Orgo websockify.
+ * VNC relay: browser <-> our server <-> the computer's VNC: Orgo's websockify (BILSKIRNIR_DESK=orgo),
+ * or the hall's own desk's RFB port on loopback (local, the default).
  * The server performs the RFB handshake upstream with the computer's VNC password
  * (which is root-equivalent and never reaches the browser), then offers the browser
  * an unauthenticated RFB session. In "watch" mode, client input messages
@@ -140,7 +143,9 @@ export function attachVncRelay(server: Server) {
 async function relay(client: WebSocket, userId: string, botId: string, mode: 'watch' | 'control') {
   const fromClient = new ByteQueue();
   const fromUp = new ByteQueue();
-  let upstream: WebSocket | null = null;
+  /** Orgo's websocket or the desk's TCP socket: the relay needs only these. */
+  type Upstream = { send(b: Buffer): void; close(): void; readyState: number; on(ev: string, fn: (...a: any[]) => void): unknown; once(ev: string, fn: (...a: any[]) => void): unknown };
+  let upstream: Upstream | null = null;
   let piping = false;
   const filter = new WatchFilter();
   const closeAll = (code = 1000, reason = '') => {
@@ -160,9 +165,13 @@ async function relay(client: WebSocket, userId: string, botId: string, mode: 'wa
     const { computerId, screenId } = await screenFor(userId, botId);
     // A screen nobody has used yet is bare; set it up while the person is already watching.
     readyScreen(userId, botId).catch(() => {});
-    const { password } = await orgo.vncPassword(computerId);
-    const upUrl = `wss://www.orgo.ai/desktops/${computerId}/ws/websockify?token=${encodeURIComponent(password)}${screenId !== 'default' ? `&screen=${encodeURIComponent(screenId)}` : ''}`;
-    upstream = new WebSocket(upUrl, ['binary']);
+    const { password } = await machine.vncPassword(computerId);
+    if (env.desk === 'local') {
+      upstream = new TcpUpstream(deskConfig.host, rfbPortFor(screenId));
+    } else {
+      const upUrl = `wss://www.orgo.ai/desktops/${computerId}/ws/websockify?token=${encodeURIComponent(password)}${screenId !== 'default' ? `&screen=${encodeURIComponent(screenId)}` : ''}`;
+      upstream = new WebSocket(upUrl, ['binary']) as unknown as Upstream;
+    }
     upstream.on('message', (data: Buffer) => {
       if (!piping) return fromUp.push(Buffer.from(data));
       if (client.readyState === WebSocket.OPEN) client.send(data);

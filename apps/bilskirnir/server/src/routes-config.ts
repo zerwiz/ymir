@@ -247,8 +247,8 @@ configApi.post('/bots/:id/files/download', async (c) => {
   const { path } = await c.req.json<{ path: string }>().catch(() => ({ path: '' }));
   const rel = safeRel(path);
   if (!rel) return c.json({ error: 'bad path' }, 400);
-  // On the computer itself the file is on our own disk: serve it directly.
-  if (box.local) return c.json({ url: `/api/bots/${b.id}/files/raw?path=${encodeURIComponent(rel)}` });
+  // On the computer itself, or on the hall's own desk, the file is one command away: serve it ourselves.
+  if (box.local || env.desk === 'local') return c.json({ url: `/api/bots/${b.id}/files/raw?path=${encodeURIComponent(rel)}` });
   try {
     if (!env.orgoComputerId) return c.json({ error: 'computer unavailable' }, 409);
     const r: any = await orgo.exportFile(env.orgoComputerId, `${LIB_ROOT}/${b.id}/${rel}`);
@@ -260,12 +260,23 @@ configApi.post('/bots/:id/files/download', async (c) => {
   }
 });
 
-configApi.get('/bots/:id/files/raw', (c) => {
+configApi.get('/bots/:id/files/raw', async (c) => {
   const b = ownBot(c.get('user').id, c.req.param('id'));
-  if (!b || !box.local) return c.json({ error: 'not found' }, 404);
+  if (!b || !(box.local || env.desk === 'local')) return c.json({ error: 'not found' }, 404);
   const rel = safeRel(c.req.query('path'));
   if (!rel) return c.json({ error: 'bad path' }, 400);
   const root = `${LIB_ROOT}/${b.id}`;
+  if (!box.local) {
+    // On the desk: resolve links there, refuse anything outside the library, and carry the file back (small files).
+    const r = await box.bash(`root=$(realpath -e ${shq(root)}) && f=$(realpath -e ${shq(`${root}/${rel}`)}) && case "$f" in "$root"/*) [ -f "$f" ] && base64 -w0 "$f" ;; *) exit 3 ;; esac`, 60);
+    if (r.exit_code !== 0) return c.json({ error: 'not found' }, 404);
+    const data = Buffer.from(r.output.trim(), 'base64');
+    return c.body(data, 200, {
+      'content-type': 'application/octet-stream',
+      'content-disposition': `attachment; filename*=UTF-8''${encodeURIComponent(rel.split('/').pop()!)}`,
+      'x-content-type-options': 'nosniff',
+    });
+  }
   let file: string;
   try {
     // Follow links before checking, so a link inside the library cannot point outside it.

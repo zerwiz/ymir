@@ -2,12 +2,13 @@ import { execFile } from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { env } from './env.js';
-import { orgo } from './orgo.js';
+import { machine, machineId } from './machine.js';
 
 /**
  * The box: the one Orgo computer every bot works on. When this server runs on that computer
- * (HQ_LOCAL=1) commands and files go straight to the local shell and disk; otherwise they go
- * through Orgo's API to ORGO_COMPUTER_ID.
+ * (HQ_LOCAL=1) commands and files go straight to the local shell and disk; otherwise they go to the
+ * computer BILSKIRNIR_DESK names: the hall's own desk through `docker exec` (local, the default), or
+ * Orgo's API to ORGO_COMPUTER_ID (orgo). See machine.ts.
  */
 
 export interface BashResult { output: string; exit_code: number }
@@ -44,9 +45,10 @@ export const box = {
   /** Run a bash command on the box. `screenId` picks which screen's DISPLAY it sees. */
   async bash(command: string, timeoutSec = 60, screenId?: string | null): Promise<BashResult> {
     if (env.localBox) return localBash(command, timeoutSec, screenId);
-    if (!env.orgoComputerId) throw new Error('ORGO_COMPUTER_ID is not set');
+    const id = machineId();
+    if (!id) throw new Error('ORGO_COMPUTER_ID is not set');
     const cmd = `export DISPLAY=${displayFor(screenId)}; ${command}`;
-    const r = await orgo.bash(env.orgoComputerId, screenId ?? undefined, cmd, timeoutSec);
+    const r = await machine.bash(id, screenId ?? undefined, cmd, timeoutSec);
     return { output: r.output ?? '', exit_code: r.exit_code ?? (r.success ? 0 : 1) };
   },
 

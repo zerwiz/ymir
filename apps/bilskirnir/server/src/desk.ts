@@ -145,9 +145,11 @@ export function ensureDeskBase(): Promise<void> {
 
 type Rgb = [number, number, number];
 
+// No blue and no purple in this house: the cool names wear the same house hues as the web app
+// (web/src/lib/colors.ts): cyan→moss, blue→steel, violet→umber, magenta→rust.
 const COLOR_HEX: Record<string, string> = {
   black: '#000000', brown: '#A06B39', red: '#FB2B3E', orange: '#FD690F', yellow: '#F59312', green: '#14C16F',
-  cyan: '#13B7A2', blue: '#1E86FC', violet: '#8F59F9', magenta: '#F93498', gray: '#959595',
+  cyan: '#7D8F6A', blue: '#96A0A8', violet: '#8A6A4A', magenta: '#A0523D', gray: '#959595',
 };
 
 function colorHex(color: string): string {
@@ -178,15 +180,15 @@ function hslHex(h: number, s: number, l: number): string {
 
 interface Palette { accent: string; ink: string; wash: string; washDeep: string; washLight: string; glow: string; glow2: string; line: string }
 
-/** Soft tints of the bot's colour. Black and gray get a calm blue-gray instead of a muddy wash. */
+/** Soft tints of the bot's colour. Black, gray and steel get the house's bronze instead of a muddy wash. */
 function paletteFor(avatarHex: string): Palette {
   const [h, s] = hslOf(avatarHex);
-  const base = s < 0.15 ? '#7A869A' : avatarHex;
-  const hue = s < 0.15 ? 218 : h;
-  const sat = s < 0.15 ? 0.3 : Math.max(0.55, Math.min(0.9, s));
+  const base = s < 0.15 ? '#C9973F' : avatarHex;
+  const hue = s < 0.15 ? 38 : h;
+  const sat = s < 0.15 ? 0.42 : Math.max(0.55, Math.min(0.9, s));
   return {
     accent: base,
-    ink: mix(base, '#14171F', 0.8),
+    ink: mix(base, '#14110D', 0.8),
     wash: hslHex(hue, sat, 0.925),
     washLight: hslHex(hue - 12, sat * 0.9, 0.965),
     washDeep: hslHex(hue + 10, sat, 0.865),
