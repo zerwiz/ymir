@@ -50,7 +50,7 @@ ROOT="$(_root)"
 cd "$ROOT" || exit 2
 
 # ONE list. A new tree ward appears here or it does not run anywhere.
-WARDS=(runtime-guard.sh runtime-pinned-guard.sh defaults-guard.sh app-folder-guard.sh app-functional-guard.sh rules-number-guard.sh inventory-guard.sh registers-guard.sh fleet-version-guard.sh subsystem-docs-guard.sh path-ledger-guard.sh path-legality-guard.sh packaging-guard.sh public-data-guard.sh cron-guard.sh features-guard.sh weave-guard.sh vault-guard.sh confidential-guard.sh dead-code-guard.sh docs-claims-guard.sh home-contract-guard.sh language-guard.sh pkill-guard.sh skills-share-guard.sh rules-compliance-guard.sh pr-ship-guard.sh model-rows-guard.sh areas-guard.sh desktop-main-guard.sh house-colour-guard.sh pr-identity-guard.sh nda-guard.sh)
+WARDS=(runtime-guard.sh unit-writer-guard.sh runtime-pinned-guard.sh defaults-guard.sh app-folder-guard.sh app-functional-guard.sh rules-number-guard.sh inventory-guard.sh registers-guard.sh fleet-version-guard.sh subsystem-docs-guard.sh path-ledger-guard.sh path-legality-guard.sh packaging-guard.sh public-data-guard.sh cron-guard.sh features-guard.sh weave-guard.sh vault-guard.sh confidential-guard.sh dead-code-guard.sh docs-claims-guard.sh home-contract-guard.sh language-guard.sh pkill-guard.sh skills-share-guard.sh rules-compliance-guard.sh pr-ship-guard.sh model-rows-guard.sh areas-guard.sh desktop-main-guard.sh house-colour-guard.sh pr-identity-guard.sh nda-guard.sh)
 #
 # nda-guard (2026-11-12, RULES/04): company, client and NDA-project names never enter the public tree. The
 # names are read from $YMIR_HOME at run time, so the ward is never cached and says UNARMED, aloud, where no

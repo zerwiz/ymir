@@ -20,6 +20,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 GARMR="$ROOT/bin/ward/garmr"
 PY="$(command -v python3 || echo /usr/bin/python3)"
+# plan 272, fault 12: a unit is settled through the register, whichever tree this script runs from.
+[ -r "$SCRIPT_DIR/../engine/unit-settle-lib.sh" ] && . "$SCRIPT_DIR/../engine/unit-settle-lib.sh"
 
 # the usage is the header itself, read until the first line that is not a comment,
 # so adding a verb can never print `set -u` as if it were help (it did).
@@ -206,8 +208,14 @@ seat_units() {
   # The units must run the PINNED runtime, never the checkout an agent happens to be
   # standing in (runtime-pinned-guard). Resolve it once, and fall back to this tree
   # only when no pinned checkout exists.
-  local unit_root="${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}"
-  [ -d "$unit_root" ] || unit_root="$ROOT"
+  # Plan 272, fault 12: there is NO fallback to this tree. An old checkout that ran this door used to render
+  # `garmr-brain` with itself as the root and switch the unit off the pin; with no pin seated nothing is rendered.
+  local unit_root=""
+  if command -v unit_pin_dir >/dev/null 2>&1; then unit_root="$(unit_pin_dir)"; else unit_root="${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}"; [ -d "$unit_root" ] || unit_root=""; fi
+  if [ -z "$unit_root" ]; then
+    printf 'garmr: no pinned runtime is seated — the units were NOT rendered (a unit is never written onto a working tree); seat the pin: bin/engine/runtime-seat.sh\n' >&2
+    return 0
+  fi
   local run=(sudo)
   [ "$dry" = 1 ] && run=(echo "would run:")
   # The hound's two units live in /etc and need root. A sudo that must ask for a
@@ -234,6 +242,8 @@ seat_units() {
   sed "s|__YMIR_ROOT__|$unit_root|g; s|__PYTHON__|$PY|g" "$render/garmr-brain.service" \
     > "$HOME/.config/systemd/user/garmr-brain.service"
   cp "$render/garmr-brain.timer" "$HOME/.config/systemd/user/garmr-brain.timer"
+  # the register has the last word on where the unit points (it retargets any tree that is not the pin)
+  if [ "$dry" != 1 ] && command -v unit_settle >/dev/null 2>&1; then unit_settle garmr-brain || true; fi
   as_operator systemctl --user daemon-reload
   if [ "$off" = 1 ]; then
     as_operator systemctl --user disable garmr-brain.timer >/dev/null 2>&1 || true
