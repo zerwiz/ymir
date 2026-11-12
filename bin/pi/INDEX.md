@@ -24,7 +24,7 @@ folder rewrites one file instead of colliding on every branch.
 bin[21]{file,does,kind,verdict,disposition,callers,lines}:
   "arm-pin-lib.sh","arm-pin-lib.sh — where the ARM's code lives: the pinned runtime, never a working tree.","lib","wired","keep",5,111
   "arm-pin.sh","arm-pin.sh — the pin's age and reach, as one fact on the board (plan 257 H8).","tool","wired","keep",2,126
-  "arm.sh","arm.sh — the Gná arm, honestly: what the watch is, and whether THIS harness can arm it.","tool","tested","keep",48,217
+  "arm.sh","arm.sh — the Gná arm, honestly: what the watch is, and whether THIS harness can arm it.","tool","tested","keep",49,217
   "hnoss-ensure.sh","hnoss-ensure.sh — seat and check the Hnoss (OpenDesign) MCP bridge on a machine.","tool","tested","keep",3,192
   "hnoss-mcp-launch.sh","hnoss-mcp-launch.sh — the door that seats the Hnoss (OpenDesign) MCP bridge on the","tool","tested","keep",1,231
   "logretta-council.sh","logretta-council.sh — the council's MODES: who divides the work, who is sent out, who rules.","tool","wired","keep",0,309

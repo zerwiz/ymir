@@ -53,8 +53,21 @@ def token() -> str:
     return value
 
 
+def mark_answered(records: list) -> None:
+    """A mail the operator answered in its own thread is done: he paid attention (2026-11-12)."""
+    last_out = {}
+    for r in records:
+        if (r.get("direction") or "") == "out" and r.get("thread_key"):
+            t = str(r.get("received_at") or "")
+            last_out[str(r["thread_key"])] = max(t, last_out.get(str(r["thread_key"]), ""))
+    for r in records:
+        if (r.get("direction") or "in") == "in" and str(r.get("thread_key") or "") in last_out \
+                and last_out[str(r.get("thread_key"))] >= str(r.get("received_at") or ""):
+            r["answered"] = True
+
+
 def column_of(record: dict) -> str:
-    if record.get("handled_at"):
+    if record.get("handled_at") or record.get("answered"):
         return "done"
     if record.get("direction") == "out":
         return "waiting"
@@ -86,7 +99,9 @@ def row(record: dict) -> dict:
 
 
 def queue(account: str, hours: int) -> dict:
-    rows = [r for r in gna_store.latest(account, hours) if (r.get("direction") or "in") == "in"]
+    every = gna_store.latest(account, hours)
+    mark_answered(every)
+    rows = [r for r in every if (r.get("direction") or "in") == "in"]
     columns = {"needs_you": [], "unsure": [], "waiting": [], "done": []}
     for record in rows:
         columns[column_of(record)].append(row(record))

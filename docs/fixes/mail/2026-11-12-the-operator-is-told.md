@@ -22,3 +22,9 @@ the hotline (`bin/notify/send.sh`), which reaches the operator by Telegram and t
 `python3 bin/mail/tests/test_gna.py` → `Ran 37 tests … OK`. `gna_notify.py --pending` → nothing new (the imported
 back-catalogue was marked seen in the home's ledger first, so old mail does not arrive as news).
 `bin/notify/send.sh --source cron --severity MEDIUM … --dry-run` → `send`.
+
+## Appended 2026-11-12 — mail he already paid attention to is not news
+The operator: *"if we have paid attention [to it], we don't need [to be told]"*. `gna_notify.attended()` skips a
+message Gmail no longer marks `UNREAD` (he opened it) or one he wrote in after it arrived, in the same thread (he
+answered it). The desk and the importer count an answered mail as **done**. Measured on the operator's inbox: needs-you
+92 → 90, done 195 → 197; `test_gna.py` 37 tests OK.

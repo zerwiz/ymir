@@ -47,13 +47,43 @@ def latest_versions():
     return latest
 
 
+def replied_threads(latest: dict) -> dict:
+    """thread → the newest time the operator wrote in it (his own sent mail and drafts)."""
+    out = {}
+    for row in latest.values():
+        if row.get("direction") in ("out", "outbound") and row.get("thread_key"):
+            t = str(row.get("received_at") or "")
+            key = (row.get("account", ""), str(row.get("thread_key")))
+            if t > out.get(key, ""):
+                out[key] = t
+    return out
+
+
+def attended(row: dict, replied: dict) -> str:
+    """Why the operator already paid attention to this mail, or "" if he has not.
+
+    Two signals, both his own: Gmail no longer marks it UNREAD (he opened it), or he wrote in the same thread
+    after it arrived (he answered). Mail he has seen is not news (the operator, 2026-11-12)."""
+    labels = row.get("labels")
+    if isinstance(labels, list) and labels and "UNREAD" not in labels and "DRAFT" not in labels:
+        return "read"
+    key = (row.get("account", ""), str(row.get("thread_key") or ""))
+    if key in replied and replied[key] >= str(row.get("received_at") or ""):
+        return "answered"
+    return ""
+
+
 def pending():
     notified = already_notified()
+    latest = latest_versions()
+    replied = replied_threads(latest)
     out = []
-    for (_, _), row in latest_versions().items():
+    for (_, _), row in latest.items():
         if row.get("direction") not in ("in", "inbound"):
             continue
         if (row.get("account", ""), str(row.get("id"))) in notified:
+            continue
+        if attended(row, replied):
             continue
         if str(row.get("auto_submitted") or "").strip() or str(row.get("precedence") or "").strip() in ("bulk", "junk", "list"):
             continue
