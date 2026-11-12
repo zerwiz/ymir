@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# ymir-app — the ONE command every Ymir shortcut runs, on every platform (plan 275 S11).
+#
+#   ymir-app <hlidskjalf|smidja|odrerir|sessrumnir|bilskirnir|rodd> [args…]
+#   ymir-app --list | --where
+#
+# A shortcut never names a tree again. Measured: on 2026-10-22 every launcher named a dead /tmp/npm-pretest path,
+# on 2026-11-09 five named a worker's worktree, and this file's own first version (plan 118) opened the npm global
+# copy of October (v0.1.53). This one resolves the PINNED runtime when it runs — a link to the current release
+# after `bin/engine/release.sh adopt` — so an update, a rollback or a moved checkout can never break an icon.
+# It is installed to ~/.local/bin/ymir-app by bin/desktop/shortcuts.sh (install and every update).
+set -u
+pin="${YMIR_RUNTIME_DIR:-}"
+if [ -z "$pin" ]; then
+  conf="${YMIR_HOME:-$HOME/Documents/ymirhome}/config/runtime.env"   # allow-home-default: the one home
+  [ -r "$conf" ] && pin="$(sed -n 's/^[[:space:]]*YMIR_RUNTIME_DIR[[:space:]]*=[[:space:]]*//p' "$conf" | head -1 | tr -d "\"'")"
+  pin="${pin//\$\{HOME\}/$HOME}"; pin="${pin//\$HOME/$HOME}"
+fi
+[ -n "$pin" ] || pin="$HOME/ymir-runtime"
+[ -d "$pin/apps" ] || { printf 'ymir-app: no Ymir runtime at %s — run bin/engine/ymir-install.sh\n' "$pin" >&2; exit 1; }
+export YMIR_RUNTIME_DIR="$pin"
+
+app="${1:-}"; [ $# -gt 0 ] && shift
+case "$app" in
+  hlidskjalf|smidja|odrerir) exec bash "$pin/scripts/electron.sh" start --view "$app" "$@" ;;
+  sessrumnir) exec bash "$pin/bin/desktop/sessrumnir-launch.sh" start "$@" ;;
+  bilskirnir) exec "$pin/apps/bilskirnir/start.sh" "$@" ;;
+  rodd) systemctl --user restart ymir-rodd.service 2>/dev/null && exit 0; exec "$pin/apps/rodd/start.sh" "$@" ;;
+  --where) printf '%s\n' "$pin" ;;
+  --list|"") printf '%s\n' hlidskjalf smidja odrerir sessrumnir bilskirnir rodd ;;
+  *) printf 'ymir-app: no app named %s (ymir-app --list)\n' "$app" >&2; exit 2 ;;
+esac

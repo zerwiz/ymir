@@ -89,14 +89,31 @@ if [ -n "$dirty" ]; then
   exit 3
 fi
 
-# 1. the pinned checkout moves — never a working tree, and never a merge commit of its own
-git -C "$RUN_DIR" checkout -q "$BRANCH" && git -C "$RUN_DIR" reset -q --hard "origin/$BRANCH" || {
-  printf 'FAIL\tthe checkout could not be moved to origin/%s\n' "$BRANCH"; exit 1; }
+# 1. the runtime moves. A pin that is a LINK to a release (plan 275 S9, after `release.sh adopt`) is never touched in
+#    place: a new release is built beside it, proved app by app, and the link flips in one rename. Only an old,
+#    not-yet-adopted pin is still moved with checkout + reset (the road this plan retires).
+RELEASE_DOOR="$ROOT/bin/engine/release.sh"
+if [ -L "$RUN_DIR" ] && [ -x "$RELEASE_DOOR" ]; then
+  printf 'release\tbuilding origin/%s beside the running release (nothing moves until it is proved)\n' "$BRANCH"
+  rel_out="$(bash "$RELEASE_DOOR" build --ref "origin/$BRANCH" --from "$RUN_DIR" 2>&1)"; rel_rc=$?
+  printf '%s\n' "$rel_out" | sed 's/^/  /'
+  if [ "$rel_rc" != 0 ]; then
+    fault release-unproved "The new release did not build or prove" "The running release was left in place." "" '```' "$rel_out" '```'
+    printf 'FAIL\tthe new release did not prove — the running one stays\n'; exit 1
+  fi
+  bash "$RELEASE_DOOR" flip "$(git -C "$RUN_DIR" rev-parse --short=12 "origin/$BRANCH")" | sed 's/^/  /' || {
+    printf 'FAIL\tthe flip did not land\n'; exit 1; }
+  RELEASED=1
+else
+  git -C "$RUN_DIR" checkout -q "$BRANCH" && git -C "$RUN_DIR" reset -q --hard "origin/$BRANCH" || {
+    printf 'FAIL\tthe checkout could not be moved to origin/%s\n' "$BRANCH"; exit 1; }
+  RELEASED=0
+fi
 now=$(git -C "$RUN_DIR" rev-parse --short HEAD | tr -d '[:space:]')
 
 # 2. its dependency closure, because node-based tools (the calendar reader, the MCP faces) need it and a fresh
 #    clone has none — measured 2026-11-02: calendar-watch died on `Cannot find package 'zod'`.
-if [ -f "$RUN_DIR/package-lock.json" ] && [ ! -d "$RUN_DIR/node_modules/zod" ]; then
+if [ "${RELEASED:-0}" = 0 ] && [ -f "$RUN_DIR/package-lock.json" ] && [ ! -d "$RUN_DIR/node_modules/zod" ]; then
   printf 'deps\tinstalling the runtime dependency closure (npm ci --omit=dev)\n'
   ( cd "$RUN_DIR" && npm ci --omit=dev --no-audit --no-fund >/dev/null 2>&1 ) || {
     printf 'FAIL\tthe dependency closure did not install\trun it by hand: cd %s && npm ci --omit=dev\n' "$RUN_DIR"; exit 1; }
@@ -150,7 +167,7 @@ if [ "$fail" -ne 0 ]; then
   fi
   # S1: roll back to the commit that was running, so the machine is never left on code that does not start
   printf 'ROLLBACK\ta unit did not settle on %s — moving the pin back to %s\n' "$now" "${previous:0:8}"
-  git -C "$RUN_DIR" reset -q --hard "$previous" && {
+  { if [ "${RELEASED:-0}" = 1 ]; then bash "$RELEASE_DOOR" rollback >/dev/null; else git -C "$RUN_DIR" reset -q --hard "$previous"; fi; } && {
     [ -x "$UNITS_DOOR" ] && YMIR_RUNTIME_DIR="$RUN_DIR" bash "$UNITS_DOOR" write --no-restart >/dev/null 2>&1
     systemctl --user daemon-reload
     for u in $UNITS; do unit_present "$u" && systemctl --user restart "$(unit_name "$u")" >/dev/null 2>&1; done; }

@@ -10,6 +10,6 @@
     "ui:install": "npm ci --prefix ui"
   },
   "devDependencies": {
-    "electron": "^43.7.3"
+    "electron": "43.8.9"
   }
 }
