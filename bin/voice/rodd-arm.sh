@@ -491,13 +491,29 @@ cmd_hold() {
     bash "$ROOT/bin/seat/helm-identity.sh" --check >/dev/null 2>&1 \
       || refuse "the helm is NOT taken: $(bash "$ROOT/bin/seat/helm-identity.sh" --check 2>&1 | head -1)"
   fi
+  # The seat and the charter come from the roster (the same row the gate just read), so the
+  # sidecar the arm reads names WHO holds the helm, never only `rodd`.
+  local ident="" seat="" charter=""
+  if [ -x "$ROOT/bin/seat/helm-identity.sh" ]; then
+    ident="$(bash "$ROOT/bin/seat/helm-identity.sh" --check 2>/dev/null | sed -n '2p')"
+    seat="$(printf '%s' "$ident" | awk -F'","' '{gsub(/^ *"/,"",$1); print $1}')"
+    charter="$(printf '%s' "$ident" | awk -F'","' '{print $2}' | sed 's/ · /,/g; s/ /-/g')"
+  fi
+  [ -n "$seat" ] || seat=unnamed
+  [ -n "$charter" ] || charter=none
   gleipnir_session_pid _sess; local sess="${_sess:-$$}"
   gleipnir_lock_owner _owner
   if [ -n "$_owner" ] && gleipnir_pid_alive "$_owner"; then
     refuse "the helm is held by another live session (pid $_owner) — a hold never steals; release it first"
   fi
   gleipnir_lock_acquire || refuse "the helm could not be taken — another live session holds it (a hold never steals)"
-  printf 'role=rodd session=%s\n' "$sess" > "$STATE_ROOT/.arm.role" 2>/dev/null || true
+  # The arm reads this sidecar from the state dir ITS lease names; the home's state dir is
+  # only the answer when no lease exists yet (a hold that wrote elsewhere left the lease
+  # at role=unknown and Eir's roddhelm red).
+  local side="$STATE_ROOT" lst=""
+  [ -r "$LEASE" ] && lst="$(lease_field "$LEASE" state)"
+  [ -n "$lst" ] && [ -d "$lst" ] && side="$lst"
+  printf 'role=rodd session=%s seat=%s charter=%s\n' "$sess" "$seat" "$charter" > "$side/.arm.role" 2>/dev/null || true
   room_append "$STATE_ROOT" "Nanna" "hold: Rödd takes the helm (session $sess)" || true
   printf 'rodd-arm-hold[1]{verb,holder_pid,state_dir}:\n  "hold","%s","%s"\n' "$sess" "$STATE_ROOT"
   return 0

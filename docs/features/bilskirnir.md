@@ -18,7 +18,8 @@ It opens in its own Electron window, like the other Ymir apps, and fits every sc
 - `hermes` on your PATH, so Nanna can answer. Without it the hall still opens, and Nanna stays silent.
 - An `electron` binary for the window: a system package (`/usr/lib/electron*`) or `npm` electron. Without it, open
   the hall in a browser.
-- The model rail reachable (the rail key is read from `~/.pi/agent/auth.json`).
+- A model provider you can reach: anything you already have is found for you, and you choose it in **Settings ›
+  Models** ([choose a model](bilskirnir-choose-a-model.md)). No pi needed.
 
 ## Do it
 
@@ -54,7 +55,7 @@ It fails when the page scrolls sideways or the composer leaves the screen.
 |---|---|---|
 | `PORT` | `apps/bilskirnir/.env` | `8787` |
 | `BILSKIRNIR_HERMES_PORT` | the environment, read by `setup.sh` | `8642` |
-| `BILSKIRNIR_MODEL` | the environment, read by `setup.sh` | `qwen3.6-35b-a3b@q4_k_xl-mtp` |
+| `BILSKIRNIR_MODEL` | the environment, read by `setup.sh` | unset: your choice on Settings › Models, else the first allowed model found |
 | `BILSKIRNIR_WEB_PORT` | the environment, read by `start.sh --dev` | `5173` |
 | `BILSKIRNIR_ELECTRON` | the environment, read by `start.sh` | probed |
 | `BILSKIRNIR_DESKTOP` | the environment, read by `setup.sh` | `1` (seat the launcher entry) |
@@ -78,3 +79,4 @@ It fails when the page scrolls sideways or the composer leaves the screen.
 
 - **2026-11-12** — first written: every screen, its own window, install and Gróa, the house's words.
 - **2026-11-12** — the launcher entry is named Bilskirnir and rides the house's desktop road.
+- **2026-11-12** — the model is chosen on Settings › Models, and `setup.sh` no longer needs pi ([choose a model](bilskirnir-choose-a-model.md)).

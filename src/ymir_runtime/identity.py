@@ -54,7 +54,7 @@ SEAT_FILE_NAME = ".ymir-seat"
 
 # `unnamed` is a RENDERED word, never an invented name (Rule 44).
 UNNAMED = "unnamed"
-DEFAULT_PIN = "~/ymir-runtime"
+DEFAULT_PIN = paths_mod.DEFAULT_PIN  # one default, stated once in paths.py (plan 269)
 
 # The pin's age costs two git calls; a poll loop must not pay them every cycle.
 IDENTITY_TTL_SECONDS = 300

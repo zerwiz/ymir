@@ -41,29 +41,9 @@ SERVICE="queue-warden.service"; TIMER="queue-warden.timer"
 if [ -n "$TIMER_ACTION" ]; then
   case "$TIMER_ACTION" in
     install)
-      mkdir -p "$UNIT_DIR"
-      cat >"$UNIT_DIR/$SERVICE" <<UNIT
-[Unit]
-Description=queue-warden — get every open PR into main
-
-[Service]
-Type=oneshot
-WorkingDirectory=$ROOT
-ExecStart=/usr/bin/env bash $ROOT/bin/forge/queue-warden.sh run
-UNIT
-      cat >"$UNIT_DIR/$TIMER" <<UNIT
-[Unit]
-Description=queue-warden — every 10 minutes
-
-[Timer]
-OnBootSec=3min
-OnUnitActiveSec=10min
-AccuracySec=30s
-Unit=$SERVICE
-
-[Install]
-WantedBy=timers.target
-UNIT
+      # the unit is the register's (config/units.yaml: queue-warden) and the one writer renders it against the
+      # PINNED runtime, never the tree this door ran from (plan 269)
+      bash "$ROOT/bin/engine/units.sh" write queue-warden --no-restart >/dev/null || { printf 'queue: units.sh could not write the unit\n' >&2; exit 1; }
       systemctl --user daemon-reload 2>/dev/null || true
       systemctl --user enable --now "$TIMER" 2>&1 | tail -2 || true
       printf 'timer[3]{unit,interval,state}:\n  "%s","%s","%s"\n' "$UNIT_DIR/$TIMER" "10min" "$(systemctl --user is-active "$TIMER" 2>/dev/null | head -1 || true)"
@@ -131,7 +111,9 @@ run_one() {
   GH_TOKEN_FOR_PUSH="$(gh auth token)" GIT_ASKPASS="$ASKPASS" YMIR_SKIP_FIXES_GUARD=1 git push https://github.com:443/zerwiz/ymir.git "HEAD:$branch" >/tmp/qw-push-$n.log 2>&1 || { printf '  blocked: push failed\n'; cat /tmp/qw-push-$n.log | tail -3; cd "$ROOT"; return; }
   # step 6 merge
   . "$ROOT/bin/forge/merge-method.sh"
-  if gh pr merge "$n" "$(merge_flag_for_pr "$n")" --delete-branch >/tmp/qw-mergepr-$n.log 2>&1; then
+  _qw_flag="$(merge_flag_for_pr "$n")"
+  refuse_squash_of_gather "$n" "$_qw_flag" || { printf '  blocked: a gathered batch is never squashed\n'; cd "$ROOT"; return; }
+  if gh pr merge "$n" "$_qw_flag" --delete-branch >/tmp/qw-mergepr-$n.log 2>&1; then
     printf '  merged\n'
     bash "$ROOT/bin/records/runes-append.sh" engine merge --message "queue-warden merged PR $n" >/dev/null 2>&1 || true
     bash "$ROOT/bin/agents/eindri-notify.sh" --from queue-warden -- "merged PR $n" >/dev/null 2>&1 || true

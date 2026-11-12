@@ -127,26 +127,9 @@ cmd_take() {  # <id>
 cmd_install_timer() {
   local dir="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
   mkdir -p "$dir" || die "cannot create $dir"
-  cat >"$dir/review-loop.service" <<EOF
-[Unit]
-Description=review loop — judge the review shelf (plan 205 §2.5)
-
-[Service]
-Type=oneshot
-ExecStart=/bin/bash $ROOT/bin/forge/review-shelf.sh tick
-EOF
-  cat >"$dir/review-loop.timer" <<EOF
-[Unit]
-Description=review loop every 30 minutes — one wake per (packet, head), never a flood
-
-[Timer]
-OnBootSec=5min
-OnUnitActiveSec=30min
-Unit=review-loop.service
-
-[Install]
-WantedBy=timers.target
-EOF
+  # the units are the register's (config/units.yaml: review-loop) and the one writer renders them against
+  # the PINNED runtime, never the tree this door ran from (plan 269)
+  bash "$ROOT/bin/engine/units.sh" write review-loop --no-restart >/dev/null || die "units.sh could not write review-loop"
   systemctl --user daemon-reload 2>/dev/null || true
   systemctl --user enable --now review-loop.timer 2>/dev/null || true
   printf 'review-shelf[1]{timer,state,next}:\n  "review-loop.timer","enabled","the shelf is judged every 30 minutes"'

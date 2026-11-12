@@ -195,7 +195,16 @@ cmd_check() {
   resolve_state
   local lease="$STATE_ROOT/.arm.lease" role=""
   [ -r "$lease" ] || refuse "no arm lease — nobody is holding the arm"
-  role="$(lease_field "$lease" role)"; [ -n "$role" ] || role=unknown
+  role="$(lease_field "$lease" role)"
+  # A lease the daemon wrote before the hold took the helm (or from an older pinned runtime)
+  # names no role; the hold's sidecar for the SAME session is the declaration then.
+  if [ -z "$role" ] || [ "$role" = unknown ]; then
+    local lsess side srole ssess
+    lsess="$(lease_field "$lease" session)"; side="$STATE_ROOT/.arm.role"
+    [ -r "$side" ] && { srole="$(lease_field "$side" role)"; ssess="$(lease_field "$side" session)"; }
+    [ -n "${srole:-}" ] && [ -n "$lsess" ] && [ "${ssess:-}" = "$lsess" ] && role="$srole"
+  fi
+  [ -n "$role" ] || role=unknown
   case "$role" in
     rodd|counsellor|pi|opencode|claude|cursor|codex|grok|kimi|muse|hermes) : ;;
     *) refuse "the lease names role '$role', which is not a known holder role" ;;

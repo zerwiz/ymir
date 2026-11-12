@@ -27,8 +27,9 @@ while [ $# -gt 0 ]; do case "$1" in --dry-run) DRY=1; shift;; --status) STATUS=1
 for _a in "${ORIG[@]}"; do
   if [ "$_a" = "--install-timer" ]; then
     U="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"; mkdir -p "$U"
-    printf '[Unit]\nDescription=issue-watch — read the issues\n\n[Service]\nType=oneshot\nWorkingDirectory=%s\nExecStart=/usr/bin/env bash %s/bin/forge/issue-watch.sh\n' "$ROOT" "$ROOT" >"$U/issue-watch.service"
-    printf '[Unit]\nDescription=issue-watch — every 5 minutes\n\n[Timer]\nOnBootSec=4min\nOnUnitActiveSec=5min\nAccuracySec=30s\nUnit=issue-watch.service\n\n[Install]\nWantedBy=timers.target\n' >"$U/issue-watch.timer"
+    # the units are the register's (config/units.yaml: issue-watch) and the one writer renders them against
+    # the PINNED runtime, never the tree this door ran from (plan 269)
+    bash "$ROOT/bin/engine/units.sh" write issue-watch --no-restart >/dev/null || { printf 'issue-watch: units.sh could not write the unit\n' >&2; exit 1; }
     systemctl --user daemon-reload 2>/dev/null || true
     systemctl --user enable --now issue-watch.timer >/dev/null 2>&1 || true
     printf 'issue-watch-timer[2]{unit,state}:\n  "%s","%s"\n' "$U/issue-watch.timer" "$(systemctl --user is-active issue-watch.timer 2>/dev/null)"

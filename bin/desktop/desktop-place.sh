@@ -111,10 +111,17 @@ install_entries() {
     printf 'skip: desktop entries are Omarchy/Linux-shaped; this host is %s\n' "$(ymir_os)" >&2
     return 0
   fi
-  # Which root runs the launchers? The one durable root that carries the files
-  # below — the npm package when it is whole, else this checkout.
-  local root
-  root="$(launcher_root)" || {
+  # Which root runs the launchers? The PINNED runtime when it stands and carries the files below (plan
+  # 269: an app must never run from the tree an installer happened to run in); else the one durable root
+  # that does — the npm package when it is whole, else this checkout.
+  local root pinroot=""
+  [ -r "$ROOT/bin/pi/arm-pin-lib.sh" ] && . "$ROOT/bin/pi/arm-pin-lib.sh" && arm_pin_dir pinroot
+  if [ -n "$pinroot" ] && [ -f "$pinroot/scripts/electron.sh" ] && [ -f "$pinroot/bin/desktop/sessrumnir-launch.sh" ]; then
+    root="$pinroot"
+  else
+    root="$(launcher_root)"
+  fi
+  [ -n "$root" ] || {
     printf 'error: no durable root raises the halls — neither this checkout nor the ymir package carries scripts/electron.sh and bin/desktop/sessrumnir-launch.sh (a temp install is never baked)\n' >&2
     return 1
   }

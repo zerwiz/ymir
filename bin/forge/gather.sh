@@ -218,6 +218,7 @@ git -C "$WTP" push -q --no-verify -u "$REMOTE" "$BRANCH" || err "push of $BRANCH
 
 BODY="$(mktemp)"; trap 'rm -f "$BODY"' EXIT
 {
+  printf 'MERGE WITH A MERGE COMMIT — this is a gathered batch; a squash erases every errand'"'"'s history.\n\n'
   printf 'One batch, gathered by `bin/forge/gather.sh` (RULES/08, the batch road): every errand below\n'
   printf 'committed on its own branch and never pushed; the helm merged them in one worktree from\n'
   printf 'fresh `%s/%s` and the gates ran once on head `%s`.\n\n' "$REMOTE" "$BASE" "${HEAD_SHA:0:12}"
@@ -232,6 +233,10 @@ n="$(grep -c '^merged=' "$MANIFEST")"
 url="$(cd "$WTP" && bash bin/forge/pr-open.sh --role helm --house "$HOUSE" --fleet "$FLEET" --errand "$BATCH" \
   --authority "RULES/08 batch road; the Allfather merges" --proves "gates passed once on ${HEAD_SHA:0:12}" \
   --title "gather: $n errands in one batch ($BATCH)" --body-file "$BODY")" || err "the PR could not be opened (the branch is pushed)" "open it by hand from $WTP"
+case "$url" in
+  https://*/pull/[0-9]*) ;;
+  *) err "the PR opener printed no pull-request URL (got '${url:-nothing}') — nothing is marked shipped" "the branch is pushed; open the PR by hand from $WTP, then re-run" ;;
+esac
 printf 'pr=%s\n' "$url" >>"$MANIFEST"
 
 # ── the record ──────────────────────────────────────────────────────────────

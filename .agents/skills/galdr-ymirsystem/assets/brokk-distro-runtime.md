@@ -1277,3 +1277,19 @@ asks her to merge with `void` and the reason (Rule 08).
 
 
 *Appended 2026-11-12 (plan 262):* main's one OpenCode door, `bin/seat/opencode-launcher.sh`, prints `env OPENCODE_CONFIG_CONTENT=… opencode run [--model M] --auto "<brief>"` (OpenCode v2's interactive screen refuses `--model`). The herdr road runs that line with `hdr pane run` and counts the seat only once `seat-prove.sh` finds the agent; an explicit `--kind` wins over `agents.yaml`; the tmux fallback runs the same line; an exact `provider/model` is verified with `opencode-launcher.sh has` (OpenCode's own list, because pi's catalog lacks the `opencode/` provider). Guards: `bin/gates/tests/test_opencode_launcher.sh` and Eir's `opencode` surface. Fix note `docs/fixes/agents/2026-11-12-an-opencode-worker-actually-starts.md`.
+
+## The pinned runtime — what restarts, and who writes the units (plan 269, 2026-11-12)
+
+`bin/engine/runtime-deploy.sh` moves `~/ymir-runtime` to origin/main, installs its dependencies, and then restarts
+**the units the register owes this seat** (`bin/engine/units.sh list --restart`, from `config/units.yaml`) — timers
+included. It no longer works from a fixed list of ten; `YMIR_RUNTIME_UNITS` in `runtime.env` is an override only.
+Before the restart it runs `units.sh write --no-restart` from the pin, so a unit that runs a working tree is
+rewritten onto the pin and its old line logged. `--no-restart` fetches, moves and installs dependencies and stops;
+`runtime-seat.sh` uses it.
+
+A seat with no pin is seated, not skipped: the installer step `runtime` and Gróa both run
+`bin/engine/runtime-seat.sh`, which clones the pin from origin/main and records it in `<home>/config/runtime.env`.
+Gróa also runs `units.sh write` after every update, so a unit seated from a worktree is caught within a day.
+Eir's `runtimepin` surface runs `units.sh check` and its mend is the seat door. The resolver default
+(`~/ymir-runtime`, applied once the checkout is seated) lives once in `src/ymir_runtime/paths.py` and
+`bin/pi/arm-pin-lib.sh`.

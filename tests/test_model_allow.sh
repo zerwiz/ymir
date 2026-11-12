@@ -3,13 +3,13 @@
 #
 # A throwaway home carries an allow-list with exactly the fleet's approved models:
 # opencode-go/deepseek-v4.1-flash, the local rail (llama-swap/*, llamacpp-*/*) and,
-# for the Claude harness, claude-opus-5-5. Then:
+# for the Claude harness, claude-sonnet-5-5 and claude-opus-5-5. Then:
 #
 #   · a spawn asking for opencode-go/deepseek-v4-pro is refused, with the reason
 #   · the same spawn with a dated grant succeeds, and the grant use is logged
 #   · flash spawns as before
-#   · a claude spawn with no --model gets claude-opus-5-5; --model opus does too
-#   · a claude spawn asking for sonnet, or for another harness's model, is refused
+#   · a claude spawn with no --model launches on sonnet; --effort high launches opus
+#   · a claude spawn asking for haiku, or for another harness's model, is refused
 #   · the resolver refuses a pro request and resolves `opus` for Claude
 #
 # Spawns run with --dry-run (nothing is created). A case whose harness is not on PATH
@@ -47,9 +47,10 @@ allow:
   - opencode-go/deepseek-v4.1-flash
   - llama-swap/*
   - llamacpp-*/*
+  - claude/claude-sonnet-5-5
   - claude/claude-opus-5-5
 defaults:
-  claude: claude-opus-5-5
+  claude: claude-sonnet-5-5
 ${1:-grants: []}
 YAML
 }
@@ -117,12 +118,15 @@ fi
 # ── the spawner: claude ──
 if have claude && [ -f "$ROOT/.agents/harnesses/claude-worker.settings.json" ]; then
   out="$(spawn --harness claude)"
-  [ "$(preflight_model "$out")" = claude-opus-5-5 ] && ok "claude gets Opus 5.5 with no --model" || bad "claude gets Opus 5.5 with no --model" "$out"
-  out="$(spawn --harness claude --model opus)"
-  [ "$(preflight_model "$out")" = claude-opus-5-5 ] && ok "claude --model opus is Opus 5.5" || bad "claude --model opus is Opus 5.5" "$out"
-  for m in sonnet haiku claude-fable-5-2 opencode-go/deepseek-v4.1-flash; do
+  [ "$(preflight_model "$out")" = sonnet ] && ok "claude with no --model launches on sonnet" || bad "claude with no --model launches on sonnet" "$out"
+  printf '%s' "$out" | grep -q -- '--model sonnet' && ok "the claude launch line carries --model sonnet" || bad "the claude launch line carries --model sonnet" "$out"
+  out="$(spawn --harness claude --effort high)"
+  [ "$(preflight_model "$out")" = opus ] && ok "claude at high effort launches on opus" || bad "claude at high effort launches on opus" "$out"
+  out="$(spawn --harness claude --model sonnet)"
+  [ "$(preflight_model "$out")" = sonnet ] && ok "claude --model sonnet is allowed" || bad "claude --model sonnet is allowed" "$out"
+  for m in haiku claude-fable-5-2 opencode-go/deepseek-v4.1-flash; do
     out="$(spawn --harness claude --model "$m")"; rc=$?
-    [ "$rc" != 0 ] && printf '%s' "$out" | grep -q '^refused:' && ok "claude refuses $m" || bad "claude refuses $m" "$out"
+    [ "$rc" != 0 ] && printf '%s' "$out" | grep -q '^refused:\|^error:' && ok "claude refuses $m" || bad "claude refuses $m" "$out"
   done
 else
   skip "claude spawns" "claude or its worker profile is absent"

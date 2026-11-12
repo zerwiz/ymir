@@ -152,6 +152,7 @@ fi
 # ── the merge ────────────────────────────────────────────────────────────────────────────────
 . "$ROOT/bin/forge/merge-method.sh"
 MERGE_FLAG="$(merge_flag_for_pr "$PR" "$REPO")"
+refuse_squash_of_gather "$PR" "$MERGE_FLAG" "$REPO" || exit 1
 MERGE_OUT="$(gh pr merge "$PR" -R "$REPO" "$MERGE_FLAG" --delete-branch 2>&1)" || {
   printf 'ship: the merge failed — %s\n' "$(printf '%s' "$MERGE_OUT" | tail -2)" >&2
   printf 'ship[2]{pr,state}:\n  "%s","not merged"\n' "$PR"

@@ -214,3 +214,24 @@
 
 /* knob contrasts with the "on" track (matters for black bots in dark mode) */
 .toggle.is-on .toggle__knob { background: var(--bot-on-action, #FFFFFF); }
+
+/* ---------- Settings > Models: what the user already has, one click to use it ---------- */
+.models-policy { padding: 8px 12px; border-radius: 10px; background: var(--color-bg-tertiary); box-shadow: var(--color-border-tertiary) 0 0 0 0.5px inset; margin-bottom: 12px; }
+.models-now { margin: 4px 0 8px; font-size: 13px; line-height: 19px; color: var(--color-text-secondary); }
+.models-now strong { color: var(--color-text-primary); font-weight: 500; overflow-wrap: anywhere; }
+.models-done { margin: 0 0 10px; color: var(--color-text-secondary); overflow-wrap: anywhere; }
+.models-note { padding: 0 14px 8px; }
+.models-search { width: 100%; margin: 4px 0 12px; }
+.models-provider .cfg-row__title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.models-provider .cfg-row__sub { overflow-wrap: anywhere; }
+.models-row__id { font-family: var(--font-mono-stack); font-size: 12.5px; font-weight: 450; white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+.models-row.is-refused { opacity: 0.55; }
+.models-row.is-refused .cfg-row__sub { color: var(--color-text-tertiary); }
+.models-add { display: flex; flex-direction: column; gap: 14px; padding: 14px; }
+.models-add select.text-input { width: 100%; }
+@media (max-width: 760px) {
+  .models-row { flex-wrap: wrap; row-gap: 8px; }
+  .models-row .cfg-btn, .models-row .cfg-chip { margin-left: auto; }
+  .models-add .cfg-btn { width: 100%; }
+  .models-provider .models-provider__head { flex-wrap: wrap; }
+}

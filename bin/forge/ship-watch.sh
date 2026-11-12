@@ -29,29 +29,9 @@ SERVICE="ship-watch.service"; TIMER="ship-watch.timer"
 if [ -n "$TIMER_ACTION" ]; then
   case "$TIMER_ACTION" in
     install)
-      mkdir -p "$UNIT_DIR"
-      cat >"$UNIT_DIR/$SERVICE" <<UNIT
-[Unit]
-Description=ship-watch — settle and ship proved PRs
-
-[Service]
-Type=oneshot
-WorkingDirectory=$ROOT
-ExecStart=/usr/bin/env bash $ROOT/bin/forge/ship-watch.sh
-UNIT
-      cat >"$UNIT_DIR/$TIMER" <<UNIT
-[Unit]
-Description=ship-watch — every 5 minutes
-
-[Timer]
-OnBootSec=3min
-OnUnitActiveSec=5min
-AccuracySec=30s
-Unit=$SERVICE
-
-[Install]
-WantedBy=timers.target
-UNIT
+      # the unit is the register's (config/units.yaml: ship-watch) and the one writer renders it against the
+      # PINNED runtime, never the tree this door ran from (plan 269)
+      bash "$ROOT/bin/engine/units.sh" write ship-watch --no-restart >/dev/null || { printf 'ship: units.sh could not write the unit\n' >&2; exit 1; }
       systemctl --user daemon-reload 2>/dev/null || true
       systemctl --user enable --now "$TIMER" 2>&1 | tail -2 || true
       printf 'timer[3]{unit,interval,state}:\n  "%s","%s","%s"\n' "$UNIT_DIR/$TIMER" "5min" "$(systemctl --user is-active "$TIMER" 2>/dev/null | head -1 || true)"
