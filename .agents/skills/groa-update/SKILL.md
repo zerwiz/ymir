@@ -190,3 +190,11 @@ law; Rule 07's reason applied to topology).
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-12** — Plan 278: an update finishes the installs. After the Eir check Gróa runs
+  `bin/agents/eir-doctor.sh fix --safe`, which mends only the surfaces `config/surfaces.yaml` calls `safe`, then
+  checks again. Her last line is the verdict: `groa-update: whole — every surface answers`, or
+  `groa-update: NOT whole — owed: …` with each surface's exact command; a step stopped at its limit counts as a
+  failure. Exit 4 means the code and the seat moved but surfaces are owed; 1 still means the seat could not be
+  seated. A surface listed in `$YMIR_HOME/config/owed-accepted.txt` is named but does not fail the update. A new
+  owed set writes one report to `hodd/state/groa/faults/` (the brief for plan 275's one smith). The helper is
+  `bin/agents/groa-verdict-lib.sh`; the how-to is `docs/features/an-update-finishes-the-installs.md`.

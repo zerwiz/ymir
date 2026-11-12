@@ -89,6 +89,14 @@ gate launcher-guard "the app launchers run in place on the pin and send a worktr
      bash "$ROOT/bin/desktop/tests/test_launcher_worktree_guard.sh"
 gate pin-door-stable "the pin door refuses a dirty pin, rolls back an unsettled update and records last-good" \
      bash "$ROOT/bin/engine/tests/test_runtime_deploy_stable.sh"
+# Plan 278 — an update finishes the installs: Eir mends by risk class from one register, Gróa's last line
+# tells the truth, and a unit still running a retired value is found and re-seated.
+gate eir-register "Eir reads config/surfaces.yaml, mends only safe surfaces unattended, and never leaves a broken row without a reason" \
+     bash "$ROOT/bin/agents/tests/test_eir_register.sh"
+gate groa-verdict "Gróa's closing line says whole or names every owed surface, and a stopped step fails it" \
+     bash "$ROOT/bin/agents/tests/test_groa_verdict.sh"
+gate unit-drift "an installed unit on a retired value is found and re-seated; a seat's own choice is not drift" \
+     bash "$ROOT/bin/engine/tests/test_units_drift.sh"
 gate rodd-face-follows "Rödd's face is re-dressed when its patches change" \
      bash "$ROOT/apps/rodd/smoke/test_face_follows_patches.sh"
 gate hall-data-home "two checkouts of the hall share one data home and nothing is lost" \

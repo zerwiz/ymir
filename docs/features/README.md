@@ -27,6 +27,8 @@ its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
   [every-service-runs-from-main.md](every-service-runs-from-main.md)
 - Bilskirnir, the business hall — every agent in its own room, in its own window, on every screen:
   [bilskirnir.md](bilskirnir.md)
+- An update finishes the installs — Gróa mends the safe surfaces after the check, and the last line says
+  `whole` or names what is owed: [an-update-finishes-the-installs.md](an-update-finishes-the-installs.md)
 
 **Earlier doors** — built 2026-11-09, catalogued the same day:
 

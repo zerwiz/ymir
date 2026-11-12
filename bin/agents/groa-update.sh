@@ -19,6 +19,11 @@
 #   reread-Brokk: yes|no
 #   galdr-reread: yes|no                 (Galdr must refresh the owning assets)
 #   nudge-eindri-homes: <id> ...|none
+# and, on an apply, ONE closing verdict (plan 278):
+#   groa-update: whole — every surface answers
+#   groa-update: NOT whole — owed: <surface> (<risk>), …; steps stopped at their limit: …
+# Exit: 0 whole · 1 the seat could not be seated (or the gateway did not answer) · 4 updated, but
+# surfaces are owed or a step stopped at its limit · 2 usage.
 set -u
 # The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
@@ -49,7 +54,7 @@ fi
 REG="${BROKK_EINDRI_HOMES:-$_hoard/data/eindri-homes.md}"
 REMOTE=""; BRANCH=""; CHECK=0
 
-case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help) sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
+case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help) sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 while [ $# -gt 0 ]; do
   # AN EMPTY ARGUMENT IS NOT A FLAG (2026-11-08). Three harness surfaces passed `""` to mean "no flag"
   # for update, and this door read it as an unknown flag and exited 2 — so Gróa reported a hard failure
@@ -87,6 +92,8 @@ fi
 #   gstep <label> <limit-seconds> <command…>      stdout/stderr of the command pass through; the step line goes to stderr
 # Limits: YMIR_GROA_STEP_TIMEOUT (default 120) for every step; YMIR_GROA_STEP_TIMEOUT_<LABEL> for one.
 [ -r "$SCRIPT_DIR/../time/sol-lib.sh" ] && . "$SCRIPT_DIR/../time/sol-lib.sh"
+# How the update ends (plan 278): the owed list, the verdict line, the fault report.
+. "$SCRIPT_DIR/groa-verdict-lib.sh"
 command -v sol_line >/dev/null 2>&1 || sol_line() { date '+%Y-%m-%d %H:%M %Z'; }
 GSTEP_STOPPED=""
 exec 7>&2   # step lines go to the real stderr even when the step runs inside $( … 2>&1 )
@@ -99,7 +106,7 @@ gstep() {
   timeout -k 5 "$limit" "$@"; rc=$?
   case $rc in
     0)       printf '%s — step %s: ok in %ss\n' "$(sol_line)" "$label" "$((SECONDS - t0))" >&7 ;;
-    124|137) printf '%s — step %s: STOPPED at its %ss limit (ran %ss) — the update went on without it\n' "$(sol_line)" "$label" "$limit" "$((SECONDS - t0))" >&7
+    124|137) printf '%s — step %s: STOPPED at its %ss limit (ran %ss) — the update goes on, and its verdict counts this as a failure\n' "$(sol_line)" "$label" "$limit" "$((SECONDS - t0))" >&7
              GSTEP_STOPPED="$GSTEP_STOPPED $label" ;;
     *)       printf '%s — step %s: failed (rc=%s) in %ss\n' "$(sol_line)" "$label" "$rc" "$((SECONDS - t0))" >&7 ;;
   esac
@@ -345,16 +352,27 @@ if [ "${YMIR_GROA_PIN:-on}" != off ] && [ -x "$SCRIPT_DIR/../engine/units.sh" ];
   fi
 fi
 
-# Eir checks after every update, so a desktop that cannot open is REPORTED and
-# never silently dead (P8, 2026-09-24). The update is never blocked on a
-# broken surface — the report is the loudness; the Nornir job keeps the watch
-# daily.
+# Eir checks after every update, then MENDS what an update may mend, then checks again (plan 278:
+# "it needs to finish the installs"). Only a surface config/surfaces.yaml calls `safe` is mended
+# unattended; an `ask` surface (a download, root, a change to what the user runs) and a `never` surface
+# are named as OWED with the exact command. The closing line below carries the verdict.
+EIR_OWED=""
 if [ -x "$SCRIPT_DIR/eir-doctor.sh" ]; then
   if eir_out="$(gstep eir 240 "$SCRIPT_DIR/eir-doctor.sh" check 2>&1)"; then
     printf 'eir: check clean\n'
   else
     eir_broken="$(printf '%s' "$eir_out" | sed -n '2s/.*,\([0-9][0-9]*\)$/\1/p')"
-    printf 'eir: %s surface(s) need mending — bin/agents/eir-doctor.sh (the row above names them)\n' "${eir_broken:-?}"
+    printf 'eir: %s surface(s) broken — mending the safe ones\n' "${eir_broken:-?}"
+    mend_out="$(gstep eir-mend 420 "$SCRIPT_DIR/eir-doctor.sh" fix --safe 2>&1)" || true
+    printf '%s\n' "$mend_out" | grep -E '^eir: (mended|could not mend)' | sed 's/^/  /'
+    if eir_out="$(gstep eir-recheck 240 "$SCRIPT_DIR/eir-doctor.sh" check 2>&1)"; then
+      printf 'eir: check clean after mending\n'
+    else
+      EIR_OWED="$(groa_owed_from "$eir_out")"
+      # An Eir that printed no owed rows (an older Eir, or one that stopped) is still not whole.
+      [ -n "$EIR_OWED" ] || EIR_OWED="eir ask"
+      printf 'eir: %s surface(s) still owed after mending\n' "$(printf '%s\n' "$EIR_OWED" | grep -c .)"
+    fi
   fi
 fi
 
@@ -465,6 +483,32 @@ fi
 if [ -n "$GSTEP_STOPPED" ]; then
   printf '%s — groa-update: steps STOPPED at their limits:%s — run each by hand to see why\n' "$(sol_line)" "$GSTEP_STOPPED" >&2
 fi
+
+# What CHANGED for you, since your last update. Every change carries a note in
+# docs/fixes/; until now nothing printed them, so an updating user saw "updated" and
+# nothing else. This is the reader that closes the loop (plan 66 §7). (It sat after the
+# final `exit` until 2026-11-12, so it never ran — plan 278 moved it above the verdict.)
+if [ -x "$ROOT/bin/gates/update-notes.sh" ]; then
+  printf '\n'
+  bash "$ROOT/bin/gates/update-notes.sh" || true
+fi
+
+# THE LAST LINE TELLS THE TRUTH (plan 278). "whole", or each surface still owed and each step that hit
+# its limit, with the exact command — never a closing line that says done while installs are owed. A
+# timeout is a failure here, not a note. The operator may accept a surface as owed on this machine
+# ($YMIR_HOME/config/owed-accepted.txt): it is still named, but it no longer fails the update.
+GROA_ROLE="$(timeout 10 "$SCRIPT_DIR/../skuld/role.sh" resolve 2>/dev/null | head -1)"
+GROA_COMMIT="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null)"
+export GROA_ROLE GROA_COMMIT
+printf '\n'
+groa_verdict "$EIR_OWED" "$GSTEP_STOPPED" "$(groa_accepted "${YMIR_HOME:-}/config/owed-accepted.txt")"
+verdict_rc=$?
+if [ "$verdict_rc" != 0 ]; then
+  # One dated report per NEW owed set, in the home: the brief for the one smith (plan 275, phase B).
+  report="$(groa_fault_report "${_hoard:-}/state/groa/faults" "$EIR_OWED" "$GSTEP_STOPPED")"
+  [ -n "$report" ] && printf 'groa-update: the fault report — %s\n' "$report"
+fi
+
 # The seating verdict is the update's verdict: a seat that could not be seated is
 # not updated, and the caller must be able to SEE that in an exit code.
 if [ "${seat_failed:-0}" != 0 ]; then
@@ -473,12 +517,7 @@ if [ "${seat_failed:-0}" != 0 ]; then
 fi
 # A flag nobody reads is a gate that reports and does not fail — the exact shape of fault
 # this file already refuses. Fail the update when the gateway did not answer.
-exit "$(( ${seat_failed:-0} || ${GATEWAY_FAILED:-0} ))"
-
-# What CHANGED for you, since your last update. Every change carries a note in
-# docs/fixes/; until now nothing printed them, so an updating user saw "updated" and
-# nothing else. This is the reader that closes the loop (plan 66 §7).
-if [ -x "$ROOT/bin/gates/update-notes.sh" ]; then
-  printf '\n'
-  bash "$ROOT/bin/gates/update-notes.sh" || true
-fi
+[ "${GATEWAY_FAILED:-0}" = 0 ] || exit 1
+# Exit 4: the tree and the seat moved, but installs are owed or a step stopped (plan 278). Distinct from
+# 1 (seating failed) so a caller can tell "not updated" from "updated, not whole".
+exit "$verdict_rc"

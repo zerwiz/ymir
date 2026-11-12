@@ -69,3 +69,7 @@ ymir eir       # what stands, and mending
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-12** — Plan 278: an update no longer stops at the check. Gróa has Eir mend every `safe` surface
+  (`bin/agents/eir-doctor.sh fix --safe`), checks again, and ends on one true line: `whole`, or each owed
+  surface with its exact command (exit 4). Eir's surfaces and their risk classes are in `config/surfaces.yaml`.
+  The full page: [an-update-finishes-the-installs.md](an-update-finishes-the-installs.md).

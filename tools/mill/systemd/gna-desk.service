@@ -1,5 +1,5 @@
 [Unit]
-Description=Gná — the one mail desk (:8490, read-only, loopback): the inbox the arm is told about, as it arrives
+Description=Gná — the one mail desk (:8494, read-only, loopback): the inbox the arm is told about, as it arrives
 Documentation=file://__YMIR_TREE__/docs/features/gna-the-one-mail-desk.md
 StartLimitIntervalSec=120
 StartLimitBurst=10

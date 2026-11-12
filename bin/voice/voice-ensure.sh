@@ -97,7 +97,11 @@ whisper_status() { [ -x "$SNOTRA_ENSURE" ] && "$SNOTRA_ENSURE" status 2>/dev/nul
 RODD_SETUP="$ROOT/apps/rodd/setup.sh"
 face_status() {
   if [ ! -x "$RODD_SETUP" ]; then printf 'absent'; return 0; fi
-  "$RODD_SETUP" --check 2>/dev/null || printf 'missing'
+  # ONE word (plan 278): `setup.sh --check` already prints missing / stale:<why> / present, so a fallback
+  # appended after it printed `missing` twice and split the status row over two lines.
+  local o
+  o="$("$RODD_SETUP" --check 2>/dev/null | head -1)"
+  printf '%s' "${o:-missing}"
 }
 
 ensure_face() {
