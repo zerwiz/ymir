@@ -33,9 +33,13 @@ function answers() {
   });
 }
 
+// set once the app is on its way out: every wait and every late call on the window gives up
+let quitting = false;
+let win = null;
+
 async function waitForHall() {
   const deadline = Date.now() + BOOT_TIMEOUT_MS;
-  while (Date.now() < deadline) {
+  while (!quitting && Date.now() < deadline) {
     if (await answers()) return true;
     await new Promise((r) => setTimeout(r, 500));
   }
@@ -54,7 +58,7 @@ function silentHall() {
 }
 
 async function open() {
-  const win = new BrowserWindow({
+  win = new BrowserWindow({
     width: 1280, height: 820, minWidth: 360, minHeight: 560,
     title: 'Bilskirnir',
     icon: ICON,
@@ -64,16 +68,36 @@ async function open() {
   });
   // the page's own <title> must not rename the window: it is Bilskirnir, whatever room is open
   win.on('page-title-updated', (e) => e.preventDefault());
+  // the window is gone the moment it closes: drop the handle so nothing touches a destroyed object
+  win.on('closed', () => { win = null; });
+  const w = win;
   // links that leave the hall open in the browser, never inside the shell
-  win.webContents.setWindowOpenHandler(({ url }) => {
+  w.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith(URL_)) return { action: 'allow' };
     shell.openExternal(url);
     return { action: 'deny' };
   });
-  if (await waitForHall()) await win.loadURL(URL_);
-  else await win.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(silentHall()));
+  const up = await waitForHall();
+  // closed while waiting for the hall: loading into a destroyed window is what aborted the shell
+  if (quitting || w.isDestroyed()) return;
+  try {
+    if (up) await w.loadURL(URL_);
+    else await w.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(silentHall()));
+  } catch (err) {
+    // a load interrupted by a close is an ending, not a fault
+    if (!quitting && !w.isDestroyed()) console.error('bilskirnir: load failed:', err && err.message);
+  }
 }
 
 Menu.setApplicationMenu(null);
 app.whenReady().then(open);
+
+// One road out: every ending goes through app.quit(). This shell raises no backend of its own (start.sh
+// owns the gateway and the server), so there are no child processes to reap — the window is the only thing
+// that must be let go of cleanly.
+app.on('before-quit', () => {
+  quitting = true;
+  if (win && !win.isDestroyed()) win.destroy();
+});
 app.on('window-all-closed', () => app.quit());
+for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => app.quit());
