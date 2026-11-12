@@ -137,6 +137,7 @@ def mail_rows() -> list[dict]:
     p = mail_record()
     if not p.is_file():
         return rows
+    newest: dict[str, dict] = {}      # the record appends; a re-judged message's newest row wins
     for line in p.read_text(encoding="utf-8", errors="ignore").splitlines():
         if not line.strip():
             continue
@@ -144,6 +145,8 @@ def mail_rows() -> list[dict]:
             m = json.loads(line)
         except ValueError:
             continue
+        newest[str(m.get("id") or len(newest))] = m
+    for m in newest.values():
         out = m.get("direction") == "out"
         who = ",".join(_addr(t) for t in (m.get("to") or [])) if out else _addr(m.get("from"))
         rows.append({
@@ -302,17 +305,31 @@ def _sent_since(path: Path, who: str, idx: dict, mails: list[dict]) -> str:
     return ""
 
 
-def gmail_drafts() -> list[dict]:
-    """Gmail's own drafts, read-only through the scanner. Absent credentials is an empty shelf."""
+def gmail_drafts(strict: bool = False) -> list[dict] | None:
+    """Gmail's own drafts, read-only through the scanner. Absent credentials is an empty shelf —
+    or, with strict, None: a caller that closes items when a draft is gone must know the
+    difference between "no drafts" and "could not look"."""
     if os.environ.get("COMMS_OFFLINE") == "1":
-        return []
+        return None if strict else []
+    fixture = os.environ.get("COMMS_GMAIL_FIXTURE")       # tests answer from a file, never the mailbox
+    if fixture:
+        try:
+            with open(fixture, encoding="utf-8") as fh:
+                rows = json.load(fh).get("in:drafts")
+        except Exception:
+            rows = None
+        if rows is None:
+            return None if strict else []
+        return [{"id": m.get("id"), "subject": m.get("subject"), "date": m.get("date"), "to": ""} for m in rows]
     try:
         out = subprocess.run(["bash", str(ROOT / "bin" / "mail" / "mail-scan.sh"), "--query", "in:drafts",
                               "--max", "40"], capture_output=True, text=True, timeout=90,
                              env={**os.environ, "YMIR_TREE": str(ROOT)}).stdout
         data = json.loads(out or "{}")
     except Exception:
-        return []
+        return None if strict else []
+    if strict and "messages" not in data:
+        return None
     return [{"id": m.get("id"), "subject": m.get("subject"), "date": m.get("date"), "to": ""}
             for m in data.get("messages") or []]
 
@@ -413,7 +430,8 @@ def _persons(item: dict, idx: dict) -> dict[str, set[str]]:
         if k in idx and k not in GENERIC:
             found.setdefault(k, set()).update(idx[k])
     # a person named in the body as the counterparty ("to Reygan", "to Craig")
-    for tok in re.findall(r"\bto ([A-Z][a-zåäö]+)\b", item["text"]):
+    for tok in [t for pair in re.findall(r"\bto ([A-Z][a-zåäö]+)(?: and ([A-Z][a-zåäö]+))?\b", item["text"])
+                for t in pair if t]:
         k = tok.lower()
         if k in idx:
             found.setdefault(k, set()).update(idx[k])
@@ -432,8 +450,9 @@ def _keys(item: dict, persons: dict) -> list[str]:
 
 def match_todo(todo_text: str, todo_file: Path | None = None, days: float = 3,
                live: bool = True) -> list[dict]:
-    """Proposals, each with its evidence. Kinds: tick (an open item a message has answered) ·
-    open (a message that needs him and has no item) · wait (a question he sent, unanswered)."""
+    """Proposals, each with its evidence. Kinds: tick (an open item of his a message has answered) ·
+    open (a conversation that needs his answer and has no item) · send (a draft waiting in Gmail) ·
+    wait (a question he sent, unanswered) · close (a house-kept line he has since answered)."""
     mails = mail_rows()
     idx = person_index(mails)
     done = house_notes(todo_text)
@@ -454,8 +473,12 @@ def match_todo(todo_text: str, todo_file: Path | None = None, days: float = 3,
         if ev:
             proposals.append({"id": it["id"], "kind": "tick", "section": it["section"], "item": it["title"],
                               "confidence": ev["confidence"], "evidence": ev["why"], "refs": ev["refs"]})
-    proposals += _opens(mails, todo_text, days)
+    drafts = gmail_drafts(strict=True) if live else None
+    drafted = {_bare(d.get("subject") or "") for d in drafts or []}
+    proposals += [p for p in _opens(mails, todo_text, days) if _bare(p["subject"]) not in drafted]
+    proposals += _sends(drafts, todo_text)
     proposals += _waits(mails, todo_text, days)
+    proposals += _closes(mails, todo_text, drafts)
     return proposals
 
 
@@ -468,8 +491,8 @@ def _answered_by_out_mail(it, persons, keys, mails, floor):
     need = len(keys) if len(keys) <= 2 else 2
     quoted = [q.lower() for q in QUOTED.findall(it["text"])]
     hits: dict[str, dict] = {}
-    for r in mails:
-        if r["direction"] != "out":
+    for r in sorted(mails, key=lambda r: r["at"]):     # the FIRST mail that answers it, not any later one
+        if r["direction"] != "out" or _is_draft(r["_mail"]):
             continue
         at = parse_at(r["at"])
         if floor and at and at < floor:
@@ -586,7 +609,7 @@ def _rfc_date(s):
         return None
 
 
-NOREPLY = re.compile(r"^(no-?reply|do-?not-?reply|notifications?|mailer-daemon|receipts?)", re.I)
+NOREPLY = re.compile(r"^(no-?reply|do-?not-?reply|mail-?no-?reply|notifications?|mailer-daemon|receipts?)", re.I)
 
 
 def _contact_after(mails, direction, addr, at) -> bool:
@@ -604,34 +627,152 @@ def _contact_after(mails, direction, addr, at) -> bool:
     return False
 
 
-def _opens(mails, todo_text, days):
-    """An incoming mail the desk marked as needing a reply, still unanswered, with no item."""
-    cut = now() - dt.timedelta(days=days)
-    low = todo_text.lower()
-    out, seen = [], set()
-    for r in sorted(mails, key=lambda r: r["at"], reverse=True):
+ASKS = ("reply_needed", "create_card", "schedule_meeting")   # the judge's verdicts that ask him something
+
+
+def asks_him(m: dict) -> bool:
+    """An incoming mail that asks the operator something: a verdict that wants an answer, or one
+    the judge was unsure of (a human decides). Calendar mail, notices and bulk are archived or
+    recorded by the judge and never ask."""
+    if m.get("direction") == "out" or m.get("handled_at"):
+        return False
+    conf = m.get("confidence")
+    return m.get("proposed_action") in ASKS or (conf is not None and float(conf) < 0.6)
+
+
+def _is_draft(m: dict) -> bool:
+    return "DRAFT" in (m.get("labels") or [])
+
+
+def _shared_word(a: str, b: str) -> bool:
+    wa = {w for w in _words(a) if len(w) >= 5 and w not in GENERIC}
+    return bool(wa & {w for w in _words(b) if len(w) >= 5})
+
+
+def _answered(mails, thread: str, sender: str, subject: str, at) -> dict | None:
+    """The mail he sent that answers a conversation: a sent reply in the same thread, or a new
+    mail to the same person whose subject shares a word with it (a reply often starts a new
+    thread). A draft is not an answer."""
+    for r in sorted(mails, key=lambda r: r["at"]):
         m = r["_mail"]
-        at = parse_at(r["at"])
-        if r["direction"] != "in" or not at or at < cut or m.get("handled_at"):
+        t = parse_at(r["at"])
+        if r["direction"] != "out" or _is_draft(m) or not t or t <= at:
             continue
-        if m.get("proposed_action") != "reply_needed":
+        if thread and r["thread"] == thread:
+            return r
+        to = {_addr(x).lower() for x in (m.get("to") or []) + (m.get("cc") or [])}
+        if sender in to and _shared_word(subject, r["text"]):
+            return r
+    return None
+
+
+def owed_conversations(mails, days: float | None = None) -> list[dict]:
+    """Every conversation where the last word is theirs, it asks him something, and he has not
+    answered — newest first. The same rule the mail index shows as "you owe a reply"."""
+    cut = (now() - dt.timedelta(days=days)) if days else None
+    threads: dict[str, list[dict]] = {}
+    for r in mails:
+        threads.setdefault(r["thread"] or r["ref"], []).append(r)
+    out = []
+    for key, rs in threads.items():
+        real = sorted((r for r in rs if not _is_draft(r["_mail"])), key=lambda r: r["at"])
+        if not real or real[-1]["direction"] != "in":
+            continue
+        last = real[-1]
+        m, at = last["_mail"], parse_at(last["at"])
+        if not at or (cut and at < cut) or not asks_him(m):
             continue
         sender = _addr(m.get("from")).lower()
-        if NOREPLY.match(sender.split("@")[0]) or _contact_after(mails, "out", sender, at):
+        if NOREPLY.match(sender.split("@")[0]) or _answered(mails, key, sender, last["text"], at):
             continue
-        key = (sender, r["text"].lower().strip())
-        if key in seen or r["text"][:30].lower() in low or r["ref"] in low:
+        drafted = any(_is_draft(r["_mail"]) and r["at"] >= last["at"] for r in rs)
+        out.append({"thread": key, "last": last, "sender": sender, "at": at, "drafted": drafted,
+                    "first": real[0]["text"]})
+    return sorted(out, key=lambda c: c["at"], reverse=True)
+
+
+def _opens(mails, todo_text, days):
+    """A conversation that needs his answer, unanswered, with no line yet: one line per thread."""
+    out = []
+    for c in owed_conversations(mails, days):
+        pid = hashlib.sha256(("open" + c["thread"]).encode()).hexdigest()[:8]
+        if f"(item {pid}" in todo_text:
             continue
-        seen.add(key)
-        pid = hashlib.sha256(("open" + r["ref"]).encode()).hexdigest()[:8]
-        if f"(item {pid})" in todo_text:
-            continue
-        name = (m.get("from") or {}).get("name") or sender
-        out.append({"id": pid, "kind": "open", "section": "Today",
-                    "item": f"Answer {name} — {r['text'][:70]}", "confidence": "high",
-                    "evidence": f"in {r['at'][:16]} from {sender}, marked reply needed; nothing sent to them since",
-                    "refs": [r["ref"]]})
+        m, last = c["last"]["_mail"], c["last"]
+        name = (m.get("from") or {}).get("name") or c["sender"]
+        age = (now() - c["at"]).days
+        out.append({"id": pid, "kind": "open", "section": "Today" if age <= 2 else "This week",
+                    "item": f"Answer {name} — {c['first'][:70]}", "confidence": "high" if m.get("proposed_action") in ASKS else "low",
+                    "evidence": (f"their last word {last['at'][:16]} ({m.get('proposed_action')}: "
+                                 f"{(m.get('evidence') or '')[:90]}); nothing sent back since"
+                                 + ("; a draft answer is waiting" if c["drafted"] else "")),
+                    "refs": [last["ref"]], "thread": c["thread"], "subject": last["text"]})
     return out
+
+
+def _bare(subject: str) -> str:
+    """A subject without its Re:/Fwd: prefixes, for matching a draft to its conversation."""
+    return re.sub(r"^\s*((re|fwd?|sv|vb)\s*:\s*)+", "", subject or "", flags=re.I).strip().lower()
+
+
+def _sends(drafts, todo_text):
+    """A draft waiting in Gmail: one line, so a written answer is not forgotten in the folder."""
+    out = []
+    for d in drafts or []:
+        did = str(d.get("id") or "")
+        if not did:
+            continue
+        pid = hashlib.sha256(("send" + did).encode()).hexdigest()[:8]
+        if f"(item {pid}" in todo_text:
+            continue
+        out.append({"id": pid, "kind": "send", "section": "Today",
+                    "item": f"Send or drop the draft «{(d.get('subject') or '(no subject)')[:70]}»",
+                    "confidence": "high", "evidence": f"in Gmail's drafts since {(d.get('date') or '')[:16]}",
+                    "refs": [did], "draft": did})
+    return out
+
+
+HOUSE_LINE = re.compile(r"^- \[ \] (\d{4}-\d{2}-\d{2}) · (.*)\(item ([0-9a-f]{8})"
+                        r"(?: · (thread|draft) ([^)\s]+))?\)\s*$")
+
+
+def _closes(mails, todo_text, drafts):
+    """An open line the house wrote that a sent mail has since answered, or whose draft has left
+    the drafts folder. Proposed like everything else; nothing closes without his yes."""
+    if HOUSE_MARK not in todo_text:
+        return []
+    out = []
+    by_ref = {r["ref"]: r for r in mails}
+    for line in todo_text[todo_text.index(HOUSE_MARK):].splitlines():
+        m = HOUSE_LINE.match(line)
+        if not m or not m.group(4):
+            continue
+        day, text, pid, kind, ref = m.groups()
+        cid = hashlib.sha256(("close" + pid).encode()).hexdigest()[:8]
+        title = text.split(" — ")[0].strip()
+        if kind == "thread":
+            ins = sorted((r for r in mails if r["thread"] == ref and r["direction"] == "in"), key=lambda r: r["at"])
+            if not ins:
+                continue
+            last = ins[-1]
+            sender = _addr(last["_mail"].get("from")).lower()
+            ans = _answered(mails, ref, sender, last["text"], parse_at(last["at"]))
+            if ans:
+                out.append({"id": cid, "kind": "close", "section": "Today", "item": title, "confidence": "high",
+                            "evidence": f"answered {ans['at'][:16]} to {ans['who'][:40]}: '{ans['text'][:60]}'",
+                            "refs": [ans["ref"]], "closes": pid})
+        elif kind == "draft" and drafts is not None and ref not in {str(d.get("id")) for d in drafts}:
+            out.append({"id": cid, "kind": "close", "section": "Today", "item": title, "confidence": "medium",
+                        "evidence": "the draft is no longer in Gmail's drafts — sent or discarded",
+                        "refs": [ref], "closes": pid})
+    return out
+
+
+# A product's own mail (a password reset, an address to confirm) asks a user to click, not to answer;
+# and a test mailbox (verify.test.2026@…) or a reserved test domain has nobody to answer at all.
+TRANSACTIONAL = re.compile(r"\b(reset your|confirm your|verify your|your password|password reset|"
+                           r"återställ|bekräfta din)\b", re.I)
+TEST_DOMAIN = re.compile(r"^[^@]*\btest\b[^@]*@|@(?:[\w-]+\.)*(?:test|invalid|localhost)$", re.I)
 
 
 def _waits(mails, todo_text, days):
@@ -649,8 +790,10 @@ def _waits(mails, todo_text, days):
         asks = "?" in r["text"] or "question" in r["text"].lower() or "?" in tail
         if not asks:
             continue
+        if TRANSACTIONAL.search(r["text"]) or _is_draft(m):
+            continue
         for to in [_addr(x).lower() for x in m.get("to") or []]:
-            if not to or _contact_after(mails, "in", to, at) or (to, r["text"]) in seen:
+            if not to or TEST_DOMAIN.search(to) or _contact_after(mails, "in", to, at) or (to, r["text"]) in seen:
                 continue
             seen.add((to, r["text"]))
             pid = hashlib.sha256(("wait" + r["ref"] + to).encode()).hexdigest()[:8]
@@ -681,10 +824,11 @@ dated line naming the message. Each line ends with the item's id, so the house n
 """
 
 
-def apply(ids: list[str], todo_file: Path, live: bool = True) -> list[dict]:
-    """Write the approved proposals as dated lines in the house-kept half. Append-only."""
+def apply(ids: list[str], todo_file: Path, live: bool = True, days: float = 14) -> list[dict]:
+    """Write the approved proposals as dated lines in the house-kept half. His own lines are never
+    touched; a close ticks the house's own line and says which mail answered it."""
     text = todo_file.read_text(encoding="utf-8")
-    props = {p["id"]: p for p in match_todo(text, todo_file, live=live)}
+    props = {p["id"]: p for p in match_todo(text, todo_file, days=days, live=live)}
     picked = [props[i] for i in ids if i in props]
     if not picked:
         return []
@@ -695,16 +839,29 @@ def apply(ids: list[str], todo_file: Path, live: bool = True) -> list[dict]:
         if p["kind"] == "tick":
             line = (f"- [x] {day} · done: «{p['item']}» ({p['section']}) — {p['evidence']} "
                     f"· approved by him (item {p['id']})")
-            section = "Today"
-        elif p["kind"] == "open":
-            line = f"- [ ] {day} · {p['item']} — {p['evidence']} (item {p['id']})"
-            section = "Today"
+            text = _insert_under(text, "Today", line)
+        elif p["kind"] == "close":
+            text = _close_line(text, p["closes"], f"{day} · {p['evidence']}")
+        elif p["kind"] in ("open", "send"):
+            tag = f" · thread {p['thread']}" if p.get("thread") else (f" · draft {p['draft']}" if p.get("draft") else "")
+            line = f"- [ ] {day} · {p['item']} — {p['evidence']} (item {p['id']}{tag})"
+            text = _insert_under(text, p["section"], line)
         else:
             line = f"- [ ] {day} · {p['item']} — {p['evidence']} (item {p['id']})"
-            section = "Waiting on others"
-        text = _insert_under(text, section, line)
+            text = _insert_under(text, "Waiting on others", line)
     todo_file.write_text(text, encoding="utf-8")
     return picked
+
+
+def _close_line(text: str, pid: str, note: str) -> str:
+    """Tick the house's own line for item pid, in the house-kept half only, and say why."""
+    start = text.index(HOUSE_MARK)
+    head, body = text[:start], text[start:].split("\n")
+    for i, line in enumerate(body):
+        if line.startswith("- [ ] ") and f"(item {pid}" in line:
+            body[i] = "- [x] " + line[6:] + f" — closed {note}"
+            break
+    return head + "\n".join(body)
 
 
 def _insert_under(text: str, section: str, line: str) -> str:
@@ -804,13 +961,14 @@ def main(argv=None) -> int:
     ow.add_argument("--offline", action="store_true")
     tm = sub.add_parser("todo-matches")
     tm.add_argument("--todo")
-    tm.add_argument("--days", type=float, default=3)
+    tm.add_argument("--days", type=float, default=14)
     tm.add_argument("--offline", action="store_true")
     tm.add_argument("--json", action="store_true")
     ta = sub.add_parser("todo-apply")
     ta.add_argument("ids", nargs="+")
     ta.add_argument("--todo")
     ta.add_argument("--offline", action="store_true")
+    ta.add_argument("--days", type=float, default=14)
     br = sub.add_parser("brief")
     br.add_argument("--hours", type=float, default=24)
     a = ap.parse_args(argv)
@@ -846,7 +1004,7 @@ def main(argv=None) -> int:
         return 0
     if a.cmd == "todo-apply":
         tp = Path(a.todo) if a.todo else todo_path()
-        done = apply(a.ids, tp, live=not a.offline)
+        done = apply(a.ids, tp, live=not a.offline, days=a.days)
         print(toon("todo_applied", ["id", "kind", "item"], done))
         missing = [i for i in a.ids if i not in {d["id"] for d in done}]
         if missing:

@@ -82,6 +82,31 @@ or an accepted invitation, so the proposal says what it saw and asks you.
 *Where this sits:* plan 261 · [the mail desk](gna-the-one-mail-desk.md) · [the hotline](the-hotline.md) ·
 [your todos](the-allfathers-todos.md).
 
+## Appended 2026-11-12 — what you owe is counted per conversation, and an answer closes the line
+
+The **open** row above proposed a line for every *reply needed* mail from the last three days. Now:
+
+| Kind | When | Evidence it shows |
+|---|---|---|
+| **open** under *Today* (last two days) or *This week* | a **conversation** where the last word is theirs, it asks you something (the mail desk says *reply needed*, *request* or *meeting*, or was unsure), and you have sent nothing back: not in that thread, and not a new mail to them on the same subject. One line per conversation, from the last 14 days (`--days`) | their last mail and why the desk thinks it asks |
+| **send** under *Today* | a draft waits in Gmail's drafts folder (read live). Its conversation gets no second line | the draft and its date |
+| **close** | a line the house wrote is answered: a reply you **sent** (a draft is not an answer), or its draft has left the folder | the mail that answered it |
+| **wait** | as before, except a password reset, an address to confirm or a test mailbox is never *waiting on others* | your mail |
+
+A close ticks the house's own line in place and says what answered it. Your own lines are still never touched.
+
+Calendar mail no longer counts as owed. Invitations, updates, acceptances and declines are answered in the calendar.
+To apply today's rules to mail already stored, run:
+
+```bash
+python3 bin/mail/gna_import.py --account <your address> --rejudge --dry-run   # what would change
+python3 bin/mail/gna_import.py --account <your address> --rejudge             # append the changed verdicts
+```
+
+The store is append-only, so the re-judge appends new rows and the newest row of each message counts. `bin/day/day.sh`
+now says *you owe a reply in N conversations*, using the same rule.
+
 ## CHANGE LOG
 
 - **2026-11-12** — Written, and carried into main by the gathered batch; from here appended, never rewritten.
+- **2026-11-12 (later)** — Appended: owed is counted per conversation; send and close proposals; the re-judge.

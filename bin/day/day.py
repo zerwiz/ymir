@@ -118,16 +118,28 @@ def mail_fact() -> dict:
             rows.append(json.loads(line))
         except json.JSONDecodeError:
             bad += 1
-    inbound = [r for r in rows if r.get("direction") == "in"]
+    latest: dict[str, dict] = {}       # the store appends; a re-judged message's newest row wins
+    for r in rows:
+        latest[str(r.get("id") or len(latest))] = r
+    inbound = [r for r in latest.values() if r.get("direction") == "in"]
     unhandled = [r for r in inbound if not r.get("handled_at")]
-    newest = [r for r in unhandled if (r.get("received_at") or "") >= (dt.date.today() - dt.timedelta(days=7)).isoformat()]
-    newest.sort(key=lambda r: r.get("received_at") or "", reverse=True)
+    # What he owes is counted per conversation, by the comms door's one rule (plan 261): the last word
+    # is theirs, it asks him something, and nothing has been sent back. A message count overstates it.
+    try:
+        sys.path.insert(0, str(repo_root() / "bin" / "records"))
+        import comms  # noqa: PLC0415
+        conv = comms.owed_conversations(comms.mail_rows())
+    except Exception as exc:                       # the door is absent or broken: say so, never guess
+        return {"unable": f"the comms door could not count what is owed ({exc.__class__.__name__})"}
+    cut = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=14)
+    fresh = [c for c in conv if c["at"] >= cut]
     return {
         "inbound": len(inbound), "unhandled": len(unhandled), "unreadable_lines": bad,
-        "recent": [{"at": (r.get("received_at") or "")[:16],
-                    "from": (r.get("from") or {}).get("name") or (r.get("from") or {}).get("email") or "",
-                    "subject": (r.get("subject") or "")[:70],
-                    "class": r.get("classification") or ""} for r in newest[:4]],
+        "owed": len(conv), "owed_recent": len(fresh),
+        "recent": [{"at": c["last"]["at"][:16],
+                    "from": (c["last"]["_mail"].get("from") or {}).get("name") or c["sender"],
+                    "subject": (c["first"] or "")[:70],
+                    "class": c["last"]["_mail"].get("classification") or ""} for c in fresh[:4]],
         "as_of": max((r.get("ingested_at") or r.get("received_at") or "") for r in rows)[:19] if rows else "",
         "source": "gná's store (hodd/memory/mail/messages.jsonl)",
     }
@@ -265,7 +277,8 @@ def render(as_json: bool, quiet: bool, carry: bool = False) -> int:
     if "unable" in mail:
         print("  " + unable(mail))
     else:
-        print("  %d inbound · %d unhandled · as_of %s" % (mail["inbound"], mail["unhandled"], mail["as_of"]))
+        print("  %d inbound · you owe a reply in %d conversations (%d from the last 14 days) · as_of %s"
+              % (mail["inbound"], mail["owed"], mail["owed_recent"], mail["as_of"]))
         if carry:
             print("    sender and subject withheld: this is a carried copy, outside the home")
         elif not quiet:

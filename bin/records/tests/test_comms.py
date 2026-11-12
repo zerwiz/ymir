@@ -232,6 +232,90 @@ class TheTodo(unittest.TestCase):
         self.assertGreater(final.index(f"(item {nxt['id']})"), wait_at)
 
 
+class OwedConversations(unittest.TestCase):
+    """2026-11-12, his word: the to-do must know what mail he owes, and stop owing it once answered."""
+
+    def seed_conv(self, mails, drafts=None, keep=None):
+        todo = seed()
+        if keep is not None:
+            todo.write_text(keep)
+        (TMP / "hodd/memory/mail/messages.jsonl").write_text("".join(json.dumps(m) + "\n" for m in mails))
+        live = dict(LIVE)
+        if drafts is not None:
+            live["in:drafts"] = drafts
+        fx = TMP / "live-conv.json"
+        fx.write_text(json.dumps(live))
+        os.environ["COMMS_GMAIL_FIXTURE"] = str(fx)
+        return todo
+
+    REY = {"name": "Rey Asker", "email": "rey@example.org"}
+
+    def ask(self, mid, at, subject, action="create_card", thread="t-plan"):
+        return mail(mid, "in", at, subject, self.REY, ME, "Could you look?", "request", action, thread)
+
+    def test_one_line_per_conversation_and_calendar_mail_is_not_owed(self):
+        todo = self.seed_conv([
+            self.ask("a1", "2026-11-10T09:00:00+00:00", "The plan"),
+            self.ask("a2", "2026-11-11T09:00:00+00:00", "Re: The plan"),
+            mail("c1", "in", "2026-11-11T10:00:00+00:00", "Invitation: Friday synch @ Fri", self.REY, ME,
+                 "", "meeting", "archive", "t-cal"),
+        ], drafts=[])
+        opens = [p for p in comms.match_todo(todo.read_text(), None, days=14, live=True) if p["kind"] == "open"]
+        self.assertEqual([p["thread"] for p in opens], ["t-plan"], "one line for the thread, none for the invitation")
+        self.assertEqual(opens[0]["refs"], ["a2"], "the line points at their last word")
+
+    def test_a_reply_closes_the_line_the_house_wrote(self):
+        mails = [self.ask("a1", "2026-11-11T09:00:00+00:00", "The plan")]
+        todo = self.seed_conv(mails, drafts=[])
+        pid = next(p["id"] for p in comms.match_todo(todo.read_text(), None, days=14, live=True) if p["kind"] == "open")
+        comms.apply([pid], todo, live=True)
+        self.assertIn(f"(item {pid} · thread t-plan)", todo.read_text())
+        # a draft is not an answer
+        mails.append(dict(mail("d1", "out", "2026-11-11T10:00:00+00:00", "Re: The plan", ME, self.REY, thread="t-plan"),
+                          labels=["DRAFT"]))
+        (TMP / "hodd/memory/mail/messages.jsonl").write_text("".join(json.dumps(m) + "\n" for m in mails))
+        self.assertFalse([p for p in comms.match_todo(todo.read_text(), None, days=14, live=True) if p["kind"] == "close"])
+        # the sent reply is
+        mails.append(mail("s1", "out", "2026-11-11T11:00:00+00:00", "Re: The plan", ME, self.REY, thread="t-plan"))
+        (TMP / "hodd/memory/mail/messages.jsonl").write_text("".join(json.dumps(m) + "\n" for m in mails))
+        props = comms.match_todo(todo.read_text(), None, days=14, live=True)
+        close = next(p for p in props if p["kind"] == "close")
+        self.assertEqual(close["refs"], ["s1"])
+        self.assertNotIn("open", {p["kind"] for p in props if p.get("thread") == "t-plan"})
+        before = todo.read_text()
+        comms.apply([close["id"]], todo, live=True)
+        after = todo.read_text()
+        self.assertEqual(after.count(f"(item {pid}"), 1, "the line is ticked in place, not written twice")
+        self.assertIn("- [x] ", after[after.index(comms.HOUSE_MARK):])
+        self.assertEqual(before[:before.index(comms.HOUSE_MARK)], after[:after.index(comms.HOUSE_MARK)],
+                         "his half is never touched")
+
+    def test_a_draft_is_one_line_and_its_conversation_is_not_doubled(self):
+        todo = self.seed_conv([self.ask("a1", "2026-11-11T09:00:00+00:00", "The plan")],
+                              drafts=[{"id": "r123", "subject": "Re: The plan", "date": "Wed, 11 Nov 2026"}])
+        props = comms.match_todo(todo.read_text(), None, days=14, live=True)
+        self.assertEqual([p["kind"] for p in props if p["kind"] in ("open", "send")], ["send"])
+        send = next(p for p in props if p["kind"] == "send")
+        comms.apply([send["id"]], todo, live=True)
+        self.assertIn("· draft r123)", todo.read_text())
+        # the draft leaves the folder: the line is proposed closed — but never when the folder could not be read
+        kept = todo.read_text()
+        self.seed_conv([self.ask("a1", "2026-11-11T09:00:00+00:00", "The plan")], drafts=None, keep=kept)
+        self.assertFalse([p for p in comms.match_todo(todo.read_text(), None, days=14, live=True) if p["kind"] == "close"])
+        self.seed_conv([self.ask("a1", "2026-11-11T09:00:00+00:00", "The plan")], drafts=[], keep=kept)
+        closes = [p for p in comms.match_todo(todo.read_text(), None, days=14, live=True) if p["kind"] == "close"]
+        self.assertEqual([c["closes"] for c in closes], [send["id"]])
+
+    def test_a_password_reset_is_not_waiting_on_anyone(self):
+        todo = self.seed_conv([
+            mail("x1", "out", "2026-11-10T09:00:00+00:00", "Reset your Growth Agent password", ME,
+                 {"name": "Sam", "email": "sam@example.net"}, "Click here. Questions?"),
+            mail("x2", "out", "2026-11-10T09:00:00+00:00", "Do you want in?", ME,
+                 {"name": "T", "email": "verify.test.2026@example.no"}, "Do you want in?"),
+        ], drafts=[])
+        self.assertFalse([p for p in comms.match_todo(todo.read_text(), None, days=14, live=True) if p["kind"] == "wait"])
+
+
 class TheBrief(unittest.TestCase):
     def test_brief_names_each_channel_and_what_waits(self):
         seed()
