@@ -33,7 +33,7 @@ PIN="${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}"
 KEEP="${YMIR_RELEASE_KEEP:-3}"
 LOGDIR="$BASE/logs"
 # the state a running tree writes into itself — shared across releases, never rebuilt
-SHARED_PATHS=".run state .a2a .yggdrasil .hermes.md opencode.json .pi/mcp-adapter.json"
+SHARED_PATHS=".run state .a2a .yggdrasil .hermes.md opencode.json .pi/mcp-adapter.json apps/odrerir/public/livehall.json apps/odrerir/dist/livehall.json"
 # the desktop apps: name · folder · how it is built · what must exist after the build
 APPS="hlidskjalf odrerir sessrumnir bilskirnir rodd"
 
@@ -150,6 +150,11 @@ build() {
   # the house's own per-app setup runs IN the release (the data home links, Rödd's face, the launcher entries)
   if [ -x "$tmp/apps/rodd/setup.sh" ]; then ( cd "$tmp/apps/rodd" && YMIR_FLEET_DEPLOY=off YMIR_SKIP_DESKTOP=1 YMIR_RUNTIME_DIR="$PIN" ./setup.sh ) >> "$log" 2>&1 || { say "FAIL	apps/rodd/setup.sh — see $log"; return 1; }; fi
   if [ -x "$tmp/apps/bilskirnir/scripts/data-home.sh" ]; then ( "$tmp/apps/bilskirnir/scripts/data-home.sh" ) >> "$log" 2>&1 || true; fi
+  # Óðrerir's live board is written by a nightly job into the app's folder; a release whose shared copy is still
+  # empty gets one now, so the hall never opens on a 404 (plan 275 S16)
+  if [ ! -s "$SHARED/apps/odrerir/public/livehall.json" ] && [ -x "$tmp/bin/time/nornir-job-hall-snapshot.sh" ]; then
+    BROKK_ROOT_OVERRIDE="$tmp" bash "$tmp/bin/time/nornir-job-hall-snapshot.sh" >> "$log" 2>&1 || true
+  fi
   if ! prove "$tmp"; then say "FAIL	the release did not prove — it stays unbuilt at $tmp"; return 1; fi
   date -Is > "$tmp/.release-proved"
   rm -rf "$d"; mv -T "$tmp" "$d"

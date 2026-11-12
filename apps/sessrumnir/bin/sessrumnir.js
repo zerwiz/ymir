@@ -12,7 +12,7 @@
 
 const { spawn } = require('child_process')
 const { existsSync } = require('fs')
-const { join, resolve } = require('path')
+const { join, resolve, dirname } = require('path')
 
 const VERSION = require('../package.json').version
 
@@ -59,11 +59,14 @@ function findElectron() {
   if (process.env.SESSRUMNIR_ELECTRON && existsSync(process.env.SESSRUMNIR_ELECTRON)) {
     return process.env.SESSRUMNIR_ELECTRON
   }
-  // Try to find electron from the package's own node_modules
-  const candidates = [
-    join(__dirname, '..', 'node_modules', 'electron', 'dist', 'electron'),
-    join(__dirname, '..', 'node_modules', '.bin', 'electron'),
-  ]
+  // The app's own node_modules, then every ancestor's (plan 275 S10, 2026-11-12): every Ymir app shares ONE
+  // Electron, which npm hoists to the workspace root — the app-local copy no longer exists, and looking only here
+  // left Sessrúmnir with "Electron not found" while the release held a proved 43.8.9 two folders up.
+  const candidates = []
+  for (let d = join(__dirname, '..'); ; d = dirname(d)) {
+    candidates.push(join(d, 'node_modules', 'electron', 'dist', 'electron'))
+    if (dirname(d) === d) break
+  }
 
   for (const candidate of candidates) {
     if (existsSync(candidate)) {

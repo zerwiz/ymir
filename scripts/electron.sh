@@ -22,7 +22,7 @@ if [ -z "${YMIR_ALLOW_WORKTREE_RUNTIME:-}" ]; then
   # Compare ROOT with ROOT (2026-11-12): the old guard compared the canonical root with this script's own
   # folder, so from scripts/ it always fired and re-ran "<root>/electron.sh" (no such file) — every icon on
   # the pin died; from bin/desktop/ it looked for the resolver one level too high and never ran at all.
-  _self="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+  _self="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)/$(basename "${BASH_SOURCE[0]}")"
   _root="$(dirname "$_self")"
   while [ "$_root" != / ] && [ ! -f "$_root/bin/desktop/main-tree.sh" ]; do _root="$(dirname "$_root")"; done
   _canon="$(bash "$_root/bin/desktop/main-tree.sh" "$_root" 2>/dev/null || true)"
