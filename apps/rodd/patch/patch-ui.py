@@ -142,22 +142,31 @@ loadHouseTools();
 
 RODD_MIND_HTML = """            <div class="field" id="rodd-mind">
               <span class="field-head">Mind <span id="rodd-head-state" class="field-value">reading…</span></span>
-              <select id="rodd-head-mode" aria-label="Whose mind answers">
-                <option value="local">Local · this machine's rail</option>
-                <option value="online">Online · your own API key</option>
+              <!-- plan 275 (2026-11-12): the minds this machine can reach, found by the house's model door — local
+                   servers first, then every provider a key is held for. Choose two things; nothing to type. -->
+              <select id="rodd-head-provider" aria-label="Where the mind runs">
+                <option value="">searching for the minds this machine can reach…</option>
               </select>
-              <input id="rodd-head-base" type="text" placeholder="https://…/v1  (OpenAI-compatible base)"
-                     aria-label="Endpoint base URL" autocomplete="off" spellcheck="false" />
-              <input id="rodd-head-model" type="text" placeholder="model id"
-                     aria-label="Model id" autocomplete="off" spellcheck="false" />
-              <input id="rodd-head-key" type="password" placeholder="API key (or leave empty to keep the one you set)"
-                     aria-label="API key" autocomplete="off" spellcheck="false" />
+              <select id="rodd-head-pick" aria-label="Which model answers"></select>
+              <details id="rodd-head-other">
+                <summary>Another endpoint (type it yourself)</summary>
+                <select id="rodd-head-mode" aria-label="Whose mind answers">
+                  <option value="local">Local · this machine's rail</option>
+                  <option value="online">Online · your own API key</option>
+                </select>
+                <input id="rodd-head-base" type="text" placeholder="https://…/v1  (OpenAI-compatible base)"
+                       aria-label="Endpoint base URL" autocomplete="off" spellcheck="false" />
+                <input id="rodd-head-model" type="text" placeholder="model id"
+                       aria-label="Model id" autocomplete="off" spellcheck="false" />
+                <input id="rodd-head-key" type="password" placeholder="API key (or leave empty to keep the one you set)"
+                       aria-label="API key" autocomplete="off" spellcheck="false" />
+              </details>
               <button id="rodd-head-save" type="button" class="btn wide">Save the mind and raise it</button>
               <small>
-                A key you type here is written to the private home
-                (<code>hodd/secrets/rodd.env</code>, mode 0600) and never to this repository.
-                A key already in the house vault is used by name, and is never shown back to you.
-                Changing the mind raises the voice host again; then press Restart conversation.
+                A local mind is asked one word before it is saved; one that does not answer is never written.
+                Keys are used where you already keep them (pi's store or the house vault) and are never shown here.
+                A key you type is written to the private home (<code>hodd/secrets/rodd.env</code>, mode 0600),
+                never to this repository. Changing the mind raises the voice host again; then press Restart conversation.
               </small>
             </div>
 
@@ -168,41 +177,76 @@ RODD_MIND_JS = """  <!-- rodd: the mind — whose model answers, and where the k
   <script>
   (function () {
     var TOOLBOX = "http://127.0.0.1:8891";
+    var prov = document.getElementById("rodd-head-provider");
+    var pick = document.getElementById("rodd-head-pick");
+    var other = document.getElementById("rodd-head-other");
     var mode = document.getElementById("rodd-head-mode");
     var base = document.getElementById("rodd-head-base");
     var model = document.getElementById("rodd-head-model");
     var key = document.getElementById("rodd-head-key");
     var save = document.getElementById("rodd-head-save");
     var state = document.getElementById("rodd-head-state");
-    if (!mode || !save) return;
+    if (!prov || !save) return;
+    var found = [];
+    var current = null;
 
     function show(t) { if (state) state.textContent = t; }
+    function opt(sel, value, text) { var o = document.createElement("option"); o.value = value; o.textContent = text; sel.appendChild(o); }
 
-    function fill(h) {
+    function fillModels() {
+      pick.innerHTML = "";
+      var p = found.filter(function (x) { return x.id === prov.value; })[0];
+      if (!p) return;
+      p.models.forEach(function (m) { opt(pick, m, m); });
+      if (current && current.model && p.models.indexOf(current.model) >= 0) pick.value = current.model;
+    }
+
+    function fillProviders(list) {
+      found = list || [];
+      prov.innerHTML = "";
+      if (!found.length) { opt(prov, "", "no mind found on this machine — use Another endpoint"); other.open = true; return; }
+      found.forEach(function (p) {
+        opt(prov, p.id, (p.local ? "This machine · " : "Online · ") + p.name + " (" + p.models.length + ")");
+      });
+      // select what answers now, when it is on the list
+      if (current) {
+        var hit = found.filter(function (p) { return p.base_url && current.base_url && p.base_url.replace(/\\/$/, "") === current.base_url.replace(/\\/$/, ""); })[0];
+        if (hit) prov.value = hit.id;
+      }
+      fillModels();
+    }
+
+    function fillHead(h) {
       if (!h) return;
+      current = h;
       mode.value = h.mode || "local";
       base.value = h.base_url || "";
       model.value = h.model || "";
-      show((h.model || "no model yet") + " · key " + (h.key_state || "none"));
+      show((h.model || "no mind chosen yet") + " · " + (h.mode === "online" ? "online" : "this machine") + " · key " + (h.key_state || "none"));
       key.placeholder = h.key_state && h.key_state !== "none"
         ? "a key is set (" + h.key_state + ") — type only to replace it"
         : "API key";
     }
 
+    prov.addEventListener("change", fillModels);
+
     fetch(TOOLBOX + "/head", { cache: "no-store" })
       .then(function (r) { return r.json(); })
-      .then(fill)
+      .then(function (h) { fillHead(h); return fetch(TOOLBOX + "/head/models", { cache: "no-store" }); })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { fillProviders(d.providers); })
       .catch(function () { show("the house toolbox is not answering"); });
 
     save.addEventListener("click", function () {
-      show("saving…");
-      var body = {
-        mode: mode.value,
-        base_url: base.value.trim(),
-        model: model.value.trim(),
-        apply: true
-      };
-      if (key.value.trim()) body.api_key = key.value.trim();
+      var body;
+      if (other.open && model.value.trim()) {
+        body = { mode: mode.value, base_url: base.value.trim(), model: model.value.trim(), apply: true };
+        if (key.value.trim()) body.api_key = key.value.trim();
+      } else {
+        if (!prov.value || !pick.value) { show("choose where the mind runs and which model"); return; }
+        body = { provider: prov.value, model: pick.value, apply: true };
+      }
+      show("asking the mind and saving…");
       fetch(TOOLBOX + "/head", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -211,8 +255,8 @@ RODD_MIND_JS = """  <!-- rodd: the mind — whose model answers, and where the k
         .then(function (r) { return r.json(); })
         .then(function (out) {
           key.value = "";
-          fill(out.head || null);
-          show((out.ok ? "raised · " : "saved, not raised · ") + (out.detail || ""));
+          if (out.head) fillHead(out.head);
+          show((out.ok ? "raised · " : "not raised · ") + (out.detail || ""));
         })
         .catch(function (err) { show("refused · " + (err && err.message ? err.message : err)); });
     });
