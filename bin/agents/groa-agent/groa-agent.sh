@@ -59,15 +59,59 @@ Working directory: $REPO
 
 running(){ [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; }
 
+# ── the record ───────────────────────────────────────────────────────────────
+# Gróa does not only log to a file: what she did is written where the house keeps
+# its memory — the daily log always, the Runes ledger when she acted or stopped,
+# and the well when the tree actually moved.
+record_report(){
+  local offset="$1" segment guard behind updated migrations line
+  segment="$(tail -c +$((offset+1)) "$LOG" 2>/dev/null || true)"
+  guard="$(printf '%s' "$segment" | sed -n 's/.*GUARD: *//p' | head -1)"
+  behind="$(printf '%s' "$segment" | sed -n 's/.*BEHIND: *//p' | head -1)"
+  updated="$(printf '%s' "$segment" | sed -n 's/.*UPDATED: *//p' | head -1)"
+  migrations="$(printf '%s' "$segment" | sed -n 's/.*MIGRATIONS: *//p' | head -1)"
+
+  # nothing was behind and nothing moved: no record, no noise
+  [ -z "$guard" ] && { [ -z "$behind" ] || [ "$behind" = "none" ]; } &&     { [ -z "$updated" ] || [ "$updated" = "nothing" ]; } && return 0
+
+  if [ -n "$guard" ]; then
+    line="Gróa stopped: $guard"
+  else
+    line="Gróa — behind: ${behind:-?} · updated: ${updated:-?} · migrations: ${migrations:-?}"
+  fi
+
+  [ -x "$REPO/bin/records/daily-log.sh" ] &&     ( cd "$REPO" && YMIR_HOME="$HOME_DIR" bin/records/daily-log.sh add --actor groa "$line" ) >/dev/null 2>&1 || true
+  printf '%s\n' "$line" >> "$LOG"
+
+  if [ -n "$guard" ]; then
+    [ -x "$REPO/bin/records/runes-append.sh" ] &&       ( cd "$REPO" && YMIR_HOME="$HOME_DIR" bin/records/runes-append.sh groa groa.guard --message "$line" ) >/dev/null 2>&1 || true
+  else
+    [ -x "$REPO/bin/records/runes-append.sh" ] &&       ( cd "$REPO" && YMIR_HOME="$HOME_DIR" bin/records/runes-append.sh groa groa.update --message "$line" ) >/dev/null 2>&1 || true
+    case "${updated:-}" in
+      ""|nothing) ;;
+      *) [ -x "$REPO/bin/records/mimir.sh" ] &&            ( cd "$REPO" && YMIR_HOME="$HOME_DIR" bin/records/mimir.sh observe "$line" --tags groa,update --source groa-agent ) >/dev/null 2>&1 || true ;;
+    esac
+  fi
+}
+
+# run the agent, then record what it found
+run_and_record(){
+  local offset
+  offset="$(wc -c < "$LOG" 2>/dev/null || echo 0)"
+  ( cd "$REPO" && timeout "$TIMEOUT" opencode run -m "$MODEL" "$PROMPT_TEXT" >> "$LOG" 2>&1 )
+  record_report "$offset"
+}
+
 case "${1:-}" in
   start|tick|check)
     if running; then echo "already running (pid $(cat "$PIDFILE"))"; exit 0; fi
     prompt="$prompt_run"; [ "${1:-}" = check ] && prompt="$prompt_check"
+    PROMPT_TEXT="$prompt"
     kind="${1:-start}"
     {
       echo "── $(date -Is) $kind with $MODEL ─────────────────────────"
     } >> "$LOG"
-    ( cd "$REPO" && timeout "$TIMEOUT" opencode run -m "$MODEL" "$prompt" >> "$LOG" 2>&1 ) &
+    PROMPT_TEXT="$prompt" run_and_record &
     echo $! > "$PIDFILE"
     if [ "$kind" = tick ]; then
       wait "$(cat "$PIDFILE")" 2>/dev/null

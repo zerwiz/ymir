@@ -66,4 +66,15 @@ YMIR_HOME="$th" bash "$repo/bin/records/todos.sh" reopen 0 >/dev/null 2>&1
 chk "todos.sh reopen" "pending" "$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))[0]['status'])" "$th/state/todos.json")"
 chk "the MCP face calls the door, not its own store" "0" "$(grep -c '_todo_save' "$repo/bin/seat/ymir-mcp.py")"
 
+# 7. Gróa's agent records what it found (daily log + Runes + well when the tree moved) and is silent when nothing moved.
+gr="$work/groa"; mkdir -p "$gr/repo/bin/records" "$gr/path" "$gr/ymirhome"
+for t in daily-log runes-append mimir; do printf '#!/usr/bin/env bash\necho "$(basename "$0") $*" >> "%s/calls"\n' "$gr" > "$gr/repo/bin/records/$t.sh"; chmod +x "$gr/repo/bin/records/$t.sh"; done
+printf '#!/usr/bin/env bash\nprintf "%%b\\n" "$FAKE_OUT"\n' > "$gr/path/opencode"; chmod +x "$gr/path/opencode"
+GA=(env PATH="$gr/path:$PATH" YMIR_REPO="$gr/repo" YMIR_HOME="$gr/ymirhome" GROA_PROMPT=/dev/null bash "$repo/bin/agents/groa-agent/groa-agent.sh" tick)
+FAKE_OUT="BEHIND: omarchy\\nUPDATED: omarchy\\nMIGRATIONS: none" "${GA[@]}" >/dev/null 2>&1
+chk "a moved tree is written to the daily log, Runes and the well" "3" "$(cat "$gr/calls" 2>/dev/null | wc -l)"
+rm -f "$gr/calls"; rm -f "$gr/ymirhome/hodd/state/groa-agent.pid"
+FAKE_OUT="BEHIND: none\\nUPDATED: nothing\\nMIGRATIONS: none" "${GA[@]}" >/dev/null 2>&1
+chk "nothing behind, nothing moved: no record, no noise" "0" "$(cat "$gr/calls" 2>/dev/null | wc -l)"
+
 echo "$ok passed, $fail failed"; [ "$fail" -eq 0 ]
