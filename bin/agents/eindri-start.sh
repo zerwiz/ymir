@@ -40,19 +40,20 @@ SESSION="${YMIR_HERDR_SESSION:-brokk}"
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 
-REQ=""; ROLE=""; SEAT=""; MODEL=""; KIND="${YMIR_HERDR_KIND:-pi}"; MAIN=""; TASK_ID=""; PROJECT_DIR=""
+REQ=""; ROLE=""; SEAT=""; MODEL=""; EFFORT=""; KIND="${YMIR_HERDR_KIND:-pi}"; MAIN=""; TASK_ID=""; PROJECT_DIR=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --role) ROLE=${2-}; shift 2 ;;
     --kind) KIND=${2-}; shift 2 ;;
     --model) MODEL=${2-}; shift 2 ;;
+    --effort) EFFORT=${2-}; shift 2 ;;
     --id) TASK_ID=${2-}; shift 2 ;;
     --project) PROJECT_DIR=${2-}; shift 2 ;;
     --main) MAIN="--main"; shift ;;
     --space) SEAT="--space"; shift ;;
     --tab) SEAT="--tab"; shift ;;
     --pane) SEAT="--pane"; shift ;;
-    -*) printf 'error: unknown flag %s\nhelp: bin/agents/eindri-start.sh "<request>" [--id <task-id>] [--role <name>] [--pane|--tab|--space] [--kind pi|opencode|claude]\n' "$1" >&2; exit 2 ;;
+    -*) printf 'error: unknown flag %s\nhelp: bin/agents/eindri-start.sh "<request>" [--id <task-id>] [--role <name>] [--pane|--tab|--space] [--kind pi|opencode|claude] [--model M|free] [--effort low..max]\n' "$1" >&2; exit 2 ;;
     *) [ -z "$REQ" ] && REQ="$1" || REQ="$REQ $1"; shift ;;
   esac
 done
@@ -78,7 +79,13 @@ LABEL="${ROLE}-${SLUG:-task}"
 # the fleet's agents.yaml, then the tier. This door only ASKS it, and records who
 # answered.
 MODEL_SOURCE=""; MODEL_NOTE=""
-if [ -z "$MODEL" ] && [ -x "$SCRIPT_DIR/../model/agent-model.sh" ]; then
+# A Claude seat takes an Anthropic alias, never the role's provider/model token: the
+# engine chooses it by the errand's weight (sonnet, or opus for --effort high|xhigh|max —
+# the Allfather, 2026-11-12). Asking the role resolver here handed the engine a token it
+# must refuse, and the Claude errand died before it was seated.
+if [ "$KIND" = claude ] && [ -z "$MODEL" ]; then
+  MODEL_SOURCE="errand weight (the engine picks sonnet or opus)"
+elif [ -z "$MODEL" ] && [ -x "$SCRIPT_DIR/../model/agent-model.sh" ]; then
   resolved="$("$SCRIPT_DIR/../model/agent-model.sh" "$ROLE" --json 2>/dev/null || true)"
   if [ -n "$resolved" ]; then
     MODEL="$(printf '%s' "$resolved" | sed -n 's/.*"model"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)"
@@ -111,6 +118,7 @@ if [ -n "$TASK_ID" ] && [ -z "$SEAT" ] && [ -z "$MAIN" ] \
   PROJECT_DIR="${PROJECT_DIR:-$PWD}"
   engine_args=(seat "$TASK_ID" --project "$PROJECT_DIR" --harness "$KIND" --request "$REQ" --role "$ROLE")
   if [ -n "$MODEL" ]; then engine_args+=(--model "$MODEL"); fi
+  if [ -n "$EFFORT" ]; then engine_args+=(--effort "$EFFORT"); fi
   engine_rc=0
   engine_out="$("$SCRIPT_DIR/../engine/ymir-engine.sh" "${engine_args[@]}")" || engine_rc=$?
   if [ "$engine_rc" -eq 0 ]; then

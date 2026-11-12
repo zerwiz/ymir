@@ -15,7 +15,7 @@
 # runs) because a broken notification must not silently become a dead seat — the
 # wiring check names the missing dependency instead.
 
-deny_reason='LAW (Allfather, 2026-11-10): never use Claude subagents. Every worker is an Ymir Eindri: bash "$HOME/ymir/bin/agents/eindri-start.sh" "<request>" --id <task-id> [--project <dir>] (or bin/agents/agent-run.sh <figure> "<task>"). Seated in herdr, on a Yggdrasil worktree, armed. If no Eindri road works, do it inline or ask the Allfather.'
+deny_reason='LAW (Allfather, 2026-11-10): never use Claude subagents. Every worker is an Ymir Eindri: bash "$HOME/ymir/bin/agents/eindri-start.sh" "<request>" --id <task-id> [--project <dir>] (or bin/agents/agent-run.sh <figure> "<task>"). Seated in herdr, on a Yggdrasil worktree, armed. Model by weight (Allfather, 2026-11-12): a Claude worker (--kind claude) runs a simple errand on Sonnet and a heavy one (--effort high|xhigh|max) on Opus; when paid tokens are spent, --model free picks a free model for pi or opencode (bin/model/free-models.sh); OpenCode launches through bin/seat/opencode-launcher.sh. If no Eindri road works, do it inline or ask the Allfather.'
 
 if command -v jq >/dev/null 2>&1; then
   jq -n --arg r "$deny_reason" '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$r}}'
