@@ -116,6 +116,8 @@ build() {
   tmp="$REL/.building-$sha-$$"; log="$LOGDIR/build-$sha.log"; rm -rf "$tmp"
   say "build	$sha	from $from ($ref) — log $log"
   (
+    # a build must never touch the running machine: no service restart, no launcher or key redrawn from this folder
+    export YMIR_FLEET_DEPLOY=off YMIR_SKIP_DESKTOP=1 BILSKIRNIR_DESKTOP=0
     set -x
     git clone -q --no-checkout --local "$from" "$tmp" || exit 10
     url="$(git -C "$from" remote get-url origin 2>/dev/null)"; [ -n "$url" ] && git -C "$tmp" remote set-url origin "$url"
@@ -146,7 +148,7 @@ build() {
   local rc=$?
   if [ "$rc" != 0 ]; then say "FAIL	build stopped at step $rc — the last lines of $log:"; tail -15 "$log"; return 1; fi
   # the house's own per-app setup runs IN the release (the data home links, Rödd's face, the launcher entries)
-  if [ -x "$tmp/apps/rodd/setup.sh" ]; then ( cd "$tmp/apps/rodd" && YMIR_RUNTIME_DIR="$PIN" ./setup.sh ) >> "$log" 2>&1 || { say "FAIL	apps/rodd/setup.sh — see $log"; return 1; }; fi
+  if [ -x "$tmp/apps/rodd/setup.sh" ]; then ( cd "$tmp/apps/rodd" && YMIR_FLEET_DEPLOY=off YMIR_SKIP_DESKTOP=1 YMIR_RUNTIME_DIR="$PIN" ./setup.sh ) >> "$log" 2>&1 || { say "FAIL	apps/rodd/setup.sh — see $log"; return 1; }; fi
   if [ -x "$tmp/apps/bilskirnir/scripts/data-home.sh" ]; then ( "$tmp/apps/bilskirnir/scripts/data-home.sh" ) >> "$log" 2>&1 || true; fi
   if ! prove "$tmp"; then say "FAIL	the release did not prove — it stays unbuilt at $tmp"; return 1; fi
   date -Is > "$tmp/.release-proved"
