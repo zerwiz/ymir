@@ -11,7 +11,9 @@ const PORT = Number(process.env.PORT || 8301);
 // Loopback unless the operator widens it (2026-11-12): this node answers JSON-RPC with no
 // credential and its executor reads the well, so it must not face the LAN by default.
 // A multi-machine heart sets YMIR_FLEET_BIND to its tailnet address (~/.config/ymir/fleet.env).
-const HOST = process.env.RATATOSKR_HOST || process.env.YMIR_FLEET_BIND || "127.0.0.1";
+// A LIST (ticket ymir/80): a heart listens on loopback AND its tailnet address, never the LAN.
+const HOSTS = String(process.env.RATATOSKR_HOST || process.env.YMIR_FLEET_BIND || "127.0.0.1").split(/[\s,]+/).filter(Boolean);
+const HOST = HOSTS[0];
 
 // The card is the SHARED contract's: built (and validated) at boot, so a card
 // that left the shape fails here, loudly, and never reaches the wire.
@@ -35,10 +37,7 @@ const store = new InMemoryTaskStore();
 const requestHandler = new DefaultRequestHandler(card as unknown as SdkAgentCard, store, executor);
 const transport = new JsonRpcTransportHandler(requestHandler);
 
-const server = Bun.serve({
-  port: PORT,
-  hostname: HOST,
-  async fetch(req: Request) {
+async function fetchHandler(req: Request) {
     const url = new URL(req.url);
     if (url.pathname === A2A_CARD_PATH) return Response.json(card);
     if (req.method === "POST") {
@@ -52,6 +51,8 @@ const server = Bun.serve({
       return Response.json(out, { headers: { "content-type": "application/json" } });
     }
     return new Response(`ratatoskr node — POST JSON-RPC here; card at ${A2A_CARD_PATH}`, { status: 404 });
-  },
-});
-console.log(`ratatoskr: heart node on ${HOST}:${PORT} — card + JSON-RPC live`);
+}
+// one listener per address in the list: loopback alone on a single machine; loopback + tailnet on a fleet's heart
+const servers = HOSTS.map((hostname) => Bun.serve({ port: PORT, hostname, fetch: fetchHandler }));
+const server = servers[0];
+console.log(`ratatoskr: heart node on ${HOSTS.join(" + ")}:${PORT} — card + JSON-RPC live`);

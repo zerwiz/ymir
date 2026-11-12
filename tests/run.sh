@@ -3,7 +3,7 @@
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 fail=0
-for t in test_snotra_store.sh test_ping_room.sh test_snotra_autojoin.sh test_snotra_bot.sh test_utgard_box.sh test_utgard_lane.sh test_model_allow.sh test_relaunch_one_seat.sh test_acclaim_well.sh test_heimdall_named_user.sh; do
+for t in test_fleet_doors_loopback.sh test_snotra_store.sh test_ping_room.sh test_snotra_autojoin.sh test_snotra_bot.sh test_utgard_box.sh test_utgard_lane.sh test_model_allow.sh test_relaunch_one_seat.sh test_acclaim_well.sh test_heimdall_named_user.sh; do
   printf '\n=== %s\n' "$t"
   bash "$HERE/$t" || fail=1
 done

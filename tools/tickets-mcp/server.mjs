@@ -262,7 +262,9 @@ const PORT = parseInt(process.env.PORT || "0", 10);
 // The bind and the browser ward (2026-11-12): loopback unless the operator widens it
 // (YMIR_FLEET_BIND in ~/.config/ymir/fleet.env — a multi-machine heart names its tailnet
 // address), and no wildcard CORS: a page in the operator's browser must not drive this door.
-const BIND = process.env.SKULD_BIND || process.env.YMIR_FLEET_BIND || "127.0.0.1";
+// A LIST (2026-11-12, ticket ymir/80): a heart listens on loopback AND its tailnet address, never the LAN.
+const BINDS = String(process.env.SKULD_BIND || process.env.YMIR_FLEET_BIND || "127.0.0.1").split(/[\s,]+/).filter(Boolean);
+const BIND = BINDS[0];
 const ALLOWED_ORIGINS = (process.env.SKULD_CORS_ORIGINS || "").split(",").map(s => s.trim()).filter(Boolean);
 const originAllowed = (req) => !req.headers.origin || ALLOWED_ORIGINS.includes(String(req.headers.origin));
 if (PORT > 0) {
@@ -295,6 +297,7 @@ if (PORT > 0) {
       catch (e) { res.end(JSON.stringify({ jsonrpc: "2.0", id: null, error: { code: -32603, message: String(e) } })); }
     });
     serverHttp.listen(PORT, BIND);
+    for (const extra of BINDS.slice(1)) http.createServer((q, r) => serverHttp.emit("request", q, r)).listen(PORT, extra);
   }).catch(e => { process.stderr.write(String(e)); });
 }
 function requestBody(req) { return new Promise((ok, no) => { let b = ""; req.on("data", c => { b += c; if (b.length > 2 << 20) req.destroy(); }); req.on("end", () => ok(b)); req.on("error", no); }); }
