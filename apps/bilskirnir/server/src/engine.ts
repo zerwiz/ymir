@@ -1,6 +1,7 @@
-import { execFile, spawn } from 'node:child_process';
+import { execFile, execFileSync, spawn } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import YAML from 'yaml';
 import { displayFor } from './box.js';
@@ -111,15 +112,22 @@ const SHARED_ENV = [
 /** Parts of the primary agent's config a managed agent starts from, so it reaches the same models. */
 const SHARED_CONFIG = ['model', 'providers', 'custom_providers', 'auxiliary', 'fallback_model', 'fallback_providers'];
 
-function soul(b: any): string {
-  const owner = (db.prepare('SELECT name FROM users WHERE id=?').get(b.user_id) as any)?.name ?? 'the user';
-  const role = b.label ? `, ${b.label}` : '';
-  return [
-    `You are ${b.name}${role}. You work for ${owner} as one of a small team of AI agents, each with its own screen on a shared computer.`,
-    b.description ? `\n${b.description}` : '',
-    '\nYou are direct, warm and brief. You do the work rather than describe it, and you say plainly what you did and what you could not do.',
-    '',
-  ].join('\n');
+/** The one renderer of an agent's house parts, shared with setup.sh (the primary's): house/house.py. */
+const HOUSE_PY = new URL('../../house/house.py', import.meta.url).pathname;
+const house = (args: string[]): string => execFileSync('python3', [HOUSE_PY, ...args], { encoding: 'utf8', timeout: 20_000 });
+
+/** What the user called the agent: its label is its role. The soul never invents one. */
+const roleOf = (b: any): string => (b.label && b.label !== b.name ? String(b.label) : 'an agent of the house');
+
+/**
+ * The soul: the house soul (who it is, whose, what it reaches) in a managed block, with whatever the user
+ * wrote kept around it. Re-rendering is idempotent.
+ */
+function soul(b: any, existing?: string): string {
+  const args = ['soul', '--name', b.name, '--role', roleOf(b), '--description', b.description ?? ''];
+  const f = path.join(homeFor(b.id), '.soul-in');
+  if (existing !== undefined) { fs.writeFileSync(f, existing); args.push('--existing', f); }
+  try { return house(args); } finally { try { fs.rmSync(f); } catch { /* none */ } }
 }
 
 /** Rewrite the persona file after a rename or a new description. The primary agent keeps its own. */
@@ -128,7 +136,10 @@ export function syncPersona(botId: string) {
   if (!b || b.engine !== 'managed') return;
   const home = homeFor(botId);
   if (!fs.existsSync(home)) return;
-  fs.writeFileSync(path.join(home, 'SOUL.md'), soul(b));
+  const file = path.join(home, 'SOUL.md');
+  let had: string | undefined;
+  try { had = fs.readFileSync(file, 'utf8'); } catch { /* none yet */ }
+  fs.writeFileSync(file, soul(b, had ?? ''));
 }
 
 function extraMcpServers(): Record<string, any> {
@@ -143,7 +154,7 @@ function extraMcpServers(): Record<string, any> {
 }
 
 /** Create or refresh the home. config.yaml is created once; after that only the keys we own are patched. */
-async function writeHome(botId: string): Promise<{ home: string; key: string; display: string | null }> {
+export async function writeHome(botId: string): Promise<{ home: string; key: string; display: string | null }> {
   const b = botRow(botId);
   const home = homeFor(botId);
   fs.mkdirSync(path.join(home, 'logs'), { recursive: true });
@@ -177,17 +188,29 @@ async function writeHome(botId: string): Promise<{ home: string; key: string; di
     for (const k of SHARED_CONFIG) if (primary[k] !== undefined) cfg[k] = primary[k];
     cfg.agent = { reasoning_effort: 'medium' };
   }
-  cfg.platform_toolsets = { ...(cfg.platform_toolsets ?? {}), api_server: ['hermes-api-server', ...(display ? ['computer_use'] : [])] };
+  // The house parts — soul's doors, the house hands, toolsets, browser, session hook — come from the one
+  // renderer the primary agent uses too (house/house.py), so a new bot has a to-do, a brief, the well and an arm.
+  const hp = JSON.parse(house(['parts', '--json', ...(cdp ? ['--browser', cdp] : [])]));
+  cfg.platform_toolsets = { ...(cfg.platform_toolsets ?? {}), api_server: [...hp.platform_toolsets.api_server, ...(display ? ['computer_use'] : [])] };
+  if (hp.hooks) cfg.hooks = hp.hooks; else delete cfg.hooks;
   cfg.terminal = { ...(cfg.terminal ?? {}), cwd };
   if (cdp) cfg.browser = { ...(cfg.browser ?? {}), cdp_url: cdp };
   cfg.mcp_servers = {
     ...(cfg.mcp_servers ?? {}),
     ...extraMcpServers(),
+    ...hp.mcp_servers,
     hq: { url: `${env.mcpBaseUrl}/mcp/${botId}`, headers: { Authorization: `Bearer ${mcpToken(botId)}` }, timeout: 1800, connect_timeout: 30 },
   };
   writePrivate(cfgFile, YAML.stringify(cfg));
 
-  if (!fs.existsSync(path.join(home, 'SOUL.md'))) fs.writeFileSync(path.join(home, 'SOUL.md'), soul(b));
+  // brought up to date at every start: the house block is refreshed, the user's own lines stay
+  const soulFile = path.join(home, 'SOUL.md');
+  let had: string | undefined;
+  try { had = fs.readFileSync(soulFile, 'utf8'); } catch { /* a new bot */ }
+  const wantSoul = soul(b, had ?? '');
+  if (wantSoul !== had) fs.writeFileSync(soulFile, wantSoul);
+  // the session hook runs only with the operator's consent, given once for the machine's Hermes — carried here
+  try { fs.copyFileSync(path.join(os.homedir(), '.hermes', 'shell-hooks-allowlist.json'), path.join(home, 'shell-hooks-allowlist.json')); } catch { /* none given */ }
 
   // Subscription sign-ins live in auth.json. Start from the primary agent's; later sign-ins are this bot's own.
   const auth = path.join(home, 'auth.json');
