@@ -21,7 +21,12 @@ its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
 - The well door for every harness — one MCP set for pi, opencode, Claude, Cursor, Codex and Hermes, and
   Claude Code loads the project's AGENTS.md: [the-well-door-for-every-harness.md](the-well-door-for-every-harness.md)
 
-**Newest doors** — built 2026-11-09, catalogued the same day:
+**Newest doors** — built 2026-11-12, catalogued the same day:
+
+- Bilskirnir, the business hall — every agent in its own room, in its own window, on every screen:
+  [bilskirnir.md](bilskirnir.md)
+
+**Earlier doors** — built 2026-11-09, catalogued the same day:
 
 - The agent's own context budget — how much room is left before compaction:
   [the-context-budget.md](the-context-budget.md)
