@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[56]{file,does,kind,verdict,disposition,callers,lines}:
+bin[60]{file,does,kind,verdict,disposition,callers,lines}:
   "README.md","Gróa — the updater, one per install","data","tested","keep",59,-
   "agent-census.sh","agent-census.sh — how many agents are running on THIS machine, and which of them are stale.","tool","wired","keep",1,163
   "agent-run.sh","agent-run.sh — run one agent's errand through the harness the Allfather chose.","tool","wired","keep",2,62
@@ -53,11 +53,12 @@ bin[56]{file,does,kind,verdict,disposition,callers,lines}:
   "eindri-start.sh","eindri-start.sh — start an Eindri as the Allfather asks.","tool","wired","keep",2,197
   "eindri-wake-lib.sh","eindri-wake-lib.sh — the ONE delivery ledger behind the Eindri push path.","lib","wired","keep",11,71
   "eindri-watch.sh","eindri-watch.sh — the control door on the Eindri→Brokk wake bridge.","tool","wired","keep",6,131
-  "einherjar-spawn.sh","einherjar-spawn.sh - gather an Eindri worker (Einherjar = the chosen who are","tool","tested","keep",20,1394
-  "eir-doctor.sh","eir-doctor.sh — Eir, the healer: diagnose the running system, then mend it.","tool","wired","keep",10,857
+  "einherjar-spawn.sh","einherjar-spawn.sh - gather an Eindri worker (Einherjar = the chosen who are","tool","tested","keep",21,1394
+  "eir-doctor.sh","eir-doctor.sh — Eir, the healer: diagnose the running system, then mend it.","tool","wired","keep",14,1007
   "erindi-brief.sh","erindi-brief.sh - scaffold an Eindri worker brief at data/<task-id>/brief.md.","tool","tested","keep",6,425
   "groa-agent.sh","groa-agent.sh — Gróa's body on a schedule: the updater, leashed, one per install.","tool","wired","keep",2,144
-  "groa-update.sh","groa-update.sh — Gróa, the völva who renews.","tool","wired","keep",15,485
+  "groa-update.sh","groa-update.sh — Gróa, the völva who renews.","tool","wired","keep",18,524
+  "groa-verdict-lib.sh","groa-verdict-lib.sh — how Gróa's update ends: whole, or owed, and never 'done' when it is not (plan 278).","lib","wired","keep",2,79
   "hall.sh","hall.sh — the whole house in ONE read: the seat, the doors, the queue, the last runes.","tool","wired","keep",1,16
   "name-registry.sh","name-registry.sh — the collision system for Ymir's names.","tool","wired","keep",3,167
   "pr-seal.sh","pr-seal.sh — the seat's own PR is sealed by the seat, and the word arrives through Gná.","tool","wired","keep",2,324
@@ -74,11 +75,14 @@ bin[56]{file,does,kind,verdict,disposition,callers,lines}:
   "skill-index.sh","skill-index.sh — Sága's sight over the crafts: one index of EVERY skill we","tool","tested","keep",3,244
   "skill-vendor-sync.sh","skill-vendor-sync.sh — keep imported third-party skill packs current.","tool","wired","keep",0,113
   "spam-guard.sh","spam-guard.sh — a model that loops is a fault, and the agent holding the Gná arm hears of it.","tool","wired","keep",0,182
+  "surfaces.py","'''surfaces.py — read config/surfaces.yaml, the ONE register of Eir's surfaces (plan 278).","tool","wired","keep",2,51
   "test_eir_mends.sh","test_eir_mends.sh — the Eir rows that read wrong or looked at the wrong place (2026-11-12).","tool","wired","keep",0,34
+  "test_eir_register.sh","test_eir_register.sh — plan 278: Eir reads one register, mends by risk class, and never leaves a broken","tool","wired","keep",1,95
+  "test_groa_verdict.sh","test_groa_verdict.sh — plan 278: the last line of an update tells the truth.","tool","wired","keep",1,68
   "valhalla.sh","valhalla.sh — the process hall (Valhalla).","tool","wired","keep",0,116
   "workspace-provision.sh","workspace-provision.sh — carve one workspace for the operator.","tool","wired","keep",0,82
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
 
-**Tally.** verdict: wired=43, tested=13
+**Tally.** verdict: wired=47, tested=13
 
-**Tally.** disposition: keep=54, migrate → src/ymir_runtime/send.py=1, migrate → src/ymir_runtime/seat.py=1
+**Tally.** disposition: keep=58, migrate → src/ymir_runtime/send.py=1, migrate → src/ymir_runtime/seat.py=1
