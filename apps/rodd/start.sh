@@ -66,13 +66,13 @@ fi
 # The electron binary is PROBED, never pinned to one distro release: this box moved
 # electron41 → electron43 and a hard path turned a working app into "No such file".
 resolve_electron() {
+  # plan 275 S10 (2026-11-12): the ONE resolver (bin/desktop/electron-lib.sh), the release's own Electron only. The
+  # old probe fell back to another app's runtime and to the distribution's /usr/lib/electron*, which pacman upgrades
+  # on its own schedule — so an app ran on whatever Electron was lying around, and broke when that moved.
   [ -n "${RODD_ELECTRON:-}" ] && { printf '%s' "$RODD_ELECTRON"; return 0; }
-  [ -x "$APP/node_modules/electron/dist/electron" ] && { printf '%s' "$APP/node_modules/electron/dist/electron"; return 0; }
-  local e
-  for e in $(ls -d /usr/lib/electron*/electron 2>/dev/null | sort -Vr); do
-    [ -x "$e" ] && { printf '%s' "$e"; return 0; }
-  done
-  command -v electron 2>/dev/null
+  local tree; tree="$(dirname "$(dirname "$APP")")"
+  [ -r "$tree/bin/desktop/electron-lib.sh" ] || return 1
+  ( . "$tree/bin/desktop/electron-lib.sh"; electron_bin "$APP" "$tree" )
 }
 ELECTRON="$(resolve_electron)"
 is_local_seat() { [ "$1" = "$(hostname -s)" ] || [ "$1" = localhost ] || [ "$1" = 127.0.0.1 ]; }
