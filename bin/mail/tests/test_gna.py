@@ -159,7 +159,7 @@ class Judge(unittest.TestCase):
         self.assertEqual(verdict["proposed_action"], "create_card")
 
     def test_every_no_reply_spelling_is_bulk(self):
-        for sender in ("mail-noreply@google.com", "no-reply-eyql6js@mail.example.com", "noreply@example.com"):
+        for sender in ("mail-noreply@example.com", "no-reply-eyql6js@mail.example.com", "noreply@example.com"):
             verdict = gna_judge.judge(record(**{"from": {"email": sender}, "subject": "Tips", "body_text": "what"}),
                                       self.people)
             self.assertEqual(verdict["proposed_action"], "archive", sender)
