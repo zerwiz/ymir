@@ -44,7 +44,10 @@ start() {
 
 stop() {
   local n="$1"
-  pkill -f "^Xvnc :$n( |$)" 2>/dev/null
+  # the X server records its own pid in its lock file — kill that pid, never a pattern
+  local xpid
+  xpid="$(tr -dc '0-9' < "/tmp/.X$n-lock" 2>/dev/null)"
+  [ -n "$xpid" ] && kill "$xpid" 2>/dev/null
   for pid in $(pgrep -x xfwm4); do
     { tr '\0' '\n' < "/proc/$pid/environ"; } 2>/dev/null | grep -qx "DISPLAY=:$n" && kill "$pid" 2>/dev/null
   done

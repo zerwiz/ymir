@@ -214,7 +214,7 @@ class HelmIdentityTest(ArmTestCase):
         self.seat.write_text("host=elsewhere\n", encoding="utf-8")
         self.assertEqual(self.helm(YMIR_ROLE="dev").host, "elsewhere")
         self.seat.unlink()
-        with unittest.mock.patch("socket.gethostname", return_value="newbox.tail.ts.net"):
+        with unittest.mock.patch("socket.gethostname", return_value="newbox.example.net"):
             self.assertEqual(self.helm(YMIR_ROLE="dev").host, "newbox", "a copied lease is re-taken with the NEW host")
 
     def test_an_unresolvable_fleet_role_stands_read_only_and_names_it(self) -> None:
