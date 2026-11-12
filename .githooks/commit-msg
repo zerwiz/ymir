@@ -3,3 +3,6 @@
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 [ -r "$root/bin/gates/guards/nda-guard.py" ] || exit 0
 python3 "$root/bin/gates/guards/nda-guard.py" message "$1" || { echo "commit-msg: the NDA gate refused this message." >&2; exit 1; }
+# the maker ward (RULES/53): a message may not name a model, a maker or an agent harness.
+[ -r "$root/bin/gates/guards/maker-guard.sh" ] && { bash "$root/bin/gates/guards/maker-guard.sh" message "$1" || exit 1; }
+exit 0

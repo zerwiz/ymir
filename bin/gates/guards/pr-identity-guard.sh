@@ -18,11 +18,18 @@ if [ "$mode" = "ci" ]; then
   [ -z "${GITHUB_EVENT_PATH:-}" ] && { echo "no GITHUB_EVENT_PATH" >&2; exit 2; }
   body=$(python3 -c "import json,sys; d=json.load(open('$GITHUB_EVENT_PATH')); print(d.get('pull_request',{}).get('body','') or '')")
   branch=$(python3 -c "import json,sys; d=json.load(open('$GITHUB_EVENT_PATH')); print(d.get('pull_request',{}).get('head',{}).get('ref',''))")
+  title=$(python3 -c "import json,sys; d=json.load(open('$GITHUB_EVENT_PATH')); print(d.get('pull_request',{}).get('title','') or '')")
 else
   [ -z "$pr" ] && { echo "usage: pr-identity-guard.sh <pr-number> [--ci]" >&2; exit 2; }
   body=$(gh pr view "$pr" --json body -q .body)
   branch=$(gh pr view "$pr" --json headRefName -q .headRefName)
+  title=$(gh pr view "$pr" --json title -q .title)
 fi
+
+# the title is prose too — the same matcher as the body (RULES/53)
+ttmp=$(mktemp); printf '%s\n' "${title:-}" > "$ttmp"
+if m=$(pr_maker_match "$ttmp"); then rm -f "$ttmp"; echo "refused: PR title: $m" >&2; exit 1; fi
+rm -f "$ttmp"
 
 # check signature block present
 if ! printf '%s\n' "$body" | grep -q '^house:'; then

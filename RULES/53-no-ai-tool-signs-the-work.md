@@ -30,3 +30,25 @@ Nothing may print. A guard that runs this on every push is the enforcement this 
 ## CHANGE LOG
 
 - **2026-11-11** — written at the Allfather's word, the same day in Ymir and in the Example5 repository.
+
+## Appended 2026-11-12 — the names are refused too, and a ward judges them
+
+At the Allfather's word: *"now we are mentioning claude in the pushes over and over. we should have a guard of this"* and
+*"we need a guard so the models and harnesses are not named — it is not good for clients' projects."*
+
+The law above forbade the **signature**. This section forbids the **name**. Prose in a commit message, a pull request
+title or a pull request body never names a model, a model maker or an agent harness. Say "the agent harness" or "the
+worker". Say "no AI attribution" where you once wrote a long phrase naming a tool.
+
+| Question | Answer |
+|---|---|
+| What is refused? | Any model family, model maker, model id from the machine's catalog, or harness name, as a whole word in prose, in any case; a co-author trailer naming an AI; a "Generated with" line; the robot emoji. |
+| What is allowed? | Code. A fenced block or a `backticked span` is never judged, so a path such as `.claude/hooks/ymir-arm.sh` or a flag such as `--harness claude` stands, because code names the harness functionally. |
+| Where is it checked? | The commit-msg hook (subject and body), the pre-push hook (every new commit in the pushed range, never history), the CI identity ward (PR title and body), and every door that opens a PR: `bin/forge/pr-open.sh` (which `bin/forge/gather.sh` uses), the smith's `gh pr create` shim, and `bin/agents/eindri-acclaim.sh` for the status line. |
+| Where does the list live? | One matcher, `bin/forge/maker-names.py`. One word list with reasons, `bin/gates/maker-words.txt`. One allow file with reasons, `bin/gates/maker-allow.txt`. A client repository tunes its own copy. |
+| Do clients get it? | Yes. The collaboration kit (version 1.6.0) ships `scripts/gates/maker-guard.sh` with the matcher and both lists, and the kit's commit-msg and pre-push hooks call it. |
+
+History is not rewritten (Rule 06): commits and pull requests made before this day keep their words. The ward judges
+what is new.
+
+- **2026-11-12** — the name ward appended; fix note `docs/fixes/gates/2026-11-12-the-maker-name-ward.md`.

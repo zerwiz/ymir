@@ -17,7 +17,10 @@ KIT="$HERE/kit"
 # 1.5.0 (2026-11-11, RULES/20 + Ymir RULES/52): the kit carries `RULES/20` and the `docs/templates/` shelf (house
 # templates, The Good Docs Project, MADR, arc42, each with its licence); the kit README and `docs/headers.md` are
 # converted from TOON blocks to Markdown tables — format only, every fact kept.
-VERSION="1.5.0"
+# 1.6.0 (2026-11-12, Ymir RULES/53): the kit carries the maker ward — `scripts/gates/maker-guard.sh`, its matcher
+# `maker-names.py`, the word list `maker-words.txt` (tune it per client) and `maker-allow.txt`; the kit's commit-msg
+# and pre-push hooks call it, so a client's commits never carry a model or harness name.
+VERSION="1.6.0"
 
 mode=""; repo=""
 for a in "$@"; do

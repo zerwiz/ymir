@@ -70,7 +70,26 @@ esac
 
 if is_smith; then
   case "${1:-} ${2:-}" in
-    "pr create") [ "${YMIR_SMITH_PR:-}" = direct ] || refuse "gh $1 $2" ;;
+    "pr create")
+      [ "${YMIR_SMITH_PR:-}" = direct ] || refuse "gh $1 $2"
+      # the maker ward (RULES/53): a PR title or body that names a model, a maker or an agent harness is refused
+      # BEFORE it is opened. The ward is found beside the worktree's own bin/, never assumed.
+      _guard="$(git rev-parse --show-toplevel 2>/dev/null)/bin/gates/guards/maker-guard.sh"
+      if [ -r "$_guard" ]; then
+        _args=("$@"); _i=0; _t=""
+        while [ "$_i" -lt "${#_args[@]}" ]; do
+          _a="${_args[$_i]}"; _v="${_args[$((_i+1))]:-}"
+          case "$_a" in
+            --title|-t) printf '%s\n' "$_v" >"${_t:=$(mktemp)}.title"; bash "$_guard" text "the PR title" "$_t.title" || exit 1; _i=$((_i+1)) ;;
+            --title=*) printf '%s\n' "${_a#--title=}" >"${_t:=$(mktemp)}.title"; bash "$_guard" text "the PR title" "$_t.title" || exit 1 ;;
+            --body|-b) printf '%s\n' "$_v" >"${_t:=$(mktemp)}.body"; bash "$_guard" text "the PR body" "$_t.body" || exit 1; _i=$((_i+1)) ;;
+            --body=*) printf '%s\n' "${_a#--body=}" >"${_t:=$(mktemp)}.body"; bash "$_guard" text "the PR body" "$_t.body" || exit 1 ;;
+            --body-file|-F) [ "$_v" != "-" ] && [ -r "$_v" ] && { bash "$_guard" text "the PR body ($_v)" "$_v" || exit 1; }; _i=$((_i+1)) ;;
+          esac
+          _i=$((_i+1))
+        done
+        [ -z "$_t" ] || rm -f "$_t" "$_t.title" "$_t.body"
+      fi ;;
     "pr merge"|"pr close"|"pr reopen"|"repo delete"|"release create"|"release delete")
       refuse "gh $1 $2" ;;
   esac

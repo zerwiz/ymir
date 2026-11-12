@@ -1,0 +1,7 @@
+# maker-allow.txt — the one allow file for bin/forge/maker-names.py (RULES/53).
+#
+# Prose in a commit message, a PR title or a PR body may not name an AI maker or product.
+# Code (a fenced block or a `backticked span`) is never judged, so a path or flag needs no entry.
+# Anything else that must stay is listed here as:   phrase | reason
+# A line with no reason is ignored: an exception nobody can explain is not an exception.
+# Append only (Rule 06) — a retired exception is struck by a dated comment, never deleted.

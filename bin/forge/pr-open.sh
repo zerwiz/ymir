@@ -32,7 +32,7 @@ $body"
 # A body that opens with a MERGE WITH A MERGE COMMIT banner (a gathered batch) keeps it as the
 # PR's first line, above the signature, so the button's reader sees it before anything else.
 case "$body" in
-  "MERGE WITH A MERGE COMMIT"*)
+  "MERGE WITH A MERGE COMMIT"*|"Merge with a merge commit"*)
     banner=${body%%$'\n'*}; rest=${body#"$banner"}
     full="$banner
 
@@ -42,6 +42,11 @@ esac
 tmp=$(mktemp); printf '%s\n' "$full" > "$tmp"
 if m=$(pr_pattern_match "$tmp"); then
   rm -f "$tmp"; echo "refused: $m" >&2; exit 3
+fi
+# the title is judged by the same matcher (RULES/53) — a body is not the only place a name can land
+printf '%s\n' "$title" > "$tmp"
+if m=$(pr_maker_match "$tmp"); then
+  rm -f "$tmp"; echo "refused: PR title: $m" >&2; exit 3
 fi
 rm -f "$tmp"
 if [ "$dry" = 1 ]; then

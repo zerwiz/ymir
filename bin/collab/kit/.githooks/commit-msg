@@ -12,6 +12,11 @@ message_file="${1:-}"
 subject=$(head -1 "$message_file" | tr -d '\r')
 words=$(printf '%s' "$subject" | wc -w)
 
+# the maker ward (RULES/53, kit 1.6.0): a message never names a model, a maker or an agent harness.
+if [ -x scripts/gates/maker-guard.sh ]; then
+  bash scripts/gates/maker-guard.sh message "$message_file" || { notify commit-msg "a commit message was refused for naming a model or harness"; exit 1; }
+fi
+
 case "$subject" in
   Merge*|Revert*|fixup!*|squash!*) exit 0 ;;
 esac

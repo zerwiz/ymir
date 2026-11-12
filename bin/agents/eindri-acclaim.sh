@@ -90,6 +90,13 @@ if [ -n "$TERMINAL" ] && [ -n "$LINE" ]; then
         exit 3 ;;
     esac
   fi
+  # the maker ward (RULES/53): the line carries the PR into the review spine and the PR record, so it may not
+  # name a model, a maker or an agent harness. Refused HERE, where the worker still exists to reword it.
+  if [ -r "$ROOT/bin/gates/guards/maker-guard.sh" ]; then
+    _lf="$(mktemp)"; printf '%s\n' "$LINE" >"$_lf"
+    bash "$ROOT/bin/gates/guards/maker-guard.sh" text "the $TERMINAL line" "$_lf" || { rm -f "$_lf"; exit 3; }
+    rm -f "$_lf"
+  fi
   status_file="$STATE/$AGENT.status"
   last="$(tail -n1 "$status_file" 2>/dev/null || true)"
   [ "$last" = "$TERMINAL: $LINE" ] || printf '%s: %s\n' "$TERMINAL" "$LINE" >>"$status_file"
