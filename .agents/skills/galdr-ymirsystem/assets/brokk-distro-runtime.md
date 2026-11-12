@@ -1172,6 +1172,36 @@ The Claude harness never takes another harness's model. With no `--model` it get
 Its uses are counted per errand in `<state>/model-allow.log`. No environment variable allows a
 model. A list that does not parse fails closed. No list at all is `unpoliced`, which Eir reports.
 
+## No helm, no errand — and the helm runs the pin (2026-11-12, plan 257)
+
+**The seat gate.** `seat()` in `src/ymir_runtime/seat.py` refuses before anything is
+created when no live helm holds the arm lease. The lease must exist, its `state=` must be
+this house (compared by real path, so `<tree>/state → <home>/state` is one house), its pid
+must be alive with its recorded `/proc` start time, and its heartbeat must be inside
+`BROKK_WATCH_HEARTBEAT_STALE_SECONDS` (60). The refusal is `NoHelm` (exit **1**), never
+`EngineRefusal` (exit 4): on 4 the shell door runs its old road and would seat the worker
+anyway. `YMIR_DISPATCH_NO_HELM=1` is the loud override and lands in the meta as
+`helm_bypass=`.
+
+**One shelf.** The lease is the authority for the errand's record root: the meta, status
+and brief go to the lease's `state=`, never to a seat's private `BROKK_STATE_OVERRIDE`.
+The lease is looked for on `roots.state` and then on the arm shelf (`$YMIR_STATE_DIR` →
+`<home>/state`). The meta records `helm_pid`, `helm_gen` and `helm_state`.
+
+**The record is the wake.** `watch.terminal_status_wake` raises one `signal: <id> <line>`
+for a `done:`/`failed:`/`needs-decision:`/`paused:` line newer than `state/<id>.woke`.
+`.arm.terminal-epoch` seeds older lines silently. `eindri-acclaim.sh` writes the same
+cursor, so the loud road and the record never wake twice.
+
+**The pin.** `bin/pi/arm-pin-lib.sh` is the one resolver (`YMIR_RUNTIME_DIR`,
+`YMIR_RUNTIME_BRANCH` from `runtime.env`). `syn-watch-arm.sh` hands over to the pin's
+client (`YMIR_ARM_PINNED=1` stops a loop; `YMIR_ARM_TREE=1` is the override), and the pi,
+OpenCode and Claude adapters call the pin's client. The daemon writes `pin=` and
+`pin_behind=` into the lease. Gróa fast-forwards the pin (a `pin` row) and runs
+`runtime-deploy.sh` when it moved. Rödd's `start.sh` and `src/main.js` run the pin.
+`bin/pi/arm-pin.sh status|check` puts the age on the board; Eir's surface is `armpin`.
+Fix note `docs/fixes/agents/2026-11-11-no-helm-no-errand.md`.
+
 ## CHANGE LOG
 
 - **2026-11-08** — Appended with the capability: the canon, the estate door, the widening of `domain.sh`,
@@ -1191,3 +1221,7 @@ model. A list that does not parse fails closed. No list at all is `unpoliced`, w
   (`bin/model/model-allow.sh`, `src/ymir_runtime/allow.py`), enforced at the spawner, the engine,
   herdr-run, agent-run, the resolver and agent-model; Claude defaults to its own allowed model; Eir's
   `models` surface. Fix note `docs/fixes/model/2026-11-12-only-approved-models-spawn.md`.
+- **2026-11-12** — Appended with plan 257 (H1–H3, H6–H8): the seat's helm gate as a hard
+  refusal, the lease as the record root, the record-as-wake cursor, the pinned arm client and
+  adapters, Gróa carrying the pin, Rödd on the pin, and `armpin`. Fix note
+  `docs/fixes/agents/2026-11-11-no-helm-no-errand.md`.

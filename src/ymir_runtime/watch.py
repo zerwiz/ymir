@@ -75,6 +75,12 @@ RAISE_FLOOR_SECONDS = 900
 RAISE_HOURLY_CEILING = 3
 BRAKED_PREFIXES = ("stale:", "check:")
 
+# H3 (plan 257): a terminal status line is itself a wake — the worker writes `done:`
+# (or `failed:` / `needs-decision:` / `paused:`) and the arm raises, without the worker
+# remembering to run acclaim. `blocked:` is NOT here: a blocked seat needs Brokk, and it
+# travels the loud acclaim road or the failsafe, never the silent status scan.
+TERMINAL_WAKE_PREFIXES = ("done:", "failed:", "needs-decision:", "paused:")
+
 
 def _positive_int(value: str | None, default: int) -> int:
     try:
@@ -253,14 +259,24 @@ def write_lease(
     role: str = "unknown",
     now: float | None = None,
     stat_reader: Callable[[int], str] | None = None,
+    pin: str = "",
+    pin_behind: str = "",
 ) -> bool:
     """Write the lease atomically; a torn lease is a lying one."""
     starttime = proc.proc_starttime(pid, stat_reader=stat_reader or proc._proc_stat) or "0"
     stamp = int(now if now is not None else time.time())
-    body = (
-        f"pid={pid} starttime={starttime} gen={generation} mode={mode} role={role} "
-        f"session={session} heartbeat={stamp} state={paths.state}\n"
-    )
+    fields = [
+        f"pid={pid} starttime={starttime} gen={generation} mode={mode} role={role} ",
+        f"session={session} heartbeat={stamp} state={paths.state}",
+    ]
+    # H6/H8 (plan 257): the lease records the pinned runtime's currency — the sha and
+    # how far behind origin it stands — so a stale pin is a NUMBER any door can read,
+    # never a smell to be inferred from odd behaviour.
+    if pin:
+        fields.append(f" pin={pin}")
+    if pin_behind:
+        fields.append(f" pin_behind={pin_behind}")
+    body = "".join(fields) + "\n"
     paths.state.mkdir(parents=True, exist_ok=True)
     temporary = paths.lease.with_name(f"{paths.lease.name}.{pid}")
     try:
@@ -269,6 +285,31 @@ def write_lease(
     except OSError:
         return False
     return True
+
+
+def pin_facts(env: Mapping[str, str], runner: proc.Runner = proc.run) -> tuple[str, str]:
+    """`(sha, behind)` for the pinned runtime, read from git — never guessed.
+
+    The sha is the pin's HEAD; `behind` is the commit count to `origin/main` on the
+    LOCAL ref of the pin's own branch (YMIR_RUNTIME_BRANCH, default main). A missing pin or an
+    unreadable git returns empty strings — a seat with no pin reports no currency,
+    and Eir's `armpin` surface turns that into a named failure, never a lie.
+    """
+    pin = paths_mod.runtime_pin_dir(env)
+    if not str(pin) or not pin.is_dir():
+        return "", ""
+    sha = ""
+    result = runner(("git", "-C", str(pin), "rev-parse", "--short=8", "HEAD"), env=dict(env))
+    if proc.ok(result):
+        sha = proc.out(result)
+    behind = ""
+    branch = paths_mod.runtime_pin_branch(env)
+    result = runner(
+        ("git", "-C", str(pin), "rev-list", "--count", f"HEAD..origin/{branch}"), env=dict(env)
+    )
+    if proc.ok(result):
+        behind = proc.out(result)
+    return sha, behind
 
 
 def release_lease(paths: ArmPaths, *, pid: int | None = None) -> None:
@@ -411,6 +452,14 @@ def raise_line(paths: ArmPaths) -> str:
         # raising anything, so the harness read the close as "ended without an
         # actionable reason", retried five times, and flapped (2026-09-23).
 
+    # H3 — the record is the wake: a terminal status line newer than its per-id
+    # cursor raises exactly one wake, so a worker that writes only `done: …` wakes
+    # the arm within one poll with no acclaim and no sweep. The queue above keeps
+    # first call; this is the direct road a finished worker travels by default.
+    terminal = terminal_status_wake(paths)
+    if terminal:
+        return terminal
+
     for suffix, prefix in ((".signal", "signal"), (".check", "check")):
         found = paths.triggers(suffix)
         if found:
@@ -428,6 +477,87 @@ def raise_line(paths: ArmPaths) -> str:
             pass
         return "stale: watcher stopped by operator"
 
+    return ""
+
+
+def _cursor(path: Path) -> float:
+    try:
+        return float(path.read_text(encoding="utf-8", errors="replace").strip() or 0)
+    except (OSError, ValueError):
+        return 0.0
+
+
+def _terminal_epoch(paths: ArmPaths) -> float:
+    """When this house first read terminal lines as wakes (`.arm.terminal-epoch`).
+
+    A status that turned terminal BEFORE the record-as-wake existed was already carried
+    by acclaim or the sweep, so it is seeded silently rather than re-presented: the
+    first poll after an upgrade must not raise a hundred old `done:` lines (plan 257,
+    risk "a derived wake firing on an old terminal line").
+    """
+    marker = paths.state / ".arm.terminal-epoch"
+    value = _cursor(marker)
+    if value > 0:
+        return value
+    stamp = time.time()
+    try:
+        marker.write_text(f"{stamp}\n", encoding="utf-8")
+    except OSError:
+        pass
+    return stamp
+
+
+def terminal_status_wake(paths: ArmPaths) -> str:
+    """One `signal:` per terminal status line, keyed by the per-id `.woke` cursor.
+
+    Plan 257 H3 — the record is the wake. A `state/<id>.status` whose last line is
+    terminal (`done:` · `failed:` · `needs-decision:` · `paused:`) and whose mtime is
+    newer than `state/<id>.woke` raises exactly one wake. The cursor is written BEFORE
+    the line is returned, so a second poll never re-wakes the same line; a newer
+    terminal line (a later mtime) is news once more. `eindri-acclaim.sh` writes the same
+    cursor when it delivers the loud wake, so the two roads never wake twice.
+    """
+    try:
+        entries = sorted(
+            (entry for entry in paths.state.iterdir() if entry.name.endswith(".status")),
+            key=lambda entry: entry.name,
+        )
+    except OSError:
+        return ""
+    epoch = 0.0
+    for status in entries:
+        seat_id = status.name[: -len(".status")]
+        if not seat_id or seat_id.startswith("."):
+            continue
+        try:
+            status_mtime = status.stat().st_mtime
+        except OSError:
+            continue
+        cursor = paths.state / f"{seat_id}.woke"
+        cursor_value = _cursor(cursor)
+        if status_mtime <= cursor_value:
+            continue  # the cheap test first: nothing new since the last wake
+        try:
+            lines = status.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
+            continue
+        last = lines[-1].strip() if lines else ""
+        if not last.lower().startswith(TERMINAL_WAKE_PREFIXES):
+            continue
+        if cursor_value <= 0:
+            epoch = epoch or _terminal_epoch(paths)
+            if status_mtime < epoch:
+                # older than the record-as-wake itself: seed, never raise
+                try:
+                    cursor.write_text(f"{status_mtime}\n", encoding="utf-8")
+                except OSError:
+                    pass
+                continue
+        try:
+            cursor.write_text(f"{status_mtime}\n", encoding="utf-8")
+        except OSError:
+            continue  # a cursor that cannot be written would re-wake every poll
+        return f"signal: {seat_id} {last}"
     return ""
 
 
@@ -515,6 +645,8 @@ def cycle(
     emit: bool = False,
     now: float | None = None,
     stat_reader: Callable[[int], str] | None = None,
+    pin: str = "",
+    pin_behind: str = "",
 ) -> str:
     """One poll cycle: beat, lease, sweep the handoff, raise at most one line.
 
@@ -542,6 +674,8 @@ def cycle(
         generation=generation,
         now=now,
         stat_reader=stat_reader,
+        pin=pin,
+        pin_behind=pin_behind,
     )
     sweep_handoff(paths, env=env, runner=runner)
     line = raise_line(paths)
@@ -841,6 +975,9 @@ def run_daemon(
     generation = next_generation(paths)
     install = signal_installer or _install_traps
     install(lambda: release_lease(paths, pid=mine))
+    # H6/H8 (plan 257): the pin's currency is computed ONCE per daemon run — two git
+    # reads per 5 s poll would be noise — and carried into every lease write.
+    pin, pin_behind = pin_facts(env, runner)
     if not write_lease(
         paths,
         pid=mine,
@@ -849,6 +986,8 @@ def run_daemon(
         session="none",
         generation=generation,
         stat_reader=stat_reader,
+        pin=pin,
+        pin_behind=pin_behind,
     ):
         say_err(f"cannot write lease {paths.lease}")
         return 1
@@ -868,6 +1007,8 @@ def run_daemon(
             pid=mine,
             emit=emit,
             stat_reader=stat_reader,
+            pin=pin,
+            pin_behind=pin_behind,
         )
         if line:
             print(line)

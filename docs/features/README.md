@@ -59,3 +59,5 @@ its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
 Voice files on Windows and WSL: [voice-files-on-windows.md](voice-files-on-windows.md).
 
 Talk to Skírnir in Hlidskjalf: [talk-to-skirnir.md](talk-to-skirnir.md).
+
+No helm, no errand — the seat door refuses a worker with no live arm, and the arm and Rödd run the pin: [no-helm-no-errand.md](no-helm-no-errand.md).

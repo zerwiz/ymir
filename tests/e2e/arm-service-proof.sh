@@ -46,6 +46,7 @@ TMP="$(mktemp -d "${TMPDIR:-/tmp}/ymir-arm-proof.XXXXXX")"
 export BROKK_STATE_OVERRIDE="$TMP/state"
 export BROKK_MACHINE_STATE_DIR="$TMP/machine"
 export BROKK_WATCH_POLL_SECONDS=1
+export YMIR_ARM_TREE=1   # plan 257 H6: prove this tree's client, never the operator's pin
 export BROKK_WATCH_DAEMON_GRACE_SECONDS=3
 export SYN_WATCH_UNIT="ymir-arm-proof"
 mkdir -p "$BROKK_STATE_OVERRIDE" "$BROKK_MACHINE_STATE_DIR"

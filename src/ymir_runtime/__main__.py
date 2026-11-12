@@ -26,7 +26,7 @@ from typing import Mapping, Sequence
 from . import __version__, heartbeat, landed as landed_mod, paths, proc, watch
 from .dispatch import ModelUnavailable, TableRefusal
 from .dispatch import resolve as resolve_dispatch
-from .errors import EngineError, EngineRefusal, SeatNotFound
+from .errors import EngineError, EngineRefusal, NoHelm, SeatNotFound
 from .seat import Errand, seat
 from .send import send
 from .status import SeatState, status
@@ -277,6 +277,13 @@ def main(
         )
         try:
             seat_id = seat(errand, runner=run, env=env, probe=lookup)
+        except NoHelm as exc:
+            # plan 257 H1 — a hard refusal (exit 1), never exit 4: on 4 the shell door
+            # would run its old road and seat the worker anyway.
+            print(f"refused: {exc.reason}", file=sys.stderr)
+            if exc.remedy:
+                print(f"help: {exc.remedy}", file=sys.stderr)
+            return EXIT_FAILED
         except EngineRefusal as exc:
             print(f"engine-cannot-own: {exc.reason}", file=sys.stderr)
             if exc.remedy:

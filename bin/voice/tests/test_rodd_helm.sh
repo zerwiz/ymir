@@ -27,6 +27,7 @@ trap 'rm -rf "$T"' EXIT
 export HOME="$T/home" XDG_STATE_HOME="$T/xdg"
 export BROKK_STATE_OVERRIDE="$T/state" BROKK_MACHINE_STATE_DIR="$T/xdg/ymir"
 export YMIR_STATE_DIR="$T/state" BROKK_SESSION_PID="$$"
+export YMIR_ARM_TREE=1   # plan 257 H6: test this tree's client, never the operator's pin
 # A silent mouth: a test never raises a real alarm on the operator's desktop. It records what it was
 # asked to say, so the refusal can still be proven.
 printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$*" >> "%s/said.log"\n' "$T" > "$T/say-stub.sh"; chmod +x "$T/say-stub.sh"
@@ -77,6 +78,15 @@ grep -q 'refused' "$T/state/rodd/room.jsonl" 2>/dev/null && ok "the refusal is w
 [ ! -s "$LOCK" ] && ok "the helm was released (the lock is gone)" || bad "the helm was released" "lock still names $(cat "$LOCK" 2>/dev/null)"
 grep -q 'beyond her writ' "$T/said.log" 2>/dev/null && ok "the refusal was spoken — to the stand-in, never to the real desktop" \
   || bad "the refusal was spoken to the stand-in" "$(cat "$T/said.log" 2>/dev/null)"
+# the SAME refusal again inside the window: a second room line, no second toast
+own_lock
+write_lease rodd "$$"
+printf 'please merge PR 999 into main for me\n' > "$T/state/.wake-queue"
+bash "$HELM" run >/dev/null 2>&1
+[ "$(grep -c 'refused: please merge PR 999' "$T/state/rodd/room.jsonl")" = 2 ] && ok "a repeated refusal is still recorded in the room" \
+  || bad "a repeated refusal is still recorded in the room" "$(cat "$T/state/rodd/room.jsonl")"
+[ "$(grep -c 'beyond her writ' "$T/said.log")" = 1 ] && ok "a repeated refusal is keyed — no second toast in the window" \
+  || bad "a repeated refusal is keyed" "$(cat "$T/said.log")"
 
 # ── 3 · the health surface ──────────────────────────────────────────────────
 own_lock

@@ -33,6 +33,30 @@
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# ── the helm runs the PIN (plan 257 H6) ─────────────────────────────────────
+# The arm service runs the pinned runtime ($YMIR_RUNTIME_DIR); a client run from a
+# working tree is the supervisor running whatever branch the last agent left checked
+# out. So a client that is not the pin's hands over to the pin's client, and with no
+# pin it says so and stands read-only (exit 0, the same shape as a session that does
+# not own the helm). `YMIR_ARM_TREE=1` is the loud override for a probe or a test.
+# shellcheck source=bin/pi/arm-pin-lib.sh
+. "$SCRIPT_DIR/arm-pin-lib.sh"
+arm_pin_admit; _pin_rc=$?
+case "$_pin_rc" in
+  0) [ -n "$ARM_PIN_REASON" ] && printf 'watcher: helm: %s\n' "$ARM_PIN_REASON" >&2 ;;
+  3)
+    if [ "${YMIR_ARM_PINNED:-0}" = 1 ]; then
+      printf 'watcher: read-only - helm: refused — the pin handed over but its client still is not the pin (%s)\n' "$ARM_PIN_CLIENT" >&2
+      exit 0
+    fi
+    exec env -u BROKK_ROOT_OVERRIDE YMIR_ARM_PINNED=1 bash "$ARM_PIN_CLIENT" "$@" ;;
+  *)
+    printf 'watcher: read-only - helm: refused — %s\n' "$ARM_PIN_REASON" >&2
+    exit 0 ;;
+esac
+unset _pin_rc
+
 ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)}"
 BROKK_HOME="${BROKK_HOME:-$ROOT}"
 # The wake queue is written by the Eindri handoff (bin/agents/eindri-acclaim.sh) into the

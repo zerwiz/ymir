@@ -123,3 +123,55 @@ def resolve(env: Mapping[str, str] | None = None) -> Roots:
         root=root,
         wt_root=wt_root,
     )
+
+
+def runtime_env(env: Mapping[str, str] | None = None) -> dict[str, str]:
+    """`<home>/config/runtime.env` as a mapping — the pin's own record (RULES/02 §7).
+
+    The file is the one the shell ward reads (`runtime-pinned-guard.sh`); `$HOME` and a
+    leading `~` are expanded, nothing else. A missing file is an empty mapping.
+    """
+    environ = dict(os.environ) if env is None else dict(env)
+    conf = resolve(environ).config / "runtime.env"
+    values: dict[str, str] = {}
+    try:
+        text = conf.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return values
+    home = environ.get("HOME") or os.path.expanduser("~")
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("export "):
+            stripped = stripped[len("export "):].strip()
+        if not stripped or stripped.startswith("#") or "=" not in stripped:
+            continue
+        key, value = stripped.split("=", 1)
+        value = value.strip().strip('"').strip("'")
+        value = value.replace("${HOME}", home).replace("$HOME", home)
+        if value.startswith("~/"):
+            value = home + value[1:]
+        values[key.strip()] = value
+    return values
+
+
+def runtime_pin_dir(env: Mapping[str, str] | None = None) -> Path:
+    """The pinned runtime checkout (RULES/02 §7) — `runtime.env`'s YMIR_RUNTIME_DIR.
+
+    A unit or a harness that executes from a WORKING tree is a machine running whatever
+    branch the last agent left checked out; the pin is the ONE checkout that may
+    supervise (plan 257 H6). This reads the SAME file the shell ward reads —
+    `runtime-pinned-guard.sh` and `bin/pi/arm-pin-lib.sh` — never a second path.
+    Empty when no pin is configured.
+    """
+    environ = dict(os.environ) if env is None else dict(env)
+    explicit = environ.get("YMIR_RUNTIME_DIR")
+    if explicit:
+        return Path(explicit).expanduser()
+    value = runtime_env(environ).get("YMIR_RUNTIME_DIR", "")
+    return Path(value).expanduser() if value else Path("")
+
+
+def runtime_pin_branch(env: Mapping[str, str] | None = None) -> str:
+    """The branch the pin follows — YMIR_RUNTIME_BRANCH, the ward's default `main`."""
+    environ = dict(os.environ) if env is None else dict(env)
+    return environ.get("YMIR_RUNTIME_BRANCH") or runtime_env(environ).get("YMIR_RUNTIME_BRANCH") or "main"
