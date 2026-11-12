@@ -20,7 +20,8 @@
 # Usage:
 #   bin/seat/herdr-run.sh available                      # can we use herdr right now?
 #   bin/seat/herdr-run.sh worth-a-smith "<errand>"       # is this an errand at all?
-#   bin/seat/herdr-run.sh eindri [NAME] [--role R] [--space] -- "<task>"
+#   bin/seat/herdr-run.sh eindri [NAME] [--role R] [--kind K] [--model M] [--space] -- "<task>"
+#       --kind pi|opencode|claude WINS over config/agents.yaml and the model's provider (plan 262)
 #   bin/seat/herdr-run.sh run <name> -- <command...>     # a command in a pane
 #   bin/seat/herdr-run.sh agent-status                   # who stands, and in what state
 #   bin/seat/herdr-run.sh close-all                      # clear the tabs/panes we made
@@ -328,11 +329,13 @@ case "$ACTION" in
     printf 'herdr-run[1]{tab,pane,step,exit}:\n  "%s","%s","%s",%s\n' "$tab" "$pane" "$NAME" "$rc"
     exit "$rc" ;;
   agent|eindri)
-    NAME=""; ROLE=""; SPACE=0; TAB=0; MODEL_REQ=""; MAIN=0
+    NAME=""; ROLE=""; SPACE=0; TAB=0; MODEL_REQ=""; MAIN=0; KIND_EXPLICIT=""
     while [ $# -gt 0 ]; do
       case "$1" in
         --role) ROLE=${2-}; shift 2 ;;
         --role=*) ROLE=${1#--role=}; shift ;;
+        --kind) KIND_EXPLICIT=${2-}; shift 2 ;;
+        --kind=*) KIND_EXPLICIT=${1#--kind=}; shift ;;
         --model) MODEL_REQ=${2-}; shift 2 ;;
         --model=*) MODEL_REQ=${1#--model=}; shift ;;
         --space) SPACE=1; shift ;;
@@ -373,11 +376,24 @@ Seat law, read first. You are a worker figure, not the primary. There is NO huma
       ROLE="$("$SCRIPT_DIR/../agents/eindri-role.sh" choose "$PROMPT" 2>/dev/null | sed -n '2p' | sed -E 's/^ *"([^"]+)".*/\1/')"
     fi
     [ -n "$NAME" ] || NAME="${ROLE:-eindri}"
-    KIND="${YMIR_HERDR_KIND:-pi}"
+    KIND="${KIND_EXPLICIT:-${YMIR_HERDR_KIND:-pi}}"
 
     # Resolve a model request (friendly or exact) to harness+provider+model.
     # local -> pi, online -> opencode. Unresolved -> report and continue default.
     MODEL_ARGS=()
+    # An exact provider/model token that the harness itself serves is used VERBATIM. The resolver is
+    # for friendly names; fed `opencode/deepseek-v4.1-flash-free` it answered the paid
+    # `opencode-go/deepseek-v4.1-flash` and the worker ran on the wrong model (measured 2026-11-12).
+    # A token OpenCode does not list is a refusal, never a guess (plan 262, P4).
+    if [ "$KIND" = opencode ] && [ -n "$MODEL_REQ" ] && case "$MODEL_REQ" in */*|free) true ;; *) false ;; esac; then
+      if [ "$MODEL_REQ" = free ] || "$SCRIPT_DIR/opencode-launcher.sh" has "$MODEL_REQ" >/dev/null 2>&1; then
+        MODEL_ARGS=(-- --model "$MODEL_REQ"); MODEL_REQ=""; MODEL_VERBATIM=1
+        printf 'herdr-run[1]{model,state}:\n  "%s","served by opencode — used verbatim"\n' "${MODEL_ARGS[2]}" >&2
+      else
+        printf 'error: opencode does not serve %s — a model it does not list is a refusal, not a guess\nhelp: opencode models\n' "$MODEL_REQ" >&2
+        exit 1
+      fi
+    fi
     if [ -n "$MODEL_REQ" ] && [ -x "$SCRIPT_DIR/../model/model-resolve.sh" ]; then
       r="$("$SCRIPT_DIR/../model/model-resolve.sh" resolve "$MODEL_REQ" 2>/dev/null | sed -n '2p')"
       case "$r" in
@@ -392,11 +408,14 @@ Seat law, read first. You are a worker figure, not the primary. There is NO huma
           # online one is opencode's. Trusting a field position here seated
           # pi with an online model id, so the worker started and sat IDLE -
           # "sent but never started" - while the dispatch row reported success.
-          case "${md:-}:${pv:-}:${h:-}" in
-            *llama*|*lmstudio*|*ollama*) KIND=pi ;;
-            "")                          KIND=pi ;;   # nothing resolved: stay local
-            *)                           KIND=opencode ;;
-          esac
+          # An explicit --kind always wins (plan 262): the caller named the harness.
+          if [ -z "$KIND_EXPLICIT" ]; then
+            case "${md:-}:${pv:-}:${h:-}" in
+              *llama*|*lmstudio*|*ollama*) KIND=pi ;;
+              "")                          KIND=pi ;;   # nothing resolved: stay local
+              *)                           KIND=opencode ;;
+            esac
+          fi
           [ -n "$md" ] && MODEL_ARGS=(-- --model "$pv/$md")
           printf 'herdr-run[1]{model,harness,provider,model_id}:\n  "%s","%s","%s","%s"\n' "$MODEL_REQ" "$h" "$pv" "$md" >&2 ;;
       esac
@@ -404,10 +423,10 @@ Seat law, read first. You are a worker figure, not the primary. There is NO huma
 
     # No explicit model: use the AGENT'S configured harness+model from
     # config/agents.yaml (local->pi, online->opencode) — never default silently.
-    if [ -z "$MODEL_REQ" ] && [ -x "$SCRIPT_DIR/../fleet/agents-config.sh" ]; then
+    if [ -z "$MODEL_REQ" ] && [ -z "${MODEL_VERBATIM:-}" ] && [ -x "$SCRIPT_DIR/../fleet/agents-config.sh" ]; then
       _h="$("$SCRIPT_DIR/../fleet/agents-config.sh" get "$ROLE" harness 2>/dev/null)"
       _m="$("$SCRIPT_DIR/../fleet/agents-config.sh" get "$ROLE" model 2>/dev/null)"
-      [ -n "$_h" ] && KIND="$_h"
+      [ -n "$_h" ] && [ -z "$KIND_EXPLICIT" ] && KIND="$_h"
       [ -n "$_m" ] && MODEL_ARGS=(-- --model "$_m")
       printf 'herdr-run[1]{agent,harness,model}:\n  "%s","%s","%s"\n' "$ROLE" "${_h:-?}" "${_m:-?}" >&2
     fi
@@ -506,18 +525,45 @@ Seat law, read first. You are a worker figure, not the primary. There is NO huma
     [ -n "$tab" ] || { printf 'error: could not seat the Eindri\n' >&2; exit 1; }
     [ -n "$pane" ] || { printf 'error: the tab has no pane\n' >&2; exit 1; }
 
-    if ! hdr agent start "$NAME" --kind "$KIND" --pane "$pane" "${MODEL_ARGS[@]}" >/dev/null 2>&1; then
-      printf 'error: could not start a %s Eindri in %s\nhelp: the pane must sit at an interactive shell prompt\n' "$KIND" "$pane" >&2
-      exit 1
-    fi
-    # Inject the task — retry until it lands. `agent start` can return before the
-    # harness accepts input (opencode is slower than pi), and a single swallowed
-    # prompt is the "it started but nothing was injected" bug.
+    AGENT_REF="$NAME"
     injected=no
-    for _try in 1 2 3 4 5 6 7 8 9 10; do
-      if hdr agent prompt "$NAME" "$PROMPT" >/dev/null 2>&1; then injected=yes; break; fi
-      sleep 3
-    done
+    if [ "$KIND" = opencode ]; then
+      # OpenCode v2's TUI refuses --model and `hdr agent start` carries no environment, so the
+      # launcher's one shape (model in inline config, brief as --prompt) is run in the pane.
+      # The brief is the first turn, so nothing is injected afterwards. The seat is counted
+      # only when the agent list shows it — a pane that printed an error is not a seat (plan 262,
+      # Rule 37).
+      oc_model=""
+      for _i in "${!MODEL_ARGS[@]}"; do [ "${MODEL_ARGS[$_i]}" = "--model" ] && oc_model="${MODEL_ARGS[$((_i+1))]:-}"; done
+      brief_dir="$STATE_DIR/eindri-briefs"; mkdir -p "$brief_dir"
+      brief_file="$brief_dir/$NAME.md"; printf '%s\n' "$PROMPT" >"$brief_file"
+      oc_line="$("$SCRIPT_DIR/opencode-launcher.sh" print ${oc_model:+--model "$oc_model"} --brief "$brief_file")" || {
+        printf 'error: the OpenCode launcher refused this seat\n' >&2; exit 1; }
+      oc_line="cd $(printf '%q' "$SEAT_CWD") && $oc_line"
+      if ! hdr pane run "$pane" "$oc_line" >/dev/null 2>&1; then
+        printf 'error: could not run opencode in %s\nhelp: the pane must sit at an interactive shell prompt\n' "$pane" >&2
+        exit 1
+      fi
+      if ! proved="$("$SCRIPT_DIR/seat-prove.sh" "$pane" "$SEAT_CWD" 2>&1)"; then
+        printf 'error: opencode did not come up in %s — no agent stands there, so this is not a seat\n%s\nhelp: read the pane: herdr pane read %s\n' "$pane" "$proved" "$pane" >&2
+        exit 1
+      fi
+      hdr agent rename "$pane" "$NAME" >/dev/null 2>&1 || true
+      AGENT_REF="$NAME"; hdr agent get "$NAME" >/dev/null 2>&1 || AGENT_REF="$pane"
+      injected="brief-in-launch"; _try=0
+    else
+      if ! hdr agent start "$NAME" --kind "$KIND" --pane "$pane" "${MODEL_ARGS[@]}" >/dev/null 2>&1; then
+        printf 'error: could not start a %s Eindri in %s\nhelp: the pane must sit at an interactive shell prompt\n' "$KIND" "$pane" >&2
+        exit 1
+      fi
+      # Inject the task — retry until it lands. `agent start` can return before the
+      # harness accepts input, and a single swallowed prompt is the
+      # "it started but nothing was injected" bug.
+      for _try in 1 2 3 4 5 6 7 8 9 10; do
+        if hdr agent prompt "$NAME" "$PROMPT" >/dev/null 2>&1; then injected=yes; break; fi
+        sleep 3
+      done
+    fi
     printf 'herdr-run[1]{eindri,injected,attempts}:\n  "%s","%s",%s\n' "$NAME" "$injected" "${_try:-0}" >&2
 
     # Arm the handoff (plan 42, the automation law). A when-source beside the
@@ -535,11 +581,11 @@ Seat law, read first. You are a worker figure, not the primary. There is NO huma
     fi
 
     if [ "${YMIR_HERDR_AGENT_WAIT:-1}" = "1" ]; then
-      hdr agent wait "$NAME" --until done --until idle --timeout $((SETTLE * 1000)) >/dev/null 2>&1 || true
+      hdr agent wait "$AGENT_REF" --until done --until idle --timeout $((SETTLE * 1000)) >/dev/null 2>&1 || true
     fi
     printf 'herdr-run[1]{seat,eindri,role,kind,tab,state}:\n  "%s","%s","%s","%s","%s","%s"\n' \
       "$seat_note" "$NAME" "${ROLE:-unspecified}" "$KIND" "$tab" \
-      "$(hdr agent get "$NAME" 2>/dev/null | python3 -c '
+      "$(hdr agent get "$AGENT_REF" 2>/dev/null | python3 -c '
 import json,sys
 try:
     d=json.load(sys.stdin); r=d.get("result",{}); a=r.get("agent",r)

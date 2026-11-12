@@ -11,7 +11,7 @@ Verified on 2026-06-11 across versions 1.15.7 through 1.17.6, with busy-queue be
 | Interrupt | Double Escape; it is known to be flaky while a long shell command runs, so use `../../../bin/brokk-control.sh <task-id> relaunch` for a wedged pane. |
 | Skill invocation | No separate verified form beyond normal slash-command behavior; use natural language when the exact command is uncertain. |
 | Resume | Relaunch with `--continue` to resume the most recent session for the current directory, then send the next instruction after the TUI is ready because `--prompt` does not auto-submit alongside `--continue`. |
-| Model flag | `--model <provider/model>`. |
+| Model flag | **None on the interactive TUI** (OpenCode v2.2.7: `Unrecognized flag: --model`). `opencode run` takes `--model <provider/model>`. The one launch line is `bin/seat/opencode-launcher.sh print` (plan 262, #679). |
 | Effort flag | None for Brokk's interactive `opencode --prompt` launch verified on 1.17.6; `opencode run` has `--variant`, but that is not this path. |
 | Model discovery | Run `opencode models [provider]` to list available provider/model identifiers. |
 | Trust dialog | None. |

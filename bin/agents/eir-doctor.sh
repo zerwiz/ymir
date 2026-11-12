@@ -116,7 +116,7 @@ surface_detail_skip() {
 }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir bilskirnir hnoss shells graphics well memory mail mcp harness claudehooks arm armpin roddhelm lock gates migrations hoard autoboot vault ward seats seatreap models)
+SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir bilskirnir hnoss shells graphics well memory mail mcp harness claudehooks opencode arm armpin roddhelm lock gates migrations hoard autoboot vault ward seats seatreap models)
 
 # ── the three surfaces the 2026-11-03 Windows audit found, and the rule they read ──────────
 # A SEAT IS NOT UPDATED BY A PULL. The checkout moves; the installed hooks, the PATH a later
@@ -497,6 +497,16 @@ s_claudehooks() {
   ! printf '%s\n' "$out" | grep -q '"claude-[^"]*","stale"'
 }
 f_claudehooks() { [ -x "$SCRIPT_DIR/../seat/harness-extensions-install.sh" ] && "$SCRIPT_DIR/../seat/harness-extensions-install.sh" >/dev/null 2>&1 && s_claudehooks; }
+# OpenCode launch shape (plan 262): OpenCode v2's interactive TUI takes --prompt and --auto but not --model,
+# and a release that drops either flag kills every OpenCode worker in its pane. The surface reads
+# `opencode --help` through the launcher's own check, so a drifted TUI is a red surface, not a dead
+# pane. A host with no OpenCode owes nothing.
+s_opencode() {
+  command -v opencode >/dev/null 2>&1 || return 0
+  [ -x "$SCRIPT_DIR/../seat/opencode-launcher.sh" ] || return 1
+  "$SCRIPT_DIR/../seat/opencode-launcher.sh" check >/dev/null 2>&1
+}
+f_opencode() { s_opencode; }   # nothing here can mend an upstream flag: the finding names it for the Allfather
 # Arm: Sýn as a SERVICE (plan 58, Phase 2) — one standing watcher per home that
 # idles when no session is seated, never retires with one. The surface is the
 # arm's own door (bin/pi/syn-watch.sh): a live lease with a fresh heartbeat is
@@ -696,6 +706,7 @@ detail() { # <name> -> the command that prints one short fact
     graphics)  printf '%s\n' "if [ -z \"\${DISPLAY:-}\${WAYLAND_DISPLAY:-}\" ]; then echo headless; else echo \"\$(graphics_block 2>/dev/null | sed -n '1p' | sed 's/.*{//;s/}//') · \$(graphics_policy 2>/dev/null)\"; fi" ;;
     harness)   printf '%s\n' "s_harness && echo 'deployed extensions resolve their bin/' || echo 'no live root recorded'" ;;
     claudehooks) printf '%s\n' "command -v claude >/dev/null 2>&1 && echo 'the three Claude hooks: AGENTS.md · Eindri-only · the Gná arm' || echo 'no claude on this host'" ;;
+    opencode)  printf '%s\n' "command -v opencode >/dev/null 2>&1 && $SCRIPT_DIR/../seat/opencode-launcher.sh check 2>&1 | sed -n '2p' | sed -E 's/^ *\"[a-z]+\",//; s/\"//g' || echo 'no opencode on this host'" ;;
     arm)       printf '%s\n' "$SCRIPT_DIR/../pi/syn-watch.sh status --detail 2>/dev/null | head -1 || echo 'arm door missing'" ;;
     armpin)    printf '%s\n' "$SCRIPT_DIR/../seat/armpin.sh --detail 2>/dev/null | head -1 || echo 'armpin door missing'" ;;
     roddhelm)  printf '%s\n' "$SCRIPT_DIR/../voice/rodd-helm.sh --check 2>&1 | head -1 || echo 'rodd-helm door missing'" ;;
