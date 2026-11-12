@@ -119,3 +119,7 @@ that; it forbids it **inside Ymir**. The handling is scope, not exception:
 foreign UI string in an app, a commit message in another tongue. **What is
 allowed:** English for the work, Old Norse for the names — and at the boundary of
 a native project, that project's own tongue, inside its own walls.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

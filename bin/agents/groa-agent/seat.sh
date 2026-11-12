@@ -95,6 +95,8 @@ RandomizedDelaySec=120
 WantedBy=timers.target
 EOF
 
+# plan 272, fault 12: the register settles the unit onto the pin before the manager reads it
+if [ -r "$HERE/../../engine/unit-settle-lib.sh" ]; then . "$HERE/../../engine/unit-settle-lib.sh"; unit_settle groa-agent || true; fi
 systemctl --user daemon-reload
 systemctl --user enable --now groa-agent.timer
 echo "timer: daily 04:$MINUTE"

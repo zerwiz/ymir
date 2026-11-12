@@ -393,3 +393,7 @@ restates it. Proof: `bin/time/tests/test_event_trigger.sh` (42 assertions, wired
 gate in `bin/gates/ci-verify.sh`) — 42 because the last three prove the lease: a second run of
 one smithy is refused with the pid that holds it, a dry run still answers while it is busy, and
 a stale lease self-heals because the pid is the truth and the file is not.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

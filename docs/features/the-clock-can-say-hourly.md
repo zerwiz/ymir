@@ -52,3 +52,7 @@ line is printed under it. Fix the shape: it must be `HH:MM`, `@daily`, `@hourly`
 The job fired at the wrong moment — remember `HH:MM` is once a **day**, and `@hourly` is the top of every
 hour. A job that seems to run twice an hour is two lines for the same command with different shapes: the
 stamp is per command and per shape.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

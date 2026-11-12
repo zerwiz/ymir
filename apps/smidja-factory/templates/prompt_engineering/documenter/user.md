@@ -46,3 +46,7 @@ Respond with ONLY valid JSON matching `DocumentOutput` — no prose before or af
 ```
 
 `document_path` and the `app_docs/` entry in `artifacts` are the path you ACTUALLY wrote, `_v2` suffix and all. Gates open these files — a name you meant to use fails them.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

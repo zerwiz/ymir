@@ -65,3 +65,7 @@ Voice files on Windows and WSL: [voice-files-on-windows.md](voice-files-on-windo
 Talk to Skírnir in Hlidskjalf: [talk-to-skirnir.md](talk-to-skirnir.md).
 
 No helm, no errand — the seat door refuses a worker with no live arm, and the arm and Rödd run the pin: [no-helm-no-errand.md](no-helm-no-errand.md).
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

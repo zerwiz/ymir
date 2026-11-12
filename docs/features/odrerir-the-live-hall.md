@@ -36,3 +36,7 @@ The snapshot lands at `apps/odrerir/public/livehall.json`, which the board reads
 | The board is empty or stale | Run `systems/snotra/services/cron/hall-snapshot.sh`; check the Nornir job is firing (`bin/time/nornir-cron-start.sh --status`). |
 | `:4322` refuses | The board app is not raised — raise the hall (`scripts/start.sh` raises the set). |
 | The MCP face fails | `bin/desktop/odrerir-mcp-smoke.sh` — the smoke test names the fault. |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

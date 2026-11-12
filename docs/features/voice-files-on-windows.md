@@ -62,3 +62,7 @@ is reused. Failed synthesis preserves an existing destination file.
 HTTP uses a direct origin connection without ambient proxies or silent retries.
 Linux retains its existing systemd service road; fleet-wide acceptance needs
 separate verification on another machine.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

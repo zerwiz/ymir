@@ -10,3 +10,7 @@ Low-latency event queue carrying messages between agents, realms, and services.
 1. Broker (Redis or file-backed) dispatches messages
 2. Inbox consumers (agents) poll for pending tasks
 3. All messages audited to `workspace/memory/runes_audit.md`
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

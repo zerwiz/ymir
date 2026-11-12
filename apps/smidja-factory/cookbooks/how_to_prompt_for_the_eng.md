@@ -108,3 +108,7 @@ After launching, show the engineer three things so a bad translation dies in sec
 3. **The `smidja_id`**, so they can watch it (`just phases <smidja_id>`).
 
 Then observe and report per `run_adw.md`. You run the system; you do not do the work inside it.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

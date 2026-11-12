@@ -112,3 +112,7 @@ demands, the machine is not doing its job.
 
 The first is a debt we pay. The second is not ours to pay. The third is the mistake that makes
 engineers distrust other engineers, and we will not add to that pile.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

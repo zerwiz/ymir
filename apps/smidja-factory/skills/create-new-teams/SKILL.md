@@ -149,3 +149,7 @@ gate with teeth says why not. Report the `smidja_id` + what the trace showed.
 4. **Per-agent models are the norm**, not a special case.
 5. **Validate + smoke before you call it done** — spawning in the UI is the bar.
 6. If the team needs a role that doesn't exist → `create-new-agent` first.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

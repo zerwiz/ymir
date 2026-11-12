@@ -18,3 +18,7 @@ is — never a company and never a workspace.
 The **house** (company) is `companies/wayof/` — WayOf. Domains are *not* companies;
 the house owns projects, projects span domains. See `RULES/01-domains.md` and
 `RULES/03-houses.md`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

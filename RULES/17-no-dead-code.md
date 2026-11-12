@@ -79,3 +79,7 @@ related[4]{doc}:
   "RULES/14-features.md","a feature with no page is a feature nobody can use — this rule is the same discipline for code"
   "RULES/11-never-delete-only-move.md","DELETING here means removing code nothing reaches; a live artifact is still moved, never lost"
 ```
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

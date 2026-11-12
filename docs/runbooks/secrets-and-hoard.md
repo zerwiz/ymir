@@ -58,3 +58,7 @@ Force-push rewrites the remote — any other clone must be re-cloned.
 | `$YMIR_HOME/docs/` | private strategy, plans |
 | `$YMIR_HOME/tenants/<t>/` | per-tenant private trees |
 | `$YMIR_HOME/identity/` | company/domain cards, portfolio, project registry |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

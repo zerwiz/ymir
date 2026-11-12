@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """brain.py — the hound's judgement: read findings, apply the rules, speak, record.
 
     brain.py --once          # one pass over the findings since the last offset (the timer)

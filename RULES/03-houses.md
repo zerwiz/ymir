@@ -59,3 +59,7 @@ brand   = a domain's label   (Ymir Labs, Brokk Forge, …)
 
 Anything that treats a domain as a house, or a house as a domain, is a
 violation and must be corrected here first.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

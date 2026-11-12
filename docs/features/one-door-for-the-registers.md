@@ -39,3 +39,7 @@ there, or it is not run anywhere.
   pass that proves nothing, so it refuses instead.
 - *A push still fails with `bin/README.md is STALE` after generating.* You generated before staging. Stage
   first, then generate.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

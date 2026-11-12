@@ -166,3 +166,7 @@ asking.**
 4. **Never assume the repo or paths** — ask or state them.
 5. **Never commit secrets in a request** — they live in `~/Ymir/.env`.
 6. **Note the service/chain** so the run is reproducible by anyone.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

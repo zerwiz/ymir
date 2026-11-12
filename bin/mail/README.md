@@ -159,3 +159,7 @@ line; and `NoSendCapability` now forbids the *paths* (`messages/send`, `smtplib`
 file while allowing the **vocabulary** (`gmail.send`, `mail-send.sh`) in `gna_connect.py` only — a door that
 mints a grant must name the authority it asks for and say where sending really happens. The reason and the
 second proof that enforces it are in `docs/fixes/mail/2026-11-08-the-connect-door.md`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

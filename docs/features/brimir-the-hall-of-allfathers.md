@@ -53,3 +53,7 @@ bin/room/brimir.sh send "…"               # speak in the shared room
 **See also:** [`gladsheim-the-fleet-room.md`](gladsheim-the-fleet-room.md) ·
 [`ratatoskr-a2a.md`](ratatoskr-a2a.md) — the task layer · plan 74 · plan 61 (the
 constellation) · plan 75 (the build).
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

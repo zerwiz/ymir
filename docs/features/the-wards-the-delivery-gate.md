@@ -111,3 +111,7 @@ bash bin/gates/guards/pr-ship-guard.sh check              # judge every open PR
 **If it does not work:** a refusal naming a login means a worker opened a PR — close it and let the
 reviewer open its own from the pushed branch. A `SKIP` line is not a failure; it names what is
 missing (no registry, no `gh`, no network) and the gate resumes once that exists.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

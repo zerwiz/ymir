@@ -98,3 +98,7 @@ does not sneak past it.
 | The board is empty | `bin/desktop/smidja-bootstrap.sh` creates the DB. |
 | `:8437` refuses | `bin/desktop/smidja-board.sh build`, then `start`. |
 | A run stalls | `bin/desktop/smidja-observe.sh` shows the phase it stuck on. |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

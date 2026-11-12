@@ -159,3 +159,7 @@ bin/gates/guards/path-ledger-guard.sh performs its initial recursive grep in LC_
 ## Fix-note coverage for outgoing refs (2026-11-03)
 
 bin/gates/guards/fixes-guard.sh judges every outgoing branch independently. A recorded sibling cannot hide an unrecorded branch, regardless of push order. Tag and deletion pointers remain content-free. A branch tip with no commits absent from already-fetched origin refs is an already-public pointer; every other outgoing branch must add a fix note in its own comparison range. A new unrelated history compares against the empty tree. Manual --check keeps its existing branch/base judgment. tests/test_fixes_guard_refs.py exercises actual Git commit graphs and mixed ref batches without override flags.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

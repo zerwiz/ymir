@@ -651,3 +651,7 @@ BROKK_STATE_OVERRIDE=/tmp/s bin/agents/eindri-acclaim-silent.sh agent    # wakes
 - When the silence window or the heartbeat files change, update §8.1 and §11 in the same pass.
 - Keep `VERIFIED_HARNESSES`, the dispatch profiles, and `bin/fleet/hamr-harness.sh`'s adapter set in
   agreement; a mismatch is a compliance failure (see `runtime-compliance.md`).
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

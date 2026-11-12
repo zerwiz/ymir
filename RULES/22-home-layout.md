@@ -100,3 +100,7 @@ refuses to write outside a shelf**. A script that cannot name its destination do
 The ward fails on: state outside the home · state inside the repo tree · a company-named document
 outside a company or project shelf · a layout-map entry that does not exist · a registry path that
 does not resolve.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

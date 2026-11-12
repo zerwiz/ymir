@@ -24,3 +24,7 @@ supersedes      decision_id or null
 3. "We discussed" is not a decision. If nothing was decided, the entry does not exist.
 4. A reversal is a new entry with `status: reversed` that cites the original.
 5. A decision with a `review_date` is re-opened on that date or explicitly re-affirmed.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -159,3 +159,7 @@ This map is the key that lets a later smidja rejoin each agent's **existing cont
 The map records the model each session was created with. If config drift changes an agent's model, that agent starts a **fresh** session and the map is updated — never a bad resume. `agent_sessions` in `smidja.db` is the queryable mirror of this file.
 
 **Files are the raw record; the db is the queryable mirror.** Losing `smidja.db` loses nothing that can't be rebuilt from `raw_output.jsonl`, `envelope.json`, and `agent_map.json`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -14,6 +14,28 @@
 # a worker that wrote only the status shelf was invisible to the sweep. One
 # ledger, one wake per (id, kind), whichever road arrives first.
 set -u
+# Every line the helm reads begins with a Sol stamp (plan 272, fault 4).
+_EWL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+[ -r "$_EWL_DIR/../time/sol-lib.sh" ] && . "$_EWL_DIR/../time/sol-lib.sh"
+# A tree without the lib (a copied door) still stamps, in the same shape.
+command -v sol_line >/dev/null 2>&1 || {
+  sol_line() { date '+%Y-%m-%d %H:%M %Z'; }
+  sol_is_stamped() { case "${1:-}" in [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\ [0-9][0-9]:[0-9][0-9]*) return 0 ;; esac; return 1; }
+  sol_stamped() { local t="$*"; if sol_is_stamped "$t"; then printf '%s' "$t"; else printf '%s — %s' "$(sol_line)" "$t"; fi; }
+}
+
+# The helm's state — where everything FOR THE HELM is written (the wake queue,
+# the report and question shelves, the delivery ledger, the status files).
+# A worker runs with its own seat dir in BROKK_MACHINE_STATE_DIR and
+# BROKK_STATE_OVERRIDE (its private working state). That override must never
+# redirect what is for the helm: a wake filed in a seat's queue is a wake nobody
+# reads (plan 272, fault 1). Any OTHER override (a test's temp dir, a deliberate
+# redirect) is honoured.  Usage: eindri_helm_state <result-var> <default-state>
+eindri_helm_state() {
+  local _rv=$1 _def=$2 _ov="${BROKK_STATE_OVERRIDE:-}"
+  if [ -n "$_ov" ] && [ "$_ov" = "${BROKK_MACHINE_STATE_DIR:-}" ]; then _ov=""; fi
+  printf -v "$_rv" '%s' "${BROKK_HELM_STATE:-${_ov:-$_def}}"
+}
 
 # Fill EINDRI_STATE from the caller's STATE, or resolve it exactly as every
 # other shell tool does (bin/vault/hoard-lib.sh). Idempotent.
@@ -43,5 +65,6 @@ eindri_mark_delivered() {  # <id> <kind>
 eindri_queue_wake() {  # <line>
   local line=$1 d="$EINDRI_STATE"
   mkdir -p "$d" 2>/dev/null || true
+  if command -v sol_stamped >/dev/null 2>&1; then line="$(sol_stamped "$line")"; fi
   printf '%s\n' "$line" >>"$d/.wake-queue"
 }

@@ -87,3 +87,7 @@ missing, keeps a backup, and `--check` reports it stale until it is there. Nothi
 
 An update seats both through migration `.agents/migrations/0021-the-claude-hooks.sh`; Gróa's update
 re-verifies them and Eir's `claudehooks` surface fails when either is stale.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -102,3 +102,7 @@ the looser container.
 A layer is gated on its host and reports a clean skip elsewhere — the Quadlet layer
 is a no-op on macOS, and Compose is a no-op on a bare box. When the core changes,
 every layer here is updated in the same change.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

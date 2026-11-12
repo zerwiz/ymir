@@ -88,3 +88,7 @@ the watch reads it and refuses to arm.
 proves every verb (including `off`/`on` and the silence line) without touching the house's own
 state. If `now` says `not watching`, the unit is not running: `systemctl --user status
 snotra-detect.service` (the unit name is `SNOTRA_WATCH_UNIT` if yours differs).
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

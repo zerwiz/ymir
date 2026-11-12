@@ -92,3 +92,7 @@ The move IS the acknowledgement: without it Brokk rings again and eventually tre
 - Run the terminal act — one command; it files the report shelf and appends the durable wake: `BROKK_STATE_OVERRIDE={{STATE_DIR}} bin/agents/eindri-acclaim.sh {{REVIEW_ID}} --terminal done --line "<the verdict in one line>"`.
 - `grep -c "{{REVIEW_ID}}" {{WAKE_QUEUE}}` prints at least 1 (the wake is in the durable queue).
 - Stop. Brokk routes the verdict; the Allfather alone seals.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

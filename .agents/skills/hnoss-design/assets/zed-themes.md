@@ -217,3 +217,7 @@ same for every dark omarchy theme.
 >
 > **Scope again:** the generator writes only to `~/.config/zed/` — never to
 > Hyprland, never to omarchy's own config. The errand's boundary holds.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

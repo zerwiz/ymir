@@ -54,3 +54,7 @@ The records council for the Ymir home. Read the elders before a new plan is
 written; reconcile, never contradict; a true elder remembers. Counsel is
 read-only — drafts and findings are produced for Brokk and the Allfather;
 changes go through the normal gates and the append-only law.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

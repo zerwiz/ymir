@@ -55,3 +55,7 @@ login asking for an operator path is denied; an operator path asking for vault p
 is denied; a public caller asking for anything else is denied. A denial is written to the
 Runes ledger naming the class and the caller. Without that evidence, "distinct gates" is
 aspiration, not architecture.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

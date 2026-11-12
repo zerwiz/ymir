@@ -68,3 +68,7 @@ before any translation work; it is the detail this skill's router points at.
 Kvasir (the scout) maps where the translation programs live and how they
 connect — see `kvasir`'s agent card; the same `assets/programs.md` is his map.
 The skald uses the tools; the scout knows the terrain. One craft, two hands.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -33,9 +33,9 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
 fi
 hoard_state_dir YMIR_STATE_DIR
 hoard_data_dir YMIR_DATA_DIR
-STATE="${BROKK_STATE_OVERRIDE:-$YMIR_STATE_DIR}"
-
 . "$SCRIPT_DIR/eindri-wake-lib.sh"
+eindri_helm_state STATE "$YMIR_STATE_DIR"
+
 EINDRI_STATE="$STATE"
 
 AGENT=""
@@ -99,12 +99,16 @@ if [ -n "$TERMINAL" ] && [ -n "$LINE" ]; then
   fi
   status_file="$STATE/$AGENT.status"
   last="$(tail -n1 "$status_file" 2>/dev/null || true)"
-  [ "$last" = "$TERMINAL: $LINE" ] || printf '%s: %s\n' "$TERMINAL" "$LINE" >>"$status_file"
+  # The status line keeps `<state>: ` first (readers parse it) and carries the Sol stamp right after it, so the line
+  # a person reads says WHEN. A repeat of the same act is recognised through the stamp, not written twice.
+  _bare="$(printf '%s' "$last" | sed -E 's/^([a-z-]+): [0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2} [A-Za-z0-9+-]+ — /\1: /')"
+  [ "$_bare" = "$TERMINAL: $LINE" ] || printf '%s: %s — %s\n' "$TERMINAL" "$(sol_line)" "$LINE" >>"$status_file"
+  unset _bare
   case "$TERMINAL" in
     needs-decision) shelf="$STATE/eindri-questions/$AGENT.md" ;;
     *)              shelf="$STATE/eindri-reports/$AGENT.md" ;;
   esac
-  [ -s "$shelf" ] || printf '%s\n' "$LINE" >"$shelf" 2>/dev/null
+  [ -s "$shelf" ] || printf '%s\n' "$(sol_stamped "$LINE")" >"$shelf" 2>/dev/null
   # A shelf the act claims to have filed must be THERE: say so loudly, never claim it silently.
   [ -s "$shelf" ] || { printf 'error: the report did not land — %s is missing or empty (state dir %s)\nhelp: check that the state dir is writable; the wake was NOT queued\n' "$shelf" "$STATE" >&2; exit 1; }
 fi
@@ -251,4 +255,5 @@ if [ "$TERMINAL" = done ] && [ -x "$SCRIPT_DIR/eindri-review-spawn.sh" ]; then
     fi
   fi
 fi
+printf '%s — acclaimed %s (%s)\n' "$(sol_line)" "$AGENT" "$kind"
 printf 'eindri-acclaim[1]{agent,kind,detail}:\n  "%s","%s","%s"\n' "$AGENT" "$kind" "$detail"

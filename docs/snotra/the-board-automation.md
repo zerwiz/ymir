@@ -83,3 +83,7 @@ every day at 09:00, for each card in list "Decisions" with no due date, set due 
 - A check in `smoke.sh` that a board whose place declares automations actually has them (Trello exposes them only
   through Butler's UI, so this check would have to read the board's `prefs` or ask the operator — until then the
   list is a document, not a gate, and it says so).
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

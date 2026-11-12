@@ -123,3 +123,7 @@ The gate (`bin/gates/guards/sensitive-gate.sh`) checks classification, hold, acc
 provenance and the NDA/private guard before any external surface. Every allow/refuse is
 appended to a **hash-chained** `access.jsonl`; `snotra-evidence.sh verify-access` recomputes
 the chain and names the first broken entry.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

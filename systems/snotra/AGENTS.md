@@ -35,3 +35,7 @@ her records are lost if this folder is deleted. Hlidskjalf may *read* her; nothi
 **Before you claim done:** `bash -n` on every shell door you touched; `bash systems/snotra/tests/smoke.sh`;
 `bin/gates/guards/path-ledger-guard.sh`; and if you changed a door's shape, update `domain.yaml` in the
 same change — code, plan and declaration must agree.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

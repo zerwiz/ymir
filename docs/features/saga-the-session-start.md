@@ -52,3 +52,7 @@ bin/time/saga-sessionstart-run.sh     # the run-tier door (used by the harness h
 | Refused: the lock is held | A live primary owns the seat — end it, or inspect the `lock` surface with `bin/agents/eir-doctor.sh`. |
 | No digest in the harness | The session‑start surface is not seated — `bin/seat/valknut-load.sh --check`, then re‑bind. |
 | Cron did not start | `bin/time/nornir-cron-start.sh --status`; the digest's step 7 is idempotent, so re‑run it. |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

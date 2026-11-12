@@ -47,3 +47,7 @@ assets[2]{path,load_when}:
   named-file staging for the private home, the append-only law for the record).
 - Private data never leaves the home; the public repo carries program docs
   only (Rule 04).
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -53,3 +53,7 @@ Never track it in project `.claude/settings.json`, which is Claude-only and prop
 
 On Claude 2.1.217 the tool presents as `Agent`, and both `Agent` and `Task` worked as deny keys in an A/B with nonsense control.
 `permissions.allow` pre-approves rather than controls availability, so no closed positive allowlist exists.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

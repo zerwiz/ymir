@@ -41,3 +41,7 @@ The tracked hook anchors to `pwd -P`, verifies that root is Brokk-shaped and hoo
 Codex's primary watcher protocol is `../../../bin/brokk-watch-checkpoint.sh --seconds "${BROKK_CODEX_WATCH_CHECKPOINT:-180}"`, not `../../../bin/pi/syn-watch-arm.sh`.
 Codex cannot reason while a foreground tool call is running, so the checkpoint is deliberately foreground and bounded to return control regularly for user messages and queued notifications.
 Codex's PreToolUse watcher-arm seatbelt blocks directly through its project hook.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -157,3 +157,7 @@ bin/vault/home-sync.sh ship "memory: today's log" hodd/memory/daily/2026-11-10.m
 **If it refuses with a conflict list:** two seats changed the same lines of a hand-written file. The tree is left as it
 was; merge by hand (append-only records keep both sides), then `ship` again. Append-only logs and the generated mirror
 merge on their own through the home's `.gitattributes` (seated by migration 0018 on install and update).
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

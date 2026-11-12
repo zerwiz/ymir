@@ -42,3 +42,7 @@ shared_system_law[6]{rule}:
 **Why it is law and not preference:** a wrong board in a client's workspace is visible to the client. The
 record of this house is that its faults are found by its own wards; an unwarded door is the one place
 where that stops being true.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

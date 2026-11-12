@@ -42,3 +42,7 @@ The plan ledger and the memory well are different records: plans say what was
 DECIDED (with the elders holding continuity); the well says what was LEARNED;
 the runes say what was DONE. The elder keeps all three coherent — a plan cites
 its elders, an observed lesson cites its runes.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

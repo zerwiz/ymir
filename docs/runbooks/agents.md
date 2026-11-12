@@ -55,3 +55,7 @@ runbook). `mode: all` lets an agent be dispatched *and* driven directly.
 bin/agents/eindri-start.sh "design a landing page"       # one command: role -> seat -> run
 bin/agents/eindri-start.sh "…" --pane | --tab | --space  # seat a pane / tab / workspace
 ```
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

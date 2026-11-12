@@ -307,3 +307,7 @@ The exclusion binds the pass as a writer: proposing an offload and letting the m
 Every Brokk-home skill that migration produces is user-owned and local under the destinations hard rule, while an approved project-level destination is produced and shipped through that project's registered delivery path, never by stow.
 Changing Brokk's tracked `.agents/skills/` or public `skills/` remains a deliberately scoped Brokk repository task through its pipeline, never a stow product.
 Outside a Allfather-approved offload, generalizable knowledge still routes to shared tracked material through its pipeline and fleet-local knowledge to `data/`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # shellcheck shell=bash
 # Shared worktree-tangle guard for the firstmate-on-itself case.
 # Usage: . bin/backend/fm-tangle-lib.sh

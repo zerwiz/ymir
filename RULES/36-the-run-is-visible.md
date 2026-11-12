@@ -225,3 +225,7 @@ map**. A path with no book is how a night gets lost; a book that does not exist 
 **The map:** `.agents/assets/agents/subsystem-docs.md` — one row per subsystem: path · entry · canonical
 doc · books · doors · missing. It is the only place a hand is told what to read, so it is checked, not
 trusted.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

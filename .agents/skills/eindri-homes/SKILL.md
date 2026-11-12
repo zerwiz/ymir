@@ -289,3 +289,7 @@ tools[6]{tool,plane}:
 assets[1]{path,holds}:
   "assets/control-plane.md","agent lifecycle control plane (from the upstream distro): DATA plane (conversational send) vs CONTROL plane (allowlisted verbs interrupt/exit/relaunch), per-harness mechanics, per-backend capability"
 ```
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

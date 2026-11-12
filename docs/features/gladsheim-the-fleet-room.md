@@ -60,3 +60,7 @@ the live hall, so the fleet's board shows the conversation as it happens.
 
 **See also:** [`ratatoskr-a2a.md`](ratatoskr-a2a.md) — the task layer under the room ·
 plan 73 · plan 75 Part 9 (how it ships).
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

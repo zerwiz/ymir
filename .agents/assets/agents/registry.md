@@ -115,3 +115,7 @@ mend the door layer on the server, not in the tree.
 ## Maintaining this
 
 - **Owner:** Brokk. **Loaded by:** `AGENTS.md`. **Mirror:** `.agents/skills/galdr-ymirsystem/assets/registry.md`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

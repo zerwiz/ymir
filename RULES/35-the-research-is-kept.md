@@ -47,3 +47,7 @@ and a claim in a PR had no source behind it.
 `bin/records/library.sh research check` — every episode carries a question, a finding, its header and
 its sources; the index is current. `library.sh self-test` proves the refusals in a temp root (an
 unsourced finding refused, an episode never rewritten, an emptied source list caught).
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

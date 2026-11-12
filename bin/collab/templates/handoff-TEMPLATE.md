@@ -43,3 +43,7 @@ product in full; name anyone mentioned as they appear on the contract, not by an
 
 - what cost the last hand time: a stale cache, a port, a mutation, a line in a document that is no longer
   true — say what a person will see, not what failed internally
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

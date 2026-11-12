@@ -51,3 +51,7 @@ deploy proved are the same one.
 
 A container bind-mounting the same working tree inherits the same drift. Containers answer *isolation of
 untrusted code*; version discipline is a checkout problem. See `RULES/02` §7 and `RULES/05`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

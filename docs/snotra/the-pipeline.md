@@ -103,3 +103,7 @@ A night where either is missing fails **loudly** at that step and stops — it d
 - **It never promotes a decision.** `snotra-promote.sh` requires `--by "<a person>"`.
 - **It never invents a person.** An owner who is not on the board is reported, not guessed.
 - **It never deletes audio without a transcript**, and never deletes text at all.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

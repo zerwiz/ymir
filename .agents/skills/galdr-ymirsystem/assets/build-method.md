@@ -111,3 +111,7 @@ Full gates and runnable checks: `assets/runtime-compliance.md`.
 - **Owner:** Brokk. **Router:** `.agents/skills/galdr-ymirsystem/SKILL.md`.
 - **Mirror:** `.agents/skills/tyr-check/assets/build-method.md`.
 - Update the asset map and harness matrix whenever a component or harness changes.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -57,3 +57,7 @@ seat's act — never a timer's.
 - `RED`: read the check that failed. A red PR is never merged; fix it and push a new head.
 - `CONFLICTED`: `mergeStateStatus=DIRTY`, `BLOCKED` or `DRAFT`. Rebase the branch, or clear the block.
 - `HELD`: somebody left `state/.seal-hold`. Read it; remove it only by the Allfather's word.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

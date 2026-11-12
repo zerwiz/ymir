@@ -110,3 +110,7 @@ plan's purpose.
 **If it does not work.** `SKIP` means no vault on this machine (expected in CI). A `gap` row names the plan
 and the missing item; run `--rows` for the rows, and read the plan before adding a status — the gate reports
 what the plan says, and `opened` when it says nothing.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

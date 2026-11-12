@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """escalate.py — the severity ladder (plan 98 §'the severity ladder').
 
     escalate.py --finding <json> [--severity CRITICAL] [--dry-run]

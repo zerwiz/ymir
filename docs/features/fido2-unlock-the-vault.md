@@ -42,3 +42,7 @@ key (touch) **or** the passphrase.
 | `No FIDO2 devices found` | Plug the key in; if it still fails, it may not support `hmac-secret`. |
 | Enrollment fails on a token | The token is not FIDO2/hmac‑secret capable — use a YubiKey 5-class key. |
 | The key stops working | The slot was removed, or the token is a different one — re‑enroll. |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

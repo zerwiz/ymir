@@ -103,3 +103,7 @@ systemctl --user stop ymir.service          # the substrate
   dangerous shell operations *inside the checkout*; that is the feature.
 - One**helm per home**: a second session in the same checkout should use an
   Yggdrasil worktree.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -164,3 +164,7 @@ SELECT ... FROM events WHERE smidja_id = ? AND rowid > ? ORDER BY rowid LIMIT 50
 ```
 
 Keep the highest `rowid` returned as the next cursor. History is **the same queries** with filters, lazy-paged as the engineer scrolls or drills in — one mechanism serves both live and past runs, which is why there is no separate replay path.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

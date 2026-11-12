@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Board reader for the desk — what is assigned to *this person*, read from Plane.
 
 Three lessons, each bought once:

@@ -101,3 +101,7 @@ Then name the agent in an smidja's `REQUIRED_AGENTS` and call it.
 - Output types never appear in config — they live at the call site, paired with the user prompt.
 
 Full spec: `references/config.md`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

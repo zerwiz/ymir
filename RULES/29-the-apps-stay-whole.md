@@ -57,3 +57,7 @@ its sibling: Þráðr called `/api/terminal/status`, which was never implemented
 Not a substitute for the app's own tests, and not a promise of correctness — the ward proves the app
 can be **read, routed and answered**, which is the floor beneath every other claim. The panels'
 contents are still the operator's to judge.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

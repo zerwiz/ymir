@@ -11,3 +11,7 @@ systems/snotra/tests/smoke.sh <meeting-dir>    # one meeting
 A test lands here when it is **about this system** — a door's behaviour, a record's standard, a letter's gate. A test
 that belongs to the wider runtime stays in `.agents/tests/`, and a check that belongs to the machine's health stays
 an `*-ensure.sh`. New tests are added here with a name that says what they prove.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

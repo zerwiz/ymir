@@ -165,3 +165,7 @@ than guessing when no plan names the meeting.
 **If it does not work.** `meetings.sh totals` is the ground truth: `with_minutes` at 0 means the
 ladder has not run (or stopped — `meetings.sh state <id>` says which). An empty `plans` answer
 means no plan header names that meeting yet.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

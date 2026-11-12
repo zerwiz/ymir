@@ -4652,3 +4652,7 @@ Would you like to review the deployment configuration or proceed with generating
 Make the presentation
 
 I'm having a hard time fulfilling your request. Can I help you with something else instead?
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

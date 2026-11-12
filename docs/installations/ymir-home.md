@@ -91,3 +91,7 @@ Scripts fall back to `$ROOT/hodd` (legacy Hoard in repo) when
 `YMIR_HOARD` and `YMIR_HOME` are both unset. The migration script
 (`bin/engine/ymir-migrate.sh private-data`) copies data to `$YMIR_HOME` and
 writes `.ymir-layout.yaml`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

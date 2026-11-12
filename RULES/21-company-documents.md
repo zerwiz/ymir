@@ -73,3 +73,7 @@ send_check[7]{question,if the answer is no}
 - **When drafting:** write for the reader — a colleague who has never seen our systems.
 - **When revising:** the fix is almost always *shorter*. Internal shorthand is long; plain
   wording is short.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

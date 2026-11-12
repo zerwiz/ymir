@@ -35,3 +35,7 @@ Allfather's word do that.
 - *`refused: sync-admins needs --admins-json`* — pass the raw `getChatAdministrators` result; get it with
   `bin/notify/telegram-members.sh admins --chat <id>`.
 - *`unavailable: PyYAML is required`* — install PyYAML; the store is YAML so a human can read it.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

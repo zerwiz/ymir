@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """hound.py — Garmr's senses: what executes, who touches the sensitive shelves,
 what is listening, and what leaves the box. Read-only, metadata only.
 

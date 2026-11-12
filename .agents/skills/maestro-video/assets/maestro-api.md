@@ -310,3 +310,7 @@ Two runtime faults worth knowing before you blame your own request:
   (`assets/setup-for-users.md`).
 - **`GET /api/v1/system/preflight` returning `{"ok":false,…}`** names the actual
   blocker; read `checks[]` before re-submitting anything.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

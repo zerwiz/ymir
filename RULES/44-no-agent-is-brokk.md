@@ -39,3 +39,7 @@ they come from … and who their Allfathers are … all this must come in update
 
 **Related:** Rule 43 (the tongues), Rule 25 (agnostic by construction: a clean skip is a pass),
 Rule 05 (one core, every platform), Rule 02 (agents: `.agents/agents` is canonical).
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

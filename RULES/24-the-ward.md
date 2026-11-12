@@ -110,3 +110,7 @@ register_law[3]{rule,why}
 **Enforced by:** `bin/ward/services-register.sh` (`check`, `--measure`; HIGH on an unnamed row, a class outside
 Rule 18's six, or a port claimed twice) · wired into Vörðr's nightly walk, so a register nobody reads fails a report
 instead of failing a person.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

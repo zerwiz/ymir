@@ -1506,3 +1506,7 @@ An installer that used to write its own unit (`bin/mail/install.sh`, the forge w
 keeps its entry point and calls the writer. A new app joins by shipping `apps/<name>/electron/<name>.desktop.in`.
 The Omarchy/Linux layer is first-class; a host with no systemd skips the unit step with a named line (RULES/05).
 Eir's `runtimepin` surface checks it; the fix note is `docs/fixes/engine/`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

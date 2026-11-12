@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """redact.py — the guardian's own ward (plan 98 §6, §'the redaction rule').
 
 The hound is asked to reason about a breach, so it must see the SHAPE of what

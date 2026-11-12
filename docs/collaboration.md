@@ -61,3 +61,7 @@ carried[2]{repo,state,note}:
 
 **The drift is the point of the check.** It is not a failure that a repository differs — it is a fact that should be visible, so that a
 person can decide whether the difference is deliberate.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

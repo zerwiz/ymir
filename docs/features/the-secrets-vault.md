@@ -68,3 +68,7 @@ bin/vault/hodd.sh load secrets/platform.env    # loads it, then prints one TOON 
 | A commit is refused by `secret-guard` | A secret is staged — remove it and reference it from the hoard instead. |
 
 See also: [`docs/guides/SECRETS.md`](../guides/SECRETS.md).
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

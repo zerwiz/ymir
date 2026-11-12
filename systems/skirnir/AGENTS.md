@@ -32,3 +32,7 @@ the rooms' state are lost if this folder is deleted.
 
 **Before you claim done:** `bash -n` on every shell door you touched; `bash systems/skirnir/services/smoke.sh`;
 `bin/gates/guards/path-ledger-guard.sh`; and if a door's shape changed, `domain.yaml` changes with it.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

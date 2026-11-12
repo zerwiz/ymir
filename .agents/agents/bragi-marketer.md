@@ -110,3 +110,7 @@ All five are mandatory; a missing declaration fails the Galdr gate.
 - **Firecrawl** (firecrawl.dev) — scrape/crawl/search/map to markdown (research, SEO).
 - **browser-use** (github.com/browser-use/browser-use) — LLM browser agent (publish, post).
 Keys from `.env.local` (`FIRECRAWL_API_KEY`); visuals via **Hnoss** (OpenDesign).
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

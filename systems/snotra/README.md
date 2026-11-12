@@ -80,3 +80,7 @@ bin/gates/guards/path-ledger-guard.sh check                     # no stale refer
 systems/snotra/tests/smoke.sh                                   # the pipeline's own gate
 .agents/migrations/0014-systems-shelf.sh                        # heals this home; a second run rewrites nothing
 ```
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

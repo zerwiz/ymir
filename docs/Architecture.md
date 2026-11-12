@@ -575,3 +575,7 @@ shape — `single` | `connected` | `detached` — and changes nothing.
   era's shape.
 - **The Rut port** (§6, Rust/NATS/gRPC) remains a post-end-to-end target, not
   current code.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -12,3 +12,7 @@ Use the `ymir` MCP tools for the same runtime doors exposed by Ymir's OpenCode p
 Home writes refuse traversal, escaping symlinks, credential paths and overwrite. Notes and daily logs append. New plans require the selected `YMIR_REALM`, explicit project and a complete plan body. The canonical plan audit must pass before the plan and its status index row are written. Placement copies by default and moves only when requested. Import defaults to preview. Name individual files when committing. Set `YMIR_REALM` to search one realm's content; no tool chooses a private realm on your behalf.
 
 The existing Codex project hooks and canonical skill/agent bindings remain owned by Ymir's harness installer. This plugin does not register duplicate hooks. Shell doors require the supported Bash runtime and dependencies; missing dependencies return errors. From the canonical Ymir code root, use `node bin/seat/codex-plugin-install.mjs` to install or refresh, then start a new Codex chat to reload the installed plugin.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -89,3 +89,7 @@ anything from the network — it reads the published copy and nothing else.
 - A collaborator gets a connection failure — check that Gimlé is up, then the unit:
   `systemctl --user status skills-mcp.service`. The health probe is written in the unit's
   comments.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

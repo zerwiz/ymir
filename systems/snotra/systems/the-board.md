@@ -28,3 +28,7 @@ trello-due.sh                        the digest of overdue promises
 
 Where a domain's board is the *agent-control* board of plan 129 (`board: snotra/projects`), this is the same door:
 one board per place, its queue, its blocked items, its decisions — and the meeting's cards are projected into it.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -36,3 +36,7 @@ assets[3]{file,load_when}
 3. **Plane writes through the database skip its own log.** `gimle-board.sh create` is a dry run unless `--yes`;
    the clean path is an API token, which is still owed.
 4. **`who` must read the login rows before querying per-user**, or sqlite's cursor reuse silently returns one row.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

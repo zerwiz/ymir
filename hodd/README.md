@@ -44,3 +44,7 @@ set -a; . "$YMIR_HOARD/secrets/platform.env"; set +a
 Anything currently tracked that is private belongs at `$YMIR_HOME/` instead,
 then dropped from git (kept on disk): `docs/masterplan.md`, `docs/plans/*`,
 `docs/append-only-log.md`, `identity/*`, `data/*`, `memory/*`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

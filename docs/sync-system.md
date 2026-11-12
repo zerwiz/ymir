@@ -64,3 +64,7 @@ The agent will sync changes automatically at regular intervals. Operators can ad
 - If the operator does not understand the behavior policies, the system may not meet their needs.
 
 The system is designed to be secure by default, but operators should review the trusted peers list and behavior policies before using it in production.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

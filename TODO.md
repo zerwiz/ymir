@@ -245,3 +245,7 @@ Hlidskjalf + Smíðja desktop apps.
 - **For each: use it, or delete it.** Closing an item **deletes its line from `dead-code.allow`** —
   the guard rejects a line whose reason is a deferral, and an entry that outlives its code is the
   lie the rule exists to stop.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

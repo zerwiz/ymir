@@ -22,3 +22,7 @@ Report exactly four lines:
 - UPDATED: <what moved, or nothing>
 - MIGRATIONS: <needed|not needed> · NPM: <newer stands|current>
 - APPS: <ok|FAIL: the surfaces named by desktop-verify>
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

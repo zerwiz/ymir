@@ -25,3 +25,7 @@ The shapes this design will not take, and why.
 ## 6. Questions
 
 What only the asker can settle.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

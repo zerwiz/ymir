@@ -13,3 +13,7 @@ runbooks[5]{path,load_when}:
 
 Index: `docs/runbooks/README.md`. When a host task has an operator-facing
 procedure, add a runbook there and a row here.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

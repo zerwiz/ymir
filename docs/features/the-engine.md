@@ -43,3 +43,7 @@ bin/engine/ymir-engine.sh dispatch <role|figure> [--task T] [--brief F] [--kind 
 | `no engine` / import error | The tree's `src/ymir_runtime/` is missing or stale — `ymir groa`. |
 | A verb says the seat is busy | Another primary holds the lock; inspect with `bin/records/ymir-state.sh`. |
 | `stop` refuses | Unlanded work: land it (a PR) or pass `--force` deliberately. |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

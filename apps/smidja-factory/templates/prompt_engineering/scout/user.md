@@ -32,3 +32,7 @@ Respond with ONLY valid JSON matching `ScoutOutput` — no prose before or after
   "artifacts": ["<context_handoff_dir>/scout_findings.md"]
 }
 ```
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

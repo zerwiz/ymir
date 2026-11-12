@@ -34,9 +34,9 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   done
 fi
 hoard_state_dir YMIR_STATE_DIR
-STATE="${BROKK_STATE_OVERRIDE:-$YMIR_STATE_DIR}"
-
 . "$SCRIPT_DIR/eindri-wake-lib.sh"
+eindri_helm_state STATE "$YMIR_STATE_DIR"
+
 EINDRI_STATE="$STATE"
 QUEUE="$STATE/.wake-queue"
 
@@ -151,6 +151,45 @@ case "$ACTION" in
       [ -n "$sid" ] || continue
       latest="$(git -C "$STATE/../.." --version >/dev/null 2>&1; true)"
       report="$STATE/eindri-reports/$sid.md"
+      # A REVIEW seat owes a verdict (plan 272, fault 6). One went idle with nothing and was filed as any silent
+      # worker: "finished without a terminal word", 0 commits — which says nothing the helm can act on. A review ends
+      # in a verdict or says WHY it has none: the sweep looks for the verdict the seat left (a REVIEW.md / REPORT.md in
+      # its worktree, a verdict line in its status) and files THAT; if there is none it files an explicit "no verdict",
+      # with the reasons it can see and the one command that seats the review again.
+      _mode="$(sed -n 's/^mode=//p' "$STATE/$sid.meta" 2>/dev/null | head -1)"
+      _wtree="$(sed -n 's/^worktree=//p' "$STATE/$sid.meta" 2>/dev/null | head -1)"
+      case "$_mode:$sid" in
+        review:*|*:*-review)
+          if [ ! -f "$report" ]; then
+            _verdict=""; _from=""
+            for _vf in "$_wtree/REVIEW.md" "$_wtree/REPORT.md" "$_wtree/review.md"; do
+              [ -f "$_vf" ] || continue
+              _verdict="$(grep -m1 -iE '(APPROVED|NEEDS-REWORK|NEEDS REWORK|REJECTED|BLOCKED)' "$_vf" 2>/dev/null || true)"
+              [ -n "$_verdict" ] && { _from="$_vf"; break; }
+            done
+            [ -n "$_verdict" ] || { _verdict="$(grep -iE '^[a-z-]+: .*(APPROVED|NEEDS-REWORK|NEEDS REWORK|REJECTED)' "$STATE/$sid.status" 2>/dev/null | tail -1)"; [ -n "$_verdict" ] && _from="$STATE/$sid.status"; }
+            if [ -n "$_verdict" ]; then
+              {
+                printf '# %s — review verdict recovered\n\n' "$sid"
+                printf '%s\n\n' "$_verdict"
+                printf -- '- the seat went idle without running eindri-acclaim.sh; its verdict was read from %s\n' "$_from"
+              } >"$report" 2>/dev/null || continue
+            else
+              {
+                printf '# %s — REVIEW ENDED WITHOUT A VERDICT\n\n' "$sid"
+                printf 'no verdict: the review seat went idle and left neither a verdict line nor a REVIEW.md / REPORT.md.\n\n'
+                printf -- '- pane: %s (agent status: %s)\n' "$spane" "$sstate"
+                printf -- '- commits ahead of origin/main: %s (a reviewer commits nothing; this is not the cause)\n' "$scommits"
+                printf -- '- last status line: %s\n' "$(tail -n1 "$STATE/$sid.status" 2>/dev/null || echo none)"
+                printf -- '- what to do: seat the review again — bin/agents/eindri-review-spawn.sh (the PR is unjudged)\n'
+                printf -- '- detected by: eindri-handoff.sh sweep\n'
+              } >"$report" 2>/dev/null || continue
+            fi
+          fi
+          sed -i "s/^seat_state=.*/seat_state=done/" "$STATE/$sid.meta" 2>/dev/null || true
+          sed -i "s/^state=.*/state=done/" "$STATE/$sid.meta" 2>/dev/null || true
+          continue ;;
+      esac
       if [ ! -f "$report" ]; then
         {
           printf '# %s — finished without a terminal word\n\n' "$sid"

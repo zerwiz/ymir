@@ -23,3 +23,7 @@ references the vault.
 still works. They retire by a dated note, never silently.
 
 Windows and WSL file voice and engine control: [operator guide](../../docs/features/voice-files-on-windows.md). The Kokoro adapter supports English. The [Hlidskjalf speech entry](../../docs/features/talk-to-skirnir.md) adds app-scoped F8/Escape and separate genuine Swedish Bengt speech.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

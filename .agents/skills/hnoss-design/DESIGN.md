@@ -160,3 +160,7 @@ port-scoped so two instances coexist without one `--stop` killing the other.
 grep 'model=' "$YMIR_HOME/state/model-bridge-4613.log"    # model=deepseek-v4.1-flash provider=opencode-go
 docker logs open-design-open-design-1 | grep 'proxy:openai'  # [proxy:openai] POST 127.0.0.1 model=deepseek-v4.1-flash
 ```
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

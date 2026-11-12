@@ -176,3 +176,7 @@ When a skill is forged, it:
 4. Includes Utgard sandbox compliance declarations
 5. Adds session integration hook recommendations
 6. Validates against `tyr-check`'s principles checklist
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

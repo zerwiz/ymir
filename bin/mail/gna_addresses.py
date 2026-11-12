@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Gná's register: the addresses the house USES, and whether mail can reach them.
 
   addresses.sh                the register, TOON

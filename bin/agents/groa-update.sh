@@ -77,6 +77,35 @@ if [ -x "$ROOT/bin/gates/checks/fresh-base-check.sh" ]; then
   bash "$ROOT/bin/gates/checks/fresh-base-check.sh" 2>&1 | head -1
 fi
 
+
+# ── every step has a limit, and says where it is (plan 272, fault 5) ─────────────────────────────────────────
+# An apply ran past ten minutes and was cut by the caller's own timeout with no word of WHICH step stalled — the pin
+# had already moved. Now every step that can wait (a network, a package install, a doctor over every surface) runs
+# under its own limit and prints one line when it ends: the Sól stamp, the step, how it ended, and how long it took.
+# A step that hits its limit is STOPPED and NAMED, and the update goes on to the next one (a stopped step is a loud
+# line and a non-zero verdict for that step, never a silent hang and never the end of the whole run).
+#   gstep <label> <limit-seconds> <command…>      stdout/stderr of the command pass through; the step line goes to stderr
+# Limits: YMIR_GROA_STEP_TIMEOUT (default 120) for every step; YMIR_GROA_STEP_TIMEOUT_<LABEL> for one.
+[ -r "$SCRIPT_DIR/../time/sol-lib.sh" ] && . "$SCRIPT_DIR/../time/sol-lib.sh"
+command -v sol_line >/dev/null 2>&1 || sol_line() { date '+%Y-%m-%d %H:%M %Z'; }
+GSTEP_STOPPED=""
+exec 7>&2   # step lines go to the real stderr even when the step runs inside $( … 2>&1 )
+gstep() {
+  local label=$1 limit=$2 var rc t0
+  shift 2
+  var="YMIR_GROA_STEP_TIMEOUT_$(printf '%s' "$label" | tr 'a-z-' 'A-Z_')"
+  limit="${!var:-${YMIR_GROA_STEP_TIMEOUT:-$limit}}"
+  t0=$SECONDS
+  timeout -k 5 "$limit" "$@"; rc=$?
+  case $rc in
+    0)       printf '%s — step %s: ok in %ss\n' "$(sol_line)" "$label" "$((SECONDS - t0))" >&7 ;;
+    124|137) printf '%s — step %s: STOPPED at its %ss limit (ran %ss) — the update went on without it\n' "$(sol_line)" "$label" "$limit" "$((SECONDS - t0))" >&7
+             GSTEP_STOPPED="$GSTEP_STOPPED $label" ;;
+    *)       printf '%s — step %s: failed (rc=%s) in %ss\n' "$(sol_line)" "$label" "$rc" "$((SECONDS - t0))" >&7 ;;
+  esac
+  return $rc
+}
+
 declare -a ROWS; NUDGE_IDS=""
 reread=no
 changed_surface=0
@@ -228,7 +257,7 @@ fi
 # agent's soul from the home, rewrites the managed .env block, and reinstalls dependencies only when the
 # lock file moved — so a running hall keeps its floor. A failed setup is named, never silent.
 if [ -x "$ROOT/apps/bilskirnir/setup.sh" ]; then
-  if "$ROOT/apps/bilskirnir/setup.sh" >/dev/null 2>&1; then
+  if gstep bilskirnir 240 "$ROOT/apps/bilskirnir/setup.sh" >/dev/null 2>&1; then
     printf 'bilskirnir: refreshed from the home (apps/bilskirnir/setup.sh)\n'
   else
     printf 'bilskirnir: setup did not finish — run apps/bilskirnir/setup.sh and read its lines\n'
@@ -238,15 +267,15 @@ if [ -n "${NUDGE_IDS# }" ]; then printf 'nudge-eindri-homes: %s\n' "${NUDGE_IDS#
 
 # Keep the whole fleet on the fleet preferences (writes each home's gitignored
 # state/; never touches a tracked tree).
-[ -x "$SCRIPT_DIR/../fleet/fleet-apply.sh" ] && "$SCRIPT_DIR/../fleet/fleet-apply.sh" >/dev/null 2>&1 || true
+[ -x "$SCRIPT_DIR/../fleet/fleet-apply.sh" ] && { gstep fleet-apply 60 "$SCRIPT_DIR/../fleet/fleet-apply.sh" >/dev/null 2>&1 || true; }
 
 # Heal this home forward (structure migrations) after every update.
-[ -x "$SCRIPT_DIR/../engine/ymir-migrate.sh" ] && "$SCRIPT_DIR/../engine/ymir-migrate.sh" apply >/dev/null 2>&1 || true
+[ -x "$SCRIPT_DIR/../engine/ymir-migrate.sh" ] && { gstep migrate 120 "$SCRIPT_DIR/../engine/ymir-migrate.sh" apply >/dev/null 2>&1 || true; }
 # The seat sweep's hook, re-seated after every update (the Allfather, 2026-11-10: it comes
 # on INSTALLATIONS AND UPDATES, for pi, opencode and claude seats alike). The migration
 # above heals the two structural faults; this seats the door that closes finished seats.
 if [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ]; then
-  if "$SCRIPT_DIR/../seat/seat-reap.sh" --install >/dev/null 2>&1; then
+  if gstep seat-reap 60 "$SCRIPT_DIR/../seat/seat-reap.sh" --install >/dev/null 2>&1; then
     printf 'seat-reap: the sweep is seated on every harness on this host\n'
   else
     printf 'seat-reap: a harness on this host is NOT seated — bin/seat/seat-reap.sh --check names it\n'
@@ -273,7 +302,7 @@ fi
 # ensure door lands it from the machine's own cache, or from the network behind a mirror.
 # Never fatal, never silent: it prints a line and Eir judges the result below.
 if [ -x "$SCRIPT_DIR/../desktop/electron-ensure.sh" ]; then
-  if eo="$("$SCRIPT_DIR/../desktop/electron-ensure.sh" ensure --root "$ROOT" --quiet 2>&1)"; then
+  if eo="$(gstep electron 180 "$SCRIPT_DIR/../desktop/electron-ensure.sh" ensure --root "$ROOT" --quiet 2>&1)"; then
     printf 'electron: every installed surface answers --version\n'
   else
     printf 'electron: NOT mended — %s\n' "$(printf '%s' "$eo" | grep -m1 '"FAIL"' || printf 'see bin/desktop/electron-ensure.sh status')"
@@ -284,7 +313,7 @@ fi
 # Bifrost door that reaches pi's provider are seated by the ensure door, so an update
 # never leaves a design generation on a stale hand-copy (2026-11-10). Never fatal.
 if [ -x "$SCRIPT_DIR/../pi/hnoss-ensure.sh" ]; then
-  if ho="$("$SCRIPT_DIR/../pi/hnoss-ensure.sh" ensure 2>&1)"; then
+  if ho="$(gstep hnoss 90 "$SCRIPT_DIR/../pi/hnoss-ensure.sh" ensure 2>&1)"; then
     printf 'hnoss: model door seated — %s\n' "$(printf '%s' "$ho" | grep -m1 '^\[hnoss\]' | sed 's/^\[hnoss\] //' || printf 'launcher + pi MCP entry')"
   else
     printf 'hnoss: NOT mended — %s\n' "$(printf '%s' "$ho" | tail -1)"
@@ -295,7 +324,7 @@ fi
 # owns that move (bin/engine/runtime-deploy.sh) — a moved pin whose services still run the
 # old code is the same lie as a stale one. Bounded and never fatal; the line is the record.
 if [ "$PIN_MOVED" = 1 ] && [ -x "$SCRIPT_DIR/../engine/runtime-deploy.sh" ]; then
-  if ro="$(setsid timeout -k 5 "${YMIR_GROA_PIN_TIMEOUT:-180}" "$SCRIPT_DIR/../engine/runtime-deploy.sh" </dev/null 2>&1)"; then
+  if ro="$(gstep pin-deploy "${YMIR_GROA_PIN_TIMEOUT:-180}" setsid "$SCRIPT_DIR/../engine/runtime-deploy.sh" </dev/null 2>&1)"; then
     printf 'pin: moved and every unit settled — %s\n' "$(printf '%s' "$ro" | tail -1)"
   else
     printf 'pin: moved, but a unit did not settle — %s\n' "$(printf '%s' "$ro" | grep -m1 FAIL || printf '%s' "$ro" | tail -1)"
@@ -310,7 +339,7 @@ if [ "${YMIR_GROA_PIN:-on}" != off ] && [ -x "$SCRIPT_DIR/../engine/units.sh" ];
     if uo="$("$SCRIPT_DIR/../engine/units.sh" check 2>&1)"; then printf 'units: every Ymir unit and launcher is on the pin\n'
     else printf 'units: %s off the pin or unregistered — an update moves them\n' "$(printf '%s' "$uo" | grep -cE 'OFF-PIN|UNREGISTERED|ABSENT')"; fi
   elif [ "$PIN_MOVED" != 1 ]; then  # a moved pin was just written by runtime-deploy
-    if uo="$(timeout -k 5 "${YMIR_GROA_PIN_TIMEOUT:-180}" "$SCRIPT_DIR/../engine/units.sh" write 2>&1)"; then
+    if uo="$(gstep units-write "${YMIR_GROA_PIN_TIMEOUT:-180}" "$SCRIPT_DIR/../engine/units.sh" write 2>&1)"; then
       printf 'units: %s moved onto the pin\n' "$(printf '%s' "$uo" | grep -cE '"(moved|written)"')"
     else printf 'units: a unit could not be written — %s\n' "$(printf '%s' "$uo" | grep -m1 FAIL | tr -d '"')"; fi
   fi
@@ -321,7 +350,7 @@ fi
 # broken surface — the report is the loudness; the Nornir job keeps the watch
 # daily.
 if [ -x "$SCRIPT_DIR/eir-doctor.sh" ]; then
-  if eir_out="$("$SCRIPT_DIR/eir-doctor.sh" check 2>&1)"; then
+  if eir_out="$(gstep eir 240 "$SCRIPT_DIR/eir-doctor.sh" check 2>&1)"; then
     printf 'eir: check clean\n'
   else
     eir_broken="$(printf '%s' "$eir_out" | sed -n '2s/.*,\([0-9][0-9]*\)$/\1/p')"
@@ -332,7 +361,7 @@ fi
 # Codex uses the SAME deployment door as first setup. A failed refresh fails the
 # update; a source file existing in the repo is not proof that Codex loads it.
 if command -v codex >/dev/null 2>&1; then
-  if command -v node >/dev/null 2>&1 && node "$ROOT/bin/seat/codex-plugin-install.mjs"; then
+  if command -v node >/dev/null 2>&1 && gstep codex-plugin 120 node "$ROOT/bin/seat/codex-plugin-install.mjs"; then
     printf 'codex plugin: refreshed and verified\n'
   else
     printf 'FAIL — the Codex plugin could not be refreshed; this update is NOT complete.\n' >&2
@@ -351,7 +380,7 @@ if [ -x "$SCRIPT_DIR/../seat/valknut-load.sh" ]; then
   # An update that leaves the phone gateway broken is NOT complete, for the same reason the
   # seat is not complete: extensions that were seated but never re-proved stay broken quietly.
   if [ -x "$SCRIPT_DIR/tools/ymir-gateway/smoke.sh" ]; then
-    if bash "$SCRIPT_DIR/tools/ymir-gateway/smoke.sh" >/dev/null 2>&1; then
+    if gstep gateway-smoke 60 bash "$SCRIPT_DIR/tools/ymir-gateway/smoke.sh" >/dev/null 2>&1; then
       printf 'gateway: ok — ymir-gateway answers after the update\n'
     else
       printf 'FAIL — ymir-gateway smoke test failed after this update.\n'
@@ -371,7 +400,7 @@ if [ -x "$SCRIPT_DIR/../seat/valknut-load.sh" ]; then
         printf 'home: shelves incomplete — an update would lay them out (bin/engine/home-seed.sh)\n'
       fi
     else
-      bash "$SCRIPT_DIR/../engine/home-seed.sh" --yes >/dev/null 2>&1 \
+      gstep home-seed 60 bash "$SCRIPT_DIR/../engine/home-seed.sh" --yes >/dev/null 2>&1 \
         && printf 'home: shelves laid out and readme written\n' \
         || printf 'home: home-seed could not lay the shelves out — run bin/engine/home-seed.sh and read its rows\n'
     fi
@@ -389,7 +418,7 @@ if [ -x "$SCRIPT_DIR/../seat/valknut-load.sh" ]; then
         printf 'harnesses: extensions or contracts are stale — an update would refresh them\n'
       fi
     elif ! bash "$SCRIPT_DIR/../seat/harness-extensions-install.sh" --check >/dev/null 2>&1; then
-      if bash "$SCRIPT_DIR/../seat/harness-extensions-install.sh" >/dev/null 2>&1; then
+      if gstep harness-extensions 240 bash "$SCRIPT_DIR/../seat/harness-extensions-install.sh" >/dev/null 2>&1; then
         printf 'harnesses: extensions and contracts refreshed on every harness present\n'
       else
         printf 'FAIL — the harness extensions could not be refreshed.\n' >&2
@@ -409,7 +438,7 @@ if [ -x "$SCRIPT_DIR/../seat/valknut-load.sh" ]; then
   fi
   if [ "${CHECK:-0}" = "1" ]; then
     printf 'rebound: skipped (check mode writes nothing)\n'
-  elif "$SCRIPT_DIR/../seat/valknut-load.sh" --all --global >/dev/null 2>&1; then
+  elif gstep valknut-load 240 "$SCRIPT_DIR/../seat/valknut-load.sh" --all --global >/dev/null 2>&1; then
     printf 'rebound (agents · skills · pi extensions)\n'
   else
     # A seat that could NOT be seated is not updated. This used to WARN and carry
@@ -425,7 +454,7 @@ if [ -x "$SCRIPT_DIR/../seat/valknut-load.sh" ]; then
   if [ -x "$SCRIPT_DIR/../pi/arm.sh" ]; then
     if ! command -v hermes >/dev/null 2>&1; then
       printf 'arm: no Hermes on this host — no session hook to seat\n'
-    elif bash "$SCRIPT_DIR/../pi/arm.sh" hook hermes --install >/dev/null 2>&1; then
+    elif gstep arm-hook 60 bash "$SCRIPT_DIR/../pi/arm.sh" hook hermes --install >/dev/null 2>&1; then
       printf 'arm: hermes session hook re-seated (the session-start digest has a door)\n'
     else
       printf 'arm: hermes session hook could not be seated — run bin/pi/arm.sh hook hermes --install\n'
@@ -433,6 +462,9 @@ if [ -x "$SCRIPT_DIR/../seat/valknut-load.sh" ]; then
   fi
 fi
 
+if [ -n "$GSTEP_STOPPED" ]; then
+  printf '%s — groa-update: steps STOPPED at their limits:%s — run each by hand to see why\n' "$(sol_line)" "$GSTEP_STOPPED" >&2
+fi
 # The seating verdict is the update's verdict: a seat that could not be seated is
 # not updated, and the caller must be able to SEE that in an exit code.
 if [ "${seat_failed:-0}" != 0 ]; then

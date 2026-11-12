@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # shellcheck shell=bash
 # Startup-memory budget primitives.
 # Usage: . bin/backend/fm-startup-memory-budget-lib.sh

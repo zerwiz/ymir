@@ -558,3 +558,7 @@ bin/time/nornir-cron-start.sh --status       # → cron: running pid=... jobs=4
 | `bin/agents/einherjar-spawn.sh` calls `hamr-harness.sh crew` | resolved 2026-09-24: the spawn resolves harness/model from the machine and never calls `hamr-harness` for the default |
 | `bin/agents/erindi-brief.sh` / `einherjar-spawn.sh` reference `.agents/sandbox/Dockerfile.utgard` and `utgard-runner:latest` | the Dockerfile and `sandcastle.config.json` exist; no image is guaranteed built, so a DECLARED utgard with no image is a LOUD refusal (never `--isolation auto` sealing off by file presence) |
 | Plan §13 says `docs/supervision-protocols/` will be created | directory does not exist in Ymir |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -52,3 +52,7 @@ new/updated tests, platforms tested (Linux/Windows), etc.
 - [ ] Tests added or updated for changed modules (colocated `*.test.ts`)
 - [ ] Electron security posture preserved (context isolation, IPC through preload bridge, validated payloads)
 - [ ] Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/)
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

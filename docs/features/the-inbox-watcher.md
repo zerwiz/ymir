@@ -36,3 +36,7 @@ registry — a stranger's mail waits for the operator, which is correct.
 **If it does not work.** `inbox.sh` first: if that fails, the grant is the problem (refresh token,
 client id or secret missing from the vault). If `inbox.sh` works but the watcher says nothing new,
 check `inbox-seen.json` — an id already there will not be announced twice.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

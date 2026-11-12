@@ -20,6 +20,8 @@
 # operator's registries, and is not flagged: the list comes from `collaborators.yaml` and the NDA
 # register, never from a dictionary of names.
 #
+# The list also carries (2026-11-12, plan 272) email local parts, chat/code-host handles and Telegram roster names.
+#
 # Exit: 0 clean · 1 a person from the registry is in the tree · 2 usage.
 set -u
 VERSION="1.0.0"
@@ -40,10 +42,10 @@ ymir_home_root HOME_R 2>/dev/null || true
 
 REG="$HOME_R/hodd/identity/collaborators.yaml"
 CONF="$HOME_R/hodd/identity/confidential.yaml"
-[ -r "$REG" ] || [ -r "$CONF" ] || { printf 'people-guard[1]{state}: "no registries yet"\n'; exit 0; }
+[ -r "$REG" ] || [ -r "$CONF" ] || [ -d "$HOME_R/hodd/data/telegram-rosters" ] || { printf 'people-guard[1]{state}: "no registries yet"\n'; exit 0; }
 
 # The list is built from the registries, one token per line: a full name, and every address.
-TOKENS="$(REG_Q="$REG" CONF_Q="$CONF" python3 - <<'PY'
+TOKENS="$(REG_Q="$REG" CONF_Q="$CONF" ROOT_Q="$ROOT" HOME_Q="$HOME_R" python3 - <<'PY'
 import os, re, sys
 tokens = set()
 for path in (os.environ["REG_Q"], os.environ["CONF_Q"]):
@@ -69,16 +71,29 @@ for path in (os.environ["REG_Q"], os.environ["CONF_Q"]):
 for token in list(tokens):
     if "@" in token:
         tokens.add(token.lower())
+# plan 272 fault 11: the people too — the same reader the NDA gate uses (ndalib.load_people), so the two wards
+# can never disagree: email local parts, chat and code-host handles, names.yaml persons, Telegram rosters.
+try:
+    sys.path.insert(0, os.path.join(os.environ["ROOT_Q"], "bin", "gates", "guards"))
+    import ndalib
+    allow = ndalib.load_allow(os.environ["ROOT_Q"])
+    for k in ndalib.load_people(os.environ["HOME_Q"], {}):
+        if k not in allow:
+            print("EXTRA\t" + k)
+except Exception:
+    pass
 # only tokens long enough to be a name or an address, never a single initial
 for token in sorted(t for t in tokens if len(t) >= 6):
-    print(token)
+    print("NAME\t" + token)
 PY
 )"
 
 [ -n "$TOKENS" ] || { printf 'people-guard[1]{state}: "the registries name nobody — nothing to check"\n'; exit 0; }
 
-LIST="$(mktemp)"; printf '%s\n' "$TOKENS" > "$LIST"
-cleanup() { rm -f "$LIST"; }
+LIST="$(mktemp)"; XLIST="$(mktemp)"
+printf '%s\n' "$TOKENS" | sed -n 's/^NAME\t//p' > "$LIST"
+printf '%s\n' "$TOKENS" | sed -n 's/^EXTRA\t//p' > "$XLIST"
+cleanup() { rm -f "$LIST" "$XLIST"; }
 trap cleanup EXIT
 
 if [ "$CMD" = "--scan" ]; then
@@ -90,6 +105,16 @@ fi
 hits="$(grep -rInF -f "$LIST" "${SCOPE[@]}" \
   --include='*.md' --include='*.sh' --include='*.py' --include='*.ts' --include='*.yaml' --include='*.yml' --include='*.json' \
   2>/dev/null | grep -v '/node_modules/' | grep -v '/\.yggdrasil/' | grep -v 'people-guard.sh' | head -20 || true)"
+
+# Handles and roster names are short words, so they are matched as whole words, and an old line that carries
+# one is COUNTED as owed rather than refused: a whole-tree read cannot tell what a change added (the NDA gate
+# refuses the added line at commit, push and write). Names and addresses above still refuse outright.
+if [ -s "$XLIST" ]; then
+  owed="$(grep -rInwiF -f "$XLIST" "${SCOPE[@]}" \
+    --include='*.md' --include='*.sh' --include='*.py' --include='*.ts' --include='*.yaml' --include='*.yml' --include='*.json' \
+    2>/dev/null | grep -v '/node_modules/' | grep -v '/\.yggdrasil/' | grep -v 'people-guard.sh' | wc -l | tr -d ' ')"
+  [ "${owed:-0}" -gt 0 ] && printf 'people-guard: %s old line(s) name a person by handle or roster name — owed a scrub; a new one is refused by nda-guard\n' "$owed" >&2
+fi
 
 if [ -n "$hits" ]; then
   printf 'people-guard[%s]{file,line}\n' "$(printf '%s\n' "$hits" | wc -l | tr -d ' ')"

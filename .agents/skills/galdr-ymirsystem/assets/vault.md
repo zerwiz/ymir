@@ -131,3 +131,7 @@ bin/vault/hnitbjorg.sh phone-remove   # revoke (removes the LUKS slot + the phon
 `tests/` covers the contract: `--version`/help fast paths, `status` TOON shape,
 the sealed-by-default guarantee (init is never automatic), and the phone key flow
 (`tests/e2e/vault-phone-proof.sh`, via the `YMIR_PHONE_ROOT` test seam).
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

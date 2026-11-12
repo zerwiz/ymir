@@ -216,3 +216,7 @@ Compliance assessment per principle and per runtime gate, with "Assess" / "Impro
   - `galdr-ymirsystem/assets/nornir-jobs.md` — scheduler, jobs, Runes
   - `galdr-ymirsystem/assets/hlidskjalf-ui.md` — UI working guide
   - `galdr-ymirsystem/assets/pi-boot-guide.md` — PI primary boot
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

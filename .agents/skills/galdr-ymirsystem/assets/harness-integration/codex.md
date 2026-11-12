@@ -270,3 +270,7 @@ marker exists, a missing or invalid file or a non-WSL route is refused. With
 neither file, the existing local route applies. The store must be inside the
 selected Linux home. Windows and Linux stores are not copied or merged.
 The user must restart Codex after installing the updated plugin code.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

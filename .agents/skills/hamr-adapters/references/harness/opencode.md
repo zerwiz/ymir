@@ -40,3 +40,7 @@ The follow-up was verified in the interactive TUI.
 
 The companion `.opencode/plugins/brokk-primary-watch-arm.js` owns normal TUI watcher supervision, wakes it with `client.session.promptAsync`, and coordinates with the guard before a blind-turn follow-up.
 The PreToolUse-equivalent watcher-arm seatbelt blocks by throwing from `tool.execute.before`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

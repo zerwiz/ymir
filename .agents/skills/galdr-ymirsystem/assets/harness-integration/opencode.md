@@ -260,3 +260,7 @@ bin/gates/checks/syn-cd-pretool-check.sh  --command 'cd ../..';              ech
 - **`config/x-mode.env` is sourced by the arm spawn** (`.opencode/plugins/syn-watch-arm.js:355`). It is not present by default; treat it as an operator opt-in.
 - **`.opencode/plugins/lib/` is not a package** — there is no `package.json` there. Relative imports (`./lib/rodd-operational-input.js`) are what make it work; the top-level `package.json` supplies `"type":"module"`.
 - **Tool name matching is exact.** The seatbelts only inspect `input.tool === "bash"`. If OpenCode renames the shell tool, both seatbelts silently stop enforcing.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

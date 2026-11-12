@@ -62,3 +62,7 @@ isolated (a local model needs loopback) — so the tiers say plainly what is and
 allowed, and the choice is the operator's, recorded in the session.
 
 Confirmed by the Allfather 2026-10-11.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

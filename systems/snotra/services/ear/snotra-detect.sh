@@ -421,6 +421,10 @@ ear_seat_unit() {  # 0 when the TREE's unit is the one seated (seated, or refres
     if cp -f "$src" "$dst" 2>/dev/null; then
       if [ -f "$dst" ]; then
         log "engine: seated the tree's $SNOTRA_EAR_UNIT into ~/.config/systemd/user (refreshed)"
+        # plan 272, fault 12: the register puts the seated unit on the pin (it never keeps this tree as its root)
+        for _usl in "${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}/bin/engine/units.sh"; do
+          [ -r "$_usl" ] && bash "$_usl" write snotra-ear --no-restart >/dev/null 2>&1 || true
+        done
       else
         log "engine: WARNING — could not seat $SNOTRA_EAR_UNIT"
         return 1

@@ -64,3 +64,7 @@ Not adopted as standalone skills: `firstmate-coding-guidelines` (folded into Gal
 
 Governance: `.agents/skills/galdr-ymirsystem/SKILL.md`; adopted-skill provenance is recorded in
 `.agents/skills/galdr-ymirsystem/assets/reference-adoption.md`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

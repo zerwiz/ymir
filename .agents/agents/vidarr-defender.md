@@ -74,3 +74,7 @@ defence[3]{figure,job,may_not}:
   closed by finding it closed.
 - **Never a guess.** If the evidence does not support the rule, he says so and leaves the door alone:
   a false bite on a working service is how people learn to switch the defender off.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

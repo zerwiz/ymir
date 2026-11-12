@@ -236,3 +236,7 @@ proof[6]{step,command,result}:
 A finished film is the real proof: the `.mp4` plays, the `_shotlist.md` names
 every clip's model, prompt and seed, and the VO is one deliberate voice — local,
 or honestly silent with the script beside it.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

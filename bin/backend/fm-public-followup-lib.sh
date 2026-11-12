@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # shellcheck shell=bash
 # fm-public-followup-lib.sh - shared gating and private-transport helpers for the
 # deterministic public-followup consumer.

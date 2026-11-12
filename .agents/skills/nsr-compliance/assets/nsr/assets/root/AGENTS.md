@@ -36,3 +36,7 @@ __DESCRIPTION__. This file is the fluff-free router — read the referenced docs
 3. Run operations via `.agents/skills/` scripts (lifecycle, git_ops, feature skills).
 4. Configure env via `docs/CI_CD/deployment/envs/*.env.example` → `.env`.
 5. Pass all gates (`.compliance/gates/*`) before committing or deploying.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

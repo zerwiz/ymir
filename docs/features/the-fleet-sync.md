@@ -55,3 +55,7 @@ bin/fleet/fleet-version.sh           # version across seats
 | A push moves nothing | `--dry-run` first; the path may not be in the configured set. |
 | A seat raised the wrong services | Fix its role (`bin/skuld/role.sh set <host> <role>`), then `bin/fleet/fleet-ensure.sh`. |
 | The home diverges | Resolve on the seat and re‑sync; the mover never forces (it reports). |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

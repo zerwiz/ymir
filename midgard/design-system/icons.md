@@ -57,3 +57,7 @@ rg -n "[\x{1F300}-\x{1FAFF}\x{2600}-\x{27BF}]" apps/hlidskjalf/src || echo "no e
 - **Owner:** Brokk. **Tokens:** `midgard/design-system/tokens.css`.
 - Add a rune here and its glyph in `icons/` in the same pass; keep the count in the
   `icons[N]` block true (Galdr TOON check: `.agents/skills/galdr-ymirsystem/scripts/toon-check.py`).
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # shellcheck shell=bash
 # Inheritance propagation: the PRIMARY firstmate pushes a declared, extensible
 # set of LOCAL (gitignored) config items down into each secondmate home's

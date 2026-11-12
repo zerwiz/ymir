@@ -37,3 +37,5 @@ allow:
     reason: the spaced form of the realm that owns Ymir itself (see whynotproductions above)
   - word: the-book
     reason: ordinary English words; Ymir's own book shelf, not a client
+  - word: zerwiz
+    reason: the operator's own public code-host login, the owner of this repository; a handle the operator publishes is not a private person

@@ -74,3 +74,7 @@ The house's zone resolves in one order, and the answer says which one won: `--tz
 | `error: unknown command` | a typo | `bin/time/sol.sh --help` |
 | `check` exits 1 | NTP not synchronised | `systemctl enable --now systemd-timesyncd` |
 | the zone is wrong | `--tz`/`$YMIR_TZ` override, or `/etc/localtime` | `bin/time/sol.sh tz` names the source |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

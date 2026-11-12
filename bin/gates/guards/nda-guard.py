@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import ndalib
 
 ROOT = ndalib.repo_root()
+# The home is never resolved here: ndalib.ymir_home() asks the one resolver (ymir_home_root, bin/vault/hoard-lib.sh).
 ZERO = '0' * 40
 
 
@@ -43,7 +44,7 @@ def report(hits):
     for path, n, name, kind in hits:
         print(f'nda-guard: {path}:{n}: protected {kind} name "{name}"', file=sys.stderr)
     if hits:
-        print(f'nda-guard: {len(hits)} hit(s). Company and client names are private data (RULES/04); '
+        print(f'nda-guard: {len(hits)} hit(s). Company, client and personal names are private data (RULES/04); '
               'rewrite to a neutral word or move the file into the home. An ordinary English word '
               'goes in config/nda-allow.yaml with its reason.', file=sys.stderr)
     return 1 if hits else 0
@@ -157,7 +158,17 @@ def main(argv):
         return report(hits)
     if cmd in ('tree', 'check'):
         files = argv[2:] or git('ls-files').splitlines()
-        return report(tree_hits(M, files))
+        hits = tree_hits(M, files)
+        # A person already named in an old public file is owed a scrub, but a whole-file read cannot tell
+        # a line a push adds from one that was there before. People are therefore REFUSED on the lines a
+        # change adds (staged, message, push, range, hook) and COUNTED, not refused, on a whole-file read,
+        # so touching an old file to add a log line is not blocked by a name it already carried.
+        owed = [h for h in hits if str(h[3]).startswith('person')]
+        hits = [h for h in hits if not str(h[3]).startswith('person')]
+        if owed:
+            print(f'nda-guard: {len(owed)} line(s) in {len({h[0] for h in owed})} file(s) name a person from the home; '
+                  'owed a scrub (a new line that names one is refused at commit, push and write).', file=sys.stderr)
+        return report(hits)
     print(f'error: unknown command {cmd}', file=sys.stderr)
     return 2
 

@@ -52,3 +52,7 @@ Sign-off · Signed`. Move a card when its state changes; do not create a list pe
 
 The full design, the research and the audit are in
 `$YMIR_HOME/svartalfaheim/example-8/framework/trello-workflow.md`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

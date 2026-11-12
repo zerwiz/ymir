@@ -151,3 +151,7 @@ So the links are seated in each harness's root by install and update, pointing a
 repository-local harness link (such as `.claude/skills -> ../.agents/skills`) is retired where it would make a session
 inside the checkout load a second copy of what the root already carries (plan 248 §4). Edit the canonical file; never a
 link.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

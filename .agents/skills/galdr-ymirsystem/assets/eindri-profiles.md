@@ -134,3 +134,7 @@ Galdr references these assets when:
 - Ensuring new CLI tools adhere to Ymir ergonomic standards
 - Maintaining Norse naming convention and aett pattern consistency
 - Verifying Utgard sandbox compliance for all agent-facing tools
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

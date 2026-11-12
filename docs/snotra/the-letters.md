@@ -87,3 +87,7 @@ Every refusal and every spend is carved into the Runes. The how-to for the opera
 `docs/features/the-outbound-gate.md`; the change record is
 `docs/fixes/snotra/2026-10-24-the-gate-is-in-every-door.md`; the proofs are
 `bin/time/snotra/tests/test_outbound_gate.py` (12, with no Google in the loop) and each door's `--self-test`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

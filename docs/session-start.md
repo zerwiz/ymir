@@ -103,3 +103,7 @@ options[2]{change,effect}:
 Ported from the validated upstream agent-distro (read-only reference) for
 [plan 29](plans/29-brokk-distro-runtime.md); the Norse names and the Brokk/Allfather
 substitutions are ours. The upstream's own contract is its `docs/session-start.md`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

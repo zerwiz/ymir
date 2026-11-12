@@ -39,3 +39,7 @@ through whatever you chose.
 | `status` says absent | `bin/engine/hermes-ensure.sh ensure --install`. |
 | An agent cannot use it | Set its harness to `hermes` in `config/agents.yaml`, then `bin/fleet/agents-config.sh apply`. |
 | A model never answers | The model rail/bridge is down — `bin/agents/eir-doctor.sh fix`. |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

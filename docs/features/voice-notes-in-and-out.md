@@ -27,3 +27,7 @@ Nothing from your voice is sent anywhere, and nothing is kept after the transcri
 `systemctl --user status kokoro-serve` — it gives the card back after five idle minutes and is raised
 again by the next voice note or by the command above. If your note comes back empty, the ear could not
 reach its model: run `systems/skirnir/services/ear.sh <file>` by hand and read the error it prints.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

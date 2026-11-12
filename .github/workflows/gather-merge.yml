@@ -1,0 +1,19 @@
+name: Gather merge
+
+# A gathered batch keeps its history (plan 272, fault 9). GitHub picks the merge method at the click and no
+# pull-request check can see it, so this judges the record after the fact: a gathered batch that arrived on main
+# as ONE parent was squashed, and this run turns red and names the commit. The lever that prevents it is the
+# repository setting "Allow squash merging" — see bin/gates/guards/gather-merge-guard.sh.
+on:
+  push:
+    branches: [main]
+
+jobs:
+  gather-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: A gathered batch must not land as one parent
+        run: bash bin/gates/guards/gather-merge-guard.sh check HEAD

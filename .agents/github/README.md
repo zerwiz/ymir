@@ -13,3 +13,7 @@ Zero-trust GitHub CI/CD, webhook security, and autonomous Issue-to-PR pipeline.
 - Webhooks verified via HMAC signature
 - Secrets injected via `gh secret set` — never committed
 - Mjollnir never force-merges
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

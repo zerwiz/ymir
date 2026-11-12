@@ -92,3 +92,7 @@ bin/vault/hnitbjorg.sh phone-remove     # revoke: removes the key's slot and the
 | `could not write the key to the phone` | The phone's storage is not writable over MTP — make sure it is unlocked and set to file transfer; some phones need a folder open in their file manager first. |
 | `phone-mtp missing` in `phone-status` | Install the backend: `sudo pacman -S gvfs-mtp` (Arch) or `sudo apt install gvfs-backends` (Debian/Ubuntu). |
 | The vault does not open with the phone | Use your passphrase, then re-run `phone-enroll`. |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

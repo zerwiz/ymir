@@ -1448,3 +1448,7 @@ agent in the hall is **Nanna**, Ymir's own shipped assistant, the one who answer
 agent that keeps heimdall's computer; she does not live in the hall. Everything else in that section stands: the agent is
 a **she**, the engine under her (Hermes) is her tool and never her name, and another machine's hall is kept by that
 machine's own agent. The old paragraph is kept as the record of what was believed.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

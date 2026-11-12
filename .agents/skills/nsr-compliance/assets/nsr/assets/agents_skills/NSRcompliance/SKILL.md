@@ -69,3 +69,7 @@ Walkthrough: `docs/BEST_PRACTICES/compliance-wiring.md`.
 - Never lose a function: wiring delegates to existing procedures and adds guards.
 - Generated `.compliance/` is derived from this skill — regenerate, don't hand-edit both copies.
 - Syncs with WayOfTeams (Kanban Board, Knowledge Base, Anchor Memory) over MCP.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

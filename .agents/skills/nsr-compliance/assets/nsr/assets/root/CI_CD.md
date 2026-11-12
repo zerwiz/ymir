@@ -21,3 +21,7 @@ Pipeline overview. Detail in `docs/CI_CD/`.
 
 - CI never hardcodes values or secrets; deploy via `deploy.sh --env <env> --target <client|tenant>`.
 - Every deploy runs `check_env.sh → check_paths.sh → check_platform.sh` then `validate_code.sh` before production.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

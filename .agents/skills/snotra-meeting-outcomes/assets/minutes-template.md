@@ -54,3 +54,7 @@ errors; the quote is evidence of intent, not exact wording.
 3. A decision without a rationale says `not stated`. It does not invent one.
 4. An action without a due date says `date unresolved` and carries a `decide_by`.
 5. No name is assigned unless the transcript names the person.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

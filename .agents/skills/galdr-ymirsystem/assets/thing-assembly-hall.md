@@ -132,3 +132,7 @@ P1 tailnet TLS · P2 coturn + the guests' door · P3 the OIDC gate (Heimdall) ·
 P4 the ear inside the room (Snotra auto-notified; minutes to the hoard) ·
 P5 the SFU only if mesh is outgrown. The rebrand and the room engine are done;
 the engineering phases wait on the Allfather's word.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

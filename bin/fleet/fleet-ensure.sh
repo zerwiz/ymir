@@ -25,6 +25,8 @@ case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help) sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# plan 272, fault 12: a unit this script renders is settled through the register right after it is written
+[ -r "$SCRIPT_DIR/../engine/unit-settle-lib.sh" ] && . "$SCRIPT_DIR/../engine/unit-settle-lib.sh"
 # Rule 12: never resolve the repo by counting ".." — a door that lives in
 # bin/<sub>/ lands on bin/ (which owns no tools/ or apps/). Walk up to the tree
 # that owns .pi/ and RULES/ — the repo root — so the template root is the same
@@ -271,6 +273,7 @@ materialize_embed() {
   if [ -x /usr/local/bin/llama-server ] && [ -f "$HOME/Models/embed/nomic-embed-text-v1.5.Q4_K_M.gguf" ]; then
     cp -f "$FLEET_TEMPLATE_ROOT/tools/mill/systemd/embed.service" "$HOME/.config/systemd/user/embed.service"
     refuse_disposable_path "$HOME/.config/systemd/user/embed.service" || return 1
+    if command -v unit_settle >/dev/null 2>&1; then unit_settle embed || true; fi
     return 0
   fi
   say "fleet: embed — the embedding stone is owed (heart/forge) but cannot rise:" >&2
@@ -346,6 +349,7 @@ materialize_web_unit() {  # <program> — substitute the per-seat roots into the
       "$template" > "$tmp" || { rm -f "$tmp"; return 1; }
   refuse_disposable_path "$tmp" || { rm -f "$tmp"; return 1; }
   mv -f "$tmp" "$dst"
+  if command -v unit_settle >/dev/null 2>&1; then unit_settle "$(basename "$dst" .service)" || true; fi
 }
 
 materialize_units() {  # <owed...> — every owed unit + the target; purge the stale

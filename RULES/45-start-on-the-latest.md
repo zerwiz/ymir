@@ -45,3 +45,7 @@ the loud override.
 
 **What is deliberately not law:** that every read of a document requires a network. A seat on a plane
 reads its ledger; it just may not hand out the next number as if the world stood still.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

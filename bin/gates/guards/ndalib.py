@@ -10,6 +10,9 @@ The names are NEVER in this repository. They are read at run time from the opera
   hodd/identity/projects.yaml       every project that is not Ymir's own or openly public
   svartalfaheim/<realm>/            every realm directory
   hodd/identity/confidential.yaml   `nda:` — names the operator adds by hand
+  hodd/identity/collaborators.yaml  every person: full name, email local part, chat and code-host handles
+  hodd/identity/names.yaml          entries of kind `person`
+  hodd/data/telegram-rosters/*.yaml every name and username a chat roster has recorded
 Words that are also ordinary English live in config/nda-allow.yaml, each with its reason.
 """
 import os, re, subprocess, sys
@@ -66,6 +69,54 @@ def load_allow(root=None):
     return out
 
 
+GENERIC_LOCALS = {'info', 'admin', 'hello', 'contact', 'support', 'office', 'mail', 'noreply', 'no-reply',
+                  'team', 'sales', 'hola', 'webmaster', 'postmaster'}
+
+
+def _walk_strings(node, out):
+    if isinstance(node, dict):
+        for v in node.values():
+            _walk_strings(v, out)
+    elif isinstance(node, list):
+        for v in node:
+            _walk_strings(v, out)
+    elif isinstance(node, str):
+        out.append(node)
+
+
+def load_people(home, names):
+    """People are private data like companies are: a full name, the local part of an address, and every
+    chat or code-host handle the home records. Roles and ids are not read; only what identifies a person."""
+    ident = os.path.join(home, 'hodd', 'identity')
+    for p in _yaml(os.path.join(ident, 'collaborators.yaml')).get('people', []) or []:
+        if not isinstance(p, dict):
+            continue
+        _add(names, p.get('name'), 'person')
+        for e in p.get('emails', []) or []:
+            if isinstance(e, str) and '@' in e:
+                local = e.split('@', 1)[0].strip().lower()
+                if local not in GENERIC_LOCALS:
+                    _add(names, local, 'person-handle')
+        for key in ('telegram', 'github', 'handles', 'usernames'):
+            v = p.get(key)
+            vals = v if isinstance(v, list) else [v]
+            for h in vals:
+                _add(names, str(h).lstrip('@') if h else None, 'person-handle')
+    for kind_list in (_yaml(os.path.join(ident, 'names.yaml')).get('names', {}) or {}).values():
+        for e in kind_list or []:
+            if isinstance(e, dict) and e.get('kind') == 'person':
+                _add(names, e.get('name') or e.get('owner'), 'person')
+    rosters = os.path.join(home, 'hodd', 'data', 'telegram-rosters')
+    if os.path.isdir(rosters):
+        for f in sorted(os.listdir(rosters)):
+            if f.endswith('.yaml'):
+                strings = []
+                _walk_strings(_yaml(os.path.join(rosters, f)), strings)
+                for t in strings:
+                    _add(names, t.lstrip('@'), 'person-roster')
+    return names
+
+
 def load_names(home, allow=None):
     """{name_lower: source_kind} read from the home. Source kinds, never values, are what is reported."""
     names = {}
@@ -99,6 +150,7 @@ def load_names(home, allow=None):
     conf = _yaml(os.path.join(ident, 'confidential.yaml'))
     for n in conf.get('nda', []) or []:
         _add(names, n if isinstance(n, str) else (n or {}).get('name'), 'nda-list')
+    load_people(home, names)
     for w in (allow if allow is not None else load_allow()):
         names.pop(w, None)
     return names

@@ -117,3 +117,7 @@ bin/ward/garmr.sh verify
 A hound that is **silent** is reported as a finding, not as calm. If `verify` says the
 heartbeat is stale, restart it (`sudo systemctl restart garmr-hound.service`) and read
 `journalctl -u garmr-hound.service`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

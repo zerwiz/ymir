@@ -45,3 +45,7 @@ id; add the id to the harness config and go.
 | A model fails to load (OOM) | It does not fit — `bin/model/model-fit.sh` picks one that does. |
 | Two clients evict each other | They request different model ids — align them to **one** id. |
 | The engine is CPU‑only | Rebuild with CUDA: `bin/model/llama-ensure.sh ensure` proves `CUDA0`. |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

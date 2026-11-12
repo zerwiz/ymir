@@ -43,7 +43,15 @@ out="$("${client:-$ROOT/bin/pi/syn-watch-arm.sh}" --restart 9>&-)"; rc=$?
 case "$out" in
   *signal:*|*stale:*|*check:*|*heartbeat:*)
     {
-      printf 'BROKK WATCHER WAKE:\n%s\n\n' "$out"
+      # Every line a person reads begins with Sól's stamp (plan 272, fault 4): a repeat reads as a repeat. The arm's own
+      # grammar (signal:/stale:/check:/heartbeat:) stays inside each line, untouched.
+      [ -r "$ROOT/bin/time/sol-lib.sh" ] && . "$ROOT/bin/time/sol-lib.sh"
+      if command -v sol_prefix >/dev/null 2>&1; then
+        printf 'BROKK WATCHER WAKE:\n' | sol_prefix
+        printf '%s\n\n' "$out" | sol_prefix
+      else
+        printf 'BROKK WATCHER WAKE:\n%s\n\n' "$out"
+      fi
       printf 'Run bin/time/saga-wake-drain.sh first and handle every queued wake; acknowledge with `saga-wake-drain.sh ack`.\n'
       printf 'A wake from Rödd is answered in her room: bin/voice/rodd-room.sh reply "<text>".\n'
       printf 'Watcher continuity is hook-owned: do not arm another cycle yourself.\n'

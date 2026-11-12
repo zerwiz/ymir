@@ -73,3 +73,7 @@ bin/vault/hnitbjorg.sh close        # seal the vault
 | `bwrap is required for --airlock` | Install bubblewrap (`sudo pacman -S bubblewrap` / `sudo apt install bubblewrap`), or drop `--airlock`. |
 | A commit is refused with *outside the vault is staged* | You are committing outside the vault during a session — commit the work inside the vault, or `bin/vault/confidential.sh stop`. |
 | The model does not answer in a session | Check the local router is up (`llama-router status`); use `--tier none` if you want no model. |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

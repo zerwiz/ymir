@@ -91,3 +91,7 @@ visible instead of hidden in prose.
 | every seat `FAILED: model not found` | the id is not what the provider serves | ask the rail: `curl $BASE/v1/models` with the key, and copy the exact id |
 | one seat `FAILED: timed out` | a local load slower than `timeout_seconds` | raise it for that stack, or seat a smaller model |
 | `BUDGET` in the output | `max_total_chars` reached | raise it deliberately, or ask a narrower question |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

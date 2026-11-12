@@ -59,3 +59,7 @@ because the count can flicker on a live machine.
 Portability is a migration, not a switch: the verbs and the ratchet exist, and many callers are still GNU-only.
 The service surface is systemd-shaped, with no launchd or Windows rendering. Windows is packaged, not proved —
 run it on a clean machine before telling anyone it works.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

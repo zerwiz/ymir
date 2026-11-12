@@ -207,3 +207,7 @@ hermes-telegram.sh instructions    → the four steps, token never printed
 neither machine has a `chat` id yet, so the door would refuse before sending. That is
 the honest state of this door today — the registry stands, the mouths are seated, and
 no ear is attached until `hermes gateway setup` gets a token.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

@@ -258,3 +258,7 @@ A concrete, per-task checklist:
 - TrueFoundry — agentic enterprise guide / MCP gateway: https://www.truefoundry.com/blog/software-compliance-agentic-enterprise-guide
 - GitClear — AI code quality research: https://www.gitclear.com/ai_assistant_code_quality_2025_research
 - Wikipedia — Software compliance (history): https://en.wikipedia.org/wiki/Software_compliance
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

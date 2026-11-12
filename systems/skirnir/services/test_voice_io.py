@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Failure contracts without a microphone or a live voice engine."""
 import importlib.util
 import io

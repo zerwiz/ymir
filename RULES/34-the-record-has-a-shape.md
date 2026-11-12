@@ -69,3 +69,7 @@ paid by the hand that already knows what the document is.
 | `bin/gates/doors.sh --check` | a stale subsystem register |
 | `bin/gates/guards/features-guard.sh` | a feature page the catalogue does not name |
 | `bin/gates/guards/rules-number-guard.sh` | a rule number used twice, or an index count that is stale |
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

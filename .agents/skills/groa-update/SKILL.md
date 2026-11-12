@@ -186,3 +186,7 @@ law: a layer gated on its host reports a clean skip elsewhere, never a false fai
 cleanly to `single`/`standalone` on a box with no registry. Every shape‑dependent step —
 this one included — **asks it**, and none re‑derives the shape by hand (plan 76, the shape
 law; Rule 07's reason applied to topology).
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

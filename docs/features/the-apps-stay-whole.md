@@ -59,3 +59,7 @@ would ship an unreadable app is refused, with the file and the parse error named
    (`~/ymir/.run/hlidskjalf-api.log`) and the route's handler.
 4. If a push is refused by this ward and you believe it is wrong, run the ward directly against the
    file it names; the remedy is in its own last line.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

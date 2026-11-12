@@ -74,3 +74,7 @@ own bot. The peer's token never sends in this machine's name.
   `hermes gateway restart`, then `check` again.
 - *The relay says `NOT CARVED`.* The hop was sent but the ledger refused to record it. Treat that as a fault,
   not a warning: an unrecorded hop is exactly what this door exists to prevent.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

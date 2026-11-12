@@ -57,3 +57,7 @@ what it leaves alone, commits, merges into the base branch and pushes.
 - **A door that cannot answer says `unread`**, never zero.
 - **Nothing is sent, merged or pushed without an explicit word**, and a draft is not a send.
 - **Gimlé mirrors the shelf; it does not replace it.** The repo is the only surface that is checked and versioned.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

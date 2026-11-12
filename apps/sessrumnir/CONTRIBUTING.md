@@ -231,3 +231,7 @@ Report problems on [GitHub Issues](https://github.com/zerwiz/ymir/issues) and as
 ## License
 
 By contributing to this project, you agree that your contributions will be licensed under the [Apache License 2.0](LICENSE).
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

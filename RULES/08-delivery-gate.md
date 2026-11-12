@@ -235,3 +235,7 @@ always squash merging?"* A squash erases each errand's history and leaves git th
 or a body saying it was gathered by `gather.sh`, takes `--merge`; every other PR keeps `--squash`.
 `ship.sh`, `queue-warden.sh` and `pr-seal.sh` ask it. The fix note is
 `docs/fixes/forge/2026-11-12-the-merge-method-follows-the-prs-kind.md`.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

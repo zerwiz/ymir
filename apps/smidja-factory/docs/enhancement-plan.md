@@ -418,3 +418,7 @@ just kaia                  # CLI memory interface
 ---
 
 *This plan is a living document. Update as enhancements are completed, new needs emerge, or priorities shift.*
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

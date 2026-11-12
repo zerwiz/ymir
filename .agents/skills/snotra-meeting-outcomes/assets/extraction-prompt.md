@@ -57,3 +57,7 @@ HARD RULES
 Run the deterministic validator. The model's output is a candidate set, never the
 record. Merge it with the secretary's review; every accepted item carries its
 evidence.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

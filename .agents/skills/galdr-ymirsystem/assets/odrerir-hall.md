@@ -352,3 +352,7 @@ canonical "charged twice → which desk" case — `julia-1` 7.86 decisions/sec a
 options); `kev-4b` 0.21/sec and the most accurate (billing 0.99) but 14 s at twelve options, so
 twenty cards would take 95 s. Hence `rank.sh` prefers **laya**, escalates to **kev-4b**, and
 puts **julia-1** last. The footer names the door that spoke.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

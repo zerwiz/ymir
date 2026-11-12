@@ -52,3 +52,7 @@ The absence of a routed work item is not a divergence and the guard never requir
 
 `bin/brokk-Allfather-hold.sh --help` owns command syntax, close modes, legacy-identity compatibility, completion attestation, retry behavior, and close ordering.
 `docs/Allfather-hold-lifecycle.md` records the mechanism and regression evidence without restating this policy.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

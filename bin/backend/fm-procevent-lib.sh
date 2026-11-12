@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # shellcheck shell=bash
 # Shared identity, ownership, capture, and publication rules for the generic
 # process-to-event runner.

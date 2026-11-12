@@ -54,3 +54,7 @@ sqlite3 smidja/smidja_data/smidja.db "select smidja_id, status from sessions ord
 ```
 
 If the smoke test fails, fix it before composing chains — every multi-agent smidja rides on this exact path.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

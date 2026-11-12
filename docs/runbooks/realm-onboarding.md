@@ -58,3 +58,7 @@ boundaries.
 
 The realm tree, `.env.realm`, persona, and entity cards exist; the realm is listed
 in `data/projects.md`; `bin/brokk status` and the compliance gate are green.
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

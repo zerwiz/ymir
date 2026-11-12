@@ -52,3 +52,7 @@ open. That limit is stated here so nobody mistakes a green ward for a finished d
 ## The duty, in one sentence
 
 **If a user can read it, a machine has checked it — and if it names a road, the road is open.**
+
+## CHANGE LOG
+
+- **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
