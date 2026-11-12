@@ -73,3 +73,7 @@ It fails when the page scrolls sideways or the composer leaves the screen.
 - **Nanna says nothing.** Her gateway is down. `start.sh --check` names it; read `data/run/gateway.log`.
 - **The install row says stale.** Run `apps/bilskirnir/setup.sh` and read its lines. Eir's `bilskirnir` surface
   reports the same.
+
+## CHANGE LOG
+
+- **2026-11-12** — first written: every screen, its own window, install and Gróa, the house's words.

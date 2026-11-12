@@ -62,3 +62,7 @@ Stored colour keys still work and wear the nearest house hue.
 - **2026-11-12** — the push was refused by `rules-compliance-guard.sh` (RULES/39 N1/N7) for the line in `setup.sh`
   that names the XDG data directory under the home: the ward read that path segment as an mDNS host name. Narrowed so an
   mDNS host name is still caught and the XDG path segment is not (component: gates).
+- **2026-11-12** — the same ward then judged the vendored Bot HQ code in the base commit: XML namespace URIs in SVG and
+  in an update manifest, and the cloud's fixed link-local metadata address in Orgo's own guide. Neither is a house
+  address; the ward now passes those two shapes and nothing else. The vendored documents and the how-to page gained the
+  CHANGE LOG the append-only law asks for (component: gates).

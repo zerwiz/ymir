@@ -194,3 +194,7 @@ docs/               architecture; the Orgo and xAI/Composio guides predate the H
 Project code is available under the [MIT license](LICENSE). The bot artwork and some icons come from Grok Bot's design and remain the property of their owners, as do third-party app logos; the MIT license does not cover them. See [third-party notices](THIRD_PARTY_NOTICES.md).
 
 Continued from [grokbot-clone](https://github.com/nickvasilescu/grokbot-clone). Built with [Hermes Agent](https://github.com/NousResearch/hermes-agent), [Orgo](https://orgo.ai), [Composio](https://composio.dev), and [xAI](https://x.ai). This is an independent project, unaffiliated with xAI, Cursor/Anysphere or Nous Research.
+
+## CHANGE LOG
+
+- **2026-11-12** — vendored from Bot HQ (MIT) into `apps/bilskirnir` (plan 259); kept as upstream wrote it, and from here appended, never rewritten.

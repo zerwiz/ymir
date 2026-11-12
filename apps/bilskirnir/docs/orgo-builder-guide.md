@@ -905,3 +905,7 @@ All take `?token=<vnc_password>`.
 |---|---|---|---|
 | GET | `http://169.254.169.254/orgo/v1/identity/token[?fresh=1]` | Identity token (header `Metadata-Flavor: Orgo`) | doc |
 | GET | `http://169.254.169.254/orgo/v1/identity` | `{desktop_id, vm_id, state}` (no token) | doc |
+
+## CHANGE LOG
+
+- **2026-11-12** — vendored from Bot HQ (MIT) into `apps/bilskirnir` (plan 259); kept as upstream wrote it, and from here appended, never rewritten.

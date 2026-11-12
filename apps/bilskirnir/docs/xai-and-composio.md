@@ -686,3 +686,7 @@ Sessions are free to create. Triggers are billed per **delivered** event, and po
 4. Whether the `OpenAIResponsesProvider` tool output drops straight into xAI unchanged. In particular, check any `strict` field and root schema shapes. Some Composio tools may have schemas whose root is not an object, which xAI rejects with 400.
 5. The exact camelCase SDK params for `composio.toolkits.get()` list filters (`sortBy`, `category`, `search`). The REST names are documented; the TypeScript `ToolkitListParams` field names are not shown.
 6. The current `@composio/openai` version.
+
+## CHANGE LOG
+
+- **2026-11-12** — vendored from Bot HQ (MIT) into `apps/bilskirnir` (plan 259); kept as upstream wrote it, and from here appended, never rewritten.
