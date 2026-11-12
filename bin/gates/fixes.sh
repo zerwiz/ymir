@@ -138,19 +138,24 @@ case "$action" in
     ;;
 
   validate)
+    # What a note must be (plan 272, fault 10). The validator had frozen at the first format — `## <component> ·
+    # <version> · <date> — <title>` with a `### Files` section, in ten named components — and 595 of the 820 notes
+    # written since in other shapes were reported invalid. The notes were not wrong: the fix-note guard asks only
+    # that a push add a note under a component directory. So this judges what a reader needs, and rewrites nothing:
+    #   · every directory under docs/fixes/ is a component (the list above is only what `record` offers);
+    #   · every note is a non-empty Markdown file whose first non-blank line is a heading with a title (or a bold lead-in, the form an appended correction takes);
+    # A `### Files` section is what `record` writes, not what a note owes: 97 hand-written notes have none.
     fails=0; checked=0
     [ -d "$FIXES" ] || { printf 'fixes: docs/fixes/ does not exist yet\n'; exit 0; }
     for d in "$FIXES"/*/; do
       [ -d "$d" ] || continue
       c="$(basename "$d")"
-      known "$c" || { printf '  "%s","unknown component directory"\n' "$c"; fails=$((fails+1)); continue; }
       for f in "$d"*.md; do
         [ -e "$f" ] || continue
         checked=$((checked+1))
-        hdr="$(sed -n '1p' "$f")"
-        printf '%s' "$hdr" | grep -qE "^## ${c} · ([0-9]+\.[0-9]+\.[0-9]+[^ ]*|unversioned) · [0-9]{4}-[0-9]{2}-[0-9]{2} — .+" \
-          || { printf '  "%s","malformed header: %s"\n' "${f#"$ROOT"/}" "$hdr"; fails=$((fails+1)); }
-        grep -q '^### Files$' "$f" || { printf '  "%s","no Files section"\n' "${f#"$ROOT"/}"; fails=$((fails+1)); }
+        hdr="$(grep -m1 -v '^[[:space:]]*$' "$f" 2>/dev/null || true)"
+        printf '%s' "$hdr" | grep -qE '^(#{1,3} +|\*\*)[^ ].*' \
+          || { printf '  "%s","no heading with a title: %s"\n' "${f#"$ROOT"/}" "$hdr"; fails=$((fails+1)); continue; }
       done
     done
     if [ "$fails" = 0 ]; then printf 'fixes[1]{state,checked}:\n  "valid",%s\n' "$checked"
