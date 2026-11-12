@@ -115,6 +115,36 @@ t "planted: after the move only the missing register entry remains (exit 1)" [ "
 rm -f "$YMIR_UNIT_DIR/planted.service"
 t "planted: with the register honoured, check is clean again" bash -c 'bash "$0" check >/dev/null' "$UNITS"
 
+# 4b — the tree's name is a PREFIX of the pin's ($HOME/ymir vs $HOME/ymir-runtime): a root matches as a
+#      whole path component only, a unit on the pin is left alone, and a second run changes nothing
+mkdir -p "$HOME/ymir/RULES" "$HOME/ymir/bin/engine" "$YMIR_UNIT_DIR/prefixed.service.d"; touch "$HOME/ymir/bin/engine/ymir-install.sh"
+cat >"$YMIR_UNIT_DIR/prefixed.service" <<UNIT
+[Service]
+WorkingDirectory=$HOME/ymir/systems/skirnir
+ExecStart=/bin/bash $HOME/ymir/bin/ward/x.sh
+UNIT
+cat >"$YMIR_UNIT_DIR/onpin.service" <<UNIT
+[Service]
+WorkingDirectory=$PIN/systems/skirnir
+ExecStart=/bin/bash $PIN/bin/ward/x.sh
+UNIT
+cat >"$YMIR_UNIT_DIR/prefixed.service.d/10-env.conf" <<UNIT
+[Service]
+WorkingDirectory=$HOME/ymir/systems/skirnir
+UNIT
+cp "$YMIR_UNIT_DIR/onpin.service" "$T/onpin.before"
+bash "$UNITS" write >/dev/null 2>&1
+t "prefix: a unit on the working tree moves once onto the pin" grep -qx "WorkingDirectory=$PIN/systems/skirnir" "$YMIR_UNIT_DIR/prefixed.service"
+t "prefix: the path is never doubled (ymir-runtime-runtime)" bash -c '! grep -rq "ymir-runtime-runtime" "$0"' "$YMIR_UNIT_DIR"
+t "prefix: ExecStart moved once too" grep -qx "ExecStart=/bin/bash $PIN/bin/ward/x.sh" "$YMIR_UNIT_DIR/prefixed.service"
+t "prefix: a drop-in is moved once" grep -qx "WorkingDirectory=$PIN/systems/skirnir" "$YMIR_UNIT_DIR/prefixed.service.d/10-env.conf"
+t "prefix: a unit already on the pin is unchanged" cmp -s "$T/onpin.before" "$YMIR_UNIT_DIR/onpin.service"
+sums1="$(cd "$YMIR_UNIT_DIR" && find . -type f -exec sha256sum {} + | sort)"
+bash "$UNITS" write >/dev/null 2>&1
+sums2="$(cd "$YMIR_UNIT_DIR" && find . -type f -exec sha256sum {} + | sort)"
+t "prefix: a second write changes nothing" [ "$sums1" = "$sums2" ]
+rm -rf "$HOME/ymir"
+
 # 5 — a launcher pointing into an errand worktree
 WT="$T/tree/.yggdrasil/bilskirnir-every-screen"
 cat >"$YMIR_APPLICATIONS_DIR/ymir-bilskirnir.desktop" <<DESK
