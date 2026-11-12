@@ -57,17 +57,24 @@ EXIT_OK, EXIT_FAULT, EXIT_USAGE, EXIT_REFUSED = 0, 1, 2, 3
 # ── where the list lives ─────────────────────────────────────────────────────────
 
 
-def _home(env: Mapping[str, str]) -> Path:
-    explicit = env.get("YMIR_HOME")
-    if explicit:
-        return Path(explicit).expanduser()
-    xdg = env.get("YMIR_CONFIG_DIR") or str(Path(env.get("XDG_CONFIG_HOME") or "~/.config") / "ymir")
-    pointer = Path(xdg).expanduser() / "home"
+def _paths():
+    """The home law's Python twin (paths.py), whether run in the package or as a script."""
     try:
-        recorded = pointer.read_text(encoding="utf-8").splitlines()[0].strip()
-    except (OSError, IndexError):
-        recorded = ""
-    return Path(recorded or "~/Documents/ymirhome").expanduser()
+        from . import paths  # type: ignore[import-not-found]
+    except ImportError:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("ymir_paths", Path(__file__).with_name("paths.py"))
+        paths = sys.modules.get("ymir_paths")
+        if paths is None:
+            paths = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
+            sys.modules["ymir_paths"] = paths  # a dataclass reads its own module back
+            spec.loader.exec_module(paths)  # type: ignore[union-attr]
+    return paths
+
+
+def _home(env: Mapping[str, str]) -> Path:
+    return _paths().ymir_home(env)
 
 
 def settings_dir(env: Mapping[str, str] | None = None) -> Path:

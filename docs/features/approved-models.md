@@ -92,3 +92,7 @@ No environment variable allows a model. The file is the only way.
 - **`the claude harness names no model and the allow-list has no defaults.claude`**: set `defaults: {claude: <id>}`.
 - **`the allow-list does not parse`**: the file is refused as a whole (it fails closed). Run `bin/model/model-allow.sh list` to see the error.
 - **Eir says `unpoliced`**: no list is written yet. Copy the template.
+
+## CHANGE LOG
+
+- **2026-11-12** — Created with the allow-list, its grants, the spawn-door enforcement and the Claude default (branch `eindri/flash-only`).

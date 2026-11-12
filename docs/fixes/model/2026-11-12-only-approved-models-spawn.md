@@ -60,3 +60,7 @@ install working until its operator writes a list.
   gated. Its spend is the harness's own setting.
 - `herdr-run.sh` with no model named runs pi's own default. Eir's audit checks that default
   against the list, but the launch itself is not refused.
+
+## CHANGE LOG
+
+- **2026-11-12** — Created with the allow-list, its grants, the spawn-door enforcement and the Claude default (branch `eindri/flash-only`).
