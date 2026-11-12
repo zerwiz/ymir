@@ -140,6 +140,9 @@ const ymirHome = (() => {
 })();
 const state = process.env.BROKK_STATE_OVERRIDE || `${ymirHome}/state`;
 const config = process.env.BROKK_CONFIG_OVERRIDE || `${fmHome}/config`;
+// plan 257 H6: this is the TREE's client, kept as the fallback; the spawn line below runs
+// the PIN's client (bin/pi/arm-pin-lib.sh), and the tree's client hands over to the pin
+// itself, so a session's branch is never the code that supervises.
 const armScript = `${fmRoot}/bin/pi/syn-watch-arm.sh`;
 const marker = `${state}/.pi-watch-extension-loaded`;
 const extensionVersion = `sha256:${createHash("sha256").update(readFileSync(extensionFile)).digest("hex")}`;
@@ -769,7 +772,7 @@ export default function (pi: ExtensionAPI) {
       BROKK_WATCH_PREDECESSOR_ARM_PID: predecessorArmPid,
       BROKK_SESSION_PID: String(process.pid),
     };
-    const armChild = spawn("bash", ["-lc", "config_dir=\"${BROKK_CONFIG_OVERRIDE:-$BROKK_HOME/config}\"; [ -f \"$config_dir/x-mode.env\" ] && . \"$config_dir/x-mode.env\"; exec \"$BROKK_WATCH_ARM_SCRIPT\" --restart"], {
+    const armChild = spawn("bash", ["-lc", "config_dir=\"${BROKK_CONFIG_OVERRIDE:-$BROKK_HOME/config}\"; [ -f \"$config_dir/x-mode.env\" ] && . \"$config_dir/x-mode.env\"; c=\"\"; [ -r \"$BROKK_ROOT_OVERRIDE/bin/pi/arm-pin-lib.sh\" ] && . \"$BROKK_ROOT_OVERRIDE/bin/pi/arm-pin-lib.sh\" && arm_pin_client c; exec \"${c:-$BROKK_WATCH_ARM_SCRIPT}\" --restart"], {
       cwd: fmRoot,
       env,
       stdio: ["ignore", "pipe", "pipe"],

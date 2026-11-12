@@ -32,7 +32,11 @@ ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/
 HOARD_LIB="$ROOT/bin/vault/hoard-lib.sh"
 DRAIN="$ROOT/bin/time/saga-wake-drain.sh"
 ARM="$ROOT/bin/voice/rodd-arm.sh"
-SAY="$ROOT/systems/snotra/services/tts-lease/ymir-say.sh"
+# The speaker is overridable (RODD_SAY) so a test can prove the toast without raising a
+# real one: test_rodd_helm.sh queued "please merge PR 999 into main" and, with the real
+# speaker, every gate run put that refusal on the Allfather's desktop (plan 257 H7/B7).
+SAY="${RODD_SAY:-$ROOT/systems/snotra/services/tts-lease/ymir-say.sh}"
+REFUSAL_WINDOW="${RODD_REFUSAL_WINDOW_SECONDS:-3600}"
 SPAWN="$ROOT/bin/agents/einherjar-spawn.sh"
 LOCK_DOOR="$ROOT/bin/records/ymir-state.sh"
 
@@ -77,6 +81,27 @@ with open(room, "a", encoding="utf-8") as fh:
 PY
 }
 
+# refuse_aloud <toast-prefix> <instruction> — plan 257 H7/B7: EVERY refusal Nanna makes is
+# ONE room line AND the notification, keyed by the instruction's hash. The room line is
+# always written (a refusal is never lost); the toast is raised once per key per window
+# (RODD_REFUSAL_WINDOW_SECONDS, default 3600), so the same refused instruction met again —
+# in a re-read wake, in memory, in a test — is recorded, never repeated on his desktop.
+refuse_aloud() {
+  local prefix="$1" what="$2" key ledger now seen=""
+  room_append "Nanna" "refused: $what" || true
+  key="rodd:refusal:$(printf '%s' "$what" | sha256sum 2>/dev/null | cut -c1-16)"
+  ledger="$ROOM_STATE/rodd/refusals.keys"
+  now="$(date +%s)"
+  if [ -r "$ledger" ]; then
+    seen="$(awk -v k="$key" -v n="$now" -v w="$REFUSAL_WINDOW" '$2 == k && (n - $1) < w { print $1 }' "$ledger" 2>/dev/null | tail -1)"
+  fi
+  if [ -z "$seen" ]; then
+    mkdir -p "$ROOM_STATE/rodd" 2>/dev/null || true
+    printf '%s %s\n' "$now" "$key" >>"$ledger" 2>/dev/null || true
+    "$SAY" --mark-alarm "$prefix: $what" >/dev/null 2>&1 || true
+  fi
+}
+
 # ── the judgement a wake asks for ────────────────────────────────────────────
 # A wake asking for a merge (or another act only the Allfather may do) is beyond
 # her writ: refused aloud and the helm released. A wake asking for WORK may only
@@ -104,12 +129,12 @@ dispatch_errand() {  # <wake>
   [ -n "$id" ] && [ -n "$project" ] || { room_append "Nanna" "cannot dispatch — $wake names no errand or project"; return 1; }
   case "$mode" in
     direct-PR|no-mistakes) ;;
-    *) room_append "Nanna" "refused to dispatch — mode '$mode' is not direct-PR/no-mistakes"; "$SAY" --mark-alarm "Rödd refuses a dispatch beyond her writ: $wake" >/dev/null 2>&1 || true; return 1 ;;
+    *) refuse_aloud "Rödd refuses a dispatch beyond her writ" "mode '$mode' is not direct-PR/no-mistakes — $wake"; return 1 ;;
   esac
   [ -x "$SPAWN" ] || { room_append "Nanna" "cannot dispatch — the errand door is missing"; return 1; }
   "$SPAWN" "$id" "$project" --mode "$mode" >/dev/null 2>&1 \
     && room_append "Nanna" "dispatched errand $id in $project (mode $mode)" \
-    || room_append "Nanna" "dispatch of errand $id failed — the errand door refused it"
+    || refuse_aloud "Rödd's dispatch was refused" "errand $id in $project — the errand door refused it (no helm, no errand?)"
 }
 
 # ── one duty pass ─────────────────────────────────────────────────────────────
@@ -128,8 +153,7 @@ run_pass() {
     esac
     [ -n "$line" ] || continue
     if is_beyond_her "$line"; then
-      room_append "Nanna" "refused: $line"
-      "$SAY" --mark-alarm "Rödd refuses a wake beyond her writ: $line" >/dev/null 2>&1 || true
+      refuse_aloud "Rödd refuses a wake beyond her writ" "$line"
       "$ARM" release >/dev/null 2>&1 || true
       printf 'rodd-helm: refused and released — %s\n' "$line" >&2
       refused=1

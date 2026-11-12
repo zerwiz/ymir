@@ -37,6 +37,9 @@ export BROKK_STATE_OVERRIDE="$T/state"
 export BROKK_MACHINE_STATE_DIR="$T/xdg/ymir"
 unset BROKK_SESSION_PID 2>/dev/null || true
 export BROKK_WATCH_INLINE=1 BROKK_WATCH_POLL_SECONDS=600
+# plan 257 H6: these tests exercise THIS tree's client, so they take the loud override
+# rather than being handed to the operator's pinned runtime.
+export YMIR_ARM_TREE=1
 mkdir -p "$HOME" "$T/xdg/ymir" "$BROKK_STATE_OVERRIDE"
 
 lock="$T/xdg/ymir/brokk.lock"

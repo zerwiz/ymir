@@ -111,6 +111,30 @@ add_row() { ROWS+=("$1"); }
 ff_home "$ROOT" "$ROOT"
 add_row "  \"$ROOT\",\"this Brokk home\",\"$FF_STATE\",\"$FF_DETAIL\""
 
+# 1b. The PINNED runtime (plan 257 H6/H8). "Pinned" must not mean "frozen on the day the
+#     machine was installed": the pin is the checkout the arm service, the arm clients and
+#     Rödd execute (RULES/02 §7), so Gróa carries it forward with the homes — by the same
+#     guarded fast-forward (never forced; a dirty or off-branch pin is skipped and named).
+#     YMIR_GROA_PIN=off leaves it where it stands.
+PIN_MOVED=0
+if [ "${YMIR_GROA_PIN:-on}" != off ] && [ -r "$SCRIPT_DIR/../pi/arm-pin-lib.sh" ]; then
+  . "$SCRIPT_DIR/../pi/arm-pin-lib.sh"
+  PIN_DIR=""; arm_pin_dir PIN_DIR
+  if [ -n "$PIN_DIR" ]; then
+    if [ "$(_arm_real "$PIN_DIR")" = "$(_arm_real "$ROOT")" ]; then
+      add_row "  \"pin\",\"$PIN_DIR\",\"current\",\"the pin IS this home — carried above\""
+    else
+      _home_branch="$BRANCH"; arm_pin_branch BRANCH
+      ff_home "$PIN_DIR" "pin"
+      BRANCH="$_home_branch"; unset _home_branch
+      add_row "  \"pin\",\"$PIN_DIR\",\"$FF_STATE\",\"$FF_DETAIL\""
+      [ "$FF_STATE" = updated ] && PIN_MOVED=1
+    fi
+  else
+    add_row "  \"pin\",\"runtime.env\",\"absent\",\"no pinned runtime configured (bin/engine/runtime-deploy.sh seats one)\""
+  fi
+fi
+
 # 2. Registered Eindri-homes.
 if [ -f "$REG" ]; then
   while IFS= read -r line; do
@@ -234,6 +258,17 @@ if [ -x "$SCRIPT_DIR/../pi/hnoss-ensure.sh" ]; then
     printf 'hnoss: model door seated — %s\n' "$(printf '%s' "$ho" | grep -m1 '^\[hnoss\]' | sed 's/^\[hnoss\] //' || printf 'launcher + pi MCP entry')"
   else
     printf 'hnoss: NOT mended — %s\n' "$(printf '%s' "$ho" | tail -1)"
+  fi
+fi
+
+# The pin moved, so the units that execute it are restarted and PROVED by the one door that
+# owns that move (bin/engine/runtime-deploy.sh) — a moved pin whose services still run the
+# old code is the same lie as a stale one. Bounded and never fatal; the line is the record.
+if [ "$PIN_MOVED" = 1 ] && [ -x "$SCRIPT_DIR/../engine/runtime-deploy.sh" ]; then
+  if ro="$(setsid timeout -k 5 "${YMIR_GROA_PIN_TIMEOUT:-180}" "$SCRIPT_DIR/../engine/runtime-deploy.sh" </dev/null 2>&1)"; then
+    printf 'pin: moved and every unit settled — %s\n' "$(printf '%s' "$ro" | tail -1)"
+  else
+    printf 'pin: moved, but a unit did not settle — %s\n' "$(printf '%s' "$ro" | grep -m1 FAIL || printf '%s' "$ro" | tail -1)"
   fi
 fi
 

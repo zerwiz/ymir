@@ -18,7 +18,42 @@ const http = require('node:http');
 const path = require('node:path');
 const fs = require('node:fs');
 
-const UI = path.join(__dirname, '..', 'ui');
+// Plan 257 H7 — Rödd runs the PIN. Her face and her tool server execute the pinned runtime
+// (YMIR_RUNTIME_DIR, read from <home>/config/runtime.env exactly as the ward reads it), never
+// the working tree an agent may have switched to any branch. A pin that cannot be found is a
+// refusal in ONE named line, never a silent fall-back to the tree. YMIR_RODD_TREE=1 is the
+// loud override for a developer testing this checkout's face.
+function pinnedRuntimeDir() {
+  if (process.env.YMIR_RUNTIME_DIR) return process.env.YMIR_RUNTIME_DIR;
+  const home = process.env.HOME || '';
+  let ymirHome = process.env.YMIR_HOME || '';
+  if (!ymirHome) {
+    try {
+      const xdg = process.env.XDG_CONFIG_HOME || path.join(home, '.config');
+      ymirHome = fs.readFileSync(path.join(xdg, 'ymir', 'home'), 'utf8').split('\n')[0].trim();
+    } catch { /* no recorded home */ }
+  }
+  if (!ymirHome) ymirHome = path.join(home, 'Documents', 'ymirhome');   // allow-home-default: the documented default home
+  try {
+    const conf = fs.readFileSync(path.join(ymirHome, 'config', 'runtime.env'), 'utf8');
+    for (const raw of conf.split('\n')) {
+      const line = raw.trim().replace(/^export\s+/, '');
+      if (!line.startsWith('YMIR_RUNTIME_DIR=')) continue;
+      let v = line.slice('YMIR_RUNTIME_DIR='.length).trim().replace(/^["']|["']$/g, '');
+      v = v.replace(/\$\{HOME\}|\$HOME/g, home).replace(/^~(?=\/)/, home);
+      return v;
+    }
+  } catch { /* no runtime.env */ }
+  return '';
+}
+const RODD_TREE = process.env.YMIR_RODD_TREE === '1';
+const PIN = pinnedRuntimeDir();
+const PIN_REFUSAL = RODD_TREE ? '' : (!PIN
+  ? 'Rödd refuses to start: no pinned runtime (YMIR_RUNTIME_DIR in <home>/config/runtime.env) — run bin/engine/runtime-deploy.sh'
+  : (!fs.existsSync(path.join(PIN, 'apps', 'rodd', 'ui'))
+    ? `Rödd refuses to start: the pinned runtime ${PIN} has no apps/rodd/ui — run bin/engine/runtime-deploy.sh`
+    : ''));
+const UI = (RODD_TREE || !PIN) ? path.join(__dirname, '..', 'ui') : path.join(PIN, 'apps', 'rodd', 'ui');
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
@@ -171,6 +206,12 @@ function restartHost(url) {
 }
 
 app.whenReady().then(async () => {
+  if (PIN_REFUSAL) {
+    console.error(`[rodd] ${PIN_REFUSAL}`);
+    app.exit(1);
+    return;
+  }
+  console.log('[rodd] code root', RODD_TREE ? `${path.join(__dirname, '..')} (YMIR_RODD_TREE=1 — the working tree, by the loud override)` : PIN);
   Menu.setApplicationMenu(null);
   // The face offers the camera only when the head can see: start.sh says which head it
   // raised (RODD_CAMERA=1 with the vision head), and a picture sent to a text-only head

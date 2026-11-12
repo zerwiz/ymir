@@ -291,7 +291,7 @@ def pin_facts(env: Mapping[str, str], runner: proc.Runner = proc.run) -> tuple[s
     """`(sha, behind)` for the pinned runtime, read from git — never guessed.
 
     The sha is the pin's HEAD; `behind` is the commit count to `origin/main` on the
-    LOCAL ref (the same number the plan's measurement used). A missing pin or an
+    LOCAL ref of the pin's own branch (YMIR_RUNTIME_BRANCH, default main). A missing pin or an
     unreadable git returns empty strings — a seat with no pin reports no currency,
     and Eir's `armpin` surface turns that into a named failure, never a lie.
     """
@@ -299,11 +299,14 @@ def pin_facts(env: Mapping[str, str], runner: proc.Runner = proc.run) -> tuple[s
     if not str(pin) or not pin.is_dir():
         return "", ""
     sha = ""
-    result = runner(("git", "-C", str(pin), "rev-parse", "HEAD"), env=dict(env))
+    result = runner(("git", "-C", str(pin), "rev-parse", "--short=8", "HEAD"), env=dict(env))
     if proc.ok(result):
         sha = proc.out(result)
     behind = ""
-    result = runner(("git", "-C", str(pin), "rev-list", "--count", "HEAD..origin/main"), env=dict(env))
+    branch = paths_mod.runtime_pin_branch(env)
+    result = runner(
+        ("git", "-C", str(pin), "rev-list", "--count", f"HEAD..origin/{branch}"), env=dict(env)
+    )
     if proc.ok(result):
         behind = proc.out(result)
     return sha, behind
@@ -477,13 +480,42 @@ def raise_line(paths: ArmPaths) -> str:
     return ""
 
 
+def _cursor(path: Path) -> float:
+    try:
+        return float(path.read_text(encoding="utf-8", errors="replace").strip() or 0)
+    except (OSError, ValueError):
+        return 0.0
+
+
+def _terminal_epoch(paths: ArmPaths) -> float:
+    """When this house first read terminal lines as wakes (`.arm.terminal-epoch`).
+
+    A status that turned terminal BEFORE the record-as-wake existed was already carried
+    by acclaim or the sweep, so it is seeded silently rather than re-presented: the
+    first poll after an upgrade must not raise a hundred old `done:` lines (plan 257,
+    risk "a derived wake firing on an old terminal line").
+    """
+    marker = paths.state / ".arm.terminal-epoch"
+    value = _cursor(marker)
+    if value > 0:
+        return value
+    stamp = time.time()
+    try:
+        marker.write_text(f"{stamp}\n", encoding="utf-8")
+    except OSError:
+        pass
+    return stamp
+
+
 def terminal_status_wake(paths: ArmPaths) -> str:
     """One `signal:` per terminal status line, keyed by the per-id `.woke` cursor.
 
-    The cursor is written BEFORE the line is returned, so a second poll — even one
-    that runs after a failed delivery — never re-wakes the same line. A newer
-    terminal line (a later mtime) raises again, so a seat that finished, was read,
-    and then appended a correction is still news once.
+    Plan 257 H3 — the record is the wake. A `state/<id>.status` whose last line is
+    terminal (`done:` · `failed:` · `needs-decision:` · `paused:`) and whose mtime is
+    newer than `state/<id>.woke` raises exactly one wake. The cursor is written BEFORE
+    the line is returned, so a second poll never re-wakes the same line; a newer
+    terminal line (a later mtime) is news once more. `eindri-acclaim.sh` writes the same
+    cursor when it delivers the loud wake, so the two roads never wake twice.
     """
     try:
         entries = sorted(
@@ -492,31 +524,39 @@ def terminal_status_wake(paths: ArmPaths) -> str:
         )
     except OSError:
         return ""
+    epoch = 0.0
     for status in entries:
         seat_id = status.name[: -len(".status")]
-        try:
-            lines = status.read_text(encoding="utf-8", errors="replace").splitlines()
-        except OSError:
-            continue
-        last = lines[-1].strip() if lines else ""
-        head = last.split(":", 1)[0].lower() if last else ""
-        if head not in ("done", "failed", "needs-decision", "paused"):
+        if not seat_id or seat_id.startswith("."):
             continue
         try:
             status_mtime = status.stat().st_mtime
         except OSError:
             continue
         cursor = paths.state / f"{seat_id}.woke"
-        try:
-            cursor_value = float(cursor.read_text(encoding="utf-8", errors="replace").strip())
-        except (OSError, ValueError):
-            cursor_value = 0.0
+        cursor_value = _cursor(cursor)
         if status_mtime <= cursor_value:
+            continue  # the cheap test first: nothing new since the last wake
+        try:
+            lines = status.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
             continue
+        last = lines[-1].strip() if lines else ""
+        if not last.lower().startswith(TERMINAL_WAKE_PREFIXES):
+            continue
+        if cursor_value <= 0:
+            epoch = epoch or _terminal_epoch(paths)
+            if status_mtime < epoch:
+                # older than the record-as-wake itself: seed, never raise
+                try:
+                    cursor.write_text(f"{status_mtime}\n", encoding="utf-8")
+                except OSError:
+                    pass
+                continue
         try:
             cursor.write_text(f"{status_mtime}\n", encoding="utf-8")
         except OSError:
-            pass
+            continue  # a cursor that cannot be written would re-wake every poll
         return f"signal: {seat_id} {last}"
     return ""
 

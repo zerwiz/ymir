@@ -160,6 +160,15 @@ else
     fi
   fi
 fi
+# 3b. The record-as-wake cursor (plan 257 H3). The arm raises one wake per terminal
+#     status line newer than state/<id>.woke; the loud road has just delivered (or
+#     found delivered) this one, so it writes the same cursor and the two roads never
+#     wake twice for one line.
+if [ -f "$STATE/$AGENT.status" ]; then
+  _woke="$(date -r "$STATE/$AGENT.status" +%s.%N 2>/dev/null || stat -f %Fm "$STATE/$AGENT.status" 2>/dev/null || true)"
+  [ -n "$_woke" ] && printf '%s\n' "$_woke" >"$STATE/$AGENT.woke" 2>/dev/null || true
+  unset _woke
+fi
 # 4. The review spine (FORSETI the Judge). The delivery gate's other half: a
 #    ship errand that reached `done` with a PR wakes its own reviewer. One per
 #    task (the .reviewed marker); YMIR_AUTO_REVIEW=off is the loud override; a

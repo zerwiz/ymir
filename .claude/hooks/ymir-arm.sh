@@ -24,6 +24,11 @@ done < "$HOME/.pi/agent/extensions/.ymir-root" 2>/dev/null
 [ -n "$root" ] || exit 0
 # inside the house the project's own .claude/settings.json already arms it
 [ "$(readlink -f "${CLAUDE_PROJECT_DIR:-.}")" = "$(readlink -f "$root")" ] && exit 0
-out=$("$root/bin/pi/syn-watch-arm.sh" --restart); rc=$?
+# plan 257 H6: the arm client this hook runs is the PIN's, never the tree's — a session
+# must not carry its own branch into the supervisor. The tree's client hands over too, so
+# an older pin with no lib still lands on one road.
+client=""
+[ -r "$root/bin/pi/arm-pin-lib.sh" ] && . "$root/bin/pi/arm-pin-lib.sh" && arm_pin_client client
+out=$("${client:-$root/bin/pi/syn-watch-arm.sh}" --restart); rc=$?
 case "$out" in *signal:*|*stale:*|*check:*|*heartbeat:*) printf '%s\n' "$out" >&2; exit 2;; esac
 exit $rc

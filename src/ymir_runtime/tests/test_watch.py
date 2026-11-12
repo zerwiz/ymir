@@ -227,6 +227,7 @@ class RaiseTest(ArmTestCase):
     def test_a_terminal_status_line_wakes_once(self) -> None:
         # H3 (plan 257): a worker that writes only `done:` wakes the arm by the record
         # itself — no acclaim, no sweep — and the per-id cursor makes it exactly once.
+        (self.paths.state / ".arm.terminal-epoch").write_text("1\n", encoding="utf-8")
         status = self.paths.state / "errand-x.status"
         status.write_text("working: launched\n", encoding="utf-8")
         os.utime(status, (1000.0, 1000.0))
@@ -238,6 +239,7 @@ class RaiseTest(ArmTestCase):
         self.assertEqual(watch.raise_line(self.paths), "", "a second poll must not re-wake the same line")
 
     def test_a_newer_terminal_line_is_still_news_once(self) -> None:
+        (self.paths.state / ".arm.terminal-epoch").write_text("1\n", encoding="utf-8")
         status = self.paths.state / "errand-x.status"
         status.write_text("done: first\n", encoding="utf-8")
         os.utime(status, (2000.0, 2000.0))
@@ -245,6 +247,38 @@ class RaiseTest(ArmTestCase):
         status.write_text("done: first\ndone: merged\n", encoding="utf-8")
         os.utime(status, (3000.0, 3000.0))
         self.assertEqual(watch.raise_line(self.paths), "signal: errand-x done: merged")
+        self.assertEqual(watch.raise_line(self.paths), "")
+
+    def test_terminal_lines_older_than_the_epoch_are_seeded_not_raised(self) -> None:
+        # the first poll after an upgrade must not re-present every old done: line
+        old = self.paths.state / "errand-old.status"
+        old.write_text("done: long ago\n", encoding="utf-8")
+        os.utime(old, (1000.0, 1000.0))
+        self.assertEqual(watch.raise_line(self.paths), "")
+        self.assertTrue((self.paths.state / "errand-old.woke").exists())
+        self.assertTrue((self.paths.state / ".arm.terminal-epoch").exists())
+        fresh = self.paths.state / "errand-new.status"
+        fresh.write_text("working: x\ndone: just now\n", encoding="utf-8")
+        future = time.time() + 5
+        os.utime(fresh, (future, future))
+        self.assertEqual(watch.raise_line(self.paths), "signal: errand-new done: just now")
+        self.assertEqual(watch.raise_line(self.paths), "")
+
+    def test_blocked_and_working_lines_never_raise_by_the_record(self) -> None:
+        (self.paths.state / ".arm.terminal-epoch").write_text("1\n", encoding="utf-8")
+        for name, line in (("a", "working: busy"), ("b", "blocked: stuck")):
+            status = self.paths.state / f"errand-{name}.status"
+            status.write_text(line + "\n", encoding="utf-8")
+            os.utime(status, (2000.0, 2000.0))
+        self.assertEqual(watch.raise_line(self.paths), "")
+
+    def test_an_acclaimed_line_is_not_woken_twice(self) -> None:
+        # eindri-acclaim.sh writes the cursor when it delivers the loud wake
+        (self.paths.state / ".arm.terminal-epoch").write_text("1\n", encoding="utf-8")
+        status = self.paths.state / "errand-y.status"
+        status.write_text("done: opened PR 2\n", encoding="utf-8")
+        os.utime(status, (2000.0, 2000.0))
+        (self.paths.state / "errand-y.woke").write_text("2000.0\n", encoding="utf-8")
         self.assertEqual(watch.raise_line(self.paths), "")
 
     def test_the_operator_stop_is_a_stale_line(self) -> None:

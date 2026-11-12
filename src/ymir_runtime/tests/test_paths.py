@@ -79,6 +79,15 @@ class ResolveTest(unittest.TestCase):
                 Path("~/ymir-runtime").expanduser(),
             )
 
+    def test_runtime_pin_branch_reads_runtime_env_and_defaults_to_main(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            config = Path(tmp) / "config"
+            config.mkdir(parents=True)
+            env = {"YMIR_HOME": tmp, "YMIR_SETTINGS_DIR": str(config)}
+            self.assertEqual(paths.runtime_pin_branch(env), "main")
+            (config / "runtime.env").write_text('YMIR_RUNTIME_BRANCH="stable"\n', encoding="utf-8")
+            self.assertEqual(paths.runtime_pin_branch(env), "stable")
+
     def test_runtime_pin_dir_is_empty_when_runtime_env_is_absent(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             env = {"YMIR_HOME": tmp, "YMIR_SETTINGS_DIR": str(Path(tmp) / "config")}
