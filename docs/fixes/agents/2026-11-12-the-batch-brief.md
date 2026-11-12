@@ -13,3 +13,7 @@
 ## Proof
 
 `.agents/tests/erindi-brief-batch.test.sh` passes (8 cases).
+
+## CHANGE LOG
+
+- 2026-11-12 — written with the change it describes.

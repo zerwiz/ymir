@@ -28,3 +28,7 @@ keeps its record.
 
 `.agents/tests/branch-guard-documents.test.sh` (21 cases) passes, and the old
 `branch-guard-delivery.test.sh` and `fixes-guard-deletion.test.sh` still pass.
+
+## CHANGE LOG
+
+- 2026-11-12 — written with the change it describes.

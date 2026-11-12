@@ -23,3 +23,7 @@ the plan and changes nothing; `--no-pr` stops after the gates.
 `.agents/tests/gather.test.sh` (28 cases) builds a scratch repository with a bare origin and passes:
 dry run, finished detection, one gate run, one push, one PR, a conflict and its resume, a refusing gate,
 and a refused unsigned PR.
+
+## CHANGE LOG
+
+- 2026-11-12 — written with the change it describes.

@@ -7,3 +7,7 @@ A push of documents only, by an exact set of paths, may land on `main`. Errands 
 and never push, and the helm ships them in one push and one PR through `bin/forge/gather.sh`. A lone
 errand may still push its own PR. Everything else still leaves by PR, and who merges does not change.
 The same section is noted at the end of `AGENTS.md`.
+
+## CHANGE LOG
+
+- 2026-11-12 — written with the change it describes.

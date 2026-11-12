@@ -79,3 +79,7 @@ The batch name is printed when the batch starts. Each batch's record is kept in
 A push that changes only documents may land on `main` directly. The exact set of files is in
 `RULES/08`, and `bin/gates/guards/branch-guard.sh --documents <base> <head>` tells you whether a
 range qualifies.
+
+## CHANGE LOG
+
+- 2026-11-12 — written with the change it describes.
