@@ -12,7 +12,7 @@ printed:
 ```
 seats[2]{seat,primary,reachable,door}:
   "heimdall","Hœnir","unreachable","ssh heimdall@100.69.101.57"
-  "nidavellir","Hávi","up","ssh zerwizomar@100.110.19.71"
+  "nidavellir","Hávi","up","ssh <user>@<tailnet address>"
 ```
 
 The seat that owns the table reported itself **unreachable**. Read cold it says the fleet
@@ -44,7 +44,7 @@ not need a key to talk to itself, and a seat is never unreachable from inside it
 ```
 seats[2]{seat,primary,reachable,door}:
   "heimdall","Hœnir","up (self)","local — this machine"
-  "nidavellir","Hávi","up","ssh zerwizomar@100.110.19.71"
+  "nidavellir","Hávi","up","ssh <user>@<tailnet address>"
 ```
 
 ## The proof that the road is real, not merely reported
@@ -72,3 +72,10 @@ A one-way channel that reports "sent" is the false green this house has paid for
 - **A seat's own row now answers without measuring the machine's services.** It says "this
   is the machine you are on", which is true by construction; every capability check still
   belongs to Eir (`bin/agents/eir-doctor.sh`) and to the doors that own each surface.
+
+## CHANGE LOG
+
+- **2026-11-11** — note written: `seat-wire.sh seats` measures the row for the machine it runs on locally, so a seat
+  is never reported unreachable from inside itself.
+- **2026-11-12** — the private address in the "after" example is replaced with a placeholder, and this section added,
+  when the note was carried onto the integration branch (the public-data and rules-compliance wards).
