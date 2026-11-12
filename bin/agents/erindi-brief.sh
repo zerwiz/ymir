@@ -56,6 +56,17 @@ BROKK_HOME="${BROKK_HOME:-${BROKK_ROOT_OVERRIDE:-$ROOT}}"
 DATA="${BROKK_DATA_OVERRIDE:-$BROKK_HOME/data}"
 STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
 PAUSED_VERB="${BROKK_PAUSED_VERB:-paused}"
+# Where the worker's terminal act lands: the home's state dir, the SAME one eindri-acclaim.sh, the
+# liveness sweep and the wake drain resolve through hoard-lib. The brief used to name <repo>/state, so
+# its completion check grepped a queue that never existed there (the queue lives in the home's state).
+# (STATE above stays the spawn's own record dir — the .meta it reads.)
+DONE_STATE=""
+for _hl in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$ROOT/bin/vault/hoard-lib.sh"; do
+  [ -r "$_hl" ] && { . "$_hl" 2>/dev/null; break; }
+done
+command -v hoard_state_dir >/dev/null 2>&1 && hoard_state_dir DONE_STATE 2>/dev/null || true
+DONE_STATE="${BROKK_STATE_OVERRIDE:-${DONE_STATE:-$STATE}}"
+unset _hl
 
 KIND=ship
 SCOUT=0
@@ -174,14 +185,14 @@ shell_quote() {
   printf "'"
 }
 
-STATUS_FILE=$(shell_quote "$STATE/$ID.status")
-REPORT_SHELF=$(shell_quote "$STATE/eindri-reports/$ID.md")
+STATUS_FILE=$(shell_quote "$DONE_STATE/$ID.status")
+REPORT_SHELF=$(shell_quote "$DONE_STATE/eindri-reports/$ID.md")
 
 # THE HANDOFF DOOR (2026-11-01). The shelf above is where a report goes; this is the door that writes it,
 # and the brief names it so the worker does not have to remember a path. A link with no door is a hope.
 HANDOFF_CMD="bin/agents/report.sh write $ID --state done|blocked|needs-decision --changed \"<files>\" --verified \"<command → result>\" --not-verified \"<what and why>\" --next \"<one sentence>\" --pointers \"plan:<N> · card:<id>\""
-WAKE_QUEUE=$(shell_quote "$STATE/.wake-queue")
-INBOX_DIR=$(shell_quote "$STATE/$ID.inbox")
+WAKE_QUEUE=$(shell_quote "$DONE_STATE/.wake-queue")
+INBOX_DIR=$(shell_quote "$DONE_STATE/$ID.inbox")
 REPORT_FILE="$DATA/$ID/report.md"
 
 INBOX_SECTION=$(cat <<EOF
@@ -205,10 +216,10 @@ Report status by appending one line:
 `bin/agents/eindri-checkpoint.sh save $ID --step "<what just finished>" --next "<what is next>"`.
 The pane is a view; the checkpoint is the record. A restart reads the checkpoint, never your scrollback.
    handoff failsafe sweeps (bin/agents/eindri-handoff.sh), and appends the DURABLE wake
-   (state/.wake-queue) so Brokk is woken even with no arm and no sweep running:
+   ($WAKE_QUEUE) so Brokk is woken even with no arm and no sweep running:
       \`bin/agents/eindri-acclaim.sh $ID --terminal done --line "<what shipped and where: PR, path, proof>"\`
    Use \`--terminal failed\` or \`--terminal needs-decision\` as the state; a
-   needs-decision files the question shelf ($STATE/eindri-questions/$ID.md) instead.
+   needs-decision files the question shelf ($DONE_STATE/eindri-questions/$ID.md) instead.
    Never defer the wake: a report that is not in the queue is a report Brokk may
    never see.
    Use \`$PAUSED_VERB: {why}\` - distinct from \`blocked:\` - ONLY when you are deliberately
