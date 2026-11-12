@@ -28,3 +28,7 @@ The operator: *"if we have paid attention [to it], we don't need [to be told]"*.
 message Gmail no longer marks `UNREAD` (he opened it) or one he wrote in after it arrived, in the same thread (he
 answered it). The desk and the importer count an answered mail as **done**. Measured on the operator's inbox: needs-you
 92 → 90, done 195 → 197; `test_gna.py` 37 tests OK.
+
+## CHANGE LOG
+
+- **2026-11-12** — written: the arm is asked to relay new mail; an empty helm sends it by the hotline; mail already read or answered is not news.
