@@ -52,7 +52,17 @@ CID="$(get GOOGLE_MCP_CLIENT_ID)"; CSEC="$(get GOOGLE_MCP_CLIENT_SECRET)"
   exit 1
 }
 
-PORT="${GOOGLE_AUTH_PORT:-8765}"; REDIRECT="http://127.0.0.1:$PORT/callback"
+# One sign-in port for every Google door (plan 276): YMIR_OAUTH_LOOPBACK_PORT, then the old GOOGLE_AUTH_PORT;
+# :8765 is Kokoro, the house's voice, and is never a sign-in's default.
+PORT="${YMIR_OAUTH_LOOPBACK_PORT:-${GOOGLE_AUTH_PORT:-8767}}"; REDIRECT="http://127.0.0.1:$PORT/callback"
+
+# A busy port is said, never worked around (plan 276): name the holder and stop; stop no service.
+if [ "$MODE" = --store ] && (exec 3<>"/dev/tcp/127.0.0.1/$PORT") 2>/dev/null; then
+  holder="$(ss -ltnpH "sport = :$PORT" 2>/dev/null | sed -n 's/.*users:(("\([^"]*\)",pid=\([0-9]*\).*/\1 (pid \2)/p' | head -1)"
+  printf 'error: port %s is held by %s — nothing was signed in\n' "$PORT" "${holder:-another process}" >&2
+  printf 'help: free it, or set YMIR_OAUTH_LOOPBACK_PORT to a port registered on the OAuth client (:8765 is Kokoro, the voice)\n' >&2
+  exit 1
+fi
 VERIFIER="$(python3 -c 'import secrets,base64;print(base64.urlsafe_b64encode(secrets.token_bytes(48)).rstrip(b"=").decode())')"
 CHALLENGE="$(python3 -c "import hashlib,base64,sys;print(base64.urlsafe_b64encode(hashlib.sha256(sys.argv[1].encode()).digest()).rstrip(b'=').decode())" "$VERIFIER")"
 STATE="$(python3 -c 'import secrets;print(secrets.token_urlsafe(24))')"

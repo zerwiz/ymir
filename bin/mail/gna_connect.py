@@ -110,12 +110,32 @@ def tokeninfo_endpoint() -> str:
     return env_str("YMIR_OAUTH_TOKENINFO_URL", "https://oauth2.googleapis.com/tokeninfo")
 
 
+# The sign-in's loopback port (plan 276). The fleet's OAuth client is a WEB client, so Google accepts
+# only the exact redirect URIs registered on it — an ephemeral port is refused with
+# redirect_uri_mismatch. :8765 is Kokoro's, the house's voice, and is never a sign-in's default.
+DEFAULT_OAUTH_PORT = 8767
+
+
 def connect_port() -> int:
-    raw = env_str("GNA_CONNECT_PORT", "0")
+    """YMIR_OAUTH_LOOPBACK_PORT, the one setting every Google sign-in door reads; GNA_CONNECT_PORT is
+    still honoured under it for old notes. 0 asks for an ephemeral port (a Desktop-app client)."""
+    name = "YMIR_OAUTH_LOOPBACK_PORT" if env_str("YMIR_OAUTH_LOOPBACK_PORT", "") else "GNA_CONNECT_PORT"
+    raw = env_str(name, str(DEFAULT_OAUTH_PORT))
     try:
         return int(raw)
     except ValueError:
-        raise SystemExit(f"connect: GNA_CONNECT_PORT is not a number: {raw!r}")
+        raise SystemExit(f"connect: {name} is not a number: {raw!r}")
+
+
+def port_holder(port: int) -> str:
+    """Who listens on a loopback port, as `ss -ltnp` names it — or 'another process'."""
+    try:
+        out = subprocess.run(["ss", "-ltnpH", f"sport = :{port}"], capture_output=True, text=True,
+                             timeout=10).stdout
+    except (OSError, subprocess.SubprocessError):
+        return "another process"
+    m = re.search(r'users:\(\("([^"]+)",pid=(\d+)', out)
+    return f"{m.group(1)} (pid {m.group(2)})" if m else "another process"
 
 
 def gate_grant_key() -> str:
@@ -488,7 +508,15 @@ class Loopback:
                 self.wfile.write(page)
                 threading.Thread(target=outer.server.shutdown, daemon=True).start()
 
-        self.server = HTTPServer((LOOPBACK, port), Handler)
+        try:
+            self.server = HTTPServer((LOOPBACK, port), Handler)
+        except OSError as exc:
+            if exc.errno != 98:                       # EADDRINUSE; anything else is a real fault
+                raise
+            # A busy port is said, never worked around: the door stops no service by itself (plan 276).
+            raise SystemExit(f"connect: port {port} is held by {port_holder(port)} — nothing was signed in.\n"
+                             f"help: free it, or set YMIR_OAUTH_LOOPBACK_PORT to a port registered on the "
+                             f"OAuth client (:8765 is Kokoro, the house's voice — leave it running)")
         self.server.timeout = 1.0
         self.port = int(self.server.server_address[1])
 
@@ -568,6 +596,9 @@ def cmd_google(address: str = "", port: int | None = None, timeout: float = DEFA
     if consent_url_out:
         Path(consent_url_out).write_text(url + "\n", encoding="utf-8")
     print(f"consent: open this URL and sign in (the door waits {int(timeout)}s)\n{url}", flush=True)
+    print(f"help: if Google answers redirect_uri_mismatch, add {listener.redirect_uri()} to the OAuth "
+          f"client's Authorized redirect URIs (Google Cloud console → APIs & Services → Credentials), "
+          f"or set YMIR_OAUTH_LOOPBACK_PORT to a port already registered there", flush=True)
     if open_browser:
         try:
             import webbrowser
@@ -1152,6 +1183,7 @@ def self_test(only: str = "") -> int:
     })
     env.pop("GNA_SECRETS_FILE", None)
     env.pop("GNA_CONNECT_PORT", None)
+    env["YMIR_OAUTH_LOOPBACK_PORT"] = "0"        # the fixture's fake Google takes any loopback port
 
     def run(args: list[str], stdin_data: str = "", timeout: float = 90.0):
         return subprocess.run([sys.executable, str(Path(__file__)), *args], input=stdin_data,
@@ -1185,6 +1217,14 @@ def self_test(only: str = "") -> int:
               str(parsed.get("redirect_uri")))
         check("the consent URL never carries the client secret",
               "fixture-client-secret" not in url, "no secret in the URL")
+        held = Loopback(0)
+        try:
+            refused = run(["google", "--no-browser", "--port", str(held.port), "--timeout", "2"])
+        finally:
+            held.close()
+        check("a busy port is refused with its holder named, and nothing is stopped",
+              refused.returncode != 0 and f"port {held.port} is held by" in (refused.stderr + refused.stdout),
+              (refused.stderr + refused.stdout).strip()[-120:])
 
         # ── 3. one full sign-in: URL → loopback → code → vault → GET /users/me ───────────────
         url_file = work / "consent-url.txt"

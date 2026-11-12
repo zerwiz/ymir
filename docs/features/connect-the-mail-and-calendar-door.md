@@ -108,9 +108,31 @@ back `401 loginRequired`, with no Basic challenge offered at all). So the three-
 nothing in this house promises a guest a calendar. A guest's calendar is a Workspace seat and one sign-in.
 
 
+## The sign-in port, and Kokoro
+
+Google signs you in by sending your browser back to a small local listener. The fleet's OAuth client is a **Web**
+client, so Google only accepts return addresses registered on it. A random port gets `Error 400:
+redirect_uri_mismatch`.
+
+- Every Google sign-in reads one setting: **`YMIR_OAUTH_LOOPBACK_PORT`**, default **8767**. This covers
+  `connect.sh google`, `calendar-auth.sh` and `google-auth.sh`. The older `GNA_CONNECT_PORT`, `CALENDAR_AUTH_PORT`
+  and `GOOGLE_AUTH_PORT` are still read under it.
+- **Port 8765 belongs to Kokoro**, the house's voice. No sign-in uses it by default.
+- **Register the address once.** In Google Cloud, open APIs & Services → Credentials → the OAuth client → *Authorized
+  redirect URIs*, and add `http://127.0.0.1:8767/callback`. Until that's done, the sign-in shows Google's mismatch
+  error. The terminal prints the exact address to add.
+- **A busy port is reported, never worked around.** If something already listens on the port, the sign-in names it
+  (`port 8767 is held by <program> (pid N)`) and stops. It never stops a service.
+
+```bash
+bash bin/mail/connect.sh google --account you@example.com             # signs in on 8767
+YMIR_OAUTH_LOOPBACK_PORT=8768 bash bin/mail/connect.sh google ...     # another registered port
+```
+
 ## CHANGE LOG
 
 - **2026-11-08** — First cut: the four verbs, the two roads (one sign-in, three fields), the limits that are
   promises, and the failure lines a person actually sees.
 - **2026-11-08 (appended)** — Added how to read the one mail record (`ledger.sh tail` now folds the connect
   events in) and the CalDAV answer, so the page never leaves a guest expecting a calendar it cannot have.
+- **2026-11-12** — Appended: one sign-in port off Kokoro's 8765; a busy port is named; the mismatch explained (plan 276).

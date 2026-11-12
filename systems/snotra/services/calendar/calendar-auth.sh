@@ -9,7 +9,7 @@
 #   calendar-auth.sh --store            run the loopback flow, then store the token
 #
 # Env: GOOGLE_MCP_CLIENT_ID / GOOGLE_MCP_CLIENT_SECRET (from the vault),
-#      CALENDAR_AUTH_PORT (default 8765), CHROMIUM_PROFILE (default "Profile 1")
+#      YMIR_OAUTH_LOOPBACK_PORT (default 8767; CALENDAR_AUTH_PORT still read), CHROMIUM_PROFILE (default "Profile 1")
 #
 # Exit: 0 ok · 1 error · 2 usage · 3 refused
 set -euo pipefail
@@ -28,7 +28,17 @@ VAL="$(age -d -i "$SEC/age.key" "$SEC/platform.env.age" 2>/dev/null || true)"
 get(){ printf '%s\n' "$VAL" | sed -n "s/^$1=//p" | head -1 | sed "s/^['\"]//; s/['\"]$//"; }
 CID="$(get GOOGLE_MCP_CLIENT_ID)"; CSEC="$(get GOOGLE_MCP_CLIENT_SECRET)"
 [ -n "$CID" ] && [ -n "$CSEC" ] || { printf 'error: GOOGLE_MCP_CLIENT_ID/SECRET missing from the vault\n' >&2; exit 1; }
-PORT="${CALENDAR_AUTH_PORT:-8765}"; REDIRECT="http://127.0.0.1:$PORT/callback"
+# One sign-in port for every Google door (plan 276): YMIR_OAUTH_LOOPBACK_PORT, then the old CALENDAR_AUTH_PORT;
+# :8765 is Kokoro, the house's voice, and is never a sign-in's default.
+PORT="${YMIR_OAUTH_LOOPBACK_PORT:-${CALENDAR_AUTH_PORT:-8767}}"; REDIRECT="http://127.0.0.1:$PORT/callback"
+
+# A busy port is said, never worked around (plan 276): name the holder and stop; stop no service.
+if [ "$MODE" = --store ] && (exec 3<>"/dev/tcp/127.0.0.1/$PORT") 2>/dev/null; then
+  holder="$(ss -ltnpH "sport = :$PORT" 2>/dev/null | sed -n 's/.*users:(("\([^"]*\)",pid=\([0-9]*\).*/\1 (pid \2)/p' | head -1)"
+  printf 'error: port %s is held by %s — nothing was signed in\n' "$PORT" "${holder:-another process}" >&2
+  printf 'help: free it, or set YMIR_OAUTH_LOOPBACK_PORT to a port registered on the OAuth client (:8765 is Kokoro, the voice)\n' >&2
+  exit 1
+fi
 case "${CALENDAR_WRITE:-0}" in
   1|yes|true) SCOPE="https://www.googleapis.com/auth/calendar.events" ;;   # read AND write: accept/decline
   *)          SCOPE="https://www.googleapis.com/auth/calendar.events.readonly" ;;
