@@ -302,7 +302,7 @@ seal() {
   esac
 
   printf 'sealing[1]{pr,head,sha,checks}:\n  "#%s","%s","%s","%s"\n' "$n" "$head" "$sha" "${ci_v#green:}"
-  if ! (cd "$ROOT" && gh pr merge "$n" --squash --delete-branch >/dev/null 2>&1); then
+  if ! (cd "$ROOT" && . "$ROOT/bin/forge/merge-method.sh"; gh pr merge "$n" "$(merge_flag_for_pr "$n")" --delete-branch >/dev/null 2>&1); then
     printf 'seal-failed[1]{pr,detail}:\n  "#%s","gh pr merge did not succeed — nothing was claimed; read the PR and retry by hand"\n' "$n" >&2
     return 1
   fi

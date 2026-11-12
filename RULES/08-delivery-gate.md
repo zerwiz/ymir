@@ -228,3 +228,10 @@ re-run the gates for each.
 
 The how-to is `docs/features/gather-a-batch.md`. The tests are `.agents/tests/gather.test.sh`
 and `.agents/tests/erindi-brief-batch.test.sh`.
+
+**A batch merges with a merge commit, not a squash** (appended 2026-11-12). The Allfather asked *"why are we
+always squash merging?"* A squash erases each errand's history and leaves git thinking the branches are unmerged.
+`bin/forge/merge-method.sh` is the one place the choice is made: a head branch `yggdrasil/gather-*` or `gather/*`,
+or a body saying it was gathered by `gather.sh`, takes `--merge`; every other PR keeps `--squash`.
+`ship.sh`, `queue-warden.sh` and `pr-seal.sh` ask it. The fix note is
+`docs/fixes/forge/2026-11-12-the-merge-method-follows-the-prs-kind.md`.
