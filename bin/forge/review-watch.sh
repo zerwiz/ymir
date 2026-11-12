@@ -98,29 +98,9 @@ SERVICE="review-watch.service"; TIMER="review-watch.timer"
 if [ -n "$TIMER_ACTION" ]; then
   case "$TIMER_ACTION" in
     install)
-      mkdir -p "$UNIT_DIR" || die "cannot create $UNIT_DIR"
-      cat >"$UNIT_DIR/$SERVICE" <<UNIT
-[Unit]
-Description=review-watch — ask the lock owner about every unjudged open PR (plan 206)
-
-[Service]
-Type=oneshot
-WorkingDirectory=$ROOT
-ExecStart=/usr/bin/env bash $ROOT/bin/forge/review-watch.sh
-UNIT
-      cat >"$UNIT_DIR/$TIMER" <<UNIT
-[Unit]
-Description=review-watch — the review loop's clock (every $TIMER_INTERVAL)
-
-[Timer]
-OnBootSec=3min
-OnUnitActiveSec=$TIMER_INTERVAL
-AccuracySec=30s
-Unit=$SERVICE
-
-[Install]
-WantedBy=timers.target
-UNIT
+      # the unit is the register's (config/units.yaml: review-watch) and the one writer renders it against the
+      # PINNED runtime, never the tree this door ran from (plan 269)
+      bash "$ROOT/bin/engine/units.sh" write review-watch --set "REVIEW_INTERVAL=$TIMER_INTERVAL" --no-restart >/dev/null || { printf 'review: units.sh could not write the unit\n' >&2; exit 1; }
       systemctl --user daemon-reload 2>/dev/null || true
       systemctl --user enable --now "$TIMER" 2>&1 | tail -2 || die "the timer could not be enabled — the unit is written at $UNIT_DIR/$TIMER"
       printf 'timer[3]{unit,interval,state}:\n  "%s","%s","%s"\n' "$UNIT_DIR/$TIMER" "$TIMER_INTERVAL" \

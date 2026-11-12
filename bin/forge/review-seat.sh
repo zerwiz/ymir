@@ -258,28 +258,10 @@ RestartSec=15
 [Install]
 WantedBy=default.target
 UNIT
-  cat >"$UNIT_DIR/review-seat.service" <<UNIT
-[Unit]
-Description=review-seat keeper — ensure the reviewer's herdr seat exists (idempotent)
-
-[Service]
-Type=oneshot
-WorkingDirectory=$clone
-ExecStart=/usr/bin/env bash $ROOT/bin/forge/review-seat.sh ensure --clone $clone${primary:+ --primary}
-UNIT
-  cat >"$UNIT_DIR/review-seat.timer" <<UNIT
-[Unit]
-Description=review-seat keeper — every 5 minutes
-
-[Timer]
-OnBootSec=2min
-OnUnitActiveSec=5min
-AccuracySec=20s
-Unit=review-seat.service
-
-[Install]
-WantedBy=timers.target
-UNIT
+  # the keeper unit is the register's (config/units.yaml: review-seat); the herdr server above is not a
+  # Ymir tree and stays as written. The writer renders against the PINNED runtime (plan 269).
+  bash "$ROOT/bin/engine/units.sh" write review-seat --set "CLONE=$clone" --set "PRIMARY=${primary:+ --primary}" --no-restart >/dev/null \
+    || die "units.sh could not write review-seat"
   systemctl --user daemon-reload 2>/dev/null || true
   systemctl --user enable --now herdr-server.service >/dev/null 2>&1 || printf 'review-seat: WARNING — herdr-server.service did not start (a server may already be running; the guard sleeps in that case)\n' >&2
   systemctl --user enable --now review-seat.timer >/dev/null 2>&1 || die "the keeper timer could not be enabled ($UNIT_DIR/review-seat.timer)"

@@ -30,28 +30,9 @@ while [ $# -gt 0 ]; do case "$1" in --dry-run) DRY=1; shift;; --hours) HOURS="${
 for _a in "${ORIG[@]}"; do [ "$_a" = "--install-timer" ] && TIMER=1; done
 if [ "${TIMER:-0}" = 1 ]; then
   U="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"; mkdir -p "$U"
-  cat >"$U/pr-watch.service" <<UNIT
-[Unit]
-Description=pr-watch — tell the operator a PR arrived
-
-[Service]
-Type=oneshot
-WorkingDirectory=$ROOT
-ExecStart=/usr/bin/env bash $ROOT/bin/forge/pr-watch.sh
-UNIT
-  cat >"$U/pr-watch.timer" <<UNIT
-[Unit]
-Description=pr-watch — every 5 minutes
-
-[Timer]
-OnBootSec=2min
-OnUnitActiveSec=5min
-AccuracySec=30s
-Unit=pr-watch.service
-
-[Install]
-WantedBy=timers.target
-UNIT
+  # the unit is the register's (config/units.yaml: pr-watch) and the one writer renders it against the
+  # PINNED runtime, never the tree this door ran from (plan 269)
+  bash "$ROOT/bin/engine/units.sh" write pr-watch --no-restart >/dev/null || { printf 'pr: units.sh could not write the unit\n' >&2; exit 1; }
   systemctl --user daemon-reload 2>/dev/null || true
   systemctl --user enable --now pr-watch.timer >/dev/null 2>&1 || true
   printf 'pr-watch-timer[2]{unit,state}:\n  "%s","%s"\n' "$U/pr-watch.timer" "$(systemctl --user is-active pr-watch.timer 2>/dev/null)"

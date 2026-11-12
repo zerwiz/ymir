@@ -7,7 +7,7 @@
 # This lib is the one resolver every client and adapter shares, reading the same file the
 # ward reads (bin/gates/guards/runtime-pinned-guard.sh, RULES/02 §7):
 #
-#   $YMIR_RUNTIME_DIR (env) → <home>/config/runtime.env YMIR_RUNTIME_DIR → empty
+#   $YMIR_RUNTIME_DIR (env) → <home>/config/runtime.env YMIR_RUNTIME_DIR → ~/ymir-runtime when seated → empty
 #
 # Source-safe: defines functions only; call `<fn> <result-var>`.
 #
@@ -45,6 +45,8 @@ arm_pin_dir() {  # <var>
       case "$_dir" in "~"/*) _dir="$HOME/${_dir#\~/}" ;; esac
     fi
   fi
+  # No recorded choice: the one documented default (plan 269), once install has SEATED a checkout there.
+  [ -n "$_dir" ] || { [ -d "$HOME/ymir-runtime/.git" ] && _dir="$HOME/ymir-runtime"; }
   printf -v "$_var" '%s' "$_dir"
 }
 

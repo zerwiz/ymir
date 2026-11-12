@@ -130,6 +130,17 @@ if [ "${YMIR_GROA_PIN:-on}" != off ] && [ -r "$SCRIPT_DIR/../pi/arm-pin-lib.sh" 
       add_row "  \"pin\",\"$PIN_DIR\",\"$FF_STATE\",\"$FF_DETAIL\""
       [ "$FF_STATE" = updated ] && PIN_MOVED=1
     fi
+  elif [ "$CHECK" = 1 ]; then
+    add_row "  \"pin\",\"runtime.env\",\"absent\",\"no pinned runtime is seated — an update seats it (bin/engine/runtime-seat.sh)\""
+  elif [ -x "$SCRIPT_DIR/../engine/runtime-seat.sh" ]; then
+    # plan 269: a machine installed before the pin was seated runs every service from its working tree.
+    # Gróa does not skip it — she seats the pin through the same step the installer runs, and the units
+    # follow it. Idempotent; a refusal is a named row, never a silent skip.
+    if so="$(setsid timeout -k 5 "${YMIR_GROA_PIN_TIMEOUT:-180}" "$SCRIPT_DIR/../engine/runtime-seat.sh" </dev/null 2>&1)"; then
+      add_row "  \"pin\",\"$(printf '%s' "$so" | grep -m1 '^cloned' | cut -f2)\",\"seated\",\"no pin was configured; it is seated now and every unit moved onto it\""
+    else
+      add_row "  \"pin\",\"runtime.env\",\"failed\",\"$(printf '%s' "$so" | grep -m1 '^FAIL' | cut -f2- | tr -d '"')\""
+    fi
   else
     add_row "  \"pin\",\"runtime.env\",\"absent\",\"no pinned runtime configured (bin/engine/runtime-deploy.sh seats one)\""
   fi
@@ -288,6 +299,20 @@ if [ "$PIN_MOVED" = 1 ] && [ -x "$SCRIPT_DIR/../engine/runtime-deploy.sh" ]; the
     printf 'pin: moved and every unit settled — %s\n' "$(printf '%s' "$ro" | tail -1)"
   else
     printf 'pin: moved, but a unit did not settle — %s\n' "$(printf '%s' "$ro" | grep -m1 FAIL || printf '%s' "$ro" | tail -1)"
+  fi
+fi
+
+# Whatever else writes a unit — an installer run from a worktree, a hand — is caught here: the one writer
+# (bin/engine/units.sh, register config/units.yaml) moves any Ymir unit or launcher still on a working tree
+# onto the pin and logs the old line (plan 269). Idempotent; a check run only reports.
+if [ "${YMIR_GROA_PIN:-on}" != off ] && [ -x "$SCRIPT_DIR/../engine/units.sh" ]; then
+  if [ "$CHECK" = 1 ]; then
+    if uo="$("$SCRIPT_DIR/../engine/units.sh" check 2>&1)"; then printf 'units: every Ymir unit and launcher is on the pin\n'
+    else printf 'units: %s off the pin or unregistered — an update moves them\n' "$(printf '%s' "$uo" | grep -cE 'OFF-PIN|UNREGISTERED|ABSENT')"; fi
+  elif [ "$PIN_MOVED" != 1 ]; then  # a moved pin was just written by runtime-deploy
+    if uo="$(timeout -k 5 "${YMIR_GROA_PIN_TIMEOUT:-180}" "$SCRIPT_DIR/../engine/units.sh" write 2>&1)"; then
+      printf 'units: %s moved onto the pin\n' "$(printf '%s' "$uo" | grep -cE '"(moved|written)"')"
+    else printf 'units: a unit could not be written — %s\n' "$(printf '%s' "$uo" | grep -m1 FAIL | tr -d '"')"; fi
   fi
 fi
 

@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Mapping
 
 DEFAULT_HOME = "~/Documents/ymirhome"
+DEFAULT_PIN = "~/ymir-runtime"
 
 
 @dataclass(frozen=True)
@@ -161,14 +162,20 @@ def runtime_pin_dir(env: Mapping[str, str] | None = None) -> Path:
     branch the last agent left checked out; the pin is the ONE checkout that may
     supervise (plan 257 H6). This reads the SAME file the shell ward reads —
     `runtime-pinned-guard.sh` and `bin/pi/arm-pin-lib.sh` — never a second path.
-    Empty when no pin is configured.
+    Empty when no pin is configured and none is seated at the default.
     """
     environ = dict(os.environ) if env is None else dict(env)
     explicit = environ.get("YMIR_RUNTIME_DIR")
     if explicit:
         return Path(explicit).expanduser()
     value = runtime_env(environ).get("YMIR_RUNTIME_DIR", "")
-    return Path(value).expanduser() if value else Path("")
+    if value:
+        return Path(value).expanduser()
+    # No recorded choice: the one documented default (plan 269) — but only once install has SEATED a
+    # checkout there. A seat that has no pin still says so (empty), never a path that is not there.
+    base = environ.get("HOME")
+    default = (Path(base) / DEFAULT_PIN[2:]) if base else Path(DEFAULT_PIN).expanduser()
+    return default if (default / ".git").exists() else Path("")
 
 
 def runtime_pin_branch(env: Mapping[str, str] | None = None) -> str:
