@@ -24,7 +24,7 @@ bash "$W/scripts/data-home.sh" >/dev/null
 mkdir -p "$P/data"; printf 'empty-hall\n' > "$P/data/grokbot.db"
 bash "$P/scripts/data-home.sh" >/dev/null
 [ "$(cat "$P/data/grokbot.db")" = agents-and-conversations ] && ok "the pin now opens the operator's hall" || bad "pin not linked"
-ls -d "$P"/data.local-* >/dev/null 2>&1 && [ "$(cat "$P"/data.local-*/grokbot.db)" = empty-hall ] && ok "the pin's own copy is set aside, not deleted" || bad "pin copy lost"
+ls -d "$P"/data?local-* >/dev/null 2>&1 && [ "$(cat "$P"/data?local-*/grokbot.db)" = empty-hall ] && ok "the pin's own copy is set aside, not deleted" || bad "pin copy lost"
 
 out=$(bash "$P/scripts/data-home.sh" --check); [ $? = 0 ] && ok "a linked checkout checks clean ($out)" || bad "linked check: $out"
 bash "$P/scripts/data-home.sh" >/dev/null; [ "$(find "$P" -maxdepth 1 -name "data?local-*" | wc -l)" = 1 ] && ok "running again changes nothing" || bad "not idempotent"
