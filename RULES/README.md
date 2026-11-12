@@ -130,6 +130,6 @@ Keep each rule short and unambiguous; reference it from code where it bites.
 
 - **50 — the home is pulled before and pushed after** · `RULES/50-the-home-is-pulled-before-and-pushed-after.md`
 - **51 — Ymir is a program; it runs globally, in the user's root agents** · `RULES/51-ymir-is-a-program.md`
-| 52 | `52-no-agent-runs-unowned.md` | No agent runs unowned |
+| 52 | `55-no-agent-runs-unowned.md` | No agent runs unowned |
 | 53 | `53-no-ai-tool-signs-the-work.md` | No AI tool signs the work, and none adds itself |
 | 54 | `54-no-blue-no-purple.md` | No blue and no purple — every colour is a house colour |

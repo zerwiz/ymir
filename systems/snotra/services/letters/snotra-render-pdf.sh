@@ -76,4 +76,3 @@ chromium --headless=new --no-sandbox --disable-gpu --user-data-dir="$TMP/chrome"
   || chromium --headless --no-sandbox --disable-gpu --user-data-dir="$TMP/chrome" --print-to-pdf="$OUT" "file://$TMP/record.html" >/dev/null 2>&1
 [ -s "$OUT" ] && printf 'pdf\t%s\t%s\n' "$OUT" "$(du -h "$OUT" | cut -f1)" || { echo "error: pdf not written" >&2; exit 1; }
 
-**2026-11-03 (correction, appended):** the operator's name was redacted — it is personal data and belongs in the home, not in a public repository (RULES/04, RULES/06).
