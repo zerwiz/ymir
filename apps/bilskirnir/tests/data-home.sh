@@ -44,5 +44,28 @@ BILSKIRNIR_CANDIDATES="$W2" bash "$P2/scripts/data-home.sh" >/dev/null
 grep -q KEY=real "$T/home2/.env" && ok "the real .env came with it" || bad ".env not carried"
 ls -d "$P2"/data.aside-* >/dev/null 2>&1 && ok "the empty hall is set aside, not deleted" || bad "empty hall lost"
 
+# tonight's case, with nothing named by hand: the root record lists the working tree and the pin; the pin starts first
+export BILSKIRNIR_DATA_HOME="$T/home3"
+mkdir -p "$T/w3/apps/bilskirnir/scripts" "$T/p3/apps/bilskirnir/scripts" "$HOME/.pi/agent/extensions"
+cp "$SRC" "$T/w3/apps/bilskirnir/scripts/"; cp "$SRC" "$T/p3/apps/bilskirnir/scripts/"
+printf '%s\n%s\n' "$T/p3" "$T/w3" > "$HOME/.pi/agent/extensions/.ymir-root"
+mkdir -p "$T/w3/apps/bilskirnir/data"; head -c 40000 /dev/urandom > "$T/w3/apps/bilskirnir/data/grokbot.db"
+bash "$T/p3/apps/bilskirnir/scripts/data-home.sh" >/dev/null
+[ "$(stat -c %s "$T/home3/data/grokbot.db" 2>/dev/null)" = 40000 ] && ok "from the pin, the root record finds the working tree's real hall" || bad "root record not read"
+[ -L "$T/w3/apps/bilskirnir/data" ] && [ -L "$T/p3/apps/bilskirnir/data" ] && ok "both checkouts now open the same hall" || bad "not both linked"
+
+# the real hall is busy (its server runs): nothing moves, and the smaller hall is NOT chosen instead
+export BILSKIRNIR_DATA_HOME="$T/home4"
+mkdir -p "$T/w4/apps/bilskirnir/scripts" "$T/p4/apps/bilskirnir/scripts"
+cp "$SRC" "$T/w4/apps/bilskirnir/scripts/"; cp "$SRC" "$T/p4/apps/bilskirnir/scripts/"
+mkdir -p "$T/w4/apps/bilskirnir/data/run" "$T/p4/apps/bilskirnir/data"
+head -c 30000 /dev/urandom > "$T/w4/apps/bilskirnir/data/grokbot.db"; printf 'small\n' > "$T/p4/apps/bilskirnir/data/grokbot.db"
+sleep 300 & live=$!; printf '%s\n' "$live" > "$T/w4/apps/bilskirnir/data/run/server.pid"
+out=$(BILSKIRNIR_CANDIDATES="$T/w4/apps/bilskirnir" bash "$T/p4/apps/bilskirnir/scripts/data-home.sh")
+kill "$live" 2>/dev/null
+[ ! -e "$T/home4/data" ] && [ -d "$T/w4/apps/bilskirnir/data" ] && [ ! -L "$T/p4/apps/bilskirnir/data" ] && ok "a busy real hall makes the door wait, and nothing moves" || bad "busy: $out"
+BILSKIRNIR_CANDIDATES="$T/w4/apps/bilskirnir" bash "$T/p4/apps/bilskirnir/scripts/data-home.sh" >/dev/null
+[ "$(stat -c %s "$T/home4/data/grokbot.db" 2>/dev/null)" = 30000 ] && ok "once its server stops, the next start takes the real hall" || bad "after stop: not moved"
+
 printf '%s passed, %s failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]
