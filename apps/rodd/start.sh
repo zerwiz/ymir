@@ -101,6 +101,11 @@ local_rail() { curl -s -o /dev/null --max-time 2 "${YMIR_VOICE_HEAD_URL:-http://
 host_seat() {
   local s me
   me="$(hostname -s)"
+  # plan 275 S16 (2026-11-12): ask the voice door, the one resolver of the engine's host. Rödd used to call any
+  # machine with an answering :8080 its own host — nidavellir's small local server made it skip the tunnel to the
+  # real engine on heimdall, and its microphone stream had nothing to connect to.
+  s="$(bash "$ROOT/bin/voice/voice-door.sh" which-host 2>/dev/null | tail -1)"
+  [ -n "$s" ] && { printf '%s' "$s"; return 0; }
   if local_rail; then printf '%s' "$me"; return 0; fi
   for s in $(host_seats) "$me"; do
     if is_local_seat "$s"; then printf '%s' "$s"; return 0; fi

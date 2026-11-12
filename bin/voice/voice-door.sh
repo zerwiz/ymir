@@ -131,7 +131,7 @@ case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help|"") sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 CMD="${1-}"; shift || true
 DO_STOP=0; DO_INSTALL=0; DO_NOW="${YMIR_DESK_NOW:-0}"
-case "$CMD" in status|host|client|plan|--install|install|start|stop|log) ;; *) printf 'error: unknown command %s\nhelp: bin/voice/voice-door.sh [status|host|client|plan|--install]\n' "$CMD" >&2; exit 2 ;; esac
+case "$CMD" in status|which-host|host|client|plan|--install|install|start|stop|log) ;; *) printf 'error: unknown command %s\nhelp: bin/voice/voice-door.sh [status|host|client|plan|--install]\n' "$CMD" >&2; exit 2 ;; esac
 [ "$CMD" = install ] && CMD=--install
 while [ $# -gt 0 ]; do case "$1" in --stop) DO_STOP=1 ;; --install) DO_INSTALL=1 ;; --now) DO_NOW=1 ;; *) shift; continue ;; esac; shift; done
 
@@ -456,6 +456,7 @@ PY
 
 case "$CMD" in
   status)  cmd_status ;;
+  which-host) resolve_host ;;   # the ONE answer to "where does the engine live" (Rödd asks this, plan 275)
   plan)    cmd_plan ;;
   host)    cmd_host ;;
   client)  cmd_client "$@" ;;
