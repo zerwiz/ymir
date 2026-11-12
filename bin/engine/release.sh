@@ -173,9 +173,20 @@ flip() {
   keep_cur="$(readlink -f "$CUR")"; keep_prev="$(cat "$BASE/previous" 2>/dev/null)"
   for r in $(ls -1dt "$REL"/*/ 2>/dev/null); do
     r="${r%/}"; [ "$r" = "$keep_cur" ] || [ "$r" = "$keep_prev" ] && continue
+    # a release a running process still uses (its folder, its command line) is never deleted: an app server
+    # started from it would answer 404 the moment its files vanished (nidavellir, 2026-11-12: Óðrerir's page)
+    if in_use "$r"; then say "kept	$r	(still in use by a running process)"; continue; fi
     n=$((n+1)); if [ "$n" -gt "$KEEP" ]; then rm -rf "$r" && say "pruned	$r"; fi
   done
   return 0
+}
+in_use() {  # <release-dir> → 0 when any process runs from it
+  local p
+  for p in /proc/[0-9]*; do
+    case "$(readlink "$p/cwd" 2>/dev/null)" in "$1"|"$1"/*) return 0 ;; esac
+    { tr '\0' ' ' < "$p/cmdline"; } 2>/dev/null | grep -qF "$1/" && return 0
+  done
+  return 1
 }
 rollback() {
   local p; p="$(cat "$BASE/previous" 2>/dev/null)"
