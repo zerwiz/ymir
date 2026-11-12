@@ -21,3 +21,7 @@ called `loadURL` on a destroyed window.
 > I could not reproduce the SIGTRAP here: the old code also exited 0 with no core, headless and on Wayland. The
 > original dumps likely came from an external driver closing the window. The change removes the one race I could find
 > and the test guards it. If a core appears again, `coredumpctl info` will name the cause.
+
+## CHANGE LOG
+
+- **2026-11-12** — Opened.

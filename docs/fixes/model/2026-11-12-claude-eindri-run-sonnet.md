@@ -15,3 +15,7 @@ On 2026-11-12 the Allfather's word was that Claude workers run Sonnet 5.5. PR #6
 
 > [!IMPORTANT]
 > The operator's own list lives in the home and is the helm's edit. It needs the same `claude/claude-sonnet-5-5` line and `defaults: claude: claude-sonnet-5-5`.
+
+## CHANGE LOG
+
+- **2026-11-12** — Opened.

@@ -9,3 +9,7 @@ When PR #691 merged at 12:07 on 2026-11-12, 18 files named `.merge_file_<random>
 - `bin/gates/tests/test_regenerate_on_merge_cleanup.sh` holds both behaviours.
 
 The 18 existing files in the main checkout are untracked and were not touched from this worktree. The helm removes them with `rm -f .merge_file_??????` at the checkout root.
+
+## CHANGE LOG
+
+- **2026-11-12** — Opened.

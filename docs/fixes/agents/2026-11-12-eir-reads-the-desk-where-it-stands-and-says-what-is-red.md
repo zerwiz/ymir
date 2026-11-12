@@ -12,3 +12,7 @@ The installation and Nornir assets named `:8490`; they now say `:8494`.
 - `bin/agents/tests/test_eir_mends.sh`
 - `.agents/skills/galdr-ymirsystem/assets/installation.md`
 - `.agents/skills/galdr-ymirsystem/assets/nornir-jobs.md`
+
+## CHANGE LOG
+
+- **2026-11-12** — Opened.

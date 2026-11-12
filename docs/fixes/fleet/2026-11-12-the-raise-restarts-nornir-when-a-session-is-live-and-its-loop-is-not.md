@@ -7,3 +7,7 @@
 
 ### Files
 - `bin/fleet/fleet-ensure.sh`
+
+## CHANGE LOG
+
+- **2026-11-12** — Opened.

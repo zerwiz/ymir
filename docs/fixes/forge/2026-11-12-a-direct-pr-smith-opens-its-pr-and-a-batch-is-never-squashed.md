@@ -26,3 +26,7 @@ Tests: `bin/gates/tests/test_smith_pr_open.sh` and `bin/gates/tests/test_merge_m
 
 > [!NOTE]
 > GitHub's own merge button cannot be refused from here. The banner and the title are what the person pressing it sees.
+
+## CHANGE LOG
+
+- **2026-11-12** — Opened.

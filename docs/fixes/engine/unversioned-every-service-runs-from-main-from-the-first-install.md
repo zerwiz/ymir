@@ -85,3 +85,7 @@ A collaborator's pre-push ward `runtime-pinned` refused his push because `garmr-
 - `src/ymir_runtime/paths.py`
 - `src/ymir_runtime/identity.py`
 - `src/ymir_runtime/tests/test_paths.py`
+
+## CHANGE LOG
+
+- **2026-11-12** — Opened.
