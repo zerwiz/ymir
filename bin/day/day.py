@@ -145,6 +145,20 @@ def mail_fact() -> dict:
     }
 
 
+def log_fact() -> dict:
+    """Today's daily log against his list (plan 274): entries, those marked open, those not listed yet."""
+    todo = home() / "hodd/life/personal/me/todo.md"
+    try:
+        sys.path.insert(0, str(repo_root() / "bin" / "records"))
+        import comms  # noqa: PLC0415
+        text = todo.read_text(encoding="utf-8") if todo.is_file() else ""
+        j = comms.log_join(text)
+    except Exception as exc:
+        return {"unable": f"the comms door could not read the daily log ({exc.__class__.__name__})"}
+    j["source"] = "the daily log (hodd/memory/daily) and his list"
+    return j
+
+
 def role() -> str:
     for cand in (repo_root() / "bin/skuld/role.sh",):
         if cand.is_file():
@@ -250,7 +264,7 @@ def evidence_fact() -> dict:
 
 def render(as_json: bool, quiet: bool, carry: bool = False) -> int:
     open_acts, his_path = acts()
-    facts = {"mail": mail_fact(), "clock": clock_fact(), "calendar": calendar_fact(), "evidence": evidence_fact()}
+    facts = {"mail": mail_fact(), "log": log_fact(), "clock": clock_fact(), "calendar": calendar_fact(), "evidence": evidence_fact()}
     subject = os.environ.get("DAY_SUBJECT") or os.environ.get("USER") or "operator"
     if as_json:
         print(json.dumps({"as_of": now(), "subject": subject, "his_file": his_path,
@@ -284,6 +298,16 @@ def render(as_json: bool, quiet: bool, carry: bool = False) -> int:
         elif not quiet:
             for r in mail["recent"]:
                 print("    %s  %-18s %s" % (r["at"], r["from"][:18], r["subject"]))
+    print()
+    lg = facts["log"]
+    print("THE LOG · %s" % lg.get("source", ""))
+    if lg.get("unable"):
+        print("  " + unable(lg))
+    else:
+        print("  today's log: %d entries · %d marked open, %d of them not on your list yet"
+              % (lg["entries"], lg["open"], lg["not_listed"]))
+        if lg["not_listed"]:
+            print("    comms.sh todo-matches offers them; nothing is written without your yes")
     print()
     print("THE CLOCK · %s" % clock.get("source", ""))
     if "unable" in clock:

@@ -232,6 +232,90 @@ class TheTodo(unittest.TestCase):
         self.assertGreater(final.index(f"(item {nxt['id']})"), wait_at)
 
 
+class DayAndListJoined(unittest.TestCase):
+    """Plan 274: a log entry tagged open is offered to the list; a tick on the list is written to the log."""
+
+    LIST = """# The Allfather's day
+
+# His half — what only he can do
+
+## Today
+
+- [ ] **Book the train** to the city
+- [ ] **Read the draft** from the partner
+
+# The derived half — what the house measured
+
+- [ ] a measured line the house rewrites whole
+"""
+
+    def setUp(self):
+        self.daily = TMP / "hodd/memory/daily"
+        if self.daily.exists():
+            for f in self.daily.iterdir():
+                f.unlink()
+        self.daily.mkdir(parents=True, exist_ok=True)
+        seen = comms.todo_seen_path()
+        if seen.exists():
+            seen.unlink()
+        self.todo = TMP / "todo-274.md"
+        self.todo.write_text(self.LIST, encoding="utf-8")
+        (self.daily / "2026-11-12.md").write_text(
+            "# 2026-11-12 — the day's work\n\n"
+            "## 00:20 — seat\n- Calendar: the hold cannot be written; the grant needs one consent.\n- tags: open\n\n"
+            "## 00:30 — seat\n- The letters were rebuilt.\n- tags: letters\n\n"
+            "## 00:40 — seat\n- done: something already done (item abcdef12)\n- tags: todo, open\n\n",
+            encoding="utf-8")
+
+    def tearDown(self):
+        for f in self.daily.iterdir():
+            f.unlink()
+        seen = comms.todo_seen_path()
+        if seen.exists():
+            seen.unlink()
+
+    def _log_props(self):
+        return [p for p in comms.match_todo(self.todo.read_text(encoding="utf-8"), None, live=False) if p.get("log")]
+
+    def test_an_open_log_entry_is_offered_once_and_written_with_its_source(self):
+        props = self._log_props()
+        self.assertEqual(len(props), 1, props)
+        p = props[0]
+        self.assertEqual((p["kind"], p["section"], p["log"]), ("open", "Today", "2026-11-12T00:20"))
+        self.assertIn("Calendar", p["item"])
+        done = comms.apply([p["id"]], self.todo, live=False)
+        self.assertEqual([d["id"] for d in done], [p["id"]])
+        text = self.todo.read_text(encoding="utf-8")
+        self.assertIn(f"(item {p['id']} · log 2026-11-12T00:20)", text)
+        self.assertEqual(self._log_props(), [], "a second run proposes nothing")
+
+    def test_a_tick_is_logged_once_and_the_first_run_replays_nothing(self):
+        text = self.todo.read_text(encoding="utf-8")
+        self.assertEqual(comms.log_ticks(text), [], "the first run only remembers")
+        ticked = text.replace("- [ ] **Book the train**", "- [x] **Book the train**")
+        ticked = ticked.replace("- [ ] a measured line", "- [x] a measured line")
+        new = comms.log_ticks(ticked)
+        self.assertEqual([(b["title"], b["part"]) for b in new], [("Book the train", "his")],
+                         "his tick is logged; the derived half is not his act")
+        self.assertEqual(comms.log_ticks(ticked), [], "a second run logs nothing")
+        log = (self.daily / "2026-11-12.md").read_text(encoding="utf-8")
+        self.assertEqual(log.count("done: Book the train"), 1)
+        self.assertIn("- tags: todo", log)
+
+    def test_a_tick_another_machine_logged_is_not_logged_again(self):
+        text = self.todo.read_text(encoding="utf-8")
+        comms.log_ticks(text)
+        key = [b for b in comms._checkboxes(text) if b["title"] == "Read the draft"][0]["key"]
+        with (self.daily / "2026-11-12.md").open("a", encoding="utf-8") as fh:
+            fh.write(f"## 00:50 — todo\n- done: Read the draft — ticked by him (item {key})\n- tags: todo\n\n")
+        ticked = text.replace("- [ ] **Read the draft**", "- [x] **Read the draft**")
+        self.assertEqual(comms.log_ticks(ticked), [])
+
+    def test_the_day_counts_the_join(self):
+        j = comms.log_join(self.todo.read_text(encoding="utf-8"))
+        self.assertEqual((j["day"], j["entries"], j["open"], j["not_listed"]), ("2026-11-12", 3, 1, 1))
+
+
 class OwedConversations(unittest.TestCase):
     """2026-11-12, his word: the to-do must know what mail he owes, and stop owing it once answered."""
 

@@ -106,7 +106,34 @@ python3 bin/mail/gna_import.py --account <your address> --rejudge             # 
 The store is append-only, so the re-judge appends new rows and the newest row of each message counts. `bin/day/day.sh`
 now says *you owe a reply in N conversations*, using the same rule.
 
+## The daily log and your list, joined
+
+The house keeps two records of your day: the **daily log** (`hodd/memory/daily/<date>.md`, written by
+`bin/records/daily-log.sh`), which says what was done, and your **to-do list**, which says what is still to do. They
+are now joined both ways.
+
+- **Log to list.** A log entry tagged `open` (or `todo`) from the last three days is offered by
+  `comms.sh todo-matches` as an *open* line under *Today*, with the log entry as its evidence. It is written only when
+  you say yes (`comms.sh todo-apply <id>`), and the line ends with `· log <date>T<time>` so you can find the entry.
+- **List to log.** A line you tick, in your own half or the house-kept half, is written to today's log once as
+  `done: <the line> (item <id>)`, tagged `todo`. The house finds your ticks by comparing the list with what it saw
+  last time (`hodd/memory/comms/todo-seen.json`). The first run only remembers what is already ticked. A tick another
+  machine has already logged is not logged again. The derived half is not counted, because the house rewrites it.
+- **The day says both.** `bin/day/day.sh` prints *today's log: N entries · M marked open, K of them not on your list
+  yet*.
+
+```bash
+bash bin/records/daily-log.sh add "the calendar grant needs one consent" --tag open   # an open entry
+bash bin/records/comms.sh todo-matches          # offers it; also writes new ticks to the log
+bash bin/records/comms.sh todo-matches --no-log # offers only, writes nothing
+bash bin/records/comms.sh log-ticks             # only write new ticks to the log
+bash bin/records/comms.sh log-join              # today's counts
+```
+
+Your list is only read here. A tick is read from it, never made in it.
+
 ## CHANGE LOG
 
 - **2026-11-12** — Written, and carried into main by the gathered batch; from here appended, never rewritten.
 - **2026-11-12 (later)** — Appended: owed is counted per conversation; send and close proposals; the re-judge.
+- **2026-11-12 (evening)** — Appended: the daily log and the list joined (plan 274).

@@ -452,7 +452,8 @@ def match_todo(todo_text: str, todo_file: Path | None = None, days: float = 3,
                live: bool = True) -> list[dict]:
     """Proposals, each with its evidence. Kinds: tick (an open item of his a message has answered) ·
     open (a conversation that needs his answer and has no item) · send (a draft waiting in Gmail) ·
-    wait (a question he sent, unanswered) · close (a house-kept line he has since answered)."""
+    wait (a question he sent, unanswered) · close (a house-kept line he has since answered) ·
+    open from the daily log (an entry tagged open, plan 274)."""
     mails = mail_rows()
     idx = person_index(mails)
     done = house_notes(todo_text)
@@ -479,6 +480,7 @@ def match_todo(todo_text: str, todo_file: Path | None = None, days: float = 3,
     proposals += _sends(drafts, todo_text)
     proposals += _waits(mails, todo_text, days)
     proposals += _closes(mails, todo_text, drafts)
+    proposals += _log_opens(todo_text)
     return proposals
 
 
@@ -733,7 +735,7 @@ def _sends(drafts, todo_text):
 
 
 HOUSE_LINE = re.compile(r"^- \[ \] (\d{4}-\d{2}-\d{2}) · (.*)\(item ([0-9a-f]{8})"
-                        r"(?: · (thread|draft) ([^)\s]+))?\)\s*$")
+                        r"(?: · (thread|draft|log) ([^)\s]+))?\)\s*$")
 
 
 def _closes(mails, todo_text, drafts):
@@ -806,6 +808,140 @@ def _waits(mails, todo_text, days):
     return out
 
 
+# ── plan 274 · the daily log and the list, joined ───────────────────────────
+
+
+def daily_dir() -> Path:
+    """The daily log's shelf — the one `bin/records/daily-log.sh` writes (DAILY_LOG_DIR overrides)."""
+    env = os.environ.get("DAILY_LOG_DIR")
+    return Path(env) if env else home() / "hodd" / "memory" / "daily"
+
+
+LOG_HEAD = re.compile(r"^## (\d{2}:\d{2}) — (.+?)\s*$")
+OPEN_TAGS = {"open", "todo"}
+LOG_DAYS = 3          # how far back an open log entry is still offered to the list
+
+
+def log_entries(day: str) -> list[dict]:
+    """The entries of one day's log: a `## HH:MM — actor` head, its `- ` lines, and `- tags:`."""
+    f = daily_dir() / f"{day}.md"
+    if not f.is_file():
+        return []
+    out, cur = [], None
+    for line in f.read_text(encoding="utf-8", errors="replace").splitlines():
+        m = LOG_HEAD.match(line)
+        if m:
+            cur = {"day": day, "at": m.group(1), "actor": m.group(2), "lines": [], "tags": set()}
+            out.append(cur)
+        elif cur is not None and line.startswith("- tags:"):
+            cur["tags"] |= {t.strip().lower() for t in line[7:].split(",") if t.strip()}
+        elif cur is not None and line.startswith("- "):
+            cur["lines"].append(line[2:].strip())
+    for e in out:
+        e["text"] = " ".join(e["lines"]).strip()
+    return [e for e in out if e["text"]]
+
+
+def _log_days(n: int) -> list[str]:
+    return [(now() - dt.timedelta(days=i)).strftime("%Y-%m-%d") for i in range(n)]
+
+
+def _log_opens(todo_text: str) -> list[dict]:
+    """A log entry tagged open (or todo) that is not on the list yet: offered, never written."""
+    out = []
+    for day in _log_days(LOG_DAYS):
+        for e in log_entries(day):
+            if not (e["tags"] & OPEN_TAGS) or e["text"].lower().startswith("done:"):
+                continue
+            pid = hashlib.sha256(("log" + day + e["at"] + e["text"]).encode()).hexdigest()[:8]
+            if f"(item {pid}" in todo_text:
+                continue
+            first = re.split(r"(?<=[.;])\s", e["text"], maxsplit=1)[0]
+            out.append({"id": pid, "kind": "open", "section": "Today",
+                        "item": first[:110].rstrip(" .;:"), "confidence": "high",
+                        "evidence": f"the daily log, {day} {e['at']} ({e['actor']})",
+                        "refs": [f"{day}T{e['at']}"], "log": f"{day}T{e['at']}", "subject": ""})
+    return out
+
+
+def todo_seen_path() -> Path:
+    return comms_dir() / "todo-seen.json"
+
+
+def _checkboxes(todo_text: str) -> list[dict]:
+    """Every checkbox in his half and the house-kept half (the derived half is the house's
+    measurement, rewritten whole, so a tick there is not an act). Keyed by the item id a line
+    carries, or by its title's hash."""
+    out, part = [], "his"
+    lines = todo_text.splitlines()
+    for n, line in enumerate(lines, 1):
+        if line.startswith("# The derived half"):
+            part = "derived"
+        elif line.startswith(HOUSE_MARK):
+            part = "house"
+        elif line.startswith("# His half"):
+            part = "his"
+        m = ITEM.match(line)
+        if not m or part == "derived":
+            continue
+        text = m.group(2)
+        own = re.search(r"\(item ([0-9a-f]{8})", text)
+        b = BOLD.search(text)
+        title = (b.group(1) if b else re.sub(r"\s*\(item [^)]*\).*$", "", text)[:100]).strip()
+        key = own.group(1) if own else hashlib.sha256(title.encode()).hexdigest()[:8]
+        out.append({"key": key, "checked": m.group(1).lower() == "x", "title": title, "part": part})
+    return out
+
+
+def _log_add(text: str, tags: str, actor: str = "todo") -> None:
+    """Append one entry in the daily log's own format (append-only, Rule 06)."""
+    d = daily_dir()
+    d.mkdir(parents=True, exist_ok=True)
+    t = now()
+    f = d / f"{t.strftime('%Y-%m-%d')}.md"
+    if not f.exists():
+        f.write_text(f"# {t.strftime('%Y-%m-%d')} — the day's work\n\n", encoding="utf-8")
+    with f.open("a", encoding="utf-8") as fh:
+        fh.write(f"## {t.strftime('%H:%M')} — {actor}\n- {text}\n- tags: {tags}\n\n")
+
+
+def log_ticks(todo_text: str) -> list[dict]:
+    """A line ticked since the house last looked — by him in his editor, or by todo-apply — is
+    written to today's log as one `done:` entry. The first run only remembers what is ticked
+    already, so the past is not replayed into today."""
+    boxes = _checkboxes(todo_text)
+    ticked = {b["key"]: b for b in boxes if b["checked"]}
+    path = todo_seen_path()
+    try:
+        seen = set(json.loads(path.read_text(encoding="utf-8")).get("ticked", []))
+        first = False
+    except (OSError, ValueError):
+        seen, first = set(), True
+    new = [] if first else [b for k, b in ticked.items() if k not in seen]
+    # the log itself is the second guard: another machine of the fleet may have logged this tick
+    # already and synced it through the home before this one's seen-state caught up
+    logged = {m for day in _log_days(LOG_DAYS) for e in log_entries(day) if e["text"].startswith("done:")
+              for m in re.findall(r"\(item ([0-9a-f]{8})\)", e["text"])}
+    new = [b for b in new if b["key"] not in logged]
+    for b in new:
+        who = "by him" if b["part"] == "his" else "in the house-kept half"
+        _log_add(f"done: {b['title'][:140]} — ticked {who} (item {b['key']})", "todo")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({"ticked": sorted(set(ticked) | (seen & set(ticked))),
+                                "as_of": now().isoformat(timespec="seconds")}, indent=1), encoding="utf-8")
+    return new
+
+
+def log_join(todo_text: str) -> dict:
+    """Today's log against the list: entries, those marked open, and those not on the list yet."""
+    today = now().strftime("%Y-%m-%d")
+    es = log_entries(today)
+    opens = [e for e in es if e["tags"] & OPEN_TAGS and not e["text"].lower().startswith("done:")]
+    return {"entries": len(es), "open": len(opens),
+            "not_listed": sum(1 for p in _log_opens(todo_text) if p["log"].startswith(today)),
+            "day": today}
+
+
 HOUSE_HALF = f"""
 
 ---
@@ -843,7 +979,8 @@ def apply(ids: list[str], todo_file: Path, live: bool = True, days: float = 14) 
         elif p["kind"] == "close":
             text = _close_line(text, p["closes"], f"{day} · {p['evidence']}")
         elif p["kind"] in ("open", "send"):
-            tag = f" · thread {p['thread']}" if p.get("thread") else (f" · draft {p['draft']}" if p.get("draft") else "")
+            tag = (f" · thread {p['thread']}" if p.get("thread") else f" · draft {p['draft']}" if p.get("draft")
+                   else f" · log {p['log']}" if p.get("log") else "")
             line = f"- [ ] {day} · {p['item']} — {p['evidence']} (item {p['id']}{tag})"
             text = _insert_under(text, p["section"], line)
         else:
@@ -964,6 +1101,11 @@ def main(argv=None) -> int:
     tm.add_argument("--days", type=float, default=14)
     tm.add_argument("--offline", action="store_true")
     tm.add_argument("--json", action="store_true")
+    tm.add_argument("--no-log", action="store_true", help="do not write new ticks to the daily log")
+    lt = sub.add_parser("log-ticks")
+    lt.add_argument("--todo")
+    lj = sub.add_parser("log-join")
+    lj.add_argument("--todo")
     ta = sub.add_parser("todo-apply")
     ta.add_argument("ids", nargs="+")
     ta.add_argument("--todo")
@@ -995,12 +1137,16 @@ def main(argv=None) -> int:
         return 0
     if a.cmd == "todo-matches":
         tp = Path(a.todo) if a.todo else todo_path()
-        props = match_todo(tp.read_text(encoding="utf-8"), tp, a.days, live=not a.offline)
+        text = tp.read_text(encoding="utf-8")
+        ticks = [] if a.no_log else log_ticks(text)
+        props = match_todo(text, tp, a.days, live=not a.offline)
         if a.json:
             print(json.dumps(props, ensure_ascii=False, indent=1))
         else:
             print(toon("todo_proposals", ["id", "kind", "section", "item", "confidence", "evidence"], props))
             print("help: nothing is written without his yes — comms.sh todo-apply <id>...")
+            if ticks:
+                print(toon("logged_ticks", ["key", "part", "title"], ticks))
         return 0
     if a.cmd == "todo-apply":
         tp = Path(a.todo) if a.todo else todo_path()
@@ -1010,6 +1156,14 @@ def main(argv=None) -> int:
         if missing:
             print(f"help: not proposed now, so not written: {' '.join(missing)}")
         return 0 if done else 1
+    if a.cmd == "log-ticks":
+        tp = Path(a.todo) if a.todo else todo_path()
+        print(toon("logged_ticks", ["key", "part", "title"], log_ticks(tp.read_text(encoding="utf-8"))))
+        return 0
+    if a.cmd == "log-join":
+        tp = Path(a.todo) if a.todo else todo_path()
+        print(toon("log_join", ["day", "entries", "open", "not_listed"], [log_join(tp.read_text(encoding="utf-8"))]))
+        return 0
     if a.cmd == "brief":
         sys.stdout.write(brief(a.hours))
         return 0
