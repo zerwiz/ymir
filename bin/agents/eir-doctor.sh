@@ -896,7 +896,7 @@ detail() { # <name> -> the command that prints one short fact
     hoard)     printf '%s\n' "printf 'hoard %s' \"\$(_hoard_root)\" ; [ -d \"\$YMIR_HOME/identity\" ] && printf ' +flat-duplicate' ; printf '\n'" ;;
     autoboot)  printf '%s\n' "$SCRIPT_DIR/../engine/ymir-autoboot.sh verify >/dev/null 2>&1 && echo 'boot proven' || echo 'boot gap — bin/engine/ymir-autoboot.sh verify'" ;;
     seatpaths) printf '%s\n' "printf '%s' \"$(seat_profile)\" ; grep -qF \"$HOME/.bun/bin\" \"$(seat_profile)\" 2>/dev/null && printf ' carries the marked block' || printf ' does not carry ~/.bun/bin — a unit or validator will not find bun'" ;;
-    hooks)     printf '%s\n' "printf 'installed hooks' ; [ -x \"$(cd "$ROOT" && git rev-parse --git-path hooks 2>/dev/null || printf '.git/hooks')/pre-commit\" ] && printf ' present' || printf ' MISSING — a guarded deletion and a staged secret would both pass'" ;;
+    hooks)     printf '%s\n' "printf 'installed hooks' ; _hk=\"$(cd "$ROOT" && git rev-parse --git-path hooks 2>/dev/null || printf '.git/hooks')\"; case \"\$_hk\" in /*) ;; *) _hk=\"$ROOT/\$_hk\" ;; esac; [ -x \"\$_hk/pre-commit\" ] && printf ' present' || printf ' MISSING — a guarded deletion and a staged secret would both pass'" ;;
     seats)     printf '%s\n' seats_detail ;;
     seatreap)  printf '%s\n' "printf 'a finished-idle seat kept past a day' ; for f in $STATE/.*.idle-since $ROOT/state/.*.idle-since; do [ -f \$f ] && echo \$(basename \$f); done" ;;
     packaging) printf '%s\n' "bash \"$SCRIPT_DIR/../gates/guards/packaging-guard.sh\" check 2>&1 | grep -o 'the File directive names a file that does not exist: [^)]*' | head -1 || printf 'every named input exists'" ;;

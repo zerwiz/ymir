@@ -161,6 +161,18 @@ cmd_ensure() {
     *) shift ;;
   esac; done
   need_herdr
+  # the pin is what every app and service runs: a judge never sits in it (plan 275, 2026-11-12)
+  local _pin_real; _pin_real="$(readlink -f "${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}" 2>/dev/null)"
+  if [ -n "$_pin_real" ] && [ "$(readlink -f "$clone" 2>/dev/null)" = "$_pin_real" ]; then
+    printf 'review-seat: %s is the pinned runtime — the judge uses its own clone (%s) instead\n' "$clone" "$HOME/review/ymir" >&2
+    clone="$HOME/review/ymir"
+  fi
+  # the judge's clone is made when it is missing, from the same remote the pin follows — the feature works on a new seat
+  if [ ! -d "$clone/.git" ]; then
+    local _url; _url="$(git -C "$ROOT" remote get-url origin 2>/dev/null)"
+    [ -n "$_url" ] && mkdir -p "$(dirname "$clone")" && git clone -q "$_url" "$clone" 2>/dev/null \
+      && printf 'review-seat: made the judge its own clone at %s\n' "$clone" >&2
+  fi
   [ -d "$clone" ] || refuse "no review clone at $clone — a judge reviews a CLONE of the delivered commit, never a smith's worktree (git clone <remote> $clone)"
   local pane; pane="$(seat_pane "$clone")"
   if [ -n "$pane" ]; then

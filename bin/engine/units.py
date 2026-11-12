@@ -237,13 +237,13 @@ def names_ymir(text: str) -> bool:
 
 # ── rendering ────────────────────────────────────────────────────────────────
 def substitute(value: str, pin: Path, vars_: dict[str, str]) -> str:
-    value = value.replace("@ROOT@", str(pin))
+    value = value.replace("@ROOT@", str(pin)).replace("@HOME@", os.path.expanduser("~"))
 
     def sub(m: re.Match) -> str:
         name = m.group(1)
         if name not in vars_:
             raise KeyError(name)
-        return str(vars_[name]).replace("@ROOT@", str(pin))
+        return str(vars_[name]).replace("@ROOT@", str(pin)).replace("@HOME@", os.path.expanduser("~"))
     return re.sub(r"\$\{([A-Z][A-Z0-9_]*)\}", sub, value)
 
 

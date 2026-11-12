@@ -103,7 +103,9 @@ units:
     description: "review-seat keeper — ensure the reviewer's herdr seat exists (idempotent)"
     workdir: "${CLONE}"
     exec: "/usr/bin/env bash bin/forge/review-seat.sh ensure --clone ${CLONE}${PRIMARY}"
-    vars: { CLONE: "@ROOT@", PRIMARY: "" }
+    # plan 275 (2026-11-12): the judge's OWN clone, never the pin — with @ROOT@ every 5-minute run hid the pin's
+    # .pi/extensions (tracked files), so the pin read dirty and the next update would have refused it
+    vars: { CLONE: "@HOME@/review/ymir", PRIMARY: "" }
     timer: { description: "review-seat keeper — every 5 minutes", boot: 2min, every: 5min, accuracy: 20s }
 
   - name: review-loop

@@ -143,6 +143,8 @@ build() {
     ( cd "$tmp/apps/sessrumnir" && npm run build ) || exit 16
     ( cd "$tmp/apps/sessrumnir" && npx --no-install electron-builder install-app-deps ) || exit 17
     ( cd "$tmp/apps/bilskirnir" && npm run build -w web ) || exit 18
+    # the house's git guards, as the installer seats them in a working tree (Eir judges the pin's hooks too)
+    for h in "$tmp"/.githooks/*; do [ -f "$h" ] && install -m 755 "$h" "$tmp/.git/hooks/$(basename "$h")"; done
     link_shared "$tmp"
   ) > "$log" 2>&1
   local rc=$?
