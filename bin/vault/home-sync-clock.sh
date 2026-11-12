@@ -38,7 +38,7 @@ rec=$(git status --porcelain | grep -v '^??' | awk '{print $2}' | grep -E '^(hod
 other=$(git status --porcelain | grep -v '^??' | awk '{print $2}' | grep -vE '^(hodd/memory/runes_audit\.md|hodd/rooms/.*\.jsonl|hodd/memory/daily/.*\.md)$')
 if [ -n "$rec" ] && [ -z "$other" ] && [ "$DRY" = 0 ]; then
   printf '%s\n' "$rec" | xargs -r git add -- 2>/dev/null
-  git -c user.name="home-sync-clock" -c user.email="clock@ymir.local" commit -q -m "records: the runes and the room files, by the clock" 2>/dev/null || true
+  git -c user.name="home-sync-clock" -c user.email="home-sync-clock@ymir" commit -q -m "records: the runes and the room files, by the clock" 2>/dev/null || true
 fi
 git fetch -q origin 2>/dev/null || { printf 'home-sync-clock: fetch failed\n' >&2; exit 1; }
 behind=$(git rev-list --count HEAD..origin/main 2>/dev/null)
