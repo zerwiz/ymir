@@ -10,3 +10,7 @@ Now the hold reads the seat and charter from the roster (the same row the holder
 - `bin/voice/rodd-helm.sh`
 - `bin/voice/tests/test_rodd_arm.sh`
 - `bin/voice/tests/test_rodd_helm.sh`
+
+## CHANGE LOG
+
+- **2026-11-12** — Opened: the hold names the seat and charter, and the helm check reads the sidecar.
