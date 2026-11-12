@@ -314,11 +314,12 @@ if [ -n "$HALL_DIR" ] && [ -d "$HALL_DIR" ]; then
   else
     # A packaged app ships a BUILD (odrerir's tarball carries dist/, and vite is
     # hoisted by the workspace-root install — the P3 law). Serve the build where
+      # plan 275 (2026-11-12): no bare --host — it bound the page to EVERY interface (RULES/24); the app config binds loopback
     # there is one; develop where there is not.
     if [ -d "$HALL_DIR/dist" ]; then
-      ymir_detach bash -c "cd '$HALL_DIR' && exec npx --no-install vite preview --port '$HALL_PORT' --host" >"$HALL_LOG" 2>&1
+      ymir_detach bash -c "cd '$HALL_DIR' && exec npx --no-install vite preview --port '$HALL_PORT'" >"$HALL_LOG" 2>&1
     else
-      ymir_detach bash -c "cd '$HALL_DIR' && exec npm run dev -- --port '$HALL_PORT' --host" >"$HALL_LOG" 2>&1
+      ymir_detach bash -c "cd '$HALL_DIR' && exec npm run dev -- --port '$HALL_PORT'" >"$HALL_LOG" 2>&1
     fi
     echo $! > "$HALL_PID_FILE"
     _hall_up=0
@@ -357,9 +358,9 @@ fi
 # hall never answers on the port every other door expects. A packaged install
 # ships ./dist, so it is served; a clone gets the dev server — both on $PORT.
 if [ -d "$APP/dist" ]; then
-  ymir_detach bash -c "cd '$APP' && exec npx --no-install vite preview --port '$PORT' --strictPort --host" >"$LOG" 2>&1
+  ymir_detach bash -c "cd '$APP' && exec npx --no-install vite preview --port '$PORT' --strictPort" >"$LOG" 2>&1
 else
-  ymir_detach bash -c "cd '$APP' && exec npm run dev -- --port '$PORT' --strictPort --host" >"$LOG" 2>&1
+  ymir_detach bash -c "cd '$APP' && exec npm run dev -- --port '$PORT' --strictPort" >"$LOG" 2>&1
 fi
 PID=$!
 echo "$PID" > "$PID_FILE"
