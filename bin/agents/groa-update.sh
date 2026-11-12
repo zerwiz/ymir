@@ -263,8 +263,12 @@ fi
 # and have common updates of Ymir when Gróa updates"). After the fast-forward its setup door renders the
 # agent's soul from the home, rewrites the managed .env block, and reinstalls dependencies only when the
 # lock file moved — so a running hall keeps its floor. A failed setup is named, never silent.
-if [ -x "$ROOT/apps/bilskirnir/setup.sh" ]; then
-  if gstep bilskirnir 240 "$ROOT/apps/bilskirnir/setup.sh" >/dev/null 2>&1; then
+# plan 275 (2026-11-12): the apps are set up in the tree the icons RUN — the pin (a release once adopted) — never in
+# the tree Gróa happens to run from: run by hand from ~/ymir she installed Bilskirnir and Electron into the working
+# tree, and the pin every icon opens got none of it.
+APPROOT="$ROOT"; _pin="${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}"; [ -d "$_pin/apps" ] && APPROOT="$(readlink -f "$_pin")"
+if [ -x "$APPROOT/apps/bilskirnir/setup.sh" ]; then
+  if gstep bilskirnir 240 "$APPROOT/apps/bilskirnir/setup.sh" >/dev/null 2>&1; then
     printf 'bilskirnir: refreshed from the home (apps/bilskirnir/setup.sh)\n'
   else
     printf 'bilskirnir: setup did not finish — run apps/bilskirnir/setup.sh and read its lines\n'
@@ -309,7 +313,7 @@ fi
 # ensure door lands it from the machine's own cache, or from the network behind a mirror.
 # Never fatal, never silent: it prints a line and Eir judges the result below.
 if [ -x "$SCRIPT_DIR/../desktop/electron-ensure.sh" ]; then
-  if eo="$(gstep electron 180 "$SCRIPT_DIR/../desktop/electron-ensure.sh" ensure --root "$ROOT" --quiet 2>&1)"; then
+  if eo="$(gstep electron 180 "$SCRIPT_DIR/../desktop/electron-ensure.sh" ensure --root "${APPROOT:-$ROOT}" --quiet 2>&1)"; then
     printf 'electron: every installed surface answers --version\n'
   else
     printf 'electron: NOT mended — %s\n' "$(printf '%s' "$eo" | grep -m1 '"FAIL"' || printf 'see bin/desktop/electron-ensure.sh status')"
