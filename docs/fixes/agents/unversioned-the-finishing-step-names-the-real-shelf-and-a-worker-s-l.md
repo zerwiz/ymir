@@ -10,3 +10,7 @@ eindri-acclaim.sh claimed it had filed state/eindri-reports/<id>.md with a path 
 - `bin/records/todos.sh`
 - `bin/seat/ymir-mcp.py`
 - `bin/seat/tests/test_everything_up.sh`
+
+## CHANGE LOG
+
+- 2026-11-12 — filed with the errand `everything-up`.

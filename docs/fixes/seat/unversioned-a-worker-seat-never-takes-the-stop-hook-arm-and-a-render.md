@@ -8,3 +8,7 @@ The repo's .claude/hooks/ymir-arm.sh (the source the installer seats) lacked the
 - `bin/gates/checks/claude-stop-arm.sh`
 - `bin/seat/valknut-load.sh`
 - `bin/seat/tests/test_everything_up.sh`
+
+## CHANGE LOG
+
+- 2026-11-12 — filed with the errand `everything-up`.

@@ -389,11 +389,14 @@ fi
 config_out() {  # <rendered-json-or-text> <target>
   local ex=$1 out=$2
   [ -r "$ex" ] || { printf 'absent'; return 0; }
-  python3 - "$ex" "$out" "${YMIR_HOME_RESOLVED:-$HOME/Documents/ymirhome}" "$ROOT" <<'PY'
+  python3 - "$ex" "$out" "${YMIR_HOME_RESOLVED:-}" "$ROOT" <<'PY'
 import json, os, sys
 
 ex, out, home, root = sys.argv[1:5]
-raw = open(ex).read().replace("__YMIR_HOME__", home).replace("__YMIR_ROOT__", root)
+raw = open(ex).read().replace("__YMIR_ROOT__", root)
+# An unresolved home leaves the placeholder visible rather than guessing a path (never $HOME).
+if home:
+    raw = raw.replace("__YMIR_HOME__", home)
 
 def write(text):
     with open(out, "w") as fh:
