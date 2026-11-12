@@ -121,7 +121,7 @@ textarea { resize: vertical; min-height: 64px; line-height: 1.5; }
   gap: 6px;
   font-size: 12.5px;
   color: var(--dim);
-  background: rgba(19, 26, 38, 0.5);
+  background: rgba(26, 22, 16, 0.5);
   border: 1px solid var(--border-soft);
   border-radius: 8px;
   padding: 7px 9px;

@@ -183,7 +183,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   justify-content: space-between;
   padding: 14px 24px;
   border-bottom: 1px solid var(--border-soft);
-  background: rgba(11, 15, 24, 0.5);
+  background: rgba(21, 18, 9, 0.5);
   flex: none;
 }
 .head-left { display: flex; align-items: baseline; gap: 12px; }
@@ -307,7 +307,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
   color: var(--dim);
 }
 .pick-item:hover { background: var(--panel-2); color: var(--text); }
-.pick-item.active { background: rgba(108, 182, 255, 0.1); color: var(--text); }
+.pick-item.active { background: rgba(236, 166, 84, 0.1); color: var(--text); }
 .pick-item-id { font-family: var(--mono); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pick-item-meta { font-size: 11px; color: var(--faint); flex: none; }
 .pick-del {

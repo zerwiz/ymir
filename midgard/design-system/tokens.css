@@ -49,11 +49,11 @@
   --ymir-house-ymirlabs: #c9973f; /* bronze — the platform's own house wears the forge accent (was blue) */
   --ymir-house-brokkforge: #f59e0b;
   --ymir-house-runestone: #f43f5e;
-  --ymir-house-muninn: #8b5cf6;
-  --ymir-house-dvalin: #94a3b8;
-  --ymir-house-utgard: #d946ef;
+  --ymir-house-muninn: #96a0a8;
+  --ymir-house-dvalin: #9a8f75;
+  --ymir-house-utgard: #c2584a;
   --ymir-house-askr: #34d399;
-  --ymir-house-mannheim: #64748b;
+  --ymir-house-mannheim: #6b6250;
 
   /* --- Type: the cloth's three faces --------------------------- */
   /* Runic glyphs fall through to Noto Sans Runic inside every stack, so a rune

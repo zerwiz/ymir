@@ -15,11 +15,11 @@ export function Emblem({ size = 34 }: { size?: number }) {
     >
       <defs>
         <linearGradient id="ymir-anvil" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#475569" />
-          <stop offset="1" stopColor="#1e293b" />
+          <stop offset="0" stopColor="#6b6250" />
+          <stop offset="1" stopColor="#2b241a" />
         </linearGradient>
         <linearGradient id="ymir-rune" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#7dd3fc" />
+          <stop offset="0" stopColor="#eca654" />
           <stop offset="1" stopColor="#c9973f" />
         </linearGradient>
       </defs>
@@ -27,10 +27,10 @@ export function Emblem({ size = 34 }: { size?: number }) {
       <path
         d="M10 34h28l-3 5H13l-3-5Z"
         fill="url(#ymir-anvil)"
-        stroke="#334155"
+        stroke="#2b241a"
         strokeWidth="1.5"
       />
-      <path d="M6 30h36v4H6z" fill="url(#ymir-anvil)" stroke="#334155" strokeWidth="1.5" />
+      <path d="M6 30h36v4H6z" fill="url(#ymir-anvil)" stroke="#2b241a" strokeWidth="1.5" />
       {/* Algiz — the branching worker stems */}
       <g
         fill="none"

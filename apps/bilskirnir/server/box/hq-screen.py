@@ -554,7 +554,7 @@ def do_undress(n, bot_id):
     except OSError:
         pass
     if shutil.which('xsetroot') and hqlib.geometry(n):
-        hqlib.run(['xsetroot', '-solid', '#eceef1'], env=hqlib.base_env(n), timeout=5)
+        hqlib.run(['xsetroot', '-solid', '#f0e6cd'], env=hqlib.base_env(n), timeout=5)
     for old in glob.glob(folder + '/wall-*.png'):
         try:
             os.unlink(old)

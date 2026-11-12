@@ -36,10 +36,10 @@ function theme(): ITheme {
     cursorAccent: bg,
     selectionBackground: v('--ember', '#e68e0d') + '44',
     black: '#1b1b1f', red: '#e06c75', green: '#98c379', yellow: '#e5c07b',
-    blue: '#61afef', magenta: '#c678dd', cyan: '#56b6c2', white: '#dcdfe4',
+    blue: '#96a0a8', magenta: '#c9973f', cyan: '#cfc3a9', white: '#dcdfe4',
     brightBlack: '#5c6370', brightRed: '#ef7b85', brightGreen: '#a9d17f',
-    brightYellow: '#f0cd8c', brightBlue: '#7cc0f5', brightMagenta: '#d79ae8',
-    brightCyan: '#6fc8d4', brightWhite: '#ffffff',
+    brightYellow: '#f0cd8c', brightBlue: '#96a0a8', brightMagenta: '#eca654',
+    brightCyan: '#f0e6cd', brightWhite: '#ffffff',
   };
 }
 

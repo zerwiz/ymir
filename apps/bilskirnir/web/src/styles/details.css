@@ -85,7 +85,7 @@
   font-family: var(--font-mono-stack); font-size: 12px; line-height: 18px; color: var(--color-ink); text-overflow: ellipsis;
 }
 .engine__model::placeholder { color: var(--color-text-quaternary); }
-.engine__model:focus { outline: none; border-color: var(--color-border-focus); box-shadow: 0 0 0 3px #1E86FC22; }
+.engine__model:focus { outline: none; border-color: var(--color-border-focus); box-shadow: 0 0 0 3px #C9973F22; }
 .engine__actions { display: flex; align-items: center; gap: 6px; padding: 6px 4px 6px 8px; }
 .engine__actions .btn { height: 28px; padding: 4px 14px; }
 .engine__actions .btn:disabled { opacity: 0.45; cursor: default; }

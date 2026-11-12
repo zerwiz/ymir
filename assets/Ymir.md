@@ -763,7 +763,7 @@ export const OmniChatDrawer: React.FC = () => {
 
       <div className="flex-1 p-3 overflow-y-auto space-y-3">
         {messages.map((m, i) => (
-          <div key={i} className={`p-2.5 rounded-lg text-sm ${m.sender === 'You' ? 'bg-indigo-600 text-white ml-auto max-w-[80%]' : 'bg-slate-800 text-slate-200 mr-auto max-w-[80%]'}`}>
+          <div key={i} className={`p-2.5 rounded-lg text-sm ${m.sender === 'You' ? 'bg-amber-600 text-white ml-auto max-w-[80%]' : 'bg-slate-800 text-slate-200 mr-auto max-w-[80%]'}`}>
             <span className="text-[10px] opacity-60 block font-bold">{m.sender}</span>
             {m.text}
           </div>
@@ -773,13 +773,13 @@ export const OmniChatDrawer: React.FC = () => {
       <div className="p-2 border-t border-slate-800 flex gap-2 bg-slate-900">
         <input 
           type="text" 
-          className="flex-1 bg-slate-800 rounded px-3 py-1.5 text-sm outline-none text-white focus:ring-1 focus:ring-indigo-500" 
+          className="flex-1 bg-slate-800 rounded px-3 py-1.5 text-sm outline-none text-white focus:ring-1 focus:ring-amber-500" 
           placeholder="Issue command..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
         />
-        <button onClick={handleSend} className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 rounded text-sm font-semibold text-white">Send</button>
+        <button onClick={handleSend} className="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 rounded text-sm font-semibold text-white">Send</button>
       </div>
     </div>
   );
@@ -1318,12 +1318,12 @@ export const OmniDashboard: React.FC = () => {
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6 flex flex-col gap-6">
       <header className="flex justify-between items-center border-b border-slate-800 pb-4">
         <div>
-          <h1 className="text-2xl font-bold text-indigo-400">⚡ COMMANDO CENTRAL HQ</h1>
+          <h1 className="text-2xl font-bold text-amber-400">⚡ COMMANDO CENTRAL HQ</h1>
           <p className="text-xs text-slate-400">Single-Operator Autonomous Agency Engine</p>
         </div>
         <div className="flex gap-2">
           <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs rounded-full font-mono">Telegram Sync: Active</span>
-          <span className="px-3 py-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-xs rounded-full font-mono">Cron Daemon: Running</span>
+          <span className="px-3 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs rounded-full font-mono">Cron Daemon: Running</span>
         </div>
       </header>
 
@@ -1334,7 +1334,7 @@ export const OmniDashboard: React.FC = () => {
           {fleet.map((agent, i) => (
             <div key={i} className="bg-slate-900 border border-slate-800 p-4 rounded-xl">
               <div className="flex justify-between items-center mb-2">
-                <span className="font-mono text-sm font-bold text-indigo-300">{agent.role}</span>
+                <span className="font-mono text-sm font-bold text-amber-300">{agent.role}</span>
                 <span className="text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono">{agent.status}</span>
               </div>
               <p className="text-xs font-mono text-slate-400">Branch: {agent.branch}</p>
@@ -1743,7 +1743,7 @@ export const TenantSelector: React.FC<{ onTenantChange: (id: string) => void }> 
       <select
         value={selectedTenant}
         onChange={(e) => handleChange(e.target.value)}
-        className="bg-slate-800 text-indigo-300 font-mono text-sm border border-slate-700 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-indigo-500"
+        className="bg-slate-800 text-amber-300 font-mono text-sm border border-slate-700 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-amber-500"
       >
         {tenants.map((t) => (
           <option key={t} value={t}>
@@ -1951,8 +1951,8 @@ export const InterAgentNetworkView: React.FC = () => {
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 text-white">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-bold text-indigo-400">🌐 Inter-Agent Communication Network</h2>
-        <span className="text-xs font-mono bg-indigo-500/10 text-indigo-300 px-2.5 py-1 rounded-full border border-indigo-500/20">
+        <h2 className="text-lg font-bold text-amber-400">🌐 Inter-Agent Communication Network</h2>
+        <span className="text-xs font-mono bg-amber-500/10 text-amber-300 px-2.5 py-1 rounded-full border border-amber-500/20">
           {messages.length} Total Messages Logged
         </span>
       </div>
@@ -1964,7 +1964,7 @@ export const InterAgentNetworkView: React.FC = () => {
               <div className="flex items-center gap-2 font-mono text-xs">
                 <span className="text-emerald-400 font-bold">{m.sender.tenantId}</span>
                 <span className="text-slate-500">➔</span>
-                <span className="text-indigo-400 font-bold">{m.recipient.tenantId}</span>
+                <span className="text-amber-400 font-bold">{m.recipient.tenantId}</span>
               </div>
               <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${
                 m.status === 'completed' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'
@@ -2735,7 +2735,7 @@ export const FileViewerModal: React.FC<{ tenantId: string; activeFilePath?: stri
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
           <h3 className="text-sm font-bold text-white font-mono">
-            Tenant Filesystem :: <span className="text-indigo-400">{tenantId}</span>
+            Tenant Filesystem :: <span className="text-amber-400">{tenantId}</span>
           </h3>
         </div>
         <span className="text-xs text-slate-400 font-mono">Isolated Workspace Scope</span>
@@ -3046,9 +3046,9 @@ import React from 'react';
 
 export const PRReviewCard: React.FC<{ prData: any }> = ({ prData }) => {
   return (
-    <div className="bg-slate-900 border border-indigo-500/30 rounded-xl p-4 text-white">
+    <div className="bg-slate-900 border border-amber-500/30 rounded-xl p-4 text-white">
       <div className="flex justify-between items-center mb-2">
-        <span className="text-xs font-mono bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded">
+        <span className="text-xs font-mono bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded">
           Automated Bug Fix PR
         </span>
         <span className="text-xs text-slate-400 font-mono">Tenant: {prData.tenantId}</span>
@@ -3062,7 +3062,7 @@ export const PRReviewCard: React.FC<{ prData: any }> = ({ prData }) => {
           href={prData.prUrl}
           target="_blank"
           rel="noreferrer"
-          className="flex-1 text-center bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 rounded-lg transition"
+          className="flex-1 text-center bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold py-2 rounded-lg transition"
         >
           Review PR on GitHub
         </a>

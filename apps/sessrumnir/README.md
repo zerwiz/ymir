@@ -109,7 +109,7 @@ A theme file uses the `pi-theme/v1` format: JSON with a `$schema`, a `name`, a `
     "app": "#0a0a0a",
     "surface": "#171717",
     "text": "#f5f5f5",
-    "accent": "#2563eb",
+    "accent": "#c9973f",
     "success": "#34d399",
     "warning": "#facc15",
     "error": "#f87171"

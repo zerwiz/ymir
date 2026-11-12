@@ -81,7 +81,7 @@ defineExpose({ focus })
   flex: none;
   padding: 14px 24px 16px;
   border-top: 1px solid var(--border-soft);
-  background: rgba(11, 15, 24, 0.5);
+  background: rgba(21, 18, 9, 0.5);
 }
 .box {
   max-width: 940px;

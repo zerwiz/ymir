@@ -2,15 +2,17 @@ import { useEffect, useRef, useState } from 'react';
 import { ACCENTS } from '../data/realms';
 import { useYmir } from '../state/store';
 
-/** Background presets. `hex: null` is the canonical forge canvas. */
+/** Background presets. `hex: null` is the canonical forge canvas. The ids are stored
+ *  preferences; since 2026-11-12 (RULES/54) the cool grounds are warm stone, dried
+ *  blood and iron under new names. */
 const BACKGROUNDS: { id: string; name: string; hex: string | null }[] = [
   { id: 'forge', name: 'Forge (default)', hex: null },
-  { id: 'midnight', name: 'Midnight', hex: '#0a0f1c' },
+  { id: 'midnight', name: 'Peat', hex: '#14100b' },
   { id: 'charcoal', name: 'Charcoal', hex: '#15171b' },
   { id: 'ink', name: 'Ink', hex: '#050608' },
   { id: 'forest', name: 'Forest', hex: '#0a1410' },
-  { id: 'plum', name: 'Plum', hex: '#150b1c' },
-  { id: 'ocean', name: 'Ocean', hex: '#07131c' },
+  { id: 'plum', name: 'Dried blood', hex: '#1c0f0c' },
+  { id: 'ocean', name: 'Iron', hex: '#121416' },
 ];
 
 const BG_KEYS = ['--ymir-bg-0', '--ymir-bg-1', '--ymir-bg-2', '--ymir-bg-3'];

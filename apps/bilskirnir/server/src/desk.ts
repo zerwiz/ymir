@@ -147,7 +147,7 @@ type Rgb = [number, number, number];
 
 const COLOR_HEX: Record<string, string> = {
   black: '#000000', brown: '#A06B39', red: '#FB2B3E', orange: '#FD690F', yellow: '#F59312', green: '#14C16F',
-  cyan: '#13B7A2', blue: '#1E86FC', violet: '#8F59F9', magenta: '#F93498', gray: '#959595',
+  cyan: '#13B7A2', blue: '#C9973F', violet: '#96A0A8', magenta: '#C2584A', gray: '#959595',
 };
 
 function colorHex(color: string): string {
@@ -186,7 +186,7 @@ function paletteFor(avatarHex: string): Palette {
   const sat = s < 0.15 ? 0.3 : Math.max(0.55, Math.min(0.9, s));
   return {
     accent: base,
-    ink: mix(base, '#14171F', 0.8),
+    ink: mix(base, '#1A1610', 0.8),
     wash: hslHex(hue, sat, 0.925),
     washLight: hslHex(hue - 12, sat * 0.9, 0.965),
     washDeep: hslHex(hue + 10, sat, 0.865),

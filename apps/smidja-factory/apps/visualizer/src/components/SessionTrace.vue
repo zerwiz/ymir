@@ -792,11 +792,11 @@ function selectPhase(p: Phase) {
   cursor: default;
 }
 .stop-btn.pause {
-  border-color: rgba(148, 163, 255, 0.5);
+  border-color: rgba(240, 230, 205, 0.5);
   color: var(--violet);
 }
 .stop-btn.pause:hover:not(:disabled) {
-  background: rgba(148, 163, 255, 0.14);
+  background: rgba(240, 230, 205, 0.14);
   color: var(--violet);
 }
 .engineer {
@@ -835,7 +835,7 @@ function selectPhase(p: Phase) {
 }
 .steer-input {
   flex: 1 1 360px;
-  background: rgba(11, 15, 24, 0.8);
+  background: rgba(21, 18, 9, 0.8);
   border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
   border-radius: 8px;
   color: inherit;
@@ -1047,7 +1047,7 @@ function selectPhase(p: Phase) {
   position: absolute;
   top: 0;
   bottom: 0;
-  border-left: 1px dashed rgba(174, 191, 212, 0.14);
+  border-left: 1px dashed rgba(207, 195, 169, 0.14);
 }
 
 .block {
@@ -1071,7 +1071,7 @@ function selectPhase(p: Phase) {
 }
 
 .block:hover {
-  box-shadow: 0 0 18px var(--lane-glow, rgba(108, 182, 255, 0.2));
+  box-shadow: 0 0 18px var(--lane-glow, rgba(236, 166, 84, 0.2));
 }
 
 .b-top {
@@ -1137,7 +1137,7 @@ function selectPhase(p: Phase) {
 .block.selected {
   outline: 2px solid var(--blue);
   outline-offset: 2px;
-  box-shadow: 0 0 22px var(--lane-glow, rgba(108, 182, 255, 0.25));
+  box-shadow: 0 0 22px var(--lane-glow, rgba(236, 166, 84, 0.25));
 }
 
 .tool-tick {

@@ -61,7 +61,7 @@ const resultPreview = computed(() => {
   border: 1px solid var(--border-soft);
   border-left: 3px solid var(--violet);
   border-radius: 8px;
-  background: rgba(19, 26, 38, 0.55);
+  background: rgba(26, 22, 16, 0.55);
   overflow: hidden;
 }
 .tool-card.ok { border-left-color: var(--green); }

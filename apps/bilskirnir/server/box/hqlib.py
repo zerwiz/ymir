@@ -248,8 +248,8 @@ _TERMINAL_LOOK = (
     ('/color-background', 'string', '#FBFBFD'),
     ('/color-foreground', 'string', '#2A2E37'),
     ('/color-cursor', 'string', '#2A2E37'),
-    ('/color-palette', 'string', '#2e3440;#c7243a;#2f8f46;#a66f00;#2a6fdb;#8a4fd3;#16857a;#8b93a1;'
-                                 '#5b6372;#e0364d;#3aa657;#c98a00;#3d86f5;#a36bf0;#1fa293;#c5cad3'),
+    ('/color-palette', 'string', '#2b241a;#c7243a;#2f8f46;#a66f00;#c9973f;#96a0a8;#16857a;#8b93a1;'
+                                 '#5b6372;#e0364d;#3aa657;#c98a00;#eca654;#cfc3a9;#1fa293;#c5cad3'),
     ('/font-use-system', 'bool', 'false'),
     ('/font-name', 'string', 'DejaVu Sans Mono 11'),
     ('/misc-menubar-default', 'bool', 'false'),

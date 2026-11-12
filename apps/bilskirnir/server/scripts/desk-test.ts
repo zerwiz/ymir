@@ -224,7 +224,7 @@ async function testExtras(ids: string[]): Promise<void> {
   say(`\n== ${last.id}: ${last.bot.name} becomes ${again.name} (${again.avatarColor} ${again.avatarShape})`);
   await timed(`redress ${last.id} after rename`, () => dressScreen(again, last.id));
   check(!!(await greets(cdpPortFor(last.id), again.name)), `${last.id}: open home page now greets ${again.name}`, JSON.stringify(await homePage(cdpPortFor(last.id))));
-  check((await look(last.id))?.colors?.accent?.toUpperCase() === '#1E86FC', `${last.id}: colour is now blue`);
+  check((await look(last.id))?.colors?.accent?.toUpperCase() === '#C9973F', `${last.id}: colour is now blue`);
   await timed(`restart Chrome ${last.id}`, () => dressScreen(again, last.id, { restartChrome: true }));
   const fresh = browserOf(await browsers(), again.id);
   check(!!fresh && fresh.pid !== pids[last.id], `${last.id}: restartChrome gave a new Chrome`);
