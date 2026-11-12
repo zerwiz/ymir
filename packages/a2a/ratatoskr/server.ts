@@ -8,6 +8,10 @@ import { heartCard } from "./card.ts";
 
 const WELL = process.env.WELL_URL || "http://127.0.0.1:4602";
 const PORT = Number(process.env.PORT || 8301);
+// Loopback unless the operator widens it (2026-11-12): this node answers JSON-RPC with no
+// credential and its executor reads the well, so it must not face the LAN by default.
+// A multi-machine heart sets YMIR_FLEET_BIND to its tailnet address (~/.config/ymir/fleet.env).
+const HOST = process.env.RATATOSKR_HOST || process.env.YMIR_FLEET_BIND || "127.0.0.1";
 
 // The card is the SHARED contract's: built (and validated) at boot, so a card
 // that left the shape fails here, loudly, and never reaches the wire.
@@ -33,6 +37,7 @@ const transport = new JsonRpcTransportHandler(requestHandler);
 
 const server = Bun.serve({
   port: PORT,
+  hostname: HOST,
   async fetch(req: Request) {
     const url = new URL(req.url);
     if (url.pathname === A2A_CARD_PATH) return Response.json(card);
@@ -49,4 +54,4 @@ const server = Bun.serve({
     return new Response(`ratatoskr node — POST JSON-RPC here; card at ${A2A_CARD_PATH}`, { status: 404 });
   },
 });
-console.log(`ratatoskr: heart node on :${PORT} — card + JSON-RPC live`);
+console.log(`ratatoskr: heart node on ${HOST}:${PORT} — card + JSON-RPC live`);

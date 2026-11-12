@@ -259,10 +259,18 @@ server.resource("the-book", "skuld://book", "the ticket book", async () => {
 
 // — the served mode: StreamableHTTP on PORT (the SDK holds the handshake+session) —
 const PORT = parseInt(process.env.PORT || "0", 10);
+// The bind and the browser ward (2026-11-12): loopback unless the operator widens it
+// (YMIR_FLEET_BIND in ~/.config/ymir/fleet.env — a multi-machine heart names its tailnet
+// address), and no wildcard CORS: a page in the operator's browser must not drive this door.
+const BIND = process.env.SKULD_BIND || process.env.YMIR_FLEET_BIND || "127.0.0.1";
+const ALLOWED_ORIGINS = (process.env.SKULD_CORS_ORIGINS || "").split(",").map(s => s.trim()).filter(Boolean);
+const originAllowed = (req) => !req.headers.origin || ALLOWED_ORIGINS.includes(String(req.headers.origin));
 if (PORT > 0) {
   import("node:http").then(({ default: http }) => {
     const serverHttp = http.createServer(async (req, res) => {
-      const cors = { "access-control-allow-origin": "*", "access-control-allow-headers": "content-type, accept, mcp-session-id, mcp-protocol-version, mcp-integration-context", "access-control-allow-methods": "POST, OPTIONS, DELETE", "access-control-expose-headers": "mcp-session-id, Mcp-Session-Id" };
+      if (!originAllowed(req)) { res.writeHead(403).end(); return; }
+      const cors = { "access-control-allow-headers": "content-type, accept, mcp-session-id, mcp-protocol-version, mcp-integration-context", "access-control-allow-methods": "POST, OPTIONS, DELETE", "access-control-expose-headers": "mcp-session-id, Mcp-Session-Id" };
+      if (req.headers.origin) { cors["access-control-allow-origin"] = String(req.headers.origin); cors["vary"] = "Origin"; }
       if (req.method === "OPTIONS") { res.writeHead(204, cors).end(); return; }
       if (!["POST", "DELETE"].includes(req.method)) { res.writeHead(405).end(); return; }
       // the documented session-map: one transport per session; the known
@@ -286,7 +294,7 @@ if (PORT > 0) {
         await transport.handleRequest(req, res, parsed); }
       catch (e) { res.end(JSON.stringify({ jsonrpc: "2.0", id: null, error: { code: -32603, message: String(e) } })); }
     });
-    serverHttp.listen(PORT, "0.0.0.0");
+    serverHttp.listen(PORT, BIND);
   }).catch(e => { process.stderr.write(String(e)); });
 }
 function requestBody(req) { return new Promise((ok, no) => { let b = ""; req.on("data", c => { b += c; if (b.length > 2 << 20) req.destroy(); }); req.on("end", () => ok(b)); req.on("error", no); }); }
