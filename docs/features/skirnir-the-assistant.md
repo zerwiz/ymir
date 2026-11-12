@@ -98,6 +98,13 @@ link, no image, no code, 194 canaries), and if it says it does not hold the fact
 **refusal** so the handoff to the Allfather still happens. If the rail is down, nothing breaks: the
 verbatim claim or the honest no is already prepared.
 
+**A second model, when the first is silent** (2026-11-12). The mouth is a chain: the primary first,
+then a fallback, and the first that answers speaks. Name the fallback in the same drop-in, with
+`SKIRNIR_MODEL_FALLBACK=<alias>`. If it lives behind another machine's rail, add
+`SKIRNIR_MODEL_FALLBACK_URL=<that rail's /v1 address>`; without it, the fallback is asked on the same
+rail. The same two settings may live in `skirnir.yaml` as `model_fallback:` and `model_fallback_url:`.
+With no model named at all, nothing is sent and he says plainly that no mouth phrased the answer.
+
 **Which model.** Measured on this box: `qwen3.5-9b@q4_k_s-summarizer` (32K, 5.4 GB, ~140–150 t/s,
 1.3–3.2 s warm, ~7 s on the first call while it loads) is the one that **says "I do not hold that"**
 when it does not. `minicpm5-1b` is five times faster and **invents** ("Gimle is a type of dog") — do
