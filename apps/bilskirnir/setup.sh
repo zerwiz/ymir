@@ -30,6 +30,8 @@
 #   BILSKIRNIR_VOICE     the voice road: house | xai     (house — see server/src/voice-house.ts for its parts)
 set -u
 APP="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# the hall's state lives in one home per user, never in this checkout (plan 275 S5)
+[ "${1:-}" = "--check" ] || bash "$APP/scripts/data-home.sh" || { echo "bilskirnir: the data home could not be linked — see scripts/data-home.sh" >&2; exit 1; }
 CHECK=0; [ "${1-}" = "--check" ] && CHECK=1
 case "${1-}" in -h|--help) sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 
