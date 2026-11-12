@@ -123,3 +123,28 @@ def resolve(env: Mapping[str, str] | None = None) -> Roots:
         root=root,
         wt_root=wt_root,
     )
+
+
+def runtime_pin_dir(env: Mapping[str, str] | None = None) -> Path:
+    """The pinned runtime checkout (RULES/02 §7) — `runtime.env`'s YMIR_RUNTIME_DIR.
+
+    A unit or a harness that executes from a WORKING tree is a machine running whatever
+    branch the last agent left checked out; the pin is the ONE checkout that may
+    supervise (plan 257 H6). This reads the SAME file the shell ward reads —
+    `runtime-pinned-guard.sh` — never a second path, so both halves of the house agree.
+    """
+    environ = dict(os.environ) if env is None else dict(env)
+    explicit = environ.get("YMIR_RUNTIME_DIR")
+    if explicit:
+        return Path(explicit).expanduser()
+    conf = resolve(environ).config / "runtime.env"
+    try:
+        text = conf.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return Path("")
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("YMIR_RUNTIME_DIR="):
+            value = stripped.split("=", 1)[1].strip().strip('"').strip("'")
+            return Path(os.path.expandvars(value)).expanduser()
+    return Path("")

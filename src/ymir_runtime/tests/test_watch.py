@@ -108,6 +108,44 @@ class LeaseTest(ArmTestCase):
         )
         self.assertEqual(watch.read_lease(self.paths.lease)["role"], "rodd")
 
+    def test_write_lease_records_the_pins_currency(self) -> None:
+        # H6/H8 (plan 257): the lease carries pin=<sha> pin_behind=<n> so a stale pin
+        # is a NUMBER any door can read.
+        self.assertTrue(
+            watch.write_lease(
+                self.paths, pid=os.getpid(), mode="daemon", role="counsellor",
+                session="none", generation=1, pin="4b09c4a1", pin_behind="162",
+            )
+        )
+        lease = watch.read_lease(self.paths.lease)
+        self.assertEqual(lease["pin"], "4b09c4a1")
+        self.assertEqual(lease["pin_behind"], "162")
+
+    def test_write_lease_omits_the_pin_when_none_is_given(self) -> None:
+        self.assertTrue(
+            watch.write_lease(self.paths, pid=os.getpid(), mode="daemon", session="none", generation=1)
+        )
+        lease = watch.read_lease(self.paths.lease)
+        self.assertNotIn("pin", lease)
+        self.assertNotIn("pin_behind", lease)
+
+    def test_pin_facts_reads_sha_and_behind_from_git(self) -> None:
+        def runner(argv, **kwargs):
+            if "rev-parse" in argv:
+                return completed(0, "4b09c4a1\n")
+            if "rev-list" in argv:
+                return completed(0, "162\n")
+            return completed(1, "", "not scripted")
+
+        with tempfile.TemporaryDirectory() as pin:
+            env = {"YMIR_RUNTIME_DIR": pin}
+            self.assertEqual(watch.pin_facts(env, runner=runner), ("4b09c4a1", "162"))
+
+    def test_pin_facts_is_empty_when_no_pin_is_configured(self) -> None:
+        env = {"YMIR_HOME": "/tmp/no-home"}
+        self.assertEqual(watch.pin_facts(env, runner=lambda argv, **k: completed(0, "")), ("", ""))
+
+
     def test_a_lease_with_no_role_reads_unknown(self) -> None:
         self.lease()  # the helper writes no role= field
         self.assertEqual(watch.read_lease(self.paths.lease).get("role", "unknown"), "unknown")
@@ -185,6 +223,29 @@ class RaiseTest(ArmTestCase):
     def test_a_check_trigger_is_consumed_and_named(self) -> None:
         (self.paths.state / "pr-9.check").write_text("", encoding="utf-8")
         self.assertEqual(watch.raise_line(self.paths), "check: pr-9")
+
+    def test_a_terminal_status_line_wakes_once(self) -> None:
+        # H3 (plan 257): a worker that writes only `done:` wakes the arm by the record
+        # itself — no acclaim, no sweep — and the per-id cursor makes it exactly once.
+        status = self.paths.state / "errand-x.status"
+        status.write_text("working: launched\n", encoding="utf-8")
+        os.utime(status, (1000.0, 1000.0))
+        self.assertEqual(watch.raise_line(self.paths), "")
+
+        status.write_text("working: launched\ndone: opened PR 1\n", encoding="utf-8")
+        os.utime(status, (2000.0, 2000.0))
+        self.assertEqual(watch.raise_line(self.paths), "signal: errand-x done: opened PR 1")
+        self.assertEqual(watch.raise_line(self.paths), "", "a second poll must not re-wake the same line")
+
+    def test_a_newer_terminal_line_is_still_news_once(self) -> None:
+        status = self.paths.state / "errand-x.status"
+        status.write_text("done: first\n", encoding="utf-8")
+        os.utime(status, (2000.0, 2000.0))
+        self.assertEqual(watch.raise_line(self.paths), "signal: errand-x done: first")
+        status.write_text("done: first\ndone: merged\n", encoding="utf-8")
+        os.utime(status, (3000.0, 3000.0))
+        self.assertEqual(watch.raise_line(self.paths), "signal: errand-x done: merged")
+        self.assertEqual(watch.raise_line(self.paths), "")
 
     def test_the_operator_stop_is_a_stale_line(self) -> None:
         self.paths.stop_marker.touch()

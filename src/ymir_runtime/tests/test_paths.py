@@ -59,6 +59,31 @@ class ResolveTest(unittest.TestCase):
         root = paths.repo_root({}, module_file="/repo/src/ymir_runtime/paths.py")
         self.assertEqual(root, Path("/repo"))
 
+    def test_runtime_pin_dir_env_wins(self) -> None:
+        self.assertEqual(
+            paths.runtime_pin_dir({"YMIR_RUNTIME_DIR": "/tmp/pin"}),
+            Path("/tmp/pin"),
+        )
+
+    def test_runtime_pin_dir_reads_runtime_env_and_expands_home(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            config = Path(tmp) / "config"
+            config.mkdir(parents=True)
+            (config / "runtime.env").write_text(
+                'YMIR_RUNTIME_DIR="$HOME/ymir-runtime"\nYMIR_RUNTIME_BRANCH="main"\n',
+                encoding="utf-8",
+            )
+            env = {"YMIR_HOME": tmp, "YMIR_SETTINGS_DIR": str(config)}
+            self.assertEqual(
+                paths.runtime_pin_dir(env),
+                Path("~/ymir-runtime").expanduser(),
+            )
+
+    def test_runtime_pin_dir_is_empty_when_runtime_env_is_absent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            env = {"YMIR_HOME": tmp, "YMIR_SETTINGS_DIR": str(Path(tmp) / "config")}
+            self.assertEqual(paths.runtime_pin_dir(env), Path(""))
+
     def test_the_engine_root_wins_over_brokk_home(self) -> None:
         env = {"YMIR_ENGINE_ROOT": "/code", "BROKK_HOME": "/home-of-worktrees"}
         self.assertEqual(paths.repo_root(env), Path("/code"))
