@@ -476,7 +476,7 @@ def do_dress(n, flags, look_b64, warnings):
     env = hqlib.screen_env(n)
     colors = look.get('colors') or {}
     if shutil.which('xsetroot'):
-        hqlib.run(['xsetroot', '-solid', colors.get('wash', '#eef0f3')], env=env, timeout=5)
+        hqlib.run(['xsetroot', '-solid', colors.get('wash', '#f3efe8')], env=env, timeout=5)
     lap('prepare')
     hqlib.hide_panels(n, env, size, warnings)
     lap('panel')
@@ -554,7 +554,7 @@ def do_undress(n, bot_id):
     except OSError:
         pass
     if shutil.which('xsetroot') and hqlib.geometry(n):
-        hqlib.run(['xsetroot', '-solid', '#eceef1'], env=hqlib.base_env(n), timeout=5)
+        hqlib.run(['xsetroot', '-solid', '#f1ece4'], env=hqlib.base_env(n), timeout=5)
     for old in glob.glob(folder + '/wall-*.png'):
         try:
             os.unlink(old)

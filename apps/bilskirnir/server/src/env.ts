@@ -17,7 +17,13 @@ function secret(name: string): string {
   throw new Error(`Missing env ${name} (or ${name}_FILE)`);
 }
 
-const hermesHome = process.env.HERMES_HOME_PRIMARY ?? path.join(os.homedir(), '.hermes');
+function desk(v: string | undefined): 'local' | 'orgo' {
+  const s = (v ?? '').trim().toLowerCase() || 'local';
+  if (s !== 'local' && s !== 'orgo') throw new Error(`BILSKIRNIR_DESK must be "local" or "orgo", not ${JSON.stringify(v)}`);
+  return s;
+}
+
+const hermesHome =process.env.HERMES_HOME_PRIMARY ?? path.join(os.homedir(), '.hermes');
 
 export const env = {
   port: Number(process.env.PORT ?? 8787),
@@ -27,7 +33,13 @@ export const env = {
   xaiKey: req('XAI_API_KEY'),
   xaiModel: process.env.XAI_MODEL ?? 'grok-4.7',
   composioKey: req('COMPOSIO_API_KEY'),
-  orgoKey: secret('ORGO_API_KEY'),
+  /** Only needed when BILSKIRNIR_DESK=orgo. */
+  orgoKey: (() => { try { return secret('ORGO_API_KEY'); } catch { return ''; } })(),
+  /**
+   * Which computer the agents work on: `local` (default) is the hall's own desk, a container on this
+   * machine started by house/desk.sh; `orgo` is an Orgo cloud computer (ORGO_API_KEY + ORGO_COMPUTER_ID).
+   */
+  desk: desk(process.env.BILSKIRNIR_DESK),
   sessionSecret: req('SESSION_SECRET'),
   devLogin: process.env.DEV_LOGIN === '1',
   /** Ymir runs this app on the operator's own machine: no sign-in. Set to the operator's email to enter as them. */

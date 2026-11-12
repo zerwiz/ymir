@@ -153,7 +153,8 @@ The keys you need:
 
 | Key | Used for |
 |---|---|
-| `ORGO_API_KEY`, `ORGO_COMPUTER_ID` | The computer and its screens |
+| `BILSKIRNIR_DESK` | Which computer the agents use: `local` (default, the hall's own desk — see [docs/the-desk.md](docs/the-desk.md)) or `orgo` |
+| `ORGO_API_KEY`, `ORGO_COMPUTER_ID` | The Orgo computer and its screens, when `BILSKIRNIR_DESK=orgo` |
 | `COMPOSIO_API_KEY` | Connected apps |
 | `XAI_API_KEY` | Voice and `x_search` |
 | `SESSION_SECRET` | Sign-in sessions and the tokens agents use to reach `/mcp` |

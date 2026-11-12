@@ -153,10 +153,13 @@ async function writeHome(botId: string): Promise<{ home: string; key: string; di
   // Its screen decides which display and which Chrome it drives. Only meaningful on the computer itself.
   let display: string | null = null;
   let cdp = '';
-  if (env.localBox) {
+  // On the hall's own desk (BILSKIRNIR_DESK=local) the agent runs here and its screen is in the desk's
+  // container: its Chrome's DevTools port shares this machine's loopback, so the browser tools reach it,
+  // but the X display stays inside the container (computer-use is for HQ_LOCAL only).
+  if (env.localBox || env.desk === 'local') {
     try {
       const s = await screenFor(b.user_id, botId);
-      display = displayFor(s.screenId);
+      if (env.localBox) display = displayFor(s.screenId);
       cdp = cdpUrlFor(botId, s.screenId);
     } catch (e: any) {
       console.warn(`[engine] no screen for ${b.name} yet: ${e?.message ?? e}`);

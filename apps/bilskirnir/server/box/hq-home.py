@@ -23,7 +23,7 @@ TEMPLATE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'home.html')
 NEUTRAL = {
     'stamp': 'neutral',
     'bot': {'id': '', 'name': '', 'label': ''},
-    'colors': {'accent': '#6b7280', 'ink': '#1f2430', 'wash': '#f1f2f4'},
+    'colors': {'accent': '#6b7280', 'ink': '#24201a', 'wash': '#f3efe8'},
     'avatarSvg': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="#fff"/>'
                  '<circle cx="24" cy="24" r="17" fill="#9aa1ad"/></svg>',
     'wallSvg': '<svg xmlns="http://www.w3.org/2000/svg" width="__W__" height="__H__"><defs>'

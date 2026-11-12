@@ -21,6 +21,8 @@
 #   YMIR_RUNTIME_DIR     the pinned runtime the Ymir MCP door runs from (~/ymir-runtime, else this tree)
 #   BILSKIRNIR_MCP_GATEWAY  the record doors (well, skuld, bolthorn)  (http://127.0.0.1:8316)
 #   BILSKIRNIR_SESSION_HOOK the house's Hermes session hook (~/.hermes/agent-hooks/ymir-session-hook.sh)
+#   BILSKIRNIR_DESK      the agents' computer: local = the hall's own desk (house/desk.sh), orgo = Orgo  (local)
+#   BILSKIRNIR_DESK_HOST where the desk's loopback ports are (the agent's Chrome DevTools)   (127.0.0.1)
 set -u
 APP="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CHECK=0; [ "${1-}" = "--check" ] && CHECK=1
@@ -34,6 +36,8 @@ HPORT="${BILSKIRNIR_HERMES_PORT:-8642}"
 RUNTIME="${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}"; [ -f "$RUNTIME/bin/mcp/ymir-mcp.py" ] || RUNTIME="$(dirname "$(dirname "$APP")")"
 GATEWAY="${BILSKIRNIR_MCP_GATEWAY:-http://127.0.0.1:8316}"
 HOUSE_HOOK="${BILSKIRNIR_SESSION_HOOK:-$HOME/.hermes/agent-hooks/ymir-session-hook.sh}"
+DESK="${BILSKIRNIR_DESK:-local}"
+DESK_HOST="${BILSKIRNIR_DESK_HOST:-127.0.0.1}"
 say() { printf 'bilskirnir: %s\n' "$*"; }
 fail=0
 
@@ -94,7 +98,23 @@ else
   say "soul rendered into data/engines/$SLUG/SOUL.md"
 fi
 
-# ── 3. the agent's own Hermes home: model and gateway (never ~/.hermes) ─────────
+# ── 3. the desk: the agents' own computer (a container on this machine) ─────────
+# One Linux desktop, one screen per agent, loopback only (house/desk.sh). The first agent's screen is
+# display :99, so her Chrome's DevTools answer on port 9299 (9200 + display, server/box/hqlib.py).
+DESK_UP=0
+if [ "$DESK" = local ]; then
+  if ! command -v "${DOCKER:-docker}" >/dev/null 2>&1; then
+    say "desk skipped: no container engine (${DOCKER:-docker}) on this machine — the agents have no computer here"
+  elif [ "$CHECK" = 1 ]; then
+    line="$(bash "$APP/house/desk.sh" status)" && { DESK_UP=1; say "desk up ($line)"; } || { say "desk not up ($line) — run: apps/bilskirnir/house/desk.sh up"; fail=1; }
+  else
+    line="$(bash "$APP/house/desk.sh" up 2>&1 | tail -1)" && { DESK_UP=1; say "desk up ($line)"; } || { say "desk did not come up: $line"; fail=1; }
+  fi
+else
+  say "desk: Orgo (BILSKIRNIR_DESK=$DESK) — ORGO_API_KEY and ORGO_COMPUTER_ID in .env"
+fi
+
+# ── 4. the agent's own Hermes home: model and gateway (never ~/.hermes) ─────────
 rail_key() { python3 -c "import json,os;print(json.load(open(os.path.expanduser('~/.pi/agent/auth.json')))['llama-swap']['key'])" 2>/dev/null; }
 if [ "$CHECK" = 0 ]; then
   umask 077
@@ -110,9 +130,15 @@ if [ "$CHECK" = 0 ]; then
     # The house's hands — Rödd's toolbox (mail read-only, calendar, home search, todo, Trello, seats,
     # the arm, drafts) — through one MCP door, so the agent holds exactly the hands Nanna holds.
     printf '  house:\n    command: python3\n    args: ["%s/house/hands-mcp.py"]\n    enabled: true\n' "$APP"
-    # No browser toolset: its helpers are not in this isolated runtime, and a missing tool is a loop
-    # (2026-11-12: she retried it seven times). The desktop comes with the agent's own computer.
-    printf 'platform_toolsets:\n  api_server: [web, terminal, file, skills, todo, cronjob, vision]\n' 
+    # The browser toolset only when she has a desk to drive: pinned to the Chrome on her own screen, so
+    # what she opens is what the hall shows. Without a desk it stays off — a missing tool is a loop
+    # (2026-11-12: she retried it seven times).
+    if [ "$DESK_UP" = 1 ]; then
+      printf 'platform_toolsets:\n  api_server: [web, terminal, file, skills, todo, cronjob, vision, browser]\n'
+      printf 'browser:\n  cdp_url: "http://%s:9299"\n' "$DESK_HOST"
+    else
+      printf 'platform_toolsets:\n  api_server: [web, terminal, file, skills, todo, cronjob, vision]\n'
+    fi
     # The house's session hook: the Sága brief at session start, delivered into the first turn.
     if [ -x "$HOUSE_HOOK" ]; then
       printf 'hooks:\n  on_session_start:\n  - command: %s\n    timeout: 180\n  pre_llm_call:\n  - command: %s\n    timeout: 60\n' "$HOUSE_HOOK" "$HOUSE_HOOK"
@@ -126,9 +152,12 @@ if [ "$CHECK" = 0 ]; then
   say "agent home: data/engines/$SLUG (model $MODEL)"
 else
   grep -q "default: \"$MODEL\"" "$ENGINE/config.yaml" 2>/dev/null && grep -q "ymir-mcp.py" "$ENGINE/config.yaml" && say "agent home current (model and Ymir's MCP doors)" || { say "agent home missing or on another model"; fail=1; }
+  if [ "$DESK_UP" = 1 ]; then
+    grep -q "cdp_url: \"http://$DESK_HOST:9299\"" "$ENGINE/config.yaml" 2>/dev/null && say "agent's browser drives her desk" || { say "agent's browser is not pinned to her desk — re-run setup.sh"; fail=1; }
+  fi
 fi
 
-# ── 4. the app's .env: one managed block, the rest is the operator's ────────────
+# ── 5. the app's .env: one managed block, the rest is the operator's ────────────
 managed() {
   printf '# >>> managed by setup.sh (from the home) — re-run setup.sh, do not edit\n'
   printf 'PRIMARY_BOT_NAME=%s\nPRIMARY_BOT_LABEL=%s\nHERMES_HOME_PRIMARY=%s\nHERMES_URL=http://127.0.0.1:%s\n' "$NAME" "$LABEL" "$ENGINE" "$HPORT"
@@ -158,7 +187,7 @@ else
   grep -q "^PRIMARY_BOT_NAME=$NAME\$" "$ENVF" 2>/dev/null && say ".env current" || { say ".env stale or missing"; fail=1; }
 fi
 
-# ── 5. the code's dependencies, from the lock files ─────────────────────────────
+# ── 6. the code's dependencies, from the lock files ─────────────────────────────
 # Reinstall only when the lock file changed: `npm ci` empties node_modules first, which pulls the floor
 # out from under a running app (2026-11-12: the hall answered "Bad Gateway" mid-conversation).
 LOCK_SUM="$(sha256sum "$APP/package-lock.json" | cut -c1-16)"; STAMP="$APP/node_modules/.bilskirnir-lock"
@@ -173,7 +202,7 @@ else
   [ -d "$APP/node_modules/@novnc" ] && [ -d "$APP/node_modules/hono" ] && say "dependencies present" || { say "dependencies missing"; fail=1; }
 fi
 
-# ── 6. the database follows the roster ──────────────────────────────────────────
+# ── 7. the database follows the roster ──────────────────────────────────────────
 DB="$APP/data/grokbot.db"
 if [ "$CHECK" = 0 ] && [ -f "$DB" ]; then
   python3 - "$DB" "$NAME" "$LABEL" <<'PY'
