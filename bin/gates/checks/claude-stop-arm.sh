@@ -20,6 +20,9 @@
 set -uo pipefail
 ROOT="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 cat >/dev/null 2>&1 || true            # drain the hook payload; we never block on it
+# A worker seat (a Yggdrasil worktree or a seat directory) is never the helm: it owns its own seat's
+# Gleipnir lock, so "owns the lock" is not "is the helm". It never arms.
+case "$(readlink -f "$ROOT")" in */.yggdrasil/*|*/.local/state/ymir/seats/*) exit 0 ;; esac
 [ -x "$ROOT/bin/pi/syn-watch-arm.sh" ] || exit 0
 
 session="$(bash "$ROOT/bin/records/ymir-state.sh" lock session-pid --shell-pid $$ 2>/dev/null | tr -d '[:space:]')"

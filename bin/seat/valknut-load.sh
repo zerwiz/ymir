@@ -41,6 +41,9 @@ fi
 if [ -n "$_hoard" ] && [ -r "$_hoard/config/runtime.env" ]; then
   _pin=$(sed -n 's/^YMIR_RUNTIME_DIR="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' "$_hoard/config/runtime.env" | head -1)
 fi
+# The operator's home, resolved once through hoard-lib: `__YMIR_HOME__` in a rendered config means THIS,
+# never $HOME (a render that used $HOME pointed engram at ~/hodd/memory/kaia.engram).
+YMIR_HOME_RESOLVED="$_hoard"
 unset _hoard
 [ -n "$_pin" ] && [ -d "$_pin/.pi/extensions" ] && PI_EXT_SRC="${PI_EXT_SRC:-$_pin/.pi/extensions}"
 PI_EXT_SRC="${PI_EXT_SRC:-$ROOT/.pi/extensions}"
@@ -386,7 +389,7 @@ fi
 config_out() {  # <rendered-json-or-text> <target>
   local ex=$1 out=$2
   [ -r "$ex" ] || { printf 'absent'; return 0; }
-  python3 - "$ex" "$out" "$HOME" "$ROOT" <<'PY'
+  python3 - "$ex" "$out" "${YMIR_HOME_RESOLVED:-$HOME/Documents/ymirhome}" "$ROOT" <<'PY'
 import json, os, sys
 
 ex, out, home, root = sys.argv[1:5]
