@@ -11,7 +11,7 @@ printed:
 
 ```
 seats[2]{seat,primary,reachable,door}:
-  "heimdall","Hœnir","unreachable","ssh heimdall@100.69.101.57"
+  "heimdall","Hœnir","unreachable","ssh <user>@<tailnet address>"
   "nidavellir","Hávi","up","ssh <user>@<tailnet address>"
 ```
 
@@ -22,11 +22,11 @@ for a fault that does not exist.
 
 ## What was actually true
 
-- `ssh heimdall@100.69.101.57 'echo hello'` → `Permission denied (publickey)`.
-- from **nidavellir**: `ssh heimdall@100.69.101.57 'echo BACK-OK'` → `BACK-OK`, and the same
-  by the tailnet name `heimdall.tailefab81.ts.net`.
-- `~/.ssh/authorized_keys` on this box carries `omarchy-105`, `zerwizserver@wayofteams`,
-  `whynot@whynot`, the GitHub signing keys and `u0_a749@localhost` — **not this host's own
+- `ssh <user>@<tailnet address> 'echo hello'` → `Permission denied (publickey)`.
+- from **nidavellir**: `ssh <user>@<tailnet address> 'echo BACK-OK'` → `BACK-OK`, and the same
+  by the tailnet name `<seat>.<tailnet>.ts.net`.
+- `~/.ssh/authorized_keys` on this box carries the other seats' keys, the GitHub signing
+  keys and a phone key — **not this host's own
   key**.
 
 So the road works in both directions between the machines, and the only failing dial was
@@ -53,12 +53,12 @@ Two attributed lines crossed the arm-to-arm wire the same hour, and both survive
 queues:
 
 - **heimdall → nidavellir**, `bin/seat/seat-wire.sh nudge nidavellir "…"` → landed on
-  `/home/zerwizomar/Documents/ymirhome/state/.wake-queue`, resolved from
-  `/home/zerwizomar/Documents/ymirhome/state/.arm.lease`; nidavellir's helm is
+  `<home>/state/.wake-queue`, resolved from
+  `<home>/state/.arm.lease`; nidavellir's helm is
   `pid=1182 starttime=1205 gen=29 mode=systemd session=5425`, held.
 - **nidavellir → heimdall**, the same verb run on that seat by hand →
   `from=nidavellir to=heimdall at=2026-11-11T22:04:33Z` in this box's
-  `/home/heimdall/Documents/ymirhome/state/.wake-queue`.
+  `<peer home>/state/.wake-queue`.
 
 A one-way channel that reports "sent" is the false green this house has paid for before
 (plan 188 §14-16). This one was proved in both directions before it was called mended.
