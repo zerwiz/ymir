@@ -9,8 +9,10 @@ Environment=PATH=%h/.bun/bin:/usr/bin:/bin
 Environment=SKILLS_DIR=%h/.fleet/skills
 # Loopback unless the operator widens it in ~/.config/ymir/fleet.env (2026-11-12).
 Environment=YMIR_FLEET_BIND=127.0.0.1
+# One listener only: the address the fleet reaches (the heart's tailnet), else loopback (ticket ymir/80).
+Environment=YMIR_FLEET_BIND_SHARED=127.0.0.1
 EnvironmentFile=-%h/.config/ymir/fleet.env
-ExecStart=%h/.fleet/well-venv/bin/mcp-proxy --host ${YMIR_FLEET_BIND} --port 8319 -- node %h/.fleet/packages/mcp/skills/server.mjs
+ExecStart=%h/.fleet/well-venv/bin/mcp-proxy --host ${YMIR_FLEET_BIND_SHARED} --port 8319 -- node %h/.fleet/packages/mcp/skills/server.mjs
 Restart=on-failure
 RestartSec=3
 [Install]

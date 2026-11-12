@@ -8,8 +8,10 @@ Type=simple
 WorkingDirectory=%h/.fleet/cards-root
 # Loopback unless the operator widens it in ~/.config/ymir/fleet.env (2026-11-12).
 Environment=YMIR_FLEET_BIND=127.0.0.1
+# One listener only: the address the fleet reaches (the heart's tailnet), else loopback (ticket ymir/80).
+Environment=YMIR_FLEET_BIND_SHARED=127.0.0.1
 EnvironmentFile=-%h/.config/ymir/fleet.env
-ExecStart=/usr/bin/python3 -m http.server 8318 --bind ${YMIR_FLEET_BIND}
+ExecStart=/usr/bin/python3 -m http.server 8318 --bind ${YMIR_FLEET_BIND_SHARED}
 Restart=on-failure
 [Install]
 WantedBy=ymir.target
