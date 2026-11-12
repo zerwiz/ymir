@@ -6,3 +6,7 @@
 
 ## Why
 `compliance-check.sh` (`mocks` row) failed on two lines plan 274 (#702) added.
+
+## CHANGE LOG
+
+- 2026-11-12 — review-mend: added missing heading for #710
