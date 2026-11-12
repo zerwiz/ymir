@@ -90,5 +90,27 @@ hk "$T/ymirtree/docs/n.md" "a note on Zorblax" | grep -q '"deny"' && ok "the hoo
 [ -z "$(hk "$H/hodd/note.md" "a note on Zorblax")" ] && ok "a write into the home is allowed" || bad "hook home"
 [ -z "$(hk "$T/elsewhere/n.md" "a note on Zorblax")" ] && ok "a write outside any Ymir tree is allowed" || bad "hook elsewhere"
 
+# ── people (plan 272, fault 11): a person is refused like a company is ───────
+# Invented people only: Fenwick Ostrander, fostrander, @fen_ostr_chat, roster speaker "Tamsin Quillfeather".
+cat >"$H/hodd/identity/collaborators.yaml" <<'Y'
+people:
+  - id: fenwick
+    name: Fenwick Ostrander
+    emails: [fostrander@example.test, info@example.test]
+    telegram: [fen_ostr_chat]
+    github: ostrander-gh
+Y
+mkdir -p "$H/hodd/data/telegram-rosters"
+printf 'chat: -1\nspeakers:\n  - {user: 7, name: "Tamsin Quillfeather", username: tquill_rost}\n' >"$H/hodd/data/telegram-rosters/-1.yaml"
+for who in "Fenwick Ostrander" fostrander fen_ostr_chat ostrander-gh "Tamsin Quillfeather" tquill_rost; do
+  printf 'a line naming %s here\n' "$who" >"$T/msg.txt"
+  python3 "$G" message "$T/msg.txt" 2>&1 | grep -q 'protected person' && ok "a commit message naming a person is refused ($who)" || bad "person refused: $who"
+done
+printf 'write to info@example.test\n' >"$T/msg.txt"
+python3 "$G" message "$T/msg.txt" 2>&1 | grep -q protected && bad "generic mailbox local part" || ok "a generic mailbox local part (info) is not a person"
+[ -n "$(hk "$T/ymirtree/docs/n.md" "thanks tquill_rost" | grep '"deny"')" ] && ok "the write hook refuses a roster username" || bad "hook person"
+printf 'old line about Fenwick Ostrander\n' >"$T/f.txt"
+python3 "$G" tree "$T/f.txt" >/dev/null 2>&1 && ok "a whole-file read counts an old person line as owed, does not refuse it" || bad "tree owed"
+
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

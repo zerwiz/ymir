@@ -23,20 +23,20 @@ printf 'telegram roster\n'
 
 "$DOOR" --version >/dev/null && ok "the door reports a version" || bad "the door reports a version"
 
-"$DOOR" record --chat -1001 --user 42 --name Craig --username craigema --message m1 >/dev/null 2>&1
-grep -q '"42","Craig","craigema"' "$YMIR_HOME/hodd/data/telegram-rosters/-1001.yaml" 2>/dev/null || true
-"$DOOR" list --chat -1001 | grep -q '"Craig"' && ok "a speaker is recorded" || bad "a speaker is recorded" "$("$DOOR" list --chat -1001)"
+"$DOOR" record --chat -1001 --user 42 --name Testperson --username testuser_fixture --message m1 >/dev/null 2>&1
+grep -q '"42","Testperson","testuser_fixture"' "$YMIR_HOME/hodd/data/telegram-rosters/-1001.yaml" 2>/dev/null || true
+"$DOOR" list --chat -1001 | grep -q '"Testperson"' && ok "a speaker is recorded" || bad "a speaker is recorded" "$("$DOOR" list --chat -1001)"
 
-"$DOOR" record --chat -1001 --user 42 --name Craig --message m1 >/dev/null 2>&1
+"$DOOR" record --chat -1001 --user 42 --name Testperson --message m1 >/dev/null 2>&1
 count=$("$DOOR" list --chat -1001 | grep -o '"1"' | head -1)
 [ "$count" = '"1"' ] && ok "the same message is counted once" || bad "the same message is counted once" "$("$DOOR" list --chat -1001)"
 
-"$DOOR" record --chat -2002 --user 42 --name Craig --message m2 >/dev/null 2>&1
+"$DOOR" record --chat -2002 --user 42 --name Testperson --message m2 >/dev/null 2>&1
 [ -f "$YMIR_HOME/hodd/data/telegram-rosters/-1001.yaml" ] && [ -f "$YMIR_HOME/hodd/data/telegram-rosters/-2002.yaml" ] \
   && ok "two chats are two files" || bad "two chats are two files"
 "$DOOR" chats | grep -q '\-1001' && "$DOOR" chats | grep -q '\-2002' && ok "chats lists both rooms" || bad "chats lists both rooms" "$("$DOOR" chats)"
 
-"$DOOR" show --chat -1001 --user 42 | grep -q 'Craig' && ok "show returns the row" || bad "show returns the row"
+"$DOOR" show --chat -1001 --user 42 | grep -q 'Testperson' && ok "show returns the row" || bad "show returns the row"
 "$DOOR" show --chat -1001 --user 999 >/dev/null 2>&1 && bad "show refuses an unknown id" || ok "show refuses an unknown id"
 
 ADMINS='{"ok":true,"result":[{"status":"creator","user":{"id":7,"first_name":"Ada","username":"ada-handle"}}]}'
@@ -44,7 +44,7 @@ ADMINS='{"ok":true,"result":[{"status":"creator","user":{"id":7,"first_name":"Ad
 "$DOOR" list --chat -1001 | grep -q '"Ada"' && ok "an admin who never spoke is recorded" || bad "an admin who never spoke is recorded" "$("$DOOR" list --chat -1001)"
 "$DOOR" list --chat -1001 | grep -q '"admin"' && ok "the admin carries the admin role" || bad "the admin carries the admin role"
 
-"$DOOR" record --chat -1001 --user 42 --name Craig >/dev/null 2>&1
+"$DOOR" record --chat -1001 --user 42 --name Testperson >/dev/null 2>&1
 ok "a record without a message id still works"
 
 printf '\n%d passed, %d failed\n' "$pass" "$fail"

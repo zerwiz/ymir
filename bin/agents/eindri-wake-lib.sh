@@ -15,6 +15,19 @@
 # ledger, one wake per (id, kind), whichever road arrives first.
 set -u
 
+# The helm's state — where everything FOR THE HELM is written (the wake queue,
+# the report and question shelves, the delivery ledger, the status files).
+# A worker runs with its own seat dir in BROKK_MACHINE_STATE_DIR and
+# BROKK_STATE_OVERRIDE (its private working state). That override must never
+# redirect what is for the helm: a wake filed in a seat's queue is a wake nobody
+# reads (plan 272, fault 1). Any OTHER override (a test's temp dir, a deliberate
+# redirect) is honoured.  Usage: eindri_helm_state <result-var> <default-state>
+eindri_helm_state() {
+  local _rv=$1 _def=$2 _ov="${BROKK_STATE_OVERRIDE:-}"
+  if [ -n "$_ov" ] && [ "$_ov" = "${BROKK_MACHINE_STATE_DIR:-}" ]; then _ov=""; fi
+  printf -v "$_rv" '%s' "${BROKK_HELM_STATE:-${_ov:-$_def}}"
+}
+
 # Fill EINDRI_STATE from the caller's STATE, or resolve it exactly as every
 # other shell tool does (bin/vault/hoard-lib.sh). Idempotent.
 

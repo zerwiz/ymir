@@ -34,9 +34,9 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   done
 fi
 hoard_state_dir YMIR_STATE_DIR
-STATE="${BROKK_STATE_OVERRIDE:-$YMIR_STATE_DIR}"
-
 . "$SCRIPT_DIR/eindri-wake-lib.sh"
+eindri_helm_state STATE "$YMIR_STATE_DIR"
+
 EINDRI_STATE="$STATE"
 QUEUE="$STATE/.wake-queue"
 
