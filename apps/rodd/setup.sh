@@ -23,6 +23,8 @@ UI="$APP/ui"
 # a scanner that walks this repo counted its worklets as dead code (dead-code-guard, 2026-11-08)
 ENGINE="${RODD_ENGINE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/ymir/rodd-engine}"   # allow-home-default: a cache, overridable
 STAMP="$UI/.rodd-face"     # which tag the served face was dressed from
+PATCH_STAMP="$UI/.rodd-patch"   # which patch set dressed it (plan 275: a merged patch must reach the face)
+patch_hash() { cat "$APP/patch/"* 2>/dev/null | sha256sum | cut -c1-16; }
 say() { printf '%-42s %s\n' "$1" "$2"; }
 
 # `--check` is the question every installer and every updater asks: is the face present,
@@ -32,6 +34,9 @@ case "${1:-}" in
   --check)
     if [ ! -f "$UI/index.html" ]; then printf 'missing\n'; exit 1; fi
     if [ "$(cat "$STAMP" 2>/dev/null)" != "$TAG" ]; then printf 'stale:%s\n' "$TAG"; exit 1; fi
+    # the face is also stale when the house's patches changed since it was dressed (2026-11-12: plan 271's
+    # why.js merged, but the face kept printing "[object Event]" because nothing re-ran the patcher)
+    if [ "$(cat "$PATCH_STAMP" 2>/dev/null)" != "$(patch_hash)" ]; then printf 'stale:patch\n'; exit 1; fi
     printf 'present\n'; exit 0 ;;
   -h|--help) sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
 esac
@@ -72,5 +77,6 @@ for f in silero_vad_v6.onnx ort-wasm-simd-threaded.mjs ort-wasm-simd-threaded.wa
 done
 
 python3 "$APP/patch/patch-ui.py" "$UI" || exit 1
+patch_hash > "$PATCH_STAMP"
 
 say "ready" "apps/rodd/start.sh  then  apps/rodd/smoke.sh"
