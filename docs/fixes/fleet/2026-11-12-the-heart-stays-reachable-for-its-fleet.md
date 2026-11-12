@@ -22,3 +22,7 @@ functional ... we fix his pr before we merging"*.
 ## Proof
 34/34 in the test. In a scratch home with the real fleet registry: the heart wrote loopback + its tailnet IP; a lone
 heart stayed on loopback and said so; a second run left the operator's file alone.
+
+## CHANGE LOG
+
+- 2026-11-12 — review-mend: added missing heading for #712
