@@ -200,11 +200,12 @@ adopt() {
   [ -d "$PIN/.git" ] || fail "no pin at $PIN"
   local sha d; sha="$(git -C "$PIN" rev-parse --short=12 HEAD)"; d="$REL/$sha"
   [ -e "$d" ] && fail "$d already exists — build a release and flip it instead"
-  mv -T "$PIN" "$d" || fail "could not move the pin"
+  # the links are made in the same breath as the move, so the pin's path is absent for microseconds, not for the
+  # whole of link_shared (heimdall 2026-11-12: a timer started in that gap and failed its CHDIR)
+  ln -sfn "$d" "$CUR.tmp-$$" && mv -T "$PIN" "$d" && mv -T "$CUR.tmp-$$" "$CUR" && ln -sfn "$CUR" "$PIN" \
+    || fail "could not move the pin"
   link_shared "$d"
   date -Is > "$d/.release-adopted"
-  ln -sfn "$d" "$CUR.tmp-$$" && mv -T "$CUR.tmp-$$" "$CUR"
-  ln -sfn "$CUR" "$PIN"
   say "adopt	$PIN → $CUR → $d"
 }
 
