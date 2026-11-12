@@ -42,3 +42,4 @@ The pictures were taken against a clean demo HOME with stub providers, so they s
 ## CHANGE LOG
 
 - **2026-11-12** — written (Eindri `model-door`).
+- **2026-11-12** — correction (gather-five, after the review of PR #692): the line above that says "48 checks pass" is wrong; the suite `tests/model-door.mts` has 41 checks. The original line stands as the record.

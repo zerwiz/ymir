@@ -37,3 +37,7 @@ apart. The 13:56:34 Discord death is its **fault C**: Discord's own process dies
 roads that fault does not explain (the Firefox deaths at 13:29 and 13:33 with no kill syscall). The GPU note
 helps **fault D** (sound or voice gone with no process dying): the card's processes are written at the same
 second as the death. The guard's `inputs` count and Rödd's loss records give D the same kind of record.
+
+## CHANGE LOG
+
+- **2026-11-12** — written (Eindri `desk-stays-whole`); change-log section added at the gather so the append-only ward can judge the note.
