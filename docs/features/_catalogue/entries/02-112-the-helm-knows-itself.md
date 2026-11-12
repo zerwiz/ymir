@@ -1,0 +1,4 @@
+---
+section: agents-work-collaboration
+---
+| Agents | **The helm knows itself — the lease says who holds it, what for, where, and on which pin** (`bin/seat/helm-identity.sh` · `bin/seat/armpin.sh` · `apps/rodd/src/pin.js` · [how-to](docs/features/the-helm-knows-itself.md)) | The arm lease now carries `seat · charter · host · machine · fleetrole · fleet · pin · pin_behind`, written at take; `rodd-arm.sh who`, `lock-ask.sh who` and the digest print it as one row. A machine that cannot resolve its host or fleet role is refused the helm and the field is named. Rödd resolves her code from the pinned runtime and refuses without it; her unit names the pin. Eir's `armpin` surface fails when the pin is behind or a supervisor runs a tree. Rödd's refusals are keyed through the notify door — one toast per window, one room line each (plans 254, 257) | [docs/features/the-helm-knows-itself.md](docs/features/the-helm-knows-itself.md) |

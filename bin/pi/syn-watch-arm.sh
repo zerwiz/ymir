@@ -174,6 +174,16 @@ if ! role_is_known "$ROLE"; then
   printf 'watcher: refused — clause 3: role %s is not one this seat can work (rodd, counsellor, or a harness name); declare BROKK_ARM_ROLE or --holder\n' "$ROLE" >&2
   exit 1
 fi
+# Clause 4 (plans 254 B1c · 257 H7): a holder that cannot resolve its own HOST or its
+# FLEET ROLE does not take the helm — it stands read-only and names the missing field. A
+# supervisor that does not know which machine it stands on cannot tell its own wakes from
+# a peer's. The engine is the one resolver (bin/seat/helm-identity.sh --check asks it).
+if [ -x "$SCRIPT_DIR/../seat/helm-identity.sh" ]; then
+  if ! _ident="$(bash "$SCRIPT_DIR/../seat/helm-identity.sh" --check 2>&1)"; then
+    printf 'watcher: read-only — clause 4: %s\n' "$(printf '%s' "$_ident" | grep -m1 -E 'refused|cannot' || printf '%s' "$_ident" | head -1)" >&2
+    exit 1
+  fi
+fi
 printf 'role=%s session=%s\n' "$ROLE" "$sess" > "$STATE/.arm.role" 2>/dev/null || true
 printf 'watcher: helm role=%s session=%s\n' "$ROLE" "$sess"
 

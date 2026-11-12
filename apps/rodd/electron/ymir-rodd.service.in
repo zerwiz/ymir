@@ -1,0 +1,22 @@
+# ymir-rodd.service — Rödd, the voice, run from the PINNED runtime (plan 257 H7).
+#
+# Rendered by bin/desktop/desktop-place.sh (install_entries) with __YMIR_RUNTIME__ set to the
+# pin from $YMIR_HOME/config/runtime.env. Because ExecStart names the pin, the pinned-runtime
+# ward (bin/gates/guards/runtime-pinned-guard.sh) judges her like every other unit — a surface
+# the ward cannot see is a surface that drifts.
+#
+# Not a boot resident: no [Install] section. The launcher entry starts it on his click.
+[Unit]
+Description=Ymir · Rödd — the voice, from the pinned runtime
+After=graphical-session.target
+
+[Service]
+Type=oneshot
+# start.sh raises the window detached and returns; the window lives in this unit's cgroup,
+# so the unit must stay active after the script exits or systemd would reap the window.
+RemainAfterExit=yes
+TimeoutStartSec=300
+Environment=YMIR_RUNTIME_DIR=__YMIR_RUNTIME__
+WorkingDirectory=__YMIR_RUNTIME__/apps/rodd
+ExecStart=__YMIR_RUNTIME__/apps/rodd/start.sh
+ExecStop=__YMIR_RUNTIME__/apps/rodd/start.sh --stop

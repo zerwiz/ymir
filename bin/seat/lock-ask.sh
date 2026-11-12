@@ -172,7 +172,8 @@ cmd_who() {
   # so this door, rodd-arm.sh and the digest answer with the same words.
   local helm_door="$ROOT/bin/seat/helm-identity.sh"
   if [ -x "$helm_door" ]; then
-    bash "$helm_door" 2>/dev/null || printf 'helm[1]{seat,role,charter,host,fleetrole,fleet,pin,behind,gen,pid,heartbeat_age_s,identity,missing,state_dir,queue,room}:\n  "no arm is held","%s"\n' "${lpid:+no}"
+    bash "$helm_door" --lease "$STATE/.arm.lease" 2>/dev/null \
+      || printf 'helm[1]{verdict,lease}:\n  "no arm is held","%s/.arm.lease"\n' "$STATE"
   fi
   printf 'lock[8]{lock,owner_pid,live,arm_pid,arm_role,arm_session,agree,queue}:\n  "%s","%s","%s","%s","%s","%s","%s","%s/.wake-queue"\n' \
     "$lp" "${pid:-none}" "$live" "${lpid:-none}" "$lrole" "${lsession:-none}" "$agree" "${lstate:-$STATE}"

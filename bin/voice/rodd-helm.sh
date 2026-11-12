@@ -7,12 +7,20 @@
 #
 #   drain      bin/time/saga-wake-drain.sh               read the wakes, ack the handled
 #   answer     <lease state>/rodd/room.jsonl             append {ts,from,text}, never truncate
-#   alarm      systems/snotra/services/tts-lease/ymir-say.sh --mark-alarm  (speaks + toasts)
+#   alarm      bin/notify/send.sh --key rodd:refusal:<sha>  (one toast per window, keyed)
 #   dispatch   bin/agents/einherjar-spawn.sh             direct-PR / no-mistakes ONLY
 #   refuse     bin/voice/rodd-arm.sh release             give the helm back when a duty is beyond her
 #
 # A refused wake is SPOKEN, never dropped: the refusal is written to the room and
-# said aloud, and the helm is released so the next seat can take it. The room is
+# raised through the notify door, and the helm is released so the next seat can take it.
+#
+# A REFUSAL IS KEYED (plan 254 B7). The toast *"Rödd refuses a wake … please merge PR 999
+# into main (no link)"* came back night after night because nothing keyed it: the same
+# instruction, re-met, raised a fresh notification every time. Now every refusal goes
+# through bin/notify/send.sh with `--key rodd:refusal:<sha of the instruction>`, so the
+# same refused instruction is ONE toast per window — and ALWAYS one room line, because a
+# refusal silenced on the desktop must still be on the record. The words are composed
+# from the instruction and the reason; no fixed phrase lives in this file. The room is
 # resolved from the `state=` the arm LEASE names — the lease is the authority,
 # never a path — and the queue is drained/acked through the door, never edited.
 #
@@ -32,7 +40,7 @@ ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/
 HOARD_LIB="$ROOT/bin/vault/hoard-lib.sh"
 DRAIN="$ROOT/bin/time/saga-wake-drain.sh"
 ARM="$ROOT/bin/voice/rodd-arm.sh"
-SAY="$ROOT/systems/snotra/services/tts-lease/ymir-say.sh"
+NOTIFY="${RODD_NOTIFY_DOOR:-$ROOT/bin/notify/send.sh}"
 SPAWN="$ROOT/bin/agents/einherjar-spawn.sh"
 LOCK_DOOR="$ROOT/bin/records/ymir-state.sh"
 
@@ -77,6 +85,37 @@ with open(room, "a", encoding="utf-8") as fh:
 PY
 }
 
+# ── a refusal: one room line always, one keyed toast per window ─────────────
+# The instruction is normalised before it is hashed — a leading ISO stamp and the
+# queue's own tab-separated header are not part of what was asked — so the SAME request
+# re-met tomorrow is the same key, and a different request is a different one.
+instruction_of() {  # <wake line> → the words that were asked
+  printf '%s' "$1" | awk -F'\t' '{print $NF}' \
+    | sed -E 's/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:]+Z?[[:space:]]+//' | tr -s '[:space:]' ' ' | sed 's/^ //; s/ $//'
+}
+refusal_key() {  # <instruction> → rodd:refusal:<sha>
+  printf 'rodd:refusal:%s' "$(printf '%s' "$1" | sha256sum | cut -c1-16)"
+}
+refuse_aloud() {  # <reason> <wake line>
+  local reason="$1" asked key
+  asked="$(instruction_of "$2")"
+  key="$(refusal_key "$asked")"
+  room_append "Nanna" "refused ($reason): $asked [key $key]"
+  [ -x "$NOTIFY" ] || [ -r "$NOTIFY" ] || return 0
+  bash "$NOTIFY" --source rodd --severity MEDIUM --key "$key" --no-telegram \
+    --message "Rödd refused: $asked — $reason" >/dev/null 2>&1 || true
+}
+
+# Her own notices come back to her through the queue (the notify door raises MEDIUM+ as
+# a wake). A line she raised is HER word, already recorded — it is heard, never judged
+# again, or one refusal would breed the next.
+is_her_own() {
+  case "$1" in
+    *" notify rodd "*|*"notify rodd "*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 # ── the judgement a wake asks for ────────────────────────────────────────────
 # A wake asking for a merge (or another act only the Allfather may do) is beyond
 # her writ: refused aloud and the helm released. A wake asking for WORK may only
@@ -104,7 +143,7 @@ dispatch_errand() {  # <wake>
   [ -n "$id" ] && [ -n "$project" ] || { room_append "Nanna" "cannot dispatch — $wake names no errand or project"; return 1; }
   case "$mode" in
     direct-PR|no-mistakes) ;;
-    *) room_append "Nanna" "refused to dispatch — mode '$mode' is not direct-PR/no-mistakes"; "$SAY" --mark-alarm "Rödd refuses a dispatch beyond her writ: $wake" >/dev/null 2>&1 || true; return 1 ;;
+    *) refuse_aloud "mode '$mode' is not direct-PR or no-mistakes" "$wake"; return 1 ;;
   esac
   [ -x "$SPAWN" ] || { room_append "Nanna" "cannot dispatch — the errand door is missing"; return 1; }
   "$SPAWN" "$id" "$project" --mode "$mode" >/dev/null 2>&1 \
@@ -127,9 +166,11 @@ run_pass() {
       *) continue ;;
     esac
     [ -n "$line" ] || continue
+    if is_her_own "$line"; then
+      continue
+    fi
     if is_beyond_her "$line"; then
-      room_append "Nanna" "refused: $line"
-      "$SAY" --mark-alarm "Rödd refuses a wake beyond her writ: $line" >/dev/null 2>&1 || true
+      refuse_aloud "a merge, a force, a spend or a deploy is the Allfather's hand (Rule 08)" "$line"
       "$ARM" release >/dev/null 2>&1 || true
       printf 'rodd-helm: refused and released — %s\n' "$line" >&2
       refused=1

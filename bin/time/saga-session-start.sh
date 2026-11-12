@@ -78,6 +78,11 @@ if [ "$LOCKED" = "1" ]; then
 else
   printf 'READ-ONLY: session lock held by pid %s - no spawn, steer, merge, drain, or repair this session\n' "${owner:-unknown}"
 fi
+# Who holds the helm, what it is for, which machine, which pin — ONE line from the lease
+# (plans 254 B1b/B1c · 257 H8). The record answers; the digest never infers it.
+if [ -x "$SCRIPT_DIR/../seat/helm-identity.sh" ]; then
+  bash "$SCRIPT_DIR/../seat/helm-identity.sh" --line 2>/dev/null || printf 'helm: no arm is held\n'
+fi
 
 section "BOOTSTRAP"
 missing=""

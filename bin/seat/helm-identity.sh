@@ -10,6 +10,7 @@
 #
 #   helm-identity.sh                 the one row, read from the lease the arm holds
 #   helm-identity.sh --lease <file>  read THAT lease (a caller that already resolved one)
+#   helm-identity.sh --line          the same answer as one middot line (the digest's form)
 #   helm-identity.sh --check         the holder gate: can THIS machine resolve host and
 #                                    fleet role? exit 3 and the field is named when not
 #
@@ -32,17 +33,19 @@ ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/
 HOARD_LIB="$ROOT/bin/vault/hoard-lib.sh"
 ENGINE="$ROOT/bin/engine/ymir-engine.sh"
 
-usage() { sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+usage() { sed -n '2,27p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 die()   { printf 'helm-identity: %s\n' "$*" >&2; exit 1; }
 refuse(){ printf 'helm-identity: %s\n' "$*" >&2; exit 3; }
 
 LEASE_OVERRIDE=""
 ACTION="row"
+FORMAT="row"
 while [ $# -gt 0 ]; do
   case "$1" in
     --lease) LEASE_OVERRIDE="${2:-}"; shift 2 ;;
     --check) ACTION="check"; shift ;;
-    --format|row) ACTION="row"; shift ;;
+    --line) FORMAT="line"; shift ;;
+    row) ACTION="row"; shift ;;
     -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
     -h|--help) usage 0 ;;
     *) usage 2 ;;
@@ -82,7 +85,7 @@ print_row() {  # <lease>
   gen="$(lease_field "$lease" gen)"; [ -n "$gen" ] || gen=unknown
   role="$(lease_field "$lease" role)"; [ -n "$role" ] || role=unknown
   seat="$(lease_field "$lease" seat)"; [ -n "$seat" ] || seat=unnamed
-  charter="$(lease_field "$lease" charter)"; [ -n "$charter" ] || charter="planning,mail,the-work-in-hand,dispatch-on"
+  charter="$(lease_field "$lease" charter)"; [ -n "$charter" ] || charter=none
   host="$(lease_field "$lease" host)"; [ -n "$host" ] || host=none
   fleetrole="$(lease_field "$lease" fleetrole)"; [ -n "$fleetrole" ] || fleetrole=none
   fleet="$(lease_field "$lease" fleet)"; [ -n "$fleet" ] || fleet=none
@@ -99,6 +102,15 @@ print_row() {  # <lease>
   esac
   queue="${state_dir:-none}/.wake-queue"
   room="${state_dir:-none}/rodd/room.jsonl"
+  if [ "$FORMAT" = line ]; then
+    # The one line a person reads (the digest): seat · role · charter · host · fleetrole ·
+    # pin (behind) · gen · pid · heartbeat — and the missing field when the helm is read-only.
+    printf 'helm: %s · %s · %s · %s · %s · pin %s (%s behind) · gen %s · pid %s · heartbeat %ss' \
+      "$seat" "$role" "$(charter_text "$charter")" "$host" "$fleetrole" "$pin" "$behind" "$gen" "${pid:-none}" "$age"
+    [ "$identity" = readonly ] && printf ' · READ-ONLY (missing %s)' "$missing"
+    printf '\n'
+    return 0
+  fi
   printf 'helm[1]{seat,role,charter,host,fleetrole,fleet,pin,behind,gen,pid,heartbeat_age_s,identity,missing,state_dir,queue,room}:\n'
   printf '  "%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s"\n' \
     "$seat" "$role" "$(charter_text "$charter")" "$host" "$fleetrole" \
