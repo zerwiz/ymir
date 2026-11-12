@@ -27,10 +27,10 @@ bin[15]{file,does,kind,verdict,disposition,callers,lines}:
   "connect.sh","connect.sh — THE connect door: one button to a signed-in mailbox, and the honest line per account.","tool","wired","keep",3,71
   "gna_addresses.py","'''Gná's register: the addresses the house USES, and whether mail can reach them.","tool","wired","keep",2,971
   "gna_connect.py","'''Gná's connect door — one button to a signed-in mailbox, and the honest line per account.","tool","wired","keep",3,1434
-  "gna_desk.py","'''Gná's desk — read-only, loopback, one account per request.","tool","wired","keep",1,254
-  "gna_import.py","'''Gná's importer: one account, read-only, every message once.","tool","wired","keep",2,643
+  "gna_desk.py","'''Gná's desk — read-only, loopback, one account per request.","tool","wired","keep",1,269
+  "gna_import.py","'''Gná's importer: one account, read-only, every message once.","tool","wired","keep",2,651
   "gna_judge.py","'''Gná's judge: rules first, and every verdict carries the rule that gave it.","tool","wired","keep",0,169
-  "gna_notify.py","'''gna_notify.py — tell the arm about mail that arrived, once, as it arrives.","tool","wired","keep",1,257
+  "gna_notify.py","'''gna_notify.py — tell the arm about mail that arrived, once, as it arrives.","tool","wired","keep",1,287
   "gna_store.py","'''Gná's store: one message once, and the account is the boundary.","tool","wired","keep",0,257
   "inbound-test.sh","inbound-test.sh — THE acceptance test for 'people can mail us' (plan 116 §15.3.4).","tool","wired","keep",3,141
   "install.sh","install.sh — seat Gná's desk on THIS machine.","data","tested","keep",46,82
