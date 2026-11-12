@@ -4,7 +4,7 @@ The full Norse component map. AGENTS.md loads this when a task names a subsystem
 Deep doctrine (law, aetts, reject list): `.agents/skills/galdr-ymirsystem/assets/norse-naming.md`.
 
 ```
-platform[55]{subsystem,norse,role}:
+platform[57]{subsystem,norse,role}:
   "Master platform root","Ymir","base host OS, master daemon"
   "Primary agent","Brokk","main autonomous worker"
   "Sub-agent worker","Eindri","isolated sandboxed workers"
@@ -21,6 +21,7 @@ platform[55]{subsystem,norse,role}:
   "Global shared workspace","Midgard","cross-tenant shared repos & assets"
   "Inter-agent A2A bus","Ratatoskr","A2A 1.0 backbone: agent cards, task lifecycle, Redis queue"
   "Vector DB & memory","Mimirsbrunn","long-term memory, embeddings, vector store"
+  "The deeper well (derived memory)","Sökkvabekkr","the sunken bench where Sága tells Odin all that has been: conclusions about each person and agent, derived from the well and rebuildable from it (Honcho engine; on trial, plan 260)"
   "Audit trail","Runes","append-only system audit ledger"
   "Issue-to-PR pipeline","Mjollnir","autonomous bug-fix and PR creation"
   "Process health monitor","Valhalla","PM2/Docker process supervisor"
