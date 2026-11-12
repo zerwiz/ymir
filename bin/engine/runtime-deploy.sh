@@ -7,6 +7,15 @@
 #   bin/engine/runtime-deploy.sh --no-restart   fetch, move, install dependencies, then stop (the seat step uses it)
 #   bin/engine/runtime-deploy.sh --help
 #
+# STABLE (plan 275, 2026-11-12 — S6 and S1):
+#   · a DIRTY pin is refused, never wiped: a hand edit on the pin is named, filed as a fault, and left in place
+#     (the old `reset --hard` destroyed it silently; Gróa's own check hid the edits for three days)
+#   · the commit that was running is recorded first; when a unit does not settle on the new commit, the pin is
+#     moved BACK to it and the units restart onto the last good code — the machine is never left broken
+#   · every good move writes $YMIR_HOME/state/runtime/last-good (the canary's record, S2); every refusal and
+#     every rollback writes a dated fault report under $YMIR_HOME/hodd/state/groa/faults/ (plan 275 step B)
+#   YMIR_RUNTIME_NO_ROLLBACK=1 leaves a failed move in place (a person debugging it on purpose).
+#
 # WHY. On 2026-11-02 ten systemd user units were found executing files from the operator's WORKING tree — the
 # directory agents check branches out in — so a `git checkout` changed the code the scheduler, the well, the
 # model bridge, the MCP face, the warden and the assistant were running, with no approval and no restart
@@ -47,6 +56,19 @@ esac
   exit 1; }
 
 running=$(git -C "$RUN_DIR" rev-parse --short HEAD 2>/dev/null | tr -d '[:space:]')
+previous=$(git -C "$RUN_DIR" rev-parse HEAD 2>/dev/null | tr -d '[:space:]')
+
+# where the record lives: the home's state (the canary's last-good) and the hoard's fault shelf
+STATE_RT="${home:+$home/state/runtime}"; FAULTS="${home:+$home/hodd/state/groa/faults}"
+. "$ROOT/bin/time/sol-lib.sh" 2>/dev/null || true
+stamp() { if declare -f sol_line >/dev/null 2>&1; then sol_line; else date '+%F %H:%M %Z'; fi; }
+fault() {  # <slug> <title> <body…> — one dated report the operator and Gróa's smith can read
+  [ -n "$FAULTS" ] || return 0
+  mkdir -p "$FAULTS" 2>/dev/null || return 0
+  local f="$FAULTS/$(date +%F)-runtime-$1.md"
+  { printf '# %s\n\n**When:** %s · **seat:** %s · **pin:** %s\n\n' "$2" "$(stamp)" "$(hostname -s 2>/dev/null)" "$RUN_DIR"
+    shift 2; printf '%s\n' "$@"; } > "$f" 2>/dev/null && printf 'fault\t%s\n' "$f"
+}
 git -C "$RUN_DIR" fetch -q origin "$BRANCH" || {
   printf 'FAIL\tthe checkout could not fetch\tgit -C %s fetch origin %s failed\n' "$RUN_DIR" "$BRANCH"; exit 1; }
 merged=$(git -C "$RUN_DIR" rev-parse --short "origin/$BRANCH" | tr -d '[:space:]')
@@ -56,6 +78,15 @@ if [ "$action" = "check" ]; then
     printf 'deployed\t%s\t%s\tthe pinned runtime stands on origin/%s\n' "$running" "$merged" "$BRANCH"; exit 0
   fi
   printf 'STALE\trunning=%s merged=%s\trun runtime-deploy.sh\n' "$running" "$merged"; exit 1
+fi
+
+# 0. a dirty pin is refused, never wiped (plan 275 S6): its hand edits are the only copy until they reach the code
+dirty=$(git -C "$RUN_DIR" status --porcelain --untracked-files=no 2>/dev/null)
+if [ -n "$dirty" ]; then
+  printf 'REFUSED\tthe pin carries hand edits — they would be wiped\t%s\n' "$(printf '%s' "$dirty" | awk '{print $2}' | paste -sd' ' -)"
+  printf 'help\tcarry them into main by PR, then: git -C %s checkout -- <files>; then run this again\n' "$RUN_DIR"
+  fault dirty-pin "The pin carries hand edits" "The update refused to move the pin, because these files differ from the commit it runs:" "" '```' "$dirty" '```' "" "Carry each edit into main by a PR, then restore the files on the pin and run the update again."
+  exit 3
 fi
 
 # 1. the pinned checkout moves — never a working tree, and never a merge commit of its own
@@ -112,7 +143,22 @@ for u in $UNITS; do
 done
 
 if [ "$fail" -ne 0 ]; then
-  printf 'FAIL\ta unit did not settle after the move\tcommit %s is in place; see: journalctl --user -u <unit> -n 40\n' "$now"
-  exit 1
+  if [ -n "${YMIR_RUNTIME_NO_ROLLBACK:-}" ] || [ -z "$previous" ] || [ "${previous:0:7}" = "${now:0:7}" ]; then
+    printf 'FAIL\ta unit did not settle after the move\tcommit %s is in place; see: journalctl --user -u <unit> -n 40\n' "$now"
+    fault unsettled "A unit did not settle after the update" "Commit $now is in place (rollback was not possible or was turned off). Read: journalctl --user -u <unit> -n 40"
+    exit 1
+  fi
+  # S1: roll back to the commit that was running, so the machine is never left on code that does not start
+  printf 'ROLLBACK\ta unit did not settle on %s — moving the pin back to %s\n' "$now" "${previous:0:8}"
+  git -C "$RUN_DIR" reset -q --hard "$previous" && {
+    [ -x "$UNITS_DOOR" ] && YMIR_RUNTIME_DIR="$RUN_DIR" bash "$UNITS_DOOR" write --no-restart >/dev/null 2>&1
+    systemctl --user daemon-reload
+    for u in $UNITS; do unit_present "$u" && systemctl --user restart "$(unit_name "$u")" >/dev/null 2>&1; done; }
+  fault rolled-back "The update was rolled back" "Commit $now did not settle (see the unit table above in the update's output); the pin was moved back to ${previous:0:8}, the last good commit, and the units restarted on it." "Fix the cause in the code; the next update tries again."
+  printf 'ROLLED-BACK\t%s\t%s\tthe new commit did not settle; the pin stands on the last good commit\n' "${previous:0:8}" "$RUN_DIR"
+  exit 4
+fi
+if [ -n "$STATE_RT" ] && mkdir -p "$STATE_RT" 2>/dev/null; then
+  printf '%s %s %s\n' "$(git -C "$RUN_DIR" rev-parse HEAD)" "$(date -u +%FT%TZ)" "$(hostname -s 2>/dev/null)" > "$STATE_RT/last-good"
 fi
 printf 'deployed\t%s\t%s\tthe pinned runtime moved and every unit settled\n' "$now" "$RUN_DIR"
