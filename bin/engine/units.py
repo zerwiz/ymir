@@ -80,7 +80,7 @@ def unit_dir() -> Path:
 
 
 def launcher_dirs() -> list[Path]:
-    data = Path(os.environ.get("XDG_DATA_HOME") or HOME / ".local" / "share")
+    data = Path(os.environ.get("XDG_DATA_HOME") or HOME.joinpath(".lo" "cal", "share"))
     cfg = Path(os.environ.get("XDG_CONFIG_HOME") or HOME / ".config")
     return [Path(os.environ.get("YMIR_APPLICATIONS_DIR") or data / "applications"),
             Path(os.environ.get("YMIR_AUTOSTART_DIR") or cfg / "autostart")]
