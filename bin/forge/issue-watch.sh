@@ -18,9 +18,8 @@
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)"
-. "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
-H=""; declare -f ymir_home_root >/dev/null 2>&1 && ymir_home_root H 2>/dev/null
-STATE="${H:-$HOME/Documents/ymirhome}/state"; mkdir -p "$STATE"
+. "$ROOT/bin/vault/hoard-lib.sh"
+STATE=""; hoard_state_dir STATE; mkdir -p "$STATE"
 SEEN="$STATE/issue-watch.json"; REPO="${ISSUE_WATCH_REPO:-zerwiz/ymir}"
 DRY=0; STATUS=0
 ORIG=("$@")

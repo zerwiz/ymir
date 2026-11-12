@@ -30,8 +30,8 @@ case "$MODE" in -h|--help) sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
   full|--digest|--json) ;; *) echo "error: unknown mode $MODE" >&2; exit 2 ;; esac
 
 STATE=""
-if [ -r "$ROOT/bin/vault/hoard-lib.sh" ]; then . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null; command -v hoard_state_dir >/dev/null 2>&1 && hoard_state_dir STATE 2>/dev/null; fi
-[ -n "$STATE" ] || STATE="${YMIR_STATE_DIR:-${YMIR_HOME:-$HOME/Documents/ymirhome}/state}"
+. "$ROOT/bin/vault/hoard-lib.sh"
+hoard_state_dir STATE
 OWNER="$(bash "$ROOT/bin/records/ymir-state.sh" lock owner 2>/dev/null | tr -d '[:space:]')"
 PANES=""; AGENTS=""
 if command -v herdr >/dev/null 2>&1; then
