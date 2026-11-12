@@ -23,7 +23,7 @@
 # the brief says why.
 #
 # Usage:
-#   erindi-brief.sh <task-id> <repo-name> --mode <no-mistakes|direct-PR|local-only>
+#   erindi-brief.sh <task-id> <repo-name> --mode <no-mistakes|direct-PR|local-only|batch>
 #   erindi-brief.sh <task-id> <repo-name> --scout
 #   erindi-brief.sh <task-id> --relaunch
 #
@@ -132,7 +132,7 @@ if [ "$RELAUNCH" -eq 1 ]; then
   if [ "$RECORDED_KIND" = ship ]; then
     MODE=$(meta_value "$META" mode)
     case "$MODE" in
-      no-mistakes|direct-PR|local-only) ;;
+      no-mistakes|direct-PR|local-only|batch) ;;
       *) echo "error: task record $META records no valid mode; refusing to regenerate the brief" >&2; exit 1 ;;
     esac
   elif [ "$RECORDED_KIND" != scout ]; then
@@ -145,12 +145,12 @@ else
     KIND=scout
   else
     [ "$MODE_SET" -eq 1 ] || {
-      echo "error: ship briefs require --mode <no-mistakes|direct-PR|local-only>; resolve it at intake and pass it here" >&2
+      echo "error: ship briefs require --mode <no-mistakes|direct-PR|local-only|batch>; resolve it at intake and pass it here" >&2
       exit 1
     }
     case "$MODE" in
-      no-mistakes|direct-PR|local-only) ;;
-      *) echo "error: --mode must be one of no-mistakes, direct-PR, local-only (got '$MODE')" >&2; exit 1 ;;
+      no-mistakes|direct-PR|local-only|batch) ;;
+      *) echo "error: --mode must be one of no-mistakes, direct-PR, local-only, batch (got '$MODE')" >&2; exit 1 ;;
     esac
   fi
   if [ "$MODE_SET" -eq 1 ] && [ "$SCOUT" -eq 1 ]; then
@@ -318,6 +318,24 @@ $WELL_STEP
      \`bin/agents/eindri-acclaim.sh $ID --terminal done --line "opened PR <url>"\`
 - \`grep -c "$ID" $WAKE_QUEUE\` prints at least 1 (your wake is in the durable queue; Brokk is woken with no arm and no sweep).
 - Stop. Brokk routes the PR to the Glitnir human gate; you never merge.
+EOF
+)
+    ;;
+  batch)
+    # RULES/08, appended 2026-11-12: errands dispatched TOGETHER commit on their own
+    # branches and never push; the helm merges them in one integration worktree and
+    # ships ONE push and ONE PR through the gates.
+    RULE1="Never push to any remote and never open a PR. Commit only on your \`eindri/$ID\` branch; this errand is one of a batch, and the helm merges every branch of the batch locally and ships them in ONE push and ONE PR (RULES/08, the batch road)."
+    DOD_BODY=$(cat <<EOF
+# Definition of done — every gate is a COMMAND; run it and record its output
+- \`git branch --show-current\` prints \`eindri/$ID\` (you are on the right branch).
+- Your own tests for what you changed pass; record the command and its last line.
+- \`git status --porcelain\` prints nothing (everything committed; git status is clean).
+- Remember your work in the well: \`bash bin/records/mimir.sh observe "<what you built, the lesson, what is left>" --source eindri --task $ID --tags eindri,done\`.
+- Run the terminal act — one command; it writes the status line, files the report shelf, and appends the durable wake:
+     \`bin/agents/eindri-acclaim.sh $ID --terminal done --line "committed on eindri/$ID (not pushed): <what, proof>"\`
+- \`grep -c "$ID" $WAKE_QUEUE\` prints at least 1 (your wake is in the durable queue).
+- Stop. You never push and never open a PR; the helm merges the batch and ships it once.
 EOF
 )
     ;;
