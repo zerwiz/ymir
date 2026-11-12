@@ -26,9 +26,9 @@ bin[48]{file,does,kind,verdict,disposition,callers,lines}:
   "atlas.sh","atlas.sh — one page at the top of the home that says where we have it all (plan 251).","tool","wired","keep",1,19
   "audit-apply.sh","audit-apply.sh — turn an audit into work, in one door.","tool","wired","keep",0,96
   "behind.sh","behind.sh — the arithmetic of being behind: opened/closed this week, net, stale-30d, unbuilt phases.","tool","wired","keep",0,43
-  "comms.py","'''comms.py — every communication, in, out and owed, and the to-do they move (plan 261).","tool","wired","keep",4,1021
-  "comms.sh","comms.sh — the one read door over every communication: in, out and owed (plan 261).","tool","wired","keep",2,19
-  "daily-log.sh","daily-log.sh — the day's work, recorded where the contract says it lives.","tool","wired","keep",4,104
+  "comms.py","'''comms.py — every communication, in, out and owed, and the to-do they move (plan 261).","tool","wired","keep",4,1175
+  "comms.sh","comms.sh — the one read door over every communication: in, out and owed (plan 261).","tool","wired","keep",3,19
+  "daily-log.sh","daily-log.sh — the day's work, recorded where the contract says it lives.","tool","wired","keep",6,104
   "developers.sh","developers.sh — who can write to a repository, and who actually has.","tool","wired","keep",0,108
   "grade.sh","grade.sh — Dellingr: how fresh is a document?","tool","wired","keep",2,29
   "header.sh","header.sh — the declared-truth header of a home document: check, or apply a minimal one.","tool","wired","keep",2,28
@@ -39,27 +39,27 @@ bin[48]{file,does,kind,verdict,disposition,callers,lines}:
   "library.sh","library.sh — the library of records: one corpus, one contract, one door (plan 115).","tool","wired","migrate → src/ymir_runtime/library.py",0,72
   "meetings.sh","meetings.sh — one report over every meeting the house has, whatever recorded it.","tool","wired","keep",4,313
   "mimir-ingest.sh","mimir-ingest.sh — ingest the repo's data material into the well (Mimirsbrunn).","tool","wired","keep",1,133
-  "mimir-log.py","'''mimir-log.py — move memory between the engram (the index) and the JSONL log","data","wired","keep",1,290
+  "mimir-log.py","'''mimir-log.py — move memory between the engram (the index) and the JSONL log","tool","wired","keep",1,290
   "mimir-log.sh","mimir-log.sh — move memory between the engram and the append log (a thin door).","tool","wired","keep",3,19
   "mimir-policy.py","'''mimir-policy.py — the law of the well: what may be written, what it is, and","tool","tested","keep",3,1301
   "mimir-recall-today.sh","mimir-recall-today.sh — drink before you act: the session's opening recall.","tool","wired","keep",1,113
   "mimir-reflect.sh","mimir-reflect — smelt the well's episodes into facts, through the LLAMA-ROUTER.","tool","wired","keep",0,35
   "mimir.sh","mimir.sh — the well (Mimirsbrunn).","tool","tested","keep",23,510
-  "note.sh","note.sh — append a DATED section to an existing document in the home (append-only, Rule 06).","tool","wired","keep",1,16
+  "note.sh","note.sh — append a DATED section to an existing document in the home (append-only, Rule 06).","tool","wired","keep",4,16
   "open-work.sh","open-work.sh — the open work, rendered for a HUMAN, from the record the doors read.","tool","wired","keep",2,80
   "plan-board.sh","plan-board.sh — how many plans are done and not done, what to work on next, and which old","tool","wired","keep",0,300
   "plan-state.sh","plan-state.sh — read and write the Status/Owner header of every plan in the ledger.","tool","wired","keep",2,83
   "plan.sh","plan.sh — the plan ledger: create the NEXT numbered plan and its index row.","tool","tested","keep",8,220
   "project-brief.sh","project-brief.sh — 'this project', for any session in any harness (Claude Code, Pi, OpenCode, Hermes).","tool","wired","keep",1,21
   "project_brief.py","'''project_brief — the 'this project' section of the session-start digest (see project-brief.sh).'''","tool","wired","keep",1,139
-  "regenerate-on-merge.sh","regenerate-on-merge.sh — the merge driver for WOVEN documents (Þættir, plan 174).","tool","wired","keep",2,21
-  "runes-append.sh","runes-append.sh — the append-only Runes ledger, a THIN SHIM.","tool","tested","keep",34,117
+  "regenerate-on-merge.sh","regenerate-on-merge.sh — the merge driver for WOVEN documents (Þættir, plan 174).","tool","wired","keep",3,36
+  "runes-append.sh","runes-append.sh — the append-only Runes ledger, a THIN SHIM.","tool","tested","keep",35,117
   "runes-project.sh","runes-project.sh — the DAG projector, regenerates runes_audit.md from events.","tool","wired","keep",0,65
   "snotra-ladder.sh","snotra-ladder.sh — the meeting ladder: transcript → minutes → promises → todos, and a stop that says so.","tool","wired","keep",0,611
   "snotra-what.sh","snotra-what.sh — Snotra's own voice: what the ear is doing, said in one sentence.","tool","wired","keep",1,640
-  "test_comms.py","'''The proofs plan 261 asks for: the record, the owed list, the to-do proposals, the brief,","tool","wired","keep",0,424
-  "test_mimir_bridge_health.py","﻿import importlib.util,json,subprocess,sys,tempfile,threading,unittest","data","wired","keep",0,29
-  "todos.sh","todos.sh — THE task board of the house, one writer for one file.","tool","wired","keep",3,180
+  "test_comms.py","'''The proofs plan 261 asks for: the record, the owed list, the to-do proposals, the brief,","tool","wired","keep",0,508
+  "test_mimir_bridge_health.py","﻿import importlib.util,json,subprocess,sys,tempfile,threading,unittest","tool","wired","keep",0,30
+  "todos.sh","todos.sh — THE task board of the house, one writer for one file.","tool","wired","keep",6,184
   "vor-crew-state.sh","vor-crew-state.sh - deterministic read of an Eindri worker's CURRENT state.","tool","wired","keep",2,125
   "weave-features.sh","weave-features.sh — FEATURES.md is WOVEN from fragments, never hand-edited.","tool","wired","keep",7,56
   "weave.sh","weave.sh — the dispatcher for every WOVEN document and every INDEX (Þættir, plan 174/175).","tool","wired","keep",8,92
@@ -69,7 +69,7 @@ bin[48]{file,does,kind,verdict,disposition,callers,lines}:
   "where.sh","where.sh — 'which book do I read before touching this path?'","tool","wired","keep",1,101
   "workspace-rag.sh","workspace-rag.sh — memory over the realm workspaces (W0038).","tool","wired","keep",0,165
   "wyrd-db.sh","wyrd-db.sh — the database layer (W0040).","tool","wired","keep",0,49
-  "ymir-state.sh","ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runtime/state/`).","tool","wired","keep",11,44
+  "ymir-state.sh","ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runtime/state/`).","tool","wired","keep",12,44
 
 **Tally.** verdict: wired=40, tested=8
 
