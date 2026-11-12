@@ -89,6 +89,20 @@ notes="$(git log --no-merges --diff-filter=A --name-only --format= "$range" 2>/d
 touched="$(git log --no-merges --name-only --format= "$range" 2>/dev/null | sed '/^$/d' | sort -u | grep -v '^docs/fixes/' | grep -v '^CHANGELOG' || true)"
 
 if [ -z "$notes" ]; then
+  # THE DOCUMENT ROAD (RULES/08, appended 2026-11-12): a range that changes documents
+  # only, by branch-guard's exact set, owes no fix note — UNLESS it changes a rule. A rule
+  # is law, and a change of law keeps its record. branch-guard owns the set; this gate
+  # asks it, and with no branch-guard beside it the gate stays strict.
+  bg="$SCRIPT_DIR/branch-guard.sh"
+  if [ -r "$bg" ] && bash "$bg" --documents "$base" "$head_sha" >/dev/null 2>&1; then
+    if git diff --no-renames --name-only "$base" "$head_sha" | grep -q '^RULES/'; then
+      printf 'fixes-guard[1]{gate,result}:\n  "push","refused — documents only, but a rule changed and a rule change keeps its fix note"\n' >&2
+      printf 'help: bin/gates/fixes.sh record --component=rules --version=unversioned --title="what the rule now says"\n' >&2
+      return 1
+    fi
+    printf 'fixes-guard[1]{gate,result}:\n  "push","ok — documents only; no fix note owed (RULES/08, 2026-11-12)"\n'
+    return 0
+  fi
   printf 'fixes-guard[1]{gate,result}:\n  "push","refused — no fix note in this range"\n' >&2
   printf 'help: bin/gates/fixes.sh record --component=<%s> --version=<v> --title="what changed"\n' \
     "install|runtime|snotra|skills|agents|hlidskjalf|odrerir|sessrumnir|smidja|hoard|gate" >&2

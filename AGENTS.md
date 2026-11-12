@@ -818,3 +818,19 @@ TOON is converted, format only, when it is next touched.
 The craft and the templates are the skill **`bragi-documents`**, and its template shelf is
 `.agents/skills/bragi-documents/assets/templates/`. The collaboration kit carries the same shelf and its own `RULES/20`,
 so every repository it standardises gets them. The law is `RULES/52-documents-are-for-people.md`.
+
+## 2026-11-12 — two more delivery roads: documents land on main, and a batch ships once
+
+At the Allfather's word: *"documents should be able to push on main"* · *"if multiple agents are sent out at the same
+time, it's much better to merge the branches locally into one push … so everybody is going through the gates."*
+
+The delivery gate above still holds for code, config, scripts, apps, this file and every skill. Two roads are added:
+
+- **Documents only may land on `main`.** A push whose every changed file is Markdown under `docs/` (a fix note added
+  only, never `docs/features/_catalogue/`) or an append-only `RULES/*.md` change may go straight to `main`.
+  `bin/gates/guards/branch-guard.sh` enforces the set; a rule change still carries its fix note.
+- **Errands sent out together ship as one batch.** Brief them with `--mode batch`; each commits on `eindri/<id>` and
+  never pushes. The helm runs `bin/forge/gather.sh --finished` (or names the ids): one worktree, one gate run, one push,
+  one PR. A lone errand may still push its own PR.
+
+The law is RULES/08, in its section appended 2026-11-12. The how-to is `docs/features/gather-a-batch.md`.

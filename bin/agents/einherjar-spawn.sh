@@ -4,7 +4,7 @@
 # and expose its launch through the runtime backend (tmux/herdr).
 #
 # Usage:
-#   einherjar-spawn.sh <task-id> <project-dir> --mode <direct-PR|local-only|no-mistakes>
+#   einherjar-spawn.sh <task-id> <project-dir> --mode <direct-PR|local-only|no-mistakes|batch>
 #       [--yolo on|off] [--harness <name>] [--model <token|request>]
 #       [--effort <low|medium|high|xhigh|max>] [--backend tmux|herdr]
 #       [--isolation on|off|auto] [--force] [--dry-run]
@@ -230,10 +230,10 @@ else
   if [ "$SCOUT" -eq 1 ]; then
     [ "$MODE_SET" -eq 0 ] || { echo "error: --mode applies only to ship spawns; a scout delivers a report" >&2; exit 1; }
   else
-    [ "$MODE_SET" -eq 1 ] || { echo "error: ship spawns require --mode <direct-PR|local-only|no-mistakes>" >&2; exit 1; }
+    [ "$MODE_SET" -eq 1 ] || { echo "error: ship spawns require --mode <direct-PR|local-only|no-mistakes|batch>" >&2; exit 1; }
     case "$MODE" in
-      direct-PR|local-only|no-mistakes) ;;
-      *) echo "error: --mode must be one of direct-PR, local-only, no-mistakes (got '$MODE')" >&2; exit 1 ;;
+      direct-PR|local-only|no-mistakes|batch) ;;
+      *) echo "error: --mode must be one of direct-PR, local-only, no-mistakes, batch (got '$MODE')" >&2; exit 1 ;;
     esac
   fi
 fi
@@ -337,7 +337,7 @@ if [ "$RELAUNCH" -eq 1 ]; then
   [ -d "$WT" ] || { echo "error: recorded worktree $WT no longer exists; recover it before relaunching" >&2; exit 1; }
   if [ "$KIND" = ship ] && [ "$MODE_SET" -eq 0 ]; then
     MODE=$(meta_value "$META" mode)
-    case "$MODE" in direct-PR|local-only|no-mistakes) ;; *) echo "error: task record $META records no valid mode" >&2; exit 1 ;; esac
+    case "$MODE" in direct-PR|local-only|no-mistakes|batch) ;; *) echo "error: task record $META records no valid mode" >&2; exit 1 ;; esac
   fi
   if [ -z "$HARNESS_ARG" ]; then
     RECORDED_RAW=$(meta_value "$META" raw_launch)
