@@ -13,6 +13,7 @@ import './styles/voice.css';
 // The house cloth, dressed on last (docs/house-cloth.md): the tokens, then the mapping.
 import '@design/tokens.css';
 import './styles/house.css';
+import './styles/screens.css';
 // @ts-expect-error — plain JS module from the design system; its types live beside it in ember.d.ts
 import { startEmbers } from '@design/ember.js';
 

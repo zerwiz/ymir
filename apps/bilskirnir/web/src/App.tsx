@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { startEvents } from './lib/events';
-import { useStore } from './store';
+import { isWide, useStore } from './store';
+import { DRAWER_QUERY } from './lib/media';
 import { ChatView } from './components/ChatView';
 import { ComputerViewer } from './components/ComputerViewer';
 import { DetailsPanel } from './components/DetailsPanel';
@@ -19,8 +20,10 @@ function Shell() {
   const modal = useStore((s) => s.modal);
   const viewerOpen = useStore((s) => s.viewerOpen);
   const collapsed = useStore((s) => s.sidebarCollapsed);
+  const drawerOpen = useStore((s) => s.drawerOpen);
   const hasBot = useStore((s) => !!s.selectedBotId);
   const view = useConfigUI((s) => s.view);
+  const showDetails = detailsOpen && hasBot && view === 'chat';
 
   useEffect(() => {
     const st = useStore.getState();
@@ -41,12 +44,17 @@ function Shell() {
   // Global shortcuts: ⌘K search, ⌘B sidebar, ⇧⌘, details, ⌘N new bot.
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
+      const st = useStore.getState();
+      // Escape folds away whatever covers the chat on a narrow screen: the drawer first, then the details.
+      if (e.key === 'Escape' && !st.modal && !st.viewerOpen) {
+        if (st.drawerOpen) { st.set({ drawerOpen: false }); return; }
+        if (st.detailsOpen && !isWide()) { st.set({ detailsOpen: false }); return; }
+      }
       const mod = e.metaKey || e.ctrlKey;
       if (!mod) return;
-      const st = useStore.getState();
       const key = e.key.toLowerCase();
       if (key === 'k') { e.preventDefault(); st.setModal(st.modal === 'search' ? null : 'search'); }
-      else if (key === 'b') { e.preventDefault(); st.set({ sidebarCollapsed: !st.sidebarCollapsed }); }
+      else if (key === 'b') { e.preventDefault(); if (window.matchMedia(DRAWER_QUERY).matches) st.set({ drawerOpen: !st.drawerOpen }); else st.set({ sidebarCollapsed: !st.sidebarCollapsed }); }
       else if (e.shiftKey && (key === ',' || key === '<')) { e.preventDefault(); st.set({ detailsOpen: !st.detailsOpen }); }
       else if (key === ',') { e.preventDefault(); useConfigUI.getState().openAppSettings(); }
     };
@@ -55,10 +63,12 @@ function Shell() {
   }, []);
 
   return (
-    <div className={`app${collapsed ? ' is-sidebar-collapsed' : ''}${detailsOpen && hasBot && view === 'chat' ? ' has-details' : ''}`}>
+    <div className={`app${collapsed ? ' is-sidebar-collapsed' : ''}${showDetails ? ' has-details' : ''}${drawerOpen ? ' has-drawer' : ''}`}>
       <Sidebar />
       {view === 'tasks' ? <TasksView /> : <ChatView />}
-      {detailsOpen && hasBot && view === 'chat' && <DetailsPanel />}
+      {/* the veil: only drawn on a narrow screen, behind the drawer or the details; a tap folds them away */}
+      <div className="shell-veil" aria-hidden onClick={() => useStore.getState().set(drawerOpen ? { drawerOpen: false } : { detailsOpen: false })} />
+      {showDetails && <DetailsPanel />}
       {modal === 'create' && <CreateBotModal />}
       {modal === 'group' && <CreateGroupModal />}
       {modal === 'search' && <SearchModal />}

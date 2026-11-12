@@ -7,6 +7,7 @@ import { useConfigUI, useVersion } from '../../configStore';
 import { useStore } from '../../store';
 import { Glyph } from './glyphs';
 import './ui';
+import { RoomsButton } from '../Sidebar';
 
 type Filter = 'all' | 'open' | 'done';
 
@@ -64,6 +65,7 @@ export function TasksView() {
   return (
     <main className="chat tasks-view">
       <header className="tasks-view__header">
+        <RoomsButton />
         <div className="tasks-view__title">Tasks</div>
         <div className="segmented" role="tablist" aria-label="Filter tasks">
           {([['open', `In progress${counts.open ? ` ${counts.open}` : ''}`], ['done', 'Done'], ['all', 'All']] as [Filter, string][]).map(([f, label]) => (

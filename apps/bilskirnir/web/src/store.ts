@@ -23,6 +23,8 @@ interface State {
 
   detailsOpen: boolean;
   sidebarCollapsed: boolean;
+  /** Narrow screens only: the rooms list slides in as a drawer. Never remembered. */
+  drawerOpen: boolean;
   modal: ModalKind;
   viewerOpen: boolean;
   /** How the large computer view opens, and the mode it is in while open. */
@@ -47,6 +49,9 @@ const LS_DETAILS = 'grokbot.detailsOpen';
 const LS_SIDEBAR = 'grokbot.sidebarCollapsed';
 const lsGet = (k: string) => { try { return localStorage.getItem(k); } catch { return null; } };
 const lsSet = (k: string, v: string) => { try { localStorage.setItem(k, v); } catch { /* ignore */ } };
+/** The width at which the details stop being a third column and become an overlay (shell.css). */
+export const WIDE_QUERY = '(min-width: 1181px)';
+export const isWide = () => { try { return window.matchMedia(WIDE_QUERY).matches; } catch { return true; } };
 
 export const useStore = create<State>((set, get) => ({
   user: null,
@@ -60,8 +65,10 @@ export const useStore = create<State>((set, get) => ({
   computer: null,
   connectionsVersion: 0,
   sseConnected: false,
-  detailsOpen: lsGet(LS_DETAILS) !== '0',
+  // On a narrow screen the details are an overlay, so they open closed and the choice is not remembered.
+  detailsOpen: isWide() && lsGet(LS_DETAILS) !== '0',
   sidebarCollapsed: lsGet(LS_SIDEBAR) === '1',
+  drawerOpen: false,
   modal: null,
   viewerOpen: false,
   viewerMode: 'watch',
@@ -182,7 +189,7 @@ export const useStore = create<State>((set, get) => ({
   setModal(modal) { set({ modal }); },
 
   set(p) {
-    if (p.detailsOpen !== undefined) lsSet(LS_DETAILS, p.detailsOpen ? '1' : '0');
+    if (p.detailsOpen !== undefined && isWide()) lsSet(LS_DETAILS, p.detailsOpen ? '1' : '0');
     if (p.sidebarCollapsed !== undefined) lsSet(LS_SIDEBAR, p.sidebarCollapsed ? '1' : '0');
     set(p);
   },

@@ -9,6 +9,7 @@ import { Icon } from './Icon';
 import { Menu } from './Menu';
 import { Transcript } from './Transcript';
 import { VoiceCallBar } from './VoiceCallBar';
+import { RoomsButton } from './Sidebar';
 
 export function ChatView() {
   const bot = useSelectedBot();
@@ -23,6 +24,7 @@ export function ChatView() {
   if (!bot) {
     return (
       <main className="chat chat--empty">
+        <RoomsButton />
         <div className="empty-chat"><div className="empty-chat__sub">No Bot selected.</div></div>
       </main>
     );
@@ -36,6 +38,7 @@ export function ChatView() {
       <VoiceCallBar />
       <Composer bot={bot} running={!!live?.isRunning} />
       <header className="chat__header">
+        <RoomsButton />
         <span className="chat__pill-anchor">
           <button type="button" className="chat__pill" onClick={() => setMenu(!menu)} aria-haspopup="menu" aria-expanded={menu}>
             <BotAvatarFor bot={bot} size={24} />
@@ -56,7 +59,7 @@ export function ChatView() {
         </span>
         <div className="chat__header-right">
           {!detailsOpen && (
-            <button type="button" className="icon-btn icon-btn--bordered" onClick={() => set({ detailsOpen: true })} aria-label="Show details" title="Show details">
+            <button type="button" className="icon-btn icon-btn--bordered chat__details-btn" onClick={() => set({ detailsOpen: true })} aria-label="Show details" title="Show details">
               <Icon name="sidebar" opacity={0.66} style={{ transform: 'scaleX(-1)' }} />
             </button>
           )}
