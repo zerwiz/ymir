@@ -146,7 +146,7 @@ bin[139]{file,does,kind,verdict,disposition,callers,lines}:
   "snotra-voice-device.sh","bin/time/snotra/snotra-voice-device.sh -> systems/snotra/services/ear/snotra-voice-device.sh — RETIRED SHIM","tool","wired","keep",0,12
   "snotra-voice.py","bin/time/snotra/snotra-voice.py -> systems/snotra/services/ear/snotra-voice.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "snotra_paths.py","bin/time/snotra/snotra_paths.py -> systems/snotra/services/record/snotra_paths.py — RETIRED SHIM (plan 129)","tool","wired","keep",1,10
-  "sol-lib.sh","sol-lib.sh — Sól's stamp for shell roads.","lib","wired","keep",8,44
+  "sol-lib.sh","sol-lib.sh — Sól's stamp for shell roads.","lib","wired","keep",9,44
   "sol.sh","sol.sh — Sól, the sun's wheel: THE clock and date door.","tool","tested","keep",4,248
   "stt-shim.py","bin/time/snotra/stt-shim.py -> systems/snotra/services/ear/stt-shim.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "stt-wire.sh","bin/time/snotra/stt-wire.sh -> systems/snotra/services/ear/stt-wire.sh — RETIRED SHIM","tool","wired","keep",0,12

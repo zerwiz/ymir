@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[50]{file,does,kind,verdict,disposition,callers,lines}:
+bin[51]{file,does,kind,verdict,disposition,callers,lines}:
   "arm-talk.sh","arm-talk.sh — the heart speaks into every seat's pane, over that seat's own road (plan 234 P1).","tool","wired","keep",1,193
   "armpin.sh","armpin.sh — does every surface that SUPERVISES run the pin, and is the pin current?","tool","wired","keep",1,100
   "broken.sh","broken.sh — the register of broken things (RULES/50).","tool","tested","keep",1,165
@@ -32,7 +32,7 @@ bin[50]{file,does,kind,verdict,disposition,callers,lines}:
   "core-four.sh","core-four.sh — the four dials that decide an agent's outcome, in ONE read.","tool","wired","keep",4,204
   "fleet-plans.sh","fleet-plans.sh — read every LIVE host's claims over the tailnet; merge; report collisions + dark hosts.","tool","wired","keep",0,92
   "harness-contract-install.sh","harness-contract-install.sh — every harness reads ONE contract, and an update keeps it true.","tool","wired","keep",1,81
-  "harness-extensions-install.sh","harness-extensions-install.sh — every harness gets the house's extensions and packages, on install AND on update.","tool","wired","keep",7,362
+  "harness-extensions-install.sh","harness-extensions-install.sh — every harness gets the house's extensions and packages, on install AND on update.","tool","wired","keep",8,373
   "helm-identity.sh","helm-identity.sh — WHO holds this helm, WHAT it is for, WHICH machine and fleet it","tool","wired","keep",5,141
   "herdr-agents.py","'''herdr-agents.py — list the agents standing in this herdr session, as TOON.","tool","wired","keep",9,85
   "herdr-ensure.sh","herdr-ensure.sh — Þjazi: guarantee the terminal backend Ymir needs.","tool","wired","keep",4,106
@@ -59,6 +59,7 @@ bin[50]{file,does,kind,verdict,disposition,callers,lines}:
   "sessrumnir-wire.sh","sessrumnir-wire.sh — the seat wire: talk to a Sessrúmnir seat, and read its last answer.","tool","wired","keep",1,224
   "test_arm_pin.sh","test_arm_pin.sh — plan 257 H6: the helm runs the PINNED code, never a working tree.","tool","wired","keep",0,65
   "test_arm_pin_board.sh","test_arm_pin_board.sh — plan 257 H8: the pin's age and reach as one fact (bin/pi/arm-pin.sh).","tool","wired","keep",0,66
+  "test_claude_global_arm_opt_in.sh","test_claude_global_arm_opt_in.sh — the global Claude arm is seated only when the operator asks (2026-11-12).","tool","wired","keep",0,49
   "test_core_four_pending_factory.sh","The ward for the three near-loop doors: core four, pending, and the factory preset.","tool","wired","keep",0,26
   "test_doors_fleet_path.sh","The ward for plan 229 — the near loop on a machine that is not this shell.","tool","wired","keep",0,85
   "test_everything_up.sh","Wards for the 'everything-up' errand: a worker seat is never the helm (Stop hook + arm check),","tool","wired","keep",1,119
@@ -73,6 +74,6 @@ bin[50]{file,does,kind,verdict,disposition,callers,lines}:
   "whose-tree.sh","whose-tree.sh — whose code am I standing in?","tool","wired","keep",0,118
   "ymir-mcp.py","'''ymir-mcp.py (seat copy) — a thin pointer, kept because files are moved, never deleted (Rule 11).","tool","tested","keep",7,13
 
-**Tally.** verdict: wired=41, tested=9
+**Tally.** verdict: wired=42, tested=9
 
-**Tally.** disposition: keep=50
+**Tally.** disposition: keep=51
