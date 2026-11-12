@@ -83,6 +83,37 @@ if [ -n "$TERMINAL" ] && [ -n "$LINE" ]; then
   [ -s "$shelf" ] || printf '%s\n' "$LINE" >"$shelf"
 fi
 
+# 1b. The well remembers what the errand did (the Allfather, 2026-11-12: "when they are DONE
+#     they need to remember what they have done to the well"). The brief asks the worker for
+#     one episode before this act (bin/records/mimir.sh observe … --task <id>). Here a `done`
+#     or `failed` that left none since its launch is said LOUDLY, and a minimal episode is
+#     written from --line (or the status line) so no finished errand is missing from the
+#     well. A failed errand is remembered with its why. The well is a record, not a gate: a
+#     well that does not answer never holds back the wake.
+MIMIR="$SCRIPT_DIR/../records/mimir.sh"
+well_remember_finish() {  # <terminal> <line> <writer>
+  local term=$1 text=$2 writer=$3 since n
+  [ -x "$MIMIR" ] && [ -n "$text" ] || return 0
+  since="$(sed -n 's/^launch_iso=//p' "$STATE/$AGENT.meta" 2>/dev/null | head -1 | cut -c1-10)"
+  n="$(timeout 15 "$MIMIR" recall "$AGENT" --task "$AGENT" ${since:+--since "$since"} --k 1 2>/dev/null \
+        | sed -n '1s/^recall\[\([0-9]*\)\].*/\1/p')"
+  if [ "${n:-0}" -ge 1 ] 2>/dev/null; then
+    printf 'well: the errand %s left its own episode — remembered\n' "$AGENT" >&2
+    return 0
+  fi
+  printf 'WARNING: the errand %s finished (%s) and left NO episode in the well — writing a minimal one from its line. A worker remembers what it did itself: bin/records/mimir.sh observe "…" --source eindri --task %s --tags eindri,%s\n' \
+    "$AGENT" "$term" "$AGENT" "$term" >&2
+  timeout 15 "$MIMIR" observe "eindri $AGENT $term: $text (written by $writer: the worker left no episode of its own)" \
+    --source "$writer" --task "$AGENT" --tags "eindri,$term,unremembered" --shape behaviour --force >/dev/null 2>&1 \
+    || printf 'warning: the well did not take the minimal episode for %s — the wake stands\n' "$AGENT" >&2
+}
+case "$TERMINAL" in
+  done|failed)
+    _wl="$LINE"; [ -n "$_wl" ] || _wl="$(tail -n1 "$STATE/$AGENT.status" 2>/dev/null | sed 's/^[a-z-]*: //')"
+    well_remember_finish "$TERMINAL" "$_wl" eindri-acclaim
+    unset _wl ;;
+esac
+
 # 2. Kind and detail from the shelves (a question outranks a report — the smith
 #    is blocked and needs an answer, not a review).
 kind="reported"
