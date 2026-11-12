@@ -171,6 +171,8 @@ want_rc 0 "hold on a vacant helm exits 0"
 [ -s "$BROKK_MACHINE_STATE_DIR/brokk.lock" ] && ok "hold took the lock" || bad "hold took the lock" "no lock at $BROKK_MACHINE_STATE_DIR"
 grep -q 'role=rodd session=' "$STATE/.arm.role" 2>/dev/null && ok "hold wrote the role sidecar" \
   || bad "hold wrote the role sidecar" "$(cat "$STATE/.arm.role" 2>/dev/null)"
+grep -q 'role=rodd session=[0-9]* seat=[^ ]* charter=[^ ]*' "$STATE/.arm.role" 2>/dev/null && ok "hold names the seat and charter in the sidecar" \
+  || bad "hold names the seat and charter in the sidecar" "$(cat "$STATE/.arm.role" 2>/dev/null)"
 grep -q 'hold: Rödd takes the helm' "$STATE/rodd/room.jsonl" 2>/dev/null && ok "hold announced the handover in the room" \
   || bad "hold announced the handover in the room" "$(cat "$STATE/rodd/room.jsonl" 2>/dev/null)"
 
