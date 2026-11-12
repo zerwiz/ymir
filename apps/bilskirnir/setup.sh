@@ -21,6 +21,8 @@
 #   YMIR_RUNTIME_DIR     the pinned runtime the Ymir MCP door runs from (~/ymir-runtime, else this tree)
 #   BILSKIRNIR_MCP_GATEWAY  the record doors (well, skuld, bolthorn)  (http://127.0.0.1:8316)
 #   BILSKIRNIR_SESSION_HOOK the house's Hermes session hook (~/.hermes/agent-hooks/ymir-session-hook.sh)
+#   BILSKIRNIR_DESKTOP   seat the launcher entry and icon (1; 0 = none, as install --no-desktop passes)
+#   XDG_DATA_HOME        where the launcher entry goes        (~/.local/share)
 set -u
 APP="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CHECK=0; [ "${1-}" = "--check" ] && CHECK=1
@@ -183,6 +185,26 @@ c.execute("UPDATE bots SET name=?, label=? WHERE is_primary=1 AND (name<>? OR la
 c.commit()
 PY
   say "the first agent in the app is $NAME"
+fi
+
+# ── 7. the launcher entry: the hall opens like the other apps, from the menu ────
+# Only where a desktop exists (Rule 25: probe, never assume); a server host gets a clean skip.
+DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+DESK="$DATA_HOME/applications/ymir-bilskirnir.desktop"
+ICON_DST="$DATA_HOME/icons/hicolor/512x512/apps/ymir-bilskirnir.png"
+want_desk="$(sed "s#__APP__#$APP#g" "$APP/electron/bilskirnir.desktop.in" 2>/dev/null)"
+if [ "${BILSKIRNIR_DESKTOP:-1}" = 0 ]; then
+  say "launcher entry skipped (BILSKIRNIR_DESKTOP=0)"
+elif [ -z "${WAYLAND_DISPLAY:-}${DISPLAY:-}" ] && [ ! -d "$DATA_HOME/applications" ]; then
+  say "no desktop on this host — no launcher entry"
+elif [ "$CHECK" = 1 ]; then
+  [ "$(cat "$DESK" 2>/dev/null)" = "$want_desk" ] && say "launcher entry current" || say "launcher entry missing or stale (not required)"
+else
+  mkdir -p "$(dirname "$DESK")" "$(dirname "$ICON_DST")"
+  printf '%s\n' "$want_desk" > "$DESK"
+  cp "$APP/electron/icon.png" "$ICON_DST"
+  command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$(dirname "$DESK")" >/dev/null 2>&1
+  say "launcher entry seated (Ymir · Bilskirnir)"
 fi
 
 [ "$fail" = 0 ] && { say "ready"; exit 0; } || { say "not ready"; exit 1; }
