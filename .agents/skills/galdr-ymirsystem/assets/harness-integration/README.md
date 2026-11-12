@@ -238,6 +238,21 @@ refuses only a verifiably live owner), and the Pi extension classifies an empty
 lock as `missing` so `gna_watch_arm`'s reclaim takes it directly. A vacant helm
 is never punted to a manual session start; only a real live contender is refused.
 
+> **ONE HELM, ANY HARNESS (plan 254).** The helm is one session per state dir and it is
+> **harness-blind** — the lock binds to any verified harness (`pi` · `opencode` · `claude` ·
+> `cursor` · `codex` · `grok` · `kimi` · `muse` · `hermes`), never to Pi alone, so Claude and
+> OpenCode can hold it **today** (proved, not built: the Claude `Stop` hook and the OpenCode
+> `session.idle` plugin each take a wake). The arm lease now names the holder beside the
+> service shape: `mode=` keeps `systemd|daemon`, and a new `role=` records whose helm it is —
+> `counsellor` for a Pi seat, `rodd` for Rödd's helm, `claude`/`opencode` where the holder
+> declares it via `BROKK_ARM_ROLE`; a lease with no `role=` reads `unknown`, never a guess.
+> The one client (`bin/pi/syn-watch-arm.sh`) gains `--holder <role>`, and its claim is allowed
+> only when three clauses hold: a vacant helm, a live harness claimant, and a declared role it
+> can work — anything else is refused loudly with the failing clause named. Nanna's duty loop
+> (`bin/voice/rodd-helm.sh`) drains, answers the room, alarms, dispatches (`direct-PR` /
+> `no-mistakes` only) and refuses-and-releases; `bin/voice/rodd-arm.sh hold|release` moves the
+> helm without a reboot. One arm client, extended — never a second.
+
 - **Pi** owns continuity in `gna-pi-watch.ts` (Gná); the model gets a **tool** `gna_watch_arm` and a command `/gna-watch-arm` for the first cycle or a repair, never for ordinary re-arms. Gná's liveness is **zombie-aware**: `kill(pid, 0)` alone passes a zombie and a recycled pid, so the watcher reads `/proc/<pid>/stat` — the state character (Z/X = dead) and the starttime recorded at lock acquire (field 22; a mismatch means the kernel handed the pid to an unrelated process) — answers every ordinary wake: a **vacant** helm is taken (arm script via `gleipnir_lock_acquire`; Gná classifies an empty lock as `missing` so the reclaim takes it in place), while only a verifiably live other owner is refused as read-only. It drops its own lock on real process exit (`releaseLockIfOwned`). Gná's wake delivery is **echo-guarded**: an identical watcher message is sent at most once per drained state — when the durable queue is empty, a repeat is the same news the primary already drained and is not re-delivered, so a long stale window cannot flood the follow-up queue.
 
 > **ONE QUEUE (2026-09-23).** The state dir is the **operator's home**, never the code tree: `$YMIR_STATE_OVERRIDE` → `$YMIR_HOME/state` → the recorded choice (`~/.config/ymir/home`) → `$HOME/Documents/ymirhome`. Every reader and writer must resolve it the SAME way — `bin/vault/hoard-lib.sh` for shell, and the same order of authority inside `gna-pi-watch.ts`. This was once two dirs: the watcher read `$BROKK_HOME/state` (the **tree**) while the Eindri handoff (`bin/agents/eindri-acclaim.sh`) wrote `$YMIR_STATE_DIR` (the **hoard**), so a report filled one `.wake-queue` and the watcher polled another — **the task wrote, the watcher watched, and no wake ever surfaced.** A report may be filed and still be invisible; the queue is only real when both ends agree on where it is.
@@ -841,6 +856,27 @@ hand-made subset. Naming differs by harness and must be respected:
 > from `~/CodeP/excalidraw`, `~/ymir` and `/tmp`). A copy or a symlink would double-register —
 > which is why the mechanism is a named path and not a second home. Law:
 > `RULES/13-pi-extensions.md`, correction 2026-10-10.
+
+> **A named path is only one home when the session is not standing in ANOTHER checkout
+> (2026-11-11).** This machine carries two full checkouts of one repository — the working
+> tree `~/ymir` and the pinned runtime `~/ymir-runtime` (`$YMIR_HOME/config/runtime.env`) —
+> and the settings name the runtime. pi de-duplicates on `path.resolve` alone, so a bare `pi`
+> started at `~/ymir` took the working tree's tree from discovery AND the runtime's from the
+> settings: 44 tool-name conflicts, and not one extension loaded. A **dispatched** worker
+> never met it (`bin/agents/einherjar-spawn.sh` hands the pane the `-ne` + one `-e` per pin
+> shape from `bin/seat/pi-launcher.sh`); the seat started by hand had no door.
+>
+> `bin/seat/pi-door.sh` is that door, and it is the same shape: a caller that already names
+> its extensions is handed through; a directory with no `.pi/extensions` is handed through; a
+> settings entry for the *same* tree is handed through; a settings entry for a *different*
+> checkout opens the session with discovery off and names **that directory's own tree** once,
+> carrying the settings `packages` explicitly. `bin/seat/harness-extensions-install.sh` seats
+> it as `~/.pi/agent/bin/pi` (first on `PATH`) on install and on every update and reports the
+> copy `stale` when it has moved — a copy, never a symlink, because a symlink into a checkout
+> dies with the branch. `bin/seat/valknut-load.sh --check` therefore accepts a settings entry
+> naming another tree **only** while that door is seated, since the door is what reconciles
+> the launch. Measured: `44` conflicts in `~/ymir` before, `0` after; `0` in a sparse
+> worktree and in the runtime before and after. Law: `RULES/13-pi-extensions.md`.
 
 > **Rebind on every install, update and merge (2026-09-23).** The harnesses load
 their surfaces from their **own** homes — Pi reads `${HOME}/.pi/agent/extensions/`
@@ -1617,3 +1653,7 @@ an older home.
 the recorded helm owner IS this session's pid (the acquire contract) — a live other owner no longer
 lets a stranger attach; and a new client retires its own session's older clients, so one signal
 cannot rewake a session N times. Proved by `bin/gates/tests/test_arm_client_helm.sh`.
+
+## CHANGE LOG
+
+- 2026-11-12 — review-mend: added missing heading for #673

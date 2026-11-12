@@ -12,12 +12,14 @@
 # The Allfather's law is that this is figured out AUTOMATICALLY when the seat takes
 # the arm — never by an operator remembering to tidy up:
 #
-#   seat-reap.sh <id>        close THIS errand's workspace, by the id recorded in
-#                            state/<id>.meta (label `eindri-<id>` when an older
-#                            record does not carry one)
-#   seat-reap.sh --sweep     close every agentless `eindri-*` workspace whose
-#                            errand is closed or has no live record
-#   seat-reap.sh --list      what --sweep WOULD close, closing nothing
+#   seat-reap.sh <id>        close THIS errand's seat: the discriminator decides
+#                            working (never) / finished (retire) / undecided
+#                            (keep with the reason named)
+#   seat-reap.sh --sweep     the hall: retire finished-idle agents (S2), close
+#                            agentless seats, never touch a working seat
+#   seat-reap.sh --list      what --sweep WOULD do, closing nothing
+#   seat-reap.sh --close-pane P  close an ORPHAN pane (a bare shell, no errand) —
+#                            the ONLY door; the Allfather's word, never a sweep
 #   seat-reap.sh --install   seat the sweep on every harness this host runs
 #   seat-reap.sh --check     is it seated? (exit 1 when a present harness is not)
 #   seat-reap.sh --shell P   close the bare shell standing in worktree P (a dead
@@ -25,6 +27,12 @@
 #   seat-reap.sh --verify    the two structural faults, reported and never mended
 #                            (exit 1 when this seat is broken) — the verb install
 #                            and Gróa call from their --check mode
+#
+# Plan 255 (2026-11-11): a FINISHED worker is still a live process at an idle
+# prompt, so the old `agent_in_workspace → keep` could not tell it from real work.
+# The sweep now asks the discriminator for a named verdict, and a finished seat is
+# RETIRED — the harness's own exit first, a bounded wait, the close doors, and
+# only then a TERM to the agent's pid (SIGKILL never first, never silent).
 #
 # One reader for one question: whether an agent stands in a workspace is asked of
 # bin/seat/herdr-agents.py (the ONE reader of `herdr agent list`, plan 189 §18.2),
@@ -126,6 +134,177 @@ PY
   return $rc
 }
 
+# ── plan 255 · the discriminator: three verdicts, not two ──────────────────
+# An agent that FINISHED is still a live process sitting at an idle prompt, so
+# the old `agent_in_workspace → keep` could not tell real work from a finished
+# seat. These readers ask the ONE door (herdr-agents.py) for the agent's STATE,
+# and the sweep calls discriminate() for a named verdict instead of a blanket keep.
+IDLE_GRACE="${SEAT_REAP_IDLE_GRACE:-600}"      # idle-for-grace seconds → RETIRE
+EXIT_WAIT="${SEAT_REAP_EXIT_WAIT:-20}"         # bounded wait for the agent to leave
+
+# agent_status <ws> <wt> -> the agent's `agent_status` on stdout; rc 1 when no
+# agent stands there at all. The same ONE reader, never re-parsed.
+agent_status() {
+  local ws=$1 wt=${2:-} j tmp rc st
+  j="$(agents_json)" || return 1
+  [ -n "$j" ] || return 1
+  tmp="$(mktemp 2>/dev/null)" || return 1
+  printf '%s' "$j" >"$tmp"
+  st="$(python3 - "$ws" "$wt" "$tmp" <<'PY' 2>/dev/null
+import json,sys
+ws, wt = sys.argv[1], (sys.argv[2] or "").rstrip("/")
+try:
+    agents = json.load(open(sys.argv[3]))
+except Exception:
+    raise SystemExit(1)
+for a in agents or []:
+    if (a.get("workspace_id") or "") == ws:
+        print(a.get("agent_status") or "unknown"); raise SystemExit(0)
+    fg = (a.get("foreground_cwd") or "").rstrip("/")
+    cwd = (a.get("cwd") or "").rstrip("/")
+    if wt and (fg == wt or cwd == wt):
+        print(a.get("agent_status") or "unknown"); raise SystemExit(0)
+raise SystemExit(1)
+PY
+)"
+  rc=$?
+  rm -f "$tmp"
+  [ "$rc" = 0 ] || return 1
+  printf '%s' "${st:-unknown}"
+}
+
+# agent_live <ws> <wt> -> 0 when a LIVE agent (working|idle) stands here.
+# `done` is not live: its process has exited and the agentless path owns it.
+agent_live() {
+  local st; st="$(agent_status "$1" "$2" 2>/dev/null || true)"
+  case "$st" in working|idle) return 0 ;; *) return 1 ;; esac
+}
+
+# agent_kind <ws> <wt> -> the agent's harness kind (pi/claude/...), or empty.
+agent_kind() {
+  local ws=$1 wt=${2:-} j tmp rc kind
+  j="$(agents_json)" || return 1
+  [ -n "$j" ] || return 1
+  tmp="$(mktemp 2>/dev/null)" || return 1
+  printf '%s' "$j" >"$tmp"
+  kind="$(python3 - "$ws" "$wt" "$tmp" <<'PY' 2>/dev/null
+import json,sys
+ws, wt = sys.argv[1], (sys.argv[2] or "").rstrip("/")
+try:
+    agents = json.load(open(sys.argv[3]))
+except Exception:
+    raise SystemExit(1)
+for a in agents or []:
+    if (a.get("workspace_id") or "") == ws:
+        print(a.get("agent") or ""); raise SystemExit(0)
+    fg = (a.get("foreground_cwd") or "").rstrip("/")
+    cwd = (a.get("cwd") or "").rstrip("/")
+    if wt and (fg == wt or cwd == wt):
+        print(a.get("agent") or ""); raise SystemExit(0)
+raise SystemExit(1)
+PY
+)"
+  rc=$?
+  rm -f "$tmp"
+  [ "$rc" = 0 ] || return 1
+  printf '%s' "${kind:-}"
+}
+
+# terminal_errand <id> -> 0 when the record reached a word that ENDS the work.
+# `needs-decision` is deliberately NOT terminal here: it waits for the Allfather.
+terminal_errand() {
+  local id=$1 f st verdict
+  f="$(record "$id" review)" && [ -n "$f" ] && {
+    verdict="$(awk -F= '$1=="verdict"{print $2; exit}' "$f" 2>/dev/null)"
+    case "$verdict" in pass|fail) return 0 ;; esac
+  }
+  f="$(record "$id" close)" && [ -n "$f" ] && return 0
+  f="$(record "$id" status)" || return 1
+  [ -n "$f" ] || return 1
+  st="$(tail -n1 "$f" 2>/dev/null | awk '{print $1}' | tr -d ':')"
+  case "$st" in done|failed|accepted|returned|closed) return 0 ;; esac
+  return 1
+}
+
+needs_decision_errand() {  # <id> -> 0 when the record waits on the Allfather
+  local id=$1 f st
+  f="$(record "$id" status)" || return 1
+  [ -n "$f" ] || return 1
+  st="$(tail -n1 "$f" 2>/dev/null | awk '{print $1}' | tr -d ':')"
+  [ "$st" = "needs-decision" ]
+}
+
+# The idle grace: a finished-idle seat is stamped on first observation, and the
+# stamp only counts while the agent KEEPS reporting idle. One `working` sample
+# clears it — the grace is continuous, never a single glance.
+idle_since() {  # <id> -> epoch on stdout; rc 1 when unstamped
+  local id=$1 d stamp
+  while IFS= read -r d; do
+    [ -r "$d/.$id.idle-since" ] || continue
+    stamp="$(head -n1 "$d/.$id.idle-since" 2>/dev/null | tr -dc '0-9')"
+    [ -n "$stamp" ] && { printf '%s' "$stamp"; return 0; }
+  done < <(state_dirs)
+  return 1
+}
+mark_idle() {  # <id> — stamp this finished-idle seat now
+  local id=$1 d
+  while IFS= read -r d; do
+    mkdir -p "$d" 2>/dev/null || continue
+    printf '%s\n' "$(date +%s)" > "$d/.$id.idle-since" 2>/dev/null || true
+  done < <(state_dirs)
+}
+clear_idle() {  # <id> — a working sample, or a retirement, resets the grace
+  local id=$1 d
+  while IFS= read -r d; do
+    rm -f "$d/.$id.idle-since" 2>/dev/null || true
+  done < <(state_dirs)
+}
+
+# discriminate <id> <ws> <wt> <pane> — set VERDICT/REASON and return:
+#   0 KEEP (working | undecided), 1 RETIRE (finished), 2 AGENTLESS (no live agent)
+discriminate() {
+  local id=$1 ws=$2 wt=$3 st since now age
+  VERDICT="undecided"; REASON="no live record"
+  st="$(agent_status "$ws" "$wt" 2>/dev/null || true)"
+  [ -n "$st" ] || return 2
+  case "$st" in
+    working)
+      VERDICT="working"; REASON="the agent reports working — never touched"
+      [ "${SEAT_REAP_DRY:-0}" = 0 ] && clear_idle "$id"
+      return 0 ;;
+    idle)
+      if terminal_errand "$id"; then
+        now="$(date +%s)"
+        since="$(idle_since "$id" 2>/dev/null || true)"
+        if [ -z "$since" ]; then
+          [ "${SEAT_REAP_DRY:-0}" = 0 ] && mark_idle "$id"
+          VERDICT="undecided"; REASON="finished-idle — grace not yet elapsed (just observed)"
+          return 0
+        fi
+        age=$(( now - since ))
+        if [ "$age" -lt "$IDLE_GRACE" ]; then
+          VERDICT="undecided"; REASON="finished-idle — grace not yet elapsed (${age}s of ${IDLE_GRACE}s)"
+          return 0
+        fi
+        VERDICT="finished"; REASON="finished-idle for ${age}s — retiring"
+        return 1
+      fi
+      [ "${SEAT_REAP_DRY:-0}" = 0 ] && clear_idle "$id"
+      if needs_decision_errand "$id"; then
+        VERDICT="undecided"; REASON="needs-decision — waits for the Allfather, never reaped"
+      else
+        VERDICT="undecided"; REASON="idle but the record is not terminal — left alone"
+      fi
+      return 0 ;;
+    done)
+      [ "${SEAT_REAP_DRY:-0}" = 0 ] && clear_idle "$id"
+      return 2 ;;
+    *)
+      VERDICT="undecided"; REASON="unknown agent state (${st}) — left alone"
+      return 0 ;;
+  esac
+}
+
 pane_of() { # <ws> -> the first pane id in that workspace
   [ "$HAVE_HERDR" = 1 ] || return 1
   herdr pane list --workspace "$1" 2>/dev/null \
@@ -176,8 +355,8 @@ closed_errand() {
   f="$(record "$id" close)" && [ -n "$f" ] && return 0
   f="$(record "$id" status)" || return 1
   [ -n "$f" ] || return 1
-  st="$(head -n1 "$f" 2>/dev/null | awk '{print $1}' | tr -d ':')"
-  case "$st" in done|failed|needs-decision|accepted|returned|closed) return 0 ;; esac
+  st="$(tail -n1 "$f" 2>/dev/null | awk '{print $1}' | tr -d ':')"
+  case "$st" in done|failed|accepted|returned|closed) return 0 ;; esac
   return 1
 }
 
@@ -191,17 +370,184 @@ stale_errand() {
   [ "$age" -gt "${SEAT_REAP_STALE_SECONDS:-7200}" ]
 }
 
-# ── one close ────────────────────────────────────────────────────────────────
-# close_seat <id> <ws> <pane> <why> -> prints one TOON row; 0 closed, 1 refused/failed
-close_seat() {
-  local id=$1 ws=$2 pane=$3 why=$4 wt
+# ── the settling grace (the house law, tests/test_eindri_liveness_grace.sh) ───
+# A recordless workspace is NOT a dead one: einherjar-spawn.sh raises the herdr
+# workspace at launch_herdr and writes the first status only AFTER the seat is
+# proved — up to the whole seat-settle wait (60 s) later. A sweep that closed a
+# recordless workspace on sight would kill a seat that is still booting, which is
+# exactly the false-death the liveness grace was written to stop (2026-11-06).
+#
+# The age is measured from the launch stamp the spawner writes beside the record
+# (state/.<id>.launched), then from the meta's `launched`, then from the
+# worktree's own mtime. When NO timestamp can be found the workspace is KEPT and
+# said so: an unmeasurable seat is assumed live, because assuming dead is the
+# irreversible direction.
+grace_seconds() { printf '%s' "${YMIR_SEAT_SETTLE:-60}"; }
+
+recordless_age() { # <id> -> age in seconds on stdout; 1 when no stamp exists
+  local id=$1 d stamp launched wt now
+  now=$(date +%s)
+  while IFS= read -r d; do
+    if [ -r "$d/.$id.launched" ]; then
+      stamp="$(head -n1 "$d/.$id.launched" 2>/dev/null | tr -dc '0-9')"
+      [ -n "$stamp" ] && { printf '%s' "$((now - stamp))"; return 0; }
+    fi
+  done < <(state_dirs)
+  launched="$(meta_key "$id" launched 2>/dev/null || true)"
+  case "$launched" in ''|*[!0-9]*) ;; *) printf '%s' "$((now - launched))"; return 0 ;; esac
+  wt="$(meta_key "$id" worktree 2>/dev/null || true)"
+  [ -n "$wt" ] || wt="$ROOT/.yggdrasil/$id"
+  if [ -d "$wt" ]; then
+    stamp=$(stat -c %Y "$wt" 2>/dev/null || stat -f %m "$wt" 2>/dev/null || true)
+    case "$stamp" in ''|*[!0-9]*) ;; *) printf '%s' "$((now - stamp))"; return 0 ;; esac
+  fi
+  return 1
+}
+
+# ── plan 255 · S2: the retire verb — end the agent, THEN close the seat ─────
+# The escalation, in order, never starting with a kill:
+#   (a) the harness's own exit (per .agents/skills/hamr-adapters/);
+#   (b) a bounded wait for the pane to become agentless;
+#   (c) the close doors (seats.sh close, herdr workspace close) behind the
+#       dirty/unpushed worktree guard;
+#   (d) only then a TERM to the agent's own pid, recorded.
+exit_command() {  # <agent-kind> -> the harness's own exit command
+  case "${1:-}" in
+    pi|codex) printf '%s' "/quit" ;;
+    claude|opencode|cursor|grok|kimi|muse) printf '%s' "/exit" ;;
+    *) printf '%s' "/quit" ;;   # unknown: pi's form is the house default
+  esac
+}
+
+agent_pid() {  # <pane> -> the agent process pid, or empty (the pane's foreground)
+  local pane=$1 tmp rc pid
+  [ "$HAVE_HERDR" = 1 ] || return 1
+  tmp="$(mktemp 2>/dev/null)" || return 1
+  herdr pane process-info --pane "$pane" >"$tmp" 2>/dev/null || { rm -f "$tmp"; return 1; }
+  pid="$(python3 - "$tmp" <<'PY' 2>/dev/null
+import json,sys
+try:
+    d = json.load(open(sys.argv[1]))
+except Exception:
+    raise SystemExit(1)
+procs = ((d.get("result") or {}).get("process_info") or {}).get("foreground_processes") or []
+for p in procs:
+    if (p.get("name") or "") in ("pi","claude","opencode","codex","cursor","grok","kimi","muse"):
+        print(p.get("pid") or ""); raise SystemExit(0)
+raise SystemExit(1)
+PY
+)"
+  rc=$?
+  rm -f "$tmp"
+  [ "$rc" = 0 ] && [ -n "$pid" ] && { printf '%s' "$pid"; return 0; }
+  return 1
+}
+
+# worktree_guard <wt> -> 0 clean enough to close; 1 refuse (GUARD_REASON set).
+# A dirty or unpushed tree is the operator's work: never closed by a sweep. The
+# `.pi/extensions` deletion is the migration's fault (0019), not work.
+worktree_guard() {
+  local wt=$1 up ahead head dirty
+  GUARD_REASON=""
+  [ -d "$wt" ] && [ -e "$wt/.git" ] || return 0
+  dirty="$(git -C "$wt" status --porcelain 2>/dev/null | grep -vE '^.?D[[:space:]]+\.pi/extensions/')"
+  [ -n "$dirty" ] && { GUARD_REASON="dirty worktree"; return 1; }
+  up="$(git -C "$wt" rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)"
+  head="$(git -C "$wt" rev-parse HEAD 2>/dev/null || true)"
+  if [ -n "$up" ]; then
+    ahead="$(git -C "$wt" rev-list --count "${up}..HEAD" 2>/dev/null || echo 0)"
+    [ "${ahead:-0}" -gt 0 ] && { GUARD_REASON="unpushed worktree (${ahead} commit(s))"; return 1; }
+  elif [ -n "$head" ]; then
+    # No upstream: refuse unless a remote branch already holds this exact commit.
+    git -C "$wt" branch -r --contains "$head" 2>/dev/null | grep -q . \
+      || { GUARD_REASON="unpushed worktree (no upstream, no remote holds this commit)"; return 1; }
+  fi
+  return 0
+}
+
+rune_retire() {  # <id> <pane> <ws> <step> — ONE runes line per retirement
+  local id=$1 pane=$2 ws=$3 step=$4
+  local runes="$SCRIPT_DIR/../records/runes-append.sh"
+  [ -x "$runes" ] || return 0
+  "$runes" seat-reap seat-retired \
+    --message "id=$id pane=$pane verdict=$VERDICT reason=$REASON escalation=$step" \
+    >/dev/null 2>&1 || true
+}
+
+retire_seat() {  # <id> <ws> <pane> -> one TOON row; 0 retired, 1 refused/failed
+  local id=$1 ws=$2 pane=$3 wt kind exit_cmd step i pid
   wt="$(meta_key "$id" worktree 2>/dev/null || true)"
   [ -n "$wt" ] || wt="$ROOT/.yggdrasil/$id"
 
-  if agent_in_workspace "$ws" "$wt"; then
-    printf '  "%s","%s","%s","refused: a live agent stands here"\n' "$id" "$ws" "$pane"
+  if ! worktree_guard "$wt"; then
+    printf '  "%s","%s","%s","refused: %s"\n' "$id" "$ws" "$pane" "$GUARD_REASON"
     return 1
   fi
+
+  kind="$(agent_kind "$ws" "$wt" 2>/dev/null || true)"
+  exit_cmd="$(exit_command "$kind")"
+  step="harness-exit ($kind ${exit_cmd:-none})"
+
+  # (a) the harness's own exit, delivered as its verified command
+  if [ -n "$pane" ] && [ "$HAVE_HERDR" = 1 ] && [ -n "$exit_cmd" ]; then
+    herdr pane send-text "$pane" "$exit_cmd" >/dev/null 2>&1 || true
+    herdr pane send-keys "$pane" enter >/dev/null 2>&1 || true
+  fi
+
+  # (b) a bounded wait for the pane to become agentless
+  for i in $(seq 1 "$EXIT_WAIT"); do
+    agent_live "$ws" "$wt" || { step="agent-exited"; break; }
+    sleep 1
+  done
+
+  # (c) the close doors, behind the worktree guard already passed
+  if [ -n "$pane" ] && [ -x "$SCRIPT_DIR/seats.sh" ]; then
+    "$SCRIPT_DIR/seats.sh" close "$pane" >/dev/null 2>&1 || true
+  fi
+  if [ -n "$ws" ] && [ "$HAVE_HERDR" = 1 ] && ! agent_live "$ws" "$wt"; then
+    if herdr workspace close "$ws" >/dev/null 2>&1; then
+      step="${step}+workspace-closed"
+      rune_retire "$id" "$pane" "$ws" "$step"
+      printf '  "%s","%s","%s","retired: %s — %s (escalation: %s)"\n' "$id" "$ws" "$pane" "$VERDICT" "$REASON" "$step"
+      return 0
+    fi
+  fi
+
+  # (d) only then a TERM to the agent's own pid, recorded — never silent
+  pid="$(agent_pid "$pane" 2>/dev/null || true)"
+  if [ -n "$pid" ]; then
+    kill -TERM "$pid" 2>/dev/null || true
+    step="term-agent-pid-${pid}"
+    sleep 2
+    if [ -n "$ws" ] && [ "$HAVE_HERDR" = 1 ] && ! agent_live "$ws" "$wt"; then
+      herdr workspace close "$ws" >/dev/null 2>&1 && step="${step}+workspace-closed"
+    fi
+  fi
+
+  rune_retire "$id" "$pane" "$ws" "$step"
+  printf '  "%s","%s","%s","retired: %s — %s (escalation: %s)"\n' "$id" "$ws" "$pane" "$VERDICT" "$REASON" "$step"
+  return 0
+}
+
+# ── one close ────────────────────────────────────────────────────────────────
+# close_seat <id> <ws> <pane> <why> -> prints one TOON row; 0 closed, 1 refused/failed
+close_seat() {
+  local id=$1 ws=$2 pane=$3 why=$4 wt disc_rc
+  wt="$(meta_key "$id" worktree 2>/dev/null || true)"
+  [ -n "$wt" ] || wt="$ROOT/.yggdrasil/$id"
+
+  discriminate "$id" "$ws" "$wt" "$pane"
+  disc_rc=$?
+  case "$disc_rc" in
+    0)  # KEEP — a working or undecided seat is never closed by this door
+        printf '  "%s","%s","%s","refused: %s — %s"\n' "$id" "$ws" "$pane" "$VERDICT" "$REASON"
+        return 1 ;;
+    1)  # RETIRE — a finished seat goes through the retire verb (S2)
+        retire_seat "$id" "$ws" "$pane"
+        return $? ;;
+    2)  # AGENTLESS — the close below
+        ;;
+  esac
   # The pane door refuses a live agent on its own reading — belt and braces,
   # because the agent list is a moment, and a close is forever.
   if [ -n "$pane" ] && [ -x "$SCRIPT_DIR/seats.sh" ]; then
@@ -209,12 +555,13 @@ close_seat() {
   fi
   if [ -n "$ws" ] && [ "$HAVE_HERDR" = 1 ]; then
     # A second liveness read immediately before the irreversible step.
-    if agent_in_workspace "$ws" "$wt"; then
+    if agent_live "$ws" "$wt"; then
       printf '  "%s","%s","%s","refused: an agent appeared at the moment of closing"\n' "$id" "$ws" "$pane"
       return 1
     fi
     if herdr workspace close "$ws" >/dev/null 2>&1; then
       printf '  "%s","%s","%s","%s"\n' "$id" "$ws" "$pane" "$why"
+      clear_idle "$id"
       local d
       while IFS= read -r d; do
         printf 'closed=%s\nworkspace=%s\nwhy=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$ws" "$why" >"$d/$id.seat-closed" 2>/dev/null || true
@@ -254,8 +601,10 @@ reap_one() { # <id> -> prints rows; 0 closed
 
 # ── the sweep ────────────────────────────────────────────────────────────────
 sweep() { # <do-it: 0|1>
-  local do_it=$1 ws label id pane wt why n_closed=0 n_kept=0 n_ref=0
-  local -a closed_rows=() kept_rows=() refused_rows=()
+  local do_it=$1 ws label id pane wt why disc_rc n_closed=0 n_retired=0 n_kept=0 n_ref=0 n_finidle=0 n_working=0
+  local row rrow
+  local -a closed_rows=() retired_rows=() kept_rows=() refused_rows=()
+  SEAT_REAP_DRY=$((1 - do_it))   # --list mutates no idle grace state
 
   [ "$HAVE_HERDR" = 1 ] || { printf 'seat-reap[1]{state}:\n  "no herdr on this host — no seat to close"\n'; return 0; }
 
@@ -270,15 +619,59 @@ sweep() { # <do-it: 0|1>
     pane="$(meta_key "$id" seat_pane 2>/dev/null || true)"
     [ -n "$pane" ] || pane="$(pane_of "$ws" 2>/dev/null || true)"
 
-    if agent_in_workspace "$ws" "$wt"; then
+    discriminate "$id" "$ws" "$wt" "$pane"
+    disc_rc=$?
+    case "$disc_rc" in
+      0)  # KEEP — a working or undecided seat is never swept
+          n_kept=$((n_kept + 1))
+          case "$REASON" in finished-idle*) n_finidle=$((n_finidle + 1)) ;; esac
+          [ "$VERDICT" = working ] && n_working=$((n_working + 1))
+          kept_rows+=("$(printf '  "%s","%s","%s","%s — %s"' "$id" "$ws" "$pane" "$VERDICT" "$REASON")")
+          continue ;;
+      1)  # RETIRE — a finished seat goes through the retire verb (S2)
+          if [ "$do_it" = 0 ]; then
+            if worktree_guard "$wt"; then
+              n_retired=$((n_retired + 1))
+              retired_rows+=("$(printf '  "%s","%s","%s","%s — %s"' "$id" "$ws" "$pane" "$VERDICT" "$REASON")")
+            else
+              n_ref=$((n_ref + 1))
+              refused_rows+=("$(printf '  "%s","%s","%s","refused: %s"' "$id" "$ws" "$pane" "$GUARD_REASON")")
+            fi
+            continue
+          fi
+          if rrow="$(retire_seat "$id" "$ws" "$pane")"; then
+            n_retired=$((n_retired + 1)); retired_rows+=("$rrow")
+            clear_idle "$id"
+          else
+            case "$rrow" in *refused*) n_ref=$((n_ref + 1)); refused_rows+=("$rrow") ;;
+                          *) n_kept=$((n_kept + 1)); kept_rows+=("$rrow") ;; esac
+          fi
+          continue ;;
+      2)  # AGENTLESS — the existing close path below
+          ;;
+    esac
+    if needs_decision_errand "$id"; then
       n_kept=$((n_kept + 1))
-      kept_rows+=("$(printf '  "%s","%s","%s","a live agent stands here — never touched"' "$id" "$ws" "$pane")")
+      kept_rows+=("$(printf '  "%s","%s","%s","needs-decision — waits for the Allfather, never reaped"' "$id" "$ws" "$pane")")
       continue
     fi
     if closed_errand "$id"; then
       why="errand closed, no agent"
     elif [ -z "$(record "$id" status 2>/dev/null || true)" ]; then
-      # The heartbeat is the record of life: a meta with no status has never breathed.
+      # THE HEARTBEAT IS THE RECORD OF LIFE — but a seat takes time to breathe.
+      # Inside the settling grace the workspace is SETTLING and nothing is closed
+      # (tests/test_eindri_liveness_grace.sh is the law this honours).
+      age="$(recordless_age "$id" 2>/dev/null || true)"
+      if [ -z "$age" ]; then
+        n_kept=$((n_kept + 1))
+        kept_rows+=("$(printf '  "%s","%s","%s","no live record and no timestamp — kept (an unmeasurable seat is assumed live)"' "$id" "$ws" "$pane")")
+        continue
+      fi
+      if [ "$age" -lt "$(grace_seconds)" ]; then
+        n_kept=$((n_kept + 1))
+        kept_rows+=("$(printf '  "%s","%s","%s","SETTLING — %ss old, inside the %ss grace"' "$id" "$ws" "$pane" "$age" "$(grace_seconds)")")
+        continue
+      fi
       why="no live record"
     elif stale_errand "$id"; then
       why="record stale, no agent"
@@ -303,7 +696,12 @@ sweep() { # <do-it: 0|1>
   done < <(ws_rows 2>/dev/null)
 
   local verb=closed; [ "$do_it" = 0 ] && verb=would-close
-  printf 'seat-reap[1]{%s,kept,refused}:\n  "%s","%s","%s"\n' "$verb" "$n_closed" "$n_kept" "$n_ref"
+  printf 'seat-reap[1]{%s,retired,kept,finished-idle,working,refused}:\n  "%s","%s","%s","%s","%s","%s"\n' \
+    "$verb" "$n_closed" "$n_retired" "$n_kept" "$n_finidle" "$n_working" "$n_ref"
+  if [ "${#retired_rows[@]}" -gt 0 ]; then
+    printf 'retired[%s]{id,workspace,pane,why}:\n' "${#retired_rows[@]}"
+    printf '%s\n' "${retired_rows[@]}"
+  fi
   if [ "${#closed_rows[@]}" -gt 0 ]; then
     printf '%s[%s]{id,workspace,pane,why}:\n' "$verb" "${#closed_rows[@]}"
     printf '%s\n' "${closed_rows[@]}"
@@ -366,7 +764,7 @@ verify() {
   done < <(git -C "$ROOT" worktree list --porcelain 2>/dev/null | awk '/^worktree /{print substr($0,10)}')
   [ "$n_bad" = 0 ] && printf '  "worktrees","ok","no worktree reports an extension deletion"\n'
   if [ $((bad + n_bad)) -gt 0 ]; then
-    printf 'seat-reap: %s fault(s) — mend: bin/engine/ymir-migrate.sh apply (migration 0018)\n' "$((bad + n_bad))" >&2
+    printf 'seat-reap: %s fault(s) — mend: bin/engine/ymir-migrate.sh apply (migration 0019)\n' "$((bad + n_bad))" >&2
     return 1
   fi
   return 0
@@ -469,6 +867,51 @@ seat_hooks() { # <do-it 0|1>
   [ "$bad" = 0 ]
 }
 
+# ── plan 255 · S4: the orphan pane — named in the brief, closed ONLY by his word ──
+pane_cwd() {  # <pane-id> -> the pane's cwd on stdout; rc 1 when unknown
+  local pane=$1 tmp cwd rc
+  [ "$HAVE_HERDR" = 1 ] || return 1
+  tmp="$(mktemp 2>/dev/null)" || return 1
+  herdr pane list >"$tmp" 2>/dev/null || { rm -f "$tmp"; return 1; }
+  cwd="$(python3 - "$pane" "$tmp" <<'PY' 2>/dev/null
+import json,sys
+pane=sys.argv[1]
+try:
+    d=json.load(open(sys.argv[2]))
+except Exception:
+    raise SystemExit(1)
+for p in (d.get("result") or {}).get("panes") or []:
+    if (p.get("pane_id") or "")==pane:
+        print(p.get("cwd") or ""); raise SystemExit(0)
+raise SystemExit(1)
+PY
+)"
+  rc=$?
+  rm -f "$tmp"
+  [ "$rc" = 0 ] && [ -n "$cwd" ] && { printf '%s' "$cwd"; return 0; }
+  return 1
+}
+
+close_pane() {  # <pane-id> — the ONLY door that closes an orphan (bare) shell
+  local pane=$1 cwd
+  if python3 "$SCRIPT_DIR/herdr-agents.py" --find --pane "$pane" >/dev/null 2>&1; then
+    printf 'seat-reap[1]{pane,state}:\n  "%s","refused: a live agent stands here"\n' "$pane"
+    return 1
+  fi
+  cwd="$(pane_cwd "$pane" 2>/dev/null || true)"
+  case "$cwd" in
+    "$ROOT/.yggdrasil/"*|"$ROOT/.yggdrasil")
+      printf 'seat-reap[1]{pane,state}:\n  "%s","refused: an errand pane — the sweep owns it"\n' "$pane"
+      return 1 ;;
+  esac
+  if "$SCRIPT_DIR/seats.sh" close "$pane" >/dev/null 2>&1; then
+    printf 'seat-reap[1]{pane,state}:\n  "%s","closed (bare shell, no errand — his working directory)"\n' "$pane"
+    return 0
+  fi
+  printf 'seat-reap[1]{pane,state}:\n  "%s","refused: the pane did not close"\n' "$pane"
+  return 1
+}
+
 usage() {
   sed -n '2,40p' "$0" | sed 's/^# \{0,1\}//'
 }
@@ -492,6 +935,12 @@ case "${1:-}" in
     fi
     printf 'seat-reap[1]{path,pane,state}:\n  "%s","%s","refused: the pane did not close"\n' "$target" "$p"
     exit 1 ;;
+  --close-pane)
+    # Close an ORPHAN pane (a bare shell, no errand) — his word, never a sweep.
+    target="${2:-}"
+    [ -n "$target" ] || { printf 'error: --close-pane <pane-id>\n' >&2; exit 2; }
+    close_pane "$target"
+    exit $? ;;
   --install)
     printf 'seat-reap[1]{harness,state,detail}:\n'
     seat_hooks 1 || exit 1

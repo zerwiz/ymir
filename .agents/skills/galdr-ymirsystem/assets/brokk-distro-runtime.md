@@ -1136,15 +1136,116 @@ because assuming a seat is dead is the irreversible direction.
 gains a `seats` step (and NAMES the faults under `--check`); `bin/agents/groa-update.sh`
 re-seats the sweep after every update and reports it under `--check`;
 `bin/agents/eir-doctor.sh` has a `seats` surface whose fix mode calls the migration.
-`.agents/migrations/0018-a-worktree-is-not-a-root.sh` heals homes installed earlier:
+`.agents/migrations/0019-a-worktree-is-not-a-root.sh` heals homes installed earlier:
 it prunes linked-worktree paths from `~/.pi/agent/extensions/.ymir-root` (backup kept)
 and switches affected Eindri worktrees to the sparse-checkout exclusion.
+
+**A worktree is not a root, in the engine too.** `src/ymir_runtime/seat.py` names the
+MAIN tree's `.pi/extensions` to `bin/seat/pi-launcher.sh` when `roots.root` is itself a
+worktree (`git rev-parse --path-format=absolute --git-common-dir`), because a worktree has
+no extension tree of its own by design and the generator refuses a seat that names one.
 
 **A worktree is not a root.** `valknut-load.sh` refuses to record a linked worktree in
 `.ymir-root` (the one test: `git rev-parse --git-common-dir` differs from `--git-dir`),
 and prunes any an older seat recorded. `einherjar-spawn.sh` excludes `.pi/extensions`
 by that same sparse-checkout rule instead of `rm -rf` + `--assume-unchanged`, which was
 a per-FILE bit that left 45 deletions in every worker's `git status`.
+
+## Approved models — the allow-list at every spawn door (2026-11-12)
+
+A worker may run only on a model the operator's allow-list allows. The list is the
+operator's own file in the home, `<home>/config/models-allowed.yaml`; the tree ships only
+`config/models-allowed.yaml.example`. The rule has one home, `src/ymir_runtime/allow.py`,
+and one shell door, `bin/model/model-allow.sh`.
+
+| Door | Where it asks |
+|---|---|
+| `bin/agents/einherjar-spawn.sh` | after harness and model resolution, before the engine hand-off and the worktree; a raw launch's `--model` too |
+| `src/ymir_runtime/seat.py` | after `harness.resolve`, before `worktree.ensure`; a refusal is an `EngineError` (exit 1), never the exit-4 hinge |
+| `bin/seat/herdr-run.sh`, `bin/agents/agent-run.sh` | before the pane or the harness runs |
+| `bin/model/model-resolve.sh`, `bin/model/agent-model.sh` | every resolution carries the verdict; `agent-model` picks only from allowed rows |
+| `bin/agents/eir-doctor.sh` | surface `models`: live seats, `agents.yaml` rows and pi's default |
+
+The Claude harness never takes another harness's model. With no `--model` it gets the list's
+`defaults.claude`, and a family alias such as `opus` resolves to the allowed id. A grant
+(model, reason, granted-by, granted-at, expires, optional `uses`) allows one model on purpose.
+Its uses are counted per errand in `<state>/model-allow.log`. No environment variable allows a
+model. A list that does not parse fails closed. No list at all is `unpoliced`, which Eir reports.
+
+## No helm, no errand — and the helm runs the pin (2026-11-12, plan 257)
+
+**The seat gate.** `seat()` in `src/ymir_runtime/seat.py` refuses before anything is
+created when no live helm holds the arm lease. The lease must exist, its `state=` must be
+this house (compared by real path, so `<tree>/state → <home>/state` is one house), its pid
+must be alive with its recorded `/proc` start time, and its heartbeat must be inside
+`BROKK_WATCH_HEARTBEAT_STALE_SECONDS` (60). The refusal is `NoHelm` (exit **1**), never
+`EngineRefusal` (exit 4): on 4 the shell door runs its old road and would seat the worker
+anyway. `YMIR_DISPATCH_NO_HELM=1` is the loud override and lands in the meta as
+`helm_bypass=`.
+
+**One shelf.** The lease is the authority for the errand's record root: the meta, status
+and brief go to the lease's `state=`, never to a seat's private `BROKK_STATE_OVERRIDE`.
+The lease is looked for on `roots.state` and then on the arm shelf (`$YMIR_STATE_DIR` →
+`<home>/state`). The meta records `helm_pid`, `helm_gen` and `helm_state`.
+
+**The record is the wake.** `watch.terminal_status_wake` raises one `signal: <id> <line>`
+for a `done:`/`failed:`/`needs-decision:`/`paused:` line newer than `state/<id>.woke`.
+`.arm.terminal-epoch` seeds older lines silently. `eindri-acclaim.sh` writes the same
+cursor, so the loud road and the record never wake twice.
+
+**The pin.** `bin/pi/arm-pin-lib.sh` is the one resolver (`YMIR_RUNTIME_DIR`,
+`YMIR_RUNTIME_BRANCH` from `runtime.env`). `syn-watch-arm.sh` hands over to the pin's
+client (`YMIR_ARM_PINNED=1` stops a loop; `YMIR_ARM_TREE=1` is the override), and the pi,
+OpenCode and Claude adapters call the pin's client. The daemon writes `pin=` and
+`pin_behind=` into the lease. Gróa fast-forwards the pin (a `pin` row) and runs
+`runtime-deploy.sh` when it moved. Rödd's `start.sh` and `src/main.js` run the pin.
+`bin/pi/arm-pin.sh status|check` puts the age on the board; Eir's surface is `armpin`.
+Fix note `docs/fixes/agents/2026-11-11-no-helm-no-errand.md`.
+
+## The helm knows itself — the lease carries who, what for, where and which pin (plans 254 B1b/B1c · 257 H7/H8 · 254 B7)
+
+Appended 2026-11-12. The lease format in the state table above (`pid starttime gen mode session heartbeat
+state`) stands as the record of what it was; this section is what it now carries.
+
+The arm writes these fields at take, beside the old ones and the `role=` of plan 254 phase 1.
+
+| Field | Value | Where it comes from |
+|---|---|---|
+| `seat=` | the name this seat answers as, else `unnamed` | `~/.pi/agent/extensions/.ymir-seat` `primary=` — never invented (Rule 44) |
+| `charter=` | `planning,mail,the-work-in-hand,dispatch-on` | the Allfather's own definition of the helm's work |
+| `host=` / `machine=` | this machine, and its key in the seat registry | `.ymir-seat` `host=`, else `hostname` · `hodd/identity/seats.yaml` |
+| `fleetrole=` | heart · forge · dev · hand | `bin/skuld/role.sh resolve` (or `YMIR_ROLE`) |
+| `fleet=` | the fleet's name, as one token | `seats.yaml` `fleet.name` |
+| `pin=` / `pin_behind=` | the pinned runtime's sha and `git rev-list --count HEAD..origin/main` | `YMIR_RUNTIME_DIR`, else `$YMIR_HOME/config/runtime.env` |
+| `identity=` / `missing=` | `held`, or `readonly` with the field named | derived at take |
+
+The resolver is `src/ymir_runtime/identity.py`, cached for five minutes so the poll loop does not pay
+two git calls a beat. `bin/engine/ymir-engine.sh identity [--check]` prints it; `--check` exits 3 and
+names the field when host or fleet role cannot be resolved.
+
+**One row reads it back.** `bin/seat/helm-identity.sh` owns the row, so `bin/voice/rodd-arm.sh who`,
+`bin/seat/lock-ask.sh who` and the Sága digest (`--line`) cannot print three different answers.
+
+**The holder gate.** A claimant whose machine cannot resolve its host or fleet role does not take the
+helm: `rodd-arm.sh hold` refuses with exit 3, and `bin/pi/syn-watch-arm.sh` refuses with *clause 4*,
+each naming the missing field. The standing arm service still beats, but writes `identity=readonly`.
+
+**Rödd runs the pin.** `apps/rodd/start.sh` resolves the pin and hands over to `<pin>/apps/rodd/start.sh`
+when launched from anywhere else; an absent pin is one named line and no Rödd. Her Electron entry resolves
+the face and the tool server's `--app-dir` through `apps/rodd/src/pin.js`. Her unit template
+`apps/rodd/electron/ymir-rodd.service.in` is rendered by `bin/desktop/desktop-place.sh` with
+`ExecStart=<pin>/apps/rodd/start.sh`, so `runtime-pinned-guard.sh` judges her like every other unit.
+
+**The armpin surface.** `bin/seat/armpin.sh` fails when the pin is behind `origin/main`, or when a
+supervisor — the arm service (judged by its `PYTHONPATH`), an arm client, Rödd's window or her
+`uvicorn --app-dir` — executes from outside the pin. Eir reports it as `armpin`; the mend is
+`bin/engine/runtime-deploy.sh`.
+
+**A refusal is keyed (B7).** `bin/voice/rodd-helm.sh` sends every refusal through
+`bin/notify/send.sh --key rodd:refusal:<sha of the instruction>`; the instruction is hashed without its
+timestamp, so the same request is one toast per window and always one room line. Her own notices that
+return as wakes are heard, never judged again. `bin/voice/voice-toolbox.py` serves any memory item that
+asks her to merge with `void` and the reason (Rule 08).
 
 ## CHANGE LOG
 
@@ -1159,5 +1260,20 @@ a per-FILE bit that left 45 deletions in every worker's `git status`.
 - update-loop: bin/engine/update-loop.sh
 - **2026-11-10** — Appended with the capability: the seat sweep (`bin/seat/seat-reap.sh`), the
   recorded workspace id, the agent-aware housekeeping verdict, the worktree-is-not-a-root rule,
-  migration 0018 and the install/update/Eir wiring. Fix note
+  migration 0019 and the install/update/Eir wiring. Fix note
   `docs/fixes/agents/2026-11-10-the-arm-closes-finished-seats.md`.
+- **2026-11-12** — Appended with the capability: the model allow-list and its grants
+  (`bin/model/model-allow.sh`, `src/ymir_runtime/allow.py`), enforced at the spawner, the engine,
+  herdr-run, agent-run, the resolver and agent-model; Claude defaults to its own allowed model; Eir's
+  `models` surface. Fix note `docs/fixes/model/2026-11-12-only-approved-models-spawn.md`.
+- **2026-11-12** — Appended with plan 257 (H1–H3, H6–H8): the seat's helm gate as a hard
+  refusal, the lease as the record root, the record-as-wake cursor, the pinned arm client and
+  adapters, Gróa carrying the pin, Rödd on the pin, and `armpin`. Fix note
+  `docs/fixes/agents/2026-11-11-no-helm-no-errand.md`.
+- **2026-11-12** — Appended with the capability: the helm's identity in the lease (seat · charter ·
+  host · machine · fleetrole · fleet · pin · pin_behind), the one-row reader, the holder gate (clause 4),
+  Rödd on the pin with her unit template, the `armpin` surface, and the keyed refusal. Plans 254 and 257;
+  fix note `docs/fixes/runtime/2026-11-11-the-helm-knows-itself.md`.
+
+
+*Appended 2026-11-12 (plan 262):* main's one OpenCode door, `bin/seat/opencode-launcher.sh`, prints `env OPENCODE_CONFIG_CONTENT=… opencode run [--model M] --auto "<brief>"` (OpenCode v2's interactive screen refuses `--model`). The herdr road runs that line with `hdr pane run` and counts the seat only once `seat-prove.sh` finds the agent; an explicit `--kind` wins over `agents.yaml`; the tmux fallback runs the same line; an exact `provider/model` is verified with `opencode-launcher.sh has` (OpenCode's own list, because pi's catalog lacks the `opencode/` provider). Guards: `bin/gates/tests/test_opencode_launcher.sh` and Eir's `opencode` surface. Fix note `docs/fixes/agents/2026-11-12-an-opencode-worker-actually-starts.md`.

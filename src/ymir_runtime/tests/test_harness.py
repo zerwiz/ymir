@@ -65,7 +65,22 @@ class ResolveTest(unittest.TestCase):
             (config / "eindri-harness").write_text("opencode opencode-go/deepseek-v4.1-flash\n", encoding="utf-8")
             selection = harness.resolve(harness="claude", config_dir=config, catalog=lambda: [])
         self.assertEqual(selection.name, "claude")
-        self.assertEqual(selection.model, "")
+        self.assertEqual(selection.model, "sonnet")
+
+    def test_a_simple_claude_errand_runs_on_sonnet(self) -> None:
+        for effort in ("", "low", "medium"):
+            selection = harness.resolve(harness="claude", effort=effort, catalog=lambda: [])
+            self.assertEqual(selection.model, "sonnet", effort)
+            self.assertIn("errand weight", selection.model_provenance)
+
+    def test_a_heavy_claude_errand_runs_on_opus(self) -> None:
+        for effort in ("high", "xhigh", "max"):
+            selection = harness.resolve(harness="claude", effort=effort, catalog=lambda: [])
+            self.assertEqual(selection.model, "opus", effort)
+
+    def test_an_explicit_claude_model_beats_the_weight(self) -> None:
+        selection = harness.resolve(harness="claude", model="haiku", effort="max", catalog=lambda: [])
+        self.assertEqual(selection.model, "haiku")
 
     def test_claude_refuses_an_explicit_provider_model_token(self) -> None:
         with self.assertRaises(ValueError) as caught:
@@ -135,8 +150,34 @@ class BuildLaunchCommandTest(unittest.TestCase):
         self.assertEqual(
             harness.build_launch_command(selection, "/d/prompt.md"),
             "env OPENCODE_CONFIG_CONTENT='{\"permission\":{\"*\":\"allow\"}}' opencode "
-            "--model 'openai/gpt-5' --prompt \"$(cat '/d/prompt.md')\"",
+            "run --model 'openai/gpt-5' --auto \"$(cat '/d/prompt.md')\"",
         )
+
+    def test_opencode_shape_matches_its_launcher_door(self) -> None:
+        """Two copies of one shape killed every engine-seated OpenCode seat (2026-11-12)."""
+        import subprocess
+        selection = harness.HarnessSelection("opencode", "openai/gpt-5", "", "", "")
+        door = subprocess.run(
+            [str(harness.opencode_launcher_door()), "print", "--model", "openai/gpt-5", "--brief", "/d/prompt.md"],
+            capture_output=True, text=True, check=True,
+        ).stdout.strip()
+        self.assertEqual(harness.build_launch_command(selection, "/d/prompt.md"), door)
+
+    def test_free_resolves_through_the_free_model_door(self) -> None:
+        calls = []
+
+        def runner(argv):
+            calls.append(argv)
+            return subprocess.CompletedProcess(argv, 0, "opencode/glm-5.3-flash-free\n", "")
+
+        selection = harness.resolve(harness="opencode", model="free", catalog=lambda: [], runner=runner)
+        self.assertEqual(selection.model, "opencode/glm-5.3-flash-free")
+        self.assertEqual(calls[0][1:], ["pick", "opencode"])
+        self.assertIn("free", selection.model_provenance)
+
+    def test_claude_refuses_free(self) -> None:
+        with self.assertRaises(ValueError):
+            harness.resolve(harness="claude", model="free", catalog=lambda: [])
 
     def test_every_launch_shape_survives_the_exec_prefix(self) -> None:
         """The seat writer prefixes `exec ` to any shape that lacks it.

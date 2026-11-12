@@ -17,11 +17,15 @@ ARM="$ROOT/bin/pi/syn-watch-arm.sh"
 fail=0
 pass() { echo "PASS: $1"; }
 bad()  { echo "FAIL: $1"; fail=1; }
-alive() {  # <pid> — running (not a reaped-or-zombie stub still awaiting wait)
+alive() {  # <pid> — running (not a reaped-or-zombie child still awaiting wait)
   local p=$1 st
   kill -0 "$p" 2>/dev/null || return 1
   st="$(awk '{print $3}' "/proc/$p/stat" 2>/dev/null)"
   [ -n "$st" ] && [ "$st" != "Z" ]
+}
+fake_harness() {  # <comm> — a live process whose /proc/<pid>/comm is the named harness
+  python3 -c "import ctypes,time; ctypes.CDLL(None).prctl(15, b'$1',0,0,0); time.sleep(600)" </dev/null >/dev/null 2>&1 &
+  echo $!
 }
 
 T="$(mktemp -d)"
@@ -33,6 +37,9 @@ export BROKK_STATE_OVERRIDE="$T/state"
 export BROKK_MACHINE_STATE_DIR="$T/xdg/ymir"
 unset BROKK_SESSION_PID 2>/dev/null || true
 export BROKK_WATCH_INLINE=1 BROKK_WATCH_POLL_SECONDS=600
+# plan 257 H6: these tests exercise THIS tree's client, so they take the loud override
+# rather than being handed to the operator's pinned runtime.
+export YMIR_ARM_TREE=1
 mkdir -p "$HOME" "$T/xdg/ymir" "$BROKK_STATE_OVERRIDE"
 
 lock="$T/xdg/ymir/brokk.lock"
@@ -51,22 +58,25 @@ if [ -e "$BROKK_STATE_OVERRIDE/.arm.clients/4242.pids" ]; then bad "(a) wrote a 
 
 # ── (b) this session holds the helm; a new client retires older ones ───────────
 rm -f "$lock"
-export BROKK_SESSION_PID="5151"
+PI=$(fake_harness pi); sleep 0.3
+export BROKK_SESSION_PID="$PI"
 mkdir -p "$BROKK_STATE_OVERRIDE/.arm.clients"
 # Two live stub "older clients" whose cmdline names syn-watch-arm (the real client does).
 bash -c 'exec -a syn-watch-arm sleep 600' & a=$!
 bash -c 'exec -a syn-watch-arm sleep 600' & b=$!
-printf '%s\n%s\n' "$a" "$b" > "$BROKK_STATE_OVERRIDE/.arm.clients/5151.pids"
+printf '%s\n%s\n' "$a" "$b" > "$BROKK_STATE_OVERRIDE/.arm.clients/$PI.pids"
 timeout 20 bash "$ARM" --restart >"$T/out" 2>&1 &
 newc=$!
-sleep 8
+# Wait for the retirement rather than a fixed sleep: the client's catch-up sweep talks to the
+# live herdr first and its time varies, and the identity gate (clause 4) costs a beat too.
+for _ in $(seq 1 36); do alive "$a" || alive "$b" || break; sleep 0.5; done
 if alive "$a"; then bad "(b) older client $a was not retired (out: $(tr "\n" " " < "$T/out"))"; else pass "(b) older client $a retired"; fi
 if alive "$b"; then bad "(b) older client $b was not retired"; else pass "(b) older client $b retired"; fi
-if grep -qx 5151 "$BROKK_STATE_OVERRIDE/.arm.clients/5151.pids" 2>/dev/null || [ -s "$BROKK_STATE_OVERRIDE/.arm.clients/5151.pids" ]; then
+if grep -qx "$PI" "$BROKK_STATE_OVERRIDE/.arm.clients/$PI.pids" 2>/dev/null || [ -s "$BROKK_STATE_OVERRIDE/.arm.clients/$PI.pids" ]; then
   pass "(b) the new client recorded a live client for the session"
 else
   bad "(b) the new client wrote no pidfile"
 fi
-kill "$newc" 2>/dev/null || true
+kill "$newc" "$PI" 2>/dev/null || true
 
 exit $fail

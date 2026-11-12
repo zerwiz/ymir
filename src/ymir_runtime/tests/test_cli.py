@@ -10,7 +10,7 @@ import unittest
 from pathlib import Path
 
 from ymir_runtime import __main__ as cli
-from ymir_runtime.tests.support import Recorder, engine_env, make_repo, tmux_responses, write_brief
+from ymir_runtime.tests.support import Recorder, engine_env, make_repo, tmux_responses, write_brief, write_lease
 
 
 def available(name: str) -> str:
@@ -23,6 +23,8 @@ class CliTest(unittest.TestCase):
         self.tmp = Path(self._tmp.name)
         self.repo = make_repo(self.tmp / "repo")
         self.env = engine_env(self.tmp, repo=self.repo)
+        # H1: the seat verb refuses with no live helm, so the compat/refusal tests seed one.
+        write_lease(Path(self.env["YMIR_STATE_DIR"]))
 
     def tearDown(self) -> None:
         self._tmp.cleanup()

@@ -46,8 +46,8 @@ The mark combines two glyphs:
   which every artifact is shaped.
 
 Construction rules:
-- Dual-layer chiseled bevel: dark iron exterior `#334155`, luminous cyan inner
-  edge `#7dd3fc`.
+- Dual-layer chiseled bevel: dark iron exterior `#2b241a`, luminous cyan inner
+  edge `#eca654`.
 - One emblem per context; never gradient-bloated, never filled with imagery.
 - On dark obsidian surfaces: cyan-lit variant. On light surfaces: steel variant
   with indigo edge.
@@ -60,14 +60,14 @@ tags, and portal theming (proposed accents — ENTRY-004 mapping):
 
 | House | Name-sake | House accent |
 |---|---|---|
-| Ymir Labs | the giant | cyan `#38bdf8` |
+| Ymir Labs | the giant | cyan `#c9973f` |
 | Brokk Forge | the bellows-smith | forge amber `#f59e0b` |
 | Runestone Labs (Runir) | the runes | rune crimson `#f43f5e` |
-| Muninn Labs | the raven (memory) | raven violet `#8b5cf6` |
-| Dvalin | the dwarf craftsman | cold steel `#94a3b8` |
-| Utgard Studios | the giant-realm | jötun magenta `#d946ef` |
+| Muninn Labs | the raven (memory) | raven violet `#96a0a8` |
+| Dvalin | the dwarf craftsman | cold steel `#9a8f75` |
+| Utgard Studios | the giant-realm | jötun magenta `#c2584a` |
 | Askr | the first man | ash green `#34d399` |
-| Mannheim | *(reserved)* | slate `#64748b` |
+| Mannheim | *(reserved)* | slate `#6b6250` |
 
 House accents are **structural only** — tags, entity headers, chart series —
 never the page chrome.
@@ -127,28 +127,28 @@ Foundations (light = dom, dark = forge) — **the forge theme is default and can
 | Token | Value | Role |
 |---|---|---|
 | `--ymir-bg-0` | `#080c14` | deepest canvas, app shell |
-| `--ymir-bg-1` | `#0b101c` | panel surface |
-| `--ymir-bg-2` | `#101726` | elevated surface, cards |
-| `--ymir-bg-3` | `#182334` | hover, wells |
+| `--ymir-bg-1` | `#151209` | panel surface |
+| `--ymir-bg-2` | `#1a1610` | elevated surface, cards |
+| `--ymir-bg-3` | `#221d14` | hover, wells |
 | light base | `#f4f6fa` | (light theme only, optional) |
 
 **Accents (two lights of Bifrost)**
 
 | Token | Value | Role |
 |---|---|---|
-| `--ymir-cyan-1` | `#38bdf8` | primary accent, active states, focus ring, links |
-| `--ymir-cyan-2` | `#0ea5e9` | hover/darker accent, gradients |
-| `--ymir-violet-1` | `#818cf8` | realm identity, secondary accent |
-| `--ymir-violet-2` | `#6366f1` | darker violet |
+| `--ymir-cyan-1` | `#c9973f` | primary accent, active states, focus ring, links |
+| `--ymir-cyan-2` | `#c9973f` | hover/darker accent, gradients |
+| `--ymir-violet-1` | `#eca654` | realm identity, secondary accent |
+| `--ymir-violet-2` | `#eca654` | darker violet |
 
 **Structure (hammered steel)**
 
 | Token | Value | Role |
 |---|---|---|
-| `--ymir-steel-1` | `#334155` | borders, bevel exteriors |
-| `--ymir-steel-2` | `#475569` | stronger lines, dividers |
-| `--ymir-steel-3` | `#94a3b8` | secondary text, muted glyphs |
-| `--ymir-chisel` | `#7dd3fc` | cyan inner bevel edge (emblem, focus) |
+| `--ymir-steel-1` | `#2b241a` | borders, bevel exteriors |
+| `--ymir-steel-2` | `#6b6250` | stronger lines, dividers |
+| `--ymir-steel-3` | `#9a8f75` | secondary text, muted glyphs |
+| `--ymir-chisel` | `#eca654` | cyan inner bevel edge (emblem, focus) |
 
 **Semantics (state of the forge)**
 
@@ -157,17 +157,17 @@ Foundations (light = dom, dark = forge) — **the forge theme is default and can
 | `--ymir-ok` | `#34d399` | NOMINAL (emerald) |
 | `--ymir-warn` | `#fbbf24` | DEGRADED (amber) |
 | `--ymir-danger` | `#f87171` | DOWN / sealed (ember red) |
-| `--ymir-info` | `#38bdf8` | transit / neutral-inform |
+| `--ymir-info` | `#c9973f` | transit / neutral-inform |
 | `--ymir-ok-dim` | `rgba(52,211,153,.15)` | background wash of the above three, same pattern for warn/danger/info |
 
 **Text on forge**
 
 | Token | Value | Role |
 |---|---|---|
-| `--ymir-text-0` | `#e8edf6` | primary text |
-| `--ymir-text-1` | `#b3c0d4` | secondary text |
-| `--ymir-text-2` | `#7b8aa3` | tertiary, disabled |
-| `--ymir-text-3` | `#4b5a73` | placeholder |
+| `--ymir-text-0` | `#f0e6cd` | primary text |
+| `--ymir-text-1` | `#cfc3a9` | secondary text |
+| `--ymir-text-2` | `#9a8f75` | tertiary, disabled |
+| `--ymir-text-3` | `#6b6250` | placeholder |
 
 Contrast: `--ymir-text-0` on `--ymir-bg-1` ≈ 13:1; body 15px meets WCAG AA
 everywhere; never put cyan text on cyan.
@@ -178,7 +178,7 @@ everywhere; never put cyan text on cyan.
 - Panel padding `--ymir-space-4: 16px`; page gutter 24–48.
 - Max content width 1440; density slider for the data views (comfortable ↔ compact).
 - Components: radius `--ymir-radius: 8px` (panels 12px), 1px steel borders,
-  inset shadows to sell the bevel: `inset 0 0 0 1px rgba(125,211,252,.12)`.
+  inset shadows to sell the bevel: `inset 0 0 0 1px rgba(236, 166, 84, .12)`.
 
 ### 4.4 Iconography & glyphs
 
@@ -462,14 +462,14 @@ wears on tags and marks (design.md §2.2).
 
 | House | Name-sake | Seal | What the house does today |
 |---|---|---|---|
-| **Ymir Labs** | the primordial giant; the frame of the world | cyan `#38bdf8` | the platform itself: Ymir OS, Hlidskjalf, the agent fleet, Mimirsbrunn — the body everything else is carved from |
+| **Ymir Labs** | the primordial giant; the frame of the world | cyan `#c9973f` | the platform itself: Ymir OS, Hlidskjalf, the agent fleet, Mimirsbrunn — the body everything else is carved from |
 | **Brokk Forge** | the bellows-smith who drove the forging of Mjölnir | forge amber `#f59e0b` | engineering & build tooling: WayOf Command/Runecode, softwerefactory, wayofmono, the factory |
 | **Runestone Labs** (short: **Runir**) | the runes carved once, that cannot be un-carved | rune crimson `#f43f5e` | records & compliance: `.compliance` gates, rune auditing, docs, runbooks, research |
-| **Muninn Labs** | the raven *(memory)* that flew for Odin daily | raven violet `#8b5cf6` | memory & knowledge: Anchor/wayofteams-mcp anchor-memory, Mimirsbrunn/engram, vector RAG |
-| **Dvalin** | the dwarf smith of the finest crafted things | cold steel `#94a3b8` | crafted tools — OptiCat (HVAC Pro), Linkable, Todo, Desk, Material Files |
-| **Utgard Studios** | the realm where the giants work, outside the walls | jötun magenta `#d946ef` | creative: WhyNot Productions (soul/growth media), AiPic (video), OpenChamber, sensual dojo, sensebit |
+| **Muninn Labs** | the raven *(memory)* that flew for Odin daily | raven violet `#96a0a8` | memory & knowledge: Anchor/wayofteams-mcp anchor-memory, Mimirsbrunn/engram, vector RAG |
+| **Dvalin** | the dwarf smith of the finest crafted things | cold steel `#9a8f75` | crafted tools — OptiCat (HVAC Pro), Linkable, Todo, Desk, Material Files |
+| **Utgard Studios** | the realm where the giants work, outside the walls | jötun magenta `#c2584a` | creative: WhyNot Productions (soul/growth media), AiPic (video), OpenChamber, sensual dojo, sensebit |
 | **Askr** | the first man, shaped from an ash tree | ash green `#34d399` | human-centered products: Relocation Copilot, onboarding automation |
-| **Mannheim** | *(holding — reserving a clan name with no myth yet)* | slate `#64748b` | holding; allocated when a new venture claims it |
+| **Mannheim** | *(holding — reserving a clan name with no myth yet)* | slate `#6b6250` | holding; allocated when a new venture claims it |
 
 > Houses are **names in the mythos, not subsystems** — they are the ventures the
 > fleet ships under, mapped per ENTRY-004. A house may be split or merged only by
@@ -1113,27 +1113,27 @@ Copy
    ============================================================ */
 :root{
   /* canvas — the forge chamber */
-  --ymir-bg-0:#080c14; --ymir-bg-1:#0b101c; --ymir-bg-2:#101726; --ymir-bg-3:#182334;
+  --ymir-bg-0:#080c14; --ymir-bg-1:#151209; --ymir-bg-2:#1a1610; --ymir-bg-3:#221d14;
   /* accents — two lights of Bifrost */
-  --ymir-cyan-1:#38bdf8; --ymir-cyan-2:#0ea5e9; --ymir-violet-1:#818cf8; --ymir-violet-2:#6366f1;
+  --ymir-cyan-1:#c9973f; --ymir-cyan-2:#c9973f; --ymir-violet-1:#eca654; --ymir-violet-2:#eca654;
   /* structure — hammered steel */
-  --ymir-steel-1:#334155; --ymir-steel-2:#475569; --ymir-steel-3:#94a3b8; --ymir-chisel:#7dd3fc;
+  --ymir-steel-1:#2b241a; --ymir-steel-2:#6b6250; --ymir-steel-3:#9a8f75; --ymir-chisel:#eca654;
   /* semantics — state of the forge */
-  --ymir-ok:#34d399; --ymir-warn:#fbbf24; --ymir-danger:#f87171; --ymir-info:#38bdf8;
+  --ymir-ok:#34d399; --ymir-warn:#fbbf24; --ymir-danger:#f87171; --ymir-info:#c9973f;
   --ymir-ok-dim:rgba(52,211,153,.15); --ymir-warn-dim:rgba(251,191,36,.15);
-  --ymir-danger-dim:rgba(248,113,113,.15); --ymir-info-dim:rgba(56,189,248,.15);
+  --ymir-danger-dim:rgba(248,113,113,.15); --ymir-info-dim:rgba(201, 151, 63, .15);
   /* text on forge */
-  --ymir-text-0:#e8edf6; --ymir-text-1:#b3c0d4; --ymir-text-2:#7b8aa3; --ymir-text-3:#4b5a73;
+  --ymir-text-0:#f0e6cd; --ymir-text-1:#cfc3a9; --ymir-text-2:#9a8f75; --ymir-text-3:#6b6250;
   /* type */
   --f-rune:'Cinzel',serif; --f-mono:'JetBrains Mono',monospace; --f-body:'Inter',sans-serif;
   /* space & shape */
   --ymir-radius:8px; --ymir-radius-panel:12px; --ymir-space-4:16px;
   /* bevel */
-  --chisel-inset:inset 0 0 0 1px rgba(125,211,252,.12);
+  --chisel-inset:inset 0 0 0 1px rgba(236, 166, 84, .12);
 }
 /* realm tints — structural only (design.md P5) */
-.shell[data-realm="way-of"]{--realm:#38bdf8}
-.shell[data-realm="zerwiz"]{--realm:#8b5cf6}
+.shell[data-realm="way-of"]{--realm:#c9973f}
+.shell[data-realm="zerwiz"]{--realm:#96a0a8}
 .shell[data-realm="craig"]{--realm:#f59e0b}
 
 /* ============ base ============ */
@@ -1143,7 +1143,7 @@ body{background:var(--ymir-bg-0);color:var(--ymir-text-0);font:15px/22px var(--f
 /* hand-hammered steel — ~2% noise, chrome only, never behind narrative */
 body::before{content:"";position:fixed;inset:0;z-index:99;pointer-events:none;opacity:.025;
   background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
-::selection{background:rgba(56,189,248,.3)}
+::selection{background:rgba(201, 151, 63, .3)}
 :focus-visible{outline:2px solid var(--ymir-chisel);outline-offset:2px;border-radius:4px}
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 input{font:inherit;color:inherit;background:none;border:none;outline:none}

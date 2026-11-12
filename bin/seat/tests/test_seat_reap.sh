@@ -25,12 +25,17 @@ case "${1:-} ${2:-}" in
     exit 0 ;;
   "pane list") cat "$S/panes.json" ;;
   "pane close") printf '%s\n' "$3" >>"$S/panes-closed"; exit 0 ;;
+  "pane send-text")
+    printf '%s\n' "$4" >>"$S/sent-text"
+    # a harness exit empties the agent list — the pane becomes agentless
+    printf '{"result":{"agents":[]}}' >"$S/agents.json"
+    exit 0 ;;
   "agent list") cat "$S/agents.json" ;;
   *) exit 0 ;;
 esac
 STUB
 chmod +x "$T/bin/herdr"
-export STUB_DIR="$T/stub"; mkdir -p "$STUB_DIR"
+export STUB_DIR="$T/fixtures"; mkdir -p "$STUB_DIR"
 printf '{"result":{"workspaces":[]}}' >"$STUB_DIR/workspaces.json"
 printf '{"result":{"panes":[]}}' >"$STUB_DIR/panes.json"
 printf '{"result":{"agents":[]}}' >"$STUB_DIR/agents.json"
@@ -49,6 +54,8 @@ printf 'failed: the launch produced NO agent\n' >"$T/state/alpha.status"
 printf 'id=beta\nworkspace=wB\nseat_pane=wB:p1\nworktree=%s\n' "$T/repo/.yggdrasil/beta" >"$T/state/beta.meta"
 printf 'working: a live agent stands here\n' >"$T/state/beta.status"
 printf 'id=gamma\nworkspace=wC\n' >"$T/state/gamma.meta"     # recordless: no status at all
+# gamma was launched an hour ago, so the settling grace has passed
+printf '%s\n' "$(( $(date +%s) - 3600 ))" >"$T/state/.gamma.launched"
 printf 'id=fresh\nworkspace=wF\nworktree=%s\n' "$T/repo/.yggdrasil/fresh" >"$T/state/fresh.meta"
 printf 'working: young\n' >"$T/state/fresh.status"
 
@@ -81,7 +88,7 @@ JSON
 # 1. the sweep lists before it closes
 t "--list closes nothing" bash -c "! test -s $STUB_DIR/closed"
 t "--list names the closed errand" bash -c "PATH=$T/bin:\$PATH HOME=$T/home BROKK_HOME=$T/repo BROKK_STATE_OVERRIDE=$T/state bash $root/bin/seat/seat-reap.sh --list | grep -q '\"alpha\",\"wA\"'"
-t "--list keeps the live one" bash -c "PATH=$T/bin:\$PATH HOME=$T/home BROKK_HOME=$T/repo BROKK_STATE_OVERRIDE=$T/state bash $root/bin/seat/seat-reap.sh --list | grep -q '\"beta\",\"wB\",\"wB:p1\",\"a live agent stands here'"
+t "--list keeps the live one" bash -c "PATH=$T/bin:\$PATH HOME=$T/home BROKK_HOME=$T/repo BROKK_STATE_OVERRIDE=$T/state bash $root/bin/seat/seat-reap.sh --list | grep -q '\"beta\",\"wB\",\"wB:p1\",\"working'"
 
 # 2. the sweep closes the closed and the recordless, and never the live
 t "sweep closes the finished seats" reap --sweep
@@ -90,7 +97,7 @@ t "gamma's workspace was closed" bash -c "grep -qx wC $STUB_DIR/closed"
 t "the live agent's workspace was NOT closed" bash -c "! grep -qx wB $STUB_DIR/closed"
 t "the fresh record was NOT closed" bash -c "! grep -qx wF $STUB_DIR/closed"
 t "the main hall was never considered" bash -c "! grep -qx wZ $STUB_DIR/closed"
-t "one TOON row says what closed" bash -c "PATH=$T/bin:\$PATH HOME=$T/home BROKK_HOME=$T/repo BROKK_STATE_OVERRIDE=$T/state bash $root/bin/seat/seat-reap.sh --list | head -2 | grep -q 'seat-reap\\[1\\]{would-close,kept,refused}'"
+t "one TOON row says what closed" bash -c "PATH=$T/bin:\$PATH HOME=$T/home BROKK_HOME=$T/repo BROKK_STATE_OVERRIDE=$T/state bash $root/bin/seat/seat-reap.sh --list | head -2 | grep -q 'seat-reap\\[1\\]{would-close,retired,kept,finished-idle,working,refused}'"
 
 # 3. the marker makes a second sweep a no-op
 t "a closed seat is recorded" bash -c "test -f $T/state/alpha.seat-closed && grep -q workspace=wA $T/state/alpha.seat-closed"
@@ -104,7 +111,7 @@ t "the second sweep closes nothing new" bash -c "PATH=$T/bin:\$PATH HOME=$T/home
 
 # 4. one errand, by its recorded workspace id, refuses a live agent
 t "single close of a live errand is refused" bash -c "! PATH=$T/bin:\$PATH HOME=$T/home BROKK_HOME=$T/repo BROKK_STATE_OVERRIDE=$T/state bash $root/bin/seat/seat-reap.sh beta | grep -q '\"beta\",\"wB\",\"wB:p1\",\"closed\"'"
-t "refusal names the live agent" bash -c "PATH=$T/bin:\$PATH HOME=$T/home BROKK_HOME=$T/repo BROKK_STATE_OVERRIDE=$T/state bash $root/bin/seat/seat-reap.sh beta | grep -q 'refused: a live agent stands here'"
+t "refusal names the live agent" bash -c "PATH=$T/bin:\$PATH HOME=$T/home BROKK_HOME=$T/repo BROKK_STATE_OVERRIDE=$T/state bash $root/bin/seat/seat-reap.sh beta | grep -q 'refused: working'"
 
 # 5. the bare shell that keeps a worktree in use can be closed, and only a bare one
 mkdir -p "$T/repo/.yggdrasil/shellonly" "$T/repo/.yggdrasil/held"
@@ -157,11 +164,11 @@ t "a dirty worktree is still kept" bash -c "cd $T/hk/.yggdrasil/merged && echo d
 
 # 7. the migration: a worktree path is pruned from the root record, with a backup
 printf '%s\n%s\n' "$T/repo" "$T/repo/.yggdrasil/alpha" >"$T/home/.pi/agent/extensions/.ymir-root"
-t "the migration runs" bash -c "HOME=$T/home YMIR_HOME=$T/home BROKK_ROOT_OVERRIDE=$T/repo bash $root/.agents/migrations/0018-a-worktree-is-not-a-root.sh >/dev/null"
+t "the migration runs" bash -c "HOME=$T/home YMIR_HOME=$T/home BROKK_ROOT_OVERRIDE=$T/repo bash $root/.agents/migrations/0019-a-worktree-is-not-a-root.sh >/dev/null"
 t "the worktree path is pruned" bash -c "! grep -q yggdrasil $T/home/.pi/agent/extensions/.ymir-root"
 t "the real root survives" bash -c "grep -qx $T/repo $T/home/.pi/agent/extensions/.ymir-root"
-t "a backup was kept" bash -c "test -f $T/home/.pi/agent/extensions/.ymir-root.pre-0018"
-t "a second run is clean" bash -c "HOME=$T/home YMIR_HOME=$T/home BROKK_ROOT_OVERRIDE=$T/repo bash $root/.agents/migrations/0018-a-worktree-is-not-a-root.sh | grep -q 'root record: clean'"
+t "a backup was kept" bash -c "test -f $T/home/.pi/agent/extensions/.ymir-root.pre-0019"
+t "a second run is clean" bash -c "HOME=$T/home YMIR_HOME=$T/home BROKK_ROOT_OVERRIDE=$T/repo bash $root/.agents/migrations/0019-a-worktree-is-not-a-root.sh | grep -q 'root record: clean'"
 
 # 8. the migration heals a worktree that reports its extensions deleted
 if [ -d "$T/hk/.git" ] || [ -f "$T/hk/.git" ]; then
@@ -172,7 +179,7 @@ if [ -d "$T/hk/.git" ] || [ -f "$T/hk/.git" ]; then
   rm -rf "$T/hk/.yggdrasil/merged/.pi/extensions"
   ( cd "$T/hk/.yggdrasil/merged" && git update-index --assume-unchanged .pi/extensions 2>/dev/null )
   t "the fault is visible first" bash -c "test -n \"\$(git -C $T/hk/.yggdrasil/merged status --porcelain | grep 'D  *\\.pi/extensions')\" || true"
-  t "the migration heals it" bash -c "HOME=$T/home YMIR_HOME=$T/home BROKK_ROOT_OVERRIDE=$T/hk bash $root/.agents/migrations/0018-a-worktree-is-not-a-root.sh | grep -qE 'healed to the sparse-checkout exclusion|already clean'"
+  t "the migration heals it" bash -c "HOME=$T/home YMIR_HOME=$T/home BROKK_ROOT_OVERRIDE=$T/hk bash $root/.agents/migrations/0019-a-worktree-is-not-a-root.sh | grep -qE 'healed to the sparse-checkout exclusion|already clean'"
   t "git status is clean after the mend" bash -c "test -z \"\$(git -C $T/hk/.yggdrasil/merged status --porcelain)\""
 fi
 
@@ -222,6 +229,120 @@ t "seat-prove carries the one default" bash -c "grep -q 'YMIR_SEAT_SETTLE:-60' $
 t "the spawner does not carry a second default" bash -c "! grep -q 'YMIR_SEAT_SETTLE:-25' $root/bin/agents/einherjar-spawn.sh"
 t "the engine passes --settle only when the operator set it" bash -c "grep -q 'if settle:' $root/src/ymir_runtime/seat.py"
 t "the runtime asset names the number" bash -c "grep -q 'YMIR_SEAT_SETTLE' $root/.agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md"
+
+
+# ── 14. the settling grace: a booting seat is never swept (house law) ────────
+# tests/test_eindri_liveness_grace.sh: inside the grace a quiet seat is SETTLING
+# and nothing is corrected. The spawner raises the workspace before it writes any
+# status, so a recordless workspace younger than YMIR_SEAT_SETTLE is a seat that
+# is still coming up.
+printf 'id=settling\nworkspace=wST\n' >"$T/state/settling.meta"
+printf '%s\n' "$(date +%s)" >"$T/state/.settling.launched"
+printf 'id=unstamped\nworkspace=wUN\n' >"$T/state/unstamped.meta"
+cat >"$STUB_DIR/workspaces.json" <<JSON
+{"result":{"workspaces":[
+ {"workspace_id":"wST","label":"eindri-settling","agent_status":"unknown"},
+ {"workspace_id":"wUN","label":"eindri-unstamped","agent_status":"unknown"}
+]}}
+JSON
+cat >"$STUB_DIR/panes.json" <<JSON
+{"result":{"panes":[
+ {"pane_id":"wST:p1","cwd":"$T/repo/.yggdrasil/settling"},
+ {"pane_id":"wUN:p1","cwd":"$T/repo/.yggdrasil/unstamped"}
+]}}
+JSON
+rm -f "$STUB_DIR/closed"
+t "a freshly launched recordless seat is SETTLING, not closed" bash -c "PATH=$T/bin:\$PATH HOME=$T/home BROKK_HOME=$T/repo BROKK_STATE_OVERRIDE=$T/state bash $root/bin/seat/seat-reap.sh --sweep | grep -q 'SETTLING'"
+t "the settling seat was NOT closed" bash -c "! grep -qx wST $STUB_DIR/closed"
+t "an unmeasurable seat is kept, not closed" bash -c "! grep -qx wUN $STUB_DIR/closed"
+t "and the sweep says why it was kept" bash -c "PATH=$T/bin:\$PATH HOME=$T/home BROKK_HOME=$T/repo BROKK_STATE_OVERRIDE=$T/state bash $root/bin/seat/seat-reap.sh --list | grep -q 'no timestamp'"
+# the same seat, an hour later, is a dead one
+printf '%s\n' "$(( $(date +%s) - 3600 ))" >"$T/state/.settling.launched"
+t "past the grace the same seat IS closed" bash -c "PATH=$T/bin:\$PATH HOME=$T/home BROKK_HOME=$T/repo BROKK_STATE_OVERRIDE=$T/state bash $root/bin/seat/seat-reap.sh --sweep >/dev/null; grep -qx wST $STUB_DIR/closed"
+t "the spawner stamps the launch" bash -c "grep -q 'launched' $root/bin/agents/einherjar-spawn.sh && grep -q '\.\$ID\.launched' $root/bin/agents/einherjar-spawn.sh"
+
+# ── 15. plan 255 · the discriminator: three verdicts, not two ────────────────
+# Five cases on a stubbed agent reader and a fresh throwaway state dir. The stub
+# clears the agent list when a harness exit is sent, so the retire verb (S2) sees
+# the pane go agentless and closes the workspace behind it.
+DISC="$T/disc"; mkdir -p "$DISC/state/data" "$DISC/wt"
+rm -f "$STUB_DIR/closed"
+disc() { env PATH="$T/bin:$PATH" HOME="$T/home" BROKK_HOME="$T/repo" \
+             BROKK_STATE_OVERRIDE="$DISC/state" BROKK_DATA_OVERRIDE="$DISC/state/data" \
+             SEAT_REAP_IDLE_GRACE=60 SEAT_REAP_EXIT_WAIT=2 \
+             bash "$root/bin/seat/seat-reap.sh" "$@"; }
+disc_grep() { local _pat=$1; shift; disc "$@" | grep -q "$_pat"; }
+now="$(date +%s)"
+
+# (1) working kept — a `working` agent is never touched
+printf 'id=wk\nworkspace=wWK\nseat_pane=wWK:p1\nworktree=%s\n' "$DISC/wt/wk" >"$DISC/state/wk.meta"
+printf 'working: busy\n' >"$DISC/state/wk.status"
+cat >"$STUB_DIR/agents.json" <<JSON
+{"result":{"agents":[{"agent":"pi","agent_status":"working","pane_id":"wWK:p1","workspace_id":"wWK","cwd":"$DISC/wt/wk","foreground_cwd":"$DISC/wt/wk"}]}}
+JSON
+cat >"$STUB_DIR/workspaces.json" <<JSON
+{"result":{"workspaces":[{"workspace_id":"wWK","label":"eindri-wk","agent_status":"working"}]}}
+JSON
+t "working kept (verdict names it)" disc_grep '"wk","wWK","wWK:p1","working' --list
+t "working never closed" bash -c "! grep -qx wWK $STUB_DIR/closed"
+
+# (2) finished retired — terminal record + continuous idle past the grace → RETIRE
+printf 'id=fin\nworkspace=wFIN\nseat_pane=wFIN:p1\nworktree=%s\n' "$DISC/wt/fin" >"$DISC/state/fin.meta"
+printf 'done: finished\n' >"$DISC/state/fin.status"
+printf '%s\n' "$(( now - 600 ))" >"$DISC/state/.fin.idle-since"
+cat >"$STUB_DIR/agents.json" <<JSON
+{"result":{"agents":[{"agent":"pi","agent_status":"idle","pane_id":"wFIN:p1","workspace_id":"wFIN","cwd":"$DISC/wt/fin","foreground_cwd":"$DISC/wt/fin"}]}}
+JSON
+cat >"$STUB_DIR/workspaces.json" <<JSON
+{"result":{"workspaces":[{"workspace_id":"wFIN","label":"eindri-fin","agent_status":"idle"}]}}
+JSON
+t "finished retired (verdict names it)" disc_grep '"fin","wFIN","wFIN:p1","retired' --sweep
+t "finished workspace closed" bash -c "grep -qx wFIN $STUB_DIR/closed"
+t "the idle stamp is cleared after retirement" bash -c "! test -f $DISC/state/.fin.idle-since"
+
+# (3) needs-decision kept — waits for the Allfather, never reaped
+printf 'id=nd\nworkspace=wND\nseat_pane=wND:p1\nworktree=%s\n' "$DISC/wt/nd" >"$DISC/state/nd.meta"
+printf 'needs-decision: the Allfather must choose\n' >"$DISC/state/nd.status"
+printf '%s\n' "$(( now - 600 ))" >"$DISC/state/.nd.idle-since"
+cat >"$STUB_DIR/agents.json" <<JSON
+{"result":{"agents":[{"agent":"pi","agent_status":"idle","pane_id":"wND:p1","workspace_id":"wND","cwd":"$DISC/wt/nd","foreground_cwd":"$DISC/wt/nd"}]}}
+JSON
+cat >"$STUB_DIR/workspaces.json" <<JSON
+{"result":{"workspaces":[{"workspace_id":"wND","label":"eindri-nd","agent_status":"idle"}]}}
+JSON
+t "needs-decision kept (named, never reaped)" disc_grep '"nd","wND","wND:p1","undecided — needs-decision' --sweep
+t "needs-decision never closed" bash -c "! grep -qx wND $STUB_DIR/closed"
+
+# (4) dirty worktree refused — the retire verb refuses before it ends anything
+mkdir -p "$DISC/gitrepo"
+git init -q -b main "$DISC/gitrepo"
+( cd "$DISC/gitrepo" && mkdir -p .pi RULES && : > .pi/x && : > RULES/x && git add -A && git commit -qm base ) >/dev/null 2>&1
+git -C "$DISC/gitrepo" worktree add -q -b dirty-branch "$DISC/gitrepo/.yggdrasil/dirty" main >/dev/null 2>&1
+echo dirt >> "$DISC/gitrepo/.yggdrasil/dirty/.pi/x"
+printf 'id=dirty\nworkspace=wDR\nseat_pane=wDR:p1\nworktree=%s\n' "$DISC/gitrepo/.yggdrasil/dirty" >"$DISC/state/dirty.meta"
+printf 'done: finished\n' >"$DISC/state/dirty.status"
+printf '%s\n' "$(( now - 600 ))" >"$DISC/state/.dirty.idle-since"
+cat >"$STUB_DIR/agents.json" <<JSON
+{"result":{"agents":[{"agent":"pi","agent_status":"idle","pane_id":"wDR:p1","workspace_id":"wDR","cwd":"$DISC/gitrepo/.yggdrasil/dirty","foreground_cwd":"$DISC/gitrepo/.yggdrasil/dirty"}]}}
+JSON
+cat >"$STUB_DIR/workspaces.json" <<JSON
+{"result":{"workspaces":[{"workspace_id":"wDR","label":"eindri-dirty","agent_status":"idle"}]}}
+JSON
+t "dirty worktree refused (the guard named it)" disc_grep '"dirty","wDR","wDR:p1","refused: dirty worktree' --sweep
+t "dirty worktree never closed" bash -c "! grep -qx wDR $STUB_DIR/closed"
+
+# (5) grace not yet elapsed kept — terminal + idle, but the grace has not run out
+printf 'id=g\nworkspace=wG\nseat_pane=wG:p1\nworktree=%s\n' "$DISC/wt/g" >"$DISC/state/g.meta"
+printf 'done: finished\n' >"$DISC/state/g.status"
+printf '%s\n' "$(( now - 10 ))" >"$DISC/state/.g.idle-since"
+cat >"$STUB_DIR/agents.json" <<JSON
+{"result":{"agents":[{"agent":"pi","agent_status":"idle","pane_id":"wG:p1","workspace_id":"wG","cwd":"$DISC/wt/g","foreground_cwd":"$DISC/wt/g"}]}}
+JSON
+cat >"$STUB_DIR/workspaces.json" <<JSON
+{"result":{"workspaces":[{"workspace_id":"wG","label":"eindri-g","agent_status":"idle"}]}}
+JSON
+t "grace not elapsed kept (named, not retired)" disc_grep '"g","wG","wG:p1","undecided — finished-idle — grace not yet elapsed' --sweep
+t "grace seat never closed" bash -c "! grep -qx wG $STUB_DIR/closed"
 
 printf 'seat reap: %s ok / %s fail\n' "$ok" "$fail"
 [ "$fail" = 0 ]

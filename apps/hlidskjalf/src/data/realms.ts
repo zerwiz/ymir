@@ -41,11 +41,11 @@ export const DOMAINS: Record<string, DomainDef> = {
   ymirlabs: { id: 'ymirlabs', name: 'Ymir Labs', accent: '#c9973f', glyph: 'ᛦ' },
   brokkforge: { id: 'brokkforge', name: 'Brokk Forge', accent: '#f59e0b', glyph: 'ᛒ' },
   runestone: { id: 'runestone', name: 'Runestone Labs', accent: '#f43f5e', glyph: 'ᚱ' },
-  muninn: { id: 'muninn', name: 'Muninn Labs', accent: '#8b5cf6', glyph: 'ᛗ' },
-  dvalin: { id: 'dvalin', name: 'Dvalin', accent: '#94a3b8', glyph: 'ᛞ' },
-  utgard: { id: 'utgard', name: 'Utgard Studios', accent: '#d946ef', glyph: 'ᚢ' },
+  muninn: { id: 'muninn', name: 'Muninn Labs', accent: '#96a0a8', glyph: 'ᛗ' },
+  dvalin: { id: 'dvalin', name: 'Dvalin', accent: '#9a8f75', glyph: 'ᛞ' },
+  utgard: { id: 'utgard', name: 'Utgard Studios', accent: '#c2584a', glyph: 'ᚢ' },
   askr: { id: 'askr', name: 'Askr', accent: '#34d399', glyph: 'ᚨ' },
-  mannheim: { id: 'mannheim', name: 'Mannheim', accent: '#64748b', glyph: 'ᛘ' },
+  mannheim: { id: 'mannheim', name: 'Mannheim', accent: '#6b6250', glyph: 'ᛘ' },
 };
 
 export const realmById = (id: string): RealmDef =>
@@ -60,14 +60,16 @@ export interface AccentPreset {
 
 /**
  * Personal accent presets. `realm` follows the tenant tint (the structural
- * default); every other preset lets the operator paint their own seat.
+ * default); every other preset lets the operator paint their own seat. The ids
+ * are stored preferences and stay as they were; since 2026-11-12 (RULES/54) the
+ * cool presets wear house colours under house names.
  */
 export const ACCENTS: AccentPreset[] = [
   { id: 'realm', name: 'Realm default', tint: null, tint2: null },
-  { id: 'azure', name: 'Azure', tint: '#c9973f', tint2: '#0ea5e9' },
-  { id: 'indigo', name: 'Indigo', tint: '#818cf8', tint2: '#6366f1' },
-  { id: 'violet', name: 'Violet', tint: '#a855f7', tint2: '#7c3aed' },
-  { id: 'magenta', name: 'Magenta', tint: '#d946ef', tint2: '#c026d3' },
+  { id: 'azure', name: 'Bronze', tint: '#c9973f', tint2: '#7d5f2a' },
+  { id: 'indigo', name: 'Hearth', tint: '#eca654', tint2: '#c9973f' },
+  { id: 'violet', name: 'Steel', tint: '#96a0a8', tint2: '#5f686e' },
+  { id: 'magenta', name: 'Blood', tint: '#c2584a', tint2: '#7c3a30' },
   { id: 'crimson', name: 'Crimson', tint: '#f43f5e', tint2: '#e11d48' },
   { id: 'ember', name: 'Ember', tint: '#f87171', tint2: '#ef4444' },
   { id: 'orange', name: 'Orange', tint: '#fb923c', tint2: '#f97316' },
@@ -75,8 +77,8 @@ export const ACCENTS: AccentPreset[] = [
   { id: 'lime', name: 'Lime', tint: '#a3e635', tint2: '#84cc16' },
   { id: 'emerald', name: 'Emerald', tint: '#34d399', tint2: '#10b981' },
   { id: 'teal', name: 'Teal', tint: '#2dd4bf', tint2: '#14b8a6' },
-  { id: 'cyan', name: 'Cyan', tint: '#22d3ee', tint2: '#06b6d4' },
-  { id: 'steel', name: 'Steel', tint: '#94a3b8', tint2: '#64748b' },
+  { id: 'cyan', name: 'Bone', tint: '#cfc3a9', tint2: '#9a8f75' },
+  { id: 'steel', name: 'Worn bone', tint: '#9a8f75', tint2: '#6b6250' },
 ];
 
 /**

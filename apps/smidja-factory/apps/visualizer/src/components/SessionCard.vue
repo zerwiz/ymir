@@ -410,7 +410,7 @@ const hiddenRowCount = computed(() =>
   color: var(--accent);
 }
 .card-stop:nth-of-type(3):hover:not(:disabled) {
-  background: rgba(148, 163, 255, 0.16);
+  background: rgba(240, 230, 205, 0.16);
   color: var(--violet);
 }
 .card-stop:disabled {
@@ -419,14 +419,14 @@ const hiddenRowCount = computed(() =>
 }
 
 .card:hover {
-  border-color: rgba(148, 163, 255, 0.45);
-  box-shadow: 0 10px 34px rgba(148, 163, 255, 0.12);
+  border-color: rgba(240, 230, 205, 0.45);
+  box-shadow: 0 10px 34px rgba(240, 230, 205, 0.12);
   transform: translateY(-2px);
 }
 
 .card.running {
-  border-color: rgba(108, 182, 255, 0.6);
-  box-shadow: 0 0 22px rgba(108, 182, 255, 0.16);
+  border-color: rgba(236, 166, 84, 0.6);
+  box-shadow: 0 0 22px rgba(236, 166, 84, 0.16);
 }
 
 .card.fail {

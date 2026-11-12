@@ -6,7 +6,8 @@ case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)"
-YMIR_HOME="${YMIR_HOME:-$HOME/Documents/ymirhome}"
+. "$ROOT/bin/vault/hoard-lib.sh"
+ymir_home_root YMIR_HOME
 
 PR=""; DRY=0; ONLY="all"; REPORT=0
 while [ $# -gt 0 ]; do

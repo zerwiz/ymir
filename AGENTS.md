@@ -784,3 +784,53 @@ the operator's hours.
 **What this does not excuse.** A repair that changes behaviour beyond the fix — a new door, a new
 default, a new claim on the system, a new public surface — is *new work* and earns its own proof. The
 word "fix" is not a licence to slip a feature in behind an approval.
+
+## 2026-11-11 — Ymir is a program, and it runs globally (RULES/51)
+
+At the operator's word: *"ymir are the logic. the tools. the programs."* · *"ymir must work GLOBALLY on the users
+computers."* This repository is the **source** Ymir is built and shipped from; it is **not** where Ymir is used.
+Ymir runs in the user's **root agents** — the global agent of every harness they have (pi, Claude Code, OpenCode,
+Codex, Cursor, and any harness to come) — and in their home, so a session opened in `~` or in any project has all of
+it: the contract, the extensions (on pi at least `ro`, ask-user, `todo`, `open-editor`), the MCP doors, the skills and
+the hooks. **Install and every update seat them; a root agent loads the pinned runtime, never a working tree.** A
+feature is done when it answers from a session opened outside this checkout, on every harness, after install and after
+update. When you develop Ymir, build for the root agent first; this file is the page for working **on** Ymir. Full
+law: `RULES/51-ymir-is-a-program.md`.
+
+## 2026-11-11 — a document is written for a person to read (RULES/52)
+
+At the Allfather's word, after a day of plans and architecture pages written in TOON: *"i cant read what is says in
+simple ways. we are having this problem globally."*
+
+The voice section above says TOON blocks *"belong in files, ledgers and agent-facing output"*. **That sentence no
+longer covers documents.** Any file a person reads, whether a plan, an architecture page, a research note, a runbook, a
+README, a fix note or a rule, is written for that person:
+
+- headings that say what each section answers;
+- short paragraphs, with sentences of about 20 words and never over 40;
+- real Markdown tables where each item has three or more facts;
+- Mermaid diagrams for anything with boxes and arrows;
+- GitHub callouts (`> [!IMPORTANT]`) for what is owed.
+
+TOON stays only where only a machine reads: tool stdout, a registry a script parses, a ledger row. A document still in
+TOON is converted, format only, when it is next touched.
+
+The craft and the templates are the skill **`bragi-documents`**, and its template shelf is
+`.agents/skills/bragi-documents/assets/templates/`. The collaboration kit carries the same shelf and its own `RULES/20`,
+so every repository it standardises gets them. The law is `RULES/52-documents-are-for-people.md`.
+
+## 2026-11-12 — two more delivery roads: documents land on main, and a batch ships once
+
+At the Allfather's word: *"documents should be able to push on main"* · *"if multiple agents are sent out at the same
+time, it's much better to merge the branches locally into one push … so everybody is going through the gates."*
+
+The delivery gate above still holds for code, config, scripts, apps, this file and every skill. Two roads are added:
+
+- **Documents only may land on `main`.** A push whose every changed file is Markdown under `docs/` (a fix note added
+  only, never `docs/features/_catalogue/`) or an append-only `RULES/*.md` change may go straight to `main`.
+  `bin/gates/guards/branch-guard.sh` enforces the set; a rule change still carries its fix note.
+- **Errands sent out together ship as one batch.** Brief them with `--mode batch`; each commits on `eindri/<id>` and
+  never pushes. The helm runs `bin/forge/gather.sh --finished` (or names the ids): one worktree, one gate run, one push,
+  one PR. A lone errand may still push its own PR.
+
+The law is RULES/08, in its section appended 2026-11-12. The how-to is `docs/features/gather-a-batch.md`.

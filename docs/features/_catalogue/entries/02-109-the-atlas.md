@@ -1,0 +1,8 @@
+---
+section: agents-work-collaboration
+---
+| Records | **The atlas — one page at the top of the home that says where we have it all** (`bin/records/atlas.sh` · [how-to](docs/features/the-atlas.md)) | His word, 2026-11-11: *"we need a system that's over all of this on a top level so we know where we have it all."* Renders `hodd/ATLAS.md` from the home's registries (`companies.yaml`, `projects.yaml`) and the realm folders: per company its status, people, board (declared `board:` or a `trello/` record), projects with repository and local clone, where its plans, documents, meetings, plan ledgers and decisions live with the last change, its open decisions, and a stale flag; then the cross-cutting doors. `--check` refuses a project that names a company folder that does not exist. Proved by `atlas.sh --self-test` on a fixture home | [docs/features/the-atlas.md](docs/features/the-atlas.md) |
+
+## CHANGE LOG
+
+- 2026-11-11 — review-mend: added missing heading for #668

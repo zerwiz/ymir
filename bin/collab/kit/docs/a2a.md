@@ -1,3 +1,10 @@
+---
+title: "A2A — the repository's card"
+status: "accepted"
+owner: "the project's collaboration-kit owner"
+updated: "2026-11-11"
+---
+
 # A2A — the repository's card in the constellation
 
 **What this is.** A repository that answers for its areas can also *say so* to a peer. `scripts/a2a.sh`
@@ -50,3 +57,8 @@ the card is generated from the record, it is valid, and it does not lie or leak.
 ## CHANGE LOG
 
 - **2026-11-08** — Opened with the card: protocol, skills, the grant scheme, and the five rules a card obeys.
+
+## References
+
+- `scripts/a2a.sh`, `scripts/a2a.py`, `scripts/gates/a2a-guard.sh`, `docs/areas.md`
+- `docs/headers.md` — the header and References format this document follows

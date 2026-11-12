@@ -63,6 +63,20 @@ bin/agents/eindri-start.sh <task-id>
   grace. When a worker later writes its own terminal word, `eindri-acclaim.sh` heals the report shelf a sweep had
   guessed at, and the correction travels as its own wake (`corrected`) so a spent `report` cannot mute it.
 
+**Seat an OpenCode worker (plan 262):**
+
+```bash
+bin/agents/eindri-start.sh "<the errand>" --role <name> --kind opencode --model <provider/model|free>
+```
+
+- The worker opens in a herdr pane (or a tmux window when herdr is absent) and reads its brief. It runs as one shot
+  (`opencode run`), so it cannot be steered once started. OpenCode v2's interactive screen refuses a `--model` flag.
+  One script, `bin/seat/opencode-launcher.sh`, writes the command for every road.
+- `--model free` picks a free model from the live catalog. A model OpenCode does not list is refused:
+  `bin/seat/opencode-launcher.sh has <provider/model>`.
+- `--kind` always wins over `config/agents.yaml`.
+- A pane that printed an error is not a seat. The seat is counted only once `herdr agent list` shows the agent.
+
 ## If it does not work
 
 | What you see | What to do |
@@ -72,4 +86,5 @@ bin/agents/eindri-start.sh <task-id>
 | No pane appeared | The backend is down — `bin/seat/herdr-ensure.sh status`, then re-spawn. |
 | The worker went quiet | `bin/agents/eindri-watch.sh` for heartbeats; `bin/agents/eindri-handoff.sh sweep` re-arms the failsafe. |
 | The status says `working` but nothing happens | `bin/agents/eindri-liveness.sh check` names the verdict and the pane; `sweep` corrects the record and wakes the seat. A fresh seat reads `SETTLING` for its first 10 minutes — that is the grace, not a stall. |
+| An OpenCode pane says `Unrecognized flag` | Something launched `opencode` by hand with `--model`. Use `bin/seat/opencode-launcher.sh print`; `bin/agents/eir-doctor.sh check` names the `opencode` surface if the installed OpenCode no longer takes `--prompt` and `--auto`. |
 | `seat=no` in `state/<id>.meta` | The launch produced no agent — read `state/<id>.status` (it says which pane), fix the cause, relaunch. |

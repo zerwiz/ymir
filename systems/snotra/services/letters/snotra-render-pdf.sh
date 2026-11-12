@@ -42,19 +42,19 @@ doc=f"""<!doctype html><html><head><meta charset="utf-8"><title>{html.escape(m.g
 <style>
 @page {{ size: A4; margin: 18mm 16mm; }}
 body {{ font-family: "Source Sans 3", "DejaVu Sans", sans-serif; font-size: 10.5pt; color:#1b1b1b; line-height:1.45; }}
-h1 {{ font-size: 22pt; margin:0 0 2mm; color:#12263f; }}
-h2 {{ font-size: 14pt; margin:8mm 0 2mm; color:#12263f; border-bottom:1px solid #d8dee6; padding-bottom:1mm; page-break-after:avoid; }}
+h1 {{ font-size: 22pt; margin:0 0 2mm; color:#2b241a; }}
+h2 {{ font-size: 14pt; margin:8mm 0 2mm; color:#2b241a; border-bottom:1px solid #f0e6cd; padding-bottom:1mm; page-break-after:avoid; }}
 h3 {{ font-size: 11.5pt; margin:5mm 0 1mm; page-break-after:avoid; }}
 table {{ width:100%; border-collapse:collapse; margin:2mm 0 4mm; font-size:9.2pt; }}
-th,td {{ border:1px solid #d8dee6; padding:1.6mm 2mm; vertical-align:top; text-align:left; }}
+th,td {{ border:1px solid #f0e6cd; padding:1.6mm 2mm; vertical-align:top; text-align:left; }}
 th {{ background:#f2f5f8; }}
-blockquote {{ margin:2mm 0; padding:1mm 0 1mm 4mm; border-left:3px solid #b9c4d0; color:#444; }}
+blockquote {{ margin:2mm 0; padding:1mm 0 1mm 4mm; border-left:3px solid #cfc3a9; color:#444; }}
 code, pre {{ font-family:"DejaVu Sans Mono", monospace; font-size:8.6pt; background:#f6f7f9; }}
 pre {{ padding:2mm; overflow-wrap:anywhere; white-space:pre-wrap; }}
-.cover {{ border-bottom:2px solid #12263f; padding-bottom:4mm; margin-bottom:6mm; }}
-.meta {{ color:#5b6b7c; font-size:9.5pt; }}
+.cover {{ border-bottom:2px solid #2b241a; padding-bottom:4mm; margin-bottom:6mm; }}
+.meta {{ color:#6b6250; font-size:9.5pt; }}
 section.brief {{ page-break-before: always; }}
-footer {{ margin-top:8mm; border-top:1px solid #d8dee6; padding-top:2mm; color:#5b6b7c; font-size:8.5pt; }}
+footer {{ margin-top:8mm; border-top:1px solid #f0e6cd; padding-top:2mm; color:#6b6250; font-size:8.5pt; }}
 .sig {{ margin-top:6mm; font-size:9.5pt; color:#333; }}
 </style></head><body>
 <div class="cover"><h1>{html.escape(m.get('title','Meeting Record'))}</h1>

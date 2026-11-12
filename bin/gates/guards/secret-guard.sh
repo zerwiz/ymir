@@ -69,6 +69,10 @@ weave_woven_files() {
     now="$(wov_hash "$f")"
     was="$(printf '%s' "$pre" | awk -v k="$f" 'index($0, k "=") == 1 { print substr($0, length(k) + 2); exit }')"
     [ "$now" = "$was" ] && continue
+    # A woven file that left git (plan 243: FEATURES.md, bin/README.md … are built, not tracked) is
+    # written and NOT staged — `git add` of an ignored path fails and used to abort every commit
+    # that touched the feature catalogue (found 2026-11-11, plan 250).
+    git -C "$ROOT" check-ignore -q -- "$f" && continue
     git -C "$ROOT" add -- "$f" || exit 1
     printf 'weave: wove and staged %s (a woven file — the only kind a hook may write)\n' "$f"
   done

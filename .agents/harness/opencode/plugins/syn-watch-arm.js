@@ -418,6 +418,8 @@ async function scheduleRetry(paths, sessionID, client, reason, predecessorArmPid
   retryTimer = timer;
 }
 
+// plan 257 H6: the shell line resolves the PIN's client (bin/pi/arm-pin-lib.sh) and runs
+// it, so this session's tree and branch never become the supervisor's code.
 function spawnArm(paths, sessionID, client, predecessorArmPid = "") {
   setArmStatus("starting");
   const env = {
@@ -428,7 +430,7 @@ function spawnArm(paths, sessionID, client, predecessorArmPid = "") {
     BROKK_STATE_OVERRIDE: paths.state,
     BROKK_WATCH_PREDECESSOR_ARM_PID: predecessorArmPid,
   };
-  const armChild = spawn("bash", ["-lc", 'config_dir="${BROKK_CONFIG_OVERRIDE:-$BROKK_HOME/config}"; [ -f "$config_dir/x-mode.env" ] && . "$config_dir/x-mode.env"; exec "$BROKK_ROOT_OVERRIDE/bin/pi/syn-watch-arm.sh" --restart'], {
+  const armChild = spawn("bash", ["-lc", 'config_dir="${BROKK_CONFIG_OVERRIDE:-$BROKK_HOME/config}"; [ -f "$config_dir/x-mode.env" ] && . "$config_dir/x-mode.env"; c=""; [ -r "$BROKK_ROOT_OVERRIDE/bin/pi/arm-pin-lib.sh" ] && . "$BROKK_ROOT_OVERRIDE/bin/pi/arm-pin-lib.sh" && arm_pin_client c; exec "${c:-$BROKK_ROOT_OVERRIDE/bin/pi/syn-watch-arm.sh}" --restart'], {
     cwd: paths.root,
     env,
     stdio: ["ignore", "pipe", "pipe"],

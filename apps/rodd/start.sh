@@ -5,6 +5,7 @@
 #   apps/rodd/start.sh --headless raise the same pipeline and the terminal client, no window
 #   apps/rodd/start.sh --check    report what is up, change nothing
 #   apps/rodd/start.sh --stop     lower the window, the toolbox and the tunnel
+#   apps/rodd/start.sh --install-unit  render ymir-rodd.service, ExecStart naming the pin
 #
 # Why a script: the host serves ONE session, and every stray client — a terminal, a probe,
 # a second window — takes it and leaves the face silent. This door owns that single seat,
@@ -16,6 +17,52 @@ PORT_HOST="${RODD_HOST_PORT:-8890}"
 PORT_BOX="${RODD_TOOLBOX_PORT:-8891}"
 PY="${RODD_PYTHON:-$HOME/venvs/s2s/bin/python}"   # allow-home-default: the engine lives in the seat own venv
 say() { printf '%-44s %s\n' "$1" "$2"; }
+
+# ── Rödd runs the PIN (plan 257 H7) ──────────────────────────────────────────
+# Her window, her tool server and her pipeline execute the pinned runtime (RULES/02 §7),
+# never this working tree: an agent that switched ~/ymir to a branch used to change the code
+# she ran at her next restart. A start from any other checkout hands over to the pin's own
+# start.sh; with no pin she refuses in ONE named line. `--stop` is never refused (lowering
+# her is always allowed), and YMIR_RODD_TREE=1 is the loud override for testing this face.
+#   apps/rodd/start.sh --install-unit   render ymir-rodd.service (ExecStart names the pin) so
+#                                       bin/gates/guards/runtime-pinned-guard.sh can see her
+if [ "${1:-}" != "--stop" ] && [ "${YMIR_RODD_TREE:-0}" != 1 ]; then
+  # shellcheck source=../../bin/pi/arm-pin-lib.sh
+  . "$ROOT/bin/pi/arm-pin-lib.sh"
+  RODD_PIN=""; arm_pin_dir RODD_PIN
+  if [ -z "$RODD_PIN" ]; then
+    say "Rödd refuses to start" "no pinned runtime (YMIR_RUNTIME_DIR in <home>/config/runtime.env) — bin/engine/runtime-deploy.sh"
+    exit 1
+  fi
+  if [ "$(_arm_real "$RODD_PIN")" != "$(_arm_real "$ROOT")" ]; then
+    if [ ! -x "$RODD_PIN/apps/rodd/start.sh" ] || [ "${YMIR_RODD_PINNED:-0}" = 1 ]; then
+      say "Rödd refuses to start" "the pinned runtime $RODD_PIN has no runnable apps/rodd/start.sh — bin/engine/runtime-deploy.sh"
+      exit 1
+    fi
+    exec env YMIR_RODD_PINNED=1 bash "$RODD_PIN/apps/rodd/start.sh" "$@"
+  fi
+  if [ "${1:-}" = "--install-unit" ]; then
+    unit_dir="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
+    mkdir -p "$unit_dir"
+    cat >"$unit_dir/ymir-rodd.service" <<UNIT
+# ymir-rodd.service — Rödd, the voice of Ymir, run from the PINNED runtime (plan 257 H7).
+# Rendered by apps/rodd/start.sh --install-unit; the ExecStart names the pin so
+# bin/gates/guards/runtime-pinned-guard.sh sees her like every other surface.
+[Unit]
+Description=Rödd — the voice of Ymir (pinned runtime)
+After=graphical-session.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+Environment=YMIR_RUNTIME_DIR=$RODD_PIN
+ExecStart=/bin/bash $RODD_PIN/apps/rodd/start.sh
+ExecStop=/bin/bash $RODD_PIN/apps/rodd/start.sh --stop
+UNIT
+    say "unit rendered" "$unit_dir/ymir-rodd.service (systemctl --user daemon-reload && systemctl --user start ymir-rodd)"
+    exit 0
+  fi
+fi
 # The electron binary is PROBED, never pinned to one distro release: this box moved
 # electron41 → electron43 and a hard path turned a working app into "No such file".
 resolve_electron() {
@@ -81,6 +128,36 @@ case "${1:-}" in
     say "headless client" "$(ps -eo args | grep -c ' talk --url')"
     exit 0 ;;
 esac
+
+# 0 · Rödd runs the PIN (plan 257 H7). Her code root is the pinned runtime the units run —
+# YMIR_RUNTIME_DIR, else $YMIR_HOME/config/runtime.env — never the working tree this script
+# may have been launched from. A start from anywhere else hands over to the pinned copy;
+# an absent pin is ONE named line and no Rödd. (To run a tree on purpose, name it:
+# YMIR_RUNTIME_DIR=<that tree> — an explicit pin, never a silent one.)
+resolve_pin() {
+  local home conf dir
+  dir="${YMIR_RUNTIME_DIR:-}"
+  if [ -z "$dir" ]; then
+    home="${YMIR_HOME:-$HOME/Documents/ymirhome}"   # allow-home-default: the one home, resolved then used
+    conf="$home/config/runtime.env"
+    [ -r "$conf" ] && dir="$(sed -n 's/^[[:space:]]*YMIR_RUNTIME_DIR[[:space:]]*=[[:space:]]*//p' "$conf" | head -1 | tr -d "\"'")"
+    dir="${dir//\$\{HOME\}/$HOME}"; dir="${dir//\$HOME/$HOME}"
+  fi
+  printf '%s' "$dir"
+}
+PIN="$(resolve_pin)"
+if [ -z "$PIN" ]; then
+  say "Rödd refuses to start" "no pinned runtime is named (YMIR_RUNTIME_DIR, or runtime.env in the home)"; exit 1
+fi
+if [ ! -x "$PIN/apps/rodd/start.sh" ]; then
+  say "Rödd refuses to start" "the pin $PIN carries no apps/rodd — run bin/engine/runtime-deploy.sh"; exit 1
+fi
+if [ "$(cd "$PIN/apps/rodd" && pwd -P)" != "$(cd "$APP" && pwd -P)" ]; then
+  say "handing over to the pin" "$PIN/apps/rodd/start.sh"
+  YMIR_RUNTIME_DIR="$PIN" exec "$PIN/apps/rodd/start.sh" "$@"
+fi
+export YMIR_RUNTIME_DIR="$PIN"
+say "code root (the pin)" "$PIN"
 
 # 1 · clear every stray client — one seat, one client
 n=$(strays | wc -l)

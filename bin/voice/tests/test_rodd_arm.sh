@@ -117,5 +117,77 @@ case "$out" in *"narrow it, then re-run"*) bad "a heard reply is not repeated" "
 if out="$(bash "$DOOR" --self-test 2>&1)"; then ok "the door's --self-test passes"
 else bad "the door's --self-test passes" "$(printf '%s' "$out" | grep -E '^  (FAIL|rodd-arm self-test)' | head -5 | tr '\n' ' ')"; fi
 
+# ── 8 · the lease names the holder's role (plan 254 B1) ──────────────────────
+printf 'pid=%s starttime=%s gen=3 mode=test role=rodd session=none heartbeat=%s state=%s\n' \
+  "$$" "$(starttime_of "$$")" "$(date +%s)" "$STATE" >"$LEASE"
+run who
+want_rc 0 "who with a role=rodd lease exits 0"
+case "$out" in *'"rodd"'*) ok "who reads the role from the lease" ;; *) bad "who reads the role from the lease" "$out" ;; esac
+run --check
+case "$out" in *'"rodd"'*) ok "--check reads the role too" ;; *) bad "--check reads the role too" "$out" ;; esac
+write_lease "$$" "$(date +%s)"
+run who
+case "$out" in *'"unknown"'*) ok "who reads role=unknown when the lease carries none" ;; *) bad "who reads role=unknown when the lease carries none" "$out" ;; esac
+
+# ── 8b · who is ONE row of the helm's identity (plans 254 B1b/B1c · 257 H8) ───
+printf 'pid=%s starttime=%s gen=40 mode=systemd role=counsellor session=none heartbeat=%s state=%s seat=Hoenir charter=planning,mail,the-work-in-hand,dispatch-on host=heimdall machine=heimdall fleetrole=dev fleet=the-ymir-fleet pin=4b09c4a1 pin_behind=162 identity=held missing=none\n' \
+  "$$" "$(starttime_of "$$")" "$(date +%s)" "$STATE" >"$LEASE"
+run who
+want_rc 0 "who with an identity lease exits 0"
+rows="$(printf '%s\n' "$out" | grep -c '^  "')"
+[ "$rows" = 1 ] && ok "who prints ONE row" || bad "who prints ONE row" "$out"
+for want in '"Hoenir"' '"counsellor"' 'planning · mail · the work in hand · dispatch on' '"heimdall"' '"dev"' '"4b09c4a1"' '"162"' '"40"' "\"$$\""; do
+  case "$out" in *"$want"*) ok "who carries $want" ;; *) bad "who carries $want" "$out" ;; esac
+done
+out="$(bash "$ROOT/bin/seat/helm-identity.sh" --lease "$LEASE" --line)"
+case "$out" in "helm: Hoenir · counsellor · planning · mail · the work in hand · dispatch on · heimdall · dev · pin 4b09c4a1 (162 behind) · gen 40 · pid $$ · heartbeat "*) ok "the digest line reads as one sentence" ;; *) bad "the digest line reads as one sentence" "$out" ;; esac
+# a lease that carries no identity renders unnamed/none — never an invented name (Rule 44)
+write_lease "$$" "$(date +%s)"
+run who
+case "$out" in *'"unnamed"'*) ok "a lease with no seat renders unnamed" ;; *) bad "a lease with no seat renders unnamed" "$out" ;; esac
+case "$out" in *planning*) bad "a lease with no charter invents none" "$out" ;; *) ok "a lease with no charter invents none" ;; esac
+# a read-only holder says so, and names the field
+printf 'pid=%s starttime=%s gen=4 mode=daemon role=rodd session=none heartbeat=%s state=%s seat=unnamed host=heimdall fleetrole=none identity=readonly missing=fleetrole\n' \
+  "$$" "$(starttime_of "$$")" "$(date +%s)" "$STATE" >"$LEASE"
+out="$(bash "$ROOT/bin/seat/helm-identity.sh" --lease "$LEASE" --line)"
+case "$out" in *"READ-ONLY (missing fleetrole)"*) ok "a read-only lease names the missing field" ;; *) bad "a read-only lease names the missing field" "$out" ;; esac
+write_lease "$$" "$(date +%s)"
+
+# ── 9 · hold and release (plan 254 B5) ────────────────────────────────────────
+export BROKK_MACHINE_STATE_DIR="$TMP/lockdir" BROKK_SESSION_PID="$$"
+# hold is refused when the machine cannot resolve its fleet role (B1c): no registry, no role
+mkdir -p "$TMP/nohome"
+out="$(env -u YMIR_ROLE YMIR_HOME="$TMP/nohome" bash "$DOOR" hold 2>&1)"; rc=$?
+want_rc 3 "hold with no resolvable fleet role is refused"
+case "$out" in *fleetrole*) ok "the refusal names fleetrole" ;; *) bad "the refusal names fleetrole" "$out" ;; esac
+[ ! -s "$BROKK_MACHINE_STATE_DIR/brokk.lock" ] && ok "a refused hold took no lock" || bad "a refused hold took no lock" "lock present"
+export YMIR_ROLE=dev
+mkdir -p "$BROKK_MACHINE_STATE_DIR"
+run_hold() { out="$(bash "$DOOR" hold 2>"$TMP/err")"; rc=$?; err="$(cat "$TMP/err")"; }
+run_release() { out="$(bash "$DOOR" release 2>"$TMP/err")"; rc=$?; err="$(cat "$TMP/err")"; }
+
+run_hold
+want_rc 0 "hold on a vacant helm exits 0"
+[ -s "$BROKK_MACHINE_STATE_DIR/brokk.lock" ] && ok "hold took the lock" || bad "hold took the lock" "no lock at $BROKK_MACHINE_STATE_DIR"
+grep -q 'role=rodd session=' "$STATE/.arm.role" 2>/dev/null && ok "hold wrote the role sidecar" \
+  || bad "hold wrote the role sidecar" "$(cat "$STATE/.arm.role" 2>/dev/null)"
+grep -q 'hold: Rödd takes the helm' "$STATE/rodd/room.jsonl" 2>/dev/null && ok "hold announced the handover in the room" \
+  || bad "hold announced the handover in the room" "$(cat "$STATE/rodd/room.jsonl" 2>/dev/null)"
+
+run_release
+want_rc 0 "release gives the helm back"
+[ ! -s "$BROKK_MACHINE_STATE_DIR/brokk.lock" ] && ok "release dropped the lock" || bad "release dropped the lock" "lock still names $(cat "$BROKK_MACHINE_STATE_DIR/brokk.lock" 2>/dev/null)"
+[ ! -e "$STATE/.arm.role" ] && ok "release cleared the role sidecar" || bad "release cleared the role sidecar" "sidecar still present"
+grep -q 'release: Rödd gives the helm back' "$STATE/rodd/room.jsonl" 2>/dev/null && ok "release announced the handover" \
+  || bad "release announced the handover" "$(cat "$STATE/rodd/room.jsonl" 2>/dev/null)"
+
+bash -c 'sleep 600' & other=$!
+printf '%s\n' "$other" > "$BROKK_MACHINE_STATE_DIR/brokk.lock"
+run_hold
+want_rc 3 "hold on a live holder refuses with the holder named"
+case "$err" in *"held by another live session"*) ok "the refusal names the holder" ;; *) bad "the refusal names the holder" "$err" ;; esac
+kill "$other" 2>/dev/null || true
+unset BROKK_MACHINE_STATE_DIR BROKK_SESSION_PID YMIR_ROLE
+
 printf 'test_rodd_arm: %s passed, %s failed\n' "$pass" "$fail"
 [ "$fail" = 0 ]

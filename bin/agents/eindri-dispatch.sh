@@ -54,11 +54,22 @@ say() { printf '%s\n' "$*"; }
 # review and left the herdr workspace `eindri-<id>` standing, so a finished errand
 # kept a pane — and after a herdr restart, a restored bare shell — in the hall
 # forever. One door closes it (bin/seat/seat-reap.sh), and it refuses a live agent.
-seat_close() { # <id> <why>
-  local id=$1 why=${2:-handoff}
+seat_close() { # <id> <why> — the close hand's answer is no longer swallowed
+  local id=$1 why=${2:-handoff} out n
   [ -n "$id" ] || return 0
   [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ] || return 0
-  "$SCRIPT_DIR/../seat/seat-reap.sh" "$id" >/dev/null 2>&1 || true
+  out="$(BROKK_HOME="$BROKK_HOME" BROKK_STATE_OVERRIDE="$STATE" "$SCRIPT_DIR/../seat/seat-reap.sh" "$id" 2>&1)" || true
+  case "$out" in
+    *refused*|*"no herdr workspace"*|*"needs-decision"*)
+      say "seat close refused for $id — $(printf '%s' "$out" | tail -1 | sed 's/^ *//')"
+      n="$(cat "$STATE/$id.seat-kept" 2>/dev/null || true)"
+      case "$n" in ''|*[!0-9]*) n=0 ;; esac
+      n=$((n+1)); printf '%s' "$n" >"$STATE/$id.seat-kept"
+      if [ "$n" -ge 3 ]; then
+        printf 'check: seat %s kept %s sweeps running — %s\n' "$id" "$n" "$(printf '%s' "$out" | tail -1 | sed 's/^ *//')" >>"$STATE/.wake-queue"
+      fi
+      ;;
+  esac
   return 0
 }
 
@@ -177,7 +188,7 @@ cmd_new() {
 
   if [ "$SCOUT" = 1 ]; then KIND=scout; else
     [ -n "$MODE" ] || MODE=local-only
-    case "$MODE" in direct-PR|local-only|no-mistakes) ;; *) echo "error: bad --mode $MODE" >&2; exit 2 ;; esac
+    case "$MODE" in direct-PR|local-only|no-mistakes|batch) ;; *) echo "error: bad --mode $MODE" >&2; exit 2 ;; esac
   fi
   [ -n "$WAVE" ] || WAVE="A"
 

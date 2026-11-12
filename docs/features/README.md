@@ -21,7 +21,12 @@ its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
 - The well door for every harness — one MCP set for pi, opencode, Claude, Cursor, Codex and Hermes, and
   Claude Code loads the project's AGENTS.md: [the-well-door-for-every-harness.md](the-well-door-for-every-harness.md)
 
-**Newest doors** — built 2026-11-09, catalogued the same day:
+**Newest doors** — built 2026-11-12, catalogued the same day:
+
+- Bilskirnir, the business hall — every agent in its own room, in its own window, on every screen:
+  [bilskirnir.md](bilskirnir.md)
+
+**Earlier doors** — built 2026-11-09, catalogued the same day:
 
 - The agent's own context budget — how much room is left before compaction:
   [the-context-budget.md](the-context-budget.md)
@@ -36,6 +41,10 @@ its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
   [the-records-shelf.md](the-records-shelf.md)
 - The seats and the arm — where the work is, the hall in one read, who can be woken:
   [the-seats-and-the-arm.md](the-seats-and-the-arm.md)
+- The helm knows itself — who holds it, what for, which machine, which pin; Rödd on the pin:
+  [the-helm-knows-itself.md](the-helm-knows-itself.md)
+- Build a fleet — the home, each machine by role, the arm-holder checklist, and how two fleets speak:
+  [build-a-fleet.md](build-a-fleet.md)
 - Telegram across the fleet — a bot per machine, and the road between them:
   [telegram-across-the-fleet.md](telegram-across-the-fleet.md)
 - The home push door — named paths only, never `-A`:
@@ -52,3 +61,5 @@ its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
 Voice files on Windows and WSL: [voice-files-on-windows.md](voice-files-on-windows.md).
 
 Talk to Skírnir in Hlidskjalf: [talk-to-skirnir.md](talk-to-skirnir.md).
+
+No helm, no errand — the seat door refuses a worker with no live arm, and the arm and Rödd run the pin: [no-helm-no-errand.md](no-helm-no-errand.md).

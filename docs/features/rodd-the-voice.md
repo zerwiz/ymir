@@ -281,3 +281,65 @@ the process exits with code 1. Prove it without a display:
 
 - **2026-11-09** — the four hands and the boot path (plan 231 R1/R3); fix note
   `docs/fixes/voice/2026-11-09-rodd-gets-his-four-hands.md`.
+
+## 2026-11-11 — one helm, any harness (Rödd holds the arm)
+
+### Which harnesses may hold the helm
+
+The helm is **one session per state dir**, and it is **harness-blind** — the session lock
+binds to any verified harness (`pi` · `opencode` · `claude` · `cursor` · `codex` · `grok` ·
+`kimi` · `muse` · `hermes`), never to Pi alone. Three of them can hold it **today**, and
+plan 254 proves rather than builds that:
+
+- **Pi** — the main seat, the ordinary holder;
+- **Claude Code** — a Claude seat opened OUTSIDE `~/ymir` resolves the house through its
+global hook and takes a wake;
+- **OpenCode** — an idle OpenCode TUI attaches through its plugin and a wake defeats
+  `session.idle`.
+
+A **second live session** while another holds the helm prints
+`watcher: read-only - this session does not hold the helm` and exits 0 — the one-helm rule
+is enforced, not assumed.
+
+### The lease now names the holder
+
+The arm lease (`state/.arm.lease`) gains a `role=` field beside `mode=`. `mode=` keeps its
+own meaning (the service shape, `systemd|daemon`); `role=` names whose helm it is:
+`counsellor` for a Pi seat, `rodd` for Rödd's helm, `claude`/`opencode` where the holder
+declares it. A lease with no `role=` reads `role=unknown` — never a guess. Every reader
+(`rodd-arm.sh who` · `lock-ask.sh` · `syn-watch.sh status`) reports it.
+
+### Nanna carries the duties
+
+**Nanna** is the agent inside Rödd, and holding the helm without the duties is the thing
+plan 254 refuses. Her duty loop is **one** thin door, `bin/voice/rodd-helm.sh`, which calls
+the doors that own each duty rather than re-implementing them:
+
+- **drain** the wake queue — `bin/time/saga-wake-drain.sh` (read, then ack the handled);
+- **answer the room** — append `{ts,from,text}` to `<lease state>/rodd/room.jsonl`, append-only;
+- **raise the alarm** — `ymir-say.sh --mark-alarm` (her voice + a desktop toast);
+- **dispatch an errand** — `bin/agents/einherjar-spawn.sh`, `direct-PR`/`no-mistakes` ONLY;
+- **refuse and release** — `rodd-arm.sh release` when a duty is beyond her.
+
+A refused wake is **spoken, never dropped**: the refusal is written to the room and said
+aloud, and the helm is released so the next seat can take it.
+
+### hold and release
+
+`bin/voice/rodd-arm.sh` gains `hold` and `release`:
+
+```bash
+bin/voice/rodd-arm.sh hold      # take a vacant helm for Rödd (refuses a live holder)
+bin/voice/rodd-arm.sh release   # give it back (the next live session claims it on its next arm)
+```
+
+The handover is announced in the room with both pids. A `hold` while another live seat
+holds the helm is refused with the holder's pid — never a forced steal, which the lock
+already refuses.
+
+### CHANGE LOG
+
+- **2026-11-11** — the lease names the holder (`role=`), the one-client claim gains
+  `--holder`, Nanna's duty loop lands in `rodd-helm.sh`, and `hold`/`release` move the helm
+  without a reboot (plan 254); fix note
+  `docs/fixes/voice/2026-11-11-rodd-holds-the-arm.md`.

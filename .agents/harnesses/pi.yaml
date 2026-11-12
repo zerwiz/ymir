@@ -15,6 +15,11 @@ extensions:
   project_dir: .pi/extensions
   format: "ts|js file, or a directory with index.ts|index.js"
   dedupe: "settings extensions[] is resolved by realpath — one path, no double registration"
+  # Two FULL checkouts of one repository are two homes to pi's loader, which de-duplicates
+  # on the resolved path alone: a bare `pi` in a checkout the settings do not name used to
+  # load 44 colliding extensions and refuse them all (2026-11-11). bin/seat/pi-door.sh is
+  # seated as ~/.pi/agent/bin/pi and hands such a launch one home, untouched everywhere else.
+  door: ~/.pi/agent/bin/pi
 instructions:
   global: ~/.pi/agent/AGENTS.md
   project: AGENTS.md

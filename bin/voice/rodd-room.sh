@@ -16,7 +16,10 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 verb="${1:-}"; shift || true
-state="$(bash "$SCRIPT_DIR/rodd-arm.sh" who 2>/dev/null | awk -F'","' 'NR==2{print $6}')"
+# The room is resolved exactly as rodd-arm.sh resolves it: from the `state=` the arm lease
+# names. `rodd-arm.sh who` TOON row names role at column 5 and state_dir at column 7
+# (the who header: verb,holder_pid,gen,mode,role,session,state_dir,...).
+state="$(bash "$SCRIPT_DIR/rodd-arm.sh" who 2>/dev/null | awk -F'","' 'NR==2{print $7}')"
 [ -n "$state" ] || { echo "rodd-room: no arm is held — the room has no writer" >&2; exit 3; }
 room="$state/rodd/room.jsonl"
 case "$verb" in

@@ -5,9 +5,11 @@
 # reach the session that HOLDS THE ARM — the one that drains wakes, dispatches errands and
 # answers. This is the door for both halves of that conversation (plan 223):
 #
-#   who           resolve the arm lease: holder pid, gen, mode, state dir, heartbeat age
+#   who           resolve the arm lease: holder pid, gen, mode, role, state dir, heartbeat age
 #   tell [--from <name>] <text>   append a wake of kind `signal` into the state dir the LEASE names
 #   hear [n]      read the arm's replies from <state>/rodd/room.jsonl, and advance the cursor
+#   hold          take a vacant helm for Rödd and announce the handover (never steals)
+#   release       give the helm back and announce it (never steals)
 #
 # THE LEASE IS THE AUTHORITY, NEVER A PATH. Two state shelves exist on some seats, and only the
 # one named in `.arm.lease` (`state=`) is drained by the arm. So every verb resolves the lease
@@ -26,6 +28,8 @@
 #   rodd-arm.sh tell <text>         hand the arm holder a message (refuses with no arm held)
 #   rodd-arm.sh hear [n]            print unread replies (default 20, `all` for every one)
 #   rodd-arm.sh room                where the room is, and how many replies it holds
+#   rodd-arm.sh hold                take a vacant helm for Rödd (refuses a live holder)
+#   rodd-arm.sh release             give the helm back (refuses if another session holds it)
 #   rodd-arm.sh --check             the one-line verdict, for a health surface
 #   rodd-arm.sh --self-test         prove the door against a synthetic lease in a temp state
 #
@@ -81,7 +85,7 @@ pid_starttime() {  # <pid>
 # Returns 0 held · 1 not held.
 arm_probe() {
   ARM_WHY=""
-  PID=""; GEN=""; MODE=""; SESSION=""; LIVESTATE=""; HEARTBEAT=""; AGE=""; QUEUE=""; ROOM=""
+  PID=""; GEN=""; MODE=""; ROLE=""; SESSION=""; LIVESTATE=""; HEARTBEAT=""; AGE=""; QUEUE=""; ROOM=""
   resolve_roots
   if [ ! -r "$LEASE" ]; then
     ARM_WHY="there is no arm lease at $LEASE — nobody is holding the arm"
@@ -90,6 +94,7 @@ arm_probe() {
   PID="$(lease_field "$LEASE" pid)"
   GEN="$(lease_field "$LEASE" gen)"
   MODE="$(lease_field "$LEASE" mode)"
+  ROLE="$(lease_field "$LEASE" role)"; [ -n "$ROLE" ] || ROLE=unknown
   SESSION="$(lease_field "$LEASE" session)"
   HEARTBEAT="$(lease_field "$LEASE" heartbeat)"
   LIVESTATE="$(lease_field "$LEASE" state)"
@@ -135,15 +140,25 @@ held_or_refuse() {
 }
 
 # ── who ────────────────────────────────────────────────────────────────────────
+# ONE row answers everything the Allfather asked of the record (plans 254 B1b/B1c ·
+# 257 H8): seat · role · charter · host · fleetrole · fleet · pin · behind · gen ·
+# pid · heartbeat age — plus the state dir, queue and room the lease names. The row
+# itself is owned by bin/seat/helm-identity.sh, so the arm door, the lock door and
+# the digest can never print three different answers to one question.
+HELM_DOOR="$ROOT/bin/seat/helm-identity.sh"
 cmd_who() {
   if ! arm_probe; then
     printf 'no arm is held\n'
     printf 'rodd-arm: %s\n' "$ARM_WHY" >&2
     return 3
   fi
-  printf 'rodd-arm[1]{verb,holder_pid,gen,mode,session,state_dir,heartbeat_age_s,stale_after_s,queue,room}:\n'
-  printf '  "who","%s","%s","%s","%s","%s","%s","%s","%s","%s"\n' \
-    "$PID" "${GEN:-unknown}" "${MODE:-unknown}" "${SESSION:-none}" \
+  if [ -x "$HELM_DOOR" ]; then
+    bash "$HELM_DOOR" --lease "$LEASE"
+    return 0
+  fi
+  printf 'rodd-arm[1]{verb,holder_pid,gen,mode,role,session,state_dir,heartbeat_age_s,stale_after_s,queue,room}:\n'
+  printf '  "who","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s"\n' \
+    "$PID" "${GEN:-unknown}" "${MODE:-unknown}" "${ROLE:-unknown}" "${SESSION:-none}" \
     "$LIVESTATE" "$AGE" "$STALE_AFTER" "$QUEUE" "$ROOM"
   return 0
 }
@@ -298,8 +313,8 @@ cmd_room() {
 # ── check ──────────────────────────────────────────────────────────────────────
 cmd_check() {
   if arm_probe; then
-    printf 'rodd-arm[1]{verdict,holder_pid,state_dir,heartbeat_age_s}:\n  "held","%s","%s","%s"\n' \
-      "$PID" "$LIVESTATE" "$AGE"
+    printf 'rodd-arm[1]{verdict,holder_pid,role,state_dir,heartbeat_age_s}:\n  "held","%s","%s","%s","%s"\n' \
+      "$PID" "${ROLE:-unknown}" "$LIVESTATE" "$AGE"
     return 0
   fi
   printf 'rodd-arm[1]{verdict,why}:\n  "no arm is held","%s"\n' "$ARM_WHY"
@@ -441,6 +456,68 @@ self_test() {
   [ "$fail" = 0 ]
 }
 
+# ── hold / release ────────────────────────────────────────────────────────────
+# Rödd may HOLD the helm (plan 254): take a vacant lock, write her role into the
+# sidecar the arm daemon reads, and announce the handover in the room. A release
+# gives it back and clears the sidecar. Never a forced steal — the lock refuses a
+# live holder, and so does this door, with the holder's pid named.
+require_lock_lib() {
+  local gl="$ROOT/bin/vault/gleipnir-lock-lib.sh"
+  [ -r "$gl" ] || die "the lock library is missing ($gl) — hold/release cannot run"
+  # shellcheck source=../vault/gleipnir-lock-lib.sh
+  . "$gl"
+}
+
+room_append() {  # <state-dir> <from> <text> — one append-only line, never a truncation
+  local st="$1" from="$2" text="$3"
+  mkdir -p "$st/rodd" 2>/dev/null || return 1
+  python3 - "$st/rodd/room.jsonl" "$from" "$text" <<'PY' || return 1
+import json, sys, time
+room, who, text = sys.argv[1:4]
+line = {"ts": int(time.time()), "from": who, "text": " ".join(text.split())}
+with open(room, "a", encoding="utf-8") as fh:
+    fh.write(json.dumps(line, ensure_ascii=False) + "\n")
+PY
+}
+
+cmd_hold() {
+  resolve_roots
+  require_lock_lib
+  # THE HOLDER GATE (plans 254 B1c · 257 H7): a session that cannot resolve its own
+  # host or its fleet role may NOT take the helm — it stands read-only and names the
+  # field. A supervisor that does not know which machine it stands on cannot tell its
+  # own wakes from a peer's.
+  if [ -x "$ROOT/bin/seat/helm-identity.sh" ]; then
+    bash "$ROOT/bin/seat/helm-identity.sh" --check >/dev/null 2>&1 \
+      || refuse "the helm is NOT taken: $(bash "$ROOT/bin/seat/helm-identity.sh" --check 2>&1 | head -1)"
+  fi
+  gleipnir_session_pid _sess; local sess="${_sess:-$$}"
+  gleipnir_lock_owner _owner
+  if [ -n "$_owner" ] && gleipnir_pid_alive "$_owner"; then
+    refuse "the helm is held by another live session (pid $_owner) — a hold never steals; release it first"
+  fi
+  gleipnir_lock_acquire || refuse "the helm could not be taken — another live session holds it (a hold never steals)"
+  printf 'role=rodd session=%s\n' "$sess" > "$STATE_ROOT/.arm.role" 2>/dev/null || true
+  room_append "$STATE_ROOT" "Nanna" "hold: Rödd takes the helm (session $sess)" || true
+  printf 'rodd-arm-hold[1]{verb,holder_pid,state_dir}:\n  "hold","%s","%s"\n' "$sess" "$STATE_ROOT"
+  return 0
+}
+
+cmd_release() {
+  resolve_roots
+  require_lock_lib
+  gleipnir_session_pid _sess; local sess="${_sess:-$$}"
+  gleipnir_lock_owner _owner
+  if [ -n "$_owner" ] && [ "$_owner" != "$sess" ]; then
+    refuse "this session (pid $sess) does not hold the helm — the holder is pid $_owner; a release never steals"
+  fi
+  gleipnir_lock_release
+  rm -f "$STATE_ROOT/.arm.role" 2>/dev/null || true
+  room_append "$STATE_ROOT" "Nanna" "release: Rödd gives the helm back (session $sess)" || true
+  printf 'rodd-arm-release[1]{verb,released,state_dir}:\n  "release","yes","%s"\n' "$STATE_ROOT"
+  return 0
+}
+
 # ── main ───────────────────────────────────────────────────────────────────────
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
@@ -449,7 +526,9 @@ case "${1-}" in
   tell) shift; cmd_tell "$@" ;;
   hear) shift; cmd_hear "${1:-$DEFAULT_SHOW}" ;;
   room) shift; cmd_room ;;
+  hold) shift; cmd_hold ;;
+  release) shift; cmd_release ;;
   --check|check) shift; cmd_check ;;
   --self-test|self-test) shift; self_test ;;
-  *) printf 'error: unknown verb %s\nhelp: rodd-arm.sh [who|tell <text>|hear [n]|room|--check|--self-test]\n' "$1" >&2; exit 2 ;;
+  *) printf 'error: unknown verb %s\nhelp: rodd-arm.sh [who|tell <text>|hear [n]|room|hold|release|--check|--self-test]\n' "$1" >&2; exit 2 ;;
 esac

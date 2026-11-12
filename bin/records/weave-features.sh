@@ -19,7 +19,7 @@
 set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 CAT="$ROOT/docs/features/_catalogue"
-OUT="$ROOT/FEATURES.md"
+OUT="${YMIR_WEAVE_OUT:-$ROOT/FEATURES.md}"   # plan 243 A: FEATURES.md is built, not versioned
 [ -f "$CAT/_header.md" ] || { echo "weave-features: no header fragment" >&2; exit 2; }
 [ -f "$CAT/_sections.md" ] || { echo "weave-features: no section order" >&2; exit 2; }
 
@@ -43,6 +43,11 @@ while IFS='|' read -r order title slug; do
 done < "$CAT/_sections.md"
 
 if [ "${1:-}" = "--check" ]; then
+  # plan 243 A: FEATURES.md is built, not versioned — when git does not track it, the check is
+  # that the fragments weave (they just did), never a diff against a local copy.
+  if ! git -C "$ROOT" ls-files --error-unmatch FEATURES.md >/dev/null 2>&1; then
+    printf 'FEATURES.md is built, not versioned — the fragments weave (%s entries)\n' "$(ls "$CAT"/entries/*.md 2>/dev/null | wc -l)"; exit 0
+  fi
   if cmp -s "$tmp" "$OUT"; then printf 'FEATURES.md is current (%s entries)\n' "$(ls "$CAT"/entries/*.md 2>/dev/null | wc -l)"; exit 0; fi
   printf 'FEATURES.md is STALE — run bin/records/weave-features.sh\n' >&2; exit 1
 fi

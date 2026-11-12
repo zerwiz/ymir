@@ -17,9 +17,8 @@
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)"
-. "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
-H=""; declare -f ymir_home_root >/dev/null 2>&1 && ymir_home_root H 2>/dev/null
-STATE="${H:-$HOME/Documents/ymirhome}/state"; mkdir -p "$STATE"
+. "$ROOT/bin/vault/hoard-lib.sh"
+STATE=""; hoard_state_dir STATE; mkdir -p "$STATE"
 SEEN="$STATE/pr-watch.json"; REPO="${PR_WATCH_REPO:-zerwiz/ymir}"
 DRY=0; HOURS=1; STATUS=0
 ORIG=("$@")
@@ -92,7 +91,7 @@ for n in list(seen):
 if status:
     print(f"pr-watch[1]{{repo,open,would_say}}:\n  \"{repo}\",\"{len(prs)}\",\"{len(out)}\"")
 delivered = True
-if out and not dry:
+if out and not dry and prs:
     body = "\n".join("• " + l for l in out)
     first = body.split('\n')[0][:180]
     r = subprocess.run([os.path.join(root,'bin/notify/send.sh'),

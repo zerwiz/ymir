@@ -199,7 +199,7 @@ function createMainWindow(): BrowserWindow {
     minWidth: MIN_WINDOW_WIDTH,
     minHeight: MIN_WINDOW_HEIGHT,
     title: 'Sessrúmnir',
-    backgroundColor: '#0a1020',
+    backgroundColor: '#151209',
     icon: appIcon,
     show: false,
     webPreferences: {

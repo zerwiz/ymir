@@ -43,7 +43,9 @@ say() { printf 'rules-compliance[1]{file,line,rule,finding}:\n  "%s","%s","%s","
 
 # A template is a SHAPE, copied into a message; a changelog inside it would be copied too.
 # Its history is the repository's. Exempt, with the reason written here.
-is_shape() { case "$1" in .agents/templates/*) return 0 ;; *) return 1 ;; esac; }
+# Letter templates are shapes for the same reason: an email skeleton cannot carry a CHANGE LOG without mailing it to
+# the reader (plan 250 §7, 2026-11-11).
+is_shape() { case "$1" in .agents/templates/*|systems/snotra/services/letters/templates/*) return 0 ;; *) return 1 ;; esac; }
 is_meta() { case "$1" in RULES/README.md|docs/features/_catalogue/*|bin/README.md|.agents/backend/README.md|FEATURES.md|*/plans/README.md) return 0 ;; *) return 1 ;; esac; }
 
 # R1 — a NEW document carries its history.
@@ -89,8 +91,12 @@ while IFS= read -r f; do
   git diff -U0 "$BASE..$HEAD" -- "$f" 2>/dev/null | grep '^+' | grep -v '^+++' >"$tmp" || { rm -f "$tmp"; continue; }
   while IFS= read -r hit; do
     say "$f" "added" "RULES/39 · network N1/N7" "address or plain-HTTP URL in a new line: ${hit:0:90}"
-  done < <(grep -nE '(\b192\.168\.[0-9]+\.|\b10\.[0-9]+\.[0-9]+\.[0-9]+|\.local\b|http://)' "$tmp" 2>/dev/null \
+  # an XML namespace (xmlns=) is an identifier that is never fetched, and 169.254.x.x (the cloud metadata address) is the fixed
+  # link-local metadata address inside any cloud machine — neither is a house address (2026-11-12).
+  # `.local` is an mDNS name only when it ends a host; `~/.local/share` is the XDG data path (2026-11-12)
+  done < <(grep -nE '(\b192\.168\.[0-9]+\.|\b10\.[0-9]+\.[0-9]+\.[0-9]+|\.local\b([^/]|$)|http://)' "$tmp" 2>/dev/null \
              | grep -vE '127\.0\.0\.1|localhost|<[a-z-]+>' \
+             | grep -vE 'xmlns(:[a-z]+)?=|http://169\.254\b' \
              | grep -vE 'http://\$\{?[A-Za-z_]+' \
              | grep -vE "http://%s|http://\{host\}|http://\{h\}|f\"http://" | head -20)   # a format/f-string host is not an address
   rm -f "$tmp"

@@ -75,12 +75,12 @@ The mark combines two glyphs:
   which every artifact is shaped.
 
 Construction rules:
-- Dual-layer chiseled bevel: dark iron exterior `#334155`, luminous cyan inner
-  edge `#7dd3fc`. The **Emblem is brand, not cloth** — it keeps its own colours on
-  every surface, exactly as the landing page keeps it (a blue mark on the stone).
+- Dual-layer chiseled bevel: dark iron exterior `#2b241a`, lit bronze inner
+  edge `#eca654`. The Emblem wears the cloth like everything else: since
+  2026-11-12 (RULES/54) there is no blue mark on the stone.
 - One emblem per context; never gradient-bloated, never filled with imagery.
-- On dark obsidian surfaces: cyan-lit variant. On light surfaces: steel variant
-  with indigo edge.
+- On dark stone surfaces: the bronze-lit variant. On light surfaces: the steel
+  variant with a bronze-deep edge.
 - Favicon = the rune alone, 24–32px, stroke weight 2.
 
 ### 2.2 Houses — brands within the brand
@@ -90,14 +90,14 @@ tags, and portal theming (proposed accents — ENTRY-004 mapping):
 
 | House | Name-sake | House accent |
 |---|---|---|
-| Ymir Labs | the giant | cyan `#38bdf8` |
+| Ymir Labs | the giant | forge bronze `#c9973f` |
 | Brokk Forge | the bellows-smith | forge amber `#f59e0b` |
 | Runestone Labs (Runir) | the runes | rune crimson `#f43f5e` |
-| Muninn Labs | the raven (memory) | raven violet `#8b5cf6` |
-| Dvalin | the dwarf craftsman | cold steel `#94a3b8` |
-| Utgard Studios | the giant-realm | jötun magenta `#d946ef` |
+| Muninn Labs | the raven (memory) | raven steel `#96a0a8` |
+| Dvalin | the dwarf craftsman | worn bone `#9a8f75` |
+| Utgard Studios | the giant-realm | jötun blood `#c2584a` |
 | Askr | the first man | ash green `#34d399` |
-| Mannheim | *(reserved)* | slate `#64748b` |
+| Mannheim | *(reserved)* | faint bone `#6b6250` |
 
 House accents are **structural only** — tags, entity headers, chart series —
 never the page chrome, and they are **heraldry, not cloth**: they keep their own
@@ -275,7 +275,7 @@ Views: **Fleet** (agents/cards) · **Tasks** (A2A lifecycle board) · **Well**
 | `AgentCard` | Agent Card JSON rendered: name, capabilities, skills, interface, status dot, house seal |
 | `TaskChip` | A2A state: SUBMITTED→WORKING→terminal; color + rune + label (never color alone) |
 | `TraceRow` | mono line: ts · agent · module · event · checksum |
-| `RecallPanel` | query + ranked episodes (score bar = cyan), timeline view |
+| `RecallPanel` | query + ranked episodes (score bar = bronze), timeline view |
 | `MetricTile` | mono number + delta + sparkline; beveled panel |
 | `RuneTag` | house/label pills using house accents |
 | `PRCard` | title, checklist progress, CI runes, review actions (Glitnir) |

@@ -27,6 +27,13 @@ print('panes[N]{id,agent,status,cwd}:')
 for p in panes:
     cwd = (p.get('cwd') or '').replace('/home/heimdall', '~')
     print(f'  "{p.get("pane_id") or "?"}","{p.get("agent") or "shell"}","{p.get("agent_status") or "-"}","{cwd}"')
+# plan 255 · S4: a bare shell that is NOT an errand is the Allfather's own
+# working directory — named in its own row, never closed by a sweep.
+orphans = [p for p in panes if not p.get('agent') and '/.yggdrasil/' not in (p.get('cwd') or '')]
+print(f'orphans[{len(orphans)}]{{pane,cwd}}:')
+for p in orphans:
+    cwd = (p.get('cwd') or '').replace('/home/heimdall', '~')
+    print(f'  "{p.get("pane_id") or "?"}","{cwd}"')
 PY
       rm -f "$tmp"
       exit 0

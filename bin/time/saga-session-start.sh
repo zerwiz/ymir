@@ -78,6 +78,11 @@ if [ "$LOCKED" = "1" ]; then
 else
   printf 'READ-ONLY: session lock held by pid %s - no spawn, steer, merge, drain, or repair this session\n' "${owner:-unknown}"
 fi
+# Who holds the helm, what it is for, which machine, which pin — ONE line from the lease
+# (plans 254 B1b/B1c · 257 H8). The record answers; the digest never infers it.
+if [ -x "$SCRIPT_DIR/../seat/helm-identity.sh" ]; then
+  bash "$SCRIPT_DIR/../seat/helm-identity.sh" --line 2>/dev/null || printf 'helm: no arm is held\n'
+fi
 
 section "BOOTSTRAP"
 missing=""
@@ -163,6 +168,12 @@ fi
 
 section "SUPERVISION"
 printf 'harness next step: arm supervision via the installed harness adapter; never run bin/pi/syn-watch-arm.sh by hand.\n'
+# The pin's age in one line (plan 257 H8): the arm, its clients and Rödd run the pinned
+# runtime, and a stale pin is a number on the board — never fetched here, so the digest
+# stays fast; `bin/pi/arm-pin.sh check` (Eir's armpin) fetches and names every finding.
+if [ -x "$ROOT/bin/pi/arm-pin.sh" ]; then
+  "$ROOT/bin/pi/arm-pin.sh" status 2>/dev/null || true
+fi
 
 section "THE ALLFATHER'S TODOS"
 # The voice keeps his task ledger (hodd/state/voice/todos.jsonl); the arm holder must read it, or a
@@ -241,7 +252,15 @@ section "TODAY"
 # ($YMIR_HOME/hodd/memory/daily/YYYY-MM-DD.md) — the record a random document in
 # hodd/docs is not.
 if [ -x "$SCRIPT_DIR/../records/daily-log.sh" ]; then
-  BROKK_HOME="$BROKK_HOME" "$SCRIPT_DIR/../records/daily-log.sh" today 2>/dev/null | head -24 || printf 'no entries yet\n'
+  # The NEWEST work is at the bottom of the day: show the tail, and say how much came before it. (2026-11-11: `head -24`
+  # showed only the morning, so a session opened at night never saw the evening's work — "why don't the agents update
+  # the saga?")
+  _today="$(BROKK_HOME="$BROKK_HOME" "$SCRIPT_DIR/../records/daily-log.sh" today 2>/dev/null || true)"
+  if [ -z "$_today" ]; then printf 'no entries yet\n'; else
+    _n="$(printf '%s\n' "$_today" | wc -l | tr -d ' ')"
+    [ "$_n" -gt 40 ] && printf '(%s earlier lines today — daily-log.sh today shows all)\n' "$((_n - 40))"
+    printf '%s\n' "$_today" | tail -40
+  fi
 else
   printf 'daily-log.sh not installed\n'
 fi

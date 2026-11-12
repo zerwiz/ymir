@@ -8,9 +8,10 @@ import subprocess
 import tempfile
 import time
 import unittest
+import unittest.mock
 from pathlib import Path
 
-from ymir_runtime import proc, watch
+from ymir_runtime import identity, proc, watch
 from ymir_runtime.tests.support import Recorder, completed, engine_env
 
 
@@ -101,6 +102,182 @@ class LeaseTest(ArmTestCase):
         watch.release_lease(self.paths, pid=os.getpid())
         self.assertFalse(watch.lease_alive(self.paths))
 
+    def test_write_lease_records_the_declared_role(self) -> None:
+        self.assertTrue(
+            watch.write_lease(self.paths, pid=os.getpid(), mode="daemon", role="rodd", session="none", generation=1)
+        )
+        self.assertEqual(watch.read_lease(self.paths.lease)["role"], "rodd")
+
+    def test_write_lease_records_the_pins_currency(self) -> None:
+        # H6/H8 (plan 257): the lease carries pin=<sha> pin_behind=<n> so a stale pin
+        # is a NUMBER any door can read.
+        self.assertTrue(
+            watch.write_lease(
+                self.paths, pid=os.getpid(), mode="daemon", role="counsellor",
+                session="none", generation=1, pin="4b09c4a1", pin_behind="162",
+            )
+        )
+        lease = watch.read_lease(self.paths.lease)
+        self.assertEqual(lease["pin"], "4b09c4a1")
+        self.assertEqual(lease["pin_behind"], "162")
+
+    def test_write_lease_omits_the_pin_when_none_is_given(self) -> None:
+        self.assertTrue(
+            watch.write_lease(self.paths, pid=os.getpid(), mode="daemon", session="none", generation=1)
+        )
+        lease = watch.read_lease(self.paths.lease)
+        self.assertNotIn("pin", lease)
+        self.assertNotIn("pin_behind", lease)
+
+    def test_pin_facts_reads_sha_and_behind_from_git(self) -> None:
+        def runner(argv, **kwargs):
+            if "rev-parse" in argv:
+                return completed(0, "4b09c4a1\n")
+            if "rev-list" in argv:
+                return completed(0, "162\n")
+            return completed(1, "", "not scripted")
+
+        with tempfile.TemporaryDirectory() as pin:
+            env = {"YMIR_RUNTIME_DIR": pin}
+            self.assertEqual(watch.pin_facts(env, runner=runner), ("4b09c4a1", "162"))
+
+    def test_pin_facts_is_empty_when_no_pin_is_configured(self) -> None:
+        env = {"YMIR_HOME": "/tmp/no-home"}
+        self.assertEqual(watch.pin_facts(env, runner=lambda argv, **k: completed(0, "")), ("", ""))
+
+
+    def test_a_lease_with_no_role_reads_unknown(self) -> None:
+        self.lease()  # the helper writes no role= field
+        self.assertEqual(watch.read_lease(self.paths.lease).get("role", "unknown"), "unknown")
+
+    def test_role_never_overloads_mode(self) -> None:
+        self.lease(mode="systemd", role="rodd")
+        lease = watch.read_lease(self.paths.lease)
+        self.assertEqual(lease["mode"], "systemd")
+        self.assertEqual(lease["role"], "rodd")
+
+
+class HelmIdentityTest(ArmTestCase):
+    """Plans 254 B1b/B1c and 257 H8: the lease says whose hand, what for, which machine, which pin."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        identity.reset_cache()
+        self.seat = self.tmp / "ext" / ".ymir-seat"
+        self.seat.parent.mkdir(parents=True)
+        self.env.update(
+            {
+                "PI_EXT_HOME": str(self.seat.parent),
+                "YMIR_RUNTIME_DIR": str(self.tmp / "no-pin"),
+                "YMIR_SEATS_FILE": str(self.tmp / "seats.yaml"),
+            }
+        )
+
+    def tearDown(self) -> None:
+        identity.reset_cache()
+        super().tearDown()
+
+    def helm(self, **env: str) -> identity.Helm:
+        return identity.resolve({**self.env, **env}, ttl=0)
+
+    def test_every_field_is_written_into_the_lease(self) -> None:
+        self.seat.write_text("host=heimdall\nprimary=Hoenir\nrole=counsellor\n", encoding="utf-8")
+        (self.tmp / "seats.yaml").write_text(
+            "fleet:\n  name: the Ymir fleet\nseats:\n  heimdall:\n    machine:\n      host: heimdall\n",
+            encoding="utf-8",
+        )
+        helm = self.helm(YMIR_ROLE="dev")
+        watch.write_lease(
+            self.paths, pid=os.getpid(), mode="systemd", role="counsellor", session="none", generation=40, helm=helm
+        )
+        lease = watch.read_lease(self.paths.lease)
+        for key in ("pid", "starttime", "gen", "mode", "role", "session", "heartbeat", "state"):
+            self.assertIn(key, lease)
+        self.assertEqual(lease["seat"], "Hoenir")
+        self.assertEqual(lease["charter"], identity.CHARTER)
+        self.assertEqual(lease["host"], "heimdall")
+        self.assertEqual(lease["machine"], "heimdall")
+        self.assertEqual(lease["fleetrole"], "dev")
+        self.assertEqual(lease["fleet"], "the-ymir-fleet")
+        self.assertEqual(lease["pin"], "none")
+        self.assertEqual(lease["pin_behind"], "none")
+        self.assertEqual(lease["identity"], "held")
+        self.assertEqual(lease["missing"], "none")
+
+    def test_no_sealed_name_is_rendered_unnamed_never_invented(self) -> None:
+        self.seat.write_text("host=heimdall\n", encoding="utf-8")
+        helm = self.helm(YMIR_ROLE="dev")
+        self.assertEqual(helm.seat, identity.UNNAMED)
+        self.assertEqual(helm.identity, "held", "an unnamed seat still holds the helm (Rule 44)")
+
+    def test_the_host_is_the_seat_record_else_this_machine(self) -> None:
+        self.seat.write_text("host=elsewhere\n", encoding="utf-8")
+        self.assertEqual(self.helm(YMIR_ROLE="dev").host, "elsewhere")
+        self.seat.unlink()
+        with unittest.mock.patch("socket.gethostname", return_value="newbox.example.net"):
+            self.assertEqual(self.helm(YMIR_ROLE="dev").host, "newbox", "a copied lease is re-taken with the NEW host")
+
+    def test_an_unresolvable_fleet_role_stands_read_only_and_names_it(self) -> None:
+        self.seat.write_text("host=heimdall\n", encoding="utf-8")
+        helm = self.helm()  # no YMIR_ROLE and the temp repo carries no bin/skuld/role.sh
+        self.assertEqual(helm.identity, "readonly")
+        self.assertEqual(helm.missing, ("fleetrole",))
+        self.assertIn("missing=fleetrole", helm.lease_tokens())
+
+    def test_an_unresolvable_host_stands_read_only(self) -> None:
+        with unittest.mock.patch("socket.gethostname", return_value=""):
+            helm = self.helm(YMIR_ROLE="dev")
+        self.assertIn("host", helm.missing)
+
+    def test_the_pin_reports_its_sha_and_how_far_behind(self) -> None:
+        pin = self.tmp / "pin"
+        git = lambda *a: subprocess.run(["git", *a], cwd=pin, check=True, capture_output=True)  # noqa: E731
+        pin.mkdir()
+        git("init", "-q", "-b", "main")
+        git("-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "--allow-empty", "-m", "one")
+        git("update-ref", "refs/remotes/origin/main", "HEAD")
+        git("-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "--allow-empty", "-m", "two")
+        git("-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "--allow-empty", "-m", "three")
+        git("update-ref", "refs/remotes/origin/main", "HEAD")
+        git("reset", "-q", "--hard", "HEAD~2")
+        helm = self.helm(YMIR_ROLE="dev", YMIR_RUNTIME_DIR=str(pin))
+        self.assertRegex(helm.pin, r"^[0-9a-f]{7,}$")
+        self.assertEqual(helm.pin_behind, "2")
+
+    def test_the_lease_tokens_carry_no_whitespace(self) -> None:
+        self.seat.write_text("host=heimdall\nprimary=Hœnir\n", encoding="utf-8")
+        tokens = self.helm(YMIR_ROLE="dev").lease_tokens().split(" ")
+        self.assertTrue(all("=" in token for token in tokens))
+        self.assertEqual(identity.render_charter(identity.CHARTER), "planning · mail · the work in hand · dispatch on")
+
+
+class RoleResolutionTest(ArmTestCase):
+    def test_a_declared_role_wins(self) -> None:
+        env = dict(self.env, BROKK_ARM_ROLE="rodd")
+        self.assertEqual(watch.resolve_role(self.paths, env, session=str(os.getpid())), "rodd")
+
+    def test_no_session_is_unknown(self) -> None:
+        self.assertEqual(watch.resolve_role(self.paths, self.env, session="none"), "unknown")
+        self.assertEqual(watch.resolve_role(self.paths, self.env, session=""), "unknown")
+
+    def test_the_sidecar_names_the_holder_only_for_its_own_session(self) -> None:
+        self.paths.role.write_text("role=rodd session=424242\n", encoding="utf-8")
+        self.assertEqual(watch.resolve_role(self.paths, self.env, session="424242"), "rodd")
+        # a different live session must not inherit the stale sidecar
+        self.assertNotEqual(watch.resolve_role(self.paths, self.env, session=str(os.getpid())), "rodd")
+
+    def test_a_pi_comm_derives_counsellor(self) -> None:
+        with unittest.mock.patch.object(watch, "_session_comm", return_value="pi"):
+            self.assertEqual(watch.resolve_role(self.paths, self.env, session="424242"), "counsellor")
+
+    def test_a_known_harness_comm_keeps_its_name(self) -> None:
+        with unittest.mock.patch.object(watch, "_session_comm", return_value="claude"):
+            self.assertEqual(watch.resolve_role(self.paths, self.env, session="424242"), "claude")
+
+    def test_an_unreadable_comm_is_unknown_never_guessed(self) -> None:
+        with unittest.mock.patch.object(watch, "_session_comm", return_value=""):
+            self.assertEqual(watch.resolve_role(self.paths, self.env, session="424242"), "unknown")
+
 
 class HeartbeatTest(ArmTestCase):
     def test_touch_then_age_is_inside_the_window(self) -> None:
@@ -140,6 +317,63 @@ class RaiseTest(ArmTestCase):
     def test_a_check_trigger_is_consumed_and_named(self) -> None:
         (self.paths.state / "pr-9.check").write_text("", encoding="utf-8")
         self.assertEqual(watch.raise_line(self.paths), "check: pr-9")
+
+    def test_a_terminal_status_line_wakes_once(self) -> None:
+        # H3 (plan 257): a worker that writes only `done:` wakes the arm by the record
+        # itself — no acclaim, no sweep — and the per-id cursor makes it exactly once.
+        (self.paths.state / ".arm.terminal-epoch").write_text("1\n", encoding="utf-8")
+        status = self.paths.state / "errand-x.status"
+        status.write_text("working: launched\n", encoding="utf-8")
+        os.utime(status, (1000.0, 1000.0))
+        self.assertEqual(watch.raise_line(self.paths), "")
+
+        status.write_text("working: launched\ndone: opened PR 1\n", encoding="utf-8")
+        os.utime(status, (2000.0, 2000.0))
+        self.assertEqual(watch.raise_line(self.paths), "signal: errand-x done: opened PR 1")
+        self.assertEqual(watch.raise_line(self.paths), "", "a second poll must not re-wake the same line")
+
+    def test_a_newer_terminal_line_is_still_news_once(self) -> None:
+        (self.paths.state / ".arm.terminal-epoch").write_text("1\n", encoding="utf-8")
+        status = self.paths.state / "errand-x.status"
+        status.write_text("done: first\n", encoding="utf-8")
+        os.utime(status, (2000.0, 2000.0))
+        self.assertEqual(watch.raise_line(self.paths), "signal: errand-x done: first")
+        status.write_text("done: first\ndone: merged\n", encoding="utf-8")
+        os.utime(status, (3000.0, 3000.0))
+        self.assertEqual(watch.raise_line(self.paths), "signal: errand-x done: merged")
+        self.assertEqual(watch.raise_line(self.paths), "")
+
+    def test_terminal_lines_older_than_the_epoch_are_seeded_not_raised(self) -> None:
+        # the first poll after an upgrade must not re-present every old done: line
+        old = self.paths.state / "errand-old.status"
+        old.write_text("done: long ago\n", encoding="utf-8")
+        os.utime(old, (1000.0, 1000.0))
+        self.assertEqual(watch.raise_line(self.paths), "")
+        self.assertTrue((self.paths.state / "errand-old.woke").exists())
+        self.assertTrue((self.paths.state / ".arm.terminal-epoch").exists())
+        fresh = self.paths.state / "errand-new.status"
+        fresh.write_text("working: x\ndone: just now\n", encoding="utf-8")
+        future = time.time() + 5
+        os.utime(fresh, (future, future))
+        self.assertEqual(watch.raise_line(self.paths), "signal: errand-new done: just now")
+        self.assertEqual(watch.raise_line(self.paths), "")
+
+    def test_blocked_and_working_lines_never_raise_by_the_record(self) -> None:
+        (self.paths.state / ".arm.terminal-epoch").write_text("1\n", encoding="utf-8")
+        for name, line in (("a", "working: busy"), ("b", "blocked: stuck")):
+            status = self.paths.state / f"errand-{name}.status"
+            status.write_text(line + "\n", encoding="utf-8")
+            os.utime(status, (2000.0, 2000.0))
+        self.assertEqual(watch.raise_line(self.paths), "")
+
+    def test_an_acclaimed_line_is_not_woken_twice(self) -> None:
+        # eindri-acclaim.sh writes the cursor when it delivers the loud wake
+        (self.paths.state / ".arm.terminal-epoch").write_text("1\n", encoding="utf-8")
+        status = self.paths.state / "errand-y.status"
+        status.write_text("done: opened PR 2\n", encoding="utf-8")
+        os.utime(status, (2000.0, 2000.0))
+        (self.paths.state / "errand-y.woke").write_text("2000.0\n", encoding="utf-8")
+        self.assertEqual(watch.raise_line(self.paths), "")
 
     def test_the_operator_stop_is_a_stale_line(self) -> None:
         self.paths.stop_marker.touch()
@@ -190,15 +424,15 @@ class StatusTest(ArmTestCase):
     def test_status_reports_healthy_with_rc_zero_and_a_gap_with_rc_one(self) -> None:
         body, code = watch.status_lines(self.paths, env=self.env)
         self.assertEqual(code, 1)
-        self.assertTrue(body.startswith("syn-watch[1]{state,mode,unit,pid,heartbeat_age,stale_seconds,session,armed,state_dir}:\n"))
+        self.assertTrue(body.startswith("syn-watch[1]{state,mode,role,unit,pid,heartbeat_age,stale_seconds,session,armed,state_dir}:\n"))
         self.assertIn('"down","none"', body)
 
-    def test_the_toon_row_has_nine_fields(self) -> None:
+    def test_the_toon_row_has_ten_fields(self) -> None:
         self.lease(session="none")
         watch.heartbeat_touch(self.paths)
         self.paths.armed.touch()
         row = watch.status_row(self.paths, env=self.env, runner=Recorder())
-        self.assertEqual(row.count('"'), 18)
+        self.assertEqual(row.count('"'), 20)
 
 
 class SessionOwnerTest(ArmTestCase):

@@ -144,7 +144,7 @@ export interface AgentSession {
   model: string | null;
   session_id: string | null;
   /**
-   * The agent's lane color from smidja.config.yaml, e.g. "#a78bfa". Null on dbs
+   * The agent's lane color from smidja.config.yaml, e.g. "#cfc3a9". Null on dbs
    * written by a tracer predating the column, and on agents with no configured
    * color — fall back to the UI's own palette.
    */

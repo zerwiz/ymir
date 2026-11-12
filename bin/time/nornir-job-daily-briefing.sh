@@ -215,6 +215,21 @@ else
 fi
 emit ""
 
+# ---- 5. Messages: in · out · owed, and what moved on his list (plan 261) ----
+# One door reads every channel (mail where it lies, Telegram from the comms record) and the
+# owed shelves; it never sends. Offline here: the brief must not wait on a mailbox.
+if [ -r "$SCRIPT_DIR/../records/comms.py" ]; then
+  comms_md=$(COMMS_OFFLINE=1 YMIR_HOME="$YMIR_HOME" timeout 60 python3 "$SCRIPT_DIR/../records/comms.py" brief --hours 24 2>/dev/null)
+  if [ -n "$comms_md" ]; then
+    printf '%s\n' "$comms_md" >>"$TMP"
+  else
+    emit "## Messages — in · out · owed"
+    emit ""
+    emit "UNABLE: bin/records/comms.py gave no answer"
+  fi
+  emit ""
+fi
+
 # ---- Next step ------------------------------------------------------------
 emit "## Next"
 emit ""

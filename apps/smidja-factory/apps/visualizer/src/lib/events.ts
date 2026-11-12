@@ -38,7 +38,7 @@ export function agentColor(
   )
 }
 
-/** "#c89bff" + alpha → rgba() usable in inline styles. Invalid input → transparent. */
+/** "#cfc3a9" + alpha → rgba() usable in inline styles. Invalid input → transparent. */
 export function hexAlpha(hex: string, alpha: number): string {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim())
   if (!m || !m[1]) return 'transparent'

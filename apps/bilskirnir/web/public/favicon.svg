@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Bilskirnir's mark: the rune ᛒ (B), carved in bronze on a stone tile with a brass edge. -->
+  <defs>
+    <linearGradient id="stone" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#221d14"/>
+      <stop offset="1" stop-color="#0e0c09"/>
+    </linearGradient>
+    <linearGradient id="bronze" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#ffe3a0"/>
+      <stop offset="0.45" stop-color="#c9973f"/>
+      <stop offset="1" stop-color="#7d5f2a"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#stone)"/>
+  <rect x="3" y="3" width="58" height="58" rx="13" fill="none" stroke="#c9973f" stroke-opacity="0.55" stroke-width="2"/>
+  <path d="M24 11 V53 M24 11 L41 21.5 L24 32 L41 42.5 L24 53" fill="none" stroke="#0e0c09" stroke-opacity="0.6"
+        stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round" transform="translate(1.2 1.6)"/>
+  <path d="M24 11 V53 M24 11 L41 21.5 L24 32 L41 42.5 L24 53" fill="none" stroke="url(#bronze)"
+        stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M22.6 13 V30" stroke="#fff3cf" stroke-opacity="0.7" stroke-width="1.6" stroke-linecap="round"/>
+</svg>

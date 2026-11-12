@@ -178,14 +178,14 @@ wears on tags and marks (design.md §2.2).
 
 | House | Name-sake | Seal | What the house does today |
 |---|---|---|---|
-| **Ymir Labs** | the primordial giant; the frame of the world | cyan `#38bdf8` | the platform itself: Ymir OS, Hlidskjalf, the agent fleet, Mimirsbrunn — the body everything else is carved from |
+| **Ymir Labs** | the primordial giant; the frame of the world | forge bronze `#c9973f` | the platform itself: Ymir OS, Hlidskjalf, the agent fleet, Mimirsbrunn — the body everything else is carved from |
 | **Brokk Forge** | the bellows-smith who drove the forging of Mjölnir | forge amber `#f59e0b` | engineering & build tooling: WayOf Command/Runecode, softwerefactory, wayofmono, the smidja |
 | **Runestone Labs** (short: **Runir**) | the runes carved once, that cannot be un-carved | rune crimson `#f43f5e` | records & compliance: `.compliance` gates, rune auditing, docs, runbooks, research |
-| **Muninn Labs** | the raven *(memory)* that flew for the Allfather daily | raven violet `#8b5cf6` | memory & knowledge: the house memory plane and its MCP door, Mimirsbrunn/engram, vector RAG |
-| **Dvalin** | the dwarf smith of the finest crafted things | cold steel `#94a3b8` | crafted tools — OptiCat (HVAC Pro), Linkable, Todo, Desk, Material Files |
-| **Utgard Studios** | the realm where the giants work, outside the walls | jötun magenta `#d946ef` | creative: WhyNot Productions (soul/growth media), AiPic (video), OpenChamber, sensual dojo, sensebit |
+| **Muninn Labs** | the raven *(memory)* that flew for the Allfather daily | raven steel `#96a0a8` | memory & knowledge: the house memory plane and its MCP door, Mimirsbrunn/engram, vector RAG |
+| **Dvalin** | the dwarf smith of the finest crafted things | worn bone `#9a8f75` | crafted tools — OptiCat (HVAC Pro), Linkable, Todo, Desk, Material Files |
+| **Utgard Studios** | the realm where the giants work, outside the walls | jötun blood `#c2584a` | creative: WhyNot Productions (soul/growth media), AiPic (video), OpenChamber, sensual dojo, sensebit |
 | **Askr** | the first man, shaped from an ash tree | ash green `#34d399` | human-centered products: Relocation Copilot, onboarding automation |
-| **Mannheim** | *(holding — reserving a clan name with no myth yet)* | slate `#64748b` | holding; allocated when a new venture claims it |
+| **Mannheim** | *(holding — reserving a clan name with no myth yet)* | faint bone `#6b6250` | holding; allocated when a new venture claims it |
 
 > Houses are **names in the mythos, not subsystems** — they are the ventures the
 > fleet ships under, mapped per ENTRY-004. A house may be split or merged only by
@@ -280,6 +280,7 @@ identity, never rebuilding from raw ore.
 | Borrowed anvil | Norse name | Domain |
 |---|---|---|
 | `engdbram` (PyPI `engdbram`, v2.2.1) | **Mimirsbrunn** | engram memory engine |
+| Honcho (Plastic Labs, AGPL-3.0 server; on trial, plan 260) | **Sökkvabekkr** | the deeper well: conclusions derived from the well |
 | Redis (queue under the A2A task model) | **Ratatoskr**'s nest | A2A task queue |
 | `a2aproject/a2a` + SDKs (A2A 1.0) | the **Ratatoskr** protocol | agent↔agent horizontal delegation |
 | Traefik/Caddy | **Bifrost** | gateway / reverse proxy |
@@ -804,6 +805,8 @@ Each is named for the figure whose role matches its work.
 | **Forseti** | Forseti | The reconciler — reviewer, compliance | `.agents/agents/forseti-reviewer.md` |
 | **Snotra** | Snotra | The modest — documenter, docs, runbooks | `.agents/agents/snotra-documenter.md` |
 | **Galdr** | Galdr | The master builder — runtime, CLI, ergonomics | `.agents/agents/galdr.md` |
+| **Rödd** | Rödd | The voice, as an app — the window, the desk shell, the pipeline | `apps/rodd`, `bin/voice/voice-door.sh` |
+| **Nanna** | Nanna | The one who answers in Rödd — the assistant, a she, and never Skírnir | `apps/rodd/patch/patch-ui.py` |
 
 **Rule:** Every agent carries its rune of introduction (Agent Card). Every
 agent reports to Brokk. Brokk reports to the Allfather.
@@ -1389,3 +1392,51 @@ lacks is a schedule, which is named debt in plan 98, not a missing capability.
 **His law, in one line:** *metadata only, and no model in the alert path.* A guardian that logs
 content is a leak with a badge; a guardian that asks a model what severity a fact is has handed the
 most expensive judgement to the least accountable thing in the house.
+\n
+
+## Rödd and Nanna — the app and the voice inside it (2026-11-11)
+
+His correction, and the law it makes: *"the apps are named rödd. not the assistant in the app. the female."*
+
+**Rödd is the app.** She is named for the noun: Old Norse *rödd*, a voice, an utterance — a feminine word.
+Rödd is the window, the desk shell, the pipeline and its door (`apps/rodd`, `bin/voice/voice-door.sh`), and
+when a machine says "Rödd is down" it means the app, not a person.
+
+**Nanna is the voice inside her.** Baldr's wife, the kindest in Asgard — a companion who answers and
+remembers, never a servant. She is a **she** in every line the house writes about her, she introduces herself
+as Nanna, and she is addressed as Nanna. Chosen at his word from four figures (Nanna · Iðunn · Hlín · Sjöfn)
+because the alternative was a servant, and this house had already tried a servant.
+
+**Skírnir is neither.** He is the messenger the house later pared down to a fixed set of doors
+(`systems/skirnir/`) — the assistant the Allfather calls *"the nerfed assistant"*. He keeps his own name, his
+own work and his own shelf, and he never answers in Nanna's window. A window that says *"You are Skírnir"* is
+mislabelled software, not a character choice.
+
+The sentence to hold: **Rödd is the hall speaking; Nanna is the one who answers in it.**
+
+## Bilskirnir, Fulla and Sökkvabekkr — the business hall and the deeper well (2026-11-12)
+
+**Bilskirnir is the business hall.** Thor's hall *"with five hundred and forty rooms"* — one room for every one who
+lives there. In Ymir it is the application where every agent has its own room, its own screen and its work in plain
+sight. At the Allfather's word it is **for running the house's business** — and still able to code, research and take
+every other errand:
+
+> *"Sessrúmnir are more the developing tool of ymir, and this application will be more about managing the business
+> side of ymir, but also capable of coding and every other task we need."*
+
+So the two halls divide the work: **Sessrúmnir** is where Ymir is built; **Bilskirnir** is where the house's business is
+run. Bilskirnir's face began as Bot HQ (MIT), dressed in the house cloth the way Rödd is dressed — the colours mapped
+onto the cloth, the hearth behind, nothing else repainted. The name stands as a proposal until it is sealed.
+
+**Fulla keeps the hall.** The first agent in Bilskirnir is not a stranger with a default name; it is the machine's own
+keeper from the roster. On heimdall that is **Fulla**, who keeps Frigg's casket — *the keeper of the hall's precious
+things*. She is a **she**, she answers as Fulla of the Ymir fleet, and the engine under her (Hermes) is her tool, never
+her name. Another machine's hall is kept by that machine's own agent.
+
+**Sökkvabekkr is the deeper well.** *"The sunken bench"* — the deep hall where cool waters flow and where Odin and Sága
+drink every day while she tells him all that has been. Mímisbrunnr, the well, keeps **what happened**, append-only, the
+record. Sökkvabekkr keeps **what is understood** — of the Allfather and of each agent — and tells it back when asked. Its
+engine is Honcho, as engram is the well's. It is fed from the well and can always be rebuilt from it; it never writes the
+well (plan 260).
+
+The sentences to hold: **Sessrúmnir builds the house; Bilskirnir runs it. The well remembers; Sökkvabekkr understands.**

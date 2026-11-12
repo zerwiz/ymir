@@ -32,7 +32,11 @@ mkdir -p "$STATE" 2>/dev/null || true
 exec 9>"$STATE/.claude-arm.${session:-unknown}.lock" || exit 0
 flock -n 9 || exit 0
 
-out="$("$ROOT/bin/pi/syn-watch-arm.sh" --restart 9>&-)"; rc=$?
+# plan 257 H6: run the PIN's client, never this checkout's — the code that decides what a
+# wake means is always the pinned runtime's, whatever branch this tree stands on.
+client=""
+[ -r "$ROOT/bin/pi/arm-pin-lib.sh" ] && . "$ROOT/bin/pi/arm-pin-lib.sh" && arm_pin_client client
+out="$("${client:-$ROOT/bin/pi/syn-watch-arm.sh}" --restart 9>&-)"; rc=$?
 case "$out" in
   *signal:*|*stale:*|*check:*|*heartbeat:*)
     {

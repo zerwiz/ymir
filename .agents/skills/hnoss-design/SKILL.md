@@ -91,3 +91,38 @@ and single-tenant, so `OPEN_DESIGN_DISABLE_API_AUTH=1` in
 straight to the Studio —** and `agentId` must be `pi` (the CLI whose registry is
 the Allfather's 54 models at llama-swap), NEVER a cloud model name.
 Full runbook: `DESIGN.md` → `RUNTIME ADDENDUM` + `The model truth`. Full runbook: `DESIGN.md` → `RUNTIME`.
+
+## 2026-11-10 — the model door (correcting the seat note in §5)
+
+§5 above says design generation "proxies through our own llama-swap rail". That was the
+belief, and it was wrong on this seat: the Allfather's provider is
+`opencode-go/deepseek-v4.1-flash`, the launcher could not resolve a provider that is built
+into pi rather than named in `models.json`, and it silently fell back to the rail — a door
+and a model that cannot answer each other. Every generation died with nothing to show.
+
+**The road, and it is shipped now:**
+
+- **`bin/pi/hnoss-mcp-launch.sh`** is the launcher (no longer a hand-file in
+  `~/.local/bin`). It takes the provider, the model and the credential from pi, then
+  picks the door: a `models.json` rail directly; a provider built **into** pi through
+  **Bifrost** (`bin/bridge/bifrost-bridge.sh`), which adds the `x-opencode-session` header
+  the gateway demands and the BYOK client cannot send; anything else → a refusal naming
+  the provider, never a quiet substitution.
+- **`bin/pi/hnoss-ensure.sh status|ensure`** seats and checks the whole door: the
+  launcher, the `hnoss` pi MCP entry, the compatibility shim, and the resolved model.
+  Install runs it (`step_hnoss`), every update mends it (Gróa), Eir reports it.
+- **`bin/pi/open-design.sh start|stop`** is the Studio (container, loopback `:7456`). It
+  now passes the deployment's `.env` to Compose — without that, Compose read the caller's
+  directory, ignored the `.env`, and the image's 192 MB Node heap killed every real page
+  (`FATAL ERROR: Ineffective mark-compacts near heap limit`, reported to the client as
+  "OD daemon unreachable"). This seat's `.env` carries `NODE_OPTIONS=--max-old-space-size=1024`.
+
+**What still holds from §5:** the daemon's `agentId` is `pi` for the *Studio's own*
+composer, and that path is separate. The MCP path — `od_generate_design` — is BYOK only
+and never touches an agent; it goes daemon-proxy → launcher's door → provider. Two roads,
+one brain: pi's provider decides both.
+
+**Proof on this seat, 2026-11-10:** a real generation through the MCP returned HTML
+("Blackwater Forge — Hero"), and `state/model-bridge-4613.log` names it —
+`model=deepseek-v4.1-flash provider=opencode-go` on a `200`. Runbook and the four things
+that can break: `DESIGN.md` → *THE MODEL DOOR (2026-11-10)*.

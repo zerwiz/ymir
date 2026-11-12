@@ -80,13 +80,17 @@ surface_skip() {
     # vault is a server-side property (Rule 15/16), never the roaming seat's.
     vault)      return 0 ;;
     # The Electron shells are not built for Android; the seat is the harness.
-    shells|sessrumnir) return 0 ;;
+    shells|sessrumnir|bilskirnir) return 0 ;;
     # No systemd on Android: there is no boot unit to enable. The Pi watcher owns
     # supervision here, and `ymir-autoboot.sh verify` already names the gap.
     autoboot)   return 0 ;;
+    # A hand runs no pinned runtime and supervises nothing: the arm and Rödd live on a seat.
+    armpin)     return 0 ;;
     # The desk is a systemd user unit: a substrate without systemd (a hand) cannot
     # owe it — and the arm's own door already names that gap.
     mail)       return 0 ;;
+    # a hand runs no arm service and no Rödd window: there is no pin for it to owe
+    armpin)     return 0 ;;
   esac
   return 1
 }
@@ -103,15 +107,16 @@ surface_ok() {
 surface_detail_skip() {
   case "$1" in
     vault)      printf '%s\n' 'not this seat (no cryptsetup/loop devices on Android)' ;;
-    shells|sessrumnir) printf '%s\n' 'not this seat (desktop shells are not built for bionic)' ;;
+    shells|sessrumnir|bilskirnir) printf '%s\n' 'not this seat (desktop shells are not built for bionic)' ;;
     autoboot)   printf '%s\n' 'not this seat (no systemd; the Pi watcher owns supervision)' ;;
+    armpin)     printf '%s\n' 'not this seat (a hand runs no pinned runtime)' ;;
     mail)       printf '%s\n' 'not this seat (no systemd: the desk is a user unit)' ;;
     *)          printf '%s\n' 'skip' ;;
   esac
 }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir shells graphics well memory mail mcp harness claudehooks arm lock gates migrations hoard autoboot vault ward)
+SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir bilskirnir hnoss shells graphics well memory mail mcp harness claudehooks opencode arm armpin roddhelm lock gates migrations hoard autoboot vault ward seats seatreap models)
 
 # ── the three surfaces the 2026-11-03 Windows audit found, and the rule they read ──────────
 # A SEAT IS NOT UPDATED BY A PULL. The checkout moves; the installed hooks, the PATH a later
@@ -129,6 +134,74 @@ s_seatpaths() {
   return 0
 }
 f_seatpaths() { "$SCRIPT_DIR/../engine/prereq-ensure.sh" --persist-path >/dev/null 2>&1; }
+
+# ── seats: the two faults of 2026-11-10, plus the sweep that closes finished seats ──
+# (a) `~/.pi/agent/extensions/.ymir-root` must never name a LINKED WORKTREE — a root is a
+#     home, a worktree is an errand, and the errand dies. (b) no Eindri worktree may carry
+#     the broken `rm -rf .pi/extensions` + assume-unchanged state that made git report all
+#     45 extension files as deleted. (c) the sweep that closes finished seats must be
+#     seated on every harness this host actually runs.
+# One test for a linked worktree: --git-common-dir and --git-dir resolve to different
+# paths (the same expression lives in bin/seat/valknut-load.sh and migration 0019).
+_is_linked_worktree() {  # <path>
+  local p=${1:-.} common own
+  common="$(git -C "$p" rev-parse --git-common-dir 2>/dev/null)" || return 1
+  own="$(git -C "$p" rev-parse --git-dir 2>/dev/null)" || return 1
+  [ -n "$common" ] && [ -n "$own" ] || return 1
+  [ "$(CDPATH='' cd "$p" && CDPATH='' cd "$common" 2>/dev/null && pwd -P)" \
+    = "$(CDPATH='' cd "$p" && CDPATH='' cd "$own" 2>/dev/null && pwd -P)" ] && return 1
+  return 0
+}
+s_seats() {
+  local pointer="${PI_EXT_HOME:-$HOME/.pi/agent/extensions}/.ymir-root" line
+  if [ -r "$pointer" ]; then
+    while IFS= read -r line; do
+      [ -n "$line" ] || continue
+      case "$line" in */.yggdrasil/*|*/.yggdrasil) return 1 ;; esac
+      [ -d "$line" ] && _is_linked_worktree "$line" && return 1
+    done <"$pointer"
+  fi
+  local wt dirty
+  while IFS= read -r wt; do
+    [ -n "$wt" ] || continue
+    case "$wt" in */.yggdrasil/*) ;; *) continue ;; esac
+    [ -d "$wt" ] || continue
+    dirty="$(git -C "$wt" status --porcelain 2>/dev/null | grep -c '^\( \{0,1\}\)D  *\.pi/extensions/')"
+    [ "${dirty:-0}" = 0 ] || return 1
+  done < <(git -C "$ROOT" worktree list --porcelain 2>/dev/null | awk '/^worktree /{print substr($0,10)}')
+  [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ] || return 1
+  "$SCRIPT_DIR/../seat/seat-reap.sh" --check >/dev/null 2>&1
+}
+f_seats() {
+  # The two structural faults are the migration's to mend (one door, called by install,
+  # by Gróa and by Eir alike); the harness hooks are the sweep door's own.
+  [ -x "$SCRIPT_DIR/../engine/ymir-migrate.sh" ] && "$SCRIPT_DIR/../engine/ymir-migrate.sh" apply >/dev/null 2>&1
+  [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ] && "$SCRIPT_DIR/../seat/seat-reap.sh" --install >/dev/null 2>&1
+  s_seats
+}
+# ── seatreap (plan 255): a seat kept as finished-idle past a day is the fault the
+# sweep exists to clear. Where herdr is absent there is no seat to judge — a clean
+# skip with its reason, never a guess (RULES/25).
+s_seatreap() {
+  have herdr || return 0
+  local door="$SCRIPT_DIR/../seat/seat-reap.sh" now d f base id age
+  [ -x "$door" ] || return 1
+  now="$(date +%s)"
+  for d in "$STATE" "$ROOT/state"; do
+    [ -d "$d" ] || continue
+    for f in "$d"/.*.idle-since; do
+      [ -f "$f" ] || continue
+      base="${f##*/}"; base="${base#.}"; id="${base%.idle-since}"
+      age=$(( now - $(head -n1 "$f" 2>/dev/null | tr -dc '0-9') ))
+      [ "${age:-0}" -gt 86400 ] && return 1
+    done
+  done
+  return 0
+}
+f_seatreap() {
+  [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ] && "$SCRIPT_DIR/../seat/seat-reap.sh" --sweep >/dev/null 2>&1
+  s_seatreap
+}
 s_hooks() {
   local hooks; hooks="$(cd "$ROOT" && git rev-parse --git-path hooks 2>/dev/null || printf '.git/hooks')"
   case "$hooks" in /*) ;; *) hooks="$ROOT/$hooks" ;; esac
@@ -168,6 +241,16 @@ f_council()   { "$SCRIPT_DIR/../pi/logretta-ensure.sh" ensure >/dev/null 2>&1; }
 f_snotra()    { "$SCRIPT_DIR/../../systems/snotra/services/ear/snotra-ensure.sh" ensure --install >/dev/null 2>&1; }
 s_sessrumnir(){ [ -x "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" ] && "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" status >/dev/null 2>&1; }
 f_sessrumnir(){ "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1; }
+# Bilskirnir, the business hall (plan 259): healthy when its setup door's --check passes (agent home,
+# soul, .env, dependencies); the repair is the door itself. A tree without the app is not owed it.
+s_bilskirnir(){ [ -x "$ROOT/apps/bilskirnir/setup.sh" ] || return 0; "$ROOT/apps/bilskirnir/setup.sh" --check >/dev/null 2>&1; }
+f_bilskirnir(){ [ -x "$ROOT/apps/bilskirnir/setup.sh" ] && "$ROOT/apps/bilskirnir/setup.sh" >/dev/null 2>&1; }
+# Hnoss — the design smithy's model door (2026-11-10). The MCP bridge is only as good as
+# the door it reaches a model through; a hand-placed launcher plus a rail/BYOK mismatch
+# made every design generation die silently. The ensure door seats the launcher and the
+# pi MCP entry, and REFUSES a provider it has no door for instead of falling back.
+s_hnoss()     { [ -x "$SCRIPT_DIR/../pi/hnoss-ensure.sh" ] && "$SCRIPT_DIR/../pi/hnoss-ensure.sh" status >/dev/null 2>&1; }
+f_hnoss()     { "$SCRIPT_DIR/../pi/hnoss-ensure.sh" ensure >/dev/null 2>&1; }
 # The boot law (2026-09-24): every role-owed program enabled and standing. The
 # mend for a stopped boot IS the raise — re-materialize, re-enable, re-verify.
 s_autoboot()  { [ -x "$SCRIPT_DIR/../engine/ymir-autoboot.sh" ] && "$SCRIPT_DIR/../engine/ymir-autoboot.sh" verify >/dev/null 2>&1; }
@@ -246,6 +329,23 @@ print(",".join(d.get("accounts") or []))' 2>/dev/null)"
   esac
 }
 s_mail()      { [ "$(mail_state)" = ok ]; }
+# ── the allow-list (2026-11-12): only the models this operator approved run as Eindri ────────
+# Broken when a seat still working, or a configured default (agents.yaml, pi's settings), names a
+# model the list refuses. The mend is the operator's word (the list, a grant, or stopping the seat),
+# never a rewrite by the doctor, so f_models only says where to look.
+s_models()    { "$SCRIPT_DIR/../model/model-allow.sh" audit "$STATE" >/dev/null 2>&1; }
+f_models()    { return 1; }
+models_detail() {
+  local out n
+  if ! "$SCRIPT_DIR/../model/model-allow.sh" list >/dev/null 2>&1; then printf 'the allow-list does not read — bin/model/model-allow.sh list'; return; fi
+  if "$SCRIPT_DIR/../model/model-allow.sh" list 2>/dev/null | sed -n 2p | grep -q unpoliced; then
+    printf 'unpoliced — no allow-list at %s (template: config/models-allowed.yaml.example)' "$("$SCRIPT_DIR/../model/model-allow.sh" path)"; return
+  fi
+  out="$("$SCRIPT_DIR/../model/model-allow.sh" audit "$STATE" 2>/dev/null)"
+  n="$(printf '%s\n' "$out" | sed -n '1s/.*\[\([0-9]*\)\].*/\1/p')"
+  if [ "${n:-0}" = 0 ]; then printf 'every live seat and configured default is on the allow-list'
+  else printf '%s off the allow-list: %s' "$n" "$(printf '%s\n' "$out" | sed -n '2,4p' | cut -d'"' -f2,6 | tr '"' '=' | paste -sd' ' -)"; fi
+}
 f_mail()      { [ -x "$ROOT/bin/mail/install.sh" ] && "$ROOT/bin/mail/install.sh" >/dev/null 2>&1; }
 # The desktop shells (P8, 2026-09-24): the RESOLVER answers — app-local,
 # workspace-hoisted, or the sibling package (bin/desktop/electron-lib.sh). ABSENT for
@@ -397,6 +497,16 @@ s_claudehooks() {
   ! printf '%s\n' "$out" | grep -q '"claude-[^"]*","stale"'
 }
 f_claudehooks() { [ -x "$SCRIPT_DIR/../seat/harness-extensions-install.sh" ] && "$SCRIPT_DIR/../seat/harness-extensions-install.sh" >/dev/null 2>&1 && s_claudehooks; }
+# OpenCode launch shape (plan 262): OpenCode v2's interactive TUI takes --prompt and --auto but not --model,
+# and a release that drops either flag kills every OpenCode worker in its pane. The surface reads
+# `opencode --help` through the launcher's own check, so a drifted TUI is a red surface, not a dead
+# pane. A host with no OpenCode owes nothing.
+s_opencode() {
+  command -v opencode >/dev/null 2>&1 || return 0
+  [ -x "$SCRIPT_DIR/../seat/opencode-launcher.sh" ] || return 1
+  "$SCRIPT_DIR/../seat/opencode-launcher.sh" check >/dev/null 2>&1
+}
+f_opencode() { s_opencode; }   # nothing here can mend an upstream flag: the finding names it for the Allfather
 # Arm: Sýn as a SERVICE (plan 58, Phase 2) — one standing watcher per home that
 # idles when no session is seated, never retires with one. The surface is the
 # arm's own door (bin/pi/syn-watch.sh): a live lease with a fresh heartbeat is
@@ -405,6 +515,17 @@ f_claudehooks() { [ -x "$SCRIPT_DIR/../seat/harness-extensions-install.sh" ] && 
 # a dead watch costs — and the mend is to seat the service again.
 s_arm()      { [ -x "$SCRIPT_DIR/../pi/syn-watch.sh" ] && "$SCRIPT_DIR/../pi/syn-watch.sh" status >/dev/null 2>&1; }
 f_arm()      { [ -x "$SCRIPT_DIR/../pi/syn-watch.sh" ] && "$SCRIPT_DIR/../pi/syn-watch.sh" start >/dev/null 2>&1 && s_arm; }
+# armpin (plan 257 H8): the pinned runtime is current with origin, and every surface that
+# supervises — the arm service, its clients, Rödd's window and her tool server — executes
+# from it. bin/seat/armpin.sh is the judge; the mend moves the pin (runtime-deploy.sh),
+# which restarts and proves the units, then the judge is asked again.
+s_armpin()   { [ -x "$SCRIPT_DIR/../seat/armpin.sh" ] && "$SCRIPT_DIR/../seat/armpin.sh" check >/dev/null 2>&1; }
+f_armpin()   { [ -x "$SCRIPT_DIR/../engine/runtime-deploy.sh" ] && "$SCRIPT_DIR/../engine/runtime-deploy.sh" >/dev/null 2>&1; s_armpin; }
+# roddhelm: the lease names a known holder role, the room is writable, and the
+# drain door answers (plan 254 B6). The check is rodd-helm.sh --check; there is
+# no safe auto-mend — a role is the holder's declaration, never invented.
+s_roddhelm() { [ -x "$SCRIPT_DIR/../voice/rodd-helm.sh" ] && "$SCRIPT_DIR/../voice/rodd-helm.sh" --check >/dev/null 2>&1; }
+f_roddhelm() { s_roddhelm; }
 # Lock: absent, or held by a live pid.
 s_lock() {
   local f="$STATE/.lock" pid
@@ -576,14 +697,19 @@ detail() { # <name> -> the command that prints one short fact
     a2abridge) printf '%s\n' "have a2abridge && a2abridge --version 2>/dev/null | head -1 || echo 'engine absent'" ;;
     hermes)    printf '%s\n' "have hermes && echo present || echo absent" ;;
     sessrumnir)printf '%s\n' "[ -d $APP_SESSRUMNIR/out ] && echo built || echo 'not built'" ;;
+    bilskirnir)printf '%s\n' "[ -x $ROOT/apps/bilskirnir/setup.sh ] && { $ROOT/apps/bilskirnir/setup.sh --check 2>&1 | tail -1; } || echo 'not in this tree'" ;;
     well)      printf '%s\n' well_detail ;;
     memory)    printf '%s\n' memory_detail ;;
     mail)      printf '%s\n' mail_detail ;;
+    models)    printf '%s\n' models_detail ;;
     mcp)       printf '%s\n' "echo 'a2abridge + the well door'" ;;
     graphics)  printf '%s\n' "if [ -z \"\${DISPLAY:-}\${WAYLAND_DISPLAY:-}\" ]; then echo headless; else echo \"\$(graphics_block 2>/dev/null | sed -n '1p' | sed 's/.*{//;s/}//') · \$(graphics_policy 2>/dev/null)\"; fi" ;;
     harness)   printf '%s\n' "s_harness && echo 'deployed extensions resolve their bin/' || echo 'no live root recorded'" ;;
     claudehooks) printf '%s\n' "command -v claude >/dev/null 2>&1 && echo 'the three Claude hooks: AGENTS.md · Eindri-only · the Gná arm' || echo 'no claude on this host'" ;;
+    opencode)  printf '%s\n' "command -v opencode >/dev/null 2>&1 && $SCRIPT_DIR/../seat/opencode-launcher.sh check 2>&1 | sed -n '2p' | sed -E 's/^ *\"[a-z]+\",//; s/\"//g' || echo 'no opencode on this host'" ;;
     arm)       printf '%s\n' "$SCRIPT_DIR/../pi/syn-watch.sh status --detail 2>/dev/null | head -1 || echo 'arm door missing'" ;;
+    armpin)    printf '%s\n' "$SCRIPT_DIR/../seat/armpin.sh --detail 2>/dev/null | head -1 || echo 'armpin door missing'" ;;
+    roddhelm)  printf '%s\n' "$SCRIPT_DIR/../voice/rodd-helm.sh --check 2>&1 | head -1 || echo 'rodd-helm door missing'" ;;
     gates)     printf '%s\n' "s_gates && echo 'pre-push hook: the worktree that pushes' || echo 'installed hook is stale — bin/gates/guards/fixes-guard.sh --install'" ;;
     lock)      printf '%s\n' "cat $STATE/.lock 2>/dev/null | tr -d '[:space:]' | sed 's/^/pid /' || echo none" ;;
     migrations)printf '%s\n' "echo 'structure'" ;;
@@ -592,6 +718,8 @@ detail() { # <name> -> the command that prints one short fact
     autoboot)  printf '%s\n' "$SCRIPT_DIR/../engine/ymir-autoboot.sh verify >/dev/null 2>&1 && echo 'boot proven' || echo 'boot gap — bin/engine/ymir-autoboot.sh verify'" ;;
     seatpaths) printf '%s\n' "printf '%s' \"$(seat_profile)\" ; grep -qF \"$HOME/.bun/bin\" \"$(seat_profile)\" 2>/dev/null && printf ' carries the marked block' || printf ' does not carry ~/.bun/bin — a unit or validator will not find bun'" ;;
     hooks)     printf '%s\n' "printf 'installed hooks' ; [ -x \"$(cd "$ROOT" && git rev-parse --git-path hooks 2>/dev/null || printf '.git/hooks')/pre-commit\" ] && printf ' present' || printf ' MISSING — a guarded deletion and a staged secret would both pass'" ;;
+    seats)     printf '%s\n' "printf 'the seat wire' ; [ -x $SCRIPT_DIR/../seat/seat-reap.sh ] && $SCRIPT_DIR/../seat/seat-reap.sh --list 2>/dev/null | head -1" ;;
+    seatreap)  printf '%s\n' "printf 'a finished-idle seat kept past a day' ; for f in $STATE/.*.idle-since $ROOT/state/.*.idle-since; do [ -f \$f ] && echo \$(basename \$f); done" ;;
     packaging) printf '%s\n' "bash \"$SCRIPT_DIR/../gates/guards/packaging-guard.sh\" check 2>&1 | grep -o 'the File directive names a file that does not exist: [^)]*' | head -1 || printf 'every named input exists'" ;;
   esac
 }

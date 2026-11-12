@@ -222,6 +222,14 @@ print(f"last checkpoint: {d.get(chr(34)+chr(115)+chr(116)+chr(101)+chr(112)+chr(
   printf '%s\n' "$line" >>"$STATE/$id.status"
   printf 'liveness=dead corrected=%s evidence=%s\n' "$ts" "$evidence" >>"$STATE/$id.meta" 2>/dev/null || true
   eindri_is_delivered "$id" dead && return 0
+  # An abandoned errand is remembered too, with why (the Allfather, 2026-11-12): the worker
+  # never reached its own episode, so the sweep writes the one it can — the verdict and its
+  # evidence. Once per death (the delivered mark above); the well never holds back the wake.
+  if [ -x "$SCRIPT_DIR/../records/mimir.sh" ]; then
+    timeout 15 "$SCRIPT_DIR/../records/mimir.sh" observe \
+      "eindri $id abandoned ($kind): $line (written by eindri-liveness: the worker left no episode of its own)" \
+      --source eindri-liveness --task "$id" --tags "eindri,abandoned,$kind" --shape behaviour --force >/dev/null 2>&1 || true
+  fi
   # quote the last checkpoint: "where the work stood" beats "the pane went quiet"
   local cp=""
   cp="$(bash "$SCRIPT_DIR/eindri-checkpoint.sh" show "$id" 2>/dev/null | python3 -c '

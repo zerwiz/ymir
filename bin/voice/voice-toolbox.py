@@ -23,6 +23,9 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import re
+import os
+import subprocess
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -30,7 +33,63 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import voice_tools  # noqa: E402
 
+REPO = Path(__file__).resolve().parents[2]
+HOME = Path(os.environ.get("YMIR_HOME") or (Path.home() / "Documents" / "ymirhome"))
+SETTINGS = HOME / "hodd" / "state" / "rodd" / "settings.json"
+MEMORY = HOME / "hodd" / "state" / "rodd" / "memory.jsonl"
 LOOPBACK = ("127.0.0.1", "localhost", "[::1]")
+
+# A memory item that asks her to MERGE is void (plan 254 B7, 2026-11-11): merging is the
+# Allfather's hand (Rule 08), and an instruction to merge that sits in her memory is one she
+# will meet, refuse, and toast about again every night. The item is never deleted (the
+# memory appends); it is served marked void with the reason, so she reads the correction
+# beside it instead of re-raising it. A correction row (kind=correction) is never voided.
+_MERGE_ASK = re.compile(r"\bmerge\b.*\b(pr|pull request|branch|main|into)\b|\b(pr|pull request)\b.*\bmerge\b", re.I)
+VOID_MERGE = "void: merging is the Allfather's hand (Rule 08) — never hers; corrected 2026-11-11"
+
+
+def _void_if_merge(row):
+    if not isinstance(row, dict) or row.get("kind") == "correction":
+        return row
+    if _MERGE_ASK.search(str(row.get("text", ""))):
+        row = dict(row, void=VOID_MERGE)
+    return row
+
+
+def _rodd_head():
+    """The one door for whose mind answers (bin/voice/rodd-head.py)."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("rodd_head", REPO / "bin" / "voice" / "rodd-head.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _read_json(path: Path) -> dict:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def _write_json(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    os.chmod(tmp, 0o600)
+    tmp.replace(path)
+
+
+def _raise_host() -> dict:
+    """Raise the host with whatever head the resolver now names — the one launch path."""
+    door = REPO / "bin" / "voice" / "voice-door.sh"
+    try:
+        out = subprocess.run(["bash", str(door), "host"], capture_output=True, text=True, timeout=240)
+    except subprocess.TimeoutExpired:
+        return {"ok": False, "detail": "the door did not answer within 240s"}
+    tail = (out.stdout or "") + (out.stderr or "")
+    return {"ok": out.returncode == 0, "detail": " \u00b7 ".join(tail.strip().splitlines()[-2:])}
+
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -65,6 +124,21 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802
         if self.path.startswith("/health"):
             return self._json(200, {"ok": True, "tools": len(voice_tools.TOOLS)})
+        if self.path.startswith("/head"):
+            r = _rodd_head().resolve()
+            r.pop("key", None)          # a secret is never returned to a window
+            return self._json(200, r)
+        if self.path.startswith("/settings"):
+            return self._json(200, _read_json(SETTINGS))
+        if self.path.startswith("/memory"):
+            rows = []
+            try:
+                for line in MEMORY.read_text(encoding="utf-8").splitlines()[-40:]:
+                    if line.strip():
+                        rows.append(_void_if_merge(json.loads(line)))
+            except Exception:
+                pass
+            return self._json(200, {"rows": rows})
         if self.path.startswith("/tools"):
             defs = []
             for t in voice_tools.TOOLS:
@@ -74,14 +148,51 @@ class Handler(BaseHTTPRequestHandler):
                     "parameters": t.get("parameters", {"type": "object", "properties": {}}),
                 })
             return self._json(200, {"tools": defs})
-        return self._json(404, {"error": "unknown path", "paths": ["/tools", "/tool", "/health"]})
+        return self._json(404, {"error": "unknown path", "paths": ["/tools", "/tool", "/head", "/settings", "/memory", "/health"]})
 
     def do_POST(self) -> None:  # noqa: N802
+        length = int(self.headers.get("Content-Length") or 0)
+        raw = self.rfile.read(length) or b"{}"
+        try:
+            payload = json.loads(raw)
+        except Exception:
+            payload = {}
+
+        if self.path.startswith("/head"):
+            # the mode, the endpoint, the model, the NAME of a key — or a key typed here,
+            # which is written into the private home and never returned again
+            try:
+                mod = _rodd_head()
+                mod.save(mode=payload.get("mode"), base_url=payload.get("base_url"),
+                         model=payload.get("model"), key_name=payload.get("key_name"),
+                         api_key=payload.get("api_key") or None)
+            except SystemExit as exc:
+                return self._json(200, {"ok": False, "detail": str(exc)})
+            head = mod.resolve()
+            head.pop("key", None)
+            raised = _raise_host() if payload.get("apply", True) else {"ok": True, "detail": "saved, not raised"}
+            return self._json(200, {"ok": raised["ok"], "head": head, "detail": raised["detail"]})
+
+        if self.path.startswith("/settings"):
+            current = _read_json(SETTINGS)
+            merged = {**current, **{k: v for k, v in payload.items() if not str(k).startswith("_")}}
+            _write_json(SETTINGS, merged)
+            return self._json(200, {"ok": True, "settings": merged, "path": str(SETTINGS)})
+
+        if self.path.startswith("/memory"):
+            text = str(payload.get("text") or "").strip()
+            if not text:
+                return self._json(200, {"ok": False, "detail": "nothing to remember"})
+            MEMORY.parent.mkdir(parents=True, exist_ok=True)
+            with MEMORY.open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps({"at": payload.get("at") or "", "text": text}, ensure_ascii=False) + "\n")
+            os.chmod(MEMORY, 0o600)
+            return self._json(200, {"ok": True})
+
         if not self.path.startswith("/tool"):
             return self._json(404, {"error": "unknown path"})
         try:
-            length = int(self.headers.get("Content-Length") or 0)
-            payload = json.loads(self.rfile.read(length) or b"{}")
+            payload = payload if isinstance(payload, dict) else {}
             name = str(payload.get("name") or "").strip()
             args = payload.get("arguments") or {}
             if isinstance(args, str):

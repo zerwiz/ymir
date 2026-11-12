@@ -863,7 +863,7 @@ function togglePanel(id: string) {
   padding: 2px 12px;
   border: 1px solid var(--border-soft);
   border-radius: 999px;
-  background: rgba(19, 26, 38, 0.6);
+  background: rgba(26, 22, 16, 0.6);
   font-family: var(--mono);
   font-size: 16px;
   overflow-wrap: anywhere;
@@ -996,7 +996,7 @@ h3:first-child {
 
 .think-block {
   margin-bottom: 10px;
-  border-left: 2px solid rgba(148, 163, 255, 0.35);
+  border-left: 2px solid rgba(240, 230, 205, 0.35);
   padding-left: 12px;
 }
 .think-head {

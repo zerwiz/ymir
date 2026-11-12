@@ -38,18 +38,19 @@ selection_foreground / selection_background
 color0 … color15          # the ANSI terminal ladder
 ```
 
-Aetheria's tokens (the palette the 2026-09-24 theme was forged from):
+Aetheria's tokens (the palette the 2026-09-24 theme was forged from). Since 2026-11-12 this repo carries no blue
+or purple (RULES/54), so the theme's cool values are named, not quoted — read them from the live theme:
 
 ```
 palette[8]{token,value}:
-  "background","#0e091d"   (violet-night — the soul of the theme)
+  "background","<read live>"   (violet-night — the soul of the theme; a cool hue, so its value is not carried in this repo — RULES/54)
   "foreground","#14B9B5"   (teal — the primary text)
   "accent","#BE3F50"       (berry — focus, selection, borders)
   "cursor","#ff7f41"       (ember — cursor / accent text)
   "selection_background","#14B9B5"
-  "selection_foreground","#0e091d"
+  "selection_foreground","<the background>"
   "muted","#118789"        (derived teal — dimmed text, gutters; from color15 #11AEB3 blended down)
-  "surface","#262133"      (derived violet — hover, active lines)
+  "surface","<derived>"      (the background lifted — hover, active lines)
 ```
 
 ## 3. The Zed theme file
@@ -81,9 +82,9 @@ blurred extensions, and the forged `Aetheria Blur`):
 ```
 blur_recipe[4]{key,value,why}:
   "background.appearance","\"blurred\"","tells Zed this theme is meant for a see-through window"
-  "background","#0e091dd0","the base surface at ~82% — the desktop shows through softly"
-  "editor.background","#0e091d00","the pane itself fully transparent — the blur shows behind the code"
-  "panel/toolbar/tab chrome","#0e091d00","chrome melts away; only bars with text keep #0e091dd0"
+  "background","<background>d0","the base surface at ~82% — the desktop shows through softly"
+  "editor.background","<background>00","the pane itself fully transparent — the blur shows behind the code"
+  "panel/toolbar/tab chrome","<background>00","chrome melts away; only bars with text keep <background>d0"
 ```
 
 Keep **text and syntax colors opaque** — translucency belongs to surfaces, never
@@ -127,7 +128,7 @@ syntax[8]{token,color,role}:
   "string","#E20342","crimson — strings carry the theme's heat"
   "comment","#118789","muted teal, italic — whispers"
   "function","#BE3F50","berry — the accent, call sites"
-  "keyword","#9147a8","violet — control words"
+  "keyword","<color5, read live>","the theme's violet — control words (value not carried here, RULES/54)"
   "number","#c8e967","lime — numerals stand out"
   "type","#7cd699","green-teal — type names"
   "variable","#14B9B5","teal — the primary ink"

@@ -87,6 +87,46 @@ VENV="${YMIR_VOICE_VENV:-$HOME/venvs/s2s}"
 STATE_DIR="${YMIR_HOME:-$HOME}/hodd/state/voice"
 UNIT="ymir-voice-host.service"
 
+# ── the head: ONE door, so a switch made in Rödd's settings and a start made in a
+# shell cannot disagree. bin/voice/rodd-head.py resolves mode · base_url · model ·
+# key (named in the vault, or typed into the panel and kept 0600 in the home). An
+# environment value already set wins, which is how a one-off start stays possible.
+RODD_RESOLVED_KEY=""
+RODD_HEAD_MODE_RESOLVED="local"
+RODD_HEAD_CLIENT="plain"
+PROXY_PORT="${RODD_PROXY_PORT:-8893}"
+if [ -z "$HEAD_MODEL" ] && [ -r "$ROOT/bin/voice/rodd-head.py" ]; then
+  while IFS='=' read -r _k _v; do
+    case "$_k" in
+      RODD_HEAD_MODE)          RODD_HEAD_MODE_RESOLVED="$_v" ;;
+      RODD_HEAD_ONLINE_CLIENT) RODD_HEAD_CLIENT="$_v" ;;
+      RODD_VOICE_HEAD_URL)     [ -n "$HEAD_URL" ]   || HEAD_URL="$_v" ;;
+      RODD_VOICE_HEAD_MODEL)   [ -n "$HEAD_MODEL" ] || HEAD_MODEL="$_v" ;;
+      RODD_VOICE_HEAD_API_KEY) RODD_RESOLVED_KEY="$_v" ;;
+    esac
+  done < <(python3 "$ROOT/bin/voice/rodd-head.py" env --with-key 2>/dev/null || true)
+  # an online head is reached through the loopback proxy, which is the only place the
+  # headers a hosted gateway demands can be added (see bin/voice/head-proxy.py)
+  if [ "$RODD_HEAD_MODE_RESOLVED" = "online" ]; then
+    HEAD_URL="http://127.0.0.1:${PROXY_PORT}/v1"
+  fi
+fi
+
+raise_head_proxy() {
+  command -v systemd-run >/dev/null 2>&1 || return 0
+  systemctl --user stop rodd-head-proxy.service 2>/dev/null || true
+  mkdir -p "$STATE_DIR"
+  systemd-run --user --unit=rodd-head-proxy.service --collect \
+    --property=StandardOutput=append:"$STATE_DIR/head-proxy.log" \
+    --property=StandardError=append:"$STATE_DIR/head-proxy.log" \
+    python3 "$ROOT/bin/voice/head-proxy.py" --port "$PROXY_PORT" >/dev/null 2>&1 || return 1
+  for _ in $(seq 1 30); do
+    curl -s -o /dev/null --max-time 1 "http://127.0.0.1:$PROXY_PORT/health" && return 0
+    sleep 0.5
+  done
+  return 1
+}
+
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help|"") sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 CMD="${1-}"; shift || true
@@ -231,7 +271,10 @@ cmd_host() {
     err "hint: any model the seat's own catalog lists, e.g. 'bin/model/catalog.sh' then set it."
     return 1
   fi
-  hk="$(head_key || true)"
+  # the resolver's key wins: it knows WHICH key the chosen head needs (the rail's own
+  # key for local, the named or typed one for an online endpoint). Falling back to
+  # the rail key for an online head sent the wrong bearer and the engine answered 400.
+  if [ -n "$RODD_RESOLVED_KEY" ]; then hk="$RODD_RESOLVED_KEY"; else hk="$(head_key || true)"; fi
   # THE MICROPHONE IS NEVER TAKEN FROM A CALL (the Allfather, 2026-11-09: "the mic should not be used").
   # The voice host opens the default source for VAD. If another client is already capturing — Discord, a
   # Meet, Zoom, anything — starting the host competes for that device and the call loses it, which is the
@@ -239,7 +282,12 @@ cmd_host() {
   # whose it is. Nothing is measured by guessing; `pactl` is asked.
   if command -v pactl >/dev/null 2>&1; then
     local holder
-    holder="$(pactl list source-outputs 2>/dev/null | sed -n 's/^\s*application.name = "//p' | tr -d '"' | grep -viE '^(speech-to-speech|ymir-voice|parecord|pw-record)$' | head -1)"
+    # Rödd's own window is not a call. It holds the microphone whenever it is open, so
+    # excluding every Electron client would be wrong and excluding none made the door
+    # refuse to raise its own host while its own face was open (measured 2026-11-11
+    # 05:12: refused: '@zerwiz/rodd' holds the microphone). Its product name is known,
+    # so it is named here and nothing else is forgiven.
+    holder="$(pactl list source-outputs 2>/dev/null | sed -n 's/^\s*application.name = "//p' | tr -d '"' | grep -viE '^(speech-to-speech|ymir-voice|parecord|pw-record|@zerwiz/rodd)$' | head -1)"
     if [ -n "${holder:-}" ]; then
       err "refused: '$holder' holds the microphone — the voice host will not take it from a live call"
       err "hint: leave the call first, or stop it, then raise the voice door again"
@@ -248,6 +296,9 @@ cmd_host() {
   fi
   local cu; cu="$(cuda_lib_path || true)"
   mkdir -p "$STATE_DIR"
+  if [ "${RODD_HEAD_MODE_RESOLVED:-local}" = "online" ]; then
+    raise_head_proxy || err "warning: the head proxy did not answer on $PROXY_PORT — the head may refuse"
+  fi
   systemctl --user stop "$UNIT" 2>/dev/null || true
   # shellcheck disable=SC2046
   build_host_argv
@@ -255,6 +306,7 @@ cmd_host() {
     --setenv=VIRTUAL_ENV="$VENV" \
     --setenv=PATH="$VENV/bin:/usr/local/bin:/usr/bin:/bin" \
     --setenv=HF_HUB_DISABLE_XET=1 \
+    --setenv=HF_HUB_OFFLINE=1 \
     ${CUDA_VISIBLE_DEVICES+--setenv=CUDA_VISIBLE_DEVICES="$CUDA_VISIBLE_DEVICES"} \
     ${cu:+--setenv=LD_LIBRARY_PATH="$cu"} \
     --property=StandardOutput=append:"$STATE_DIR/host.log" \

@@ -314,18 +314,18 @@ def seat_claude(want: dict, check: bool) -> None:
     state = load_json(os.path.join(HOME, ".claude.json"), {})
     cur = state.get("mcpServers") or {}
     stale = [n for n, s in cur.items() if is_out(n, s)]
-    todo = [n for n, s in want.items() if cur.get(n) != fmt_claude(s)]
+    pending = [n for n, s in want.items() if cur.get(n) != fmt_claude(s)]
     # Local (per-project) engram entries are the operator's file to mend; name them.
     local = sorted({n for p in (state.get("projects") or {}).values()
                     for n, s in ((p or {}).get("mcpServers") or {}).items() if is_direct_engram(n, s)})
     if local:
         say("claude", "note", "a project-scoped direct engram remains — claude mcp remove --scope local engram, in that project")
-    if not todo and not stale:
+    if not pending and not stale:
         say("claude", "current", f"user scope carries the {len(want)} server(s) of the set, engram-free")
         return
     if check:
         drift += 1
-        say("claude", "stale", f"user scope would change {', '.join(sorted(todo + stale))}"
+        say("claude", "stale", f"user scope would change {', '.join(sorted(pending + stale))}"
             + (f" (drops {dropped_text(stale, cur)})" if stale else ""))
         return
     backup(os.path.join(HOME, ".claude.json"))
@@ -333,7 +333,7 @@ def seat_claude(want: dict, check: bool) -> None:
     for n in stale:
         r = subprocess.run(["claude", "mcp", "remove", "--scope", "user", n], capture_output=True, text=True)
         (done if r.returncode == 0 else failed).append(f"-{n}")
-    for n in todo:
+    for n in pending:
         if n in cur:
             subprocess.run(["claude", "mcp", "remove", "--scope", "user", n], capture_output=True, text=True)
         r = subprocess.run(["claude", "mcp", "add-json", "--scope", "user", n, json.dumps(fmt_claude(want[n]))],

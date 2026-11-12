@@ -12,7 +12,12 @@ KIT="$HERE/kit"
 # `areas/TEMPLATE.yaml`, `scripts/areas.{sh,py}`, `scripts/gates/areas-guard.sh`, `docs/areas.md`,
 # and RULES/18. A behaviour change to a gate is a referee change, so it arrives with a fix note and a
 # version, never silently.
-VERSION="1.3.0"
+# 1.4.0 (2026-11-11, RULES/19): the kit carries `scripts/status.py`, `docs/headers.md`, RULES/19 and the
+# `plans/tickets/` shelf; every kit document carries the header and a References section.
+# 1.5.0 (2026-11-11, RULES/20 + Ymir RULES/52): the kit carries `RULES/20` and the `docs/templates/` shelf (house
+# templates, The Good Docs Project, MADR, arc42, each with its licence); the kit README and `docs/headers.md` are
+# converted from TOON blocks to Markdown tables — format only, every fact kept.
+VERSION="1.5.0"
 
 mode=""; repo=""
 for a in "$@"; do
@@ -27,7 +32,7 @@ while IFS= read -r rel; do
   if [ ! -e "$target" ]; then missing+=("$rel")
   elif ! cmp -s "$KIT/$rel" "$target"; then differ+=("$rel")
   else present+=("$rel"); fi
-done < <(cd "$KIT" && find . -type f ! -name README.md | sed 's|^\./||' | sort)
+done < <(cd "$KIT" && find . -type f ! \( -name README.md ! -path './plans/tickets/*' \) | sed 's|^\./||' | sort)
 
 # the baton is not the kit's business: `init.sh` already owns it, and two doors to one shelf is how they drift
 if [ -x "$HERE/init.sh" ]; then
@@ -74,7 +79,7 @@ if [ "$mode" = apply ]; then
   # a manifest so the next run knows what it installed and when
   # what the kit CARRIES and what this run ADDED — a manifest that says "files: 0" on a refresh reads as an
   # empty kit. Appended 2026-11-06, after the first install that had nothing missing said exactly that.
-  carried="$(cd "$KIT" && find . -type f ! -name README.md | grep -c . | tr -d ' ')"
+  carried="$(cd "$KIT" && find . -type f ! \( -name README.md ! -path './plans/tickets/*' \) | grep -c . | tr -d ' ')"
   printf '{\n  "kit": "%s",\n  "applied": "%s",\n  "files": %s,\n  "installed_this_run": %s\n}\n' \
     "$VERSION" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$carried" \
     "$(printf '%s\n' "${missing[@]:-}" | grep -c . | tr -d ' ')" > "$repo/.collab-kit.json"

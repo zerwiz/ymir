@@ -542,6 +542,21 @@ step_models() {
   fi
 }
 
+# ── 3a2b. Hnoss, the design door ────────────────────────────────────────────
+# The OpenDesign MCP bridge is SEATED here — the shipped launcher, the pi MCP entry and
+# its own Bifrost model door — so a design generation reaches the provider pi itself
+# uses. Before 2026-11-10 that launcher was a hand-file in ~/.local/bin: no install
+# seated it, no update mended it, and it paired the local rail with an online model,
+# so every design generation died silently. A machine with no design studio owes
+# nothing and reports a clean skip.
+step_hnoss() {
+  local hn="$SCRIPT_DIR/../pi/hnoss-ensure.sh"
+  [ -x "$hn" ] || { add hnoss SKIP "no bin/pi/hnoss-ensure.sh"; return 0; }
+  if [ "$CHECK" = 1 ]; then add hnoss OK "would seat the Hnoss model door + pi MCP entry"; return; fi
+  if "$hn" ensure --install >/dev/null 2>&1; then add hnoss OK "model door + pi MCP entry seated"
+  else add hnoss WARN "not seated — run bin/pi/hnoss-ensure.sh ensure --install (it names the refusal)"; fi
+}
+
 # ── 3a3. the local model: engine, the user's model, pi, ymir ────────────────
 # Installation stands a local brain up for THIS hardware (plan 57). It ADOPTS an
 # existing CUDA llama.cpp engine (never rebuilds what stands), chooses the best
@@ -741,6 +756,26 @@ step_sessrumnir() {
       if "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1; then add sessrumnir OK "ready"; else add sessrumnir WARN "not ready — run bin/desktop/sessrumnir-ensure.sh install"; fi
     fi
   else add sessrumnir SKIP "no sessrumnir-ensure.sh"; fi
+}
+
+# ── 3b3. Bilskirnir, the business hall ──────────────────────────────────────
+# apps/bilskirnir (plan 259): Bot HQ's face, Nanna answering through her own Hermes home. Its one setup
+# door renders her soul from the home, writes the managed .env block, installs the dependencies from the
+# lock files and seats the launcher entry. Gróa re-runs the same door after every fast-forward; Eir reads
+# its --check. The hall is the operator's (dev) and, later, the always-on host's (heart).
+step_bilskirnir() {
+  role_gate bilskirnir heart,dev "the business hall" || return 0
+  [ "$SKIP_ENGINES" = 1 ] && { add bilskirnir SKIP "--skip-engines"; return; }
+  local door="$ROOT/apps/bilskirnir/setup.sh"
+  [ -x "$door" ] || { add bilskirnir SKIP "no apps/bilskirnir/setup.sh in this tree"; return; }
+  if [ "$CHECK" = 1 ]; then
+    if "$door" --check >/dev/null 2>&1; then add bilskirnir OK "current (apps/bilskirnir/setup.sh --check)"
+    else add bilskirnir WARN "stale — a full run executes apps/bilskirnir/setup.sh"; fi
+  else
+    local desk=1; [ "$NO_DESKTOP" = 1 ] && desk=0
+    if BILSKIRNIR_DESKTOP="$desk" "$door" >/dev/null 2>&1; then add bilskirnir OK "ready — open it with apps/bilskirnir/start.sh"
+    else add bilskirnir WARN "setup did not finish — run apps/bilskirnir/setup.sh"; fi
+  fi
 }
 
 # ── 3c. Þjazi backend (herdr-first) ──────────────────────────────────────────
@@ -1256,6 +1291,16 @@ step_loaders() {
           add harness-extensions OK "every harness present carries the house's extensions and the three Claude hooks"
         else
           add harness-extensions WARN "a harness differs — run bin/seat/harness-extensions-install.sh --check"
+        fi
+      fi
+      # The two faults of 2026-11-10 are NOT healed by --check: they are NAMED here and
+      # mended by migration 0019 on a real install/update. A check that repaired the
+      # tree would hide exactly the state it exists to report.
+      if [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ]; then
+        if out="$("$SCRIPT_DIR/../seat/seat-reap.sh" --verify 2>&1)"; then
+          add seats OK "seat-reap wired; no worktree reports an extension deletion; no worktree recorded as a root"
+        else
+          add seats WARN "$(printf '%s' "$out" | sed -n 's/^seat-reap: //p' | head -1) — a real install/update heals it (migration 0019)"
         fi
       fi
     else
@@ -1793,6 +1838,7 @@ run_step step_clients "the client register"
 run_step step_apps "apps"
 run_step step_engines "engines"
 run_step step_models "models"
+run_step step_hnoss "Hnoss, the design door"
 run_step step_local_model "the local model"
 run_step step_hermes "hermes"
 run_step step_profile "the machine's profile"
@@ -1803,6 +1849,7 @@ run_step step_voice "the voice engines"
 run_step step_a2a "the A2A mesh"
 run_step step_room "the room"
 run_step step_sessrumnir "the seat"
+run_step step_bilskirnir "Bilskirnir, the business hall"
 run_step step_backend "backend"
 run_step step_host "host"
 run_step step_role "role"
