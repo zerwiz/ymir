@@ -149,7 +149,7 @@ install_entries() {
       if [ -n "$want" ] && [ ! -e "$root/$want" ]; then
         printf 'skip: %s — %s is not in %s\n' "$(basename "$f" .in)" "$want" "$root" >&2; continue
       fi
-      sed -e "s|__YMIR_ROOT__|$root|g" -e "s|__YMIR_RUNTIME__|$pin|g" "$f" >"$dst/$(basename "$f" .in)" && n=$((n+1))
+      sed -e "s|__YMIR_ROOT__|$root|g" -e "s|__YMIR_RUNTIME__|$pin|g" -e "s|__YMIR_APP__|${YMIR_SHORTCUT_BIN:-$HOME/.local/bin}/ymir-app|g" "$f" >"$dst/$(basename "$f" .in)" && n=$((n+1))
     done
     for f in "$src"/*.service.in; do
       [ -e "$f" ] || continue

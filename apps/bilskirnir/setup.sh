@@ -221,7 +221,7 @@ REPO="$(dirname "$(dirname "$APP")")"
 PINROOT=""
 [ -r "$REPO/bin/pi/arm-pin-lib.sh" ] && . "$REPO/bin/pi/arm-pin-lib.sh" && arm_pin_dir PINROOT
 [ -n "$PINROOT" ] || PINROOT="$HOME/ymir-runtime"
-want_desk="$(sed "s|__YMIR_ROOT__|$PINROOT|g" "$APP/electron/ymir-bilskirnir.desktop.in" 2>/dev/null)"
+want_desk="$(sed -e "s|__YMIR_ROOT__|$PINROOT|g" -e "s|__YMIR_APP__|${YMIR_SHORTCUT_BIN:-$HOME/.local/bin}/ymir-app|g" "$APP/electron/ymir-bilskirnir.desktop.in" 2>/dev/null)"
 if [ "${BILSKIRNIR_DESKTOP:-1}" = 0 ]; then
   say "launcher entry skipped (BILSKIRNIR_DESKTOP=0)"
 elif [ ! -e "$PINROOT/apps/bilskirnir/start.sh" ]; then
