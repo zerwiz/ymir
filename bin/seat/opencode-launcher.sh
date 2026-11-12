@@ -25,6 +25,7 @@
 #   opencode-launcher.sh write <out-script> [--model M|free] [--brief F]
 #   opencode-launcher.sh run [--model M|free] [--cwd D] "<prompt>"  # launch it now, by hand
 #   opencode-launcher.sh check                                   # opencode present and v2 `run` shape
+#   opencode-launcher.sh has <provider/model>                    # does THIS opencode serve that token? (`opencode models`)
 #
 # Exit: 0 ok · 1 refused (no opencode, no free model, bad shape) · 2 usage.
 set -u
@@ -33,7 +34,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
-  -h|--help|"") sed -n '2,29p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+  -h|--help|"") sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
 esac
 
 shell_quote() { printf "'%s'" "$(printf '%s' "$1" | sed "s/'/'\\\\''/g")"; }
@@ -94,5 +95,16 @@ case "$ACTION" in
     for f in --model --auto; do printf '%s' "$h" | grep -q -- "$f" || ok=no; done
     printf 'opencode-launcher[2]{check,state}:\n  "version","%s"\n  "run --model --auto","%s"\n' "$v" "$ok"
     [ "$ok" = yes ] || exit 1 ;;
-  *) printf 'error: unknown action %s\nhelp: opencode-launcher.sh print|write|run|check\n' "$ACTION" >&2; exit 2 ;;
+  has)
+    # Pi's catalog (bin/model/catalog.sh) does not list the `opencode/` provider that carries the free
+    # models; OpenCode itself is the authority on what it serves (plan 262, measured 2026-11-12).
+    m=${MODEL:-${PROMPT:-}}
+    [ -n "$m" ] || { echo "error: has needs a provider/model token" >&2; exit 2; }
+    command -v opencode >/dev/null 2>&1 || { printf 'opencode-launcher[1]{model,state}:\n  "%s","no opencode on this host"\n' "$m"; exit 1; }
+    if opencode models 2>/dev/null | grep -qxF -- "$m"; then
+      printf 'opencode-launcher[1]{model,state}:\n  "%s","served"\n' "$m"
+    else
+      printf 'opencode-launcher[1]{model,state}:\n  "%s","NOT SERVED by this opencode (opencode models)"\n' "$m"; exit 1
+    fi ;;
+  *) printf 'error: unknown action %s\nhelp: opencode-launcher.sh print|write|run|check|has\n' "$ACTION" >&2; exit 2 ;;
 esac

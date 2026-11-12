@@ -1274,3 +1274,6 @@ asks her to merge with `void` and the reason (Rule 08).
   host · machine · fleetrole · fleet · pin · pin_behind), the one-row reader, the holder gate (clause 4),
   Rödd on the pin with her unit template, the `armpin` surface, and the keyed refusal. Plans 254 and 257;
   fix note `docs/fixes/runtime/2026-11-11-the-helm-knows-itself.md`.
+
+
+*Appended 2026-11-12 (plan 262):* main's one OpenCode door, `bin/seat/opencode-launcher.sh`, prints `env OPENCODE_CONFIG_CONTENT=… opencode run [--model M] --auto "<brief>"` (OpenCode v2's interactive screen refuses `--model`). The herdr road runs that line with `hdr pane run` and counts the seat only once `seat-prove.sh` finds the agent; an explicit `--kind` wins over `agents.yaml`; the tmux fallback runs the same line; an exact `provider/model` is verified with `opencode-launcher.sh has` (OpenCode's own list, because pi's catalog lacks the `opencode/` provider). Guards: `bin/gates/tests/test_opencode_launcher.sh` and Eir's `opencode` surface. Fix note `docs/fixes/agents/2026-11-12-an-opencode-worker-actually-starts.md`.
