@@ -177,11 +177,15 @@ INNER
       fi
       if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_OWNER_ID:-}" ]; then
         if curl -s -m 10 -o /dev/null -w '%{http_code}' \
-          "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+          "${TELEGRAM_API_BASE:-https://api.telegram.org}/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
           --data-urlencode "chat_id=${TELEGRAM_OWNER_ID}" \
           --data-urlencode "text=${LINE}${RECORD:+ · record $RECORD}" \
           -d "disable_web_page_preview=true" 2>/dev/null | grep -q '^200$'; then
           SAID_TG=1
+          # plan 261: what the house said on Telegram is a row in the communications record
+          python3 "$ROOT/bin/records/comms.py" record --channel telegram --direction out \
+            --who "$([ -n "${TELEGRAM_ALERT_CHAT:-}" ] && echo 'the alarm room' || echo 'the Allfather')" \
+            --thread "$TELEGRAM_OWNER_ID" --project "$SOURCE" --text "${LINE}" >/dev/null 2>&1 || true
         fi
       fi
     fi

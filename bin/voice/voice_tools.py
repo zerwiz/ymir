@@ -782,6 +782,42 @@ TOOLS = [
             "additionalProperties": False,
         },
     },
+    {
+        "type": "function",
+        "name": "comms",
+        "description": (
+            "Every communication, in, out and owed (plan 261): what came in and went out on each channel "
+            "(mail, Telegram), and every letter, draft and approval still waiting to be sent, with who it is "
+            "for. Use for 'what did I send', 'what came in', 'what do I still owe'. Read-only."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "view": {"type": "string", "description": "summary (default) · list · owed"},
+                "hours": {"type": "integer", "description": "how far back for summary/list (default 24)"},
+                "channel": {"type": "string", "description": "mail or telegram, for list"},
+            },
+            "additionalProperties": False,
+        },
+    },
+    {
+        "type": "function",
+        "name": "todo_from_mail",
+        "description": (
+            "Update his to-do from his messages. With no `apply`, it PROPOSES changes, each with the message "
+            "that justifies it (a tick, a new item, a waiting-on) — read them to him and ask. Only after his "
+            "yes, call again with `apply` set to the ids he approved; they are written as dated lines in the "
+            "house-kept half of todo.md. His own lines are never edited."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "apply": {"type": "array", "items": {"type": "string"},
+                          "description": "proposal ids he said yes to — never set without his yes"},
+            },
+            "additionalProperties": False,
+        },
+    },
 ]
 
 
@@ -2734,3 +2770,47 @@ async def _tool_seat_wire(args):
 
 NEW_TOOLS["arm_tell"] = _tool_arm_tell
 NEW_TOOLS["seat_wire"] = _tool_seat_wire
+
+
+# ── the messages: in, out, owed, and the to-do they move (plan 261) ──────────
+# His word, 2026-11-12: *"Can we update my personal to-do list on what emails we actually have
+# sent out?"* · *"We need to have for both incoming emails and outgoing."* One door
+# (bin/records/comms.sh) — the voice reads it, and writes the to-do only with his yes.
+
+async def _tool_comms(args):
+    view = str(args.get("view") or "summary").strip().lower()
+    door = _door("records/comms.sh")
+    hours = str(int(args.get("hours") or 24))
+    if view == "owed":
+        code, out = _run([door, "owed"], timeout=120)
+    elif view == "list":
+        argv = [door, "list", "--hours", hours]
+        if args.get("channel"):
+            argv += ["--channel", str(args["channel"]).strip().lower()]
+        code, out = _run(argv, timeout=60)
+    else:
+        code, out = _run([door, "summary", "--hours", hours], timeout=60)
+    if code != 0:
+        return ToolResult(f"The messages door did not answer: {_clean(out, 200)}")
+    return ToolResult(out[:3000] if out.strip() else "The messages door said nothing.")
+
+
+async def _tool_todo_from_mail(args):
+    door = _door("records/comms.sh")
+    ids = [str(i).strip() for i in (args.get("apply") or []) if str(i).strip()]
+    if ids:
+        code, out = _run([door, "todo-apply", *ids], timeout=180)
+        if code != 0:
+            return ToolResult(f"Nothing was written: {_clean(out, 300)}")
+        return ToolResult("Written to his to-do, in the house-kept half, each with its message: "
+                          + _clean(out, 1200))
+    code, out = _run([door, "todo-matches"], timeout=180)
+    if code != 0:
+        return ToolResult(f"The to-do door did not answer: {_clean(out, 200)}")
+    if "todo_proposals[0]" in out:
+        return ToolResult("Nothing in his messages moves his to-do right now.")
+    return ToolResult("Proposed — ask him before writing any of these:\n" + out[:3000])
+
+
+NEW_TOOLS["comms"] = _tool_comms
+NEW_TOOLS["todo_from_mail"] = _tool_todo_from_mail
