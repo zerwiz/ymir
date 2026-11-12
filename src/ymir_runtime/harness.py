@@ -112,6 +112,16 @@ def servable(harness_name: str, model: str, tokens: Sequence[str]) -> bool:
     return model in tokens
 
 
+CLAUDE_HEAVY_EFFORTS = ("high", "xhigh", "max")
+
+
+def claude_model_for(effort: str) -> tuple[str, str]:
+    """The Anthropic alias for a Claude errand that named no model, by its weight."""
+    if effort in CLAUDE_HEAVY_EFFORTS:
+        return "opus", f"errand weight — effort '{effort}' is heavy, so opus"
+    return "sonnet", "errand weight — a simple errand runs on sonnet (Allfather, 2026-11-12)"
+
+
 def resolve(
     *,
     harness: str = "",
@@ -158,6 +168,11 @@ def resolve(
         # model from config/eindri-harness, or any `provider/model` token, belongs to
         # pi or opencode and kills the seat — measured 2026-11-11, foreman-process-3 came
         # up on "opencode-go/deepseek-v4.1-flash" and refused its first turn (plan 239 P5b).
+        if model == "free":
+            raise ValueError(
+                "harness 'claude' has no free model — 'free' is for pi and opencode "
+                "(bin/model/free-models.sh); pass sonnet, opus or haiku, or no model"
+            )
         if "/" in model:
             if model == explicit_model:
                 raise ValueError(
@@ -165,14 +180,21 @@ def resolve(
                     "model name or alias (sonnet, opus, haiku), never a provider/model token"
                 )
             model = ""
+        if model:
+            model_prov = "explicit flag (--model)" if model == explicit_model else "config/eindri-harness (this machine)"
+        else:
+            # The Allfather's word, 2026-11-12: "do simple tasks on Sonnet". A Claude
+            # errand with no model was served Claude's own default (Opus) for every
+            # chore; now the weight decides — a simple errand (no effort, or low/medium)
+            # runs on Sonnet, a heavy one (high/xhigh/max) on Opus. An explicit --model
+            # always wins.
+            model, model_prov = claude_model_for(effort)
         return HarnessSelection(
             name="claude",
             model=model,
             effort="",
             provenance=prov or "explicit flag (--harness)",
-            model_provenance="explicit flag (--model)" if (model and model == explicit_model) else (
-                "config/eindri-harness (this machine)" if model else "none — the harness default is served"
-            ),
+            model_provenance=model_prov,
         )
     tokens = list(catalog()) if catalog is not None else list(default_catalog(runner=runner))
 
@@ -183,6 +205,17 @@ def resolve(
             harness, prov = "opencode", "fleet law — no local catalog, hosted -> opencode"
 
     model_prov = "explicit flag (--model)" if (required and model) else ""
+    if model == "free":
+        # The Allfather, 2026-11-12: "add free models for both Pi and OpenCode" — the
+        # road when the paid tokens are spent. The live catalog decides, one door picks.
+        picked = runner([str(free_models_door()), "pick", "opencode" if harness == "opencode" else "pi"])
+        if not proc.ok(picked) or not (picked.stdout or "").strip():
+            raise ValueError(
+                f"no free model is served for {harness} on this machine — "
+                f"bin/model/free-models.sh list {'opencode' if harness == 'opencode' else 'pi'}"
+            )
+        model = picked.stdout.strip().splitlines()[0]
+        model_prov = "free — bin/model/free-models.sh pick (the live catalog)"
     if not model and tokens:
         local = first_local(tokens)
         if local and harness in ("pi", "pi-signed"):
@@ -202,6 +235,16 @@ def resolve(
         provenance=prov,
         model_provenance=model_prov,
     )
+
+
+def free_models_door() -> Path:
+    """The free-model picker — bin/model/free-models.sh, beside the tree's bin/."""
+    return Path(__file__).resolve().parents[2] / "bin" / "model" / "free-models.sh"
+
+
+def opencode_launcher_door() -> Path:
+    """OpenCode's ONE launch door — bin/seat/opencode-launcher.sh; the shape below matches it."""
+    return Path(__file__).resolve().parents[2] / "bin" / "seat" / "opencode-launcher.sh"
 
 
 def launcher_door() -> Path:
@@ -265,10 +308,14 @@ def build_launch_command(
         # `OPENCODE_CONFIG_CONTENT=...`. With `env` the shape is executable BOTH as a
         # plain command and after `exec`, which is why every harness's shape must be
         # self-contained: a launch shape that only works in one caller is a trap.
+        # OpenCode v2 moved the message to `run`: the old top-level `--model/--prompt`
+        # answers "Unrecognized flag: --model in command opencode" and the seat dies in
+        # its pane (the shell road was mended 2026-11-06; this engine road was missed
+        # until 2026-11-12, measured on opencode v2.2.7).
         return (
             "env OPENCODE_CONFIG_CONTENT="
             + proc.shell_quote('{"permission":{"*":"allow"}}')
-            + f' opencode {model_flag}--prompt "$(cat {proc.shell_quote(brief_ref)})"'
+            + f' opencode run {model_flag}--auto "$(cat {proc.shell_quote(brief_ref)})"'
         )
     if selection.name == "claude":
         # An Eindri on Claude (plan 239 P5b) is interactive, so the seat stays visible
