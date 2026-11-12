@@ -21,3 +21,7 @@ an attribution line in code or a commit (Rule 53 is unchanged).
 `python3 systems/snotra/services/letters/letter-design.py --self-test` → `ok (14 types × 7 themes)`, including the
 two new checks: the line names the agent, and `made_by: off` removes it. A real letter rendered on a sealed seat
 ended with `Made with Ymir by <that seat's agent>`; an unsealed seat prints `Made with Ymir` alone.
+
+## CHANGE LOG
+
+- **2026-11-12** — written: the made-by line, the sealed-seat check, seventeen letter types for outreach and replies, the atlas lines for the home's views.
