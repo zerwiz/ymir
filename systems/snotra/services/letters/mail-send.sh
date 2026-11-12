@@ -14,7 +14,9 @@
 #   mail-send.sh draft --to a@x,b@y --subject S --body FILE \
 #       [--html FILE | --template NAME | --plain] [--footer LINE] \
 #       (a --body that opens with a `theme:` header is rendered by letter-design.py — the house letter design)
-#       [--attach FILE ...] [--record ID] [--dry-run]
+#       [--attach FILE ...] [--record ID] [--reply-to GMAIL-MESSAGE-ID] [--dry-run]
+#       (--reply-to answers INSIDE that message's thread: In-Reply-To + References + the threadId,
+#        and --subject defaults to "Re: <its subject>")
 #   mail-send.sh raw    <draft-id>     # the exact bytes, for an approval hash
 #   mail-send.sh send <draft-id>       # refused unless the approval matches those bytes
 #   mail-send.sh discard <draft-id>
@@ -79,7 +81,7 @@ guard_recipients(){
 }
 
 draft(){
-  local to="" subject="" body="" html="" dry=0 record="" from_record="" meeting_dir="" plain=0 template="leemunroe-simple" footer=""; local attaches=()
+  local to="" subject="" body="" html="" dry=0 record="" from_record="" meeting_dir="" plain=0 template="leemunroe-simple" footer="" reply_to=""; local attaches=()
   while [ $# -gt 0 ]; do case "$1" in
     --to) to="${2-}"; shift 2 ;;
     --subject) subject="${2-}"; shift 2 ;;
@@ -92,8 +94,31 @@ draft(){
     --attach) attaches+=("${2-}"); shift 2 ;;
     --record) record="${2-}"; shift 2 ;;
     --from-record) from_record="${2-}"; shift 2 ;;
+    --reply-to) reply_to="${2-}"; shift 2 ;;
     --dry-run) dry=1; shift ;;
     *) die "unknown option: $1" ;; esac; done
+  # A reply joins the thread it answers (2026-11-12): Gmail threads a message by its threadId, and every
+  # other client by In-Reply-To/References — a reply that carries neither starts a new conversation.
+  local reply_mid="" reply_refs="" reply_thread=""
+  if [ -n "$reply_to" ]; then
+    local meta mcode; meta="$(gmail GET "/users/me/messages/$reply_to?format=metadata&metadataHeaders=Message-ID&metadataHeaders=References&metadataHeaders=Subject")"
+    mcode="${meta##*$'\n'}"; meta="${meta%$'\n'*}"
+    case "$mcode" in 200) ;; *) die "--reply-to: message $reply_to could not be read (HTTP $mcode)" ;; esac
+    local parsed; parsed="$(python3 - "$meta" "$subject" <<'PY'
+import json, sys
+d = json.loads(sys.argv[1]); subject = sys.argv[2]
+h = {x.get("name", "").lower(): x.get("value", "") for x in (d.get("payload") or {}).get("headers", [])}
+mid = h.get("message-id", "")
+refs = " ".join(x for x in (h.get("references", ""), mid) if x).strip()
+if not subject:
+    orig = h.get("subject", "")
+    subject = orig if orig.lower().startswith("re:") else ("Re: " + orig if orig else "")
+print("\x1f".join([d.get("threadId", ""), mid, refs, subject]))  # a non-blank separator: an empty field must not collapse
+PY
+)" || die "--reply-to: the message metadata could not be parsed"
+    IFS=$'\x1f' read -r reply_thread reply_mid reply_refs subject <<<"$parsed"
+    [ -n "$reply_thread" ] || die "--reply-to: message $reply_to carries no thread"
+  fi
   [ -n "$subject" ] && [ -n "$body" ] || die "draft needs --subject --body"
   # --body is a FILE (the help says so). Read it; a plain string still works.
   if [ -f "$body" ]; then body="$(cat "$body")"; fi
@@ -137,11 +162,14 @@ draft(){
     for a in "${attaches[@]:-}"; do [ -f "$a" ] && { "$guard" check --surface email --to "$to" "$a" >/dev/null 2>&1 || die "private-guard refused attachment: $(basename "$a")"; }; done
   fi
   local eml; eml="$(mktemp --suffix=.eml)"
-  python3 - "$to" "$subject" "$body" "$eml" "$html" "${attaches[@]}" <<'PY'
+  python3 - "$to" "$subject" "$body" "$eml" "$html" "$reply_mid" "$reply_refs" "${attaches[@]}" <<'PY'
 import sys, os, mimetypes
 from email.message import EmailMessage
-to,subject,body,out,html,*att=sys.argv[1:]
-m=EmailMessage(); m["To"]=to; m["Subject"]=subject; m.set_content(body)
+to,subject,body,out,html,reply_mid,reply_refs,*att=sys.argv[1:]
+m=EmailMessage(); m["To"]=to; m["Subject"]=subject
+if reply_mid: m["In-Reply-To"]=reply_mid
+if reply_refs: m["References"]=reply_refs
+m.set_content(body)
 if html: m.add_alternative(html, subtype="html")
 for p in att:
     if not os.path.isfile(p): continue
@@ -161,7 +189,9 @@ PY
 )"
   # The raw message can exceed MAX_ARG_STRLEN (a PDF attachment does), so it
   # reaches Python on stdin, never as an argument.
-  local payload; payload="$(printf '%s' "$raw" | python3 -c 'import json,sys;print(json.dumps({"message":{"raw":sys.stdin.read()}}))')"
+  local payload; payload="$(printf '%s' "$raw" | python3 -c 'import json,sys;m={"raw":sys.stdin.read()}
+if sys.argv[1]: m["threadId"]=sys.argv[1]
+print(json.dumps({"message":m}))' "$reply_thread")"
   local out code body2; out="$(gmail POST "/users/me/drafts" "$payload")"; code="${out##*$'\n'}"; body2="${out%$'\n'*}"
   case "$code" in 200|201) ;; *) die "draft failed (HTTP $code): $body2" ;; esac
   python3 - "$body2" "$eml" <<'PY'

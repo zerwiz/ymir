@@ -64,6 +64,13 @@ class Api:
 
     def __init__(self) -> None:
         self.drafts: dict[str, bytes] = {}
+        self.draft_threads: dict[str, str] = {}
+        # a message that already sits in a thread, for --reply-to
+        self.messages: dict[str, dict] = {
+            "m-orig": {"threadId": "t-1", "headers": {"Message-ID": "<orig@example.test>",
+                                                      "References": "<first@example.test>",
+                                                      "Subject": "The plan for the quarter"}},
+        }
         self.lengths: dict[str, int] = {}
         self.sends: list[str] = []
         self.events: list[dict] = []
@@ -109,6 +116,7 @@ def make_server(api: Api) -> ThreadingHTTPServer:
                 raw = (payload.get("message") or {}).get("raw") or ""
                 did = f"r-auto-{len(api.drafts) + 1}"
                 api.drafts[did] = base64.urlsafe_b64decode(raw) if raw else b""
+                api.draft_threads[did] = (payload.get("message") or {}).get("threadId") or ""
                 return self._json(200, {"id": did, "message": {"id": "m-" + did}})
             if u.path == "/calendar/v3/calendars/primary/events":
                 q = parse_qs(u.query)
@@ -127,6 +135,13 @@ def make_server(api: Api) -> ThreadingHTTPServer:
                     return self._json(404, {"error": {"message": "draft not found"}})
                 raw = base64.urlsafe_b64encode(api.drafts[did]).decode()
                 return self._json(200, {"id": did, "message": {"raw": raw}})
+            mm = re.match(r"^/gmail/v1/users/me/messages/([^/]+)$", u.path)
+            if mm:
+                msg = api.messages.get(unquote(mm.group(1)))
+                if not msg:
+                    return self._json(404, {"error": {"message": "message not found"}})
+                return self._json(200, {"id": mm.group(1), "threadId": msg["threadId"],
+                                        "payload": {"headers": [{"name": k, "value": v} for k, v in msg["headers"].items()]}})
             if u.path == "/gmail/v1/users/me/profile":
                 return self._json(200, {"emailAddress": "operator@example.com"})
             return self._empty(404)
@@ -334,6 +349,33 @@ class MailGate(Case):
                             "--body", str(body), "--plain")
         message = BytesParser(policy=policy.default).parsebytes(raw)
         self.assertEqual(message.get_content_type(), "text/plain", "--plain still carried an HTML half")
+
+    def test_7_a_reply_joins_the_thread_it_answers(self):
+        """--reply-to sets In-Reply-To, References and the threadId, and defaults the subject to Re: <theirs>."""
+        body = self.tmp / "reply.md"
+        body.write_text("Agreed, and one question.\n", encoding="utf-8")
+        r = self.run_script(MAIL, "draft", "--to", "partner@letters.test", "--body", str(body),
+                            "--plain", "--reply-to", "m-orig")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        did = r.stdout.split("\t")[1]
+        message = BytesParser(policy=policy.default).parsebytes(self.api.drafts[did])
+        self.assertEqual(message["In-Reply-To"], "<orig@example.test>")
+        self.assertEqual(message["References"], "<first@example.test> <orig@example.test>")
+        self.assertEqual(message["Subject"], "Re: The plan for the quarter")
+        self.assertEqual(self.api.draft_threads[did], "t-1", "the draft was not placed in the thread")
+
+    def test_8_a_reply_keeps_an_explicit_subject_and_refuses_an_unknown_message(self):
+        body = self.tmp / "reply.md"
+        body.write_text("Short answer.\n", encoding="utf-8")
+        raw = self._drafted("--to", "partner@letters.test", "--body", str(body), "--plain",
+                            "--subject", "Re: our own words", "--reply-to", "m-orig")
+        message = BytesParser(policy=policy.default).parsebytes(raw)
+        self.assertEqual(message["Subject"], "Re: our own words")
+        self.assertEqual(message["In-Reply-To"], "<orig@example.test>")
+        r = self.run_script(MAIL, "draft", "--to", "partner@letters.test", "--body", str(body),
+                            "--plain", "--reply-to", "m-missing")
+        self.assertNotEqual(r.returncode, 0, "a reply to a message that does not exist was drafted")
+        self.assertIn("could not be read", r.stderr)
 
     def test_4_the_gate_is_a_verb_of_the_door_not_a_caller_habit(self):
         """`send` must not depend on anyone remembering to call `check` first."""

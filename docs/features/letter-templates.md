@@ -95,6 +95,14 @@ A body that opens with a `theme:` header is designed automatically; the plain-te
 `::: warning Title`, `::: card 1 | Owner | Title`, `::: stats`, `::: button Label | https://…` (all but `button` end with
 `:::`). `python3 $L/letter-design.py --gallery /tmp/gallery` renders every type in every theme for a look.
 
+**Answering a thread.** A reply belongs in the conversation it answers. Pass the Gmail id of the message you are
+answering, and the draft joins that thread with the reply headers every mail client follows. The subject defaults
+to `Re: <their subject>`; `--subject` still wins.
+
+    bash $L/mail-send.sh draft --to someone@example.com --body /tmp/reply.md --reply-to <gmail-message-id>
+
+The id is the `id` of a message in Gná's store, or of any message the Gmail API lists.
+
 **Your own companies' themes and private letter types** go in your home, not in this repository:
 `$YMIR_HOME/hodd/identity/letters/themes.yaml` (each theme `extends:` a shipped one) and
 `$YMIR_HOME/hodd/identity/letters/types/`.
@@ -128,6 +136,8 @@ Agents find all of this through the skill `snotra-letters`.
 
 ## CHANGE LOG
 
+- **2026-11-12 (evening)** — `--reply-to <gmail-message-id>`: a reply joins its thread (`In-Reply-To`, `References`,
+  the `threadId`) and the subject defaults to `Re: <their subject>`.
 - **2026-11-12 (later)** — the made-by line links to Ymir's homepage and shows its address.
 - **2026-11-12** — seventeen letter types for outreach and replies (30 in all).
 - **2026-11-12** — every letter says it was made with Ymir and by which agent (`made_by:`); a home theme with an
