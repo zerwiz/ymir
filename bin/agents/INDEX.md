@@ -21,8 +21,8 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[55]{file,does,kind,verdict,disposition,callers,lines}:
-  "README.md","Gróa — the updater, one per install","data","tested","keep",60,-
+bin[56]{file,does,kind,verdict,disposition,callers,lines}:
+  "README.md","Gróa — the updater, one per install","data","tested","keep",59,-
   "agent-census.sh","agent-census.sh — how many agents are running on THIS machine, and which of them are stale.","tool","wired","keep",1,163
   "agent-run.sh","agent-run.sh — run one agent's errand through the harness the Allfather chose.","tool","wired","keep",2,62
   "areas.sh","areas.sh — the estate door: a project's areas, their keepers, and the seam to the seat.","tool","wired","keep",15,393
@@ -35,49 +35,50 @@ bin[55]{file,does,kind,verdict,disposition,callers,lines}:
   "brokk-update.sh","brokk-update.sh — back-compat alias.","tool","wired","keep",2,10
   "domain.sh","domain.sh — the ONE door that starts, reports and stops a domain's keeper.","tool","wired","keep",2,215
   "eindri-acclaim-silent.sh","eindri-acclaim-silent.sh — action half of the Eindri silence bridge.","tool","wired","keep",1,57
-  "eindri-acclaim.sh","eindri-acclaim.sh — action half of the Eindri→Brokk wake bridge.","tool","tested","keep",7,224
+  "eindri-acclaim.sh","eindri-acclaim.sh — action half of the Eindri→Brokk wake bridge.","tool","tested","keep",10,260
   "eindri-arm.sh","eindri-arm.sh — the Eindri's own arm (plan 42, the automation law).","tool","wired","keep",2,161
   "eindri-checkpoint.sh","eindri-checkpoint.sh — a herdr worker's durable checkpoint, so a dead pane resumes.","tool","wired","keep",4,105
   "eindri-control.sh","eindri-control.sh — the CONTROL plane: allowlisted lifecycle verbs for a","tool","wired","keep",2,40
-  "eindri-dispatch.sh","eindri-dispatch.sh — the errand loop: ONE command per errand (plan 42","tool","wired","keep",2,492
-  "eindri-handoff.sh","eindri-handoff.sh — the handoff failsafe.","tool","wired","keep",4,202
+  "eindri-dispatch.sh","eindri-dispatch.sh — the errand loop: ONE command per errand (plan 42","tool","wired","keep",3,492
+  "eindri-handoff.sh","eindri-handoff.sh — the handoff failsafe.","tool","wired","keep",6,241
   "eindri-heartbeat.sh","eindri-heartbeat.sh — condition half of the Eindri silence bridge.","tool","wired","keep",3,106
   "eindri-liveness.sh","eindri-liveness.sh — the sweep's second question: is the pane still a worker?","tool","wired","keep",2,256
   "eindri-notify.sh","eindri-notify.sh — the ARM-HOLDER'S INBOX: inject one line into the session that holds the lock.","tool","wired","keep",9,94
-  "eindri-review-spawn.sh","eindri-review-spawn.sh — the review spine.","tool","tested","keep",2,340
+  "eindri-review-spawn.sh","eindri-review-spawn.sh — the review spine.","tool","tested","keep",3,340
   "eindri-role.sh","eindri-role.sh — the right smith for the right metal.","tool","wired","keep",2,117
   "eindri-route.sh","eindri-route.sh — which machine should host an errand, by its nature?","tool","tested","keep",0,108
   "eindri-seat.sh","eindri-seat.sh — seat a worker and PROVE it, in one move.","tool","wired","keep",1,85
   "eindri-seen.sh","eindri-seen.sh — condition half of the Eindri→Brokk wake bridge.","tool","wired","keep",2,57
   "eindri-send.sh","eindri-send.sh — the DATA plane: send conversational text to a seated Eindri.","tool","wired","keep",8,16
   "eindri-start.sh","eindri-start.sh — start an Eindri as the Allfather asks.","tool","wired","keep",2,197
-  "eindri-wake-lib.sh","eindri-wake-lib.sh — the ONE delivery ledger behind the Eindri push path.","lib","wired","keep",7,48
+  "eindri-wake-lib.sh","eindri-wake-lib.sh — the ONE delivery ledger behind the Eindri push path.","lib","wired","keep",11,71
   "eindri-watch.sh","eindri-watch.sh — the control door on the Eindri→Brokk wake bridge.","tool","wired","keep",6,131
-  "einherjar-spawn.sh","einherjar-spawn.sh - gather an Eindri worker (Einherjar = the chosen who are","tool","tested","keep",21,1387
-  "eir-doctor.sh","eir-doctor.sh — Eir, the healer: diagnose the running system, then mend it.","tool","wired","keep",9,787
-  "erindi-brief.sh","erindi-brief.sh - scaffold an Eindri worker brief at data/<task-id>/brief.md.","tool","tested","keep",5,412
-  "groa-agent.sh","groa-agent.sh — Gróa's body on a schedule: the updater, leashed, one per install.","tool","wired","keep",1,100
-  "groa-update.sh","groa-update.sh — Gróa, the völva who renews.","tool","wired","keep",14,428
+  "einherjar-spawn.sh","einherjar-spawn.sh - gather an Eindri worker (Einherjar = the chosen who are","tool","tested","keep",20,1394
+  "eir-doctor.sh","eir-doctor.sh — Eir, the healer: diagnose the running system, then mend it.","tool","wired","keep",10,857
+  "erindi-brief.sh","erindi-brief.sh - scaffold an Eindri worker brief at data/<task-id>/brief.md.","tool","tested","keep",6,425
+  "groa-agent.sh","groa-agent.sh — Gróa's body on a schedule: the updater, leashed, one per install.","tool","wired","keep",2,144
+  "groa-update.sh","groa-update.sh — Gróa, the völva who renews.","tool","wired","keep",15,485
   "hall.sh","hall.sh — the whole house in ONE read: the seat, the doors, the queue, the last runes.","tool","wired","keep",1,16
   "name-registry.sh","name-registry.sh — the collision system for Ymir's names.","tool","wired","keep",3,167
   "pr-seal.sh","pr-seal.sh — the seat's own PR is sealed by the seat, and the word arrives through Gná.","tool","wired","keep",2,324
   "profile.sh","profile.sh — what THIS user's machine actually is, probed not assumed.","tool","tested","keep",4,97
   "project-git.sh","project-git.sh — resolve a project's GitHub block from the master registry","tool","tested","keep",8,317
-  "prompt.md","You are the Ymir update agent for ONE install.","data","tested","keep",3,25
+  "prompt.md","You are the Ymir update agent for ONE install.","data","tested","keep",3,29
   "report.sh","report.sh — THE handoff door.","tool","tested","keep",13,97
   "research-round.sh","research-round.sh — one reusable research errand: seat a skald or a sage, give","tool","wired","keep",0,144
   "rodd-operational-input.sh","rodd-operational-input.sh - canonical Rödd operational-input protocol.","tool","wired","keep",1,251
   "seat-identity.sh","seat-identity.sh — print a seat's primary agent and its role file.","tool","wired","keep",6,228
   "seat-stop.sh","seat-stop.sh — stop a seat WHOLE: every process working in its worktree, not just the pane.","tool","wired","keep",1,78
-  "seat.sh","seat.sh — seat Gróa on THIS machine, once.","tool","tested","migrate → src/ymir_runtime/seat.py",16,106
+  "seat.sh","seat.sh — seat Gróa on THIS machine, once.","tool","tested","migrate → src/ymir_runtime/seat.py",22,108
   "skill-find.sh","skill-find.sh — find the skill you need, without loading any of them.","tool","tested","keep",4,188
   "skill-index.sh","skill-index.sh — Sága's sight over the crafts: one index of EVERY skill we","tool","tested","keep",3,244
   "skill-vendor-sync.sh","skill-vendor-sync.sh — keep imported third-party skill packs current.","tool","wired","keep",0,113
   "spam-guard.sh","spam-guard.sh — a model that loops is a fault, and the agent holding the Gná arm hears of it.","tool","wired","keep",0,182
+  "test_eir_mends.sh","test_eir_mends.sh — the Eir rows that read wrong or looked at the wrong place (2026-11-12).","tool","wired","keep",0,34
   "valhalla.sh","valhalla.sh — the process hall (Valhalla).","tool","wired","keep",0,116
   "workspace-provision.sh","workspace-provision.sh — carve one workspace for the operator.","tool","wired","keep",0,82
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
 
-**Tally.** verdict: wired=42, tested=13
+**Tally.** verdict: wired=43, tested=13
 
-**Tally.** disposition: keep=53, migrate → src/ymir_runtime/send.py=1, migrate → src/ymir_runtime/seat.py=1
+**Tally.** disposition: keep=54, migrate → src/ymir_runtime/send.py=1, migrate → src/ymir_runtime/seat.py=1

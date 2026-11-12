@@ -17,7 +17,8 @@ bin/mail/gna_import.py    the importer: the Gmail API OR IMAP, read-only, one ac
 bin/mail/gna_addresses.py the register behind the door: DNS MX by hand, routing, arrival proofs
 bin/mail/addresses.sh     the addresses the house USES, and whether mail can reach them (--check)
 bin/mail/gna_desk.py      the desk: 127.0.0.1:8494, token + account scope, GET only
-bin/mail/connect.sh       the connect door: one sign-in (google) or three fields (imap), status, revoke
+bin/mail/connect.sh       the connect door: one sign-in (google) or three fields (imap), status, revoke;
+                          the sign-in listens on YMIR_OAUTH_LOOPBACK_PORT (8767) — 8765 is Kokoro's
 bin/mail/gna_connect.py   the verbs behind it: consent URL, loopback catcher, the vault write, the proofs
 bin/mail/inbound-test.sh  the acceptance test: send from outside, assert the arrival, or skip
 bin/mail/mail-scan.sh     the earlier one-shot read (kept — it proved the door opened)

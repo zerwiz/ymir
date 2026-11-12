@@ -24,12 +24,12 @@ folder rewrites one file instead of colliding on every branch.
 bin[19]{file,does,kind,verdict,disposition,callers,lines}:
   "agent-model.sh","agent-model.sh — WHICH MODEL, ON THIS SEAT.","tool","wired","keep",8,305
   "apodex-smoke-test.sh","apodex-smoke-test — validate an Apodex endpoint (GGUF via llama-router).","tool","wired","keep",0,119
-  "catalog.sh","catalog.sh — THE door to what this machine can serve.","tool","wired","keep",12,135
+  "catalog.sh","catalog.sh — THE door to what this machine can serve.","tool","wired","keep",17,135
   "free-models.sh","free-models.sh — the free models a harness can serve on this machine, and the one to use.","tool","wired","keep",2,74
   "jev-doors.sh","jev-doors.sh — where the decision models answer, in one read.","tool","wired","keep",4,163
   "llama-ensure.sh","llama-ensure.sh — stand a CUDA llama.cpp engine for local models, or adopt the","tool","wired","keep",3,163
   "local-model-lock.sh","local-model-lock.sh — serialize LOCAL model inference on one machine.","tool","tested","keep",9,132
-  "model-allow.sh","model-allow.sh — may an Eindri run on this model?","tool","wired","keep",6,28
+  "model-allow.sh","model-allow.sh — may an Eindri run on this model?","tool","tested","keep",6,28
   "model-fetch.sh","model-fetch.sh — fetch a chosen model into the operator's models directory.","tool","wired","keep",1,124
   "model-fit.sh","model-fit.sh — choose the best local model for THE USER'S hardware, probed at","tool","wired","keep",2,155
   "model-hardware.sh","model-hardware.sh — profile THIS machine for local models and record the","tool","wired","keep",1,98
@@ -42,6 +42,6 @@ bin[19]{file,does,kind,verdict,disposition,callers,lines}:
   "rail-resolve.sh","rail-resolve.sh — the DOOR to the living rail resolver (plan 51, Parts 9a/9b/9c).","tool","tested","keep",6,72
   "test_jev_doors.sh","The ward for bin/model/jev-doors.sh — the door register that told four lies in a row.","tool","wired","keep",0,54
 
-**Tally.** verdict: wired=15, tested=4
+**Tally.** verdict: wired=14, tested=5
 
 **Tally.** disposition: keep=19
