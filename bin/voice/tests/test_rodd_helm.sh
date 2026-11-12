@@ -27,6 +27,10 @@ trap 'rm -rf "$T"' EXIT
 export HOME="$T/home" XDG_STATE_HOME="$T/xdg"
 export BROKK_STATE_OVERRIDE="$T/state" BROKK_MACHINE_STATE_DIR="$T/xdg/ymir"
 export YMIR_STATE_DIR="$T/state" BROKK_SESSION_PID="$$"
+# A silent mouth: a test never raises a real alarm on the operator's desktop. It records what it was
+# asked to say, so the refusal can still be proven.
+printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$*" >> "%s/said.log"\n' "$T" > "$T/say-stub.sh"; chmod +x "$T/say-stub.sh"
+export RODD_SAY="$T/say-stub.sh"
 mkdir -p "$T/xdg/ymir" "$T/state" "$T/home"
 
 LOCK="$T/xdg/ymir/brokk.lock"
@@ -71,6 +75,8 @@ bash "$HELM" run >"$T/out2" 2>"$T/err2"; rc2=$?
 grep -q 'refused' "$T/state/rodd/room.jsonl" 2>/dev/null && ok "the refusal is written in the room, never dropped" \
   || bad "the refusal is written in the room" "$(cat "$T/state/rodd/room.jsonl" 2>/dev/null)"
 [ ! -s "$LOCK" ] && ok "the helm was released (the lock is gone)" || bad "the helm was released" "lock still names $(cat "$LOCK" 2>/dev/null)"
+grep -q 'beyond her writ' "$T/said.log" 2>/dev/null && ok "the refusal was spoken — to the stand-in, never to the real desktop" \
+  || bad "the refusal was spoken to the stand-in" "$(cat "$T/said.log" 2>/dev/null)"
 
 # ── 3 · the health surface ──────────────────────────────────────────────────
 own_lock

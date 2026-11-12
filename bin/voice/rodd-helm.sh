@@ -32,7 +32,10 @@ ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/
 HOARD_LIB="$ROOT/bin/vault/hoard-lib.sh"
 DRAIN="$ROOT/bin/time/saga-wake-drain.sh"
 ARM="$ROOT/bin/voice/rodd-arm.sh"
-SAY="$ROOT/systems/snotra/services/tts-lease/ymir-say.sh"
+# The mouth that raises an alarm. A setting, so a test can hand it a silent stand-in: before
+# 2026-11-12 the test suite's fake "please merge PR 999" wake reached the Allfather's real desktop
+# as "Rödd refuses a wake beyond her writ", once per test run, from every worker running the gates.
+SAY="${RODD_SAY:-$ROOT/systems/snotra/services/tts-lease/ymir-say.sh}"
 SPAWN="$ROOT/bin/agents/einherjar-spawn.sh"
 LOCK_DOOR="$ROOT/bin/records/ymir-state.sh"
 
