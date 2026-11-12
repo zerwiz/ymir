@@ -1,7 +1,12 @@
 // Voice calls, the way Grok Bot does them: a second, lightweight voice agent runs in the browser against
-// the xAI realtime API, speaks as the bot, and relays real work to the bot's main text agent loop.
-// This module mints the ephemeral secret, builds the voice agent's prompt and tools, serves the relay
-// tools, records call start/end rows, and proxies TTS (voice preview) and STT (composer dictation).
+// a realtime API, speaks as the bot, and relays real work to the bot's main text agent loop.
+// This module builds the voice agent's prompt and tools, serves the relay tools, records call start/end
+// rows, and proxies TTS (voice preview) and STT (composer dictation).
+//
+// Two roads, chosen by BILSKIRNIR_VOICE (see voice-house.ts):
+//   house (default)  Rödd's engine for calls, Kokoro for the voice, whisper.cpp for dictation — nothing leaves
+//                    the machine and no request reaches xAI
+//   xai              xAI's cloud, as Bot HQ shipped it (needs XAI_API_KEY)
 import { Hono } from 'hono';
 import OpenAI from 'openai';
 import { db, now } from './db.js';
@@ -13,6 +18,7 @@ import { enqueue } from './agent/loop.js';
 import { computerState } from './computer.js';
 import type { ActivityKind, EventBody, MessageBody, RowBody, VoiceCallRecord, VoiceOption } from './types.js';
 import { listMemories } from './engine-memory.js';
+import { HOUSE_REALTIME_PATH, house, houseStatus, houseVoices, isKokoroVoice, kokoroSpeak, realtimeStatus, whisperTranscribe } from './voice-house.js';
 
 export const voiceApi = new Hono<AuthVars>();
 
@@ -43,6 +49,7 @@ export const SPEEDS = [0.7, 0.85, 1, 1.15, 1.3, 1.5];
 
 let voiceCache: { at: number; voices: VoiceOption[] } | null = null;
 async function listVoices(): Promise<VoiceOption[]> {
+  if (house.road === 'house') return houseVoices();
   if (voiceCache && Date.now() - voiceCache.at < 3600_000) return voiceCache.voices;
   try {
     const r = await fetch(`${XAI}/tts/voices`, { headers: xaiHeaders(), signal: AbortSignal.timeout(8000) });
@@ -65,6 +72,10 @@ const clampSpeed = (s: unknown) => {
 const langName = (code: string) => LANGUAGES.find((l) => l.code.toLowerCase() === code?.toLowerCase())?.name;
 function settingsOf(bot: any) {
   const language = langName(bot.voice_language) ? String(bot.voice_language) : 'auto';
+  if (house.road === 'house') {
+    // Bot HQ's default voice ('luna') is an xAI name Kokoro cannot say; such a bot speaks in the house's default.
+    return { voice: isKokoroVoice(bot.voice) ? String(bot.voice) : house.defaultVoice, speed: clampSpeed(bot.voice_speed ?? 1), language };
+  }
   return { voice: String(bot.voice || 'luna'), speed: clampSpeed(bot.voice_speed ?? 1), language };
 }
 
@@ -235,7 +246,19 @@ const fmtDuration = (ms: number) => {
   return s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${String(s % 60).padStart(2, '0')}s`;
 };
 
-voiceApi.get('/options', async (c) => c.json({ voices: await listVoices(), languages: LANGUAGES, speeds: SPEEDS }));
+/** The house's ear is whisper small.en and its mouth speaks English voices, so the house road offers English. */
+const HOUSE_LANGUAGES = LANGUAGES.filter((l) => l.code === 'auto' || l.code === 'en');
+
+voiceApi.get('/options', async (c) => c.json({
+  road: house.road,
+  defaultVoice: house.road === 'house' ? house.defaultVoice : 'luna',
+  voices: await listVoices(),
+  languages: house.road === 'house' ? HOUSE_LANGUAGES : LANGUAGES,
+  speeds: SPEEDS,
+}));
+
+/** What answers on the house road — the ear, the mouth and Rödd's engine. */
+voiceApi.get('/status', async (c) => c.json(await houseStatus()));
 
 voiceApi.post('/session', async (c) => {
   const user = c.get('user');
@@ -243,6 +266,8 @@ voiceApi.post('/session', async (c) => {
   const bot = ownBot(user.id, botId);
   if (!bot) return c.json({ error: 'not found' }, 404);
   const s = settingsOf(bot);
+
+  if (house.road === 'house') return houseSession(c, user.id, bot, s);
 
   const r = await fetch(`${XAI}/realtime/client_secrets`, {
     method: 'POST',
@@ -292,6 +317,49 @@ voiceApi.post('/session', async (c) => {
     session,
   });
 });
+
+/** Open a call on the house road: no secret to mint, the browser speaks to Rödd's engine through our relay. */
+async function houseSession(c: any, userId: string, bot: any, s: ReturnType<typeof settingsOf>) {
+  const rt = await realtimeStatus();
+  if (!rt.up) {
+    console.warn('[voice] house realtime down:', rt.detail);
+    return c.json({ error: 'The house voice is not raised (run bin/voice/voice-door.sh host)' }, 503);
+  }
+  if (rt.free === 0) return c.json({ error: 'The house voice is busy in another window (Rödd holds its one seat)' }, 409);
+
+  const instructions = voiceInstructions(userId, bot, s.language);
+  const session: Record<string, unknown> = {
+    type: 'realtime',
+    instructions,
+    tools: VOICE_TOOLS,
+    audio: {
+      // Where the engine reads it (audio.input.turn_detection), as its own client sends it: barge-in on.
+      input: { format: { type: 'audio/pcm', rate: SAMPLE_RATE }, turn_detection: { type: 'server_vad', interrupt_response: true } },
+      output: { format: { type: 'audio/pcm', rate: SAMPLE_RATE }, voice: s.voice, speed: s.speed },
+    },
+  };
+
+  const callId = newId('call');
+  const startRow = appendRow(bot.id, 'event', callEvent(`Voice call with ${bot.name} started`, { id: callId, phase: 'started' }));
+  calls.set(callId, { id: callId, botId: bot.id, userId, startedAt: now(), startSeq: startRow.seq, tasks: [] });
+  emitBot(bot.id);
+
+  return c.json({
+    callId,
+    clientSecret: '',
+    expiresAt: 0,
+    model: 'house',
+    // Same origin: the browser resolves it against its own host, and the relay checks the session cookie.
+    websocketUrl: `${HOUSE_REALTIME_PATH}?bot=${encodeURIComponent(bot.id)}`,
+    sampleRate: SAMPLE_RATE,
+    instructions,
+    voice: s.voice,
+    speed: s.speed,
+    language: s.language,
+    tools: VOICE_TOOLS,
+    session,
+  });
+}
 
 voiceApi.post('/tool', async (c) => {
   const user = c.get('user');
@@ -357,12 +425,19 @@ voiceApi.post('/tool', async (c) => {
   }
 });
 
-const xai = new OpenAI({ apiKey: env.xaiKey, baseURL: XAI, timeout: 45_000 });
+let xaiClient: OpenAI | null = null;
+const xai = () => (xaiClient ??= new OpenAI({ apiKey: env.xaiKey, baseURL: XAI, timeout: 45_000 }));
 
 async function summarizeCall(botName: string, transcript: { role: string; text: string }[], tasks: string[]): Promise<string | null> {
   if (!transcript.length && !tasks.length) return null;
+  if (house.road === 'house') {
+    // No cloud summary on the house road: say plainly what was asked, from the call's own words.
+    const first = transcript.find((t) => t.role === 'user')?.text;
+    const parts = [first ? `Opened with "${clip(first.replace(/\s+/g, ' '), 90)}"` : '', tasks.length ? `handed off ${tasks.length} task${tasks.length > 1 ? 's' : ''}` : ''].filter(Boolean);
+    return parts.length ? `${parts.join('; ')}.` : null;
+  }
   const lines = transcript.map((t) => `${t.role === 'user' ? 'User' : botName}: ${t.text}`).join('\n').slice(-12_000);
-  const res: any = await xai.responses.create({
+  const res: any = await xai().responses.create({
     model: env.xaiModel,
     reasoning: { effort: 'low' },
     store: false,
@@ -421,6 +496,15 @@ voiceApi.post('/preview', async (c) => {
   const language = p.language && langName(p.language) ? p.language : s.language;
   const text = String(p.text || `Hi, I'm ${bot?.name ?? 'your Bot'}. This is how I'll sound when we talk.`).slice(0, 400);
   const codec = p.codec === 'pcm' ? 'pcm' : 'mp3';
+  if (house.road === 'house') {
+    try {
+      const pcm = await kokoroSpeak(text, voice, clampSpeed(p.speed ?? s.speed), SAMPLE_RATE);
+      return c.body(pcm, 200, { 'Content-Type': `audio/pcm;rate=${SAMPLE_RATE}`, 'Cache-Control': 'no-store' });
+    } catch (e: any) {
+      console.warn('[voice] house tts failed:', e?.message);
+      return c.json({ error: 'Preview unavailable — the house voice (Kokoro) is not answering' }, 502);
+    }
+  }
   const r = await fetch(`${XAI}/tts`, {
     method: 'POST',
     headers: { ...xaiHeaders(), 'Content-Type': 'application/json' },
@@ -443,6 +527,15 @@ voiceApi.post('/stt', async (c) => {
   if (!file || typeof file === 'string') return c.json({ error: 'file required' }, 400);
   if (file.size > 25 * 1024 * 1024) return c.json({ error: 'recording too long' }, 413);
   if (file.size < 200) return c.json({ text: '' });
+  if (house.road === 'house') {
+    try {
+      const text = await whisperTranscribe(Buffer.from(await file.arrayBuffer()), String(form?.get('language') ?? ''));
+      return c.json({ text });
+    } catch (e: any) {
+      console.warn('[voice] house stt failed:', e?.message);
+      return c.json({ error: 'Transcription failed — the house ear (whisper) did not answer' }, 502);
+    }
+  }
   const out = new FormData();
   out.append('model', STT_MODEL);
   const lang = String(form?.get('language') ?? '');

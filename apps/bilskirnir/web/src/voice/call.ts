@@ -1,5 +1,5 @@
-// The in-browser voice agent. Grok Bot runs calls as a second, lightweight agent against the xAI realtime
-// API that speaks as the bot and relays real work to the bot's main text agent (send_task). Results come
+// The in-browser voice agent. Grok Bot runs calls as a second, lightweight agent against a realtime API
+// (the house's own engine by default, or xAI's) that speaks as the bot and relays real work to the bot's main text agent (send_task). Results come
 // back through the normal transcript stream and are injected into the call as [work_landed] notes.
 import { create } from 'zustand';
 import type { Row } from '@shared/types';
@@ -117,7 +117,11 @@ class VoiceCall {
   }
 
   private connect(sess: VoiceSession) {
-    const ws = new WebSocket(sess.websocketUrl, [`xai-client-secret.${sess.clientSecret}`]);
+    // The house road hands back a same-origin path (our relay to Rödd's engine, cookie-checked); the xAI road
+    // hands back xAI's URL and a short-lived secret carried in the subprotocol.
+    const ws = sess.websocketUrl.startsWith('/')
+      ? new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}${sess.websocketUrl}`)
+      : new WebSocket(sess.websocketUrl, [`xai-client-secret.${sess.clientSecret}`]);
     this.ws = ws;
     this.connectTimer = setTimeout(() => { if (!this.ready) this.end('Couldn’t connect the call'); }, 15000);
     ws.onopen = () => this.send({ type: 'session.update', session: sess.session });

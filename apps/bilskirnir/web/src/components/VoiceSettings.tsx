@@ -5,8 +5,11 @@ import { voiceApi, type VoiceOptions } from '../voice/api';
 import { endCall, isCallActive, previewVoice, startCall, useVoice } from '../voice/call';
 import { Icon } from './Icon';
 
+// Until the server answers: the voices Rödd offers Nanna (Kokoro's), the house road being the default.
 const FALLBACK: VoiceOptions = {
-  voices: ['ara', 'eve', 'leo', 'luna', 'rex', 'sal'].map((id) => ({ id, name: id[0].toUpperCase() + id.slice(1) })),
+  road: 'house',
+  defaultVoice: 'af_nicole',
+  voices: [['af_nicole', 'Nicole'], ['af_sky', 'Sky'], ['af_bella', 'Bella'], ['am_michael', 'Michael'], ['bf_emma', 'Emma']].map(([id, name]) => ({ id, name })),
   languages: [{ code: 'auto', name: 'Auto-detect' }, { code: 'en', name: 'English' }],
   speeds: [0.7, 0.85, 1, 1.15, 1.3, 1.5],
 };
@@ -65,7 +68,10 @@ export function VoiceSettings({ bot }: { bot: Bot }) {
     finally { setPreviewing(false); }
   };
 
-  const voices = opts.voices.some((v) => v.id === bot.voice) ? opts.voices : [{ id: bot.voice, name: bot.voice }, ...opts.voices];
+  // A saved voice this road cannot say (an xAI name on the house road) is shown as the voice the bot really uses.
+  const knows = (id: string) => opts.voices.some((v) => v.id === id);
+  const voice = knows(bot.voice) ? bot.voice : opts.defaultVoice && knows(opts.defaultVoice) ? opts.defaultVoice : bot.voice;
+  const voices = knows(voice) ? opts.voices : [{ id: voice, name: voice }, ...opts.voices];
   const speeds = opts.speeds.includes(bot.voiceSpeed) ? opts.speeds : [...opts.speeds, bot.voiceSpeed].sort((a, b) => a - b);
 
   return (
@@ -74,7 +80,7 @@ export function VoiceSettings({ bot }: { bot: Bot }) {
         <span>Voice</span>
         <span className="voice-setting__right">
           <button type="button" className="voice-preview" onClick={preview} disabled={previewing} title={`Hear ${bot.name}'s voice`}>{previewing ? 'Playing…' : 'Preview'}</button>
-          <NativeSelect label="Voice" value={bot.voice} options={voices.map((v) => ({ value: v.id, label: v.name }))} onChange={(voice) => save({ voice })} />
+          <NativeSelect label="Voice" value={voice} options={voices.map((v) => ({ value: v.id, label: v.name }))} onChange={(voice) => save({ voice })} />
         </span>
       </div>
       <div className="panel-row panel-row--setting">

@@ -30,7 +30,8 @@ export const env = {
   appUrl: process.env.APP_URL ?? 'http://localhost:5173',
   /** Public URL of this server, used for OAuth callbacks. */
   serverUrl: process.env.SERVER_URL ?? `http://localhost:${process.env.PORT ?? 8787}`,
-  xaiKey: req('XAI_API_KEY'),
+  /** Needed only on the xAI voice road (BILSKIRNIR_VOICE=xai) and for X search; the house road runs without it. */
+  xaiKey: (process.env.BILSKIRNIR_VOICE ?? 'house').trim().toLowerCase() === 'xai' ? req('XAI_API_KEY') : (process.env.XAI_API_KEY ?? ''),
   xaiModel: process.env.XAI_MODEL ?? 'grok-4.7',
   composioKey: req('COMPOSIO_API_KEY'),
   /** Only needed when BILSKIRNIR_DESK=orgo. */

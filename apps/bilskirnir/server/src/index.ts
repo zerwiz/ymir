@@ -7,6 +7,7 @@ import type { Server } from 'node:http';
 import { env } from './env.js';
 import { api } from './routes.js';
 import { attachVncRelay } from './vnc.js';
+import { attachHouseRealtime } from './voice-house.js';
 import { initRoutines } from './routines.js';
 import { initTriggers } from './triggers.js';
 import { initProactive } from './proactive.js';
@@ -45,6 +46,7 @@ if (fs.existsSync(webDist)) {
 
 const server = serve({ fetch: app.fetch, port: env.port, hostname: env.host }, (info) => console.log(`[grokbot] server on http://localhost:${info.port}`));
 attachVncRelay(server as unknown as Server);
+attachHouseRealtime(server as unknown as Server);
 // GROKBOT_NO_SCHEDULER=1 for extra dev/test servers sharing a database copy, so routines and triggers don't fire twice.
 if (process.env.GROKBOT_NO_SCHEDULER !== '1') {
   initRoutines(enqueue);
