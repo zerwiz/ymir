@@ -200,6 +200,17 @@ TOOLS = [
     },
     {
         "type": "function",
+        "name": "web_search",
+        "description": ("Search the web now (the house's own SearXNG on this machine, no key, no account). For news, "
+                        "today's events or anything after your training, set `recent` to day, week or month. Say the "
+                        "source of what you read back."),
+        "parameters": {"type": "object", "properties": {
+            "query": {"type": "string"},
+            "recent": {"type": "string", "description": "optional: day, week, month or year"}},
+            "required": ["query"], "additionalProperties": False},
+    },
+    {
+        "type": "function",
         "name": "fleet",
         "description": ("The fleet — every machine he owns (heimdall, nidavellir, zerwizserver the heart, whynot, …): "
                         "whether it answers and by which road, the Ymir it runs and how old, its load, failed services, "
@@ -1918,6 +1929,38 @@ async def _tool_todo_update(args):
     return ToolResult("Updated in his to-do: " + ", ".join(f"{k} → {v}" for k, v in fields.items() if v), create_response=True)
 
 
+# ── the web (plan 275, 2026-11-12): her web search went through a Google API key that was never set ("Search is not
+# configured"), so asked for the news she had nothing. The house's own SearXNG (open source, loopback only, no key)
+# answers instead. YMIR_SEARCH_URL points at another instance (the fleet's, a client's).
+async def _tool_web_search(args):
+    import json as _json
+    import urllib.parse as _up
+    import urllib.request as _ur
+    import datetime as _dt
+    q = str(args.get("query") or "").strip()
+    if not q:
+        return ToolResult("web_search needs a query.")
+    base = os.environ.get("YMIR_SEARCH_URL", "http://127.0.0.1:8899").rstrip("/")
+    params = {"q": q, "format": "json"}
+    rec = str(args.get("recent") or "").lower()
+    if rec in ("day", "week", "month", "year"):
+        params["time_range"] = rec
+    try:
+        with _ur.urlopen(base + "/search?" + _up.urlencode(params), timeout=20) as r:
+            d = _json.loads(r.read().decode("utf-8", "replace"))
+    except Exception as exc:
+        return ToolResult(f"The web search did not answer ({str(exc)[:120]}); say so plainly.")
+    rows = d.get("results") or []
+    if not rows:
+        return ToolResult(f"No results for {q!r}.")
+    today = _dt.date.today().isoformat()
+    lines = [f"Web results for {q!r}, searched {today}" + (f" (last {rec})" if params.get("time_range") else "") + ":"]
+    for r in rows[:7]:
+        when = (" · " + str(r.get("publishedDate"))[:10]) if r.get("publishedDate") else ""
+        lines.append(f"- {r.get('title','')[:120]}{when}: {str(r.get('content') or '')[:220]} ({r.get('url','')})")
+    return ToolResult("\n".join(lines))
+
+
 # ── the fleet (plan 232 R6, plan 253; built 2026-11-12 under plan 275): asked "what is going on in the fleet", she
 # could only read this machine's worker panes. bin/fleet/fleet-status.sh is the one fleet answer.
 async def _tool_fleet(args):
@@ -2010,6 +2053,7 @@ NEW_TOOLS = {
     "home_recent": _tool_home_recent,
     "last_session": _tool_last_session,
     "search_sessions": _tool_search_sessions,
+    "web_search": _tool_web_search,
     "fleet": _tool_fleet,
     "now": _tool_now,
     "letter_types": _tool_letter_types,

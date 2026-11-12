@@ -77,6 +77,17 @@ resolve_electron() {
 ELECTRON="$(resolve_electron)"
 is_local_seat() { [ "$1" = "$(hostname -s)" ] || [ "$1" = localhost ] || [ "$1" = 127.0.0.1 ]; }
 strays() { ps -eo pid,args | grep -E "s2s/bin/python .* talk|(electron[0-9]*|node_modules/electron/dist)/electron .*apps/rodd" | grep -v grep | awk '{print $1}'; }
+# plan 275 (2026-11-12): the window is closed through its MAIN process only, and given time to close its own helpers.
+# Every process above was sent SIGTERM at once — the GPU, renderer and audio helpers died under the main process,
+# which treats a helper vanishing as fatal and traps: two Electron cores and two crash notices on his desk tonight
+# (22:25:52, 23:36:36). The main Electron process is the one without `--type=`; the voice client is a python process.
+rodd_mains() { strays | while read -r p; do tr '\0' ' ' < "/proc/$p/cmdline" 2>/dev/null | grep -q -- '--type=' || echo "$p"; done; }
+lower_rodd() {
+  local p alive
+  for p in $(rodd_mains); do kill -TERM "$p" 2>/dev/null; done
+  for _ in $(seq 1 25); do alive=$(rodd_mains); [ -z "$alive" ] && return 0; sleep 0.2; done
+  for p in $(rodd_mains); do kill -KILL "$p" 2>/dev/null; done   # it would not close in five seconds
+}
 host_seats() {
   python3 - <<'PY'
 import json, os
@@ -117,7 +128,7 @@ host_seat() {
 
 case "${1:-}" in
   --stop)
-    for p in $(strays); do kill "$p" 2>/dev/null; done
+    lower_rodd
     # the toolbox is stopped by the pid that holds its port — never a blanket pattern kill,
     # whose match also takes the shell running it (measured twice on 2026-10-20)
     port_pid=$(ss -ltnp 2>/dev/null | grep ":$PORT_BOX " | grep -oE 'pid=[0-9]+' | head -1 | cut -d= -f2)
@@ -165,8 +176,8 @@ export YMIR_RUNTIME_DIR="$PIN"
 say "code root (the pin)" "$PIN"
 
 # 1 · clear every stray client — one seat, one client
-n=$(strays | wc -l)
-for p in $(strays); do kill "$p" 2>/dev/null; done
+n=$(rodd_mains | wc -l)
+lower_rodd
 sleep 2
 say "stray clients cleared" "$n"
 

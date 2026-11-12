@@ -420,6 +420,10 @@ def patch_main() -> None:
                       '    return { output: house.output };\n'
                       '  }\n'
                       '  if (DEBUG) console.debug(`[tool] run name=${name}', 1)
+    # plan 275: web_search is a HOUSE tool (SearXNG); the vendor's own one needed a Google key that was never set
+    s = s.replace("  if (toolsEnabled.web_search) defs.push(TOOL_DEFS.web_search);\n", "", 1)
+    s = s.replace("  if (toolsEnabled.web_search && searchAvailable()) defs.push(TOOL_DEFS.web_search);\n", "", 1)
+    s = s.replace('  if (!["web_search", "camera_snapshot"].includes(name)) {', '  if (!["camera_snapshot"].includes(name)) {', 1)
     # plan 275: while a house tool runs, the window says what she is doing (the mind may call a tool in silence)
     if "rodd: working caption" not in s:
         s = s.replace('    const house = await runHouseTool(name, args).catch((err) => ({ output: `the toolbox refused: ${err}` }));\n'
@@ -427,7 +431,7 @@ def patch_main() -> None:
                       '    // rodd: working caption\n'
                       '    const doing = { todo_list: "Reading your to-do…", todo_add: "Adding to your to-do…", todo_done: "Ticking it off…",\n'
                       '      read_mail: "Reading your mail…", read_calendar: "Looking at your calendar…", search_home: "Searching your files…",\n'
-                      '      read_home_file: "Reading the file…", recall: "Remembering…", plans: "Reading the plans…", seats: "Looking at the workers…" }[name]\n'
+                      '      read_home_file: "Reading the file…", recall: "Remembering…", web_search: "Searching the web…", plans: "Reading the plans…", seats: "Looking at the workers…" }[name]\n'
                       '      || `Working: ${name.replace(/_/g, " ")}…`;\n'
                       '    setCaption(doing, "muted");\n'
                       '    const house = await runHouseTool(name, args).catch((err) => ({ output: `the toolbox refused: ${err}` }));\n'
