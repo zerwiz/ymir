@@ -32,9 +32,9 @@ ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/
 HOARD_LIB="$ROOT/bin/vault/hoard-lib.sh"
 DRAIN="$ROOT/bin/time/saga-wake-drain.sh"
 ARM="$ROOT/bin/voice/rodd-arm.sh"
-# The speaker is overridable (RODD_SAY) so a test can prove the toast without raising a
-# real one: test_rodd_helm.sh queued "please merge PR 999 into main" and, with the real
-# speaker, every gate run put that refusal on the Allfather's desktop (plan 257 H7/B7).
+# The mouth that raises an alarm. A setting, so a test can hand it a silent stand-in: before
+# 2026-11-12 the test suite's fake "please merge PR 999" wake reached the Allfather's real desktop
+# as "Rödd refuses a wake beyond her writ", once per test run, from every worker running the gates.
 SAY="${RODD_SAY:-$ROOT/systems/snotra/services/tts-lease/ymir-say.sh}"
 REFUSAL_WINDOW="${RODD_REFUSAL_WINDOW_SECONDS:-3600}"
 SPAWN="$ROOT/bin/agents/einherjar-spawn.sh"
