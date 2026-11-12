@@ -32,7 +32,10 @@ while [ $# -gt 0 ]; do
   esac
 done
 STATE="$HOME_R/hodd/state/assistant"
-DEST="$HOME_R/hodd/saves/assistant/$(date +%Y-%m-%d)"
+# plan 275 (2026-11-12): one folder per MACHINE — the home is shared, and two seats writing the same
+# hodd/saves/assistant/<date>/ overwrote each other's snapshot (heimdall's 56 asks against another seat's 6)
+SEAT="$(hostname -s 2>/dev/null || echo seat)"
+DEST="$HOME_R/hodd/saves/assistant/$SEAT/$(date +%Y-%m-%d)"
 mkdir -p "$DEST" || exit 3
 copied=0
 for f in assistant.db asks.json digest.jsonl pending-ask.json; do
@@ -45,7 +48,7 @@ for f in assistant.db asks.json digest.jsonl pending-ask.json; do
 done
 [ -d "$HOME_R/hodd/identity/assistant" ] && cp -a "$HOME_R/hodd/identity/assistant/." "$DEST/identity/" 2>/dev/null
 # rotate
-ls -1d "$HOME_R/hodd/saves/assistant/"*/ 2>/dev/null | sort | head -n -"$KEEP" | while read -r old; do
+ls -1d "$HOME_R/hodd/saves/assistant/$SEAT/"*/ 2>/dev/null | sort | head -n -"$KEEP" | while read -r old; do
   rm -rf "$old"
 done
 printf 'backup[1]{files,dir,kept}:\n  "%s","%s","%s"\n' "$copied" "$DEST" "$KEEP"
