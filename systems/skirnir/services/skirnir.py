@@ -219,7 +219,7 @@ INTENTS = {
     "sell me ymir": ("ymir_pitch", None),
     "why ymir": ("ymir_pitch", None),
     "what is opti cat": ("public", "what-opti-cat-is"),
-    "what is opticat": ("public", "what-opti-cat-is"),
+    "what is example-4": ("public", "what-opti-cat-is"),
     "are you available": ("logistics", "availability"),
     "when will he answer": ("logistics", "availability"),
     "where is he": ("schedule", None),
@@ -1501,8 +1501,8 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
                 hit_head = len(q & head(claim))
                 squashed = re.sub(r"[^a-z0-9]", "", claim.lower())
                 words = re.findall(r"[a-z0-9]+", claim.lower())
-                # where the subject sits in the claim: "OptiCat is …" beats "The documents around
-                # an OptiCat …" when both match, because the first is a fact ABOUT it
+                # where the subject sits in the claim: "Example4 is …" beats "The documents around
+                # an Example4 …" when both match, because the first is a fact ABOUT it
                 pos = min((i for i, w in enumerate(words) if w in q), default=99)
                 if len(q) == 1:
                     # one word is only an answer if it is the SUBJECT of the claim. "how many
@@ -1512,7 +1512,7 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
                 else:
                     ok = hit_body >= 2 and (hit_body / len(q)) >= 0.5
                     score = hit_body / len(q)
-                # "whynotproductions", "opticat", "wayofteams": a question often runs a name together
+                # "whynotproductions", "example-4", "wayofteams": a question often runs a name together
                 # that the fact writes apart. A long token found inside the squashed claim IS the subject.
                 # ...but only when the token SPANS a word boundary: "whynotproductions" is two words
                 # run together, while "deadline" is one word and must not match by being inside it.

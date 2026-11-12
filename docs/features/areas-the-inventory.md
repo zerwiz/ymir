@@ -31,11 +31,11 @@ Driving a project's estate from Ymir (the same answers, plus the seat):
 
 ```bash
 bin/agents/areas.sh canon                        # the eighteen areas and the question each must answer
-bin/agents/areas.sh init control-tower           # by registry id, or by path
-bin/agents/areas.sh list control-tower
-bin/agents/areas.sh check control-tower
-bin/agents/areas.sh estate control-tower
-bin/agents/areas.sh brief control-tower tenancy   # the brief a keeper is given, generated
+bin/agents/areas.sh init example-3           # by registry id, or by path
+bin/agents/areas.sh list example-3
+bin/agents/areas.sh check example-3
+bin/agents/areas.sh estate example-3
+bin/agents/areas.sh brief example-3 tenancy   # the brief a keeper is given, generated
 ```
 
 The constellation card, generated from the same shelf:
@@ -76,5 +76,5 @@ is `.agents/areas.yaml`; the copy that travels is `bin/collab/kit/areas/canon.ya
 
 - **2026-11-08** — Opened with the capability: the eighteen-area canon, the estate door
   (`bin/agents/areas.sh`), the travelling kit shelf and its gate, the card generated from the shelf, and
-  the first two estates measured (Ymir: 6 held · 12 unheld; Inmost's Control Tower: 4 held · 14 unheld,
+  the first two estates measured (Ymir: 6 held · 12 unheld; Inmost's Example3: 4 held · 14 unheld,
   with the tenancy folder scoped and refused). Plan 219.

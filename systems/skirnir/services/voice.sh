@@ -3,7 +3,7 @@
 #
 #   bin/assistant/voice.sh                          # record 6 s, transcribe, answer, speak
 #   bin/assistant/voice.sh --seconds 10
-#   bin/assistant/voice.sh --text "what is OptiCat?"       # skip the microphone
+#   bin/assistant/voice.sh --text "what is Example4?"       # skip the microphone
 #   bin/assistant/voice.sh --file /tmp/ask.wav             # transcribe a file
 #   bin/assistant/voice.sh --model qwen3.6-35b-a3b@q4_k_xl-mtp
 #   bin/assistant/voice.sh --no-speak

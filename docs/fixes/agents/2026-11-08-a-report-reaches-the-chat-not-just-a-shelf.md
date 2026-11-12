@@ -35,7 +35,7 @@ named. `report.sh write` now ends by injecting its one line, and when nobody hol
 ```
 bin/agents/eindri-notify.sh --status
   → arm-holder[1]{lock_owner,alive,pane}: "2624809","yes","w3:p1Z"
-bin/agents/eindri-notify.sh --from tenancy-keeper -- "tenancy measured in Control Tower: …"
+bin/agents/eindri-notify.sh --from tenancy-keeper -- "tenancy measured in Example3: …"
   → injected[1]{from,pane,owner}: "tenancy-keeper","w3:p1Z","2624809"
   → and the line arrived as a turn in that session, which is the whole point
 ```

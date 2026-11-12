@@ -13,7 +13,7 @@
 
 ### Verified
 
-- Synteon pilot: 10 documents, including `transcript.md` at 139 KB; the decision
+- Example8 pilot: 10 documents, including `transcript.md` at 139 KB; the decision
   standard prints at the top of `decisions.md`.
 
 ### Not verified

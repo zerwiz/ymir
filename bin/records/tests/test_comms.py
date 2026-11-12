@@ -308,7 +308,7 @@ class OwedConversations(unittest.TestCase):
 
     def test_a_password_reset_is_not_waiting_on_anyone(self):
         todo = self.seed_conv([
-            mail("x1", "out", "2026-11-10T09:00:00+00:00", "Reset your Growth Agent password", ME,
+            mail("x1", "out", "2026-11-10T09:00:00+00:00", "Reset your ExampleProject password", ME,
                  {"name": "Sam", "email": "sam@example.net"}, "Click here. Questions?"),
             mail("x2", "out", "2026-11-10T09:00:00+00:00", "Do you want in?", ME,
                  {"name": "T", "email": "probe.test@example.net"}, "Do you want in?"),

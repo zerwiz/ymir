@@ -17,7 +17,7 @@ TOKEN_FILE = os.environ.get("GIMLE_PLANE_TOKEN_FILE", os.path.expanduser("~/giml
 # repository (Rule 04). The file is a flat JSON object, keys lower-cased.
 PEOPLE_FILE = os.environ.get("GIMLE_PEOPLE_FILE", os.path.expanduser("~/gimle/desk/etc/people.json"))
 WORKSPACES = [w for w in os.environ.get(
-    "GIMLE_PLANE_WORKSPACES", "wayof,opticat,synteon,whynotproductions,ymirhome").split(",") if w]
+    "GIMLE_PLANE_WORKSPACES", "wayof,example-4,example-8,whynotproductions,ymirhome").split(",") if w]
 
 
 def _people():

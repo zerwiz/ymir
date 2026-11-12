@@ -36,7 +36,7 @@ Deep-reference docs live in **`docs/`** (note the space):
 `software-smidja-pi.md` / `software-smidja-opencode.md` (coding-agent
 setups), `software-smidja-visualizer.md` (trace UI), `SmidjaAgentsAndModels.md`
 (roster + model backends — source of truth for agents/models), and
-`wayoffactory-updates.md` (how findings flow into the wayoffactory repo).
+`example-7-updates.md` (how findings flow into the example-7 repo).
 
 ## Sibling skills — load one if the task matches
 

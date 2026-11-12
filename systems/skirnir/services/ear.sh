@@ -27,7 +27,7 @@ fi
 URL="${WHISPER_URL:-http://127.0.0.1:10300/inference}"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 # whisper wants 16 kHz mono PCM — and TELEGRAM'S NOTES ARE QUIET. Measured 2026-10-22: the same note
-# without gain heard "OptiCAD"; with gain and a vocabulary hint it heard "OptiCat". Level first, then
+# without gain heard "OptiCAD"; with gain and a vocabulary hint it heard "Example4". Level first, then
 # the words.
 ffmpeg -hide_banner -loglevel error -y -i "$FILE" \
   -af "volume=6dB,loudnorm=I=-16:TP=-1.5:LRA=11" -ar 16000 -ac 1 "$TMP/16k.wav" 2>/dev/null \
@@ -54,9 +54,9 @@ raise_mouth() {
 }
 raise_mouth >/dev/null 2>&1 &
 
-# A VOCABULARY HINT, because a general model hears "OptiCAD" and this house has an OptiCat. Names only,
+# A VOCABULARY HINT, because a general model hears "OptiCAD" and this house has an Example4. Names only,
 # never a private fact: it biases the decoder toward the words the house actually says.
-VOCAB="${WHISPER_VOCAB:-OptiCat, OVK, Skírnir, Snotra, Boverket, WayOf, Whynot Productions, Synteon, ventilation inspection, Isabella, Craig, Brokk, Ymir}"
+VOCAB="${WHISPER_VOCAB:-Example4, OVK, Skírnir, Snotra, Boverket, WayOf, Whynot Productions, Example8, ventilation inspection, Isabella, Craig, Brokk, Ymir}"
 OUT="$(curl -s -m 120 "$URL" -F "file=@$TMP/16k.wav" -F response_format=json -F temperature=0 \
   -F "language=$LANG_CODE" -F "prompt=$VOCAB" 2>/dev/null)"
 TEXT="$(printf '%s' "$OUT" | python3 -c 'import json,sys

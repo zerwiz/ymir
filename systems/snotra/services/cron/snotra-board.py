@@ -2,7 +2,7 @@
 """snotra-board — a place declares a board; this door makes it, once.
 
 WHY: a place profile names a board and its lists, and until that board exists the first projection fails.
-Making it by hand is how two boards end up with the same name (measured 2026-10-22: a second "Control Tower"
+Making it by hand is how two boards end up with the same name (measured 2026-10-22: a second "Example3"
 was created) — so a declaration should be executable, idempotent, and refuse to guess.
 
 WHAT IT DOES

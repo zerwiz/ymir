@@ -1,0 +1,141 @@
+#!/usr/bin/env python3
+"""ndalib — the NDA matcher: company, client and NDA-project names never enter the public tree.
+
+ONE module, used by the guard (pre-commit, pre-push, CI) and by the Claude Code write hook,
+so the two can never disagree (RULES/04, appended 2026-11-12).
+
+The names are NEVER in this repository. They are read at run time from the operator's home:
+  hodd/identity/companies.yaml      every company
+  hodd/identity/clients.yaml        every client
+  hodd/identity/projects.yaml       every project that is not Ymir's own or openly public
+  svartalfaheim/<realm>/            every realm directory
+  hodd/identity/confidential.yaml   `nda:` — names the operator adds by hand
+Words that are also ordinary English live in config/nda-allow.yaml, each with its reason.
+"""
+import os, re, subprocess, sys
+
+OPEN_KINDS = {'oss', 'oss-fork', 'vendored', 'docs'}
+MIN_LEN = 4
+
+
+def repo_root():
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+
+
+def ymir_home():
+    """The home, or None. Never invents one."""
+    h = os.environ.get('YMIR_HOME')
+    if h:
+        return h if os.path.isdir(h) else None
+    try:
+        root = repo_root()
+        out = subprocess.run(
+            ['bash', '-c', f'. "{root}/bin/vault/hoard-lib.sh" >/dev/null 2>&1; out=""; ymir_home_root out; printf "%s" "$out"'],
+            capture_output=True, timeout=10).stdout.decode().strip()
+        if out and os.path.isdir(out):
+            return out
+    except Exception:
+        pass
+    d = os.path.join(os.path.expanduser('~'), 'Documents', 'ymirhome')
+    return d if os.path.isdir(d) else None
+
+
+def _yaml(path):
+    try:
+        import yaml
+        return yaml.safe_load(open(path, encoding='utf-8')) or {}
+    except Exception:
+        return {}
+
+
+def _add(names, value, source):
+    if not isinstance(value, str):
+        return
+    v = value.strip()
+    if len(v) >= MIN_LEN:
+        names.setdefault(v.lower(), source)
+
+
+def load_allow(root=None):
+    """{word_lower: reason}. An entry without a reason is ignored: an allowance is a claim."""
+    data = _yaml(os.path.join(root or repo_root(), 'config', 'nda-allow.yaml'))
+    out = {}
+    for e in data.get('allow', []) or []:
+        if isinstance(e, dict) and e.get('word') and str(e.get('reason', '')).strip():
+            out[str(e['word']).strip().lower()] = e['reason']
+    return out
+
+
+def load_names(home, allow=None):
+    """{name_lower: source_kind} read from the home. Source kinds, never values, are what is reported."""
+    names = {}
+    ident = os.path.join(home, 'hodd', 'identity')
+    for c in _yaml(os.path.join(ident, 'companies.yaml')).get('companies', []) or []:
+        if isinstance(c, dict):
+            _add(names, c.get('name'), 'company'); _add(names, c.get('id'), 'company')
+    for c in _yaml(os.path.join(ident, 'clients.yaml')).get('clients', []) or []:
+        if isinstance(c, dict):
+            _add(names, c.get('name'), 'client'); _add(names, c.get('id'), 'client')
+    apps_dir = os.path.join(repo_root(), 'apps')
+    own_apps = [a.lower() for a in os.listdir(apps_dir)] if os.path.isdir(apps_dir) else []
+    for p in _yaml(os.path.join(ident, 'projects.yaml')).get('projects', []) or []:
+        if not isinstance(p, dict):
+            continue
+        ident_s = f"{p.get('id', '')} {p.get('name', '')}".lower()
+        pid = str(p.get('id', '')).lower()
+        if p.get('posture') == 'public' or p.get('kind') in OPEN_KINDS or ident_s.strip().startswith('ymir'):
+            continue
+        # Ymir's own applications live in apps/ of THIS repository: they are the public product, not a client's.
+        if str(p.get('repo') or p.get('workspace') or '').startswith('apps/') or \
+                any(pid == a or pid.startswith(a + '-') for a in own_apps):
+            continue
+        _add(names, p.get('name'), 'project'); _add(names, p.get('id'), 'project')
+        _add(names, p.get('realm'), 'realm')
+    sv = os.path.join(home, 'svartalfaheim')
+    if os.path.isdir(sv):
+        for d in os.listdir(sv):
+            if not d.startswith('.') and os.path.isdir(os.path.join(sv, d)):
+                _add(names, d, 'realm')
+    conf = _yaml(os.path.join(ident, 'confidential.yaml'))
+    for n in conf.get('nda', []) or []:
+        _add(names, n if isinstance(n, str) else (n or {}).get('name'), 'nda-list')
+    for w in (allow if allow is not None else load_allow()):
+        names.pop(w, None)
+    return names
+
+
+def compile_names(names):
+    if not names:
+        return None
+    alts = '|'.join(re.escape(n) for n in sorted(names, key=len, reverse=True))
+    return re.compile(r'(?<![A-Za-z0-9_])(' + alts + r')(?![A-Za-z0-9_])', re.I)
+
+
+class Matcher:
+    def __init__(self, home=None, root=None):
+        self.home = home if home is not None else ymir_home()
+        self.allow = load_allow(root)
+        self.names = load_names(self.home, self.allow) if self.home else {}
+        self.rx = compile_names(self.names)
+
+    @property
+    def armed(self):
+        return self.rx is not None
+
+    def scan_text(self, text):
+        """[(line_no, matched_name, source_kind)] — never more than the name is echoed."""
+        out = []
+        if not self.rx:
+            return out
+        for n, line in enumerate(text.splitlines(), 1):
+            for m in self.rx.finditer(line):
+                out.append((n, m.group(1), self.names.get(m.group(1).lower(), '?')))
+        return out
+
+    def scan_path(self, path):
+        return [(0, m.group(1), self.names.get(m.group(1).lower(), '?')) for m in
+                (self.rx.finditer(path) if self.rx else [])]
+
+
+def is_binary(raw):
+    return b'\x00' in raw[:8192]

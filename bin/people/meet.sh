@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # meet.sh — one command: "put a meeting with <person> in the calendar, with a Meet link".
 #
-#   meet.sh --with craig --at "fri 10:00" --for 30 --title "OptiCat review" [--note "text"] [--dry-run]
+#   meet.sh --with craig --at "fri 10:00" --for 30 --title "Example4 review" [--note "text"] [--dry-run]
 #
 # WHY: the doors already worked — `calendar-invite.sh create … --meet` and `mail-send.sh draft` — but
 # using them means an ISO timestamp, a comma-separated attendee list, and a body FILE. That is a

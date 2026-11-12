@@ -263,7 +263,7 @@ class Case(unittest.TestCase):
 
 class MailGate(Case):
     def test_1_unapproved_draft_is_refused_and_the_refusal_is_recorded(self):
-        self.draft("r-1", b"To: partner@example.com\r\nSubject: OptiCat\r\n\r\nhello\r\n")
+        self.draft("r-1", b"To: partner@example.com\r\nSubject: Example4\r\n\r\nhello\r\n")
         r = self.run_script(MAIL, "send", "r-1")
         self.assertNotEqual(r.returncode, 0, r.stdout)
         self.assertIn("NOT APPROVED", r.stderr)
@@ -271,7 +271,7 @@ class MailGate(Case):
         self.assertIn("REFUSED mail r-1", self.ledger(), "the refusal was not carved into the Runes")
 
     def test_2_an_approved_draft_sends_exactly_once_and_a_second_send_is_refused(self):
-        self.draft("r-2", b"To: partner@example.com\r\nSubject: OptiCat\r\n\r\nhello\r\n")
+        self.draft("r-2", b"To: partner@example.com\r\nSubject: Example4\r\n\r\nhello\r\n")
         self.assertEqual(self.approve("r-2").returncode, 0)
 
         first = self.run_script(MAIL, "send", "r-2")
@@ -287,9 +287,9 @@ class MailGate(Case):
         self.assertIn("SPENT mail r-2", self.ledger())
 
     def test_3_a_draft_edited_after_approval_is_refused_as_stale(self):
-        self.draft("r-3", b"To: partner@example.com\r\nSubject: OptiCat\r\n\r\nhello\r\n")
+        self.draft("r-3", b"To: partner@example.com\r\nSubject: Example4\r\n\r\nhello\r\n")
         self.assertEqual(self.approve("r-3").returncode, 0)
-        self.draft("r-3", b"To: partner@example.com\r\nSubject: OptiCat\r\n\r\nhello, and one more thing\r\n")
+        self.draft("r-3", b"To: partner@example.com\r\nSubject: Example4\r\n\r\nhello, and one more thing\r\n")
 
         r = self.run_script(MAIL, "send", "r-3")
         self.assertNotEqual(r.returncode, 0)
@@ -315,7 +315,7 @@ class MailGate(Case):
         body = self.tmp / "letter.md"
         body.write_text("Hi partner,\n\nA sentence with **weight**.\n\nThe house\n", encoding="utf-8")
         raw = self._drafted("--to", "partner@letters.test", "--subject", "A plain letter",
-                            "--body", str(body), "--footer", "Growth Agent \u00b7 sent from the house")
+                            "--body", str(body), "--footer", "Example9 \u00b7 sent from the house")
         message = BytesParser(policy=policy.default).parsebytes(raw)
         self.assertEqual(message.get_content_type(), "multipart/alternative", "the letter went out undressed")
         parts = {p.get_content_type(): p.get_content()
@@ -323,7 +323,7 @@ class MailGate(Case):
         self.assertIn("text/html", parts, "there is no HTML half in the message")
         self.assertIn("A sentence with", parts["text/plain"])
         self.assertIn("<strong>weight</strong>", parts["text/html"], "the words were not dressed, they were changed")
-        self.assertIn("Growth Agent \u00b7 sent from the house", parts["text/html"], "the footer never reached the letter")
+        self.assertIn("Example9 \u00b7 sent from the house", parts["text/html"], "the footer never reached the letter")
         for demo in ("htmlemail.io", "Company Inc", "This is preheader text"):
             self.assertNotIn(demo, parts["text/html"], f"a vendored demo line travelled with a real letter: {demo}")
 
@@ -348,7 +348,7 @@ class MailGate(Case):
 
 
 class CalendarGate(Case):
-    ARGS = ("--title", "OptiCat review", "--start", "2026-10-30T10:00:00",
+    ARGS = ("--title", "Example4 review", "--start", "2026-10-30T10:00:00",
             "--end", "2026-10-30T10:30:00")
 
     def create(self, *extra: str) -> subprocess.CompletedProcess:
@@ -385,7 +385,7 @@ class CalendarGate(Case):
         key = "evt-2026_10_30T10_00_00"
         self.assertEqual(self.run_script(APPROVE, "approve-event", key).returncode, 0)
 
-        r = self.run_script(CAL, "create", "--title", "OptiCat review — and pricing",
+        r = self.run_script(CAL, "create", "--title", "Example4 review — and pricing",
                             "--start", "2026-10-30T10:00:00", "--end", "2026-10-30T10:30:00",
                             "--attendees", "partner@example.com")
         self.assertEqual(r.returncode, 3)

@@ -186,7 +186,7 @@ class Board:
     """The board behind the MCP — the same reader the desk uses (plan 217, G1 and G2).
 
     A *place* is a Plane project, named `<workspace>/<project>`. A token's place column is matched
-    against that name, so `OptiCat` resolves and `Michael` — a person, not a project — is refused by
+    against that name, so `Example4` resolves and `Michael` — a person, not a project — is refused by
     name instead of answering an empty board. That silence was the fault measured on 2026-11-07: five
     collaborators seated, every one of them counting zero, and nothing saying why.
     """
@@ -251,7 +251,7 @@ class Board:
 
         `plane_reader.board_for` reads every workspace and is right for the desk, where the person is
         the scope. The MCP's scope is the PLACE on the token, so a card from a place outside it is not
-        the caller's to see — measured 2026-11-07, where an OptiCat-only token was handed a Ymir card.
+        the caller's to see — measured 2026-11-07, where an Example4-only token was handed a Ymir card.
         """
         email = (self.reader._people().get(subject.lower()) or "").lower()
         rows, notes = [], []

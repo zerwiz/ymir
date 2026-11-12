@@ -13,7 +13,7 @@ to configure, because he has no tools.
 ```sh
 systems/skirnir/services/kb-export.sh                 # rebuild the digest from APPROVED facts only
 systems/skirnir/services/kb-export.sh --list          # what is approved right now
-systems/skirnir/services/ask.sh --tier collaborator --text "what is OptiCat?"
+systems/skirnir/services/ask.sh --tier collaborator --text "what is Example4?"
 systems/skirnir/services/ask.sh --tier collaborator --sender anna@example.com --text "nda please"
 systems/skirnir/services/voice.sh                     # talk to him: mic → whisper → Skírnir → Kokoro
 systems/skirnir/services/voice.sh --text "who are you" # the same, without a microphone

@@ -26,7 +26,7 @@ and `bin/agents/groa-update.sh` adds them to an existing one through `bin/engine
 bash bin/records/plan.sh new thermal-repair --title "Power, thermals and the fans" --scope machine --owner heimdall
 
 # a company's plan
-bash bin/records/plan.sh new pricing --title "Pricing for 2027" --scope realm --owner synteon
+bash bin/records/plan.sh new pricing --title "Pricing for 2027" --scope realm --owner example-8
 
 # your own
 bash bin/records/plan.sh new moving-house --title "Moving in December" --scope personal

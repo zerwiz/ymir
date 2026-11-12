@@ -37,7 +37,7 @@ meet    https://meet.google.com/ewn-doph-vfd
 mail    all
 ```
 
-Read back through the Calendar API: title *Trello and Control Tower — how we work*, 2026-11-03 09:00–10:00
+Read back through the Calendar API: title *Trello and Example3 — how we work*, 2026-11-03 09:00–10:00
 Europe/Stockholm (08:00Z), status `confirmed`, both attendees `needsAction`, and the approval recorded as
 **SENT** — spent by the one post that used it, as the gate requires.
 

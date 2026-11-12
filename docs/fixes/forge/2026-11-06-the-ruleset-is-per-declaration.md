@@ -9,7 +9,7 @@ measurements. The heart measured both halves in one message, and the second one 
 
 ```
 measured[3]{repo,ruleset,why}:
-  "the game clone (~/CodeP/the-outer-byway)","7332edd065bd1ff7 on BOTH seats","its declaration lists no plan ledger — a fixed set of files, so the hash is STABLE across seats and time"
+  "the game clone (~/CodeP/example-15)","7332edd065bd1ff7 on BOTH seats","its declaration lists no plan ledger — a fixed set of files, so the hash is STABLE across seats and time"
   "the ymir tree, on the heart","08f5954d → f224f614 → fee527c1 across one night","its declaration names the plan ledger as source 4, so every appended plan moves the hash"
   "the ymir tree, on this seat","73b0883e → f7c802a0 → d8cbdeba → aea8cfbe, same cause","same declaration, different home contract — the seat shifts it too"
 ```

@@ -3,7 +3,7 @@
 ### Files
 - `bin/time/snotra/snotra-letter.py` (plain-text body + email-safe HTML; multipart draft)
 - `bin/time/snotra/snotra-project.py`, `trello_client.py` (members, due dates, checklists, body)
-- `hodd/identity/places/synteon/documentation/place.yaml` (roles.chair, roles.operator)
+- `hodd/identity/places/example-8/documentation/place.yaml` (roles.chair, roles.operator)
 
 ### What was wrong
 - **The drafts carried raw Markdown.** `## heading`, `**bold**`, `---` were pasted as the *text* body, so

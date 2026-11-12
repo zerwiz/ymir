@@ -14,8 +14,8 @@ overdue *actions in the meeting record*; the board is a different surface, and i
   skips cards that are closed or complete, and says **one line per bucket per day**: overdue is a
   HIGH naming the worst card and its age; due today is a MEDIUM. Scheduled at **07:45**.
   Its first real run found exactly what he saw: **1 overdue ("Road map & Trello — 2026-10-20") and
-  5 due today** on *Synteon — Meetings*. The board is resolved by exact name, then by substring —
-  because "Meetings" was renamed to "Synteon — Meetings" and a silent miss is the failure mode.
+  5 due today** on *Example8 — Meetings*. The board is resolved by exact name, then by substring —
+  because "Meetings" was renamed to "Example8 — Meetings" and a silent miss is the failure mode.
 - **Cron failure reporting** — the scheduler now captures each job's exit code and, on a non-zero,
   sends a **HIGH** through Hófvarpnir with the last line of output, keyed per job per day. Both
   execution branches (flock and fallback) are wired. A failed job is no longer a log line.
@@ -38,7 +38,7 @@ and, on the board:
 
 ```
 trello-due[1]{board,overdue,due_today,worst}:
-  "Synteon — Meetings","1","5","Road map & Trello — 2026-10-20"
+  "Example8 — Meetings","1","5","Road map & Trello — 2026-10-20"
 ```
 
 ## What is still owed (plan 100)

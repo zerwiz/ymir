@@ -26,7 +26,7 @@ silently swapped); the machine's opencode model was handed to Claude, which refu
   a machine model dropped, an explicit provider token refused, an alias kept).
 - Full `ymir_runtime` suite: the same 11 pre-existing failures as `main` (diffed), none added.
 - **Live:** `eindri-start.sh … --id foreman-process-3 --kind claude` → seat `harness=claude`, herdr pane w4P:p1, accept
-  edits on, brief as the first turn; after the model law it works the ForemanAI errand with no prompt.
+  edits on, brief as the first turn; after the model law it works the Example5 errand with no prompt.
 
 ### Not done
 - **P5d** (a stalled worker raised to the arm), **P5f** (the `eindri-only` hook per project), **P5g** (the brief's

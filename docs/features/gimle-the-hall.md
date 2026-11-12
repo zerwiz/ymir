@@ -76,7 +76,7 @@ list_plans                     (the mirrored plan documents the hall serves at /
 ```
 
 **A place is a project on the board**, named `<workspace>/<project>` (`whynotproductions/Ymir`). A token's
-place column holds the short names people use (`Ymir`, `OptiCat`, `Growth`); the server resolves each to the
+place column holds the short names people use (`Ymir`, `Example4`, `Growth`); the server resolves each to the
 one project it names and answers `unresolved_places` for anything that is not a place at all — a person in a
 place column is refused by name, never answered with an empty board.
 

@@ -148,10 +148,11 @@ fi
 # ── claude: the hook SCRIPTS; the JSON wiring is named, never merged blind ────
 if command -v claude >/dev/null 2>&1; then
   copy_tree "$ROOT/.claude/hooks" "$HOME/.claude/hooks" "claude-hooks" || true
-  # THREE user-scope hooks, each wired as ONE NAMED entry in ~/.claude/settings.json, so they
+  # FOUR user-scope hooks, each wired as ONE NAMED entry in ~/.claude/settings.json, so they
   # serve EVERY project on the machine and never a single repo:
   #   SessionStart  load-agents-md.sh  Claude Code reads CLAUDE.md, never a project's AGENTS.md
   #   PreToolUse    eindri-only.sh      (Agent|Task) workers are Eindri, never Claude subagents
+  #   PreToolUse    nda-write.sh        (Write|Edit|MultiEdit) company/client names never enter the public tree (RULES/04)
   #   Stop          ymir-arm.sh         (asyncRewake) the Gná arm reaches a seat in ANY project
   # An entry whose hook command names the script is current; none is added on install (one
   # backup kept per run) and reported stale on --check. Nothing else in the file moves.
@@ -169,6 +170,10 @@ desired = [
         "matcher": "Agent|Task",
         "hooks": [{"type": "command",
                    "command": 'bash "$HOME/.claude/hooks/eindri-only.sh"', "timeout": 10}]}),
+    ("claude-nda-write", "PreToolUse", "nda-write.sh", {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [{"type": "command",
+                   "command": 'bash "$HOME/.claude/hooks/nda-write.sh"', "timeout": 10}]}),
     ("claude-ymir-arm", "Stop", "ymir-arm.sh", {
         "hooks": [{"type": "command",
                    "command": 'bash "$HOME/.claude/hooks/ymir-arm.sh"',

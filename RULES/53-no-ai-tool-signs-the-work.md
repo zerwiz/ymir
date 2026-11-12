@@ -29,4 +29,4 @@ Nothing may print. A guard that runs this on every push is the enforcement this 
 
 ## CHANGE LOG
 
-- **2026-11-11** — written at the Allfather's word, the same day in Ymir and in the ForemanAI repository.
+- **2026-11-11** — written at the Allfather's word, the same day in Ymir and in the Example5 repository.

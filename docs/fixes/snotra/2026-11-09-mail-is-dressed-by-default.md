@@ -43,7 +43,7 @@ python3 bin/time/snotra/tests/test_outbound_gate.py
       Ran 14 tests in 19.06s — OK          (was 12 pass · 2 fail before this change)
 
 bash systems/snotra/services/letters/mail-send.sh draft --to … --subject … --body /tmp/probe-body.md \
-     --footer "Growth Agent · sent from the house" --dry-run
+     --footer "Example9 · sent from the house" --dry-run
       eml → content-type: multipart/alternative · text/plain 69 chars · text/html 7823 chars
       no "Company Inc", no "htmlemail.io", no "This is preheader text"; the footer and the <ul> present
 

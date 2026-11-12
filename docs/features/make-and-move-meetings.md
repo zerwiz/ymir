@@ -26,7 +26,7 @@ it **refuses and lists them** — a wrong meeting moved is worse than a question
 ```sh
 C=systems/snotra/services/calendar/calendar-write.sh
 $C status                                      # ready · read-only · unmeasured
-$C create --title "OptiCat review" --when "tomorrow 09:30" --duration 45m
+$C create --title "Example4 review" --when "tomorrow 09:30" --duration 45m
 $C create --title "Review" --when "2030-01-02 09:00" \
     --attendees a@example.com --dry-run        # say what would happen, change nothing
 $C move "Standup" --to "tomorrow 14:00" --duration 30m

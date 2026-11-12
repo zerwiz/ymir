@@ -90,7 +90,7 @@ surfaces:
 ```
 
 The guard reads that register. A protected document — by hash, or by a marker such as
-`COHERANS`, `Mutual Non-Disclosure`, `Annex A-1`, `Annex B-1`, `Background IP`, `WO-IP-`
+`EXAMPLE6`, `Mutual Non-Disclosure`, `Annex A-1`, `Annex B-1`, `Background IP`, `WO-IP-`
 or `Confidential Information` — is refused on Trello and on any public surface, and on
 email unless **every** recipient is one of the four parties. A derived record that carries
 those markers inherits the rule: the NDA says derivatives are confidential too.

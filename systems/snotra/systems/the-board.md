@@ -9,7 +9,7 @@ are what the record says today, and a card edited by hand in the board is overwr
 - **A place declares its board.** The board and its lists are named in the place's profile; until the board exists
   the first projection fails. So `check` says whether it is there, and `ensure` creates only what is missing.
 - **A name that exists is never created again** (in the map, `trello-map.yaml`). This is measured, not cautious: on
-  2026-10-22 a second "Control Tower" board was created by hand.
+  2026-10-22 a second "Example3" board was created by hand.
 - **A list that exists is never renamed.** A profile that renames a list silently files cards nowhere.
 - **The board is created private**, in the organisation the other boards already belong to.
 - **`ensure` prints what it created and what it left alone**, and re-reads the board to prove it.

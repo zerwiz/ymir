@@ -23,7 +23,7 @@
 - the validator accepts `status: proposed` + `approver_pending: true` with no approver, and still refuses
   `approved`/`decided`/`rejected` without exactly one person. The record now validates:
   **VALID — 14 decisions, 3 actions, 0 warning(s)**.
-- `snotra-agenda.sh` files the dated agenda card (`Agenda — 2026-10-26 09:00 · synteon/documentation`) into
+- `snotra-agenda.sh` files the dated agenda card (`Agenda — 2026-10-26 09:00 · example-8/documentation`) into
   *Next Meeting Agenda*, in the room's order, every line citing its id; a second run says `already current`.
 - `smoke.sh`: **8 pass · 0 skip · 0 fail**.
 

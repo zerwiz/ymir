@@ -70,7 +70,7 @@ def get(p):
     try: return json.load(urllib.request.urlopen(r, timeout=12))
     except Exception: return {}
 lines, blocked, done, doing = [], 0, 0, 0
-for ws in ("wayof", "synteon", "opticat", "whynotproductions", "ymirhome"):
+for ws in ("wayof", "example-8", "example-4", "whynotproductions", "ymirhome"):
     d = get(f"/api/v1/workspaces/{ws}/projects/?per_page=100")
     for p in (d.get("results") or []):
         try:

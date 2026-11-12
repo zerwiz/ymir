@@ -1,6 +1,6 @@
 # Snotra — Business Launch Document
 
-**Prepared for:** Reygan Assareh (Synteon Technologies)
+**Prepared for:** Reygan Assareh (Example8 Technologies)
 **Prepared by:** <the operator> <the operator> (Ymir / Whynot Productions)
 **Date:** 2026-10-31
 **Status:** Draft for partner review

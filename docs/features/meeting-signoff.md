@@ -7,7 +7,7 @@ decision.
 ## Commands
 
 ```sh
-OUT="$YMIR_HOME/svartalfaheim/synteon/meetings/2026-10-20-roadmap"
+OUT="$YMIR_HOME/svartalfaheim/example-8/meetings/2026-10-20-roadmap"
 
 systems/snotra/services/approve/snotra-signoff.sh init   "$OUT"   # one entry per participant
 systems/snotra/services/approve/snotra-signoff.sh ask    "$OUT"   # one Gmail draft per pending person

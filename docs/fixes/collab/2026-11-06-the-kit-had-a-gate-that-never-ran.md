@@ -66,7 +66,7 @@ project registry (`realm`, `posture`), the kit manifest, and the host's own `.ag
    three when it was two.
 
 **Verified:** run against this machine's own code (`house`), and against a real project
-(`project: growth-agent`, `realm whynotproductions`, `hands zerwiz,Sebanionen`).
+(`project: example-9`, `realm whynotproductions`, `hands zerwiz,Sebanionen`).
 
 ## CHANGE LOG
 

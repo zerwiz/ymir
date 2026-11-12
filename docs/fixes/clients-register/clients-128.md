@@ -17,16 +17,16 @@
 
 ## Why
 
-On 2026-10-24 the Allfather said "opticat are its own company and project. its not ours …
+On 2026-10-24 the Allfather said "example-4 are its own company and project. its not ours …
 our client" and then "its way of's client." The home had no way to hold that sentence:
 companies.yaml holds the houses we ARE, collaborators.yaml holds people, projects.yaml
 holds repos, place.yaml holds one company's surface. The one client-shaped realm already
-present, inmostinvest, was filed as a house — that is the fault.
+present, example-2, was filed as a house — that is the fault.
 
 ## Proof
 
 - `clients.sh validate` passes on the hoard's clients.yaml
-- `place-validate.sh` accepts OptiCat's place (declares `client_of: wayof`)
+- `place-validate.sh` accepts Example4's place (declares `client_of: wayof`)
 - `place-validate.sh` refuses a place with a client company but no `client_of`
 - `place-validate.sh` accepts a house company without `client_of`
 - `projects-validate.sh` validates all 23 projects (none have `client:` yet)

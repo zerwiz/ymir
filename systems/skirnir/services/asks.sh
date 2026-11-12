@@ -2,7 +2,7 @@
 # asks.sh — the ledger of questions Skírnir could not answer, and the road that closes the loop.
 #
 #   asks.sh add --who "Isabella Jakobsson (@isalorain)" --chat 4242 --channel telegram-dm \
-#               --question "what is the OptiCat deadline" [--context "…"]   → prints the id
+#               --question "what is the Example4 deadline" [--context "…"]   → prints the id
 #   asks.sh list [--open|--all]                                            → TOON rows
 #   asks.sh get <id>                                                       → the record
 #   asks.sh deliver <id> --text "…"                                        → send his answer to the asker

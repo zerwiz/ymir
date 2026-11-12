@@ -10,13 +10,13 @@ grant connected on this machine (`mcp({ connect: "trello" })`).
 
 ```sh
 # create or update every card for a meeting; safe to run again
-systems/snotra/services/cron/snotra-trello.sh export "$YMIR_HOME/svartalfaheim/synteon/meetings/2026-10-20-roadmap"
+systems/snotra/services/cron/snotra-trello.sh export "$YMIR_HOME/svartalfaheim/example-8/meetings/2026-10-20-roadmap"
 
 # move the sign-off card when confirmations arrive
-systems/snotra/services/cron/snotra-trello.sh sync "$YMIR_HOME/svartalfaheim/synteon/meetings/2026-10-20-roadmap"
+systems/snotra/services/cron/snotra-trello.sh sync "$YMIR_HOME/svartalfaheim/example-8/meetings/2026-10-20-roadmap"
 
 # what is on the board, per list
-systems/snotra/services/cron/snotra-trello.sh doctor "$YMIR_HOME/svartalfaheim/synteon/meetings/2026-10-20-roadmap"
+systems/snotra/services/cron/snotra-trello.sh doctor "$YMIR_HOME/svartalfaheim/example-8/meetings/2026-10-20-roadmap"
 ```
 
 The board URL is written into `trello.json` beside the record and into the follow-up
@@ -51,4 +51,4 @@ Sign-off · Signed`. Move a card when its state changes; do not create a list pe
   yet been exercised.
 
 The full design, the research and the audit are in
-`$YMIR_HOME/svartalfaheim/synteon/framework/trello-workflow.md`.
+`$YMIR_HOME/svartalfaheim/example-8/framework/trello-workflow.md`.

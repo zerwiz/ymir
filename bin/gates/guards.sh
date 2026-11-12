@@ -50,7 +50,11 @@ ROOT="$(_root)"
 cd "$ROOT" || exit 2
 
 # ONE list. A new tree ward appears here or it does not run anywhere.
-WARDS=(runtime-guard.sh runtime-pinned-guard.sh defaults-guard.sh app-folder-guard.sh app-functional-guard.sh rules-number-guard.sh inventory-guard.sh registers-guard.sh fleet-version-guard.sh subsystem-docs-guard.sh path-ledger-guard.sh path-legality-guard.sh packaging-guard.sh public-data-guard.sh cron-guard.sh features-guard.sh weave-guard.sh vault-guard.sh confidential-guard.sh dead-code-guard.sh docs-claims-guard.sh home-contract-guard.sh language-guard.sh pkill-guard.sh skills-share-guard.sh rules-compliance-guard.sh pr-ship-guard.sh model-rows-guard.sh areas-guard.sh desktop-main-guard.sh house-colour-guard.sh pr-identity-guard.sh)
+WARDS=(runtime-guard.sh runtime-pinned-guard.sh defaults-guard.sh app-folder-guard.sh app-functional-guard.sh rules-number-guard.sh inventory-guard.sh registers-guard.sh fleet-version-guard.sh subsystem-docs-guard.sh path-ledger-guard.sh path-legality-guard.sh packaging-guard.sh public-data-guard.sh cron-guard.sh features-guard.sh weave-guard.sh vault-guard.sh confidential-guard.sh dead-code-guard.sh docs-claims-guard.sh home-contract-guard.sh language-guard.sh pkill-guard.sh skills-share-guard.sh rules-compliance-guard.sh pr-ship-guard.sh model-rows-guard.sh areas-guard.sh desktop-main-guard.sh house-colour-guard.sh pr-identity-guard.sh nda-guard.sh)
+#
+# nda-guard (2026-11-12, RULES/04): company, client and NDA-project names never enter the public tree. The
+# names are read from $YMIR_HOME at run time, so the ward is never cached and says UNARMED, aloud, where no
+# home resolves. It is in the one list so pre-push and CI both run it.
 #
 # weave-guard (2026-11-04, plan 175 §3): the weaver was seated and NOTHING CALLED IT — so a stale
 # index (RULES/README.md, a plan row, a feature page's catalogue row) was refused by no ward at all.
@@ -73,7 +77,7 @@ WARDS=(runtime-guard.sh runtime-pinned-guard.sh defaults-guard.sh app-folder-gua
 #          finding it prints is, by construction, the push's own. These are the wards that
 #          read file CONTENT (RULES/04 above all: 5,460 files, and the scan is the same
 #          answer per file, so a push that changed one file need not re-read 5,459).
-SCOPED=(public-data-guard.sh house-colour-guard.sh)
+SCOPED=(public-data-guard.sh house-colour-guard.sh nda-guard.sh)
 # house-colour-guard (2026-11-12, RULES/54): no blue and no purple. Scoped, because the verdict
 # is per file — a push that touched three stylesheets needs those three read, not the 24 s the
 # whole tree costs; CI's --full reads every file.

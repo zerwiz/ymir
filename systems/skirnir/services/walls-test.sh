@@ -125,8 +125,8 @@ out="$(ask 'whata do you have in your database' owner)"
 case "$out" in *"I hold"*) pass "a typo still reaches the inventory" ;; *) fail "typo tolerance" "$out" ;; esac
 
 # two facts about one subject: the focused one answers, the tie is not a refusal
-out="$(ask 'can you tell about opticat' owner)"
-case "$out" in *OptiCat*) pass "a subject with two facts still answers" ;; *) fail "tie refusal" "$out" ;; esac
+out="$(ask 'can you tell about example-4' owner)"
+case "$out" in *Example4*) pass "a subject with two facts still answers" ;; *) fail "tie refusal" "$out" ;; esac
 
 # the model's eye: private classes must never enter its context, whatever the tier
 ctx="$(YMIR_HOME="$YMIR_HOME" python3 -c "
@@ -173,7 +173,7 @@ fi
 # ── the handoff: gather first, then name the asker ─────────────────────────────────────────────
 # a stranger's first unknown question must NOT be escalated yet — he asks who/what/when first
 out="$(python3 "$ENGINE" --tier stranger --channel telegram-dm --chat 5150 --sender isalorain \
-       --text "what is the OptiCat deadline" 2>/dev/null)"
+       --text "what is the Example4 deadline" 2>/dev/null)"
 case "$out" in
   *"Before I pass this"*) pass "he gathers before he escalates" ;;
   *) fail "gather before escalating" "$out" ;;
@@ -181,7 +181,7 @@ esac
 
 # and the second message must carry the asker's NAME, not an anonymous ping
 MSG="$(YMIR_HOME="$AMBIENT_YMIR_HOME" bash "$SCRIPT_DIR/escalate.sh" --tier collaborator --chat 5150 \
-        --who "Isabella Jakobsson (@isalorain)" --text "what is the OptiCat deadline" \
+        --who "Isabella Jakobsson (@isalorain)" --text "what is the Example4 deadline" \
         --context "the inspection is Friday" --reason "no approved fact matches" --dry-run 2>&1)"
 case "$MSG" in
   *"Isabella Jakobsson"*) pass "the handoff names who is asking" ;;
@@ -231,14 +231,14 @@ lang="$(python3 -c "
 import importlib.util, os
 spec = importlib.util.spec_from_file_location('sk', os.environ['ENGINE'])
 m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
-print('sv' if m.language_hint('vad är OptiCat och vad behöver vi göra') else 'no')" 2>&1)"
+print('sv' if m.language_hint('vad är Example4 och vad behöver vi göra') else 'no')" 2>&1)"
 [ "$lang" = "sv" ] && pass "a Swedish question is marked for a Swedish answer" \
   || fail "language hint" "$lang"
 
 # ── a voice note in, a voice note out: the two halves of the same loop ────────────────────────
 if curl -s -m 4 -o /dev/null http://127.0.0.1:8765/v1/audio/speech 2>/dev/null \
    || (exec 3<>/dev/tcp/127.0.0.1/8765) 2>/dev/null; then
-  if bash "$SCRIPT_DIR/mouth.sh" "Skirnir, what is OptiCat? The inspection is on Friday." "$TMP/note.ogg" >/dev/null 2>&1 \
+  if bash "$SCRIPT_DIR/mouth.sh" "Skirnir, what is Example4? The inspection is on Friday." "$TMP/note.ogg" >/dev/null 2>&1 \
      && [ -s "$TMP/note.ogg" ]; then
     pass "the mouth makes a Telegram voice note ($(stat -c%s "$TMP/note.ogg") bytes)"
     heard="$(bash "$SCRIPT_DIR/ear.sh" "$TMP/note.ogg" 2>/dev/null)"

@@ -28,10 +28,10 @@ ITEMS = [
     {"id": "ev-standup", "summary": "Standup", "status": "confirmed",
      "start": {"dateTime": "2030-01-02T08:00:00+01:00"},
      "end": {"dateTime": "2030-01-02T08:15:00+01:00"}},
-    {"id": "ev-two-a", "summary": "OptiCat review", "status": "confirmed",
+    {"id": "ev-two-a", "summary": "Example4 review", "status": "confirmed",
      "start": {"dateTime": "2030-01-03T10:00:00+01:00"},
      "end": {"dateTime": "2030-01-03T10:30:00+01:00"}},
-    {"id": "ev-two-b", "summary": "OptiCat review — pricing", "status": "confirmed",
+    {"id": "ev-two-b", "summary": "Example4 review — pricing", "status": "confirmed",
      "start": {"dateTime": "2030-01-04T10:00:00+01:00"},
      "end": {"dateTime": "2030-01-04T10:30:00+01:00"}},
 ]

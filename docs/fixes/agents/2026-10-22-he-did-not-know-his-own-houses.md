@@ -6,8 +6,8 @@ name one. Two faults, both general.
 
 ```
 fixed[2]{fault,was,now}:
-  "the digest had no houses in it","21 facts, none of them the companies the Allfather works in","four approved facts from `hodd/identity/companies.yaml` — Whynot Productions, WayOf, Synteon Technologies, and the three together. No person's name is in any of them: the members stay in the registry (Rule 04)"
-  "a name written together did not match a name written apart","'whynotproductions' tokenised to one word and never met 'Whynot Productions'","a long token (≥5) found inside the SQUASHED claim is the subject — 'whynotproductions', 'opticat', 'wayofteams' all resolve now"
+  "the digest had no houses in it","21 facts, none of them the companies the Allfather works in","four approved facts from `hodd/identity/companies.yaml` — Whynot Productions, WayOf, Example8 Technologies, and the three together. No person's name is in any of them: the members stay in the registry (Rule 04)"
+  "a name written together did not match a name written apart","'whynotproductions' tokenised to one word and never met 'Whynot Productions'","a long token (≥5) found inside the SQUASHED claim is the subject — 'whynotproductions', 'example-4', 'wayofteams' all resolve now"
 ```
 
 **And he now answers to the house's name as well as his own:** *"ymir can you tell about …"* strips the

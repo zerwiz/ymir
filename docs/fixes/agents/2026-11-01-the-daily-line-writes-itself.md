@@ -33,7 +33,7 @@ $ bin/time/daily-line.sh --dry-run
 daily line
 cards: 0 blocked
 handoffs today: 1
-  · ses-2026-11-01 — done; next: import growth-agent into Gimlé the same way investready was read and filed
+  · ses-2026-11-01 — done; next: import example-9 into Gimlé the same way investready was read and filed
     unproven: the fix to the browser kill is unproven until a signed death; the outbound-gate suite is still red (8 fail)
 ```
 

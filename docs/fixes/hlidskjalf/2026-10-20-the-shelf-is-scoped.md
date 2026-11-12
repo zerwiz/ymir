@@ -10,18 +10,18 @@
 - store — `hodd/life/meetings/<lane>/<id>`.
 
 Each row now carries `scope` (`private | company | product | project | store`) and the
-company/realm as `workspace`. the house’s record shows `workspace: synteon, scope: company`.
+company/realm as `workspace`. the house’s record shows `workspace: example-8, scope: company`.
 
 ### Why
 
 the company is a **company** with four members, not a project of `work`. The record moved to
-`svartalfaheim/synteon/`; the registry is `hodd/identity/companies.yaml`, the shelf rules
+`svartalfaheim/example-8/`; the registry is `hodd/identity/companies.yaml`, the shelf rules
 `hodd/identity/meeting-locations.yaml`. Skrymir had been browsing the wrong shelf and too
 shallow; both are corrected in the same branch.
 
 ### Verified
 
-- API returns the pilot as `workspace synteon · scope company · 6 decisions`.
+- API returns the pilot as `workspace example-8 · scope company · 6 decisions`.
 - Skrymir returns `projects/…` under `realm=work`; the company is browsed under its own realm.
 
 ### Not verified

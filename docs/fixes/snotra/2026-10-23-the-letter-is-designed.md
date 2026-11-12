@@ -30,7 +30,7 @@ about the letter itself, not claims about the meeting.
 ### Measured
 ```
 letters/reygan-assareh.html   21 066 bytes   (was 5 334)
-probes: 'Synteon Technologies' 2 · '#12263f' 10 · 'Grade A · Critical' 1 · '2026-10-24' 2 · 'DEC-20261022' 1
+probes: 'Example8 Technologies' 2 · '#12263f' 10 · 'Grade A · Critical' 1 · '2026-10-24' 2 · 'DEC-20261022' 1
 sections: Who does what · What I need from you · How to answer · Next meeting   all present
 sent: the designed letter to <the operator's address> only (approved cde98d0b…)
 ```

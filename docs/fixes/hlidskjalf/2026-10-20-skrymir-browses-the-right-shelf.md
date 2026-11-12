@@ -16,7 +16,7 @@ causes:
 
 ### Verified
 
-- `/api/files?realm=work` now returns `projects/synteon technologies/meetings/2026-10-20-roadmap`.
+- `/api/files?realm=work` now returns `projects/example-8 technologies/meetings/2026-10-20-roadmap`.
 - API re-raised on `:3889`.
 
 ### Not verified

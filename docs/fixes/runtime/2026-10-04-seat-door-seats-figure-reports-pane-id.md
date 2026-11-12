@@ -59,7 +59,7 @@ same file was already open. Two patches to one path, merged out of order, and th
 first. **A redaction is only finished when it is on the line everyone merges FROM** — which is why
 this one is cut from `origin/main` after the merge, not before it.
 
-Verified on this branch: `aiassetvault · ymirhomepage · learnai · aigeeksandfreaks` → **0 hits**.
+Verified on this branch: `example-16 · ymirhomepage · learnai · aigeeksandfreaks` → **0 hits**.
 
 (The many other `CodeP/` matches in this repo are `CodeP/ymir` — **this public repository itself**,
 which is not private data.)

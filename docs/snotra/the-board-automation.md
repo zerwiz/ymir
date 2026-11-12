@@ -43,7 +43,7 @@ webhooks[2]{fact,consequence}:
 | a decision waiting too long | Scheduled → weekly email report of `Decisions` | nothing — the report is internal | **usable, to the operator's own address only** |
 | knowing a card was moved by a human | Rule → comment "moved by …" | treat it as drift and leave it (`project verify` reports it) | **Butler's comment is the audit trail the door cannot see** |
 
-## The commands, ready to paste (Synteon's Documentation board)
+## The commands, ready to paste (Example8's Documentation board)
 
 Butler's own language, four rules and one scheduled command. Nothing here touches the record, and nothing sends
 mail to a partner.

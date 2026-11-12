@@ -1251,7 +1251,7 @@ asks her to merge with `void` and the reason (Rule 08).
 
 - **2026-11-08** — Appended with the capability: the canon, the estate door, the widening of `domain.sh`,
   the tree ward, the kit shelf and its two gates, the card, and the first two estates measured (Ymir 6 held
-  · 12 unheld; Inmost's Control Tower 4 held · 14 unheld, its tenancy ground refused by name at the gate).
+  · 12 unheld; Inmost's Example3 4 held · 14 unheld, its tenancy ground refused by name at the gate).
   Plan 219; fix note `docs/fixes/collab/2026-11-08-the-kit-carries-the-inventory.md`.
 - **2026-11-08** — Appended with the capability: the release model (build · health · flip), the shared
   shelf, the one-rename law with its forbidden form, the automatic rollback inside the watch window, the

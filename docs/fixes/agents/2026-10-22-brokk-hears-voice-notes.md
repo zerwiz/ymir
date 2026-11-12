@@ -14,7 +14,7 @@ wired[3]{piece,value,note}:
 **`ear.sh` gained `--file=`** so the bridge's shell-free template can call it (`--file={file}`); the
 positional form still works for every other caller.
 
-**Measured:** `ear.sh --file=/tmp/note.ogg` → *"Skírnir, what is OptiCat? The inspection is on Friday."* — the
+**Measured:** `ear.sh --file=/tmp/note.ogg` → *"Skírnir, what is Example4? The inspection is on Friday."* — the
 exact shape the handler template passes.
 
 **What the operator must do once:** `/telegram-connect` in the TUI, because `telegram.json` is read at

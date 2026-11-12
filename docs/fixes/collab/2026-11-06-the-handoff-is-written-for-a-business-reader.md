@@ -44,7 +44,7 @@ Three batons written from the new template and run through the new check with no
   each naming the line and the word, exit 1;
 - the same sentence with `allow-house-word: the seat's own record` on that line → exit 0.
 
-Not proved: an existing repository's baton re-checked under the new rules. Growth Agent and InvestReady carry
+Not proved: an existing repository's baton re-checked under the new rules. Example9 and InvestReady carry
 the older copies and the older check, so they keep passing until their shelf is refreshed — which is the
 reason the change is additive rather than a rename.
 

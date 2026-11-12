@@ -12,7 +12,7 @@ correction[2]{case,was,now}:
 ```
 
 **Measured the same night — the number that justifies the rule:** a 30-minute microphone capture of the
-Synteon call, **60 MB of WAV**, became **5.3 MB of Opus** (11×) with its 1,386-word transcript stored
+Example8 call, **60 MB of WAV**, became **5.3 MB of Opus** (11×) with its 1,386-word transcript stored
 beside it. The meetings shelf went from **54 MB of raw audio to 5.4 MB** of text plus compressed audio.
 
 **Rule 30, restated in the operator's own words:** storage on this machine first, then one of his drives

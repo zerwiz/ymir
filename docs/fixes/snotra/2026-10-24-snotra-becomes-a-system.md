@@ -51,7 +51,7 @@ smoke, after the move       8 pass · 1 skip · 3 fail      (identical — the 3
 migration 0014 on a home with old spellings   heals them (6 rewrites on a scratch home, 1 on this one) · second run: 0
 eir-doctor snotra surface   ok     ·     materialised ~/.fleet copy of the ear: answers
 ```
-The three smoke failures are named, not waved: two places declare boards that do not exist (`Example`, `OptiCat`),
+The three smoke failures are named, not waved: two places declare boards that do not exist (`Example`, `Example4`),
 and one meeting folder carries a stray. Both were true **before** the move — proven by running the same gate from a
 pre-move worktree at `851d8f70` and getting the identical verdict line.
 

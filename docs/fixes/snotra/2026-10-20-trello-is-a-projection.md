@@ -20,7 +20,7 @@
   two business days after the meeting.
 - Labels created through REST (`Grade A/B/C`, `Blocking`, `Question`); MCP cannot create
   labels.
-- Board: <https://trello.com/b/5eh3eaGl/synteon-meetings>.
+- Board: <https://trello.com/b/5eh3eaGl/example-8-meetings>.
 
 ### Not verified
 

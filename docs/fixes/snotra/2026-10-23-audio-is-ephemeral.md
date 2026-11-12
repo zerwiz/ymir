@@ -50,6 +50,6 @@ correction[2]{case,was,now}:
 ```
 
 **Measured on the same night, and it is the number that justifies the rule:** a 30-minute microphone
-capture of tonight's Synteon call — **60 MB of WAV** — became **5.3 MB of Opus** (11×) with its 1,386-word
+capture of tonight's Example8 call — **60 MB of WAV** — became **5.3 MB of Opus** (11×) with its 1,386-word
 transcript stored beside it. The whole meetings shelf went from 54 MB of raw audio to 5.4 MB of text +
 compressed audio.

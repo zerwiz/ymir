@@ -19,7 +19,7 @@ choosing, and a letter went out saying "no decisions were taken".
 
 - A meeting **with a record**: `record.json` in the meeting folder (the engine writes it).
 - A **place profile**: `hodd/identity/places/<company>/<place>/place.yaml` — this is where that company's
-  board, list names, labels and cadence live. Synteon's is `synteon/documentation`; Whynot Productions'
+  board, list names, labels and cadence live. Example8's is `example-8/documentation`; Whynot Productions'
   is `whynotproductions/projects`; Way of Teams' declares `surface: gimle`.
 - The **board map**: `hodd/identity/trello-map.yaml` (refreshed by `systems/snotra/services/cron/trello-map.sh`).
 - The meeting bot's store reachable on this seat (the Vexa stack), and a Trello grant for the card doors.
@@ -27,7 +27,7 @@ choosing, and a letter went out saying "no decisions were taken".
 ## The commands
 
 ```bash
-M=~/Documents/ymirhome/svartalfaheim/synteon/meetings/2026-10-22-sync-reygan-craig
+M=~/Documents/ymirhome/svartalfaheim/example-8/meetings/2026-10-22-sync-reygan-craig
 
 systems/snotra/services/ear/snotra-harvest.sh status   "$M"   # what the bot holds for this meeting
 systems/snotra/services/ear/snotra-harvest.sh fetch    "$M"   # pull the audio, verify it byte-for-byte
@@ -67,8 +67,8 @@ list name appears in `snotra-project.py`, `snotra-letter.py` or `trello_client.p
 
 | place | board | decision list | action list | question list |
 |---|---|---|---|---|
-| `synteon/documentation` | Documentation | Decided / Resolved | Backlist Actions/Tasks | Open Questions |
-| `whynotproductions/projects` | Control Tower | Decided | Project Todos | Open Questions |
+| `example-8/documentation` | Documentation | Decided / Resolved | Backlist Actions/Tasks | Open Questions |
+| `whynotproductions/projects` | Example3 | Decided | Project Todos | Open Questions |
 
 A place that asks for another engine is **refused, not cross-filed**:
 
@@ -94,7 +94,7 @@ meeting looked like a fault.
 
 ## The agenda drives the meeting (DEC-04)
 
-`snotra-agenda.sh` writes the dated card into the place's agenda list (*Next Meeting Agenda* for Synteon),
+`snotra-agenda.sh` writes the dated card into the place's agenda list (*Next Meeting Agenda* for Example8),
 in the room's own order: what is still **proposed** → **actions due** by that date → **open questions,
 last, always**. The date is `--date`, or the place's cadence (the Monday at `monday_at`). Every line cites
 its `DEC-`/`ACT-`/`OQ-` id, and the card is idempotent by `record-key`.

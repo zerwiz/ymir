@@ -73,7 +73,7 @@ case "$ACTION" in
     ;;
   classify)
     CARD_TEXT="${1:-}"
-    rail_call "You are a workstream classifier. Given a card's text, classify it into one of: patent, vertical, docs, control-tower, meetings. Output only the classification." \
+    rail_call "You are a workstream classifier. Given a card's text, classify it into one of: patent, vertical, docs, example-3, meetings. Output only the classification." \
       "Card text: $CARD_TEXT" 50
     ;;
   dedup)
