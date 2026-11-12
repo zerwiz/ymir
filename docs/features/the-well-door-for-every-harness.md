@@ -84,6 +84,11 @@ missing, keeps a backup, and `--check` reports it stale until it is there. Nothi
   `~/.pi/agent/extensions/.ymir-root` rather than from the current project, so a Claude seat opened
   in any repository still takes a wake. Inside the Ymir repo itself it exits immediately; the repo's
   own `.claude/settings.json` arms that session.
+  **Opt-in since 2026-11-12.** It wakes every Claude session on the machine, in every repository and with
+  whatever permissions that session holds, to act on the wake queue, and Gná writes lines derived from
+  inbound mail into that queue. So the install seats it only when you ask:
+  `printf 'on\n' > "$YMIR_HOME/config/claude-global-arm"` (or `YMIR_CLAUDE_GLOBAL_ARM=1`), then re-run
+  `bin/seat/harness-extensions-install.sh`. An entry you already have is left alone.
 
 An update seats both through migration `.agents/migrations/0021-the-claude-hooks.sh`; Gróa's update
 re-verifies them and Eir's `claudehooks` surface fails when either is stale.

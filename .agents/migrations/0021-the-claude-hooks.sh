@@ -34,5 +34,5 @@ fi
 out="$("$door" 2>&1)"; rc=$?
 printf '%s\n' "$out" | grep '"claude' | sed 's/^ *//; s/^"//; s/",/ — /; s/"$//' | sed 's/^/0021: /'
 [ "$rc" = 0 ] || say "a harness could not be seated — bin/seat/harness-extensions-install.sh --check names it"
-say "done — the AGENTS.md loader, the Eindri-only ward and the global Gná arm are seated"
+say "done — the AGENTS.md loader and the Eindri-only ward are seated; the global Gná arm is opt-in (config/claude-global-arm)"
 exit 0
