@@ -73,7 +73,12 @@ say() { printf 'rules-compliance[1]{file,line,rule,finding}:\n  "%s","%s","%s","
 # Its history is the repository's. Exempt, with the reason written here.
 # Letter templates are shapes for the same reason: an email skeleton cannot carry a CHANGE LOG without mailing it to
 # the reader (plan 250 §7, 2026-11-11).
-is_shape() { case "$1" in .agents/templates/*|systems/snotra/services/letters/templates/*) return 0 ;; *) return 1 ;; esac; }
+# Plan 272 (fault 8), four more classes whose history is kept elsewhere, each with its reason:
+#   docs/fixes/*              a fix note IS the record of one change — its own history; a CHANGE LOG inside it records nothing
+#   midgard/email-templates/* an email skeleton, a shape (same reason as the letter templates above)
+#   assets/reference/*        reference copies of other projects' material; their history is theirs, not this tree's
+#   bin/collab/kit/*          the kit copied into other repositories; it carries those repositories' laws, not this one's
+is_shape() { case "$1" in .agents/templates/*|systems/snotra/services/letters/templates/*|docs/fixes/*|midgard/email-templates/*|assets/reference/*|bin/collab/kit/*) return 0 ;; *) return 1 ;; esac; }
 is_meta() { case "$1" in RULES/README.md|docs/features/_catalogue/*|bin/README.md|.agents/backend/README.md|FEATURES.md|*/plans/README.md) return 0 ;; *) return 1 ;; esac; }
 
 # R1 — a NEW document carries its history.
