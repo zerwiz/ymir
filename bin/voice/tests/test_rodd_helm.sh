@@ -96,6 +96,12 @@ if bash "$HELM" --check >"$T/out3" 2>&1; then ok "--check reports ok with a know
 grep -q '"ok"' "$T/out3" && ok "--check says ok" || bad "--check says ok" "$(cat "$T/out3")"
 write_lease unknown "$$"
 if bash "$HELM" --check >"$T/out3b" 2>&1; then bad "--check refuses an unknown role" "$(cat "$T/out3b")"; else ok "--check refuses an unknown role"; fi
+# the hold's sidecar for the SAME session declares the role a role-less lease lacks
+printf 'role=rodd session=%s seat=Test charter=planning\n' "$$" > "$T/state/.arm.role"
+if bash "$HELM" --check >"$T/out3c" 2>&1; then ok "--check reads the hold's sidecar for the same session"; else bad "--check reads the hold's sidecar for the same session" "$(cat "$T/out3c")"; fi
+printf 'role=rodd session=1 seat=Test charter=planning\n' > "$T/state/.arm.role"
+if bash "$HELM" --check >"$T/out3d" 2>&1; then bad "--check ignores a sidecar of another session" "$(cat "$T/out3d")"; else ok "--check ignores a sidecar of another session"; fi
+rm -f "$T/state/.arm.role"
 
 # ── 4 · the one-client role claim (B3) ──────────────────────────────────────
 # The client's own seat-reap sweep talks to the live herdr, so give it room to

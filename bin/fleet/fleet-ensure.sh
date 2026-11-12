@@ -494,6 +494,20 @@ raise_units() {  # <owed...>
       fail=1
     fi
   done
+  # Nornir is a oneshot with RemainAfterExit: the unit stays `active (exited)` after
+  # its scheduler loop retires (the loop lives only while a session lock holds), so
+  # `enable --now` is a no-op and a session that opens later finds the unit green and
+  # the schedule dead — autoboot verify then reads "enabled but not active". A live
+  # session with no live loop is the one case a restart is owed.
+  case " $owed " in *" nornir "*)
+    if autoboot_is_unit_active nornir && ! autoboot_cron_up && autoboot_cron_alive_owner; then
+      if systemctl --user restart "$(autoboot_unit_of nornir)" >/dev/null 2>&1; then
+        say "fleet: $(autoboot_unit_of nornir) restarted (a session is live, its scheduler loop was not)"
+      else
+        say "fleet: FAIL — could not restart $(autoboot_unit_of nornir)" >&2; fail=1
+      fi
+    fi ;;
+  esac
   return "$fail"
 }
 

@@ -310,7 +310,7 @@ Four rows a day (`07:20 · 11:20 · 15:20 · 19:20`, any role that owns a mailbo
 keep the desk's store current and prove the desk answers. The job imports every
 account declared in the home's `hodd/memory/mail/accounts.yaml` through
 `bin/mail/gna_import.py` (read-only, one account, `google` or `imap` — it cannot
-send), then probes `http://127.0.0.1:8490/health` with the desk's own token.
+send), then probes `http://127.0.0.1:8494/health` with the desk's own token.
 
 Since 2026-10-24 each round also asks `bin/mail/addresses.sh --check` (plan 116
 §15.3.1) and prints a **WARN** line, plus a `gna-mail.log` row, for any address
@@ -326,7 +326,7 @@ Rune — the gate then shows 503 with the command that raises the desk, never an
 empty inbox. `--check` probes health alone; `--dry-run` reads and writes nothing.
 
 The desk itself is a systemd **user** unit (`gna-desk.service`, `Restart=always`),
-seated once by `bin/mail/install.sh`; a reboot raises it again. Port `8490`
+seated once by `bin/mail/install.sh`; a reboot raises it again. Port `8494`
 (`GNA_DESK_PORT`), loopback only. The store and the scope live in the home, and
 the message spine is git-ignored.
 
