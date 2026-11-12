@@ -834,3 +834,7 @@ The delivery gate above still holds for code, config, scripts, apps, this file a
   one PR. A lone errand may still push its own PR.
 
 The law is RULES/08, in its section appended 2026-11-12. The how-to is `docs/features/gather-a-batch.md`.
+
+## CHANGE LOG
+
+- 2026-11-12 — review-mend: added missing heading for #716
