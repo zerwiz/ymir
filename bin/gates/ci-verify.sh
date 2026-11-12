@@ -83,6 +83,16 @@ gate liveness-grace "the sweep never calls a live seat dead inside the settling 
 # (and refuses when it cannot), the one task-board writer, the acclaim PR guard (scout exempt).
 gate everything-up "seat wards: stop hook, hoard-resolved config, one-writer todos, acclaim PR guard" \
      bash "$ROOT/bin/seat/tests/test_everything_up.sh"
+# Plan 275 — the update keeps every machine whole: the launchers start from the pin, the pin door refuses a dirty
+# pin and rolls back an update that does not settle, Rödd's face follows its patches, and the hall keeps one home.
+gate launcher-guard "the app launchers run in place on the pin and send a worktree to main's copy" \
+     bash "$ROOT/bin/desktop/tests/test_launcher_worktree_guard.sh"
+gate pin-door-stable "the pin door refuses a dirty pin, rolls back an unsettled update and records last-good" \
+     bash "$ROOT/bin/engine/tests/test_runtime_deploy_stable.sh"
+gate rodd-face-follows "Rödd's face is re-dressed when its patches change" \
+     bash "$ROOT/apps/rodd/smoke/test_face_follows_patches.sh"
+gate hall-data-home "two checkouts of the hall share one data home and nothing is lost" \
+     bash "$ROOT/apps/bilskirnir/tests/data-home.sh"
 # RULES/04 — the public tree carries TEMPLATES and LOGIC. The ward is in the list above; this is
 # the proof that it BITES (a ward never seen to refuse is decoration, and this one wore that coat).
 gate public-data "RULES/04 — a secret, a name, a topology or a mailbox is refused, and the ward is proved to refuse" \
