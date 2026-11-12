@@ -275,6 +275,17 @@ def patch_main() -> None:
                       '    return { output: house.output };\n'
                       '  }\n'
                       '  if (DEBUG) console.debug(`[tool] run name=${name}', 1)
+    # plan 271: a failure is a sentence and one action, never `[object Event]`
+    if "roddWhy" not in s:
+        s = s.replace('import { $, truncateError, DEBUG } from "./ui/dom.js";',
+                      'import { $, truncateError, DEBUG } from "./ui/dom.js";\nimport { roddWhy, sayWhy } from "./why.js";', 1)
+        s = s.replace('  const message = err instanceof Error ? err.message : String(err);\n  try {\n    await teardown();',
+                      '  const message = sayWhy(await roddWhy(err));\n  try {\n    await teardown();', 1)
+        s = s.replace('    console.warn("[main] server error (non-fatal):", msg);',
+                      '    console.warn("[main] server error (non-fatal):", msg);\n'
+                      '    if (/\\b(400|401|403|404|500)\\b|api key|model not found/i.test(msg)) {\n'
+                      '      void roddWhy(detail.error).then((w) => setCaption(sayWhy(w), "error"));\n'
+                      '    }', 1)
     s = re.sub(r'const DEFAULT_VOICE = "[^"]*";', 'const DEFAULT_VOICE = "af_nicole";', s, count=1)
     # the shipped briefs, recognised by their own opening line: an upgrade reaches a default
     # and never a sentence he wrote (the old gate restored the field only when it still
@@ -312,7 +323,7 @@ def main() -> int:
     if not (UI / "index.html").is_file():
         print(f"patch-ui: no UI at {UI} — run setup.sh first", file=sys.stderr)
         return 2
-    for name in ("house.css", "ember.js"):
+    for name in ("house.css", "ember.js", "why.js"):
         shutil.copy2(HERE / name, UI / name)
     patch_html()
     patch_main()

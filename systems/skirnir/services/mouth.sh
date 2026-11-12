@@ -39,6 +39,9 @@ port_open() { (exec 3<>"/dev/tcp/${HOST}/${PORT:-80}") 2>/dev/null; }
 # our check and our first word (plan 112's lease guard).
 bash "$LEASE" touch 2>/dev/null || true
 if ! port_open; then
+  # plan 271: raising the synthesiser at the operator's desk during a call is the helm's fault, not his
+  _desk="$(dirname "${BASH_SOURCE[0]}")/../../../bin/desk/in-call.sh"
+  [ -r "$_desk" ] && { bash "$_desk" check --what "the synthesiser (kokoro-serve)" || exit 3; }
   systemctl --user start kokoro-serve.service >/dev/null 2>&1 || true
   for _ in $(seq 1 "$WAIT"); do sleep 1; port_open && break; done
 fi

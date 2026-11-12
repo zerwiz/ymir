@@ -77,7 +77,7 @@ WORKSPACE="${1-}"
 # Electron helpers (gpu/utility/renderer). The helpers outlive a dead main —
 # they are re-parented to the user systemd — so this list is for REAPING only.
 all_pids() {
-  pgrep -f "electron/dist/electron.*sessrumnir" 2>/dev/null || true
+  pgrep -f "/electron/dist/electron .*sessrumnir" 2>/dev/null || true
 }
 # The MAIN process only. An Electron helper always carries --type=; the main
 # never does. Matching the helpers here is what made `status` say "up" and
@@ -97,6 +97,7 @@ is_running() { [ -n "$(view_pids)" ]; }
 # Omarchy configures Hyprland in Lua, so the dispatch is a Lua expression (the
 # classic `focuswindow class:...` form does not parse).
 focus_window() {
+  [ "${SESSRUMNIR_NO_FOCUS:-0}" = 1 ] && return 0
   command -v hyprctl >/dev/null 2>&1 || return 0
   hyprctl dispatch "hl.dsp.focus({window=\"class:^ymir-sessrumnir\$\"})" >/dev/null 2>&1 || true
 }
@@ -129,6 +130,9 @@ if is_running; then
   exit 0
 fi
 
+# plan 271: a new window is not started over the operator's call (YMIR_DESK_NOW=1 is his "now").
+bash "$SCRIPT_DIR/../desk/in-call.sh" check --what "Sessrúmnir" || exit 3
+
 # A dead main leaves its helpers running as orphans of the user systemd. They
 # still carry the identity string, so reaping them before the launch is the
 # difference between a window and "started but nothing appeared".
@@ -138,7 +142,7 @@ if [ -n "$stale" ]; then
   sleep 1
 fi
 
-"$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1 || {
+[ "${SESSRUMNIR_SKIP_ENSURE:-0}" = 1 ] || "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1 || {
   printf 'error: Sessrúmnir is not ready — run bin/desktop/sessrumnir-ensure.sh install\n' >&2
   exit 1
 }
@@ -175,16 +179,46 @@ case "${YMIR_DESKTOP_DISABLE_GPU:-auto}" in
 esac
 export YMIR_DESKTOP_DISABLE_GPU
 
+START_TS="$(date -Is)"
 nohup node "$APP/bin/sessrumnir.js" "${args[@]}" >"$LOG_FILE" 2>&1 < /dev/null &
-echo $! >"$PID_FILE"
+LAUNCH_PID=$!
+echo $LAUNCH_PID >"$PID_FILE"
 
-i=0
-for i in $(seq 1 30); do [ -n "$(view_pids)" ] && break; sleep 0.5; done
+# "up" means the window STAYED. The process appearing is not enough: on 2026-11-12 the launcher said
+# "up" and the window was gone within seconds with an empty log (plan 271 piece 4). So the launcher
+# waits for the process, then holds the claim for SESSRUMNIR_STAY_S seconds (default 10) and only then
+# says "up"; if it is gone before that, it names what it can find — the app's own exit line, a core
+# dump, the scope's end — in the log AND on stderr, and exits 1.
+STAY_S="${SESSRUMNIR_STAY_S:-10}"
+for _ in $(seq 1 30); do [ -n "$(view_pids)" ] && break; sleep 0.5; done
 
-if is_running; then
+why_it_died() {
+  local reason line core
+  line="$(grep -E '^\[sessrumnir\] electron (exited|failed)' "$LOG_FILE" 2>/dev/null | tail -1)"
+  [ -n "$line" ] && reason="$line" || reason="no exit line in the log (the launcher process itself $(kill -0 "$LAUNCH_PID" 2>/dev/null && echo 'is still alive, so no window ever mapped' || echo 'ended without saying why'))"
+  if command -v coredumpctl >/dev/null 2>&1; then
+    core="$(coredumpctl list --no-pager --no-legend --since "$START_TS" 2>/dev/null | grep -i electron | tail -1 | tr -s ' ' | cut -c1-120)"
+    [ -n "$core" ] && reason="$reason; core dump: $core (coredumpctl info, or the diagnose-crash skill)"
+  fi
+  printf '%s' "$reason"
+}
+
+stayed=0
+if [ -n "$(view_pids)" ]; then
+  stayed=1
+  t_end=$(( $(date +%s) + STAY_S ))
+  while [ "$(date +%s)" -lt "$t_end" ]; do
+    sleep 0.5
+    if [ -z "$(view_pids)" ]; then stayed=0; break; fi
+  done
+fi
+
+if [ "$stayed" = 1 ]; then
   focus_window
-  printf 'sessrumnir[1]{state,pid}:\n  "up",%s\n' "$(view_pids | head -1)"
+  printf 'sessrumnir[1]{state,pid,stayed_s}:\n  "up",%s,%s\n' "$(view_pids | head -1)" "$STAY_S"
 else
-  printf 'error: Sessrúmnir failed to start; see %s\n' "${LOG_FILE#"$ROOT"/}" >&2
+  r="$(why_it_died)"
+  printf '[launcher] the window did not stay up for %ss: %s\n' "$STAY_S" "$r" >>"$LOG_FILE"
+  printf 'error: Sessrúmnir did not stay up (%ss): %s\nhelp: log %s\n' "$STAY_S" "$r" "${LOG_FILE#"$ROOT"/}" >&2
   exit 1
 fi

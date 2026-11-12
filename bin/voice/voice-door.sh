@@ -17,7 +17,7 @@
 #   voice-door.sh start             the one verb: raise the host if needed, open the tunnel,
 #                                   and seat the voice in a herdr pane (or this terminal)
 #   voice-door.sh stop [--host]     lower the client and tunnel; --host lowers the pipeline
-#   voice-door.sh host [--stop]     raise/stop the pipeline here
+#   voice-door.sh host [--stop] [--now]  raise/stop the pipeline here (--now: the operator says go, call or not)
 #   voice-door.sh client            speak and listen here, against a host
 #   voice-door.sh log [--lines N]   what the voice has DONE: turns, tool calls, well recalls
 #   voice-door.sh plan              print exactly what would run, change nothing
@@ -130,10 +130,10 @@ raise_head_proxy() {
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help|"") sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 CMD="${1-}"; shift || true
-DO_STOP=0; DO_INSTALL=0
+DO_STOP=0; DO_INSTALL=0; DO_NOW="${YMIR_DESK_NOW:-0}"
 case "$CMD" in status|host|client|plan|--install|install|start|stop|log) ;; *) printf 'error: unknown command %s\nhelp: bin/voice/voice-door.sh [status|host|client|plan|--install]\n' "$CMD" >&2; exit 2 ;; esac
 [ "$CMD" = install ] && CMD=--install
-while [ $# -gt 0 ]; do case "$1" in --stop) DO_STOP=1 ;; --install) DO_INSTALL=1 ;; *) shift; continue ;; esac; shift; done
+while [ $# -gt 0 ]; do case "$1" in --stop) DO_STOP=1 ;; --install) DO_INSTALL=1 ;; --now) DO_NOW=1 ;; *) shift; continue ;; esac; shift; done
 
 have() { command -v "$1" >/dev/null 2>&1; }
 say() { printf '%s\n' "$*"; }
@@ -275,26 +275,30 @@ cmd_host() {
   # key for local, the named or typed one for an online endpoint). Falling back to
   # the rail key for an online head sent the wrong bearer and the engine answered 400.
   if [ -n "$RODD_RESOLVED_KEY" ]; then hk="$RODD_RESOLVED_KEY"; else hk="$(head_key || true)"; fi
-  # THE MICROPHONE IS NEVER TAKEN FROM A CALL (the Allfather, 2026-11-09: "the mic should not be used").
-  # The voice host opens the default source for VAD. If another client is already capturing — Discord, a
-  # Meet, Zoom, anything — starting the host competes for that device and the call loses it, which is the
-  # disconnect loop we spent a night chasing. So: refuse while someone else holds the microphone, and say
-  # whose it is. Nothing is measured by guessing; `pactl` is asked.
-  if command -v pactl >/dev/null 2>&1; then
-    local holder
-    # Rödd's own window is not a call. It holds the microphone whenever it is open, so
-    # excluding every Electron client would be wrong and excluding none made the door
-    # refuse to raise its own host while its own face was open (measured 2026-11-11
-    # 05:12: refused: '@zerwiz/rodd' holds the microphone). Its product name is known,
-    # so it is named here and nothing else is forgiven.
-    holder="$(pactl list source-outputs 2>/dev/null | sed -n 's/^\s*application.name = "//p' | tr -d '"' | grep -viE '^(speech-to-speech|ymir-voice|parecord|pw-record|@zerwiz/rodd)$' | head -1)"
-    if [ -n "${holder:-}" ]; then
-      err "refused: '$holder' holds the microphone — the voice host will not take it from a live call"
-      err "hint: leave the call first, or stop it, then raise the voice door again"
-      return 3
-    fi
+  # THE DESK STAYS WHOLE (plan 271, the Allfather 2026-11-12: "it needs to work if I'm in Discord also").
+  # Two separate facts, kept apart:
+  #  1. The `serve` road opens NO microphone — Rödd's window captures through the browser and the sound
+  #     server shares the device — so a held mic is no reason to refuse the engine itself (the 2026-11-09
+  #     refusal belongs to the `talk` road, which does open the device; see cmd_client).
+  #  2. A dev seat's display GPU is not the engine's: on a dev seat Kokoro and the ear run on the CPU,
+  #     whatever was asked (the same pin as kokoro-serve), so the engine cannot disturb a call's browser.
+  # What the helm may not do is START things at the operator's desk during a call: the guard is asked,
+  # and only the operator's explicit --now (Rödd's own start and restart pass it) goes through.
+  "$ROOT/bin/desk/in-call.sh" check $([ "$DO_NOW" = 1 ] && echo --now) --what "the voice engine" || return 3
+  local desk_role; desk_role="$("$ROOT/bin/desk/in-call.sh" role 2>/dev/null | head -1)"
+  local -a engine_pin=()
+  if [ "$desk_role" = dev ]; then
+    STT_DEVICE=cpu; STT_COMPUTE=int8
+    engine_pin=(--device cpu)
+    CUDA_VISIBLE_DEVICES=""
   fi
   local cu; cu="$(cuda_lib_path || true)"
+  # YMIR_VOICE_DRY=1 prints what would be raised and changes nothing (the tests, and a look before a leap)
+  if [ "${YMIR_VOICE_DRY:-0}" = 1 ]; then
+    build_host_argv
+    say "dry: would raise $UNIT: $eng serve ${engine_pin[*]:-} stt_device=$STT_DEVICE CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES-<unset>}"
+    return 0
+  fi
   mkdir -p "$STATE_DIR"
   if [ "${RODD_HEAD_MODE_RESOLVED:-local}" = "online" ]; then
     raise_head_proxy || err "warning: the head proxy did not answer on $PROXY_PORT — the head may refuse"
@@ -311,7 +315,7 @@ cmd_host() {
     ${cu:+--setenv=LD_LIBRARY_PATH="$cu"} \
     --property=StandardOutput=append:"$STATE_DIR/host.log" \
     --property=StandardError=append:"$STATE_DIR/host.log" \
-    "$eng" serve "${HOST_ARGV[@]}" ${hk:+--responses_api_api_key "$hk"} >/dev/null || {
+    "$eng" serve "${HOST_ARGV[@]}" "${engine_pin[@]}" ${hk:+--responses_api_api_key "$hk"} >/dev/null || {
       err "error: could not raise $UNIT"; return 1; }
   printf '%s\n' "$(date -Is) unit=$UNIT port=$PORT head=$HEAD_URL/$HEAD_MODEL" >> "$STATE_DIR/host.seat"
   for _ in $(seq 1 90); do host_answers && { say "host up on 127.0.0.1:$PORT (log: $STATE_DIR/host.log)"; return 0; }; sleep 1; done
@@ -323,6 +327,17 @@ cmd_client() {
   local eng host
   eng="$(find_engine || true)"
   [ -n "$eng" ] || { err "error: the engine is absent; run: bin/voice/voice-door.sh --install"; return 1; }
+  # The `talk` road DOES open a capture device, so it keeps the refusal a call earns — and it never flips a
+  # Bluetooth headset's profile behind the operator's back: opening a capture stream on a headset in A2DP
+  # drops the call's audio (plan 271). Asked of the one door; the operator's --now is the only way past.
+  if [ "$DO_NOW" != 1 ]; then
+    "$ROOT/bin/desk/in-call.sh" check --what "the voice client (it opens the microphone)" || return 3
+    if "$ROOT/bin/desk/in-call.sh" bluetooth 2>/dev/null; then
+      err "refused: the active microphone is a Bluetooth headset — opening it here would flip its profile and drop the headset's audio"
+      err "hint: use the machine's own microphone (set YMIR_VOICE_INPUT_DEVICE), or pass --now"
+      return 3
+    fi
+  fi
   host="$(resolve_host || true)"
   [ -n "$host" ] || { err "error: no host seat reachable — set YMIR_VOICE_HOST, or run 'host' here"; return 1; }
   if [ "$host" != "$(hostname -s)" ]; then
@@ -336,6 +351,8 @@ cmd_client() {
   local -a extra=()
   # half-duplex by default (see the header): the speakers and the microphone share one room
   [ "$BARGE_IN" = 1 ] || extra+=(--block-mic-during-playback)
+  # capture from the source the operator names, never a surprise default
+  [ -n "${YMIR_VOICE_INPUT_DEVICE:-}" ] && extra+=(--input-device "$YMIR_VOICE_INPUT_DEVICE")
   # the hands: a tool module, importable from the repo's voice shelf
   if [ "$TOOLS_ON" = 1 ] && [ -r "$ROOT/bin/voice/voice_tools.py" ]; then
     # carried ON the command, not in this shell's env: a herdr pane does not inherit it

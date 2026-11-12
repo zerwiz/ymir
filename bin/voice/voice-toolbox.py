@@ -8,6 +8,8 @@ loopback HTTP:
     GET  /tools          the definitions the client registers with the Realtime session
     POST /tool           {"name": ..., "arguments": {...}} → {"output": ..., "create_response": bool}
     GET  /health         liveness
+    GET  /desk           what the window needs to say WHY a call failed: is the engine answering,
+                         who holds the microphone (plan 271)
 
 Every call goes through `voice_tools.execute_tool`, so the confirm gate on `hand_over`,
 the vault refusal, the seat-scoping and the activity log are exactly the terminal's.
@@ -25,6 +27,7 @@ import asyncio
 import json
 import re
 import os
+import socket
 import subprocess
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -54,6 +57,27 @@ def _void_if_merge(row):
     if _MERGE_ASK.search(str(row.get("text", ""))):
         row = dict(row, void=VOID_MERGE)
     return row
+
+
+def _desk() -> dict:
+    """The facts behind a failed connect, asked fresh each time (plan 271 piece 3)."""
+    port = int(os.environ.get("YMIR_VOICE_PORT") or 8890)
+    up = False
+    try:
+        with socket.create_connection(("127.0.0.1", port), timeout=1.5):
+            up = True
+    except OSError:
+        pass
+    def door(*args: str) -> str:
+        try:
+            r = subprocess.run(["bash", str(REPO / "bin" / "desk" / "in-call.sh"), *args],
+                               capture_output=True, text=True, timeout=5)
+            return r.stdout.strip()
+        except Exception:
+            return ""
+    return {"engine_up": up, "engine_port": port, "mic_holder": door("holder"),
+            "mic_bluetooth": subprocess.run(["bash", str(REPO / "bin" / "desk" / "in-call.sh"), "bluetooth"],
+                                            capture_output=True, timeout=5).returncode == 0}
 
 
 def _rodd_head():
@@ -124,6 +148,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802
         if self.path.startswith("/health"):
             return self._json(200, {"ok": True, "tools": len(voice_tools.TOOLS)})
+        if self.path.startswith("/desk"):
+            return self._json(200, _desk())
         if self.path.startswith("/head"):
             r = _rodd_head().resolve()
             r.pop("key", None)          # a secret is never returned to a window
@@ -148,7 +174,7 @@ class Handler(BaseHTTPRequestHandler):
                     "parameters": t.get("parameters", {"type": "object", "properties": {}}),
                 })
             return self._json(200, {"tools": defs})
-        return self._json(404, {"error": "unknown path", "paths": ["/tools", "/tool", "/head", "/settings", "/memory", "/health"]})
+        return self._json(404, {"error": "unknown path", "paths": ["/tools", "/tool", "/head", "/settings", "/memory", "/health", "/desk"]})
 
     def do_POST(self) -> None:  # noqa: N802
         length = int(self.headers.get("Content-Length") or 0)
