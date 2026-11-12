@@ -518,6 +518,33 @@ serve_ok() {  # <harness> <model> -> 0 servable
 
 resolve_harness_model() {
   local req mr mrow m5 prov h conf _m _h _first _clean _f1 _f2
+  # (0) a Claude seat takes an Anthropic alias, chosen by the errand's weight — the twin of
+  # src/ymir_runtime/harness.py claude_model_for. The Allfather, 2026-11-12: "do simple tasks
+  # on Sonnet". No --model: low/medium/none -> sonnet, high/xhigh/max -> opus.
+  if [ "$HARNESS" = claude ]; then
+    if [ "$MODEL_SET" -eq 1 ] && [ -n "$MODEL" ]; then
+      case "$MODEL" in */*) echo "error: harness 'claude' cannot serve model '$MODEL' — Claude takes an Anthropic model name or alias (sonnet, opus, haiku), never a provider/model token" >&2; exit 1 ;; esac
+      MODEL_PROV="explicit flag (--model $MODEL)"
+    else
+      case "${EFFORT:-}" in
+        high|xhigh|max) MODEL=opus; MODEL_PROV="errand weight — effort '$EFFORT' is heavy, so opus" ;;
+        *)              MODEL=sonnet; MODEL_PROV="errand weight — a simple errand runs on sonnet (Allfather, 2026-11-12)" ;;
+      esac
+    fi
+    case "$MODEL" in free) echo "error: harness 'claude' has no free model — 'free' is for pi and opencode (bin/model/free-models.sh)" >&2; exit 1 ;; esac
+    MODEL_LOCAL=no
+    return 0
+  fi
+  # (0b) `--model free` — the road when the paid tokens are spent (the Allfather, 2026-11-12:
+  # "add free models for both Pi and OpenCode"). The live catalog decides; one door picks.
+  if [ "$MODEL_SET" -eq 1 ] && [ "$MODEL" = free ]; then
+    [ -n "$HARNESS" ] || { HARNESS=opencode; HARNESS_PROV="free model -> opencode (no --harness named)"; }
+    case "$HARNESS" in pi|pi-signed) _h=pi ;; opencode) _h=opencode ;; *) echo "error: '--model free' serves pi or opencode, not '$HARNESS'" >&2; exit 1 ;; esac
+    MODEL=$("$SCRIPT_DIR/../model/free-models.sh" pick "$_h") || { echo "error: no free model is served for $_h — bin/model/free-models.sh list $_h" >&2; exit 1; }
+    MODEL_PROV="free — bin/model/free-models.sh pick $_h (the live catalog)"
+    MODEL_LOCAL=no
+    return 0
+  fi
   # (1) an explicit CONCRETE model token; harness by locality when unset
   if [ "$MODEL_SET" -eq 1 ] && [ -n "$MODEL" ] && model_is_token "$MODEL"; then
     MODEL_PROV="explicit flag (--model $MODEL)"
@@ -887,8 +914,9 @@ build_launch_command() {  # prints the worker command WITHOUT the leading exec
       # assignment through the exec.
       # OpenCode v2 moved the message to `run`; the old top-level --model/--prompt shape answers
       # "Unrecognized flag: --model in command opencode" and every seat dies in its pane (measured 2026-11-06).
-      printf 'env OPENCODE_CONFIG_CONTENT=%s opencode run %s--auto "$(cat %s)"' \
-        "$(shell_quote '{"permission":{"*":"allow"}}')" "$model_flag" "$(shell_quote "$brief_ref")"
+      # The ONE shape lives in bin/seat/opencode-launcher.sh (2026-11-12: the engine's copy
+      # had drifted to the dead v1 shape and killed every engine-seated OpenCode seat).
+      "$ROOT/bin/seat/opencode-launcher.sh" print ${MODEL:+--model "$MODEL"} --brief "$brief_ref" | tr -d '\n'
       ;;
     claude)
       # Plan 239 P5b/P5c — the same shape as src/ymir_runtime/harness.py (one shape, two
