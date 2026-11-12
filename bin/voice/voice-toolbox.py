@@ -77,7 +77,16 @@ def _desk() -> dict:
         except Exception:
             return ""
     inputs = door("inputs")
-    return {"engine_up": up, "engine_port": port, "mic_holder": door("holder"),
+    # plan 275 (2026-11-13): an engine whose process lives but whose port is not open yet is STARTING (it loads its
+    # ear, its voice and warms its mind for about half a minute) — the window waits for it instead of calling it lost
+    starting = False
+    if not up:
+        try:
+            starting = subprocess.run(["pgrep", "-f", "speech-to-speech serve"], capture_output=True,
+                                      timeout=3).returncode == 0
+        except Exception:
+            pass
+    return {"engine_up": up, "engine_starting": starting, "engine_port": port, "mic_holder": door("holder"),
             "inputs": int(inputs) if inputs.isdigit() else None,
             "mic_bluetooth": subprocess.run(["bash", str(REPO / "bin" / "desk" / "in-call.sh"), "bluetooth"],
                                             capture_output=True, timeout=5).returncode == 0}

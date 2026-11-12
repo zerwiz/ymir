@@ -583,6 +583,32 @@ def patch_main() -> None:
     p.write_text(s)
 
 
+NO_STALE_MARK = "# rodd: never a stale face"
+NO_STALE = '''
+# rodd: never a stale face (plan 275, 2026-11-13). Electron kept the face's files in its HTTP cache, so an update to
+# main.js, house.css or ember.js stayed hidden behind the old copies until the cache was cleared by hand. `no-cache`
+# makes the window ask on every load; an unchanged file costs one 304, a changed one arrives at once.
+@app.middleware("http")
+async def _rodd_no_stale(request, call_next):
+    response = await call_next(request)
+    if not request.url.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-cache"
+    return response
+'''
+
+
+def patch_server() -> None:
+    p = UI / "server.py"
+    s = p.read_text()
+    if NO_STALE_MARK in s:
+        return
+    anchor = 'app = FastAPI(title="s2s-demo")\n'
+    if anchor not in s:
+        print("patch-ui: server.py has no FastAPI app line — the face may be served stale", file=sys.stderr)
+        return
+    p.write_text(s.replace(anchor, anchor + NO_STALE, 1))
+
+
 def main() -> int:
     if not (UI / "index.html").is_file():
         print(f"patch-ui: no UI at {UI} — run setup.sh first", file=sys.stderr)
@@ -591,6 +617,7 @@ def main() -> int:
         shutil.copy2(HERE / name, UI / name)
     patch_html()
     patch_main()
+    patch_server()
     print(f"patch-ui: {UI} dressed as Rödd")
     return 0
 

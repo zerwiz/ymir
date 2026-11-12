@@ -300,6 +300,8 @@ if ! curl -s --max-time 2 "http://127.0.0.1:$PORT_BOX/health" | grep -q '"ok"'; 
   sleep 2
 fi
 say "toolbox" "$(curl -s --max-time 3 "http://127.0.0.1:$PORT_BOX/health" | head -c 40)"
+# her web search: the house's own SearXNG, raised in the background so the window never waits for it (plan 275)
+setsid bash "$ROOT/bin/voice/search-ensure.sh" > /tmp/rodd-search.log 2>&1 < /dev/null &
 
 # 5 · the window — or, when asked, the engine's own terminal client and no face at all.
 # A touchscreen seat with a running shell wants the buttons, not an Electron window over the

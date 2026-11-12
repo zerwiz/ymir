@@ -46,6 +46,38 @@ chk(ex({ name: "NotFoundError" }, { inputs: 0 }).cause === "no-input", "rule 1: 
   const ok = await recover({ err: 1, why: ex(new Error("401 Unauthorized"), {}), restart: async () => { n += 1; }, say() {}, sleep: async () => {} });
   chk(!ok && n === 0, "a refused key is not 'a lost stream': no blind retries");
 }
+// ── plan 275 (2026-11-13): an engine still starting is waited for, and every loss is named for what it was ──
+chk(ex({ type: "error" }, { engine_up: false, engine_starting: true }).cause === "engine-starting",
+  "an engine whose process lives but whose port is shut is 'starting', not 'down'");
+{ // starting: waited for, said so while waiting, ONE knock once it answers, honest words after
+  const c = vclock(); let n = 0, polls = 0; const said = [];
+  const ok = await recover({ err: { type: "error" }, why: ex({ type: "error" }, { engine_up: false, engine_starting: true }),
+    probe: async () => (++polls < 12 ? { engine_up: false, engine_starting: true } : { engine_up: true }),
+    restart: async () => { n += 1; }, say: (t) => said.push(t), sleep: c.sleep, now: c.now });
+  chk(ok && n === 1 && polls === 12, `a starting engine is waited for (${polls} looks) and knocked on once (${n})`);
+  chk(said.some((t) => /is starting — Rödd connects/.test(t)), "while it starts the window says so, not 'microphone lost'");
+  chk(/^The voice engine was starting at 14:05:03; connected at 14:05:\d\d\.$/.test(said.at(-1) || ""), `said after: "${said.at(-1)}"`);
+  chk(!said.some((t) => /Microphone/.test(t)), "never blames the microphone for an engine that was starting");
+}
+{ // starting forever: the wait is bounded, then the ordinary knocks, then honest words
+  const c = vclock(); let n = 0; const said = [];
+  const ok = await recover({ err: 1, why: ex(1, { engine_up: false, engine_starting: true }),
+    probe: async () => ({ engine_up: false, engine_starting: true }),
+    restart: async () => { n += 1; noteFatalDuringRecovery(); }, say: (t) => said.push(t), sleep: c.sleep, now: c.now });
+  chk(!ok && n === 3 && c.at() <= 130000 && /never answered/.test(said.at(-1) || ""), `a start that never ends is bounded (${Math.round(c.at() / 1000)} s, ${n} knocks)`);
+}
+{ // the one seat held: patient knocks, the second works, named as the seat
+  const c = vclock(); let n = 0; const said = [];
+  const ok = await recover({ err: 1, why: ex(new Error("session_limit_reached"), {}),
+    restart: async () => { n += 1; if (n === 1) noteFatalDuringRecovery(); }, say: (t) => said.push(t), sleep: c.sleep, now: c.now });
+  chk(ok && n === 2 && c.at() >= 8000 && /^The voice's one seat lost/.test(said.at(-1) || ""), `a held seat is knocked on patiently: try ${n} at ${c.at()} ms`);
+}
+{ // a dropped line is named as the line
+  const c = vclock(); const said = [];
+  await recover({ err: { type: "close" }, why: ex({ type: "close" }, { engine_up: true }),
+    restart: async () => {}, say: (t) => said.push(t), sleep: c.sleep, now: c.now });
+  chk(/^The line to the voice engine lost at/.test(said.at(-1) || ""), `a dropped line is named as the line: "${said.at(-1)}"`);
+}
 let hits = "";
 try { hits = execSync("grep -rnE '(restart|stop|kill).*(pipewire|wireplumber)' bin/voice bin/desk apps/rodd/start.sh apps/rodd/src apps/rodd/patch scripts/electron.sh --include=*.sh --include=*.js --include=*.py --include=*.mjs | grep -v -E 'never|NEVER|test|law|LAW|//|#' || true", { encoding: "utf8" }); } catch {}
 chk(hits.trim() === "", "never restarts pipewire or wireplumber as a remedy (searched Rödd, the voice door, the guard)");

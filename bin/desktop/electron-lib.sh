@@ -69,6 +69,22 @@ _electron_foreign_root() {  # <ancestor> <root>
 #                                   hoisted OUT of the ymir package to sit beside it
 # No caller hardcodes an app-local electron path again: this is the only place
 # that knows the shapes. Each candidate is verified executable, never assumed.
+# plan 275 (2026-11-13): an Electron of the WRONG MAJOR is not the app's Electron. A tree updated in place kept
+# Electron 33 in node_modules after package.json pinned 43.8.9; the resolver took the first binary it met, and Rödd's
+# window died with "WebSocket is not defined" (Node in Electron 33 has none) — a riddle where a sentence was owed.
+_electron_want_major() {  # <app-dir> → the major the app declares (empty when it declares none)
+  sed -n 's/.*"electron"[[:space:]]*:[[:space:]]*"[^0-9]*\([0-9][0-9]*\).*/\1/p' "$1/package.json" 2>/dev/null | head -1
+}
+_electron_have_major() {  # <binary> → the major of the package that ships it
+  sed -n 's/^[[:space:]]*"version"[[:space:]]*:[[:space:]]*"\([0-9][0-9]*\).*/\1/p' "$(dirname "$(dirname "$1")")/package.json" 2>/dev/null | head -1
+}
+_electron_fits() {  # <app-dir> <binary> → 0 when the binary's major is the declared one (or either is unknown)
+  local want have; want="$(_electron_want_major "$1")"; have="$(_electron_have_major "$2")"
+  [ -z "$want" ] || [ -z "$have" ] || [ "$want" = "$have" ] && return 0
+  printf 'electron-lib: %s is Electron %s but %s declares %s — run npm ci in the tree (skipped)\n' "$2" "$have" "$1/package.json" "$want" >&2
+  return 1
+}
+
 electron_bin() {  # <app-dir> [root] [pkg] → prints the binary; exit 0 found / 1 not
   local app="${1-}" root="${2-}"; local pkg="${3:-${app##*/}}" c
   [ -n "$app" ] && [ -d "$app" ] || return 1
@@ -81,12 +97,12 @@ electron_bin() {  # <app-dir> [root] [pkg] → prints the binary; exit 0 found /
   while [ -n "$a" ] && [ "$a" != "/" ]; do
     _electron_foreign_root "$a" "$root" && break
     if [ "${a##*/}" = node_modules ]; then c="$a/electron/dist/electron"; else c="$a/node_modules/electron/dist/electron"; fi
-    [ -x "$c" ] && { printf '%s' "$c"; return 0; }
+    [ -x "$c" ] && _electron_fits "$app" "$c" && { printf '%s' "$c"; return 0; }
     a="$(dirname "$a")"
   done
   # (3) the sibling package's own runtime
   c="$(dirname "$root")/$pkg/node_modules/electron/dist/electron"
-  [ -x "$c" ] && { printf '%s' "$c"; return 0; }
+  [ -x "$c" ] && _electron_fits "$app" "$c" && { printf '%s' "$c"; return 0; }
   return 1
 }
 
