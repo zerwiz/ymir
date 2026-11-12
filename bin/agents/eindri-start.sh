@@ -40,12 +40,12 @@ SESSION="${YMIR_HERDR_SESSION:-brokk}"
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 
-REQ=""; ROLE=""; SEAT=""; MODEL=""; KIND="${YMIR_HERDR_KIND:-pi}"; MAIN=""; TASK_ID=""; PROJECT_DIR=""
+REQ=""; ROLE=""; SEAT=""; MODEL=""; KIND="${YMIR_HERDR_KIND:-pi}"; MAIN=""; TASK_ID=""; PROJECT_DIR=""; KIND_EXPLICIT=""; MODEL_EXPLICIT=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --role) ROLE=${2-}; shift 2 ;;
-    --kind) KIND=${2-}; shift 2 ;;
-    --model) MODEL=${2-}; shift 2 ;;
+    --kind) KIND=${2-}; KIND_EXPLICIT=$KIND; shift 2 ;;
+    --model) MODEL=${2-}; MODEL_EXPLICIT=$MODEL; shift 2 ;;
     --id) TASK_ID=${2-}; shift 2 ;;
     --project) PROJECT_DIR=${2-}; shift 2 ;;
     --main) MAIN="--main"; shift ;;
@@ -102,6 +102,17 @@ case "$MODEL_SOURCE" in
   *)                     MODEL_NOTE="$MODEL_SOURCE" ;;
 esac
 
+# 2c. Claude serves Anthropic models only. The fleet's agents.yaml names a provider/model token for
+# every role, so `--kind claude` without `--model` used to carry that token to the engine and was
+# refused (measured 2026-11-12). A token the operator did NOT type is dropped for an Anthropic
+# alias; one he typed is still refused downstream, loudly.
+if [ "$KIND" = claude ] && [ -z "$MODEL_EXPLICIT" ]; then
+  case "$MODEL" in
+    */*|"") MODEL="${YMIR_CLAUDE_DEFAULT_MODEL:-sonnet}"; MODEL_SOURCE="default Anthropic alias for --kind claude"
+            MODEL_NOTE="the Anthropic alias claude serves — the fleet's provider/model token belongs to pi or opencode" ;;
+  esac
+fi
+
 # 3. The engine owns the errand when the caller names one (plan 58, Phase 1).
 #    With --id an errand is a real seat — worktree, harness, record, heartbeat.
 #    A seat hint (--pane/--tab/--space/--main) is the old road's grain, so those
@@ -142,7 +153,7 @@ mkdir -p "$STATE"
 #    rc 3 from herdr-run means "not worth a smith" — report it, do NOT fake a seat.
 seat="none"; refuse=0; rc=0
 if [ -x "$SCRIPT_DIR/../seat/herdr-run.sh" ]; then
-  "$SCRIPT_DIR/../seat/herdr-run.sh" eindri $SEAT $MAIN ${MODEL:+--model "$MODEL"} "$ROLE" -- "$REQ" >/dev/null 2>&1 || rc=$?
+  "$SCRIPT_DIR/../seat/herdr-run.sh" eindri $SEAT $MAIN ${KIND_EXPLICIT:+--kind "$KIND_EXPLICIT"} ${MODEL:+--model "$MODEL"} "$ROLE" -- "$REQ" >/dev/null 2>&1 || rc=$?
 fi
 if [ "$rc" = 0 ]; then
   seat="herdr"
@@ -151,7 +162,19 @@ elif [ "$rc" = 3 ]; then
 else
   command -v tmux >/dev/null 2>&1 || { printf 'eindri-start[1]{role,seat,request}:\n  "%s","none","%s"\n' "$ROLE" "$REQ"; printf 'error: no seat — herdr cannot seat and tmux is absent\n' >&2; exit 1; }
   tmux has-session -t "$SESSION" 2>/dev/null || tmux new-session -d -s "$SESSION" -n shell
-  tmux new-window -t "$SESSION" -n "$LABEL" "bash -lc 'printf \"\\n  %s — Eindri of Ymir\\n  request: %s\\n\\n\"; case \"$KIND\" in pi) exec pi \"$REQ\" ;; *) exec \"$KIND\" ;; esac'" 2>/dev/null \
+  # The tmux fallback seats the same worker the herdr road does (plan 262): a bare `exec opencode`
+  # started empty — no model, no brief — and sat idle. The shape comes from the launcher, never here.
+  brief_dir="$STATE/eindri-briefs"; mkdir -p "$brief_dir"
+  brief_file="$brief_dir/$LABEL.md"; printf '%s\n' "$REQ" >"$brief_file"
+  case "$KIND" in
+    opencode) tmux_cmd="$("$SCRIPT_DIR/../seat/opencode-launcher.sh" print ${MODEL:+--model "$MODEL"} --brief "$brief_file")" || tmux_cmd="" ;;
+    pi)       tmux_cmd="exec pi $(printf '%q' "$REQ")" ;;
+    *)        tmux_cmd="exec $KIND" ;;
+  esac
+  if [ -z "$tmux_cmd" ]; then
+    printf 'error: the %s launcher refused this seat — no tmux window was opened\n' "$KIND" >&2; exit 1
+  fi
+  tmux new-window -t "$SESSION" -n "$LABEL" -c "$PWD" bash -lc "$tmux_cmd" 2>/dev/null \
     && seat="tmux:$SESSION:$LABEL"
 fi
 [ "$refuse" = 1 ] && { printf 'eindri-start[1]{role,seat,verdict}:\n  "%s","none","too brief — answer it in hand"\n' "$ROLE"; exit 0; }

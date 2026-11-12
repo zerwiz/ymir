@@ -209,6 +209,11 @@ def launcher_door() -> Path:
     return Path(__file__).resolve().parents[2] / "bin" / "seat" / "pi-launcher.sh"
 
 
+def opencode_launcher_door() -> Path:
+    """The ONE interactive-OpenCode launcher generator — bin/seat/opencode-launcher.sh."""
+    return Path(__file__).resolve().parents[2] / "bin" / "seat" / "opencode-launcher.sh"
+
+
 def build_launch_command(
     selection: HarnessSelection,
     brief_ref: str,
@@ -259,17 +264,28 @@ def build_launch_command(
             )
         return completed.stdout.strip()
     if selection.name == "opencode":
-        # `env` is load-bearing, not decoration. The seat writer prefixes `exec ` to
-        # any shape that does not already carry it (seat.py), and `exec VAR=x cmd`
-        # is not runnable shell — bash looks for a command called
-        # `OPENCODE_CONFIG_CONTENT=...`. With `env` the shape is executable BOTH as a
-        # plain command and after `exec`, which is why every harness's shape must be
-        # self-contained: a launch shape that only works in one caller is a trap.
-        return (
-            "env OPENCODE_CONFIG_CONTENT="
-            + proc.shell_quote('{"permission":{"*":"allow"}}')
-            + f' opencode {model_flag}--prompt "$(cat {proc.shell_quote(brief_ref)})"'
-        )
+        # Plan 262: the interactive TUI refuses --model ("Unrecognized flag: --model in command
+        # opencode", OpenCode v2.2.7), so the model rides in the inline config and the brief is
+        # --prompt. The shape is composed by bin/seat/opencode-launcher.sh — the one door the
+        # spawner, the herdr seat and the tmux fallback also call — never here. The shape is
+        # `env VAR=… opencode …`, so it runs bare and after the seat writer's `exec ` prefix.
+        door = opencode_launcher_door()
+        if not door.is_file():
+            raise ValueError(
+                f"the OpenCode launcher generator is missing at {door} — a hand-built opencode "
+                "line is the shape that died in four panes (plan 262)"
+            )
+        argv = [str(door), "print"]
+        if selection.model and selection.model != "default":
+            argv += ["--model", selection.model]
+        argv += ["--brief", brief_ref]
+        completed = runner(argv)
+        if not proc.ok(completed):
+            raise ValueError(
+                "the OpenCode launcher refused this seat: "
+                + ((completed.stderr or completed.stdout or "").strip() or "no reason given")
+            )
+        return completed.stdout.strip()
     if selection.name == "claude":
         # An Eindri on Claude (plan 239 P5b) is interactive, so the seat stays visible
         # in herdr and can be steered; the brief is its first turn. It is launched

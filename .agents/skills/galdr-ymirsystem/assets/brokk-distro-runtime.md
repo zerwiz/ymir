@@ -1166,3 +1166,14 @@ a per-FILE bit that left 45 deletions in every worker's `git status`.
   recorded workspace id, the agent-aware housekeeping verdict, the worktree-is-not-a-root rule,
   migration 0019 and the install/update/Eir wiring. Fix note
   `docs/fixes/agents/2026-11-10-the-arm-closes-finished-seats.md`.
+
+*Appended 2026-11-12 (plan 262):* an OpenCode worker starts from ONE shape, written by `bin/seat/opencode-launcher.sh`:
+`env OPENCODE_CONFIG_CONTENT='{"model":…,"permission":{…}}' opencode --auto --prompt "$(cat <brief>)"`. OpenCode v2's
+interactive TUI refuses `--model`, so the model rides in the config and the brief is the first turn. Four callers use
+it and none builds its own line: `einherjar-spawn.sh`, `harness.py` (`opencode_launcher_door`), `herdr-run.sh` (runs it
+with `hdr pane run`, then `seat-prove.sh` must find the agent before the seat counts) and the tmux fallback in
+`eindri-start.sh`. The worker denials are `.agents/harnesses/opencode-worker.permission.json`. An explicit `--kind`
+wins over `agents.yaml`; `--kind claude` with no `--model` takes the alias `sonnet`. An exact `provider/model` for an
+OpenCode seat is verified with `opencode-launcher.sh has` (OpenCode's own list; pi's catalog lacks the `opencode/`
+provider). Guards: `bin/gates/tests/test_opencode_launcher.sh` and Eir's `opencode` surface. Fix note
+`docs/fixes/agents/2026-11-12-an-opencode-worker-actually-starts.md`.
