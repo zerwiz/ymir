@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import ndalib
 
 ROOT = ndalib.repo_root()
+# The home is never resolved here: ndalib.ymir_home() asks the one resolver (ymir_home_root, bin/vault/hoard-lib.sh).
 ZERO = '0' * 40
 
 

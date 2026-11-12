@@ -11,12 +11,12 @@ ok()  { pass=$((pass+1)); printf 'ok   %s\n' "$1"; }
 bad() { fail=$((fail+1)); printf 'FAIL %s\n' "$1"; }
 
 # ── the settle step runs the PIN's writer, never the caller's tree ──
-mkdir -p "$T/home/pin/bin/engine" "$T/tree/bin/engine"
-printf '#!/usr/bin/env bash\nprintf "pin %%s\\n" "$*" >>"%s/calls"\n' "$T" >"$T/home/pin/bin/engine/units.sh"
+mkdir -p "$T/hm/pin/bin/engine" "$T/tree/bin/engine"
+printf '#!/usr/bin/env bash\nprintf "pin %%s\\n" "$*" >>"%s/calls"\n' "$T" >"$T/hm/pin/bin/engine/units.sh"
 printf '#!/usr/bin/env bash\nprintf "TREE %%s\\n" "$*" >>"%s/calls"\n' "$T" >"$T/tree/bin/engine/units.sh"
-chmod +x "$T/home/pin/bin/engine/units.sh" "$T/tree/bin/engine/units.sh"
+chmod +x "$T/hm/pin/bin/engine/units.sh" "$T/tree/bin/engine/units.sh"
 . "$ROOT/bin/engine/unit-settle-lib.sh"
-HOME="$T/h" YMIR_RUNTIME_DIR="$T/home/pin" unit_settle garmr-brain >/dev/null 2>&1; rc=$?
+HOME="$T/h" YMIR_RUNTIME_DIR="$T/hm/pin" unit_settle garmr-brain >/dev/null 2>&1; rc=$?
 [ "$rc" = 0 ] && grep -q '^pin write garmr-brain --no-restart' "$T/calls" && ok "unit_settle runs the pin's units.sh with the unit's name and no restart" || bad "pin call: $(cat "$T/calls" 2>&1)"
 grep -q TREE "$T/calls" 2>/dev/null && bad "the caller's own tree ran" || ok "the calling tree's units.sh is never the one run"
 err="$(HOME="$T/h" YMIR_RUNTIME_DIR="$T/none" unit_settle garmr-brain 2>&1 >/dev/null)"; rc=$?

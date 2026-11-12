@@ -20,22 +20,22 @@ once="$(sol_stamped "a notice")"; twice="$(sol_stamped "$once")"
 printf 'one\n\ntwo\n' | sol_prefix | grep -cE "$STAMP_RX" | grep -qx 2 && ok "sol_prefix stamps each non-empty line" || bad "sol_prefix"
 
 # the worker's acclaim: status line, queue line, shelf and printed line
-mkdir -p "$T/repo/bin/agents" "$T/repo/bin/vault" "$T/repo/bin/time" "$T/repo/RULES" "$T/repo/.pi" "$T/home/state"
+mkdir -p "$T/repo/bin/agents" "$T/repo/bin/vault" "$T/repo/bin/time" "$T/repo/RULES" "$T/repo/.pi" "$T/hm/state"
 cp "$ROOT/bin/agents/eindri-acclaim.sh" "$ROOT/bin/agents/eindri-wake-lib.sh" "$T/repo/bin/agents/"
 cp "$ROOT/bin/vault/hoard-lib.sh" "$T/repo/bin/vault/"; cp "$ROOT/bin/time/sol-lib.sh" "$ROOT/bin/time/saga-wake-drain.sh" "$T/repo/bin/time/"
-printf 'working: launched\n' >"$T/home/state/w1.status"
-out="$(env -i PATH="$PATH" HOME="$T" YMIR_HOME="$T/home" BROKK_ROOT_OVERRIDE="$T/repo" bash "$T/repo/bin/agents/eindri-acclaim.sh" w1 --terminal failed --line "it stopped" 2>&1)"
-tail -n1 "$T/home/state/w1.status" | grep -qE '^failed: [0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2} .+ — it stopped$' && ok "the status line keeps its state first and carries the stamp" || bad "status line: $(tail -n1 "$T/home/state/w1.status")"
-head -n1 "$T/home/state/.wake-queue" | grep -qE "$STAMP_RX" && ok "the wake line begins with the stamp" || bad "wake line: $(head -n1 "$T/home/state/.wake-queue")"
-head -n1 "$T/home/state/eindri-reports/w1.md" | grep -qE "$STAMP_RX" && ok "the report begins with the stamp" || bad "report"
+printf 'working: launched\n' >"$T/hm/state/w1.status"
+out="$(env -i PATH="$PATH" HOME="$T" YMIR_HOME="$T/hm" BROKK_ROOT_OVERRIDE="$T/repo" bash "$T/repo/bin/agents/eindri-acclaim.sh" w1 --terminal failed --line "it stopped" 2>&1)"
+tail -n1 "$T/hm/state/w1.status" | grep -qE '^failed: [0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2} .+ — it stopped$' && ok "the status line keeps its state first and carries the stamp" || bad "status line: $(tail -n1 "$T/hm/state/w1.status")"
+head -n1 "$T/hm/state/.wake-queue" | grep -qE "$STAMP_RX" && ok "the wake line begins with the stamp" || bad "wake line: $(head -n1 "$T/hm/state/.wake-queue")"
+head -n1 "$T/hm/state/eindri-reports/w1.md" | grep -qE "$STAMP_RX" && ok "the report begins with the stamp" || bad "report"
 printf '%s\n' "$out" | grep -E "$STAMP_RX" | grep -q 'acclaimed w1' && ok "the acclaim prints one stamped human line" || bad "printed line: $out"
-before="$(wc -l <"$T/home/state/w1.status")"
-env -i PATH="$PATH" HOME="$T" YMIR_HOME="$T/home" BROKK_ROOT_OVERRIDE="$T/repo" bash "$T/repo/bin/agents/eindri-acclaim.sh" w1 --terminal failed --line "it stopped" >/dev/null 2>&1
-[ "$(wc -l <"$T/home/state/w1.status")" = "$before" ] && ok "a repeat of the same act is recognised through the stamp, not written twice" || bad "repeat written twice"
+before="$(wc -l <"$T/hm/state/w1.status")"
+env -i PATH="$PATH" HOME="$T" YMIR_HOME="$T/hm" BROKK_ROOT_OVERRIDE="$T/repo" bash "$T/repo/bin/agents/eindri-acclaim.sh" w1 --terminal failed --line "it stopped" >/dev/null 2>&1
+[ "$(wc -l <"$T/hm/state/w1.status")" = "$before" ] && ok "a repeat of the same act is recognised through the stamp, not written twice" || bad "repeat written twice"
 
 # the drain: an unstamped queue line is stamped when shown
-printf 'eindri old line with no time\n' >"$T/home/state/.wake-queue"
-dout="$(env -i PATH="$PATH" HOME="$T" YMIR_HOME="$T/home" BROKK_HOME="$T/repo" BROKK_STATE_OVERRIDE="$T/home/state" bash "$T/repo/bin/time/saga-wake-drain.sh" 2>&1)"
+printf 'eindri old line with no time\n' >"$T/hm/state/.wake-queue"
+dout="$(env -i PATH="$PATH" HOME="$T" YMIR_HOME="$T/hm" BROKK_HOME="$T/repo" BROKK_STATE_OVERRIDE="$T/hm/state" bash "$T/repo/bin/time/saga-wake-drain.sh" 2>&1)"
 printf '%s\n' "$dout" | grep -E '^WAKE ' | grep -qE "^WAKE [0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2} " && ok "the drain shows an unstamped wake with a stamp" || bad "drain: $dout"
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

@@ -18,8 +18,8 @@ unit_pin_dir() {
   local d="${YMIR_RUNTIME_DIR:-}" home="" conf=""
   if [ -z "$d" ]; then
     if command -v ymir_home_root >/dev/null 2>&1; then ymir_home_root home 2>/dev/null; fi
-    home="${home:-${YMIR_HOME:-$HOME/Documents/ymirhome}}"
-    conf="$home/config/runtime.env"
+    home="${home:-${YMIR_HOME:-}}"
+    [ -n "$home" ] && conf="$home/config/runtime.env"
     if [ -r "$conf" ]; then d="$(sed -n 's/^YMIR_RUNTIME_DIR=//p' "$conf" 2>/dev/null | tail -1 | tr -d "\"'")"; fi
   fi
   d="${d:-$HOME/ymir-runtime}"
