@@ -30,6 +30,7 @@ apps/sessrumnir/src/main/file-service.test.ts | fixture | a unicode filename, as
 bin/mail/gna_judge.py | detector | the mail classifier's Swedish invoice and meeting words — the classifier reads those languages, it does not write them
 systems/skirnir/services/skirnir.py | detector | the assistant's language hint: a Swedish token list that decides whether the mouth answers in his clients' tongue
 systems/skirnir/services/walls-test.sh | detector | the test of that language hint, which must contain the Swedish it detects
+bin/records/comms.py | detector | the messages door reads Swedish mail: its greeting, done-word and name patterns carry the Swedish letters and words they recognise (hej, välkommen, klar)
 docs/fixes/agents/2026-10-22-memory-voice-and-the-window.md | detector | the fix note that records why the Swedish hint exists, quoting the sentence it detects
 
 # ── quotations: a person's own words, kept as spoken ────────────────────────────

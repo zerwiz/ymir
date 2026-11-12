@@ -2,6 +2,7 @@
 # mail-scan.sh — read-only: the last N hours of a mailbox, as compact JSON.
 #
 #   mail-scan.sh [--hours 24] [--max 40] [--scope inbox|sent|drafts|all] [--account primary]
+#   mail-scan.sh --query '<gmail search>' [--max 40]   # a read-only search (plan 261: the comms door)
 #
 # The SCOPE decides what is read: `inbox` (the default) is unread inbox only; `sent`
 # and `drafts` are what the house has written; `all` is everything but chats.
@@ -11,11 +12,12 @@
 set -uo pipefail
 
 ROOT="${YMIR_TREE:-$HOME/ymir}"
-HOURS=24; MAX=40; SCOPE=inbox
+HOURS=24; MAX=40; SCOPE=inbox; QUERY=""
 while [ $# -gt 0 ]; do case "$1" in
   --hours) HOURS="${2-}"; shift 2 ;;
   --max) MAX="${2-}"; shift 2 ;;
   --scope) SCOPE="${2-}"; shift 2 ;;
+  --query) QUERY="${2-}"; shift 2 ;;
   --account) shift 2 ;;
   *) echo "usage: mail-scan.sh [--hours N] [--max N]" >&2; exit 2 ;;
 esac; done
@@ -38,6 +40,8 @@ case "$SCOPE" in
   all)    Q="newer_than:${HOURS}h -in:chats" ;;
   *) echo "usage: --scope inbox|sent|drafts|all" >&2; exit 2 ;;
 esac
+# a search reads exactly like a scope does — the query only narrows WHAT is read
+[ -n "$QUERY" ] && Q="$QUERY"
 LIST="$(curl -sS -m 30 -G "https://gmail.googleapis.com/gmail/v1/users/me/messages" \
   -H "Authorization: Bearer $TOKEN" \
   --data-urlencode "q=$Q" --data-urlencode "maxResults=$MAX")"
