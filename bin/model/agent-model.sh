@@ -56,6 +56,7 @@ SETTINGS=""; hoard_settings_dir SETTINGS 2>/dev/null || true
 [ -n "$SETTINGS" ] || { printf 'agent-model: the settings dir is unresolved\n' >&2; exit 1; }
 
 CATALOG="$ROOT/bin/model/catalog.sh"
+ALLOW="$ROOT/bin/model/model-allow.sh"
 HOST="$(hostname -s 2>/dev/null || hostname 2>/dev/null || echo unknown)"
 
 die()    { printf 'agent-model: %s\n' "$*" >&2; exit 1; }
@@ -78,8 +79,18 @@ listed() {  # <provider/model> → 0 when this seat lists it
 refresh_catalog() {
   [ -s "$CATFILE" ] && return 0
   [ -x "$CATALOG" ] || return 1
-  "$CATALOG" >"$CATFILE" 2>/dev/null || return 1
+  # Only what the operator's allow-list allows (bin/model/model-allow.sh, 2026-11-12): every
+  # step below picks from this file, so no tier, row or default can land on a refused model —
+  # the `strong` tier reached for `opencode-go/.*pro` first, and a pro model spent a month of
+  # credit in one night.
+  "$CATALOG" 2>/dev/null | "$ALLOW" filter >"$CATFILE" 2>/dev/null || return 1
   [ -s "$CATFILE" ]
+}
+not_allowed() {  # <provider/model> → 0 (and prints the reason) when the allow-list refuses it
+  local out
+  out="$("$ALLOW" check "$1" 2>/dev/null)" && return 1
+  printf '%s' "$out" | sed -n '2p' | sed 's/^  //'
+  return 0
 }
 providers_of() { awk -F'","' 'NR > 1 { p=$1; sub(/^  "/, "", p); print p }' "$CATFILE" | sort -u; }
 
@@ -203,6 +214,7 @@ resolve_one() {  # <agent> → prints "model<TAB>source<TAB>why"; exit 3 when re
   envval="$(printenv "$envkey" 2>/dev/null || true)"
 
   if [ -n "$EXPLICIT" ]; then
+    local nope; nope="$(not_allowed "$EXPLICIT")" && refuse "the model '$EXPLICIT' is not on this fleet's allow-list ($nope) — bin/model/model-allow.sh list"
     listed "$EXPLICIT" || refuse "the model '$EXPLICIT' is NOT in this seat's catalogue — a model a machine does not list is not a preference, it is a promise it cannot keep"
     printf '%s\t%s\t%s' "$EXPLICIT" "explicit --model" "the operator named it for this run"
     return 0

@@ -1,0 +1,31 @@
+# models-allowed.yaml — which models an Eindri may run on (the operator's own list).
+#
+# Copy this to <home>/config/models-allowed.yaml and make it yours. The door is
+# bin/model/model-allow.sh; every spawn asks it before launch, and refuses a model
+# this file does not allow. With no file at all the fleet is "unpoliced" and the
+# doctor (bin/agents/eir-doctor.sh, surface `models`) says so.
+#
+# Naming: pi/opencode models as `provider/model` (the catalogue's form, globs allowed);
+# Claude models as `claude/<model-id>`. An alias such as `opus` resolves to the first
+# allowed Claude id of that family.
+version: 1
+
+allow:
+  - llama-swap/*            # the local rail costs nothing
+  - llamacpp-*/*
+  # - opencode-go/<the one cloud model you pay for>
+  # - claude/<the one Claude model your Eindri may use>
+
+# The model a harness gets when the spawn names none.
+defaults: {}
+  # claude: <claude-model-id>
+
+# Special permission: one model, on purpose, on the record. Every field is required;
+# a grant past its `expires` date is ignored. `uses` (optional) caps the launches.
+grants: []
+  # - model: <provider/model>
+  #   reason: <why this errand needs it>
+  #   granted_by: <who>
+  #   granted_at: 2026-01-01
+  #   expires: 2026-01-02
+  #   uses: 1

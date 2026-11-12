@@ -18,7 +18,13 @@ const http = require('node:http');
 const path = require('node:path');
 const fs = require('node:fs');
 
-const UI = path.join(__dirname, '..', 'ui');
+// The code root is the PINNED runtime, never the tree this file happens to sit in (plan 257
+// H7): the face, the tool server's --app-dir and every door the instructions name resolve
+// from YMIR_RUNTIME_DIR / runtime.env. An absent pin is a refusal, said in the window.
+const { resolvePin } = require('./pin');
+const PIN = resolvePin(process.env);
+const UI = PIN.ui || '';
+const ARM_DOOR = PIN.root ? path.join(PIN.root, 'bin', 'voice', 'rodd-arm.sh') : 'bin/voice/rodd-arm.sh';
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
@@ -70,7 +76,7 @@ function startUiServer(attempt = 1) {
     const proc = execFile(
       py,
       ['-m', 'uvicorn', '--app-dir', dir, 'server:app', '--host', '127.0.0.1', '--port', String(port)],
-      { env, cwd: dir, timeout: 0 },
+      { env: { ...env, YMIR_RUNTIME_DIR: PIN.root }, cwd: dir, timeout: 0 },
       (err) => { if (err) console.error('[rodd] ui server exited:', err.message); },
     );
     // a missing interpreter is an 'error' event, not stderr — the very case that used to hang
@@ -191,6 +197,14 @@ app.whenReady().then(async () => {
     callback(local && ['media', 'audioCapture', 'display-capture', 'clipboard-read', 'clipboard-sanitized-write'].includes(permission));
   });
 
+  // No pin, no Rödd: one named line in the console and in the window, never the tree.
+  if (PIN.error) {
+    console.error('[rodd] ' + PIN.error);
+    showBootFailure(Object.assign(new Error(PIN.error), { dir: '(no pinned runtime)' }));
+    return;
+  }
+  console.log('[rodd] code root', JSON.stringify(PIN.root), 'from', PIN.source);
+
   // ONE retry after a pause, then the sentence and a clean exit (plan 231 R3).
   let started = null;
   let lastError = null;
@@ -239,12 +253,12 @@ app.whenReady().then(async () => {
       "ledger (a PLAN is not an ERRAND); research sends Huginn out — ask him out loud first, then confirm.",
       "That door resolves the ARM LEASE and prints the holder's pid, generation, state dir and how fresh its heartbeat is.",
       "If it prints 'no arm is held', say exactly that — nobody is watching — and never guess a name or a session.",
-      "To hand him something, use: bash ~/ymir-runtime/bin/voice/rodd-arm.sh tell \"<the one line>\". It refuses when no arm",
+      `To hand him something, use: bash ${ARM_DOOR} tell "<the one line>". It refuses when no arm`,
       "is held, and that refusal is the truth: say it out loud instead of claiming you sent it.",
       "THE ARM HOLDER — who is watching, right now. Before answering anything about what Ymir is doing, whether anyone",
-      "is supervising, or what was decided, RUN: bash /home/heimdall/ymir-runtime/bin/voice/rodd-arm.sh who — it resolves the ARM LEASE and prints the",
-      "holder's pid, generation, state dir and heartbeat age. If it answers 'no arm is held', say exactly that and never",
-      "guess a name. To hand him one line: bash /home/heimdall/ymir-runtime/bin/voice/rodd-arm.sh tell \"<the line>\" — it refuses when no arm is held,",
+      `is supervising, or what was decided, RUN: bash ${ARM_DOOR} who — it resolves the ARM LEASE and prints the`,
+      "holder's seat, role, charter, host, fleet role, pin, generation, pid and heartbeat age. If it answers 'no arm is held', say exactly that and never",
+      `guess a name. To hand him one line: bash ${ARM_DOOR} tell "<the line>" — it refuses when no arm is held,`,
       "and that refusal is the truth: say it, do not claim you sent it.",
       "You also have ls, read, edit and bash, and mcp (chrome-devtools drives the browser, well and the",
       "board hold the record). edit, bash and any mcp call that can write ask him out loud first and run",

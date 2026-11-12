@@ -48,10 +48,10 @@ const LEVEL_CLASSES: Record<IntensityLevel, string> = {
 // Legend dot colors, cycled by model rank.
 const MODEL_DOT_COLORS = [
   'bg-emerald-500', /* theme-exempt: categorical palette */
-  'bg-blue-500', /* theme-exempt: categorical palette */
-  'bg-sky-400', /* theme-exempt: categorical palette */
-  'bg-violet-500', /* theme-exempt: categorical palette */
   'bg-amber-500', /* theme-exempt: categorical palette */
+  'bg-stone-400', /* theme-exempt: categorical palette */
+  'bg-stone-600', /* theme-exempt: categorical palette */
+  'bg-amber-700', /* theme-exempt: categorical palette */
   'bg-rose-500', /* theme-exempt: categorical palette */
   'bg-teal-400', /* theme-exempt: categorical palette */
   'bg-neutral-500', /* theme-exempt: categorical palette */

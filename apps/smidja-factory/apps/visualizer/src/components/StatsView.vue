@@ -228,7 +228,7 @@ const providerShare = (kind: 'local' | 'online') => {
   font-weight: 600;
 }
 .panel {
-  background: rgba(16, 21, 32, 0.6);
+  background: rgba(26, 22, 16, 0.6);
   border: 1px solid color-mix(in srgb, var(--accent) 12%, transparent);
   border-radius: 12px;
   padding: 14px 16px;
@@ -243,7 +243,7 @@ const providerShare = (kind: 'local' | 'online') => {
   gap: 12px;
 }
 .stat {
-  background: rgba(11, 15, 24, 0.6);
+  background: rgba(21, 18, 9, 0.6);
   border: 1px solid color-mix(in srgb, var(--text) 7%, transparent);
   border-radius: 10px;
   padding: 12px;
@@ -284,7 +284,7 @@ const providerShare = (kind: 'local' | 'online') => {
   font-size: 12px;
 }
 .vendor-select {
-  background: rgba(11, 15, 24, 0.8);
+  background: rgba(21, 18, 9, 0.8);
   border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
   border-radius: 8px;
   color: var(--text);

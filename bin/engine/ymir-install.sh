@@ -758,6 +758,26 @@ step_sessrumnir() {
   else add sessrumnir SKIP "no sessrumnir-ensure.sh"; fi
 }
 
+# ── 3b3. Bilskirnir, the business hall ──────────────────────────────────────
+# apps/bilskirnir (plan 259): Bot HQ's face, Nanna answering through her own Hermes home. Its one setup
+# door renders her soul from the home, writes the managed .env block, installs the dependencies from the
+# lock files and seats the launcher entry. Gróa re-runs the same door after every fast-forward; Eir reads
+# its --check. The hall is the operator's (dev) and, later, the always-on host's (heart).
+step_bilskirnir() {
+  role_gate bilskirnir heart,dev "the business hall" || return 0
+  [ "$SKIP_ENGINES" = 1 ] && { add bilskirnir SKIP "--skip-engines"; return; }
+  local door="$ROOT/apps/bilskirnir/setup.sh"
+  [ -x "$door" ] || { add bilskirnir SKIP "no apps/bilskirnir/setup.sh in this tree"; return; }
+  if [ "$CHECK" = 1 ]; then
+    if "$door" --check >/dev/null 2>&1; then add bilskirnir OK "current (apps/bilskirnir/setup.sh --check)"
+    else add bilskirnir WARN "stale — a full run executes apps/bilskirnir/setup.sh"; fi
+  else
+    local desk=1; [ "$NO_DESKTOP" = 1 ] && desk=0
+    if BILSKIRNIR_DESKTOP="$desk" "$door" >/dev/null 2>&1; then add bilskirnir OK "ready — open it with apps/bilskirnir/start.sh"
+    else add bilskirnir WARN "setup did not finish — run apps/bilskirnir/setup.sh"; fi
+  fi
+}
+
 # ── 3c. Þjazi backend (herdr-first) ──────────────────────────────────────────
 # Ymir spawns agents into terminal panes, so a backend must exist. herdr is
 # preferred (protocol 14+, presentation spaces at 0.8.0+); tmux is an accepted
@@ -1829,6 +1849,7 @@ run_step step_voice "the voice engines"
 run_step step_a2a "the A2A mesh"
 run_step step_room "the room"
 run_step step_sessrumnir "the seat"
+run_step step_bilskirnir "Bilskirnir, the business hall"
 run_step step_backend "backend"
 run_step step_host "host"
 run_step step_role "role"

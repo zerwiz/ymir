@@ -80,13 +80,17 @@ surface_skip() {
     # vault is a server-side property (Rule 15/16), never the roaming seat's.
     vault)      return 0 ;;
     # The Electron shells are not built for Android; the seat is the harness.
-    shells|sessrumnir) return 0 ;;
+    shells|sessrumnir|bilskirnir) return 0 ;;
     # No systemd on Android: there is no boot unit to enable. The Pi watcher owns
     # supervision here, and `ymir-autoboot.sh verify` already names the gap.
     autoboot)   return 0 ;;
+    # A hand runs no pinned runtime and supervises nothing: the arm and Rödd live on a seat.
+    armpin)     return 0 ;;
     # The desk is a systemd user unit: a substrate without systemd (a hand) cannot
     # owe it — and the arm's own door already names that gap.
     mail)       return 0 ;;
+    # a hand runs no arm service and no Rödd window: there is no pin for it to owe
+    armpin)     return 0 ;;
   esac
   return 1
 }
@@ -103,15 +107,16 @@ surface_ok() {
 surface_detail_skip() {
   case "$1" in
     vault)      printf '%s\n' 'not this seat (no cryptsetup/loop devices on Android)' ;;
-    shells|sessrumnir) printf '%s\n' 'not this seat (desktop shells are not built for bionic)' ;;
+    shells|sessrumnir|bilskirnir) printf '%s\n' 'not this seat (desktop shells are not built for bionic)' ;;
     autoboot)   printf '%s\n' 'not this seat (no systemd; the Pi watcher owns supervision)' ;;
+    armpin)     printf '%s\n' 'not this seat (a hand runs no pinned runtime)' ;;
     mail)       printf '%s\n' 'not this seat (no systemd: the desk is a user unit)' ;;
     *)          printf '%s\n' 'skip' ;;
   esac
 }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir hnoss shells graphics well memory mail mcp harness claudehooks arm roddhelm lock gates migrations hoard autoboot vault ward seats seatreap)
+SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir bilskirnir hnoss shells graphics well memory mail mcp harness claudehooks arm armpin roddhelm lock gates migrations hoard autoboot vault ward seats seatreap models)
 
 # ── the three surfaces the 2026-11-03 Windows audit found, and the rule they read ──────────
 # A SEAT IS NOT UPDATED BY A PULL. The checkout moves; the installed hooks, the PATH a later
@@ -236,6 +241,10 @@ f_council()   { "$SCRIPT_DIR/../pi/logretta-ensure.sh" ensure >/dev/null 2>&1; }
 f_snotra()    { "$SCRIPT_DIR/../../systems/snotra/services/ear/snotra-ensure.sh" ensure --install >/dev/null 2>&1; }
 s_sessrumnir(){ [ -x "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" ] && "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" status >/dev/null 2>&1; }
 f_sessrumnir(){ "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1; }
+# Bilskirnir, the business hall (plan 259): healthy when its setup door's --check passes (agent home,
+# soul, .env, dependencies); the repair is the door itself. A tree without the app is not owed it.
+s_bilskirnir(){ [ -x "$ROOT/apps/bilskirnir/setup.sh" ] || return 0; "$ROOT/apps/bilskirnir/setup.sh" --check >/dev/null 2>&1; }
+f_bilskirnir(){ [ -x "$ROOT/apps/bilskirnir/setup.sh" ] && "$ROOT/apps/bilskirnir/setup.sh" >/dev/null 2>&1; }
 # Hnoss — the design smithy's model door (2026-11-10). The MCP bridge is only as good as
 # the door it reaches a model through; a hand-placed launcher plus a rail/BYOK mismatch
 # made every design generation die silently. The ensure door seats the launcher and the
@@ -320,6 +329,23 @@ print(",".join(d.get("accounts") or []))' 2>/dev/null)"
   esac
 }
 s_mail()      { [ "$(mail_state)" = ok ]; }
+# ── the allow-list (2026-11-12): only the models this operator approved run as Eindri ────────
+# Broken when a seat still working, or a configured default (agents.yaml, pi's settings), names a
+# model the list refuses. The mend is the operator's word (the list, a grant, or stopping the seat),
+# never a rewrite by the doctor, so f_models only says where to look.
+s_models()    { "$SCRIPT_DIR/../model/model-allow.sh" audit "$STATE" >/dev/null 2>&1; }
+f_models()    { return 1; }
+models_detail() {
+  local out n
+  if ! "$SCRIPT_DIR/../model/model-allow.sh" list >/dev/null 2>&1; then printf 'the allow-list does not read — bin/model/model-allow.sh list'; return; fi
+  if "$SCRIPT_DIR/../model/model-allow.sh" list 2>/dev/null | sed -n 2p | grep -q unpoliced; then
+    printf 'unpoliced — no allow-list at %s (template: config/models-allowed.yaml.example)' "$("$SCRIPT_DIR/../model/model-allow.sh" path)"; return
+  fi
+  out="$("$SCRIPT_DIR/../model/model-allow.sh" audit "$STATE" 2>/dev/null)"
+  n="$(printf '%s\n' "$out" | sed -n '1s/.*\[\([0-9]*\)\].*/\1/p')"
+  if [ "${n:-0}" = 0 ]; then printf 'every live seat and configured default is on the allow-list'
+  else printf '%s off the allow-list: %s' "$n" "$(printf '%s\n' "$out" | sed -n '2,4p' | cut -d'"' -f2,6 | tr '"' '=' | paste -sd' ' -)"; fi
+}
 f_mail()      { [ -x "$ROOT/bin/mail/install.sh" ] && "$ROOT/bin/mail/install.sh" >/dev/null 2>&1; }
 # The desktop shells (P8, 2026-09-24): the RESOLVER answers — app-local,
 # workspace-hoisted, or the sibling package (bin/desktop/electron-lib.sh). ABSENT for
@@ -479,6 +505,12 @@ f_claudehooks() { [ -x "$SCRIPT_DIR/../seat/harness-extensions-install.sh" ] && 
 # a dead watch costs — and the mend is to seat the service again.
 s_arm()      { [ -x "$SCRIPT_DIR/../pi/syn-watch.sh" ] && "$SCRIPT_DIR/../pi/syn-watch.sh" status >/dev/null 2>&1; }
 f_arm()      { [ -x "$SCRIPT_DIR/../pi/syn-watch.sh" ] && "$SCRIPT_DIR/../pi/syn-watch.sh" start >/dev/null 2>&1 && s_arm; }
+# armpin (plan 257 H8): the pinned runtime is current with origin, and every surface that
+# supervises — the arm service, its clients, Rödd's window and her tool server — executes
+# from it. bin/seat/armpin.sh is the judge; the mend moves the pin (runtime-deploy.sh),
+# which restarts and proves the units, then the judge is asked again.
+s_armpin()   { [ -x "$SCRIPT_DIR/../seat/armpin.sh" ] && "$SCRIPT_DIR/../seat/armpin.sh" check >/dev/null 2>&1; }
+f_armpin()   { [ -x "$SCRIPT_DIR/../engine/runtime-deploy.sh" ] && "$SCRIPT_DIR/../engine/runtime-deploy.sh" >/dev/null 2>&1; s_armpin; }
 # roddhelm: the lease names a known holder role, the room is writable, and the
 # drain door answers (plan 254 B6). The check is rodd-helm.sh --check; there is
 # no safe auto-mend — a role is the holder's declaration, never invented.
@@ -655,14 +687,17 @@ detail() { # <name> -> the command that prints one short fact
     a2abridge) printf '%s\n' "have a2abridge && a2abridge --version 2>/dev/null | head -1 || echo 'engine absent'" ;;
     hermes)    printf '%s\n' "have hermes && echo present || echo absent" ;;
     sessrumnir)printf '%s\n' "[ -d $APP_SESSRUMNIR/out ] && echo built || echo 'not built'" ;;
+    bilskirnir)printf '%s\n' "[ -x $ROOT/apps/bilskirnir/setup.sh ] && { $ROOT/apps/bilskirnir/setup.sh --check 2>&1 | tail -1; } || echo 'not in this tree'" ;;
     well)      printf '%s\n' well_detail ;;
     memory)    printf '%s\n' memory_detail ;;
     mail)      printf '%s\n' mail_detail ;;
+    models)    printf '%s\n' models_detail ;;
     mcp)       printf '%s\n' "echo 'a2abridge + the well door'" ;;
     graphics)  printf '%s\n' "if [ -z \"\${DISPLAY:-}\${WAYLAND_DISPLAY:-}\" ]; then echo headless; else echo \"\$(graphics_block 2>/dev/null | sed -n '1p' | sed 's/.*{//;s/}//') · \$(graphics_policy 2>/dev/null)\"; fi" ;;
     harness)   printf '%s\n' "s_harness && echo 'deployed extensions resolve their bin/' || echo 'no live root recorded'" ;;
     claudehooks) printf '%s\n' "command -v claude >/dev/null 2>&1 && echo 'the three Claude hooks: AGENTS.md · Eindri-only · the Gná arm' || echo 'no claude on this host'" ;;
     arm)       printf '%s\n' "$SCRIPT_DIR/../pi/syn-watch.sh status --detail 2>/dev/null | head -1 || echo 'arm door missing'" ;;
+    armpin)    printf '%s\n' "$SCRIPT_DIR/../seat/armpin.sh --detail 2>/dev/null | head -1 || echo 'armpin door missing'" ;;
     roddhelm)  printf '%s\n' "$SCRIPT_DIR/../voice/rodd-helm.sh --check 2>&1 | head -1 || echo 'rodd-helm door missing'" ;;
     gates)     printf '%s\n' "s_gates && echo 'pre-push hook: the worktree that pushes' || echo 'installed hook is stale — bin/gates/guards/fixes-guard.sh --install'" ;;
     lock)      printf '%s\n' "cat $STATE/.lock 2>/dev/null | tr -d '[:space:]' | sed 's/^/pid /' || echo none" ;;

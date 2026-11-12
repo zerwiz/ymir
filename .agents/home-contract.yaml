@@ -164,6 +164,12 @@ contract:
     door: bin/engine/home-seed.sh
     required: true
     why: "each agent's harness and model — the one file that decides what runs"
+  - path: config/models-allowed.yaml
+    kind: seeded
+    template: .agents/config/models-allowed.yaml.example
+    door: bin/engine/home-seed.sh
+    required: false
+    why: "the models an Eindri may run on — every spawn door refuses any other (bin/model/model-allow.sh)"
   - path: config/cron.yaml
     kind: defaulted
     template: .agents/config/cron.yaml.example

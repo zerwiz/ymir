@@ -48,24 +48,24 @@
    its violet/cyan aurora. Set on <html> (e.g. via the shell titlebar toggle) —
    the overrides below win because they come later in the cascade. ── */
 :root[data-theme='classic'] {
-  --bg: #06080f;
-  --panel: #0d1119;
-  --panel-2: #131a26;
-  --panel-3: #0a0e16;
-  --border: #232c3d;
-  --border-soft: #222b3d;
+  --bg: #0e0c09;
+  --panel: #151209;
+  --panel-2: #1a1610;
+  --panel-3: #151209;
+  --border: #2b241a;
+  --border-soft: #2b241a;
   --text: #f2f5fa;
-  --dim: #aabdd5;
-  --faint: #8b9cb6;
+  --dim: #cfc3a9;
+  --faint: #9a8f75;
   --green: #4ade80;
   --red: #ff6f67;
-  --blue: #6cb6ff;
+  --blue: #eca654;
   --amber: #e8b64a;
-  --purple: #c89bff;
-  --cyan: #5ad2dd;
-  --violet: #94a3ff;
+  --purple: #cfc3a9;
+  --cyan: #c9973f;
+  --violet: #f0e6cd;
   --accent: #c9973f;
-  --surface: linear-gradient(180deg, #10141f 0%, #0b0f18 100%);
+  --surface: linear-gradient(180deg, #1a1610 0%, #151209 100%);
 }
 
 * {
@@ -96,9 +96,9 @@ body {
 /* Classic deep-space body: the original violet/cyan aurora (preserved). */
 :root[data-theme='classic'] body {
   background:
-    radial-gradient(1100px 700px at 8% -10%, rgba(148, 163, 255, 0.09), transparent 62%),
-    radial-gradient(1000px 720px at 102% 108%, rgba(90, 210, 221, 0.07), transparent 60%),
-    linear-gradient(180deg, #06080f 0%, #090d17 100%);
+    radial-gradient(1100px 700px at 8% -10%, rgba(240, 230, 205, 0.09), transparent 62%),
+    radial-gradient(1000px 720px at 102% 108%, rgba(201, 151, 63, 0.07), transparent 60%),
+    linear-gradient(180deg, #0e0c09 0%, #151209 100%);
   background-attachment: fixed;
 }
 
@@ -116,11 +116,11 @@ body {
   --faint: #b0b0b0;
   --green: #00ff00;
   --red: #ff4444;
-  --blue: #4488ff;
+  --blue: #c9973f;
   --amber: #ffcc00;
-  --purple: #cc88ff;
+  --purple: #cfc3a9;
   --cyan: #00ffff;
-  --violet: #aa88ff;
+  --violet: #cfc3a9;
   --accent: #ff8800;
   --surface: #000000;
 }
@@ -211,7 +211,7 @@ body {
 }
 
 :root[data-theme='high-contrast'] a {
-  color: #88aaff;
+  color: #eca654;
   text-decoration: underline;
 }
 
@@ -261,7 +261,7 @@ pre {
   font-family: var(--mono);
   font-size: 16px;
   line-height: 1.55;
-  color: #cfdded;
+  color: #f0e6cd;
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -588,5 +588,5 @@ pre {
   .lane-name { color: #000 !important; }
   .b-status.success { color: #006600 !important; }
   .b-status.fail { color: #cc0000 !important; }
-  .b-status.running { color: #0000cc !important; }
+  .b-status.running { color: #7d5f2a !important; }
 }

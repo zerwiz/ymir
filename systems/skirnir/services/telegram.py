@@ -57,6 +57,17 @@ LIMITS = os.path.join(STATE, "telegram.limits.json")
 OWNER_ID = os.environ.get("TELEGRAM_OWNER_ID", "")
 
 
+def record(direction: str, who: str, chat_id, ref, text: str) -> None:
+    """Plan 261: every Telegram message, in and out, is a row in the house's communications record
+    (hodd/memory/comms/telegram.jsonl). The pen never breaks the poller — a failure is ignored."""
+    try:
+        sys.path.insert(0, os.path.join(ROOT, "bin", "records"))
+        import comms  # noqa: E402  (bin/records/comms.py)
+        comms.append("telegram", direction, who, thread=str(chat_id or ""), ref=str(ref or ""), text=text or "")
+    except Exception:
+        pass
+
+
 def vault(key: str) -> str:
     out = subprocess.run(["bash", os.path.join(ROOT, "bin", "vault", "hodd.sh"),
                           "emit", "secrets/platform.env"], capture_output=True, text=True).stdout
@@ -363,6 +374,9 @@ def main() -> int:
                         print(f"telegram: could not hear the voice note: {err}", file=sys.stderr)
                 if not text or sender.get("is_bot"):
                     continue
+                speaker = sender.get("username") or " ".join(
+                    x for x in (sender.get("first_name"), sender.get("last_name")) if x) or str(sender.get("id", ""))
+                record("in", speaker, chat.get("id"), msg.get("message_id"), text)
                 # every group or channel he is put in is RECORDED first, before any filter — that is how
                 # the Allfather gets a chat id to allowlist instead of guessing one.
                 if chat.get("type") in ("group", "supergroup", "channel"):
@@ -477,6 +491,7 @@ def main() -> int:
                         api_patient("sendMessage", chat_id=chat.get("id"), text=reply,
                                     reply_to_message_id=msg.get("message_id"),
                                     disable_web_page_preview="true")
+                    record("out", speaker, chat.get("id"), msg.get("message_id"), reply)
                 except Exception as err:
                     print(f"telegram: send failed for update {update.get('update_id')}: {err}",
                           file=sys.stderr)

@@ -140,11 +140,21 @@ held_or_refuse() {
 }
 
 # ── who ────────────────────────────────────────────────────────────────────────
+# ONE row answers everything the Allfather asked of the record (plans 254 B1b/B1c ·
+# 257 H8): seat · role · charter · host · fleetrole · fleet · pin · behind · gen ·
+# pid · heartbeat age — plus the state dir, queue and room the lease names. The row
+# itself is owned by bin/seat/helm-identity.sh, so the arm door, the lock door and
+# the digest can never print three different answers to one question.
+HELM_DOOR="$ROOT/bin/seat/helm-identity.sh"
 cmd_who() {
   if ! arm_probe; then
     printf 'no arm is held\n'
     printf 'rodd-arm: %s\n' "$ARM_WHY" >&2
     return 3
+  fi
+  if [ -x "$HELM_DOOR" ]; then
+    bash "$HELM_DOOR" --lease "$LEASE"
+    return 0
   fi
   printf 'rodd-arm[1]{verb,holder_pid,gen,mode,role,session,state_dir,heartbeat_age_s,stale_after_s,queue,room}:\n'
   printf '  "who","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s"\n' \
@@ -473,6 +483,14 @@ PY
 cmd_hold() {
   resolve_roots
   require_lock_lib
+  # THE HOLDER GATE (plans 254 B1c · 257 H7): a session that cannot resolve its own
+  # host or its fleet role may NOT take the helm — it stands read-only and names the
+  # field. A supervisor that does not know which machine it stands on cannot tell its
+  # own wakes from a peer's.
+  if [ -x "$ROOT/bin/seat/helm-identity.sh" ]; then
+    bash "$ROOT/bin/seat/helm-identity.sh" --check >/dev/null 2>&1 \
+      || refuse "the helm is NOT taken: $(bash "$ROOT/bin/seat/helm-identity.sh" --check 2>&1 | head -1)"
+  fi
   gleipnir_session_pid _sess; local sess="${_sess:-$$}"
   gleipnir_lock_owner _owner
   if [ -n "$_owner" ] && gleipnir_pid_alive "$_owner"; then

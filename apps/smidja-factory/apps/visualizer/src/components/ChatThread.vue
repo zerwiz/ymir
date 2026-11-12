@@ -110,7 +110,7 @@ function onScroll() {
   gap: 6px;
   padding: 5px 14px;
   border-radius: 999px;
-  background: rgba(19, 26, 38, 0.6);
+  background: rgba(26, 22, 16, 0.6);
   border: 1px solid var(--border-soft);
   color: var(--dim);
   font-size: 14px;
@@ -157,7 +157,7 @@ function onScroll() {
   font-family: var(--mono);
   font-size: 11px;
   color: var(--faint);
-  background: rgba(11, 15, 24, 0.6);
+  background: rgba(21, 18, 9, 0.6);
   border-radius: 999px;
   padding: 1px 8px;
 }
@@ -185,7 +185,7 @@ function onScroll() {
   border-left: 3px solid var(--accent);
   border-radius: 8px;
   padding: 10px 12px;
-  background: rgba(19, 26, 38, 0.55);
+  background: rgba(26, 22, 16, 0.55);
 }
 .launch-head { display: flex; align-items: center; gap: 10px; }
 .launch-ico { font-size: 18px; flex: none; }
@@ -203,7 +203,7 @@ function onScroll() {
   border: 1px solid var(--border-soft);
   color: var(--amber);
 }
-.launch-status.running { color: var(--blue); border-color: rgba(108, 182, 255, 0.4); }
+.launch-status.running { color: var(--blue); border-color: rgba(236, 166, 84, 0.4); }
 .launch-status.success { color: var(--green); border-color: color-mix(in srgb, var(--green) 40%, transparent); }
 .launch-status.fail { color: var(--red); border-color: color-mix(in srgb, var(--red) 40%, transparent); }
 .launch-link {

@@ -188,7 +188,7 @@ cmd_new() {
 
   if [ "$SCOUT" = 1 ]; then KIND=scout; else
     [ -n "$MODE" ] || MODE=local-only
-    case "$MODE" in direct-PR|local-only|no-mistakes) ;; *) echo "error: bad --mode $MODE" >&2; exit 2 ;; esac
+    case "$MODE" in direct-PR|local-only|no-mistakes|batch) ;; *) echo "error: bad --mode $MODE" >&2; exit 2 ;; esac
   fi
   [ -n "$WAVE" ] || WAVE="A"
 

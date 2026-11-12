@@ -150,3 +150,81 @@ with no record is refused, because the record is what makes `main` explainable.
 The doors are `bin/agents/eindri-review-spawn.sh --pr <url>` (seat the judge once per head),
 `bin/forge/review-watch.sh` (the trigger), `bin/seat/lock-ask.sh` (the read-only agent's mouth) and
 `bin/notify/mail.sh` (the word reaching him).
+
+---
+
+## Appended 2026-11-12 — two more roads: documents may land on main, and a batch ships once
+
+This section amends §08.1 ("Exception: None") and the 2026-11-05 and 2026-11-06 sections above.
+They stay as the record of what was law before. Everything not named here still leaves by PR.
+
+### Road one: a push of documents only may land on `main`
+
+The Allfather's word: *"documents should be able to push on main."* A one-line document fix
+does not need a branch, a PR and a merge by his hand.
+
+A push may land directly on `main` when **every file it changes** is a document by this exact
+set, and the push is a fast-forward of what `main` already is.
+
+| Path | What may change | Why the limit |
+|---|---|---|
+| `docs/**/*.md` | added or modified | the person-facing pages |
+| `docs/fixes/<component>/*.md` | **added only** | a fix note is never rewritten (Rule 06) |
+| `RULES/*.md` | added, or modified with **zero deleted lines** | the rules are append-only (Rule 06) |
+
+Everything else still leaves by PR. That includes:
+
+- code, scripts, config and apps, anywhere;
+- `AGENTS.md`, `CLAUDE.md` and any skill, because they change how agents behave;
+- `docs/features/_catalogue/**`, because those fragments are woven into `FEATURES.md`;
+- any non-Markdown file under `docs/`;
+- a deletion or a rename, even of a document (Rule 11);
+- a push that is not a fast-forward, or that creates or deletes `main`.
+
+A push that mixes one document with one line of code is a code push. It goes by PR.
+
+> [!IMPORTANT]
+> A rule change is a document, so it may land on `main`. But **a rule change still carries its
+> fix note** in the same push. A change of law keeps its record. Other document-only pushes owe
+> no fix note.
+
+**How it is enforced.** `bin/gates/guards/branch-guard.sh` judges each pushed ref. A push to a
+protected branch passes only when `branch-guard.sh --documents <remote-sha> <local-sha>` says
+the range is documents only; otherwise it is refused and the refusal names the first file that
+is not a document. `bin/gates/guards/fixes-guard.sh` asks the same question, and owes no note for
+a document-only range unless a `RULES/` file changed. Every other pre-push ward still runs, and
+CI still judges `main` after the push. The tests are
+`.agents/tests/branch-guard-documents.test.sh`.
+
+### Road two: errands sent out together ship as one batch
+
+The Allfather's word: *"If multiple agents are sent out at the same time, it's much better to
+merge the branches locally into one push, instead of one push per errand, so everybody is going
+through the gates."*
+
+When several errands are dispatched together:
+
+1. Each errand's brief says `Delivery contract: mode=batch` (`bin/agents/erindi-brief.sh <id>
+   <repo> --mode batch`).
+2. Each errand commits on its own `eindri/<id>` branch, runs its own tests, leaves `git status`
+   clean, records its work in the well, and acclaims `committed on eindri/<id> (not pushed)`.
+   **It never pushes and never opens a PR.**
+3. The helm gathers the batch with **one door**: `bin/forge/gather.sh <id…>` or
+   `bin/forge/gather.sh --finished`. It makes one integration worktree from fresh
+   `origin/main`, merges each branch there, and stops on a conflict, naming the branch and the
+   files. The helm resolves the conflict in that worktree and runs `gather.sh --continue
+   <batch>`.
+4. The door runs the pre-push gates **once** on the gathered head, pushes **one** branch and
+   opens **one** PR. The PR body lists every errand with its one-line acclaim.
+5. The door records the batch in the well and appends `done: shipped in PR <url>` to each
+   errand's status, so no errand is gathered twice.
+
+The PR is still the Allfather's to merge, or the reviewer's where the project says
+`reviewer-merges`. Nothing about who merges changes.
+
+**A lone errand may still push its own PR** (`--mode direct-PR` or `no-mistakes`). The batch road
+is for errands that run at the same time, where one push per errand would race `main` and
+re-run the gates for each.
+
+The how-to is `docs/features/gather-a-batch.md`. The tests are `.agents/tests/gather.test.sh`
+and `.agents/tests/erindi-brief-batch.test.sh`.

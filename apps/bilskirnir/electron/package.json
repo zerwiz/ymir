@@ -1,0 +1,8 @@
+{
+  "name": "ymir-bilskirnir",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Bilskirnir \u2014 the business hall, as a desk app: an Electron shell over the hall's own server.",
+  "main": "main.js",
+  "desktopName": "ymir-bilskirnir.desktop"
+}

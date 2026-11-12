@@ -62,7 +62,7 @@ function createWindow() {
     minHeight: 600,
     show: false,
     autoHideMenuBar: true,
-    backgroundColor: "#0B0F18",
+    backgroundColor: "#151209",
     icon: join(__dirname, "icon.png"),
     // No native frame: it follows the system's light theme and would show
     // white. The app's dark topbar is the title bar instead (drag region +
@@ -70,7 +70,7 @@ function createWindow() {
     // renders the topbar's own buttons (see preload.js / the Vue app).
     titleBarStyle: "hidden",
     ...(process.platform !== "linux"
-      ? { titleBarOverlay: { color: "#0B0F18", symbolColor: "#FFFFFF", height: 48 } }
+      ? { titleBarOverlay: { color: "#151209", symbolColor: "#FFFFFF", height: 48 } }
       : {}),
     webPreferences: {
       preload: join(__dirname, "preload.js"),

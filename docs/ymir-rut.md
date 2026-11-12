@@ -185,15 +185,15 @@ All inter-daemon communication relies on strongly typed Protocol Buffers (`proto
 
 **B. Color Palette & Lighting**
 
-- **Canvas Base:** Deep obsidian slate (`#080c14` to `#060911`), evoking subterranean forge chambers and deep space telemetry.
-- **Luminescence & Primary Accent:** Electric Cyan (`#38bdf8`, `#0ea5e9`), representing crystalline energy and Bifrost transit beams.
-- **Secondary Accent:** Deep Violet / Indigo (`#818cf8`, `#6366f1`), denoting ethereal multi-tenant realms and deep compute nodes.
-- **Borders & Structural Lines:** Muted slate (`#1e293b`, `#334155`), providing crisp container framing without visual clutter.
+- **Canvas Base:** Forge stone (`#0e0c09` to `#151209`), evoking subterranean forge chambers.
+- **Luminescence & Primary Accent:** Forge bronze (`#c9973f`, `#7d5f2a`), the light of the hearth on worked metal.
+- **Secondary Accent:** Steel (`#96a0a8`, `#5f686e`), denoting the multi-tenant realms and the deep compute nodes.
+- **Borders & Structural Lines:** Brass line and faint bone (`#2b241a`, `#6b6250`), providing crisp container framing without visual clutter.
 
 **C. Iconography & Emblem Geometry**
 
 - **The Ymir Root Mark:** Combines the **Algiz** rune (signifying divine protection and branching worker stems) with a heavy **blacksmith anvil base** (signifying industrial strength and compute execution).
-- **Chiseled Bevels:** Modeled with dual-layer vector depth — a dark iron forged exterior (`#334155`) paired with a luminous cyan chiseled inner edge (`#7dd3fc`).
+- **Chiseled Bevels:** Modeled with dual-layer vector depth — a dark iron forged exterior (`#2b241a`) paired with a lit bronze chiseled inner edge (`#eca654`).
 
 ### 3. Core Architecture Topology (The 7 Realms / Modules)
 

@@ -101,7 +101,7 @@ function fmtRuns(runs: string[]): string {
   gap: 14px;
 }
 .card {
-  background: rgba(16, 21, 32, 0.6);
+  background: rgba(26, 22, 16, 0.6);
   border: 1px solid color-mix(in srgb, var(--accent) 14%, transparent);
   border-radius: 12px;
   padding: 14px 16px;
@@ -128,7 +128,7 @@ function fmtRuns(runs: string[]): string {
   color: var(--red);
 }
 .cls-mild {
-  background: rgba(148, 163, 255, 0.14);
+  background: rgba(240, 230, 205, 0.14);
   color: var(--violet);
 }
 .count {

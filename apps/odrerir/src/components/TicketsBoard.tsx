@@ -13,7 +13,7 @@ const COLORS: Record<string, string> = {
   Backlog: '#6B7280',
   Planned: '#7d5f2a',
   Ready: '#96a0a8',
-  'In Progress': '#3B82F6',
+  'In Progress': '#C9973F',
   'Submitted for Review': '#EAB308',
   'In Review': '#EAB308',
   Approved: '#22C55E',

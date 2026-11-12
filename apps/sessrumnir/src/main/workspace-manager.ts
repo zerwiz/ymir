@@ -84,8 +84,8 @@ interface WorkspaceState {
 }
 
 const WORKSPACE_COLORS = [
-  '#3b82f6', '#ef4444', '#22c55e', '#eab308', '#a855f7',
-  '#ec4899', '#06b6d4', '#f97316', '#6366f1', '#14b8a6',
+  '#c9973f', '#ef4444', '#22c55e', '#eab308', '#96a0a8',
+  '#ec4899', '#7d5f2a', '#f97316', '#eca654', '#14b8a6',
 ]
 
 export type PiManagerListener = (manager: PiRpcManager) => void

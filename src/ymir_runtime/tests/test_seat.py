@@ -2,15 +2,25 @@
 
 from __future__ import annotations
 
+import os
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
 from ymir_runtime import heartbeat, paths
 from ymir_runtime.seat import _worth_a_smith, seat as seat_verb, task_section
-from ymir_runtime.errors import EngineError, EngineRefusal
+from ymir_runtime.errors import EngineError, EngineRefusal, NoHelm
 from ymir_runtime.seat import Errand
-from ymir_runtime.tests.support import Recorder, completed, engine_env, make_repo, tmux_responses, write_brief
+from ymir_runtime.tests.support import (
+    Recorder,
+    completed,
+    engine_env,
+    make_repo,
+    tmux_responses,
+    write_brief,
+    write_lease,
+)
 
 
 def available(name: str) -> str:
@@ -30,6 +40,8 @@ class SeatTest(unittest.TestCase):
             "# Task\n\nForge the thing: write the artefact and report it.\n\n"
             "Isolation: herdr — the ordinary road\n\nDelivery contract: mode=direct-PR\n",
         )
+        # H1: a seat is refused with no live helm, so the whole-record tests seed one.
+        self.lease = write_lease(self.state)
 
     def tearDown(self) -> None:
         self._tmp.cleanup()
@@ -190,6 +202,130 @@ class SeatTest(unittest.TestCase):
         self.assertEqual(errand.extra, {"spawn_source": "test"})
 
 
+class HelmGateTest(unittest.TestCase):
+    """H1 — no helm, no errand: the gate refuses before anything is created."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+        self.repo = make_repo(self.tmp / "repo")
+        self.env = engine_env(self.tmp, repo=self.repo)
+        self.state = Path(self.env["YMIR_STATE_DIR"])
+        write_brief(
+            self.tmp,
+            "errand-one",
+            "# Task\n\nForge the thing.\n\nIsolation: herdr — the ordinary road\n\n"
+            "Delivery contract: mode=direct-PR\n",
+        )
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def _errand(self, **overrides) -> Errand:
+        base = dict(
+            task_id="errand-one",
+            project_dir=str(self.repo),
+            harness="pi",
+            model="llama-swap/qwen3.6-35b-a3b@iq3_s",
+            backend="tmux",
+        )
+        base.update(overrides)
+        return Errand(**base)
+
+    def test_no_lease_is_refused(self) -> None:
+        with self.assertRaises(NoHelm) as caught:
+            seat_verb(self._errand(), runner=Recorder(), env=self.env, probe=available)
+        self.assertIn("no helm, no errand", str(caught.exception))
+        self.assertIn("YMIR_DISPATCH_NO_HELM=1", str(caught.exception))
+        # refused BEFORE anything is created — no meta, no worktree
+        self.assertFalse(heartbeat.meta_path(self.state, "errand-one").exists())
+
+    def test_no_helm_is_a_hard_refusal_not_the_strangler_hinge(self) -> None:
+        # exit 4 would send einherjar-spawn.sh down the old road and seat the worker anyway
+        self.assertFalse(issubclass(NoHelm, EngineRefusal))
+        from ymir_runtime import __main__ as cli
+        code = cli.main(
+            ["seat", "errand-one", "--project", str(self.repo), "--harness", "pi", "--backend", "tmux"],
+            env=self.env, runner=Recorder(), probe=available,
+        )
+        self.assertEqual(code, 1)
+
+    def test_a_dead_pid_is_refused(self) -> None:
+        write_lease(self.state, pid=99999999, starttime="")
+        with self.assertRaises(NoHelm) as caught:
+            seat_verb(self._errand(), runner=Recorder(), env=self.env, probe=available)
+        self.assertIn("not alive", str(caught.exception))
+
+    def test_a_reused_pid_is_refused(self) -> None:
+        # the pid is alive (this test process) but the starttime is not its own
+        write_lease(self.state, starttime="1")
+        with self.assertRaises(NoHelm) as caught:
+            seat_verb(self._errand(), runner=Recorder(), env=self.env, probe=available)
+        self.assertIn("reused pid", str(caught.exception))
+
+    def test_a_lease_with_no_heartbeat_is_refused(self) -> None:
+        lease = write_lease(self.state)
+        body = " ".join(t for t in lease.read_text().split() if not t.startswith("heartbeat="))
+        lease.write_text(body + "\n", encoding="utf-8")
+        with self.assertRaises(NoHelm) as caught:
+            seat_verb(self._errand(), runner=Recorder(), env=self.env, probe=available)
+        self.assertIn("no heartbeat", str(caught.exception))
+
+    def test_the_record_lives_on_the_arms_shelf_not_a_private_override(self) -> None:
+        # H2 — a caller whose BROKK_STATE_OVERRIDE is a seat's PRIVATE dir still writes the
+        # errand where the arm reads: the lease's own state=, never the override.
+        write_lease(self.state, gen="3")
+        private = self.tmp / "private-seat-state"
+        private.mkdir()
+        self.env["BROKK_STATE_OVERRIDE"] = str(private)
+        seat_id = seat_verb(
+            self._errand(), runner=Recorder(responses=tmux_responses()), env=self.env, probe=available
+        )
+        self.assertTrue(heartbeat.meta_path(self.state, seat_id).exists())
+        self.assertFalse(heartbeat.meta_path(private, seat_id).exists())
+        self.assertEqual(heartbeat.read_meta(self.state, seat_id)["helm_state"], str(self.state))
+
+    def test_a_tree_shelf_that_points_at_the_home_is_the_same_house(self) -> None:
+        # <tree>/state -> <home>/state is the ordinary shape on a seat (the pointer)
+        pointer = self.tmp / "tree-state"
+        pointer.symlink_to(self.state)
+        write_lease(self.state, state_dir=str(pointer))
+        seat_id = seat_verb(
+            self._errand(), runner=Recorder(responses=tmux_responses()), env=self.env, probe=available
+        )
+        self.assertTrue(heartbeat.meta_path(self.state, seat_id).exists())
+
+    def test_a_stale_heartbeat_is_refused(self) -> None:
+        write_lease(self.state, heartbeat=int(time.time()) - 120)
+        with self.assertRaises(NoHelm) as caught:
+            seat_verb(self._errand(), runner=Recorder(), env=self.env, probe=available)
+        self.assertIn("stale", str(caught.exception))
+
+    def test_a_foreign_state_is_refused(self) -> None:
+        write_lease(self.state, state_dir=str(self.tmp / "elsewhere"))
+        with self.assertRaises(NoHelm) as caught:
+            seat_verb(self._errand(), runner=Recorder(), env=self.env, probe=available)
+        self.assertIn("not this house", str(caught.exception))
+
+    def test_a_live_lease_is_admitted_and_recorded(self) -> None:
+        write_lease(self.state, gen="7")
+        seat_id = seat_verb(
+            self._errand(), runner=Recorder(responses=tmux_responses()), env=self.env, probe=available
+        )
+        meta = heartbeat.read_meta(self.state, seat_id)
+        self.assertEqual(meta["helm_pid"], str(os.getpid()))
+        self.assertEqual(meta["helm_gen"], "7")
+        self.assertEqual(meta["helm_state"], str(self.state))
+
+    def test_the_override_records_itself(self) -> None:
+        self.env["YMIR_DISPATCH_NO_HELM"] = "1"
+        seat_id = seat_verb(
+            self._errand(), runner=Recorder(responses=tmux_responses()), env=self.env, probe=available
+        )
+        meta = heartbeat.read_meta(self.state, seat_id)
+        self.assertEqual(meta.get("helm_bypass"), "YMIR_DISPATCH_NO_HELM=1")
+
+
 class WorthTest(unittest.TestCase):
     """The first law, delegated — never a second copy of the heuristic."""
 
@@ -249,6 +385,8 @@ class WorthTest(unittest.TestCase):
         self.repo = make_repo(self.tmp / "repo")
         self.env = engine_env(self.tmp, repo=self.repo)
         write_brief(self.tmp, "brief-tiny", "# Notes\n\nnothing worth a smith\n")
+        # H1: the worth-refusal test seats an errand, so it needs a live helm.
+        write_lease(Path(self.env["YMIR_STATE_DIR"]))
 
     def tearDown(self) -> None:
         self._tmp.cleanup()

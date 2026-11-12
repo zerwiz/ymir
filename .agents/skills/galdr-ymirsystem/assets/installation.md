@@ -1444,3 +1444,44 @@ set. A host without a given harness is a clean skip (RULES/25).
 
 The law that the Eindri-only hook enforces is `RULES/49-workers-are-eindri.md`; it is stated for a
 Claude agent under `AGENTS.md` *Dispatch-first* (which `CLAUDE.md` imports).
+
+## 2026-11-12 — Bilskirnir is installed, updated and doctored like the rest of the house
+
+At the Allfather's word: *"This application must be able to be installed and have common updates of Ymir when Gróa
+updates."* Bilskirnir, the business hall (`apps/bilskirnir`, plan 259), now has one setup door, and every road the
+house uses to keep a machine current runs it.
+
+| Road | What it does | When |
+|---|---|---|
+| `bin/engine/ymir-install.sh` step `bilskirnir` ("Bilskirnir, the business hall", after `sessrumnir`) | runs `apps/bilskirnir/setup.sh`; `--check` runs `setup.sh --check` and writes nothing | on install, roles `heart` and `dev`; skipped with `--skip-engines`; `--no-desktop` passes `BILSKIRNIR_DESKTOP=0` |
+| `bin/agents/groa-update.sh` | re-runs `setup.sh` after the fast-forward; `--check` prints `bilskirnir: current` or `stale` | on every update |
+| `bin/agents/eir-doctor.sh` surface `bilskirnir` | healthy when `setup.sh --check` passes; `fix` re-runs the door | on every doctor run; skipped on a `hand` |
+
+What the door does, in order: reads the assistant's name (Nanna, unless the user's own `fleet.assistant` renames her),
+the house and the Allfather from the home; renders her soul into her own Hermes home under `apps/bilskirnir/data/`;
+writes the managed block of `apps/bilskirnir/.env`; installs the dependencies from the lock file **only when the lock
+moved** (a running hall keeps its floor); renames the first agent in the app's database; and, where a desktop exists,
+seats the launcher entry `ymir-bilskirnir.desktop` with the bronze Ymir mark as its icon.
+
+The window is opened by `apps/bilskirnir/start.sh` (gateway, face, server, Electron window, in that order;
+`--check`, `--stop`, `--headless`, `--dev`). It probes the electron binary and never pins a path.
+
+> [!NOTE]
+> The step is a `WARN`, never a `FAIL`, when the door does not finish: the hall is one application, and an install
+> must not stop the rest of the house because of it. The row names the command to run by hand.
+
+### 2026-11-12 (later) — Bilskirnir's launcher entry rides the house's desktop road
+
+At the Allfather's word: *"the new application also coming in like an icon on updates and installations into the
+desktop as the other apps."* The entry is now a template like the other halls': `apps/bilskirnir/electron/ymir-bilskirnir.desktop.in`
+(`__YMIR_ROOT__`, name "Bilskirnir", `Icon=ymir-bilskirnir`, class `ymir-bilskirnir`, opening `start.sh` and so the
+Electron window). The bronze Ymir mark ships as an icon theme at 16 to 512 px plus the scalable SVG under
+`apps/bilskirnir/electron/icons/hicolor/`.
+
+| Writer | When |
+|---|---|
+| `bin/desktop/desktop-place.sh entries` and `apply` (the Omarchy layer, and any Linux desktop) | install's Omarchy layer; it now renders Bilskirnir's template and seats any app's `icons/hicolor` tree. An entry whose `Exec` door is missing from the launch root is skipped, never written as a dead button |
+| `apps/bilskirnir/setup.sh` (step 7) | the install step `bilskirnir` and every Gróa update; the same template, so the two writers agree |
+| `setup.sh --check` | fails when a desktop exists and the entry or its icon is missing or stale, so Eir's `bilskirnir` surface names it |
+
+A host with no display and no applications directory is a clean skip (RULES/05, RULES/25).

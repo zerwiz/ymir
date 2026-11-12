@@ -8,7 +8,9 @@ is asserted without a pane, a server, or a model ever being touched.
 
 from __future__ import annotations
 
+import os
 import subprocess
+import time
 from pathlib import Path
 from typing import Iterable, Mapping, Sequence
 
@@ -143,6 +145,51 @@ def write_brief(tmp: Path, seat_id: str, body: str) -> Path:
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(body, encoding="utf-8")
     return target
+
+
+def write_lease(
+    state: Path,
+    *,
+    pid: int | None = None,
+    starttime: str = "",
+    heartbeat: int | None = None,
+    gen: str = "1",
+    mode: str = "test",
+    role: str = "counsellor",
+    session: str | None = None,
+    state_dir: str | None = None,
+    pin: str = "",
+    pin_behind: str = "",
+) -> Path:
+    """A synthetic arm lease the gate admits: a LIVE pid with its real starttime.
+
+    The engine's helm gate (plan 257 H1) reads this exact file. Tests that seat an
+    errand end to end must place one, or set `YMIR_DISPATCH_NO_HELM=1` to take the
+    loud override instead.
+    """
+    pid = os.getpid() if pid is None else pid
+    starttime = starttime or proc.proc_starttime(pid)
+    heartbeat = int(time.time()) if heartbeat is None else heartbeat
+    session = str(pid) if session is None else session
+    state_dir = str(state) if state_dir is None else state_dir
+    fields = [
+        f"pid={pid}",
+        f"starttime={starttime}",
+        f"gen={gen}",
+        f"mode={mode}",
+        f"role={role}",
+        f"session={session}",
+        f"heartbeat={heartbeat}",
+        f"state={state_dir}",
+    ]
+    if pin:
+        fields.append(f"pin={pin}")
+    if pin_behind:
+        fields.append(f"pin_behind={pin_behind}")
+    lease = state / ".arm.lease"
+    lease.parent.mkdir(parents=True, exist_ok=True)
+    lease.write_text(" ".join(fields) + "\n", encoding="utf-8")
+    return lease
 
 
 def tmux_responses(window: str = "@7", pane_ok: bool = True) -> dict[str, Completed]:

@@ -275,7 +275,7 @@ function tagClass(tag: string): string {
 }
 
 .panel {
-  background: rgba(16, 21, 32, 0.6);
+  background: rgba(26, 22, 16, 0.6);
   border: 1px solid color-mix(in srgb, var(--accent) 12%, transparent);
   border-radius: 12px;
   padding: 14px 16px;
@@ -291,7 +291,7 @@ function tagClass(tag: string): string {
   flex-wrap: wrap;
 }
 .input {
-  background: rgba(11, 15, 24, 0.8);
+  background: rgba(21, 18, 9, 0.8);
   border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
   border-radius: 8px;
   color: inherit;

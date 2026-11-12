@@ -32,12 +32,12 @@ const emit = defineEmits<{ (e: 'open', adwId: string): void }>()
   padding: 8px 10px;
   border: 1px solid var(--border-soft);
   border-radius: 8px;
-  background: rgba(19, 26, 38, 0.45);
+  background: rgba(26, 22, 16, 0.45);
   color: var(--text);
   cursor: pointer;
   text-align: left;
 }
-.mini:hover { border-color: var(--border); background: rgba(19, 26, 38, 0.7); }
+.mini:hover { border-color: var(--border); background: rgba(26, 22, 16, 0.7); }
 
 .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--faint); }
 .dot.success { background: var(--green); box-shadow: 0 0 8px color-mix(in srgb, var(--green) 60%, transparent); }

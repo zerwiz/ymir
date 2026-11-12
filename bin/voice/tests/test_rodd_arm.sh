@@ -129,8 +129,39 @@ write_lease "$$" "$(date +%s)"
 run who
 case "$out" in *'"unknown"'*) ok "who reads role=unknown when the lease carries none" ;; *) bad "who reads role=unknown when the lease carries none" "$out" ;; esac
 
+# ── 8b · who is ONE row of the helm's identity (plans 254 B1b/B1c · 257 H8) ───
+printf 'pid=%s starttime=%s gen=40 mode=systemd role=counsellor session=none heartbeat=%s state=%s seat=Hoenir charter=planning,mail,the-work-in-hand,dispatch-on host=heimdall machine=heimdall fleetrole=dev fleet=the-ymir-fleet pin=4b09c4a1 pin_behind=162 identity=held missing=none\n' \
+  "$$" "$(starttime_of "$$")" "$(date +%s)" "$STATE" >"$LEASE"
+run who
+want_rc 0 "who with an identity lease exits 0"
+rows="$(printf '%s\n' "$out" | grep -c '^  "')"
+[ "$rows" = 1 ] && ok "who prints ONE row" || bad "who prints ONE row" "$out"
+for want in '"Hoenir"' '"counsellor"' 'planning · mail · the work in hand · dispatch on' '"heimdall"' '"dev"' '"4b09c4a1"' '"162"' '"40"' "\"$$\""; do
+  case "$out" in *"$want"*) ok "who carries $want" ;; *) bad "who carries $want" "$out" ;; esac
+done
+out="$(bash "$ROOT/bin/seat/helm-identity.sh" --lease "$LEASE" --line)"
+case "$out" in "helm: Hoenir · counsellor · planning · mail · the work in hand · dispatch on · heimdall · dev · pin 4b09c4a1 (162 behind) · gen 40 · pid $$ · heartbeat "*) ok "the digest line reads as one sentence" ;; *) bad "the digest line reads as one sentence" "$out" ;; esac
+# a lease that carries no identity renders unnamed/none — never an invented name (Rule 44)
+write_lease "$$" "$(date +%s)"
+run who
+case "$out" in *'"unnamed"'*) ok "a lease with no seat renders unnamed" ;; *) bad "a lease with no seat renders unnamed" "$out" ;; esac
+case "$out" in *planning*) bad "a lease with no charter invents none" "$out" ;; *) ok "a lease with no charter invents none" ;; esac
+# a read-only holder says so, and names the field
+printf 'pid=%s starttime=%s gen=4 mode=daemon role=rodd session=none heartbeat=%s state=%s seat=unnamed host=heimdall fleetrole=none identity=readonly missing=fleetrole\n' \
+  "$$" "$(starttime_of "$$")" "$(date +%s)" "$STATE" >"$LEASE"
+out="$(bash "$ROOT/bin/seat/helm-identity.sh" --lease "$LEASE" --line)"
+case "$out" in *"READ-ONLY (missing fleetrole)"*) ok "a read-only lease names the missing field" ;; *) bad "a read-only lease names the missing field" "$out" ;; esac
+write_lease "$$" "$(date +%s)"
+
 # ── 9 · hold and release (plan 254 B5) ────────────────────────────────────────
 export BROKK_MACHINE_STATE_DIR="$TMP/lockdir" BROKK_SESSION_PID="$$"
+# hold is refused when the machine cannot resolve its fleet role (B1c): no registry, no role
+mkdir -p "$TMP/nohome"
+out="$(env -u YMIR_ROLE YMIR_HOME="$TMP/nohome" bash "$DOOR" hold 2>&1)"; rc=$?
+want_rc 3 "hold with no resolvable fleet role is refused"
+case "$out" in *fleetrole*) ok "the refusal names fleetrole" ;; *) bad "the refusal names fleetrole" "$out" ;; esac
+[ ! -s "$BROKK_MACHINE_STATE_DIR/brokk.lock" ] && ok "a refused hold took no lock" || bad "a refused hold took no lock" "lock present"
+export YMIR_ROLE=dev
 mkdir -p "$BROKK_MACHINE_STATE_DIR"
 run_hold() { out="$(bash "$DOOR" hold 2>"$TMP/err")"; rc=$?; err="$(cat "$TMP/err")"; }
 run_release() { out="$(bash "$DOOR" release 2>"$TMP/err")"; rc=$?; err="$(cat "$TMP/err")"; }
@@ -156,7 +187,7 @@ run_hold
 want_rc 3 "hold on a live holder refuses with the holder named"
 case "$err" in *"held by another live session"*) ok "the refusal names the holder" ;; *) bad "the refusal names the holder" "$err" ;; esac
 kill "$other" 2>/dev/null || true
-unset BROKK_MACHINE_STATE_DIR BROKK_SESSION_PID
+unset BROKK_MACHINE_STATE_DIR BROKK_SESSION_PID YMIR_ROLE
 
 printf 'test_rodd_arm: %s passed, %s failed\n' "$pass" "$fail"
 [ "$fail" = 0 ]

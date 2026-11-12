@@ -49,7 +49,7 @@ public/js/brand.js           the client DEFAULT (fallback) brand
 | name / titles / OG / join label | `config.template.js` brand block + `brand.js` defaults — `Þing`, `ENTER HALL`, `Ymir · Þing` |
 | the mark | `public/images/logo.svg` = the Ymir Algiz-anvil (`assets/ymir-mark-algiz-anvil.svg`, same emblem Hlidskjalf's `Emblem.tsx` renders) — feeds favicon + every header/footer |
 | the social card | `public/images/thing-og.png` + `.jpg` — the 1200×630 Open Graph card. **The rasters are BUILD ARTIFACTS**: the source is `tools/og-card/thing-og.html` and `tools/og-card/render.sh` cuts it (see *The social card* below) |
-| the palette | stock MiroTalk blue (`--ds-brand-*: #4678f9`) → Ymir **slate + cyan + gold**: see `public/css/_tokens.css` (`--ds-brand-*`), `landing.css` body gradient, `client.css` `:root --body-bg` |
+| the palette | stock MiroTalk blue (`--ds-brand-*`; its value is not carried here, RULES/54) → Ymir **slate + cyan + gold**: see `public/css/_tokens.css` (`--ds-brand-*`), `landing.css` body gradient, `client.css` `:root --body-bg` |
 | about modal | `brand.about.*` — no author/email block; the hall's own words + `© Ymir — Þing` |
 | footer | every view reduced to Privacy Policy + local `/api/v1/docs/` + `© 2026 Ymir — Þing` |
 | lang | 16 `public/lang/*.json` — the rating prompt says Þing in every tongue |

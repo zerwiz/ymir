@@ -4,7 +4,7 @@
 # and expose its launch through the runtime backend (tmux/herdr).
 #
 # Usage:
-#   einherjar-spawn.sh <task-id> <project-dir> --mode <direct-PR|local-only|no-mistakes>
+#   einherjar-spawn.sh <task-id> <project-dir> --mode <direct-PR|local-only|no-mistakes|batch>
 #       [--yolo on|off] [--harness <name>] [--model <token|request>]
 #       [--effort <low|medium|high|xhigh|max>] [--backend tmux|herdr]
 #       [--isolation on|off|auto] [--force] [--dry-run]
@@ -230,10 +230,10 @@ else
   if [ "$SCOUT" -eq 1 ]; then
     [ "$MODE_SET" -eq 0 ] || { echo "error: --mode applies only to ship spawns; a scout delivers a report" >&2; exit 1; }
   else
-    [ "$MODE_SET" -eq 1 ] || { echo "error: ship spawns require --mode <direct-PR|local-only|no-mistakes>" >&2; exit 1; }
+    [ "$MODE_SET" -eq 1 ] || { echo "error: ship spawns require --mode <direct-PR|local-only|no-mistakes|batch>" >&2; exit 1; }
     case "$MODE" in
-      direct-PR|local-only|no-mistakes) ;;
-      *) echo "error: --mode must be one of direct-PR, local-only, no-mistakes (got '$MODE')" >&2; exit 1 ;;
+      direct-PR|local-only|no-mistakes|batch) ;;
+      *) echo "error: --mode must be one of direct-PR, local-only, no-mistakes, batch (got '$MODE')" >&2; exit 1 ;;
     esac
   fi
 fi
@@ -337,7 +337,7 @@ if [ "$RELAUNCH" -eq 1 ]; then
   [ -d "$WT" ] || { echo "error: recorded worktree $WT no longer exists; recover it before relaunching" >&2; exit 1; }
   if [ "$KIND" = ship ] && [ "$MODE_SET" -eq 0 ]; then
     MODE=$(meta_value "$META" mode)
-    case "$MODE" in direct-PR|local-only|no-mistakes) ;; *) echo "error: task record $META records no valid mode" >&2; exit 1 ;; esac
+    case "$MODE" in direct-PR|local-only|no-mistakes|batch) ;; *) echo "error: task record $META records no valid mode" >&2; exit 1 ;; esac
   fi
   if [ -z "$HARNESS_ARG" ]; then
     RECORDED_RAW=$(meta_value "$META" raw_launch)
@@ -357,16 +357,58 @@ if [ "$RELAUNCH" -eq 1 ]; then
 # the one that yields writes nothing. Nothing refused it, because nothing counted AGENTS —
 # only ids. This does: if a live herdr pane is already working in this errand's worktree, the
 # spawn refuses and names it. A refusal that names the ghost is cheaper than a rebuild.
+#
+# Corrected 2026-11-12: the guard above asked `herdr agent-status`, a verb herdr does not
+# have. It printed nothing, so the guard never refused, and a relaunch opened w5W and w5X
+# beside two workers that were still working (two agents in one worktree, twice in a night).
+# The seat is now read from `herdr pane list`: every pane whose cwd is in this errand's
+# worktree. A working agent there is refused. On --relaunch a pane already in the worktree
+# is the errand's SEAT and is REUSED: a bare shell gets the launch line in place, and an
+# idle or finished agent is refused unless FORCE_RELAUNCH=1. With FORCE_RELAUNCH=1 the old
+# seat is closed before the new one opens, so there is never a second pane beside it.
+REUSE_PANE=""
+REUSE_WS=""
 if command -v herdr >/dev/null 2>&1; then
-  _wt_existing="$PROJECT_DIR/.yggdrasil/$ID"
-  _live="$(herdr agent-status 2>/dev/null | grep -F "$_wt_existing" | grep -v '(deleted)' | head -1 || true)"
-  if [ -n "${_live:-}" ] && [ "${FORCE_RELAUNCH:-0}" != 1 ]; then
-    printf 'refused: an agent already stands in %s\n' "$_wt_existing" >&2
-    printf '  pane: %s\n' "$(printf '%s' "$_live" | cut -c1-140)" >&2
-    printf 'help: talk to it (bin/agents/eindri-send.sh %s "…"), or close that pane first.\n' "$ID" >&2
-    printf 'note: a second agent in one worktree overwrites the first — the 2026-11-09 audit.\n' >&2
+  _wt_existing="${WT:-$PROJECT_DIR/.yggdrasil/$ID}"
+  _seat_rows="$(herdr pane list 2>/dev/null | python3 -c '
+import json, os, sys
+wt = os.path.realpath(sys.argv[1])
+try:
+    panes = json.load(sys.stdin)["result"]["panes"]
+except Exception:
+    raise SystemExit(0)
+for p in panes:
+    cwds = {os.path.realpath(c) for c in (p.get("cwd"), p.get("foreground_cwd")) if c}
+    if any(c == wt or c.startswith(wt + os.sep) for c in cwds):
+        print("\t".join([p.get("pane_id", ""), p.get("workspace_id", ""), p.get("agent") or "-", p.get("agent_status") or "unknown"]))
+' "$_wt_existing" 2>/dev/null || true)"
+  _working="$(printf '%s\n' "$_seat_rows" | awk -F'\t' '$3 != "-" && ($4 == "working" || $4 == "blocked") {print; exit}')"
+  _idle_agent="$(printf '%s\n' "$_seat_rows" | awk -F'\t' '$3 != "-" && $4 != "working" && $4 != "blocked" && $1 != "" {print; exit}')"
+  _bare="$(printf '%s\n' "$_seat_rows" | awk -F'\t' '$3 == "-" && $1 != "" {print; exit}')"
+  if [ -n "$_working" ]; then
+    printf 'refused: an agent is working in %s\n  pane: %s\n' "$_wt_existing" "$(printf '%s' "$_working" | tr '\t' ' ')" >&2
+    printf 'help: talk to it (bin/agents/eindri-send.sh %s "…"); a second agent in one worktree overwrites the first.\n' "$ID" >&2
     exit 3
   fi
+  if [ -n "$_idle_agent" ]; then
+    if [ "${FORCE_RELAUNCH:-0}" = 1 ] && [ "$RELAUNCH" -eq 1 ]; then
+      if [ "$DRY" -eq 0 ]; then
+        printf '%s\n' "$_seat_rows" | awk -F'\t' '$3 != "-" {print $1}' | while IFS= read -r _p; do
+          [ -n "$_p" ] && herdr pane close "$_p" >/dev/null 2>&1 && printf 'relaunch: closed the old seat %s before the new one opens\n' "$_p" >&2
+        done
+      fi
+    else
+      printf 'refused: the errand %s still has its seat %s (an agent, %s) in %s\n' \
+        "$ID" "$(printf '%s' "$_idle_agent" | cut -f1)" "$(printf '%s' "$_idle_agent" | cut -f4)" "$_wt_existing" >&2
+      printf 'help: talk to it (bin/agents/eindri-send.sh %s "…"), or replace it: FORCE_RELAUNCH=1 bin/agents/einherjar-spawn.sh %s --relaunch\n' "$ID" "$ID" >&2
+      exit 3
+    fi
+  fi
+  if [ "$RELAUNCH" -eq 1 ] && [ -n "$_bare" ]; then
+    REUSE_PANE="$(printf '%s' "$_bare" | cut -f1)"
+    REUSE_WS="$(printf '%s' "$_bare" | cut -f2)"
+  fi
+  unset _seat_rows _working _idle_agent _bare _p
 fi
 BRIEF="$DATA/$ID/brief.md"
   [ -f "$BRIEF" ] || { echo "error: no brief at $BRIEF; regenerate it: bin/agents/erindi-brief.sh $ID --relaunch" >&2; exit 1; }
@@ -565,6 +607,13 @@ resolve_harness_model() {
     fi
     MODEL="${prov}/${m5}"
     MODEL_PROV="bin/model/model-resolve.sh resolve \"$req\" (confidence=$conf)"
+    if [ "$h" = claude ] && { [ -z "$HARNESS" ] || [ "$HARNESS" = claude ]; }; then
+      # a Claude alias or id resolved to Claude: the bare id, never a catalogue token
+      HARNESS=claude; HARNESS_PROV="bin/model/model-resolve.sh (a Claude model)"
+      MODEL=$m5; MODEL_LOCAL=no
+      unset _clean _f1 _f2
+      return 0
+    fi
     if [ -z "$HARNESS" ] && [ -n "$h" ] && [ "$h" != default ]; then
       HARNESS=$h
       HARNESS_PROV="bin/model/model-resolve.sh (resolved harness)"
@@ -581,6 +630,11 @@ resolve_harness_model() {
           _h=$("$SCRIPT_DIR/../fleet/agents-config.sh" get brokk harness 2>/dev/null | sed -n '1p')
           HARNESS=$_h
           [ -n "$HARNESS" ] && HARNESS_PROV="config/agents.yaml via bin/fleet/agents-config.sh (harness rule)"
+        fi
+        if [ "$HARNESS" = claude ]; then  # never hand Claude another harness's model (step 0)
+          MODEL=""; MODEL_LOCAL=no
+          MODEL_PROV="the allow-list's claude default (bin/model/model-allow.sh default claude)"
+          return 0
         fi
       fi
     fi
@@ -636,6 +690,49 @@ else
     echo "error: harness '$HARNESS' executable not found on PATH; install it or select a verified harness" >&2
     exit 1
   fi
+fi
+
+# --- the allow-list: only the models this fleet approved (2026-11-12) ---------
+# On 2026-11-11 workers sent out on a pro model spent a month of cloud credit in one
+# night. Every model the spawn resolved is put to the operator's allow-list
+# (bin/model/model-allow.sh, the list in the home) BEFORE anything is created. A model
+# the list does not allow is refused, by name and with the remedy. A dated grant in the
+# same file allows a model on purpose, and the use is logged. A raw launch command is
+# put to the same list for any `--model`/`-m` it names. No variable here allows a model.
+ALLOW_DOOR="$SCRIPT_DIR/../model/model-allow.sh"
+allow_gate() {  # <harness> <model> — refuses (exit 1) or rewrites MODEL to the allowed id
+  local h=$1 m=$2 out rc=0 verdict allowed_model rule reason
+  [ -x "$ALLOW_DOOR" ] || { echo "error: the allow-list door is missing at $ALLOW_DOOR — refused, because an unread list is no list" >&2; exit 1; }
+  if [ "$DRY" -eq 1 ]; then
+    out=$("$ALLOW_DOOR" check "$m" --harness "$h" 2>/dev/null) || rc=$?
+  else
+    out=$("$ALLOW_DOOR" check "$m" --harness "$h" --for "$ID" 2>/dev/null) || rc=$?
+  fi
+  IFS=$'\x1f' read -r verdict allowed_model rule reason < <(printf '%s\n' "$out" | python3 -c '
+import json, sys
+rows = sys.stdin.read().splitlines()
+cells = json.loads("[" + rows[1].strip() + "]") if len(rows) > 1 else ["", "", "", "refused", "", "the door gave no answer"]
+print("\x1f".join([cells[3], cells[2], cells[4], cells[5]]))' 2>/dev/null) || true
+  if [ "$rc" -ne 0 ] || [ "$verdict" = refused ] || [ -z "$verdict" ]; then
+    echo "refused: ${reason:-the allow-list refused model '${m:-<harness default>}' for harness '$h'}" >&2
+    printf '%s\n' "$out" | sed -n 's/^help: /help: /p' >&2
+    echo "help: bin/model/model-allow.sh list   (the list is $("$ALLOW_DOOR" path 2>/dev/null))" >&2
+    exit 1
+  fi
+  case "$verdict" in
+    granted)   echo "note: model '$allowed_model' runs on a grant ($rule): $reason — the use is logged" >&2
+               MODEL_PROV="${MODEL_PROV:-} · granted ($rule)" ;;
+    unpoliced) echo "warning: $reason" >&2 ;;
+  esac
+  [ -z "$RAW_LAUNCH" ] && [ -n "$allowed_model" ] && MODEL=$allowed_model
+  return 0
+}
+if [ -n "$RAW_LAUNCH" ]; then
+  _raw_model=$(printf '%s' "$RAW_LAUNCH" | awk '{for(i=1;i<NF;i++) if ($i=="--model"||$i=="-m") {print $(i+1); exit} for(i=1;i<=NF;i++) if ($i ~ /^--model=/) {sub(/^--model=/,"",$i); print $i; exit}}' | tr -d "'\"")
+  if [ -n "$_raw_model" ]; then allow_gate "$HARNESS" "$_raw_model"; fi
+  unset _raw_model
+else
+  allow_gate "$HARNESS" "${MODEL:-}"
 fi
 
 # --- isolation: the brief DECLARES it; the spawn validates it (D2) ----------
@@ -777,6 +874,7 @@ if [ "$DRY" -eq 1 ]; then
   fi
   [ "$ISOLATION_DECLARED" = utgard ] && [ "$ISOLATION_EFFECTIVE" != on ] && printf '  note: brief declares Isolation: utgard; effective %s. A declared utgard is never silently downgraded; the refusal above is the law, not a fallback.\n' "$ISOLATION_EFFECTIVE"
   [ "$ISOLATION_DECLARED" = herdr ] && [ "$ISOLATION_EFFECTIVE" = on ] && printf '  note: brief declares Isolation: herdr (the ordinary road) but --isolation on forced the sandbox\n'
+  [ -n "$REUSE_PANE" ] && printf '  seat: reuses %s, the errand'"'"'s own pane (no second pane)\n' "$REUSE_PANE"
   printf '  dispatch_profile: %s\n' "${DISPATCH_ACTIVE:-<none active — the machine resolution governs>}"
   exit 0
 fi
@@ -1053,6 +1151,20 @@ launch_herdr() {  # -> prints pane id
   # was tried on 2026-09-24 and the worker still took the primary's helm, because
   # the pane's own environment wins for everything the harness reads at startup.
   [ -n "$SEAT_STATE_DIR" ] && mkdir -p "$SEAT_STATE_DIR" 2>/dev/null || true
+  # A relaunch REUSES the errand's own seat (2026-11-12): a bare shell already in the
+  # worktree gets the launch line in place, and no workspace is created beside it. The
+  # seat's variables ride the command, because the pane's environment was set at its birth.
+  if [ -n "$REUSE_PANE" ]; then
+    mkdir -p "$STATE" 2>/dev/null || true
+    [ -n "$REUSE_WS" ] && printf '%s' "$REUSE_WS" >"$STATE/.$ID.ws" 2>/dev/null || true
+    date +%s >"$STATE/.$ID.launched" 2>/dev/null || true
+    herdr pane send-text "$REUSE_PANE" "YMIR_SMITH=$(shell_quote "$ID") PATH=$(shell_quote "$ROOT/bin/forge/smith-bin:$PATH") $PANE_CMD" 2>/dev/null || {
+      echo "error: could not reach the errand's own seat $REUSE_PANE" >&2; return 1; }
+    herdr pane send-keys "$REUSE_PANE" Enter 2>/dev/null || true
+    echo "relaunch: reused the errand's seat $REUSE_PANE — no second pane" >&2
+    printf '%s\n' "$REUSE_PANE"
+    return 0
+  fi
   # Two more variables ride the seat, both from plan 205 §2.2:
   #   YMIR_SMITH   names the errand, so a door can tell a worker's shell from the operator's
   #                without guessing (the shim reads it first, and falls back to the worktree path);

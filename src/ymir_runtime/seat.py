@@ -19,13 +19,13 @@ import os
 import random
 import re
 import time
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any, Mapping
 
 from . import backend as backend_mod
-from . import container, harness, heartbeat, paths, proc, worktree as worktree_mod
-from .errors import EngineError, EngineRefusal
+from . import allow, container, harness, heartbeat, paths, proc, worktree as worktree_mod
+from .errors import EngineError, EngineRefusal, NoHelm
 
 SAFE_ID = re.compile(r"^[A-Za-z0-9._-]+$")
 KINDS = ("ship", "scout")
@@ -255,6 +255,148 @@ def _seat_wake(
         pass
 
 
+def _read_lease(lease_path: Path) -> dict[str, str]:
+    """The arm lease as a mapping — `pid= starttime= gen= … state=` tokens.
+
+    The same token grammar `bin/pi/syn-watch-arm.sh`'s `lease_part` reads, and the
+    engine's `watch.read_lease`: whitespace-separated `key=value`, last value wins.
+    """
+    values: dict[str, str] = {}
+    try:
+        text = lease_path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return values
+    for token in text.split():
+        key, separator, value = token.partition("=")
+        if separator:
+            values[key] = value
+    return values
+
+
+def _real(path: Path | str) -> str:
+    """A shelf compared by where it LANDS — `<tree>/state` is often a pointer to the home's."""
+    try:
+        return os.path.realpath(os.path.expanduser(str(path)))
+    except (OSError, ValueError):
+        return str(path)
+
+
+def arm_shelf(environ: Mapping[str, str]) -> Path:
+    """The shelf the arm watches: `$YMIR_STATE_DIR` → `<home>/state` (hoard_state_dir).
+
+    Deliberately NOT `BROKK_STATE_OVERRIDE`: that variable is a seat's PRIVATE state
+    (einherjar-spawn sets it for every worker), and the arm never reads it. This is the
+    Python twin of `bin/pi/syn-watch-arm.sh`'s resolution, so both halves name one shelf.
+    """
+    explicit = environ.get("YMIR_STATE_DIR")
+    if explicit:
+        return Path(explicit).expanduser()
+    return paths.ymir_home(environ) / "state"
+
+
+def _helm_gate(
+    roots,
+    environ: Mapping[str, str],
+    *,
+    now: float | None = None,
+    stat_reader=proc._proc_stat,
+) -> dict[str, str]:
+    """Refuse a seat born with no LIVE helm — the errand would have nobody to tell.
+
+    Plan 257 H1. The tests are the arm's own doors: a lease that exists, whose `state=` is
+    this house, whose pid is live AND whose starttime still matches (pid reuse is not a
+    helm), and whose heartbeat is inside `BROKK_WATCH_HEARTBEAT_STALE_SECONDS` (default 60).
+    H2: the lease is the AUTHORITY for where the errand's record lives — its `state=` must
+    be a shelf that exists and can be written, or the seat is refused rather than seated
+    into a shelf nobody reads (Rule 25: a clean refusal, never a silent half-seat).
+
+    `YMIR_DISPATCH_NO_HELM=1` is the loud, RECORDED override — the meta keeps the fact so
+    an orphan errand can always be found afterwards.
+
+    Returns the helm facts to record in the seat meta (`helm_pid`, `helm_gen`,
+    `helm_state`, and `helm_bypass` when the override was used).
+    """
+    if environ.get("YMIR_DISPATCH_NO_HELM", "") == "1":
+        return {
+            "helm_pid": "",
+            "helm_gen": "",
+            "helm_state": "",
+            "helm_bypass": "YMIR_DISPATCH_NO_HELM=1",
+        }
+
+    shelf = arm_shelf(environ)
+    candidates: list[Path] = []
+    for place in (roots.state, shelf):
+        lease_path = Path(place) / ".arm.lease"
+        if all(_real(lease_path) != _real(seen) for seen in candidates):
+            candidates.append(lease_path)
+    lease: dict[str, str] = {}
+    lease_path = candidates[0]
+    for candidate in candidates:
+        lease = _read_lease(candidate)
+        if lease:
+            lease_path = candidate
+            break
+
+    override = "or set YMIR_DISPATCH_NO_HELM=1 to dispatch without one (it is recorded in the meta)"
+    if not lease:
+        looked = " or ".join(str(c) for c in candidates)
+        raise NoHelm(
+            f"no helm, no errand — no arm lease at {looked}",
+            f"seat a helm first (bin/pi/syn-watch-arm.sh --restart from a session, or bin/pi/syn-watch.sh start), {override}",
+        )
+
+    leased_state = lease.get("state", "")
+    house = {_real(roots.state), _real(shelf)}
+    if not leased_state or _real(leased_state) not in house:
+        raise NoHelm(
+            f"no helm, no errand — the arm lease at {lease_path} names state={leased_state or 'missing'}, "
+            f"which is not this house ({roots.state})",
+            f"seat from the house the arm watches, {override}",
+        )
+
+    pid = lease.get("pid", "")
+    starttime = lease.get("starttime", "")
+    if not pid.isdigit() or not starttime or not proc.pid_alive(pid, starttime, stat_reader=stat_reader):
+        raise NoHelm(
+            f"no helm, no errand — lease pid {pid or 'missing'} is not alive with its recorded "
+            f"starttime {starttime or 'missing'} (a reused pid is not a helm)",
+            f"re-seat the arm (bin/pi/syn-watch.sh restart), {override}",
+        )
+
+    try:
+        stale = int(environ.get("BROKK_WATCH_HEARTBEAT_STALE_SECONDS", "60"))
+    except (TypeError, ValueError):
+        stale = 60
+    if stale <= 0:
+        stale = 60
+    moment = int(now if now is not None else time.time())
+    beat = lease.get("heartbeat", "")
+    if not beat.isdigit():
+        raise NoHelm(
+            f"no helm, no errand — the arm lease at {lease_path} carries no heartbeat",
+            f"re-seat the arm (bin/pi/syn-watch.sh restart), {override}",
+        )
+    if moment - int(beat) > stale:
+        raise NoHelm(
+            f"no helm, no errand — the arm heartbeat is stale ({moment - int(beat)}s > {stale}s)",
+            f"re-seat the arm (bin/pi/syn-watch.sh restart), {override}",
+        )
+
+    record_root = Path(leased_state)
+    if not record_root.is_dir() or not os.access(record_root, os.W_OK):
+        raise NoHelm(
+            f"no helm, no errand — the arm's shelf {record_root} is unreachable (missing or not writable)",
+            "mend the home's state directory, then seat again",
+        )
+
+    return {
+        "helm_pid": pid,
+        "helm_gen": lease.get("gen", ""),
+        "helm_state": leased_state,
+    }
+
+
 def seat(
     errand: "Errand | Mapping[str, Any]",
     *,
@@ -262,6 +404,7 @@ def seat(
     env: Mapping[str, str] | None = None,
     probe=proc.which,
     now: float | None = None,
+    stat_reader=proc._proc_stat,
 ) -> str:
     """Seat one errand end to end and return its seat id."""
     errand = Errand.coerce(errand)
@@ -281,6 +424,14 @@ def seat(
             f"project directory not found: {project}",
             "pass an existing git working tree as <project-dir>",
         )
+
+    # H1 · the gate, in the door that actually seats (plan 257). Refuse BEFORE anything
+    # is created when no live helm is held. H2 · the record root is the lease's own
+    # `state=` — the shelf the arm reads — never a tree default, so a seat never writes
+    # where nobody is looking. The override is recorded, never silent.
+    helm = _helm_gate(roots, environ, now=now, stat_reader=stat_reader)
+    if helm.get("helm_state"):
+        roots = replace(roots, state=Path(helm["helm_state"]))
 
     state, data, config = roots.state, roots.data, roots.config
 
@@ -318,11 +469,6 @@ def seat(
         raise EngineRefusal(plan.refusal, "bin/agents/einherjar-spawn.sh keeps this road until the sandbox module owns it")
 
     try:
-        tree = worktree_mod.ensure(seat_id, project, roots.wt_root, runner=runner)
-    except Exception as exc:  # noqa: BLE001 - the caller must see the plain why
-        raise EngineRefusal(str(exc), "check the project worktree and the .yggdrasil root") from exc
-
-    try:
         selection = harness.resolve(
             harness=errand.harness,
             model=errand.model,
@@ -333,6 +479,30 @@ def seat(
         )
     except ValueError as exc:
         raise EngineRefusal(str(exc), "pass an explicit --model provider/model that this machine serves") from exc
+
+    # The allow-list (2026-11-12): only the models this operator approved may run as an
+    # Eindri. A refusal is an EngineError, not the strangler's hinge — the old road must
+    # not run a model the list refused. It is asked before the worktree is made.
+    if not selection.is_raw:
+        verdict = allow.enforce(selection.model, harness=selection.name, task=seat_id, env=environ)
+        if not verdict.ok:
+            raise EngineError(
+                f"refused: {verdict.reason}" + (f" (remedy: {verdict.remedy})" if verdict.remedy else "")
+            )
+        if verdict.model and verdict.model != selection.model:
+            selection = replace(
+                selection,
+                model=verdict.model,
+                model_provenance=f"{selection.model_provenance or 'the harness default'} -> the allow-list ({verdict.rule or verdict.verdict})",
+            )
+        elif verdict.verdict == "granted":
+            selection = replace(selection, model_provenance=f"{selection.model_provenance} · granted ({verdict.rule})")
+
+    try:
+        tree = worktree_mod.ensure(seat_id, project, roots.wt_root, runner=runner)
+    except Exception as exc:  # noqa: BLE001 - the caller must see the plain why
+        raise EngineRefusal(str(exc), "check the project worktree and the .yggdrasil root") from exc
+
 
     if not selection.is_verified and not selection.is_raw:
         raise EngineRefusal(
@@ -465,6 +635,10 @@ def seat(
             "role": errand.role,
         }
     )
+    # H1 — the helm this seat answers to, recorded beside everything else. An errand
+    # born under the loud override carries `helm_bypass=` so an orphan can be found.
+    for key, value in helm.items():
+        record.setdefault(key, value)
     if seat_note:
         record["seat_note"] = seat_note
     for key, value in (errand.extra or {}).items():
