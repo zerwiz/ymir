@@ -86,6 +86,45 @@ def _model_url() -> str:
     return "http://127.0.0.1:8080/v1/chat/completions"
 
 
+def _chat_url(base: str) -> str:
+    """A rail base URL made into its chat door, the same way `_model_url` does it."""
+    base = base.rstrip("/")
+    return base if base.endswith("/chat/completions") else base + "/chat/completions"
+
+
+def _model_chain(model: str = "") -> list[tuple[str, str]]:
+    """The answering models, IN ORDER, as (alias, chat url) pairs; the first that answers wins.
+
+    His word, 2026-11-09: "give him the mtp model here and the q2 qwen3.6 on nidavellir". So the
+    mouth is a short chain, all of it configuration (Rule 07):
+
+      1. the primary - `model` as the caller resolved it (`configured_mouth`: flag, SKIRNIR_MODEL,
+         then `model:` in skirnir.yaml), on `_model_url()`;
+      2. the fallback - SKIRNIR_MODEL_FALLBACK, else `model_fallback:` in skirnir.yaml, on
+         SKIRNIR_MODEL_FALLBACK_URL / `model_fallback_url:` when it lives behind another door, else on
+         the same rail.
+
+    A chain exists because one model is one point of silence: when the rail evicts the preset or a
+    remote seat is asleep, the assistant used to answer "my thinking is slow" and the conversation
+    died. A fallback is a second sentence, not a second agent. An EMPTY chain is the honest answer
+    that no mouth is configured. (First written by hand on the pinned runtime on 2026-11-09 and
+    carried to main on 2026-11-12.)
+    """
+    import os as _os
+    cfg = assistant_config()
+    chain: list[tuple[str, str]] = []
+    primary = (model or "").strip()
+    if primary:
+        chain.append((primary, _model_url()))
+    fallback = (_os.environ.get("SKIRNIR_MODEL_FALLBACK") or str(cfg.get("model_fallback") or "")).strip()
+    if fallback:
+        url = (_os.environ.get("SKIRNIR_MODEL_FALLBACK_URL") or str(cfg.get("model_fallback_url") or "")).strip()
+        url = _chat_url(url) if url else _model_url()
+        if (fallback, url) not in chain:
+            chain.append((fallback, url))
+    return chain
+
+
 def configured_mouth(explicit: str = "") -> tuple[str, str]:
     """WHICH MODEL ANSWERS, from configuration and never from a literal (Rule 07).
 
@@ -897,7 +936,22 @@ def escalate(question: str, reason: str, tier: str, channel: str = "", chat: str
 
 def _rail(system: str, user: str, model: str, temperature: float = 0.0,
           seed: int | None = None) -> str | None:
-    """One call to the rail. No tools, no credential in the prompt, nothing but text in and out."""
+    """The rail, through the CHAIN (`_model_chain`): the primary, then the fallback.
+
+    Each configured model is tried in order and the first answer is returned; the caller never learns
+    which one spoke, because a person talking to an assistant should not have to. None means no model
+    in the chain answered - or none is configured - and the caller says so rather than inventing words.
+    """
+    for alias, url in _model_chain(model):
+        said = _rail_one(system, user, alias, temperature, seed, url)
+        if said:
+            return said
+    return None
+
+
+def _rail_one(system: str, user: str, model: str, temperature: float = 0.0,
+              seed: int | None = None, url: str = "") -> str | None:
+    """One call to one rail. No tools, no credential in the prompt, nothing but text in and out."""
     try:
         import urllib.request
         key = _rail_key()
@@ -909,7 +963,7 @@ def _rail(system: str, user: str, model: str, temperature: float = 0.0,
         if seed is not None:
             payload["seed"] = int(seed) % 2_147_483_647
         body = json.dumps(payload).encode()
-        req = urllib.request.Request(_model_url(), data=body,
+        req = urllib.request.Request(url or _model_url(), data=body,
                                      headers={"Content-Type": "application/json",
                                               "Authorization": f"Bearer {key}"})
         with urllib.request.urlopen(req, timeout=180) as resp:
