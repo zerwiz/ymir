@@ -11,7 +11,13 @@
 #   in-call.sh holder                           the first holder's name, or nothing
 #   in-call.sh source                           the source name the call is capturing from
 #   in-call.sh bluetooth                        exit 0 when that source is a Bluetooth headset
+#   in-call.sh inputs                           how many real (non-monitor) microphones exist right now
 #   in-call.sh role                             the seat role the guard acts on
+#
+# THE LAW (plan 259 B2e): the sound server is shared. Nothing this guard guards, and nothing that
+# asks it, may restart pipewire, wireplumber or any system-wide audio unit as a remedy — that drops
+# every other client in the same second, which is how a small fault becomes a meeting lost. The
+# remedy for a lost stream is the APPLICATION re-opening it.
 #
 # Env (all optional):
 #   YMIR_DESK_NOW=1        the operator's explicit "now" (same as --now)
@@ -68,6 +74,8 @@ holders() {
 cmd="${1-}"; shift || true
 case "$cmd" in
   role) seat_role; echo; exit 0 ;;
+  inputs) command -v pactl >/dev/null 2>&1 || exit 0
+          pactl list short sources 2>/dev/null | awk '$2 !~ /\.monitor$/' | wc -l; exit 0 ;;
   holder) holders | head -1 | cut -f1; exit 0 ;;
   source) holders | head -1 | cut -f2; exit 0 ;;
   bluetooth)
@@ -85,7 +93,7 @@ case "$cmd" in
       exit 0
     fi
     printf 'refused: %s holds the microphone — the operator is in a call, so %s will not start\n' "$h" "$what" >&2
-    printf 'hint: wait for the call to end, or the operator says "now" (--now / YMIR_DESK_NOW=1)\n' >&2
+    printf 'hint: wait for the call to end, or the operator says "now" (--now / YMIR_DESK_NOW=1) — and never restart pipewire or wireplumber to get around it\n' >&2
     exit 3 ;;
   *) sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
 esac

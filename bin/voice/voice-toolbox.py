@@ -40,6 +40,7 @@ REPO = Path(__file__).resolve().parents[2]
 HOME = Path(os.environ.get("YMIR_HOME") or (Path.home() / "Documents" / "ymirhome"))
 SETTINGS = HOME / "hodd" / "state" / "rodd" / "settings.json"
 MEMORY = HOME / "hodd" / "state" / "rodd" / "memory.jsonl"
+LOSSES = HOME / "hodd" / "state" / "rodd" / "losses.jsonl"
 LOOPBACK = ("127.0.0.1", "localhost", "[::1]")
 
 # A memory item that asks her to MERGE is void (plan 254 B7, 2026-11-11): merging is the
@@ -75,7 +76,9 @@ def _desk() -> dict:
             return r.stdout.strip()
         except Exception:
             return ""
+    inputs = door("inputs")
     return {"engine_up": up, "engine_port": port, "mic_holder": door("holder"),
+            "inputs": int(inputs) if inputs.isdigit() else None,
             "mic_bluetooth": subprocess.run(["bash", str(REPO / "bin" / "desk" / "in-call.sh"), "bluetooth"],
                                             capture_output=True, timeout=5).returncode == 0}
 
@@ -174,7 +177,7 @@ class Handler(BaseHTTPRequestHandler):
                     "parameters": t.get("parameters", {"type": "object", "properties": {}}),
                 })
             return self._json(200, {"tools": defs})
-        return self._json(404, {"error": "unknown path", "paths": ["/tools", "/tool", "/head", "/settings", "/memory", "/health", "/desk"]})
+        return self._json(404, {"error": "unknown path", "paths": ["/tools", "/tool", "/head", "/settings", "/memory", "/health", "/desk", "/loss"]})
 
     def do_POST(self) -> None:  # noqa: N802
         length = int(self.headers.get("Content-Length") or 0)
@@ -204,6 +207,27 @@ class Handler(BaseHTTPRequestHandler):
             merged = {**current, **{k: v for k, v in payload.items() if not str(k).startswith("_")}}
             _write_json(SETTINGS, merged)
             return self._json(200, {"ok": True, "settings": merged, "path": str(SETTINGS)})
+
+        if self.path.startswith("/loss"):
+            # ONE record per loss (plan 259 B2e rule 4): the id is the second the stream was lost,
+            # and a loss already written is not written twice.
+            lid = str(payload.get("id") or "").strip()
+            if not lid:
+                return self._json(200, {"ok": False, "detail": "a loss needs its id (the second it was lost)"})
+            seen = set()
+            try:
+                for line in LOSSES.read_text(encoding="utf-8").splitlines():
+                    seen.add(json.loads(line).get("id"))
+            except Exception:
+                pass
+            if lid in seen:
+                return self._json(200, {"ok": True, "duplicate": True})
+            LOSSES.parent.mkdir(parents=True, exist_ok=True)
+            row = {k: payload.get(k) for k in ("id", "what", "cause", "lost_at", "reopened_at", "attempts", "said")}
+            with LOSSES.open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+            os.chmod(LOSSES, 0o600)
+            return self._json(200, {"ok": True})
 
         if self.path.startswith("/memory"):
             text = str(payload.get("text") or "").strip()

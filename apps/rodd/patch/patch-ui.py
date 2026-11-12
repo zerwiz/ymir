@@ -278,9 +278,20 @@ def patch_main() -> None:
     # plan 271: a failure is a sentence and one action, never `[object Event]`
     if "roddWhy" not in s:
         s = s.replace('import { $, truncateError, DEBUG } from "./ui/dom.js";',
-                      'import { $, truncateError, DEBUG } from "./ui/dom.js";\nimport { roddWhy, sayWhy } from "./why.js";', 1)
+                      'import { $, truncateError, DEBUG } from "./ui/dom.js";\nimport { roddWhy, sayWhy, recover, postLoss, noteFatalDuringRecovery } from "./why.js";', 1)
         s = s.replace('  const message = err instanceof Error ? err.message : String(err);\n  try {\n    await teardown();',
-                      '  const message = sayWhy(await roddWhy(err));\n  try {\n    await teardown();', 1)
+                      '  if (noteFatalDuringRecovery()) { try { await teardown(); } catch {} return; }\n'
+                      '  const why = await roddWhy(err);\n  const message = sayWhy(why);\n  try {\n    await teardown();', 1)
+        # plan 259 B2e: the stream is re-opened in place, the loss said in words with the time, one record
+        s = s.replace('    setCaption(truncateError(message), "error");\n  }\n}',
+                      '    setCaption(truncateError(message), "error");\n  }\n'
+                      '  void recover({ err, why, restart: () => doStart(), say: (t, k) => setCaption(t, k), post: postLoss });\n}', 1)
+        s = s.replace('  micStream = await navigator.mediaDevices.getUserMedia(micConstraints());\n  return micStream;',
+                      '  micStream = await navigator.mediaDevices.getUserMedia(micConstraints());\n'
+                      '  // the device vanishing under a live call ends the track: that is a loss to name and re-open\n'
+                      '  for (const t of micStream.getAudioTracks()) {\n'
+                      '    t.addEventListener("ended", () => { if (micStream) void onFatalError(new Error("microphone stream lost (track ended)")); });\n'
+                      '  }\n  return micStream;', 1)
         s = s.replace('    console.warn("[main] server error (non-fatal):", msg);',
                       '    console.warn("[main] server error (non-fatal):", msg);\n'
                       '    if (/\\b(400|401|403|404|500)\\b|api key|model not found/i.test(msg)) {\n'
