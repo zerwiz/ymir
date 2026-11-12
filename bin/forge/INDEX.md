@@ -21,13 +21,13 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[43]{file,does,kind,verdict,disposition,callers,lines}:
+bin[46]{file,does,kind,verdict,disposition,callers,lines}:
   "conflict-errand.md","conflict-errand.md — the brief a SMITH is handed when a PR cannot merge (plan 203 + 206 §12).","data","wired","keep",1,49
   "essence-fetch.sh","essence-fetch.sh — the npm world's self-heal: npm's packer refuses dotfolders","tool","wired","keep",2,18
   "finding-log.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",1,64
   "finding-tally.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",1,140
   "gather.sh","gather.sh — gather a batch of errand branches into ONE push and ONE PR.","tool","tested","keep",4,254
-  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",456,101
+  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",461,101
   "github-deploy.sh","github-deploy.sh — zero-trust deploys (W0035).","tool","wired","keep",0,96
   "gjallarhorn-expose.sh","gjallarhorn-expose.sh — put EVERY app on its own public hostname (Gjallarhorn).","tool","wired","keep",0,152
   "gjallarhorn-notify.sh","gjallarhorn-notify.sh — the horn (W0036).","tool","wired","keep",1,73
@@ -50,22 +50,25 @@ bin[43]{file,does,kind,verdict,disposition,callers,lines}:
   "pr-pretest.sh","pr-pretest.sh — the PR-time gate: a REAL npm installation, locally, before","tool","wired","keep",1,59
   "pr-watch.sh","pr-watch.sh — TELL HIM a PR arrived.","tool","wired","keep",0,90
   "queue-warden.sh","queue-warden.sh — get every open PR into main, or block with a named reason.","tool","wired","keep",1,138
+  "repair-errand.md","repair-errand.md — the brief a SMITH is handed when a verdict refuses a PR (plan 206 §12.1).","data","wired","keep",2,68
   "review-mend.sh","review-mend.sh — the refusal becomes a router (plan 233 §13/13a/13b)","tool","wired","keep",2,143
   "review-rules.sh","review-rules.sh — the rules floor: load what a reviewer MUST know, or refuse to review.","tool","wired","keep",4,139
-  "review-seat.sh","review-seat.sh — the reviewer's SEAT: pi in a herdr pane, on the heart, on a loop.","tool","wired","keep",1,303
+  "review-seat.sh","review-seat.sh — the reviewer's SEAT: pi in a herdr pane, on the heart, on a loop.","tool","wired","keep",2,339
   "review-shelf.sh","review-shelf.sh — where a packet LANDS, and the waiting rule that keeps it honest.","tool","wired","keep",0,150
-  "review-verdict.sh","review-verdict.sh — the judge's ONE act of writing: its verdict, and nothing else.","tool","wired","keep",0,132
+  "review-verdict.sh","review-verdict.sh — the judge's ONE act of writing: its verdict, and nothing else.","tool","wired","keep",2,178
   "review-watch.sh","review-watch.sh — the missing trigger: a PR that arrives is a question the owner is asked.","tool","wired","keep",1,279
   "ship-watch.sh","ship-watch.sh — the delivery loop: settle branches, then ship proved PRs.","tool","wired","keep",1,110
   "ship.sh","ship.sh — the reviewer's merge: the one door that puts a judged PR on main.","tool","wired","keep",5,206
   "skillopt-setup.sh","skillopt-setup.sh — one-time SkillOpt installation for Ymir.","tool","wired","keep",1,77
   "smith-gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","wired","keep",1,101
+  "smith-seat.sh","smith-seat.sh — seat ANY figure in its own herdr workspace, the same way every time.","tool","wired","keep",2,175
   "utgard-box-door.py","'''utgard-box-door.py — the one road out of a box.","tool","wired","keep",1,369
   "utgard-box.sh","utgard-box.sh — a whole computer for one run, outside the wall.","tool","wired","keep",2,931
   "utgard-lane.sh","utgard-lane.sh — best of N: one brief, many boxes, one board.","tool","wired","keep",1,227
   "utgard.sh","utgard.sh — the sealed execution barrier (Utgard, the realm outside the wall).","tool","wired","keep",4,128
+  "verdict-watch.sh","verdict-watch.sh — EVERY report is delivered, because the ARTEFACT is watched, not the agent.","tool","wired","keep",2,103
   "yggdrasil.sh","yggdrasil.sh — the worktree manager (Yggdrasil, the world-tree).","tool","tested","keep",8,176
 
-**Tally.** verdict: wired=38, tested=5
+**Tally.** verdict: wired=41, tested=5
 
-**Tally.** disposition: keep=43
+**Tally.** disposition: keep=46

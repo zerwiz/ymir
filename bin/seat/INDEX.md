@@ -36,12 +36,12 @@ bin[51]{file,does,kind,verdict,disposition,callers,lines}:
   "helm-identity.sh","helm-identity.sh — WHO holds this helm, WHAT it is for, WHICH machine and fleet it","tool","wired","keep",5,141
   "herdr-agents.py","'''herdr-agents.py — list the agents standing in this herdr session, as TOON.","tool","wired","keep",9,85
   "herdr-ensure.sh","herdr-ensure.sh — Þjazi: guarantee the terminal backend Ymir needs.","tool","wired","keep",4,106
-  "herdr-run.sh","herdr-run.sh — raise an Eindri in herdr, by the grain that fits the errand.","tool","tested","keep",14,631
+  "herdr-run.sh","herdr-run.sh — raise an Eindri in herdr, by the grain that fits the errand.","tool","tested","keep",16,631
   "hermes-seat.sh","hermes-seat.sh — seat Ymir's tools into Hermes, the same packets the other harnesses get.","tool","wired","keep",2,91
   "hermes-session-hook.sh","hermes-session-hook.sh — Hermes' session side of the Gná arm: the Sága digest, and its delivery.","tool","wired","keep",1,134
   "hermes-soul.md.in","<!-- ymir-seat:begin - written by bin/seat/seat-surface.sh on install and every update -->","data","wired","keep",1,40
   "hermes-telegram.sh","hermes-telegram.sh — seat THIS machine's Telegram bot into the Hermes gateway (the machine agent's ear).","tool","wired","keep",2,150
-  "lock-ask.sh","lock-ask.sh — a read-only agent asks the LOCK OWNER for work, and the owner answers.","tool","wired","keep",3,376
+  "lock-ask.sh","lock-ask.sh — a read-only agent asks the LOCK OWNER for work, and the owner answers.","tool","wired","keep",4,376
   "lock-hold.sh","lock-hold.sh — a PRIMARY THAT DOES NOT EXIT: hold this machine's session lock, for the seat's life.","tool","wired","keep",0,53
   "opencode-launcher.sh","opencode-launcher.sh — the ONE launch door for an OpenCode seat, as pi-launcher.sh is pi's.","tool","wired","keep",5,111
   "pending.sh","pending.sh — everything that is waiting on the operator, in ONE list.","tool","wired","keep",5,117
@@ -55,7 +55,7 @@ bin[51]{file,does,kind,verdict,disposition,callers,lines}:
   "seat-surface.sh","seat-surface.sh — render THIS seat's own name into the AGENTS.md every harness reads.","tool","wired","keep",7,218
   "seat-wake.sh","seat-wake.sh — the seat's word to the ARM, not to a desktop.","tool","wired","keep",3,83
   "seat-wire.sh","seat-wire.sh — one seat speaks into another seat's live pane, and says who it is.","tool","wired","keep",2,393
-  "seats.sh","seats.sh — where the work actually is: panes in either backend, and the dead shells named.","tool","wired","keep",5,74
+  "seats.sh","seats.sh — where the work actually is: panes in either backend, and the dead shells named.","tool","wired","keep",6,74
   "sessrumnir-wire.sh","sessrumnir-wire.sh — the seat wire: talk to a Sessrúmnir seat, and read its last answer.","tool","wired","keep",1,224
   "test_arm_pin.sh","test_arm_pin.sh — plan 257 H6: the helm runs the PINNED code, never a working tree.","tool","wired","keep",0,65
   "test_arm_pin_board.sh","test_arm_pin_board.sh — plan 257 H8: the pin's age and reach as one fact (bin/pi/arm-pin.sh).","tool","wired","keep",0,66

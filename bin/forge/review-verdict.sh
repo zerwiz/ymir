@@ -124,6 +124,52 @@ TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   printf '## CHANGE LOG\n\n- **%s** — written by review-verdict.sh (plan 206); this file is append-only by\n  correction, never by rewrite.\n' "$TS"
 } >"$FILE.tmp" && mv "$FILE.tmp" "$FILE" || die "the verdict could not be written at $FILE"
 
+# ── DELIVERY AND THE CALL FOR A HAND (plan 206 §12, the Allfather's word 2026-11-07) ─────────────
+# "the review agent aren't telling any agent or the user" · "he needs to call for an agent to resolve
+# the problems". Both are this block: a verdict is DELIVERED through the one hotline (so Runes is
+# always written and the arm carries it), and a refusal SEATS A SMITH by the repair errand, because a
+# REFUSE that only writes a file leaves the branch untouched and the next tick refuses it again.
+if [ -x "$ROOT/bin/notify/send.sh" ]; then
+  case "$VERDICT" in
+    REFUSE|NEEDS-REWORK) SEV=HIGH ;;
+    *)                   SEV=INFO ;;
+  esac
+  if bash "$ROOT/bin/notify/send.sh" --source review --severity "$SEV" \
+       --key "review:pr-$PR.$HEAD" \
+       --message "review verdict on PR #$PR: $VERDICT — $REASON (head ${HEAD:0:12}, ruleset ${RULESET:-unrecorded}, judged on $(hostname -s 2>/dev/null || echo seat))" \
+       >/dev/null 2>&1; then
+    printf 'review-verdict: delivered — the rune is written and the arm carries it\n' >&2
+  else
+    printf 'review-verdict: the verdict is written but the NOTIFY FAILED — the hotline is down; the file is the only record\n' >&2
+  fi
+fi
+
+# A refusal summons a hand, automatically. One marker per head, so a branch that keeps failing
+# cannot become a spawn storm; the gating is the machine's role, as everywhere else on the heart.
+if [ "$VERDICT" != "PASS" ] && [ "${YMIR_REVIEW_SELF:-auto}" != 0 ]; then
+  rmarker="$STATE/.reviewed/repaired-pr-$PR.$HEAD"
+  if [ ! -f "$rmarker" ] && [ -x "$ROOT/bin/seat/herdr-run.sh" ] && [ -r "$ROOT/bin/forge/repair-errand.md" ]; then
+    brief="$(sed -e "s|@PR@|$PR|g" -e "s|@HEAD@|$HEAD|g" -e "s|@VERDICT@|$VERDICT|g" "$ROOT/bin/forge/repair-errand.md" 2>/dev/null || true)"
+    brief_file="$STATE/.reviewed/errand-repair-$PR.md"
+    mkdir -p "$STATE/.reviewed" 2>/dev/null || true
+    printf '%s\n' "$brief" >"$brief_file" 2>/dev/null || true
+    # A SMITH WORKS IN A WORKTREE — never the main tree (an agent's checkout must not be what a
+    # hand edits), and never the judge's clone (that one judges the delivered commit).
+    wt="$ROOT/.yggdrasil/repair-smith-$PR"
+    git -C "$ROOT" worktree add -f -q "$wt" "$HEAD" >/dev/null 2>&1 || true
+    if [ -n "$brief" ] && [ -d "$wt" ] && [ -x "$ROOT/bin/forge/smith-seat.sh" ] \
+       && bash "$ROOT/bin/forge/smith-seat.sh" ensure --role sindri --brief "$brief_file" \
+            --cwd "$wt" --label "repair-smith-$PR" \
+            --prompt "Your brief is attached as the second system prompt. Do the errand now: fix exactly what the verdict names, run the wards, push the branch, and report." >/dev/null 2>&1; then
+      mkdir -p "$STATE/.reviewed" 2>/dev/null || true
+      : >"$rmarker" 2>/dev/null || true
+      printf 'review-verdict: a smith was called for PR #%s — the repair errand is seated (plan 206 §12)\n' "$PR" >&2
+    else
+      printf 'review-verdict: the smith could NOT be seated for PR #%s — no herdr shell pane; the refusal stands and waits for a hand\n' "$PR" >&2
+    fi
+  fi
+fi
+
 if [ "$JSON" = 1 ]; then
   printf '{"pr":%s,"head":"%s","verdict":"%s","file":"%s"}\n' "$PR" "$HEAD" "$VERDICT" "$FILE"
 else

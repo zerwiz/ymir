@@ -62,7 +62,13 @@ case "$SEVERITY" in INFO|MEDIUM|HIGH|CRITICAL) ;; *) printf 'error: severity mus
 STATE_DIR="$HOME_R/hodd/state/notify"
 APPROVALS="$STATE_DIR/approvals"
 STATE_FILE="$STATE_DIR/state.json"
-WAKE_QUEUE="$HOME_R/hodd/state/.wake-queue"
+# THE ARM'S QUEUE IS THE ONE THE ARM READS. It used to be restated here as `hodd/state/.wake-queue`
+# while the arm and `bin/seat/lock-ask.sh` drain `<home>/state/.wake-queue` — two queues, so every
+# notify was delivered "to the arm" into a file nothing reads (measured 2026-11-07: notify wrote 1.3 KB
+# at hodd/state while the live queue held 6.2 KB of asks and no verdicts). Resolved, never restated.
+WAKE_QUEUE=""
+if declare -f hoard_state_dir >/dev/null 2>&1; then hoard_state_dir _wq_sd && [ -n "${_wq_sd:-}" ] && WAKE_QUEUE="$_wq_sd/.wake-queue"; fi
+[ -n "${WAKE_QUEUE:-}" ] || WAKE_QUEUE="$HOME_R/state/.wake-queue"
 mkdir -p "$STATE_DIR" 2>/dev/null || true
 
 # ── dedupe + collapse, decided once ────────────────────────────────────────────
@@ -77,11 +83,16 @@ except Exception:
 seen = {k: v for k, v in (state.get("seen") or {}).items() if now - float(v) < 7 * 86400}
 counts = {k: [t for t in v if now - float(t) < 3600] for k, v in (state.get("counts") or {}).items()}
 key, source, severity = os.environ["KEY"], os.environ["SOURCE"], os.environ["SEVERITY"]
+# A VERDICT IS A JUDGEMENT, NOT CHATTER — never collapsed into "more than N events this hour".
+# Measured 2026-11-07: the ninth review event of the hour was folded into that line, so a REFUSE
+# reached the operator as a count. Keys `report:*` and `review:*` are records and always send whole
+# (identical keys are still deduped — the same verdict twice is not news).
+is_record = key.startswith("report:") or key.startswith("review:")
 verdict = "send"
 if severity != "CRITICAL":
     if key in seen and now - float(seen[key]) < 3600:
         verdict = "duplicate"
-    elif len(counts.get(source, [])) >= 8:
+    elif not is_record and len(counts.get(source, [])) >= 8:
         verdict = "collapse"
 state["seen"] = seen
 if verdict == "send":
