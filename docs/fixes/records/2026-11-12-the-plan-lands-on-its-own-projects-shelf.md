@@ -25,3 +25,7 @@ one, so the tool failed even for company and personal plans.
 ## Proof
 
 `tests/test_plan_finds_the_shelf.sh` — 14 cases in a throwaway home, registered in `tests/run.sh`.
+
+## CHANGE LOG
+
+- 2026-11-12 — review-mend: added missing heading for #717
