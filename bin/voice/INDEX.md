@@ -35,7 +35,7 @@ bin[18]{file,does,kind,verdict,disposition,callers,lines}:
   "test_voice_beside_call.sh","test_voice_beside_call.sh — plan 271 pieces 1 and 2, proven on stand-ins, nothing raised.","tool","wired","keep",0,48
   "todos.sh","todos.sh — the Allfather's task ledger, READ by anyone who must know it (the arm holder first).","tool","wired","keep",6,57
   "voice-door.sh","voice-door.sh — the real-time voice door: speak to Ymir on whatever seat you are at.","tool","tested","keep",3,467
-  "voice-ensure.sh","voice-ensure.sh — ensure the voice engines: whisper.cpp (speech → text) and","tool","wired","keep",3,190
+  "voice-ensure.sh","voice-ensure.sh — ensure the voice engines: whisper.cpp (speech → text) and","tool","wired","keep",3,194
   "voice-toolbox.py","'''voice-toolbox.py — the house's hands for a browser face.","tool","wired","keep",1,280
   "voice_mcp.py","'''voice_mcp.py — the voice's MCP adapter: every server this seat knows, as hands.","tool","wired","keep",0,396
   "voice_tools.py","'''voice-tools.py — the hands of the voice.","tool","tested","keep",4,2817

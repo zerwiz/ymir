@@ -27,7 +27,7 @@ bin[15]{file,does,kind,verdict,disposition,callers,lines}:
   "connect.sh","connect.sh — THE connect door: one button to a signed-in mailbox, and the honest line per account.","tool","wired","keep",3,71
   "gna_addresses.py","'''Gná's register: the addresses the house USES, and whether mail can reach them.","tool","wired","keep",2,972
   "gna_connect.py","'''Gná's connect door — one button to a signed-in mailbox, and the honest line per account.","tool","wired","keep",3,1474
-  "gna_desk.py","'''Gná's desk — read-only, loopback, one account per request.","tool","wired","keep",1,269
+  "gna_desk.py","'''Gná's desk — read-only, loopback, one account per request.","tool","wired","keep",2,269
   "gna_import.py","'''Gná's importer: one account, read-only, every message once.","tool","wired","keep",2,692
   "gna_judge.py","'''Gná's judge: rules first, and every verdict carries the rule that gave it.","tool","wired","keep",0,229
   "gna_notify.py","'''gna_notify.py — tell the arm about mail that arrived, once, as it arrives.","tool","wired","keep",1,287
