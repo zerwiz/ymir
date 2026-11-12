@@ -542,7 +542,7 @@ claudehooks_detail() {
   if [ -n "$stale" ]; then
     printf 'stale: %s — bin/seat/harness-extensions-install.sh (a pinned runtime that lags origin is the usual cause: bin/seat/armpin.sh)' "$stale"
   else
-    printf 'the three Claude hooks: AGENTS.md · Eindri-only · the Gná arm'
+    printf 'the Claude hooks: AGENTS.md · Eindri-only · NDA-write (the global Gná arm is opt-in)'
   fi
 }
 f_claudehooks() { [ -x "$SCRIPT_DIR/../seat/harness-extensions-install.sh" ] && "$SCRIPT_DIR/../seat/harness-extensions-install.sh" >/dev/null 2>&1 && s_claudehooks; }
