@@ -24,13 +24,22 @@ STAMP="$(date +%Y%m%d-%H%M%S)"
 donor="$APP"
 if [ ! -e "$HOME_DIR/data" ]; then
   best=0
-  for c in "$APP" "${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}/apps/bilskirnir" ${BILSKIRNIR_CANDIDATES:-}; do
+  # every Ymir root this machine knows: the harness root record lists the working tree AND the pin, so a pin started
+  # first still finds the real hall in the working tree (measured 2026-11-12: the main-tree resolver answers the pin
+  # for itself, so the working tree was never a candidate)
+  roots=""
+  [ -r "$HOME/.pi/agent/extensions/.ymir-root" ] && while IFS= read -r r; do
+    [ -n "$r" ] && [ -d "$r/apps/bilskirnir" ] && roots="$roots $r/apps/bilskirnir"
+  done < "$HOME/.pi/agent/extensions/.ymir-root"
+  for c in "$APP" "${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}/apps/bilskirnir" $roots ${BILSKIRNIR_CANDIDATES:-}; do
     db="$c/data/grokbot.db"
     [ -f "$db" ] && [ ! -L "$c/data" ] || continue
-    # never take a hall from under a running server: its own start will link it when it next runs
-    [ "$c" != "$APP" ] && [ -f "$c/data/run/server.pid" ] && kill -0 "$(cat "$c/data/run/server.pid" 2>/dev/null)" 2>/dev/null && continue
     sz=$(stat -c %s "$db" 2>/dev/null || echo 0)
-    [ "$sz" -gt "$best" ] && { best=$sz; donor="$(cd "$c" && pwd)"; }
+    if [ "$sz" -gt "$best" ]; then
+      best=$sz; donor="$(cd "$c" && pwd)"; busy=0
+      # never take a hall from under a running server — and never choose a smaller one instead: WAIT
+      [ "$donor" != "$APP" ] && [ -f "$c/data/run/server.pid" ] && kill -0 "$(cat "$c/data/run/server.pid" 2>/dev/null)" 2>/dev/null && busy=1
+    fi
   done
   _mt="$APP"; while [ "$_mt" != / ] && [ ! -f "$_mt/bin/desktop/main-tree.sh" ]; do _mt="$(dirname "$_mt")"; done
   _canon="$(bash "$_mt/bin/desktop/main-tree.sh" "$_mt" 2>/dev/null || true)"
@@ -40,6 +49,12 @@ if [ ! -e "$HOME_DIR/data" ]; then
   fi
 fi
 check=0; [ "${1:-}" = "--check" ] && check=1
+if [ "${busy:-0}" = 1 ]; then
+  # the real hall is in use by another checkout's running server: change nothing now (this checkout keeps working
+  # as it is), and let the next start after that server stops make the move
+  printf 'data-home: waiting — the real hall (%s) is in use by a running server; nothing moved\n' "$donor"
+  exit 0
+fi
 
 state=0
 for name in data .env; do
