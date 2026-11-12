@@ -1,7 +1,7 @@
 ---
 name: snotra-letters
 description: >-
-  Write and send any outgoing email so it arrives designed: the house letter design (13 letter types × themes,
+  Write and send any outgoing email so it arrives designed: the house letter design (30 letter types × themes,
   including Ymir's own colours from the design tokens), the seven vendored HTML layouts, the meeting letter, and the
   occasion templates — and the one door that drafts, previews, approves and sends. Use whenever an email, letter,
   update, agenda, meeting record, follow-up, request, notice, quote, welcome, introduction or digest is to be sent,
@@ -19,7 +19,7 @@ plain words beside it, so it reads well in any mail client. Nobody hand-builds H
 
 | shelf | where | use it for |
 |---|---|---|
-| **the letter design** — 13 letter types, the blocks, the themes | `systems/snotra/services/letters/letter-design.py`, types in `templates/house/types/` | **almost every letter** — start here |
+| **the letter design** — 30 letter types, the blocks, the themes | `systems/snotra/services/letters/letter-design.py`, types in `templates/house/types/` | **almost every letter** — start here |
 | **the meeting letter** — the record of a meeting as a designed page | `systems/snotra/services/letters/snotra-letter.py` | the letter generated from a Snotra meeting record |
 | **seven vendored layouts** — leemunroe-simple, Cerberus (fluid, responsive, hybrid), Mailgun (action, alert, billing) | `systems/snotra/services/letters/templates/` (README there) | a letter hand-dressed in a special layout; `leemunroe-simple` is the automatic fallback for a body with no theme |
 | **occasion texts** — follow-ups after client, team, sales, board, stand-up and workshop meetings; agenda, sign-off, header | `midgard/email-templates/` | the words for those occasions — paste them into a letter type to design them |
@@ -41,7 +41,7 @@ bash $L/mail-send.sh draft --to a@x --subject "…" --body /tmp/letter.md   # de
 
 ## The markers
 
-The letter opens with a header (`theme`, `kicker`, `title`, `subtitle`, `footer`, `preheader`, `use`). Then blocks,
+The letter opens with a header (`theme`, `kicker`, `title`, `subtitle`, `footer`, `preheader`, `made_by`, `use`). Then blocks,
 separated by a blank line: `## heading` · paragraphs (`**bold**`, `` `code` ``, `[text](url)`) · `- list` ·
 `1. **title** — detail` (numbered rows) · `| table |` (a `|---|` row makes a header) · `> quote` · `::: callout` ·
 `::: note Title` · `::: warning Title` · `::: card 1 | Owner | Title` · `::: stats` (`value | label` per line) ·
@@ -54,8 +54,16 @@ separated by a blank line: `## heading` · paragraphs (`**bold**`, `` `code` ``,
 - **The company's theme for the company's mail** — keeps companies apart in the reader's inbox.
 - **A new letter type** that is generic goes in `templates/house/types/` (public, placeholders only); one with a
   company's or a person's details goes in the home.
+- **Every letter says who prepared it.** The renderer ends each letter with `Made with Ymir by <agent>`,
+  the agent's name from the seat's `.ymir-seat` (never a machine name). `made_by: <text>` replaces it; `made_by: off`
+  removes it. Do not add a second signature of your own.
+- **The house's own letters** use the operator's house theme from the home (a theme with an empty `label:` shows no
+  company name at the bottom). A footer line is the letter's own words; never add a stock sign-off the operator did
+  not write.
 - Proof: `python3 systems/snotra/services/letters/letter-design.py --self-test` (every type in every theme).
 
 ## CHANGE LOG
 
+- **2026-11-12** — `made_by`: every letter says it was made with Ymir and by which agent; the house theme with no
+  company name; no stock sign-off the operator did not write.
 - **2026-11-11** — first written with the house letter design (plan 250 §7): the four template shelves, the letter types, the themes, the markers.

@@ -99,6 +99,21 @@ A body that opens with a `theme:` header is designed automatically; the plain-te
 `$YMIR_HOME/hodd/identity/letters/themes.yaml` (each theme `extends:` a shipped one) and
 `$YMIR_HOME/hodd/identity/letters/types/`.
 
+**Letter types for outreach and replies (added 2026-11-12).** Beside the meeting and project letters there are now
+types for reaching out and answering: `outreach` (first contact), `outreach-nudge` (a follow-up when there was no
+reply), `inquiry-reply` (someone asked about your services), `answer` (the short answer first), `status-reply` (we
+have it and are on it), `accept`, `decline`, `proposal`, `partnership`, `invitation`, `reschedule`, `confirmation`,
+`apology`, `feedback-request`, `reminder`, `investor-update` and `goodbye`. `letter-design.py --types` lists them all
+with what each is for.
+
+**Who prepared the letter.** Every designed letter ends with a small line under its footer, `Made with Ymir ·
+prepared by <agent>`, where the agent is the name your own seat carries (from `~/.pi/agent/extensions/.ymir-seat`).
+No machine name appears. Write `made_by: <your text>` in the letter's header to change it, or `made_by: off` to
+remove it.
+
+**A theme with no company name.** A theme in your home with `label: ""` leaves the bottom of the letter free of any
+company name. Use it for letters you send as yourself rather than for a company.
+
 Agents find all of this through the skill `snotra-letters`.
 
 ## If it does not work
@@ -111,6 +126,9 @@ Agents find all of this through the skill `snotra-letters`.
 
 ## CHANGE LOG
 
+- **2026-11-12** — seventeen letter types for outreach and replies (30 in all).
+- **2026-11-12** — every letter says it was made with Ymir and by which agent (`made_by:`); a home theme with an
+  empty label shows no company name.
 - **2026-11-11** — the house letter design: `letter-design.py`, thirteen letter types, themes from Ymir's design tokens
   and from the home, designed by default when a body opens with `theme:`; the skill `snotra-letters` names every shelf.
 - **2026-11-09** — a letter is dressed by default. `mail-send.sh draft` renders `--body` into `leemunroe-simple`
