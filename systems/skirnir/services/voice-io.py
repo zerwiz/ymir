@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """File-only voice adapter for the installed Whisper and Kokoro HTTP engines."""
 import argparse
 from contextlib import contextmanager
