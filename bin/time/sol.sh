@@ -12,6 +12,7 @@
 #   sol.sh utc                     one ISO-8601 instant, Z
 #   sol.sh epoch                   seconds since the epoch
 #   sol.sh stamp                   a sortable suffix, UTC               (20261018-145504Z)
+#   sol.sh line                    the stamp every line a person reads begins with   (2026-11-12 14:55 CET)
 #   sol.sh tz                      the zone, and where it came from
 #   sol.sh add +1d -2h30m          move from now (or --at), DST-correct
 #   sol.sh diff <a> <b>            the distance between two instants
@@ -30,7 +31,7 @@ set -u
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-usage() { sed -n '2,27p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,28p' "$0" | sed 's/^# \{0,1\}//'; }
 
 CMD="${1:-now}"; shift || true
 AT="" TZ_ARG="" PLAIN=0
@@ -58,7 +59,7 @@ while [ $# -gt 0 ]; do
 done
 
 case "$CMD" in
-  now|iso|utc|epoch|stamp|tz|context|check) ;;
+  now|iso|utc|epoch|stamp|line|tz|context|check) ;;
   add|diff) ;;
   -h|--help|help) usage; exit 0 ;;
   *) printf 'error: unknown command %s\nhelp: sol.sh --help\n' "$CMD" >&2; exit 2 ;;
@@ -164,6 +165,9 @@ elif cmd == "epoch":
 elif cmd == "stamp":
     v = now.astimezone(dt.timezone.utc).strftime("%Y%m%d-%H%M%SZ")
     emit([("stamp", v)], one=v)
+elif cmd == "line":
+    v = now_local.strftime("%Y-%m-%d %H:%M ") + (now_local.tzname() or "UTC")
+    emit([("line", v)], one=v)
 elif cmd == "tz":
     emit([("zone", zname), ("source", src), ("offset", now_local.strftime("%z")),
           ("abbrev", now_local.tzname() or ""), ("dst", "yes" if now_local.dst() and now_local.dst().total_seconds() else "no")],

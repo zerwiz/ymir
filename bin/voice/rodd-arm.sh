@@ -53,8 +53,11 @@ STALE_AFTER="${BROKK_WATCH_HEARTBEAT_STALE_SECONDS:-60}"
 DEFAULT_SHOW=20
 
 usage() { sed -n '2,34p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
-die()   { printf 'rodd-arm: %s\n' "$*" >&2; exit 1; }
-refuse(){ printf 'rodd-arm: %s\n' "$*" >&2; exit 3; }
+# Every sentence a person reads begins with Sol's stamp (plan 272, fault 4).
+_RA_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -r "$_RA_DIR/../time/sol-lib.sh" ]; then . "$_RA_DIR/../time/sol-lib.sh"; else sol_line() { date '+%Y-%m-%d %H:%M %Z'; }; fi
+die()   { printf '%s — rodd-arm: %s\n' "$(sol_line)" "$*" >&2; exit 1; }
+refuse(){ printf '%s — rodd-arm: %s\n' "$(sol_line)" "$*" >&2; exit 3; }
 now()   { date +%s; }
 # one readable line: the queue is tab-separated, so a tab or a newline in a spoken
 # message would break the record. Flatten, then squeeze, then trim — never mangle words.
@@ -250,6 +253,16 @@ chunk = raw[start:]
 cut = chunk.rfind(b"\n") + 1
 consumed, tail = chunk[:cut], chunk[cut:]
 
+def shown_at(value):
+    """The room stores epoch seconds for parsing; whatever SHOWS the time renders it as Sol's line shape."""
+    import time
+    text = str(value)
+    if text.isdigit():
+        if os.environ.get("YMIR_TZ"):
+            os.environ["TZ"] = os.environ["YMIR_TZ"]; time.tzset()
+        return time.strftime("%Y-%m-%d %H:%M %Z", time.localtime(int(text)))
+    return text
+
 rows = []
 for line in consumed.decode("utf-8", "replace").splitlines():
     line = line.strip()
@@ -262,7 +275,7 @@ for line in consumed.decode("utf-8", "replace").splitlines():
     if not isinstance(obj, dict):
         obj = {"text": str(obj)}
     rows.append((
-        str(obj.get("ts") or obj.get("at") or ""),
+        shown_at(obj.get("ts") or obj.get("at") or ""),
         str(obj.get("from") or obj.get("speaker") or "arm"),
         str(obj.get("text") or ""),
     ))

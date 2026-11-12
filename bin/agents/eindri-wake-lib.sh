@@ -14,6 +14,15 @@
 # a worker that wrote only the status shelf was invisible to the sweep. One
 # ledger, one wake per (id, kind), whichever road arrives first.
 set -u
+# Every line the helm reads begins with a Sol stamp (plan 272, fault 4).
+_EWL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+[ -r "$_EWL_DIR/../time/sol-lib.sh" ] && . "$_EWL_DIR/../time/sol-lib.sh"
+# A tree without the lib (a copied door) still stamps, in the same shape.
+command -v sol_line >/dev/null 2>&1 || {
+  sol_line() { date '+%Y-%m-%d %H:%M %Z'; }
+  sol_is_stamped() { case "${1:-}" in [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\ [0-9][0-9]:[0-9][0-9]*) return 0 ;; esac; return 1; }
+  sol_stamped() { local t="$*"; if sol_is_stamped "$t"; then printf '%s' "$t"; else printf '%s — %s' "$(sol_line)" "$t"; fi; }
+}
 
 # The helm's state — where everything FOR THE HELM is written (the wake queue,
 # the report and question shelves, the delivery ledger, the status files).
@@ -56,5 +65,6 @@ eindri_mark_delivered() {  # <id> <kind>
 eindri_queue_wake() {  # <line>
   local line=$1 d="$EINDRI_STATE"
   mkdir -p "$d" 2>/dev/null || true
+  if command -v sol_stamped >/dev/null 2>&1; then line="$(sol_stamped "$line")"; fi
   printf '%s\n' "$line" >>"$d/.wake-queue"
 }
