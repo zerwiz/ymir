@@ -280,6 +280,7 @@ identity, never rebuilding from raw ore.
 | Borrowed anvil | Norse name | Domain |
 |---|---|---|
 | `engdbram` (PyPI `engdbram`, v2.2.1) | **Mimirsbrunn** | engram memory engine |
+| Honcho (Plastic Labs, AGPL-3.0 server; on trial, plan 260) | **Sökkvabekkr** | the deeper well: conclusions derived from the well |
 | Redis (queue under the A2A task model) | **Ratatoskr**'s nest | A2A task queue |
 | `a2aproject/a2a` + SDKs (A2A 1.0) | the **Ratatoskr** protocol | agent↔agent horizontal delegation |
 | Traefik/Caddy | **Bifrost** | gateway / reverse proxy |
