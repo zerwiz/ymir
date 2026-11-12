@@ -14,3 +14,7 @@ The review of PR #695 found it needed rework. (1) `bin/seat/valknut-load.sh` use
 
 ### Tests
 `bash bin/seat/tests/test_everything_up.sh` — 28 checks, now run by `ci-verify.sh`.
+
+## CHANGE LOG
+
+- **2026-11-12** — written with the rework of PR #695 (Eindri rework-695).
