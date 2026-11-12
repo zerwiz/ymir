@@ -203,7 +203,13 @@ else
   # The head must be one this rail can actually LOAD, not merely one it lists:
   # qwen3.6-35b-a3b@iq3_s answers 500 "failed to load" on this box (2026-11-09 07:35),
   # while the 3050-tuned qwen3.6-35b-a3b-3050@iq2_xxs loads and answers.
-  HEAD="${RODD_HEAD_MODEL:-qwen3.6-35b-a3b-3050@iq2_xxs}"; RODD_CAMERA=0; say "head" "fast MoE, 3050-tuned (no camera — start with --vision for pictures)"
+  # plan 275 (2026-11-12): the head is the MIND HE CHOSE in Rödd's settings (bin/voice/rodd-head.py, kept in the private
+  # home), resolved by the voice door. This launcher used to force nidavellir's 3050-tuned alias on every host; the
+  # door reads his choice only when no head is forced, so his online mind was never used, heimdall's rail answered
+  # `400 model not found`, the engine exited after 18 s, and Rödd never spoke on either machine.
+  HEAD="${RODD_HEAD_MODEL:-}"; RODD_CAMERA=0
+  if [ -n "$HEAD" ]; then say "head" "$HEAD (RODD_HEAD_MODEL)"
+  else say "head" "the mind chosen in Rödd's settings ($(python3 "$ROOT/bin/voice/rodd-head.py" env 2>/dev/null | sed -n 's/^RODD_VOICE_HEAD_MODEL=//p' | head -1))"; fi
 fi
 export RODD_CAMERA
 if is_local_seat "$seat"; then
@@ -216,12 +222,12 @@ if is_local_seat "$seat"; then
   # ("Tried to allocate 2.00 MiB ... 1.75 MiB is free", 2026-11-09 07:38). Kokoro and
   # Whisper on the CPU cost a beat and leave the head its memory.
   CUDA_VISIBLE_DEVICES="${YMIR_VOICE_CUDA:-}" \
-  YMIR_VOICE_HOST="$seat" YMIR_VOICE_HEAD_MODEL="$HEAD" \
+  YMIR_VOICE_HOST="$seat" ${HEAD:+YMIR_VOICE_HEAD_MODEL="$HEAD"} \
   YMIR_VOICE_STT_DEVICE="${YMIR_VOICE_STT_DEVICE:-cpu}" YMIR_VOICE_STT_COMPUTE="${YMIR_VOICE_STT_COMPUTE:-int8}" \
     "$ROOT/bin/voice/voice-door.sh" host --now 2>&1 | tail -1
 else
   ssh -o BatchMode=yes -o ConnectTimeout=6 "$seat" \
-    "cd ~/ymir && YMIR_VOICE_HEAD_MODEL='$HEAD' YMIR_VOICE_STT_DEVICE=cuda YMIR_VOICE_STT_COMPUTE=float16 ./bin/voice/voice-door.sh host --now" 2>&1 | tail -1
+    "cd ~/ymir-runtime && ${HEAD:+YMIR_VOICE_HEAD_MODEL='$HEAD'} YMIR_VOICE_STT_DEVICE=cuda YMIR_VOICE_STT_COMPUTE=float16 ./bin/voice/voice-door.sh host --now" 2>&1 | tail -1
 fi
 
 # 3b · warm the head. The pipeline gives the model 20 s before it gives up
@@ -230,6 +236,8 @@ fi
 # So the head is woken with one word here, while nobody is waiting for a reply.
 warm_head() {
   local t0 t1 ms body url
+  # only a head on the local rail is warmed here; his chosen online mind needs no warming
+  [ -n "$HEAD" ] || return 0
   # plan 271: loading a model on the rail is the heaviest thing this door does to the desk's GPU; during a
   # call it is skipped (the first turn is slower, nothing breaks) unless he says "now".
   if ! "$ROOT/bin/desk/in-call.sh" check --what "warming the head" 2>/dev/null; then
