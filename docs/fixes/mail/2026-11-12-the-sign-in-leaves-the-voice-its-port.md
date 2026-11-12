@@ -20,3 +20,7 @@ On nidavellir with Kokoro running: all three doors, pointed at 8765, refused wit
 
 ## Owed by the operator
 Register `http://127.0.0.1:8767/callback` on the OAuth client in Google Cloud (or choose a Desktop-app client).
+
+## CHANGE LOG
+
+- 2026-11-12 — review-mend: added missing heading for #710
