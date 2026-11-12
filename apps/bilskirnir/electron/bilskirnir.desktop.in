@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=Ymir · Bilskirnir
+GenericName=The business hall
+Comment=The hall of many rooms — give an errand and watch it forge
+Exec=__APP__/start.sh
+Path=__APP__
+Icon=ymir-bilskirnir
+Terminal=false
+Categories=Office;
+Keywords=hall;agents;business;ymir;bilskirnir;nanna;
+StartupNotify=true
+StartupWMClass=ymir-bilskirnir
