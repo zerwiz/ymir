@@ -32,6 +32,11 @@ say() { printf 'desk: %s\n' "$*"; }
 
 have_engine() { command -v "$DOCKER" >/dev/null 2>&1 && "$DOCKER" info >/dev/null 2>&1; }
 image_present() { "$DOCKER" image inspect "$IMAGE" >/dev/null 2>&1; }
+# Where the running desk reads its VNC password from. It is bound once, when the container is made, to the
+# checkout that raised it — and the app reads data/desk/vnc.pass of ITS OWN checkout. Two checkouts (a worktree
+# and the pinned runtime) are two passwords: every screen then answers "Authentication failure" and the panel
+# says "Couldn't reach <agent>'s screen" (2026-11-12, a new agent's first screen).
+secret_source() { "$DOCKER" inspect -f '{{range .Mounts}}{{if eq .Destination "/run/desk-secret"}}{{.Source}}{{end}}{{end}}' "$NAME" 2>/dev/null; }
 state() { local s; s="$("$DOCKER" inspect -f '{{.State.Status}}' "$NAME" 2>/dev/null)" && [ -n "$s" ] && echo "$s" || echo absent; }
 
 build() { say "building $IMAGE from house/desk/"; "$DOCKER" build -q -t "$IMAGE" "$APP/house/desk" >/dev/null; }
@@ -46,6 +51,11 @@ up() {
   have_engine || { say "no container engine ($DOCKER) answers — the desk cannot start here"; return 1; }
   image_present || build || { say "the image did not build"; return 1; }
   password
+  # a desk bound to another checkout's password is recreated (its home volume, the browser profiles, stays)
+  if [ "$(state)" != absent ] && [ "$(secret_source)" != "$(cd "$DIR" && pwd -P)" ]; then
+    say "the desk was raised from another checkout ($(secret_source)) — recreating it for $DIR"
+    "$DOCKER" rm -f "$NAME" >/dev/null 2>&1
+  fi
   case "$(state)" in
     running) ;;
     absent)
@@ -67,7 +77,11 @@ status() {
   image_present && img=present
   st="$(state)"
   [ "$st" = running ] && screens="$("$DOCKER" exec "$NAME" desk-screen list 2>/dev/null | wc -l)"
-  echo "image=$img container=$st screens=$screens"
+  local other=""
+  # a password the screens do not share with the app is a desk nobody can look at — say so, fail
+  [ "$st" = running ] && [ "$(secret_source)" != "$(cd "$DIR" 2>/dev/null && pwd -P)" ] && other=" secret=other-checkout"
+  echo "image=$img container=$st screens=$screens$other"
+  [ -z "$other" ] || return 1
   [ "$img" = present ] && [ "$st" = running ]
 }
 

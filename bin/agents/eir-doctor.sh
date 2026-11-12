@@ -120,7 +120,7 @@ surface_detail_skip() {
 }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir bilskirnir hnoss shells graphics well memory mail mcp harness claudehooks opencode arm armpin runtimepin roddhelm lock gates migrations hoard autoboot vault ward seats seatreap models)
+SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir bilskirnir hnoss shells graphics well memory mail mcp harness pidoor claudehooks opencode arm armpin runtimepin roddhelm lock gates migrations hoard autoboot vault ward seats seatreap models)
 
 # ── the three surfaces the 2026-11-03 Windows audit found, and the rule they read ──────────
 # A SEAT IS NOT UPDATED BY A PULL. The checkout moves; the installed hooks, the PATH a later
@@ -503,6 +503,22 @@ s_harness() {
   return 1
 }
 f_harness()   { [ -x "$SCRIPT_DIR/../seat/valknut-load.sh" ] && "$SCRIPT_DIR/../seat/valknut-load.sh" --pi >/dev/null 2>&1 && s_harness; }
+# The pi door must be what `pi` resolves to (2026-11-12): a hand-started pi that bypasses it loads two
+# extension homes and refuses all of them. A host with no pi is healthy. Eir mends it by seating the
+# installer's PATH block (the operator's shell picks it up at its next login).
+_pidoor_dst() { printf '%s' "${YMIR_PI_DOOR:-$HOME/.pi/agent/bin/pi}"; }
+s_pidoor() {
+  command -v pi >/dev/null 2>&1 || return 0
+  local got want; got="$(command -v pi)"; want="$(_pidoor_dst)"
+  [ -x "$want" ] && [ "$got" = "$want" ]
+}
+pidoor_detail() {
+  command -v pi >/dev/null 2>&1 || { printf 'no pi on this host'; return 0; }
+  local got want; got="$(command -v pi)"; want="$(_pidoor_dst)"
+  if [ "$got" = "$want" ] && [ -x "$want" ]; then printf 'pi resolves to the one-home door (%s)' "$want"
+  else printf '`pi` resolves to %s, not the door %s — bin/seat/harness-extensions-install.sh seats the PATH block (YMIR_PI_DOOR_PATH=print shows it)' "$got" "$want"; fi
+}
+f_pidoor() { [ -x "$SCRIPT_DIR/../seat/harness-extensions-install.sh" ] && "$SCRIPT_DIR/../seat/harness-extensions-install.sh" >/dev/null 2>&1; s_pidoor; }
 # Claude hooks (2026-11-10): every Claude seat in the fleet carries THREE user-scope hooks, seated
 # by bin/seat/harness-extensions-install.sh — the AGENTS.md loader (Claude reads CLAUDE.md, never
 # a project's AGENTS.md), the Eindri-only PreToolUse (Claude must never spawn its own subagents),
@@ -757,6 +773,7 @@ detail() { # <name> -> the command that prints one short fact
     mcp)       printf '%s\n' "echo 'a2abridge + the well door'" ;;
     graphics)  printf '%s\n' "if [ -z \"\${DISPLAY:-}\${WAYLAND_DISPLAY:-}\" ]; then echo headless; else echo \"\$(graphics_block 2>/dev/null | sed -n '1p' | sed 's/.*{//;s/}//') · \$(graphics_policy 2>/dev/null)\"; fi" ;;
     harness)   printf '%s\n' "s_harness && echo 'deployed extensions resolve their bin/' || echo 'no live root recorded'" ;;
+    pidoor) printf '%s\n' pidoor_detail ;;
     claudehooks) printf '%s\n' claudehooks_detail ;;
     opencode)  printf '%s\n' "command -v opencode >/dev/null 2>&1 && $SCRIPT_DIR/../seat/opencode-launcher.sh check 2>&1 | sed -n '2p' | sed -E 's/^ *\"[a-z]+\",//; s/\"//g' || echo 'no opencode on this host'" ;;
     arm)       printf '%s\n' "$SCRIPT_DIR/../pi/syn-watch.sh status --detail 2>/dev/null | head -1 || echo 'arm door missing'" ;;

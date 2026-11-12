@@ -219,6 +219,19 @@ Open **Settings › Models** (⌘, or Ctrl+, then *Models*). The hall looks for 
 
 **Test it:** `node_modules/.bin/tsx tests/model-door.mts` runs the detector against stub servers and a temporary HOME. `node tests/models-screen.mjs <url> <out-dir>` photographs the screen at desktop and phone width.
 
+## Every agent is a house agent
+
+Nanna is not the only one. An agent you create in the app gets the same house parts at birth, and again at every start:
+the house soul (its own name and role, the house and the operator read from your home), the house doors (`ymir`, `well`,
+`skuld`, `bolthorn` and the house hands), the platform toolsets and the Sága session hook. Its own `hq` door stays. One
+file renders them, `house/house.py`, used by `setup.sh` for the primary and by `server/src/engine.ts` for every bot.
+
+Anything you write in an agent's `SOUL.md` stays: the house block sits between `<!-- house:begin -->` and
+`<!-- house:end -->` and only that block is refreshed. Test: `npx tsx tests/house-agents.mts`.
+
+If a screen says "Couldn't reach … screen", check `house/desk.sh status`. `secret=other-checkout` means the desk was raised
+from another checkout; `house/desk.sh up` recreates it (the browser profiles stay).
+
 ## Development
 
 ```bash

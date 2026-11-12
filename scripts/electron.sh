@@ -365,6 +365,9 @@ start_one() {
         [ "$gp" = software ] && extra+=(--disable-gpu --disable-gpu-compositing)
       fi ;;
   esac
+  # plan 271: a NEW desktop window is not started over the operator's call (a raise of a window already up is
+  # unaffected: that branch returned above). Only his explicit --now / YMIR_DESK_NOW=1 goes through.
+  bash "$ROOT/bin/desk/in-call.sh" check --what "the $v window" || return 3
   nohup env YMIR_DESKTOP_VIEW="$v" "$(real_electron "$v")" "$(app_dir "$v")" \
     --user-data-dir="$HOME/.config/$(view_mark "$v")" \
     "${extra[@]}" >"$l" 2>&1 < /dev/null &

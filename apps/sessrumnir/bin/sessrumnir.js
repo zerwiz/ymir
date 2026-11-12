@@ -55,6 +55,10 @@ if (args.includes('--version') || args.includes('-v')) {
 // ─── Find Electron binary ────────────────────────────────────────────────────
 
 function findElectron() {
+  // a named binary wins (the launcher's own test seats a stand-in here; never set it in daily use)
+  if (process.env.SESSRUMNIR_ELECTRON && existsSync(process.env.SESSRUMNIR_ELECTRON)) {
+    return process.env.SESSRUMNIR_ELECTRON
+  }
   // Try to find electron from the package's own node_modules
   const candidates = [
     join(__dirname, '..', 'node_modules', 'electron', 'dist', 'electron'),
@@ -143,6 +147,8 @@ function launch() {
 
   // Pass workspace path via environment variable
   const env = { ...process.env }
+  // Chromium's own error lines go to the log: an empty log was the whole of the 2026-11-12 mystery.
+  if (!env.ELECTRON_ENABLE_LOGGING) env.ELECTRON_ENABLE_LOGGING = '1'
   // The repo root, so the renderer can reach hodd/, svartalfaheim/, workspace/.
   env.YMIR_ROOT = resolve(__dirname, '..', '..', '..')
   if (workspacePath) {
@@ -156,13 +162,21 @@ function launch() {
     detached: false,
   })
 
+  const startedAt = Date.now()
+  console.log(`[sessrumnir] electron started pid=${child.pid} app=${appPath}`)
+
   child.on('error', (err) => {
-    console.error('Failed to start Sessrúmnir:', err.message)
+    console.error(`[sessrumnir] electron failed to start: ${err.message}`)
     process.exit(1)
   })
 
-  child.on('exit', (code) => {
-    process.exit(code ?? 0)
+  // Say how the window ended. A signal death (SIGTRAP, SIGSEGV, SIGKILL) used to leave NOTHING:
+  // `code` is null then, and the old handler exited 0 in silence (plan 271 piece 4).
+  child.on('exit', (code, signal) => {
+    const secs = ((Date.now() - startedAt) / 1000).toFixed(1)
+    console.error(`[sessrumnir] electron exited code=${code} signal=${signal || 'none'} after ${secs}s`)
+    const sigNum = signal ? (require('os').constants.signals[signal] || 1) : 0
+    process.exit(signal ? 128 + sigNum : (code ?? 0))
   })
 
   // Forward signals

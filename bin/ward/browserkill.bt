@@ -1,0 +1,74 @@
+/* plan 242 + 0002 phase 1 (2026-11-11): NAME THE SENDER.
+   The old script hooked tracepoint:signal:signal_generate, which carries no sender field —
+   its comm/pid are the TARGET's, so it printed the victim twice and could never name a hand.
+   It held zero sig=9 in 553,791 lines. This hooks the kernel send path instead, where
+   `comm`/`pid` are the SENDING task and the target is read from the task_struct.
+
+   Fire policy, so the journal stays readable:
+     sig 9  — ALWAYS written (a kill is rare and precious)
+     sig 15 / 1 — written only when the target is a browser or the shell
+   A process exit of quickshell / omarchy-* is kept: a Wayland teardown raises no signal. */
+kprobe:__send_signal_locked
+/arg0 == 9 || ((arg0 == 15 || arg0 == 1) && (strcontains(str(((struct task_struct *)arg2)->comm), "firefox")
+   || strcontains(str(((struct task_struct *)arg2)->comm), "chrom")
+   || strcontains(str(((struct task_struct *)arg2)->comm), "Brave")
+   || strcontains(str(((struct task_struct *)arg2)->comm), "Web Content")
+   || strcontains(str(((struct task_struct *)arg2)->comm), "quickshell")))/
+{
+  $t = (struct task_struct *)arg2;
+  printf("%s SEND sig=%d from=%s(%d) to=%s(%d)\n",
+    strftime("%H:%M:%S", nsecs), (int)arg0, comm, pid, str($t->comm), $t->pid);
+}
+
+tracepoint:sched:sched_process_exit
+/comm == "quickshell"/
+{
+  printf("%s EXIT %s pid=%d\n", strftime("%H:%M:%S", nsecs), comm, pid);
+}
+
+/* 2026-11-11 23:15 — the receiving end, so the ambiguity cannot survive.
+   A task ended by a fatal signal and a task that exited by itself are indistinguishable from the
+   wrapper (bash reports 128+sig either way once a shell child is involved), and the send path
+   showed no external SIGKILL at the 22:49:25 death. `do_exit` is called for every death with a
+   code that names the cause: low 7 bits = the killing signal (9 = SIGKILL), 0 = a normal exit.
+   comm here is the dying task itself. */
+kprobe:do_exit
+/comm == "firefox" || strcontains(comm, "chrom") || comm == "quickshell" || strcontains(comm, "Brave") || strcontains(comm, "RemVid") || strcontains(comm, "Web Content") || strcontains(comm, "Isolated")/
+{
+  printf("%s DIE %s pid=%d code=%d sig=%d\n", strftime("%H:%M:%S", nsecs), comm, pid,
+    (int)arg0, (int)arg0 & 127);
+}
+
+/* 2026-11-12 13:40 — the cgroup door.
+   At 13:29:11 and 13:33:07 the firefox main process reported DIE code=9 sig=9 (killed by SIGKILL),
+   yet no kill()/tgkill() record existed in audit and no send-path probe fired: `ausearch` has named
+   nothing for weeks for the same reason. A cgroup-level kill (writing "1" to cgroup.kill) sends
+   SIGKILL without any userspace kill syscall — it does not go through the audited syscalls, and its
+   writer is a plain write(2) to a cgroup file. A one-byte write to a cgroup file is exactly that
+   (cgroup.kill, cgroup.freeze, cgroup.procs with one pid), so this names the writer when it happens. */
+kprobe:cgroup_file_write
+/(int)arg2 == 1/
+{
+  printf("%s CGWRITE from=%s(%d) nbytes=1\n", strftime("%H:%M:%S", nsecs), comm, pid);
+}
+
+/* 2026-11-12 — the unsigned SIGKILL gets its name (plan 271 piece 5).
+   13:56:34, Discord died by SIGKILL with no outside sender. Two roads send SIGKILL with no kill()
+   syscall in the audit: the cgroup door (a write to cgroup.kill, which kills every task in the
+   scope) and the kernel's own OOM killer. The one-byte CGWRITE above names the WRITER but never the
+   VICTIM; this names both — the cgroup directory is the unit, so "app-org.chromium.Chromium-212514
+   .scope" appears beside the hand that stopped it. A scope stopped by systemd (`systemctl stop`, a
+   leaderless scope, a failed unit) arrives here too, with from=systemd. */
+kprobe:cgroup_kill_write
+{
+  $of = (struct kernfs_open_file *)arg0;
+  printf("%s CGKILL from=%s(%d) unit=%s\n", strftime("%H:%M:%S", nsecs), comm, pid,
+    str($of->kn->parent->name));
+}
+
+/* the OOM killer sends SIGKILL from the kernel with no sender at all */
+kprobe:oom_kill_process
+{
+  printf("%s OOMKILL victim=%s(%d)\n", strftime("%H:%M:%S", nsecs),
+    str(((struct oom_control *)arg0)->chosen->comm), ((struct oom_control *)arg0)->chosen->pid);
+}

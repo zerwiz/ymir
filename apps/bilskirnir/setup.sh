@@ -45,35 +45,9 @@ say() { printf 'bilskirnir: %s\n' "$*"; }
 fail=0
 
 # ── 1. who: read the names from the home ────────────────────────────────────────
-read_names() {
-  python3 - "$YMIR_HOME" "$HOST" <<'PY'
-import sys, os, yaml
-home, host = sys.argv[1], sys.argv[2]
-def load(p):
-    try: return yaml.safe_load(open(os.path.join(home, 'hodd', 'identity', p))) or {}
-    except Exception: return {}
-seats, op = load('seats.yaml'), load('operator.yaml')
-seat = (seats.get('seats') or {}).get(host) or {}
-ma = seat.get('machine_agent') or {}
-fleet = seats.get('fleet') or {}
-# Who answers in the hall: NANNA, Ymir's own assistant — shipped with the app as Rödd ships her, the same
-# in every house (2026-11-12, the Allfather: "It could be always Nanna, not in my roster"). A user who
-# wants another name sets fleet.assistant in their own roster, and that wins. The roster's own names
-# (the seat primary, the machine agent) belong to those seats and are not taken for the hall.
-asst = fleet.get('assistant') or {}
-if asst.get('name'):
-    name, role = asst['name'], asst.get('role') or 'the one who answers'
-else:
-    name, role = 'Nanna', 'the one who answers'
-print('\t'.join([
-    name or 'unnamed',
-    role,
-    fleet.get('house') or 'unnamed',
-    fleet.get('name') or 'unnamed',
-    (op.get('allfather') or {}).get('display') or fleet.get('operator') or 'the Allfather (unnamed in the home)',
-]))
-PY
-}
+# One renderer for every agent's house parts — house/house.py, shared with server/src/engine.ts (every bot
+# made in the app is dressed by the same file). It reads the names from the home (RULES/44).
+read_names() { python3 "$APP/house/house.py" names; }
 IFS=$'\t' read -r NAME ROLE HOUSE FLEET OPERATOR < <(read_names) || { say "cannot read the home at $YMIR_HOME"; exit 1; }
 SLUG="$(printf '%s' "$NAME" | iconv -f utf-8 -t ascii//TRANSLIT 2>/dev/null | tr 'A-Z' 'a-z' | tr -c 'a-z0-9\n' '-' | sed 's/-*$//')"
 [ -n "$SLUG" ] || SLUG=first-agent
@@ -82,15 +56,7 @@ ENGINE="$APP/data/engines/$SLUG"
 say "the hall's assistant is $NAME ($LABEL); the house and the Allfather are read from the home"
 
 # ── 2. the soul, rendered from the home ─────────────────────────────────────────
-render_soul() {
-  python3 - "$APP/house/soul.md.tmpl" "$NAME" "$ROLE" "$HOUSE" "$FLEET" "$OPERATOR" "$YMIR_HOME" <<'PY'
-import sys
-t = open(sys.argv[1]).read()
-for k, v in zip(['name', 'role', 'house', 'fleet', 'operator', 'home'], sys.argv[2:]):
-    t = t.replace('{{%s}}' % k, v)
-sys.stdout.write(t)
-PY
-}
+render_soul() { python3 "$APP/house/house.py" soul --full --name "$NAME" --role "$ROLE"; }
 want_soul="$(render_soul)"
 if [ "$CHECK" = 1 ]; then
   [ "$(cat "$ENGINE/SOUL.md" 2>/dev/null)" = "$want_soul" ] && say "soul current" || { say "soul stale or missing"; fail=1; }
@@ -140,27 +106,10 @@ if [ "$CHECK" = 0 ]; then
   umask 077
   { printf '# Rendered by apps/bilskirnir/setup.sh — the first agent'"'"'s own Hermes home. Do not edit; re-run setup.\n'
     [ -n "$BLOCK" ] && printf '%s\n' "$BLOCK"
-    # Ymir's MCP doors — the same ones every root agent has (RULES/51): the house door (todo, the daily
-    # log, the Gná arm, plans, the hall) from the pinned runtime, and the gateway's record doors.
-    printf 'mcp_servers:\n'
-    printf '  ymir:\n    command: python3\n    args: ["%s/bin/mcp/ymir-mcp.py"]\n    enabled: true\n' "$RUNTIME"
-    for d in well skuld bolthorn; do printf '  %s:\n    url: "%s/mcp/%s"\n    enabled: true\n' "$d" "$GATEWAY" "$d"; done
-    # The house's hands — Rödd's toolbox (mail read-only, calendar, home search, todo, Trello, seats,
-    # the arm, drafts) — through one MCP door, so the agent holds exactly the hands Nanna holds.
-    printf '  house:\n    command: python3\n    args: ["%s/house/hands-mcp.py"]\n    enabled: true\n' "$APP"
-    # The browser toolset only when she has a desk to drive: pinned to the Chrome on her own screen, so
-    # what she opens is what the hall shows. Without a desk it stays off — a missing tool is a loop
-    # (2026-11-12: she retried it seven times).
-    if [ "$DESK_UP" = 1 ]; then
-      printf 'platform_toolsets:\n  api_server: [web, terminal, file, skills, todo, cronjob, vision, browser]\n'
-      printf 'browser:\n  cdp_url: "http://%s:9299"\n' "$DESK_HOST"
-    else
-      printf 'platform_toolsets:\n  api_server: [web, terminal, file, skills, todo, cronjob, vision]\n'
-    fi
-    # The house's session hook: the Sága brief at session start, delivered into the first turn.
-    if [ -x "$HOUSE_HOOK" ]; then
-      printf 'hooks:\n  on_session_start:\n  - command: %s\n    timeout: 180\n  pre_llm_call:\n  - command: %s\n    timeout: 60\n' "$HOUSE_HOOK" "$HOUSE_HOOK"
-    fi
+    # The house parts — Ymir's MCP doors, the house hands, the toolsets, the browser pinned to her own
+    # screen when she has a desk, the Sága session hook — from the one renderer every agent shares.
+    if [ "$DESK_UP" = 1 ]; then python3 "$APP/house/house.py" parts --browser "http://$DESK_HOST:9299"
+    else python3 "$APP/house/house.py" parts; fi
   } > "$ENGINE/config.yaml"
   # the hook runs only with the operator's consent, given once for the machine's Hermes — carried here
   [ -f "$HOME/.hermes/shell-hooks-allowlist.json" ] && cp "$HOME/.hermes/shell-hooks-allowlist.json" "$ENGINE/shell-hooks-allowlist.json"

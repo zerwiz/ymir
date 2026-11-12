@@ -213,10 +213,10 @@ if is_local_seat "$seat"; then
   CUDA_VISIBLE_DEVICES="${YMIR_VOICE_CUDA:-}" \
   YMIR_VOICE_HOST="$seat" YMIR_VOICE_HEAD_MODEL="$HEAD" \
   YMIR_VOICE_STT_DEVICE="${YMIR_VOICE_STT_DEVICE:-cpu}" YMIR_VOICE_STT_COMPUTE="${YMIR_VOICE_STT_COMPUTE:-int8}" \
-    "$ROOT/bin/voice/voice-door.sh" host 2>&1 | tail -1
+    "$ROOT/bin/voice/voice-door.sh" host --now 2>&1 | tail -1
 else
   ssh -o BatchMode=yes -o ConnectTimeout=6 "$seat" \
-    "cd ~/ymir && YMIR_VOICE_HEAD_MODEL='$HEAD' YMIR_VOICE_STT_DEVICE=cuda YMIR_VOICE_STT_COMPUTE=float16 ./bin/voice/voice-door.sh host" 2>&1 | tail -1
+    "cd ~/ymir && YMIR_VOICE_HEAD_MODEL='$HEAD' YMIR_VOICE_STT_DEVICE=cuda YMIR_VOICE_STT_COMPUTE=float16 ./bin/voice/voice-door.sh host --now" 2>&1 | tail -1
 fi
 
 # 3b · warm the head. The pipeline gives the model 20 s before it gives up
@@ -225,6 +225,11 @@ fi
 # So the head is woken with one word here, while nobody is waiting for a reply.
 warm_head() {
   local t0 t1 ms body url
+  # plan 271: loading a model on the rail is the heaviest thing this door does to the desk's GPU; during a
+  # call it is skipped (the first turn is slower, nothing breaks) unless he says "now".
+  if ! "$ROOT/bin/desk/in-call.sh" check --what "warming the head" 2>/dev/null; then
+    say "head not warmed" "a call holds the microphone — the first turn will be slower"; return 0
+  fi
   url="${YMIR_VOICE_HEAD_URL:-http://127.0.0.1:8080/v1}"
   t0=$(date +%s%N)
   body=$(curl -s --max-time 300 "$url/chat/completions" -H 'Content-Type: application/json' \
@@ -269,7 +274,7 @@ if [ "${1:-}" = "--headless" ] || [ "${RODD_HEADLESS:-0}" = "1" ]; then
       CUDA_VISIBLE_DEVICES="${YMIR_VOICE_CUDA:-}" \
       YMIR_VOICE_HOST="$seat" YMIR_VOICE_HEAD_MODEL="$HEAD" \
       YMIR_VOICE_STT_DEVICE="${YMIR_VOICE_STT_DEVICE:-cpu}" YMIR_VOICE_STT_COMPUTE="${YMIR_VOICE_STT_COMPUTE:-int8}" \
-        "$ROOT/bin/voice/voice-door.sh" host 2>&1 | tail -1
+        "$ROOT/bin/voice/voice-door.sh" host --now 2>&1 | tail -1
     fi
     seat_client
   fi
