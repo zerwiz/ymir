@@ -311,7 +311,7 @@ class OwedConversations(unittest.TestCase):
             mail("x1", "out", "2026-11-10T09:00:00+00:00", "Reset your Growth Agent password", ME,
                  {"name": "Sam", "email": "sam@example.net"}, "Click here. Questions?"),
             mail("x2", "out", "2026-11-10T09:00:00+00:00", "Do you want in?", ME,
-                 {"name": "T", "email": "verify.test.2026@example.no"}, "Do you want in?"),
+                 {"name": "T", "email": "probe.test@example.net"}, "Do you want in?"),
         ], drafts=[])
         self.assertFalse([p for p in comms.match_todo(todo.read_text(), None, days=14, live=True) if p["kind"] == "wait"])
 

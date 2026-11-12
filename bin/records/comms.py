@@ -769,7 +769,7 @@ def _closes(mails, todo_text, drafts):
 
 
 # A product's own mail (a password reset, an address to confirm) asks a user to click, not to answer;
-# and a test mailbox (verify.test.2026@…) or a reserved test domain has nobody to answer at all.
+# and a test mailbox (a local part with "test") or a reserved test domain has nobody to answer at all.
 TRANSACTIONAL = re.compile(r"\b(reset your|confirm your|verify your|your password|password reset|"
                            r"återställ|bekräfta din)\b", re.I)
 TEST_DOMAIN = re.compile(r"^[^@]*\btest\b[^@]*@|@(?:[\w-]+\.)*(?:test|invalid|localhost)$", re.I)
