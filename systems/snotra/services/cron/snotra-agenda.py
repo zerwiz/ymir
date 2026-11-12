@@ -10,7 +10,7 @@ WHAT IT DOES
     apply   <meeting-dir> [--date YYYY-MM-DD]   create/update the dated card in the place's agenda list
     verify  <meeting-dir> [--date YYYY-MM-DD]   is the card there, in the right list, with the right text
 
-WHERE IT GOES: the place's `lists.agenda` (Synteon: *Next Meeting Agenda*), by name through the board map.
+WHERE IT GOES: the place's `lists.agenda` (Example8: *Next Meeting Agenda*), by name through the board map.
 The date comes from `--date`, else the place's cadence (`monday_at` → the next such weekday).
 
 WHAT IS ON IT, in the room's order:

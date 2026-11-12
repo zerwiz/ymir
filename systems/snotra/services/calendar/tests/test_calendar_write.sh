@@ -117,7 +117,7 @@ PY
 # ── 4 · two matches is a refusal that lists them ────────────────────────────────────────────
 printf 'ambiguity is refused, never guessed\n'
 before="$(writes)"
-out="$(door move "OptiCat review" --to "2030-01-03 15:00" 2>&1)"; rc=$?
+out="$(door move "Example4 review" --to "2030-01-03 15:00" 2>&1)"; rc=$?
 [ "$rc" = 3 ] && pass "two matches is a refusal (exit 3)" || fail "two matches exited $rc, wanted 3"
 case "$out" in *ev-two-a*) pass "the refusal lists the first match" ;; *) fail "no list: $out" ;; esac
 case "$out" in *ev-two-b*) pass "the refusal lists the second match" ;; *) fail "no list: $out" ;; esac

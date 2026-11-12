@@ -25,8 +25,8 @@ voice.sh[5]{step,engine,note}:
 ## Measured
 
 ```
-skírnir (template)  → "OptiCat is a system for OVK …"            spoken by Kokoro
-skírnir (model leg) → "OptiCat is a system designed for OVK …"   qwen3.5-9b, digest-only context
+skírnir (template)  → "Example4 is a system for OVK …"            spoken by Kokoro
+skírnir (model leg) → "Example4 is a system designed for OVK …"   qwen3.5-9b, digest-only context
 kokoro              → 200 OK, 45 KB wav for one sentence         resident server, ~2 s of audio
 ```
 

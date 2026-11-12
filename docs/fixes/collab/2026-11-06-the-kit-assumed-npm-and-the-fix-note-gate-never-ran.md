@@ -50,7 +50,7 @@ refresh, which is the only place it could have been seen.
 
 ## What was NOT done
 
-- **Growth Agent and InvestReady were not re-standardised.** Their shelf is older by this fix; `--check` on
+- **Example9 and InvestReady were not re-standardised.** Their shelf is older by this fix; `--check` on
   either will report `differs` for the three hooks and the two guards, which is the signal, not a failure.
 - **No GitHub enforcement.** Branch protection still needs the paid plan; the hooks are the gate.
 

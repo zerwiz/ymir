@@ -8,7 +8,7 @@ Every project divides its work into areas — the database, multi-tenancy, ident
 money, the jobs. **Nothing recorded that the division had happened.** So an area nobody held looked
 exactly like an area that was finished: a decision about the tenant boundary was made by whoever
 happened to hold a frontend task, and no file anywhere said "multi-tenancy" was ever a question.
-Measured on day zero, in the first estate tried: Inmost's Control Tower is Elixir/Ash (35 resources
+Measured on day zero, in the first estate tried: Inmost's Example3 is Elixir/Ash (35 resources
 declare `multitenancy strategy(:attribute) attribute(:org_id) global?(false)`, 13 Ash domains), while
 the hoard's own stack plan still said Supabase + Next.js. Nobody held "data-model", so nobody noticed
 that the plan and the client's code described two different systems.
@@ -47,7 +47,7 @@ this note exists before the push.
 
 ## What was verified, on a real repository
 
-Inmost's Control Tower, `~/CodeP/Inmost-ControlTower`, working tree at `chore/collab-kit`:
+Inmost's Example3, `~/CodeP/Inmost-ControlTower`, working tree at `chore/collab-kit`:
 
 ```
 bash scripts/areas.sh init                    → 18 declarations, every one honestly unheld
@@ -76,6 +76,6 @@ it, so the change could not pass quietly.
 
 ## What is not done
 
-`areas/` is not yet in the ymir tree's own commit, Control Tower's branch is **not committed or
+`areas/` is not yet in the ymir tree's own commit, Example3's branch is **not committed or
 pushed** (the Allfather's word rules that), and the four repositories on 1.1.0 still need their
 one-branch, one-PR re-seat, theirs to merge.

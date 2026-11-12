@@ -12,7 +12,7 @@ agenda line or letter may contain it.
     "title": "Sync — Reygan, Craig",
     "started_at": "2026-10-22T23:18:00+03:00",
     "ended_at":   "2026-10-23T02:07:00+03:00",
-    "company": "synteon",              // → which place profile decides the shape
+    "company": "example-8",              // → which place profile decides the shape
     "place": "documentation",
     "chair": "Reygan Assareh",         // who sends the agenda and holds the register
     "conference_url": "https://meet.google.com/fyc-zooa-abr",   // the join key to the bot's store

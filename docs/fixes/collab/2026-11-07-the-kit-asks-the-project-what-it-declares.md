@@ -18,7 +18,7 @@ not those three, the hook printed *"checks[doctor] refused: npm run --silent che
 could not satisfy, on a project with nothing wrong.
 
 Found by installing the kit into four repositories on 2026-11-07. Three have no `package.json` at all and take
-the Elixir or skip lane (correct). The fourth, `Way-Of/ForemanAI`, declares `build`, `dev`, `lint`, `start`
+the Elixir or skip lane (correct). The fourth, `Way-Of/Example5`, declares `build`, `dev`, `lint`, `start`
 and the `db:*` scripts — **no `check`, no `typecheck`** — and would have had every commit refused.
 
 This is the same class of fault the kit fixed on 2026-11-06 (when the hooks asked npm on any machine that had

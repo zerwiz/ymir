@@ -125,7 +125,7 @@ else bad "ask ledger" "could not record an ask"; fi
 
 # ── 8 · Trello: resolve by name, never by id ─────────────────────────────────────────────────
 if [ -f "$H/hodd/identity/trello-map.yaml" ]; then
-  ARI="$(bash "$ROOT/systems/snotra/services/cron/trello-map.sh" --resolve "control tower" "in progress" 2>/dev/null)"
+  ARI="$(bash "$ROOT/systems/snotra/services/cron/trello-map.sh" --resolve "example-3" "in progress" 2>/dev/null)"
   case "$ARI" in ari:cloud:trello::list/*) ok "the Trello id resolves by name" ;;
     *) bad "trello resolve" "${ARI:-no answer}" ;; esac
 else

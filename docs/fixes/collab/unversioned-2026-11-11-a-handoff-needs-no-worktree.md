@@ -7,7 +7,7 @@ only handoffs don't need a new worktree. only code changes need a new worktree."
 
 Kit RULES/17 sent every change through a worktree and a pull request, and the kit's `pre-push` refused every push to
 `main`/`master`. A baton written at the end of a session therefore waited behind a pull request for the operator's
-merge, and the next hand read the old one. In the Growth Agent repository on 2026-11-11, the baton to the next
+merge, and the next hand read the old one. In the Example9 repository on 2026-11-11, the baton to the next
 developer had to be pushed past the hook by hand.
 
 ## What changed

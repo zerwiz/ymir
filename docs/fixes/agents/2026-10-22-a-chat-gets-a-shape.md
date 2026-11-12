@@ -4,7 +4,7 @@ Two of the audit's owed items, plus the Allfather's word on the ledger.
 
 ```
 fixed[3]{item,was,now}:
-  "his memory was six raw turns","no shape to a long conversation; a follow-up was a fresh question","every eight turns the chat is summarised into at most two sentences (names, dates, decisions kept; pleasantries dropped) into `chat-summaries.json`, and *'what did we talk about'* answers from it. Measured on a seeded chat: *'The Allfather requires the OptiCat protocol, template, and BBR list by Friday for the 10:00 Solna inspection. Craig's phase two deliverables remain under NDA…'*"
+  "his memory was six raw turns","no shape to a long conversation; a follow-up was a fresh question","every eight turns the chat is summarised into at most two sentences (names, dates, decisions kept; pleasantries dropped) into `chat-summaries.json`, and *'what did we talk about'* answers from it. Measured on a seeded chat: *'The Allfather requires the Example4 protocol, template, and BBR list by Friday for the 10:00 Solna inspection. Craig's phase two deliverables remain under NDA…'*"
   "a mangled asker name","`tell Isabell: …` (ASR) matched nothing and fell to the newest ask","fuzzy match on the first name (≥0.60), the NEWEST matching ask wins, and *her/him/them* means the newest — so a name heard through a microphone still reaches the right chat"
   "the ledger on a shelf","`--commit` only, nightly","the Allfather's word: **yes, and on pushes** — the nightly row is `--keep 7 --push`, and the home repo carries a `pre-push` hook that snapshots on every push (a hook commit lands on the NEXT push; run `--commit` first to ride the same one)"
 ```

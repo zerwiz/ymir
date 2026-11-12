@@ -114,7 +114,7 @@ def render(template: str, subject: str, body_html: str, preheader: str, footer: 
 def self_test() -> int:
     failures: list[str] = []
     body = "Hi Svein,\n\nA letter with a **bold** word and a link to https://example.com/a?b=1.\n\n- first\n- second\n\n# A heading\nAnd a closing line.\n"
-    page = render("leemunroe-simple", "A subject", blocks(body), "The preview line", "Growth Agent · sent from the house")
+    page = render("leemunroe-simple", "A subject", blocks(body), "The preview line", "Example9 · sent from the house")
     if "<h2" not in page or "<ul" not in page:
         failures.append("headings and lists are not rendered")
     if "This is preheader text" in page:
@@ -125,7 +125,7 @@ def self_test() -> int:
         failures.append("the template's powered-by credit survived")
     if "The preview line" not in page:
         failures.append("the caller's preheader did not reach the letter")
-    if "Growth Agent · sent from the house" not in page:
+    if "Example9 · sent from the house" not in page:
         failures.append("the caller's footer did not reach the letter")
     if '<a href="https://example.com/a?b=1"' not in page:
         failures.append("a bare URL was not linked")

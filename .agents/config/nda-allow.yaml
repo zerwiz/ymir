@@ -1,0 +1,39 @@
+# nda-allow.yaml — words the NDA gate would match that are fine in the public tree.
+#
+# The protected names are NEVER in this repository: they are read from the operator's home at run
+# time (bin/gates/guards/ndalib.py). This file holds only the opposite — words that appear in the home's
+# registries AND are public or ordinary English — and every entry carries its reason. An entry with no
+# reason is ignored. A real company, client or NDA-project name never belongs here.
+allow:
+  - word: work
+    reason: ordinary English; also the name of a shelf in the home
+  - word: personal
+    reason: ordinary English; also the name of a shelf in the home
+  - word: harness
+    reason: ordinary English, and the standard word for an agent harness
+  - word: command
+    reason: ordinary English
+  - word: orchestrator
+    reason: ordinary English
+  - word: observability
+    reason: ordinary English
+  - word: anchor
+    reason: ordinary English
+  - word: courses
+    reason: ordinary English
+  - word: synapse
+    reason: ordinary English
+  - word: wayof
+    reason: the house that publishes Ymir; named in the public contract (RULES/03)
+  - word: wayofteams
+    reason: the public control plane Ymir's daemon pairs with; named in the public contract
+  - word: whynotproductions
+    reason: the realm that owns Ymir itself; named in the public contract and every plan path
+  - word: gimle
+    reason: Ymir's own collaboration surface, a public product of this repository
+  - word: zerwiz.org
+    reason: the operator's own public domain, already the identity of this repository's owner
+  - word: whynot productions
+    reason: the spaced form of the realm that owns Ymir itself (see whynotproductions above)
+  - word: the-book
+    reason: ordinary English words; Ymir's own book shelf, not a client

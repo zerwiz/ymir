@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# commit-msg — the NDA gate over the commit message (RULES/04, 2026-11-12). A message is public once pushed.
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+[ -r "$root/bin/gates/guards/nda-guard.py" ] || exit 0
+python3 "$root/bin/gates/guards/nda-guard.py" message "$1" || { echo "commit-msg: the NDA gate refused this message." >&2; exit 1; }

@@ -20,5 +20,5 @@ the ward's real paths.
 
 **Two limits, said plainly:** a passage can be ragged where the page mixed navigation text with prose,
 and the site's "houses" (ventures: Ymir Labs, Brokk Forge, …) are a different set from the Allfather's
-companies (Whynot Productions, WayOf, Synteon) — both are in the digest, and the honest answer names
+companies (Whynot Productions, WayOf, Example8) — both are in the digest, and the honest answer names
 which one it is answering about.

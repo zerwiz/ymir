@@ -33,7 +33,7 @@ because the room mix contains it.
 - oracle: said *"The mouth carries these words into the room."* → recorded back → match 1.00 (peak 0.794).
 - the meeting's own recording (Vexa bot, 80 min) contains the spoken greeting.
 - TTFA **1.18 s** (806–1274 ms across runs); ASR 140–390 ms; digest answers in 0.23 s.
-- fuzzy subject: *"Skamer, what is Nutra?"* resolves to the OptiCat fact.
+- fuzzy subject: *"Skamer, what is Nutra?"* resolves to the Example4 fact.
 
 ### Not verified
 

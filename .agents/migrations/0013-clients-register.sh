@@ -2,7 +2,7 @@
 # 0013-clients-register — give an existing home the CLIENTS register: the companies it SERVES.
 #
 # Before this migration a client had nowhere to live in the home: the only client-shaped
-# realm it carried — inmostinvest — sat in `companies.yaml` as a house with its owner listed
+# realm it carried — example-2 — sat in `companies.yaml` as a house with its owner listed
 # among the members, the relationship living only in prose. This migration creates the
 # register from the shipped template when it is ABSENT, and does nothing else.
 #

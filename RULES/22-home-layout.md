@@ -54,7 +54,7 @@ Measured on 2026-10-13:
    misplaced document.
 3. **Company and project material in the operator's own shelf.** `hodd/life/marketing/`,
    `hodd/life/meetings/` and `hodd/life/work/` hold material belonging to a **company** or a
-   **project** — a WayOf/ForemanAI meeting, marketing for a company, and seven project notes
+   **project** — a WayOf/Example5 meeting, marketing for a company, and seven project notes
    (`investready-project.md`, `treasury-demo-project.md`, `wayofteams-tickets-ui-anatomy.md`).
    A company's material belongs in its company shelf; a project's, in the project's shelf.
 4. **Two things share one name.** `svartalfaheim/work/` is a **realm**; `hodd/life/work/` is a

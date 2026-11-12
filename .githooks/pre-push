@@ -38,6 +38,13 @@ YMIR_PREPUSH_BUDGET="$BUDGET" bash bin/gates/guards.sh || {
   exit 1
 }
 
+# 1b. the NDA gate over exactly what this push adds (RULES/04, 2026-11-12). It reads $YMIR_HOME, so it
+# can never be cached, and it says UNARMED aloud where no home resolves.
+python3 bin/gates/guards/nda-guard.py push <"$refs" || {
+  echo "pre-push: the NDA gate refused this push — a company, client or NDA-project name is in what it adds."
+  exit 1
+}
+
 # 2. the four that judge the PUSH rather than the tree. Each is under 0.1 s (measured
 # 2026-11-11), so they are not budgeted — a gate that can be timed out is a gate a slow
 # machine can walk through. branch-guard is first and unconditional: Rule 08 is not a

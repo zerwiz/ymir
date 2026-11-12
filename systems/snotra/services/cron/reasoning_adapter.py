@@ -223,7 +223,7 @@ class ReasoningAdapter:
 
     def classify(self, card_text: str, categories: list[str] | None = None) -> str:
         """Classify a card into a workstream board/list."""
-        cats = categories or ["patent", "vertical", "docs", "control-tower", "meetings"]
+        cats = categories or ["patent", "vertical", "docs", "example-3", "meetings"]
         system_prompt = (
             "You are a workstream classifier. Given a card's text, classify it into "
             "one of: " + ", ".join(cats) + ".\n\n"

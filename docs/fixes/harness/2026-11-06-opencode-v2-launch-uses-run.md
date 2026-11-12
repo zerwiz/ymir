@@ -6,7 +6,7 @@
 
 The spawn launched `opencode --model … --prompt "$(cat brief)"`. OpenCode v2.0.16 removed the top-level
 `--model` and `--prompt` shape: the pane answered `ERROR Unrecognized flag: --model in command opencode`, and
-every opencode seat died while the dispatcher printed `spawned`. Measured in the growth-agent UI errand: the
+every opencode seat died while the dispatcher printed `spawned`. Measured in the example-9 UI errand: the
 herdr seat-prove found no agent in the pane.
 
 ## Why

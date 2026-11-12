@@ -2,7 +2,7 @@
 
 ### Files
 - `bin/time/snotra/snotra-letter.py` — the ask and the note are **quoted from the record**
-- `hodd/identity/places/synteon/documentation/place.yaml` — `roles.operator` (the signer, distinct from the chair)
+- `hodd/identity/places/example-8/documentation/place.yaml` — `roles.operator` (the signer, distinct from the chair)
 
 ### What was wrong — seen in the operator's own inbox
 The Allfather read the test letter and said: *"is that email following the updates from the meeting we had. I see

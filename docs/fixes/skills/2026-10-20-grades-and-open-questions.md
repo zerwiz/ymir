@@ -17,7 +17,7 @@ follow-up instead of held as their own register.
 
 ### Verified
 
-- Synteon pilot: **10 decisions · 16 actions · 7 open questions (3 blocking)**;
+- Example8 pilot: **10 decisions · 16 actions · 7 open questions (3 blocking)**;
   11 documents rendered.
 
 ### Not verified

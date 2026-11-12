@@ -41,8 +41,8 @@ skew, and one shim of mine that crashed every response.
 
 - `apps/rodd/smoke.sh` — all stages PASS, the decisive line **`assistant audio arrived PASS 293,376 bytes`**,
   with a full spoken turn in the same run.
-- the toolbox — `{"ok": true, "tools": 15}`, and a real call: Gimlé's board `9 card(s) assigned · OPT·OptiCat 5
-  · GRW·Growth Agent 3 · INV·InvestReady 1`.
+- the toolbox — `{"ok": true, "tools": 15}`, and a real call: Gimlé's board `9 card(s) assigned · OPT·Example4 5
+  · GRW·Example9 3 · INV·InvestReady 1`.
 - the vision head — `gemma-4-12b-vision` (model + BF16 **mmproj**) answered **"Red"** for a 2×2 PNG sent as an
   image part; the camera is enabled again on that guard.
 - the errand gate — first `hand_over` answers *"NOT SENT — ask him"*; a confirm with a different task is

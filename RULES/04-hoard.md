@@ -392,3 +392,32 @@ matched nothing. **A ward that names what it forbids is the leak; a ward whose p
 Unmaking them is a history rewrite and the operator's decision — plan 171, phase 4.
 
 A change that contradicts this rule must change the rule first (append-only; never silently rewritten).
+
+## 2026-11-12 — company and client names are private data, and the NDA gate is the ward
+
+At the Allfather's word, after a collaborator's merge tool raised a security block on this repository: *"we cannot
+leak company information in Ymir's public repo."* An inventory of the operator's project folders had been committed
+by accident and no ward knew that it was private.
+
+**The rule.** The name of a company, a client or a project that belongs to either is private data, exactly as a
+secret or a person is. It never appears in this repository: not in code, a test, a fix note, a plan, a path, a
+commit message or a pull request body. The first law already said this; this entry names the case that no ward
+read.
+
+**The ward.** `bin/gates/guards/nda-guard.py`, one matcher (`ndalib.py`) used by every road:
+
+- the Claude Code write hook (`.claude/hooks/nda-write.sh`), before a write into the public tree;
+- `.githooks/pre-commit` over the staged diff, and `.githooks/commit-msg` over the message;
+- `.githooks/pre-push` over exactly what the push adds, and the ward in `bin/gates/guards.sh` over the tree.
+
+**Where the names come from.** Never from this repository. They are read at run time from `$YMIR_HOME`: every
+company and client in the registries, every project that is not Ymir's own or openly public, every non-public
+realm, and the `nda:` list in `hodd/identity/confidential.yaml` where the Allfather adds a name by hand. Matching
+is whole-word and case-insensitive. A word that is also ordinary English or already public goes in
+`config/nda-allow.yaml`, each with its reason. With no home the gate says `UNARMED` aloud; that is a fault on any
+seat that has a home, never a pass.
+
+**What it does not do.** It does not unmake history. A name already pushed stays in the commits that carried it
+until the Allfather decides on a rewrite (see the fix note `docs/fixes/gates/2026-11-12-the-nda-gate.md`).
+
+A change that contradicts this entry must change the rule first (append-only; never silently rewritten).

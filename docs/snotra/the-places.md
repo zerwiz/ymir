@@ -7,7 +7,7 @@ something, the cadence of its meetings, the roles, and how long its sound may li
 hodd/identity/places/<company>/<place>/place.yaml
 ```
 
-**Why a file and not code:** Synteon's meeting decided its board's shape (graded decisions, layered boards,
+**Why a file and not code:** Example8's meeting decided its board's shape (graded decisions, layered boards,
 the agenda as driver, reusable templates). Inmost Invest or Whynot Productions may want something else
 entirely. A door that carries one company's shape applies it to every company — so the shape is data, and
 the doors read it. **No company, board or list name appears in `systems/snotra/*.py`.**
@@ -16,8 +16,8 @@ the doors read it. **No company, board or list name appears in `systems/snotra/*
 
 ```yaml
 version: 1
-place: synteon/documentation
-company: synteon
+place: example-8/documentation
+company: example-8
 surface: trello            # trello | gimle | jira — a door that does not speak it REFUSES
 board: Documentation       # resolved by NAME through trello-map.yaml, never a typed id
 inherits: house-default
@@ -39,7 +39,7 @@ labels:                    # grade → colour; created on the board if missing
   "Question": sky
 
 meeting_card:              # one card per meeting on the company's meetings board
-  board: "Synteon — Meetings"
+  board: "Example8 — Meetings"
   list:  "Meetings"
 
 roles:
@@ -67,8 +67,8 @@ never:                     # laws, not preferences — the doors quote these
 
 | place | surface | board | decision list | action list | question list | agenda list |
 |---|---|---|---|---|---|---|
-| `synteon/documentation` | trello | Documentation | Decided / Resolved | Backlist Actions/Tasks | Open Questions | Next Meeting Agenda |
-| `whynotproductions/projects` | trello | Control Tower | Decided | Project Todos | Open Questions | Weekly Updates |
+| `example-8/documentation` | trello | Documentation | Decided / Resolved | Backlist Actions/Tasks | Open Questions | Next Meeting Agenda |
+| `whynotproductions/projects` | trello | Example3 | Decided | Project Todos | Open Questions | Weekly Updates |
 | `ymir/projects` | trello | **Ymir** | Decisions | Doing | Open Questions | Agenda |
 | `wayof/projects` | **gimle** | — | — | — | — | — |
 
@@ -92,9 +92,9 @@ ymir/board:INTRO` makes it idempotent like every other card.
 
 **A declared board is executable.** `snotra-board.sh check <place>` asks whether the board, its lists and its
 labels exist; `ensure` creates only what is missing, finds an unmapped board by name inside the organisation
-before creating anything (the duplicate "Control Tower" of 2026-10-22 is why), and refreshes the map. The smoke
+before creating anything (the duplicate "Example3" of 2026-10-22 is why), and refreshes the map. The smoke
 now checks **every** place's board, and it found two real drifts on the first run: Documentation was missing
-the `Blocking` label, and Control Tower was missing every grade label its profile names.
+the `Blocking` label, and Example3 was missing every grade label its profile names.
 
 ## The proof that the shape is not in the code
 

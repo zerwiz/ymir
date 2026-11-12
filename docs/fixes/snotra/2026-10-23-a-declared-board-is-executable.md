@@ -9,7 +9,7 @@
 
 ### What was wrong
 - **A place named a board that did not exist**, and the only way to make it was a click: the first projection
-  would fail, and a hand-made board is how two boards end up with the same name (the second "Control Tower",
+  would fail, and a hand-made board is how two boards end up with the same name (the second "Example3",
   2026-10-22).
 - **The doors scanned one shelf.** `svartalfaheim/<realm>/meetings/` only — so a meeting about the house's own
   work (`hodd/life/meetings/work/…`) was invisible to `--recent`, to the smoke and to the layout gate.
@@ -27,9 +27,9 @@
 - `snotra_paths.py` — the shelves: every realm's meetings, `hodd/life/meetings/*`, the shared workspace,
   overridable with `SNOTRA_MEETING_SHELVES`. `snotra-pipeline.sh --recent N` and `smoke.sh` both use it.
 - **Two real drifts caught by the new smoke check on its first run:** Documentation was missing its `Blocking`
-  label; Control Tower was missing every grade label its profile names. Both now `ensure`d; the smoke's first
+  label; Example3 was missing every grade label its profile names. Both now `ensure`d; the smoke's first
   version of the board check also counted *another* board's meeting list as this board's — fixed.
 
 ### The fault this door exists to stop, still visible
-The organisation holds **two** boards named `Control Tower`. They predate this work and are left untouched:
+The organisation holds **two** boards named `Example3`. They predate this work and are left untouched:
 reaping a duplicate is the Allfather's call, not a door's.

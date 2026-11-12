@@ -258,7 +258,7 @@ _STOP = {"the","a","an","is","are","was","were","what","who","why","how","does",
          "give","say","said","us","also","again"}
 
 
-SUBJECTS = {"opticat": ["opticat", "opti-cat", "opticad", "optica", "opticat's", "opticaat"],
+SUBJECTS = {"example-4": ["example-4", "opti-cat", "opticad", "optica", "example-4's", "opticaat"],
             "snotra": ["snotra", "snatra", "snotre", "nutra", "snorta", "snota"],
             "skirnir": ["skirnir", "skirmir", "skamer", "scurnier", "skirner"],
             "allfather": ["allfather", "all father", "our father", "alfather"],
@@ -269,8 +269,8 @@ SUBJECTS = {"opticat": ["opticat", "opti-cat", "opticad", "optica", "opticat's",
 def subject_of(heard: str):
     """Which of our subjects this question is about — tolerant of a mangled noun.
 
-    BEST distance wins, never first-hit: "Nutra" is SNOTRA (distance 2), not OptiCat, and
-    an earlier first-hit table answered the Allfather's Snotra question with OptiCat.
+    BEST distance wins, never first-hit: "Nutra" is SNOTRA (distance 2), not Example4, and
+    an earlier first-hit table answered the Allfather's Snotra question with Example4.
     """
     low = heard.lower()
     words = re.findall(r"[a-z]+", low)
@@ -294,7 +294,7 @@ def digest_match(heard: str, limit: int = 3) -> list[str]:
     """Facts the Allfather approved that answer THIS question.
 
     The intent table is a phrasebook; a question phrased differently ("tell me more about
-    OptiCat") walks past it. This is the retrieval door: token overlap over the approved
+    Example4") walks past it. This is the retrieval door: token overlap over the approved
     claims, best first, so a fact once approved can be spoken in any wording.
     """
     if not os.path.exists(DIGEST_JSONL):
@@ -303,7 +303,7 @@ def digest_match(heard: str, limit: int = 3) -> list[str]:
     if not q:
         return []
     # 1) a small deterministic pre-pass for the questions a meeting actually asks about
-    #    people and contact. Weights alone let the OptiCat record answer "how do I contact
+    #    people and contact. Weights alone let the Example4 record answer "how do I contact
     #    you" because it contains the word "contact" (measured). A map is honest.
     prefer = None
     if re.search(r"\b(contact|reach|get in touch|email|telegram|phone|call you|"
@@ -317,14 +317,14 @@ def digest_match(heard: str, limit: int = 3) -> list[str]:
         # the availability fact)
         guess = subject_of(heard)
         if guess:
-            prefer = {"opticat": r"^opticat is", "snotra": r"^snotra is",
+            prefer = {"example-4": r"^example-4 is", "snotra": r"^snotra is",
                       "skirnir": r"^sk[ií]rnir", "allfather": r"^the allfather is",
                       "ymir": r"^ymir is", "brokk": r"^brokk is"}[guess]
         for subject, pattern in (("snotra", r"^snotra is"),
                                  ("brokk", r"^brokk is"),
                                  ("allfather", r"^the allfather is"),
                                  ("ymir", r"^ymir is"),
-                                 ("opticat", r"^opticat is"),
+                                 ("example-4", r"^example-4 is"),
                                  ("ovk", r"^ovk records")):
             if re.search(rf"\b{subject}\b", heard, re.I):
                 prefer = pattern
@@ -346,7 +346,7 @@ def digest_match(heard: str, limit: int = 3) -> list[str]:
                   if re.match(prefer, str(f.get("claim", "")).strip(), re.I)]
         if chosen:
             return chosen[:limit]
-    # rare words decide the subject; "opticat" must outweigh "system"
+    # rare words decide the subject; "example-4" must outweigh "system"
     df: dict[str, int] = {}
     tokenised = []
     for fact in facts:
@@ -368,16 +368,16 @@ def digest_match(heard: str, limit: int = 3) -> list[str]:
         hit = sum(weight(t) for t in shared) / sum(weight(t) for t in q)
         claim = str(fact.get("claim", ""))
         # the fact whose SUBJECT is the question's subject wins: "The Allfather is …" for
-        # "who is the Allfather", "Snotra is …" for "what is Snotra", "OptiCat is …" first.
+        # "who is the Allfather", "Snotra is …" for "what is Snotra", "Example4 is …" first.
         words = [w for w in re.findall(r"[a-z0-9]+", claim.lower())]
         head = " ".join(words[:2])
         if head and head in heard.lower():
             hit += 0.5
-        if "opticat" in q and "opticat" in toks:
+        if "example-4" in q and "example-4" in toks:
             hit += 0.05
         # "how do I contact you / reach him / send a message" is about the CONTACT fact,
         # not about any claim that happens to contain the word "contact" (measured:
-        # "how do I contact you" answered with the OptiCat record)
+        # "how do I contact you" answered with the Example4 record)
         if re.search(r"\b(contact|reach|get in touch|message|email|telegram|phone|call)\b",
                      heard, re.I) and claim.lower().startswith("to reach"):
             hit += 0.7
@@ -609,7 +609,7 @@ class Voice:
             log(stage="asr", stt_ms=ms, rms=int(level), new=new[-80:] or "-")
             clean = re.sub(r"\[BLANK_AUDIO\]", "", text).strip()
             floor_open = (time.time() - self.addressed_at) < self.args.floor_window
-            subject = re.search(r"\b(opticat|opti-?cat|ovk|ymir|snotra|skirnir|wayof|way of|"
+            subject = re.search(r"\b(example-4|opti-?cat|ovk|ymir|snotra|skirnir|wayof|way of|"
                                 r"trello|meeting|calendar|ventilation|inspection)\b", clean, re.I)
             asked = "?" in clean or subject or re.match(r"^(what|who|why|how|when|where|can|"
                                                         r"could|would|do|does|is|are|tell)\b",
@@ -674,8 +674,8 @@ class Voice:
         """
         import queue
 
-        # address the QUESTION, not the greeting: "Skirnir, what is OptiCat?" must reach the
-        # digest as "what is OptiCat" (with the name in it the intent matcher misses and the
+        # address the QUESTION, not the greeting: "Skirnir, what is Example4?" must reach the
+        # digest as "what is Example4" (with the name in it the intent matcher misses and the
         # rail answers at length — measured 24.9 s of audio for one question)
         heard = re.sub(r"\b(sk[iy]?r?n?[aeiou]?r|scare\s*men|scream\s*it|skirm\w*)\b[,:]?\s*",
                        "", heard, flags=re.I).strip() or heard.strip()

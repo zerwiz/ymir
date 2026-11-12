@@ -77,7 +77,7 @@ or starting agents, load the sibling instead:
   (overview), `software-smidja-run.md` (how to run), `software-smidja-pi.md` /
   `software-smidja-opencode.md` (coding-agent setups), `software-smidja-visualizer.md`
   (trace UI), `SmidjaAgentsAndModels.md` (roster + model backends source of
-  truth, incl. reasoning/write-scope per agent), `wayoffactory-updates.md`.
+  truth, incl. reasoning/write-scope per agent), `example-7-updates.md`.
 
 ## Startup
 

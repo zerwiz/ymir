@@ -25,10 +25,10 @@ bad() { fail=$((fail+1)); printf 'FAIL %s — %s\n' "$1" "${2-}"; }
 
 T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
 H="$T/home"; ID="$H/hodd/identity"
-mkdir -p "$ID/places/opticat/projects" "$ID/places/wayof/projects" "$H/state"
+mkdir -p "$ID/places/example-4/projects" "$ID/places/wayof/projects" "$H/state"
 printf 'version: 1\ncompanies:\n  - id: wayof\n    name: WayOf\n' > "$ID/companies.yaml"
-printf 'version: 1\nclients:\n  - id: opticat\n    name: OptiCat\n    state: active\n    served_by: wayof\n' > "$ID/clients.yaml"
-printf 'place: opticat/projects\nclient_of: wayof\n' > "$ID/places/opticat/projects/place.yaml"
+printf 'version: 1\nclients:\n  - id: example-4\n    name: Example4\n    state: active\n    served_by: wayof\n' > "$ID/clients.yaml"
+printf 'place: example-4/projects\nclient_of: wayof\n' > "$ID/places/example-4/projects/place.yaml"
 printf 'place: wayof/projects\n' > "$ID/places/wayof/projects/place.yaml"
 export YMIR_HOME="$H"
 
@@ -37,32 +37,32 @@ YMIR_HOME="$H" bash "$PV" --all >/dev/null 2>&1 \
   && ok "a client place that names its serving house is accepted" \
   || bad "a client place that names its serving house is accepted"
 
-printf 'place: opticat/projects\n' > "$ID/places/opticat/projects/place.yaml"
+printf 'place: example-4/projects\n' > "$ID/places/example-4/projects/place.yaml"
 out="$(YMIR_HOME="$H" bash "$PV" --all 2>&1)"; rc=$?
 [ "$rc" -ne 0 ] && ok "a client place with no client_of is REFUSED" || bad "a client place with no client_of is REFUSED" "rc=$rc"
 printf '%s' "$out" | grep -q "declares no client_of" \
   && ok "…and the refusal names the missing field" || bad "…and the refusal names the missing field" "$out"
 
-printf 'place: opticat/projects\nclient_of: nowhere\n' > "$ID/places/opticat/projects/place.yaml"
+printf 'place: example-4/projects\nclient_of: nowhere\n' > "$ID/places/example-4/projects/place.yaml"
 YMIR_HOME="$H" bash "$PV" --all >/dev/null 2>&1 \
   && bad "a client_of naming no house is refused" "it passed" \
   || ok "a client_of naming no house is refused"
 
 # ── 2. a place that names a client beside no register is a refusal ────────────
-printf 'place: opticat/projects\nclient_of: wayof\n' > "$ID/places/opticat/projects/place.yaml"
+printf 'place: example-4/projects\nclient_of: wayof\n' > "$ID/places/example-4/projects/place.yaml"
 mv "$ID/clients.yaml" "$T/clients.yaml.bak"
 out="$(YMIR_HOME="$H" bash "$PV" --all 2>&1)"; rc=$?
 [ "$rc" -ne 0 ] && ok "an absent register beside a client place is REFUSED" || bad "an absent register beside a client place is REFUSED" "rc=$rc"
 printf '%s' "$out" | grep -q 'clients.yaml' \
   && ok "…and the refusal names the register file" || bad "…and the refusal names the register file" "$out"
-printf 'place: wayof/projects\n' > "$ID/places/opticat/projects/place.yaml"
+printf 'place: wayof/projects\n' > "$ID/places/example-4/projects/place.yaml"
 YMIR_HOME="$H" bash "$PV" --all >/dev/null 2>&1 \
   && ok "a shelf of houses resolves with no register at all" || bad "a shelf of houses resolves with no register at all"
-printf 'place: opticat/projects\nclient_of: wayof\n' > "$ID/places/opticat/projects/place.yaml"
+printf 'place: example-4/projects\nclient_of: wayof\n' > "$ID/places/example-4/projects/place.yaml"
 mv "$T/clients.yaml.bak" "$ID/clients.yaml"
 
 # ── 3. projects.yaml's optional client: field ─────────────────────────────────
-printf 'version: 1\nprojects:\n  - id: ovk\n    name: OVK\n    client: opticat\n  - id: ymir\n    name: Ymir\n' > "$ID/projects.yaml"
+printf 'version: 1\nprojects:\n  - id: ovk\n    name: OVK\n    client: example-4\n  - id: ymir\n    name: Ymir\n' > "$ID/projects.yaml"
 YMIR_HOME="$H" bash "$PJ" >/dev/null 2>&1 \
   && ok "a project's client: resolves against the register" || bad "a project's client: resolves against the register"
 printf 'version: 1\nprojects:\n  - id: ovk\n    name: OVK\n    client: nobody\n' > "$ID/projects.yaml"
@@ -74,27 +74,27 @@ printf '%s' "$out" | grep -q 'client=' \
 # ── 4. the register's own shape ───────────────────────────────────────────────
 YMIR_HOME="$H" bash "$CL" validate >/dev/null 2>&1 \
   && ok "a well-shaped register validates" || bad "a well-shaped register validates"
-printf 'version: 1\nclients:\n  - id: opticat\n    name: OptiCat\n    state: invented\n    served_by: wayof\n' > "$ID/clients.yaml"
+printf 'version: 1\nclients:\n  - id: example-4\n    name: Example4\n    state: invented\n    served_by: wayof\n' > "$ID/clients.yaml"
 out="$(YMIR_HOME="$H" bash "$CL" validate 2>&1)"; rc=$?
 [ "$rc" -ne 0 ] && ok "a register with an invented state is REFUSED" || bad "a register with an invented state is REFUSED" "rc=$rc"
 printf '%s' "$out" | grep -q 'state' && ok "…and the refusal names the field" || bad "…and the refusal names the field" "$out"
-printf 'version: 1\nclients:\n  - id: opticat\n    name: OptiCat\n    state: active\n    served_by: wayof\n' > "$ID/clients.yaml"
+printf 'version: 1\nclients:\n  - id: example-4\n    name: Example4\n    state: active\n    served_by: wayof\n' > "$ID/clients.yaml"
 
 # ── 5. the install's check mode is a RED, not a shrug ─────────────────────────
 if command -v timeout >/dev/null 2>&1; then TO="timeout 600"; else TO=""; fi
 good="$($TO env YMIR_HOME="$H" bash "$INSTALL" --check 2>/dev/null | grep '"clients"')"
 printf '%s' "$good" | grep -q '"clients","OK"' \
   && ok "install --check reports the resolved register" || bad "install --check reports the resolved register" "$good"
-printf 'place: opticat/projects\n' > "$ID/places/opticat/projects/place.yaml"
+printf 'place: example-4/projects\n' > "$ID/places/example-4/projects/place.yaml"
 row="$($TO env YMIR_HOME="$H" bash "$INSTALL" --check 2>/dev/null | grep '"clients"')"
 printf '%s' "$row" | grep -q '"clients","FAIL"' \
   && ok "install --check is a RED when a place's client_of cannot be resolved" \
   || bad "install --check is a RED when a place's client_of cannot be resolved" "$row"
-printf '%s' "$row" | grep -q 'opticat/projects/place.yaml' \
+printf '%s' "$row" | grep -q 'example-4/projects/place.yaml' \
   && ok "…and the red names the file" || bad "…and the red names the file" "$row"
 $TO env YMIR_HOME="$H" bash "$INSTALL" --check >/dev/null 2>&1
 [ "$?" -ne 0 ] && ok "…and the install exits non-zero" || bad "…and the install exits non-zero"
-printf 'place: opticat/projects\nclient_of: wayof\n' > "$ID/places/opticat/projects/place.yaml"
+printf 'place: example-4/projects\nclient_of: wayof\n' > "$ID/places/example-4/projects/place.yaml"
 
 # ── 6. migration 0013 — create, never edit, idempotent ────────────────────────
 SEED="$T/mig"; mkdir -p "$SEED/home/hodd/identity" "$SEED/home/state"

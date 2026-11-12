@@ -22,7 +22,7 @@ written down that Gná (the mail desk) must never grow a send path of her own. A
 
 ```bash
 # 1. compose it. This creates a Gmail DRAFT and sends nothing.
-systems/snotra/services/letters/mail-send.sh draft --to partner@example.com --subject "OptiCat review" --body letter.md
+systems/snotra/services/letters/mail-send.sh draft --to partner@example.com --subject "Example4 review" --body letter.md
 
 #    the door answers:  draft   r-1234567890   /tmp/....eml
 
@@ -49,7 +49,7 @@ Google mails every attendee the moment an event is made, so the door mails **nob
 
 ```bash
 # 1. ask for it. With attendees and no word, this REFUSES and posts nothing:
-systems/snotra/services/calendar/calendar-invite.sh create --title "OptiCat review" \
+systems/snotra/services/calendar/calendar-invite.sh create --title "Example4 review" \
     --start 2026-10-30T10:00:00 --end 2026-10-30T10:30:00 --attendees partner@example.com
 #    → calendar-invite: REFUSED — nothing was posted and no attendee was mailed.
 #      the body is held at …/approvals/pending/evt-2026_10_30T10_00_00.json

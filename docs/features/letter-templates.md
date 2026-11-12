@@ -21,7 +21,7 @@ same way, by the same renderer, so the house does not send two kinds of mail.
 
     systems/snotra/services/letters/mail-send.sh draft \
       --to someone@example.com --subject "Your suite is open" \
-      --body /tmp/letter.md --footer "Growth Agent · sent from the house"
+      --body /tmp/letter.md --footer "Example9 · sent from the house"
 
 That is the whole call. `--plain` sends the bare words on purpose (a machine-to-machine note needs no typeface).
 `--template NAME` picks another renderer-supported layout — today only `leemunroe-simple` is re-renderable, and any

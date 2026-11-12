@@ -70,9 +70,9 @@ tells you the one command that fixes a credential gap.
 under your home, never in the Ymir tree:
 
 ```bash
-bin/forge/mjollnir.sh clone ndroi          # lands in $YMIR_HOME/halls/<owner>/<repo>
-bin/forge/mjollnir.sh clone ndroi --dir ~/CodeP/ndroi
-bin/agents/project-git.sh ndroi --field path   # where the tree is (or refuses)
+bin/forge/mjollnir.sh clone example-10          # lands in $YMIR_HOME/halls/<owner>/<repo>
+bin/forge/mjollnir.sh clone example-10 --dir ~/CodeP/example-10
+bin/agents/project-git.sh example-10 --field path   # where the tree is (or refuses)
 ```
 
 It refuses to clone over an existing tree, refuses a destination inside the Ymir repo, and refuses a

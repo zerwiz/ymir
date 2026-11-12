@@ -27,9 +27,9 @@ skipped, so a second run adds nothing.
 
 - `Inmost-ControlTower`'s baton yields **9 cards** (5 next, 4 blocked) — and the parser needed ordered lists as
   well as bullets, because a baton's "what is next" is usually numbered.
-- The project guard printed the whole Board rather than guessing: `AIGeeks Freaks, AssetVault, ChatCollab, Command,
+- The project guard printed the whole Board rather than guessing: `AIGeeks Freaks, Example11, Example12, Command,
   Courses Astro teaching site, Gimle, Hlidskjalf, Hlidskjalf Mobile, Moved to WayOf, Sessrúmnir, Smíðja factory,
-  The Book — Hidden Knowledge Workshop, Ymir, Ymir Home Hodd, Ymir Homepage, whynotproductions, Óðrerir`.
+  Example13, Ymir, Ymir Home Hodd, Ymir Homepage, whynotproductions, Óðrerir`.
 - **Cloudflare answers 1010 to a bare `Python-urllib` agent** on `board.zerwiz.org`; a plain `User-Agent` is the
   whole fix. A 403 that looks like an auth failure was a bot check.
 

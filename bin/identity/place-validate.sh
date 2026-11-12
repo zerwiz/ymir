@@ -153,19 +153,19 @@ self_test() {
   local h="$t/home" pass=0 fail=0
   ok()  { pass=$((pass+1)); printf 'ok   %s\n' "$1"; }
   bad() { fail=$((fail+1)); printf 'FAIL %s — %s\n' "$1" "${2-}"; }
-  mkdir -p "$h/hodd/identity/places/opticat/projects" "$h/hodd/identity/places/wayof/projects"
+  mkdir -p "$h/hodd/identity/places/example-4/projects" "$h/hodd/identity/places/wayof/projects"
 
   printf 'version: 1\ncompanies:\n  - id: wayof\n    name: WayOf\n' > "$h/hodd/identity/companies.yaml"
-  printf 'version: 1\nclients:\n  - id: opticat\n    name: OptiCat\n    state: active\n    served_by: wayof\n' \
+  printf 'version: 1\nclients:\n  - id: example-4\n    name: Example4\n    state: active\n    served_by: wayof\n' \
     > "$h/hodd/identity/clients.yaml"
 
-  local place="$h/hodd/identity/places/opticat/projects/place.yaml"
-  printf 'place: opticat/projects\nclient_of: wayof\n' > "$place"
+  local place="$h/hodd/identity/places/example-4/projects/place.yaml"
+  printf 'place: example-4/projects\nclient_of: wayof\n' > "$place"
   YMIR_HOME="$h" bash "$0" "$place" >/dev/null 2>&1 \
     && ok "a client place that names its serving house is accepted" \
     || bad "a client place that names its serving house is accepted"
 
-  printf 'place: opticat/projects\n' > "$place"
+  printf 'place: example-4/projects\n' > "$place"
   if out="$(YMIR_HOME="$h" bash "$0" "$place" 2>&1)"; then
     bad "a client place with no client_of is refused" "it was accepted"
   else
@@ -174,7 +174,7 @@ self_test() {
       || bad "…and the sentence names the missing field" "$out"
   fi
 
-  printf 'place: opticat/projects\nclient_of: nowhere\n' > "$place"
+  printf 'place: example-4/projects\nclient_of: nowhere\n' > "$place"
   YMIR_HOME="$h" bash "$0" "$place" >/dev/null 2>&1 \
     && bad "a client_of naming no house is refused" "it was accepted" \
     || ok "a client_of naming no house is refused"
@@ -184,7 +184,7 @@ self_test() {
     && bad "--all refuses a shelf that carries one refused place" "it passed" \
     || ok "--all refuses a shelf that carries one refused place"
 
-  printf 'place: opticat/projects\nclient_of: wayof\n' > "$place"
+  printf 'place: example-4/projects\nclient_of: wayof\n' > "$place"
   YMIR_HOME="$h" bash "$0" --all >/dev/null 2>&1 \
     && ok "--all resolves a shelf whose places all resolve" \
     || bad "--all resolves a shelf whose places all resolve"
@@ -198,7 +198,7 @@ self_test() {
       || bad "…and the refusal names the register file" "$out"
   fi
   printf 'place: wayof/projects\n' > "$h/hodd/identity/places/wayof/projects/place.yaml"
-  printf 'place: opticat/projects\n' > "$place"
+  printf 'place: example-4/projects\n' > "$place"
   YMIR_HOME="$h" bash "$0" --all >/dev/null 2>&1 \
     && ok "a shelf of houses resolves with no register at all" \
     || bad "a shelf of houses resolves with no register at all"

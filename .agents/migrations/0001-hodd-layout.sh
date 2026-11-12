@@ -20,7 +20,7 @@ for f in masterplan.md append-only-log.md; do move "$ROOT/docs/$f" "$HOARD/docs"
 move "$ROOT/docs/plans" "$HOARD/docs"
 
 # Private project data
-for f in "$ROOT"/assets/data/aigf-*.md; do [ -e "$f" ] && move "$f" "$HOARD/docs/aigf"; done
+for f in "$ROOT"/assets/data/example-1-*.md; do [ -e "$f" ] && move "$f" "$HOARD/docs/example-1"; done
 
 # Business identity
 move "$ROOT/svartalfaheim/wayof/AGENTS.md" "$HOARD/identity/svartalfaheim/wayof"

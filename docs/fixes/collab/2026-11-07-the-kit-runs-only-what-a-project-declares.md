@@ -9,8 +9,8 @@ installed on the machine** — not whenever **the project declared the script**.
 node for its own sake, that made the hook a lockout in every repository without npm:
 
 - the three Elixir repositories the kit was installed into on 2026-11-07 (`Inmost-ControlTower`,
-  `ForemanAI-Elixir`, `wayof-coe`) have **no `package.json` at all**;
-- `ForemanAI` has one, and declares `build`, `dev`, `lint`, `start`, the `db:*` scripts — **no `check`, no
+  `Example14`, `wayof-coe`) have **no `package.json` at all**;
+- `Example5` has one, and declares `build`, `dev`, `lint`, `start`, the `db:*` scripts — **no `check`, no
   `typecheck`**.
 
 Measured, in every one of the four: `npm run --silent check` → `exit 254`, and `pre-commit` printed *"a ward
@@ -47,9 +47,9 @@ From the branch that carries this fix, against the four installed repositories:
 ```
 measured[4]{repo,declares,result}:
   "Inmost-ControlTower","nothing (no package.json)","pre-commit exits 0 — the baton check is the project's own gate"
-  "ForemanAI-Elixir","nothing (no package.json)","pre-commit exits 0"
+  "Example14","nothing (no package.json)","pre-commit exits 0"
   "wayof-coe","nothing (no package.json)","pre-commit exits 0"
-  "ForemanAI","package.json, no check/typecheck/test","pre-commit exits 0; the project's own lint stays its own"
+  "Example5","package.json, no check/typecheck/test","pre-commit exits 0; the project's own lint stays its own"
 ```
 
 `bash bin/collab/tests/test_collab.sh` — **22 passed, 0 failed**.

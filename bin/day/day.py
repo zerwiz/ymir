@@ -231,7 +231,7 @@ def calendar_fact() -> dict:
 
 
 def evidence_fact() -> dict:
-    doc = home() / "svartalfaheim/inmostinvest/docs/what-we-are-better-at.md"
+    doc = home() / "svartalfaheim/example-2/docs/what-we-are-better-at.md"
     gate = repo_root() / "bin/collab/kit/scripts/advantage-audit.sh"
     if not doc.is_file():
         return {"unable": "no client-facing claims document"}

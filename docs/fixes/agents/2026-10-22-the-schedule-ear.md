@@ -14,10 +14,10 @@ fixed[2]{fault,now}:
 
 **And a match that had to be tightened, not loosened.** The squashed-token rule — the one that makes
 *"whynotproductions"* meet *"Whynot Productions"* — was matching any word of eight letters or more, so
-*"how many plans are there"* found *"he plans"* and *"what is the OptiCat deadline"* found *"a deadline
+*"how many plans are there"* found *"he plans"* and *"what is the Example4 deadline"* found *"a deadline
 moves"*. It now applies only when the token **spans a word boundary**: two words run together, never one
 word with the token inside it. Three wall assertions had gone red; they are green again.
 
 **Verified:** `walls-test` holds (33) · *'what are <his name> working on'*, *'what are he doing now'*,
-*'when are he free for a meeting'* all read the calendar · *'what is the OptiCat deadline'* and
+*'when are he free for a meeting'* all read the calendar · *'what is the Example4 deadline'* and
 *'how many plans are there'* are the honest no again.

@@ -111,7 +111,7 @@ PY
 
     # Resolve the hoard paths. Two roots, and never one for the other: the identity
     # registers live under <home>/hodd/identity, while a REALM lives at <home>/<realm>
-    # (`svartalfaheim/opticat`) — a client names its realm by that path, so joining a
+    # (`svartalfaheim/example-4`) — a client names its realm by that path, so joining a
     # realm onto the hodd root would refuse every client on a healthy home.
     HOARD="${YMIR_HOME:-}/hodd"
     HOME_ROOT="${YMIR_HOME:-}"

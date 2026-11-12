@@ -7,7 +7,7 @@
 #
 # WHY: the workspace is a real place with boards that carry different jobs — Documentation, Control
 # Tower, Meetings, Patent, Vertical Comparison. A system that projects into it must first KNOW it, or
-# it creates a second "Control Tower" (measured 2026-10-22: it did exactly that).
+# it creates a second "Example3" (measured 2026-10-22: it did exactly that).
 #
 # Uses the same OAuth grant `snotra-trello.py` uses (mcp-auth.json), never a second credential.
 set -u

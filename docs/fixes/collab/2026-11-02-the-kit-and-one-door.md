@@ -22,7 +22,7 @@ the local rule is a raid, and the next hand would not know which version they we
 
 ## What was found while doing it
 
-- **Growth Agent had no `pr-guard.sh` and no hook line calling one.** The guard was written, documented in `AGENTS.md`, and never
+- **Example9 had no `pr-guard.sh` and no hook line calling one.** The guard was written, documented in `AGENTS.md`, and never
   committed, so the claim in its own contract was false. Fixed in that repository (PR #23), not here.
 - **InvestReady carries 10 of 16 files** — six absent because it was standardised before `RULES/15–17` existed.
 - Two wards bit on the new kit and both were answered at the source: a doc that named a path that does not resolve in this tree, and a
@@ -62,6 +62,6 @@ Files: `bin/collab/kit/**` · `bin/collab/standardise.sh` · `bin/collab/collab.
 
 ## Correction, appended 2026-11-02
 
-This note said the missing pull-request guard in Growth Agent was "fixed in that repository (PR #23)". **That number was a guess made
+This note said the missing pull-request guard in Example9 was "fixed in that repository (PR #23)". **That number was a guess made
 before the pull request existed, and it was wrong.** The fix is committed on `deploy/2026-11-03` and is **PR #22** there; **#23** is a
 later, unrelated change (the three source adapters). A number in a note is a citation — it is written after the thing exists, never before.

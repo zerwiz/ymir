@@ -231,3 +231,8 @@ bin/data/
 /.agents/backend/README.md
 /.agents/assets/agents/capabilities.md
 /.agents/assets/agents/capabilities/
+
+# an inventory of the operator's machine is private data: it belongs in $YMIR_HOME, never the repo (RULES/04, 2026-11-12)
+/home-*.txt
+/*-inventory.txt
+/*-inventory.md

@@ -5,7 +5,7 @@
 ## What was wrong
 
 The collaboration kit gave a repository its baton, fix notes, gates and areas, and nothing about the *state of
-its documents and plans*. ForemanAI proved the missing pieces first (branch `agent/claude-process`): a status
+its documents and plans*. Example5 proved the missing pieces first (branch `agent/claude-process`): a status
 script that reads headers, a header format, a rule that no implementation precedes a validated plan, and a
 tickets shelf under it. The operator's words (2026-11-11): *"plan, validate plan, then execute. no
 implementations before validations are proven"* and *"tickets are not validated plans. there can be several

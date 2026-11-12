@@ -289,7 +289,7 @@ TOOLS = [
         "parameters": {
             "type": "object",
             "properties": {
-                "title": {"type": "string", "description": "a short title, e.g. 'Control Tower architecture with Craig'"},
+                "title": {"type": "string", "description": "a short title, e.g. 'Example3 architecture with Craig'"},
                 "steps": {"type": "array", "items": {"type": "string"}, "description": "the numbered steps, one action each"},
                 "agent": {"type": "string", "description": "who would do it (sindri, bragi, huginn …)"},
             },
@@ -942,7 +942,7 @@ async def _execute(name, arguments):
                 "    r=urllib.request.Request(base+p, headers={'X-Api-Key':tok})\n"
                 "    return json.loads(urllib.request.urlopen(r, timeout=20).read())\n"
                 "def rows(d): return d if isinstance(d,list) else d.get('results',[])\n"
-                "slugs=[s for s in os.environ.get('GIMLE_PLANE_WORKSPACES','wayof,opticat,synteon,whynotproductions,ymirhome').split(',') if s]\n"
+                "slugs=[s for s in os.environ.get('GIMLE_PLANE_WORKSPACES','wayof,example-4,example-8,whynotproductions,ymirhome').split(',') if s]\n"
                 f"want=str({str(arguments.get('workspace') or '')!r}).lower()\n"
                 "total=0\n"
                 "for slug in slugs:\n"

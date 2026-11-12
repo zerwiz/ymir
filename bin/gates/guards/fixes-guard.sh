@@ -48,6 +48,10 @@ case "${1-}" in
       exit 1
     fi
     cp "$SRC" "$H" && chmod +x "$H" || exit 1
+    # the NDA gate's two hooks (RULES/04, 2026-11-12) ride the same install
+    for extra in pre-commit commit-msg; do
+      [ -r "$ROOT/.githooks/$extra" ] && cp "$ROOT/.githooks/$extra" "$(dirname "$H")/$extra" && chmod +x "$(dirname "$H")/$extra"
+    done
     printf 'fixes-guard[1]{gate,result}:\n  "hook","installed from .githooks/pre-push at %s"\n' "${H#"$ROOT"/}"
     exit 0 ;;
   --check) ;;

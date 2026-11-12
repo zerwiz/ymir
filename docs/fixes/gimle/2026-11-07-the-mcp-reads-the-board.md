@@ -21,7 +21,7 @@ box, with the same token directory, rendered `9 card(s) assigned` through `plane
 token and the reader were all fine, and only one face of the hall had never been wired to them.
 
 It is worse than an unfilled gap, and this is the part that had to be named: **six tokens seat five
-collaborators** with real place columns (`OptiCat`, `Growth`, `InvestReady`, `WayOf`, `Synteon`, `Michael`), and
+collaborators** with real place columns (`Example4`, `Growth`, `InvestReady`, `WayOf`, `Example8`, `Michael`), and
 every one of them would have counted zero with nothing saying why. A door that refuses everything for the wrong
 reason cannot be told from a door that works.
 
@@ -32,7 +32,7 @@ reason cannot be told from a door that works.
    `<workspace>/<project>` a token saying `Ymir` no longer matched its own project. Scope is now the resolved
    project **id**, compared by identity.
 3. **`my_tasks` ignored scope entirely.** It used `board_for()`, which reads every workspace for the desk where
-   the person *is* the scope. Handed an OptiCat-only token, it returned a Ymir card. Cards are now filtered to
+   the person *is* the scope. Handed an Example4-only token, it returned a Ymir card. Cards are now filtered to
    the places on the token.
 4. **Two tokens for one subject silently revoked the first.** The token file was read into a dict keyed by
    subject, so the last line won. Found by this change's own self-test, which is why the self-test exists.
@@ -62,7 +62,7 @@ reason cannot be told from a door that works.
 Proved on the **real** board on the heart, from a scratch copy on a spare port, the live service untouched:
 
 ```
-subject A · who_am_i    → allowed_places: wayof/WayOf · synteon/ForemanAI · opticat/OptiCat · wayof/Growth Agent · wayof/InvestReady
+subject A · who_am_i    → allowed_places: wayof/WayOf · example-8/Example5 · example-4/Example4 · wayof/Example9 · wayof/InvestReady
 subject A · list_places → open: 7 · 0 · 24 · 25 · 9      (65 real cards)
 subject B · place_board → 24 cards, its own state names (Todo …), real titles
 create_card on a read-only unit → refused, and the audit line carries the reason

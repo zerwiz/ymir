@@ -38,7 +38,7 @@ bash bin/agents/skill-find.sh --check                      # duplicates, unfinda
 |---|---|---|
 | 1 | `.agents/skills/` | **ships** with the repo and the npm package — the project's craft |
 | 2 | `.agents/skills-local/` | **this machine only.** Gitignored, never published, never cloned |
-| 3 | `~/Documents/ymirhome/.agents/skills/` | **the Allfather's own projects** — `aigf` and the rest of the business |
+| 3 | `~/Documents/ymirhome/.agents/skills/` | **the Allfather's own projects** — `example-1` and the rest of the business |
 | 4 | `~/.pi/agent/skills/` | yours, harness-wide, across projects |
 
 **A shipped skill always beats a local one on purpose.** The project's craft

@@ -13,7 +13,7 @@ export YMIR_HOME="$TMP/home"; mkdir -p "$YMIR_HOME/hodd/state/calendar"
 export AUTOJOIN_NOW="2026-10-20T09:00:00+03:00" AUTOJOIN_WINDOW_HOURS=24 AUTOJOIN_MAX_PER_RUN=3
 cat > "$TMP/events.json" <<'JSON'
 {"events":[
- {"id":"m1","summary":"Synteon roadmap","start":"2026-10-20T10:00:00+03:00","end":"2026-10-20T11:00:00+03:00","status":"confirmed","busy":true,"conference_url":"https://meet.google.com/abc-defg-hij","workspace":"work","account":"work"},
+ {"id":"m1","summary":"Example8 roadmap","start":"2026-10-20T10:00:00+03:00","end":"2026-10-20T11:00:00+03:00","status":"confirmed","busy":true,"conference_url":"https://meet.google.com/abc-defg-hij","workspace":"work","account":"work"},
  {"id":"m2","summary":"Declined call","start":"2026-10-20T11:00:00+03:00","end":"2026-10-20T11:30:00+03:00","status":"confirmed","busy":true,"conference_url":"https://meet.google.com/x","workspace":"work","self_response":"declined"},
  {"id":"m3","summary":"No link","start":"2026-10-20T12:00:00+03:00","end":"2026-10-20T12:30:00+03:00","status":"confirmed","busy":true,"workspace":"work"},
  {"id":"m4","summary":"Dentist","start":"2026-10-20T13:00:00+03:00","end":"2026-10-20T13:30:00+03:00","status":"confirmed","busy":true,"conference_url":"https://meet.google.com/y","workspace":"personal"},

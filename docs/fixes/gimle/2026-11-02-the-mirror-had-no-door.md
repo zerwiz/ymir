@@ -4,8 +4,8 @@
 
 ## What was wrong
 
-The one sync that exists, `gimle-mirror.timer`, copies eight named documents from Growth Agent into
-`~/gimle/desk/data/docs/growth-agent/` every hour and reports `mirrored 9 files`. Nothing served that
+The one sync that exists, `gimle-mirror.timer`, copies eight named documents from Example9 into
+`~/gimle/desk/data/docs/example-9/` every hour and reports `mirrored 9 files`. Nothing served that
 directory. Asking the hall for a mirrored file returned **200 with the login page** — the SPA fallback
 answering for a path that does not exist on its own root. So the synchronization ran, proved itself in the
 journal, and produced files **no person could read**: the greenest possible nothing (Rule 37).
@@ -50,7 +50,7 @@ second idea about who may read what.
 - The desk's **places** frame should list the mirrored documents per project, so a person finds them without
   knowing a URL. That is a render change, and it belongs with this one.
 - The mirror itself covers one project. `bin/gimle/deploy.sh` made the code a version; the mirror is still a
-  hand-written list of eight paths in Growth Agent's script.
+  hand-written list of eight paths in Example9's script.
 
 ## Same change: the register
 

@@ -78,13 +78,13 @@ One core, many faces — no duplicate implementations.
 ## Open questions for you
 
 1. Does the "hygiene-out" positioning resonate with how you'd describe it to
-   the Synteon team?
+   the Example8 team?
 2. Are there specific board truth metrics you'd want to see that we haven't
    listed?
 3. For the identity matching — would you prefer a manual mapping table or
    automatic speaker-to-user resolution?
 4. Forge-first or standalone-first? You recommended Forge. We're following that.
-5. Does the module/add-on model make sense for Synteon's roadmap?
+5. Does the module/add-on model make sense for Example8's roadmap?
 
 Looking forward to your thoughts.
 

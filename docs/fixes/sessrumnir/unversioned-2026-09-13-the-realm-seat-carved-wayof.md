@@ -15,7 +15,7 @@
   seat; `bin/time/saga-session-start.sh` stage 6 (context digest) now prints
   `--- hood ---` whole from the realm seat, so a session opens knowing the
   operator's holdings. Living overviews: `workspace/company/wayof-overview.md`
-  and `workspace/company/aigf.md` (hodd stays the private store; the realm
+  and `workspace/company/example-1.md` (hodd stays the private store; the realm
   points at it).
 - **Verified:** `bash -n` green; realm-lib resolves `wayof`; `realm env:
   present`.

@@ -4,7 +4,7 @@
 
 ## What was wrong
 
-While finishing the kit I wrote, in a fix note, that Growth Agent's missing pull-request guard had been "fixed in that repository (PR #23)".
+While finishing the kit I wrote, in a fix note, that Example9's missing pull-request guard had been "fixed in that repository (PR #23)".
 At the moment of writing, **neither pull request existed**; #22 turned out to be the guard fix and **#23** an unrelated change. The note was
 wrong within the hour, and wrong in the worst way — it read as a verified citation.
 

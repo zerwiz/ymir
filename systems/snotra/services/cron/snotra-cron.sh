@@ -92,7 +92,7 @@ grooming() {
 }
 
 card_moves() {
-  for board in "Synteon — Meetings" "Documentation"; do
+  for board in "Example8 — Meetings" "Documentation"; do
     bash "$ROOT/bin/time/snotra/snotra-card-moves.sh" watch "$board" >>"$LOG" 2>&1 || true
   done
   log "card moves complete"

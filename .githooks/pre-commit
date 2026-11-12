@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# pre-commit — the NDA gate over the staged diff (RULES/04, 2026-11-12). Company, client and NDA-project
+# names are private data; a commit that adds one is refused with the file and line. The names are read from
+# $YMIR_HOME at run time. The commit MESSAGE is judged by .githooks/commit-msg, because git gives pre-commit
+# no message to read.
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+[ -r "$root/bin/gates/guards/nda-guard.py" ] || exit 0
+python3 "$root/bin/gates/guards/nda-guard.py" staged || { echo "pre-commit: the NDA gate refused this commit — see the lines above." >&2; exit 1; }
