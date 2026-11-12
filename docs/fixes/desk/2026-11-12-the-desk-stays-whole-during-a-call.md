@@ -23,3 +23,7 @@ and it did not cover anything else the helm starts at the desk.
 
 The guard sees a call only as a capture stream. A call that is listening but not capturing (muted at the
 source) is invisible to it.
+
+## CHANGE LOG
+
+- **2026-11-12** — written by its errand; change-log section added at the gather.

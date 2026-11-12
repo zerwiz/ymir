@@ -43,3 +43,7 @@ when the helm chooses.
 `npx tsx tests/house-agents.mts` (a throwaway home, database and engines folder): a new bot carries the five house doors,
 its `hq` door and the house toolsets; its soul names its own role and the home's house and operator; a restart leaves the
 config and soul byte-identical; its own soul lines survive; an old bot is brought up to date.
+
+## CHANGE LOG
+
+- **2026-11-12** — written by its errand; change-log section added at the gather.

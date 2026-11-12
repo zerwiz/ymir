@@ -24,3 +24,7 @@ Nothing that is not provably a Bilskirnir process is ever killed. An unreadable 
 `apps/bilskirnir/tests/start-owns-ports.sh` runs a copy of `start.sh` against stub servers on free ports: a stranger
 is refused and named and left alive, a sibling tree is lowered, our own server with the face is kept, and an answering
 server without the face is refused. All eleven checks pass.
+
+## CHANGE LOG
+
+- **2026-11-12** — written by its errand; change-log section added at the gather.

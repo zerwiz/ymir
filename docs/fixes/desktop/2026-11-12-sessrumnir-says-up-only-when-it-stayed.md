@@ -24,3 +24,7 @@ The real death was not reproduced. Two headless runs were tried and crashed for 
 do with the app (`--ozone-platform=headless` segfaults even a trivial Electron window), so they prove nothing.
 The next real death will now name itself in the log. Proof of the launcher logic is on a stand-in:
 `bin/desktop/tests/test_sessrumnir_stays.sh`.
+
+## CHANGE LOG
+
+- **2026-11-12** — written by its errand; change-log section added at the gather.

@@ -37,3 +37,7 @@ live call now raises the loss path.
 
 Proof: the same smoke test, on a virtual clock (no engine, no window, no audio device). Not proven: the
 30-minute unplug test of B2e, which needs the operator's desk.
+
+## CHANGE LOG
+
+- **2026-11-12** — written by its errand; change-log section added at the gather.

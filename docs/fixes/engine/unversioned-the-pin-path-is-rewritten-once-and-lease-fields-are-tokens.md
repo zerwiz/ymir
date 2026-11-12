@@ -27,3 +27,7 @@ Two faults came out of the same runtime move on 2026-11-12.
   doubles, a unit on the pin is byte-identical, a drop-in moves once, a second write is a no-op.
 - `bin/pi/tests/test_lease_fields.sh`: a lease with the new identity fields is alive; another state is
   refused; no greedy `state=` reader remains in `bin/` or `src/`.
+
+## CHANGE LOG
+
+- **2026-11-12** — written by its errand; change-log section added at the gather.

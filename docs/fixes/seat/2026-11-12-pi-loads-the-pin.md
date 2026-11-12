@@ -27,3 +27,7 @@ On 2026-11-12 `pi`, started by hand in the working tree, refused all 44 Ymir ext
 ## Proof
 
 `bin/seat/tests/test_pi_loads_the_pin.sh` runs in a temp HOME: 10 passed, 0 failed.
+
+## CHANGE LOG
+
+- **2026-11-12** — written by its errand; change-log section added at the gather.

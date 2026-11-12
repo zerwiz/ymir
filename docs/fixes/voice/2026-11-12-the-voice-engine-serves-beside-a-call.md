@@ -25,3 +25,7 @@ card that drives the display on a dev seat.
 tools: the bare `host` is refused naming Discord, `host --now` pins the CPU and hides the card, and no
 capture tool is opened. No real engine was raised and no real call was involved; a trial beside a live call
 is still owed by the operator.
+
+## CHANGE LOG
+
+- **2026-11-12** — written by its errand; change-log section added at the gather.
