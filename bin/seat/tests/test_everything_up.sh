@@ -38,6 +38,14 @@ HOME="$work/h2" YMIR_HOME="$work/ymirhome" bash "$r/bin/seat/valknut-load.sh" --
 got="$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['mcpServers']['engram']['args'][1])" "$r/.pi/mcp-adapter.json" 2>&1)"
 chk "engram path is the resolved hoard, not ~/hodd" "$work/ymirhome/hodd/memory/kaia.engram" "$got"
 
+# 3b. An unresolved home refuses loudly: no placeholder is written, and the row is not "seeded".
+rm -f "$r/.pi/mcp-adapter.json"
+mv "$r/bin/vault/hoard-lib.sh" "$r/bin/vault/hoard-lib.off"   # the resolver is unreachable: the home cannot resolve
+out="$(HOME="$work/h2" YMIR_HOME= bash "$r/bin/seat/valknut-load.sh" --pi 2>&1)"
+mv "$r/bin/vault/hoard-lib.off" "$r/bin/vault/hoard-lib.sh"
+chk "an unresolved home is refused, not seeded" "yes" "$(printf '%s' "$out" | grep -q 'ERROR refused: home unresolved' && ! printf '%s' "$out" | grep -q seeded && echo yes || echo no)"
+chk "and no placeholder file is written" "no" "$([ -e "$r/.pi/mcp-adapter.json" ] && echo yes || echo no)"
+
 # 4. The finishing step: the shelf and the wake land in the resolved state dir, and a write that
 #    did not land fails loudly instead of claiming a file that is not there.
 # Run a COPY of the act in a bare tree: no well, no voice, nothing of the real house is touched.
@@ -64,7 +72,24 @@ YMIR_HOME="$th" bash "$repo/bin/records/todos.sh" done 0 >/dev/null 2>&1
 chk "todos.sh done" "done" "$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))[0]['status'])" "$th/state/todos.json")"
 YMIR_HOME="$th" bash "$repo/bin/records/todos.sh" reopen 0 >/dev/null 2>&1
 chk "todos.sh reopen" "pending" "$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))[0]['status'])" "$th/state/todos.json")"
-chk "the MCP face calls the door, not its own store" "0" "$(grep -c '_todo_save' "$repo/bin/seat/ymir-mcp.py")"
+# The LIVE face is bin/mcp/ymir-mcp.py (every installed config names it); the decoy bin/seat copy is gone.
+chk "the live MCP face keeps no store of its own" "0" "$(grep -c '_todo_save\|_todo_path' "$repo/bin/mcp/ymir-mcp.py")"
+chk "the seat copy is only a pointer to the live face" "0" "$(grep -c "_todo\|FastMCP" "$repo/bin/seat/ymir-mcp.py")"
+# clear: remove from the tail, tell the truth (three tasks -> none remain, and the answer says 3).
+for t in a b c; do YMIR_HOME="$th" bash "$repo/bin/records/todos.sh" add "$t" >/dev/null 2>&1; done
+if python3 -c "import mcp" 2>/dev/null; then
+  out="$(YMIR_HOME="$th" python3 - "$repo" <<'PY' 2>&1
+import importlib.util, sys
+spec = importlib.util.spec_from_file_location("face", sys.argv[1] + "/bin/mcp/ymir-mcp.py"); m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+print(m.todo(action="clear"))
+PY
+)"
+  # a, b, c plus the earlier "a task" = 4 rows
+  chk "clear reports the true count" "cleared 4 task(s)" "$out"
+  chk "and nothing remains" "0" "$(python3 -c "import json,sys;print(len(json.load(open(sys.argv[1]))))" "$th/state/todos.json")"
+else
+  echo "skip clear (the mcp SDK is not installed here)"
+fi
 
 # 7. Gróa's agent records what it found (daily log + Runes + well when the tree moved) and is silent when nothing moved.
 gr="$work/groa"; mkdir -p "$gr/repo/bin/records" "$gr/path" "$gr/ymirhome"
@@ -77,11 +102,17 @@ rm -f "$gr/calls"; rm -f "$gr/ymirhome/hodd/state/groa-agent.pid"
 FAKE_OUT="BEHIND: none\\nUPDATED: nothing\\nMIGRATIONS: none" "${GA[@]}" >/dev/null 2>&1
 chk "nothing behind, nothing moved: no record, no noise" "0" "$(cat "$gr/calls" 2>/dev/null | wc -l)"
 
-# 8. A shipping errand's done line must carry its pull request; batch and local-only errands are exempt.
+# 8. A shipping errand's done line must carry its pull request; batch, local-only and report-only (scout) errands are exempt.
 mkdir -p "$st"
 printf 'mode=direct-PR\n' > "$st/ship1.meta"; printf 'mode=batch\n' > "$st/bat1.meta"
 BROKK_STATE_OVERRIDE="$st" bash "$work/ac/bin/agents/eindri-acclaim.sh" ship1 --terminal done --line "done: nothing to show" >/dev/null 2>&1; chk "a direct-PR done line with no PR is refused (rc 3)" "3" "$?"
 BROKK_STATE_OVERRIDE="$st" bash "$work/ac/bin/agents/eindri-acclaim.sh" ship1 --terminal done --line "done: opened PR https://github.com/o/r/pull/7" >/dev/null 2>&1; chk "with its PR url it passes" "0" "$?"
 BROKK_STATE_OVERRIDE="$st" bash "$work/ac/bin/agents/eindri-acclaim.sh" bat1 --terminal done --line "done: committed on the branch" >/dev/null 2>&1; chk "a batch errand needs no PR" "0" "$?"
+
+# a scout record as eindri-dispatch.sh writes it (mode=scout) needs no PR either; review and recon likewise.
+for m in scout review recon; do
+  printf 'mode=%s\n' "$m" > "$st/d$m.meta"
+  BROKK_STATE_OVERRIDE="$st" bash "$work/ac/bin/agents/eindri-acclaim.sh" "d$m" --terminal done --line "done: report filed" >/dev/null 2>&1; chk "a dispatched $m record needs no PR (rc 0)" "0" "$?"
+done
 
 echo "$ok passed, $fail failed"; [ "$fail" -eq 0 ]

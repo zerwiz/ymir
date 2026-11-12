@@ -41,6 +41,10 @@ _pin=""
 [ -n "$_pin" ] && [ -d "$_pin/.pi/extensions" ] && PI_EXT_SRC="${PI_EXT_SRC:-$_pin/.pi/extensions}"
 PI_EXT_SRC="${PI_EXT_SRC:-$ROOT/.pi/extensions}"
 unset _pin
+# The operator's home, through the ONE resolver (RULES/07). A render never guesses: if the home
+# cannot be resolved, config_out refuses rather than write a placeholder path.
+YMIR_HOME_RESOLVED=""
+[ -r "$ROOT/bin/vault/hoard-lib.sh" ] && . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null && ymir_home_root YMIR_HOME_RESOLVED 2>/dev/null
 PI_EXT_HOME="${PI_EXT_HOME:-${HOME}/.pi/agent/extensions}"
 PI_SETTINGS="${PI_SETTINGS:-${HOME}/.pi/agent/settings.json}"
 OC_LOCAL="$ROOT/.opencode/agents"
@@ -387,8 +391,12 @@ import json, os, sys
 
 ex, out, home, root = sys.argv[1:5]
 raw = open(ex).read().replace("__YMIR_ROOT__", root)
-# An unresolved home leaves the placeholder visible rather than guessing a path (never $HOME).
-if home:
+# An unresolved home is a refusal: never write the placeholder, never guess a path (never $HOME).
+if "__YMIR_HOME__" in raw:
+    if not home:
+        print("ERROR refused: home unresolved (set YMIR_HOME or run the installer)")
+        print("valknut-load: the home is unresolved; refusing to write __YMIR_HOME__ into " + out, file=sys.stderr)
+        raise SystemExit
     raw = raw.replace("__YMIR_HOME__", home)
 
 def write(text):
