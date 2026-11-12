@@ -76,6 +76,47 @@ def line_for(rows):
     return f"mail: {n} new — " + " | ".join(first) + more
 
 
+TELL = " — tell the operator (Telegram), and say which need him"
+
+
+def helm_held() -> bool:
+    """Is a live session holding the arm? `arm.sh status` is the one truth (its `lock` row).
+
+    When nobody holds the helm, a wake line only lands in a file no one reads — measured
+    2026-11-12: Gná queued mail lines for days and the operator was never told. So a vacant
+    helm makes the notice go to the operator directly, through the hotline."""
+    arm = Path(__file__).resolve().parent.parent / "pi" / "arm.sh"
+    try:
+        out = subprocess.run(["bash", str(arm), "status"], capture_output=True, text=True, timeout=20).stdout
+    except (OSError, subprocess.SubprocessError):
+        return False
+    for line in out.splitlines():
+        if line.strip().startswith('"lock"'):
+            return '"none"' not in line
+    return False
+
+
+def hotline(text: str, needs_you: int) -> tuple[bool, str]:
+    """The operator's own door (bin/notify/send.sh: Telegram and the desktop), with the mail index to open."""
+    send = Path(__file__).resolve().parent.parent / "notify" / "send.sh"
+    index = gna_store.ymir_home() / "hodd" / "memory" / "mail" / "index.html"
+    cmd = ["bash", str(send), "--source", "cron", "--severity", "MEDIUM" if needs_you else "INFO",
+           "--message", text, "--key", "gna-mail", "--target", f"file:{index}"]
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    except (OSError, subprocess.SubprocessError) as exc:
+        return False, str(exc)
+    return r.returncode == 0, (r.stdout or r.stderr).strip().splitlines()[-1:] and (r.stdout or r.stderr).strip().splitlines()[-1] or ""
+
+
+def needs_you_count(rows) -> int:
+    n = 0
+    for r in rows:
+        if float(r.get("confidence") or 0) >= 0.6 and r.get("proposed_action") != "archive":
+            n += 1
+    return n
+
+
 def ledger() -> Path:
     return gna_store.MAIL_DIR / "notified.jsonl"
 
@@ -192,10 +233,18 @@ def main():
 
     ok = True
     for l in lines:
-        said, detail = nudge(l)
+        said, detail = nudge(l + TELL)
         if not said:
             ok = False
             print(f"gna_notify: FAIL the arm refused the line: {detail}", file=sys.stderr)
+    if not helm_held():
+        # Nobody holds the arm, so nobody would read the line: tell the operator directly.
+        need = needs_you_count(rows)
+        text = line_for(rows) + (f" — {need} need you" if need else "")
+        sent, detail = hotline(text, need)
+        print(f"gna_notify: the helm is empty, so the operator was told directly: {'sent' if sent else 'FAILED'} {detail}")
+        if not sent:
+            ok = False
     if ok:
         result = mark_notified(rows)
         print(f"gna_notify: marked {result.get('written', 0)} version(s) notified")
