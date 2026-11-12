@@ -17,7 +17,9 @@ The letter's header (first lines, between --- and ---):
   preheader: the inbox preview text         footer: the small print at the bottom
   use: what this letter type is for (shown by --types)
   made_by: the line under the footer naming who prepared the letter — default "Made with Ymir by <the
-           seat's agent>" (the name from ~/.pi/agent/extensions/.ymir-seat, never a machine name); "off" removes it
+           seat's agent>" (the name from ~/.pi/agent/extensions/.ymir-seat, never a machine name); "off" removes it.
+           "Ymir" links to Ymir's homepage, and the address is shown beside it
+  made_by_url: the homepage the made-by line links to (default YMIR_HOMEPAGE_URL, else https://ymir.zerwiz.org)
 
 The blocks (separated by a blank line):
   ## heading                                 a section title
@@ -328,7 +330,8 @@ def render(text: str, theme: str | None = None) -> str:
     footer = meta.get("footer", "")
     out.append(f'<tr><td style="padding:22px 32px;border-top:1px solid {t["line"]};font-family:{SANS};font-size:12px;'
                f'line-height:1.5;color:{t["muted"]};">{inline(footer, t) if footer else E(t["label"])}'
-               + (f'<div style="margin-top:6px;font-size:11px;letter-spacing:0.3px;">{E(made)}</div>' if (made := made_by_line(meta)) else "")
+               + (f'<div style="margin-top:6px;font-size:11px;letter-spacing:0.3px;">{made_by_html(made, meta, t)}</div>'
+                  if (made := made_by_line(meta)) else "")
                + '</td></tr>')
     fonts = ('<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Newsreader:'
              'opsz,wght@6..72,400;6..72,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">')
@@ -340,6 +343,22 @@ def render(text: str, theme: str | None = None) -> str:
             f'<tr><td align="center" style="padding:24px 12px;"><table role="presentation" width="600" cellpadding="0" cellspacing="0" '
             f'bgcolor="{t["sheet"]}" style="max-width:600px;width:100%;background:{t["sheet"]};border-radius:14px;overflow:hidden;'
             f'border:1px solid {t["line"]};">{"".join(out)}</table></td></tr></table></body></html>')
+
+
+YMIR_HOMEPAGE = "https://ymir.zerwiz.org"   # Ymir's public homepage, the one default (Rule 07)
+
+
+def made_by_html(made: str, meta: dict, t: dict) -> str:
+    """The made-by line with "Ymir" linked to Ymir's homepage, and the address shown after it — a reader whose
+    mail program strips links can still find the page. A replaced line that does not name Ymir keeps only the link
+    at its end."""
+    url = (meta.get("made_by_url", "").strip() or os.environ.get("YMIR_HOMEPAGE_URL", "").strip() or YMIR_HOMEPAGE)
+    a = f'style="color:{t["muted"]};text-decoration:underline;"'
+    shown = re.sub(r"^https?://", "", url).rstrip("/")
+    text = E(made)
+    if "Ymir" in text:
+        text = text.replace("Ymir", f'<a href="{E(url)}" {a}>Ymir</a>', 1)
+    return f'{text} · <a href="{E(url)}" {a}>{E(shown)}</a>'
 
 
 def made_by_line(meta: dict) -> str:
@@ -411,8 +430,13 @@ def self_test() -> int:
     if "<b>x</b>" in h or "<i>" in h:
         failures.append("markup in the words is not escaped")
     os.environ["YMIR_AGENT_NAME"] = "TestAgent"
-    if "Made with Ymir by TestAgent" not in render("---\ntheme: plain\ntitle: t\n---\nHi", None):
-        failures.append("the made-by line does not name the agent")
+    made = render("---\ntheme: plain\ntitle: t\n---\nHi", None)
+    if "</a> by TestAgent" not in made or ">Ymir</a>" not in made:
+        failures.append("the made-by line does not name Ymir and the agent")
+    if 'href="https://ymir.zerwiz.org"' not in made or ">ymir.zerwiz.org</a>" not in made:
+        failures.append("the made-by line does not link Ymir's homepage")
+    if 'href="https://example.org/y"' not in render("---\ntheme: plain\ntitle: t\nmade_by_url: https://example.org/y\n---\nHi", None):
+        failures.append("made_by_url does not change the link")
     if "Made with Ymir" in render("---\ntheme: plain\ntitle: t\nmade_by: off\n---\nHi", None):
         failures.append("made_by: off does not remove the line")
     del os.environ["YMIR_AGENT_NAME"]
