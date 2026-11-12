@@ -42,6 +42,28 @@ bash bin/records/plan.sh next --scope machine # the number the next one would ta
 
 In a chat with the agent, the same thing: `ymir_plan` takes `scope` and `owner`.
 
+## Which shelf a project plan lands on
+
+You name the project; the tool finds its folder in whichever realm holds it. It works the same for any home and any
+number of projects, because it reads the folders and keeps no list of its own.
+
+| Situation | What happens |
+|---|---|
+| `--project P`, one realm has it | filed on that project's shelf |
+| the same project name in two realms | refused, both realms named; add `--realm R` |
+| `--realm R` given, P not in R | refused; it never searches past a realm you named |
+| no folder called P anywhere | refused; a plan is never filed for a project that does not exist |
+| the folder exists but has no `plans/` | refused, unless you pass `--new-shelf` to open it |
+
+To see every realm and project, and which have no plans yet:
+
+```sh
+bash bin/records/plan.sh shelves
+```
+
+The MCP door `ymir_plan` takes the same choices: `action` (`new`, `list`, `next`, `shelves`), `realm`, `project`,
+`scope`, `owner` and `new_shelf`.
+
 ## Limits
 
 - **Numbering is per shelf.** Machine `001` and project `001` are different plans; a number is never reused *within*
@@ -66,3 +88,6 @@ In a chat with the agent, the same thing: `ymir_plan` takes `scope` and `owner`.
 
 - **2026-11-10** — Written with plan 240. Four scopes (`project` · `realm` · `machine` · `personal`), per-shelf
   numbering, shelves created by install and update. The law: `.agents/skills/elder-home/assets/ledger.md`.
+- **2026-11-12** — The project's shelf is found after the arguments are read (it used to file every project plan in
+  the default project's ledger); ambiguous and unknown projects are refused; `--new-shelf` and `shelves` added; the
+  MCP door passes realm and project for every action.
