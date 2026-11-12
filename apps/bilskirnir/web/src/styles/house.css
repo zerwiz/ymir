@@ -1,0 +1,82 @@
+/* house.css — Bilskirnir dressed in the house cloth, the Rödd way (docs/house-cloth.md).
+   Bot HQ keeps its own layout, type and components. Only its colour variables are mapped
+   onto the cloth (midgard/design-system/tokens.css), in light and dark alike, and the page
+   goes transparent so the hearth burns behind it. Imported LAST, after Bot HQ's styles.
+   No hex lives here: every value is a --ymir-* token or a wash of one. */
+
+html:root[data-theme] {
+  color-scheme: dark;
+
+  /* the ground and the surfaces: stone */
+  --color-bg-chrome: var(--ymir-bg-0);
+  --color-bg-sidebar: color-mix(in srgb, var(--ymir-bg-1) 78%, transparent);
+  --color-bg-pane: var(--ymir-bg-1);
+  --color-bg-elevated: var(--ymir-bg-2);
+  --color-bg-elevated-hover: var(--ymir-bg-3);
+  --color-bg-active: var(--ymir-accent-wash);
+  --color-bg-active-solid: var(--ymir-bg-2);
+  --color-bg-tertiary: color-mix(in srgb, var(--ymir-text-0) 6%, transparent);
+  --color-bg-hover: color-mix(in srgb, var(--ymir-text-0) 5%, transparent);
+  --color-bg-subtle: color-mix(in srgb, var(--ymir-text-0) 3%, transparent);
+  --color-bg-secondary-hover: color-mix(in srgb, var(--ymir-text-0) 9%, transparent);
+  --color-bg-secondary-active: color-mix(in srgb, var(--ymir-text-0) 16%, transparent);
+  --color-bg-scrim: color-mix(in srgb, var(--ymir-bg-0) 70%, transparent);
+  --color-bg-scrim-heavy: color-mix(in srgb, var(--ymir-bg-0) 94%, transparent);
+
+  /* words on stone: bone */
+  --color-text-primary: var(--ymir-text-0);
+  --color-text-secondary: var(--ymir-text-1);
+  --color-text-tertiary: var(--ymir-text-2);
+  --color-text-quaternary: var(--ymir-text-3);
+  --color-icon-secondary: var(--ymir-text-2);
+  --color-ink: var(--ymir-text-0);
+
+  /* lines: brass, quiet */
+  --color-border-primary: var(--ymir-steel-2);
+  --color-border-secondary: var(--ymir-steel-1);
+  --color-border-tertiary: color-mix(in srgb, var(--ymir-steel-1) 75%, transparent);
+  --color-border-focus: var(--ymir-chisel);
+
+  /* the accent: bronze */
+  --color-primary: var(--ymir-cyan-1);
+  --color-bg-primary-hover: var(--ymir-cyan-2);
+  --color-bg-primary-disabled: color-mix(in srgb, var(--ymir-cyan-1) 18%, transparent);
+  --color-on-primary: var(--ymir-bg-0);
+
+  /* chat bubbles */
+  --color-bubble-agent: color-mix(in srgb, var(--ymir-bg-2) 88%, transparent);
+  --color-bubble-user: var(--ymir-cyan-2);
+
+  /* state of the forge */
+  --color-success: var(--ymir-ok);
+  --color-success-bg: var(--ymir-ok-dim);
+  --color-success-text: var(--ymir-ok);
+  --color-warn: var(--ymir-warn);
+  --color-warn-bg: var(--ymir-warn-dim);
+  --color-warn-text: var(--ymir-warn);
+  --color-danger: var(--ymir-danger);
+  --color-danger-hover: var(--ymir-danger-deep);
+  --color-danger-bg: var(--ymir-danger-dim);
+  --color-danger-text: var(--ymir-danger);
+
+  /* flat, like the dark theme: a hairline instead of a shadow */
+  --shadow-pill: 0 0 0 0.5px var(--ymir-steel-1);
+  --shadow-composer: 0 0 0 0.5px var(--ymir-steel-1);
+  --shadow-card: 0 0 0 0.5px var(--ymir-steel-1);
+  --shadow-popover: 0 0 0 0.5px var(--ymir-steel-1), var(--ymir-shadow-raise);
+  --shadow-modal: var(--ymir-shadow-raise);
+  --bubble-ring: 0 0 0 0.5px var(--ymir-steel-1) inset;
+}
+
+::selection { background: var(--ymir-selection-bg); color: var(--ymir-selection-fg); }
+
+/* The hearth burns behind the work: the ground is painted on <html>, the canvas sits on
+   it, and the layers above are transparent where the fire should show (the chat column,
+   the shell). The side panels keep a veil of stone so their words stay easy to read. */
+html { background: var(--ymir-bg-0); }
+body, #root, .boot, .app, .chat, .signin { background: transparent !important; }
+.chat__header { background: linear-gradient(180deg, color-mix(in srgb, var(--ymir-bg-0) 85%, transparent) 0%, transparent 100%); }
+.details { background: color-mix(in srgb, var(--ymir-bg-0) 80%, transparent); }
+.sidebar__fade { background: linear-gradient(180deg, transparent 0%, var(--color-bg-sidebar) 100%); }
+#ember-bg { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+#root { position: relative; z-index: 1; }

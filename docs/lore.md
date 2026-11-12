@@ -1412,3 +1412,30 @@ own work and his own shelf, and he never answers in Nanna's window. A window tha
 mislabelled software, not a character choice.
 
 The sentence to hold: **Rödd is the hall speaking; Nanna is the one who answers in it.**
+
+## Bilskirnir, Fulla and Sökkvabekkr — the business hall and the deeper well (2026-11-12)
+
+**Bilskirnir is the business hall.** Thor's hall *"with five hundred and forty rooms"* — one room for every one who
+lives there. In Ymir it is the application where every agent has its own room, its own screen and its work in plain
+sight. At the Allfather's word it is **for running the house's business** — and still able to code, research and take
+every other errand:
+
+> *"Sessrúmnir are more the developing tool of ymir, and this application will be more about managing the business
+> side of ymir, but also capable of coding and every other task we need."*
+
+So the two halls divide the work: **Sessrúmnir** is where Ymir is built; **Bilskirnir** is where the house's business is
+run. Bilskirnir's face began as Bot HQ (MIT), dressed in the house cloth the way Rödd is dressed — the colours mapped
+onto the cloth, the hearth behind, nothing else repainted. The name stands as a proposal until it is sealed.
+
+**Fulla keeps the hall.** The first agent in Bilskirnir is not a stranger with a default name; it is the machine's own
+keeper from the roster. On heimdall that is **Fulla**, who keeps Frigg's casket — *the keeper of the hall's precious
+things*. She is a **she**, she answers as Fulla of the Ymir fleet, and the engine under her (Hermes) is her tool, never
+her name. Another machine's hall is kept by that machine's own agent.
+
+**Sökkvabekkr is the deeper well.** *"The sunken bench"* — the deep hall where cool waters flow and where Odin and Sága
+drink every day while she tells him all that has been. Mímisbrunnr, the well, keeps **what happened**, append-only, the
+record. Sökkvabekkr keeps **what is understood** — of the Allfather and of each agent — and tells it back when asked. Its
+engine is Honcho, as engram is the well's. It is fed from the well and can always be rebuilt from it; it never writes the
+well (plan 260).
+
+The sentences to hold: **Sessrúmnir builds the house; Bilskirnir runs it. The well remembers; Sökkvabekkr understands.**

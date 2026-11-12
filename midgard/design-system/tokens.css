@@ -93,6 +93,24 @@
   --ymir-dur-hop: 220ms;
   --ymir-dur-roll: 240ms;
   --ymir-ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* --- Appended 2026-11-12: what the reference apps wear on top of the cloth -----
+     Sessrúmnir, Hlidskjalf and Rödd each carried these by hand; they are named here
+     so a new application takes them from the one file (docs/house-cloth.md).
+     NEW names only — no value above changed, so every app already importing this
+     file renders exactly as before. */
+  --ymir-bg-sunk: #14100b;                      /* below the ground — code blocks, a selected row's well */
+  --ymir-text-faint: rgba(207, 195, 169, 0.38); /* bone at 38% — hints */
+  --ymir-text-ghost: rgba(207, 195, 169, 0.26); /* bone at 26% — the quietest mark */
+  --ymir-danger-deep: #7c3a30;                  /* blood, dried — hover on a danger control */
+  --ymir-accent-wash: rgba(201, 151, 79, 0.14); /* bronze wash — an active row, the realm tint's dim */
+  --ymir-steel-wash: rgba(150, 160, 168, 0.14); /* steel wash */
+  --ymir-selection-bg: #57411a;                 /* the landing's selection: amber … */
+  --ymir-selection-fg: #f0e6cd;                 /* … on pale bone */
+  --ymir-scrollbar: var(--ymir-steel-1);
+  --ymir-scrollbar-hover: var(--ymir-steel-2);
+  --ymir-ember-rgb: 236, 166, 84;               /* the hearth's sparks (ember.js EMBER_RGB) */
+  --ymir-haze-rgb: 214, 138, 64;                /* the hearth's haze (ember.js HAZE_RGB) */
 }
 
 /* Numeric safety for all telemetry */
