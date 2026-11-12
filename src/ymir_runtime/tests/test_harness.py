@@ -130,13 +130,20 @@ class BuildLaunchCommandTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             harness.build_launch_command(selection, "/d/prompt.md", empty)
 
-    def test_opencode_shape_matches_the_shell_road(self) -> None:
+    def test_opencode_shape_is_the_launchers_one_interactive_shape(self) -> None:
+        """Plan 262: the TUI refuses --model, so the model rides in the config and the brief is --prompt."""
         selection = harness.HarnessSelection("opencode", "openai/gpt-5", "", "", "")
-        self.assertEqual(
-            harness.build_launch_command(selection, "/d/prompt.md"),
-            "env OPENCODE_CONFIG_CONTENT='{\"permission\":{\"*\":\"allow\"}}' opencode "
-            "--model 'openai/gpt-5' --prompt \"$(cat '/d/prompt.md')\"",
-        )
+        shape = harness.build_launch_command(selection, "/d/prompt.md")
+        self.assertTrue(shape.startswith("env OPENCODE_CONFIG_CONTENT='{\"model\":\"openai/gpt-5\",\"permission\":"), shape)
+        self.assertTrue(shape.endswith(" opencode --auto --prompt \"$(cat '/d/prompt.md')\""), shape)
+        self.assertNotIn("--model", shape)
+        self.assertNotIn("opencode run", shape)
+        door = harness.opencode_launcher_door()
+        said = subprocess.run(
+            [str(door), "print", "--model", "openai/gpt-5", "--brief", "/d/prompt.md"],
+            text=True, capture_output=True, check=True,
+        ).stdout.strip()
+        self.assertEqual(shape, said)
 
     def test_every_launch_shape_survives_the_exec_prefix(self) -> None:
         """The seat writer prefixes `exec ` to any shape that lacks it.

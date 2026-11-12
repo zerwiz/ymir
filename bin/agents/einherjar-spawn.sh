@@ -63,6 +63,7 @@ log_err() {
 trap 'log_err "$LINENO" "${BASH_COMMAND:-}"' ERR
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+OPENCODE_LAUNCHER="$SCRIPT_DIR/../seat/opencode-launcher.sh"   # plan 262: the one interactive OpenCode shape
 # shellcheck source=bin/fleet/ymir-platform.sh
 . "$SCRIPT_DIR/../fleet/ymir-platform.sh"
 # Docker or rootless Podman (Fedora). Empty when neither is reachable.
@@ -742,8 +743,8 @@ if [ "$DRY" -eq 1 ]; then
     "$HARNESS" "${HARNESS_PROV:-}" "${MODEL:-<harness default>}" "${MODEL_PROV:-}" "$_wt" "$BRIEF" \
     "${MODE:-scout}" "$YOLO" "$WORTH_VERDICT" "${LOCKED:-no}${LOCK_HOLDER:+ (busy: $LOCK_HOLDER)}"
   if [ "$HARNESS" = opencode ]; then
-    printf '  launch: cd %s && opencode run%s --auto "$(cat %s)"\n' \
-      "$_cwd" "${MODEL:+ --model $MODEL}" "$BRIEF"
+    printf '  launch: cd %s && %s\n' "$_cwd" \
+      "$("$OPENCODE_LAUNCHER" print ${MODEL:+--model "$MODEL"} --brief "$BRIEF" 2>/dev/null | tr -d '\n')"
   else
     printf '  launch: cd %s && %s%s --prompt "$(cat %s)"\n' \
       "$_cwd" "$HARNESS" "${MODEL:+ --model $MODEL}" "$BRIEF"
@@ -880,15 +881,11 @@ build_launch_command() {  # prints the worker command WITHOUT the leading exec
   fi
   case "$HARNESS" in
     opencode)
-      # `exec VAR=value cmd` is not a thing: exec takes a command, not assignments,
-      # so the old form died with "exec: OPENCODE_CONFIG_CONTENT=…: not found" and
-      # EVERY opencode seat was born dead while the dispatcher said "spawned"
-      # (measured 2026-10-24, four dispatches, four empty panes). `env` carries the
-      # assignment through the exec.
-      # OpenCode v2 moved the message to `run`; the old top-level --model/--prompt shape answers
-      # "Unrecognized flag: --model in command opencode" and every seat dies in its pane (measured 2026-11-06).
-      printf 'env OPENCODE_CONFIG_CONTENT=%s opencode run %s--auto "$(cat %s)"' \
-        "$(shell_quote '{"permission":{"*":"allow"}}')" "$model_flag" "$(shell_quote "$brief_ref")"
+      # One shape, one door (plan 262): the interactive TUI refuses --model, so the model rides in
+      # the inline config and the brief is --prompt. The shape lives in bin/seat/opencode-launcher.sh
+      # and this spawner only CALLS it. The 2026-11-06 mend (`opencode run`) fixed this door alone and
+      # left the others to drift; `run` is one shot nobody can steer.
+      "$OPENCODE_LAUNCHER" print ${MODEL:+--model "$MODEL"} --brief "$brief_ref" | tr -d '\n'
       ;;
     claude)
       # Plan 239 P5b/P5c — the same shape as src/ymir_runtime/harness.py (one shape, two

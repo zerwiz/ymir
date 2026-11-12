@@ -98,6 +98,12 @@ gate mocks-vocabulary "the mocks scan catches a half-built door and excuses only
 gate main-red "the alarm for a red main names the ward and never fires for a pull request" \
      bash "$ROOT/bin/gates/tests/test_main_red.sh"
 
+# PLAN 262 — an OpenCode worker actually starts. The interactive TUI refuses --model (OpenCode v2),
+# four doors each built their own shape and three drifted. One launcher, four callers, and this is
+# the parity test plus the version guard that keeps it from drifting again.
+gate opencode-launcher "every door seats OpenCode with the launcher's one shape; the version guard bites" \
+     bash "$ROOT/bin/gates/tests/test_opencode_launcher.sh"
+
 # Rule 11 — a tracked file is MOVED, never deleted. RULES/11 says the ward runs here; until
 # 2026-11-03 nothing in this file called it, so a deletion passed CI unseen. The range is the
 # PR's base when there is one, and an honest SKIP (not a green) when this checkout has no base.

@@ -1,0 +1,24 @@
+{
+  "$comment": "The permission block every OpenCode Eindri is launched with (plan 262, the twin of claude-worker.settings.json, plan 239 P5c). A worker runs unattended in its own Yggdrasil worktree, so it may act without a prompt, while the moves that only the Allfather makes, or that destroy unrecorded work, are denied. OpenCode matches the LAST rule that fits, so the allow-all comes first and the denials after it. bin/seat/opencode-launcher.sh merges this block into OPENCODE_CONFIG_CONTENT.",
+  "*": "allow",
+  "bash": {
+    "*": "allow",
+    "git push origin main*": "deny",
+    "git push origin master*": "deny",
+    "git push -f*": "deny",
+    "git push --force*": "deny",
+    "git push origin +*": "deny",
+    "gh pr merge*": "deny",
+    "git merge*": "deny",
+    "git add -A*": "deny",
+    "git add .": "deny",
+    "git commit -a*": "deny",
+    "git reset --hard*": "deny",
+    "git clean -f*": "deny",
+    "git checkout -- *": "deny",
+    "git stash*": "deny",
+    "rm -rf*": "deny",
+    "sudo *": "deny"
+  },
+  "task": "deny"
+}
