@@ -591,6 +591,14 @@ def main() -> int:
 
     classes: dict[str, int] = {}
     columns = {"needs_you": 0, "unsure": 0, "waiting": 0, "done": 0}
+    last_out = {}
+    for r in records:
+        if (r.get("direction") or "") == "out" and r.get("thread_key"):
+            last_out[str(r["thread_key"])] = max(str(r.get("received_at") or ""), last_out.get(str(r["thread_key"]), ""))
+    for r in records:
+        if str(r.get("thread_key") or "") in last_out and (r.get("direction") or "in") == "in" \
+                and last_out[str(r.get("thread_key"))] >= str(r.get("received_at") or ""):
+            r["answered"] = True
     for r in records:
         classes[r["classification"]] = classes.get(r["classification"], 0) + 1
         columns[column_of(r)] += 1
@@ -627,7 +635,7 @@ def main() -> int:
 
 
 def column_of(record: dict) -> str:
-    if record.get("handled_at"):
+    if record.get("handled_at") or record.get("answered"):
         return "done"
     if record.get("direction") == "out":
         return "waiting"
