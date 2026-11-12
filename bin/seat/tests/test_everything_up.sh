@@ -57,4 +57,13 @@ bd="$work/bdata"; mkdir -p "$bd"
 BROKK_DATA_OVERRIDE="$bd" BROKK_STATE_OVERRIDE="$st" bash "$repo/bin/agents/erindi-brief.sh" tst3 somerepo --mode direct-PR >/dev/null 2>&1
 chk "the brief's completion check greps the resolved queue" "yes" "$(grep -q "grep -c \"tst3\" '$st/.wake-queue'" "$bd/tst3/brief.md" 2>/dev/null && echo yes || echo no)"
 
+# 6. The task board has one writer: todos.sh can reopen what the MCP face marks pending again.
+th="$work/todohome"; mkdir -p "$th/state"
+YMIR_HOME="$th" bash "$repo/bin/records/todos.sh" add "a task" >/dev/null 2>&1
+YMIR_HOME="$th" bash "$repo/bin/records/todos.sh" done 0 >/dev/null 2>&1
+chk "todos.sh done" "done" "$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))[0]['status'])" "$th/state/todos.json")"
+YMIR_HOME="$th" bash "$repo/bin/records/todos.sh" reopen 0 >/dev/null 2>&1
+chk "todos.sh reopen" "pending" "$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))[0]['status'])" "$th/state/todos.json")"
+chk "the MCP face calls the door, not its own store" "0" "$(grep -c '_todo_save' "$repo/bin/seat/ymir-mcp.py")"
+
 echo "$ok passed, $fail failed"; [ "$fail" -eq 0 ]
