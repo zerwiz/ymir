@@ -25,7 +25,7 @@
 #   heimdall-ssh-keys.sh --version
 #
 # Examples:
-#   heimdall-ssh-keys.sh add zerwiz
+#   heimdall-ssh-keys.sh add <your-github-user>
 #   heimdall-ssh-keys.sh add --key 'ssh-ed25519 AAAA… laptop'   # paste a key instead
 #   heimdall-ssh-keys.sh add --quiet          # refresh every configured user
 #   heimdall-ssh-keys.sh harden              # needs sudo; disables password logins

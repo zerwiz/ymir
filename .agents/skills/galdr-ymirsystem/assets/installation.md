@@ -830,6 +830,13 @@ Hardening (`harden`) disables password logins — a console sudo action, never
 taken by an agent, and refused while zero keys are seated (a machine with no
 key inside is a machine nobody can enter).
 
+**Whose keys — appended 2026-11-12.** The ward admits only the GitHub user(s) the operator names, in
+`HEIMDALL_GH_USERS` or `$XDG_CONFIG_HOME/heimdall/gh-users`. It no longer adds a built-in user, and it no
+longer takes the owner of the checkout's `origin` remote. On a collaborator's machine, either of those
+handed the upstream owner SSH access. With no user named, `ensure` refuses to arm: it writes no keys and
+installs no timer, and the install's `heimdall` step reports WARN. The ward script is copied from this tree;
+a URL is fetched only when `HEIMDALL_DISTRO_URL` is set on purpose. Proof: `tests/test_heimdall_named_user.sh`.
+
 ## Sessrúmnir specifically (`bin/desktop/sessrumnir-ensure.sh`, `bin/desktop/sessrumnir-launch.sh`)
 
 ```
