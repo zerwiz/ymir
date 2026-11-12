@@ -32,6 +32,8 @@
 #   BILSKIRNIR_DEBUG_PORT     open the window's DevTools port   (unset: closed)
 set -uo pipefail
 APP="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# the hall's state lives in one home per user, never in this checkout (plan 275 S5)
+[ "${1:-}" = "--check" ] || bash "$APP/scripts/data-home.sh" || { echo "bilskirnir: the data home could not be linked — see scripts/data-home.sh" >&2; exit 1; }
 RUN="$APP/data/run"; mkdir -p "$RUN"
 say() { printf '%-28s %s\n' "$1" "$2"; }
 envval() { grep -E "^$1=" "$2" 2>/dev/null | tail -1 | cut -d= -f2-; }
