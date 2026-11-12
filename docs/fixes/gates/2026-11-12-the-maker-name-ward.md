@@ -32,3 +32,7 @@ the kit's copy byte for byte.
 
 History is not rewritten, by the Allfather's call. A word such as `pi` or `cursor` is also ordinary English; where prose
 needs it, put it in backticks or add a reasoned line to the allow file.
+
+## CHANGE LOG
+
+- **2026-11-12** — written with the ward, at the Allfather's word; RULES/53 carries the law.
