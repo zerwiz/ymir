@@ -65,11 +65,40 @@ case "$VERB" in
     exit 0
     ;;
   install)
+    # IT ACTUALLY INSTALLS NOW (2026-11-12). The verb printed "installed (dry-run not implemented fully)"
+    # and wrote nothing, so the heart had no clock and never updated itself on a merge — a door that
+    # reports success and does nothing is the fault this house keeps paying for.
+    U="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"; mkdir -p "$U"
     if [ "$DRY" = 1 ]; then
       say "unit,ymir-update-loop.service,timer,ymir-update-loop.timer,interval,15min"
-    else
-      say "installed (dry-run not implemented fully)"
+      say "would write: $U/ymir-update-loop.service and .timer; would enable --now the timer"
+      exit 0
     fi
+    cat >"$U/ymir-update-loop.service" <<UNIT
+[Unit]
+Description=update-loop — the heart keeps itself on latest main
+
+[Service]
+Type=oneshot
+WorkingDirectory=$ROOT
+ExecStart=/usr/bin/env bash $ROOT/bin/engine/update-loop.sh run
+UNIT
+    cat >"$U/ymir-update-loop.timer" <<UNIT
+[Unit]
+Description=update-loop — every 15 minutes
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=15min
+AccuracySec=1min
+Unit=ymir-update-loop.service
+
+[Install]
+WantedBy=timers.target
+UNIT
+    systemctl --user daemon-reload 2>/dev/null || true
+    systemctl --user enable --now ymir-update-loop.timer >/dev/null 2>&1 || true
+    say "installed,ymir-update-loop.timer,$(systemctl --user is-active ymir-update-loop.timer 2>/dev/null),15min"
     exit 0
     ;;
   rollback)
