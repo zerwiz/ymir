@@ -59,7 +59,7 @@ link_shared() {  # <release-dir>
       # the release shipped or made one: the shared copy wins once it exists, else this one seeds it
       if [ -e "$SHARED/$p" ]; then rm -rf "$d/$p"; else mv "$d/$p" "$SHARED/$p"; fi
     fi
-    case "$p" in *.*) [ -e "$SHARED/$p" ] || : ;; *) mkdir -p "$SHARED/$p" ;; esac
+    case "$p" in .run|state|.a2a|.yggdrasil) mkdir -p "$SHARED/$p" ;; esac   # the folders; the rest are files
     [ -L "$d/$p" ] || ln -s "$SHARED/$p" "$d/$p"
   done
 }
