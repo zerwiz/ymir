@@ -36,6 +36,34 @@ fi
 git rev-parse --verify -q "$BASE" >/dev/null || { printf 'rules-compliance: SKIP — base %s is unknown\n' "$BASE"; exit 0; }
 
 added=$(git diff --name-only --diff-filter=A "$BASE..$HEAD")
+# A fork's sync is not the pusher's work (plan 272, fault 7). A collaborator who merges upstream's default branch
+# "adds" hundreds of files he did not write; judging them charged him with faults that sit in upstream's own main.
+# A file the push adds whose bytes are IDENTICAL to the same path on upstream's default branch is upstream's, and is
+# subtracted. Upstream is `RULES_UPSTREAM_REF`, else the `upstream` remote's default branch; with neither, nothing is
+# subtracted (a plain clone has no upstream, and then every added file is the pusher's).
+UPSTREAM_REF="${RULES_UPSTREAM_REF:-}"
+if [ -z "$UPSTREAM_REF" ]; then
+  for _c in upstream/main upstream/master; do
+    if git rev-parse --verify -q "$_c" >/dev/null; then UPSTREAM_REF=$_c; break; fi
+  done
+fi
+if [ -n "$UPSTREAM_REF" ] && git rev-parse --verify -q "$UPSTREAM_REF" >/dev/null && [ -n "$added" ]; then
+  kept=""; skipped=0
+  while IFS= read -r _f; do
+    [ -n "$_f" ] || continue
+    _u=$(git rev-parse -q --verify "$UPSTREAM_REF:$_f" 2>/dev/null || true)
+    _h=$(git rev-parse -q --verify "$HEAD:$_f" 2>/dev/null || true)
+    if [ -n "$_u" ] && [ "$_u" = "$_h" ]; then skipped=$((skipped+1)); else kept="${kept:+$kept
+}$_f"; fi
+  done <<ADDED
+$added
+ADDED
+  added="$kept"
+  if [ "$skipped" -gt 0 ]; then
+    printf 'rules-compliance: %s added file(s) are identical to %s, so they are upstream'"'"'s and not this push'"'"'s — not judged\n' "$skipped" "$UPSTREAM_REF"
+  fi
+fi
+
 [ -z "$added" ] && { printf 'rules-compliance[1]{state,detail}:\n  "clean","the push adds no new file"\n'; exit 0; }
 
 fail=0
