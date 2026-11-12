@@ -11,6 +11,16 @@ NOT SECREATS OR PRIVATE DATA::"*. The repository is PUBLIC, so four classes are 
                 a CIDR range (`192.168.0.0/16`), RFC 5737 documentation space, or `<host>.tailnet.ts.net`.
   4. MAILBOX  — a personal address. Allowed only as an RFC 2606 example domain, a noreply account
                 form, a house identity, an ssh identity (`git@github.com`), or a bare host with no dot.
+  5. MACHINE  — a fleet machine named AS A HOST (plan 278): after `@`, `ssh`, `host=`/`host:` or `//`, or
+                before a port, `.local` or a tailnet suffix. The names are read at run time from the home's
+                fleet registry (`$YMIR_HOME/hodd/data/fleet.json`, `hosts`) and are NEVER in this file.
+                Judged by shape only, because a machine may share its name with a figure of the lore, and a
+                word scan cannot tell the seat from the subsystem. ADVISORY until the live tree is swept:
+                findings are counted and printed, and fail the ward only under `--strict-names` (or
+                YMIR_PUBLIC_GUARD_STRICT=1).
+
+Every run prints its scope — files judged, files exempt, words and machine names loaded (counts, never
+the names) — so a silent pass can never stand in for a judged one.
 
 Written in python because the shell version judged four classes with three chained greps and an
 allow-list of substrings, and a ward whose allow-list can be satisfied by a substring is a ward that
@@ -22,6 +32,7 @@ Usage:
   public-guard.py --staged          # what is about to be committed
   public-guard.py FILE...           # named files
   public-guard.py --list            # the classes and what each allows
+  … --strict-names                  # the machine class fails the ward instead of advising
 
 Exit: 0 clean · 1 findings · 2 usage.
 """
@@ -136,7 +147,7 @@ def mailbox_findings(line: str) -> list[str]:
     return out
 
 
-def operator_words(root: Path) -> list[str]:
+def resolve_home(root: Path) -> str:
     home = os.environ.get("YMIR_HOME", "")
     if not home:
         lib = root / "bin" / "vault" / "hoard-lib.sh"
@@ -147,6 +158,11 @@ def operator_words(root: Path) -> list[str]:
                 home = out.strip()
             except Exception:
                 home = ""
+    return home
+
+
+def operator_words(root: Path) -> list[str]:
+    home = resolve_home(root)
     if not home:
         return []
     listing = Path(home) / "hodd" / "security" / "operator-words.txt"
@@ -154,6 +170,52 @@ def operator_words(root: Path) -> list[str]:
         return []
     return [ln.strip() for ln in listing.read_text(errors="replace").splitlines()
             if ln.strip() and not ln.strip().startswith("#")]
+
+
+def machine_names(root: Path) -> list[str]:
+    """The fleet's machine names, from the home's registry at run time — never shipped (RULES/04, 39)."""
+    reg = os.environ.get("YMIR_FLEET_REGISTRY", "")
+    if not reg:
+        home = resolve_home(root)
+        if not home:
+            return []
+        reg = str(Path(home) / "hodd" / "data" / "fleet.json")
+    try:
+        import json
+        hosts = json.loads(Path(reg).read_text(encoding="utf-8")).get("hosts") or {}
+    except Exception:
+        return []
+    return sorted({str(h) for h in hosts
+                   if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9-]{2,62}", str(h))
+                   and str(h).lower() not in GENERIC_HOSTS and str(h).lower() != public_owner(root)})
+
+
+# A registry may carry a row for a name every machine has, or the repository's own public owner; neither is
+# a place this house stands, and judging them would bury the real findings (measured 2026-11-12: one generic
+# loopback name alone made most of the hits).
+GENERIC_HOSTS = {"localhost", "local", "host", "server", "phone", "android", "termux", "ubuntu", "debian",
+                 "raspberrypi", "pi", "router", "gateway", "laptop", "desktop", "workstation",
+                 "unknown", "none", "default", "self", "this"}
+
+
+def public_owner(root: Path) -> str:
+    """The repository owner in the origin URL — public by design (the licence holder), never a secret."""
+    try:
+        url = subprocess.run(["git", "-C", str(root), "remote", "get-url", "origin"],
+                             capture_output=True, text=True, timeout=10).stdout
+    except Exception:
+        return ""
+    m = re.search(r"github\.com[:/]([^/]+)/", url)
+    return m.group(1).lower() if m else ""
+
+
+def machine_shape(names: list[str]) -> re.Pattern | None:
+    if not names:
+        return None
+    alt = "|".join(re.escape(n) for n in sorted(names, key=len, reverse=True))
+    return re.compile(
+        rf"(?:@|\bssh\s+(?:-\S+\s+)*|\bhost(?:name)?\s*[=:]\s*[\"']?|//)(?:{alt})\b(?![-.][a-z])"
+        rf"|\b(?:{alt})(?::\d{{2,5}}\b|\.local\b|\.[a-z0-9-]+\.ts\.net\b)", re.I)
 
 
 def scan(path: str, text: str, words: list[str], home: str) -> list[str]:
@@ -193,6 +255,10 @@ def main(argv: list[str]) -> int:
     root = Path(__file__).resolve().parents[3]
     words = operator_words(root)
     home = os.environ.get("YMIR_HOME", "")
+    strict = "--strict-names" in argv or os.environ.get("YMIR_PUBLIC_GUARD_STRICT") == "1"
+    argv = [a for a in argv if a != "--strict-names"]
+    machines = machine_names(root)
+    shape = machine_shape(machines)
 
     if argv and argv[0] in ("-h", "--help"):
         print(__doc__)
@@ -206,6 +272,7 @@ def main(argv: list[str]) -> int:
         print(f'  "name","a word declared in $YMIR_HOME/hodd/security/operator-words.txt","nothing — the list is the authority" ({len(words)} declared)')
         print('  "topology","a private address, a CIDR outside the declared ranges, a tailnet host","192.168.0.0/16 · 10.0.0.0/8 · 172.16.0.0/12 · 100.64.0.0/10 · RFC 5737 space · <host>.tailnet.ts.net"')
         print('  "mailbox","a personal address","example.com/.org/.net · .invalid · .test · git@github.com · noreply · <the operator>"')
+        print(f'  "machine","a fleet machine named as a host (@, ssh, host=, //, :port, .local, a tailnet suffix)","the same word anywhere else — a machine may share a name with the lore" ({len(machines)} read from the fleet registry; {"binding" if strict else "advisory"})')
         return 0
 
     mode = argv[0] if argv and argv[0].startswith("--") else ""
@@ -225,20 +292,44 @@ def main(argv: list[str]) -> int:
         print('  "names","SKIP — no $YMIR_HOME/hodd/security/operator-words.txt on this machine; the other three classes are judged"')
 
     findings: list[str] = []
+    advisory: list[str] = []
+    judged = exempt = 0
     for rel in files:
         p = root / rel
         if not p.is_file():
             continue
         if rel in GENERATED or rel.rsplit("/", 1)[-1] in {"package-lock.json", "bun.lock", "pnpm-lock.yaml", "yarn.lock"}:
+            exempt += 1
             continue                                      # generated third-party text
         try:
             raw = p.read_bytes()[:400_000]
             if b"\x00" in raw[:8000]:
+                exempt += 1
                 continue                                  # a binary is not a public DOCUMENT
             text = raw.decode("utf-8", "replace")
         except Exception:
+            exempt += 1
             continue
+        judged += 1
         findings.extend(scan(rel, text, words, home))
+        if shape is not None and rel not in GUARD_FILES:
+            for n, line in enumerate(text.splitlines(), 1):
+                if shape.search(line):
+                    advisory.append(f"{rel}:{n}: names a fleet machine as a host (RULES/39) — the name is masked here on purpose")
+    if strict:
+        findings.extend(advisory)
+        advisory = []
+
+    # THE SCOPE, ALWAYS (plan 278): a guard that prints nothing cannot be told from one that judged nothing.
+    print(f'public_guard_scope[1]{{judged,exempt,words,machines,machine_class}}:\n'
+          f'  "{judged}","{exempt}","{len(words)}","{len(machines)}","{"binding" if strict else "advisory"}"')
+    if advisory:
+        files_hit = len({a.split(":", 1)[0] for a in advisory})
+        print(f'public_guard_advisory[1]{{class,lines,files}}:\n  "machine","{len(advisory)}","{files_hit}"')
+        for a in advisory[:10]:
+            print("  " + a)
+        if len(advisory) > 10:
+            print(f'  "…","{len(advisory) - 10} more — run with --strict-names to make them binding"')
 
     if not findings:
         print(f'public_guard[1]{{files,verdict}}:\n  "{len(files)}","PASS — templates and logic; no secret, no operator word, no topology, no mailbox"')

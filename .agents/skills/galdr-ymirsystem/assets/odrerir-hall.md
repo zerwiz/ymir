@@ -197,7 +197,7 @@ board ever needs it again. Everything the hall renders lives under
 
 ### The living door + the live feed (2026-09-27 — the React hall reads LIVE again)
 - **The wound.** The React port kept the Astro door's default `SKULD_URL =
-  http://whynot.<tailnet>.ts.net:8320`. The 2026-09-27 cutover (plan 51 Part 9)
+  http://<heart>.<tailnet>.ts.net:8320`. The 2026-09-27 cutover (plan 51 Part 9)
   retired whynot's Skuld unit and moved the record to the heart (zerwizserver),
   so every board call rang a dead seat and the book read empty. The one gateway
   (`bin/bridge/mcp-gateway.sh`, :8316) fronts skuld over the heart — but the gateway had

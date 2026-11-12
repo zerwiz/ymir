@@ -105,8 +105,12 @@ gate hall-keeps-changes "the first agent keeps the user's soul lines and config 
      bash "$ROOT/apps/bilskirnir/tests/keeps-user-changes.sh"
 # RULES/04 — the public tree carries TEMPLATES and LOGIC. The ward is in the list above; this is
 # the proof that it BITES (a ward never seen to refuse is decoration, and this one wore that coat).
-gate public-data "RULES/04 — a secret, a name, a topology or a mailbox is refused, and the ward is proved to refuse" \
+gate public-data "RULES/04 — a secret, a name, a topology, a mailbox or a machine named as a host is refused, and the ward is proved to refuse" \
      bash "$ROOT/bin/gates/checks/public-data-ward.test.sh"
+# Plan 278: the Nornir board takes its server seats from the fleet registry, never names in the code. bun is the
+# server's runtime, but the test is written on node:test so CI's pinned Node runs it.
+gate cron-seats "the Hlidskjalf cron board reads its server seats from the fleet registry" \
+     node --test "$ROOT/apps/hlidskjalf/server/server-seats.test.ts"
 
 # The mocks gate was an inline pipeline with no test, so every exclusion it grew arrived as a false red on
 # legitimate code and was judged by eye. The scan is a file now, and this proves it bites AND stays narrow.

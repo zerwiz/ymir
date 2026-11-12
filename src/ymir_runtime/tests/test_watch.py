@@ -181,9 +181,9 @@ class HelmIdentityTest(ArmTestCase):
         return identity.resolve({**self.env, **env}, ttl=0)
 
     def test_every_field_is_written_into_the_lease(self) -> None:
-        self.seat.write_text("host=heimdall\nprimary=Hoenir\nrole=counsellor\n", encoding="utf-8")
+        self.seat.write_text("host=seat-host\nprimary=Hoenir\nrole=counsellor\n", encoding="utf-8")
         (self.tmp / "seats.yaml").write_text(
-            "fleet:\n  name: the Ymir fleet\nseats:\n  heimdall:\n    machine:\n      host: heimdall\n",
+            "fleet:\n  name: the Ymir fleet\nseats:\n  seat-host:\n    machine:\n      host: seat-host\n",
             encoding="utf-8",
         )
         helm = self.helm(YMIR_ROLE="dev")
@@ -195,8 +195,8 @@ class HelmIdentityTest(ArmTestCase):
             self.assertIn(key, lease)
         self.assertEqual(lease["seat"], "Hoenir")
         self.assertEqual(lease["charter"], identity.CHARTER)
-        self.assertEqual(lease["host"], "heimdall")
-        self.assertEqual(lease["machine"], "heimdall")
+        self.assertEqual(lease["host"], "seat-host")
+        self.assertEqual(lease["machine"], "seat-host")
         self.assertEqual(lease["fleetrole"], "dev")
         self.assertEqual(lease["fleet"], "the-ymir-fleet")
         self.assertEqual(lease["pin"], "none")
@@ -205,7 +205,7 @@ class HelmIdentityTest(ArmTestCase):
         self.assertEqual(lease["missing"], "none")
 
     def test_no_sealed_name_is_rendered_unnamed_never_invented(self) -> None:
-        self.seat.write_text("host=heimdall\n", encoding="utf-8")
+        self.seat.write_text("host=seat-host\n", encoding="utf-8")
         helm = self.helm(YMIR_ROLE="dev")
         self.assertEqual(helm.seat, identity.UNNAMED)
         self.assertEqual(helm.identity, "held", "an unnamed seat still holds the helm (Rule 44)")
@@ -218,7 +218,7 @@ class HelmIdentityTest(ArmTestCase):
             self.assertEqual(self.helm(YMIR_ROLE="dev").host, "newbox", "a copied lease is re-taken with the NEW host")
 
     def test_an_unresolvable_fleet_role_stands_read_only_and_names_it(self) -> None:
-        self.seat.write_text("host=heimdall\n", encoding="utf-8")
+        self.seat.write_text("host=seat-host\n", encoding="utf-8")
         helm = self.helm()  # no YMIR_ROLE and the temp repo carries no bin/skuld/role.sh
         self.assertEqual(helm.identity, "readonly")
         self.assertEqual(helm.missing, ("fleetrole",))
@@ -245,7 +245,7 @@ class HelmIdentityTest(ArmTestCase):
         self.assertEqual(helm.pin_behind, "2")
 
     def test_the_lease_tokens_carry_no_whitespace(self) -> None:
-        self.seat.write_text("host=heimdall\nprimary=Hœnir\n", encoding="utf-8")
+        self.seat.write_text("host=seat-host\nprimary=Hœnir\n", encoding="utf-8")
         tokens = self.helm(YMIR_ROLE="dev").lease_tokens().split(" ")
         self.assertTrue(all("=" in token for token in tokens))
         self.assertEqual(identity.render_charter(identity.CHARTER), "planning · mail · the work in hand · dispatch on")

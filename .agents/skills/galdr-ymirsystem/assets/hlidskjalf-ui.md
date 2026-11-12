@@ -263,7 +263,7 @@ chat: `/api/chat/history`, `POST /api/chat`.
 ### The Cron gate — local and server schedules (2026-09-24, plan 54)
 
 The Nornir gate (`src/gates/Cron.tsx`) shows BOTH faces: the LOCAL seat's loop and
-the SERVER seats' (whynot · zerwizserver). Two read-only routes feed it:
+the SERVER seats' (the fleet's heart and forge hosts). Two read-only routes feed it:
 
 - **`/api/cron`** — the schedule the LOOP reads, never the repo's template. The
   board once read `<ROOT>/.agents/config`, which ships only `cron.yaml.example`,
@@ -273,12 +273,13 @@ the SERVER seats' (whynot · zerwizserver). Two read-only routes feed it:
   whether it `applies` to this seat's roles (from `bin/fleet/topology.sh`), the fired
   markers (`state/.cron-fired`), and — when stopped — a `why` read from
   `state/cron.log` (e.g. `no live session lock`).
-- **`/api/cron/seats`** — one ssh round-trip per server seat (BatchMode,
-  `ConnectTimeout=3`, host aliases `whynot` and `server` from `~/.ssh/config`),
-  returning reachable/running/pid/roles plus how many of the schedule's jobs that
-  seat's roles run. Read on demand, machine-local — never carried through the
-  synced home (plan 51 rule 1). The seat list defaults to whynot + zerwizserver
-  and is overridable with `YMIR_CRON_SERVER_SEATS="seat:sshhost …"`.
+- **`/api/cron/seats`** — one ssh round-trip per server seat (BatchMode, `ConnectTimeout=3`), returning
+  reachable/running/pid/roles plus how many of the schedule's jobs that seat's roles run. Read on demand,
+  machine-local — never carried through the synced home (plan 51 rule 1). The seats are the fleet's
+  `heart` and `forge` hosts from the registry in the hoard (`<hoard>/data/fleet.json`, or
+  `YMIR_FLEET_REGISTRY`), this machine excluded, resolved by `server/server-seats.ts`; the ssh host is the
+  registry's name for the seat. `YMIR_CRON_SERVER_SEATS="seat:sshhost …"` still overrides. No machine name
+  is written in the code (plan 278; until 2026-11-12 two were).
 
 Never render a bare zero: an absent schedule names the missing path, a stopped
 loop names its reason, an unreachable seat names the ssh failure.
@@ -997,3 +998,4 @@ private home/audio/report settings and synthetic-only boundary are unchanged.
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-12** — Plan 278: `/api/cron/seats` takes its seats from the fleet registry (`server/server-seats.ts`): the heart and forge hosts, this machine excluded. The two machine names the code and this page carried are gone.
