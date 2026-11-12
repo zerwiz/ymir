@@ -1,0 +1,59 @@
+# surfaces.yaml — the ONE register of Eir's surfaces, read by Eir and by Gróa (plan 278).
+#
+# Eir (bin/agents/eir-doctor.sh) checks each surface named here, in this order, and Gróa's update mends
+# only the ones an update may mend without asking. A surface is one row:
+#
+#   name    the surface; Eir carries `s_<name>` (is it healthy?) and `f_<name>` (the mend)
+#   risk    who may run the mend:
+#             safe   an update mends it unattended — Ymir's own files and units, local, no root, no download
+#             ask    needs the operator's word — a download, a package install, root, or a change to what
+#                    the user runs. An update lists it as OWED with the exact command and never runs it.
+#             never  report only — the fault is in code, upstream, or the operator's own declaration
+#   roles   the fleet roles the surface applies to (heart forge dev hand), or `all`. A surface that is not
+#           this seat's is a clean skip, never a red row (RULES/25).
+#   why     one line: why the risk class is what it is
+#
+# Nothing here names a machine, a user, a host or a path (RULES/04). A seat with no copy of this file
+# falls back to Eir's own list with every mend treated as `ask`, so a missing register can never make an
+# update mend more than it should.
+version: 1
+
+surfaces:
+  - { name: floors,      risk: ask,   roles: all, why: "installs packages through the platform's package manager" }
+  - { name: seatpaths,   risk: safe,  roles: all, why: "writes Ymir's own marked block into the login profile" }
+  - { name: hooks,       risk: safe,  roles: all, why: "re-seats Ymir's own git hooks from their installers" }
+  - { name: packaging,   risk: never, roles: all, why: "a missing installer input is a code change, not a mend" }
+  - { name: herdr,       risk: ask,   roles: all, why: "installing the pane backend downloads it" }
+  - { name: a2abridge,   risk: safe,  roles: all, why: "repoints the engine's own unit at the user boot target and starts it; never downloads" }
+  - { name: hermes,      risk: ask,   roles: all, why: "installing the worker runtime downloads it" }
+  - { name: snotra,      risk: ask,   roles: all, why: "installing the meeting ear downloads an engine and a model" }
+  - { name: voice,       risk: ask,   roles: all, why: "builds Rödd's face with npm and may fetch voice models" }
+  - { name: council,     risk: safe,  roles: all, why: "writes the council roster only where none exists; never overwrites" }
+  - { name: sessrumnir,  risk: ask,   roles: [heart, forge, dev], why: "an npm install and build" }
+  - { name: bilskirnir,  risk: ask,   roles: [heart, forge, dev], why: "may reinstall dependencies from the network" }
+  - { name: hnoss,       risk: safe,  roles: all, why: "seats the launcher and the pi MCP entry; the package install itself is `hnoss-ensure.sh ensure --install`, which asks" }
+  - { name: shells,      risk: ask,   roles: [heart, forge, dev], why: "lands the Electron runtime, from the network when the cache lacks it" }
+  - { name: graphics,    risk: never, roles: all, why: "a missing render device is a driver or kernel matter" }
+  - { name: well,        risk: safe,  roles: all, why: "starts Ymir's own well bridge" }
+  - { name: memory,      risk: safe,  roles: all, why: "raises the well and runs the grading pass, which never lowers the count" }
+  - { name: mail,        risk: safe,  roles: all, why: "re-seats Ymir's own mail desk unit from its source; the account is the operator's and is never mended" }
+  - { name: unitdrift,   risk: safe,  roles: all, why: "re-renders a Ymir unit that still runs a value its source retired" }
+  - { name: mcp,         risk: safe,  roles: all, why: "re-seats Ymir's MCP entries in the harness configs" }
+  - { name: harness,     risk: safe,  roles: all, why: "re-binds the pi extensions to the live root" }
+  - { name: pidoor,      risk: safe,  roles: all, why: "seats the PATH block so `pi` is the one-home door; a new shell picks it up" }
+  - { name: claudehooks, risk: safe,  roles: all, why: "re-seats Ymir's own Claude hooks" }
+  - { name: opencode,    risk: never, roles: all, why: "an upstream flag change cannot be mended here" }
+  - { name: arm,         risk: safe,  roles: all, why: "starts Ymir's own standing watcher" }
+  - { name: armpin,      risk: safe,  roles: all, why: "moves the pin to main and restarts its units, as every update does" }
+  - { name: runtimepin,  risk: safe,  roles: all, why: "moves Ymir units onto the pin through the one writer" }
+  - { name: roddhelm,    risk: never, roles: all, why: "the holder of the arm is a declaration, never invented" }
+  - { name: lock,        risk: safe,  roles: all, why: "removes a lock file whose process is dead" }
+  - { name: gates,       risk: safe,  roles: all, why: "re-seats the pre-push hook from its installer" }
+  - { name: migrations,  risk: safe,  roles: all, why: "applies the numbered, idempotent home migrations" }
+  - { name: hoard,       risk: ask,   roles: all, why: "moves and removes directories in the home" }
+  - { name: autoboot,    risk: ask,   roles: all, why: "re-materialises and re-enables the boot units of every program the role owes" }
+  - { name: vault,       risk: ask,   roles: [heart, forge, dev], why: "installs disk-encryption tooling as root" }
+  - { name: ward,        risk: ask,   roles: all, why: "hardens the machine; may need root" }
+  - { name: seats,       risk: safe,  roles: all, why: "applies the seat migration and seats the sweep hook" }
+  - { name: seatreap,    risk: ask,   roles: all, why: "closes finished worker seats; a person may still be reading one" }
+  - { name: models,      risk: never, roles: all, why: "the allow-list is the operator's word" }

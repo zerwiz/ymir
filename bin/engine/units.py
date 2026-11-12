@@ -11,7 +11,10 @@ Nothing here is a second resolver: it reads the same file `src/ymir_runtime/path
 
     units.sh list  [--names|--restart]   what the register owes, and every app under apps/
     units.sh check                       exit 1 when a Ymir unit/launcher is off the pin or unregistered
-    units.sh write [name…] [--set K=V]   render/retarget everything, write only what changed
+    units.sh drift                       exit 1 when an installed unit still runs a value its source retired
+    units.sh write [name…] [--set K=V] [--render]
+                                         render/retarget everything, write only what changed;
+                                         --render re-seats an adopted unit from the register
 """
 from __future__ import annotations
 
@@ -421,7 +424,9 @@ def cmd_write(args: argparse.Namespace) -> int:
         # a unit another installer already wrote (the fleet renders gna-desk from its own template) keeps its
         # shape: the writer moves its paths and never reformats it, so two writers cannot flip-flop
         present = any((udir / f"{e['name']}.{x}").exists() for x in ("service", "timer"))
-        if e["mode"] == "render" and e.get("if_present") == "adopt" and present and not overrides:
+        # --render (plan 278): re-seat from the register even where another installer wrote the file, so a
+        # unit that kept a retired argument through the adopt road is rendered from its source again
+        if e["mode"] == "render" and e.get("if_present") == "adopt" and present and not overrides and not args.render:
             e = {**e, "mode": "adopt"}
         if e["mode"] == "render":
             if not (pin / ".git").exists() and not args.dry_run and not os.environ.get("YMIR_UNITS_ALLOW_NO_PIN"):
@@ -483,6 +488,71 @@ def cmd_write(args: argparse.Namespace) -> int:
                     run.put(f, retarget(old, roots, pin), f.name, "launcher")
     finish(run)
     emit(run.rows)
+    return 1 if run.problems else 0
+
+
+def _var_flags(exec_tpl: str) -> dict[str, str]:
+    """{VAR: the flag word just before ${VAR}} in a register exec line (`--port ${GNA_DESK_PORT}` → --port)."""
+    words = exec_tpl.split()
+    out: dict[str, str] = {}
+    for i, w in enumerate(words):
+        m = re.fullmatch(r"\$\{([A-Z][A-Z0-9_]*)\}", w)
+        if m and i > 0 and words[i - 1].startswith("-"):
+            out[m.group(1)] = words[i - 1]
+    return out
+
+
+def drift_of(entry: dict, text: str) -> list[str]:
+    """Why an installed unit no longer matches its source (plan 278), or nothing.
+
+    Only what the register DECLARES is judged: a value listed under `retired:` for a variable is one the
+    source used once and has since moved off. A unit still running it was never re-seated (the adopt road
+    keeps every argument). A seat's own `--set` choice is never drift, because it is not a retired value.
+    """
+    retired = entry.get("retired") or {}
+    if not retired:
+        return []
+    flags = _var_flags(str(entry.get("exec", "")))
+    defaults = {k: str(v) for k, v in (entry.get("vars") or {}).items()}
+    why: list[str] = []
+    for line in text.splitlines():
+        key, _, rest = line.partition("=")
+        key = key.strip()
+        for var, olds in retired.items():
+            olds = [str(o) for o in (olds or [])]
+            got = None
+            if key.startswith("ExecStart") and var in flags:
+                words = rest.split()
+                for i, w in enumerate(words[:-1]):
+                    if w == flags[var]:
+                        got = words[i + 1]
+            elif key == "Environment" and rest.startswith(var + "="):
+                got = rest[len(var) + 1:].strip().strip("\"'")
+            if got is not None and got in olds:
+                why.append(f"{var}={got} is a retired default; the source says {defaults.get(var, '?')}")
+    return sorted(set(why))
+
+
+def cmd_drift(args: argparse.Namespace) -> int:
+    """exit 1 when an installed Ymir unit runs a value its source has retired (plan 278, problem 17)."""
+    reg = load_register()
+    roles = roles_here()
+    run = Run(True, False)
+    udir = unit_dir()
+    for e in reg["units"]:
+        if not owed(e, roles):
+            continue
+        for suffix in ("service", "timer"):
+            f = udir / f"{e['name']}.{suffix}"
+            if not f.exists():
+                continue
+            try:
+                text = f.read_text(encoding="utf-8")
+            except OSError:
+                continue
+            for why in drift_of(e, text):
+                run.row(e["name"], e["kind"], "DRIFT", f"{why} — bin/engine/units.sh write {e['name']} --render", bad=True)
+    emit(run.rows or [("none", "-", "ok", "every installed unit runs what its source says")])
     return 1 if run.problems else 0
 
 
@@ -585,12 +655,14 @@ def main() -> int:
     w.add_argument("--set", action="append", default=[])
     w.add_argument("--dry-run", action="store_true")
     w.add_argument("--no-restart", action="store_true")
+    w.add_argument("--render", action="store_true")
     sub.add_parser("check")
+    sub.add_parser("drift")
     ls = sub.add_parser("list")
     ls.add_argument("--names", action="store_true")
     ls.add_argument("--restart", action="store_true")
     args = ap.parse_args()
-    return {"write": cmd_write, "check": cmd_check, "list": cmd_list}[args.verb](args)
+    return {"write": cmd_write, "check": cmd_check, "drift": cmd_drift, "list": cmd_list}[args.verb](args)
 
 
 if __name__ == "__main__":

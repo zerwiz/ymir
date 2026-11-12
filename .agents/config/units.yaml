@@ -45,6 +45,10 @@ units:
     # the fleet step renders this unit from tools/mill/systemd/gna-desk.service on the seats that owe it;
     # where that file exists the writer only moves its paths onto the pin
     if_present: adopt
+    # values the source used once and moved off (plan 278). An adopted unit still running one was never
+    # re-seated: `units.sh drift` names it and `units.sh write gna-desk --render` re-seats it. 8490 is the
+    # gimle share's port; the desk ran there until 2026-11-12.
+    retired: { GNA_DESK_PORT: ["8490"] }
 
   - name: queue-warden
     mode: render

@@ -7,9 +7,15 @@
 # harness extension owns that) and never touches a tracked tree.
 #
 # Usage:
-#   eir-doctor.sh [check]      # diagnose every surface, aggregate TOON
-#   eir-doctor.sh fix          # mend what can be mended safely, then re-check
+#   eir-doctor.sh [check]                  # diagnose every surface, aggregate TOON
+#   eir-doctor.sh fix [surface…]           # mend the broken (or only the named), then re-check
+#   eir-doctor.sh fix --safe [surface…]    # mend only what config/surfaces.yaml calls `safe`; list the
+#                                          # rest as OWED with the exact command (Gróa runs this one)
 #   eir-doctor.sh --version
+#
+# The surfaces, their order, their roles and their risk class come from config/surfaces.yaml (plan 278),
+# read by bin/agents/surfaces.py — the same rows Gróa reads. Without the register Eir falls back to its own
+# list and treats every mend as `ask`.
 set -u
 # The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
@@ -47,8 +53,19 @@ fi
 app_dir sessrumnir APP_SESSRUMNIR || APP_SESSRUMNIR=""
 
 
-case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
+case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,21p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 ACTION="${1:-check}"; shift || true
+# `fix` takes --safe and surface names (plan 278); `check` takes none.
+FIX_SAFE=0; FIX_ONLY=""
+[ "$ACTION" = fix ] || set --   # a check judges every surface; extra words are ignored as before
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --safe) FIX_SAFE=1 ;;
+    -*)     printf 'error: unknown flag %s\nhelp: bin/agents/eir-doctor.sh fix [--safe] [surface…]\n' "$1" >&2; exit 2 ;;
+    *)      FIX_ONLY="$FIX_ONLY $1" ;;
+  esac
+  shift
+done
 
 have() { command -v "$1" >/dev/null 2>&1; }
 say_ok() { return 0; }
@@ -68,9 +85,23 @@ for _seat in "${HOME}/.pi/agent/extensions/.ymir-seat" "${YMIR_HOME:-/nonexisten
   [ -n "$ROLE" ] && break
 done
 unset _seat
+FLEET_ROLES="${YMIR_EIR_ROLES-}"
+if [ -z "${YMIR_EIR_ROLES+set}" ] && [ -x "$SCRIPT_DIR/../skuld/role.sh" ]; then
+  FLEET_ROLES="$(timeout 10 "$SCRIPT_DIR/../skuld/role.sh" resolve 2>/dev/null | tr ',\n' '  ' | sed 's/  */ /g; s/^ //; s/ $//')"
+fi
 
 # surface_skip <surface> — 0 when this substrate/role cannot owe the surface.
 surface_skip() {
+  # The register's roles (plan 278): a surface declared for other roles is not this seat's to owe.
+  # The FLEET role is read once from the fleet registry (bin/skuld/role.sh), never the seat's own word
+  # (`.ymir-seat` role= names the agent's office, e.g. counsellor). Unresolved: the seat owes everything.
+  local _ro="${SURF_ROLES[$1]:-all}" _fr
+  if [ "$_ro" != all ] && [ -n "$FLEET_ROLES" ]; then
+    for _fr in $FLEET_ROLES; do case ",$_ro," in *",$_fr,"*) _ro=all; break ;; esac; done
+    [ "$_ro" = all ] || return 0
+  fi
+  # A unit check needs systemd (RULES/05: a clean, named skip on another platform layer).
+  if [ "$1" = unitdrift ] && ! command -v systemctl >/dev/null 2>&1; then return 0; fi
   # The mail desk is a systemd user unit; a substrate without systemd cannot owe it
   # (a hand). A clean skip with its reason is a pass (RULES/25).
   if [ "$1" = mail ] && [ "$PLATFORM" = termux ]; then return 0; fi
@@ -115,12 +146,37 @@ surface_detail_skip() {
     armpin)     printf '%s\n' 'not this seat (a hand runs no pinned runtime)' ;;
     runtimepin) printf '%s\n' 'not this seat (no systemd: no unit to keep on the pin)' ;;
     mail)       printf '%s\n' 'not this seat (no systemd: the desk is a user unit)' ;;
-    *)          printf '%s\n' 'skip' ;;
+    unitdrift)  printf '%s\n' 'not this seat (no systemd: no unit to compare with its source)' ;;
+    *)          if [ "${SURF_ROLES[$1]:-all}" != all ]; then printf 'not this seat (the register owes it to: %s)\n' "${SURF_ROLES[$1]}"
+                else printf '%s\n' 'skip'; fi ;;
   esac
 }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir bilskirnir hnoss shells graphics well memory mail mcp harness pidoor claudehooks opencode arm armpin runtimepin roddhelm lock gates migrations hoard autoboot vault ward seats seatreap models)
+SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir bilskirnir hnoss shells graphics well memory mail unitdrift mcp harness pidoor claudehooks opencode arm armpin runtimepin roddhelm lock gates migrations hoard autoboot vault ward seats seatreap models)
+
+# ── the register (plan 278): config/surfaces.yaml names the surfaces, their roles and their risk class ──
+# The array above is the FALLBACK, kept until every seat carries the register. Without the register every
+# mend is `ask`, so an update can never mend more than it should because a file was missing.
+declare -A SURF_RISK=() SURF_ROLES=() SURF_WHY=()
+SURF_REGISTER="${YMIR_EIR_REGISTER:-$ROOT/config/surfaces.yaml}"
+SURF_SOURCE="fallback"
+if _rows="$(python3 -I "$SCRIPT_DIR/surfaces.py" "$SURF_REGISTER" 2>/dev/null)" && [ -n "$_rows" ]; then
+  _list=()
+  while IFS=$'\t' read -r _n _r _ro _w; do
+    [ -n "$_n" ] || continue
+    _list+=("$_n"); SURF_RISK[$_n]="$_r"; SURF_ROLES[$_n]="$_ro"; SURF_WHY[$_n]="$_w"
+  done <<<"$_rows"
+  SURFACES=("${_list[@]}"); SURF_SOURCE="register"
+  unset _list _n _r _ro _w
+fi
+unset _rows
+surface_risk() { printf '%s' "${SURF_RISK[$1]:-ask}"; }
+# Test seam: extra surfaces defined by a test, honoured only under YMIR_EIR_TEST=1 (never in a real run).
+if [ "${YMIR_EIR_TEST:-}" = 1 ] && [ -n "${YMIR_EIR_TEST_SURFACES:-}" ] && [ -r "$YMIR_EIR_TEST_SURFACES" ]; then
+  # shellcheck source=/dev/null
+  . "$YMIR_EIR_TEST_SURFACES"
+fi
 
 # ── the three surfaces the 2026-11-03 Windows audit found, and the rule they read ──────────
 # A SEAT IS NOT UPDATED BY A PULL. The checkout moves; the installed hooks, the PATH a later
@@ -242,8 +298,54 @@ s_floors()    { [ -x "$SCRIPT_DIR/../engine/prereq-ensure.sh" ] && "$SCRIPT_DIR/
 f_floors()    { "$SCRIPT_DIR/../engine/prereq-ensure.sh" ensure --install >/dev/null 2>&1; }
 s_herdr()     { [ -x "$SCRIPT_DIR/../seat/herdr-ensure.sh" ] && "$SCRIPT_DIR/../seat/herdr-ensure.sh" status >/dev/null 2>&1; }
 f_herdr()     { "$SCRIPT_DIR/../seat/herdr-ensure.sh" ensure --install >/dev/null 2>&1; }
-s_a2abridge() { [ -x "$SCRIPT_DIR/../bridge/a2abridge-ensure.sh" ] && "$SCRIPT_DIR/../bridge/a2abridge-ensure.sh" status >/dev/null 2>&1; }
-f_a2abridge() { "$SCRIPT_DIR/../bridge/a2abridge-ensure.sh" ensure --install >/dev/null 2>&1; }
+# a2abridge (plan 278, proved 2026-11-12): `a2abridge-ensure.sh status` always exits 0, so this surface was
+# green while the directory never rose — the engine's own installer writes `WantedBy=multi-user.target`, a
+# target the user manager does not have, so an "enabled" unit is pulled in by nothing at boot. Judge the
+# truth instead: no engine is a clean pass (the mesh is optional); an engine whose unit cannot boot, or
+# whose directory is down, is broken. The mend is `ensure` WITHOUT --install: it repoints the boot target
+# and starts the unit, and never downloads (a missing engine is `ensure --install`, the operator's word).
+A2AB_BIN="${A2ABRIDGE_BIN:-$HOME/.a2abridge/bin/a2abridge}"
+A2AB_UNIT="${YMIR_A2AB_UNIT:-$HOME/.config/systemd/user/a2abridge-directory.service}"
+a2ab_fault() {  # prints the fault, or nothing when healthy
+  [ -x "$A2AB_BIN" ] || return 0
+  if [ -f "$A2AB_UNIT" ] && grep -qE '^WantedBy=multi-user\.target' "$A2AB_UNIT" 2>/dev/null; then
+    printf 'the directory unit boots with multi-user.target, which a user manager never reaches — bin/bridge/a2abridge-ensure.sh ensure'
+    return 0
+  fi
+  if command -v systemctl >/dev/null 2>&1 && [ -f "$A2AB_UNIT" ] \
+     && ! systemctl --user is-active --quiet a2abridge-directory 2>/dev/null; then
+    printf 'the directory unit is %s — bin/bridge/a2abridge-ensure.sh ensure' \
+      "$(systemctl --user is-active a2abridge-directory 2>/dev/null || printf inactive)"
+  fi
+}
+s_a2abridge() { [ -z "$(a2ab_fault)" ]; }
+f_a2abridge() { "$SCRIPT_DIR/../bridge/a2abridge-ensure.sh" ensure >/dev/null 2>&1; s_a2abridge; }
+a2abridge_detail() {
+  local f; f="$(a2ab_fault)"
+  if [ -n "$f" ]; then printf '%s' "$f"
+  elif [ -x "$A2AB_BIN" ]; then printf '%s · directory up' "$("$A2AB_BIN" version 2>/dev/null | head -1)"
+  else printf 'engine absent (optional — bin/bridge/a2abridge-ensure.sh ensure --install)'; fi
+}
+# unitdrift (plan 278): an installed unit that still runs a value its source has retired. The adopt road
+# moves a unit's paths onto the pin and keeps every argument, so the mail desk ran on a retired port through
+# every update. The register declares what was retired; the mend re-seats exactly the drifted units.
+s_unitdrift() { [ -x "$SCRIPT_DIR/../engine/units.sh" ] || return 0; "$SCRIPT_DIR/../engine/units.sh" drift >/dev/null 2>&1; }
+f_unitdrift() {
+  local n
+  for n in $("$SCRIPT_DIR/../engine/units.sh" drift 2>/dev/null | awk -F'","' '/"DRIFT"/{gsub(/^ *"/,"",$1); print $1}' | sort -u); do
+    "$SCRIPT_DIR/../engine/units.sh" write "$n" --render >/dev/null 2>&1 || return 1
+  done
+  s_unitdrift
+}
+unitdrift_detail() {
+  "$SCRIPT_DIR/../engine/units.sh" drift 2>/dev/null | awk -F'","' 'NR>1{gsub(/^ *"/,"",$1); gsub(/"$/,"",$4); printf "%s%s: %s", (n++?"; ":""), $1, $4}'
+}
+# A door's own status, read for its first complaint (plan 278: every broken row carries a reason). The
+# doors print TOON rows; the first one that names a fault is the reason, with its quotes taken off.
+door_reason() {  # <door> [args…]
+  "$@" 2>&1 | grep -m1 -E 'ABSENT|absent|MISSING|missing|NOT |not |down|FAIL|stale|refus' \
+    | sed -E 's/^ *//; s/"//g; s/,/ · /g' | cut -c1-200
+}
 s_hermes()    { [ -x "$SCRIPT_DIR/../engine/hermes-ensure.sh" ] && "$SCRIPT_DIR/../engine/hermes-ensure.sh" status >/dev/null 2>&1; }
 f_hermes()    { "$SCRIPT_DIR/../engine/hermes-ensure.sh" ensure --install >/dev/null 2>&1; }
 # The meeting ear's engine (whisper.cpp + a model); the MCP face + unit ride
@@ -762,7 +864,14 @@ detail() { # <name> -> the command that prints one short fact
   case "$1" in
     floors)    printf '%s\n' "[ -x $SCRIPT_DIR/../engine/prereq-ensure.sh ] && echo 'tool floors'" ;;
     herdr)     printf '%s\n' "have herdr && herdr --version 2>/dev/null | head -1 || { have tmux && tmux -V | sed 's/^/tmux fallback: /' || echo 'no pane backend'; }" ;;
-    a2abridge) printf '%s\n' "have a2abridge && a2abridge --version 2>/dev/null | head -1 || echo 'engine absent'" ;;
+    a2abridge) printf '%s\n' a2abridge_detail ;;
+    unitdrift) printf '%s\n' "unitdrift_detail | grep . || echo 'every installed unit runs what its source says'" ;;
+    voice)     printf '%s\n' "door_reason $SCRIPT_DIR/../voice/voice-ensure.sh status" ;;
+    hnoss)     printf '%s\n' "door_reason $SCRIPT_DIR/../pi/hnoss-ensure.sh status" ;;
+    snotra)    printf '%s\n' "door_reason $SCRIPT_DIR/../../systems/snotra/services/ear/snotra-ensure.sh status" ;;
+    council)   printf '%s\n' "door_reason $SCRIPT_DIR/../pi/logretta-ensure.sh status" ;;
+    vault)     printf '%s\n' "door_reason $SCRIPT_DIR/../vault/hnitbjorg-ensure.sh status" ;;
+    ward)      printf '%s\n' "door_reason $SCRIPT_DIR/../ward/security-audit.sh check" ;;
     hermes)    printf '%s\n' "have hermes && echo present || echo absent" ;;
     sessrumnir)printf '%s\n' "[ -d $APP_SESSRUMNIR/out ] && echo built || echo 'not built'" ;;
     bilskirnir)printf '%s\n' "[ -x $ROOT/apps/bilskirnir/setup.sh ] && { $ROOT/apps/bilskirnir/setup.sh --check 2>&1 | tail -1; } || echo 'not in this tree'" ;;
@@ -794,13 +903,41 @@ detail() { # <name> -> the command that prints one short fact
   esac
 }
 
+# A healthy row whose detail would be a door's first complaint says plainly that it is healthy instead.
+ok_text() {
+  case "$1" in
+    voice)   printf 'the voice engines and the face answer' ;;
+    hnoss)   printf 'the design door is seated' ;;
+    snotra)  printf 'the meeting ear has an engine' ;;
+    council) printf 'the council roster stands' ;;
+    vault)   printf 'the vault tooling stands (a sealed vault is healthy)' ;;
+    ward)    printf 'no door above the floor' ;;
+  esac
+}
+
 broken=0
 unconfigured=0
+OWED=""   # surface<TAB>risk, one per line: broken, and not mended by this run
 if [ "$ACTION" = "fix" ]; then
   for s in "${SURFACES[@]}"; do
+    if [ -n "$FIX_ONLY" ]; then case " $FIX_ONLY " in *" $s "*) ;; *) continue ;; esac; fi
     surface_skip "$s" && continue
-    if ! "s_$s" >/dev/null 2>&1; then
-      "f_$s" >/dev/null 2>&1 && printf 'eir: mended %s\n' "$s" || printf 'eir: could not mend %s\n' "$s" >&2
+    declare -F "s_$s" >/dev/null || continue
+    "s_$s" >/dev/null 2>&1 && continue
+    risk="$(surface_risk "$s")"
+    # --safe (Gróa's road, plan 278): only a `safe` mend runs unattended. A named surface is the operator
+    # asking for that one, so it is mended whatever its class — except `never`, which no door can mend.
+    if [ "$risk" = never ] || { [ "$FIX_SAFE" = 1 ] && [ "$risk" != safe ]; }; then
+      printf 'eir: owed %s (%s) — bin/agents/eir-doctor.sh fix %s\n' "$s" "$risk" "$s"
+      continue
+    fi
+    if declare -F "f_$s" >/dev/null && "f_$s" >/dev/null 2>&1 && "s_$s" >/dev/null 2>&1; then
+      printf 'eir: mended %s\n' "$s"
+      # Every mend is a Runes entry (operational law 3); the line carries the surface and the class.
+      [ "${YMIR_EIR_TEST:-}" = 1 ] || { [ -x "$SCRIPT_DIR/../records/runes-append.sh" ] && \
+        "$SCRIPT_DIR/../records/runes-append.sh" eir mend --message "eir mended surface $s (risk $risk)" >/dev/null 2>&1; } || true
+    else
+      printf 'eir: could not mend %s (%s) — bin/agents/eir-doctor.sh fix %s, then read its row\n' "$s" "$risk" "$s" >&2
     fi
   done
 fi
@@ -828,11 +965,21 @@ for s in "${SURFACES[@]}"; do
       unconfigured) unconfigured=$((unconfigured+1)) ;;
       *)            broken=$((broken+1)) ;;
     esac
+  elif ! declare -F "s_$s" >/dev/null; then state=broken; broken=$((broken+1)); d_override="the register names this surface but Eir has no check for it (s_$s)"
   elif "s_$s" >/dev/null 2>&1; then state=ok
   elif surface_ok "$s"; then state=ok; d_override="tmux fallback"
   else state=broken; broken=$((broken+1)); fi
-  d="$(eval "$("detail" "$s" 2>/dev/null)" 2>/dev/null | head -1)"
+  if [ "$state" = ok ] && [ -n "$(ok_text "$s")" ]; then d="$(ok_text "$s")"
+  else d="$(eval "$("detail" "$s" 2>/dev/null)" 2>/dev/null | head -1)"; fi
   [ -n "${d_override:-}" ] && { d="$d_override"; d_override=""; }
+  # A broken row ALWAYS carries a reason and the command (plan 278, problem 10): `voice` and `hnoss`
+  # printed an empty detail, which told the operator nothing.
+  if [ "$state" = broken ]; then
+    [ -n "$d" ] || d="the check gave no reason — bin/agents/eir-doctor.sh fix $s"
+    d="$(printf '%s' "$d" | tr -d '"')"
+    OWED="${OWED}${s}	$(surface_risk "$s")
+"
+  fi
   rows="${rows}  \"${s}\",\"${state}\",\"${d}\"\n"
   count=$((count+1))
 done
@@ -849,6 +996,9 @@ if [ -t 2 ]; then
   done <<<"$(printf '%b' "$rows" | sed 's/^  //; s/"//g; s/,/|/; s/,/|/')"
 fi
 if [ "$broken" != 0 ] || [ "$unconfigured" != 0 ]; then
+  # One line per broken surface with its risk class, so Gróa and the operator read the same owed list
+  # (plan 278). Machine-clean: `owed: <surface> <risk>`.
+  printf '%s' "$OWED" | while IFS=$'\t' read -r _s _r; do [ -n "$_s" ] && printf 'owed: %s %s\n' "$_s" "$_r"; done
   [ "$broken" != 0 ] && printf 'eir: %s surface(s) need mending — run: bin/agents/eir-doctor.sh fix\n' "$broken"
   [ "$unconfigured" != 0 ] && printf 'eir: %s surface(s) are unconfigured — a name must be DECLARED, never mended\n' "$unconfigured"
   exit 1
