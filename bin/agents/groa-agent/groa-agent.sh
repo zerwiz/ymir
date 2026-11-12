@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # groa-agent.sh — Gróa's body on a schedule: the updater, leashed, one per install.
 #
-#   groa-agent.sh start   # launch in the background (opencode, free model)
+#   groa-agent.sh start   # launch in the background
 #   groa-agent.sh stop    # stop it
 #   groa-agent.sh status  # is it running? last lines of its log
 #   groa-agent.sh tick    # one scheduled run: start, wait, stop if it hangs
@@ -9,9 +9,22 @@
 #
 # The agent is deliberately narrow: exact commands, no commits, no merges, no
 # pushes. If a command fails it must stop and say so, not improvise.
+#
+# GROA_MODE (plan 275 S8b, 2026-11-12):
+#   script (the default) — the timer runs bin/agents/groa-update.sh ITSELF. An update is a fixed list of commands
+#                          and needs no model. Measured 2026-11-08 → 2026-11-12 on heimdall and nidavellir: every
+#                          nightly tick printed "Model unavailable: opencode/nemotron-3-ultra-free" and exited 0, so
+#                          no machine updated itself for five days and nothing said so.
+#   agent                — the old road: a leashed OpenCode model types the commands (GROA_MODEL).
+# A failed update exits non-zero and files a dated fault under $YMIR_HOME/hodd/state/groa/faults/.
 set -uo pipefail
 
-REPO="${YMIR_REPO:-$HOME/ymir}"
+# The tree Gróa runs from is the tree she installs into: the PIN (what every icon and unit runs), never the
+# operator's working tree — a working tree is a person's, and its setup never reached the pin (plan 275, part two).
+REPO="${YMIR_REPO:-}"
+[ -n "$REPO" ] || { [ -d "${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}/.git" ] && REPO="${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}"; }
+[ -n "$REPO" ] || REPO="$HOME/ymir"
+MODE="${GROA_MODE:-script}"
 
 # Rule 07: the home is resolved, never restated.
 HOME_DIR="${YMIR_HOME:-}"
@@ -94,12 +107,41 @@ record_report(){
   fi
 }
 
-# run the agent, then record what it found
+# a failed nightly run is a dated fault the operator (and Gróa's smith) can find, never a quiet log line
+file_fault(){  # <rc> <what>
+  local d="$HOME_DIR/hodd/state/groa/faults" f
+  mkdir -p "$d" 2>/dev/null || return 0
+  f="$d/$(date +%Y%m%d-%H%M%S)-nightly-update.md"
+  { printf '# The nightly update failed — %s\n\n' "$(date -Is)"
+    printf -- '- machine: %s\n- tree: %s\n- mode: %s\n- exit: %s\n- what: %s\n\n' "$(hostname -s)" "$REPO" "$MODE" "$1" "$2"
+    printf 'The last lines of `%s`:\n\n```\n' "$LOG"; tail -40 "$LOG" 2>/dev/null; printf '```\n'; } > "$f"
+}
+
+# run the update (or the agent), then record what it found; the return code is the update's own
 run_and_record(){
-  local offset
+  local offset rc before after
   offset="$(wc -c < "$LOG" 2>/dev/null || echo 0)"
-  ( cd "$REPO" && timeout "$TIMEOUT" opencode run -m "$MODEL" "$PROMPT_TEXT" >> "$LOG" 2>&1 )
+  if [ "$MODE" = agent ]; then
+    ( cd "$REPO" && timeout "$TIMEOUT" opencode run -m "$MODEL" "$PROMPT_TEXT" >> "$LOG" 2>&1 ); rc=$?
+    # an agent whose model is gone did nothing: that is a failure, not a pass
+    tail -c +$((offset+1)) "$LOG" | grep -q 'Model unavailable' && rc=69
+  else
+    before="$(git -C "$REPO" rev-parse --short HEAD 2>/dev/null)"
+    if [ "${GROA_KIND:-run}" = check ]; then
+      ( cd "$REPO" && git fetch -q --all --prune && timeout "$TIMEOUT" bash bin/agents/groa-update.sh --check ) >> "$LOG" 2>&1; rc=$?
+    else
+      ( cd "$REPO" && git fetch -q --all --prune && timeout "$TIMEOUT" bash bin/agents/groa-update.sh ) >> "$LOG" 2>&1; rc=$?
+    fi
+    after="$(git -C "$REPO" rev-parse --short HEAD 2>/dev/null)"
+    if [ "$rc" = 0 ]; then
+      if [ "$before" = "$after" ]; then echo "UPDATED: nothing" >> "$LOG"; else echo "UPDATED: $before..$after" >> "$LOG"; fi
+    else
+      echo "GUARD: groa-update.sh exited $rc ($before → $after)" >> "$LOG"
+    fi
+  fi
+  [ "$rc" = 0 ] || file_fault "$rc" "$([ "$MODE" = agent ] && echo "the agent run" || echo "bin/agents/groa-update.sh")"
   record_report "$offset"
+  return "$rc"
 }
 
 case "${1:-}" in
@@ -109,15 +151,17 @@ case "${1:-}" in
     PROMPT_TEXT="$prompt"
     kind="${1:-start}"
     {
-      echo "── $(date -Is) $kind with $MODEL ─────────────────────────"
+      if [ "$MODE" = agent ]; then echo "── $(date -Is) $kind with $MODEL ─────────────────────────"
+      else echo "── $(date -Is) $kind · groa-update.sh in $REPO ─────────────────────────"; fi
     } >> "$LOG"
-    PROMPT_TEXT="$prompt" run_and_record &
+    GROA_KIND="$([ "$kind" = check ] && echo check || echo run)" PROMPT_TEXT="$prompt" run_and_record &
     echo $! > "$PIDFILE"
     if [ "$kind" = tick ]; then
-      wait "$(cat "$PIDFILE")" 2>/dev/null
-      echo "── $(date -Is) tick finished (rc $?) ─────────────────────" >> "$LOG"
+      wait "$(cat "$PIDFILE")" 2>/dev/null; trc=$?
+      echo "── $(date -Is) tick finished (rc $trc) ─────────────────────" >> "$LOG"
       rm -f "$PIDFILE"
       tail -20 "$LOG"
+      exit "$trc"
     else
       echo "started (pid $(cat "$PIDFILE"), model $MODEL, log $LOG)"
     fi

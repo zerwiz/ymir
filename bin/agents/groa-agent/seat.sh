@@ -16,7 +16,11 @@ QUIET=0
 for a in "$@"; do [ "$a" = "--quiet" ] && QUIET=1; done
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO="${YMIR_REPO:-$HOME/ymir}"
+# plan 275 S8b: Gróa runs from the pin (what the icons and units run), never a working tree
+REPO="${YMIR_REPO:-}"
+[ -n "$REPO" ] || { [ -d "${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}/.git" ] && REPO="${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}"; }
+[ -n "$REPO" ] || REPO="$HOME/ymir"
+MODE="${GROA_MODE:-script}"
 AUTH_SRC="${OC_AUTH_SRC:-}"
 MINUTE="${GROA_MINUTE:-}"
 
@@ -42,7 +46,7 @@ if [ -z "$MINUTE" ]; then
 fi
 
 # 1. OpenCode
-if ! command -v opencode >/dev/null 2>&1; then
+if [ "$MODE" = agent ] && ! command -v opencode >/dev/null 2>&1; then
   echo "installing opencode…"
   if ! npm i -g opencode-ai </dev/null >/dev/null 2>&1; then
     # never block on a password prompt — sudo hangs pi when there is no tty.
@@ -54,7 +58,7 @@ if ! command -v opencode >/dev/null 2>&1; then
     fi
   fi
 fi
-command -v opencode >/dev/null || { echo "opencode still absent" >&2; exit 1; }
+[ "$MODE" != agent ] || command -v opencode >/dev/null || { echo "opencode still absent" >&2; exit 1; }
 
 # 2. auth
 if [ -n "$AUTH_SRC" ] && [ -r "$AUTH_SRC" ]; then
@@ -73,11 +77,13 @@ mkdir -p "$HOME/.config/systemd/user"
 # 4. the timer
 cat > "$HOME/.config/systemd/user/groa-agent.service" <<EOF
 [Unit]
-Description=Gróa — the updater, one per install (OpenCode, free model, leashed)
+Description=Gróa — the updater, one per install (runs groa-update.sh; GROA_MODE=$MODE)
 
 [Service]
 Type=oneshot
 Environment=YMIR_REPO=$REPO
+Environment=GROA_MODE=$MODE
+TimeoutStartSec=3600
 ExecStart=%h/.local/bin/groa-agent.sh tick
 Nice=10
 EOF
