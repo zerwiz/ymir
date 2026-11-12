@@ -172,7 +172,7 @@ function restartHost(url) {
     }
     if (!host) return resolve('no host known');
     execFile('ssh', ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=6', host,
-      'cd ~/ymir && ./bin/voice/voice-door.sh host'], { timeout: 240000 }, (err) => resolve(err ? String(err.message) : 'restarted'));
+      'cd ~/ymir && ./bin/voice/voice-door.sh host --now'], { timeout: 240000 }, (err) => resolve(err ? String(err.message) : 'restarted'));
   });
 }
 

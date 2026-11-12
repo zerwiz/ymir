@@ -8,6 +8,8 @@ loopback HTTP:
     GET  /tools          the definitions the client registers with the Realtime session
     POST /tool           {"name": ..., "arguments": {...}} → {"output": ..., "create_response": bool}
     GET  /health         liveness
+    GET  /desk           what the window needs to say WHY a call failed: is the engine answering,
+                         who holds the microphone (plan 271)
 
 Every call goes through `voice_tools.execute_tool`, so the confirm gate on `hand_over`,
 the vault refusal, the seat-scoping and the activity log are exactly the terminal's.
@@ -25,6 +27,7 @@ import asyncio
 import json
 import re
 import os
+import socket
 import subprocess
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -37,6 +40,7 @@ REPO = Path(__file__).resolve().parents[2]
 HOME = Path(os.environ.get("YMIR_HOME") or (Path.home() / "Documents" / "ymirhome"))
 SETTINGS = HOME / "hodd" / "state" / "rodd" / "settings.json"
 MEMORY = HOME / "hodd" / "state" / "rodd" / "memory.jsonl"
+LOSSES = HOME / "hodd" / "state" / "rodd" / "losses.jsonl"
 LOOPBACK = ("127.0.0.1", "localhost", "[::1]")
 
 # A memory item that asks her to MERGE is void (plan 254 B7, 2026-11-11): merging is the
@@ -54,6 +58,29 @@ def _void_if_merge(row):
     if _MERGE_ASK.search(str(row.get("text", ""))):
         row = dict(row, void=VOID_MERGE)
     return row
+
+
+def _desk() -> dict:
+    """The facts behind a failed connect, asked fresh each time (plan 271 piece 3)."""
+    port = int(os.environ.get("YMIR_VOICE_PORT") or 8890)
+    up = False
+    try:
+        with socket.create_connection(("127.0.0.1", port), timeout=1.5):
+            up = True
+    except OSError:
+        pass
+    def door(*args: str) -> str:
+        try:
+            r = subprocess.run(["bash", str(REPO / "bin" / "desk" / "in-call.sh"), *args],
+                               capture_output=True, text=True, timeout=5)
+            return r.stdout.strip()
+        except Exception:
+            return ""
+    inputs = door("inputs")
+    return {"engine_up": up, "engine_port": port, "mic_holder": door("holder"),
+            "inputs": int(inputs) if inputs.isdigit() else None,
+            "mic_bluetooth": subprocess.run(["bash", str(REPO / "bin" / "desk" / "in-call.sh"), "bluetooth"],
+                                            capture_output=True, timeout=5).returncode == 0}
 
 
 def _rodd_head():
@@ -124,6 +151,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802
         if self.path.startswith("/health"):
             return self._json(200, {"ok": True, "tools": len(voice_tools.TOOLS)})
+        if self.path.startswith("/desk"):
+            return self._json(200, _desk())
         if self.path.startswith("/head"):
             r = _rodd_head().resolve()
             r.pop("key", None)          # a secret is never returned to a window
@@ -148,7 +177,7 @@ class Handler(BaseHTTPRequestHandler):
                     "parameters": t.get("parameters", {"type": "object", "properties": {}}),
                 })
             return self._json(200, {"tools": defs})
-        return self._json(404, {"error": "unknown path", "paths": ["/tools", "/tool", "/head", "/settings", "/memory", "/health"]})
+        return self._json(404, {"error": "unknown path", "paths": ["/tools", "/tool", "/head", "/settings", "/memory", "/health", "/desk", "/loss"]})
 
     def do_POST(self) -> None:  # noqa: N802
         length = int(self.headers.get("Content-Length") or 0)
@@ -178,6 +207,27 @@ class Handler(BaseHTTPRequestHandler):
             merged = {**current, **{k: v for k, v in payload.items() if not str(k).startswith("_")}}
             _write_json(SETTINGS, merged)
             return self._json(200, {"ok": True, "settings": merged, "path": str(SETTINGS)})
+
+        if self.path.startswith("/loss"):
+            # ONE record per loss (plan 259 B2e rule 4): the id is the second the stream was lost,
+            # and a loss already written is not written twice.
+            lid = str(payload.get("id") or "").strip()
+            if not lid:
+                return self._json(200, {"ok": False, "detail": "a loss needs its id (the second it was lost)"})
+            seen = set()
+            try:
+                for line in LOSSES.read_text(encoding="utf-8").splitlines():
+                    seen.add(json.loads(line).get("id"))
+            except Exception:
+                pass
+            if lid in seen:
+                return self._json(200, {"ok": True, "duplicate": True})
+            LOSSES.parent.mkdir(parents=True, exist_ok=True)
+            row = {k: payload.get(k) for k in ("id", "what", "cause", "lost_at", "reopened_at", "attempts", "said")}
+            with LOSSES.open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+            os.chmod(LOSSES, 0o600)
+            return self._json(200, {"ok": True})
 
         if self.path.startswith("/memory"):
             text = str(payload.get("text") or "").strip()
