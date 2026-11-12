@@ -1440,3 +1440,11 @@ engine is Honcho, as engram is the well's. It is fed from the well and can alway
 well (plan 260).
 
 The sentences to hold: **Sessrúmnir builds the house; Bilskirnir runs it. The well remembers; Sökkvabekkr understands.**
+
+## Correction (2026-11-12) — Nanna keeps the Bilskirnir hall, not Fulla
+
+The section "Bilskirnir, Fulla and Sökkvabekkr" above says *"Fulla keeps the hall"*. That was wrong for Bilskirnir. The first
+agent in the hall is **Nanna**, Ymir's own shipped assistant, the one who answers in Rödd as well. Fulla is the machine
+agent that keeps heimdall's computer; she does not live in the hall. Everything else in that section stands: the agent is
+a **she**, the engine under her (Hermes) is her tool and never her name, and another machine's hall is kept by that
+machine's own agent. The old paragraph is kept as the record of what was believed.

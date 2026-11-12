@@ -33,7 +33,7 @@ for f in "${entries[@]}"; do
   case "$exec_line" in
     */.yggdrasil/*)
       bad=$((bad+1))
-      printf 'desktop-main-guard: %s points into a WORKTREE\n  Exec=%s\n  fix: bash bin/host/omarchy-install.sh   (from the main tree)\n' \
+      printf 'desktop-main-guard: %s points into a WORKTREE\n  Exec=%s\n  fix: run `bash bin/host/omarchy-install.sh` from the MAIN tree (~/ymir, never a .yggdrasil worktree) — it re-seats every launcher from main; do not edit the .desktop by hand\n' \
         "$(basename "$f")" "$exec_line";;
   esac
 done
