@@ -193,6 +193,32 @@ Voice runs on the house's own parts by default (`BILSKIRNIR_VOICE=house`). Nothi
 
 Open a bot's details panel, **Engine**. Pick a provider and model there. **Sign in to a subscription** opens a terminal on the bot's screen running Hermes' own sign-in for that provider (for example Claude Pro/Max), so you finish it in the viewer and the bot uses that subscription from then on. Check your provider's terms before running an agent on a consumer subscription.
 
+## Choosing a model
+
+Open **Settings › Models** (⌘, or Ctrl+, then *Models*). The hall looks for what you already have and lists it. You type nothing unless a provider needs a key.
+
+![Settings, Models, on a wide screen: each provider found, its models, and a Use button per model](assets/screenshots/models-desktop.png)
+
+**What it looks for.** It only reads, and a missing place is simply skipped:
+
+- keys in the environment: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`, `DEEPSEEK_API_KEY`, `GROQ_API_KEY`, `GEMINI_API_KEY`, `XAI_API_KEY` and the like;
+- pi (`~/.pi/agent/auth.json` and `models.json`), OpenCode (its config and `auth.json`) and Hermes' own `~/.hermes`;
+- local servers answering `/v1/models`: Ollama (11434), LM Studio (1234), llama.cpp or llama-swap (8080) and vLLM (8000). Set `BILSKIRNIR_LOCAL_PORTS=ollama:11434,vllm:8000` to look elsewhere.
+
+**Using a model.** Pick the agent at the top, then press *Use for Nanna* beside any model. The hall rewrites that agent's own Hermes `config.yaml` (only its `model:` block) and reloads its gateway. Each agent can have its own model.
+
+**Adding a provider.** Under *Add a provider*, pick OpenRouter, OpenAI, Anthropic, DeepSeek, Groq, Gemini, xAI, Mistral and others from the list and paste a key. Or choose *Another server* and give a base URL. A pasted key is stored in your own home secrets (`$YMIR_HOME/hodd/secrets/`, readable only by you), or in the app's ignored `data/models/` when there is no home. It never goes into the repo and is never sent back to the page; the page shows only where a key was found.
+
+**Your fleet's allow-list rules it.** If `$YMIR_HOME/config/models-allowed.yaml` exists, only the models it allows (or a live, dated grant) can be chosen. The others stay visible, greyed, saying *not allowed in this fleet*. The judge is `bin/model/model-allow.sh`, the one door, so this screen never holds a second copy of the rule. With no file, everything found can be chosen.
+
+**On a phone.** The same page, one column; each model's button sits beside it.
+
+![The same page on a phone](assets/screenshots/models-phone.png)
+
+**First start.** `setup.sh` no longer needs pi. For the first agent it uses, in order: `BILSKIRNIR_MODEL` (and `BILSKIRNIR_BASE_URL`) if set; the model you chose on this screen; the model the agent already has; otherwise the first allowed chat model the detector finds. If it finds none, it says so and the hall still opens: choose one here.
+
+**Test it:** `node_modules/.bin/tsx tests/model-door.mts` runs the detector against stub servers and a temporary HOME. `node tests/models-screen.mjs <url> <out-dir>` photographs the screen at desktop and phone width.
+
 ## Development
 
 ```bash
@@ -229,3 +255,4 @@ Continued from [grokbot-clone](https://github.com/nickvasilescu/grokbot-clone). 
 ## CHANGE LOG
 
 - **2026-11-12** — vendored from Bot HQ (MIT) into `apps/bilskirnir` (plan 259); kept as upstream wrote it, and from here appended, never rewritten.
+- **2026-11-12** — Settings › Models: the hall finds the providers the user already has, one click to use a model per agent, the fleet's allow-list rules it (Eindri `model-door`).

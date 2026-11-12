@@ -5,6 +5,7 @@ import { newId } from './lib/ids.js';
 import { hub } from './lib/hub.js';
 import { requireUser, type AuthVars } from './lib/auth.js';
 import fs from 'node:fs';
+import path from 'node:path';
 import { Readable } from 'node:stream';
 import { env } from './env.js';
 import { emitBot, getBotRow, listRoutines, listTasks } from './store.js';
@@ -12,7 +13,9 @@ import { computerState, readyScreen, resetBotScreen } from './computer.js';
 import { box } from './box.js';
 import { orgo } from './orgo.js';
 import { openTerminal } from './desk.js';
-import { engineHome, engineInfo, engineKind, forgetEngineOptions, restartEngine, stopOwnScreen } from './engine.js';
+import { engineHome, engineInfo, engineKind, forgetEngineOptions, reloadEngine, restartEngine, stopOwnScreen } from './engine.js';
+import { detect, forBrowser, PRESETS, readChoices, modelsDirFor } from './models/detect.js';
+import { addProvider, choose, removeProvider } from './models/choose.js';
 import { listMemories } from './engine-memory.js';
 import { idleConfig, viewerCount } from './idle.js';
 import type { LibraryFile, Skill } from './types.js';
@@ -23,7 +26,7 @@ import type { LibraryFile, Skill } from './types.js';
  */
 export const configApi = new Hono<AuthVars>();
 
-for (const p of ['/bots/*', '/skills/*', '/computer/*']) configApi.use(p, requireUser);
+for (const p of ['/bots/*', '/skills/*', '/computer/*', '/models/*']) configApi.use(p, requireUser);
 
 const ownBot = (userId: string, id: string) => {
   const b = getBotRow(id);
@@ -159,6 +162,61 @@ configApi.post('/bots/:id/engine/login', async (c) => {
     return c.json({ ok: true });
   } catch (e: any) {
     return c.json({ error: String(e?.message ?? e).slice(0, 300) }, 502);
+  }
+});
+
+// ---------- the Models screen: what the user already has, and one click to use it ----------
+
+/** Every provider found (environment, pi, OpenCode, Hermes, local servers), its models, and the fleet's verdict on each. Keys are never sent. */
+configApi.get('/models', async (c) => {
+  const d = forBrowser(await detect());
+  const choices = readChoices(modelsDirFor());
+  const bots = (db.prepare("SELECT id, name, is_primary, engine FROM bots WHERE COALESCE(kind,'agent') <> 'room' AND COALESCE(hidden,0)=0 ORDER BY is_primary DESC, created_at ASC").all() as any[])
+    .filter((b) => b.engine === 'primary' || b.engine === 'managed')
+    .map((b) => {
+      const ch = choices[b.id] ?? (b.is_primary ? choices.primary : undefined);
+      return { id: b.id, name: b.name, primary: !!b.is_primary, model: ch?.model ?? null, providerId: ch?.providerId ?? null };
+    });
+  return c.json({ ...d, bots, presets: PRESETS.map(({ id, name, baseUrl, needsKey, local, keyHint }) => ({ id, name, baseUrl, needsKey, local: !!local, keyHint })) });
+});
+
+/** Add a provider by preset + key, or by base URL alone. The key goes to the user's own secrets, never back to the browser. */
+configApi.post('/models/providers', async (c) => {
+  const p = await c.req.json<{ preset?: string; name?: string; baseUrl?: string; key?: string }>().catch(() => ({} as any));
+  try {
+    const r = await addProvider(p);
+    return c.json({ ok: true, id: r.provider.id, keyStoredIn: r.keyStoredIn });
+  } catch (e: any) {
+    return c.json({ error: String(e?.message ?? e).slice(0, 300) }, 400);
+  }
+});
+
+configApi.delete('/models/providers/:id', (c) => {
+  removeProvider(c.req.param('id'));
+  return c.json({ ok: true });
+});
+
+/** Use this model for this agent: rewrite its Hermes config.yaml's model block, then reload its gateway. */
+configApi.post('/bots/:id/model', async (c) => {
+  const b = ownBot(c.get('user').id, c.req.param('id'));
+  if (!b) return c.json({ error: 'not found' }, 404);
+  const home = engineHome(b.id);
+  if (!home) return c.json({ error: 'This room has no agent behind it.' }, 409);
+  const p = await c.req.json<{ providerId?: string; model?: string }>().catch(() => ({} as any));
+  if (!p.providerId || !p.model) return c.json({ error: 'Pick a model.' }, 400);
+  const kind = engineKind(b.id);
+  if (kind === 'primary' && !path.resolve(home).startsWith(path.resolve(env.enginesDir) + path.sep)) {
+    return c.json({ error: `${b.name} runs on the computer's own Hermes, which this app does not change. Choose the model there.` }, 409);
+  }
+  try {
+    const r = await choose(kind === 'primary' ? 'primary' : b.id, home, { providerId: p.providerId, model: p.model });
+    db.prepare('UPDATE bots SET provider=?, model=?, updated_at=? WHERE id=?').run(r.providerId, r.model, now(), b.id);
+    emitBot(b.id);
+    await reloadEngine(b.id);
+    forgetEngineOptions(b.id);
+    return c.json({ ok: true, providerId: r.providerId, model: r.model });
+  } catch (e: any) {
+    return c.json({ error: String(e?.message ?? e).slice(0, 300) }, 400);
   }
 });
 

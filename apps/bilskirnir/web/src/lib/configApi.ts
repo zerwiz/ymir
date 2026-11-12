@@ -34,7 +34,24 @@ export interface ComputerDetails {
 
 export type BotPatch = Partial<Pick<Bot, 'name' | 'label' | 'description' | 'instructions' | 'avatarShape' | 'avatarColor' | 'effort' | 'mode'>>;
 
+export interface ModelRow { id: string; allowed: boolean; reason?: string }
+export interface ModelProvider {
+  id: string; name: string; baseUrl: string; local: boolean; sources: string[];
+  status: 'ok' | 'needs-key' | 'unreachable' | 'from-config'; note?: string; models: ModelRow[];
+  /** Where the key was found, in words — never the key. */
+  key: string; hasKey: boolean; added?: boolean;
+}
+export interface ModelsView {
+  at: string; policed: boolean; allowList: string | null; providers: ModelProvider[];
+  bots: { id: string; name: string; primary: boolean; model: string | null; providerId: string | null }[];
+  presets: { id: string; name: string; baseUrl: string; needsKey: boolean; local: boolean; keyHint?: string }[];
+}
+
 export const configApi = {
+  models: () => req<ModelsView>('GET', '/models'),
+  addProvider: (p: { preset?: string; name?: string; baseUrl?: string; key?: string }) => req<{ ok: true; id: string; keyStoredIn: string | null }>('POST', '/models/providers', p),
+  removeProvider: (id: string) => req<{ ok: true }>('DELETE', `/models/providers/${encodeURIComponent(id)}`),
+  useModel: (botId: string, p: { providerId: string; model: string }) => req<{ ok: true; providerId: string; model: string }>('POST', `/bots/${botId}/model`, p),
   settings: (botId: string) => req<BotSettingsBundle>('GET', `/bots/${botId}/settings`),
   updateBot: (botId: string, p: BotPatch) => req<{ bot: Bot }>('PATCH', `/bots/${botId}`, p),
   deleteBot: (botId: string) => req<{ ok: true }>('DELETE', `/bots/${botId}`),
