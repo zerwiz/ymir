@@ -17,4 +17,4 @@ web/screenshots/
 tests/out/
 # the data home is linked in, not kept here (plan 275 S5)
 data
-data.local-*
+data.aside-*

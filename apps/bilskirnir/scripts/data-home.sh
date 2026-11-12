@@ -10,7 +10,7 @@
 # The home is BILSKIRNIR_DATA_HOME, else ${XDG_DATA_HOME:-~/.local/share}/ymir/bilskirnir. It holds `data/` and
 # `.env`; the checkout gets two links. Nothing is ever deleted:
 #   · no home yet, the checkout has real state  → the state MOVES into the home, then is linked
-#   · a home exists, the checkout has its own   → the checkout's copy is set aside as <name>.local-<stamp>, then linked
+#   · a home exists, the checkout has its own   → the checkout's copy is set aside as <name>.aside-<stamp>, then linked
 #   · already linked                             → nothing to do
 # --check prints `linked` (exit 0) or what would change (exit 1), and changes nothing.
 set -u
@@ -35,7 +35,7 @@ for name in data .env; do
   mkdir -p "$HOME_DIR"
   if [ -e "$there" ]; then
     # the home already has it: keep this checkout's copy beside it, never lose it
-    [ -e "$here" ] || [ -L "$here" ] && mv "$here" "$here.local-$STAMP"
+    [ -e "$here" ] || [ -L "$here" ] && mv "$here" "$here.aside-$STAMP"
   elif [ -e "$here" ] && [ ! -L "$here" ]; then
     mv "$here" "$there"
   else

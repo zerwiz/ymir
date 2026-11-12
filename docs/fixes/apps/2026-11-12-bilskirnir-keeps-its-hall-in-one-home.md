@@ -12,7 +12,7 @@ conversations were still in the working tree's copy.
 
 `scripts/data-home.sh` links `data/` and `.env` to one home per user — `BILSKIRNIR_DATA_HOME`, else
 `${XDG_DATA_HOME:-~/.local/share}/ymir/bilskirnir`. The first checkout to run moves its state there. A later checkout
-that has its own copy sets it aside as `<name>.local-<stamp>`, so nothing is deleted. `start.sh` and `setup.sh` run it
+that has its own copy sets it aside as `<name>.aside-<stamp>`, so nothing is deleted. `start.sh` and `setup.sh` run it
 first. `.gitignore` ignores the links and the set-aside copies.
 
 ## Proof
