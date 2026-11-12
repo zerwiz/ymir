@@ -65,7 +65,7 @@ export function DetailsPanel() {
   return (
     <aside className="details" style={botVars(bot.avatarColor)} aria-label="Conversation details">
       <div className="details__top">
-        <button type="button" className="icon-btn icon-btn--bordered details__gear" onClick={() => useConfigUI.getState().openBotSettings(bot.id)} aria-label="Bot settings" title="Bot settings">
+        <button type="button" className="icon-btn icon-btn--bordered details__gear" onClick={() => useConfigUI.getState().openBotSettings(bot.id)} aria-label="Agent settings" title="Agent settings">
           <Glyph name="gear" size={16} opacity={0.7} />
         </button>
         <button type="button" className="icon-btn icon-btn--bordered" onClick={() => set({ detailsOpen: false })} aria-label="Close details">
@@ -97,20 +97,20 @@ export function DetailsPanel() {
         <div className="details__tabs">
           <div className="segmented">
             <button type="button" className={tab === 'activity' ? 'is-active' : ''} onClick={() => setTab('activity')}>Activity</button>
-            <button type="button" className={tab === 'tasks' ? 'is-active' : ''} onClick={() => setTab('tasks')}>Tasks</button>
-            <button type="button" className={tab === 'library' ? 'is-active' : ''} onClick={() => setTab('library')}>Library</button>
+            <button type="button" className={tab === 'tasks' ? 'is-active' : ''} onClick={() => setTab('tasks')}>Errands</button>
+            <button type="button" className={tab === 'library' ? 'is-active' : ''} onClick={() => setTab('library')}>The shelf</button>
           </div>
         </div>
         {tab === 'activity' ? (
           <div className="details__sections">
             <section>
               <div className="section-label section-label--row">
-                <span>Upcoming</span>
+                <span>Coming up</span>
                 <button type="button" className="link-btn link-btn--small" onClick={() => useConfigUI.getState().openBotSettings(bot.id, 'routines')}>Manage</button>
               </div>
               <div className="panel-card">
                 {routines?.length ? routines.map((r) => <RoutineRow key={r.id} r={r} />) : (
-                  <div className="panel-empty">Nothing scheduled. Try asking in chat, for example “send me a summary every weekday at 8am”.</div>
+                  <div className="panel-empty">Nothing set. Ask in the room, for example “send me a summary every weekday at 8am”.</div>
                 )}
               </div>
             </section>
@@ -138,11 +138,11 @@ export function DetailsPanel() {
             {bot.kind !== 'room' && (
               <>
                 <section>
-                  <div className="section-label">Engine</div>
+                  <div className="section-label">The engine</div>
                   <EngineSettings bot={bot} />
                 </section>
                 <section>
-                  <div className="section-label">Voice chat</div>
+                  <div className="section-label">The voice</div>
                   <VoiceSettings bot={bot} />
                 </section>
               </>

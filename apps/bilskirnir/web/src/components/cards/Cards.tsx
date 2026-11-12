@@ -12,7 +12,7 @@ function useBusy() {
   const [error, setError] = useState<string | null>(null);
   const run = async (key: string, fn: () => Promise<unknown>) => {
     setBusy(key); setError(null);
-    try { await fn(); } catch (e) { setError((e as Error).message || 'Something went wrong'); } finally { setBusy(null); }
+    try { await fn(); } catch (e) { setError((e as Error).message || 'Something broke'); } finally { setBusy(null); }
   };
   return { busy, error, run };
 }

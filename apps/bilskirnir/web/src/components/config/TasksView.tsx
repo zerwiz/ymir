@@ -66,9 +66,9 @@ export function TasksView() {
     <main className="chat tasks-view">
       <header className="tasks-view__header">
         <RoomsButton />
-        <div className="tasks-view__title">Tasks</div>
-        <div className="segmented" role="tablist" aria-label="Filter tasks">
-          {([['open', `In progress${counts.open ? ` ${counts.open}` : ''}`], ['done', 'Done'], ['all', 'All']] as [Filter, string][]).map(([f, label]) => (
+        <div className="tasks-view__title">Errands</div>
+        <div className="segmented" role="tablist" aria-label="Filter errands">
+          {([['open', `Under way${counts.open ? ` ${counts.open}` : ''}`], ['done', 'Done'], ['all', 'All']] as [Filter, string][]).map(([f, label]) => (
             <button key={f} type="button" role="tab" aria-selected={filter === f} className={filter === f ? 'is-active' : ''} onClick={() => setFilter(f)}>{label}</button>
           ))}
         </div>
@@ -78,8 +78,8 @@ export function TasksView() {
           {tasks === null ? <div className="cfg-empty">Loading…</div> : shown.length === 0 ? (
             <div className="tasks-empty">
               <Glyph name="tasks" size={28} opacity={0.35} />
-              <div className="tasks-empty__title">{filter === 'done' ? 'Nothing finished yet' : 'Nothing in progress'}</div>
-              <div className="tasks-empty__sub">Give a Bot a multi-part request and every piece gets its own row here, so progress is easy to follow.</div>
+              <div className="tasks-empty__title">{filter === 'done' ? 'No errand finished yet' : 'No errand under way'}</div>
+              <div className="tasks-empty__sub">Give an agent an errand in several parts, and each part gets its own row here, so you can follow it.</div>
             </div>
           ) : (
             <div className="task-list">{shown.map((t) => <TaskRow key={t.id} t={t} bot={byId.get(t.botId)} showBot />)}</div>
@@ -96,9 +96,9 @@ export function TasksIsland() {
   const tasks = useTasks();
   const waiting = tasks?.filter((t) => t.state === 'needs_input').length ?? 0;
   return (
-    <button type="button" className={`sidebar-island${view === 'tasks' ? ' is-active' : ''}`} onClick={() => useConfigUI.getState().setView(view === 'tasks' ? 'chat' : 'tasks')} title="Tasks" aria-pressed={view === 'tasks'}>
+    <button type="button" className={`sidebar-island${view === 'tasks' ? ' is-active' : ''}`} onClick={() => useConfigUI.getState().setView(view === 'tasks' ? 'chat' : 'tasks')} title="Errands" aria-pressed={view === 'tasks'}>
       <span className="sidebar-island__icon"><Glyph name="tasks" size={18} /></span>
-      <span className="sidebar-island__label">Tasks</span>
+      <span className="sidebar-island__label">Errands</span>
       {waiting > 0 && <span className="sidebar-island__count" aria-label={`${waiting} waiting on you`}>{waiting}</span>}
     </button>
   );
@@ -112,7 +112,7 @@ export function BotTasks({ bot }: { bot: Bot }) {
     <div className="details__sections">
       <section>
         <div className="section-label section-label--row">
-          <span>Tasks</span>
+          <span>Errands</span>
           <button type="button" className="link-btn link-btn--small" onClick={() => useConfigUI.getState().setView('tasks')}>See all</button>
         </div>
         {tasks === null ? <div className="panel-card"><div className="panel-empty">Loading…</div></div> : sorted.length === 0 ? (

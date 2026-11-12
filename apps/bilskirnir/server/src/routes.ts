@@ -43,7 +43,7 @@ function createBot(userId: string, b: { name: string; label?: string; descriptio
   const color = COLORS.includes(b.avatarColor as AvatarColor) ? b.avatarColor : hashPick(id, COLORS.filter((c) => c !== 'black'));
   db.prepare(
     'INSERT INTO bots(id,user_id,name,label,description,instructions,avatar_shape,avatar_color,mode,is_primary,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
-  ).run(id, userId, b.name.trim().slice(0, 60) || 'New Bot', b.label ?? '', b.description ?? '', b.instructions ?? '', shape, color, b.mode === 'teammate' ? 'teammate' : 'personal', b.isPrimary ? 1 : 0, now(), now());
+  ).run(id, userId, b.name.trim().slice(0, 60) || 'New agent', b.label ?? '', b.description ?? '', b.instructions ?? '', shape, color, b.mode === 'teammate' ? 'teammate' : 'personal', b.isPrimary ? 1 : 0, now(), now());
   // The first bot is the agent that already runs on the computer; the others get an engine of their own.
   if (assignEngine(id) === 'managed') provisionEngine(id);
   hub.emit(userId, { type: 'roster' });
@@ -56,7 +56,7 @@ function findOrCreateUser(email: string, name?: string, preferId?: string) {
   if (env.allowedEmails.length && !env.allowedEmails.includes(email.toLowerCase())) throw new UserError('This account is not allowed to sign in here.');
   const id = preferId ?? newId('usr');
   db.prepare('INSERT INTO users(id,email,name,created_at) VALUES (?,?,?,?)').run(id, email, name ?? email.split('@')[0], now());
-  createBot(id, { name: env.primaryBotName, label: env.primaryBotLabel, description: "The keeper of this machine's hall. Your first word goes to her; she watches the house and calls on the other agents.", avatarShape: 'blob', avatarColor: 'black', isPrimary: true });
+  createBot(id, { name: env.primaryBotName, label: env.primaryBotLabel, description: 'The one who answers in the hall. Your first word goes to her; she watches the house and calls on the other agents.', avatarShape: 'blob', avatarColor: 'black', isPrimary: true });
   return { id, isNew: true };
 }
 

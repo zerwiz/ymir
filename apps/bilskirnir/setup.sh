@@ -182,6 +182,8 @@ if [ "$CHECK" = 0 ] && [ -f "$DB" ]; then
 import sqlite3, sys
 c = sqlite3.connect(sys.argv[1])
 c.execute("UPDATE bots SET name=?, label=? WHERE is_primary=1 AND (name<>? OR label<>?)", (sys.argv[2], sys.argv[3], sys.argv[2], sys.argv[3]))
+# the first seed said "the keeper of this machine's hall" — the Allfather: "we should not say for this machine"
+c.execute("UPDATE bots SET description=? WHERE is_primary=1 AND description=?", ("The one who answers in the hall. Your first word goes to her; she watches the house and calls on the other agents.", "The keeper of this machine's hall. Your first word goes to her; she watches the house and calls on the other agents."))
 c.commit()
 PY
   say "the first agent in the app is $NAME"

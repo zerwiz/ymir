@@ -36,8 +36,8 @@ export function TrafficLights() {
 
 function previewFor(bot: Bot, running: boolean, awaiting: string | null) {
   if (awaiting) return `Waiting for you: ${awaiting}`;
-  if (running && !bot.lastPreview) return 'Working…';
-  return bot.lastPreview ?? 'No messages yet';
+  if (running && !bot.lastPreview) return 'At work…';
+  return bot.lastPreview ?? 'Nothing said yet';
 }
 
 const BotRow = memo(function BotRow({ bot, selected, running, awaiting, onSelect }: { bot: Bot; selected: boolean; running: boolean; awaiting: string | null; onSelect: (id: string) => void }) {
@@ -85,7 +85,7 @@ export function Sidebar() {
           <Icon name="close" size={14} opacity={0.66} />
         </button>
         <div className="sidebar__controls">
-          <button type="button" className="icon-btn icon-btn--plain sidebar__collapse" onClick={() => set({ sidebarCollapsed: !collapsed })} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} title="Toggle sidebar (⌘B)">
+          <button type="button" className="icon-btn icon-btn--plain sidebar__collapse" onClick={() => set({ sidebarCollapsed: !collapsed })} aria-label={collapsed ? 'Widen the rooms' : 'Fold the rooms'} title="Fold or widen the rooms (⌘B)">
             <Icon name="sidebar" opacity={0.66} />
           </button>
           {!collapsed && (
@@ -93,7 +93,7 @@ export function Sidebar() {
               <button type="button" className="icon-btn" onClick={() => setModal('search')} aria-label="Search" title="Search (⌘K)">
                 <Icon name="search" opacity={0.66} />
               </button>
-              <button type="button" className="icon-btn" onClick={() => setModal('create')} aria-label="New Bot" title="New Bot">
+              <button type="button" className="icon-btn" onClick={() => setModal('create')} aria-label="New agent" title="New agent">
                 <Icon name="plus" opacity={0.66} />
               </button>
             </>
@@ -128,8 +128,8 @@ export function Sidebar() {
             <button type="button" className="bot-list__empty" onClick={() => setModal('create')}>
               <span className="bot-list__empty-plus"><Icon name="plus" size={14} opacity={0.66} /></span>
               <span>
-                <span className="bot-row__name">Create a Bot</span>
-                <span className="bot-row__preview">Give it a job, like research or inbox triage</span>
+                <span className="bot-row__name">Seat an agent</span>
+                <span className="bot-row__preview">Give it an errand, like research or the inbox</span>
               </span>
             </button>
           )}
@@ -151,7 +151,7 @@ export function Sidebar() {
                 items={[
                   { label: 'Settings', hint: '⌘,', onSelect: () => useConfigUI.getState().openAppSettings() },
                   { label: 'Connect apps', onSelect: () => setModal('apps') },
-                  { label: 'Log out', danger: true, onSelect: logout },
+                  { label: 'Leave the hall', danger: true, onSelect: logout },
                 ]}
               >
                 <div className="menu__header">{user?.email}</div>

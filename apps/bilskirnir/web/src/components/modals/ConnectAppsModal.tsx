@@ -35,7 +35,7 @@ function AppRow({ app, onChanged }: { app: Toolkit; onChanged: () => void }) {
       setState('waiting');
     } catch (e) {
       popup?.close();
-      setError((e as Error).message || 'Couldn’t start the connection');
+      setError((e as Error).message || 'Couldn’t open that door');
       setState('idle');
     }
   };
@@ -164,11 +164,11 @@ export function ConnectAppsModal() {
   const connectedCount = data?.connected.length ?? 0;
 
   return (
-    <Modal onClose={close} className="apps-modal" label="Connect Apps">
+    <Modal onClose={close} className="apps-modal" label="Connect apps">
       <button type="button" className="modal__close apps-modal__close" onClick={close} aria-label="Close"><Icon name="close" size={16} opacity={0.68} /></button>
       <div className="apps-modal__head">
         <div className="apps-modal__titlerow">
-          <span className="apps-modal__title">Connect Apps</span>
+          <span className="apps-modal__title">Connect apps</span>
           <button type="button" className={`apps-modal__connected${view.kind === 'connected' ? ' is-active' : ''}`} onClick={() => setView(view.kind === 'connected' ? { kind: 'all' } : { kind: 'connected' })}>
             {connectedApps.length > 0 && (
               <span className="apps-modal__connected-logos">
@@ -185,9 +185,9 @@ export function ConnectAppsModal() {
               <Icon name="search" size={14} opacity={0.56} />
               <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search apps and skills" aria-label="Search apps" />
             </label>
-            <button type="button" className="pill-chip" title="Bot templates are coming soon" disabled>
+            <button type="button" className="pill-chip" title="Agent templates are not forged yet" disabled>
               {primary && <BotAvatarFor bot={primary} size={22} />}
-              <span>Bot templates</span>
+              <span>Agent templates</span>
               <Icon name="share" size={12} opacity={0.56} />
             </button>
           </div>

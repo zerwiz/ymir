@@ -19,7 +19,7 @@ export const MAX_SCREENS = 4;
 export interface BotScreen { computerId: string; screenId: string; width?: number; height?: number }
 
 function computerId(): string {
-  if (!env.orgoComputerId) throw new Error('ORGO_COMPUTER_ID is not set, so there is no computer for the bots to use.');
+  if (!env.orgoComputerId) throw new Error('No computer is set up for the hall yet (ORGO_COMPUTER_ID is empty), so the agents have no screen to work on.');
   return env.orgoComputerId;
 }
 
@@ -170,7 +170,7 @@ async function lease(userId: string, botId: string): Promise<BotScreen> {
   } else {
     screen = existing.find((s) => s.id !== 'default' && !s.default && !taken.has(s.id));
     if (!screen) {
-      if (existing.length >= MAX_SCREENS) throw new Error(`Every screen on the computer is in use (${MAX_SCREENS} at most). Remove a bot to free one.`);
+      if (existing.length >= MAX_SCREENS) throw new Error(`Every screen on the computer is in use (${MAX_SCREENS} at most). Remove an agent to free one.`);
       screen = await orgo.createScreen(id);
     }
   }
@@ -257,7 +257,7 @@ export async function suspendComputer(_userId: string, _reason = 'manual'): Prom
 /** Refresh status and screen sizes from Orgo (cheap; used when the UI opens). */
 export async function refreshComputer(userId: string): Promise<ComputerState> {
   if (!env.orgoComputerId) {
-    setStatus(userId, 'error', 'ORGO_COMPUTER_ID is not set.');
+    setStatus(userId, 'error', 'No computer is set up for the hall yet (ORGO_COMPUTER_ID is empty).');
     return computerState(userId);
   }
   try {

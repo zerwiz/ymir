@@ -66,7 +66,7 @@ export function ComputerScreen({ bot, variant, initialMode = 'watch', hint, paus
     setWaking(true); setWakeError(null);
     api.ensureComputer()
       .then(() => useStore.getState().loadComputer())
-      .catch((e: Error) => setWakeError(e.message || 'The computer did not start.'))
+      .catch((e: Error) => setWakeError(e.message || 'The computer did not wake.'))
       .finally(() => setWaking(false));
   }, []);
 
@@ -275,7 +275,7 @@ export function ComputerScreen({ bot, variant, initialMode = 'watch', hint, paus
           <div className="screen__chin">
             <span className="screen__chin-text" role="status">
               <i className="screen__ping" aria-hidden />
-              <span>{hint || 'You’re driving'}</span>
+              <span>{hint || 'You hold the reins'}</span>
             </span>
             <span className="screen__chin-actions">
               {canFullscreen && (

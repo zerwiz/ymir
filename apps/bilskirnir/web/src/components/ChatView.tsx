@@ -25,7 +25,7 @@ export function ChatView() {
     return (
       <main className="chat chat--empty">
         <RoomsButton />
-        <div className="empty-chat"><div className="empty-chat__sub">No Bot selected.</div></div>
+        <div className="empty-chat"><div className="empty-chat__sub">Choose a room.</div></div>
       </main>
     );
   }
@@ -52,7 +52,7 @@ export function ChatView() {
                 { label: detailsOpen ? 'Hide details' : 'Show details', hint: '⇧⌘,', onSelect: () => set({ detailsOpen: !detailsOpen }) },
                 { label: 'Open computer', onSelect: () => set({ viewerOpen: true, viewerMode: 'watch', viewerHint: null }) },
                 { label: 'New conversation', onSelect: () => api.fresh(bot.id).then(() => flash('Started a new conversation')).catch((e) => flash(e.message)) },
-                { label: 'Bot settings', onSelect: () => useConfigUI.getState().openBotSettings(bot.id) },
+                { label: 'Agent settings', onSelect: () => useConfigUI.getState().openBotSettings(bot.id) },
               ]}
             />
           )}
