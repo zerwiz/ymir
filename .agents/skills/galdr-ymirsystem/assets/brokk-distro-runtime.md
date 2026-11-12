@@ -1202,6 +1202,51 @@ OpenCode and Claude adapters call the pin's client. The daemon writes `pin=` and
 `bin/pi/arm-pin.sh status|check` puts the age on the board; Eir's surface is `armpin`.
 Fix note `docs/fixes/agents/2026-11-11-no-helm-no-errand.md`.
 
+## The helm knows itself — the lease carries who, what for, where and which pin (plans 254 B1b/B1c · 257 H7/H8 · 254 B7)
+
+Appended 2026-11-12. The lease format in the state table above (`pid starttime gen mode session heartbeat
+state`) stands as the record of what it was; this section is what it now carries.
+
+The arm writes these fields at take, beside the old ones and the `role=` of plan 254 phase 1.
+
+| Field | Value | Where it comes from |
+|---|---|---|
+| `seat=` | the name this seat answers as, else `unnamed` | `~/.pi/agent/extensions/.ymir-seat` `primary=` — never invented (Rule 44) |
+| `charter=` | `planning,mail,the-work-in-hand,dispatch-on` | the Allfather's own definition of the helm's work |
+| `host=` / `machine=` | this machine, and its key in the seat registry | `.ymir-seat` `host=`, else `hostname` · `hodd/identity/seats.yaml` |
+| `fleetrole=` | heart · forge · dev · hand | `bin/skuld/role.sh resolve` (or `YMIR_ROLE`) |
+| `fleet=` | the fleet's name, as one token | `seats.yaml` `fleet.name` |
+| `pin=` / `pin_behind=` | the pinned runtime's sha and `git rev-list --count HEAD..origin/main` | `YMIR_RUNTIME_DIR`, else `$YMIR_HOME/config/runtime.env` |
+| `identity=` / `missing=` | `held`, or `readonly` with the field named | derived at take |
+
+The resolver is `src/ymir_runtime/identity.py`, cached for five minutes so the poll loop does not pay
+two git calls a beat. `bin/engine/ymir-engine.sh identity [--check]` prints it; `--check` exits 3 and
+names the field when host or fleet role cannot be resolved.
+
+**One row reads it back.** `bin/seat/helm-identity.sh` owns the row, so `bin/voice/rodd-arm.sh who`,
+`bin/seat/lock-ask.sh who` and the Sága digest (`--line`) cannot print three different answers.
+
+**The holder gate.** A claimant whose machine cannot resolve its host or fleet role does not take the
+helm: `rodd-arm.sh hold` refuses with exit 3, and `bin/pi/syn-watch-arm.sh` refuses with *clause 4*,
+each naming the missing field. The standing arm service still beats, but writes `identity=readonly`.
+
+**Rödd runs the pin.** `apps/rodd/start.sh` resolves the pin and hands over to `<pin>/apps/rodd/start.sh`
+when launched from anywhere else; an absent pin is one named line and no Rödd. Her Electron entry resolves
+the face and the tool server's `--app-dir` through `apps/rodd/src/pin.js`. Her unit template
+`apps/rodd/electron/ymir-rodd.service.in` is rendered by `bin/desktop/desktop-place.sh` with
+`ExecStart=<pin>/apps/rodd/start.sh`, so `runtime-pinned-guard.sh` judges her like every other unit.
+
+**The armpin surface.** `bin/seat/armpin.sh` fails when the pin is behind `origin/main`, or when a
+supervisor — the arm service (judged by its `PYTHONPATH`), an arm client, Rödd's window or her
+`uvicorn --app-dir` — executes from outside the pin. Eir reports it as `armpin`; the mend is
+`bin/engine/runtime-deploy.sh`.
+
+**A refusal is keyed (B7).** `bin/voice/rodd-helm.sh` sends every refusal through
+`bin/notify/send.sh --key rodd:refusal:<sha of the instruction>`; the instruction is hashed without its
+timestamp, so the same request is one toast per window and always one room line. Her own notices that
+return as wakes are heard, never judged again. `bin/voice/voice-toolbox.py` serves any memory item that
+asks her to merge with `void` and the reason (Rule 08).
+
 ## CHANGE LOG
 
 - **2026-11-08** — Appended with the capability: the canon, the estate door, the widening of `domain.sh`,
@@ -1225,3 +1270,7 @@ Fix note `docs/fixes/agents/2026-11-11-no-helm-no-errand.md`.
   refusal, the lease as the record root, the record-as-wake cursor, the pinned arm client and
   adapters, Gróa carrying the pin, Rödd on the pin, and `armpin`. Fix note
   `docs/fixes/agents/2026-11-11-no-helm-no-errand.md`.
+- **2026-11-12** — Appended with the capability: the helm's identity in the lease (seat · charter ·
+  host · machine · fleetrole · fleet · pin · pin_behind), the one-row reader, the holder gate (clause 4),
+  Rödd on the pin with her unit template, the `armpin` surface, and the keyed refusal. Plans 254 and 257;
+  fix note `docs/fixes/runtime/2026-11-11-the-helm-knows-itself.md`.

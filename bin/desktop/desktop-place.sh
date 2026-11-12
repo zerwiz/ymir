@@ -119,6 +119,17 @@ install_entries() {
     return 1
   }
   mkdir -p "$dst" || return 1
+  # Rödd runs the PIN, never a tree (plan 257 H7): __YMIR_RUNTIME__ is the pinned runtime
+  # from the home's runtime.env (the one default the other pinned doors share), and her
+  # unit template lands beside the user's other units so the pinned-runtime ward sees her.
+  local pin="" conf="${YMIR_HOME:-$HOME/Documents/ymirhome}/config/runtime.env"   # allow-home-default: the one home
+  pin="${YMIR_RUNTIME_DIR:-}"
+  if [ -z "$pin" ] && [ -r "$conf" ]; then
+    pin="$(sed -n 's/^[[:space:]]*YMIR_RUNTIME_DIR[[:space:]]*=[[:space:]]*//p' "$conf" | head -1 | tr -d "\"'")"
+    pin="${pin//\$\{HOME\}/$HOME}"; pin="${pin//\$HOME/$HOME}"
+  fi
+  [ -n "$pin" ] || pin="$HOME/ymir-runtime"
+  local units="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user" u=0
   local src found=0 want
   for src in "${dirs[@]}"; do
     [ -d "$src" ] || continue
@@ -131,7 +142,12 @@ install_entries() {
       if [ -n "$want" ] && [ ! -e "$root/$want" ]; then
         printf 'skip: %s — %s is not in %s\n' "$(basename "$f" .in)" "$want" "$root" >&2; continue
       fi
-      sed -e "s|__YMIR_ROOT__|$root|g" "$f" >"$dst/$(basename "$f" .in)" && n=$((n+1))
+      sed -e "s|__YMIR_ROOT__|$root|g" -e "s|__YMIR_RUNTIME__|$pin|g" "$f" >"$dst/$(basename "$f" .in)" && n=$((n+1))
+    done
+    for f in "$src"/*.service.in; do
+      [ -e "$f" ] || continue
+      mkdir -p "$units" || continue
+      sed -e "s|__YMIR_RUNTIME__|$pin|g" "$f" >"$units/$(basename "$f" .in)" && u=$((u+1))
     done
     # an app that ships its own icon theme (icons/hicolor/<size>/apps/<name>.png) seats it, so its
     # entry's themed Icon= resolves at every size the launcher asks for
@@ -139,6 +155,7 @@ install_entries() {
       mkdir -p "$HOME/.local/share/icons/hicolor" && cp -r "$src/icons/hicolor/." "$HOME/.local/share/icons/hicolor/"
     fi
   done
+  [ "$u" = 0 ] || systemctl --user daemon-reload >/dev/null 2>&1 || true
   [ "$found" = 1 ] || { printf 'error: no launcher templates found\n' >&2; return 1; }
   printf 'entries[%s]{installed_to}\:\n  "%s","%s"\n' "$n" "$n" "$dst"
 }

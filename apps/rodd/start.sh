@@ -129,6 +129,36 @@ case "${1:-}" in
     exit 0 ;;
 esac
 
+# 0 · Rödd runs the PIN (plan 257 H7). Her code root is the pinned runtime the units run —
+# YMIR_RUNTIME_DIR, else $YMIR_HOME/config/runtime.env — never the working tree this script
+# may have been launched from. A start from anywhere else hands over to the pinned copy;
+# an absent pin is ONE named line and no Rödd. (To run a tree on purpose, name it:
+# YMIR_RUNTIME_DIR=<that tree> — an explicit pin, never a silent one.)
+resolve_pin() {
+  local home conf dir
+  dir="${YMIR_RUNTIME_DIR:-}"
+  if [ -z "$dir" ]; then
+    home="${YMIR_HOME:-$HOME/Documents/ymirhome}"   # allow-home-default: the one home, resolved then used
+    conf="$home/config/runtime.env"
+    [ -r "$conf" ] && dir="$(sed -n 's/^[[:space:]]*YMIR_RUNTIME_DIR[[:space:]]*=[[:space:]]*//p' "$conf" | head -1 | tr -d "\"'")"
+    dir="${dir//\$\{HOME\}/$HOME}"; dir="${dir//\$HOME/$HOME}"
+  fi
+  printf '%s' "$dir"
+}
+PIN="$(resolve_pin)"
+if [ -z "$PIN" ]; then
+  say "Rödd refuses to start" "no pinned runtime is named (YMIR_RUNTIME_DIR, or runtime.env in the home)"; exit 1
+fi
+if [ ! -x "$PIN/apps/rodd/start.sh" ]; then
+  say "Rödd refuses to start" "the pin $PIN carries no apps/rodd — run bin/engine/runtime-deploy.sh"; exit 1
+fi
+if [ "$(cd "$PIN/apps/rodd" && pwd -P)" != "$(cd "$APP" && pwd -P)" ]; then
+  say "handing over to the pin" "$PIN/apps/rodd/start.sh"
+  YMIR_RUNTIME_DIR="$PIN" exec "$PIN/apps/rodd/start.sh" "$@"
+fi
+export YMIR_RUNTIME_DIR="$PIN"
+say "code root (the pin)" "$PIN"
+
 # 1 · clear every stray client — one seat, one client
 n=$(strays | wc -l)
 for p in $(strays); do kill "$p" 2>/dev/null; done

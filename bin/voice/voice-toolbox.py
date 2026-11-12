@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import re
 import os
 import subprocess
 import sys
@@ -37,6 +38,22 @@ HOME = Path(os.environ.get("YMIR_HOME") or (Path.home() / "Documents" / "ymirhom
 SETTINGS = HOME / "hodd" / "state" / "rodd" / "settings.json"
 MEMORY = HOME / "hodd" / "state" / "rodd" / "memory.jsonl"
 LOOPBACK = ("127.0.0.1", "localhost", "[::1]")
+
+# A memory item that asks her to MERGE is void (plan 254 B7, 2026-11-11): merging is the
+# Allfather's hand (Rule 08), and an instruction to merge that sits in her memory is one she
+# will meet, refuse, and toast about again every night. The item is never deleted (the
+# memory appends); it is served marked void with the reason, so she reads the correction
+# beside it instead of re-raising it. A correction row (kind=correction) is never voided.
+_MERGE_ASK = re.compile(r"\bmerge\b.*\b(pr|pull request|branch|main|into)\b|\b(pr|pull request)\b.*\bmerge\b", re.I)
+VOID_MERGE = "void: merging is the Allfather's hand (Rule 08) — never hers; corrected 2026-11-11"
+
+
+def _void_if_merge(row):
+    if not isinstance(row, dict) or row.get("kind") == "correction":
+        return row
+    if _MERGE_ASK.search(str(row.get("text", ""))):
+        row = dict(row, void=VOID_MERGE)
+    return row
 
 
 def _rodd_head():
@@ -118,7 +135,7 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 for line in MEMORY.read_text(encoding="utf-8").splitlines()[-40:]:
                     if line.strip():
-                        rows.append(json.loads(line))
+                        rows.append(_void_if_merge(json.loads(line)))
             except Exception:
                 pass
             return self._json(200, {"rows": rows})

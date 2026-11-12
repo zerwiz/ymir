@@ -11,7 +11,7 @@ import unittest
 import unittest.mock
 from pathlib import Path
 
-from ymir_runtime import proc, watch
+from ymir_runtime import identity, proc, watch
 from ymir_runtime.tests.support import Recorder, completed, engine_env
 
 
@@ -155,6 +155,100 @@ class LeaseTest(ArmTestCase):
         lease = watch.read_lease(self.paths.lease)
         self.assertEqual(lease["mode"], "systemd")
         self.assertEqual(lease["role"], "rodd")
+
+
+class HelmIdentityTest(ArmTestCase):
+    """Plans 254 B1b/B1c and 257 H8: the lease says whose hand, what for, which machine, which pin."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        identity.reset_cache()
+        self.seat = self.tmp / "ext" / ".ymir-seat"
+        self.seat.parent.mkdir(parents=True)
+        self.env.update(
+            {
+                "PI_EXT_HOME": str(self.seat.parent),
+                "YMIR_RUNTIME_DIR": str(self.tmp / "no-pin"),
+                "YMIR_SEATS_FILE": str(self.tmp / "seats.yaml"),
+            }
+        )
+
+    def tearDown(self) -> None:
+        identity.reset_cache()
+        super().tearDown()
+
+    def helm(self, **env: str) -> identity.Helm:
+        return identity.resolve({**self.env, **env}, ttl=0)
+
+    def test_every_field_is_written_into_the_lease(self) -> None:
+        self.seat.write_text("host=heimdall\nprimary=Hoenir\nrole=counsellor\n", encoding="utf-8")
+        (self.tmp / "seats.yaml").write_text(
+            "fleet:\n  name: the Ymir fleet\nseats:\n  heimdall:\n    machine:\n      host: heimdall\n",
+            encoding="utf-8",
+        )
+        helm = self.helm(YMIR_ROLE="dev")
+        watch.write_lease(
+            self.paths, pid=os.getpid(), mode="systemd", role="counsellor", session="none", generation=40, helm=helm
+        )
+        lease = watch.read_lease(self.paths.lease)
+        for key in ("pid", "starttime", "gen", "mode", "role", "session", "heartbeat", "state"):
+            self.assertIn(key, lease)
+        self.assertEqual(lease["seat"], "Hoenir")
+        self.assertEqual(lease["charter"], identity.CHARTER)
+        self.assertEqual(lease["host"], "heimdall")
+        self.assertEqual(lease["machine"], "heimdall")
+        self.assertEqual(lease["fleetrole"], "dev")
+        self.assertEqual(lease["fleet"], "the-ymir-fleet")
+        self.assertEqual(lease["pin"], "none")
+        self.assertEqual(lease["pin_behind"], "none")
+        self.assertEqual(lease["identity"], "held")
+        self.assertEqual(lease["missing"], "none")
+
+    def test_no_sealed_name_is_rendered_unnamed_never_invented(self) -> None:
+        self.seat.write_text("host=heimdall\n", encoding="utf-8")
+        helm = self.helm(YMIR_ROLE="dev")
+        self.assertEqual(helm.seat, identity.UNNAMED)
+        self.assertEqual(helm.identity, "held", "an unnamed seat still holds the helm (Rule 44)")
+
+    def test_the_host_is_the_seat_record_else_this_machine(self) -> None:
+        self.seat.write_text("host=elsewhere\n", encoding="utf-8")
+        self.assertEqual(self.helm(YMIR_ROLE="dev").host, "elsewhere")
+        self.seat.unlink()
+        with unittest.mock.patch("socket.gethostname", return_value="newbox.tail.ts.net"):
+            self.assertEqual(self.helm(YMIR_ROLE="dev").host, "newbox", "a copied lease is re-taken with the NEW host")
+
+    def test_an_unresolvable_fleet_role_stands_read_only_and_names_it(self) -> None:
+        self.seat.write_text("host=heimdall\n", encoding="utf-8")
+        helm = self.helm()  # no YMIR_ROLE and the temp repo carries no bin/skuld/role.sh
+        self.assertEqual(helm.identity, "readonly")
+        self.assertEqual(helm.missing, ("fleetrole",))
+        self.assertIn("missing=fleetrole", helm.lease_tokens())
+
+    def test_an_unresolvable_host_stands_read_only(self) -> None:
+        with unittest.mock.patch("socket.gethostname", return_value=""):
+            helm = self.helm(YMIR_ROLE="dev")
+        self.assertIn("host", helm.missing)
+
+    def test_the_pin_reports_its_sha_and_how_far_behind(self) -> None:
+        pin = self.tmp / "pin"
+        git = lambda *a: subprocess.run(["git", *a], cwd=pin, check=True, capture_output=True)  # noqa: E731
+        pin.mkdir()
+        git("init", "-q", "-b", "main")
+        git("-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "--allow-empty", "-m", "one")
+        git("update-ref", "refs/remotes/origin/main", "HEAD")
+        git("-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "--allow-empty", "-m", "two")
+        git("-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "--allow-empty", "-m", "three")
+        git("update-ref", "refs/remotes/origin/main", "HEAD")
+        git("reset", "-q", "--hard", "HEAD~2")
+        helm = self.helm(YMIR_ROLE="dev", YMIR_RUNTIME_DIR=str(pin))
+        self.assertRegex(helm.pin, r"^[0-9a-f]{7,}$")
+        self.assertEqual(helm.pin_behind, "2")
+
+    def test_the_lease_tokens_carry_no_whitespace(self) -> None:
+        self.seat.write_text("host=heimdall\nprimary=Hœnir\n", encoding="utf-8")
+        tokens = self.helm(YMIR_ROLE="dev").lease_tokens().split(" ")
+        self.assertTrue(all("=" in token for token in tokens))
+        self.assertEqual(identity.render_charter(identity.CHARTER), "planning · mail · the work in hand · dispatch on")
 
 
 class RoleResolutionTest(ArmTestCase):

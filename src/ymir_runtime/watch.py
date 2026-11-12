@@ -19,6 +19,8 @@ The state, all under the resolved state dir (Rule 04: the home, never the tree):
     .watch.heartbeat    epoch seconds, touched every cycle (the liveness door)
     .supervision-armed  the armed marker the turn-end guard reads
     .arm.lease          pid=… starttime=… gen=… mode=… role=… session=… heartbeat=… state=…
+                        seat=… charter=… host=… machine=… fleetrole=… fleet=… pin=…
+                        pin_behind=… identity=… missing=…   (plans 254 B1b/B1c · 257 H8)
     .arm.event          the raised-but-undelivered line (the delivery slot)
     .arm.wake           append-only journal of every line this arm has raised
     .arm.gen            the recovery-generation counter
@@ -40,6 +42,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Mapping, Sequence
 
+from . import identity as identity_mod
 from . import paths as paths_mod
 from . import proc
 from .state import lock as lock_mod
@@ -257,26 +260,33 @@ def write_lease(
     session: str,
     generation: int,
     role: str = "unknown",
+    helm: identity_mod.Helm | None = None,
     now: float | None = None,
     stat_reader: Callable[[int], str] | None = None,
     pin: str = "",
     pin_behind: str = "",
 ) -> bool:
-    """Write the lease atomically; a torn lease is a lying one."""
+    """Write the lease atomically; a torn lease is a lying one.
+
+    The identity fields (plan 254 B1b/B1c, plan 257 H8) are written HERE, at take,
+    from the identity the caller resolved — so a reader never has to infer whose hand
+    holds the helm, which machine it stands on, or which pinned code it runs.
+    """
     starttime = proc.proc_starttime(pid, stat_reader=stat_reader or proc._proc_stat) or "0"
     stamp = int(now if now is not None else time.time())
-    fields = [
-        f"pid={pid} starttime={starttime} gen={generation} mode={mode} role={role} ",
-        f"session={session} heartbeat={stamp} state={paths.state}",
-    ]
-    # H6/H8 (plan 257): the lease records the pinned runtime's currency — the sha and
-    # how far behind origin it stands — so a stale pin is a NUMBER any door can read,
-    # never a smell to be inferred from odd behaviour.
-    if pin:
-        fields.append(f" pin={pin}")
-    if pin_behind:
-        fields.append(f" pin_behind={pin_behind}")
-    body = "".join(fields) + "\n"
+    identity_fields = f" {helm.lease_tokens()}" if helm is not None else ""
+    body = (
+        f"pid={pid} starttime={starttime} gen={generation} mode={mode} role={role} "
+        f"session={session} heartbeat={stamp} state={paths.state}{identity_fields}"
+    )
+    # H6/H8 (plan 257): with no resolved helm the pin facts are written alone; a helm carries
+    # its own pin= and pin_behind= tokens, so they are never written twice.
+    if helm is None:
+        if pin:
+            body += f" pin={pin}"
+        if pin_behind:
+            body += f" pin_behind={pin_behind}"
+    body += "\n"
     paths.state.mkdir(parents=True, exist_ok=True)
     temporary = paths.lease.with_name(f"{paths.lease.name}.{pid}")
     try:
@@ -643,6 +653,7 @@ def cycle(
     mode: str = "daemon",
     pid: int | None = None,
     emit: bool = False,
+    helm: identity_mod.Helm | None = None,
     now: float | None = None,
     stat_reader: Callable[[int], str] | None = None,
     pin: str = "",
@@ -663,6 +674,8 @@ def cycle(
             pass
     session = session_owner(paths, env=env, runner=runner, stat_reader=stat_reader)
     role = resolve_role(paths, env, session=session)
+    if helm is None:
+        helm = identity_mod.resolve(env, runner=runner)
     lease = read_lease(paths.lease)
     generation = int(lease["gen"]) if lease.get("gen", "").isdigit() else 0
     write_lease(
@@ -670,6 +683,7 @@ def cycle(
         pid=mine,
         mode=mode,
         role=role,
+        helm=helm,
         session=session,
         generation=generation,
         now=now,
@@ -973,6 +987,12 @@ def run_daemon(
         return 0
 
     generation = next_generation(paths)
+    helm = identity_mod.resolve(env, runner=runner)
+    if helm.missing:
+        say_err(
+            f"the helm stands READ-ONLY — {helm.readonly_reason()} could not be resolved; "
+            "no errand may be seated under it"
+        )
     install = signal_installer or _install_traps
     install(lambda: release_lease(paths, pid=mine))
     # H6/H8 (plan 257): the pin's currency is computed ONCE per daemon run — two git
@@ -983,6 +1003,7 @@ def run_daemon(
         pid=mine,
         mode=mode,
         role=resolve_role(paths, env, session="none"),
+        helm=helm,
         session="none",
         generation=generation,
         stat_reader=stat_reader,
@@ -996,7 +1017,11 @@ def run_daemon(
             marker.touch()
         except OSError:
             pass
-    say_err(f"arm up pid={mine} gen={generation} mode={mode} state={paths.state}")
+    say_err(
+        f"arm up pid={mine} gen={generation} mode={mode} state={paths.state} "
+        f"seat={helm.seat} role={helm.fleetrole or 'unknown'} pin={helm.pin} "
+        f"identity={helm.identity}"
+    )
 
     while True:
         line = cycle(
@@ -1006,6 +1031,7 @@ def run_daemon(
             mode=mode,
             pid=mine,
             emit=emit,
+            helm=helm,
             stat_reader=stat_reader,
             pin=pin,
             pin_behind=pin_behind,

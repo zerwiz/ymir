@@ -84,6 +84,8 @@ surface_skip() {
     # No systemd on Android: there is no boot unit to enable. The Pi watcher owns
     # supervision here, and `ymir-autoboot.sh verify` already names the gap.
     autoboot)   return 0 ;;
+    # A hand runs no pinned runtime and supervises nothing: the arm and Rödd live on a seat.
+    armpin)     return 0 ;;
     # The desk is a systemd user unit: a substrate without systemd (a hand) cannot
     # owe it — and the arm's own door already names that gap.
     mail)       return 0 ;;
@@ -107,6 +109,7 @@ surface_detail_skip() {
     vault)      printf '%s\n' 'not this seat (no cryptsetup/loop devices on Android)' ;;
     shells|sessrumnir|bilskirnir) printf '%s\n' 'not this seat (desktop shells are not built for bionic)' ;;
     autoboot)   printf '%s\n' 'not this seat (no systemd; the Pi watcher owns supervision)' ;;
+    armpin)     printf '%s\n' 'not this seat (a hand runs no pinned runtime)' ;;
     mail)       printf '%s\n' 'not this seat (no systemd: the desk is a user unit)' ;;
     *)          printf '%s\n' 'skip' ;;
   esac
@@ -502,12 +505,12 @@ f_claudehooks() { [ -x "$SCRIPT_DIR/../seat/harness-extensions-install.sh" ] && 
 # a dead watch costs — and the mend is to seat the service again.
 s_arm()      { [ -x "$SCRIPT_DIR/../pi/syn-watch.sh" ] && "$SCRIPT_DIR/../pi/syn-watch.sh" status >/dev/null 2>&1; }
 f_arm()      { [ -x "$SCRIPT_DIR/../pi/syn-watch.sh" ] && "$SCRIPT_DIR/../pi/syn-watch.sh" start >/dev/null 2>&1 && s_arm; }
-# armpin (plan 257 H8): the arm service, every arm client and Rödd execute the PINNED runtime,
-# and the pin is current, clean and on its branch. A pin 166 commits behind is a number on the
-# board, not a smell. No auto-mend here: moving the pin restarts the units, and that is Gróa's
-# update (bin/agents/groa-update.sh) or bin/engine/runtime-deploy.sh, never a look.
-s_armpin() { [ -x "$SCRIPT_DIR/../pi/arm-pin.sh" ] && "$SCRIPT_DIR/../pi/arm-pin.sh" check >/dev/null 2>&1; }
-f_armpin() { s_armpin; }
+# armpin (plan 257 H8): the pinned runtime is current with origin, and every surface that
+# supervises — the arm service, its clients, Rödd's window and her tool server — executes
+# from it. bin/seat/armpin.sh is the judge; the mend moves the pin (runtime-deploy.sh),
+# which restarts and proves the units, then the judge is asked again.
+s_armpin()   { [ -x "$SCRIPT_DIR/../seat/armpin.sh" ] && "$SCRIPT_DIR/../seat/armpin.sh" check >/dev/null 2>&1; }
+f_armpin()   { [ -x "$SCRIPT_DIR/../engine/runtime-deploy.sh" ] && "$SCRIPT_DIR/../engine/runtime-deploy.sh" >/dev/null 2>&1; s_armpin; }
 # roddhelm: the lease names a known holder role, the room is writable, and the
 # drain door answers (plan 254 B6). The check is rodd-helm.sh --check; there is
 # no safe auto-mend — a role is the holder's declaration, never invented.
@@ -694,7 +697,7 @@ detail() { # <name> -> the command that prints one short fact
     harness)   printf '%s\n' "s_harness && echo 'deployed extensions resolve their bin/' || echo 'no live root recorded'" ;;
     claudehooks) printf '%s\n' "command -v claude >/dev/null 2>&1 && echo 'the three Claude hooks: AGENTS.md · Eindri-only · the Gná arm' || echo 'no claude on this host'" ;;
     arm)       printf '%s\n' "$SCRIPT_DIR/../pi/syn-watch.sh status --detail 2>/dev/null | head -1 || echo 'arm door missing'" ;;
-    armpin)    printf '%s\n' "$SCRIPT_DIR/../pi/arm-pin.sh check --no-fetch 2>/dev/null | sed -n '2p' | sed 's/^ *//; s/\"//g' || echo 'arm-pin door missing'" ;;
+    armpin)    printf '%s\n' "$SCRIPT_DIR/../seat/armpin.sh --detail 2>/dev/null | head -1 || echo 'armpin door missing'" ;;
     roddhelm)  printf '%s\n' "$SCRIPT_DIR/../voice/rodd-helm.sh --check 2>&1 | head -1 || echo 'rodd-helm door missing'" ;;
     gates)     printf '%s\n' "s_gates && echo 'pre-push hook: the worktree that pushes' || echo 'installed hook is stale — bin/gates/guards/fixes-guard.sh --install'" ;;
     lock)      printf '%s\n' "cat $STATE/.lock 2>/dev/null | tr -d '[:space:]' | sed 's/^/pid /' || echo none" ;;

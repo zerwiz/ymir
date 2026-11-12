@@ -23,7 +23,7 @@ import sys
 from pathlib import Path
 from typing import Mapping, Sequence
 
-from . import __version__, heartbeat, landed as landed_mod, paths, proc, watch
+from . import __version__, heartbeat, identity, landed as landed_mod, paths, proc, watch
 from .dispatch import ModelUnavailable, TableRefusal
 from .dispatch import resolve as resolve_dispatch
 from .errors import EngineError, EngineRefusal, NoHelm, SeatNotFound
@@ -36,6 +36,7 @@ EXIT_OK = 0
 EXIT_FAILED = 1
 EXIT_USAGE = 2
 EXIT_CANNOT_OWN = 4
+EXIT_REFUSED = 3
 
 CANNOT_OWN = EXIT_CANNOT_OWN
 
@@ -76,6 +77,16 @@ def build_parser() -> argparse.ArgumentParser:
 
     ensure = sub.add_parser("ensure", help="report the interpreter and roots the engine will use")
     ensure.add_argument("--toon", action="store_true")
+
+    identity_p = sub.add_parser(
+        "identity",
+        help="resolve THIS machine's helm identity — seat · charter · host · role · fleet · pin (plans 254 B1b/B1c · 257 H8)",
+    )
+    identity_p.add_argument(
+        "--check",
+        action="store_true",
+        help="the holder gate: exit 3 and name the field when host or fleet role cannot be resolved",
+    )
 
     seat_p = sub.add_parser("seat", help="seat an errand end to end")
     seat_p.add_argument("task_id")
@@ -148,6 +159,35 @@ def main(
             sys.executable, str(roots.state), str(roots.data), str(roots.config),
             str(roots.root), str(roots.wt_root),
         ]), end="")
+        return EXIT_OK
+
+    if args.verb == "identity":
+        helm = identity.resolve(env, runner=run)
+        if args.check and helm.missing:
+            print(
+                f"refused: the helm stands READ-ONLY — this machine cannot resolve {helm.readonly_reason()} "
+                "(no registry, no seat record); a holder that does not know its own machine or role does not hold",
+                file=sys.stderr,
+            )
+            return EXIT_REFUSED
+        print(
+            _row(
+                "identity[1]{seat,charter,host,machine,fleetrole,fleet,pin,pin_behind,identity,missing}",
+                (
+                    helm.seat,
+                    helm.charter_text,
+                    helm.host or "none",
+                    helm.machine or "none",
+                    helm.fleetrole or "none",
+                    helm.fleet or "none",
+                    helm.pin,
+                    helm.pin_behind,
+                    helm.identity,
+                    helm.readonly_reason() or "none",
+                ),
+            ),
+            end="",
+        )
         return EXIT_OK
 
     if args.verb == "status":

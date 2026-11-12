@@ -67,7 +67,9 @@ bash -c 'exec -a syn-watch-arm sleep 600' & b=$!
 printf '%s\n%s\n' "$a" "$b" > "$BROKK_STATE_OVERRIDE/.arm.clients/$PI.pids"
 timeout 20 bash "$ARM" --restart >"$T/out" 2>&1 &
 newc=$!
-sleep 8
+# Wait for the retirement rather than a fixed sleep: the client's catch-up sweep talks to the
+# live herdr first and its time varies, and the identity gate (clause 4) costs a beat too.
+for _ in $(seq 1 36); do alive "$a" || alive "$b" || break; sleep 0.5; done
 if alive "$a"; then bad "(b) older client $a was not retired (out: $(tr "\n" " " < "$T/out"))"; else pass "(b) older client $a retired"; fi
 if alive "$b"; then bad "(b) older client $b was not retired"; else pass "(b) older client $b retired"; fi
 if grep -qx "$PI" "$BROKK_STATE_OVERRIDE/.arm.clients/$PI.pids" 2>/dev/null || [ -s "$BROKK_STATE_OVERRIDE/.arm.clients/$PI.pids" ]; then
