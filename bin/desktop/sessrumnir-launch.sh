@@ -136,7 +136,7 @@ if is_running; then
 fi
 
 # plan 271: a new window is not started over the operator's call (YMIR_DESK_NOW=1 is his "now").
-bash "$SCRIPT_DIR/../desk/in-call.sh" check --what "Sessrúmnir" || exit 3
+# plan 275 S8: Sessrúmnir takes no microphone and loads no model, so a call does not hold it back
 
 # A dead main leaves its helpers running as orphans of the user systemd. They
 # still carry the identity string, so reaping them before the launch is the

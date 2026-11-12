@@ -141,6 +141,8 @@ function launch() {
   // applies to hlidskjalf/smidja/odrerir. The DECISION lives in the launcher,
   // never hardcoded here.
   const electronArgs = [appPath, '--no-sandbox']
+  // plan 275 S16: the DevTools port, so the app can be tested as a person uses it (unset = none)
+  if (process.env.YMIR_DEVTOOLS_PORT) electronArgs.push(`--remote-debugging-port=${process.env.YMIR_DEVTOOLS_PORT}`)
   if (['1', 'true', 'yes'].includes(String(process.env.YMIR_DESKTOP_DISABLE_GPU ?? '').toLowerCase())) {
     electronArgs.push('--disable-gpu', '--disable-gpu-compositing')
   }

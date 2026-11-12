@@ -289,7 +289,7 @@ fi
 export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-1}" XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/1000}"
 [ -n "$ELECTRON" ] || { say "no electron binary" "install electron43 or run npm ci in apps/rodd"; exit 1; }
 setsid env SPEECH_TO_SPEECH_URL="ws://127.0.0.1:$PORT_HOST/v1/realtime" \
-  "$ELECTRON" --remote-debugging-port=9222 "$APP" > /tmp/rodd-app.log 2>&1 < /dev/null &
+  "$ELECTRON" --remote-debugging-port="${YMIR_DEVTOOLS_PORT:-9222}" "$APP" > /tmp/rodd-app.log 2>&1 < /dev/null &
 sleep 14
 say "window" "$(ps -eo args | grep -c 'apps/rodd')"
 say "next" "apps/rodd/smoke.sh 45   # must end: assistant audio arrived PASS"

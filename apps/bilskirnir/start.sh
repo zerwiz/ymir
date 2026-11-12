@@ -217,7 +217,7 @@ fi
 if window_up; then say "the window" "already open — kept"; exit 0; fi
 ELECTRON="$(resolve_electron)"
 [ -n "$ELECTRON" ] || { say "the window" "no electron binary — install electron, or open $OPEN_URL in a browser"; exit 1; }
-DEBUG=(); [ -n "${BILSKIRNIR_DEBUG_PORT:-}" ] && DEBUG=(--remote-debugging-port="$BILSKIRNIR_DEBUG_PORT")
+DEBUG=(); _dp="${BILSKIRNIR_DEBUG_PORT:-${YMIR_DEVTOOLS_PORT:-}}"; [ -n "$_dp" ] && DEBUG=(--remote-debugging-port="$_dp")
 BILSKIRNIR_URL="$OPEN_URL" spawn window "$APP" "$ELECTRON" "${DEBUG[@]}" "$APP/electron"
 sleep 2
 window_up && say "the window" "open ($OPEN_URL)" || say "the window" "did not stay open — see data/run/window.log"
