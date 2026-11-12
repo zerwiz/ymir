@@ -190,6 +190,9 @@ materialize_tools() {
               "packages/contracts:packages/contracts" \
               "tools/mill/worker.sh:mill-worker.sh" \
               "tools/tickets-mcp/server.mjs:tickets-mcp-server.mjs" \
+              "tools/tickets-mcp/ledger.mjs:ledger.mjs" \
+              "tools/tickets-mcp/package.json:package.json" \
+              "tools/tickets-mcp/package-lock.json:package-lock.json" \
               "tools/snotra/server.mjs:snotra-server.mjs"; do
     src="${pair%%:*}"; dstn="${pair##*:}"
     [ -e "$ROOT/$src" ] || continue
@@ -200,6 +203,19 @@ materialize_tools() {
       cp -f "$ROOT/$src" "$DST/$dstn" 2>/dev/null || true
     fi
   done
+  # The Node doors' dependencies (2026-11-12): Skuld and Snotra import the MCP SDK and zod,
+  # which nothing declared, so a fresh seat's Skuld died on its first start. The pinned set
+  # ships in tools/tickets-mcp/package.json + its lockfile; install it with scripts OFF, and
+  # only when the lockfile changed or the SDK is missing.
+  if [ -f "$DST/package-lock.json" ] && command -v npm >/dev/null 2>&1; then
+    if [ ! -d "$DST/node_modules/@modelcontextprotocol/sdk" ] || ! cmp -s "$DST/package-lock.json" "$DST/node_modules/.package-lock.json.deployed" 2>/dev/null; then
+      if ( cd "$DST" && npm ci --omit=dev --ignore-scripts --no-audit --no-fund >/dev/null 2>&1 ); then
+        cp -f "$DST/package-lock.json" "$DST/node_modules/.package-lock.json.deployed" 2>/dev/null || true
+      else
+        say "fleet: the Node doors' dependencies did not install — run: cd $DST && npm ci --omit=dev --ignore-scripts" >&2
+      fi
+    fi
+  fi
   # the meeting ear's operator commands — capture, transcribe, ensure — so any
   # seat can run them from ~/.fleet without a repo checkout on its PATH
   # hoard-lib.sh rides along: every one of these commands resolves the
@@ -229,14 +245,16 @@ materialize_tools() {
   if [ -d "$ROOT/.agents/skills" ]; then
     rm -rf "$DST/skills" && cp -r "$ROOT/.agents/skills" "$DST/skills" 2>/dev/null || true
   fi
-  # the cards root — the seat's own agent card under /.well-known
+  # the cards root — the seat's own agent card under /.well-known. Its URL is loopback
+  # unless the operator names a reachable one (YMIR_FLEET_CARD_URL): a card must not
+  # publish the machine's LAN address by default (2026-11-12).
   mkdir -p "$DST/cards-root/.well-known"
   if [ ! -f "$DST/cards-root/.well-known/agent-card.json" ]; then
     cat > "$DST/cards-root/.well-known/agent-card.json" <<CARD
 {
   "name": "$(hostname -s 2>/dev/null || echo seat)",
   "description": "Ymir body seat — A2A node (:8301) · cards (:8318)",
-  "url": "http://$(hostname -I 2>/dev/null | awk '{print $1}'):8301",
+  "url": "${YMIR_FLEET_CARD_URL:-http://127.0.0.1:8301}",
   "version": "1.0"
 }
 CARD

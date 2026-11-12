@@ -1,0 +1,10 @@
+{
+  "name": "ymir-fleet-doors",
+  "private": true,
+  "description": "Runtime dependencies of the fleet's Node doors deployed flat into ~/.fleet (Skuld, Snotra). Installed by bin/fleet/fleet-ensure.sh with --ignore-scripts.",
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "zod": "3.25.76"
+  }
+}

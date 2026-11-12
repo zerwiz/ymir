@@ -7,7 +7,10 @@ StartLimitBurst=10
 Type=simple
 Environment=PATH=%h/.bun/bin:/usr/bin:/bin
 Environment=PORT=8320
-Environment=SKULD_PGPASSWORD=skuld
+# The database password is the operator's, set in ~/.config/ymir/fleet.env (SKULD_PGPASSWORD); none ships here.
+# Loopback unless the operator widens it in ~/.config/ymir/fleet.env (2026-11-12).
+Environment=YMIR_FLEET_BIND=127.0.0.1
+EnvironmentFile=-%h/.config/ymir/fleet.env
 ExecStart=node %h/.fleet/tickets-mcp-server.mjs
 Restart=on-failure
 RestartSec=3

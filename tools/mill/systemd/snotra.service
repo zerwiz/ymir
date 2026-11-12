@@ -5,6 +5,9 @@ Type=simple
 Environment=PATH=%h/.bun/bin:/usr/bin:/bin
 Environment=PORT=8321
 Environment=SNOTRA_VAULT=%h/Documents/ymirhome
+# Loopback unless the operator widens it in ~/.config/ymir/fleet.env (2026-11-12).
+Environment=YMIR_FLEET_BIND=127.0.0.1
+EnvironmentFile=-%h/.config/ymir/fleet.env
 ExecStart=node %h/.fleet/snotra-server.mjs
 Restart=on-failure
 RestartSec=3
