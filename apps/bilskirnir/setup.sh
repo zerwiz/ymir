@@ -54,7 +54,11 @@ IFS=$'\t' read -r NAME ROLE HOUSE FLEET OPERATOR < <(read_names) || { say "canno
 SLUG="$(printf '%s' "$NAME" | iconv -f utf-8 -t ascii//TRANSLIT 2>/dev/null | tr 'A-Z' 'a-z' | tr -c 'a-z0-9\n' '-' | sed 's/-*$//')"
 [ -n "$SLUG" ] || SLUG=first-agent
 LABEL="$(printf '%s' "$ROLE" | sed -E 's/^the keeper of the hall.*/Keeper of the hall/; s/^(.)/\U\1/')"
-ENGINE="$APP/data/engines/$SLUG"
+# plan 275 (2026-11-13): an agent's Hermes home is named by its PHYSICAL path. Hermes ties a profile to the home
+# path it was given; a home named through the pin (~/ymir-runtime → releases/<sha>) changes its name at every
+# release and Hermes refuses every message with profile_mismatch (Nanna from 2026-11-12 19:26).
+mkdir -p "$APP/data/engines" 2>/dev/null
+ENGINE="$(cd "$APP/data/engines" 2>/dev/null && pwd -P || printf %s "$APP/data/engines")/$SLUG"
 say "the hall's assistant is $NAME ($LABEL); the house and the Allfather are read from the home"
 
 # ── 2. the soul, rendered from the home ─────────────────────────────────────────
