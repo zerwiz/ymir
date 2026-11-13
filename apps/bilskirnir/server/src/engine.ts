@@ -1,4 +1,4 @@
-import { execFile, execFileSync, spawn } from 'node:child_process';
+import { execFile, execFileSync, spawn, spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -252,6 +252,8 @@ async function keyAccepted(url: string, key: string): Promise<boolean> {
 }
 
 /** The gateway's pid, but only if the pid file belongs to this home and the process is alive. */
+const realOrSelf = (p: string) => { try { return fs.realpathSync(p); } catch { return path.resolve(p); } };
+
 function gatewayPid(home: string): number | null {
   let raw = '';
   try { raw = fs.readFileSync(path.join(home, 'gateway.pid'), 'utf8').trim(); } catch { return null; }
@@ -260,7 +262,7 @@ function gatewayPid(home: string): number | null {
     const j = JSON.parse(raw);
     if (typeof j === 'number') pid = j;
     else {
-      if (j?.hermes_home && path.resolve(j.hermes_home) !== path.resolve(home)) return null;
+      if (j?.hermes_home && realOrSelf(j.hermes_home) !== realOrSelf(home)) return null;
       pid = Number(j?.pid);
     }
   } catch { pid = Number(raw); }
@@ -270,6 +272,29 @@ function gatewayPid(home: string): number | null {
     if (!fs.readFileSync(`/proc/${pid}/cmdline`, 'utf8').includes('gateway')) return null;
   } catch { /* no /proc: trust the pid file */ }
   return pid;
+}
+
+/** Conversations opened while the home had another name are rebound to the home as named now (plan 275):
+ *  house/hermes-rebind.py, run while the gateway is down. A failure is logged, never fatal. */
+function rebindReceipts(home: string) {
+  const script = new URL('../../house/hermes-rebind.py', import.meta.url).pathname;
+  const r = spawnSync('python3', [script, home], { encoding: 'utf8', timeout: 20_000 });
+  const said = (r.stdout || r.stderr || '').trim();
+  if (said && !/\tcurrent$|no state\.db/.test(said)) console.log(`[engine] ${said}`);
+}
+
+/** True when every conversation receipt names this home as it is named now (house/hermes-rebind.py --check). */
+function receiptsCurrent(home: string): boolean {
+  const script = new URL('../../house/hermes-rebind.py', import.meta.url).pathname;
+  return spawnSync('python3', [script, '--check', home], { timeout: 20_000 }).status !== 1;
+}
+
+/** The HERMES_HOME a running gateway was started with, as its own environment says (null when unreadable). */
+function startedHome(pid: number): string | null {
+  try {
+    const e = fs.readFileSync(`/proc/${pid}/environ`, 'utf8').split('\0').find((x) => x.startsWith('HERMES_HOME='));
+    return e ? e.slice('HERMES_HOME='.length) : null;
+  } catch { return null; }
 }
 
 async function stopGateway(botId: string) {
@@ -311,8 +336,15 @@ async function startGateway(botId: string): Promise<void> {
   if (!b.engine_port) db.prepare('UPDATE bots SET engine_port=? WHERE id=?').run(freePort(), botId);
   const url = managedUrl(botId);
 
-  // A gateway from an earlier run of this server is still good: use it as it is.
-  if ((await healthy(url)) && managedKey(botId) && (await keyAccepted(url, managedKey(botId)))) return;
+  // A gateway from an earlier run of this server is still good: use it as it is — but only when it was started with
+  // this agent's home as it is named NOW (plan 275, 2026-11-13). One started through the pin (releases/<sha>/…)
+  // resolves its profile to the real path while its own HERMES_HOME says the other, and refuses every message with
+  // profile_mismatch; it is stopped and started again with the physical home.
+  const running = gatewayPid(homeFor(botId));
+  const startedWith = running ? startedHome(running) : null;
+  const sameHome = (!startedWith || startedWith === homeFor(botId)) && receiptsCurrent(homeFor(botId));
+  if (!sameHome) console.warn(`[engine] ${botId}: its gateway was started with ${startedWith}; restarting it with ${homeFor(botId)}`);
+  if (sameHome && (await healthy(url)) && managedKey(botId) && (await keyAccepted(url, managedKey(botId)))) return;
   if (await healthy(url)) {
     if (gatewayPid(homeFor(botId))) await stopGateway(botId);
     else throw new Error(`Port ${botRow(botId).engine_port} is taken by something else.`);
@@ -323,6 +355,7 @@ async function startGateway(botId: string): Promise<void> {
   if (gatewayPid(home)) await stopGateway(botId);
 
   const log = fs.openSync(path.join(home, 'logs', 'gateway.out.log'), 'a');
+  rebindReceipts(home);
   const child = spawn(env.hermesBin, ['gateway', 'run', '--no-supervise'], {
     cwd: home,
     detached: true,
@@ -468,6 +501,7 @@ export async function reloadEngine(botId: string): Promise<'restarted' | 'not-ou
   optionsCache.delete(botId);
   fs.mkdirSync(path.join(home, 'logs'), { recursive: true });
   const log = fs.openSync(path.join(home, 'logs', 'gateway.out.log'), 'a');
+  rebindReceipts(home);
   const child = spawn(env.hermesBin, ['gateway', 'run', '--no-supervise'], {
     cwd: home, detached: true, stdio: ['ignore', log, log],
     env: { ...process.env, HERMES_HOME: home },
