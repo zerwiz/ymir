@@ -22,7 +22,7 @@ fail=0; ok() { printf 'ok   %s\n' "$1"; }; no() { printf 'FAIL %s\n' "$1"; fail=
 
 out="$(FAKE_LIFE=30 bash "$L" start 2>&1)"; rc=$?
 { [ $rc = 0 ] && grep -q '"up"' <<<"$out"; } && ok "a window that stays is reported up" || no "stay ($rc: $out)"
-pkill -f "$T/fake/electron/dist/electron" 2>/dev/null; sleep 1
+pkill -f "$T/fake/electron/dist/electron" 2>/dev/null; sleep 1   # kill: a fake electron this test started seconds ago, matched by its temp path — there is no pid to name
 
 : > "$T/state/sessrumnir.log"
 out="$(FAKE_LIFE=1 FAKE_SIGNAL=SIGSEGV bash "$L" start 2>&1)"; rc=$?
