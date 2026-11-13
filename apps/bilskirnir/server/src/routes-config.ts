@@ -15,7 +15,7 @@ import { orgo } from './orgo.js';
 import { openTerminal } from './desk.js';
 import { engineHome, engineInfo, engineKind, forgetEngineOptions, reloadEngine, restartEngine, stopOwnScreen } from './engine.js';
 import { detect, forBrowser, PRESETS, readChoices, modelsDirFor } from './models/detect.js';
-import { addProvider, choose, removeProvider } from './models/choose.js';
+import { addProvider, choose, chooseFallback, readFallback, removeProvider } from './models/choose.js';
 import { listMemories } from './engine-memory.js';
 import { idleConfig, viewerCount } from './idle.js';
 import type { LibraryFile, Skill } from './types.js';
@@ -217,6 +217,26 @@ configApi.delete('/models/providers/:id', (c) => {
   dropCatalog();
   removeProvider(c.req.param('id'));
   return c.json({ ok: true });
+});
+
+/** The agent's fallback model (plan 275 wave 1): read it, set it, or clear it ({ providerId: null }). */
+configApi.get('/bots/:id/fallback', (c) => {
+  const b = ownBot(c.get('user').id, c.req.param('id'));
+  if (!b) return c.json({ error: 'not found' }, 404);
+  const home = engineHome(b.id);
+  return c.json({ fallback: home ? readFallback(home) : null });
+});
+configApi.post('/bots/:id/fallback', async (c) => {
+  const b = ownBot(c.get('user').id, c.req.param('id'));
+  if (!b) return c.json({ error: 'not found' }, 404);
+  const home = engineHome(b.id);
+  if (!home) return c.json({ error: 'This room has no agent behind it.' }, 409);
+  const p = await c.req.json<{ providerId?: string | null; model?: string }>().catch(() => ({} as any));
+  try {
+    const r = await chooseFallback(home, p.providerId && p.model ? { providerId: p.providerId, model: p.model } : null);
+    await reloadEngine(b.id);
+    return c.json({ ok: true, fallback: r.model });
+  } catch (e: any) { return c.json({ error: e?.message ?? String(e) }, 400); }
 });
 
 /** Use this model for this agent: rewrite its Hermes config.yaml's model block, then reload its gateway. */

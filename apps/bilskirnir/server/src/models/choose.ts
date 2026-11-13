@@ -118,6 +118,44 @@ function setHomeEnv(home: string, name: string, value: string) {
   writePrivate(file, [...lines, `${name}=${value}`, ''].join('\n'));
 }
 
+/** The fallback named in an agent's Hermes config.yaml (the first entry), or null. */
+export function readFallback(home: string): { model: string; baseUrl: string } | null {
+  try {
+    const cfg: any = YAML.parse(fs.readFileSync(path.join(home, 'config.yaml'), 'utf8')) ?? {};
+    const f = Array.isArray(cfg.fallback_providers) ? cfg.fallback_providers[0] : null;
+    return f?.model ? { model: String(f.model), baseUrl: String(f.base_url ?? '') } : null;
+  } catch { return null; }
+}
+
+/**
+ * The model Hermes falls back to when the agent's own model fails — rate limits, outages, a refused key (plan 275 wave 1;
+ * Hermes' `fallback_providers`). `null` clears it. The key, when there is one, goes to the agent's .env under its own
+ * name and the config names that variable, never the key.
+ */
+export async function chooseFallback(home: string, input: ChooseInput | null, opts: DetectOptions = {}): Promise<{ model: string | null }> {
+  const file = path.join(home, 'config.yaml');
+  let cfg: any = {};
+  try { cfg = YAML.parse(fs.readFileSync(file, 'utf8')) ?? {}; } catch { /* a new home */ }
+  if (!input) {
+    delete cfg.fallback_providers;
+    writePrivate(file, YAML.stringify(cfg));
+    return { model: null };
+  }
+  const env = opts.env ?? process.env;
+  const d = await detect(opts);
+  const p = d.providers.find((x) => x.id === input.providerId);
+  if (!p) throw new Error('That provider is not among the ones found.');
+  const m = p.models.find((x) => x.id === input.model);
+  if (!m) throw new Error('That model is not listed by this provider.');
+  if (!m.allowed) throw new Error('That model is not allowed in this fleet.');
+  const key = resolveKey(p.keyRef, env);
+  if (!p.local && !key) throw new Error(`${p.name} needs a key. Add one on the Models screen.`);
+  if (key) setHomeEnv(home, 'BILSKIRNIR_FALLBACK_API_KEY', key);
+  cfg.fallback_providers = [{ provider: 'custom', model: m.id, base_url: p.baseUrl, ...(key ? { key_env: 'BILSKIRNIR_FALLBACK_API_KEY' } : {}) }];
+  writePrivate(file, YAML.stringify(cfg));
+  return { model: m.id };
+}
+
 export interface ChooseInput { providerId: string; model: string }
 export interface ChooseResult { providerId: string; model: string; baseUrl: string; keyFrom: string }
 

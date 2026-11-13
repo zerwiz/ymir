@@ -50,6 +50,8 @@ export interface ModelsView {
 export const configApi = {
   models: () => req<ModelsView>('GET', '/models'),
   /** choose a model from the house's catalog for this agent; written into its Hermes home, key included (plan 275) */
+  fallback: (botId: string) => req<{ fallback: { model: string; baseUrl: string } | null }>('GET', `/bots/${botId}/fallback`),
+  setFallback: (botId: string, providerId: string | null, model?: string) => req<{ ok: true; fallback: string | null }>('POST', `/bots/${botId}/fallback`, { providerId, model }),
   chooseModel: (botId: string, providerId: string, model: string) => req<{ ok: true; providerId: string; model: string }>('POST', `/bots/${botId}/model`, { providerId, model }),
   addProvider: (p: { preset?: string; name?: string; baseUrl?: string; key?: string }) => req<{ ok: true; id: string; keyStoredIn: string | null }>('POST', '/models/providers', p),
   removeProvider: (id: string) => req<{ ok: true }>('DELETE', `/models/providers/${encodeURIComponent(id)}`),
