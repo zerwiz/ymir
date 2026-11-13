@@ -33,10 +33,16 @@ systems/snotra/services/ear/snotra-autojoin.sh scan
 systems/snotra/services/ear/snotra-autojoin.sh run            # dry run
 systems/snotra/services/ear/snotra-autojoin.sh run --apply    # sends the bot
 
-# 4. the bot — Snotra joins a call through Vexa
+# 4. the bot — Snotra asks Vexa to send a bot into a call
+systems/snotra/services/ear/snotra-bot.sh health                        # is the engine up?
 systems/snotra/services/ear/snotra-bot.sh join https://meet.google.com/abc-defg-hij
-systems/snotra/services/ear/snotra-bot.sh status <id>
+systems/snotra/services/ear/snotra-bot.sh status https://meet.google.com/abc-defg-hij
+systems/snotra/services/ear/snotra-bot.sh stop   https://meet.google.com/abc-defg-hij
 ```
+
+`join` prints `dispatched`, and that word is the honest one: the engine accepted the
+request. Only `status` reads the bots that are actually running, and it exits `4` when
+none is — a registered request is not a join.
 
 ## The record
 
@@ -52,7 +58,15 @@ append-only: `put` refuses to overwrite; a correction is `--as corrections`.
 
 ## Limits
 
-- The bot needs a Vexa endpoint; this door does not run the engine.
+- The bot needs a Vexa endpoint; this door does not run the engine. A self-hosted engine
+  can be reached over plain HTTP **only** on loopback; anything else must be HTTPS. When this
+  box hosts Vexa Lite, the door finds it on `127.0.0.1:8056` and reads the engine's own key
+  from the container — an external engine is named in the vault or the environment.
+- The engine on this box: gateway `8056`, agent API `8100`, terminal `3001`, transcription
+  `8083`, with containers `vexa-lite`, `vexa-lite-postgres`, `vexa-lite-storage`,
+  `vexa-lite-whisper`.
+- A headless browser is not admitted to a Meet link as an anonymous guest — Meet answers
+  *"You can't join this video call"*. The bot needs an invited or signed-in participant.
 - Þing in P2P mode records in a participant's browser, not on the server.
 - Auto-join is dry-run unless `--apply`; the personal lane is off by default.
 - The store is a filesystem contract, not a database. Syncthing/git move it.
