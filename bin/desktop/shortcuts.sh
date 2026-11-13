@@ -44,7 +44,7 @@ catalog() {
     odrerir    apps/odrerir/electron/ymir-odrerir.desktop.in       apps/odrerir/electron/icon.png ymir-odrerir.desktop \
     sessrumnir apps/sessrumnir/resources/ymir-sessrumnir.desktop.in apps/sessrumnir/resources/icons/icon-256.png ymir-sessrumnir.desktop \
     bilskirnir apps/bilskirnir/electron/ymir-bilskirnir.desktop.in apps/bilskirnir/electron/icon.png ymir-bilskirnir.desktop \
-    rodd       apps/rodd/electron/rodd.desktop.in                   apps/rodd/electron/icon.svg rodd.desktop
+    rodd       apps/rodd/electron/rodd.desktop.in                   apps/rodd/electron/icon.png rodd.desktop
 }
 title() {  # the one display name: "Ymir · <App>"
   case "$1" in

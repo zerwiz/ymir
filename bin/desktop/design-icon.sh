@@ -49,6 +49,8 @@ APPS=(
   "apps/odrerir|ansuz|#c9973f|the mead — Óðrerir, the Live Hall (the Allfather's breath, inspiration)|ymir-odrerir|ymir odrerir|ymir-odrerir|Ymir · Óðrerir"
   "apps/sessrumnir|othala|#c9973f|the hall — Sessrúmnir, the seat that holds the cloth|ymir-sessrumnir|ymir sessrumnir|ymir-sessrumnir|Ymir · Sessrúmnir"
   "apps/smidja-factory/apps/visualizer|kaunan|#f59e0b|the torch — the forge's eye, Smíðja's trace|ymir-smidja|ymir smidja|ymir-smidja|Ymir · Smíðja"
+  "apps/bilskirnir|gungnir|#c9973f|the thorn — Bilskirnir, Thor's hall of many rooms|ymir-bilskirnir|ymir bilskirnir|ymir-bilskirnir|Ymir · Bilskirnir"
+  "apps/rodd|laguz|#c9973f|the flow — Rödd, the voice of Ymir|ymir-rodd|ymir rodd|ymir-rodd|Ymir · Rödd"
 )
 
 list() {
@@ -146,38 +148,9 @@ install_all() {
       fi
     fi
     cp -f "$src" "$icons_dir/$iconname.svg" 2>/dev/null || { printf '  "%s","FAILED","-","no icon at %s"\n' "$dir" "${src#"$ROOT"/}"; continue; }
-    {
-      printf '[Desktop Entry]\nType=Application\nVersion=1.0\n'
-      printf 'Name=%s\n' "$display"
-      printf 'Comment=%s\n' "$says"
-      # The door, never a path: a launcher entry outlives the tree that wrote it,
-      # and `ymir <door>` reaches whichever install is live. (The CLI is on PATH
-      # from npm's global bin, and from bin/ in a clone — ymir.js is a bin entry.)
-      # THE APPS RUN FROM MAIN, NEVER FROM A WORKTREE (the Allfather, 2026-11-08: "the apps run time must be
-      # locked to main. otherwise they might break if the user are swithing threes"). Measured the same day:
-      # every entry pointed into ~/ymir/.yggdrasil/<errand>/… and the buttons failed. The rewrite lives HERE,
-      # at the one place an Exec line is written, so no caller can seat a launcher into a working copy.
-      case "$exec" in
-        */.yggdrasil/*)
-          _canon="$(bash "$(dirname "${BASH_SOURCE[0]}")/main-tree.sh" 2>/dev/null || true)"
-          if [ -n "${_canon:-}" ]; then
-            case "$exec" in
-              "$_canon"/*) : ;;
-              *)
-                _tail="${exec#*/.yggdrasil/}"
-                _tail="${_tail#*/}"
-                exec="$_canon/$_tail"
-                printf 'design-icon: the launcher pointed into a worktree — seated from MAIN instead: %s\n' "$exec" >&2
-                ;;
-            esac
-          fi
-          ;;
-      esac
-      printf 'Exec=%s\n' "$exec"
-      printf 'Icon=%s\n' "$iconname"
-      printf 'Terminal=false\nCategories=Development;Utility;\n'
-      printf 'StartupWMClass=%s\nStartupNotify=true\n' "$klass"
-    } >"$apps_dir/$iconname.desktop"
+    # The launcher entry is NOT written here (plan 275, 2026-11-13): bin/desktop/shortcuts.sh is the one writer,
+    # with Exec=ymir-app <app>. This step used to write a second entry (Exec=ymir <app>) over it, so the
+    # launcher an install left behind depended on which of the two ran last.
     printf '  "%s","%s.svg","%s.desktop"\n' "$iconname" "$iconname" "$iconname"
   done
   # Names we have retired, swept on every install: a launcher entry that points at
@@ -186,6 +159,8 @@ install_all() {
   for stale in ymir-hlidskjalf-mobile ymir-visualizer; do
     rm -f "$apps_dir/$stale.desktop" "$icons_dir/$stale.svg"
   done
+  # the launchers themselves: the one writer, so every entry carries the one command and this rune
+  [ -x "$ROOT/bin/desktop/shortcuts.sh" ] && bash "$ROOT/bin/desktop/shortcuts.sh" >/dev/null 2>&1 || true
   command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$apps_dir" >/dev/null 2>&1 || true
 }
 
@@ -234,6 +209,10 @@ raster_targets() {  # <surface> -> "<out>:<size>" lines
     hlidskjalf) printf '%s\n' "$ROOT/apps/hlidskjalf/electron/icon.png:512" "$ROOT/apps/hlidskjalf/public/apple-touch-icon.png:180" ;;
     odrerir)    printf '%s\n' "$ROOT/apps/odrerir/electron/icon.png:512" "$ROOT/apps/odrerir/public/apple-touch-icon.png:180" ;;
     smidja)     printf '%s\n' "$ROOT/apps/smidja-factory/apps/visualizer/desktop/icon.png:512" ;;
+    bilskirnir) printf '%s\n' "$ROOT/apps/bilskirnir/electron/icon.png:512"
+                # its own theme set, which apps/bilskirnir/setup.sh copies into the icon theme on every setup
+                for s in 16 32 48 64 128 256 512; do printf '%s\n' "$ROOT/apps/bilskirnir/electron/icons/hicolor/${s}x${s}/apps/ymir-bilskirnir.png:$s"; done ;;
+    rodd)       printf '%s\n' "$ROOT/apps/rodd/electron/icon.png:512" ;;
     sessrumnir) for s in 16 32 48 64 128 256 512; do printf '%s\n' "$ROOT/apps/sessrumnir/resources/icons/icon-$s.png:$s"; done
                 printf '%s\n' "$ROOT/apps/sessrumnir/resources/icons/icon.png:512" "$ROOT/apps/sessrumnir/public/apple-touch-icon.png:180" ;;
   esac
@@ -241,7 +220,7 @@ raster_targets() {  # <surface> -> "<out>:<size>" lines
 
 raster_all() {
   local n=0 row d glyph tint says icon surface svg out size tmp
-  printf 'rasters[9]{surface,file,size}:\n'
+  printf 'rasters[18]{surface,file,size}:\n'
   for row in "${APPS[@]}"; do
     IFS='|' read -r d glyph tint says icon _e _k _n <<<"$row"
     surface="${icon#ymir-}"
@@ -250,6 +229,9 @@ raster_all() {
       odrerir)    svg="$ROOT/apps/odrerir/public/icon.svg" ;;
       sessrumnir) svg="$ROOT/apps/sessrumnir/public/icon.svg" ;;
       smidja)     svg="$ROOT/apps/smidja-factory/apps/visualizer/public/icon.svg" ;;
+      bilskirnir) svg="$ROOT/apps/bilskirnir/public/icon.svg"
+                  cp -f "$svg" "$ROOT/apps/bilskirnir/electron/icons/hicolor/scalable/apps/ymir-bilskirnir.svg" ;;
+      rodd)       svg="$ROOT/apps/rodd/public/icon.svg" ;;
       *) continue ;;
     esac
     while IFS=: read -r out size; do
