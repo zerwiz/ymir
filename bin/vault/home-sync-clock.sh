@@ -44,8 +44,27 @@ git fetch -q origin 2>/dev/null || { printf 'home-sync-clock: fetch failed\n' >&
 behind=$(git rev-list --count HEAD..origin/main 2>/dev/null)
 if [ "${behind:-0}" -gt 0 ]; then
   if [ "$DRY" = 1 ]; then printf 'would-pull,%s\n' "$behind"; exit 0; fi
-  git merge --no-ff origin/main -m "merge: the heart's commits into the home (home-sync-clock)" >/dev/null 2>&1 \
-    || { git merge --abort >/dev/null 2>&1; printf 'refused,a real conflict — reconcile by hand\n' >&2; exit 3; }
+  # AN UNTRACKED FILE THE MERGE WOULD OVERWRITE IS MOVED ASIDE, NOT DELETED (2026-11-13). This collision
+  # stopped the home three times in one night: a door had written a plans README at a shelf, the heart then
+  # committed that same path, and every merge refused. The clock now moves the stray aside and retries —
+  # Rule 11 kept to the letter: moved to hodd/state/untracked-premerge-<date>/, never deleted.
+  tries=0
+  while :; do
+    out="$(git merge --no-ff origin/main -m "merge: the heart's commits into the home (home-sync-clock)" 2>&1)" && break
+    tries=$((tries+1))
+    [ "$tries" -gt 6 ] && { git merge --abort >/dev/null 2>&1; printf 'refused,%s\n' "$(printf '%s' "$out" | grep -m1 .)" >&2; exit 3; }
+    if printf '%s' "$out" | grep -q "would be overwritten"; then
+      stash="hodd/state/untracked-premerge-$(date +%Y%m%d-%H%M%S)"
+      printf '%s\n' "$out" | sed -n '/would be overwritten/,/^error/p' | grep -E "^	" | tr -d '\t' | while IFS= read -r f; do
+        [ -f "$f" ] || continue
+        mkdir -p "$stash/$(dirname "$f")"; mv "$f" "$stash/$f"
+      done
+      printf 'moved-aside,%s\n' "$stash"
+      continue
+    fi
+    git merge --abort >/dev/null 2>&1
+    printf 'refused,a real conflict — reconcile by hand\n' >&2; exit 3
+  done
 fi
 dirty=$(git status --porcelain | grep -vc '^??')
 ahead=$(git rev-list --count origin/main..HEAD 2>/dev/null)
