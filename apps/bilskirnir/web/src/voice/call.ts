@@ -49,6 +49,8 @@ export function startCall(botId: string) {
 }
 
 export function endCall() { current?.end(); }
+/** The voice settings changed during a call with this bot: the call takes the new voice at once. */
+export function updateCallVoice(botId: string, voice: string, speed?: number) { if (current && !current.ended && current.botId === botId) current.setVoice(voice, speed); }
 export function toggleMute() { current?.setMuted(!useVoice.getState().muted); }
 export function callLevels(): { out: number; mic: number } {
   return current && !current.ended ? { out: current.player.level(), mic: current.micLevel() } : { out: 0, mic: 0 };
@@ -107,6 +109,9 @@ class VoiceCall {
     try {
       this.mic = new MicCapture(this.ctx, stream, (pcm) => this.sendAudio(pcm));
       await this.mic.start();
+      this.stream = stream;
+      for (const t of stream.getAudioTracks()) t.addEventListener('ended', () => this.end('The microphone was lost, so the call was ended — press the mic to call again.'));
+      this.watchMic();
       this.sess = await voiceApi.session(this.botId);
       if (this.ended) { void voiceApi.end(this.botId, this.sess.callId, [], 'Cancelled'); return; }
       setV({ callId: this.sess.callId });
@@ -139,7 +144,37 @@ class VoiceCall {
     if (this.ws?.readyState === WebSocket.OPEN) this.ws.send(JSON.stringify(ev));
   }
 
+  // plan 275 (2026-11-13): the call watches its own microphone. A call whose sound stopped arriving sat open and deaf
+  // for 38 minutes, holding one of the engine's two seats; now it wakes its audio once, then ends with a plain word.
+  private lastFrame = Date.now();
+  private stream?: MediaStream;
+  private micWatch?: ReturnType<typeof setInterval>;
+  private watchMic() {
+    this.micWatch = setInterval(() => {
+      if (this.ended || !this.ready) return;
+      // a track that ended (unplugged, taken by another app, stopped) still lets the worklet send silent frames
+      if (this.stream && this.stream.getAudioTracks().every((t) => t.readyState === 'ended')) {
+        this.end('The microphone was lost, so the call was ended — press the mic to call again.');
+        return;
+      }
+      const quiet = Date.now() - this.lastFrame;
+      if (quiet < 15000) return;
+      if (this.ctx.state !== 'running') { void this.ctx.resume().catch(() => {}); return; }
+      if (quiet > 30000) this.end('The microphone stopped sending sound, so the call was ended — press the mic to call again.');
+    }, 5000);
+  }
+
+  /** A voice chosen during the call applies at once: the call's own session, sent again with the new voice. */
+  setVoice(voice: string, speed?: number) {
+    if (!this.sess || this.ended) return;
+    const s: any = structuredClone(this.sess.session ?? {});
+    s.audio = { ...(s.audio ?? {}), output: { ...(s.audio?.output ?? {}), voice, ...(speed ? { speed } : {}) } };
+    this.sess = { ...this.sess, session: s };
+    this.send({ type: 'session.update', session: s });
+  }
+
   private sendAudio(pcm: Int16Array) {
+    this.lastFrame = Date.now();
     if (!this.ready || this.ended || useVoice.getState().muted) return;
     this.send({ type: 'input_audio_buffer.append', audio: pcmToBase64(pcm) });
   }
@@ -358,6 +393,7 @@ class VoiceCall {
 
   private scheduleCheck(ms: number) {
     if (this.checkTimer) clearTimeout(this.checkTimer);
+    if (this.micWatch) clearInterval(this.micWatch);
     this.checkTimer = setTimeout(() => this.checkTasks(), ms);
   }
 
