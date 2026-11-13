@@ -118,7 +118,7 @@ if [ "${dry:-0}" = 1 ]; then
 fi
 
 export BROKK_INJECT_MARK=1
-if timeout 60 "$ROOT/bin/agents/eindri-send.sh" "$pane" "[${from}] ${line}" >/dev/null 2>&1; then
+if timeout 60 "$ROOT/bin/agents/eindri-send.sh" --from "agent $from" "$pane" "$line" >/dev/null 2>&1; then
   printf 'injected[1]{from,pane,owner}:\n  "%s","%s","%s"\n' "$from" "$pane" "$owner"
   exit 0
 fi

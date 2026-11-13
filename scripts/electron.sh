@@ -334,7 +334,10 @@ start_one() {
     # is exactly what a click must not do. focuswindow also switches desktops.
     local cls state=already-up
     cls="$(view_mark "$v")"   # the window class, from the one place that defines it
-    if command -v hyprctl >/dev/null 2>&1; then
+    if [ "${YMIR_APP_FOLLOWING:-0}" = 1 ]; then
+      # ymir-app is bringing the window to the user's desktop (2026-11-14): no jump to where it sat.
+      window_present "$cls" && state=raised
+    elif command -v hyprctl >/dev/null 2>&1; then
       # Omarchy configures Hyprland in Lua, so `hyprctl dispatch` evaluates the
       # remainder as a Lua expression — the classic `focuswindow class:...`
       # string form is a syntax error there. This is the working idiom.
