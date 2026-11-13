@@ -58,7 +58,28 @@ if [ -z "${VEXA_API_URLS:-}" ] || [ -z "${VEXA_API_URL:-}" ] || [ -z "$KEY" ]; t
   fi
 fi
 CANDIDATES="${VEXA_API_URLS:-${VEXA_API_URL:-}}"
-[ -n "$CANDIDATES" ] || die "VEXA_API_URL or VEXA_API_URLS is not set (env or vault)"
+# ONE documented default (Rule 07): the engine this box itself hosts, on loopback. An
+# address is not a secret and the port is Vexa Lite's own; any other engine is named in
+# the vault or the environment, never guessed.
+if [ -z "$CANDIDATES" ] && command -v docker >/dev/null 2>&1 \
+   && docker inspect "${VEXA_LITE_CONTAINER:-vexa-lite}" >/dev/null 2>&1; then
+  CANDIDATES="http://127.0.0.1:${VEXA_LITE_PORT:-8056}"
+fi
+# A SELF-HOSTED engine on this box mints its own key at first boot and keeps it root-only
+# inside the container. The door reads THAT, so the Allfather's vault holds no copy of a
+# credential that a reinstall would invalidate — and no document ever carries it.
+if [ -z "$KEY" ] && [ -z "${VEXA_API_KEY_DONE:-}" ]; then
+  _lite="${VEXA_LITE_CONTAINER:-vexa-lite}"
+  case "$CANDIDATES" in
+    *127.0.0.1*|*localhost*)
+      if command -v docker >/dev/null 2>&1 && docker inspect "$_lite" >/dev/null 2>&1; then
+        KEY="$(docker exec "$_lite" sh -c 'sed -n "s/^VEXA_API_KEY=//p" /run/vexa/key.env' 2>/dev/null | head -1)"
+        [ -n "$KEY" ] && VEXA_ALLOW_HTTP="${VEXA_ALLOW_HTTP:-1}"
+      fi ;;
+  esac
+  unset _lite
+fi
+[ -n "$CANDIDATES" ] || die "VEXA_API_URL or VEXA_API_URLS is not set (env or vault), and no local Vexa Lite engine answers"
 IFS=',' read -r -a _urls <<< "$CANDIDATES"
 for u in "${_urls[@]}"; do
   case "$u" in
@@ -68,7 +89,7 @@ for u in "${_urls[@]}"; do
     *) die "endpoint must be absolute: $u" ;;
   esac
 done
-[ -n "$KEY" ] || die "VEXA_API_KEY is not set (env or vault)"
+[ -n "$KEY" ] || die "VEXA_API_KEY is not set (env, vault, or the local Vexa Lite engine's own key)"
 
 # Health-failover: whynot may be down; a local Vexa or a hosted one may not be.
 pick_url(){

@@ -698,4 +698,20 @@ the bot may use. Read this before promising a join from a headless server.
 meeting key whether or not the door succeeded, so a refused join was never retried; it now records
 only a success.
 
+**The engine stands on this box, and the bot it spawns is real.** Vexa Lite is installed:
+gateway `8056`, agent API `8100`, terminal `3001`, bundled CPU transcription `8083`, with
+PostgreSQL and the recording store beside it. The door resolved the engine's own key and
+dispatched for real — the API row carries a `bot_container_id` and a Playwright Chromium ran
+in the container, which is precisely the field that was `null` when plan 147 called a bot
+joined. The door reads the key from the engine's own `/run/vexa/key.env` and its URL from one
+documented loopback default; no credential enters the vault or a document.
+
+**And Meet refused the bot the same way it refused the seat.** For both a made-up code and the
+live meeting, the engine recorded `join_failure` at stage `joining`, with its own reason:
+the join button never appeared because the browser had been moved to
+`workspace.google.com/products/meet/`. The bot's screenshot shows Google's marketing page, not
+a lobby. An anonymous automated guest is not admitted to these meetings; the road that
+survives is a signed-in or invited participant (Vexa's authenticated-bot mode), which needs
+the Allfather's word on the account.
+
 **Fix note:** `docs/fixes/snotra/2026-11-13-the-seat-could-not-be-admitted.md`.

@@ -109,6 +109,49 @@ the door succeeded**, so a refused join was written down as done and the meeting
 retried. Proven both ways with a stub door: with a failing join the joined file is not
 written at all, and with a succeeding one the key is recorded.
 
+## The engine, standing, and the bot it really spawned
+
+The lite stack is installed on this box and answers: `vexa-lite` reports **healthy**, the
+gateway on `8056` answers `/health` with `200`, the agent API is on `8100`, the terminal on
+`3001`, and the bundled CPU transcription service on `8083`. It costs about 600 MB resident,
+48 MB for PostgreSQL and 152 MB for the transcriber.
+
+Then the door was used for real, twice: once on a made-up meeting code, and once on the
+meeting the calendar had live. Both times the engine answered `201` and the door printed
+`dispatched`, and both times the engine really did spawn the bot — the API row carries
+`bot_container_id: mtg-…`, the very field that was `null` in plan 147, and a Playwright
+Chromium ran inside the container with its own workload log.
+
+The clock did the second one — `bin/time/nornir-job-snotra-autojoin.sh` was run by hand
+exactly as the schedule will run it, and it found the live meeting, dispatched the bot and
+recorded nothing as joined.
+
+## What Meet did with the bot
+
+The engine's own record of that meeting is unambiguous:
+
+- `completion_reason: join_failure`, `failure_stage: joining`;
+- the bot found the name field, typed its name, muted itself, and then searched for the join
+  button for sixty seconds;
+- its reason: *"Could not locate join button by any locale-agnostic or English selector after
+  60000ms (url=https://workspace.google.com/products/meet/…)"*.
+
+The screenshot the bot saved at that moment is Google's Workspace marketing page for Meet.
+Meet did not show the bot a lobby, a knock, or a refusal sentence: it moved the browser off
+the meeting entirely.
+
+That is the same place this seat's own headless Chromium landed earlier the same night. Two
+independent browser stacks, one answer. An anonymous, automated guest is not admitted to a
+Meet link from this calendar, and no amount of retrying changes that.
+
+> [!IMPORTANT]
+> **The one thing that is still owed is a decision, not a script.** A bot that may join these
+> meetings has to be a *signed-in or invited participant*. Vexa supports that (sign in once,
+> persist the browser session), and it needs a Google account the bot may use — the
+> Allfather's word, never a guess and never an invented account. A transcript follows from
+> the same decision: with no seat in the room there is nothing to transcribe, and the door
+> will not pretend otherwise.
+
 ## The clock: a cadence the scheduler could not express
 
 Auto-join needs to run every few minutes; a meeting that starts at `:10` and lasts thirty
@@ -151,5 +194,9 @@ dresses a refusal as a join.
   proof and two of the clock's own (18 assertions).
 - `docs/features/snotra-meetings.md` — the commands and the honest word (`dispatched`, not
   "joined"), and the headless-guest limit.
+- The Vexa Lite stack installed on this box: `vexa-lite` (gateway `8056`, agent `8100`,
+  terminal `3001`), `vexa-lite-postgres`, `vexa-lite-storage`, `vexa-lite-whisper` on `8083`.
+  The door resolves its key from the engine's own `/run/vexa/key.env` and its URL from one
+  documented loopback default, so no credential is copied into the vault or a document.
 - `.agents/skills/galdr-ymirsystem/assets/snotra-meeting-ear.md` — the owning asset carries
   the same three faults and the admission finding.

@@ -88,7 +88,9 @@ unset VEXA_ALLOW_HTTP
 # the refusal is about the ENDPOINT, not the meeting link: a plain-http engine off loopback
 refute "a plain-HTTP engine off loopback is refused without the test flag" \
   env VEXA_API_URL="http://vexa.example.test" VEXA_API_KEY=test-key "$DOOR" join "https://meet.google.com/abc-defg-hij"
-VEXA_ALLOW_HTTP=1 VEXA_API_KEY="" refute "missing key is refused" env -u VEXA_API_KEY "$DOOR" join "http://127.0.0.1:18099/x"
+# a key is required for any engine that is not this box's own Vexa Lite (whose key the door
+# reads from the container), so the refusal is measured against a remote endpoint
+refute "missing key is refused" env -u VEXA_API_KEY VEXA_API_URL="https://vexa.example.test" "$DOOR" join "https://meet.google.com/abc-defg-hij"
 
 # failover: the first endpoint is down, the second answers — clean child env
 check "failover skips a dead endpoint" env VEXA_API_URLS='http://127.0.0.1:18098,http://127.0.0.1:18099' VEXA_API_KEY=test-key VEXA_ALLOW_HTTP=1 "$DOOR" join 'https://meet.google.com/abc-defg-hij'

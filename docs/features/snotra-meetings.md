@@ -59,7 +59,12 @@ append-only: `put` refuses to overwrite; a correction is `--as corrections`.
 ## Limits
 
 - The bot needs a Vexa endpoint; this door does not run the engine. A self-hosted engine
-  can be reached over plain HTTP **only** on loopback; anything else must be HTTPS.
+  can be reached over plain HTTP **only** on loopback; anything else must be HTTPS. When this
+  box hosts Vexa Lite, the door finds it on `127.0.0.1:8056` and reads the engine's own key
+  from the container — an external engine is named in the vault or the environment.
+- The engine on this box: gateway `8056`, agent API `8100`, terminal `3001`, transcription
+  `8083`, with containers `vexa-lite`, `vexa-lite-postgres`, `vexa-lite-storage`,
+  `vexa-lite-whisper`.
 - A headless browser is not admitted to a Meet link as an anonymous guest — Meet answers
   *"You can't join this video call"*. The bot needs an invited or signed-in participant.
 - Þing in P2P mode records in a participant's browser, not on the server.
