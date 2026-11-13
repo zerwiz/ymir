@@ -43,6 +43,12 @@ export function EngineSettings({ bot }: { bot: Bot }) {
   const [where, setWhere] = useState<'local' | 'online'>('local');
   const [catProvider, setCatProvider] = useState('');
   const [catModel, setCatModel] = useState('');
+  // plan 275 wave 1: the model Hermes falls back to when this one fails (a local model, so an outage is never an error)
+  const [fallback, setFallbackState] = useState<string>('');
+  const [fbBusy, setFbBusy] = useState(false);
+  useEffect(() => {
+    configApi.fallback(botId).then((r) => setFallbackState(r.fallback ? `${r.fallback.baseUrl}::${r.fallback.model}` : '')).catch(() => {});
+  }, [botId]);
   useEffect(() => {
     let alive = true;
     configApi.models().then((v) => {
@@ -164,6 +170,22 @@ export function EngineSettings({ bot }: { bot: Bot }) {
         <PickList label="Model" value={catModel} placeholder="Choose a provider"
           options={(catalog?.providers.find((p) => p.id === catProvider)?.models ?? []).filter((m) => m.allowed).map((m) => ({ value: m.id, label: m.id }))}
           onPick={(m) => { setNote(null); setCatModel(m); }} />
+      </div>
+      <div className="panel-row panel-row--setting">
+        <span>If it fails</span>
+        <PickList label="Fallback model" value={fallback} placeholder={fbBusy ? 'Saving…' : 'No fallback'} disabled={fbBusy}
+          options={[{ value: '', label: 'No fallback' },
+            ...catProviders(catalog, 'local').flatMap((p) => p.models.filter((m) => m.allowed).map((m) => ({ value: `${p.baseUrl}::${m.id}`, label: m.id, hint: p.name })))]}
+          onPick={async (v) => {
+            setFbBusy(true); setNote(null);
+            try {
+              const [, model] = v.split('::');
+              const p = v ? catProviders(catalog, 'local').find((x) => v.startsWith(`${x.baseUrl}::`)) : null;
+              await configApi.setFallback(botId, p ? p.id : null, model);
+              setFallbackState(v);
+            } catch (e) { setNote(`Couldn’t set the fallback: ${(e as Error).message}`); }
+            finally { setFbBusy(false); }
+          }} />
       </div>
       {(() => {
         const held = (catalog?.providers.find((p) => p.id === catProvider)?.models ?? []).filter((m) => !m.allowed).length;
