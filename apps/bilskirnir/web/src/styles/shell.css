@@ -39,6 +39,18 @@
   transition: background-color 120ms var(--ease-out);
 }
 .bot-row:hover { background: var(--color-bg-hover); }
+/* the per-agent settings button (plan 275): shown on hover, on focus, on the chosen agent and while its menu is open */
+.bot-row-wrap { position: relative; }
+.bot-row-wrap .bot-row { padding-right: 40px; }
+.bot-row__more { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px;
+  display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; opacity: 0;
+  transition: opacity 120ms var(--ease-out), background-color 120ms var(--ease-out); }
+.bot-row__more:hover { background: var(--color-bg-hover); }
+.bot-row-wrap:hover .bot-row__more, .bot-row-wrap:focus-within .bot-row__more, .bot-row-wrap.has-menu .bot-row__more,
+.bot-row-wrap:has(.bot-row.is-selected) .bot-row__more { opacity: 1; }
+.bot-row-wrap > .menu { right: 8px; max-width: calc(100vw - 24px); }
+.bot-row-wrap > .menu.is-below { top: calc(100% - 6px); bottom: auto; }
+.bot-row-wrap > .menu.is-above { bottom: calc(100% - 6px); top: auto; }
 .bot-row.is-selected { background: var(--color-bg-active); }
 .bot-row__avatar { position: relative; display: inline-flex; }
 .bot-row__avatar .status-dot { right: -1px; top: -1px; }

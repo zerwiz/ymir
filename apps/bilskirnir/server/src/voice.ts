@@ -1,3 +1,7 @@
+import { spawn } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 // Voice calls, the way Grok Bot does them: a second, lightweight voice agent runs in the browser against
 // a realtime API, speaks as the bot, and relays real work to the bot's main text agent loop.
 // This module builds the voice agent's prompt and tools, serves the relay tools, records call start/end
@@ -318,12 +322,54 @@ voiceApi.post('/session', async (c) => {
   });
 });
 
+/** Raise Rödd's engine through the house door, once (a second press while it loads does not start a second). Returns
+ *  the door's refusal when it gives one (a call holds the microphone), else ''. */
+let raising: { at: number; log: string } | null = null;
+function raiseHouseVoice(): string {
+  const said = () => {
+    try {
+      const last = fs.readFileSync(raising!.log, 'utf8').trim().split('\n').pop() ?? '';
+      return /refus|held|in a call|microphone|failed|error/i.test(last) ? `The house voice was not raised: ${last.slice(0, 200)}` : '';
+    } catch { return ''; }
+  };
+  if (raising && Date.now() - raising.at < 120_000) return said();
+  const door = new URL('../../../../bin/voice/voice-door.sh', import.meta.url).pathname;
+  const log = path.join(os.tmpdir(), `bilskirnir-voice-raise-${process.getuid?.() ?? 'u'}.log`);
+  raising = { at: Date.now(), log };
+  try {
+    const out = fs.openSync(log, 'w');
+    spawn('bash', [door, 'host'], { detached: true, stdio: ['ignore', out, out] }).unref();
+    fs.closeSync(out);
+    console.log('[voice] raising the house voice (log:', log + ')');
+  } catch (e: any) {
+    return `The house voice could not be raised: ${String(e?.message ?? e).slice(0, 120)}`;
+  }
+  return '';
+}
+
+/** The door's refusal, if it gave one, read once the wait is over. */
+function raiseRefusal(): string {
+  if (!raising) return '';
+  try {
+    const last = fs.readFileSync(raising.log, 'utf8').trim().split('\n').pop() ?? '';
+    return /refus|held|in a call|microphone|failed|error/i.test(last) ? `The house voice was not raised: ${last.slice(0, 200)}` : '';
+  } catch { return ''; }
+}
+
 /** Open a call on the house road: no secret to mint, the browser speaks to Rödd's engine through our relay. */
 async function houseSession(c: any, userId: string, bot: any, s: ReturnType<typeof settingsOf>) {
-  const rt = await realtimeStatus();
+  let rt = await realtimeStatus();
   if (!rt.up) {
-    console.warn('[voice] house realtime down:', rt.detail);
-    return c.json({ error: 'The house voice is not raised (run bin/voice/voice-door.sh host)' }, 503);
+    // plan 275 (2026-11-13): pressing the mic raises the voice the way Rödd's start does, instead of telling the
+    // person to type a command. The engine is not a boot resident, so after a restart it is simply not up yet. The
+    // house door keeps its own guard (no --now): it will not raise a GPU engine while a call holds the microphone.
+    raiseHouseVoice();
+    for (let i = 0; i < 45 && !rt.up && !raiseRefusal(); i++) { await new Promise((r) => setTimeout(r, 2000)); rt = await realtimeStatus(); }
+    if (!rt.up) {
+      const said = raiseRefusal();
+      console.warn('[voice] house realtime still down:', rt.detail, said);
+      return c.json({ error: said || 'The house voice is still starting — press the mic again in a moment.' }, 503);
+    }
   }
   if (rt.free === 0) return c.json({ error: 'The house voice is busy in another window (Rödd holds its one seat)' }, 409);
 
