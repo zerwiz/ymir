@@ -662,3 +662,40 @@ printed sentence* as a send call.
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+
+## 2026-11-13 — the seat, the admission, and the API the door was speaking
+
+Measured on this seat, one night, after the Allfather asked twice why Snotra is not in his meetings.
+
+**The bot engine is absent, and one belief was wrong.** Port `8090` does answer on this box's
+tailnet address, but it is **Element** (the Gladsheim/Matrix client), not a Vexa runtime; `18080`
+answers nothing, and the vault holds no `VEXA_API_URL`, `VEXA_API_URLS` or `VEXA_API_KEY`. Plan
+147's runtime is gone from this machine and no peer on the tailnet serves one. The lite stack
+(`vexaai/vexa-lite`, 2.31 GB compressed, ~5.1 GB unpacked, plus PostgreSQL and storage sidecars)
+needs about 6 GB; the box had 3.9 GB free at the start of the night and 29 GB after another hand
+pruned unused images, which is the difference between a number and an install.
+
+**The Vexa door now speaks 0.12.** The old shape (`POST /meetings`) is retired: the current
+contract is `POST /bots` with `platform` and `native_meeting_id`, `GET /bots/status` for the
+running bots, `DELETE /bots/{platform}/{id}` to stop one. The door prints `dispatched` — never
+"joined" — because a `201` is an accepted request, and `status` reads the running list and exits
+`4` when nothing runs. That is plan 147's lesson, made mechanical.
+
+**The CDP seat had three faults, all fixed.** It could only launch headed, and a server has no
+display it may attach to; its default browser profile (`~/.local/share/skirnir/meet-profile`) is a
+path the snap Chromium may not write, so the browser died before the DevTools port opened; and it
+closed its CDP session right after navigating, so the init script was gone when the seat re-attached
+to verify — `bridge=False` on every run. The refusal now quotes the page instead of assuming a lobby.
+
+**A headless guest is not admitted to a Meet link from this calendar.** Run for real against a live
+event, Meet answered *"You can't join this video call — no one can join a meeting unless invited or
+admitted by the host"*; a made-up code answers the identical sentence, so this is the generic
+un-admitted answer, not a verdict on the link. The road that survives it is an **invited or signed-in
+participant** (Vexa's authenticated-bot mode), which needs the Allfather's word on the Google account
+the bot may use. Read this before promising a join from a headless server.
+
+**The clock no longer records refusals as joins.** `snotra-autojoin.sh run --apply` appended the
+meeting key whether or not the door succeeded, so a refused join was never retried; it now records
+only a success.
+
+**Fix note:** `docs/fixes/snotra/2026-11-13-the-seat-could-not-be-admitted.md`.

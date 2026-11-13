@@ -109,3 +109,6 @@
 # the pane and the symptom, tells the arm holder, carves a rune, and stops nothing unless told --stop.
 # 0,20,40 * * * is not a shape Nornir reads: use three hourly rows on this machine's own minute.
 @hourly:47 bin/agents/spam-guard.sh
+
+# every N minutes, aligned to the hour — the finest cadence Nornir offers (2026-11-13)
+@heart @every:5 bin/time/nornir-job-snotra-autojoin.sh

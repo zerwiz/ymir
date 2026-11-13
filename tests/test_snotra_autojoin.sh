@@ -55,4 +55,14 @@ check "dry run prints WOULD-JOIN" bash -c "'$DOOR' run | grep -q WOULD-JOIN"
 check "dry run does not record a join" test ! -s "$YMIR_HOME/hodd/state/snotra/autojoin-joined.json"
 check "status prints the plan" bash -c "'$DOOR' status | grep -q 'plan\\[1\\]'"
 
+# --apply records a meeting as joined ONLY when the door succeeded. Measured fault
+# (2026-11-13): the key was appended either way, so a refused join was written down as done
+# and the meeting was never retried — plan 147's fault, one layer lower.
+check "a refused join is not recorded as joined" bash -c "
+  SNOTRA_BOT=/bin/false '$DOOR' run --apply >/dev/null 2>&1
+  test ! -s '$YMIR_HOME/hodd/state/snotra/autojoin-joined.json'"
+check "a successful join is recorded" bash -c "
+  SNOTRA_BOT=/bin/true '$DOOR' run --apply >/dev/null 2>&1
+  python3 -c \"import json;d=json.load(open('$YMIR_HOME/hodd/state/snotra/autojoin-joined.json'));assert d, d\""
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"; [ "$FAIL" -eq 0 ]

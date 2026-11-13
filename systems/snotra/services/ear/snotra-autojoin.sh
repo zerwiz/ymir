@@ -140,7 +140,14 @@ PY
   if [ "$apply" = 1 ] && [ -x "$BOT" ]; then
     while IFS=$'\t' read -r act key url; do
       [ "$act" = JOIN ] || continue
-      "$BOT" join "$url" --workspace "${key%%|*}" --name Snotra || printf 'failed\t%s\n' "$key" >&2
+      # A meeting is recorded as joined only when the door SUCCEEDED. Until 2026-11-13 the
+      # key was appended either way, so a refused join (no engine, no endpoint, a bot the
+      # room never admitted) was written down as a join and the meeting was never retried —
+      # the same fault plan 147 named, one layer lower.
+      if ! "$BOT" join "$url" --workspace "${key%%|*}" --name Snotra; then
+        printf 'failed\t%s\n' "$key" >&2
+        continue
+      fi
       python3 - "$JOINED" "$key" <<'PY'
 import json,sys
 p,key=sys.argv[1],sys.argv[2]
