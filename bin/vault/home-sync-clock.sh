@@ -17,7 +17,9 @@ SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(CDPATH='' cd "$SELF_DIR/../.." && pwd)"
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 H=""; declare -f ymir_home_root >/dev/null 2>&1 && ymir_home_root H 2>/dev/null
-HOME_DIR="${H:-$HOME/Documents/ymirhome}"
+# The one resolver says where the home is (defaults-guard); a home it cannot name is a fault, never a guess.
+[ -n "$H" ] || { printf 'home-sync-clock: the resolver (bin/vault/hoard-lib.sh) named no home\n' >&2; exit 1; }
+HOME_DIR="$H"
 DRY=0
 for a in "$@"; do case "$a" in --install-timer) TIMER=1;; --dry-run) DRY=1;; esac; done
 if [ "${TIMER:-0}" = 1 ]; then
@@ -34,11 +36,15 @@ cd "$HOME_DIR" || exit 1
 # THE RECORDS THE HOUSE WRITES ITSELF are committed by the clock; anything else holds it. The runes and the
 # room files are append-only unions written by the arm on every cycle — they are not scratch, and leaving them
 # uncommitted is what blocked every reconciliation for days.
-rec=$(git status --porcelain | grep -v '^??' | awk '{print $2}' | grep -E '^(hodd/memory/runes_audit\.md|hodd/rooms/.*\.jsonl|hodd/memory/daily/.*\.md)$')
-other=$(git status --porcelain | grep -v '^??' | awk '{print $2}' | grep -vE '^(hodd/memory/runes_audit\.md|hodd/rooms/.*\.jsonl|hodd/memory/daily/.*\.md)$')
+# 2026-11-13: the comms logs (hodd/memory/comms/*.jsonl — the Telegram log and its kin) are written by the house on
+# every message and merge by union like the runes. Left off this list, one dirty telegram.jsonl held the clock for
+# every hour of a day, and the home fell behind the heart until a hand reconciled it.
+RECORDS='^(hodd/memory/runes_audit\.md|hodd/rooms/.*\.jsonl|hodd/memory/daily/.*\.md|hodd/memory/comms/.*\.jsonl)$'
+rec=$(git status --porcelain | grep -v '^??' | awk '{print $2}' | grep -E "$RECORDS")
+other=$(git status --porcelain | grep -v '^??' | awk '{print $2}' | grep -vE "$RECORDS")
 if [ -n "$rec" ] && [ -z "$other" ] && [ "$DRY" = 0 ]; then
   printf '%s\n' "$rec" | xargs -r git add -- 2>/dev/null
-  git -c user.name="home-sync-clock" -c user.email="home-sync-clock@ymir" commit -q -m "records: the runes and the room files, by the clock" 2>/dev/null || true
+  git -c user.name="home-sync-clock" -c user.email="home-sync-clock@ymir" commit -q -m "records: the runes, the room files and the comms logs, by the clock" 2>/dev/null || true
 fi
 git fetch -q origin 2>/dev/null || { printf 'home-sync-clock: fetch failed\n' >&2; exit 1; }
 behind=$(git rev-list --count HEAD..origin/main 2>/dev/null)
