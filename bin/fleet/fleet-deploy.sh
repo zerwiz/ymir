@@ -26,6 +26,21 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)}"
 DST="${YMIR_FLEET_DIR:-$HOME/.fleet}"
 
+# plan 275 (2026-11-12): this is the npm POSTINSTALL, so it ran from every folder npm installed in — a worker's
+# worktree, a test's temp folder, a release being built — and from there restarted the live services and redrew the
+# operator's Omarchy keys and menu entries to point into that folder (2026-10-22: a dead /tmp/npm-pretest path;
+# 2026-11-12: a release's .building- folder). It now acts only from the pinned runtime or a global npm install.
+if [ "${YMIR_FLEET_DEPLOY:-on}" = off ]; then printf 'fleet-deploy: off (YMIR_FLEET_DEPLOY=off)\n'; exit 0; fi
+_fd_real() { (cd "$1" 2>/dev/null && pwd -P); }
+_fd_root="$(_fd_real "$ROOT")"; _fd_pin="$(_fd_real "${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}")"
+_fd_global="$(npm root -g 2>/dev/null)"
+case "$_fd_root" in
+  "$_fd_pin") ;;
+  "$_fd_global"/*) ;;
+  *) [ "${YMIR_FLEET_DEPLOY:-}" = force ] || {
+       printf 'fleet-deploy: skipped — %s is not the pinned runtime or a global install (YMIR_FLEET_DEPLOY=force overrides)\n' "$ROOT"; exit 0; } ;;
+esac
+
 # tool file (or directory) in the package -> deployed path under ~/.fleet
 TOOLS=(
   "tools/well-mcp/server.ts:well-mcp-server.ts"

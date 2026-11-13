@@ -79,7 +79,8 @@ status() {
   [ "$st" = running ] && screens="$("$DOCKER" exec "$NAME" desk-screen list 2>/dev/null | wc -l)"
   local other=""
   # a password the screens do not share with the app is a desk nobody can look at — say so, fail
-  [ "$st" = running ] && [ "$(secret_source)" != "$(cd "$DIR" 2>/dev/null && pwd -P)" ] && other=" secret=other-checkout"
+  # both sides resolved: the desk mounts its secret through the pin's link, the data home is the real path (plan 275)
+  [ "$st" = running ] && [ "$(readlink -f "$(secret_source)" 2>/dev/null)" != "$(cd "$DIR" 2>/dev/null && pwd -P)" ] && other=" secret=other-checkout"
   echo "image=$img container=$st screens=$screens$other"
   [ -z "$other" ] || return 1
   [ "$img" = present ] && [ "$st" = running ]

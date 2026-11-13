@@ -22,7 +22,7 @@ if [ -z "${YMIR_ALLOW_WORKTREE_RUNTIME:-}" ]; then
   # Compare ROOT with ROOT (2026-11-12): the old guard compared the canonical root with this script's own
   # folder, so from scripts/ it always fired and re-ran "<root>/electron.sh" (no such file) — every icon on
   # the pin died; from bin/desktop/ it looked for the resolver one level too high and never ran at all.
-  _self="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+  _self="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)/$(basename "${BASH_SOURCE[0]}")"
   _root="$(dirname "$_self")"
   while [ "$_root" != / ] && [ ! -f "$_root/bin/desktop/main-tree.sh" ]; do _root="$(dirname "$_root")"; done
   _canon="$(bash "$_root/bin/desktop/main-tree.sh" "$_root" 2>/dev/null || true)"
@@ -370,9 +370,11 @@ start_one() {
         [ "$gp" = software ] && extra+=(--disable-gpu --disable-gpu-compositing)
       fi ;;
   esac
-  # plan 271: a NEW desktop window is not started over the operator's call (a raise of a window already up is
-  # unaffected: that branch returned above). Only his explicit --now / YMIR_DESK_NOW=1 goes through.
-  bash "$ROOT/bin/desk/in-call.sh" check --what "the $v window" || return 3
+  # plan 275 S8 (2026-11-12): a dashboard window takes neither the microphone nor the GPU's audio path, so a call
+  # does not hold it back — the Allfather: "it needs to work if I'm in Discord also". The call guard stays on the
+  # doors that DO touch the microphone or load a model (the voice engine, the voice client, Rödd's head).
+  # The DevTools port, for testing an app as a person would use it: YMIR_DEVTOOLS_PORT (unset = none).
+  [ -n "${YMIR_DEVTOOLS_PORT:-}" ] && extra+=(--remote-debugging-port="$YMIR_DEVTOOLS_PORT")
   nohup env YMIR_DESKTOP_VIEW="$v" "$(real_electron "$v")" "$(app_dir "$v")" \
     --user-data-dir="$HOME/.config/$(view_mark "$v")" \
     "${extra[@]}" >"$l" 2>&1 < /dev/null &

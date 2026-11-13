@@ -62,6 +62,11 @@ export function explain(err, desk = {}) {
       action: "Plug in or select a microphone in Settings → audio, then click the orb again." };
   }
   // a socket that would not open or dropped, with nothing else said: ask who is at fault
+  if (desk.engine_up === false && desk.engine_starting) {
+    return { cause: "engine-starting",
+      sentence: "The voice engine is still starting — it loads its ear, its voice and its mind.",
+      action: "Rödd connects the moment it answers; nothing needs doing." };
+  }
   if (desk.engine_up === false) {
     return { cause: "engine-down",
       sentence: "The voice engine is not running, so there is nothing to talk to.",
@@ -97,8 +102,27 @@ export function sayWhy(why) {
 // server is shared, and that remedy drops every other client in the same second.
 
 /** causes where the stream, not the setup, went away — worth re-opening on our own */
-export const RECOVERABLE = new Set(["line-dropped", "mic-lost", "mic-held", "mic-missing", "no-input", "engine-down"]);
+export const RECOVERABLE = new Set(["line-dropped", "mic-lost", "mic-held", "mic-missing", "no-input", "engine-down",
+                                    "engine-starting", "seat-busy"]);
 export const RETRY_DELAYS_MS = [800, 2200, 4000]; // the last attempt starts before the 5 s mark
+// plan 275 (2026-11-13): a seat held by a session that never closed is freed when the engine notices the dead
+// socket — seconds, not milliseconds — so a busy seat is knocked on patiently instead of three times in five seconds
+export const SEAT_DELAYS_MS = [3000, 8000, 15000];
+export const START_WAIT_MS = 120000, START_POLL_MS = 2000;
+
+/** what was lost, in words: the window used to say "Microphone stream" for every cause, even an engine still starting */
+export function lostWhat(cause) {
+  if (cause === "engine-starting" || cause === "engine-down") return "The voice engine";
+  if (cause === "line-dropped") return "The line to the voice engine";
+  if (cause === "seat-busy") return "The voice's one seat";
+  return "Microphone stream";
+}
+
+/** ask the toolbox's /desk door; {} when it does not answer */
+export async function deskNow() {
+  try { const r = await fetch(`${TOOLBOX}/desk`, { cache: "no-store" }); if (r.ok) return await r.json(); } catch { /* away */ }
+  return {};
+}
 
 export const clock = (d = new Date()) => d.toTimeString().slice(0, 8);
 
@@ -124,11 +148,23 @@ export async function recover(o) {
   if (recovering || !RECOVERABLE.has(o.why.cause)) return false;
   const sleep = o.sleep || ((ms) => new Promise((r) => setTimeout(r, ms)));
   const now = o.now || (() => new Date());
-  const lostD = now(), lostAt = clock(lostD), what = "Microphone stream";
+  const lostD = now(), lostAt = clock(lostD), what = lostWhat(o.why.cause);
+  const probe = o.probe || deskNow;
   recovering = true;
   let reopenedAt = null, tries = 0, prev = 0;
   try {
-    for (const at of RETRY_DELAYS_MS) {
+    // an engine still starting is waited for, saying so, and knocked on only once it answers
+    if (o.why.cause === "engine-starting") {
+      for (let waited = 0; waited < START_WAIT_MS; waited += START_POLL_MS) {
+        o.say(`The voice engine is starting — Rödd connects the moment it answers (${Math.max(0, Math.round((now() - lostD) / 1000))} s).`, "muted");
+        await sleep(START_POLL_MS);
+        const d = await probe();
+        if (d.engine_up) break;
+        if (d.engine_up === false && !d.engine_starting) break;   // it died while starting: fall to the knocks below
+      }
+    }
+    const delays = o.why.cause === "seat-busy" ? SEAT_DELAYS_MS : RETRY_DELAYS_MS;
+    for (const at of delays) {
       await sleep(at - prev); prev = at; tries += 1;
       failedThisTry = false;
       try { await o.restart(); } catch { failedThisTry = true; }
@@ -136,7 +172,10 @@ export async function recover(o) {
       if (!failedThisTry) { reopenedAt = clock(now()); break; }
     }
   } finally { recovering = false; }
-  const said = lossSentence(what, lostAt, reopenedAt);
+  const said = o.why.cause === "engine-starting"
+    ? (reopenedAt ? `The voice engine was starting at ${lostAt}; connected at ${reopenedAt}.`
+                  : `The voice engine was starting at ${lostAt} and never answered.`)
+    : lossSentence(what, lostAt, reopenedAt);
   o.say(reopenedAt ? said : `${said} ${o.why.action}`, reopenedAt ? "muted" : "error");
   console.log("[rodd] " + said + ` (${tries} attempt${tries === 1 ? "" : "s"})`);
   if (o.post) {

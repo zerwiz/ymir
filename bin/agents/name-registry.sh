@@ -66,10 +66,19 @@ def entries():
 def scan():
     need_yaml()
     names = {}
+    def rel(src):
+        # plan 275 (2026-11-12): the registry is SHARED by every seat through the home, so a source is written relative
+        # to its tree ("ymir:…", "home:…"), never as one machine's absolute path — heimdall and nidavellir rewrote every
+        # line in turn (one machine's home path vs another's) and the file conflicted on every sync
+        for tag, base in (("ymir", root), ("home", home)):
+            b = os.path.realpath(base) + os.sep
+            r = os.path.realpath(src)
+            if r.startswith(b): return f"{tag}:{r[len(b):]}"
+        return src
     def add(name, kind, source, owner=""):
         n = norm(name)
         if not n or n in ("topology",): return
-        names.setdefault(n, []).append({"kind": kind, "source": source, "owner": owner})
+        names.setdefault(n, []).append({"kind": kind, "source": rel(source), "owner": owner})
     # subsystems from the naming law's TOON block
     if os.path.exists(naming):
         for line in open(naming):
@@ -102,9 +111,16 @@ def scan():
         for h, i in (d.get("seats") or {}).items():
             add(h, "host", seats)
             if i.get("primary"): add(i["primary"], "seat-persona", seats, h)
-    doc = {"version": 1, "generated": __import__("datetime").datetime.now().astimezone().isoformat(timespec="seconds"),
+    # the stamp moves only when the names moved, so an unchanged scan leaves the shared file untouched
+    old_doc = {}
+    if os.path.exists(out):
+        try: old_doc = yaml.safe_load(open(out)) or {}
+        except Exception: old_doc = {}
+    stamp = old_doc.get("generated") if old_doc.get("names") == names else None
+    doc = {"version": 1, "generated": stamp or __import__("datetime").datetime.now().astimezone().isoformat(timespec="seconds"),
            "names": names}
-    open(out, "w").write(yaml.safe_dump(doc, sort_keys=True))
+    if old_doc != doc:
+        open(out, "w").write(yaml.safe_dump(doc, sort_keys=True))
     print(f"scanned\t{len(names)} names\t{out}")
     # collisions among reserved kinds
     bad = 0

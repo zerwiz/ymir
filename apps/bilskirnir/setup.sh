@@ -35,7 +35,7 @@ APP="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CHECK=0; [ "${1-}" = "--check" ] && CHECK=1
 case "${1-}" in -h|--help) sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 
-YMIR_HOME="${YMIR_HOME:-$HOME/Documents/ymirhome}"
+. "$APP/../../bin/vault/hoard-lib.sh" && ymir_home_root YMIR_HOME   # the one resolver
 HOST="${YMIR_HOST:-$(hostname -s)}"
 HPORT="${BILSKIRNIR_HERMES_PORT:-8642}"
 RUNTIME="${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}"; [ -f "$RUNTIME/bin/mcp/ymir-mcp.py" ] || RUNTIME="$(dirname "$(dirname "$APP")")"
@@ -148,22 +148,59 @@ else
   fi
 fi
 
+# ── the ear, found where this machine keeps it (plan 275 S16, 2026-11-12) ──
+# The paths were heimdall's own (~/whisper.cpp.src/build/bin, ~/whisper.cpp/models), so on nidavellir, where
+# whisper-cpp comes from the package manager (/usr/bin/whisper-cli) and the model sits in ~/.local/share, the hall
+# called its ear missing and refused to open at all. An explicit setting wins; else the first that exists.
+find_ear() {
+  WCLI="${BILSKIRNIR_WHISPER_CLI:-}"
+  if [ -z "$WCLI" ]; then
+    for c in "$HOME/whisper.cpp.src/build/bin/whisper-cli" "$(command -v whisper-cli 2>/dev/null)" "$(command -v whisper-cpp 2>/dev/null)"; do
+      [ -n "$c" ] && [ -x "$c" ] && { WCLI="$c"; break; }
+    done
+  fi
+  WMODEL="${BILSKIRNIR_WHISPER_MODEL:-}"
+  if [ -z "$WMODEL" ]; then
+    for d in "$HOME/whisper.cpp/models" "${XDG_DATA_HOME:-$HOME/.local/share}/whisper.cpp/models" /usr/share/whisper.cpp/models /usr/share/whisper/models; do
+      for m in ggml-small.en.bin ggml-base.en.bin ggml-small.bin ggml-base.bin; do
+        [ -f "$d/$m" ] && { WMODEL="$d/$m"; break 2; }
+      done
+    done
+  fi
+}
+find_ear
+
 # ── 5. the app's .env: one managed block, the rest is the operator's ────────────
 managed() {
   printf '# >>> managed by setup.sh (from the home) — re-run setup.sh, do not edit\n'
   printf 'PRIMARY_BOT_NAME=%s\nPRIMARY_BOT_LABEL=%s\nHERMES_HOME_PRIMARY=%s\nHERMES_URL=http://127.0.0.1:%s\n' "$NAME" "$LABEL" "$ENGINE" "$HPORT"
+  # the ear as this machine has it, so the server needs no machine's path of its own
+  [ -n "$WCLI" ] && printf 'BILSKIRNIR_WHISPER_CLI=%s\n' "$WCLI"
+  [ -n "$WMODEL" ] && printf 'BILSKIRNIR_WHISPER_MODEL=%s\n' "$WMODEL"
   printf '# <<< managed by setup.sh\n'
 }
 ENVF="$APP/.env"
 if [ "$CHECK" = 0 ]; then
-  if [ ! -f "$ENVF" ]; then
-    umask 077
-    { printf 'PORT=8787\nAPP_URL=http://localhost:5173\nSERVER_URL=http://localhost:8787\n'
-      printf 'SESSION_SECRET=%s\n' "$(head -c 32 /dev/urandom | base64 | tr -d '/+=')"
-      printf '# Local use: no sign-in, loopback only. Hosting elsewhere needs a login (plan 259).\nDEV_LOGIN=0\nHOST=127.0.0.1\nLOCAL_OPERATOR=allfather@localhost\nALLOWED_EMAILS=allfather@localhost\n'
-      printf 'HERMES_BIN=hermes\nHQ_LOCAL=0\nMAX_BOTS=4\nORGO_API_KEY=unset\nORGO_COMPUTER_ID=\nCOMPOSIO_API_KEY=unset\nXAI_API_KEY=unset\n'
-    } > "$ENVF"
-  fi
+  # Every base setting that is ABSENT is added; a value already there (the operator's) is never touched. It used to
+  # write them only when the file was missing — so an .env that existed but was empty (the data home creates one)
+  # kept no session secret and no keys, and the server died at start (nidavellir, 2026-11-12: `Missing env
+  # COMPOSIO_API_KEY`). The secret is generated once, here, and never printed.
+  umask 077; [ -f "$ENVF" ] || : > "$ENVF"
+  python3 - "$ENVF" <<'PY'
+import os, re, sys, base64
+p = sys.argv[1]; s = open(p).read()
+have = {m.group(1) for m in re.finditer(r'(?m)^([A-Z][A-Z0-9_]*)=', s)}
+base = [('PORT', '8787'), ('APP_URL', 'http://localhost:5173'), ('SERVER_URL', 'http://localhost:8787'),
+        ('SESSION_SECRET', base64.b64encode(os.urandom(32)).decode().translate({ord(c): None for c in '/+='})),
+        ('DEV_LOGIN', '0'), ('HOST', '127.0.0.1'), ('LOCAL_OPERATOR', 'allfather@localhost'),
+        ('ALLOWED_EMAILS', 'allfather@localhost'), ('HERMES_BIN', 'hermes'), ('HQ_LOCAL', '0'), ('MAX_BOTS', '4'),
+        ('ORGO_API_KEY', 'unset'), ('ORGO_COMPUTER_ID', ''), ('COMPOSIO_API_KEY', 'unset'), ('XAI_API_KEY', 'unset')]
+add = [f'{k}={v}' for k, v in base if k not in have]
+if add:
+    head = '# Local use: no sign-in, loopback only. Hosting elsewhere needs a login (plan 259).\n' if 'HOST' not in have else ''
+    open(p, 'w').write(s.rstrip('\n') + ('\n' if s.strip() else '') + head + '\n'.join(add) + '\n')
+print(len(add))
+PY
   # drop the old hand-set lines and the previous managed block, then append the fresh one
   python3 - "$ENVF" <<'PY'
 import sys, re
@@ -221,7 +258,7 @@ REPO="$(dirname "$(dirname "$APP")")"
 PINROOT=""
 [ -r "$REPO/bin/pi/arm-pin-lib.sh" ] && . "$REPO/bin/pi/arm-pin-lib.sh" && arm_pin_dir PINROOT
 [ -n "$PINROOT" ] || PINROOT="$HOME/ymir-runtime"
-want_desk="$(sed "s|__YMIR_ROOT__|$PINROOT|g" "$APP/electron/ymir-bilskirnir.desktop.in" 2>/dev/null)"
+want_desk="$(sed -e "s|__YMIR_ROOT__|$PINROOT|g" -e "s|__YMIR_APP__|${YMIR_SHORTCUT_BIN:-$HOME/.local/bin}/ymir-app|g" "$APP/electron/ymir-bilskirnir.desktop.in" 2>/dev/null)"
 if [ "${BILSKIRNIR_DESKTOP:-1}" = 0 ]; then
   say "launcher entry skipped (BILSKIRNIR_DESKTOP=0)"
 elif [ ! -e "$PINROOT/apps/bilskirnir/start.sh" ]; then
@@ -245,14 +282,12 @@ fi
 
 # ── 8. the voice: the house's own ear and mouth (BILSKIRNIR_VOICE=house, the default) ──
 # Reported, never raised: Rödd's engine is the voice door's to raise (bin/voice/voice-door.sh host), and
-# Kokoro's unit wakes on the first preview. A missing ear (whisper) fails the check, because dictation is the
-# composer's own button; a lowered engine or a sleeping Kokoro is said, not failed, since they wake on demand.
+# Kokoro's unit wakes on the first preview. Nothing here fails the check: a missing ear turns dictation off, a
+# lowered engine or a sleeping Kokoro is said — the hall opens either way (plan 275 S16, 2026-11-12).
 ROAD="$(printf '%s' "${BILSKIRNIR_VOICE:-house}" | tr 'A-Z' 'a-z')"
 if [ "$ROAD" = "xai" ]; then
   say "voice road: xai (xAI's cloud) — needs XAI_API_KEY in .env"
 else
-  WCLI="${BILSKIRNIR_WHISPER_CLI:-$HOME/whisper.cpp.src/build/bin/whisper-cli}"
-  WMODEL="${BILSKIRNIR_WHISPER_MODEL:-$HOME/whisper.cpp/models/ggml-small.en.bin}"
   KOKORO="${BILSKIRNIR_KOKORO_URL:-http://127.0.0.1:8765}"
   RT="${BILSKIRNIR_REALTIME_URL:-ws://127.0.0.1:${YMIR_VOICE_PORT:-8890}/v1/realtime}"
   RT_HTTP="$(printf '%s' "$RT" | sed -E 's#^ws#http#; s#/v1/realtime.*$##')"
@@ -260,7 +295,8 @@ else
   if [ -x "$WCLI" ] && [ -f "$WMODEL" ] && command -v "${BILSKIRNIR_FFMPEG:-ffmpeg}" >/dev/null 2>&1; then
     say "voice ear: whisper.cpp ready ($(basename "$WMODEL"))"
   else
-    say "voice ear: missing — dictation needs whisper-cli ($WCLI), its model ($WMODEL) and ffmpeg"; fail=1
+    # a missing ear turns dictation off; it never keeps the hall shut (plan 275 S16)
+    say "voice ear: not found — dictation is off until whisper-cli, a ggml model and ffmpeg are present (BILSKIRNIR_WHISPER_CLI / BILSKIRNIR_WHISPER_MODEL)"
   fi
   if curl -fsS -m 2 "$KOKORO/health" >/dev/null 2>&1; then say "voice mouth: Kokoro answers at $KOKORO"
   else say "voice mouth: Kokoro asleep at $KOKORO (the unit ${BILSKIRNIR_KOKORO_UNIT:-kokoro-serve.service} wakes on the first preview)"; fi

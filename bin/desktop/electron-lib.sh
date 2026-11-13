@@ -69,31 +69,51 @@ _electron_foreign_root() {  # <ancestor> <root>
 #                                   hoisted OUT of the ymir package to sit beside it
 # No caller hardcodes an app-local electron path again: this is the only place
 # that knows the shapes. Each candidate is verified executable, never assumed.
+# plan 275 (2026-11-13): an Electron of the WRONG MAJOR is not the app's Electron. A tree updated in place kept
+# Electron 33 in node_modules after package.json pinned 43.8.9; the resolver took the first binary it met, and Rödd's
+# window died with "WebSocket is not defined" (Node in Electron 33 has none) — a riddle where a sentence was owed.
+_electron_want_major() {  # <app-dir> → the major the app declares (empty when it declares none)
+  sed -n 's/.*"electron"[[:space:]]*:[[:space:]]*"[^0-9]*\([0-9][0-9]*\).*/\1/p' "$1/package.json" 2>/dev/null | head -1
+}
+_electron_have_major() {  # <binary> → the major of the package that ships it
+  sed -n 's/^[[:space:]]*"version"[[:space:]]*:[[:space:]]*"\([0-9][0-9]*\).*/\1/p' "$(dirname "$(dirname "$1")")/package.json" 2>/dev/null | head -1
+}
+_electron_fits() {  # <app-dir> <binary> → 0 when the binary's major is the declared one (or either is unknown)
+  local want have; want="$(_electron_want_major "$1")"; have="$(_electron_have_major "$2")"
+  [ -z "$want" ] || [ -z "$have" ] || [ "$want" = "$have" ] && return 0
+  printf 'electron-lib: %s is Electron %s but %s declares %s — run npm ci in the tree (skipped)\n' "$2" "$have" "$1/package.json" "$want" >&2
+  return 1
+}
+
 electron_bin() {  # <app-dir> [root] [pkg] → prints the binary; exit 0 found / 1 not
-  local app="${1-}" root="${2-}" pkg="${3:-${app##*/}}" c
+  local app="${1-}" root="${2-}"; local pkg="${3:-${app##*/}}" c
   [ -n "$app" ] && [ -d "$app" ] || return 1
   [ -z "$root" ] && root="$(electron_root "$app")"
+  # physical paths on both sides (plan 275): a pin that is a LINK to a release must not read as a foreign root
+  app="$(cd "$app" && pwd -P)"; [ -d "$root" ] && root="$(cd "$root" && pwd -P)"
   local a="$app"
   # (1)+(2): walk up from the app, checking node_modules/electron at each stop —
   # and when a stop IS a node_modules dir, checking electron directly inside it.
   while [ -n "$a" ] && [ "$a" != "/" ]; do
     _electron_foreign_root "$a" "$root" && break
     if [ "${a##*/}" = node_modules ]; then c="$a/electron/dist/electron"; else c="$a/node_modules/electron/dist/electron"; fi
-    [ -x "$c" ] && { printf '%s' "$c"; return 0; }
+    [ -x "$c" ] && _electron_fits "$app" "$c" && { printf '%s' "$c"; return 0; }
     a="$(dirname "$a")"
   done
   # (3) the sibling package's own runtime
   c="$(dirname "$root")/$pkg/node_modules/electron/dist/electron"
-  [ -x "$c" ] && { printf '%s' "$c"; return 0; }
+  [ -x "$c" ] && _electron_fits "$app" "$c" && { printf '%s' "$c"; return 0; }
   return 1
 }
 
 # The electron PACKAGE dir (the parent of dist/, holding path.txt) — mirror of
 # electron_bin's search, returning the dir instead of the binary.
 electron_pkg_dir() {  # <app-dir> [root] [pkg]
-  local app="${1-}" root="${2-}" pkg="${3:-${app##*/}}" c
+  local app="${1-}" root="${2-}"; local pkg="${3:-${app##*/}}" c
   [ -n "$app" ] && [ -d "$app" ] || return 1
   [ -z "$root" ] && root="$(electron_root "$app")"
+  # physical paths on both sides (plan 275): a pin that is a LINK to a release must not read as a foreign root
+  app="$(cd "$app" && pwd -P)"; [ -d "$root" ] && root="$(cd "$root" && pwd -P)"
   local a="$app"
   while [ -n "$a" ] && [ "$a" != "/" ]; do
     _electron_foreign_root "$a" "$root" && break
@@ -112,7 +132,7 @@ electron_pkg_dir() {  # <app-dir> [root] [pkg]
 # app. The RUNNING search (electron_bin) already prefers the nearest installed
 # one — this is only the *placement* answer for a missing runtime (P3).
 electron_place_dir() {  # <app-dir> [root] [pkg]
-  local app="${1-}" root="${2-}" pkg="${3:-${app##*/}}" d
+  local app="${1-}" root="${2-}"; local pkg="${3:-${app##*/}}" d
   [ -n "$app" ] && [ -d "$app" ] || return 1
   [ -z "$root" ] && root="$(electron_root "$app")"
   d="$(electron_pkg_dir "$app" "$root" "$pkg")" && [ -n "$d" ] && { printf '%s' "$d"; return 0; }
@@ -138,7 +158,7 @@ electron_is_workspace_member() {  # <app-dir> [root]
 # or not runnable — the gated-postinstall shape. absent when nothing is found.
 # Absence is never 'ok'. (P2)
 electron_runtime_state() {  # <app-dir> [root] [pkg] → ok | partial | absent
-  local app="${1-}" root="${2-}" pkg="${3:-${app##*/}}" dir
+  local app="${1-}" root="${2-}"; local pkg="${3:-${app##*/}}" dir
   [ -n "$app" ] && [ -d "$app" ] || { printf 'absent'; return 1; }
   [ -z "$root" ] && root="$(electron_root "$app")"
   if electron_bin "$app" "$root" "$pkg" >/dev/null; then printf 'ok'; return 0; fi
@@ -162,7 +182,7 @@ electron_remedy() {
 # release and places it, version-exact, npm-independent, into the RESOLVED
 # electron dir (P3): the workspace root's hoist for a member, app-local else.
 electron_fetch_runtime() {  # <app-dir> [root] [pkg]
-  local app="${1-}" root="${2-}" pkg="${3:-${app##*/}}" dir v url tmp srcv
+  local app="${1-}" root="${2-}"; local pkg="${3:-${app##*/}}" dir v url tmp srcv
   [ -d "$app" ] || return 1
   [ -z "$root" ] && root="$(electron_root "$app")"
   dir="$(electron_place_dir "$app" "$root" "$pkg")" || return 1
@@ -170,11 +190,13 @@ electron_fetch_runtime() {  # <app-dir> [root] [pkg]
   [ -f "$dir/path.txt" ] && [ -x "$dir/dist/electron" ] && return 0
   # The exact version: the app's own manifest when it pins electron, else the
   # electron package's manifest already sitting in the place dir.
-  v=""
-  if [ -f "$app/package.json" ]; then
+  # The exact version npm INSTALLED comes first (the lock decides it); the app's declared range is only a fallback —
+  # a range like ^43.7.3 is not the version the lock resolved (43.8.9 on 2026-11-12), and fetching the range's floor
+  # put a runtime beside a package of another version (plan 275 S10).
+  v="$(node -e "console.log(require('$dir/package.json').version)" 2>/dev/null || true)"
+  if [ -z "$v" ] && [ -f "$app/package.json" ]; then
     v="$(sed -n 's/.*"electron"[[:space:]]*:[[:space:]]*"[^0-9]*\([0-9][0-9.]*\).*/\1/p' "$app/package.json" 2>/dev/null | head -1)"
   fi
-  [ -n "$v" ] || v="$(node -e "console.log(require('$dir/package.json').version)" 2>/dev/null || true)"
   [ -n "$v" ] || { printf 'electron_fetch_runtime: no electron version to fetch for %s\n' "$app" >&2; return 1; }
   command -v curl >/dev/null 2>&1 || return 1
   command -v unzip >/dev/null 2>&1 || return 1
@@ -192,7 +214,7 @@ electron_fetch_runtime() {  # <app-dir> [root] [pkg]
 # always lands the runtime. Now resolver-aware (P1): it fetches into the
 # RESOLVED electron dir, never an app-local hardcode.
 fetch_electron_zip() {  # <app-dir> [root] [pkg]
-  local app="${1-}" root="${2-}" pkg="${3:-${app##*/}}"
+  local app="${1-}" root="${2-}"; local pkg="${3:-${app##*/}}"
   local dir="$app/node_modules/electron"
   [ -z "$root" ] && root="$(electron_root "$app")"
   dir="$(electron_place_dir "$app" "$root" "$pkg")" || return 1

@@ -129,7 +129,7 @@ while IFS= read -r f; do
   # `.local` is an mDNS name only when it ends a host; `~/.local/share` is the XDG data path (2026-11-12)
   done < <(grep -nE '(\b192\.168\.[0-9]+\.|\b10\.[0-9]+\.[0-9]+\.[0-9]+|\.local\b([^/]|$)|http://)' "$tmp" 2>/dev/null \
              | grep -vE '127\.0\.0\.1|localhost|<[a-z-]+>' \
-             | grep -vE 'xmlns(:[a-z]+)?=|http://169\.254\b' \
+             | grep -vE 'xmlns(:[a-z]+)?=|<!DOCTYPE|http://169\.254\b' \
              | grep -vE 'http://\$\{?[A-Za-z_]+' \
              | grep -vE "http://%s|http://\{host\}|http://\{h\}|f\"http://" | head -20)   # a format/f-string host is not an address
   rm -f "$tmp"

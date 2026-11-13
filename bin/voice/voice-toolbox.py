@@ -77,10 +77,96 @@ def _desk() -> dict:
         except Exception:
             return ""
     inputs = door("inputs")
-    return {"engine_up": up, "engine_port": port, "mic_holder": door("holder"),
+    # plan 275 (2026-11-13): an engine whose process lives but whose port is not open yet is STARTING (it loads its
+    # ear, its voice and warms its mind for about half a minute) — the window waits for it instead of calling it lost
+    starting = False
+    if not up:
+        try:
+            starting = subprocess.run(["pgrep", "-f", "speech-to-speech serve"], capture_output=True,
+                                      timeout=3).returncode == 0
+        except Exception:
+            pass
+    return {"engine_up": up, "engine_starting": starting, "engine_port": port, "mic_holder": door("holder"),
             "inputs": int(inputs) if inputs.isdigit() else None,
             "mic_bluetooth": subprocess.run(["bash", str(REPO / "bin" / "desk" / "in-call.sh"), "bluetooth"],
                                             capture_output=True, timeout=5).returncode == 0}
+
+
+_MODELS_CACHE: dict = {"at": 0.0, "data": None}
+
+
+def _models() -> dict:
+    """Every provider and model this user can already reach, from the house's ONE model door (Bilskirnir's
+    detector: pi's and OpenCode's providers, the home's added ones, and local servers on their usual ports),
+    filtered by the operator's allow-list. Keys are never returned: only the NAME of where a key lives
+    (plan 275, 2026-11-12 — "the app search for local models and list them in drop down")."""
+    import time
+    if _MODELS_CACHE["data"] is not None and time.time() - _MODELS_CACHE["at"] < 60:
+        return _MODELS_CACHE["data"]
+    det = REPO / "apps" / "bilskirnir" / "server" / "src" / "models" / "detect.ts"
+    out = {"providers": []}
+    try:
+        r = subprocess.run(["node", str(det), "--json"], capture_output=True, text=True, timeout=60)
+        d = json.loads(r.stdout or "{}")
+    except Exception as exc:
+        return {"providers": [], "error": f"the model door did not answer: {exc}"}
+    for prov in d.get("providers", []):
+        allowed = [m["id"] for m in prov.get("models", []) if m.get("allowed")]
+        if not allowed or prov.get("status") not in ("ok", "from-config"):
+            continue
+        where = str(prov.get("key") or "")
+        key_name = f"pi:{prov['id']}" if ".pi/agent/auth.json" in where else ""
+        out["providers"].append({
+            "id": prov["id"], "name": prov.get("name") or prov["id"], "local": bool(prov.get("local")),
+            "base_url": prov.get("baseUrl", ""), "key_name": key_name, "has_key": bool(prov.get("hasKey")),
+            "models": allowed,
+        })
+    # this machine's own servers first, then the rest
+    out["providers"].sort(key=lambda x: (not x["local"], x["name"].lower()))
+    _MODELS_CACHE.update(at=time.time(), data=out)
+    return out
+
+
+def _provider_door(args: list[str], stdin: str = "") -> dict:
+    """The house's ONE provider door (Bilskirnir's choose.ts), run through its own tsx. A key goes in on
+    standard input, never as an argument, and the answer names where it was kept, never the key."""
+    app = REPO / "apps" / "bilskirnir"
+    tsx = app / "node_modules" / ".bin" / "tsx"
+    if not tsx.exists():
+        return {"ok": False, "detail": "the provider door is not installed here (apps/bilskirnir has no dependencies yet)"}
+    try:
+        r = subprocess.run([str(tsx), str(app / "server" / "src" / "models" / "choose.ts"), *args],
+                           input=stdin, capture_output=True, text=True, timeout=60, cwd=str(app))
+        return json.loads((r.stdout or "").strip().splitlines()[-1])
+    except Exception as exc:
+        return {"ok": False, "detail": f"the provider door did not answer: {str(exc)[:160]}"}
+
+
+_PRESETS_CACHE: dict = {"at": 0.0, "data": None}
+
+
+def _presets() -> dict:
+    import time
+    if _PRESETS_CACHE["data"] is not None and time.time() - _PRESETS_CACHE["at"] < 3600:
+        return _PRESETS_CACHE["data"]
+    d = _provider_door(["--presets"])
+    if "presets" in d:
+        _PRESETS_CACHE.update(at=time.time(), data=d)
+    return d
+
+
+def _try_mind(base_url: str, model: str, key: str) -> tuple[bool, str]:
+    """One word to the chosen mind before it is saved: a mind that does not answer is never written."""
+    import urllib.request
+    body = json.dumps({"model": model, "messages": [{"role": "user", "content": "Say ok"}], "max_tokens": 2}).encode()
+    req = urllib.request.Request(base_url.rstrip("/") + "/chat/completions", data=body,
+                                 headers={"Content-Type": "application/json", **({"Authorization": f"Bearer {key}"} if key else {})})
+    try:
+        with urllib.request.urlopen(req, timeout=90) as resp:
+            ok = resp.status == 200 and b"choices" in resp.read()
+            return ok, "answered" if ok else f"HTTP {resp.status}"
+    except Exception as exc:
+        return False, str(exc)[:160]
 
 
 def _rodd_head():
@@ -153,6 +239,10 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(200, {"ok": True, "tools": len(voice_tools.TOOLS)})
         if self.path.startswith("/desk"):
             return self._json(200, _desk())
+        if self.path.startswith("/head/models"):
+            return self._json(200, _models())
+        if self.path.startswith("/head/presets"):
+            return self._json(200, _presets())
         if self.path.startswith("/head"):
             r = _rodd_head().resolve()
             r.pop("key", None)          # a secret is never returned to a window
@@ -177,7 +267,7 @@ class Handler(BaseHTTPRequestHandler):
                     "parameters": t.get("parameters", {"type": "object", "properties": {}}),
                 })
             return self._json(200, {"tools": defs})
-        return self._json(404, {"error": "unknown path", "paths": ["/tools", "/tool", "/head", "/settings", "/memory", "/health", "/desk", "/loss"]})
+        return self._json(404, {"error": "unknown path", "paths": ["/tools", "/tool", "/head", "/head/models", "/head/presets", "/head/provider", "/settings", "/memory", "/health", "/desk", "/loss"]})
 
     def do_POST(self) -> None:  # noqa: N802
         length = int(self.headers.get("Content-Length") or 0)
@@ -187,9 +277,59 @@ class Handler(BaseHTTPRequestHandler):
         except Exception:
             payload = {}
 
+        if self.path.startswith("/session"):
+            # one press of the orb is one session; the window hands it over when it ends (plan 275)
+            try:
+                return self._json(200, voice_tools.save_session(payload))
+            except Exception as exc:
+                return self._json(200, {"ok": False, "detail": str(exc)[:200]})
+
+        if self.path.startswith("/head/provider"):
+            # add a provider with a key pasted once: kept in the private home, tested by the door's own detection
+            args = ["--add"]
+            if payload.get("preset"):
+                args += ["--preset", str(payload["preset"])]
+            if payload.get("name"):
+                args += ["--name", str(payload["name"])]
+            if payload.get("base_url"):
+                args += ["--base-url", str(payload["base_url"])]
+            key = str(payload.get("api_key") or "").strip()
+            if key:
+                args.append("--key-stdin")
+            out = _provider_door(args, stdin=key)
+            _MODELS_CACHE.update(at=0.0, data=None)          # the new provider shows at once
+            if out.get("ok"):
+                prov_id = (out.get("provider") or {}).get("id", "")
+                found = next((x for x in _models().get("providers", []) if x["id"] == prov_id), None)
+                out["models"] = len(found["models"]) if found else 0
+                out["detail"] = (f"{(out.get('provider') or {}).get('name', prov_id)} added — key kept in {out.get('keyStoredIn') or 'the place it already was'}; "
+                                 + (f"{out['models']} models you may choose" if found else "it did not answer with models yet (check the key, or the allow-list)"))
+            return self._json(200, out)
+
         if self.path.startswith("/head"):
             # the mode, the endpoint, the model, the NAME of a key — or a key typed here,
             # which is written into the private home and never returned again
+            # the simple road: a provider and a model chosen from the lists the model door found
+            if payload.get("provider"):
+                prov = next((x for x in _models().get("providers", []) if x["id"] == payload["provider"]), None)
+                model_id = str(payload.get("model") or "").strip()
+                if not prov or model_id not in prov["models"]:
+                    return self._json(200, {"ok": False, "detail": "that provider and model are not on this machine's list"})
+                mod = _rodd_head()
+                key = mod._vault_key(prov["key_name"]) if prov["key_name"] else ""
+                # a local mind is asked one word first; an online gateway may need headers only the engine's proxy adds
+                if prov["local"]:
+                    ok, why = _try_mind(prov["base_url"], model_id, key)
+                    if not ok:
+                        return self._json(200, {"ok": False, "detail": f"{model_id} did not answer ({why}) — nothing was saved"})
+                try:
+                    mod.save(mode="local" if prov["local"] else "online", base_url=prov["base_url"], model=model_id,
+                             key_name=prov["key_name"], client="opencode" if prov["id"].startswith("opencode") else "plain")
+                except SystemExit as exc:
+                    return self._json(200, {"ok": False, "detail": str(exc)})
+                head = mod.resolve(); head.pop("key", None)
+                raised = _raise_host() if payload.get("apply", True) else {"ok": True, "detail": "saved, not raised"}
+                return self._json(200, {"ok": raised["ok"], "head": head, "detail": raised["detail"]})
             try:
                 mod = _rodd_head()
                 mod.save(mode=payload.get("mode"), base_url=payload.get("base_url"),

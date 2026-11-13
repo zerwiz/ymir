@@ -33,7 +33,8 @@ export const env = {
   /** Needed only on the xAI voice road (BILSKIRNIR_VOICE=xai) and for X search; the house road runs without it. */
   xaiKey: (process.env.BILSKIRNIR_VOICE ?? 'house').trim().toLowerCase() === 'xai' ? req('XAI_API_KEY') : (process.env.XAI_API_KEY ?? ''),
   xaiModel: process.env.XAI_MODEL ?? 'grok-4.7',
-  composioKey: req('COMPOSIO_API_KEY'),
+  /** Composio is an optional integration: empty or `unset` means it is off, never that the hall cannot start. */
+  composioKey: process.env.COMPOSIO_API_KEY || 'unset',
   /** Only needed when BILSKIRNIR_DESK=orgo. */
   orgoKey: (() => { try { return secret('ORGO_API_KEY'); } catch { return ''; } })(),
   /**

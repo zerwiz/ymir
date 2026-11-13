@@ -64,6 +64,16 @@ PORT="${YMIR_VOICE_PORT:-8890}"
 HOST_MACHINE="${YMIR_VOICE_HOST:-}"
 STT="${YMIR_VOICE_STT:-faster-whisper}"
 STT_MODEL="${YMIR_VOICE_STT_MODEL:-small.en}"
+# this machine's own voice settings (plan 275): ~/.config/ymir/voice.env, per machine and never the shared home —
+# one machine has a compute GPU and room for two conversations, another has neither. Only YMIR_VOICE_* keys are read.
+if [ -r "${XDG_CONFIG_HOME:-$HOME/.config}/ymir/voice.env" ]; then
+  while IFS='=' read -r _k _v; do
+    case "$_k" in YMIR_VOICE_[A-Z_]*) [ -n "${!_k:-}" ] || export "$_k=$(printf '%s' "$_v" | tr -d "\"'")" ;; esac
+  done < <(grep -E '^[[:space:]]*YMIR_VOICE_[A-Z_]+=' "${XDG_CONFIG_HOME:-$HOME/.config}/ymir/voice.env")
+  # read before: the host was resolved above this block, so a machine that names ITSELF as the voice host was
+  # still sent to the fleet's first ear (nidavellir to heimdall)
+  HOST_MACHINE="${YMIR_VOICE_HOST:-$HOST_MACHINE}"
+fi
 STT_DEVICE="${YMIR_VOICE_STT_DEVICE:-cpu}"
 STT_COMPUTE="${YMIR_VOICE_STT_COMPUTE:-int8}"
 TTS="${YMIR_VOICE_TTS:-kokoro}"
@@ -131,7 +141,7 @@ case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help|"") sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 CMD="${1-}"; shift || true
 DO_STOP=0; DO_INSTALL=0; DO_NOW="${YMIR_DESK_NOW:-0}"
-case "$CMD" in status|host|client|plan|--install|install|start|stop|log) ;; *) printf 'error: unknown command %s\nhelp: bin/voice/voice-door.sh [status|host|client|plan|--install]\n' "$CMD" >&2; exit 2 ;; esac
+case "$CMD" in status|which-host|host|client|plan|--install|install|start|stop|log) ;; *) printf 'error: unknown command %s\nhelp: bin/voice/voice-door.sh [status|host|client|plan|--install]\n' "$CMD" >&2; exit 2 ;; esac
 [ "$CMD" = install ] && CMD=--install
 while [ $# -gt 0 ]; do case "$1" in --stop) DO_STOP=1 ;; --install) DO_INSTALL=1 ;; --now) DO_NOW=1 ;; *) shift; continue ;; esac; shift; done
 
@@ -287,7 +297,18 @@ cmd_host() {
   "$ROOT/bin/desk/in-call.sh" check $([ "$DO_NOW" = 1 ] && echo --now) --what "the voice engine" || return 3
   local desk_role; desk_role="$("$ROOT/bin/desk/in-call.sh" role 2>/dev/null | head -1)"
   local -a engine_pin=()
-  if [ "$desk_role" = dev ]; then
+  # The machine's own choice comes first (plan 275, 2026-11-12): ~/.config/ymir/voice.env is per machine, never the
+  # shared home, because one machine has a free compute GPU and another has none. YMIR_VOICE_GPU=on puts the ear and
+  # the voice on the GPU: on heimdall the RTX A5000 sat at 0 % while Kokoro on the CPU took 28 s to its first word.
+  # The Allfather: "It was much faster with the voice back before."
+  local _vgpu="${YMIR_VOICE_GPU:-}"
+  [ -n "$_vgpu" ] || _vgpu="$(sed -n 's/^[[:space:]]*YMIR_VOICE_GPU[[:space:]]*=[[:space:]]*//p' "${XDG_CONFIG_HOME:-$HOME/.config}/ymir/voice.env" 2>/dev/null | tail -1 | tr -d "\"'")"
+  if [ "$_vgpu" = on ] && command -v nvidia-smi >/dev/null 2>&1 && nvidia-smi -L >/dev/null 2>&1; then
+    STT_DEVICE=cuda; STT_COMPUTE=float16
+    engine_pin=(--device cuda)
+    unset CUDA_VISIBLE_DEVICES
+    say "voice on the GPU (YMIR_VOICE_GPU=on for this machine)"
+  elif [ "$desk_role" = dev ]; then
     STT_DEVICE=cpu; STT_COMPUTE=int8
     engine_pin=(--device cpu)
     CUDA_VISIBLE_DEVICES=""
@@ -456,6 +477,7 @@ PY
 
 case "$CMD" in
   status)  cmd_status ;;
+  which-host) resolve_host ;;   # the ONE answer to "where does the engine live" (Rödd asks this, plan 275)
   plan)    cmd_plan ;;
   host)    cmd_host ;;
   client)  cmd_client "$@" ;;

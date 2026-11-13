@@ -64,6 +64,14 @@ write_shim() {  # <old-path>
   [ -n "$old" ] || return 0
   case "$old" in */hnoss-mcp-launch.sh) ;; *) return 0 ;; esac
   [ -d "$(dirname "$old")" ] && [ -w "$(dirname "$old")" ] || return 0
+  # plan 275 (2026-11-12): never write a shim over a SHIPPED launcher. A config that names another Ymir checkout's
+  # own bin/pi/hnoss-mcp-launch.sh (the working tree, a worktree, an old pin) is pointed at a file git tracks; the
+  # shim replaced it with an `exec` of the same path (a loop) and left that tree dirty, which then blocked its update.
+  [ "$(readlink -f "$old" 2>/dev/null)" = "$(readlink -f "$LAUNCHER" 2>/dev/null)" ] && return 0
+  if git -C "$(dirname "$old")" ls-files --error-unmatch "$old" >/dev/null 2>&1; then
+    printf 'hnoss: %s is a shipped launcher in another checkout — left untouched (re-seat the config instead)\n' "$old"
+    return 0
+  fi
   printf '#!/bin/sh\n# Seated by bin/pi/hnoss-ensure.sh — the shipped launcher is the source\n# of truth; this path exists only so an older config keeps working.\nexec "%s" "$@"\n' "$LAUNCHER" >"$old" \
     && chmod 755 "$old" && printf 'hnoss: shim → %s\n' "$old"
 }
@@ -76,7 +84,8 @@ daemon_state() {
   fi
 }
 
-have_server() { command -v open-design-mcp >/dev/null 2>&1; }
+# on PATH, or in npm's global prefix (a timer's or ssh's PATH does not carry ~/.npm-global/bin — plan 275)
+have_server() { command -v open-design-mcp >/dev/null 2>&1 || [ -x "$(npm prefix -g 2>/dev/null)/bin/open-design-mcp" ]; }
 
 # The engine is ADOPTED, never forced (open-source first): a machine that has no design
 # studio owes no bridge, and a clean skip with its reason is a pass (RULES/25). A machine

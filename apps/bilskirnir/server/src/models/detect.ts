@@ -96,7 +96,8 @@ export interface Preset {
   keyHint?: string;
 }
 
-export const PRESETS: Preset[] = [
+/** The hand-kept providers: the local servers and the common few, always offered even with no catalog. */
+const HAND_PRESETS: Preset[] = [
   { id: 'openrouter', name: 'OpenRouter', baseUrl: 'https://openrouter.ai/api/v1', envKey: 'OPENROUTER_API_KEY', needsKey: true, keyHint: 'openrouter.ai/keys' },
   { id: 'openai', name: 'OpenAI', baseUrl: 'https://api.openai.com/v1', envKey: 'OPENAI_API_KEY', needsKey: true, keyHint: 'platform.openai.com/api-keys' },
   { id: 'anthropic', name: 'Anthropic (Claude)', baseUrl: 'https://api.anthropic.com/v1', envKey: 'ANTHROPIC_API_KEY', needsKey: true, keyHint: 'console.anthropic.com' },
@@ -113,6 +114,37 @@ export const PRESETS: Preset[] = [
   { id: 'llamacpp', name: 'llama.cpp / llama-swap (this computer)', baseUrl: 'http://127.0.0.1:8080/v1', needsKey: false, local: true },
   { id: 'vllm', name: 'vLLM (this computer)', baseUrl: 'http://127.0.0.1:8000/v1', needsKey: false, local: true },
 ];
+
+/**
+ * Every other provider, from the open catalog models.dev (github.com/sst/models.dev — the one OpenCode uses), cached
+ * per machine by bin/model/providers-catalog.sh at $YMIR_HOME/state/models.dev.json. Only providers with an
+ * OpenAI-compatible address are offered here; the rest need a translator (plan 275: LiteLLM, on demand).
+ * The catalog carries NO keys — a key is pasted once and kept in the user's private home (plan 275, 2026-11-12).
+ */
+/** The user's home: YMIR_HOME, else the one documented default — the server's single place that says it. */
+export function ymirHome(env: NodeJS.ProcessEnv = process.env): string {
+  return env.YMIR_HOME || path.join(env.HOME ?? os.homedir(), 'Documents', 'ymirhome');   // allow-home-default: the server's one resolver, mirroring bin/vault/hoard-lib.sh
+}
+
+function catalogPresets(hand: Preset[]): Preset[] {
+  const home = ymirHome();
+  let cat: Record<string, any> = {};
+  try { cat = JSON.parse(fs.readFileSync(path.join(home, 'state', 'models.dev.json'), 'utf8')); } catch { return []; }
+  const norm = (u: string) => u.replace(/\/+$/, '').toLowerCase();
+  const ids = new Set(hand.map((h) => h.id));
+  const bases = new Set(hand.map((h) => norm(h.baseUrl)));
+  const out: Preset[] = [];
+  for (const [id, p] of Object.entries(cat)) {
+    const api = typeof p?.api === 'string' ? p.api.trim() : '';
+    if (!api || !/^https?:\/\//.test(api) || ids.has(id) || bases.has(norm(api))) continue;
+    const env = Array.isArray(p.env) ? p.env.find((e: unknown) => typeof e === 'string' && /KEY|TOKEN/i.test(e)) : undefined;
+    out.push({ id, name: String(p.name || id), baseUrl: api.replace(/\/+$/, ''), envKey: env, needsKey: true,
+               keyHint: typeof p.doc === 'string' ? p.doc.replace(/^https?:\/\//, '') : undefined });
+  }
+  return out.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export const PRESETS: Preset[] = [...HAND_PRESETS, ...catalogPresets(HAND_PRESETS)];
 
 /** A placeholder is not a key (the app's own .env ships `XAI_API_KEY=unset`). */
 const isKey = (v: string | undefined): v is string => !!v && !/^(unset|none|null|changeme|your[-_ ]?key.*|xxx+|<.*>)$/i.test(v.trim());
@@ -420,7 +452,7 @@ function allowListPath(env: NodeJS.ProcessEnv, door: string | null): string {
     const p = (r.stdout ?? '').trim().split('\n').pop();
     if (r.status === 0 && p) return p;
   }
-  const settings = env.YMIR_SETTINGS_DIR || path.join(env.YMIR_HOME || path.join(env.HOME ?? os.homedir(), 'Documents/ymirhome'), 'config');
+  const settings = env.YMIR_SETTINGS_DIR || path.join(ymirHome(env), 'config');
   return path.join(settings, 'models-allowed.yaml');
 }
 
@@ -542,7 +574,9 @@ export function modelBlock(model: string, baseUrl: string, key: string): string 
 async function main(argv: string[]) {
   const arg = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
   if (argv.includes('--json')) {
-    process.stdout.write(JSON.stringify(forBrowser(await detect()), null, 2) + '\n');
+    // written synchronously: a pipe takes 64 KiB at a time, and process.exit() right after an async write cut the
+    // answer off mid-string for any program reading it (Rödd's Mind got nothing, plan 275, 2026-11-12)
+    fs.writeSync(1, JSON.stringify(forBrowser(await detect()), null, 2) + '\n');
     return 0;
   }
   if (argv.includes('--model-block')) {

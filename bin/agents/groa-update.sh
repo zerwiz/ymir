@@ -263,8 +263,12 @@ fi
 # and have common updates of Ymir when Gróa updates"). After the fast-forward its setup door renders the
 # agent's soul from the home, rewrites the managed .env block, and reinstalls dependencies only when the
 # lock file moved — so a running hall keeps its floor. A failed setup is named, never silent.
-if [ -x "$ROOT/apps/bilskirnir/setup.sh" ]; then
-  if gstep bilskirnir 240 "$ROOT/apps/bilskirnir/setup.sh" >/dev/null 2>&1; then
+# plan 275 (2026-11-12): the apps are set up in the tree the icons RUN — the pin (a release once adopted) — never in
+# the tree Gróa happens to run from: run by hand from ~/ymir she installed Bilskirnir and Electron into the working
+# tree, and the pin every icon opens got none of it.
+APPROOT="$ROOT"; _pin="${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}"; [ -d "$_pin/apps" ] && APPROOT="$(readlink -f "$_pin")"
+if [ -x "$APPROOT/apps/bilskirnir/setup.sh" ]; then
+  if gstep bilskirnir 240 "$APPROOT/apps/bilskirnir/setup.sh" >/dev/null 2>&1; then
     printf 'bilskirnir: refreshed from the home (apps/bilskirnir/setup.sh)\n'
   else
     printf 'bilskirnir: setup did not finish — run apps/bilskirnir/setup.sh and read its lines\n'
@@ -309,7 +313,7 @@ fi
 # ensure door lands it from the machine's own cache, or from the network behind a mirror.
 # Never fatal, never silent: it prints a line and Eir judges the result below.
 if [ -x "$SCRIPT_DIR/../desktop/electron-ensure.sh" ]; then
-  if eo="$(gstep electron 180 "$SCRIPT_DIR/../desktop/electron-ensure.sh" ensure --root "$ROOT" --quiet 2>&1)"; then
+  if eo="$(gstep electron 180 "$SCRIPT_DIR/../desktop/electron-ensure.sh" ensure --root "${APPROOT:-$ROOT}" --quiet 2>&1)"; then
     printf 'electron: every installed surface answers --version\n'
   else
     printf 'electron: NOT mended — %s\n' "$(printf '%s' "$eo" | grep -m1 '"FAIL"' || printf 'see bin/desktop/electron-ensure.sh status')"
@@ -331,10 +335,26 @@ fi
 # owns that move (bin/engine/runtime-deploy.sh) — a moved pin whose services still run the
 # old code is the same lie as a stale one. Bounded and never fatal; the line is the record.
 if [ "$PIN_MOVED" = 1 ] && [ -x "$SCRIPT_DIR/../engine/runtime-deploy.sh" ]; then
-  if ro="$(gstep pin-deploy "${YMIR_GROA_PIN_TIMEOUT:-180}" setsid "$SCRIPT_DIR/../engine/runtime-deploy.sh" </dev/null 2>&1)"; then
+  # a pin that is a link to a release builds a whole new release before it flips (plan 275 S9): minutes, not seconds
+  _pin_dir="${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}"; _pin_limit=180; [ -L "$_pin_dir" ] && _pin_limit=1800
+  if ro="$(gstep pin-deploy "${YMIR_GROA_PIN_TIMEOUT:-$_pin_limit}" setsid "$SCRIPT_DIR/../engine/runtime-deploy.sh" </dev/null 2>&1)"; then
     printf 'pin: moved and every unit settled — %s\n' "$(printf '%s' "$ro" | tail -1)"
   else
     printf 'pin: moved, but a unit did not settle — %s\n' "$(printf '%s' "$ro" | grep -m1 FAIL || printf '%s' "$ro" | tail -1)"
+  fi
+fi
+
+# Every app's shortcut, on every platform, from the one command (plan 275 S11–S12): written by every update, so a
+# shortcut can never be older than the code it opens. Linux entries always; Windows Start-menu shortcuts from WSL;
+# ~/Applications on macOS. The check names what is owed; it is never fatal to the update.
+if [ -x "$SCRIPT_DIR/../desktop/shortcuts.sh" ]; then
+  if [ "$CHECK" = 1 ]; then
+    if "$SCRIPT_DIR/../desktop/shortcuts.sh" --check >/dev/null 2>&1; then printf 'shortcuts: every app has its shortcut\n'
+    else printf 'shortcuts: owed — bin/desktop/shortcuts.sh writes them\n'; fi
+  elif so="$(gstep shortcuts 60 "$SCRIPT_DIR/../desktop/shortcuts.sh" 2>&1)"; then
+    printf 'shortcuts: %s written (%s)\n' "$(printf '%s' "$so" | grep -c '"written"')" "$(printf '%s' "$so" | sed -n '2p' | tr -d ' "')"
+  else
+    printf 'shortcuts: FAILED — %s\n' "$(printf '%s' "$so" | grep -m1 -E 'OWED|FAIL' | tr -d '"')"
   fi
 fi
 

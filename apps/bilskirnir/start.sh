@@ -48,15 +48,13 @@ URL="http://127.0.0.1:$PORT"
 # The electron binary is PROBED, never pinned to one distro release (Rödd learned this: electron41 →
 # electron43 turned a hard path into "No such file").
 resolve_electron() {
+  # plan 275 S10 (2026-11-12): the ONE resolver (bin/desktop/electron-lib.sh), the release's own Electron only. The
+  # old probe fell back to another app's runtime and to the distribution's /usr/lib/electron*, which pacman upgrades
+  # on its own schedule — so an app ran on whatever Electron was lying around, and broke when that moved.
   [ -n "${BILSKIRNIR_ELECTRON:-}" ] && { printf '%s' "$BILSKIRNIR_ELECTRON"; return 0; }
-  local e
-  for e in "$APP/node_modules/electron/dist/electron" "$APP/../rodd/node_modules/electron/dist/electron"; do
-    [ -x "$e" ] && { printf '%s' "$e"; return 0; }
-  done
-  for e in $(ls -d /usr/lib/electron*/electron 2>/dev/null | sort -Vr); do
-    [ -x "$e" ] && { printf '%s' "$e"; return 0; }
-  done
-  command -v electron 2>/dev/null
+  local tree; tree="$(dirname "$(dirname "$APP")")"
+  [ -r "$tree/bin/desktop/electron-lib.sh" ] || return 1
+  ( . "$tree/bin/desktop/electron-lib.sh"; electron_bin "$APP" "$tree" )
 }
 
 face_up() { curl -s --max-time 2 -w '\n%{http_code}' "$1/" 2>/dev/null | awk 'BEGIN{b="";c=""} {if(c!="")b=b c "\n"; c=$0} END{exit !(c ~ /^2/ && tolower(b) ~ /<!doctype html|<div id=/)}'; }
@@ -219,7 +217,7 @@ fi
 if window_up; then say "the window" "already open — kept"; exit 0; fi
 ELECTRON="$(resolve_electron)"
 [ -n "$ELECTRON" ] || { say "the window" "no electron binary — install electron, or open $OPEN_URL in a browser"; exit 1; }
-DEBUG=(); [ -n "${BILSKIRNIR_DEBUG_PORT:-}" ] && DEBUG=(--remote-debugging-port="$BILSKIRNIR_DEBUG_PORT")
+DEBUG=(); _dp="${BILSKIRNIR_DEBUG_PORT:-${YMIR_DEVTOOLS_PORT:-}}"; [ -n "$_dp" ] && DEBUG=(--remote-debugging-port="$_dp")
 BILSKIRNIR_URL="$OPEN_URL" spawn window "$APP" "$ELECTRON" "${DEBUG[@]}" "$APP/electron"
 sleep 2
 window_up && say "the window" "open ($OPEN_URL)" || say "the window" "did not stay open — see data/run/window.log"

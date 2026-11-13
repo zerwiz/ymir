@@ -20,7 +20,7 @@ pass=0; fail=0
 t() { local name=$1; shift; if "$@"; then printf '  ok   %s\n' "$name"; pass=$((pass+1)); else printf '  FAIL %s\n' "$name"; fail=$((fail+1)); fi; }
 
 T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
-export HOME="$T/home" XDG_CONFIG_HOME="$T/home/.config" XDG_DATA_HOME="$T/home/.local/share"
+export HOME="$T/home" XDG_CONFIG_HOME="$T/home/.config" XDG_DATA_HOME="$T/home/.local/share"   # allow-home-default: the test fences HOME in a temp dir
 export YMIR_HOME="$T/ymirhome" YMIR_STATE_DIR="$T/state"
 export YMIR_UNIT_DIR="$T/units" YMIR_APPLICATIONS_DIR="$T/apps-dir" YMIR_AUTOSTART_DIR="$T/autostart"
 export YMIR_UNITS_NO_SYSTEMCTL=1 YMIR_UNITS_NO_ROLE_PROBE=1
@@ -74,7 +74,8 @@ t "fresh seat: the forge clocks are written" [ -f "$YMIR_UNIT_DIR/queue-warden.t
 t "fresh seat: no unit names the tree the seat ran from" bash -c '! grep -rl -e "$0" -e "$1" "$2" >/dev/null' "$ROOT" "$TREE" "$YMIR_UNIT_DIR"
 for l in rodd ymir-bilskirnir ymir-hlidskjalf ymir-odrerir ymir-sessrumnir ymir-smidja; do
   f="$YMIR_APPLICATIONS_DIR/$l.desktop"
-  t "fresh seat: launcher $l.desktop points at the pin" bash -c 'grep -q "^Exec=.*$0" "$1" && ! grep -q "^Exec=.*$2" "$1"' "$PIN" "$f" "$ROOT"
+  # plan 275 S11: a launcher runs the one stable command and names no tree at all — not the pin, not a worktree
+  t "fresh seat: launcher $l.desktop runs ymir-app and names no tree" bash -c 'grep -q "^Exec=.*/ymir-app " "$1" && ! grep -q "^Exec=.*$0" "$1" && ! grep -q "^Exec=.*$2" "$1"' "$PIN" "$f" "$ROOT"
 done
 bash "$UNITS" check 2>&1 | grep -v '"ok"\|absent\|^units' >&2
 t "fresh seat: check agrees (exit 0)" bash -c 'bash "$0" check >/dev/null' "$UNITS"
@@ -156,7 +157,7 @@ Path=$WT/apps/bilskirnir
 DESK
 t "launcher: check fails on a worktree launcher" bash -c '! bash "$0" check >/dev/null 2>&1' "$UNITS"
 bash "$UNITS" write >/dev/null 2>&1
-t "launcher: write points it at the pin" grep -q "^Exec=$PIN/apps/bilskirnir/start.sh" "$YMIR_APPLICATIONS_DIR/ymir-bilskirnir.desktop"
+t "launcher: write turns it into the one stable command" grep -q "^Exec=.*/ymir-app bilskirnir$" "$YMIR_APPLICATIONS_DIR/ymir-bilskirnir.desktop"
 t "launcher: and the worktree is gone from it" bash -c '! grep -q "yggdrasil" "$0"' "$YMIR_APPLICATIONS_DIR/ymir-bilskirnir.desktop"
 
 # 6 — written by the code in a worktree, a unit still names the pin

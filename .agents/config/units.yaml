@@ -103,7 +103,9 @@ units:
     description: "review-seat keeper — ensure the reviewer's herdr seat exists (idempotent)"
     workdir: "${CLONE}"
     exec: "/usr/bin/env bash bin/forge/review-seat.sh ensure --clone ${CLONE}${PRIMARY}"
-    vars: { CLONE: "@ROOT@", PRIMARY: "" }
+    # plan 275 (2026-11-12): the judge's OWN clone, never the pin — with @ROOT@ every 5-minute run hid the pin's
+    # .pi/extensions (tracked files), so the pin read dirty and the next update would have refused it
+    vars: { CLONE: "@HOME@/review/ymir", PRIMARY: "" }
     timer: { description: "review-seat keeper — every 5 minutes", boot: 2min, every: 5min, accuracy: 20s }
 
   - name: review-loop
@@ -127,6 +129,9 @@ units:
   - { name: ymir-syn-watch,    mode: adopt, kind: service, roles: all }
   - { name: gimle-project,     mode: adopt, kind: service, roles: all, restart: false }
   - { name: stt-shim,          mode: adopt, kind: service, roles: all, restart: false }
+  # the terminal voice client (speech-to-speech talk → Rödd's engine), started on demand; registered 2026-11-12 so Eir
+  # knows it as a feature, not a stray (plan 275 — "we should not take away any features")
+  - { name: rodd-client,       mode: adopt, kind: service, roles: all, restart: false }
   - { name: hlidskjalf-spa,    mode: adopt, kind: service, roles: [heart, dev] }
   - { name: hlidskjalf-gate,   mode: adopt, kind: service, roles: [heart, dev] }
   - { name: smidja,            mode: adopt, kind: service, roles: [heart, dev] }

@@ -27,13 +27,18 @@ HOUSE_BRIEF = " ".join([
     "Rödd is the app and the window you speak through; you are Nanna, the voice inside it, and you are a she.",
     "Skírnir is someone else entirely: never wear his name and never call yourself his successor.",
     "Speak in one or two short sentences, warmly, and address him as Allfather.",
+    "For any email or letter use the house's templates: letter_types, then letter_template, then letter_draft (a designed",
+    "draft in his Gmail, never sent). For the time or the day use the time given at the top of this brief, or the now tool.",
+    "Before EVERY tool call, first say one short sentence of what you are about to do — 'Let me look at your to-do.',",
+    "'One moment, I am reading your mail.' — and only then call the tool, so he is never left in silence while you work.",
     "He may call you Nanna, Rödd, Ymir or Imer — any of those is him addressing you.",
     "You DO have hands in this window and you use them: search_home and read_home_file for his own",
     "notes, plans and files (his day and todo are life/personal/me/todo.md); read_mail for Gmail",
     "(scope inbox, sent, drafts or all); read_calendar for his day, calendar_respond to answer an",
     "invitation; gimle for boards, projects, places, tasks and who owes what; read_board for Trello;",
-    "draft_write to write a draft (it sends nothing); todos are a ledger — todo_add, todo_list,",
-    "todo_done, todo_reopen, todo_update; home_recent lists what the house wrote lately;",
+    "draft_write to write a draft (it sends nothing); his to-do is ONE list, life/personal/me/todo.md — todo_list reads it,",
+    "todo_add adds to it, todo_done ticks, todo_reopen and todo_update change an item (never edit that file by hand);",
+    "home_recent lists what the house wrote lately;",
     "last_session brings back the previous conversation, search_sessions searches every past session;",
     "recall before answering about past work or a decision; remember to keep a durable lesson;",
     "context_left on a long conversation; cron_jobs for the schedule and whether it is running;",
@@ -140,24 +145,114 @@ loadHouseTools();
 """
 
 
+PTT_JS = r"""
+// rodd: hold to talk (plan 275 S22, 2026-11-12). Rödd shares the built-in microphone with the speakers, so a video or a
+// call on them was heard as speech: 743 turns started in one evening and every answer was cancelled. With hold to talk
+// (off by default, his word 2026-11-12: "I don't want to have hold to talk") the microphone is closed between turns; holding the orb, the mic button or Space opens it, and it closes
+// 0.4 s after release, so the engine hears a clean end of the turn and nothing else can open or cut one.
+const PTT_KEY = "rodd.holdToTalk";
+function pttOn() { return localStorage.getItem(PTT_KEY) === "1"; }
+let pttTimer = 0;
+function pttHold(down) {
+  if (!pttOn() || !micStream || !client) return;
+  clearTimeout(pttTimer);
+  if (down) {
+    micMuted = false; syncMicMuteState();
+    micBtn.classList.remove("muted"); circleBtn.classList.add("ptt-held");
+    setCaption("Listening while you hold…");
+  } else {
+    pttTimer = setTimeout(() => {
+      micMuted = true; syncMicMuteState();
+      micBtn.classList.add("muted"); circleBtn.classList.remove("ptt-held");
+    }, 400);
+  }
+}
+for (const b of [micBtn, circleBtn]) {
+  b.addEventListener("pointerdown", (e) => { if (pttOn() && client && micStream) { e.preventDefault(); pttHold(true); } });
+  for (const ev of ["pointerup", "pointerleave", "pointercancel"]) b.addEventListener(ev, () => pttHold(false));
+}
+const pttTyping = () => /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || "");
+document.addEventListener("keydown", (e) => { if (e.code === "Space" && !e.repeat && !pttTyping() && client) { e.preventDefault(); pttHold(true); } });
+document.addEventListener("keyup", (e) => { if (e.code === "Space" && !pttTyping()) pttHold(false); });
+window.__roddPTT = { on: pttOn, set: (v) => localStorage.setItem(PTT_KEY, v ? "1" : "0"), hold: pttHold };
+"""
+
+HIDE_CAM = """  <!-- rodd: hide the camera — a button on the preview hides it, a chip brings it back (his word, 2026-11-12) -->
+  <button id="rodd-cam-hide" type="button" class="rodd-cam-btn" title="Hide the camera preview" aria-label="Hide the camera preview">Hide</button>
+  <button id="rodd-cam-show" type="button" class="rodd-cam-btn" title="Show the camera preview" aria-label="Show the camera preview">Show camera</button>
+  <style>
+    .rodd-cam-btn { position: fixed; z-index: 2147483000; display: none; font: 500 12px/1 var(--font, system-ui); padding: 6px 10px;
+      border-radius: 999px; border: 1px solid rgba(201,151,63,.45); background: rgba(14,12,9,.82); color: #e8dcc4; cursor: pointer; }
+    .rodd-cam-btn:hover { border-color: #c9973f; }
+    body.cam-on:not(.rodd-cam-hidden) #rodd-cam-hide { display: block; }
+    body.cam-on.rodd-cam-hidden #rodd-cam-show { display: block; }
+    body.rodd-cam-hidden #cam-pip { display: none !important; }
+  </style>
+  <script>
+  (function () {
+    var KEY = "rodd.camHidden";
+    var hide = document.getElementById("rodd-cam-hide"), show = document.getElementById("rodd-cam-show");
+    var pip = document.getElementById("cam-pip"), last = null;
+    function set(h) { document.body.classList.toggle("rodd-cam-hidden", h); try { localStorage.setItem(KEY, h ? "1" : "0"); } catch (e) {} place(); }
+    function place() {
+      // the Hide button sits on the preview's top corner; the Show chip where the preview was
+      var r = pip && pip.getBoundingClientRect();
+      if (r && r.height) last = r; else r = last;   // a hidden preview has no box: use where it last was
+      var top = r && r.height ? r.top + 6 : 72, right = r && r.width ? (innerWidth - r.right) + 6 : 16;
+      hide.style.top = top + "px"; hide.style.right = right + "px";
+      show.style.top = (r && r.height ? r.bottom - 34 : 72) + "px"; show.style.right = (r && r.width ? innerWidth - r.left - 120 : 16) + "px";
+    }
+    hide.addEventListener("click", function () { set(true); });
+    show.addEventListener("click", function () { set(false); });
+    var saved = "0"; try { saved = localStorage.getItem(KEY) || "0"; } catch (e) {}
+    document.body.classList.toggle("rodd-cam-hidden", saved === "1");
+    new MutationObserver(place).observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    addEventListener("resize", place); setTimeout(place, 500); setInterval(place, 2000);
+  })();
+  </script>
+"""
+
 RODD_MIND_HTML = """            <div class="field" id="rodd-mind">
+              <label class="field-head"><input id="rodd-ptt" type="checkbox" />
+                Hold to talk — hold the orb, the mic button or Space; the microphone is closed between turns,
+                so a video or a call on the speakers cannot start or cut a turn</label>
               <span class="field-head">Mind <span id="rodd-head-state" class="field-value">reading…</span></span>
-              <select id="rodd-head-mode" aria-label="Whose mind answers">
-                <option value="local">Local · this machine's rail</option>
-                <option value="online">Online · your own API key</option>
+              <!-- plan 275 (2026-11-12): the minds this machine can reach, found by the house's model door — local
+                   servers first, then every provider a key is held for. Choose two things; nothing to type. -->
+              <select id="rodd-head-provider" aria-label="Where the mind runs">
+                <option value="">searching for the minds this machine can reach…</option>
               </select>
-              <input id="rodd-head-base" type="text" placeholder="https://…/v1  (OpenAI-compatible base)"
-                     aria-label="Endpoint base URL" autocomplete="off" spellcheck="false" />
-              <input id="rodd-head-model" type="text" placeholder="model id"
-                     aria-label="Model id" autocomplete="off" spellcheck="false" />
-              <input id="rodd-head-key" type="password" placeholder="API key (or leave empty to keep the one you set)"
-                     aria-label="API key" autocomplete="off" spellcheck="false" />
+              <select id="rodd-head-pick" aria-label="Which model answers"></select>
+              <details id="rodd-head-add">
+                <summary>Add a provider (paste its key once)</summary>
+                <input id="rodd-add-provider" list="rodd-add-list" type="text" placeholder="search 200+ providers — OpenAI, Groq, Mistral, …"
+                       aria-label="Provider to add" autocomplete="off" spellcheck="false" />
+                <datalist id="rodd-add-list"></datalist>
+                <input id="rodd-add-key" type="password" placeholder="its API key"
+                       aria-label="API key for that provider" autocomplete="off" spellcheck="false" />
+                <button id="rodd-add-go" type="button" class="btn wide">Add the provider</button>
+                <small id="rodd-add-note">The key is kept on this computer in your private home
+                  (<code>hodd/secrets/</code>, readable only by you), never in Ymir's public repository.</small>
+              </details>
+              <details id="rodd-head-other">
+                <summary>Another endpoint (type it yourself)</summary>
+                <select id="rodd-head-mode" aria-label="Whose mind answers">
+                  <option value="local">Local · this machine's rail</option>
+                  <option value="online">Online · your own API key</option>
+                </select>
+                <input id="rodd-head-base" type="text" placeholder="https://…/v1  (OpenAI-compatible base)"
+                       aria-label="Endpoint base URL" autocomplete="off" spellcheck="false" />
+                <input id="rodd-head-model" type="text" placeholder="model id"
+                       aria-label="Model id" autocomplete="off" spellcheck="false" />
+                <input id="rodd-head-key" type="password" placeholder="API key (or leave empty to keep the one you set)"
+                       aria-label="API key" autocomplete="off" spellcheck="false" />
+              </details>
               <button id="rodd-head-save" type="button" class="btn wide">Save the mind and raise it</button>
               <small>
-                A key you type here is written to the private home
-                (<code>hodd/secrets/rodd.env</code>, mode 0600) and never to this repository.
-                A key already in the house vault is used by name, and is never shown back to you.
-                Changing the mind raises the voice host again; then press Restart conversation.
+                A local mind is asked one word before it is saved; one that does not answer is never written.
+                Keys are used where you already keep them (pi's store or the house vault) and are never shown here.
+                A key you type is written to the private home (<code>hodd/secrets/rodd.env</code>, mode 0600),
+                never to this repository. Changing the mind raises the voice host again; then press Restart conversation.
               </small>
             </div>
 
@@ -168,41 +263,121 @@ RODD_MIND_JS = """  <!-- rodd: the mind — whose model answers, and where the k
   <script>
   (function () {
     var TOOLBOX = "http://127.0.0.1:8891";
+    var prov = document.getElementById("rodd-head-provider");
+    var pick = document.getElementById("rodd-head-pick");
+    var other = document.getElementById("rodd-head-other");
     var mode = document.getElementById("rodd-head-mode");
     var base = document.getElementById("rodd-head-base");
     var model = document.getElementById("rodd-head-model");
     var key = document.getElementById("rodd-head-key");
     var save = document.getElementById("rodd-head-save");
     var state = document.getElementById("rodd-head-state");
-    if (!mode || !save) return;
+    if (!prov || !save) return;
+    var found = [];
+    var current = null;
 
     function show(t) { if (state) state.textContent = t; }
+    function opt(sel, value, text) { var o = document.createElement("option"); o.value = value; o.textContent = text; sel.appendChild(o); }
 
-    function fill(h) {
+    function fillModels() {
+      pick.innerHTML = "";
+      var p = found.filter(function (x) { return x.id === prov.value; })[0];
+      if (!p) return;
+      p.models.forEach(function (m) { opt(pick, m, m); });
+      if (current && current.model && p.models.indexOf(current.model) >= 0) pick.value = current.model;
+    }
+
+    function fillProviders(list) {
+      found = list || [];
+      prov.innerHTML = "";
+      if (!found.length) { opt(prov, "", "no mind found on this machine — use Another endpoint"); other.open = true; return; }
+      found.forEach(function (p) {
+        opt(prov, p.id, (p.local ? "This machine · " : "Online · ") + p.name + " (" + p.models.length + ")");
+      });
+      // select what answers now, when it is on the list
+      if (current) {
+        var hit = found.filter(function (p) { return p.base_url && current.base_url && p.base_url.replace(/\\/$/, "") === current.base_url.replace(/\\/$/, ""); })[0];
+        if (hit) prov.value = hit.id;
+      }
+      fillModels();
+    }
+
+    function fillHead(h) {
       if (!h) return;
+      current = h;
       mode.value = h.mode || "local";
       base.value = h.base_url || "";
       model.value = h.model || "";
-      show((h.model || "no model yet") + " · key " + (h.key_state || "none"));
+      show((h.model || "no mind chosen yet") + " · " + (h.mode === "online" ? "online" : "this machine") + " · key " + (h.key_state || "none"));
       key.placeholder = h.key_state && h.key_state !== "none"
         ? "a key is set (" + h.key_state + ") — type only to replace it"
         : "API key";
     }
 
+    prov.addEventListener("change", fillModels);
+    var ptt = document.getElementById("rodd-ptt");
+    if (ptt) {
+      ptt.checked = localStorage.getItem("rodd.holdToTalk") === "1";
+      ptt.addEventListener("change", function () { localStorage.setItem("rodd.holdToTalk", ptt.checked ? "1" : "0"); });
+    }
+
+    // add a provider: the list comes from the house's provider door (models.dev + the hand-kept ones)
+    var addName = document.getElementById("rodd-add-provider");
+    var addList = document.getElementById("rodd-add-list");
+    var addKey = document.getElementById("rodd-add-key");
+    var addGo = document.getElementById("rodd-add-go");
+    var addNote = document.getElementById("rodd-add-note");
+    var presets = [];
+    function reloadMinds() {
+      return fetch(TOOLBOX + "/head/models", { cache: "no-store" })
+        .then(function (r) { return r.json(); })
+        .then(function (d) { fillProviders(d.providers); });
+    }
+    if (addName && addGo) {
+      fetch(TOOLBOX + "/head/presets", { cache: "no-store" })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          presets = (d.presets || []).filter(function (p) { return !p.local; });
+          presets.forEach(function (p) { var o = document.createElement("option"); o.value = p.name; addList.appendChild(o); });
+        })
+        .catch(function () {});
+      addGo.addEventListener("click", function () {
+        var name = addName.value.trim().toLowerCase();
+        var p = presets.filter(function (x) { return x.name.toLowerCase() === name || x.id === name; })[0];
+        if (!p) { addNote.textContent = "choose a provider from the list"; return; }
+        if (p.needsKey && !addKey.value.trim()) { addNote.textContent = p.name + " needs a key" + (p.keyHint ? " (get one at " + p.keyHint + ")" : ""); return; }
+        addNote.textContent = "adding " + p.name + " and asking it for its models…";
+        fetch(TOOLBOX + "/head/provider", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ preset: p.id, api_key: addKey.value.trim() })
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (out) {
+            addKey.value = "";
+            addNote.textContent = out.detail || (out.ok ? "added" : "not added");
+            if (out.ok) return reloadMinds().then(function () { prov.value = (out.provider || {}).id || prov.value; fillModels(); });
+          })
+          .catch(function (err) { addNote.textContent = "refused · " + (err && err.message ? err.message : err); });
+      });
+    }
+
     fetch(TOOLBOX + "/head", { cache: "no-store" })
       .then(function (r) { return r.json(); })
-      .then(fill)
+      .then(function (h) { fillHead(h); return fetch(TOOLBOX + "/head/models", { cache: "no-store" }); })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { fillProviders(d.providers); })
       .catch(function () { show("the house toolbox is not answering"); });
 
     save.addEventListener("click", function () {
-      show("saving…");
-      var body = {
-        mode: mode.value,
-        base_url: base.value.trim(),
-        model: model.value.trim(),
-        apply: true
-      };
-      if (key.value.trim()) body.api_key = key.value.trim();
+      var body;
+      if (other.open && model.value.trim()) {
+        body = { mode: mode.value, base_url: base.value.trim(), model: model.value.trim(), apply: true };
+        if (key.value.trim()) body.api_key = key.value.trim();
+      } else {
+        if (!prov.value || !pick.value) { show("choose where the mind runs and which model"); return; }
+        body = { provider: prov.value, model: pick.value, apply: true };
+      }
+      show("asking the mind and saving…");
       fetch(TOOLBOX + "/head", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -211,8 +386,8 @@ RODD_MIND_JS = """  <!-- rodd: the mind — whose model answers, and where the k
         .then(function (r) { return r.json(); })
         .then(function (out) {
           key.value = "";
-          fill(out.head || null);
-          show((out.ok ? "raised · " : "saved, not raised · ") + (out.detail || ""));
+          if (out.head) fillHead(out.head);
+          show((out.ok ? "raised · " : "not raised · ") + (out.detail || ""));
         })
         .catch(function (err) { show("refused · " + (err && err.message ? err.message : err)); });
     });
@@ -252,10 +427,19 @@ def patch_html() -> None:
     s = re.sub(r"\s*<footer class=\"footer\">.*?</footer>", "", s, count=1, flags=re.S)
     if 'id="voice"' in s:
         s = re.sub(r'<select id="voice">.*?</select>', VOICES, s, flags=re.S)
-    if 'id="rodd-mind"' not in s:
+    if 'id="rodd-mind"' in s:
+        s = re.sub(r'            <div class="field" id="rodd-mind">.*?            <label class="field">\n              <span>Instructions</span>',
+                   lambda _m: RODD_MIND_HTML, s, count=1, flags=re.S)
+    else:
         s = s.replace('            <label class="field">\n              <span>Instructions</span>',
                       RODD_MIND_HTML, 1)
-    if 'rodd: the mind' not in s:
+    if "rodd: hide the camera" in s:
+        s = re.sub(r"  <!-- rodd: hide the camera.*?</script>\n", lambda _m: HIDE_CAM, s, count=1, flags=re.S)
+    else:
+        s = s.replace("</body>", HIDE_CAM + "</body>", 1)
+    if 'rodd: the mind' in s:
+        s = re.sub(r'  <!-- rodd: the mind.*?</script>\n', lambda _m: RODD_MIND_JS, s, count=1, flags=re.S)
+    else:
         s = s.replace("</body>", RODD_MIND_JS + "</body>", 1)
     p.write_text(s)
 
@@ -275,6 +459,23 @@ def patch_main() -> None:
                       '    return { output: house.output };\n'
                       '  }\n'
                       '  if (DEBUG) console.debug(`[tool] run name=${name}', 1)
+    # plan 275: web_search is a HOUSE tool (SearXNG); the vendor's own one needed a Google key that was never set
+    s = s.replace("  if (toolsEnabled.web_search) defs.push(TOOL_DEFS.web_search);\n", "", 1)
+    s = s.replace("  if (toolsEnabled.web_search && searchAvailable()) defs.push(TOOL_DEFS.web_search);\n", "", 1)
+    s = s.replace('  if (!["web_search", "camera_snapshot"].includes(name)) {', '  if (!["camera_snapshot"].includes(name)) {', 1)
+    # plan 275: while a house tool runs, the window says what she is doing (the mind may call a tool in silence)
+    if "rodd: working caption" not in s:
+        s = s.replace('    const house = await runHouseTool(name, args).catch((err) => ({ output: `the toolbox refused: ${err}` }));\n'
+                      '    return { output: house.output };',
+                      '    // rodd: working caption\n'
+                      '    const doing = { todo_list: "Reading your to-do…", todo_add: "Adding to your to-do…", todo_done: "Ticking it off…",\n'
+                      '      read_mail: "Reading your mail…", read_calendar: "Looking at your calendar…", search_home: "Searching your files…",\n'
+                      '      read_home_file: "Reading the file…", recall: "Remembering…", web_search: "Searching the web…", plans: "Reading the plans…", seats: "Looking at the workers…" }[name]\n'
+                      '      || `Working: ${name.replace(/_/g, " ")}…`;\n'
+                      '    setCaption(doing, "muted");\n'
+                      '    const house = await runHouseTool(name, args).catch((err) => ({ output: `the toolbox refused: ${err}` }));\n'
+                      '    setCaption("");\n'
+                      '    return { output: house.output };', 1)
     # plan 271: a failure is a sentence and one action, never `[object Event]`
     if "roddWhy" not in s:
         s = s.replace('import { $, truncateError, DEBUG } from "./ui/dom.js";',
@@ -325,9 +526,87 @@ def patch_main() -> None:
     _tail = "\n    })(),"
     s = re.sub(re.escape(_head) + r".*?" + re.escape(_tail), lambda m: keep_his_words, s,
                count=1, flags=re.S)
+    # plan 275 S22: hold to talk — the microphone is closed between turns; holding opens it
+    if "rodd: hold to talk" in s:
+        # an update brings the newest hold-to-talk block (its default moved to off on 2026-11-12)
+        s = re.sub(r"\n// rodd: hold to talk.*?window\.__roddPTT = [^\n]*\n", lambda _m: PTT_JS, s, count=1, flags=re.S)
+    else:
+        s = s.replace('micBtn.addEventListener("click", () => {\n  if (!micStream || !client) return;',
+                      'micBtn.addEventListener("click", () => {\n  if (!micStream || !client) return;\n  if (pttOn()) return;   // hold to talk owns the button', 1)
+        s = s.replace("  client = c;\n  c.setMuted(micMuted || userAudioReplaying);",
+                      "  client = c;\n  if (pttOn()) { micMuted = true; micBtn.classList.add(\"muted\"); }\n  c.setMuted(micMuted || userAudioReplaying);", 1)
+        s = s.replace('stopBtn.addEventListener("click", async () => {', PTT_JS + '\nstopBtn.addEventListener("click", async () => {', 1)
+    # plan 275 (2026-11-12): one press of the orb is one session, kept as a memory when it ends
+    if "rodd: sessions" not in s:
+        s = s.replace("async function teardown() {",
+                      "// rodd: sessions — one press of the orb is one session; it is kept in the home when it ends\n"
+                      "let roddSession = null;\n"
+                      "function roddSessionStart() { roddSession = { id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())), started: new Date().toISOString(), turns: [], seen: new Set() }; }\n"
+                      "function roddSessionLine(d) {\n"
+                      "  if (!roddSession || !d || d.partial || !String(d.text || '').trim()) return;\n"
+                      "  const key = (d.itemId || '') + '|' + d.text; if (roddSession.seen.has(key)) return; roddSession.seen.add(key);\n"
+                      "  roddSession.turns.push({ who: d.role === 'user' ? 'Allfather' : 'Nanna', text: String(d.text).trim(), at: new Date().toISOString() });\n"
+                      "}\n"
+                      "function roddSessionEnd() {\n"
+                      "  const sess = roddSession; roddSession = null;\n"
+                      "  if (!sess || !sess.turns.length) return;\n"
+                      "  const body = JSON.stringify({ id: sess.id, started: sess.started, ended: new Date().toISOString(), turns: sess.turns });\n"
+                      "  try { fetch('http://127.0.0.1:8891/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }); } catch {}\n"
+                      "}\n"
+                      "window.addEventListener('beforeunload', roddSessionEnd);\n\n"
+                      "async function teardown() {\n  roddSessionEnd();", 1)
+        s = s.replace("    chat.onTranscript(d);\n", "    chat.onTranscript(d);\n    roddSessionLine(d);\n", 1)
+        s = s.replace("  client = c;\n", "  client = c;\n  roddSessionStart();\n", 1)
+    # plan 275 (2026-11-12): every session's brief carries the real date and time — she greeted him "good morning"
+    # at eleven at night, because she was never told the time
+    s = s.replace("    instructions: withNow(inputInstructions.value.trim() || DEFAULT_INSTRUCTIONS),",
+                  "    instructions: inputInstructions.value.trim() || DEFAULT_INSTRUCTIONS,", 1)
+    if "rodd: the time" in s and "instructions: withNow(settings.instructions),\n" not in s:
+        s = s.replace("    instructions: settings.instructions,\n", "    instructions: withNow(settings.instructions),\n", 1)
+    if "rodd: the time" not in s:
+        s = s.replace("const STORAGE_KEYS = {",
+                      "// rodd: the time — the brief always opens with the real date and time, his own zone\n"
+                      "function withNow(text) {\n"
+                      "  const d = new Date();\n"
+                      "  const h = d.getHours();\n"
+                      "  const part = h < 5 || h >= 22 ? \"night\" : h < 12 ? \"morning\" : h < 18 ? \"afternoon\" : \"evening\";\n"
+                      "  const when = d.toLocaleString(\"en-GB\", { weekday: \"long\", day: \"numeric\", month: \"long\", year: \"numeric\", hour: \"2-digit\", minute: \"2-digit\", timeZoneName: \"short\" });\n"
+                      "  return `Right now it is ${when} — ${part}. Use this for the time and the day; call the now tool if the conversation runs long.\\n\\n` + text;\n"
+                      "}\n\nconst STORAGE_KEYS = {", 1)
+        # the time goes to the SESSION (at connect and on every update), never into the saved settings,
+        # where it would freeze one stale time into his brief
+        s = s.replace("    instructions: settings.instructions,\n", "    instructions: withNow(settings.instructions),\n", 1)
+        s = s.replace("client.updateSession({ voice: settings.voice, instructions: settings.instructions });",
+                      "client.updateSession({ voice: settings.voice, instructions: withNow(settings.instructions) });", 1)
     s = s.replace('role === "user" ? "You" : "Assistant"', 'role === "user" ? "Allfather" : "Nanna"')
     s = s.replace("camera_snapshot: raw.camera_snapshot ?? true", "camera_snapshot: raw.camera_snapshot ?? true")
     p.write_text(s)
+
+
+NO_STALE_MARK = "# rodd: never a stale face"
+NO_STALE = '''
+# rodd: never a stale face (plan 275, 2026-11-13). Electron kept the face's files in its HTTP cache, so an update to
+# main.js, house.css or ember.js stayed hidden behind the old copies until the cache was cleared by hand. `no-cache`
+# makes the window ask on every load; an unchanged file costs one 304, a changed one arrives at once.
+@app.middleware("http")
+async def _rodd_no_stale(request, call_next):
+    response = await call_next(request)
+    if not request.url.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-cache"
+    return response
+'''
+
+
+def patch_server() -> None:
+    p = UI / "server.py"
+    s = p.read_text()
+    if NO_STALE_MARK in s:
+        return
+    anchor = 'app = FastAPI(title="s2s-demo")\n'
+    if anchor not in s:
+        print("patch-ui: server.py has no FastAPI app line — the face may be served stale", file=sys.stderr)
+        return
+    p.write_text(s.replace(anchor, anchor + NO_STALE, 1))
 
 
 def main() -> int:
@@ -338,6 +617,7 @@ def main() -> int:
         shutil.copy2(HERE / name, UI / name)
     patch_html()
     patch_main()
+    patch_server()
     print(f"patch-ui: {UI} dressed as Rödd")
     return 0
 

@@ -1,11 +1,10 @@
 [Desktop Entry]
 Type=Application
 Version=1.0
-Name=Bilskirnir
+Name=Ymir · Bilskirnir
 GenericName=The business hall
 Comment=The hall of many rooms — give an errand and watch it forge
-Exec=__YMIR_ROOT__/apps/bilskirnir/start.sh
-Path=__YMIR_ROOT__/apps/bilskirnir
+Exec=__YMIR_APP__ bilskirnir
 Icon=ymir-bilskirnir
 Terminal=false
 Categories=Office;

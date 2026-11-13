@@ -18,13 +18,13 @@
 set -uo pipefail
 check=0; tree="${PWD}"
 for a in "$@"; do case "$a" in --check) check=1 ;; *) tree="$a" ;; esac; done
-here="$(cd "$tree" && pwd)"
+here="$(cd "$tree" && pwd -P)"   # physical: a pin that is a link to a release is that release, not a worktree
 common="$(git -C "$here" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" || {
   printf 'main-tree: %s is not a git checkout\n' "$here" >&2; exit 1; }
 canon="$(dirname "$common")"
 [ -d "$canon" ] || { printf 'main-tree: the common dir resolves nowhere (%s)\n' "$common" >&2; exit 1; }
 if [ "$check" = 1 ]; then
-  canon_real="$(cd "$canon" && pwd)"
+  canon_real="$(cd "$canon" && pwd -P)"
   [ "$canon_real" = "$here" ] && { printf 'main-tree: canonical (%s)\n' "$canon_real"; exit 0; }
   printf 'main-tree: this is a WORKTREE (%s); the canonical tree is %s\n' "$here" "$canon_real"; exit 1
 fi

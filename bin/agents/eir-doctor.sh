@@ -609,15 +609,22 @@ f_harness()   { [ -x "$SCRIPT_DIR/../seat/valknut-load.sh" ] && "$SCRIPT_DIR/../
 # extension homes and refuses all of them. A host with no pi is healthy. Eir mends it by seating the
 # installer's PATH block (the operator's shell picks it up at its next login).
 _pidoor_dst() { printf '%s' "${YMIR_PI_DOOR:-$HOME/.pi/agent/bin/pi}"; }
+# The operator's shell is the judge, not Eir's own PATH: Eir runs from a timer or a non-interactive ssh, which
+# never reads ~/.bashrc, so it called the door "not first" on both machines while their shells already had it
+# first (plan 275, 2026-11-12). Its own PATH passing is enough; else an interactive shell is asked.
+_pidoor_shell_pi() { timeout 10 "${SHELL:-bash}" -ic 'command -v pi' 2>/dev/null </dev/null | tail -1; }
 s_pidoor() {
   command -v pi >/dev/null 2>&1 || return 0
   local got want; got="$(command -v pi)"; want="$(_pidoor_dst)"
-  [ -x "$want" ] && [ "$got" = "$want" ]
+  [ -x "$want" ] || return 1
+  [ "$got" = "$want" ] && return 0
+  [ "$(_pidoor_shell_pi)" = "$want" ]
 }
 pidoor_detail() {
   command -v pi >/dev/null 2>&1 || { printf 'no pi on this host'; return 0; }
   local got want; got="$(command -v pi)"; want="$(_pidoor_dst)"
   if [ "$got" = "$want" ] && [ -x "$want" ]; then printf 'pi resolves to the one-home door (%s)' "$want"
+  elif [ -x "$want" ] && [ "$(_pidoor_shell_pi)" = "$want" ]; then printf 'the operator'"'"'s shell resolves pi to the one-home door (%s)' "$want"
   else printf '`pi` resolves to %s, not the door %s — bin/seat/harness-extensions-install.sh seats the PATH block (YMIR_PI_DOOR_PATH=print shows it)' "$got" "$want"; fi
 }
 f_pidoor() { [ -x "$SCRIPT_DIR/../seat/harness-extensions-install.sh" ] && "$SCRIPT_DIR/../seat/harness-extensions-install.sh" >/dev/null 2>&1; s_pidoor; }
@@ -896,7 +903,7 @@ detail() { # <name> -> the command that prints one short fact
     hoard)     printf '%s\n' "printf 'hoard %s' \"\$(_hoard_root)\" ; [ -d \"\$YMIR_HOME/identity\" ] && printf ' +flat-duplicate' ; printf '\n'" ;;
     autoboot)  printf '%s\n' "$SCRIPT_DIR/../engine/ymir-autoboot.sh verify >/dev/null 2>&1 && echo 'boot proven' || echo 'boot gap — bin/engine/ymir-autoboot.sh verify'" ;;
     seatpaths) printf '%s\n' "printf '%s' \"$(seat_profile)\" ; grep -qF \"$HOME/.bun/bin\" \"$(seat_profile)\" 2>/dev/null && printf ' carries the marked block' || printf ' does not carry ~/.bun/bin — a unit or validator will not find bun'" ;;
-    hooks)     printf '%s\n' "printf 'installed hooks' ; [ -x \"$(cd "$ROOT" && git rev-parse --git-path hooks 2>/dev/null || printf '.git/hooks')/pre-commit\" ] && printf ' present' || printf ' MISSING — a guarded deletion and a staged secret would both pass'" ;;
+    hooks)     printf '%s\n' "printf 'installed hooks' ; _hk=\"$(cd "$ROOT" && git rev-parse --git-path hooks 2>/dev/null || printf '.git/hooks')\"; case \"\$_hk\" in /*) ;; *) _hk=\"$ROOT/\$_hk\" ;; esac; [ -x \"\$_hk/pre-commit\" ] && printf ' present' || printf ' MISSING — a guarded deletion and a staged secret would both pass'" ;;
     seats)     printf '%s\n' seats_detail ;;
     seatreap)  printf '%s\n' "printf 'a finished-idle seat kept past a day' ; for f in $STATE/.*.idle-since $ROOT/state/.*.idle-since; do [ -f \$f ] && echo \$(basename \$f); done" ;;
     packaging) printf '%s\n' "bash \"$SCRIPT_DIR/../gates/guards/packaging-guard.sh\" check 2>&1 | grep -o 'the File directive names a file that does not exist: [^)]*' | head -1 || printf 'every named input exists'" ;;

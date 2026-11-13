@@ -12,7 +12,7 @@
 
 const { spawn } = require('child_process')
 const { existsSync } = require('fs')
-const { join, resolve } = require('path')
+const { join, resolve, dirname } = require('path')
 
 const VERSION = require('../package.json').version
 
@@ -59,11 +59,14 @@ function findElectron() {
   if (process.env.SESSRUMNIR_ELECTRON && existsSync(process.env.SESSRUMNIR_ELECTRON)) {
     return process.env.SESSRUMNIR_ELECTRON
   }
-  // Try to find electron from the package's own node_modules
-  const candidates = [
-    join(__dirname, '..', 'node_modules', 'electron', 'dist', 'electron'),
-    join(__dirname, '..', 'node_modules', '.bin', 'electron'),
-  ]
+  // The app's own node_modules, then every ancestor's (plan 275 S10, 2026-11-12): every Ymir app shares ONE
+  // Electron, which npm hoists to the workspace root — the app-local copy no longer exists, and looking only here
+  // left Sessrúmnir with "Electron not found" while the release held a proved 43.8.9 two folders up.
+  const candidates = []
+  for (let d = join(__dirname, '..'); ; d = dirname(d)) {
+    candidates.push(join(d, 'node_modules', 'electron', 'dist', 'electron'))
+    if (dirname(d) === d) break
+  }
 
   for (const candidate of candidates) {
     if (existsSync(candidate)) {
@@ -141,6 +144,8 @@ function launch() {
   // applies to hlidskjalf/smidja/odrerir. The DECISION lives in the launcher,
   // never hardcoded here.
   const electronArgs = [appPath, '--no-sandbox']
+  // plan 275 S16: the DevTools port, so the app can be tested as a person uses it (unset = none)
+  if (process.env.YMIR_DEVTOOLS_PORT) electronArgs.push(`--remote-debugging-port=${process.env.YMIR_DEVTOOLS_PORT}`)
   if (['1', 'true', 'yes'].includes(String(process.env.YMIR_DESKTOP_DISABLE_GPU ?? '').toLowerCase())) {
     electronArgs.push('--disable-gpu', '--disable-gpu-compositing')
   }

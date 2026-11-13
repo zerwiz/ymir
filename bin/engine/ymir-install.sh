@@ -1669,9 +1669,8 @@ step_desktop() {
   # A headless host has no display; launching a window would only fail.
   # DISPLAY/WAYLAND_DISPLAY are X11/Wayland variables — macOS has a display and
   # neither of them, so testing only those would wrongly skip every Mac.
-  if [ -z "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ] && [ "$(ymir_os)" != macos ]; then
-    add desktop SKIP "no display (headless) — run scripts/electron.sh start --both"; return
-  fi
+  # no display is no reason to skip the shortcuts: a WSL install writes Windows Start-menu shortcuts with no Linux
+  # display at all, and a desktop's entries are files (plan 275 S11). Only the live verify below needs a display.
   # P4 (2026-09-24): the INSTALL-TIME guarantee — before any window is claimed,
   # every surface must resolve an executable runtime that ANSWERS --version and
   # is routed by the right class. A runtime that is merely absent is a FAILURE,
@@ -1687,26 +1686,18 @@ step_desktop() {
     fi
   fi
   # One window per surface that is here: the halls are not one app.
-  raised=0
-  for _v in hlidskjalf smidja odrerir; do
-    "$ROOT/scripts/electron.sh" start --view "$_v" >/dev/null 2>&1 && raised=$((raised+1))
-  done
-  [ -x "$ROOT/bin/desktop/sessrumnir-launch.sh" ] && "$ROOT/bin/desktop/sessrumnir-launch.sh" start >/dev/null 2>&1 && raised=$((raised+1))
-  if [ "$raised" -ge 2 ]; then
-    add desktop OK "verified + raised $raised window(s) — Hlidskjalf · Smíðja · Óðrerir · Sessrúmnir"
-  else
-    add desktop WARN "could not raise every desktop app — ymir hlidskjalf | smidja | sessrumnir"
-  fi
-  # The routing is then proven LIVE (P5): with the windows up, the compositor
-  # must actually hold each surface's class. One retry lets a slow map settle.
-  if [ -x "$ROOT/bin/desktop/desktop-verify.sh" ] && command -v hyprctl >/dev/null 2>&1; then
-    local t=0
-    while [ "$t" -lt 2 ] && ! "$ROOT/bin/desktop/desktop-verify.sh" --live >/dev/null 2>&1; do
-      t=$((t+1)); sleep 3
-    done
-    if ! "$ROOT/bin/desktop/desktop-verify.sh" --live >/dev/null 2>&1; then
-      add desktop FAIL "a raised surface's window is missing its class on the compositor — bin/desktop/desktop-verify.sh --live names it"
+  # plan 275 S11 (2026-11-12): the install writes every app's SHORTCUT on this platform and opens no window. It used
+  # to raise four windows on the user's desk as its proof; the proof is the release's headless check
+  # (bin/engine/release.sh prove), and a person opens an app from its icon.
+  if [ -x "$ROOT/bin/desktop/shortcuts.sh" ]; then
+    local sout
+    if sout="$("$ROOT/bin/desktop/shortcuts.sh" 2>&1)"; then
+      add desktop OK "verified; $(printf '%s' "$sout" | grep -c '"written"') shortcut(s) written ($(printf '%s' "$sout" | sed -n '2p' | tr -d ' "'))"
+    else
+      add desktop WARN "shortcuts owed — $(printf '%s' "$sout" | grep -m1 OWED | tr -d '"')"
     fi
+  else
+    add desktop OK "verified (no shortcut writer in this tree)"
   fi
 }
 
