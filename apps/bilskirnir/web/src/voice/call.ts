@@ -251,12 +251,23 @@ class VoiceCall {
     }
   }
 
+  // plan 275 (2026-11-13), at the Allfather's word: "the chat I'm having on streaming voice is not getting into the
+  // session's chat". Every line, his and the agent's, goes into the room the moment it settles — once.
+  private posted = new Set<string>();
+  private settle(id: string, role: Caption['role'], text: string) {
+    const t = text.trim();
+    if (!t || this.posted.has(id) || !this.sess) return;
+    this.posted.add(id);
+    voiceApi.line(this.botId, this.sess.callId, role, t).catch(() => this.posted.delete(id));
+  }
+
   private caption(id: string | undefined, role: Caption['role'], text: string, final: boolean, mode: 'set' | 'append') {
     if (!id) return;
     const caps = useVoice.getState().captions;
     const i = caps.findIndex((c) => c.id === id);
     if (i < 0) {
       setV({ captions: [...caps, { id, role, text, final }].slice(-200) });
+      if (final) this.settle(id, role, text);
       return;
     }
     const prev = caps[i];
@@ -264,6 +275,7 @@ class VoiceCall {
     const copy = caps.slice();
     copy[i] = next;
     setV({ captions: copy });
+    if (next.final && !prev.final) this.settle(id, role, next.text);
   }
 
   transcript() {

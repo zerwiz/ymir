@@ -238,7 +238,7 @@ ${recent || '(no messages yet)'}`;
 
 // ---------- calls ----------
 
-interface ActiveCall { id: string; botId: string; userId: string; startedAt: number; startSeq: number; tasks: string[] }
+interface ActiveCall { id: string; botId: string; userId: string; startedAt: number; startSeq: number; tasks: string[]; lines?: number }
 const calls = new Map<string, ActiveCall>();
 
 function callEvent(text: string, call: VoiceCallRecord): EventBody {
@@ -495,6 +495,21 @@ async function summarizeCall(botName: string, transcript: { role: string; text: 
   const text = String(res.output_text ?? '').trim();
   return text ? clip(text.replace(/\s+/g, ' '), 240) : null;
 }
+
+/** One settled line of a live call, written into the room as an ordinary message marked as spoken (plan 275). */
+voiceApi.post('/line', async (c) => {
+  const user = c.get('user');
+  const { botId, callId, role, text } = await c.req.json<{ botId: string; callId: string; role: string; text: string }>().catch(() => ({} as any));
+  const bot = ownBot(user.id, botId);
+  if (!bot) return c.json({ error: 'not found' }, 404);
+  const call = calls.get(callId);
+  if (!call || call.botId !== bot.id) return c.json({ error: 'no such call' }, 404);
+  if ((role !== 'user' && role !== 'assistant') || typeof text !== 'string' || !text.trim()) return c.json({ error: 'empty' }, 400);
+  appendRow(bot.id, 'message', { type: 'message', role, text: clip(text.trim(), 2000), from: { kind: 'voice', id: callId, name: 'Voice call' } });
+  call.lines = (call.lines ?? 0) + 1;
+  emitBot(bot.id);
+  return c.json({ ok: true });
+});
 
 voiceApi.post('/end', async (c) => {
   const user = c.get('user');
