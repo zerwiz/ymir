@@ -121,8 +121,13 @@ const HAND_PRESETS: Preset[] = [
  * OpenAI-compatible address are offered here; the rest need a translator (plan 275: LiteLLM, on demand).
  * The catalog carries NO keys — a key is pasted once and kept in the user's private home (plan 275, 2026-11-12).
  */
+/** The user's home: YMIR_HOME, else the one documented default — the server's single place that says it. */
+export function ymirHome(env: NodeJS.ProcessEnv = process.env): string {
+  return env.YMIR_HOME || path.join(env.HOME ?? os.homedir(), 'Documents', 'ymirhome');   // allow-home-default: the server's one resolver, mirroring bin/vault/hoard-lib.sh
+}
+
 function catalogPresets(hand: Preset[]): Preset[] {
-  const home = process.env.YMIR_HOME || path.join(os.homedir(), 'Documents', 'ymirhome');
+  const home = ymirHome();
   let cat: Record<string, any> = {};
   try { cat = JSON.parse(fs.readFileSync(path.join(home, 'state', 'models.dev.json'), 'utf8')); } catch { return []; }
   const norm = (u: string) => u.replace(/\/+$/, '').toLowerCase();
@@ -447,7 +452,7 @@ function allowListPath(env: NodeJS.ProcessEnv, door: string | null): string {
     const p = (r.stdout ?? '').trim().split('\n').pop();
     if (r.status === 0 && p) return p;
   }
-  const settings = env.YMIR_SETTINGS_DIR || path.join(env.YMIR_HOME || path.join(env.HOME ?? os.homedir(), 'Documents/ymirhome'), 'config');
+  const settings = env.YMIR_SETTINGS_DIR || path.join(ymirHome(env), 'config');
   return path.join(settings, 'models-allowed.yaml');
 }
 

@@ -15,7 +15,7 @@ import path from 'node:path';
 import YAML from 'yaml';
 import {
   type AddedProvider, type Choice, type DetectOptions, type KeyRef, type FoundProvider,
-  detect, modelBlock, modelsDirFor, normalizeBase, PRESETS, readAdded, readChoices, resolveKey,
+  detect, modelBlock, modelsDirFor, normalizeBase, PRESETS, readAdded, readChoices, resolveKey, ymirHome,
 } from './detect.js';
 
 function writePrivate(file: string, content: string) {
@@ -28,7 +28,7 @@ const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(
 
 /** Where a pasted key is kept: the user's home secrets when the home exists, else the app's ignored data/. */
 export function keyHome(env: NodeJS.ProcessEnv, modelsDir: string): { file: string; where: string } {
-  const home = env.YMIR_HOME || path.join(env.HOME ?? os.homedir(), 'Documents/ymirhome');
+  const home = ymirHome(env);
   const secrets = path.join(home, 'hodd', 'secrets');
   if (fs.existsSync(path.join(home, 'hodd'))) return { file: path.join(secrets, 'bilskirnir-providers.env'), where: 'your home secrets' };
   return { file: path.join(modelsDir, 'keys.env'), where: "the app's private data folder" };

@@ -15,7 +15,7 @@
 # says "handed", never "done"; the answer is what proves it.
 set -u
 ROOT="$(CDPATH='' cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-HOME_DIR="${YMIR_HOME:-$HOME/Documents/ymirhome}"   # allow-home-default: the one home
+. "$ROOT/bin/vault/hoard-lib.sh"; ymir_home_root HOME_DIR   # the one resolver: env, then recorded, then the default
 REG="$HOME_DIR/hodd/data/fleet.json"
 me="$(hostname -s)"
 seat="$(sed -n 's/^primary=//p' "$HOME/.pi/agent/extensions/.ymir-seat" 2>/dev/null | head -1)"

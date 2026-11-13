@@ -13,6 +13,7 @@
 set -uo pipefail
 APP="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$APP/../.." && pwd)"
+RODD_HOME=""; . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null && ymir_home_root RODD_HOME   # the one resolver
 PORT_HOST="${RODD_HOST_PORT:-8890}"
 PORT_BOX="${RODD_TOOLBOX_PORT:-8891}"
 PY="${RODD_PYTHON:-$HOME/venvs/s2s/bin/python}"   # allow-home-default: the engine lives in the seat own venv
@@ -230,7 +231,7 @@ else
     _remote="$(ssh -o BatchMode=yes -o ConnectTimeout=5 "$seat" 'd=${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}; python3 $d/bin/voice/rodd-head.py env' 2>/dev/null | sed -n 's/^RODD_VOICE_HEAD_MODEL=//p' | head -1)"
     [ -n "$_remote" ] && _mind="$_remote"
   fi
-  if [ -n "$_mind" ] && python3 - "$_mind" "${YMIR_HOME:-$HOME/Documents/ymirhome}/state/models.dev.json" <<'PY' 2>/dev/null
+  if [ -n "$_mind" ] && python3 - "$_mind" "$RODD_HOME/state/models.dev.json" <<'PY' 2>/dev/null
 import json, re, sys
 mind, cat = sys.argv[1], sys.argv[2]
 if re.search(r"vision|-vl\b|vl-|llava|minicpm-v", mind, re.I): sys.exit(0)

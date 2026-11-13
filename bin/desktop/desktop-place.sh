@@ -129,7 +129,8 @@ install_entries() {
   # Rödd runs the PIN, never a tree (plan 257 H7): __YMIR_RUNTIME__ is the pinned runtime
   # from the home's runtime.env (the one default the other pinned doors share), and her
   # unit template lands beside the user's other units so the pinned-runtime ward sees her.
-  local pin="" conf="${YMIR_HOME:-$HOME/Documents/ymirhome}/config/runtime.env"   # allow-home-default: the one home
+  local pin="" home=""; . "$ROOT/bin/vault/hoard-lib.sh" && ymir_home_root home
+  local conf="$home/config/runtime.env"
   pin="${YMIR_RUNTIME_DIR:-}"
   if [ -z "$pin" ] && [ -r "$conf" ]; then
     pin="$(sed -n 's/^[[:space:]]*YMIR_RUNTIME_DIR[[:space:]]*=[[:space:]]*//p' "$conf" | head -1 | tr -d "\"'")"

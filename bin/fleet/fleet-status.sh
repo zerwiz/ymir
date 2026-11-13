@@ -17,7 +17,8 @@
 # A row a machine cannot answer is said ("down"), never guessed. A registry row with no ssh user or tailnet name
 # (a placeholder such as "localhost" or "unknown") is listed as "no road", not probed.
 set -u
-HOME_DIR="${YMIR_HOME:-$HOME/Documents/ymirhome}"   # allow-home-default: the one home
+ROOT="$(CDPATH='' cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+. "$ROOT/bin/vault/hoard-lib.sh"; ymir_home_root HOME_DIR   # the one resolver: env, then recorded, then the default
 REG="$HOME_DIR/hodd/data/fleet.json"
 LIMIT="${YMIR_FLEET_STATUS_TIMEOUT:-8}"
 JSON=0; ONLY=""
@@ -28,7 +29,7 @@ for a in "$@"; do case "$a" in --json) JSON=1 ;; -h|--help) sed -n '2,8p' "$0" |
 PROBE='pin="${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}"
 c=$(git -C "$pin" log -1 --format="%h %cr" 2>/dev/null || echo "none")
 rel=$([ -L "$pin" ] && echo release || echo checkout)
-h=$(ls -d "$HOME/Documents/ymirhome" 2>/dev/null)
+h=""; . "$pin/bin/vault/hoard-lib.sh" 2>/dev/null && ymir_home_root h
 u=$(grep -E "^UPDATED|^GUARD|Model unavailable" "$h/hodd/state/groa-agent.log" 2>/dev/null | tail -1 | cut -c1-70); t=$(grep -oE "^── [0-9T:+-]+ tick finished \(rc [0-9]+\)" "$h/hodd/state/groa-agent.log" 2>/dev/null | tail -1 | sed -E "s/^── ([0-9-]+)T([0-9:]{5}).*\(rc ([0-9]+)\)/\1 \2 rc \3/"); u="${t:-never} · ${u:-no outcome line}"
 l=$(cut -d" " -f1 /proc/loadavg 2>/dev/null); n=$(nproc 2>/dev/null)
 f=$(systemctl --user --failed --no-legend 2>/dev/null | wc -l)

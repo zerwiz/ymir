@@ -17,7 +17,8 @@
 # Settings (RULES/07): YMIR_PROVIDERS_URL (https://models.dev/api.json), YMIR_HOME (the home).
 set -u
 URL="${YMIR_PROVIDERS_URL:-https://models.dev/api.json}"
-HOME_DIR="${YMIR_HOME:-$HOME/Documents/ymirhome}"   # allow-home-default: the one home
+ROOT="$(CDPATH='' cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+. "$ROOT/bin/vault/hoard-lib.sh"; ymir_home_root HOME_DIR   # the one resolver: env, then recorded, then the default
 CACHE="$HOME_DIR/state/models.dev.json"
 MODE=refresh
 case "${1:-}" in --force) MODE=force ;; --check) MODE=check ;; "") ;; -h|--help) sed -n '2,8p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; *) echo "unknown option $1" >&2; exit 2 ;; esac

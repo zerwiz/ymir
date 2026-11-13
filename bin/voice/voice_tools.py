@@ -230,7 +230,7 @@ TOOLS = [
         "type": "function",
         "name": "letter_types",
         "description": ("The house's letter templates: every letter type (welcome, follow-up, answer, request, "
-                        "proposal, …) with what it is for, and the themes (ymir-light, inmost, wayof, veyral, …). "
+                        "proposal, …) with what it is for, and the themes (ymir-light and the companies' own, …). "
                         "Use it FIRST whenever he asks for an email or a letter; then letter_template, then letter_draft."),
         "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
     },

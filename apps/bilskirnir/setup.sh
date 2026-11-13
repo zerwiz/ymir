@@ -35,7 +35,7 @@ APP="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CHECK=0; [ "${1-}" = "--check" ] && CHECK=1
 case "${1-}" in -h|--help) sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 
-YMIR_HOME="${YMIR_HOME:-$HOME/Documents/ymirhome}"
+. "$APP/../../bin/vault/hoard-lib.sh" && ymir_home_root YMIR_HOME   # the one resolver
 HOST="${YMIR_HOST:-$(hostname -s)}"
 HPORT="${BILSKIRNIR_HERMES_PORT:-8642}"
 RUNTIME="${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}"; [ -f "$RUNTIME/bin/mcp/ymir-mcp.py" ] || RUNTIME="$(dirname "$(dirname "$APP")")"

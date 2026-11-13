@@ -20,7 +20,7 @@ pass=0; fail=0
 t() { local name=$1; shift; if "$@"; then printf '  ok   %s\n' "$name"; pass=$((pass+1)); else printf '  FAIL %s\n' "$name"; fail=$((fail+1)); fi; }
 
 T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
-export HOME="$T/home" XDG_CONFIG_HOME="$T/home/.config" XDG_DATA_HOME="$T/home/.local/share"
+export HOME="$T/home" XDG_CONFIG_HOME="$T/home/.config" XDG_DATA_HOME="$T/home/.local/share"   # allow-home-default: the test fences HOME in a temp dir
 export YMIR_HOME="$T/ymirhome" YMIR_STATE_DIR="$T/state"
 export YMIR_UNIT_DIR="$T/units" YMIR_APPLICATIONS_DIR="$T/apps-dir" YMIR_AUTOSTART_DIR="$T/autostart"
 export YMIR_UNITS_NO_SYSTEMCTL=1 YMIR_UNITS_NO_ROLE_PROBE=1
