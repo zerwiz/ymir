@@ -69,6 +69,8 @@ export interface MessageBody {
   /** Set when a message came from another bot, a routine or a voice call rather than the user typing. */
   from?: { kind: 'bot' | 'routine' | 'voice'; id: string; name: string };
   citations?: { url: string; title?: string }[];
+  /** He liked this answer (plan 275, 2026-11-13); the agent is told which answers he liked. */
+  liked?: boolean;
 }
 
 export interface ToolCallBody {

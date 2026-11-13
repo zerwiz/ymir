@@ -280,6 +280,18 @@ api.post('/bots/:id/messages', async (c) => {
   return c.json({ row });
 });
 
+/** Like (or unlike) one of the agent's answers (plan 275). The mark lives on the message; the agent reads it in its instructions. */
+api.post('/bots/:id/rows/:seq/like', async (c) => {
+  const b = ownBot(c.get('user').id, c.req.param('id'));
+  if (!b) return c.json({ error: 'not found' }, 404);
+  const row = getRow(b.id, Number(c.req.param('seq')));
+  if (!row || row.body.type !== 'message' || row.body.role !== 'assistant') return c.json({ error: 'only an answer of the agent can be liked' }, 400);
+  const { liked } = await c.req.json<{ liked?: boolean }>().catch(() => ({ liked: true }));
+  updateRow(b.id, row.seq, { ...row.body, liked: liked !== false });
+  emitBot(b.id);
+  return c.json({ ok: true, liked: liked !== false });
+});
+
 api.post('/bots/:id/interrupt', (c) => {
   const b = ownBot(c.get('user').id, c.req.param('id'));
   if (!b) return c.json({ error: 'not found' }, 404);
