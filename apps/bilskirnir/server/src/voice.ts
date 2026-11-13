@@ -530,10 +530,25 @@ voiceApi.post('/end', async (c) => {
   const row = appendRow(bot.id, 'event', callEvent(base, record));
   emitBot(bot.id);
 
-  // Summarise in the background and rewrite the row.
-  summarizeCall(bot.name, lines, call.tasks)
-    .then((summary) => { if (summary) updateRow(bot.id, row.seq, callEvent(`${base}. ${summary}`, { ...record, summary })); })
-    .catch((e) => console.warn('[voice] call summary failed:', e?.message));
+  if (house.road === 'house') {
+    // plan 275 (2026-11-13): on the house road the agent itself hears the call. Its lines are handed to the agent's own
+    // Hermes conversation — so what was said is in its memory for the next written turn — and the agent answers with
+    // the call's one-line summary, in its own model (the xAI summariser needs a key the house does not have).
+    if (lines.length || call.tasks.length) {
+      const said = lines.map((t) => `${t.role === 'user' ? 'He' : bot.name}: ${t.text}`).join('\n').slice(-8000);
+      enqueue(bot.id, {
+        type: 'user',
+        text: `[The voice call just ended, ${fmtDuration(durationMs)}. What was said:\n${said || '(nothing)'}`
+          + `${call.tasks.length ? `\nWork handed off during the call:\n${call.tasks.map((t) => `- ${t}`).join('\n')}` : ''}\n`
+          + 'Keep what matters from it in mind. Reply with ONE short line that sums up the call — no greeting.]',
+      });
+    }
+  } else {
+    // Summarise in the background and rewrite the row.
+    summarizeCall(bot.name, lines, call.tasks)
+      .then((summary) => { if (summary) updateRow(bot.id, row.seq, callEvent(`${base}. ${summary}`, { ...record, summary })); })
+      .catch((e) => console.warn('[voice] call summary failed:', e?.message));
+  }
   return c.json({ ok: true, seq: row.seq });
 });
 

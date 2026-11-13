@@ -168,8 +168,29 @@ configApi.post('/bots/:id/engine/login', async (c) => {
 // ---------- the Models screen: what the user already has, and one click to use it ----------
 
 /** Every provider found (environment, pi, OpenCode, Hermes, local servers), its models, and the fleet's verdict on each. Keys are never sent. */
+// The catalog is slow to build (it reaches every rail and hosted provider) and the settings panel sat on "Looking…" for
+// about 20 s each time it opened (plan 275, 2026-11-13). The last answer is handed out at once and refreshed in the
+// background when a minute old; it is warmed at start and dropped when a provider is added or removed.
+let catalogCache: { at: number; value: Awaited<ReturnType<typeof detect>> } | null = null;
+let catalogBuilding: Promise<Awaited<ReturnType<typeof detect>>> | null = null;
+function buildCatalog() {
+  if (!catalogBuilding) {
+    catalogBuilding = detect()
+      .then((value) => { catalogCache = { at: Date.now(), value }; return value; })
+      .finally(() => { catalogBuilding = null; });
+  }
+  return catalogBuilding;
+}
+async function cachedDetect() {
+  if (!catalogCache) return buildCatalog();
+  if (Date.now() - catalogCache.at > 60_000) buildCatalog().catch(() => {});
+  return catalogCache.value;
+}
+function dropCatalog() { catalogCache = null; }
+setTimeout(() => { buildCatalog().catch(() => {}); }, 2000).unref();
+
 configApi.get('/models', async (c) => {
-  const d = forBrowser(await detect());
+  const d = forBrowser(await cachedDetect());
   const choices = readChoices(modelsDirFor());
   const bots = (db.prepare("SELECT id, name, is_primary, engine FROM bots WHERE COALESCE(kind,'agent') <> 'room' AND COALESCE(hidden,0)=0 ORDER BY is_primary DESC, created_at ASC").all() as any[])
     .filter((b) => b.engine === 'primary' || b.engine === 'managed')
@@ -182,6 +203,7 @@ configApi.get('/models', async (c) => {
 
 /** Add a provider by preset + key, or by base URL alone. The key goes to the user's own secrets, never back to the browser. */
 configApi.post('/models/providers', async (c) => {
+  dropCatalog();
   const p = await c.req.json<{ preset?: string; name?: string; baseUrl?: string; key?: string }>().catch(() => ({} as any));
   try {
     const r = await addProvider(p);
@@ -192,6 +214,7 @@ configApi.post('/models/providers', async (c) => {
 });
 
 configApi.delete('/models/providers/:id', (c) => {
+  dropCatalog();
   removeProvider(c.req.param('id'));
   return c.json({ ok: true });
 });
