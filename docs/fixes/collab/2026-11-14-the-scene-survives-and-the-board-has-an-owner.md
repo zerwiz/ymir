@@ -76,3 +76,7 @@ again with nothing in memory, and a joiner receives the twelve bytes it drew bef
 - `systems/whiteboard/services/collab/index.mjs` — the join restores from disk; the three save doors; snapshots flushed on leave and on stop
 - `systems/whiteboard/services/collab/test/*.test.mjs` — the unit truths
 - `systems/whiteboard/services/collab/test/prove-live.mjs` — the restart proof
+
+## CHANGE LOG
+
+- 2026-11-13 — review-mend: added missing heading for #729
