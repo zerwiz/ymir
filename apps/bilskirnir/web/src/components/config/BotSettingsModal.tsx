@@ -318,7 +318,9 @@ function MemoriesTab({ bot, data, onChange }: { bot: Bot; data: BotSettingsBundl
     setHidden((h) => new Set(h).add(m.id));
     try { await configApi.deleteMemory(m.id); onChange(); } catch { setHidden((h) => { const n = new Set(h); n.delete(m.id); return n; }); }
   };
-  const fill = data ? Math.min(100, Math.round((data.memory.historyChars / data.memory.compactAtChars) * 100)) : 0;
+  // a fresh room has no limit measured yet (compactAtChars 0): said in words, never "NaN% full" (plan 275)
+  const measured = !!data && data.memory.compactAtChars > 0;
+  const fill = measured ? Math.min(100, Math.round((data!.memory.historyChars / data!.memory.compactAtChars) * 100)) : 0;
   return (
     <div className="cfg-page">
       <div className="cfg-page__head">
@@ -352,7 +354,7 @@ function MemoriesTab({ bot, data, onChange }: { bot: Bot; data: BotSettingsBundl
       )}
       {data && (
         <div className="cfg-meter" title="Older messages are summarized automatically when this fills up.">
-          <div className="cfg-meter__label"><span>Conversation memory</span><span>{fill}% full</span></div>
+          <div className="cfg-meter__label"><span>Conversation memory</span><span>{measured ? `${fill}% full` : 'not measured yet'}</span></div>
           <div className="cfg-meter__track"><span style={{ width: `${Math.max(2, fill)}%` }} /></div>
           <div className="cfg-field__hint">
             When it fills up, older messages get summarized so {bot.name} can keep going.
