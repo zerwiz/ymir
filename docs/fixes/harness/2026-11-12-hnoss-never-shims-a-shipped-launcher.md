@@ -6,7 +6,7 @@
 ## Why
 `write_shim` writes a four-line compatibility shim to whatever "old path" a config still names. On heimdall the config
 named `~/ymir/bin/pi/hnoss-mcp-launch.sh`, the working tree's own shipped launcher. The update ran from the pin, so the
-shim replaced the working tree's 230-line launcher with `exec "/home/heimdall/ymir/bin/pi/hnoss-mcp-launch.sh"`, which
+shim replaced the working tree's 230-line launcher with `exec "<home>/ymir/bin/pi/hnoss-mcp-launch.sh"`, which
 is an `exec` of itself. The tree was then dirty, and the next update skipped it as `dirty (1)`. It happened twice on
 2026-11-12, the second time during the S8b proof of plan 275.
 

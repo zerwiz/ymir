@@ -69,7 +69,7 @@ def scan():
     def rel(src):
         # plan 275 (2026-11-12): the registry is SHARED by every seat through the home, so a source is written relative
         # to its tree ("ymir:…", "home:…"), never as one machine's absolute path — heimdall and nidavellir rewrote every
-        # line in turn (/home/heimdall/… vs /home/zerwizomar/…) and the file conflicted on every sync
+        # line in turn (one machine's home path vs another's) and the file conflicted on every sync
         for tag, base in (("ymir", root), ("home", home)):
             b = os.path.realpath(base) + os.sep
             r = os.path.realpath(src)
