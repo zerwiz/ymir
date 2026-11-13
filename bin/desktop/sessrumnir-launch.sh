@@ -96,6 +96,73 @@ view_pids() {
 }
 is_running() { [ -n "$(view_pids)" ]; }
 
+# ── THE TREE AND ITS BUILD (plan 283 phase 4, 2026-11-13) ─────────────────────
+# A launcher that opens a build older than its source tells the operator the APP is broken
+# when only the BUILD is behind — and the source tree is where every repair is measured, so
+# a fix "verified" in one tree and started from another is how tonight's ember stayed broken
+# after being fixed. Two facts are printed (the tree, the build) and a stale build is
+# REFUSED with the exact command, never rebuilt silently: a silent rebuild hides the drift.
+# An installed package copy carries no `src/` next to `out/`; there the check says `package`
+# and passes — a clean skip with its reason, never a green that hides a real tree.
+mtime_of() {  # <path> -> epoch seconds, or nothing
+  [ -e "$1" ] || return 0
+  if stat -c %Y "$1" >/dev/null 2>&1; then stat -c %Y "$1"; else stat -f %m "$1" 2>/dev/null; fi
+}
+iso_of() {  # <epoch> -> local ISO minute
+  [ -n "${1:-}" ] || { printf 'none'; return 0; }
+  date -d "@$1" '+%Y-%m-%dT%H:%M' 2>/dev/null || date -r "$1" '+%Y-%m-%dT%H:%M' 2>/dev/null || printf 'none'
+}
+newest_source_mtime() {  # newest mtime among the app's sources
+  local newest=0 m f
+  for f in "$APP/package.json" "$APP/electron.vite.config.ts"; do
+    m="$(mtime_of "$f")"; [ -n "$m" ] && [ "$m" -gt "$newest" ] && newest="$m"
+  done
+  if [ -d "$APP/src" ]; then
+    while IFS= read -r m; do
+      [ -n "$m" ] || continue
+      [ "$m" -gt "$newest" ] && newest="$m"
+    done <<EOF
+$(find "$APP/src" "$APP/resources" -type f -printf '%T@\n' 2>/dev/null | cut -d. -f1)
+EOF
+  fi
+  [ "$newest" -gt 0 ] && printf '%s' "$newest"
+}
+# fresh | stale | unbuilt | package | unknown — and the two stamps, for the refusal line.
+BUILD_STATE=""; BUILD_AT=""; SRC_AT=""
+build_probe() {
+  [ -n "$BUILD_STATE" ] && return 0
+  local index="$APP/out/renderer/index.html" m_src m_out
+  if [ ! -d "$APP/src" ] && [ -e "$APP/out/renderer/index.html" ]; then BUILD_STATE=package; return 0; fi
+  if [ ! -e "$index" ]; then BUILD_STATE=unbuilt; return 0; fi
+  m_src="$(newest_source_mtime)"; m_out="$(mtime_of "$index")"
+  if [ -z "${m_src:-}" ] || [ -z "${m_out:-}" ]; then BUILD_STATE=unknown; return 0; fi
+  SRC_AT="$(iso_of "$m_src")"; BUILD_AT="$(iso_of "$m_out")"
+  if [ "$m_out" -lt "$m_src" ]; then BUILD_STATE=stale; else BUILD_STATE=fresh; fi
+}
+build_state() {
+  build_probe
+  case "$BUILD_STATE" in
+    fresh) printf 'fresh %s' "$BUILD_AT" ;;
+    stale) printf 'STALE build %s, source %s' "$BUILD_AT" "$SRC_AT" ;;
+    unbuilt) printf 'unbuilt' ;;
+    package) printf 'package copy' ;;
+    *) printf 'unknown' ;;
+  esac
+}
+build_refuse() {
+  local cmd
+  cmd="(cd $APP && npm run build)"
+  printf 'error: Sessrúmnir will not start a build that is behind its source\n' >&2
+  printf '  tree:   %s\n' "$APP" >&2
+  if [ "$BUILD_STATE" = unbuilt ]; then
+    printf '  build:  no out/renderer/index.html at all\n' >&2
+  else
+    printf '  build:  %s   source: %s\n' "$BUILD_AT" "$SRC_AT" >&2
+  fi
+  printf 'help: %s   (or start the pinned app: ymir-app sessrumnir — the pin is built at release)\n' "$cmd" >&2
+  printf '      SESSRUMNIR_ALLOW_STALE=1 starts it anyway, and says so\n' >&2
+}
+
 # Raise the running window. The desktop-placement rule may have opened it on its
 # own numbered desktop (desktop-place.sh), so a launch from elsewhere would
 # otherwise show nothing — the focus dispatch also switches to where it sits.
@@ -103,6 +170,7 @@ is_running() { [ -n "$(view_pids)" ]; }
 # classic `focuswindow class:...` form does not parse).
 focus_window() {
   [ "${SESSRUMNIR_NO_FOCUS:-0}" = 1 ] && return 0
+  [ "${YMIR_APP_FOLLOWING:-0}" = 1 ] && return 0   # ymir-app brings it to the user's desktop (2026-11-14)
   command -v hyprctl >/dev/null 2>&1 || return 0
   hyprctl dispatch "hl.dsp.focus({window=\"class:^ymir-sessrumnir\$\"})" >/dev/null 2>&1 || true
 }
@@ -111,9 +179,9 @@ case "$ACTION" in
   status)
     if is_running; then
       p="$(view_pids | head -1)"
-      printf 'sessrumnir[1]{state,pid}:\n  "up",%s\n' "$p"
+      printf 'sessrumnir[1]{state,pid,tree,build}:\n  "up",%s,"%s","%s"\n' "$p" "$APP" "$(build_state)"
     else
-      printf 'sessrumnir[1]{state,pid}:\n  "down",0\n'
+      printf 'sessrumnir[1]{state,pid,tree,build}:\n  "down",0,"%s","%s"\n' "$APP" "$(build_state)"
     fi
     exit 0 ;;
   stop)
@@ -185,6 +253,25 @@ esac
 export YMIR_DESKTOP_DISABLE_GPU
 
 START_TS="$(date -Is)"
+
+if [ "${SESSRUMNIR_ALLOW_STALE:-0}" != 1 ]; then
+  build_probe
+  case "$BUILD_STATE" in
+    stale|unbuilt) build_refuse; exit 1 ;;
+  esac
+fi
+
+# ── THE PATH THE APP'S OWN SPAWNS INHERIT (plan 283, the seat fault, 2026-11-13) ──
+# Measured: the Electron main process can arrive with NO PATH AT ALL (the launcher's child
+# carried a 9 KB environment and not one PATH entry), so the app resolved `pi` to a bare
+# npm global binary. That binary loads BOTH the pinned tree from the settings and this
+# checkout's own `.pi/extensions`, every tool registers twice, and pi exits before a seat
+# exists — the operator saw "Couldn't start Brokk". The house already has the one-home
+# door (`~/.pi/agent/bin/pi`, RULES/13); it must be the FIRST pi on the child's PATH, and
+# the rest of the seat's PATH is kept, never replaced.
+export PATH="${HOME}/.pi/agent/bin:${PATH:-/usr/local/bin:/usr/bin:/bin}:${HOME}/.local/bin:${HOME}/.npm-global/bin"
+printf '[launcher] tree=%s build=%s\n' "$APP" "$(build_state)" >>"$LOG_FILE"
+
 nohup node "$APP/bin/sessrumnir.js" "${args[@]}" >"$LOG_FILE" 2>&1 < /dev/null &
 LAUNCH_PID=$!
 echo $LAUNCH_PID >"$PID_FILE"

@@ -5,12 +5,18 @@ interface EmberBackgroundProps {
 }
 
 /**
- * EmberBackground — the hearth of the landing page, carried into the chat.
+ * EmberBackground — Sessrúmnir's ONE hearth: the landing's fire and the chat column's.
  *
  * The same little fire-dots that fly around the landing's hero (Ginnungagap):
- * 26 embers rise slowly with a gentle sway, seeded fresh on any resize, drawn
- * on one canvas behind the chat column. Purely decorative — pointer-events
- * none, aria-hidden, subtle enough that text stays the master of the room.
+ * 30 embers rise slowly with a gentle sway, seeded fresh on any resize, drawn
+ * on one canvas behind the column. Purely decorative — pointer-events none,
+ * aria-hidden, subtle enough that text stays the master of the room.
+ *
+ * ONE IMPLEMENTATION, ON PURPOSE (plan 283, 2026-11-13). Until tonight this app carried
+ * three hearths — this one, a dead `EmberBackground.tsx` twin and a dark copy of
+ * `midgard/design-system/ember.js` — so every repair landed in a file the other two did
+ * not read and the fire "came back broken" after being fixed. The other apps keep using
+ * the shared module; this app keeps this port, and it is the only file to change.
  */
 export function EmberBackground({ className = '' }: EmberBackgroundProps): React.JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -39,15 +45,23 @@ export function EmberBackground({ className = '' }: EmberBackgroundProps): React
       canvas.height = Math.max(1, H * dpr)
       context.setTransform(dpr, 0, 0, dpr, 0, 0)
     }
+    // The fire rises FROM THE FLOOR (his words, 2026-11-13: "the chat dont have it from
+    // the bottom"). It used to be seeded entirely BELOW the bottom edge, so a cold view
+    // showed an empty room for the seconds it takes one ember to climb into sight, and a
+    // view that is shown for a moment showed nothing at all. Half the fire now starts
+    // inside the lower half of the column — densest at the floor — and the rest waits
+    // just under it, so the hearth is alight on the first painted frame and keeps rising.
     function init() {
       embers = []
       haze = []
-      for (let i = 0; i < 30; i++) {
+      const total = 30
+      const alight = Math.ceil(total * 0.5)
+      for (let i = 0; i < total; i++) {
         embers.push({
           x: Math.random() * W,
-          y: H + Math.random() * 24,
+          y: i < alight ? H * (0.45 + Math.random() * 0.55) : H + Math.random() * 36,
           r: 1.0 + Math.random() * 1.6,
-          v: 0.14 + Math.random() * 0.34,
+          v: 0.18 + Math.random() * 0.42,
           ph: Math.random() * 6.28,
           sp: 0.6 + Math.random() * 1.4,
         })
@@ -95,13 +109,32 @@ export function EmberBackground({ className = '' }: EmberBackgroundProps): React
       raf = requestAnimationFrame(loop)
     }
     let raf = 0
+    let timer: ReturnType<typeof setInterval> | null = null
     function onResize() {
       size()
       init()
+      // Resizing the buffer CLEARS the canvas; draw once here so a pane split or a
+      // panel toggle never leaves one blank frame of cold hearth.
+      frame()
     }
-    size()
-    init()
-    raf = requestAnimationFrame(loop)
+    // A canvas that mounts before its column has a box — the chat is mounted while the
+    // landing shows — stayed at the 1x1 it was sized to, and only a window resize could
+    // ever mend it. That is why the chat had no fire at all on 2026-11-13 while the landing
+    // did. So: size now, and if there is no box yet ask again every 250 ms until there is.
+    // Nothing is ever drawn into a single pixel again.
+    function begin(): boolean {
+      size()
+      if (W < 2 || H < 2) return false
+      if (timer) {
+        clearInterval(timer)
+        timer = null
+      }
+      init()
+      frame()
+      raf = requestAnimationFrame(loop)
+      return true
+    }
+    if (!begin()) timer = setInterval(begin, 250)
     window.addEventListener('resize', onResize)
     // The host is usually mounted HIDDEN (the app keeps the chat mounted while another
     // view shows), so at mount its rect is 0x0, the canvas was sized 1x1, and the embers
@@ -128,10 +161,21 @@ export function EmberBackground({ className = '' }: EmberBackgroundProps): React
     }
     return () => {
       cancelAnimationFrame(raf)
+      if (timer) clearInterval(timer)
       window.removeEventListener('resize', onResize)
       if (ro) ro.disconnect()
     }
   }, [])
 
-  return <canvas ref={canvasRef} aria-hidden="true" className={className} />
+  // `width`/`height` here are the LAYOUT size, never the drawing buffer: a canvas is a
+  // replaced element, so `absolute inset-0` alone leaves it at its intrinsic 1x1 and the
+  // fire is a single pixel in the corner. The buffer is still set by size() at dpr.
+  return (
+    <canvas
+      ref={canvasRef}
+      aria-hidden="true"
+      className={className}
+      style={{ width: '100%', height: '100%' }}
+    />
+  )
 }

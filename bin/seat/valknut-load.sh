@@ -322,6 +322,62 @@ if [ "$MODE_CHECK" = "1" ]; then
   else
     printf '  %-46s %s\n' "pi settings name the extensions tree" "FAIL — run: bin/seat/valknut-load.sh --pi, or seat the door (bin/seat/harness-extensions-install.sh)"; fails=$((fails+1))
   fi
+  # ── THE SEAT'S OWN DOOR (plan 283, 2026-11-13) ──────────────────────────────
+  # Measured this night: the Allfather's seat printed forty-four `Tool "x" conflicts with …`
+  # lines and pi exited before a seat existed ("Couldn't start Brokk"). The cause was not a
+  # second tree — both trees were byte-identical — but a SPAWNER that bypassed the house's
+  # one-home door: the Electron main process carried no PATH, so the app resolved a bare npm
+  # `pi`, which loads the pin from the settings AND this checkout's `.pi/`, and pi does not
+  # de-duplicate. The door (`$HOME/.pi/agent/bin/pi`) is the cure, and it is only a cure while
+  # every seat actually gets it. These four lines each can fail; the last one PROVES the load.
+  _door="${HOME}/.pi/agent/bin/pi"
+  if [ -x "$_door" ] && grep -q 'pi-door' "$_door" 2>/dev/null; then
+    printf '  %-46s %s\n' "the one-home door is seated" "PASS -> $_door"
+  else
+    printf '  %-46s %s\n' "the one-home door is seated" "FAIL — run: bin/seat/harness-extensions-install.sh"
+    fails=$((fails+1))
+  fi
+  _first_pi="$(command -v pi 2>/dev/null || true)"
+  if [ -n "$_first_pi" ] && [ "$_first_pi" = "$_door" ]; then
+    printf '  %-46s %s\n' "pi first on PATH is the door" "PASS -> $_first_pi"
+  else
+    printf '  %-46s %s\n' "pi first on PATH is the door" "FAIL — ${_first_pi:-nothing} shadows it (a shim before ~/.pi/agent/bin)"
+    fails=$((fails+1))
+  fi
+  if [ -x "$_door" ]; then
+    _verdict="$(bash "$_door" --why 2>/dev/null | sed -n 's/^  "\([a-z]*\)",.*/\1/p' | head -1)"
+    case "$_verdict" in
+      pass|onehome)
+        printf '  %-46s %s\n' "the door's verdict in this tree" "PASS -> $_verdict" ;;
+      *)
+        printf '  %-46s %s\n' "the door's verdict in this tree" "FAIL -> ${_verdict:-no answer from the door}"
+        fails=$((fails+1)) ;;
+    esac
+    # The load itself, in this tree: pi --list-models loads every extension and names any
+    # collision on stderr, without a model call. Zero conflict lines is the proof.
+    _conflicts="$(cd "$ROOT" && timeout 90 bash "$_door" --list-models 2>&1 >/dev/null | grep -c 'conflicts with' || true)"
+    if [ "${_conflicts:-1}" = 0 ]; then
+      printf '  %-46s %s\n' "a seat loads extensions once here" "PASS (0 conflicts)"
+    else
+      _first="$(cd "$ROOT" && timeout 90 bash "$_door" --list-models 2>&1 >/dev/null | grep -m1 'conflicts with' || true)"
+      printf '  %-46s %s\n' "a seat loads extensions once here" "FAIL ($_conflicts conflict lines) — ${_first:0:90}"
+      fails=$((fails+1))
+    fi
+    # THE SHAPE THAT ACTUALLY FAILED (2026-11-13): the desktop app spawns `pi … -e <its own
+    # permissions extension>` and NO `-ne`, so discovery stays on. The door used to read any
+    # `-e` as "the caller owns the set" and pass through to the colliding load. This line
+    # holds that reading to account with the app's own argument, not a synthetic one.
+    _perm="$ROOT/apps/sessrumnir/resources/pi-desktop-permissions.ts"
+    if [ -r "$_perm" ]; then
+      _c2="$(cd "$ROOT" && timeout 90 bash "$_door" --list-models -e "$_perm" 2>&1 >/dev/null | grep -c 'conflicts with' || true)"
+      if [ "${_c2:-1}" = 0 ]; then
+        printf '  %-46s %s\n' "a seat that adds its own -e still loads once" "PASS (0 conflicts)"
+      else
+        printf '  %-46s %s\n' "a seat that adds its own -e still loads once" "FAIL ($_c2 conflicts) — the door passes a lone -e through; it must only pass -ne through"
+        fails=$((fails+1))
+      fi
+    fi
+  fi
   printf 'check{pi-extension-check}:
 '
   if [ "$fails" -eq 0 ]; then

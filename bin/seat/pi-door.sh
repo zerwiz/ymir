@@ -15,7 +15,11 @@
 #
 # ONE DECISION, made per launch, and the seat keeps its doors either way:
 #
-#   the caller already names its extensions (-ne / -e)  -> through, untouched
+#   the caller turned discovery off (-ne/--no-extensions) -> through, untouched
+#       A LONE `-e` IS NOT THAT (measured 2026-11-13): Sessrúmnir spawns
+#       `pi … -e <its own permissions extension>` and no `-ne`, so discovery stayed ON,
+#       both trees loaded, every tool collided and the seat never started. `-e` adds an
+#       extension; only `-ne` says "the caller owns the set".
 #   <cwd>/.pi/extensions is absent                      -> through, untouched
 #   the settings name that same directory               -> through, untouched (pi de-duplicates)
 #   the settings name ANOTHER checkout's tree           -> discovery off (-ne), the cwd's
@@ -118,7 +122,9 @@ run_real() {  # <args…>
 decide() {  # prints: "pass<TAB>-<TAB>reason" | "onehome<TAB>tree<TAB>reason"
   local tree other owns=0 a
   for a in "$@"; do
-    case "$a" in -ne|--no-extensions|-e|--extension) owns=1 ;; esac
+    # ONLY the no-discovery flag means the caller owns the extension set. `-e` alone
+    # adds one extension and leaves discovery on — the 2026-11-13 seat fault.
+    case "$a" in -ne|--no-extensions) owns=1 ;; esac
   done
   tree="$(cwd_tree "$PWD")"
   [ "$owns" = 1 ] && { printf 'pass\t-\t%s' 'the caller already names its extensions'; return 0; }
