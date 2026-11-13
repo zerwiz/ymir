@@ -145,7 +145,14 @@ function launch() {
   // never hardcoded here.
   const electronArgs = [appPath, '--no-sandbox']
   // plan 275 S16: the DevTools port, so the app can be tested as a person uses it (unset = none)
-  if (process.env.YMIR_DEVTOOLS_PORT) electronArgs.push(`--remote-debugging-port=${process.env.YMIR_DEVTOOLS_PORT}`)
+  if (process.env.YMIR_DEVTOOLS_PORT) {
+    electronArgs.push(`--remote-debugging-port=${process.env.YMIR_DEVTOOLS_PORT}`)
+    // Chromium refuses a DevTools websocket that carries an Origin header unless the origins
+    // are named, and every scripted client (node's built-in WebSocket, any harness) sends one.
+    // Without this the door answers /json and then fails the handshake — measured 2026-11-13.
+    // Only while the door is open, and the port binds loopback by default.
+    electronArgs.push('--remote-allow-origins=*')
+  }
   if (['1', 'true', 'yes'].includes(String(process.env.YMIR_DESKTOP_DISABLE_GPU ?? '').toLowerCase())) {
     electronArgs.push('--disable-gpu', '--disable-gpu-compositing')
   }

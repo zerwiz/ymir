@@ -1407,6 +1407,7 @@ export interface DiagnosticsProviderInfo {
 /** Where a resolved Pi path came from, for logging and error messaging. */
 export type PiResolutionSource =
   | 'override'
+  | 'house-door'
   | 'npm-prefix'
   | 'path'
   | 'version-manager'
