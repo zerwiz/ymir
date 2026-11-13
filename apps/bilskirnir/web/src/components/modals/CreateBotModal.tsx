@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import type { AvatarColor, AvatarShape, Bot } from '@shared/types';
 import { BotAvatar } from '../../avatar/BotAvatar';
+import { CharacterPicker } from '../../avatar/CharacterPicker';
 import { api } from '../../lib/api';
 import { COLOR_NAMES, COLOR_ORDER, palette } from '../../lib/colors';
 import { useStore } from '../../store';
@@ -11,8 +12,8 @@ import { Modal } from './Modal';
 export function CreateBotModal() {
   const setModal = useStore((s) => s.setModal);
   const [name, setName] = useState('');
-  // every agent wears the Ymir mark; the shape is kept only because the API still carries it
-  const shape: AvatarShape = 'blob';
+  // the house's characters (plan 275, 2026-11-13): the Ymir mark by default, or one of the fourteen figures
+  const [shape, setShape] = useState<AvatarShape>('ymir');
   const [color, setColor] = useState<AvatarColor>('yellow');
   const [mode, setMode] = useState<Bot['mode']>('personal');
   const [busy, setBusy] = useState(false);
@@ -53,6 +54,7 @@ export function CreateBotModal() {
             autoFocus
             aria-label="Agent name"
           />
+          <CharacterPicker shape={shape} color={color} onShape={setShape} />
           <div className="swatches" role="radiogroup" aria-label="The agent's hue">
             <div className="swatches__row">
               {COLOR_ORDER.map((c) => (

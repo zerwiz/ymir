@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { AvatarColor, Bot, Memory, Routine, Skill } from '@shared/types';
+import type { AvatarColor, AvatarShape, Bot, Memory, Routine, Skill } from '@shared/types';
+import { CharacterPicker } from '../../avatar/CharacterPicker';
 import { BotAvatar, BotAvatarFor } from '../../avatar/BotAvatar';
 import { COLOR_NAMES, COLOR_ORDER, botVars, palette } from '../../lib/colors';
 import { configApi, type BotSettingsBundle } from '../../lib/configApi';
@@ -131,7 +132,7 @@ function GeneralTab({ bot, onClose }: { bot: Bot; onClose: () => void }) {
             </button>
           </div>
         </div>
-        {picker && <LookPicker color={draft.avatarColor} onColor={(c) => put('avatarColor', c)} />}
+        {picker && <LookPicker shape={draft.avatarShape} color={draft.avatarColor} onShape={(s) => put('avatarShape', s)} onColor={(c) => put('avatarColor', c)} />}
       </section>
 
       <section className="cfg-section cfg-grid">
@@ -219,9 +220,10 @@ function GeneralTab({ bot, onClose }: { bot: Bot; onClose: () => void }) {
 }
 
 // Every agent wears the Ymir mark, so the look is its hue alone: six house hues, shown as the ring around the mark.
-function LookPicker({ color, onColor }: { color: AvatarColor; onColor: (c: AvatarColor) => void }) {
+function LookPicker({ shape, color, onShape, onColor }: { shape: AvatarShape; color: AvatarColor; onShape: (s: AvatarShape) => void; onColor: (c: AvatarColor) => void }) {
   return (
     <div className="cfg-picker">
+      <CharacterPicker shape={shape} color={color} onShape={onShape} size={36} />
       <div className="swatches" role="radiogroup" aria-label="The agent's hue">
         <div className="swatches__row">
           {COLOR_ORDER.map((c) => (
