@@ -92,3 +92,7 @@ the whiteboard, and it waits for the operator's word. The one command is in the 
 - `systems/whiteboard/services/ttd-bridge/bridge.mjs` — converse prompt, tools in the request, the wall on every failure
 - `systems/whiteboard/services/ttd-bridge/index.mjs` — the converse route; `generate` rebuilt on the same handler with no tools
 - `systems/whiteboard/units/whiteboard-bridge.service` — new: one owner, no secret in the file
+
+## CHANGE LOG
+
+- 2026-11-13 — review-mend: added missing heading for #729
