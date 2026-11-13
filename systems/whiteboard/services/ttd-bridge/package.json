@@ -1,0 +1,10 @@
+{
+  "name": "whiteboard-ttd-bridge",
+  "private": true,
+  "type": "module",
+  "description": "The whiteboard's AI bridge: one rail, two modes (bare Mermaid, and conversation with the board's own tools), and a usage wall said in words.",
+  "scripts": {
+    "start": "node index.mjs",
+    "test": "node --test test/*.test.mjs"
+  }
+}

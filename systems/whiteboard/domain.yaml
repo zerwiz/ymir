@@ -1,0 +1,49 @@
+version: 1
+updated: "2026-11-14"
+
+# systems/whiteboard/domain.yaml — the whiteboard's own declaration, in its own folder.
+#
+# The whiteboard is a suite tool, not a screen we build: the drawing surface is the
+# upstream Excalidraw fork's built bundle, and what lives here is the half WE own —
+# the room server that keeps a room's scene, and the bridge that puts a model behind
+# the assistant. Those two are the only parts of the whiteboard this house can change
+# without forking and rebuilding the app.
+#
+# PLAN 158 §appended IS THE CONTRACT here: the scene is the record and the session is
+# transport; a board belongs to the identity the gate asserted; the assistant holds
+# the whiteboard's tools and nothing else.
+
+domain: whiteboard
+name: Whiteboard
+figure: none — the whiteboard is the suite's own craft, kept by Galdr
+kind: system            # not an app: its screen is an upstream build we do not own.
+keeper: galdr
+stateful: true          # it owns rooms' snapshots and the boards of every person.
+
+folder: systems/whiteboard/
+may_write: [systems/whiteboard/]
+
+board: none
+memory: well namespace domain:whiteboard
+
+doors:
+  collab: [services/collab/index.mjs, services/collab/members.mjs]
+  bridge: [services/ttd-bridge/index.mjs]
+  units: [units/whiteboard-bridge.service]
+
+called_by:
+  - "the browser at the suite's whiteboard hostname, through the gate"
+  - "the AI panel in the app, which calls the bridge"
+
+never:
+  - "read a room's scene — the key is in the URL fragment and the server sees ciphertext"
+  - "take an owner from the client — the owner is the header the gate's proxy asserts"
+  - "hand the assistant a house tool — no record, no web, no mail, no ledger"
+  - "write a secret into a unit file"
+  - "overwrite or prune a snapshot — a scene is superseded, never replaced"
+
+# The rail is a cloud model, by plan 233 §16 and the operator's word. That is why
+# every surface that talks to it says so on the panel itself.
+model:
+  rail: opencode-go
+  modes: [generate, converse]
