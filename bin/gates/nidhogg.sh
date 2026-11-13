@@ -184,6 +184,7 @@ cmd_break() {
   have herdr || { printf 'error: herdr not on PATH\n' >&2; exit 1; }
   herdr agent send-keys "$agent" esc >/dev/null 2>&1 || true
   sleep 2
+  msg="$(YMIR_MSG_FROM="${YMIR_MSG_FROM:-script Níðhöggr, the loop-breaker}" bash "$(dirname "${BASH_SOURCE[0]}")/../agents/msg-origin.sh" "$msg")"   # where it came from (2026-11-14)
   if herdr agent prompt "$agent" "$msg" >/dev/null 2>&1; then
     printf 'nidhogg[1]{agent,action,result}:\n  "%s","break","steered"\n' "$agent"
     exit 0

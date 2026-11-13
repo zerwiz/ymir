@@ -258,6 +258,7 @@ cmd_ask() {
   local pane; pane="$(seat_pane "$clone")"
   [ -n "$pane" ] || refuse "the judge is not seated in $clone — review-seat.sh ensure first"
   local line="Review PR #$pr. Fetch its head, run the rules floor and the gates YOURSELF here, then write ONE verdict to $STATE/eindri-reports/pr-$pr-review.md whose first line is PASS or REFUSE. Merge nothing; if you need a hand, ask the lock owner with bin/seat/lock-ask.sh."
+  line="$(YMIR_MSG_FROM="${YMIR_MSG_FROM:-script review-seat, Forseti door}" bash "$(dirname "${BASH_SOURCE[0]}")/../agents/msg-origin.sh" "$line")"   # where it came from (2026-11-14)
   if [ "$WAIT" = 1 ]; then
     herdr agent prompt "$pane" "$line" --wait --until working >/dev/null 2>&1 \
       || die "the judge did not take the prompt (pane $pane)"
