@@ -55,3 +55,7 @@ Twelve findings became seven, and the seven are real.
 ## Change log
 
 - **2026-11-13** — written with the change, after the nightly alarm.
+
+## CHANGE LOG
+
+- 2026-11-13 — review-mend: added missing heading for #723
