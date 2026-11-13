@@ -100,6 +100,31 @@ Comments, templates (`*.example`), `CHANGELOG*`, and `assets/reference/`
 (provenance) are exempt by intent — they document, they do not configure.
 
 
+## Amendment — a new port is a random five-digit number (2026-11-12)
+
+Appended, not rewritten; the clauses above stand. **By the Allfather's word:** *"Use a random
+5 digit ports to avoid conflicts — this should already be a global rule for all agents and LLMs."*
+
+### C. Choosing a port
+
+- **Never a well-known or four-digit default.** No `4000`, `5432`, `8080`, `3000`, `5173`… for
+  anything new. Those collide with every other dev server, database and tool on the host.
+- **Pick a random five-digit port in `10000–32767`.** That range sits below the kernel's
+  ephemeral range (`net.ipv4.ip_local_port_range` = `32768–60999` on this host), so an outgoing
+  connection can never be handed the same number. One way to pick it:
+  `shuf -i 10000-32767 -n 1`, then confirm it is free with `ss -ltnH | grep -w ":<port>"`.
+- **One port per surface, recorded once.** The chosen number becomes the one documented
+  default (env var with that default, per clause *No literal ports*), and the app, the
+  published port, the proxy target and the health probe all read it.
+- **A service's ports are a block.** When a project needs several (app, db, metrics), pick a
+  random base and use consecutive numbers (`base`, `base+1`, …), each checked free.
+- **Existing ports stay.** Ports already in service are not migrated for this rule alone; they
+  move when their service is next reworked.
+
+Applies to every agent and every LLM tool on every machine: Claude Code, pi, opencode, Codex,
+Gemini, and Eindri workers alike.
+
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-12** — amendment C appended: a new port is a random five-digit number in 10000–32767 (fix note `docs/fixes/rules/2026-11-12-rule-07-random-five-digit-ports.md`).
