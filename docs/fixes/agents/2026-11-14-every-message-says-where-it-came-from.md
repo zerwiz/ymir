@@ -28,3 +28,13 @@ with `[from ` is not stamped twice. The seat law in `bin/seat/herdr-run.sh` tell
 From the helm's pane: `[from agent Hœnir (the helm, claude) · herdr pane w39:pT · heimdall] hello`; from the worker's:
 `[from agent pi · herdr pane w39:pW · heimdall] hi`; from Rödd: `[from the Allfather, by voice through Rödd · heimdall] x`.
 A stamped line passes through unchanged. Every edited script passes `bash -n`.
+
+## Appended 2026-11-14 — the lease path, through its resolver
+
+The new line in `bin/agents/eindri-notify.sh` read the lease from a literal `$HOME/Documents/ymirhome`
+fallback, which is a guessed home (Rule 07). `defaults-guard` refused the push of the plan-275/283 branch
+on it — the ward was right, and the fix is the house resolver the file already loads twenty lines above:
+`STATE/.arm.lease` when the caller names the state, otherwise `ymir_home_root` from
+`bin/vault/hoard-lib.sh`, and an empty `lease` when the home cannot be resolved (the next line already
+falls back to the lock's own directory). `defaults-guard` now counts three defaults on this tree, with
+this file's finding gone.
