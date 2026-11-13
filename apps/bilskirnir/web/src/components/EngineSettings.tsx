@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Bot, EngineInfo, EngineProvider } from '@shared/types';
-import { configApi } from '../lib/configApi';
+import { configApi, type ModelsView } from '../lib/configApi';
 import { useStore } from '../store';
 import { Icon } from './Icon';
+import { PickList } from './PickList';
 
-const KIND: Record<EngineProvider['kind'], string> = { subscription: 'Subscription', api_key: 'API key' };
 const STATUS: Record<EngineInfo['status'], string> = { ready: 'ready', starting: 'starting', stopped: 'stopped', error: 'error' };
 
 /** Connected providers first; otherwise the server's order. */
@@ -17,18 +17,42 @@ function sortProviders(list: EngineProvider[]): EngineProvider[] {
  * a subscription, and the agent's status. Every call fails soft: if the engine endpoints are missing or
  * down, the section says so and the rest of the panel is unaffected.
  */
+/** The catalog's providers of one kind: local (this machine or the fleet's rails) or online, those with a usable model first. */
+function catProviders(v: ModelsView | null, where: 'local' | 'online') {
+  // "local" is the house's own hardware: this machine's rail and the fleet's rails (tailnet, loopback, a LAN name)
+  const own = (p: { local?: boolean; baseUrl: string }) => !!p.local || /\/\/(127\.0\.0\.1|localhost|[^/]*\.ts\.net|[^/.]+)(:\d+)?\//.test(p.baseUrl);
+  return (v?.providers ?? []).filter((p) => own(p) === (where === 'local'))
+    .sort((a, b) => Number(b.models.some((m) => m.allowed)) - Number(a.models.some((m) => m.allowed)));
+}
+
 export function EngineSettings({ bot }: { bot: Bot }) {
   const viewerOpen = useStore((s) => s.viewerOpen);
   const set = useStore((s) => s.set);
   const [engine, setEngine] = useState<EngineInfo | null>(null);
   const [phase, setPhase] = useState<'loading' | 'ok' | 'unavailable'>('loading');
   const [provider, setProvider] = useState('');
-  const [model, setModel] = useState('');
+  const [, setModel] = useState('');   // kept in step with the engine; the chooser below edits the catalog choice
   const [busy, setBusy] = useState<'save' | 'signin' | 'restart' | 'screen' | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [signingIn, setSigningIn] = useState(false);
   const dirty = useRef(false);
   const botId = bot.id;
+  // The house's catalog (plan 275, 2026-11-13): every provider found on this machine, local or online, each with
+  // its whole model list — chosen from dropdowns, never typed. Saving writes the choice into the agent's Hermes home.
+  const [catalog, setCatalog] = useState<ModelsView | null>(null);
+  const [where, setWhere] = useState<'local' | 'online'>('local');
+  const [catProvider, setCatProvider] = useState('');
+  const [catModel, setCatModel] = useState('');
+  useEffect(() => {
+    let alive = true;
+    configApi.models().then((v) => {
+      if (!alive) return;
+      setCatalog(v);
+      const mine = v.providers.find((p) => p.id === bot.provider) ?? v.providers.find((p) => p.models.some((m) => m.id === bot.model));
+      if (mine) { setWhere(catProviders(v, 'local').some((p) => p.id === mine.id) ? 'local' : 'online'); setCatProvider(mine.id); setCatModel(bot.model ?? ''); }
+    }).catch(() => {});
+    return () => { alive = false; };
+  }, [botId]);
 
   const apply = useCallback((e: EngineInfo, keepDraft = false) => {
     setEngine(e); setPhase('ok');
@@ -82,28 +106,8 @@ export function EngineSettings({ bot }: { bot: Bot }) {
 
   const providers = sortProviders(engine.providers ?? []);
   const selected = providers.find((p) => p.id === provider) ?? null;
-  const suggestions = selected?.models ?? [];
-  const wantProvider = provider && provider !== (engine.provider ?? '') ? provider : undefined;
-  const wantModel = model.trim() && model.trim() !== (engine.model ?? '') ? model.trim() : undefined;
-  const changed = !!wantProvider || !!wantModel;
   const openSubscriptions = providers.filter((p) => p.kind === 'subscription' && !p.connected);
   const signInTo = selected && selected.kind === 'subscription' && !selected.connected ? selected : null;
-  const listId = `engine-models-${botId}`;
-
-  const pickProvider = (id: string) => {
-    dirty.current = true; setNote(null); setProvider(id);
-    const next = providers.find((p) => p.id === id);
-    // A model from another provider will not work here, so start from this provider's first suggestion.
-    if (next?.models.length && !next.models.includes(model.trim())) setModel(next.models[0]);
-  };
-
-  const save = async () => {
-    if (!changed || busy) return;
-    setBusy('save'); setNote(null);
-    try { const r = await configApi.setEngine(botId, { ...(wantProvider ? { provider: wantProvider } : {}), ...(wantModel ? { model: wantModel } : {}) }); dirty.current = false; apply(r.engine); }
-    catch (e) { setNote(`Couldn’t save: ${(e as Error).message || 'the engine did not answer'}`); }
-    finally { setBusy(null); }
-  };
 
   const signIn = async () => {
     if (busy) return;
@@ -135,36 +139,46 @@ export function EngineSettings({ bot }: { bot: Bot }) {
 
   return (
     <div className="panel-card engine">
+      <div className="engine__where" role="radiogroup" aria-label="Where it thinks">
+        {(['local', 'online'] as const).map((w) => (
+          <button key={w} type="button" role="radio" aria-checked={where === w} className={`engine__where-btn${where === w ? ' is-on' : ''}`}
+            onClick={() => {
+              if (where === w) return;
+              setWhere(w); setNote(null);
+              const first = catProviders(catalog, w)[0];
+              setCatProvider(first?.id ?? ''); setCatModel(first?.models.find((m) => m.allowed)?.id ?? '');
+            }}>
+            {w === 'local' ? 'Local' : 'Online'}
+            <span>{w === 'local' ? 'on this machine or the fleet' : 'a hosted provider'}</span>
+          </button>
+        ))}
+      </div>
       <div className="panel-row panel-row--setting">
         <span>Provider</span>
-        <span className="mini-select mini-select--native engine__select">
-          <span>{selected?.name ?? (provider || 'Default')}</span>
-          <Icon name="chev_down" size={10} opacity={0.66} />
-          <select aria-label="Provider" value={provider} onChange={(e) => pickProvider(e.target.value)}>
-            {!selected && <option value={provider}>{provider || 'Default'}</option>}
-            {providers.map((p) => <option key={p.id} value={p.id}>{p.name} · {KIND[p.kind]} · {p.connected ? 'Connected' : 'Not connected'}</option>)}
-          </select>
-        </span>
+        <PickList label="Provider" value={catProvider} placeholder={catalog ? 'None found' : 'Looking…'}
+          options={catProviders(catalog, where).map((p) => ({ value: p.id, label: p.name, hint: `${p.models.filter((m) => m.allowed).length} models` }))}
+          onPick={(id) => { setNote(null); setCatProvider(id); setCatModel(catalog?.providers.find((p) => p.id === id)?.models.find((m) => m.allowed)?.id ?? ''); }} />
       </div>
-      {selected && (
-        <div className={`engine__conn${selected.connected ? ' is-on' : ''}`}>
-          <i aria-hidden />
-          <span>{selected.connected ? 'Connected' : 'Not connected'} · {KIND[selected.kind]}</span>
-        </div>
-      )}
       <div className="panel-row panel-row--setting">
-        <label htmlFor={`${listId}-input`}>Model</label>
-        <input
-          id={`${listId}-input`} className="engine__model" list={listId} value={model} spellCheck={false} autoComplete="off"
-          placeholder={suggestions[0] ?? 'Model id'}
-          onChange={(e) => { dirty.current = true; setNote(null); setModel(e.target.value); }}
-          onKeyDown={(e) => { if (e.key === 'Enter') save(); }}
-        />
-        <datalist id={listId}>{suggestions.map((m) => <option key={m} value={m} />)}</datalist>
+        <span>Model</span>
+        <PickList label="Model" value={catModel} placeholder="Choose a provider"
+          options={(catalog?.providers.find((p) => p.id === catProvider)?.models ?? []).filter((m) => m.allowed).map((m) => ({ value: m.id, label: m.id }))}
+          onPick={(m) => { setNote(null); setCatModel(m); }} />
       </div>
+      {(() => {
+        const held = (catalog?.providers.find((p) => p.id === catProvider)?.models ?? []).filter((m) => !m.allowed).length;
+        return held ? <div className="engine__held">{held} more from this provider are held back by the fleet's allow-list.</div> : null;
+      })()}
       <div className="engine__actions">
-        <button type="button" className="btn btn--sm btn--bot" onClick={save} disabled={!changed || busy === 'save'}>{busy === 'save' ? 'Saving…' : 'Save'}</button>
-        {changed && <button type="button" className="link-btn link-btn--small" onClick={() => { dirty.current = false; setNote(null); setProvider(engine.provider ?? ''); setModel(engine.model ?? ''); }}>Undo</button>}
+        <button type="button" className="btn btn--sm btn--bot" disabled={!catModel || busy === 'save' || (catModel === (engine.model ?? '') && catProvider === (bot.provider ?? ''))}
+          onClick={async () => {
+            if (!catProvider || !catModel || busy) return;
+            setBusy('save'); setNote(null);
+            try { await configApi.chooseModel(botId, catProvider, catModel); dirty.current = false; load(true); setNote(null); }
+            catch (e) { setNote(`Couldn’t save: ${(e as Error).message || 'the engine did not answer'}`); }
+            finally { setBusy(null); }
+          }}>{busy === 'save' ? 'Saving…' : 'Save'}</button>
+        <span className="engine__now">Now: {engine.model ?? 'none'}</span>
       </div>
       {(signInTo || openSubscriptions.length > 0) && (
         <button type="button" className="panel-row panel-row--action engine__signin" onClick={signIn} disabled={busy === 'signin'}>
