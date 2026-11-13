@@ -24,3 +24,9 @@ runes, so they join the record list. The list is now one `RECORDS` pattern used 
 
 Nothing in install or update seats the clock's timer (`--install-timer`); the same holds for the other hourly watchers
 in `bin/forge/`. That is its own change.
+
+### And the home is asked, never guessed
+
+The clock fell back to `$HOME/Documents/ymirhome` when the resolver named nothing; `defaults-guard` refuses a restated
+home. It now asks `bin/vault/hoard-lib.sh` only, and exits 1 with the reason when no home is named. A dry run against
+this seat's real home resolves and answers as before.

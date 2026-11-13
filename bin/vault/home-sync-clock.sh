@@ -17,7 +17,9 @@ SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(CDPATH='' cd "$SELF_DIR/../.." && pwd)"
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 H=""; declare -f ymir_home_root >/dev/null 2>&1 && ymir_home_root H 2>/dev/null
-HOME_DIR="${H:-$HOME/Documents/ymirhome}"
+# The one resolver says where the home is (defaults-guard); a home it cannot name is a fault, never a guess.
+[ -n "$H" ] || { printf 'home-sync-clock: the resolver (bin/vault/hoard-lib.sh) named no home\n' >&2; exit 1; }
+HOME_DIR="$H"
 DRY=0
 for a in "$@"; do case "$a" in --install-timer) TIMER=1;; --dry-run) DRY=1;; esac; done
 if [ "${TIMER:-0}" = 1 ]; then
