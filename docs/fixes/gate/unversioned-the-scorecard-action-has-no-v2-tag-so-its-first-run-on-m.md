@@ -16,3 +16,7 @@ returns only full versions). `gh api repos/ossf/scorecard-action/git/matching-re
 `v2.4.3`, …) — no `v2` — which is what run 43554892680 hit. The other three actions in the file keep their
 floating major tags; each was checked the same way and resolves (`actions/checkout` → `v4`,
 `actions/upload-artifact` → `v4`, `github/codeql-action` → `v3`).
+
+## CHANGE LOG
+
+- 2026-11-13 — review-mend: added missing heading for #735
