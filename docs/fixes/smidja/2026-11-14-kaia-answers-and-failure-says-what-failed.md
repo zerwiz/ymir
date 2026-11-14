@@ -64,7 +64,7 @@ pin the filter, the whole error, pi's warning, the empty case, and the default i
 ## Not done, named — and it is the important one
 
 **The chat still answers in the seat's voice, not Völundr's.** The target repo here is
-`~/Documents/ymirhome` (the service's `CMD_DB` is `/home/heimdall/Documents/ymirhome/smidja/smidja.db`),
+`~/Documents/ymirhome` (the service's `CMD_DB` is `$YMIR_HOME/smidja/smidja.db`),
 and that tree holds neither persona file, so no `--append-system-prompt` is passed and pi answers
 from the home contract in its working directory. Measured above: the reply introduced itself as
 the seat's counsellor. The one-line fix is to let `kaiaPromptArgs()` also resolve the persona from
