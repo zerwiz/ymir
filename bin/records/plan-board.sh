@@ -38,8 +38,11 @@ esac
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PLAN_DIR="${YMIR_PLAN_DIR:-}"
 if [ -z "$PLAN_DIR" ]; then
-  hoard="$(bash "$ROOT/bin/vault/hodd.sh" path 2>/dev/null || true)"
-  [ -n "$hoard" ] && PLAN_DIR="$(dirname "$hoard")/svartalfaheim/whynotproductions/projects/ymir/plans"
+  # The ledger's realm is the OPERATOR's, so it is DISCOVERED inside his home; the
+  # repository carries no realm name of ours (RULES/04). A home with several ledgers
+  # answers "name one", never a guess.
+  . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
+  command -v ymir_plan_dir >/dev/null 2>&1 && { ymir_plan_dir PLAN_DIR 2>/dev/null || true; }
 fi
 [ -n "$PLAN_DIR" ] && [ -d "$PLAN_DIR" ] || { printf 'plan-board: no ledger (set YMIR_PLAN_DIR)\n' >&2; exit 1; }
 

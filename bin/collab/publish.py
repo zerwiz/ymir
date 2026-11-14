@@ -25,8 +25,10 @@ import sys
 import urllib.error
 import urllib.request
 
-DEFAULT_BASE = "https://board.zerwiz.org"
-DEFAULT_WORKSPACE = "whynotproductions"
+# The board and the workspace are the OPERATOR's, so they are configuration, never a default in the
+# repository (RULES/04): set PLANE_API_BASE and GIMLE_PLANE_WORKSPACE (or pass --base / --workspace).
+DEFAULT_BASE = ""
+DEFAULT_WORKSPACE = ""
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
@@ -98,6 +100,10 @@ def main():
     parser.add_argument("--yes", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
+    if not args.base:
+        die("no board — set PLANE_API_BASE (or pass --base) to the address of your Plane install")
+    if not args.workspace:
+        die("no workspace — set GIMLE_PLANE_WORKSPACE (or pass --workspace) to the board's workspace slug")
 
     baton = os.path.join(os.path.abspath(args.repo), "handoff", "CURRENT.md")
     if not os.path.isfile(baton):

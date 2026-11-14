@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Gná's connect door — one button to a signed-in mailbox, and the honest line per account.
 
-Plan 221 §5 (`svartalfaheim/whynotproductions/projects/ymir/plans/221-the-connect-door.md`).
+Plan 221 §5 (`svartalfaheim/<realm>/projects/ymir/plans/221-the-connect-door.md`).
 Four verbs, and every one of them ends in a MEASUREMENT, never an assumption:
 
   connect.sh google            one sign-in: consent URL → loopback redirect → code exchanged →

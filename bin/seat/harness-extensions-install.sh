@@ -24,6 +24,10 @@ ROOT="$(CDPATH='' cd "$_d" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]
 
 # A PINNED runtime wins over the working tree (RULES/02 §7): the extensions a harness loads must be the
 # ones a deployment proved, not whatever branch an agent left checked out.
+# The home is asked of the ONE resolver (Rule 07), never read out of the environment here.
+if [ -r "$ROOT/bin/vault/hoard-lib.sh" ]; then
+  . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
+fi
 _pin=""
 [ -r "$ROOT/bin/pi/arm-pin-lib.sh" ] && . "$ROOT/bin/pi/arm-pin-lib.sh" 2>/dev/null && arm_pin_dir _pin
 if [ -n "$_pin" ] && [ -d "$_pin/.git" ]; then
@@ -133,7 +137,7 @@ if command -v pi >/dev/null 2>&1; then
     stale)   if [ "$mode" = "check" ]; then
                detail="$detail · one-home door stale"; stale=$((stale+1)); [ "$state" = current ] && state="stale"
              elif pi_door_seat; then
-               # A deploy is a COPY, and nothing re-ran it: measured 2026-11-13 on nidavellir, the release
+               # A deploy is a COPY, and nothing re-ran it: measured 2026-11-13 on a second machine, the release
                # carried the fixed door while ~/.pi/agent/bin/pi still held the old rule that read a lone
                # `-e` as ownership — the seat there died of the very conflict this release fixed. Sync
                # re-seats a STALE door, not only an absent one.
@@ -218,8 +222,9 @@ if command -v claude >/dev/null 2>&1; then
   # backup kept per run) and reported stale on --check. Nothing else in the file moves.
   if [ -f "$ROOT/.claude/hooks/load-agents-md.sh" ]; then
     _arm_opt="off"
+    _home=""; command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root _home 2>/dev/null || _home="${YMIR_HOME:-}"
     if [ "${YMIR_CLAUDE_GLOBAL_ARM:-}" = 1 ]; then _arm_opt="on"
-    elif [ -n "${YMIR_HOME:-}" ] && [ "$(tr -d '[:space:]' < "$YMIR_HOME/config/claude-global-arm" 2>/dev/null)" = on ]; then _arm_opt="on"; fi
+    elif [ -r "$_home/config/claude-global-arm" ] && [ "$(tr -d '[:space:]' < "$_home/config/claude-global-arm" 2>/dev/null)" = on ]; then _arm_opt="on"; fi
     _wired="$(python3 - "$HOME/.claude/settings.json" "$mode" "$_arm_opt" <<'PY' 2>/dev/null
 import json, os, shutil, sys, datetime
 dst, mode, arm_opt = sys.argv[1], sys.argv[2], sys.argv[3]

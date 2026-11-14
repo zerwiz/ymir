@@ -5,7 +5,7 @@ she is scoped to, judges what a message is, and puts it in a queue with a propos
 action and the evidence for it. **She cannot send** — there is no send path in this
 directory, and a test fails if one appears.
 
-Law: plan 116 (`svartalfaheim/whynotproductions/projects/ymir/plans/`, in the home).
+Law: plan 116 (`svartalfaheim/<realm>/projects/ymir/plans/`, in the home).
 Page: `docs/features/gna-the-one-mail-desk.md`.
 
 ## What is here, and what is private
@@ -95,10 +95,10 @@ Three facts per address, and none of them is an assumption:
 
 `--check` exits `1` when an address is undeliverable, `2` when the register cannot be read,
 `3` when everything is reachable but nothing is proven, and `0` only when it is all proven.
-Measured 2026-10-24: `zerwiz.org` publishes **no MX at all**, so `gimle@`, `snotra@`,
-`reply+*` and `bounce+*` there cannot receive; `way-of.com` publishes Google MX, and the
-Workspace aliases do not exist yet — the register says `alias-missing`, naming the console
-step, rather than showing an empty inbox.
+Measured 2026-10-24: the house's own mail domain publishes **no MX at all**, so the desk's
+address, the notices' and `reply+*`/`bounce+*` there cannot receive; a second, older domain
+publishes Google MX, and its Workspace aliases do not exist yet — the register says
+`alias-missing`, naming the console step, rather than showing an empty inbox.
 
 ## The desk's honesty line
 

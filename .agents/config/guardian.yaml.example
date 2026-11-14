@@ -48,7 +48,10 @@ escalate:                      # the severity ladder (plan 98 §'the severity la
   medium: local                # local | fleet | online
   high: local-or-fleet
   critical: online
-  fleet: [llamacpp-omarchy, llamacpp-whynot]
+  # the models that may reason about a FLEET-scoped finding: name the providers YOUR boxes serve
+  # (the catalogue is the truth — bin/model/catalog.sh). Empty is honest; a default here would
+  # point a stranger's install at a machine of ours (RULES/04).
+  fleet: []
   local: qwen3.6-35b-a3b@q4_k_xl-mtp
   online: opencode-go/deepseek-v4.1-flash
   on: high                     # a finding at or above this severity may be reasoned about

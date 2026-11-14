@@ -13,8 +13,8 @@ so the ear can know the room, the participants, and the moment it began.
 | upstream | `miroslavpejic85/mirotalk` (AGPLv3) |
 | our fork | `zerwiz/mirotalk` — tracks upstream; branding/ops live here |
 | code tree | the operator's fork checkout (e.g. `~/mirotalk`) |
-| deployment | whynot — `~/thing/mirotalk`, port **3000**, unit `thing.service` (WantedBy `ymir.target`), public door `ping.zerwiz.org` via `cloudflared-thing` |
-| plan of record | `.../whynotproductions/workspace/ymir/plans/53-thing-the-assembly.md` |
+| deployment | the forge — `~/thing/mirotalk`, port **3000**, unit `thing.service` (WantedBy `ymir.target`), public door `<room>.<host>` via `cloudflared-thing` (declared as `PING_ROOM_HOST`) |
+| plan of record | `.../<realm>/workspace/ymir/plans/53-thing-the-assembly.md` |
 
 ## How the brand works (the part everyone gets wrong)
 
@@ -79,7 +79,7 @@ tools/og-card/render.sh            # re-render, then commit both rasters
 The hall used to be shared as a bare link. `og:image` pointed at
 `../images/logo.svg` — a **relative** path (a crawler has not fetched the page and
 cannot resolve it) to an **SVG** (which no crawler renders) — and `og:url` was
-**empty**. Every share of `ping.zerwiz.org` unfurled to nothing.
+**empty**. Every share of the room's public name unfurled to nothing.
 
 ```
 social_card[3]{piece,where,rule}:
@@ -94,11 +94,11 @@ master. Neither is optional: a crawler fetches a file, not a build.
 
 ### The cache lie
 
-- `ping.zerwiz.org` is Cloudflare-backed (`cf-cache-status: DYNAMIC`), but
+- the room's public name is Cloudflare-backed (`cf-cache-status: DYNAMIC`), but
   **browser caches and sessionStorage** keep old pages alive:
   - sessionStorage brand → bump `brandDataKey` (above)
   - browser HTML cache → hard refresh (`Ctrl+Shift+R`) or a cache-busting query
-  - edge → `bin/forge/gjallarhorn-purge.sh ping.zerwiz.org` if a PoP held a copy
+  - edge → `bin/forge/gjallarhorn-purge.sh <the room's public name>` if a PoP held a copy
 - Debug by driving a headless Chromium at the public URL and reading the
   rendered DOM (the wire usually serves the new page while a browser shows the
   old one — that asymmetry is the tell).

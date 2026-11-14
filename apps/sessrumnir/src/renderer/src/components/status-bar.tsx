@@ -83,7 +83,6 @@ export function StatusBar(): React.JSX.Element {
     try {
       await window.piDesktop.system.openExternal(await window.piDesktop.system.hallUrl())
     } catch {
-      await window.piDesktop.system.openExternal('https://hall.ymir.zerwiz.org').catch(() => {})
     }
   }
 

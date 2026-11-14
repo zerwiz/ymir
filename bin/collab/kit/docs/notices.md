@@ -38,14 +38,14 @@ project from the repository's own path, so no id is guessed and no registry is r
 the arm holder with the refusal:
 
 ```
-KIT Inmost-ControlTower · estate · areas: 18 · 5 held · 0 unproved · 0 waived · 0 na · 13 unheld (example-3)
+KIT Example-ControlTower · estate · areas: 18 · 5 held · 0 unproved · 0 waived · 0 na · 13 unheld (example-3)
 ```
 
 Where the refusal **names an area** — `tenancy (unheld): apps/ct_core/lib/ct_core/domains/tenancy.ex` — a third
 line carries the one command that fixes it:
 
 ```
-KIT Inmost-ControlTower · remedy · tenancy is unheld — shape it, then apply it:
+KIT Example-ControlTower · remedy · tenancy is unheld — shape it, then apply it:
   bash bin/agents/areas.sh call example-3 tenancy
 ```
 

@@ -114,6 +114,18 @@ contract:
     door: bin/engine/home-seed.sh
     required: false
     why: "the words that must never appear in the public repository (people, clients, domains, hosts); read by bin/gates/agnostic-audit.sh (the census and the pre-push ward) and turned into rules by bin/gates/secret-scan.sh; absent, both say so and judge the shared shapes alone (plan 287 §6)"
+  - path: config/nda-allow.yaml
+    kind: seeded
+    template: .agents/config/nda-allow.operator.yaml.example
+    door: bin/engine/home-seed.sh
+    required: false
+    why: "the operator's OWN words the NDA gate must allow (his realm, his mail domain, his handle), each with a reason; absent, only the repository's generic allowances apply and no word of his is written into the public tree (RULES/04, RULES/42)"
+  - path: hodd/identity/house-domains.txt
+    kind: seeded
+    template: .agents/config/house-domains.txt.example
+    door: bin/engine/home-seed.sh
+    required: false
+    why: "the mail domains that are the operator's OWN: a commit may be authored as <agent>@<domain> and the developers register shows such an author unmasked; absent, both wards fall back to the generic @ymir forms and say so (RULES/04)"
   - path: hodd/identity/machines.yaml
     kind: stub
     template: hodd/identity/machines.yaml.example
@@ -269,12 +281,6 @@ contract:
     why: "the well; a seat that has none says so and borrows through its door"
 
   # ── optional: read when it is there, and a clean skip when it is not ──
-  - path: hodd/config/private-scan-allow.txt
-    kind: optional
-    template: "-"
-    door: "-"
-    required: false
-    why: "the private sweep's accepted findings, each with its reason; it lives under config/ because state/ is gitignored and a reason lost on a clone is an allow list nobody can audit"
   - path: config/room.yaml
     kind: optional
     template: "-"

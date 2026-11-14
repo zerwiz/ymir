@@ -29,15 +29,15 @@ MODE="${1:-write}"
 # $HOME/... path (defaults-guard refused exactly that on this file's first draft).
 PLAN_DIR="${YMIR_PLAN_DIR:-}"
 if [ -z "$PLAN_DIR" ]; then
+  # The resolver is what knows how to find a ledger under a realm the repository may
+  # not name, so the library is loaded whether or not YMIR_HOME is already in the env.
+  if [ -r "$ROOT/bin/vault/hoard-lib.sh" ]; then . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true; fi
   _h="${YMIR_HOME:-}"
-  if [ -z "$_h" ] && [ -r "$ROOT/bin/vault/hoard-lib.sh" ]; then
-    . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
-    command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root _h
-  fi
+  if [ -z "$_h" ] && command -v ymir_home_root >/dev/null 2>&1; then ymir_home_root _h; fi
   # Last resort is hodd.sh's own resolver — never a literal path written here
   # (the ward refuses the literal, and rightly: it is this machine's layout).
   [ -n "$_h" ] || _h="$(bash "$ROOT/bin/vault/hodd.sh" path 2>/dev/null || true)"
-  PLAN_DIR="$_h/svartalfaheim/whynotproductions/projects/ymir/plans"
+  command -v ymir_plan_dir >/dev/null 2>&1 && { ymir_plan_dir PLAN_DIR 2>/dev/null || true; }
 fi
 REG="$PLAN_DIR/register.md"
 Q="$PLAN_DIR/questions.md"

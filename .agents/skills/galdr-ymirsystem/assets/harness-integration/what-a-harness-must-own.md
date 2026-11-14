@@ -99,7 +99,7 @@ measured[6]{measure,count}:
 ```
 
 Nineteen capabilities have three implementations. Three implementations of one door means three
-places to fix one bug — and Sebastian's port is exactly that invoice.
+places to fix one bug — and a partner's port is exactly that invoice.
 
 ---
 
@@ -149,7 +149,7 @@ phases[6]{id,what,done when}:
 
 ---
 
-## 8 · What this does to the open PR (#508, Sebastian)
+## 8 · What this does to the open PR (#508, a partner's)
 
 It **shrinks it**. His five lifecycle plugins are exactly the seam — they stay. His `ymir-tools.ts`
 (21 names, 19 of them already doors) is the duplication and goes, with `opencode.json` pointing at the
@@ -173,7 +173,7 @@ traps[5]{trap,truth}:
 
 ## CHANGE LOG
 
-- **2026-11-04** — written after Sebastian's #508 exposed the shape: one harness's plugin API moved and
+- **2026-11-04** — written after a partner's #508 exposed the shape: one harness's plugin API moved and
   five guards plus twenty hand-written tools had to be considered at once. Counts in §3–§4 were taken
   from this checkout with `grep` on the extension/plugin/MCP sources, not estimated.
 

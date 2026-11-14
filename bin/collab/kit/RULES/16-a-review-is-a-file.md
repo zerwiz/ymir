@@ -1,7 +1,7 @@
 # 16 — A review is a file in the repository
 
-**Added 2026-11-03** at the Allfather's word: *"we need to have the audit in the repo, so Sebastian can get it when he starts to work
-again. We need to have a system for this."*
+**Added 2026-11-03** at the Allfather's word: *"we need to have the audit in the repo, so a partner can get it when he starts to
+work again. We need to have a system for this."*
 
 ## The rule
 

@@ -33,7 +33,7 @@ os.environ["YMIR_HOME"] = str(TMP)
     "      tls_key: GNA_IMAP_TLS\n      user_key: GNA_IMAP_USER\n"
     "      password_key: GNA_IMAP_PASSWORD\n      mailbox: INBOX\n"
     "house:\n"
-    "  - address: gimle@example.org\n    route: catch-all\n    forward_to: operator@example.com\n"
+    "  - address: desk@example.org\n    route: catch-all\n    forward_to: operator@example.com\n"
     "  - address: dead@nowhere.example\n    route: catch-all\n    forward_to: operator@example.com\n"
     "  - address: team@example.com\n    route: catch-all\n    forward_to: team@example.com\n"
     "domains:\n"
@@ -56,7 +56,7 @@ def record(**over) -> dict:
         "account": "operator@example.com",
         "direction": "in",
         "thread_key": "t1",
-        "from": {"name": "Craig Example", "email": "craig@example.com"},
+        "from": {"name": "Ada Example", "email": "ada@example.com"},
         "to": [{"name": "the operator", "email": "operator@example.com"}],
         "subject": "Faktura 2026-10",
         "body_text": "Bifogad faktura for oktober.",
@@ -66,7 +66,7 @@ def record(**over) -> dict:
         "confidence": 0.85,
         "proposed_action": "file_invoice",
         "matched_by": "sender_email",
-        "person_id": "craig-martin",
+        "person_id": "ada-lovelace",
         "evidence": "test",
     }
     base.update(over)
@@ -102,14 +102,14 @@ class StoreScope(unittest.TestCase):
 
 
 class Judge(unittest.TestCase):
-    people = {"craig@example.com": {"id": "craig-martin", "project": "wayof"}}
+    people = {"ada@example.com": {"id": "ada-lovelace", "project": "example-project"}}
 
     def test_known_sender_invoice_is_high_confidence(self):
         verdict = gna_judge.judge(record(), self.people)
         self.assertEqual(verdict["classification"], "invoice")
         self.assertEqual(verdict["proposed_action"], "file_invoice")
         self.assertGreaterEqual(verdict["confidence"], 0.6)
-        self.assertIn("craig-martin", verdict["evidence"])
+        self.assertIn("ada-lovelace", verdict["evidence"])
 
     def test_unknown_sender_lands_in_unsure(self):
         verdict = gna_judge.judge(record(**{"from": {"email": "someone@example.com"},
@@ -118,7 +118,7 @@ class Judge(unittest.TestCase):
         self.assertEqual(verdict["classification"], "other")
 
     def test_thread_inherits(self):
-        parent = record(id="m0", classification="invoice", person_id="craig-martin")
+        parent = record(id="m0", classification="invoice", person_id="ada-lovelace")
         verdict = gna_judge.judge(record(id="m2", subject="Re: Faktura", body_text="Tack!"), self.people, parent)
         self.assertEqual(verdict["classification"], "invoice")
         self.assertEqual(verdict["matched_by"], "thread")
@@ -133,7 +133,7 @@ class Judge(unittest.TestCase):
         self.assertEqual(verdict["matched_by"], "house")
 
     def test_every_verdict_carries_evidence(self):
-        for sender in ({"email": "craig@example.com"}, {"email": "x@y.z"}):
+        for sender in ({"email": "ada@example.com"}, {"email": "x@y.z"}):
             verdict = gna_judge.judge(record(**{"from": sender}), self.people)
             self.assertTrue(verdict["evidence"])
             self.assertIn(verdict["classification"], gna_judge.CLASSES)
@@ -152,7 +152,7 @@ class Judge(unittest.TestCase):
         self.assertNotEqual(verdict["matched_by"], "calendar", "a word in the subject is not an invitation")
 
     def test_a_calendar_thread_does_not_hand_down_archive(self):
-        parent = record(id="m0", classification="meeting", proposed_action="archive", person_id="craig-martin")
+        parent = record(id="m0", classification="meeting", proposed_action="archive", person_id="ada-lovelace")
         verdict = gna_judge.judge(record(id="m2", subject="Re: the plan", body_text="Could you send it?"),
                                   self.people, parent)
         self.assertNotEqual(verdict["matched_by"], "thread")
@@ -165,11 +165,11 @@ class Judge(unittest.TestCase):
             self.assertEqual(verdict["proposed_action"], "archive", sender)
 
     def test_a_question_word_without_a_question_is_not_a_question(self):
-        known = {"from": {"email": "craig@example.com"}, "subject": "Notes", "body_text": "Here is what we did."}
+        known = {"from": {"email": "ada@example.com"}, "subject": "Notes", "body_text": "Here is what we did."}
         self.assertEqual(gna_judge.judge(record(**known), self.people)["classification"], "notice")
         known["body_text"] = "What do you think?"
         self.assertEqual(gna_judge.judge(record(**known), self.people)["classification"], "question")
-        known["body_text"] = "Here is what we did.\n\nOn Mon, Craig wrote:\n> what time?"
+        known["body_text"] = "Here is what we did.\n\nOn Mon, Ada wrote:\n> what time?"
         self.assertEqual(gna_judge.judge(record(**known), self.people)["classification"], "notice",
                          "a question mark in the quoted reply is not his correspondent's question")
 
@@ -234,8 +234,8 @@ class Desk(unittest.TestCase):
 
 
 MESSAGE = (
-    b"From: Craig Example <craig@example.com>\r\n"
-    b"To: gimle@example.org\r\n"
+    b"From: Ada Example <ada@example.com>\r\n"
+    b"To: desk@example.org\r\n"
     b"Subject: Faktura 2026-10\r\n"
     b"Message-ID: <fixture-1@example.com>\r\n"
     b"Date: Fri, 23 Oct 2026 10:00:00 +0000\r\n"
@@ -285,7 +285,7 @@ class _ImapHandler(socketserver.StreamRequestHandler):
                 self.write("* 1 EXISTS\r\n* OK [UIDVALIDITY 1] UIDs valid",
                            tag, f"OK [READ-ONLY] {verb} completed")
             elif verb == "UID" and args.upper().startswith("SEARCH"):
-                wanted = "1" if "gimle@example.org" in args or "TO" not in args.upper() else ""
+                wanted = "1" if "desk@example.org" in args or "TO" not in args.upper() else ""
                 self.write(f"* SEARCH {wanted}".rstrip(), tag, "OK UID SEARCH completed")
             elif verb == "UID" and args.upper().startswith("FETCH"):
                 self.wfile.write(b"* 1 FETCH (UID 1 RFC822 {" + str(len(MESSAGE)).encode() + b"}\r\n")
@@ -339,15 +339,15 @@ class ImapReader(unittest.TestCase):
         records = gna_import.collect("reader@example.org", days=2, max_messages=10)
         self.assertEqual(len(records), 1)
         record = records[0]
-        self.assertEqual(record["to_header"], "gimle@example.org")
+        self.assertEqual(record["to_header"], "desk@example.org")
         self.assertEqual(record["subject"], "Faktura 2026-10")
         self.assertEqual(record["id"], "fixture-1@example.com")
         self.assertEqual(record["account"], "reader@example.org")
         self.assertIn(record["classification"], gna_judge.CLASSES)
         self.assertTrue(record["evidence"])
 
-    def test_the_search_finds_the_message_addressed_to_gimle(self):
-        records = gna_import.search_address("reader@example.org", "gimle@example.org", days=2)
+    def test_the_search_finds_the_message_addressed_to_the_desk(self):
+        records = gna_import.search_address("reader@example.org", "desk@example.org", days=2)
         self.assertEqual([r["id"] for r in records], ["fixture-1@example.com"])
 
     def test_the_reader_never_asks_the_store_to_change_anything(self):
@@ -467,19 +467,19 @@ class Addresses(unittest.TestCase):
         self.assertEqual(row["deliverable"], "no")
 
     def test_mx_and_a_route_is_declared_not_deliverable(self):
-        row = self.rows()["gimle@example.org"]
+        row = self.rows()["desk@example.org"]
         self.assertEqual(row["mx"], "present")
         self.assertEqual(row["route"], "catch-all")
         self.assertEqual(row["state"], "unproven")
         self.assertIn("no test message", row["reason"])
 
     def test_an_arrival_proof_makes_it_deliverable_and_the_state_is_a_plain_word(self):
-        gna_addresses.append_arrival({"to": "gimle@example.org", "to_header": "gimle@example.org",
+        gna_addresses.append_arrival({"to": "desk@example.org", "to_header": "desk@example.org",
                                       "account": "operator@example.com"})
-        row = self.rows()["gimle@example.org"]
+        row = self.rows()["desk@example.org"]
         self.assertEqual(row["state"], "deliverable")
         document = gna_addresses.honesty()
-        line = {a["address"]: a for a in document["addresses"]}["gimle@example.org"]
+        line = {a["address"]: a for a in document["addresses"]}["desk@example.org"]
         self.assertEqual(line["deliverable"], "deliverable")
         self.assertEqual(line["forwarded"], "operator@example.com")
         self.assertEqual(line["unreadable"], "no")
@@ -500,7 +500,7 @@ class Addresses(unittest.TestCase):
         self.assertTrue(state["addresses"])
         toon = gna_addresses.toon_honesty(document)
         self.assertIn("honesty[", toon)
-        self.assertIn("gimle@example.org", toon)
+        self.assertIn("desk@example.org", toon)
 
     def test_an_account_no_address_forwards_into_cannot_receive(self):
         document = gna_desk.honesty()
@@ -536,7 +536,7 @@ class InboundDoor(unittest.TestCase):
         return subprocess.run([str(self.script), *args], capture_output=True, text=True, env=env, timeout=120)
 
     def test_an_address_that_can_receive_is_ready(self):
-        done = self.run_door("--mx-only", "--to", "gimle@example.org")
+        done = self.run_door("--mx-only", "--to", "desk@example.org")
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
         self.assertIn("READY", done.stdout)
         self.assertIn('"present"', done.stdout)
@@ -593,16 +593,16 @@ class InboundChain(unittest.TestCase):
             pass
 
     def test_the_arrival_is_found_by_its_to_header_and_proven(self):
-        proof = gna_addresses.await_arrival("reader@example.org", "gimle@example.org",
+        proof = gna_addresses.await_arrival("reader@example.org", "desk@example.org",
                                            timeout=10, poll=0.2)
         self.assertEqual(proof.get("result"), "arrived", proof)
-        self.assertEqual(proof["to_header"], "gimle@example.org")
+        self.assertEqual(proof["to_header"], "desk@example.org")
         self.assertTrue(gna_addresses.ARRIVALS.exists())
         rows = {row["address"]: row for row in gna_addresses.register()}
-        self.assertEqual(rows["gimle@example.org"]["state"], "deliverable")
+        self.assertEqual(rows["desk@example.org"]["state"], "deliverable")
 
     def test_the_desk_then_says_the_inbox_can_receive(self):
-        gna_addresses.await_arrival("reader@example.org", "gimle@example.org", timeout=10, poll=0.2)
+        gna_addresses.await_arrival("reader@example.org", "desk@example.org", timeout=10, poll=0.2)
         state = gna_desk.inbox_state("operator@example.com", gna_desk.honesty())
         self.assertEqual(state["inbox_state"], "arrivable")
 
