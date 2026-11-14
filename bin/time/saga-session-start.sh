@@ -425,7 +425,7 @@ SEC_DESCR() {  # <name> -> one line: what it answers
     wake)        printf 'the wake queue in full — every durable wake, and the open work' ;;
     seats)       printf 'the hall sweep as a dry run: which seats it WOULD close, and why' ;;
     supervision) printf 'how the harness arms supervision, and the age of the pinned runtime' ;;
-    todos)       printf "the Allfather's task ledger — every open todo, with due dates" ;;
+    todos)       printf "the Allfather's task ledger — every open item, with due dates" ;;
     agents)      printf 'every agent process on this machine, every herdr pane, every stale errand pane' ;;
     update)      printf 'whether a newer Ymir stands on npm (one cached lookup a day)' ;;
     fleet)       printf 'Eindri task records, open forge orders, fleet metadata' ;;

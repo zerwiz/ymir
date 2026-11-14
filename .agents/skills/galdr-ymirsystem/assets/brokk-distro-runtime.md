@@ -109,6 +109,16 @@ So `bin/time/saga-session-start.sh` now prints **a head of ≤ 60 lines and ≤ 
 everything else is a **section asked for by name**. It still composes existing scripts and
 re-implements none of them.
 
+**Appended 2026-11-14 (plan 293 part 3) — the head says what never landed.** The audit of 36
+agent panes found 22 worker branches pushed and clean, four merged, and nothing anywhere in the
+session start saying the rest were still waiting — while one machine's local `main` held 19
+commits that existed on no remote at all. So the digest gained a **LANDING** section
+(`SEC_LANDING`, backed by `bin/time/saga-land-warnings.sh`): a branch pushed with no pull request
+is named with its age, and a local branch holding commits on no remote is named before it can be
+lost. It is read-only, time-bounded, and offline is a clean sentence rather than a hang. In the
+head it appears where it is now part of the shape — between `FLEET` and `CONTEXT DIGEST` — and it
+stays inside the 60-line budget (measured 48 lines).
+
 | Mode | What it does | Side effects |
 |---|---|---|
 | *(no argument)* | the session start: the stages, then the head | lock, bridges, the well, and — for the helm only — the hall sweep, the handoff and cron |

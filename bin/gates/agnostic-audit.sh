@@ -183,7 +183,7 @@ if [ "$MODE" = "list" ]; then
   printf '    host:<word>       a machine or user — only where it is used as a host or a user\n'
   printf '    domain:<word>     a mail or client domain — anywhere, on a domain boundary\n'
   printf '  the generic shapes   a concrete private address (a range is documentation)\n'
-  printf '                       a real host before ts.net (a placeholder passes)\n'
+  printf '                       a real host before ts.net (a made-up host passes)\n'
   printf '  never printed        the list itself: a finding names the file, the line and the entry'"'"'s position\n'
   exit 0
 fi
@@ -252,7 +252,7 @@ grep_pass() {  # <class-label> <ERE> [<allow-ERE>]
 [ -n "$DOMS_ERE"  ] && grep_pass "the operator's own domain" "$DOMS_ERE"
 [ -n "$HOSTS_ERE" ] && grep_pass "a machine or user of the operator's, named as a host" "$HOSTS_ERE"
 grep_pass "a private address, not a range" "$IP_ERE" "$IP_ALLOW"
-grep_pass "a real tailnet host, not a placeholder" "$TSNET_ERE" "$TSNET_ALLOW"
+grep_pass "a real tailnet host, not a made-up one" "$TSNET_ERE" "$TSNET_ALLOW"
 
 awk -F'\t' '{ k=$1"\t"$2"\t"$3; if (!(k in seen)) { seen[k]=1; print } }' "$RAW" >"$WORK/unique"
 
@@ -347,7 +347,7 @@ if [ "$QUIET" = 0 ]; then
       shown=$((shown + 1))
     done <"$WORK/report"
     [ "$FINDINGS" -gt "$shown" ] && printf '  … and %s more (YMIR_AUDIT_MAX_REPORT raises the cap)\n' "$((FINDINGS - shown))"
-    printf '\nhelp: an example uses an invented person, an invented domain and a placeholder host\n'
+    printf '\nhelp: an example uses an invented person, an invented domain and an invented host\n'
     printf '      (Ada, example.org, host-a); a note names a ROLE, not a machine; whatever is the\n'
     printf '      operator'"'"'s own life or tooling lives in the home, never here (RULES/04, RULES/25).\n'
   fi
