@@ -21,17 +21,21 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[48]{file,does,kind,verdict,disposition,callers,lines}:
+bin[57]{file,does,kind,verdict,disposition,callers,lines}:
+  "agents-status.sh","agents-status.sh — which agents are running, where, on what work, and which are idle.","tool","wired","keep",1,48
   "atlas.py","'''atlas.py — one page at the top of the home that says where we have it all (plan 251).","tool","wired","keep",1,277
   "atlas.sh","atlas.sh — one page at the top of the home that says where we have it all (plan 251).","tool","wired","keep",1,19
   "audit-apply.sh","audit-apply.sh — turn an audit into work, in one door.","tool","wired","keep",0,96
   "behind.sh","behind.sh — the arithmetic of being behind: opened/closed this week, net, stale-30d, unbuilt phases.","tool","wired","keep",0,43
   "comms.py","'''comms.py — every communication, in, out and owed, and the to-do they move (plan 261).","tool","tested","keep",4,1175
   "comms.sh","comms.sh — the one read door over every communication: in, out and owed (plan 261).","tool","wired","keep",3,19
+  "cron-registry.sh","cron-registry.sh — every scheduled thing on this machine: the Nornir rows, the system timers, the user timers.","tool","wired","keep",1,56
   "daily-log.sh","daily-log.sh — the day's work, recorded where the contract says it lives.","tool","wired","keep",6,104
   "developers.sh","developers.sh — who can write to a repository, and who actually has.","tool","wired","keep",0,108
+  "gimle-tunnels-check.sh","gimle-tunnels-check.sh — every Gimlé surface must be reachable on a tunnel, and we must KNOW it is, not assume it.","tool","wired","keep",0,66
   "grade.sh","grade.sh — Dellingr: how fresh is a document?","tool","wired","keep",2,29
   "header.sh","header.sh — the declared-truth header of a home document: check, or apply a minimal one.","tool","wired","keep",2,28
+  "host-status.sh","host-status.sh — CPU, memory and GPU of this machine, in one read.","tool","wired","keep",0,45
   "journal-append.sh","journal-append.sh — write one idempotent entry to THIS machine's outbox.","tool","tested","keep",0,115
   "journal-receive.sh","journal-receive.sh — the HEART folds the bodies' journals into one record.","tool","tested","keep",1,137
   "journal-reconcile.sh","journal-reconcile.sh — push this machine's outbox to the heart, when it answers.","tool","tested","keep",2,131
@@ -53,13 +57,18 @@ bin[48]{file,does,kind,verdict,disposition,callers,lines}:
   "project-brief.sh","project-brief.sh — 'this project', for any session in any harness (Claude Code, Pi, OpenCode, Hermes).","tool","wired","keep",1,21
   "project_brief.py","'''project_brief — the 'this project' section of the session-start digest (see project-brief.sh).'''","tool","wired","keep",1,139
   "regenerate-on-merge.sh","regenerate-on-merge.sh — the merge driver for WOVEN documents (Þættir, plan 174).","tool","wired","keep",3,36
+  "registries-refresh.sh","registries-refresh.sh — write the four measured registries for this host into the home.","tool","wired","keep",0,25
+  "registry-audit.sh","registry-audit.sh — is every running container named in the services registry, and is every named service alive?","tool","wired","keep",0,47
   "runes-append.sh","runes-append.sh — the append-only Runes ledger, a THIN SHIM.","tool","tested","keep",37,117
   "runes-project.sh","runes-project.sh — the DAG projector, regenerates runes_audit.md from events.","tool","wired","keep",0,65
+  "running-inventory.sh","running-inventory.sh — what is actually running on this machine, generated rather than remembered.","tool","wired","keep",1,95
   "snotra-ladder.sh","snotra-ladder.sh — the meeting ladder: transcript → minutes → promises → todos, and a stop that says so.","tool","wired","keep",0,611
   "snotra-what.sh","snotra-what.sh — Snotra's own voice: what the ear is doing, said in one sentence.","tool","wired","keep",1,640
   "test_comms.py","'''The proofs plan 261 asks for: the record, the owed list, the to-do proposals, the brief,","tool","wired","keep",0,508
   "test_mimir_bridge_health.py","﻿import importlib.util,json,subprocess,sys,tempfile,threading,unittest","tool","wired","keep",0,30
   "todos.sh","todos.sh — THE task board of the house, one writer for one file.","tool","wired","keep",6,184
+  "tunnels-registry.sh","tunnels-registry.sh — emit the registry's `tunnels:` block from the cloudflared configs that actually exist.","tool","wired","keep",0,62
+  "tunnels-status.sh","tunnels-status.sh — every public name this machine publishes, whether its tunnel is up, and whether its upstream answers.","tool","wired","keep",2,44
   "vor-crew-state.sh","vor-crew-state.sh - deterministic read of an Eindri worker's CURRENT state.","tool","wired","keep",2,125
   "weave-features.sh","weave-features.sh — FEATURES.md is WOVEN from fragments, never hand-edited.","tool","wired","keep",7,56
   "weave.sh","weave.sh — the dispatcher for every WOVEN document and every INDEX (Þættir, plan 174/175).","tool","wired","keep",8,92
@@ -71,6 +80,6 @@ bin[48]{file,does,kind,verdict,disposition,callers,lines}:
   "wyrd-db.sh","wyrd-db.sh — the database layer (W0040).","tool","wired","keep",0,49
   "ymir-state.sh","ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runtime/state/`).","tool","wired","keep",12,44
 
-**Tally.** verdict: wired=39, tested=9
+**Tally.** verdict: wired=48, tested=9
 
-**Tally.** disposition: keep=47, migrate → src/ymir_runtime/library.py=1
+**Tally.** disposition: keep=56, migrate → src/ymir_runtime/library.py=1
