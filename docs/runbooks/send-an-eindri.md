@@ -33,7 +33,8 @@ flowchart LR
 | 5 | Speak to it only through the stamped door | `bin/agents/eindri-send.sh --from "agent <you>" <pane> "<text>"` | the worker sees `[from agent … · herdr pane … · <machine>]` |
 | 6 | Read it without disturbing it | `herdr agent read <pane>` | — |
 | 7 | Receive its report | `$YMIR_HOME/state/eindri-reports/<errand>.md` and one stamped line in the helm's pane | the report names its commit and its proof |
-| 8 | Check the branch is right (the list below), then hand it to the heart's worker, which gathers, opens the PR, reviews and merges | the list of branches, their order and their proofs, sent to the heart | the heart's PR carries only checked branches |
+| 8 | The worker pushes its branch and writes its **handoff packet**; the helm checks the branch (the list below) before the heart takes it | `bin/forge/handoff-packet.sh write <errand> --task … --plan … --branch eindri/<errand> --gate … --test … --claim … --not-done … --need …` lands on the review shelf (`bin/forge/review-shelf.sh`) | `handoff-packet.sh check <errand>` passes |
+| 8b | The heart's reviewer (Forseti on the heart) takes the packet, fetches the branch, reruns the gates and tests **on the heart**, reads the diff against the plan, opens the PR, merges and tells the operator | plans 203, 205, 206 §4; `RULES/08` (`reviewer-merges`) | the merge record in Runes |
 | 9 | Close the seat and reap the worktree once the PR merges | `bin/seat/seat-reap.sh`, `git worktree remove .yggdrasil/<errand>` | the pane is gone; `.yggdrasil/` does not grow |
 
 ## The fixed core every brief carries
@@ -54,6 +55,9 @@ A worker starts knowing nothing. Every brief ends with these lines (plan 275, 04
 - The report: write it to the reports shelf, then send one line with `eindri-send.sh --from "agent <errand>" <helm pane> "<result>"`.
 
 ## Before a branch goes to the heart
+
+This road is already the house's law — plan 206 §4 (*the one pass*) and `RULES/08`'s `reviewer-merges` row; this
+runbook only points at it. The packet is the one artefact that crosses from a worker to the reviewer.
 
 The heart's worker merges; the helm answers for what it is handed. A branch is handed over only when every line
 below holds:
