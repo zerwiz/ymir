@@ -77,6 +77,22 @@ The door stops with exit code 3 and prints the branch, the files and the worktre
 The batch name is printed when the batch starts. Each batch's record is kept in
 `state/gather/<batch>.manifest`.
 
+## When one errand stands on another
+
+A worker sometimes builds on another worker's branch instead of `origin/main` — for example a rename
+that lands on top of a header change. Its handoff packet then names that branch as its `base` (a
+branch such as `eindri/smidja-header-chat`, not `origin/main`).
+
+The gather reads that base from each packet and merges the base **first**, whatever order you named
+the branches on the command line. So you can write:
+
+```bash
+bin/forge/gather.sh kaia-to-volundr smidja-header-chat
+```
+
+and the base (`smidja-header-chat`) is merged before the branch cut from it, even though it was named
+second. A packet whose base is `origin/main` needs no reordering and keeps the order you gave.
+
 ## Limits
 
 - Only local branches are gathered. An errand that pushed its own PR is not a batch errand.
@@ -101,3 +117,4 @@ range qualifies.
 
 - 2026-11-12 — written with the change it describes.
 - 2026-11-14 — the helm is prompted to gather when the last errand of a batch finishes (plan 293 part 4).
+- 2026-11-14 — added: the gather reads a packet's base branch and merges it first (plan 293 part 7).
