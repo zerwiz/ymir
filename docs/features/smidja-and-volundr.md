@@ -103,9 +103,9 @@ does not sneak past it.
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
 
-## Choose the model Kaia's chat starts on
+## Choose the model Völundr's chat starts on
 
-Kaia is the smithy's own chat — the voice in the visualizer's Chat page. It answers on a
+Völundr is the smithy's own chat — the voice in the visualizer's Chat page. It answers on a
 model this machine's `pi` actually serves, and **you name which one**.
 
 Smíðja takes it in this order: the `SMIDJA_CHAT_MODEL` environment variable, then your own

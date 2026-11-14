@@ -3,10 +3,10 @@
 Load this when working with the smithy: installing it, configuring its roster,
 running a chain, reading its trace, or wiring it into Hlidskjalf.
 
-- **Norse:** **Smíðja** = the smithy (the workshop). Its orchestrator seat is
-  **Völundr**, the master smith — *Kaia's seat inside the factory* (Kaia decides
-  *what* is forged; Völundr decides *how* the smithy runs). Its trace UI is
-  **Smíðja's eye**.
+- **Norse:** **Smíðja** = the smithy (the workshop). Its orchestrator is
+  **Völundr**, the master of the smiths — one figure, whose name was written *Kaia* before
+  2026-11-14: he leads the smithy, decides *what* is forged and *how* the smithy runs, and
+  dispatches its smiths. Its trace UI is **Smíðja's eye**.
 - **Registry:** `.agents/assets/agents/naming.md`, `docs/lore.md` §XI/§XIII.
 - **Skill (adopted upstream):** `.agents/skills/smidja-factory/` (internals + cookbooks +
   references + sibling skills `smidja-launcher`, `smidja-start`,
@@ -219,7 +219,7 @@ marker line per execution shows no committed phase's work was recomputed, and
   an ellipsis, and only wraps below ~740px. Measured 1600→360px: six doors visible
   at every width, zero collisions. Public share of the why:
   `docs/fixes/smidja/2026-11-14-the-smithy-header-fits-every-width.md`.
-- **Kaia's persona ships with the app, and the home may override it (2026-11-14).**
+- **Völundr's persona ships with the app, and the home may override it (2026-11-14).**
   The chat's identity is resolved in this order — `KAIA_PERSONA` (an explicit
   file), `<repo>/.agents/skills/smidja/kaia/persona.md` (the operator's own shape;
   when the chat's data lives in the home, that root IS the home), the target
@@ -234,7 +234,7 @@ marker line per execution shows no committed phase's work was recomputed, and
   `config/smidja.env`, then the repo's `DEFAULT_CHAT_MODEL`; the repo ships only the
   shape, `config/smidja.env.example`. `GET /api/chat/default-model` serves the answer
   and the picker opens with that model selected.
-- **Kaia's chat (2026-11-14).** `server/chat.ts` defaults to
+- **Völundr's chat (2026-11-14).** `server/chat.ts` defaults to
   `opencode-go/deepseek-v4.1-flash` (the old `deepseek-v4-flash` is in no catalog
   and the provider answers it `400 Model is unavailable`, which pi reported as
   exit 1). A failure shows `failureReason()`: pi's stderr with every

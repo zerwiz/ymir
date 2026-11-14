@@ -1,6 +1,6 @@
 ---
 name: create-new-teams
-description: "Create a new smidja team (roster stack) by interviewing the user first. Ask a lot of questions — purpose, local/cloud/hybrid surface, which agents, which model EACH agent runs (orchestrator gets a big model by default), cost/speed/quality trade-offs, kaia tier, and what context to inject — then hand-edit the roster file and validate. Use when the user wants a new team, a new roster, a new configuration of agents+models, or 'make a team for project X'."
+description: "Create a new smidja team (roster stack) by interviewing the user first. Ask a lot of questions — purpose, local/cloud/hybrid surface, which agents, which model EACH agent runs (orchestrator gets a big model by default), cost/speed/quality trade-offs, Völundr tier, and what context to inject — then hand-edit the roster file and validate. Use when the user wants a new team, a new roster, a new configuration of agents+models, or 'make a team for project X'."
 version: "1.0"
 allowed-tools: read, write, edit, bash, grep, glob
 ---
