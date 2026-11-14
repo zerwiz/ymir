@@ -82,7 +82,7 @@ named for him is the operator's life — only the second is a finding.
 |---|---|
 | `name:` | anywhere, as a whole word — a person, a client, a company |
 | `domain:` | anywhere, on a domain boundary — a mail or client domain |
-| `host:` | only where it is *used* as a host: after `@`, `//`, `/home/`, `host=`, `host:` or `ssh`, or before a port, `.local` or a tailnet suffix |
+| `host:` | only where it is *used* as a host: after `@`, `//`, `/home/`, `host=`, `host:` or `ssh`, or before a port, a dot-local (mDNS) name or a tailnet suffix |
 | `user:` | another spelling of `host:` |
 
 A bare word is read as `name:`. Entries shorter than three characters are

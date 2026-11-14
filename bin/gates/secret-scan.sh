@@ -93,7 +93,7 @@ deny_sources() {  # the lists that EXIST on this machine, one path per line
 #   name: · domain:   judged ANYWHERE as a whole word — a person, a client, a company or a
 #                     mail domain is a finding wherever it appears.
 #   host: · user:     judged only where the word is USED as one — after `@`, `//`, `/home/`,
-#                     `host=`, `host:` or `ssh`, or before a port, `.local` or a tailnet
+#                     `host=`, `host:` or `ssh`, or before a port, a dot-local (mDNS) name or a tailnet
 #                     suffix. The lore and the fleet share names (a subsystem named for a
 #                     figure is the craft; the box named for him is the operator's life), so
 #                     a host rule that fired anywhere would bury real findings under craft.

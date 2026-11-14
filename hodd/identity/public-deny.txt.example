@@ -15,8 +15,8 @@
 #                   A word inside a longer word is not a match (`ann` never matches `annal`).
 #   domain:<word>   a mail or client domain — judged anywhere, on a domain boundary.
 #   host:<word>     a machine or a user name — judged only where it is USED as one: after
-#                   `@`, `//`, `/home/`, `host=`, `host:` or `ssh`, or before a port, `.local`
-#                   or a tailnet suffix. Use this kind for a name that is also an ordinary
+#                   `@`, `//`, `/home/`, `host=`, `host:` or `ssh`, or before a port, a dot-local (mDNS)
+#                   name or a tailnet suffix. Use this kind for a name that is also an ordinary
 #                   word or a figure of the lore: the subsystem named for the figure is the
 #                   house's craft, the box named for him is the operator's life, and only
 #                   the second is a finding.
