@@ -305,7 +305,12 @@ def cmd_write(a):
     if not tests:
         usage_error("write needs at least one --test (the command, its exit, its tail)")
 
-    packet = {"task": a.task, "plan": a.plan, "branch": branch, "base": base_ref,
+    # THE BASE IS THE RESOLVED SHA, never the ref the smith typed (2026-11-14): `--base
+    # origin/main` wrote "origin/main" into the packet, and `check` — which needs a full sha to
+    # re-derive the diff — then refused the door's own packet ("no full sha … the diff cannot be
+    # verified"). A door that writes what it refuses is a door that costs the next hand a round
+    # trip, so the ref is resolved here and only the sha is written.
+    packet = {"task": a.task, "plan": a.plan, "branch": branch, "base": base,
               "head": head, "author": author,
               "written_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
               "ruleset": ruleset, "floor": floor,

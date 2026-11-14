@@ -118,6 +118,18 @@ run python3 "$tool" check ok --repo "$repo" --packet "$tmp/emptyrec.packet"
 [ "$rc" = 1 ] && ok "an empty records block is refused at check" || bad "an empty records block passed"
 
 # 10 · a missing packet is a refusal, never an empty pass
+# 10 · a base given as a REF is resolved to its sha, so the door's own packet passes its own check
+run python3 "$tool" write reffed --task t --plan p --branch work --base work --head "$head" \
+  --gate "site|bash g.sh|0|g.sh: 1 PASS" --test "bash t.sh|0|1 passed" \
+  --record "none|the door's own packet test touches no project record" \
+  --repo "$repo" --packet "$tmp/reffed.packet"
+[ "$rc" = 0 ] && ok "a packet may name its base by ref" || bad "write refused a ref base: $out"
+grep -qE '^  "t","p","work","[0-9a-f]{40}"' "$tmp/reffed.packet" \
+  && ok "the ref was resolved to a full sha in the packet" || bad "the packet kept a ref as its base"
+run python3 "$tool" check reffed --repo "$repo" --packet "$tmp/reffed.packet"
+[ "$rc" = 0 ] && ok "the door's own packet passes the door's own check" || bad "the door refused its own packet: $out"
+
+# 9 · a missing packet is a refusal, never an empty pass
 run python3 "$tool" check ghost --repo "$repo" --packet "$tmp/nope.packet"
 [ "$rc" = 1 ] && ok "a missing packet is refused" || bad "a missing packet was accepted"
 

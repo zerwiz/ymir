@@ -2,7 +2,7 @@
 Description=Snotra — the meeting ear MCP face (:8321, read-only minutes)
 [Service]
 Type=simple
-Environment=PATH=%h/.bun/bin:/usr/bin:/bin
+Environment=PATH=%h/.bun/bin:/usr/bin:/bin:%h/.local/share/mise/shims:%h/.mise/shims
 Environment=PORT=8321
 Environment=SNOTRA_VAULT=%h/Documents/ymirhome
 # Loopback unless the operator widens it in ~/.config/ymir/fleet.env (2026-11-12).

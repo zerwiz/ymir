@@ -9,12 +9,25 @@ registers the provider with baseUrl=http://127.0.0.1:PORT/v1 and any placeholder
 key.
 
 Providers (YMIR_MODEL_PROVIDER):
-    opencode-go   (default)  OpenCode Zen Go gateway — REQUIRES OPENCODE_GO_API_KEY
-    lmstudio                 LM Studio on localhost — NO KEY REQUIRED
+    opencode-go   (default)  OpenCode Zen Go gateway — needs a key
+    local-rail               the local llama.cpp rail — the second road when no key is here
+    lmstudio                 LM Studio on localhost — ONLY when the operator names it
     openai-compatible        any OpenAI-compatible server — optional key
 
-The Allfather chooses. No provider is forced to need a key: LM Studio runs
-entirely locally and the bridge starts with no credential at all.
+THE FALLBACK IS NEVER LM STUDIO (plan 275 item 22, 2026-11-14). It used to be: with no
+OPENCODE_GO_API_KEY in the env file the bridge chose `lmstudio`, a door the Allfather
+retired on 2026-10-24 ("no lm studio we not using that"), and every chat then died with
+`curl: (7) Failed to connect to 127.0.0.1:1234` behind a bare 500. The order is now:
+
+    1. the operator NAMED a provider (--provider / YMIR_MODEL_PROVIDER)  — it wins, even lmstudio
+    2. a key is readable for opencode-go  -> opencode-go
+    3. the local rail answers on :8080    -> local-rail
+    4. neither                            -> REFUSE, naming both roads
+
+A key is read by a DOOR, never by a guess: the env file, the process environment, the
+vault (`bin/vault/hodd.sh emit secrets/platform.env`) and finally pi's own auth.json.
+The value never leaves this process: it is never printed, never written into the env
+file, never passed in argv (argv is world-readable through /proc).
 
 Endpoints (OpenAI-compatible):
     GET  /v1/models                          -> model list (for pi listing)
@@ -23,21 +36,27 @@ Endpoints (OpenAI-compatible):
 Usage:
     python3 model-bridge.py [--port 4603] [--env /path/.env] [--provider NAME] [--bind HOST]
     python3 model-bridge.py --providers      # the provider names this bridge can serve
+    python3 model-bridge.py --resolve-provider   # which provider it would serve, and WHY
 
 Env:
-    YMIR_MODEL_PROVIDER       opencode-go | lmstudio | openai-compatible
+    YMIR_MODEL_PROVIDER       opencode-go | local-rail | lmstudio | openai-compatible
     YMIR_MODEL_BASE_URL       override the provider's base URL
     YMIR_MODEL_API_KEY        credential for the selected provider
     YMIR_MODEL_BIND           listen address (default 127.0.0.1); a containerised
                               client on another network names the interface it sees
     OPENCODE_GO_API_KEY       credential when provider=opencode-go
+    LLAMA_SWAP_API_KEY        credential when provider=local-rail (the rail's own key)
     LMSTUDIO_BASE_URL         default http://127.0.0.1:1234/v1
     OPENCODE_GO_BASE_URL      default https://opencode.ai/zen/go/v1
+    YMIR_RAIL_BASE_URL        default http://127.0.0.1:8080/v1 (the local rail)
     OPENCODE_GO_BRIDGE_PORT   default 4603
+    YMIR_VAULT_DOOR           the vault door keyed for a sealed vault (default bin/vault/hodd.sh)
+    YMIR_PI_AUTH              pi's auth.json (default ~/.pi/agent/auth.json)
 """
 import argparse
 import json
 import os
+import subprocess
 import sys
 import urllib.request
 import urllib.error
@@ -45,36 +64,63 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 DEFAULT_PORT = 4603
 
+# This file lives at <root>/.agents/backend/model-bridge.py, so the tree's own doors
+# (the catalog, the vault) are two levels up. Reported, never assumed: a packaged copy
+# that lacks them degrades to the static table rather than pretending to read them.
+ROOT = __import__("pathlib").Path(__file__).resolve().parents[2]
+
 # Provider catalogue. `key_env` lists the env names checked, in order; an empty
 # key requirement (lmstudio) means the bridge starts with no credential.
+#
+# `vault_key` and `pi_auth` are the two further doors a credential may sit behind on this
+# machine (plan 275 item 22): the house vault is the private store, and pi's auth.json is
+# what the harness itself uses. `catalog` names the provider as `bin/model/catalog.sh`
+# lists it, so /v1/models can answer from the catalogue rather than a stale table.
 PROVIDERS = {
     "opencode-go": {
         "base_url": "https://opencode.ai/zen/go/v1",
         "base_url_env": "OPENCODE_GO_BASE_URL",
         "key_env": ["OPENCODE_GO_API_KEY", "YMIR_MODEL_API_KEY"],
+        "vault_key": "OPENCODE_GO_API_KEY",
+        "pi_auth": "opencode-go",
+        "catalog": "opencode-go",
         "requires_key": True,
+    },
+    "local-rail": {
+        "base_url": "http://127.0.0.1:8080/v1",
+        "base_url_env": "YMIR_RAIL_BASE_URL",
+        "key_env": ["LLAMA_SWAP_API_KEY", "YMIR_MODEL_API_KEY"],
+        "vault_key": "LLAMA_SWAP_API_KEY",
+        "pi_auth": "llama-swap",
+        "catalog": "llama-swap",
+        "requires_key": False,
     },
     "lmstudio": {
         "base_url": "http://127.0.0.1:1234/v1",
         "base_url_env": "LMSTUDIO_BASE_URL",
         "key_env": ["LMSTUDIO_API_KEY", "YMIR_MODEL_API_KEY"],
+        "pi_auth": "lmstudio",
+        "catalog": "lmstudio",
         "requires_key": False,
     },
     "openai-compatible": {
         "base_url": "",
         "base_url_env": "YMIR_MODEL_BASE_URL",
         "key_env": ["YMIR_MODEL_API_KEY"],
+        "catalog": "",
         "requires_key": False,
     },
 }
 
-# The opencode-go catalog (from `opencode models`, 2026-08-31).
-# Bare model ids — the gateway rejects the `opencode-go/` prefix.
+# The provider the bridge falls to when no key exists. NEVER lmstudio (plan 275 item 22):
+# a retired door that answers `curl: (7)` is not a fallback, it is a second failure.
+FALLBACK_PROVIDER = "local-rail"
+
+# The static table is the LAST resort, for a machine where neither the provider nor the
+# catalogue can answer. It is not an opinion about what the gateway serves — the
+# catalogue is (`bin/model/catalog.sh`) — and it is deliberately short.
 MODELS = [
-    {"id": "deepseek-v4-flash", "contextWindow": 131072, "input": ["text"]},
-    {"id": "deepseek-v4-flash-vision-exp", "contextWindow": 131072, "input": ["text", "image"]},
-    {"id": "deepseek-v4-pro", "contextWindow": 131072, "input": ["text"]},
-    {"id": "glm-5.1", "contextWindow": 131072, "input": ["text"]},
+    {"id": "deepseek-v4.1-flash", "contextWindow": 1000000, "input": ["text"]},
 ]
 
 # Resolved at startup.
@@ -106,13 +152,93 @@ def load_env(path: str) -> dict:
 
 
 def resolve_provider(env: dict, cli_provider: str | None) -> str:
-    name = (cli_provider or env.get("YMIR_MODEL_PROVIDER")
-            or os.environ.get("YMIR_MODEL_PROVIDER") or "opencode-go").strip()
+    """The provider this bridge serves. `cli_provider` is the operator's NAME, if any.
+
+    Named beats detected — but when nothing is named the fallback is decided by what is
+    actually here, and it is NEVER lmstudio (plan 275 item 22): a retired door answering
+    `curl: (7)` behind a bare 500 is how OmniChat lost every model at once.
+    """
+    name, _why = choose_provider(env, cli_provider)
+    if not name:
+        print("[bridge] ERROR: no provider to serve — "
+              "no key for opencode-go, and the local rail does not answer.\n"
+              "  named:   --provider opencode-go | local-rail | lmstudio | openai-compatible\n"
+              "  keyed:   put OPENCODE_GO_API_KEY in the vault (bin/vault/hodd.sh emit secrets/platform.env)\n"
+              "  local:   raise the rail on :8080, or set YMIR_RAIL_BASE_URL\n"
+              "  (lmstudio is served only when it is NAMED)", file=sys.stderr)
+        raise SystemExit(1)
     if name not in PROVIDERS:
         print(f"[bridge] ERROR: unknown provider '{name}'. "
               f"Choose one of: {', '.join(PROVIDERS)}", file=sys.stderr)
         raise SystemExit(2)
     return name
+
+
+def choose_provider(env: dict, cli_provider: str | None) -> tuple[str, str]:
+    """(provider, why). The `why` is REPORTED because a door that cannot say why it chose
+    a provider leaves the operator guessing at the one place the fleet already broke."""
+    named = (cli_provider or env.get("YMIR_MODEL_PROVIDER")
+             or os.environ.get("YMIR_MODEL_PROVIDER") or "").strip()
+    if named:
+        return named, "named by the operator"
+    spec = PROVIDERS["opencode-go"]
+    key, where = resolve_key(env, spec)
+    if key:
+        return "opencode-go", f"a key is readable ({where})"
+    rail = resolve_base_url(env, PROVIDERS[FALLBACK_PROVIDER])
+    if rail_answers(rail):
+        return FALLBACK_PROVIDER, f"no key, and the rail answers on {rail}"
+    return "", "no key for opencode-go and no rail answering"
+
+
+def vault_env() -> dict:
+    """The vault's secret names, read through the ONE door and kept in memory.
+
+    `bin/vault/hodd.sh emit secrets/platform.env` is the house's single way to a secret
+    (Rule 04: referenced, never inlined). It is bounded, it is silent on failure, and
+    nothing it prints is ever logged — only the KEY'S NAME may be reported.
+    """
+    door = os.environ.get("YMIR_VAULT_DOOR") or str(ROOT / "bin" / "vault" / "hodd.sh")
+    if not os.path.exists(door):
+        return {}
+    try:
+        out = subprocess.run(["bash", door, "emit", "secrets/platform.env"],
+                             capture_output=True, timeout=25).stdout.decode("utf-8", "replace")
+    except Exception:
+        return {}
+    return load_env_text(out)
+
+
+def load_env_text(text: str) -> dict:
+    """KEY=value per line, with the `export ` the vault door adds stripped."""
+    env = {}
+    for line in text.splitlines():
+        line = line.strip()
+        if line.startswith("export "):
+            line = line[len("export "):]
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, _, v = line.partition("=")
+        env[k.strip()] = v.strip().strip('"').strip("'")
+    return env
+
+
+def pi_auth_key(name: str) -> str:
+    """pi's own credential for a provider, from `~/.pi/agent/auth.json` (a documented
+    pi path, never a house one). The harness reads its key there, so a bridge serving
+    the same rail reads the same key instead of inventing a second place."""
+    if not name:
+        return ""
+    path = os.environ.get("YMIR_PI_AUTH") or os.path.expanduser("~/.pi/agent/auth.json")
+    try:
+        with open(path) as f:
+            data = json.load(f)
+    except Exception:
+        return ""
+    v = data.get(name) if isinstance(data, dict) else None
+    if isinstance(v, dict):
+        return str(v.get("key") or "")
+    return v if isinstance(v, str) else ""
 
 
 def resolve_base_url(env: dict, spec: dict) -> str:
@@ -122,6 +248,24 @@ def resolve_base_url(env: dict, spec: dict) -> str:
             return v
     v = env.get(spec["base_url_env"]) or os.environ.get(spec["base_url_env"])
     return v or spec["base_url"]
+
+
+def rail_answers(base_url: str, timeout: float = 1.5) -> bool:
+    """Does the local rail answer at its root? A closed port is a fast, quiet no."""
+    if not base_url:
+        return False
+    root = base_url.rstrip("/")
+    root = root[:-3] if root.endswith("/v1") else root
+    try:
+        req = urllib.request.Request(root + "/v1/models",
+                                     headers={"User-Agent": USER_AGENT})
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return 200 <= r.status < 500
+    except urllib.error.HTTPError as e:
+        # 401 from a keyed rail still proves the door is OPEN: the model is served there.
+        return e.code in (401, 403)
+    except Exception:
+        return False
 
 
 def resolve_key(env: dict, spec: dict) -> tuple[str, str]:
@@ -135,7 +279,48 @@ def resolve_key(env: dict, spec: dict) -> tuple[str, str]:
         v = os.environ.get(name)
         if v:
             return v, f"{name} in the environment"
+    vault_name = spec.get("vault_key")
+    if vault_name:
+        v = vault_env().get(vault_name)
+        if v:
+            return v, f"{vault_name} in the vault"
+    pi_name = spec.get("pi_auth")
+    if pi_name:
+        v = pi_auth_key(pi_name)
+        if v:
+            return v, f"{pi_name} in pi's auth.json"
     return "", "no key"
+
+
+def catalog_models(spec: dict) -> list:
+    """The models this provider serves, from the ONE catalogue door.
+
+    `/v1/models` answered `deepseek-v4-flash` for a whole week because the bridge fell back
+    to a hand-written table while the gateway was unreachable — so a model the house uses
+    (v4.1) was invisible to every chat that listed models. `bin/model/catalog.sh` already
+    knows every model pi can serve; the bridge reads it rather than keeping a second table.
+    """
+    wanted = spec.get("catalog") or ""
+    if not wanted:
+        return []
+    door = os.environ.get("YMIR_CATALOG_BIN") or str(ROOT / "bin" / "model" / "catalog.sh")
+    if not os.path.exists(door):
+        return []
+    try:
+        out = subprocess.run(["bash", door], capture_output=True, timeout=45).stdout.decode("utf-8", "replace")
+    except Exception:
+        return []
+    rows = []
+    for line in out.splitlines():
+        line = line.strip()
+        if not line.startswith('"'):
+            continue
+        cells = [c.strip().strip('"') for c in line.rstrip(",").split('","')]
+        cells = [c.strip('"') for c in cells]
+        if len(cells) < 2 or cells[0] != wanted:
+            continue
+        rows.append({"id": cells[1], "object": "model"})
+    return rows
 
 
 def is_https(url: str) -> bool:
@@ -162,7 +347,8 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def _models(self) -> list:
-        # Ask the provider what it serves; fall back to the static catalogue.
+        # Ask the provider what it serves; then the catalogue (the house's one
+        # opinion); then the static table, which is nothing but a last resort.
         try:
             req = urllib.request.Request(_upstream("models"),
                                          headers={**_auth_headers(), "User-Agent": USER_AGENT,
@@ -170,9 +356,15 @@ class Handler(BaseHTTPRequestHandler):
          "x-opencode-session": SESSION_ID})
             with _curl_open(req, timeout=10) as r:
                 data = json.loads(r.read())
-            return data.get("data", [])
+            live = data.get("data", [])
+            if live:
+                return live
         except Exception:
-            return [{"id": m["id"], "object": "model"} for m in MODELS]
+            pass
+        from_catalog = catalog_models(PROVIDERS.get(PROVIDER, {}))
+        if from_catalog:
+            return from_catalog
+        return [{"id": m["id"], "object": "model"} for m in MODELS]
 
     def do_GET(self):
         if self.path.split("?")[0] == "/v1/models":
@@ -230,11 +422,21 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Connection", "close")
             chunked = True
         else:
-            cl = resp.headers.get("Content-Length")
-            if cl:
-                self.send_header("Content-Length", cl)
+            # A NON-STREAM REPLY IS DELIMITED, ALWAYS (2026-11-14, plan 275 item 22). The
+            # upstream body is already whole in memory here, so the honest framing is its
+            # real length — never "no length and hope the client stops" — and the body is
+            # written once instead of re-read until the socket fills the disk.
+            whole = resp.read()
+            self.send_header("Content-Length", str(len(whole)))
             chunked = False
         self.end_headers()
+        if not chunked:
+            try:
+                self.wfile.write(whole)
+                self.wfile.flush()
+            except (BrokenPipeError, ConnectionResetError):
+                pass
+            return
         while True:
             chunk = resp.read(4096)
             if not chunk:
@@ -280,18 +482,24 @@ class _CurlResponse:
     My first curl transport returned a bare BytesIO, so the proxy died on
     '.status' - a bridge that answers 500 looks like a broken model when it is a
     broken wrapper. This presents the shape the callers expect.
+
+    AND `.read(n)` MUST CONSUME (2026-11-14, plan 275 item 22): the first version
+    returned the WHOLE body on every call, so the proxy's `while chunk := resp.read(4096)`
+    loop never ended — it re-wrote the same 640-byte reply forever and a chat client was
+    handed a response with no end (measured: one completion through :4604 produced a 13 GB
+    download of repeated JSON). A wrapper whose read() does not advance is not a stream.
     """
 
     def __init__(self, body: bytes, status: int):
-        self._body = body
+        self._buf = __import__("io").BytesIO(body)
         self.status = status
         self.headers = {"content-type": "application/json"}
 
-    def read(self, *_a) -> bytes:
-        return self._body
+    def read(self, n: int = -1) -> bytes:
+        return self._buf.read(n)
 
     def __iter__(self):
-        return iter(self._body.splitlines(True))
+        return iter(self._buf.readlines())
 
     def __enter__(self):
         return self
@@ -382,17 +590,29 @@ def main() -> int:
     ap.add_argument("--env", default=os.environ.get("ENV_FILE",
                     str(__import__("pathlib").Path(__file__).resolve().parents[1] / ".env")))
     ap.add_argument("--provider", default=None,
-                    help="opencode-go | lmstudio | openai-compatible")
+                    help="opencode-go | local-rail | lmstudio | openai-compatible")
     ap.add_argument("--bind", default=os.environ.get("YMIR_MODEL_BIND", "127.0.0.1"),
                     help="listen address (default 127.0.0.1, or YMIR_MODEL_BIND)")
     ap.add_argument("--providers", action="store_true",
                     help="print the provider names this bridge can serve, one per line")
+    ap.add_argument("--resolve-provider", dest="resolve_provider", action="store_true",
+                    help="print which provider this bridge would serve, and WHY, without serving")
     args = ap.parse_args()
     if getattr(args, "self_test", False):
         return _self_test()
     if args.providers:
         print("\n".join(PROVIDERS))
         return 0
+    if getattr(args, "resolve_provider", False):
+        env = load_env(args.env)
+        name, why = choose_provider(env, args.provider)
+        spec = PROVIDERS.get(name, {})
+        base = resolve_base_url(env, spec) if spec else ""
+        _key, where = resolve_key(env, spec) if spec else ("", "no key")
+        print('provider[4]{provider,why,base_url,key}:')
+        print('  "%s","%s","%s","%s"' % (name or "NONE", why, base or "",
+                                            "present" if _key else where))
+        return 0 if name else 1
 
     global KEY, BASE_URL, PROVIDER, BIND
     BIND = args.bind
@@ -404,8 +624,8 @@ def main() -> int:
 
     if spec["requires_key"] and not KEY:
         print(f"[bridge] ERROR: provider '{PROVIDER}' requires a key. Set "
-              f"{' or '.join(spec['key_env'])} in {args.env}, or choose a "
-              f"keyless provider such as 'lmstudio'.", file=sys.stderr)
+              f"{' or '.join(spec['key_env'])} in {args.env}, in the vault, or in pi's auth.json — "
+              f"or choose the local rail with '--provider local-rail'.", file=sys.stderr)
         return 1
     if not BASE_URL:
         print(f"[bridge] ERROR: provider '{PROVIDER}' has no base URL. Set "
