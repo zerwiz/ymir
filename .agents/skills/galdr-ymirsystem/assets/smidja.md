@@ -221,8 +221,9 @@ marker line per execution shows no committed phase's work was recomputed, and
   `docs/fixes/smidja/2026-11-14-the-smithy-header-fits-every-width.md`.
 - **Völundr's persona ships with the app, and the home may override it (2026-11-14).**
   The chat's identity is resolved in this order — `KAIA_PERSONA` (an explicit
-  file), `<repo>/.agents/skills/smidja/kaia/persona.md` (the operator's own shape;
-  when the chat's data lives in the home, that root IS the home), the target
+  file), a superseded shelf name a home may still carry — `<home>/.agents/skills/smidja/kaia/persona.md`
+  (the operator's own shape; the repository's skill is `smidja-factory`); when the chat's data
+  lives in the home, that root IS the home — then the target
   repo's own `prompts/kaia.md`, then the default that ships with the app at
   `apps/smidja-factory/apps/visualizer/prompts/kaia.md` (found by walking up from
   the server module, so it answers the same on any machine). The spawn also

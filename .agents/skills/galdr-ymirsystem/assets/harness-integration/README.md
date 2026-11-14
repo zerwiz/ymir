@@ -402,7 +402,7 @@ governed[6]{path,load_first}:
   "bin/mimir*",".agents/skills/galdr-ymirsystem/assets/memory-well.md"
   "bin/nornir-* | config/cron.yaml",".agents/skills/galdr-ymirsystem/assets/nornir-jobs.md"
   "bin/seat/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr-ymirsystem/assets/harness-integration/README.md"
-  "bin/smidja* | .agents/skills/smidja/**",".agents/skills/galdr-ymirsystem/assets/smidja.md"
+  "bin/smidja* | .agents/skills/smidja-factory/**",".agents/skills/galdr-ymirsystem/assets/smidja.md"
 ```
 
 The Pi extension `.pi/extensions/syn-turnend-guard.ts` relays it: `read` of an
