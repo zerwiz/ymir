@@ -33,7 +33,7 @@ export const LORE_LONG: LoreSection[] = [
     title: 'II · The Smiths at the Forge',
     paras: [
       'To work the metal, the gods needed smiths, and the greatest were the dwarf brothers. Brokk stands at the bellows, feeding the fire and driving the work to its end; his brother shapes the craft. Together they forged the finest treasures of Asgard.',
-      'In Ymir, Brokk is the primary agent — the one who keeps the forge hot and never abandons a task half-struck. The Eindri are his delegated hands: isolated smiths, each struck off into a sealed realm so a single bad casting can never shatter the whole forge. Between them sits Smíðja, the smithy itself — the engine that reads the roster, sets the phases, and carries every errand to its acceptance gate. Its master smith is Völundr, who decides how the shop runs, while Kaia decides what is worth forging.',
+      'In Ymir, Brokk is the primary agent — the one who keeps the forge hot and never abandons a task half-struck. The Eindri are his delegated hands: isolated smiths, each struck off into a sealed realm so a single bad casting can never shatter the whole forge. Between them sits Smíðja, the smithy itself — the engine that reads the roster, sets the phases, and carries every errand to its acceptance gate. Its master smith is Völundr, who decides how the shop runs, while Völundr decides what is worth forging.',
     ],
     names: [
       { rune: 'ᛒ', name: 'Brokk', line: 'The primary agent — the bellows that drives every task to an artifact.' },
@@ -61,11 +61,11 @@ export const LORE_LONG: LoreSection[] = [
     title: 'IV · The Well of Memory',
     paras: [
       'At the root of the tree runs Mimirsbrunn, the well of wisdom. Even Odin gave an eye for a single drink. Memory here is a well that never runs dry and never blocks the work: drink deep, and act wiser.',
-      'From the well speaks Kaia, the oracle and the eye of the fleet. She does not act on faith — before she dispatches a single smith she drinks, recalling everything the project has taught, and then passes every plan through the Veil, the filter that asks: is this grounded in what the well holds, or spun from air? Everything the fleet does is inscribed into Runes, the ledger carved once and never un-carved.',
+      'From the well speaks Völundr, the master of the smiths and the eye of the fleet. He does not act on faith — before he dispatches a single smith he drinks, recalling everything the project has taught, and then passes every plan through the Veil, the filter that asks: is this grounded in what the well holds, or spun from air? Everything the fleet does is inscribed into Runes, the ledger carved once and never un-carved.',
     ],
     names: [
       { rune: 'ᛗ', name: 'Mimirsbrunn', line: 'Long-term memory — the engram well the fleet drinks from.' },
-      { rune: 'ᚲ', name: 'Kaia', line: 'The oracle — recalls before every dispatch; the eye that remembers.' },
+      { rune: 'ᚲ', name: 'Völundr', line: 'The master of the smiths — he leads Smíðja, dispatches its smiths, and recalls before every dispatch.' },
       { rune: 'ᚹ', name: 'The Veil', line: 'The anti-hallucination gate — nothing passes without evidence.' },
       { rune: 'ᚱ', name: 'Runes', line: 'The append-only audit ledger — a rune carved stays carved.' },
     ],

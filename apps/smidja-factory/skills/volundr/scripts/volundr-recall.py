@@ -17,7 +17,7 @@ import sys
 import urllib.parse
 import urllib.request
 
-DEFAULT_URL = os.environ.get("KAIA_MEMORY_URL", "http://127.0.0.1:4602")
+DEFAULT_URL = os.environ.get("VOLUNDR_MEMORY_URL") or os.environ.get("KAIA_MEMORY_URL", "http://127.0.0.1:4602")
 
 
 def main() -> int:
@@ -35,7 +35,7 @@ def main() -> int:
         with urllib.request.urlopen(url, timeout=5) as r:
             data = json.load(r)
     except Exception as e:
-        print(f"[kaia] recall failed ({url}): {e}", file=sys.stderr)
+        print(f"[volundr] recall failed ({url}): {e}", file=sys.stderr)
         return 1
 
     results = data.get("results", [])

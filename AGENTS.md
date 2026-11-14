@@ -340,13 +340,13 @@ isolation[8]{id,rule}:
   throughput). Messages follow `.agents/bus/protocol.ts`.
 - Every A2A message is observed into **Mimirsbrunn** and logged to **Runes**.
 - **Status (corrected 2026-09-30 — the entry above this one said "planned, not built", and that was false):** the native backbone **stands and answers**. `packages/a2a/ratatoskr/` (shared contract at `packages/contracts/src/agent-card.ts`, `A2A_PROTOCOL = "a2a/1.0"`, card served at `/.well-known/agent-card.json`) runs as the heart's node on **`<heart>:8301`** (the heart's name is read from the fleet registry in the home, never written here — plan 278), measured: `GET http://127.0.0.1:8301/.well-known/agent-card.json` returns its card with `streaming: true` and the skill `well-recall`. An external `a2abridge` still runs **seat-side** (this seat, `:7777`) as the adapter a harness talks to — it is not the backbone, and **no `a2abridge` binary exists on the server**. `.agents/bus/` **is** still a stub, so that half of the old claim held. What does **not** exist is the directory of many installs and per-pair grants: that is plan **61** (`$YMIR_HOME/svartalfaheim/whynotproductions/projects/ymir/plans/61-the-constellation-many-ymirs-one-forge.md`), whose first phase corrects this very line. Way of Teams (`~/CodeP/wayofteams`) remains the sold control plane; Ymir's daemon works standalone.
-- Kaia orchestrates: dispatch Eindri as A2A tasks, recall memory before dispatch,
+- Völundr orchestrates: dispatch Eindri as A2A tasks, recall memory before dispatch,
   honour the anti-hallucination gate; specialists reach tools via MCP.
 
 ## Open-source-first
 
 - Ymir **owns three things**: the UI/UX (Hlidskjalf), the agent runtime
-  (Brokk/Eindri/Kaia), and A2A collaboration (Ratatoskr).
+  (Brokk/Eindri/Völundr), and A2A collaboration (Ratatoskr).
 - Every other feature adopts a **validated OSS project** first (engram/mimirsbrunn,
   Redis, Traefik/Caddy, OAuth2-proxy, cloudflared, MinIO/FileBrowser, PM2/Docker,
   MCP servers, `smidja`, `a2aproject/a2a`), Norse-named shell over the OSS
@@ -403,7 +403,7 @@ Quick reference:
 | **Ymir** | The substrate — one repo, one machine, all realms carved from it |
 | **Brokk** | You — the Allfather's counsellor: the bellows that plans, steers, reviews, and sends the Eindri out to forge |
 | **Eindri** | Sub-agent workers — isolated smiths in Utgard sandboxes |
-| **Kaia** | The eye that remembers — orchestrator, recalls from Mimirsbrunn |
+| **Völundr** | The master of the smiths — leads the Smithy (Smíðja) and dispatches its smiths; the eye that remembers, recalls from Mimirsbrunn |
 | **Yggdrasil** | Git worktree isolation — parallel branches, zero collision |
 | **Utgard** | Ephemeral sandbox — untrusted code runs there, never in the halls |
 | **Mimirsbrunn** | Engram memory engine — long-term memory, embeddings |

@@ -24,16 +24,6 @@ export const DEFAULT_WORKSPACES: RealmDef[] = [
     tint2: '#7d5f2a',
     glyph: 'ᛉ',
   },
-  {
-    id: 'personal',
-    tenant: 'Personal',
-    name: 'Personal',
-    kind: 'personal',
-    domains: ['me', 'life', 'development'],
-    tint: '#96a0a8',
-    tint2: '#5f686e',
-    glyph: 'ᛗ',
-  },
 ];
 
 /** The realms a machine has, from the registry row it answered with. A realm the
@@ -200,7 +190,7 @@ export const GATES: GateDef[] = [
   { id: 'reviews', label: 'Reviews', glyph: 'ᛉ', hint: 'Glitnir PR cards' },
   { id: 'processes', label: 'Processes', glyph: 'ᛞ', hint: 'Valhalla supervision' },
   { id: 'files', label: 'Files', glyph: 'ᛊ', hint: 'Skrymir file browser' },
-  { id: 'chat', label: 'OmniChat', glyph: 'ᚴ', hint: 'Kaia · orchestration' },
+  { id: 'chat', label: 'OmniChat', glyph: 'ᚴ', hint: 'Völundr · the smiths' },
   { id: 'forge', label: 'Forge', glyph: 'ᚨ', hint: 'Create · edit · Eindri & skills' },
   { id: 'runtime', label: 'Runtime', glyph: 'ᛖ', hint: 'Sága digest · session seating' },
   { id: 'cron', label: 'Cron', glyph: 'ᛃ', hint: 'Nornir schedule · job health' },

@@ -380,11 +380,20 @@ start_one() {
   # loopback port (bin/desktop/app-lib.sh, plan 275 item 19): a fault found after the fact can be inspected
   # without a restart, and bin/desktop/boot-stopwatch.sh can ask the renderer when it first answered.
   # YMIR_DEVTOOLS_PORT still wins, for a one-off probe.
+  #
+  # Chromium refuses a DevTools websocket that carries an Origin header unless the origins are named, and
+  # every scripted client sends one (node's built-in WebSocket, any harness). Without the flag the door
+  # answers /json and then fails the handshake (measured by Sessrúmnir's launcher, 2026-11-13).
   local dtp="${YMIR_DEVTOOLS_PORT:-}"
   [ -n "$dtp" ] || dtp="$(app_devtools_port "$v" 2>/dev/null || true)"
-  [ -n "$dtp" ] && extra+=(--remote-debugging-port="$dtp")
+  [ -n "$dtp" ] && extra+=(--remote-debugging-port="$dtp" --remote-allow-origins=*)
+  # The profile a window writes into. The operator's own is the default; a SOAK passes its own
+  # throwaway profile so a second instance never fights the open window's single-instance lock
+  # (plan 286 P1 needs the same app twice: once as it was, once as it is).
+  local udd="${YMIR_APP_USER_DATA_DIR:-$HOME/.config/$(view_mark "$v")}"
+  mkdir -p "$udd" 2>/dev/null || true
   nohup env YMIR_DESKTOP_VIEW="$v" "$(real_electron "$v")" "$(app_dir "$v")" \
-    --user-data-dir="$HOME/.config/$(view_mark "$v")" \
+    --user-data-dir="$udd" \
     "${extra[@]}" >"$l" 2>&1 < /dev/null &
   echo $! >"$f"
   # Wait briefly for the real process to appear, so a following call sees it.

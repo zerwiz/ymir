@@ -1025,6 +1025,7 @@
   border: 1px solid color-mix(in srgb, var(--realm-tint) 35%, transparent);
   color: var(--ymir-text-0);
 }
+/* .kaia is the stored chat role kept for every row already written; it renders as Völundr. */
 .bubble.kaia {
   align-self: flex-start;
   background: var(--ymir-bg-2);

@@ -2,12 +2,12 @@
 # /// script
 # dependencies = ["pydantic", "python-dotenv", "pyyaml", "rich"]
 # ///
-"""smidja Orchestrate (variant A) — Kaia dispatches sub-agents, tracks them, reports.
+"""smidja Orchestrate (variant A) — Völundr dispatches sub-agents, tracks them, reports.
 
 Usage:
     uv run smidja/smidja_orchestrate.py "<prompt or path/to/prompt.md>" [--config smidja/smidja_smidja_config/smidja.config.yaml] [--smidja-id a1b2c3d4]
 
-Phases: engineer(request) -> orchestrator (Kaia, dispatches sub-agents) -> reviewer [-> revise ...]
+Phases: engineer(request) -> orchestrator (Völundr, dispatches sub-agents) -> reviewer [-> revise ...]
 
 The orchestrator agent gets the WHOLE task. It spawns sub-agents (scout,
 planner, builder, reviewer) via its subagent_* tools, tracks their progress,
@@ -20,6 +20,7 @@ the bounded revise loop.
 """
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -29,17 +30,19 @@ from smidja_modules.data_types import (AgentCall, OrchestratorOutput,
 
 REQUIRED_AGENTS = ["orchestrator", "reviewer"]
 MAX_REVISION_LOOPS = 3
-KAIA_MEMORY_URL = "http://127.0.0.1:4602"
+VOLUNDR_MEMORY_URL = (os.environ.get("VOLUNDR_MEMORY_URL")
+                      or os.environ.get("KAIA_MEMORY_URL")   # historical name, kept
+                      or "http://127.0.0.1:4602")
 
 
-def kaia_memory_for(project: str, k: int = 5) -> str:
-    """Recall Kaia's remembered lessons for a project from the engram bridge."""
+def volundr_memory_for(project: str, k: int = 5) -> str:
+    """Recall Völundr's remembered lessons for a project from the engram bridge."""
     import json
     import urllib.parse
     import urllib.request
 
     try:
-        url = f"{KAIA_MEMORY_URL}/recall?q={urllib.parse.quote(project)}&k={k}"
+        url = f"{VOLUNDR_MEMORY_URL}/recall?q={urllib.parse.quote(project)}&k={k}"
         with urllib.request.urlopen(url, timeout=3) as r:
             data = json.load(r)
         hits = [hit["episode"]["content"] for hit in data.get("results", [])]
@@ -50,9 +53,9 @@ def kaia_memory_for(project: str, k: int = 5) -> str:
 
 def kaia_observe(content: str, tags: str = "run,lesson", actors: str = "",
                  salience: float = 0.7) -> str:
-    """WRITE this run's lesson into Kaia's memory.
+    """WRITE this run's lesson into Völundr's memory.
 
-    The orchestrator reads before dispatch (kaia_memory_for); this is the write
+    The orchestrator reads before dispatch (volundr_memory_for); this is the write
     that closes the loop. Without it the well stays empty, recollection returns
     nothing, and every run learns the same lesson again from scratch.
     """
@@ -68,13 +71,13 @@ def kaia_observe(content: str, tags: str = "run,lesson", actors: str = "",
             return [x.strip() for x in str(v or "").split(",") if x.strip()]
         body = json.dumps({"content": content, "tags": _list(tags),
                            "actors": _list(actors), "salience": salience}).encode()
-        req = urllib.request.Request(f"{KAIA_MEMORY_URL}/observe", data=body,
+        req = urllib.request.Request(f"{VOLUNDR_MEMORY_URL}/observe", data=body,
                                      headers={"Content-Type": "application/json"},
                                      method="POST")
         with urllib.request.urlopen(req, timeout=5) as r:
             return str(json.load(r).get("id", ""))
     except Exception as e:  # a lost lesson must be loud, never silent
-        print(f"[kaia] MEMORY WRITE FAILED (this lesson is lost): {e}", file=sys.stderr)
+        print(f"[volundr] MEMORY WRITE FAILED (this lesson is lost): {e}", file=sys.stderr)
         return ""
 
 
@@ -103,18 +106,18 @@ def main(prompt: str, config: str = "smidja/smidja_smidja_config/smidja.config.y
         ph.log(input=prompt)
 
     project = Path(run.repo_root).name
-    kaia_mem = kaia_memory_for(project)
+    volundr_mem = volundr_memory_for(project)
     dispatch = (
         f"OBJECTIVE (the original ask, unchanged):\n{prompt}\n\n"
         f"PROJECT: {project}\n"
         f"WHAT YOU REMEMBER ABOUT THIS PROJECT:\n"
-        f"{kaia_mem if kaia_mem else '(no prior memory yet — first run)'}\n\n"
+        f"{volundr_mem if volundr_mem else '(no prior memory yet — first run)'}\n\n"
         "Dispatch sub-agents to do the work, guided by your memory of what has "
         "worked or failed on this project before. Track them, then report every "
         "changed file.")
 
     with run.phase(PhaseParams(name="orchestrate", kind="agent", owner="orchestrator",
-                               description="Kaia dispatches sub-agents, tracks them, and reports every changed file")) as ph:
+                               description="Völundr dispatches sub-agents, tracks them, and reports every changed file")) as ph:
         previous = ph.call(AgentCall(output_type=OrchestratorOutput, prompt=dispatch,
                                      gates=[gates.orchestrator_dispatched,
                                             gates.diff_matches_claims]))
@@ -134,7 +137,7 @@ def main(prompt: str, config: str = "smidja/smidja_smidja_config/smidja.config.y
             break
 
         with run.phase(PhaseParams(name=f"revise_{i}", kind="agent", owner="orchestrator", retries=1,
-                                   description="Kaia closes every blocking finding the reviewer named")) as ph:
+                                   description="Völundr closes every blocking finding the reviewer named")) as ph:
             previous = ph.call(AgentCall(output_type=OrchestratorOutput, prompt=prompt, previous=review,
                                          gates=[gates.orchestrator_dispatched,
                                                 gates.diff_matches_claims]))

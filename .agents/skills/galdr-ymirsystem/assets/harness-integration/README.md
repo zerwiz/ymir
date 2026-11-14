@@ -402,7 +402,7 @@ governed[6]{path,load_first}:
   "bin/mimir*",".agents/skills/galdr-ymirsystem/assets/memory-well.md"
   "bin/nornir-* | config/cron.yaml",".agents/skills/galdr-ymirsystem/assets/nornir-jobs.md"
   "bin/seat/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr-ymirsystem/assets/harness-integration/README.md"
-  "bin/smidja* | .agents/skills/smidja/**",".agents/skills/galdr-ymirsystem/assets/smidja.md"
+  "bin/smidja* | .agents/skills/smidja-factory/**",".agents/skills/galdr-ymirsystem/assets/smidja.md"
 ```
 
 The Pi extension `.pi/extensions/syn-turnend-guard.ts` relays it: `read` of an
@@ -1583,7 +1583,7 @@ parses YAML; Pi scans lines. Anything a line scan cannot see does not reach Pi, 
 
 §13 above says the MCP server is `engram-mcp --db <store> --agent-id <harness>`, registered per harness under
 the name `engram`. That table is kept as the record of what was built. **It is superseded.** The law, stated
-2026-11-10: **engram is Kaia's engine only.** A harness reaches memory through the **well door**, which is this
+2026-11-10: **engram is Völundr's engine only.** A harness reaches memory through the **well door**, which is this
 body's MCP gateway at `http://127.0.0.1:8316/mcp/well` (`bin/bridge/mcp-gateway.sh`). The gateway journals each
 write and carries it to the heart. A direct `engram-mcp --db` stdio server writes the seat's own file, skips the
 journal, and never reaches the heart. That makes it a **leak**, not a registration.
@@ -1612,7 +1612,7 @@ Callers: `step_memory` (the installer), `f_mcp` (Eir), and migration `0020-the-w
 `bin/bridge/a2a-mcp.sh install` now wires `well` and no longer wires `engram`. `mcp-config.sh write` is the pi
 half of the same named merge; it no longer replaces the whole file.
 
-**Left alone, on purpose.** Kaia's own direct use stays: `bin/bridge/mimir-bridge.py`, `bin/records/mimir*.sh`,
+**Left alone, on purpose.** Völundr's own direct use stays: `bin/bridge/mimir-bridge.py`, `bin/records/mimir*.sh`,
 the well guard, housekeeping, the vault sync and `hoard-lib.sh`. `ymir-well.ts` drinks over the HTTP bridge on
 `:4602`, which on a `hand` is the door to the heart. It is not an engram MCP server. A confidential session
 (`bin/vault/confidential.sh`) points `ENGRAM_DB` inside the vault, and it must never journal to the heart

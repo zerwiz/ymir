@@ -137,6 +137,11 @@ gate main-red "the alarm for a red main names the ward and never fires for a pul
 gate opencode-launcher "every door seats OpenCode with the launcher's one shape; the version guard bites" \
      bash "$ROOT/bin/gates/tests/test_opencode_launcher.sh"
 
+# PLAN 286 P1/P2/P5 — the leak soak's own judge, on a planted world. A window cannot be raised on
+# a CI runner; the registry, the desk refusal, the PR→app mapping, the /proc measurement and the
+# verdict (a leak fails, a flat soak passes, a bounded step is not a leak) are proved here.
+gate soak-judge "the leak soak's registry, desk guard, PR mapping and verdict all bite" \
+     bash "$ROOT/bin/gates/tests/test_soak.sh"
 # PLAN 293 part 7 — a worker cut from another unmerged branch records that branch in its packet, and
 # the gather merges the base FIRST. Gathered in the wrong order the dependent lands before its base.
 gate gather-orders-by-base "the gather merges a packet's base branch before the branch cut from it" \
@@ -212,6 +217,11 @@ codex_checks() {
   node --test "$ROOT/tests/test_codex_plugin.mjs" "$ROOT/tests/test_codex_install.mjs" "$ROOT/tests/test_codex_wsl_well.mjs"
 }
 gate codex-plugin "the Codex tool catalog, shell syntax, install and refresh contract" codex_checks
+# A PR that touches an app runs that app's SHORT soak (plan 286 P5, 2026-11-14). The window proof
+# belongs to a seat with a display — a CI runner has none, and says so in one clean skip line
+# instead of a false green. The judge itself is proved everywhere by tests/test_soak.sh below.
+gate soak-apps  "an app this change touches stays inside the leak budgets (plan 286 P5)" \
+     bash "$ROOT/bin/gates/soak-pr.sh"
 # The publish pretest is no longer a per-push gate (the Allfather, 2026-11-04: *"stop testing the npm
 # installation on every push"*). It packs the real tarball, installs it in a sandbox and boots the apps —
 # minutes of work that proved NOTHING about a change that cannot affect the artifact, and its cost made

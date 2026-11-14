@@ -1983,11 +1983,11 @@ function stream() {
   );
 }
 
-/* ---- /api/chat — Kaia, the oracle by the well ---------------------------- */
+/* ---- /api/chat — Völundr, the oracle by the well ---------------------------- */
 const CHAT_DIR = join(STATE_DIR, 'chat');
 const CHAT_WINDOW = 40; // rolling context — the last 40 messages
 const SAFE_SESSION = /^[A-Za-z0-9._-]+$/;
-// Kaia speaks through the models the operator actually connected. The root Pi
+// Völundr speaks through the models the operator actually connected. The root Pi
 // catalog (`~/.pi/agent/models.json`) is the source of truth for the llama.cpp
 // router (`:8080`) and LM Studio; the Bifrost bridge (`:4603`) is the online
 // fallback. We never guess a llama.cpp model id — we read the one `.pi` uses.
@@ -2193,8 +2193,8 @@ async function chatModels(): Promise<{ id: string; name: string; provider: strin
   return [...out.values()].sort((a, b) => a.id.localeCompare(b.id));
 }
 
-const KAIA_SYSTEM = [
-  'You are Kaia, the oracle by the well (Mimirsbrunn), the orchestrator of the Ymir fleet.',
+const VOLUNDR_SYSTEM = [
+  'You are Völundr, the master of the smiths — the oracle by the well (Mimirsbrunn) and the orchestrator of the Ymir fleet.',
   'Address the Allfather directly in every reply; never respond with zero direct address.',
   'Apply Norse methodology: name subsystems for the role-matched figure; never use imported terms.',
   'Drink from the well before you answer; when a recall excerpt is provided, ground the reply in it.',
@@ -2271,7 +2271,7 @@ function deleteChatSession(session: string): { ok: boolean } {
   return { ok: true };
 }
 
-/** A bounded recall from the well — Kaia drinks before every dispatch.
+/** A bounded recall from the well — Völundr drinks before every dispatch.
  *  Relevance to the query first, recency as the tie-break. */
 function chatRecall_uncached(query: string, limit = 6): { text: string; count: number } {
   const lines = read(WELL).split('\n').filter((l) => l.trim().startsWith('{'));
@@ -2317,14 +2317,14 @@ async function postChat(
   const user: ChatRow = { id: `u-${Date.now()}`, from: 'user', body: content, ts: new Date().toISOString() };
   appendChat(sid, user);
 
-  // Rolling window of the last 40 messages — the context Kaia keeps in view.
+  // Rolling window of the last 40 messages — the context Völundr keeps in view.
   const history = chatHistory(sid).slice(-CHAT_WINDOW);
   const recall = chatRecall(content);
   const lanes = agents?.length ? `\n\nFocused Eindri lanes: ${agents.join(', ')}.` : '';
   const messages = [
     {
       role: 'system',
-      content: `${KAIA_SYSTEM}${lanes}\n\nWell recall:\n${recall.text || '(dry — answer from first principles, and say the well was dry)'}`,
+      content: `${VOLUNDR_SYSTEM}${lanes}\n\nWell recall:\n${recall.text || '(dry — answer from first principles, and say the well was dry)'}`,
     },
     ...history.map((m) => ({ role: m.from === 'user' ? 'user' : 'assistant', content: m.body })),
   ];
@@ -2341,9 +2341,9 @@ async function postChat(
     body = `The well is local; no model backend answered (${(err as Error).message}). Recall ran; for a reply, raise a local model (llama-server on :8080) or the Bifrost bridge (\`bin/bridge/bifrost-bridge.sh\`).`;
   }
 
-  const kaia: ChatRow = {
+  const volundr: ChatRow = {
     id: `k-${Date.now()}`,
-    from: 'kaia',
+    from: 'kaia', // the stored role keeps the historical name; the UI renders it as Völundr
     body,
     ts: new Date().toISOString(),
     recalling: recall.count > 0,
@@ -2351,8 +2351,8 @@ async function postChat(
     ...(agents?.length ? { agents } : {}),
     ...(live ? {} : { error: true }),
   };
-  appendChat(sid, kaia);
-  return { reply: kaia, live };
+  appendChat(sid, volundr);
+  return { reply: volundr, live };
 }
 
 /* ---- /api/prompts — the smithy's agent prompts, editable in the Forge ---- */

@@ -26,6 +26,13 @@ This skill's assets:
 
 Python 3 stdlib only — run them from anywhere; `--url` overrides the bridge.
 
+> **Names that keep the old spelling.** The CLI verb `scripts/smidja kaia`, the flag
+> `--kaia T0|T1|T2`, the roster key `kaia_tier`, the env `SMIDJA_KAIA`, the files
+> `kaia_notes.md` / `kaia-handoff.py` / `kaia-memory-bridge.py`, and the memory store
+> `kaia.engram` all keep their historical names, because rosters, scripts and stores
+> already carry them — every one of them means **Völundr**. `VOLUNDR_MEMORY_URL` is read
+> before `KAIA_MEMORY_URL`.
+
 ## 1. The orchestrator rules (always)
 
 1. **Coordinate, never implement.** Dispatch scout (recon), planner (specs),
@@ -43,7 +50,7 @@ Python 3 stdlib only — run them from anywhere; `--url` overrides the bridge.
 ## 2. Memory connection — recall before dispatch, learn after work
 
 The engine: `smidja/smidja_orchestrate.py` builds the dispatch by calling
-`kaia_memory_for(project, k=5)` → `GET /recall?q=<project>` and injecting the
+`volundr_memory_for(project, k=5)` → `GET /recall?q=<project>` and injecting the
 hits as **WHAT YOU REMEMBER ABOUT THIS PROJECT** into Völundr's prompt.
 
 **Read (before dispatching/coordinating):**
@@ -111,21 +118,21 @@ Full routing table + envelope contract: `prompt/dispatch-prompt.md`.
 
 ## 2c. Völundr's session presence — tiers, admission, watchdog (admit · recover · watch)
 
-Völundr is **an overlord, not a toll booth**: her presence over a run is tiered,
-and every tier can run without her. Pick per run with `--kaia T0|T1|T2` (or
+Völundr is **an overlord, not a toll booth**: his presence over a run is tiered,
+and every tier can run without him. Pick per run with `--kaia T0|T1|T2` (or
 `SMIDJA_KAIA`, or the roster stack's `kaia_tier` meta — default **T1**).
 
 | Tier | Name | Völundr does | Mandatory? |
 |---|---|---|---|
 | **T0** | silent | nothing — no handoff file, no one-shot, no ticket | no |
-| **T1** | informed | reads the session handoff and files admission notes into `kaia_notes.md` (injected into every agent call); watchdog still reports to her | no — **default** for any non-trivial run |
+| **T1** | informed | reads the session handoff and files admission notes into `kaia_notes.md` (injected into every agent call); watchdog still reports to him | no — **default** for any non-trivial run |
 | **T2** | orchestrator | T1 + Völundr is the coordinator/dispatcher during the run (recon-interval synthesize, orchestrate chain) | no |
 
 **Admission flow (run start, non-T0):** `session._admit()` writes
 `<session>/kaia_handoff.json` (request/plan/roster/prompts/docs) + a `handoff`
 event → spawns a **detached one-shot** `python3 scripts/kaia-handoff.py --admit
 <smidja_id>` → `smidja kaia "<admission prompt>"` (cloud orchestrator via the ogb
-bridge) → her newest valid envelope is extracted and written to
+bridge) → his newest valid envelope is extracted and written to
 `kaia_notes.md`, injected into every agent call under a `KAIA ADMISSION NOTES`
 header (not steer.md).
 

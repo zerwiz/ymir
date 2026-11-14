@@ -13,7 +13,7 @@ import os
 import sys
 import urllib.request
 
-DEFAULT_URL = os.environ.get("KAIA_MEMORY_URL", "http://127.0.0.1:4602")
+DEFAULT_URL = os.environ.get("VOLUNDR_MEMORY_URL") or os.environ.get("KAIA_MEMORY_URL", "http://127.0.0.1:4602")
 
 
 def get(url: str, path: str) -> dict:
@@ -21,7 +21,7 @@ def get(url: str, path: str) -> dict:
         with urllib.request.urlopen(f"{url}{path}", timeout=3) as r:
             return json.load(r)
     except Exception as e:
-        print(f"[kaia] bridge unreachable at {url}{path}: {e}", file=sys.stderr)
+        print(f"[volundr] bridge unreachable at {url}{path}: {e}", file=sys.stderr)
         sys.exit(1)
 
 
