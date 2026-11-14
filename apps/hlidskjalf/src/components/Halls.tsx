@@ -134,24 +134,3 @@ export function HallsChooser({ onClose }: { onClose: () => void }): React.JSX.El
     </div>
   );
 }
-
-/** Compact switcher for the topbar: jump between the three halls. */
-export function HallsSwitcher({ current }: { current?: Hall['id'] }): React.JSX.Element {
-  return (
-    <div role="group" aria-label="Switch hall" style={{ display: 'flex', gap: '2px' }}>
-      {HALLS.map((h) => (
-        <button
-          key={h.id}
-          type="button"
-          className={`icon-btn ${h.id === current ? 'on' : ''}`}
-          title={`${h.name} — ${h.blurb.split('.')[0]}.`}
-          aria-label={`Open ${h.name}`}
-          aria-current={h.id === current ? 'page' : undefined}
-          onClick={() => void raise(h.id)}
-        >
-          {h.glyph}
-        </button>
-      ))}
-    </div>
-  );
-}
