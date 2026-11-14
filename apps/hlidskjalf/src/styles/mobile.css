@@ -106,13 +106,15 @@
     min-width: 520px;
   }
 
-  /* --- Chat stacks: thread first, sidebars below ---------------- */
+  /* --- Chat: the thread keeps the height, the drawer stacks below it --- */
   .chat-layout {
-    grid-template-columns: 1fr !important;
     height: auto;
   }
-  .chat-side {
-    min-height: 0;
+  .chat-thread {
+    min-height: 60vh;
+  }
+  .chat-drawer {
+    grid-template-columns: 1fr;
   }
   .chat-side-list {
     max-height: 180px;
