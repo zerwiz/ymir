@@ -34,3 +34,7 @@ node_modules/@capacitor/cli 6.2.3
 
 Each matches the range the merged `package.json` files now declare, and all three JSON files parse. A lock that
 disagrees with its manifest is the fault this check exists to catch.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #765
