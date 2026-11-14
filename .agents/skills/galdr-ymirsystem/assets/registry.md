@@ -116,16 +116,18 @@ commands[5]{command,purpose}:
 `bin/desktop/ymir-marketing-stack.sh up|status|down|doors` stands Mautic + Postiz +
 Activepieces (+ optionally Forgejo) on ANY computer — same OSS engines the
 server runs, env-driven, ports virtualized, secrets in the home, never inline.
-The Allfather's server stack (zerwizserver) and the public doors agents reach:
+The operator's own server stack (the heart) and the public doors agents reach. The names
+below are the SHAPE of that stack, not a fleet: the operator's real hosts live in his home
+(`hodd/config/services.yaml`), and a row here reads them from there at run time.
 
 ```
 marketing_doors[6]{service,door,reach_note}:
-  "Mautic (email automation)","mautic.zerwiz.org -> server 127.0.0.1:8001","list building + campaigns; agent-carved via the local provisioned stack when the public door is closed"
-  "Postiz (social publishing)","postiz.zerwiz.org -> server 127.0.0.1:4007","schedule X/LinkedIn/insta; queue per site"
-  "Activepieces (workflow)","activepieces.zerwiz.org -> server 127.0.0.1:8080","event->post flows; meetup booked -> thread scheduled"
-  "Forgejo (git · issues · PRs)","forgejo.zerwiz.org -> server 127.0.0.1:3030","the local git forge: issues->PR loop lives here"
-  "SearXNG (search)","searxng on the server","private search for research (Bragi)"
-  "Grafana","grafana on the server :3003","fleet + stack observability"
+  "Mautic (email automation)","<service>.<host> -> the heart 127.0.0.1:8001","list building + campaigns; agent-carved via the local provisioned stack when the public door is closed"
+  "Postiz (social publishing)","<service>.<host> -> the heart 127.0.0.1:4007","schedule X/LinkedIn/insta; queue per site"
+  "Activepieces (workflow)","<service>.<host> -> the heart 127.0.0.1:8080","event->post flows; meetup booked -> thread scheduled"
+  "Forgejo (git · issues · PRs)","<service>.<host> -> the heart 127.0.0.1:3030","the local git forge: issues->PR loop lives here"
+  "SearXNG (search)","searxng on the heart","private search for research (Bragi)"
+  "Grafana","grafana on the heart :3003","fleet + stack observability"
 ```
 
 An agent (Bragi for marketing, Sindri for git) provisions the stack locally for
