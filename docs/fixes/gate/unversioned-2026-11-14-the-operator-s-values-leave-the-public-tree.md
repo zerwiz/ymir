@@ -128,3 +128,7 @@ is not run again in this errand.
 
 galdr-reread: `harness-integration/README.md` was not touched; the touched `.agents/` assets are named
 above and were read before editing.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #758
