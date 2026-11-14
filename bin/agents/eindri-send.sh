@@ -226,6 +226,21 @@ submit_key() { far "herdr pane send-keys $(printf '%q' "$PANE") Enter" >/dev/nul
 SENT=0; RESENT=no; STATE=""
 send_once || die "the send failed — the far side refused it" 4
 SENT=1
+# RECORD THE WORD (2026-11-14, plan 275 item 8, carried in from main): the send is written to the
+# fleet message log so Hlidskjalf's A2A panel shows the herdr traffic between agents. `from` is the
+# stamp's own origin, so the log and the pane can never disagree. A send that failed writes nothing,
+# and a log that cannot be written never fails the send — the message matters more than its record.
+case "$TEXT" in
+  '[from '*'] '*) _from="${TEXT#\[from }"; _from="${_from%%\]*}"; _text="${TEXT#*\] }" ;;
+  *) _from="$(msg_origin)"; _text="$TEXT" ;;
+esac
+# The `pane` column is the DESTINATION — the pane the word landed in. A named target that is not a
+# pane id has no known destination pane, and the sender's own pane is NOT a stand-in for it.
+case "$PANE" in
+  w[0-9]*:p[0-9]*) _pane="$PANE" ;;
+  *) _pane="" ;;
+esac
+"$ROOT/bin/agents/msg-log.sh" record --from "$_from" --to "$TARGET" --pane "$_pane" "$_text" 2>/dev/null || true
 sleep "$WAIT" 2>/dev/null || true
 STATE="$(status_of)"
 if [ "$STATE" != working ] && [ "$RESEND" = 1 ] && ! screen_busy; then
