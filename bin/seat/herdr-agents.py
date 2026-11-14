@@ -17,7 +17,15 @@ cannot disagree about whether a seat is standing.
       agent; exits 1 when no agent matches. That is the whole test: the pane is
       the evidence, `state/<id>.status` is only the claim.
 
-Usage: herdr-agents.py [--json] [--find [--cwd P] [--pane P]]
+  --tsv
+      one line per agent, tab-separated, for a caller that needs the whole
+      identity of a seat rather than the person's reading of it:
+      `pane  status  kind  tab  workspace  focused  cwd` (cwd is the FOREGROUND
+      cwd when herdr reports one). `bin/seat/seat-audit.sh` and the tab sweep of
+      `bin/seat/seat-reap.sh` read this face, so the pane, its tab and its
+      workspace come from one door and cannot disagree.
+
+Usage: herdr-agents.py [--json] [--tsv] [--find [--cwd P] [--pane P]]
 """
 import json
 import subprocess
@@ -67,6 +75,19 @@ def main() -> int:
 
     if "--json" in args:
         print(json.dumps(agents, indent=2))
+        return 0
+
+    if "--tsv" in args:
+        for a in agents:
+            print("\t".join([
+                a.get("pane_id") or "?",
+                a.get("agent_status") or "unknown",
+                a.get("agent") or "?",
+                a.get("tab_id") or "",
+                a.get("workspace_id") or "",
+                "true" if a.get("focused") else "false",
+                (a.get("foreground_cwd") or a.get("cwd") or "?"),
+            ]))
         return 0
 
     print(f"herdr-agents[{len(agents)}]{{kind,state,pane,cwd,foreground}}:")
