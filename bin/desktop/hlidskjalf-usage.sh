@@ -1,30 +1,47 @@
 #!/usr/bin/env bash
-# hlidskjalf-usage.sh — what the HARNESSES spent, not just the smithy.
+# hlidskjalf-usage.sh — what EVERY HARNESS spent, and what each number means.
 #
 # The Statistics gate counted only smithy runs (smidja.db), so a machine burning
-# tokens through opencode and pi from morning to night reported "No runs yet". The
-# sessions are the usage; this reads them.
+# tokens through opencode and pi from morning to night reported "No runs yet". Then it
+# read opencode and pi and nothing else, so the Allfather's Claude Code work was
+# invisible: *"the stats aren't reading claude."* (plan 275 item 29, 2026-11-14.)
 #
 #   bin/desktop/hlidskjalf-usage.sh [--days N]   # JSON, aggregated
 #
-# SOURCES (verified on this machine):
-#   opencode  ~/.local/share/opencode/opencode.db  (SQLite, Drizzle)
-#             session / message / part; usage lives in message.data as JSON:
-#             {role, modelID, providerID, cost, tokens:{total,input,output,
-#              reasoning,cache:{read,write}}}. cost is stored 0 - tokens are truth.
-#   pi        ~/.pi/agent/sessions/**/*.jsonl
+# SOURCES — every harness this machine has, each read from its own store:
+#   opencode  ~/.local/share/opencode/opencode.db   (SQLite) message rows + session rows
+#   pi        ~/.pi/agent/sessions/**/*.jsonl       one file per session
+#   claude    ~/.claude/projects/**/*.jsonl         message.model + message.usage,
+#                                                   deduplicated by message.id
+#   codex     ~/.codex/sessions/**/rollout-*.jsonl  token_count events; the
+#                                                   total_token_usage is CUMULATIVE,
+#                                                   so the last one per rollout is the run
+#   hermes    <home>/state.db session_model_usage   Bilskirnir's agents and ~/.hermes
+#   cursor    ~/.cursor                             probed; no usage store = a named skip
 #
-# BOUNDED BY CONSTRUCTION: the db here is 37 GB and holds 132k messages. Nothing
-# loads rows into the UI - the aggregation is one SQL statement with json_extract,
-# a time window, and a hard row cap, and the result is small by definition.
+# WHAT A NUMBER MEANS (the lies this replaces, all of them on the page 2026-11-14):
+#   a RUN is a SESSION or an ERRAND, never a message. `messages` is reported beside it.
+#   success/fail are read from the session's own end state, and `unknown` is said out
+#   loud rather than counted as a success (61,103 "runs, 100% success" was 61,103
+#   messages with no failure ever read).
+#   cache read is shown as the provider bills it — summed per call — and the ratio is
+#   computed against the prompt it belongs to (`input + cache_read`), never against
+#   `input + output`, which is a different quantity (16,478M "against" 310M).
+#   COST comes from ONE rule: the harness's recorded cost when it records one, else a
+#   published list price, else `null` — never 0. A local model is $0 because the
+#   hardware is ours, and that is a fact, not a guess.
+#
+# BOUNDED BY CONSTRUCTION: the opencode db here is 37 GB and holds 132k messages.
+# Nothing loads rows into the UI — the aggregation is SQL in the engine, a time window,
+# and a hard row cap, and the result is small by definition.
 set -u
 
-VERSION="1.0.0"
+VERSION="2.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
-  -h|--help) sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+  -h|--help) sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
 esac
 
 DAYS="${YMIR_USAGE_DAYS:-30}"
@@ -33,21 +50,77 @@ while [ $# -gt 0 ]; do
 done
 
 DAYS="$DAYS" python3 - <<'PY'
-import json, os, sqlite3, sys, glob
+import glob, json, os, sqlite3
 from datetime import datetime, timedelta, timezone
 
 days = int(os.environ.get("DAYS", "30"))
-since_ms = int((datetime.now(timezone.utc) - timedelta(days=days)).timestamp() * 1000)
-out = {"window_days": days, "sources": {}, "totals": {}, "by_model": []}
+now = datetime.now(timezone.utc)
+since_dt = now - timedelta(days=days)
+since_ms = int(since_dt.timestamp() * 1000)
+since_s = int(since_dt.timestamp())
 
+out = {"window_days": days, "sources": {}, "totals": {}, "by_model": []}
+# Every row is one (harness, model) pair. The shape is fixed so the UI never guesses.
+FIELDS = ("messages", "sessions", "input", "output", "cache_read", "cache_write", "reasoning")
+
+def empty(model, source, provider="", kind="online", agent=""):
+    return {"model": model or "unknown", "source": source, "provider": provider,
+            "kind": kind, "agent": agent, "cost": None, "cost_source": "none",
+            **{k: 0 for k in FIELDS}}
+
+def bump(row, **kw):
+    for k, v in kw.items():
+        if k in FIELDS:
+            row[k] += int(v or 0)
+    return row
+
+# --------------------------------------------------------------------------- #
+# THE ONE PRICE TABLE. Published list prices per 1M tokens, and only for models
+# whose price is published and stable. A model NOT in here is `null`, never 0 —
+# an unpriced online call is an unknown cost, not a free one.
+# `recorded` always wins: pi and Hermes write their own cost, and that is evidence.
+# --------------------------------------------------------------------------- #
+PRICES = {
+    # Anthropic list prices, per 1M tokens (input, cache read, cache write, output).
+    "claude-opus":   (15.0, 1.50, 18.75, 75.0),
+    "claude-sonnet": (3.0, 0.30, 3.75, 15.0),
+    "claude-haiku":  (0.80, 0.08, 1.0, 4.0),
+}
+
+def price_for(model):
+    m = (model or "").lower()
+    for fam, p in PRICES.items():
+        if fam in m:
+            return p
+    return None
+
+def cost_of(model, kind, inp, outp, cr, cw, recorded):
+    """ONE rule for every harness: recorded → published → unknown (None)."""
+    if recorded is not None:
+        try:
+            return float(recorded), "recorded"
+        except (TypeError, ValueError):
+            pass
+    if kind == "local":
+        return 0.0, "local"
+    p = price_for(model)
+    if p:
+        pin, pcr, pcw, po = p
+        return round((inp * pin + cr * pcr + cw * pcw + outp * po) / 1_000_000, 6), "list"
+    return None, "unknown"
+
+# --------------------------------------------------------------------------- #
+# opencode — one SQL statement; the engine aggregates 132k rows, we get 40.
+# --------------------------------------------------------------------------- #
 oc = os.path.expanduser("~/.local/share/opencode/opencode.db")
 if os.path.exists(oc):
     try:
         c = sqlite3.connect("file:%s?mode=ro" % oc, uri=True)
         c.execute("PRAGMA query_only=ON")
-        # One statement, aggregated in the engine: never the rows, only the sums.
         rows = c.execute("""
-            select coalesce(json_extract(data,'$.modelID'),'unknown') model,
+            select coalesce(json_extract(data,'$.providerID'),'opencode') provider,
+                   coalesce(json_extract(data,'$.modelID'),'unknown') model,
+                   count(distinct session_id) sessions,
                    count(*) msgs,
                    sum(coalesce(json_extract(data,'$.tokens.input'),0)) input,
                    sum(coalesce(json_extract(data,'$.tokens.output'),0)) output,
@@ -57,94 +130,294 @@ if os.path.exists(oc):
             from message
             where json_extract(data,'$.tokens') is not null
               and coalesce(json_extract(data,'$.time.created'), 0) >= ?
-            group by model order by (sum(coalesce(json_extract(data,'$.tokens.input'),0))
-                                   + sum(coalesce(json_extract(data,'$.tokens.output'),0))) desc
+            group by provider, model
+            order by (sum(coalesce(json_extract(data,'$.tokens.input'),0))
+                    + sum(coalesce(json_extract(data,'$.tokens.output'),0))) desc
             limit 40
         """, (since_ms,)).fetchall()
-        rows = [r for r in rows if r[1]]
-        out["sources"]["opencode"] = {
-            "model": "harness",
-            "messages": sum(r[1] for r in rows),
-            "input": sum(r[2] for r in rows), "output": sum(r[3] for r in rows),
-            "cache_read": sum(r[4] for r in rows), "cache_write": sum(r[5] for r in rows),
-            "reasoning": sum(r[6] for r in rows),
-        }
-        out["by_model"] += [
-            {"source": "opencode", "model": r[0], "messages": r[1], "input": r[2],
-             "output": r[3], "cache_read": r[4], "cache_write": r[5], "reasoning": r[6]}
-            for r in rows
-        ]
+        src = {k: 0 for k in FIELDS}
+        per = []
+        for prov, model, sess, msgs, inp, outp, cr, cw, rs in rows:
+            r = empty(model, "opencode", provider=prov)
+            bump(r, sessions=sess, messages=msgs, input=inp, output=outp,
+                 cache_read=cr, cache_write=cw, reasoning=rs)
+            per.append(r)
+            for k in FIELDS:
+                src[k] += r[k]
+        out["sources"]["opencode"] = {"ok": True, "model": "harness", **src}
+        out["by_model"] += per
     except Exception as e:
-        out["sources"]["opencode"] = {"error": str(e)[:120]}
+        out["sources"]["opencode"] = {"ok": False, "error": str(e)[:120]}
 
-# pi keeps TWO stores: the agent home and the older tree beside it. Scanning only
-# one under-reported the harness by an order of magnitude (75 messages against 657
-# session files), which is how a "small number" masks a missing source.
-pi_files = []
-for root in ("~/.pi/agent/sessions", "~/.pi/sessions"):
-    pi_files += glob.glob(os.path.expanduser(root + "/**/*.jsonl"), recursive=True)
-if pi_files:
-    agg = {"input": 0, "output": 0, "cache_read": 0, "cache_write": 0, "messages": 0, "cost": 0.0}
-    models = {}
-    for f in pi_files:
+# --------------------------------------------------------------------------- #
+# pi — one jsonl per session under two roots ("the agent home and the older tree
+# beside it"): scanning only one under-reported the harness by an order of
+# magnitude. A session file IS a run.
+# --------------------------------------------------------------------------- #
+def read_pi():
+    files = []
+    for root in ("~/.pi/agent/sessions", "~/.pi/sessions"):
+        files += glob.glob(os.path.expanduser(root + "/**/*.jsonl"), recursive=True)
+    if not files:
+        return None, []
+    src = {k: 0 for k in FIELDS}
+    per = {}
+    for f in files:
         try:
-            with open(f, "r", errors="ignore") as fh:
-                for line in fh:
-                    if '"tokens"' not in line and '"usage"' not in line:
-                        continue
+            if os.path.getmtime(f) < since_s:
+                continue
+        except OSError:
+            continue
+        used_models = set()
+        try:
+            fh = open(f, "r", errors="ignore")
+        except OSError:
+            continue
+        with fh:
+            for line in fh:
+                if '"tokens"' not in line and '"usage"' not in line:
+                    continue
+                try:
+                    d = json.loads(line)
+                except ValueError:
+                    continue
+                t = d.get("tokens") or d.get("usage") or {}
+                msg = d.get("message") if isinstance(d.get("message"), dict) else {}
+                if not t and msg:
+                    t = msg.get("usage") or {}
+                if not t:
+                    continue
+                inp = t.get("input") or t.get("input_tokens") or 0
+                outp = t.get("output") or t.get("output_tokens") or 0
+                cr = (t.get("cache") or {}).get("read") or t.get("cacheRead") or t.get("cache_read_input_tokens") or 0
+                cw = (t.get("cache") or {}).get("write") or t.get("cacheWrite") or t.get("cache_creation_input_tokens") or 0
+                rs = t.get("reasoning") or t.get("reasoning_tokens") or 0
+                m = d.get("modelID") or d.get("model") or msg.get("model") or "unknown"
+                cc = t.get("cost") or {}
+                cost = cc.get("total") if isinstance(cc, dict) else cc
+                r = per.get(m) or empty(m, "pi")
+                bump(r, messages=1, input=inp, output=outp, cache_read=cr, cache_write=cw, reasoning=rs)
+                if cost is not None:
                     try:
-                        d = json.loads(line)
-                    except Exception:
-                        continue
-                    t = d.get("tokens") or d.get("usage") or {}
-                    cost_seen = 0
-                    # pi nests it one level down: {"type":"message","message":{"usage":{...}}}
-                    # with camelCase cache keys. Reading only the top level counted 23
-                    # messages where the session files held hundreds of turns.
-                    if not t and isinstance(d.get("message"), dict):
-                        t = d["message"].get("usage") or {}
-                    if not t:
-                        continue
-                    inp = t.get("input") or t.get("input_tokens") or 0
-                    outp = t.get("output") or t.get("output_tokens") or 0
-                    cr = (t.get("cache") or {}).get("read") or t.get("cacheRead") or t.get("cache_read_input_tokens") or 0
-                    cw = (t.get("cache") or {}).get("write") or t.get("cacheWrite") or t.get("cache_creation_input_tokens") or 0
-                    agg["input"] += inp; agg["output"] += outp
-                    agg["cache_read"] += cr; agg["cache_write"] += cw; agg["messages"] += 1
-                    # The model pi actually used lives one level down, beside the usage:
-                    # {"type":"message","message":{"model":"deepseek-v4.1-flash","usage":{...}}}
-                    # Reading only the top level filed 92% of the volume under "unknown".
-                    msg = d.get("message") if isinstance(d.get("message"), dict) else {}
-                    m = d.get("modelID") or d.get("model") or msg.get("model") or "unknown"
-                    c = t.get("cost") or {}
-                    cost = c.get("total") if isinstance(c, dict) else (c or 0)
-                    try:
-                        cost = float(cost or 0)
-                    except Exception:
-                        cost = 0.0
-                    agg["cost"] = agg.get("cost", 0.0) + cost
-                    mm = models.setdefault(m, {"input": 0, "output": 0, "messages": 0, "cost": 0.0})
-                    mm["input"] += inp; mm["output"] += outp; mm["messages"] += 1
-                    mm["cost"] = mm.get("cost", 0.0) + cost
+                        r["cost"] = round(float(r["cost"] or 0) + float(cost), 6)
+                        r["cost_source"] = "recorded"
+                    except (TypeError, ValueError):
+                        pass
+                used_models.add(m)
+                per[m] = r
+        # one file, one run — counted on the models it actually used
+        for m in used_models:
+            per[m]["sessions"] += 1
+    for r in per.values():
+        for k in FIELDS:
+            src[k] += r[k]
+    return src, list(per.values())
+
+pi_src, pi_rows = read_pi()
+if pi_src is not None:
+    out["sources"]["pi"] = {"ok": True, "model": "harness", **pi_src}
+    out["by_model"] += pi_rows
+
+# --------------------------------------------------------------------------- #
+# Claude Code — ~/.claude/projects/<project>/<session>.jsonl. Usage lives at
+# message.usage; the same message id appears once per turn, but a resumed or
+# compacted session repeats it, so rows are DEDUPLICATED BY message.id.
+# --------------------------------------------------------------------------- #
+def read_claude():
+    files = glob.glob(os.path.expanduser("~/.claude/projects/**/*.jsonl"), recursive=True)
+    if not files:
+        return None, []
+    src = {k: 0 for k in FIELDS}
+    per = {}
+    seen_ids = set()
+    for f in files:
+        try:
+            if os.path.getmtime(f) < since_s:
+                continue
+        except OSError:
+            continue
+        used = set()
+        try:
+            fh = open(f, "r", errors="ignore")
+        except OSError:
+            continue
+        with fh:
+            for line in fh:
+                if '"usage"' not in line:
+                    continue
+                try:
+                    d = json.loads(line)
+                except ValueError:
+                    continue
+                msg = d.get("message") if isinstance(d.get("message"), dict) else None
+                if not msg:
+                    continue
+                u = msg.get("usage") or {}
+                if not u:
+                    continue
+                mid = msg.get("id") or d.get("uuid") or ""
+                if mid and mid in seen_ids:
+                    continue
+                if mid:
+                    seen_ids.add(mid)
+                m = msg.get("model") or "claude"
+                inp = u.get("input_tokens") or 0
+                outp = u.get("output_tokens") or 0
+                cr = u.get("cache_read_input_tokens") or 0
+                cw = u.get("cache_creation_input_tokens") or 0
+                rs = ((u.get("output_tokens_details") or {}).get("thinking_tokens")) or 0
+                r = per.get(m) or empty(m, "claude", provider="anthropic")
+                bump(r, messages=1, input=inp, output=outp, cache_read=cr, cache_write=cw, reasoning=rs)
+                used.add(m)
+                per[m] = r
+        for m in used:
+            per[m]["sessions"] += 1
+    for r in per.values():
+        for k in FIELDS:
+            src[k] += r[k]
+    return src, list(per.values())
+
+cl_src, cl_rows = read_claude()
+if cl_src is not None:
+    out["sources"]["claude"] = {"ok": True, "model": "harness", **cl_src}
+    out["by_model"] += cl_rows
+
+# --------------------------------------------------------------------------- #
+# Codex — ~/.codex/sessions/<y>/<m>/<d>/rollout-*.jsonl. `token_count` carries
+# `total_token_usage`, which is CUMULATIVE for the rollout: summing the events
+# would multiply the truth by the number of turns, so the LAST one per file is
+# the run's total.
+# --------------------------------------------------------------------------- #
+def read_codex():
+    files = glob.glob(os.path.expanduser("~/.codex/sessions/**/rollout-*.jsonl"), recursive=True)
+    if not files:
+        return None, []
+    src = {k: 0 for k in FIELDS}
+    per = {}
+    for f in files:
+        try:
+            if os.path.getmtime(f) < since_s:
+                continue
+        except OSError:
+            continue
+        model = "codex"
+        last = None
+        turns = 0
+        try:
+            fh = open(f, "r", errors="ignore")
+        except OSError:
+            continue
+        with fh:
+            for line in fh:
+                if '"model"' not in line and 'token_count' not in line:
+                    continue
+                try:
+                    d = json.loads(line)
+                except ValueError:
+                    continue
+                if d.get("type") == "turn_context":
+                    model = ((d.get("payload") or {}).get("model")) or model
+                p = d.get("payload") or {}
+                if p.get("type") == "token_count":
+                    turns += 1
+                    info = p.get("info") or {}
+                    if info.get("total_token_usage"):
+                        last = info["total_token_usage"]
+        if not last:
+            continue
+        r = per.get(model) or empty(model, "codex", provider="openai")
+        bump(r,
+             messages=turns, sessions=1,
+             input=last.get("input_tokens") or 0,
+             output=last.get("output_tokens") or 0,
+             cache_read=last.get("cached_input_tokens") or 0,
+             cache_write=last.get("cache_write_input_tokens") or 0,
+             reasoning=last.get("reasoning_output_tokens") or 0)
+        per[model] = r
+    for r in per.values():
+        for k in FIELDS:
+            src[k] += r[k]
+    return src, list(per.values())
+
+cx_src, cx_rows = read_codex()
+if cx_src is not None:
+    out["sources"]["codex"] = {"ok": True, "model": "harness", **cx_src}
+    out["by_model"] += cx_rows
+
+# --------------------------------------------------------------------------- #
+# Hermes — Bilskirnir's agents and the operator's own home. `session_model_usage`
+# is already the per-session, per-model aggregate, and it records its own cost.
+# --------------------------------------------------------------------------- #
+def read_hermes():
+    homes = [os.path.expanduser("~/.hermes")]
+    homes += glob.glob(os.path.expanduser("~/Documents/ymirhome/bilskirnir/data/engines/*"))
+    src = {k: 0 for k in FIELDS}
+    per = {}
+    found = []
+    seen = set()
+    for home in homes:
+        db = os.path.join(home, "state.db")
+        real = os.path.realpath(db)
+        if not os.path.exists(db) or real in seen:
+            continue
+        seen.add(real)
+        try:
+            c = sqlite3.connect("file:%s?mode=ro" % db, uri=True)
+            c.execute("PRAGMA query_only=ON")
+            rows = c.execute("""
+                select model, billing_base_url, count(distinct session_id) sessions,
+                       sum(api_call_count) calls,
+                       sum(input_tokens) input, sum(output_tokens) output,
+                       sum(cache_read_tokens) cache_read, sum(cache_write_tokens) cache_write,
+                       sum(reasoning_tokens) reasoning,
+                       sum(coalesce(actual_cost_usd, estimated_cost_usd)) cost
+                from session_model_usage
+                where coalesce(last_seen, 0) >= ?
+                group by model, billing_base_url
+            """, (since_s,)).fetchall()
         except Exception:
             continue
-    out["sources"]["pi"] = {"model": "harness", **agg}
-    out["by_model"] += [{"source": "pi", "model": k, **v} for k, v in
-                        sorted(models.items(), key=lambda kv: -(kv[1]["input"] + kv[1]["output"]))[:20]]
+        found.append(os.path.basename(home.rstrip("/")) or "hermes")
+        for model, base, sess, calls, inp, outp, cr, cw, rs, cost in rows:
+            r = per.get(model) or empty(model, "hermes", provider=(base or "").split("//")[-1].split("/")[0])
+            bump(r, sessions=sess, messages=calls or 0, input=inp, output=outp,
+                 cache_read=cr, cache_write=cw, reasoning=rs)
+            if cost:
+                r["cost"] = round(float(r["cost"] or 0) + float(cost), 6)
+                r["cost_source"] = "recorded"
+            per[model] = r
+    if not found:
+        return None, [], []
+    for r in per.values():
+        for k in FIELDS:
+            src[k] += r[k]
+    return src, list(per.values()), found
 
-tot = {"messages": 0, "input": 0, "output": 0, "cache_read": 0, "cache_write": 0, "reasoning": 0, "cost": 0.0}
-for s in out["sources"].values():
-    for k in tot:
-        tot[k] += int(s.get(k) or 0)
-tot["total"] = tot["input"] + tot["output"]
-prompt = tot["input"] + tot["cache_read"]
-# local = our own hardware; online = a cloud API. By model id, honestly.
-LOCAL_MARKERS = ("llama", "lmstudio", "ollama", "local")
-# The registry is the truth: a model served by llama-swap or a llama.cpp seat is OUR
-# hardware, whatever its id sounds like. Measured 2026-11-05: 245M tokens of pi work
-# were reported as "online" because the id `deepseek-v4.1-flash` matched no marker.
-LOCAL_MODELS = set()
-LOCAL_PROVIDERS = set()
+he_res = read_hermes()
+if he_res[0] is not None:
+    he_src, he_rows, he_homes = he_res
+    out["sources"]["hermes"] = {"ok": True, "model": "harness", "homes": he_homes, **he_src}
+    out["by_model"] += he_rows
+
+# --------------------------------------------------------------------------- #
+# Cursor — probed, never assumed. ~/.cursor holds settings today and no usage
+# store; the skip says so instead of silently reporting zero.
+# --------------------------------------------------------------------------- #
+cur = os.path.expanduser("~/.cursor")
+if os.path.isdir(cur):
+    stores = glob.glob(os.path.join(cur, "**", "usage*.json"), recursive=True)
+    out["sources"]["cursor"] = {
+        "ok": False,
+        "skip": "no usage store found under ~/.cursor" if not stores else "usage store present but unread",
+    }
+
+# --------------------------------------------------------------------------- #
+# LOCAL vs ONLINE — by WHERE the model ran, not by which harness ran it.
+# The registry is the truth: a model served by llama-swap or a llama.cpp seat is
+# OUR hardware whatever its id sounds like. (245M tokens of pi work was once
+# reported "online" because `deepseek-v4.1-flash` matched no marker.)
+# --------------------------------------------------------------------------- #
+LOCAL_MODELS, LOCAL_PROVIDERS = set(), set()
 try:
     reg = json.load(open(os.path.expanduser("~/.pi/agent/models.json")))
     for provider, spec in (reg.get("providers") or {}).items():
@@ -153,84 +426,151 @@ try:
         if any(k in provider.lower() for k in ("llama", "local", "ollama", "lmstudio")):
             LOCAL_PROVIDERS.add(provider)
             ms = spec.get("models") or []
-            # pi's registry carries models as a LIST of {id,…}; a dict is accepted too.
-            entries = ms if isinstance(ms, list) else list(ms.keys())
-            for e in entries:
-                name = e.get("id") or e.get("name") if isinstance(e, dict) else e
+            for e in (ms if isinstance(ms, list) else list(ms.keys())):
+                name = (e.get("id") or e.get("name")) if isinstance(e, dict) else e
                 if name:
                     LOCAL_MODELS.add(str(name))
                     if str(name).endswith("-fast"):
                         LOCAL_MODELS.add(str(name)[:-5])
 except Exception:
     pass
+
 for m in out["by_model"]:
     mid = str(m.get("model", ""))
-    m["kind"] = "local" if (mid in LOCAL_MODELS or any(k in mid.lower() for k in LOCAL_MARKERS)) else "online"
+    prov = str(m.get("provider", "")).lower()
+    if m.get("source") == "hermes" and prov in ("", "nous"):
+        m["kind"] = "online"
+    elif mid in LOCAL_MODELS or prov in LOCAL_PROVIDERS or any(
+            k in mid.lower() for k in ("llama", "lmstudio", "ollama")):
+        m["kind"] = "local"
+    else:
+        m["kind"] = "online"
+    # the cost rule, applied once, on the final row
+    cost, src = cost_of(mid, m["kind"], m["input"], m["output"],
+                        m["cache_read"], m["cache_write"], m.get("cost"))
+    m["cost"] = cost
+    m["cost_source"] = src
+    # the agent column: the HARNESS is what the row is, and it is never "—"
+    m["harness"] = m.get("source", "")
+    m["agent"] = m.get("agent") or m.get("source", "")
 
-def _empty():
-    return {"tokens": 0, "calls": 0, "input": 0, "output": 0, "cache_read": 0}
-lo = {"local": _empty(), "online": _empty()}
-for m in out["by_model"]:
-    k = m.get("kind", "online")
-    lo[k]["tokens"] += int(m.get("input") or 0) + int(m.get("output") or 0)
-    lo[k]["calls"] += int(m.get("messages") or 0)
-    lo[k]["input"] += int(m.get("input") or 0)
-    lo[k]["output"] += int(m.get("output") or 0)
-    lo[k]["cache_read"] += int(m.get("cache_read") or 0)
-out["local_online"] = lo
+out["by_model"].sort(key=lambda r: -(r["input"] + r["output"]))
 
-# the gate's section names, filled from the harnesses
-oc = out["sources"].get("opencode", {})
-pi = out["sources"].get("pi", {})
-out["runs"] = {
-    "total": int(tot["messages"]), "success": int(tot["messages"]), "fail": 0, "running": 0,
-    "success_rate": 100.0 if tot["messages"] else 0.0,
-    "tokens": int(tot["input"]) + int(tot["output"]),
-    "cost": round(float(tot.get("cost") or 0), 6),
-    "by_source": {"opencode": int(oc.get("messages") or 0), "pi": int(pi.get("messages") or 0)},
-}
-out["by_chain"] = [
-    {"chain": m.get("source", "harness"), "workflow": m.get("source", "harness"),
-     "runs": int(m.get("messages") or 0), "success": int(m.get("messages") or 0),
-     "rate": 100.0, "tokens": int(m.get("input") or 0) + int(m.get("output") or 0), "cost": round(float(m.get("cost") or 0), 6)}
-    for m in out["by_model"][:12]
-]
+# --------------------------------------------------------------------------- #
+# THE TOTALS — one set of numbers, computed once, used everywhere.
+# --------------------------------------------------------------------------- #
+tot = {k: 0 for k in FIELDS}
+tot.update({"cost": 0.0, "cost_unknown_calls": 0})
+for r in out["by_model"]:
+    for k in FIELDS:
+        tot[k] += int(r.get(k) or 0)
+    if r.get("cost") is None:
+        tot["cost_unknown_calls"] += int(r.get("messages") or 0)
+    else:
+        tot["cost"] = round(tot["cost"] + float(r["cost"]), 6)
 
-tot["cache_hit_ratio"] = round(tot["cache_read"] / prompt, 4) if prompt else 0.0
+# A bucket where NOTHING is priced is `unknown`, not $0.00 — that $0.00 was the lie.
+if tot["cost_unknown_calls"] >= tot["messages"] and tot["messages"]:
+    tot["cost"] = None
+tot["total"] = tot["input"] + tot["output"]
+tot["prompt"] = tot["input"] + tot["cache_read"]          # what was actually sent
+tot["cache_hit_ratio"] = round(tot["cache_read"] / tot["prompt"], 4) if tot["prompt"] else 0.0
 out["totals"] = tot
 
-# THE GATE'S OWN NAMES, filled from the harnesses - so Statistics reports pi and
-# opencode, and the smithy's runs stay the smithy's.
+lo = {"local": dict({"tokens": 0, "calls": 0, "sessions": 0, "input": 0, "output": 0,
+                     "cache_read": 0, "cost": 0.0}, **{}),
+      "online": {}}
+lo["online"] = {"tokens": 0, "calls": 0, "sessions": 0, "input": 0, "output": 0,
+                "cache_read": 0, "cost": 0.0}
+for m in out["by_model"]:
+    k = m["kind"]
+    lo[k]["tokens"] += m["input"] + m["output"]
+    lo[k]["calls"] += m["messages"]          # calls ARE messages: a call is one exchange
+    lo[k]["sessions"] += m["sessions"]       # and sessions are RUNS — a different number
+    lo[k]["input"] += m["input"]
+    lo[k]["output"] += m["output"]
+    lo[k]["cache_read"] += m["cache_read"]
+    if m.get("cost") is not None:
+        lo[k]["cost"] = round(lo[k]["cost"] + float(m["cost"]), 6)
+out["local_online"] = lo
+
+# A RUN is a SESSION. Failure is read where a harness states one; where it does not,
+# `unknown` is said rather than counted as a success.
+sessions = tot["sessions"]
+out["runs"] = {
+    "total": sessions,
+    "messages": tot["messages"],
+    "success": None,          # no harness writes a per-session terminal state we can trust
+    "fail": None,
+    "unknown": sessions,
+    "success_rate": None,     # never invented; the UI says "not recorded"
+    "tokens": tot["total"],
+    "cost": tot["cost"],
+    "cost_unknown_calls": tot["cost_unknown_calls"],
+    "by_source": {k: int((v or {}).get("sessions") or 0)
+                  for k, v in out["sources"].items() if (v or {}).get("ok")},
+}
+
+# BY HARNESS (what `by_chain` was mislabelled as) and BY MODEL (what `by_workflow` was).
+by_harness = {}
+for m in out["by_model"]:
+    h = by_harness.setdefault(m["source"], {"source": m["source"], "runs": 0, "messages": 0,
+                                            "tokens": 0, "cost": 0.0, "cost_unknown": 0})
+    h["runs"] += m["sessions"]
+    h["messages"] += m["messages"]
+    h["tokens"] += m["input"] + m["output"]
+    if m.get("cost") is None:
+        h["cost_unknown"] += m["messages"]
+    else:
+        h["cost"] = round(h["cost"] + float(m["cost"]), 6)
+for h in by_harness.values():
+    if h["cost_unknown"] >= h["messages"] and h["messages"]:
+        h["cost"] = None
+out["by_chain"] = sorted(by_harness.values(), key=lambda r: -r["tokens"])
+out["by_harness"] = out["by_chain"]
+out["by_workflow"] = [
+    {"workflow": m["model"], "source": m["source"], "runs": m["sessions"],
+     "messages": m["messages"], "tokens": m["input"] + m["output"],
+     "cost": m["cost"], "kind": m["kind"], "agent": m["agent"]}
+    for m in out["by_model"][:25]
+]
+
+# THE GATE'S OWN NAMES, filled from every harness — the page reads this block.
 out["gate"] = {
     "totals": {
-        "runs": int(tot["messages"]), "success": int(tot["messages"]), "fail": 0,
-        "running": 0, "tokens": int(tot["input"]) + int(tot["output"]), "cost": round(float(tot.get("cost") or 0), 6),
+        "runs": sessions,
+        "messages": tot["messages"],
+        "success": None,
+        "fail": None,
+        "running": 0,
+        "tokens": tot["total"],
+        "cost": tot["cost"],
+        "cost_unknown_calls": tot["cost_unknown_calls"],
     },
     "usage": {
-        "input": int(tot["input"]), "output": int(tot["output"]),
-        "cache_read": int(tot["cache_read"]), "cache_write": int(tot["cache_write"]),
-        "total": int(tot["input"]) + int(tot["output"]),
+        "input": tot["input"],
+        "output": tot["output"],
+        "cache_read": tot["cache_read"],
+        "cache_write": tot["cache_write"],
+        "total": tot["total"],
+        "prompt": tot["prompt"],
+        "cache_hit_ratio": tot["cache_hit_ratio"],
     },
     "providers": {
-        "local":  {"events": lo["local"]["calls"],  "sessions": lo["local"]["calls"],
-                   "tokens": lo["local"]["tokens"],  "cost": 0,
-                   "input": lo["local"]["tokens"],  "output": 0, "cache_read": 0},
-        "online": {"events": lo["online"]["calls"], "sessions": lo["online"]["calls"],
-                   "tokens": lo["online"]["tokens"], "cost": 0,
-                   "input": lo["online"]["input"],  "output": lo["online"]["output"], "cache_read": lo["online"]["cache_read"]},
+        "local": lo["local"],
+        "online": lo["online"],
         "per_model": [
-            {"model": m["model"], "agent": m.get("source", "harness"), "kind": m.get("kind", "online"),
-             "cells": int(m.get("messages") or 0), "tokens": int(m.get("input") or 0) + int(m.get("output") or 0), "cost": round(float(m.get("cost") or 0), 6)}
+            {"model": m["model"], "agent": m["agent"], "harness": m["harness"],
+             "provider": m["provider"], "kind": m["kind"],
+             "events": m["messages"], "sessions": m["sessions"],
+             "tokens": m["input"] + m["output"], "cost": m["cost"],
+             "cost_source": m["cost_source"]}
             for m in out["by_model"]
         ],
     },
     "by_chain": out["by_chain"],
-    "by_model": [
-        {"model": m["model"], "agent": m.get("source", "harness"), "kind": m.get("kind", "online"),
-         "cells": int(m.get("messages") or 0),
-         "tokens": int(m.get("input") or 0) + int(m.get("output") or 0), "cost": round(float(m.get("cost") or 0), 6)}
-        for m in out["by_model"]
-    ],
+    "by_harness": out["by_chain"],
+    "by_model": out["by_workflow"],
 }
 
 print(json.dumps(out))

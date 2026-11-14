@@ -97,3 +97,37 @@ app_dir() {  # <surface> <result-var> — a clone's apps/<x>, else the package
 # Some callers need the directory a mint writes INTO (an app's public/, electron/,
 # dist/…). A packaged app is read-only in spirit, so the clone's apps/ is preferred
 # when it exists; otherwise the package is the only truth there is.
+
+# app_devtools_port <surface> → the FIXED loopback DevTools port for that app.
+#
+# Item 19 of plan 275, at the Allfather's word: *"we need to have devtools attached to
+# all agents harnesses"*. Until 2026-11-14 a port existed only when a human exported
+# YMIR_DEVTOOLS_PORT before launching, so in practice there was no door at all, and an
+# app could only be inspected by restarting it with one. Every app now opens its own
+# DevTools on a port taken from THIS table, so any app can be inspected without a
+# restart, and the Fleet page can name the port instead of guessing.
+#
+#   hlidskjalf 9411 · smidja 9412 · odrerir 9413 · sessrumnir 9414
+#   bilskirnir 9415 · rodd 9416
+#
+# An explicit YMIR_DEVTOOLS_PORT still wins (one override for a developer who wants a
+# specific port); the table is the default, never a second source of truth.
+app_devtools_port() {  # <surface>
+  if [ -n "${YMIR_DEVTOOLS_PORT:-}" ]; then printf '%s' "$YMIR_DEVTOOLS_PORT"; return 0; fi
+  case "${1-}" in
+    hlidskjalf) printf '%s' '9411' ;;
+    smidja)     printf '%s' '9412' ;;
+    odrerir)    printf '%s' '9413' ;;
+    sessrumnir) printf '%s' '9414' ;;
+    bilskirnir) printf '%s' '9415' ;;
+    rodd)       printf '%s' '9416' ;;
+    *)          printf '%s' '' ;;
+  esac
+}
+
+# app_devtools_url <surface> → the CDP endpoint a person (or an agent) dials.
+app_devtools_url() {  # <surface>
+  local _adp_port; _adp_port="$(app_devtools_port "${1-}")"
+  [ -n "$_adp_port" ] && printf 'http://127.0.0.1:%s/json/version' "$_adp_port"
+  return 0
+}
