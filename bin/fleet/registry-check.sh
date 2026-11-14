@@ -31,7 +31,10 @@ for name,row in fleet.get('hosts',{}).items():
     elif not os.path.isdir(os.path.join(h,folder)): problems.append((name,f'folder missing: {folder}'))
     elif not os.path.isfile(os.path.join(h,folder,'README.md')): problems.append((name,f'no card: {folder}/README.md'))
     if not row.get('roles'): problems.append((name,'no roles'))
-    if row.get('state')=='up' and not row.get('tailnet') and name!='localhost': problems.append((name,'state up but no tailnet name'))
+    # a rented host is reached by ADDRESS and key, not by a tailnet name — the door must allow the road that exists
+    reachable = row.get('tailnet') or row.get('address')
+    if row.get('state')=='up' and not reachable and name!='localhost':
+        problems.append((name,'state up but no road named (no tailnet, no address)'))
 for s in svc.get('services',[]):
     host=s.get('host')
     if host and host not in hosts: problems.append((s['id'], f'hosted on unknown machine: {host}'))
