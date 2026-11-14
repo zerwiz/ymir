@@ -1,4 +1,4 @@
 ---
 section: agents-work-collaboration
 ---
-| Forge | Queue warden | Gets every open PR into main automatically, or blocks it with a named reason. | [docs/features/queue-warden.md](docs/features/queue-warden.md) |
+| Forge | Queue warden | Keeps the PR queue tidy — five at most, the stale ones named, a conflicting branch re-cut onto main under a new name. It never merges, never force-pushes, never closes. | [docs/features/queue-warden.md](docs/features/queue-warden.md) |

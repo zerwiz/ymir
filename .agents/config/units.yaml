@@ -54,7 +54,7 @@ units:
     mode: render
     kind: timer
     roles: [heart, forge, dev]
-    description: "queue-warden — get every open PR into main"
+    description: "queue-warden — PR hygiene: five at most, the stale named, a conflict re-cut onto a new branch; it never merges"
     workdir: "."
     exec: "/usr/bin/env bash bin/forge/queue-warden.sh run"
     timer: { description: "queue-warden — every 10 minutes", boot: 3min, every: 10min, accuracy: 30s }
