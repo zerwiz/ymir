@@ -38,3 +38,12 @@ cases, both directions:
 | an unrelated finding | INHERITED |
 
 `5 ok, 0 failed` on this machine. The ward is unchanged in what it *finds*; only the ownership decision moved.
+
+### Appended the same day — the body that proved it was refused for naming a path
+
+The first push's CI failed on `pr-identity-guard`, not on this change: the pull-request body quoted the finding with a
+real absolute home path, and the ward reads `/home/<x>/…` as a leaked address. Reworded to
+`<this checkout>/.yggdrasil/queue-warden-review/…`, and the ward answers `pr-identity-guard: OK`.
+
+Worth keeping: an example is still text, and a body that quotes a machine path is judged exactly like a commit that
+carries one — the rule is about facts, not about intent.
