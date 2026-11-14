@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useYmir } from '../state/store';
 import { gateApi } from '../services/api';
 import { Markdown } from '../components/Markdown';
@@ -9,27 +9,21 @@ interface FlatNode {
   depth: number;
 }
 
-function flatten(node: FileNode, depth = 0, out: FlatNode[] = []): FlatNode[] {
-  out.push({ node, depth });
-  if (node.type === 'dir' && node.children) {
-    for (const child of node.children) flatten(child, depth + 1, out);
-  }
-  return out;
-}
-
-// The tree CAN fold (2026-09-24): a dir's children render only while the dir is
-// open. The old tree was always fully expanded, so folders could neither open
-// nor close — every click merely selected. `collapsed` is the fold state.
+// The tree folds (2026-09-24) and now LAZY-LOADS (2026-11-14, plan 275 item 21):
+// Skrymir's root is the whole home, so a folder is read when it is OPENED — the
+// whole home is never walked to paint a tree. Hence the state is the set of
+// EXPANDED folders (empty at start, so every folder begins closed) and a map of
+// the children fetched so far; a folder with no entry is one nobody opened yet.
 function visibleFlat(
   node: FileNode,
-  collapsed: ReadonlySet<string>,
+  children: ReadonlyMap<string, FileNode[]>,
+  expanded: ReadonlySet<string>,
   depth = 0,
   out: FlatNode[] = [],
 ): FlatNode[] {
   out.push({ node, depth });
-  if (node.type === 'dir' && node.children && !collapsed.has(node.path)) {
-    for (const child of node.children) visibleFlat(child, collapsed, depth + 1, out);
-  }
+  if (node.type !== 'dir' || !expanded.has(node.path)) return out;
+  for (const child of children.get(node.path) ?? []) visibleFlat(child, children, expanded, depth + 1, out);
   return out;
 }
 
@@ -78,7 +72,7 @@ function FileGlyph() {
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      <path d="M11.4 2.8H6a1.2 1.2 0 0 0-1.2 1.2v12A1.2 1.2 0 0 0 6 17.2h8a1.2 1.2 0 0 0 1.2-1.2V6.6L11.4 2.8z" />
+      <path d="M11.4 2.8H6a1.2 1.2 0 0 0-1.2 1.2v12A1.2 1.2 0 0 0 6 17.2h8a1.2 1.2 0 0 0 1.2-1.2v-9.4L11.4 2.8z" />
       <path d="M11.4 2.8v3.8h3.8" />
     </svg>
   );
@@ -93,54 +87,62 @@ interface Preview {
   error?: string;
 }
 
-/** Files (Skrymir) — the realm tree from the gate API, with real file contents. */
+/** Files (Skrymir) — the WHOLE home, read-only, a folder at a time. */
 export function Files() {
-  const files = useYmir((s) => s.files);
-  const realm = useYmir((s) => s.realm);
+  const rootFiles = useYmir((s) => s.files);
   const live = useYmir((s) => s.live);
-  const flat = useMemo(() => flatten(files), [files]);
-  // Folds start CLOSED (a 96-file realm opens tidy): each dir except the root
-  // begins collapsed, and clicking a dir opens/closes it (2026-09-24).
-  const initialDirs = useMemo(
-    () => flat.filter((f) => f.node.type === 'dir' && f.node.path !== files.path).map((f) => f.node.path),
-    [flat, files.path],
+  const root: FileNode = useMemo(
+    () => ({ name: rootFiles.name || 'ymirhome', type: 'dir', path: '', children: rootFiles.children }),
+    [rootFiles],
   );
-  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(initialDirs));
-  const visible = useMemo(() => visibleFlat(files, collapsed), [files, collapsed]);
-  const [selected, setSelected] = useState<string>(
-    () => flat.find((f) => f.node.type === 'file')?.node.path ?? files.path,
-  );
+  // path → its children, as fetched. `''` is the root, seeded from the store.
+  const [children, setChildren] = useState<Map<string, FileNode[]>>(() => new Map());
+  // The ROOT is always open (its path is ''), so the home's own shelves show at
+  // once; every folder beneath it starts closed and is read on open.
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(['']));
+  const [selected, setSelected] = useState<string>('');
   const [preview, setPreview] = useState<Preview | null>(null);
   const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
 
-  const toggleDir = (path: string) =>
-    setCollapsed((prev) => {
+  useEffect(() => {
+    if (rootFiles.children?.length) {
+      setChildren((prev) => (prev.has('') ? prev : new Map(prev).set('', rootFiles.children ?? [])));
+      return;
+    }
+    // The store's root arrives with its fast batch; if this page is opened before
+    // it, ask for the root itself rather than painting an empty home.
+    if (!children.has('')) void load('');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rootFiles]);
+
+  const load = useCallback(async (path: string) => {
+    setBusy(path);
+    try {
+      const dir = await gateApi.files(path);
+      if (dir.error) throw new Error(dir.error);
+      setChildren((prev) => new Map(prev).set(path, dir.children ?? []));
+    } catch {
+      setChildren((prev) => new Map(prev).set(path, []));
+    } finally {
+      setBusy(null);
+    }
+  }, []);
+
+  const flat = useMemo(() => visibleFlat(root, children, expanded), [root, children, expanded]);
+
+  const toggleDir = (node: FileNode) => {
+    const path = node.path;
+    setSelected(path);
+    const isOpen = expanded.has(path);
+    setExpanded((prev) => {
       const next = new Set(prev);
-      if (next.has(path)) next.delete(path);
+      if (isOpen) next.delete(path);
       else next.add(path);
       return next;
     });
-
-  // The tree starts folded, so the initially selected file would hide under its
-  // closed parents — open just that ancestor chain once (2026-09-24).
-  useEffect(() => {
-    setCollapsed((prev) => {
-      if (!prev.size) return prev;
-      const parts = selected.split('/');
-      const dirs = new Set<string>();
-      for (let i = 1; i < parts.length - 1; i++) dirs.add(parts.slice(0, i).join('/'));
-      let changed = false;
-      const next = new Set(prev);
-      for (const d of dirs) if (next.has(d)) {
-        next.delete(d);
-        changed = true;
-      }
-      return changed ? next : prev;
-    });
-    // The intent is one-time on mount; `selected` at mount is the loaded
-    // default and is intentionally captured, not tracked.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!isOpen && !children.has(path)) void load(path);
+  };
 
   const selectedNode = flat.find((f) => f.node.path === selected)?.node;
 
@@ -152,14 +154,14 @@ export function Files() {
     let alive = true;
     setLoading(true);
     gateApi
-      .file(realm, selected)
+      .file(selected)
       .then((r) => alive && setPreview(r))
       .catch(() => alive && setPreview({ path: selected, error: 'unavailable' }))
       .finally(() => alive && setLoading(false));
     return () => {
       alive = false;
     };
-  }, [selected, selectedNode, realm, live]);
+  }, [selected, selectedNode, live]);
 
   const body =
     selectedNode?.type !== 'file'
@@ -178,12 +180,16 @@ export function Files() {
     preview?.body != null &&
     /\.(md|markdown)$/i.test(selectedNode.name);
 
+  const fileCount = flat.filter((f) => f.node.type === 'file').length;
+
   return (
     <>
       <div className="stage-head">
         <div>
           <h1 className="stage-title">Skrymir</h1>
-          <p className="stage-deck">The giant's hand · realm-scoped file browser · read-only</p>
+          <p className="stage-deck">
+            The giant's hand · the whole home · realms are folders · read-only
+          </p>
         </div>
       </div>
 
@@ -192,44 +198,43 @@ export function Files() {
           <div className="panel-head">
             <div className="panel-title">
               <span className="glyph" aria-hidden="true">ᛊ</span>
-              {files.name}
+              {root.name}
             </div>
             <span className="mono dim" style={{ fontSize: 10 }}>
-              {flat.filter((f) => f.node.type === 'file').length} files
+              {busy ? 'reading…' : `${fileCount} files shown`}
             </span>
           </div>
           <div className="file-tree">
             {flat.length <= 1 ? (
               <div className="empty" style={{ padding: 16 }}>
-                <p className="mono dim" style={{ fontSize: 11 }}>no files in this realm</p>
+                <p className="mono dim" style={{ fontSize: 11 }}>the home is empty</p>
               </div>
             ) : (
-              visible.map(({ node, depth }) => {
-                const isDir = node.type === 'dir';
-                return (
-                  <button
-                    key={node.path}
-                    className="file-node"
-                    style={{ paddingLeft: 12 + depth * 14 }}
-                    aria-selected={selected === node.path}
-                    aria-expanded={isDir ? !collapsed.has(node.path) : undefined}
-                    onClick={() => {
-                      setSelected(node.path);
-                      if (isDir) toggleDir(node.path);
-                    }}
-                  >
-                    {isDir ? (
-                      <>
-                        <Chevron open={!collapsed.has(node.path)} />
-                        <FolderGlyph />
-                      </>
-                    ) : (
-                      <FileGlyph />
-                    )}
-                    <span className="truncate">{node.name}</span>
-                  </button>
-                );
-              })
+              flat
+                .slice(1)
+                .map(({ node, depth }) => {
+                  const isDir = node.type === 'dir';
+                  return (
+                    <button
+                      key={node.path}
+                      className="file-node"
+                      style={{ paddingLeft: 12 + (depth - 1) * 14 }}
+                      aria-selected={selected === node.path}
+                      aria-expanded={isDir ? expanded.has(node.path) : undefined}
+                      onClick={() => (isDir ? toggleDir(node) : setSelected(node.path))}
+                    >
+                      {isDir ? (
+                        <>
+                          <Chevron open={expanded.has(node.path)} />
+                          <FolderGlyph />
+                        </>
+                      ) : (
+                        <FileGlyph />
+                      )}
+                      <span className="truncate">{node.name}</span>
+                    </button>
+                  );
+                })
             )}
           </div>
         </section>
@@ -238,7 +243,7 @@ export function Files() {
           <div className="panel-head">
             <div className="panel-title">
               <span className="glyph" aria-hidden="true">ᛊ</span>
-              {selected}
+              {selected || root.name}
             </div>
             <span className="mono dim" style={{ fontSize: 10 }}>
               {selectedNode?.size ? `${selectedNode.size} bytes` : selectedNode?.type === 'dir' ? 'directory' : ''}

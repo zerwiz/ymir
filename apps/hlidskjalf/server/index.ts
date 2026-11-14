@@ -10,23 +10,17 @@
  *   PORT=3889 bun run server/index.ts
  */
 import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
-import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
+
 import { Database } from 'bun:sqlite';
-import { dirname, extname, join, resolve } from 'node:path';
+import { basename, dirname, extname, join, relative, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { homedir } from 'node:os';
 import { createVoiceHandler, voiceAccess } from './voice.ts';
 import { createRoddHandler } from './rodd.ts';
 import { serverSeats as resolveServerSeats } from './server-seats.ts';
-import {
-  findAccount,
-  invitesOpen,
-  listAccounts,
-  listInvites,
-  register,
-  verify as verifyAccount,
-} from './accounts.ts';
 import { A2A_PROTOCOL, type AgentInterface } from '../../../packages/contracts/src/index.ts';
+import { readDigest } from './digest.ts';
+import { readSoakHealth } from './health.ts';
 
 const PORT = Number(process.env.PORT ?? 3889);
 const HERE = import.meta.dir;
@@ -72,7 +66,13 @@ const json = (data: unknown, status = 200) =>
  * that must not live in a 2,700-line monolith. This gate only forwards, with the
  * desk's own token, and passes its refusals through unchanged — an account-less
  * query answers 400 naming what is missing, never an empty queue. */
-const MAIL_DESK = process.env.GNA_DESK_URL ?? 'http://127.0.0.1:8490';
+// The desk's address: one door, one port fact. GNA_DESK_URL wins; else the port
+// the desk itself defaults to (GNA_DESK_PORT, 8494 — the register in
+// .agents/config/units.yaml retires 8490). The gate asked 8490 while the desk
+// listened on 8494, so every mail surface read "the desk did not answer"
+// (measured 2026-11-14, plan 275 item 25).
+const MAIL_DESK =
+  process.env.GNA_DESK_URL ?? `http://127.0.0.1:${process.env.GNA_DESK_PORT ?? '8494'}`;
 const MAIL_TOKEN_FILE = join(HOARD, 'state/gna-desk.token');
 
 function mailDeskToken(): string {
@@ -166,10 +166,10 @@ function memoAsync<T>(key: string, ttlMs: number, fn: () => Promise<T>): Promise
 /** Read-only subprocess probe, off the event loop. `timeout` still bounds a
  *  stuck script, but the loop is never blocked waiting on it, and a brief cache
  *  means concurrent polls share one spawn. Mutating actions keep `run()`. */
-async function runAsync(cmd: string[], ttlMs = 3000): Promise<string> {
+async function runAsync(cmd: string[], ttlMs = 3000, killAfterS = 12): Promise<string> {
   return memoAsync('run:' + cmd.join('\u0000'), ttlMs, async () => {
     try {
-      const proc = Bun.spawn(['timeout', '12', ...cmd], {
+      const proc = Bun.spawn(['timeout', String(killAfterS), ...cmd], {
         cwd: ROOT,
         stdout: 'pipe',
         stderr: 'pipe',
@@ -1210,43 +1210,82 @@ function workspaceRoot(realm: string): string {
   return realmTree; // the hoard, even when empty: a home is never the repo's
 }
 
-function files(realm: string) {
-  const base = workspaceRoot(realm);
-  const walk = (dir: string, rel: string, depth: number): unknown => {
-    const name = rel === '' ? (realm || 'svartalfaheim') : rel.split('/').pop()!;
-    const node: Record<string, unknown> = { name, type: 'dir', path: rel || '/', children: [] as unknown[] };
-    const maxDepth = Number(process.env.SKRYMIR_MAX_DEPTH ?? 6);
-    if (depth > maxDepth || !existsSync(dir)) return node;
-    let entries: string[] = [];
-    try {
-      entries = readdirSync(dir);
-    } catch {
-      return node;
-    }
-    for (const e of entries) {
-      if (e.startsWith('.')) continue;
-      const full = join(dir, e);
-      let st;
-      try {
-        st = statSync(full);
-      } catch {
-        continue;
-      }
-      const childRel = rel ? `${rel}/${e}` : e;
-      if (st.isDirectory()) (node.children as unknown[]).push(walk(full, childRel, depth + 1));
-      else (node.children as unknown[]).push({ name: e, type: 'file', path: childRel, size: st.size, updated: st.mtime.toISOString() });
-    }
-    return node;
-  };
-  if (existsSync(base)) return walk(base, '', 0);
-  return walk(HOME_DIR, '', 0); // the hoard's home, not the checkout's docs
+/* ---- Skrymir: the WHOLE home, one folder at a time (plan 275 item 21) ----- *
+ * The browser showed ONE realm (workspaceRoot('work')), so the other realms'
+ * trees were invisible and the home's own shelves never appeared. The
+ * realms are folders under svartalfaheim/, not modes: Skrymir's root IS the
+ * home. Two things follow and both are load-bearing:
+ *   - a folder is read WHEN IT IS OPENED (one level per request), so the whole
+ *     home is never walked to paint a tree;
+ *   - the key and the vault are never listed and never read — hodd/secrets,
+ *     the vault folder and its mount, and .git are hidden by name, and a path
+ *     that resolves outside the home is refused.
+ */
+function homeRoot(): string {
+  return resolve(HOME_DIR);
 }
 
-/* ---- /api/file — read one realm file, read-only, scoped ------------------ */
-function fileContent(realm: string, rel: string) {
-  const base = resolve(workspaceRoot(realm));
-  const full = resolve(base, rel);
-  if (full !== base && !full.startsWith(base + '/')) return { error: 'outside realm' };
+/** Relativised shelves Skrymir must never show (RULES/04 and 15). */
+function hiddenShelves(): string[] {
+  const out = ['hodd/secrets', 'vault', '.git'];
+  const mnt = process.env.YMIR_VAULT_MNT ?? join(homedir(), 'Vault');
+  const rel = relative(homeRoot(), resolve(mnt)).replace(/^\.\//, '');
+  if (rel && !rel.startsWith('..') && !rel.startsWith('/')) out.push(rel);
+  return out;
+}
+
+function hiddenPath(rel: string): boolean {
+  const clean = rel.replace(/^\/+/, '').replace(/\/+$/, '');
+  if (!clean) return false;
+  if (clean.split('/').some((p) => p === '.git')) return true;
+  return hiddenShelves().some((h) => clean === h || clean.startsWith(`${h}/`));
+}
+
+/** The absolute target for a home-relative path, or null when it escapes. */
+function homeTarget(rel: string): string | null {
+  const base = homeRoot();
+  const full = resolve(base, rel || '.');
+  if (full !== base && !full.startsWith(`${base}/`)) return null;
+  if (hiddenPath(rel)) return null;
+  return full;
+}
+
+/** ONE directory level, for the folder that was just opened. */
+function files(pathOrRealm: string) {
+  // Back-compat: an old client sends ?realm=work; that is the realm folder, and
+  // the realm is a folder here, never a mode.
+  const rel = pathOrRealm || '';
+  const full = homeTarget(rel);
+  if (!full) return { name: rel || 'ymirhome', type: 'dir', path: rel, children: [], error: 'not shown: the vault and the secrets are never listed' };
+  if (!existsSync(full)) return { name: rel.split('/').pop() || 'ymirhome', type: 'dir', path: rel, children: [], error: 'not found' };
+  const children: unknown[] = [];
+  let entries: string[] = [];
+  try {
+    entries = readdirSync(full).sort((a, b) => a.localeCompare(b));
+  } catch {
+    return { name: rel.split('/').pop() || 'ymirhome', type: 'dir', path: rel, children, error: 'unreadable' };
+  }
+  for (const e of entries) {
+    if (e.startsWith('.')) continue; // dot entries are state, keys and the repo: never a browser's business
+    const childRel = rel ? `${rel}/${e}` : e;
+    if (hiddenPath(childRel)) continue;
+    const target = join(full, e);
+    let st;
+    try {
+      st = statSync(target);
+    } catch {
+      continue; // a broken link is not a row
+    }
+    if (st.isDirectory()) children.push({ name: e, type: 'dir', path: childRel, lazy: true });
+    else children.push({ name: e, type: 'file', path: childRel, size: st.size, updated: st.mtime.toISOString() });
+  }
+  return { name: rel ? rel.split('/').pop()! : basename(homeRoot()), type: 'dir', path: rel, children };
+}
+
+/* ---- /api/file — read one file of the home, read-only --------------------- */
+function fileContent(rel: string) {
+  const full = homeTarget(rel);
+  if (!full) return { error: 'outside the home, or a shelf Skrymir never shows' };
   if (!existsSync(full)) return { error: 'not found' };
   let st;
   try {
@@ -1276,14 +1315,113 @@ function skills() {
 }
 
 /* ---- /api/runtime -------------------------------------------------------- */
+// The page a PERSON reads (plan 275 item 25). The digest itself is an agent's
+// context — TOON tables, 163 liveness rows mostly long finished — so the raw text
+// is returned for the fold and the facts are drawn on the page from `view`.
+// The services section is item 27: which release each long-running service is
+// actually running from, and a warning when that is not the pin.
+async function releaseMatrix(): Promise<{ pin: string; services: unknown[]; error?: string }> {
+  try {
+    const proc = Bun.spawn(['bash', 'bin/engine/release-services.sh', 'status', '--json'], {
+      cwd: ROOT, stdout: 'pipe', stderr: 'pipe',
+    });
+    const out = await new Response(proc.stdout).text();
+    await proc.exited;
+    const parsed = JSON.parse(out) as { pin?: string; services?: unknown[] };
+    return { pin: parsed.pin ?? '', services: parsed.services ?? [] };
+  } catch (e) {
+    return { pin: '', services: [], error: `the release matrix could not be read: ${(e as Error).message}` };
+  }
+}
+
+/** Mail that asks for the Allfather — the desk's own count, or an honest null. */
+async function mailWaiting(): Promise<{ needs: number; unsure: number; accounts: string[]; error?: string }> {
+  const token = mailDeskToken();
+  if (!token) return { needs: 0, unsure: 0, accounts: [], error: 'the desk has no token yet' };
+  try {
+    const list = await fetch(`${MAIL_DESK}/accounts`, {
+      headers: { authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(4000),
+    });
+    const accounts = ((await list.json()) as { accounts?: string[] }).accounts ?? [];
+    let needs = 0;
+    let unsure = 0;
+    for (const account of accounts) {
+      const r = await fetch(`${MAIL_DESK}/queue?account=${encodeURIComponent(account)}&hours=72`, {
+        headers: { authorization: `Bearer ${token}` },
+        signal: AbortSignal.timeout(4000),
+      });
+      const q = (await r.json().catch(() => ({}))) as { counts?: { needs_you?: number; unsure?: number } };
+      needs += q.counts?.needs_you ?? 0;
+      unsure += q.counts?.unsure ?? 0;
+    }
+    return { needs, unsure, accounts };
+  } catch (e) {
+    return { needs: 0, unsure: 0, accounts: [], error: `the desk did not answer: ${(e as Error).message}` };
+  }
+}
+
+/**
+ * The digest takes ten to fifteen seconds (it runs the whole session-start
+ * script), and a page must not wait that long to answer. So it is read in the
+ * BACKGROUND and the page says `reading: true` until it lands: the fast parts
+ * (services, mail, markers) are answered every time, and the digest is served
+ * from the last read while a fresh one is being made. `RUNTIME_TTL` is how old a
+ * read may be before another is started.
+ */
+const RUNTIME_TTL = 60_000;
+let digestRead: { at: number; digest: string } | null = null;
+let digestInflight: Promise<void> | null = null;
+
+function readDigestInBackground(): void {
+  if (digestInflight) return;
+  digestInflight = (async () => {
+    try {
+      // 60 s is the script's own ceiling, not a promise it is fast
+      const digest = await runAsync(['bash', 'bin/time/saga-session-start.sh'], 0, 60);
+      digestRead = { at: Date.now(), digest };
+    } catch {
+      digestRead = { at: Date.now(), digest: '' };
+    } finally {
+      digestInflight = null;
+    }
+  })();
+}
+
 async function runtime() {
-  const digest = await runAsync(['bash', 'bin/time/saga-session-start.sh'], 10000);
+  const fresh = !!digestRead && Date.now() - digestRead.at < RUNTIME_TTL;
+  if (!fresh) readDigestInBackground();
+  const [services, mail] = await Promise.all([releaseMatrix(), mailWaiting()]);
   const markers = {
     lock: read(join(STATE_DIR, '.lock')).trim(),
     started: existsSync(join(STATE_DIR, '.session-start-complete')),
     armed: existsSync(join(STATE_DIR, '.supervision-armed')),
   };
-  return { digest, markers, doc: 'docs/session-start.md' };
+  const digest = digestRead?.digest ?? '';
+  return {
+    digest,
+    view: digest ? readDigest(digest) : null,
+    reading: !digest,
+    services,
+    mail,
+    markers,
+    doc: 'docs/session-start.md',
+  };
+}
+
+/* ---- /api/soak ----------------------------------------------------------- */
+// Plan 286 P6 — the Health view's data. Two sources, one reading: the leak
+// ledger's per-service trends (RSS, fds, watches, children, GPU, restarts) and
+// each app's LAST soak from `state/soak/<app>/`. Both are judged by plan 286
+// §5's budgets inside health.ts, so the page never invents a verdict.
+// Memoised for 30 s: the ledger is append-only and grows every five minutes, and
+// the app registry is a shell door — neither may be re-read on every request.
+function soakHealth() {
+  const appNames = run(['bin/desktop/ymir-app', '--list'])
+    .split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return memo('soak-health', 30_000, () => readSoakHealth({ homeDir: HOME_DIR, appNames }));
 }
 
 /* ---- /api/cron ----------------------------------------------------------- */
@@ -2299,169 +2437,33 @@ function workspaceProvision(name: string, kind: string, domains: string) {
   return parseToon(run(['bash', 'bin/agents/workspace-provision.sh', name, '--kind', kind, '--domains', domains]));
 }
 
-/* ---- tunnel gate (hardcoded for now) ------------------------------------- */
-// Temporary HTTP Basic Auth for the public tunnel. Override with
-// HLIDSKJALF_AUTH="user:pass"; replace with Heimdall (oauth2-proxy) later.
-const GATE_AUTH = process.env.HLIDSKJALF_AUTH ?? '';
-const SMIDJA_URL = process.env.SMIDJA_VIZ_URL ?? 'http://127.0.0.1:8437';
-// No default host: which hostname serves the smithy is the machine's fact.
-const SMIDJA_HOST = (process.env.SMIDJA_HOST ?? '').toLowerCase();
-const ODRERIR_HOST = (process.env.ODRERIR_HOST ?? '').toLowerCase();
-/** The one door: the primary host that carries Hlidskjalf's own login. Every app
- *  host redirects its unauthenticated visitors here, with where they were going. */
-const PRIMARY_HOST = (process.env.YMIR_PRIMARY_HOST ?? '').toLowerCase();
-const ODRERIR_URL = process.env.ODRERIR_URL ?? 'http://127.0.0.1:4322';
-/** Every app host the gate fronts: unauthenticated visitors get the login, never
- *  the app. Add a row when an app earns a public hostname. */
-const APP_HOSTS: Array<{ host: string; base: string; name: string }> = [
-  { host: SMIDJA_HOST, base: SMIDJA_URL, name: 'Smíðja' },
-  { host: ODRERIR_HOST, base: ODRERIR_URL, name: 'Óðrerir' },
-].filter((a) => a.host !== '');
+/* ---- the halls are LOCAL (plan 275 item 30, plans 277 and 279) ------------ *
+ * The three apps are not hosted: they run on this machine, they listen on
+ * loopback, and the DESKTOP SESSION is the authority. The hosted era left a login
+ * inside the gate (`HLIDSKJALF_AUTH`, an accounts store, invite codes, a GitHub
+ * door), a chooser that asked which of three halls to enter, and a set of public
+ * hostnames the gate fronted behind that login. None of it survives: nothing here
+ * asks who you are, because nobody but this machine's own user can reach a
+ * loopback port. Hosted, shared surfaces are Gimlé's (plan 284), not a hall's.
+ */
 const DIST = join(ROOT, 'apps/hlidskjalf/dist');
 
-/**
- * Sessions SURVIVE a restart. The cookie used to be a key in a process-local
- * Map, so every API restart silently voided every session — and the boards
- * painted the refused calls as ZEROS: 0 jobs in Nornir, 0/0 watched in Valhalla,
- * while the scheduler ran 33 jobs and 56 daemons were up (2026-10-23, both
- * reported to the Allfather as "dead"). A door that forgets who came in is not
- * a lock, it is a trapdoor.
- *
- * The token is a signed statement (`login.expiry.mac`), not a row in memory:
- * the law that no session is WRITTEN to disk still stands — what lives on disk
- * is the signing key, one machine secret under the hoard's state (0600).
- */
-const SESSION_TTL_S = Number(process.env.YMIR_SESSION_TTL_SECONDS ?? 60 * 60 * 24 * 30);
-const SESSION_KEY = (() => {
-  const fromEnv = process.env.YMIR_SESSION_SECRET;
-  if (fromEnv) return fromEnv;
-  const path = join(HOARD, 'state', 'gate-session.key');
-  try {
-    const k = readFileSync(path, 'utf8').trim();
-    if (k) return k;
-  } catch {
-    /* first run on this machine */
-  }
-  const k = randomBytes(32).toString('hex');
-  try {
-    mkdirSync(dirname(path), { recursive: true });
-    writeFileSync(path, `${k}\n`, { mode: 0o600 });
-  } catch {
-    /* an unwritable hoard still signs for this process's lifetime */
-  }
-  return k;
-})();
-function sessionMac(login: string, exp: number): string {
-  return createHmac('sha256', SESSION_KEY).update(`${login}\u0000${exp}`).digest('base64url');
-}
-/** Mint the cookie's value: who, until when, and a MAC binding both. */
-function mintSession(login: string): string {
-  const exp = Math.floor(Date.now() / 1000) + SESSION_TTL_S;
-  return `${Buffer.from(login, 'utf8').toString('base64url')}.${exp}.${sessionMac(login, exp)}`;
-}
-/** The login a token vouches for, or null — expired and forged alike are null. */
-function readSession(token: string): string | null {
-  const [b64, expRaw, mac] = token.split('.');
-  if (!b64 || !expRaw || !mac) return null;
-  const exp = Number(expRaw);
-  if (!Number.isFinite(exp) || exp * 1000 < Date.now()) return null;
-  let login = '';
-  try {
-    login = Buffer.from(b64, 'base64url').toString('utf8');
-  } catch {
-    return null;
-  }
-  if (!login) return null;
-  const want = Buffer.from(sessionMac(login, exp));
-  const got = Buffer.from(mac);
-  if (want.length !== got.length || !timingSafeEqual(want, got)) return null;
-  return login;
-}
-
-/**
- * The token a request carries is the httpOnly `ymir_session` cookie — and nothing
- * else. There is deliberately NO header credential (no `X-Ymir-Session`/`Bearer`)
- * and no stored session: every app must be verified live by this gate rather
- * than read a file that claims a session. The gate is the one authority.
- */
-function cookieToken(req: Request): string {
-  const c = req.headers.get('cookie') ?? '';
-  const m = c.match(/(?:^|;\s*)ymir_session=([^;]+)/);
-  return m ? m[1] : '';
-}
-function isAuthed(req: Request): boolean {
-  if (isDesktopSeat(req)) return true;
-  return !!readSession(cookieToken(req));
-}
-
 /** The peer address per request: Bun's Request has no socket, so it is recorded
- *  at the top of the handler. */
+ *  at the top of the handler. The voice and Rödd doors need it — they are the two
+ *  surfaces that still judge WHERE a request came from, and they refuse anything
+ *  that is not loopback. */
 const REQUEST_IP = new WeakMap<Request, string>();
 
-/**
- * The desktop seat (Electron) is local and trusted, so it is never asked to log
- * in: the shell loads this app from 127.0.0.1 and its preload marks every
- * request with `x-ymir-surface: desktop`. The marker alone proves nothing — a
- * web caller could send the header too — so it is honoured ONLY when the request
- * genuinely arrives over loopback, which a remote client never does. The web
- * door keeps its lock.
- */
-function isDesktopSeat(req: Request): boolean {
-  // A header where the client can set one; a query marker where it cannot —
-  // EventSource (the live Runes stream) sends no custom headers.
-  const marked =
-    (req.headers.get('x-ymir-surface') ?? '') === 'desktop' ||
-    new URL(req.url).searchParams.get('surface') === 'desktop';
-  if (!marked) return false;
-  const ip =
-    REQUEST_IP.get(req) ??
-    (req as Request & { socket?: { remoteAddress?: string } }).socket?.remoteAddress ??
-    '';
-  const bare = ip.startsWith('::ffff:') ? ip.slice('::ffff:'.length) : ip;
-  return bare === '127.0.0.1' || bare === '::1';
-}
-
-/** Who the gate says you are: the desktop seat wears the operator's own name. */
+/** Who is behind a request: on a local seat, there is exactly one answer. */
 function seatOf(req: Request): string {
-  if (isDesktopSeat(req)) {
-    const user = (GATE_AUTH || '').split(':')[0];
-    return user || 'operator';
-  }
-  return loginOf(req);
+  const h = new URL(req.url).hostname;
+  return h === '127.0.0.1' || h === 'localhost' || h === '[::1]' ? 'operator' : 'local';
 }
 
-/** The login behind a request's session, if any. */
+/** The login behind a request. The halls carry no session any more (item 30):
+ *  the desktop session is the authority, so this answers only for `seatOf`. */
 function loginOf(req: Request): string | null {
-  return readSession(cookieToken(req));
-}
-
-/** Begin a session and hand back the cookie. No session is kept on disk. */
-function sessionResponse(login: string): Response {
-  const token = mintSession(login);
-  return new Response(JSON.stringify({ ok: true, login }), {
-    headers: {
-      'content-type': 'application/json',
-      'set-cookie': `ymir_session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000`,
-    },
-  });
-}
-
-/** The login screen for an app host — same gate, same credentials. */
-
-/** Forward an authed Smíðja-host request to the visualizer on :8437. */
-async function proxyApp(req: Request, url: URL, base = SMIDJA_URL, label = 'smidja'): Promise<Response> {
-  const headers = new Headers(req.headers);
-  headers.delete('host');
-  headers.delete('cookie');
-  headers.delete('connection');
-  const init: RequestInit = { method: req.method, headers, redirect: 'manual' };
-  if (req.method !== 'GET' && req.method !== 'HEAD') init.body = await req.arrayBuffer();
-  try {
-    const up = await fetch(`${base}${url.pathname}${url.search}`, init);
-    return new Response(up.body, { status: up.status, headers: up.headers });
-  } catch (err) {
-    return json({ error: `${label} upstream unreachable: ${(err as Error).message}` }, 502);
-  }
+  return new URL(req.url).hostname === '127.0.0.1' ? 'operator' : null;
 }
 
 const STATIC_TYPES: Record<string, string> = {
@@ -2507,9 +2509,17 @@ function serveStatic(pathname: string): Response {
 }
 
 /* ---- server -------------------------------------------------------------- */
-// Sessions are in-memory only: a gate restart ends them, and nothing on disk can
-// revive one. That is the point — no bearer is kept at rest.
+// The halls are LOCAL. A bind beyond loopback is refused unless the operator
+// says so out loud (YMIR_ALLOW_WIDE_BIND=1), because "no app opens a port beyond
+// loopback" is the promise the login used to pretend to keep (item 30).
 const HOST = process.env.HLIDSKJALF_HOST ?? '127.0.0.1';
+const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '::1', '[::1]']);
+if (!LOOPBACK_HOSTS.has(HOST) && process.env.YMIR_ALLOW_WIDE_BIND !== '1') {
+  console.error(`[hlidskjalf] refusing to listen on ${HOST}: the halls are loopback only.`);
+  console.error('[hlidskjalf] A hosted, shared surface belongs to Gimlé (plan 284).');
+  console.error('[hlidskjalf] To override for a deliberate test: YMIR_ALLOW_WIDE_BIND=1');
+  process.exit(2);
+}
 const server = Bun.serve({
   hostname: HOST,
   port: PORT,
@@ -2520,156 +2530,29 @@ const server = Bun.serve({
     // Recorded per request (a WeakMap, so concurrent requests cannot mix).
     REQUEST_IP.set(req, srv.requestIP(req)?.address ?? '');
     try {
-      if (p === '/api/login' && req.method === 'POST') {
-        const b = (await req.json().catch(() => ({}))) as { username?: string; password?: string };
-        const user = b.username ?? '';
-        const pass = b.password ?? '';
-        // Two ways in: the operator's own credentials (HLIDSKJALF_AUTH), or an
-        // account minted with an invite code.
-        let login: string | null = null;
-        if (GATE_AUTH && `${user}:${pass}` === GATE_AUTH) login = user;
-        else if (user && pass) login = await verifyAccount(user, pass);
-        if (login) return sessionResponse(login);
-        return json({ error: 'invalid credentials' }, 401);
-      }
-      if (p === '/api/register' && req.method === 'POST') {
-        const b = (await req.json().catch(() => ({}))) as {
-          username?: string;
-          password?: string;
-          invite?: string;
-        };
-        const made = await register(b.username ?? '', b.password ?? '', b.invite ?? '');
-        if (!made.ok) return json({ error: made.reason }, 403);
-        return sessionResponse(made.login);
-      }
-      /* ---- GitHub: the same gate, a second door ---------------------------- *
-       * Sign-in with GitHub never creates access on its own. It names a login,
-       * and that login must already hold an account — accounts come from an
-       * invite, so the door stays closed to strangers however they arrive. */
-      if (p === '/api/auth/github' && req.method === 'GET') {
-        const clientId = process.env.GITHUB_CLIENT_ID ?? '';
-        const clientSecret = process.env.GITHUB_CLIENT_SECRET ?? '';
-        if (!clientId || !clientSecret) {
-          return json(
-            {
-              error:
-                'GitHub sign-in is not configured. Set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET in .env.local (a GitHub OAuth app) and restart the gate.',
-            },
-            503,
-          );
-        }
-        const state = crypto.randomUUID();
-        const redirect = `${url.origin}/api/auth/github/callback`;
-        const authorize =
-          'https://github.com/login/oauth/authorize' +
-          `?client_id=${encodeURIComponent(clientId)}` +
-          `&redirect_uri=${encodeURIComponent(redirect)}` +
-          '&scope=read:user&state=' +
-          encodeURIComponent(state);
-        return new Response(JSON.stringify({ url: authorize }), {
-          headers: {
-            'content-type': 'application/json',
-            'set-cookie': `ymir_oauth_state=${state}; Path=/; HttpOnly; SameSite=Lax; Max-Age=600`,
-          },
-        });
-      }
-      if (p === '/api/auth/github/callback' && req.method === 'GET') {
-        const clientId = process.env.GITHUB_CLIENT_ID ?? '';
-        const clientSecret = process.env.GITHUB_CLIENT_SECRET ?? '';
-        const code = url.searchParams.get('code') ?? '';
-        const state = url.searchParams.get('state') ?? '';
-        const expected = (req.headers.get('cookie') ?? '').match(/ymir_oauth_state=([^;]+)/)?.[1] ?? '';
-        if (!code) return json({ error: 'GitHub returned no code' }, 400);
-        if (!state || state !== expected) return json({ error: 'OAuth state did not match' }, 400);
-        const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json', accept: 'application/json' },
-          body: JSON.stringify({ client_id: clientId, client_secret: clientSecret, code }),
-        });
-        const tok = (await tokenRes.json().catch(() => ({}))) as { access_token?: string };
-        if (!tok.access_token) return json({ error: 'GitHub refused the code' }, 502);
-        const userRes = await fetch('https://api.github.com/user', {
-          headers: {
-            authorization: `Bearer ${tok.access_token}`,
-            accept: 'application/vnd.github+json',
-            'user-agent': 'ymir-gate',
-          },
-        });
-        const gh = (await userRes.json().catch(() => ({}))) as { login?: string };
-        const login = (gh.login ?? '').trim().toLowerCase();
-        if (!login) return json({ error: 'GitHub returned no login' }, 502);
-        if (!findAccount(login)) {
-          return json(
-            { error: `No account is held for the GitHub login '${login}'. Ask for an invite code, then register.` },
-            403,
-          );
-        }
-        return sessionResponse(login);
-      }
-      if (p === '/api/invites' && req.method === 'GET' && isAuthed(req)) {
-        // The operator's own view of who may still be let in.
-        return json({
-          invites: listInvites().map((i) => ({ ...i, code: i.code })),
-          accounts: listAccounts(),
-        });
-      }
+      // The halls carry no login (plan 275 item 30): no /api/login, no
+      // /api/register, no invite, no GitHub door, and no host the gate fronts
+      // behind one. What the face asks at boot is who this seat is, and the
+      // answer is the machine's own operator.
       if (p === '/api/session') {
-        const reqHost = (req.headers.get('host') ?? '').toLowerCase().split(':')[0];
-        const local = reqHost === 'localhost' || reqHost === '127.0.0.1' || reqHost === '::1' || reqHost === '';
-        return json({
-          authed: (GATE_AUTH && !local) ? isAuthed(req) : true,
-          login: seatOf(req) ?? (voiceAccess(req, REQUEST_IP.get(req) ?? '', true) === null ? 'operator' : null),
-          // The login surface shows "create an account" only while a live invite
-          // exists — a newcomer with a code can enter, and nobody else can.
-          registration: invitesOpen(),
-          // GitHub is a second door only when an OAuth app is configured; the
-          // login surface hides the button otherwise (it would 503).
-          github: !!(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET),
-        });
+        return json({ login: 'operator', surface: 'local', doc: 'docs/features/hlidskjalf-the-control-plane.md' });
       }
-      if (p === '/api/logout' && req.method === 'POST') {
-        // The cookie is cleared client-side; the signed token expires on its own.
-        return new Response(JSON.stringify({ ok: true }), {
-          headers: { 'content-type': 'application/json', 'set-cookie': 'ymir_session=; Path=/; Max-Age=0' },
-        });
-      }
-      // The Smíðja host rides the same gate: sign in here, then every request
-      // is reverse-proxied to the visualizer on :8437.
-      const host = (req.headers.get('host') ?? '').toLowerCase().split(':')[0];
-      const app = APP_HOSTS.find((a) => a.host === host);
-      if (app) {
-        if (!isAuthed(req)) {
-          // No dead login page: send them to the one login, remembering the app.
-          if (p.startsWith('/api/')) return json({ error: 'unauthorized' }, 401);
-          const scheme = (req.headers.get('x-forwarded-proto') ?? 'https').split(',')[0];
-          const door = PRIMARY_HOST || host;
-          return new Response(null, {
-            status: 302,
-            headers: { location: `${scheme}://${door}/?next=${encodeURIComponent(url.toString())}` },
-          });
-        }
-        return proxyApp(req, url, app.base, app.name);
-      }
-      // Login is only demanded from outside the machine: a request that arrives
-      // on loopback (the local desktop seat) is trusted without a session.
-      const reqHost = (req.headers.get('host') ?? '').toLowerCase().split(':')[0];
-      const local = reqHost === 'localhost' || reqHost === '127.0.0.1' || reqHost === '::1' || reqHost === '';
-      if (GATE_AUTH && !local && p.startsWith('/api/') && !isAuthed(req)) return json({ error: 'unauthorized' }, 401);
       if (p === '/api/rodd' || p.startsWith('/api/rodd/')) {
-        const login = loginOf(req);
-        const owner = isDesktopSeat(req) || !login || login === ((GATE_AUTH || '').split(':')[0] || 'operator');
-        const refusal = voiceAccess(req, REQUEST_IP.get(req) ?? '', owner);
+        // The loopback and same-origin wards stay (they are the real lock on a
+        // local door); the session dependence is gone with the logins.
+        const refusal = voiceAccess(req, REQUEST_IP.get(req) ?? '', true);
         if (refusal) return refusal;
         return rodd(req);
       }
       if (p.startsWith('/api/skirnir/voice/')) {
-        const login = loginOf(req);
-        const owner = isDesktopSeat(req) || !login || login === ((GATE_AUTH || '').split(':')[0] || 'operator');
-        const refusal = voiceAccess(req, REQUEST_IP.get(req) ?? '', owner);
+        const refusal = voiceAccess(req, REQUEST_IP.get(req) ?? '', true);
         if (refusal) return refusal;
-        return voice(req, seatOf(req) ?? 'local-operator');
+        return voice(req, seatOf(req) ?? 'operator');
       }
       if (p === '/api/health') return json({ ok: true, root: ROOT, sessions: orders().length });
+      // The leak ledger and the last soak of every app (plan 286 P6): the Health
+      // view on the Runtime page. Read-only, memoised — see soakHealth().
+      if (p === '/api/soak') return json(soakHealth());
       if (p === '/api/mail/accounts') {
         if (req.method !== 'GET') return json({ error: 'method not allowed' }, 405);
         return mailDesk('/accounts');
@@ -2899,10 +2782,25 @@ const server = Bun.serve({
       // so an unmemoised poll leaves Glitnir hanging for a minute and reads as a
       // dead surface. One answer per minute is what a human review board needs.
       if (p === '/api/reviews') return json(await memoAsync('reviews', 60_000, reviews));
-      if (p === '/api/files') return json(files(url.searchParams.get('realm') ?? 'work'));
-      if (p === '/api/file') return json(fileContent(url.searchParams.get('realm') ?? 'work', url.searchParams.get('path') ?? ''));
+      // Skrymir's root is the WHOLE home (plan 275 item 21); `realm` is honoured
+      // as the folder it now is, so an old client still lands somewhere true.
+      if (p === '/api/files') {
+        const rel = url.searchParams.get('path') ?? '';
+        const realm = url.searchParams.get('realm') ?? '';
+        return json(files(rel || (realm ? join('svartalfaheim', realm) : '')));
+      }
+      if (p === '/api/file') {
+        const rel = url.searchParams.get('path') ?? '';
+        const realm = url.searchParams.get('realm') ?? '';
+        return json(fileContent(rel || (realm ? join('svartalfaheim', realm) : '')));
+      }
       if (p === '/api/skills') return json(skills());
-      if (p === '/api/runtime') return json(await runtime());
+      if (p === '/api/runtime') {
+        // No memo here: `runtime()` is cheap now (the digest is read in the
+        // background and the release matrix is spawned once per poll), and the
+        // page must see `reading: false` the moment the digest lands.
+        return json(await runtime());
+      }
       // A speed-start from the UI. It calls the same launcher the Omarchy key
       // bindings use, so the app is raised when it is already up and started
       // when it is not — one way to raise a Ymir window, not two.
