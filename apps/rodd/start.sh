@@ -342,9 +342,19 @@ fi
 
 # 5 · the window
 export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-1}" XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/1000}"
+# The DevTools door: the app's fixed loopback port (bin/desktop/app-lib.sh, plan 275 item 19), always on, so
+# her window can be inspected without a restart. YMIR_DEVTOOLS_PORT still wins, for a one-off probe.
+[ -r "$ROOT/bin/desktop/app-lib.sh" ] && . "$ROOT/bin/desktop/app-lib.sh"
+RODD_DEVTOOLS_PORT="${YMIR_DEVTOOLS_PORT:-$(app_devtools_port rodd 2>/dev/null || true)}"
 [ -n "$ELECTRON" ] || { say "no electron binary" "install electron43 or run npm ci in apps/rodd"; exit 1; }
 setsid env SPEECH_TO_SPEECH_URL="ws://127.0.0.1:$PORT_HOST/v1/realtime" \
-  "$ELECTRON" --remote-debugging-port="${YMIR_DEVTOOLS_PORT:-9222}" "$APP" > /tmp/rodd-app.log 2>&1 < /dev/null &
-sleep 14
+  "$ELECTRON" --remote-debugging-port="${RODD_DEVTOOLS_PORT:-9222}" "$APP" > /tmp/rodd-app.log 2>&1 < /dev/null &
+# The window maps in about two seconds; a fixed 14 s sleep only made the click wait — and it is the click that
+# waits, because ymir-app restarts her unit and a oneshot unit does not return until this script does (measured
+# 2026-11-14: ~69 s from click to window, of which this sleep was 12 s of nothing). Poll for the window instead.
+for _i in $(seq 1 60); do
+  ps -eo args 2>/dev/null | grep 'apps/rodd' | grep -qv 'grep' && break
+  sleep 0.5
+done
 say "window" "$(ps -eo args | grep -c 'apps/rodd')"
 say "next" "apps/rodd/smoke.sh 45   # must end: assistant audio arrived PASS"
