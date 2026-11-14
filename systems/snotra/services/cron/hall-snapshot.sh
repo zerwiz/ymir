@@ -69,6 +69,13 @@ hoard_local_env YMIR_ENV_FILE
 hoard_state_dir YMIR_STATE_DIR
 hoard_data_dir YMIR_DATA_DIR
 
+# WHICH REALM THE HALL NAMES is the operator's own (plan 288 §1, RULES/42): his file at
+# config/snotra/snotra.conf says it, and with no file the snapshot names the realm Ymir uses when
+# nothing is declared — `default` — rather than one house's name written into a public tree.
+SNOTRA_CONF_FILE="${SNOTRA_CONF:-$YMIR_HOME/config/snotra/snotra.conf}"
+[ -r "$SNOTRA_CONF_FILE" ] && . "$SNOTRA_CONF_FILE"
+SNOTRA_HALL_REALM="${SNOTRA_HALL_REALM:-default}"
+
 # The roots that live OUTSIDE the code tree: this machine's records and the
 # runtime state belong to the home the operator chose at installation, never in
 # the tree — a packaged install replaces its tree on upgrade (Rule 04).
@@ -126,11 +133,12 @@ landed=$(ls "$STATE/eindri-reports/archive/" 2>/dev/null | sed 's/-.*//' | sort 
 landed_json=$(printf '%s\n' "$landed" | python3 -c "import json,sys; print(json.dumps(sys.stdin.read().split()))" 2>/dev/null || echo '[]')
 
 OUT_JSON="$(RUNE_C="$runes" PROJ_N="$(printf '%s' "$projects" | wc -w | tr -d ' ')" LOOM="$loom" WAKE="$wake" \
+ HALL_REALM="$SNOTRA_HALL_REALM" \
  SMITHS="$SMITHS_JSON" ERRANDS="$err" PROJ="$proj" UNDERWAY="$underway" LANDED="$landed_json" python3 -c "
 import json, os
 payload = {
   'generated_at': os.popen('date -u +%Y-%m-%dT%H:%M:%SZ').read().strip(),
-  'realm': 'wayof',
+  'realm': os.environ.get('HALL_REALM') or 'default',
   'tally': {
     'runes': int(os.environ['RUNE_C'] or 0),
     'projects': int(os.environ['PROJ_N'] or 0),

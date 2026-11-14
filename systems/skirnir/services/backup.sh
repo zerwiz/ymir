@@ -33,7 +33,7 @@ while [ $# -gt 0 ]; do
 done
 STATE="$HOME_R/hodd/state/assistant"
 # plan 275 (2026-11-12): one folder per MACHINE — the home is shared, and two seats writing the same
-# hodd/saves/assistant/<date>/ overwrote each other's snapshot (heimdall's 56 asks against another seat's 6)
+# hodd/saves/assistant/<date>/ overwrote each other's snapshot (one seat's 56 asks against another's 6)
 SEAT="$(hostname -s 2>/dev/null || echo seat)"
 DEST="$HOME_R/hodd/saves/assistant/$SEAT/$(date +%Y-%m-%d)"
 mkdir -p "$DEST" || exit 3

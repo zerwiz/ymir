@@ -504,33 +504,60 @@ def export_cards(board, state, rec):
     return state
 
 
-WORKSTREAMS = {
-    'patent': {'board': 'q5s42k70', 'decision': 'Patent Strategy', 'action': 'Patent Strategy', 'question': 'Questions to answer'},
-    'vertical': {'board': 'Dh17f3OF', 'decision': 'Gate 1 — Long-list and screen', 'action': 'Gate 2 — Falsify the top three', 'question': 'Gate 1 — Long-list and screen'},
-    'docs': {'board': '2YjEkVfP', 'decision': 'Documents & Agreements between us', 'action': 'Documents & Agreements between us', 'question': 'Weekly updates'},
-}
+WORKSTREAM_KEYS = ('decision', 'action', 'question')
+
+
+def workstreams() -> dict[str, dict]:
+    """The operator's workstreams: one row per board a subject's card is projected onto.
+
+    WHERE THE VALUES LIVE (plan 288 §1, RULES/42): a board id, its list names and its keywords are ONE
+    operator's — `$YMIR_HOME/config/snotra/workstreams.yaml`, whose shape ships as
+    `.agents/config/snotra/workstreams.yaml.example`. Written into this file they published a client's
+    board to everyone who clones the repository, and gave a stranger's install three 404s.
+
+    An absent file is a CLEAN FALLBACK, never an error: no workstream means a card is filed on its
+    meeting's own board and linked nowhere else. Lists are matched BY NAME, so a board may be rebuilt
+    without editing the settings.
+    """
+    p = os.path.join(home_dir(), 'config', 'snotra', 'workstreams.yaml')
+    if not os.path.isfile(p):
+        return {}
+    try:
+        import yaml
+        data = yaml.safe_load(open(p, encoding='utf-8')) or {}
+    except Exception:  # noqa: BLE001
+        return {}
+    out: dict[str, dict] = {}
+    for row in (data.get('workstreams') or [] if isinstance(data, dict) else []):
+        if not isinstance(row, dict) or not row.get('name') or not row.get('board'):
+            continue
+        out[str(row['name']).strip().lower()] = {
+            'board': str(row['board']), 'decision': row.get('decision') or '',
+            'action': row.get('action') or '', 'question': row.get('question') or '',
+            'keywords': [str(k).lower() for k in (row.get('keywords') or [])],
+        }
+    return out
 
 
 def classify(text):
+    ws = workstreams()
+    names = list(ws)
     # Try LLM reasoning first
     try:
         sys.path.insert(0, os.path.dirname(__file__))
         from reasoning_adapter import get_reasoning_adapter
         adapter = get_reasoning_adapter({"reasoning": {"enabled": True}})
-        if adapter:
-            result = adapter.classify(text, categories=['patent', 'vertical', 'docs'])
-            if result and result.strip().lower() in ('patent', 'vertical', 'docs'):
+        if adapter and names:
+            result = adapter.classify(text, categories=names)
+            if result and result.strip().lower() in names:
                 return result.strip().lower()
     except Exception:
         pass
-    # Fallback: keyword matching
+    # Fallback: the keywords the operator declared for each workstream, in HIS order
     t = (text or '').lower()
-    if any(k in t for k in ('patent', 'provisional', 'filing', 'intellectual property')):
-        return 'patent'
-    if any(k in t for k in ('vertical', 'pilot', 'scoring', 'trading', 'comparison', 'gate 0', 'gate 1', 'gate 2')):
-        return 'vertical'
-    if any(k in t for k in ('agreement', 'contract', 'nda', 'document', 'annex', 'sign')):
-        return 'docs'
+    for name, spec in ws.items():
+        if any(k and k in t for k in spec['keywords']):
+            return name
     return None
 
 
@@ -538,6 +565,7 @@ def link_workstreams(state, rec, cards):
     """Copy the card a subject belongs to onto its workstream board, linking the source."""
     byref = {c['ref']: c for c in cards if c.get('ref') in ('DEC', 'ACT', 'OQ') or (c.get('ref') or '').startswith(('DEC-', 'ACT-', 'OQ-'))}
     byref = {c['ref']: c for c in cards}
+    wsmap = workstreams()
     lists_cache = {}
     links = []
     for kind, items in (('decision', rec.get('decisions', [])), ('action', rec.get('actions', [])), ('question', rec.get('questions', []))):
@@ -550,7 +578,9 @@ def link_workstreams(state, rec, cards):
             ws = classify(text)
             if not ws:
                 continue
-            tgt = WORKSTREAMS[ws]
+            tgt = wsmap.get(ws)
+            if not tgt:
+                continue
             bid = tgt['board']
             if bid not in lists_cache:
                 lists_cache[bid] = {l['name']: l['id'] for l in api('GET', f'/boards/{bid}/lists', {'fields': 'name'})}

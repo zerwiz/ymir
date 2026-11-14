@@ -29,6 +29,8 @@ doors:
   database: [services/assistant-brief.sh, services/assistant_brief.py]   # plan 227 §S1.5 — the dated briefing, four verbs
   gate: [services/asks.sh, services/ask.sh, services/approve-fact.sh, services/escalate.sh, services/escalation-timer.sh]
   rooms: [services/room.sh, services/room-squad.sh, services/room-wall-test.sh, services/walls-test.sh]
+  tests: [services/smoke.sh, services/research-smoke.sh, services/adapter-test.sh,
+          services/test-fixtures.sh]   # the operator's own names, handed to a test so the test needs none
 called_by:
   - "the Allfather, through Telegram and the desk"
   - "bin/agents/domain.sh call skirnir '<order>'"

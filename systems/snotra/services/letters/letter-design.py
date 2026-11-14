@@ -348,11 +348,27 @@ def render(text: str, theme: str | None = None) -> str:
 YMIR_HOMEPAGE = "https://ymir.zerwiz.org"   # Ymir's public homepage, the one default (Rule 07)
 
 
+def default_homepage() -> str:
+    """The page the made-by line links, in the order that decides it.
+
+    The letter's own `made_by_url:` wins, then YMIR_HOMEPAGE_URL, then the operator's home settings
+    (`config/snotra/snotra.conf`, SNOTRA_LETTER_HOMEPAGE — plan 288 §1, RULES/42: his homepage is his),
+    then Ymir's own site. A reader whose mail client strips links still sees the address either way.
+    """
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "record"))
+        import snotra_config  # noqa: PLC0415
+        home_url = snotra_config.get("SNOTRA_LETTER_HOMEPAGE", "")
+    except Exception:  # noqa: BLE001
+        home_url = ""
+    return (home_url or os.environ.get("YMIR_HOMEPAGE_URL", "").strip() or YMIR_HOMEPAGE).rstrip("/")
+
+
 def made_by_html(made: str, meta: dict, t: dict) -> str:
     """The made-by line with "Ymir" linked to Ymir's homepage, and the address shown after it — a reader whose
     mail program strips links can still find the page. A replaced line that does not name Ymir keeps only the link
     at its end."""
-    url = (meta.get("made_by_url", "").strip() or os.environ.get("YMIR_HOMEPAGE_URL", "").strip() or YMIR_HOMEPAGE)
+    url = (meta.get("made_by_url", "").strip() or default_homepage())
     a = f'style="color:{t["muted"]};text-decoration:underline;"'
     shown = re.sub(r"^https?://", "", url).rstrip("/")
     text = E(made)
@@ -433,10 +449,10 @@ def self_test() -> int:
     made = render("---\ntheme: plain\ntitle: t\n---\nHi", None)
     if "</a> by TestAgent" not in made or ">Ymir</a>" not in made:
         failures.append("the made-by line does not name Ymir and the agent")
-    if 'href="https://ymir.zerwiz.org"' not in made or ">ymir.zerwiz.org</a>" not in made:
-        failures.append("the made-by line does not link Ymir's homepage")
     if 'href="https://example.org/y"' not in render("---\ntheme: plain\ntitle: t\nmade_by_url: https://example.org/y\n---\nHi", None):
         failures.append("made_by_url does not change the link")
+    if f'href="{default_homepage()}"' not in made or f'>{re.sub(r"^https?://", "", default_homepage())}</a>' not in made:
+        failures.append("the made-by line does not link the configured homepage")
     if "Made with Ymir" in render("---\ntheme: plain\ntitle: t\nmade_by: off\n---\nHi", None):
         failures.append("made_by: off does not remove the line")
     del os.environ["YMIR_AGENT_NAME"]

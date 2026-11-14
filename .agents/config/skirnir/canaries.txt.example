@@ -1,0 +1,18 @@
+# canaries.txt.example — strings that must never reach a stranger through Skírnir.
+#
+# Copy to `$YMIR_HOME/config/skirnir/canaries.txt`. One string per line; `#` starts a comment and blank
+# lines are ignored. Put in it what identifies YOUR house: your machines' names, your own names and
+# handles, anything a stranger asking the assistant must never hear back.
+#
+# WHY IT LIVES IN THE HOME (plan 288 §1, RULES/04): a guard that names what it refuses has published
+# it. The repository's own base list (`systems/skirnir/services/canaries.txt`) holds only the vault's
+# markers and the security posture — strings that are public craft. Your own names are yours.
+#
+# The tiers: the repository's base list binds EVERYONE, without exception. This file, and the plan
+# slugs the digest derives, are withheld from everyone but the owner — the owner may hear his own
+# machines; a stranger may not.
+#
+# Read by:  systems/skirnir/services/skirnir.py (`load_canaries`)
+
+my-laptop
+my-old-server

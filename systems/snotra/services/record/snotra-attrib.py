@@ -23,7 +23,7 @@ HOW THE TRACK IS CHOSEN FOR A QUOTE
 THE LAWS
     * a **person** names a speaker: `--by "<name>"` is required, and the mapping is appended to `speakers.jsonl`
       — an index re-assigned is a new line, so a correction never erases who said it before;
-    * a **track** is evidence, not identity: naming `speaker-01` "Craig Martin" is a claim the operator makes from
+    * a **track** is evidence, not identity: naming `speaker-01` "Blake Ashford" is a claim the operator makes from
       a sample, and the claim records who made it and when;
     * `apply` writes `decided_by` only where the vote is clear; every other decision keeps `decided_by: null` and
       an `attribution.status: unclear` with the reason — an honest unknown beats a plausible name (Rule 33).
