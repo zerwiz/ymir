@@ -57,7 +57,7 @@ stored row or a well's worth of memory.
 
 ### Proof
 
-- **The real windows, read through the DevTools protocol on heimdall.**
+- **The real windows, read through the DevTools protocol.**
   - OmniChat, `--remote-debugging-port=9311` over a real Electron window on the worktree's build:
     `.panel-title` reads *ᚴ VÖLUNDR — MASTER OF THE SMITHS*, the deck reads *Speak with Völundr · he
     drinks from the well before every dispatch*, and `document.body.innerText` contains no `Kaia`.

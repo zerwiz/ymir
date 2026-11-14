@@ -45,7 +45,7 @@ a message typed into Kaia's own input and sent through the UI:
 
 ```
 +33s  rows 2  streaming false  errors []  model null
-FINAL text: "I am Hœnir, your counsellor seated here on heimdall — and the smithy, Smíðja, is
+FINAL text: "I am Hœnir, your counsellor seated here on this machine — and the smithy, Smíðja, is
 the forge where worker agents are built from new work, rostered into teams, and sent out to do
 the making."
 ```
@@ -64,7 +64,7 @@ pin the filter, the whole error, pi's warning, the empty case, and the default i
 ## Not done, named — and it is the important one
 
 **The chat still answers in the seat's voice, not Völundr's.** The target repo here is
-`~/Documents/ymirhome` (the service's `CMD_DB` is `/home/heimdall/Documents/ymirhome/smidja/smidja.db`),
+`$YMIR_HOME` (the service's `CMD_DB` is `$YMIR_HOME/smidja/smidja.db`),
 and that tree holds neither persona file, so no `--append-system-prompt` is passed and pi answers
 from the home contract in its working directory. Measured above: the reply introduced itself as
 the seat's counsellor. The one-line fix is to let `kaiaPromptArgs()` also resolve the persona from
@@ -75,5 +75,10 @@ fix earns its own proof. It is recorded for the helm rather than slipped in here
 
 ## CHANGE LOG
 
+- 2026-11-14 — **the machine is masked** (the helm's audit, RULES/04 · RULES/39 · RULES/25): the proof
+  above now quotes *"seated here on this machine"* and names the store as `$YMIR_HOME/smidja/smidja.db`
+  instead of one seat's hostname and home path. The finding is unchanged; only what identifies the
+  seat it was measured on is gone. The rename errand carried this, as the helm directed, because the
+  line came in from `eindri/smidja-header-chat`.
 - 2026-11-14 — failure text rebuilt from the real cause; extension status lines dropped; default
   model corrected to `opencode-go/deepseek-v4.1-flash`; persona paths brought current; five tests.
