@@ -32,3 +32,7 @@ launcher an install left behind depended on which of the two ran last.
 - After `design-icon.sh install`, every launcher entry reads `Exec=…/ymir-app <app>` and `Icon=ymir-<app>`.
 - The raster also re-cut Hlidskjalf's Android splash screens; those were restored unchanged, as this change does not
   concern them.
+
+## CHANGE LOG
+
+- 2026-11-13 — review-mend: added missing heading for #730
