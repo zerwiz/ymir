@@ -1,0 +1,32 @@
+# workstreams.yaml.example — the operator's own workstreams, and where each one projects.
+#
+# Copy to `$YMIR_HOME/config/snotra/workstreams.yaml` and fill in your own boards. This shape is VALID
+# as it stands, and an absent file means exactly what an empty `workstreams:` means: a card is filed on
+# its meeting's own board and linked nowhere else (a clean fallback, never an error).
+#
+# WHY IT LIVES IN THE HOME (plan 288 §1, RULES/42): a board id is one operator's board — a stranger who
+# cloned the repository would get a 404 from it, and the client names beside it are personal data.
+#
+# Read by:  systems/snotra/services/cron/snotra-trello.py  (`link_workstreams`, `classify`)
+
+version: 1
+
+# One row per workstream. `board` is a board id from YOUR Trello (or the org tool's own id).
+# `decision` / `action` / `question` are the LIST NAMES on that board a card of each kind is filed
+# into — they are matched by name, never by id, so the board may be rebuilt without editing this file.
+# `keywords` is the deterministic fallback: when the reasoning model is absent or unsure, a card whose
+# text carries one of these words belongs to this workstream.
+workstreams:
+  - name: "documents"
+    board: "<board-id>"
+    decision: "Decisions"
+    action: "Actions"
+    question: "Open questions"
+    keywords: ["agreement", "contract", "nda", "document", "annex", "sign"]
+
+  - name: "meetings"
+    board: "<board-id>"
+    decision: "Decisions"
+    action: "Actions"
+    question: "Open questions"
+    keywords: ["agenda", "minutes", "recap"]

@@ -22,7 +22,7 @@
 # Env:
 #   VEXA_API_URL       base URL, HTTPS (required unless VEXA_API_URLS is set)
 #   VEXA_API_URLS      comma-separated endpoints; the first healthy one wins
-#                      (e.g. whynot, then a local Vexa, then hosted)
+#                      (e.g. the Vexa you run, then a local one, then hosted)
 #   VEXA_API_KEY       bearer token (or SNOTRA_VAULT_KEY name; see below)
 #   VEXA_JOIN_PATH     default /bots
 #   VEXA_STATUS_PATH   default /bots/status
@@ -47,6 +47,10 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   unset _sd _c
 fi
 KEY="${VEXA_API_KEY:-}"
+# His own meeting hosts come from his home settings (`config/snotra/snotra.conf`, AUTOJOIN_PLATFORM_HOSTS).
+if [ -n "${YMIR_HOME:-}" ] && [ -r "${SNOTRA_CONF:-$YMIR_HOME/config/snotra/snotra.conf}" ]; then
+  . "${SNOTRA_CONF:-$YMIR_HOME/config/snotra/snotra.conf}"
+fi
 if [ -z "${VEXA_API_URLS:-}" ] || [ -z "${VEXA_API_URL:-}" ] || [ -z "$KEY" ]; then
   _have=""
   ymir_home_root _have 2>/dev/null || true
@@ -91,7 +95,7 @@ for u in "${_urls[@]}"; do
 done
 [ -n "$KEY" ] || die "VEXA_API_KEY is not set (env, vault, or the local Vexa Lite engine's own key)"
 
-# Health-failover: whynot may be down; a local Vexa or a hosted one may not be.
+# Health-failover: any endpoint may be down; a local Vexa or a hosted one may answer.
 pick_url(){
   local u code
   for u in "${_urls[@]}"; do
@@ -119,10 +123,10 @@ api(){ # method path json
 # (platform, native_meeting_id), never on the whole URL.
 parse_link(){ # url → platform<TAB>id
   local url="${1-}" platform="${2-}"
-  python3 - "$url" "$platform" <<'PY'
+  python3 - "$url" "$platform" "${AUTOJOIN_PLATFORM_HOSTS:-}" <<'PY'
 import re,sys
 from urllib.parse import urlparse
-url,forced=sys.argv[1],sys.argv[2]
+url,forced,own=sys.argv[1],sys.argv[2],sys.argv[3]
 p=urlparse(url); host=(p.netloc or "").lower(); path=p.path.strip("/")
 platform=forced
 if not platform:
@@ -130,7 +134,9 @@ if not platform:
     elif host.endswith("zoom.us"): platform="zoom"
     elif "teams.microsoft." in host or "teams.live." in host: platform="teams"
     elif "jitsi" in host: platform="jitsi"
-    elif "ping." in host: platform="ping"
+    # his own meeting hosts: a host name is one operator's, so the list comes from his home, never
+    # from this file (plan 288 §1, RULES/42). An empty list leaves the public platforms, honestly.
+    elif any(h.strip() and h.strip() in host for h in own.split(",")): platform="ping"
     else: platform="other"
 mid=""
 if platform=="google_meet":

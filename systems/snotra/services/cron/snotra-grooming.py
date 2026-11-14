@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """snotra-grooming — the Monthly Grooming card (DEC-20261022-04).
 
-WHY: Reygan's meeting framework requires a monthly grooming session that goes
+WHY: the operator's meeting framework requires a monthly grooming session that goes
 through the bucket list of tasks/actions discussed and picked up during calls,
 and decides which are prioritised for the coming month. Without it the Backlog
 grows unbounded and the Monday Meeting has no prioritised list to pull from.

@@ -258,12 +258,65 @@ _STOP = {"the","a","an","is","are","was","were","what","who","why","how","does",
          "give","say","said","us","also","again"}
 
 
-SUBJECTS = {"example-4": ["example-4", "opti-cat", "opticad", "optica", "example-4's", "opticaat"],
-            "snotra": ["snotra", "snatra", "snotre", "nutra", "snorta", "snota"],
-            "skirnir": ["skirnir", "skirmir", "skamer", "scurnier", "skirner"],
-            "allfather": ["allfather", "all father", "our father", "alfather"],
-            "ymir": ["ymir", "ymer", "imir"],
-            "brokk": ["brokk", "brok", "brock"]}
+# The house's OWN names are the repository's (any installation speaks them). The operator's clients and
+# companies are HIS: they arrive from `$YMIR_HOME/config/snotra/voice-subjects.yaml`, shaped by
+# `.agents/config/snotra/voice-subjects.yaml.example`, and a home without that file simply has no
+# client subjects — a clean fallback, never an error (plan 288 §1, RULES/04, RULES/42).
+HOUSE_SUBJECTS = {"snotra": ["snotra", "snatra", "snotre", "nutra", "snorta", "snota"],
+                  "skirnir": ["skirnir", "skirmir", "skamer", "scurnier", "skirner"],
+                  "allfather": ["allfather", "all father", "our father", "alfather"],
+                  "ymir": ["ymir", "ymer", "imir"],
+                  "brokk": ["brokk", "brok", "brock"]}
+
+# The generic topics that make a spoken sentence a question (his trade's own nouns come from the home too).
+HOUSE_TOPICS = ("ymir", "snotra", "skirnir", "trello", "meeting", "calendar")
+
+
+def own_subjects() -> dict[str, list[str]]:
+    """The operator's own subjects, read from his home; absent gives no client subject at all."""
+    home = os.environ.get("YMIR_HOME") or os.path.expanduser("~/Documents/ymirhome")
+    path = os.path.join(home, "config", "snotra", "voice-subjects.yaml")
+    if not os.path.isfile(path):
+        return {}
+    try:
+        import yaml
+        data = yaml.safe_load(open(path, encoding="utf-8")) or {}
+    except Exception:
+        return {}
+    out: dict[str, list[str]] = {}
+    rows = data.get("subjects") if isinstance(data, dict) else None
+    if isinstance(rows, dict):
+        for canon, aliases in rows.items():
+            aliases = [str(a).strip().lower() for a in (aliases or []) if str(a).strip()]
+            if canon and aliases:
+                out[str(canon).strip().lower()] = aliases
+    return out
+
+
+def subjects() -> dict[str, list[str]]:
+    """His own subjects first — a home that names one is answering before the house's names do."""
+    out = own_subjects()
+    for canon, aliases in HOUSE_SUBJECTS.items():
+        out.setdefault(canon, list(aliases))
+    return out
+
+
+SUBJECTS = subjects()
+
+
+def subject_pattern(subject: str) -> str:
+    """How a fact that DEFINES a subject starts, so the definition answers before a mention does."""
+    if subject == "skirnir":
+        return r"^sk[ií]rnir"
+    if subject == "allfather":
+        return r"^the allfather is"
+    return "^" + re.escape(subject)
+
+
+def subject_re() -> re.Pattern:
+    """The names that make a sentence a question: the house's topics and every configured subject."""
+    names = [re.escape(s) for s in list(HOUSE_TOPICS) + list(SUBJECTS)]
+    return re.compile(r"\b(" + "|".join(names) + r")\b", re.I)
 
 
 def subject_of(heard: str):
@@ -315,19 +368,14 @@ def digest_match(heard: str, limit: int = 3) -> list[str]:
         # definition questions want the fact that DEFINES the subject ("Snotra is …"),
         # not one that merely mentions it (measured: "who is the Allfather" answered with
         # the availability fact)
+        # the subject is whichever of the configured names this question uses — the house's own and
+        # the operator's (his home gives his), never a name written into this file
         guess = subject_of(heard)
         if guess:
-            prefer = {"example-4": r"^example-4 is", "snotra": r"^snotra is",
-                      "skirnir": r"^sk[ií]rnir", "allfather": r"^the allfather is",
-                      "ymir": r"^ymir is", "brokk": r"^brokk is"}[guess]
-        for subject, pattern in (("snotra", r"^snotra is"),
-                                 ("brokk", r"^brokk is"),
-                                 ("allfather", r"^the allfather is"),
-                                 ("ymir", r"^ymir is"),
-                                 ("example-4", r"^example-4 is"),
-                                 ("ovk", r"^ovk records")):
-            if re.search(rf"\b{subject}\b", heard, re.I):
-                prefer = pattern
+            prefer = subject_pattern(guess)
+        for subject in SUBJECTS:
+            if re.search(rf"\b{re.escape(subject)}\b", heard, re.I):
+                prefer = subject_pattern(subject)
                 break
     facts = []
     try:
@@ -346,7 +394,7 @@ def digest_match(heard: str, limit: int = 3) -> list[str]:
                   if re.match(prefer, str(f.get("claim", "")).strip(), re.I)]
         if chosen:
             return chosen[:limit]
-    # rare words decide the subject; "example-4" must outweigh "system"
+    # rare words decide the subject; a client's own name must outweigh "system"
     df: dict[str, int] = {}
     tokenised = []
     for fact in facts:
@@ -373,8 +421,8 @@ def digest_match(heard: str, limit: int = 3) -> list[str]:
         head = " ".join(words[:2])
         if head and head in heard.lower():
             hit += 0.5
-        if "example-4" in q and "example-4" in toks:
-            hit += 0.05
+        if any(s in q and s in toks for s in SUBJECTS):
+            hit += 0.05    # the subject of the question is named by the claim
         # "how do I contact you / reach him / send a message" is about the CONTACT fact,
         # not about any claim that happens to contain the word "contact" (measured:
         # "how do I contact you" answered with the Example4 record)
@@ -609,8 +657,7 @@ class Voice:
             log(stage="asr", stt_ms=ms, rms=int(level), new=new[-80:] or "-")
             clean = re.sub(r"\[BLANK_AUDIO\]", "", text).strip()
             floor_open = (time.time() - self.addressed_at) < self.args.floor_window
-            subject = re.search(r"\b(example-4|opti-?cat|ovk|ymir|snotra|skirnir|wayof|way of|"
-                                r"trello|meeting|calendar|ventilation|inspection)\b", clean, re.I)
+            subject = subject_re().search(clean)
             asked = "?" in clean or subject or re.match(r"^(what|who|why|how|when|where|can|"
                                                         r"could|would|do|does|is|are|tell)\b",
                                                         clean.strip(), re.I)

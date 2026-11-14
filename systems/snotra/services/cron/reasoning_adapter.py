@@ -17,6 +17,20 @@ THE TASKS:
   dedup       — new card → check against existing (semantic duplicate detection)
   classify    — card content → workstream board/list
   identity    — speaker name → user ID (from context)
+
+THE PROMPTS AND THE NAMES: every example in this file is INVENTED. A real meeting, a real person or a
+real board column in a public repository is personal data (RULES/04); the operator's own workstream
+names arrive from his home (`config/snotra/snotra.conf`, `REASONING_CLASSIFY_CATEGORIES`) through
+`snotra_config`, and the generic four below answer when no home is present (plan 288 §1, RULES/42).
+
+2026-11-03 (correction, appended): the operator's name was redacted — it is personal data and belongs in
+the home, not in a public repository (RULES/04, RULES/06).
+
+2026-11-14 (correction, appended — plan 288 §1, errand `systems-split`): the redaction above was written
+as markdown APPENDED to a Python file, which made this module a SyntaxError and silently killed every
+importing door's reasoning pass. The note lives inside this docstring now, so the record survives and the
+module parses. The last real names in the prompt examples (a chair and a participant) are invented here;
+the board's own workstream names are read from the operator's home.
 """
 from __future__ import annotations
 
@@ -27,6 +41,20 @@ from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "record"))
+
+# The generic workstreams: what a board looks like before an operator names his own. His names come from
+# `$YMIR_HOME/config/snotra/snotra.conf` (REASONING_CLASSIFY_CATEGORIES) — never from this file.
+DEFAULT_CATEGORIES = ["patents", "verticals", "documents", "meetings"]
+
+
+def classify_categories() -> list[str]:
+    """The operator's workstream names, else the generic four — and never a guess."""
+    try:
+        import snotra_config  # noqa: PLC0415  (the one reader of his Snotra settings)
+        return snotra_config.csv("REASONING_CLASSIFY_CATEGORIES", DEFAULT_CATEGORIES)
+    except Exception:  # noqa: BLE001
+        return list(DEFAULT_CATEGORIES)
 
 
 class ReasoningAdapter:
@@ -129,13 +157,13 @@ class ReasoningAdapter:
             '"owner": "name or null", "due_date": "YYYY-MM-DD or null", '
             '"evidence_quote": "verbatim quote", "timestamp": "HH:MM:SS or null"}]\n\n'
             "EXAMPLE:\n"
-            'Transcript: "We decided to use Trello. Reygan will circulate the '
+            'Transcript: "We decided to use Trello. Blake will circulate the '
             'agreement by Friday. Open question: who holds admin?"\n'
             'Output: [{"type":"decision","statement":"Use Trello for the board",'
             '"owner":null,"due_date":null,"evidence_quote":"We decided to use Trello",'
             '"timestamp":null},{"type":"action","statement":"Circulate the developer '
-            'agreement","owner":"Reygan","due_date":null,'
-            '"evidence_quote":"Reygan will circulate the agreement by Friday",'
+            'agreement","owner":"Blake","due_date":null,'
+            '"evidence_quote":"Blake will circulate the agreement by Friday",'
             '"timestamp":null},{"type":"question","statement":"Who holds admin on '
             'the board panel?","owner":null,"due_date":null,'
             '"evidence_quote":"Open question: who holds admin?","timestamp":null}]'
@@ -222,8 +250,12 @@ class ReasoningAdapter:
         return self._call_llm(system_prompt, f"New card: {new_card}\nExisting cards:\n{existing_cards}", max_tokens=100)
 
     def classify(self, card_text: str, categories: list[str] | None = None) -> str:
-        """Classify a card into a workstream board/list."""
-        cats = categories or ["patent", "vertical", "docs", "example-3", "meetings"]
+        """Classify a card into a workstream board/list.
+
+        `categories` is for a caller that KNOWS its board's columns; with none, the operator's own
+        names are read from his home, and the generic four answer a home that has not declared any.
+        """
+        cats = categories or classify_categories()
         system_prompt = (
             "You are a workstream classifier. Given a card's text, classify it into "
             "one of: " + ", ".join(cats) + ".\n\n"
@@ -251,8 +283,8 @@ class ReasoningAdapter:
             "'ambiguous: <name1>, <name2>'.\n"
             "- Handle nicknames and abbreviations from context.\n\n"
             "EXAMPLE:\n"
-            "Speaker: Reygan\nContext: Reygan Assareh (chair), <the operator> <the operator> (operator)\n"
-            "Output: Reygan Assareh"
+            "Speaker: Blake\nContext: Blake Ashford (chair), Jordan Ellis (operator)\n"
+            "Output: Blake Ashford"
         )
         return self._call_llm(system_prompt, f"Speaker: {speaker}\nContext: {context}", max_tokens=50)
 
@@ -319,5 +351,3 @@ if __name__ == "__main__":
         print(adapter.classify(args.input))
     elif args.task == "identity":
         print(adapter.identity(args.input, args.context))
-
-**2026-11-03 (correction, appended):** the operator's name was redacted — it is personal data and belongs in the home, not in a public repository (RULES/04, RULES/06).

@@ -11,7 +11,7 @@
 # The discriminator is the stream's **`media.role`**, the property the sound
 # server's clients set while a call is live (PulseAudio's `Communication`, which
 # PipeWire's session manager surfaces as `phone`). A bare mic grab carries no
-# `media.role` at all. Measured on heimdall 2026-09-28: an idle Chromium mic hold
+# `media.role` at all. Measured 2026-09-28 on a CUDA seat: an idle Chromium mic hold
 # reports `application.name = "Chromium input"`, `application.process.binary =
 # "chromium"` and **no `media.role`**; a stream created with
 # `--property=media.role=Communication` reports `media.role = "phone"`.

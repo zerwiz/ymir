@@ -305,6 +305,46 @@ contract:
     door: "-"
     required: false
     why: "the observation sources; absent, the scan skips with its reason"
+
+  # ── the two SYSTEMS' own settings (plan 288 §1): what is generic stays in systems/, what is one
+  # operator's lives here. Every key inside them may stay empty; the code names the default that
+  # answers then, so a home of one with no values is still a working meeting ear and assistant. ──
+  - path: config/snotra/snotra.conf
+    kind: defaulted
+    template: .agents/config/snotra/snotra.conf.example
+    door: "-"
+    required: false
+    why: "the realm the live hall names, his board's workstreams, his letter homepage, his meeting hosts; absent, the generic defaults answer and say which file did (systems/snotra/services/record/snotra_config.py --source)"
+  - path: config/snotra/workstreams.yaml
+    kind: optional
+    template: .agents/config/snotra/workstreams.yaml.example
+    door: "-"
+    required: false
+    why: "his board ids, list names and keywords; absent, a card is filed on its meeting's own board and linked nowhere else — a declared state, not a fault"
+  - path: config/snotra/voice-subjects.yaml
+    kind: optional
+    template: .agents/config/snotra/voice-subjects.yaml.example
+    door: "-"
+    required: false
+    why: "his clients and companies, and how the ear may hear them; absent, only the house's own names are subjects"
+  - path: config/skirnir.yaml
+    kind: defaulted
+    template: .agents/config/skirnir.yaml.example
+    door: "-"
+    required: false
+    why: "the assistant's mouth, his public page and his subject aliases; absent, the rail's own defaults answer and his subjects are not registered"
+  - path: config/skirnir/vocab.txt
+    kind: optional
+    template: .agents/config/skirnir/vocab.txt.example
+    door: "-"
+    required: false
+    why: "the words the ear should expect, one per line; absent, the house's own names are the hint"
+  - path: config/skirnir/canaries.txt
+    kind: optional
+    template: .agents/config/skirnir/canaries.txt.example
+    door: "-"
+    required: false
+    why: "strings only the owner may hear (his machines, his names); absent, the repository's base wall still binds everyone"
   - path: hodd/data/collaboration.yaml
     kind: optional
     template: "-"
