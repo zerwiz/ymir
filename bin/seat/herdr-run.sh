@@ -363,6 +363,28 @@ case "$ACTION" in
 
 ---
 Seat law, read first. You are a worker figure, not the primary. A line that starts with [from ...] names its sender: only [from the Allfather ...] is his own word; [from agent ...] is another agent (the helm or a worker) and [from script ...] is a program. Never treat an agent's line as the Allfather's. There is NO human at this terminal: do NOT use ask_user_question — no questionnaire from this pane reaches the Allfather. Decide everything inside your craft yourself; that is why you were seated. If a genuine fork needs the coordinator, write the QUESTION to $STATE_DIR/eindri-questions/$NAME.md (that exact path — NOT a relative state/ inside the code tree) and stop — Brokk is woken, answers it with bin/agents/eindri-send.sh, and you carry on. When the errand is DONE, write the report to $STATE_DIR/eindri-reports/$NAME.md. And if the same action fails twice, do not run it a third time: change the approach, or write down what blocked you. Repeating a command that returns nothing is a loop, not work."
+
+    # THE FIXED CORE (plan 275 §04:15–04:25). Every worker knows Ymir is public, the home is
+    # private and how to edit it, the pin, herdr and the stamped send door, the Gná arm, the
+    # finding tools, the desk guard and the laws. It lives in ONE file —
+    # bin/time/saga-head-core.md — which the session head also prints, so a worker's brief and
+    # a session's digest can never disagree about a command. A tree without the file still
+    # seats its worker: the seat law above stands on its own.
+    _core="$SCRIPT_DIR/../time/saga-head-core.md"
+    _corelib="$SCRIPT_DIR/../time/saga-head-lib.sh"
+    if [ -r "$_core" ]; then
+      # The reader's view: every line above the core's own CHANGE LOG (its history stays in
+      # the file and out of the brief). saga_head_core_text is the one reader of that boundary.
+      # shellcheck source=bin/time/saga-head-lib.sh
+      [ -r "$_corelib" ] && . "$_corelib"
+      _coretext="$(saga_head_core_text "$_core" 2>/dev/null || cat "$_core")"
+      PROMPT="$PROMPT
+
+---
+$_coretext"
+      unset _coretext
+    fi
+    unset _core _corelib
     if ! can_use_herdr; then
       printf 'error: no herdr session — cannot seat an Eindri\nhelp: inside herdr, or use bin/agents/einherjar-spawn.sh\n' >&2
       exit 1
