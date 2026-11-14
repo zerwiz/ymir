@@ -13,7 +13,7 @@ case "${1:-list}" in
       tmp="$(mktemp)"
       herdr pane list >"$tmp" 2>/dev/null
       python3 /dev/fd/3 3<<'PY' "$tmp"
-import json, sys
+import json, os, sys
 try:
     data = json.load(open(sys.argv[1]))
 except Exception:
@@ -25,14 +25,18 @@ print('seats[1]{panes,live,working,shells}:')
 print(f'  "{len(panes)}","{len(live)}","{len(working)}","{len(panes) - len(live)}"')
 print('panes[N]{id,agent,status,cwd}:')
 for p in panes:
-    cwd = (p.get('cwd') or '').replace('/home/heimdall', '~')
+    home = os.path.expanduser('~')
+    cwd = (p.get('cwd') or '')[(len(home)):] if (p.get('cwd') or '').startswith(home) else (p.get('cwd') or '')
+    cwd = '~' + cwd
     print(f'  "{p.get("pane_id") or "?"}","{p.get("agent") or "shell"}","{p.get("agent_status") or "-"}","{cwd}"')
 # plan 255 · S4: a bare shell that is NOT an errand is the Allfather's own
 # working directory — named in its own row, never closed by a sweep.
 orphans = [p for p in panes if not p.get('agent') and '/.yggdrasil/' not in (p.get('cwd') or '')]
 print(f'orphans[{len(orphans)}]{{pane,cwd}}:')
 for p in orphans:
-    cwd = (p.get('cwd') or '').replace('/home/heimdall', '~')
+    home = os.path.expanduser('~')
+    cwd = (p.get('cwd') or '')[(len(home)):] if (p.get('cwd') or '').startswith(home) else (p.get('cwd') or '')
+    cwd = '~' + cwd
     print(f'  "{p.get("pane_id") or "?"}","{cwd}"')
 PY
       rm -f "$tmp"

@@ -29,7 +29,8 @@ assets[3]{file,load_when}
 
 ## The traps already paid for
 
-1. **The Gimlé MCP is live and its public door is dead.** `127.0.0.1:8489` answers; `mcp.gimle.zerwiz.org` answers
+1. **The Gimlé MCP is live and its public door is dead.** `127.0.0.1:8489` answers; its public name (declared by the
+   operator) answers
    000. Do not tell anyone the MCP is reachable until the hostname does.
 2. **AFFiNE's GraphQL cannot create a document.** There is no `createDoc`/`updateDoc` — only publishing, roles and
    comments. Storing a baton in Documents is an import or a sync client, not an API call.

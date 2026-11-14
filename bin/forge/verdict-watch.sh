@@ -21,7 +21,9 @@ ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/
   [ "$PWD" = / ] && break; cd ..; done; pwd)"
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 _h=""; declare -f ymir_home_root >/dev/null 2>&1 && ymir_home_root _h 2>/dev/null
-STATE="${_h:-$HOME/Documents/ymirhome}/state"
+# The ONE resolver says where the home is (Rule 07); a home it cannot name is a refusal, not a guess.
+[ -n "$_h" ] || { printf 'verdict-watch: the resolver (bin/vault/hoard-lib.sh) named no home\n' >&2; exit 1; }
+STATE="$_h/state"
 REPORTS="$STATE/eindri-reports"
 SEEN="$STATE/.reviewed/delivered"
 NOTIFY="$ROOT/bin/notify/send.sh"

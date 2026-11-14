@@ -5,7 +5,7 @@
 #
 # The Óðrerir boards do not read a local file for tickets/plans: they ring the
 # Skuld MCP through THIS BODY's own gateway (bin/bridge/mcp-gateway.sh, :8316), which
-# resolves the heart (zerwizserver) at request time — the app never names the
+# resolves the heart (by the role the home's fleet registry gives it) at request time — the app never names the
 # heart. This smoke walks the SAME wire the browser walks — initialize (an
 # mcp-session-id), then tickets/list, plans/list, tickets/get, comments/list,
 # plans/get — and judges the answers the boards parse:

@@ -167,7 +167,7 @@ def self_test() -> int:
         (home / "svartalfaheim/acme/meetings/m.md").write_text("# m\n")
         subprocess.run(["git", "-C", str(home), "add", "."], check=True)
         subprocess.run(["git", "-C", str(home), "commit", "-qm", "acme: the meeting recorded"], check=True)
-        subprocess.run(["git", "-C", str(home), "commit", "-q", "--allow-empty", "-m", "nidavellir: the day's appends"], check=True)
+        subprocess.run(["git", "-C", str(home), "commit", "-q", "--allow-empty", "-m", "%s: the day's appends" % (socket.gethostname().split(".")[0] or "a seat")], check=True)
         (root / "f").write_text("x")
         subprocess.run(["git", "-C", str(root), "add", "."], check=True)
         subprocess.run(["git", "-C", str(root), "commit", "-qm", "feature: a thing"], check=True)

@@ -82,7 +82,7 @@ try:
     for x in json.load(sys.stdin)["result"]["agents"]: print(x.get("name",""))
 except Exception: pass' 2>/dev/null); do
       [ -n "$a" ] || continue
-      if herdr agent read "$a" 2>/dev/null | grep -qE '\((llama-swap|llamacpp-whynot|llama\.cpp|lmstudio)\)'; then
+      if herdr agent read "$a" 2>/dev/null | grep -qE '\((llama[^)]*|lmstudio)\)'; then
         busy=$((busy + 1))
         [ -n "$holders" ] && holders="$holders,"
         holders="$holders$a"

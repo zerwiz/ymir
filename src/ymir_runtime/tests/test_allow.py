@@ -46,7 +46,7 @@ class AllowTest(unittest.TestCase):
 
     # ── the list ──
     def test_flash_and_local_rail_are_allowed(self) -> None:
-        for model in ("opencode-go/deepseek-v4.1-flash", "llama-swap/qwen3.6-35b-a3b@iq3_s", "llamacpp-whynot/q@q4"):
+        for model in ("opencode-go/deepseek-v4.1-flash", "llama-swap/qwen3.6-35b-a3b@iq3_s", "llamacpp-other/q@q4"):
             self.assertEqual(self.check(model).verdict, "allowed", model)
 
     def test_pro_is_refused_with_the_remedy(self) -> None:

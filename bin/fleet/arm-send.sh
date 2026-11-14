@@ -7,7 +7,7 @@
 # WHY. Every machine has an arm holder (the session that holds its Gná lock) and the same door to reach it,
 # bin/voice/rodd-arm.sh `tell`, which drops a `signal` wake into the queue that holder reads. But that door only
 # reached the holder on its own machine: "a remote route must be nudged on its own host" (plan 253, measured
-# 2026-11-11), so heimdall's helm could not ask nidavellir's anything without a human paste. This carries `tell` over
+# 2026-11-11), so one machine's helm could not ask another's anything without a human paste. This carries `tell` over
 # the fleet's own roads (hodd/data/fleet.json: user and tailnet name), signed with the sending seat's name, and puts
 # the way back in the line, so the receiver can answer with one command.
 #

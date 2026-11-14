@@ -2,7 +2,7 @@
 # inbound-test.sh — THE acceptance test for "people can mail us" (plan 116 §15.3.4).
 #
 #   bin/mail/inbound-test.sh                       # test the registry's acceptance address
-#   bin/mail/inbound-test.sh --to gimle@zerwiz.org  # name the address yourself
+#   bin/mail/inbound-test.sh --to desk@example.org  # name the address yourself
 #   bin/mail/inbound-test.sh --mx-only              # ask only "could mail arrive here at all?"
 #   bin/mail/inbound-test.sh --dry-run              # prepare the message, send nothing
 #   bin/mail/inbound-test.sh --self-test            # the door's proofs, offline

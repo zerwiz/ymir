@@ -11,7 +11,7 @@ const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..', '..', '..');
 // A desktop shell is a LOCAL seat: it never wears a tunnel. A non-loopback URL
-// (a *.zerwiz.org hostname, say) is refused, not honoured - Cloudflare has no
+// (a *.example.org hostname, say) is refused, not honoured - Cloudflare has no
 // business inside an Electron window.
 function localOnly(url, fallback) {
   try {

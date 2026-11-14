@@ -61,16 +61,27 @@ PY
 CARDS=""
 if [ -n "${PLANE_API_BASE:-}" ] && [ -x "$ROOT/bin/vault/hodd.sh" ]; then
   TOK="$(bash "$ROOT/bin/vault/hodd.sh" emit secrets/platform.env 2>/dev/null | sed -n 's/^export PLANE_API_TOKEN=//p' | tr -d "\"'")"
+  # WHICH workspaces to read is the operator's fact, so it is read from his config, never a list in
+  # this repository (RULES/04): $GIMLE_PLANE_WORKSPACES, else his config/gimle/plane-workspaces.txt.
+  if [ -z "${GIMLE_PLANE_WORKSPACES:-}" ]; then
+    _home="$(bash "$ROOT/bin/vault/hodd.sh" path 2>/dev/null || true)"
+    if [ -n "$_home" ] && [ -r "$_home/config/gimle/plane-workspaces.txt" ]; then
+      GIMLE_PLANE_WORKSPACES="$(sed -e 's/#.*//' "$_home/config/gimle/plane-workspaces.txt" | tr -d '[:blank:]' | grep -v '^$' | paste -sd, -)"
+      export GIMLE_PLANE_WORKSPACES
+    fi
+  fi
   if [ -n "$TOK" ]; then
-    CARDS="$(PLANE_TOKEN="$TOK" PLANE_API_BASE="$PLANE_API_BASE" DAY="$DAY" python3 - <<'PY'
+    CARDS="$(PLANE_TOKEN="$TOK" PLANE_API_BASE="$PLANE_API_BASE" DAY="$DAY" GIMLE_PLANE_WORKSPACES="${GIMLE_PLANE_WORKSPACES:-}" python3 - <<'PY'
 import json, os, urllib.request, urllib.error
 tok, base, day = os.environ["PLANE_TOKEN"], os.environ["PLANE_API_BASE"].rstrip("/"), os.environ["DAY"]
+# the workspaces are the operator's (RULES/04): GIMLE_PLANE_WORKSPACES, never a list in this repo
+workspaces = [w.strip() for w in os.environ.get("GIMLE_PLANE_WORKSPACES", "").split(",") if w.strip()]
 def get(p):
     r = urllib.request.Request(base + p, headers={"X-API-Key": tok})
     try: return json.load(urllib.request.urlopen(r, timeout=12))
     except Exception: return {}
 lines, blocked, done, doing = [], 0, 0, 0
-for ws in ("wayof", "example-8", "example-4", "whynotproductions", "ymirhome"):
+for ws in workspaces:
     d = get(f"/api/v1/workspaces/{ws}/projects/?per_page=100")
     for p in (d.get("results") or []):
         try:

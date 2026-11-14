@@ -299,7 +299,7 @@ at sunrise. The forge address is the user's, from the home — never the tree:
 
 - No `FORGEJO_URL` configured → clean exit (the loop is not armed); a closed
   door (tunnel down) → exit 1 and Rune `forgejo / git.door-down`.
-- The forge may be the server's (`forgejo.zerwiz.org` → :3030) or a locally
+- The forge may be the heart's (`<the heart>.<host>` → :3030) or a locally
   provisioned one (`bin/desktop/ymir-marketing-stack.sh --with-forgejo`).
 
 ### 3.8 The marketing stack (`bin/desktop/ymir-marketing-stack.sh`)
@@ -314,8 +314,8 @@ send), then probes `http://127.0.0.1:8494/health` with the desk's own token.
 
 Since 2026-10-24 each round also asks `bin/mail/addresses.sh --check` (plan 116
 §15.3.1) and prints a **WARN** line, plus a `gna-mail.log` row, for any address
-the house uses that cannot receive — measured that evening: `zerwiz.org` publishes
-no MX, so `gimle@`, `snotra@`, `reply+*` and `bounce+*` there are undeliverable.
+the house uses that cannot receive — measured that evening: the house's own mail domain
+published no MX, so its desk and notices addresses, `reply+*` and `bounce+*` were undeliverable.
 The WARN never fails the import: an address that cannot receive is a DNS or
 console fault, and the mail that DOES arrive must still be read.
 
@@ -369,7 +369,7 @@ bin/desktop/ymir-marketing-stack.sh up|status|down|doors
 ```
 
 - Rune `marketing / stack.<action>` carved on each provision action.
-- The Allfather's live stack is the server's (`zerwizserver`); its public
+- The Allfather's live stack is the heart's; its public
   doors are tunnel-driven (`cloudflared`) — see the registry's
   `marketing_doors[]` table.
 - Idempotent: gates are pure checks; the cron date-guard suppresses repeat

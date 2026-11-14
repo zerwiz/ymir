@@ -268,7 +268,7 @@ part.
 
 **Modes** (ship): `direct-PR` (push `eindri/<id>`, open PR; never merge), `local-only` (work on `eindri/<id>`; Brokk merges local `main` after approval), `no-mistakes` (run the `no-mistakes` pipeline, open the PR it produces). Merge authority stays with the **Glitnir human gate** — Brokk never force-merges, and **a worker never merges its own PR**.
 
-**The seat's own PR is sealed by the seat (2026-11-05, RULES/08 appended; plan 190).** A PR left open is a branch drifting from a moving `main`, so the seat's own green, conflict-free PR — its ONLY open one, `state/.seal-hold` absent — is merged by the seat's agent (Sindri on nidavellir, Hœnir on heimdall) through `bin/agents/pr-seal.sh seal <n>`, with one Runes entry naming PR, head and merge commit. `bin/agents/pr-seal.sh watch` raises ONE wake line through the arm (`state/.wake-queue`) naming PR, head, checks and the exact merge command; the sweep walks that road every time. Another hand's PR is never sealed, and no merge happens on red or on a conflict, under any flag.
+**The seat's own PR is sealed by the seat (2026-11-05, RULES/08 appended; plan 190).** A PR left open is a branch drifting from a moving `main`, so the seat's own green, conflict-free PR — its ONLY open one, `state/.seal-hold` absent — is merged by the seat's agent (the smith on its own machine, the helm in the main hall) through `bin/agents/pr-seal.sh seal <n>`, with one Runes entry naming PR, head and merge commit. `bin/agents/pr-seal.sh watch` raises ONE wake line through the arm (`state/.wake-queue`) naming PR, head, checks and the exact merge command; the sweep walks that road every time. Another hand's PR is never sealed, and no merge happens on red or on a conflict, under any flag.
 
 **Isolation.** Every worker runs in a Yggdrasil worktree at `<BROKK_HOME>/.yggdrasil/<id>`, created read-only-referencing the project. herdr is the ORDINARY road — no container. Utgard is the EXCEPTION, chosen for untrusted code or an outsized task, never because an image is present. The brief DECLARES it (`Isolation: herdr|utgard — <why>`); `--isolation auto` honours the declaration, and a declared utgard with no image is a LOUD refusal, never a silent downgrade (2026-09-24). A sealed worker mounts the worktree at `/sandbox/workspace`, plus `state/` and `data/` at their host paths. The brief's first instruction to the worker is to verify isolation with `pwd -P` and `git rev-parse --show-toplevel` before touching anything.
 
@@ -1251,7 +1251,7 @@ asks her to merge with `void` and the reason (Rule 08).
 
 - **2026-11-08** — Appended with the capability: the canon, the estate door, the widening of `domain.sh`,
   the tree ward, the kit shelf and its two gates, the card, and the first two estates measured (Ymir 6 held
-  · 12 unheld; Inmost's Example3 4 held · 14 unheld, its tenancy ground refused by name at the gate).
+  · 12 unheld; the client's estate 4 held · 14 unheld, its tenancy ground refused by name at the gate).
   Plan 219; fix note `docs/fixes/collab/2026-11-08-the-kit-carries-the-inventory.md`.
 - **2026-11-08** — Appended with the capability: the release model (build · health · flip), the shared
   shelf, the one-rename law with its forbidden form, the automatic rollback inside the watch window, the
