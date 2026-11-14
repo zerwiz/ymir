@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # landing — Sága names the branches pushed with no PR and the commits on no remote (plan 293).
 #
 # PLAN 293 part 3 — the digest SEES what never landed: a pushed worker branch with no PR, and a

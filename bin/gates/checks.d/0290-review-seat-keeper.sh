@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # review-seat-keeper — the reviewer's seat refuses aloud, reaps a shell pane and re-raises, and
 # names why pi died.
 #

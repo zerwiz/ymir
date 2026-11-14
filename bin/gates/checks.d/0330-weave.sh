@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # weave — every index names every rule, plan and feature page (plan 175).
 #
 # plan 175 §3 — CI keeps the LAST word on the weaver. The pre-commit hook is CONVENIENCE (it can be

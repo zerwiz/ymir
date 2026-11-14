@@ -70,3 +70,9 @@ driver already sources (see `bin/gates/checks.d/0000-lib.sh`).
   CI judges the whole tree, and your gate may read a path only your machine has.
 - **The gate never ran.** Look for a `"<file>","FAIL"` row: the driver reports a file it could not
   load by the file's own name rather than skipping it.
+
+## CHANGE LOG
+
+- **2026-11-14** — written with the change it documents (plan 295, fix S1): the gate list became a
+  directory of files under `bin/gates/checks.d/`, and `bin/gates/ci-verify.sh` became the driver that
+  reads it.

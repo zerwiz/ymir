@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # cron-seats — the Hlidskjalf cron board reads its server seats from the fleet registry.
 #
 # Plan 278: the board takes its server seats from the registry, never names in the code. bun is the

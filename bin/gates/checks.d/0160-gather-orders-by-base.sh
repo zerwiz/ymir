@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # gather-orders-by-base — the gather merges a packet's base branch before the branch cut from it.
 #
 # PLAN 293 part 7 — a worker cut from another unmerged branch records that branch in its packet,

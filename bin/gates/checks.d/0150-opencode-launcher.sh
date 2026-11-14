@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # opencode-launcher — every door seats OpenCode with the launcher's one shape; the version guard bites.
 #
 # PLAN 262 — an OpenCode worker actually starts. The interactive TUI refuses --model (OpenCode v2),

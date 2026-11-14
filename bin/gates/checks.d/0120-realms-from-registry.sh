@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # realms-from-registry — Hlidskjalf's realm list is the home's registry, never a name in the code.
 #
 # RULES/04 — a realm is a shelf of the operator's home. The shipped build carries a generic pair

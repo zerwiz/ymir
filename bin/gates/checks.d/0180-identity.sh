@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # identity — Rule 04/39 — a commit publishes an account, never a private mailbox.
 #
 # `--check`, not `--base`: on a pull request the checkout is the host's merge commit, and the

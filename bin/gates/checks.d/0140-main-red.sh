@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # main-red — the alarm for a red main names the ward and never fires for a pull request.
 #
 # A RED MAIN MUST SHOUT (plan 243 part E, 2026-11-11). The gate on main was red for four

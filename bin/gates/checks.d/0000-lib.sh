@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # 00-lib.sh — the helpers a gate may call. Not a gate: no `gate` call is made here.
 #
 # It is the FIRST file the driver sources (the names are read in C order), so every gate below

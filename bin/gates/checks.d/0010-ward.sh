@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # ward — every tree ward, the whole tree.
 #
 # THE WHOLE TREE, EVERY WARD (plan 243 §3, part E). `--full` is the CI posture: no diff scope,

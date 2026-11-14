@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # no-delete — Rule 11 — a tracked file is moved, never deleted (against the PR's base).
 #
 # RULES/11 says the ward runs here; until 2026-11-03 nothing called it, so a deletion passed CI

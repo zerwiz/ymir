@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # pr-pretest — a REAL npm install of the publish artifact, when this run is asked to pay for it.
 #
 # The publish pretest is no longer a per-push gate (the Allfather, 2026-11-04: *"stop testing the

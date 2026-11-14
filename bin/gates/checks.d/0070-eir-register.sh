@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # eir-register — Eir reads config/surfaces.yaml, mends only safe surfaces unattended, and never
 # leaves a broken row without a reason.
 #

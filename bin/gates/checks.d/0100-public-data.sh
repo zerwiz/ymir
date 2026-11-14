@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # public-data — RULES/04 — a secret, a name, a topology, a mailbox or a machine named as a host is
 # refused, and the ward is proved to refuse.
 #

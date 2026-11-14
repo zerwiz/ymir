@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # gate-directory — the gate list is a directory, and it behaves like one.
 #
 # Plan 295 fix S1. The proof that two branches adding two gates merge without a conflict, that a

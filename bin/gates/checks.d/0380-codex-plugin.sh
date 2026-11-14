@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # codex-plugin — the Codex tool catalog, shell syntax, install and refresh contract.
 codex_checks() {
   local door

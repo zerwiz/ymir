@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # liveness-grace — the sweep never calls a live seat dead inside the settling grace.
 #
 # 2026-11-06 — the sweep judged a LIVE errand dead 3m59s after launch, because herdr

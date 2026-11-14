@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # everything-up — seat wards: stop hook, hoard-resolved config, one-writer todos, acclaim PR guard.
 #
 # The rendered config resolves the home (and refuses when it cannot), worker seats are never the

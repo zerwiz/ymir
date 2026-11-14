@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # mocks-vocabulary — the mocks scan catches a half-built door and excuses only vocabulary.
 #
 # The mocks gate was an inline pipeline with no test, so every exclusion it grew arrived as a false

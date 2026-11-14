@@ -58,3 +58,8 @@ Four things make the split safe rather than merely tidy:
   with its own output and its verdict entry; an unloadable file is a FAIL; an empty or missing
   directory exits non-zero; the driver carries no gate line; the real list still holds its gates.
 - `bin/gates/registers.sh check` — both registers `current` after regeneration.
+
+## CHANGE LOG
+
+- 2026-11-14 — the note that ships with the change: the gate list is a directory, and every reader of
+  it follows the directory.
