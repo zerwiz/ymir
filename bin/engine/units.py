@@ -375,6 +375,30 @@ def have_systemd() -> bool:
     return not os.environ.get("YMIR_UNITS_NO_SYSTEMCTL") and shutil.which("systemctl") is not None
 
 
+def retire_unit(name: str, dry: bool) -> str:
+    """Turn a unit OFF where an install once seated it. Returns what was done, in one phrase.
+
+    Plan 290 §3 (the Allfather, 2026-11-14): a door its machine does not name must not run. Skipping the
+    write is not enough — the unit file the old install seated stays enabled and keeps its clock. So the
+    file is KEPT (naming the door must restore it in one command) and the clock is stopped and disabled.
+    Idempotent: a unit already off is left alone and says so.
+    """
+    unit = f"{name}.timer" if not Path(name).name.endswith(".timer") else name
+    if dry:
+        return "would be turned off (dry run)"
+    for suffix in ("timer", "service"):
+        u = f"{name}.{suffix}"
+        is_active = systemctl("is-active", u) if have_systemd() else None
+        is_enabled = systemctl("is-enabled", u) if have_systemd() else None
+        running = (is_active is not None and is_active.stdout.strip() == "active") or \
+                  (is_enabled is not None and is_enabled.stdout.strip() in ("enabled", "enabled-runtime", "static"))
+        if not running:
+            continue
+        systemctl("disable", "--now", u)
+        unit = u
+    return f"turned off — this machine's wardens.yaml does not name it (unit file kept, {unit})"
+
+
 def systemctl(*args: str) -> subprocess.CompletedProcess:
     return subprocess.run(["systemctl", "--user", *args], capture_output=True, text=True, timeout=60)
 
@@ -454,10 +478,11 @@ def cmd_write(args: argparse.Namespace) -> int:
         if want and e["name"] not in want:
             continue
         # plan 290: an outward door is seated ONLY where this machine's home names it on. The role
-        # gate below stays, but a role is a capability, never a decision to act outward.
+        # gate below stays, but a role is a capability, never a decision to act outward. A unit the old
+        # install already seated is turned OFF here, never merely skipped: a clock nobody stops is a
+        # clock that keeps acting.
         if e["name"] in doors and not doors[e["name"]]:
-            run.row(e["name"], e["kind"], "not-seated",
-                    "this machine's wardens.yaml does not name this door on")
+            run.row(e["name"], e["kind"], "not-seated", retire_unit(e["name"], args.dry_run))
             continue
         if not want and not owed(e, roles):  # a unit asked for BY NAME is owed; the role gates the sweep
             run.row(e["name"], e["kind"], "skipped", "not this seat's role")

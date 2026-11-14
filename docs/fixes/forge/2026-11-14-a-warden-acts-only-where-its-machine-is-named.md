@@ -79,3 +79,29 @@ passed the gate and printed the five open PRs with one Rune row; `review-watch -
 ## CHANGE LOG
 
 - 2026-11-14 — written with the change.
+
+## Appended 2026-11-14 — the update road, not only new installs
+
+The Allfather's addition: *"users must get these updates on installations."* Recording what a machine was
+doing (migration 0023) left every existing install acting outward by **inertia** — the same inertia that let
+a collaborator's install merge here. So the law is applied the other way round, by **migration 0024**
+(`.agents/migrations/0024-wardens-off-until-named.sh`), which the update road already runs
+(`bin/agents/groa-update.sh` and `bin/engine/ymir-install.sh` both call `bin/engine/ymir-migrate.sh apply`):
+
+- on a home with **no** file, it seats the template — every outward door off;
+- it turns every outward door **off**, rewriting only a value a migration wrote (a line a person wrote is
+  left exactly as it is, and that door's timer is not touched);
+- it records `was_on: <date>` for every door the **old install was actually running** — asked of systemd,
+  never of the file, because on an old-shaped home there is no file to ask — so the operator sees what his
+  machine used to do and can turn back on what he owns;
+- it **stops and disables** every outward warden timer the old install seated, and keeps the unit file, so
+  naming the door and `systemctl --user enable --now <door>.timer` restores it;
+- and the seater now does the same on every install and update (`bin/engine/units.py`: `retire_unit`), so a
+  door that is off can never be left with a live clock by a later run.
+
+`test_wardens_off_until_named.sh` — 35 cases, CI gate `wardens-off-until-named` — proves it on a **copy of
+an old-shaped home** with systemd stubbed: seven outward timers running, one file absent; after the migration
+every door reads off, `was_on` is recorded seven times, exactly those seven units are disabled and no other
+unit is touched, a second run does nothing, a door the operator named is left on with its clock running, and a
+fresh install receives the template with every door off. The seater then reports `not-seated` and keeps the
+unit file.

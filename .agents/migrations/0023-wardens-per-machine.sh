@@ -23,6 +23,12 @@
 # That is why a collaborator's fresh install — which runs no door yet — seats nothing outward.
 #
 # Idempotent: applied once, and a second run changes nothing (it is also recorded in state/migrations).
+#
+# 2026-11-14, later the same day — THIS MIGRATION ONLY RECORDS; 0024 DECIDES. At the Allfather's word
+# (*"users must get these updates on installations"*) migration 0024 runs right after this one and turns
+# every outward door OFF on every existing installation, stopping the timers this one merely described and
+# recording `was_on:` so the operator can turn back on what he owns. Kept, not rewritten, because a home may
+# already have applied it (RULES/06).
 set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

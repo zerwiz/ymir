@@ -1315,6 +1315,12 @@ The key is **`enabled: on|off`**, never a bare `on:` key: YAML 1.1 reads the key
 so `on: on` loads as `{True: True}` and every reader sees no policy at all. An absent `enabled` is **off** —
 that is what makes a fresh install, a collaborator's or a stranger's, seat nothing outward.
 
+**An existing installation is treated like a new one** (migration `0024-wardens-off-until-named`, run by
+`bin/engine/ymir-migrate.sh apply` — which the installer and Gróa both call): every outward door is turned
+off, the timer the old install seated is stopped and disabled (its unit file is kept), and `was_on: <date>`
+records what it was running so the operator can turn back on what he owns. `bin/engine/units.py` does the
+same on every later write (`retire_unit`), so a door that is off never keeps a live clock.
+
 The five rules a door keeps, in the order the library asks them: is this door named ON here; is every
 `owner/repo` in the operator's registry (`hodd/identity/projects.yaml`); does `gh api user` answer as the
 identity the machine names for that duty (a mismatch is a refusal that prints both names); and — for a merge —
