@@ -43,6 +43,15 @@ import { t, tEnglish } from '../shared/i18n'
 const WORKSPACES_FILE = 'workspaces.json'
 
 /**
+ * How long the disk watcher waits after a workspace becomes active before its
+ * first walk. Short enough that a file change made in that half-second is still
+ * picked up by the walk itself, long enough that the window has answered the
+ * compositor first (2026-11-14: the walk alone was 43 s of main-thread CPU on
+ * this machine's workspace).
+ */
+const WATCH_START_DELAY_MS = 2500
+
+/**
  * Directory under the GUI data path holding every worktree this app creates.
  * It is also the only place a task may reuse a checkout from: everything
  * outside it — the user's clone above all — belongs to the user.
@@ -171,6 +180,8 @@ export class WorkspaceManager {
   // Only the active workspace is watched, mirroring how Pi events are
   // forwarded for the active workspace only.
   private watchingWorkspaceId: string | null = null
+  /** Pending delayed start of the disk watcher (see updateActiveWatcher). */
+  private watchTimer: ReturnType<typeof setTimeout> | null = null
 
   constructor() {
     this.configPath = getGuiDataPath(WORKSPACES_FILE)
@@ -203,10 +214,25 @@ export class WorkspaceManager {
     }
 
     this.watchingWorkspaceId = this.activeWorkspaceId
-    if (this.activeWorkspaceId) {
-      this.fileServices
-        .get(this.activeWorkspaceId)
-        ?.startWatching((event) => this.emitFileChange(event))
+    const watchedId = this.activeWorkspaceId
+    if (this.watchTimer) {
+      clearTimeout(this.watchTimer)
+      this.watchTimer = null
+    }
+    if (watchedId) {
+      // THE WATCHER WAITS FOR THE WINDOW (measured 2026-11-14). chokidar's first
+      // walk runs on the main thread; on this machine's workspace it burned 43 s of
+      // CPU and 1.5 GB before the app had answered anything, and the compositor put
+      // "Application not responding" on a window that was merely busy. The walk is
+      // still needed — but it must not be the thing the first second is spent on.
+      this.watchTimer = setTimeout(() => {
+        this.watchTimer = null
+        if (this.activeWorkspaceId !== watchedId) return
+        this.fileServices
+          .get(watchedId)
+          ?.startWatching((event) => this.emitFileChange(event))
+      }, WATCH_START_DELAY_MS)
+      this.watchTimer.unref?.()
     }
   }
 

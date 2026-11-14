@@ -98,6 +98,12 @@ const IGNORED_DIRS = new Set([
   'node_modules', '.git', '.next', 'dist', 'build', 'out',
   '.cache', '__pycache__', '.venv', 'venv', '.tox',
   'target', 'coverage', '.nyc_output',
+  // Yggdrasil's worktree shelf: one directory per parallel checkout, and this
+  // machine had 198 of them inside the watched workspace. chokidar walked every
+  // one of them on the main thread at startup — 43 s of CPU, 1.5 GB RSS, and
+  // the compositor's "not responding" dialog on a window that had done nothing
+  // wrong (measured 2026-11-14). A file tree never shows this shelf.
+  '.yggdrasil',
 ])
 
 /**
