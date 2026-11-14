@@ -88,7 +88,7 @@ GET /api/files?path=hodd/secrets      → error "not shown: the vault and the se
 GET /api/file?path=hodd/secrets/platform.env.age → refused
 GET /api/file?path=../../../etc/passwd           → refused
 GET /api/files?realm=work             → svartalfaheim/work (back-compat)
-GET /api/runtime                      → view.helm {seat Hœnir, machine heimdall, role dev, pin e713188c},
+GET /api/runtime                      → view.helm {seat <a seat>, machine host-a, role dev, pin <a sha>},
                                         errands 3 alive, 156 finished, 4 unreadable panes,
                                         services.pin 7ae529759d0b with 14 rows,
                                         mail {needs 14, accounts [the operator's own address]}

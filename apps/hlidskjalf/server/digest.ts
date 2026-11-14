@@ -157,7 +157,7 @@ function readHelm(text: string): DigestHelm | null {
   const pin = /pin\s+([0-9a-f]{6,40})\s*\((\d+)\s*behind\)/i.exec(body);
   const pid = /\bpid\s+(\d+)/i.exec(body);
   const hb = /heartbeat\s+(\S+)/i.exec(body);
-  // machine and role sit together (`heimdall · dev`); the seat is first. Prose
+  // machine and role sit together (`host-a · dev`); the seat is first. Prose
   // middle fields are free text, so they are reported, not interpreted.
   const roleAt = parts.findIndex((p) => /^(heart|forge|dev|hand)$/i.test(p));
   const machine = roleAt > 0 ? parts[roleAt - 1] : '';
