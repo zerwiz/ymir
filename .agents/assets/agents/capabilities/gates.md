@@ -108,7 +108,9 @@
 | test_finding_tally.sh | ensure config | tested | keep (a human or a cron row must run it) |
 | test_fixes_validate.sh | test_fixes_validate.sh — plan 272 fault 10: the fix-note validator jud | tested | keep (a human or a cron row must run it) |
 | test_fleet_roads.sh | good block passes | tested | keep (a human or a cron row must run it) |
+| test_gate_directory.sh | test_gate_directory.sh — plan 295 fix S1: the gate list is a DIRECTORY | tested | keep (a human or a cron row must run it) |
 | test_gather_merge_guard.sh | test_gather_merge_guard.sh — plan 272 fault 9: a gathered batch that l | tested | keep (a human or a cron row must run it) |
+| test_gather_orders_by_base.sh | test_gather_orders_by_base.sh — plan 293 part 7: a packet names the br | tested | keep (a human or a cron row must run it) |
 | test_gimle_mcp_board.sh | test_gimle_mcp_board.sh — the Gimlé MCP's board face, proved by comma | tested | keep (a human or a cron row must run it) |
 | test_groa_steps.sh | test_groa_steps.sh — plan 272 fault 5: every Gróa step has a limit an | tested | keep (a human or a cron row must run it) |
 | test_handoff_packet.sh | test_handoff_packet.sh — proves the packet door reads the schema's pac | tested | keep (a human or a cron row must run it) |
