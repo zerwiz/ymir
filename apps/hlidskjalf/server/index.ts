@@ -2810,9 +2810,10 @@ const server = Bun.serve({
         return json(await memoAsync('plans', 30_000, async () => {
           const { readdirSync, readFileSync } = await import('node:fs');
           const { join } = await import('node:path');
-          const home = (await import('node:os')).homedir();
+          // The home is RESOLVED, never restated (RULES/07): HOME_DIR above is env -> the recorded
+          // choice -> the one default, so a seat on another machine is not sent to Documents/ymirhome.
           const dir = process.env.YMIR_PLANS_DIR ??
-            join(home, 'Documents/ymirhome/svartalfaheim/whynotproductions/projects/ymir/plans');
+            join(HOME_DIR, 'svartalfaheim/whynotproductions/projects/ymir/plans');
           const rows: Array<{ n: number; slug: string; state: string; title: string }> = [];
           try {
             for (const f of readdirSync(dir)) {
