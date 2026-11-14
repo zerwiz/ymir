@@ -60,3 +60,30 @@ and the boot stopwatch's Bilskirnir row measures the rest (gateway, server, wind
 ## CHANGE LOG
 
 - 2026-11-14 — written with the change; measured on heimdall's live install the same night.
+
+## Appended 2026-11-14 — the hall's server is built once, not transformed on every start
+
+`start.sh` raised the server with `npx tsx --env-file=../.env src/index.ts`, so every launch paid tsx's TypeScript
+transform. The server already declared its production shape (`npm run build` = `tsc`, `npm start` =
+`node --env-file=../.env dist/index.js`); `start.sh` simply never used it.
+
+`start.sh` now runs the built entry and rebuilds **only** when `server/src` holds a file newer than
+`server/dist/index.js`:
+
+| | answered `/api/health` after |
+|---|---|
+| `npx tsx src/index.ts` | 3708 ms · 3649 ms |
+| `node --env-file=../.env dist/index.js` | 4937 ms (first, cold cache) · 2652 ms · **1535 ms** |
+
+The one-off build is 22.8 s (`npx tsc -p tsconfig.json`) and happens once per source change, never on a warm start.
+It is `tsc`, not a bundle: `better-sqlite3` and every other dependency stay real imports, so nothing is inlined and
+no dependency shape changes.
+
+Still owed at the time of writing: Nanna's Hermes gateway, 8.85 s of the cold boot. It is paid only when the hall
+has been fully lowered (`--stop` lowers the gateway too); a click on a warm hall reuses the running gateway at no
+cost. The next step inside it is Hermes' own boot, read from `data/run/gateway.log` timestamps.
+
+### Closed after testing
+
+The two timing servers ran on `:8799` (never the hall's own `:8787`), were killed after each measurement, and `ss`
+shows the port closed. The hall itself was left as it was found — lowered.

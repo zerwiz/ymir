@@ -340,11 +340,17 @@ cmd_host() {
   systemctl --user stop "$UNIT" 2>/dev/null || true
   # shellcheck disable=SC2046
   build_host_argv
+  # CUDA_MODULE_LOADING=LAZY (2026-11-14, plan 275 item 10): the engine's import initialises every CUDA module
+  # for every kernel it might ever use, before it can answer. Measured on heimdall, same command, same card:
+  # 52.7 s eager against 33.9 s lazy on a cold cache, and 31.6 s against 28.3 s warm — the first kernels pay a
+  # little more later, which for a voice engine is nothing beside a window that will not open. LAZY is the
+  # default here and YMIR_VOICE_CUDA_MODULE_LOADING=eager restores the old path, named, when a driver dislikes it.
   systemd-run --user --unit="$UNIT" --collect \
     --setenv=VIRTUAL_ENV="$VENV" \
     --setenv=PATH="$VENV/bin:/usr/local/bin:/usr/bin:/bin" \
     --setenv=HF_HUB_DISABLE_XET=1 \
     --setenv=HF_HUB_OFFLINE=1 \
+    --setenv=CUDA_MODULE_LOADING="${YMIR_VOICE_CUDA_MODULE_LOADING:-LAZY}" \
     ${CUDA_VISIBLE_DEVICES+--setenv=CUDA_VISIBLE_DEVICES="$CUDA_VISIBLE_DEVICES"} \
     ${cu:+--setenv=LD_LIBRARY_PATH="$cu"} \
     --property=StandardOutput=append:"$STATE_DIR/host.log" \
