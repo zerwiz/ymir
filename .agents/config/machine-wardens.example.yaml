@@ -10,6 +10,10 @@
 # with no file runs no outward warden at all: that is the point of an opt-in, and it is why a fresh
 # install — a collaborator's, a stranger's — starts with every door on this page OFF.
 #
+# An EXISTING install is treated the same way, by migration 0024 (the update road runs it): every outward
+# door is turned off, the timer the old install seated is stopped and disabled, and `was_on:` records what
+# it was doing. Nothing acts outward by inertia; the operator names what he owns and it comes back.
+#
 # Read by `bin/forge/warden-policy.py` (one parser, one precedence rule) through
 # `bin/forge/warden-lib.sh`, which every outward door sources. What a door asks before it acts:
 #
@@ -22,6 +26,10 @@
 #
 # PRECEDENCE, and no third opinion: the door's own key, then the machine-wide default `identity:` /
 # `token_ref:` at the top of this file, then the door's documented default.
+#
+# `was_on: <date>` is NOT a switch. Migration 0024 writes it beside a door the OLD install was running, so
+# the operator can see what his machine used to do and turn back on what he owns: set `enabled: on` and run
+# `systemctl --user enable --now <door>.timer`. Leaving it there does nothing.
 #
 # THE KEY IS `enabled`, NEVER A BARE `on:`. YAML 1.1 (pyyaml and many other parsers still implement
 # it) reads the KEY `on` as the boolean true, so `on: on` is loaded as `{True: True}` and every

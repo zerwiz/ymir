@@ -119,3 +119,30 @@ The migration that records what a machine already did is `.agents/migrations/002
 ## CHANGE LOG
 
 - 2026-11-14 — written with the change (plan 290 §3).
+
+## Appended 2026-11-14 — an install you already have
+
+Updates carry this. `bin/agents/groa-update.sh` (and the installer) run `bin/engine/ymir-migrate.sh apply`,
+and **migration 0024** turns every outward door off on an existing machine — including stopping and disabling
+the timers the old install had seated — and writes `was_on: <date>` beside each door it found running.
+
+`was_on` is a record, not a switch. To give a door back:
+
+```yaml
+pr-watch:
+  enabled: on          # your decision, beside the record of what the old install did
+  was_on: 2026-11-14
+```
+
+then
+
+```bash
+systemctl --user enable --now pr-watch.timer
+```
+
+The unit file was never deleted, so that one command restores it. Nothing acts outward by inertia again: the
+seater turns a unit off whenever its door is not named, on every install and every update.
+
+## CHANGE LOG
+
+- 2026-11-14 — appended: the update road turns the doors off and records what was on (`was_on`).
