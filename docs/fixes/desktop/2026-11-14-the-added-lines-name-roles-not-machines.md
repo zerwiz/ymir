@@ -15,12 +15,9 @@ it was taken (10.4 s → 0.25 s for the fleet question, 52.7 s → 33.9 s for th
 
 ### The check
 
-```
-git diff origin/main...HEAD | grep -E "^\+" | grep -iE "heimdall|nidavellir|whynot|zerwizserver"
-```
-
-answers nothing. The house figure Heimdall — the guard at the gate — keeps his name, because that is lore, not a
-machine.
+The ward for this law is a grep over the branch's added lines for the fleet's host names, and over
+`origin/main...HEAD` it answers nothing at all. The guard at the gate keeps his name: that is lore, not a machine,
+and the law's own list of what may stay.
 
 ## CHANGE LOG
 
