@@ -4,8 +4,9 @@
 
 **Hlidskjalf** is Ymir's dashboard — the Allfather's high seat. It is where you *see* the
 system: the workspaces, the runs, the record, the fleet — over one page instead of a
-dozen terminals. The **gate API** behind it enforces auth, so the portal is the single
-way in.
+dozen terminals. The **gate API** behind it reads the runtime, so the portal is the single
+way in — and since 2026-11-14 it asks for no credential at all (plan 275 item 30): the
+halls are local, loopback only, and the desktop session is the authority.
 
 ## What you need
 
@@ -24,33 +25,25 @@ That brings up:
 | Surface | Address |
 |---|---|
 | Hlidskjalf SPA | `http://127.0.0.1:3888` |
-| Gate API (auth + `/api/*`) | `http://127.0.0.1:3889` |
+| Gate API (`/api/*`) | `http://127.0.0.1:3889` |
 
-Open **http://127.0.0.1:3888** in a browser. The first time, the gate shows an
-**in-app login** — your credentials come from `HLIDSKJALF_AUTH` in the home's
-`.env.local` (never inline, never in the repo).
+Open **http://127.0.0.1:3888** in a browser. There is **no login**: the halls are
+local, the desktop session is the authority, and the gate answers with your own
+name and nothing to sign in with (plan 275 item 30).
 
-```bash
-scripts/stop.sh          # lower it all again
-```
+### Let someone else in — not through a hall
 
-### Let someone else in
+Nothing here lets a second person in, and nothing should: the three apps are not
+hosted. Hosted, shared surfaces are **Gimlé**'s (plan 284). The old invite codes,
+the accounts store and the GitHub door were for a hosted instance and were removed
+on 2026-11-14.
 
-```bash
-bin/engine/ymir-invite.sh            # mint an invite code (idempotent)
-bin/engine/ymir-invite.sh list       # what is live and what is spent
-```
+### Reach it from another machine — no
 
-Hand the code over; the person registers with it.
-
-### Reach it from another machine
-
-```bash
-bin/forge/gjallarhorn-tunnel.sh start   # Cloudflare tunnel → the gate (:3889)
-```
-
-The tunnel exposes the **gate**, so auth still stands between the network and
-anything private.
+A hall never leaves this machine. `bin/forge/gjallarhorn-tunnel.sh` now **refuses**
+to start a tunnel whose config points at a hall port (3888, 3889, 4602, 4603,
+4322, 8437, 8787). A tunnel fronts a public surface (Gimlé, a video forge, a
+notice door), never Hlidskjalf, Smíðja or Óðrerir.
 
 ### The desktop shell
 
@@ -62,9 +55,24 @@ scripts/electron.sh stop | status
 
 ## Notes and limits
 
-- **Local by default.** SPA `:3888` and gate `:3889` bind loopback; the tunnel is opt‑in.
-- **Auth belongs to the operator.** There is no baked‑in name; the in‑app login uses
-  `HLIDSKJALF_AUTH` from `$YMIR_HOME/.env.local`.
+### The Runtime page, and the Health view
+
+The **Runtime** gate (`#/runtime`) is the house's bearings: the helm, what needs you, the live
+errands, and which release each service actually runs from. Below those sits **Health** — the leak
+ledger's service trends and each app's last soak, judged against plan 286 §5 and said in one word
+per row (**holds**, **grows**, **restarts**, or **unknown**). The full how-to is its own page:
+[The Health view](the-health-view.md).
+
+- **Local, full stop.** The SPA (`:3888`) and the gate (`:3889`) bind loopback, and
+  the gate refuses a wider bind unless `YMIR_ALLOW_WIDE_BIND=1`.
+- **No account, no grant.** There is nothing to sign in with and nothing to grant;
+  the realm list in Profile shows the workspaces (the realm folders), not roles.
+- **The realms are your own.** Hlidskjalf ships a generic pair — Work and Personal — and
+  reads the rest from your home's registry (`hodd/identity/workspaces.yaml`) when the gate
+  starts, so a realm's name is never written in this repository. The **realm** filter on the
+  Forge and in the OmniChat drawer lists every realm that registry holds, and Profile lists
+  each one with its shelf (`svartalfaheim/<realm>`). There is no order to keep and no switch
+  to throw: a home with no registry opens with the pair and works.
 - **One control plane.** Other surfaces (Óðrerir, Smiðja) are their own apps, but
   Hlidskjalf is the seat you actually look at.
 - Ports are configuration (Rule 07): `HLIDSKJALF_PORT`, `HLIDSKJALF_API_PORT`.
@@ -74,9 +82,12 @@ scripts/electron.sh stop | status
 | What you see | What to do |
 |---|---|
 | Nothing on `:3888` | `scripts/start.sh` and watch its output; check `scripts/start.sh --help`. |
-| The login rejects everyone | Set `HLIDSKJALF_AUTH` in `$YMIR_HOME/.env.local`, then restart. |
-| Another machine cannot reach it | Start the tunnel (`bin/forge/gjallarhorn-tunnel.sh start`); confirm auth is set first. |
+| Another machine cannot reach it | That is the design: a hall is loopback only. A shared surface is Gimlé (plan 284). |
+| `refusing to listen on …` in the gate's log | Something set `HLIDSKJALF_HOST` to a non-loopback address; unset it (or `YMIR_ALLOW_WIDE_BIND=1` for a deliberate test). |
 
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-14** — the halls carry no login (plan 275 item 30): the in-app login, the invite codes, the GitHub door and the tunnel-to-a-hall are removed; the page now says what is true.
+- **2026-11-14** — the Runtime page gained the **Health** view (plan 286 P6): the leak ledger's service trends and every app's last soak, judged by plan 286 §5 — [The Health view](the-health-view.md).
+- **2026-11-14** — the realm list left the code: Hlidskjalf ships a generic pair and reads the realms from the home's registry at run time, so a realm's own name is never in the public tree and a home with none still opens (RULES/04).
