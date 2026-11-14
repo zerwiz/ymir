@@ -164,6 +164,15 @@ contract:
     door: bin/engine/home-seed.sh
     required: true
     why: "each agent's harness and model — the one file that decides what runs"
+  # The operator's own desktop answers (2026-11-14, his word: "are this settings able to be
+  # set from env files for diffrent users ? we probly need that"). Not required: without it
+  # every app takes the machine's policy exactly as before.
+  - path: config/desktop.env
+    kind: seeded
+    template: .agents/config/desktop.env.example
+    door: bin/engine/home-seed.sh
+    required: false
+    why: "the person's answer for the GPU, the surface and window placement, read by every app launcher"
   - path: config/models-allowed.yaml
     kind: seeded
     template: .agents/config/models-allowed.yaml.example
