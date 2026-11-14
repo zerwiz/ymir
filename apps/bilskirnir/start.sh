@@ -29,9 +29,13 @@
 #   BILSKIRNIR_WEB_PORT       Vite's port with --dev            (5173)
 #   BILSKIRNIR_ELECTRON       the electron binary               (probed: node_modules, /usr/lib/electron*, PATH)
 #   HERMES_BIN (in .env)      the hermes CLI                    (hermes)
-#   BILSKIRNIR_DEBUG_PORT     open the window's DevTools port   (unset: closed)
+#   BILSKIRNIR_DEBUG_PORT     open the window's DevTools port   (the app's own fixed port, bin/desktop/app-lib.sh)
 set -uo pipefail
 APP="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TREE="$(cd "$APP/../.." && pwd)"
+# The DevTools door is a property of the app, not of the caller (plan 275 item 19, 2026-11-14): the fixed
+# loopback port lives in ONE table, bin/desktop/app-lib.sh, and the window always opens it.
+APP_LIB="$TREE/bin/desktop/app-lib.sh"; [ -r "$APP_LIB" ] && . "$APP_LIB"
 # the hall's state lives in one home per user, never in this checkout (plan 275 S5)
 [ "${1:-}" = "--check" ] || bash "$APP/scripts/data-home.sh" || { echo "bilskirnir: the data home could not be linked — see scripts/data-home.sh" >&2; exit 1; }
 RUN="$APP/data/run"; mkdir -p "$RUN"
@@ -215,7 +219,22 @@ if [ "$sc" = 0 ] && up "$URL/api/health" && { [ "$MODE" = "dev" ] || face_up "$U
 elif [ "$sc" = 0 ]; then
   say "the server :$PORT" "ours, but not serving the face — lower it: apps/bilskirnir/start.sh --stop"; exit 1
 else
-  spawn server "$APP/server" npx tsx --env-file=../.env src/index.ts
+  # 2026-11-14 (plan 275 item 10): the hall's server is BUILT once, not transformed on every start. It ran
+  # `npx tsx src/index.ts`, which pays tsx's TypeScript transform on each launch — measured 4.5 s of a 20.4 s
+  # cold boot. The server already declares its production shape (`npm run build` = tsc, `npm start` = node
+  # dist/index.js), so that is what runs now: the build is refreshed only when a source file is newer than the
+  # built entry, and never on a warm start. A native module (better-sqlite3) stays a real import — this is tsc,
+  # not a bundle, so nothing is inlined and no dependency shape changes.
+  server_entry="$APP/server/dist/index.js"
+  newest_src="$(find "$APP/server/src" -type f -newer "$server_entry" 2>/dev/null | head -1)"
+  if [ ! -f "$server_entry" ] || [ -n "$newest_src" ]; then
+    say "the server" "building (tsc → dist/index.js)"
+    ( cd "$APP/server" && npx tsc -p tsconfig.json > "$RUN/build-server.log" 2>&1 ) \
+      && say "the server" "built" || { say "the server" "build FAILED — see data/run/build-server.log"; exit 1; }
+  else
+    say "the server" "built and current (dist/index.js)"
+  fi
+  spawn server "$APP/server" node --env-file=../.env dist/index.js
   wait_for "up $URL/api/health" 40 && say "the server :$PORT" "raised" || { say "the server :$PORT" "FAILED — see data/run/server.log"; exit 1; }
   if [ "$MODE" != "dev" ] && ! wait_for "face_up $URL" 10; then
     say "the server :$PORT" "answers but GET / is not the face — see data/run/server.log and web/dist"; exit 1
@@ -232,7 +251,9 @@ fi
 if window_up; then say "the window" "already open — kept"; exit 0; fi
 ELECTRON="$(resolve_electron)"
 [ -n "$ELECTRON" ] || { say "the window" "no electron binary — install electron, or open $OPEN_URL in a browser"; exit 1; }
-DEBUG=(); _dp="${BILSKIRNIR_DEBUG_PORT:-${YMIR_DEVTOOLS_PORT:-}}"; [ -n "$_dp" ] && DEBUG=(--remote-debugging-port="$_dp")
+DEBUG=(); _dp="${BILSKIRNIR_DEBUG_PORT:-${YMIR_DEVTOOLS_PORT:-}}"
+[ -n "$_dp" ] || _dp="$(app_devtools_port bilskirnir 2>/dev/null || true)"
+[ -n "$_dp" ] && DEBUG=(--remote-debugging-port="$_dp")
 BILSKIRNIR_URL="$OPEN_URL" spawn window "$APP" "$ELECTRON" "${DEBUG[@]}" "$APP/electron"
 sleep 2
 window_up && say "the window" "open ($OPEN_URL)" || say "the window" "did not stay open — see data/run/window.log"

@@ -195,8 +195,21 @@ reachable() { timeout 6 ssh -o BatchMode=yes -o ConnectTimeout=5 "$1" true 2>/de
 
 resolve_host() {
   [ -n "$HOST_MACHINE" ] && { printf '%s' "$HOST_MACHINE"; return 0; }
-  local h
-  while IFS= read -r h; do [ -n "$h" ] || continue; reachable "$h" && { printf '%s' "$h"; return 0; }; done < <(fleet_order)
+  local h me first
+  me="$(hostname -s)"
+  # The fleet names its ear seats in preference order (fleet.json · ear[]), and the first of them is the seat
+  # that hosts the engine. When that seat is THIS one the answer needs no network at all — and the ssh walk
+  # below costs a 5 s timeout per seat that does not answer, which on this seat was 10.4 s on EVERY Rödd start
+  # (measured 2026-11-14: the local seat fails ssh-to-self in 0.1 s, then two fleet seats each burn 5 s) for an
+  # answer that was already under its own feet. A client seat is unchanged: the first seat is not it, so the
+  # walk runs exactly as before.
+  first="$(fleet_order | head -1)"
+  [ -n "$first" ] && [ "$first" = "$me" ] && { printf '%s' "$me"; return 0; }
+  while IFS= read -r h; do
+    [ -n "$h" ] || continue
+    [ "$h" = "$me" ] && { printf '%s' "$me"; return 0; }   # never ssh to self: a dev seat has no key for its own login
+    reachable "$h" && { printf '%s' "$h"; return 0; }
+  done < <(fleet_order)
   return 1
 }
 
@@ -327,11 +340,17 @@ cmd_host() {
   systemctl --user stop "$UNIT" 2>/dev/null || true
   # shellcheck disable=SC2046
   build_host_argv
+  # CUDA_MODULE_LOADING=LAZY (2026-11-14, plan 275 item 10): the engine's import initialises every CUDA module
+  # for every kernel it might ever use, before it can answer. Measured on this machine, same command, same card:
+  # 52.7 s eager against 33.9 s lazy on a cold cache, and 31.6 s against 28.3 s warm — the first kernels pay a
+  # little more later, which for a voice engine is nothing beside a window that will not open. LAZY is the
+  # default here and YMIR_VOICE_CUDA_MODULE_LOADING=eager restores the old path, named, when a driver dislikes it.
   systemd-run --user --unit="$UNIT" --collect \
     --setenv=VIRTUAL_ENV="$VENV" \
     --setenv=PATH="$VENV/bin:/usr/local/bin:/usr/bin:/bin" \
     --setenv=HF_HUB_DISABLE_XET=1 \
     --setenv=HF_HUB_OFFLINE=1 \
+    --setenv=CUDA_MODULE_LOADING="${YMIR_VOICE_CUDA_MODULE_LOADING:-LAZY}" \
     ${CUDA_VISIBLE_DEVICES+--setenv=CUDA_VISIBLE_DEVICES="$CUDA_VISIBLE_DEVICES"} \
     ${cu:+--setenv=LD_LIBRARY_PATH="$cu"} \
     --property=StandardOutput=append:"$STATE_DIR/host.log" \

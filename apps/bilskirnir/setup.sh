@@ -44,6 +44,19 @@ HOUSE_HOOK="${BILSKIRNIR_SESSION_HOOK:-$HOME/.hermes/agent-hooks/ymir-session-ho
 DESK="${BILSKIRNIR_DESK:-local}"
 DESK_HOST="${BILSKIRNIR_DESK_HOST:-127.0.0.1}"
 say() { printf 'bilskirnir: %s\n' "$*"; }
+
+# ── is her browser pinned to her desk? By the VALUE, never by the spelling ─────────────────────────────────
+# 2026-11-14 (plan 275 item 10): this used to grep for `cdp_url: "http://<desk>:9299"` — the QUOTED form. But the
+# renderer (house/house.py · parts) writes the config through yaml.safe_dump, which leaves a plain URL unquoted, so
+# a perfectly current install read as "not pinned to her desk" at every start. start.sh believes --check, so it
+# ran the WHOLE setup on every launch: measured 3.9 s of a 20.4 s cold boot, spent re-rendering what was already
+# right. Quotes are YAML's business; the pin is the value.
+cdp_pinned() {  # <config.yaml> <host:port>
+  local host port
+  host="$(printf '%s' "${2%:*}" | sed 's/[][\.*^$]/\\&/g')"
+  port="${2##*:}"
+  grep -qE "^[[:space:]]*cdp_url:[[:space:]]*[\"']?http://${host}:${port}/?[\"']?[[:space:]]*(#.*)?$" "$1" 2>/dev/null
+}
 fail=0
 
 # ── 1. who: read the names from the home ────────────────────────────────────────
@@ -148,7 +161,7 @@ else
     grep -q "ymir-mcp.py" "$ENGINE/config.yaml" 2>/dev/null && say "agent home current (no model chosen yet: $why)" || { say "agent home missing"; fail=1; }
   fi
   if [ "$DESK_UP" = 1 ]; then
-    grep -q "cdp_url: \"http://$DESK_HOST:9299\"" "$ENGINE/config.yaml" 2>/dev/null && say "agent's browser drives her desk" || { say "agent's browser is not pinned to her desk — re-run setup.sh"; fail=1; }
+    cdp_pinned "$ENGINE/config.yaml" "$DESK_HOST:9299" && say "agent's browser drives her desk" || { say "agent's browser is not pinned to her desk — re-run setup.sh"; fail=1; }
   fi
 fi
 
