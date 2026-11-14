@@ -14,7 +14,10 @@ anything). The loop is those two pieces:
   (the arm drains it into the session between turns) and the answer lands in the asker's own inbox.
 - **`bin/forge/review-seat.sh`** — the reviewer's SEAT: one herdr workspace named `review`, one **pi** agent
   in it, cwd a **clone** of the repo (never a smith's worktree), its charter the judge's role file plus the law
-  it judges by, its model resolved for that seat. `ask <pr>` puts one PR in front of it.
+  it judges by, its model resolved for that seat. `ask <pr>` puts one PR in front of it. `ensure` is the
+  keeper: it raises the seat when there is none, **re-raises it when the pane holds no agent** (a shell is
+  not the seat), and says why it could not raise it — including the pane's own first error line when pi dies
+  at startup.
 - **`bin/forge/review-verdict.sh`** — the judge's ONE act of writing. The charter keeps `edit: deny`,
   `write: deny`, so the verdict is written through a door that checks the **head sha** and the verdict shape,
   and `ship.sh` reads it.
@@ -39,8 +42,7 @@ bin/forge/review-watch.sh --judge 552         # the owner's answer: pi in herdr 
 
 bin/forge/review-seat.sh ensure               # raise the reviewer's seat (one herdr workspace, pi)
 bin/forge/review-seat.sh status               # is it there, and what is it doing
-bin/forge/review-seat.sh ask 552 --wait        # one PR in front of the seated judge
-bin/forge/review-verdict.sh write 552 --head <sha> --verdict PASS --reason "…"
+bin/forge/review-seat.sh ask 552 --wait        # one PR in front of the seated judgebin/forge/review-verdict.sh write 552 --head <sha> --verdict PASS --reason "…"
 bin/forge/ship.sh --check 552                 # judge the six merge conditions, merge nothing
 bin/forge/ship.sh 552                         # merge, write the Runes entry, mail him
 
@@ -78,6 +80,15 @@ bin/seat/lock-ask.sh list [--all]             # open asks, or every ask
 
 ## CHANGE LOG
 
+- **2026-11-14** — the keeper answers for a dead seat (plan 293 part 10). **A pane is not an agent**: a
+  pane whose cwd is the review clone but which holds no agent is a bare shell, and the keeper used to
+  count it as the seat forever — so nothing re-raised it and the watch prompted a shell every ten
+  minutes. `ensure` now reaps that pane, says so, and raises a fresh agent in the same pass. Two more
+  answers came with it: `ensure --primary` refuses only the **helm** and still raises the seat as a
+  plain seat when a live primary holds the lock (before, it refused every run, leaving no reviewer at
+  all), and a seat that cannot start reports the pane's own first error line instead of "agent start
+  failed". `status` reports such a pane as *not the seat*. Proved by
+  `bin/forge/tests/test_review_seat_keeper.sh` (CI gate `review-seat-keeper`).
 - **2026-11-06** — written with the doors it describes (plan 206): the review loop joined to the
   spine, the read-only agent's mouth, the resolver that replaced five hardcoded model ids, and the
   operator-only mail door.
