@@ -84,6 +84,14 @@ if [ "${#REPOS[@]}" -eq 0 ]; then
 fi
 
 command -v gh >/dev/null 2>&1 || refuse "gh is not on PATH here — a watch with no GitHub door sees nothing, and must not say 'nothing to do'"
+# plan 290 §3 — the shared law every outward door keeps (bin/forge/warden-lib.sh): this machine must
+# NAME the door, every repository must be the operator's, and the hand must be the identity it names.
+. "$ROOT/bin/forge/warden-lib.sh"
+warden_begin review-watch || die "this machine cannot be named from the fleet registry"
+warden_require_door || exit 3
+WARDEN_REPOS="${REPOS[*]}"
+warden_require_repos "${REPOS[@]}" || exit 3
+warden_require_identity || exit 3
 if ! gh auth status >/dev/null 2>&1; then
   refuse "this seat has NO working GitHub identity (gh auth status failed) — the watch cannot read a PR, so it refuses rather than reporting an empty repository"
 fi
@@ -98,6 +106,8 @@ SERVICE="review-watch.service"; TIMER="review-watch.timer"
 if [ -n "$TIMER_ACTION" ]; then
   case "$TIMER_ACTION" in
     install)
+      # plan 290 rule 1: seating is the operator's decision for THIS machine, not the door's.
+      warden_seat_allowed review-watch || exit 3
       # the unit is the register's (config/units.yaml: review-watch) and the one writer renders it against the
       # PINNED runtime, never the tree this door ran from (plan 269)
       bash "$ROOT/bin/engine/units.sh" write review-watch --set "REVIEW_INTERVAL=$TIMER_INTERVAL" --no-restart >/dev/null || { printf 'review: units.sh could not write the unit\n' >&2; exit 1; }
@@ -244,6 +254,8 @@ else
   for r in "${rows[@]}"; do printf '%s\n' "$r"; done
 fi
 [ "$RAISED" -gt 0 ] || [ "$ALL" = 1 ] || true
+# 4 · every outward act is a Rune: machine, door, identity, repositories, and the verdict it rested on.
+[ "$RAISED" -gt 0 ] && warden_runes asked "raised ${RAISED} ask(s) over ${SEEN} open PR(s) in ${REPOS[*]}" >/dev/null || true
 
 # ── the heart answers its own ask (plan 206 §11.3 #2) ───────────────────────────────────────────
 # A headless heart has no interactive primary to answer an ask; the SEAT PRIMARY IS THE REVIEWER.

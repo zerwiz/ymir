@@ -131,6 +131,29 @@ app_dir() {  # <surface> <result-var> — a clone's apps/<x>, else the package
 # Some callers need the directory a mint writes INTO (an app's public/, electron/,
 # dist/…). A packaged app is read-only in spirit, so the clone's apps/ is preferred
 # when it exists; otherwise the package is the only truth there is.
+app_window_buttons() {  # → on|off — should this app show the frame's minimize/maximize/close?
+  # The ONE answer to "does the platform want window buttons here", answered by the
+  # platform layer and carried into the app as YMIR_WINDOW_BUTTONS=on|off.
+  #
+  # A tiling compositor draws no title bar of its own and closes a window with a key,
+  # so a drawn _ □ × is dead weight there — Hyprland, Omarchy's session, above all
+  # (the Allfather, 2026-11-14: "on Omarchy none of the _ □ × buttons should be visible
+  # in any app"). Everywhere else the frame keeps its buttons.
+  #
+  # Gated on the host, never assumed (Rule 05): the answer comes from
+  # bin/host/host-sense.sh, and a launcher that cannot ask it answers "on" — the
+  # platform default, never a silent change on a host we cannot name.
+  local _awb_sense _awb_answer
+  _awb_sense="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)/../host/host-sense.sh"
+  if [ -r "$_awb_sense" ]; then
+    _awb_answer="$(bash "$_awb_sense" capability window-buttons 2>/dev/null || true)"
+    case "$_awb_answer" in
+      no|off|0)  printf 'off'; return 0 ;;
+      yes|on|1)  printf 'on';  return 0 ;;
+    esac
+  fi
+  printf 'on'
+}
 
 # app_devtools_port <surface> → the FIXED loopback DevTools port for that app.
 #

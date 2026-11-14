@@ -383,7 +383,7 @@ start_one() {
   local dtp="${YMIR_DEVTOOLS_PORT:-}"
   [ -n "$dtp" ] || dtp="$(app_devtools_port "$v" 2>/dev/null || true)"
   [ -n "$dtp" ] && extra+=(--remote-debugging-port="$dtp")
-  nohup env YMIR_DESKTOP_VIEW="$v" "$(real_electron "$v")" "$(app_dir "$v")" \
+  nohup env YMIR_DESKTOP_VIEW="$v" YMIR_WINDOW_BUTTONS="$(app_window_buttons)" "$(real_electron "$v")" "$(app_dir "$v")" \
     --user-data-dir="$HOME/.config/$(view_mark "$v")" \
     "${extra[@]}" >"$l" 2>&1 < /dev/null &
   echo $! >"$f"

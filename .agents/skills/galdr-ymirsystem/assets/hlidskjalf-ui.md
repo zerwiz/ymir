@@ -470,6 +470,21 @@ which made every Ymir key seem to open one app). The desktop step of
 and after the raise (`--live`), so a misrouted or unopenable surface is a loud
 FAIL, never green.
 
+**The frame, and whether it carries buttons (2026-11-14).** The window's frame is a
+**platform fact**, not an app decision: `bin/host/host-sense.sh capability
+window-buttons` answers `no` on a tiling compositor (Hyprland — Omarchy's session —
+Sway, Niri, River, which draw no title bar and close a window with a key) and `yes`
+everywhere else. Every launcher asks `app_window_buttons` (`bin/desktop/app-lib.sh`)
+and carries the answer in as `YMIR_WINDOW_BUTTONS=on|off`; the mains build
+`frame: WINDOW_BUTTONS`. On Omarchy the app is frameless, so no `_ □ ×` is drawn or
+shown anywhere — Smíðja's own shell hands the same answer to its topbar, which draws
+its three controls only when the platform wants them. **The application menu stays
+set** in every shell: the accelerators are the keyboard road in, and only the drawn
+bar goes with the frame. A launcher that cannot ask answers `on` (the platform
+default), and `.agents/tests/window-buttons.test.sh` turns red when a new window or
+launcher forgets the question. Proof:
+`docs/fixes/desktop/2026-11-14-no-window-buttons-on-omarchy.md`.
+
 **GUI.** On a small-VRAM iGPU the Wayland `--type=gpu-process` can die with
 `amdgpu: Not enough memory for command submission` (SIGSEGV, not an OOM). The
 effective policy is one decision in `bin/host/graphics-lib.sh`: a shared-memory

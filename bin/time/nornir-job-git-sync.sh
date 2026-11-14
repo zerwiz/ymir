@@ -42,6 +42,17 @@ if [ "$MODE" != "fetch" ] && [ "$MODE" != "push" ]; then
   exit 2
 fi
 
+# plan 290 §3 — `fetch` is a read and answers to nobody; `push` is OUTWARD, so this machine must name
+# the door, the hand must be the identity it names, and every target must be the operator's own
+# repository (bin/forge/warden-lib.sh). A push that reached the wrong box is how a home lands in
+# someone else's tree.
+if [ "$MODE" = "push" ]; then
+  . "$ROOT/bin/forge/warden-lib.sh"
+  warden_begin git-sync || { printf 'git-sync: this machine cannot be named from the fleet registry\n' >&2; exit 1; }
+  warden_require_door || exit 3
+  warden_require_identity || exit 3
+fi
+
 discover_targets() {
   if [ -n "${BROKK_GIT_SYNC_TARGETS:-}" ]; then
     printf '%s\n' "$BROKK_GIT_SYNC_TARGETS" | tr ':' '\n'
@@ -120,9 +131,20 @@ while IFS= read -r target; do
       fi
     fi
     upstream=$(git -C "$target" rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)
+    if [ "$MODE" = "push" ]; then
+      # own repositories only (plan 290 rule 2): a target that is not in the operator's registry is
+      # skipped with its name, never pushed to.
+      if ! _repo="$(warden_require_checkout "$target")"; then
+        printf 'target: SKIPPED — %s is not a repository in the operator registry\n' "$target"
+        skipped=$((skipped + 1))
+        continue
+      fi
+      WARDEN_REPOS="$_repo"
+    fi
     if [ -n "$upstream" ]; then
       if git -C "$target" push "$REMOTE" HEAD >>/dev/null 2>&1; then
         printf 'target: pushed %s (%s)\n' "$target" "$branch"
+        [ "$MODE" = "push" ] && warden_runes pushed "pushed $target ($branch) to $REMOTE" >/dev/null || true
         ok=$((ok + 1))
       else
         printf 'target: push REJECTED (no force used) %s (%s)\n' "$target" "$branch"
@@ -131,6 +153,7 @@ while IFS= read -r target; do
     else
       if git -C "$target" push -u "$REMOTE" HEAD >>/dev/null 2>&1; then
         printf 'target: pushed and set upstream %s (%s)\n' "$target" "$branch"
+        [ "$MODE" = "push" ] && warden_runes pushed "pushed $target ($branch) to $REMOTE and set its upstream" >/dev/null || true
         ok=$((ok + 1))
       else
         printf 'target: push REJECTED (no force used) %s (%s)\n' "$target" "$branch"

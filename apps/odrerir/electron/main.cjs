@@ -28,6 +28,14 @@ const HALL = localOnly(process.env.HALL_URL || 'http://127.0.0.1:4322/', 'http:/
 const APP_NAME = 'Ymir · Óðrerir';
 const APP_SLUG = 'ymir-odrerir';
 const ICON = path.join(__dirname, 'icon.png');
+// The frame's buttons are the PLATFORM LAYER's question, never this file's: every launcher asks
+// `bin/host/host-sense.sh capability window-buttons` and carries the answer in as YMIR_WINDOW_BUTTONS.
+// A tiling compositor — Hyprland, Omarchy's session — draws no title bar of its own and closes a
+// window with a key, so the window is frameless there and no _ □ × can be drawn or shown (the
+// Allfather, 2026-11-14: "on Omarchy none of the _ □ × buttons should be visible in any app").
+// Everywhere else the platform keeps its own frame. Unset (a hand launch) = the platform default.
+// The menu STAYS SET either way: its accelerators are the keyboard road in, and only the drawn bar goes.
+const WINDOW_BUTTONS = String(process.env.YMIR_WINDOW_BUTTONS ?? 'on').toLowerCase() !== 'off';
 
 app.setName(APP_SLUG);
 if (process.platform === 'linux') {
@@ -127,6 +135,8 @@ function openWindow(url, title) {
     backgroundColor: '#0e0c09',
     icon: ICON,
     title,
+    // frameless where the platform draws no title bar (see WINDOW_BUTTONS above)
+    frame: WINDOW_BUTTONS,
     autoHideMenuBar: false,
     webPreferences: {
       contextIsolation: true,

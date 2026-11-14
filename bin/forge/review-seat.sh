@@ -56,10 +56,19 @@ WORKSPACE_LABEL="review"
 ROLE_FILE="$ROOT/.agents/agents/forseti-reviewer.md"
 CHARTER="$STATE/review/charter.md"
 DEFAULT_CLONE="${YMIR_REVIEW_CLONE:-$HOME/review/ymir}"
+# Rule 07: the repositories the judge may be asked about — configuration with ONE documented default,
+# the same one bin/forge/review-watch.sh uses, so the seat and the watch cannot disagree.
+DEFAULT_REPOS="${YMIR_REVIEW_REPOS:-zerwiz/ymir}"
 
 die()    { printf 'review-seat: %s\n' "$*" >&2; exit 1; }
 usage()  { printf 'review-seat: %s\n' "$*" >&2; exit 2; }
 refuse() { printf 'review-seat: REFUSED — %s\n' "$*" >&2; exit 3; }
+
+# plan 290 §3 — the shared law every outward door keeps (bin/forge/warden-lib.sh): this machine must
+# NAME the door, the reviewer's clone must be the operator's repository, and the hand must be the
+# identity the machine names. Asked once, here, so no sub-command can slip past it.
+. "$ROOT/bin/forge/warden-lib.sh"
+warden_begin review-seat || die "this machine cannot be named from the fleet registry"
 
 # The honest probe is the SERVER answering, not a variable: a herdr CLI reaches its server from
 # a pane, from a timer and over ssh, and refusing on HERDR_ENV alone would refuse every one of
@@ -394,6 +403,8 @@ cmd_close() {
 UNIT_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
 install_units() {
   local clone=$1 primary=$2
+  # plan 290 rule 1: seating is the operator's decision for THIS machine, not the door's.
+  warden_seat_allowed review-seat || exit 3
   mkdir -p "$UNIT_DIR" || die "cannot create $UNIT_DIR"
   cat >"$UNIT_DIR/herdr-server.service" <<UNIT
 [Unit]
@@ -443,6 +454,17 @@ case "${1-}" in
 esac
 
 ACTION="${1:-status}"; shift || true
+case "$ACTION" in
+  # `status`, `charter` and `close` are local questions; the three ACTIONS THAT TOUCH THE WORLD —
+  # raising a judge, asking it, and keeping it alive — pass the door gate first (plan 290).
+  ensure|ask)
+    warden_require_door || exit 3
+    WARDEN_REPOS="$DEFAULT_REPOS"
+    # shellcheck disable=SC2086
+    IFS=', ' read -r -a _repos <<<"$DEFAULT_REPOS"
+    warden_require_repos "${_repos[@]}" || exit 3
+    warden_require_identity || exit 3 ;;
+esac
 case "$ACTION" in
   status)  cmd_status "$@" ;;
   ensure)  cmd_ensure "$@" ;;

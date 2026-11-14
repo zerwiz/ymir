@@ -19,9 +19,11 @@
 #   bin/host/host-sense.sh --version
 #
 # Capabilities asked of a desktop:
-#   placement  can a window be pinned to its own numbered workspace from a script
-#   launcher   do .desktop entries land in a menu / taskbar / app grid
-#   tray       is there a native system-tray host (icons beside the clock)
+#   placement      can a window be pinned to its own numbered workspace from a script
+#   launcher       do .desktop entries land in a menu / taskbar / app grid
+#   tray           is there a native system-tray host (icons beside the clock)
+#   window-buttons does the frame carry minimize/maximize/close? (no on a tiling
+#                  compositor, which draws no title bar and closes with keys)
 set -u
 
 VERSION="1.0.0"
@@ -162,12 +164,28 @@ esac
 OMARCHY="no"
 { have omarchy || [ -d "$HOME/.local/share/omarchy" ]; } && OMARCHY="yes"
 
+# window-buttons: may an app show the frame's minimize/maximize/close buttons?
+# A tiling compositor draws no title bar of its own and closes a window with a key
+# — Hyprland, which is Omarchy's session, above all — so a drawn _ □ × is dead
+# weight there and every Ymir window goes without it (the Allfather, 2026-11-14:
+# "on Omarchy none of the _ □ × buttons should be visible in any app"). Everywhere
+# else the platform keeps its own frame: the layer is GATED on its host, never
+# assumed, and a host we cannot name keeps the buttons (Rule 05).
+WINDOW_BUTTONS="yes"
+case "$DESKTOP" in
+  hyprland|sway|niri|river) WINDOW_BUTTONS="no" ;;
+esac
+case "$COMPOSITOR" in
+  hyprland|sway) WINDOW_BUTTONS="no" ;;
+esac
+
 if [ -n "$CAP" ]; then
   case "$CAP" in
-    placement) printf '%s\n' "$PLACEMENT" ;;
-    launcher)  printf '%s\n' "$LAUNCHER" ;;
-    tray)      printf '%s\n' "$TRAY" ;;
-    *) printf 'error: unknown capability %s\nhelp: bin/host/host-sense.sh capability [placement|launcher|tray]\n' "$CAP" >&2; exit 2 ;;
+    placement)      printf '%s\n' "$PLACEMENT" ;;
+    launcher)       printf '%s\n' "$LAUNCHER" ;;
+    tray)           printf '%s\n' "$TRAY" ;;
+    window-buttons) printf '%s\n' "$WINDOW_BUTTONS" ;;
+    *) printf 'error: unknown capability %s\nhelp: bin/host/host-sense.sh capability [placement|launcher|tray|window-buttons]\n' "$CAP" >&2; exit 2 ;;
   esac
   exit 0
 fi
@@ -188,12 +206,16 @@ printf 'host[1]{os,id,family,session,desktop}:\n'
 printf '  "%s","%s","%s","%s","%s"\n' "$OS_NAME" "$OS_ID" "$FAMILY" "$SESSION" "$DESKTOP"
 printf 'machine[5]{platform,wsl,kernel,arch,package_manager}:\n'
 printf '  "%s","%s","%s","%s","%s"\n' "$PLATFORM" "$WSL" "$KERNEL" "$ARCH" "$PKG"
-printf 'capabilities[3]{name,state,note}:\n'
+printf 'capabilities[4]{name,state,note}:\n'
 case "$PLACEMENT" in
   yes) printf '  "placement","yes","%s can pin a window to its own workspace"\n' "$COMPOSITOR" ;;
   *)   printf '  "placement","no","%s has no scriptable per-window workspace rule — placement is skipped, never faked"\n' "${DESKTOP:-desktop}" ;;
 esac
 printf '  "launcher","%s","%s"\n' "$LAUNCHER" "$APPS_DIR"
 printf '  "tray","%s","%s"\n' "$TRAY" "$([ "$TRAY" = yes ] && printf 'native tray host' || printf 'no native tray host — an icon needs an extension or a bar')"
+case "$WINDOW_BUTTONS" in
+  no) printf '  "window-buttons","no","%s draws no title bar and closes with keys — every Ymir window is frameless here"\n' "${DESKTOP:-$COMPOSITOR}" ;;
+  *)  printf '  "window-buttons","yes","the platform frame keeps its minimize/maximize/close"\n' ;;
+esac
 printf 'layer[1]{name,state}:\n'
 printf '  "omarchy","%s"\n' "$([ "$OMARCHY" = yes ] && printf 'FIRST-CLASS LAYER — Omarchy detected, the Omarchy layer applies here' || printf 'first-class layer, not on THIS host — Omarchy is absent, so its layer skips cleanly (Rule 05); the portable core runs, and this host gets its own layer')"

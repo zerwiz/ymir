@@ -68,6 +68,12 @@ function fitWindowSize(): { width: number; height: number } {
 }
 const DEV_SERVER_URL = process.env.ELECTRON_RENDERER_URL
 const PRELOAD_PATH = join(__dirname, '../preload/index.js')
+// Does this platform want the frame's minimize/maximize/close? The answer is the platform layer's
+// (`bin/host/host-sense.sh capability window-buttons`), resolved by the launcher and carried in as
+// YMIR_WINDOW_BUTTONS. A tiling compositor — Hyprland, Omarchy's session — draws no title bar of its
+// own and closes a window with a key, so the window is frameless there and no _ □ × can be drawn or
+// shown (the Allfather, 2026-11-14). Elsewhere the platform keeps its frame; unset = that default.
+const WINDOW_BUTTONS = String(process.env.YMIR_WINDOW_BUTTONS ?? 'on').toLowerCase() !== 'off'
 // <webview> partitions used by the file preview (see file-tree.tsx). The HTML
 // preview renders untrusted workspace files with scripts and network disabled;
 // the PDF preview needs pdfium (plugins) and is confined to file:// only.
@@ -199,6 +205,14 @@ function createMainWindow(): BrowserWindow {
     minWidth: MIN_WINDOW_WIDTH,
     minHeight: MIN_WINDOW_HEIGHT,
     title: 'Sessrúmnir',
+    // The frame's buttons are the PLATFORM LAYER's question, never this file's: the launcher asks
+    // `bin/host/host-sense.sh capability window-buttons` and carries the answer in as YMIR_WINDOW_BUTTONS.
+    // A tiling compositor — Hyprland, Omarchy's session — draws no title bar of its own and closes a
+    // window with a key, so the window is frameless there and no _ □ × can be drawn or shown (the
+    // Allfather, 2026-11-14: "on Omarchy none of the _ □ × buttons should be visible in any app").
+    // Everywhere else the platform keeps its own frame; unset (a hand launch) is that platform default.
+    // Nothing else changes: the menu stays set, so its accelerators are still the keyboard road in.
+    frame: WINDOW_BUTTONS,
     backgroundColor: '#151209',
     icon: appIcon,
     show: false,

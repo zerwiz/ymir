@@ -137,6 +137,19 @@ gate main-red "the alarm for a red main names the ward and never fires for a pul
 gate opencode-launcher "every door seats OpenCode with the launcher's one shape; the version guard bites" \
      bash "$ROOT/bin/gates/tests/test_opencode_launcher.sh"
 
+# PLAN 290 §3 — an outward warden acts only where the operator's home names it for THIS machine, only on
+# the operator's own repositories, and only as the identity that machine gives the duty. The fault it
+# answers: a warden shipped by this repo merged another operator's PRs because a role seated it. A gate
+# is here because a policy nobody tests is a policy nobody has.
+gate wardens-own-only "a fresh home seats no outward warden, a foreign repository is refused, a mismatched identity is refused, a named door works" \
+     bash "$ROOT/bin/gates/tests/test_warden_lib.sh"
+
+# PLAN 290 §3, the Allfather's word of 2026-11-14 (*"users must get these updates on installations"*): the
+# update road turns every outward warden OFF on an existing install and records what the old install was
+# running, so nothing acts outward by inertia and the operator can turn back on what he owns. Proved on a
+# copy of an old-shaped home, with systemd stubbed.
+gate wardens-off-until-named "an existing installation's outward timers are stopped by the update road and recorded, a door the operator named is left alone, a fresh install starts with every door off" \
+     bash "$ROOT/bin/gates/tests/test_wardens_off_until_named.sh"
 # PLAN 293 part 7 — a worker cut from another unmerged branch records that branch in its packet, and
 # the gather merges the base FIRST. Gathered in the wrong order the dependent lands before its base.
 gate gather-orders-by-base "the gather merges a packet's base branch before the branch cut from it" \
@@ -201,6 +214,8 @@ gate weave      "every index names every rule, plan and feature page (plan 175)"
                bash "$ROOT/bin/records/weave.sh" --check
 gate workflows  "every Actions workflow parses"               bash "$ROOT/bin/gates/checks/workflow-check.sh" --quiet
 gate units      "systemd reads every key in every unit template" bash "$ROOT/bin/gates/checks/unit-template-check.sh" --quiet
+gate window-buttons "the frame's _ □ × are the platform's answer, and every window and launcher asks it" \
+               bash "$ROOT/.agents/tests/window-buttons.test.sh"
 gate ext-api    "extensions speak Pi's real tool API"          bash "$ROOT/bin/gates/checks/extension-api-check.sh" --quiet
 gate ext-smoke  "every Ymir tool ANSWERS when called like Pi calls it" \
                node --experimental-strip-types "$ROOT/tools/extension-smoke.mjs"

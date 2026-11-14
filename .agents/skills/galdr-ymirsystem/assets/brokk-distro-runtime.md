@@ -1349,6 +1349,45 @@ Eir's `runtimepin` surface runs `units.sh check` and its mend is the seat door. 
 (`~/ymir-runtime`, applied once the checkout is seated) lives once in `src/ymir_runtime/paths.py` and
 `bin/pi/arm-pin-lib.sh`.
 
+## The wardens belong to one named machine (plan 290 §3, 2026-11-14)
+
+A register entry is a **capability**, never a decision to act outward. Until 2026-11-14 the two were the
+same thing: `config/units.yaml` carried `roles: [heart, forge, dev]`, so a machine merely having a role was
+seated a merging warden — and a merging warden from a collaborator's own install merged pull requests in this
+repository under a GitHub account this fleet does not own.
+
+```
+wardens[6]{piece,what,where}
+  "the file","this machine's own decision, one per machine, read by this machine alone","$YMIR_HOME/config/machines/<machine>/wardens.yaml"
+  "the reader","one parser, one precedence rule: door key > machine-wide default > door default","bin/forge/warden-policy.py"
+  "the library","the gate every outward door sources: on, own-repo, identity, merge, Rune","bin/forge/warden-lib.sh"
+  "the seater","asks the reader (`seat-plan`) before writing a unit; `not-seated` otherwise","bin/engine/units.py"
+  "the template","every door off, `merge: off`","`.agents/config/machine-wardens.example.yaml`"
+  "the migration","records what a machine does today as `enabled: on`; starts and stops nothing",".agents/migrations/0023-wardens-per-machine.sh"
+```
+
+The key is **`enabled: on|off`**, never a bare `on:` key: YAML 1.1 reads the key `on` as the boolean `true`,
+so `on: on` loads as `{True: True}` and every reader sees no policy at all. An absent `enabled` is **off** —
+that is what makes a fresh install, a collaborator's or a stranger's, seat nothing outward.
+
+**An existing installation is treated like a new one** (migration `0024-wardens-off-until-named`, run by
+`bin/engine/ymir-migrate.sh apply` — which the installer and Gróa both call): every outward door is turned
+off, the timer the old install seated is stopped and disabled (its unit file is kept), and `was_on: <date>`
+records what it was running so the operator can turn back on what he owns. `bin/engine/units.py` does the
+same on every later write (`retire_unit`), so a door that is off never keeps a live clock.
+
+The five rules a door keeps, in the order the library asks them: is this door named ON here; is every
+`owner/repo` in the operator's registry (`hodd/identity/projects.yaml`); does `gh api user` answer as the
+identity the machine names for that duty (a mismatch is a refusal that prints both names); and — for a merge —
+`merge: on` **and** the fleet registry naming this machine heart **and** `bin/forge/merge-verdict.sh` saying
+yes. Every outward act is one Rune carrying machine, door, identity, repositories and the verdict.
+
+Gated doors: `queue-warden`, `review-watch`, `review-seat`, `review-loop` (`review-shelf.sh tick`), `pr-watch`,
+`issue-watch`, `ship-watch`, and the outward Nornir jobs `gna-mail`, `snotra-mail`, `git-sync` (push only),
+`private-scan`. `gather`, `ship` and `mjollnir` are a hand's doors: never seated, so never held off, but still
+gated by repository, identity and record. The proof is `bin/gates/tests/test_warden_lib.sh`, run by CI as the
+`wardens-own-only` gate; the how-to is `docs/features/wardens-per-machine.md`.
+
 ## What never landed, and the batch that waits (plan 293 parts 3–4, 2026-11-14)
 
 Two gaps the audit of 36 agent panes exposed, both now closed in code rather than in a runbook.
