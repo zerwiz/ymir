@@ -1,32 +1,52 @@
-import type { DomainId, Session, TenantGrant, User } from '../types';
-import { DOMAINS } from '../data/realms';
+import type { DomainId, RealmDef, Session, TenantGrant, User } from '../types';
+// The explicit `.ts` is deliberate: the realm list is read by a node:test that runs
+// in CI's pinned Node, which resolves no extensionless specifier (the app's bundler
+// does, and tsconfig allows the extension for exactly this).
+import { DEFAULT_WORKSPACES, DOMAINS } from '../data/realms.ts';
 
 /**
- * The session the UI holds once the gate has authenticated it.
+ * The session the UI holds — the SEAT'S OWN record, not a credential.
  *
- * There is exactly **one** way in: the gate's own login (`LoginModal` →
- * `POST /api/login` or `/api/register` with an invite code). This module no
- * longer mints identities — an earlier mock picker issued sessions for imaginary
- * users from a hardcoded list, which meant a correct sign-in fell through to a
- * screen offering somebody else's name. Removed 2026-09-12.
- *
- * What remains is the session *shape*: who the operator is, which workspaces
- * they hold, and how it is persisted.
+ * The halls are local (plan 275 item 30): there is no login, no invite and no
+ * account store, because the desktop session is the authority. So this module no
+ * longer mints or verifies anything; it shapes what the UI renders — who is
+ * seated, and which workspaces (realms) exist on this machine. That list is the
+ * operator's own registry, read from the home at run time, so no realm is hidden
+ * by a pinned default (item 11's follow-up) and no realm's name is written here.
  */
 
 const SESSION_KEY = 'ymir.session';
 
-function grant(realm: string, tenant: string, role: TenantGrant['role'], domain: DomainId): TenantGrant {
+/** Which house a workspace without a colour of its own belongs to. */
+const DOMAIN_OF_KIND: Record<string, DomainId> = { work: 'ymirlabs', personal: 'muninn' };
+
+function grant(
+  realm: string,
+  tenant: string,
+  role: TenantGrant['role'],
+  domain: DomainId,
+  tint?: string,
+  glyph?: string,
+): TenantGrant {
   const d = DOMAINS[domain];
-  return { realm, tenant, role, domain, tint: d.accent, glyph: d.glyph };
+  return { realm, tenant, role, domain, tint: tint ?? d.accent, glyph: glyph ?? d.glyph };
 }
 
-/** The workspaces every operator holds on their own machine. */
-export function baseGrants(): TenantGrant[] {
-  return [
-    grant('work', 'Work', 'owner', 'ymirlabs'),
-    grant('personal', 'Personal', 'owner', 'muninn'),
-  ];
+/** The workspaces (realms) that exist on this machine — the registry's own rows,
+ *  or the shipped pair when the gate has not answered yet.
+ *  `role` is kept in the shape because a workspace row still carries a display
+ *  colour and a house; it grants nothing, and nothing asks for a grant. */
+export function baseGrants(realms: RealmDef[] = DEFAULT_WORKSPACES): TenantGrant[] {
+  return realms.map((r) =>
+    grant(
+      r.id,
+      r.name ?? r.tenant ?? r.id,
+      'owner',
+      r.domain ?? DOMAIN_OF_KIND[r.kind ?? 'work'] ?? 'ymirlabs',
+      r.tint,
+      r.glyph,
+    ),
+  );
 }
 
 /**
@@ -36,7 +56,7 @@ export function baseGrants(): TenantGrant[] {
  * name is the operator's own login — never a name borrowed from a previous
  * operator, and never a literal.
  */
-export function sessionFor(login: string): Session {
+export function sessionFor(login: string, realms: RealmDef[] = DEFAULT_WORKSPACES): Session {
   const user: User = {
     login,
     name: login,
@@ -45,7 +65,7 @@ export function sessionFor(login: string): Session {
   };
   return {
     user,
-    tenants: baseGrants(),
+    tenants: baseGrants(realms),
     method: 'gate',
     issuedAt: new Date().toISOString(),
     token: '',
@@ -87,13 +107,13 @@ export function provisionWorkspace(input: {
   name: string;
   kind: 'work' | 'personal';
   domains: string[];
-}): Session {
+}, realms: RealmDef[] = DEFAULT_WORKSPACES): Session {
   const id = input.name.toLowerCase().replace(/[^a-z0-9-]/g, '-') || 'workspace';
   const domain: DomainId = input.kind === 'work' ? 'ymirlabs' : 'muninn';
-  const base = baseGrants();
+  const base = baseGrants(realms);
   const exists = base.some((t) => t.realm === id);
   const tenants = exists ? base : [...base, grant(id, input.name || id, 'owner', domain)];
-  return { ...sessionFor(input.login), tenants };
+  return { ...sessionFor(input.login, realms), tenants };
 }
 
 export function tenantFor(session: Session | null, realm: string) {

@@ -5,6 +5,7 @@ import { DOMAINS } from '../data/realms';
 import { AETTS_LIST, aettFor, suggestFigures } from '../data/mythology';
 import { StatusChip } from '../components/Status';
 import { RuneTag } from '../components/RuneTag';
+import { RealmScope } from '../components/RealmScope';
 import { ModelPicker } from '../components/ModelPicker';
 import { gateApi, type PromptFile } from '../services/api';
 import type { AgentCard as AgentCardType, DomainId, SkillDef } from '../types';
@@ -202,6 +203,7 @@ export function Forge() {
             Gungnir · create Eindri and skills · every worker earns a myth that matches its craft
           </p>
         </div>
+        <RealmScope hint="The realm a new card is forged into" />
         <div className="stream-tabs" role="group" aria-label="Forge mode">
           <button className="stream-tab" aria-pressed={mode === 'agent'} onClick={() => setMode('agent')}>
             Eindri · {agents.length}

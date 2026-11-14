@@ -7,20 +7,21 @@ the tokens are the single source of truth.
 ## Surfaces
 
 ```
-surfaces[6]{part,where,note}:
+surfaces[5]{part,where,note}:
   "SPA",":3888 (vite) / built dist served by the gate","React app; gates: Fleet, Chat, Runes, …"
-  "gate API",":3889 (bun apps/hlidskjalf/server/index.ts)","auth + /api/* + serves dist/; static types + caching"
-  "login","in-app modal → /api/login → session cookie","user/pass from .env.local HLIDSKJALF_AUTH; Heimdall (oauth2-proxy) is the target"
-  "register","in-app modal → /api/register → spends an invite code","bin/engine/ymir-invite.sh mints a limited-use code when nothing is live; argon2id account in state/accounts.json (0600, gitignored)"
+  "gate API",":3889 (bun apps/hlidskjalf/server/index.ts)","/api/* + serves dist/; static types + caching; loopback bind only"
+  "login","NONE — the halls are local (plan 275 item 30)","the desktop session is the authority; /api/login, /api/register, invite codes, the GitHub door and the accounts store are retired; hosted surfaces are Gimlé's (plan 284)"
   "desktop","apps/hlidskjalf/electron/main.cjs + scripts/electron.sh","single instance + one window (never stack); see the ymir skill assets/desktop.md"
-  "tunnel","gjallarhorn → your hostname → :3889","outbound only; `bin/forge/gjallarhorn-tunnel.sh`"
+  "tunnel","NONE to a hall","`bin/forge/gjallarhorn-tunnel.sh` REFUSES an ingress that points at a hall port; a public surface is Gimlé's (plan 284)"
 ```
 
 Quick rules:
 
-- **One login, one window** — no GitHub hop before Heimdall; auth stays in-window.
-- **Gate API protects `/api/*`** and serves the SPA; 401 → `ymir:unauthorized`.
-- **No secrets inline** — `HLIDSKJALF_AUTH` from `.env.local`.
+- **No login, one window** — the halls are local (plan 275 item 30); the desktop
+  session is the authority and no app asks for a credential.
+- **Gate API serves `/api/*`** and the SPA; every bind is loopback (a wider bind is
+  refused unless `YMIR_ALLOW_WIDE_BIND=1`).
+- **No secret in a document** — the vault holds what a door needs, by reference.
 - **Electron:** single-instance lock; `openWindow` reuses the live window.
 - Raise/repair: `scripts/start.sh`; if the window is gone but ports answer, the
   shell must be restarted (backend ≠ window).
@@ -165,8 +166,13 @@ Rules that hold it honest:
   (`DOMAINS`), exactly as the landing page keeps its house seals. Chrome is the
   cloth; heraldry is not chrome.
 - The **workspace tints** are cloth too: `work` = bronze `#c9973f`, `personal` =
-  steel `#96a0a8` (`apps/hlidskjalf/src/data/realms.ts` → `WORKSPACES`, mirrored by the
-  `data-realm` fallbacks in `styles/global.css`).
+  steel `#96a0a8` (`apps/hlidskjalf/src/data/realms.ts` → `DEFAULT_WORKSPACES`, mirrored by the
+  `data-realm` fallbacks in `styles/global.css`). **A realm's own name and colour are not in
+  this file**: the list is read at run time from the operator's registry
+  (`hodd/identity/workspaces.yaml`) through the gate's `/api/workspaces`, and the shipped
+  `DEFAULT_WORKSPACES` is a generic pair of two so a home with no registry still opens. A
+  realm the build does not know takes a stable seal (tint + rune) from its own id, so it looks
+  the same on every machine without anything being written down (RULES/04).
 - The **Emblem** (`components/Emblem.tsx`, `midgard/design-system/ymir-mark.svg`)
   is brand, not cloth — it keeps its own colours on the stone.
 - The login's GitHub button is a bone plate with a dark rune (the old white/navy
@@ -246,19 +252,42 @@ selection would hide under closed parents).
   has a 10s timeout (`services/api.ts`). Smíðja loads on a **separate track**
   (`refreshSmidja`) so a slow endpoint (e.g. `/api/reviews`) cannot hold its gates
   hostage. `App` polls `refreshSmidja` every 5s.
-- Realm switching is **granted**: `setRealm` refuses a realm the session has no
-  grant. Tenant boundaries are sacred — never render another tenant's data.
+- Realm switching is a **filter**, not a grant (plan 275): the halls are local and nothing asks
+  for a grant, so `setRealm` moves the scope a page works in, and `RealmScope` offers every realm
+  the home's registry holds (`store.realms`, filled by `loadRealms`). Tenant boundaries are still
+  sacred — never render another realm's private data.
 - Persist user prefs to `localStorage` (`ymir.accent`, `ymir.tenant-colors`,
   `ymir.company.*`, `ymir.stream-height`).
 
 ## The gate API surface (`/api`, read-only)
 
 `/api/health · /api/me · /api/workspace · /api/agents · /api/tasks · /api/runes ·
-/api/well · /api/processes · /api/reviews · /api/files · /api/runtime · /api/cron ·
+/api/well · /api/processes · /api/reviews · /api/files · /api/runtime · /api/soak · /api/cron ·
 /api/cron/seats · /api/calendar ·
 /api/loaders · /api/checks · /api/settings · /api/stream · /api/mimir …` plus the
 smithy trace: `/api/smidja/{health,sessions,sessions/:id,decisions,stats}` and
 chat: `/api/chat/history`, `POST /api/chat`.
+
+### The Health view — the leak ledger on the Runtime page (2026-11-14, plan 286 P6)
+
+The Runtime gate (`src/gates/Runtime.tsx`) carries a **Health** section drawn by
+`src/components/SoakHealth.tsx`, fed by **`/api/soak`** (`server/health.ts`). It reads TWO records,
+never a second opinion:
+
+- **Services** — `$YMIR_HOME/state/soak/services/<date>.jsonl` from `bin/ward/soak-sampler.sh`
+  (RSS, fds, inotify watches, children, zombies, GPU, restarts). The trend is the ledger's own last
+  window (30 min ending at its newest pass), so a stopped timer still shows the last true trend and
+  the page says the ledger has stopped rather than drawing an empty chart.
+- **Apps** — `$YMIR_HOME/state/soak/<app>/<date>.jsonl` from `bin/gates/soak.sh`. The harness's own
+  `judge` row is plan 286 §5 already applied (`pass` → holds, `leak` → grows, its `finding` rows
+  say why). A run still being written is `unknown` with its numbers; a run with baseline and
+  after-cycles but no judge row is judged here against §5 and the row says `unjudged`. A new
+  `raise` row starts a clean slate, so an earlier run in the same day never colours the last.
+
+The verdict vocabulary is exactly **holds · grows · restarts**, with `unknown` as the honest
+fourth; every row names the number that broke its budget. `/api/soak` is memoised for 30 s (the
+ledger is append-only and grows every five minutes). An app with no soak is a row, not a blank:
+"no soak yet — run bin/gates/soak.sh <app>" beside the sampler's last reading of it.
 
 ### The Cron gate — local and server schedules (2026-09-24, plan 54)
 
@@ -557,6 +586,14 @@ render device, next to whatever is serving a model on that GPU.
 
 ### The login surface carries no operator name
 
+> **Correction (2026-11-14, plan 275 item 30).** The in-app login described in
+> this section is GONE, with `HLIDSKJALF_AUTH`, `LoginModal.tsx`, the invite codes,
+> the GitHub door and `bin/engine/{ymir-invite,ymir-setup-auth}.sh`. The halls are
+> local: the desktop session is the authority, every app binds loopback, and a
+> bind beyond loopback is refused unless `YMIR_ALLOW_WIDE_BIND=1`. Hosted, shared
+> surfaces are Gimlé's (plan 284). What follows is kept as the record of what was
+> believed and why it was removed.
+
 The in-app login (the gate shows it; there is no browser prompt) renders its
 fields from the server template in `apps/hlidskjalf/server/index.ts`. Neither the
 placeholder nor any default may name the operator: the field says `username`, and
@@ -577,7 +614,7 @@ There used to be **two** ways in, and the second was a mistake:
 
 | | what it was | fate |
 |---|---|---|
-| `components/LoginModal.tsx` | the gate's login, beside the saga panel | **kept** — the only login |
+| `components/LoginModal.tsx` | the gate's login, beside the saga panel | **deleted 2026-11-14** — the halls carry no login (plan 275 item 30) |
 | `app/Login.tsx` | a mock identity picker (`MOCK_IDENTITIES`), "Mock · Heimdall W0028 pending", demo mode | **deleted** |
 
 The mock was wrong in a way that mattered: `App` rendered it as the fallback
@@ -593,7 +630,7 @@ What replaced it:
   gate decides *who*, the UI only shapes what it renders. `App` calls
   `gateApi.session()` at boot and establishes the session from the login the gate
   reports; `establishSession(login)` replaced `signIn`/`enterDemo` in the store.
-- **A GitHub door on the same gate.** `LoginModal` carries *Continue with GitHub*
+- (retired) **A GitHub door on the same gate.** `LoginModal` carried *Continue with GitHub*
   → `GET /api/auth/github`, which returns the authorize URL when
   `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET` are set, and the exact reason when
   they are not. The callback (`/api/auth/github/callback`) exchanges the code,
@@ -605,12 +642,15 @@ What replaced it:
 Verified: `tsc --noEmit` and `npm run build` green, and the served SPA renders the
 lore login with the invite affordance and no baked-in identity.
 
-### Accounts and invites — how someone else gets in (added 2026-09-12)
+### Accounts and invites — RETIRED (2026-11-14, plan 275 item 30)
 
-One operator owns an instance. `HLIDSKJALF_AUTH` is that operator. Everyone else
-enters through an **invite code**: registration is closed unless a live code is
-presented, and a code carries its own ceiling, so a shared link cannot quietly
-become an open door.
+This whole section described a hosted instance: one operator with a password, and
+everyone else through an **invite code**. The three apps are not hosted — they are
+local, they bind loopback, and the desktop session is the authority — so the
+accounts store, the invite codes, the registration endpoint, the GitHub door and
+the `LoginModal` are removed, together with `bin/engine/{ymir-invite,ymir-setup-auth}.sh`.
+A shared, invited surface belongs to **Gimlé** (plan 284). Kept below as the
+record of the mechanism that was removed.
 
 ```
 POST /api/register {username,password,invite}   → 201 + session   (403 when refused)
@@ -619,7 +659,12 @@ GET  /api/session                               → {authed,login,registration}
 GET  /api/invites                               → {invites,accounts}   (authed)
 ```
 
-- **Store:** `apps/hlidskjalf/server/accounts.ts` owns accounts and invites.
+- **RETIRED 2026-11-14 (plan 275 item 30).** `server/accounts.ts`, the invite
+  codes, the account store, `LoginModal`, the halls chooser and the GitHub door are
+  gone: the three apps were never meant to be hosted, the desktop session is the
+  authority, and a shared invited surface belongs to Gimlé (plan 284). The
+  installer's `invite` and `auth` steps now report a clean skip with that reason.
+- (record) **Store:** `apps/hlidskjalf/server/accounts.ts` owned accounts and invites.
   `SESSIONS` is a `Map<token,login>` — a session knows *who* it is, and
   `/api/me` reports that login, never a hardcoded one.
 - **Where it lives:** `~/.config/ymir/accounts.json`, mode `0600`
@@ -709,7 +754,10 @@ Four gaps closed in one pass:
   the browser's cookie to the gate's `/api/session`; Sessrúmnir, having no gate
   cookie, shows a Sign-in link rather than claiming a session. Sign out clears the
   cookie and the in-memory token (shell menu; AccountMenu).
-- **The GitHub door is offered only when it can open**: `/api/auth/github`
+- **The GitHub door is retired** (2026-11-14, plan 275 item 30): `/api/auth/github`,
+  `/api/session.github`, the "Continue with GitHub" button and
+  `bin/engine/ymir-setup-auth.sh` are gone with the hosted-era login.
+- (record) **The GitHub door was offered only when it could open**: `/api/auth/github`
   returns 503 when no OAuth app is configured, so `/api/session` now carries
   `github: !!(GITHUB_CLIENT_ID && GITHUB_CLIENT_SECRET)` and `LoginModal` renders
   the "Continue with GitHub" button (and its `or` divider) only when true. The
@@ -999,3 +1047,4 @@ private home/audio/report settings and synthetic-only boundary are unchanged.
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
 - **2026-11-12** — Plan 278: `/api/cron/seats` takes its seats from the fleet registry (`server/server-seats.ts`): the heart and forge hosts, this machine excluded. The two machine names the code and this page carried are gone.
+- **2026-11-14** — the realm list left the code (RULES/04): `DEFAULT_WORKSPACES` is a generic pair, the operator's realms are read from the home's registry through `/api/workspaces`, and `store.realms` + `loadRealms` carry them to `RealmScope` and Profile. A realm the build does not know wears a seal derived from its own id.
