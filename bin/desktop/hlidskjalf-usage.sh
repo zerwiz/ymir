@@ -60,7 +60,7 @@ while [ $# -gt 0 ]; do
   case "$1" in --days) DAYS="${2:-30}"; shift 2 ;; *) shift ;; esac
 done
 
-DAYS="$DAYS" python3 - <<'PY'
+DAYS="$DAYS" YMIR_HOME_DIR="$YMIR_HOME_DIR" python3 - <<'PY'
 import glob, json, os, sqlite3
 from datetime import datetime, timedelta, timezone
 
