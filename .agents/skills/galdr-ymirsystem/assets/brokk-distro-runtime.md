@@ -1151,6 +1151,61 @@ and prunes any an older seat recorded. `einherjar-spawn.sh` excludes `.pi/extens
 by that same sparse-checkout rule instead of `rm -rf` + `--assume-unchanged`, which was
 a per-FILE bit that left 45 deletions in every worker's `git status`.
 
+## The audit says it in one line, and the reaper reads every tab (2026-11-14, plan 293)
+
+The fault this answers: `--sweep` walked only the workspaces the SPAWNER raises, so a
+worker seated **by hand** — a tab in the helm's own workspace — was invisible to it. On
+2026-11-14 one machine carried 36 agent panes and the reaper could see none of them; the
+helm retired them with a shell loop pasted into a pane, and that loop died with the pane.
+A measurement that lives in a pane is not a capability.
+
+**`bin/seat/seat-audit.sh` is the measurement, shipped.** One line per agent pane in every
+workspace and tab, for the runbook's four checks (`hodd/docs/runbooks/retiring-finished-agents.md`):
+
+```
+seat-audit.sh                 # TOON: pane, status, agent, folder, branch, dirty,
+                              #       unpushed, in_main, pr, mergeable, verdict
+seat-audit.sh --tsv           # the machine face: + tab, workspace, focused, why, report
+seat-audit.sh --pane <id>     # one pane
+seat-audit.sh --no-pr         # never ask GitHub (offline, or a planted answer)
+seat-audit.sh --fetch         # fetch origin first: a truthful unpushed count
+```
+
+**The verdicts are the runbook's table, in one place** — `working`, `dirty`, `unpushed`,
+`landed` (in `origin/main`, or a PR the service says `MERGED`), `open-pr` /
+`open-pr-conflict`, `pr-closed`, `recon-with-report`, `recon-no-report`, `unmerged`,
+`no-origin-main`. `bin/seat/seat-reap.sh` acts on that word and never re-decides it.
+
+**Two measurements are deliberately not taken here.**
+
+- `git merge-tree` is never called: it hung for 30 s with no CPU use on this repository.
+  Mergeability is asked of GitHub (`--json mergeable`), the only side that knows, with ONE
+  `gh pr list --limit 1000` per repository. A batch that returns fewer rows than the limit
+  is COMPLETE, so a branch missing from it has no PR — a fact, and no second question.
+  It is asked only about a pane that COULD close (clean, pushed, not working): a dirty
+  or unpushed seat is refused before its PR matters, and the call is paid at every
+  session start.
+- No `git fetch` per pane: the sweep runs at every session start. Without a fetch
+  `origin/<branch>` can only understate what the remote holds, so a stale read refuses to
+  close a seat rather than closing one early. `--fetch` takes the truthful count.
+
+**The three skips are refusals, not omissions**: the caller's own pane (`HERDR_PANE_ID`),
+any repository's own checkout (a seat, not an errand — skipped by SHAPE, not by branch
+name), and a folder that is not a git repository is a `no-git` ROW rather than a silence.
+
+**`--sweep` now reads the whole hall.** After the `eindri-*` stage it asks `seat-audit.sh`
+once and closes a hand-seated seat only when the verdict is `landed` or
+`recon-with-report` — never `working`, `dirty` or `unpushed`. It closes the WORKSPACE when
+the seat owns one (the `eindri-*` shape, so no empty workspace is left behind) and the
+TAB otherwise, and it never closes a pane herdr reports as `focused`: that is where the
+operator's hand is. `SEAT_REAP_TABS=0` turns the stage off. Each close is written as one
+dated line to the report the runbook names, `state/eindri-reports/<helm>.md` — the helm's
+name read from the lease, `SEAT_REAP_REPORT` overriding it.
+
+**Nothing is deleted.** No branch and no worktree is removed by either door; a merged
+worktree is `bin/forge/housekeeping.sh`'s judgement, made only after its branch is merged
+and no shell stands in it.
+
 ## Approved models — the allow-list at every spawn door (2026-11-12)
 
 A worker may run only on a model the operator's allow-list allows. The list is the
