@@ -10,12 +10,12 @@
  * Both are tested here at the boundary where they broke: the resolver, and the adapter.
  */
 import { describe, expect, test } from "bun:test";
-import { mkdtempSync, writeFileSync, chmodSync } from "node:fs";
+import { mkdirSync, mkdtempSync, writeFileSync, chmodSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { piCommand, piPath, resetPiPathCache } from "./model-catalog.ts";
 import { adaptMemoryPayload } from "./memory-adapt.ts";
-import { DEFAULT_CHAT_MODEL, failureReason } from "./chat.ts";
+import { DEFAULT_CHAT_MODEL, failureReason, kaiaPersonaFile } from "./chat.ts";
 
 describe("piPath — the binary is resolved, never assumed", () => {
   test("YMIR_PI_BIN wins when it points at a real executable", () => {
@@ -132,5 +132,49 @@ describe("failureReason — the real cause, whole (plan 275 item 15)", () => {
   test("the default model is the house's, and one the catalog serves", () => {
     expect(DEFAULT_CHAT_MODEL).toBe("opencode-go/deepseek-v4.1-flash");
     expect(DEFAULT_CHAT_MODEL).not.toBe("opencode-go/deepseek-v4-flash");
+  });
+});
+
+describe("kaiaPersonaFile — the chat answers as Kaia, never as the seat (plan 275, helm 2026-11-14)", () => {
+  const withEnv = (value: string | undefined, fn: () => void) => {
+    const before = process.env.KAIA_PERSONA;
+    if (value === undefined) delete process.env.KAIA_PERSONA;
+    else process.env.KAIA_PERSONA = value;
+    try { fn(); } finally {
+      if (before === undefined) delete process.env.KAIA_PERSONA;
+      else process.env.KAIA_PERSONA = before;
+    }
+  };
+
+  test("KAIA_PERSONA wins when it is a real file", () => {
+    const dir = mkdtempSync(join(tmpdir(), "kaia-persona-"));
+    const file = join(dir, "mine.md");
+    writeFileSync(file, "You are Kaia.\n");
+    withEnv(file, () => expect(kaiaPersonaFile(dir)).toBe(file));
+  });
+
+  test("a stale KAIA_PERSONA is skipped, not trusted", () => {
+    const dir = mkdtempSync(join(tmpdir(), "kaia-persona-"));
+    withEnv(join(dir, "gone.md"), () => {
+      const got = kaiaPersonaFile(dir);
+      expect(got).not.toBe(join(dir, "gone.md"));
+      expect(got).toMatch(/kaia\.md$/);
+    });
+  });
+
+  test("the operator's home override beats the shipped default", () => {
+    const home = mkdtempSync(join(tmpdir(), "kaia-home-"));
+    const override = join(home, ".agents/skills/smidja/kaia/persona.md");
+    mkdirSync(join(home, ".agents/skills/smidja/kaia"), { recursive: true });
+    writeFileSync(override, "You are Kaia, in this operator's own words.\n");
+    withEnv(undefined, () => expect(kaiaPersonaFile(home)).toBe(override));
+  });
+
+  test("with nothing in the target repo, the app's own default is found", () => {
+    const empty = mkdtempSync(join(tmpdir(), "kaia-empty-"));
+    withEnv(undefined, () => {
+      const got = kaiaPersonaFile(empty);
+      expect(got).toMatch(/apps\/smidja-factory\/apps\/visualizer\/prompts\/kaia\.md$/);
+    });
   });
 });
