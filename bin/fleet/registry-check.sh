@@ -10,7 +10,15 @@
 #   registry-check.sh           human report; exit 1 on any incoherence
 #   registry-check.sh --quiet   one line
 set -uo pipefail
-HOME_DIR="${YMIR_HOME:-$HOME/Documents/ymirhome}"
+# The home is resolved, never assumed (RULES/07): the one resolver is bin/vault/hoard-lib.sh.
+_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+_ROOT="$(cd "$_DIR" && while [ ! -d "$PWD/RULES" ] || [ ! -d "$PWD/bin" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)"
+if [ -z "${YMIR_HOME:-}" ] && [ -r "$_ROOT/bin/vault/hoard-lib.sh" ]; then
+  . "$_ROOT/bin/vault/hoard-lib.sh" >/dev/null 2>&1 || true
+  if command -v ymir_home_root >/dev/null 2>&1; then _h=""; ymir_home_root _h; [ -n "$_h" ] && export YMIR_HOME="$_h"; fi
+fi
+[ -n "${YMIR_HOME:-}" ] || { printf '%s: the home could not be resolved (bin/vault/hoard-lib.sh, RULES/07)\n' "$(basename "$0")" >&2; exit 2; }
+HOME_DIR="${YMIR_HOME}"
 fails=0
 note() { printf '  %s\n' "$1"; fails=$((fails+1)); }
 quiet=0; [ "${1:-}" = "--quiet" ] && quiet=1
