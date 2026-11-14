@@ -11,7 +11,8 @@
 #                                        as a house identity, while a person's mailbox is masked.
 #
 # A home that declares none is not an error: both fall back to the generic forms only
-# (`@ymir`, `@ymir.local`, `@users.noreply.github.com`), which is what a fresh fleet wants.
+# (the `ymir` and `ymir.local` local domains, and GitHub's own noreply form), which is what a
+# fresh fleet wants.
 
 example.org
 example.com
