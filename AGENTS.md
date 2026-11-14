@@ -836,8 +836,8 @@ The law is RULES/08, in its section appended 2026-11-12. The how-to is `docs/fea
 ## 2026-11-14 — the halls are local: there is no in-app login (plan 275 item 30)
 
 At the Allfather's word: *"this feature of opening online must go away with the logins we have. we are not hosting
-the 3 apps online, they are local. Craig found that we were opening ports out. we have a plan for this. this was a
-feature from very long time ago."*
+the 3 apps online, they are local. [a collaborator's security review] found that we were opening ports out. we have
+a plan for this. this was a feature from very long time ago."*
 
 The paragraph above under **Starting the system** still said *"the gate shows an in-app login … everyone else is let
 in with an invite code … GitHub sign-in is the same gate by another door"*. **That is no longer true, and it must not
