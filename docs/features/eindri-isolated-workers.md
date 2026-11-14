@@ -42,6 +42,38 @@ bin/agents/eindri-start.sh <task-id>
 **Watch the fleet:** each worker's pane sits in the backend (`herdr`), and
 `bin/agents/eindri-watch.sh` reports heartbeats.
 
+**Every brief opens with its Bearings** — added 2026-11-14. A brief carries more than the errand:
+a generated section with the house's fixed core (the two repositories and their laws, the pin,
+panes and the stamped send door, the arm, the desk guard, the finding tools, the laws), the
+**records of the project the errand is for** (its decisions, handoff, schedule, plans, meetings,
+seat and boards), and the map of where documents live in the home.
+
+```bash
+bin/agents/eindri-bearings.sh <path|id|alias>   # the section, as the brief gets it
+bin/agents/eindri-bearings.sh --check            # is every door it reads answering?
+```
+
+A worker is told, in that section, to read its project's records before it writes and to update the
+ones its work changes before its report — and the handoff packet refuses a packet that does not say
+which records it touched (`--record "<path>|<what>"`, or `--record "none|<why>"`).
+
+**A worker for another project starts in THAT project's folder** — added 2026-11-14. `--project`
+takes a path, a project id or an alias, and resolves through the project registry to *this
+machine's* clone. When the project is not Ymir, the worktree is made in **that project's own
+repository**, by that project's own convention, and the pane opens there:
+
+```bash
+bin/agents/eindri-start.sh "<errand>" --project <id|alias|path> --id my-errand
+bin/agents/eindri-start.sh "<errand>" --project <id|alias|path> --id my-errand --dry-run
+bin/agents/project-target.sh worktree <id|alias|path> my-errand   # just the worktree, printed
+```
+
+| The project row says | The worker sits in |
+|---|---|
+| `worktree: {command, path, branch}` | that convention, in that repository (e.g. `.yggdrasil/<id>` on `agent/<id>`) |
+| nothing | `git worktree add -b eindri/<id> <clone>/.yggdrasil/<id>` |
+| no clone on this machine | nowhere — the seat is **refused**, and the row to fix is named |
+
 ## Notes and limits
 
 - **herdr is the ordinary road; Utgard is the barrier.** A normal deploy runs in a

@@ -10,6 +10,21 @@
 # already in the tree; the server-side sweep is the safety net, it must run on the server's clock, and findings are
 # reviewed by a person — every scanner has false positives, so this reports, it does not block.
 #
+# ONE CAPABILITY, ONE IMPLEMENTATION (2026-11-14, plan 287 §6 and this sweep's own PR #732). The halves divide so, and
+# each half has exactly one owner:
+#   · THE OPERATOR'S OWN WORDS and the generic shapes — a person, a client, a company, a mail domain, a machine, a
+#     real tailnet host, a concrete private address — are judged by ONE engine, `bin/gates/agnostic-audit.sh`, which
+#     reads `hodd/identity/public-deny.txt` from the home and never prints it. This job CALLS that engine over
+#     `origin/main` (fetched fresh) and folds its verdict into the queue; it does not re-spell the match itself. The
+#     engine is also the pre-push and CI ward, judging only what a push adds.
+#   · THE SECRETS — a key, a token, a private-key header — are shape, not list. Their GATE is `bin/gates/secret-scan.sh`
+#     (gitleaks over the staged diff and over every PR and main; PR #733, which also generates its rules from the same
+#     home list) with `bin/gates/guards/secret-guard.sh` beside it in CI. This sweep keeps the two SECRET shapes it had
+#     as a second pair of eyes that needs no binary — belt and braces, at the clock's moment, never the gate.
+#   · THE CONTENT OF A RECORD (a mailbox, a phone number) is this job's own two rules, which no list can know.
+# A leaked word is therefore named in one place, on one clock, and a secret in another — and neither re-implements the
+# other.
+#
 #   nornir-job-private-scan.sh            sweep the working tree, write the queue, seat an errand on findings
 #   nornir-job-private-scan.sh --report   same, print, do not seat
 #   nornir-job-private-scan.sh --json     machine-readable
@@ -22,26 +37,37 @@ set -uo pipefail
 # exactly what `defaults-guard` exists to refuse. A sweep with an unresolved home has nowhere private to
 # write its queue and might write another operator's, so it refuses and says which door was missing.
 REPO="${YMIR_REPO:-$HOME/ymir}"
-[ -r "$REPO/bin/vault/hoard-lib.sh" ] && . "$REPO/bin/vault/hoard-lib.sh"
+# THE ONE RESOLVER (Rule 07): the home is ASKED, never guessed — a hardcoded fallback path is the drift that made
+# four scripts disagree about where the hoard lives (defaults-guard, 2026-11-14). No home, no queue: said, not invented.
 HOME_DIR="${YMIR_HOME:-}"
-declare -f ymir_home_root >/dev/null 2>&1 && ymir_home_root HOME_DIR 2>/dev/null
-[ -n "$HOME_DIR" ] || { printf 'private-scan: no home recorded — set YMIR_HOME or keep bin/vault/hoard-lib.sh in the tree (Rule 07)\n' >&2; exit 2; }
+if [ -z "$HOME_DIR" ] && [ -r "$REPO/bin/vault/hoard-lib.sh" ]; then
+  # shellcheck source=bin/vault/hoard-lib.sh
+  . "$REPO/bin/vault/hoard-lib.sh" 2>/dev/null || true
+  if declare -f ymir_home_root >/dev/null 2>&1; then ymir_home_root HOME_DIR 2>/dev/null || true; fi
+fi
+[ -n "$HOME_DIR" ] || { printf 'private-scan: no Ymir home resolves (YMIR_HOME unset, no hoard-lib) — the queue has nowhere to live\n' >&2; exit 2; }
 QUEUE="$HOME_DIR/hodd/state/private-scan/queue.md"
 REPORT_DIR="$HOME_DIR/hodd/state/private-scan"
 LOG="$REPORT_DIR/scan.log"
 MODE="${1:-}"
 
-[ -d "$REPO/.git" ] || { printf 'private-scan: no repository at %s\n' "$REPO" >&2; exit 2; }
-command -v rg >/dev/null 2>&1 || { printf 'private-scan: ripgrep is required\n' >&2; exit 2; }
+# A WORKTREE IS A CHECKOUT TOO (2026-11-14): `-d "$REPO/.git"` answered no for every Yggdrasil worktree, because a
+# worktree's `.git` is a FILE that points at the shared gitdir — so the sweep refused to run on exactly the trees a
+# worker forges in. The question is whether git can answer, not what the path is called.
+git -C "$REPO" rev-parse --git-dir >/dev/null 2>&1 || { printf 'private-scan: no repository at %s\n' "$REPO" >&2; exit 2; }
+# A missing ripgrep skips THIS half by name; the engine still runs, because the names are the half that must not go
+# unjudged (RULES/25: a clean skip is a pass, a false clean is not).
+HAVE_RG=1
+command -v rg >/dev/null 2>&1 || { HAVE_RG=0; printf 'private-scan: note — no ripgrep here, so the SECRET and mailbox rules are SKIPPED; the words of the home are still judged\n' >&2; }
 mkdir -p "$REPORT_DIR"
 
 # ── what is looked for ────────────────────────────────────────────────────────────────────────────────────────
 # Each rule is a regex and a category. The categories mirror what belongs in the home instead of here.
-#   SECRET   a credential — never in a public repo, in any form
-#   ADDRESS  an IP, a tailnet name, a hostname, a home path — the machine's address is not public
+#   SECRET   a credential — never in a public repo, in any form (the shape half; secret-guard.sh owns the gate)
 #   PERSON   a mailbox or a phone number — private data, Rule 04
-#   BUSINESS a client, company or project name under NDA — the NDA gate's list, applied to content too
-#   PRIVATE  a plan, schedule, note or dump — a record, not runtime code
+#   AGNOSTIC the operator's own words and every generic shape — judged by bin/gates/agnostic-audit.sh, below,
+#            against `hodd/identity/public-deny.txt`: a person, a client, a company, a mail domain, a machine,
+#            a real tailnet host, a concrete private address. This job does not spell any of them itself.
 rules() {
   cat <<'RULES'
 SECRET	sk-[A-Za-z0-9]{20,}
@@ -53,48 +79,24 @@ SECRET	-----BEGIN [A-Z ]*PRIVATE KEY-----
 SECRET	AGE-SECRET-KEY-1[A-Z0-9]{10,}
 SECRET	re_[A-Za-z0-9]{20,}
 SECRET	eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.
-ADDRESS	\b100\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\b
-ADDRESS	\b192\.168\.[0-9]{1,3}\.[0-9]{1,3}\b
-ADDRESS	\b10\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\b
-ADDRESS	[A-Za-z0-9-]+\.ts\.net
-ADDRESS-LOW	[a-z0-9-]+\.zerwiz\.org
-ADDRESS-LOW	/home/(alice|bob|tester|user|example|test)/
+# ADDRESS, ADDRESS-LOW and BUSINESS used to be spelled here. They are not any more: the machines, the tailnet, the
+# concrete private addresses and every name of the operator's are judged by bin/gates/agnostic-audit.sh against the
+# home's own list, and two spellings of "a private address" is how one of them ends up wrong (the ward's own first
+# spelling missed an entire private block for exactly this reason, 2026-11-14).
 PERSON	[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.(?!test|example|invalid|local)\w{2,}
 PERSON	\+?46[ -]?7[0-9]{1,2}[ -]?[0-9]{3}[ -]?[0-9]{2}[ -]?[0-9]{2}
 RULES
 }
 
-# THIS FLEET'S OWN HOME PATHS ARE READ FROM THE HOME, NEVER HARDCODED (2026-11-14). `/home/<user>/` is the
-# machine's address in the same sense as an IP, so baking one into this public script breaks the very rule the
-# script exists to enforce — and the Rule-07 gate said so. `hodd/identity/machine-homes.txt` holds one path per
-# line (`/home/<user>/`); absent, the rule is skipped AND SAID, because a silently missing rule is a false clean.
-homes_file="$HOME_DIR/hodd/identity/machine-homes.txt"
-homes_rules=""
-if [ -f "$homes_file" ]; then
-  while IFS= read -r home_path; do
-    case "${home_path:-}" in ''|'#'*) continue ;; esac
-    homes_rules+="ADDRESS	$(printf '%s' "$home_path" | sed 's/[.]/\\./g')"$'\n'
-  done < "$homes_file"
-else
-  printf 'private-scan: note — no %s, so no machine home paths are checked this run\n' "$homes_file" >&2
-fi
-
-# Names that identify a client, a company or a person are read from the home, never hardcoded in this public repo.
-# `hodd/identity/nda-names.txt` — one name per line — is the NDA gate's own list; if it is absent, this rule is skipped
-# and the sweep says so, because a silently missing rule is a false clean.
-nda_file="$HOME_DIR/hodd/identity/nda-names.txt"
-nda_rules=""
-if [ -f "$nda_file" ]; then
-  while IFS= read -r name; do
-    case "$name" in ''|\#*) continue ;; esac   # a comment line is not a name
-    nda_rules+="BUSINESS	(?i)\\b${name// /[ _-]}\\b"$'\n'
-  done < "$nda_file"
-else
-  printf 'private-scan: note — no %s, so no BUSINESS names are checked this run\n' "$nda_file" >&2
-fi
+# The names of people, clients and companies are read from the home by bin/gates/agnostic-audit.sh — the one engine —
+# through `hodd/identity/public-deny.txt`. This job no longer keeps a second list (`nda-names.txt`), because a second
+# list is a second truth and a silently missing one is a false clean.
 
 # A false positive must be written down, not silently tolerated: the allow file lives in the home (private) and holds
 # one regex per line — each with a comment saying why it is safe. A finding that matches is still counted as `allow`.
+# THE ALLOW LIST LIVES IN config/, NOT state/ (carried from fix/agnostic-audit-job, 2026-11-14): `hodd/state/` is
+# gitignored, so the REASON for every accepted finding would be lost on the next clone — and an allow list whose
+# reasons are lost is an allow list nobody can audit. One path, and it is the one that travels.
 allow_file="$HOME_DIR/hodd/config/private-scan-allow.txt"
 findings=0
 low=0
@@ -112,7 +114,7 @@ while IFS=$'\t' read -r cat pattern; do
       allowed=$((allowed+1)); continue
     fi
     printf '%s\t%s\n' "$cat" "$hit" >> "$out"
-    case "$cat" in ADDRESS-LOW) low=$((low+1));; *) findings=$((findings+1));; esac
+    findings=$((findings+1))
   done < <(rg --no-heading --line-number --color never -e "$pattern" \
              -g '!node_modules' -g '!.git' -g '!docs/fixes/**' \
              -g '!bin/gates/guards/**' -g '!.pi/**' -g '!*.lock' \
@@ -120,7 +122,43 @@ while IFS=$'\t' read -r cat pattern; do
              -g '!assets/reference/**' -g '!**/dist/**' -g '!**/build/**' \
              -g '!.yggdrasil/**' -g '!docs/**' -g '!apps/*/tickets/**' \
              "$REPO" 2>/dev/null | sed "s|^$REPO/||" | head -40)
-done < <( { rules; printf '%s' "$nda_rules"; printf '%s' "$homes_rules"; } | sort -u )
+done < <( { [ "$HAVE_RG" = 1 ] && rules || true; } | sort -u )
+
+# ── the one engine: the operator's words, and every generic shape ────────────────────────────────────────────
+# `bin/gates/agnostic-audit.sh` is the census of the whole tree (and `--ref` of a fetched one), the ward a push
+# meets, and the only reader of `hodd/identity/public-deny.txt`. This job asks it, and folds its verdict into the
+# same queue, so a person triaging the sweep sees one list of places to look — not two scanners disagreeing.
+ENGINE="$REPO/bin/gates/agnostic-audit.sh"
+engine_ref=""
+if [ -n "${YMIR_AUDIT_REF:-}" ]; then
+  engine_ref="$YMIR_AUDIT_REF"
+elif git -C "$REPO" rev-parse -q --verify origin/main >/dev/null 2>&1; then
+  engine_ref="origin/main"
+fi
+# FRESH, OR SAID ALOUD: the census must read what main holds now, not what this copy last pulled.
+if [ -z "${YMIR_OFFLINE:-}" ] && git -C "$REPO" rev-parse -q --verify origin >/dev/null 2>&1; then
+  git -C "$REPO" fetch --quiet origin main 2>/dev/null \
+    || printf 'private-scan: note — the fetch failed; the engine judged the %s this copy already carries\n' "${engine_ref:-tree}" >&2
+fi
+if [ -r "$ENGINE" ]; then
+  if [ -n "$engine_ref" ]; then
+    # Every finding, not the first screenful: the engine caps its printed report for a person's terminal, and the
+    # queue must carry them all (it was silently cutting at 200 and reporting 201, 2026-11-14).
+    ag_out="$( cd "$REPO" && YMIR_AUDIT_MAX_REPORT=100000 bash "$ENGINE" --ref "$engine_ref" 2>&1 )" || true
+  else
+    ag_out="$( cd "$REPO" && YMIR_AUDIT_MAX_REPORT=100000 bash "$ENGINE" 2>&1 )" || true
+  fi
+  while IFS= read -r line; do
+    where="$(printf '%s' "$line" | awk '{print $1}')"
+    [ -n "$where" ] || continue
+    printf 'AGNOSTIC\t%s\n' "$where" >> "$out"
+    findings=$((findings+1))
+  done < <(printf '%s\n' "$ag_out" | grep -E '^  [^ ].*:[0-9]+ ' | sed 's/^  //')
+  printf '%s\n' "$ag_out" | grep -q 'NONE READ' && \
+    printf 'private-scan: note — the home holds no deny list, so only the generic shapes were judged (hodd/identity/public-deny.txt)\n' >&2
+else
+  printf 'private-scan: note — no bin/gates/agnostic-audit.sh in %s, so the operator'"'"'s words were NOT judged this run\n' "$REPO" >&2
+fi
 
 stamp="$(date -u +%FT%TZ)"
 if [ "$MODE" = "--json" ]; then
@@ -152,6 +190,15 @@ if [ "$MODE" = "--report" ]; then
   cat "$out" | head -40
   printf '\nprivate-scan: %s finding(s) — queued at %s\n' "$findings" "$QUEUE"
   exit 1
+fi
+
+# The operator hears it once, through the one hotline (plan 287 §6). It is reached ONLY on a finding: a clean run has
+# already returned above, so a channel that says "still fine" twice a day can never exist.
+if [ -r "$REPO/bin/notify/send.sh" ]; then
+  bash "$REPO/bin/notify/send.sh" --source cron --severity MEDIUM \
+    --key "private-scan:$(date +%F)" \
+    --message "the public tree carries $findings thing(s) that belong in the home ($stamp); the queue is hodd/state/private-scan/queue.md" \
+    >/dev/null 2>&1 || printf 'private-scan: the hotline could not be reached; the queue and the journal carry it\n' >&2
 fi
 
 # One heavy thing at a time (home contract, law 7): a scan is cheap, but the errand it seats is not free — and a second

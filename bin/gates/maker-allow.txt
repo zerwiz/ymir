@@ -5,6 +5,8 @@
 # Anything else that must stay is listed here as:   phrase | reason
 # A line with no reason is ignored: an exception nobody can explain is not an exception.
 # Append only (Rule 06) — a retired exception is struck by a dated comment, never deleted.
+pi loads the pin | RULES/53: a seat's commit subject about which checkout the `pi` door binds (2026-11-12) — the command, not a maker claim
+pi's auth.json | RULES/53: the harness's own config path, named in bridge-and-rail's body — a path, not a maker claim
 deepseek-v4.1-flash | RULES/53: the model id the Allfather chose for the smithy's chat (plan 275 item 15) — his choice IS the record, and the commit quotes it
 no --append-system-prompt was passed and pi | RULES/53: the smithy's body names the harness's own flag and command while recording a fault (2026-11-14) — not a maker claim
 answered 500 with pi's | RULES/53: the smithy's body quotes the harness's own error output (2026-11-14) — not a maker claim

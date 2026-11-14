@@ -127,10 +127,14 @@ while IFS= read -r f; do
   # an XML namespace (xmlns=) is an identifier that is never fetched, and 169.254.x.x (the cloud metadata address) is the fixed
   # link-local metadata address inside any cloud machine — neither is a house address (2026-11-12).
   # `.local` is an mDNS name only when it ends a host; `~/.local/share` is the XDG data path (2026-11-12)
+  # `.env.local` is the house's own env FILE, not an mDNS host: every new document that named
+  # `$YMIR_HOME/.env.local` was refused (measured 2026-11-14, plan 275 item 22) because the regex
+  # read the filename's second half as a hostname. A filename is excluded; a `host.local` is not.
   done < <(grep -nE '(\b192\.168\.[0-9]+\.|\b10\.[0-9]+\.[0-9]+\.[0-9]+|\.local\b([^/]|$)|http://)' "$tmp" 2>/dev/null \
              | grep -vE '127\.0\.0\.1|localhost|<[a-z-]+>' \
              | grep -vE 'xmlns(:[a-z]+)?=|<!DOCTYPE|http://169\.254\b' \
              | grep -vE 'http://\$\{?[A-Za-z_]+' \
+             | grep -vE '\.env\.local([^/]|$)' \
              | grep -vE "http://%s|http://\{host\}|http://\{h\}|f\"http://" | head -20)   # a format/f-string host is not an address
   rm -f "$tmp"
 done <<EOF

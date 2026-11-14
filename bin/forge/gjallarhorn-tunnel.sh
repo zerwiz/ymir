@@ -8,7 +8,7 @@
 # cloudflared config's ingress and REFUSES a config that points at a hall port.
 #
 # Usage:
-#   gjallarhorn-tunnel.sh [start|stop|status] [--config <path>] [--tunnel <name>]
+#   gjallarhorn-tunnel.sh [start|stop|status|check] [--config <path>] [--tunnel <name>]
 #   gjallarhorn-tunnel.sh --version
 set -u
 
@@ -42,7 +42,7 @@ TUNNEL="${YMIR_TUNNEL_NAME:-ymir}"
 PID_FILE="$YMIR_STATE_DIR/gjallarhorn.pid"
 LOG_FILE="$YMIR_STATE_DIR/gjallarhorn.log"
 
-case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
+case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 ACTION="${1:-status}"; shift || true
 while [ $# -gt 0 ]; do case "$1" in --config) CONFIG=${2-}; shift 2 ;; --tunnel) TUNNEL=${2-}; shift 2 ;; *) shift ;; esac; done
 
@@ -61,7 +61,72 @@ tunnel_host() {
 HOST="$(tunnel_host)"
 [ -n "$HOST" ] || HOST='<unset: set YMIR_TUNNEL_HOST>'
 
+# ── the halls, and the guard that keeps a tunnel off them ─────────────────────
+HALL_PORTS="3888 3889 4322 8437 8787 4602 4603"
+
+# Every `service:` target in the config, as <line>\t<hostname>\t<service>.
+# Only a scheme URL can name a port; `http_status:404` and `unix:` cannot and are skipped.
+config_ingress() {
+  [ -r "$CONFIG" ] || return 0
+  awk '
+    /^[[:space:]]*-[[:space:]]*hostname:/ { h=$0; sub(/^[^:]*:[[:space:]]*/,"",h); sub(/[[:space:]]*#.*/,"",h); host=h; next }
+    /^[[:space:]]*service:/ {
+      s=$0; sub(/^[[:space:]]*service:[[:space:]]*/,"",s); sub(/[[:space:]]*#.*/,"",s)
+      printf "%d\t%s\t%s\n", NR, (host==""?"(no hostname)":host), s
+    }
+  ' "$CONFIG"
+}
+
+# The port a service URL dials, or empty when it names none (`http_status:404`, `unix:`).
+service_port() {
+  local svc="$1" rest
+  case "$svc" in
+    *://*) ;;
+    *) return 0 ;;
+  esac
+  rest="${svc#*://}"; rest="${rest%%/*}"
+  case "$rest" in
+    *:*[0-9]*) printf '%s' "${rest##*:}" ;;
+  esac
+}
+
+# Rows whose ingress dials a hall port. Exit 0 when one is found (like grep), 1 when clean.
+hall_ingress() {
+  local nr host svc port found=1
+  while IFS=$'\t' read -r nr host svc; do
+    [ -n "$svc" ] || continue
+    port="$(service_port "$svc")"
+    [ -n "$port" ] || continue
+    case " $HALL_PORTS " in
+      *" $port "*) printf '%s\t%s\t%s\n' "$nr" "$host" "$svc"; found=0 ;;
+    esac
+  done < <(config_ingress)
+  return $found
+}
+
+refuse_hall_ingress() {
+  local rows="$1"
+  printf 'error: this tunnel config points at a hall — the halls are local, never tunneled\n' >&2
+  printf '%s\n' "$rows" | while IFS=$'\t' read -r nr host svc; do
+    printf '  %s:%s -> %s (a hall port)\n' "${CONFIG#"$HOME"/}" "$nr" "$host $svc" >&2
+  done
+  printf 'hall:  %s\n' "$HALL_PORTS" >&2
+  printf 'law:   plan 275 item 30 — no ingress at a hall port; a hosted surface reaches the world through its own door (plan 284)\n' >&2
+  printf 'help:  point the tunnel at the surface meant to be public (a forge, a board), or leave the hall local\n' >&2
+}
+
 case "$ACTION" in
+  check)
+    [ -r "$CONFIG" ] || { printf 'error: tunnel config not found: %s\n' "$CONFIG" >&2; exit 1; }
+    rows="$(hall_ingress || true)"
+    if [ -n "$rows" ]; then
+      refuse_hall_ingress "$rows"
+      printf 'gjallarhorn_check[1]{config,verdict}:\n  "%s","REFUSED"\n' "${CONFIG#"$HOME"/}"
+      exit 1
+    fi
+    n="$(config_ingress | awk -F'\t' '$3 !~ /^http_status:/ && $3 != ""' | wc -l)"
+    printf 'gjallarhorn_check[2]{config,verdict,ingress}:\n  "%s","ok — no hall port",%s\n' "${CONFIG#"$HOME"/}" "$n"
+    exit 0 ;;
   status)
     state=down
     if running; then state=up; fi
@@ -71,8 +136,14 @@ case "$ACTION" in
   stop)
     if running; then pid=$(tr -d '[:space:]' <"$PID_FILE"); kill "$pid" 2>/dev/null || true; rm -f "$PID_FILE"; printf 'gjallarhorn: stopped pid=%s\n' "$pid"; else ymir_kill_matching "config-ymir.yml" 2>/dev/null && printf 'gjallarhorn: stopped (matched process)\n' || printf 'gjallarhorn: already stopped\n'; fi
     exit 0 ;;
-  start) ;;
-  *) printf 'error: unknown action %s\nhelp: gjallarhorn-tunnel.sh [start|stop|status]\n' "$ACTION" >&2; exit 2 ;;
+  start)
+    # The guard runs BEFORE cloudflared is even looked for: a config that would publish a
+    # hall is refused whatever else is missing (plan 275 item 30).
+    [ -r "$CONFIG" ] || { printf 'error: tunnel config not found: %s\nhelp: cp midgard/infrastructure/ingress/cloudflared-ymir.yml ~/.cloudflared/config-ymir.yml\n' "$CONFIG" >&2; exit 1; }
+    rows="$(hall_ingress || true)"
+    if [ -n "$rows" ]; then refuse_hall_ingress "$rows"; exit 1; fi
+    ;;
+  *) printf 'error: unknown action %s\nhelp: gjallarhorn-tunnel.sh [start|stop|status|check]\n' "$ACTION" >&2; exit 2 ;;
 esac
 
 # THE HALLS ARE LOCAL. Ports measured on this seat 2026-11-14: the SPA (:3888), the

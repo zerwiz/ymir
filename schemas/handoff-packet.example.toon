@@ -28,6 +28,10 @@ claims[3]{claim,state,evidence}:
   "no magic offsets remain in the rig","verified","grep -n '0\\.42\\|1\\.15' game/camera/cockpit.js returns nothing",
   "the bench log names the previous attempt so it is not repeated","verified","docs/bench/2026-11-06-cockpit-eye.md:6"
 
+records[2]{path,what}:
+  "docs/bench/2026-11-06-cockpit-eye.md","written — the bench log now names what failed",
+  "none","the project keeps no decision record for a camera offset; the plan row is unchanged"
+
 not_done[2]{item,why}:
   "the F-key seat toggle keeps its old binding","out of scope for this errand; named in plan 78 step 4",
   "no test asserts the camera against the visual render","the scene test harness cannot capture pixels yet — see plan 76 row 9"

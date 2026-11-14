@@ -137,6 +137,41 @@ gate main-red "the alarm for a red main names the ward and never fires for a pul
 gate opencode-launcher "every door seats OpenCode with the launcher's one shape; the version guard bites" \
      bash "$ROOT/bin/gates/tests/test_opencode_launcher.sh"
 
+# PLAN 275 item 22 — OmniChat lost every model at once because Bifrost fell back to a retired
+# LM Studio when no key was in the env file. The fallback is now the vault, then the local
+# rail, and the model list comes from the catalogue (so v4.1 appears).
+gate bifrost-provider "the model bridge never falls back to lmstudio, reads its key through the vault, and lists the catalogue" \
+     bash "$ROOT/bin/bridge/tests/test_bifrost_provider.sh"
+
+# PLAN 275 item 23 — the rail could not load its model while the voice engine held the card,
+# and the chat could only say "no model backend answered". A chat now falls to a model that
+# fits and says which answered; a full card is called by its name; the voice idles out.
+gate chat-ladder "a chat that cannot load the big model answers from one that fits, and says which did" \
+     node --test "$ROOT/apps/hlidskjalf/server/chat-ladder.test.ts"
+gate vram-ledger "the house can say who holds the card, and never prints a holder's argv" \
+     bash "$ROOT/bin/model/tests/test_vram_ledger.sh"
+gate voice-idle-out "the voice engine lets the card go after a quiet window, and never cuts a call" \
+     bash "$ROOT/bin/voice/tests/test_voice_idle.sh"
+
+# PLAN 275 item 26 — a unit whose PATH stops at /bin cannot see a mise-installed `gh`, so the
+# digest said "not installed" while every shell found it. Every house unit names the shims.
+gate unit-path-shims "every house unit's PATH reaches the house's tools (mise shims, after /usr/bin)" \
+     bash "$ROOT/bin/engine/tests/test_unit_path_shims.sh"
+
+# PLAN 275 item 30 — the halls are local. A tunnel that dials a hall port is refused, and no
+# shipped ingress template publishes one.
+gate gjallarhorn-no-hall "a tunnel config may not point at a hall port, and no shipped template does" \
+     bash "$ROOT/bin/forge/tests/test_gjallarhorn_no_hall.sh"
+
+# The ward that guards RULES/39 read the house's own env filename (`$YMIR_HOME/.env.local`) as an
+# mDNS host and refused every new document that named it. A filename is not a hostname (plan 275).
+gate rules-compliance-env-file "the address ward tells a documented filename from an mDNS host, and still refuses a host" \
+     bash "$ROOT/bin/gates/tests/test_rules_compliance_env_file.sh"
+
+# The handoff packet is the one artefact a smith hands the reviewer and nothing ran its test. It now
+# resolves a `--base` ref to a sha, so the door's own packet passes the door's own check.
+gate handoff-packet "a handoff packet is sound, and the door no longer refuses the packet it just wrote" \
+     bash "$ROOT/bin/gates/tests/test_handoff_packet.sh"
 # PLAN 293 part 7 — a worker cut from another unmerged branch records that branch in its packet, and
 # the gather merges the base FIRST. Gathered in the wrong order the dependent lands before its base.
 gate gather-orders-by-base "the gather merges a packet's base branch before the branch cut from it" \
@@ -174,6 +209,11 @@ gate capability "the capability register is current"           bash "$ROOT/bin/g
 gate home-index "the home's shelves are navigable"             bash "$ROOT/bin/gates/checks/home-index-check.sh"
 gate triggers    "a smithy starts by a person, the clock or an event — and nothing arms itself" \
                bash "$ROOT/bin/time/tests/test_event_trigger.sh"
+# Plan 275 item 28 — Sága's head is SHORT and remembers what it already said: ≤ 60 lines,
+# every section answers by name, a finished errand is reported once, and the size test fails
+# when the head outgrows its budget (a digest nobody can afford to read is not a digest).
+gate saga-head   "Sága's head fits its budget, every section answers by name, finished errands are news once, and ONE hook serves the current home" \
+               bash "$ROOT/bin/time/tests/test_saga_head.sh"
 gate voice-arm   "Rödd knocks on the arm, and refuses when nobody is holding it (plan 223)" \
                bash "$ROOT/bin/voice/tests/test_rodd_arm.sh"
 # PLAN 293 part 3 — the digest SEES what never landed: a pushed worker branch with no PR, and a

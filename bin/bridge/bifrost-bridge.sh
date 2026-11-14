@@ -4,13 +4,21 @@
 # this keeps that endpoint alive so a session never 401s.
 #
 # The provider is the operator's choice (YMIR_MODEL_PROVIDER):
-#   opencode-go        OpenCode Zen Go gateway — needs OPENCODE_GO_API_KEY
-#   lmstudio           LM Studio on localhost — keyless
+#   opencode-go        OpenCode Zen Go gateway — needs a key (vault, env file, or pi's auth.json)
+#   local-rail         the local llama.cpp rail on :8080 — the keyless second road
+#   lmstudio           LM Studio on localhost — served ONLY when it is named
 #   openai-compatible  any OpenAI-compatible server — optional key
-# No provider is forced to require a key: with no OPENCODE_GO_API_KEY the bridge
-# auto-selects lmstudio so a fresh install with a local model server just works.
 #
-# Usage: bin/bridge/bifrost-bridge.sh [--start|--stop|--status|--ensure] [--port N] [--provider NAME]
+# THE FALLBACK IS NEVER LM STUDIO (plan 275 item 22, measured 2026-11-14): with no
+# OPENCODE_GO_API_KEY in the env file this door used to choose `lmstudio` — a provider the
+# Allfather retired on 2026-10-24 ("no lm studio we not using that") — so bifrost answered
+# every chat with `curl: (7) Failed to connect to 127.0.0.1:1234` behind a bare 500. The
+# order is now: a NAMED provider wins; else opencode-go when a key is readable through the
+# vault or pi's auth.json; else the local rail; else a loud refusal that names both roads.
+# The decision itself lives in model-bridge.py (`--resolve-provider`), so this shell holds
+# no second opinion about it.
+#
+# Usage: bin/bridge/bifrost-bridge.sh [--start|--stop|--status|--ensure|--providers|--resolve] [--port N] [--provider NAME]
 #        bin/bridge/bifrost-bridge.sh --foreground  # stay in the foreground (a systemd unit
 #                                            # supervises this process directly — no self-daemon)
 #        bin/bridge/bifrost-bridge.sh --version
@@ -72,12 +80,13 @@ while [ $# -gt 0 ]; do
     --start|"") ACTION=start; shift ;;
     --ensure) ACTION=ensure; shift ;;
     --providers) ACTION=providers; shift ;;
+    --resolve) ACTION=resolve; shift ;;
     --stop|stop) ACTION=stop; shift ;;
     --status|status) ACTION=status; shift ;;
     --foreground) FOREGROUND=1; shift ;;
     --port) PORT=${2-}; shift 2 ;;
     --provider) PROVIDER=${2-}; shift 2 ;;
-    *) printf 'error: unknown flag %s\nhelp: bin/bridge/bifrost-bridge.sh [--start|--stop|--status|--ensure|--port|--provider|--foreground]\n' "$1" >&2; exit 2 ;;
+    *) printf 'error: unknown flag %s\nhelp: bin/bridge/bifrost-bridge.sh [--start|--stop|--status|--ensure|--providers|--resolve|--port|--provider|--foreground]\n' "$1" >&2; exit 2 ;;
   esac
 done
 
@@ -148,17 +157,61 @@ env_value() {
     | tail -1 | sed -E 's/^"(.*)"$/\1/; s/^'"'"'(.*)'"'"'$/\1/'
 }
 
+# WHICH provider, and WHY — asked of the bridge, never decided here (plan 275 item 22).
+# RESOLVED_PROVIDER is empty when there is no road at all, and RESOLVED_WHY always says
+# what was looked for, so a refusal can name it instead of guessing.
+RESOLVED_PROVIDER=""
+RESOLVED_WHY=""
+RESOLVED_BASE=""
+RESOLVED_KEY=""
+resolve_expected() {
+  [ -e "$BRIDGE" ] || return 1
+  local out row
+  out="$(python3 "$BRIDGE" --resolve-provider --env "$ENV_FILE" ${PROVIDER:+--provider "$PROVIDER"} 2>/dev/null)" || true
+  row="$(printf '%s\n' "$out" | sed -n 's/^  "//p' | head -1)"
+  [ -n "$row" ] || return 1
+  RESOLVED_PROVIDER="$(printf '%s' "$row" | cut -d'"' -f1)"
+  RESOLVED_WHY="$(printf '%s' "$row" | cut -d'"' -f3)"
+  RESOLVED_BASE="$(printf '%s' "$row" | cut -d'"' -f5)"
+  RESOLVED_KEY="$(printf '%s' "$row" | cut -d'"' -f7)"
+  [ "$RESOLVED_PROVIDER" = NONE ] && RESOLVED_PROVIDER=""
+  return 0
+}
+
+# start/ensure/serve: resolve the provider BEFORE any action, so a named provider, a
+# keyless rail and a retirement all take the same road.
+if [ "$ACTION" = start ] || [ "$ACTION" = ensure ] || [ "$ACTION" = resolve ]; then
+  [ -e "$BRIDGE" ] || { printf 'error: bridge script not found: %s\nhelp: expected .agents/backend/model-bridge.py\n' "$BRIDGE" >&2; exit 1; }
+  resolve_expected || true
+  if [ -z "$PROVIDER" ] && [ -n "$RESOLVED_PROVIDER" ]; then PROVIDER="$RESOLVED_PROVIDER"; fi
+  if [ -z "$PROVIDER" ]; then
+    printf 'error: no provider to serve — no key for opencode-go, and the local rail does not answer\n' >&2
+    printf 'why:   %s\n' "${RESOLVED_WHY:-the bridge could not be asked}" >&2
+    printf 'help:  raise the rail on :8080, put OPENCODE_GO_API_KEY in the vault (bin/vault/hodd.sh emit secrets/platform.env),\n' >&2
+    printf '       or name one: --provider opencode-go|local-rail|lmstudio|openai-compatible\n' >&2
+    printf 'note:  lmstudio is served only when it is NAMED; it is not a fallback (plan 275 item 22)\n' >&2
+    exit 1
+  fi
+fi
+
 case "$ACTION" in
   providers)
     # What this bridge can carry — the list a caller with no door for its provider
     # reads to refuse in words instead of guessing a URL.
     python3 "$BRIDGE" --providers
     exit 0 ;;
+  resolve)
+    # What this door would serve, and why — the same answer start/ensure act on.
+    printf 'bridge[4]{port,provider,why,base_url}:\n  %s,"%s","%s","%s"\n' \
+      "$PORT" "$PROVIDER" "$RESOLVED_WHY" "$RESOLVED_BASE"
+    exit 0 ;;
   status)
+    resolve_expected || true
     if listening; then
-      printf 'bridge[1]{port,status,provider}:\n  %s,"up","%s"\n' "$PORT" "$(running_provider)"
+      printf 'bridge[2]{port,status,provider}:\n  %s,"up","%s"\n' "$PORT" "$(running_provider)"
     else
-      printf 'bridge[1]{port,status,provider}:\n  %s,"down","%s"\n' "$PORT" "${PROVIDER:-}"
+      printf 'bridge[4]{port,status,provider,why}:'
+      printf '\n  %s,"down","%s","%s"\n' "$PORT" "${PROVIDER:-$RESOLVED_PROVIDER}" "$RESOLVED_WHY"
     fi
     exit 0 ;;
   stop)
@@ -193,19 +246,6 @@ if listening; then
 fi
 [ -e "$BRIDGE" ] || { printf 'error: bridge script not found: %s\nhelp: expected .agents/backend/model-bridge.py\n' "$BRIDGE"; exit 1; }
 
-# Choose the provider when the operator did not pin one. Prefer an explicitly
-# configured provider; otherwise use opencode-go only when a key actually
-# exists, and fall back to the keyless local provider so install "just works".
-if [ -z "$PROVIDER" ]; then
-  if [ -n "$(env_value YMIR_MODEL_PROVIDER)" ]; then
-    PROVIDER="$(env_value YMIR_MODEL_PROVIDER)"
-  elif [ -n "$(env_value OPENCODE_GO_API_KEY)" ] || [ -n "${OPENCODE_GO_API_KEY:-}" ]; then
-    PROVIDER="opencode-go"
-  else
-    PROVIDER="lmstudio"
-  fi
-fi
-
 # A missing env file is fine for keyless providers; the bridge reads what it can.
 mkdir -p "$YMIR_STATE_DIR"
 if [ "$FOREGROUND" = 1 ]; then
@@ -227,8 +267,9 @@ if listening; then
 else
   printf 'error: bridge failed to start (provider=%s); see %s\n' "$PROVIDER" "${LOG_FILE#"$ROOT"/}" >&2
   case "$PROVIDER" in
-    opencode-go) printf 'help: set OPENCODE_GO_API_KEY in %s, or run with --provider lmstudio\n' "${ENV_FILE#"$ROOT"/}" >&2 ;;
-    lmstudio)    printf 'help: is LM Studio running and serving on 127.0.0.1:1234? Or set YMIR_MODEL_PROVIDER=opencode-go\n' >&2 ;;
+    opencode-go) printf 'help: put OPENCODE_GO_API_KEY in the vault (bin/vault/hodd.sh emit secrets/platform.env) or in pi auth.json, or run with --provider local-rail\n' >&2 ;;
+    local-rail)  printf 'help: is the rail serving on :8080? Or set YMIR_RAIL_BASE_URL / YMIR_MODEL_PROVIDER\n' >&2 ;;
+    lmstudio)    printf 'help: lmstudio is NAMED, never chosen — is LM Studio serving on 127.0.0.1:1234?\n' >&2 ;;
     *)           printf 'help: check YMIR_MODEL_BASE_URL and the provider in %s\n' "${ENV_FILE#"$ROOT"/}" >&2 ;;
   esac
   exit 1
