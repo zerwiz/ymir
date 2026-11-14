@@ -168,6 +168,15 @@ gate voice-arm   "Rödd knocks on the arm, and refuses when nobody is holding it
                bash "$ROOT/bin/voice/tests/test_rodd_arm.sh"
 gate voice-vad   "the detector weights are fetched and checksummed, never committed, and both doors name one file (plan 288)" \
                bash "$ROOT/bin/voice/tests/test_voice_vad_model.sh"
+# PLAN 293 part 3 — the digest SEES what never landed: a pushed worker branch with no PR, and a
+# commit on no remote. A warning nobody runs is decoration, so the door is proved on a planted
+# repository, including the offline path (a branch is never called PR-less on a failed question).
+gate landing     "Sága names the branches pushed with no PR and the commits on no remote (plan 293)" \
+               bash "$ROOT/bin/time/tests/test_saga_land_warnings.sh"
+# PLAN 293 part 4 — the LAST errand of a batch calls the gather, once, naming the ids and the exact
+# command. Membership is the meta's own `mode=batch` + `wave`, never a second registry.
+gate gather-notice "the last errand of a batch prompts the gather, once, with the command (plan 293)" \
+               bash "$ROOT/bin/forge/tests/test_gather_notice.sh"
 gate usage      "no door became unused since the baseline"    bash "$ROOT/bin/gates/checks/usage-ratchet.sh"
 gate portability "GNU-only callers may fall, never rise (RULES/05)"    bash "$ROOT/bin/gates/checks/portability-ratchet.sh" check
 gate inventory  "the bin/backend index is current"            bash "$ROOT/bin/gates/inventory.sh" --check

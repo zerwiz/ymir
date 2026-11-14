@@ -56,6 +56,7 @@
 | fleet-version-guard.sh | fleet-version-guard.sh — the three labels and the two trees must agree | tested | keep (a human or a cron row must run it) |
 | gather-merge-guard.sh | gather-merge-guard.sh — a gathered batch keeps its history (plan 272,  | tested | keep (a human or a cron row must run it) |
 | git-clobber-guard.sh | git-clobber-guard.sh — no command that throws away uncommitted work. | tested | keep (a human or a cron row must run it) |
+| hearth-guard.sh | hearth-guard.sh — one capability, one implementation: a second copy is | tested | keep (a human or a cron row must run it) |
 | hoard-guard.sh | hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME). | tested+named | keep (a human or a cron row must run it) |
 | home-contract-guard.sh | home-contract-guard.sh — the contract that raises a user's home is che | tested | keep (a human or a cron row must run it) |
 | house-colour-guard.sh | (no header line) | tested | keep (a human or a cron row must run it) |
@@ -97,20 +98,22 @@
 | repo-scrub.sh | repo-scrub.sh — purge private paths from ALL git history before going  | tested | keep (a human or a cron row must run it) |
 | require-check.sh | require-check.sh — make the `gates` job the REQUIRED check on main. | tested | keep (a human or a cron row must run it) |
 | seat-woven-driver.sh | seat-woven-driver.sh — seat the engine behind `merge=regenerate`, and  | tested | keep (a human or a cron row must run it) |
+| secret-scan.sh | secret-scan.sh — the secret scan's door, and the generator for the ope | tested | keep (a human or a cron row must run it) |
 | test_areas_and_injection.sh | test_areas_and_injection.sh — the smoke suite for plan 219 and the arm | tested | keep (a human or a cron row must run it) |
 | test_arm_client_helm.sh | test_arm_client_helm.sh — the arm client's two measured faults (2026-1 | tested+named | keep (a human or a cron row must run it) |
-| test_arm_talk.sh | bogus host refused with road named | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| test_arm_talk.sh | bogus host refused with road named | tested | keep (a human or a cron row must run it) |
 | test_broken.sh | add appends | tested | keep (a human or a cron row must run it) |
 | test_ci_parity.sh | test_ci_parity.sh — a push run and a pull_request run on one sha print | tested | keep (a human or a cron row must run it) |
 | test_desktop_main_guard.sh | desktop-main-guard names a launcher that points into a worktree AND name | tested | keep (a human or a cron row must run it) |
 | test_finding_tally.sh | ensure config | tested | keep (a human or a cron row must run it) |
 | test_fixes_validate.sh | test_fixes_validate.sh — plan 272 fault 10: the fix-note validator jud | tested | keep (a human or a cron row must run it) |
-| test_fleet_roads.sh | good block passes | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| test_fleet_roads.sh | good block passes | tested | keep (a human or a cron row must run it) |
 | test_gather_merge_guard.sh | test_gather_merge_guard.sh — plan 272 fault 9: a gathered batch that l | tested | keep (a human or a cron row must run it) |
 | test_gimle_mcp_board.sh | test_gimle_mcp_board.sh — the Gimlé MCP's board face, proved by comma | tested | keep (a human or a cron row must run it) |
 | test_groa_steps.sh | test_groa_steps.sh — plan 272 fault 5: every Gróa step has a limit an | tested | keep (a human or a cron row must run it) |
 | test_handoff_packet.sh | test_handoff_packet.sh — proves the packet door reads the schema's pac | tested | keep (a human or a cron row must run it) |
 | test_hermes_seat.sh | test_hermes_seat.sh — the acceptance test for plan 177 H1/H2/H3: Herme | tested+named | keep (a human or a cron row must run it) |
+| test_home_sync_clock.sh | test_home_sync_clock.sh — the clock commits the records the house writ | tested | keep (a human or a cron row must run it) |
 | test_main_red.sh | test_main_red.sh — the alarm BITES, and it stays quiet where it must. | tested | keep (a human or a cron row must run it) |
 | test_maker_names.sh | test_maker_names.sh — RULES/53: the maker ward refuses a model, a make | tested | keep (a human or a cron row must run it) |
 | test_merge_method.sh | test_merge_method.sh — the merge flag follows the PR's kind (RULES/08, | tested | keep (a human or a cron row must run it) |
@@ -121,8 +124,8 @@
 | test_no_stale_arm_door.sh | test_no_stale_arm_door.sh — plan 272 fault 3. | tested | keep (a human or a cron row must run it) |
 | test_opencode_launcher.sh | test_opencode_launcher.sh — plan 262: an OpenCode worker actually star | tested+named | keep (a human or a cron row must run it) |
 | test_people_guard_people.sh | test_people_guard_people.sh — plan 272 fault 11: the people ward reads | tested | keep (a human or a cron row must run it) |
-| test_plan_state.sh | plan missing headers -> finding | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
-| test_plan_watch.sh | dry-run prints arithmetic, sends nothing | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| test_plan_state.sh | plan missing headers -> finding | tested | keep (a human or a cron row must run it) |
+| test_plan_watch.sh | dry-run prints arithmetic, sends nothing | tested | keep (a human or a cron row must run it) |
 | test_pr_identity.sh | complete body passes | tested | keep (a human or a cron row must run it) |
 | test_pr_ship_guard.sh | test_pr_ship_guard.sh — proves the ship door judges the PR and not the | tested | keep (a human or a cron row must run it) |
 | test_queue_warden.sh | 1. script exists and executable | tested | keep (a human or a cron row must run it) |
@@ -131,7 +134,7 @@
 | test_review_mend.sh | dry-run on PR 624 (missing CHANGE LOG) -> rung per finding + next: | tested | keep (a human or a cron row must run it) |
 | test_review_seat_verdict.sh | test_review_seat_verdict.sh — plan 272 fault 6: a review seat ends in  | tested | keep (a human or a cron row must run it) |
 | test_review_seats.sh | test_review_seats.sh — proves the seats and their mouth, hermetically. | tested | keep (a human or a cron row must run it) |
-| test_roster.sh | (no header line) | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| test_roster.sh | (no header line) | tested | keep (a human or a cron row must run it) |
 | test_rules_compliance_fork_sync.sh | test_rules_compliance_fork_sync.sh — plan 272 fault 7. | tested | keep (a human or a cron row must run it) |
 | test_skills_mcp.sh | test_skills_mcp.sh — the skills door, proved by command. | tested | keep (a human or a cron row must run it) |
 | test_smith_pr_open.sh | test_smith_pr_open.sh — a direct-PR smith may open its PR and never me | tested | keep (a human or a cron row must run it) |
