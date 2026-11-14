@@ -192,6 +192,10 @@ for door in UNITS:
             out[idx] = f"{key}: off   # migration 0024 — off until this machine names it"
             lines = out
             set_off.append(f"{door}: off" + (f" (was {value})" if value not in ("off", "") else ""))
+            # a Nornir job has no clock to ask, so the file is the witness: a migration-written `on` means
+            # the old install WAS running it, and that is exactly what `was_on` must record.
+            if value in ("on", "yes", "true", "1"):
+                was_running[door] = True
     # record what the old install had seated, so the operator can turn back on what he owns
     if was_running.get(door):
         rng2 = block_range(door)
