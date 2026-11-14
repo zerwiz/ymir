@@ -40,3 +40,7 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #755
