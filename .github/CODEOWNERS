@@ -1,0 +1,43 @@
+# CODEOWNERS — who reviews what.
+#
+# GitHub reads this file to decide whose review a pull request requests. It takes effect
+# only when branch protection requires a code-owner review (`Require review from Code
+# Owners`); until that setting is on, this file states the intent and asks for nothing.
+#
+# TWO RULES FOR THIS FILE:
+#
+#   1. PUBLIC GITHUB HANDLES ONLY. A handle is how a reviewer is addressed in the open;
+#      a person's name, an address or a phone number is the operator's private data and
+#      never belongs in a public repository (RULES/04). A handle is written `@handle`,
+#      a team `@org/team-name` — never a name.
+#   2. ROLES REVIEW, NOT PEOPLE. The paths below are grouped by what the code does, so a
+#      fleet with more than one maintainer can put a different handle on each line and a
+#      fleet of one keeps the default.
+#
+# A later pattern wins over an earlier one. Keep the catch-all first.
+
+# ── the default: every change needs a maintainer's review ────────────────────────────────────
+*                                   @zerwiz
+
+# ── the law and its gates: the rules, the wards, the delivery gate ───────────────────────────
+/RULES/                             @zerwiz
+/bin/gates/                         @zerwiz
+/.github/                           @zerwiz
+
+# ── the runtime: what a stranger's install runs ─────────────────────────────────────────────
+/bin/engine/                        @zerwiz
+/src/ymir_runtime/                  @zerwiz
+/bin/seat/                          @zerwiz
+/bin/agents/                        @zerwiz
+
+# ── the apps: each has a window, and each is reviewed by its own owner when one is named ────
+/apps/                              @zerwiz
+
+# ── the records: plans, features, fix notes — the documents a person reads ──────────────────
+/docs/                              @zerwiz
+/FEATURES.md                        @zerwiz
+
+# ── a second maintainer's areas, as a shape to copy ─────────────────────────────────────────
+# Put a handle on the line, never a name. For example, if a maintainer takes the apps:
+#
+#   /apps/                            @another-public-handle
