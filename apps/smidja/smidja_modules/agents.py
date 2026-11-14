@@ -356,14 +356,14 @@ def _execute(run, phase: Phase, call: AgentCall, agent, agent_dir) -> EnvelopeBa
                 "\n\n## LIVE ENGINEER GUIDANCE (must follow — highest priority)\n\n"
                 f"{steer_text}"
             )
-    # Kaia's startup notes (Pillar D admission) ride a separate file so they are
+    # Völundr's startup notes (Pillar D admission) ride a separate file so they are
     # clearly inherited context, not a live steer — injected the same standing way.
     kaia_file = run.session_dir / "kaia_notes.md"
     if kaia_file.exists():
         kaia_text = kaia_file.read_text().strip()
         if kaia_text:
             system_text += (
-                "\n\n## KAIA ADMISSION NOTES (orchestrator context for this task)\n\n"
+                "\n\n## VÖLUNDR ADMISSION NOTES (orchestrator context for this task)\n\n"
                 f"{kaia_text}\n\n"
             )
     prompts.save(agent_dir / "prompts", "system.md", system_text)
@@ -676,7 +676,7 @@ def _infer_task_role(description: str) -> str:
 
 def _materialize_subagent_start(run, phase: Phase, parent_agent: str, event: dict) -> None:
     """Open a subagent lane the moment an orchestrator `task`/`subagent_create`
-    tool call STARTS, so the child is visible below Kaia while it runs.
+    tool call STARTS, so the child is visible below Völundr while it runs.
 
     Old behavior materialized only at `tool_execution_end` (terminal-only lane,
     and nothing at all if the child stalls). This additive step writes the
@@ -899,7 +899,7 @@ def _event_forwarder(run, phase: Phase, agent_name: str):
         if event.get("type") == "tool_execution_start" and (
                 event.get("toolName") in ("task", "subagent_create")):
             # G2 live lanes: open the subagent lane the moment the dispatch
-            # starts (status=running), so the child is visible below Kaia while
+            # starts (status=running), so the child is visible below Völundr while
             # it runs instead of only appearing at tool_execution_end. The
             # terminal path below completes the SAME lane idempotently.
             _materialize_subagent_start(run, phase, agent_name, event)

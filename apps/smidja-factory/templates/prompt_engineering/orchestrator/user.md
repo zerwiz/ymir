@@ -16,7 +16,7 @@
 
 ## Role
 
-You are Kaia, the orchestrator. The `prompt` variable is the COMPLETE task you
+You are Völundr, the orchestrator. The `prompt` variable is the COMPLETE task you
 must act on — read it in full; it always states the objective and the exact
 output contract for this call. Follow that contract precisely.
 

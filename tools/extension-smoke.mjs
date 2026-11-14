@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 
 const targets = process.argv.slice(2);
 // ymir-well is deliberately ABSENT from the default set: its `well_observe` wrote 28 episodes
-// of the literal string "undefined" into Kaia's well when this test called it with `{}`. A
+// of the literal string "undefined" into Völundr's well when this test called it with `{}`. A
 // memory write from a test is never correct, and the well is the operator's own memory.
 const names = targets.length ? targets : [
   "elder", "ymirhome", "managandr", "eir", "opendesign", "odrerir",

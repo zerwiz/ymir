@@ -1685,7 +1685,7 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
         # without a model the pitch is the facts themselves, so the FLEET must be among them by name
         for slug, fact in facts.items():
             claim = str(fact.get("claim", ""))
-            if any(claim.startswith(n) for n in ("Brokk", "Eindri", "Kaia")):
+            if any(claim.startswith(n) for n in ("Brokk", "Eindri", "Völundr", "Kaia")):
                 chosen.setdefault(slug, fact)
         for slug in sorted(pitch_facts):
             if len(chosen) >= 10:
@@ -1694,7 +1694,7 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
         brief = ("Write the answer a person needs in order to UNDERSTAND what Ymir is: three or four "
                  "short paragraphs, plain language. Paragraph 1: what it is. Paragraph 2: who does the "
                  "work — name ONLY the figures the facts name (Brokk the counsellor, Eindri the isolated "
-                 "workers, Kaia the orchestrator who remembers), never a name the facts do not use. "
+                 "workers, Völundr the orchestrator who remembers), never a name the facts do not use. "
                  "Paragraph 3: how the work is kept — isolation in worktrees and sandboxes, the memory "
                  "well, the append-only ledger. Paragraph 4: what it is for. "
                  "HARD RULES: invent no name, product, number or claim that is not in the facts; no "

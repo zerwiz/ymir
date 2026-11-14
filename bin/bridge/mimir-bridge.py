@@ -94,6 +94,7 @@ STORE = Path(os.environ.get(
 )).expanduser()
 HOST = os.environ.get("MIMIRSBRUNN_HOST", "127.0.0.1")
 PORT = int(os.environ.get("MIMIRSBRUNN_PORT", os.environ.get("ENGRAM_PORT", "4602")))
+# the agent id every episode already in the well carries; the name is the historical one for Völundr
 DEFAULT_AGENT = os.environ.get("ENGRAM_AGENT_ID", "kaia")
 
 # --- the append log (the source of truth for re-seeding) ---------------------

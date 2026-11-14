@@ -28,7 +28,7 @@ the next session starts from the newest checkpoint file.
 Run with one of the recon-interval rosters:
     smidja run --roster recon-interval-9b  "<objective>"
     smidja run --roster recon-interval-35b "<objective>"
-    smidja run --roster recon-interval-orch "<objective>"   # Kaia-tier T2 synthesis
+    smidja run --roster recon-interval-orch "<objective>"   # Völundr-tier T2 synthesis
 """
 
 import argparse

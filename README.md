@@ -533,7 +533,7 @@ named for the figure whose role matches the machine's job:
 The platform is the primordial giant **Ymir**, from whose body the worlds were
 carved. The smiths are **Brokk** (the bellows-smith, your primary agent) and
 **Eindri** (the workers who out-forged the gods). Memory is **Mimirsbrunn**, the
-well at the root of **Yggdrasil**, and **Kaia** is the oracle who speaks from it.
+well at the root of **Yggdrasil**, and **Völundr** is the oracle who speaks from it.
 Every significant action is carved into **Runes**, an append-only ledger. Work
 passes the **seven gates** and is built on **borrowed anvils** — validated open
 source first, always. The full tale: [`docs/lore.md`](docs/lore.md).
@@ -543,7 +543,7 @@ source first, always. The full tale: [`docs/lore.md`](docs/lore.md).
 | **Ymir** | the platform / host daemon |
 | **Brokk** | the primary autonomous agent |
 | **Eindri** | isolated workers — Sindri, Bragi, Huginn, Mímir, Forseti, Snotra, Kvasir |
-| **Mimirsbrunn** | the memory well (engram) + Kaia's bridge |
+| **Mimirsbrunn** | the memory well (engram) + Völundr's bridge |
 | **Yggdrasil** | git worktrees — zero-collision parallelism |
 | **Utgard** | ephemeral Docker sandboxes — the execution barrier |
 | **Runes** | the append-only audit ledger |
@@ -671,7 +671,7 @@ installable by anyone running pi.
 | Workspaces | **workspace/** | personal & work scopes over domains |
 | Shared space | **Midgard** | shared assets & repos |
 | Message bus | **Ratatoskr** | A2A 1.0 backbone (cards, lifecycle, Redis) |
-| Vector memory | **Mimirsbrunn** | engram store + Kaia's bridge (`:4602`) |
+| Vector memory | **Mimirsbrunn** | engram store + Völundr's bridge (`:4602`) |
 | Audit ledger | **Runes** | append-only system log |
 | Issue→PR | **Mjollnir** | autonomous fixes & PRs |
 | Process monitor | **Valhalla** | PM2/Docker supervision |
@@ -686,7 +686,7 @@ installable by anyone running pi.
 | Live hall board | **Óðrerir** | fleet planning glass (:4322) |
 | Multi-tenant domains | **Svartalfaheim** | scoped tenant workspaces |
 | Agent ergonomics | **Galdr** | TOON output, 10 design principles |
-| Smíðja orchestrator | **Völundr** | runs Smíðja (Kaia's seat inside) |
+| Smíðja orchestrator | **Völundr** | the master of the smiths — leads Smíðja and dispatches its smiths |
 | MCP/A2A composition | **Hermóðr** | MCP vertical (agent→tools) + A2A horizontal |
 | Host desktop (Omarchy) | **Omarchy** | the machine Ymir runs on: monitors, scale, themes, hooks |
 | Terminal backend | **Þjazi** | agent panes — herdr (protocol 14+) or tmux |
@@ -789,7 +789,7 @@ scripts/stop.sh
 ```
 
 Views: Fleet · Tasks · Well · Runes · Reviews · Processes · Files · OmniChat ·
-Runtime · Cron · Forge · Profile. OmniChat speaks to **Kaia** for real (recall from
+Runtime · Cron · Forge · Profile. OmniChat speaks to **Völundr** for real (recall from
 the well, replies via the local model bridge). Press **Enter demo mode** on the sign-in
 screen to explore without the runtime.
 
