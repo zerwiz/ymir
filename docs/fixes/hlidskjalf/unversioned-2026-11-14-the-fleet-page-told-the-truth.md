@@ -76,3 +76,7 @@ rects**, the doors panel listing 6 app ports and 18 agent doors, the stream show
 messages, cards reading `DOWN` for the unseated, `tsc --noEmit` clean, no console errors.
 **Not proved:** a second machine. The second machine's ssh road timed out at 04:10, and the
 release-flip pass needs the merge this branch does not perform.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #759
