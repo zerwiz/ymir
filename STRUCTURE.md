@@ -23,7 +23,7 @@ ymir/
 ├── bin/                            # THE FORGE — 214 files: every door of the hall (counted 2026-09-27)
 │   ├── ymir.js                    # [d] the npm CLI front door (install/raise/lower/eir/groa/pi…)
 │   ├── ymir-install.sh            # [d] first setup (--plan · --yes · --no-desktop)
-│   ├── ymir-migrate.sh · ymir-invite.sh · ymir-setup-auth.sh · ymir-say.sh
+│   ├── ymir-migrate.sh · ymir-say.sh
 │   ├── saga-session-start.sh      # [d] the Sága digest (seated before first word)
 │   ├── saga-sessionstart-run.sh · saga-wake-drain.sh
 │   ├── nornir-cron-start.sh       # [d] the schedule spine; + nornir-job-*.sh (briefing, observer, housekeeping, git-sync…)

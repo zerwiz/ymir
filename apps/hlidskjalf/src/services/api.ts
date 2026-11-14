@@ -23,8 +23,65 @@ const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? '';
 
 export const demoMode = import.meta.env.VITE_DEMO === '1';
 
+export interface DigestErrand {
+  id: string;
+  state: string;
+  pane: string;
+  detail: string;
+}
+
+export interface DigestTodo {
+  area: string;
+  text: string;
+  id: string;
+  due?: string;
+  high?: boolean;
+}
+
+export interface DigestView {
+  helm: {
+    seat: string;
+    machine: string;
+    role: string;
+    pin: string;
+    behind: string;
+    pid: string;
+    heartbeat: string;
+    holder: boolean;
+  } | null;
+  next: string;
+  decisions: number;
+  wakes: number;
+  errands: DigestErrand[];
+  unreadable: DigestErrand[];
+  finished: number;
+  finishedIds: string[];
+  todos: DigestTodo[];
+  todosOpen: number;
+  sections: string[];
+  parsed: boolean;
+}
+
+export interface ReleaseService {
+  unit: string;
+  state: string;
+  pid: number;
+  release: string;
+  onPin: boolean;
+  running: boolean;
+  started: string;
+  why: string;
+}
+
+/** What `/api/runtime` answers: the digest as a person reads it (item 25), the
+ *  release each service runs from (item 27), and the raw text for the fold. */
 export interface RuntimeInfo {
   digest: string;
+  /** null while the digest is being read for the first time (it takes ~12 s). */
+  view: DigestView | null;
+  reading: boolean;
+  services: { pin: string; services: ReleaseService[]; error?: string };
+  mail: { needs: number; unsure: number; accounts: string[]; error?: string };
   markers: { lock: string; started: boolean; armed: boolean };
   doc: string;
 }
@@ -197,11 +254,13 @@ export function desktopHeaders(extra: Record<string, string> = {}): Record<strin
   return isDesktopSeat() ? { 'x-ymir-surface': 'desktop', ...extra } : extra;
 }
 
-/** A 401 from a real endpoint re-locks the gate; the login/session calls must not. */
-function noteUnauthorized(path: string, status: number): void {
-  if (status === 401 && !path.startsWith('/api/login') && !path.startsWith('/api/session')) {
-    window.dispatchEvent(new Event('ymir:unauthorized'));
-  }
+/**
+ * A 401 from a real endpoint is reported, never a silent empty board (plan 275
+ * item 30: the halls carry no login, so the only 401 left is the local ward —
+ * a voice or Rödd door refusing a request that did not arrive on loopback).
+ */
+function noteUnauthorized(_path: string, status: number): void {
+  if (status === 401) window.dispatchEvent(new Event('ymir:unauthorized'));
 }
 
 /**
@@ -474,11 +533,13 @@ export const gateApi = {
   runes: () => get<RuneEntry[]>('/api/runes'),
   processes: () => get<ProcessInfo[]>('/api/processes'),
   reviews: () => get<ReviewsInfo>('/api/reviews'),
-  files: (realm?: string) =>
-    get<FileNode>(`/api/files${realm ? `?realm=${encodeURIComponent(realm)}` : ''}`),
-  file: (realm: string, path: string) =>
+  files: (path?: string) =>
+    // ONE folder at a time (plan 275 item 21): the whole home is Skrymir's root and
+    // a folder is read when it is opened, so a tree never walks the home to paint.
+    get<FileNode>(`/api/files${path ? `?path=${encodeURIComponent(path)}` : ''}`),
+  file: (path: string) =>
     get<{ path: string; size?: number; updated?: string; body?: string; note?: string; error?: string }>(
-      `/api/file?realm=${encodeURIComponent(realm)}&path=${encodeURIComponent(path)}`,
+      `/api/file?path=${encodeURIComponent(path)}`,
     ),
   skills: () => get<SkillDef[]>('/api/skills'),
   runtime: () => get<RuntimeInfo>('/api/runtime'),
@@ -499,26 +560,12 @@ export const gateApi = {
   prompts: () => get<PromptFile[]>('/api/prompts'),
   savePrompt: (agent: string, kind: string, body: string) =>
     post<{ ok: boolean; path: string }>('/api/prompts', { agent, kind, body }),
-  session: () => get<{ authed: boolean; login?: string | null; registration?: boolean; github?: boolean }>('/api/session'),
-  login: (username: string, password: string) => post<{ ok: boolean }>('/api/login', { username, password }),
   /**
-   * Create an account from an invite code. Registration is refused unless the
-   * code is live — the gate, not this call, is what decides.
+   * Who this seat is. NOT a credential (plan 275 item 30): the halls are local and
+   * the desktop session is the authority, so the gate answers with the operator's
+   * own name and nothing to sign in with.
    */
-  register: (username: string, password: string, invite: string) =>
-    post<{ ok: boolean }>('/api/register', { username, password, invite }),
-  /**
-   * Raise a desktop app (Hlidskjalf, Smíðja, Sessrúmnir, or Óðrerir) from inside the UI — the same
-   * launcher the key bindings use, so it raises what is up and starts what is not.
-   */
-  desktop: (view: 'hlidskjalf' | 'smidja' | 'sessrumnir' | 'odrerir') =>
-    post<{ view: string; ok: boolean; output: string }>('/api/desktop', { view }),
-  logout: () => post<{ ok: boolean }>('/api/logout', {}),
-  /**
-   * Begin GitHub sign-in. The gate answers with an authorize URL when it is
-   * configured, and with the exact reason when it is not.
-   */
-  githubStart: () => get<{ url?: string; error?: string }>('/api/auth/github'),
+  session: () => get<{ login: string; surface: string; doc?: string }>('/api/session'),
   smidjaHealth: () => get<{ db: string; sessions: number }>('/api/smidja/health'),
   smidjaSessions: () => get<SmidjaSession[]>('/api/smidja/sessions'),
   smidjaSession: (id: string) => get<SmidjaDetail>(`/api/smidja/sessions/${encodeURIComponent(id)}`),

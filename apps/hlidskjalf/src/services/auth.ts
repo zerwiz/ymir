@@ -2,16 +2,14 @@ import type { DomainId, Session, TenantGrant, User } from '../types';
 import { DOMAINS } from '../data/realms';
 
 /**
- * The session the UI holds once the gate has authenticated it.
+ * The session the UI holds — the SEAT'S OWN record, not a credential.
  *
- * There is exactly **one** way in: the gate's own login (`LoginModal` →
- * `POST /api/login` or `/api/register` with an invite code). This module no
- * longer mints identities — an earlier mock picker issued sessions for imaginary
- * users from a hardcoded list, which meant a correct sign-in fell through to a
- * screen offering somebody else's name. Removed 2026-09-12.
- *
- * What remains is the session *shape*: who the operator is, which workspaces
- * they hold, and how it is persisted.
+ * The halls are local (plan 275 item 30): there is no login, no invite and no
+ * account store, because the desktop session is the authority. So this module no
+ * longer mints or verifies anything; it shapes what the UI renders — who is
+ * seated, and which workspaces (realms) exist on this machine. The tenant list is
+ * the workspace registry's three, so no realm is hidden by a pinned default
+ * (item 11's follow-up: the Personal and Svein shelves must stay visible).
  */
 
 const SESSION_KEY = 'ymir.session';
@@ -21,11 +19,14 @@ function grant(realm: string, tenant: string, role: TenantGrant['role'], domain:
   return { realm, tenant, role, domain, tint: d.accent, glyph: d.glyph };
 }
 
-/** The workspaces every operator holds on their own machine. */
+/** The workspaces (realms) that exist on this machine — the registry's three.
+ *  `role` is kept in the shape because a workspace row still carries a display
+ *  colour and a house; it grants nothing, and nothing asks for a grant. */
 export function baseGrants(): TenantGrant[] {
   return [
     grant('work', 'Work', 'owner', 'ymirlabs'),
     grant('personal', 'Personal', 'owner', 'muninn'),
+    grant('svein', 'Svein', 'owner', 'dvalin'),
   ];
 }
 

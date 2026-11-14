@@ -1,10 +1,13 @@
 import type { GateId, DomainDef, RealmDef, TaskState, AgentStatus } from '../types';
 
-// One runtime: a single workspace. The Work · Personal · Svein mode chips and the
-// switching they offered are retired (plan 275) — there is one Hlidskjalf and one
-// workspace, so `WORKSPACES` is a one-entry lookup for `realmDef`/`realmById`, not
-// a list of modes to switch between. Domains are knowledge areas inside it; houses
-// are brands.
+// One runtime, MANY realms (plan 275 items 11 and 21). The Work · Personal · Svein
+// mode chips and the switching they offered are retired: there is one Hlidskjalf
+// and it shows EVERY realm. A realm is a FOLDER (svartalfaheim/<realm>) and a
+// LABEL, never a mode that hides the other two — pinning the runtime to `work`
+// stranded the Personal and Svein data, which the rule "never remove a feature"
+// forbids. So `WORKSPACES` stays the full list (the registry's three), `DEFAULT_REALM`
+// is only the default SCOPE a realm-scoped page starts on, and a page that needs a
+// scope offers the three as a filter.
 export const WORKSPACES: RealmDef[] = [
   {
     id: 'work',
@@ -17,10 +20,37 @@ export const WORKSPACES: RealmDef[] = [
     tint2: '#7d5f2a',
     glyph: 'ᛉ',
   },
+  {
+    id: 'personal',
+    tenant: 'Personal',
+    name: 'Personal',
+    kind: 'personal',
+    domains: ['me', 'life', 'development'],
+    tint: '#96a0a8',
+    tint2: '#5f686e',
+    glyph: 'ᛗ',
+  },
+  {
+    id: 'svein',
+    tenant: 'Svein',
+    name: 'Svein',
+    kind: 'work',
+    // The company a realm belongs to is private data (RULES/04): it is named in
+    // the operator's registry (hodd/identity/workspaces.yaml), never here.
+    domains: ['company', 'marketing', 'development', 'life'],
+    tint: '#8aa39b',
+    tint2: '#4f6b64',
+    glyph: 'ᛋ',
+  },
 ];
 
-/** The one active realm: the single workspace this runtime serves. */
+/** The realm a realm-scoped page opens on. It is a default FILTER, not a mode:
+ *  every realm stays reachable and visible. */
 export const DEFAULT_REALM = 'work';
+
+/** A realm's display name, for a label or a filter chip. */
+export const realmLabel = (id: string): string =>
+  WORKSPACES.find((r) => r.id === id)?.name ?? id;
 
 /** Back-compat alias — the active `realm` id is now a workspace id. */
 export const REALMS = WORKSPACES;

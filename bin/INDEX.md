@@ -24,7 +24,7 @@ folder rewrites one file instead of colliding on every branch.
 bin[4]{file,does,kind,verdict,disposition,callers,lines}:
   "README.md","<!-- allow-superseded-path: a generated index must name the folder or the script it indexes, by construction -->","data","tested","keep",60,-
   "bitrate-gate.sh","bitrate-gate.sh — a diffusion clip that 'completes' is not a clip that worked.","tool","wired","keep",0,82
-  "brokk","brokk — the primary agent's CLI (Brokk, the bellows-smith).","tool","tested","keep",60,74
+  "brokk","brokk — the primary agent's CLI (Brokk, the bellows-smith).","tool","tested","keep",61,74
   "no-delete-guard.sh","no-delete-guard.sh — Rule 11, ENFORCED.","tool","wired","keep",4,90
 
 **Tally.** verdict: tested=2, wired=2
