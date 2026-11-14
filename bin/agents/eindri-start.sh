@@ -146,17 +146,35 @@ fi
 
 mkdir -p "$STATE"
 
-# 3. Seat: herdr first, tmux fallback — always produce a seat.
+# 3. Seat: herdr whenever herdr is installed; tmux ONLY where it is not (plan 275 item 31, 2026-11-14).
 #    rc 3 from herdr-run means "not worth a smith" — report it, do NOT fake a seat.
+#    Measured 2026-11-14: nine workers fell silently into tmux because herdr-run was handed the ROLE as the seat
+#    name (every sindri errand asked for the one worktree `.yggdrasil/sindri`, which a stale branch blocked) and any
+#    herdr failure was read as "herdr is absent". Now the ERRAND names the seat, the role is passed as --role, the
+#    herdr road's own error is shown, and a herdr failure on a machine that has herdr is an error, never a tmux seat.
 seat="none"; refuse=0; rc=0
-if [ -x "$SCRIPT_DIR/../seat/herdr-run.sh" ]; then
-  "$SCRIPT_DIR/../seat/herdr-run.sh" eindri $SEAT $MAIN ${KIND_EXPLICIT:+--kind "$KIND_EXPLICIT"} ${MODEL:+--model "$MODEL"} "$ROLE" -- "$REQ" >/dev/null 2>&1 || rc=$?
+HERDR_INSTALLED=0; command -v herdr >/dev/null 2>&1 && HERDR_INSTALLED=1
+# A launch from a unit or a cron has no herdr in its environment: reach herdr by its socket, and never hand a child
+# the launcher's own pane (the child gets its own; the [from …] stamp depends on it).
+[ -n "${HERDR_SOCKET_PATH:-}" ] || { _hs="${XDG_CONFIG_HOME:-$HOME/.config}/herdr/herdr.sock"; [ -S "$_hs" ] && export HERDR_SOCKET_PATH="$_hs"; }
+unset HERDR_PANE_ID HERDR_TAB_ID
+SEAT_NAME="${TASK_ID:-$LABEL}"
+herdr_err="$STATE/eindri-briefs/$SEAT_NAME.herdr-seat.err"; mkdir -p "$STATE/eindri-briefs"
+if [ -x "$SCRIPT_DIR/../seat/herdr-run.sh" ] && [ "$HERDR_INSTALLED" = 1 ]; then
+  "$SCRIPT_DIR/../seat/herdr-run.sh" eindri $SEAT $MAIN ${KIND_EXPLICIT:+--kind "$KIND_EXPLICIT"} ${MODEL:+--model "$MODEL"} --role "$ROLE" "$SEAT_NAME" -- "$REQ" >/dev/null 2>"$herdr_err" || rc=$?
 fi
-if [ "$rc" = 0 ]; then
+if [ "$HERDR_INSTALLED" = 1 ] && [ "$rc" != 0 ] && [ "$rc" != 3 ]; then
+  printf 'eindri-start[1]{role,seat,errand}:\n  "%s","none","%s"\n' "$ROLE" "$SEAT_NAME"
+  printf 'error: herdr is installed but could not seat %s (herdr-run exit %s) — refused rather than hiding it in tmux\n' "$SEAT_NAME" "$rc" >&2
+  sed 's/^/  herdr-run: /' "$herdr_err" | tail -8 >&2
+  exit 1
+fi
+if [ "$rc" = 0 ] && [ "$HERDR_INSTALLED" = 1 ]; then
   seat="herdr"
 elif [ "$rc" = 3 ]; then
   seat="none"; refuse=1
 else
+  printf 'eindri-start: herdr is not installed on this machine — seating %s in tmux\n' "$SEAT_NAME" >&2
   command -v tmux >/dev/null 2>&1 || { printf 'eindri-start[1]{role,seat,request}:\n  "%s","none","%s"\n' "$ROLE" "$REQ"; printf 'error: no seat — herdr cannot seat and tmux is absent\n' >&2; exit 1; }
   tmux has-session -t "$SESSION" 2>/dev/null || tmux new-session -d -s "$SESSION" -n shell
   # The tmux fallback seats the same worker the herdr road does (plan 262): a bare `exec opencode`
