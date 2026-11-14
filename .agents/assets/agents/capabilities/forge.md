@@ -30,7 +30,7 @@
 | pr-open.sh | (no header line) | tested | keep (a human or a cron row must run it) |
 | pr-patterns.sh | pr-patterns.sh — the ONE place the forbidden-pattern list lives. | tested | keep (a human or a cron row must run it) |
 | pr-watch.sh | pr-watch.sh — TELL HIM a PR arrived. A watcher that only queues a wake | tested | keep (a human or a cron row must run it) |
-| queue-warden.sh | queue-warden.sh — get every open PR into main, or block with a named r | tested | keep (a human or a cron row must run it) |
+| queue-warden.sh | queue-warden.sh — PR HYGIENE: five open at most, the stale ones named, | tested | keep (a human or a cron row must run it) |
 | review-mend.sh | review-mend.sh — the refusal becomes a router (plan 233 §13/13a/13b) | tested | keep (a human or a cron row must run it) |
 | review-rules.sh | review-rules.sh — the rules floor: load what a reviewer MUST know, or  | tested | keep (a human or a cron row must run it) |
 | review-seat.sh | review-seat.sh — the reviewer's SEAT: pi in a herdr pane, on the heart | tested | keep (a human or a cron row must run it) |
