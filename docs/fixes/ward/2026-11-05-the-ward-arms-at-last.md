@@ -15,7 +15,7 @@ unreachable by design. The ruleset now begins with `-D`.
 `sudo` resets `HOME=/root` — so the one watch meant to witness a key being added pointed at
 `/root/.ssh/authorized_keys`, did not exist, and was silently guarded away. The operator is named by
 `SUDO_USER`, and that is whose `~/.ssh` is watched. Proven by installing with `HOME=/heimdall-nohome`:
-the rule still came out as `/home/heimdall/.ssh/authorized_keys`.
+the rule still came out as `~/.ssh/authorized_keys`.
 
 **Armed and verified:** `Result=success`, `ExecMainStatus=0`, 24 rules in the kernel —
 `execve` and the eleven signal paths, the identity watches, the unit directories, and the hoard's

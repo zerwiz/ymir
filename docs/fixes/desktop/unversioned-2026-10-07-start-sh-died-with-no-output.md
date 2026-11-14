@@ -11,8 +11,8 @@ debugged from its own report, so the trace had to come from `bash -x`, and it en
 + smidja_visualizer_dir SMIDJA_VIZ
 + smidja_factory_dir factory
 + app_dir smidja _smd_c
-+ _smd_c=/home/heimdall/ymir/bin/.agents/skills/smidja-factory
-+ '[' -d /home/heimdall/ymir/bin/.agents/skills/smidja-factory/apps/visualizer ']'
++ _smd_c=~/ymir/bin/.agents/skills/smidja-factory
++ '[' -d ~/ymir/bin/.agents/skills/smidja-factory/apps/visualizer ']'
 + printf -v factory %s ''
 + return 1
 ```
@@ -50,9 +50,9 @@ An explicit `YMIR_ROOT_DIR` still wins outright, so nothing that sets it changes
 
 ### Verified
 
-- `smidja_visualizer_dir` → `/home/heimdall/ymir/.agents/skills/smidja-factory/apps/visualizer`
+- `smidja_visualizer_dir` → `~/ymir/.agents/skills/smidja-factory/apps/visualizer`
   (was empty).
-- `app_dir hlidskjalf` → `/home/heimdall/ymir/apps/hlidskjalf` (was empty).
+- `app_dir hlidskjalf` → `~/ymir/apps/hlidskjalf` (was empty).
 - Both resolve correctly **inside a worktree** as well, because the git answer follows the
   worktree — verified in `.yggdrasil/fix-dispatch-silent`.
 - `bash -n` on both. `scripts/start.sh` now exits **0** and raises the hall.

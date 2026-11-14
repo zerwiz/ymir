@@ -44,7 +44,7 @@ bun test  · 9/9 (server/kaia.test.ts — the resolver and the adapter)
 vue-tsc --noEmit  · clean
 ```
 
-**Live, under the service's own restricted PATH** (`PATH=/home/heimdall/.bun/bin:/usr/bin:/bin`),
+**Live, under the service's own restricted PATH** (`PATH=~/.bun/bin:/usr/bin:/bin`),
 a second instance on `:8438` answered both:
 
 ```

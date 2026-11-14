@@ -86,8 +86,8 @@ probe server and its scratch store were stopped and removed; the live store was 
 
 **Not shipped, deliberately:** the patch sits uncommitted in the hall tree, because opening a PR is the
 Allfather's word and he already has #536 open. The running unit therefore still serves the old code — and from
-an **older tree**: `mimir.service` runs `/home/heimdall/ymir-runtime/bin/bridge/mimir-bridge.py` (a separate
-clone, `main` at `9ab27599`, 2026-11-02), while the session and this note live in `/home/heimdall/ymir`
+an **older tree**: `mimir.service` runs `~/ymir-runtime/bin/bridge/mimir-bridge.py` (a separate
+clone, `main` at `9ab27599`, 2026-11-02), while the session and this note live in `~/ymir`
 (detached at `49ced55e`). Two trees, one door: a fix landed in the hall does not reach the unit, and a fix
 landed in the runtime is erased by the next pull. That divergence is the fault to name before anything else is
 mended here.

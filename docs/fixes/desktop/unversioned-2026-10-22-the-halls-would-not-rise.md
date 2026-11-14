@@ -44,8 +44,8 @@ vanished root is named instead of guessed at. The template's `Exec` is corrected
 
 ```
 before   status → 3 launchers "MISSING" at /tmp/npm-pretest-GvEQAf/… · dead buttons
-temp offered  YMIR_LAUNCHER_ROOT=/tmp/npm-pretest-…  → refused, fell back to /home/heimdall/ymir
-after    status → every launcher "present" at /home/heimdall/ymir
+temp offered  YMIR_LAUNCHER_ROOT=/tmp/npm-pretest-…  → refused, fell back to ~/ymir
+after    status → every launcher "present" at ~/ymir
 verify   desktop-verify.sh → 4/4 surfaces runnable Electron, class agreement 4/4
 click    gtk-launch ymir-hlidskjalf  → window class ymir-hlidskjalf, desktop 3  ✓
          gtk-launch ymir-sessrumnir  → window class ymir-sessrumnir, desktop 9  ✓

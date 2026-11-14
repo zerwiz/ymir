@@ -90,7 +90,7 @@ The rail was never broken. Proved directly, on this box, with a real PNG:
 gemma-4-12b-vision · "What colour is this square? One word." → "Red" · 1.2 s
 ```
 
-(its `mmproj` is the BF16 projector at `/home/heimdall/models/HauhauCS/…mmproj-…-BF16.gguf`, the one the
+(its `mmproj` is the BF16 projector at `~/models/HauhauCS/…mmproj-…-BF16.gguf`, the one the
 2026-11-07 vision proof used; the F32 projectors are what crash `clip_model_loader`.)
 
 ### The rule this adds

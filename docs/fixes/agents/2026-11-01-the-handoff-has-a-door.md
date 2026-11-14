@@ -36,7 +36,7 @@ the door rather than the path.
 ```
 $ bin/agents/report.sh write ses-2026-11-01 --state done --changed "…" --verified "…" --next "…"
 report[1]{id,file,state}:
-  "ses-2026-11-01","/home/heimdall/.local/state/ymir/eindri-reports/ses-2026-11-01.md","done"
+  "ses-2026-11-01","~/.local/state/ymir/eindri-reports/ses-2026-11-01.md","done"
 
 $ bin/agents/report.sh check ses-2026-11-01
 report: ses-2026-11-01 complete

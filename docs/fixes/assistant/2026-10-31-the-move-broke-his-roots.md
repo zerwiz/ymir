@@ -6,7 +6,7 @@
 
 `bin/assistant/` moved to `systems/skirnir/services/` — one level **deeper** than it was. Every door that
 computed the repository root by *counting* `..` therefore landed one level short: `skirnir.py` and
-`telegram.py` resolved to `/home/heimdall/ymir/systems`, `ground.py` used `parents[2]`, and `paths.py`
+`telegram.py` resolved to `~/ymir/systems`, `ground.py` used `parents[2]`, and `paths.py`
 and `research.py` built the vault library's path as `<here>/../vault/hoard-lib.sh`, which does not exist.
 
 The failure was quiet and expensive in exactly the wrong way: Skírnir's **Telegram service** reported

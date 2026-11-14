@@ -93,7 +93,7 @@ ok - every relative import resolves where extensions run (extensions)
 ok - deployed extensions are byte-identical to source
 ok - no test files in the deployed tree
 ok - no extension is present in two load paths
-ok - the first VALID root in .ymir-root resolves (/home/heimdall/ymir)
+ok - the first VALID root in .ymir-root resolves (~/ymir)
 ok - valknut-load.sh carries --check (Rule 13 §9)
 # pi-extensions: all checks pass                       exit 0
 ```

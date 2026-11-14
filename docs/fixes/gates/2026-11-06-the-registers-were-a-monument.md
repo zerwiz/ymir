@@ -18,7 +18,7 @@ The intended cure was already declared and already written, and never ran. `.git
 `merge=regenerate`; `bin/records/regenerate-on-merge.sh` implements the reweave; and the value git actually had was:
 
 ```
-merge.regenerate.driver = bash "/home/heimdall/ymir/.yggdrasil/merge-534/bin/records/regenerate-on-merge.sh" %O %A %B %L %P
+merge.regenerate.driver = bash "~/ymir/.yggdrasil/merge-534/bin/records/regenerate-on-merge.sh" %O %A %B %L %P
 ```
 
 **It pointed into a worktree that no longer exists.** A merged errand took the driver's own path with it, so from that
