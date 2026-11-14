@@ -4,7 +4,7 @@
 #   meeting-record-guard.sh check   # what is tracked under hodd/life/meetings and missing on disk
 #   meeting-record-guard.sh fix     # restore the missing ones from git, and carve a rune for each
 #
-# WHY (2026-10-23): a tracked transcript — `hodd/life/meetings/2026-10-23-ping-reygan-craig-mic.transcript.md` —
+# WHY (2026-10-23): a tracked transcript — a meeting folder under `hodd/life/meetings/`, named by his calendar —
 # was found DELETED on disk; the commit guard refused the deletion (Rule 11) and it was restored by hand.
 # The cause was not provable from the logs, and this door exists because "who deleted it" is the wrong first
 # question: the record must not be able to go missing while a meeting is being processed.

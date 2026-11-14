@@ -101,7 +101,7 @@ case "$S" in *schedule*|*"free"*|*"meeting"*|*"calendar"*) ok "the schedule read
 
 # ── 6 · research reaches the real provider ────────────────────────────────────────────────────
 if [ "$QUICK" = 0 ]; then
-  RD="$(timeout 90 python3 "$SCRIPT_DIR/research.py" --query "OVK ventilation Boverket" --limit 2 --no-cache 2>/dev/null)"
+  RD="$(timeout 90 python3 "$SCRIPT_DIR/research.py" --query "EU energy performance certificate requirements" --limit 2 --no-cache 2>/dev/null)"
   PR="$(printf '%s' "$RD" | j "d.get('provider','')")"
   NS="$(printf '%s' "$RD" | j "len(d.get('sources') or [])")"
   case "$PR" in
@@ -124,9 +124,21 @@ if [ -n "$AID" ]; then ok "an ask can be recorded (${AID})"
 else bad "ask ledger" "could not record an ask"; fi
 
 # ── 8 · Trello: resolve by name, never by id ─────────────────────────────────────────────────
+# The board and the list are the OPERATOR's (plan 288 §1): his map names them, so this file never does.
 if [ -f "$H/hodd/identity/trello-map.yaml" ]; then
-  ARI="$(bash "$ROOT/systems/snotra/services/cron/trello-map.sh" --resolve "example-3" "in progress" 2>/dev/null)"
+  ARI="$(python3 - "$H/hodd/identity/trello-map.yaml" "$ROOT" <<'PYMAP'
+import os, subprocess, sys, yaml
+m = yaml.safe_load(open(sys.argv[1], encoding="utf-8")) or {}
+pair = next(((b.get("name"), l.get("name")) for b in (m.get("boards") or [])
+             for l in (b.get("lists") or []) if b.get("name") and l.get("name")), None)
+if pair:
+    door = os.path.join(sys.argv[2], "systems", "snotra", "services", "cron", "trello-map.sh")
+    print(subprocess.run(["bash", door, "--resolve", pair[0], pair[1]],
+                         capture_output=True, text=True).stdout.strip())
+PYMAP
+)"
   case "$ARI" in ari:cloud:trello::list/*) ok "the Trello id resolves by name" ;;
+    "") skip "trello resolve" "his map names no board and list yet" ;;
     *) bad "trello resolve" "${ARI:-no answer}" ;; esac
 else
   skip "trello map" "no map yet — systems/snotra/services/cron/trello-map.sh"
@@ -215,15 +227,23 @@ for Q in "who is in this group" "can you see who are in this group" "who's in th
 done
 
 # ── D · the handoff names the asker (it said \"someone\" once) ───────────────────────────────
-H2="$(bash "$SCRIPT_DIR/escalate.sh" --tier collaborator --chat -5435500944 --who "Reygan Inmostinvestmentgroup" \
+# An INVENTED asker: the door's job is to carry the name it is given, not to know a person.
+H2="$(bash "$SCRIPT_DIR/escalate.sh" --tier collaborator --chat -5435500944 --who "Blake Ashford (@blake)" \
       --text "smoke" --context "smoke" --reason "smoke" --dry-run 2>&1)"
-case "$H2" in *"Reygan Inmostinvestmentgroup"*) ok "the handoff carries the person's name" ;; *) bad "handoff name" "$H2" ;; esac
+case "$H2" in *"Blake Ashford (@blake)"*) ok "the handoff carries the person's name" ;; *) bad "handoff name" "$H2" ;; esac
 
 # ── E · a tier gate that must not rot: a stranger cannot hear contacts ──────────────────────
-S2="$(ASK 'who is craig' stranger)"
-case "$S2" in *"Craig Martin"*) bad "tier gate" "a stranger heard a contact" ;; *) ok "a stranger cannot hear a contact" ;; esac
-O2="$(ASK 'who is craig' owner)"
-case "$O2" in *"Craig"*) ok "the owner can hear a contact" ;; *) bad "owner contact" "$O2" ;; esac
+# The person is the OPERATOR's, taken from his own digest at run time — a name in this public file
+# would be the very leak the gate exists to stop (plan 288 §1). No person registered is a clean skip.
+CONTACT="$(bash "$SCRIPT_DIR/test-fixtures.sh" contact 2>/dev/null)"
+if [ -n "$CONTACT" ]; then
+  S2="$(ASK "who is $CONTACT" stranger)"
+  case "$S2" in *"$CONTACT"*) bad "tier gate" "a stranger heard a contact" ;; *) ok "a stranger cannot hear a contact" ;; esac
+  O2="$(ASK "who is $CONTACT" owner)"
+  case "$O2" in *"$CONTACT"*) ok "the owner can hear a contact" ;; *) bad "owner contact" "$O2" ;; esac
+else
+  skip "the tier gate" "the home holds no contact fact — nothing to test the gate against"
+fi
 
 # ── F · the voice RAISES itself, and still fails LOUD when it cannot ────────────────────────
 # The idle-stop is CORRECT to lower an unused voice — which is why the mouth must raise it before it

@@ -242,8 +242,9 @@ def letter_text(rec: dict, place: dict, person: dict) -> str:
             L.append(f"  - {a}")
         L.append("")
     if f["chair"]:
-        L.append(f"Reygan, as chair, holds the register." if f["chair"].split()[0].lower() == "reygan"
-                 else f"{f['chair']} holds the register.")
+        # The chair is whoever the record names — never one person's name written into the code (plan 288 §1,
+        # RULES/04). The record's own words say who holds the register.
+        L.append(f"{f['chair']}, as chair, holds the register.")
         L.append("")
     L.append(f"— {f['sender'] or 'the house'}")
     L.append("")

@@ -19,7 +19,7 @@ ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 ymir_home_root HOME_R 2>/dev/null || true
 [ -n "${HOME_R:-}" ] || { printf 'learn-site: the hoard is unresolved\n' >&2; exit 2; }
-URL="https://ymir.zerwiz.org/"; DRY=0
+URL=""; DRY=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --url) URL="${2:-}"; shift 2 ;;
@@ -27,6 +27,23 @@ while [ $# -gt 0 ]; do
     *) shift ;;
   esac
 done
+# WHICH page is the operator's (plan 288 §1, RULES/42): `site_url:` in his own settings
+# ($YMIR_HOME/config/skirnir.yaml) answers first, then Ymir's public home page — the site every
+# installation of the program has and may learn, which is why it is a default and not a value.
+if [ -z "$URL" ]; then
+  URL="$(python3 - "$HOME_R" <<'PYCFG' 2>/dev/null
+import os, sys
+home = sys.argv[1]
+try:
+    import yaml
+    cfg = yaml.safe_load(open(os.path.join(home, "config", "skirnir.yaml"), encoding="utf-8")) or {}
+    print(str(cfg.get("site_url") or "").strip())
+except Exception:
+    print("")
+PYCFG
+)"
+fi
+[ -n "$URL" ] || URL="https://ymir.zerwiz.org/"
 DEST="$HOME_R/hodd/identity/assistant/approved"
 mkdir -p "$DEST" 2>/dev/null || exit 3
 

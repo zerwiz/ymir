@@ -12,10 +12,10 @@
 #   5. Append a Rune to the audit ledger
 #
 # Portable across the fleet: the engine is DISCOVERED on each seat —
-#   heimdall  ~/whisper.cpp.src/build/bin/whisper-cli   (CUDA)
-#   whynot    ~/whisper.cpp/build/bin/whisper-cli       (CUDA)
-#   omarchy   /usr/bin/whisper-cli                      (extra/whisper-cpp)
-#   fallback  voxtype transcribe                        (omarchy's bundled engine)
+#   a CUDA seat   ~/whisper.cpp.src/build/bin/whisper-cli
+#   (alt build)   ~/whisper.cpp/build/bin/whisper-cli
+#   the Arch seat /usr/bin/whisper-cli                  (the whisper-cpp package)
+#   fallback      voxtype transcribe                    (the bundled engine)
 #
 # Env:
 #   YMIR_HOME          — the hoard root (default ~/Documents/ymirhome)
@@ -291,7 +291,7 @@ do_transcribe() {
     say "  engine: $WHISPER"
     say "  model:  $MODEL"
     # Choose the backend by available VRAM: a resident rail model starves CUDA
-    # (heimdall <gpu> and whynot <gpu> both run one), so a tight card goes
+    # (two of the fleet's seats run one), so a tight card goes
     # straight to the CPU; otherwise try GPU and fall back on failure. Never a
     # silent empty transcript.
     local VRAM
@@ -306,7 +306,7 @@ do_transcribe() {
     fi
     [ -f "$TMP_PREFIX.txt" ] && TRANSCRIPT="$(cat "$TMP_PREFIX.txt")"
     # The rail yields. A resident rail model is the single largest claim on a
-    # strong box's VRAM — 13,790 MiB for the 262K MTP preset on heimdall — and
+    # strong box's VRAM — 13,790 MiB for a 262K preset, measured — and
     # the meeting is the thing that matters while it is happening, so the rail
     # is the one that gives way. This path was written and left opt-in; it is
     # on by default now, and `SNOTRA_FREE_RAIL=0` is the deliberate override
