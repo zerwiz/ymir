@@ -52,7 +52,7 @@ npm run api     # gate API on :3889 (needs bun)
 npm run dev     # SPA on :3888 (proxies /api → :3889)
 ```
 
-Endpoint surface (live): `/api/me|workspace|agents|tasks|orders|well|runes|processes|reviews|files|runtime|cron|loaders|checks|settings|chat|chat/history` + `GET /api/stream` (SSE, tails Runes). Chat (`POST /api/chat`) speaks to Kaia through the first reachable OpenAI-compatible backend — the local llama-server (`:8080`), then the Bifrost bridge (`:4603`) — recalling from the well and persisting to `state/chat.jsonl`.
+Endpoint surface (live): `/api/me|workspace|agents|tasks|orders|well|runes|processes|reviews|files|runtime|cron|loaders|checks|settings|chat|chat/history` + `GET /api/stream` (SSE, tails Runes). Chat (`POST /api/chat`) speaks to Völundr through the first reachable OpenAI-compatible backend — the local llama-server (`:8080`), then the Bifrost bridge (`:4603`) — recalling from the well and persisting to `state/chat.jsonl`.
 
 ## Structure
 

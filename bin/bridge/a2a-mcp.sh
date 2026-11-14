@@ -12,7 +12,7 @@
 # in other areas is left untouched — launch it with `pi --mcp-config .pi/mcp-adapter.json`
 # to pick the repo up.
 #
-# The well (2026-11-10, the Allfather's law): engram is Kaia's engine only. The memory
+# The well (2026-11-10, the Allfather's law): engram is Völundr's engine only. The memory
 # server wired here is the WELL DOOR — this body's gateway (`/mcp/well` on :8316), which
 # journals every write and carries it to the heart — never a direct `engram-mcp --db`
 # stdio server. An `engram` entry an older install wrote is removed on the next install
@@ -64,7 +64,7 @@ done
 if [ "$PROJECT" = 1 ]; then PI_MCP="$ROOT/.pi/mcp-adapter.json"; else PI_MCP="$HOME/.pi/agent/mcp-adapter.json"; fi
 
 WOTES="$(command -v wayofteams-mcp 2>/dev/null || true)"
-# The well door: this body's MCP gateway, never the engine (engram is Kaia's).
+# The well door: this body's MCP gateway, never the engine (engram is Völundr's).
 GATEWAY_PORT="${MCP_GATEWAY_PORT:-${YMIR_MCP_GATEWAY_PORT:-8316}}"
 WELL_URL="http://127.0.0.1:$GATEWAY_PORT/mcp/well"
 

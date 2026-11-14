@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # mimir.sh — the well (Mimirsbrunn). Drink before you act, water it after.
 #
-# Talks to Kaia's engram bridge (:4602) when it is up; otherwise operates the
+# Talks to Völundr's engram bridge (:4602) when it is up; otherwise operates the
 # local well log (episodes.jsonl). Galdr-style TOON.
 #
 # Every write passes the GATE in bin/records/mimir-policy.py: does this change

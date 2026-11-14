@@ -35,7 +35,7 @@ platform[57]{subsystem,norse,role}:
   "Session lock","Gleipnir","the chain that binds one session"
   "Scheduled jobs","Nornir","the fates who govern time"
   "Software smidja","Smíðja","repeatable agent+code pipeline: rosters, bounded phases, typed envelopes, retries/acceptance, trace"
-  "Smíðja orchestrator","Völundr","the master smith who runs Smíðja (Kaia's seat inside the smidja)"
+  "Smíðja orchestrator","Völundr","the master of the smiths who leads Smíðja and dispatches its smiths"
   "Control-plane hub / federation & sync","Vingólf","the assembly hall: coordination, identity, and sync across substrates; never executes code"
   "Records keeper (plans · docs · memory)","Reginn (the Elder)","the keeper who remembers — the plan ledger, the documentation shelves, and the well/runes; reads the elders before writing, reconciles never contradicts"
   "Encrypted document vault","Hnitbjörg","the mountain stronghold where the mead was hidden; a LUKS2 container, sealed by default, opened only by the operator (bin/vault/hnitbjorg.sh)"

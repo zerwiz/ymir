@@ -30,16 +30,16 @@ def main() -> int:
 
     smidja = Path(args.root) / "scripts" / "smidja"
     if not smidja.exists():
-        print(f"[kaia] no launcher at {smidja}", file=sys.stderr)
+        print(f"[volundr] no launcher at {smidja}", file=sys.stderr)
         return 1
 
     cmd = [str(smidja), "teach", args.project]
     if args.recon:
         cmd.append("--recon")
-    print(f"[kaia] running: {' '.join(cmd)}")
+    print(f"[volundr] running: {' '.join(cmd)}")
     rc = subprocess.call(cmd)
     if rc != 0:
-        print(f"[kaia] teach exited {rc}", file=sys.stderr)
+        print(f"[volundr] teach exited {rc}", file=sys.stderr)
     return rc
 
 

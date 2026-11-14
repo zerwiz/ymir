@@ -7,7 +7,7 @@ argument-hint: "[install | create smithy | run smithy | update config | ...]"
 # Smíðja — the Smithy
 
 > **Norse name:** **Smíðja** (the smithy). Its orchestrator seat is **Völundr**,
-> the master smith — Smíðja's orchestrator (Kaia's seat inside the smithy).
+> the master of the smiths — Smíðja's orchestrator, who leads the smithy and dispatches its smiths.
 > Registry: `.agents/assets/agents/naming.md`, `docs/lore.md` §XI.
 
 Reusable combination of **agents plus code**: deterministic Python smidja scripts own sequencing, retries, and acceptance; coding agents (Pi in v1) work inside bounded phases; typed JSON envelopes carry context between them; everything streams into SQLite for the polled visualizer. Agent proposes, code disposes.
@@ -69,7 +69,7 @@ or starting agents, load the sibling instead:
   asserts the restart re-enters at the checkpoint with no client attached.
 - **Visualizer ships with this skill:** `apps/visualizer/` (Vue + vite server).
   Start with `just ui` / `scripts/smidja ui` → UI `http://localhost:4601`, API
-  `:4600`, Kaia memory `#/memory`. Sqlite probing still works — the db is WAL.
+  `:4600`, Völundr memory `#/memory`. Sqlite probing still works — the db is WAL.
 - **Bench missions:** `tests/local-models/missions/` (T1 recon, T2 build, T3
   context probe) via `smidja mission T1|T2 [--config <roster>]`; results in
   `tests/local-models/RESULTS.md`.
@@ -151,7 +151,7 @@ Written back after the loss audit (see
 `plans/getback-lost-functionality-plan.md`) so the doc carries an honest,
 reader-visible statement of what the runtime is and does today:
 
-- **Orchestration:** `smidja_orchestrate` — Kaia (orchestrator) dispatches real
+- **Orchestration:** `smidja_orchestrate` — Völundr (orchestrator) dispatches real
   sub-agents via the `task` tool on BOTH surfaces (opencode's native dispatch
   and pi's merged `subagents.ts` harness behave identically), tracks them, and
   reports every changed file. Lanes appear live the moment a dispatch starts
@@ -168,7 +168,7 @@ reader-visible statement of what the runtime is and does today:
 - **Stability:** a LM Studio GPU-kernel stall on a live pi child is detected by
   the watchdog (`stall_watch.py`), traced as `model_stall`, cleared by
   unload→reload, and the child is killed so the model-fallback retry resumes.
-- **Memory:** Kaia's engram under `smidja/smidja_data/kaia.engram` (UI `#/memory`,
+- **Memory:** Völundr's engram under `smidja/smidja_data/kaia.engram` (UI `#/memory`,
   CLI `just kaia`), project-aware per repo.
 - **Gates:** all 7 original gates preserved + `tools_were_used`, `loop_guard`,
   `orchestrator_dispatched`.

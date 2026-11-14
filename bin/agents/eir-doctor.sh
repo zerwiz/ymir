@@ -562,7 +562,7 @@ f_memory()    {
 s_mcp() {
   local pi="$HOME/.pi/agent/mcp-adapter.json" oc="$ROOT/opencode.json"
   # The live MCP surfaces: the OpenCode config must bind the WELL DOOR (the gateway's
-  # /mcp/well — engram is Kaia's engine only, 2026-11-10, and a direct engram server is a
+  # /mcp/well — engram is Völundr's engine only, 2026-11-10, and a direct engram server is a
   # leak that never reaches the heart), and the Pi config must parse and carry the fleet
   # servers. If the A2A mesh engine (a2abridge) is seated, its bridge must be wired too —
   # a seated engine with no bridge is the silent half; the deeper connection proof lives

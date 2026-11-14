@@ -36,7 +36,7 @@ export function OmniChat() {
       <div className="stage-head">
         <div>
           <h1 className="stage-title">OmniChat</h1>
-          <p className="stage-deck">Speak with Kaia · she drinks from the well before every dispatch</p>
+          <p className="stage-deck">Speak with Völundr · he drinks from the well before every dispatch</p>
         </div>
       </div>
 
@@ -84,7 +84,7 @@ export function OmniChat() {
           <div className="panel-head">
             <div className="panel-title">
               <span className="glyph" aria-hidden="true">ᚴ</span>
-              Kaia — oracle by the well
+              Völundr — master of the smiths
             </div>
             <span className="status status-ok">
               <span className="dot" aria-hidden="true">ᛟ</span>NOMINAL
@@ -95,7 +95,7 @@ export function OmniChat() {
             {chat.length === 0 ? (
               <div className="empty">
                 <span className="glyph" aria-hidden="true">ᚴ</span>
-                <p>Ask Kaia anything. She recalls the well before she answers.</p>
+                <p>Ask Völundr anything. He recalls the well before he answers.</p>
               </div>
             ) : null}
             {chat.map((m) => (
@@ -103,7 +103,7 @@ export function OmniChat() {
                 {m.thinking ? (
                   <div className="thinking">
                     <span className="dots" aria-hidden="true"><i /><i /><i /></span>
-                    {m.recalling ? 'drawing from the well…' : 'Kaia is thinking…'}
+                    {m.recalling ? 'drawing from the well…' : 'Völundr is thinking…'}
                   </div>
                 ) : (
                   <>
@@ -131,7 +131,7 @@ export function OmniChat() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder={`Command the ${realm} realm…`}
-              aria-label="Message Kaia"
+              aria-label="Message Völundr"
             />
             <button className="btn btn-primary" type="submit" disabled={!draft.trim()}>
               <span aria-hidden="true">ᚴ</span> Send
@@ -175,7 +175,7 @@ export function OmniChat() {
             </div>
             <div className="panel-body col" style={{ gap: 6 }}>
               <div className="dim" style={{ fontSize: 12 }}>
-                Focus Kaia on specific agents before she dispatches.
+                Focus Völundr on specific agents before he dispatches.
               </div>
               <div className="lane-toggles">
                 {agents.map((a) => (
