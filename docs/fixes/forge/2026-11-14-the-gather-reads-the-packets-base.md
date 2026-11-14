@@ -33,3 +33,7 @@ pass.
 
 - The gather orders the base only when it is named in the same call (or as another errand). It does
   not silently add a base branch that was never named; the helm still names every errand.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #761
