@@ -66,6 +66,13 @@ git merge -q --no-ff -m "merge landed" eindri/landed
 git push -q origin main
 git checkout -q main
 
+# a branch riding INSIDE an open batch PR: its own head has no PR, but a gather branch contains it
+commit_at eindri/inbatch "$OLD_DATE" inbatch.txt
+git checkout -q -B yggdrasil/gather-test main
+git merge -q --no-ff -m "gather: eindri/inbatch" eindri/inbatch
+git push -q origin yggdrasil/gather-test
+git checkout -q main
+
 # a local branch nobody pushed: two commits that exist on no remote
 git checkout -q -b wip main
 printf 'w1\n' >w1.txt && git add w1.txt && git commit -q -m "wip 1"
@@ -82,8 +89,10 @@ printf '#!/usr/bin/env bash\ncase "$*" in *--jq*) cat >/dev/null; exit 0 ;; esac
 # gh that says eindri/opened has an OPEN pull request #7
 printf '#!/usr/bin/env bash\nprintf "eindri/opened\\tOPEN\\t7\\n"\n' >"$TMP/gh-open"
 # gh that says both waiting branches carry one
-printf '#!/usr/bin/env bash\nprintf "eindri/opened\\tOPEN\\t7\\neindri/old\\tOPEN\\t8\\n"\n' >"$TMP/gh-both"
-chmod +x "$TMP/gh-none" "$TMP/gh-open" "$TMP/gh-both"
+printf '#!/usr/bin/env bash\nprintf "eindri/opened\\tOPEN\\t7\\neindri/old\\tOPEN\\t8\\nyggdrasil/gather-test\\tOPEN\\t750\\n"\n' >"$TMP/gh-both"
+# gh that says a gathered batch PR #750 is open, whose branch carries eindri/inbatch
+printf '#!/usr/bin/env bash\nprintf "yggdrasil/gather-test\\tOPEN\\t750\\n"\n' >"$TMP/gh-batch"
+chmod +x "$TMP/gh-none" "$TMP/gh-open" "$TMP/gh-both" "$TMP/gh-batch"
 
 # ── 1. a pushed branch older than the threshold with no PR is named, with its age ──
 out="$(run_door "$TMP/gh-none")"
@@ -104,6 +113,25 @@ esac
 case "$out" in
   *'"eindri/opened — 9h: pushed, no PR, not merged"'*) ok "a pushed branch with no PR of its own is named too" ;;
   *) bad "a pushed branch with no PR of its own is named too" "$(printf '%s' "$out" | head -4)" ;;
+esac
+case "$out" in
+  *'"eindri/inbatch — 9h: pushed, no PR, not merged"'*) ok "with no open PR at all, a branch inside nothing is called waiting" ;;
+  *) bad "with no open PR at all, a branch inside nothing is called waiting" "$(printf '%s' "$out" | grep inbatch)" ;;
+esac
+
+# ── 2b. a branch carried inside an open batch PR is NOT waiting ──────────────────
+outb="$(run_door "$TMP/gh-batch")"
+case "$outb" in
+  *'"in-pr","eindri/inbatch — 9h: in batch PR #750, not merged yet"'*) ok "a branch inside an open batch PR is named with that PR, not as lost work" ;;
+  *) bad "a branch inside an open batch PR is named with that PR, not as lost work" "$(printf '%s' "$outb" | head -5)" ;;
+esac
+case "$outb" in
+  *'"eindri/inbatch — 9h: pushed, no PR, not merged"'*) bad "the carried branch is not also reported as having no PR" ;;
+  *) ok "the carried branch is not also reported as having no PR" ;;
+esac
+case "$outb" in
+  *'"eindri/old — 9h: pushed, no PR, not merged"'*) ok "a branch inside nothing is still reported while a batch PR is open" ;;
+  *) bad "a branch inside nothing is still reported while a batch PR is open" "$(printf '%s' "$outb" | head -5)" ;;
 esac
 
 # ── 3. commits that exist on no remote, on a local branch ───────────────────────

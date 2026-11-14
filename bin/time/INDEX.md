@@ -79,7 +79,7 @@ bin[143]{file,does,kind,verdict,disposition,callers,lines}:
   "participants-fill.sh","bin/time/snotra/participants-fill.sh -> systems/snotra/services/letters/participants-fill.sh — RETIRED SHIM (plan 129, 2026-10-24); execs t…","tool","wired","keep",0,16
   "readai_ingest.py","bin/time/snotra/readai_ingest.py -> systems/snotra/services/cron/readai_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "reasoning_adapter.py","bin/time/snotra/reasoning_adapter.py -> systems/snotra/services/cron/reasoning_adapter.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
-  "saga-land-warnings.sh","saga-land-warnings.sh — Sága's eye on work that finished and never landed.","tool","wired","keep",2,249
+  "saga-land-warnings.sh","saga-land-warnings.sh — Sága's eye on work that finished and never landed.","tool","wired","keep",2,311
   "saga-session-start.sh","saga-session-start.sh - the one-command Brokk session start.","tool","tested","keep",8,360
   "saga-sessionstart-run.sh","saga-sessionstart-run.sh - session-open entry point for run-tier harnesses.","tool","wired","keep",0,91
   "saga-wake-drain.sh","saga-wake-drain.sh - present durable Brokk wakes, or acknowledge them.","tool","wired","keep",9,151
@@ -156,7 +156,7 @@ bin[143]{file,does,kind,verdict,disposition,callers,lines}:
   "teams_ingest.py","bin/time/snotra/teams_ingest.py -> systems/snotra/services/cron/teams_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "test_event_trigger.sh","test_event_trigger.sh — a smithy may be started by a person, the clock, or an","tool","wired","keep",1,251
   "test_outbound_gate.py","'''The outbound gate's proofs — plan 124 §7, his word 2026-10-24:","tool","wired","keep",0,501
-  "test_saga_land_warnings.sh","test_saga_land_warnings.sh — the digest SEES work that finished and never landed.","tool","wired","keep",1,173
+  "test_saga_land_warnings.sh","test_saga_land_warnings.sh — the digest SEES work that finished and never landed.","tool","wired","keep",1,201
   "transcript_ingest.py","bin/time/snotra/transcript_ingest.py -> systems/snotra/services/cron/transcript_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "trello-map.sh","bin/time/snotra/trello-map.sh -> systems/snotra/services/cron/trello-map.sh — RETIRED SHIM","tool","wired","keep",0,12
   "trello_adapter.py","bin/time/snotra/trello_adapter.py -> systems/snotra/services/cron/trello_adapter.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
