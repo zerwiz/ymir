@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # test_guards_inherited.sh — a ward's finding is OURS only when it names OUR copy of the path.
 #
-# Measured 2026-11-14: two pull requests (#747, #754) were refused because `runtime-pinned-guard` named
-# `queue-warden.service → /home/<seat>/ymir/.yggdrasil/queue-warden-review/bin/forge/queue-warden.sh`, and
+# Measured 2026-11-14: two pull requests (#747, #754) were refused because `runtime-pinned-guard` named a unit
+# pointing into a NEIGHBOUR checkout (`<place>/<seat>/ymir/.yggdrasil/queue-warden-review/bin/forge/queue-warden.sh`), and
 # `inherited()` matched the changed path `bin/forge/queue-warden.sh` as a SUBSTRING of that neighbour checkout's
 # path. Both branches were refused for a fault that belonged to the machine's units, not to them.
 #
@@ -27,7 +27,7 @@ CHANGED_LIST="$T/changed"
 printf 'bin/forge/queue-warden.sh\n' >"$CHANGED_LIST"
 
 # 1. a NEIGHBOUR checkout's copy is not ours — the exact finding that refused two PRs
-neighbour="  \"a unit runs a working tree\",\"queue-warden.service → /home/seat/ymir/.yggdrasil/queue-warden-review/bin/forge/queue-warden.sh (working tree)\""
+neighbour="  \"a unit runs a working tree\",\"queue-warden.service → /place/seat/ymir/.yggdrasil/queue-warden-review/bin/forge/queue-warden.sh (working tree)\""
 if inherited runtime-pinned-guard.sh "$neighbour"; then good 'a neighbour checkout’s copy is INHERITED, not ours'
 else bad 'a neighbour checkout’s copy is INHERITED, not ours'; fi
 
