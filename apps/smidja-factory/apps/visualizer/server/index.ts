@@ -537,6 +537,12 @@ const server = Bun.serve({
     "/api/chat/sessions": safely(async () => json(await chat.listSessions(dbPath))),
     "/api/chat/debug/sessions": safely(async () => json(await chat.debugSessions(dbPath))),
     "/api/chat/models": safely(async () => json(await chat.piModels(repoRoot))),
+    // The model the chat starts on: the operator's own choice from the home
+    // (config/smidja.env), else the repo's generic default. The picker reads this
+    // so the configured model is the one shown as selected.
+    "/api/chat/default-model": safely(async () =>
+      json({ model: chat.chatModelDefault(repoRoot) }),
+    ),
     "/api/chat/message": {
       POST: safely(async (req) => {
         const body = (await req.json().catch(() => ({}))) as {

@@ -15,7 +15,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { piCommand, piPath, resetPiPathCache } from "./model-catalog.ts";
 import { adaptMemoryPayload } from "./memory-adapt.ts";
-import { DEFAULT_CHAT_MODEL, failureReason, kaiaPersonaFile } from "./chat.ts";
+import { DEFAULT_CHAT_MODEL, failureReason, kaiaPersonaFile, chatModelDefault } from "./chat.ts";
 
 describe("piPath — the binary is resolved, never assumed", () => {
   test("YMIR_PI_BIN wins when it points at a real executable", () => {
@@ -176,5 +176,43 @@ describe("kaiaPersonaFile — the chat answers as Kaia, never as the seat (plan 
       const got = kaiaPersonaFile(empty);
       expect(got).toMatch(/apps\/smidja-factory\/apps\/visualizer\/prompts\/kaia\.md$/);
     });
+  });
+});
+
+describe("chatModelDefault — the repo is agnostic, the operator's home names the model", () => {
+  const withEnv = (value: string | undefined, fn: () => void) => {
+    const before = process.env.SMIDJA_CHAT_MODEL;
+    if (value === undefined) delete process.env.SMIDJA_CHAT_MODEL;
+    else process.env.SMIDJA_CHAT_MODEL = value;
+    try { fn(); } finally {
+      if (before === undefined) delete process.env.SMIDJA_CHAT_MODEL;
+      else process.env.SMIDJA_CHAT_MODEL = before;
+    }
+  };
+
+  test("no home config and no environment: the repo's generic default", () => {
+    const empty = mkdtempSync(join(tmpdir(), "kaia-model-"));
+    withEnv(undefined, () => expect(chatModelDefault(empty)).toBe(DEFAULT_CHAT_MODEL));
+  });
+
+  test("the home's config/smidja.env names the operator's own model", () => {
+    const home = mkdtempSync(join(tmpdir(), "kaia-model-"));
+    mkdirSync(join(home, "config"), { recursive: true });
+    writeFileSync(join(home, "config/smidja.env"), "# mine\nSMIDJA_CHAT_MODEL=openrouter/some-model\n");
+    withEnv(undefined, () => expect(chatModelDefault(home)).toBe("openrouter/some-model"));
+  });
+
+  test("an environment variable wins over the file", () => {
+    const home = mkdtempSync(join(tmpdir(), "kaia-model-"));
+    mkdirSync(join(home, "config"), { recursive: true });
+    writeFileSync(join(home, "config/smidja.env"), "SMIDJA_CHAT_MODEL=from-file\n");
+    withEnv("from-environment", () => expect(chatModelDefault(home)).toBe("from-environment"));
+  });
+
+  test("a blank line in the file falls back to the default, never to an empty id", () => {
+    const home = mkdtempSync(join(tmpdir(), "kaia-model-"));
+    mkdirSync(join(home, "config"), { recursive: true });
+    writeFileSync(join(home, "config/smidja.env"), "SMIDJA_CHAT_MODEL=\n");
+    withEnv(undefined, () => expect(chatModelDefault(home)).toBe(DEFAULT_CHAT_MODEL));
   });
 });

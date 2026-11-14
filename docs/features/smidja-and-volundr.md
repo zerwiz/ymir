@@ -102,3 +102,35 @@ does not sneak past it.
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+
+## Choose the model Kaia's chat starts on
+
+Kaia is the smithy's own chat — the voice in the visualizer's Chat page. It answers on a
+model this machine's `pi` actually serves, and **you name which one**.
+
+Smíðja takes it in this order: the `SMIDJA_CHAT_MODEL` environment variable, then your own
+`config/smidja.env` in the home, then the generic default the repository ships.
+
+Copy the template and set your value:
+
+```bash
+cp config/smidja.env.example "$YMIR_HOME/config/smidja.env"
+$EDITOR "$YMIR_HOME/config/smidja.env"      # SMIDJA_CHAT_MODEL=provider/model
+```
+
+Ask the machine before you type an id — a model the catalogue does not list cannot answer:
+
+```bash
+bin/model/catalog.sh --has opencode-go/deepseek-v4.1-flash
+```
+
+The picker on the Chat page then opens with your model already selected. If the chat
+fails, the error now names the model and quotes what the provider said, whole.
+
+**If it does not work:** if the picker still says `default`, the file is not where Smíðja
+looks — it must be `<your home>/config/smidja.env` — or the id you named is not in the
+catalogue.
+
+## CHANGE LOG
+
+- **2026-11-14** — added: how to name the chat's model (the home's `config/smidja.env`).

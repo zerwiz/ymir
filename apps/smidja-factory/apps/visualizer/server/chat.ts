@@ -16,6 +16,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, statSync } from "node
 import { dirname, join } from "node:path";
 import { repoRootOf } from "./db.ts";
 import { piCommand } from "./model-catalog.ts";
+import { parseEnv } from "./settings.ts";
 import type {
   ChatHistoryResponse,
   ChatMessage,
@@ -36,6 +37,32 @@ const VERBOSE = process.env.SMIDJA_CHAT_DEBUG === "1" || process.env.SMIDJA_DEBU
  * pi reports as exit 1, which the chat showed as "Kaia (Pi) failed".
  */
 export const DEFAULT_CHAT_MODEL = "opencode-go/deepseek-v4.1-flash";
+
+/**
+ * WHERE THE OPERATOR NAMES THEIR MODEL — the home, never this repo.
+ *
+ * The repo is agnostic and ships the generic default above. What one operator wants their
+ * chat to start on is their own shape, so it lives in the home's `config/smidja.env`
+ * (`SMIDJA_CHAT_MODEL=…`; the repo ships the shape as `config/smidja.env.example`). A unit
+ * or a wrapper that knows better may set `SMIDJA_CHAT_MODEL` in the environment instead.
+ */
+export const CHAT_CONFIG_PATH = "config/smidja.env";
+
+/** The model the chat starts on: the environment, then the home, then the repo default. */
+export function chatModelDefault(root: string): string {
+  const fromEnv = process.env.SMIDJA_CHAT_MODEL?.trim();
+  if (fromEnv) return fromEnv;
+  try {
+    const file = join(root, CHAT_CONFIG_PATH);
+    if (existsSync(file)) {
+      const value = parseEnv(readFileSync(file, "utf8")).get("SMIDJA_CHAT_MODEL")?.trim();
+      if (value) return value;
+    }
+  } catch {
+    /* an unreadable config must never stop the chat — fall through to the default */
+  }
+  return DEFAULT_CHAT_MODEL;
+}
 
 /**
  * pi's extension status lines: `[constellation] mesh: unconfigured`,
@@ -226,7 +253,7 @@ export async function sendMessage(req: ChatMessageRequest, dbPath: string): Prom
     // It must be an id this machine's pi catalog actually serves: the old
     // `deepseek-v4-flash` is not one, and the provider answers it with
     // 400 "Model is unavailable" (pi then exits 1, plan 275 item 15).
-    const model = requestedModel?.trim() || DEFAULT_CHAT_MODEL;
+    const model = requestedModel?.trim() || chatModelDefault(root);
     const args = [
       "--print",
       "--session",
