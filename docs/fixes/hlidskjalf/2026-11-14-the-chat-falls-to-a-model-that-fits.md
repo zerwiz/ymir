@@ -41,3 +41,7 @@ Wired into `bin/gates/ci-verify.sh` as `chat-ladder`.
 
 The gate on this seat runs the PIN, so the new chat text reaches the Allfather's window when the pin flips, not
 before. No restart was needed for this half.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #757
