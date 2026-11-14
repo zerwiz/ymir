@@ -128,7 +128,7 @@
 | test_plan_watch.sh | dry-run prints arithmetic, sends nothing | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
 | test_pr_identity.sh | complete body passes | tested | keep (a human or a cron row must run it) |
 | test_pr_ship_guard.sh | test_pr_ship_guard.sh — proves the ship door judges the PR and not the | tested | keep (a human or a cron row must run it) |
-| test_queue_warden.sh | test_queue_warden.sh — the warden is HYGIENE, and the proof is the abs | tested | keep (a human or a cron row must run it) |
+| test_queue_warden.sh | test_queue_warden.sh — the warden is HYGIENE, and its one merge is the | tested | keep (a human or a cron row must run it) |
 | test_regenerate_on_merge_cleanup.sh | test_regenerate_on_merge_cleanup.sh — the merge driver leaves no `.mer | tested | keep (a human or a cron row must run it) |
 | test_registers.sh | test_registers.sh — one door for every generated register. | tested | keep (a human or a cron row must run it) |
 | test_review_mend.sh | dry-run on PR 624 (missing CHANGE LOG) -> rung per finding + next: | tested | keep (a human or a cron row must run it) |

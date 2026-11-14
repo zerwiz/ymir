@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
 # queue-warden.sh — PR HYGIENE: five open at most, the stale ones named, a conflicting branch
-# re-cut onto main under a NEW name and pushed to nobody's branch.
+# re-cut onto main under a NEW name. It force-pushes nothing, closes nothing, and commits nothing
+# with --no-verify.
 #
-# IT NEVER MERGES. It never force-pushes, never commits with --no-verify, never closes another
-# hand's work, and never writes to GitHub as a person.
+# THE MERGE ROAD IS CLOSED EXCEPT ON THE HEART (the Allfather, 2026-11-14: "zerwizserver (the heart)
+# handles the merging of the PRs … config/machines/zerwizserver/wardens.yaml is the only file that
+# may say merge: on … every other machine's says merge: off, and the template ships merge: off").
+# Where the road is open, its ONLY door is bin/forge/merge-verdict.sh — one sha, one verdict, main
+# green, branch current, no unexplained bypass (PR #747). Where it is closed, the door says so and
+# never reaches a merge call.
 #
-# WHY (plan 290, 2026-11-14 11:38 CET — the heart's ruling): a dev machine's clock was deciding
-# what reached main, under the operator's own GitHub login, with the whole-tree gate red and
-# untested major bumps next in its queue. The record of what this door used to do, and why it
-# stopped, is docs/fixes/forge/2026-11-14-the-warden-stopped-merging.md (RULES/06, RULES/11).
+# WHY THE OLD ROAD WAS THE FAULT (plan 290, 2026-11-14 11:38 CET — the heart's ruling): a dev
+# machine's clock was deciding what reached main, under the operator's own GitHub login, with the
+# whole-tree gate red and untested major bumps next in its queue. The record of what this door used
+# to do, and why it stopped, is docs/fixes/forge/2026-11-14-the-warden-stopped-merging.md.
 #
 # Usage
 #   queue-warden.sh run [--dry-run] [--pr N] [--cap N] [--stale-hours H] [--no-recut]
@@ -17,20 +22,23 @@
 #   queue-warden.sh --uninstall-timer | --timer-status
 #   queue-warden.sh --version | --help
 #
-# The policy lives in the operator's home, one file per machine (plan 290 §3):
+# The policy lives in the operator's home, one file per machine (plan 290 §3), and `enabled` is the
+# per-machine opt-in:
 #   $YMIR_HOME/config/machines/<machine>/wardens.yaml
 #     queue-warden:
-#       max_open_prs: 5        # the cap this warden reports against
-#       stale_hours: 48        # a PR older than this is flagged, never closed
+#       enabled: on|off        # off: no clock seats it, and a scheduled run refuses (a hand may still run it)
+#       max_open_prs: 5
+#       stale_hours: 48
 #       identity: <name>       # the machine's own identity — never a person's login
 #       token_ref: <VAULT_KEY> # the vault key holding THAT identity's token
-# A missing file is not a fault: the defaults below stand and the warden says so.
+#       merge: on|off          # only the heart's file says on
+# A missing file is not a fault: the defaults below stand and the warden says which it used.
 set -u
-VERSION="2.0.0"
+VERSION="2.1.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
-usage() { sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//'; }
 
 CMD="run"; DRY=0; PR_ONLY=""; CAP=""; STALE_HOURS=""; RECUT=1; START_TIMER=0; TIMER_ACTION=""
 while [ $# -gt 0 ]; do
@@ -68,10 +76,20 @@ STATE=""; hoard_state_dir STATE 2>/dev/null || true
 MACHINE="${YMIR_HOST:-$(hostname -s 2>/dev/null | tr 'A-Z' 'a-z')}"
 [ -n "$MACHINE" ] || MACHINE="unknown"
 
-# ── the policy: the operator's home first, then the documented defaults ──────────────────────
+# ── the policy: the SHARED reader first, so two wardens never hold two parsers ────────────────
+# `bin/forge/warden-policy.py <door> <key>` is the library's door (wardens-own-only). While that
+# door is not on this tree the warden reads the same file itself — six lines, one block — and says
+# so on every pass (`policy_from`), so a fallback can never pass for the shared reader.
 WARDENS="$HOME_DIR/config/machines/$MACHINE/wardens.yaml"
-policy_get() {  # <key> — a scalar under the `queue-warden:` block; empty when absent
+SHARED_READER="$ROOT/bin/forge/warden-policy.py"
+POLICY_READER="local"
+policy_get() {  # <key> — a scalar under this door's block; empty when absent
   [ -r "$WARDENS" ] || return 0
+  if [ -f "$SHARED_READER" ]; then
+    local v
+    v="$(python3 "$SHARED_READER" queue-warden "$1" 2>/dev/null)" && { POLICY_READER="shared"; printf '%s' "$v"; return 0; }
+    printf 'queue-warden: the shared policy reader refused queue-warden/%s — reading it here instead\n' "$1" >&2
+  fi
   awk -v k="$1" '
     /^[^[:space:]#]/ { blk = ($1 == "queue-warden:") ; next }
     blk && $1 == k":" {
@@ -84,11 +102,16 @@ policy_get() {  # <key> — a scalar under the `queue-warden:` block; empty when
 [ -n "$STALE_HOURS" ] || STALE_HOURS=48
 IDENTITY="$(policy_get identity)"; [ -n "$IDENTITY" ] || IDENTITY="unnamed"
 TOKEN_REF="$(policy_get token_ref)"
+ENABLED="$(policy_get enabled)"; [ -n "$ENABLED" ] || ENABLED="off"     # opt-in: silence is a NO
+MERGE_POLICY="$(policy_get merge)"; [ -n "$MERGE_POLICY" ] || MERGE_POLICY="off"
+
+# ── the machine's role, from the fleet registry (never a hostname written in this tree) ───────
+ROLES="$(bash "$ROOT/bin/skuld/role.sh" resolve 2>/dev/null | head -1 || true)"
+[ -n "$ROLES" ] || ROLES="unknown"
 
 # ── the identity (plan 290 rule 4) ───────────────────────────────────────────────────────────
-# The warden WRITES under the machine's own identity or not at all. A person's login on this box
-# is never its hand: if the home names no credential, the re-cut is made locally and the push is
-# recorded as owed — never done as whoever happens to be logged in.
+# The warden WRITES under the machine's own identity or not at all. A person's login on this box is
+# never its hand: if the home names no credential, the re-cut is made locally and the push recorded.
 MACHINE_TOKEN=""
 if [ -n "$TOKEN_REF" ] && [ -r "$ROOT/bin/vault/hodd.sh" ]; then
   MACHINE_TOKEN="$(bash "$ROOT/bin/vault/hodd.sh" emit secrets/platform.env 2>/dev/null | python3 -c '
@@ -111,6 +134,20 @@ CREDENTIAL="absent"
 [ -n "$MACHINE_TOKEN" ] && CREDENTIAL="machine"
 [ -n "$TOKEN_REF" ] || TOKEN_REF="-"
 
+# ── the merge road: closed unless this machine's own file opens it AND it is the heart ────────
+# The answer is a REASON, printed on every pass. A road that opens by omission is how a laptop's
+# clock decided what reached main.
+merge_road() {  # prints the reason; 0 = open
+  [ "$MERGE_POLICY" = "on" ] || { printf 'closed: merge: off in this machine'"'"'s wardens file'; return 1; }
+  case " $ROLES " in
+    *" heart "*) ;;
+    *) printf 'closed: merge: on, but this machine'"'"'s role is %s — only the heart may merge' "$ROLES"; return 1 ;;
+  esac
+  [ -x "$ROOT/bin/forge/merge-verdict.sh" ] || { printf 'closed: the gate bin/forge/merge-verdict.sh is not on this tree'; return 1; }
+  printf 'open: the heart, through bin/forge/merge-verdict.sh'
+  return 0
+}
+
 # ── the clock (a user timer; seated only when asked, started only when asked) ────────────────
 UNIT_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
 SERVICE="queue-warden.service"; TIMER="queue-warden.timer"
@@ -124,12 +161,16 @@ if [ -n "$TIMER_ACTION" ]; then
       systemctl --user daemon-reload 2>/dev/null || true
       # SEATING IS NOT STARTING. A warden's clock is a decision the operator (or the heart) makes
       # for this machine (plan 290 rule 1); `--start` is that decision and nothing else is.
-      if [ "$START_TIMER" = 1 ]; then
+      if [ "$START_TIMER" = 1 ] && [ "$ENABLED" = "on" ]; then
         systemctl --user enable --now "$TIMER" 2>&1 | tail -2 || true
         STARTED="started (--start)"
       else
         systemctl --user disable "$TIMER" >/dev/null 2>&1 || true
-        STARTED="seated, stopped — pass --start to run it"
+        if [ "$ENABLED" = "on" ]; then
+          STARTED="seated, stopped — pass --start to run it"
+        else
+          STARTED="not seated for a clock: enabled is off for this machine"
+        fi
       fi
       printf 'timer[4]{unit,interval,state,why}\n  "%s","10min","%s","%s"\n' "$UNIT_DIR/$TIMER" "$STARTED" \
         "$(systemctl --user is-active "$TIMER" 2>/dev/null | head -1 || true)"
@@ -155,12 +196,24 @@ timer_state() {
   printf '%s/%s' "${a:-absent}" "${e:-absent}"
 }
 
+MERGE_ROAD="$(merge_road || true)"; MERGE_OPEN=0
+merge_road >/dev/null 2>&1 && MERGE_OPEN=1
+
 if [ "$CMD" = "status" ]; then
-  printf 'queue-warden[9]{host,identity,credential,cap,stale_hours,recut,policy_from,timer,merges}\n'
-  printf '  "%s","%s","%s","%s","%s","%s","%s","%s","never"\n' "$MACHINE" "$IDENTITY" "$CREDENTIAL" "$CAP" \
-    "$STALE_HOURS" "$([ "$RECUT" = 1 ] && echo on || echo off)" \
+  printf 'queue-warden[12]{host,role,identity,credential,cap,stale_hours,recut,enabled,policy_from,reader,timer,merge}\n'
+  printf '  "%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s"\n' "$MACHINE" "$ROLES" "$IDENTITY" "$CREDENTIAL" \
+    "$CAP" "$STALE_HOURS" "$([ "$RECUT" = 1 ] && echo on || echo off)" "$ENABLED" \
     "$([ -r "$WARDENS" ] && echo "home/config/machines/$MACHINE/wardens.yaml" || echo defaults)" \
-    "$(timer_state)"
+    "$POLICY_READER" "$(timer_state)" "$MERGE_ROAD"
+  exit 0
+fi
+
+# ── the opt-in: a SCHEDULED pass on a machine that has not opted in refuses, loudly ──────────
+# `INVOCATION_ID` is set by systemd and by nothing else, so the door can tell a clock from a hand.
+# A hand may always run a pass — that is how a human inspects the queue — and the refusal does not.
+if [ "$ENABLED" != "on" ] && [ -n "${INVOCATION_ID:-}" ] && [ "$DRY" = 0 ]; then
+  printf 'queue-warden[2]{host,enabled,why}\n'
+  printf '  "%s","%s","%s"\n' "$MACHINE" "$ENABLED" "this machine has not opted in (enabled is off in its wardens file) — no clock may run a warden here"
   exit 0
 fi
 
@@ -244,6 +297,39 @@ recut_one() {  # <pr> <branch>
   return 0
 }
 
+# ── the merge act: the heart's only, and only through the gate ───────────────────────────────
+# Called ONLY when merge_road answered open. The gate is authoritative: a NO is a NO, an "I cannot
+# tell" is a NO (merge-verdict exits 2), and nothing here overrides the wards.
+merge_one() {  # <pr> <branch>
+  local n="$1" branch="$2" flag reason
+  if [ -f "$ROOT/bin/forge/merge-method.sh" ]; then
+    # shellcheck disable=SC1091
+    . "$ROOT/bin/forge/merge-method.sh"
+    flag="$(merge_flag_for_pr "$n" 2>/dev/null || true)"
+    if type refuse_squash_of_gather >/dev/null 2>&1; then
+      refuse_squash_of_gather "$n" "${flag:---squash}" || { notice "$n" "$branch" "merge-refused" "a gathered batch is never squashed"; return 0; }
+    fi
+  fi
+  [ -n "$flag" ] || flag="--squash"
+  if [ "$DRY" = 1 ]; then
+    notice "$n" "$branch" "merge" "dry-run: the road is open; would ask merge-verdict.sh, then merge with $flag"
+    return 0
+  fi
+  if ! reason="$(bash "$ROOT/bin/forge/merge-verdict.sh" "$n" 2>&1)"; then
+    notice "$n" "$branch" "merge-refused" "merge-verdict.sh said NO: $(printf '%s' "$reason" | tail -1 | cut -c1-110)"
+    return 0
+  fi
+  if gh pr merge "$n" "$flag" --delete-branch >/tmp/qw-mergepr-$n.log 2>&1; then
+    merges=$((merges + 1))
+    notice "$n" "$branch" "merged" "merged with $flag after merge-verdict.sh said yes"
+    bash "$ROOT/bin/records/runes-append.sh" engine merge \
+      --message "queue-warden merged PR $n on $MACHINE (merge-verdict.sh: yes)" >/dev/null 2>&1 || true
+  else
+    notice "$n" "$branch" "merge-refused" "gh refused the merge: $(tail -1 /tmp/qw-mergepr-$n.log 2>/dev/null | cut -c1-90)"
+  fi
+  return 0
+}
+
 # ── the open PRs ─────────────────────────────────────────────────────────────────────────────
 rows="$(gh pr list --state open --limit 100 \
   --json number,headRefName,createdAt,mergeable,isDraft,author \
@@ -258,14 +344,17 @@ age_hours() {  # <iso>
   printf '%s' "$(( (now_epoch - e) / 3600 ))"
 }
 
-open=0; stale=0; conflicting=0; recut_made=0; recut_pushed=0; blocked=0
+open=0; stale=0; conflicting=0; recut_made=0; recut_pushed=0; merges=0
 declare -a order=()
 while IFS=$'\t' read -r num branch created mergeable draft author; do
   [ -n "${num:-}" ] || continue
   open=$((open + 1))
   age="$(age_hours "$created")"
   order+=("$age|$num|$branch")
-  [ "$draft" = "true" ] && { notice "$num" "$branch" "draft" "left alone — a draft is not asked for"; continue; }
+  if [ "$draft" = "true" ]; then
+    notice "$num" "$branch" "draft" "left alone — a draft is not asked for"
+    continue
+  fi
   if [ "$mergeable" = "CONFLICTING" ]; then
     conflicting=$((conflicting + 1))
     case "$branch" in
@@ -285,6 +374,8 @@ while IFS=$'\t' read -r num branch created mergeable draft author; do
             fi ;;
         esac ;;
     esac
+  elif [ "$MERGE_OPEN" = 1 ]; then
+    merge_one "$num" "$branch"
   fi
   if [ "$age" -ge "$STALE_HOURS" ]; then
     stale=$((stale + 1))
@@ -306,17 +397,21 @@ fi
 {
   printf 'stamp\t%s\n' "$STAMP_ISO"
   printf 'host\t%s\n' "$MACHINE"
+  printf 'role\t%s\n' "$ROLES"
   printf 'identity\t%s\n' "$IDENTITY"
   printf 'credential\t%s\n' "$CREDENTIAL"
   printf 'read_as\t%s\n' "$READ_AS"
+  printf 'enabled\t%s\n' "$ENABLED"
+  printf 'policy_from\t%s\n' "$POLICY_READER"
   printf 'cap\t%s\n' "$CAP"
   printf 'open\t%s\n' "$open"
-  printf 'merges\t0\n'
+  printf 'merge_road\t%s\n' "$MERGE_ROAD"
+  printf 'merges\t%s\n' "$merges"
 } >"$STATUS" 2>/dev/null || true
 
-printf 'warden-pass[10]{host,read_as,credential,identity,cap,open,over_cap,stale,conflicting,merges}\n'
-printf '  "%s","%s","%s","%s","%s","%s","%s","%s","%s","0"\n' "$MACHINE" "$READ_AS" "$CREDENTIAL" "$IDENTITY" \
-  "$CAP" "$open" "$over" "$stale" "$conflicting"
+printf 'warden-pass[12]{host,role,read_as,credential,identity,cap,open,over_cap,stale,conflicting,merges,merge_road}\n'
+printf '  "%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s"\n' "$MACHINE" "$ROLES" "$READ_AS" \
+  "$CREDENTIAL" "$IDENTITY" "$CAP" "$open" "$over" "$stale" "$conflicting" "$merges" "$MERGE_ROAD"
 if [ "${#notices[@]}" -gt 0 ]; then
   printf 'notice[4]{pr,branch,kind,action}\n'
   for n in "${notices[@]}"; do
