@@ -54,3 +54,7 @@ stated. Rendered in the real window (CDP) with Claude's rows and models visible
 
 `bin/desktop/hlidskjalf-usage.sh` · `apps/hlidskjalf/src/gates/Stats.tsx` ·
 `apps/hlidskjalf/src/services/api.ts` (the `YmirUsage` shape).
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #759
