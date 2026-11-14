@@ -343,6 +343,15 @@ fi
 # 5 · the window
 export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-1}" XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/1000}"
 [ -n "$ELECTRON" ] || { say "no electron binary" "install electron43 or run npm ci in apps/rodd"; exit 1; }
+# The frame's buttons are the platform layer's question (bin/host/host-sense.sh): on a tiling
+# compositor (Omarchy's Hyprland) the window is frameless and draws no _ □ ×, elsewhere the
+# platform keeps its own. The answer crosses into the shell as YMIR_WINDOW_BUTTONS (Rule 05).
+if [ -r "$ROOT/bin/desktop/app-lib.sh" ]; then
+  # shellcheck source=../../bin/desktop/app-lib.sh
+  . "$ROOT/bin/desktop/app-lib.sh"
+  YMIR_WINDOW_BUTTONS="$(app_window_buttons)"
+fi
+export YMIR_WINDOW_BUTTONS="${YMIR_WINDOW_BUTTONS:-on}"
 setsid env SPEECH_TO_SPEECH_URL="ws://127.0.0.1:$PORT_HOST/v1/realtime" \
   "$ELECTRON" --remote-debugging-port="${YMIR_DEVTOOLS_PORT:-9222}" "$APP" > /tmp/rodd-app.log 2>&1 < /dev/null &
 sleep 14
