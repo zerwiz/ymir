@@ -26,7 +26,7 @@ bin[48]{file,does,kind,verdict,disposition,callers,lines}:
   "atlas.sh","atlas.sh — one page at the top of the home that says where we have it all (plan 251).","tool","wired","keep",1,19
   "audit-apply.sh","audit-apply.sh — turn an audit into work, in one door.","tool","wired","keep",0,96
   "behind.sh","behind.sh — the arithmetic of being behind: opened/closed this week, net, stale-30d, unbuilt phases.","tool","wired","keep",0,43
-  "comms.py","'''comms.py — every communication, in, out and owed, and the to-do they move (plan 261).","tool","wired","keep",4,1175
+  "comms.py","'''comms.py — every communication, in, out and owed, and the to-do they move (plan 261).","tool","tested","keep",4,1175
   "comms.sh","comms.sh — the one read door over every communication: in, out and owed (plan 261).","tool","wired","keep",3,19
   "daily-log.sh","daily-log.sh — the day's work, recorded where the contract says it lives.","tool","wired","keep",6,104
   "developers.sh","developers.sh — who can write to a repository, and who actually has.","tool","wired","keep",0,108
@@ -44,7 +44,7 @@ bin[48]{file,does,kind,verdict,disposition,callers,lines}:
   "mimir-policy.py","'''mimir-policy.py — the law of the well: what may be written, what it is, and","tool","tested","keep",3,1301
   "mimir-recall-today.sh","mimir-recall-today.sh — drink before you act: the session's opening recall.","tool","wired","keep",1,113
   "mimir-reflect.sh","mimir-reflect — smelt the well's episodes into facts, through the LLAMA-ROUTER.","tool","wired","keep",0,35
-  "mimir.sh","mimir.sh — the well (Mimirsbrunn).","tool","tested","keep",22,510
+  "mimir.sh","mimir.sh — the well (Mimirsbrunn).","tool","tested","keep",23,510
   "note.sh","note.sh — append a DATED section to an existing document in the home (append-only, Rule 06).","tool","wired","keep",4,16
   "open-work.sh","open-work.sh — the open work, rendered for a HUMAN, from the record the doors read.","tool","wired","keep",2,80
   "plan-board.sh","plan-board.sh — how many plans are done and not done, what to work on next, and which old","tool","wired","keep",0,300
@@ -53,7 +53,7 @@ bin[48]{file,does,kind,verdict,disposition,callers,lines}:
   "project-brief.sh","project-brief.sh — 'this project', for any session in any harness (Claude Code, Pi, OpenCode, Hermes).","tool","wired","keep",1,21
   "project_brief.py","'''project_brief — the 'this project' section of the session-start digest (see project-brief.sh).'''","tool","wired","keep",1,139
   "regenerate-on-merge.sh","regenerate-on-merge.sh — the merge driver for WOVEN documents (Þættir, plan 174).","tool","wired","keep",3,36
-  "runes-append.sh","runes-append.sh — the append-only Runes ledger, a THIN SHIM.","tool","tested","keep",36,117
+  "runes-append.sh","runes-append.sh — the append-only Runes ledger, a THIN SHIM.","tool","tested","keep",37,117
   "runes-project.sh","runes-project.sh — the DAG projector, regenerates runes_audit.md from events.","tool","wired","keep",0,65
   "snotra-ladder.sh","snotra-ladder.sh — the meeting ladder: transcript → minutes → promises → todos, and a stop that says so.","tool","wired","keep",0,611
   "snotra-what.sh","snotra-what.sh — Snotra's own voice: what the ear is doing, said in one sentence.","tool","wired","keep",1,640
@@ -71,6 +71,6 @@ bin[48]{file,does,kind,verdict,disposition,callers,lines}:
   "wyrd-db.sh","wyrd-db.sh — the database layer (W0040).","tool","wired","keep",0,49
   "ymir-state.sh","ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runtime/state/`).","tool","wired","keep",12,44
 
-**Tally.** verdict: wired=40, tested=8
+**Tally.** verdict: wired=39, tested=9
 
 **Tally.** disposition: keep=47, migrate → src/ymir_runtime/library.py=1

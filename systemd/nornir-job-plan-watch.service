@@ -1,5 +1,12 @@
+# Plan watch — the daily clock over the ledger (the .timer beside this file sets 07:30).
+#
+# This is a TEMPLATE, not a unit. `bin/time/nornir-job-plan-watch.sh --install` (and
+# `bin/seat/clocks.sh`) replace __YMIR_ROOT__ with the checkout that runs the clock, and the
+# rendered unit is written to the machine's own unit directory. A rendered unit names one
+# machine and one home, so it is private data and never comes back into this repository
+# (RULES/04, RULES/07) — the public tree carries the template and the door that renders it.
 [Unit]
 Description=Plan watch (Nornir job)
 [Service]
 Type=oneshot
-ExecStart=/bin/bash -lc 'cd /home/zerwizserver/ymir/.yggdrasil/plan-watch && bin/time/nornir-job-plan-watch.sh'
+ExecStart=/bin/bash -lc 'cd __YMIR_ROOT__ && bin/time/nornir-job-plan-watch.sh'

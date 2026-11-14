@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[139]{file,does,kind,verdict,disposition,callers,lines}:
+bin[143]{file,does,kind,verdict,disposition,callers,lines}:
   "asana_adapter.py","bin/time/snotra/asana_adapter.py -> systems/snotra/services/cron/asana_adapter.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "audio-retention.sh","bin/time/snotra/audio-retention.sh -> systems/snotra/services/ear/audio-retention.sh — RETIRED SHIM","tool","wired","keep",0,12
   "brokk-wake-grant.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",0,128
@@ -45,16 +45,16 @@ bin[139]{file,does,kind,verdict,disposition,callers,lines}:
   "fathom_ingest.py","bin/time/snotra/fathom_ingest.py -> systems/snotra/services/cron/fathom_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "gong_ingest.py","bin/time/snotra/gong_ingest.py -> systems/snotra/services/cron/gong_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "google-auth.sh","bin/time/snotra/google-auth.sh -> systems/snotra/services/calendar/google-auth.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door…","tool","wired","keep",0,16
-  "hall-snapshot.sh","bin/time/snotra/hall-snapshot.sh -> systems/snotra/services/cron/hall-snapshot.sh — RETIRED SHIM","tool","wired","keep",1,12
+  "hall-snapshot.sh","bin/time/snotra/hall-snapshot.sh -> systems/snotra/services/cron/hall-snapshot.sh — RETIRED SHIM","tool","wired","keep",2,12
   "housewatch.sh","housewatch.sh — the quiet parts of the house, checked on a timer so they cannot go quiet.","tool","wired","keep",0,137
   "jira_adapter.py","bin/time/snotra/jira_adapter.py -> systems/snotra/services/cron/jira_adapter.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "knit_ingest.py","bin/time/snotra/knit_ingest.py -> systems/snotra/services/cron/knit_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "linear_adapter.py","bin/time/snotra/linear_adapter.py -> systems/snotra/services/cron/linear_adapter.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
-  "mail-send.sh","bin/time/snotra/mail-send.sh -> systems/snotra/services/letters/mail-send.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and…","tool","wired","keep",10,16
+  "mail-send.sh","bin/time/snotra/mail-send.sh -> systems/snotra/services/letters/mail-send.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and…","tool","wired","keep",11,16
   "meet_ingest.py","bin/time/snotra/meet_ingest.py -> systems/snotra/services/cron/meet_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "meeting-record-guard.sh","bin/time/snotra/meeting-record-guard.sh -> systems/snotra/services/approve/meeting-record-guard.sh — RETIRED SHIM (plan 129, 2026-10-24); e…","tool","wired","keep",0,16
   "monday_adapter.py","bin/time/snotra/monday_adapter.py -> systems/snotra/services/cron/monday_adapter.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
-  "nornir-cron-start.sh","nornir-cron-start.sh - ensure Brokk's scheduled jobs are running (idempotent).","tool","tested","keep",8,404
+  "nornir-cron-start.sh","nornir-cron-start.sh - ensure Brokk's scheduled jobs are running (idempotent).","tool","tested","keep",8,416
   "nornir-job-asken-handoff.sh","nornir-job-asken-handoff.sh — the rollover, on the schedule.","tool","wired","keep",0,63
   "nornir-job-bragi-scrape.sh","nornir-job-bragi-scrape.sh — Bragi, on the loom: the scheduled scrape round.","tool","wired","keep",0,154
   "nornir-job-daily-briefing.sh","nornir-job-daily-briefing.sh - the 07:00 Sága daily seeing.","tool","wired","keep",1,256
@@ -63,12 +63,14 @@ bin[139]{file,does,kind,verdict,disposition,callers,lines}:
   "nornir-job-git-sync.sh","nornir-job-git-sync.sh - Yggdrasil, the world-tree kept in order.","tool","wired","keep",2,153
   "nornir-job-gna-mail.sh","nornir-job-gna-mail.sh — the desk's own clock: import, then prove the desk answers.","tool","wired","keep",0,153
   "nornir-job-groa-update.sh","nornir-job-groa-update.sh — every installation keeps itself current, and it decides HOW from its own home.","tool","wired","keep",0,250
-  "nornir-job-hall-snapshot.sh","nornir-job-hall-snapshot.sh — Óðrerir: refresh the Live Hall's board.","tool","wired","keep",0,31
+  "nornir-job-hall-snapshot.sh","nornir-job-hall-snapshot.sh — Óðrerir: refresh the Live Hall's board.","tool","wired","keep",1,31
   "nornir-job-memory-housekeeping.sh","nornir-job-memory-housekeeping.sh - Muninn, the raven of memory.","tool","wired","keep",0,153
   "nornir-job-nsr-compliance.sh","nornir-job-nsr-compliance.sh — the NorthStar compliance round, nightly.","tool","wired","keep",0,54
   "nornir-job-observer.sh","nornir-job-observer.sh - Huginn, the raven of observation.","tool","wired","keep",0,181
-  "nornir-job-plan-watch.sh","nornir-job-plan-watch.sh — the clock that watches the master plan.","tool","wired","keep",2,180
+  "nornir-job-plan-watch.sh","nornir-job-plan-watch.sh — the clock that watches the master plan.","tool","wired","keep",2,181
+  "nornir-job-private-scan.sh","nornir-job-private-scan.sh — the twice-daily sweep of the Ymir repository for things that belong in the home.","tool","wired","keep",0,193
   "nornir-job-skillopt-sleep.sh","nornir-job-skillopt-sleep.sh — SkillOpt overnight self-evolution.","tool","wired","keep",1,77
+  "nornir-job-snotra-autojoin.sh","nornir-job-snotra-autojoin.sh — the clock that keeps Snotra in the Allfather's meetings.","tool","wired","keep",0,52
   "nornir-job-snotra-mail.sh","nornir-job-snotra-mail.sh — Snotra listens for the answers.","tool","wired","keep",0,45
   "nornir-job-worktree-housekeeping.sh","nornir-job-worktree-housekeeping.sh — the daily reckoning of what the worktrees cost.","tool","wired","keep",0,40
   "notion_adapter.py","bin/time/snotra/notion_adapter.py -> systems/snotra/services/cron/notion_adapter.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
@@ -77,7 +79,8 @@ bin[139]{file,does,kind,verdict,disposition,callers,lines}:
   "participants-fill.sh","bin/time/snotra/participants-fill.sh -> systems/snotra/services/letters/participants-fill.sh — RETIRED SHIM (plan 129, 2026-10-24); execs t…","tool","wired","keep",0,16
   "readai_ingest.py","bin/time/snotra/readai_ingest.py -> systems/snotra/services/cron/readai_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "reasoning_adapter.py","bin/time/snotra/reasoning_adapter.py -> systems/snotra/services/cron/reasoning_adapter.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
-  "saga-session-start.sh","saga-session-start.sh - the one-command Brokk session start.","tool","tested","keep",7,348
+  "saga-land-warnings.sh","saga-land-warnings.sh — Sága's eye on work that finished and never landed.","tool","wired","keep",2,311
+  "saga-session-start.sh","saga-session-start.sh - the one-command Brokk session start.","tool","tested","keep",8,360
   "saga-sessionstart-run.sh","saga-sessionstart-run.sh - session-open entry point for run-tier harnesses.","tool","wired","keep",0,91
   "saga-wake-drain.sh","saga-wake-drain.sh - present durable Brokk wakes, or acknowledge them.","tool","wired","keep",9,151
   "smoke.sh","bin/time/snotra/smoke.sh -> systems/snotra/tests/smoke.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and says so.","tool","tested","keep",7,16
@@ -88,10 +91,10 @@ bin[139]{file,does,kind,verdict,disposition,callers,lines}:
   "snotra-attrib.sh","bin/time/snotra/snotra-attrib.sh -> systems/snotra/services/record/snotra-attrib.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new do…","tool","wired","keep",0,16
   "snotra-audio-ladder.py","bin/time/snotra/snotra-audio-ladder.py -> systems/snotra/services/ear/snotra-audio-ladder.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "snotra-audio-ladder.sh","bin/time/snotra/snotra-audio-ladder.sh -> systems/snotra/services/ear/snotra-audio-ladder.sh — RETIRED SHIM","tool","wired","keep",0,12
-  "snotra-autojoin.sh","bin/time/snotra/snotra-autojoin.sh -> systems/snotra/services/ear/snotra-autojoin.sh — RETIRED SHIM","tool","wired","keep",0,12
+  "snotra-autojoin.sh","bin/time/snotra/snotra-autojoin.sh -> systems/snotra/services/ear/snotra-autojoin.sh — RETIRED SHIM","tool","wired","keep",1,12
   "snotra-board.py","bin/time/snotra/snotra-board.py -> systems/snotra/services/cron/snotra-board.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "snotra-board.sh","bin/time/snotra/snotra-board.sh -> systems/snotra/services/cron/snotra-board.sh — RETIRED SHIM","tool","wired","keep",0,12
-  "snotra-bot.sh","bin/time/snotra/snotra-bot.sh -> systems/snotra/services/ear/snotra-bot.sh — RETIRED SHIM","tool","wired","keep",0,12
+  "snotra-bot.sh","bin/time/snotra/snotra-bot.sh -> systems/snotra/services/ear/snotra-bot.sh — RETIRED SHIM","tool","wired","keep",1,12
   "snotra-capture.sh","bin/time/snotra/snotra-capture.sh -> systems/snotra/services/ear/snotra-capture.sh — RETIRED SHIM","tool","wired","keep",1,12
   "snotra-card-moves.py","bin/time/snotra/snotra-card-moves.py -> systems/snotra/services/cron/snotra-card-moves.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "snotra-card-moves.sh","bin/time/snotra/snotra-card-moves.sh -> systems/snotra/services/cron/snotra-card-moves.sh — RETIRED SHIM","tool","wired","keep",0,12
@@ -147,12 +150,13 @@ bin[139]{file,does,kind,verdict,disposition,callers,lines}:
   "snotra-voice.py","bin/time/snotra/snotra-voice.py -> systems/snotra/services/ear/snotra-voice.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "snotra_paths.py","bin/time/snotra/snotra_paths.py -> systems/snotra/services/record/snotra_paths.py — RETIRED SHIM (plan 129)","tool","wired","keep",1,10
   "sol-lib.sh","sol-lib.sh — Sól's stamp for shell roads.","lib","wired","keep",9,44
-  "sol.sh","sol.sh — Sól, the sun's wheel: THE clock and date door.","tool","tested","keep",4,248
+  "sol.sh","sol.sh — Sól, the sun's wheel: THE clock and date door.","tool","tested","keep",5,248
   "stt-shim.py","bin/time/snotra/stt-shim.py -> systems/snotra/services/ear/stt-shim.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "stt-wire.sh","bin/time/snotra/stt-wire.sh -> systems/snotra/services/ear/stt-wire.sh — RETIRED SHIM","tool","wired","keep",0,12
   "teams_ingest.py","bin/time/snotra/teams_ingest.py -> systems/snotra/services/cron/teams_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "test_event_trigger.sh","test_event_trigger.sh — a smithy may be started by a person, the clock, or an","tool","wired","keep",1,251
   "test_outbound_gate.py","'''The outbound gate's proofs — plan 124 §7, his word 2026-10-24:","tool","wired","keep",0,501
+  "test_saga_land_warnings.sh","test_saga_land_warnings.sh — the digest SEES work that finished and never landed.","tool","wired","keep",1,201
   "transcript_ingest.py","bin/time/snotra/transcript_ingest.py -> systems/snotra/services/cron/transcript_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "trello-map.sh","bin/time/snotra/trello-map.sh -> systems/snotra/services/cron/trello-map.sh — RETIRED SHIM","tool","wired","keep",0,12
   "trello_adapter.py","bin/time/snotra/trello_adapter.py -> systems/snotra/services/cron/trello_adapter.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
@@ -162,6 +166,6 @@ bin[139]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-say.sh","bin/time/snotra/ymir-say.sh -> systems/snotra/services/tts-lease/ymir-say.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and…","tool","wired","keep",8,16
   "zoom_ingest.py","bin/time/snotra/zoom_ingest.py -> systems/snotra/services/cron/zoom_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
 
-**Tally.** verdict: wired=130, tested=9
+**Tally.** verdict: wired=134, tested=9
 
-**Tally.** disposition: keep=139
+**Tally.** disposition: keep=143
