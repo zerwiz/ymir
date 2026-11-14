@@ -109,7 +109,17 @@ run_one() {
   fi
   # step 5 push
   GH_TOKEN_FOR_PUSH="$(gh auth token)" GIT_ASKPASS="$ASKPASS" YMIR_SKIP_FIXES_GUARD=1 git push https://github.com:443/zerwiz/ymir.git "HEAD:$branch" >/tmp/qw-push-$n.log 2>&1 || { printf '  blocked: push failed\n'; cat /tmp/qw-push-$n.log | tail -3; cd "$ROOT"; return; }
-  # step 6 merge
+  # step 6 merge — ONLY if this exact head sha has a green gate verdict.
+  #
+  # Added 2026-11-14 after a queue-warden on another machine merged seven PRs (#731–#735, #742, #743) whose whole-tree
+  # gate was FAILING, leaving main red at 1c61d0cd (20 passed, 6 failed). A warden's job is queue hygiene — cap, stale,
+  # re-cut, solve conflicts — and a merge is the one act it may not take on trust. The rule it now keeps is the gate's
+  # own: one sha, one verdict, and no merge while main is red.
+  if ! bash "$ROOT/bin/forge/merge-verdict.sh" "$n" >/tmp/qw-verdict-$n.log 2>&1; then
+    printf '  blocked: no green verdict for this head sha — see /tmp/qw-verdict-%s.log\n' "$n"
+    tail -3 /tmp/qw-verdict-$n.log | sed 's/^/    /'
+    cd "$ROOT"; return 0 2>/dev/null || exit 0
+  fi
   . "$ROOT/bin/forge/merge-method.sh"
   _qw_flag="$(merge_flag_for_pr "$n")"
   refuse_squash_of_gather "$n" "$_qw_flag" || { printf '  blocked: a gathered batch is never squashed\n'; cd "$ROOT"; return; }
