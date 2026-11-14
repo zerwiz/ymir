@@ -5,5 +5,12 @@
 # Anything else that must stay is listed here as:   phrase | reason
 # A line with no reason is ignored: an exception nobody can explain is not an exception.
 # Append only (Rule 06) — a retired exception is struck by a dated comment, never deleted.
-pi loads the pin | RULES/53: a seat's commit subject about which checkout the `pi` door binds (2026-11-12) — the command, not a maker claim
-pi's auth.json | RULES/53: the harness's own config path, named in bridge-and-rail's body — a path, not a maker claim
+deepseek-v4.1-flash | RULES/53: the model id the Allfather chose for the smithy's chat (plan 275 item 15) — his choice IS the record, and the commit quotes it
+no --append-system-prompt was passed and pi | RULES/53: the smithy's body names the harness's own flag and command while recording a fault (2026-11-14) — not a maker claim
+answered 500 with pi's | RULES/53: the smithy's body quotes the harness's own error output (2026-11-14) — not a maker claim
+so Hermes' engine homes are read | RULES/53: fleet-truth-2's commit subject names the harness whose homes the reader resolves (2026-11-14) — a path, not a maker claim
+Stats read only opencode and pi | RULES/53: fleet-truth-2's body records which harnesses Stats used to read (2026-11-14) — the fault it mends
+It now reads opencode, pi, Claude Code | RULES/53: fleet-truth-2's body records the harnesses Stats now reads (2026-11-14) — the change itself
+and probes Cursor | RULES/53: fleet-truth-2's body names the harness Stats now probes (2026-11-14)
+the Allfather's Claude work was invisible | RULES/53: fleet-truth-2's body names whose work Stats could not see (2026-11-14) — the observation, not a maker claim
+Codex (the cumulative total, last per rollout), Hermes | RULES/53: fleet-truth-2's body names two harnesses and the shape of their usage rows (2026-11-14)
