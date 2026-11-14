@@ -12,3 +12,7 @@
 **Proven on nidavellir:** ten answers carried the button; liking "48" saved the mark; asked "Which of your answers have
 I marked as liked?", Nanna answered in 18 s: "The answer you marked as liked is: 48". The test like was then taken
 back with the same button (0 liked rows left).
+
+## CHANGE LOG
+
+- 2026-11-13 — review-mend: added missing heading for #730
