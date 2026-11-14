@@ -248,3 +248,10 @@
   max-width: 960px; margin: 0 auto 8px; padding: 6px 12px; border-radius: 12px; background: var(--color-danger-bg); color: var(--color-danger-text);
   font-size: 13px; line-height: 18px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
 }
+
+/* like an answer (plan 275): quiet until hovered, warm once liked */
+.bubble__like { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 22px; margin-left: 4px;
+  border-radius: 6px; color: var(--color-text-tertiary); opacity: 0; transition: opacity 120ms var(--ease-out), color 120ms var(--ease-out); vertical-align: middle; }
+.bubble-wrap:hover .bubble__like, .bubble__like:focus-visible, .bubble__like.is-on { opacity: 1; }
+.bubble__like:hover { background: var(--color-bg-hover); color: var(--color-ink); }
+.bubble__like.is-on { color: var(--color-primary); }

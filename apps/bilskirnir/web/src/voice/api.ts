@@ -44,6 +44,8 @@ export const voiceApi = {
   }).catch((e) => { optionsPromise = null; throw e; })),
   session: (botId: string) => post<VoiceSession>('/session', { botId }),
   tool: (botId: string, callId: string, name: string, args: unknown) => post<{ output: string; taskSeq?: number }>('/tool', { botId, callId, name, args }),
+  /** one settled line of a call, into the room as it is said (plan 275, 2026-11-13) */
+  line: (botId: string, callId: string, role: 'user' | 'assistant', text: string) => post<{ ok: true }>('/line', { botId, callId, role, text }),
   end: (botId: string, callId: string, transcript: { role: 'user' | 'assistant'; text: string }[], error?: string) => post<{ ok: true }>('/end', { botId, callId, transcript, error }),
   /** Best-effort end on tab close. */
   endBeacon: (botId: string, callId: string, transcript: { role: 'user' | 'assistant'; text: string }[]) => {

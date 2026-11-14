@@ -3,7 +3,10 @@
 export type AvatarShape =
   | 'blob' | 'pebble' | 'bean' | 'egg' | 'squircle' | 'tablet' | 'capsule' | 'cylinder' | 'hex'
   | 'gem' | 'crystal' | 'wedge' | 'shield' | 'dome' | 'arch' | 'cloud' | 'teardrop' | 'leaf'
-  | 'square' | 'sparkle' | 'clover' | 'flower' | 'heart' | 'house' | 'star';
+  | 'square' | 'sparkle' | 'clover' | 'flower' | 'heart' | 'house' | 'star'
+  // the house's own (plan 275, 2026-11-13): the Ymir mark, and fourteen figures of the lore
+  | 'ymir' | 'huginn' | 'fenrir' | 'jormungandr' | 'sleipnir' | 'ratatoskr' | 'hraesvelgr' | 'heidrun'
+  | 'eikthyrnir' | 'gullinbursti' | 'mjolnir' | 'gungnir' | 'skidbladnir' | 'sol' | 'mani';
 
 export type AvatarColor =
   | 'black' | 'brown' | 'red' | 'orange' | 'yellow' | 'green' | 'cyan' | 'blue' | 'violet' | 'magenta' | 'gray';
@@ -66,6 +69,8 @@ export interface MessageBody {
   /** Set when a message came from another bot, a routine or a voice call rather than the user typing. */
   from?: { kind: 'bot' | 'routine' | 'voice'; id: string; name: string };
   citations?: { url: string; title?: string }[];
+  /** He liked this answer (plan 275, 2026-11-13); the agent is told which answers he liked. */
+  liked?: boolean;
 }
 
 export interface ToolCallBody {

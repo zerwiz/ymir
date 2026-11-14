@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Bot } from '@shared/types';
 import { useStore } from '../store';
 import { voiceApi, type VoiceOptions } from '../voice/api';
-import { endCall, isCallActive, previewVoice, startCall, useVoice } from '../voice/call';
+import { endCall, isCallActive, previewVoice, startCall, updateCallVoice, useVoice } from '../voice/call';
 import { Icon } from './Icon';
 
 // Until the server answers: the voices Rödd offers Nanna (Kokoro's), the house road being the default.
@@ -80,7 +80,7 @@ export function VoiceSettings({ bot }: { bot: Bot }) {
         <span>Voice</span>
         <span className="voice-setting__right">
           <button type="button" className="voice-preview" onClick={preview} disabled={previewing} title={`Hear ${bot.name}'s voice`}>{previewing ? 'Playing…' : 'Preview'}</button>
-          <NativeSelect label="Voice" value={voice} options={voices.map((v) => ({ value: v.id, label: v.name }))} onChange={(voice) => save({ voice })} />
+          <NativeSelect label="Voice" value={voice} options={voices.map((v) => ({ value: v.id, label: v.name }))} onChange={(voice) => { save({ voice }); updateCallVoice(bot.id, voice); }} />
         </span>
       </div>
       <div className="panel-row panel-row--setting">

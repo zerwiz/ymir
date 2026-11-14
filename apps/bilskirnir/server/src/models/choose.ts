@@ -94,6 +94,68 @@ export function patchHermesModel(configFile: string, model: string, baseUrl: str
   writePrivate(configFile, modelBlock(model, baseUrl, key) + rest);
 }
 
+/** The variable names Hermes reads a built-in provider's key from (hermes_cli/auth.py), by our id or its address. */
+const HERMES_KEY_NAMES: { match: RegExp; names: string[] }[] = [
+  { match: /opencode\.ai\/.*go|^opencode-go$/, names: ['OPENCODE_GO_API_KEY'] },
+  { match: /opencode\.ai\/zen(?!\/go)|^opencode-zen$/, names: ['OPENCODE_ZEN_API_KEY'] },
+  { match: /openrouter\.ai|^openrouter$/, names: ['OPENROUTER_API_KEY'] },
+  { match: /api\.openai\.com|^openai$/, names: ['OPENAI_API_KEY'] },
+  { match: /api\.anthropic\.com|^anthropic$/, names: ['ANTHROPIC_API_KEY'] },
+  { match: /api\.deepseek\.com|^deepseek$/, names: ['DEEPSEEK_API_KEY'] },
+  { match: /generativelanguage\.googleapis\.com|^gemini$/, names: ['GEMINI_API_KEY'] },
+  { match: /api\.x\.ai|^xai$/, names: ['XAI_API_KEY'] },
+];
+function hermesKeyNames(id: string, baseUrl: string): string[] {
+  return [...new Set(HERMES_KEY_NAMES.filter((h) => h.match.test(id) || h.match.test(baseUrl)).flatMap((h) => h.names))];
+}
+/** Set NAME=value in the agent's Hermes home .env (0600), replacing an earlier line of the same name. */
+function setHomeEnv(home: string, name: string, value: string) {
+  const file = path.join(home, '.env');
+  let lines: string[] = [];
+  try { lines = fs.readFileSync(file, 'utf8').split('\n'); } catch { /* a new home */ }
+  lines = lines.filter((l) => !l.startsWith(`${name}=`));
+  while (lines.length && lines[lines.length - 1] === '') lines.pop();
+  writePrivate(file, [...lines, `${name}=${value}`, ''].join('\n'));
+}
+
+/** The fallback named in an agent's Hermes config.yaml (the first entry), or null. */
+export function readFallback(home: string): { model: string; baseUrl: string } | null {
+  try {
+    const cfg: any = YAML.parse(fs.readFileSync(path.join(home, 'config.yaml'), 'utf8')) ?? {};
+    const f = Array.isArray(cfg.fallback_providers) ? cfg.fallback_providers[0] : null;
+    return f?.model ? { model: String(f.model), baseUrl: String(f.base_url ?? '') } : null;
+  } catch { return null; }
+}
+
+/**
+ * The model Hermes falls back to when the agent's own model fails — rate limits, outages, a refused key (plan 275 wave 1;
+ * Hermes' `fallback_providers`). `null` clears it. The key, when there is one, goes to the agent's .env under its own
+ * name and the config names that variable, never the key.
+ */
+export async function chooseFallback(home: string, input: ChooseInput | null, opts: DetectOptions = {}): Promise<{ model: string | null }> {
+  const file = path.join(home, 'config.yaml');
+  let cfg: any = {};
+  try { cfg = YAML.parse(fs.readFileSync(file, 'utf8')) ?? {}; } catch { /* a new home */ }
+  if (!input) {
+    delete cfg.fallback_providers;
+    writePrivate(file, YAML.stringify(cfg));
+    return { model: null };
+  }
+  const env = opts.env ?? process.env;
+  const d = await detect(opts);
+  const p = d.providers.find((x) => x.id === input.providerId);
+  if (!p) throw new Error('That provider is not among the ones found.');
+  const m = p.models.find((x) => x.id === input.model);
+  if (!m) throw new Error('That model is not listed by this provider.');
+  if (!m.allowed) throw new Error('That model is not allowed in this fleet.');
+  const key = resolveKey(p.keyRef, env);
+  if (!p.local && !key) throw new Error(`${p.name} needs a key. Add one on the Models screen.`);
+  if (key) setHomeEnv(home, 'BILSKIRNIR_FALLBACK_API_KEY', key);
+  cfg.fallback_providers = [{ provider: 'custom', model: m.id, base_url: p.baseUrl, ...(key ? { key_env: 'BILSKIRNIR_FALLBACK_API_KEY' } : {}) }];
+  writePrivate(file, YAML.stringify(cfg));
+  return { model: m.id };
+}
+
 export interface ChooseInput { providerId: string; model: string }
 export interface ChooseResult { providerId: string; model: string; baseUrl: string; keyFrom: string }
 
@@ -112,6 +174,10 @@ export async function choose(agentKey: string, home: string, input: ChooseInput,
   const key = resolveKey(p.keyRef, env);
   if (!p.local && !key) throw new Error(`${p.name} needs a key. Add one on the Models screen.`);
   patchHermesModel(path.join(home, 'config.yaml'), m.id, p.baseUrl, key);
+  // plan 275 (2026-11-13): Hermes knows some addresses as its OWN providers (opencode go, openrouter, …) and reads
+  // their key only from the agent's .env under its own variable name, ignoring config.yaml's api_key — so a model
+  // chosen here failed with "No usable credentials found for provider 'opencode-go'". The key goes there too.
+  if (key) for (const name of hermesKeyNames(p.id, p.baseUrl)) setHomeEnv(home, name, key);
   const dir = modelsDirFor(opts);
   const choices = readChoices(dir);
   const row: Choice = { providerId: p.id, baseUrl: p.baseUrl, model: m.id, keyRef: p.keyRef, at: new Date().toISOString() };

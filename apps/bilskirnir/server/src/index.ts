@@ -40,6 +40,9 @@ app.route('/api', configApi);
 // Serve the built web app in production.
 const webDist = path.resolve(new URL('.', import.meta.url).pathname, '../../web/dist');
 if (fs.existsSync(webDist)) {
+  // plan 275 (2026-11-13): index.html names the hashed bundles, so it must never be cached — Electron kept an old one
+  // and the window showed yesterday's face after a rebuild. The hashed assets themselves may be cached.
+  app.use('*', async (c, next) => { await next(); if ((c.res.headers.get('content-type') ?? '').includes('text/html')) c.header('Cache-Control', 'no-cache'); });
   app.use('/*', serveStatic({ root: path.relative(process.cwd(), webDist) }));
   app.get('*', (c) => c.html(fs.readFileSync(path.join(webDist, 'index.html'), 'utf8')));
 }

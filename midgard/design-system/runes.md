@@ -36,7 +36,7 @@ runes[24]{glyph,name,sound,meaning,ymir_use,file}:
   "ᛒ","Berkanan","b","birch","Profile — the self; Ratatoskr — the messenger","berkana"
   "ᛖ","Ehwaz","e","horse","Runtime — the seat and its transit; Hlidskjalf","ehwaz"
   "ᛗ","Mannaz","m","man, self","(no glyph yet)","—"
-  "ᛚ","Laguz","l","water, flow","(no glyph yet)","—"
+  "ᛚ","Laguz","l","water, flow","Rödd — the voice that flows","laguz"
   "ᛜ","Ingwaz","ng","Ing, the seed","Mimirsbrunn — the well of wisdom","ingwaz"
   "ᛞ","Dagaz","d","day, dawn","Valhalla — process health","dagaz"
   "ᛟ","Othala","o","inheritance, estate","(no glyph yet)","—"
@@ -56,12 +56,14 @@ squirrel, a gate, a world-tree) while `icons.md` claimed a rune for each. Correc
 Five UI surfaces, five different glyphs — no app borrows another's rune:
 
 ```
-app_runes[5]{app,glyph,rune,house_tint}:
+app_runes[7]{app,glyph,rune,house_tint}:
   "Hlidskjalf","ᛖ","ehwaz — the seat","#c9973f bronze (ymirlabs)"
   "Hlidskjalf Mobile","ᚱ","raidho — the road, the seat carried","#c9973f bronze"
   "Óðrerir","ᚨ","ansuz — the Allfather's breath, the mead of poetry","#c9973f bronze (ymirlabs)"
   "Sessrúmnir","ᛟ","othala — inheritance, the hall that holds what is kept","#c9973f bronze (ymirlabs)"
   "Smíðja (visualizer)","ᚲ","kaunan — the torch, the forge's eye","#f59e0b amber (brokkforge)"
+  "Bilskirnir","ᚦ","thurisaz — Thor's rune, for Thor's hall of many rooms (glyph file: gungnir)","#c9973f bronze (ymirlabs)"
+  "Rödd","ᛚ","laguz — water, flow: the voice that flows","#c9973f bronze (ymirlabs)"
 ```
 
 Minted and installed by `bin/desktop/design-icon.sh` (`list` · `mint --all` · `install`):
@@ -80,3 +82,4 @@ dir, so every app is dockable and carries the house mark.
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-13** — Bilskirnir and Rödd join the app runes (plan 275), at the Allfather's word that their launcher icons were "not made in the same way as the others". Bilskirnir wears ᚦ Thurisaz, Thor's rune, for Thor's hall (no other app wears it; the Gungnir subsystem shares the glyph); Rödd wears ᛚ Laguz, newly drawn in `icons/laguz.svg`. Rödd had worn a black copy of Óðrerir's glyph and Bilskirnir the whole Ymir mark.

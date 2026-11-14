@@ -57,3 +57,27 @@ App logos supplied at runtime by Composio also remain the property of their resp
 ## CHANGE LOG
 
 - **2026-11-12** — vendored from Bot HQ (MIT) into `apps/bilskirnir` (plan 259); kept as upstream wrote it, and from here appended, never rewritten.
+
+## game-icons.net — the house's fourteen characters (added 2026-11-13, plan 275)
+
+The fourteen agent characters in `web/artwork/characters/` are from [game-icons.net](https://game-icons.net)
+([github.com/game-icons/icons](https://github.com/game-icons/icons)), licensed under
+[Creative Commons Attribution 3.0](https://creativecommons.org/licenses/by/3.0/). They are recoloured in the Ymir
+mark's bronze on stone when drawn; the files themselves are unchanged.
+
+| Character | Icon | Artist |
+|---|---|---|
+| Huginn | raven | Lorc |
+| Fenrir | wolf-head | Lorc |
+| Jörmungandr | ouroboros | Lorc |
+| Sleipnir | horse-head | Lorc |
+| Hræsvelgr | eagle-emblem | Lorc |
+| Eikþyrnir | stag-head | Lorc |
+| Máni | moon | Lorc |
+| Ratatoskr | squirrel | Delapouite |
+| Mjölnir | thor-hammer | Delapouite |
+| Gungnir | spear-feather | Delapouite |
+| Skíðblaðnir | drakkar | Delapouite |
+| Heiðrún | goat | Skoll |
+| Gullinbursti | boar | Caro Asercion |
+| Sól | heraldic-sun | Caro Asercion |

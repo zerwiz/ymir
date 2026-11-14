@@ -130,8 +130,17 @@ if command -v pi >/dev/null 2>&1; then
   fi
   case "$(pi_door_state)" in
     current) detail="$detail · one-home door current" ;;
-    stale)   detail="$detail · one-home door stale"
-             [ "$mode" = "check" ] && { stale=$((stale+1)); [ "$state" = current ] && state="stale"; } ;;
+    stale)   if [ "$mode" = "check" ]; then
+               detail="$detail · one-home door stale"; stale=$((stale+1)); [ "$state" = current ] && state="stale"
+             elif pi_door_seat; then
+               # A deploy is a COPY, and nothing re-ran it: measured 2026-11-13 on nidavellir, the release
+               # carried the fixed door while ~/.pi/agent/bin/pi still held the old rule that read a lone
+               # `-e` as ownership — the seat there died of the very conflict this release fixed. Sync
+               # re-seats a STALE door, not only an absent one.
+               detail="$detail · one-home door re-seated (it was behind the tree)"
+             else
+               detail="$detail · one-home door STALE and not seatable ($PI_DOOR_DST)"
+             fi ;;
     absent)  if [ "$mode" = "check" ]; then
                detail="$detail · one-home door ABSENT (a seat started in another checkout loads two homes)"
                stale=$((stale+1)); [ "$state" = current ] && state="stale"
