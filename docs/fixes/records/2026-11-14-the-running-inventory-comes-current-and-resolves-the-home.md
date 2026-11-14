@@ -38,3 +38,7 @@ names line 2604), so this branch carries the mend rather than passing the fault 
 path set, and the `Documents/ymirhome` literal survives in `index.ts` only inside the resolver's own one-default
 fallback and this explanation. No build was run: this machine has 11 GB and the change is a type-checked call
 replacement, not new surface.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #765
