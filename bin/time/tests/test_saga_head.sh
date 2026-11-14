@@ -100,6 +100,24 @@ n="$(printf '%s\n' "$c" | awk 'END{print NR}')"
 printf '%s' "$c" | grep -qE '^== (CONTEXT DIGEST|MODEL CATALOG|SKILLS|TODAY) ==' && bad "no section body rides along on a compaction" "$c" \
   || ok "no section body rides along on a compaction"
 
+# ══ 4b · a PAGE is not a session (plan 275 item 36b) ═════════════════════════
+# The Runtime page draws the digest. A page load is not a hand on the helm: it must take
+# nothing, create no lock, and never report the lock as its own — the failure that made the
+# page print "session lock held (pid <the gate's own pid>)" and "helm: Hœnir · unknown".
+P="$TMP/pagelock"; mkdir -p "$P"
+pout="$(SAGA_STATE_DIR="$S1" BROKK_MACHINE_STATE_DIR="$P" BROKK_STATE_OVERRIDE="$P" bash "$DOOR" --page 2>&1)"
+[ -z "$(find "$P" -mindepth 1 -print -quit 2>/dev/null)" ] && ok "a page run creates no lock, no lease, no marker" \
+  || bad "a page run creates no lock, no lease, no marker" "$(ls -A "$P" | head -3)"
+printf '%s' "$pout" | grep -q 'held by this session' && bad "a page never reports the lock as its own" "$(printf '%s' "$pout" | grep -n 'held by')" \
+  || ok "a page never reports the lock as its own"
+printf '%s' "$pout" | grep -q 'lock: read-only' && ok "a page says it takes nothing" || bad "a page says it takes nothing" "$(printf '%s' "$pout" | sed -n '/HELM/,+2p')"
+printf '%s' "$pout" | grep -q '(read-only page)' && ok "the head names itself a page view, not a session start" || bad "the head names itself a page view" "$(printf '%s' "$pout" | head -2)"
+# The holder it names comes from the LEASE: the line is helm-identity's own, or its refusal.
+printf '%s' "$pout" | grep -qE '^(helm: | )+.*( · |no arm is held)' && ok "a page names the real holder from the arm lease" \
+  || bad "a page names the real holder from the arm lease" "$(printf '%s' "$pout" | sed -n '/HELM/,+2p')"
+grep -q "saga-session-start.sh', '--page'\|saga-session-start.sh\", \"--page" "$ROOT/apps/hlidskjalf/server/index.ts" && ok "Hlidskjalf's Runtime page asks for --page" \
+  || bad "Hlidskjalf's Runtime page asks for --page" "$(grep -n 'saga-session-start.sh' "$ROOT/apps/hlidskjalf/server/index.ts" | head -2)"
+
 # ══ 5 · the fixed core: ONE file, read by the head AND the seat law ══════════
 [ -r "$CORE" ] && ok "the fixed core is one file (bin/time/saga-head-core.md)" || bad "the fixed core is one file"
 for law in "PUBLIC repo" "PRIVATE repo" "bin/vault/home-sync.sh" "~/ymir-runtime" "eindri-send.sh" "rodd-arm.sh" "skill-find.sh" "in-call.sh" "eindri/<errand>"; do

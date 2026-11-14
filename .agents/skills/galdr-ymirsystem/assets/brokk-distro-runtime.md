@@ -113,6 +113,7 @@ re-implements none of them.
 |---|---|---|
 | *(no argument)* | the session start: the stages, then the head | lock, bridges, the well, and — for the helm only — the hall sweep, the handoff and cron |
 | `--head` | the head alone | **none** (this is the compaction path; the lock is only read) |
+| `--page` | the head, for a page that DRAWS it (Hlidskjalf's Runtime page) | **none at all** — a page load is not a hand on the helm: it takes no lock, writes no lease, and names the real holder from the arm lease |
 | `--section <name>` | one section | the section's own (a read, except `bootstrap`, which re-probes idempotently) |
 | `--list` | the twenty section names, one line each | none |
 | `--check` | measures the head; **exit 1 over budget** | none |

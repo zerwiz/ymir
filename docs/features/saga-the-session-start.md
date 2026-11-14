@@ -20,6 +20,7 @@ the Allfather, the live errands, and the next step.
 ```bash
 bin/time/saga-session-start.sh              # a session start: the stages, then the head
 bin/time/saga-session-start.sh --head       # the head alone (what a compaction re-injects)
+bin/time/saga-session-start.sh --page       # a PAGE reads the head: read-only, holds nothing
 bin/time/saga-session-start.sh --list       # the twenty sections, one line each
 bin/time/saga-session-start.sh --section wake     # one section, when the work needs it
 bin/time/saga-session-start.sh --check      # measure the head; exit 1 over budget
@@ -65,6 +66,9 @@ The head carries:
   sweeping undelivered reports into the wake queue and raising the cron all happen at the
   **helm's** session start. A worker's session start (a seat takes its own lock) does none of
   it.
+- **A page is not a session.** Hlidskjalf's Runtime page runs `--page`: it takes no lock,
+  writes no lease and never reports the lock as its own, so a page load cannot look like a
+  hand on the helm. The holder it names comes from the arm lease.
 - **One hook, for the home you are in.** The user-scope Claude Code hook resolves the home the
   session is actually in (the project, then the pin) instead of three hardcoded paths.
 
