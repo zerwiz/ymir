@@ -23,15 +23,16 @@ if [ "$INSTALL" = 1 ]; then
 fi
 
 if [ "$INSTALL" = 1 ]; then
-  cat <<'UNIT'
-[Unit]
-Description=Plan watch (Nornir job)
-[Service]
-Type=oneshot
-ExecStart=/bin/bash -lc 'cd __ROOT__ && bin/time/nornir-job-plan-watch.sh'
-UNIT
-  # substitute root
-  sed "s#__ROOT__#$ROOT#g" >/dev/null 2>&1
+  # The unit is a TEMPLATE in the repository (systemd/nornir-job-plan-watch.service) and is
+  # rendered HERE, because a rendered unit names one checkout on one machine — private data
+  # that never returns to the public tree (RULES/04, RULES/07).
+  unit="$ROOT/systemd/nornir-job-plan-watch.service"
+  if [ -r "$unit" ]; then
+    sed -e '/^#/d' -e "s#__YMIR_ROOT__#$ROOT#g" "$unit"
+  else
+    printf '[Unit]\nDescription=Plan watch (Nornir job)\n[Service]\nType=oneshot\nExecStart=/bin/bash -lc %s\n' \
+      "'cd $ROOT && bin/time/nornir-job-plan-watch.sh'"
+  fi
   cat <<'TIMER'
 [Timer]
 OnCalendar=*-*-* 07:30:00
