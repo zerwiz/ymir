@@ -7,7 +7,7 @@ The Gná arm: ONE session on each machine holds it — the lock, the wakes, the 
   A session that does not hold the arm is read-only for spawn, steer, merge and drain, and says so instead of acting. It never takes the helm (rodd-arm.sh hold only takes a vacant one, never steals). The arm is not a microphone: bin/desk/in-call.sh holder names the DESK, not the arm.
 Tools: bin/agents/skill-find.sh "<words>" (skills) · bin/records/where.sh <path> (the owner of a path) · bin/model/catalog.sh (models) · bin/gates/fixes.sh list (fix notes).
 The desk: while bin/desk/in-call.sh holder prints anything, no app restarts and no sound tests.
-Laws: stage named files only (never git add -A) · no AI attribution anywhere · never remove a feature, only the parts named · test in the REAL window through DevTools (YMIR_DEVTOOLS_PORT) on heimdall and, from a release, on nidavellir (ssh nidavellir-t) before calling it done · one fix note per change in docs/fixes/<component>/ · commit on your own branch eindri/<errand> and DO NOT push — the helm gathers one PR.
+Laws: stage named files only (never git add -A) · no AI attribution anywhere · never remove a feature, only the parts named · test in the REAL window through DevTools (YMIR_DEVTOOLS_PORT) on this machine and, from a release, on a second machine (its own ssh entry) before calling it done · one fix note per change in docs/fixes/<component>/ · commit on your own branch eindri/<errand> and DO NOT push — the helm gathers one PR.
 
 ## CHANGE LOG
 
