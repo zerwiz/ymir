@@ -21,8 +21,8 @@ Three resolvers now live in `bin/vault/hoard-lib.sh`, the one door every script 
 | Resolver | Answers | Replaced |
 |---|---|---|
 | `ymir_plan_dir` | the canonical plan ledger: the single `svartalfaheim/<realm>/projects/<project>/plans` in the home (the older `workspace/` shape only when `projects/` has none) | the realm spelled in `behind.sh`, `plan-state.sh`, `plan-board.sh`, `plan-audit.sh`, `queue.sh`, `review-seat.sh`, `ymir-mcp.py` and five comments |
-| `ymir_fleet_heart` | the fleet registry's `heart` | `HEART="${YMIR_HEART:-zerwizserver}"` in `bin/records/well-door.sh` |
-| `ymir_house_domains` | the domains the home calls its own | `*@zerwiz.org` in `identity-guard.sh` and `bin/records/developers.sh` |
+| `ymir_fleet_heart` | the fleet registry's `heart` | `HEART="${YMIR_HEART:-<the heart's host>}"` in `bin/records/well-door.sh` |
+| `ymir_house_domains` | the domains the home calls its own | `*@<the house's domain>` in `identity-guard.sh` and `bin/records/developers.sh` |
 
 Against those, two home files ship a template and a seed row (`.agents/home-contract.yaml`):
 
@@ -43,7 +43,7 @@ the setting instead of pointing a stranger's install at a machine of ours: `PING
 `GIMLE_PLANE_WORKSPACE`, `PLANE_API_BASE`, `RAIL_KEY_PROVIDERS`, and the collab register's `host`.
 
 Three smaller corrections of the same class: `bin/seat/seats.sh` shortened **his** home with a literal
-(`/home/heimdall`) and now shortens this user's; `bin/seat/machine-profile.sh`'s seat table of four
+(`/home/<user>`) and now shortens this user's; `bin/seat/machine-profile.sh`'s seat table of four
 hosts became `hostname -s`; and three scripts that fell back to `"${_h:-$HOME/Documents/ymirhome}"`
 (`smith-seat.sh`, `verdict-watch.sh`) now refuse when the resolver names no home.
 
@@ -67,7 +67,7 @@ contract's ledger path, both copies of the server-stack registry, the elder's le
 ratatoskr and tyr pages, the Snotra, Óðrerir, Smíðja, Hlidskjalf, Nornir, memory-well and Þing assets,
 the harness page that named a partner, and the OpenCode plugin. The plugin is the one real behaviour
 change there: `ymir_plan` and `ymir_place` resolved the realm as a **default parameter**
-(`whynotproductions`), so both now call a new `planLedger(home, realm?, project)` that discovers the
+(`<the realm>`), so both now call a new `planLedger(home, realm?, project)` that discovers the
 ledger by the same precedence as the shell resolver and refuses, naming what it found, when a home
 holds several.
 
@@ -91,6 +91,9 @@ derives the smith's own from `gh api user`.
 - `.agents/` — the 18 prompt files, except `nsr-compliance`
 - `.agents/config/{house-domains.txt.example,nda-allow.yaml,nda-allow.operator.yaml.example}`,
   `.agents/home-contract.yaml` (three new rows)
+- `bin/host/heimdall-ssh-keys.sh` is an EXISTING file (the lore ward's own, `8d2a24e8`), not a new
+  door and not a rename: only its portability comment changed, to name the two proven platforms by
+  role instead of by host.
 
 ### The home side (shipped, not in this repository)
 
