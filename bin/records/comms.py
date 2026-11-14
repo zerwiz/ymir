@@ -429,7 +429,7 @@ def _persons(item: dict, idx: dict) -> dict[str, set[str]]:
         k = tok.lower()
         if k in idx and k not in GENERIC:
             found.setdefault(k, set()).update(idx[k])
-    # a person named in the body as the counterparty ("to Reygan", "to Craig")
+    # a person named in the body as the counterparty ("to Ada", "to Bo")
     for tok in [t for pair in re.findall(r"\bto ([A-Z][a-zåäö]+)(?: and ([A-Z][a-zåäö]+))?\b", item["text"])
                 for t in pair if t]:
         k = tok.lower()

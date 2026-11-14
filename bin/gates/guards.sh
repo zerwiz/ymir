@@ -83,7 +83,7 @@ SCOPED=(public-data-guard.sh house-colour-guard.sh nda-guard.sh)
 # whole tree costs; CI's --full reads every file.
 
 # CI_ONLY — declared whole-tree work that costs more than a push may spend (plan 243 §3,
-#          part C). Measured on heimdall 2026-11-11, serially, on this tree; the number in
+#          part C). Measured on the dev machine 2026-11-11, serially, on this tree; the number in
 #          each reason is that measurement and `--profile` re-measures it. A ward lands
 #          here only with a reason, and CI runs EVERY one of them on every PR and on main
 #          (`guards.sh --full`), so nothing is skipped — it is *moved* to the gate with the

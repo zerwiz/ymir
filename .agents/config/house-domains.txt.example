@@ -1,0 +1,17 @@
+# house-domains.txt.example — the mail domains that belong to YOU (the house), and nobody else.
+#
+# Copy to $YMIR_HOME/hodd/identity/house-domains.txt (private, never in this repo) and fill in
+# your own. One domain per line; `#` starts a comment.
+#
+# Read at run time by two wards, so the repository never spells a domain of yours (RULES/04):
+#
+#   bin/gates/guards/identity-guard.sh   a commit may be AUTHORED as <agent>@<one of these>
+#                                        (the house's agent identities), and nothing else is;
+#   bin/records/developers.sh            an author whose address is on one of these is shown
+#                                        as a house identity, while a person's mailbox is masked.
+#
+# A home that declares none is not an error: both fall back to the generic forms only
+# (`@ymir`, `@ymir.local`, `@users.noreply.github.com`), which is what a fresh fleet wants.
+
+example.org
+example.com

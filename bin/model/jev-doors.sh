@@ -73,7 +73,7 @@ path, host, key, as_json = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4] ==
 #   {"state":"x","questions":{"q":{"type":"noul","instructions":"ok?"}}}
 # which the engine refuses with 400 — `questions.<id>: "criteria" must be a non-empty
 # object`. Nothing counted but 200, so a door that was standing and answering its real
-# traffic was reported `down`. Measured on heimdall with jev build 12138: a criteria-less
+# traffic was reported `down`. Measured on the dev machine with jev build 12138: a criteria-less
 # body → 400, a body carrying criteria → 200 in one forward pass.
 PROBE = json.dumps({
     "state": "the probe asks one question to learn whether this door answers",

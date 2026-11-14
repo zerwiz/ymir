@@ -117,7 +117,8 @@ write_charter() {
     printf 'so the loop delivers it; the file alone is also delivered by bin/forge/verdict-watch.sh.\n'
 
 
-    printf '   in %s\n\n' "$HOME_DIR/svartalfaheim/whynotproductions/projects/ymir/plans"
+    LEDGER=""; ymir_plan_dir LEDGER 2>/dev/null || true
+    printf '   in %s\n\n' "${LEDGER:-the plan ledger under $HOME_DIR}"
     printf '## What you may do\n\n'
     printf -- '- read everything; run the gates and the tests YOURSELF on the fetched head\n'
     printf -- '- mark every claim in a packet verified or unverified\n'

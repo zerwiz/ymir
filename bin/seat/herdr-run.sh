@@ -196,7 +196,7 @@ seat_guard() {  # <name>; non-zero if the seat would share the primary's lock
 # let three agents infer against one rail at once. Non-zero = at capacity.
 local_model_guard() {  # <model-string>
   case "${1:-}" in
-    *llama-swap*|*llamacpp-whynot*|*llama.cpp*|*llama-cpp*|*lmstudio*)
+    *llama*|*lmstudio*)
       [ -x "$SCRIPT_DIR/../model/local-model-lock.sh" ] || return 0
       "$SCRIPT_DIR/../model/local-model-lock.sh" check >/dev/null 2>&1
       ;;

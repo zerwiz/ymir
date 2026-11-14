@@ -2,14 +2,14 @@
 # ping-room.sh — Þing on demand: raise a MiroTalk room on the computer you are on.
 #
 # The room must never be assumed. It is raised when a meeting needs it, published by
-# Tailscale Serve/Funnel or the ping.zerwiz.org tunnel claim, and lowered after.
+# Tailscale Serve/Funnel or the public tunnel claim (PING_ROOM_HOST), and lowered after.
 #
 # Usage:
 #   ping-room.sh start [--port N] [--mode local|tailnet|public] [--title T]
 #   ping-room.sh stop
 #   ping-room.sh status
 #   ping-room.sh url
-#   ping-room.sh claim   # ping.zerwiz.org via the Cloudflare tunnel
+#   ping-room.sh claim   # publish the room on the tunnel named by PING_ROOM_HOST
 #   ping-room.sh release
 #
 # Env:
@@ -18,6 +18,7 @@
 #   PING_CMD              override the room command (tests); PORT is exported
 #   PING_IMAGE            docker image to run when no checkout exists
 #   PING_STATE            state file (default <home>/hodd/state/thing/room.json)
+#   PING_ROOM_HOST        the PUBLIC hostname your tunnel serves the room on (required by `claim`)
 #
 # Exit: 0 ok · 1 error · 2 usage · 3 refused (already raised / claim held)
 set -euo pipefail
@@ -117,10 +118,11 @@ cmd_claim(){
     local h; h="$(python3 -c "import json;print(json.load(open('$YMIR_HOME/hodd/state/thing/claim.json')).get('host',''))" 2>/dev/null || true)"
     [ "$h" = "$(hostname)" ] || { printf 'refused\tclaim held by %s\n' "$h"; exit 3; }
   fi
-  printf '{"host":"%s","since":"%s","url":"https://ping.zerwiz.org"}\n' "$(hostname)" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$YMIR_HOME/hodd/state/thing/claim.json"
-  printf 'claimed\tping.zerwiz.org\t%s\n' "$(hostname)"
+  [ -n "${PING_ROOM_HOST:-}" ] || die "no public name — set PING_ROOM_HOST to the hostname your tunnel serves the room on"
+  printf '{"host":"%s","since":"%s","url":"https://%s"}\n' "$(hostname)" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$PING_ROOM_HOST" > "$YMIR_HOME/hodd/state/thing/claim.json"
+  printf 'claimed\t%s\t%s\n' "$PING_ROOM_HOST" "$(hostname)"
 }
-cmd_release(){ rm -f "$YMIR_HOME/hodd/state/thing/claim.json"; printf 'released\tping.zerwiz.org\n'; }
+cmd_release(){ rm -f "$YMIR_HOME/hodd/state/thing/claim.json"; printf 'released\t%s\n' "${PING_ROOM_HOST:-the claim}"; }
 
 case "$ACTION" in
   start) shift; cmd_start "$@" ;;
