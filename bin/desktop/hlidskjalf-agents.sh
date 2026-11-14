@@ -74,11 +74,15 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   done
   unset _c
 fi
+# The fallback is NOT restated here: the home is whatever the one resolver says
+# (bin/vault/hoard-lib.sh), and when the resolver is missing the card says so by
+# leaving these empty rather than guessing a path (Rule 07, defaults-guard).
 STATE_DIR="${YMIR_STATE_DIR:-}"; SETTINGS_DIR="${YMIR_SETTINGS_DIR:-}"
 if [ -z "$STATE_DIR" ] && command -v hoard_state_dir >/dev/null 2>&1; then hoard_state_dir STATE_DIR; fi
 if [ -z "$SETTINGS_DIR" ] && command -v hoard_settings_dir >/dev/null 2>&1; then hoard_settings_dir SETTINGS_DIR; fi
-STATE_DIR="${STATE_DIR:-$HOME/Documents/ymirhome/state}"
-SETTINGS_DIR="${SETTINGS_DIR:-$HOME/Documents/ymirhome/config}"
+if [ -z "$SETTINGS_DIR" ] && command -v ymir_home_root >/dev/null 2>&1; then
+  _home=""; ymir_home_root _home && SETTINGS_DIR="$_home/config"; unset _home
+fi
 AGENTS_YAML="${YMIR_AGENTS_YAML:-$SETTINGS_DIR/agents.yaml}"
 MSGLOG="${YMIR_MSG_LOG:-$STATE_DIR/fleet/messages.jsonl}"
 
