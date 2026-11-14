@@ -1,6 +1,6 @@
 import type { GateId, DomainDef, RealmDef, TaskState, AgentStatus } from '../types';
 
-// One runtime: a single workspace. The Work · Personal · Svein mode chips and the
+// One runtime: a single workspace. The Work · Personal · the third realm mode chips and the
 // switching they offered are retired (plan 275) — there is one Hlidskjalf and one
 // workspace, so `WORKSPACES` is a one-entry lookup for `realmDef`/`realmById`, not
 // a list of modes to switch between. Domains are knowledge areas inside it; houses
