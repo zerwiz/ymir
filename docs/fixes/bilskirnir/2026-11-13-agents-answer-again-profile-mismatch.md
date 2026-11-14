@@ -32,3 +32,7 @@ In Bilskirnir's window, driven through DevTools: Marketing answered "What is sev
 Nanna's gateway now admits her messages (Hermes log 13:33:03, one model call, no refusal) and her engine panel offers
 nine providers. Her replies still echo "profile_mismatch", because her conversation history is full of that error and
 the local model copies it; clearing her room is the operator's choice. Lowering Bilskirnir left no new Electron core.
+
+## CHANGE LOG
+
+- 2026-11-13 — review-mend: added missing heading for #730
