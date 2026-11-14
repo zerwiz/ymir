@@ -198,18 +198,32 @@ marker line per execution shows no committed phase's work was recomputed, and
   `SMIDJA_VIZ_API_PORT`.
 - Served under Hlidskjalf's **Sessions** gate via **Open visualizer**
   (`VITE_VISUALIZER_URL`, default `http://127.0.0.1:8437`).
-- **Shared login, verified live (added 2026-09-13).** The server exposes
-  `GET /api/auth`, which forwards the browser's cookie to the gate's
-  `/api/session` and returns `{authed, login}`; `App.vue` shows a "Sign in" link
-  (to the gate) or "ᛉ <login>" from that live answer. It **never** reads a
-  session file — a token on disk would let a user look logged in when they are not.
-- **The Hall door (added 2026-09-13).** `App.vue`'s topbar carries a **To the
-  Hall** pill (rune Othala ᛟ, `.hall-btn`) beside the theme toggle: a new tab to
-  the Óðrerir Live Hall — `http://localhost:4322` when
-  `window.location.host` starts with `localhost`/`127.0.0.1`, otherwise
-  `https://hall.ymir.zerwiz.org`. It is a **plain anchor, not a `/api/desktop`**
-  launcher: the Hall is the landing's live board, not one of the three apps the
-  gate raises. Same door in Hlidskjalf's and Sessrúmnir's chrome.
+- **The door is loopback, and there is no login (changed 2026-11-14).** The
+  server binds **`127.0.0.1`** always — it used to read `HOST` from the
+  environment, so a stray `HOST=0.0.0.0` opened the smithy's API to the network.
+  The hosted-era `GET /api/auth` (which forwarded the browser's cookie to the
+  gate's `/api/session`) and the header's "Sign in" / "ᛉ <login>" bits are
+  **gone**: the smithy is a local app, opened from its own desktop icon, and the
+  desktop session is the authority (plan 275 item 30; plan 279 closed the open
+  ports). `server/settings.ts` still holds the WayOfTeams **MCP token** — that is
+  a credential for a local tool, not a login gate, and it stays.
+- **The Hall door (2026-09-13 — gone 2026-11-14).** `App.vue`'s topbar once
+  carried a **To the Hall** pill (rune Othala ᛟ, `.hall-btn`) beside the theme
+  toggle. Every cross-app door left the headers on 2026-11-14 at the Allfather's
+  word — *"we open the apps from the desktop icons instead"* — so the smithy's
+  header now carries only its own trail, the live dot, the theme toggle and the
+  window controls (plan 275 item 2 / errand `one-hlidskjalf`).
+- **The header follows the window (2026-11-14).** Each crumb is one wrapper
+  (separator + its own door) and the tools (live · theme · window) are one group
+  that never shrinks; the trail tightens, shortens its run id and phase name with
+  an ellipsis, and only wraps below ~740px. Measured 1600→360px: six doors visible
+  at every width, zero collisions. Public share of the why:
+  `docs/fixes/smidja/2026-11-14-the-smithy-header-fits-every-width.md`.
+- **Kaia's chat (2026-11-14).** `server/chat.ts` defaults to
+  `opencode-go/deepseek-v4.1-flash` (the old `deepseek-v4-flash` is in no catalog
+  and the provider answers it `400 Model is unavailable`, which pi reported as
+  exit 1). A failure shows `failureReason()`: pi's stderr with every
+  `[<extension>]` status line dropped and **nothing truncated**.
 - See `docs/lore.md` §XIII.
 
 ## In Hlidskjalf (the gate API)

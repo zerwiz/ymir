@@ -27,6 +27,40 @@ import type {
 
 const VERBOSE = process.env.SMIDJA_CHAT_DEBUG === "1" || process.env.SMIDJA_DEBUG === "1";
 
+/**
+ * The chat's default model — the house's orchestration model, and one this
+ * machine's pi catalog actually serves (`bin/model/catalog.sh --has …`). The id
+ * that used to sit here, `opencode-go/deepseek-v4-flash`, is listed by no
+ * provider: pi warns "Model … not found", lets the request through as a custom
+ * id, and the upstream answers 400 {"message":"Model is unavailable."} — which
+ * pi reports as exit 1, which the chat showed as "Völundr (Pi) failed".
+ */
+export const DEFAULT_CHAT_MODEL = "opencode-go/deepseek-v4.1-flash";
+
+/**
+ * pi's extension status lines: `[constellation] mesh: unconfigured`,
+ * `[excalidraw] excalidraw: no fork`, `[wayofteams-tools] …`. Every installed
+ * extension prints one on every run — working or failing — so none of them is
+ * the cause of a failure, and none belongs in the error the user reads.
+ */
+const EXTENSION_STATUS = /^\[[a-z][a-z0-9._-]*\]/i;
+
+/**
+ * The real reason pi exited non-zero, shown WHOLE: its stderr with the extension
+ * status lines dropped and nothing truncated. A provider's error body is the one
+ * line that says what is wrong (which model, which key, which door), so cutting
+ * it at 300 characters hid exactly the answer it was meant to give.
+ */
+export function failureReason(stderr: string): string {
+  const lines = stderr
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const real = lines.filter((l) => !EXTENSION_STATUS.test(l));
+  // If nothing but status lines came back, repeat what pi said rather than nothing.
+  return (real.length ? real : lines).join("\n");
+}
+
 /** Debug helper: always visible in the server log when chat debugging is on. */
 function dbg(...parts: unknown[]): void {
   if (VERBOSE) console.error("[chat-debug]", ...parts);
@@ -186,7 +220,13 @@ export async function sendMessage(req: ChatMessageRequest, dbPath: string): Prom
     // The user picks the chat model in the UI (orchestrator picker); fall back
     // to the orchestrator's cloud model. Passing it explicitly keeps pi on the
     // right surface instead of its heavy wayofteams-tools MCP default.
-    const model = requestedModel?.trim() || "opencode-go/deepseek-v4-flash";
+    // The user picks the chat model in the UI (orchestrator picker); fall back
+    // to the house's orchestration model. Passing it explicitly keeps pi on the
+    // right surface instead of its heavy wayofteams-tools MCP default.
+    // It must be an id this machine's pi catalog actually serves: the old
+    // `deepseek-v4-flash` is not one, and the provider answers it with
+    // 400 "Model is unavailable" (pi then exits 1, plan 275 item 15).
+    const model = requestedModel?.trim() || DEFAULT_CHAT_MODEL;
     const args = [
       "--print",
       "--session",
@@ -229,19 +269,15 @@ export async function sendMessage(req: ChatMessageRequest, dbPath: string): Prom
     }
     dbg(`  exit=${result.exit} stdout=${result.stdout.length}ch stderr=${result.stderr.length}ch`);
     if (result.exit !== 0) {
-      if (VERBOSE) console.error(`[chat] pi exit ${result.exit}: ${result.stderr.slice(0, 400)}`);
-      // Surface WHY pi failed (e.g. "Model lmstudio/... not found") instead of
-      // a bare exit code — the chat UI shows this to the user.
-      const why = result.stderr
-        .split(/\r?\n/)
-        .map((l) => l.trim())
-        .filter(Boolean)
-        .filter((l) => !l.startsWith("[wayofteams-tools]"))
-        .slice(-3)
-        .join(" | ");
-      throw new Error(
-        `Völundr (Pi) failed (exit ${result.exit})${why ? ` — ${why.slice(0, 300)}` : ""}`,
-      );
+      if (VERBOSE) console.error(`[chat] pi exit ${result.exit}, stderr:\n${result.stderr}`);
+      // Surface WHY pi failed instead of a bare exit code — the chat UI shows
+      // this to the user. What pi says first is not the cause: each extension
+      // prints a status line (`[constellation] …`, `[excalidraw] …`) whether or
+      // not the message works, and showing those as the reason hid the real
+      // provider error and cut it at 300 characters. Drop every status line,
+      // keep the whole of what is left.
+      const why = failureReason(result.stderr);
+      throw new Error(`Völundr (Pi) failed (exit ${result.exit})${why ? ` — ${why}` : ""}`);
     }
     return result.stdout.trim() || "(no response)";
   }
@@ -254,6 +290,11 @@ export async function sendMessage(req: ChatMessageRequest, dbPath: string): Prom
  */
 function kaiaPromptArgs(cwd: string): string[] {
   const candidates = [
+    // Where the smithy keeps them today (the paths above went stale when the
+    // app moved under apps/smidja-factory — measured 2026-11-14, plan 275 §03:20).
+    "apps/smidja-factory/skills/volundr/prompt/volundr-system.md",
+    "apps/smidja-factory/templates/prompt_engineering/orchestrator/system.md",
+    // The older layouts, kept so a repo shaped differently still finds its own.
     "apps/smidja/smidja_data/prompt_engineering/orchestrator/system.md",
     ".agents/skills/smidja/skills/volundr/prompt/volundr-system.md",
   ];

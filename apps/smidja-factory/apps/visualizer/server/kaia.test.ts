@@ -15,6 +15,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { piCommand, piPath, resetPiPathCache } from "./model-catalog.ts";
 import { adaptMemoryPayload } from "./memory-adapt.ts";
+import { DEFAULT_CHAT_MODEL, failureReason } from "./chat.ts";
 
 describe("piPath — the binary is resolved, never assumed", () => {
   test("YMIR_PI_BIN wins when it points at a real executable", () => {
@@ -92,5 +93,44 @@ describe("adaptMemoryPayload — the flat bridge shape becomes the UI contract",
 
   test("a non-object payload is returned unchanged", () => {
     expect(adaptMemoryPayload("/health", "not json")).toBe("not json");
+  });
+});
+
+describe("failureReason — the real cause, whole (plan 275 item 15)", () => {
+  // Measured on heimdall 2026-11-14: pi prints one status line per installed
+  // extension on EVERY run, then the provider's answer. The chat used to show
+  // the status lines as the cause and cut the provider's words at 300 chars.
+  const real =
+    'Warning: Model "deepseek-v4-flash" not found for provider "opencode-go". Using custom model id.\n' +
+    "[constellation] mesh: unconfigured — no registry configured — set CONSTELLATION_REGISTRY (a git URL or a local path).\n" +
+    "[excalidraw] excalidraw: no fork — set EXCALIDRAW_ROOT; fork expects ~/CodeP/excalidraw\n" +
+    '400: {"type":"server_error","message":"Upstream request failed: Model is unavailable."}\n';
+
+  test("every [extension] status line is dropped", () => {
+    const why = failureReason(real);
+    expect(why).not.toContain("[constellation]");
+    expect(why).not.toContain("[excalidraw]");
+    expect(why).not.toContain("[wayofteams-tools]");
+  });
+
+  test("the provider's error is shown whole — not cut at 300 characters", () => {
+    const why = failureReason(real);
+    expect(why).toContain('400: {"type":"server_error","message":"Upstream request failed: Model is unavailable."}');
+    const long = "500: " + "x".repeat(900);
+    expect(failureReason(long)).toBe(long);
+  });
+
+  test("pi's own warning is kept: it names the model", () => {
+    expect(failureReason(real)).toContain("deepseek-v4-flash");
+  });
+
+  test("nothing but status lines still says what pi said", () => {
+    const only = "[excalidraw] excalidraw: no fork\n";
+    expect(failureReason(only)).toBe("[excalidraw] excalidraw: no fork");
+  });
+
+  test("the default model is the house's, and one the catalog serves", () => {
+    expect(DEFAULT_CHAT_MODEL).toBe("opencode-go/deepseek-v4.1-flash");
+    expect(DEFAULT_CHAT_MODEL).not.toBe("opencode-go/deepseek-v4-flash");
   });
 });
