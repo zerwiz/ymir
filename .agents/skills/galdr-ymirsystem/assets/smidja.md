@@ -229,6 +229,11 @@ marker line per execution shows no committed phase's work was recomputed, and
   passes `--no-context-files`, so the chat never adopts the identity of the
   `AGENTS.md` in its working directory — measured 2026-11-14, where it answered
   as the seat's counsellor because no persona was found at all.
+- **The chat's model is the operator's to name (2026-11-14).** `chatModelDefault()`
+  resolves `SMIDJA_CHAT_MODEL` from the environment, then the home's
+  `config/smidja.env`, then the repo's `DEFAULT_CHAT_MODEL`; the repo ships only the
+  shape, `config/smidja.env.example`. `GET /api/chat/default-model` serves the answer
+  and the picker opens with that model selected.
 - **Kaia's chat (2026-11-14).** `server/chat.ts` defaults to
   `opencode-go/deepseek-v4.1-flash` (the old `deepseek-v4-flash` is in no catalog
   and the provider answers it `400 Model is unavailable`, which pi reported as
