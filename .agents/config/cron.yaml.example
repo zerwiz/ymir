@@ -112,3 +112,13 @@
 
 # every N minutes, aligned to the hour — the finest cadence Nornir offers (2026-11-13)
 @heart @every:5 bin/time/nornir-job-snotra-autojoin.sh
+
+# — THE PRIVATE SWEEP (RULES/04 · RULES/25, 2026-11-14) ————————————————————————————————————————————
+# This repository is the runtime and the apps; a client name, a mailbox, a schedule, a plan, a key or an
+# address in it is a leak, not a shortcut. Twice a day the tree's CONTENT is swept — a pre-commit hook can
+# be skipped with --no-verify and cannot see what is already committed. A finding is queued for a person and
+# one triage errand is seated; the scan never blocks, because every scanner has false positives. The GATE (a
+# refused change) is separate and runs when a change is offered: bin/gates/secret-scan.sh, in pre-commit and
+# on every pull request. Give your own minute on a large fleet.
+@heart 06:10 bin/time/nornir-job-private-scan.sh
+@heart 18:10 bin/time/nornir-job-private-scan.sh

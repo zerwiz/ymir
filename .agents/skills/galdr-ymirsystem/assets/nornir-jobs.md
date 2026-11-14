@@ -41,6 +41,18 @@ nornir-cron-start.sh --stop     # stop the loop, remove state/cron.pid
   `cron run:` (`/proc/<pid>/cmdline`), so PID reuse after reboot cannot fake a running loop.
 - Log rotation: `state/cron.log` rotates to `state/cron.log.1` above
   `BROKK_CRON_LOG_MAX_BYTES` (default 1 MiB).
+- **The private sweep (2026-11-14, RULES/04 · RULES/25).** Two rows
+  (`@heart 06:10` and `@heart 18:10 bin/time/nornir-job-private-scan.sh`) sweep the
+  repository's **content** twice a day for what belongs in the operator's home — a secret
+  shape, an address, a person, a business name, a private record. A finding is queued for a
+  person and ONE triage errand is seated; the sweep never blocks and never fixes, because every
+  scanner has false positives. The **gate** on the other side of the same question runs when a
+  change is offered (`bin/gates/secret-scan.sh` in pre-commit and on every pull request); both
+  read the operator's own lists in the home (`hodd/identity/public-deny.txt`,
+  `hodd/identity/nda-names.txt`, `hodd/security/operator-words.txt`), so a word is defined once
+  and enforced at two moments. A fresh home is seated from `.agents/config/cron.yaml.example`,
+  which carries both rows — a law that says a scan runs on the clock is only true if the
+  template seats it.
 - **Handoff failsafe sweep (2026-09-27, plan 58 Phase 3).** A row
   (`06:45 bin/agents/eindri-handoff.sh sweep`, any role) delivers every undelivered
   worker report or question into the wake queue — a worker whose terminal act wrote
