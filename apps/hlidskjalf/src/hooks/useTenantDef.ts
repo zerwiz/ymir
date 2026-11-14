@@ -8,6 +8,9 @@ import type { RealmDef, TenantGrant } from '../types';
  */
 export function useTenantDef(realm: string, grant?: TenantGrant | null): RealmDef {
   const override = useYmir((s) => s.tenantColors[realm]);
-  const def = realmDef(realm, grant ?? undefined);
+  // The home's own realms first: a realm the shipped pair does not know still
+  // wears the seal its registry id picks, not a borrowed house colour.
+  const realms = useYmir((s) => s.realms);
+  const def = realms.find((r) => r.id === realm) ?? realmDef(realm, grant ?? undefined);
   return override ? { ...def, tint: override, tint2: override } : def;
 }

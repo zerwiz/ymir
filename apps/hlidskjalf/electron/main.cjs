@@ -23,10 +23,6 @@ function localOnly(url, fallback) {
 const HLIDSKJALF = localOnly(process.env.HLIDSKJALF_URL || 'http://127.0.0.1:3888/', 'http://127.0.0.1:3888/');
 const SMIDJA = localOnly(process.env.SMIDJA_URL || 'http://127.0.0.1:8437/', 'http://127.0.0.1:8437/');
 const ODRERIR = localOnly(process.env.ODRERIR_URL || 'http://127.0.0.1:4322/', 'http://127.0.0.1:4322/');
-// The gate is the one identity: signing out here clears the shared session for
-// every Ymir surface (Hlidskjalf, Smiðja, Sessrúmnir).
-const GATE = process.env.YMIR_GATE_URL || 'http://127.0.0.1:3889';
-
 // One window, one app identity: Hlidskjalf and Smíðja are separate desktop
 // apps so they never stack in the taskbar and each carries its own icon.
 const VIEW = (process.env.YMIR_DESKTOP_VIEW ?? 'hlidskjalf').toLowerCase();
@@ -230,17 +226,6 @@ function openWindow(url, title) {
   return win;
 }
 
-// Sign out of the shared Ymir session: clear it at the gate, then reload so the
-// login screen returns. One identity covers every surface.
-async function signOut() {
-  try {
-    await fetch(`${GATE}/api/logout`, { method: 'POST' });
-  } catch {
-    /* gate down — the reload still drops the view */
-  }
-  for (const w of BrowserWindow.getAllWindows()) w.reload();
-}
-
 function buildMenu() {
   const template = [
     {
@@ -252,8 +237,6 @@ function buildMenu() {
         { type: 'separator' },
         { label: 'Reload', accelerator: 'CmdOrCtrl+R', click: () => win && win.reload() },
         { label: 'DevTools', accelerator: 'CmdOrCtrl+Alt+I', click: () => win && win.webContents.toggleDevTools() },
-        { type: 'separator' },
-        { label: 'Sign out', click: () => { void signOut(); } },
         { type: 'separator' },
         { role: 'quit' },
       ],

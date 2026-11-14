@@ -278,6 +278,10 @@ export interface FileNode {
   size?: number;
   updated?: string;
   children?: FileNode[];
+  /** A folder's children are read when it is opened (plan 275 item 21). */
+  lazy?: boolean;
+  /** Why a folder could not be listed — a hidden shelf, or a refusal. */
+  error?: string;
 }
 
 export interface ChatMessage {
