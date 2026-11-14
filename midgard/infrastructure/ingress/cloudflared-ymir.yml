@@ -1,26 +1,34 @@
-# Gjallarhorn — the `ymir` tunnel. Hosts the Hlidskjalf control plane and the
-# Smíðja trace UI behind the same gate.
+# Gjallarhorn — a tunnel config for ONE frontier surface (template).
 #
-#   ymir.example.org        ->  http://127.0.0.1:3889  (Hlidskjalf; gate + API)
-#   smidja.example.org  ->  http://127.0.0.1:3889  (Smíðja; gate then proxy :8437)
+# Copy to `~/.cloudflared/config-<name>.yml` and point it at the surface that is meant to
+# be reachable from outside: the video forge, a hosted board, a share. Raise it with
 #
-# Created with:  cloudflared tunnel create ymir
-#                cloudflared tunnel route dns --overwrite-dns <id> ymir.example.org
-#                cloudflared tunnel route dns --overwrite-dns <id> smidja.example.org
+#   bin/forge/gjallarhorn-tunnel.sh start --config ~/.cloudflared/config-<name>.yml
 #
-# SECURITY: Hlidskjalf's auth is a mock until Heimdall (oauth2-proxy) lands.
-# Put an authenticating origin (Bifrost → Heimdall) in front before broad
-# public exposure; until then this hostname is open.
+# THE HALLS ARE LOCAL, AND NO TUNNEL POINTS AT ONE (plan 275 item 30, 2026-11-14). This
+# file used to publish Hlidskjalf and Smíðja through `http://127.0.0.1:3889` — a leftover of
+# the hosted era, when the apps carried a login and were served from the edge. The halls
+# now listen on loopback only and are opened from the desktop as local apps; a hosted,
+# shared surface is a different product (Gimlé, plan 284) with its own door.
+#
+# `gjallarhorn-tunnel.sh start` refuses any ingress at a hall port:
+#
+#   3888 Hlidskjalf SPA · 3889 the gate · 4322 Óðrerir · 8437 Smíðja ·
+#   8787 Bilskirnir · 4602 Mímir (the well) · 4603 Bifrost
+#
+# Created with:  cloudflared tunnel create <name>
+#                cloudflared tunnel route dns --overwrite-dns <id> <hostname>
+#
+# Measured on the operator's seat 2026-11-14: the tunnels that exist serve the video forge
+# (:8761), the hound's notifications (:2586) and :3891 — none of them a hall.
 tunnel: ymir
 credentials-file: /home/<user>/.cloudflared/<tunnel-id>.json   # rendered per machine
 
 ingress:
-  - hostname: ymir.example.org
-    service: http://127.0.0.1:3889
+  # The frontier surface — replace this row with the one thing this tunnel publishes.
+  - hostname: forge.example.org
+    service: http://127.0.0.1:8761
     originRequest:
       noTLSVerify: true
-  - hostname: smidja.example.org
-    service: http://127.0.0.1:3889
-    originRequest:
-      noTLSVerify: true
+  # Everything else is closed.
   - service: http_status:404
