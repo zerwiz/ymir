@@ -443,7 +443,8 @@ something else serves the port, `down` when nothing does. `--stop` closes a borr
 four states it is in — `answering`, `not raised (heart listens)`, `forward up, but NOTHING behind it`,
 `silent both ends`. A forward with nothing behind it is the silent door this house has been burned by.
 
-**Never a second table.** The heart is `YMIR_HEART` (default `zerwizserver`) and `WELL_HEART_HOST` (default
+**Never a second table.** The heart is `YMIR_HEART` (default: the `heart` the home's fleet registry names) and
+`WELL_HEART_HOST` (default
 `127.0.0.1` behind it) — configuration, resolved (Rule 07). The store stays one file in the hoard on the
 heart; a hand holds no second well.
 

@@ -177,7 +177,7 @@ Plans live in the canonical ledger `$YMIR_HOME/svartalfaheim/<realm>/workspace/<
 - Scope, dependencies, acceptance criteria
 - Source references (ENTRY numbers, Architecture.md sections)
 
-The plan index is at `<ledger>/README.md` (the ymir project's: `svartalfaheim/whynotproductions/workspace/ymir/plans/README.md`).
+The plan index is at `<ledger>/README.md` (the ymir project's: `svartalfaheim/<realm>/workspace/ymir/plans/README.md`).
 
 When creating a new plan:
 1. File it under the canonical ledger (`svartalfaheim/<realm>/workspace/<project>/plans/`), numbered after the index's last (ymir: 01–42 → 43…)
