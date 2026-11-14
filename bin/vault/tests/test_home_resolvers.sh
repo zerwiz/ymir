@@ -80,10 +80,25 @@ out="$(YMIR_HOME="$nokey" bash -c 'unset YMIR_HEART; . "$1"; h=KEEP; ymir_fleet_
 [ "${out%%|*}" = 1 ] && [ "${out#*|}" = KEEP ] \
   && ok "a registry with no heart answers 1" || bad "heartless registry: $out"
 
-# the repository itself must not spell ours: the words live in the home only
-if grep -qE 'whynotproductions|zerwizserver' "$LIB"; then
-  bad "hoard-lib.sh names the operator's realm or host"
-else ok "hoard-lib.sh names no realm and no host"; fi
+# The repository must not spell the operator's realm or hosts — and NEITHER MAY THIS TEST.
+# So the words are read from his deny list, the same door bin/gates/agnostic-audit.sh uses
+# (`$YMIR_HOME/hodd/identity/public-deny.txt`). A home with no list is a clean skip, said aloud,
+# because a test that silently checks nothing is a green that means nothing (RULES/18, RULES/25).
+check_home="${YMIR_HOME:-}"
+[ -n "$check_home" ] || check_home="$(bash -c '. "$1"; ymir_home_root h; printf %s "$h"' _ "$LIB" 2>/dev/null || true)"
+deny="${YMIR_DENY_LIST:-${check_home:+$check_home/hodd/identity/public-deny.txt}}"
+if [ -r "$deny" ]; then
+  named=0
+  while IFS= read -r w; do
+    w="${w%%#*}"; w="$(printf '%s' "$w" | tr -d '[:blank:]')"
+    [ -n "$w" ] || continue
+    if grep -qF -- "$w" "$LIB"; then named=$((named + 1)); fi
+  done < "$deny"
+  [ "$named" -eq 0 ] && ok "hoard-lib.sh names not one word from the home's deny list" \
+    || bad "hoard-lib.sh names $named word(s) from the home's deny list"
+else
+  printf '  skip the deny-list check — no %s on this machine (a clean skip, said aloud)\n' "$deny"
+fi
 
 printf 'test_home_resolvers: %d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

@@ -13,7 +13,8 @@ The names are NEVER in this repository. They are read at run time from the opera
   hodd/identity/collaborators.yaml  every person: full name, email local part, chat and code-host handles
   hodd/identity/names.yaml          entries of kind `person`
   hodd/data/telegram-rosters/*.yaml every name and username a chat roster has recorded
-Words that are also ordinary English live in config/nda-allow.yaml, each with its reason.
+Words that are also ordinary English live in config/nda-allow.yaml, each with its reason; the
+operator's own additions are read from $YMIR_HOME/config/nda-allow.yaml (never from here).
 """
 import os, re, subprocess, sys
 
@@ -59,13 +60,26 @@ def _add(names, value, source):
         names.setdefault(v.lower(), source)
 
 
-def load_allow(root=None):
-    """{word_lower: reason}. An entry without a reason is ignored: an allowance is a claim."""
-    data = _yaml(os.path.join(root or repo_root(), 'config', 'nda-allow.yaml'))
-    out = {}
+def _allow_rows(path, out):
+    data = _yaml(path)
     for e in data.get('allow', []) or []:
         if isinstance(e, dict) and e.get('word') and str(e.get('reason', '')).strip():
             out[str(e['word']).strip().lower()] = e['reason']
+    return out
+
+
+def load_allow(root=None):
+    """{word_lower: reason}. An entry without a reason is ignored: an allowance is a claim.
+
+    TWO files, and the split is the line this house draws (RULES/04, RULES/42): the repository ships
+    the GENERIC words any operator's tree needs (ordinary English that also names a shelf), and the
+    operator's own — his realm, his domain, his handle — are read at run time from his home
+    (`$YMIR_HOME/config/nda-allow.yaml`, template in `.agents/config/`). A word of his is never
+    written here, because that is exactly the leak the gate exists to refuse."""
+    out = _allow_rows(os.path.join(root or repo_root(), 'config', 'nda-allow.yaml'), {})
+    home = ymir_home()
+    if home:
+        _allow_rows(os.path.join(home, 'config', 'nda-allow.yaml'), out)
     return out
 
 
