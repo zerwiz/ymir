@@ -13,6 +13,12 @@
 // it did not raise would be a lie told in pixels.
 
 const { app, BrowserWindow, Menu, session } = require('electron');
+// The window's WM class, named ONCE and never left to the package name (2026-11-14). Without this Electron
+// presented `zerwiz-rodd` (from `@zerwiz/rodd`), while bin/desktop/app-lib.sh — the ONE source of truth for
+// routing, the .desktop StartupWMClass, the generated Hyprland rule and ymir-app's "open where you click"
+// watcher — all name `ymir-rodd`. So a rule for Rödd matched nothing, and the click-to-desktop follow waited
+// thirty seconds for a window it had already missed. Every other Ymir app sets its slug; this one now does too.
+app.setName('ymir-rodd');
 const { execFile } = require('node:child_process');
 const http = require('node:http');
 const path = require('node:path');

@@ -1,7 +1,9 @@
 import { create } from 'zustand';
 import type {
+  A2ATraffic,
   AgentCard,
   ChatMessage,
+  Doors,
   FileNode,
   GateId,
   DomainId,
@@ -173,6 +175,10 @@ interface YmirState {
   agents: AgentCard[];
   /** Why the roster is what it is: live, unauthorised, unreadable, or offline. */
   agentsStatus: AgentsStatus;
+  /** The herdr traffic between agents (plan 275 item 8), newest first. */
+  a2a: A2ATraffic;
+  /** Every app's DevTools port and every agent's pane (plan 275 item 19). */
+  doors: Doors;
   /** Harness usage: opencode and pi sessions, not only the smithy's runs. */
   usage: import('../services/api').YmirUsage | null;
   tasks: Task[];
@@ -203,6 +209,8 @@ interface YmirState {
   refreshCalendar: () => Promise<void>;
   /** Re-read the LIVE fleet: the dead leave, and the count follows the source. */
   refreshAgents: () => Promise<void>;
+  refreshA2A: () => Promise<void>;
+  refreshDoors: () => Promise<void>;
   refreshReviews: () => Promise<void>;
   setSelectedSession: (id: string | null) => void;
   loadSessionDetail: (id: string) => Promise<void>;
@@ -268,6 +276,8 @@ function emptyState() {
   return {
     agents: [] as YmirState['agents'],
     agentsStatus: 'loading' as AgentsStatus,
+    a2a: { messages: [], recorded: 0 } as A2ATraffic,
+    doors: { apps: [], agents: [], apps_up: 0, agents_seated: 0 } as Doors,
     usage: null,
     tasks: [] as YmirState['tasks'],
     runes: [] as YmirState['runes'],
@@ -363,7 +373,7 @@ export const useYmir = create<YmirState>((set, get) => ({
       // rather than handing the panel a shape it cannot read.
       const ok = <T,>(x: T | null | undefined, prev: T): T =>
         x && !(x as unknown as { error?: unknown }).error ? (x as T) : prev;
-      const [agentsResult, usage, tasks, runes, recall, processes, reviews, files, runtime, cron, cronSeats, mimir, skills] =
+      const [agentsResult, a2a, usage, tasks, runes, recall, processes, reviews, files, runtime, cron, cronSeats, mimir, skills, doors] =
         await Promise.all([
           // Each call degrades on its own — one bad endpoint must not blank the app.
           // The roster is special: an empty board has four causes, so this call
@@ -375,6 +385,7 @@ export const useYmir = create<YmirState>((set, get) => ({
               return [get().agents, agentsFailureStatus(error)];
             }
           })(),
+          gateApi.a2aMessages().then((v) => ok(v, get().a2a)).catch(() => get().a2a),
           gateApi.usage().then((v) => ok(v, get().usage)).catch(() => get().usage),
           gateApi.tasks().then((v) => ok(v, get().tasks)).catch(() => get().tasks),
           gateApi.runes().then((v) => ok(v, get().runes)).catch(() => get().runes),
@@ -395,9 +406,10 @@ export const useYmir = create<YmirState>((set, get) => ({
           gateApi.cronSeats().then((v) => ok(v, get().cronSeats ?? [])).catch(() => get().cronSeats ?? []),
           gateApi.mimirHealth().catch(() => null),
           gateApi.skills().then((v) => ok(v, get().skills)).catch(() => get().skills),
+          gateApi.doors().then((v) => ok(v, get().doors)).catch(() => get().doors),
         ]);
       const [agents, agentsStatus] = agentsResult;
-      set({ agents, agentsStatus, tasks, runes, recall, processes, reviews, files, runtime, cron, cronSeats, mimir, skills, usage, live: true });
+      set({ agents, agentsStatus, a2a, doors, tasks, runes, recall, processes, reviews, files, runtime, cron, cronSeats, mimir, skills, usage, live: true });
     } catch {
       // Gate API unreachable — stay on the last good data and mark it.
       set((s) => ({
@@ -430,6 +442,20 @@ export const useYmir = create<YmirState>((set, get) => ({
       set({ agents, agentsStatus: 'live' });
     } catch (error) {
       set({ agentsStatus: agentsFailureStatus(error) });
+    }
+  },
+  refreshA2A: async () => {
+    try {
+      set({ a2a: await gateApi.a2aMessages() });
+    } catch {
+      // the panel keeps the last words it read; a dark door never blanks the stream
+    }
+  },
+  refreshDoors: async () => {
+    try {
+      set({ doors: await gateApi.doors() });
+    } catch {
+      // the last door we saw is still a door; a dark gate never blanks the list
     }
   },
   refreshReviews: async () => {

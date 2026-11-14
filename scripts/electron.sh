@@ -376,8 +376,13 @@ start_one() {
   # plan 275 S8 (2026-11-12): a dashboard window takes neither the microphone nor the GPU's audio path, so a call
   # does not hold it back — the Allfather: "it needs to work if I'm in Discord also". The call guard stays on the
   # doors that DO touch the microphone or load a model (the voice engine, the voice client, Rödd's head).
-  # The DevTools port, for testing an app as a person would use it: YMIR_DEVTOOLS_PORT (unset = none).
-  [ -n "${YMIR_DEVTOOLS_PORT:-}" ] && extra+=(--remote-debugging-port="$YMIR_DEVTOOLS_PORT")
+  # The DevTools port, for testing an app as a person would use it. ALWAYS on, on the app's own fixed
+  # loopback port (bin/desktop/app-lib.sh, plan 275 item 19): a fault found after the fact can be inspected
+  # without a restart, and bin/desktop/boot-stopwatch.sh can ask the renderer when it first answered.
+  # YMIR_DEVTOOLS_PORT still wins, for a one-off probe.
+  local dtp="${YMIR_DEVTOOLS_PORT:-}"
+  [ -n "$dtp" ] || dtp="$(app_devtools_port "$v" 2>/dev/null || true)"
+  [ -n "$dtp" ] && extra+=(--remote-debugging-port="$dtp")
   nohup env YMIR_DESKTOP_VIEW="$v" YMIR_WINDOW_BUTTONS="$(app_window_buttons)" "$(real_electron "$v")" "$(app_dir "$v")" \
     --user-data-dir="$HOME/.config/$(view_mark "$v")" \
     "${extra[@]}" >"$l" 2>&1 < /dev/null &
