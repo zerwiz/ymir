@@ -212,6 +212,11 @@ function openWindow(url, title) {
     },
   });
   rememberBounds(win);
+  // Hide the visible File/Edit/View menu bar (as Sessrúmnir does). The
+  // application menu stays set below, so its accelerators (Ctrl+1/2/3, reload,
+  // DevTools, zoom) keep working; only the bar disappears. `autoHideMenuBar` is
+  // deliberately left off so Alt does not reveal it.
+  win.setMenuBarVisibility(false);
   win.loadURL(url);
   // The desktop header stays "Ymir" — never the current workspace/gate title.
   win.on('page-title-updated', (e) => e.preventDefault());
