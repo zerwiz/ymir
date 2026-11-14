@@ -237,6 +237,8 @@ if [ -z "${YMIR_GRAPHICS_LIB_LOADED:-}" ]; then
   done
   unset _gc
 fi
+# The operator's own answers first (the home's config/desktop.env), then the machine policy.
+desktop_env_load 2>/dev/null || true
 case "${YMIR_DESKTOP_DISABLE_GPU:-auto}" in
   1|true|yes) YMIR_DESKTOP_DISABLE_GPU=1 ;;
   0|false|no) YMIR_DESKTOP_DISABLE_GPU=0 ;;
@@ -251,6 +253,7 @@ case "${YMIR_DESKTOP_DISABLE_GPU:-auto}" in
     unset _gp ;;
 esac
 export YMIR_DESKTOP_DISABLE_GPU
+export YMIR_DESKTOP_OZONE_PLATFORM="${YMIR_DESKTOP_OZONE_PLATFORM:-auto}"
 
 START_TS="$(date -Is)"
 
