@@ -10,6 +10,7 @@
 - **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | finding-log.sh | (no header line) | tested | keep (a human or a cron row must run it) |
 | finding-tally.sh | (no header line) | tested | keep (a human or a cron row must run it) |
+| gather-notice.sh | gather-notice.sh — when the LAST errand of a batch finishes, the helm  | tested+named | keep (a human or a cron row must run it) |
 | gather.sh | gather.sh — gather a batch of errand branches into ONE push and ONE PR | tested+named | keep (a human or a cron row must run it) |
 | github-deploy.sh | github-deploy.sh — zero-trust deploys (W0035). Sync secrets from the l | tested+named | keep (a human or a cron row must run it) |
 | gjallarhorn-expose.sh | gjallarhorn-expose.sh — put EVERY app on its own public hostname (Gjal | tested+named | keep (a human or a cron row must run it) |
@@ -41,6 +42,7 @@
 | ship.sh | ship.sh — the reviewer's merge: the one door that puts a judged PR on  | tested | keep (a human or a cron row must run it) |
 | skillopt-setup.sh | skillopt-setup.sh — one-time SkillOpt installation for Ymir. | tested | keep (a human or a cron row must run it) |
 | smith-seat.sh | smith-seat.sh — seat ANY figure in its own herdr workspace, the same w | tested | keep (a human or a cron row must run it) |
+| test_gather_notice.sh | test_gather_notice.sh — the LAST errand of a batch calls the gather. | tested+named | keep (a human or a cron row must run it) |
 | utgard-box.sh | utgard-box.sh — a whole computer for one run, outside the wall. | tested+named | keep (a human or a cron row must run it) |
 | utgard-lane.sh | utgard-lane.sh — best of N: one brief, many boxes, one board. | tested+named | keep (a human or a cron row must run it) |
 | utgard.sh | utgard.sh — the sealed execution barrier (Utgard, the realm outside th | tested+named | keep (a human or a cron row must run it) |
