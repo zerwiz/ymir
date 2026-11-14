@@ -131,3 +131,12 @@ answer directly against the Bot API, so the fleet door no longer points at a fil
 `bin/notify/telegram-machines.sh` · `bin/seat/hermes-telegram.sh` ·
 `bin/gates/tests/test_new_doors.sh` · `docs/features/telegram-on-every-machine.md` (new) ·
 `docs/features/_catalogue/entries/00-018-interface-telegram-the-road-between-machines.md` (new)
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: a dev machine. The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).

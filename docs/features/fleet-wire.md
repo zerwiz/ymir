@@ -40,4 +40,4 @@ the running drain is older than #512.
 
 ## CHANGE LOG
 
-- **2026-11-05** — written (Hœnir) after the fleet wire was proved in both directions between heimdall and nidavellir.
+- **2026-11-05** — written (Hœnir) after the fleet wire was proved in both directions between two machines of the fleet.

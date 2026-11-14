@@ -27,7 +27,7 @@ choosing, and a letter went out saying "no decisions were taken".
 ## The commands
 
 ```bash
-M=~/Documents/ymirhome/svartalfaheim/example-8/meetings/2026-10-22-sync-reygan-craig
+M=$YMIR_HOME/svartalfaheim/example-8/meetings/2026-10-22-sync-ada-grace
 
 systems/snotra/services/ear/snotra-harvest.sh status   "$M"   # what the bot holds for this meeting
 systems/snotra/services/ear/snotra-harvest.sh fetch    "$M"   # pull the audio, verify it byte-for-byte

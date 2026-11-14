@@ -16,7 +16,8 @@ repository, so a stranger can continue where the last hand stopped.
 ## What you need
 
 - The private home at `$YMIR_HOME` with `hodd/data/collaboration.yaml` (the register).
-- For `who`: ssh to the host that runs the collaboration suite (default `zerwizserver`), and that host's containers
+- For `who`: ssh to the host that runs the collaboration suite (by default the fleet's heart, read from the fleet
+  registry), and that host's containers
   answering — the gate, the board's database, the documents' database, the forge.
 - For `letter`: the mail gate (`systems/snotra/services/letters/mail-send.sh`) and the vault grant it uses.
 - For `ship`: a git checkout with a remote.

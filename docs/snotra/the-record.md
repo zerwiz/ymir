@@ -8,13 +8,13 @@ agenda line or letter may contain it.
 ```jsonc
 {
   "meeting": {
-    "meeting_id": "M-20261022-sync-reygan-craig",
-    "title": "Sync — Reygan, Craig",
+    "meeting_id": "M-20261022-sync-ada-grace",
+    "title": "Sync — Ada, Grace",
     "started_at": "2026-10-22T23:18:00+03:00",
     "ended_at":   "2026-10-23T02:07:00+03:00",
     "company": "example-8",              // → which place profile decides the shape
     "place": "documentation",
-    "chair": "Reygan Assareh",         // who sends the agenda and holds the register
+    "chair": "Ada Lovelace",         // who sends the agenda and holds the register
     "conference_url": "https://meet.google.com/fyc-zooa-abr",   // the join key to the bot's store
     "calendar_event_id": "…",
     "classification": "confidential",
@@ -27,7 +27,7 @@ agenda line or letter may contain it.
     }
   },
   "participants": [{ "name": "…", "email": "…", "role": "…", "present": true }],
-  "aliases": { "Isabella Jakobsson": ["Isabella", "Isa", "ESA"] },
+  "aliases": { "Grace Hopper": ["Grace", "Gracie", "GH"] },
   "decisions": [{ "decision_id": "DEC-20261022-01", "statement": "…", "grade": "B",
                   "status": "proposed", "decided_by": null, "approver_pending": true,
                   "reversibility": "costly",
