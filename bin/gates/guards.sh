@@ -50,7 +50,17 @@ ROOT="$(_root)"
 cd "$ROOT" || exit 2
 
 # ONE list. A new tree ward appears here or it does not run anywhere.
-WARDS=(runtime-guard.sh unit-writer-guard.sh runtime-pinned-guard.sh defaults-guard.sh app-folder-guard.sh app-functional-guard.sh rules-number-guard.sh inventory-guard.sh registers-guard.sh fleet-version-guard.sh subsystem-docs-guard.sh path-ledger-guard.sh path-legality-guard.sh packaging-guard.sh public-data-guard.sh cron-guard.sh features-guard.sh weave-guard.sh vault-guard.sh confidential-guard.sh dead-code-guard.sh docs-claims-guard.sh home-contract-guard.sh language-guard.sh pkill-guard.sh skills-share-guard.sh rules-compliance-guard.sh pr-ship-guard.sh model-rows-guard.sh areas-guard.sh desktop-main-guard.sh house-colour-guard.sh pr-identity-guard.sh nda-guard.sh hearth-guard.sh)
+WARDS=(runtime-guard.sh unit-writer-guard.sh runtime-pinned-guard.sh defaults-guard.sh app-folder-guard.sh app-functional-guard.sh rules-number-guard.sh inventory-guard.sh registers-guard.sh fleet-version-guard.sh subsystem-docs-guard.sh path-ledger-guard.sh path-legality-guard.sh packaging-guard.sh public-data-guard.sh cron-guard.sh features-guard.sh weave-guard.sh vault-guard.sh confidential-guard.sh dead-code-guard.sh docs-claims-guard.sh home-contract-guard.sh language-guard.sh pkill-guard.sh skills-share-guard.sh rules-compliance-guard.sh pr-ship-guard.sh model-rows-guard.sh areas-guard.sh desktop-main-guard.sh house-colour-guard.sh pr-identity-guard.sh nda-guard.sh hearth-guard.sh bin/gates/agnostic-audit.sh)
+#
+# agnostic-audit (2026-11-14, plan 287 §6, RULES/04 and RULES/25): the repository is 100 % agnostic —
+# the operator's people, clients, companies, mail domains, host names, user names and tailnet never
+# appear in it, and the repo never assumes his fleet. The words are read from the home at run time
+# (`hodd/identity/public-deny.txt`), the generic shapes (a concrete private address, a real tailnet
+# host) are always judged, and the ward never prints a word of the list — only the file, the line and
+# WHICH entry matched. It is diff-natured on purpose: `bin/gates/agnostic-audit.sh check` refuses only
+# what the push ADDS, and a hit already on the base revision prints `inherited` and never blocks
+# (plan 243 §3 part D). The whole-tree census is the same door without `check`, run on the heart's
+# clock twice a day. It reads $YMIR_HOME, so it is never cached.
 #
 # nda-guard (2026-11-12, RULES/04): company, client and NDA-project names never enter the public tree. The
 # names are read from $YMIR_HOME at run time, so the ward is never cached and says UNARMED, aloud, where no
@@ -77,7 +87,10 @@ WARDS=(runtime-guard.sh unit-writer-guard.sh runtime-pinned-guard.sh defaults-gu
 #          finding it prints is, by construction, the push's own. These are the wards that
 #          read file CONTENT (RULES/04 above all: 5,460 files, and the scan is the same
 #          answer per file, so a push that changed one file need not re-read 5,459).
-SCOPED=(public-data-guard.sh house-colour-guard.sh nda-guard.sh)
+SCOPED=(public-data-guard.sh house-colour-guard.sh nda-guard.sh bin/gates/agnostic-audit.sh)
+# agnostic-audit.sh is scoped for the same reason public-data-guard is, and its own diff rule does the
+# rest: it is handed the changed paths, greps only those, and then asks git which LINES the push adds,
+# so a name that already stood in the file is reported `inherited` and never refuses the push.
 # house-colour-guard (2026-11-12, RULES/54): no blue and no purple. Scoped, because the verdict
 # is per file — a push that touched three stylesheets needs those three read, not the 24 s the
 # whole tree costs; CI's --full reads every file.
@@ -214,9 +227,27 @@ scope_hash() {  # the content of what a SCOPED ward will read
 }
 SCOPE_HASH=""
 [ "$SCOPE_COUNT" -gt 0 ] && SCOPE_HASH="$(scope_hash)"
+# WHERE A WARD STANDS. Every ward lives in bin/gates/guards/ — except one whose own rule puts it a
+# shelf up: RULES/12 says every door sits under its system folder, and the agnostic audit is a door of
+# bin/gates/ that ALSO runs as a ward. A name with a `/` in it is a path from the repo root; a bare
+# name is a ward in the guards shelf. One rule, so the list can name either without a second table.
+# A ward's verdict file: one per ward, safe for a name that carries a shelf (`a/b.sh` becomes `a__b.sh`).
+rfile() { printf '%s/%s' "$RESULTS" "${1//\//__}"; }
+ward_path() {  # <ward> -> its file
+  case "$1" in
+    */*) printf '%s' "$ROOT/$1" ;;
+    *)   printf '%s' "$ROOT/bin/gates/guards/$1" ;;
+  esac
+}
+ward_label() {  # <ward> -> how a person reads it
+  case "$1" in
+    */*) printf '%s' "$1" ;;
+    *)   printf 'bin/gates/guards/%s' "$1" ;;
+  esac
+}
 cache_key() {  # <ward>
   local w="$1" self hash
-  self="$(sha256sum "$ROOT/bin/gates/guards/$w" 2>/dev/null | cut -d' ' -f1)"
+  self="$(sha256sum "$(ward_path "$w")" 2>/dev/null | cut -d' ' -f1)"
   if is_scoped "$w"; then hash="scoped:$SCOPE_HASH"; else hash="tree:$TREE_HASH"; fi
   printf '%s:%s:%s' "$self" "$hash" "$ENGINE_HASH" | sha256sum | cut -d' ' -f1
 }
@@ -258,17 +289,18 @@ DEADLINE=0
 DEFERRED=()
 
 run_ward() {  # <ward>
-  local w="$1" s="$ROOT/bin/gates/guards/$1" t0 t1 out key rc=0
+  local w="$1" s t0 t1 out key rc=0
+  s="$(ward_path "$1")"
   t0="$(date +%s%N)"
   if [ ! -r "$s" ]; then
-    printf 'MISSING\t0\t%s\n' "bin/gates/guards/$w — a ward named in the list does not exist" >"$RESULTS/$w"
+    printf 'MISSING\t0\t%s\n' "$(ward_label "$w") — a ward named in the list does not exist" >"$(rfile "$w")"
     return 0
   fi
   key=""
   if [ "$CACHE_OK" -eq 1 ] && grep -q '^# cache: tree$' "$s" 2>/dev/null; then
     key="$(cache_key "$w")"
     if cache_read "$w" "$key"; then
-      printf 'CACHED\t0\t%s\n' "unchanged content — the same verdict was already proved" >"$RESULTS/$w"
+      printf 'CACHED\t0\t%s\n' "unchanged content — the same verdict was already proved" >"$(rfile "$w")"
       return 0
     fi
   fi
@@ -286,7 +318,7 @@ run_ward() {  # <ward>
   t1="$(date +%s%N)"
   local ms=$(( (t1 - t0) / 1000000 ))
   if [ "$rc" -eq 0 ]; then
-    printf 'PASS\t%s\t\n' "$ms" >"$RESULTS/$w"
+    printf 'PASS\t%s\t\n' "$ms" >"$(rfile "$w")"
     [ -n "$key" ] && cache_write "$w" "$key"
   else
     # The ward's own last line names the fault and its remedy; carry it up rather than
@@ -296,9 +328,9 @@ run_ward() {  # <ward>
     local why; why="$(printf '%s' "$out" | grep -E '^[[:alnum:]_-]+-guard|^[[:alnum:]_-]+-[a-z]+:' | tail -1 | cut -c1-200)"
     [ -n "$why" ] || why="$(printf '%s' "$out" | grep -vE '^[[:space:]]*$' | tail -1 | cut -c1-200)"
     if inherited "$w" "$out"; then
-      printf 'INHERITED\t%s\t%s\n' "$ms" "$why" >"$RESULTS/$w"
+      printf 'INHERITED\t%s\t%s\n' "$ms" "$why" >"$(rfile "$w")"
     else
-      printf 'FAIL\t%s\t%s\n' "$ms" "$why" >"$RESULTS/$w"
+      printf 'FAIL\t%s\t%s\n' "$ms" "$why" >"$(rfile "$w")"
     fi
   fi
 }
@@ -306,11 +338,11 @@ run_ward() {  # <ward>
 pending=()
 for w in "${WARDS[@]}"; do
   if is_pr_only "$w"; then
-    printf 'PR\t0\t%s\n' "$(pr_only_reason "$w")" >"$RESULTS/$w"
+    printf 'PR\t0\t%s\n' "$(pr_only_reason "$w")" >"$(rfile "$w")"
     continue
   fi
   if [ "$FULL" -eq 0 ] && is_ci_only "$w"; then
-    printf 'CI\t0\t%s\n' "$(ci_only_reason "$w")" >"$RESULTS/$w"
+    printf 'CI\t0\t%s\n' "$(ci_only_reason "$w")" >"$(rfile "$w")"
     continue
   fi
   pending+=("$w")
@@ -319,7 +351,7 @@ done
 for w in "${pending[@]}"; do
   if [ "$DEADLINE" -gt 0 ] && [ "$(date +%s)" -ge "$DEADLINE" ]; then
     DEFERRED+=("$w")
-    printf 'DEFERRED\t0\t%s\n' "the ${BUDGET}s pre-push budget was spent — CI runs this ward on the PR" >"$RESULTS/$w"
+    printf 'DEFERRED\t0\t%s\n' "the ${BUDGET}s pre-push budget was spent — CI runs this ward on the PR" >"$(rfile "$w")"
     continue
   fi
   run_ward "$w" &
@@ -334,8 +366,8 @@ wait
 order() { case "$1" in FAIL) printf '0';; MISSING) printf '1';; DEFERRED) printf '2';; INHERITED) printf '3';; PASS) printf '4';; CACHED) printf '5';; CI) printf '6';; PR) printf '7';; *) printf '8';; esac; }
 rows=""
 for w in "${WARDS[@]}"; do
-  [ -r "$RESULTS/$w" ] || continue
-  st="$(cut -f1 "$RESULTS/$w")"; ms="$(cut -f2 "$RESULTS/$w")"; fd="$(cut -f3- "$RESULTS/$w")"
+  [ -r "$(rfile "$w")" ] || continue
+  st="$(cut -f1 "$(rfile "$w")")"; ms="$(cut -f2 "$(rfile "$w")")"; fd="$(cut -f3- "$(rfile "$w")")"
   rows+="$(order "$st")"$'\t'"$w"$'\t'"$st"$'\t'"${ms:-0}"$'\t'"$fd"$'\n'
 done
 printf 'guards[%s]{ward,status,ms,finding}:\n' "${#WARDS[@]}"
@@ -355,7 +387,7 @@ done
 
 END_ALL="$(date +%s%N)"
 TOTAL_MS=$(( (END_ALL - START_ALL) / 1000000 ))
-count_status() { local want="$1" n=0 w; for w in "${WARDS[@]}"; do [ -r "$RESULTS/$w" ] || continue; [ "$(cut -f1 "$RESULTS/$w")" = "$want" ] && n=$((n+1)); done; printf '%s' "$n"; }
+count_status() { local want="$1" n=0 w; for w in "${WARDS[@]}"; do [ -r "$(rfile "$w")" ] || continue; [ "$(cut -f1 "$(rfile "$w")")" = "$want" ] && n=$((n+1)); done; printf '%s' "$n"; }
 n_fail=$(count_status FAIL); n_missing=$(count_status MISSING); n_inh=$(count_status INHERITED)
 n_def=$(count_status DEFERRED); n_ci=$(count_status CI); n_cache=$(count_status CACHED); n_pr=$(count_status PR)
 
