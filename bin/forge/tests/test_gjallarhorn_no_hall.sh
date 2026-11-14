@@ -2,7 +2,7 @@
 # test_gjallarhorn_no_hall.sh — a tunnel never publishes a hall.
 #
 # WHY (plan 275 item 30, 2026-11-14): his word — *"this feature of opening online must go
-# away with the logins we have. we are not hosting the 3 apps online.. they are local. craig
+# away with the logins we have. we are not hosting the 3 apps online.. they are local. a collaborator
 # found that were opening ports out."* The halls already listen on loopback only; what
 # survived from the hosted era was a tunnel config pointing at the gate (:3889). So the
 # door refuses any ingress that dials a hall port, and the shipped templates carry none.

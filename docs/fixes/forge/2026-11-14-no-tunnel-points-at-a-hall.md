@@ -5,7 +5,7 @@
 ## What was wrong
 
 His word: *"this feature of opening online must go away with the logins we have. we are not hosting the 3 apps
-online.. they are local. craig found that were opening ports out."*
+online.. they are local. a collaborator found that were opening ports out."*
 
 The halls already listen on loopback only (plan 279's fixes closed the open ports). What survived the hosted era was
 **the tunnel**: `bin/forge/gjallarhorn-tunnel.sh` raised whatever its config said, and the config this repo shipped

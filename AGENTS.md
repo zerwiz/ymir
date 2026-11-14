@@ -844,7 +844,7 @@ The law is RULES/08, in its section appended 2026-11-12. The how-to is `docs/fea
 This corrects the line above under **Starting the system**, which says
 `bin/forge/gjallarhorn-tunnel.sh start` *"exposes Hlidskjalf at the operator's own hostname (Cloudflare tunnel →
 `:3889`)"*. That was the hosted era, and it is over. At the Allfather's word: *"we are not hosting the 3 apps online..
-they are local. craig found that were opening ports out."*
+they are local. a collaborator found that were opening ports out."*
 
 The halls listen on loopback only and are opened from the desktop as local apps. **No tunnel may dial a hall port** —
 3888 Hlidskjalf SPA, 3889 the gate, 4322 Óðrerir, 8437 Smíðja, 8787 Bilskirnir, 4602 Mímir (the well), 4603 Bifrost.

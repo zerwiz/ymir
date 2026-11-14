@@ -6,7 +6,7 @@
 #
 # THE HALLS ARE LOCAL, AND NO TUNNEL POINTS AT ONE (plan 275 item 30, 2026-11-14). His
 # word: "this feature of opening online must go away with the logins we have. we are not
-# hosting the 3 apps online.. they are local. craig found that were opening ports out." The
+# hosting the 3 apps online.. they are local. a collaborator found that were opening ports out." The
 # halls already listen on loopback only; what survived the hosted era was a tunnel config
 # pointing at the gate (:3889). So `start` REFUSES any ingress that names a hall port:
 #
