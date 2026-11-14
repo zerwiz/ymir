@@ -555,12 +555,18 @@ config_files=$(git -C "$ROOT" ls-files -- 'bin/*.sh' 'scripts/*.sh' \
   | grep -vE '(^|/)(CHANGELOG|assets/reference/|node_modules/|\.yggdrasil/)' \
   | grep -vE '\.example$|\.template$' || true)
 
+# A TEST IS A FIXTURE, NOT A CONFIGURATION (measured 2026-11-14). A test that proves a door's parity must
+# NAME the model it hands the door — there is nothing else to hand it — and that is not a claim about the
+# author's machine. So the model class judges shipped surfaces only; `tests/` files are skipped. The path
+# class still judges tests: a machine's own home path in a test is the same leak as anywhere.
+config_surfaces=$(printf '%s\n' $config_files | grep -vE '(^|/)tests?/' || true)
+
 # A model id or provider name as a VALUE. The pattern is deliberately narrow: a
 # known provider prefix followed by a model token, in a VALUE POSITION only —
 # after `:`, `=`, or a JSON/YAML key. Prose that merely mentions
 # "llama.cpp/llama-swap" in a sentence is documentation, not configuration, and
 # must not trip the gate.
-for f in $config_files; do
+for f in $config_surfaces; do
   [ -f "$ROOT/$f" ] || continue
   config_checked=$((config_checked + 1))
   hits=$(sed -E 's/(^|[[:space:]])#.*$//' "$ROOT/$f" 2>/dev/null \
@@ -569,11 +575,14 @@ for f in $config_files; do
   [ -n "$hits" ] && config_bad="$config_bad ${f}(model)"
 done
 
-# An absolute path naming a user.
+# An absolute path naming a user. The path must BEGIN a token: measured 2026-11-14, the bare pattern also
+# matched `"$T/home/state"` (a test's temp dir) because it never asked where the match started, and filed
+# a relative temp path as a user path. A real absolute path follows a space, a quote, `=` or a line start;
+# a path inside a variable does not.
 for f in $config_files; do
   [ -f "$ROOT/$f" ] || continue
   hits=$(sed -E 's/(^|[[:space:]])#.*$//' "$ROOT/$f" 2>/dev/null \
-    | grep -nE '/home/[a-z][a-z0-9_-]+/|/Users/[A-Za-z][A-Za-z0-9_-]+/|[Cc]:\\Users\\' \
+    | grep -nE "(^|[[:space:]\"'=(:,])/home/[a-z][a-z0-9_-]+/|(^|[[:space:]\"'=(:,])/Users/[A-Za-z][A-Za-z0-9_-]+/|(^|[[:space:]\"'=(:,])[Cc]:\\\\Users\\\\" \
     | head -3)
   [ -n "$hits" ] && config_bad="$config_bad ${f}(path)"
 done

@@ -17,8 +17,15 @@
 # Exit: 0 clean · 1 findings (the hotline) · 2 could not scan
 set -uo pipefail
 
+# The tree and the home are RESOLVED, never guessed (Rule 07). Until 2026-11-14 this line carried
+# `$HOME/Documents/ymirhome` as its own default — a second place that knew where the hoard lives, which is
+# exactly what `defaults-guard` exists to refuse. A sweep with an unresolved home has nowhere private to
+# write its queue and might write another operator's, so it refuses and says which door was missing.
 REPO="${YMIR_REPO:-$HOME/ymir}"
-HOME_DIR="${YMIR_HOME:-$HOME/Documents/ymirhome}"
+[ -r "$REPO/bin/vault/hoard-lib.sh" ] && . "$REPO/bin/vault/hoard-lib.sh"
+HOME_DIR="${YMIR_HOME:-}"
+declare -f ymir_home_root >/dev/null 2>&1 && ymir_home_root HOME_DIR 2>/dev/null
+[ -n "$HOME_DIR" ] || { printf 'private-scan: no home recorded — set YMIR_HOME or keep bin/vault/hoard-lib.sh in the tree (Rule 07)\n' >&2; exit 2; }
 QUEUE="$HOME_DIR/hodd/state/private-scan/queue.md"
 REPORT_DIR="$HOME_DIR/hodd/state/private-scan"
 LOG="$REPORT_DIR/scan.log"
@@ -50,13 +57,27 @@ ADDRESS	\b100\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\b
 ADDRESS	\b192\.168\.[0-9]{1,3}\.[0-9]{1,3}\b
 ADDRESS	\b10\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\b
 ADDRESS	[A-Za-z0-9-]+\.ts\.net
-ADDRESS	/home/zerwizserver/
 ADDRESS-LOW	[a-z0-9-]+\.zerwiz\.org
 ADDRESS-LOW	/home/(alice|bob|tester|user|example|test)/
 PERSON	[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.(?!test|example|invalid|local)\w{2,}
 PERSON	\+?46[ -]?7[0-9]{1,2}[ -]?[0-9]{3}[ -]?[0-9]{2}[ -]?[0-9]{2}
 RULES
 }
+
+# THIS FLEET'S OWN HOME PATHS ARE READ FROM THE HOME, NEVER HARDCODED (2026-11-14). `/home/<user>/` is the
+# machine's address in the same sense as an IP, so baking one into this public script breaks the very rule the
+# script exists to enforce — and the Rule-07 gate said so. `hodd/identity/machine-homes.txt` holds one path per
+# line (`/home/<user>/`); absent, the rule is skipped AND SAID, because a silently missing rule is a false clean.
+homes_file="$HOME_DIR/hodd/identity/machine-homes.txt"
+homes_rules=""
+if [ -f "$homes_file" ]; then
+  while IFS= read -r home_path; do
+    case "${home_path:-}" in ''|'#'*) continue ;; esac
+    homes_rules+="ADDRESS	$(printf '%s' "$home_path" | sed 's/[.]/\\./g')"$'\n'
+  done < "$homes_file"
+else
+  printf 'private-scan: note — no %s, so no machine home paths are checked this run\n' "$homes_file" >&2
+fi
 
 # Names that identify a client, a company or a person are read from the home, never hardcoded in this public repo.
 # `hodd/identity/nda-names.txt` — one name per line — is the NDA gate's own list; if it is absent, this rule is skipped
@@ -99,7 +120,7 @@ while IFS=$'\t' read -r cat pattern; do
              -g '!assets/reference/**' -g '!**/dist/**' -g '!**/build/**' \
              -g '!.yggdrasil/**' -g '!docs/**' -g '!apps/*/tickets/**' \
              "$REPO" 2>/dev/null | sed "s|^$REPO/||" | head -40)
-done < <( { rules; printf '%s' "$nda_rules"; } | sort -u )
+done < <( { rules; printf '%s' "$nda_rules"; printf '%s' "$homes_rules"; } | sort -u )
 
 stamp="$(date -u +%FT%TZ)"
 if [ "$MODE" = "--json" ]; then
