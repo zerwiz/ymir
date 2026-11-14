@@ -132,6 +132,20 @@ gate main-red "the alarm for a red main names the ward and never fires for a pul
 gate opencode-launcher "every door seats OpenCode with the launcher's one shape; the version guard bites" \
      bash "$ROOT/bin/gates/tests/test_opencode_launcher.sh"
 
+# PLAN 290 §3 — an outward warden acts only where the operator's home names it for THIS machine, only on
+# the operator's own repositories, and only as the identity that machine gives the duty. The fault it
+# answers: a warden shipped by this repo merged another operator's PRs because a role seated it. A gate
+# is here because a policy nobody tests is a policy nobody has.
+gate wardens-own-only "a fresh home seats no outward warden, a foreign repository is refused, a mismatched identity is refused, a named door works" \
+     bash "$ROOT/bin/gates/tests/test_warden_lib.sh"
+
+# PLAN 290 §3, the Allfather's word of 2026-11-14 (*"users must get these updates on installations"*): the
+# update road turns every outward warden OFF on an existing install and records what the old install was
+# running, so nothing acts outward by inertia and the operator can turn back on what he owns. Proved on a
+# copy of an old-shaped home, with systemd stubbed.
+gate wardens-off-until-named "an existing installation's outward timers are stopped by the update road and recorded, a door the operator named is left alone, a fresh install starts with every door off" \
+     bash "$ROOT/bin/gates/tests/test_wardens_off_until_named.sh"
+
 # Rule 11 — a tracked file is MOVED, never deleted. RULES/11 says the ward runs here; until
 # 2026-11-03 nothing in this file called it, so a deletion passed CI unseen. The range is the
 # PR's base when there is one, and an honest SKIP (not a green) when this checkout has no base.
