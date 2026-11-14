@@ -52,3 +52,12 @@ and is correct as it stands. Do not "fix" it to match the outbound one.
 
 The extension that makes the lane *fast* rather than merely working — mouth warm from arrival,
 `voice_speak` mid-turn, and a per-turn stopwatch — is plan 121's phase 3 and is not in this change.
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: a dev machine (this seat). The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).

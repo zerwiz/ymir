@@ -46,3 +46,12 @@ want of a live session lock (the plan 29 law). Two read-path faults:
 - `apps/hlidskjalf/server/index.ts` · `apps/hlidskjalf/src/gates/Cron.tsx`
 - `apps/hlidskjalf/src/services/api.ts` · `apps/hlidskjalf/src/state/store.ts`
 - `.agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md`
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: the fleet's always-on heart. The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).

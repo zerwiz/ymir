@@ -28,3 +28,12 @@ question about the vault is answered from a *feature fact* (`intent=fact:feature
 of refusing. The suite could not be proven green in this session, so this change is **not** claimed production
 ready: it is reviewable, it is reversible (one function and one branch), and the next session's first task is the
 suite, then the three remaining items — identity per turn, `mouth → ear → answer`, and the knowledge application.
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: a person the house meets. The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).

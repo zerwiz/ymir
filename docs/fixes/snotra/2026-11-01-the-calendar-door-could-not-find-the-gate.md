@@ -93,3 +93,12 @@ Measured: `<a personal address>` → refused, naming *"thegleemachine.com publis
 'provenance'`: the log was written and the index was not, so a lesson could be stored and be unfindable. It now
 reads the engine's own signature and passes only what it accepts. **Measured after the fix: 58 memories observed,
 104 already present** — fifty-eight lessons that had been written and never indexed are now searchable.
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: a dev machine (this seat). The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
