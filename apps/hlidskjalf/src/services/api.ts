@@ -9,6 +9,8 @@ import type {
   RuneEntry,
   SkillDef,
   Task,
+  A2ATraffic,
+  Doors,
 } from '../types';
 
 /**
@@ -161,18 +163,92 @@ export interface OrderRow {
   phase: string;
   status: string;
 }
-/** What the HARNESSES spent (opencode, pi) — not only the smithy's runs. */
+export interface UsageModelRow {
+  source: string;
+  harness?: string;
+  agent?: string;
+  provider?: string;
+  model: string;
+  /** local = this machine's own rail; online = a cloud API. Decided by where it RAN. */
+  kind?: 'local' | 'online';
+  messages: number;
+  sessions: number;
+  input: number;
+  output: number;
+  cache_read: number;
+  cache_write?: number;
+  reasoning?: number;
+  /** null = this call is NOT priced (unknown), never 0 for an unpriced online model. */
+  cost?: number | null;
+  cost_source?: 'recorded' | 'list' | 'local' | 'none' | 'unknown';
+}
+
+/** One harness's presence in the window — read, or skipped with its reason. */
+export interface UsageSource {
+  ok?: boolean;
+  model?: string;
+  skip?: string;
+  error?: string;
+  homes?: string[];
+  messages?: number;
+  sessions?: number;
+  input?: number;
+  output?: number;
+  cache_read?: number;
+  cache_write?: number;
+}
+
+/** What EVERY harness spent (opencode · pi · Claude Code · Codex · Hermes) — plan 275 item 29. */
 export interface YmirUsage {
   window_days: number;
-  sources: Record<string, { messages?: number; input?: number; output?: number; cache_read?: number; cache_write?: number; error?: string }>;
-  totals: { messages: number; input: number; output: number; cache_read: number; cache_write: number; total: number; cache_hit_ratio: number };
-  by_model: Array<{ source: string; model: string; messages: number; input: number; output: number }>;
+  sources: Record<string, UsageSource>;
+  totals: {
+    messages: number;
+    sessions: number;
+    input: number;
+    output: number;
+    cache_read: number;
+    cache_write: number;
+    reasoning?: number;
+    total: number;
+    /** input + cache_read — the tokens actually sent to a model. */
+    prompt?: number;
+    cache_hit_ratio: number;
+    /** null when nothing in the window is priced. */
+    cost?: number | null;
+    cost_unknown_calls?: number;
+  };
+  by_model: UsageModelRow[];
+  /** A RUN is a session; success/fail are null where no harness records them. */
+  runs?: {
+    total: number;
+    messages: number;
+    success: number | null;
+    fail: number | null;
+    unknown?: number;
+    success_rate: number | null;
+    tokens: number;
+    cost: number | null;
+    cost_unknown_calls?: number;
+    by_source: Record<string, number>;
+  };
+  local_online?: Record<'local' | 'online', {
+    tokens: number; calls: number; sessions: number; input: number; output: number;
+    cache_read: number; cost: number | null;
+  }>;
   /** The same numbers under the names the Statistics gate renders. */
   gate?: {
-    totals: { runs: number; success: number; fail: number; running: number; tokens: number; cost: number };
-    usage: { input: number; output: number; cache_read: number; cache_write: number; total: number };
+    totals: {
+      runs: number; messages?: number; success: number | null; fail: number | null;
+      running: number; tokens: number; cost: number | null; cost_unknown_calls?: number;
+    };
+    usage: {
+      input: number; output: number; cache_read: number; cache_write: number;
+      total: number; prompt?: number; cache_hit_ratio?: number;
+    };
     providers: { local: any; online: any; per_model: any[] };
     by_chain: any[];
+    by_harness?: any[];
     by_model: any[];
   };
 }
@@ -390,6 +466,10 @@ export interface StatsUsage {
   cache_read: number;
   cache_write: number;
   total: number;
+  /** input + cache_read: the tokens actually sent to a model (plan 275 item 29). */
+  prompt?: number;
+  /** cache_read / prompt — the share of every prompt that came from cache. */
+  cache_hit_ratio?: number;
 }
 export interface VendorCost {
   cached_cost: number;
@@ -470,6 +550,10 @@ export const gateApi = {
   workspace: () => get<{ realm: RealmId; path: string }>('/api/workspace'),
   agents: () => get<AgentCard[]>('/api/agents'),
   tasks: () => get<Task[]>('/api/tasks'),
+  /** The herdr traffic between agents, newest first — read from the fleet message log. */
+  a2aMessages: (n = 40) => get<A2ATraffic>(`/api/a2a/messages?n=${n}`),
+  /** Every app's DevTools port and every agent's pane — the inspection doors. */
+  doors: () => get<Doors>('/api/doors'),
   well: (q: string) => get<RecallEpisode[]>(`/api/well?q=${encodeURIComponent(q)}`),
   runes: () => get<RuneEntry[]>('/api/runes'),
   processes: () => get<ProcessInfo[]>('/api/processes'),
