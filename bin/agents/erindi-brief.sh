@@ -241,6 +241,15 @@ the panes."*
    Silence is distinguished from thinking: a worker that stops appending inside
    the window is reported as SUSPECT (bin/agents/eindri-heartbeat.sh) — keep a line
    moving whenever you make progress.
+
+**Name the project records you touched.** The brief above carries the bearings: the fixed core,
+and the records of the project you were sent to. Before your terminal act, your report says which
+of them the work changed — one line:
+   \`records updated: <path> · <path>\`
+   or, when the errand genuinely changed none, \`none: <why no record changed>\`.
+The handoff packet refuses without it (\`bin/forge/handoff-packet.sh write $ID --record "path|what"\`),
+and so does the review: a project's decisions, handoff, plans and boards are updated by the work,
+or the work has not landed (plan 291 part 2).
 EOF
 )
 

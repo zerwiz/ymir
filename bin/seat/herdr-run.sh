@@ -73,6 +73,10 @@ HDR_SESSION="${HERDR_SESSION:-}"
 HDR_BIN="${HDR:-$(command -v herdr || command -v hdr || printf 'herdr')}"
 hdr() { if [ -n "$HDR_SESSION" ]; then "$HDR_BIN" --session "$HDR_SESSION" "$@"; else "$HDR_BIN" "$@"; fi; }
 
+# The agent's own state and readiness come from the shared lib, so the launcher and its test read
+# herdr the same way (plan 291 row 5).
+[ -r "$SCRIPT_DIR/agent-state-lib.sh" ] && . "$SCRIPT_DIR/agent-state-lib.sh"
+
 can_use_herdr() {
   [ "${YMIR_HERDR_PANES:-1}" = "1" ] || return 1
   [ "${HERDR_ENV:-}" = "1" ] || return 1
@@ -578,13 +582,41 @@ $_coretext"
         printf 'error: could not start a %s Eindri in %s\nhelp: the pane must sit at an interactive shell prompt\n' "$KIND" "$pane" >&2
         exit 1
       fi
-      # Inject the task — retry until it lands. `agent start` can return before the
-      # harness accepts input, and a single swallowed prompt is the
-      # "it started but nothing was injected" bug.
+      # ROW 5 (plan 291, 2026-11-14): `agent start` returns as soon as the pane HOLDS the agent,
+      # which is not the same as the agent being ready for input. Measured that day: two hand-seated
+      # workers sat idle — their first prompt was typed into a harness that had not drawn its input
+      # box yet, and only a second prompt woke them. So the seat waits for `interactive_ready` first.
+      ready=no
+      for _w in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+        if agent_ready "$AGENT_REF"; then ready=yes; break; fi
+        sleep 1
+      done
+      # Inject the task, then CONFIRM the agent moved — a prompt that was accepted and swallowed
+      # looks identical to one that landed until you look at the state. One retry, never a loop.
+      retried=no
       for _try in 1 2 3 4 5 6 7 8 9 10; do
         if hdr agent prompt "$NAME" "$PROMPT" >/dev/null 2>&1; then injected=yes; break; fi
         sleep 3
       done
+      if [ "$injected" = yes ]; then
+        for _w in 1 2 3 4 5 6 7 8 9 10; do
+          case "$(agent_state "$AGENT_REF")" in
+            working|done) break ;;
+          esac
+          sleep 1
+        done
+        case "$(agent_state "$AGENT_REF")" in
+          working|done) ;;
+          *)
+            # the measured fault: ready, but the prompt left no trace — send it once more
+            hdr agent prompt "$NAME" "$PROMPT" >/dev/null 2>&1 && retried=yes
+            sleep 2 ;;
+        esac
+      fi
+      printf 'herdr-run[1]{eindri,interactive_ready,retried,state}:
+  "%s","%s","%s","%s"
+' \
+        "$NAME" "$ready" "$retried" "$(agent_state "$AGENT_REF")" >&2
     fi
     printf 'herdr-run[1]{eindri,injected,attempts}:\n  "%s","%s",%s\n' "$NAME" "$injected" "${_try:-0}" >&2
 
