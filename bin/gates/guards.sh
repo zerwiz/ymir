@@ -239,13 +239,25 @@ cache_write() {  # <ward> <key>
 # CI refuses it, and names the commit that broke main. A SCOPED ward is never inherited: it
 # was handed only the changed files, so anything it finds is ours.
 inherited() {  # <ward> <output>
-  local w="$1" out="$2" p
+  local w="$1" out="$2" p t tokens=""
   # A ward that was handed ONLY the changed files cannot have found anything else: whatever
   # it prints is this push's. Only a whole-tree run can be inherited.
   if is_scoped "$w" && [ "$SCOPE_COUNT" -gt 0 ]; then return 1; fi
+  # A PATH IS A WHOLE TOKEN, NOT A TAIL (measured 2026-11-14 on PRs #747 and #754). Until now a changed
+  # path matched as a SUBSTRING of the ward's output, so a unit pointing into a NEIGHBOUR checkout —
+  # /home/…/ymir/.yggdrasil/queue-warden-review/bin/forge/queue-warden.sh — was read as naming THIS
+  # tree's bin/forge/queue-warden.sh, and every branch touching that script was refused for a fault it
+  # did not have. Ours now means this checkout's own copy ("$ROOT/<path>"), or the path standing as a
+  # token of its own — the way a ward prints it inside prose or a TOON row. A tail never counts.
+  while IFS= read -r t; do
+    t="${t//\"/}"; t="${t//,/}"; t="${t//(}"; t="${t//)}"; t="${t//:}"; t="${t//;}"
+    t="${t//\[}"; t="${t//\]}"
+    [ -n "$t" ] && tokens+="$t"$'\n'
+  done <<< "$(printf '%s' "$out" | tr '[:space:],' '\n\n')"
   while IFS= read -r p; do
     [ -n "$p" ] || continue
-    case "$out" in *"$p"*) return 1 ;; esac
+    printf '%s' "$tokens" | grep -qxF -- "$ROOT/$p" && return 1
+    printf '%s' "$tokens" | grep -qxF -- "$p" && return 1
   done <"$CHANGED_LIST"
   return 0
 }

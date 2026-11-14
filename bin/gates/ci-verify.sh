@@ -234,6 +234,11 @@ gate seat-find "the finder names the pane whose work printed the words, never it
 gate private-guard-variable "the private ward reads \$YMIR_HOME as design and still refuses a resolved path or a real realm" \
      bash "$ROOT/.agents/tests/private-guard-variable.test.sh"
 
+# THE GATE'S OWN DECISION, PROVED (2026-11-14): a ward's finding belongs to a push only when it names
+# THIS checkout's copy of a path, never when it names a neighbour checkout's copy of the same script.
+gate guards-inherited "a finding in a neighbour checkout is inherited, and a finding in ours is not" \
+     bash "$ROOT/bin/gates/tests/test_guards_inherited.sh"
+
 if [ "${YMIR_PRETEST_ON_PUSH:-0}" = 1 ]; then
   gate pr-pretest  "a REAL npm install of the publish artifact" bash "$ROOT/bin/forge/npm/npm-pretest.sh local"
 else
