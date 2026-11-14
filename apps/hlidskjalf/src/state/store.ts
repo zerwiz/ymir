@@ -18,7 +18,6 @@ import type {
 } from '../types';
 import { realmDef, ACCENTS, GATES, DEFAULT_REALM } from '../data/realms';
 import {
-  clearSession,
   loadSession,
   provisionWorkspace,
   sessionFor,
@@ -194,8 +193,9 @@ interface YmirState {
   /** Establish the UI session for a login the gate has verified. */
   establishSession: (login: string) => void;
   provision: (input: { login: string; name: string; kind: 'work' | 'personal'; domains: string[] }) => void;
-  signOut: () => void;
   loadLive: () => Promise<void>;
+  /** The Runtime page's own read: the digest lands late, and the page retries. */
+  refreshRuntime: () => Promise<void>;
   startCron: () => Promise<void>;
   stopCron: () => Promise<void>;
   refreshSmidja: () => Promise<void>;
@@ -275,7 +275,8 @@ function emptyState() {
     recall: [] as YmirState['recall'],
     processes: [] as YmirState['processes'],
     reviews: null as YmirState['reviews'],
-    files: { name: 'realm', type: 'dir', path: '/', children: [] } as YmirState['files'],
+    // Skrymir's root is the WHOLE home (plan 275 item 21); folders load on open.
+    files: { name: 'ymirhome', type: 'dir', path: '', children: [] } as YmirState['files'],
     chat: [] as YmirState['chat'],
     skills: [] as YmirState['skills'],
   };
@@ -358,7 +359,12 @@ export const useYmir = create<YmirState>((set, get) => ({
       // rather than handing the panel a shape it cannot read.
       const ok = <T,>(x: T | null | undefined, prev: T): T =>
         x && !(x as unknown as { error?: unknown }).error ? (x as T) : prev;
-      const [agentsResult, usage, tasks, runes, recall, processes, reviews, files, runtime, cron, cronSeats, mimir, skills] =
+      // TWO BATCHES, on purpose (2026-11-14). Everything used to wait on the
+      // SLOWEST endpoint — `reviews` shells lint + compliance with a 60 s cap — so
+      // the file tree, the runtime page and every board sat blank for a minute
+      // after a session was seated. The FAST group paints first; the slow group
+      // (usage · reviews · the well) arrives when it can.
+      const [agentsResult, tasks, runes, processes, files, runtime, cron, cronSeats, mimir, skills] =
         await Promise.all([
           // Each call degrades on its own — one bad endpoint must not blank the app.
           // The roster is special: an empty board has four causes, so this call
@@ -370,13 +376,10 @@ export const useYmir = create<YmirState>((set, get) => ({
               return [get().agents, agentsFailureStatus(error)];
             }
           })(),
-          gateApi.usage().then((v) => ok(v, get().usage)).catch(() => get().usage),
           gateApi.tasks().then((v) => ok(v, get().tasks)).catch(() => get().tasks),
           gateApi.runes().then((v) => ok(v, get().runes)).catch(() => get().runes),
-          gateApi.well('').then((v) => ok(v, get().recall)).catch(() => get().recall),
           gateApi.processes().then((v) => ok(v, get().processes)).catch(() => get().processes),
-          gateApi.reviews().then((v) => ok(v, get().reviews)).catch(() => get().reviews),
-          gateApi.files(get().realm).then((v) => ok(v, get().files)).catch(() => get().files),
+          gateApi.files().then((v) => ok(v, get().files)).catch(() => get().files),
           gateApi.runtime().then((v) => ok(v, get().runtime)).catch(() => get().runtime),
           gateApi.cron()
             .then((v) => {
@@ -392,7 +395,14 @@ export const useYmir = create<YmirState>((set, get) => ({
           gateApi.skills().then((v) => ok(v, get().skills)).catch(() => get().skills),
         ]);
       const [agents, agentsStatus] = agentsResult;
-      set({ agents, agentsStatus, tasks, runes, recall, processes, reviews, files, runtime, cron, cronSeats, mimir, skills, usage, live: true });
+      set({ agents, agentsStatus, tasks, runes, processes, files, runtime, cron, cronSeats, mimir, skills, live: true });
+
+      const [usage, reviews, recall] = await Promise.all([
+        gateApi.usage().then((v) => ok(v, get().usage)).catch(() => get().usage),
+        gateApi.reviews().then((v) => ok(v, get().reviews)).catch(() => get().reviews),
+        gateApi.well('').then((v) => ok(v, get().recall)).catch(() => get().recall),
+      ]);
+      set({ usage, reviews, recall });
     } catch {
       // Gate API unreachable — stay on the last good data and mark it.
       set((s) => ({
@@ -462,6 +472,15 @@ export const useYmir = create<YmirState>((set, get) => ({
     }
   },
 
+  refreshRuntime: async () => {
+    try {
+      const runtime = await gateApi.runtime();
+      set({ runtime });
+    } catch {
+      /* keep the last good reading */
+    }
+  },
+
   setSelectedSession: (id) => set({ selectedSession: id, sessionDetail: null }),
   loadSessionDetail: async (id) => {
     try {
@@ -504,10 +523,9 @@ export const useYmir = create<YmirState>((set, get) => ({
     void get().loadLive();
   },
 
-  signOut: () => {
-    clearSession();
-    set({ session: null, live: null, query: '', agentsStatus: 'offline' });
-  },
+  // No signOut: the halls are local and there is no session to end (plan 275
+  // item 30). `clearSession` still exists in services/auth.ts for a machine that
+  // wants a clean seat; nothing in the UI offers it any more.
 
   setRealm: (realm) => {
     // Single tenant: switch freely between workspaces (work | personal | …).

@@ -1,9 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { useYmir } from '../state/store';
 
+/**
+ * Who is seated — never a sign-in (plan 275 item 30). The halls are local: the
+ * desktop session is the authority, so this menu names the operator and opens the
+ * Profile. The "signed in via …" line and the Sign out button went with the
+ * hosted-era login they belonged to.
+ */
 export function AccountMenu() {
   const session = useYmir((s) => s.session);
-  const signOut = useYmir((s) => s.signOut);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -40,7 +45,7 @@ export function AccountMenu() {
         <span className="col" style={{ lineHeight: 1.25, textAlign: 'left' }}>
           <span style={{ fontSize: 13 }}>{user.login}</span>
           <span className="mono dim" style={{ fontSize: 10 }}>
-            signed in
+            local seat
           </span>
         </span>
       </button>
@@ -61,11 +66,8 @@ export function AccountMenu() {
 
           <div className="account-foot">
             <span className="mono dim" style={{ fontSize: 10 }}>
-              signed in via {session.method}
+              this machine · no login
             </span>
-            <button className="btn btn-danger" onClick={signOut}>
-              <span aria-hidden="true">ᛪ</span> Sign out
-            </button>
           </div>
         </div>
       ) : null}
