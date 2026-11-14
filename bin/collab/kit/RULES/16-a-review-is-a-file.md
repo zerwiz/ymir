@@ -29,3 +29,7 @@ change before merge · and the next tasks in the order they should be taken.
 A pull-request comment lives where the work was, and a person starting work today starts at the repository's baton, not at the
 conversation of a branch that later merged. **The review belongs where the next hand already looks** — and posting it *in addition* to
 the pull request is courtesy, not record.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #755
