@@ -100,11 +100,31 @@ run "$door" --marker
 case "$(cat "$door")" in *"eindri-bearings:v1"*) ok "the marker is the same one the brief is built with" ;;
   *) bad "the marker is not the one the door writes" ;; esac
 
-# 7 · the shipped core is AGNOSTIC: no home path, no machine, no operator
-if grep -qE '/home/|/Users/|heimdall|nidavellir|w[0-9]+:p' "$core"; then
-  bad "the shipped core carries a machine, a pane or a private path"
+# 7 · the shipped core is AGNOSTIC: no home path, no pane, and none of the operator's own names.
+# The names are NEVER written here — that would publish what the check is protecting. They are
+# read at run time from the home's deny list (the one `bin/gates/agnostic-audit.sh` reads), and a
+# machine is judged where it is USED as one, exactly as that list's own contract says.
+deny="${YMIR_HOME:-}/hodd/identity/public-deny.txt"
+hosts=""; names=""
+if [ -r "$deny" ]; then
+  hosts="$(awk -F': *' '/^(host|user):/ {print $2}' "$deny" | sed '/^$/d' | paste -sd'|' -)"
+  names="$(awk -F': *' '/^(name|domain):/ {print $2}' "$deny" | sed '/^$/d' | paste -sd'|' -)"
+fi
+leak=""
+grep -qE '/home/|/Users/|w[0-9]+:p[0-9]+' "$core" && leak="a home path or a pane id"
+if [ -z "$leak" ] && [ -n "$hosts" ]; then
+  grep -qE "user@($hosts)|/home/($hosts)|/Users/($hosts)|ssh ($hosts)|//($hosts)|($hosts)\.[a-z]|($hosts):[0-9]" "$core" \
+    && leak="a machine, used as one"
+fi
+if [ -z "$leak" ] && [ -n "$names" ]; then
+  grep -qiE "\b($names)\b" "$core" && leak="a name from the home's deny list"
+fi
+if [ -n "$leak" ]; then
+  bad "the shipped core carries $leak — it must be agnostic (RULES/04)"
+elif [ ! -r "$deny" ]; then
+  ok "the shipped core carries no home path and no pane id (no deny list in this home, so names are not judged)"
 else
-  ok "the shipped core carries no machine, pane or private path"
+  ok "the shipped core carries no home path, pane id, machine or name from the home's deny list"
 fi
 
 printf 'test_eindri_bearings: %s passed, %s failed\n' "$pass" "$fail"

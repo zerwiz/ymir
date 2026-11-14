@@ -87,13 +87,13 @@ printf '**Where you work.** project `%s` — %s (%s), at `%s`.\n\n' "${PID:-unre
 
 # ---- (a) the fixed core ---------------------------------------------------------------------
 printf '### (a) The fixed core\n\n'
-awk 'NR==1 && /^<!--/ {skip=1; next} skip && /-->/ {skip=0; next} skip {next} /^# / {next} {print}' "$CORE"
+awk 'NR==1 && /^<!--/ {skip=1; next} skip && /-->/ {skip=0; next} skip {next} /^## CHANGE LOG/ {exit} /^# / {next} {print}' "$CORE"
 printf '\n'
 OVERLAY="${YMIR_HOME:-}/config/eindri-core.md"
 if [ -r "$OVERLAY" ]; then
   printf '### (a2) This fleet'"'"'s overlay\n\n'
   printf '_The home'"'"'s own word on top of the shipped core (`config/eindri-core.md`) — names, panes, machines and standing words._\n\n'
-  awk 'NR==1 && /^<!--/ {skip=1; next} skip && /-->/ {skip=0; next} skip {next} /^# / {next} {print}' "$OVERLAY"
+  awk 'NR==1 && /^<!--/ {skip=1; next} skip && /-->/ {skip=0; next} skip {next} /^## CHANGE LOG/ {exit} /^# / {next} {print}' "$OVERLAY"
   printf '\n'
 else
   printf '> [!NOTE]\n> No home overlay at `%s` — the shipped core above is all this errand carries. A fleet that\n> has its own names, panes and machines writes them there, never in the public repository.\n\n' "$OVERLAY"

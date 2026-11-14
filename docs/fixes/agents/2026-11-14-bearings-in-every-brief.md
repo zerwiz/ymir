@@ -96,3 +96,17 @@ on the shelf in `docs/runbooks/README.md`.
   the new road once merged.
 - `python3 -m unittest discover` in `src/ymir_runtime/tests` fails on six pre-existing tests that name
   `bin/runes-append.sh` (moved to `bin/records/`), untouched by this change; `test_seat.py` is 32/32 green.
+
+### Repair, same day — the check that guards the leak must not leak
+
+The helm read the branch and found one fault in the guard itself: the core's agnostic check
+(`bin/agents/tests/test_eindri_bearings.sh`) hardcoded two machine names, so the very file that
+protects the public repository from those names published them. The check now reads the home's own
+deny list (`$YMIR_HOME/hodd/identity/public-deny.txt`, the list `bin/gates/agnostic-audit.sh` reads)
+at run time — a machine is judged where it is USED as one (`user@`, `/home/`, `ssh`, `//`, a port or a
+suffix), a person or client as a whole word — and keeps the generic `/home/`, `/Users/` and pane-id
+patterns. In a home with no deny list, the names are simply not judged, and the test says so.
+
+Two more findings from the same read, both fixed here: `bin/seat/agent-state-lib.sh` is executable
+(RULES/12 — a new door), and `.agents/assets/agents/eindri-core.md` carries a CHANGE LOG (RULES/06) —
+which the bearings door now CUTS at, so the log stays out of every brief it prints.

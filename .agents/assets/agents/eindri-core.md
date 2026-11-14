@@ -60,3 +60,7 @@ Read this once. It is the ground the errand stands on; the errand itself follows
   from a release on a second machine, before calling it done.
 - **One fix note per change** in `docs/fixes/<component>/`, and a test when behaviour changed.
 - **Commit on your own branch** (`eindri/<errand>`) and **do not push** — the helm gathers one PR.
+
+## CHANGE LOG
+
+- **2026-11-14** — written: the shipped, agnostic core every errand's brief carries, and the home's overlay is printed after it (plan 291 part 2). This document carries its history from here; its earlier history is its git log. Everything above the CHANGE LOG is printed into a brief; nothing below it is.
