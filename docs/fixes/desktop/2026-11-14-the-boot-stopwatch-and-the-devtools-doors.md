@@ -75,3 +75,29 @@ ends in the app's name anyway, and prints the disagreement, so a rename can neve
 ## CHANGE LOG
 
 - 2026-11-14 — written with the change; measurements taken the same night on heimdall.
+
+## Appended 2026-11-14 — the three slow boots cut, and the instrument that now says what a renderer does
+
+The Allfather's word: *do all needed fixes.* The stopwatch's three failures are cut below, each measured before and
+after on heimdall, each cold boot taken with the desk free (`bin/desk/in-call.sh holder` empty) and announced to
+the helm first.
+
+| App | Was | Now | What was cut |
+|---|---|---|---|
+| Hlidskjalf | 9.46 s window→answer (white window) | first paint in 972–1492 ms; launch→painted median 5070 → **3262 ms**, worst 13559 → **3299 ms** | the `return null` that waited on `/api/session`, and 21 eagerly imported gate pages turned into on-demand chunks — see `docs/fixes/hlidskjalf/2026-11-14-the-window-answers-while-the-gate-is-asked.md` |
+| Bilskirnir | server answered in 3.7 s (tsx) | **1.5–2.7 s** (built) | `npx tsx src/index.ts` on every start → `tsc` once into `server/dist` and `node dist/index.js` after; refreshed only when a source file is newer than the built entry. Measured: tsx 3708 / 3649 ms, built 4937 (cold cache) / 2652 / 1535 ms; the one-off build is 22.8 s and never repeats until the sources move |
+| Rödd | engine raised in **39.6–52.7 s** | **33.9 s cold cache, 28.3 s warm** | `CUDA_MODULE_LOADING=LAZY` on the voice host: the engine's import initialised every CUDA module before it could answer. Same command, same card, two pairs in opposite order: 52.7 → 33.9 s and 31.6 → 28.3 s. `YMIR_VOICE_CUDA_MODULE_LOADING=eager` restores the old path, named |
+
+`bin/desktop/devtools.cjs` gained **`perf <port>`** for this work: the renderer's navigation timings, its paint
+marks, every resource it fetched and the slowest twelve, all read from the page itself. That is how "the window is
+white for nine seconds" became a number and a list of what happened in the meantime.
+
+### Closed after testing
+
+Everything this work started was closed and checked: the two Hlidskjalf measurement windows (each with its own
+`--user-data-dir` under `/tmp`), the `vite preview` on `:3898`, the Bilskirnir timing servers on `:8799` and the
+voice-engine A/B runs on `:8898`. `ss` shows none of those ports listening and `ps` shows none of those processes
+alive. What was open before the work is open after it: Hlidskjalf and Óðrerir (re-raised after a release flip by
+another hand closed them), and the voice host, which the A/B measurement stopped and which was raised again through
+`bin/voice/voice-door.sh host --now` and answers on `:8890`. Sessrúmnir was open when the errand began and was not
+touched: its own worker holds it.

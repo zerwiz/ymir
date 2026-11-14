@@ -219,7 +219,22 @@ if [ "$sc" = 0 ] && up "$URL/api/health" && { [ "$MODE" = "dev" ] || face_up "$U
 elif [ "$sc" = 0 ]; then
   say "the server :$PORT" "ours, but not serving the face — lower it: apps/bilskirnir/start.sh --stop"; exit 1
 else
-  spawn server "$APP/server" npx tsx --env-file=../.env src/index.ts
+  # 2026-11-14 (plan 275 item 10): the hall's server is BUILT once, not transformed on every start. It ran
+  # `npx tsx src/index.ts`, which pays tsx's TypeScript transform on each launch — measured 4.5 s of a 20.4 s
+  # cold boot. The server already declares its production shape (`npm run build` = tsc, `npm start` = node
+  # dist/index.js), so that is what runs now: the build is refreshed only when a source file is newer than the
+  # built entry, and never on a warm start. A native module (better-sqlite3) stays a real import — this is tsc,
+  # not a bundle, so nothing is inlined and no dependency shape changes.
+  server_entry="$APP/server/dist/index.js"
+  newest_src="$(find "$APP/server/src" -type f -newer "$server_entry" 2>/dev/null | head -1)"
+  if [ ! -f "$server_entry" ] || [ -n "$newest_src" ]; then
+    say "the server" "building (tsc → dist/index.js)"
+    ( cd "$APP/server" && npx tsc -p tsconfig.json > "$RUN/build-server.log" 2>&1 ) \
+      && say "the server" "built" || { say "the server" "build FAILED — see data/run/build-server.log"; exit 1; }
+  else
+    say "the server" "built and current (dist/index.js)"
+  fi
+  spawn server "$APP/server" node --env-file=../.env dist/index.js
   wait_for "up $URL/api/health" 40 && say "the server :$PORT" "raised" || { say "the server :$PORT" "FAILED — see data/run/server.log"; exit 1; }
   if [ "$MODE" != "dev" ] && ! wait_for "face_up $URL" 10; then
     say "the server :$PORT" "answers but GET / is not the face — see data/run/server.log and web/dist"; exit 1

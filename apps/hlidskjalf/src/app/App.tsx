@@ -8,6 +8,19 @@ import { gateApi, isDesktopSeat } from '../services/api';
 import { startStream } from '../services/stream';
 import { gateFromHash, useYmir } from '../state/store';
 
+/** The seat, drawn before the gate has answered. Deliberately not the shell: it must not look admitted. */
+function Boot() {
+  return (
+    <>
+      <EmberBackground />
+      <div className="boot-seat" role="status" aria-live="polite">
+        <span className="dim">taking the seat…</span>
+      </div>
+      <Overlay />
+    </>
+  );
+}
+
 export default function App() {
   const session = useYmir((s) => s.session);
   const [authed, setAuthed] = useState<boolean | null>(null);
@@ -89,8 +102,13 @@ export default function App() {
       .catch(() => setAuthed(false));
   };
 
-  // Hold until we know (no unauthenticated flash of the app).
-  if (authed === null) return null;
+  // The window answers while the gate is being asked (2026-11-14, plan 275 item 10). It used to `return null`
+  // until /api/session came back, so the window was genuinely blank for as long as that call took — measured
+  // 3.4 s on a good night and 8.7 s on a busy one, which is the "white window" the Allfather saw. Nothing is
+  // decided here that was decided before: the shell still waits for an admitted session (no unauthenticated
+  // flash), and a refusal still shows the gate's own login. What changed is that the seat is DRAWN while it is
+  // being taken, so the app has answered before the network has.
+  if (authed === null || (authed && !session)) return <Boot />;
 
   if (!authed) {
     return (
@@ -102,9 +120,9 @@ export default function App() {
     );
   }
 
-  // Auth in flight: the gate admitted us a moment ago and the session is
-  // being established. Hold rather than flash the login again.
-  if (!session) return null;
+  // Auth in flight: the gate admitted us a moment ago and the session is being established — Boot above says so,
+  // and never flashes the login again.
+  if (!session) return <Boot />;
 
   return (
     <>
