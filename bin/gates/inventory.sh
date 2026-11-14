@@ -232,6 +232,18 @@ shelves = {}
 # index could not match a clean checkout: `--check` was the lottery this file warns
 # about. A generated index must be a function of the tree, not of the seat.
 tracked_set = set(tracked)
+
+# A GATE FILE IS NOT A DOOR (plan 295 fix S1, 2026-11-14). `bin/gates/checks.d/` holds one file
+# per gate that `bin/gates/ci-verify.sh` sources; they are FRAGMENTS of that one door, called by
+# nothing an agent can look up, and the door already has its row. Indexing them would also undo
+# the whole point of the split: adding a gate would rewrite this register and the capability
+# fragment, so two branches adding two gates would meet again in a generated file. Excluded here
+# and in shelf_paths() below, so `--check` and the rendered index agree by construction.
+GATE_FRAGMENT_DIR = "bin/gates/checks.d/"
+
+def is_a_door(rel):
+    return not rel.startswith(GATE_FRAGMENT_DIR)
+
 for shelf, d in (("bin", BIN), (".agents/backend", BACKEND)):
     if d.exists():
         shelves[shelf] = [
@@ -240,6 +252,7 @@ for shelf, d in (("bin", BIN), (".agents/backend", BACKEND)):
             if p.is_file() and p.name != "INDEX.md"
             and not any(part.startswith(".") for part in p.relative_to(d).parts)
             and p.relative_to(ROOT).as_posix() in tracked_set
+            and is_a_door(p.relative_to(ROOT).as_posix())
         ]
 
 fail = False
@@ -388,6 +401,8 @@ def shelf_paths(shelf_dir):
     return {p[len(prefix):] for p in tracked
             if p.startswith(prefix)
             and not any(part.startswith(".") for part in p[len(prefix):].split("/"))
+            # A gate file is a fragment of the CI door, not a door: see GATE_FRAGMENT_DIR above.
+            and is_a_door(p)
             # An INDEX.md is a SHELF'S OWN INDEX at any depth, not a door: naming it in the
             # register it belongs to is circular. Measured 2026-11-11: the vendored collab kit's
             # docs/templates/INDEX.md was the one file no row could honestly name.
