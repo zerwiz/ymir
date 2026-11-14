@@ -47,9 +47,12 @@ session: chat-mwfuhbhl
 send: clicked
 reply after 94s:
   "I am Kaia, the voice of the Smíðja — the one who tells you what the smithy is doing and sets
-   it to work — and this window is your own, Allfather Josef: the agent factory of the Ymir house."
+   it to work — and this window is your own, <the operator>: the agent factory of the house."
 errors: []
 ```
+
+The reply also addressed the operator by name; that word is masked here on purpose — this repo is
+public and RULES/04 keeps a name out of it (the valve that names the operator lives in the home).
 
 No seat name, no invented run, and the two things a run needs are in the persona.
 
