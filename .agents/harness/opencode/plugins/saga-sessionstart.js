@@ -57,7 +57,7 @@ export default Plugin.define({
         if (!sessionID || handledSessions.has(sessionID) || !root) continue;
         handledSessions.add(sessionID);
 
-        const result = await runProcess(`${root}/bin/saga-sessionstart-run.sh`, []);
+        const result = await runProcess(`${root}/bin/time/saga-sessionstart-run.sh`, []);
         if (result.code !== 0) continue;
         const digest = result.stdout.trim();
         if (!digest) continue;

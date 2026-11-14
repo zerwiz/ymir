@@ -1275,9 +1275,14 @@ function skills() {
     });
 }
 
-/* ---- /api/runtime -------------------------------------------------------- */
+/* ---- /api/runtime --------------------------------------------------------- */
 async function runtime() {
-  const digest = await runAsync(['bash', 'bin/time/saga-session-start.sh'], 10000);
+  // --page, NEVER a bare call (plan 275 item 36b): a digest run for a page is READ-ONLY. The
+  // bare call is a session start — it takes the lock, and the page then reported the hall's
+  // page-load as holding the helm ("session lock held (pid <the gate's own pid>)"), and read
+  // back the identity-less lease that acquisition had just written ("helm: Hœnir · unknown").
+  // --page takes nothing, refreshes nothing, and names the real holder from the arm lease.
+  const digest = await runAsync(['bash', 'bin/time/saga-session-start.sh', '--page'], 15000);
   const markers = {
     lock: read(join(STATE_DIR, '.lock')).trim(),
     started: existsSync(join(STATE_DIR, '.session-start-complete')),
