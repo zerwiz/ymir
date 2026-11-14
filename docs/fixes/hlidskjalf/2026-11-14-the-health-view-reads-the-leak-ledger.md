@@ -63,7 +63,7 @@ its own words; an unjudged run is judged by §5 and says `unjudged`; a mid-run s
 a `skip` names its reason; a not-responding dialog is never a pass; two runs in one file take the
 last; a lone `storm-state.json` is not an app; an app with no soak carries the sampler's reading.
 
-**The real window on heimdall, through DevTools** (`YMIR_DEVTOOLS_PORT`): the gate ran from this
+**The real window on this machine, through DevTools** (`YMIR_DEVTOOLS_PORT`): the gate ran from this
 worktree on `:3897`, the SPA was built from it and served on `:3988`, and an Electron window
 loaded it; Playwright over CDP (`:9421`) opened `#/runtime`. Measured against this machine's real
 ledger:
@@ -92,7 +92,7 @@ this machine at the same time), which is the point: the page reads what the writ
 - **The sampler timer was not enabled by this errand.** It is a per-machine user timer, seated by
   the machine's own holder (RULES/41, RULES/55); the ledger here is the one the `leak-ledger`
   errand proved, and the view says plainly when it has stopped.
-- **No second-machine proof from a release.** `nidavellir` needs a release built from a branch
+- **No second-machine proof from a release.** a second machine needs a release built from a branch
   that is not merged; nothing on a screen was changed there, and no window was driven on another
   machine by a worker.
 
