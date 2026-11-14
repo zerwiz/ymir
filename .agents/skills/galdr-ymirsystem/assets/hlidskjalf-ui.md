@@ -166,8 +166,13 @@ Rules that hold it honest:
   (`DOMAINS`), exactly as the landing page keeps its house seals. Chrome is the
   cloth; heraldry is not chrome.
 - The **workspace tints** are cloth too: `work` = bronze `#c9973f`, `personal` =
-  steel `#96a0a8` (`apps/hlidskjalf/src/data/realms.ts` → `WORKSPACES`, mirrored by the
-  `data-realm` fallbacks in `styles/global.css`).
+  steel `#96a0a8` (`apps/hlidskjalf/src/data/realms.ts` → `DEFAULT_WORKSPACES`, mirrored by the
+  `data-realm` fallbacks in `styles/global.css`). **A realm's own name and colour are not in
+  this file**: the list is read at run time from the operator's registry
+  (`hodd/identity/workspaces.yaml`) through the gate's `/api/workspaces`, and the shipped
+  `DEFAULT_WORKSPACES` is a generic pair of two so a home with no registry still opens. A
+  realm the build does not know takes a stable seal (tint + rune) from its own id, so it looks
+  the same on every machine without anything being written down (RULES/04).
 - The **Emblem** (`components/Emblem.tsx`, `midgard/design-system/ymir-mark.svg`)
   is brand, not cloth — it keeps its own colours on the stone.
 - The login's GitHub button is a bone plate with a dark rune (the old white/navy
@@ -247,8 +252,10 @@ selection would hide under closed parents).
   has a 10s timeout (`services/api.ts`). Smíðja loads on a **separate track**
   (`refreshSmidja`) so a slow endpoint (e.g. `/api/reviews`) cannot hold its gates
   hostage. `App` polls `refreshSmidja` every 5s.
-- Realm switching is **granted**: `setRealm` refuses a realm the session has no
-  grant. Tenant boundaries are sacred — never render another tenant's data.
+- Realm switching is a **filter**, not a grant (plan 275): the halls are local and nothing asks
+  for a grant, so `setRealm` moves the scope a page works in, and `RealmScope` offers every realm
+  the home's registry holds (`store.realms`, filled by `loadRealms`). Tenant boundaries are still
+  sacred — never render another realm's private data.
 - Persist user prefs to `localStorage` (`ymir.accent`, `ymir.tenant-colors`,
   `ymir.company.*`, `ymir.stream-height`).
 
@@ -1040,3 +1047,4 @@ private home/audio/report settings and synthetic-only boundary are unchanged.
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
 - **2026-11-12** — Plan 278: `/api/cron/seats` takes its seats from the fleet registry (`server/server-seats.ts`): the heart and forge hosts, this machine excluded. The two machine names the code and this page carried are gone.
+- **2026-11-14** — the realm list left the code (RULES/04): `DEFAULT_WORKSPACES` is a generic pair, the operator's realms are read from the home's registry through `/api/workspaces`, and `store.realms` + `loadRealms` carry them to `RealmScope` and Profile. A realm the build does not know wears a seal derived from its own id.

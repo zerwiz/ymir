@@ -9,8 +9,9 @@ example line)
 ## Why
 
 `readHelm()` in `server/digest.ts` carries a comment that showed a concrete host and seat as its example
-(`heimdall · dev`), and the Runtime fix note's proof transcript showed `view.helm {seat Hœnir, machine
-heimdall, …}`. A shipped note and a shipped comment must name no machine (RULES/25): the file is public,
+(a machine's own name · a role), and the Runtime fix note's proof transcript showed
+`view.helm {seat <a seat>, machine <a host>, …}`.
+A shipped note and a shipped comment must name no machine (RULES/25): the file is public,
 and the example is exactly what a reader copies.
 
 ## What changed

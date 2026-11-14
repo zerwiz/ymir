@@ -1211,8 +1211,8 @@ function workspaceRoot(realm: string): string {
 }
 
 /* ---- Skrymir: the WHOLE home, one folder at a time (plan 275 item 21) ----- *
- * The browser showed ONE realm (workspaceRoot('work')), so the Personal and
- * Svein trees were invisible and the home's own shelves never appeared. The
+ * The browser showed ONE realm (workspaceRoot('work')), so the other realms'
+ * trees were invisible and the home's own shelves never appeared. The
  * realms are folders under svartalfaheim/, not modes: Skrymir's root IS the
  * home. Two things follow and both are load-bearing:
  *   - a folder is read WHEN IT IS OPENED (one level per request), so the whole

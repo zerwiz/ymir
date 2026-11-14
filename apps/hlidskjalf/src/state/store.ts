@@ -12,13 +12,14 @@ import type {
   ReviewsInfo,
   RecallEpisode,
   RealmId,
+  RealmDef,
   RuneEntry,
   Session,
   SkillDef,
   StreamEvent,
   Task,
 } from '../types';
-import { realmDef, ACCENTS, GATES, DEFAULT_REALM } from '../data/realms';
+import { realmDef, realmsFromRegistry, ACCENTS, GATES, DEFAULT_REALM, DEFAULT_WORKSPACES } from '../data/realms';
 import {
   loadSession,
   provisionWorkspace,
@@ -165,6 +166,11 @@ interface YmirState {
   cronError: string | null;
   mimir: MimirHealth | null;
   smidjaDb: string;
+  /** The realms THIS machine has: the operator's registry read at run time, or
+   *  the shipped pair before the gate answers. Never a name written in the repo. */
+  realms: RealmDef[];
+  /** Read the realms the home holds, and keep the seat on one that exists. */
+  loadRealms: () => Promise<void>;
   smidjaSessions: SmidjaSession[];
   smidjaStats: SmidjaStats | null;
   smidjaDecisions: SmidjaDecision[];
@@ -346,6 +352,7 @@ export const useYmir = create<YmirState>((set, get) => ({
   cronError: null,
   mimir: null,
   smidjaDb: 'absent',
+  realms: DEFAULT_WORKSPACES,
   smidjaSessions: [],
   smidjaStats: null,
   smidjaDecisions: [],
@@ -520,7 +527,8 @@ export const useYmir = create<YmirState>((set, get) => ({
 
   establishSession: (login) => {
     // The gate already decided; this only shapes what the UI renders.
-    const session = sessionFor(login);
+    const realms = get().realms;
+    const session = sessionFor(login, realms);
     saveSession(session);
     const realm = initialRealm(session);
     document.documentElement.dataset.realm = realm;
@@ -531,11 +539,32 @@ export const useYmir = create<YmirState>((set, get) => ({
       tenantColors[realm] ?? session.tenants.find((x) => x.realm === realm)?.tint,
     );
     set({ session, realm, ...emptyState() });
+    // The realm list is the operator's own registry in the home: read it now.
+    void get().loadRealms();
     void get().loadLive();
   },
 
+  /** Read the realms this home holds and re-shape the seat around them. The
+   *  shipped pair stands until the gate answers; an answer that carries none
+   *  leaves it standing (a registry that cannot be read is not an empty home). */
+  loadRealms: async () => {
+    let realms: RealmDef[] = get().realms;
+    try {
+      const rows = await gateApi.workspaces();
+      realms = realmsFromRegistry(rows);
+    } catch {
+      return;
+    }
+    const { session, realm } = get();
+    const next = realms.some((r) => r.id === realm) ? realm : realms[0].id;
+    const rebuilt = session ? { ...session, tenants: sessionFor(session.user.login, realms).tenants } : session;
+    if (rebuilt) saveSession(rebuilt);
+    set({ realms, session: rebuilt, realm: next });
+  },
+
   provision: (input) => {
-    const session = provisionWorkspace(input);
+    const realms = get().realms;
+    const session = provisionWorkspace(input, realms);
     saveSession(session);
     const slug = input.name.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/(^-|-$)/g, '');
     const realm = session.tenants.find((t) => t.realm === slug)?.realm ?? session.tenants[0]?.realm ?? 'work';
@@ -786,10 +815,15 @@ export const useYmir = create<YmirState>((set, get) => ({
   applyAccent(a.accentId, a.customAccent, realmTintOf(useYmir.getState()));
 }
 
-// A persisted session boots straight into live mode.
-if (initialSession) void useYmir.getState().loadLive();
+  // A persisted session boots straight into live mode.
+if (initialSession) {
+  // Its realm list is the home's, not a stale copy: read it before the first paint
+  // wherever the gate answers, and let the shipped pair stand where it does not.
+  void useYmir.getState().loadRealms();
+  void useYmir.getState().loadLive();
+}
 
 export const currentRealmDef = () => {
-  const { realm } = useYmir.getState();
-  return realmDef(realm);
+  const { realm, realms } = useYmir.getState();
+  return realms.find((r) => r.id === realm) ?? realmDef(realm);
 };

@@ -13,7 +13,7 @@
 Five rows of plan 275 §2026-11-14, all measured there on 2026-11-14 03:30–03:55:
 
 - **Item 11's follow-up.** `one-hlidskjalf` (commit `87278472`) pinned the active realm to
-  `work`. That removed the *mode* — which was right — but it also made the Personal and Svein
+  `work`. That removed the *mode* — which was right — but it also made the other realms'
   shelves invisible, and the rule is **never remove a feature**. `realm` is read in 183 places
   to scope search, fleet and data.
 - **Item 21.** `/api/files` called `files(realm)` with `realm` defaulting to `work`, and
@@ -30,8 +30,8 @@ Five rows of plan 275 §2026-11-14, all measured there on 2026-11-14 03:30–03:
 
 ## What changed
 
-**Every realm is shown (item 11).** `WORKSPACES` in `realms.ts` is the registry's three realms
-again — Work · Personal · Svein — with `DEFAULT_REALM` demoted to *the scope a realm-scoped
+**Every realm is shown (item 11).** `WORKSPACES` in `realms.ts` listed the registry's realms
+again — the operator's own, read from the home — with `DEFAULT_REALM` demoted to *the scope a realm-scoped
 page opens on*, not a mode. `RealmScope` (new) is a small segmented filter rendered **inside**
 the pages whose work a realm actually scopes: the Forge (a new card is forged into a realm) and
 the OmniChat drawer (where Kaia dispatches). `baseGrants()` in `services/auth.ts` lists all

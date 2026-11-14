@@ -67,6 +67,12 @@ per row (**holds**, **grows**, **restarts**, or **unknown**). The full how-to is
   the gate refuses a wider bind unless `YMIR_ALLOW_WIDE_BIND=1`.
 - **No account, no grant.** There is nothing to sign in with and nothing to grant;
   the realm list in Profile shows the workspaces (the realm folders), not roles.
+- **The realms are your own.** Hlidskjalf ships a generic pair — Work and Personal — and
+  reads the rest from your home's registry (`hodd/identity/workspaces.yaml`) when the gate
+  starts, so a realm's name is never written in this repository. The **realm** filter on the
+  Forge and in the OmniChat drawer lists every realm that registry holds, and Profile lists
+  each one with its shelf (`svartalfaheim/<realm>`). There is no order to keep and no switch
+  to throw: a home with no registry opens with the pair and works.
 - **One control plane.** Other surfaces (Óðrerir, Smiðja) are their own apps, but
   Hlidskjalf is the seat you actually look at.
 - Ports are configuration (Rule 07): `HLIDSKJALF_PORT`, `HLIDSKJALF_API_PORT`.
@@ -84,3 +90,4 @@ per row (**holds**, **grows**, **restarts**, or **unknown**). The full how-to is
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
 - **2026-11-14** — the halls carry no login (plan 275 item 30): the in-app login, the invite codes, the GitHub door and the tunnel-to-a-hall are removed; the page now says what is true.
 - **2026-11-14** — the Runtime page gained the **Health** view (plan 286 P6): the leak ledger's service trends and every app's last soak, judged by plan 286 §5 — [The Health view](the-health-view.md).
+- **2026-11-14** — the realm list left the code: Hlidskjalf ships a generic pair and reads the realms from the home's registry at run time, so a realm's own name is never in the public tree and a home with none still opens (RULES/04).

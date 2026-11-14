@@ -853,9 +853,9 @@ record of what was believed):
 - **Loopback only.** The halls listen on `127.0.0.1` (measured: 3888, 3889, 4602, 4603, 4322, 8437, 8787). The gate
   refuses a non-loopback bind unless `YMIR_ALLOW_WIDE_BIND=1`, and `bin/forge/gjallarhorn-tunnel.sh` **refuses** a
   tunnel config whose ingress points at a hall port.
-- **One realm does not hide three.** The Work · Personal · Svein mode chips are retired, but every realm stays
+- **One realm does not hide three.** The workspace-mode chips are retired, but every realm stays
   visible: a realm is a folder under `svartalfaheim/` (Skrymir shows the whole home), and a page that scopes its work
-  by realm offers the three as a filter.
+  by realm offers every realm the home holds, read from the operator's own registry at run time.
 - **Hosted, shared surfaces are Gimlé's** (plan 284). Plans 277 and 279 keep their record; this change closes 277's
   Local reach row for the halls (loopback, no credential) and the residue of 279 row 2 on the halls' side.
 
