@@ -183,12 +183,20 @@ assets/reference/state/
 # The seat's chat belongs to the operator — in the home, never the repo (Rule 04).
 chat/
 
-# The Smiðja visualizer's BUILT UI must SHIP in the npm package. npm honours
-# .gitignore when no .npmignore exists, so the blanket `dist/` rule dropped the
-# whole interface from the tarball: the API answered and the app view showed
-# nothing. Un-ignore it by name (a build artifact that is part of the product).
-!apps/smidja-factory/apps/visualizer/dist/
-!apps/smidja-factory/apps/visualizer/dist/**
+# The Smiðja visualizer's BUILT UI ships in the npm package but is NOT tracked.
+#
+# History, because this line has been wrong in both directions. 2026-09-23: the
+# blanket `dist/` rule above dropped the interface from the tarball (npm honours
+# .gitignore when no .npmignore exists, and back then the package had no `files`
+# allowlist), so the built bundle was un-ignored and committed — the API answered
+# and the app view showed nothing until a build was committed by hand. 2026-11-14
+# (plan 288 step 7, plan 287 P4): 72 generated files made every clone stale and
+# heavy, and `package.json` has since grown an explicit `files` allowlist naming
+# `apps/smidja-factory/apps/visualizer/dist/**`, which the root ignore file cannot
+# override. So the bundle leaves git and is BUILT by the release
+# (bin/engine/release-build.sh), the npm prepack (bin/desktop/app-build.sh) and the
+# install (step_smidja). One build road, one place, never a committed copy.
+apps/smidja-factory/apps/visualizer/dist/
 
 # A local config backup, never tracked (and this repo is public).
 opencode.json.bak*

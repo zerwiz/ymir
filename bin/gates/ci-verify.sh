@@ -166,6 +166,8 @@ gate triggers    "a smithy starts by a person, the clock or an event — and not
                bash "$ROOT/bin/time/tests/test_event_trigger.sh"
 gate voice-arm   "Rödd knocks on the arm, and refuses when nobody is holding it (plan 223)" \
                bash "$ROOT/bin/voice/tests/test_rodd_arm.sh"
+gate voice-vad   "the detector weights are fetched and checksummed, never committed, and both doors name one file (plan 288)" \
+               bash "$ROOT/bin/voice/tests/test_voice_vad_model.sh"
 gate usage      "no door became unused since the baseline"    bash "$ROOT/bin/gates/checks/usage-ratchet.sh"
 gate portability "GNU-only callers may fall, never rise (RULES/05)"    bash "$ROOT/bin/gates/checks/portability-ratchet.sh" check
 gate inventory  "the bin/backend index is current"            bash "$ROOT/bin/gates/inventory.sh" --check

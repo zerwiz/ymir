@@ -8,7 +8,7 @@
 an extension, but on a directory:
 
 ```
-ENOENT: no such file or directory, lstat '/home/heimdall/ymir/.pi/shared/extensions'
+ENOENT: no such file or directory, lstat '~/ymir/.pi/shared/extensions'
 ```
 
 The test reproduced a deploy from `.pi/shared/extensions`, the second home that the one-tree

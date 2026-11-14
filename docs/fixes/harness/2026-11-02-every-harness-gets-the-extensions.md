@@ -26,7 +26,7 @@ idempotently, and reports `current · synced · stale · absent`:
 
 A **pinned runtime wins over the working tree** (RULES/02 §7): the script reads `$YMIR_HOME/config/runtime.env`, so
 what a harness loads is what a deployment proved, not whatever branch an agent left checked out. On this seat that
-moved Pi's `extensions[]` from `/home/heimdall/ymir/.pi/extensions` to `~/ymir-runtime/.pi/extensions`.
+moved Pi's `extensions[]` from `~/ymir/.pi/extensions` to `~/ymir-runtime/.pi/extensions`.
 
 **Zed is now a harness with a descriptor** — `.agents/harnesses/zed.yaml`, measured against zed.dev's docs:
 `AGENTS.md` is its primary instruction file (and `.rules` outranks it — a trap worth writing down), `.agents/skills`
@@ -40,7 +40,7 @@ measured", which is a statement rather than a guess).
 
 ```
 harness_extensions[6]{harness,state,detail}:
-  "pi","current","settings extensions[] → /home/heimdall/ymir-runtime/.pi/extensions"
+  "pi","current","settings extensions[] → ~/ymir-runtime/.pi/extensions"
   "claude","stale","hooks wiring differs — merge by hand, never blindly"
   "codex","current","hooks.json matches the tree"
   "zed","current",".agents/skills is Zed's native shelf — nothing to copy"

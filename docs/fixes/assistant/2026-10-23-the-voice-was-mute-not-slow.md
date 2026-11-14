@@ -15,7 +15,7 @@ The mouth was healthy — it sang an eleven-kilobyte note in one second when dri
 fault was in `~/.pi/agent/telegram.json`:
 
 ```json
-"template": ["bash", "/home/heimdall/ymir/bin/assistant/mouth.sh", "{text}", "{ogg}"]
+"template": ["bash", "~/ymir/bin/assistant/mouth.sh", "{text}", "{ogg}"]
 ```
 
 pi-telegram's command-template standard reads an **array as a sequence of commands**, not one
@@ -32,7 +32,7 @@ invoked empty.
 1. **`bin/assistant/voice-handler.sh`** — one step. The reply arrives on **stdin** and is handed to
    the same one mouth (`mouth.sh`). A long sentence with an apostrophe is data now, not shell.
    Config becomes:
-   `"template": "bash /home/heimdall/ymir/bin/assistant/voice-handler.sh {ogg}"`, `"output": "ogg"`.
+   `"template": "bash ~/ymir/bin/assistant/voice-handler.sh {ogg}"`, `"output": "ogg"`.
 2. **`bin/assistant/ear.sh` raises the mouth the instant his voice lands** (plan 121, phase 2).
    The synthesiser is idle-lowered after five quiet minutes and costs up to 30 s to raise — paid
    *before the first word* until now. The raise runs in the background, overlapping transcription

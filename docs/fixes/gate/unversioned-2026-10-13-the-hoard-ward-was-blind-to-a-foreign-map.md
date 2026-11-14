@@ -6,7 +6,7 @@ Eir's `hoard` surface exists to catch private data in the wrong place. It report
 home that was broken in four ways** — so it was not a ward, it was a comfort.
 
 **The masking bug.** The surface retried a declared layout path that did not exist *under this
-root* whenever the path began with the map's `git_repo`. Our map named `/home/heimdall/…` for
+root* whenever the path began with the map's `git_repo`. Our map named `~/…` for
 every path, so each foreign path was retried as `$YMIR_HOME/<rest>` — which exists — and the
 surface passed. **The retry masked precisely the fault the surface was built to catch.** A map
 describing another machine is now a **failure**, and every declared path must exist as written.

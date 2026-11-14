@@ -7,7 +7,7 @@ changing from one branch to another forr ymir systems? do we need to run some th
 
 Ten systemd user units — `nornir` · `mimir` · `bifrost` · `mcp-gateway` · `housewatch` · `calendar-watch` ·
 `garmr-brain` · `skirnir-telegram` · `skirnir-timer` · `ymir-syn-watch` — execute files from
-`/home/heimdall/ymir`, the working tree every agent checks branches out in. A `git checkout` therefore changes the
+`~/ymir`, the working tree every agent checks branches out in. A `git checkout` therefore changes the
 code the house runs: a running script keeps its loaded text, but every subprocess it spawns reads the new branch from
 disk.
 

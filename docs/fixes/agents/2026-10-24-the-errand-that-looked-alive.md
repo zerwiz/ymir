@@ -39,7 +39,7 @@ Two faults, and the second is the worse one:
 - **One extension home per pi seat.** When the seat's working directory is not the seat root, `herdr-run.sh`
   starts pi with discovery **off** and exactly one explicit tree:
   `pi -ne -e <seat-root>/.pi/extensions`. Verified by hand inside the failing worktree:
-  `pi -ne -e /home/heimdall/ymir/.pi/extensions --list-models` exits 0 and lists the rail — the same command
+  `pi -ne -e ~/ymir/.pi/extensions --list-models` exits 0 and lists the rail — the same command
   that produced eighteen collisions before.
 - **Registration is the proof.** After `hdr agent start`, the road now waits for `hdr agent get <name>` (up to
   10 s). If the agent never registers, it **fails loudly**, prints the pane's tail with its reason, and exits

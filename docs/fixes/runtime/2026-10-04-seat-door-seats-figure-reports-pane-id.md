@@ -16,16 +16,16 @@ The task was to confirm the seat door (herdr) seats a figure and reports a pane 
 
 | Workspace | Pane ID | Agent | Status | Tab | CWD |
 |-----------|---------|-------|--------|-----|-----|
-| w3 | w3:p7 | pi | working | w3:t7 | /home/heimdall/ymir |
-| w3 | w3:pA | pi | idle | w3:t9 | /home/heimdall/ymir |
-| w21 | w21:p1 | pi | idle | w21:t1 | /home/heimdall/CodeP/<redacted> |
-| wS | wS:p1 | pi | idle | wS:t1 | /home/heimdall/CodeP/<redacted> |
-| wM | wM:p1 | pi | idle | wM:t1 | /home/heimdall/CodeP/<redacted> |
-| w1Z | w1Z:p1 | pi | idle | w1Z:t1 | /home/heimdall/CodeP/coe |
-| w1S | w1S:p1 | pi | idle | w1S:t1 | /home/heimdall/CodeP/<redacted> |
-| w1S | w1S:p6 | pi | idle | w1S:t6 | /home/heimdall/CodeP/<redacted> |
-| wN | wN:p1 | pi | idle | wN:t1 | /home/heimdall/CodeP/wayofteams |
-| w22 | w22:p1 | pi | working | w22:t1 | /home/heimdall/ymir/.yggdrasil/probe-1791125967 |
+| w3 | w3:p7 | pi | working | w3:t7 | ~/ymir |
+| w3 | w3:pA | pi | idle | w3:t9 | ~/ymir |
+| w21 | w21:p1 | pi | idle | w21:t1 | ~/CodeP/<redacted> |
+| wS | wS:p1 | pi | idle | wS:t1 | ~/CodeP/<redacted> |
+| wM | wM:p1 | pi | idle | wM:t1 | ~/CodeP/<redacted> |
+| w1Z | w1Z:p1 | pi | idle | w1Z:t1 | ~/CodeP/coe |
+| w1S | w1S:p1 | pi | idle | w1S:t1 | ~/CodeP/<redacted> |
+| w1S | w1S:p6 | pi | idle | w1S:t6 | ~/CodeP/<redacted> |
+| wN | wN:p1 | pi | idle | wN:t1 | ~/CodeP/wayofteams |
+| w22 | w22:p1 | pi | working | w22:t1 | ~/ymir/.yggdrasil/probe-1791125967 |
 
 **My seat (probe-1791125967):**
 - Workspace: w22 (label: `eindri-probe-1791125967`)
@@ -33,7 +33,7 @@ The task was to confirm the seat door (herdr) seats a figure and reports a pane 
 - Agent: pi
 - Status: working
 - Tab: w22:t1
-- CWD: /home/heimdall/ymir/.yggdrasil/probe-1791125967
+- CWD: ~/ymir/.yggdrasil/probe-1791125967
 
 ### Verification commands
 

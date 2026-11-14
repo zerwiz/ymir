@@ -8,7 +8,7 @@
 Every rail-model resolution on this seat refused:
 
 ```
-error: the fleet module is missing at /home/heimdall/ymir/bin/src/ymir_runtime/fleet
+error: the fleet module is missing at ~/ymir/bin/src/ymir_runtime/fleet
 help: this tree predates the living rail resolver — update it
 ```
 
