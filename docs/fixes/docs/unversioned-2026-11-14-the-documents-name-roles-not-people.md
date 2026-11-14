@@ -16,9 +16,12 @@ lore keeps its own words: the dwarf-halls are written `Niðavellir`, the Old Nor
 and the box that borrowed it is not named.
 
 Inside `docs/fixes/` the notes are append-only (`RULES/06`), and the earlier decision stands: an old line is
-corrected by a **dated entry**, never silently rewritten. Each affected note now ends with *Correction 2026-11-14 —
-the machine and person names above are roles*, which says what the names above are read as and repeats none of
-them. Whether the old lines are ever redacted is the Allfather's decision; this change does not make it.
+corrected by a **dated entry**, never silently rewritten. Each affected note now carries the entry *Correction
+2026-11-14 — the machine and person names above are roles*, which says what the names above are read as and repeats
+none of them. One note is corrected beside itself instead of inside it: the note of 2026-09-22 in
+`docs/fixes/install/` ends without a terminating newline, so an appended entry would re-publish its last line — a
+machine user's name — as text this change added; its correction stands as its own dated entry in the same
+directory, and that note's bytes are untouched. Whether the old lines are ever redacted is the Allfather's decision; this change does not make it.
 
 ### The proof
 
@@ -36,5 +39,5 @@ validate` reports 1208 notes valid, and the pre-push wards pass with only the th
 
 ## CHANGE LOG
 
-- **2026-11-14** — Carved: the docs pages name roles and invented examples; 156 fix notes gained a dated correction
-  that repeats no name.
+- **2026-11-14** — Carved: the docs pages name roles and invented examples; 155 fix notes gained a dated correction
+  that repeats no name, and the 2026-09-22 ward note is corrected beside itself so its bytes stay as they were.
