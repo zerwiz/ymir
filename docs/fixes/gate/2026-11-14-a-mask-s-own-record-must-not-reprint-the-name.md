@@ -29,3 +29,7 @@ the only place a reader will look for it. The before-column says `<the seat>`, `
 
 Run the audit against the added lines and treat the record's own quotation as added text — it is. A
 mask that leaves one copy behind is not a mask.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #760

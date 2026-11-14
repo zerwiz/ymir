@@ -84,3 +84,7 @@ A new identifier is spelled `volundr`; the old spellings stay only for what alre
 `apps/hlidskjalf/src/data/realms.ts` (the lane hint) and `src/state/store.ts` (the stored role) are
 also edited by `eindri/hall-follow`, so a rebase of this branch against that errand lands both hunks
 by hand — they are one line each.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #760

@@ -44,3 +44,7 @@ on the rename's branch, rather than waiting for that branch to be mended — so 
 
 Nothing. The wider tree still carries hostnames in older fix notes; masking them is a sweep of its
 own, not this errand's.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #760

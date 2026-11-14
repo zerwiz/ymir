@@ -67,3 +67,7 @@ fails, a flat soak passes, a bounded step is not a leak, a pegged boot is, and a
 Plan 286 P3 (the fixes a soak names) and P6 (the Health view). The pin does not yet carry
 `YMIR_APP_USER_DATA_DIR` (see the desktop note of the same date), so an app that is already open — Hlidskjalf
 on this machine — is a named skip rather than a second instance.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #760

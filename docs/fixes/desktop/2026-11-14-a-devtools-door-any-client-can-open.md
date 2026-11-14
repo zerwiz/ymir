@@ -32,3 +32,7 @@ override the soak raises its own instance in a throwaway profile and never touch
 
 The operator's default profile path, the GPU/ozone policy, the single-instance lock and the window class are all
 untouched. A launcher that sets nothing behaves exactly as before.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #760

@@ -44,3 +44,7 @@ value on the other three seats, and it puts a private path in a public tree (Rul
 not ship in the repo (`bin/fleet/registry-check.sh`, `bin/records/{gimle-tunnels-check,registries-refresh,
 running-inventory,tunnels-registry}.sh`). They live in his home's `bin/`, and the scheduler runs from the
 repo root — moving them into the repo or naming them absolutely is his call, not a smith's.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #760
