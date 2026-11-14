@@ -1,0 +1,74 @@
+# Dependabot — the dependency updates, once a week, in groups.
+#
+# What this file does: Dependabot opens pull requests that bump a dependency to a newer
+# version, one PR per group, so an update arrives as a reviewable change rather than a
+# silent drift. A PR is still a PR here: the wards judge it, and a maintainer seals it.
+#
+# What it does NOT do: it asks GitHub to open PRs; it does not enable the repository's
+# vulnerability alerts or security-update settings. Those are repository settings and the
+# operator turns them on himself.
+#
+# Three choices worth knowing before editing:
+#
+#   * WEEKLY, on Monday. `time` and `timezone` are left out on purpose: the operator's
+#     clock is his, and a schedule pinned to one zone runs at the wrong hour for every
+#     other install (RULES/07). Add them if one machine's night matters to you.
+#   * GROUPED. Minor and patch bumps of all npm (or all pip) packages arrive as one PR;
+#     a major bump arrives separately, because a major is a decision, not a chore.
+#   * PATCH-LEVEL UPDATES FOR SECURITY. A security advisory is not waited for until
+#     Monday — the `*-security` groups below collect them as they come.
+#
+# Adding an ecosystem: copy a block, point `directory` at the folder that holds the
+# manifest. Dependabot reads ONLY the folders named here, so a new app with its own
+# package.json needs its own entry (the npm workspace root covers the ones listed in
+# the root package.json's `workspaces`).
+version: 2
+
+updates:
+  # ── npm: the root workspace, which covers apps/hlidskjalf, apps/odrerir,
+  #    apps/sessrumnir and apps/smidja-factory through the root `workspaces` list.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    versioning-strategy: "increase-if-necessary"
+    commit-message:
+      prefix: "deps(npm)"
+    labels:
+      - "dependencies"
+      - "npm"
+    groups:
+      npm-minor-and-patch:
+        applies-to: "version-updates"
+        update-types:
+          - "minor"
+          - "patch"
+      npm-security:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
+
+  # ── pip: the runtime's own package (src/pyproject.toml).
+  - package-ecosystem: "pip"
+    directory: "/src"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps(pip)"
+    labels:
+      - "dependencies"
+      - "python"
+    groups:
+      pip-minor-and-patch:
+        applies-to: "version-updates"
+        update-types:
+          - "minor"
+          - "patch"
+      pip-security:
+        applies-to: "security-updates"
+        patterns:
+          - "*"

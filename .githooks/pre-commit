@@ -6,3 +6,16 @@
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 [ -r "$root/bin/gates/guards/nda-guard.py" ] || exit 0
 python3 "$root/bin/gates/guards/nda-guard.py" staged || { echo "pre-commit: the NDA gate refused this commit — see the lines above." >&2; exit 1; }
+
+# …and the secret scan over the same staged diff (plan 287 §8). It judges the SHARED key shapes from
+# `.gitleaks.toml` — a credential, a token, a private-key header — and never the operator's word list:
+# that half is the whole-tree audit's work, and a commit that merely touches a file carrying older
+# history should not be refused for it. A machine without the gitleaks binary skips aloud, and CI
+# still judges the pull request, so a fresh clone never loses the ability to commit.
+if [ -x "$root/bin/gates/secret-scan.sh" ] && command -v "${YMIR_GITLEAKS:-gitleaks}" >/dev/null 2>&1; then
+  YMIR_SECRET_SCAN_CONFIG="$root/.gitleaks.toml" "$root/bin/gates/secret-scan.sh" staged || {
+    echo "pre-commit: the secret scan refused this commit — a credential is staged (see above)." >&2
+    echo "help: if it is a fixture, allowlist the exact LINE in .gitleaks.toml with its reason." >&2
+    exit 1
+  }
+fi

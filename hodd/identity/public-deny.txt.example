@@ -1,0 +1,48 @@
+# public-deny.txt — the words that may never appear in the public repository.
+#
+# THIS FILE IS A TEMPLATE. It is copied to `hodd/identity/public-deny.txt` on the first
+# install and never overwritten, and the copy is where the operator's own words live: in
+# his private home, never in this tree. The entries below are INVENTED, and they are here
+# to show the shape, not to name anyone (RULES/04, RULES/42).
+#
+# One door reads it — `bin/gates/secret-scan.sh` — and two guards judge with it. Nothing
+# prints a word from it: a finding names the file and the line, never the word, because a
+# gate that names what it refuses has published it (RULES/18).
+#
+# Format, one entry per line; a blank line or a line starting with `#` is ignored:
+#
+#   name:<word>     a person, a client, a company — judged ANYWHERE, as a whole word.
+#                   A word inside a longer word is not a match (`ann` never matches `annal`).
+#   domain:<word>   a mail or client domain — judged anywhere, on a domain boundary.
+#   host:<word>     a machine or a user name — judged only where it is USED as one: after
+#                   `@`, `//`, `/home/`, `host=`, `host:` or `ssh`, or before a port, `.local`
+#                   or a tailnet suffix. Use this kind for a name that is also an ordinary
+#                   word or a figure of the lore: the subsystem named for the figure is the
+#                   house's craft, the box named for him is the operator's life, and only
+#                   the second is a finding.
+#   user:<word>     another spelling of `host:`.
+#
+# A bare word (no kind) is read as `name:`.
+#
+# What belongs here: the people the house meets, the houses and clients it serves, their
+# mail domains, and this fleet's machine names, user names and tailnet id — read from
+# `hodd/data/fleet.json` and `hodd/identity/` when this list is refreshed. What does NOT
+# belong: the public owner identity (the repository's own login and the domain it is
+# published under), a public project or product name, and any word whose only use in the
+# tree is a subsystem of the lore.
+#
+# Keep it current: a machine that joins the fleet is a line here, in the same breath.
+
+# ── invented people and houses ───────────────────────────────────────────────────────────────
+name:Ada Lovelace
+name:Turing and Sons
+name:Bramblewood Holdings
+domain:bramblewood.example
+
+# ── invented machines and accounts ───────────────────────────────────────────────────────────
+host:box-one
+host:box-two
+user:ada
+
+# ── a bare word is read as `name:` — and is judged ANYWHERE ───────────────────────────────────
+Bramblewood
