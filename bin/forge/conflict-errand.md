@@ -6,9 +6,11 @@
 # code to happen automatically."* So `review-watch` seats a smith for a conflicting head, by this
 # brief, and the branch comes back mergeable for the next tick to judge.
 #
-# @BRANCH@ and @PR@ are substituted by bin/forge/review-watch.sh before the brief is handed over.
+# Placeholders (branch, PR, checkout) are filled by bin/forge/review-watch.sh before the brief is
+# handed over. The machine's own checkout is named there, never here: a file in the public tree may
+# not carry one machine's home (RULES/04).
 # Everything else is fixed: the smith clears CONFLICTS and nothing else, and never ships.
-You are a SMITH (an Eindri) in /home/zerwizserver/ymir. One errand: clear the merge conflicts on
+You are a SMITH (an Eindri) in @REPO@. One errand: clear the merge conflicts on
 branch @BRANCH@ (PR #@PR@) and stop. You do not ship it; the reviewer does, on a later pass.
 
 Auth first: put the seat's own bin directories first on the path (the seat-env file does this), then
@@ -46,3 +48,6 @@ REPORT: conflicted files · how each was resolved · ward tally · pushed sha or
 - 2026-11-07 · first cut: the elif brief a smith is handed for a CONFLICTING head — merge main in,
   resolve by rule (registers regenerated, append-only records kept, `.review-rules.yaml` restored),
   wards, plain push, and stop. Written because the reviewer may not edit and the loop had no road.
+- 2026-11-14 · the machine's own checkout left the brief: `@REPO@` is substituted by
+  `review-watch.sh` from the tree it runs in, so the public repository carries no home directory.
+  Found by the private-scan sweep (RULES/04, RULES/07).
