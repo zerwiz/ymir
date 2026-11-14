@@ -70,8 +70,8 @@ waiting 20 · done 35**, machine sends 0. The first run judged a forwarded meeti
 
 The desk answered *"what is in the mailbox?"*, and that was not the same question as
 *"can mail arrive at all?"*. Measured on 2026-10-24: `zerwiz.org` published **no MX
-record**, so `gimle@zerwiz.org`, `snotra@zerwiz.org`, `reply+*@zerwiz.org` and
-`bounce+*@zerwiz.org` could not receive anything — while the desk showed an empty inbox
+record**, so the desk's own three addresses (the collaborator door, the meeting desk
+and the reply/bounce pattern on the operator's domain) could not receive anything — while the desk showed an empty inbox
 that looked exactly like "no mail today". Three doors now close that gap.
 
 **The register — `bin/mail/addresses.sh`.** One row per address the house uses: whether the
@@ -103,7 +103,7 @@ exactly what is missing and exits **3** — a skip with a reason, never a pass.
 
 ```sh
 bash bin/mail/inbound-test.sh                    # the registry's acceptance address
-bash bin/mail/inbound-test.sh --to gimle@zerwiz.org
+bash bin/mail/inbound-test.sh --to <the desk's own address>
 bash bin/mail/inbound-test.sh --mx-only          # only "could mail arrive here at all?"
 bash bin/mail/inbound-test.sh --self-test        # the proofs, offline
 ```
