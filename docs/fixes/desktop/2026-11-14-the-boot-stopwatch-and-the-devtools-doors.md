@@ -11,7 +11,7 @@ so a fault noticed after the fact could only be looked at by restarting — whic
 
 ### What was measured before the change
 
-Cold boots on heimdall, each app stopped first, one at a time, with the desk free (2026-11-14 ~03:00–04:00 CET):
+Cold boots on this machine, each app stopped first, one at a time, with the desk free (2026-11-14 ~03:00–04:00 CET):
 
 | App | click → window | window → answer | what the number was made of |
 |---|---|---|---|
@@ -55,10 +55,10 @@ ends in the app's name anyway, and prints the disagreement, so a rename can neve
   Smíðja cold `2.17 s / 0.27 s` and Óðrerir cold `2.02 s / 0.35 s` as passes, plus Hlidskjalf run with a
   five-minute watch. A cold boot with the window already open is refused (exit 4) and prints the helm line; a cold
   boot while a call is held is refused (exit 3) naming the holder.
-- **The Rödd class fix** cannot be proved through her own `start.sh` on heimdall yet — she hands over to the pin,
+- **The Rödd class fix** cannot be proved through her own `start.sh` on this machine yet — she hands over to the pin,
   which carries the old `main.js` — so it is proved by the instrument failing honestly: the cold boot reported
   `presented its window as "zerwiz-rodd", not "ymir-rodd"`, which is exactly the warning this fix removes.
-- **`voice-door.sh which-host`: 10.44 s → 0.25 s** on heimdall (measured before and after the change, same
+- **`voice-door.sh which-host`: 10.44 s → 0.25 s** on this machine (measured before and after the change, same
   machine, same fleet file).
 - **Bilskirnir's stale setup check** is its own note: `docs/fixes/bilskirnir/2026-11-14-a-current-install-starts-without-setup.md`.
 
@@ -74,12 +74,12 @@ ends in the app's name anyway, and prints the disagreement, so a rename can neve
 
 ## CHANGE LOG
 
-- 2026-11-14 — written with the change; measurements taken the same night on heimdall.
+- 2026-11-14 — written with the change; measurements taken the same night on this machine.
 
 ## Appended 2026-11-14 — the three slow boots cut, and the instrument that now says what a renderer does
 
 The Allfather's word: *do all needed fixes.* The stopwatch's three failures are cut below, each measured before and
-after on heimdall, each cold boot taken with the desk free (`bin/desk/in-call.sh holder` empty) and announced to
+after on this machine, each cold boot taken with the desk free (`bin/desk/in-call.sh holder` empty) and announced to
 the helm first.
 
 | App | Was | Now | What was cut |

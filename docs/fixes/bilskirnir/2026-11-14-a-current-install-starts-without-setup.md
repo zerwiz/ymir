@@ -29,7 +29,7 @@ cost added to a check that runs at every start).
 
 ### Proof
 
-On the live install (heimdall, the pin `~/ymir-runtime`, the engine home
+On the live install (this machine, the pin `~/ymir-runtime`, the engine home
 `~/Documents/ymirhome/bilskirnir/data/engines/nanna`), with the patched `setup.sh` run **from the pin's own
 directory** so every other path is the real one:
 
@@ -59,7 +59,7 @@ and the boot stopwatch's Bilskirnir row measures the rest (gateway, server, wind
 
 ## CHANGE LOG
 
-- 2026-11-14 — written with the change; measured on heimdall's live install the same night.
+- 2026-11-14 — written with the change; measured on this machine's live install the same night.
 
 ## Appended 2026-11-14 — the hall's server is built once, not transformed on every start
 
