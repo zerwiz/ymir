@@ -30,3 +30,9 @@ git are preserved in the operator's home,
 `~/.fleet` (in the operator's home directory) is the **deploy shelf** — the tools and services
 materialised for a seat. This `.fleet/` was a folder in the source tree. Different places, different
 jobs; only one of them is code.
+
+## CHANGE LOG
+
+- **2026-11-14** — written when the shelf's only file (the Silero detector) left git: this README is
+  the signpost that answers "where did `.fleet/voice/silero_vad.onnx` go?" (plan 288 step 7, plan 287
+  P4; fix note `docs/fixes/voice/2026-11-14-the-detector-is-fetched-not-committed.md`).
