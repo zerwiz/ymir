@@ -134,6 +134,11 @@ function openWindow(url, title) {
     },
   });
   win.loadURL(url);
+  // Hide the visible File/Edit/View menu bar (as Sessrúmnir does). The
+  // application menu stays set below, so its accelerators (reload, DevTools,
+  // zoom) keep working; only the bar disappears. `autoHideMenuBar` is
+  // deliberately left off so Alt does not reveal it.
+  win.setMenuBarVisibility(false);
   win.on('page-title-updated', (e) => e.preventDefault());
   win.webContents.setWindowOpenHandler(({ url: u }) => {
     shell.openExternal(u);

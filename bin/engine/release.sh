@@ -4,7 +4,10 @@
 #   bin/engine/release.sh build [--ref <ref>] [--from <repo>]   build releases/<sha>: clone, install (Electron included),
 #                                                              build every app, then prove it; prints the release dir
 #   bin/engine/release.sh prove <dir|sha>                      the proof alone (every app; changes nothing)
-#   bin/engine/release.sh flip <sha>                           point `current` at a PROVED release (one atomic rename)
+#   bin/engine/release.sh flip <sha> [--no-restart]          point `current` at a PROVED release (one atomic rename),
+#                                                              then RESTART the long-running services that run from a
+#                                                              release (YMIR_RELEASE_RESTART=off or --no-restart holds)
+#   bin/engine/release.sh restart [--only-stale] [--dry-run]  the restart alone (bin/engine/release-services.sh)
 #   bin/engine/release.sh rollback                             point `current` back at the release before it
 #   bin/engine/release.sh adopt                                turn the old in-place pin into the first release (once)
 #   bin/engine/release.sh status                               what current is, what is kept, what is proved
@@ -186,13 +189,43 @@ build() {
 }
 
 # ── flip and rollback: one atomic rename ──────────────────────────────────────────────────────────────────────
+# A flip is not finished when the link moves: every service raised from the pin
+# before it keeps answering from the release it started in (the gate API and the
+# SPA served e713188ca4e2 for eight hours after the pin moved, plan 275 item 27).
+# So a flip RESTARTS the long-running services that run from a release, and says
+# which of them answered — a restart that fails is printed, never swallowed.
+# Desktop windows are deliberately NOT restarted: an open window keeps the release
+# it started from (that is the design), and closing a window the operator is using
+# to apply an update is not this door's work.
+restart_services() {  # <release-dir> [--only-stale] [--dry-run]
+  local d="$1"; shift || true
+  [ "${YMIR_RELEASE_RESTART:-on}" = off ] && { say "restart	skipped	YMIR_RELEASE_RESTART=off — the services still run the release they started in"; return 0; }
+  [ -x "$d/bin/engine/release-services.sh" ] || { say "restart	skipped	no bin/engine/release-services.sh in $d"; return 0; }
+  say "restart[]: "
+  YMIR_RUNTIME_DIR="$PIN" YMIR_RELEASES="$BASE" YMIR_RELEASE_SERVICES_ROOT="$d" \
+    bash "$d/bin/engine/release-services.sh" restart "$@"
+}
+
 flip() {
+  local no_restart=0 a; local args=()
+  for a in "$@"; do case "$a" in
+    --no-restart) no_restart=1 ;;
+    *) args+=("$a") ;;
+  esac; done
+  set -- "${args[@]}"
   local d; d="$(resolve_sha "${1:?flip <sha>}")"
   [ -n "$d" ] && [ -f "$d/.release-proved" ] || fail "no PROVED release for $1"
   readlink -f "$CUR" 2>/dev/null > "$BASE/previous" || true
   ln -sfn "$d" "$CUR.tmp-$$" && mv -T "$CUR.tmp-$$" "$CUR" || fail "the flip did not land"
   say "current	$d"
-  # keep KEEP releases besides current and previous; never delete either
+  if [ "$no_restart" = 1 ]; then
+    say "restart	skipped	--no-restart — the services still run the release they started in"
+  else
+    restart_services "$d" || true
+  fi
+  # keep KEEP releases besides current and previous; never delete either. This runs AFTER the restart, so the
+  # pruner sees an honest picture: a release a *desktop window* still runs from is kept, one only a service held
+  # (and which has now been restarted) is free to go.
   local keep_cur keep_prev n=0 r
   keep_cur="$(readlink -f "$CUR")"; keep_prev="$(cat "$BASE/previous" 2>/dev/null)"
   for r in $(ls -1dt "$REL"/*/ 2>/dev/null); do
@@ -243,6 +276,7 @@ case "${1:-}" in
   build) shift; build "$@" ;;
   prove) shift; d="$(resolve_sha "${1:?prove <dir|sha>}")"; [ -n "$d" ] || fail "no release $1"; prove "$d" ;;
   flip) shift; flip "$@" ;;
+  restart) shift; restart_services "$(readlink -f "$CUR")" "$@" ;;
   rollback) rollback ;;
   adopt) adopt ;;
   status) status ;;

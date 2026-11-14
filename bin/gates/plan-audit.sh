@@ -60,9 +60,14 @@ shelf_default() {
   if [ -z "$h" ] && command -v ymir_home_root >/dev/null 2>&1; then ymir_home_root h; fi
   [ -n "$h" ] || h="$(bash "$ROOT/bin/vault/hodd.sh" path 2>/dev/null || true)"
   [ -n "$h" ] || return 1
-  # The ledger lives under the operator's own realm, so it is discovered, never spelled.
-  command -v ymir_plan_dir >/dev/null 2>&1 && ymir_plan_dir ledger 2>/dev/null || true
-  [ -n "$ledger" ] || return 1
+  # The ledger lives under the operator's own realm, so it is discovered first — and if the
+  # resolver has no such helper (an older home), the canonical shelf is the fallback, so this
+  # door resolves the same ledger it always did rather than dying on a missing function.
+  if command -v ymir_plan_dir >/dev/null 2>&1; then
+    ledger="$(ymir_plan_dir ledger 2>/dev/null || true)"
+  fi
+  [ -n "$ledger" ] || ledger="$h/svartalfaheim/whynotproductions/projects/ymir/plans"
+  [ -d "$ledger" ] || return 1
   printf '%s' "$ledger"
 }
 
