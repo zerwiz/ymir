@@ -61,3 +61,7 @@ rules (`identity/topology`, the tenant-doc rule) that live in `bin/gates/guards/
 and it is called by no gate. It needs an owner — either re-pointed at the public guard or retired by
 a move to `hodd/reference/` (Rule 11). It was not touched here, because rewriting another ward's test
 is not this errand.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #752
