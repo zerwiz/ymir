@@ -1326,3 +1326,12 @@ Guards: `bin/time/tests/test_saga_land_warnings.sh` and `bin/forge/tests/test_ga
 by CI as the `landing` and `gather-notice` gates. Fix notes
 `docs/fixes/time/2026-11-14-the-digest-sees-what-never-landed.md` and
 `docs/fixes/forge/2026-11-14-the-last-errand-calls-the-gather.md`.
+
+*A correction, appended the same day (plan 293 part 3).* The first run named four branches "pushed, no PR,
+not merged" while they were riding inside open **gathered batch** pull requests — the batch road merges
+each errand's branch into one batch branch, so an errand's own head carries no PR. The door now takes the
+open PR heads from the one `gh` answer it already has, computes their reachable commits in **one**
+`git rev-list`, and asks `git for-each-ref --contains` only of a branch that proves carried. Such a row is
+its own kind, `in-pr`: `eindri/x — 5h: in batch PR #750, not merged yet`, action *nothing to gather*.
+Cost on this tree: 12 s → 3.9 s (the first version asked one `--merged` read per open PR). Fix note
+`docs/fixes/time/2026-11-14-a-branch-inside-a-batch-pr-is-not-waiting.md`.
