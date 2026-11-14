@@ -19,6 +19,7 @@
 # Usage:
 #   saga-session-start.sh                     # the session start: stages, then the head
 #   saga-session-start.sh --head              # the head only, NO side effects (compaction)
+#   saga-session-start.sh --page              # a PAGE reads the head: read-only, holds nothing
 #   saga-session-start.sh --section <name>    # one section, on demand (default: read-only)
 #   saga-session-start.sh --list              # the sections, one line each
 #   saga-session-start.sh --check             # measure the head; exit 1 over budget
@@ -194,6 +195,18 @@ stage_prepare() {
 
 # ══ THE SECTIONS (on demand) ════════════════════════════════════════════════
 SEC_LOCK() {
+  # A PAGE IS NOT A SESSION (plan 275 item 36b). The Runtime page runs this door to DRAW the
+  # digest; a page load is not a hand on the helm. So it takes nothing, refreshes nothing, and
+  # never reports the lock as its own — it names the real holder from the arm lease.
+  if [ "${PAGE:-0}" = 1 ]; then
+    printf 'lock: read-only — this run takes nothing, refreshes nothing and holds nothing\n'
+    if [ -x "$SCRIPT_DIR/../seat/helm-identity.sh" ]; then
+      bash "$SCRIPT_DIR/../seat/helm-identity.sh" --line 2>/dev/null || printf 'helm: no arm is held (no lease on this machine)\n'
+    else
+      printf 'helm: bin/seat/helm-identity.sh is not installed — the lease cannot be read\n'
+    fi
+    return 0
+  fi
   [ "$LOCK_KNOWN" = 1 ] || lock_probe
   if [ "$LOCKED" = 1 ]; then
     printf 'lock: held by this session (pid %s)\n' "${BROKK_SESSION_PID:-$$}"
@@ -453,7 +466,8 @@ head_needs() {  # what needs the Allfather: counts first, then the newsiest line
 }
 
 print_head() {
-  printf 'Sága · the short head · %s · home=%s · realm=%s\n' "$(sol_now utc)" "$BROKK_HOME" "$REALM"
+  printf 'Sága · the short head%s · %s · home=%s · realm=%s\n' \
+    "$([ "${PAGE:-0}" = 1 ] && printf ' (read-only page)' || true)" "$(sol_now utc)" "$BROKK_HOME" "$REALM"
   section "FIXED CORE (every worker knows this)"
   if [ -r "$HEAD_CORE" ]; then saga_head_core_text "$HEAD_CORE"; else printf 'ABSENT: %s — the core is missing from this tree\n' "$HEAD_CORE"; fi
   section "HELM"
@@ -481,14 +495,15 @@ is_section() { case " $SECTIONS " in *" $1 "*) return 0 ;; esac; return 1; }
 MODE="start"; SECTION=""
 while [ $# -gt 0 ]; do
   case "$1" in
-    -h|--help) sed -n '2,33p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     --head|head) MODE=head; shift ;;
+    --page|page) MODE=page; shift ;;
     --full|--all|full) MODE=full; shift ;;
     --list|list) MODE=list; shift ;;
     --check|check) MODE=check; shift ;;
     --section) SECTION="${2-}"; MODE=section; [ $# -ge 2 ] && shift 2 || shift ;;
     --section=*) SECTION="${1#--section=}"; MODE=section; shift ;;
-    *) printf 'error: unknown argument %s\nhelp: saga-session-start.sh [--head|--section <name>|--list|--check|--full]\n' "$1" >&2; exit 2 ;;
+    *) printf 'error: unknown argument %s\nhelp: saga-session-start.sh [--head|--page|--section <name>|--list|--check|--full]\n' "$1" >&2; exit 2 ;;
   esac
 done
 
@@ -500,6 +515,11 @@ case "$MODE" in
     ;;
   head)
     # NO side effects: this is the compaction path. The lock is only READ.
+    print_head
+    ;;
+  page)
+    # NO side effects and no lock AT ALL: a page load is not a session start.
+    PAGE=1
     print_head
     ;;
   section)
