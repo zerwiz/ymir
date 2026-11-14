@@ -51,7 +51,7 @@ export default function App() {
   // gates pick up a newly-written run without a page reload.
   useEffect(() => {
     if (!session) return;
-    const id = window.setInterval(() => { void useYmir.getState().refreshSmidja(); void useYmir.getState().refreshAgents(); }, 5000);
+    const id = window.setInterval(() => { void useYmir.getState().refreshSmidja(); void useYmir.getState().refreshAgents(); void useYmir.getState().refreshA2A(); void useYmir.getState().refreshDoors(); }, 5000);
     const reviewsId = window.setInterval(() => { void useYmir.getState().refreshReviews(); }, 30_000);
     return () => { window.clearInterval(id); window.clearInterval(reviewsId); };
   }, [session]);
