@@ -57,7 +57,7 @@ The nine worlds of the myth map onto Ymir's spaces:
 
 | Realm of the myth | What it is in Ymir |
 |---|---|
-| **Svartalfaheim / Nidavellir** — the dwarf-halls under the earth | tenant workspaces — the shop floors |
+| **Svartalfaheim / Niðavellir** — the dwarf-halls under the earth | tenant workspaces — the shop floors |
 | **Midgard** — the world of humans, middle, shared | cross-tenant shared assets & repos |
 | **Utgard (Jötunheim)** — outside the wall, where giants dwell | the sandbox barrier — untrusted code runs *there*, never in the halls |
 | **Yggdrasil** — the tree that binds all realms | git worktree isolation, zero-collision parallel edits |
