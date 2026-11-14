@@ -177,3 +177,12 @@ A house that only works where its own repository happens to be checked out is a 
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+
+## Appended 2026-11-14 — no operator's fleet is assumed, and the audit runs on a clock
+
+At the operator's word: *"users might run their fleets in different ways"* · *"we need to have an audit of this
+running on cron jobs twice a day."* Nothing in the repository assumes a machine count, a role layout (which machine is
+the heart), a delivery road (who merges) or a model on a particular box: each is read from the operator's registries,
+and the default is a fleet of one. A whole-tree audit for the operator's names, domains and hosts (deny list in the
+home) runs on the fleet's heart twice a day and on every push; a finding is a red gate and a notice to the operator.
+See `AGENTS.md` (2026-11-14) and `RULES/04` (2026-11-14).

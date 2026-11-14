@@ -835,6 +835,32 @@ The delivery gate above still holds for code, config, scripts, apps, this file a
 
 The law is RULES/08, in its section appended 2026-11-12. The how-to is `docs/features/gather-a-batch.md`.
 
+## 2026-11-14 — the repository is 100 % agnostic; the operator's own tooling lives in the home
+
+At the operator's word: *"it's critical that ymir's repo is 100% agnostic; our special tooling etc belongs in ymir
+home"* · *"it's a public repo and users might run their fleets in different ways."* The first law above forbids
+private **data** here; this section widens it to private **shape**.
+
+- **What belongs here:** only what any operator's install needs — the engine, the apps, the tools, the gates, the
+  `*.example` templates, and the documents that teach them.
+- **Never here, in any file (code, comment, prompt, test, fixture, doc, fix note):** a real person, client, company,
+  mail domain, meeting or NDA; the operator's host names, user names, tailnet name or addresses.
+- **Never assumed:** a machine count, a role layout (which machine is the heart), a delivery road (who merges), a
+  model on a particular box. All of these are **read from the operator's home** — `hodd/data/fleet.json`,
+  `hodd/identity/projects.yaml`, `config/` — and the default is a fleet of one machine.
+- **The operator's special tooling lives in the home:** automations written for one company's meetings, one
+  client's boards, one mail domain or one person's workflow go to `$YMIR_HOME/.agents/skills/` and the home's own
+  scripts and config. A feature this repository ships is generic first; the operator's version of it is
+  configuration in the home.
+- **Examples use invented names** (`Ada`, `example.org`, `host-a`); fix notes name roles (*the heart*, *the dev
+  machine*, *a second machine*), never a machine.
+- **It is audited, not trusted:** a whole-tree scan for the operator's names, domains and hosts — the deny list kept
+  in the **home**, never here — runs on the heart's clock twice a day and on every push; a finding is a red gate and a
+  notice to the operator.
+
+The law is `RULES/04` and `RULES/25`, each in its section appended the same day; the work is the operator's plan 287.
+
 ## CHANGE LOG
 
 - 2026-11-12 — review-mend: added missing heading for #716
+- 2026-11-14 — appended: the repository is 100 % agnostic; the operator's own tooling lives in the home.
