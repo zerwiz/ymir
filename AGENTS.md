@@ -838,3 +838,23 @@ The law is RULES/08, in its section appended 2026-11-12. The how-to is `docs/fea
 ## CHANGE LOG
 
 - 2026-11-12 — review-mend: added missing heading for #716
+
+## 2026-11-14 — the halls are local, and no tunnel points at one
+
+This corrects the line above under **Starting the system**, which says
+`bin/forge/gjallarhorn-tunnel.sh start` *"exposes Hlidskjalf at the operator's own hostname (Cloudflare tunnel →
+`:3889`)"*. That was the hosted era, and it is over. At the Allfather's word: *"we are not hosting the 3 apps online..
+they are local. craig found that were opening ports out."*
+
+The halls listen on loopback only and are opened from the desktop as local apps. **No tunnel may dial a hall port** —
+3888 Hlidskjalf SPA, 3889 the gate, 4322 Óðrerir, 8437 Smíðja, 8787 Bilskirnir, 4602 Mímir (the well), 4603 Bifrost.
+`bin/forge/gjallarhorn-tunnel.sh start` now refuses such a config before cloudflared is looked for, and
+`… check` audits one without raising anything. A tunnel publishes a frontier surface (the video forge on `:8761`, the
+hound's notifications on `:2586`); a hosted, shared surface is Gimlé's (plan 284) and carries its own door.
+
+Measured on the Allfather's seat the same day: the tunnels that exist serve `:8761`, `:2586` and `:3891` — none of
+them a hall. The fix note is `docs/fixes/forge/2026-11-14-no-tunnel-points-at-a-hall.md`; the law is plan 275 item 30.
+
+Two related corrections belong to the same night, and neither is a tunnel: the model bridge no longer falls back to
+the retired LM Studio (it reads its key through the vault and otherwise serves the local rail — item 22), and every
+house unit's PATH now names the mise shims, so a service can find the tools a shell can find (item 26).

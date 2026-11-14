@@ -96,6 +96,9 @@ OPERATOR_NAME="${YMIR_VOICE_OPERATOR:-Allfather}"
 VENV="${YMIR_VOICE_VENV:-$HOME/venvs/s2s}"
 STATE_DIR="${YMIR_HOME:-$HOME}/hodd/state/voice"
 UNIT="ymir-voice-host.service"
+# The engine lets the card go when nobody is on the line (plan 275 item 23): a watcher is
+# raised beside it, and it stops the engine after a quiet window. See bin/voice/voice-idle.sh.
+IDLE_UNIT="ymir-voice-idle.service"
 
 # ── the head: ONE door, so a switch made in Rödd's settings and a start made in a
 # shell cannot disagree. bin/voice/rodd-head.py resolves mode · base_url · model ·
@@ -271,6 +274,7 @@ cmd_plan() {
 cmd_host() {
   local eng hk
   if [ "$DO_STOP" = 1 ]; then
+    systemctl --user stop "$IDLE_UNIT" 2>/dev/null || true
     systemctl --user stop "$UNIT" 2>/dev/null && say "stopped $UNIT" || say "was not running"
     return 0
   fi
@@ -339,6 +343,20 @@ cmd_host() {
     "$eng" serve "${HOST_ARGV[@]}" "${engine_pin[@]}" ${hk:+--responses_api_api_key "$hk"} >/dev/null || {
       err "error: could not raise $UNIT"; return 1; }
   printf '%s\n' "$(date -Is) unit=$UNIT port=$PORT head=$HEAD_URL/$HEAD_MODEL" >> "$STATE_DIR/host.seat"
+  # THE CARD IS BORROWED, NOT KEPT (plan 275 item 23). Raise the idle watcher beside the
+  # engine: after YMIR_VOICE_IDLE_SECONDS with no session in use it stops the engine and the
+  # card is free for the rail. It is best-effort by design — an engine that runs and never
+  # lets go is worse, but a missing watcher must not stop the voice from working.
+  if [ "${YMIR_VOICE_IDLE_SECONDS:-300}" != 0 ] && command -v systemd-run >/dev/null 2>&1; then
+    systemctl --user stop "$IDLE_UNIT" 2>/dev/null || true
+    systemd-run --user --unit="$IDLE_UNIT" --collect \
+      --property=StandardOutput=append:"$STATE_DIR/idle.log" \
+      --property=StandardError=append:"$STATE_DIR/idle.log" \
+      --setenv=YMIR_VOICE_PORT="$PORT" \
+      --setenv=YMIR_VOICE_IDLE_SECONDS="${YMIR_VOICE_IDLE_SECONDS:-300}" \
+      "$ROOT/bin/voice/voice-idle.sh" watch >/dev/null 2>&1 \
+      || err "warning: the idle watcher did not start — the engine will hold the card until it is stopped"
+  fi
   for _ in $(seq 1 90); do host_answers && { say "host up on 127.0.0.1:$PORT (log: $STATE_DIR/host.log)"; return 0; }; sleep 1; done
   err "error: $UNIT started but nothing answers on $PORT yet — read $STATE_DIR/host.log"
   return 1
@@ -440,6 +458,7 @@ cmd_stop() {
     if [ -n "$host" ] && [ "$host" != "$(hostname -s)" ]; then
       ssh -o BatchMode=yes "$host" "cd ~/ymir && ./bin/voice/voice-door.sh host --stop" 2>&1 | tail -1
     else
+      systemctl --user stop "$IDLE_UNIT" 2>/dev/null || true
       systemctl --user stop "$UNIT" 2>/dev/null && say "pipeline lowered here" || say "no pipeline was running here"
     fi
   else
