@@ -17,8 +17,11 @@
 # Exit: 0 clean · 1 findings (the hotline) · 2 could not scan
 set -uo pipefail
 
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+. "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 REPO="${YMIR_REPO:-$HOME/ymir}"
-HOME_DIR="${YMIR_HOME:-$HOME/Documents/ymirhome}"
+HOME_DIR=""; declare -f ymir_home_root >/dev/null 2>&1 && ymir_home_root HOME_DIR 2>/dev/null
+[ -n "$HOME_DIR" ] || { printf 'private-scan: the home could not be resolved — bin/vault/hoard-lib.sh is the one door\n' >&2; exit 2; }
 QUEUE="$HOME_DIR/hodd/state/private-scan/queue.md"
 REPORT_DIR="$HOME_DIR/hodd/state/private-scan"
 LOG="$REPORT_DIR/scan.log"
@@ -50,7 +53,7 @@ ADDRESS	\b100\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\b
 ADDRESS	\b192\.168\.[0-9]{1,3}\.[0-9]{1,3}\b
 ADDRESS	\b10\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\b
 ADDRESS	[A-Za-z0-9-]+\.ts\.net
-ADDRESS	/home/zerwizserver/
+ADDRESS	/home/zerwiz[A-Za-z]*/
 ADDRESS-LOW	[a-z0-9-]+\.zerwiz\.org
 ADDRESS-LOW	/home/(alice|bob|tester|user|example|test)/
 PERSON	[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.(?!test|example|invalid|local)\w{2,}
