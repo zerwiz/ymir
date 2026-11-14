@@ -42,3 +42,7 @@ A dry run, so nothing was created; the resolved id is the newest message in that
 A group gets **one thread**, and it is opened once, deliberately: the first letter says so, and every following letter to
 the same people about the same thing answers inside it. A new thread is for a **new subject or a new audience**, and it
 should be a decision, not an accident. The runbook's rule is in `hodd/docs/runbooks/email.md` ("One thread, not many").
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #751
