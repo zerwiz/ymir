@@ -97,7 +97,7 @@ describe("adaptMemoryPayload — the flat bridge shape becomes the UI contract",
 });
 
 describe("failureReason — the real cause, whole (plan 275 item 15)", () => {
-  // Measured on heimdall 2026-11-14: pi prints one status line per installed
+  // Measured on this machine, 2026-11-14: pi prints one status line per installed
   // extension on EVERY run, then the provider's answer. The chat used to show
   // the status lines as the cause and cut the provider's words at 300 chars.
   const real =
