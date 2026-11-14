@@ -24,3 +24,7 @@ the machine that wrote the default and breaks everywhere else.
 `bin/desktop/hlidskjalf-agents.sh` · `bin/desktop/hlidskjalf-usage.sh` ·
 `docs/features/inspect-any-app-and-agent.md` (its CHANGE LOG, which `rules-compliance-guard`
 requires of a new page).
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #757
