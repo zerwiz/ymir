@@ -214,6 +214,7 @@ export interface FileNode {
 
 export interface ChatMessage {
   id: string;
+  /** 'kaia' is the historical role value kept on stored rows; the UI names it Völundr. */
   from: 'user' | 'kaia';
   body: string;
   ts: string;

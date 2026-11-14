@@ -15,7 +15,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { piCommand, piPath, resetPiPathCache } from "./model-catalog.ts";
 import { adaptMemoryPayload } from "./memory-adapt.ts";
-import { DEFAULT_CHAT_MODEL, failureReason, kaiaPersonaFile, chatModelDefault } from "./chat.ts";
+import { DEFAULT_CHAT_MODEL, failureReason, volundrPersonaFile, chatModelDefault } from "./chat.ts";
 
 describe("piPath — the binary is resolved, never assumed", () => {
   test("YMIR_PI_BIN wins when it points at a real executable", () => {
@@ -97,7 +97,7 @@ describe("adaptMemoryPayload — the flat bridge shape becomes the UI contract",
 });
 
 describe("failureReason — the real cause, whole (plan 275 item 15)", () => {
-  // Measured on heimdall 2026-11-14: pi prints one status line per installed
+  // Measured on this machine, 2026-11-14: pi prints one status line per installed
   // extension on EVERY run, then the provider's answer. The chat used to show
   // the status lines as the cause and cut the provider's words at 300 chars.
   const real =
@@ -135,46 +135,94 @@ describe("failureReason — the real cause, whole (plan 275 item 15)", () => {
   });
 });
 
-describe("kaiaPersonaFile — the chat answers as Kaia, never as the seat (plan 275, helm 2026-11-14)", () => {
+describe("volundrPersonaFile — the chat answers as Völundr, never as the seat (plan 275, helm 2026-11-14)", () => {
   const withEnv = (value: string | undefined, fn: () => void) => {
-    const before = process.env.KAIA_PERSONA;
-    if (value === undefined) delete process.env.KAIA_PERSONA;
-    else process.env.KAIA_PERSONA = value;
+    const before = process.env.VOLUNDR_PERSONA;
+    const beforeOld = process.env.KAIA_PERSONA;
+    delete process.env.VOLUNDR_PERSONA;
+    delete process.env.KAIA_PERSONA;
+    if (value !== undefined) process.env.VOLUNDR_PERSONA = value;
     try { fn(); } finally {
-      if (before === undefined) delete process.env.KAIA_PERSONA;
-      else process.env.KAIA_PERSONA = before;
+      delete process.env.VOLUNDR_PERSONA;
+      delete process.env.KAIA_PERSONA;
+      if (before !== undefined) process.env.VOLUNDR_PERSONA = before;
+      if (beforeOld !== undefined) process.env.KAIA_PERSONA = beforeOld;
+    }
+  };
+  const withOldEnv = (value: string | undefined, fn: () => void) => {
+    const before = process.env.VOLUNDR_PERSONA;
+    const beforeOld = process.env.KAIA_PERSONA;
+    delete process.env.VOLUNDR_PERSONA;
+    delete process.env.KAIA_PERSONA;
+    if (value !== undefined) process.env.KAIA_PERSONA = value;
+    try { fn(); } finally {
+      delete process.env.VOLUNDR_PERSONA;
+      delete process.env.KAIA_PERSONA;
+      if (before !== undefined) process.env.VOLUNDR_PERSONA = before;
+      if (beforeOld !== undefined) process.env.KAIA_PERSONA = beforeOld;
     }
   };
 
-  test("KAIA_PERSONA wins when it is a real file", () => {
-    const dir = mkdtempSync(join(tmpdir(), "kaia-persona-"));
+  test("VOLUNDR_PERSONA wins when it is a real file", () => {
+    const dir = mkdtempSync(join(tmpdir(), "volundr-persona-"));
     const file = join(dir, "mine.md");
-    writeFileSync(file, "You are Kaia.\n");
-    withEnv(file, () => expect(kaiaPersonaFile(dir)).toBe(file));
+    writeFileSync(file, "You are Völundr.\n");
+    withEnv(file, () => expect(volundrPersonaFile(dir)).toBe(file));
   });
 
-  test("a stale KAIA_PERSONA is skipped, not trusted", () => {
-    const dir = mkdtempSync(join(tmpdir(), "kaia-persona-"));
+  test("the historical KAIA_PERSONA is still read, so no wrapper breaks", () => {
+    const dir = mkdtempSync(join(tmpdir(), "volundr-persona-"));
+    const file = join(dir, "mine.md");
+    writeFileSync(file, "You are Völundr.\n");
+    withOldEnv(file, () => expect(volundrPersonaFile(dir)).toBe(file));
+  });
+
+  test("VOLUNDR_PERSONA beats KAIA_PERSONA when both are set", () => {
+    const dir = mkdtempSync(join(tmpdir(), "volundr-persona-"));
+    const fresh = join(dir, "fresh.md");
+    const old = join(dir, "old.md");
+    writeFileSync(fresh, "You are Völundr.\n");
+    writeFileSync(old, "You are Kaia.\n");
+    const before = process.env.KAIA_PERSONA;
+    process.env.KAIA_PERSONA = old;
+    try {
+      withEnv(fresh, () => expect(volundrPersonaFile(dir)).toBe(fresh));
+    } finally {
+      if (before === undefined) delete process.env.KAIA_PERSONA;
+      else process.env.KAIA_PERSONA = before;
+    }
+  });
+
+  test("a stale persona file is skipped, not trusted", () => {
+    const dir = mkdtempSync(join(tmpdir(), "volundr-persona-"));
     withEnv(join(dir, "gone.md"), () => {
-      const got = kaiaPersonaFile(dir);
+      const got = volundrPersonaFile(dir);
       expect(got).not.toBe(join(dir, "gone.md"));
-      expect(got).toMatch(/kaia\.md$/);
+      expect(got).toMatch(/volundr\.md$/);
     });
   });
 
   test("the operator's home override beats the shipped default", () => {
-    const home = mkdtempSync(join(tmpdir(), "kaia-home-"));
-    const override = join(home, ".agents/skills/smidja/kaia/persona.md");
+    const home = mkdtempSync(join(tmpdir(), "volundr-home-"));
+    const override = join(home, ".agents/skills/smidja/volundr/persona.md");
+    mkdirSync(join(home, ".agents/skills/smidja/volundr"), { recursive: true });
+    writeFileSync(override, "You are Völundr, in this operator's own words.\n");
+    withEnv(undefined, () => expect(volundrPersonaFile(home)).toBe(override));
+  });
+
+  test("the historical home path is still read: an existing kaia/persona.md keeps working", () => {
+    const home = mkdtempSync(join(tmpdir(), "volundr-home-"));
+    const legacy = join(home, ".agents/skills/smidja/kaia/persona.md");
     mkdirSync(join(home, ".agents/skills/smidja/kaia"), { recursive: true });
-    writeFileSync(override, "You are Kaia, in this operator's own words.\n");
-    withEnv(undefined, () => expect(kaiaPersonaFile(home)).toBe(override));
+    writeFileSync(legacy, "You are Völundr, written before the rename.\n");
+    withEnv(undefined, () => expect(volundrPersonaFile(home)).toBe(legacy));
   });
 
   test("with nothing in the target repo, the app's own default is found", () => {
-    const empty = mkdtempSync(join(tmpdir(), "kaia-empty-"));
+    const empty = mkdtempSync(join(tmpdir(), "volundr-empty-"));
     withEnv(undefined, () => {
-      const got = kaiaPersonaFile(empty);
-      expect(got).toMatch(/apps\/smidja-factory\/apps\/visualizer\/prompts\/kaia\.md$/);
+      const got = volundrPersonaFile(empty);
+      expect(got).toMatch(/apps\/smidja-factory\/apps\/visualizer\/prompts\/volundr\.md$/);
     });
   });
 });
@@ -191,26 +239,26 @@ describe("chatModelDefault — the repo is agnostic, the operator's home names t
   };
 
   test("no home config and no environment: the repo's generic default", () => {
-    const empty = mkdtempSync(join(tmpdir(), "kaia-model-"));
+    const empty = mkdtempSync(join(tmpdir(), "volundr-model-"));
     withEnv(undefined, () => expect(chatModelDefault(empty)).toBe(DEFAULT_CHAT_MODEL));
   });
 
   test("the home's config/smidja.env names the operator's own model", () => {
-    const home = mkdtempSync(join(tmpdir(), "kaia-model-"));
+    const home = mkdtempSync(join(tmpdir(), "volundr-model-"));
     mkdirSync(join(home, "config"), { recursive: true });
     writeFileSync(join(home, "config/smidja.env"), "# mine\nSMIDJA_CHAT_MODEL=openrouter/some-model\n");
     withEnv(undefined, () => expect(chatModelDefault(home)).toBe("openrouter/some-model"));
   });
 
   test("an environment variable wins over the file", () => {
-    const home = mkdtempSync(join(tmpdir(), "kaia-model-"));
+    const home = mkdtempSync(join(tmpdir(), "volundr-model-"));
     mkdirSync(join(home, "config"), { recursive: true });
     writeFileSync(join(home, "config/smidja.env"), "SMIDJA_CHAT_MODEL=from-file\n");
     withEnv("from-environment", () => expect(chatModelDefault(home)).toBe("from-environment"));
   });
 
   test("a blank line in the file falls back to the default, never to an empty id", () => {
-    const home = mkdtempSync(join(tmpdir(), "kaia-model-"));
+    const home = mkdtempSync(join(tmpdir(), "volundr-model-"));
     mkdirSync(join(home, "config"), { recursive: true });
     writeFileSync(join(home, "config/smidja.env"), "SMIDJA_CHAT_MODEL=\n");
     withEnv(undefined, () => expect(chatModelDefault(home)).toBe(DEFAULT_CHAT_MODEL));

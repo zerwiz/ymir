@@ -141,7 +141,7 @@ export async function fetchThinking(adwId: string, agent: string): Promise<strin
   }
 }
 
-// ── Kaia's memory (engram) ──────────────────────────────────────────────────
+// ── Völundr's memory (engram) ──────────────────────────────────────────────────
 
 export function fetchMemoryHealth(): Promise<MemoryHealth> {
   return getJson('/api/memory/health') as Promise<MemoryHealth>

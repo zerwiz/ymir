@@ -1,7 +1,7 @@
 /**
  * /api/chat/* — the orchestrator chat endpoints.
  *
- *   POST /api/chat/message  → send a message to Pi as Kaia, capture the reply
+ *   POST /api/chat/message  → send a message to Pi as Völundr, capture the reply
  *   GET  /api/chat/history  → conversation for one session (JSONL on disk)
  *   POST /api/chat/session  → launch a smidja run for a team + task
  *   POST /api/chat/steer    → inject guidance into the active session
@@ -34,7 +34,7 @@ const VERBOSE = process.env.SMIDJA_CHAT_DEBUG === "1" || process.env.SMIDJA_DEBU
  * that used to sit here, `opencode-go/deepseek-v4-flash`, is listed by no
  * provider: pi warns "Model … not found", lets the request through as a custom
  * id, and the upstream answers 400 {"message":"Model is unavailable."} — which
- * pi reports as exit 1, which the chat showed as "Kaia (Pi) failed".
+ * pi reports as exit 1, which the chat showed as "Völundr (Pi) failed".
  */
 export const DEFAULT_CHAT_MODEL = "opencode-go/deepseek-v4.1-flash";
 
@@ -215,7 +215,7 @@ export async function debugSessions(dbPath: string): Promise<{
 
 /**
  * POST /api/chat/message — run Pi once in print mode against a persistent
- * session-scoped conversation, capture stdout as Kaia's reply, and persist both
+ * session-scoped conversation, capture stdout as Völundr's reply, and persist both
  * the user message and the reply to the session JSONL.
  */
 export async function sendMessage(req: ChatMessageRequest, dbPath: string): Promise<ChatMessageResponse> {
@@ -260,7 +260,7 @@ export async function sendMessage(req: ChatMessageRequest, dbPath: string): Prom
       `chat/${session}`,
       "--model",
       model,
-      ...kaiaPromptArgs(root),
+      ...volundrPromptArgs(root),
       prompt,
     ];
     dbg(`spawn pi: model=${model} session=${session} cwd=${root}`);
@@ -292,7 +292,7 @@ export async function sendMessage(req: ChatMessageRequest, dbPath: string): Prom
     if (result === TIMED_OUT) {
       dbg(`  TIMED OUT after 120s (pid=${proc.pid}) — killing`);
       try { proc.kill(); } catch { /* ignore */ }
-      throw new Error("Kaia (Pi) took too long — try again");
+      throw new Error("Völundr (Pi) took too long — try again");
     }
     dbg(`  exit=${result.exit} stdout=${result.stdout.length}ch stderr=${result.stderr.length}ch`);
     if (result.exit !== 0) {
@@ -304,36 +304,40 @@ export async function sendMessage(req: ChatMessageRequest, dbPath: string): Prom
       // provider error and cut it at 300 characters. Drop every status line,
       // keep the whole of what is left.
       const why = failureReason(result.stderr);
-      throw new Error(`Kaia (Pi) failed (exit ${result.exit})${why ? ` — ${why}` : ""}`);
+      throw new Error(`Völundr (Pi) failed (exit ${result.exit})${why ? ` — ${why}` : ""}`);
     }
     return result.stdout.trim() || "(no response)";
   }
 }
 
 /**
- * KAIA'S PERSONA — where it comes from, in order.
+ * VÖLUNDR'S PERSONA — where it comes from, in order.
  *
- * The repo stays agnostic: the smithy ships a **generic** Kaia with the app, and the
+ * The repo stays agnostic: the smithy ships a **generic** Völundr with the app, and the
  * operator's own shape lives in their home and may override it. What must never happen
  * again is the middle case: the chat quietly finding nothing and answering as whichever
  * agent's contract happens to sit in the working directory (measured 2026-11-14 — the
  * reply introduced itself as the seat's counsellor).
  *
- *   1. `KAIA_PERSONA` — an explicit file, for a unit or a wrapper that knows better.
- *   2. `<root>/.agents/skills/smidja/kaia/persona.md` — the operator's own shape. When the
- *      chat's data lives in the home, `root` IS the home, so this is the home override.
- *   3. `<root>/apps/smidja-factory/apps/visualizer/prompts/kaia.md` — a target repo that
- *      carries the smithy itself.
+ *   1. `VOLUNDR_PERSONA`, then `KAIA_PERSONA` — an explicit file, for a unit or a wrapper
+ *      that knows better. The old name is still read so no wrapper breaks.
+ *   2. `<root>/.agents/skills/smidja/volundr/persona.md`, then the historical
+ *      `.../kaia/persona.md` — the operator's own shape. When the chat's data lives in the
+ *      home, `root` IS the home, so this is the home override.
+ *   3. `<root>/apps/smidja-factory/apps/visualizer/prompts/volundr.md`, then the historical
+ *      `prompts/kaia.md` — a target repo that carries the smithy itself.
  *   4. the default that ships WITH the app, found by walking up from this file — so the
- *      chat answers as Kaia on any machine, in any home, without a config step.
+ *      chat answers as Völundr on any machine, in any home, without a config step.
  *   5. the older layouts, kept so a repo shaped differently still finds its own.
  */
 const LEGACY_PERSONA_PATHS = [
   "apps/smidja/smidja_data/prompt_engineering/orchestrator/system.md",
   ".agents/skills/smidja/skills/volundr/prompt/volundr-system.md",
 ];
-const APP_PERSONA_PATH = "apps/smidja-factory/apps/visualizer/prompts/kaia.md";
-const HOME_PERSONA_PATH = ".agents/skills/smidja/kaia/persona.md";
+const APP_PERSONA_PATH = "apps/smidja-factory/apps/visualizer/prompts/volundr.md";
+const LEGACY_APP_PERSONA_PATH = "apps/smidja-factory/apps/visualizer/prompts/kaia.md";
+const HOME_PERSONA_PATH = ".agents/skills/smidja/volundr/persona.md";
+const LEGACY_HOME_PERSONA_PATH = ".agents/skills/smidja/kaia/persona.md";
 
 /** The nearest ancestor of `start` that holds `rel`, or null. */
 function findUp(start: string, rel: string): string | null {
@@ -349,10 +353,10 @@ function findUp(start: string, rel: string): string | null {
 }
 
 /** The persona file the chat must be given, or null when nothing can be found. */
-export function kaiaPersonaFile(root: string): string | null {
-  const explicit = process.env.KAIA_PERSONA?.trim();
+export function volundrPersonaFile(root: string): string | null {
+  const explicit = (process.env.VOLUNDR_PERSONA ?? process.env.KAIA_PERSONA)?.trim();
   if (explicit && existsSync(explicit)) return explicit;
-  for (const rel of [HOME_PERSONA_PATH, APP_PERSONA_PATH]) {
+  for (const rel of [HOME_PERSONA_PATH, LEGACY_HOME_PERSONA_PATH, APP_PERSONA_PATH, LEGACY_APP_PERSONA_PATH]) {
     const abs = join(root, rel);
     if (existsSync(abs)) return abs;
   }
@@ -365,10 +369,14 @@ export function kaiaPersonaFile(root: string): string | null {
   return null;
 }
 
+/** The historical name of `volundrPersonaFile`, kept as an alias so a wrapper or a
+ *  test written before 2026-11-14 keeps working (never remove a feature). */
+export const kaiaPersonaFile = volundrPersonaFile;
+
 /** The persona, appended to pi's base prompt, plus the flag that keeps the chat
  *  from adopting the identity of whatever AGENTS.md sits in its working directory. */
-function kaiaPromptArgs(cwd: string): string[] {
-  const persona = kaiaPersonaFile(cwd);
+function volundrPromptArgs(cwd: string): string[] {
+  const persona = volundrPersonaFile(cwd);
   const args: string[] = ["--no-context-files"];
   if (persona) args.push("--append-system-prompt", persona);
   return args;

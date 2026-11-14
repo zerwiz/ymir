@@ -19,7 +19,7 @@ icons[22]{glyph,name,unicode,figure,used_for}:
   "algiz","Algiz","ᛉ","protection","Reviews / Glitnir — the protective gate; the Ymir emblem"
   "dagaz","Dagaz","ᛞ","day/dawn","Processes — Valhalla supervision"
   "sowilo","Sowilo","ᛊ","sun","Files — Skrymir (light on the tree)"
-  "kaunan","Kaunan","ᚴ","torch","OmniChat — Kaia's flame"
+  "kaunan","Kaunan","ᚴ","torch","OmniChat — Völundr's flame"
   "ansuz","Ansuz","ᚨ","the Allfather's breath","Óðrerir — the mead of poetry, the Live Hall"
   "ehwaz","Ehwaz","ᛖ","horse/journey","Runtime — the seat and its transit"
   "jera","Jera","ᛃ","year/harvest","Cron — the Nornir's seasons"

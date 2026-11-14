@@ -1411,7 +1411,7 @@ checkout re-rendering the machine's SOUL.md from older code shows up as a red ro
 
 The `a2a` row above says `bin/bridge/a2a-mcp.sh install wires a2abridge + engram into pi + opencode`. The
 `memory` row says the step "reports MCP coverage". Both rows are kept as the record. Both are corrected here.
-engram is Kaia's engine only, so a harness reaches memory through this body's gateway at `/mcp/well` and never
+engram is Völundr's engine only, so a harness reaches memory through this body's gateway at `/mcp/well` and never
 through a direct `engram-mcp` server.
 
 ```

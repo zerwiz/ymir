@@ -108,7 +108,7 @@ function tagClass(tag: string): string {
 
     <!-- header + stats -->
     <div class="head">
-      <div class="title">Kaia's memory <span class="dim">(engram)</span></div>
+      <div class="title">Völundr's memory <span class="dim">(engram)</span></div>
       <div v-if="health.ok" class="stat-row">
         <span class="stat">
           <b>{{ inspect?.counts?.episodes ?? health.episodes ?? '—' }}</b>

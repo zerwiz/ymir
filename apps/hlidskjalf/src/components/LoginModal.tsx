@@ -34,7 +34,7 @@ const LORE_BEATS: { rune: string; name: string; line: string }[] = [
   {
     rune: 'ᛗ',
     name: 'Mimirsbrunn',
-    line: 'The well at the root. Kaia drinks before she acts, so nothing is ever spoken dry.',
+    line: 'The well at the root. Völundr drinks before he acts, so nothing is ever spoken dry.',
   },
   {
     rune: 'ᚱ',

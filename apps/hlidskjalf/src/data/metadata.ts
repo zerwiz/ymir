@@ -70,7 +70,7 @@ export const GATE_META: Record<GateId, PageMeta> = {
   chat: {
     title: 'OmniChat',
     description:
-      'Speak with Kaia, the oracle by the well. She recalls before she dispatches.',
+      'Speak with Völundr, the master of the smiths. He recalls before he dispatches.',
   },
   forge: {
     title: 'The Forge',
