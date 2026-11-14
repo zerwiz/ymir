@@ -121,3 +121,8 @@ a quiet machine); `storm` is the ward's own record of a unit it stopped.
 - The ward stops nothing and `counter_only` is high: the journal could not be read for those
   units, so the count came from systemd's live counter. Check `journalctl --user -u <unit>`.
 - A storm you want left alone: put the unit's name in `restart_storm.exclude` and re-run.
+
+## CHANGE LOG
+
+- **2026-11-14** — written with the feature (plan 286 P0 and P4, errand `leak-ledger`): the ledger's
+  rows, the timer, the ward's limit and the knobs in `$YMIR_HOME/config/soak.yaml`.
