@@ -140,7 +140,37 @@ dry="$(W --pass --dry-run)"
 grep -q '"action":"would-stop"' <<<"$dry" && ok "a dry run says what it WOULD do" \
   || no "dry run output: $dry"
 
-# ── 7. the config's threshold is the one used, and --status says where it came from
+# ── 7. when the journal cannot be read, the sampler's ledger is the count ─────
+printf '#!/usr/bin/env bash\nexit 1\n' > "$T/bin/journal-blind"; chmod +x "$T/bin/journal-blind"
+mkdir -p "$T/home/state/soak/services"
+LED="$T/home/state/soak/services/$(date +%F).jsonl"
+python3 - "$LED" <<'PY2'
+import datetime, json, sys
+now = datetime.datetime.now(datetime.timezone.utc)
+rows = []
+for minutes_ago, restarts in ((40, 3), (8, 15)):
+    ts = (now - datetime.timedelta(minutes=minutes_ago)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    rows.append({"ts": ts, "pass": "planted", "host": "planted", "kind": "service",
+                 "scope": "user", "name": "loop-a.service", "state": "activating",
+                 "sub": "auto-restart", "restarts": restarts})
+with open(sys.argv[1], "a") as fh:
+    for row in rows:
+        fh.write(json.dumps(row) + "\n")
+PY2
+rm -f "$T/stops" "$T/notify.log" "$T/home/state/soak/storm-state.json"; : > "$T/notify.log"
+printf 'restart_storm:\n  threshold: 10\n' > "$T/home/config/soak.yaml"
+env YMIR_HOME="$T/home" YMIR_SOAK_SYSTEMCTL="$T/bin/systemctl" \
+    YMIR_SOAK_JOURNALCTL="$T/bin/journal-blind" YMIR_SOAK_NOTIFY="$T/bin/notify" \
+    YMIR_SOAK_IN_CALL="$T/bin/in-call-free" \
+    bash "$N" --pass > /dev/null 2>&1
+grep -qx 'loop-a.service' "$T/stops" 2>/dev/null \
+  && ok "with the journal blind, the ledger's restart deltas are the count" \
+  || no "the ledger fallback did not stop the storming unit"
+grep -q '"source":"ledger"' "$LED" 2>/dev/null && ok "the row says the ledger answered" \
+  || no "the source was not recorded as the ledger"
+rm -f "$LED"
+
+# ── 8. the config's threshold is the one used, and --status says where it came from
 printf 'restart_storm:\n  threshold: 40\n' > "$T/home/config/soak.yaml"
 rm -f "$T/stops" "$T/home/state/soak/storm-state.json"
 W --pass > /dev/null
