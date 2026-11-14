@@ -32,3 +32,7 @@ is still **refused**. Wired into `bin/gates/ci-verify.sh` as `rules-compliance-e
 
 The specific document that tripped it (the bridge fix note) now passes the ward unchanged, which is the point: the
 note did not need rewording, the ward needed to know a filename from a host.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #757
