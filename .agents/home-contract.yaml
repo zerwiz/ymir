@@ -114,6 +114,12 @@ contract:
     door: bin/engine/home-seed.sh
     required: false
     why: "the words that must never appear in the public repository (people, clients, domains, hosts); absent, the secret scan and the private sweep say so and judge the shared shapes alone (plan 287 §6, plan 288 step 3)"
+  - path: hodd/identity/house-domains.txt
+    kind: seeded
+    template: .agents/config/house-domains.txt.example
+    door: bin/engine/home-seed.sh
+    required: false
+    why: "the mail domains that are the operator's OWN: a commit may be authored as <agent>@<domain> and the developers register shows such an author unmasked; absent, both wards fall back to the generic @ymir forms and say so (RULES/04)"
   - path: hodd/identity/machines.yaml
     kind: stub
     template: hodd/identity/machines.yaml.example

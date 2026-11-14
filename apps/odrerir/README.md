@@ -13,7 +13,7 @@ ymir raise            # the Live Hall answers at :4322
 ```
 
 - Home: <https://github.com/zerwiz/odrerir>
-- The Lore: <https://ymir.zerwiz.org/>
+- The Lore: <https://your-ymir-host.example.org/>
 - Licence: Apache-2.0 (LICENSE, NOTICE)
 
 ## CHANGE LOG

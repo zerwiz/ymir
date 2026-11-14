@@ -13,7 +13,7 @@
 # FAIL-CLOSED. No door up means `{"error": ...}` and no scores at all: a card with no
 # classification must say so, never invent a figure to fill the slot.
 #
-# The door is chosen by being UP, in this order (measured 2026-11-09, heimdall):
+# The door is chosen by being UP, in this order (measured 2026-11-09, the dev machine):
 #   $JEV_RANK_DOOR            the operator's word
 #   jev-laya                  1.77 decisions/sec, and RIGHT on the money case (billing 0.83)
 #   jev-kev-4b                the authority (billing 0.99) but 0.21/sec — a 20-card page

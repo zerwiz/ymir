@@ -53,14 +53,17 @@ die() { printf 'error: %s\n' "$1" >&2; [ -n "${2:-}" ] && printf 'help: %s\n' "$
 # (Rule 07; defaults-guard refuses exactly that). Same resolution as bin/gates/queue.sh.
 shelf_default() {
   [ -n "${YMIR_PLAN_DIR:-}" ] && { printf '%s' "$YMIR_PLAN_DIR"; return 0; }
-  local h="${YMIR_HOME:-}"
-  if [ -z "$h" ] && [ -r "$ROOT/bin/vault/hoard-lib.sh" ]; then
-    . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
-    command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root h
-  fi
+  local h="${YMIR_HOME:-}" ledger=""
+  # The resolver is what finds a ledger under a realm the repository may not name —
+  # so the library is loaded whether or not YMIR_HOME is already in the env.
+  if [ -r "$ROOT/bin/vault/hoard-lib.sh" ]; then . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true; fi
+  if [ -z "$h" ] && command -v ymir_home_root >/dev/null 2>&1; then ymir_home_root h; fi
   [ -n "$h" ] || h="$(bash "$ROOT/bin/vault/hodd.sh" path 2>/dev/null || true)"
   [ -n "$h" ] || return 1
-  printf '%s' "$h/svartalfaheim/whynotproductions/projects/ymir/plans"
+  # The ledger lives under the operator's own realm, so it is discovered, never spelled.
+  command -v ymir_plan_dir >/dev/null 2>&1 && ymir_plan_dir ledger 2>/dev/null || true
+  [ -n "$ledger" ] || return 1
+  printf '%s' "$ledger"
 }
 
 MODE="report"; SHELF=""

@@ -6,9 +6,9 @@
 #   bin/voice/search-ensure.sh --stop     stop the container (it is kept, not removed)
 #
 # WHY. Rödd's web_search reads the house's own SearXNG (open source, no key, no account) at YMIR_SEARCH_URL, default
-# http://127.0.0.1:8899. It was raised by hand on heimdall and on nidavellir (2026-11-12/13), and nothing in the repo
-# knew it existed — so a fresh install had no search, and nidavellir (docker.service disabled, socket only) would have
-# lost it at the next reboot. Rödd's start runs this, so a reboot is healed by her first start: `docker start` knocks on
+# http://127.0.0.1:8899. It was raised by hand on two of our machines (2026-11-12/13), and nothing in the repo knew it
+# existed — so a fresh install had no search, and a machine with docker.service disabled (socket only) would have lost
+# it at the next reboot. Rödd's start runs this, so a reboot is healed by her first start: `docker start` knocks on
 # the socket and the socket wakes docker.
 #
 # The container never takes the desktop's breath: one CPU, 512 MB, bound to 127.0.0.1 only. Its settings (a random

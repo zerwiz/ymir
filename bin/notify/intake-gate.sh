@@ -35,9 +35,9 @@ url = os.environ["URL"]; key = os.environ["KEY"]
 FEW_SHOT = (
     "Six examples of how this house classifies a message, two per label:\n"
     "A. 'the well bridge is down on :4602 — restart it' -> signal\n"
-    "B. 'Reygan accepted the meeting invitation for Tuesday at 9' -> facts\n"
+    "B. 'Ada accepted the meeting invitation for Tuesday at 9' -> facts\n"
     "C. 'a new model claims 10x better coding, no benchmarks published' -> hype\n"
-    "D. 'Sebastian asks whether the door is up — he is blocked' -> signal\n"
+    "D. 'Bo asks whether the door is up — he is blocked' -> signal\n"
     "E. 'a vendor published benchmarks showing their model is faster' -> facts\n"
     "F. 'this changes everything, everyone is switching, nobody has measured it' -> hype\n"
     "signal = an action somebody here must take TODAY. facts = true, nothing to do.\n"

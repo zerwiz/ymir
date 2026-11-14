@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # connect.sh — THE connect door: one button to a signed-in mailbox, and the honest line per account.
 #
-# Plan 221 (`svartalfaheim/whynotproductions/projects/ymir/plans/221-the-connect-door.md`, §4 and §5).
+# Plan 221 (`svartalfaheim/<realm>/projects/ymir/plans/221-the-connect-door.md`, §4 and §5).
 # The complaint this answers: "it is way way too complicated for new users to set up their email and
 # google calendar". A user presses one button and signs in; the operator carries Google ONCE (one Cloud
 # project, consent screen Internal, one OAuth client marked agentic) and every user ends up with a

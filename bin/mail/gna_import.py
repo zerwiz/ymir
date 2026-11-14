@@ -577,8 +577,8 @@ def self_test() -> int:
         except SystemExit as exc:
             checks.append(("plaintext off loopback is refused", "unencrypted" in str(exc), str(exc)))
         raw = (
-            b"From: Craig Example <craig@example.com>\r\n"
-            b"To: gimle@example.org\r\n"
+            b"From: Ada Example <ada@example.com>\r\n"
+            b"To: desk@example.org\r\n"
             b"Subject: Faktura 2026-10\r\n"
             b"Message-ID: <fixture-1@example.com>\r\n"
             b"Date: Fri, 23 Oct 2026 10:00:00 +0000\r\n"
@@ -588,7 +588,7 @@ def self_test() -> int:
         records = _imap_records("reader@example.org", [(raw, "imap:fixture:1")])
         first = records[0] if records else {}
         checks.append(("a fetched message keeps its To: header intact",
-                       first.get("to_header") == "gimle@example.org", str(first.get("to_header"))))
+                       first.get("to_header") == "desk@example.org", str(first.get("to_header"))))
         checks.append(("a fetched message carries the id its Message-ID names",
                        first.get("id") == "fixture-1@example.com", str(first.get("id"))))
         checks.append(("a fetched message is judged like any other",

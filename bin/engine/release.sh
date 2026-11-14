@@ -9,7 +9,7 @@
 #   bin/engine/release.sh adopt                                turn the old in-place pin into the first release (once)
 #   bin/engine/release.sh status                               what current is, what is kept, what is proved
 #
-# WHY (measured 2026-11-12 on heimdall and nidavellir). The pin was a git checkout moved in place with
+# WHY (measured 2026-11-12 on the dev machine and on a second one). The pin was a git checkout moved in place with
 # `git reset --hard` under open windows; dependencies were installed only on a fresh clone and without Electron
 # (a dev dependency); no app was built (Hlidskjalf served Vite's DEV server, Sessrúmnir built itself at the click);
 # and every app found its own Electron (v33.0.0, v33.4.11, v43.7.3, the distribution's 43.8.3 and 41). This door ends
@@ -176,7 +176,7 @@ flip() {
   for r in $(ls -1dt "$REL"/*/ 2>/dev/null); do
     r="${r%/}"; [ "$r" = "$keep_cur" ] || [ "$r" = "$keep_prev" ] && continue
     # a release a running process still uses (its folder, its command line) is never deleted: an app server
-    # started from it would answer 404 the moment its files vanished (nidavellir, 2026-11-12: Óðrerir's page)
+    # started from it would answer 404 the moment its files vanished (a second machine, 2026-11-12: Óðrerir's page)
     if in_use "$r"; then say "kept	$r	(still in use by a running process)"; continue; fi
     n=$((n+1)); if [ "$n" -gt "$KEEP" ]; then rm -rf "$r" && say "pruned	$r"; fi
   done
@@ -203,7 +203,7 @@ adopt() {
   local sha d; sha="$(git -C "$PIN" rev-parse --short=12 HEAD)"; d="$REL/$sha"
   [ -e "$d" ] && fail "$d already exists — build a release and flip it instead"
   # the links are made in the same breath as the move, so the pin's path is absent for microseconds, not for the
-  # whole of link_shared (heimdall 2026-11-12: a timer started in that gap and failed its CHDIR)
+  # whole of link_shared (a dev machine, 2026-11-12: a timer started in that gap and failed its CHDIR)
   ln -sfn "$d" "$CUR.tmp-$$" && mv -T "$PIN" "$d" && mv -T "$CUR.tmp-$$" "$CUR" && ln -sfn "$CUR" "$PIN" \
     || fail "could not move the pin"
   link_shared "$d"

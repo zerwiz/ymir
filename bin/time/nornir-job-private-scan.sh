@@ -18,7 +18,14 @@
 set -uo pipefail
 
 REPO="${YMIR_REPO:-$HOME/ymir}"
-HOME_DIR="${YMIR_HOME:-$HOME/Documents/ymirhome}"
+# The home is RESOLVED through the one door (Rule 07), never restated here.
+HOME_DIR=""
+if [ -r "$(dirname "${BASH_SOURCE[0]}")/../vault/hoard-lib.sh" ]; then
+  . "$(dirname "${BASH_SOURCE[0]}")/../vault/hoard-lib.sh" 2>/dev/null || true
+  command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root HOME_DIR 2>/dev/null || true
+fi
+[ -n "$HOME_DIR" ] || HOME_DIR="${YMIR_HOME:-}"
+[ -n "$HOME_DIR" ] || { printf 'private-scan: the home is unresolved (bin/vault/hoard-lib.sh)\n' >&2; exit 2; }
 QUEUE="$HOME_DIR/hodd/state/private-scan/queue.md"
 REPORT_DIR="$HOME_DIR/hodd/state/private-scan"
 LOG="$REPORT_DIR/scan.log"
@@ -50,8 +57,6 @@ ADDRESS	\b100\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\b
 ADDRESS	\b192\.168\.[0-9]{1,3}\.[0-9]{1,3}\b
 ADDRESS	\b10\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\b
 ADDRESS	[A-Za-z0-9-]+\.ts\.net
-ADDRESS	/home/zerwizserver/
-ADDRESS-LOW	[a-z0-9-]+\.zerwiz\.org
 ADDRESS-LOW	/home/(alice|bob|tester|user|example|test)/
 PERSON	[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.(?!test|example|invalid|local)\w{2,}
 PERSON	\+?46[ -]?7[0-9]{1,2}[ -]?[0-9]{3}[ -]?[0-9]{2}[ -]?[0-9]{2}
@@ -70,6 +75,37 @@ if [ -f "$nda_file" ]; then
   done < "$nda_file"
 else
   printf 'private-scan: note — no %s, so no BUSINESS names are checked this run\n' "$nda_file" >&2
+fi
+
+# The operator's OWN home paths and domains are facts of his home, never literals in this public repo (RULES/04).
+# They are read from the same registries the rest of the house reads: the fleet's ssh users, and the domains the
+# home declares as the house's own. A home that declares neither skips these rules — and says so.
+addr_rules=""
+fleet_reg="$HOME_DIR/hodd/data/fleet.json"
+if [ -f "$fleet_reg" ]; then
+  while IFS= read -r u; do
+    [ -n "$u" ] && addr_rules+="ADDRESS	/home/${u}/"$'\n'
+  done < <(python3 - "$fleet_reg" <<'PY'
+import json, sys
+try: doc = json.load(open(sys.argv[1]))
+except Exception: raise SystemExit(0)
+for row in (doc.get("hosts") or {}).values():
+    if isinstance(row, dict) and row.get("ssh_user"):
+        print(str(row["ssh_user"]).strip())
+PY
+)
+else
+  printf 'private-scan: note — no %s, so no fleet login path is checked this run\n' "$fleet_reg" >&2
+fi
+domains_file="$HOME_DIR/hodd/identity/house-domains.txt"
+if [ -f "$domains_file" ]; then
+  while IFS= read -r d; do
+    d="${d%%#*}"; d="$(printf '%s' "$d" | tr -d '[:blank:]')"
+    [ -n "$d" ] || continue
+    addr_rules+="ADDRESS-LOW	[a-z0-9-]+\.${d//./\\.}"$'\n'
+  done < "$domains_file"
+else
+  printf 'private-scan: note — no %s, so no house domain is checked this run\n' "$domains_file" >&2
 fi
 
 # A false positive must be written down, not silently tolerated: the allow file lives in the home (private) and holds
@@ -99,7 +135,7 @@ while IFS=$'\t' read -r cat pattern; do
              -g '!assets/reference/**' -g '!**/dist/**' -g '!**/build/**' \
              -g '!.yggdrasil/**' -g '!docs/**' -g '!apps/*/tickets/**' \
              "$REPO" 2>/dev/null | sed "s|^$REPO/||" | head -40)
-done < <( { rules; printf '%s' "$nda_rules"; } | sort -u )
+done < <( { rules; printf '%s' "$nda_rules"; printf '%s' "$addr_rules"; } | sort -u )
 
 stamp="$(date -u +%FT%TZ)"
 if [ "$MODE" = "--json" ]; then
