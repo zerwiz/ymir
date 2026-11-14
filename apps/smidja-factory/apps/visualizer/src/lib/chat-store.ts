@@ -118,8 +118,20 @@ export async function init(): Promise<void> {
     rosters.value = r
     models.value = m
     chatModels.value = cm as { id: string; name: string; provider: string }[]
-    // Default Kaia to a WORKING local model when one is resolvable: prefer the
-    // llamacpp Q2 (native, 130K) over a stale/cloud entry, so the first message
+    // The operator's own choice comes first: the model named in their home
+    // (config/smidja.env → SMIDJA_CHAT_MODEL), served by /api/chat/default-model.
+    // The repo ships a generic default; the home says what THIS operator wants.
+    if (!chatModel.value) {
+      const cfg = await fetch('/api/chat/default-model')
+        .then((res) => res.json())
+        .catch(() => null)
+      const wanted = (cfg as { model?: string } | null)?.model
+      if (wanted && (cm as { id: string }[]).some((m) => m.id === wanted)) {
+        chatModel.value = wanted
+      }
+    }
+    // Otherwise default Kaia to a WORKING local model when one is resolvable: prefer
+    // the llamacpp Q2 (native, 130K) over a stale/cloud entry, so the first message
     // doesn't 500 with "Connection error" on an unloaded backend. Only applies
     // when the user hasn't already picked a model this session.
     if (!chatModel.value) {

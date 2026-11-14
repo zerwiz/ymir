@@ -1,7 +1,10 @@
 import type { GateId, DomainDef, RealmDef, TaskState, AgentStatus } from '../types';
 
-// Single tenant: the switchable unit is a WORKSPACE (personal | work), not a
-// tenant. Domains are knowledge areas inside a workspace. Houses are brands.
+// One runtime: a single workspace. The Work · Personal · the third realm mode chips and the
+// switching they offered are retired (plan 275) — there is one Hlidskjalf and one
+// workspace, so `WORKSPACES` is a one-entry lookup for `realmDef`/`realmById`, not
+// a list of modes to switch between. Domains are knowledge areas inside it; houses
+// are brands.
 export const WORKSPACES: RealmDef[] = [
   {
     id: 'work',
@@ -14,17 +17,10 @@ export const WORKSPACES: RealmDef[] = [
     tint2: '#7d5f2a',
     glyph: 'ᛉ',
   },
-  {
-    id: 'personal',
-    tenant: 'Personal',
-    name: 'Personal',
-    kind: 'personal',
-    domains: ['me', 'life', 'development'],
-    tint: '#96a0a8',
-    tint2: '#5f686e',
-    glyph: 'ᛗ',
-  },
 ];
+
+/** The one active realm: the single workspace this runtime serves. */
+export const DEFAULT_REALM = 'work';
 
 /** Back-compat alias — the active `realm` id is now a workspace id. */
 export const REALMS = WORKSPACES;
