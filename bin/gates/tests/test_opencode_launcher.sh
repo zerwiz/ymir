@@ -47,9 +47,14 @@ fi
 
 # ── door 2: the shell spawner's dry run ────────────────────────────────────────────────────────
 mkdir -p "$TMP/data/parity" "$TMP/config"; printf '# Task\nwrite OK to a file and stop\n' >"$TMP/data/parity/brief.md"
+# A dry run only PRINTS its plan, but the spawner still checks that the harness exists — so the door is
+# given a stub opencode. Measured 2026-11-14: CI has no opencode on PATH, the spawner refused, and this
+# test went red on a correct tree while a developer box stayed green. This file's own contract is that
+# it needs no opencode binary; the stub makes that true on every host.
+mkdir -p "$TMP/door2bin"; printf '#!/usr/bin/env bash\nexit 0\n' >"$TMP/door2bin/opencode"; chmod +x "$TMP/door2bin/opencode"
 # The spawner refuses a model the operator's allow-list does not carry, so door 2 uses the one paid model it allows.
 ALLOWED="opencode-go/deepseek-v4.1-flash"
-dry="$(BROKK_HOME="$TMP" timeout 90 "$ROOT/bin/agents/einherjar-spawn.sh" parity "$ROOT" --scout \
+dry="$(PATH="$TMP/door2bin:$PATH" BROKK_HOME="$TMP" timeout 90 "$ROOT/bin/agents/einherjar-spawn.sh" parity "$ROOT" --scout \
         --harness opencode --model "$ALLOWED" --dry-run 2>/dev/null | sed -n 's/^  launch: cd [^ ]* && //p')"
 wantdry="$("$LAUNCHER" print --model "$ALLOWED" --brief "$TMP/data/parity/brief.md")"
 # The dry run prints a display line (no env prefix, no quotes); the same line, normalised, must match.

@@ -8,14 +8,14 @@ chk() { if [ "$2" = "$3" ]; then ok=$((ok+1)); echo "ok   $1"; else fail=$((fail
 work="$(TMPDIR=/tmp mktemp -d)"; trap 'rm -rf "$work"' EXIT   # /tmp: outside any seat dir, so helm cases are not taken for workers
 
 # 1. The global Stop hook: a worker worktree and a seat dir exit 0 silently, before any arm is read.
-mkdir -p "$work/home/.pi/agent/extensions" "$work/fake/bin/pi" "$work/wt/.yggdrasil/x" "$work/home/.local/state/ymir/seats/y"
-printf '%s\n' "$work/fake" > "$work/home/.pi/agent/extensions/.ymir-root"
+mkdir -p "$work/fakehome/.pi/agent/extensions" "$work/fake/bin/pi" "$work/wt/.yggdrasil/x" "$work/fakehome/.local/state/ymir/seats/y"
+printf '%s\n' "$work/fake" > "$work/fakehome/.pi/agent/extensions/.ymir-root"
 printf '#!/usr/bin/env bash\necho "stale: no live lease"\n' > "$work/fake/bin/pi/syn-watch-arm.sh"; chmod +x "$work/fake/bin/pi/syn-watch-arm.sh"
-for d in "$work/wt/.yggdrasil/x" "$work/home/.local/state/ymir/seats/y"; do
-  out="$(HOME="$work/home" CLAUDE_PROJECT_DIR="$d" bash "$repo/.claude/hooks/ymir-arm.sh" 2>&1)"; rc=$?
+for d in "$work/wt/.yggdrasil/x" "$work/fakehome/.local/state/ymir/seats/y"; do
+  out="$(HOME="$work/fakehome" CLAUDE_PROJECT_DIR="$d" bash "$repo/.claude/hooks/ymir-arm.sh" 2>&1)"; rc=$?
   chk "worker stop is never blocked (${d##*/})" "0|" "$rc|$out"
 done
-out="$(HOME="$work/home" CLAUDE_PROJECT_DIR="$work/elsewhere" bash "$repo/.claude/hooks/ymir-arm.sh" 2>&1)"; rc=$?
+out="$(HOME="$work/fakehome" CLAUDE_PROJECT_DIR="$work/elsewhere" bash "$repo/.claude/hooks/ymir-arm.sh" 2>&1)"; rc=$?
 chk "the helm's stop is still blocked when a wake is queued" "2" "$rc"
 
 # 2. claude-stop-arm.sh: a worker root never arms, even when it owns its seat's lock.
@@ -91,16 +91,33 @@ else
   echo "skip clear (the mcp SDK is not installed here)"
 fi
 
-# 7. Gróa's agent records what it found (daily log + Runes + well when the tree moved) and is silent when nothing moved.
+# 7. Gróa records what it found (daily log + Runes + well when the tree moved) and is silent when nothing moved.
+#
+# TWO ROADS, PROVED SEPARATELY (mended 2026-11-14). Gróa has two bodies: the AGENT road (a leashed model types the
+# commands) and, since plan 275 S8b (#721, 2026-11-12), the SCRIPT road, which is the default and runs
+# bin/agents/groa-update.sh itself. This section stubs an `opencode`, so it must ASK for the agent road — it was left
+# implicit and the default moved under it, so the test was proving a road nobody ran. Both roads write the same
+# record, so both are proved here: the agent road from its stub, the script road from a stub groa-update.sh.
 gr="$work/groa"; mkdir -p "$gr/repo/bin/records" "$gr/path" "$gr/ymirhome"
 for t in daily-log runes-append mimir; do printf '#!/usr/bin/env bash\necho "$(basename "$0") $*" >> "%s/calls"\n' "$gr" > "$gr/repo/bin/records/$t.sh"; chmod +x "$gr/repo/bin/records/$t.sh"; done
 printf '#!/usr/bin/env bash\nprintf "%%b\\n" "$FAKE_OUT"\n' > "$gr/path/opencode"; chmod +x "$gr/path/opencode"
-GA=(env PATH="$gr/path:$PATH" YMIR_REPO="$gr/repo" YMIR_HOME="$gr/ymirhome" GROA_PROMPT=/dev/null bash "$repo/bin/agents/groa-agent/groa-agent.sh" tick)
+GA=(env GROA_MODE=agent PATH="$gr/path:$PATH" YMIR_REPO="$gr/repo" YMIR_HOME="$gr/ymirhome" GROA_PROMPT=/dev/null bash "$repo/bin/agents/groa-agent/groa-agent.sh" tick)
 FAKE_OUT="BEHIND: omarchy\\nUPDATED: omarchy\\nMIGRATIONS: none" "${GA[@]}" >/dev/null 2>&1
-chk "a moved tree is written to the daily log, Runes and the well" "3" "$(cat "$gr/calls" 2>/dev/null | wc -l)"
+chk "a moved tree is written to the daily log, Runes and the well (agent road)" "3" "$(cat "$gr/calls" 2>/dev/null | wc -l)"
 rm -f "$gr/calls"; rm -f "$gr/ymirhome/hodd/state/groa-agent.pid"
 FAKE_OUT="BEHIND: none\\nUPDATED: nothing\\nMIGRATIONS: none" "${GA[@]}" >/dev/null 2>&1
-chk "nothing behind, nothing moved: no record, no noise" "0" "$(cat "$gr/calls" 2>/dev/null | wc -l)"
+chk "nothing behind, nothing moved: no record, no noise (agent road)" "0" "$(cat "$gr/calls" 2>/dev/null | wc -l)"
+# The script road is the default: the tree's own groa-update.sh is run, so the stub IS the update.
+gs="$work/groascript"; mkdir -p "$gs/repo/bin/records" "$gs/repo/bin/agents" "$gs/ymirhome"
+for t in daily-log runes-append mimir; do printf '#!/usr/bin/env bash\necho "$(basename "$0") $*" >> "%s/calls"\n' "$gs" > "$gs/repo/bin/records/$t.sh"; chmod +x "$gs/repo/bin/records/$t.sh"; done
+git init -q "$gs/repo" 2>/dev/null
+printf '#!/usr/bin/env bash\nprintf "%%b\\n" "$FAKE_OUT"\n' > "$gs/repo/bin/agents/groa-update.sh"; chmod +x "$gs/repo/bin/agents/groa-update.sh"
+GS=(env GROA_MODE=script YMIR_REPO="$gs/repo" YMIR_HOME="$gs/ymirhome" bash "$repo/bin/agents/groa-agent/groa-agent.sh" tick)
+FAKE_OUT="BEHIND: host-a\\nUPDATED: host-a\\nMIGRATIONS: none" "${GS[@]}" >/dev/null 2>&1
+chk "a moved tree is written to the daily log, Runes and the well (script road)" "3" "$(cat "$gs/calls" 2>/dev/null | wc -l)"
+rm -f "$gs/calls"; rm -f "$gs/ymirhome/hodd/state/groa-agent.pid"
+FAKE_OUT="BEHIND: none\\nUPDATED: nothing\\nMIGRATIONS: none" "${GS[@]}" >/dev/null 2>&1
+chk "nothing behind, nothing moved: no record, no noise (script road)" "0" "$(cat "$gs/calls" 2>/dev/null | wc -l)"
 
 # 8. A shipping errand's done line must carry its pull request; batch, local-only and report-only (scout) errands are exempt.
 mkdir -p "$st"
