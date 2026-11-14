@@ -10,11 +10,12 @@
  * Both are tested here at the boundary where they broke: the resolver, and the adapter.
  */
 import { describe, expect, test } from "bun:test";
-import { mkdtempSync, writeFileSync, chmodSync } from "node:fs";
+import { mkdirSync, mkdtempSync, writeFileSync, chmodSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { piCommand, piPath, resetPiPathCache } from "./model-catalog.ts";
 import { adaptMemoryPayload } from "./memory-adapt.ts";
+import { DEFAULT_CHAT_MODEL, failureReason, kaiaPersonaFile, chatModelDefault } from "./chat.ts";
 
 describe("piPath — the binary is resolved, never assumed", () => {
   test("YMIR_PI_BIN wins when it points at a real executable", () => {
@@ -92,5 +93,126 @@ describe("adaptMemoryPayload — the flat bridge shape becomes the UI contract",
 
   test("a non-object payload is returned unchanged", () => {
     expect(adaptMemoryPayload("/health", "not json")).toBe("not json");
+  });
+});
+
+describe("failureReason — the real cause, whole (plan 275 item 15)", () => {
+  // Measured on heimdall 2026-11-14: pi prints one status line per installed
+  // extension on EVERY run, then the provider's answer. The chat used to show
+  // the status lines as the cause and cut the provider's words at 300 chars.
+  const real =
+    'Warning: Model "deepseek-v4-flash" not found for provider "opencode-go". Using custom model id.\n' +
+    "[constellation] mesh: unconfigured — no registry configured — set CONSTELLATION_REGISTRY (a git URL or a local path).\n" +
+    "[excalidraw] excalidraw: no fork — set EXCALIDRAW_ROOT; fork expects ~/CodeP/excalidraw\n" +
+    '400: {"type":"server_error","message":"Upstream request failed: Model is unavailable."}\n';
+
+  test("every [extension] status line is dropped", () => {
+    const why = failureReason(real);
+    expect(why).not.toContain("[constellation]");
+    expect(why).not.toContain("[excalidraw]");
+    expect(why).not.toContain("[wayofteams-tools]");
+  });
+
+  test("the provider's error is shown whole — not cut at 300 characters", () => {
+    const why = failureReason(real);
+    expect(why).toContain('400: {"type":"server_error","message":"Upstream request failed: Model is unavailable."}');
+    const long = "500: " + "x".repeat(900);
+    expect(failureReason(long)).toBe(long);
+  });
+
+  test("pi's own warning is kept: it names the model", () => {
+    expect(failureReason(real)).toContain("deepseek-v4-flash");
+  });
+
+  test("nothing but status lines still says what pi said", () => {
+    const only = "[excalidraw] excalidraw: no fork\n";
+    expect(failureReason(only)).toBe("[excalidraw] excalidraw: no fork");
+  });
+
+  test("the default model is the house's, and one the catalog serves", () => {
+    expect(DEFAULT_CHAT_MODEL).toBe("opencode-go/deepseek-v4.1-flash");
+    expect(DEFAULT_CHAT_MODEL).not.toBe("opencode-go/deepseek-v4-flash");
+  });
+});
+
+describe("kaiaPersonaFile — the chat answers as Kaia, never as the seat (plan 275, helm 2026-11-14)", () => {
+  const withEnv = (value: string | undefined, fn: () => void) => {
+    const before = process.env.KAIA_PERSONA;
+    if (value === undefined) delete process.env.KAIA_PERSONA;
+    else process.env.KAIA_PERSONA = value;
+    try { fn(); } finally {
+      if (before === undefined) delete process.env.KAIA_PERSONA;
+      else process.env.KAIA_PERSONA = before;
+    }
+  };
+
+  test("KAIA_PERSONA wins when it is a real file", () => {
+    const dir = mkdtempSync(join(tmpdir(), "kaia-persona-"));
+    const file = join(dir, "mine.md");
+    writeFileSync(file, "You are Kaia.\n");
+    withEnv(file, () => expect(kaiaPersonaFile(dir)).toBe(file));
+  });
+
+  test("a stale KAIA_PERSONA is skipped, not trusted", () => {
+    const dir = mkdtempSync(join(tmpdir(), "kaia-persona-"));
+    withEnv(join(dir, "gone.md"), () => {
+      const got = kaiaPersonaFile(dir);
+      expect(got).not.toBe(join(dir, "gone.md"));
+      expect(got).toMatch(/kaia\.md$/);
+    });
+  });
+
+  test("the operator's home override beats the shipped default", () => {
+    const home = mkdtempSync(join(tmpdir(), "kaia-home-"));
+    const override = join(home, ".agents/skills/smidja/kaia/persona.md");
+    mkdirSync(join(home, ".agents/skills/smidja/kaia"), { recursive: true });
+    writeFileSync(override, "You are Kaia, in this operator's own words.\n");
+    withEnv(undefined, () => expect(kaiaPersonaFile(home)).toBe(override));
+  });
+
+  test("with nothing in the target repo, the app's own default is found", () => {
+    const empty = mkdtempSync(join(tmpdir(), "kaia-empty-"));
+    withEnv(undefined, () => {
+      const got = kaiaPersonaFile(empty);
+      expect(got).toMatch(/apps\/smidja-factory\/apps\/visualizer\/prompts\/kaia\.md$/);
+    });
+  });
+});
+
+describe("chatModelDefault — the repo is agnostic, the operator's home names the model", () => {
+  const withEnv = (value: string | undefined, fn: () => void) => {
+    const before = process.env.SMIDJA_CHAT_MODEL;
+    if (value === undefined) delete process.env.SMIDJA_CHAT_MODEL;
+    else process.env.SMIDJA_CHAT_MODEL = value;
+    try { fn(); } finally {
+      if (before === undefined) delete process.env.SMIDJA_CHAT_MODEL;
+      else process.env.SMIDJA_CHAT_MODEL = before;
+    }
+  };
+
+  test("no home config and no environment: the repo's generic default", () => {
+    const empty = mkdtempSync(join(tmpdir(), "kaia-model-"));
+    withEnv(undefined, () => expect(chatModelDefault(empty)).toBe(DEFAULT_CHAT_MODEL));
+  });
+
+  test("the home's config/smidja.env names the operator's own model", () => {
+    const home = mkdtempSync(join(tmpdir(), "kaia-model-"));
+    mkdirSync(join(home, "config"), { recursive: true });
+    writeFileSync(join(home, "config/smidja.env"), "# mine\nSMIDJA_CHAT_MODEL=openrouter/some-model\n");
+    withEnv(undefined, () => expect(chatModelDefault(home)).toBe("openrouter/some-model"));
+  });
+
+  test("an environment variable wins over the file", () => {
+    const home = mkdtempSync(join(tmpdir(), "kaia-model-"));
+    mkdirSync(join(home, "config"), { recursive: true });
+    writeFileSync(join(home, "config/smidja.env"), "SMIDJA_CHAT_MODEL=from-file\n");
+    withEnv("from-environment", () => expect(chatModelDefault(home)).toBe("from-environment"));
+  });
+
+  test("a blank line in the file falls back to the default, never to an empty id", () => {
+    const home = mkdtempSync(join(tmpdir(), "kaia-model-"));
+    mkdirSync(join(home, "config"), { recursive: true });
+    writeFileSync(join(home, "config/smidja.env"), "SMIDJA_CHAT_MODEL=\n");
+    withEnv(undefined, () => expect(chatModelDefault(home)).toBe(DEFAULT_CHAT_MODEL));
   });
 });

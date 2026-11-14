@@ -184,6 +184,15 @@ contract:
     template: .agents/config/models-allowed.yaml.example
     door: bin/engine/home-seed.sh
     required: false
+  # The model Smidja's Kaia chat starts on (2026-11-14, his word: "make the default model in
+  # Smidja for me opencode-go/deepseek-v4.1-flash"). Not required: absent, the repo's generic
+  # default answers and the reader says so.
+  - path: config/smidja.env
+    kind: seeded
+    template: .agents/config/smidja.env.example
+    door: bin/engine/home-seed.sh
+    required: false
+    why: "the model the smithy's chat starts on, and the one its picker opens on"
     why: "the models an Eindri may run on — every spawn door refuses any other (bin/model/model-allow.sh)"
   - path: config/cron.yaml
     kind: defaulted

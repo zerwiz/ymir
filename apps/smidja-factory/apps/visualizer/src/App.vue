@@ -25,18 +25,9 @@ const isStats = computed(() => route.value.adwId === 'stats')
 const isChat = computed(() => route.value.adwId === 'chat')
 const isSettings = computed(() => route.value.adwId === 'settings')
 
-// The shared login, verified LIVE by the gate (server /api/auth forwards the
-// browser cookie). We never read a file that *claims* a session — that is how a
-// user looks logged in when they are not.
-const auth = ref<{ authed: boolean; login: string | null }>({ authed: false, login: null })
-const gateUrl = 'http://127.0.0.1:3889'
-onMounted(async () => {
-  try {
-    auth.value = await (await fetch('/api/auth')).json()
-  } catch {
-    auth.value = { authed: false, login: null }
-  }
-})
+// There is no login here and there is no gate link: the smithy is a local app
+// opened from its own icon, the desktop session is the authority, and its API
+// answers on loopback only (plan 275 item 30 — the hosted era is over).
 const isMeta = computed(() => isMemory.value || isDecisions.value || isStats.value || isChat.value || isSettings.value)
 
 // ── Theme toggle: fensalir (the carved cloth of the halls) is the default;
@@ -73,33 +64,6 @@ const isLinuxDesktop = isDesktop && (window as { smidjaDesktop?: { platform?: st
 function winControl(action: 'minimize' | 'maximize' | 'close') {
   ;(window as { smidjaDesktop?: { windowControl?: (a: string) => void } }).smidjaDesktop?.windowControl?.(action)
 }
-
-/**
- * Raise the other app (or start it), through this API's /api/desktop route.
- * Silent on failure: a convenience control must never break the view it sits in.
- */
-async function raiseApp(view: 'hlidskjalf' | 'smidja' | 'sessrumnir') {
-  try {
-    await fetch('/api/desktop', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ view }),
-    })
-  } catch {
-    /* the launcher is unreachable — say nothing, change nothing */
-  }
-}
-
-/**
- * The Óðrerir Live Hall — the landing's live board, a page of its own rather
- * than one of the three apps the gate raises. On this machine the hall answers
- * on :4322; anywhere else, the public hall.
- */
-const host = window.location.host
-const hallUrl =
-  host.startsWith('localhost') || host.startsWith('127.0.0.1')
-    ? 'http://localhost:4322'
-    : 'https://hall.ymir.zerwiz.org'
 </script>
 
 <template>
@@ -107,7 +71,10 @@ const hallUrl =
     <canvas ref="emberEl" class="ember-bg" aria-hidden="true" />
     <a href="#main-content" class="skip-link">Skip to main content</a>
     <header class="topbar">
-      <nav class="crumbs">
+      <!-- Each crumb is one wrapper (separator + its own door) so a narrow
+           window drops a whole step, never half of one: the trail collapses
+           from the left while the page it is standing on stays legible. -->
+      <nav class="crumbs" aria-label="Breadcrumb">
         <!-- Inline copy of public/icon.svg — the ansuz rune, the forge's glyph,
              in the house bronze on stone. Keep the two in sync. -->
         <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
@@ -118,65 +85,40 @@ const hallUrl =
           </g>
         </svg>
         <span class="brand">Smíðja</span>
-        <span class="sep">›</span>
-        <a :href="hrefFor()" :class="{ current: !route.adwId }">sessions</a>
-        <span class="sep">›</span>
-        <a :href="hrefForMemory()" :class="{ current: isMemory }">memory</a>
-        <span class="sep">›</span>
-        <a :href="hrefForDecisions()" :class="{ current: isDecisions }">decisions</a>
-        <span class="sep">›</span>
-        <a :href="hrefForStats()" :class="{ current: isStats }">stats</a>
-        <span class="sep">›</span>
-        <a :href="hrefForChat()" :class="{ current: isChat }">chat</a>
-        <span class="sep">›</span>
-        <a :href="hrefForSettings()" :class="{ current: isSettings }">settings</a>
-        <template v-if="route.adwId && !isMeta">
+        <span class="crumb crumb-nav crumb-home"><span class="sep">›</span><a :href="hrefFor()" :class="{ current: !route.adwId }">sessions</a></span>
+        <span class="crumb crumb-nav"><span class="sep">›</span><a :href="hrefForMemory()" :class="{ current: isMemory }">memory</a></span>
+        <span class="crumb crumb-nav"><span class="sep">›</span><a :href="hrefForDecisions()" :class="{ current: isDecisions }">decisions</a></span>
+        <span class="crumb crumb-nav"><span class="sep">›</span><a :href="hrefForStats()" :class="{ current: isStats }">stats</a></span>
+        <span class="crumb crumb-nav"><span class="sep">›</span><a :href="hrefForChat()" :class="{ current: isChat }">chat</a></span>
+        <span class="crumb crumb-nav crumb-settings"><span class="sep">›</span><a :href="hrefForSettings()" :class="{ current: isSettings }">settings</a></span>
+        <span v-if="route.adwId && !isMeta" class="crumb crumb-deep">
           <span class="sep">›</span>
-          <a :href="hrefFor(route.adwId)" :class="{ current: !route.phaseId }">{{
+          <a :href="hrefFor(route.adwId)" :class="{ current: !route.phaseId }" :title="route.adwId">{{
             route.adwId
           }}</a>
-        </template>
-        <template v-if="route.adwId && route.phaseId && !isMeta">
+        </span>
+        <span v-if="route.adwId && route.phaseId && !isMeta" class="crumb crumb-deep crumb-phase">
           <span class="sep">›</span>
-          <span class="current">{{ phaseCrumb ?? route.phaseId }}</span>
-        </template>
+          <span class="current" :title="phaseCrumb ?? route.phaseId">{{ phaseCrumb ?? route.phaseId }}</span>
+        </span>
       </nav>
-      <span class="live-hint"><span class="live-dot" /> live</span>
-      <a v-if="auth.authed" :href="gateUrl" target="_blank" rel="noreferrer" title="Signed in to the gate" style="margin-right:6px;color:inherit;text-decoration:none;font-size:12px;opacity:.85">ᛉ {{ auth.login }}</a>
-      <a v-else :href="gateUrl" target="_blank" rel="noreferrer" title="Sign in to Ymir" style="margin-right:6px;color:inherit;text-decoration:none;font-size:12px;opacity:.85">Sign in</a>
-      <div role="group" aria-label="Switch hall" style="display:flex;gap:2px;margin-right:6px">
-        <button type="button" title="Hlidskjalf — the control plane" aria-label="Open Hlidskjalf" @click="raiseApp('hlidskjalf')" style="background:transparent;border:none;color:inherit;cursor:pointer;font-size:15px;padding:2px 6px;border-radius:6px">ᚺ</button>
-        <button type="button" class="on" aria-current="page" title="Smíðja — the smithy" style="background:transparent;border:none;color:var(--accent);cursor:default;font-size:15px;padding:2px 6px">ᛊ</button>
-        <button type="button" title="Sessrúmnir — the seat-hall" aria-label="Open Sessrúmnir" @click="raiseApp('sessrumnir')" style="background:transparent;border:none;color:inherit;cursor:pointer;font-size:15px;padding:2px 6px;border-radius:6px">ᛋ</button>
+      <div class="topbar-tools">
+        <span class="live-hint" title="live"><span class="live-dot" /><span class="live-label">live</span></span>
+        <button class="theme-toggle" type="button" :aria-label="`Theme: ${theme === 'classic' ? 'classic deep-space' : theme === 'high-contrast' ? 'high contrast (WCAG AAA)' : 'fensalir — the carved cloth'}`" :title="`Theme (click to switch)`" @click="toggleTheme">
+          ◐
+        </button>
+        <span v-if="isLinuxDesktop" class="win-controls">
+          <button class="win-btn" title="Minimize" @click="winControl('minimize')" aria-label="Minimize">
+            <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 5.5h8" stroke="currentColor" stroke-width="1.2" fill="none" /></svg>
+          </button>
+          <button class="win-btn" title="Maximize" @click="winControl('maximize')" aria-label="Maximize">
+            <svg viewBox="0 0 10 10" aria-hidden="true"><rect x="1.5" y="1.5" width="7" height="7" stroke="currentColor" stroke-width="1.2" fill="none" rx="1" /></svg>
+          </button>
+          <button class="win-btn win-close" title="Close" @click="winControl('close')" aria-label="Close">
+            <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" stroke-width="1.2" fill="none" /></svg>
+          </button>
+        </span>
       </div>
-      <!-- The Óðrerir Live Hall — the landing's live board, a page of its own
-           (the three apps above are raised through the gate; this one is a tab). -->
-      <a
-        class="hall-btn"
-        :href="hallUrl"
-        target="_blank"
-        rel="noreferrer"
-        title="The Óðrerir Live Hall — the landing's carved board"
-      >ᛟ To the Hall</a>
-      <button class="theme-toggle" type="button" :title="`Theme: ${theme === 'classic' ? 'classic deep-space' : theme === 'high-contrast' ? 'high contrast (WCAG AAA)' : 'fensalir — the carved cloth'} (click to switch)`" @click="toggleTheme">
-        {{ theme === 'classic' ? 'classic' : theme === 'high-contrast' ? 'high-contrast' : 'fensalir' }}
-      </button>
-      <span v-if="isLinuxDesktop" class="win-controls">
-        <button class="win-btn" title="Minimize" @click="winControl('minimize')" aria-label="Minimize">
-          <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 5.5h8" stroke="currentColor" stroke-width="1.2" fill="none" /></svg>
-        </button>
-        <button class="win-btn" title="Maximize" @click="winControl('maximize')" aria-label="Maximize">
-          <svg viewBox="0 0 10 10" aria-hidden="true"><rect x="1.5" y="1.5" width="7" height="7" stroke="currentColor" stroke-width="1.2" fill="none" rx="1" /></svg>
-        </button>
-        <button class="win-btn win-close" title="Close" @click="winControl('close')" aria-label="Close">
-          <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" stroke-width="1.2" fill="none" /></svg>
-        </button>
-      </span>
-      <!-- A speed-start from the UI: raise Hlidskjalf (or start it). The same
-           launcher the Omarchy key bindings use, so there is one way in. -->
-      <button class="win-btn" title="Open Hlidskjalf" aria-label="Open Hlidskjalf" @click="raiseApp('hlidskjalf')">
-        <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 8.5h8M2 8.5V3l3-2 3 2v5.5" stroke="currentColor" stroke-width="1.1" fill="none" /></svg>
-      </button>
     </header>
     <main id="main-content">
       <StatsView v-if="isStats" />
@@ -195,6 +137,7 @@ const hallUrl =
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   padding: 15px 28px;
   background: rgba(21, 18, 9, 0.72);
   backdrop-filter: blur(14px);
@@ -229,7 +172,55 @@ const hallUrl =
   align-items: center;
   gap: 10px;
   font-size: 17px;
+  /* The trail is the only part of the header that may give ground: its run id
+     shortens, and if even that is not enough the trail takes a second line.
+     A door is never dropped to make the bar fit (the Allfather, 2026-11-14:
+     "we cannot lose the buttons just because we're narrowing it"). */
+  flex: 1 1 auto;
   min-width: 0;
+  flex-wrap: wrap;
+  row-gap: 4px;
+}
+
+/* One crumb = its separator + its own door, so a step hides or shows whole. */
+.crumbs > * {
+  flex: 0 0 auto;
+}
+
+.crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.crumb > a,
+.crumb > .current {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A run id and a phase name are long, and they are context, not doors: they
+   shorten with an ellipsis (full value in the tooltip) and they are the part
+   that gives ground when the bar tightens — so no door has to be taken away. */
+.crumb-deep {
+  flex: 1 1 0;
+  min-width: 4ch;
+}
+
+.crumb-deep > a,
+.crumb-deep > .current {
+  max-width: 22ch;
+}
+
+/* The tools sit at the right edge and never shrink into the trail. */
+.topbar-tools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 
 .logo {

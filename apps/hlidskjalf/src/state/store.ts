@@ -16,7 +16,7 @@ import type {
   StreamEvent,
   Task,
 } from '../types';
-import { realmDef, ACCENTS, GATES } from '../data/realms';
+import { realmDef, ACCENTS, GATES, DEFAULT_REALM } from '../data/realms';
 import {
   clearSession,
   loadSession,
@@ -309,15 +309,10 @@ function realmTintOf(state: Pick<YmirState, 'session' | 'realm' | 'tenantColors'
 
 const initialSession = loadSession();
 
-function initialRealm(session: Session | null): RealmId {
-  try {
-    const stored = localStorage.getItem('ymir.workspace') ?? localStorage.getItem('ymir.realm');
-    if (stored) return stored;
-  } catch {
-    /* ignore */
-  }
-  if (session && session.tenants.length > 0) return session.tenants[0].realm;
-  return 'work';
+function initialRealm(_session: Session | null): RealmId {
+  // One runtime (plan 275): a single workspace. The stored mode and the tenant
+  // grants are no longer a switch — every session serves the one active workspace.
+  return DEFAULT_REALM;
 }
 
 export const useYmir = create<YmirState>((set, get) => ({
