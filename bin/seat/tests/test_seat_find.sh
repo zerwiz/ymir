@@ -60,24 +60,26 @@ panes '{"result":{"panes":[
  {"pane_id":"w1:p2","agent":"claude","agent_status":"idle","terminal_title_stripped":"notes"},
  {"pane_id":"w1:p3","agent":"pi","agent_status":"working","terminal_title_stripped":"π - other"},
  {"pane_id":"w1:p4","terminal_title_stripped":"a plain shell"}]}}'
-pane_text w1:p1 'the record now says who spoke each decision; Reygan is he/him'
+pane_text w1:p1 'the record now says who spoke each decision; the quillfern ledger was signed'
 pane_text w1:p2 'nothing of interest here, only the weather'
 pane_text w1:p3 'the plan ledger was renumbered'
-pane_text w1:p4 'Reygan is mentioned in this bare shell and must never be named'
+pane_text w1:p4 'quillfern is mentioned in this bare shell and must never be named'
 
 # ── 1. one pane printed the word; the bare shell printed it too and is not an agent ──
-rc="$(find_words Reygan)"
+# `quillfern` is an invented token: a fixture that carried a real person's name would put that
+# name in the public tree, which RULES/04 refuses whatever the file is for.
+rc="$(find_words quillfern)"
 if grep -q '"w1:p1"' "$T/out" && ! grep -q '"w1:p3"' "$T/out"; then good 'names the pane that printed the word, and only it'
 else bad 'names the pane that printed the word, and only it' "$(cat "$T/out")"; fi
 if ! grep -q '"w1:p4"' "$T/out"; then good 'a pane with no agent is never searched'; else bad 'a pane with no agent is never searched' "$(cat "$T/out")"; fi
 [ "$rc" = 0 ] && good 'exit 0 when something matched' || bad 'exit 0 when something matched' "rc=$rc"
 
 # ── 2. the caller's own pane is skipped, and `--all` includes it ─────────────────────
-OWN_PANE=w1:p1 rc="$(OWN_PANE=w1:p1 find_words Reygan)"
+OWN_PANE=w1:p1 rc="$(OWN_PANE=w1:p1 find_words quillfern)"
 if [ "$rc" = 1 ] && ! grep -q '"w1:p1"' "$T/out"; then good 'skips the caller own pane'
 else bad 'skips the caller own pane' "rc=$rc $(cat "$T/out")"; fi
 grep -q 'own pane w1:p1 was skipped' "$T/out" && good 'and says which pane it skipped' || bad 'and says which pane it skipped' "$(cat "$T/out")"
-rc="$(OWN_PANE=w1:p1 find_words Reygan --all)"
+rc="$(OWN_PANE=w1:p1 find_words quillfern --all)"
 grep -q '"w1:p1"' "$T/out" && [ "$rc" = 0 ] && good '--all searches the caller own pane' || bad '--all searches the caller own pane' "rc=$rc $(cat "$T/out")"
 
 # ── 3. every word by default; `--any` for one of them ────────────────────────────────
@@ -96,7 +98,7 @@ rc="$(find_words 'a.b')"
 
 # ── 5. a pane that cannot be read is counted and named, never dropped quietly ────────
 : >"$T/stub/unreadable-w1:p3"
-rc="$(find_words Reygan)"
+rc="$(find_words quillfern)"
 grep -q 'could not be read (w1:p3)' "$T/out" && good 'an unreadable pane is named in the help line' || bad 'an unreadable pane is named in the help line' "$(cat "$T/out")"
 rm -f "$T/stub/unreadable-w1:p3"
 

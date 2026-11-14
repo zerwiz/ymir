@@ -45,10 +45,14 @@ knows. So the search must read recent output and name panes, and there are four 
   pane that printed the word is named; a bare shell pane is never searched; the caller's own pane is
   skipped and `--all` includes it; AND versus `--any`; a dot is a literal dot; an unreadable pane is
   named; an empty result is an honest `seat-find[0]` with exit 1; no words is exit 2.
-- Live on this machine, 2026-11-14: `seat-find.sh "reygan"` named three panes (a claude pane, a pi
-  pane, and a claude pane whose screen carries the handoff command), skipped the caller's own pane
-  `w39:p1V`, and refused to name the bare-shell panes.
+- Live on this machine, 2026-11-14: `seat-find.sh "whole-tree"` named the one worker whose screen
+  carries that phrase and nothing else, printed `help: own pane … was skipped — --all includes it`, and
+  refused to name the bare-shell panes. An earlier live run with a colleague's name as the query was
+  the reason the fault was found at all — and the reason the fixtures below carry an invented token:
+  this repository is public and names no person (RULES/04).
 
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #752
+- 2026-11-14 — the fixtures' name replaced by an invented token; the live proof re-measured rather
+  than re-quoted

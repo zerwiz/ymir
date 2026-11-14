@@ -18,7 +18,7 @@
 #
 # Report (TOON, one row per matching pane, newest match first within a pane):
 #   seat-find[2]{pane,agent,status,match,line,title}:
-#     "w39:pW","pi","working","reygan pronouns","…the record now says who spoke…","π - ymir"
+#     "<pane>","pi","working","quillfern ledger","…the quillfern ledger was signed…","<title>"
 #
 # Exit: 0 at least one pane printed the words · 1 none did · 2 usage · 3 herdr cannot answer.
 set -u
