@@ -8,12 +8,16 @@
 # hours. And one machine's own local `main` held 19 commits that existed on NO remote at all: a
 # seat's work could go with the disk. Neither fact was anywhere in the session start.
 #
-# So the digest asks two questions, measured against origin and never against a local branch:
+# So the digest asks three questions, measured against origin and never against a local branch:
 #
 #   no-pr      is a worker branch pushed, older than a few hours, and carrying no pull request —
 #              or a PR that was closed without a merge? It is named, with its age.
+#   in-pr      is it riding INSIDE an open pull request? The gather merges a batch's branches into
+#              one batch branch, so an errand's own head has no PR of its own; naming that as lost
+#              work is a false alarm (measured live 2026-11-14, four branches). It is named with
+#              the PR that carries it, and nothing is asked of the helm.
 #   unpushed   does any local branch (main included) hold commits on no remote? They are counted
-#              and the branches are named, so a hand can push them to a branch before they are lost.
+#              and the branches are named, so a hand can push them before they are lost.
 #
 # READ-ONLY AND CHEAP. Nothing is fetched, pushed or written; the remote-tracking refs are read as
 # they stand, and each measurement is time-bounded. Offline is a clean sentence, never a hang and
@@ -38,7 +42,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HERE="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
 case "${1-}" in
-  -h|--help) sed -n '2,38p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+  -h|--help) sed -n '2,44p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
 esac
 
@@ -66,6 +70,8 @@ bounded() { # <seconds> <command...>
 
 now="$(date +%s)"
 case "$now" in ''|*[!0-9]*) now=0 ;; esac
+carried_reach=""
+trap '[ -n "${carried_reach:-}" ] && rm -f "$carried_reach"' EXIT
 
 row() { printf '  "%s","%s","%s"\n' "$1" "$(clean "$2")" "$(clean "$3")"; }
 clean() { printf '%s' "$1" | tr '\n\t' '  ' | tr -d '"' | sed 's/  */ /g; s/^ //; s/ $//'; }
@@ -84,15 +90,21 @@ if ! q rev-parse --verify -q "refs/remotes/$REMOTE/$BASE" >/dev/null 2>&1; then
 fi
 
 # ── (a) worker branches pushed, older than a few hours, with no PR ───────────
-# Two single reads, so the filter costs nothing per branch: every remote ref with its tip's
-# committer date (the age), and every remote branch already merged into the base.
+# Two single reads, so the filter costs nothing per branch: every remote ref with its tip's date and
+# sha (the age, and the identity the PR question needs), and every branch already merged into the base.
+refs_all="$(bounded "$BOUND" git -C "$REPO" for-each-ref \
+  --format='%(refname:lstrip=3)%09%(committerdate:unix)%09%(objectname)' "refs/remotes/$REMOTE" 2>/dev/null)"
 merged_refs="
 $(q for-each-ref --merged="refs/remotes/$REMOTE/$BASE" --format='%(refname:lstrip=3)' "refs/remotes/$REMOTE" 2>/dev/null)
 "
+tip_of() { # <branch> — its tip sha, from the ONE read
+  printf '%s\n' "$refs_all" | awk -F'\t' -v b="$1" '$1==b { print $3; exit }'
+}
+
 old_list=""
 worker_n=0
 young=0
-while IFS='	' read -r name ts; do
+while IFS='	' read -r name ts sha; do
   [ -n "$name" ] || continue
   keep=0
   for p in $PREFIXES; do
@@ -109,7 +121,7 @@ $name
   old_list="${old_list}${name}	${age_h}
 "
 done <<EOF
-$(q for-each-ref --format='%(refname:lstrip=3)%09%(committerdate:unix)' "refs/remotes/$REMOTE" 2>/dev/null)
+$refs_all
 EOF
 
 # The PR state of every branch in ONE question, with a deadline. A door that cannot answer is said
@@ -141,8 +153,48 @@ pr_field() { # <branch> <state|number> — from the one answer, never a second c
   printf '%s\n' "$pr_map" | awk -F'\t' -v b="$1" -v f="$2" '$1==b { print (f=="number" ? $3 : $2); exit }'
 }
 
+# A BRANCH CARRIED INSIDE AN OPEN PULL REQUEST IS NOT WAITING (measured live 2026-11-14). The gather
+# merges a batch's branches into ONE batch branch, so an errand's own head carries no PR and read as
+# lost work — four branches were named "pushed, no PR" while riding inside gathered PRs. The
+# reachable set of every OPEN head is computed ONCE, so a candidate costs one lookup; which PR
+# carries it is asked only of the few that do, with one `--contains` read each.
+open_heads=""        # "<head><TAB>#<number>"
+if [ "$pr_state" = known ] && [ -n "$pr_map" ]; then
+  open_heads="$(printf '%s\n' "$pr_map" | awk -F'\t' '$2=="OPEN" { print $1 "\t#" $3 }')"
+fi
+if [ -n "$open_heads" ]; then
+  shas=""
+  while IFS='	' read -r head num; do
+    [ -n "$head" ] || continue
+    head_sha="$(tip_of "$head")"
+    [ -n "$head_sha" ] && shas="$shas $head_sha"
+  done <<EOF
+$open_heads
+EOF
+  if [ -n "$shas" ]; then
+    carried_reach="$(mktemp)"
+    bounded 20 git -C "$REPO" rev-list $shas >"$carried_reach" 2>/dev/null || : >"$carried_reach"
+  fi
+fi
+carried_pr() { # <branch> — the open PR that carries it, or nothing
+  [ -n "$carried_reach" ] && [ -s "$carried_reach" ] || return 0
+  local tip h n
+  tip="$(tip_of "$1")"
+  [ -n "$tip" ] || return 0
+  grep -qxF "$tip" "$carried_reach" 2>/dev/null || return 0
+  while IFS= read -r h; do
+    [ -n "$h" ] || continue
+    n="$(printf '%s\n' "$open_heads" | awk -F'\t' -v h="$h" '$1==h { print $2; exit }')"
+    [ -n "$n" ] && { printf '%s' "$n"; return 0; }
+  done <<EOF
+$(bounded "$BOUND" git -C "$REPO" for-each-ref --contains "$tip" --format='%(refname:lstrip=3)' "refs/remotes/$REMOTE" 2>/dev/null)
+EOF
+  return 0
+}
+
 waiting=""
 w_n=0
+c_n=0
 while IFS='	' read -r name age_h; do
   [ -n "$name" ] || continue
   st="$(pr_field "$name" state)"
@@ -150,6 +202,7 @@ while IFS='	' read -r name age_h; do
     OPEN|MERGED) continue ;;            # a pull request exists: it is the heart's to read, not a loss
   esac
   if [ "$age_h" -ge 48 ]; then age="$((age_h / 24))d"; else age="${age_h}h"; fi
+  kind="no-pr"
   if [ "$pr_state" != known ]; then     # never call a branch PR-less on a question nobody answered
     verdict="pushed, not merged, PR state unread"
     action="read its PR first: gh pr list --head $name --state all"
@@ -157,15 +210,22 @@ while IFS='	' read -r name age_h; do
     case "$st" in
       CLOSED) verdict="PR #$(pr_field "$name" number) CLOSED, not merged"
               action="decide: gather it as a new PR (bin/forge/gather.sh ${name#*/}) or delete the branch" ;;
-      ''|'')  verdict="pushed, no PR, not merged"
-              action="gather it: bin/forge/gather.sh ${name#*/}" ;;
+      '')     carrier="$(carried_pr "$name")"
+              if [ -n "$carrier" ]; then
+                kind="in-pr"
+                verdict="in batch PR $carrier, not merged yet"
+                action="nothing to gather — that PR carries this branch, and it lands when $carrier merges"
+              else
+                verdict="pushed, no PR, not merged"
+                action="gather it: bin/forge/gather.sh ${name#*/}"
+              fi ;;
       *)      verdict="pushed, unexpected PR state $st, not merged"
               action="read its PR: gh pr list --head $name --state all" ;;
     esac
   fi
-  waiting="${waiting}${name}	${age}	${verdict}	${action}
+  waiting="${waiting}${kind}	${name}	${age}	${verdict}	${action}
 "
-  w_n=$((w_n + 1))
+  case "$kind" in in-pr) c_n=$((c_n + 1)) ;; *) w_n=$((w_n + 1)) ;; esac
 done <<EOF
 $old_list
 EOF
@@ -173,19 +233,17 @@ EOF
 # ── (b) commits that exist on no remote, on any local branch ─────────────────
 # A branch whose tip a remote can reach cannot hold a stranded commit (its ancestors are reachable
 # too), so the stranded tips name the branches — one read, one join, then a count per such branch.
+sha_file="$(mktemp)"; heads_file="$(mktemp)"
+trap '[ -n "${carried_reach:-}" ] && rm -f "$carried_reach"; rm -f "$sha_file" "$heads_file"' EXIT
 stranded_total=0
 stranded_rows=""
 if stranded_shas="$(bounded 20 git -C "$REPO" rev-list --branches --not --remotes 2>/dev/null)"; then
   stranded_total="$(printf '%s\n' "$stranded_shas" | grep -c . || true)"
   case "$stranded_total" in ''|*[!0-9]*) stranded_total=0 ;; esac
   if [ "$stranded_total" -gt 0 ]; then
-    stranded_rows="$(
-      printf '%s\n' "$stranded_shas" | sed '/^$/d' | sort >"${TMPDIR:-/tmp}/.saga-land-shas.$$" || exit 0
-      q for-each-ref --format='%(objectname) %(refname:short)' refs/heads 2>/dev/null \
-        | sort >"${TMPDIR:-/tmp}/.saga-land-heads.$$" || exit 0
-      join -j 1 -o 2.2 "${TMPDIR:-/tmp}/.saga-land-shas.$$" "${TMPDIR:-/tmp}/.saga-land-heads.$$" 2>/dev/null
-      rm -f "${TMPDIR:-/tmp}/.saga-land-shas.$$" "${TMPDIR:-/tmp}/.saga-land-heads.$$"
-    )"
+    printf '%s\n' "$stranded_shas" | sed '/^$/d' | sort >"$sha_file"
+    q for-each-ref --format='%(objectname) %(refname:short)' refs/heads 2>/dev/null | sort >"$heads_file"
+    stranded_rows="$(join -j 1 -o 2.2 "$sha_file" "$heads_file" 2>/dev/null)"
     out=""
     while IFS= read -r br; do
       [ -n "$br" ] || continue
@@ -211,20 +269,24 @@ add() { # <what> <detail> <action> — buffered, because the header carries the 
 "
 }
 
-if [ "$w_n" -gt 0 ]; then
-  i=0
-  while IFS='	' read -r name age verdict action; do
-    [ -n "$name" ] || continue
+emit_kind() { # <kind> <count> <folded wording>
+  local kind=$1 total=$2 i=0 k name age verdict action
+  [ "$total" -gt 0 ] || return 0
+  while IFS='	' read -r k name age verdict action; do
+    [ "$k" = "$kind" ] || continue
     i=$((i + 1))
     [ "$i" -le "$ROWS_MAX" ] || continue
-    add "no-pr" "$name — $age: $verdict" "$action"
+    add "$kind" "$name — $age: $verdict" "$action"
   done <<EOF
 $waiting
 EOF
-  if [ "$w_n" -gt "$ROWS_MAX" ]; then
-    add "no-pr" "$((w_n - ROWS_MAX)) more pushed branch(es) are waiting with no PR" \
-      "SAGA_LAND_ROWS=$((w_n + 1)) bin/time/saga-land-warnings.sh names them all"
-  fi
+  [ "$total" -le "$ROWS_MAX" ] || add "$kind" "$((total - ROWS_MAX)) $3" \
+    "SAGA_LAND_ROWS=$((total + 1)) bin/time/saga-land-warnings.sh names them all"
+}
+
+emit_kind no-pr "$w_n" "more pushed branch(es) are waiting with no PR"
+emit_kind in-pr "$c_n" "more branch(es) ride inside an open pull request"
+if [ "$w_n" -gt 0 ] || [ "$c_n" -gt 0 ]; then
   case "$pr_state" in
     known) ;;
     *) [ -n "$pr_note" ] && add "note" "the pull-request state was not read: $pr_note" "a branch above may already have a PR — the note says the row is incomplete, not the branch lost" ;;
