@@ -34,7 +34,7 @@ flowchart LR
 | 6 | Read it without disturbing it | `herdr agent read <pane>` | — |
 | 7 | Receive its report | `$YMIR_HOME/state/eindri-reports/<errand>.md` and one stamped line in the helm's pane | the report names its commit and its proof |
 | 8 | The worker pushes its branch and writes its **handoff packet**; the helm checks the branch (the list below) before the heart takes it | `bin/forge/handoff-packet.sh write <errand> --task … --plan … --branch eindri/<errand> --gate … --test … --claim … --not-done … --need …` lands on the review shelf (`bin/forge/review-shelf.sh`) | `handoff-packet.sh check <errand>` passes |
-| 8b | The heart's reviewer (Forseti on the heart) takes the packet, fetches the branch, reruns the gates and tests **on the heart**, reads the diff against the plan, opens the PR, merges and tells the operator | plans 203, 205, 206 §4; `RULES/08` (`reviewer-merges`) | the merge record in Runes |
+| 8b | Under `reviewer-merges`, the reviewer on the fleet's heart takes the packet, fetches the branch, reruns the gates and tests **on the heart**, reads the diff against the plan, opens the PR, merges and tells the operator | plans 203, 205, 206 §4; `RULES/08` (`reviewer-merges`) | the merge record in Runes |
 | 9 | Close the seat and reap the worktree once the PR merges | `bin/seat/seat-reap.sh`, `git worktree remove .yggdrasil/<errand>` | the pane is gone; `.yggdrasil/` does not grow |
 
 ## The fixed core every brief carries
@@ -66,7 +66,7 @@ below holds:
   not name is sent back (never remove a feature).
 - **It is based on `origin/main`** and carries no old copies of squash-merged commits.
 - **Its proof was rerun by the helm,** not only reported: the DevTools check in the real window from a release, on
-  heimdall and on the second machine (or that machine named as owed).
+  this machine and on a second machine of the fleet when there is one (or that machine named as owed).
 - **The house's wards pass:** no secret, name or private path (the public-repo law), no AI attribution, named files
   only, a fix note per change, the feature page and catalogue row when a user-facing feature moved.
 - **The tests it touched pass,** and a behaviour change carries its own test.
@@ -95,5 +95,5 @@ below holds:
 
 ## CHANGE LOG
 
-- **2026-11-14** — the delivery corrected at the operator's word: the heart's worker gathers and merges; the helm checks each branch first (*"so you need to make sure the PRs are right"*).
+- **2026-11-14** — the delivery road points at `deliver-across-the-fleet.md` (the project's `delivery` row decides who merges); the helm checks each branch first (*"so you need to make sure the PRs are right"*).
 - **2026-11-14** — written at the operator's word, from the night six errands were sent (plan 275 items 31 and the 05:30 trace).
