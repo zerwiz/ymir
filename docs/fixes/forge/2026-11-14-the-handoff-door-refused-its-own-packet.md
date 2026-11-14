@@ -27,3 +27,7 @@ written beside the line in the door, so the next hand knows why the ref must not
 full sha, and that packet then passes `check` — the door's own packet passes the door's own check. The suite is 19
 passed / 0 failed. Wired into `bin/gates/ci-verify.sh` as `handoff-packet`, because a test that runs nowhere is a
 silent absence (it existed and ran nowhere until now).
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #750
