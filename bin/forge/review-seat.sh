@@ -17,8 +17,10 @@
 # Usage:
 #   review-seat.sh status                       # is the seat there, and what is it doing
 #   review-seat.sh ensure [--clone <path>] [--primary]
-#                                               # raise it (idempotent); --primary takes the helm
-#                                               # when no live primary holds the lock
+#                                               # raise it (idempotent), re-raising it when the
+#                                               # pane holds no agent; --primary takes the helm
+#                                               # when no live primary holds the lock, and is a
+#                                               # plain seat when one does
 #   review-seat.sh ask <pr> [--wait]            # put one PR in front of the seated judge
 #   review-seat.sh charter                      # print the charter it would load
 #   review-seat.sh close                        # lower the seat's workspace
@@ -32,7 +34,7 @@ VERSION="1.0.0"
 
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
-  -h|--help|"") sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+  -h|--help|"") sed -n '2,31p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
 esac
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -69,20 +71,94 @@ need_herdr() {
     || refuse "the herdr server does not answer here — start it (herdr) or run this on the machine that will review"
 }
 
-# The agent rows this seat would raise: the pane's cwd is the review clone, so a worktree of a
-# smith's is never the judge's ground.
-seat_pane() {  # -> pane id whose cwd is the review clone (or empty)
-  local clone=$1
-  herdr agent list 2>/dev/null | python3 -c '
-import json, sys
-clone = sys.argv[1]
-try: d = json.load(sys.stdin)
-except Exception: raise SystemExit
-for a in d.get("result", {}).get("agents", []):
-    if a.get("cwd") == clone:
-        print(a.get("pane_id") or "")
-        break
-' "$clone" 2>/dev/null || true
+# ── the seat's PRESENCE: a pane is not an agent (plan 189 §18.2) ────────────────────────────────
+# Measured on the heart, 2026-11-14: pi died at start in the seat, the pane fell back to a bare
+# shell, and the keeper kept counting that pane as "the seat" — because a pane whose cwd is the
+# review clone is where the seat would STAND, never the seat itself. So nothing re-raised it, and
+# the review watch prompted a shell every ten minutes. Presence is therefore two questions: where
+# the panes are, and whether an agent is still standing in each of them.
+#
+# Herdr's JSON is read by ONE door — bin/seat/herdr-agents.py, which answers the pane question
+# beside the agent one — so this file keeps no second parser of herdr's shapes.
+
+SEAT_READER="$ROOT/bin/seat/herdr-agents.py"
+herdr_read() { python3 "$SEAT_READER" "$@" 2>/dev/null || true; }
+
+# Every pane whose cwd is the review clone, agent or not. A PANE is the question here: an agent
+# list cannot see a shell, and a shell is exactly what is left when pi dies at start.
+seat_candidates() {  # <clone> -> pane ids, one per line
+  local out
+  out="$(herdr_read --panes --cwd "$1" | cut -f1)"
+  [ -n "$out" ] && printf '%s\n' "$out"
+  return 0
+}
+
+# Is an agent STANDING in this pane, and is it alive? Three answers, and only one of them may close
+# a pane: `live` (herdr reports an agent in a live state), `dead` (herdr says plainly that no agent
+# is here), `unsure` (no readable answer — never a licence to close somebody's live seat).
+pane_verdict() {  # <pane> -> live | dead | unsure
+  local v
+  v="$(herdr_read --verdict --pane "$1" | head -1 | cut -f1)"
+  case "$v" in live|dead) printf '%s\n' "$v" ;; *) printf 'unsure\n' ;; esac
+}
+
+# Herdr's own word for the agent's state in one pane (empty when no agent stands there), read from
+# the SAME call as the verdict so the keeper's report and its decision cannot disagree.
+pane_state() {  # <pane>
+  herdr_read --verdict --pane "$1" | head -1 | cut -f2
+}
+
+seat_panes() {  # <clone> <live|dead> -> this clone's panes in that state
+  local clone=$1 want=${2:-live} p v
+  while IFS= read -r p; do
+    [ -n "$p" ] || continue
+    v="$(pane_verdict "$p")"
+    [ "$v" = "$want" ] && printf '%s\n' "$p"
+  done <<< "$(seat_candidates "$clone")"
+  return 0
+}
+
+# The seat itself: a LIVE agent in a pane whose cwd is the review clone. A shell is not the seat.
+seat_pane() {  # -> pane id (or empty)
+  local clone=$1 p
+  p="$(seat_panes "$clone" live | head -1)"
+  [ -n "$p" ] && printf '%s\n' "$p"
+  return 0
+}
+
+# The `review` room, resolved once so a pane can be judged the seat's own or somebody else's.
+seat_room() {  # -> workspace id (or empty)
+  herdr_read --room --label "$WORKSPACE_LABEL"
+}
+
+pane_room() {  # <pane> -> the workspace it stands in (or empty)
+  herdr_read --pane-room --pane "$1"
+}
+
+# The first line of a failure, for the journal: an error's own words, never a wall of output.
+first_error_line() {  # <text>
+  local line
+  while IFS= read -r line; do
+    line="$(printf '%s' "$line" | tr -d '\r' | sed 's/[[:space:]]*$//')"
+    if [ -n "$line" ]; then printf '%s\n' "${line:0:300}"; return 0; fi
+  done <<EOF
+$1
+EOF
+  printf '(the failure said nothing)\n'
+}
+
+# pi died at start and the pane kept the reason: read it and report ITS line. The measured cause is
+# two extension sets registering the same tool names (RULES/13), which herdr reports as "the pane
+# must sit at an interactive shell prompt" — a line that names nothing to fix.
+pane_error_line() {  # <pane>
+  local text hit
+  text="$(herdr pane read "$1" --lines 80 2>/dev/null || true)"
+  if [ -z "$text" ]; then printf 'the pane is empty — it holds no reason\n'; return 0; fi
+  hit="$(printf '%s\n' "$text" | grep -m1 -E 'conflicts with|Tool "|Cannot find module|rror:|FATAL|panic|Traceback|not found|No such file' || true)"
+  [ -n "$hit" ] || hit="$(printf '%s\n' "$text" | grep -v '^[[:space:]]*$' | tail -1)"
+  hit="$(printf '%s' "$hit" | tr -d '\r' | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
+  [ -n "$hit" ] || hit="the pane holds nothing readable"
+  printf '%s\n' "${hit:0:300}"
 }
 
 write_charter() {
@@ -143,14 +219,16 @@ cmd_status() {
   need_herdr
   local pane; pane="$(seat_pane "$clone")"
   if [ -z "$pane" ]; then
-    printf 'seat[3]{clone,pane,state}:\n  "%s","none","not seated — review-seat.sh ensure"\n' "$clone"
+    # a pane at the clone with NO agent is not the seat — name it, rather than calling a shell a seat
+    local dead; dead="$(seat_panes "$clone" dead | head -1)"
+    if [ -n "$dead" ]; then
+      printf 'seat[3]{clone,pane,state}:\n  "%s","%s","not the seat — that pane holds no agent; ensure closes it and raises a fresh one"\n' "$clone" "$dead"
+    else
+      printf 'seat[3]{clone,pane,state}:\n  "%s","none","not seated — review-seat.sh ensure"\n' "$clone"
+    fi
     return 0
   fi
-  herdr agent get "$pane" 2>/dev/null | python3 -c '
-import json, sys
-d = json.load(sys.stdin).get("result", {}).get("agent", {})
-print(f"seat[3]{{clone,pane,state}}:\n  \"%s\",\"%s\",\"%s\"" % (sys.argv[1], d.get("pane_id"), d.get("agent_status")))
-' "$clone"
+  printf 'seat[3]{clone,pane,state}:\n  "%s","%s","%s"\n' "$clone" "$pane" "$(pane_state "$pane")"
 }
 
 cmd_ensure() {
@@ -175,9 +253,32 @@ cmd_ensure() {
       && printf 'review-seat: made the judge its own clone at %s\n' "$clone" >&2
   fi
   [ -d "$clone" ] || refuse "no review clone at $clone — a judge reviews a CLONE of the delivered commit, never a smith's worktree (git clone <remote> $clone)"
+  local ws; ws="$(seat_room)"        # resolved once: the room says whose panes are the seat's own
   local pane; pane="$(seat_pane "$clone")"
   if [ -n "$pane" ]; then
     cmd_status "$clone"; return 0
+  fi
+  # A SEAT PANE WITH NO AGENT IS A DEAD SEAT (measured on the heart, 2026-11-14): close it, say so,
+  # and raise a fresh agent in the same pass — otherwise nothing ever re-raises it and the watch
+  # prompts a shell forever. It is closed when it stands in the seat's own `review` room, or when
+  # herdr does not say which room it is in (an older herdr reports no workspace); a pane herdr
+  # places in ANOTHER workspace is somebody else's and is not this door's to close (RULES/41). And
+  # nothing is closed on a guess: `pane_verdict` must answer `dead` plainly.
+  if [ -n "$ws" ]; then
+    local dead room
+    while IFS= read -r dead; do
+      [ -n "$dead" ] || continue
+      room="$(pane_room "$dead")"
+      if [ -n "$room" ] && [ "$room" != "$ws" ]; then
+        printf 'review-seat: pane %s stands in another workspace and holds no agent — left alone\n' "$dead" >&2
+        continue
+      fi
+      if herdr pane close "$dead" >/dev/null 2>&1; then
+        printf 'reaped[2]{pane,why}:\n  "%s","held no agent — a pane is not the seat; closed, and a fresh agent is raised"\n' "$dead"
+      else
+        printf 'review-seat: the dead pane %s could not be closed — raising a fresh agent beside it\n' "$dead" >&2
+      fi
+    done <<< "$(seat_panes "$clone" dead)"
   fi
   # The model is resolved for THIS seat, and named only if the catalogue lists it.
   # A SEAT CARRIES NO SECOND TOOLKIT: the clone ships its own `.pi/extensions` and settings.json
@@ -193,7 +294,8 @@ cmd_ensure() {
   # THE SEAT LAW: a seat gets its own machine state, so it never contends for the primary's helm.
   # `--primary` is the deliberate exception — a machine with NO live primary (measured: the heart's
   # lock named a dead pid on 2026-11-06) has nobody to drain the arm, so the review seat takes the
-  # helm and says so. It refuses when a live primary already holds it.
+  # helm and says so. When a live primary DOES hold it, only the helm is refused: the seat is raised
+  # as a plain seat, because a machine with no reviewer is the fault --primary exists to prevent.
   local seat_state="${YMIR_REVIEW_SEAT_STATE:-$STATE/review/seat}"
   local -a ENV_ARGS=()
   if [ "$PRIMARY" = 1 ]; then
@@ -201,11 +303,18 @@ cmd_ensure() {
     lk="$(bash "$ROOT/bin/records/ymir-state.sh" lock lock-path 2>/dev/null || true)"
     owner="$(bash "$ROOT/bin/records/ymir-state.sh" lock owner 2>/dev/null || true)"
     if [ -n "$lk" ] && [ -n "$owner" ] && [ -r "/proc/$owner/stat" ]; then
-      refuse "a live primary already holds the lock (pid $owner) — the review seat stays a seat; do not give it the helm"
-    fi
-    printf 'seat[1]{helm}:
+      # A LIVE PRIMARY KEEPS THE HELM — and the seat is STILL RAISED (2026-11-14). Refusing every
+      # run while a primary stands left the machine with no reviewer at all, which is the opposite
+      # of what --primary was asked for. The helm is the only thing that may not be taken, so the
+      # seat is raised as a plain seat with its own state and the refusal is said out loud.
+      printf 'helm[2]{owner,decision}:\n  "%s","a live primary holds the lock — the helm is not taken; the seat is raised as a plain seat"\n' "$owner"
+      PRIMARY=0
+    else
+      printf 'seat[1]{helm}:
   "primary — no live lock owner on this machine, so the review seat drains the arm itself"\n'
-  else
+    fi
+  fi
+  if [ "$PRIMARY" = 0 ]; then
     mkdir -p "$seat_state" || die "cannot create the seat's private state at $seat_state"
     ENV_ARGS=(--env "BROKK_MACHINE_STATE_DIR=$seat_state" --env "BROKK_STATE_OVERRIDE=$seat_state")
   fi
@@ -214,13 +323,6 @@ cmd_ensure() {
   # `$WORKSPACE_LABEL` ("review"), one TAB each — never beside the operator, never a workspace per
   # seat. The Allfather, 2026-11-07: "its only the smith. not the reviwer" — because this door made
   # its OWN workspace and the room he was watching held only smiths.
-  local ws
-  ws="$(herdr workspace list 2>/dev/null | python3 -c '
-import json,sys
-want=sys.argv[1]
-for w in json.load(sys.stdin).get("result",{}).get("workspaces",[]):
-    if (w.get("label") or "")==want: print(w.get("workspace_id")); break
-' "$WORKSPACE_LABEL" 2>/dev/null || true)"
   if [ -z "$ws" ]; then
     local ws_out
     ws_out="$(herdr workspace create --cwd "$clone" --label "$WORKSPACE_LABEL" --no-focus \
@@ -236,18 +338,26 @@ for w in json.load(sys.stdin).get("result",{}).get("workspaces",[]):
   [ -n "$pane_out" ] || die "the room $ws gave no pane for the judge"
 
   # The name must be unique among live agents: 'pi' collided with every seat already in the room.
-  herdr agent start reviewer --kind pi --pane "$pane_out" -- --model "$model" \
-    --append-system-prompt "$ROLE_FILE" --append-system-prompt "$charter" >/dev/null 2>&1 \
-    || die "herdr agent start failed for pane $pane_out (model $model)"
+  local start_err=""
+  if ! start_err="$(herdr agent start reviewer --kind pi --pane "$pane_out" -- --model "$model" \
+        --append-system-prompt "$ROLE_FILE" --append-system-prompt "$charter" 2>&1 >/dev/null)"; then
+    die "herdr agent start failed for pane $pane_out (model $model) — $(first_error_line "$start_err")"
+  fi
   # Seating without verifying leaves an idle agent — the hard contract of the herdr skill.
   local tries=0 st=""
   while [ "$tries" -lt 20 ]; do
-    st="$(herdr agent get "$pane_out" 2>/dev/null | python3 -c 'import json,sys;print(json.load(sys.stdin).get("result",{}).get("agent",{}).get("agent_status",""))' 2>/dev/null || true)"
+    st="$(pane_state "$pane_out")"
     case "$st" in working|idle|done|blocked) break ;; esac
     tries=$((tries + 1)); sleep 0.5
   done
+  # pi DIES AT START and the pane holds the reason. The keeper used to say only "agent start failed",
+  # which names nothing to fix (RULES/13 is the measured cause: two extension sets, one tool name).
+  case "${st:-}" in
+    working|idle|done|blocked) ;;
+    *) die "no agent took the seat in pane $pane_out (state: ${st:-none}) — the pane says: $(pane_error_line "$pane_out")" ;;
+  esac
   printf 'seat[5]{clone,pane,workspace,model,state}:\n  "%s","%s","%s","%s","%s"\n' \
-    "$clone" "$pane_out" "$ws" "$model" "${st:-unknown}"
+    "$clone" "$pane_out" "$ws" "$model" "$st"
 }
 
 cmd_ask() {
@@ -271,15 +381,7 @@ cmd_ask() {
 
 cmd_close() {
   need_herdr
-  local ws
-  ws="$(herdr workspace list 2>/dev/null | python3 -c '
-import json, sys
-label = sys.argv[1]
-d = json.load(sys.stdin)
-for w in d.get("result", {}).get("workspaces", []):
-    if (w.get("label") or "") == label:
-        print(w.get("workspace_id")); break
-' "$WORKSPACE_LABEL" 2>/dev/null || true)"
+  local ws; ws="$(seat_room)"
   [ -n "$ws" ] || { printf 'seat[2]{workspace,state}:\n  "%s","absent"\n' "$WORKSPACE_LABEL"; return 0; }
   herdr workspace close "$ws" >/dev/null 2>&1 || die "herdr refused to close $ws"
   printf 'seat[2]{workspace,state}:\n  "%s","closed"\n' "$WORKSPACE_LABEL"
