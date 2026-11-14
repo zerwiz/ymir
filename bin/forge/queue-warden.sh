@@ -3,9 +3,10 @@
 # re-cut onto main under a NEW name. It force-pushes nothing, closes nothing, and commits nothing
 # with --no-verify.
 #
-# THE MERGE ROAD IS CLOSED EXCEPT ON THE HEART (the Allfather, 2026-11-14: "zerwizserver (the heart)
-# handles the merging of the PRs … config/machines/zerwizserver/wardens.yaml is the only file that
-# may say merge: on … every other machine's says merge: off, and the template ships merge: off").
+# THE MERGE ROAD IS CLOSED EXCEPT ON THE HEART (the Allfather, 2026-11-14: "the heart handles the
+# merging of the PRs … config/machines/<heart>/wardens.yaml is the only file that may say
+# merge: on … every other machine's says merge: off, and the template ships merge: off"), where the
+# heart is the machine `bin/skuld/role.sh` names heart — this file never spells a machine's name.
 # Where the road is open, its ONLY door is bin/forge/merge-verdict.sh — one sha, one verdict, main
 # green, branch current, no unexplained bypass (PR #747). Where it is closed, the door says so and
 # never reaches a merge call.
