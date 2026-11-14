@@ -1,0 +1,38 @@
+# skirnir.yaml.example — Skírnir's own settings: the SHAPE of them.
+#
+# Copy to `$YMIR_HOME/config/skirnir.yaml` and fill in your own values. Every key may stay empty, and
+# an empty key is a clean fallback to the default the code names (RULES/42) — a home with no values is
+# still a working assistant, it simply speaks only the house's own subjects.
+#
+# WHY THIS FILE EXISTS (plan 288 §1): what is generic is Skírnir's craft and stays in
+# `systems/skirnir/`; what is about ONE operator — his pages, his subjects, his machines — lives here.
+#
+# Read by:  systems/skirnir/services/skirnir.py · learn-site.sh · kb-export.sh
+
+version: 1
+
+# ── the mouth: which model answers, and where it lives (Rule 07: no model id in the code) ──────
+# `SKIRNIR_MODEL` / `SKIRNIR_MODEL_URL` in the environment outrank these; the rail's own default is
+# the last resort. An EMPTY chain is the honest answer that no mouth is configured.
+model: ""
+model_url: ""
+model_fallback: ""
+model_fallback_url: ""
+
+# ── the public page Skírnir learns (`learn-site.sh`) ──────────────────────────────────────────────
+# Empty means Ymir's own home page, the site every installation of the program has.
+site_url: ""
+
+# ── how a question names one of your subjects ─────────────────────────────────────────────────────
+# A phrase → [tier, fact-slug] (or {tier:, fact:}). The fact slug is one of your own approved facts;
+# the tier is who may hear it: public · logistics · role · contacts · internal · nda.
+# Example:
+#   aliases:
+#     "what is acme": ["public", "what-acme-is"]
+aliases: {}
+
+# ── the words the ear should expect, and the strings a stranger must never hear ────────────────
+# Both are lists, and a list is a file of its own so it can grow without a parser:
+#   config/skirnir/vocab.txt      the ear's vocabulary hint       (systems/skirnir/services/ear.sh)
+#   config/skirnir/canaries.txt   strings only the owner may hear  (services/skirnir.py)
+# Each of those ships its own shape beside this file.

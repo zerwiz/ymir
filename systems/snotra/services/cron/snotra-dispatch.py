@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """snotra-dispatch — what we did with each person: which meetings, what was sent, what came back.
 
-WHY: the Allfather asked *"he should know if we have emailed Reygan, cuz we have — and what was in that email"*
+WHY: the operator asked *"he should know if we have emailed a participant, cuz we have — and what was in that email"*
 and *"did we send them the board?"*. Every answer exists — in `record.json` (`participants[]`), `letters.json`
 (drafted/sent, with the time), `replies.jsonl` (what came back), `cards.json` (what was filed) — and no door read
 them together, so the assistant could not answer a thing the house had already done.

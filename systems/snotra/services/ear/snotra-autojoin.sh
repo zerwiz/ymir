@@ -34,6 +34,12 @@ JOINED="$STATE_DIR/autojoin-joined.json"
 CACHE="${MANAGANDR_CACHE:-$YMIR_HOME/hodd/state/calendar/cache.json}"
 CONF="${AUTOJOIN_CONFIG:-$ROOT/config/snotra/autojoin.conf}"
 [ -r "$CONF" ] && . "$CONF"
+# His own meeting hosts (plan 288 §1, RULES/42): a host name is one operator's, so it lives in his home
+# (`config/snotra/snotra.conf`, AUTOJOIN_PLATFORM_HOSTS) and the public platforms are all this file knows.
+SETTINGS="${SNOTRA_CONF:-$YMIR_HOME/config/snotra/snotra.conf}"
+[ -r "$SETTINGS" ] && . "$SETTINGS"
+AUTOJOIN_PLATFORM_HOSTS="${AUTOJOIN_PLATFORM_HOSTS:-}"
+export AUTOJOIN_PLATFORM_HOSTS   # the python below reads it, so it must be in the environment
 BOT="${SNOTRA_BOT:-$ROOT/systems/snotra/services/ear/snotra-bot.sh}"
 NOW="${AUTOJOIN_NOW:-$(date -Iseconds)}"
 WINDOW_H="${AUTOJOIN_WINDOW_HOURS:-24}"
@@ -79,7 +85,9 @@ def platform_of(e):
     if "zoom.us" in u: return "zoom"
     if "teams.microsoft." in u: return "teams"
     if "jitsi" in u: return "jitsi"
-    if "ping.zerwiz.org" in u: return "ping"
+    own=[h.strip() for h in os.environ.get("AUTOJOIN_PLATFORM_HOSTS","").split(",") if h.strip()]
+    for h in own:
+        if h in u: return "ping"
     return e.get("conference_type") or "other"
 plan=[]
 for e in events:
