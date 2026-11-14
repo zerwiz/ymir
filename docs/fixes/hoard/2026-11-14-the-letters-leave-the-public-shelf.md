@@ -55,3 +55,7 @@ ls "$YMIR_HOME/hodd/life/outreach/2026-11-14-the-snotra-letters/"   # the three 
 
 The bytes are identical to what left: they were copied before the removal, and the home's own commit
 carries them.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #755
