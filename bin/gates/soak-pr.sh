@@ -24,13 +24,9 @@ trap ':' EXIT
 usage() { sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'; }
 case "${1-}" in -h|--help) usage; exit 0 ;; -*) printf 'error: unknown flag %s\n' "$1" >&2; exit 2 ;; esac
 
-hoard_root() {
-  if [ -n "${YMIR_HOME:-}" ]; then printf '%s' "$YMIR_HOME"; return 0; fi
-  local lib; lib="$(cd "$SELF_DIR/.." && pwd)/vault/hoard-lib.sh"
-  if [ -r "$lib" ]; then ( . "$lib"; hoard_root ) 2>/dev/null && return 0; fi
-  printf '%s' "$HOME/Documents/ymirhome"
-}
-HOME_DIR="$(hoard_root)"
+# The home comes from the ONE resolver, never restated (defaults-guard, Rule 07).
+HOARD_LIB="$(cd "$SELF_DIR/.." && pwd)/vault/hoard-lib.sh"
+if [ -r "$HOARD_LIB" ]; then . "$HOARD_LIB"; ymir_home_root HOME_DIR; else HOME_DIR="${YMIR_HOME:-}"; fi
 
 repo="$(git -C "$SELF_DIR/.." rev-parse --show-toplevel 2>/dev/null || true)"
 [ -n "$repo" ] || { printf 'soak_pr[1]{gate,status,detail}:\n  "soak","SKIP","not inside a git checkout"\n'; exit 0; }
