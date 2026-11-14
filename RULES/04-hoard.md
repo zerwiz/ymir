@@ -425,3 +425,12 @@ A change that contradicts this entry must change the rule first (append-only; ne
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+
+## Appended 2026-11-14 — private shape, not only private data
+
+At the operator's word: *"it's critical that ymir's repo is 100% agnostic; our special tooling belongs in ymir home."*
+This rule already forbids private data in the repository. It now also forbids the operator's **shape**: his host
+names, user names, tailnet, people, clients, companies and mail domains in code, comments, prompts, tests, fixtures,
+docs and fix notes; and his **special tooling** (automations made for one company, client, meeting or person), which
+lives in `$YMIR_HOME`. The deny list the audit uses lives in the home. See `AGENTS.md` (2026-11-14) and
+`RULES/25` (2026-11-14).
