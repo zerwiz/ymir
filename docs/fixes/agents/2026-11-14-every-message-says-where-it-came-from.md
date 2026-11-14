@@ -38,3 +38,7 @@ on it — the ward was right, and the fix is the house resolver the file already
 `bin/vault/hoard-lib.sh`, and an empty `lease` when the home cannot be resolved (the next line already
 falls back to the lock's own directory). `defaults-guard` now counts three defaults on this tree, with
 this file's finding gone.
+
+## CHANGE LOG
+
+- 2026-11-13 — review-mend: added missing heading for #730
