@@ -81,11 +81,6 @@ body {
   color: var(--hall-bronze);
   border-bottom-color: var(--hall-bronze);
 }
-.hall-btns {
-  display: inline-flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-}
 .hall-btn {
   display: inline-flex;
   align-items: center;

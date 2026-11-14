@@ -6,41 +6,12 @@ import TicketsBoard from './components/TicketsBoard';
 import PlansBoard from './components/PlansBoard';
 
 /**
- * Óðrerir — the Live Hall, a Hlidskjalf-type app (plan 55): the ember hearth,
- * the translucent panels, the halls buttons in the same design as the high
- * seat. Three doors — `#/` the hall, `#/tickets`, `#/plans` — and the raise
- * buttons that call the gate through the vite /api proxy (same-origin, so the
- * local desktop seat is trusted; 2026-09-24).
+ * Óðrerir — the Live Hall (plan 55): the ember hearth, the translucent panels,
+ * and its OWN doors — `#/` the board, `#/near` the near loop, `#/tickets`,
+ * `#/plans`. The halls buttons that raised the other three windows are gone
+ * (plan 275 item 32): every app opens from its own desktop icon, so no header
+ * carries a launcher for a sibling app. What stays is this hall's own nav.
  */
-
-// The three halls, one hinge: these buttons raise the other Ymir windows
-// through the Hlidskjalf gate, exactly as the high seat's own switcher does.
-const HALLS = [
-  { id: 'hlidskjalf', glyph: 'ᚺ', name: 'Hlidskjalf' },
-  { id: 'smidja', glyph: 'ᛊ', name: 'Smíðja' },
-  { id: 'sessrumnir', glyph: 'ᛋ', name: 'Sessrúmnir' },
-  { id: 'odrerir', glyph: 'ᛟ', name: 'Óðrerir' },
-];
-
-function isDesktopSeat(): boolean {
-  const w = window as unknown as { ymirDesktop?: { desktop?: boolean } };
-  return w.ymirDesktop?.desktop === true;
-}
-
-function raiseHall(id: string) {
-  if (id === 'odrerir') return; // you are here
-  // Same-origin: the vite proxy sends /api to the Hlidskjalf gate, so the
-  // desktop seat's marker rides without a CORS wall.
-  const headers: Record<string, string> = { 'content-type': 'application/json' };
-  if (isDesktopSeat()) headers['x-ymir-surface'] = 'desktop';
-  fetch('/api/desktop', {
-    method: 'POST',
-    headers,
-    credentials: 'include',
-    body: JSON.stringify({ view: id }),
-    signal: AbortSignal.timeout(8000),
-  }).catch(() => undefined); // a quiet gate never breaks the board
-}
 
 type View = 'hall' | 'tickets' | 'plans' | 'near';
 function viewFromHash(): View {
@@ -83,20 +54,6 @@ export default function App() {
             >
               {d.label}
             </a>
-          ))}
-        </span>
-        <span className="hall-btns" role="group" aria-label="the halls">
-          {HALLS.map((h) => (
-            <button
-              key={h.id}
-              type="button"
-              className="hall-btn"
-              aria-pressed={h.id === 'odrerir'}
-              onClick={() => raiseHall(h.id)}
-            >
-              <span aria-hidden="true">{h.glyph}</span>
-              {h.name}
-            </button>
           ))}
         </span>
       </div>

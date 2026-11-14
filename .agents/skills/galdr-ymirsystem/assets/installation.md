@@ -79,7 +79,7 @@ roots[5]{root,resolves_from,holds}:
 ```
 
 Plus `hoard_local_env` → `$YMIR_HOME/.env.local`: the operator's **credentials**
-(`HLIDSKJALF_AUTH`, OAuth keys, tokens), never in the tree.
+(OAuth keys, tokens — the halls need none since 2026-11-14), never in the tree.
 
 **The home is chosen, not assumed.** A real interactive install asks once
 (`step_home`), records the answer as machine state under `~/.config/ymir/home`
@@ -205,7 +205,7 @@ door) and `ymir-install` (the bare installer). Everything else the operator
 needs is a door on `ymir` — never a script path inside `node_modules`.
 
 ```
-doors[14]{verb,door,what}:
+doors[13]{verb,door,what}:
   "ymir","first setup (a bare call installs)","the plan, then consent, then the work"
   "ymir install [...]","bin/engine/ymir-install.sh","the same, said out loud"
   "ymir plan","bin/bridge/ymir-plan.sh","what an install would do here — writes nothing"
@@ -213,8 +213,7 @@ doors[14]{verb,door,what}:
   "ymir eir","bin/agents/eir-doctor.sh","what stands, and mend what does not (the healer)"
   "ymir groa","bin/agents/groa-update.sh","take the latest, then mend this home forward"
   "ymir groa migrate","bin/engine/ymir-migrate.sh","heal this home's structure"
-  "ymir heimdall","bin/engine/ymir-setup-auth.sh","the way in — status · set · github (the guardian)"
-  "ymir invite","bin/engine/ymir-invite.sh","let someone else in — mint · list · revoke"
+  "ymir heimdall / invite","RETIRED 2026-11-14 (plan 275 item 30)","the halls are local: no login, no invite, no GitHub door; a shared invited surface is Gimlé's (plan 284)"
   "ymir smidja","bin/desktop/smidja-board.sh","the smithy's board on :8437 — build · start · stop · status"
   "ymir hlidskjalf","scripts/electron.sh start --view hlidskjalf","the high seat's window"
   "ymir sessrumnir","scripts/electron.sh start --view sessrumnir","the seat-hall's window"
@@ -501,7 +500,7 @@ install[38]{step,what,self-heals}:
   "loaders","agents/skills into the harnesses","runs bin/seat/valknut-load.sh, then bin/seat/valknut-load.sh --install to seat the post-merge rebind hook. The harnesses load their surfaces from their OWN homes — Pi reads ${HOME}/.pi/agent/extensions/ — so a merged extension fix is invisible until the bind re-runs. The same rebind rides the updater (bin/agents/groa-update.sh) after every pull, and the post-merge hook after every merge: no install and no update leaves the surfaces stale"
   "gates","the git delivery gates — secret-guard (pre-commit), branch-guard + fixes-guard (pre-push)","bin/gates/guards/secret-guard.sh --install seats the pre-commit, bin/gates/guards/fixes-guard.sh --install seats the pre-push (which then runs the tree wards, branch-guard and fixes-guard in one hook), and bin/gates/guards/hoard-guard.sh --install seats the private home's pre-commit — so the gate is live from the first commit of a fresh clone; idempotent"
   "marks","each app's rune icon + .desktop entry into the operator's own desktop, and the Ymir contract into pi's agent home","bin/desktop/design-icon.sh mint --all + install writes to $HOME/.local/share (never a session sandbox), so every app is dockable and pinnable; the contract symlink means every pi session, in ANY folder, loads Brokk"
-  "invite","the way in for anyone else — an invite code","bin/engine/ymir-invite.sh ensure mints one only when nothing is live, so the step is idempotent; the code is printed at the end of the run and again in workspace/INSTALL.md"
+  "invite","NOT NEEDED — a clean skip that says why","the halls are local (plan 275 item 30): there is no login to invite someone past. Hosted, shared surfaces are Gimlé's (plan 284)"
   "register","workspace/INSTALL.md","writes the record"
   "services","gate API, SPA, Nornir, bridges, visualizer — as USER UNITS on dev seats (hlidskjalf-spa · hlidskjalf-gate · mimir · bifrost · smidja · nornir, all joined to ymir.target)","raised by the fleet step; this step PROVES the raise with bin/engine/ymir-autoboot.sh verify — the old run-scripts/start.sh road is retired for boot (it stays as the manual raise for a window an operator opens)"
   "desktop","Hlidskjalf + Smíðja desktop apps","bin/desktop/desktop-place.sh puts each on its OWN numbered desktop (preferring EMPTY ones); scripts/electron.sh start --both self-heals the Electron binary"
@@ -712,43 +711,27 @@ apply` **moves private data**, so the step chain runs it only on a real run;
 a preview leaves the home exactly as it found it. (It used to apply them even
 under `--check`, which moved a home during a "report only" pass.)
 
-## The operator's way in (auth) — `bin/engine/ymir-setup-auth.sh`
+## The operator's way in (auth) — RETIRED 2026-11-14 (plan 275 item 30)
 
-A fresh checkout seeds **no credential**, so the gate has no way in until the
-operator sets one. `step_auth` (interactive install prompts; `--yes`/non-tty
-defers) covers two doors:
+`bin/engine/ymir-setup-auth.sh` and `bin/engine/ymir-invite.sh` are **deleted**.
+The three apps are local: they bind loopback, the desktop session is the
+authority, and nothing asks for a credential — so a password door, an invite code
+and a GitHub OAuth app were configuration for a surface that no longer exists.
+`step_auth` and `step_invite` stay in the install report and answer with a clean
+skip naming that reason and pointing at **Gimlé** (plan 284) for a hosted,
+invited surface. The text below is kept as the record of the removed mechanism.
 
-```bash
-bin/engine/ymir-setup-auth.sh status            # which door (if any) is configured
-bin/engine/ymir-setup-auth.sh set [--user U]    # a local password -> HLIDSKJALF_AUTH in .env.local
-bin/engine/ymir-setup-auth.sh github            # GitHub sign-in -> GITHUB_CLIENT_ID + GITHUB_CLIENT_SECRET
+```text
+(retired) status / set / github — the two doors this used to configure
 ```
 
-Both write `.env.local` (0600, gitignored); a secret is never printed or put in a
-child process's argv. The gate reads `HLIDSKJALF_AUTH` (`user:pass`) and the
-GitHub OAuth keys (`/api/auth/github`; sign-in names a login but never grants
-access on its own — an account/invite is still required). Restart the gate after
-setting a credential. One login is meant to cover every surface — see the shared
-session below.
+## Letting someone else in (invites) — RETIRED 2026-11-14
 
-## Letting someone else in (invites)
-
-One operator owns the instance. The installer mints an **invite code**
-(`step_invite`) and prints it at the end of the run; share that code and someone
-else can create their own account at the gate login screen. Registration is
-closed unless a live code exists, so an instance is never accidentally open.
-
-```bash
-bin/engine/ymir-invite.sh mint [--limit N]   # a new code (default ceiling 5 accounts)
-bin/engine/ymir-invite.sh list               # every code, what is spent, who is in
-bin/engine/ymir-invite.sh revoke <CODE>      # take one back, now
-bin/engine/ymir-invite.sh where              # where the accounts live on this machine
-```
-
-Accounts are stored in `~/.config/ymir/accounts.json` (mode `0600`), machine
-state that never enters the repo, with argon2id hashes only. The operator's own
-credentials stay `HLIDSKJALF_AUTH` in `.env.local` — invites are for everyone
-*else*. Full surface: the galdr `hlidskjalf-ui.md` asset.
+There is nothing to mint. An invite code existed so a second person could create
+an account on a **hosted** instance; the halls are local (plan 275 item 30), which
+is also why the accounts store (`~/.config/ymir/accounts.json`), the registration
+endpoint and the GitHub door are gone. A shared, invited surface is **Gimlé**
+(plan 284). Full surface: the galdr `hlidskjalf-ui.md` asset.
 
 ## Validation
 
