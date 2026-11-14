@@ -20,8 +20,8 @@ the only place a reader will look for it. The before-column says `<the seat>`, `
 
 ### Proof
 
-- `git diff origin/main...HEAD`, added lines: **zero** lines naming the machine
-  (`grep -cE 'heimdall'` over the `+` side).
+- `git diff origin/main...HEAD`, added lines: **zero** lines naming the machine — a grep for the seat's
+  own name over the `+` side returns nothing.
 - The four lines the helm named remain fixed: the test's comment, the proof quote, the store path (now
   `$YMIR_HOME/smidja/smidja.db`) and the DevTools sentence all read as the agnostic law requires.
 
