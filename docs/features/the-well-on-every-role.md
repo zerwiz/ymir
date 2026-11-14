@@ -71,7 +71,8 @@ Nothing about the answers changes, because it is the same well.
   Both are forwarded by `bin/records/well-door.sh up`.
 - The heart's own well must be up. A door with nothing behind it is reported as such
   (`well-door.sh status` prints `forward up, but NOTHING behind it`), never as a green.
-- The address of the heart is configuration, not a constant: `YMIR_HEART` (default `zerwizserver`) and
+- The address of the heart is configuration, not a constant: `YMIR_HEART` (the heart's name, read from the fleet
+  registry) and
   `WELL_HEART_HOST` (default `127.0.0.1` behind it).
 - A borrowed well is read **and** write: an observation made on the phone is written to the heart's store,
   since the door only ever speaks to the heart.

@@ -49,3 +49,12 @@ A **distributed allocation** was being decided from a local memory. Nothing fail
 - `bin/records/plan.sh` · `bin/gates/checks/fresh-base-check.sh` · `bin/agents/einherjar-spawn.sh` ·
   `bin/agents/groa-update.sh` · `RULES/45-start-on-the-latest.md` · `RULES/README.md` ·
   `.agents/tests/plan-ledger-fresh.test.sh` · `bin/README.md` (regenerated)
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: a dev machine. The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).

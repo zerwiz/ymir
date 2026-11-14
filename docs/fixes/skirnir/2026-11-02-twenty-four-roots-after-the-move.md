@@ -62,3 +62,12 @@ been unanswered for over a day.
 The unit still calls `bin/assistant/escalation-timer.sh`, the retired shim, which execs the new door and prints
 a "has MOVED" line to the journal on every run. It works, and the noise is a reminder: the unit's `ExecStart`
 should be repointed at `systems/skirnir/services/escalation-timer.sh` and the other shims retired the same way.
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: a dev machine (this seat). The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
