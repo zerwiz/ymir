@@ -307,6 +307,18 @@ cmd_pass() {
   local scope="${scope_arg:-${YMIR_SOAK_SCOPE:-$(cfg_val sample.scope user)}}"
   case "$scope" in user|system|both) ;; *) die "scope must be user|system|both (got '$scope')" ;; esac
 
+  # ONE PASS AT A TIME. A hand-run pass and the timer's pass would otherwise both read the same
+  # processes and append the same rows — two rows per target, and a ledger twice as big as the
+  # machine it describes.
+  if command -v flock >/dev/null 2>&1; then
+    mkdir -p "$SOAK_STATE" 2>/dev/null || true
+    exec 9>"$SOAK_STATE/.sampler.lock" 2>/dev/null || true
+    if ! flock -n 9; then
+      [ "$quiet" = 1 ] || printf 'soak,skipped,another pass holds the ledger\n'
+      return 0
+    fi
+  fi
+
   local ts pass host date t0 tmp units apps registry_ok=1
   ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   pass="$(date -u +%Y%m%dT%H%M%SZ)"
