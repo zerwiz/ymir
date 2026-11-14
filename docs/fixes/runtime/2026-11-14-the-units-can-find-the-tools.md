@@ -41,3 +41,7 @@ The gate and the bridge carry the reason in a comment, because they are where it
 `bifrost.service` carries the same PATH fault; it is mended by the pin flip rather than by a restart now, because its
 provider fix lands in the same PR and a restart today would only re-raise the retired LM Studio door. The other
 speaking units inherit the fix from the same templates the next time `fleet-ensure.sh` materialises them.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #757
