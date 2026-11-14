@@ -344,20 +344,11 @@ wire_phase() {
   else
     emit 6 wire codex-plugin DO "register the local Ymir marketplace and install or refresh its Codex tools"
   fi
-  local door="none"
-  if [ -x "$ROOT/bin/engine/ymir-setup-auth.sh" ]; then
-    door="$(bash "$ROOT/bin/engine/ymir-setup-auth.sh" status 2>/dev/null | sed -n '2p' | cut -d, -f1 | tr -d ' "')"
-  fi
-  if [ -n "$door" ] && [ "$door" != none ]; then
-    emit 6 wire auth SKIP "an operator credential is set ($door)"
-  else
-    emit 6 wire auth CONSENT "no credential — a password or GitHub sign-in; without it the gate has no door"
-  fi
+  emit 6 wire auth SKIP "not needed — the halls carry no login (plan 275 item 30); the desktop session is the authority"
 
-  local codes=""
-  [ -x "$ROOT/bin/engine/ymir-invite.sh" ] && codes="$(bash "$ROOT/bin/engine/ymir-invite.sh" list 2>/dev/null | grep -c '^  "' || true)"
-  if [ "${codes:-0}" -gt 0 ]; then emit 6 wire invite SKIP "a live invite code exists"
-  else emit 6 wire invite CONSENT "mint an invite code — how anyone else is let in (registration stays closed without one)"; fi
+  # The invite and the credential are retired (plan 275 item 30): the halls are local,
+  # so there is nobody to invite past a login that does not exist.
+  emit 6 wire invite SKIP "not needed — the halls are local (plan 275 item 30); a shared surface is Gimlé (plan 284)"
 
   # Heimdall — the ssh-key ward: entry by the rune carried on GitHub. The
   # plan row is computed, never recited: a warded seat is a SKIP, a bare one a

@@ -1,6 +1,5 @@
 import { useYmir } from '../state/store';
 import { GATES, TERMINAL_STATES } from '../data/realms';
-import { ROLE_LABEL } from '../services/auth';
 import { StatusChip } from '../components/Status';
 import type { GateId } from '../types';
 
@@ -32,9 +31,6 @@ function gateCount(id: GateId, s: ReturnType<typeof useYmir.getState>): number |
 export function Rail() {
   const state = useYmir();
   const setGate = useYmir((s) => s.setGate);
-  const setRealm = useYmir((s) => s.setRealm);
-  const tenantColors = useYmir((s) => s.tenantColors);
-  const tenants = state.session?.tenants ?? [];
 
   return (
     <aside className="rail" aria-label="Hlidskjalf navigation">
@@ -68,33 +64,6 @@ export function Rail() {
       </nav>
 
       <div className="rail-foot">
-        <div className="realm-switch" role="group" aria-label="Tenant">
-          <span className="eyebrow" style={{ paddingLeft: 8 }}>
-            Tenants · {tenants.length}
-          </span>
-          {tenants.map((t) => {
-            const tint = tenantColors[t.realm] ?? t.tint;
-            return (
-              <button
-                key={t.realm}
-                className="realm-opt"
-                aria-current={state.realm === t.realm}
-                onClick={() => setRealm(t.realm)}
-                title={`${t.tenant} · ${ROLE_LABEL[t.role]}`}
-              >
-                <span className="realm-swatch" style={{ background: tint }} />
-                <span className="label grow truncate">{t.tenant}</span>
-                <span
-                  className="mono dim"
-                  style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.06em' }}
-                >
-                  {ROLE_LABEL[t.role]}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
         <div className="rail-node">
           <span className="live-dot" aria-hidden="true" />
           <span>Valhalla</span>
