@@ -82,3 +82,7 @@ at all (measured: a non-interactive ssh answered `herdr: command not found`).
 
 It does not clear a box, ever — the words in one may be the Allfather's. A caller that must send
 anyway clears it in the pane and calls again.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #752
