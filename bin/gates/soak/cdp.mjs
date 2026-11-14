@@ -663,8 +663,8 @@ function judge(allRows) {
 }
 
 // ── mode: kill exactly one process tree ───────────────────────────────────────
-// The soak closes only what it raised, and only its own tree: a broad `pkill -f <app>`
-// would kill another hand's smoke test of the same app (this house runs several at once).
+// The soak closes only what it raised, and only its own tree: a blanket kill by command-line
+// pattern would take out another hand's smoke test of the same app (this house runs several).
 if (MODE === 'kill') {
   // THE MAIN PROCESS FIRST, then its children. Measured on 2026-11-14: killing a browser's
   // children first (deepest first) makes Chromium relaunch the GPU process, fail three times,

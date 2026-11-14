@@ -43,14 +43,18 @@ command -v app_class >/dev/null 2>&1 || app_class() { printf '%s' "ymir-${1-}"; 
 
 usage() { sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'; }
 
-# ── the home, resolved once (never a hardcoded path) ────────────────────────────
-hoard_root() {
-  if [ -n "${YMIR_HOME:-}" ]; then printf '%s' "$YMIR_HOME"; return 0; fi
-  local lib; lib="$(cd "$SELF_DIR/.." && pwd)/vault/hoard-lib.sh"
-  if [ -r "$lib" ]; then ( . "$lib"; hoard_root ) 2>/dev/null && return 0; fi
-  printf '%s' "$HOME/Documents/ymirhome"
-}
-HOME_DIR="$(hoard_root)"
+# ── the home, resolved once by the one resolver (never restated here) ───────────
+# bin/vault/hoard-lib.sh owns where the operator's home lives (RULES/04, Rule 07): env →
+# the recorded choice → its own documented default. A caller that keeps a second answer is
+# how ten scripts came to disagree about where the home was.
+HOARD_LIB="$(cd "$SELF_DIR/.." && pwd)/vault/hoard-lib.sh"
+if [ -r "$HOARD_LIB" ]; then
+  . "$HOARD_LIB"
+  ymir_home_root HOME_DIR
+  YMIR_HOME="${YMIR_HOME:-$HOME_DIR}"
+else
+  HOME_DIR="${YMIR_HOME:-}"; [ -n "$HOME_DIR" ] || { printf 'error: no bin/vault/hoard-lib.sh and no YMIR_HOME — nowhere to write the ledger\n' >&2; exit 2; }
+fi
 
 # ── the pin: apps run from a release, never from a checkout ─────────────────────
 pin_root() {
@@ -397,7 +401,7 @@ else
   if ! port_up; then
     printf 'soak[2]{app,status,detail}\n  "%s","FAIL","raised but no DevTools on :%s in 60 s — see %s"\n' "$APP" "$PORT" "$LEDGER_DIR/raise.log"
     row "{\"ts\":\"$(now)\",\"app\":\"$APP\",\"kind\":\"raise_failed\",\"port\":$PORT}"
-    pkill -f "ymir-app $APP" >/dev/null 2>&1 || true
+    node "$DRIVER" --kill-tree "${launch_pid:-0}" >/dev/null 2>&1 || true   # the door that failed to open is this pid's tree, never a pattern
     exit 3
   fi
   RAISED=1
