@@ -82,3 +82,7 @@ that project's `areas/agents.yaml`.
 
 - `scripts/notify-arm.sh`, `docs/gates.md`
 - `docs/headers.md` — the header and References format this document follows
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #758
