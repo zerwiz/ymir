@@ -26,7 +26,7 @@ made, and the gate that should have caught it learns the one case it could not n
 
 ### The fault, reproduced (measured this seat, 2026-10-24)
 
-`~/.pi/agent/settings.json` named the seat tree (`/home/heimdall/ymir/.pi/extensions`)
+`~/.pi/agent/settings.json` named the seat tree (`~/ymir/.pi/extensions`)
 until 11:26 today; that is the state the fault needs. With it in place, a fresh worktree
 of the old road carries its own copy:
 
@@ -82,7 +82,7 @@ home and must pass on its own terms.
 
 ```
 ext-home[1]{tree,state,seat_root,serving}:
-  "…/.yggdrasil/sparse-proof/.pi/extensions","shared","/home/heimdall/ymir","/home/heimdall/ymir/.pi/extensions"
+  "…/.yggdrasil/sparse-proof/.pi/extensions","shared","~/ymir","~/ymir/.pi/extensions"
 ```
 
 `.agents/tests/pi-extensions.test.sh` section 8 proves it hermetically — a scratch

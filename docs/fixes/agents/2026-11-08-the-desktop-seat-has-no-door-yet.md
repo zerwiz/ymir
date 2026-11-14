@@ -27,7 +27,7 @@ missing is said, once, in the answer itself.
 ## Verified
 
 - `sessrumnir` through the toolbox (the window's own path): *"the app is running. workspaces (4): aigeeks&freeks
-  … * ymir — /home/heimdall/ymir … · 161 Pi session(s) in the active workspace's shelf, newest 11-08 14:04.
+  … * ymir — ~/ymir … · 161 Pi session(s) in the active workspace's shelf, newest 11-08 14:04.
   I can read this; sending a line into one of the app's own sessions has no door yet."*
 - `errand_state` with no arguments now opens *"Errands this seat has RECORDED (claimed state) — the panes
   hold more; call seats for what is actually working"*.

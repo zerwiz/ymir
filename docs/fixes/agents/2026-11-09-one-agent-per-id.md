@@ -17,7 +17,7 @@ which orphaned a live agent every time.
 Before anything is created, the spawn asks herdr whether an agent already stands in this errand's worktree:
 
 ```
-refused: an agent already stands in /home/heimdall/ymir/.yggdrasil/near-loop-panel/.yggdrasil/rodd-hands
+refused: an agent already stands in ~/ymir/.yggdrasil/near-loop-panel/.yggdrasil/rodd-hands
   pane: "pi","working","w49:p1",…
 help: talk to it (bin/agents/eindri-send.sh rodd-hands "…"), or close that pane first.
 note: a second agent in one worktree overwrites the first — the 2026-11-09 audit.

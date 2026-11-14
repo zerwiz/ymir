@@ -59,9 +59,9 @@ own words, measured on this checkout before the rebuild:
 
 ```
 error: Sessrúmnir will not start a build that is behind its source
-  tree:   /home/heimdall/ymir/apps/sessrumnir
+  tree:   ~/ymir/apps/sessrumnir
   build:  2026-10-31T00:43   source: 2026-11-13T20:21
-help: (cd /home/heimdall/ymir/apps/sessrumnir && npm run build)   (or start the pinned app: …)
+help: (cd ~/ymir/apps/sessrumnir && npm run build)   (or start the pinned app: …)
 ```
 
 `SESSRUMNIR_ALLOW_STALE=1` starts it anyway and says so; a packaged copy (no `src/`) reports `package

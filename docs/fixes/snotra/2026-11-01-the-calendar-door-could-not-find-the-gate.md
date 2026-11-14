@@ -5,7 +5,7 @@
 ## What happened
 
 A meeting was asked for and the door refused: *"the word was not good enough: bash:
-/home/heimdall/ymir/systems/bin/time/snotra/snotra-approve.sh: No such file or directory"*.
+~/ymir/systems/bin/time/snotra/snotra-approve.sh: No such file or directory"*.
 
 Two paths were one `..` short after Snotra became a system (plan 129). The script sits at
 `systems/snotra/services/calendar/`, so its root is **four** levels up, not three — and the gate it calls had

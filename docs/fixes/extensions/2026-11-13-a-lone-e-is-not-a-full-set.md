@@ -21,8 +21,8 @@ The house already had the cure — the one-home door at `~/.pi/agent/bin/pi` —
 it. Measured in the app's own log (`state/sessrumnir.log`), the argv was:
 
 ```
-/home/heimdall/.pi/agent/bin/pi --mode rpc --provider … --model … --continue \
-  -e /home/heimdall/ymir/apps/sessrumnir/resources/pi-desktop-permissions.ts
+~/.pi/agent/bin/pi --mode rpc --provider … --model … --continue \
+  -e ~/ymir/apps/sessrumnir/resources/pi-desktop-permissions.ts
 ```
 
 The door's rule was *"the caller already names its extensions (`-ne` / `-e`) → pass through, untouched."*

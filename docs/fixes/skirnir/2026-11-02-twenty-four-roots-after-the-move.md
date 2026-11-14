@@ -23,7 +23,7 @@ Two levels up from `bin/assistant/` is the repo root. Two levels up from `system
 exist. The `|| true` on the source line swallowed the failure, `ymir_home_root` was never defined, `HOME_R`
 stayed unset, and `set -u` killed the script at the first use.
 
-**Measured:** `ROOT resolves to /home/heimdall/ymir/systems · hoard-lib there? NO · notify door there? NO`.
+**Measured:** `ROOT resolves to ~/ymir/systems · hoard-lib there? NO · notify door there? NO`.
 Twenty-four scripts in the shelf carried the identical line — so every part of Skírnir that reaches the house
 through `$ROOT/bin/...` (`notify/send.sh`, `vault/hoard-lib.sh`, the runes door, the well) was reaching into a
 directory that does not exist. One of them failed loudly because `set -u` was watching; the rest failed

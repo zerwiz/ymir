@@ -4,7 +4,7 @@ The private sweep reported, in an earlier pass of the same day, a machine home b
 unit template: `tools/mill/systemd/garmr-hound.service` carried
 
 ```
-Environment=YMIR_HOME=/home/heimdall/Documents/ymirhome
+Environment=YMIR_HOME=~/Documents/ymirhome
 ```
 
 The hound runs as **root**, whose `HOME` is `/root`, so it cannot resolve the hoard by itself — the

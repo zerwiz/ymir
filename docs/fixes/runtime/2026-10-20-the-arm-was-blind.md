@@ -15,7 +15,7 @@ Also found: the engine venv was an editable install pointing at a stale worktree
 
 - Correct the library path, and add a fallback that reads the lock file directly when
   the owner reader is empty (liveness is still checked).
-- Repoint the venv editable install to `/home/heimdall/ymir/src`.
+- Repoint the venv editable install to `~/ymir/src`.
 - Re-arm once, restart the unit.
 
 ### Verified
@@ -23,7 +23,7 @@ Also found: the engine venv was an editable install pointing at a stale worktree
 - Before: `"idle", … "session","none"`.
 - After: `"up","systemd","active","189896","1","60","1722138","yes"` and the lease
   carries `session=1722138` — the live Pi pid.
-- `python -c` with the venv now imports `ymir_runtime` from `/home/heimdall/ymir/src`.
+- `python -c` with the venv now imports `ymir_runtime` from `~/ymir/src`.
 
 ### Not verified
 

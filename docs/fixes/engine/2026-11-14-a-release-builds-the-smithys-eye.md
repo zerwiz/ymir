@@ -31,7 +31,7 @@ bundle; a release could not, and no gate compared the two. Removing the bundle f
 
 ```
 # the release built before this change proves the hole
-bin/engine/release.sh prove /home/heimdall/.local/share/ymir/releases/2baf10ff28c5
+bin/engine/release.sh prove ~/.local/share/ymir/releases/2baf10ff28c5
 #   "visualizer","FAIL","not built (no dist/index.html) — bun is present, …"    rc=1
 #   and `ls <release>/apps/smidja-factory/apps/visualizer/` → no dist/
 

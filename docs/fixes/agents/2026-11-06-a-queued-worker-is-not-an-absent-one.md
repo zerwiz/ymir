@@ -14,7 +14,7 @@ error: <id> is NOT seated — do not steer pane …
 exit 3
 ```
 
-Measured at exactly that moment: `2086134` was alive, cwd `/home/heimdall/ymir/.yggdrasil/skuld-one-surface`, queued behind
+Measured at exactly that moment: `2086134` was alive, cwd `~/ymir/.yggdrasil/skuld-one-surface`, queued behind
 `1305131` (a `pi` in `sindri-mw5ndywa` holding the lock). **A live worker was reported as a dead one**, and the operator
 was told not to steer the errand that was about to begin — which is the worst possible advice, because the correct action
 was to wait.

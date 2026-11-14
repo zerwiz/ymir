@@ -72,14 +72,14 @@ in the tree as a signpost so a reader who finds the empty shelf learns where the
 # the install door fetched it, into the data folder, and verified it
 bin/voice/voice-ensure.sh install
 #    → "vad: fetching silero_vad.onnx (pinned 1a153a22f450) …"
-#    → "present","/home/heimdall/.local/share/ymir/models/voice/silero_vad.onnx"
+#    → "present","~/.local/share/ymir/models/voice/silero_vad.onnx"
 
 sha256sum ~/.local/share/ymir/models/voice/silero_vad.onnx
 #    1a153a22f4509e292a94e67d6f9b85e8deb25b4988682b7e174c65279d8788e3   (the pinned value)
 
 # the loader reads that file and runs it
 python bin/voice/ymir-vad.py path
-#    /home/heimdall/.local/share/ymir/models/voice/silero_vad.onnx
+#    ~/.local/share/ymir/models/voice/silero_vad.onnx
 python bin/voice/ymir-vad.py selftest
 #    vad_selftest[1]{file,window_samples,p_silence,verdict}:
 #      "silero_vad.onnx","512","0.0006","PASS"
