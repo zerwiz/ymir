@@ -1,8 +1,8 @@
 import { ref } from 'vue'
 
-// Hash routes: #/ → sessions · #/memory → Kaia's memory · #/<smidja_id> → waterfall · #/<smidja_id>/<phase_id> → phase panel open
+// Hash routes: #/ → sessions · #/memory → Völundr's memory · #/<smidja_id> → waterfall · #/<smidja_id>/<phase_id> → phase panel open
 export interface Route {
-  /** "memory" is the Kaia memory view; otherwise a session smidja_id. */
+  /** "memory" is the Völundr memory view; otherwise a session smidja_id. */
   adwId: string | null
   phaseId: string | null
 }

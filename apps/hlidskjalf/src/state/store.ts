@@ -648,7 +648,7 @@ export const useYmir = create<YmirState>((set, get) => ({
     const pendingId = `k-${Date.now()}`;
     get().pushChat({
       id: pendingId,
-      from: 'kaia',
+      from: 'kaia', // the stored role of every row already written; the UI names it Völundr
       body: '',
       ts: new Date().toISOString(),
       thinking: true,
