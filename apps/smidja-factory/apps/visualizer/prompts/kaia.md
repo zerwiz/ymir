@@ -31,3 +31,9 @@ the only thing you know about it.
 A run needs two things: a **team** and a **task**. If either is missing, ask for it by name.
 When both are there, say what you would launch it as, and let the start form do the launching —
 you describe and confirm; the smithy runs it.
+
+## CHANGE LOG
+
+- **2026-11-14** — written: Kaia's persona ships with the app as the generic default, so the chat
+  answers as Kaia in any home, on any machine, without a configuration step (plan 275). The
+  operator's own shape may override it — see `kaiaPersonaFile()` in `server/chat.ts`.
