@@ -199,8 +199,8 @@ resolve_host() {
   me="$(hostname -s)"
   # The fleet names its ear seats in preference order (fleet.json · ear[]), and the first of them is the seat
   # that hosts the engine. When that seat is THIS one the answer needs no network at all — and the ssh walk
-  # below costs a 5 s timeout per seat that does not answer, which on heimdall was 10.4 s on EVERY Rödd start
-  # (measured 2026-11-14: heimdall fails ssh-to-self in 0.1 s, then whynot and nidavellir each burn 5 s) for an
+  # below costs a 5 s timeout per seat that does not answer, which on this seat was 10.4 s on EVERY Rödd start
+  # (measured 2026-11-14: the local seat fails ssh-to-self in 0.1 s, then two fleet seats each burn 5 s) for an
   # answer that was already under its own feet. A client seat is unchanged: the first seat is not it, so the
   # walk runs exactly as before.
   first="$(fleet_order | head -1)"
@@ -341,7 +341,7 @@ cmd_host() {
   # shellcheck disable=SC2046
   build_host_argv
   # CUDA_MODULE_LOADING=LAZY (2026-11-14, plan 275 item 10): the engine's import initialises every CUDA module
-  # for every kernel it might ever use, before it can answer. Measured on heimdall, same command, same card:
+  # for every kernel it might ever use, before it can answer. Measured on this machine, same command, same card:
   # 52.7 s eager against 33.9 s lazy on a cold cache, and 31.6 s against 28.3 s warm — the first kernels pay a
   # little more later, which for a voice engine is nothing beside a window that will not open. LAZY is the
   # default here and YMIR_VOICE_CUDA_MODULE_LOADING=eager restores the old path, named, when a driver dislikes it.

@@ -53,4 +53,4 @@ release flip by another hand closed it).
 
 ## CHANGE LOG
 
-- 2026-11-14 — written with the change; three runs per build on heimdall.
+- 2026-11-14 — written with the change; three runs per build on this machine.
