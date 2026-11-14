@@ -1,0 +1,33 @@
+# soak.yaml — what the leak ledger samples, and when a restarting unit is stopped (plan 286 P0/P4).
+#
+# Copy to $YMIR_HOME/config/soak.yaml and edit. It ships at these values, and every reader says
+# whether a value came from this file or from the default in the code (bin/ward/soak-sampler.sh
+# --status prints both), so a machine with no copy behaves exactly like the one written here.
+#
+# The ledger itself is written by the machine, not by this file: one JSON row per service and per
+# app every five minutes at $YMIR_HOME/state/soak/services/<date>.jsonl.
+
+sample:
+  # Which systemd scope is sampled. `user` is every machine; the heart adds `system` (or `both`)
+  # because its house services run there as system units.
+  scope: user            # user | system | both
+  # A unit whose file is the distribution's is not the house's. true measures those too.
+  include_vendor: false
+
+restart_storm:
+  # The switch that decides whether a storming unit is ACTED on. `false` = report only: the ward
+  # writes the row and tells the Allfather, and stops nothing.
+  enabled: true
+  # Restarts inside the window, ABOVE WHICH a unit is stopped. Strictly more than this number.
+  threshold: 10
+  window_minutes: 60
+  # Which scope the ward may stop. Stopping a system unit needs the privilege to do it; a ward
+  # that cannot stop says so (a `stop-failed` row and a CRITICAL message), never a silent pass.
+  scope: user            # user | system | both
+  # Units never stopped, as an extended regular expression. Empty = none.
+  exclude: ""
+  # While `bin/desk/in-call.sh holder` names a call, these units are deferred rather than stopped —
+  # they are the sound and the voice the call is using. A deferred storm is said once, then held.
+  defer_in_call: "^(snotra|speech-to-speech|kokoro|rodd|ymir-voice|pipewire|wireplumber)"
+  # Do not re-notify about the same unit inside this window (minutes). 0 = every pass.
+  cooldown_minutes: 60
