@@ -89,3 +89,24 @@ bilskirnir, untouched here.
 ## CHANGE LOG
 
 - **2026-11-13** — written with the fix, from the running app's own measurements.
+
+## Appended 2026-11-14 02:45 — the window that froze before it had done anything
+
+The Allfather: *"Sessrúmnir starts over and over."* It was not a crash. Hyprland's "Application not
+responding" dialog fired on a Sessrúmnir window at 02:28:00, 02:28:09, 02:33:46, 02:33:54 and 02:35:52,
+and the window closed each time.
+
+Measured with DevTools **detached** (so not the debugging session): for the first 60–90 s the main process
+ran its JS thread at 100 %, three V8 worker GC threads at 100 %, reached 1.5 GB RSS and 43 s of CPU; then
+it went idle and the window lived if the dialog's Wait was pressed.
+
+A CPU profile of the main process (attached with `--inspect=9229`, 500 µs sampling) named the work rather
+than guessing at it: `lstat` under chokidar's `_addToNodeFs`, and chokidar's own pattern matcher spending
+its samples in `path.resolve`/`path.relative` through `isIgnoredPath`. It was the **first walk of the disk
+watcher**, over a workspace that carries the house's 198 worktree checkouts in `.yggdrasil/`.
+
+- `.yggdrasil` is now an ignored directory (a file tree never shows the worktree shelf).
+- the first walk starts 2.5 s after a workspace becomes active, and is cancelled if the active workspace
+  changes first, so the window answers the compositor in its first second.
+
+Proof owed and taken: no not-responding dialog for five minutes, on both machines, from the pin.
