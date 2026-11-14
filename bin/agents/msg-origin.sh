@@ -153,6 +153,12 @@ msg_origin() {
   fi
   if [ -z "$who" ] && [ -t 0 ]; then who="a person at terminal $(tty 2>/dev/null)"; fi
   if [ -z "$who" ]; then who="script $(ps -o comm= -p "${PPID:-0}" 2>/dev/null | tr -d ' ')"; fi
+  # A caller that handed in a FULL origin ("agent X · herdr pane w39:p0 · heimdall") is
+  # taken at its word: appending the road and the machine again printed
+  # "… · heimdall · herdr pane w39:p0 · heimdall" (seen 2026-11-14). One road, one machine.
+  case "$who" in
+    *" · "*) printf '%s' "$who"; return 0 ;;
+  esac
   printf '%s%s · %s' "$who" "${road:+ · $road}" "$(hostname -s 2>/dev/null || uname -n)"
 }
 
