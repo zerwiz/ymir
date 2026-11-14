@@ -1,5 +1,6 @@
 # Garmr's senses — read-only, root, because the audit log is root's to read.
-# Rendered by `bin/ward/garmr.sh install` (__YMIR_ROOT__ is replaced there).
+# Rendered by `bin/ward/garmr.sh install` (__YMIR_ROOT__ and __YMIR_OPERATOR_HOME__ are replaced
+# there, from the pinned runtime and the operator's own hoard, so this template carries no home).
 [Unit]
 Description=Garmr the hound — what executes, who touches the sensitive shelves, what listens and what leaves (read-only senses)
 Documentation=file://__YMIR_ROOT__/docs/features/the-guardian.md
@@ -10,7 +11,7 @@ After=garmr-arm.service
 [Service]
 Type=simple
 # root's HOME is /root; the hoard and the state are the operator's
-Environment=YMIR_HOME=/home/heimdall/Documents/ymirhome
+Environment=YMIR_HOME=__YMIR_OPERATOR_HOME__
 Environment=GARMR_STATE_DIR=/var/log/ymir/garmr/state
 # a reboot clears runtime rules; garmr-arm.service re-arms them. Here we only refuse
 # to run deaf — a read-only test, because this unit drops the audit capabilities.
