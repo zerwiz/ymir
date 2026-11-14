@@ -51,3 +51,7 @@ only prints the rendered template. Either way a rendered unit is never committed
 
 Found by `bin/time/nornir-job-private-scan.sh` (sweep 2026-11-14T03:51:38Z). The home's record of what
 moved is `hodd/docs/machines/zerwizserver/2026-11-14-the-machine-paths-left-the-public-repo.md`.
+
+## CHANGE LOG
+
+- 2026-11-13 — review-mend: added missing heading for #743
