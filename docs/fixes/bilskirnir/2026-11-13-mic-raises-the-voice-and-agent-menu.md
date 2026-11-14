@@ -13,3 +13,7 @@
 | The window showed an old face after a rebuild | `index.html` is served with `Cache-Control: no-cache` | The header, and the new face after a restart |
 
 Still owed: while the engine loads (about 40 s), the window should say "the voice is starting" instead of waiting quietly.
+
+## CHANGE LOG
+
+- 2026-11-13 — review-mend: added missing heading for #730
