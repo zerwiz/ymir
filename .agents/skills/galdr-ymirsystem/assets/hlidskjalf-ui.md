@@ -255,11 +255,32 @@ selection would hide under closed parents).
 ## The gate API surface (`/api`, read-only)
 
 `/api/health · /api/me · /api/workspace · /api/agents · /api/tasks · /api/runes ·
-/api/well · /api/processes · /api/reviews · /api/files · /api/runtime · /api/cron ·
+/api/well · /api/processes · /api/reviews · /api/files · /api/runtime · /api/soak · /api/cron ·
 /api/cron/seats · /api/calendar ·
 /api/loaders · /api/checks · /api/settings · /api/stream · /api/mimir …` plus the
 smithy trace: `/api/smidja/{health,sessions,sessions/:id,decisions,stats}` and
 chat: `/api/chat/history`, `POST /api/chat`.
+
+### The Health view — the leak ledger on the Runtime page (2026-11-14, plan 286 P6)
+
+The Runtime gate (`src/gates/Runtime.tsx`) carries a **Health** section drawn by
+`src/components/SoakHealth.tsx`, fed by **`/api/soak`** (`server/health.ts`). It reads TWO records,
+never a second opinion:
+
+- **Services** — `$YMIR_HOME/state/soak/services/<date>.jsonl` from `bin/ward/soak-sampler.sh`
+  (RSS, fds, inotify watches, children, zombies, GPU, restarts). The trend is the ledger's own last
+  window (30 min ending at its newest pass), so a stopped timer still shows the last true trend and
+  the page says the ledger has stopped rather than drawing an empty chart.
+- **Apps** — `$YMIR_HOME/state/soak/<app>/<date>.jsonl` from `bin/gates/soak.sh`. The harness's own
+  `judge` row is plan 286 §5 already applied (`pass` → holds, `leak` → grows, its `finding` rows
+  say why). A run still being written is `unknown` with its numbers; a run with baseline and
+  after-cycles but no judge row is judged here against §5 and the row says `unjudged`. A new
+  `raise` row starts a clean slate, so an earlier run in the same day never colours the last.
+
+The verdict vocabulary is exactly **holds · grows · restarts**, with `unknown` as the honest
+fourth; every row names the number that broke its budget. `/api/soak` is memoised for 30 s (the
+ledger is append-only and grows every five minutes). An app with no soak is a row, not a blank:
+"no soak yet — run bin/gates/soak.sh <app>" beside the sampler's last reading of it.
 
 ### The Cron gate — local and server schedules (2026-09-24, plan 54)
 

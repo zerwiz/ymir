@@ -20,6 +20,7 @@ import { createRoddHandler } from './rodd.ts';
 import { serverSeats as resolveServerSeats } from './server-seats.ts';
 import { A2A_PROTOCOL, type AgentInterface } from '../../../packages/contracts/src/index.ts';
 import { readDigest } from './digest.ts';
+import { readSoakHealth } from './health.ts';
 
 const PORT = Number(process.env.PORT ?? 3889);
 const HERE = import.meta.dir;
@@ -1408,6 +1409,21 @@ async function runtime() {
   };
 }
 
+/* ---- /api/soak ----------------------------------------------------------- */
+// Plan 286 P6 — the Health view's data. Two sources, one reading: the leak
+// ledger's per-service trends (RSS, fds, watches, children, GPU, restarts) and
+// each app's LAST soak from `state/soak/<app>/`. Both are judged by plan 286
+// §5's budgets inside health.ts, so the page never invents a verdict.
+// Memoised for 30 s: the ledger is append-only and grows every five minutes, and
+// the app registry is a shell door — neither may be re-read on every request.
+function soakHealth() {
+  const appNames = run(['bin/desktop/ymir-app', '--list'])
+    .split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return memo('soak-health', 30_000, () => readSoakHealth({ homeDir: HOME_DIR, appNames }));
+}
+
 /* ---- /api/cron ----------------------------------------------------------- */
 // The schedule the LOOP reads — never the repo's template. The board used to
 // read join(ROOT,'.agents/config'), which ships ONLY cron.yaml.example, so it
@@ -2534,6 +2550,9 @@ const server = Bun.serve({
         return voice(req, seatOf(req) ?? 'operator');
       }
       if (p === '/api/health') return json({ ok: true, root: ROOT, sessions: orders().length });
+      // The leak ledger and the last soak of every app (plan 286 P6): the Health
+      // view on the Runtime page. Read-only, memoised — see soakHealth().
+      if (p === '/api/soak') return json(soakHealth());
       if (p === '/api/mail/accounts') {
         if (req.method !== 'GET') return json({ error: 'method not allowed' }, 405);
         return mailDesk('/accounts');

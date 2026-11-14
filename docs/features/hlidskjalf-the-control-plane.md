@@ -55,6 +55,14 @@ scripts/electron.sh stop | status
 
 ## Notes and limits
 
+### The Runtime page, and the Health view
+
+The **Runtime** gate (`#/runtime`) is the house's bearings: the helm, what needs you, the live
+errands, and which release each service actually runs from. Below those sits **Health** — the leak
+ledger's service trends and each app's last soak, judged against plan 286 §5 and said in one word
+per row (**holds**, **grows**, **restarts**, or **unknown**). The full how-to is its own page:
+[The Health view](the-health-view.md).
+
 - **Local, full stop.** The SPA (`:3888`) and the gate (`:3889`) bind loopback, and
   the gate refuses a wider bind unless `YMIR_ALLOW_WIDE_BIND=1`.
 - **No account, no grant.** There is nothing to sign in with and nothing to grant;
@@ -75,3 +83,4 @@ scripts/electron.sh stop | status
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
 - **2026-11-14** — the halls carry no login (plan 275 item 30): the in-app login, the invite codes, the GitHub door and the tunnel-to-a-hall are removed; the page now says what is true.
+- **2026-11-14** — the Runtime page gained the **Health** view (plan 286 P6): the leak ledger's service trends and every app's last soak, judged by plan 286 §5 — [The Health view](the-health-view.md).

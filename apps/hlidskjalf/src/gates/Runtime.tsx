@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useYmir } from '../state/store';
 import { StatusChip } from '../components/Status';
+import { SoakHealthPanel } from '../components/SoakHealth';
 
 /**
  * Runtime — the house's bearings, drawn for a PERSON (plan 275 items 25 and 27).
@@ -240,6 +241,9 @@ export function Runtime() {
           </div>
         </section>
       </div>
+
+      {/* 5 · the leak ledger and every app's last soak (plan 286 P6) */}
+      <SoakHealthPanel />
 
       {/* the record: markers and the raw digest, behind folds */}
       <section className="panel">
