@@ -162,7 +162,12 @@ function launch() {
     // software-composited window). The graphics policy resolves to `software` on this
     // hybrid box, so this is the path every launch takes here; other platforms and X11
     // sessions are untouched.
-    if (process.platform === 'linux' && process.env.WAYLAND_DISPLAY) {
+    // Which surface: the operator's choice (`YMIR_DESKTOP_OZONE_PLATFORM`, from the home's
+    // config/desktop.env), else the measured default on a Wayland session.
+    const ozone = String(process.env.YMIR_DESKTOP_OZONE_PLATFORM || 'auto').toLowerCase()
+    if (ozone === 'x11' || ozone === 'wayland') {
+      electronArgs.push(`--ozone-platform=${ozone}`)
+    } else if (process.platform === 'linux' && process.env.WAYLAND_DISPLAY) {
       electronArgs.push('--ozone-platform=x11')
     }
   }

@@ -94,6 +94,50 @@ graphics_hybrid_fragile() {
 # (scripts/electron.sh, the recorders, Eir). YMIR_DESKTOP_DISABLE_GPU is the
 # human's override: 1 forces software, 0 forces the GPU path, unset (auto)
 # trusts the classification.
+# ── THE DESKTOP DOOR: per-user, per-machine settings from an env file ─────────
+# The Allfather, 2026-11-14: *"are this settings able to be set from env files for diffrent users ?
+# we probly need that"*. The policy below answers for the MACHINE; an operator answers for
+# THEMSELVES, and their answer lives in $YMIR_HOME/config/desktop.env — the private home, one file
+# per user, never in the public tree (Rule 04) and never hardcoded (Rule 07).
+#
+#   YMIR_DESKTOP_DISABLE_GPU=auto|1|0        the machine policy, or forced on/off
+#   YMIR_DESKTOP_OZONE_PLATFORM=auto|wayland|x11   which surface the apps use
+#   YMIR_DESKTOP_PIN=1                       desktop placement (see bin/desktop/desktop-place.sh)
+#
+# An EXPLICIT environment value always wins over the file: the program that launched the app
+# is closer to the operator than a file. The home is found through its one resolver.
+desktop_env_path() {
+  if [ -n "${YMIR_DESKTOP_ENV:-}" ]; then printf '%s' "$YMIR_DESKTOP_ENV"; return 0; fi
+  local here lib h=""
+  here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  for lib in "$here/../vault/hoard-lib.sh" "$here/../../bin/vault/hoard-lib.sh"; do
+    [ -r "$lib" ] || continue
+    # shellcheck disable=SC1090
+    . "$lib" 2>/dev/null || continue
+    declare -f ymir_home_root >/dev/null 2>&1 || continue
+    ymir_home_root h 2>/dev/null || true
+    break
+  done
+  [ -n "$h" ] && printf '%s' "$h/config/desktop.env"
+}
+
+desktop_env_load() {  # source the operator's desktop.env once; the environment wins
+  [ "${YMIR_DESKTOP_ENV_LOADED:-0}" = 1 ] && return 0
+  YMIR_DESKTOP_ENV_LOADED=1
+  local f d o p
+  f="$(desktop_env_path 2>/dev/null || true)"
+  [ -n "$f" ] && [ -r "$f" ] || return 0
+  d="${YMIR_DESKTOP_DISABLE_GPU-__unset}"; o="${YMIR_DESKTOP_OZONE_PLATFORM-__unset}"; p="${YMIR_DESKTOP_PIN-__unset}"
+  set -a
+  # shellcheck disable=SC1090
+  . "$f" || true
+  set +a
+  [ "$d" = __unset ] || YMIR_DESKTOP_DISABLE_GPU="$d"
+  [ "$o" = __unset ] || YMIR_DESKTOP_OZONE_PLATFORM="$o"
+  [ "$p" = __unset ] || YMIR_DESKTOP_PIN="$p"
+  export YMIR_DESKTOP_DISABLE_GPU YMIR_DESKTOP_OZONE_PLATFORM YMIR_DESKTOP_PIN
+}
+
 graphics_policy() {
   case "${YMIR_DESKTOP_DISABLE_GPU:-auto}" in
     1|true|yes) printf 'software' ;;
