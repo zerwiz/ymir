@@ -176,6 +176,8 @@ gate weave      "every index names every rule, plan and feature page (plan 175)"
                bash "$ROOT/bin/records/weave.sh" --check
 gate workflows  "every Actions workflow parses"               bash "$ROOT/bin/gates/checks/workflow-check.sh" --quiet
 gate units      "systemd reads every key in every unit template" bash "$ROOT/bin/gates/checks/unit-template-check.sh" --quiet
+gate window-buttons "the frame's _ □ × are the platform's answer, and every window and launcher asks it" \
+               bash "$ROOT/.agents/tests/window-buttons.test.sh"
 gate ext-api    "extensions speak Pi's real tool API"          bash "$ROOT/bin/gates/checks/extension-api-check.sh" --quiet
 gate ext-smoke  "every Ymir tool ANSWERS when called like Pi calls it" \
                node --experimental-strip-types "$ROOT/tools/extension-smoke.mjs"

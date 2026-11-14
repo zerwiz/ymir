@@ -30,6 +30,15 @@ const GATE = process.env.YMIR_GATE_URL || 'http://127.0.0.1:3889';
 // One window, one app identity: Hlidskjalf and Smíðja are separate desktop
 // apps so they never stack in the taskbar and each carries its own icon.
 const VIEW = (process.env.YMIR_DESKTOP_VIEW ?? 'hlidskjalf').toLowerCase();
+// The frame's buttons are the PLATFORM LAYER's question, never this file's: every launcher asks
+// `bin/host/host-sense.sh capability window-buttons` and carries the answer in as YMIR_WINDOW_BUTTONS.
+// A tiling compositor — Hyprland, Omarchy's session — draws no title bar of its own and closes a
+// window with a key, so the window is frameless there and no _ □ × can be drawn or shown (the
+// Allfather, 2026-11-14: "on Omarchy none of the _ □ × buttons should be visible in any app").
+// Everywhere else the platform keeps its own frame. Unset (a hand launch) = the platform default,
+// never a silent change on a host nobody named. The menu STAYS SET either way: its accelerators
+// are the keyboard road in, and only the drawn bar goes (Rule: never remove a feature).
+const WINDOW_BUTTONS = String(process.env.YMIR_WINDOW_BUTTONS ?? 'on').toLowerCase() !== 'off';
 const IS_SMIDJA = VIEW === 'smidja';
 const IS_ODRERIR = VIEW === 'odrerir';
 const APP_NAME = IS_SMIDJA ? 'Ymir · Smíðja' : IS_ODRERIR ? 'Ymir · Óðrerir' : 'Ymir · Hlidskjalf';
@@ -204,6 +213,9 @@ function openWindow(url, title) {
     backgroundColor: '#080c14',
     icon: ICON,
     title,
+    // frameless where the platform draws no title bar (see WINDOW_BUTTONS above); the app's own
+    // header carries the window, and Hyprland tiles and closes it with keys
+    frame: WINDOW_BUTTONS,
     autoHideMenuBar: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),

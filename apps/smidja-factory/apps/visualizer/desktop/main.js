@@ -21,6 +21,14 @@ const { join } = require("node:path");
 
 const UI_URL = process.env.SMIDJA_UI_URL || "http://localhost:8438";
 
+// The frame's buttons are the PLATFORM LAYER's question, never this file's: `bin/host/host-sense.sh
+// capability window-buttons` answers it (the launchers carry the answer in as YMIR_WINDOW_BUTTONS).
+// A tiling compositor — Hyprland, Omarchy's session — draws no title bar of its own and closes a
+// window with a key, so on Omarchy the topbar draws NO _ □ × (the Allfather, 2026-11-14: "on Omarchy
+// none of the _ □ × buttons should be visible in any app"). Elsewhere Windows/macOS draw native
+// overlay controls and Linux keeps the app's own. Unset (a hand launch) = the platform default.
+const WINDOW_BUTTONS = String(process.env.YMIR_WINDOW_BUTTONS ?? "on").toLowerCase() !== "off";
+
 // Force Chromium/GTK chrome to dark so nothing paints white around the page.
 nativeTheme.themeSource = "dark";
 app.setName("Smíðja · Trace");
@@ -36,7 +44,12 @@ if (process.platform === "win32") {
   app.setAppUserModelId("smidja-trace-ui");
 }
 
-// Window controls: the renderer's topbar buttons arrive here over IPC.
+// Window controls: the renderer's topbar buttons arrive here over IPC. The renderer asks FIRST
+// whether this platform draws them at all (ymir:window-buttons below) — on a tiling compositor it
+// does not, so no button is ever drawn (the Allfather, 2026-11-14).
+ipcMain.on("ymir:window-buttons", (event) => {
+  event.returnValue = WINDOW_BUTTONS;
+});
 ipcMain.on("win:minimize", (event) => {
   BrowserWindow.fromWebContents(event.sender)?.minimize();
 });

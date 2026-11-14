@@ -68,8 +68,17 @@ const isMeta = computed(() => isMemory.value || isDecisions.value || isStats.val
 // topbar doubles as the title bar — its right edge gets the window controls.
 // Custom controls only appear on Linux; Windows/macOS draw native overlay
 // buttons (which already sit on the right / follow the OS convention).
-const isDesktop = (window as { smidjaDesktop?: { isDesktop?: boolean } }).smidjaDesktop?.isDesktop ?? false
-const isLinuxDesktop = isDesktop && (window as { smidjaDesktop?: { platform?: string } }).smidjaDesktop?.platform === 'linux'
+// And they appear only where the PLATFORM wants them at all: on a tiling
+// compositor (Hyprland, Omarchy's session) the window has no buttons, drawn or
+// native — the compositor tiles and closes it with keys (the Allfather,
+// 2026-11-14: "on Omarchy none of the _ □ × buttons should be visible in any
+// app"). The answer is bin/host/host-sense.sh's, passed in by the shell.
+const desktopBridge = (window as {
+  smidjaDesktop?: { isDesktop?: boolean; platform?: string; windowButtons?: boolean }
+}).smidjaDesktop
+const isDesktop = desktopBridge?.isDesktop ?? false
+const isLinuxDesktop = isDesktop && desktopBridge?.platform === 'linux'
+const showsWindowControls = isLinuxDesktop && desktopBridge?.windowButtons !== false
 function winControl(action: 'minimize' | 'maximize' | 'close') {
   ;(window as { smidjaDesktop?: { windowControl?: (a: string) => void } }).smidjaDesktop?.windowControl?.(action)
 }
@@ -161,7 +170,7 @@ const hallUrl =
       <button class="theme-toggle" type="button" :title="`Theme: ${theme === 'classic' ? 'classic deep-space' : theme === 'high-contrast' ? 'high contrast (WCAG AAA)' : 'fensalir — the carved cloth'} (click to switch)`" @click="toggleTheme">
         {{ theme === 'classic' ? 'classic' : theme === 'high-contrast' ? 'high-contrast' : 'fensalir' }}
       </button>
-      <span v-if="isLinuxDesktop" class="win-controls">
+      <span v-if="showsWindowControls" class="win-controls">
         <button class="win-btn" title="Minimize" @click="winControl('minimize')" aria-label="Minimize">
           <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 5.5h8" stroke="currentColor" stroke-width="1.2" fill="none" /></svg>
         </button>

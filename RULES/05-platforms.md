@@ -146,6 +146,29 @@ Windows**; the **packaged** door does not exist yet — no tagged `.exe`, no sig
 winget/scoop manifests still carry placeholder hashes. The installer workflow has still never run
 in CI, so the honest table above gains a row that is true as of today and expires in thirty days.
 
+## 2026-11-14 (appended) — the window's frame is a sensed platform fact
+
+*"On Omarchy none of the _ □ × buttons should be visible in any app."* (the Allfather, plan 275 item 34)
+
+A tiling compositor draws no title bar of its own and closes a window with a key, so a drawn
+minimize/maximize/close is a control with nothing behind it. Which is why the frame is now one of the
+facts this rule's sensor reports, and not a decision any app makes for itself:
+
+- `bin/host/host-sense.sh capability window-buttons` answers `no` where the desktop tiles without
+  decorations (Hyprland — Omarchy's session — Sway, Niri, River) and `yes` everywhere else.
+- `app_window_buttons` (`bin/desktop/app-lib.sh`) is the one reader; every launcher carries the answer
+  into the app as `YMIR_WINDOW_BUTTONS=on|off`, and each Electron shell builds `frame:` from it.
+- The application menu stays SET in every shell: the shortcuts are the keyboard road in, and only the
+  drawn bar goes. A platform's own frame and its buttons are untouched on every other host.
+- A launcher that cannot reach the sensor answers `on` — the platform's default, never a silent change
+  on a host nobody named. The gate is `.agents/tests/window-buttons.test.sh`, which turns red when a new
+  window or launcher forgets to ask.
+
+Proof on this layer: `docs/fixes/desktop/2026-11-14-no-window-buttons-on-omarchy.md` (seven apps, real
+windows, DevTools and screenshots, both directions of the gate). Owed: the same walk on the second
+machine.
+
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-14** — the window frame became a sensed capability (`window-buttons`); see the section above.
