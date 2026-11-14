@@ -5,7 +5,9 @@ StartLimitBurst=10
 
 [Service]
 Type=simple
-Environment=PATH=%h/.bun/bin:/usr/bin:/bin
+# The same PATH rule as the gate (plan 275 item 26): the house's tools may be mise shims,
+# and a shim that is not on the unit's PATH reads as "not installed".
+Environment=PATH=%h/.bun/bin:/usr/bin:/bin:%h/.local/share/mise/shims:%h/.mise/shims
 Environment=BROKK_ENV_FILE=__YMIR_ENV_FILE__
 # --foreground keeps the bridge under systemd's supervision: no self-daemon,
 # no pid file — the unit IS the process the way the law wants it.
