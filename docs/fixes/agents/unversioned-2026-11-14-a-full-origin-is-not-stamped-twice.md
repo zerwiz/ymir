@@ -29,3 +29,7 @@ inherited `w39:pT` it was handed.
 ### Files
 
 `bin/agents/msg-origin.sh`.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #759
