@@ -29,3 +29,7 @@ every agent wore the Ymir mark. The choice is back, with the house's own charact
 - `web/src/avatar/BotAvatar.tsx`, `web/src/avatar/CharacterPicker.tsx`
 - `web/src/components/modals/CreateBotModal.tsx`, `web/src/components/config/BotSettingsModal.tsx`
 - `server/src/types.ts`, `server/src/routes.ts`, `THIRD_PARTY_NOTICES.md`
+
+## CHANGE LOG
+
+- 2026-11-13 — review-mend: added missing heading for #730
