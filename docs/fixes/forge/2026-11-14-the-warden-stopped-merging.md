@@ -92,3 +92,45 @@ warden-pass[10]{host,read_as,credential,identity,cap,open,over_cap,stale,conflic
 ## CHANGE LOG
 
 - 2026-11-14 — written with the change, at the heart's ruling (plan 290, P1).
+
+## 2026-11-14 12:40Z — corrected: the road is CLOSED, not absent
+
+The body above says *"no merge call exists in the file at all"*. **That is no longer true, and the
+change was decided after it was written** — recorded here rather than edited away (`RULES/06`).
+
+The Allfather, later the same day: *"zerwizserver (the heart) handles the merging of the PRs. So in the
+operator's home: `config/machines/zerwizserver/wardens.yaml` is the only file that may say
+`merge: on` … every other machine's says `merge: off`, and the template ships `merge: off`. Build to
+that."* The heart's PR #747 puts the same rule in its own words: a merge is *"the one act it may not
+take on trust"*.
+
+So the warden now carries **one** merge, and it is the heart's, behind three keys and one gate:
+
+| Condition | Where it is written | What happens if it fails |
+|---|---|---|
+| `merge: on` in **this machine's** wardens file | the operator's home | `closed: merge: off in this machine's wardens file` |
+| this machine's role is `heart` | `bin/skuld/role.sh resolve`, read from the fleet registry in the home | `closed: merge: on, but this machine's role is <role> — only the heart may merge` |
+| `bin/forge/merge-verdict.sh` is on the tree | the heart's PR #747 | `closed: the gate … is not on this tree` |
+| the gate answers `0` for this PR | one sha, one verdict, main green, branch current, no unexplained bypass | `merge-refused: merge-verdict.sh said NO: …` |
+
+No hostname is written in this file for that rule (`RULES/07`, `RULES/39`): the heart's name lives in
+the home and `role.sh` prints it. On heimdall every one of the four fails at the first key, so the door
+never reaches a merge call — and the test proves the shape rather than the intention: exactly **one**
+`gh pr merge` in the whole file, inside `merge_one`, with the gate call in that same function, and
+`merge_one` called only where the road answered open.
+
+The old faults stay removed and the test still asserts their absence: no `--no-verify`, no
+`git add -A`, no `YMIR_SKIP_*`, no forced or mirrored push, no `pr close` — on the heart's machine as
+much as here.
+
+### Also adopted the same day: the shared layout (`wardens-own-only`)
+
+`enabled: on|off` is the per-machine opt-in, the block is **not** wrapped in a `wardens:` key, and the
+policy is read through `bin/forge/warden-policy.py` — the shared reader that errand owns. That door is
+not on the tree yet, so the warden keeps a six-line fallback reader and **says which answered**
+(`reader: local|shared`), because a fallback that cannot be told from the library is a second parser
+nobody knows about. When `warden-policy.py` lands, the fallback is deleted in one edit.
+
+`enabled: off` also stops a **scheduled** pass (the door tells systemd from a hand by `INVOCATION_ID`)
+and stops `--start` from starting a clock — a hand may still run a pass, which is how the queue gets
+inspected.

@@ -4,8 +4,11 @@ Keeps the pull-request queue **tidy** — and never merges anything.
 
 It reports the five-at-most rule, flags a PR that has gone stale, and re-cuts a branch that
 conflicts onto `main` under a new name. Every one of those is a notice or a new branch. **It never
-merges, never force-pushes, never closes another hand's work, and never writes to GitHub as a
-person's login.** Merging is the Allfather's, executed by the heart's hand (plan 290).
+force-pushes, never closes another hand's work, and never writes to GitHub as a person's login.**
+
+**It merges in exactly one place: the heart's machine, behind a gate.** Everywhere else the road is
+closed and the door says why. That is the Allfather's word of 2026-11-14: *"zerwizserver (the heart)
+handles the merging of the PRs … every other machine's says `merge: off`."*
 
 ## What it does on a pass
 
@@ -15,7 +18,7 @@ person's login.** Merging is the Allfather's, executed by the heart's hand (plan
 | **A stale PR** | A PR older than the stale limit (48 hours by default) gets a notice. A notice is never a close. |
 | **A conflicting PR** | Re-cuts the branch: rebases it onto `origin/main` in a scratch worktree and lands the result on a **new** branch, `rehygiene/<pr>-<branch>-onto-main-<date>`. The PR's own branch is read and never written, so nothing is force-pushed. |
 | **A draft, a bot's branch, or a protected branch** | Left alone, with the reason written down. |
-| **A merge** | There is no such act. The door contains no merge call at all, and a test asserts that absence. |
+| **A merge** | Closed on every machine but the heart's, and on the heart's it answers to `bin/forge/merge-verdict.sh` first: one sha, one verdict, main green, branch current, no unexplained bypass. A `NO`, or an "I cannot tell", is a NO. |
 
 ## Commands
 
@@ -45,11 +48,17 @@ so the unit is written and left stopped unless you pass `--start`. On heimdall t
 ```yaml
 # $YMIR_HOME/config/machines/<machine>/wardens.yaml
 queue-warden:
+  enabled: on|off          # the per-machine opt-in: off = no clock, and a scheduled pass refuses
   max_open_prs: 5
   stale_hours: 48
   identity: <the machine's own name>     # never a person's login
   token_ref: <VAULT_KEY>                 # the vault key holding that identity's token
+  merge: on|off            # only the heart's file says on
 ```
+
+The block sits at the top level — there is no `wardens:` wrapper — and the shared reader
+`bin/forge/warden-policy.py` is asked first; while that door is not on a tree the warden reads the
+file itself and says so (`reader: local|shared`).
 
 A missing file is not a fault: the defaults above stand, and `status` says `defaults` rather than
 pretending it read a policy.
@@ -58,6 +67,20 @@ pretending it read a policy.
 warden reads the open PRs through whatever `gh` login the box has — and says which one on every pass
 (`read_as`) — but it **writes nothing**: no push, no comment, no close. A re-cut is made locally and
 the exact `git push` line is recorded as owed.
+
+## When it may merge
+
+Three keys and a gate, in this order. On any machine but the heart's the first one stops it.
+
+| Condition | Where it is decided |
+|---|---|
+| `merge: on` in this machine's own wardens file | the operator's home |
+| this machine's role is `heart` | `bin/skuld/role.sh resolve`, from the fleet registry in the home |
+| `bin/forge/merge-verdict.sh` exists on the tree | the heart's own work (PR #747) |
+| the gate answers `0` for this PR | one sha, one verdict, main green, branch current |
+
+`status` prints the answer in words, for example
+`closed: merge: off in this machine's wardens file`.
 
 ## What it writes down
 
@@ -78,12 +101,18 @@ the exact `git push` line is recorded as owed.
   reporting an empty queue.
 - **`push owed`** — that is the identity rule, not a fault: write `identity` and `token_ref` into the
   home's wardens file and the same re-cut will ship itself.
+- **`this machine has not opted in`** — `enabled` is off in the home's wardens file, so a scheduled
+  pass refuses. Run it by hand, or set `enabled: on` if the machine should carry a clock.
+- **`closed: merge: on, but this machine's role is <role>`** — the file asks for a merge this machine
+  is not the heart for. It refuses rather than trusting the file.
 - **`home/state unresolved`** — the hoard is not where the machine expects it; nothing is acted on.
 
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its
   earlier history is its git log; entries are appended below, never rewritten.
-- **2026-11-14** — hygiene only, at the heart's ruling (plan 290, P1). It no longer merges, force-pushes,
+- **2026-11-14** — hygiene only, at the heart's ruling (plan 290, P1). It no longer force-pushes,
   commits with `--no-verify`, or acts under a person's login; the cap, the stale notice and the re-cut
-  are what remain. See `docs/fixes/forge/2026-11-14-the-warden-stopped-merging.md`.
+  are what remain. The one merge left is the heart's, behind `merge: on`, the machine's role, and
+  `bin/forge/merge-verdict.sh`. The policy also adopted the shared layout (`enabled`, no wrapper,
+  `bin/forge/warden-policy.py`). See `docs/fixes/forge/2026-11-14-the-warden-stopped-merging.md`.
