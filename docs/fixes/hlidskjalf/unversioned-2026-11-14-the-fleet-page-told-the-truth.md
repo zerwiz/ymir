@@ -74,5 +74,5 @@ Real window on heimdall through Chrome DevTools (CDP `:9420`, Playwright over th
 gate on `:3901` from this worktree, SPA built from it: 42 graph nodes with **zero overlapping
 rects**, the doors panel listing 6 app ports and 18 agent doors, the stream showing 11 recorded
 messages, cards reading `DOWN` for the unseated, `tsc --noEmit` clean, no console errors.
-**Not proved:** a second machine. `ssh nidavellir-t` timed out (tailnet) at 04:10, and the
+**Not proved:** a second machine. The second machine's ssh road timed out at 04:10, and the
 release-flip pass needs the merge this branch does not perform.
