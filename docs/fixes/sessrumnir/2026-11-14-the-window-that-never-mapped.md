@@ -56,3 +56,7 @@ From the pin `7ae529759d0b` on heimdall: the window mapped at 18 s and was still
 RSS steady at 213 MB, no not-responding dialog in `browserkill-trace` for the whole window. nidavellir was
 offline at the time of this note (`tailscale status`: last seen 1h ago), so its row is owed and named in
 plan 283.
+
+## CHANGE LOG
+
+- 2026-11-13 — review-mend: added missing heading for #731
