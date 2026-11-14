@@ -46,7 +46,7 @@ packaged install are all found by the same rule. An app registry that cannot be 
 
 ## What was measured here
 
-- A pass on heimdall samples 39 targets (33 units, 6 apps) in about 2 seconds; rows carry the
+- A pass on this machine samples 39 targets (33 units, 6 apps) in about 2 seconds; rows carry the
   cgroup's whole process tree, so a worker's memory is counted toward the service that owns it.
 - The hour of rows required by the plan, and the looping unit stopped and named, are in the
   errand's report at `$YMIR_HOME/state/eindri-reports/leak-ledger.md` (the ledger is machine
@@ -68,7 +68,7 @@ packaged install are all found by the same rule. An app registry that cannot be 
 
 ## Appended — what the live run taught (same day, 05:07 CET)
 
-Measured on heimdall with a deliberately looping unit, after the note above was written. Three
+Measured on this machine with a deliberately looping unit, after the note above was written. Three
 facts worth keeping, because each changes how a row is read:
 
 - **`NRestarts` resets when a unit is stopped.** The looping unit showed `NRestarts=28` while it
@@ -97,3 +97,6 @@ ledger carries the same facts.
 
 - **2026-11-14 05:07** — appended after the live proof: the counter's reset, the stopped unit's
   silence, and the ledger fallback, all measured.
+- **2026-11-14 11:30** — corrected at the helm's word, under the agnostic law (RULES/25): two lines that
+  named one machine now say "this machine". The rows they carry are unchanged; only the machine's name left
+  the shipped note.
