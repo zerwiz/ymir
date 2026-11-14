@@ -32,3 +32,7 @@
 > restarted its own audio service after a run of "Chromium input underrun" lines from 21:13, and Meet lost its speaker
 > stream until he re-chose the headset. The cause is not proven; voice tests now wait for the call guard to say the
 > desk is free, and the guard did not yet see the Meet at the last check before testing.
+
+## CHANGE LOG
+
+- 2026-11-13 — review-mend: added missing heading for #730
