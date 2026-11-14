@@ -21,3 +21,7 @@ record it corrects.
 ### Files
 
 `docs/fixes/hlidskjalf/unversioned-2026-11-14-the-fleet-page-told-the-truth.md`.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #757
