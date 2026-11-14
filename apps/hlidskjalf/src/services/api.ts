@@ -86,6 +86,90 @@ export interface RuntimeInfo {
   doc: string;
 }
 
+/* ---- the soak ledger and the Health view (plan 286 P6) ------------------- *
+ * `holds` / `grows` / `restarts` are the only verdicts a row carries, and
+ * `unknown` is the honest fourth answer when there is not enough to judge. The
+ * budgets are plan 286 §5, read from the gate so the page never invents them. */
+export type SoakVerdict = 'holds' | 'grows' | 'restarts' | 'unknown';
+
+export interface SoakBudgets {
+  idleMinutes: number;
+  rssPctIdle: number;
+  rssPctCycles: number;
+  heapMbIdle: number;
+  heapMbCycles: number;
+  longTaskMsIdle: number;
+  longTaskMsCycles: number;
+  restartsPerHour: number;
+  sampleIntervalMinutes: number;
+}
+
+export interface ServiceTrend {
+  name: string;
+  state: string;
+  sub: string;
+  samples: number;
+  windowMinutes: number;
+  firstTs: string;
+  lastTs: string;
+  rssStartMb: number | null;
+  rssNowMb: number | null;
+  rssPeakMb: number | null;
+  rssPct: number | null;
+  fdsStart: number | null;
+  fdsNow: number | null;
+  fdsDelta: number | null;
+  watchesStart: number | null;
+  watchesNow: number | null;
+  watchesDelta: number | null;
+  childrenStart: number | null;
+  childrenNow: number | null;
+  childrenDelta: number | null;
+  zombies: number;
+  gpuMib: number | null;
+  restarts: number;
+  restartsInWindow: number;
+  verdict: SoakVerdict;
+  why: string;
+}
+
+export interface AppHealth {
+  app: string;
+  present: boolean;
+  date: string;
+  samples: number;
+  windowMinutes: number;
+  rssPct: number | null;
+  rssStartMb: number | null;
+  rssNowMb: number | null;
+  heapMbDelta: number | null;
+  fdsDelta: number | null;
+  watchesDelta: number | null;
+  childrenDelta: number | null;
+  gpuMib: number | null;
+  maxLongTaskMs: number | null;
+  notResponding: number;
+  cycles: number;
+  applied: 'idle' | 'cycles';
+  verdict: SoakVerdict;
+  why: string;
+  sampled?: { rssMb: number | null; fds: number | null; watches: number | null; children: number | null; gpuMib: number | null; state: string } | null;
+}
+
+export interface SoakHealth {
+  state: string;
+  budget: SoakBudgets;
+  windowMinutes: number;
+  lastPass: string;
+  ageMinutes: number | null;
+  passes: number;
+  stale: boolean;
+  services: ServiceTrend[];
+  apps: AppHealth[];
+  storms: Array<{ name: string; ts: string; action: string; restarts: number; threshold: number; lastError: string }>;
+  error?: string;
+}
+
 /* ---- the live tail (Snotra) ----------------------------------------------- *
  * The gate is a FRONT for systems/snotra/services/ear/snotra-live.sh; these shapes are
  * what that script says, never a second opinion. `closing` is the gate's own
@@ -543,6 +627,7 @@ export const gateApi = {
     ),
   skills: () => get<SkillDef[]>('/api/skills'),
   runtime: () => get<RuntimeInfo>('/api/runtime'),
+  soak: () => get<SoakHealth>('/api/soak'),
   calendar: () => get<CalendarInfo>('/api/calendar'),
   cron: () => get<CronInfo>('/api/cron'),
   cronStart: () => post<CronInfo & { ok: boolean; action: string; said: string }>('/api/cron/start', {}),
