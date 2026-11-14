@@ -1,0 +1,101 @@
+# Dependabot — the dependency updates, once a week, in groups, and never a major by itself.
+#
+# What this file does: Dependabot opens pull requests that bump a dependency to a newer
+# version, one PR per group, so an update arrives as a reviewable change rather than a
+# silent drift. A PR is still a PR here: the wards judge it, and a maintainer seals it.
+#
+# What it does NOT do: it asks GitHub to open PRs; it does not enable the repository's
+# vulnerability alerts or security-update settings. Those are repository settings and the
+# operator turns them on himself.
+#
+# Four choices worth knowing before editing:
+#
+#   * WEEKLY, on Monday. `time` and `timezone` are left out on purpose: the operator's
+#     clock is his, and a schedule pinned to one zone runs at the wrong hour for every
+#     other install (RULES/07). Add them if one machine's night matters to you.
+#   * GROUPED. Minor and patch bumps of all npm (or all pip) packages arrive as one PR.
+#   * A MAJOR IS NEVER A MERGE-READY PR (measured 2026-11-14: the first run of this file
+#     opened six PRs at once, four of them majors — capacitor 6→8, typescript 5→7,
+#     electron-vite 3→6, xterm 5→6). A major changes an API, a build or a platform floor,
+#     so it earns its own errand and its own real-window test. `ignore` below drops
+#     `semver-major` for every dependency in both ecosystems; a major is then raised by a
+#     person who names what it breaks, not by a bot that only knows a number changed.
+#   * ELECTRON IS PINNED EXACTLY, so Dependabot never touches it — not a patch, not a
+#     major. The apps carry `"electron": "43.8.9"` with no range on purpose: the shell is
+#     the window every app is, so its version is a decision made once for the whole house,
+#     not a semver bump. `dependency-name: "electron"` with NO update-types ignores every
+#     version, which is the only form that holds the pin.
+#
+#     A note on what `ignore` does not silence: a security advisory still reaches the
+#     repository through Dependabot's SECURITY updates, and if its only fix is a major it
+#     must be handled — that is a rotation, and a person does it. This file slows chores,
+#     never a security answer.
+#
+# Adding an ecosystem: copy a block, point `directory` at the folder that holds the
+# manifest. Dependabot reads ONLY the folders named here, so a new app with its own
+# package.json needs its own entry (the npm workspace root covers the ones listed in
+# the root package.json's `workspaces`). Copy the `ignore` list with it — a new ecosystem
+# without it re-opens the majors.
+version: 2
+
+updates:
+  # ── npm: the root workspace, which covers apps/hlidskjalf, apps/odrerir,
+  #    apps/sessrumnir and apps/smidja-factory through the root `workspaces` list.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    versioning-strategy: "increase-if-necessary"
+    commit-message:
+      prefix: "deps(npm)"
+    labels:
+      - "dependencies"
+      - "npm"
+    ignore:
+      # no major, whatever the package — see the header
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+      # Electron is pinned exactly (no range) and stays pinned: any version is ignored
+      - dependency-name: "electron"
+    groups:
+      npm-minor-and-patch:
+        applies-to: "version-updates"
+        update-types:
+          - "minor"
+          - "patch"
+      npm-security:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
+
+  # ── pip: the runtime's own package (src/pyproject.toml).
+  - package-ecosystem: "pip"
+    directory: "/src"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps(pip)"
+    labels:
+      - "dependencies"
+      - "python"
+    ignore:
+      # no major, whatever the package — a major in the runtime's dependencies is a
+      # migration with a Python floor, and it earns its own errand
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+    groups:
+      pip-minor-and-patch:
+        applies-to: "version-updates"
+        update-types:
+          - "minor"
+          - "patch"
+      pip-security:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
