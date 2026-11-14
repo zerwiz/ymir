@@ -16,11 +16,16 @@ The refusals that carry the design:
   · a `review[]` block written by a smith is refused: that block is the reviewer's, and a packet
     that already contains a verdict is a review that did not happen.
   · `floor partial` is refused: a partial floor is a refusal waiting to happen (schema rule 6).
+  · a packet with no `records` block is refused (plan 291 part 2): a worker says which of its
+    project's records it touched — each path, or `none: <reason>` — because a project's decisions,
+    handoff, plans and boards are updated by the work or the work has not landed.
 
 Usage:
   handoff-packet.sh write <id> --task T --plan P [--branch B] [--base REF] [--head SHA]
                               --gate "name|cmd|exit|tail"... --test "cmd|exit|tail"...
-                              [--claim "line|state|evidence"]... [--not-done "item|why"]...
+                              [--claim "line|state|evidence"]...
+                              --record "path|what changed" | --record "none|<why no record changed>"
+                              [--not-done "item|why"]...
                               [--need "what|who"]... [--repo DIR] [--packet FILE]
   handoff-packet.sh check <id> [--repo DIR] [--fetched SHA] [--packet FILE]
   handoff-packet.sh show  <id> [--packet FILE]
@@ -38,12 +43,13 @@ TOOL = "handoff-packet"
 SCHEMA = "schemas/handoff-packet.toon"
 PACKET_FIELDS = ["task", "plan", "branch", "base", "head", "author", "written_at",
                  "ruleset", "floor"]
-BLOCKS = ["changed", "gates", "tests", "claims", "not_done", "needs"]
+BLOCKS = ["changed", "gates", "tests", "claims", "records", "not_done", "needs"]
 BLOCK_COLS = {
     "changed": ["path", "added", "removed", "why"],
     "gates": ["gate", "cmd", "exit", "output_tail"],
     "tests": ["cmd", "exit", "tail"],
     "claims": ["claim", "state", "evidence"],
+    "records": ["path", "what"],
     "not_done": ["item", "why"],
     "needs": ["need", "who"],
 }
@@ -133,7 +139,7 @@ def read_packet(path):
     if not os.path.exists(path):
         refuse(f"no packet at {path}", [("missing", path)],
                "handoff-packet.sh write <id> — a reviewer reads a packet, never a promise")
-    packet = {"rows": {}, "changed": [], "gates": [], "tests": [], "claims": [],
+    packet = {"rows": {}, "changed": [], "gates": [], "tests": [], "claims": [], "records": [],
               "not_done": [], "needs": [], "review": [], "faults": [], "headers": {}}
     block = None
     for line in open(path, encoding="utf-8"):
@@ -155,7 +161,7 @@ def read_packet(path):
             for col, cell in zip(cols, cells):
                 packet["rows"][col] = cell
             continue
-        if block in ("changed", "gates", "tests", "claims", "not_done", "needs"):
+        if block in ("changed", "gates", "tests", "claims", "records", "not_done", "needs"):
             cols = packet["headers"].get(block, BLOCK_COLS[block])
             cells = [first] + _cells(rest)
             row = dict(zip(cols, cells))
@@ -269,6 +275,17 @@ def cmd_write(a):
         if state not in CLAIM_STATES:
             usage_error(f'--claim state must be verified|unverified, got {state!r}')
         claims.append({"claim": line, "state": state, "evidence": ev})
+    records = []
+    for r in a.record or []:
+        path, what = split_row(r, 2, "--record")
+        if not path:
+            usage_error('--record needs a path, or `none` with the reason nothing changed')
+        if path == "none":
+            if not what or what.strip().lower() in EMPTY_CLAIMS or len(what.strip()) < 8:
+                usage_error('--record "none|…" needs a REASON a reviewer can weigh, not silence')
+        elif not what:
+            usage_error(f'--record "{path}|" says nothing was updated there — say what changed')
+        records.append({"path": path, "what": what})
     not_done = []
     for n in a.not_done or []:
         item, why = split_row(n, 2, "--not-done")
@@ -280,6 +297,9 @@ def cmd_write(a):
             usage_error(f'--need who must be allfather|operator|licence|key, got {who!r}')
         needs.append({"need": what, "who": who})
 
+    if not records:
+        usage_error('write needs at least one --record: each project record you updated (path|what), '
+                    'or --record "none|<why no record changed>"')
     if not gates:
         usage_error("write needs at least one --gate (the output, not the name)")
     if not tests:
@@ -289,13 +309,13 @@ def cmd_write(a):
               "head": head, "author": author,
               "written_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
               "ruleset": ruleset, "floor": floor,
-              "changed": changed, "gates": gates, "tests": tests, "claims": claims,
+              "changed": changed, "gates": gates, "tests": tests, "claims": claims, "records": records,
               "not_done": not_done or [{"item": "none", "why": "nothing was left"}],
               "needs": needs or [{"need": "none", "who": "operator"}]}
     path = a.packet or os.path.join(packet_dir(), f"{a.id}.packet")
     write_packet(path, packet)
-    print(f'{TOOL}[1]{{packet,branch,head,changed,gates,floor,state}}:')
-    print(f'  "{path}","{branch}","{head}","{len(changed)}","{len(gates)}","{floor}","written"')
+    print(f'{TOOL}[1]{{packet,branch,head,changed,gates,records,floor,state}}:')
+    print(f'  "{path}","{branch}","{head}","{len(changed)}","{len(gates)}","{len(records)}","{floor}","written"')
     print(f'help: the reviewer runs `handoff-packet.sh check {a.id}` before the diff')
 
 
@@ -334,6 +354,20 @@ def cmd_check(a):
     for row in p["claims"]:
         if row.get("state") not in CLAIM_STATES:
             faults.append(("claims.state", f"not verified|unverified: {row.get('state')!r}"))
+
+    if not p["records"]:
+        faults.append(("records", "missing — a packet says which of the project's records it touched, "
+                                  "or `none:<why>` (plan 291 part 2)"))
+    for row in p["records"]:
+        path, what = (row.get("path") or "").strip(), (row.get("what") or "").strip()
+        if not path:
+            faults.append(("records.path", "empty — name the path, or write `none` with a reason"))
+        if not what:
+            faults.append(("records.what", f"{path or '?'} says nothing was updated"))
+        elif path == "none" and len(what) < 8:
+            faults.append(("records.what", f"`none` carries no weighable reason: {what!r}"))
+        elif what.lower() in EMPTY_CLAIMS:
+            faults.append(("records.what", f"{path or '?'} carries {what!r}, which is a claim, not a record"))
 
     repo = a.repo or os.environ.get("YMIR_PACKET_REPO", ".")
     try:
@@ -376,9 +410,9 @@ def cmd_check(a):
         refuse(f"packet {a.id or path} cannot be trusted", faults,
                "the packet is not read: fix the named rows, or write a new packet for the new head")
 
-    print(f'{TOOL}[1]{{packet,branch,head,changed,gates,tests,state}}:')
+    print(f'{TOOL}[1]{{packet,branch,head,changed,gates,tests,records,state}}:')
     print(f'  "{path}","{p["rows"].get("branch", "")}","{head}","{len(p["changed"])}",'
-          f'"{len(p["gates"])}","{len(p["tests"])}","sound"')
+          f'"{len(p["gates"])}","{len(p["tests"])}","{len(p["records"])}","sound"')
     print("note: soundness is not approval — run the gates on the fetched commit yourself (plan 203 §15.3)")
 
 
@@ -401,7 +435,8 @@ def main():
     w.add_argument("--task"); w.add_argument("--plan"); w.add_argument("--branch")
     w.add_argument("--base"); w.add_argument("--head"); w.add_argument("--author")
     w.add_argument("--gate", action="append"); w.add_argument("--test", action="append")
-    w.add_argument("--claim", action="append"); w.add_argument("--not-done", action="append")
+    w.add_argument("--claim", action="append"); w.add_argument("--record", action="append")
+    w.add_argument("--not-done", action="append")
     w.add_argument("--need", action="append")
     w.add_argument("--repo"); w.add_argument("--packet")
 
