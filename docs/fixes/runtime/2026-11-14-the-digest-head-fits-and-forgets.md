@@ -56,7 +56,7 @@ sweeps the hall from its session start.
   refused, a finished errand is reported once and then gone, an UNKNOWN row is reaped once, a
   compaction injects the head only, the core exists in exactly one file and reaches the seat
   law, and one hook resolves the current home. 36 checks, all green.
-- On heimdall, through the real hook: a startup injection is **33 lines / 3,569 bytes**, a
+- On this machine, through the real hook: a startup injection is **33 lines / 3,569 bytes**, a
   compaction **34 lines / 3,745 bytes** — from the same home that used to emit 676 lines /
   50,147 bytes.
 - The head costs about 1.3 s to print (it was 3.5 s when the record reader spawned a process
@@ -67,8 +67,8 @@ sweeps the hall from its session start.
 - **The pin and the working tree still run the old digest** until this branch becomes a
   release: the installer seats harness hooks from the pin (`RULES/02 §7`), so the deployed hook
   arrives with the next `bin/engine/release.sh build` + `flip`.
-- **nidavellir was offline** (tailnet: last seen 1 h ago) when this was proved; the same gate
-  and the same hook run there with one command once the machine is up.
+- **A second machine was offline** (its tailnet seat: last seen 1 h ago) when this was proved;
+  the same gate and the same hook run there with one command once that machine is up.
 - **Hlidskjalf's Runtime page** still shows the digest text; it is item 25's errand
   (`one-hlidskjalf`), not this one.
 
