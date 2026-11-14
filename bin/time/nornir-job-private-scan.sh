@@ -86,7 +86,7 @@ nda_file="$HOME_DIR/hodd/identity/nda-names.txt"
 nda_rules=""
 if [ -f "$nda_file" ]; then
   while IFS= read -r name; do
-    [ -z "$name" ] && continue
+    case "$name" in ''|\#*) continue ;; esac   # a comment line is not a name
     nda_rules+="BUSINESS	(?i)\\b${name// /[ _-]}\\b"$'\n'
   done < "$nda_file"
 else
@@ -95,7 +95,7 @@ fi
 
 # A false positive must be written down, not silently tolerated: the allow file lives in the home (private) and holds
 # one regex per line — each with a comment saying why it is safe. A finding that matches is still counted as `allow`.
-allow_file="$HOME_DIR/hodd/state/private-scan/allow.txt"
+allow_file="$HOME_DIR/hodd/config/private-scan-allow.txt"
 findings=0
 low=0
 allowed=0
