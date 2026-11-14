@@ -378,7 +378,7 @@ start_one() {
   # doors that DO touch the microphone or load a model (the voice engine, the voice client, Rödd's head).
   # The DevTools port, for testing an app as a person would use it: YMIR_DEVTOOLS_PORT (unset = none).
   [ -n "${YMIR_DEVTOOLS_PORT:-}" ] && extra+=(--remote-debugging-port="$YMIR_DEVTOOLS_PORT")
-  nohup env YMIR_DESKTOP_VIEW="$v" "$(real_electron "$v")" "$(app_dir "$v")" \
+  nohup env YMIR_DESKTOP_VIEW="$v" YMIR_WINDOW_BUTTONS="$(app_window_buttons)" "$(real_electron "$v")" "$(app_dir "$v")" \
     --user-data-dir="$HOME/.config/$(view_mark "$v")" \
     "${extra[@]}" >"$l" 2>&1 < /dev/null &
   echo $! >"$f"
