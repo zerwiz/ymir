@@ -2,10 +2,19 @@
 
 **Status:** runbook — written 2026-11-14 at the operator's word: *"do we need a runbook of this, for our fleet?"*
 
-Work is forged on any machine of the fleet and merged in one place. A worker (an Eindri) finishes on its own branch;
-the helm on that machine checks it; the **reviewer on the heart** fetches it, reruns its proof, opens the pull
-request, merges it and tells the operator. The operator does not press merge. This page is that road for every
-machine, and it points at the plans and rules that are its law.
+Work is forged on any machine of a fleet and merged in one place. A worker (an Eindri) finishes on its own branch,
+and the helm on that machine checks it. What happens next is **the operator's choice, per project**: the project's
+`delivery` row in the operator's own project registry (`$YMIR_HOME/hodd/identity/projects.yaml`) says who merges.
+
+| `delivery` | Who gathers and merges |
+|---|---|
+| `operator-merges` (the default) | the helm opens the PR; the operator reviews and merges |
+| `reviewer-merges` | a reviewer seat on the fleet's **heart** (the machine the fleet registry gives the `heart` role) fetches, reruns the proof, opens the PR, merges and tells the operator |
+| `batch` | the helm gathers related errands into one PR with `bin/forge/gather.sh` (`docs/features/gather-a-batch.md`) |
+
+A fleet of one machine is its own heart. Nothing on this page assumes a host name, a machine count or who the
+operator is; each comes from the operator's registries. The steps below are written for `reviewer-merges`, the
+longest road; the other two stop earlier.
 
 > [!IMPORTANT]
 > The law is `RULES/08` (its `reviewer-merges` row), plan 206 §4 (*the one pass*) and plans 203 and 205. If this page
@@ -17,8 +26,8 @@ machine, and it points at the plans and rules that are its law.
 |---|---|---|---|
 | Worker (Eindri) | a herdr pane and its own worktree, on any machine | builds the errand, proves it in the real window, pushes **its branch**, writes the handoff packet, reports one stamped line to the helm | pushes `main`, opens or merges a PR |
 | Helm | the session holding the Gná arm on that machine | briefs and seats workers (`docs/runbooks/send-an-eindri.md`), checks each branch against its brief, answers each report | merges, or hands over a branch it has not checked |
-| Reviewer | Forseti, seated on the heart (zerwizserver) | takes the packet from the review shelf, fetches the branch, reruns gates and tests **on the heart**, reads the diff against the plan, opens the PR, merges, records the merge in Runes, tells the operator | merges a red or conflicting head, or a branch whose head is not the packet's |
-| Operator | anywhere | reads the merge mail and the verdicts, answers the reviewer's questions, withdraws `reviewer-merges` with one line if he wants to | — |
+| Reviewer | Forseti, seated on the fleet's heart (`reviewer-merges` only) | takes the packet from the review shelf, fetches the branch, reruns gates and tests **on the heart**, reads the diff against the plan, opens the PR, merges, records the merge in Runes, tells the operator | merges a red or conflicting head, or a branch whose head is not the packet's |
+| Operator | anywhere | chooses each project's `delivery`; reads the verdicts and merge notices; answers the reviewer's questions | — |
 
 ## The road
 
@@ -27,7 +36,7 @@ sequenceDiagram
     participant W as Worker (any machine)
     participant H as Helm (same machine)
     participant S as Review shelf (state/review)
-    participant R as Reviewer (the heart)
+    participant R as Reviewer (the fleet's heart)
     participant O as Operator
     W->>W: prove in the real window, both machines
     W->>W: push eindri/<errand> (never main)
@@ -71,7 +80,7 @@ the helm says it in its answer; the reviewer gathers them in that order. This re
 
 | Symptom | Look at |
 |---|---|
-| A packet sits on the shelf and nothing happens | the heart: is the reviewer seated (`herdr agent list` there), is the heart healthy (it ran out of memory on 2026-11-14), `bin/forge/review-shelf.sh` |
+| A packet sits on the shelf and nothing happens | the heart: is the reviewer seated (`herdr agent list` there), is the heart healthy (memory, restart loops), `bin/forge/review-shelf.sh`; is the project's `delivery` really `reviewer-merges` |
 | The reviewer refuses | the refusal names rule, file and line; it returns to the worker, who mends on the same branch |
 | The heart cannot reach GitHub | its `gh` login (plan 206 §2 measured it invalid once) |
 | The operator never hears of a merge | plan 206 §12: the verdict door must call `bin/notify/send.sh` |
@@ -86,5 +95,6 @@ the helm says it in its answer; the reviewer gathers them in that order. This re
 
 ## CHANGE LOG
 
-- **2026-11-14** — written at the operator's word, the night the delivery road was corrected (*"i dont merge. its the
-  zerwiz server's worker that is merging"* · *"he should do the merging"* · *"so you need to make sure the PRs are right"*).
+- **2026-11-14** — written at the operator's word (*"do we need a runbook of this, for our fleet?"*), then made general
+  at his next word: *"it's a public repo and users might run their fleets in different ways"* — the delivery row,
+  the heart's role and the machine count come from each operator's own registries, never from this page.

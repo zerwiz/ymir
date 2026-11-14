@@ -23,6 +23,6 @@ always is that way."* Nine workers were seated in tmux in one night, silently.
 
 ### Proof
 
-On heimdall, from the checkout: six errands (`hall-follow`, `smidja-header-chat-2`, `fleet-truth-2`, `boot-stopwatch`,
+On the operator's dev machine, from the checkout: six errands (`hall-follow`, `smidja-header-chat-2`, `fleet-truth-2`, `boot-stopwatch`,
 `bridge-and-rail`, `digest-head`) were each seated in their own herdr pane (`w39:pY`, `pZ`, `p0`, `p11`, `p12`, `p13`)
 in `.yggdrasil/<errand>`, all `rc=0`; before the change the same launch exited 4 and fell into tmux.
