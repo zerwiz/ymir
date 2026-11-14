@@ -16,14 +16,49 @@ def ymir_home():
     return out or os.path.join(os.path.expanduser('~'), 'Documents', 'ymirhome')
 
 
-REG = os.path.join(ymir_home(), 'hodd/identity/confidential.yaml')
+HOME = ymir_home()
+REG = os.path.join(HOME, 'hodd/identity/confidential.yaml')
 FIND = False
+
+# A VARIABLE IS THE DESIGN, NOT A LEAK (plan 293 part 8, 2026-11-14).
+#
+# The public docs say where a thing lives as `$YMIR_HOME/hodd/...`. That is the shape Rule 07
+# asks for — one variable, one documented default — and until this change the ward below read
+# every one of those mentions as a "private hoard path". The helm's audit of 36 panes measured
+# it as a FALSE SIGNAL on correct code, and a ward that refuses the design is a ward the house
+# routes around (the audit's own note: "it is the wrong ward for repository code").
+#
+# What leaks is not the variable, it is the RESOLVED path: an expanded home directory, a `~/`
+# path, an absolute one, a real shelf littered with a real realm's name. So `$YMIR_HOME` left
+# the pattern list and the resolved home walked in — computed at run time from the one
+# resolver, never written here (a guard that names the operator re-creates the leak, RULES/04).
 PATTERNS = [
     (re.compile(r'/home/|/Users/|[A-Z]:\\'), 'absolute path'),
-    (re.compile(r'\$YMIR_HOME|~/[A-Za-z]|(?:^|[\s`(])hodd/|svartalfaheim/|\.yggdrasil/'), 'private hoard path'),
+    (re.compile(re.escape(HOME) + r'/', re.I), 'private hoard path (resolved)'),
+    (re.compile(r'~/[A-Za-z]|(?:^|[\s`(])hodd/|\.yggdrasil/'), 'private hoard path'),
     (re.compile(r'platform\.env|age\.key|secrets/|\.age\b'), 'vault filename'),
     (re.compile(r'\bsk-[A-Za-z0-9]|\bghp_[A-Za-z0-9]|AKIA[0-9A-Z]{16}|BEGIN [A-Z ]*PRIVATE KEY|password=|api_key=|Bearer [A-Za-z0-9._-]{12,}'), 'secret shape'),
 ]
+
+
+def real_realms():
+    """The realms that actually exist in the home, read at run time and never written here."""
+    shelf = os.path.join(HOME, 'svartalfaheim')
+    try:
+        return sorted(n for n in os.listdir(shelf) if os.path.isdir(os.path.join(shelf, n)))
+    except OSError:
+        return []
+
+
+# A SHAPED SHELF IS THE DESIGN TOO. `svartalfaheim/<realm>/<project>/plans/` is how every page
+# names the plan ledger, and the repository ships `svartalfaheim/` itself (its own examples).
+# What leaks is a REAL realm — a house's own name on a private shelf — so the realms are read
+# from the home at run time and only those refuse the surface. The generic `svartalfaheim/`
+# alternative left the pattern for the same reason `$YMIR_HOME` did.
+REALMS = real_realms()
+if REALMS:
+    PATTERNS.append((re.compile(r'svartalfaheim/(?:' + '|'.join(re.escape(r) for r in REALMS) + r')(?![-\w])', re.I),
+                     'private hoard path (a real realm)'))
 
 def registry():
     try:

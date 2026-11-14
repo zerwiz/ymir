@@ -219,6 +219,21 @@ gate codex-plugin "the Codex tool catalog, shell syntax, install and refresh con
 # It has its own door now: .github/workflows/npm-pretest.yml, run by hand or when the artifact's own inputs
 # change (package.json · the app build · the hull), and `bin/forge/npm/pr-pretest.sh` locally before a
 # release. Set YMIR_PRETEST_ON_PUSH=1 to run it here as before.
+# PLAN 293 — the hall's own three doors, each with the fault it answers measured the same day.
+# A test that no gate calls is a test nobody runs, which is this file's whole reason to exist.
+# (This block is the ONLY part of this file PR #752 owns: main's ci-verify.sh is taken whole, and a
+# branch adds its own gate lines back — the rule the Allfather gave on 2026-11-14, so two branches
+# that each add a gate never conflict again.)
+gate safe-send "a brief reads the input box before it types, asks the screen before it resends, and speaks each herdr's own verbs" \
+     bash "$ROOT/bin/agents/tests/test_eindri_send.sh"
+gate herdr-editor "the input-box reader knows both harness shapes, and says unknown rather than empty" \
+     bash "$ROOT/bin/seat/tests/test_herdr_editor.sh"
+gate seat-find "the finder names the pane whose work printed the words, never its own, and counts what it could not read" \
+     bash "$ROOT/bin/seat/tests/test_seat_find.sh"
+# RULES/04 — a variable is the design; a RESOLVED path or a real name is the leak.
+gate private-guard-variable "the private ward reads \$YMIR_HOME as design and still refuses a resolved path or a real realm" \
+     bash "$ROOT/.agents/tests/private-guard-variable.test.sh"
+
 # THE GATE'S OWN DECISION, PROVED (2026-11-14): a ward's finding belongs to a push only when it names
 # THIS checkout's copy of a path, never when it names a neighbour checkout's copy of the same script.
 gate guards-inherited "a finding in a neighbour checkout is inherited, and a finding in ours is not" \
