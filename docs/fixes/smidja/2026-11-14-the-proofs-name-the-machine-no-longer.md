@@ -12,10 +12,13 @@ The four:
 
 | Where | It said | It says |
 |---|---|---|
-| `apps/smidja-factory/apps/visualizer/server/volundr.test.ts` | `Measured on heimdall 2026-11-14: …` | `Measured on this machine, 2026-11-14: …` |
-| `docs/fixes/smidja/2026-11-14-kaia-answers-and-failure-says-what-failed.md` (proof quote) | `… seated here on heimdall …` | `… seated here on this machine …` |
-| the same note, the store's path | `/home/heimdall/Documents/ymirhome/smidja/smidja.db` | `$YMIR_HOME/smidja/smidja.db` |
-| `docs/fixes/smidja/2026-11-14-kaia-is-volundr-the-master-of-the-smiths.md` | `read through the DevTools protocol on heimdall` | `read through the DevTools protocol` |
+| `apps/smidja-factory/apps/visualizer/server/volundr.test.ts` | `Measured on <the seat> 2026-11-14: …` | `Measured on this machine, 2026-11-14: …` |
+| `docs/fixes/smidja/2026-11-14-kaia-answers-and-failure-says-what-failed.md` (proof quote) | `… seated here on <the seat> …` | `… seated here on this machine …` |
+| the same note, the store's path | `<one user's home>/Documents/ymirhome/smidja/smidja.db` | `$YMIR_HOME/smidja/smidja.db` |
+| `docs/fixes/smidja/2026-11-14-kaia-is-volundr-the-master-of-the-smiths.md` | `read through the DevTools protocol on <the seat>` | `read through the DevTools protocol` |
+
+The "it said" column is masked as well, on purpose: a record of a masked name that reprints the name
+unmasks it again, and the next audit would be right to flag its own fix note.
 
 Two of the four came in from `eindri/smidja-header-chat`. The helm directed that they be fixed here,
 on the rename's branch, rather than waiting for that branch to be mended — so they are fixed here.
