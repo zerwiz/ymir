@@ -22,6 +22,8 @@ The refusals that carry the design:
 
 Usage:
   handoff-packet.sh write <id> --task T --plan P [--branch B] [--base REF] [--head SHA]
+                              # --base names a BRANCH (eindri/<id>) when the smith was cut from an
+                              # unmerged branch; bin/forge/gather.sh then merges that base first (plan 293 part 7)
                               --gate "name|cmd|exit|tail"... --test "cmd|exit|tail"...
                               [--claim "line|state|evidence"]...
                               --record "path|what changed" | --record "none|<why no record changed>"

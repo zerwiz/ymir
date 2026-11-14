@@ -172,6 +172,10 @@ gate rules-compliance-env-file "the address ward tells a documented filename fro
 # resolves a `--base` ref to a sha, so the door's own packet passes the door's own check.
 gate handoff-packet "a handoff packet is sound, and the door no longer refuses the packet it just wrote" \
      bash "$ROOT/bin/gates/tests/test_handoff_packet.sh"
+# PLAN 293 part 7 — a worker cut from another unmerged branch records that branch in its packet, and
+# the gather merges the base FIRST. Gathered in the wrong order the dependent lands before its base.
+gate gather-orders-by-base "the gather merges a packet's base branch before the branch cut from it" \
+     bash "$ROOT/bin/gates/tests/test_gather_orders_by_base.sh"
 
 # Rule 11 — a tracked file is MOVED, never deleted. RULES/11 says the ward runs here; until
 # 2026-11-03 nothing in this file called it, so a deletion passed CI unseen. The range is the
@@ -221,6 +225,12 @@ gate landing     "Sága names the branches pushed with no PR and the commits on 
 # command. Membership is the meta's own `mode=batch` + `wave`, never a second registry.
 gate gather-notice "the last errand of a batch prompts the gather, once, with the command (plan 293)" \
                bash "$ROOT/bin/forge/tests/test_gather_notice.sh"
+# PLAN 293 part 10 — the reviewer's SEAT says why it refuses, and a dead seat is re-raised. A pane
+# whose agent died is a shell, not the seat: it is reaped and a fresh agent raised. A live primary
+# keeps only the helm — never the seat. And when pi dies at start, the pane's own first error line
+# is what the keeper reports (RULES/13 is the measured cause), not "agent start failed".
+gate review-seat-keeper "the reviewer's seat refuses aloud, reaps a shell pane and re-raises, and names why pi died" \
+               bash "$ROOT/bin/forge/tests/test_review_seat_keeper.sh"
 gate usage      "no door became unused since the baseline"    bash "$ROOT/bin/gates/checks/usage-ratchet.sh"
 gate portability "GNU-only callers may fall, never rise (RULES/05)"    bash "$ROOT/bin/gates/checks/portability-ratchet.sh" check
 gate inventory  "the bin/backend index is current"            bash "$ROOT/bin/gates/inventory.sh" --check
