@@ -184,17 +184,20 @@ export function Profile() {
               </label>
             </div>
 
+            {/* The workspaces themselves (plan 275 items 11, 30): every realm stays
+                listed and visible. The tenant GRANT beside each one went with the
+                logins — there is no one to grant to, the desktop session is the
+                operator. */}
             <div className="eyebrow">Workspaces</div>
             <div className="col" style={{ gap: 6 }}>
               {session.tenants.map((t) => (
                 <div className="tenant-row" key={t.realm}>
                   <span className="realm-swatch" style={{ background: tenantColorOf(t.realm, t.tint) }} />
                   <span className="grow">
-                    @{session.user.login}
-                    <span className="mono dim" style={{ marginLeft: 8, fontSize: 11 }}>{t.tenant}</span>
-                  </span>
-                  <span className="mono dim" style={{ fontSize: 10, textTransform: 'uppercase' }}>
-                    {ROLE_LABEL[t.role]}
+                    {t.tenant}
+                    <span className="mono dim" style={{ marginLeft: 8, fontSize: 11 }}>
+                      svartalfaheim/{t.realm}
+                    </span>
                   </span>
                 </div>
               ))}
