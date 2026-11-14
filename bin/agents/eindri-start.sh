@@ -28,6 +28,20 @@
 #   eindri-start.sh --version
 set -u
 
+# A CHILD DOES NOT INHERIT ITS PARENT'S PANE (2026-11-14, plan 275's stamp fault).
+# A worker started from the helm's shell carried HERDR_PANE_ID=w39:pT, so every message
+# it sent was stamped "agent Hœnir (the helm)" — the Allfather read it as the helm's own
+# word. The pane IDENTITY is cleared here so no child can wear its parent's name; herdr
+# sets the real one in the pane it seats, so nothing is lost by erasing it.
+#
+# What is deliberately NOT cleared: HERDR_ENV (the "inside herdr" capability flag
+# herdr-run needs to seat at all), HERDR_SOCKET_PATH/HERDR_SESSION (the transport) and
+# HERDR_WORKSPACE_ID (where the home's children belong). Clearing those unseats the
+# worker — a fix that breaks the seat is a worse fault than the one it mends.
+# bin/agents/msg-origin.sh also PROVES the pane against this process's ancestry, so this
+# is the second ward: the stamp no longer trusts an inherited id even if one survives.
+unset HERDR_PANE_ID HERDR_TAB_ID 2>/dev/null || true
+
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do

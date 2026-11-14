@@ -273,6 +273,37 @@ function agents() {
   });
 }
 
+/* ---- /api/a2a/messages — the herdr traffic between agents ------------------ *
+ * Plan 275 item 8, at the Allfather's word: *"the a2a task stream also should show
+ * the herdr communication between agents"*. The sends are recorded by
+ * bin/agents/msg-log.sh in the hoard's state root, so this door reads the same file
+ * the sender wrote — no second record, no inference. A missing log is an empty list
+ * with `recorded: 0`, never a fabricated event, and a torn line is skipped.
+ */
+const STATE_ROOT = process.env.YMIR_STATE_DIR ?? join(HOME_DIR, 'state');
+const FLEET_LOG = join(
+  process.env.YMIR_MSG_LOG ?? join(STATE_ROOT, 'fleet/messages.jsonl'),
+);
+
+function a2aMessages(limit: number): { messages: unknown[]; recorded: number } {
+  let lines: string[] = [];
+  try {
+    lines = readFileSync(FLEET_LOG, 'utf8').split('\n').filter((l) => l.trim());
+  } catch {
+    return { messages: [], recorded: 0 };
+  }
+  const messages: unknown[] = [];
+  for (const line of lines.slice(-Math.max(limit, 1))) {
+    try {
+      messages.push(JSON.parse(line));
+    } catch {
+      // one torn line never blanks the stream
+    }
+  }
+  // newest first: the panel shows what was just said without scrolling
+  return { messages: messages.reverse(), recorded: lines.length };
+}
+
 /* ---- /api/tasks (forge orders) ------------------------------------------- */
 function orders_uncached() {
   const text = read(MASTERPLAN);
@@ -302,13 +333,13 @@ function orders() {
   return memo('orders', 2000, orders_uncached);
 }
 
-function tasks() {
+function tasks_orders(): Task[] {
   const now = new Date().toISOString();
   return orders().map((o, i) => ({
     id: o.id,
     title: o.title,
     state: o.status === 'COMPLETED' ? 'COMPLETED' : o.status === 'BLOCKED' ? 'INPUT_REQUIRED' : 'WORKING',
-    realm: 'wayof',
+    realm: 'wayof' as RealmId,
     agent: 'Brokk',
     agentId: 'brokk',
     order: o.phase,
@@ -318,6 +349,130 @@ function tasks() {
     artifacts: [],
     log: [`${o.id} · ${o.status} · ${o.phase}`],
   }));
+}
+
+/* ---- the ERRANDS, read from the records the launcher wrote ---------------- *
+ * Plan 275 item 17, at the Allfather's word: *"i dont see the herdr tasks here
+ * either"*. The board was built ONLY from Forge orders (`docs/masterplan.md`), so
+ * nine errands seated in herdr panes left every column empty.
+ *
+ * The evidence is in the home's state root, and none of it is inferred:
+ *   <id>.meta    id, window/herdr_pane_id, harness, model, kind, mode, launched
+ *   <id>.status  the agent's own claim — "working: …", "done: …", "failed: …"
+ * A task without a `.meta` is not an errand and is never invented here.
+ */
+// The SPA's own vocabulary (`src/types.ts`). The gate is a single file served by bun,
+// which strips types rather than checking them — declaring them here keeps the shape
+// written down beside the code that fills it instead of nowhere at all.
+type TaskState =
+  | 'SUBMITTED' | 'WORKING' | 'COMPLETED' | 'FAILED'
+  | 'REJECTED' | 'CANCELED' | 'INPUT_REQUIRED' | 'AUTH_REQUIRED';
+type RealmId = string;
+interface Task {
+  id: string;
+  title: string;
+  state: TaskState;
+  realm: RealmId;
+  agent: string;
+  agentId: string;
+  order: string;
+  progress: number;
+  startedAt: string;
+  updatedAt: string;
+  artifacts: string[];
+  log: string[];
+}
+
+const EIN_STATE_MAP: Record<string, TaskState> = {
+  working: 'WORKING',
+  launching: 'WORKING',
+  seat: 'WORKING',
+  seated: 'WORKING',
+  running: 'WORKING',
+  submitted: 'SUBMITTED',
+  pending: 'SUBMITTED',
+  queued: 'SUBMITTED',
+  paused: 'INPUT_REQUIRED',
+  question: 'INPUT_REQUIRED',
+  needs: 'INPUT_REQUIRED',
+  blocked: 'INPUT_REQUIRED',
+  stalled: 'FAILED',
+  failed: 'FAILED',
+  error: 'FAILED',
+  done: 'COMPLETED',
+  delivered: 'COMPLETED',
+  shipped: 'COMPLETED',
+  merged: 'COMPLETED',
+  verified: 'COMPLETED',
+};
+
+function einState(claim: string): TaskState {
+  const head = claim.split(/[\s:]/)[0]?.toLowerCase() ?? '';
+  return EIN_STATE_MAP[head] ?? (claim ? 'WORKING' : 'SUBMITTED');
+}
+
+function errandTasks(): Task[] {
+  let files: string[] = [];
+  try {
+    files = readdirSync(STATE_ROOT).filter((f) => f.endsWith('.meta'));
+  } catch {
+    return [];
+  }
+  const rows: (Task & { launched: number })[] = [];
+  for (const f of files) {
+    const id = f.slice(0, -5);
+    const kv: Record<string, string> = {};
+    try {
+      for (const line of readFileSync(join(STATE_ROOT, f), 'utf8').split('\n')) {
+        const at = line.indexOf('=');
+        if (at > 0) kv[line.slice(0, at).trim()] = line.slice(at + 1);
+      }
+    } catch {
+      continue;
+    }
+    let claims: string[] = [];
+    try {
+      claims = readFileSync(join(STATE_ROOT, `${id}.status`), 'utf8')
+        .split('\n')
+        .map((l) => l.trim())
+        .filter(Boolean);
+    } catch {
+      /* an errand that has not spoken yet */
+    }
+    const claim = claims[claims.length - 1] ?? '';
+    const launched = Number(kv.launched ?? 0) || 0;
+    const pane = kv.herdr_pane_id || kv.window || '';
+    const harness = kv.harness || 'agent';
+    const state = einState(claim);
+    rows.push({
+      id,
+      title: id.replace(/-/g, ' '),
+      state,
+      realm: 'work' as RealmId,
+      // WHO is standing in the pane, not the forge's owner: the errand's own launch record.
+      agent: `${harness}${kv.model ? ` · ${kv.model}` : ''}`,
+      agentId: id,
+      order: pane ? `${kv.mode || kv.kind || 'erdri'} · ${pane}` : kv.mode || kv.kind || 'errand',
+      progress: state === 'COMPLETED' ? 100 : state === 'WORKING' ? 50 : state === 'SUBMITTED' ? 10 : 0,
+      startedAt: launched ? new Date(launched * 1000).toISOString() : '',
+      updatedAt: launched ? new Date(launched * 1000).toISOString() : '',
+      artifacts: kv.worktree ? [kv.worktree] : [],
+      log: [claim || 'no claim yet', `${kv.harness || 'agent'}${kv.model ? ` on ${kv.model}` : ''}${pane ? ` in ${pane}` : ''}`],
+      launched,
+    });
+  }
+  // Newest first, and only the tail of the ledger: a board is what is in flight, not
+  // a history of every errand this home has ever run (1,000+ records otherwise).
+  rows.sort((a, b) => b.launched - a.launched);
+  return rows.slice(0, 60).map(({ launched: _l, ...t }) => t);
+}
+
+function tasks(): Task[] {
+  // The ERRANDS first — they are the live work the Allfather asked to see — then the
+  // forge's orders, whose ids are distinct. Neither list is invented from the other.
+  const errands = errandTasks();
+  const seen = new Set(errands.map((t) => t.id));
+  return [...errands, ...tasks_orders().filter((t) => !seen.has(t.id))];
 }
 
 /* ---- /api/runes ---------------------------------------------------------- */
@@ -1604,42 +1759,98 @@ async function liveStatus() {
   };
 }
 
-/* ---- /api/stream (SSE): new runes lines ---------------------------------- */
-function stream() {
-  let cursor = 0;
+/* ---- /api/stream (SSE): new runes AND new agent-to-agent messages --------- *
+ * Two ledgers, one stream. The Runes tail has been here since the start; the fleet
+ * message log (bin/agents/msg-log.sh) joins it so the footer shows the herdr traffic
+ * between agents as it happens (plan 275 item 8). Both are read by BYTE cursor, and
+ * a file that shrank (rotated, replaced) restarts its cursor at 0 rather than
+ * silently going dark.
+ */
+function tailLines(
+  path: string,
+  from: number,
+): { at: number; lines: string[] } {
+  let size: number;
   try {
-    cursor = statSync(RUNES).size;
+    size = statSync(path).size;
+  } catch {
+    return { at: from, lines: [] };
+  }
+  const cursor = size < from ? 0 : from;
+  if (size <= cursor) return { at: cursor, lines: [] };
+  let tail = '';
+  try {
+    // BYTES, not characters: the cursor is a byte offset from statSync, and slicing a
+    // JS string by it lands mid-character the moment a row carries `Hœnir` or `Smíðja`.
+    // Every line after the first multibyte rune was silently lost to that (2026-11-14).
+    tail = readFileSync(path).subarray(cursor).toString('utf8');
+  } catch {
+    return { at: cursor, lines: [] };
+  }
+  return { at: size, lines: tail.split('\n').filter((l) => l.trim()) };
+}
+
+function stream() {
+  let runeCursor = 0;
+  try {
+    runeCursor = statSync(RUNES).size;
   } catch {
     /* no ledger yet */
+  }
+  // A stream opened now shows what is said NEXT; the A2A panel carries the history.
+  let msgCursor = 0;
+  try {
+    msgCursor = statSync(FLEET_LOG).size;
+  } catch {
+    /* nothing has been sent yet */
   }
   let tick: ReturnType<typeof setInterval> | null = null;
   return new Response(
     new ReadableStream({
       start(controller) {
         const enc = new TextEncoder();
+        const send = (ev: unknown) => controller.enqueue(enc.encode(`data: ${JSON.stringify(ev)}\n\n`));
         tick = setInterval(() => {
-          try {
-            const size = statSync(RUNES).size;
-            if (size > cursor) {
-              const tail = readFileSync(RUNES, 'utf8').slice(cursor);
-              cursor = size;
-              for (const line of tail.split('\n')) {
-                if (!line.trim().startsWith('{')) continue;
-                const e = JSON.parse(line);
-                const ev = {
-                  id: String(e.checksum ?? Date.now()).slice(0, 12),
-                  ts: e.timestamp ?? new Date().toISOString(),
-                  kind: 'rune',
-                  from: e.actor ?? 'brokk',
-                  module: e.event ?? '',
-                  message: e.message ?? '',
-                  checksum: String(e.checksum ?? '').slice(0, 8),
-                };
-                controller.enqueue(enc.encode(`data: ${JSON.stringify(ev)}\n\n`));
-              }
+          const runeTail = tailLines(RUNES, runeCursor);
+          runeCursor = runeTail.at;
+          for (const line of runeTail.lines) {
+            if (!line.trim().startsWith('{')) continue;
+            try {
+              const e = JSON.parse(line);
+              send({
+                id: String(e.checksum ?? Date.now()).slice(0, 12),
+                ts: e.timestamp ?? new Date().toISOString(),
+                kind: 'rune',
+                from: e.actor ?? 'brokk',
+                module: e.event ?? '',
+                message: e.message ?? '',
+                checksum: String(e.checksum ?? '').slice(0, 8),
+              });
+            } catch {
+              /* a torn ledger line never stops the stream */
             }
-          } catch {
-            /* keep streaming */
+          }
+
+          const msgTail = tailLines(FLEET_LOG, msgCursor);
+          msgCursor = msgTail.at;
+          for (const line of msgTail.lines) {
+            try {
+              const m = JSON.parse(line);
+              send({
+                id: `msg-${m.epoch ?? Date.now()}-${String(m.to ?? '').replace(/[^\w:]/g, '')}`,
+                ts: m.ts ?? new Date().toISOString(),
+                kind: 'ratatoskr',
+                from: m.from ?? 'agent',
+                to: m.to ?? '',
+                state: 'SUBMITTED',
+                message: m.text ?? '',
+                // The fleet's own page: a message between agents belongs to Fleet,
+                // not to whichever gate happened to be open when it arrived.
+                gate: 'fleet',
+              });
+            } catch {
+              /* one torn row is skipped, not fatal */
+            }
           }
         }, 2000);
       },
@@ -2727,6 +2938,27 @@ const server = Bun.serve({
         return json(agents());
       }
       if (p === '/api/tasks') return json(tasks());
+      if (p === '/api/a2a/messages') {
+        const n = Number(url.searchParams.get('n') ?? 60);
+        return json(a2aMessages(Number.isFinite(n) ? n : 60));
+      }
+      /* /api/doors — WHERE AN APP AND AN AGENT CAN BE INSPECTED (plan 275 item 19).
+       * The ports live in ONE table (bin/desktop/app-lib.sh) and the pane list in ONE
+       * connector; this door runs the script that reads both, so the Fleet page and a
+       * human at a terminal never disagree about which port answers. */
+      if (p === '/api/doors') {
+        return json(
+          await memoAsync('doors', 10_000, async () => {
+            try {
+              const { execFileSync } = await import('node:child_process');
+              const script = new URL('../../../bin/desktop/hlidskjalf-doors.sh', import.meta.url).pathname;
+              return JSON.parse(execFileSync('bash', [script], { timeout: 20_000 }).toString().trim());
+            } catch (e) {
+              return { apps: [], agents: [], apps_up: 0, agents_seated: 0, error: String(e).slice(0, 120) };
+            }
+          }),
+        );
+      }
       if (p === '/api/orders') return json({ open: orders().filter((o) => o.status !== 'COMPLETED').length, orders: orders() });
       if (p === '/api/runes') return json(runes());
       if (p === '/api/well') return json(await well(url.searchParams.get('q') ?? ''));
