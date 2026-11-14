@@ -13,6 +13,18 @@
 #                       gitleaks rules AT RUN TIME, into a config that EXTENDS the
 #                       repository's own and lives beside the list, never in the tree.
 #
+# Two halves of one question, and this door is the gate's half (see the note on the twice-daily
+# sweep in `docs/features/secret-scanning.md`):
+#
+#   THE GATE (this door)     at the moment a change is OFFERED — pre-commit over the staged diff,
+#                            CI over every PR and main and the whole history. It FAILS the change.
+#   THE CLOCK (the sweep)    twice a day on the server's clock, over the tree's content, in
+#                            categories (secret · address · person · business · private record);
+#                            it QUEUES and seats a triage errand, and never blocks.
+#
+# Both read the same home lists (below), so a word is defined in one place and enforced at two
+# moments.
+#
 # A stranger who installs Ymir gets the shared half from the tree and the second half
 # from their own list — or nothing, cleanly said, when they keep none. A CI run has no
 # home, so it scans the shared half: CI proves no credential SHAPE ships, and the
@@ -59,12 +71,15 @@ if [ -r "$ROOT/bin/vault/hoard-lib.sh" ]; then
 fi
 [ -n "$home" ] || home="${YMIR_HOME:-}"
 
-# The deny list, in the order the house keeps it. Both are read when both exist: plan 287
-# seats `hodd/identity/public-deny.txt` for the whole-tree audit, and the public ward has
-# kept `hodd/security/operator-words.txt` since 2026-10-01. The union heals the two names
-# without asking either owner to move.
+# The deny list, read from the home, in the order the house keeps it. All three are read when they
+# exist, because three tools now ask the same question and must not diverge: plan 287 seats
+# `hodd/identity/public-deny.txt` for the whole-tree audit, the NDA gate keeps
+# `hodd/identity/nda-names.txt`, and the public ward has kept `hodd/security/operator-words.txt`
+# since 2026-10-01. The union heals the names without asking any owner to move a file, and the
+# bare-word lists (the last two) are read as `name:`.
 DENY_CANDIDATES=(
   "$home/hodd/identity/public-deny.txt"
+  "$home/hodd/identity/nda-names.txt"
   "$home/hodd/security/operator-words.txt"
 )
 

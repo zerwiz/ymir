@@ -120,6 +120,22 @@ repository, so CI cannot judge them — and that is correct: CI proves no
 credential shape ships to anyone, and your machine proves no word of yours
 ships to anyone.
 
+## How this divides the work with the twice-daily sweep
+
+The house has **one census and one gate**, not two censuses. They answer the same question at two
+moments, and both read the same lists in the home:
+
+| | The gate — this page | The clock — `bin/time/nornir-job-private-scan.sh` |
+|---|---|---|
+| when | the moment a change is offered: pre-commit, every pull request, `main` | twice a day, on the server's clock |
+| what | the **secret** half: gitleaks' shapes and the operator's own words, over the tree **and the whole history** | the **content** half: secret, address, person, business and private-record shapes over the tree |
+| effect | it **fails** the change | it **queues** the finding, writes a triage brief, and seats ONE Eindri to fix it; it never blocks and never fixes |
+| lists | `hodd/identity/public-deny.txt` · `hodd/identity/nda-names.txt` · `hodd/security/operator-words.txt` | `hodd/identity/nda-names.txt` for business names; its own shape table for the rest |
+| why both | a hook can be skipped with `--no-verify`, and neither can see what is already in the tree | a scanner that blocks on a false positive stops the house; a person reads the queue |
+
+So: **one census on the clock** (the sweep) and **one gate on the offer** (this door). A new word
+goes in the home's list once, and both read it.
+
 ## Notes and limits
 
 - **A removed secret still lives in history.** Rotate first — the key is exposed

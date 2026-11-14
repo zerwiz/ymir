@@ -66,9 +66,8 @@ paths = [
   '''^bin/gates/guards/(secret|hoard|public|private)-guard\.(sh|py)$''',
   # This scan's own door writes the regexes and reads the deny list; it holds no secret.
   '''^bin/gates/secret-scan\.sh$''',
-  # This file names the shapes in prose, and the feature page explains them.
+  # This file names the shapes in prose; nothing else in the tree needs an exemption.
   '''^\.gitleaks\.toml$''',
-  '''^docs/features/secret-scanning\.md$''',
 ]
 
 [[allowlists]]
