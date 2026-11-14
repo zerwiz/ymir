@@ -43,10 +43,13 @@ jobs:
         with:
           persist-credentials: false
 
-      # Pinned to a major tag so a patch fix arrives without an edit here; pin to a full
-      # commit sha if your policy requires it (Dependabot will then keep it current).
+      # Pinned by commit sha, and the reason is measured: this action has no floating
+      # `v2` tag, so `@v2` fails the job in one second with "unable to find version v2"
+      # (run 43554892680, 2026-11-14 — its first run on main). The sha below is the
+      # v2.5.0 tag's commit, which hash-pinning also credits with the Scorecard's own
+      # Pinned-Dependencies check. Bump it with the tag's new sha, never with `@v2`.
       - name: Run Scorecard
-        uses: ossf/scorecard-action@v2
+        uses: ossf/scorecard-action@fa7117db83c52d787ae5a89f350999701505d78e   # v2.5.0
         with:
           results_file: scorecard.sarif
           results_format: sarif
