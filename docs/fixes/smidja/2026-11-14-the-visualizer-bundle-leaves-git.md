@@ -72,3 +72,7 @@ transcript.
 - **The visualizer's source is untouched.** Only its output left the index.
 - **A machine that already has a tracked `dist/` keeps its working copy** — the removal was
   `git rm --cached`, so a local build keeps serving until the next build replaces it.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #755
