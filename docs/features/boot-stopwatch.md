@@ -85,3 +85,8 @@ Any DevTools client can attach to `http://127.0.0.1:9311` and so on. The doors a
 | `no <class> window in Ns` | The app never mapped. Read the log the row names (`~/.local/state/ymir/boot-<app>.log`). |
 | `no answer in Ns` | The window is up but its page never answered — the app's own server is probably down. |
 | `presented its window as "<other>"` | The window class disagrees with the table; the app's name needs fixing, not the stopwatch. |
+
+## CHANGE LOG
+
+- 2026-11-14 — written with the stopwatch itself (plan 275 item 10): the three measurements, the two refusals, the
+  DevTools table, and the limits.
