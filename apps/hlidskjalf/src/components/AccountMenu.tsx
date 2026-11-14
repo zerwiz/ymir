@@ -1,12 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { WORKSPACES } from '../data/realms';
 import { useYmir } from '../state/store';
 
 export function AccountMenu() {
   const session = useYmir((s) => s.session);
-  const realm = useYmir((s) => s.realm);
-  const tenantColors = useYmir((s) => s.tenantColors);
-  const setRealm = useYmir((s) => s.setRealm);
   const signOut = useYmir((s) => s.signOut);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -28,7 +24,7 @@ export function AccountMenu() {
   }, [open]);
 
   if (!session) return null;
-  const { user, tenants: workspaces } = session;
+  const { user } = session;
 
   return (
     <div className="menu-wrap" ref={ref}>
@@ -44,7 +40,7 @@ export function AccountMenu() {
         <span className="col" style={{ lineHeight: 1.25, textAlign: 'left' }}>
           <span style={{ fontSize: 13 }}>{user.login}</span>
           <span className="mono dim" style={{ fontSize: 10 }}>
-            {workspaces.length} workspace{workspaces.length === 1 ? '' : 's'}
+            signed in
           </span>
         </span>
       </button>
@@ -61,43 +57,6 @@ export function AccountMenu() {
                 {user.email}
               </span>
             </div>
-          </div>
-
-          <div className="popover-head" style={{ paddingTop: 0 }}>
-            <span>Workspaces</span>
-            <span className="mono dim" style={{ fontSize: 10 }}>
-              single tenant · many scopes
-            </span>
-          </div>
-
-          <div className="account-tenants">
-            {workspaces.map((t) => {
-              const def = WORKSPACES.find((w) => w.id === t.realm);
-              const tint = tenantColors[t.realm] ?? t.tint;
-              return (
-                <button
-                  key={t.realm}
-                  className="account-tenant"
-                  aria-current={realm === t.realm}
-                  onClick={() => {
-                    setRealm(t.realm);
-                    setOpen(false);
-                  }}
-                >
-                  <span className="realm-swatch" style={{ background: tint }} />
-                  <span className="grow truncate" style={{ textAlign: 'left' }}>
-                    {def?.name ?? t.tenant}
-                    <span className="mono dim" style={{ fontSize: 10, marginLeft: 8 }}>
-                      {def?.kind ?? 'workspace'}
-                      {def?.company ? ` · ${def.company}` : ''}
-                    </span>
-                  </span>
-                  <span className="mono dim" style={{ fontSize: 10, textTransform: 'uppercase' }}>
-                    {def?.domains?.join(' · ') ?? ''}
-                  </span>
-                </button>
-              );
-            })}
           </div>
 
           <div className="account-foot">
