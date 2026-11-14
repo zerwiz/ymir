@@ -8,3 +8,7 @@ door's call guard (`bin/desk/in-call.sh`) saw a client named "Bilskirnir" holdin
 Bilskirnir holds the microphone — the operator is in a call, so the voice engine will not start"*. The guard already
 ignores the house's own voice clients (the engine and Rödd's window); Bilskirnir was never added. It is now, in the
 default `YMIR_DESK_IGNORE`. A real call (Discord, Meet, a browser) still stops the engine from starting.
+
+## CHANGE LOG
+
+- 2026-11-13 — review-mend: added missing heading for #730
