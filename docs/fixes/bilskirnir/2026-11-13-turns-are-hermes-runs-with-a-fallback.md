@@ -25,3 +25,7 @@
 | Fallback | online key broken on purpose: "Fallback activated: deepseek-v4.1-flash → qwen3.5-9b-highctx-262k", answer "42"; key restored: "48" on deepseek again | see the plan |
 
 Still owed from wave 1: Hermes' clarifying questions (`/v1/runs/{id}/clarify`) as a card, and a session list per agent.
+
+## CHANGE LOG
+
+- 2026-11-13 — review-mend: added missing heading for #730
