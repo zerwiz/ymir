@@ -111,6 +111,11 @@ gate public-data "RULES/04 — a secret, a name, a topology, a mailbox or a mach
 # server's runtime, but the test is written on node:test so CI's pinned Node runs it.
 gate cron-seats "the Hlidskjalf cron board reads its server seats from the fleet registry" \
      node --test "$ROOT/apps/hlidskjalf/server/server-seats.test.ts"
+# RULES/04 — a realm is a shelf of the operator's home. The shipped build carries a generic
+# pair and the list is READ from the registry at run time, so no realm's own name is in the
+# public tree and a home with none still opens. This is the proof that it stays so.
+gate realms-from-registry "Hlidskjalf's realm list is the home's registry, never a name in the code" \
+     node --test "$ROOT/apps/hlidskjalf/server/realms-registry.test.ts"
 
 # The mocks gate was an inline pipeline with no test, so every exclusion it grew arrived as a false red on
 # legitimate code and was judged by eye. The scan is a file now, and this proves it bites AND stays narrow.
