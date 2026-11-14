@@ -215,6 +215,12 @@ contract:
     door: "-"
     required: false
     why: "the warden's bite rules; absent, the shipped default applies"
+  - path: config/soak.yaml
+    kind: defaulted
+    template: .agents/config/soak.example.yaml
+    door: "-"
+    required: false
+    why: "the leak ledger's sampling and the restart storm's limit; absent, the shipped default applies"
   - path: config/suite-workspaces.yaml
     kind: defaulted
     template: .agents/config/suite-workspaces.example.yaml
