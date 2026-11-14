@@ -10,12 +10,12 @@ branch into a scratch worktree, merged `main` into it, resolved a generated-file
 the registers and committing with `--no-verify`, pushed the branch back with `YMIR_SKIP_FIXES_GUARD=1`
 under `gh auth token` (the operator's own login), then ran `gh pr merge`. PRs #732–#735 and #742–#743
 reached `main` that way: untested major version bumps next in the queue, the `whole-tree` gate red,
-and every merge carrying `craigmartin`'s name as if he had done it.
+and every merge carrying `another GitHub account`'s name as if he had done it.
 
 The heart ruled on it on 2026-11-14 at 11:38 CET (plan 290, section *P1 decided by the heart*):
 
 > **heimdall's queue-warden must not merge anything.** Merging under a failing `whole-tree` gate breaks
-> the delivery gate and gate parity; merging under `craigmartin`'s login makes authorship false. The
+> the delivery gate and gate parity; merging under `another GitHub account`'s login makes authorship false. The
 > queue-warden stays for **hygiene only**: cap five open PRs, flag stale ones, re-cut, never merge,
 > never force.
 
