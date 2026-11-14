@@ -1293,3 +1293,28 @@ Gróa also runs `units.sh write` after every update, so a unit seated from a wor
 Eir's `runtimepin` surface runs `units.sh check` and its mend is the seat door. The resolver default
 (`~/ymir-runtime`, applied once the checkout is seated) lives once in `src/ymir_runtime/paths.py` and
 `bin/pi/arm-pin-lib.sh`.
+
+## 2026-11-14 — a release builds the smithy's eye, and the release proof says whether it did
+
+`bin/engine/release.sh` (`build` / `prove` / `flip` / `rollback` / `status`) supersedes the
+`release-build.sh` + `release-flip.sh` pair described above; the layout and the one-atomic-rename flip
+are unchanged, and the door now proves a release from the inside before it earns `.release-proved`.
+
+**The fault this section records.** The Smíðja visualizer is a NESTED app
+(`apps/smidja-factory/apps/visualizer`) with its own `bun.lock`, so the root `npm ci` never installs it
+and `release.sh build` never built it. A release therefore served `:8437` with no interface at all,
+while the tree kept a **committed** `dist/` — so a checkout served a bundle and a release could not,
+and no gate compared the two. The bundle left git on 2026-11-14 (plan 288 step 7, plan 287 P4), which
+is what made the hole visible.
+
+```
+release_build[4]{step,what,why}:
+  "the nested app","bun install --frozen-lockfile && bunx vite build in apps/smidja-factory/apps/visualizer","its own lockfile: no root install reaches it; a failure stops the release (exit 19)"
+  "no bun","one SKIP line, never a green","a machine without bun serves the smithy's API with no UI, and says so"
+  "the proof row","visualizer: ok | FAIL (bun present, no dist) | skip (no bun)","the row count in the TOON header is computed, never hardcoded"
+  "the guard","a checkout already carrying a stale dist/ cannot prove a release wrong","that is why the bundle is no longer tracked"
+```
+
+The doors that build this bundle are three and all pre-date the removal: this one,
+`bin/desktop/app-build.sh` (the npm prepack, whose `files` allowlist names `…/dist/**`) and the
+install's `step_smidja`. Fix note: `docs/fixes/engine/2026-11-14-a-release-builds-the-smithys-eye.md`.
