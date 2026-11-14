@@ -21,3 +21,7 @@ outside the window"*, *"the chat I'm having on streaming voice is not getting in
   (26) and llamacpp-whynot (5); every list stayed inside the window. A local model was saved and then deepseek again;
   Hermes' `config.yaml` followed both, and the `.env` holds `OPENCODE_GO_API_KEY`.
 - A call session from the window: two lines posted, both in the room as voice messages, call ended.
+
+## CHANGE LOG
+
+- 2026-11-13 — review-mend: added missing heading for #730
