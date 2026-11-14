@@ -64,3 +64,7 @@ YMIR_DESKTOP_OZONE_PLATFORM=wayland bin/desktop/sessrumnir-launch.sh start
   prints the exact file the launchers read.
 - An app still refuses to open a window: set `YMIR_DESKTOP_OZONE_PLATFORM=x11` and relaunch.
 - A hybrid machine crashes in the GPU process: leave `YMIR_DESKTOP_DISABLE_GPU=auto`.
+
+## CHANGE LOG
+
+- **2026-11-14** — written with the desktop door: one file in the home answers for the person, every launcher reads it, an exported variable still wins.
