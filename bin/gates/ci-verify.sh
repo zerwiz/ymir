@@ -132,6 +132,18 @@ gate main-red "the alarm for a red main names the ward and never fires for a pul
 gate opencode-launcher "every door seats OpenCode with the launcher's one shape; the version guard bites" \
      bash "$ROOT/bin/gates/tests/test_opencode_launcher.sh"
 
+# PLAN 293 — the hall's own three doors, each with the fault it answers measured the same day.
+# A test that no gate calls is a test nobody runs, which is this file's whole reason to exist.
+gate safe-send "a brief reads the input box before it types, asks the screen before it resends, and speaks each herdr's own verbs" \
+     bash "$ROOT/bin/agents/tests/test_eindri_send.sh"
+gate herdr-editor "the input-box reader knows both harness shapes, and says unknown rather than empty" \
+     bash "$ROOT/bin/seat/tests/test_herdr_editor.sh"
+gate seat-find "the finder names the pane whose work printed the words, never its own, and counts what it could not read" \
+     bash "$ROOT/bin/seat/tests/test_seat_find.sh"
+# RULES/04 — a variable is the design; a RESOLVED path or a real name is the leak.
+gate private-guard-variable "the private ward reads \$YMIR_HOME as design and still refuses a resolved path or a real realm" \
+     bash "$ROOT/.agents/tests/private-guard-variable.test.sh"
+
 # Rule 11 — a tracked file is MOVED, never deleted. RULES/11 says the ward runs here; until
 # 2026-11-03 nothing in this file called it, so a deletion passed CI unseen. The range is the
 # PR's base when there is one, and an honest SKIP (not a green) when this checkout has no base.
