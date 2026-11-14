@@ -195,8 +195,21 @@ reachable() { timeout 6 ssh -o BatchMode=yes -o ConnectTimeout=5 "$1" true 2>/de
 
 resolve_host() {
   [ -n "$HOST_MACHINE" ] && { printf '%s' "$HOST_MACHINE"; return 0; }
-  local h
-  while IFS= read -r h; do [ -n "$h" ] || continue; reachable "$h" && { printf '%s' "$h"; return 0; }; done < <(fleet_order)
+  local h me first
+  me="$(hostname -s)"
+  # The fleet names its ear seats in preference order (fleet.json · ear[]), and the first of them is the seat
+  # that hosts the engine. When that seat is THIS one the answer needs no network at all — and the ssh walk
+  # below costs a 5 s timeout per seat that does not answer, which on heimdall was 10.4 s on EVERY Rödd start
+  # (measured 2026-11-14: heimdall fails ssh-to-self in 0.1 s, then whynot and nidavellir each burn 5 s) for an
+  # answer that was already under its own feet. A client seat is unchanged: the first seat is not it, so the
+  # walk runs exactly as before.
+  first="$(fleet_order | head -1)"
+  [ -n "$first" ] && [ "$first" = "$me" ] && { printf '%s' "$me"; return 0; }
+  while IFS= read -r h; do
+    [ -n "$h" ] || continue
+    [ "$h" = "$me" ] && { printf '%s' "$me"; return 0; }   # never ssh to self: a dev seat has no key for its own login
+    reachable "$h" && { printf '%s' "$h"; return 0; }
+  done < <(fleet_order)
   return 1
 }
 
