@@ -21,10 +21,10 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[19]{file,does,kind,verdict,disposition,callers,lines}:
+bin[20]{file,does,kind,verdict,disposition,callers,lines}:
   "agent-model.sh","agent-model.sh — WHICH MODEL, ON THIS SEAT.","tool","wired","keep",9,305
   "apodex-smoke-test.sh","apodex-smoke-test — validate an Apodex endpoint (GGUF via llama-router).","tool","wired","keep",0,119
-  "catalog.sh","catalog.sh — THE door to what this machine can serve.","tool","wired","keep",17,135
+  "catalog.sh","catalog.sh — THE door to what this machine can serve.","tool","wired","keep",18,135
   "free-models.sh","free-models.sh — the free models a harness can serve on this machine, and the one to use.","tool","wired","keep",2,74
   "jev-doors.sh","jev-doors.sh — where the decision models answer, in one read.","tool","wired","keep",4,163
   "llama-ensure.sh","llama-ensure.sh — stand a CUDA llama.cpp engine for local models, or adopt the","tool","wired","keep",3,163
@@ -39,9 +39,10 @@ bin[19]{file,does,kind,verdict,disposition,callers,lines}:
   "model-tune.sh","model-tune.sh — tune the chosen model for THIS host, with measured numbers.","tool","wired","keep",1,150
   "models-detect.sh","models-detect.sh — detect the LOCAL model runtimes present on this machine and","tool","wired","keep",3,168
   "models-report.sh","models-report — the user's OWN models, read from the ROOT pi home.","tool","wired","keep",1,29
+  "providers-catalog.sh","providers-catalog.sh — the open catalog of AI providers (models.dev), cached once per machine (plan 275).","tool","wired","keep",0,48
   "rail-resolve.sh","rail-resolve.sh — the DOOR to the living rail resolver (plan 51, Parts 9a/9b/9c).","tool","tested","keep",6,72
   "test_jev_doors.sh","The ward for bin/model/jev-doors.sh — the door register that told four lies in a row.","tool","wired","keep",0,54
 
-**Tally.** verdict: wired=14, tested=5
+**Tally.** verdict: wired=15, tested=5
 
-**Tally.** disposition: keep=19
+**Tally.** disposition: keep=20
