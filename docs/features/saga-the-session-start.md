@@ -82,6 +82,11 @@ against `origin`, read-only, and both are time-bounded.
 without a merge — is named with its age, and the row says the exact command that would gather it.
 Twenty-two such branches were found on 2026-11-14, only four merged.
 
+**A branch riding inside an open batch PR is not waiting.** A gathered batch merges every errand's
+branch into one batch branch and opens one pull request for it, so the errand's own branch has no PR
+of its own. Those rows say `in batch PR #n` and ask nothing of you; only a branch inside no PR at all
+is named as waiting.
+
 **Commits that exist on no remote.** Every local branch, `main` included, is counted against every
 remote. The row names how many commits are stranded, and which branches hold them. A commit on one
 disk is a commit nobody can merge, and on 2026-11-14 nineteen of them sat on one machine's local
