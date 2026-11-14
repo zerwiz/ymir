@@ -53,3 +53,7 @@ end of the reply never got one, which is a second way to see "no answer".
 
 `bifrost.service` on this seat still runs the PIN's copy of the bridge; it serves `lmstudio` until the pin flips.
 No service was restarted for this half — a restart now would only re-raise the retired door.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #757
