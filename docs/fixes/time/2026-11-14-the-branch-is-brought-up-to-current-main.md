@@ -34,3 +34,7 @@ A home that cannot be resolved now fails loudly (`exit 2`) instead of silently a
 `bash -n` is clean, and `defaults-guard.sh check <this push's paths>` answers `"none"` on every section. The
 remaining ward findings on this machine — five systemd units running from a working tree — are the box's, not this
 branch's, and the guard classifies them as INHERITED.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #765
