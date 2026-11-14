@@ -44,3 +44,7 @@ And the gate that reads every unit template agrees — `bin/gates/checks/unit-te
 
 Reported by `bin/time/nornir-job-private-scan.sh`; the home's record is
 `hodd/docs/machines/zerwizserver/2026-11-14-the-machine-paths-left-the-public-repo.md`.
+
+## CHANGE LOG
+
+- 2026-11-13 — review-mend: added missing heading for #743
