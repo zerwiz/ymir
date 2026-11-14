@@ -49,6 +49,23 @@ gates, because the gates judge the merged result.
 A bare name like `alpha` means the branch `eindri/alpha`. A name with a slash is used as it is,
 so a helm branch such as `hoenir/helm-test` can ride in the same batch.
 
+## The helm is told when a batch is ready (2026-11-14)
+
+You no longer have to remember that a batch was outstanding. When the **last** errand of a batch
+reaches its terminal word, the house puts one line in the session's wake queue:
+
+```
+batch <wave> is finished — gather it: bin/forge/gather.sh <ids…> (errands: <id>,<id>)
+```
+
+It arrives from either road that sees an errand finish: the arm's close, and the worker's own
+terminal act. It fires once per batch, it stays silent while any other errand of the batch is still
+open, and it never names an errand that already shipped. Membership is the record the dispatch
+already keeps: `mode=batch` and the same `wave` in `state/<id>.meta`.
+
+The door is `bin/forge/gather-notice.sh <errand-id>`; run it by hand to see what it would say:
+`bin/forge/gather-notice.sh --check <id>`.
+
 ## When there is a conflict
 
 The door stops with exit code 3 and prints the branch, the files and the worktree path. Then:
@@ -83,3 +100,4 @@ range qualifies.
 ## CHANGE LOG
 
 - 2026-11-12 — written with the change it describes.
+- 2026-11-14 — the helm is prompted to gather when the last errand of a batch finishes (plan 293 part 4).
