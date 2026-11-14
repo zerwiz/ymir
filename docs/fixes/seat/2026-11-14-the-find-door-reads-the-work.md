@@ -51,6 +51,22 @@ knows. So the search must read recent output and name panes, and there are four 
   the reason the fault was found at all — and the reason the fixtures below carry an invented token:
   this repository is public and names no person (RULES/04).
 
+## Appended 2026-11-14 — the fixtures named a colleague
+
+The first version of `bin/seat/tests/test_seat_find.sh` carried a real collaborator's first name in
+its planted pane text, in the query the test sent, and — worse — paired it with pronouns. The same
+name sat in this door's report example and in the live proof line above.
+
+That is personal data in a public tree, which RULES/04 refuses whatever the file is for. A test needs
+a token that is unique, not a person: the fixtures now plant **`quillfern`**, an invented word that
+names nobody. Nothing about what the test proves changed — 13 checks, same 13 asserts.
+
+The live proof above was re-measured with a neutral word rather than re-quoted with the name, and it
+named the worker whose screen carried the phrase while skipping the caller's own pane, as before.
+
+The lesson for the next hand: when a fault is found by searching the hall for a person's work, the
+fixture you write from that search must not carry the person. Search for it, then invent.
+
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #752
