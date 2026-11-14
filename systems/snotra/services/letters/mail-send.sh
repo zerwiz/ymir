@@ -14,7 +14,7 @@
 #   mail-send.sh draft --to a@x,b@y --subject S --body FILE \
 #       [--html FILE | --template NAME | --plain] [--footer LINE] \
 #       (a --body that opens with a `theme:` header is rendered by letter-design.py — the house letter design)
-#       [--attach FILE ...] [--record ID] [--reply-to GMAIL-MESSAGE-ID] [--dry-run]
+#       [--attach FILE ...] [--record ID] [--reply-to ID|last:<addr>|q:<search>] [--dry-run]
 #       (--reply-to answers INSIDE that message's thread: In-Reply-To + References + the threadId,
 #        and --subject defaults to "Re: <its subject>")
 #   mail-send.sh raw    <draft-id>     # the exact bytes, for an approval hash
@@ -100,7 +100,26 @@ draft(){
   # A reply joins the thread it answers (2026-11-12): Gmail threads a message by its threadId, and every
   # other client by In-Reply-To/References — a reply that carries neither starts a new conversation.
   local reply_mid="" reply_refs="" reply_thread=""
+  # ONE THREAD, NOT A NEW ONE EVERY TIME (2026-11-14, the Allfather: *"we need to update the logic in one
+  # thread. we are sending new threads all the time"*). The threading itself was already right — a reply
+  # carries In-Reply-To, References and the threadId — but naming a thread meant knowing a Gmail message
+  # id, which no person does, so every letter started a new thread. `--reply-to` now also takes:
+  #   last:<address>   the newest message to or from that address   (last:<their address>)
+  #   q:<search>       the newest message matching a Gmail search   (q:subject:"<topic>")
   if [ -n "$reply_to" ]; then
+    case "$reply_to" in
+      last:*|q:*)
+        local term id code
+        case "$reply_to" in
+          last:*) term="to:${reply_to#last:} OR from:${reply_to#last:}" ;;
+          *)      term="${reply_to#q:}" ;;
+        esac
+        id="$(gmail GET "/users/me/messages?maxResults=1&q=$(python3 -c 'import sys,urllib.parse;print(urllib.parse.quote(sys.argv[1]))' "$term")" \
+              | python3 -c 'import json,sys;d=json.loads(sys.stdin.read().rsplit("\n",1)[0]);m=(d.get("messages") or []);print(m[0]["id"] if m else "")')"
+        [ -n "$id" ] || die "--reply-to $reply_to: no message matched — nothing to reply inside"
+        printf 'thread\t%s -> %s\n' "$reply_to" "$id" >&2
+        reply_to="$id" ;;
+    esac
     local meta mcode; meta="$(gmail GET "/users/me/messages/$reply_to?format=metadata&metadataHeaders=Message-ID&metadataHeaders=References&metadataHeaders=Subject")"
     mcode="${meta##*$'\n'}"; meta="${meta%$'\n'*}"
     case "$mcode" in 200) ;; *) die "--reply-to: message $reply_to could not be read (HTTP $mcode)" ;; esac

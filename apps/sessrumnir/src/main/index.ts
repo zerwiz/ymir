@@ -350,33 +350,6 @@ function showMainWindow(): void {
 
 // ─── Application Menu ────────────────────────────────────────────────────────
 
-// One identity covers every Ymir surface: the shared session lives at the gate,
-// so signing out here clears it for Hlidskjalf, Smiðja, and Sessrúmnir alike.
-const YMIR_GATE = process.env.YMIR_GATE_URL ?? 'http://127.0.0.1:3889'
-
-async function signOutOfYmir(): Promise<void> {
-  try {
-    await fetch(`${YMIR_GATE}/api/logout`, { method: 'POST' })
-  } catch {
-    // gate down — nothing to clear server-side
-  }
-  BrowserWindow.getAllWindows().forEach((w) => w.reload())
-}
-
-// Move to another hall through the gate's one launcher, as the Omarchy key
-// bindings and Hlidskjalf's switcher do.
-async function raiseHall(view: 'hlidskjalf' | 'smidja' | 'sessrumnir'): Promise<void> {
-  try {
-    await fetch(`${YMIR_GATE}/api/desktop`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ view }),
-    })
-  } catch {
-    // launcher unreachable — stay where we are
-  }
-}
-
 function createApplicationMenu(): void {
   const template: Electron.MenuItemConstructorOptions[] = [
     {
@@ -407,13 +380,9 @@ function createApplicationMenu(): void {
           },
         },
         { type: 'separator' },
-{ label: 'Go to Hlidskjalf', click: () => { void raiseHall('hlidskjalf') } },
-        { label: 'Go to Smiðja', click: () => { void raiseHall('smidja') } },
-        { type: 'separator' },
-        // The gate holds the one session; Sessrúmnir has no gate cookie, so it
-        // signs in through the gate rather than claiming a session it lacks.
-        { label: 'Sign in to Ymir…', click: () => { void shell.openExternal(`${YMIR_GATE.replace(/:3889$/, ':3888')}/`) } },
-        { label: 'Sign out of Ymir', click: () => { void signOutOfYmir() } },
+        // No "Go to Hlidskjalf / Smiðja" and no gate sign-in (plan 275 items 30
+        // and 33): every app opens from its own desktop icon, and the halls carry
+        // no login — the desktop session is the authority.
         { type: 'separator' },
         // Role items get explicit labels: Electron's own role labels are English.
         { role: 'quit', label: t('app.quit') },
