@@ -47,6 +47,40 @@ app_class() {  # <surface> → the WM class the app presents
   esac
 }
 
+# ── the DevTools door, one fixed loopback port per app (plan 275 item 19, 2026-11-14) ────────────────
+# The Allfather: "we need to have devtools attached to all agents harnesses." A window could only be
+# inspected when someone remembered to export YMIR_DEVTOOLS_PORT before the app started, so a fault found
+# after the fact needed a restart to look at — and a restart destroys the fault. So the port is a property
+# of the app, resolved HERE, opened by every launcher, ALWAYS: any Ymir window answers on loopback at its
+# own port, whether or not anyone is watching. The boot stopwatch asks it when the renderer first answered.
+#
+# One table, because a port named in two files disagrees with itself the first time it is edited (Rule 07).
+# The block is 9311-9319: clear of 9222 (the old default), of Bilskirnir's desk Chrome (9200+display, so
+# 9299-9301 here), and of every service port this house serves (3888, 3889, 4602, 4603, 7860, 8316, 8437,
+# 8761, 8765, 8890, 8891). YMIR_DEVTOOLS_PORT still wins in every launcher, for a one-off probe.
+app_devtools_port() {  # <surface> → the app's fixed loopback DevTools port
+  case "${1-}" in
+    hlidskjalf) printf '%s' 9311 ;;
+    smidja)     printf '%s' 9312 ;;
+    odrerir)    printf '%s' 9313 ;;
+    bilskirnir) printf '%s' 9314 ;;
+    rodd)       printf '%s' 9315 ;;
+    sessrumnir) printf '%s' 9316 ;;
+    *)          return 1 ;;
+  esac
+}
+
+app_devtools_url() {  # <surface> → the http door to that window's DevTools
+  local _adv_port _adv_rv
+  _adv_rv="${2-}"
+  _adv_port="$(app_devtools_port "${1-}")" || return 1
+  if [ -n "$_adv_rv" ]; then printf -v "$_adv_rv" '%s' "http://127.0.0.1:$_adv_port"; else printf '%s' "http://127.0.0.1:$_adv_port"; fi
+}
+
+app_devtools_surfaces() {  # every app that has a DevTools door, in the launcher order
+  printf '%s\n' hlidskjalf smidja odrerir bilskirnir rodd sessrumnir
+}
+
 app_dir() {  # <surface> <result-var> — a clone's apps/<x>, else the package
   # Scratch names are function-prefixed on purpose: `printf -v <name>` writes to THIS
   # function's scope, so a scratch variable sharing the caller's requested name
@@ -97,3 +131,37 @@ app_dir() {  # <surface> <result-var> — a clone's apps/<x>, else the package
 # Some callers need the directory a mint writes INTO (an app's public/, electron/,
 # dist/…). A packaged app is read-only in spirit, so the clone's apps/ is preferred
 # when it exists; otherwise the package is the only truth there is.
+
+# app_devtools_port <surface> → the FIXED loopback DevTools port for that app.
+#
+# Item 19 of plan 275, at the Allfather's word: *"we need to have devtools attached to
+# all agents harnesses"*. Until 2026-11-14 a port existed only when a human exported
+# YMIR_DEVTOOLS_PORT before launching, so in practice there was no door at all, and an
+# app could only be inspected by restarting it with one. Every app now opens its own
+# DevTools on a port taken from THIS table, so any app can be inspected without a
+# restart, and the Fleet page can name the port instead of guessing.
+#
+#   hlidskjalf 9411 · smidja 9412 · odrerir 9413 · sessrumnir 9414
+#   bilskirnir 9415 · rodd 9416
+#
+# An explicit YMIR_DEVTOOLS_PORT still wins (one override for a developer who wants a
+# specific port); the table is the default, never a second source of truth.
+app_devtools_port() {  # <surface>
+  if [ -n "${YMIR_DEVTOOLS_PORT:-}" ]; then printf '%s' "$YMIR_DEVTOOLS_PORT"; return 0; fi
+  case "${1-}" in
+    hlidskjalf) printf '%s' '9411' ;;
+    smidja)     printf '%s' '9412' ;;
+    odrerir)    printf '%s' '9413' ;;
+    sessrumnir) printf '%s' '9414' ;;
+    bilskirnir) printf '%s' '9415' ;;
+    rodd)       printf '%s' '9416' ;;
+    *)          printf '%s' '' ;;
+  esac
+}
+
+# app_devtools_url <surface> → the CDP endpoint a person (or an agent) dials.
+app_devtools_url() {  # <surface>
+  local _adp_port; _adp_port="$(app_devtools_port "${1-}")"
+  [ -n "$_adp_port" ] && printf 'http://127.0.0.1:%s/json/version' "$_adp_port"
+  return 0
+}

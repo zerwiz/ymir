@@ -235,6 +235,18 @@ if [ -f "$STATE/$AGENT.status" ]; then
   [ -n "$_woke" ] && printf '%s\n' "$_woke" >"$STATE/$AGENT.woke" 2>/dev/null || true
   unset _woke
 fi
+# 3c. The last errand of a batch prompts the GATHER (plan 293 part 4). A batch errand never pushes
+#     and never opens a PR — the helm gathers the batch into one push and one PR (RULES/08). Until
+#     this, nothing told the helm the batch was ready: twenty-two clean batch branches sat on origin
+#     and four were merged. The door decides whether this was the last one and queues ONE line that
+#     names the finished ids and the exact gather command; it is silent for a lone errand.
+if grep -qx 'mode=batch' "$STATE/$AGENT.meta" "$ROOT/state/$AGENT.meta" 2>/dev/null; then
+  if [ -x "$SCRIPT_DIR/../forge/gather-notice.sh" ]; then
+    _gn="$("$SCRIPT_DIR/../forge/gather-notice.sh" "$AGENT" 2>&1)" && [ -n "$_gn" ] && printf '%s\n' "$_gn"
+  else
+    printf 'gather-notice: bin/forge/gather-notice.sh is absent — a finished batch is not prompted\n' >&2
+  fi
+fi
 # 4. The review spine (FORSETI the Judge). The delivery gate's other half: a
 #    ship errand that reached `done` with a PR wakes its own reviewer. One per
 #    task (the .reviewed marker); YMIR_AUTO_REVIEW=off is the loud override; a
