@@ -23,3 +23,7 @@ open. The effect is proved on the next Monday run (or by Dependabot's own config
 ### Note
 `ignore` slows chores, never a security answer: a security advisory still arrives through Dependabot's security
 updates, majors included, and a person handles it.
+
+## CHANGE LOG
+
+- 2026-11-13 — review-mend: added missing heading for #742
