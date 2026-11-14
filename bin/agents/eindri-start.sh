@@ -9,10 +9,22 @@
 #
 # Usage:
 #   eindri-start.sh "<request>" [--role <name>] [--pane|--tab|--space] [--kind pi|opencode|claude]
-#   eindri-start.sh "<request>" --id <task-id> [--project <dir>] [--role <name>] [--kind pi|opencode|claude]
+#   eindri-start.sh "<request>" --id <task-id> [--project <path|id|alias>] [--role <name>] [--kind pi|opencode|claude]
 #       # --id names a real errand and hands it to the engine
 #       # (src/ymir_runtime/): a Yggdrasil worktree, a recorded seat, a
 #       # heartbeat. Without --id the ordinary road below seats the agent.
+#   eindri-start.sh "<request>" --project <path|id|alias> --dry-run
+#       # print the seat plan — the project, its clone, the worktree, the branch,
+#       # the pane's folder — and seat nothing.
+#
+# TWO BEARINGS EVERY ERRAND CARRIES (plan 291, 2026-11-14):
+#   · a generated "Bearings" section is prepended to every brief, on both roads and for
+#     every harness: the shipped fixed core + the home's overlay, the project's records
+#     (resolved from the registry), and the home's document map (bin/agents/eindri-bearings.sh).
+#   · --project takes a path, an id or an alias, resolved to THIS machine's clone through
+#     hodd/identity/projects.yaml (bin/agents/project-target.sh). A worker for another
+#     project is seated in THAT project's folder, in a worktree of THAT repository — never
+#     in a worktree of Ymir's tree. A row with no clone on this machine is refused, named.
 #   eindri-start.sh --version
 set -u
 
@@ -38,9 +50,9 @@ STATE="${BROKK_STATE_OVERRIDE:-$YMIR_STATE_DIR}"
 SEATS="$STATE/herdr-seats"
 SESSION="${YMIR_HERDR_SESSION:-brokk}"
 
-case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
+case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,34p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 
-REQ=""; ROLE=""; SEAT=""; MODEL=""; EFFORT=""; KIND="${YMIR_HERDR_KIND:-pi}"; MAIN=""; TASK_ID=""; PROJECT_DIR=""; KIND_EXPLICIT=""; MODEL_EXPLICIT=""
+REQ=""; ROLE=""; SEAT=""; MODEL=""; EFFORT=""; KIND="${YMIR_HERDR_KIND:-pi}"; MAIN=""; TASK_ID=""; PROJECT_DIR=""; PROJECT_EXPLICIT=""; DRY=0; KIND_EXPLICIT=""; MODEL_EXPLICIT=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --role) ROLE=${2-}; shift 2 ;;
@@ -48,7 +60,8 @@ while [ $# -gt 0 ]; do
     --model) MODEL=${2-}; MODEL_EXPLICIT=$MODEL; shift 2 ;;
     --effort) EFFORT=${2-}; shift 2 ;;
     --id) TASK_ID=${2-}; shift 2 ;;
-    --project) PROJECT_DIR=${2-}; shift 2 ;;
+    --project) PROJECT_DIR=${2-}; PROJECT_EXPLICIT=1; shift 2 ;;
+    --dry-run) DRY=1; shift ;;
     --main) MAIN="--main"; shift ;;
     --space) SEAT="--space"; shift ;;
     --tab) SEAT="--tab"; shift ;;
@@ -109,13 +122,99 @@ case "$MODEL_SOURCE" in
   *)                     MODEL_NOTE="$MODEL_SOURCE" ;;
 esac
 
+# 2c. WHERE THE ERRAND LIVES — the project, its clone, and the folder the worker sits in
+#     (plan 291 part 3, at the Allfather's word: *"when we sending workers for diffrent projects
+#     the need to be send from the project foldeers they are going to work in so they dont do the
+#     updates in ymirs repo"*). A path, an id or an alias is resolved through the registry by ONE
+#     door; nothing here guesses a convention. A project that is not this tree is seated in ITS OWN
+#     repository, in a worktree made by that project's own convention — so an errand for another
+#     project can never commit into Ymir's tree. A row with no clone here is refused, named.
+PROJECT_TOKEN="${PROJECT_DIR:-$PWD}"
+PROJECT_PATH=""; PROJECT_ID=""; PROJECT_KIND="unregistered"; PROJECT_HOW=""; PROJECT_RESOLVED=0
+if [ -x "$SCRIPT_DIR/project-target.sh" ]; then
+  resolved="$("$SCRIPT_DIR/project-target.sh" resolve "$PROJECT_TOKEN" 2>&1)"; rrc=$?
+  if [ "$rrc" -eq 0 ]; then
+    PROJECT_RESOLVED=1
+    while IFS=$'\t' read -r _k _v; do
+      case "$_k" in
+        path) PROJECT_PATH="$_v" ;; id) PROJECT_ID="$_v" ;; kind) PROJECT_KIND="$_v" ;;
+        how) PROJECT_HOW="$_v" ;;
+      esac
+    done <<<"$resolved"
+  elif [ -n "$PROJECT_EXPLICIT" ]; then
+    # an errand sent to a project this machine has no clone of is refused, with the row named
+    printf '%s\n' "$resolved" >&2
+    exit 1
+  fi
+  unset resolved rrc
+fi
+[ -n "$PROJECT_PATH" ] || PROJECT_PATH="$PWD"
+
+# 2d. THE FOLDER THE WORKER SITS IN. In this tree the engine (or herdr-run) makes the worktree as it
+#     always has; in another project's repository this door makes it, in that repository, and the
+#     pane opens there. `--main` then tells herdr-run not to nest a second worktree inside it.
+SEAT_MAIN="$MAIN"; WORKTREE=""; WORK_BRANCH=""; WORK_MADE=""
+if [ "$PROJECT_KIND" = other ]; then
+  WORK_ID="${TASK_ID:-$LABEL}"
+  dry_flag=""; [ "$DRY" = 1 ] && dry_flag="--dry-run"
+  plan="$("$SCRIPT_DIR/project-target.sh" worktree "$PROJECT_TOKEN" "$WORK_ID" $dry_flag 2>&1)" || {
+    printf '%s\n' "$plan" >&2; exit 1; }
+  while IFS=$'\t' read -r _k _v; do
+    case "$_k" in worktree) WORKTREE="$_v" ;; branch) WORK_BRANCH="$_v" ;; created) WORK_MADE="$_v" ;; esac
+  done <<<"$plan"
+  unset plan dry_flag
+  if [ "$DRY" = 0 ]; then
+    [ -n "$WORKTREE" ] && [ -d "$WORKTREE" ] || {
+      printf 'error: no worktree stands at %s — refusing to seat a worker in a main tree\nhelp: bin/agents/project-target.sh worktree %s %s\n' "${WORKTREE:-<none>}" "$PROJECT_TOKEN" "$WORK_ID" >&2
+      exit 1; }
+    cd "$WORKTREE" || { printf 'error: cannot enter %s\n' "$WORKTREE" >&2; exit 1; }
+    SEAT_MAIN="--main"
+  fi
+fi
+
+# 2e. THE BEARINGS every brief carries (plan 291 part 2): the shipped fixed core and the home's
+#     overlay, the project's records, and the home's document map. Prepended, so it is read before
+#     the errand; skipped when the brief already carries it, so a brief is never doubled.
+if [ -x "$SCRIPT_DIR/eindri-bearings.sh" ]; then
+  marker="$("$SCRIPT_DIR/eindri-bearings.sh" --marker 2>/dev/null || true)"
+  case "$REQ" in
+    *"${marker:-no-bearings-marker}"*) ;;
+    *)
+      bearings="$("$SCRIPT_DIR/eindri-bearings.sh" "$PROJECT_PATH" 2>/dev/null || true)"
+      if [ -n "$bearings" ]; then
+        REQ="$bearings
+
+---
+
+$REQ"
+      else
+        printf 'eindri-start: the bearings could not be read from %s — the brief goes out without its core\n' "$SCRIPT_DIR/eindri-bearings.sh" >&2
+      fi ;;
+  esac
+  unset marker bearings
+fi
+
+# 2f. --dry-run: the seat PLAN and nothing else — no worktree, no pane, no process.
+if [ "$DRY" = 1 ]; then
+  printf 'eindri-start[1]{role,project,kind,project_path,worktree,branch,worktree_made,seat_cwd,harness,model,road,state}:\n'
+  printf '  "%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","dry-run"\n' \
+    "$ROLE" "${PROJECT_ID:-unregistered}" "$PROJECT_KIND" "$PROJECT_PATH" "${WORKTREE:-}" \
+    "${WORK_BRANCH:-}" "${WORK_MADE:-}" "${WORKTREE:-$PWD}" "$KIND" "${MODEL:-default}" \
+    "$([ "$PROJECT_KIND" = other ] && echo "a worktree in the project's own repository" || echo "this tree's own road")"
+  printf 'bearings[1]{marker,core_carried}:\n  "%s","%s"\n' \
+    "$("$SCRIPT_DIR/eindri-bearings.sh" --marker 2>/dev/null || echo none)" \
+    "$(case "$REQ" in *eindri-bearings*) echo yes;; *) echo no;; esac)"
+  exit 0
+fi
+
 # 3. The engine owns the errand when the caller names one (plan 58, Phase 1).
 #    With --id an errand is a real seat — worktree, harness, record, heartbeat.
 #    A seat hint (--pane/--tab/--space/--main) is the old road's grain, so those
 #    callers keep the road below; YMIR_ENGINE=off skips the handoff entirely.
 if [ -n "$TASK_ID" ] && [ -z "$SEAT" ] && [ -z "$MAIN" ] \
-   && [ "${YMIR_ENGINE:-auto}" != "off" ] && [ -x "$SCRIPT_DIR/../engine/ymir-engine.sh" ]; then
-  PROJECT_DIR="${PROJECT_DIR:-$PWD}"
+   && [ "${YMIR_ENGINE:-auto}" != "off" ] && [ -x "$SCRIPT_DIR/../engine/ymir-engine.sh" ] \
+   && { [ "$PROJECT_RESOLVED" = 0 ] || [ "$PROJECT_KIND" = ymir ]; }; then
+  PROJECT_DIR="$PROJECT_PATH"
   engine_args=(seat "$TASK_ID" --project "$PROJECT_DIR" --harness "$KIND" --request "$REQ" --role "$ROLE")
   if [ -n "$MODEL" ]; then engine_args+=(--model "$MODEL"); fi
   if [ -n "$EFFORT" ]; then engine_args+=(--effort "$EFFORT"); fi
@@ -150,7 +249,7 @@ mkdir -p "$STATE"
 #    rc 3 from herdr-run means "not worth a smith" — report it, do NOT fake a seat.
 seat="none"; refuse=0; rc=0
 if [ -x "$SCRIPT_DIR/../seat/herdr-run.sh" ]; then
-  "$SCRIPT_DIR/../seat/herdr-run.sh" eindri $SEAT $MAIN ${KIND_EXPLICIT:+--kind "$KIND_EXPLICIT"} ${MODEL:+--model "$MODEL"} "$ROLE" -- "$REQ" >/dev/null 2>&1 || rc=$?
+  "$SCRIPT_DIR/../seat/herdr-run.sh" eindri $SEAT $SEAT_MAIN ${KIND_EXPLICIT:+--kind "$KIND_EXPLICIT"} ${MODEL:+--model "$MODEL"} "$ROLE" -- "$REQ" >/dev/null 2>&1 || rc=$?
 fi
 if [ "$rc" = 0 ]; then
   seat="herdr"

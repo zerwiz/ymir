@@ -1293,3 +1293,51 @@ Gróa also runs `units.sh write` after every update, so a unit seated from a wor
 Eir's `runtimepin` surface runs `units.sh check` and its mend is the seat door. The resolver default
 (`~/ymir-runtime`, applied once the checkout is seated) lives once in `src/ymir_runtime/paths.py` and
 `bin/pi/arm-pin-lib.sh`.
+
+## Bearings in every brief, and the project's own folder (plan 291 parts 2 and 3, 2026-11-14)
+
+At the Allfather's word — *"we need to update the endri system so they are allways using and updateing this when
+getting send out"* and *"when we sending workers for diffrent projects the need to be send from the project foldeers
+they are going to work in so they dont do the updates in ymirs repos"* — two things moved from the helm's habit into
+the system.
+
+**Bearings.** `bin/agents/eindri-bearings.sh <path|id|alias>` prints one generated Markdown section with three parts:
+(a) the fixed core — the shipped, agnostic `.agents/assets/agents/eindri-core.md` followed by the home's overlay
+`$YMIR_HOME/config/eindri-core.md` (this fleet's names, panes, machines and standing words live only in the overlay);
+(b) the project's records — the row's `records:` block (`in_repo` · `in_home` · `boards` · `merges`) through
+`bin/agents/project-target.sh records`, each with the duty *read before you write, update before your report*, and a
+project with no block gets a plain statement plus the registry row to add, never an invented path; (c) the home's
+document map — `.ymir-layout.yaml` shelves, `hodd/docs/INDEX.md`, `hodd/ATLAS.md`, the plan-ledger READMEs and
+`state/eindri-reports/`. `eindri-start.sh` prepends it to the request on both roads and for every harness, and the
+engine prepends it in `seat._prompt_for` for an errand seated through `einherjar-spawn.sh`; both skip it when the brief
+already carries the marker `<!-- eindri-bearings:v1 … -->`, so a brief is never doubled. `--marker` prints that marker,
+`--check` says whether every door the section reads answers.
+
+**The project's own folder.** `bin/agents/project-target.sh resolve|records|worktree` is the ONE resolver: a path, an
+id or an alias resolves through `hodd/identity/projects.yaml` to *this machine's* clone (`clones.<host>`, then
+`local_clone`, then the row's `repo`), and `kind` is `ymir` only for the tree the door lives in. `eindri-start.sh
+--project` now passes that token through it; when the kind is `other` it makes the worktree **in that repository** by
+the row's own `worktree: {command, path, branch}` (each with `{id}`; default `git worktree add -b eindri/<id>
+<clone>/.yggdrasil/<id>`), cds there, and passes `--main` to `herdr-run.sh` so no second worktree is nested. A row with
+no clone on this machine is refused with the row named. `--dry-run` prints the seat plan (project, clone, worktree,
+branch, seat folder, harness, model, bearings carried) and seats nothing. The engine never owns an errand for another
+project. `registry/projects.yaml.example` documents both blocks and `.agents/skills/jord-projects/SKILL.md` says
+`project add` asks for them.
+
+**The packet carries it.** `bin/forge/handoff-packet.py write` gained `--record "<path>|<what>"` (or
+`--record "none|<why>"`); `check` refuses a packet with no `records[]`, an empty one, or a `none` with no weighable
+reason, and `schemas/handoff-packet.toon` documents the block as rule 7. `bin/agents/erindi-brief.sh` tells every
+worker to write the same line in its report.
+
+Guards: `bin/agents/tests/test_eindri_bearings.sh` (17) and `bin/agents/tests/test_project_target.sh` (20) on planted
+homes and repositories, and `bin/gates/tests/test_handoff_packet.sh` (20, four new records cases). Fix note
+`docs/fixes/agents/2026-11-14-bearings-in-every-brief.md`.
+
+**The launcher waits for the agent (plan 291 row 5).** `herdr agent start` returns when the pane holds an
+agent, not when the harness can take input — measured 2026-11-14, two hand-seated workers sat idle until their
+prompt was sent again. `bin/seat/agent-state-lib.sh` is the one reader of herdr's own `interactive_ready` and
+`agent_status`; `bin/seat/herdr-run.sh` waits for readiness (bounded, 20 s), speaks, confirms the agent moved
+(`working`/`done`) and retries the prompt once if it did not. `idle` + `interactive_ready: false` is not ready;
+`working`/`done` are past needing input; a blind reader answers `unknown`, never `ready`. The runbook is
+`docs/runbooks/send-an-eindri.md`; the guard is `bin/seat/tests/test_agent_state.sh` (9 cases against a stub
+herdr).
