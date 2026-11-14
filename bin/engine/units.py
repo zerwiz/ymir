@@ -111,6 +111,34 @@ def owed(entry: dict, roles: set[str]) -> bool:
     return want == "all" or not roles or bool(roles & set(want))
 
 
+def outward_doors() -> dict[str, bool]:
+    """Every door that acts outside this machine, and whether THIS machine names it on.
+
+    Plan 290 (2026-11-14). Seating used to follow a ROLE: a unit registered `roles: [heart, forge,
+    dev]` was written on every machine of those roles, so a collaborator's own install seated a
+    merging warden by merely existing. A door now runs where the operator's home names it for THIS
+    machine (`config/machines/<machine>/wardens.yaml`), and nowhere else. A name that is not an
+    outward door is absent from this map and keeps its old role rule.
+
+    The reader is `bin/forge/warden-policy.py` — the one parser of that file, shared with the doors
+    themselves, so the seater and the door can never disagree about whether the door is on.
+    """
+    door = CODE_ROOT / "bin" / "forge" / "warden-policy.py"
+    if not door.exists():
+        return {}
+    try:
+        out = subprocess.run([sys.executable, "-I", str(door), "seat-plan"],
+                             capture_output=True, text=True, timeout=30).stdout
+    except (OSError, subprocess.SubprocessError):
+        return {}
+    plan: dict[str, bool] = {}
+    for line in out.splitlines():
+        parts = line.split("\t")
+        if len(parts) >= 3 and parts[0] and not parts[0].startswith("#"):
+            plan[parts[0]] = parts[2].strip().lower() == "on"
+    return plan
+
+
 # ── the register ─────────────────────────────────────────────────────────────
 def _roots() -> list[Path]:
     """Where the register and the app templates are read from: the code that is running, and the pin.
@@ -416,6 +444,7 @@ def entry_for(reg: dict, filename: str) -> dict | None:
 def cmd_write(args: argparse.Namespace) -> int:
     reg, pin = load_register(), pin_dir()
     roles = roles_here()
+    doors = outward_doors()
     run = Run(args.dry_run, not args.no_restart)
     overrides = parse_sets(args.set)
     want = set(args.names)
@@ -423,6 +452,12 @@ def cmd_write(args: argparse.Namespace) -> int:
     tpl_launch, tpl_unit = templates(reg)
     for e in reg["units"]:
         if want and e["name"] not in want:
+            continue
+        # plan 290: an outward door is seated ONLY where this machine's home names it on. The role
+        # gate below stays, but a role is a capability, never a decision to act outward.
+        if e["name"] in doors and not doors[e["name"]]:
+            run.row(e["name"], e["kind"], "not-seated",
+                    "this machine's wardens.yaml does not name this door on")
             continue
         if not want and not owed(e, roles):  # a unit asked for BY NAME is owed; the role gates the sweep
             run.row(e["name"], e["kind"], "skipped", "not this seat's role")

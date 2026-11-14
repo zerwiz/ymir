@@ -1,0 +1,96 @@
+# wardens.yaml — TEMPLATE, never the live policy.
+#
+# Copy it to YOUR machine's shelf and edit it there:
+#
+#     mkdir -p $YMIR_HOME/config/machines/$(hostname -s)
+#     cp .agents/config/machine-wardens.example.yaml \
+#        $YMIR_HOME/config/machines/$(hostname -s)/wardens.yaml
+#
+# The runtime reads the operator's own file for THAT machine, and never another machine's. A machine
+# with no file runs no outward warden at all: that is the point of an opt-in, and it is why a fresh
+# install — a collaborator's, a stranger's — starts with every door on this page OFF.
+#
+# Read by `bin/forge/warden-policy.py` (one parser, one precedence rule) through
+# `bin/forge/warden-lib.sh`, which every outward door sources. What a door asks before it acts:
+#
+#   1. is it named ON here?             `enabled`         absent = off
+#   2. is the repository ours?          the operator's registry, hodd/identity/projects.yaml
+#   3. is this the identity named?      `identity`        compared with `gh api user`
+#   4. may it merge?                    `merge` + the heart + bin/forge/merge-verdict.sh
+#
+# Every outward act is carved as one Rune: machine, door, identity, repository, verdict.
+#
+# PRECEDENCE, and no third opinion: the door's own key, then the machine-wide default `identity:` /
+# `token_ref:` at the top of this file, then the door's documented default.
+#
+# THE KEY IS `enabled`, NEVER A BARE `on:`. YAML 1.1 (pyyaml and many other parsers still implement
+# it) reads the KEY `on` as the boolean true, so `on: on` is loaded as `{True: True}` and every
+# reader then sees no policy at all — a switch that silently unsets itself. The VALUES stay `on`/`off`
+# because those are prose to a person and this reader normalises them either way.
+#
+# THE MERGE RULE. `merge: on` is honoured only on the machine that the fleet registry names as the
+# heart (bin/skuld/role.sh resolve). Every other machine's file says `off`, and so does this template.
+# An absent key is `off`: a merge road that opens by omission is how a laptop's clock came to decide
+# what reached main.
+
+# ── machine-wide defaults (optional; a door's own key wins) ─────────────────
+# The machine's own identity for its wardens — the name a warden writes as, never the operator's
+# login that happens to be on the box. Absent, a door acts as the ambient login and says so in its
+# Rune; named and unmatched, the door refuses and prints both names.
+# identity: <machine>-warden
+# The vault key holding that identity's GitHub token (secrets/platform.env).
+# token_ref: GITHUB_TOKEN_WARDEN
+
+# ── the doors ──────────────────────────────────────────────────────────────
+# One block per door, named exactly as its script (`bin/forge/<door>.sh`). A door absent from this
+# file is off. `on:` is the opt-in a person writes, never a role that a machine happens to hold.
+
+queue-warden:
+  enabled: off
+  # the queue hygiene cap, and the age at which a PR is FLAGGED (a notice, never a close)
+  max_open_prs: 5
+  stale_hours: 48
+  # this machine may merge ONLY where the fleet names it heart, and only past merge-verdict.sh
+  merge: off
+  identity: ""
+  token_ref: ""
+
+review-watch:
+  # raises an ask for every unjudged open PR — the review loop's trigger
+  enabled: off
+
+review-seat:
+  # keeps the reviewer's herdr seat alive
+  enabled: off
+
+review-loop:
+  # judges the review shelf (bin/forge/review-shelf.sh tick)
+  enabled: off
+
+pr-watch:
+  # tells the operator a PR arrived
+  enabled: off
+
+issue-watch:
+  # tells the operator an issue arrived
+  enabled: off
+
+ship-watch:
+  # settles and ships proved PRs
+  enabled: off
+
+# ── the Nornir jobs that reach outward (gh, mail, a push) ──────────────────
+# These are seated by config/cron.yaml; this file decides whether the JOB may act on this machine,
+# so a row that reached the wrong box still refuses instead of acting.
+
+gna-mail:
+  enabled: off
+
+snotra-mail:
+  enabled: off
+
+git-sync:
+  enabled: off
+
+private-scan:
+  enabled: off
