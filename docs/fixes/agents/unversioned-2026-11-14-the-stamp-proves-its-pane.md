@@ -44,3 +44,8 @@ The same command with the honest `HERDR_PANE_ID=w39:p0` gives the same line.
 ### Files
 
 `bin/agents/msg-origin.sh` · `bin/agents/eindri-start.sh` · `bin/agents/eindri-send.sh`.
+
+### Appended 2026-11-14 (same day)
+
+A caller that hands in a FULL origin was stamped twice (`… · heimdall · herdr pane w39:p0 ·
+heimdall`); see `unversioned-2026-11-14-a-full-origin-is-not-stamped-twice.md` in this directory.
