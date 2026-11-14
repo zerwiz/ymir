@@ -219,6 +219,16 @@ marker line per execution shows no committed phase's work was recomputed, and
   an ellipsis, and only wraps below ~740px. Measured 1600→360px: six doors visible
   at every width, zero collisions. Public share of the why:
   `docs/fixes/smidja/2026-11-14-the-smithy-header-fits-every-width.md`.
+- **Kaia's persona ships with the app, and the home may override it (2026-11-14).**
+  The chat's identity is resolved in this order — `KAIA_PERSONA` (an explicit
+  file), `<repo>/.agents/skills/smidja/kaia/persona.md` (the operator's own shape;
+  when the chat's data lives in the home, that root IS the home), the target
+  repo's own `prompts/kaia.md`, then the default that ships with the app at
+  `apps/smidja-factory/apps/visualizer/prompts/kaia.md` (found by walking up from
+  the server module, so it answers the same on any machine). The spawn also
+  passes `--no-context-files`, so the chat never adopts the identity of the
+  `AGENTS.md` in its working directory — measured 2026-11-14, where it answered
+  as the seat's counsellor because no persona was found at all.
 - **Kaia's chat (2026-11-14).** `server/chat.ts` defaults to
   `opencode-go/deepseek-v4.1-flash` (the old `deepseek-v4-flash` is in no catalog
   and the provider answers it `400 Model is unavailable`, which pi reported as
