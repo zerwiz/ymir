@@ -48,3 +48,7 @@ knows. So the search must read recent output and name panes, and there are four 
 - Live on this machine, 2026-11-14: `seat-find.sh "reygan"` named three panes (a claude pane, a pi
   pane, and a claude pane whose screen carries the handoff command), skipped the caller's own pane
   `w39:p1V`, and refused to name the bare-shell panes.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #752
