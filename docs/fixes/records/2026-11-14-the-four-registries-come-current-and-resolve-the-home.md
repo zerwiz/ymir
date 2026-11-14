@@ -40,3 +40,7 @@ The eight files: `bin/fleet/registry-check.sh`, `bin/records/cron-registry.sh`, 
 `bash -n` is clean on all eight, and `defaults-guard.sh check <the changed paths>` now answers `"none"` on every
 section. The remaining ward finding — five systemd units on this box running from a working tree — is the machine's,
 not this branch's, and the guard classifies it as INHERITED.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #765
