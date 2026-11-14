@@ -486,10 +486,19 @@ Seat law, read first. You are a worker figure, not the primary. A line that star
       printf 'herdr-run[1]{isolation,worktree}:\n  "off (main tree — Allfather chose --main)"\n' >&2
     elif [ -x "$SCRIPT_DIR/../forge/yggdrasil.sh" ]; then
       # Reuse an existing worktree for this id; create only when absent.
-      wt_path="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null)/.yggdrasil/$NAME"
+      _top="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null)"
+      wt_path="$_top/.yggdrasil/$NAME"
       if [ ! -d "$wt_path" ]; then
-        wt_out="$("$SCRIPT_DIR/../forge/yggdrasil.sh" create "$NAME" 2>/dev/null)"
-        wt_path="$(printf '%s' "$wt_out" | sed -n '2p' | cut -d'"' -f6)"
+        # 2026-11-14 (plan 275 item 31): a branch left by an errand whose folder is gone used to refuse the seat
+        # ("worktree already exists") with the error thrown away. Prune, re-attach the branch, else create.
+        git -C "$_top" worktree prune 2>/dev/null || true
+        if git -C "$_top" show-ref --verify --quiet "refs/heads/yggdrasil/$NAME"; then
+          git -C "$_top" worktree add "$wt_path" "yggdrasil/$NAME" >&2 || true
+        else
+          wt_out="$("$SCRIPT_DIR/../forge/yggdrasil.sh" create "$NAME")" || printf 'herdr-run: yggdrasil.sh create %s failed: %s\n' "$NAME" "$wt_out" >&2
+          _rel="$(printf '%s' "$wt_out" | grep -oE '"\.yggdrasil/[^"]+"' | head -1 | tr -d '"')"
+          [ -n "$_rel" ] && wt_path="$_top/$_rel"
+        fi
       fi
       if [ -n "$wt_path" ] && [ -d "$wt_path" ]; then
         SEAT_CWD="$(cd "$wt_path" && pwd)"
