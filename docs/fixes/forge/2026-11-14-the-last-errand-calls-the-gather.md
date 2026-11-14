@@ -38,3 +38,7 @@ with nothing to gather prompts nothing; and both hooks call the door. It runs in
 ## Change log
 
 - **2026-11-14** — written with plan 293 part 4.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #756
