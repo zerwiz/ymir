@@ -24,3 +24,7 @@ On heimdall: Bilskirnir sat on desktop 2, `ymir-app bilskirnir` was run from des
 desktop 1 and took focus. `desktop-classes`, `ymir-edit-display` and `app-folder` tests pass.
 
 The one-line change in `sessrumnir-launch.sh` rides in the plan 283 commit, which stages the same file.
+
+## CHANGE LOG
+
+- 2026-11-13 — review-mend: added missing heading for #730
