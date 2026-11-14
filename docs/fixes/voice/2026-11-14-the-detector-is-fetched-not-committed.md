@@ -101,3 +101,7 @@ YMIR_VAD_PYTHON=…/kokoro-cli/bin/python bash bin/voice/tests/test_voice_vad_mo
 - **The pin is a version, not a hope.** `bfdc0193023f121ea5b3cc7b176dbed570a68a59` is the
   silero-vad commit that added the v6.2 model; its file hashes to the pinned value (verified twice,
   against `master` and against the pinned commit, both `1a153a22…`).
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #758
