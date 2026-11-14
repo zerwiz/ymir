@@ -376,12 +376,17 @@ start_one() {
   # plan 275 S8 (2026-11-12): a dashboard window takes neither the microphone nor the GPU's audio path, so a call
   # does not hold it back — the Allfather: "it needs to work if I'm in Discord also". The call guard stays on the
   # doors that DO touch the microphone or load a model (the voice engine, the voice client, Rödd's head).
-  # The DevTools port, for testing an app as a person would use it: YMIR_DEVTOOLS_PORT (unset = none).
-  # Chromium refuses a DevTools websocket that carries an Origin header unless the origins are
-  # named, and every scripted client sends one (node's built-in WebSocket, any harness). Without
-  # this the door answers /json and then fails the handshake — measured by Sessrúmnir's launcher
-  # on 2026-11-13; the same flag is seated here so every app's door is usable, not just listed.
-  [ -n "${YMIR_DEVTOOLS_PORT:-}" ] && extra+=(--remote-debugging-port="$YMIR_DEVTOOLS_PORT" --remote-allow-origins=*)
+  # The DevTools port, for testing an app as a person would use it. ALWAYS on, on the app's own fixed
+  # loopback port (bin/desktop/app-lib.sh, plan 275 item 19): a fault found after the fact can be inspected
+  # without a restart, and bin/desktop/boot-stopwatch.sh can ask the renderer when it first answered.
+  # YMIR_DEVTOOLS_PORT still wins, for a one-off probe.
+  #
+  # Chromium refuses a DevTools websocket that carries an Origin header unless the origins are named, and
+  # every scripted client sends one (node's built-in WebSocket, any harness). Without the flag the door
+  # answers /json and then fails the handshake (measured by Sessrúmnir's launcher, 2026-11-13).
+  local dtp="${YMIR_DEVTOOLS_PORT:-}"
+  [ -n "$dtp" ] || dtp="$(app_devtools_port "$v" 2>/dev/null || true)"
+  [ -n "$dtp" ] && extra+=(--remote-debugging-port="$dtp" --remote-allow-origins=*)
   # The profile a window writes into. The operator's own is the default; a SOAK passes its own
   # throwaway profile so a second instance never fights the open window's single-instance lock
   # (plan 286 P1 needs the same app twice: once as it was, once as it is).

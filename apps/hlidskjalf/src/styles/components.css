@@ -236,7 +236,24 @@
 .agent-skills {
   display: flex;
   flex-wrap: wrap;
+  justify-content: space-between;
   gap: 5px;
+}
+/* The last message recorded to this agent — the one line that says it is being spoken to. */
+.agent-last {
+  font-family: var(--ymir-font-mono);
+  font-size: 10px;
+  color: var(--ymir-text-3);
+  border-left: 2px solid var(--ymir-steel-2);
+  padding-left: var(--ymir-space-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* A card whose agent no pane holds: honest, quiet, never NOMINAL */
+.agent-card[data-alive='no'] {
+  opacity: 0.72;
+  border-left-style: dashed;
 }
 .agent-stats {
   display: flex;
@@ -513,35 +530,50 @@
   }
 }
 
-/* Fleet graph */
+/* Fleet graph
+ * 2026-11-14 (plan 275 item 7): the canvas is a SCROLLING, PIXEL-SIZED box, not a
+ * fixed 340px percentage grid. A node owns a cell larger than itself, so no ring
+ * can ever land on another node's name — the stacking the Allfather saw came from
+ * percentage rows (~31px pitch) under 46px rings.
+ */
 .fleet-graph {
   position: relative;
-  min-height: 340px;
+  overflow: auto;
+  max-height: min(660px, 76vh);
   background:
-    radial-gradient(circle at 50% 50%, var(--ymir-bg-3), transparent 70%),
+    radial-gradient(circle at 50% 40%, var(--ymir-bg-3), transparent 72%),
     var(--ymir-bg-1);
   border: 1px solid var(--ymir-steel-1);
   border-radius: var(--ymir-radius);
-  overflow: hidden;
+}
+.fleet-canvas {
+  position: relative;
+  margin: 0 auto;
 }
 .fleet-node {
   position: absolute;
-  /* the anchor point IS the ring centre, so A2A beams land on the circle;
-     the label floats below without shifting the anchor */
+  /* the RING's centre IS the anchor, so an A2A beam lands on the circle; the
+     label and the state hang below it without moving it */
   transform: translate(-50%, -50%);
-  width: 46px;
-  height: 46px;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
+  cursor: pointer;
+  border-radius: 50%;
+}
+.fleet-node:focus-visible {
+  outline: 2px solid var(--ymir-ok);
+  outline-offset: 2px;
 }
 .fleet-node .node-ring {
-  width: 46px;
-  height: 46px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   display: grid;
   place-items: center;
   font-family: var(--ymir-font-head);
-  font-size: 22px;
+  font-size: 20px;
   background: var(--ymir-bg-2);
   border: 2px solid var(--house, var(--ymir-steel-2));
   box-shadow: var(--ymir-bevel);
@@ -558,22 +590,45 @@
 }
 .fleet-node .node-label {
   position: absolute;
-  top: calc(100% + 3px);
+  top: calc(100% + 2px);
   left: 50%;
   transform: translateX(-50%);
+  z-index: 3;
+  pointer-events: none;
+  max-width: 124px;
   white-space: nowrap;
-  max-width: 96px;
   overflow: hidden;
   text-overflow: ellipsis;
   background: var(--ymir-bg-1);
   padding: 0 3px;
   border-radius: 3px;
-  z-index: 4;
   font-family: var(--ymir-font-mono);
   font-size: 10px;
-  color: var(--ymir-text-1);
-  line-height: 1.2;
+  color: var(--ymir-text-0);
+  line-height: 1.25;
+}
+.fleet-node .node-state {
+  position: absolute;
+  top: calc(100% + 16px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
   pointer-events: none;
+  max-width: 124px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--ymir-font-mono);
+  font-size: 9px;
+  color: var(--ymir-text-3);
+  line-height: 1.2;
+}
+/* An unseated figure is still on the board, dimmed — never hidden, never nominal */
+.fleet-node[data-alive='no'] .node-ring {
+  opacity: 0.5;
+}
+.fleet-node[data-alive='no'] .node-label {
+  color: var(--ymir-text-2);
 }
 .fleet-edges {
   position: absolute;
