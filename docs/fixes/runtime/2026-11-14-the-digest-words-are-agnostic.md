@@ -8,28 +8,29 @@ Under the law appended to `AGENTS.md` on 2026-11-14 — the repository is agnost
 machine of ours is named in any added line**, whether code, comment, fixture or fix note — two
 lines this branch added named machines:
 
-- the fixed core's testing law said *"test … on heimdall and, from a release, on nidavellir"*;
-- the fix note reported the measurement *"on heimdall"* and the owed proof as *"nidavellir was
-  offline"*.
+- the fixed core's testing law named the two machines it asks a hand to test on;
+- the fix note reported the measurement "on" one of them by name, and the owed proof as the
+  other being offline.
 
 The measurement is the value; the machine name is the leak.
 
 ## The fix
 
-Both read as **roles**, and the measurement is untouched:
+Both read as **roles**, and every number is kept exactly as measured:
 
 | Was | Now |
 |---|---|
-| test on `heimdall` and, from a release, on `nidavellir` | test on **this machine** and, from a release, on **a second machine** (its own ssh entry) |
-| "On `heimdall`, through the real hook: 33 lines / 3,569 bytes" | "On this machine, through the real hook: 33 lines / 3,569 bytes" |
-| "`nidavellir` was offline" | "A second machine was offline (its tailnet seat: last seen 1 h ago)" |
+| test on two named machines (one here, one over ssh) | test on **this machine** and, from a release, on **a second machine** (its own ssh entry) |
+| "On *the machine's name*, through the real hook: 33 lines / 3,569 bytes" | "On this machine, through the real hook: 33 lines / 3,569 bytes" |
+| "*The other machine's name* was offline" | "A second machine was offline (its tailnet seat: last seen 1 h ago)" |
 
 The house figure **Heimdall** in the lore is untouched — a figure is not a machine.
 
 ## How it was proved
 
 ```bash
-git diff origin/main...HEAD | grep -E "^\+" | grep -iE "heimdall|nidavellir|whynot|zerwizserver|craig|reygan"
+the same check the helm gave — every added line of the branch read for a machine name
+of ours (`git diff origin/main...HEAD | grep '^+'`, then the machine-name pattern)
 ```
 
 prints nothing, and the head still measures 34 lines / 3,646 bytes against its 60-line,
