@@ -14,9 +14,9 @@
 ## Why
 
 At the Allfather's word, plan 275 §2026-11-14 05:00: *"this feature of opening online must go
-away with the logins we have. we are not hosting the 3 apps online, they are local. Craig found
-that we were opening ports out. we have a plan for this. this was a feature from very long time
-ago."*
+away with the logins we have. we are not hosting the 3 apps online, they are local. [a
+collaborator's security review] found that we were opening ports out. we have a plan for this. this
+was a feature from very long time ago."*
 
 The 05:00 and 05:20 audits measured what remained of the hosted era: the gate's own login
 (`HLIDSKJALF_AUTH`), an accounts store with invite codes, a GitHub OAuth door, a set of public
@@ -64,8 +64,8 @@ true. The feature page and both galdr assets are corrected in the same change.
 - **Plan 277** — §1's **Local** reach row for the halls: loopback only, *no credential needed*.
   The three tables in 277 stand; slices 2–4 are untouched.
 - **Plan 279** — §1 row 2's residue on the halls' side: the ports were already closed (#705,
-  #712); what remained was the login that pretended to guard them. Craig's other eleven rows are
-  untouched and stay as 279 records them.
+  #712); what remained was the login that pretended to guard them. The collaborator's other
+  eleven findings are untouched and stay as plan 279 records them.
 
 ## How it was proved
 
