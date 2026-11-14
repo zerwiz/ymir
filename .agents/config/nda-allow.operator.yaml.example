@@ -1,0 +1,33 @@
+# nda-allow.operator.yaml.example — the NDA gate's words that are YOURS, kept in your home.
+#
+# Copy to $YMIR_HOME/config/nda-allow.yaml (private, never in this repo) and fill in your own.
+#
+# WHY THIS FILE EXISTS SEPARATELY. The gate refuses any word the home's registries treat as
+# protected (a company, a client, a project, a person) that appears in the public tree. But some of
+# your own words MUST appear there — your realm's name is in every plan path, your mail domain is
+# the identity you publish, your handle owns the repository. Those are the exceptions, and they are
+# yours: the repository ships the generic English ones (`.agents/config/nda-allow.yaml`) and reads
+# this file at run time, so no word of yours is ever written into the public tree (RULES/04).
+#
+# Two rules the loader enforces, and they are the whole point:
+#   · every entry carries a `reason` — an entry with no reason is IGNORED, because an allowance is
+#     a claim somebody has to be able to read;
+#   · a REAL company, client or NDA-project name never belongs here. If a name is protected, it is
+#     refused, not allowed.
+
+allow:
+  # the realm that owns this repository — its name is in every plan path, so it must be allowed
+  - word: example-house
+    reason: the realm that owns this repository; named in the public contract and every plan path
+
+  # the spaced form the same name takes in prose
+  - word: example house
+    reason: the spaced form of the realm above
+
+  # the mail domain the house publishes — already the identity of this repository's owner
+  - word: example.org
+    reason: the operator's own public mail domain, the identity of this repository's owner
+
+  # the code-host login that owns the repository — a handled the operator publishes, not a person
+  - word: your-login
+    reason: the operator's own public code-host login, the owner of this repository

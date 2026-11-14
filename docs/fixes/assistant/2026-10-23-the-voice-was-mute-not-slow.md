@@ -15,7 +15,7 @@ The mouth was healthy — it sang an eleven-kilobyte note in one second when dri
 fault was in `~/.pi/agent/telegram.json`:
 
 ```json
-"template": ["bash", "/home/heimdall/ymir/bin/assistant/mouth.sh", "{text}", "{ogg}"]
+"template": ["bash", "~/ymir/bin/assistant/mouth.sh", "{text}", "{ogg}"]
 ```
 
 pi-telegram's command-template standard reads an **array as a sequence of commands**, not one
@@ -32,7 +32,7 @@ invoked empty.
 1. **`bin/assistant/voice-handler.sh`** — one step. The reply arrives on **stdin** and is handed to
    the same one mouth (`mouth.sh`). A long sentence with an apostrophe is data now, not shell.
    Config becomes:
-   `"template": "bash /home/heimdall/ymir/bin/assistant/voice-handler.sh {ogg}"`, `"output": "ogg"`.
+   `"template": "bash ~/ymir/bin/assistant/voice-handler.sh {ogg}"`, `"output": "ogg"`.
 2. **`bin/assistant/ear.sh` raises the mouth the instant his voice lands** (plan 121, phase 2).
    The synthesiser is idle-lowered after five quiet minutes and costs up to 30 s to raise — paid
    *before the first word* until now. The raise runs in the background, overlapping transcription
@@ -52,3 +52,16 @@ and is correct as it stands. Do not "fix" it to match the outbound one.
 
 The extension that makes the lane *fast* rather than merely working — mouth warm from arrival,
 `voice_speak` mid-turn, and a per-turn stopwatch — is plan 121's phase 3 and is not in this change.
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: a dev machine (this seat). The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #758

@@ -176,6 +176,8 @@ gate triggers    "a smithy starts by a person, the clock or an event — and not
                bash "$ROOT/bin/time/tests/test_event_trigger.sh"
 gate voice-arm   "Rödd knocks on the arm, and refuses when nobody is holding it (plan 223)" \
                bash "$ROOT/bin/voice/tests/test_rodd_arm.sh"
+gate voice-vad   "the detector weights are fetched and checksummed, never committed, and both doors name one file (plan 288)" \
+               bash "$ROOT/bin/voice/tests/test_voice_vad_model.sh"
 # PLAN 293 part 3 — the digest SEES what never landed: a pushed worker branch with no PR, and a
 # commit on no remote. A warning nobody runs is decoration, so the door is proved on a planted
 # repository, including the offline path (a branch is never called PR-less on a failed question).

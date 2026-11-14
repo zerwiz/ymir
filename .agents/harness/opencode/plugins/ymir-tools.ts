@@ -33,6 +33,33 @@ async function isYmirRoot(candidate: string): Promise<boolean> {
   return (await isDirectory(`${candidate}/bin`)) && (await isDirectory(`${candidate}/RULES`))
 }
 
+// The plan ledger lives under a realm named by THIS operator, so it is DISCOVERED inside his
+// home (RULES/04, RULES/25): exactly one `svartalfaheim/<realm>/projects/<project>/plans` is the
+// ledger, and the older `workspace/<project>/plans` shape is read when the first has none. A home
+// that holds several answers with their names; one that holds none says so. Never a guess, and
+// never a realm of ours written into the plugin.
+async function planLedger(home: string, realm?: string, project = "ymir"): Promise<{ dir?: string; reason?: string }> {
+  const { readdir, stat } = await import("node:fs/promises")
+  const realms = realm ? [realm] : await readdir(`${home}/svartalfaheim`).catch(() => [] as string[])
+  // Precedence, exactly as bin/vault/hoard-lib.sh's ymir_plan_dir has it: the `projects/` shape
+  // is the ledger; the older `workspace/` shape is read only when `projects/` has none.
+  const found: string[] = []
+  for (const shape of ["projects", "workspace"]) {
+    for (const r of realms) {
+      const dir = `${home}/svartalfaheim/${r}/${shape}/${project}/plans`
+      try {
+        if ((await stat(dir)).isDirectory()) found.push(dir)
+      } catch {}
+    }
+    if (found.length > 0) break
+  }
+  if (found.length === 1) return { dir: found[0] }
+  if (found.length === 0) {
+    return { reason: `no plan ledger in this home (looked for svartalfaheim/*/projects/${project}/plans and the workspace/ shape) — pass realm+project, or set YMIR_PLAN_DIR` }
+  }
+  return { reason: `this home holds ${found.length} plan ledgers — name one with realm+project:\n  ${found.join("\n  ")}` }
+}
+
 // Helper to resolve Ymir root and home (mirrors pi extension logic)
 async function resolveYmirPaths(locationDirectory?: string): Promise<{ root: string; home: string; state: string }> {
   const { $ } = await import("bun")
@@ -309,12 +336,14 @@ export default Plugin.define({
           project: Schema.optional(Schema.String),
         }),
         output: Schema.Struct({ text: Schema.String }),
-        execute: async ({ slug, title, realm = "whynotproductions", project = "ymir" }) => {
+        execute: async ({ slug, title, realm, project = "ymir" }) => {
           try {
             if (!slug.trim() || !title.trim()) {
               return toolResult("ymir_plan needs `slug` and `title`. This tool WRITES a file into the plan ledger, so it refuses to guess.")
             }
-            const dir = `${home}/svartalfaheim/${realm}/projects/${project}/plans`
+            const ledger = await planLedger(home, realm, project)
+            if (!ledger.dir) return toolResult(`refused: ${ledger.reason}`)
+            const dir = ledger.dir
             const nums = (await runShell("bash", ["-c", `ls "$1" | grep -oE '^[0-9]+' | sort -n | tail -1`, "_", dir], home)).trim()
             const next = (parseInt(nums || "0", 10) || 0) + 1
             const nn = String(next).padStart(2, "0")
@@ -422,12 +451,15 @@ export default Plugin.define({
                 : `it is INSIDE the home but in no legal shelf:\n  ${rel}\n  reason: ${verdict.why}\n  move it with ymir_place(..., move:true) into hodd/reference/ if it is retired.`)
             }
             
-            // Classify by subject
+            // Classify by subject. The ledger's shelf is DISCOVERED in the operator's home, never
+            // spelled: with none found, plan-shaped material goes to hodd/docs, which claims it.
+            const placed = await planLedger(home)
+            const ledgerShelf = placed.dir ? `${placed.dir.slice(home.length + 1)}/` : "hodd/docs/"
             const rules = [
               { re: /secret|credential|\.env$|\.pem$|\.key$|token/, shelf: "hodd/secrets/", why: "a credential — the one place values may live" },
-              { re: /masterplan|plan 66|roadmap|master plan/, shelf: "svartalfaheim/whynotproductions/projects/ymir/plans/", why: "a masterplan or architecture plan belongs in the ledger" },
-              { re: /register|inventory|index/, shelf: "svartalfaheim/whynotproductions/projects/ymir/plans/", why: "a register is an index — it lives with the plans it indexes" },
-              { re: /calendar|mánagandr|managandr|memory|well|engram/, shelf: "svartalfaheim/whynotproductions/projects/ymir/plans/", why: "a feature's design belongs in its plan, not loose" },
+              { re: /masterplan|plan 66|roadmap|master plan/, shelf: ledgerShelf, why: "a masterplan or architecture plan belongs in the ledger" },
+              { re: /register|inventory|index/, shelf: ledgerShelf, why: "a register is an index — it lives with the plans it indexes" },
+              { re: /calendar|mánagandr|managandr|memory|well|engram/, shelf: ledgerShelf, why: "a feature's design belongs in its plan, not loose" },
               { re: /postiz|social|campaign|marketing|brand|content/, shelf: "hodd/life/marketing/", why: "the operator's own marketing domain" },
               { re: /meeting|minute|standup|1:1/, shelf: "hodd/life/meetings/", why: "a meeting artefact" },
               { re: /journal|diary|personal/, shelf: "hodd/life/personal/", why: "the operator's own personal domain" },

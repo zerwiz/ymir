@@ -14,3 +14,5 @@ It now reads opencode, pi, Claude Code | RULES/53: fleet-truth-2's body records 
 and probes Cursor | RULES/53: fleet-truth-2's body names the harness Stats now probes (2026-11-14)
 the Allfather's Claude work was invisible | RULES/53: fleet-truth-2's body names whose work Stats could not see (2026-11-14) — the observation, not a maker claim
 Codex (the cumulative total, last per rollout), Hermes | RULES/53: fleet-truth-2's body names two harnesses and the shape of their usage rows (2026-11-14)
+the harness page that named a partner, and the OpenCode plugin | RULES/53: agnostic-code's body records the harness whose plugin changed (2026-11-14) — the change itself
+The OpenCode plugin was the one behaviour change | RULES/53: agnostic-code's body names the harness whose plugin is the one behaviour change (2026-11-14)

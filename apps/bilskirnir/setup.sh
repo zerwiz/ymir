@@ -166,7 +166,7 @@ else
 fi
 
 # ── the ear, found where this machine keeps it (plan 275 S16, 2026-11-12) ──
-# The paths were heimdall's own (~/whisper.cpp.src/build/bin, ~/whisper.cpp/models), so on nidavellir, where
+# The paths were one machine's own (~/whisper.cpp.src/build/bin, ~/whisper.cpp/models), so on another, where
 # whisper-cpp comes from the package manager (/usr/bin/whisper-cli) and the model sits in ~/.local/share, the hall
 # called its ear missing and refused to open at all. An explicit setting wins; else the first that exists.
 find_ear() {
@@ -200,7 +200,7 @@ ENVF="$APP/.env"
 if [ "$CHECK" = 0 ]; then
   # Every base setting that is ABSENT is added; a value already there (the operator's) is never touched. It used to
   # write them only when the file was missing — so an .env that existed but was empty (the data home creates one)
-  # kept no session secret and no keys, and the server died at start (nidavellir, 2026-11-12: `Missing env
+  # kept no session secret and no keys, and the server died at start (a second machine, 2026-11-12: `Missing env
   # COMPOSIO_API_KEY`). The secret is generated once, here, and never printed.
   umask 077; [ -f "$ENVF" ] || : > "$ENVF"
   python3 - "$ENVF" <<'PY'

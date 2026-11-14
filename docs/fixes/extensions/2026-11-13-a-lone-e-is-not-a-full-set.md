@@ -21,8 +21,8 @@ The house already had the cure — the one-home door at `~/.pi/agent/bin/pi` —
 it. Measured in the app's own log (`state/sessrumnir.log`), the argv was:
 
 ```
-/home/heimdall/.pi/agent/bin/pi --mode rpc --provider … --model … --continue \
-  -e /home/heimdall/ymir/apps/sessrumnir/resources/pi-desktop-permissions.ts
+~/.pi/agent/bin/pi --mode rpc --provider … --model … --continue \
+  -e ~/ymir/apps/sessrumnir/resources/pi-desktop-permissions.ts
 ```
 
 The door's rule was *"the caller already names its extensions (`-ne` / `-e`) → pass through, untouched."*
@@ -75,3 +75,12 @@ cleanly — `valknut-load --check` passed all evening while the seat could not s
 ## CHANGE LOG
 
 - **2026-11-13** — written with the fix; the conflicting argv and the 44 lines are from the app's log.
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: a dev machine (this seat). The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).

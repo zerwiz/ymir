@@ -58,3 +58,16 @@ And the line arrived in the arm holder's chat as a turn — which is the only pr
 
 The arm holder does not yet write `state/.arm.pane` itself at session start; the file was written by hand
 tonight. A Pi extension on `session_start` is the durable half, named in plan 234 P2.
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: the fleet's always-on heart. The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #758

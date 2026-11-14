@@ -37,7 +37,7 @@
 #   YMIR_VOICE_HEAD_KEY_NAME vault key NAME for the head      (default: the seat's own
 #                            rail key in ~/.pi/agent/auth.json)
 #   YMIR_VOICE_HEAD_KEY_PROVIDER  the provider name in auth.json (default 'llama-swap';
-#                            use 'llamacpp-heimdall' when the head is another seat's rail)
+#                            name the provider that fronts another seat's rail when the head is there)
 #   YMIR_VOICE_MIN_SILENCE_MS  silence that ends a turn        (default 300)
 #   YMIR_VOICE_REOPEN_MS     speculative reopen grace         (default 400)
 #   YMIR_VOICE_SMART_TURN_WAIT_MS  endpointing ceiling         (default 500)
@@ -71,7 +71,7 @@ if [ -r "${XDG_CONFIG_HOME:-$HOME/.config}/ymir/voice.env" ]; then
     case "$_k" in YMIR_VOICE_[A-Z_]*) [ -n "${!_k:-}" ] || export "$_k=$(printf '%s' "$_v" | tr -d "\"'")" ;; esac
   done < <(grep -E '^[[:space:]]*YMIR_VOICE_[A-Z_]+=' "${XDG_CONFIG_HOME:-$HOME/.config}/ymir/voice.env")
   # read before: the host was resolved above this block, so a machine that names ITSELF as the voice host was
-  # still sent to the fleet's first ear (nidavellir to heimdall)
+  # still sent to the fleet's first ear (one machine to another)
   HOST_MACHINE="${YMIR_VOICE_HOST:-$HOST_MACHINE}"
 fi
 STT_DEVICE="${YMIR_VOICE_STT_DEVICE:-cpu}"
@@ -312,7 +312,7 @@ cmd_host() {
   local -a engine_pin=()
   # The machine's own choice comes first (plan 275, 2026-11-12): ~/.config/ymir/voice.env is per machine, never the
   # shared home, because one machine has a free compute GPU and another has none. YMIR_VOICE_GPU=on puts the ear and
-  # the voice on the GPU: on heimdall the RTX A5000 sat at 0 % while Kokoro on the CPU took 28 s to its first word.
+  # the voice on the GPU: on the dev machine the card sat at 0 % while Kokoro on the CPU took 28 s to its first word.
   # The Allfather: "It was much faster with the voice back before."
   local _vgpu="${YMIR_VOICE_GPU:-}"
   [ -n "$_vgpu" ] || _vgpu="$(sed -n 's/^[[:space:]]*YMIR_VOICE_GPU[[:space:]]*=[[:space:]]*//p' "${XDG_CONFIG_HOME:-$HOME/.config}/ymir/voice.env" 2>/dev/null | tail -1 | tr -d "\"'")"

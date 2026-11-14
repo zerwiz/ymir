@@ -6,7 +6,7 @@
 
 `bin/assistant/` moved to `systems/skirnir/services/` — one level **deeper** than it was. Every door that
 computed the repository root by *counting* `..` therefore landed one level short: `skirnir.py` and
-`telegram.py` resolved to `/home/heimdall/ymir/systems`, `ground.py` used `parents[2]`, and `paths.py`
+`telegram.py` resolved to `~/ymir/systems`, `ground.py` used `parents[2]`, and `paths.py`
 and `research.py` built the vault library's path as `<here>/../vault/hoard-lib.sh`, which does not exist.
 
 The failure was quiet and expensive in exactly the wrong way: Skírnir's **Telegram service** reported
@@ -34,3 +34,16 @@ called was not there — and restarted every five seconds. The token was in the 
 counting `..` is a silent break, and the py file that breaks is the one that only runs when something
 speaks to the user. The ward has a `path-ledger-guard` for strings; it has nothing for arithmetic on the
 filesystem. That gap is named here, not mended.
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: a dev machine (this seat). The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #758

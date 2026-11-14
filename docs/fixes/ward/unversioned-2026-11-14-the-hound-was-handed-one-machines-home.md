@@ -4,7 +4,7 @@ The private sweep reported, in an earlier pass of the same day, a machine home b
 unit template: `tools/mill/systemd/garmr-hound.service` carried
 
 ```
-Environment=YMIR_HOME=/home/heimdall/Documents/ymirhome
+Environment=YMIR_HOME=~/Documents/ymirhome
 ```
 
 The hound runs as **root**, whose `HOME` is `/root`, so it cannot resolve the hoard by itself — the
@@ -48,3 +48,12 @@ Reported by `bin/time/nornir-job-private-scan.sh`; the home's record is
 ## CHANGE LOG
 
 - 2026-11-13 — review-mend: added missing heading for #743
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: the fleet's always-on heart · a dev machine (this seat). The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).

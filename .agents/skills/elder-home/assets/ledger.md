@@ -11,10 +11,11 @@ $YMIR_HOME/svartalfaheim/<realm>/workspace/<project>/plans/
   <domain>/...       # some plans keep their domain folder (core/, mesh/…)
 ```
 
-For the operator's own setup (realm `whynotproductions`, project `ymir`):
+For the operator's own setup (realm `<realm>`, project `ymir` — the realm is HIS, so the ledger is
+discovered, never spelled: `bin/vault/hoard-lib.sh` → `ymir_plan_dir`):
 
 ```
-svartalfaheim/whynotproductions/workspace/ymir/plans/    # plans 01–42
+svartalfaheim/<realm>/workspace/ymir/plans/              # plans 01–42
 ```
 
 ## Retired shelves — never write here

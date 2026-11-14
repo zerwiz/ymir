@@ -26,7 +26,7 @@ SAFE = {
     "plan_write": {"title": "Tool test plan", "steps": ["first step", "second step"], "agent": "sindri"},
     "context_left": {},
     "last_session": {"turns": 2},
-    "search_sessions": {"query": "Andre", "limit": 2},
+    "search_sessions": {"query": "Ada", "limit": 2},
     "pane_read": {"errand": "voice-593303", "lines": 3},
     "errand_state": {"id": "voice-593303"},
     "steer_worker": {"target": "no-such-pane", "line": "tool test — not a live worker"},

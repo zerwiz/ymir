@@ -22,3 +22,16 @@ Measured today: `meeting{M-20261022-sync-reygan-craig, letter:draft r-… · not
 - **a send is a send only when `letters.json` carries `sent.at`** — a draft is a draft, however it looks;
 - **an absent file is "not recorded", never "not sent"** (Rule 37);
 - every row names the meeting id and the date the state file was written, so a reader can check it.
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: a person the house meets. The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #758

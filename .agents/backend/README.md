@@ -190,7 +190,3 @@ backend[176]{file,does,kind,verdict,disposition,callers,lines}:
   "zellij.sh","bin/backends/zellij.sh - the zellij session-provider adapter (EXPERIMENTAL).","data","tested","keep",1,701
 
 **Tally.** verdict: tested=165, wired=11
-
-## CHANGE LOG
-
-- 2026-11-14 — review-mend: added missing heading for #765

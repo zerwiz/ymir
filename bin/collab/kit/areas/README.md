@@ -40,9 +40,9 @@ bash scripts/areas.sh init        # one file per canon area, every one honestly 
 bash scripts/areas.sh list        # area · state · keeper · open questions
 bash scripts/areas.sh check       # names what is unanswered or unproved; exits 1 on a fault
 bash scripts/areas.sh estate      # the one line: held · unproved · waived · na · unheld
-bash scripts/areas.sh claim tenancy --keeper "Craig" --path "apps/ct_core/lib/ct_core/domains/" \
+bash scripts/areas.sh claim tenancy --keeper "Ada Lovelace" --path "apps/ct_core/lib/ct_core/domains/" \
                                   --evidence "apps/ct_core/test/tenancy/isolation_test.exs" --lens isolation
-bash scripts/areas.sh waive perf --by "Craig" --why "no traffic yet" --until 2027-01-31
+bash scripts/areas.sh waive perf --by "Ada Lovelace" --why "no traffic yet" --until 2027-01-31
 ```
 
 The gate `scripts/gates/areas-guard.sh` runs at pre-push: a change under an `unheld` area's

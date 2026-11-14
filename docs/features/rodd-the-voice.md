@@ -343,3 +343,40 @@ already refuses.
   `--holder`, Nanna's duty loop lands in `rodd-helm.sh`, and `hold`/`release` move the helm
   without a reboot (plan 254); fix note
   `docs/fixes/voice/2026-11-11-rodd-holds-the-arm.md`.
+
+## The turn boundary's detector: a download, never a file in the repo
+
+The first stage of the pipeline has to answer one question — *has the person stopped talking?* — and
+`bin/voice/ymir-vad.py` answers it with Silero's voice-activity detector, a single 2.3 MB ONNX file.
+
+That file used to be committed (`.fleet/voice/silero_vad.onnx`). It is **not any more**: model weights
+are a download, they go stale against nothing, and they have no business in a clone. The install step
+seats it, and verifies what it fetched:
+
+```sh
+bin/voice/voice-ensure.sh install    # fetches the detector, checks its sha256, seats it
+bin/voice/voice-ensure.sh status     # the `vad` row says present/missing and names the file
+bin/voice/ymir-vad.py path           # which file the loader will read
+bin/voice/ymir-vad.py selftest       # runs it: silence must read below the threshold
+```
+
+It lands in your own data folder — `~/.local/share/ymir/models/voice/silero_vad.onnx`, which follows
+`$XDG_DATA_HOME` and the same `YMIR_RELEASES` data root the releases live under. `YMIR_VOICE_MODELS_DIR`
+moves the folder and `YMIR_VAD_MODEL` names one file, for a machine that keeps its weights elsewhere.
+
+The upstream is pinned to a **commit** of `snakers4/silero-vad` and its sha256 is pinned with it, so a
+download that does not match is refused and nothing is seated. The gate that holds this together is
+`bin/voice/tests/test_voice_vad_model.sh` (the `voice-vad` row of `bin/gates/ci-verify.sh`):
+it proves the installer and the loader name the **same** file, that a mismatched download is refused,
+and — where a python has `onnxruntime` — that the detector actually runs.
+
+Two different detectors live in the voice, and it is worth knowing which is which: **this one** is the
+turn boundary in the pipeline; Rödd's *window* carries its own browser-side VAD
+(`silero_vad_v6.onnx`, copied from `@ricky0123/vad-web` by `apps/rodd/setup.sh`), which was never in git.
+
+### CHANGE LOG
+
+- **2026-11-14** — appended: the turn boundary's detector is a download fetched by the install and
+  verified against a pinned sha256, never a file in the repository; one library and one gate hold the
+  installer and the loader to one answer (plan 288 step 7, plan 287 P4; fix note
+  `docs/fixes/voice/2026-11-14-the-detector-is-fetched-not-committed.md`).

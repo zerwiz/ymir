@@ -1,0 +1,19 @@
+# voice-subjects.yaml.example — the subjects the operator's own voice may ask about.
+#
+# Copy to `$YMIR_HOME/config/snotra/voice-subjects.yaml`. Every key is one subject the live transcript
+# matcher recognises; every value is the list of ways the speech recogniser may hear it (a mangled noun
+# is normal: whisper hears "Nutra" for "Snotra").
+#
+# WHY IT LIVES IN THE HOME (plan 288 §1, RULES/42): a client, a company or a product the operator works
+# on is personal data. Written into the code it ships to every clone — and a stranger's install gains a
+# subject it has no facts for.
+#
+# Read by:  systems/snotra/services/ear/snotra-voice.py
+# Absent:   the house's own names only (snotra, skirnir, the allfather, ymir, brokk), which is a clean
+#           fallback — never an error.
+
+version: 1
+subjects:
+  # one canonical subject, then every spelling the ear may hear
+  "acme": ["acme", "acme corp", "a-cme", "akme"]
+  "harbour": ["harbour", "harbor", "arbour"]

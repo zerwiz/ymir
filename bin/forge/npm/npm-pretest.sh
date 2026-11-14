@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # npm-pretest.sh — the pre-publish test gate (the Allfather's decree):
 # the exact tarball the publish would ship must install AND smoke on THIS seat
-# and on a remote seat (heimdall) before the shelf ever sees it.
+# and on a remote seat (named in NPM_PRETEST_HOSTS) before the shelf ever sees it.
 #
 # The 0.1.49 lesson: files[] lacked tools/ and the porch sailed missing. The
 # pretest packs the real artifact, verifies the hull INSIDE the tarball,
@@ -11,9 +11,9 @@
 # Usage:   bin/forge/npm/npm-pretest.sh            local leg + the remote leg
 #          bin/forge/npm/npm-pretest.sh local      local only
 #          bin/forge/npm/npm-pretest.sh remote     remote only (needs the local tarball)
-# Env:     NPM_PRETEST_HOSTS  the remote seats, space-separated
-#                             (default: omarchy whynot; a seat that IS this
-#                             machine runs its leg locally, no loopback ssh)
+# Env:     NPM_PRETEST_HOSTS  the remote seats, space-separated (no default: a machine
+#                             list is the operator's, and a seat that IS one of them runs
+#                             its leg locally, no loopback ssh)
 #          NPM_PRETEST_HOST   one seat, back-compat
 #          NPM_PRETEST_SKIP_REMOTE=1     skip the remote leg
 set -u
@@ -21,7 +21,7 @@ set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)}"
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/npm-pretest-XXXXXX")
-REMOTE="${NPM_PRETEST_HOST:-${NPM_PRETEST_HOSTS:-omarchy whynot}}"
+REMOTE="${NPM_PRETEST_HOST:-${NPM_PRETEST_HOSTS:-}}"
 PASS=1
 TARBALL=""
 say() { printf '%s\n' "$*"; }

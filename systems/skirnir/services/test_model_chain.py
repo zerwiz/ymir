@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """test_model_chain.py — Skírnir's mouth is a CHAIN: the primary, then the fallback.
 
-His word, 2026-11-09: "give him the mtp model here and the q2 qwen3.6 on nidavellir". The chain was
+His word, 2026-11-09: "give him the mtp model here and the heavier quantisation on the other seat". The chain was
 first written by hand on the pinned runtime and carried to main on 2026-11-12. These tests hold
 three promises, and none of them calls a real model — `urlopen` is replaced:
 

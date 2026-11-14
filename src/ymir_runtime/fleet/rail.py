@@ -1,7 +1,7 @@
 """fleet/rail.py — the LIVING rail resolver (plan 51, Parts 9a/9b/9c).
 
 The Allfather's doctrine: *models come from whichever strong box is CONNECTED at
-the moment* — heimdall · whynot · omarchy. The model lane is a live federation,
+the moment* — the heart, the forge, a dev seat. The model lane is a live federation,
 not a single point: a box that drops out of the tailnet drops out of the lane,
 and resolution reroutes. A dead rail is a lane reroute, never an outage.
 
@@ -240,7 +240,12 @@ def _key_from_auth(path: Path) -> str:
         return ""
     if not isinstance(doc, dict):
         return ""
-    for provider in ("llama-swap", "llamacpp-heimdall", "llamacpp-whynot"):
+    # WHICH provider: the rail's own name when the seat declares it ($RAIL_KEY_PROVIDERS,
+    # comma-separated, first match wins), else every provider in the file. Never a list of this
+    # fleet's provider ids — a seat's own rail is its own business (RULES/04, RULES/25).
+    wanted = [x.strip() for x in os.environ.get("RAIL_KEY_PROVIDERS", "llama-swap").split(",") if x.strip()]
+    order = wanted + [k for k in doc if k not in wanted]
+    for provider in order:
         entry = doc.get(provider)
         if isinstance(entry, dict):
             value = entry.get("key") or entry.get("apiKey")

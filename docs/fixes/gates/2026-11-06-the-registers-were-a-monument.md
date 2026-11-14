@@ -18,7 +18,7 @@ The intended cure was already declared and already written, and never ran. `.git
 `merge=regenerate`; `bin/records/regenerate-on-merge.sh` implements the reweave; and the value git actually had was:
 
 ```
-merge.regenerate.driver = bash "/home/heimdall/ymir/.yggdrasil/merge-534/bin/records/regenerate-on-merge.sh" %O %A %B %L %P
+merge.regenerate.driver = bash "~/ymir/.yggdrasil/merge-534/bin/records/regenerate-on-merge.sh" %O %A %B %L %P
 ```
 
 **It pointed into a worktree that no longer exists.** A merged errand took the driver's own path with it, so from that
@@ -64,3 +64,12 @@ bin/gates/checks/usage-ratchet.sh  → the pile is unchanged (no new unused door
 
 - **2026-11-06** — Written with the split. The stale driver path (`merge-534`) is the finding that explains why a
   declared mechanism never healed anything.
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: a dev machine (this seat). The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).

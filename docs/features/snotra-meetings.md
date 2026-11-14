@@ -101,7 +101,7 @@ remote call heard only by the Vexa bot has no local uplink to borrow.
 ```bash
 systems/snotra/services/ear/snotra-voice-device.sh ensure          # the sink + the source, idempotent
 systems/snotra/services/ear/snotra-stream.sh status                # muted? device? is Kokoro up?
-systems/snotra/services/ear/snotra-stream.sh say "Craig, the actions are in the mail."
+systems/snotra/services/ear/snotra-stream.sh say "Ada, the actions are in the mail."
 systems/snotra/services/ear/snotra-stream.sh talk --listen <source>   # the streaming loop
 python3 systems/snotra/services/ear/snotra-talk.py --listen-file q.wav  # replay a recording (the test door)
 systems/snotra/services/ear/snotra-stream.sh mute                  # one command, and it holds
