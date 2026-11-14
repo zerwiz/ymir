@@ -102,3 +102,7 @@ server on an ephemeral port; the voice pipeline was never started.
   drawn, which is the same outcome by another road; the two changes agree rather than collide.
   Smíðja's header layout belongs to `smidja-header-chat`; this change touches only its
   `.win-controls` gate.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #754
