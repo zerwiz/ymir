@@ -1396,3 +1396,35 @@ prompt was sent again. `bin/seat/agent-state-lib.sh` is the one reader of herdr'
 `working`/`done` are past needing input; a blind reader answers `unknown`, never `ready`. The runbook is
 `docs/runbooks/send-an-eindri.md`; the guard is `bin/seat/tests/test_agent_state.sh` (9 cases against a stub
 herdr).
+## What never landed, and the batch that waits (plan 293 parts 3–4, 2026-11-14)
+
+Two gaps the audit of 36 agent panes exposed, both now closed in code rather than in a runbook.
+
+**The digest gained a `== LANDING ==` section.** `bin/time/saga-session-start.sh` runs
+`bin/time/saga-land-warnings.sh`, which answers two questions and prints one `landing[]` block:
+
+- a worker branch (`eindri/*`, `agent/*`, `claude/*`) pushed to the remote, older than
+  `SAGA_LAND_MIN_AGE_HOURS` (default 4), carrying no pull request or one closed without a merge —
+  named with its age and with the `bin/forge/gather.sh <id>` that would land it;
+- commits that exist on no remote, on any local branch including `main` — counted once, with the
+  branches that hold them.
+
+It is read-only: nothing is fetched, pushed or written. It reads `refs/remotes/<remote>` as they
+stand, takes already-merged branches from one `for-each-ref --merged` read, and asks `gh` once with a
+deadline for every branch's PR state. Offline it prints `PR state unread` and never claims a branch
+has no PR — a question nobody answered is not evidence. A checkout with no `origin` or no base branch
+says so instead of reporting a clean hall.
+
+**The last errand of a batch prompts the gather.** `bin/forge/gather-notice.sh <id>` is asked by both
+roads that see an errand reach a terminal word: the arm's close (`bin/agents/eindri-dispatch.sh
+close`) and the worker's terminal act (`bin/agents/eindri-acclaim.sh`). If that errand was the last
+unfinished member of its batch it queues ONE wake line —
+`batch <wave> is finished — gather it: bin/forge/gather.sh <ids…>` — once per batch, with the house
+and fleet read from the home's registry at run time. Membership is the record the dispatch already
+keeps (`mode=batch` and the same `wave` in `state/<id>.meta`); an errand already shipped is never
+named twice, and a batch that is finished with nothing gatherable prompts nothing.
+
+Guards: `bin/time/tests/test_saga_land_warnings.sh` and `bin/forge/tests/test_gather_notice.sh`, run
+by CI as the `landing` and `gather-notice` gates. Fix notes
+`docs/fixes/time/2026-11-14-the-digest-sees-what-never-landed.md` and
+`docs/fixes/forge/2026-11-14-the-last-errand-calls-the-gather.md`.

@@ -32,7 +32,7 @@ bin[157]{file,does,kind,verdict,disposition,callers,lines}:
   "branch-guard.sh","branch-guard.sh — Rule 08: no push may land on a protected branch.","tool","tested","keep",1,149
   "capabilities.sh","A GENERATED FILE MUST BE A FUNCTION OF CONTENT ALONE (0.1.94/0.1.95/0.1.97 — three","tool","wired","keep",11,317
   "check-row.md","One measured row","data","wired","keep",2,14
-  "ci-verify.sh","ci-verify.sh — what CI must prove, in one command, for BOTH hosts.","tool","tested","keep",8,208
+  "ci-verify.sh","ci-verify.sh — what CI must prove, in one command, for BOTH hosts.","tool","tested","keep",8,217
   "claude-pretool.sh","claude-pretool.sh — Claude Code's PreToolUse seam onto the house's pre-tool checks (plan 239 P2).","tool","wired","keep",0,27
   "claude-stop-arm.sh","claude-stop-arm.sh — Claude Code's Stop-hook arm: ONE client per session, only for the helm,","tool","wired","keep",2,62
   "confidential-guard.sh","confidential-guard.sh — while a confidential session is live, nothing outside the","tool","wired","keep",2,63

@@ -72,6 +72,24 @@ The head carries:
 - **One hook, for the home you are in.** The user-scope Claude Code hook resolves the home the
   session is actually in (the project, then the pin) instead of three hardcoded paths.
 
+## The warnings it now carries (2026-11-14)
+
+Two questions the digest could not answer before, answered at every session start. Both are measured
+against `origin`, read-only, and both are time-bounded.
+
+**A worker branch pushed with no pull request.** A branch named `eindri/<id>` (or `agent/*`,
+`claude/*`) that is on `origin`, older than four hours, and carries no PR — or a PR that was closed
+without a merge — is named with its age, and the row says the exact command that would gather it.
+Twenty-two such branches were found on 2026-11-14, only four merged.
+
+**Commits that exist on no remote.** Every local branch, `main` included, is counted against every
+remote. The row names how many commits are stranded, and which branches hold them. A commit on one
+disk is a commit nobody can merge, and on 2026-11-14 nineteen of them sat on one machine's local
+`main`.
+
+Offline, the digest says the pull-request state was not read, rather than claiming a branch has none.
+The rows are printed by `bin/time/saga-land-warnings.sh`, which you can run by hand at any time.
+
 ## If it does not work
 
 | What you see | What to do |
@@ -90,3 +108,4 @@ The head carries:
   the stages the helm's own, and one session-start hook that resolves the current home.
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history
   (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-14** — a LANDING section was added: the digest names worker branches pushed with no PR and commits that exist on no remote (plan 293 part 3).

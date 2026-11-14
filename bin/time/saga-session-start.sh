@@ -284,6 +284,19 @@ SEC_FLEET() {
   fi
 }
 
+SEC_LANDING() {
+  # Plan 293 part 3 (2026-11-14): the audit of 36 panes found 22 branches pushed and clean, four
+  # merged, and nothing anywhere in the session start said the rest were still waiting — while one
+  # machine's local main held 19 commits on no remote at all. A branch with no PR is work nobody will
+  # review; a commit on no remote is work one disk away from being lost. Read-only and time-bounded.
+  if [ -x "$SCRIPT_DIR/saga-land-warnings.sh" ]; then
+    bash "$SCRIPT_DIR/saga-land-warnings.sh" 2>/dev/null \
+      || printf 'landing: the warning door did not answer (bin/time/saga-land-warnings.sh --check says why)\n'
+  else
+    printf 'landing: bin/time/saga-land-warnings.sh absent — branches with no PR and commits on no remote are unseen\n'
+  fi
+}
+
 SEC_CONTEXT() {
   emit_context() {  # <path> <label>
     printf -- '--- %s ---\n' "$2"
@@ -392,11 +405,11 @@ SEC_NEXT() {
   printf 'Ascend Hlidskjalf as Brokk. Address the Allfather. Read once; act.\n'
 }
 
-SECTIONS="lock bootstrap wake seats supervision todos agents update fleet context clock today recall skills models assets tools cron liveness next"
+SECTIONS="lock bootstrap wake seats supervision todos agents update fleet landing context clock today recall skills models assets tools cron liveness next"
 
 SEC_NAME() {  # <name> -> the function
   case "$1" in
-    lock) SEC_LOCK ;; bootstrap) SEC_BOOTSTRAP ;; wake) SEC_WAKE ;; seats) SEC_SEATS ;;
+    lock) SEC_LOCK ;; bootstrap) SEC_BOOTSTRAP ;; wake) SEC_WAKE ;; seats) SEC_SEATS ;; landing) SEC_LANDING ;;
     supervision) SEC_SUPERVISION ;; todos) SEC_TODOS ;; agents) SEC_AGENTS ;; update) SEC_UPDATE ;;
     fleet) SEC_FLEET ;; context) SEC_CONTEXT ;; clock) SEC_CLOCK ;; today) SEC_TODAY ;;
     recall) SEC_RECALL ;; skills) SEC_SKILLS ;; models) SEC_MODELS ;; assets) SEC_ASSETS ;;
@@ -477,6 +490,8 @@ print_head() {
   head_needs
   section "LIVE ERRANDS"
   saga_head_errand_block "$STATE" 6 3
+  section "LANDING"
+  SEC_LANDING
   section "NEXT STEP"
   printf 'Ascend Hlidskjalf as Brokk. Address the Allfather. Read once; act.\n'
   printf 'on demand: %s --section <name>  (%s)\n' "$(basename "$0")" "$(printf '%s' "$SECTIONS" | tr ' ' ' ')"
