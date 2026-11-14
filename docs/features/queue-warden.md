@@ -7,8 +7,9 @@ conflicts onto `main` under a new name. Every one of those is a notice or a new 
 force-pushes, never closes another hand's work, and never writes to GitHub as a person's login.**
 
 **It merges in exactly one place: the heart's machine, behind a gate.** Everywhere else the road is
-closed and the door says why. That is the Allfather's word of 2026-11-14: *"zerwizserver (the heart)
-handles the merging of the PRs … every other machine's says `merge: off`."*
+closed and the door says why. That is the Allfather's word of 2026-11-14: *"the heart handles the
+merging of the PRs … every other machine's says `merge: off`."* The heart is whichever machine
+`bin/skuld/role.sh` names heart; no page here spells a machine's name.
 
 ## What it does on a pass
 
@@ -40,8 +41,8 @@ bin/forge/queue-warden.sh --uninstall-timer
 ```
 
 Seating is not starting. A warden's clock is a decision for **one named machine** (plan 290 rule 1),
-so the unit is written and left stopped unless you pass `--start`. On heimdall the clock is
-**disabled** until the Allfather or the heart re-enables it.
+so the unit is written and left stopped unless you pass `--start`. A machine whose wardens file
+carries `enabled: off` does not carry a clock at all until the Allfather or the heart re-enables it.
 
 ## The policy: your home, one file per machine
 

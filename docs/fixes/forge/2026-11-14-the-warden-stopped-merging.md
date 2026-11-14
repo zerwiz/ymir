@@ -98,10 +98,16 @@ warden-pass[10]{host,read_as,credential,identity,cap,open,over_cap,stale,conflic
 The body above says *"no merge call exists in the file at all"*. **That is no longer true, and the
 change was decided after it was written** — recorded here rather than edited away (`RULES/06`).
 
-The Allfather, later the same day: *"zerwizserver (the heart) handles the merging of the PRs. So in the
-operator's home: `config/machines/zerwizserver/wardens.yaml` is the only file that may say
-`merge: on` … every other machine's says `merge: off`, and the template ships `merge: off`. Build to
-that."* The heart's PR #747 puts the same rule in its own words: a merge is *"the one act it may not
+The Allfather, later the same day: *"the heart handles the merging of the PRs. So in the operator's
+home: `config/machines/<heart>/wardens.yaml` is the only file that may say `merge: on` … every other
+machine's says `merge: off`, and the template ships `merge: off`. Build to that."*
+
+> [!NOTE]
+> **Corrected 2026-11-14 13:30Z, before this note left the forge:** the quotation originally carried
+> the heart's machine name, and so did a comment in `bin/forge/queue-warden.sh`. Both are gone: this
+> repository is 100% agnostic (`RULES/25`, and the appended section of `AGENTS.md` of 2026-11-14), so
+> "the heart" is the machine `bin/skuld/role.sh` names heart, and a path is written
+> `config/machines/<heart>/wardens.yaml`. A quotation is not a licence to ship a hostname. The heart's PR #747 puts the same rule in its own words: a merge is *"the one act it may not
 take on trust"*.
 
 So the warden now carries **one** merge, and it is the heart's, behind three keys and one gate:
