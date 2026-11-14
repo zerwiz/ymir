@@ -101,3 +101,7 @@ change and not on any screen this errand opened.
 - **The Health view's own test** (`server/health.test.ts`, 20 assertions) is written on
   `bun:test`, so CI's Node cannot run it; it was run with `bun test` here and is not registered as
   a gate. Making it a `node:test` file is owed by that view's own line of work.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #763
