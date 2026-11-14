@@ -51,3 +51,7 @@ with the port and the body, is in the errand's report
   committed copy.
 - **No new dependency.** `bun` was already a prerequisite of the smithy's UI and of
   `bin/engine/release-build.sh`, which has built this app since it was added.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #758
