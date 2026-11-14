@@ -273,6 +273,16 @@ cmd_pass() {
   case "$window" in ''|*[!0-9]*) die "window_minutes must be a number (got '$window')" ;; esac
   case "$cooldown" in ''|*[!0-9]*) cooldown=60 ;; esac
 
+  # One hand at a time: two passes would stop the same unit and say so twice.
+  if command -v flock >/dev/null 2>&1; then
+    mkdir -p "$SOAK_STATE" 2>/dev/null || true
+    exec 9>"$SOAK_STATE/.ward.lock" 2>/dev/null || true
+    if ! flock -n 9; then
+      [ "$quiet" = 1 ] || printf 'storm,skipped,another pass holds the ward\n'
+      return 0
+    fi
+  fi
+
   local ts pass host now today
   ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   pass="$(date -u +%Y%m%dT%H%M%SZ)"
