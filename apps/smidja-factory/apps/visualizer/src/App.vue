@@ -73,33 +73,6 @@ const isLinuxDesktop = isDesktop && (window as { smidjaDesktop?: { platform?: st
 function winControl(action: 'minimize' | 'maximize' | 'close') {
   ;(window as { smidjaDesktop?: { windowControl?: (a: string) => void } }).smidjaDesktop?.windowControl?.(action)
 }
-
-/**
- * Raise the other app (or start it), through this API's /api/desktop route.
- * Silent on failure: a convenience control must never break the view it sits in.
- */
-async function raiseApp(view: 'hlidskjalf' | 'smidja' | 'sessrumnir') {
-  try {
-    await fetch('/api/desktop', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ view }),
-    })
-  } catch {
-    /* the launcher is unreachable — say nothing, change nothing */
-  }
-}
-
-/**
- * The Óðrerir Live Hall — the landing's live board, a page of its own rather
- * than one of the three apps the gate raises. On this machine the hall answers
- * on :4322; anywhere else, the public hall.
- */
-const host = window.location.host
-const hallUrl =
-  host.startsWith('localhost') || host.startsWith('127.0.0.1')
-    ? 'http://localhost:4322'
-    : 'https://hall.ymir.zerwiz.org'
 </script>
 
 <template>
@@ -144,22 +117,8 @@ const hallUrl =
       <span class="live-hint"><span class="live-dot" /> live</span>
       <a v-if="auth.authed" :href="gateUrl" target="_blank" rel="noreferrer" title="Signed in to the gate" style="margin-right:6px;color:inherit;text-decoration:none;font-size:12px;opacity:.85">ᛉ {{ auth.login }}</a>
       <a v-else :href="gateUrl" target="_blank" rel="noreferrer" title="Sign in to Ymir" style="margin-right:6px;color:inherit;text-decoration:none;font-size:12px;opacity:.85">Sign in</a>
-      <div role="group" aria-label="Switch hall" style="display:flex;gap:2px;margin-right:6px">
-        <button type="button" title="Hlidskjalf — the control plane" aria-label="Open Hlidskjalf" @click="raiseApp('hlidskjalf')" style="background:transparent;border:none;color:inherit;cursor:pointer;font-size:15px;padding:2px 6px;border-radius:6px">ᚺ</button>
-        <button type="button" class="on" aria-current="page" title="Smíðja — the smithy" style="background:transparent;border:none;color:var(--accent);cursor:default;font-size:15px;padding:2px 6px">ᛊ</button>
-        <button type="button" title="Sessrúmnir — the seat-hall" aria-label="Open Sessrúmnir" @click="raiseApp('sessrumnir')" style="background:transparent;border:none;color:inherit;cursor:pointer;font-size:15px;padding:2px 6px;border-radius:6px">ᛋ</button>
-      </div>
-      <!-- The Óðrerir Live Hall — the landing's live board, a page of its own
-           (the three apps above are raised through the gate; this one is a tab). -->
-      <a
-        class="hall-btn"
-        :href="hallUrl"
-        target="_blank"
-        rel="noreferrer"
-        title="The Óðrerir Live Hall — the landing's carved board"
-      >ᛟ To the Hall</a>
-      <button class="theme-toggle" type="button" :title="`Theme: ${theme === 'classic' ? 'classic deep-space' : theme === 'high-contrast' ? 'high contrast (WCAG AAA)' : 'fensalir — the carved cloth'} (click to switch)`" @click="toggleTheme">
-        {{ theme === 'classic' ? 'classic' : theme === 'high-contrast' ? 'high-contrast' : 'fensalir' }}
+      <button class="theme-toggle" type="button" :aria-label="`Theme: ${theme === 'classic' ? 'classic deep-space' : theme === 'high-contrast' ? 'high contrast (WCAG AAA)' : 'fensalir — the carved cloth'}`" :title="`Theme (click to switch)`" @click="toggleTheme">
+        ◐
       </button>
       <span v-if="isLinuxDesktop" class="win-controls">
         <button class="win-btn" title="Minimize" @click="winControl('minimize')" aria-label="Minimize">
@@ -172,11 +131,6 @@ const hallUrl =
           <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" stroke-width="1.2" fill="none" /></svg>
         </button>
       </span>
-      <!-- A speed-start from the UI: raise Hlidskjalf (or start it). The same
-           launcher the Omarchy key bindings use, so there is one way in. -->
-      <button class="win-btn" title="Open Hlidskjalf" aria-label="Open Hlidskjalf" @click="raiseApp('hlidskjalf')">
-        <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 8.5h8M2 8.5V3l3-2 3 2v5.5" stroke="currentColor" stroke-width="1.1" fill="none" /></svg>
-      </button>
     </header>
     <main id="main-content">
       <StatsView v-if="isStats" />
