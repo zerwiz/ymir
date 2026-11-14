@@ -32,6 +32,13 @@ LOG="$REPORT_DIR/scan.log"
 MODE="${1:-}"
 
 [ -d "$REPO/.git" ] || { printf 'private-scan: no repository at %s\n' "$REPO" >&2; exit 2; }
+# plan 290 §3 — the sweep writes the home's queue and seats an errand, so it acts outward: this machine
+# must NAME the door. A sweep whose clock reached a box that does not own it refuses instead of acting.
+. "$REPO/bin/forge/warden-lib.sh" 2>/dev/null || true
+if declare -f warden_begin >/dev/null 2>&1; then
+  warden_begin private-scan || { printf 'private-scan: this machine cannot be named from the fleet registry\n' >&2; exit 2; }
+  warden_require_door || exit 3
+fi
 command -v rg >/dev/null 2>&1 || { printf 'private-scan: ripgrep is required\n' >&2; exit 2; }
 mkdir -p "$REPORT_DIR"
 

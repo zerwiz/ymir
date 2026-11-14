@@ -72,6 +72,16 @@ done
 err() { printf 'error: %s\n' "$1" >&2; [ -n "${2:-}" ] && printf 'help: %s\n' "$2" >&2; exit "${3:-1}"; }
 g() { git -C "$MAIN_ROOT" "$@"; }
 
+# plan 290 §3 — the shared law every outward door keeps (bin/forge/warden-lib.sh). A gather pushes a
+# branch and opens a PR, so it acts only on the operator's own repository and only as the identity
+# this machine names for the duty. `--dry-run` and `--no-pr` write nothing outward, but the repository
+# is judged either way: a batch aimed at someone else's tree is refused before any work is done.
+. "$HERE_ROOT/bin/forge/warden-lib.sh"
+warden_begin gather || err "this machine cannot be named from the fleet registry"
+GATHER_REPO_NAME="$(warden_repo_of "$MAIN_ROOT")" || err "$MAIN_ROOT has no readable origin, so the repository a batch would push to is unknown"
+WARDEN_REPOS="$GATHER_REPO_NAME"
+warden_require_repos "$GATHER_REPO_NAME" || err "this batch would push to $GATHER_REPO_NAME, which is not in the operator's registry (bin/forge/warden-lib.sh rule 2)"
+
 # ── who is finished ─────────────────────────────────────────────────────────
 # acclaim_of <id> — the last `done:` line of the errand's status, without the word.
 acclaim_of() {
@@ -209,6 +219,8 @@ if [ "$NOPR" = 1 ]; then
   exit 0
 fi
 [ -n "$HOUSE" ] && [ -n "$FLEET" ] || err "the PR signature needs --house and --fleet" "pass them, or GATHER_HOUSE/GATHER_FLEET"
+# rule 3: the hand must be the identity this machine names for this duty
+warden_require_identity || err "the identity this machine names for gather does not answer (bin/forge/warden-lib.sh rule 3)"
 
 # ── one push, one PR ────────────────────────────────────────────────────────
 # The gates above ARE the pre-push hook's text, run once on this exact sha; the push
@@ -238,6 +250,8 @@ case "$url" in
   *) err "the PR opener printed no pull-request URL (got '${url:-nothing}') — nothing is marked shipped" "the branch is pushed; open the PR by hand from $WTP, then re-run" ;;
 esac
 printf 'pr=%s\n' "$url" >>"$MANIFEST"
+# rule 4: every outward act is a Rune — what was pushed, where, as whom, and on what verdict.
+warden_runes gathered "pushed $BRANCH ($n errand(s)) to $GATHER_REPO_NAME and opened $url — gates passed once on ${HEAD_SHA:0:12}" >/dev/null || true
 
 # ── the record ──────────────────────────────────────────────────────────────
 grep -E '^merged=' "$MANIFEST" | while IFS=$'\t' read -r br id acc; do

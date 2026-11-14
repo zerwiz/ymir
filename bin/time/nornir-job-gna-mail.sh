@@ -40,6 +40,16 @@ if [ -z "${HOME_R:-}" ]; then
   exit 3
 fi
 
+# plan 290 §3 — the mail door is OUTWARD: this machine must name it (config/machines/<machine>/
+# wardens.yaml), and a job whose clock reached the wrong box refuses instead of acting. `--check`
+# and `--dry-run` only read, so they answer without the gate.
+if [ "$MODE" = "import" ]; then
+  . "$ROOT/bin/forge/warden-lib.sh"
+  warden_begin gna-mail || { say "FAIL this machine cannot be named from the fleet registry"; exit 1; }
+  warden_require_door || exit 3
+  warden_require_identity || exit 3
+fi
+
 accounts() {
   python3 - "$MAIL_DIR/accounts.yaml" <<'PY' 2>/dev/null
 import sys, yaml

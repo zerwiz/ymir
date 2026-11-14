@@ -20,6 +20,12 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 ymir_home_root HOME_R 2>/dev/null || true
 [ -n "${HOME_R:-}" ] || { printf 'nornir-snotra-mail: the hoard is unresolved\n' >&2; exit 1; }
+# plan 290 §3 — reading a mailbox is OUTWARD: this machine must name the door, or a job whose clock
+# reached the wrong box would read a mailbox that is not that machine's business.
+. "$ROOT/bin/forge/warden-lib.sh"
+warden_begin snotra-mail || { printf 'nornir-snotra-mail: this machine cannot be named from the fleet registry\n' >&2; exit 1; }
+warden_require_door || exit 3
+warden_require_identity || exit 3
 DAYS="${SNOTRA_MAIL_DAYS:-30}"
 rc=0; seen=0; recorded=0
 while IFS= read -r M; do

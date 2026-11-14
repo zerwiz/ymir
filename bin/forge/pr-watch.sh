@@ -23,12 +23,18 @@ SEEN="$STATE/pr-watch.json"; REPO="${PR_WATCH_REPO:-zerwiz/ymir}"
 DRY=0; HOURS=1; STATUS=0
 ORIG=("$@")
 while [ $# -gt 0 ]; do case "$1" in --dry-run) DRY=1; shift;; --hours) HOURS="${2:-1}"; shift 2;; --status) STATUS=1; shift;; *) shift;; esac; done
+# plan 290 §3 — the shared law every outward door keeps (bin/forge/warden-lib.sh): this machine must
+# NAME the door, the repository must be the operator's, and the hand must be the identity it names.
+. "$ROOT/bin/forge/warden-lib.sh"
+warden_begin pr-watch || exit 1
 # ── the clock ──────────────────────────────────────────────────────────────────────────────────
 # A watcher nobody starts is a watcher that never speaks. `--install-timer` seats a user unit that
 # runs this door every 5 minutes, so a PR is announced within minutes of arriving, with or without
 # anyone remembering to look.
 for _a in "${ORIG[@]}"; do [ "$_a" = "--install-timer" ] && TIMER=1; done
 if [ "${TIMER:-0}" = 1 ]; then
+  # plan 290 rule 1: seating is the operator's decision for THIS machine, not the door's.
+  warden_seat_allowed pr-watch || exit 3
   U="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"; mkdir -p "$U"
   # the unit is the register's (config/units.yaml: pr-watch) and the one writer renders it against the
   # PINNED runtime, never the tree this door ran from (plan 269)
@@ -40,10 +46,15 @@ if [ "${TIMER:-0}" = 1 ]; then
 fi
 
 command -v gh >/dev/null 2>&1 || { printf 'pr-watch: gh missing\n' >&2; exit 1; }
+# 2 · own repositories only · 3 · the machine's own identity (plan 290)
+WARDEN_REPOS="$REPO"
+warden_require_door || exit 3
+warden_require_repos "$REPO" || exit 3
+warden_require_identity || exit 3
 NOW=$(date +%s)
 prs=$(gh pr list --repo "$REPO" --state open --json number,title,author,mergeStateStatus,createdAt,headRefName 2>/dev/null) || { printf 'pr-watch: gh pr list failed for %s\n' "$REPO" >&2; exit 1; }
 [ -n "$prs" ] || prs='[]'
-python3 - "$SEEN" "$NOW" "$HOURS" "$DRY" "$STATUS" "$REPO" "$ROOT" <<PY
+SAID="$(python3 - "$SEEN" "$NOW" "$HOURS" "$DRY" "$STATUS" "$REPO" "$ROOT" <<PY
 import json,sys,os,subprocess,datetime,hashlib
 seen_path,now,hours,dry,status,repo,root = sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4]=='1', sys.argv[5]=='1', sys.argv[6], sys.argv[7]
 prs = json.loads('''$prs''')
@@ -87,3 +98,15 @@ if not delivered:
 json.dump(seen, open(seen_path,'w'), indent=1)
 print("\n".join(out) if out else "pr-watch: nothing new (silence is the healthy signal)")
 PY
+)"
+printf '%s\n' "$SAID"
+# 4 · every outward act is a Rune: machine, door, identity, repository, and what it rested on.
+case "$SAID" in
+  ""|"pr-watch: nothing new"*) if [ "$STATUS" = 1 ]; then
+      warden_runes pass "read $REPO; nothing to say this pass" >/dev/null ; fi ;;
+  *) if [ "$DRY" = 1 ]; then
+       warden_runes dry-run "would tell the operator $(printf '%s' "$SAID" | grep -c . ) line(s) about $REPO"
+     else
+       warden_runes told "told the operator $(printf '%s' "$SAID" | grep -c . ) line(s) about $REPO"
+     fi ;;
+esac
