@@ -1,6 +1,6 @@
 # Brokk Distro Runtime — the definitive runtime spec
 
-> Purpose: the maintainer's reference for how Ymir turns any verified harness into **Brokk** — home layout, the 8-stage Sága digest, Gleipnir, Sýn/Gná supervision, the Nornir cron spine, the Einherjar/Erindi/Vör worker model, restart semantics, and the production acceptance criteria.
+> Purpose: the maintainer's reference for how Ymir turns any verified harness into **Brokk** — home layout, the short Sága digest head and its on-demand sections, Gleipnir, Sýn/Gná supervision, the Nornir cron spine, the Einherjar/Erindi/Vör worker model, restart semantics, and the production acceptance criteria.
 
 Companion docs: `norse-naming.md` (the component law and map), `porting-upstream-to-norse.md` (how this runtime was ported from the validated upstream distro), `docs/plans/29-brokk-distro-runtime.md` (the plan).
 
@@ -98,59 +98,113 @@ Resolution order used by every script (all overridable):
 | `state/observer.log`, `state/observer.last` | Huginn observation output | read-only bridge |
 | `workspace/memory/runes_audit.md` | Runes chained JSONL ledger | append-only, never rewritten |
 
-## 3. The 8-stage Sága session-start digest
+## 3. The Sága session-start digest — a short head, and sections on demand
 
-`bin/time/saga-session-start.sh` prints **one ordered digest** and does nothing else. It composes existing scripts; it never re-implements them. The section headers it emits are `== LOCK ==`, `== BOOTSTRAP ==`, `== WAKE QUEUE ==`, `== SUPERVISION ==`, `== UPDATE ==`, `== FLEET DIGEST ==`, `== CONTEXT DIGEST ==`, `== TODAY ==`, `== RECALL ==`, `== SKILLS ==`, `== MODEL CATALOG ==`, `== ASSET ROUTING ==`, `== TOOL SURFACE ==`, `== CRON START ==`, `== NEXT STEP ==`.
+**Appended 2026-11-14 (plan 275, item 28) — the digest was built backwards.** It pre-loaded
+nineteen sections: 55–57 KB, **696 lines**, about 14,000 tokens, of which 156 were errands
+finished days ago — and three SessionStart hooks re-injected it at every compaction. A digest
+nobody can afford to read is not a digest.
 
-**Appended 2026-10-26 (plan 136) — `== RECALL ==`.** The digest now opens the well
-before the work: `bin/records/mimir-recall-today.sh` derives the day's topic (a stated
-`$STATE/.session-topic` first, else the newest bullet in today's daily log, else the
-newest open forge order), asks the well scoped to the last 14 days, and prints the
-truth that goes with it — *recall is memory, not authority*. A missing topic is
-reported, never guessed, and the section is capped at twelve lines so a slow or cold
-well cannot stall the session start.
+So `bin/time/saga-session-start.sh` now prints **a head of ≤ 60 lines and ≤ 8 KiB**, and
+everything else is a **section asked for by name**. It still composes existing scripts and
+re-implements none of them.
+
+| Mode | What it does | Side effects |
+|---|---|---|
+| *(no argument)* | the session start: the stages, then the head | lock, bridges, the well, and — for the helm only — the hall sweep, the handoff and cron |
+| `--head` | the head alone | **none** (this is the compaction path; the lock is only read) |
+| `--section <name>` | one section | the section's own (a read, except `bootstrap`, which re-probes idempotently) |
+| `--list` | the twenty section names, one line each | none |
+| `--check` | measures the head; **exit 1 over budget** | none |
+| `--full` | a human wants the whole truth: head + every section | the stages |
+
+The head is, in order: **the fixed core** (below), **the helm** (the lock, the lease line and
+the Gná arm holder), **what needs the Allfather** (wakes, decisions, questions, his open todos
+as counts), **the live errands**, and **the next step** — then one line naming the sections.
+
+### 3.0 The fixed core, and what is news
+
+`bin/time/saga-head-core.md` is **one file** and the only copy: `~/ymir` is public and delivers
+by PR; `$YMIR_HOME` is private and is edited only through `bin/vault/home-sync.sh begin` /
+`ship`; apps run from the pin `~/ymir-runtime` → `releases/<sha>`; herdr and the stamped send
+door (`bin/agents/eindri-send.sh`, `[from …]`); the Gná arm (one session holds it —
+`bin/voice/rodd-arm.sh who`, and a session that does not hold it spawns, merges and drains
+nothing); the finding tools (`skill-find.sh`, `where.sh`, `catalog.sh`, `fixes.sh list`); the
+desk guard (`bin/desk/in-call.sh holder`); and the laws (named staging, no AI attribution, no
+feature removed, DevTools in the real window on both machines, one fix note per change, commit
+on `eindri/<errand>` and let the helm gather the PR). The head prints it; the seat law
+(`bin/seat/herdr-run.sh`) and the spawn road (`bin/agents/einherjar-spawn.sh`) append the same
+file, so a brief and a digest cannot disagree.
+
+`bin/time/saga-head-lib.sh` is the policy for the errand block, and it reads with shell
+builtins plus one `find -newer` (a process per seat record made the head cost 3.5 s):
+
+| Record | Shown |
+|---|---|
+| claims life (non-terminal) | **always**, with its pane and age |
+| terminal, newer than the last head | **once**, then folded into `state/.saga-head-seen` |
+| terminal, older than the last head | never — the old digest already reported it |
+| an UNKNOWN row whose pane cannot be read here (a tmux window on a machine without tmux) | **once**, as `reaped:`, then gone |
+| a wake already presented whose errand has since closed | dropped from the queue by `bin/time/saga-wake-drain.sh` |
+
+### 3.1 The stages (a session start only, and mostly the helm's)
 
 | # | Stage | What it emits | Source / helper |
 |---|---|---|---|
-| 1 | **LOCK** | `session lock held (pid N)` or `READ-ONLY: session lock held by pid N - no spawn, steer, merge, drain, or repair this session` | `bin/vault/gleipnir-lock-lib.sh` → machine-global `brokk.lock` for the primary, per-home `state/.lock` for an Eindri-home |
-| 2 | **BOOTSTRAP** | `tool floors OK` or `MISSING: …`; `realm env: present` or `realm env: ABSENT (svartalfaheim/<realm>/.env.realm)` | checks `git bash node`; checks `.env.realm` in `$BROKK_HOME` then `$ROOT` |
-| 3 | **WAKE QUEUE** | `wake queue: N pending`, each `WAKE <record>`, `WAKE_ACK_REQUIRED`, `open decisions: N` | `bin/agents/eindri-handoff.sh sweep` (the failsafe — sweeps undelivered reports/questions into the queue) **then** `bin/time/saga-wake-drain.sh` → `state/.wake-queue`, `state/*.decision` |
-| 4 | **SUPERVISION** | one operating block: `harness next step: arm supervision via the installed harness adapter; never run bin/pi/syn-watch-arm.sh by hand.` | Sýn/Gná per-harness protocols |
-| 4b | **UPDATE** | `current — no newer Ymir on npm`, or the newer version with its remedy (`npm i -g @zerwiz/ymir`, then `ymir groa`) | `bin/gates/checks/ymir-update-check.sh` — one cached lookup a day; silent with no network; **exit 3** when a newer version stands |
-| 5 | **FLEET DIGEST** | `task metadata records: N` (count of `state/*.meta`) and `open forge orders: N` (`grep -c '^- Status: ADDED' docs/masterplan.md`) | `state/*.meta`, `docs/masterplan.md` |
-| 6 | **CONTEXT DIGEST** | `--- realm ---`, then `data/operator.md`, `data/projects.md`, `data/learnings.md`, each delimited; `ABSENT: <path>` when missing | **`$YMIR_HOME/hodd/data/`** via `bin/vault/hoard-lib.sh` (`BROKK_DATA_OVERRIDE` wins) — never `$BROKK_HOME/data`, the code tree, which no operator record has ever occupied |
-| 6b | **TODAY** | the day's work, appended blocks under each actor | `bin/records/daily-log.sh today` → `$YMIR_HOME/hodd/memory/daily/YYYY-MM-DD.md` |
-| 7 | **CRON START** | `cron: running pid=N jobs=M` or `cron: started …` / `cron: no jobs configured …` | `bin/time/nornir-cron-start.sh` (idempotent) |
-| 7b | **TOOL SURFACE** | the Allfather's own handles: `/edit <path>`, `systems/snotra/services/tts-lease/ymir-say.sh`, `bin/host/omarchy-plugins.sh`, `bin/seat/herdr-run.sh` | inline |
-| 8 | **NEXT STEP** | `Ascend Hlidskjalf as Brokk. Address the Allfather. Read once; act.` | closing pointer |
+| 1 | **lock** | taken, or `READ-ONLY: the session lock is held by pid N` | `bin/vault/gleipnir-lock-lib.sh` → machine-global `brokk.lock` for the primary, per-home lock for an Eindri-home |
+| 2 | **bootstrap** | tool floors, the model bridge, the well, the realm env | `bin/bridge/bifrost-bridge.sh --start`, `bin/bridge/mimir-bridge.sh --start` (both idempotent) |
+| 3 | **handoff** | undelivered reports/questions swept into the wake queue (`--section wake`) | `bin/agents/eindri-handoff.sh sweep` |
+| 4 | **hall sweep** | finished seats closed, a late boot adopted | `bin/seat/seat-reap.sh --sweep`, `bin/seat/seat-adopt.sh --all` |
+| 5 | **cron** | the Nornir scheduler raised if it is down | `bin/time/nornir-cron-start.sh` |
+| 6 | **skill index** | refreshed, never printed | `bin/agents/skill-index.sh` |
 
-**Read-once contract.** The digest is this turn's startup and recovery input. Brokk must **not** re-read the context/backlog/status it just printed unless a source was reported `ABSENT` or corrupt.
+**Stages 3–5 are the HELM's.** A seat takes its own lock, so “the lock is held” alone does not
+make a session the primary: a worker's session start sweeps nothing, writes no queue and starts
+no scheduler (the seat law).
 
-### 3.1 The runner — source routing
+### 3.2 The sections
 
-`bin/time/saga-sessionstart-run.sh` decides, from the session-open source, whether the open needs the full digest, a context re-emit, or a short nudge. It exits 0 on every ordinary transport path: a failed session start must reach the agent as digest text it can act on, never as a refusal to open the session.
+`lock · bootstrap · wake · seats · supervision · todos · agents · update · fleet · context ·
+clock · today · recall · skills · models · assets · tools · cron · liveness · next` — each one
+answers by name (`--section <name>`), and an unknown name is refused with exit 2, never a silent
+empty. `liveness` is the expensive one (it judges every seat record through herdr); `context` is
+the long read (the operator contract, the project registry, the learnings, the HOOD map).
+
+**Appended 2026-10-26 (plan 136), kept as the record — `recall`.** The digest opens the well
+before the work: `bin/records/mimir-recall-today.sh` derives the day's topic (a stated
+`$STATE/.session-topic` first, else the newest bullet in today's daily log, else the newest open
+forge order), asks the well scoped to the last 14 days, and prints the truth that goes with it —
+*recall is memory, not authority*. A missing topic is reported, never guessed, and the section is
+capped at twelve lines so a slow or cold well cannot stall the session start. It is a section
+now, not the head: the head points at it, the agent drinks when the work needs it.
+
+### 3.3 The runner — source routing
+
+`bin/time/saga-sessionstart-run.sh` decides, from the session-open source, whether the open is a
+session start or a reminder. It exits 0 on every ordinary transport path: a failed session start
+must reach the agent as digest text it can act on, never as a refusal to open the session.
 
 | Source | Behavior |
 |---|---|
-| `startup`, `new`, unknown | run the full `bin/time/saga-session-start.sh`; touch `state/.session-start-complete` |
-| `clear`, `compact` | if complete: print `CONTEXT RE-EMIT (source=…)` and a reminder to re-read context only if needed; else run the full digest |
-| `resume`, `reload`, `fork` | print the instruction `Run bash …/saga-session-start.sh exactly once now` |
+| `startup`, `new`, unknown | run `bin/time/saga-session-start.sh` (stages + head); touch `<house state>/.session-start-complete` |
+| `clear`, `compact` (and `resume`, `reload`, `fork`, once the mark exists) | `CONTEXT RE-EMIT (source=…)` then **`--head` only** — the stages already ran, and a compaction is the same session asking to be reminded |
 | `--pi-prerequisite` and `BROKK_SESSIONSTART_INELIGIBLE=1` | intentional stand-down, exit 3 |
 
-The source is passed with `--source` or parsed from a Claude/Codex-shaped JSON hook payload on stdin (`"source":"startup"` etc.).
+The mark lives on the **house's shelf** (`$YMIR_HOME/state/.session-start-complete`), never in
+the tree, which a packaged install replaces. The source is passed with `--source` or parsed
+from a Claude/Codex-shaped JSON hook payload on stdin. Before routing, the runner raises the
+Mimir well bridge so `:4602` listens on **every** open.
 
-Before routing, the runner raises the Mimirsbrunn well bridge
-(`bin/bridge/mimir-bridge.sh --start`, idempotent) so `:4602` listens on **every** open —
-the well extension's `session_start` probe finds it up even on a re-emit or nudge.
-
-### 3.2 Harness adapter matrix
+### 3.4 Harness adapter matrix
 
 | Harness | Surface | Mechanism | Tier |
 |---|---|---|---|
-| OpenCode | `.opencode/plugins/saga-sessionstart.js` | `session.created` → run digest once per session id, inject via `client.session.promptAsync`; `syn-watch-arm.js` owns `session.idle` | nudge/run |
+| OpenCode | `.agents/harness/opencode/plugins/saga-sessionstart.js` | `session.created` → run `bin/time/saga-sessionstart-run.sh` once per session id, inject via `client.session.promptAsync`; `syn-watch-arm.js` owns `session.idle` | nudge/run |
 | Pi | `.pi/extensions/syn-turnend-guard.ts` | native session-open run; digest injected before the first turn; re-emit on compaction; refuse blind turn end | run |
-| Claude Code | `.claude/settings.json` | `SessionStart` runs `saga-sessionstart-run.sh`; `Stop` runs `syn-turnend-guard.sh --claude` then async `syn-watch-arm.sh --restart` | run |
+| Claude Code | `.claude/settings.json` (project) and `~/.claude/hooks/saga-session.sh` (user scope, seated by `bin/seat/harness-extensions-install.sh`) | `SessionStart` runs the runner; the user-scope hook **resolves the current home** (the project, then the pin, then the source) so one entry serves every checkout — the three per-home entries it replaced injected three digests; `Stop` runs the guard and the async arm | run |
 | Codex | `.codex/hooks.json` | `SessionStart` pipes the payload to `saga-sessionstart-run.sh`; `Stop` runs the guard; `PreToolUse` runs the Sýn seatbelts | nudge |
+| Cursor | `.cursor/hooks.json` | `sessionStart` captures digest and returns `{additional_context}`; `stop` returns `{followup_message}` on guard exit 2; `preToolUse` runs seatbelts | interactive only |
+| Grok / Kimi | not yet ported (see `.claude/settings.json` guards `${GROK_AGENT}`/`${GROK_HOOK_EVENT}` to avoid double-fire) | — | — |
 | Cursor | `.cursor/hooks.json` | `sessionStart` captures digest and returns `{additional_context}`; `stop` returns `{followup_message}` on guard exit 2; `preToolUse` runs seatbelts | interactive only |
 | Grok / Kimi | not yet ported (see `.claude/settings.json` guards `${GROK_AGENT}`/`${GROK_HOOK_EVENT}` to avoid double-fire) | — | — |
 
@@ -195,7 +249,7 @@ Mechanics:
 
 ## 6. Nornir — the cron spine
 
-Nornir are the fates who govern time. `bin/time/nornir-cron-start.sh` keeps exactly **one** lightweight scheduler loop alive (idempotent), started by Sága stage 7 at every session start.
+Nornir are the fates who govern time. `bin/time/nornir-cron-start.sh` keeps exactly **one** lightweight scheduler loop alive (idempotent), started by the Sága session-start stage 5 (the helm's own start; a seat leaves it to the helm).
 
 - **Schedule:** `config/cron.yaml`, one `HH:MM <command>` per line, `#` comments, with an optional **role gate**: `@heart[,role] HH:MM <cmd>` or `HH:MM @heart <cmd>`. Both orders parse (the 2026-09-24 fault: only the after-time shape matched, so every role-first line silently never ran). The scheduler runs only the jobs this machine's roles own, resolved from `bin/fleet/topology.sh` / `$YMIR_HOME/hodd/data/fleet.json` — record jobs ride the heart, model/bench jobs ride the forge, a dev body runs only its session jobs.
 - **PID/log:** `state/cron.pid`, `state/cron.log` (rotates at `BROKK_CRON_LOG_MAX_BYTES`, default 1 MiB).
@@ -274,7 +328,7 @@ part.
 
 **Status protocol.** A worker appends one line `{state}: {one short line}` to `state/<id>.status`; states are `working, needs-decision, blocked, paused, done, failed` (`paused` is configurable via `BROKK_PAUSED_VERB`). Each append wakes Brokk, so reports are sparse. `Vör` reconciles the possibly-stale log against the authoritative backend endpoint recorded in the meta and never infers current state from `tail -1` alone.
 
-**Report-shelf handoff (2026-09-27).** The status line alone is not enough: the failsafe `bin/agents/eindri-handoff.sh sweep` reads only `$STATE/eindri-reports/<id>.md` and `$STATE/eindri-questions/`, never `state/<id>.status`. A worker's terminal act therefore writes its status line **and** a short report to `$STATE/eindri-reports/<id>.md` (what shipped, the PR, the proof); `bin/agents/erindi-brief.sh` carries that line in its template so every errand inherits it. The sweep runs at session start (Sága stage 3) and on a Nornir cadence, idempotently. The fourth failure mode, written from life: **the worker wrote the wrong shelf.**
+**Report-shelf handoff (2026-09-27).** The status line alone is not enough: the failsafe `bin/agents/eindri-handoff.sh sweep` reads only `$STATE/eindri-reports/<id>.md` and `$STATE/eindri-questions/`, never `state/<id>.status`. A worker's terminal act therefore writes its status line **and** a short report to `$STATE/eindri-reports/<id>.md` (what shipped, the PR, the proof); `bin/agents/erindi-brief.sh` carries that line in its template so every errand inherits it. The sweep runs at a helm session start (Sága stage 3) and on a Nornir cadence, idempotently. The fourth failure mode, written from life: **the worker wrote the wrong shelf.**
 
 **The review spine — the judge sent after every ship (2026-09-27).** The delivery-gate law makes a PR the only way work leaves; the spine makes the PR audited before the Allfather's seal. A ship errand's terminal `done` (the terminal act `bin/agents/eindri-acclaim.sh <id> --terminal done --line "…"`) calls `bin/agents/eindri-review-spawn.sh <id>`, which reads the PR from the task's own record (`state/<id>.status` carries `done: opened PR <url>`) and seats **Forseti** as a scout-kind review errand through the einherjar road: `--scout --backend herdr --harness pi --model opencode-go/deepseek-v4.1-flash --effort high`. The fierce brief is filled from `.agents/assets/templates/review-brief.template.md` for THIS task (PR, branch, task id), and the verdict lands on the wake road at `state/eindri-reports/<id>-review.md`.
 
@@ -625,10 +679,10 @@ Restart is a non-event: **durable `data/` + `state/` + live backend inventory ar
 |---|---|
 | A new harness opens | Sága runs; Gleipnir reclaims a dead-pid lock; stages re-emit |
 | Session process replaced (`/new`, `/resume`, `/fork`, reload) | Pi binds a new live generation so monitoring re-arms without restarting Pi; stale callbacks no-op |
-| Cron loop died / host rebooted | Sága stage 7 restarts it; `state/.cron-fired` date guards prevent a double-run that day |
+| Cron loop died / host rebooted | the Sága session-start stage 5 restarts it; `state/.cron-fired` date guards prevent a double-run that day |
 | Worker pane gone | `Vör` reports `unknown/none` with `backend target gone`; the meta/worktree persist |
 | Supervision was armed and the watcher is stale | Turn-end guard exits 2 and re-prompts; recovery is to re-arm via the extension |
-| Digest already taken this lock (`clear`/`compact`) | runner emits the context re-emit rather than re-running the full digest |
+| Digest already taken this lock (`clear`/`compact`) | the runner re-emits the HEAD only (`--head`) — never the stages, never the sections |
 
 ## 11. Environment reference
 

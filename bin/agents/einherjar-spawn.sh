@@ -984,6 +984,20 @@ PROMPT="$DATA/$ID/prompt.md"
   cat "$BRIEF"
   printf '\n\n---\n\n## Recalled context (the well — Mimirsbrunn)\n\n'
   cat "$CTX"
+  # THE FIXED CORE (plan 275 §04:15–04:25): Ymir is public, the home is private, the pin,
+  # herdr and the stamped send door, the Gná arm, the finding tools, the desk guard, the
+  # laws. ONE copy — bin/time/saga-head-core.md — the same file the session head prints and
+  # the seat law (bin/seat/herdr-run.sh) appends, so neither road can teach a different one.
+  if [ -r "$SCRIPT_DIR/../time/saga-head-core.md" ]; then
+    printf '\n\n---\n'
+    # The reader's view of the core: above its CHANGE LOG (see saga-head-lib.sh).
+    if [ -r "$SCRIPT_DIR/../time/saga-head-lib.sh" ]; then
+      ( . "$SCRIPT_DIR/../time/saga-head-lib.sh"; saga_head_core_text "$SCRIPT_DIR/../time/saga-head-core.md" ) \
+        || cat "$SCRIPT_DIR/../time/saga-head-core.md"
+    else
+      cat "$SCRIPT_DIR/../time/saga-head-core.md"
+    fi
+  fi
 } >"$PROMPT" 2>/dev/null || cp "$BRIEF" "$PROMPT"
 BRIEF_REF=$PROMPT
 
