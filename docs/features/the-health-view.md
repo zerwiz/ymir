@@ -94,3 +94,7 @@ The page reads them through the gate's `/api/soak` route, which is memoised for 
 | "The ledger has not moved for …" | The timer is stopped. `systemctl --user status ymir-soak.timer`, then `bin/ward/soak-sampler.sh --status`. |
 | Every app says "no soak yet" | No soak has run. `bin/gates/soak.sh <app>` once that door is merged. |
 | The panel does not appear | The gate is older than this page. Restart the gate, or rebuild the SPA. |
+
+## CHANGE LOG
+
+- **2026-11-14** — this document was written with the Health view (plan 286 P6). Its history is the git log of `apps/hlidskjalf/server/health.ts` and `src/components/SoakHealth.tsx`; entries are appended below, never rewritten (RULES/06).
