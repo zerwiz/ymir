@@ -44,3 +44,7 @@ The lists are the shared source: `bin/gates/secret-scan.sh` now reads all three 
 list as bare `name:` entries), so a word is declared once in the home and enforced at two moments. The sweep's
 plumbing is the audit's to fold into its engine (`agnostic-audit`); this door keeps the **secret** half and the
 pre-commit/CI half, and names the sweep rather than reproducing it.
+
+## CHANGE LOG
+
+- 2026-11-13 — review-mend: added missing heading for #733
