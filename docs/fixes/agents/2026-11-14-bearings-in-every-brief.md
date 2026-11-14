@@ -110,3 +110,7 @@ patterns. In a home with no deny list, the names are simply not judged, and the 
 Two more findings from the same read, both fixed here: `bin/seat/agent-state-lib.sh` is executable
 (RULES/12 — a new door), and `.agents/assets/agents/eindri-core.md` carries a CHANGE LOG (RULES/06) —
 which the bearings door now CUTS at, so the log stays out of every brief it prints.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #750
