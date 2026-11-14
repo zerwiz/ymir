@@ -114,6 +114,12 @@ contract:
     door: bin/engine/home-seed.sh
     required: false
     why: "the words that must never appear in the public repository (people, clients, domains, hosts); absent, the secret scan and the private sweep say so and judge the shared shapes alone (plan 287 §6, plan 288 step 3)"
+  - path: config/nda-allow.yaml
+    kind: seeded
+    template: .agents/config/nda-allow.operator.yaml.example
+    door: bin/engine/home-seed.sh
+    required: false
+    why: "the operator's OWN words the NDA gate must allow (his realm, his mail domain, his handle), each with a reason; absent, only the repository's generic allowances apply and no word of his is written into the public tree (RULES/04, RULES/42)"
   - path: hodd/identity/house-domains.txt
     kind: seeded
     template: .agents/config/house-domains.txt.example
