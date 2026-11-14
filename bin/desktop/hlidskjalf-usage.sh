@@ -39,6 +39,17 @@ set -u
 VERSION="2.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# The home is whatever the ONE resolver says (bin/vault/hoard-lib.sh) — never restated
+# here (Rule 07). Hermes engine homes live under it, so the path has to be resolved.
+if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
+  for _c in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$SCRIPT_DIR/../../bin/vault/hoard-lib.sh"; do
+    [ -r "$_c" ] && { . "$_c"; YMIR_HOARD_LIB_LOADED=1; break; }
+  done
+  unset _c
+fi
+YMIR_HOME_DIR="${YMIR_HOME:-}"
+[ -n "$YMIR_HOME_DIR" ] || { command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root YMIR_HOME_DIR; }
+
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
   -h|--help) sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
@@ -350,7 +361,9 @@ if cx_src is not None:
 # --------------------------------------------------------------------------- #
 def read_hermes():
     homes = [os.path.expanduser("~/.hermes")]
-    homes += glob.glob(os.path.expanduser("~/Documents/ymirhome/bilskirnir/data/engines/*"))
+    home_root = os.environ.get("YMIR_HOME_DIR", "")
+    if home_root:
+        homes += glob.glob(os.path.join(home_root, "bilskirnir/data/engines/*"))
     src = {k: 0 for k in FIELDS}
     per = {}
     found = []

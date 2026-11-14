@@ -52,3 +52,7 @@ herdr agent read w39:p0                  # one agent's pane, by the id the page 
   port appears. Check with `curl -s http://127.0.0.1:9411/json/version`.
 - **The page lists no agents.** herdr holds no pane with an agent in it, or the herdr CLI is not
   on the gate's PATH. Check `herdr pane list`.
+
+## CHANGE LOG
+
+- **2026-11-14** — written with the doors registry (plan 275 item 19): every app's DevTools port in one table, every agent's pane door, both listed on the Fleet page.
