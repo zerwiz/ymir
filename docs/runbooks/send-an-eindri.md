@@ -33,7 +33,7 @@ flowchart LR
 | 5 | Speak to it only through the stamped door | `bin/agents/eindri-send.sh --from "agent <you>" <pane> "<text>"` | the worker sees `[from agent … · herdr pane … · <machine>]` |
 | 6 | Read it without disturbing it | `herdr agent read <pane>` | — |
 | 7 | Receive its report | `$YMIR_HOME/state/eindri-reports/<errand>.md` and one stamped line in the helm's pane | the report names its commit and its proof |
-| 8 | Gather finished errands into one PR | `bin/forge/gather.sh --finished` (or name the ids) | one branch, one gate run, one PR |
+| 8 | Check the branch is right (the list below), then hand it to the heart's worker, which gathers, opens the PR, reviews and merges | the list of branches, their order and their proofs, sent to the heart | the heart's PR carries only checked branches |
 | 9 | Close the seat and reap the worktree once the PR merges | `bin/seat/seat-reap.sh`, `git worktree remove .yggdrasil/<errand>` | the pane is gone; `.yggdrasil/` does not grow |
 
 ## The fixed core every brief carries
@@ -52,6 +52,22 @@ A worker starts knowing nothing. Every brief ends with these lines (plan 275, 04
 - The laws: stage named files only, no AI attribution, never remove a feature, test in the real window on both
   machines, one fix note per change, commit on `eindri/<errand>` and do not push — the helm gathers.
 - The report: write it to the reports shelf, then send one line with `eindri-send.sh --from "agent <errand>" <helm pane> "<result>"`.
+
+## Before a branch goes to the heart
+
+The heart's worker merges; the helm answers for what it is handed. A branch is handed over only when every line
+below holds:
+
+- **It does what the brief named, and nothing else.** Read the whole diff against the brief; a removal the brief did
+  not name is sent back (never remove a feature).
+- **It is based on `origin/main`** and carries no old copies of squash-merged commits.
+- **Its proof was rerun by the helm,** not only reported: the DevTools check in the real window from a release, on
+  heimdall and on the second machine (or that machine named as owed).
+- **The house's wards pass:** no secret, name or private path (the public-repo law), no AI attribution, named files
+  only, a fix note per change, the feature page and catalogue row when a user-facing feature moved.
+- **The tests it touched pass,** and a behaviour change carries its own test.
+- **The report names its commits,** and the helm's list to the heart names the order (a branch that builds on another
+  goes after it).
 
 ## Rules learned the hard way
 
@@ -75,4 +91,5 @@ A worker starts knowing nothing. Every brief ends with these lines (plan 275, 04
 
 ## CHANGE LOG
 
+- **2026-11-14** — the delivery corrected at the operator's word: the heart's worker gathers and merges; the helm checks each branch first (*"so you need to make sure the PRs are right"*).
 - **2026-11-14** — written at the operator's word, from the night six errands were sent (plan 275 items 31 and the 05:30 trace).
