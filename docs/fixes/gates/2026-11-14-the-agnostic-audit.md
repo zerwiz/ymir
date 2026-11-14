@@ -116,3 +116,7 @@ silently took the engine's 200-line print cap for a total — it queued "201 fin
 - **`config/nda-allow.yaml` stands.** The house has recorded, with reasons, that its own publishing
   names are public craft; the deny list is written not to contradict it, and a machine that shares
   such a word is a `host:` entry instead.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #750

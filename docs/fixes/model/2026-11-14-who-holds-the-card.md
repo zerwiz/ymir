@@ -31,3 +31,7 @@ no readable card reports `known:false` with the reason; the verdict a person rea
 
 Live on heimdall: the ledger classified the running engine as `voice, 2762 MiB` and `voxtype` as `other, 480 MiB`,
 matching the measurement in plan 275 to the megabyte.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #750

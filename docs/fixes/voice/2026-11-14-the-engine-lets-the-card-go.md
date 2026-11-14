@@ -38,3 +38,7 @@ The engine is started with `--responses_api_api_key <key>` in its **argv** (`bin
 process of the same user can read through `/proc`. It is how that engine takes its key, so closing it needs a change
 on the engine's side (an env var or a reading proxy; `bin/voice/head-proxy.py` already exists for the online head).
 Recorded here rather than fixed blind.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #750

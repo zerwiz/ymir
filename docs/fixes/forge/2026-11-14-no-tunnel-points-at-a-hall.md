@@ -45,3 +45,7 @@ The halls already listen on loopback only (plan 279's fixes closed the open port
 The parts of item 30 that live inside the apps — the in-app login, `HLIDSKJALF_AUTH` and the halls chooser in
 Hlidskjalf, and Smíðja's `HOST` pin — belong to errands `hall-follow` and `smidja-header-chat`. This change is the
 tunnel guard the plan assigned to `bridge-and-rail`.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #750
