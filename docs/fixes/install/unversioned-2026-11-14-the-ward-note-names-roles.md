@@ -18,3 +18,7 @@ This correction repeats none of the names. Whether the old line is ever redacted
 
 - **2026-11-14** — dated correction appended, in its own note so that the sibling's last line stays byte-for-byte
   as it was (plan 288 step 8).
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #758

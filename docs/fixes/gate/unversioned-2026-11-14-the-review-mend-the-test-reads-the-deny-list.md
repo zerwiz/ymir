@@ -44,3 +44,7 @@ the loader that reads it.
 - `bash bin/gates/guards.sh` — 0 FAIL on the push; the two INHERITED findings (weave index drift,
   cron's missing scripts) name files this branch does not touch.
 - `grep -nEi '<the token set>' docs/fixes/gate/unversioned-2026-11-14-…md bin/vault/tests/…` — nothing.
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #758
