@@ -245,7 +245,13 @@ def cmd_write(a):
     ruleset, floor = floor_facts(repo)
 
     changed = []
-    for line in git(repo, "diff", "--numstat", f"{base}...{head}", check=False).splitlines():
+    # --no-renames: git writes a rename as `dir/{old => new}` in the path column,
+    # while the check below reads `--name-only`, which names the NEW path only. A
+    # packet for a branch that carried a rename could then never be trusted
+    # (measured 2026-11-14: a rebuilt dist asset made every packet "understated"
+    # and "overstated" at once). With renames off, a move is the delete and the
+    # add it really is, and both paths compare literally.
+    for line in git(repo, "diff", "--no-renames", "--numstat", f"{base}...{head}", check=False).splitlines():
         parts = line.split("\t")
         if len(parts) != 3:
             continue
@@ -355,7 +361,7 @@ def cmd_check(a):
                 faults.append(("base", f"{base_sha[:12]} is not in {repo} — the diff cannot be verified"))
             else:
                 claimed = [c["path"] for c in p["changed"]]
-                actual = [ln for ln in git(repo, "diff", "--name-only", f"{base_sha}...{head}",
+                actual = [ln for ln in git(repo, "diff", "--no-renames", "--name-only", f"{base_sha}...{head}",
                                            check=False).splitlines() if ln]
                 missing = sorted(set(actual) - set(claimed))
                 extra = sorted(set(claimed) - set(actual))
