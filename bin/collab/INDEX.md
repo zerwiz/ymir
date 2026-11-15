@@ -21,24 +21,25 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[82]{file,does,kind,verdict,disposition,callers,lines}:
+bin[83]{file,does,kind,verdict,disposition,callers,lines}:
   "15-commits-leave-by-pull-request.md","15 — Every commit leaves by a pull request, or it lands in main","data","wired","keep",2,35
-  "16-a-review-is-a-file.md","16 — A review is a file in the repository","data","wired","keep",0,32
+  "16-a-review-is-a-file.md","16 — A review is a file in the repository","data","wired","keep",1,36
   "17-one-agent-one-worktree.md","17 — One agent, one worktree","data","wired","keep",0,60
   "18-an-area-is-held-or-waived.md","18 — An area is held, waived or never (an area is never silently nobody's)","data","wired","keep",2,34
   "19-plan-validate-execute.md","19 — Plan, validate, then execute","data","wired","keep",3,65
-  "20-documents-are-for-people.md","20 — A document is written for a person to read","data","wired","keep",1,42
-  "LICENSE","MIT No Attribution License","data","wired","keep",1,8
+  "20-documents-are-for-people.md","20 — A document is written for a person to read","data","wired","keep",2,42
+  "LICENSE","MIT No Attribution License","data","wired","keep",2,8
   "LICENSE.MIT","MIT License","data","wired","keep",0,22
   "LICENSE.txt","The arc42 template and documentation is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License.","data","wired","keep",0,19
-  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",60,-
-  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",60,-
-  "README.md","areas/ — what this repository answers for","data","tested","keep",60,-
-  "README.md","plans/tickets/ — the units of work under a validated plan","data","tested","keep",60,-
+  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",62,-
+  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",62,-
+  "README.md","areas/ — what this repository answers for","data","tested","keep",62,-
+  "README.md","plans/tickets/ — the units of work under a validated plan","data","tested","keep",62,-
   "TEMPLATE.md","---","data","wired","keep",5,35
   "TEMPLATE.yaml","areas/TEMPLATE.yaml — what one area's declaration looks like.","data","wired","keep",2,44
+  "a-company-suite.md","---","data","wired","keep",1,123
   "a2a-guard.sh","a2a-guard — a card in the constellation must stay true, and a changed one must still be valid.","tool","wired","keep",2,38
-  "a2a.md","---","data","wired","keep",1,65
+  "a2a.md","---","data","wired","keep",2,65
   "a2a.py","'''a2a.py — the repository's own card in the constellation.","tool","wired","keep",3,208
   "a2a.sh","a2a.sh — this repository's card in the constellation (a thin door; the craft is a2a.py).","tool","wired","keep",4,18
   "advantage-audit.sh","advantage-audit.sh — is every claim we make backed by evidence, or only by confidence?","tool","tested","keep",2,141
@@ -55,14 +56,14 @@ bin[82]{file,does,kind,verdict,disposition,callers,lines}:
   "collab-connect.sh","collab-connect.sh — what a collaborator pastes, and the token the house mints.","tool","wired","keep",1,39
   "collab.sh","collab.sh — Vingólf, the assembly hall: who collaborates with the house, on which surface, and at which rung.","tool","wired","keep",6,65
   "collaboration-files.md","Subject: One set of files in every project — can we work this way?","data","wired","keep",2,54
-  "collaborator-door.md","---","data","wired","keep",0,86
+  "collaborator-door.md","---","data","wired","keep",1,86
   "concept.md","Concept template","data","wired","keep",0,116
   "decision-minimal.md","{short title, representative of solved problem and found solution}","data","wired","keep",0,30
   "decision.md","---","data","wired","keep",0,80
   "fixes-components.sh","The components of this product — one directory of notes each, and no invented names.","tool","wired","keep",1,4
   "fixes-guard.sh","fixes-guard — a behaviour change leaves a note, or says why it did not need one.","tool","tested","keep",6,29
-  "fixes.sh","fixes.sh — the fix notes.","tool","wired","keep",5,81
-  "gates.md","---","data","wired","keep",3,63
+  "fixes.sh","fixes.sh — the fix notes.","tool","wired","keep",6,81
+  "gates.md","---","data","wired","keep",4,63
   "glossary.md","Glossary template","data","wired","keep",0,20
   "handoff-README.md","handoff — the baton","data","wired","keep",1,95
   "handoff-TEMPLATE.md","Handoff — <from> → <to>","data","wired","keep",1,50
@@ -78,13 +79,13 @@ bin[82]{file,does,kind,verdict,disposition,callers,lines}:
   "maker-names.py","'''maker-names.py — the ONE matcher for model, model-maker and agent-harness names in prose (RULES/53).","tool","wired","keep",10,155
   "maker-words.txt","maker-words.txt — the word list for bin/forge/maker-names.py (RULES/53).","data","wired","keep",7,36
   "new-module-test.sh","new-module-test.sh — a new module arrives with a test, or with a reason it does not need one.","tool","wired","keep",1,31
-  "notices.md","---","data","wired","keep",0,85
+  "notices.md","---","data","wired","keep",0,89
   "notify-arm.sh","notify-arm.sh — hand a gate's message to the ARM HOLDER, never to whoever happened to type the command.","tool","wired","keep",4,230
   "plan.md","---","data","tested","keep",10,58
   "pr-check.sh","pr-check — is every commit that exists proposed for review?","tool","tested","keep",6,26
   "pr-guard.sh","pr-guard — a branch that exists on the remote must have a pull request.","tool","wired","keep",1,35
   "private-data.sh","private-data — the repository is public; the operator's machine is not.","tool","wired","keep",1,41
-  "publish.py","'''publish.py — the baton on the Board: what is next and what is blocked become cards.","tool","wired","keep",1,163
+  "publish.py","'''publish.py — the baton on the Board: what is next and what is blocked become cards.","tool","wired","keep",1,169
   "quickstart.md","Title","data","wired","keep",0,98
   "readme.md","README template","data","tested","keep",1,158
   "referee-guard.sh","referee-guard — the gates, the hooks and the wards are the referee.","tool","wired","keep",1,28
@@ -95,16 +96,16 @@ bin[82]{file,does,kind,verdict,disposition,callers,lines}:
   "reviews.sh","reviews.sh — a review is a file in the repository, so the next hand gets it without asking anyone.","tool","wired","keep",1,70
   "rule.md","{NN} — {The rule, said as a sentence}","data","tested","keep",0,32
   "runbook.md","Runbook template","data","wired","keep",1,146
-  "secret-scan.sh","secret-scan — a credential must never enter this repository, and a hook is cheaper than a history rewrite.","tool","wired","keep",2,37
+  "secret-scan.sh","secret-scan — a credential must never enter this repository, and a hook is cheaper than a history rewrite.","tool","wired","keep",3,37
   "ship.sh","ship.sh — the house's git discipline as one door: branch, commit named paths, merge to the base, push.","tool","wired","keep",5,63
-  "standardise.sh","standardise.sh — put the collaboration kit into a repository, or say what is missing.","tool","wired","keep",1,97
+  "standardise.sh","standardise.sh — put the collaboration kit into a repository, or say what is missing.","tool","wired","keep",1,100
   "status.py","'''status.py — the status of every plan, ticket and document in this repository, read from their headers.","tool","wired","migrate → src/ymir_runtime/status.py",3,310
   "test_collab.sh","test_collab.sh — the proofs for bin/collab (Vingólf).","tool","wired","keep",0,117
   "troubleshooting.md","Troubleshooting {product name, feature, or task}","data","wired","keep",0,49
   "tutorial.md","Title","data","wired","keep",0,92
-  "who.py","'''who.py — the roll: who was invited into the house's collaboration surfaces, and are they using them?","tool","wired","keep",2,393
-  "worktree.sh","worktree.sh — one agent, one worktree.","tool","wired","migrate → src/ymir_runtime/worktree.py",1,45
+  "who.py","'''who.py — the roll: who was invited into the house's collaboration surfaces, and are they using them?","tool","wired","keep",2,397
+  "worktree.sh","worktree.sh — one agent, one worktree.","tool","wired","migrate → src/ymir_runtime/worktree.py",3,45
 
-**Tally.** verdict: wired=72, tested=10
+**Tally.** verdict: wired=73, tested=10
 
-**Tally.** disposition: keep=80, migrate → src/ymir_runtime/status.py=1, migrate → src/ymir_runtime/worktree.py=1
+**Tally.** disposition: keep=81, migrate → src/ymir_runtime/status.py=1, migrate → src/ymir_runtime/worktree.py=1

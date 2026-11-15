@@ -99,6 +99,22 @@ RULES
 # through `hodd/identity/public-deny.txt`. This job no longer keeps a second list (`nda-names.txt`), because a second
 # list is a second truth and a silently missing one is a false clean.
 
+# THIS FLEET'S OWN HOME PATHS ARE READ FROM THE HOME, NEVER HARDCODED (2026-11-14). `/home/<user>/` is the
+# machine's address in the same sense as an IP, so baking one into this public script breaks the very rule the
+# script exists to enforce — and the Rule-07 gate said so. `hodd/identity/machine-homes.txt` holds one path per
+# line (`/home/<user>/`); absent, the rule is skipped AND SAID, because a silently missing rule is a false clean.
+# Kept when the batch met main: the one engine judges the operator's words, and this judges the machines' homes.
+homes_file="$HOME_DIR/hodd/identity/machine-homes.txt"
+homes_rules=""
+if [ -f "$homes_file" ]; then
+  while IFS= read -r home_path; do
+    case "${home_path:-}" in ''|'#'*) continue ;; esac
+    homes_rules+="ADDRESS	$(printf '%s' "$home_path" | sed 's/[.]/\\./g')"$'\n'
+  done < "$homes_file"
+else
+  printf 'private-scan: note — no %s, so no machine home paths are checked this run\n' "$homes_file" >&2
+fi
+
 # A false positive must be written down, not silently tolerated: the allow file lives in the home (private) and holds
 # one regex per line — each with a comment saying why it is safe. A finding that matches is still counted as `allow`.
 # THE ALLOW LIST LIVES IN config/, NOT state/ (carried from fix/agnostic-audit-job, 2026-11-14): `hodd/state/` is
@@ -129,7 +145,7 @@ while IFS=$'\t' read -r cat pattern; do
              -g '!assets/reference/**' -g '!**/dist/**' -g '!**/build/**' \
              -g '!.yggdrasil/**' -g '!docs/**' -g '!apps/*/tickets/**' \
              "$REPO" 2>/dev/null | sed "s|^$REPO/||" | head -40)
-done < <( { [ "$HAVE_RG" = 1 ] && rules || true; } | sort -u )
+done < <( { [ "$HAVE_RG" = 1 ] && rules || true; printf '%s' "$homes_rules"; } | sort -u )
 
 # ── the one engine: the operator's words, and every generic shape ────────────────────────────────────────────
 # `bin/gates/agnostic-audit.sh` is the census of the whole tree (and `--ref` of a fetched one), the ward a push
