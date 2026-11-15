@@ -17,7 +17,7 @@ which orphaned a live agent every time.
 Before anything is created, the spawn asks herdr whether an agent already stands in this errand's worktree:
 
 ```
-refused: an agent already stands in /home/heimdall/ymir/.yggdrasil/near-loop-panel/.yggdrasil/rodd-hands
+refused: an agent already stands in ~/ymir/.yggdrasil/near-loop-panel/.yggdrasil/rodd-hands
   pane: "pi","working","w49:p1",…
 help: talk to it (bin/agents/eindri-send.sh rodd-hands "…"), or close that pane first.
 note: a second agent in one worktree overwrites the first — the 2026-11-09 audit.
@@ -41,3 +41,12 @@ the id.
 ## CHANGE LOG
 
 - **2026-11-09** — Carved: the duplicate-spawn guard, with the three neighbours it does not cover named.
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: a dev machine (this seat). The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).

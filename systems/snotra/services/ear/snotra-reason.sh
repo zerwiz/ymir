@@ -25,6 +25,16 @@ fi
 
 ACTION="${1:-}"; shift || true
 
+# WHICH workstreams a card may be classified into is the operator's (plan 288 §1, RULES/42): his list
+# comes from `config/snotra/snotra.conf` (REASONING_CLASSIFY_CATEGORIES), and the generic four answer a
+# home that has not declared any.
+if [ -z "${YMIR_HOME:-}" ] && command -v ymir_home_root >/dev/null 2>&1; then
+  ymir_home_root YMIR_HOME 2>/dev/null || true
+fi
+SNOTRA_CONF_FILE="${SNOTRA_CONF:-${YMIR_HOME:-/nonexistent}/config/snotra/snotra.conf}"
+[ -r "$SNOTRA_CONF_FILE" ] && . "$SNOTRA_CONF_FILE"
+REASONING_CLASSIFY_CATEGORIES="${REASONING_CLASSIFY_CATEGORIES:-patents, verticals, documents, meetings}"
+
 # Helper: call the rail with a prompt
 rail_call() {
   local system_prompt="$1" user_prompt="$2" max_tokens="${3:-500}"
@@ -73,7 +83,7 @@ case "$ACTION" in
     ;;
   classify)
     CARD_TEXT="${1:-}"
-    rail_call "You are a workstream classifier. Given a card's text, classify it into one of: patent, vertical, docs, example-3, meetings. Output only the classification." \
+    rail_call "You are a workstream classifier. Given a card's text, classify it into one of: ${REASONING_CLASSIFY_CATEGORIES}. Output only the classification." \
       "Card text: $CARD_TEXT" 50
     ;;
   dedup)

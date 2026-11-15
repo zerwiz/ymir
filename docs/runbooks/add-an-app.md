@@ -5,7 +5,7 @@ to ymir"* (plan 275).
 
 An app is not done when it runs from your checkout. It is done when it is built inside a release, opens from a
 launcher icon on every machine, wears its own rune, survives an update and a reboot, and passes the same test on
-heimdall and nidavellir. This page names every place a new app must be written into, in the order to do it.
+every machine of the fleet — a dev machine and the heart. This page names every place a new app must be written into, in the order to do it.
 
 > [!IMPORTANT]
 > An app that skips a step here breaks quietly: the icon opens nothing after an update, the window shows yesterday's
@@ -44,7 +44,7 @@ Do them in this order. The table names the file each step changes and how to pro
 | 9 | Build it inside the release | `bin/engine/release.sh`: `APPS`, the `npm ci` list, the Electron list, the build lines, `prove()` | `release.sh build --ref main` prints the app `ok` |
 | 10 | Keep its state in the home, never in the release | the app reads `$YMIR_HOME` through `bin/vault/hoard-lib.sh` (`ymir_home_root`); shared paths go in `SHARED_PATHS` | a release flip loses nothing |
 | 11 | Write its how-to and fix note | `docs/features/<name>.md`, its row in `docs/features/_catalogue/`, then `bin/records/weave-features.sh`; `docs/fixes/<component>/` | the wards pass on push |
-| 12 | Test on both machines through DevTools | `YMIR_DEVTOOLS_PORT=9305` | the same checks pass on heimdall and nidavellir |
+| 12 | Test on both machines through DevTools | `YMIR_DEVTOOLS_PORT=9305` | the same checks pass on a dev machine and the heart |
 
 ## What the start script must do
 

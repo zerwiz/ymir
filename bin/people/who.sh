@@ -54,7 +54,7 @@ elif cmd == "email":
     for r in rows(load()):
         pid = str(r.get("id", "")).lower()
         first = str(r.get("name", "")).split(" ")[0].lower()
-        # "craig" must find craig-martin: a person is not asked to type a slug
+        # "ada" must find ada-lovelace: a person is not asked to type a slug
         if pid == needle or str(r.get("name", "")).lower() == needle \
            or pid.startswith(needle) or first == needle:
             a = addr(r)

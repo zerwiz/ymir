@@ -72,7 +72,7 @@ def assistant_config() -> dict:
 def _model_url() -> str:
     """The model leg's ONE door (Rule 07): env -> his config -> the seat's own rail.
 
-    Hardcoding http://127.0.0.1:8080 worked on heimdall and only on heimdall; on heart, forge or hand
+    Hardcoding http://127.0.0.1:8080 worked on one seat and only on that seat; on heart, forge or hand
     the free-text leg failed while the voice doors honoured their env (Skirnir's own audit, 2026-10-31).
     A hand-run of this file had no env at all, which is how a strong model sat unused while he echoed
     a document title — so the config file is read too, and the rail literal is the LAST resort only.
@@ -95,7 +95,7 @@ def _chat_url(base: str) -> str:
 def _model_chain(model: str = "") -> list[tuple[str, str]]:
     """The answering models, IN ORDER, as (alias, chat url) pairs; the first that answers wins.
 
-    His word, 2026-11-09: "give him the mtp model here and the q2 qwen3.6 on nidavellir". So the
+    His word, 2026-11-09: "give him the mtp model here and the heavier quantisation on the other seat". So the
     mouth is a short chain, all of it configuration (Rule 07):
 
       1. the primary - `model` as the caller resolved it (`configured_mouth`: flag, SKIRNIR_MODEL,
@@ -257,8 +257,6 @@ INTENTS = {
     "what is this system": ("ymir_pitch", None),
     "sell me ymir": ("ymir_pitch", None),
     "why ymir": ("ymir_pitch", None),
-    "what is opti cat": ("public", "what-opti-cat-is"),
-    "what is example-4": ("public", "what-opti-cat-is"),
     "are you available": ("logistics", "availability"),
     "when will he answer": ("logistics", "availability"),
     "where is he": ("schedule", None),
@@ -311,6 +309,41 @@ IDENTITY = os.path.join(home(), "hodd", "identity", "assistant")
 DIGEST = os.path.join(STATE, "digest.jsonl")
 DB = os.path.join(STATE, "assistant.db")
 CANARIES = os.path.join(HERE, "canaries.txt")
+HOME_CANARIES = os.path.join(home(), "config", "skirnir", "canaries.txt")
+
+
+def operator_aliases() -> dict[str, tuple[str, str | None]]:
+    """How the operator's own subjects are asked for: `aliases:` in `$YMIR_HOME/config/skirnir.yaml`.
+
+    A phrase → [tier, fact-slug] (or {tier:, fact:}), because the phrasing that reaches a client's
+    approved fact is HIS (plan 288 §1, RULES/42). Written into this file it published a client and a
+    project name to everyone who clones the repository, and gave a stranger's install a subject it
+    holds no fact for. An absent file adds no phrase — a clean fallback, never an error.
+    """
+    try:
+        rows = assistant_config().get("aliases") or {}
+    except Exception:  # noqa: BLE001
+        return {}
+    out: dict[str, tuple[str, str | None]] = {}
+    if not isinstance(rows, dict):
+        return out
+    for phrase, target in rows.items():
+        phrase = str(phrase or "").strip().lower()
+        if not phrase:
+            continue
+        if isinstance(target, (list, tuple)) and target:
+            tier = str(target[0] or "public")
+            slug = str(target[1]) if len(target) > 1 and target[1] else None
+        elif isinstance(target, dict):
+            tier = str(target.get("tier") or "public")
+            slug = str(target["fact"]) if target.get("fact") else None
+        else:
+            continue
+        out[phrase] = (tier, slug)
+    return out
+
+
+INTENTS.update(operator_aliases())
 
 
 STOPWORDS = {"the", "a", "an", "is", "are", "was", "were", "what", "who", "why", "how",
@@ -453,8 +486,10 @@ def load_canaries(tier: str = "") -> list[str]:
     A plan slug is an internal identifier, not a secret: speaking it to the owner is the point of
     holding it; speaking it to a stranger is the leak. So the derived wall follows the tier."""
     tokens: list[str] = []
-    for path in (CANARIES, os.path.join(STATE, "canaries.derived.txt")):
-        if path.endswith("canaries.derived.txt") and tier == "owner":
+    for path in (CANARIES, HOME_CANARIES, os.path.join(STATE, "canaries.derived.txt")):
+        # the operator's own strings (his machines, his machines' names) and the plan slugs are HIS to
+        # hear and never a stranger's; the repository's base list binds everyone without exception
+        if (path.endswith("canaries.derived.txt") or path == HOME_CANARIES) and tier == "owner":
             continue
         try:
             with open(path) as fh:
@@ -590,8 +625,10 @@ def audiences_for(tier: str, chat: str, sender_id: str = "", members: list[str] 
 def group_audience(members: list[str]) -> set[str]:
     """What a GROUP may hear: only what EVERY member may hear.
 
-    Craig may know the NDA facts and Andre may not — so in a room with both, the answer is neither:
-    the group's audience is the intersection, and a `person:` fact is never part of it.
+    People who hold different grants may sit in one room: one may know the NDA facts and the other
+    may not — so in a room with both, the answer is neither: the group's audience is the intersection,
+    and a `person:` fact is never part of it. WHICH person holds which grant is the operator's own
+    record (his home's `hodd/identity/grants.yaml`), never a name written into this file (plan 288 §1).
     """
     if not members:
         return {"public"}
@@ -1566,9 +1603,10 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
                 else:
                     ok = hit_body >= 2 and (hit_body / len(q)) >= 0.5
                     score = hit_body / len(q)
-                # "whynotproductions", "example-4", "wayofteams": a question often runs a name together
-                # that the fact writes apart. A long token found inside the squashed claim IS the subject.
-                # ...but only when the token SPANS a word boundary: "whynotproductions" is two words
+                # a client's name typed as one word, a project name written as two: a question often runs
+                # a name together that the fact writes apart. A long token found inside the squashed claim
+                # IS the subject.
+                # ...but only when the token SPANS a word boundary: a name written as one word is two
                 # run together, while "deadline" is one word and must not match by being inside it.
                 if not ok and any(t in squashed and not any(t in w for w in words)
                                   for t in q if len(t) >= 8):
@@ -1590,7 +1628,7 @@ def answer(text: str, tier: str, channel: str, sender: str = "", model: str = ""
                 # near-equal facts are the SAME subject seen from two angles: hand the model the set
                 best = ranked[0][0]
                 # only facts that name the SUBJECT (hit_head >= 1): "the companies are …" is an
-                # aggregate, not a second opinion about WayOf, and joining the two produced a false
+                # aggregate, not a second opinion about one client, and joining the two produced a false
                 # sentence about a Telegram handle on 2026-10-22.
                 used = [r[5] for r in ranked[:3] if r[0] >= best - 0.15 and r[2] >= 1] or [ranked[0][5]]
                 intent = f"fact:{used[0]}" if len(used) == 1 else "fact:multi"

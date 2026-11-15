@@ -2,8 +2,8 @@
 # query.sh — the ONLY way Skírnir reads his database: three fixed queries, grants enforced, audited.
 #
 #   bin/assistant/query.sh --tier owner --who "a person's name"
-#   bin/assistant/query.sh --tier stranger --search "OVK"
-#   bin/assistant/query.sh --tier owner --fact what-opti-cat-is
+#   bin/assistant/query.sh --tier stranger --search "renewal"
+#   bin/assistant/query.sh --tier owner --fact what-acme-is
 #
 # No SQL is accepted. The door decides, from grants.yaml, whether that tier may read that class, and
 # writes a row to read_audit — including the refusals.

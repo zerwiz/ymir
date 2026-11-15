@@ -347,7 +347,11 @@ def main():
             measured = json.load(handle)
         measured.setdefault("state", "ok")
     else:
-        measured = measure(register.get("host") or "zerwizserver")
+        # The host is the REGISTER's fact, never a default in the code (RULES/04): a register that
+        # names none is answered honestly rather than measured against somebody else's machine.
+        host = str(register.get("host") or "").strip()
+        measured = (measure(host) if host else
+                    {"state": "unable", "reason": "the register names no host — add `host:` to it"})
 
     people = register.get("people") or []
     rows = []

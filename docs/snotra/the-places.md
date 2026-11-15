@@ -7,9 +7,8 @@ something, the cadence of its meetings, the roles, and how long its sound may li
 hodd/identity/places/<company>/<place>/place.yaml
 ```
 
-**Why a file and not code:** Example8's meeting decided its board's shape (graded decisions, layered boards,
-the agenda as driver, reusable templates). Inmost Invest or Whynot Productions may want something else
-entirely. A door that carries one company's shape applies it to every company — so the shape is data, and
+**Why a file and not code:** One client's meeting decided its board's shape (graded decisions, layered boards,
+the agenda as driver, reusable templates). Another client may want something else entirely. A door that carries one company's shape applies it to every company — so the shape is data, and
 the doors read it. **No company, board or list name appears in `systems/snotra/*.py`.**
 
 ## The contract
@@ -24,7 +23,7 @@ inherits: house-default
 
 authority:                 # every field either cites the decision it comes from, or is a house default
   decisions: [DEC-20261022-01, -03, -05, -07, -08, -11, -14]
-  meeting: M-20261022-sync-reygan-craig
+  meeting: M-20261022-sync-ada-grace
 
 lists:                     # where each kind of thing is filed (real list names, quoted not corrected)
   decision: "Decided / Resolved"
@@ -43,7 +42,7 @@ meeting_card:              # one card per meeting on the company's meetings boar
   list:  "Meetings"
 
 roles:
-  chair: "Reygan Assareh"  # sends the agenda 1–2 days ahead (DEC-04); holds the register
+  chair: "Ada Lovelace"  # sends the agenda 1–2 days ahead (DEC-04); holds the register
   operator: "Lars-<the operator> <the operator>"
 
 cadence:

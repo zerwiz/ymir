@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # addresses.sh — THE register of the mail addresses the house uses, and whether mail can reach them.
 #
-# WHY THIS DOOR EXISTS (plan 116 §15.3.1): on 2026-10-24 zerwiz.org published no MX
-# record at all, so gimle@, snotra@, reply+* and bounce+* were undeliverable — while five
-# documents assumed mail arrived, and the desk showed an empty inbox. A house address that
-# cannot receive is reported `undeliverable` here; nothing is assumed good.
+# WHY THIS DOOR EXISTS (plan 116 §15.3.1): on 2026-10-24 the house's own domain published no MX
+# record at all, so the desk's address, the notices' and reply+*/bounce+* were undeliverable —
+# while five documents assumed mail arrived, and the desk showed an empty inbox. A house address
+# that cannot receive is reported `undeliverable` here; nothing is assumed good.
 #
 #   addresses.sh              the register, TOON (address · domain · mx · route · arrived · state)
 #   addresses.sh --check      exit nonzero when a declared address cannot receive

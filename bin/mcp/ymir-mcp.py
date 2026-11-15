@@ -504,9 +504,19 @@ def skuld_plan(topic: str = "", realm: str = "", project: str = "ymir") -> str:
     """What is planned: the plan ledger in the home (one row per plan file, with its headline). Omit topic for the shelf."""
     shelf = os.environ.get("YMIR_PLAN_DIR", "")
     if not shelf:
-        base = _home() / "svartalfaheim" / (realm or "whynotproductions")
-        cands = [base / "projects" / project / "plans", base / "workspace" / project / "plans"]
-        shelf = str(next((c for c in cands if c.is_dir()), cands[0]))
+        # The ledger's realm is the OPERATOR's, so it is discovered inside his home — the
+        # repository never spells one (RULES/04). `realm` still narrows the search.
+        homes = [_home() / "svartalfaheim" / realm] if realm else sorted(
+            p for p in (_home() / "svartalfaheim").glob("*") if p.is_dir())
+        cands = [c for h in homes for c in (h / "projects" / project / "plans", h / "workspace" / project / "plans")]
+        found = [c for c in cands if c.is_dir()]
+        if not found:
+            return ("no plan ledger in this home — set YMIR_PLAN_DIR, or run bin/records/plan.sh "
+                    "from a home that holds one")
+        if len(found) > 1 and not realm:
+            return ("this home holds %d plan ledgers — name one with YMIR_PLAN_DIR or --realm:\n  %s"
+                    % (len(found), "\n  ".join(str(c) for c in found)))
+        shelf = str(found[0])
     d = Path(shelf)
     def _num(n: str) -> int:
         h = n.split("-")[0]

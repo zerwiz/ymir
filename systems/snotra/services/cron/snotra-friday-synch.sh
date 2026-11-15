@@ -5,7 +5,7 @@
 #   snotra-friday-synch.sh dry-run <meeting-dir>   what would be posted — no writes
 #   snotra-friday-synch.sh status  <meeting-dir>   one row per card in This Week
 #
-# The Friday Synch is Reygan's weekly status update: every card in This Week
+# The Friday Synch is the operator's weekly status update: every card in This Week
 # gets a comment summarising its owner's progress. Cards with no progress
 # since last Friday are moved to Backlog.
 set -euo pipefail

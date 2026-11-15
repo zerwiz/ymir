@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# voice-ensure.sh — ensure the voice engines: whisper.cpp (speech → text) and
-# piper (text → speech).
+# voice-ensure.sh — ensure the voice engines: whisper.cpp (speech → text),
+# piper (text → speech), and the detector weights the pipeline loads.
 #
 # Voice is a MACHINE property: the engines and their models live on the host /
 # in the hoard, never in the code tree. This step ADOPTS an engine already here
@@ -8,26 +8,34 @@
 # piper for the voice, each on its own per-OS road, each with a model. Loud
 # refusals (no python/pip, no network, no model) — never a silent skip.
 #
+# The DETECTOR is weights, not source. The Silero VAD ONNX file is fetched from a
+# pinned upstream commit and checked against a pinned sha256 into the user's data
+# folder (`<data root>/models/voice/`), never committed (plan 288 step 7, plan 287
+# P4; RULES/04, 11). One library says where the weights live and what they must
+# hash to — `bin/voice/voice-model-lib.sh` — and `bin/voice/ymir-vad.py` mirrors it.
+#
 # The speech→text engine is owned by systems/snotra/services/ear/snotra-ensure.sh (one whisper road), so
 # this script DELEGATES that half rather than growing a second installer.
 #
 # Usage:
-#   voice-ensure.sh status            # whisper + piper, and their models
+#   voice-ensure.sh status            # whisper + piper + the VAD weights + the face
 #   voice-ensure.sh ensure [--install]
 #   voice-ensure.sh install
 #   voice-ensure.sh --version
 #
 # Env:
-#   YMIR_PIPER_BIN     — explicit piper binary override
-#   YMIR_PIPER_VOICE   — explicit .onnx voice override
-#   YMIR_VOICES_DIR    — where piper voices live (default $YMIR_HOME/voices)
-#   PIPER_VOICE_NAME   — voice to fetch (default en_US-lessac-medium)
-#   SNOTRA_*           — forwarded to snotra-ensure.sh for the whisper half
+#   YMIR_PIPER_BIN         — explicit piper binary override
+#   YMIR_PIPER_VOICE       — explicit .onnx voice override
+#   YMIR_VOICES_DIR        — where piper voices live (default $YMIR_HOME/voices)
+#   PIPER_VOICE_NAME       — voice to fetch (default en_US-lessac-medium)
+#   YMIR_VOICE_MODELS_DIR  — where the DETECTOR weights live (default <data root>/models/voice)
+#   YMIR_VAD_MODEL         — explicit detector file override
+#   SNOTRA_*               — forwarded to snotra-ensure.sh for the whisper half
 #
-# Exit: 0 both present, 1 one missing, 2 usage.
+# Exit: 0 everything present, 1 something missing, 2 usage.
 set -u
 
-VERSION="1.0.0"
+VERSION="1.1.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # This script lives in the VOICE shelf (bin/voice/, Rule 12/23), so it walks up two
 # levels for the repo root and reaches its neighbours by shelf:
@@ -45,10 +53,13 @@ ymir_home_root YMIR_HOME
 VOICES_DIR="${YMIR_VOICES_DIR:-$YMIR_HOME/voices}"
 PIPER_VOICE_NAME="${PIPER_VOICE_NAME:-en_US-lessac-medium}"
 PIPER_VOICE_BASE="${PIPER_VOICE_BASE:-https://huggingface.co/rhasspy/piper-voices/resolve/main}"
+# WHERE THE DETECTOR WEIGHTS LIVE, and what they must hash to — one library, shared with the loader.
+# shellcheck source=bin/voice/voice-model-lib.sh
+. "$SCRIPT_DIR/voice-model-lib.sh"
 
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
-  -h|--help|"") sed -n '2,27p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+  -h|--help|"") sed -n '2,31p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
 esac
 CMD="${1-}"; shift || true
 DO_INSTALL=0
@@ -114,17 +125,21 @@ ensure_face() {
 }
 
 status() {
-  local p v wstt ws="missing" ps="missing" fs
+  local p v ws="missing" ps="missing" fs vs vp
   whisper_status >/dev/null 2>&1 && ws="present"
   p="$(find_piper || true)"; v="$(find_voice || true)"
   [ -n "$p" ] && ps="present"
   fs="$(face_status)"
+  vp="$(ymir_vad_model)"
+  ymir_vad_verify "$vp" && vs="present" || vs="missing"
   printf 'voice[1]{stt,tts,piper,voice}:\n'
   printf '  "whisper.cpp (%s)","piper (%s)","%s","%s"\n' \
     "$ws" "$ps" "${p:-—}" "${v:-—}"
+  printf 'vad[1]{state,file,means}:\n'
+  printf '  "%s","%s","the turn boundary; fetched and checksummed, never committed"\n' "$vs" "$vp"
   printf 'rodd[1]{face,means}:\n'
   printf '  "%s","the voice window; built by apps/rodd/setup.sh, never committed"\n' "$fs"
-  [ "$ws" = "present" ] && [ "$ps" = "present" ] && [ "$fs" = "present" ]
+  [ "$ws" = "present" ] && [ "$ps" = "present" ] && [ "$fs" = "present" ] && [ "$vs" = "present" ]
 }
 
 # --- install ----------------------------------------------------------------
@@ -169,6 +184,16 @@ install_voice() {
   return 0
 }
 
+# The detector weights, from the pinned upstream into the data folder. A failure is LOUD: silence
+# here would surface later as a dead turn boundary inside a working window.
+install_vad() {
+  if ! ymir_vad_fetch >/dev/null; then
+    printf 'vad: could not seat the detector — the turn boundary will refuse until it is there\n' >&2
+    return 1
+  fi
+  return 0
+}
+
 install_all() {
   # whisper (STT) — one road: systems/snotra/services/ear/snotra-ensure.sh owns it.
   if [ -x "$SNOTRA_ENSURE" ] && ! whisper_status >/dev/null 2>&1; then
@@ -177,6 +202,7 @@ install_all() {
   # piper (TTS) — adopt, else install, then its voice.
   if [ -z "$(find_piper || true)" ]; then install_piper || true; fi
   if [ -z "$(find_voice || true)" ]; then install_voice || true; fi
+  install_vad || true
   # the face (the window): fetched at the pinned tag, built here so a fresh install and an
   # update both end with a window that opens
   ensure_face || true

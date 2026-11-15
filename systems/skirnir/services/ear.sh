@@ -54,9 +54,24 @@ raise_mouth() {
 }
 raise_mouth >/dev/null 2>&1 &
 
-# A VOCABULARY HINT, because a general model hears "OptiCAD" and this house has an Example4. Names only,
-# never a private fact: it biases the decoder toward the words the house actually says.
-VOCAB="${WHISPER_VOCAB:-Example4, OVK, Skírnir, Snotra, Boverket, WayOf, Whynot Productions, Example8, ventilation inspection, Isabella, Craig, Brokk, Ymir}"
+# A VOCABULARY HINT, because a general model mishears a name it has never seen. Names only, never a
+# private fact: it biases the decoder toward the words this house actually says.
+#
+# WHOSE WORDS THEY ARE (plan 288 §1, RULES/42): the operator's clients and companies are HIS. They live
+# in `$YMIR_HOME/config/skirnir/vocab.txt` (one term per line), the repository ships only the house's own
+# names, and WHISPER_VOCAB overrides both for one run.
+VOCAB="${WHISPER_VOCAB:-}"
+if [ -z "$VOCAB" ]; then
+  for _hc in "${YMIR_HOME:-}/config/skirnir/vocab.txt" "${HOME}/Documents/ymirhome/config/skirnir/vocab.txt"; do
+    [ -n "$_hc" ] && [ -r "$_hc" ] || continue
+    # one delimiter only: `paste -sd', '` CYCLES the list (comma, then space), which produced
+    # "a,b c,d" — measured 2026-11-14 while proving this door
+    VOCAB="$(grep -v '^[[:space:]]*#' "$_hc" 2>/dev/null | grep -v '^[[:space:]]*$' | paste -sd ',' - | sed 's/,/, /g')"
+    [ -n "$VOCAB" ] && break
+  done
+  unset _hc
+fi
+VOCAB="${VOCAB:-Skírnir, Snotra, Brokk, Ymir}"
 OUT="$(curl -s -m 120 "$URL" -F "file=@$TMP/16k.wav" -F response_format=json -F temperature=0 \
   -F "language=$LANG_CODE" -F "prompt=$VOCAB" 2>/dev/null)"
 TEXT="$(printf '%s' "$OUT" | python3 -c 'import json,sys

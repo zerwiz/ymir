@@ -15,8 +15,8 @@
 # Registry (machine-local facts, one row per host, read by hostname):
 #   $YMIR_HOME/hodd/data/fleet.json   (override YMIR_FLEET_REGISTRY)
 #   {
-#     "heart": "whynot",
-#     "hosts": { "heimdall": {"roles": ["dev"], "lan": "...", "tailnet": "..."} }
+#     "heart": "heart-host",
+#     "hosts": { "dev-host": {"roles": ["dev"], "lan": "...", "tailnet": "..."} }
 #   }
 # A missing registry degrades cleanly: role defaults to "dev", shape to "single",
 # link to "standalone" — never a failure, because a lone box has no registry.

@@ -40,7 +40,7 @@ Then take the areas that have work in flight:
 
 ```bash
 bash scripts/areas.sh claim tenancy \
-  --keeper "Craig Martin" \
+  --keeper "Ada Lovelace" \
   --path "apps/ct_core/lib/ct_core/domains/" \
   --path "apps/ct_core/test/tenancy/" \
   --evidence "apps/ct_core/test/tenancy/isolation_test.exs — 6 of 11 contexts" \
@@ -50,7 +50,7 @@ bash scripts/areas.sh claim tenancy \
 And waive what genuinely has no work yet — with your name on it:
 
 ```bash
-bash scripts/areas.sh waive perf --by "Craig Martin" --why "no traffic until pilot" --until 2027-01-31
+bash scripts/areas.sh waive perf --by "Ada Lovelace" --why "no traffic until pilot" --until 2027-01-31
 ```
 
 ## What the gate refuses, and what it does not

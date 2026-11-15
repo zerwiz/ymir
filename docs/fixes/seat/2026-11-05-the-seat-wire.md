@@ -87,3 +87,16 @@ whose pid is dead is a refusal, never a guessed path and never a fallback to the
 `public-data-guard` refused this note as it arrived, and it was right: the `Verified` section printed two private
 tailnet addresses in a PUBLIC repository. They are replaced with `<tailnet>` here. The wire still resolves and shows
 them at call time — which is where an address belongs (Rule 04 · Rule 39). Nothing else in the note was changed.
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: the heart's user · a dev machine · a dev machine (this seat). The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #758

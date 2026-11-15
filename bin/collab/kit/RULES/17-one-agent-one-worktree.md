@@ -15,10 +15,10 @@ law[3]{rule,why}:
 ## How it is used
 
 ```bash
-bash scripts/worktree.sh new sebastian-c1        # .yggdrasil/sebastian-c1 on agent/sebastian-c1
-cd .yggdrasil/sebastian-c1 && npm run check
+bash scripts/worktree.sh new ada-c1        # .yggdrasil/ada-c1 on agent/ada-c1
+cd .yggdrasil/ada-c1 && npm run check
 # …work, commit, push, open the pull request…
-bash scripts/worktree.sh done sebastian-c1       # after the merge
+bash scripts/worktree.sh done ada-c1       # after the merge
 bash scripts/worktree.sh list
 ```
 
@@ -31,7 +31,7 @@ gigabyte for nothing. A build output is *not* shared, and must not be.
 
 ## What this does not answer
 
-**Which agent is which.** A worktree named `sebastian-c1` is a name, not an identity; the branch's commits carry their own author. This
+**Which agent is which.** A worktree named `ada-c1` is a name, not an identity; the branch's commits carry their own author. This
 rule prevents collision, not confusion — and the baton is what prevents confusion.
 
 ## 2026-11-11 — only a code change needs a worktree; a handoff does not (appended)

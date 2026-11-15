@@ -176,8 +176,8 @@ The collaboration differentiator (ENTRY-008). Built on the **open A2A Protocol v
   (software render on a fragile hybrid; `YMIR_DESKTOP_DISABLE_GPU` overrides).
 - **The Cron gate shows local AND server schedules.** `/api/cron` reads the
   scheduler's OWN config (`$YMIR_HOME/config/cron.yaml`), reporting
-  source/why/roles/last-fired; `/api/cron/seats` reads whynot · zerwizserver
-  over the ssh ring — read on demand, machine-local (plan 51 rule 1). The
+  source/why/roles/last-fired; `/api/cron/seats` reads the fleet's other
+  machines over the ssh ring — read on demand, machine-local (plan 51 rule 1). The
   board and the loop share ONE line grammar: a `@role[,role]` gate may sit
   before OR after the time.
 - **The Files gate folds.** The realm tree is folded by default; folders wear
@@ -508,7 +508,7 @@ Below the verbs: `worktree.py` (Yggdrasil) · `harness.py` (Hamr) · `backend.py
   `bin/seat/valknut-load.sh` writes it; a Pi seat launches
   `pi --mcp-config .pi/mcp-adapter.json`.
 - **A2A (corrected 2026-09-30):** the native backbone **runs**. The heart's node
-  `heart-zerwizserver` answers on door `:8301` and serves its agent card at
+  `heart-<machine>` answers on door `:8301` and serves its agent card at
   `/.well-known/agent-card.json` (`streaming: true`, skill `well-recall`), built from the shared
   contract in `packages/contracts` — the same shape the seat's card is built from. An external
   `a2abridge` is **seat-side** (`:7777` here), an adapter a harness talks to, not the backbone, and
@@ -551,10 +551,10 @@ compute.
 
 ```
 topology[5]{machine,role,why}:
-  "zerwizserver (.103)","HEART (+ a work/dev face)","ALWAYS ON — the record crons and the journal fold run here"
-  "whynot (.111)","FORGE","the compute (models, bench crons, heavy Eindri); not always on, so never the record"
-  "heimdall (.110)","dev (strong)","a full body: local rail + its own session crons"
-  "omarchy (.105)","dev","a full body"
+  "heart","HEART (+ a work/dev face)","ALWAYS ON — the record crons and the journal fold run here"
+  "forge","FORGE","the compute (models, bench crons, heavy Eindri); not always on, so never the record"
+  "dev-a","dev (strong)","a full body: local rail + its own session crons"
+  "dev-b","dev","a full body"
   "phone","hand","a client: PWA read + light dispatch"
 ```
 

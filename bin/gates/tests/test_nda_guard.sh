@@ -60,6 +60,18 @@ r="$(cd "$T/repo" && python3 bin/gates/guards/nda-guard.py tree f.txt 2>&1)"
 printf '%s' "$r" | grep -q 'plinthco' && bad "allow with reason" || ok "an allow entry with a reason lets the word through"
 printf '%s' "$r" | grep -qi zorblax && ok "…and the rest are still refused" || bad "rest refused"
 
+# the operator's OWN allowances come from his home, never from the repository (RULES/04, RULES/42)
+mkdir -p "$H/config"
+printf 'allow:\n  - word: plinthco\n    reason: the realm that owns this repository\n' >"$H/config/nda-allow.yaml"
+r="$(cd "$T/repo" && python3 bin/gates/guards/nda-guard.py tree f.txt 2>&1)"
+printf '%s' "$r" | grep -q 'plinthco' && bad "home allow ignored" || ok "a word allowed in the HOME's file is let through"
+printf '%s' "$r" | grep -qi zorblax && ok "…and the repository's refusals still bite" || bad "home allow over-permits"
+printf 'allow:\n  - word: work\n    reason: ordinary English\n' >"$T/repo/config/nda-allow.yaml"
+printf 'allow:\n  - word: plinthco\n' >"$H/config/nda-allow.yaml"
+r="$(cd "$T/repo" && python3 bin/gates/guards/nda-guard.py tree f.txt 2>&1)"
+printf '%s' "$r" | grep -q 'plinthco' && ok "a home entry with no reason is ignored too" || bad "reasonless home allow"
+rm -f "$H/config/nda-allow.yaml"
+
 # ── no home: loud, never silent ──────────────────────────────────────────────
 r="$(YMIR_HOME="$T/nowhere" HOME="$T/nohome" python3 "$G" tree "$T/f.txt" 2>&1)"
 printf '%s' "$r" | grep -q UNARMED && ok "no home says UNARMED aloud" || bad "unarmed"

@@ -102,11 +102,11 @@ except Exception:
 PY
 }
 # The host is the first seat that ANSWERS, in the fleet's own order, with this machine
-# last. A registry entry is a wish, not a fact: on 2026-11-09 the ear (heimdall) was
+# last. A registry entry is a wish, not a fact: on 2026-11-09 the ear (a dev machine) was
 # unreachable, ssh timed out, and the whole start failed although this box can host.
 # The host is the first seat that can ACTUALLY serve, not the first that answers ssh:
 #   · this machine first, when it carries a model rail (the head is here, so the
-#     pipeline should be here — heimdall answered ssh on 2026-11-09 while its
+#     pipeline should be here — a machine answered ssh on 2026-11-09 while its
 #     pipeline could not start at all, and the whole start died there);
 #   · then the fleet's ears in their own order.
 local_rail() { curl -s -o /dev/null --max-time 2 "${YMIR_VOICE_HEAD_URL:-http://127.0.0.1:8080/v1}/models"; }
@@ -114,8 +114,8 @@ host_seat() {
   local s me
   me="$(hostname -s)"
   # plan 275 S16 (2026-11-12): ask the voice door, the one resolver of the engine's host. Rödd used to call any
-  # machine with an answering :8080 its own host — nidavellir's small local server made it skip the tunnel to the
-  # real engine on heimdall, and its microphone stream had nothing to connect to.
+  # machine with an answering :8080 its own host — a neighbour's small local server made it skip the tunnel to the
+  # real engine elsewhere, and its microphone stream had nothing to connect to.
   s="$(bash "$ROOT/bin/voice/voice-door.sh" which-host 2>/dev/null | tail -1)"
   [ -n "$s" ] && { printf '%s' "$s"; return 0; }
   if local_rail; then printf '%s' "$me"; return 0; fi
@@ -216,8 +216,8 @@ else
   # qwen3.6-35b-a3b@iq3_s answers 500 "failed to load" on this box (2026-11-09 07:35),
   # while the 3050-tuned qwen3.6-35b-a3b-3050@iq2_xxs loads and answers.
   # plan 275 (2026-11-12): the head is the MIND HE CHOSE in Rödd's settings (bin/voice/rodd-head.py, kept in the private
-  # home), resolved by the voice door. This launcher used to force nidavellir's 3050-tuned alias on every host; the
-  # door reads his choice only when no head is forced, so his online mind was never used, heimdall's rail answered
+  # home), resolved by the voice door. This launcher used to force one machine's GPU-tuned alias on every host; the
+  # door reads his choice only when no head is forced, so his online mind was never used, the rail answered
   # `400 model not found`, the engine exited after 18 s, and Rödd never spoke on either machine.
   HEAD="${RODD_HEAD_MODEL:-}"; RODD_CAMERA=0
   # her eyes (plan 275, 2026-11-12, his question: "Why can't she look through the webcam anymore?"): the camera is
@@ -225,8 +225,8 @@ else
   # (models.dev, cached in the home) lists with image input. His opencode go mind, deepseek-v4.1-flash, takes images;
   # the old rule offered the camera only with --vision, which forced the local vision model instead of his mind.
   _mind="${HEAD:-$(python3 "$ROOT/bin/voice/rodd-head.py" env 2>/dev/null | sed -n 's/^RODD_VOICE_HEAD_MODEL=//p' | head -1)}"
-  # the engine may run on another machine (nidavellir talks to heimdall's): then the mind that answers is THAT
-  # machine's choice, so it is asked there — nidavellir judged by its own empty setting and hid the camera (plan 275)
+  # the engine may run on another machine (a hand talks to the heart's): then the mind that answers is THAT
+  # machine's choice, so it is asked there — a machine judged by its own empty setting and hid the camera (plan 275)
   if [ -z "$HEAD" ] && ! is_local_seat "$seat"; then
     _remote="$(ssh -o BatchMode=yes -o ConnectTimeout=5 "$seat" 'd=${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}; python3 $d/bin/voice/rodd-head.py env' 2>/dev/null | sed -n 's/^RODD_VOICE_HEAD_MODEL=//p' | head -1)"
     [ -n "$_remote" ] && _mind="$_remote"

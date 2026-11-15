@@ -21,10 +21,10 @@ bash scripts/areas.sh init                       # 18 files, every one honestly 
 bash scripts/areas.sh list                       # area · state · keeper · open questions
 bash scripts/areas.sh check                      # names what is unanswered or unproved
 bash scripts/areas.sh estate                     # one line: held · unproved · waived · na · unheld
-bash scripts/areas.sh claim tenancy --keeper "Craig Martin" \
+bash scripts/areas.sh claim tenancy --keeper "Ada Lovelace" \
      --path "apps/ct_core/lib/ct_core/domains/" \
      --evidence "apps/ct_core/test/tenancy/isolation_test.exs"
-bash scripts/areas.sh waive perf --by "Craig Martin" --why "no traffic yet" --until 2027-01-31
+bash scripts/areas.sh waive perf --by "Ada Lovelace" --why "no traffic yet" --until 2027-01-31
 ```
 
 Driving a project's estate from Ymir (the same answers, plus the seat):
@@ -76,5 +76,5 @@ is `.agents/areas.yaml`; the copy that travels is `bin/collab/kit/areas/canon.ya
 
 - **2026-11-08** — Opened with the capability: the eighteen-area canon, the estate door
   (`bin/agents/areas.sh`), the travelling kit shelf and its gate, the card generated from the shelf, and
-  the first two estates measured (Ymir: 6 held · 12 unheld; Inmost's Example3: 4 held · 14 unheld,
+  the first two estates measured (Ymir: 6 held · 12 unheld; a client's Example3: 4 held · 14 unheld,
   with the tenancy folder scoped and refused). Plan 219.

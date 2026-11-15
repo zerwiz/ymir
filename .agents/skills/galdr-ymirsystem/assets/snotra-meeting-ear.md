@@ -15,7 +15,7 @@ THE EAR (capture)      the seat in the meeting — heimdall today, omarchy too
 THE BRAIN (transcribe) the seat with the GPU — the living-rail resolver's
                        serving box (heimdall's <gpu> first, then whynot)
                        whisper.cpp CUDA (~1.0s) + the LIVE rail for summaries
-THE RECORD (store/serve)  the heart (zerwizserver) — minutes in the vault, synced
+THE RECORD (store/serve)  the heart — minutes in the vault, synced
                        by the home's git road, the MCP face served there
 ```
 
@@ -434,7 +434,7 @@ generated, never hand-edited.
 | Door | Does |
 |---|---|
 | `systems/snotra/services/record/snotra-store.sh` | `new · put · state · index · list · verify · path` |
-| `bin/thing/ping-room.sh` | raises MiroTalk on the current seat, `local|tailnet|public`, exclusive `ping.zerwiz.org` claim |
+| `bin/thing/ping-room.sh` | raises MiroTalk on the current seat, `local|tailnet|public`, exclusive claim on the tunnel name the operator declares (`PING_ROOM_HOST`) |
 | `systems/snotra/services/ear/snotra-autojoin.sh` | calendar scan → plan → bot dispatch (dry-run unless `--apply`) |
 | `systems/snotra/services/ear/snotra-bot.sh` | Vexa API door; the participant name is **Snotra**; HTTPS and a vault key required |
 
@@ -444,7 +444,7 @@ transports hear one room, the bot's transcript is authoritative for speaker labe
 the ear's audio is kept as evidence.
 
 The private network law that governs where these run is `$YMIR_HOME/RULES/network.md`:
-the always-on control plane is zerwizserver; whynot is compute; the dev seats are where
+the always-on control plane is the heart; the forge is compute; the dev seats are where
 the operator is; and Þing is raised on demand, never assumed.
 
 Tests: `bash tests/run.sh` — four suites, 61 assertions.

@@ -11,6 +11,14 @@
 #   hoard_root       the hoard within it    ($YMIR_HOARD → <home>/hodd)
 #   hoard_data_dir   this machine's records ($YMIR_DATA_DIR → <hoard>/data)
 #   hoard_state_dir  runtime state          ($YMIR_STATE_DIR → <home>/state)
+#   ymir_fleet_heart the fleet's heart      ($YMIR_HEART → the home's fleet.json `heart`)
+#   ymir_plan_dir    the plan ledger        ($YMIR_PLAN_DIR → the single ledger under the home)
+#
+# The last two exist for the same reason as the rest: the REPOSITORY is public and
+# ships to any operator, so it may not name this operator's machines or his realm
+# (RULES/04, RULES/25). A caller that needs "the heart" or "the ledger" asks HERE;
+# the answer is discovered from the home, and a home that records neither answers
+# empty so the caller can name what to set instead of printing a stranger's host.
 #
 # The recorded choice is machine state, not user data: a path under
 # `~/.config/ymir/` (the same place `engram-python` and `accounts.json` live), so
@@ -108,6 +116,75 @@ hoard_local_env() {  # <result-var> — the operator's env file (secrets, ports)
   [ -n "$result_var" ] || return 2
   ymir_home_root home
   printf -v "$result_var" '%s' "${YMIR_ENV_FILE:-$home/.env.local}"
+}
+
+ymir_fleet_heart() {  # <result-var> — the host the home's fleet registry names as the heart
+  # $YMIR_HEART wins (a machine may be told), else the registry's `heart` key. Never a
+  # literal host: a fleet of one, or a fleet with another heart, must not inherit ours.
+  local result_var=${1-} home reg heart
+  [ -n "$result_var" ] || return 2
+  if [ -n "${YMIR_HEART:-}" ]; then
+    printf -v "$result_var" '%s' "$YMIR_HEART"; return 0
+  fi
+  ymir_home_root home
+  reg="${YMIR_FLEET_REGISTRY:-$home/hodd/data/fleet.json}"
+  [ -r "$reg" ] || return 1
+  heart="$(python3 - "$reg" <<'PY' 2>/dev/null
+import json, sys
+try:
+    print((json.load(open(sys.argv[1])) or {}).get("heart") or "")
+except Exception:
+    print("")
+PY
+)"
+  [ -n "$heart" ] || return 1
+  printf -v "$result_var" '%s' "$heart"
+}
+
+ymir_plan_dir() {  # <result-var> — the canonical plan ledger, DISCOVERED inside the home
+  # The ledger sits under a realm named by THIS operator, so the repository cannot
+  # spell the path. It is found instead: exactly one `svartalfaheim/<realm>/projects/
+  # <project>/plans` is the ledger; the older `workspace/<project>/plans` shape is
+  # read only when the first shape has none (Rule 25: probe, never assume).
+  # Exit: 0 one ledger · 1 none in this home · 2 more than one (name one with YMIR_PLAN_DIR).
+  local result_var=${1-} project=${2:-ymir} home cand found=()
+  [ -n "$result_var" ] || return 2
+  if [ -n "${YMIR_PLAN_DIR:-}" ]; then
+    printf -v "$result_var" '%s' "$YMIR_PLAN_DIR"; return 0
+  fi
+  ymir_home_root home
+  for cand in "$home"/svartalfaheim/*/projects/"$project"/plans; do
+    [ -d "$cand" ] && found+=("$cand")
+  done
+  if [ "${#found[@]}" -eq 0 ]; then
+    for cand in "$home"/svartalfaheim/*/workspace/"$project"/plans; do
+      [ -d "$cand" ] && found+=("$cand")
+    done
+  fi
+  case "${#found[@]}" in
+    0) return 1 ;;
+    1) printf -v "$result_var" '%s' "${found[0]}" ;;
+    *) return 2 ;;
+  esac
+}
+
+ymir_house_domains() {  # <result-var> — space-separated domains the home declares as the house's own
+  # A commit may be authored as a HOUSE identity (`<agent>@<house domain>`), and the record
+  # shows such an author unmasked. WHICH domains are the house's is the operator's fact, so it
+  # is read from his home ($YMIR_HOUSE_DOMAINS, else hodd/identity/house-domains.txt) and never
+  # written here (RULES/04). A home that declares none answers 1: callers then allow only the
+  # generic forms (`@ymir`, `@ymir.local`, `@users.noreply.github.com`).
+  local result_var=${1-} home listing list
+  [ -n "$result_var" ] || return 2
+  if [ -n "${YMIR_HOUSE_DOMAINS:-}" ]; then
+    printf -v "$result_var" '%s' "$YMIR_HOUSE_DOMAINS"; return 0
+  fi
+  ymir_home_root home
+  listing="${YMIR_HOUSE_DOMAINS_FILE:-$home/hodd/identity/house-domains.txt}"
+  [ -r "$listing" ] || return 1
+  list="$(sed -e 's/#.*//' "$listing" | tr -d '[:blank:]' | grep -v '^$' | paste -sd' ' -)"
+  [ -n "$list" ] || return 1
+  printf -v "$result_var" '%s' "$list"
 }
 
 hoard_memory_store() {  # <result-var> — Kaia's engram store, ALWAYS in the hoard
