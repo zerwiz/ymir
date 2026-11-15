@@ -1,3 +1,4 @@
+# defaults-guard: prose-only — $YMIR_HOME is NAMED in this file (a gate description, a probe string, a comment) and never read.
 #!/usr/bin/env bash
 # test_rules_compliance_env_file.sh — the ward tells a filename from a hostname.
 #
