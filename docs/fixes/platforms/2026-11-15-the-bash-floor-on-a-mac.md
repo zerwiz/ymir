@@ -68,3 +68,22 @@ scan, as an upper bound because many call sites already fall back:
 
 The local-model step still builds llama.cpp for CUDA, and the Utgard sandbox still needs Docker or Podman. Both are
 plan 293's.
+
+## A second Mac fault: a message spoken aloud
+
+While the install ran, the Mac spoke a sentence about "rules" and "the runtime". The cause was in
+`bin/fleet/fleet-ensure.sh`: line 89 called `say "fleet:   units pinned to the runtime checkout … (RULES/02 §7)"`,
+but the script defines its own `say() { printf …; }` only at line 147. On Linux an undefined `say` fails quietly
+(the call carried `2>/dev/null || true`). On macOS `say` is `/usr/bin/say`, so the line was read aloud through the
+speakers.
+
+The proof is macOS's own log. `/usr/bin/say` ran at 15:45:22, during the installer's `fleet` step, and at 15:49:51,
+when `fleet-ensure.sh ensure` was run by hand. No other process called it.
+
+| Path | Change |
+|---|---|
+| `bin/fleet/fleet-ensure.sh` | `say()` is now defined right after `set -u`, and the early call is a plain `printf` |
+
+A scan of every tracked `*.sh` for a `say` call with no definition before it found no other live case. Two scripts
+matched only in help text or with an inline definition. A ward for this belongs to plan 293: any helper named like a
+macOS command (`say`, `open`, `pbcopy`) is a hazard when it is called before it is defined.
