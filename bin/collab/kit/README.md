@@ -1,7 +1,7 @@
 # The collaboration kit — the same discipline in every repository
 
-**What it is.** Twenty-one small pieces that make a repository reviewable by a stranger: a baton, fix notes, a review shelf, five gates, three
-hooks, and the two tools that keep them honest. They are the ones this house actually uses — not a template somebody imagined.
+**What it is.** Twenty-three small pieces that make a repository reviewable by a stranger: a baton, fix notes, a review shelf, five gates, three
+hooks, and the tools that keep them honest. They are the ones this house actually uses — not a template somebody imagined.
 
 **Why a kit instead of a paragraph in each repo.** Two products already carry slightly different versions of the same rules, because each
 was written in the moment. A kit is how they stay the same, and how the next repository starts at the standard rather than at the
@@ -25,6 +25,7 @@ beginning.
 | the workbench skill | `.agents/skills/smidr-the-workbench/` | the craft taught to a guest hand: the slice, the note, the five things never changed quietly, and what each refusal means |
 | the collaborator door | `docs/collaborator-door.md` · `scripts/collab-connect.sh` | how a hand that is not on our network connects: a public card, a short-lived JWT scoped to one skill, a grant, a Rune per call — and the five refusals a door must still make |
 | the advantage gate | `scripts/advantage-audit.sh` · `docs/advantage.md` | a claim about why we win carries its evidence or it is refused: the VRIO screen, the teardown taken from lost deals, and the check that fails a page of adjectives |
+| a company's own suite | `docs/a-company-suite.md` | how another company raises its own copy of the suite — its own gate secrets, its own members, its own domain and theme, one MCP token per member — and the proof that the two installations share no secret and no user |
 | the status script | `scripts/status.py` | reads every plan, ticket and document header and prints their status; `--check` fails on a malformed header; it takes the plan prefix from `plans/.prefix` or the plan file names, never assumes one |
 | the header format | `docs/headers.md` | the header every document, plan and ticket opens with, the statuses, and the rule that each ends with a References section |
 | plan, validate, execute | `RULES/19-plan-validate-execute.md` | no implementation before the area owner named in `AGENTS.md` has validated the plan; documentation and planning are allowed at any time |
@@ -51,3 +52,7 @@ repository's own law is not a standardisation, it is a raid.
 - **It does not touch the code.** No pipeline, no build, no dependency.
 - **It does not enforce anything on GitHub.** Branch protection is unavailable on this plan (`403: Upgrade to GitHub Pro`), so the
   enforcement is the hooks — which means a clone without `core.hooksPath` set is unprotected, and the installer sets it.
+
+## CHANGE LOG
+
+- 2026-11-15 — review-mend: added missing heading for #774
