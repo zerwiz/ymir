@@ -29,3 +29,7 @@ word they were merged locally into one branch, so the conflicts between them are
 - **The verdict store guessed the home too.** `bin/forge/merge-verdict.sh` and `bin/gates/gate-verdict.sh` (from
   #747, already on `main`) read `${YMIR_HOME:-$HOME/Documents/ymirhome}`, which defaults-guard refuses. Both now ask
   the resolver and refuse when no home resolves.
+- **queue-warden kept a dead twin.** The merge left main's old `run_one` (merge main in, `git add -A`,
+  `--no-verify`, a skipped fixes guard, a hardcoded remote) beside the batch's `recut_one`/`merge_one`, which already
+  carry #747's verdict gate. Nothing called it; `test_queue_warden.sh` refused it five times. It is removed:
+  47 pass, 0 fail.
