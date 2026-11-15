@@ -33,3 +33,7 @@ row (which names `checks.d`) used for the rest — the two facts do not compete.
 
 `bash -n` is clean on `ci-verify.sh`, `fixes-guard.sh` and all nine gate files; no conflict marker survives; the
 driver reads the directory (`checks.d` named in `ci-verify.sh`).
+
+## CHANGE LOG
+
+- 2026-11-15 — review-mend: added missing heading for #771
