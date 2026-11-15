@@ -254,6 +254,10 @@ case "${YMIR_DESKTOP_DISABLE_GPU:-auto}" in
 esac
 export YMIR_DESKTOP_DISABLE_GPU
 export YMIR_DESKTOP_OZONE_PLATFORM="${YMIR_DESKTOP_OZONE_PLATFORM:-auto}"
+# The frame's buttons are the platform layer's question (bin/host/host-sense.sh): on a tiling
+# compositor (Omarchy's Hyprland) the window is frameless and draws no _ □ ×, elsewhere the
+# platform keeps its own. Carried to the app as YMIR_WINDOW_BUTTONS; node passes its env on (Rule 05).
+export YMIR_WINDOW_BUTTONS="$(app_window_buttons)"
 
 START_TS="$(date -Is)"
 

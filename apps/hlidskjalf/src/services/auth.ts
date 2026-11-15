@@ -78,7 +78,9 @@ export function loadSession(): Session | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Session;
     if (!parsed?.user?.login || !Array.isArray(parsed.tenants)) return null;
-    return parsed;
+    // A stored session never carries its own workspace list: the list is the registry's (rebuilt by loadRealms).
+    // A row saved by an older build — a provisioned name that is no realm — is dropped here.
+    return { ...parsed, tenants: sessionFor(parsed.user.login).tenants };
   } catch {
     return null;
   }
@@ -108,12 +110,10 @@ export function provisionWorkspace(input: {
   kind: 'work' | 'personal';
   domains: string[];
 }, realms: RealmDef[] = DEFAULT_WORKSPACES): Session {
-  const id = input.name.toLowerCase().replace(/[^a-z0-9-]/g, '-') || 'workspace';
-  const domain: DomainId = input.kind === 'work' ? 'ymirlabs' : 'muninn';
-  const base = baseGrants(realms);
-  const exists = base.some((t) => t.realm === id);
-  const tenants = exists ? base : [...base, grant(id, input.name || id, 'owner', domain)];
-  return { ...sessionFor(input.login, realms), tenants };
+  // One Hlidskjalf (plan 275 item 11): the workspaces are the home's registry and nothing else. A name typed
+  // here is never added as a workspace of its own — that is how a person's name ("Svein") became a tenant row.
+  // The gate creates the realm on disk; the registry then lists it, and loadRealms() shows it.
+  return sessionFor(input.login, realms);
 }
 
 export function tenantFor(session: Session | null, realm: string) {

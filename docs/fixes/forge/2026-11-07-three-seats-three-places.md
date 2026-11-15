@@ -48,3 +48,12 @@ workspace_id=w4 … cwd=/home/zerwizserver/review/ymir` — the reviewer's own p
 
 - 2026-11-07 · one seat door for every figure; smiths seated in worktrees, judges in the clone, the
   loop in the pinned runtime; the name collision that made the smith door useless, proven and fixed.
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: the fleet's always-on heart. The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).

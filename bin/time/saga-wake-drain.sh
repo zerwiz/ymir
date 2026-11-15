@@ -111,7 +111,16 @@ else
   # re-presented one week-old wake at every turn boundary (2026-10-24).
   count=$(awk 'END{print NR}' "$QUEUE")
   printf '%s — wake queue: %s pending\n' "$(sol_line)" "${count:-0}"
-  dropped=0
+  # A RESOLVED WAKE DROPS ITSELF (plan 275 item 28 §3). A wake is news ONCE: it was
+  # presented at the previous drain and its subject's record has since gone terminal, so
+  # nothing is owed on it and re-reading it at every turn is noise, not memory. The FIRST
+  # notice is never dropped (plan 137): a line absent from the previous presentation is
+  # printed even when its subject has already closed.
+  _prev="$STATE/.wake-drained"
+  _kept="$(mktemp "$STATE/.wake-kept.XXXXXX" 2>/dev/null || printf '%s' "$STATE/.wake-kept.tmp")"
+  : >"$_kept" 2>/dev/null || true
+  _before="$(md5sum <"$QUEUE" 2>/dev/null | cut -d' ' -f1)"
+  resolved=0
   while IFS= read -r line || [ -n "$line" ]; do
     [ -n "$line" ] || continue
     # A wake is presented until Brokk acks it. The errand's status (done/failed)
@@ -119,8 +128,23 @@ else
     # FIRST notice Brokk gets, and dropping it on status makes the worker invisible
     # (plan 137). Echoes from Brokk closing his own errand are still presented once
     # and cleared by `ack` — harmless noise, not a reason to drop the real news.
+    _key="$(printf '%s' "$line" | cut -f4)"
+    if [ -n "$_key" ] && [ -r "$_prev" ] && grep -qxF -- "$line" "$_prev" 2>/dev/null; then
+      _claim="$(tail -n1 "$STATE/$_key.status" 2>/dev/null | tr -d '\r')"
+      case "$_claim" in
+        done:*|failed:*|needs-decision:*|paused:*)
+          resolved=$((resolved + 1)); continue ;;
+      esac
+    fi
+    printf '%s\n' "$line" >>"$_kept" 2>/dev/null || true
     printf 'WAKE %s\n' "$(sol_stamped "$line")"
   done <"$QUEUE"
+  if [ "$resolved" -gt 0 ] && [ "$(md5sum <"$QUEUE" 2>/dev/null | cut -d' ' -f1)" = "$_before" ]; then
+    mv "$_kept" "$QUEUE" 2>/dev/null || true
+    printf 'wake_resolved[1]{dropped,why}:\n  %s,"presented once, and its errand has since closed — a resolved wake is not news"\n' "$resolved"
+  else
+    rm -f "$_kept" 2>/dev/null || true
+  fi
   [ "${dropped:-0}" -gt 0 ] && printf 'wake_echo[1]{dropped,why}:\n  %s,"errands already closed — ack clears them, they are not presented as news"\n' "$dropped"
   printf 'WAKE_ACK_REQUIRED: acknowledge handled wakes to drop them from the queue\n'
   # THE OPEN WORK, every wake — not only the morning brief. One line, so a wake says not

@@ -2,7 +2,7 @@
 # bitrate-gate.sh — a diffusion clip that "completes" is not a clip that worked.
 #
 # WHY THIS GATE EXISTS (measured 2026-10-05):
-#   MiniMax H3 on heimdall produced a valid MP4 — right frame count, right
+#   MiniMax H3 on the dev machine produced a valid MP4 — right frame count, right
 #   duration, right resolution, the FULL PROMPT in the metadata — of uniform RGB
 #   noise. `status: completed`. Every job-level check passed. Nothing in the log
 #   said otherwise.

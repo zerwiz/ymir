@@ -20,8 +20,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
   [ "$PWD" = / ] && break; cd ..; done; pwd)"
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
-_h=""; declare -f ymir_home_root >/dev/null 2>&1 && ymir_home_root _h 2>/dev/null
-STATE="${_h:-$HOME/Documents/ymirhome}/state"
+STATE=""; declare -f hoard_state_dir >/dev/null 2>&1 && hoard_state_dir STATE 2>/dev/null
+if [ -z "$STATE" ]; then
+  printf 'verdict-watch: the home could not be resolved — bin/vault/hoard-lib.sh is the one door\n' >&2; exit 1
+fi
 REPORTS="$STATE/eindri-reports"
 SEEN="$STATE/.reviewed/delivered"
 NOTIFY="$ROOT/bin/notify/send.sh"

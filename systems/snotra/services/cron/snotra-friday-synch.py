@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """snotra-friday-synch — the Friday Synch (DEC-20261022-04).
 
-WHY: Reygan's meeting framework requires a Friday Synch that updates the system
+WHY: the operator's meeting framework requires a Friday Synch that updates the system
 on assigned tasks/actions. Without it the Monday Meeting has no spine — the
 "Last week's open tasks" section would be empty and the room would re-decide
 everything from scratch.

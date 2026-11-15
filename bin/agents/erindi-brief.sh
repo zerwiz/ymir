@@ -53,7 +53,20 @@ esac
 
 ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)}"
 BROKK_HOME="${BROKK_HOME:-${BROKK_ROOT_OVERRIDE:-$ROOT}}"
-DATA="${BROKK_DATA_OVERRIDE:-$BROKK_HOME/data}"
+# THE RECORDS ARE THE OPERATOR'S, NOT THE CODE TREE'S (2026-11-15). data/ lives in the home's hoard
+# (<home>/hodd/data), and a code root has none of its own — deriving it from BROKK_HOME is how the
+# heart came to read a repo's empty data/ while the rosters sat in the home. One resolver, as everywhere.
+DATA="${BROKK_DATA_OVERRIDE:-}"
+if [ -z "$DATA" ]; then
+  if ! declare -f hoard_data_dir >/dev/null 2>&1; then
+    for _hl in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$ROOT/bin/vault/hoard-lib.sh"; do
+      [ -r "$_hl" ] && { . "$_hl"; break; }
+    done
+    unset _hl
+  fi
+  declare -f hoard_data_dir >/dev/null 2>&1 && hoard_data_dir DATA 2>/dev/null
+  [ -n "${DATA:-}" ] || DATA="$BROKK_HOME/data"
+fi
 STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
 PAUSED_VERB="${BROKK_PAUSED_VERB:-paused}"
 # Where the worker's terminal act lands: the home's state dir, the SAME one eindri-acclaim.sh, the
@@ -241,6 +254,15 @@ the panes."*
    Silence is distinguished from thinking: a worker that stops appending inside
    the window is reported as SUSPECT (bin/agents/eindri-heartbeat.sh) — keep a line
    moving whenever you make progress.
+
+**Name the project records you touched.** The brief above carries the bearings: the fixed core,
+and the records of the project you were sent to. Before your terminal act, your report says which
+of them the work changed — one line:
+   \`records updated: <path> · <path>\`
+   or, when the errand genuinely changed none, \`none: <why no record changed>\`.
+The handoff packet refuses without it (\`bin/forge/handoff-packet.sh write $ID --record "path|what"\`),
+and so does the review: a project's decisions, handoff, plans and boards are updated by the work,
+or the work has not landed (plan 291 part 2).
 EOF
 )
 

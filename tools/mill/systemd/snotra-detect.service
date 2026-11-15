@@ -3,7 +3,7 @@ Description=Snotra's watch — the ear pricks up when a call begins and leaves w
 
 [Service]
 Type=simple
-Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin:%h/.local/share/mise/shims:%h/.mise/shims
 # The watch is seated from the seat's own materialized copy (%h/.fleet, exactly
 # as the ear's engine is), and its state and the wake queue live in the
 # operator's home, never in the code tree (Rule 04). __YMIR_BIN_DIR__ is the

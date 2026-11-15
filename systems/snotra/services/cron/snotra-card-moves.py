@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """snotra-card-moves — card-movement automation rules (DEC-20261022-04).
 
-WHY: Reygan's card-movement rules require automation so that moving a card
+WHY: the operator's card-movement rules require automation so that moving a card
 triggers the right actions. Without this, the board is just a list — the
 automation is what makes it a queue.
 
@@ -285,7 +285,7 @@ def rule_b(card: dict, board_id: str, done_id: str, signoff_id: str, rec: dict, 
     has_signoff = bool(done_when and done_when.strip())
 
     # If the card is in Done and needs sign-off, move to To Sign-off
-    # NEVER auto-close: require transcript evidence + human confirmation (Reygan's challenge #2)
+    # NEVER auto-close: require transcript evidence + human confirmation (the operator's own challenge, #2)
     if card.get("idList") == done_id and has_signoff:
         if dry:
             say(f"would-move-to-signoff {action_id} → {card.get('name', '?')[:60]}")

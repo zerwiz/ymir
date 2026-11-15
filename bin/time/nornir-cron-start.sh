@@ -201,6 +201,29 @@ scheduler='
   export BROKK_ROLES="${BROKK_ROLES:-dev}"
   stamp_dir="$state/.cron-fired"
   lock_dir="$state/.cron-locks"
+  # The ONE sentence a failure gets (bin/time/cron-fail-lib.sh, plan 292). Optional on purpose: a
+  # scheduler started from an older tree keeps the tail-only message instead of failing to start.
+  _fail_lib="${YMIR_CRON_FAIL_LIB:-$ROOT/bin/time/cron-fail-lib.sh}"
+  [ -r "$_fail_lib" ] && . "$_fail_lib" 2>/dev/null
+  # One row, one run, one verdict. Both branches below call THIS, because the notifier had been
+  # copied twice and the two copies could drift — and one of them deciding the message is how
+  # "the job broke" and "the job was never found" came to read identically (plan 292).
+  run_row() {
+    cd "$home" 2>/dev/null || true
+    bash -lc "$cmd" >>"$log" 2>&1
+    _rc=$?
+    [ "$_rc" -eq 0 ] && return 0
+    _tail="$(tail -n 4 "$log" 2>/dev/null | grep -v '^$' | tail -n 1 | cut -c1-160)"
+    _why=""
+    if declare -f cron_fail_detail >/dev/null 2>&1; then
+      _why="$(cron_fail_detail "$home" "$cmd" "$_rc" "$_tail" 2>/dev/null)"
+    fi
+    [ -n "$_why" ] || _why="${_tail:-no output}"
+    printf "%s cron FAIL rc=%s %s :: %s\n" "$ts" "$_rc" "$cmd" "$_why" >>"$log"
+    [ -x "$ROOT/bin/notify/send.sh" ] && bash "$ROOT/bin/notify/send.sh" --source cron --severity HIGH \
+      --key "cron-fail:$key:$today" --message "job failed (rc=$_rc): $cmd — $_why" >/dev/null 2>&1 || true
+    return 0
+  }
   # A tab carried in a variable: fields are taken by expansion, never by `read`.
   # On this seat `IFS=<tab> read` put the whole line in the first field, and a
   # schedule parser that can eat a row without saying so is a schedule nobody trusts.
@@ -305,25 +328,10 @@ scheduler='
       lock="$lock_dir/$key.lock"
       if command -v flock >/dev/null 2>&1; then
         ( flock -n 8 || { printf "%s cron skip (busy): %s\n" "$ts" "$cmd" >>"$log"; exit 0; }
-          cd "$home" 2>/dev/null || true
-          bash -lc "$cmd" >>"$log" 2>&1
-          _rc=$?
-          if [ "$_rc" -ne 0 ]; then
-            _tail="$(tail -n 4 "$log" 2>/dev/null | grep -v '^$' | tail -n 1 | cut -c1-160)"
-            [ -x "$ROOT/bin/notify/send.sh" ] && bash "$ROOT/bin/notify/send.sh" --source cron --severity HIGH \
-              --key "cron-fail:$key:$today" --message "job failed (rc=$_rc): $cmd — ${_tail:-no output}" >/dev/null 2>&1 || true
-          fi
+          run_row
         ) 8>>"$lock" &
       else
-        ( cd "$home" 2>/dev/null || true
-          bash -lc "$cmd" >>"$log" 2>&1
-          _rc=$?
-          if [ "$_rc" -ne 0 ]; then
-            _tail="$(tail -n 4 "$log" 2>/dev/null | grep -v '^$' | tail -n 1 | cut -c1-160)"
-            [ -x "$ROOT/bin/notify/send.sh" ] && bash "$ROOT/bin/notify/send.sh" --source cron --severity HIGH \
-              --key "cron-fail:$key:$today" --message "job failed (rc=$_rc): $cmd — ${_tail:-no output}" >/dev/null 2>&1 || true
-          fi
-        ) &
+        ( run_row ) &
       fi
     done <"$config"
     [ "${BROKK_CRON_ONCE:-0}" = 1 ] && exit 0

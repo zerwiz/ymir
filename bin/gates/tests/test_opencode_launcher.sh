@@ -46,7 +46,12 @@ if command -v opencode >/dev/null 2>&1; then
 fi
 
 # ── door 2: the shell spawner's dry run ────────────────────────────────────────────────────────
-mkdir -p "$TMP/data/parity" "$TMP/config"; printf '# Task\nwrite OK to a file and stop\n' >"$TMP/data/parity/brief.md"
+# THE HOUSE RESOLVES FROM ONE BASE (2026-11-15): the spawner asks the ONE resolver for data and
+# config, so they are <home>/hodd/data and <home>/config, not $BROKK_HOME/data. The fixture writes
+# the brief where the resolver looks, and every dry run below runs with HOME inside the temporary
+# tree so the home is the fixture's own.
+FIXHOME="$TMP/Documents/ymirhome"
+mkdir -p "$FIXHOME/hodd/data/parity" "$FIXHOME/config"; printf '# Task\nwrite OK to a file and stop\n' >"$FIXHOME/hodd/data/parity/brief.md"
 # A dry run only PRINTS its plan, but the spawner still checks that the harness exists — so the door is
 # given a stub opencode. Measured 2026-11-14: CI has no opencode on PATH, the spawner refused, and this
 # test went red on a correct tree while a developer box stayed green. This file's own contract is that
@@ -63,19 +68,19 @@ ALLOWED="opencode-go/deepseek-v4.1-flash"
 dry_run() {  # <with|without> YMIR_HOME, in a closed environment -> the launch line
   local mode="$1"
   if [ "$mode" = with ]; then
-    env -i PATH="$TMP/door2bin:$PATH" HOME="${HOME:-/tmp}" TMPDIR="$TMP" BROKK_HOME="$TMP" \
-      YMIR_HOME="${YMIR_HOME:-${HOME:-/tmp}/Documents/ymirhome}" \
+    env -i PATH="$TMP/door2bin:$PATH" HOME="$TMP" TMPDIR="$TMP" BROKK_HOME="$TMP" \
+      YMIR_HOME="$FIXHOME" \
       timeout 90 "$ROOT/bin/agents/einherjar-spawn.sh" parity "$ROOT" --scout \
       --harness opencode --model "$ALLOWED" --dry-run 2>/dev/null \
       | sed -n 's/^  launch: cd [^ ]* && //p'
   else
-    env -i PATH="$TMP/door2bin:$PATH" HOME="${HOME:-/tmp}" TMPDIR="$TMP" BROKK_HOME="$TMP" \
+    env -i PATH="$TMP/door2bin:$PATH" HOME="$TMP" TMPDIR="$TMP" BROKK_HOME="$TMP" \
       timeout 90 "$ROOT/bin/agents/einherjar-spawn.sh" parity "$ROOT" --scout \
       --harness opencode --model "$ALLOWED" --dry-run 2>/dev/null \
       | sed -n 's/^  launch: cd [^ ]* && //p'
   fi
 }
-wantdry="$("$LAUNCHER" print --model "$ALLOWED" --brief "$TMP/data/parity/brief.md")"
+wantdry="$("$LAUNCHER" print --model "$ALLOWED" --brief "$FIXHOME/hodd/data/parity/brief.md")"
 # The dry run prints a display line (no env prefix, no quotes); the same line, normalised, must match.
 wantdry="$(printf '%s' "$wantdry" | sed "s/^env OPENCODE_CONFIG_CONTENT='[^']*' //; s/'//g")"
 eq "einherjar-spawn --dry-run prints the launcher's line (opencode run --model M --auto <brief>, YMIR_HOME set)" "$wantdry" "$(dry_run with)"

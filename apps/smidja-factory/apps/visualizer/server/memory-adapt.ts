@@ -1,7 +1,7 @@
 /**
  * memory-adapt — one translation, at the one boundary where the shapes meet.
  *
- * The Kaia bridge (`bin/bridge/mimir-bridge.py`, :4602) answers a FLAT payload —
+ * The Völundr bridge (`bin/bridge/mimir-bridge.py`, :4602) answers a FLAT payload —
  * `store`, `episodes`, `facts`, `entities`, `edges`. The UI's published contract
  * (`shared/types.ts`) is NESTED: `db`, `counts.{episodes,facts,entities,edges}`.
  *

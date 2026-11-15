@@ -4,15 +4,16 @@
   addresses.sh                the register, TOON
   addresses.sh --check        exit nonzero when a declared address cannot receive
   gna_addresses.py honesty    the desk's honesty line, JSON (deliverable · forwarded · unreadable)
-  gna_addresses.py probe --domain zerwiz.org --json
+  gna_addresses.py probe --domain example.org --json
   gna_addresses.py await --account A --to ADDR [--since ISO] [--timeout 300]
   gna_addresses.py --self-test
 
-THE LAW THIS FILE EXISTS FOR (plan 116 §15): on 2026-10-24 zerwiz.org published **no MX at
-all**, so every @zerwiz.org address the house uses — gimle@, snotra@, reply+*, bounce+* — was
-undeliverable, while five documents across the house assumed mail arrived. Nothing measured
-it. A house address that cannot receive is reported `undeliverable` here; it is never
-assumed good, and an address whose DNS could not be read is `unmeasured`, not `fine`.
+THE LAW THIS FILE EXISTS FOR (plan 116 §15): on 2026-10-24 the house's own mail domain
+published **no MX at all**, so every address the house uses there — the desk's, the notices',
+`reply+*`, `bounce+*` — was undeliverable, while five documents across the house assumed mail
+arrived. Nothing measured it. A house address that cannot receive is reported `undeliverable`
+here; it is never assumed good, and an address whose DNS could not be read is `unmeasured`,
+not `fine`.
 
 Three facts per address, measured or declared, never guessed:
   mx       measured over DNS (a Null MX is a deliberate refusal, RFC 7505)
@@ -57,7 +58,7 @@ DNS_TIMEOUT = float(os.environ.get("GNA_DNS_TIMEOUT", "4"))
 def registry() -> list[dict]:
     """The addresses the house uses, from the home's accounts.yaml `house:` block.
 
-    A row is either a bare address (`- gimle@zerwiz.org`, the 2026-10-23 shape) or a
+    A row is either a bare address (`- desk@example.org`, the 2026-10-23 shape) or a
     mapping carrying what only a human can declare: its route and where it forwards.
     Both shapes are read, because an older home on another seat is still a valid home
     (Rule 25: probe, never assume the new shape arrived)."""
@@ -294,7 +295,7 @@ def alias_cache(fresh: bool = False) -> dict:
     """The cached measurement of which Workspace aliases exist on the readable account.
 
     Measured through the account's own `sendAs` settings — READ ONLY, no message is sent
-    and no address is added. §16 corrects §15: way-of.com already receives mail, so the
+    and no address is added. §16 corrects §15: the house's own domain already receives mail, so the
     inbound answer for a house identity is an ALIAS on the account we can read; whether
     that alias exists is a fact, and an unmeasured alias is not an existing one."""
     try:

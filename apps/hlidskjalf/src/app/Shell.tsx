@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, type ComponentType, type CSSProperties } from 'react';
 import { useYmir } from '../state/store';
-import { GATES, realmDef } from '../data/realms';
+import { GATES } from '../data/realms';
 import { applyMeta } from '../data/metadata';
 import { Rail } from './Rail';
 import { Topbar } from './Topbar';
@@ -117,18 +117,15 @@ function PageFeed() {
 
 export function Shell() {
   const realm = useYmir((s) => s.realm);
-  const session = useYmir((s) => s.session);
   const density = useYmir((s) => s.density);
   const gate = useYmir((s) => s.gate);
   const streamHeight = useYmir((s) => s.streamHeight);
 
   const gateDef = GATES.find((g) => g.id === gate);
-  const tenant = session?.tenants.find((t) => t.realm === realm);
-  const def = realmDef(realm, tenant);
 
   useEffect(() => {
-    applyMeta(gate, def.tenant);
-  }, [gate, def.tenant]);
+    applyMeta(gate);
+  }, [gate]);
 
   return (
     <div

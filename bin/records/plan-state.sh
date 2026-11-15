@@ -8,7 +8,10 @@ if [ -z "$PLAN_DIR" ]; then
   _h="${YMIR_HOME:-}"
   if [ -z "$_h" ] && [ -r "$ROOT/bin/vault/hoard-lib.sh" ]; then . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true; command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root _h; fi
   [ -n "$_h" ] || _h="$(bash "$ROOT/bin/vault/hodd.sh" path 2>/dev/null || true)"
-  PLAN_DIR="$_h/svartalfaheim/whynotproductions/projects/ymir/plans"
+  # The ledger's realm is the OPERATOR's: it is discovered inside his home, never
+  # spelled here (RULES/04 — the repository ships to other fleets).
+  command -v ymir_plan_dir >/dev/null 2>&1 || . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
+  command -v ymir_plan_dir >/dev/null 2>&1 && { ymir_plan_dir PLAN_DIR 2>/dev/null || true; }
 fi
 [ -d "$PLAN_DIR" ] || { echo "plan-state: no ledger at $PLAN_DIR" >&2; exit 1; }
 

@@ -9,7 +9,7 @@ StartLimitBurst=10
 
 [Service]
 Type=simple
-Environment=PATH=%h/.bun/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PATH=%h/.bun/bin:/usr/local/bin:/usr/bin:/bin:%h/.local/share/mise/shims:%h/.mise/shims
 Environment=BROKK_STATE_OVERRIDE=__YMIR_OPERATOR_STATE__
 Environment=SYN_WATCH_MODE=systemd
 ExecStart=/bin/bash __YMIR_BIN_DIR__/pi/syn-watch.sh run

@@ -5,7 +5,7 @@
 # config/eindri-dispatch.json ships as a TEMPLATE with unfilled model tokens
 # (<your-model-id>). A profile that still carries those tokens must never steer
 # dispatch: it would silently pick a harness/model the machine cannot run.
-# FIX 2026-09-24: the old rule was "file exists ⇒ active" — on heimdall the
+# FIX 2026-09-24: the old rule was "file exists ⇒ active" — on the dev machine the
 # template counted as ACTIVE, its first rule named opencode, Brokk obeyed it,
 # and an opencode worker was raised though the fleet law is pi-primary.
 #

@@ -30,7 +30,8 @@ their states, the tickets and the plans.
 The SPA (`src/App.tsx` → the EmberBackground + the topbar with the halls
 buttons → the boards) builds to `dist/`. The boards read the **record through
 THIS BODY's own MCP gateway** (`http://127.0.0.1:8316/mcp/skuld`, port from
-`VITE_MCP_GATEWAY_PORT`): the gateway resolves the heart (zerwizserver) at REQUEST
+`VITE_MCP_GATEWAY_PORT`): the gateway resolves the heart (by the role the home's fleet registry
+names) at REQUEST
 time, so the hall never names the heart and a heart move never moves the hall's
 door (plan 51 P6/9c — the same law the harnesses' `mcp-adapter.json` obeys).
 The door admits the browser origin (CORS, restored 2026-09-27 and PINNED to the
@@ -198,7 +199,7 @@ board ever needs it again. Everything the hall renders lives under
 ### The living door + the live feed (2026-09-27 — the React hall reads LIVE again)
 - **The wound.** The React port kept the Astro door's default `SKULD_URL =
   http://<heart>.<tailnet>.ts.net:8320`. The 2026-09-27 cutover (plan 51 Part 9)
-  retired whynot's Skuld unit and moved the record to the heart (zerwizserver),
+  retired the forge's Skuld unit and moved the record to the heart,
   so every board call rang a dead seat and the book read empty. The one gateway
   (`bin/bridge/mcp-gateway.sh`, :8316) fronts skuld over the heart — but the gateway had
   no CORS, so a PAGE still could not read it directly.

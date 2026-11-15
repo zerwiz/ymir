@@ -11,8 +11,8 @@ debugged from its own report, so the trace had to come from `bash -x`, and it en
 + smidja_visualizer_dir SMIDJA_VIZ
 + smidja_factory_dir factory
 + app_dir smidja _smd_c
-+ _smd_c=/home/heimdall/ymir/bin/.agents/skills/smidja-factory
-+ '[' -d /home/heimdall/ymir/bin/.agents/skills/smidja-factory/apps/visualizer ']'
++ _smd_c=~/ymir/bin/.agents/skills/smidja-factory
++ '[' -d ~/ymir/bin/.agents/skills/smidja-factory/apps/visualizer ']'
 + printf -v factory %s ''
 + return 1
 ```
@@ -50,9 +50,9 @@ An explicit `YMIR_ROOT_DIR` still wins outright, so nothing that sets it changes
 
 ### Verified
 
-- `smidja_visualizer_dir` → `/home/heimdall/ymir/.agents/skills/smidja-factory/apps/visualizer`
+- `smidja_visualizer_dir` → `~/ymir/.agents/skills/smidja-factory/apps/visualizer`
   (was empty).
-- `app_dir hlidskjalf` → `/home/heimdall/ymir/apps/hlidskjalf` (was empty).
+- `app_dir hlidskjalf` → `~/ymir/apps/hlidskjalf` (was empty).
 - Both resolve correctly **inside a worktree** as well, because the git answer follows the
   worktree — verified in `.yggdrasil/fix-dispatch-silent`.
 - `bash -n` on both. `scripts/start.sh` now exits **0** and raises the hall.
@@ -76,3 +76,16 @@ An explicit `YMIR_ROOT_DIR` still wins outright, so nothing that sets it changes
 > `scripts/start.sh` reported nothing at all because a library's empty return was treated as a
 > fact rather than a fault. Silence shaped like success, again — the third time in forty-eight
 > hours, and the third time found only by running the thing rather than reading about it.
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: a dev machine (this seat). The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #758

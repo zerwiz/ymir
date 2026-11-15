@@ -168,7 +168,12 @@ try:
     d = json.load(open(path))
 except Exception:
     raise SystemExit(0)
-for provider in ("llama-swap", "llamacpp-heimdall", "llamacpp-whynot"):
+# WHICH provider's key: the rail's own name when the seat declares it ($RAIL_KEY_PROVIDERS,
+# comma-separated, first match wins), else every provider the file holds. Never a list of
+# this fleet's provider ids — a seat's own rail is its own business (RULES/04, RULES/25).
+wanted = [x.strip() for x in os.environ.get("RAIL_KEY_PROVIDERS", "llama-swap").split(",") if x.strip()]
+order = wanted + [k for k in d if k not in wanted]
+for provider in order:
     key = (d.get(provider) or {}).get("key")
     if key:
         print(key); break

@@ -116,7 +116,7 @@ cmd_seats() {
     [ -n "$name" ] || continue
     found=1
     # A seat is measured by a LOCAL probe when it IS this machine (Rule 25: probe, never
-    # assume; and never a false red). This row read `unreachable` on heimdall because the
+    # assume; and never a false red). This row read `unreachable` on the dev machine because the
     # table reached for the seat you are standing on over ssh — and this host's own key is
     # not in its own authorized_keys, so the door that answers for everybody else refused
     # the machine itself. The wire does not need a key to talk to itself.

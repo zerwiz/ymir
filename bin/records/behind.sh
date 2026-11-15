@@ -13,7 +13,10 @@ if [ -z "$PLAN_DIR" ]; then
   _h="${YMIR_HOME:-}"
   [ -z "$_h" ] && command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root _h 2>/dev/null || true
   [ -n "$_h" ] || { printf 'behind: the home is unresolved — set YMIR_HOME, or run from a checkout\n' >&2; exit 2; }
-  PLAN_DIR="$_h/svartalfaheim/whynotproductions/projects/ymir/plans"
+  # The ledger's realm is the OPERATOR's, so it is discovered inside his home — the
+  # repository never spells `svartalfaheim/<realm>/…` with our realm in it (RULES/04).
+  ymir_plan_dir PLAN_DIR 2>/dev/null || true
+  [ -n "$PLAN_DIR" ] || { printf 'behind: no plan ledger under %s — set YMIR_PLAN_DIR, or keep one ledger per home\n' "$_h" >&2; exit 2; }
 fi
 python3 - "$PLAN_DIR" <<'PY'
 import os,sys,time,datetime,glob

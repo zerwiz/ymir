@@ -1,7 +1,8 @@
 // skuld.ts — the hall's book over the Skuld MCP (the tickets hall, plan 43).
 //
 // THE DOOR IS THIS BODY'S OWN GATEWAY (plan 51 P3/P6/9c). The record's home
-// moved to the heart (zerwizserver), so no client names the heart any more: the
+// moved to the heart (the role the home's fleet registry names), so no client names
+// the heart any more: the
 // hall rings `http://127.0.0.1:<gateway>/mcp/skuld` — the one local gateway
 // (bin/bridge/mcp-gateway.sh, :8316) — and the gateway resolves the heart at REQUEST
 // time. A heart-address change re-resolves inside the gateway; the hall's door

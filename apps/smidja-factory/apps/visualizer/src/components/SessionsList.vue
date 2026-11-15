@@ -82,9 +82,10 @@ const ordered = computed(() =>
 
 .cards {
   /* Uniform grid: every card the same width and (fixed in SessionCard) height,
-     independent of content. */
+     independent of content. `min(100%, 460px)` lets a column shrink below its
+     preferred width instead of pushing the page sideways on a narrow window. */
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 460px), 1fr));
   gap: 18px;
   padding: 16px 24px 28px;
 }

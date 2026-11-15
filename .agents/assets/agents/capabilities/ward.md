@@ -18,9 +18,13 @@
 | harden.sh | harden.sh — Vörðr's hands: the MENDS, written out, and the safe ones | tested | keep (a human or a cron row must run it) |
 | host-watch.sh | host-watch.sh — the watcher a hand can actually have. | tested | keep (a human or a cron row must run it) |
 | house-status.sh | house-status.sh — the heart's answer: what it hosts, and whether it is | tested | keep (a human or a cron row must run it) |
+| restart-storm.sh | restart-storm.sh — the ward that stops a unit spinning on its own face | tested | keep (a human or a cron row must run it) |
 | security-audit.sh | security-audit.sh — Vörðr's eyes: WHAT IS THIS MACHINE ACTUALLY EXPO | tested | keep (a human or a cron row must run it) |
 | services-register.sh | services-register.sh — is the register of doors READ, or is it prose? | tested | keep (a human or a cron row must run it) |
+| soak-sampler.sh | soak-sampler.sh — the leak ledger: one row per house service and per E | tested+named | keep (a human or a cron row must run it) |
 | test_browserkill_note.sh | test_browserkill_note.sh — plan 271 piece 5: a planted scope stop is n | tested | keep (a human or a cron row must run it) |
+| test_restart_storm.sh | test_restart_storm.sh — the storm ward's proof, with no real fault (pl | tested | keep (a human or a cron row must run it) |
+| test_soak_sampler.sh | test_soak_sampler.sh — the leak ledger's proof, without a real leak (p | tested | keep (a human or a cron row must run it) |
 | verdr.sh | verdr.sh — VÖRÐR, the warden: the standing report. | tested | keep (a human or a cron row must run it) |
 | vidarr-agent.sh | vidarr-agent.sh — seat the DEFENDER as a live pi agent on the fast roa | tested | keep (a human or a cron row must run it) |
 | vidarr.sh | vidarr.sh — VÍÐARR, the silent avenger: the defender's own door. | tested+named | keep (a human or a cron row must run it) |

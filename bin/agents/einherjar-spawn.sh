@@ -84,9 +84,27 @@ esac
 
 ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)}"
 BROKK_HOME="${BROKK_HOME:-${BROKK_ROOT_OVERRIDE:-$ROOT}}"
-STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
-DATA="${BROKK_DATA_OVERRIDE:-$BROKK_HOME/data}"
-CONFIG="${BROKK_CONFIG_OVERRIDE:-$BROKK_HOME/config}"
+
+# --- THE HOUSE RESOLVES FROM ONE BASE (2026-11-15) ---------------------------
+# data and config are the OPERATOR's, not the code tree's, so they resolve through the ONE resolver
+# (bin/vault/hoard-lib.sh) exactly as every other door does — <home>/hodd/data and <home>/config.
+# Measured on the heart the same morning: the session exported BROKK_HOME=<repo>, so DATA became
+# <repo>/data while CONFIG stayed <home>/config, and EVERY errand was refused with "the house is
+# split" before a single worker could be seated. A door that derives the operator's records from the
+# code root is the fault; the split guard was only reporting it.
+_HOARD_LIB="$ROOT/bin/vault/hoard-lib.sh"
+if [ -r "$_HOARD_LIB" ] && ! declare -f ymir_home_root >/dev/null 2>&1; then . "$_HOARD_LIB"; fi
+HOME_ROOT=""; _hd=""; _hc=""; _hs=""
+if declare -f ymir_home_root >/dev/null 2>&1; then
+  ymir_home_root HOME_ROOT 2>/dev/null || HOME_ROOT=""
+  hoard_data_dir _hd 2>/dev/null || _hd=""
+  hoard_settings_dir _hc 2>/dev/null || _hc=""
+  hoard_state_dir _hs 2>/dev/null || _hs=""
+fi
+STATE="${BROKK_STATE_OVERRIDE:-${_hs:-$BROKK_HOME/state}}"
+DATA="${BROKK_DATA_OVERRIDE:-${_hd:-$BROKK_HOME/data}}"
+CONFIG="${BROKK_CONFIG_OVERRIDE:-${_hc:-$BROKK_HOME/config}}"
+unset _HOARD_LIB _hd _hc _hs
 
 # --- one identity, or a refusal ----------------------------------------------
 # Overrides may MOVE the house; they may never SPLIT it. Each *_OVERRIDE is
@@ -99,18 +117,34 @@ CONFIG="${BROKK_CONFIG_OVERRIDE:-$BROKK_HOME/config}"
 # ROOT is the ENGINE root (this script lives in <root>/bin/agents), which is why
 # it is not the checkout root; that is long-standing and correct. What was not
 # correct was letting the derived paths disagree with an override.
-_state_base="$(dirname "$STATE")"
 _data_base="$(dirname "$DATA")"
 _config_base="$(dirname "$CONFIG")"
-# DATA and CONFIG carry the roster and the records: they are ONE house, always.
-if [ "$_data_base" != "$_config_base" ]; then
+# DATA and CONFIG carry the roster and the records: they are ONE house, always. The house is the
+# HOME the resolver named — not "the same directory two levels apart", which the real layout
+# (<home>/hodd/data beside <home>/config) never satisfies. A path outside that home is a split and
+# is refused; with no home resolvable the old equal-base rule still stands.
+if [ -n "$HOME_ROOT" ]; then
+  for _pair in "data:$DATA" "config:$CONFIG"; do
+    _what=${_pair%%:*}; _path=${_pair#*:}
+    case "$_path" in
+      "$HOME_ROOT"/*) : ;;
+      *) {
+        echo "error: the house is split — $_what resolves outside the home."
+        echo "  $_what: $_path"
+        echo "  home:  $HOME_ROOT"
+        echo "help: move the whole house with YMIR_HOME (or one of YMIR_DATA_DIR / YMIR_SETTINGS_DIR"
+        echo "      inside it), or override NONE. One errand with two homes names a worktree its"
+        echo "      worker is not sitting in."
+      } >&2; exit 1 ;;
+    esac
+  done
+  unset _pair _what _path
+elif [ "$_data_base" != "$_config_base" ]; then
   {
     echo "error: the house is split — data and config resolve to different bases."
     echo "  data:  $DATA"
     echo "  config:$CONFIG"
-    echo "help: move the whole house with BROKK_HOME (or BROKK_ROOT_OVERRIDE),"
-    echo "      or override NONE. Overriding one path alone is refused, because one"
-    echo "      errand with two homes names a worktree its worker is not sitting in."
+    echo "help: set YMIR_HOME so both resolve inside one home, or override NONE."
   } >&2
   exit 1
 fi
@@ -121,11 +155,17 @@ fi
 # atomic-runtime seat when its own done line tried to seat Forseti). The law that
 # mattered is kept: data and config are one house. The seat's state is named aloud,
 # because a silent divergence is exactly what this guard exists to prevent.
-if [ "$_state_base" != "$_data_base" ]; then
-  printf 'note: state is the seat'"'"'s own (%s); data and config are one house (%s) — a seat, not a split\n' \
-    "$STATE" "$_data_base" >&2
+_state_inside=1
+if [ -n "$HOME_ROOT" ]; then
+  case "$STATE" in "$HOME_ROOT"/*) : ;; *) _state_inside=0 ;; esac
+else
+  [ "$(dirname "$STATE")" = "$_data_base" ] || _state_inside=0
 fi
-unset _state_base _data_base _config_base
+if [ "$_state_inside" = 0 ]; then
+  printf 'note: state is the seat'"'"'s own (%s); data and config are one house (%s) — a seat, not a split\n' \
+    "$STATE" "${HOME_ROOT:-$_data_base}" >&2
+fi
+unset _state_inside _data_base _config_base
 
 # Adapters this platform has verified for direct launches. An adapter outside
 # this set is refused unless a raw launch command is supplied.
@@ -987,6 +1027,20 @@ PROMPT="$DATA/$ID/prompt.md"
   cat "$BRIEF"
   printf '\n\n---\n\n## Recalled context (the well — Mimirsbrunn)\n\n'
   cat "$CTX"
+  # THE FIXED CORE (plan 275 §04:15–04:25): Ymir is public, the home is private, the pin,
+  # herdr and the stamped send door, the Gná arm, the finding tools, the desk guard, the
+  # laws. ONE copy — bin/time/saga-head-core.md — the same file the session head prints and
+  # the seat law (bin/seat/herdr-run.sh) appends, so neither road can teach a different one.
+  if [ -r "$SCRIPT_DIR/../time/saga-head-core.md" ]; then
+    printf '\n\n---\n'
+    # The reader's view of the core: above its CHANGE LOG (see saga-head-lib.sh).
+    if [ -r "$SCRIPT_DIR/../time/saga-head-lib.sh" ]; then
+      ( . "$SCRIPT_DIR/../time/saga-head-lib.sh"; saga_head_core_text "$SCRIPT_DIR/../time/saga-head-core.md" ) \
+        || cat "$SCRIPT_DIR/../time/saga-head-core.md"
+    else
+      cat "$SCRIPT_DIR/../time/saga-head-core.md"
+    fi
+  fi
 } >"$PROMPT" 2>/dev/null || cp "$BRIEF" "$PROMPT"
 BRIEF_REF=$PROMPT
 

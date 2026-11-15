@@ -37,7 +37,7 @@
 #   YMIR_VOICE_HEAD_KEY_NAME vault key NAME for the head      (default: the seat's own
 #                            rail key in ~/.pi/agent/auth.json)
 #   YMIR_VOICE_HEAD_KEY_PROVIDER  the provider name in auth.json (default 'llama-swap';
-#                            use 'llamacpp-heimdall' when the head is another seat's rail)
+#                            name the provider that fronts another seat's rail when the head is there)
 #   YMIR_VOICE_MIN_SILENCE_MS  silence that ends a turn        (default 300)
 #   YMIR_VOICE_REOPEN_MS     speculative reopen grace         (default 400)
 #   YMIR_VOICE_SMART_TURN_WAIT_MS  endpointing ceiling         (default 500)
@@ -71,7 +71,7 @@ if [ -r "${XDG_CONFIG_HOME:-$HOME/.config}/ymir/voice.env" ]; then
     case "$_k" in YMIR_VOICE_[A-Z_]*) [ -n "${!_k:-}" ] || export "$_k=$(printf '%s' "$_v" | tr -d "\"'")" ;; esac
   done < <(grep -E '^[[:space:]]*YMIR_VOICE_[A-Z_]+=' "${XDG_CONFIG_HOME:-$HOME/.config}/ymir/voice.env")
   # read before: the host was resolved above this block, so a machine that names ITSELF as the voice host was
-  # still sent to the fleet's first ear (nidavellir to heimdall)
+  # still sent to the fleet's first ear (one machine to another)
   HOST_MACHINE="${YMIR_VOICE_HOST:-$HOST_MACHINE}"
 fi
 STT_DEVICE="${YMIR_VOICE_STT_DEVICE:-cpu}"
@@ -96,6 +96,9 @@ OPERATOR_NAME="${YMIR_VOICE_OPERATOR:-Allfather}"
 VENV="${YMIR_VOICE_VENV:-$HOME/venvs/s2s}"
 STATE_DIR="${YMIR_HOME:-$HOME}/hodd/state/voice"
 UNIT="ymir-voice-host.service"
+# The engine lets the card go when nobody is on the line (plan 275 item 23): a watcher is
+# raised beside it, and it stops the engine after a quiet window. See bin/voice/voice-idle.sh.
+IDLE_UNIT="ymir-voice-idle.service"
 
 # ── the head: ONE door, so a switch made in Rödd's settings and a start made in a
 # shell cannot disagree. bin/voice/rodd-head.py resolves mode · base_url · model ·
@@ -284,6 +287,7 @@ cmd_plan() {
 cmd_host() {
   local eng hk
   if [ "$DO_STOP" = 1 ]; then
+    systemctl --user stop "$IDLE_UNIT" 2>/dev/null || true
     systemctl --user stop "$UNIT" 2>/dev/null && say "stopped $UNIT" || say "was not running"
     return 0
   fi
@@ -312,7 +316,7 @@ cmd_host() {
   local -a engine_pin=()
   # The machine's own choice comes first (plan 275, 2026-11-12): ~/.config/ymir/voice.env is per machine, never the
   # shared home, because one machine has a free compute GPU and another has none. YMIR_VOICE_GPU=on puts the ear and
-  # the voice on the GPU: on heimdall the RTX A5000 sat at 0 % while Kokoro on the CPU took 28 s to its first word.
+  # the voice on the GPU: on the dev machine the card sat at 0 % while Kokoro on the CPU took 28 s to its first word.
   # The Allfather: "It was much faster with the voice back before."
   local _vgpu="${YMIR_VOICE_GPU:-}"
   [ -n "$_vgpu" ] || _vgpu="$(sed -n 's/^[[:space:]]*YMIR_VOICE_GPU[[:space:]]*=[[:space:]]*//p' "${XDG_CONFIG_HOME:-$HOME/.config}/ymir/voice.env" 2>/dev/null | tail -1 | tr -d "\"'")"
@@ -358,6 +362,20 @@ cmd_host() {
     "$eng" serve "${HOST_ARGV[@]}" "${engine_pin[@]}" ${hk:+--responses_api_api_key "$hk"} >/dev/null || {
       err "error: could not raise $UNIT"; return 1; }
   printf '%s\n' "$(date -Is) unit=$UNIT port=$PORT head=$HEAD_URL/$HEAD_MODEL" >> "$STATE_DIR/host.seat"
+  # THE CARD IS BORROWED, NOT KEPT (plan 275 item 23). Raise the idle watcher beside the
+  # engine: after YMIR_VOICE_IDLE_SECONDS with no session in use it stops the engine and the
+  # card is free for the rail. It is best-effort by design — an engine that runs and never
+  # lets go is worse, but a missing watcher must not stop the voice from working.
+  if [ "${YMIR_VOICE_IDLE_SECONDS:-300}" != 0 ] && command -v systemd-run >/dev/null 2>&1; then
+    systemctl --user stop "$IDLE_UNIT" 2>/dev/null || true
+    systemd-run --user --unit="$IDLE_UNIT" --collect \
+      --property=StandardOutput=append:"$STATE_DIR/idle.log" \
+      --property=StandardError=append:"$STATE_DIR/idle.log" \
+      --setenv=YMIR_VOICE_PORT="$PORT" \
+      --setenv=YMIR_VOICE_IDLE_SECONDS="${YMIR_VOICE_IDLE_SECONDS:-300}" \
+      "$ROOT/bin/voice/voice-idle.sh" watch >/dev/null 2>&1 \
+      || err "warning: the idle watcher did not start — the engine will hold the card until it is stopped"
+  fi
   for _ in $(seq 1 90); do host_answers && { say "host up on 127.0.0.1:$PORT (log: $STATE_DIR/host.log)"; return 0; }; sleep 1; done
   err "error: $UNIT started but nothing answers on $PORT yet — read $STATE_DIR/host.log"
   return 1
@@ -459,6 +477,7 @@ cmd_stop() {
     if [ -n "$host" ] && [ "$host" != "$(hostname -s)" ]; then
       ssh -o BatchMode=yes "$host" "cd ~/ymir && ./bin/voice/voice-door.sh host --stop" 2>&1 | tail -1
     else
+      systemctl --user stop "$IDLE_UNIT" 2>/dev/null || true
       systemctl --user stop "$UNIT" 2>/dev/null && say "pipeline lowered here" || say "no pipeline was running here"
     fi
   else

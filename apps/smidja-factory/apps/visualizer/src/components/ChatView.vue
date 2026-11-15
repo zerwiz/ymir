@@ -92,7 +92,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
     <header class="chat-head">
       <div class="head-left">
         <span class="chat-title">Orchestrator Chat</span>
-        <span class="sub">talk to {{ chatAgentName || 'Kaia' }} · start smidja sessions</span>
+        <span class="sub">talk to {{ chatAgentName || 'Völundr' }} · start smidja sessions</span>
       </div>
       <span class="model-picker" @mouseenter="modelPickerHover = true" @mouseleave="modelPickerHover = false">
         <input
@@ -101,7 +101,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
           :placeholder="(chatModel ? chatModel : 'default') + ' ...'"
           @focus="showModelPicker = true"
           @blur="onModelBlur"
-          title="Model for Kaia's replies"
+          title="Model for Völundr's replies"
           autocomplete="off"
           spellcheck="false"
         />

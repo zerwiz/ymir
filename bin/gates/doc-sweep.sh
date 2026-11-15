@@ -291,7 +291,7 @@ cmd_scan() {
   REGISTRY="$(registry || true)"
   # The ledger is DISCOVERED, never derived. The ymir project's registry row names
   # the realm it WORKS in (`work`), but the canonical plan ledger lives under a
-  # different realm (`whynotproductions`) — so deriving the destination from the
+  # different realm (the operator's own) — so deriving the destination from the
   # project's realm proposed a path that does not exist (2026-10-01). If exactly
   # one ledger is present, that is the ledger; only when none is found do we fall
   # back to the registry, and then we SAY the fallback was used.

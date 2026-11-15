@@ -72,7 +72,7 @@ fi
 # durable but it is still the directory agents check branches out in, so on any seat
 # with a pinned runtime checkout (~/ymir-runtime, moved only by runtime-deploy.sh)
 # that checkout — and only it — is a legal target. Measured 2026-11-05: all five user
-# units on nidavellir executed <main>/bin/... so runtime-pinned-guard refused EVERY
+# units on a second machine executed <main>/bin/... so runtime-pinned-guard refused EVERY
 # push from that seat, and no door existed to repin them. This is that door, and it
 # says so when it has to fall back.
 if [ -z "${YMIR_RUNTIME_PIN_RESOLVED:-}" ]; then

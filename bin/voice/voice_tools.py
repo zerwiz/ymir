@@ -212,7 +212,7 @@ TOOLS = [
     {
         "type": "function",
         "name": "fleet",
-        "description": ("The fleet — every machine he owns (heimdall, nidavellir, zerwizserver the heart, whynot, …): "
+        "description": ("The fleet — every machine he owns (the heart, the forge, the dev machines, the hand, …): "
                         "whether it answers and by which road, the Ymir it runs and how old, its load, failed services, "
                         "the voice engine, and its last nightly update. Use it for 'how is the fleet', 'is the server up', "
                         "'which machines are behind'. `seats` is only the worker panes on this one machine."),
@@ -348,7 +348,7 @@ TOOLS = [
         "parameters": {
             "type": "object",
             "properties": {
-                "title": {"type": "string", "description": "a short title, e.g. 'Example3 architecture with Craig'"},
+                "title": {"type": "string", "description": "a short title, e.g. 'Example architecture with Ada'"},
                 "steps": {"type": "array", "items": {"type": "string"}, "description": "the numbered steps, one action each"},
                 "agent": {"type": "string", "description": "who would do it (sindri, bragi, huginn …)"},
             },
@@ -676,7 +676,7 @@ TOOLS = [
         ),
         "parameters": {
             "type": "object",
-            "properties": {"host": {"type": "string", "description": "optional: the machine whose arm holder this is for (heimdall, nidavellir, zerwizserver, …); default this machine"}, 
+            "properties": {"host": {"type": "string", "description": "optional: the machine whose arm holder this is for (the heart, the forge, the dev machine, …); default this machine"}, 
                 "text": {"type": "string", "description": "the message, in his words, as one plain line"},
             },
             "required": ["text"],
@@ -692,7 +692,7 @@ TOOLS = [
         ),
         "parameters": {
             "type": "object",
-            "properties": {"host": {"type": "string", "description": "optional: the machine whose arm holder this is for (heimdall, nidavellir, zerwizserver, …); default this machine"}, 
+            "properties": {"host": {"type": "string", "description": "optional: the machine whose arm holder this is for (the heart, the forge, the dev machine, …); default this machine"}, 
                 "count": {"type": "integer", "description": "how many replies to read (default 20)"},
             },
             "additionalProperties": False,
@@ -817,7 +817,7 @@ TOOLS = [
         ),
         "parameters": {
             "type": "object",
-            "properties": {"host": {"type": "string", "description": "optional: the machine whose arm holder this is for (heimdall, nidavellir, zerwizserver, …); default this machine"}, "text": {"type": "string", "description": "one line to hand over"}},
+            "properties": {"host": {"type": "string", "description": "optional: the machine whose arm holder this is for (the heart, the forge, the dev machine, …); default this machine"}, "text": {"type": "string", "description": "one line to hand over"}},
             "required": ["text"],
             "additionalProperties": False,
         },
@@ -1001,7 +1001,8 @@ async def _execute(name, arguments):
                 "    r=urllib.request.Request(base+p, headers={'X-Api-Key':tok})\n"
                 "    return json.loads(urllib.request.urlopen(r, timeout=20).read())\n"
                 "def rows(d): return d if isinstance(d,list) else d.get('results',[])\n"
-                "slugs=[s for s in os.environ.get('GIMLE_PLANE_WORKSPACES','wayof,example-4,example-8,whynotproductions,ymirhome').split(',') if s]\n"
+                "slugs=[s for s in os.environ.get('GIMLE_PLANE_WORKSPACES','').split(',') if s]\n"
+                "if not slugs: print('set GIMLE_PLANE_WORKSPACES to the workspace slugs to read (the board belongs to the operator)'); raise SystemExit(0)\n"
                 f"want=str({str(arguments.get('workspace') or '')!r}).lower()\n"
                 "total=0\n"
                 "for slug in slugs:\n"
@@ -1637,7 +1638,7 @@ def _session_log() -> str:
         return ""
     # plan 275 (2026-11-12): when the voice host IS this machine, read its log here. Asking over ssh meant ssh to
     # itself, which a seat with no key for its own login refuses, so "last_session" and "search_sessions" answered
-    # "could not be read" on heimdall for every conversation.
+    # "could not be read" on the dev machine for every conversation.
     import socket as _socket
     local = _home() / "hodd" / "state" / "voice" / "host.log"
     if seat in (_socket.gethostname().split(".")[0], "localhost", "127.0.0.1") or not seat:

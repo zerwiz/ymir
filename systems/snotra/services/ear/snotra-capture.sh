@@ -168,7 +168,7 @@ do_start() {
   # THE CHANNEL ASSIGNMENT IS LOAD-BEARING. whisper.cpp's `-di` calls the
   # speaker by whichever channel's energy dominates a segment, so the operator's
   # mic must be channel 0 and the room (the sink monitor) channel 1. Measured on
-  # heimdall 2026-09-28: with the monitor on channel 0 the remote side came back
+  # 2026-09-28: with the monitor on channel 0 the remote side came back
   # `(speaker 0)` — the
   # two sides swapped. Set SNOTRA_CHANNELS=mono for the old mixed-down file (a
   # 2-channel file is safe either way: without `-di` the decoder downmixes it).

@@ -44,11 +44,24 @@ vanished root is named instead of guessed at. The template's `Exec` is corrected
 
 ```
 before   status → 3 launchers "MISSING" at /tmp/npm-pretest-GvEQAf/… · dead buttons
-temp offered  YMIR_LAUNCHER_ROOT=/tmp/npm-pretest-…  → refused, fell back to /home/heimdall/ymir
-after    status → every launcher "present" at /home/heimdall/ymir
+temp offered  YMIR_LAUNCHER_ROOT=/tmp/npm-pretest-…  → refused, fell back to ~/ymir
+after    status → every launcher "present" at ~/ymir
 verify   desktop-verify.sh → 4/4 surfaces runnable Electron, class agreement 4/4
 click    gtk-launch ymir-hlidskjalf  → window class ymir-hlidskjalf, desktop 3  ✓
          gtk-launch ymir-sessrumnir  → window class ymir-sessrumnir, desktop 9  ✓
 ```
 
 The two clicks were made with `gtk-launch`, which is the same door a menu button uses.
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: a dev machine (this seat). The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #758
