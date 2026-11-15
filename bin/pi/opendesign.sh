@@ -55,7 +55,7 @@ case "${1:-status}" in
     n=0
     for p in $(children); do kill "$p" 2>/dev/null && n=$((n + 1)); done
     sleep 1
-    for p in $(children); do kill -9 "$p" 2>/dev/null; done
+    for p in $(children); do kill -9 "$p" 2>/dev/null; done  # kill: a wedged process has no graceful kill — declared, per check_platform
     left=$(children | wc -l | tr -d ' ')
     say stop "swept ${n} stdio MCP child(ren); ${left} remain"
     if command -v docker >/dev/null 2>&1 && docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$CONTAINER"; then

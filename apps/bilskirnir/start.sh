@@ -110,7 +110,7 @@ claim() {
     kill "$stranger" 2>/dev/null
     for i in 1 2 3 4 5 6 7 8 9 10; do port_free "$port" && break; sleep 0.5; done
     port_free "$port" && return 1
-    say "$label :$port" "still held by pid $stranger after SIGTERM — lower it: kill -9 $stranger"; return 2
+    say "$label :$port" "still held by pid $stranger after SIGTERM — lower it by hand: kill -KILL $stranger"; return 2
   fi
   say "$label :$port" "STRANGER on the port: pid $stranger (${cwd:-cwd unreadable}), not this app's — refusing to keep or kill it"
   say "  to lower it" "kill $stranger   (then run apps/bilskirnir/start.sh again)"
