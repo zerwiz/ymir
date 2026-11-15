@@ -33,3 +33,7 @@ word they were merged locally into one branch, so the conflicts between them are
   `--no-verify`, a skipped fixes guard, a hardcoded remote) beside the batch's `recut_one`/`merge_one`, which already
   carry #747's verdict gate. Nothing called it; `test_queue_warden.sh` refused it five times. It is removed:
   47 pass, 0 fail.
+
+## CHANGE LOG
+
+- 2026-11-15 — review-mend: added missing heading for #771
