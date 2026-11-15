@@ -5,7 +5,7 @@ StartLimitBurst=10
 
 [Service]
 Type=simple
-Environment=PATH=%h/.bun/bin:/usr/bin:/bin
+Environment=PATH=%h/.bun/bin:/usr/bin:/bin:%h/.local/share/mise/shims:%h/.mise/shims
 # --foreground keeps the bridge under systemd's supervision: no self-daemon,
 # no pid file — the unit IS the process the way the law wants it.
 ExecStart=/bin/bash __YMIR_BIN_DIR__/bridge/mimir-bridge.sh --foreground

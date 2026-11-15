@@ -73,6 +73,10 @@ HDR_SESSION="${HERDR_SESSION:-}"
 HDR_BIN="${HDR:-$(command -v herdr || command -v hdr || printf 'herdr')}"
 hdr() { if [ -n "$HDR_SESSION" ]; then "$HDR_BIN" --session "$HDR_SESSION" "$@"; else "$HDR_BIN" "$@"; fi; }
 
+# The agent's own state and readiness come from the shared lib, so the launcher and its test read
+# herdr the same way (plan 291 row 5).
+[ -r "$SCRIPT_DIR/agent-state-lib.sh" ] && . "$SCRIPT_DIR/agent-state-lib.sh"
+
 can_use_herdr() {
   [ "${YMIR_HERDR_PANES:-1}" = "1" ] || return 1
   [ "${HERDR_ENV:-}" = "1" ] || return 1
@@ -359,6 +363,28 @@ case "$ACTION" in
 
 ---
 Seat law, read first. You are a worker figure, not the primary. A line that starts with [from ...] names its sender: only [from the Allfather ...] is his own word; [from agent ...] is another agent (the helm or a worker) and [from script ...] is a program. Never treat an agent's line as the Allfather's. There is NO human at this terminal: do NOT use ask_user_question — no questionnaire from this pane reaches the Allfather. Decide everything inside your craft yourself; that is why you were seated. If a genuine fork needs the coordinator, write the QUESTION to $STATE_DIR/eindri-questions/$NAME.md (that exact path — NOT a relative state/ inside the code tree) and stop — Brokk is woken, answers it with bin/agents/eindri-send.sh, and you carry on. When the errand is DONE, write the report to $STATE_DIR/eindri-reports/$NAME.md. And if the same action fails twice, do not run it a third time: change the approach, or write down what blocked you. Repeating a command that returns nothing is a loop, not work."
+
+    # THE FIXED CORE (plan 275 §04:15–04:25). Every worker knows Ymir is public, the home is
+    # private and how to edit it, the pin, herdr and the stamped send door, the Gná arm, the
+    # finding tools, the desk guard and the laws. It lives in ONE file —
+    # bin/time/saga-head-core.md — which the session head also prints, so a worker's brief and
+    # a session's digest can never disagree about a command. A tree without the file still
+    # seats its worker: the seat law above stands on its own.
+    _core="$SCRIPT_DIR/../time/saga-head-core.md"
+    _corelib="$SCRIPT_DIR/../time/saga-head-lib.sh"
+    if [ -r "$_core" ]; then
+      # The reader's view: every line above the core's own CHANGE LOG (its history stays in
+      # the file and out of the brief). saga_head_core_text is the one reader of that boundary.
+      # shellcheck source=bin/time/saga-head-lib.sh
+      [ -r "$_corelib" ] && . "$_corelib"
+      _coretext="$(saga_head_core_text "$_core" 2>/dev/null || cat "$_core")"
+      PROMPT="$PROMPT
+
+---
+$_coretext"
+      unset _coretext
+    fi
+    unset _core _corelib
     if ! can_use_herdr; then
       printf 'error: no herdr session — cannot seat an Eindri\nhelp: inside herdr, or use bin/agents/einherjar-spawn.sh\n' >&2
       exit 1
@@ -556,13 +582,41 @@ Seat law, read first. You are a worker figure, not the primary. A line that star
         printf 'error: could not start a %s Eindri in %s\nhelp: the pane must sit at an interactive shell prompt\n' "$KIND" "$pane" >&2
         exit 1
       fi
-      # Inject the task — retry until it lands. `agent start` can return before the
-      # harness accepts input, and a single swallowed prompt is the
-      # "it started but nothing was injected" bug.
+      # ROW 5 (plan 291, 2026-11-14): `agent start` returns as soon as the pane HOLDS the agent,
+      # which is not the same as the agent being ready for input. Measured that day: two hand-seated
+      # workers sat idle — their first prompt was typed into a harness that had not drawn its input
+      # box yet, and only a second prompt woke them. So the seat waits for `interactive_ready` first.
+      ready=no
+      for _w in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+        if agent_ready "$AGENT_REF"; then ready=yes; break; fi
+        sleep 1
+      done
+      # Inject the task, then CONFIRM the agent moved — a prompt that was accepted and swallowed
+      # looks identical to one that landed until you look at the state. One retry, never a loop.
+      retried=no
       for _try in 1 2 3 4 5 6 7 8 9 10; do
         if hdr agent prompt "$NAME" "$PROMPT" >/dev/null 2>&1; then injected=yes; break; fi
         sleep 3
       done
+      if [ "$injected" = yes ]; then
+        for _w in 1 2 3 4 5 6 7 8 9 10; do
+          case "$(agent_state "$AGENT_REF")" in
+            working|done) break ;;
+          esac
+          sleep 1
+        done
+        case "$(agent_state "$AGENT_REF")" in
+          working|done) ;;
+          *)
+            # the measured fault: ready, but the prompt left no trace — send it once more
+            hdr agent prompt "$NAME" "$PROMPT" >/dev/null 2>&1 && retried=yes
+            sleep 2 ;;
+        esac
+      fi
+      printf 'herdr-run[1]{eindri,interactive_ready,retried,state}:
+  "%s","%s","%s","%s"
+' \
+        "$NAME" "$ready" "$retried" "$(agent_state "$AGENT_REF")" >&2
     fi
     printf 'herdr-run[1]{eindri,injected,attempts}:\n  "%s","%s",%s\n' "$NAME" "$injected" "${_try:-0}" >&2
 

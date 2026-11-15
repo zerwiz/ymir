@@ -204,12 +204,16 @@ fi
 # ── claude: the hook SCRIPTS; the JSON wiring is named, never merged blind ────
 if command -v claude >/dev/null 2>&1; then
   copy_tree "$ROOT/.claude/hooks" "$HOME/.claude/hooks" "claude-hooks" || true
-  # FOUR user-scope hooks, each wired as ONE NAMED entry in ~/.claude/settings.json, so they
+  # FIVE user-scope hooks, each wired as ONE NAMED entry in ~/.claude/settings.json, so they
   # serve EVERY project on the machine and never a single repo:
+  #   SessionStart  saga-session.sh    Sága's ONE digest: it resolves the CURRENT home (project, then pin)
   #   SessionStart  load-agents-md.sh  Claude Code reads CLAUDE.md, never a project's AGENTS.md
   #   PreToolUse    eindri-only.sh      (Agent|Task) workers are Eindri, never Claude subagents
   #   PreToolUse    nda-write.sh        (Write|Edit|MultiEdit) company/client names never enter the public tree (RULES/04)
   #   Stop          ymir-arm.sh         (asyncRewake) the Gná arm reaches a seat in ANY project — OPT-IN
+  # The digest hook is ONE entry (plan 275 item 28): the user file once carried three, one per
+  # home, each a hardcoded absolute path, so every compaction injected three full digests. The
+  # installer now ALSO prunes any entry that still names saga-session-start.sh directly.
   # The global arm is OPT-IN (2026-11-12): it wakes every Claude session on the machine, in every
   # repository and with whatever permissions it holds, to act on the wake queue — and Gná writes lines
   # derived from inbound mail into that queue. Seated only when YMIR_CLAUDE_GLOBAL_ARM=1 or
@@ -226,6 +230,12 @@ dst, mode, arm_opt = sys.argv[1], sys.argv[2], sys.argv[3]
 
 # (name, event, fragment, entry) — entry is the exact object to append when absent.
 desired = [
+    # Sága's ONE digest (plan 275 item 28). It RESOLVES the current home at run time
+    # (the project, then the pin), so one entry serves every checkout on the machine —
+    # the three hardcoded per-home entries it replaces are pruned below.
+    ("claude-saga-session", "SessionStart", "saga-session.sh", {
+        "hooks": [{"type": "command",
+                   "command": 'bash "$HOME/.claude/hooks/saga-session.sh"', "timeout": 120}]}),
     ("claude-agents-md", "SessionStart", "load-agents-md.sh", {
         "hooks": [{"type": "command",
                    "command": 'bash "$HOME/.claude/hooks/load-agents-md.sh"', "timeout": 5}]}),
@@ -279,6 +289,50 @@ if changed and mode != "check":
         open(dst, "a").write("\n")
     except Exception as exc:
         print(f"claude-hooks|fail|could not write {dst}: {exc}")
+
+# THE PER-HOME DIGESTS GO (plan 275 item 28, measured 2026-11-14). The user file carried
+# one SessionStart entry per home — the checkout, a worktree, the pin — each a hardcoded
+# absolute path, so every start and every compaction injected three ~56 KB digests. One
+# hook (claude-saga-session) resolves the current home instead; any entry still naming
+# saga-session-start.sh directly is the duplicate and is pruned, whatever its path.
+def _prune_saga(doc):
+    hooks = doc.get("hooks") if isinstance(doc.get("hooks"), dict) else {}
+    entries = hooks.get("SessionStart") or []
+    kept, gone = [], 0
+    for e in entries:
+        hs = e.get("hooks") or []
+        keep = [h for h in hs if "saga-session-start.sh" not in (h.get("command") or "")]
+        gone += len(hs) - len(keep)
+        if keep:
+            e = dict(e); e["hooks"] = keep; kept.append(e)
+        elif not hs:
+            kept.append(e)
+    return kept, gone
+
+if not changed or mode == "check":
+    try:
+        doc = json.load(open(dst)) if os.path.exists(dst) else {}
+        if not isinstance(doc, dict):
+            raise ValueError
+    except Exception:
+        doc = None
+if isinstance(doc, dict):
+    _kept, _gone = _prune_saga(doc)
+    if _gone:
+        if mode == "check":
+            print(f"claude-saga-prune|stale|{_gone} hardcoded saga-session-start.sh SessionStart hook(s) still seated in {dst}")
+        else:
+            doc.setdefault("hooks", {})["SessionStart"] = _kept
+            try:
+                if os.path.exists(dst):
+                    shutil.copy2(dst, dst + ".bak-" + datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d-%H%M%S"))
+                json.dump(doc, open(dst, "w"), indent=2)
+                open(dst, "a").write("\n")
+                print(f"claude-saga-prune|wired|{_gone} hardcoded digest hook(s) removed — one hook now resolves the current home")
+            except Exception as exc:
+                print(f"claude-saga-prune|fail|could not write {dst}: {exc}")
+    else:
+        print("claude-saga-prune|current|no hardcoded digest hook is seated (one hook, one home)")
 PY
 )"
     while IFS='|' read -r _hn _hs _hd; do

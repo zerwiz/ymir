@@ -1999,6 +1999,10 @@ const CHAT_BASES = [
   'http://127.0.0.1:4603/v1',
 ].filter(Boolean) as string[];
 const CHAT_MODEL_ENV = process.env.CHAT_MODEL;
+// The small model that runs BESIDE the voice (plan 275 item 23). A chat that cannot load the
+// big one asks for this instead and says which answered — the alternative was no answer at
+// all while Rödd held the card.
+const CHAT_FITS_MODEL = process.env.CHAT_FITS_MODEL ?? 'qwen3.5-9b@q4_k_s-summarizer';
 const modelFor: Record<string, string> = {};
 
 interface ChatTarget {
@@ -2145,8 +2149,9 @@ function resolveChatTarget(model?: string): ChatTarget[] {
 async function chatCompletion(
   messages: { role: string; content: string }[],
   targets: ChatTarget[],
-): Promise<{ body: string; backend: string; model: string }> {
+): Promise<{ body: string; backend: string; model: string; target: ChatTarget; starved: boolean }> {
   let lastErr = '';
+  let starved = false;
   for (const t of targets) {
     try {
       const model = t.model || (await resolveModel(t.base));
@@ -2158,12 +2163,17 @@ async function chatCompletion(
         body: JSON.stringify({ model, messages, stream: false, temperature: 0.6, max_tokens: Number(process.env.YMIR_CHAT_MAX_TOKENS ?? 4096) }),   // deepseek-v4.1 spends budget on reasoning FIRST: 700 gave an empty answer
       });
       if (!res.ok) {
-        lastErr = `${t.base} → ${res.status}`;
+        // The provider's own words decide whether the CARD is the fault: a rail that answers
+        // `cudaMalloc failed: out of memory` was refused by the GPU, and the next rung of the
+        // ladder is a model that fits (plan 275 item 23).
+        const detail = await res.text().catch(() => '');
+        if (vramStarved(detail)) starved = true;
+        lastErr = `${t.base} → ${res.status}${vramStarved(detail) ? ' (out of memory on the card)' : ''}`;
         continue;
       }
       const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
       const body = data.choices?.[0]?.message?.content?.trim();
-      if (body) return { body, backend: t.base, model };
+      if (body) return { body, backend: t.base, model, target: t, starved };
       lastErr = `${t.base} → empty`;
     } catch (err) {
       lastErr = `${t.base} → ${(err as Error).message}`;
@@ -2306,6 +2316,25 @@ function chatRecall(query: string, limit = 6): { text: string; count: number } {
   return memo(`chatRecall:${query}:${limit}`, 3000, () => chatRecall_uncached(query, limit));
 }
 
+/** Who holds the graphics card, read from the one door that knows (plan 275 item 23).
+ *  `bin/model/vram-ledger.sh who --json` answers with the holders and the MiB; a seat whose
+ *  card cannot be read says `known:false`, and the chat then claims nothing it cannot see. */
+function vramLedger(): { known: boolean; voice_mib?: number; total_mib?: number } {
+  return memo('vramLedger', 5000, () => {
+    try {
+      const r = spawnSync('bash', [join(ROOT, 'bin/model/vram-ledger.sh'), 'who', '--json'], {
+        encoding: 'utf8',
+        timeout: 4000,
+      });
+      const out = (r.stdout ?? '').trim();
+      if (!out) return { known: false };
+      return JSON.parse(out) as { known: boolean; voice_mib?: number; total_mib?: number };
+    } catch {
+      return { known: false };
+    }
+  });
+}
+
 async function postChat(
   session: string,
   content: string,
@@ -2332,13 +2361,39 @@ async function postChat(
   let body: string;
   let live = false;
   let usedModel: string | undefined;
+  // THE LADDER (plan 275 item 23): what the operator asked for first, then the models that
+  // FIT beside the voice, then the online road. A chat that cannot load the big model answers
+  // from one that can — and says which, because a silent substitution is its own lie.
+  const primary = resolveChatTarget(model);
+  const fits = fitsTargets(piCatalog() as LadderEntry[], {
+    fitsModel: CHAT_FITS_MODEL,
+    exclude: primary as LadderTarget[],
+  });
+  const ladder = chatLadder(primary as LadderTarget[], fits) as ChatTarget[];
+  const askedFor = model ?? (ladder[0]?.model || '');
+  const card = vramLedger();
+  let starved = false;
   try {
-    const out = await chatCompletion(messages, resolveChatTarget(model));
-    body = out.body;
+    const out = await chatCompletion(messages, ladder);
+    starved = out.starved;
     usedModel = out.model;
+    // A fallback answer carries its own sentence: which model answered, and why it was not
+    // the one asked for.
+    const fellBack = !primary.some((t) => t.base === out.target.base && t.model === out.target.model);
+    body = fellBack
+      ? `${answeredNote(askedFor, out.target, { starved, voiceMib: card.voice_mib })}\n\n${out.body}`
+      : out.body;
     live = true;
   } catch (err) {
-    body = `The well is local; no model backend answered (${(err as Error).message}). Recall ran; for a reply, raise a local model (llama-server on :8080) or the Bifrost bridge (\`bin/bridge/bifrost-bridge.sh\`).`;
+    // The rail's own words already told us the card was the fault; say so in the operator's
+    // language instead of printing a status code at him.
+    starved = starved || vramStarved((err as Error).message);
+    body = noAnswerMessage((err as Error).message, {
+      starved,
+      voiceMib: card.voice_mib,
+      totalMib: card.total_mib,
+      asked: askedFor,
+    });
   }
 
   const kaia: ChatRow = {
