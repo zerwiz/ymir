@@ -683,10 +683,25 @@ f_armpin()   { [ -x "$SCRIPT_DIR/../engine/runtime-deploy.sh" ] && "$SCRIPT_DIR/
 # runtime and is in the one register (config/units.yaml). armpin judges the pin's age and the arm; this
 # judges the whole fleet of units — one in a working tree is the fault the pre-push ward `runtime-pinned`
 # refused a collaborator's push for. The mend is the one writer: bin/engine/units.sh write.
-s_runtimepin() { [ -x "$SCRIPT_DIR/../engine/units.sh" ] && "$SCRIPT_DIR/../engine/units.sh" check >/dev/null 2>&1; }
+#
+# APPENDED 2026-11-15 (plan 292): the units being on the pin says nothing about the pin being CURRENT.
+# On the heart the pin stood 75 commits behind main for 28 days and sixteen rows died with 127 while this
+# surface stayed green, because it only asked whether the units pointed at the pin. So the surface now also
+# asks bin/engine/pin-refresh.sh --check: red when the pin is behind main, absent, or dirty. The pin is a
+# surface, and a stale pin is a red one.
+s_runtimepin() {
+  [ -x "$SCRIPT_DIR/../engine/units.sh" ] && "$SCRIPT_DIR/../engine/units.sh" check >/dev/null 2>&1 || return 1
+  local d="$SCRIPT_DIR/../engine/pin-refresh.sh"
+  [ -x "$d" ] || return 0            # an older tree: judge the units only, as before
+  "$d" --check --quiet >/dev/null 2>&1
+}
 f_runtimepin() {
   [ -x "$SCRIPT_DIR/../engine/runtime-seat.sh" ] || return 1
   "$SCRIPT_DIR/../engine/runtime-seat.sh" >/dev/null 2>&1
+  # The refresher refuses when this seat runs FROM the pin (a copy inside the pin proves nothing about
+  # the pin); that refusal is the honest answer, and the surface then stays red rather than claiming green.
+  local d="$SCRIPT_DIR/../engine/pin-refresh.sh"
+  [ -x "$d" ] && "$d" --quiet >/dev/null 2>&1
   s_runtimepin
 }
 # roddhelm: the lease names a known holder role, the room is writable, and the

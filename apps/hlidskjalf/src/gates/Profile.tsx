@@ -1,53 +1,10 @@
 import { useState } from 'react';
 import { useYmir } from '../state/store';
 import { useUI } from '../state/ui';
-import { ACCENTS, DOMAINS, realmById } from '../data/realms';
-import { ROLE_LABEL } from '../services/auth';
-import { useTenantDef } from '../hooks/useTenantDef';
+import { ACCENTS, DOMAINS } from '../data/realms';
 import type { DomainId } from '../types';
 
 const DOMAINS_LIST = Object.keys(DOMAINS) as DomainId[];
-
-function TenantColorRow({ realm, tenant, role, domain, glyph }: {
-  realm: string;
-  tenant: string;
-  role: keyof typeof ROLE_LABEL;
-  domain: DomainId;
-  glyph: string;
-}) {
-  const colors = useYmir((s) => s.tenantColors);
-  const setTenantColor = useYmir((s) => s.setTenantColor);
-  const resetTenantColor = useYmir((s) => s.resetTenantColor);
-  const def = useTenantDef(realm, { realm, tenant, role, domain, tint: realmById(realm).tint, glyph });
-  const override = colors[realm];
-  const houseDef = DOMAINS[domain];
-
-  return (
-    <div className="tenant-row">
-      <span className="realm-swatch" style={{ background: def.tint }} />
-      <div className="col grow" style={{ minWidth: 0 }}>
-        <span className="row" style={{ gap: 8 }}>
-          <strong>{tenant}</strong>
-          <span className="mono dim" style={{ fontSize: 10, textTransform: 'uppercase' }}>
-            {ROLE_LABEL[role]}
-          </span>
-        </span>
-        <span className="mono dim" style={{ fontSize: 11 }}>
-          {houseDef.name} · seal {houseDef.glyph}
-        </span>
-      </div>
-      <input
-        type="color"
-        value={override ?? def.tint}
-        onChange={(e) => setTenantColor(realm, e.target.value)}
-        aria-label={`${tenant} colour`}
-      />
-      <button className="btn btn-sm" onClick={() => resetTenantColor(realm)} disabled={!override}>
-        Reset
-      </button>
-    </div>
-  );
-}
 
 export function Profile() {
   const session = useYmir((s) => s.session);
@@ -71,7 +28,7 @@ export function Profile() {
       <div className="stage-head">
         <div>
           <h1 className="stage-title">Profile</h1>
-          <p className="stage-deck">Personal settings · tenant colours · company settings</p>
+          <p className="stage-deck">Your seat · the company · the workspaces this home holds</p>
         </div>
       </div>
 
@@ -87,8 +44,7 @@ export function Profile() {
               <span className="avatar" aria-hidden="true">{session.user.avatar}</span>
               <div className="col" style={{ lineHeight: 1.3 }}>
                 <strong>{session.user.name}</strong>
-                <span className="mono dim" style={{ fontSize: 11 }}>{session.user.email}</span>
-                <span className="mono dim" style={{ fontSize: 11 }}>@{session.user.login} · via {session.method}</span>
+                <span className="mono dim" style={{ fontSize: 11 }}>@{session.user.login} · this computer's desktop session</span>
               </div>
             </div>
 
@@ -131,30 +87,6 @@ export function Profile() {
                 <button className="btn" aria-pressed={density === 'compact'} onClick={() => setDensity('compact')}>Compact</button>
               </div>
             </div>
-          </div>
-        </section>
-
-        <section className="panel">
-          <div className="panel-head">
-            <div className="panel-title">
-              <span className="glyph" aria-hidden="true">ᛊ</span> Workspace colours
-            </div>
-            <span className="mono dim" style={{ fontSize: 10 }}>one tenant · many scopes</span>
-          </div>
-          <div className="panel-body col" style={{ gap: 'var(--ymir-space-3)' }}>
-            {session.tenants.map((t) => (
-              <TenantColorRow
-                key={t.realm}
-                realm={t.realm}
-                tenant={t.tenant}
-                role={t.role}
-                domain={t.domain}
-                glyph={t.glyph}
-              />
-            ))}
-            <p className="mono dim" style={{ fontSize: 11 }}>
-              Each workspace swatch repaints that workspace's tint. Set accent to “Realm default” to follow it.
-            </p>
           </div>
         </section>
 

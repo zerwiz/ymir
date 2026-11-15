@@ -187,6 +187,16 @@ stage_prepare() {
   if [ "$LOCKED" = 1 ] && ! is_seat && [ -x "$SCRIPT_DIR/nornir-cron-start.sh" ]; then
     BROKK_HOME="$BROKK_HOME" BROKK_STATE_OVERRIDE="$STATE" "$SCRIPT_DIR/nornir-cron-start.sh" >/dev/null 2>&1 || true
   fi
+  # THE PIN REFRESHES FROM THE WORKING TREE (plan 292). The pinned runtime is what every unit and
+  # app runs from, and the refresher must not live inside it — the heart's pin stood 75 commits
+  # behind main for 28 days because the only thing that could refresh it was a copy of itself. A
+  # session starts from the working tree, so this is a tree that can bring the pin home. The door
+  # refuses on its own when it is seated inside the pin, and says so. The helm only: a worker's
+  # worktree refreshes nothing.
+  if [ "$LOCKED" = 1 ] && ! is_seat && [ -x "$SCRIPT_DIR/../engine/pin-refresh.sh" ]; then
+    "$SCRIPT_DIR/../engine/pin-refresh.sh" --quiet 2>&1 \
+      || printf 'pin: the refresh did not complete (see above) — rows that run from the pin may be stale\n'
+  fi
   # The skill index is cached and quiet; refresh it off the clock.
   if [ -x "$SCRIPT_DIR/../agents/skill-index.sh" ]; then
     YMIR_HOME="${YMIR_HOME:-}" "$SCRIPT_DIR/../agents/skill-index.sh" >/dev/null 2>&1 || true
