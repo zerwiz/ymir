@@ -21,3 +21,7 @@ main's side would have kept two lists and lost the engine.
 
 This is the one shape the interim rule does not cover: main's copy was the *older* evolution of the file, not a newer
 list to preserve. `bash -n` is clean and no conflict marker survives.
+
+## CHANGE LOG
+
+- 2026-11-15 — review-mend: added missing heading for #771
