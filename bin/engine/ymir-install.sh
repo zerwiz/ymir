@@ -208,6 +208,26 @@ step_runtime() {
   fi
 }
 
+# The macOS service layer (plan 293, RULES/05): a Mac has no systemd, so `systemctl --user` is answered by
+# launchd through bin/engine/launchd-user.py. Seated right after the pin, so every later step that writes
+# or raises a unit finds it. Off a Mac this is a clean skip.
+step_launchd() {
+  local door="$SCRIPT_DIR/launchd-ensure.sh" out
+  case "$(uname -s 2>/dev/null)" in Darwin*) ;; *) add launchd SKIP "not a Mac — systemd runs the units here"; return ;; esac
+  [ -x "$door" ] || { add launchd SKIP "no bin/engine/launchd-ensure.sh in this tree"; return; }
+  if [ "$CHECK" = 1 ]; then
+    if "$door" check >/dev/null 2>&1; then add launchd OK "systemctl --user is answered by launchd"
+    else add launchd WARN "the launchd layer is not seated — a full run seats it (bin/engine/launchd-ensure.sh ensure)"; fi
+    return
+  fi
+  out="$("$door" ensure 2>&1)"
+  hash -r 2>/dev/null || true
+  case "$out" in
+    *'"OK"'*|*'"SKIP"'*) add launchd OK "$(printf '%s' "$out" | grep -m1 '"launchd"' | cut -d'"' -f6)" ;;
+    *) add launchd FAIL "$(printf '%s' "$out" | grep -m1 '"launchd"' | cut -d'"' -f6) — bin/engine/launchd-ensure.sh ensure" ;;
+  esac
+}
+
 # The sweep: steps after "the pinned runtime" (fleet, Gróa, Bilskirnir, the spa) write their own units, so
 # the last word is the one writer's. Anything still on a working tree is moved onto the pin, with its old
 # line logged (plan 269).
@@ -1837,6 +1857,7 @@ run_step step_prereqs "prerequisites"
 run_step step_home "home"
 run_step step_tree "workspace tree"
 run_step step_runtime "the pinned runtime"
+run_step step_launchd "the macOS service layer"
 run_step step_clients "the client register"
 run_step step_apps "apps"
 run_step step_engines "engines"
