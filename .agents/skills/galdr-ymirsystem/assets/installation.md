@@ -998,6 +998,7 @@ sourced, never executed:
 | Need | Function | Why it exists |
 |---|---|---|
 | Which OS | `ymir_os` → `linux` \| `macos` \| `wsl` \| `msys` | branching, once |
+| The bash floor | `ymir_bash_floor "$@"`, `ymir_bash4_path` | macOS ships bash 3.2; a script that needs `declare -A` / `mapfile` re-runs itself under a bash >= 4 (`$YMIR_BASH`, Homebrew, MacPorts, `~/.local/bin`) or refuses with `brew install bash`. The install's `bash` row and the plan's `runtimes bash` row report it |
 | CPU count | `ymir_nproc` | `nproc` is GNU; macOS uses `sysctl -n hw.ncpu` |
 | Resolve a path | `ymir_readlink_f` | BSD `readlink` has no `-f`; mirrors GNU semantics including the "parent must exist" rule |
 | File facts | `ymir_stat_mtime`, `ymir_stat_size`, `ymir_stat_id`, `ymir_stat_birth`, `ymir_stat_mode` | GNU `stat -c` vs BSD `stat -f`, and birth time exists on both but differently |

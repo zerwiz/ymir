@@ -37,6 +37,8 @@
 #   was refused for a fault that was already red on origin/main, in a file it never
 #   touched. So the fastest road became --no-verify, and the gate guarded nothing.
 set -u
+# the bash floor (RULES/05): macOS ships bash 3.2 — re-run under bash >= 4, or say how to get one
+[ "${BASH_VERSINFO[0]:-0}" -ge 4 ] || { . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../fleet/ymir-platform.sh" && ymir_bash_floor "$@"; }
 
 _root() {
   local d; d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

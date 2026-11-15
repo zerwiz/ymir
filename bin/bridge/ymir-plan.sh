@@ -219,6 +219,13 @@ runtimes_phase() {
   else
     emit 3 runtimes system SKIP "git and python3 present"
   fi
+  # The bash floor (RULES/05): macOS ships 3.2; the doctor, the migrations and the gates need >= 4.
+  local b4=""
+  if b4="$(ymir_bash4_path 2>/dev/null)"; then
+    emit 3 runtimes bash SKIP "bash >= 4 at $b4"
+  else
+    emit 3 runtimes bash BLOCKED "only bash ${BASH_VERSION%%(*} — macOS ships 3.2; brew install bash (or set YMIR_BASH)"
+  fi
 
   local user=""
   for c in bun uv; do have "$c" || user="$user $c"; done
