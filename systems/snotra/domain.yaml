@@ -69,6 +69,7 @@ services:
   record:
     what: the record contract every transport writes through
     doors:
+      - services/record/snotra_config.py    # the ONE reader of the operator's own Snotra settings
       - services/record/snotra-store.sh
       - services/record/snotra_paths.py
       - services/record/snotra-layout.sh

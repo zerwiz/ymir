@@ -20,8 +20,8 @@
 #   well-door.sh down      close them
 #   well-door.sh status    what each door answers, without changing anything
 #
-# Env: YMIR_HEART (ssh host alias, default zerwizserver) · WELL_HEART_HOST (what the
-#      forward points at BEHIND the heart, default 127.0.0.1) · WELL_DOOR_PORTS.
+# Env: YMIR_HEART (ssh host alias; default: the `heart` the home's fleet registry names) ·
+#      WELL_HEART_HOST (what the forward points at BEHIND the heart, default 127.0.0.1) · WELL_DOOR_PORTS.
 #
 # Exit: 0 every door answers · 1 a door is silent/absent · 2 usage.
 
@@ -46,7 +46,10 @@ fi
 
 STATE_DIR="${YMIR_STATE_DIR:-$HOME_DIR/state}"
 DOOR_DIR="$STATE_DIR/well-door"
-HEART="${YMIR_HEART:-zerwizserver}"
+HEART="${YMIR_HEART:-}"
+if [ -z "$HEART" ] && command -v ymir_fleet_heart >/dev/null 2>&1; then ymir_fleet_heart HEART 2>/dev/null || true; fi
+[ -n "$HEART" ] || { printf 'well-door: no heart — set YMIR_HEART, or name one in the fleet registry (%s)\n' \
+  "$HOME_DIR/hodd/data/fleet.json" >&2; exit 2; }
 BEHIND="${WELL_HEART_HOST:-127.0.0.1}"
 PORTS="${WELL_DOOR_PORTS:-4602 8317}"
 

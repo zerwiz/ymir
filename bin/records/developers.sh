@@ -25,6 +25,15 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 home=""; declare -f ymir_home_root >/dev/null 2>&1 && ymir_home_root home 2>/dev/null
 home="${home:-${YMIR_HOME:-}}"
 people="$home/hodd/identity/collaborators.yaml"
+# WHICH domains are the house's own is the operator's fact: read from his home, never spelled
+# here (RULES/04). With none declared, only the generic forms below are recognised.
+HOUSE_DOMAINS=""
+declare -f ymir_house_domains >/dev/null 2>&1 && ymir_house_domains HOUSE_DOMAINS 2>/dev/null
+is_house_domain() {  # <domain>
+  local d
+  for d in ${HOUSE_DOMAINS:-}; do [ "$1" = "$d" ] && return 0; done
+  return 1
+}
 
 clone_for() {  # <owner/repo> — from DEVELOPERS_CLONES="a/b:/path,c/d:/path"
   local want="$1" pair
@@ -90,9 +99,11 @@ for repo in "$@"; do
         *@users.noreply.github.com)   who="(noreply, unnamed login)" ;;
         # The HOUSE's own addresses are not personal data: they are agent identities, and the
         # register exists to show them. Everything else is somebody's mailbox and is masked.
-        *@ymir|*@ymir.local|*@zerwiz.org) who="$addr (house identity)" ;;
-        *) if [ "${EMAILS:-0}" = 1 ]; then who="$addr"
-           else who="$(printf '%s' "$addr" | sed -E 's/^(.).*@/\1***@/') (a personal address — pass --emails to see it)" ; fi ;;
+        *@ymir|*@ymir.local) who="$addr (house identity)" ;;
+        *) if is_house_domain "${addr##*@}"; then who="$addr (house identity)"
+           elif [ "${EMAILS:-0}" = 1 ]; then who="$addr"
+           else who="$(printf '%s' "$addr" | sed -E 's/^(.).*@/\1***@/') (a personal address — pass --emails to see it)"
+           fi ;;
       esac
       printf '    %5s  %s\n' "$n" "$who"
     done

@@ -262,7 +262,7 @@ Every name explains the machine's job. Full lore: `docs/lore.md`
 | **Ymir** | Substrate — one repo, one machine, all realms carved from it |
 | **Brokk** | You — primary agent, the bellows |
 | **Eindri** | Sub-agent workers — isolated smiths in Utgard |
-| **Kaia** | Orchestrator — recalls from Mimirsbrunn |
+| **Völundr** | The master of the smiths — leads Smíðja, dispatches its smiths, recalls from Mimirsbrunn |
 | **Yggdrasil** | Git worktree isolation |
 | **Utgard** | Ephemeral sandbox — untrusted code runs there |
 | **Mimirsbrunn** | Engram memory engine |

@@ -12,6 +12,7 @@
 // Settings (RULES/07), each with one documented default:
 //   BILSKIRNIR_URL           the hall to open                 (http://127.0.0.1:8787)
 //   BILSKIRNIR_BOOT_TIMEOUT  seconds to wait for it to answer (30)
+//   YMIR_WINDOW_BUTTONS      on|off — the platform layer's answer on the frame's buttons (below)
 
 const { app, BrowserWindow, Menu, shell } = require('electron');
 const http = require('node:http');
@@ -20,6 +21,12 @@ const path = require('node:path');
 const URL_ = (process.env.BILSKIRNIR_URL || 'http://127.0.0.1:8787').replace(/\/+$/, '');
 const BOOT_TIMEOUT_MS = Number(process.env.BILSKIRNIR_BOOT_TIMEOUT || 30) * 1000;
 const ICON = path.join(__dirname, 'icon.png');
+// The frame's buttons are the PLATFORM LAYER's question, never this file's: start.sh asks
+// `bin/host/host-sense.sh capability window-buttons` and carries the answer in. A tiling compositor
+// — Hyprland, Omarchy's session — draws no title bar of its own and closes a window with a key, so
+// the window is frameless there and no _ □ × can be drawn or shown (the Allfather, 2026-11-14).
+// Elsewhere the platform keeps its own frame; unset (a hand launch) is that platform default.
+const WINDOW_BUTTONS = String(process.env.YMIR_WINDOW_BUTTONS ?? 'on').toLowerCase() !== 'off';
 
 // one name everywhere: the title is Bilskirnir; the window class the launcher groups by is the package
 // name, ymir-bilskirnir (on Wayland that is the app id; the .desktop entry's StartupWMClass matches it)
@@ -63,6 +70,8 @@ async function open() {
     title: 'Bilskirnir',
     icon: ICON,
     backgroundColor: '#0e0c09', // the cloth's ground, so the window never flashes white
+    // frameless where the platform draws no title bar (see WINDOW_BUTTONS above)
+    frame: WINDOW_BUTTONS,
     autoHideMenuBar: true,
     webPreferences: { contextIsolation: true, sandbox: true },
   });

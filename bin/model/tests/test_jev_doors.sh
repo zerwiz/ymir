@@ -40,7 +40,7 @@ t "openjev has no port, so it is no-door, not down" bash -c \
 
 # The live assertion: only when the machine that holds the doors answers at all.
 host="$(grep -m1 '^host:' "$root/../config/jev-doors.yaml" 2>/dev/null | cut -d: -f2- | tr -d ' \"')"
-host="${host:-heimdall}"
+host="${host:-127.0.0.1}"
 if curl -s -m 3 -o /dev/null "http://$host:8099/health" 2>/dev/null; then
   t "the router door answers the register as 'up'" bash -c \
     "JEV_DOOR_HOST=$host bash '$root/bin/model/jev-doors.sh' list | grep 'Julia-1' | grep -q '\"up\"'"

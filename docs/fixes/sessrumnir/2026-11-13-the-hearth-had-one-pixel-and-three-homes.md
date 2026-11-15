@@ -59,9 +59,9 @@ own words, measured on this checkout before the rebuild:
 
 ```
 error: Sessrúmnir will not start a build that is behind its source
-  tree:   /home/heimdall/ymir/apps/sessrumnir
+  tree:   ~/ymir/apps/sessrumnir
   build:  2026-10-31T00:43   source: 2026-11-13T20:21
-help: (cd /home/heimdall/ymir/apps/sessrumnir && npm run build)   (or start the pinned app: …)
+help: (cd ~/ymir/apps/sessrumnir && npm run build)   (or start the pinned app: …)
 ```
 
 `SESSRUMNIR_ALLOW_STALE=1` starts it anyway and says so; a packaged copy (no `src/`) reports `package
@@ -110,3 +110,12 @@ watcher**, over a workspace that carries the house's 198 worktree checkouts in `
   changes first, so the window answers the compositor in its first second.
 
 Proof owed and taken: no not-responding dialog for five minutes, on both machines, from the pin.
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: a dev machine · a dev machine (this seat). The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).

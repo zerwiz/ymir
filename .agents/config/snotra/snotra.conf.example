@@ -1,0 +1,42 @@
+# snotra.conf.example — the operator's Snotra settings, the SHAPE of them.
+#
+# Copy to `$YMIR_HOME/config/snotra/snotra.conf` and fill in your own values. This file is a VALID
+# document; every key may stay empty, and an empty key is a clean fallback to the generic default in
+# the code (RULES/42, kind `defaulted`). Nothing here is a secret: it is the name of a realm, a set of
+# board columns, a homepage and a list of meeting hosts.
+#
+# WHY THIS FILE EXISTS (plan 288 §1): Snotra is a SYSTEM (no UI), and what is generic stays in
+# `systems/snotra/`; what is about ONE operator lives here. A client's name, a machine's name or a
+# board id written into the code publishes it to everyone who clones the repository.
+#
+# The table says which door reads which key; the reader is `systems/snotra/services/record/snotra_config.py`.
+
+# ── the live hall snapshot names this realm ───────────────────────────────────────────────────
+# Read by:  systems/snotra/services/cron/hall-snapshot.sh
+# Default:  "default" — Ymir's own realm name when nothing is declared.
+# Example:  SNOTRA_HALL_REALM="work"
+SNOTRA_HALL_REALM=""
+
+# ── the workstreams a board is divided into, comma-separated ──────────────────────────────────
+# Read by:  systems/snotra/services/cron/reasoning_adapter.py (classify), snotra-trello.py
+# Default:  "patents,verticals,documents,meetings"
+# Example:  REASONING_CLASSIFY_CATEGORIES="filings,hiring,docs,meetings"
+REASONING_CLASSIFY_CATEGORIES=""
+
+# ── the homepage the made-by line links to ────────────────────────────────────────────────────
+# Read by:  systems/snotra/services/letters/letter-design.py
+# Default:  empty — the made-by line keeps the address the letter's own front matter gives, and
+#           says "Ymir" without a link rather than sending a reader to someone else's site.
+# Example:  SNOTRA_LETTER_HOMEPAGE="https://example.org"
+SNOTRA_LETTER_HOMEPAGE=""
+
+# ── meeting hosts that count as their own platform ────────────────────────────────────────────
+# Read by:  systems/snotra/services/ear/snotra-autojoin.sh, services/ear/snotra-bot.sh
+# Default:  empty — only the public platforms (Google Meet, Zoom, Teams, Jitsi) are recognised.
+# Example:  AUTOJOIN_PLATFORM_HOSTS="meet.example.org,rooms.example.net"
+AUTOJOIN_PLATFORM_HOSTS=""
+
+# ── the board's workstreams (board id, lists, keywords) ────────────────────────────────────────
+# That one is a SHAPE of its own, because a workstream carries a name, a board, four lists and a
+# keyword set: see `workstreams.yaml.example` beside this file. Read by
+# systems/snotra/services/cron/snotra-trello.py; absent means "link a card nowhere but its own board".

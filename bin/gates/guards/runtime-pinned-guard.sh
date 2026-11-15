@@ -2,8 +2,8 @@
 # runtime-pinned-guard.sh — a unit that executes from a WORKING tree is a machine running whatever branch
 # the last agent left checked out.
 #
-# Rule: RULES/02 §7 (appended 2026-11-02). Measured that day: ten user units pointed at /home/heimdall/ymir —
-# the directory agents switch branches in — so a `git checkout` changed the code the scheduler, the well, the
+# Rule: RULES/02 §7 (appended 2026-11-02). Measured that day: ten user units pointed at the operator's own
+# working tree (his home directory, the checkout agents switch branches in) — so a `git checkout` changed the
 # model bridge, the MCP face, the warden and the assistant were running, silently, with no approval.
 #
 #   bash bin/gates/guards/runtime-pinned-guard.sh [check]

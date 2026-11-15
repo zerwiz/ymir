@@ -66,12 +66,19 @@ while IFS="$(printf '\t')" read -r path kind template door required; do
   [ -n "$path" ] || continue
   rows=$((rows+1))
 
-  # 1 · a path is home-relative, unique, and carries no substitution but {realm}
+  # 1 · a path is home-relative, unique, and carries no substitution but {realm} and {machine}
+  #     ({machine} added 2026-11-14, plan 290 §3: a machine's own wardens.yaml is one file per
+  #     computer, and bin/engine/home-seed.sh resolves it from the fleet registry by hostname)
   case "$path" in
     /*)  say "path is absolute" "$path" "a contract path is relative to the home" ;;
     *..*) say "path escapes the home" "$path" "no .. in a contract path" ;;
   esac
-  case "$path" in *"{"*) case "$path" in *"{realm}"*) ;; *) say "unknown substitution" "$path" "only {realm} is resolved" ;; esac ;; esac
+  case "$path" in
+    *"{"*) case "$path" in
+             *"{realm}"*|*"{machine}"*) ;;
+             *) say "unknown substitution" "$path" "only {realm} and {machine} are resolved" ;;
+           esac ;;
+  esac
   if [ -n "${SEEN[$path]:-}" ]; then say "the same home file is claimed twice" "$path" "one file, one row"; fi
   SEEN[$path]=1
 

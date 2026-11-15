@@ -20,8 +20,10 @@ take the GitHub token from the vault by reference — never pasted, never export
 1. git fetch origin @BRANCH@
    git worktree add -f .yggdrasil/smith-@PR@ FETCH_HEAD
    cd .yggdrasil/smith-@PR@
-   git config user.name zerwiz
-   git config user.email 47485140+zerwiz@users.noreply.github.com
+   # the SMITH's OWN account, derived from this seat's GitHub login — never another hand's
+   login="$(gh api user --jq .login)"; id="$(gh api user --jq .id)"
+   git config user.name  "$login"
+   git config user.email "$id+$login@users.noreply.github.com"
 2. git merge --no-edit origin/main      # NEVER rebase, NEVER force-push
 3. Resolve every conflict by rule — never by choosing one side blindly:
    - GENERATED registers (bin/README.md, .agents/assets/agents/capabilities.md, bin/gates/inventory.sh,

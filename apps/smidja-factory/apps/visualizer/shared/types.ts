@@ -309,7 +309,7 @@ export interface ApiError {
   error: string;
 }
 
-// ── Kaia's memory (engram) — proxied via /api/memory/* ─────────────────────
+// ── Völundr's memory (engram) — proxied via /api/memory/* ─────────────────────
 
 export interface MemoryEpisode {
   id: string | null;
@@ -496,7 +496,7 @@ export interface StatsResponse {
 
 // ── Orchestrator chat (Ymir `#/chat`) ────────────────────────────────
 
-/** One tool invocation inside a Kaia message — rendered as a collapsible card. */
+/** One tool invocation inside a Völundr message — rendered as a collapsible card. */
 export interface ChatToolCall {
   /** Tool name as Pi reported it, e.g. "tickets_create" or "teams.tickets_create". */
   tool: string;
@@ -522,6 +522,7 @@ export interface SessionLaunch {
   status: SessionStatus | null;
 }
 
+/** "kaia" is the stored role of every row already written; the UI names it Völundr. */
 export type ChatMessageRole = "user" | "kaia" | "system" | "error";
 
 /** One message in the orchestrator chat thread. */
@@ -529,11 +530,11 @@ export interface ChatMessage {
   id: string;
   ts: string;
   role: ChatMessageRole;
-  /** Markdown body (Kaia) or plain text (user/system). */
+  /** Markdown body (Völundr) or plain text (user/system). */
   content: string;
-  /** Tool calls embedded in a Kaia message — rendered as cards under the text. */
+  /** Tool calls embedded in a Völundr message — rendered as cards under the text. */
   tool_calls?: ChatToolCall[];
-  /** Set when this Kaia message also launched a smidja session. */
+  /** Set when this Völundr message also launched a smidja session. */
   session_launch?: SessionLaunch;
   /** While true the model is still generating this message. */
   streaming?: boolean;
@@ -578,7 +579,7 @@ export interface ModelInfo {
 export interface ChatMessageRequest {
   sessionId: string;
   content: string;
-  /** Optional model override — the chat talks to Kaia on this model (defaults
+  /** Optional model override — the chat talks to Völundr on this model (defaults
    * to the orchestrator's cloud model when omitted). */
   model?: string;
 }

@@ -24,6 +24,14 @@ const http = require('node:http');
 const path = require('node:path');
 const fs = require('node:fs');
 
+// The frame's buttons are the PLATFORM LAYER's question, never this file's: start.sh asks
+// `bin/host/host-sense.sh capability window-buttons` and carries the answer in. A tiling compositor
+// — Hyprland, Omarchy's session — draws no title bar of its own and closes a window with a key, so
+// the window is frameless there and no _ □ × can be drawn or shown (the Allfather, 2026-11-14:
+// "on Omarchy none of the _ □ × buttons should be visible in any app"). Elsewhere the platform
+// keeps its own frame; unset (a hand launch) is that platform default, never a silent change.
+const WINDOW_BUTTONS = String(process.env.YMIR_WINDOW_BUTTONS ?? 'on').toLowerCase() !== 'off';
+
 // The code root is the PINNED runtime, never the tree this file happens to sit in (plan 257
 // H7): the face, the tool server's --app-dir and every door the instructions name resolve
 // from YMIR_RUNTIME_DIR / runtime.env. An absent pin is a refusal, said in the window.
@@ -143,6 +151,8 @@ dir <code>${String(err.dir || '').replace(/</g, '&lt;')}</code></p>
   const win = new BrowserWindow({
     width: 860, height: 620, title: 'Rödd — the UI server did not start',
     backgroundColor: '#0e0c09', autoHideMenuBar: true,
+    // frameless where the platform draws no title bar (see WINDOW_BUTTONS at the top)
+    frame: WINDOW_BUTTONS,
     webPreferences: { contextIsolation: true, sandbox: true },
   });
   win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
@@ -235,6 +245,8 @@ app.whenReady().then(async () => {
     width: 1180, height: 820, title: 'Rödd',
     backgroundColor: '#0e0c09',
     autoHideMenuBar: true,
+    // frameless where the platform draws no title bar (see WINDOW_BUTTONS at the top)
+    frame: WINDOW_BUTTONS,
     webPreferences: { contextIsolation: true, sandbox: true },
     // the rune of the voice (ᛚ Laguz, plan 275): the window wears its own minted icon, as every app's does
     icon: require('path').join(__dirname, '..', 'electron', 'icon.png'),

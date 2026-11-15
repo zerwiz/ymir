@@ -29,6 +29,9 @@ import datetime
 import html
 import json
 import os
+import pathlib
+import re
+import subprocess
 import sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
@@ -65,14 +68,44 @@ li:last-child{border-bottom:0}
 footer{margin-top:40px;font-family:var(--f-mono);font-size:10.5px;color:var(--ymir-bone-faint);letter-spacing:.1em;text-align:center}
 """
 
-TILES = [
-    ("Board", "https://board.zerwiz.org", "projects and tasks — Plane"),
-    ("Code", "https://forgejo.zerwiz.org", "repositories and pull requests — Forgejo"),
-    ("Documents", "https://affine.zerwiz.org", "pages and databases — AFFiNE"),
-    ("Whiteboard", "https://whiteboard.zerwiz.org", "drawing and mind maps — Excalidraw"),
-    ("Meetings", "https://affine.zerwiz.org", "the record of what was said and decided"),
-    ("Book", "https://book.zerwiz.org", "a time that suits you — Cal.com"),
-]
+def _tiles():
+    """The desk's tiles are the OPERATOR's places, so they come from his config, never from this
+    repository (RULES/04). `GIMLE_DESK_TILES` holds `Name|url|description` rows, one per line or
+    separated by `;`; `GIMLE_DESK_TILES_FILE` names a file holding the same. Declared in
+    `$YMIR_HOME/config/gimle-desktop.env` and handed to the unit by bin/gimle/deploy.sh.
+
+    An empty list is not an error: a desk with no places declared shows none and says how to
+    declare them, which is honest for a fresh install and silent for nobody."""
+    raw = os.environ.get("GIMLE_DESK_TILES", "").strip()
+    path = os.environ.get("GIMLE_DESK_TILES_FILE", "").strip()
+    if not raw and not path:
+        # Last door: the operator's own config in his home, resolved the house's way (Rule 07).
+        root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        try:
+            hoard = subprocess.run(["bash", os.path.join(root, "bin", "vault", "hodd.sh"), "path"],
+                                   capture_output=True, text=True, timeout=15).stdout.strip()
+            home = os.path.dirname(hoard) if hoard else ""
+        except Exception:
+            home = ""
+        if home:
+            path = os.path.join(home, "config", "gimle", "desk-tiles.txt")
+    if not raw and path:
+        try:
+            raw = pathlib.Path(path).read_text(encoding="utf-8")
+        except OSError:
+            raw = ""
+    rows = []
+    for line in re.split(r"[;\n]+", raw):
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue                      # a comment line is not a tile
+        parts = [p.strip() for p in line.split("|")]
+        if len(parts) >= 2 and parts[0] and parts[1]:
+            rows.append((parts[0], parts[1], parts[2] if len(parts) > 2 else ""))
+    return rows
+
+
+TILES = _tiles()
 
 
 def load(path: str) -> dict:
@@ -192,6 +225,9 @@ def render(person: str, data: dict, allowed: list[str] | None = None, docs: list
 
     tiles = "".join(f'<a class="tile" href="{html.escape(url)}"><b>{html.escape(name)}</b>'
                     f'<span>{html.escape(desc)}</span></a>' for name, url, desc in TILES)
+    if not tiles:
+        tiles = ('<p class="empty">No places are declared on this desk yet — set GIMLE_DESK_TILES '
+                 '(Name|url|description per line) in the desk\'s environment.</p>')
 
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">

@@ -1132,7 +1132,7 @@ step_sandbox() {
 }
 
 # ── 5. memory (well + harness MCP) ───────────────────────────────────────────
-# engram is Kaia's engine only (the Allfather, 2026-11-10). A harness reaches memory
+# engram is Völundr's engine only (the Allfather, 2026-11-10). A harness reaches memory
 # through the WELL DOOR — this body's gateway, `/mcp/well` — never a direct
 # `engram-mcp --db` stdio server, which writes the seat's own file and never reaches
 # the heart. So the health metric is the door, and a direct engram is a LEAK: the

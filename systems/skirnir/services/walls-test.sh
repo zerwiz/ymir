@@ -124,9 +124,16 @@ case "$out" in *"this chat is yours"*) fail "identity misfire" "$out" ;; *) pass
 out="$(ask 'whata do you have in your database' owner)"
 case "$out" in *"I hold"*) pass "a typo still reaches the inventory" ;; *) fail "typo tolerance" "$out" ;; esac
 
-# two facts about one subject: the focused one answers, the tie is not a refusal
-out="$(ask 'can you tell about example-4' owner)"
-case "$out" in *Example4*) pass "a subject with two facts still answers" ;; *) fail "tie refusal" "$out" ;; esac
+# two facts about one subject: the focused one answers, the tie is not a refusal.
+# The subject comes from the OPERATOR's own digest, never from this public file (plan 288 §1).
+SUBJECT="$(bash "$SCRIPT_DIR/test-fixtures.sh" subject 2>/dev/null)"
+if [ -n "$SUBJECT" ]; then
+  out="$(ask "can you tell about $SUBJECT" owner)"
+  if printf '%s' "$out" | grep -qiF "$SUBJECT"; then pass "a subject with two facts still answers"
+  else fail "tie refusal" "$out"; fi
+else
+  pass "a subject with two facts: this home holds none — the tie test skipped cleanly"
+fi
 
 # the model's eye: private classes must never enter its context, whatever the tier
 ctx="$(YMIR_HOME="$YMIR_HOME" python3 -c "
@@ -134,7 +141,7 @@ import importlib.util, os
 spec = importlib.util.spec_from_file_location('sk', os.environ['ENGINE'])
 m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
 facts = {'a': {'claim': 'public thing', 'class': 'public'},
-         'b': {'claim': 'Craig Martin is a partner', 'class': 'contacts'},
+         'b': {'claim': 'Blake Ashford is a partner', 'class': 'contacts'},
          'c': {'claim': 'phase two only', 'class': 'nda'}}
 seen = m.model_context(facts)
 print('clean' if set(seen) == {'a'} else 'leak:' + ','.join(sorted(seen)))" 2>&1)"
@@ -163,17 +170,24 @@ if curl -s -o /dev/null --max-time 4 https://en.wikipedia.org/w/api.php 2>/dev/n
   out="$(python3 "$SCRIPT_DIR/research.py" --query "Kosovo Liberation Army" --limit 2 2>/dev/null)"
   case "$out" in *http*|*"www."*|*"!["*) fail "research door leaks a link" "$out" ;; *) pass "the research door returns text, never a link" ;; esac
   out="$(ask 'look up Kosovo Liberation Army' owner)"
-  case "$out" in *"Craig Martin"*|*Andre*) fail "research mixed with private facts" "$out" ;;
+  leaked=""
+  while IFS= read -r _name; do
+    [ -n "$_name" ] || continue
+    case "$out" in *"$_name"*) leaked="$_name"; break ;; esac
+  done <<NAMES
+$(bash "$SCRIPT_DIR/test-fixtures.sh" names 2>/dev/null)
+NAMES
+  case "$out" in
     *"open web"*) pass "research answers from the open web, never from the digest" ;;
-    *) fail "research at the owner tier" "$out" ;; esac
+    *) if [ -n "$leaked" ]; then fail "research mixed with private facts" "a registered name rode along"; else fail "research at the owner tier" "$out"; fi ;; esac
 else
   pass "the research door skipped cleanly — no network on this box"
 fi
 
 # ── the handoff: gather first, then name the asker ─────────────────────────────────────────────
 # a stranger's first unknown question must NOT be escalated yet — he asks who/what/when first
-out="$(python3 "$ENGINE" --tier stranger --channel telegram-dm --chat 5150 --sender isalorain \
-       --text "what is the Example4 deadline" 2>/dev/null)"
+out="$(python3 "$ENGINE" --tier stranger --channel telegram-dm --chat 5150 --sender blake \
+       --text "what is the Acme deadline" 2>/dev/null)"
 case "$out" in
   *"Before I pass this"*) pass "he gathers before he escalates" ;;
   *) fail "gather before escalating" "$out" ;;
@@ -181,20 +195,20 @@ esac
 
 # and the second message must carry the asker's NAME, not an anonymous ping
 MSG="$(YMIR_HOME="$AMBIENT_YMIR_HOME" bash "$SCRIPT_DIR/escalate.sh" --tier collaborator --chat 5150 \
-        --who "Isabella Jakobsson (@isalorain)" --text "what is the Example4 deadline" \
-        --context "the inspection is Friday" --reason "no approved fact matches" --dry-run 2>&1)"
+        --who "Blake Ashford (@blake)" --text "what is the Acme deadline" \
+        --context "the deadline is Friday" --reason "no approved fact matches" --dry-run 2>&1)"
 case "$MSG" in
-  *"Isabella Jakobsson"*) pass "the handoff names who is asking" ;;
+  *"Blake Ashford"*) pass "the handoff names who is asking" ;;
   *) fail "the handoff names the asker" "$MSG" ;;
 esac
 case "$MSG" in
-  *"inspection is Friday"*) pass "the handoff carries what they said" ;;
+  *"deadline is Friday"*) pass "the handoff carries what they said" ;;
   *) fail "the handoff carries the answer" "$MSG" ;;
 esac
 
 # the owner is never told to go and ask himself
 out="$(SKIRNIR_MODEL="${SKIRNIR_MODEL:-}" python3 "$ENGINE" --tier owner --channel telegram-dm \
-       --chat owner --text "what is Isabella working on" 2>/dev/null)"
+       --chat owner --text "who is Blake working with" 2>/dev/null)"
 case "$out" in
   *"ask the Allfather"*|*"will ask the Allfather"*) fail "the owner is asked to ask himself" "$out" ;;
   *) pass "the Allfather is never told to ask the Allfather" ;;

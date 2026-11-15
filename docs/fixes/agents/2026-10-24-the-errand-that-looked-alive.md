@@ -39,7 +39,7 @@ Two faults, and the second is the worse one:
 - **One extension home per pi seat.** When the seat's working directory is not the seat root, `herdr-run.sh`
   starts pi with discovery **off** and exactly one explicit tree:
   `pi -ne -e <seat-root>/.pi/extensions`. Verified by hand inside the failing worktree:
-  `pi -ne -e /home/heimdall/ymir/.pi/extensions --list-models` exits 0 and lists the rail — the same command
+  `pi -ne -e ~/ymir/.pi/extensions --list-models` exits 0 and lists the rail — the same command
   that produced eighteen collisions before.
 - **Registration is the proof.** After `hdr agent start`, the road now waits for `hdr agent get <name>` (up to
   10 s). If the agent never registers, it **fails loudly**, prints the pane's tail with its reason, and exits
@@ -91,3 +91,16 @@ this worktree is the same home as the seat root's, so it is not a second home.*
 moved to `bin/seat/herdr-run.sh` in the restructure; the engine therefore answered "no worth-a-smith door on
 this machine" and dispatched on the brief alone, silently, for every errand. It now resolves the current path
 and keeps the old one as a fallback.
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: a dev machine (this seat). The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #758

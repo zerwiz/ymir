@@ -131,6 +131,7 @@ path_component() {  # <path> -> the component it belongs to, or empty
     bin/bridge/a2a-mcp.sh|bin/bridge/ratatoskr.sh) echo runtime ;;
     bin/engine/ymir-install.sh|bin/agents/groa-update.sh|bin/seat/valknut-load.sh|bin/engine/ymir-migrate.sh) echo install ;;
     .pi/*|.agents/skills/*|bin/agents/skill-find.sh|bin/gates/fixes.sh|bin/gates/guards/fixes-guard.sh) echo agents ;;
+    bin/gates/agnostic-audit.sh|bin/time/nornir-job-private-scan.sh|bin/time/nornir-job-agnostic-audit.sh|hodd/identity/public-deny.txt.example|.agents/home-contract.yaml) echo gate ;;
     bin/gates/capabilities.sh|bin/gates/inventory.sh|bin/gates/registers.sh|bin/gates/registers-*|bin/gates/queue.sh|bin/gates/ci-verify.sh|bin/gates/checks.d/*|bin/gates/checks/*|bin/gates/guards.sh|bin/gates/guards/*|bin/gates/tests/*|bin/no-delete-guard.sh) echo gate ;;
     # The woven catalogue (Þættir) and the derived registers belong to the gate suite:
     # a fix to them is a gate fix (2026-11-03 — they mapped to nothing and a correct

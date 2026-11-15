@@ -22,7 +22,9 @@
 # ALLOWED ADDRESSES (a commit's own identity, never a person's mailbox):
 #   *+<login>@users.noreply.github.com     the account's own noreply form (the house default)
 #   *@users.noreply.github.com             the older noreply form
-#   *@ymir  *@ymir.local  *@zerwiz.org     the house's agent identities (brokk@…, an Eindri's seat)
+#   *@ymir  *@ymir.local                   the house's agent identities (a seat, an Eindri)
+#   <agent>@<house domain>                 ONLY the domains the operator's home declares:
+#                                          $YMIR_HOME/hodd/identity/house-domains.txt (RULES/04)
 # Anything else is refused, on purpose and by name.
 #
 # A refusal can be spoken aloud (`allow-personal-email:` in the commit message, or
@@ -53,16 +55,26 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+HOUSE_DOMAINS=""  # the domains THIS operator calls his own — read from his home, never spelled here
+if [ -r "$ROOT/bin/vault/hoard-lib.sh" ]; then
+  . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
+  command -v ymir_house_domains >/dev/null 2>&1 && ymir_house_domains HOUSE_DOMAINS 2>/dev/null || true
+fi
+
 allowed() {  # <address> — may this address leave by push?
   case "$1" in
     *@users.noreply.github.com) return 0 ;;
-    *@ymir|*@ymir.local|*@zerwiz.org) return 0 ;;
+    *@ymir|*@ymir.local) return 0 ;;
     # GitHub's own web committer (2026-11-10). When a branch is updated through the API, GitHub
     # writes a commit whose COMMITTER is noreply@github.com. That address names nobody; the AUTHOR
     # line is still judged.
     noreply@github.com) return 0 ;;
     web-flow) return 0 ;;
   esac
+  # a house identity on a domain the HOME declares; with no declaration only the forms above pass
+  local dom adom
+  adom="${1##*@}"
+  for dom in ${HOUSE_DOMAINS:-}; do [ "$adom" = "$dom" ] && return 0; done
   return 1
 }
 

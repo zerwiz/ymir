@@ -416,7 +416,7 @@ do_stop() {
   # 1) silence the ear first, so the newest slice is finished and complete
   if alive "$ff"; then kill "$ff" 2>/dev/null; local n=0
     while alive "$ff" && [ "$n" -lt 20 ]; do sleep 0.5; n=$((n+1)); done
-    alive "$ff" && kill -9 "$ff" 2>/dev/null
+    alive "$ff" && kill -9 "$ff" 2>/dev/null  # kill: a wedged process has no graceful kill — declared, per check_platform
   fi
   rm -f "$WORK/ffmpeg.pid"
 
@@ -424,7 +424,7 @@ do_stop() {
   : > "$WORK/stop"
   n=0
   while alive "$worker_pid" && [ "$n" -lt 120 ]; do sleep 0.5; n=$((n+1)); done
-  alive "$worker_pid" && kill -9 "$worker_pid" 2>/dev/null
+  alive "$worker_pid" && kill -9 "$worker_pid" 2>/dev/null  # kill: a wedged process has no graceful kill — declared, per check_platform
   rm -f "$WORK/worker.pid" "$LISTENING_FILE"
 
   local base base_name topic minutes transcript actions

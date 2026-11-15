@@ -193,7 +193,7 @@ def mark_notified(rows):
 
 def seat_and_home():
     # The seat a wire nudge names is the MACHINE's seat id (`host=` in .ymir-seat), never the
-    # agent's name: `sindri` is the primary, `nidavellir` is the seat, and seat-wire refuses the
+    # agent's name: the figure is the primary, the MACHINE is the seat, and seat-wire refuses the
     # former with "it carries no machine{host,ssh_user}" (measured 2026-11-05).
     seat = os.environ.get("YMIR_SEAT") or ""
     if not seat:

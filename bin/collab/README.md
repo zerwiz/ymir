@@ -2,7 +2,7 @@
 
 Who collaborates with the house, on which surface, at which rung — and the doors that carry it.
 
-The thinking is plan 154 (`svartalfaheim/whynotproductions/projects/ymir/plans/`); the declared truth is
+The thinking is plan 154 (`svartalfaheim/<realm>/projects/ymir/plans/`); the declared truth is
 `$YMIR_HOME/hodd/data/collaboration.yaml`; the code is here.
 
 ## The six rungs
@@ -27,7 +27,7 @@ bin/collab/collab.sh letter --to <addr> --person "<name>"   # render the letter 
 bin/collab/collab.sh ship --repo P --branch B --message M --path X ...   # branch, commit named paths, merge, push
 ```
 
-**`who`** reads the register, then measures `zerwizserver`: the gate (users, the authentication log, whether any
+**`who`** reads the register, then measures the host it names: the gate (users, the authentication log, whether any
 second factor is enrolled), the Board (accounts, last sign-in, workspace membership), Documents (accounts, when
 created), the forge (accounts, last sign-in, public keys) and the shell. A surface it cannot read is `unread`,
 never zero. A sign-in from loopback or from the house's own address is labelled `loopback`/`house` — a house test

@@ -21,7 +21,20 @@ set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)}"
 BROKK_HOME="${BROKK_HOME:-${BROKK_ROOT_OVERRIDE:-$ROOT}}"
-DATA="${BROKK_DATA_OVERRIDE:-$BROKK_HOME/data}"
+# THE RECORDS ARE THE OPERATOR'S, NOT THE CODE TREE'S (2026-11-15). data/ lives in the home's hoard
+# (<home>/hodd/data), and a code root has none of its own — deriving it from BROKK_HOME is how the
+# heart came to read a repo's empty data/ while the rosters sat in the home. One resolver, as everywhere.
+DATA="${BROKK_DATA_OVERRIDE:-}"
+if [ -z "$DATA" ]; then
+  if ! declare -f hoard_data_dir >/dev/null 2>&1; then
+    for _hl in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$ROOT/bin/vault/hoard-lib.sh"; do
+      [ -r "$_hl" ] && { . "$_hl"; break; }
+    done
+    unset _hl
+  fi
+  declare -f hoard_data_dir >/dev/null 2>&1 && hoard_data_dir DATA 2>/dev/null
+  [ -n "${DATA:-}" ] || DATA="$BROKK_HOME/data"
+fi
 STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
 
 ID="${1-}"

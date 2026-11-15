@@ -10,7 +10,8 @@ NOT SECREATS OR PRIVATE DATA::"*. The repository is PUBLIC, so four classes are 
   3. TOPOLOGY — a private address, a tailnet host, a machine name. Allowed only as a SHAPE:
                 a CIDR range (`192.168.0.0/16`), RFC 5737 documentation space, or `<host>.tailnet.ts.net`.
   4. MAILBOX  — a personal address. Allowed only as an RFC 2606 example domain, a noreply account
-                form, a house identity, an ssh identity (`git@github.com`), or a bare host with no dot.
+                form, a house identity on a GENERIC domain (`@ymir`, `@ymir.local`), an ssh identity
+                (`git@github.com`), or a bare host with no dot.
   5. MACHINE  — a fleet machine named AS A HOST (plan 278): after `@`, `ssh`, `host=`/`host:` or `//`, or
                 before a port, `.local` or a tailnet suffix. The names are read at run time from the home's
                 fleet registry (`$YMIR_HOME/hodd/data/fleet.json`, `hosts`) and are NEVER in this file.
@@ -59,11 +60,13 @@ DOC_NETS = ("192.0.2.", "198.51.100.", "203.0.113.", "127.0.0.1", "0.0.0.0")
 # allow-list names; they are not a place this house stands.
 SENTINELS = {"10.0.0.0", "172.16.0.0", "192.168.0.0", "100.64.0.1", "169.254.169.254"}
 # ALLOWED: the generic suffixes themselves (`tailnet.ts.net`, `tail.ts.net`) and the placeholder
-# shapes. REFUSED: a real tailnet id (`tailefab81`) or a real seat name in front of one.
+# shapes. REFUSED: a real tailnet id or a real seat name in front of one.
 TAILNET_ALLOWED = re.compile(
     r"^(<host>|<seat>|<tailnet>|<machine>)?\.?(tailnet|tail)\.ts\.net$", re.I)
+# A house mailbox is allowed on a GENERIC domain only. The operator's own domains are private
+# facts (RULES/04): spelling one here would re-create the leak this ward exists to refuse.
 MAILBOX_ALLOWED_DOMAIN = re.compile(
-    r"(^|\.)(example\.(com|org|net)|example|invalid|test|localhost|ymir|ymir\.local|zerwiz\.org|github\.com|githubusercontent\.com|way-of\.com)$", re.I
+    r"(^|\.)(example\.(com|org|net)|example|invalid|test|localhost|ymir|ymir\.local|github\.com|githubusercontent\.com)$", re.I
 )
 SSH_IDENTITIES = {"git", "ssh", "root", "user", "ubuntu", "operator", "noreply", "no-reply", "bot"}
 EMAILS_OPT_IN = {"<the operator>", "<a personal address>", "<the operator's address>"}

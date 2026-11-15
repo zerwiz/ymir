@@ -12,7 +12,7 @@
 #   bin/engine/release.sh adopt                                turn the old in-place pin into the first release (once)
 #   bin/engine/release.sh status                               what current is, what is kept, what is proved
 #
-# WHY (measured 2026-11-12 on heimdall and nidavellir). The pin was a git checkout moved in place with
+# WHY (measured 2026-11-12 on the dev machine and on a second one). The pin was a git checkout moved in place with
 # `git reset --hard` under open windows; dependencies were installed only on a fresh clone and without Electron
 # (a dev dependency); no app was built (Hlidskjalf served Vite's DEV server, Sessrúmnir built itself at the click);
 # and every app found its own Electron (v33.0.0, v33.4.11, v43.7.3, the distribution's 43.8.3 and 41). This door ends
@@ -82,8 +82,10 @@ m=re.search(r'(\d+)',v); print(m.group(1) if m else '')
 PY
 }
 prove() {  # <release> → prints a TOON table, exit 0 only when every row passes
-  local d="$1" bad=0 a bin ver want out
-  say "release-proof[$(echo $APPS | wc -w)]{app,state,detail}:"
+  local d="$1" bad=0 a bin ver want out n
+  n=$(echo $APPS | wc -w)
+  [ -d "$d/apps/smidja-factory/apps/visualizer" ] && n=$((n+1))   # the smithy's eye is judged too
+  say "release-proof[$n]{app,state,detail}:"
   for a in $APPS; do
     [ -d "$d/apps/$a" ] || { row "$a" skip "not in this release"; continue; }
     bin="$(electron_for "$d" "$a")"
@@ -104,6 +106,17 @@ prove() {  # <release> → prints a TOON table, exit 0 only when every row passe
     esac
     row "$a" ok "Electron $ver from the release"
   done
+  # the smithy's eye (plan 288 step 7): its bundle is built in the release, and the server that serves it
+  # reads ./dist — so a release without it answers :8437 with an empty view. Judged, never assumed.
+  if [ -d "$d/apps/smidja-factory/apps/visualizer" ]; then
+    if [ -f "$d/apps/smidja-factory/apps/visualizer/dist/index.html" ]; then
+      row visualizer ok "UI built in the release (served on :8437)"
+    elif command -v bun >/dev/null 2>&1; then
+      row visualizer FAIL "not built (no dist/index.html) — bun is present, so the build was skipped, not impossible"; bad=1
+    else
+      row visualizer skip "not built and no bun on this machine — the smithy serves its API with no UI"
+    fi
+  fi
   return "$bad"
 }
 
@@ -146,6 +159,15 @@ build() {
     ( cd "$tmp/apps/sessrumnir" && npm run build ) || exit 16
     ( cd "$tmp/apps/sessrumnir" && npx --no-install electron-builder install-app-deps ) || exit 17
     ( cd "$tmp/apps/bilskirnir" && npm run build -w web ) || exit 18
+    # The smithy's EYE is a nested app with its own bun lockfile, so the root `npm ci` never installs it
+    # and its bundle was never built here — a release therefore served :8437 with no UI at all
+    # ("No ./dist build found"), while the tree kept a committed dist/ that hid the fault. The bundle
+    # left git on 2026-11-14 (plan 288 step 7, plan 287 P4); the release builds it, or says it did not.
+    if command -v bun >/dev/null 2>&1; then
+      ( cd "$tmp/apps/smidja-factory/apps/visualizer" && bun install --frozen-lockfile && bunx vite build ) || exit 19
+    else
+      printf 'visualizer SKIP no bun on this machine — the smithy serves its API with no UI\n'
+    fi
     # the house's git guards, as the installer seats them in a working tree (Eir judges the pin's hooks too)
     for h in "$tmp"/.githooks/*; do [ -f "$h" ] && install -m 755 "$h" "$tmp/.git/hooks/$(basename "$h")"; done
     link_shared "$tmp"
@@ -209,7 +231,7 @@ flip() {
   for r in $(ls -1dt "$REL"/*/ 2>/dev/null); do
     r="${r%/}"; [ "$r" = "$keep_cur" ] || [ "$r" = "$keep_prev" ] && continue
     # a release a running process still uses (its folder, its command line) is never deleted: an app server
-    # started from it would answer 404 the moment its files vanished (nidavellir, 2026-11-12: Óðrerir's page)
+    # started from it would answer 404 the moment its files vanished (a second machine, 2026-11-12: Óðrerir's page)
     if in_use "$r"; then say "kept	$r	(still in use by a running process)"; continue; fi
     n=$((n+1)); if [ "$n" -gt "$KEEP" ]; then rm -rf "$r" && say "pruned	$r"; fi
   done
@@ -236,7 +258,7 @@ adopt() {
   local sha d; sha="$(git -C "$PIN" rev-parse --short=12 HEAD)"; d="$REL/$sha"
   [ -e "$d" ] && fail "$d already exists — build a release and flip it instead"
   # the links are made in the same breath as the move, so the pin's path is absent for microseconds, not for the
-  # whole of link_shared (heimdall 2026-11-12: a timer started in that gap and failed its CHDIR)
+  # whole of link_shared (a dev machine, 2026-11-12: a timer started in that gap and failed its CHDIR)
   ln -sfn "$d" "$CUR.tmp-$$" && mv -T "$PIN" "$d" && mv -T "$CUR.tmp-$$" "$CUR" && ln -sfn "$CUR" "$PIN" \
     || fail "could not move the pin"
   link_shared "$d"

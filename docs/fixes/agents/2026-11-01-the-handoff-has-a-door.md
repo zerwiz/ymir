@@ -36,7 +36,7 @@ the door rather than the path.
 ```
 $ bin/agents/report.sh write ses-2026-11-01 --state done --changed "…" --verified "…" --next "…"
 report[1]{id,file,state}:
-  "ses-2026-11-01","/home/heimdall/.local/state/ymir/eindri-reports/ses-2026-11-01.md","done"
+  "ses-2026-11-01","~/.local/state/ymir/eindri-reports/ses-2026-11-01.md","done"
 
 $ bin/agents/report.sh check ses-2026-11-01
 report: ses-2026-11-01 complete
@@ -52,3 +52,16 @@ red with eight failures), and the next step.
   day from the cards and the reports. That is the next door.
 - A gate that refuses to close an errand (seat or card) whose handoff is missing — the door exists now, so
   the check can be enforced instead of hoped for.
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: a dev machine (this seat). The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #758

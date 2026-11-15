@@ -26,3 +26,16 @@ templates, the time or the fleet, and could reach only this machine's arm.
 On heimdall, through the window and the engine's log: first word in 0.2–0.5 s on the A5000; "Good evening … the
 night's gone quiet" at 23:14; the fleet read aloud from five machines; the arm holders on heimdall and nidavellir named;
 the to-do, letter, session and provider tools each run against a fenced copy of the home.
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: a dev machine. The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #758

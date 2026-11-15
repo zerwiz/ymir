@@ -25,3 +25,16 @@ shortcut was ever written.
 heimdall and nidavellir: a release of local main builds and proves with all five apps on Electron 43.8.9 from inside
 the release. `bin/engine/tests/test_units.sh` 50/50; `bin/desktop/tests/test_launcher_worktree_guard.sh` 8/8. The
 WSL and macOS roads are written and not yet proved on a real machine.
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: a dev machine. The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #758

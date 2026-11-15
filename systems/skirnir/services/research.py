@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """research.py — Skírnir's window on the open web: the SAME provider Pi's web tool uses.
 
-    python3 research.py --query "OVK ventilation Boverket requirements" [--limit 3]
+    python3 research.py --query "heat pump efficiency standards" [--limit 3]
 
 The house already pays for real search — `pi-web-access` answers through Exa's hosted MCP endpoint,
 keyless, and that is the door this script knocks on. Nothing is invented here and nothing is scraped

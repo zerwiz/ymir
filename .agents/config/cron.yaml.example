@@ -112,3 +112,24 @@
 
 # every N minutes, aligned to the hour — the finest cadence Nornir offers (2026-11-13)
 @heart @every:5 bin/time/nornir-job-snotra-autojoin.sh
+
+# — THE REPOSITORY STAYS AGNOSTIC (2026-11-14, plan 287 §6: RULES/04 and RULES/25) —
+# `~/ymir` is public and ships to other operators' machines: it carries the house's craft, never
+# this operator's life (people, clients, companies, mail domains) and never an assumption about his
+# fleet. The pre-push ward judges what a push ADDS; this is the census of what is already there —
+# fetch main fresh, read ITS tree, and send ONE line when it has stopped being agnostic. Silent
+# when clean: a clean run carves its rune and says nothing on the desk.
+# The words are read from YOUR home (`hodd/identity/public-deny.txt`, seated at install from
+# `hodd/identity/public-deny.txt.example`), and a notice names the file and the line, never a word
+# of that list (RULES/18). The shape ships; the schedule is yours to uncomment, on your heart, in
+# your own minute. Twelve hours apart, so a leak that lands in the morning is named by the evening.
+# TWO CLOCKS, TWO MOMENTS, ONE ENGINE (2026-11-14, corrected at the heart's word). The two rows below
+# read what was PUBLISHED: the job fetches origin/main fresh and judges THAT tree, so a word is named
+# before a leak leaves. The private sweep (`bin/time/nornir-job-private-scan.sh`, PR #732) runs after,
+# over the working tree, and triages what it finds. Both call the SAME engine —
+# `bin/gates/agnostic-audit.sh`, the door this repository ships — so the words are defined once and
+# judged at two moments. Uncomment both pairs, or neither.
+#   @heart 06:00 bin/time/nornir-job-agnostic-audit.sh
+#   @heart 18:00 bin/time/nornir-job-agnostic-audit.sh
+#   @heart 06:10 bin/time/nornir-job-private-scan.sh
+#   @heart 18:10 bin/time/nornir-job-private-scan.sh

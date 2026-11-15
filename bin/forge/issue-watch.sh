@@ -24,8 +24,13 @@ SEEN="$STATE/issue-watch.json"; REPO="${ISSUE_WATCH_REPO:-zerwiz/ymir}"
 DRY=0; STATUS=0
 ORIG=("$@")
 while [ $# -gt 0 ]; do case "$1" in --dry-run) DRY=1; shift;; --status) STATUS=1; shift;; *) shift;; esac; done
+# plan 290 §3 — the shared law every outward door keeps (bin/forge/warden-lib.sh).
+. "$ROOT/bin/forge/warden-lib.sh"
+warden_begin issue-watch || exit 1
 for _a in "${ORIG[@]}"; do
   if [ "$_a" = "--install-timer" ]; then
+    # plan 290 rule 1: seating is the operator's decision for THIS machine, not the door's.
+    warden_seat_allowed issue-watch || exit 3
     U="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"; mkdir -p "$U"
     # the units are the register's (config/units.yaml: issue-watch) and the one writer renders them against
     # the PINNED runtime, never the tree this door ran from (plan 269)
@@ -37,6 +42,11 @@ for _a in "${ORIG[@]}"; do
   fi
 done
 command -v gh >/dev/null 2>&1 || { printf 'issue-watch: gh missing\n' >&2; exit 1; }
+# 2 · own repositories only · 3 · the machine's own identity (plan 290)
+WARDEN_REPOS="$REPO"
+warden_require_door || exit 3
+warden_require_repos "$REPO" || exit 3
+warden_require_identity || exit 3
 
 issues=$(gh issue list --repo "$REPO" --state open --json number,title,labels,createdAt 2>/dev/null) \
   || { printf 'issue-watch: gh issue list failed for %s\n' "$REPO" >&2; exit 1; }
@@ -70,6 +80,9 @@ json.dump(seen, open(seen_path,'w'), indent=1)
 PY
 head -50 /tmp/iw.out | while IFS= read -r line; do [ -n "$line" ] || continue; printf '%s\n' "$line"; case "$line" in issue\ #*) say "$line" "issue:$(printf '%s' "$line" | sed -E 's/^issue #([0-9]+).*/\1/')";; esac; done
 [ "$STATUS" = 1 ] && printf 'issue-watch[1]{repo,open}:\n  "%s","%s"\n' "$REPO" "$(printf '%s' "$issues" | python3 -c 'import json,sys;print(len(json.load(sys.stdin)))')"
+# 4 · every outward act is a Rune (plan 290 rule 4). Silence is not an act.
+SAID_N="$(grep -c '^issue #' /tmp/iw.out 2>/dev/null || true)"
+[ "${SAID_N:-0}" -gt 0 ] && warden_runes told "told the operator about ${SAID_N} issue(s) on $REPO" >/dev/null || true
 
 # ── the red-main issue: close it when the tree it names is green ─────────────────────────────────
 if printf '%s' "$issues" | grep -q 'main-red\|main is red'; then
@@ -82,9 +95,11 @@ for i in json.load(sys.stdin):
     if timeout 900 bash "$ROOT/bin/gates/ci-verify.sh" >/tmp/iw-ci.log 2>&1; then
       gh issue comment "$n" --repo "$REPO" --body "main is green again (\`bin/gates/ci-verify.sh\` PASS at $(git -C "$ROOT" rev-parse --short HEAD)). Closing, as this issue's own text asks." >/dev/null 2>&1
       gh issue close "$n" --repo "$REPO" >/dev/null 2>&1 && say "issue #$n closed: main is green again" "issue:$n"
+      warden_runes closed "closed issue #$n on $REPO — bin/gates/ci-verify.sh answered green at $(git -C "$ROOT" rev-parse --short HEAD)" >/dev/null
     else
       first=$(grep -m1 '"FAIL"' /tmp/iw-ci.log | cut -c1-160)
       gh issue comment "$n" --repo "$REPO" --body "Still red. First failing gate: ${first:-see the run}" >/dev/null 2>&1
+      warden_runes commented "commented on issue #$n on $REPO — main still red; first failing gate: ${first:-unknown}" >/dev/null
     fi
   fi
 fi
