@@ -112,7 +112,7 @@ for _gate_file in "${GATE_FILES[@]}"; do
     printf '%s\t%s\n' "$(basename "$_gate_file")" "the gate file did not load" >>"$VERDICT" 2>/dev/null || true
     fail=1
   fi
-doneorigin/main
+done
 
 if [ "$fail" -eq 0 ]; then
   exit 0
