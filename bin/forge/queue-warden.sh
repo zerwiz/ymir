@@ -195,6 +195,8 @@ timer_state() {
   a="$(systemctl --user is-active "$TIMER" 2>/dev/null | head -1 || true)"
   e="$(systemctl --user is-enabled "$TIMER" 2>/dev/null | head -1 || true)"
   printf '%s/%s' "${a:-absent}" "${e:-absent}"
+}
+
 ASKPASS=/tmp/queue-warden-askpass.sh
 cat >"$ASKPASS" <<'AP'
 #!/bin/bash
