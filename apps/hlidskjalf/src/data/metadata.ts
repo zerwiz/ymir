@@ -80,7 +80,7 @@ export const GATE_META: Record<GateId, PageMeta> = {
   profile: {
     title: 'Profile',
     description:
-      'Personal and company settings — your accent, your tenants’ colours, the house seal, and members.',
+      'Your seat and the company — your accent, the density, the company name and seal, and the workspaces this home holds.',
   },
   runtime: {
     title: 'Runtime',
@@ -141,9 +141,10 @@ function setMeta(attr: 'name' | 'property', key: string, content: string): void 
 }
 
 /** Apply title + description + social tags for the active gate. */
-export function applyMeta(gate: GateId, tenant: string): void {
+export function applyMeta(gate: GateId): void {
+  // One local user, one Hlidskjalf (plan 275 item 11): the title names the page and the app, never a workspace.
   const m = GATE_META[gate] ?? GATE_META.fleet;
-  const title = `${m.title} · ${tenant} · ${SITE.name}`;
+  const title = `${m.title} · ${SITE.name}`;
   const url = `${SITE.url}/#/${gate}`;
 
   document.title = title;
