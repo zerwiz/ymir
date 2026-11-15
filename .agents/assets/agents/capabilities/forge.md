@@ -43,6 +43,7 @@
 | skillopt-setup.sh | skillopt-setup.sh — one-time SkillOpt installation for Ymir. | tested | keep (a human or a cron row must run it) |
 | smith-seat.sh | smith-seat.sh — seat ANY figure in its own herdr workspace, the same w | tested | keep (a human or a cron row must run it) |
 | test_gather_notice.sh | test_gather_notice.sh — the LAST errand of a batch calls the gather. | tested+named | keep (a human or a cron row must run it) |
+| test_review_seat_keeper.sh | test_review_seat_keeper.sh — the keeper: the reviewer's seat says WHY  | tested | keep (a human or a cron row must run it) |
 | utgard-box.sh | utgard-box.sh — a whole computer for one run, outside the wall. | tested+named | keep (a human or a cron row must run it) |
 | utgard-lane.sh | utgard-lane.sh — best of N: one brief, many boxes, one board. | tested+named | keep (a human or a cron row must run it) |
 | utgard.sh | utgard.sh — the sealed execution barrier (Utgard, the realm outside th | tested+named | keep (a human or a cron row must run it) |
