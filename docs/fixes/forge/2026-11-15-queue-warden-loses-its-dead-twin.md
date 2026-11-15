@@ -15,3 +15,7 @@ merge, so #747's rule (no merge without a green verdict for the head sha) still 
 ### Verified
 
 `bash bin/gates/tests/test_queue_warden.sh`: 47 pass, 0 fail.
+
+## CHANGE LOG
+
+- 2026-11-15 — review-mend: added missing heading for #771
