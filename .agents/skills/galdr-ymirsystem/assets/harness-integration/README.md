@@ -1630,8 +1630,10 @@ merged.
 `brokk_branch_outcomes`, `skuld_plan`, `skuld_ticket`, `constellation_list/card/ask`, `logretta_stack`,
 `excalidraw_diagram` and `excalidraw_app`. Each is a thin call to the door the extension calls. Not ported:
 `context_left` and `skuld_branch_report` are pi-session state (`ymir_context` reads the context number from
-disk). `logretta_sit`, `excalidraw_tickets` and `excalidraw_servers` keep their logic in the extension's
-TypeScript and need a CLI face first.
+disk). `logretta_sit`, `whiteboard_tickets` and `whiteboard_servers` keep their logic in the extension's
+TypeScript and need a CLI face first. `whiteboard_tickets` and `whiteboard_servers` are the same two tools
+that used to answer as `excalidraw_tickets` and `excalidraw_servers`; the old names still answer, marked
+deprecated, for one release (plan 284 §21).
 
 ### 2026-11-10 (second) — the Eindri ward, the global arm, and who seats them
 

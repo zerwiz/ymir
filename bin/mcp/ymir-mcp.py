@@ -468,7 +468,10 @@ def ymir_telegram(action: str = "list", machine: str = "", text: str = "") -> st
 # so the behaviour has one home. Doors that are pi-SESSION state are deliberately absent:
 #   context_left        pi's own context gauge — `ymir_context` above reads the number on disk
 #   logretta_sit        the council's rounds are orchestrated inside the extension (no CLI yet)
-#   excalidraw_tickets, excalidraw_servers  their logic lives in the extension's TS modules
+#   whiteboard_tickets, whiteboard_servers  their logic lives in the extension's TS modules
+#                                            (`excalidraw_tickets` / `excalidraw_servers` are
+#                                            the same tools under their retired names, kept
+#                                            for one release — plan 284 §21)
 # `skuld_branch_report` IS ported below — its durable write is `skuld-branch-outcome.sh append`;
 # the branch's merge note into the Allfather-facing conversation stays the branch extension's.
 
