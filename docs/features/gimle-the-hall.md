@@ -7,6 +7,10 @@ the same record answers the MCP.
 
 **What you need.** A gate account (invitation only), and for the MCP a token minted by the house.
 
+**A second house.** This page is the first installation's. A different company running its **own** copy — its
+own service account, names, gate secrets and members, sharing no secret or document with this one — is a
+separate act with its own page: [a-second-house-suite.md](a-second-house-suite.md).
+
 ## The addresses
 
 | what | where |
