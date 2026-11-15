@@ -61,3 +61,7 @@ callout for what is owed, and no machine-shaped blocks.
 - `bin/collab/kit/docs/collaborator-door.md` — the door a hand outside our network is given
 - `RULES/04-hoard.md` — a credential is referenced through the vault, never carried in the tree; a company's
   data, addresses and people stay in that company's own repository
+
+## CHANGE LOG
+
+- 2026-11-15 — review-mend: added missing heading for #774
