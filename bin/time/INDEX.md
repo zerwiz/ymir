@@ -70,7 +70,7 @@ bin[148]{file,does,kind,verdict,disposition,callers,lines}:
   "nornir-job-nsr-compliance.sh","nornir-job-nsr-compliance.sh — the NorthStar compliance round, nightly.","tool","wired","keep",0,54
   "nornir-job-observer.sh","nornir-job-observer.sh - Huginn, the raven of observation.","tool","wired","keep",0,181
   "nornir-job-plan-watch.sh","nornir-job-plan-watch.sh — the clock that watches the master plan.","tool","wired","keep",2,181
-  "nornir-job-private-scan.sh","nornir-job-private-scan.sh — the twice-daily sweep of the Ymir repository for things that belong in the home.","tool","wired","keep",1,247
+  "nornir-job-private-scan.sh","nornir-job-private-scan.sh — the twice-daily sweep of the Ymir repository for things that belong in the home.","tool","wired","keep",1,263
   "nornir-job-skillopt-sleep.sh","nornir-job-skillopt-sleep.sh — SkillOpt overnight self-evolution.","tool","wired","keep",1,77
   "nornir-job-snotra-autojoin.sh","nornir-job-snotra-autojoin.sh — the clock that keeps Snotra in the Allfather's meetings.","tool","wired","keep",0,52
   "nornir-job-snotra-mail.sh","nornir-job-snotra-mail.sh — Snotra listens for the answers.","tool","wired","keep",0,51

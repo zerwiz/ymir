@@ -42,7 +42,7 @@ meeting_card:              # one card per meeting on the company's meetings boar
   list:  "Meetings"
 
 roles:
-  chair: "Ada Lovelace"  # sends the agenda 1–2 days ahead (DEC-04); holds the register
+  chair: "Ada Example"  # sends the agenda 1–2 days ahead (DEC-04); holds the register
   operator: "Lars-<the operator> <the operator>"
 
 cadence:

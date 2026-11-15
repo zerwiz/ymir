@@ -10,7 +10,7 @@ meeting path, a machine's name in an architecture page, the operator's own mail 
 ### What changed
 
 Outside `docs/fixes/` (17 pages), every person, client, domain and machine is now a role or an invented example:
-`Ada Lovelace` and `Grace Hopper` for people, `example.org` for a mail domain, `partner-a` for a peer, and the
+`Ada Example` and `Grace Hopper` for people, `example.org` for a mail domain, `partner-a` for a peer, and the
 fleet's roles — *the heart*, *the forge*, *a dev machine*, *a hand* — where a page had named a particular box. The
 lore keeps its own words: the dwarf-halls are written `Niðavellir`, the Old Norse spelling, so the lore word stays
 and the box that borrowed it is not named.
