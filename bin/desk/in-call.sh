@@ -31,7 +31,9 @@
 set -u
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
-IGNORE="${YMIR_DESK_IGNORE:-^(speech-to-speech|ymir-voice|@zerwiz/rodd|rodd)$}"
+# plan 275 (2026-11-13): Bilskirnir is a house voice client too — its window opens the microphone for the very call
+# that is asking for the engine, and the guard refused that call as "the operator is in a call".
+IGNORE="${YMIR_DESK_IGNORE:-^(speech-to-speech|ymir-voice|@zerwiz/rodd|rodd|bilskirnir|@zerwiz/bilskirnir)$}"
 GUARD_ROLES="${YMIR_DESK_GUARD_ROLES:-dev}"
 
 seat_role() {

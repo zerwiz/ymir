@@ -328,6 +328,11 @@ meta_value() {  # <file> <key>
 PROJECT_DIR=
 WT=
 BRIEF=
+# The errand's own seat, when a relaunch reuses it. Initialised HERE, above the branch that fills it: the
+# dry run prints `seat:` for every spawn, and under `set -u` an unset name aborted the whole dry run with
+# "REUSE_PANE: unbound variable" — so a dry run reported a failure it had already printed the plan for.
+REUSE_PANE=""
+REUSE_WS=""
 if [ "$RELAUNCH" -eq 1 ]; then
   [ -f "$META" ] || { echo "error: --relaunch requires an existing task record at $META" >&2; exit 1; }
   KIND=$(meta_value "$META" kind); KIND=${KIND:-ship}
@@ -366,8 +371,6 @@ if [ "$RELAUNCH" -eq 1 ]; then
 # is the errand's SEAT and is REUSED: a bare shell gets the launch line in place, and an
 # idle or finished agent is refused unless FORCE_RELAUNCH=1. With FORCE_RELAUNCH=1 the old
 # seat is closed before the new one opens, so there is never a second pane beside it.
-REUSE_PANE=""
-REUSE_WS=""
 if command -v herdr >/dev/null 2>&1; then
   _wt_existing="${WT:-$PROJECT_DIR/.yggdrasil/$ID}"
   _seat_rows="$(herdr pane list 2>/dev/null | python3 -c '

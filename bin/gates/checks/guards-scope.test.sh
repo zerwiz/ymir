@@ -101,9 +101,13 @@ else
 fi
 
 # ── 6. the CI posture is wired ──────────────────────────────────────────────
-if grep -q 'guards.sh" --full' "$ROOT/bin/gates/ci-verify.sh" \
+# Plan 295 fix S1: the gate list is a directory, so the ward gate's line lives in
+# bin/gates/checks.d/, not in the driver. The assertion is the same one — the CI posture must
+# run guards.sh --full, and the workflow must call the driver — read from wherever it is kept.
+ward_line="$(grep -rlsF 'guards.sh" --full' "$ROOT/bin/gates/ci-verify.sh" "$ROOT/bin/gates/checks.d" 2>/dev/null | head -1)"
+if [ -n "$ward_line" ] \
    && grep -q 'ci-verify.sh' "$ROOT/.github/workflows/ymir-gates.yml"; then
-  ok ci_full "ci-verify.sh runs guards.sh --full, and the workflow runs ci-verify.sh"
+  ok ci_full "the CI posture runs guards.sh --full from $(basename "$(dirname "$ward_line")")/$(basename "$ward_line"), and the workflow runs ci-verify.sh"
 else
   bad ci_full "the CI posture is not wired: ci-verify must call guards.sh --full"
 fi

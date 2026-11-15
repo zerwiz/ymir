@@ -104,7 +104,7 @@ export function BottomStream() {
       <div className="stream-body" role="log" aria-live="polite">
         {shown.length === 0 ? (
           <div className="mono dim" style={{ fontSize: 11, padding: 8 }}>
-            — no live events —
+            — no live events yet — every rune and every agent-to-agent send appears here as it happens
           </div>
         ) : null}
         {shown.map((e) => (

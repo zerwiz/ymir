@@ -50,6 +50,7 @@ const ENGINE_INSTALL_SOURCE = 'omp'
 // The copied report keeps the raw values; only the panel shows these labels.
 const RESOLUTION_SOURCE_LABEL_KEYS = {
   override: 'diagnostics.resolutionSource.override',
+  'house-door': 'diagnostics.resolutionSource.houseDoor',
   'npm-prefix': 'diagnostics.resolutionSource.npmPrefix',
   path: 'diagnostics.resolutionSource.path',
   'version-manager': 'diagnostics.resolutionSource.versionManager',

@@ -24,9 +24,9 @@ folder rewrites one file instead of colliding on every branch.
 bin[22]{file,does,kind,verdict,disposition,callers,lines}:
   "arm-pin-lib.sh","arm-pin-lib.sh — where the ARM's code lives: the pinned runtime, never a working tree.","lib","wired","keep",10,113
   "arm-pin.sh","arm-pin.sh — the pin's age and reach, as one fact on the board (plan 257 H8).","tool","wired","keep",2,126
-  "arm.sh","arm.sh — the Gná arm, honestly: what the watch is, and whether THIS harness can arm it.","tool","tested","keep",56,217
-  "hnoss-ensure.sh","hnoss-ensure.sh — seat and check the Hnoss (OpenDesign) MCP bridge on a machine.","tool","tested","keep",3,192
-  "hnoss-mcp-launch.sh","hnoss-mcp-launch.sh — the door that seats the Hnoss (OpenDesign) MCP bridge on the","tool","tested","keep",1,231
+  "arm.sh","arm.sh — the Gná arm, honestly: what the watch is, and whether THIS harness can arm it.","tool","tested","keep",57,217
+  "hnoss-ensure.sh","hnoss-ensure.sh — seat and check the Hnoss (OpenDesign) MCP bridge on a machine.","tool","tested","keep",3,201
+  "hnoss-mcp-launch.sh","hnoss-mcp-launch.sh — the door that seats the Hnoss (OpenDesign) MCP bridge on the","tool","tested","keep",1,234
   "logretta-council.sh","logretta-council.sh — the council's MODES: who divides the work, who is sent out, who rules.","tool","wired","keep",0,309
   "logretta-debate.sh","logretta-debate.sh — the council's second round: seats answering SEATS, not the Allfather.","tool","wired","keep",1,118
   "logretta-ensure.sh","logretta-ensure.sh — seat the council's roster on this machine.","tool","tested","keep",7,117

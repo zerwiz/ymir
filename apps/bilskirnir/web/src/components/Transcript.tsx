@@ -74,9 +74,32 @@ const Bubble = memo(function Bubble({ row, side, pos }: { row: Row; side: 'left'
         )}
       </div>
       <span className="bubble__time">{clock(row.createdAt)}</span>
+      {side === 'left' && b.role === 'assistant' && !b.streaming && <LikeButton row={row} liked={!!b.liked} />}
     </div>
   );
 });
+
+/** Like an answer (plan 275, 2026-11-13): "so the AI knows I liked the answer". The agent reads its liked answers. */
+function LikeButton({ row, liked }: { row: Row; liked: boolean }) {
+  const [on, setOn] = useState(liked);
+  const [busy, setBusy] = useState(false);
+  return (
+    <button type="button" className={`bubble__like${on ? ' is-on' : ''}`} aria-pressed={on} disabled={busy}
+      aria-label={on ? 'You liked this answer — click to take it back' : 'Like this answer'} title={on ? 'Liked' : 'Like this answer'}
+      onClick={async () => {
+        const next = !on; setOn(next); setBusy(true);
+        try {
+          const r = await fetch(`/api/bots/${row.botId}/rows/${row.seq}/like`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ liked: next }) });
+          if (!r.ok) setOn(!next);
+        } catch { setOn(!next); } finally { setBusy(false); }
+      }}>
+      <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+        <path d="M7 10v11H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h3Zm2 11V10l4.5-7.2a1.6 1.6 0 0 1 2.9 1.2L15.4 9H20a2 2 0 0 1 2 2.3l-1.4 8A2 2 0 0 1 18.6 21H9Z"
+          fill={on ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      </svg>
+    </button>
+  );
+}
 
 function SenderLabel({ from }: { from: NonNullable<MessageBody['from']> }) {
   const bot = useStore((s) => (from.kind === 'bot' ? s.bots.find((b) => b.id === from.id) : undefined));

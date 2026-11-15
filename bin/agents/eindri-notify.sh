@@ -56,7 +56,20 @@ if [ -z "${STATE:-}" ]; then
   . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
   if declare -f ymir_home_root >/dev/null 2>&1; then ymir_home_root _h 2>/dev/null; [ -n "${_h:-}" ] && STATE="$_h/state"; fi
 fi
-lease="${STATE:-$HOME/Documents/ymirhome/state}/.arm.lease"
+# The lease: STATE when the caller named it, else the home through its ONE resolver — never a
+# literal path (Rule 07; defaults-guard refuses a guessed home, and it did: this line tripped it
+# on 2026-11-14 while the plan-275/283 branch was being pushed).
+lease=""
+if [ -n "${STATE:-}" ]; then
+  lease="$STATE/.arm.lease"
+else
+  . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
+  if declare -f ymir_home_root >/dev/null 2>&1; then
+    ymir_home_root _h 2>/dev/null
+    [ -n "${_h:-}" ] && lease="$_h/state/.arm.lease"
+  fi
+  unset _h
+fi
 session=""
 [ -r "$lease" ] || lease="$(dirname "$(dirname "$lock")")/.arm.lease"
 [ -r "$lease" ] && session="$(sed -nE 's/.*session=([0-9]+).*/\1/p' "$lease" | head -1)"
@@ -118,7 +131,7 @@ if [ "${dry:-0}" = 1 ]; then
 fi
 
 export BROKK_INJECT_MARK=1
-if timeout 60 "$ROOT/bin/agents/eindri-send.sh" "$pane" "[${from}] ${line}" >/dev/null 2>&1; then
+if timeout 60 "$ROOT/bin/agents/eindri-send.sh" --from "agent $from" "$pane" "$line" >/dev/null 2>&1; then
   printf 'injected[1]{from,pane,owner}:\n  "%s","%s","%s"\n' "$from" "$pane" "$owner"
   exit 0
 fi

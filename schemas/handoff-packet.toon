@@ -24,7 +24,8 @@
 #     task        one sentence: what this was supposed to be
 #     plan        the document that says so (home plan path or repo docs path)
 #     branch      the smith's own branch — `eins/<id>` (the transport, never a PR)
-#     base        what it was cut from (usually origin/main)
+#     base        what it was cut from: origin/main, or the `eindri/<id>` branch when the
+#                 smith was cut from an UNMERGED branch (bin/forge/gather.sh merges that base first)
 #     head        the 40-char sha the packet stands for — the reviewer compares it
 #     author      the agent that authored it (never `brokk` — Rule 44)
 #     written_at  ISO-8601 UTC

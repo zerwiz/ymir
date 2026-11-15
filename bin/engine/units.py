@@ -293,7 +293,10 @@ def render_template(path: Path, pin: Path) -> str:
     # plan 275 S11: a launcher's Exec is the one stable command (`ymir-app <name>`), never a tree path
     app = os.path.join(os.environ.get("YMIR_SHORTCUT_BIN") or os.path.expanduser("~/.local/bin"), "ymir-app")
     return (path.read_text(encoding="utf-8").replace("__YMIR_ROOT__", str(pin))
-            .replace("__YMIR_RUNTIME__", str(pin)).replace("__YMIR_APP__", app))
+            .replace("__YMIR_RUNTIME__", str(pin)).replace("__YMIR_APP__", app)
+            # the operator's hoard is resolved here too, so no template can leave one machine's
+            # home in a rendered unit (garmr-hound names YMIR_HOME for a root-run process).
+            .replace("__YMIR_OPERATOR_HOME__", str(ymir_home())))
 
 
 # ── writing ──────────────────────────────────────────────────────────────────

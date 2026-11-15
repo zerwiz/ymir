@@ -1,14 +1,24 @@
 import type { GateId, DomainDef, RealmDef, TaskState, AgentStatus } from '../types';
 
-// Single tenant: the switchable unit is a WORKSPACE (personal | work), not a
-// tenant. Domains are knowledge areas inside a workspace. Houses are brands.
-export const WORKSPACES: RealmDef[] = [
+// One runtime, MANY realms (plan 275 items 11 and 21). The mode chips and the
+// switching they offered are retired: there is one Hlidskjalf and it shows EVERY
+// realm. A realm is a FOLDER (`svartalfaheim/<realm>`) and a LABEL, never a mode
+// that hides the others — pinning the runtime to one of them stranded the rest,
+// which the rule "never remove a feature" forbids. So the realm list is a FILTER
+// on every page that scopes its work, and `DEFAULT_REALM` is only the scope a
+// realm-scoped page opens on.
+//
+// WHOSE realms they are is private data (RULES/04). The list is READ from the
+// operator's own registry — `hodd/identity/workspaces.yaml` in the home, served
+// by the gate at `GET /api/workspaces` — and never written into this file. What
+// ships is a generic default of two, so a home with one operator, no registry and
+// no realms shelf still opens Hlidskjalf and still works.
+export const DEFAULT_WORKSPACES: RealmDef[] = [
   {
     id: 'work',
     tenant: 'Work',
     name: 'Work',
     kind: 'work',
-    company: 'wayof',
     domains: ['company', 'marketing', 'development', 'life'],
     tint: '#c9973f',
     tint2: '#7d5f2a',
@@ -26,8 +36,79 @@ export const WORKSPACES: RealmDef[] = [
   },
 ];
 
-/** Back-compat alias — the active `realm` id is now a workspace id. */
-export const REALMS = WORKSPACES;
+/** The realms a machine has, from the registry row it answered with. A realm the
+ *  shipped build already knows keeps its own colour and rune; one it does not
+ *  (nobody can ship a private shelf) takes the seal its own id picks, so it looks
+ *  the same on every reload and no two realms take the same one by accident. */
+export interface WorkspaceRow {
+  id: string;
+  name?: string;
+  kind?: string;
+  company?: string;
+  domains?: string[];
+}
+
+/** The house seals a registry realm may wear, in a fixed order. */
+const SEALS: Array<{ tint: string; tint2: string; glyph: string }> = [
+  { tint: '#c9973f', tint2: '#7d5f2a', glyph: 'ᛉ' },
+  { tint: '#96a0a8', tint2: '#5f686e', glyph: 'ᛗ' },
+  { tint: '#8aa39b', tint2: '#4f6b64', glyph: 'ᛋ' },
+  { tint: '#c2584a', tint2: '#7c3a30', glyph: 'ᚢ' },
+  { tint: '#9a8f75', tint2: '#6b6250', glyph: 'ᛞ' },
+  { tint: '#34d399', tint2: '#10b981', glyph: 'ᚨ' },
+];
+
+/** A stable seal per id: the same realm wears the same tint on every machine. */
+function sealOf(id: string): { tint: string; tint2: string; glyph: string } {
+  let h = 0;
+  for (let i = 0; i < id.length; i += 1) h = (h * 31 + id.charCodeAt(i)) % 100000;
+  return SEALS[h % SEALS.length];
+}
+
+/** One registry row → the realm definition the UI draws. */
+export function realmFromRegistry(row: WorkspaceRow): RealmDef {
+  const known = DEFAULT_WORKSPACES.find((r) => r.id === row.id);
+  const seal = sealOf(row.id);
+  const kind = row.kind === 'personal' ? 'personal' : 'work';
+  return {
+    id: row.id,
+    tenant: row.name || row.id,
+    name: row.name || row.id,
+    kind,
+    ...(row.company ? { company: row.company } : {}),
+    ...(row.domains?.length ? { domains: row.domains as RealmDef['domains'] } : {}),
+    tint: known?.tint ?? seal.tint,
+    tint2: known?.tint2 ?? seal.tint2,
+    glyph: known?.glyph ?? seal.glyph,
+    ...(known?.domains ? { domains: known.domains } : {}),
+    ...(known?.company ? { company: known.company } : {}),
+  };
+}
+
+/** The realm list a machine answers with, or the shipped pair when it answers
+ *  with nothing — a registry that cannot be read is not an empty home. */
+export function realmsFromRegistry(rows: WorkspaceRow[] | null | undefined): RealmDef[] {
+  const seen = new Set<string>();
+  const out: RealmDef[] = [];
+  for (const row of rows ?? []) {
+    if (!row?.id || seen.has(row.id)) continue;
+    seen.add(row.id);
+    out.push(realmFromRegistry(row));
+  }
+  return out.length ? out : DEFAULT_WORKSPACES;
+}
+
+/** The realm a realm-scoped page opens on. It is a default FILTER, not a mode:
+ *  every realm stays reachable and visible. */
+export const DEFAULT_REALM = 'work';
+
+/** A realm's display name, for a label or a filter chip. */
+export const realmLabel = (id: string, realms: RealmDef[] = DEFAULT_WORKSPACES): string =>
+  realms.find((r) => r.id === id)?.name ?? id;
+
+/** Back-compat alias — the shipped pair, for code that draws before the registry
+ *  has answered. A surface that shows a person's realms reads the store. */
+export const REALMS = DEFAULT_WORKSPACES;
 
 export const DOMAIN_LABEL: Record<string, string> = {
   company: 'Company',
@@ -48,8 +129,8 @@ export const DOMAINS: Record<string, DomainDef> = {
   mannheim: { id: 'mannheim', name: 'Mannheim', accent: '#6b6250', glyph: 'ᛘ' },
 };
 
-export const realmById = (id: string): RealmDef =>
-  REALMS.find((r) => r.id === id) ?? REALMS[0];
+export const realmById = (id: string, realms: RealmDef[] = DEFAULT_WORKSPACES): RealmDef =>
+  realms.find((r) => r.id === id) ?? realms[0] ?? DEFAULT_WORKSPACES[0];
 
 export interface AccentPreset {
   id: string;
@@ -89,7 +170,7 @@ export function realmDef(
   id: string,
   grant?: { tenant?: string; domain?: string; tint?: string; glyph?: string },
 ): RealmDef {
-  const known = WORKSPACES.find((r) => r.id === id);
+  const known = DEFAULT_WORKSPACES.find((r) => r.id === id);
   if (known) return known;
   const house = DOMAINS[grant?.domain ?? 'ymirlabs'];
   return {

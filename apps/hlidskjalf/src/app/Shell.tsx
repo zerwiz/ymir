@@ -1,4 +1,4 @@
-import { useEffect, type CSSProperties } from 'react';
+import { lazy, Suspense, useEffect, type ComponentType, type CSSProperties } from 'react';
 import { useYmir } from '../state/store';
 import { GATES, realmDef } from '../data/realms';
 import { applyMeta } from '../data/metadata';
@@ -6,27 +6,39 @@ import { Rail } from './Rail';
 import { Topbar } from './Topbar';
 import { BottomStream } from './BottomStream';
 import { MobileNav } from './MobileNav';
-import { Fleet } from '../gates/Fleet';
-import { Tasks } from '../gates/Tasks';
-import { Well } from '../gates/Well';
-import { Runes } from '../gates/Runes';
-import { Reviews } from '../gates/Reviews';
-import { Processes } from '../gates/Processes';
-import { Files } from '../gates/Files';
-import { OmniChat } from '../gates/OmniChat';
-import { Forge } from '../gates/Forge';
-import { Profile } from '../gates/Profile';
-import { Runtime } from '../gates/Runtime';
-import { Cron } from '../gates/Cron';
-import { Sessions } from '../gates/Sessions';
-import { Worktrees } from '../gates/Worktrees';
-import { Trace } from '../gates/Trace';
-import { Decisions } from '../gates/Decisions';
-import { Stats } from '../gates/Stats';
-import { Managandr } from '../gates/Managandr';
-import { Snotra } from '../gates/Snotra';
-import { Mail } from '../gates/Mail';
-import { Skirnir } from '../gates/Skirnir';
+
+// ── the gates load when they are opened, not before the first screen (2026-11-14, plan 275 item 10) ───────
+// Every gate used to be a static import, so the renderer parsed and executed all twenty-one pages — Fleet,
+// Stats, Managandr, Snotra, Mail and the rest — before the first screen could paint. Under this seat's
+// `software` graphics policy (bin/host/graphics-lib.sh; the hybrid card forces CPU rasterisation) that cost
+// showed up as a white window: measured 9.46 s from window mapped to first answer. One screen needs one gate,
+// so each is now its own chunk, fetched on first open and kept afterwards (React caches the module). Nothing is
+// removed: every page is still there, still the same component, only later. The rail, the top bar, the stream
+// and the mobile nav stay eager — they ARE the first screen.
+const lazyGate = (load: () => Promise<Record<string, unknown>>, name: string) =>
+  lazy(() => load().then((m) => ({ default: m[name] as ComponentType })));
+
+const Fleet = lazyGate(() => import('../gates/Fleet'), 'Fleet');
+const Tasks = lazyGate(() => import('../gates/Tasks'), 'Tasks');
+const Well = lazyGate(() => import('../gates/Well'), 'Well');
+const Runes = lazyGate(() => import('../gates/Runes'), 'Runes');
+const Reviews = lazyGate(() => import('../gates/Reviews'), 'Reviews');
+const Processes = lazyGate(() => import('../gates/Processes'), 'Processes');
+const Files = lazyGate(() => import('../gates/Files'), 'Files');
+const OmniChat = lazyGate(() => import('../gates/OmniChat'), 'OmniChat');
+const Skirnir = lazyGate(() => import('../gates/Skirnir'), 'Skirnir');
+const Forge = lazyGate(() => import('../gates/Forge'), 'Forge');
+const Profile = lazyGate(() => import('../gates/Profile'), 'Profile');
+const Runtime = lazyGate(() => import('../gates/Runtime'), 'Runtime');
+const Cron = lazyGate(() => import('../gates/Cron'), 'Cron');
+const Sessions = lazyGate(() => import('../gates/Sessions'), 'Sessions');
+const Worktrees = lazyGate(() => import('../gates/Worktrees'), 'Worktrees');
+const Trace = lazyGate(() => import('../gates/Trace'), 'Trace');
+const Decisions = lazyGate(() => import('../gates/Decisions'), 'Decisions');
+const Stats = lazyGate(() => import('../gates/Stats'), 'Stats');
+const Managandr = lazyGate(() => import('../gates/Managandr'), 'Managandr');
+const Snotra = lazyGate(() => import('../gates/Snotra'), 'Snotra');
+const Mail = lazyGate(() => import('../gates/Mail'), 'Mail');
 
 function Stage() {
   const gate = useYmir((s) => s.gate);
@@ -138,7 +150,9 @@ export function Shell() {
           )}
           <PageFeed />
         </div>
-        <Stage />
+        <Suspense fallback={<div className="stage-loading dim" aria-busy="true">opening…</div>}>
+          <Stage />
+        </Suspense>
       </main>
       <BottomStream />
       <MobileNav />

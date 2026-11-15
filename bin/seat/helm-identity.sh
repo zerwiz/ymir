@@ -74,8 +74,12 @@ lease_field() {  # <file> <field>
 }
 
 charter_text() {  # planning,mail,the-work-in-hand,dispatch-on → planning · mail · the work in hand · dispatch on
-  printf '%s' "$1" | tr ',' '\n' | sed 's/-/ /g; s/^ *//; s/ *$//' | grep -v '^$' | paste -sd'·' - \
-    | sed 's/·/ · /g'
+  # GNU paste reads a MULTIBYTE -d delimiter byte by byte and CYCLES through the bytes, so `paste -sd'·'`
+  # emitted 0xC2, then the next field, then 0xB7 — a broken row and a digest line that could not be
+  # matched (measured 2026-11-14, `od -c` shows `planning 302 mail 267 the work…`). Join in awk instead:
+  # one character, whichever the locale says it is.
+  printf '%s' "$1" | tr ',' '\n' | sed 's/-/ /g; s/^ *//; s/ *$//' | grep -v '^$' \
+    | awk '{ out = (out == "" ? $0 : out " · " $0) } END { printf "%s", out }'
 }
 
 print_row() {  # <lease>

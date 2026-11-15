@@ -149,7 +149,11 @@ fi
 if [ "$VERDICT" != "PASS" ] && [ "${YMIR_REVIEW_SELF:-auto}" != 0 ]; then
   rmarker="$STATE/.reviewed/repaired-pr-$PR.$HEAD"
   if [ ! -f "$rmarker" ] && [ -x "$ROOT/bin/seat/herdr-run.sh" ] && [ -r "$ROOT/bin/forge/repair-errand.md" ]; then
-    brief="$(sed -e "s|@PR@|$PR|g" -e "s|@HEAD@|$HEAD|g" -e "s|@VERDICT@|$VERDICT|g" "$ROOT/bin/forge/repair-errand.md" 2>/dev/null || true)"
+    # @REPO@ and @REVIEW@ are the checkout this door runs in and the verdict file it just wrote:
+    # the brief names the machine's paths at dispatch time, never in the public tree (RULES/04).
+    brief="$(sed -e "s|@PR@|$PR|g" -e "s|@HEAD@|$HEAD|g" -e "s|@VERDICT@|$VERDICT|g" \
+      -e "s|@REPO@|$ROOT|g" -e "s|@REVIEW@|$FILE|g" \
+      "$ROOT/bin/forge/repair-errand.md" 2>/dev/null || true)"
     brief_file="$STATE/.reviewed/errand-repair-$PR.md"
     mkdir -p "$STATE/.reviewed" 2>/dev/null || true
     printf '%s\n' "$brief" >"$brief_file" 2>/dev/null || true

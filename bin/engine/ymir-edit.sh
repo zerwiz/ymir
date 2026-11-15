@@ -12,9 +12,9 @@
 # It accepts the same shape a normal editor does: `ymir-edit.sh <path>`.
 #
 # Usage:
-#   bin/engine/ymir-edit.sh <path>          # open, then move to a free desktop
+#   bin/engine/ymir-edit.sh <path>          # open on the desktop you are on (default since 2026-11-14)
 #   bin/engine/ymir-edit.sh --desktop <n> <path>
-#   bin/engine/ymir-edit.sh --here <path>   # open on the current desktop (no move)
+#   bin/engine/ymir-edit.sh --desktop free <path>   # the old road: move it to an empty desktop
 #   bin/engine/ymir-edit.sh --role reading <path>   # open on a DISPLAY, by role
 #   bin/engine/ymir-edit.sh --role code --fullscreen <path>
 #   bin/engine/ymir-edit.sh --new <path>    # force a second window for the same file
@@ -28,7 +28,7 @@
 #
 # Env:
 #   YMIR_EDITOR          the real editor (default: code, else nvim, else vi)
-#   YMIR_EDITOR_DESKTOP  'free' (default, an empty desktop) | 'here' | a number
+#   YMIR_EDITOR_DESKTOP  'here' (default, the desktop you are on) | 'free' (an empty one) | a number
 set -u
 
 VERSION="1.0.0"
@@ -43,7 +43,9 @@ case "${1-}" in
   -h|--help|"") sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
 esac
 
-MODE="${YMIR_EDITOR_DESKTOP:-free}"
+# 2026-11-14, at the Allfather's word ("all apps open on the screen the user opens them in"): the editor opens on
+# the desktop it was asked from, and a reused window is brought there. --desktop free keeps the old empty-desktop road.
+MODE="${YMIR_EDITOR_DESKTOP:-here}"
 ROLE="" NEW=0 FULL=0 DRY=0
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -145,7 +147,10 @@ fi
 DEST=""
 if [ -z "$ROLE" ]; then
   case "$MODE" in
-    here) DEST="" ;;
+    here) DEST="$(hyprctl activeworkspace -j 2>/dev/null | python3 -c 'import json,sys
+try: n=json.load(sys.stdin).get("id",0)
+except Exception: n=0
+print(n if isinstance(n,int) and n>0 else "")' 2>/dev/null)" ;;
     free) DEST="$(free_desktop)" ;;
     ''|*[!0-9]*) DEST="$(free_desktop)" ;;
     *) DEST="$MODE" ;;
@@ -171,6 +176,7 @@ if [ -z "$DEST" ]; then
 fi
 
 [ -n "$ADDR" ] && window_to_desktop "$ADDR" "$DEST" >/dev/null 2>&1 && PLACED="yes"
+[ -n "$ADDR" ] && [ "$MODE" = here ] && { window_focus "$ADDR" >/dev/null 2>&1 || true; }
 
 printf 'ymir-edit[1]{editor,path,desktop,reused,moved}:\n  "%s","%s","%s","%s","%s"\n' \
   "$EDITOR_BASE" "$TARGET" "$DEST" "$REUSED" "$PLACED"

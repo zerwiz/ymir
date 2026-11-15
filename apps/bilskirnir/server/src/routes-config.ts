@@ -15,7 +15,7 @@ import { orgo } from './orgo.js';
 import { openTerminal } from './desk.js';
 import { engineHome, engineInfo, engineKind, forgetEngineOptions, reloadEngine, restartEngine, stopOwnScreen } from './engine.js';
 import { detect, forBrowser, PRESETS, readChoices, modelsDirFor } from './models/detect.js';
-import { addProvider, choose, removeProvider } from './models/choose.js';
+import { addProvider, choose, chooseFallback, readFallback, removeProvider } from './models/choose.js';
 import { listMemories } from './engine-memory.js';
 import { idleConfig, viewerCount } from './idle.js';
 import type { LibraryFile, Skill } from './types.js';
@@ -168,8 +168,29 @@ configApi.post('/bots/:id/engine/login', async (c) => {
 // ---------- the Models screen: what the user already has, and one click to use it ----------
 
 /** Every provider found (environment, pi, OpenCode, Hermes, local servers), its models, and the fleet's verdict on each. Keys are never sent. */
+// The catalog is slow to build (it reaches every rail and hosted provider) and the settings panel sat on "Looking…" for
+// about 20 s each time it opened (plan 275, 2026-11-13). The last answer is handed out at once and refreshed in the
+// background when a minute old; it is warmed at start and dropped when a provider is added or removed.
+let catalogCache: { at: number; value: Awaited<ReturnType<typeof detect>> } | null = null;
+let catalogBuilding: Promise<Awaited<ReturnType<typeof detect>>> | null = null;
+function buildCatalog() {
+  if (!catalogBuilding) {
+    catalogBuilding = detect()
+      .then((value) => { catalogCache = { at: Date.now(), value }; return value; })
+      .finally(() => { catalogBuilding = null; });
+  }
+  return catalogBuilding;
+}
+async function cachedDetect() {
+  if (!catalogCache) return buildCatalog();
+  if (Date.now() - catalogCache.at > 60_000) buildCatalog().catch(() => {});
+  return catalogCache.value;
+}
+function dropCatalog() { catalogCache = null; }
+setTimeout(() => { buildCatalog().catch(() => {}); }, 2000).unref();
+
 configApi.get('/models', async (c) => {
-  const d = forBrowser(await detect());
+  const d = forBrowser(await cachedDetect());
   const choices = readChoices(modelsDirFor());
   const bots = (db.prepare("SELECT id, name, is_primary, engine FROM bots WHERE COALESCE(kind,'agent') <> 'room' AND COALESCE(hidden,0)=0 ORDER BY is_primary DESC, created_at ASC").all() as any[])
     .filter((b) => b.engine === 'primary' || b.engine === 'managed')
@@ -182,6 +203,7 @@ configApi.get('/models', async (c) => {
 
 /** Add a provider by preset + key, or by base URL alone. The key goes to the user's own secrets, never back to the browser. */
 configApi.post('/models/providers', async (c) => {
+  dropCatalog();
   const p = await c.req.json<{ preset?: string; name?: string; baseUrl?: string; key?: string }>().catch(() => ({} as any));
   try {
     const r = await addProvider(p);
@@ -192,8 +214,29 @@ configApi.post('/models/providers', async (c) => {
 });
 
 configApi.delete('/models/providers/:id', (c) => {
+  dropCatalog();
   removeProvider(c.req.param('id'));
   return c.json({ ok: true });
+});
+
+/** The agent's fallback model (plan 275 wave 1): read it, set it, or clear it ({ providerId: null }). */
+configApi.get('/bots/:id/fallback', (c) => {
+  const b = ownBot(c.get('user').id, c.req.param('id'));
+  if (!b) return c.json({ error: 'not found' }, 404);
+  const home = engineHome(b.id);
+  return c.json({ fallback: home ? readFallback(home) : null });
+});
+configApi.post('/bots/:id/fallback', async (c) => {
+  const b = ownBot(c.get('user').id, c.req.param('id'));
+  if (!b) return c.json({ error: 'not found' }, 404);
+  const home = engineHome(b.id);
+  if (!home) return c.json({ error: 'This room has no agent behind it.' }, 409);
+  const p = await c.req.json<{ providerId?: string | null; model?: string }>().catch(() => ({} as any));
+  try {
+    const r = await chooseFallback(home, p.providerId && p.model ? { providerId: p.providerId, model: p.model } : null);
+    await reloadEngine(b.id);
+    return c.json({ ok: true, fallback: r.model });
+  } catch (e: any) { return c.json({ error: e?.message ?? String(e) }, 400); }
 });
 
 /** Use this model for this agent: rewrite its Hermes config.yaml's model block, then reload its gateway. */

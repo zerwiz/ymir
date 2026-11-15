@@ -823,3 +823,16 @@ body:has(.stream-resizer:active) .stream-resizer .grip {
 .topbar .search {
   min-width: 280px;
 }
+
+/* The seat being taken (2026-11-14, plan 275 item 10): the window's first paint, drawn before /api/session
+   answers. Centred and quiet — it must read as "the app is here", never as the admitted shell. */
+.boot-seat {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display, serif);
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+}

@@ -145,9 +145,31 @@ function launch() {
   // never hardcoded here.
   const electronArgs = [appPath, '--no-sandbox']
   // plan 275 S16: the DevTools port, so the app can be tested as a person uses it (unset = none)
-  if (process.env.YMIR_DEVTOOLS_PORT) electronArgs.push(`--remote-debugging-port=${process.env.YMIR_DEVTOOLS_PORT}`)
+  if (process.env.YMIR_DEVTOOLS_PORT) {
+    electronArgs.push(`--remote-debugging-port=${process.env.YMIR_DEVTOOLS_PORT}`)
+    // Chromium refuses a DevTools websocket that carries an Origin header unless the origins
+    // are named, and every scripted client (node's built-in WebSocket, any harness) sends one.
+    // Without this the door answers /json and then fails the handshake — measured 2026-11-13.
+    // Only while the door is open, and the port binds loopback by default.
+    electronArgs.push('--remote-allow-origins=*')
+  }
   if (['1', 'true', 'yes'].includes(String(process.env.YMIR_DESKTOP_DISABLE_GPU ?? '').toLowerCase())) {
     electronArgs.push('--disable-gpu', '--disable-gpu-compositing')
+    // MEASURED 2026-11-14 on this machine: with `--disable-gpu` and NO ozone flag, the
+    // window is created and never maps on Wayland — the compositor lists no client, the
+    // operator sees nothing and clicks the icon again ("it starts over and over"). The
+    // same app with `--disable-gpu --ozone-platform=x11` maps at once (XWayland draws the
+    // software-composited window). The graphics policy resolves to `software` on this
+    // hybrid box, so this is the path every launch takes here; other platforms and X11
+    // sessions are untouched.
+    // Which surface: the operator's choice (`YMIR_DESKTOP_OZONE_PLATFORM`, from the home's
+    // config/desktop.env), else the measured default on a Wayland session.
+    const ozone = String(process.env.YMIR_DESKTOP_OZONE_PLATFORM || 'auto').toLowerCase()
+    if (ozone === 'x11' || ozone === 'wayland') {
+      electronArgs.push(`--ozone-platform=${ozone}`)
+    } else if (process.platform === 'linux' && process.env.WAYLAND_DISPLAY) {
+      electronArgs.push('--ozone-platform=x11')
+    }
   }
 
   // Pass workspace path via environment variable

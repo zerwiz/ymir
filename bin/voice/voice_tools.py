@@ -1170,7 +1170,7 @@ async def _execute(name, arguments):
         line = str(args.get("line", "")).strip()
         if not target or not line:
             raise ValueError("steer_worker needs a target and a line")
-        code, out = _run([_door("agents/eindri-send.sh"), target, line], timeout=30)
+        code, out = _run([_door("agents/eindri-send.sh"), "--from", "the Allfather, by voice through Rödd", target, line], timeout=30)
         return ToolResult(
             f"{'sent' if code == 0 else 'failed'}: {line!r} → {target}. {_clean(out, 160)}",
             create_response=False,
@@ -2154,7 +2154,7 @@ async def _tool_steer_worker(args):
         pane = _pane_for(target)
         if pane:
             target = pane
-    code, out = _run([_door("agents/eindri-send.sh"), target, line], timeout=30)
+    code, out = _run([_door("agents/eindri-send.sh"), "--from", "the Allfather, by voice through Rödd", target, line], timeout=30)
     return ToolResult(f"{'sent' if code == 0 else 'failed'}: {line!r} → {target}. {_clean(out, 160)}",
                       create_response=False)
 

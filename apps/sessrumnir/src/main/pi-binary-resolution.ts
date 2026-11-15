@@ -499,6 +499,11 @@ function finalize(
  *      launcher otherwise gets a minimal PATH with no version-manager shims.
  *   1. The path configured in Settings, if it exists. A directory is accepted
  *      and searched; a stale value is reported rather than silently obeyed.
+ *   1b. THE HOUSE DOOR (`~/.pi/agent/bin/pi`). Ymir seats a door in front of pi so a
+ *      seat started inside a checkout loads ONE extension home, not two (RULES/13).
+ *      Measured 2026-11-13: this process can arrive with NO PATH AT ALL, so the door
+ *      was never found, a bare npm `pi` was spawned, every Ymir tool registered twice,
+ *      and the seat died with "Couldn't start Brokk". The door is asked for by name.
  *   2. npm's own global prefix.
  *   3. A PATH search.
  *   4. Per-version prefixes created by node version managers.
@@ -564,6 +569,15 @@ export function resolvePiBinary(
       return finalize(deps, overridePath, 'override', true, null, pathEnv)
     } else {
       rejectedOverride = overridePath
+    }
+  }
+
+  // The house door, before any other guess: when it is present it IS the answer the
+  // seat has already proved (one extension home, RULES/13). Windows has no door.
+  if (!deps.isWindows) {
+    const door = process.env.YMIR_PI_DOOR || join(homeDir(deps.env), '.pi', 'agent', 'bin', 'pi')
+    if (usableFile(deps, door)) {
+      return finalize(deps, door, 'house-door', true, rejectedOverride, pathEnv)
     }
   }
 

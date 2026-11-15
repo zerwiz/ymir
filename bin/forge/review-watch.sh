@@ -182,7 +182,7 @@ try: d=json.load(sys.stdin)
 except Exception: d={}
 print(",".join(d.get("roles") or []))' 2>/dev/null || true)"
         case ",$roles_c," in *,heart,*)
-          errand="$(sed -e "s|@BRANCH@|${branch:-HEAD}|g" -e "s|@PR@|$num|g" "$ROOT/bin/forge/conflict-errand.md" 2>/dev/null || true)"
+          errand="$(sed -e "s|@BRANCH@|${branch:-HEAD}|g" -e "s|@PR@|$num|g" -e "s|@REPO@|$ROOT|g" "$ROOT/bin/forge/conflict-errand.md" 2>/dev/null || true)"
           if [ -n "$errand" ] && [ -x "$ROOT/bin/seat/herdr-run.sh" ] \
              && bash "$ROOT/bin/seat/herdr-run.sh" eindri "conflict-smith-$num" -- "$errand" >/dev/null 2>&1; then
             mkdir -p "$STATE/.reviewed" 2>/dev/null || true

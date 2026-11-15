@@ -3,8 +3,15 @@ import type { AgentCard as AgentCardType } from '../types';
 import { DOMAINS } from '../data/realms';
 import { useYmir } from '../state/store';
 import { StatusChip } from './Status';
-import { RuneTag } from './RuneTag';
 
+/** An Agent Card states what is TRUE of the agent right now (plan 275 item 9).
+ *
+ * What it must never do again: call an unseated roster figure NOMINAL, print an
+ * empty model, or wear an invented organisation's name (Utgard Studios, Runestone
+ * Labs, Muninn Labs). Every line below is a field the connector read from a pane,
+ * a launch record, or the operator's own config — and a field it could not read
+ * says so.
+ */
 export function AgentCard({
   agent,
   onSelect,
@@ -14,13 +21,18 @@ export function AgentCard({
   onSelect?: (id: string) => void;
   selected?: boolean;
 }) {
+  // The house colour and glyph are decoration from the roster's domain; the domain
+  // NAME is invented, so it is never printed.
   const house = DOMAINS[agent.domain] ?? DOMAINS.ymirlabs;
   const runes = useYmir((s) => s.runes);
-  // Only real, sourced figures: a card never invents a number.
   const tasks = runes.filter((r) => r.agent === agent.name || r.agent === agent.id).length;
+  const model = agent.model || 'unknown';
+  const alive = agent.alive ?? agent.status === 'nominal';
+
   return (
     <article
       className="agent-card"
+      data-alive={alive ? 'yes' : 'no'}
       style={{ '--house': house.accent } as CSSProperties}
     >
       <div className="ac-head">
@@ -29,34 +41,55 @@ export function AgentCard({
         </div>
         <div className="grow">
           <div className="row-between">
-            <div className="agent-name">{agent.name}</div>
+            <div className="agent-name" title={agent.name}>{agent.name}</div>
             <StatusChip status={agent.status} />
           </div>
           <div className="agent-role">{agent.role}</div>
         </div>
       </div>
 
-      <div className="agent-skills">
-        <RuneTag label={house.name} color={house.accent} glyph={house.glyph} />
-        {agent.skills.slice(0, 3).map((s) => (
-          <RuneTag key={s} label={s} />
-        ))}
+      <div className="agent-meta">
+        <span className="mono" title="the harness actually running it">
+          {agent.harness || '—'}
+        </span>
+        <span aria-hidden="true">·</span>
+        <span className="mono truncate" title={model}>
+          {model}
+        </span>
       </div>
 
       <div className="agent-meta">
-        <span className="mono">{agent.interface.protocol}</span>
+        <span className="mono truncate" title={agent.paneLabel || 'no pane holds it'}>
+          {agent.paneLabel || 'not seated'}
+        </span>
         <span aria-hidden="true">·</span>
-        <span className="mono truncate">{agent.interface.endpoint}</span>
-        <span aria-hidden="true">·</span>
-        <span className="mono">{agent.interface.signed ? 'JWS ✓' : 'UNSIGNED'}</span>
+        <span className="mono">{agent.machine || '—'}</span>
       </div>
 
-      <div className="agent-stats">
-        <span>
-          model <b>{agent.model}</b>
+      <div className="agent-meta">
+        <span className="mono truncate" title={agent.errandClaim || agent.errand || 'no errand record'}>
+          {agent.errand
+            ? `${agent.errand}${agent.errandState ? ` · ${agent.errandState}` : ''}`
+            : alive
+              ? agent.role || 'alive'
+              : 'no errand'}
         </span>
-        <span>
-          tasks <b>{tasks}</b>
+      </div>
+
+      {agent.lastMessage ? (
+        <div className="agent-last" title={`${agent.lastMessageFrom || ''} → ${agent.name}: ${agent.lastMessage}`}>
+          <span aria-hidden="true">↦ </span>
+          {agent.lastMessage}
+        </div>
+      ) : null}
+
+      <div className="agent-skills">
+        <span className="mono dim" style={{ fontSize: 10 }}>
+          {agent.interface.protocol} · {agent.interface.endpoint || 'no endpoint'} ·{' '}
+          {agent.interface.signed ? 'signed' : 'no JWS'}
+        </span>
+        <span className="mono dim" style={{ fontSize: 10 }}>
+          {tasks} runes
         </span>
       </div>
 

@@ -23,7 +23,7 @@
 #     `skill`). A NAME, not a stub.
 #   · the collab kit's `advantage-audit.sh` — its regex and its verdict ARE the vocabulary; the file's whole
 #     job is to detect those words in a document, so naming them is the behaviour, not a stub.
-#   · ONE declared FIXTURE: `bin/seat/tests/test_seat_reap.sh` stands a `herdr` on PATH
+#   · the declared FIXTURES: `bin/seat/tests/test_seat_reap.sh` stands a `herdr` on PATH
 #     (a temp file the ward writes, never shipped behaviour) so the seat CLOSER can be
 #     proved without closing — or refusing to close — a live workspace that belongs to
 #     somebody else's errand. Declared here rather than hidden in the ward: a fixture the
@@ -32,6 +32,21 @@
 #     (`hodd/life/personal/me/todo.md`) and the lists the voice keeps beside it
 #     (`todo-voice.md`). A FILENAME, not a stub; `bin/gates/guards/public-guard.sh`
 #     already allows `TODO.md` for the same reason.
+#   · `bin/forge/gather.sh`'s `todo=` key — the batch manifest's own STATE FIELD (a branch waiting to be
+#     merged; it is rewritten to `merged=` or `pending=` as the gatherer walks the list). A RECORD, not a
+#     stub. Matched only on lines that carry the `todo=` key, so a real `stub` in that file is still caught.
+#   · a SECOND declared FIXTURE: `bin/gates/tests/test_review_seat_verdict.sh` stands a `herdr` on PATH in
+#     a temp dir so the review judge's verdict can be proved without a live seat — the same shape as
+#     `test_seat_reap.sh`, declared for the same reason.
+#   · ANY file under a `tests/` directory. A test stands a fake BY DEFINITION — a `stub` variable, a
+#     `todo` fixture, a placeholder the assertion is about — and the gate is about SHIPPED behaviour.
+#     Measured 2026-11-14: 53 of the tree's findings were one test's fixtures and its assertion text;
+#     the class is structural, not accidental, so it is excused by class. A stub in a shipped door
+#     beside it is still caught (the probe proves it).
+#   · `bin/records/comms.py` — the operator's todo ledger. `--todo`, `todo-matches`, `todo-apply` and the
+#     `todo` tag are the feature's NAME, the same class as Pi's own tool names in the mcp doors.
+#   · `bin/voice/voice_tools.py` — the voice fills the operator's letter templates (`placeholder` is the
+#     template's own word) and calls the ledger's verbs.
 #
 # Exit: 0 no hits · 1 hits printed · 2 usage.
 set -uo pipefail
@@ -49,7 +64,12 @@ hits="$(grep -rnE '\b(mock|stub|placeholder|todo)\b' "$ROOT/bin" 2>/dev/null \
   | grep -vE '^[^:]*bin/(mcp|seat)/ymir-mcp\.py:[0-9]+:' \
   | grep -viE 'todo[-a-z]*\.md' \
   | grep -vE '^[^:]*bin/collab/kit/scripts/advantage-audit\.sh:[0-9]+:' \
-  | grep -vE '^[^:]*bin/seat/tests/test_seat_reap\.sh:[0-9]+:' || true)"
+  | grep -vE '^[^:]*bin/seat/tests/test_seat_reap\.sh:[0-9]+:' \
+  | grep -vE '^[^:]*bin/forge/gather\.sh:[0-9]+:.*todo=' \
+  | grep -vE '^[^:]*bin/gates/tests/test_review_seat_verdict\.sh:[0-9]+:' \
+  | grep -vE '^[^:]*/tests?/[^:]+:[0-9]+:' \
+  | grep -vE '^[^:]*bin/records/comms\.py:[0-9]+:' \
+  | grep -vE '^[^:]*bin/voice/voice_tools\.py:[0-9]+:' || true)"
 
 
 if [ -z "$hits" ]; then

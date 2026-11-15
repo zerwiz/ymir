@@ -99,9 +99,25 @@ export default function rules(pi: ExtensionAPI) {
     parameters: { type: "object", properties: { surface: { type: "string" } } },
     execute: async (_toolCallId: string) => {
       const rows: string[] = [];
-      const ci = read(join(ROOT, "bin", "gates", "ci-verify.sh"));
-      const gates = [...ci.matchAll(/^gate\s+(\S+)\s+"([^"]+)"/gm)].map((m) => [m[1], m[2]]);
-      if (!gates.length) return piOut("no gates found in bin/gates/ci-verify.sh — the gate list itself is unreadable.");
+      // THE GATE LIST IS A DIRECTORY (plan 295 fix S1). Each gate is one file under
+      // bin/gates/checks.d/ and bin/gates/ci-verify.sh only sources them, so the list this tool
+      // reports is read from BOTH — the fragments first (in the order the driver runs them), then
+      // any `gate` line the driver itself still carries. A second hard-coded list here would be
+      // exactly the drift this tool exists to name.
+      const gateDir = join(ROOT, "bin", "gates", "checks.d");
+      let sources: string[] = [];
+      try {
+        sources = readdirSync(gateDir)
+          .filter((f) => f.endsWith(".sh"))
+          .sort()
+          .map((f) => read(join(gateDir, f)));
+      } catch { /* no directory: the driver's own lines are read below */ }
+      sources.push(read(join(ROOT, "bin", "gates", "ci-verify.sh")));
+      const gates: string[][] = [];
+      for (const src of sources) {
+        for (const m of src.matchAll(/^gate\s+(\S+)\s+"([^"]+)"/gm)) gates.push([m[1], m[2]]);
+      }
+      if (!gates.length) return piOut("no gates found in bin/gates/checks.d/ (or ci-verify.sh) — the gate list itself is unreadable.");
       rows.push(`ci-verify[${gates.length}]{gate,covers}:`);
       for (const [name, what] of gates) rows.push(`  "${name}","${what}"`);
       rows.push("");

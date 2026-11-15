@@ -29,9 +29,13 @@
 #   BILSKIRNIR_WEB_PORT       Vite's port with --dev            (5173)
 #   BILSKIRNIR_ELECTRON       the electron binary               (probed: node_modules, /usr/lib/electron*, PATH)
 #   HERMES_BIN (in .env)      the hermes CLI                    (hermes)
-#   BILSKIRNIR_DEBUG_PORT     open the window's DevTools port   (unset: closed)
+#   BILSKIRNIR_DEBUG_PORT     open the window's DevTools port   (the app's own fixed port, bin/desktop/app-lib.sh)
 set -uo pipefail
 APP="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TREE="$(cd "$APP/../.." && pwd)"
+# The DevTools door is a property of the app, not of the caller (plan 275 item 19, 2026-11-14): the fixed
+# loopback port lives in ONE table, bin/desktop/app-lib.sh, and the window always opens it.
+APP_LIB="$TREE/bin/desktop/app-lib.sh"; [ -r "$APP_LIB" ] && . "$APP_LIB"
 # the hall's state lives in one home per user, never in this checkout (plan 275 S5)
 [ "${1:-}" = "--check" ] || bash "$APP/scripts/data-home.sh" || { echo "bilskirnir: the data home could not be linked — see scripts/data-home.sh" >&2; exit 1; }
 RUN="$APP/data/run"; mkdir -p "$RUN"
@@ -42,6 +46,10 @@ PORT="$(envval PORT "$APP/.env")"; PORT="${PORT:-8787}"
 WEB_PORT="${BILSKIRNIR_WEB_PORT:-5173}"
 HERMES_BIN="$(envval HERMES_BIN "$APP/.env")"; HERMES_BIN="${HERMES_BIN:-hermes}"
 ENGINE="$(envval HERMES_HOME_PRIMARY "$APP/.env")"
+# plan 275 (2026-11-13): an agent's Hermes home is named by its PHYSICAL path. Hermes ties a profile to the home
+# path it was given; a home named through the pin (~/ymir-runtime → releases/<sha>) changes its name at every
+# release and Hermes refuses every message with profile_mismatch (Nanna from 2026-11-12 19:26).
+[ -d "$ENGINE" ] && ENGINE="$(cd "$ENGINE" && pwd -P)"
 HPORT="$(envval API_SERVER_PORT "$ENGINE/.env")"; HPORT="${HPORT:-8642}"
 URL="http://127.0.0.1:$PORT"
 
@@ -124,8 +132,18 @@ lower() {
   local name="$1" pid
   if alive "$name"; then
     pid="$(cat "$RUN/$name.pid")"
-    kill -- "-$pid" 2>/dev/null || kill "$pid" 2>/dev/null
-    local i; for i in 1 2 3 4 5 6 7 8 9 10; do kill -0 -- "-$pid" 2>/dev/null || break; sleep 0.5; done
+    local i
+    if [ "$name" = window ]; then
+      # plan 275 (2026-11-13): the window is closed through its MAIN process and given time to close its own helpers.
+      # Killing the whole group at once kills the GPU and renderer helpers under it, and Electron traps (SIGTRAP core
+      # at 13:22:09, the operator's window). The group is killed only if it will not close in five seconds.
+      kill -TERM "$pid" 2>/dev/null
+      for i in $(seq 1 10); do kill -0 -- "-$pid" 2>/dev/null || break; sleep 0.5; done
+      kill -0 -- "-$pid" 2>/dev/null && kill -KILL -- "-$pid" 2>/dev/null
+    else
+      kill -- "-$pid" 2>/dev/null || kill "$pid" 2>/dev/null
+      for i in 1 2 3 4 5 6 7 8 9 10; do kill -0 -- "-$pid" 2>/dev/null || break; sleep 0.5; done
+    fi
     say "lowered" "$name (pid $pid)"
   fi
   rm -f "$RUN/$name.pid"
@@ -157,7 +175,7 @@ MODE="window"; [ "${1:-}" = "--headless" ] && MODE="headless"; [ "${1:-}" = "--d
 if ! "$APP/setup.sh" --check >/dev/null 2>&1; then
   say "setup" "stale — running apps/bilskirnir/setup.sh"
   "$APP/setup.sh" | tail -2 || { say "setup" "FAILED — run apps/bilskirnir/setup.sh by hand"; exit 1; }
-  ENGINE="$(envval HERMES_HOME_PRIMARY "$APP/.env")"; HPORT="$(envval API_SERVER_PORT "$ENGINE/.env")"; HPORT="${HPORT:-8642}"
+  ENGINE="$(envval HERMES_HOME_PRIMARY "$APP/.env")"; [ -d "$ENGINE" ] && ENGINE="$(cd "$ENGINE" && pwd -P)"; HPORT="$(envval API_SERVER_PORT "$ENGINE/.env")"; HPORT="${HPORT:-8642}"
 else
   say "setup" "current"
 fi
@@ -170,6 +188,7 @@ elif [ "$gc" = 0 ] && gateway_up; then
 elif ! command -v "$HERMES_BIN" >/dev/null 2>&1; then
   say "Nanna's gateway" "no '$HERMES_BIN' on PATH — the hall opens, and Nanna stays silent"
 else
+  python3 "$APP/house/hermes-rebind.py" "$ENGINE" >/dev/null 2>&1 || true   # receipts follow the home (plan 275)
   HERMES_HOME="$ENGINE" spawn gateway "$ENGINE" "$HERMES_BIN" gateway run --no-supervise
   wait_for gateway_up 60 && say "Nanna's gateway :$HPORT" "raised" || say "Nanna's gateway :$HPORT" "not answering yet — see data/run/gateway.log"
 fi
@@ -200,7 +219,22 @@ if [ "$sc" = 0 ] && up "$URL/api/health" && { [ "$MODE" = "dev" ] || face_up "$U
 elif [ "$sc" = 0 ]; then
   say "the server :$PORT" "ours, but not serving the face — lower it: apps/bilskirnir/start.sh --stop"; exit 1
 else
-  spawn server "$APP/server" npx tsx --env-file=../.env src/index.ts
+  # 2026-11-14 (plan 275 item 10): the hall's server is BUILT once, not transformed on every start. It ran
+  # `npx tsx src/index.ts`, which pays tsx's TypeScript transform on each launch — measured 4.5 s of a 20.4 s
+  # cold boot. The server already declares its production shape (`npm run build` = tsc, `npm start` = node
+  # dist/index.js), so that is what runs now: the build is refreshed only when a source file is newer than the
+  # built entry, and never on a warm start. A native module (better-sqlite3) stays a real import — this is tsc,
+  # not a bundle, so nothing is inlined and no dependency shape changes.
+  server_entry="$APP/server/dist/index.js"
+  newest_src="$(find "$APP/server/src" -type f -newer "$server_entry" 2>/dev/null | head -1)"
+  if [ ! -f "$server_entry" ] || [ -n "$newest_src" ]; then
+    say "the server" "building (tsc → dist/index.js)"
+    ( cd "$APP/server" && npx tsc -p tsconfig.json > "$RUN/build-server.log" 2>&1 ) \
+      && say "the server" "built" || { say "the server" "build FAILED — see data/run/build-server.log"; exit 1; }
+  else
+    say "the server" "built and current (dist/index.js)"
+  fi
+  spawn server "$APP/server" node --env-file=../.env dist/index.js
   wait_for "up $URL/api/health" 40 && say "the server :$PORT" "raised" || { say "the server :$PORT" "FAILED — see data/run/server.log"; exit 1; }
   if [ "$MODE" != "dev" ] && ! wait_for "face_up $URL" 10; then
     say "the server :$PORT" "answers but GET / is not the face — see data/run/server.log and web/dist"; exit 1
@@ -217,7 +251,9 @@ fi
 if window_up; then say "the window" "already open — kept"; exit 0; fi
 ELECTRON="$(resolve_electron)"
 [ -n "$ELECTRON" ] || { say "the window" "no electron binary — install electron, or open $OPEN_URL in a browser"; exit 1; }
-DEBUG=(); _dp="${BILSKIRNIR_DEBUG_PORT:-${YMIR_DEVTOOLS_PORT:-}}"; [ -n "$_dp" ] && DEBUG=(--remote-debugging-port="$_dp")
+DEBUG=(); _dp="${BILSKIRNIR_DEBUG_PORT:-${YMIR_DEVTOOLS_PORT:-}}"
+[ -n "$_dp" ] || _dp="$(app_devtools_port bilskirnir 2>/dev/null || true)"
+[ -n "$_dp" ] && DEBUG=(--remote-debugging-port="$_dp")
 BILSKIRNIR_URL="$OPEN_URL" spawn window "$APP" "$ELECTRON" "${DEBUG[@]}" "$APP/electron"
 sleep 2
 window_up && say "the window" "open ($OPEN_URL)" || say "the window" "did not stay open — see data/run/window.log"
