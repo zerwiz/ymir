@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useYmir, type AgentsStatus } from '../state/store';
 import { useUI } from '../state/ui';
-import { useTenantDef } from '../hooks/useTenantDef';
 import { DOMAINS, TERMINAL_STATES } from '../data/realms';
 import type { AgentCard as AgentCardType, AgentStatus, A2AMessage } from '../types';
 import { MetricTile } from '../components/MetricTile';
@@ -103,7 +102,7 @@ function fleetNote(
       return {
         text: 'gate unauthorised',
         chip: 'down',
-        detail: 'The gate refused the request (401). Sign in, and the roster will load.',
+        detail: 'The gate refused the request (401). There is no login: the gate on this computer is not answering as this desktop session — restart Hlidskjalf from its icon.',
       };
     case 'unreadable':
       return {
@@ -134,12 +133,9 @@ export function Fleet() {
   const a2a = useYmir((s) => s.a2a);
   const doors = useYmir((s) => s.doors);
   const tasks = useYmir((s) => s.tasks);
-  const realm = useYmir((s) => s.realm);
-  const session = useYmir((s) => s.session);
   const runes = useYmir((s) => s.runes);
   const integrity = runes.length ? runes.filter((r) => r.checksum).length / runes.length : null;
   const { openModal } = useUI();
-  const def = useTenantDef(realm, session?.tenants.find((t) => t.realm === realm));
   const note = fleetNote(agentsStatus, agents.length);
 
   // NOMINAL is a fact about a pane, never a default: `alive` is the same truth.
@@ -198,7 +194,7 @@ export function Fleet() {
         <div>
           <h1 className="stage-title">The Fleet</h1>
           <p className="stage-deck">
-            {alive}/{agents.length} agents standing · {working} working · {def.tenant} · A2A 1.0 cards{' '}
+            {alive}/{agents.length} agents standing · {working} working · A2A 1.0 cards{' '}
             {note.text}
           </p>
         </div>

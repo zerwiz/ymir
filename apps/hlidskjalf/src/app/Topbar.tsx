@@ -5,7 +5,6 @@ import { SnotraLive } from '../components/SnotraLive';
 import { Ward } from '../components/Ward';
 
 export function Topbar() {
-  const realm = useYmir((s) => s.realm);
   const query = useYmir((s) => s.query);
   const setQuery = useYmir((s) => s.setQuery);
   const density = useYmir((s) => s.density);
@@ -37,8 +36,8 @@ export function Topbar() {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={`Search ${realm} workspace…`}
-          aria-label="Workspace-scoped search"
+          placeholder="Search the house…"
+          aria-label="Search"
         />
         <kbd>/</kbd>
       </label>
