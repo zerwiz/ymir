@@ -251,6 +251,17 @@ fi
 if window_up; then say "the window" "already open — kept"; exit 0; fi
 ELECTRON="$(resolve_electron)"
 [ -n "$ELECTRON" ] || { say "the window" "no electron binary — install electron, or open $OPEN_URL in a browser"; exit 1; }
+# The frame's buttons are the platform layer's question (bin/host/host-sense.sh): on a tiling
+# compositor (Omarchy's Hyprland) the window is frameless and draws no _ □ ×, elsewhere it keeps
+# them (Rule 05). The answer crosses into the shell as YMIR_WINDOW_BUTTONS; app-lib answers it.
+if [ -r "$(dirname "$(dirname "$APP")")/bin/desktop/app-lib.sh" ]; then
+  # shellcheck source=../../bin/desktop/app-lib.sh
+  . "$(dirname "$(dirname "$APP")")/bin/desktop/app-lib.sh"
+  YMIR_WINDOW_BUTTONS="$(app_window_buttons)"
+else
+  YMIR_WINDOW_BUTTONS="on"
+fi
+export YMIR_WINDOW_BUTTONS
 DEBUG=(); _dp="${BILSKIRNIR_DEBUG_PORT:-${YMIR_DEVTOOLS_PORT:-}}"
 [ -n "$_dp" ] || _dp="$(app_devtools_port bilskirnir 2>/dev/null || true)"
 [ -n "$_dp" ] && DEBUG=(--remote-debugging-port="$_dp")

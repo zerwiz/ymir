@@ -55,6 +55,13 @@ MODE="${1:-}"
 # worktree's `.git` is a FILE that points at the shared gitdir — so the sweep refused to run on exactly the trees a
 # worker forges in. The question is whether git can answer, not what the path is called.
 git -C "$REPO" rev-parse --git-dir >/dev/null 2>&1 || { printf 'private-scan: no repository at %s\n' "$REPO" >&2; exit 2; }
+# plan 290 §3 — the sweep writes the home's queue and seats an errand, so it acts outward: this machine
+# must NAME the door. A sweep whose clock reached a box that does not own it refuses instead of acting.
+. "$REPO/bin/forge/warden-lib.sh" 2>/dev/null || true
+if declare -f warden_begin >/dev/null 2>&1; then
+  warden_begin private-scan || { printf 'private-scan: this machine cannot be named from the fleet registry\n' >&2; exit 2; }
+  warden_require_door || exit 3
+fi
 # A missing ripgrep skips THIS half by name; the engine still runs, because the names are the half that must not go
 # unjudged (RULES/25: a clean skip is a pass, a false clean is not).
 HAVE_RG=1

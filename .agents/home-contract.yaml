@@ -14,7 +14,11 @@
 # a fifth spelling and a parser cannot silently miss a file.
 #
 #   path      home-relative destination. `{realm}` is resolved at run time (the realm
-#             pin, else the active realm) and is the ONLY substitution allowed.
+#             pin, else the active realm) and `{machine}` (this computer's name, from the
+#             fleet registry by hostname) are the only two substitutions allowed.
+#             2026-11-14 (plan 290 §3): `{machine}` added, so a per-machine file — today one
+#             only, config/machines/<machine>/wardens.yaml — reaches every home instead of
+#             living outside the contract.
 #   kind      seeded    · copied once from `template` if absent; an existing file is
 #                         NEVER touched (the operator's record outranks a default)
 #             stub      · the operator's OWN words; `template` is an empty shape with a
@@ -191,6 +195,12 @@ contract:
     door: "-"
     required: true
     why: "the schedule; absent, the shipped default runs and the operator's edits have nowhere to live"
+  - path: config/machines/{machine}/wardens.yaml
+    kind: seeded
+    template: .agents/config/machine-wardens.example.yaml
+    door: bin/engine/home-seed.sh
+    required: false
+    why: "this machine's own outward wardens (plan 290 §3) — the template ships every door OFF, so a fresh install seats nothing outward; the migration records what a working machine already runs"
   - path: config/model-catalog.yaml
     kind: defaulted
     template: .agents/config/model-catalog.yaml.example
