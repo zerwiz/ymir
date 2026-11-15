@@ -25,6 +25,7 @@ import argparse
 import base64
 import json
 import os
+from pathlib import Path
 import re
 import struct
 import subprocess
@@ -274,7 +275,20 @@ HOUSE_TOPICS = ("ymir", "snotra", "skirnir", "trello", "meeting", "calendar")
 
 def own_subjects() -> dict[str, list[str]]:
     """The operator's own subjects, read from his home; absent gives no client subject at all."""
-    home = os.environ.get("YMIR_HOME") or os.path.expanduser("~/Documents/ymirhome")
+    if os.environ.get("YMIR_HOME"):
+        home = os.environ["YMIR_HOME"]
+    else:
+        # the ONE resolver (bin/vault/hoard-lib.sh) says where the home is; never a guessed default (Rule 07)
+        try:
+            import subprocess
+            _root = next(_p for _p in Path(__file__).resolve().parents if (_p / "RULES").is_dir())
+            home = subprocess.check_output(
+                ["bash", "-c", f'. "{_root}/bin/vault/hoard-lib.sh" >/dev/null 2>&1; out=""; ymir_home_root out; printf "%s" "$out"'],
+                timeout=20).decode().strip()
+        except Exception:  # noqa: BLE001
+            home = ""
+    if not home:
+        return {}
     path = os.path.join(home, "config", "snotra", "voice-subjects.yaml")
     if not os.path.isfile(path):
         return {}

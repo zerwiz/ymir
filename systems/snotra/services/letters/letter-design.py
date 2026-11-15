@@ -71,7 +71,21 @@ def ymir_tokens() -> dict:
 
 def home_dir() -> Path | None:
     import os
-    h = Path(os.environ.get("YMIR_HOME") or os.path.expanduser("~/Documents/ymirhome"))
+    if os.environ.get("YMIR_HOME"):
+        h = os.environ["YMIR_HOME"]
+    else:
+        # the ONE resolver (bin/vault/hoard-lib.sh) says where the home is; never a guessed default (Rule 07)
+        try:
+            import subprocess
+            _root = next(_p for _p in Path(__file__).resolve().parents if (_p / "RULES").is_dir())
+            h = subprocess.check_output(
+                ["bash", "-c", f'. "{_root}/bin/vault/hoard-lib.sh" >/dev/null 2>&1; out=""; ymir_home_root out; printf "%s" "$out"'],
+                timeout=20).decode().strip()
+        except Exception:  # noqa: BLE001
+            h = ""
+    if not h:
+        return None
+    h = Path(h)
     return h if h.is_dir() else None
 
 

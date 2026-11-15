@@ -62,7 +62,13 @@ raise_mouth >/dev/null 2>&1 &
 # names, and WHISPER_VOCAB overrides both for one run.
 VOCAB="${WHISPER_VOCAB:-}"
 if [ -z "$VOCAB" ]; then
-  for _hc in "${YMIR_HOME:-}/config/skirnir/vocab.txt" "${HOME}/Documents/ymirhome/config/skirnir/vocab.txt"; do
+  # the ONE resolver says where the home is (Rule 07); never a guessed second path
+  _yh="${YMIR_HOME:-}"
+  if [ -z "$_yh" ] && [ -r "$(dirname "${BASH_SOURCE[0]}")/../../../bin/vault/hoard-lib.sh" ]; then
+    . "$(dirname "${BASH_SOURCE[0]}")/../../../bin/vault/hoard-lib.sh" 2>/dev/null || true
+    declare -f ymir_home_root >/dev/null 2>&1 && ymir_home_root _yh 2>/dev/null
+  fi
+  for _hc in "${_yh:+$_yh/config/skirnir/vocab.txt}"; do
     [ -n "$_hc" ] && [ -r "$_hc" ] || continue
     # one delimiter only: `paste -sd', '` CYCLES the list (comma, then space), which produced
     # "a,b c,d" — measured 2026-11-14 while proving this door
