@@ -1,6 +1,6 @@
 # The well door for every harness — one MCP set, seated into pi, opencode, Claude, Cursor, Codex and Hermes
 
-Ymir's memory — the well — has one engine, and that engine belongs to Kaia. Every agent harness you use reaches
+Ymir's memory — the well — has one engine, and that engine belongs to Völundr. Every agent harness you use reaches
 the well through a **door**: your machine's MCP gateway, which keeps a journal of each write and carries it to
 the heart. A harness that talked to the engine directly would write into a file on your own machine, and the rest
 of your fleet would never see what it learned.

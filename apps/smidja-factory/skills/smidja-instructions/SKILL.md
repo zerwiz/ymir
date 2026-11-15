@@ -19,7 +19,7 @@ allowed-tools: read, write, edit, bash, grep, glob
 
 The smidja executes a request file (`requests/*.md`) through an smidja chain
 (builder, reviewer, orchestrator). A fuzzy ask produces a fuzzy run: agents
-guess, review rejects, and Kaia has to triage. This skill fixes the input end —
+guess, review rejects, and Völundr has to triage. This skill fixes the input end —
 **you interview the user, then write the instruction the smidja can execute
 without asking questions.**
 
@@ -48,7 +48,7 @@ user genuinely has no answer for):
 | **What does "done" look like?** | Verifiable: a build passes, a file exists with content X, a URL returns 200. Not vibes. |
 | **What must NOT change?** | Out of scope: other files, other services, other repos, existing tunnels/configs. |
 | **Any constraints?** | Stack, dependencies, no-new-deps, privacy, security, "don't touch prod". |
-| **How much autonomy?** | Recon only (scout), small build (sdlc), full plan→build→review→docs (simple-sdlc), orchestrator with sub-agents, review-only. Also: how deep should Kaia's presence be — **T0** (none, tiny/throwaway runs), **T1** (admission notes, default for real work), **T2** (Kaia orchestrates the whole run). |
+| **How much autonomy?** | Recon only (scout), small build (sdlc), full plan→build→review→docs (simple-sdlc), orchestrator with sub-agents, review-only. Also: how deep should Völundr's presence be — **T0** (none, tiny/throwaway runs), **T1** (admission notes, default for real work), **T2** (Völundr orchestrates the whole run). |
 | **Which stack?** | Local (LM Studio/pi), cloud (opencode/ocrd), hybrid, free, or "you pick". This picks the service/roster. |
 
 Ask them as a short back-and-forth, not a wall. Stop when the request would be
@@ -132,14 +132,14 @@ Rules that make smidja requests work (learned from real runs):
 
 ```bash
 smidja run --service cloud "requests/<slug>.md"          # or the chain/service chosen
-smidja run --mode local-planner "requests/<slug>.md" --kaia T2   # + Kaia orchestrates
+smidja run --mode local-planner "requests/<slug>.md" --kaia T2   # + Völundr orchestrates
 # or, for a whole-stack pick:
 smidja run --service <name> "requests/<slug>.md"
 ```
 
-Default Kaia tier is **T1** (admission notes injected into every agent call —
+Default Völundr tier is **T1** (admission notes injected into every agent call —
 no run is blocked). Use `--kaia T0` for throwaway/recon runs, `--kaia T2` when
-the request is big enough that Kaia should orchestrate.
+the request is big enough that Völundr should orchestrate.
 
 If the user wanted *you* to drive, load the **`smidja-start`** skill for
 how to launch (detached tmux for long runs), watch (`smidja sessions` /

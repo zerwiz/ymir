@@ -41,8 +41,8 @@ That is the agent fleet:
 - **Eindri** workers are the delegated hands — isolated smiths struck off in
   **Utgard** sandboxes so a single bad casting never shatters the forge.
 
-Behind them stands a third worker of the same fabric: **Kaia**, the shaper of
-the fleet itself (see §IV). She is not the hands or the bellows — she is the
+Behind them stands a third worker of the same fabric: **Völundr**, the master of
+the smiths (see §IV). He is not the hands or the bellows — he is the
 **eye that remembers**, and the will that decides which smith takes which metal.
 
 ---
@@ -61,7 +61,7 @@ The nine worlds of the myth map onto Ymir's spaces:
 | **Midgard** — the world of humans, middle, shared | cross-tenant shared assets & repos |
 | **Utgard (Jötunheim)** — outside the wall, where giants dwell | the sandbox barrier — untrusted code runs *there*, never in the halls |
 | **Yggdrasil** — the tree that binds all realms | git worktree isolation, zero-collision parallel edits |
-| **Mimirsbrunn** — the well at the root of the tree | the engram memory engine — Kaia's and the platform's long-term memory |
+| **Mimirsbrunn** — the well at the root of the tree | the engram memory engine — Völundr's and the platform's long-term memory |
 
 ### The Seven Gates
 
@@ -81,7 +81,7 @@ myth-made-module:
 
 ---
 
-## IV. The Well: Mimirsbrunn, Mimir, and Kaia
+## IV. The Well: Mimirsbrunn, Mimir, and Völundr
 
 At the root of Yggdrasil lies **Mimirsbrunn**, the well of wisdom. **Mimir**
 guards it; whoever drinks its water receives the memory of all things. Even the Allfather
@@ -90,7 +90,7 @@ paid an eye for a single drink.
 In Ymir, the water is **engram** — an open-source cognitive memory library
 (single-file SQLite + vector + full-text + local embeddings). The well is named
 **Mimirsbrunn**. The one who speaks from the well — the oracle that answers what
-we remember about a project before we act — is **Kaia**.
+we remember about a project before we act — is **Völundr**.
 
 - Every meaningful action is **observed** into the well (`POST /observe`).
 - Before any orchestration, the fleet **recalls** (`GET /recall`) what the well
@@ -99,9 +99,9 @@ we remember about a project before we act — is **Kaia**.
   into **Runes**, the append-only audit ledger. A rune that is carved cannot be
   un-carved.
 
-**Kaia's charge.** She does not act on faith. Before she dispatches a single
-smith she drinks from the well (recalls what this project has taught before) and
-then she passes every plan through **the veil** — the anti-hallucination gate —
+**Völundr's charge.** He does not act on faith. Before he dispatches a single
+smith he drinks from the well (recalls what this project has taught before) and
+then he passes every plan through **the veil** — the anti-hallucination gate —
 asking, *is this grounded in what the well holds, or is it spun from air?* Only
 what passes is forged.
 
@@ -201,7 +201,7 @@ already forged by others, taken up and named into the myth rather than rebuilt
 from raw ore.
 
 So it is here. Ymir forges only what makes it Ymir — **the UI and UX
-(Hlidskjalf), the agent runtime (Brokk, Eindri, Kaia), and the collaboration
+(Hlidskjalf), the agent runtime (Brokk, Eindri, Völundr), and the collaboration
 (Ratatoskr)**. Everything beneath that is a validated open-source engine given a
 Norse name and a Norn-carved shell:
 
@@ -255,7 +255,7 @@ only the metal changes.
    while accessing tools vertically.
 7. **Ratatoskr** is the messenger — every agent carries its rune of
    introduction, every word is task-tracked, observed, and carved.
-8. **Kaia** is the eye — she drinks from the well before every dispatch and
+8. **Völundr** is the eye — he drinks from the well before every dispatch and
    passes every plan through the veil.
 9. **Houses** are the ventures — the fleet forges for them, and honors them with
    the names and seals they carry.
@@ -377,15 +377,16 @@ trace so it can be watched and learned from. The old rule holds:
 > *Agent proposes, code disposes.*
 
 **Völundr** — Wayland the Smith, the craftiest smith in the Norse tales — is the master
-who runs the shop floor. Where **Kaia** is the eye by the well (Ymir-wide orchestration:
-recall, veil, dispatch), **Völundr** is Smíðja's own orchestrator: the smith who
-reads the roster, sets the chain, and drives each phase to its acceptance gate. Two
-seats, two roles: Kaia decides *what* is forged; Völundr decides *how* the smithy runs.
+who runs the shop floor. He is one figure with two duties, never two seats: he is the
+eye by the well (Ymir-wide orchestration: recall, veil, dispatch) **and** Smíðja's own
+orchestrator — the smith who reads the roster, sets the chain, and drives each phase to
+its acceptance gate. He decides *what* is forged and *how* the smithy runs, because the
+one who dispatches the smiths is the one who keeps the smithy.
 
 | Aspect | Name | What it is |
 |---|---|---|
 | The workshop / engine | **Smíðja** | the smithy — rosters, phases, envelopes, retries, acceptance |
-| The master smith | **Völundr** | the Smíðja orchestrator (Kaia's seat inside Smíðja) |
+| The master smith | **Völundr** | the master of the smiths — he leads Smíðja and dispatches its smiths |
 | The observation window | **Smíðja's eye** | the trace visualizer — runs, lanes, phases, decisions, stats |
 
 ### Naming rationale
@@ -394,7 +395,9 @@ seats, two roles: Kaia decides *what* is forged; Völundr decides *how* the smit
   and remains **Ymir** (the body); Smíðja is correctly scoped now to the *workshop*
   inside it. Nothing on the shop floor is the body; it is where the body is worked.
 - **Völundr** is free of collisions and names precisely the orchestrating craftsman.
-  It does not replace Kaia in Ymir; it names **Kaia's seat inside Smíðja**.
+  It is the figure's one name everywhere: in OmniChat, in Smíðja's chat, and in the
+  well's lore (the name was written *Kaia* before 2026-11-14; the appended section at
+  the foot of this document records the change).
 
 ### The rule of the shop
 
@@ -563,9 +566,9 @@ tint and steel, is a hall that was left unroofed. Three rules hold:
 - The **Ledger of Runs** — the smithy's whole account rendered true: runs,
   tokens, cache and cost, the local and the cloud split, and what the work
   would have cost on the great vendors. Every figure is counted, none guessed.
-- **Kaia's Long Table** — the oracle's chat: she keeps the last **forty**
-  exchanges in view, and she **drinks from the well before every dispatch**, so
-  no answer is spoken dry. The thread is hers to keep, split, and clear.
+- **Völundr's Long Table** — the oracle's chat: he keeps the last **forty**
+  exchanges in view, and he **drinks from the well before every dispatch**, so
+  no answer is spoken dry. The thread is his to keep, split, and clear.
 - The **Prompt Anvil** — in the Forge, the words that command each agent are
   laid open and may be struck and re-set by the Allfather's own hand.
 
@@ -649,7 +652,7 @@ is delayed or rerouted.
 
 **Erindi** is the Norse word for *errand* or *brief*. In Ymir, the erindi is
 the **task brief** — the structured format that carries a task from the Allfather
-through Kaia to an Eindri worker. It defines the scope, the acceptance criteria,
+through Völundr to an Eindri worker. It defines the scope, the acceptance criteria,
 the constraints, and the expected output.
 
 - `bin/agents/erindi-brief.sh` — generate and validate an erindi brief
@@ -878,7 +881,7 @@ Two gates govern what passes and what is reviewed.
 ### The Veil — the anti-hallucination gate
 
 **The Veil** is the filter between what the well remembers and what is spoken.
-Before Kaia dispatches a single smith, she passes every plan through the Veil,
+Before Völundr dispatches a single smith, he passes every plan through the Veil,
 asking: *is this grounded in what the well holds, or is it spun from air?*
 
 **Rule:** Nothing passes the Veil without evidence from Mimirsbrunn.
@@ -935,8 +938,8 @@ How to read the full Ymir tree:
 5. **Mimirsbrunn** is the well — drink before you act, water it afterwards.
 6. **Runes** are the ledger — a rune carved stays carved.
 7. **Ratatoskr** is the messenger — every agent carries its rune of introduction.
-8. **Kaia** is the eye — she drinks from the well before every dispatch.
-9. **Völundr** is the smithy master — Kaia's seat inside Smíðja.
+8. **Völundr** is the eye — he drinks from the well before every dispatch.
+9. **Völundr** is the smithy master — he leads Smíðja and dispatches its smiths.
 10. **Gleipnir** is the lock — one session, one reins.
 11. **Skuld** is the outcome — every branch has a verdict.
 12. **Valknut** is the load — config assembled once at boot.
@@ -956,7 +959,7 @@ How to read the full Ymir tree:
 26. **The toolchain** is the door — everything enters through it.
 27. **The entity graph** is the map — ownership, dependencies, posture.
 28. **The cloth of the halls** — realm colors, frame holds, hand reaches.
-29. **The three seats** — Ledger of Runs, Kaia's Long Table, Prompt Anvil.
+29. **The three seats** — Ledger of Runs, Völundr's Long Table, Prompt Anvil.
 
 *The giant stands, and from it the worlds are carved — light metal first,
 Rut steel after. The lock is bound, the bridge is up, the Nornir are at their
@@ -1449,6 +1452,32 @@ agent that keeps heimdall's computer; she does not live in the hall. Everything 
 a **she**, the engine under her (Hermes) is her tool and never her name, and another machine's hall is kept by that
 machine's own agent. The old paragraph is kept as the record of what was believed.
 
+## 2026-11-14 — Kaia is Völundr, the master of the smiths (appended)
+
+The Allfather's word: *"find everywhere we mention Kaia and update so he's the master of the smiths"*, and to the
+helm's question of the name, **Völundr**. So the figure this document called **Kaia** — the eye by the well, the
+orchestrator who recalls before every dispatch — is **Völundr**, the master of the smiths, who leads the smithy
+(**Smíðja**) and dispatches its smiths.
+
+This is one figure, not two. An earlier section split the work between *Kaia* (Ymir-wide orchestration) and *Völundr*
+(the smithy's own master); that split is closed. The one who dispatches the smiths is the one who keeps the smithy, so
+there is one name and one seat.
+
+The sections above were renamed in place so the document names him truly; this entry is the record of what they said
+before 2026-11-14, and the old name is kept here so a reader who knew it can find the figure again. Four identifiers
+still carry the old name on purpose, because a caller or a file on disk depends on them:
+
+| Identifier | Why it keeps the old name |
+|---|---|
+| `hodd/memory/kaia.engram` (and its `-wal` / `-shm`) | the well's store on disk — renaming it would orphan every episode the house remembers |
+| `KAIA_MEMORY_URL` | the environment variable a bridge or a script may already set; `VOLUNDR_MEMORY_URL` is read first |
+| `SMIDJA_KAIA`, `kaia_tier`, `--kaia`, `--kaia-tier` | the smithy's own tier contract, documented and in use |
+| `role: "kaia"` in a chat row | the stored role of every message already written; the chat displays it as Völundr |
+| `ENGRAM_AGENT_ID` default `kaia` | the agent name every episode in the well already carries |
+
 ## CHANGE LOG
+
+- **2026-11-14** — Kaia renamed to **Völundr, the master of the smiths**, at the Allfather's word; the document's
+  live prose renamed, the change and the kept identifiers recorded above (RULES/06).
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

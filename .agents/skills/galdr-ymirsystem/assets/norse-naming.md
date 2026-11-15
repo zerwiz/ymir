@@ -55,7 +55,7 @@ The law is restated in four authoritative places; keep them consistent:
 | Agent ergonomics standards | **Galdr** | TOON output, 10 design principles, skill synthesis | `.agents/skills/galdr-ymirsystem/` |
 | MCP/A2A composition | **Hermóðr** | MCP vertical (agent→tools) + A2A horizontal (agent↔agent) | `.agents/skills/galdr-ymirsystem/assets/pi-boot/herdr-profile.toml` (pane layout) |
 | Software smidja | **Smíðja** | Repeatable agent+code pipeline: rosters, bounded phases, typed envelopes, retries/acceptance, trace | `.agents/skills/smidja-factory/` |
-| Smíðja orchestrator | **Völundr** | The master smith who runs Smíðja — the smidja's Kaia (Kaia's seat inside the smidja) | `.agents/skills/smidja-factory/skills/volundr/` |
+| Smíðja orchestrator | **Völundr** | The master of the smiths — he leads Smíðja and dispatches its smiths | `.agents/skills/smidja-factory/skills/volundr/` |
 | Meeting ear (capture · transcribe · minutes) | **Snotra** | The wise one, mistress of counsel — the minutes-maker; hears the meeting, keeps the record | `systems/snotra/services/ear/snotra-capture.sh`, `systems/snotra/services/ear/snotra-transcribe.sh`, `systems/snotra/services/ear/snotra-ensure.sh`, `tools/snotra/`, `tools/mill/systemd/snotra.service` |
 | Meeting room (our own hall) | **Þing** | The assembly, the law-meeting — a hall of our own (MiroTalk P2P fork on whynot) where the ear knows the room, the participants, and the moment it began | `zerwiz/mirotalk` (fork), deployed `~/thing/mirotalk` on whynot (unit `thing.service`) |
 

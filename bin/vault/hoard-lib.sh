@@ -187,7 +187,7 @@ ymir_house_domains() {  # <result-var> — space-separated domains the home decl
   printf -v "$result_var" '%s' "$list"
 }
 
-hoard_memory_store() {  # <result-var> — Kaia's engram store, ALWAYS in the hoard
+hoard_memory_store() {  # <result-var> — Völundr's engram store, ALWAYS in the hoard
   # The well is one memory and it lives in the hoard (hodd/memory) — never in
   # the tree, never in a migrated copy. Everything that reads the store resolves
   # through here so no script can point the well at a duplicate (Rule 04/07).

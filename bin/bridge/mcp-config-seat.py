@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """mcp-config-seat.py — seat ONE MCP server set into every harness on this host.
 
-The law (the Allfather, 2026-11-10): *engram is Kaia's engine only.* Every harness —
+The law (the Allfather, 2026-11-10): *engram is Völundr's engine only.* Every harness —
 pi, opencode, claude, cursor, codex, hermes — reaches memory through the WELL DOOR
 (this body's gateway, ``http://127.0.0.1:<port>/mcp/well``), never through a direct
 ``engram-mcp --db <store>`` stdio server. A direct server writes into the seat's own

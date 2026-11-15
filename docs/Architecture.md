@@ -27,7 +27,7 @@ repository, orchestrated by autonomous Norse-named agents.
   the giant (Ymir), the smiths (Brokk/Eindri), the well (Mimirsbrunn), the houses.
 - **OSS-first** — for every feature below the runtime, adopt a **validated open-source
   project** first; Ymir owns only the **UI/UX (Hlidskjalf)**, the **agent runtime**
-  (Brokk/Eindri/Kaia), and **A2A collaboration** (Ratatoskr).
+  (Brokk/Eindri/Völundr), and **A2A collaboration** (Ratatoskr).
 - **Self-aware** — `AGENTS.md` in the root governs every agent's behavior.
 - **Isolated-by-default** — sub-agent code executes in ephemeral containers (Utgard)
   on isolated git worktrees (Yggdrasil).
@@ -60,7 +60,7 @@ repository, orchestrated by autonomous Norse-named agents.
 │                          YMIR CORE (TS/Python)                       │
 │                                                                       │
 │   ┌──────────────┐   ┌────────────────┐   ┌────────────────────────┐ │
-│   │   AGENTS.md  ├──►│ Brokk/Kaia     ├──►│  GUNGNIR Skill Engine  │ │
+│   │   AGENTS.md  ├──►│ Brokk/Völundr  ├──►│  GUNGNIR Skill Engine  │ │
 │   │  (Root Laws) │   │ Orchestrator   │   │  (Validated skills)    │ │
 │   └──────────────┘   └───────┬────────┘   └────────────────────────┘ │
 │                              │  A2A 1.0 dispatch (delegation)         │
@@ -83,18 +83,19 @@ repository, orchestrated by autonomous Norse-named agents.
 
 ## 3. Core Subsystems
 
-### 3.1 Agent Runtime — Brokk, Eindri & Kaia
+### 3.1 Agent Runtime — Brokk, Eindri & Völundr
 - **Brokk** is the primary autonomous agent — single-operator executive partner
   (Development, Marketing, Business Strategy, Life Execution).
 - **Eindri** workers are isolated sub-agents spawned for delegated tasks, always
   inside Utgard sandboxes on Yggdrasil worktrees.
-- **Kaia** is the orchestrator + the oracle by the Well: she recalls Mimirsbrunn
+- **Völundr** is the master of the smiths — the orchestrator and the oracle by the
+  Well: he leads the Smithy (Smíðja) and dispatches its smiths, recalls Mimirsbrunn
   before dispatch, honours the anti-hallucination gate, and dispatches specialists
   as **A2A tasks** (SSE streaming); specialists reach tools via **MCP**.
 - Realm personae in `svartalfaheim/<realm>/Brokk.md`.
 
 ### 3.2 Memory — Mimirsbrunn (engram engine) + Runes
-Adopted from Kaia's proven smidja memory (ENTRY-007): the well is **engram**
+Adopted from Völundr's proven smidja memory (ENTRY-007): the well is **engram**
 (`engdbram`, open source — single-file SQLite + sqlite-vec + FTS5 + local embeddings).
 
 | Tier | Name | Engine | Use |
@@ -363,13 +364,13 @@ Cron 07:00 → daily_brief.ts → loads AGENTS.md + realm context
 → auto-commit sync (git_backup.ts) → exit
 ```
 
-### 4.3 A2A Delegation (Kaia → specialist)
+### 4.3 A2A Delegation (Völundr → specialist)
 ```
-Kaia recalls the well (what worked here before)
+Völundr recalls the well (what worked here before)
 → discovers specialist via realm registry (Agent Card) → creates A2A task (SubmitTask)
 → specialist streams progress over SSE (Working → updates)
 → specialist finishes (Completed, artifacts) → tools via MCP internally
-→ Kaia observes the outcome into Mimirsbrunn → logs to Runes → Hlidskjalf renders state
+→ Völundr observes the outcome into Mimirsbrunn → logs to Runes → Hlidskjalf renders state
 ```
 
 ### 4.4 Parallel Feature Work (two agents, one shared repo)
@@ -400,7 +401,7 @@ On success: cleanup(merge=true) → merged to main, worktree removed
 | Layer | Choice | Norse shell |
 |-------|--------|-------------|
 | Control plane daemons | **TypeScript** (Node 22) | Bifrost, Svartalfaheim, Yggdrasil, Ratatoskr, Mjollnir, Valhalla |
-| Agent orchestration | **Python 3.12+** + TS | Brokk / Kaia / Eindri (mirrors smidja harness) |
+| Agent orchestration | **Python 3.12+** + TS | Brokk / Völundr / Eindri (mirrors smidja harness) |
 | UI / UX | **React + Vue** | Hlidskjalf portal, Skrymir |
 | Inter-agent | **A2A 1.0** (JSON-RPC 2.0/SSE) + **Redis** | Ratatoskr |
 | Memory | **engram/engdbram** bridge `:4602` | Mimirsbrunn |

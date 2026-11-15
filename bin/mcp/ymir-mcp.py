@@ -433,7 +433,7 @@ def subagent(agent: str = "", task: str = "") -> str:
 
 @mcp.tool()
 def well_recall(query: str, k: int = 5) -> str:
-    """Drink from the well before acting — Kaia's memory of what was already learned."""
+    """Drink from the well before acting — Völundr's memory of what was already learned."""
     return ymir_recall(query, k)
 
 

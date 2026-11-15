@@ -1,17 +1,17 @@
 ---
 name: how-to-run-agent-teams
-description: Run a FULL agent team with the smithy — Kaia (orchestrator) plus every role on the same model roster, chained through orchestrate. Use when the user wants to "send the team", "run everyone on <model>", "kaia should be that and everyone", or "make a workflow/chain to test a full team". Covers the nemotron-team mode (all agents + Kaia on Nemotron 3 Ultra Free via pi), the no-flash rule for Kaia, and project-anchoring with SMIDJA_PROJECT_DIR. Pairs with smidja-start / smidja-launcher (launch&watch) and smidja (internals).
+description: Run a FULL agent team with the smithy — Völundr (orchestrator) plus every role on the same model roster, chained through orchestrate. Use when the user wants to "send the team", "run everyone on <model>", "kaia should be that and everyone", or "make a workflow/chain to test a full team". Covers the nemotron-team mode (all agents + Völundr on Nemotron 3 Ultra Free via pi), the no-flash rule for Völundr, and project-anchoring with SMIDJA_PROJECT_DIR. Pairs with smidja-start / smidja-launcher (launch&watch) and smidja (internals).
 argument-hint: "[launch a team | nemotron-team | run everyone on a model | ...]"
 ---
 
 # How to run agent teams (the smithy)
 
 A **team run** = a roster (which agents) × a chain (what they execute). The
-full-team play is **`orchestrate`**: Kaia is the `orchestrator` — she receives
+full-team play is **`orchestrate`**: Völundr is the `orchestrator` — he receives
 the WHOLE task first, dispatches sub-agents (scout → planner → builder →
-reviewer) via her `subagent_*` tools, tracks them, and reports every changed
+reviewer) via his `subagent_*` tools, tracks them, and reports every changed
 file. Do not pass the engineer's prompt straight to one builder; going through
-Kaia first is the point (she recalls project memory and plans the dispatch).
+Völundr first is the point (he recalls project memory and plans the dispatch).
 
 This skill is the playbook for "send the team". For single-line launches and
 watching, load `smidja-launcher`; for picking teams/models `smidja-start`;
@@ -27,7 +27,7 @@ SMIDJA_PROJECT_DIR=/home/<user>/CodeP/<project> \
   $YMIR_ROOT/scripts/smidja run --mode nemotron-team <ask-path-or-string>
 ```
 
-That runs the full 6-agent team (orchestrator/Kaia, planner, builder, scout,
+That runs the full 6-agent team (orchestrator/Völundr, planner, builder, scout,
 reviewer, documenter) — every one on **Nemotron 3 Ultra Free via pi**
 (`openrouter/nvidia/nemotron-3-ultra-550b-a55b:free`, 1M ctx), chained through
 `orchestrate`. Watch it with `smidja tail <smidja_id>` / `just ui`, audit with
@@ -39,18 +39,19 @@ reviewer, documenter) — every one on **Nemotron 3 Ultra Free via pi**
 |---|---|---|---|---|
 | `nemotron` | all 6 on Nemotron | opencode/ocrd | simple-sdlc | test roster, ocrd CLI |
 | `nemotron-pi` | all 6 on Nemotron | **pi** (`openrouter/…:free`) | simple-sdlc | same model via pi — thinking visible |
-| `nemotron-team` | all 6 on Nemotron | **pi** | **orchestrate** | THE full-team mode — Kaia dispatches everyone |
+| `nemotron-team` | all 6 on Nemotron | **pi** | **orchestrate** | THE full-team mode — Völundr dispatches everyone |
 | `cloud-reasoning` | cloud reasoning team | opencode | simple-sdlc | hard/long tasks |
-| `orchestrate` | orchestrator+reviewer | cloud-fast | orchestrate | Kaia dispatches (default roster) |
+| `orchestrate` | orchestrator+reviewer | cloud-fast | orchestrate | Völundr dispatches (default roster) |
 
 `smidja modes` lists all 13 modes; `smidja rosters` resolves each stack and shows
 the surface per agent (a `✓ pi` column means it runs through the pi harness).
 
 ## Golden rules (hard-won — breaking these caused real failures)
 
-1. **Kaia runs on the SAME model as the team — never flash.** Admission,
+1. **Völundr runs on the SAME model as the team — never flash.** Admission,
    `smidja kaia`, and recovery default to `KAIA_CONFIG=smidja.cloud-fast`
-   (**deepseek-v4-flash**). A nemotron run MUST override it, or the admission
+   (**deepseek-v4-flash**) — the verb, the variable and the `kaia_*` files keep their
+   historical names; they all mean Völundr. A nemotron run MUST override it, or the admission
    one-shot silently talks to flash while everyone else is on nemotron:
    `nemotron*` modes now set `KAIA_CONFIG=smidja.nemotron-pi` automatically, so
    only a stray `smidja kaia`/`smidja admit` elsewhere can drift — check with
@@ -88,9 +89,9 @@ the surface per agent (a `✓ pi` column means it runs through the pi harness).
 ## How the team works (so you can report to the user)
 
 - `smidja/smidja_orchestrate.py` — chain: `request` (engineer) → `orchestrate`
-  (Kaia owns the whole task, MUST use `subagent_*` — gate
+  (Völundr owns the whole task, MUST use `subagent_*` — gate
   `orchestrator_dispatched`) → `review_N` (reviewer) → maybe `revise_N`
-  (Kaia closes findings), bounded by `MAX_REVISION_LOOPS`.
+  (Völundr closes findings), bounded by `MAX_REVISION_LOOPS`.
 - Every agent call streams events (tool_call, compact, thinking, model_error)
   into the project's `smidja/smidja_data/smidja.db` (WAL — reads never block).
 - `smidja stop <smidja_id>` kills a misbehaving team (children first);
@@ -104,7 +105,7 @@ smidja phases <smidja_id>                     # per-phase status
 smidja tail <smidja_id>                       # live event tail
 python3 -c "import json;print([l for l in open('<proj>/smidja/smidja_data/sessions/<id>/agent_map.json')])"   # models pinned
 grep '"cwd"' <proj>/smidja/smidja_data/sessions/<id>/*/raw_output.jsonl        # right repo?
-cat <proj>/smidja/smidja_data/sessions/<id>/kaia_notes.md                      # Kaia admission notes
+cat <proj>/smidja/smidja_data/sessions/<id>/kaia_notes.md                      # Völundr admission notes
 ```
 
 ## Cross-references

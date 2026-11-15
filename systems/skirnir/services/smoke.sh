@@ -50,8 +50,8 @@ case "${PW:-0}" in
   *) ok "the Ymir pitch explains it (${PW} words)" ;;
 esac
 case "$(printf '%s' "$P" | j "d.get('answer','')")" in
-  *Brokk*|*Eindri*|*Kaia*) ok "the pitch names the fleet" ;;
-  *) bad "the pitch" "does not name the fleet (Brokk, Eindri, Kaia)" ;;
+  *Brokk*|*Eindri*|*Völundr*) ok "the pitch names the fleet" ;;
+  *) bad "the pitch" "does not name the fleet (Brokk, Eindri, Völundr)" ;;
 esac
 
 # ── 2 · the digest is the operator's, and it is not empty ─────────────────────────────────────

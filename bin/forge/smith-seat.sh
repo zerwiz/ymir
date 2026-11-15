@@ -24,10 +24,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
   [ "$PWD" = / ] && break; cd ..; done; pwd)"
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
-_h=""; declare -f ymir_home_root >/dev/null 2>&1 && ymir_home_root _h 2>/dev/null
-# The ONE resolver says where the home is (Rule 07); a home it cannot name is a refusal, not a guess.
-[ -n "$_h" ] || { printf 'smith-seat: the resolver (bin/vault/hoard-lib.sh) named no home\n' >&2; exit 1; }
-STATE="$_h/state"
+STATE=""; declare -f hoard_state_dir >/dev/null 2>&1 && hoard_state_dir STATE 2>/dev/null
+if [ -z "$STATE" ]; then
+  printf 'smith-seat: the home could not be resolved — bin/vault/hoard-lib.sh is the one door\n' >&2; exit 1
+fi
 
 say()  { printf '%s\n' "$*"; }
 die()  { printf 'smith-seat: %s\n' "$*" >&2; exit 1; }
@@ -95,7 +95,7 @@ ROLE_FILE="$ROOT/.agents/agents/$ROLE.md"
 # worktree, so `git add -A` stages 55 deletions and a smith can ship them into the PR (caught on
 # 2026-11-07, mid-errand). The seat's toolkit goes to the operator's state dir, where git cannot see it.
 if [ -d "$CWD/.pi/extensions" ]; then
-  stash_dir="$_h/state/.seat-extensions/$(basename "$CWD")"
+  stash_dir="$STATE/.seat-extensions/$(basename "$CWD")"
   mkdir -p "$stash_dir" 2>/dev/null || true
   mv "$CWD/.pi/extensions" "$stash_dir/extensions" 2>/dev/null \
     && say "smith-seat: the seat's own extensions moved OUT of the tree ($stash_dir) — settings.json already loads the primary's"

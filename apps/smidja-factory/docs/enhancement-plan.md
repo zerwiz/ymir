@@ -25,9 +25,9 @@ This plan identifies high-value enhancements across both surfaces, organized by 
 | Real-time | 500ms polling + cursor pagination | `SessionTrace.vue` tick loop |
 | Themes | CSS custom properties | `neutral` (default) + `classic` (deep-space) |
 | Desktop | Electron (preload + main) | `desktop/main.js`, `desktop/preload.js` |
-| Memory | Kaia engram bridge (Python) | `/api/memory/*` proxy to `:4602` |
+| Memory | Völundr's engram bridge (Python) | `/api/memory/*` proxy to `:4602` |
 
-**Current Views**: Sessions → Session Trace (lanes + waterfall) → Phase Detail + Envelopes + Gates + Thinking + Tool calls; Memory; Decisions (self-improving surface); Stats (tokens/cost/cache/savings); Orchestrator Chat (Kaia + session launch); Settings
+**Current Views**: Sessions → Session Trace (lanes + waterfall) → Phase Detail + Envelopes + Gates + Thinking + Tool calls; Memory; Decisions (self-improving surface); Stats (tokens/cost/cache/savings); Orchestrator Chat (Völundr + session launch); Settings
 
 ### Smíðja Backend (`templates/smidja/`)
 | Layer | Technology | Key Files |
@@ -66,13 +66,13 @@ This plan identifies high-value enhancements across both surfaces, organized by 
 | A.2.4 | **Critical path highlighter** | Auto-detect and highlight the longest dependency chain in waterfall | Small | Medium |
 | A.2.5 | **Phase duration heatmap** | Calendar view of phase durations across runs (CI-style) | Small | Medium |
 
-#### A.3 Kaia Memory & Knowledge
+#### A.3 Völundr's Memory & Knowledge
 | ID | Enhancement | Description | Effort | Priority |
 |----|-------------|-------------|--------|----------|
 | A.3.1 | **Memory graph explorer** | Interactive entity-relationship graph from engram facts/episodes | Large | Medium |
-| A.3.2 | **Cross-project memory search** | Query Kaia memory across all smidja repos from one UI | Medium | Medium |
+| A.3.2 | **Cross-project memory search** | Query Völundr's memory across all smidja repos from one UI | Medium | Medium |
 | A.3.3 | **Memory decay visualization** | Show salience/confidence decay over time per fact/episode | Small | Low |
-| A.3.4 | **Admission timeline** | Visualize Kaia's admission pipeline: prompt → recall → admit → dispatch | Small | Medium |
+| A.3.4 | **Admission timeline** | Visualize Völundr's admission pipeline: prompt → recall → admit → dispatch | Small | Medium |
 
 #### A.4 Orchestrator Chat Enhancements
 | ID | Enhancement | Description | Effort | Priority |
@@ -80,7 +80,7 @@ This plan identifies high-value enhancements across both surfaces, organized by 
 | A.4.1 | **Inline tool result preview** | Expand tool calls in chat to show args/result without leaving thread | Small | High |
 | A.4.2 | **Chat-to-smidja trace linking** | Click a launched session in chat → jump to its trace (exists) + back-link | Small | High |
 | A.4.3 | **Structured task templates** | Quick-insert templates for common tasks (bug fix, feature, refactor) | Small | Medium |
-| A.4.4 | **Multi-model chat** | Switch Kaia's model mid-conversation; show model badge per message | Small | Medium |
+| A.4.4 | **Multi-model chat** | Switch Völundr's model mid-conversation; show model badge per message | Small | Medium |
 | A.4.5 | **Chat export / session resume** | Export chat + launched sessions as portable bundle; resume later | Medium | Low |
 
 #### A.5 Settings & Configuration UI
@@ -130,7 +130,7 @@ This plan identifies high-value enhancements across both surfaces, organized by 
 | C.1.2 | **`smidja_perf_optimize`** | Benchmark → profile → optimize → benchmark → regression test | Medium | High |
 | C.1.3 | **`smidja_migration`** | Analyze → plan migration → execute → verify → rollback plan | Medium | Medium |
 | C.1.3 | **`smidja_dependency_update`** | Scan → plan updates → test → staged rollout → verify | Small | Medium |
-| C.1.4 | **`smidja_incident_response`** | Triage → diagnose → fix → verify → postmortem → Kaia memory | Medium | High |
+| C.1.4 | **`smidja_incident_response`** | Triage → diagnose → fix → verify → postmortem → Völundr's memory | Medium | High |
 | C.1.5 | **`smidja_feature_flag_rollout`** | Gradual rollout with metric gates + automatic rollback | Medium | Medium |
 
 #### C.2 Agent Capability Extensions
@@ -203,7 +203,7 @@ This plan identifies high-value enhancements across both surfaces, organized by 
 #### E.1 Deployment & Operations
 | ID | Enhancement | Description | Effort | Priority |
 |----|-------------|-------------|--------|----------|
-| E.1.1 | **Docker/OCI images** | Pre-built images for smidja runner + visualizer + Kaia bridge | Medium | High |
+| E.1.1 | **Docker/OCI images** | Pre-built images for smidja runner + visualizer + Völundr's bridge | Medium | High |
 | E.1.2 | **Kubernetes operator** | `SmidjaRun` CRD for cluster-native execution + visualizer ingress | Large | Medium |
 | E.1.3 | **GitHub App integration** | Installable app: PR checks, status checks, auto-smidja on labels | Large | High |
 | E.1.4 | **Self-hosted telemetry** | OpenTelemetry export (traces/metrics/logs) to Tempo/Prometheus/Loki | Medium | Medium |
@@ -211,7 +211,7 @@ This plan identifies high-value enhancements across both surfaces, organized by 
 #### E.2 Multi-Tenancy & Teams
 | ID | Enhancement | Description | Effort | Priority |
 |----|-------------|-------------|--------|----------|
-| E.2.1 | **Team workspaces** | Isolated smidja configs, visualizer instances, Kaia memory per team | Large | Medium |
+| E.2.1 | **Team workspaces** | Isolated smidja configs, visualizer instances, Völundr's memory per team | Large | Medium |
 | E.2.2 | **RBAC for visualizer** | Viewer/Operator/Admin roles per workspace | Medium | Medium |
 | E.2.3 | **Audit log** | Immutable log of all smidja runs, steers, stops, config changes | Medium | High |
 
@@ -244,7 +244,7 @@ This plan identifies high-value enhancements across both surfaces, organized by 
 | A.2.1 Comparative trace diff | Visualizer | Side-by-side waterfall view |
 | A.2.2 Token flow Sankey | Visualizer | Interactive token flow diagram |
 | A.2.3 Failure pattern miner | Visualizer + Backend | Clustered failures with fix suggestions |
-| A.3.1 Memory graph explorer | Visualizer | Kaia engram entity graph |
+| A.3.1 Memory graph explorer | Visualizer | Völundr's engram entity graph |
 | A.5.1 Visual roster editor | Visualizer | Drag-drop agent config UI |
 | A.5.2 Model tier picker | Visualizer | Visual model catalog |
 | B.1.1 WebSocket event stream | Visualizer + API | Replace 500ms polling |
@@ -270,7 +270,7 @@ This plan identifies high-value enhancements across both surfaces, organized by 
 | A.1.3 Session handoff | Visualizer | Take over paused runs |
 | A.1.4 Comment threads | Visualizer | Phase-pinned discussions |
 | A.2.5 Phase duration heatmap | Visualizer | Calendar view |
-| A.3.2 Cross-project memory | Visualizer | Multi-repo Kaia query |
+| A.3.2 Cross-project memory | Visualizer | Multi-repo Völundr query |
 | A.5.3 Smíðja chain builder | Visualizer | Visual pipeline editor |
 | A.6.1-6.3 Mobile + a11y | Visualizer | Responsive, WCAG AAA, PWA |
 | B.1.2 GraphQL endpoint | API | Flexible query layer |
@@ -349,7 +349,7 @@ class TeamWorkspace(BaseModel):        # E.2.1
 | WebSocket complexity breaks polling fallback | Medium | High | Keep polling as fallback; feature flag WebSocket |
 | Multi-modal agents need new harness support | High | Medium | Start with Pi vision extensions; opencode later |
 | Parallel phases break context handoff assumptions | Medium | High | Design DAG with explicit data dependencies |
-| Kaia memory bridge becomes bottleneck | Medium | Medium | Add caching layer; async proxy |
+| Völundr's memory bridge becomes bottleneck | Medium | Medium | Add caching layer; async proxy |
 | Docker images bloat with all model deps | Low | Medium | Multi-stage builds; optional model layers |
 | GitHub App permissions scope creep | Medium | High | Minimal permissions; user-granted per repo |
 
@@ -383,7 +383,7 @@ smidja doctor             # Preflight check
 smidja team list          # Show rosters
 smidja mission T1         # Bench missions
 
-# Kaia Memory
+# Völundr Memory
 just kaia                  # CLI memory interface
 # UI: http://localhost:4601/#/memory
 ```
