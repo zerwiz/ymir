@@ -120,7 +120,7 @@ log_file() { case "$1" in smidja) printf '%s/electron-smidja.log' "$YMIR_STATE_D
 view_mark() { case "$1" in smidja) printf '%s' 'ymir-smidja' ;; odrerir) printf '%s' 'ymir-odrerir' ;; *) printf '%s' 'ymir-hlidskjalf' ;; esac; }
 view_pids() {  # all live Electron pids for a view
   local mark; mark="$(view_mark "$1")"
-  pgrep -f "electron/dist/electron.*--user-data-dir=.*${mark}" 2>/dev/null || true
+  pgrep -f "electron/dist/.*--user-data-dir=.*${mark}" 2>/dev/null || true
 }
 # An integrated GPU backs its graphics memory with system RAM: a small VRAM
 # carve-out plus a large shared aperture (GTT). When a local model is served
