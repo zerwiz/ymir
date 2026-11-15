@@ -153,3 +153,8 @@ configuration, and rewriting them destroys evidence. Say which files you exclude
   the old one first.
 - **The tree is unreadable to an administrator**: they are not in the house's group. Group membership applies to
   a new session.
+
+## CHANGE LOG
+
+- **2026-11-15** — written, with the staging it documents: a second company's copy of the suite, proved dark
+  and separate on a rented host before anyone uses it. Entries are appended below, never rewritten (RULES/06).
