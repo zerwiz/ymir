@@ -35,6 +35,7 @@ import re
 import shlex
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 HOME = Path.home()
@@ -188,7 +189,9 @@ def render(name: str) -> dict | None:
         "EnvironmentVariables": env,
         "StandardOutPath": str(logs),
         "StandardErrorPath": str(logs),
-        "ProcessType": "Background",
+        # Standard, never Background: macOS throttles a Background agent to a crawl under load (measured
+        # 2026-11-15 — every service sat in state R at 0% CPU and no port opened)
+        "ProcessType": "Standard",
     }
     wd = one(svc, "Service", "WorkingDirectory")
     if wd:
@@ -270,7 +273,16 @@ def boot_in(name: str) -> bool:
     log_dir().mkdir(parents=True, exist_ok=True)
     if loaded(label):
         lc("bootout", f"{DOMAIN}/{label}")
+    # bootout returns before launchd has let the job go; a bootstrap in that window fails with
+    # "5: Input/output error" (measured 2026-11-15) — wait for the label to leave, then try twice
+    for _ in range(50):
+        if not loaded(label):
+            break
+        time.sleep(0.2)
     r = lc("bootstrap", DOMAIN, str(src))
+    if r.returncode != 0 and "already" not in (r.stderr or ""):
+        time.sleep(1)
+        r = lc("bootstrap", DOMAIN, str(src))
     if r.returncode != 0 and "already" not in (r.stderr or ""):
         print(f"launchd: could not load {label}: {(r.stderr or r.stdout).strip()}", file=sys.stderr)
         return False
