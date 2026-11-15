@@ -71,6 +71,30 @@ roles it belongs on.
 | `UNREGISTERED` | The unit names a Ymir tree but nobody registered it. Add it to `config/units.yaml`. |
 | The pre-push ward `runtime-pinned` refuses a push | Run `bin/engine/units.sh write`, then push again. |
 
+## Keeping it current: the pin refreshes from outside itself (2026-11-15)
+
+The pin only helps if it stands on `main` *today*. On 2026-11-15 the heart's pin was found **75 commits behind**, and
+sixteen scheduled rows could not be found — 213 failed runs across 28 days — because the only thing that could refresh
+the pin was a copy of the pin itself.
+
+`bin/engine/pin-refresh.sh` is now the door that does it, and it will not do it from inside:
+
+| You want | Run |
+|---|---|
+| Ask whether the pin is current (exit 3 = behind, absent or unreadable) | `bin/engine/pin-refresh.sh --check` |
+| Bring the pin to `origin/main` | `bin/engine/pin-refresh.sh` (run it from your working tree, e.g. `~/ymir`) |
+| One line instead of the report — what a session start and a log want | `bin/engine/pin-refresh.sh --quiet` |
+
+It **refuses (exit 4)** when the script itself lives inside the pin, and says which tree to run it from: a refresher
+seated in the thing it refreshes proves nothing, because a stale copy is what runs. Your local edits are reported and
+never pre-empted; if an incoming commit *would* overwrite one, git refuses the merge and the door says so (exit 5), so a
+schedule never overwrites a decision.
+
+A session start runs it before the scheduler does (the new `PIN` section of `bin/time/saga-session-start.sh`), and Eir's
+`runtimepin` surface is now **red when the pin is behind main** — the units pointing at the pin says nothing about the
+pin being current, which is exactly the green that hid this for four weeks.
+
 ## CHANGE LOG
 
 - **2026-11-12** — Opened.
+- **2026-11-15** — The refresh door, its refusal, the session-start step, and a red `runtimepin` surface for a stale pin.

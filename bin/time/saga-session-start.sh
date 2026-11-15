@@ -342,6 +342,18 @@ printf '  "systems/snotra/services/tts-lease/ymir-say.sh","Ymir speaks on the de
 printf '  "bin/host/omarchy-plugins.sh","the suggested Omarchy shell plugins; add/list"\n'
 printf '  "bin/seat/herdr-run.sh","seat an Eindri in a herdr tab, or a disposable space"\n'
 
+section "PIN"
+# The pinned runtime is what every unit and app runs from, and the refresher must not live inside it
+# (plan 292: the heart's pin stood 75 commits behind main for 28 days because the only thing that could
+# refresh it was a copy of itself). A session starts from the working tree, so this is a tree that can
+# bring the pin home. The door refuses on its own when it is seated inside the pin, and says so.
+if [ -x "$SCRIPT_DIR/../engine/pin-refresh.sh" ]; then
+  "$SCRIPT_DIR/../engine/pin-refresh.sh" --quiet 2>&1 \
+    || printf 'pin: the refresh did not complete (see above) — rows that run from the pin may be stale\n'
+else
+  printf 'pin: bin/engine/pin-refresh.sh absent (an older tree) — nothing refreshed\n'
+fi
+
 section "CRON START"
 if [ -x "$SCRIPT_DIR/nornir-cron-start.sh" ]; then
   BROKK_HOME="$BROKK_HOME" BROKK_STATE_OVERRIDE="$STATE" "$SCRIPT_DIR/nornir-cron-start.sh" || printf 'cron: start reported a failure (see above)\n'
