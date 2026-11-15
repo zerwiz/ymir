@@ -64,10 +64,11 @@ shelf_default() {
   # resolver has no such helper (an older home), the canonical shelf is the fallback, so this
   # door resolves the same ledger it always did rather than dying on a missing function.
   if command -v ymir_plan_dir >/dev/null 2>&1; then
-    ledger="$(ymir_plan_dir ledger 2>/dev/null || true)"
+    ymir_plan_dir ledger 2>/dev/null || ledger=""   # it names a RESULT VARIABLE; a $(…) would lose it
   fi
   [ -n "$ledger" ] || ledger="$h/svartalfaheim/whynotproductions/projects/ymir/plans"
-  [ -d "$ledger" ] || return 1
+  # A home with no ledger (a fresh install, CI's planted home) is a clean skip, said aloud — not a red.
+  [ -d "$ledger" ] || return 3
   printf '%s' "$ledger"
 }
 
@@ -83,7 +84,14 @@ while [ $# -gt 0 ]; do
   esac
 done
 [ "$MODE" = "report" ] && MODE="report"
-[ -n "$SHELF" ] || SHELF="$(shelf_default)" || die "cannot resolve the home" "set YMIR_HOME or name a shelf with --shelf"
+if [ -z "$SHELF" ]; then
+  SHELF="$(shelf_default)"; _rc=$?
+  if [ "$_rc" -eq 3 ]; then
+    printf 'plan-audit: SKIP — this home holds no plan ledger, so there is nothing to judge (RULES/25: a clean skip, said)\n'
+    exit 0
+  fi
+  [ "$_rc" -eq 0 ] || die "cannot resolve the home" "set YMIR_HOME or name a shelf with --shelf"
+fi
 
 # ---------------------------------------------------------------- the self-test shelf
 # A tiny shelf built from three plans whose STRUCTURE differs from their spelling:

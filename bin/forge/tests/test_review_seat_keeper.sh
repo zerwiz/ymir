@@ -85,9 +85,22 @@ chmod +x "$STUB/pi"
 
 # the model this seat would resolve for the judge, in the throwaway home
 printf 'agents:\n  forseti:\n    model: stub/seat-model\n' >"$T/hm/config/agents.yaml"
+# plan 290 §3: a seated door runs only where this machine's own wardens file names it. The planted home names it.
+mkdir -p "$T/hm/config/machines/seatbox"
+printf 'review-seat:\n  enabled: on\n' >"$T/hm/config/machines/seatbox/wardens.yaml"
+# …for a repository the planted registry claims, as a login a stub gh answers with.
+mkdir -p "$T/hm/hodd/identity"
+printf 'projects:\n- id: planted\n  git: { host: github.com, owner: octo, repo: planted, remote: origin, default_branch: main, auth: gh }\n' \
+  >"$T/hm/hodd/identity/projects.yaml"
+cat >"$STUB/gh" <<'GH'
+#!/usr/bin/env bash
+# a stub gh: answers who it is, and nothing else touches the network
+case "$*" in "api user"*) echo octo-judge ;; *) exit 0 ;; esac
+GH
+chmod +x "$STUB/gh"
 
 export STUB_DIR="$FIX"
-seat() { env PATH="$STUB:$PATH" HOME="$T/home" YMIR_HOME="$T/hm" YMIR_STATE_DIR="$T/hm/state" \
+seat() { env PATH="$STUB:$PATH" HOME="$T/home" YMIR_MACHINE=seatbox YMIR_REVIEW_REPOS=octo/planted YMIR_HOME="$T/hm" YMIR_STATE_DIR="$T/hm/state" \
              XDG_STATE_HOME="$T/xdg" PI_BIN="$STUB/pi" STUB_DIR="$FIX" \
              bash "$SEAT" "$@" 2>&1; }
 clone="$T/clone"

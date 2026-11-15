@@ -13,6 +13,9 @@ SOAK="$ROOT/bin/gates/soak.sh"
 DRIVER="$ROOT/bin/gates/soak/cdp.mjs"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"; [ -n "${SLEEPER_PIDS:-}" ] && kill $SLEEPER_PIDS 2>/dev/null' EXIT
 export YMIR_HOME="$TMP/home"; mkdir -p "$YMIR_HOME/state" "$YMIR_HOME/config"
+# The registry and the PR mapping are read from the tree under test, never from a pin this machine may not have
+# (CI has no ~/ymir-runtime; the first run there said "no runtime at …" five times).
+export YMIR_RUNTIME_DIR="$ROOT"
 n=0; bad=0
 ok()   { n=$((n+1)); printf '  "%s","PASS"\n' "$1"; }
 fail() { n=$((n+1)); bad=$((bad+1)); printf '  "%s","FAIL","%s"\n' "$1" "${2-}"; }

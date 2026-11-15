@@ -1377,8 +1377,9 @@ function readDigestInBackground(): void {
   if (digestInflight) return;
   digestInflight = (async () => {
     try {
-      // 60 s is the script's own ceiling, not a promise it is fast
-      const digest = await runAsync(['bash', 'bin/time/saga-session-start.sh'], 0, 60);
+      // 60 s is the script's own ceiling, not a promise it is fast. `--page`: a page READS the head and holds
+      // nothing — without it, opening the Runtime page took the helm's session lock as if it were a session start.
+      const digest = await runAsync(['bash', 'bin/time/saga-session-start.sh', '--page'], 0, 60);
       digestRead = { at: Date.now(), digest };
     } catch {
       digestRead = { at: Date.now(), digest: '' };

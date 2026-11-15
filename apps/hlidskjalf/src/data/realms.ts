@@ -24,6 +24,16 @@ export const DEFAULT_WORKSPACES: RealmDef[] = [
     tint2: '#7d5f2a',
     glyph: 'ᛉ',
   },
+  {
+    id: 'personal',
+    tenant: 'Personal',
+    name: 'Personal',
+    kind: 'personal',
+    domains: ['me', 'life', 'development'],
+    tint: '#96a0a8',
+    tint2: '#5f686e',
+    glyph: 'ᛗ',
+  },
 ];
 
 /** The realms a machine has, from the registry row it answered with. A realm the
