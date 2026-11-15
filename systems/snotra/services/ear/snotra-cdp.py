@@ -32,6 +32,7 @@ import json
 import os
 import socket
 import struct
+import shutil
 import subprocess
 import sys
 import time
@@ -333,9 +334,25 @@ def attach(port: int) -> WS:
     return ws
 
 
+def seat_profile() -> str:
+    """A browser profile directory the seat's own browser can write.
+
+    Measured 2026-11-13 on this seat: the Chromium here is a SNAP, and its AppArmor
+    profile allows `~/.config/chromium` and `~/snap/chromium/**` but NOT an arbitrary
+    hidden subdirectory. A seat launched with the old default
+    (`~/.local/share/skirnir/meet-profile`) died before CDP ever answered:
+    `Failed to create .../SingletonLock: Permission denied (13)`. So the profile
+    follows the browser that will use it, never a fixed path that only works when
+    Chromium is a distribution package."""
+    binary = shutil.which("chromium") or ""
+    if binary.startswith("/snap/") or "/snap/" in binary:
+        return os.path.expanduser("~/snap/chromium/common/skirnir-meet-profile")
+    return os.path.expanduser("~/.local/state/skirnir/meet-profile")
+
+
 def cmd_launch(args) -> int:
     url = args.get("url", "https://meet.google.com/")
-    profile = args.get("profile", "/tmp/skirnir-profile")
+    profile = args.get("profile") or seat_profile()
     port = args.get("port", 9222)
     headed = args.get("headed", False)
     os.makedirs(profile, exist_ok=True)
@@ -371,21 +388,26 @@ def cmd_seat(args) -> int:
     _touch_lease()
     port = int(args.get("port", 9222))
     url = args.get("url", "")
-    profile = args.get("profile") or os.path.expanduser("~/.local/share/skirnir/meet-profile")
+    profile = args.get("profile") or seat_profile()
     if not url:
         print("seat: --url is required", file=sys.stderr); return 2
+    # A seat with no display (every always-on server) can only be headless: `--headed`
+    # is the exception, and the guard is the environment, not a remembered flag.
     cmd_launch({"port": port, "url": "about:blank", "profile": profile,
-                "headed": args.get("headed", True)})
+                "headed": args.get("headed", bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")))})
     ws = attach(port)
     ws.call("Page.enable")
     ws.call("Page.addScriptToEvaluateOnNewDocument", source=BRIDGE)   # before Meet, always
     print("seat\tbridge-installed")
     ws.js("location.href=%s" % json.dumps(url), await_promise=False)
-    ws.close()
+    # THE SESSION STAYS OPEN, and that is the whole point. `addScriptToEvaluateOnNewDocument`
+    # is registered on a CDP session; closing it before the navigation is what made every
+    # seat report `bridge=False` even when `bridge-installed` had printed (measured
+    # 2026-11-13: the bridge was present while install ran, absent after a re-attach and a
+    # navigation). One session from install to verdict, or the ear is deaf by construction.
     time.sleep(12)
     join_args = {"port": port, "name": args.get("name", "Skírnir")}
     rc = cmd_join(join_args)
-    ws = attach(port)
     # unmute: our stream IS the microphone, so a muted Meet is a silent mouth
     for _ in range(3):
         unmuted = ws.js("""(() => {const b=Array.from(document.querySelectorAll('button,[role=button]'))
@@ -396,12 +418,30 @@ def cmd_seat(args) -> int:
         time.sleep(2)
     bridged = bool(ws.js("!!window.__skirnir"))
     in_call = _in_call(ws)
+    page = (ws.js("document.body.innerText") or "").strip()
     ws.close()
     print(f"seat\tin_call={in_call}\tbridge={bridged}\tjoin={rc}\tunmute={unmuted}")
     if not (in_call and bridged):
+        # Name what the page ACTUALLY said. "Still in the lobby" was reported for every
+        # non-join until 2026-11-13 — including the case measured that night, where Meet
+        # answered "You can't join this video call" and the seat was never in a lobby at
+        # all (a probe with a made-up code answers the same, so the text means "this guest
+        # is not admitted", not "wait"). A wrong reason costs the next hand a night.
+        low = page.lower()
+        if "can't join this video call" in low or "cant join this video call" in low:
+            why = ("Meet refused the session outright (\"You can't join this video call\"): the link is "
+                   "not a live meeting for this guest — the host has not started it, the code is stale, "
+                   "or an anonymous/headless guest is not admitted. This is NOT a lobby wait.")
+        elif "waiting for" in low and "host" in low:
+            why = "it sits in the lobby: the meeting has not started, or the host must admit it."
+        elif "asking to be let in" in low or "ask to join" in low:
+            why = "the join request was submitted and the host has not answered it yet."
+        elif not page:
+            why = "the page is empty: the browser died or never loaded Meet."
+        else:
+            why = "the page is neither in a call nor a lobby; first lines: " + " ".join(page.split())[:160]
         print("seat: REFUSED to call this a seat — " +
-              ("the bridge is missing (the room would hear the host's mic) " if not bridged else "") +
-              ("or it is still in the lobby (the host must admit it, or invite the account) " if not in_call else ""),
+              ("the bridge is missing (the room would hear the host's mic); " if not bridged else "") + why,
               file=sys.stderr)
         return 4
     return 0

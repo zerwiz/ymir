@@ -43,9 +43,12 @@ MODE="${1:-write}"
 # comment below says about undercounting. Inventory has always counted tracked
 # files; this now matches it, and falls back to `find` outside a git tree.
 if git -c safe.directory='*' rev-parse --git-dir >/dev/null 2>&1; then
-  shells=$(git -c safe.directory='*' ls-files 'bin/*.sh' 'bin/*.py' | wc -l | tr -d ' ')
+  # THE GATE FRAGMENTS ARE NOT DOORS (plan 295 fix S1): bin/gates/checks.d/ holds one file per gate,
+  # and they are counted by the DOOR that sources them — ci-verify.sh — so that adding a gate never
+  # moves this number and never rewrites this register.
+  shells=$(git -c safe.directory='*' ls-files 'bin/*.sh' 'bin/*.py' | grep -v '^bin/gates/checks.d/' | wc -l | tr -d ' ')
 else
-  shells=$(find bin \( -name '*.sh' -o -name '*.py' \) -not -path '*/.git/*' 2>/dev/null | wc -l | tr -d ' ')
+  shells=$(find bin \( -name '*.sh' -o -name '*.py' \) -not -path '*/.git/*' -not -path 'bin/gates/checks.d/*' 2>/dev/null | wc -l | tr -d ' ')
 fi
 pys=$(find src/ymir_runtime -name '*.py' 2>/dev/null | wc -l | tr -d ' ')
 skills=$(git -c safe.directory='*' ls-files '.agents/skills/*/SKILL.md' | cut -d/ -f3 | LC_ALL=C sort -u | wc -l | tr -d ' ')
@@ -154,7 +157,12 @@ printf '**The rows live in the tree.** Each folder of `bin/` has its own fragmen
 # here claimed Ymir runs them and, worse, invited the register to "move or retire" a shipped template
 # (Rule 11) — every row read `keep (a human or a cron row must run it)` about a file Ymir never runs.
 # They are indexed by bin/README.md as what they are; the capacity register answers "what can Ymir do".
-for f in $(find bin -name '*.sh' -not -path '*/.git/*' -not -path 'bin/collab/kit/*' 2>/dev/null | LC_ALL=C sort); do
+#
+# A GATE FILE IS A FRAGMENT OF ONE DOOR (plan 295 fix S1). `bin/gates/checks.d/` holds one file per
+# gate that `bin/gates/ci-verify.sh` sources; they are lines of that door, not doors a caller can
+# look up, and registering them would make adding a gate rewrite this register — so two branches
+# adding two gates would meet again in a generated file, which is the fault the split removes.
+for f in $(find bin -name '*.sh' -not -path '*/.git/*' -not -path 'bin/collab/kit/*' -not -path 'bin/gates/checks.d/*' 2>/dev/null | LC_ALL=C sort); do
   n=$(basename "$f")
   case "$n" in inventory.sh|capabilities.sh|queue.sh|update-notes.sh|verify-seat.sh) continue ;; esac
   # the first sentence of its own header is the job, from the door itself

@@ -22,6 +22,12 @@ export async function instructionsFor(userId: string, botId: string): Promise<st
     .join('\n');
   const groups = (db.prepare("SELECT name FROM bots WHERE user_id=? AND kind='room' AND members LIKE ? ORDER BY created_at").all(userId, `%${botId}%`) as any[]).map((g) => g.name).join(', ');
   const skills = (db.prepare('SELECT name, body FROM skills WHERE bot_id=? ORDER BY created_at').all(botId) as any[]).map((s) => `### ${s.name}\n${s.body}`).join('\n\n');
+  // plan 275 (2026-11-13), at the Allfather's word: "I want to be able to like messages in the chat so the AI knows I
+  // liked the answer." The last answers he liked, in this agent's room, so it knows what lands with him.
+  const liked = (db.prepare(`SELECT body FROM rows WHERE bot_id=? AND kind='message' AND json_extract(body,'$.liked')=1
+    ORDER BY created_at DESC LIMIT 5`).all(botId) as any[])
+    .map((r) => { try { return String(JSON.parse(r.body).text ?? '').replace(/\s+/g, ' ').trim(); } catch { return ''; } })
+    .filter(Boolean).map((t) => `- ${t.length > 280 ? `${t.slice(0, 277)}…` : t}`).join('\n');
   const routines = listRoutines(botId).map((r) => `- ${r.name} (${r.id}): ${r.enabled ? r.description : 'paused'}; ${r.prompt.slice(0, 120)}`).join('\n');
   let apps = '';
   try { apps = [...(await connectedToolkits(userId))].sort().join(', '); } catch { apps = '(could not check right now)'; }
@@ -57,5 +63,5 @@ You have your own screen on a Linux computer shared by the team: a desktop with 
 - User: ${owner}${user?.email ? ` <${user.email}>` : ''}
 - Connected apps: ${apps || 'none yet'}
 ${team ? `- Other agents on the team:\n${team}` : '- You are the only agent on the team so far.'}${groups ? `\n- Group chats you are in: ${groups}` : ''}
-${routines ? `\n## Your routines in the app\n${routines}\n` : ''}${skills ? `\n## Skills ${owner} gave you\n${skills}\n` : ''}${bot.instructions ? `\n## Instructions from ${owner}\n${bot.instructions}\n` : ''}`;
+${liked ? `\n## Answers ${owner} liked\nHe marked these answers of yours as liked. Notice what they have in common — length, tone, the kind of help — and lean toward it.\n${liked}\n` : ''}${routines ? `\n## Your routines in the app\n${routines}\n` : ''}${skills ? `\n## Skills ${owner} gave you\n${skills}\n` : ''}${bot.instructions ? `\n## Instructions from ${owner}\n${bot.instructions}\n` : ''}`;
 }

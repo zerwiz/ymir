@@ -23,7 +23,11 @@ function desk(v: string | undefined): 'local' | 'orgo' {
   return s;
 }
 
-const hermesHome =process.env.HERMES_HOME_PRIMARY ?? path.join(os.homedir(), '.hermes');
+// plan 275 (2026-11-13): agent homes are named by their PHYSICAL path — Hermes ties a profile to the path it was
+// given, and a path through the pin (~/ymir-runtime → releases/<sha>) changes at every release (profile_mismatch).
+// An empty HERMES_HOME_PRIMARY is no answer either: `||`, never `??`.
+const physical = (p: string) => { try { return fs.realpathSync(p); } catch { return p; } };
+const hermesHome = physical(process.env.HERMES_HOME_PRIMARY || path.join(os.homedir(), '.hermes'));
 
 export const env = {
   port: Number(process.env.PORT ?? 8787),
@@ -58,7 +62,7 @@ export const env = {
   hermesUrl: (process.env.HERMES_URL ?? 'http://127.0.0.1:8642').replace(/\/+$/, ''),
   hermesKey: process.env.HERMES_KEY ?? '',
   /** Where each extra bot's own Hermes home lives. Must be outside ~/.hermes so it is a separate tenant. */
-  enginesDir: process.env.ENGINES_DIR ?? new URL('../../data/engines', import.meta.url).pathname,
+  enginesDir: physical(process.env.ENGINES_DIR || new URL('../../data/engines', import.meta.url).pathname),
   enginePortBase: Number(process.env.ENGINE_PORT_BASE ?? 8650),
   /** URL the Hermes gateways use to reach this server's MCP endpoint. */
   mcpBaseUrl: (process.env.MCP_BASE_URL ?? `http://127.0.0.1:${process.env.PORT ?? 8787}`).replace(/\/+$/, ''),

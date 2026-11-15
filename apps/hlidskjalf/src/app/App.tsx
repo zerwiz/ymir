@@ -1,45 +1,41 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Shell } from './Shell';
 import { Overlay } from '../components/Overlay';
-import { LoginModal } from '../components/LoginModal';
 import { EmberBackground } from '../components/EmberBackground';
-import { HallsChooser } from '../components/Halls';
-import { gateApi, isDesktopSeat } from '../services/api';
+import { gateApi } from '../services/api';
 import { startStream } from '../services/stream';
 import { gateFromHash, useYmir } from '../state/store';
 
+/** The seat, drawn before the gate has answered. Deliberately not the shell: it must not look admitted. */
+function Boot() {
+  return (
+    <>
+      <EmberBackground />
+      <div className="boot-seat" role="status" aria-live="polite">
+        <span className="dim">taking the seat…</span>
+      </div>
+      <Overlay />
+    </>
+  );
+}
+
 export default function App() {
   const session = useYmir((s) => s.session);
-  const [authed, setAuthed] = useState<boolean | null>(null);
-  // After the gate admits us, offer the three halls once per login.
-  // A desktop shell is a SEAT, not a lobby: it does not ask which hall you
-  // want, it opens the one you are in. The picker belongs to the web door.
-  const [choosing, setChoosing] = useState(!isDesktopSeat());
 
   /**
-   * One question at boot: has the gate let this browser in?
-   *
-   * There is exactly one login — the gate's own (`LoginModal`). An earlier build
-   * fell through to a second, mock identity picker when the store had no session
-   * yet, which meant signing in correctly could land you on a screen offering
-   * somebody else's name. The gate's answer now names the operator, and the UI
-   * session is built from it.
+   * The halls are LOCAL (plan 275 item 30): there is no login to pass and no
+   * chooser to answer. The desktop session is the authority, so boot goes
+   * straight to the seat, and the one thing asked of the gate is the seat's own
+   * name — never a credential. An earlier build asked the gate whether it had
+   * "authenticated" a browser, offered an invite code, a GitHub door and a
+   * "three halls share one login" chooser; all of that was for hosting the apps
+   * publicly, which they never should have been (plans 277 and 279).
    */
   useEffect(() => {
     void gateApi
       .session()
-      .then((r) => {
-        setAuthed(r.authed);
-        if (r.authed && r.login) useYmir.getState().establishSession(r.login);
-      })
-      .catch(() => setAuthed(true));
-  }, []);
-
-  // A 401 anywhere re-locks the gate.
-  useEffect(() => {
-    const lock = () => setAuthed(false);
-    window.addEventListener('ymir:unauthorized', lock);
-    return () => window.removeEventListener('ymir:unauthorized', lock);
+      .then((r) => useYmir.getState().establishSession(r.login || 'operator'))
+      .catch(() => useYmir.getState().establishSession('operator'));
   }, []);
 
   useEffect(() => {
@@ -51,7 +47,7 @@ export default function App() {
   // gates pick up a newly-written run without a page reload.
   useEffect(() => {
     if (!session) return;
-    const id = window.setInterval(() => { void useYmir.getState().refreshSmidja(); void useYmir.getState().refreshAgents(); }, 5000);
+    const id = window.setInterval(() => { void useYmir.getState().refreshSmidja(); void useYmir.getState().refreshAgents(); void useYmir.getState().refreshA2A(); void useYmir.getState().refreshDoors(); }, 5000);
     const reviewsId = window.setInterval(() => { void useYmir.getState().refreshReviews(); }, 30_000);
     return () => { window.clearInterval(id); window.clearInterval(reviewsId); };
   }, [session]);
@@ -62,56 +58,15 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
-  /** After the gate admits us, take its word for who we are. */
-  /**
-   * One login for every app: an app host sends its visitors here with ?next=,
-   * so after the gate admits us we hand them back where they were going.
-   */
-  const returnToNext = () => {
-    const next = new URLSearchParams(window.location.search).get('next');
-    if (!next) return;
-    try {
-      const t = new URL(next);
-      if (t.origin !== window.location.origin) window.location.replace(t.toString());
-    } catch {
-      /* a malformed next is ignored, never followed */
-    }
-  };
-
-  const admitted = () => {
-    setAuthed(true);
-    returnToNext();
-    void gateApi
-      .session()
-      .then((r) => {
-        if (r.login) useYmir.getState().establishSession(r.login);
-      })
-      .catch(() => setAuthed(false));
-  };
-
-  // Hold until we know (no unauthenticated flash of the app).
-  if (authed === null) return null;
-
-  if (!authed) {
-    return (
-      <>
-        <EmberBackground />
-        <LoginModal onAuthed={admitted} />
-        <Overlay />
-      </>
-    );
-  }
-
-  // Auth in flight: the gate admitted us a moment ago and the session is
-  // being established. Hold rather than flash the login again.
-  if (!session) return null;
+  // Hold until the session exists: the tenant list (the realm folders) comes
+  // from it, and rendering a gate with no workspaces would hide two realms.
+  if (!session) return <Boot />;
 
   return (
     <>
       <EmberBackground />
       <Shell />
       <Overlay />
-      {choosing && <HallsChooser onClose={() => setChoosing(false)} />}
     </>
   );
 }

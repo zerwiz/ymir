@@ -1,0 +1,81 @@
+# .gitleaks.toml — what the secret scan reads.
+#
+# The scan runs in two layers, and this file holds only the first two parts:
+#
+#   1. THE SHARED RULES (`useDefault`) — the key shapes every project shares:
+#      cloud keys, provider tokens, private-key headers, connection strings.
+#      They ship with gitleaks and are updated by it, so they are not copied here.
+#
+#   2. THE ALLOWLIST — the few files that contain a secret SHAPE on purpose: test
+#      fixtures with fake tokens, the guards that hunt secrets and must name the
+#      shapes they hunt, a document quoting a placeholder credential. Each entry
+#      says why it is exempt; nothing else is.
+#
+#   3. THE OPERATOR'S OWN WORDS — never here. A person, a client, a company, a mail
+#      domain, a host name or a user name is private (RULES/04), and a file in this
+#      public repository that listed them would be the very leak the scan exists to
+#      find. So this file carries no word of them, ever.
+#
+#      Instead, `bin/gates/secret-scan.sh` reads the deny list from the operator's
+#      private home and GENERATES a config that extends this one, at run time, on
+#      the machine that owns the list. That generated file lives in the home
+#      (`state/gitleaks/gitleaks.toml`), never in this tree:
+#
+#          bin/gates/secret-scan.sh config     # write it, print its path
+#          bin/gates/secret-scan.sh tree       # scan this tree and its history
+#
+#      In CI there is no home, so this file is the whole scan. That is correct:
+#      CI proves no credential shape ships; the operator's machine proves no word
+#      of his ships.
+#
+# Reference: https://github.com/gitleaks/gitleaks
+
+[extend]
+useDefault = true
+
+# ── allowlist: shapes on purpose ────────────────────────────────────────────────────────────────
+
+[[allowlists]]
+description = "a fixture line that seeds a FAKE credential so a test can prove a ward refuses one; the line, not the file, is exempt — the rest of each file is still scanned"
+regexTarget = "line"
+regexes = [
+  # apps/bilskirnir/tests/model-door.mts — a stub key that must never leak to a model door.
+  '''sk-test-SECRET-must-never-leak-123456''',
+  '''pi-secret-key-abcdef''',
+  # .env.example — the template's explicit "no key needed" placeholder, and a section
+  # heading whose words ("API KEYS") the generic rule reads as a key and a value.
+  '''APODEX_API_KEY=not-needed-for-local''',
+  '''# === OTHER LLM API KEYS ===''',
+  '''# === LLM API KEYS ===''',
+  # apps/sessrumnir/.../session-title.test.ts — a session id, not a credential.
+  '''2026-07-04T13-34-18-375Z_019f2d56''',
+  # bin/records/mimir-policy.py — its own self-test seeds `hunter2`-style text.
+  '''api_key=abcdef1234567890''',
+  # .pi/extensions/*/registry.test.ts — an agent card fixture whose "key" is a label.
+  '''sk-live-0123456789abcdef''',
+]
+
+[[allowlists]]
+description = "test fixtures carrying fake tokens, the wards that hunt secret shapes, and a document quoting a placeholder credential"
+paths = [
+  # Fixtures: `.agents/tests/*.test.sh` seeds a fake token to prove a ward refuses it.
+  '''^\.agents/tests/.*\.test\.sh$''',
+  # Apodex's assessment reports quote the endpoint's keyless placeholder in prose.
+  '''^assets/reference/docs/apodex/.*\.md$''',
+  # The wards must name the shapes they hunt — regex alternatives, not credentials.
+  '''^bin/gates/guards/(secret|hoard|public|private)-guard\.(sh|py)$''',
+  # This scan's own door writes the regexes and reads the deny list; it holds no secret.
+  '''^bin/gates/secret-scan\.sh$''',
+  # This file names the shapes in prose; nothing else in the tree needs an exemption.
+  '''^\.gitleaks\.toml$''',
+]
+
+[[allowlists]]
+description = "third-party lockfiles and generated bundles repeat upstream text verbatim"
+paths = [
+  '''(^|/)package-lock\.json$''',
+  '''(^|/)pnpm-lock\.yaml$''',
+  '''(^|/)yarn\.lock$''',
+  '''(^|/)dist/.*\.(js|mjs|cjs|css)$''',
+  '''(^|/)node_modules/.*$''',
+]

@@ -47,14 +47,39 @@ fi
 
 # ── door 2: the shell spawner's dry run ────────────────────────────────────────────────────────
 mkdir -p "$TMP/data/parity" "$TMP/config"; printf '# Task\nwrite OK to a file and stop\n' >"$TMP/data/parity/brief.md"
+# A dry run only PRINTS its plan, but the spawner still checks that the harness exists — so the door is
+# given a stub opencode. Measured 2026-11-14: CI has no opencode on PATH, the spawner refused, and this
+# test went red on a correct tree while a developer box stayed green. This file's own contract is that
+# it needs no opencode binary; the stub makes that true on every host.
+mkdir -p "$TMP/door2bin"; printf '#!/usr/bin/env bash\nexit 0\n' >"$TMP/door2bin/opencode"; chmod +x "$TMP/door2bin/opencode"
 # The spawner refuses a model the operator's allow-list does not carry, so door 2 uses the one paid model it allows.
 ALLOWED="opencode-go/deepseek-v4.1-flash"
-dry="$(BROKK_HOME="$TMP" timeout 90 "$ROOT/bin/agents/einherjar-spawn.sh" parity "$ROOT" --scout \
-        --harness opencode --model "$ALLOWED" --dry-run 2>/dev/null | sed -n 's/^  launch: cd [^ ]* && //p')"
+# A SEAT EXPORTS ITS OWN ENVIRONMENT, and that is what made this test red on a seat while it stayed
+# green on a developer box (measured 2026-11-14): the seat sets BROKK_STATE_OVERRIDE (its own state)
+# and BROKK_CONFIG_OVERRIDE (the home's config), and the spawner correctly refuses that as "the house
+# is split" before it prints anything. Unsetting YMIR_HOME alone does not move them. This file's own
+# contract is that it needs no environment, so the dry run is made in a CLOSED one and proved twice —
+# with YMIR_HOME set and with it unset — which is the pair the refusal was actually about.
+dry_run() {  # <with|without> YMIR_HOME, in a closed environment -> the launch line
+  local mode="$1"
+  if [ "$mode" = with ]; then
+    env -i PATH="$TMP/door2bin:$PATH" HOME="${HOME:-/tmp}" TMPDIR="$TMP" BROKK_HOME="$TMP" \
+      YMIR_HOME="${YMIR_HOME:-${HOME:-/tmp}/Documents/ymirhome}" \
+      timeout 90 "$ROOT/bin/agents/einherjar-spawn.sh" parity "$ROOT" --scout \
+      --harness opencode --model "$ALLOWED" --dry-run 2>/dev/null \
+      | sed -n 's/^  launch: cd [^ ]* && //p'
+  else
+    env -i PATH="$TMP/door2bin:$PATH" HOME="${HOME:-/tmp}" TMPDIR="$TMP" BROKK_HOME="$TMP" \
+      timeout 90 "$ROOT/bin/agents/einherjar-spawn.sh" parity "$ROOT" --scout \
+      --harness opencode --model "$ALLOWED" --dry-run 2>/dev/null \
+      | sed -n 's/^  launch: cd [^ ]* && //p'
+  fi
+}
 wantdry="$("$LAUNCHER" print --model "$ALLOWED" --brief "$TMP/data/parity/brief.md")"
 # The dry run prints a display line (no env prefix, no quotes); the same line, normalised, must match.
 wantdry="$(printf '%s' "$wantdry" | sed "s/^env OPENCODE_CONFIG_CONTENT='[^']*' //; s/'//g")"
-eq "einherjar-spawn --dry-run prints the launcher's line (opencode run --model M --auto <brief>)" "$wantdry" "$dry"
+eq "einherjar-spawn --dry-run prints the launcher's line (opencode run --model M --auto <brief>, YMIR_HOME set)" "$wantdry" "$(dry_run with)"
+eq "einherjar-spawn --dry-run prints the same line with YMIR_HOME unset (a seat is not a split)" "$wantdry" "$(dry_run without)"
 
 # ── door 3: the engine ──────────────────────────────────────────────────────────────────────────
 eng="$(cd "$ROOT/src" && python3 -I - "$MODEL" "$BRIEF" <<'PY'

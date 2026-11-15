@@ -44,6 +44,19 @@ HOUSE_HOOK="${BILSKIRNIR_SESSION_HOOK:-$HOME/.hermes/agent-hooks/ymir-session-ho
 DESK="${BILSKIRNIR_DESK:-local}"
 DESK_HOST="${BILSKIRNIR_DESK_HOST:-127.0.0.1}"
 say() { printf 'bilskirnir: %s\n' "$*"; }
+
+# ── is her browser pinned to her desk? By the VALUE, never by the spelling ─────────────────────────────────
+# 2026-11-14 (plan 275 item 10): this used to grep for `cdp_url: "http://<desk>:9299"` — the QUOTED form. But the
+# renderer (house/house.py · parts) writes the config through yaml.safe_dump, which leaves a plain URL unquoted, so
+# a perfectly current install read as "not pinned to her desk" at every start. start.sh believes --check, so it
+# ran the WHOLE setup on every launch: measured 3.9 s of a 20.4 s cold boot, spent re-rendering what was already
+# right. Quotes are YAML's business; the pin is the value.
+cdp_pinned() {  # <config.yaml> <host:port>
+  local host port
+  host="$(printf '%s' "${2%:*}" | sed 's/[][\.*^$]/\\&/g')"
+  port="${2##*:}"
+  grep -qE "^[[:space:]]*cdp_url:[[:space:]]*[\"']?http://${host}:${port}/?[\"']?[[:space:]]*(#.*)?$" "$1" 2>/dev/null
+}
 fail=0
 
 # ── 1. who: read the names from the home ────────────────────────────────────────
@@ -54,7 +67,11 @@ IFS=$'\t' read -r NAME ROLE HOUSE FLEET OPERATOR < <(read_names) || { say "canno
 SLUG="$(printf '%s' "$NAME" | iconv -f utf-8 -t ascii//TRANSLIT 2>/dev/null | tr 'A-Z' 'a-z' | tr -c 'a-z0-9\n' '-' | sed 's/-*$//')"
 [ -n "$SLUG" ] || SLUG=first-agent
 LABEL="$(printf '%s' "$ROLE" | sed -E 's/^the keeper of the hall.*/Keeper of the hall/; s/^(.)/\U\1/')"
-ENGINE="$APP/data/engines/$SLUG"
+# plan 275 (2026-11-13): an agent's Hermes home is named by its PHYSICAL path. Hermes ties a profile to the home
+# path it was given; a home named through the pin (~/ymir-runtime → releases/<sha>) changes its name at every
+# release and Hermes refuses every message with profile_mismatch (Nanna from 2026-11-12 19:26).
+mkdir -p "$APP/data/engines" 2>/dev/null
+ENGINE="$(cd "$APP/data/engines" 2>/dev/null && pwd -P || printf %s "$APP/data/engines")/$SLUG"
 say "the hall's assistant is $NAME ($LABEL); the house and the Allfather are read from the home"
 
 # ── 2. the soul, rendered from the home ─────────────────────────────────────────
@@ -144,7 +161,7 @@ else
     grep -q "ymir-mcp.py" "$ENGINE/config.yaml" 2>/dev/null && say "agent home current (no model chosen yet: $why)" || { say "agent home missing"; fail=1; }
   fi
   if [ "$DESK_UP" = 1 ]; then
-    grep -q "cdp_url: \"http://$DESK_HOST:9299\"" "$ENGINE/config.yaml" 2>/dev/null && say "agent's browser drives her desk" || { say "agent's browser is not pinned to her desk — re-run setup.sh"; fail=1; }
+    cdp_pinned "$ENGINE/config.yaml" "$DESK_HOST:9299" && say "agent's browser drives her desk" || { say "agent's browser is not pinned to her desk — re-run setup.sh"; fail=1; }
   fi
 fi
 

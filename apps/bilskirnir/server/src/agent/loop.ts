@@ -5,7 +5,10 @@ import { appendRow, emitBot, getBotRow, getLive, getRow, setLive, updateRow } fr
 import type { ActivityKind, MessageBody, ToolCallBody } from '../types.js';
 import { toolkitInfo } from '../composio.js';
 import { screenForWork } from '../computer.js';
-import { engineFor } from '../engine.js';
+import { engineFor, engineHome } from '../engine.js';
+import crypto from 'node:crypto';
+import { execFile } from 'node:child_process';
+import Database from 'better-sqlite3';
 import { instructionsFor } from './prompt.js';
 import { activityFor, appToolName, humanizeSlug, policyFor } from './tools.js';
 
@@ -42,7 +45,83 @@ export function enqueue(botId: string, trigger: Trigger) {
 
 export function interrupt(botId: string) {
   expireApprovals(botId);
+  // plan 275 wave 1: the turn is a Hermes run — ask Hermes to stop it, not only our side of the stream
+  const lr = liveRuns.get(botId);
+  if (lr) fetch(`${lr.url}/v1/runs/${lr.runId}/stop`, { method: 'POST', headers: lr.key ? { authorization: `Bearer ${lr.key}` } : {} }).catch(() => {});
   aborts.get(botId)?.abort();
+}
+
+// ---------- the run road (plan 275 wave 1, 2026-11-13) ----------
+// Every turn is a Hermes run (POST /v1/runs): it has an id we can stop, answer approvals for, and — when Hermes lost
+// track of it in a restart ("unknown") — resolve, instead of a room left paused with unknown_execution. One Hermes
+// session per conversation generation; a conversation started on the old /v1/responses road keeps its history.
+const liveRuns = new Map<string, { url: string; key: string; runId: string }>();
+db.exec(`CREATE TABLE IF NOT EXISTS engine_runs (bot_id TEXT NOT NULL, generation INTEGER NOT NULL, session_id TEXT NOT NULL,
+  last_run_id TEXT, PRIMARY KEY (bot_id, generation))`);
+
+/** The Hermes session this conversation lives in: recorded, else the one the old responses road used, else new. */
+function hermesSessionFor(botId: string, generation: number): string {
+  const row = db.prepare('SELECT session_id FROM engine_runs WHERE bot_id=? AND generation=?').get(botId, generation) as any;
+  if (row?.session_id) return row.session_id;
+  let sid = '';
+  const home = engineHome(botId);
+  if (home) {
+    try {
+      const rs = new Database(`${home}/response_store.db`, { readonly: true, fileMustExist: true });
+      try {
+        const c = rs.prepare('SELECT response_id FROM conversations WHERE name=?').get(`hq-${botId}-g${generation}`) as any;
+        const r = c && (rs.prepare('SELECT data FROM responses WHERE response_id=?').get(c.response_id) as any);
+        sid = r ? String(JSON.parse(r.data)?.session_id ?? '') : '';
+      } finally { rs.close(); }
+    } catch { /* no responses store: a new conversation */ }
+  }
+  if (!sid) sid = crypto.randomUUID();
+  db.prepare('INSERT OR REPLACE INTO engine_runs(bot_id,generation,session_id,last_run_id) VALUES (?,?,?,NULL)').run(botId, generation, sid);
+  return sid;
+}
+
+/** If the last run is one Hermes lost in a restart, acknowledge it so the session moves on. True when one was resolved. */
+async function resolveLostRun(engine: { url: string; key: string }, botId: string, generation: number): Promise<boolean> {
+  const row = db.prepare('SELECT last_run_id FROM engine_runs WHERE bot_id=? AND generation=?').get(botId, generation) as any;
+  if (!row?.last_run_id) return false;
+  const headers: Record<string, string> = { 'content-type': 'application/json', ...(engine.key ? { authorization: `Bearer ${engine.key}` } : {}) };
+  const st = await fetch(`${engine.url}/v1/runs/${row.last_run_id}`, { headers, signal: AbortSignal.timeout(8000) }).then((r) => (r.ok ? r.json() : null)).catch(() => null) as any;
+  if (st?.status !== 'unknown') return false;
+  const r = await fetch(`${engine.url}/v1/runs/${row.last_run_id}/resolve-unknown`, {
+    method: 'POST', headers, signal: AbortSignal.timeout(8000),
+    body: JSON.stringify({ admission_id: st.admission_id, execution_generation: st.execution_generation }),
+  }).catch(() => null);
+  if (r?.ok) console.log(`[agent] ${botId}: resolved the lost run ${row.last_run_id}`);
+  return !!r?.ok;
+}
+
+/** A turn lost before the run road (a /v1/responses admission) has no run to resolve: Hermes' own command acknowledges
+ *  every lost turn of the session, without replaying it (`hermes sessions discard <session> --yes`, run as the agent). */
+async function discardLostTurns(botId: string, sessionId: string): Promise<boolean> {
+  const home = engineHome(botId);
+  if (!home) return false;
+  return new Promise((resolve) => {
+    execFile(process.env.HERMES_BIN || 'hermes', ['sessions', 'discard', sessionId, '--yes'],
+      { env: { ...process.env, HERMES_HOME: home }, timeout: 60_000 }, (err, out, errOut) => {
+        console.log(`[agent] ${botId}: discard lost turns of ${sessionId}: ${err ? `failed — ${String(errOut || err.message).trim().slice(0, 160)}` : String(out).trim().slice(0, 160)}`);
+        resolve(!err);
+      });
+  });
+}
+
+/** Hermes asks before a risky step: the house's own approval card, then the answer back to the run. */
+async function answerRunApproval(engine: { url: string; key: string }, runId: string, d: any, userId: string, botId: string, rowSeq: number | null) {
+  const headers: Record<string, string> = { 'content-type': 'application/json', ...(engine.key ? { authorization: `Bearer ${engine.key}` } : {}) };
+  const st = await fetch(`${engine.url}/v1/runs/${runId}`, { headers }).then((r) => r.json()).catch(() => null) as any;
+  const pc = (st?.pending_controls ?? []).find((x: any) => x?.kind === 'approval');
+  if (!pc) return;
+  const what = String(d?.description || d?.command || 'take the next step').slice(0, 160);
+  const decision = await requestApproval({ userId, botId }, { key: `hermes:${String(d?.pattern_key ?? 'command').slice(0, 60)}`, title: `hermes: ${what}` },
+    d?.command ? { command: String(d.command) } : {}, rowSeq);
+  await fetch(`${engine.url}/v1/runs/${runId}/approval`, {
+    method: 'POST', headers,
+    body: JSON.stringify({ request_id: pc.prompt_id, execution_generation: pc.execution_generation ?? st.execution_generation, choice: decision === 'allow' ? 'once' : 'deny' }),
+  }).catch(() => {});
 }
 
 /** Run a job in the bot's serial queue, after any running turn. */
@@ -361,121 +440,261 @@ async function runTurn(botId: string, trigger: Trigger) {
       db.prepare('UPDATE bots SET handback_at=NULL WHERE id=?').run(botId);
     }
 
-    const res = await fetch(`${engine.url}/v1/responses`, {
-      method: 'POST',
-      signal: ctrl.signal,
-      headers: { 'content-type': 'application/json', accept: 'text/event-stream', ...(engine.key ? { authorization: `Bearer ${engine.key}` } : {}) },
-      body: JSON.stringify({
-        model: bot.model || 'hermes-agent',
-        ...(bot.provider ? { provider: bot.provider } : {}),
-        input,
-        instructions: await instructionsFor(userId, botId),
-        // One engine-side thread per conversation; "New chat" bumps the generation and starts another.
-        conversation: `hq-${botId}-g${bot.generation}`,
-        stream: true,
-        store: true,
-        model_options: { reasoning_effort: bot.effort ?? 'medium' },
-      }),
-    });
-    if (!res.ok || !res.body) throw new Error(await failureText(res));
-
-    for await (const ev of sseEvents(res.body)) {
-      const d = ev.data;
-      switch (ev.type) {
-        case 'response.output_text.delta': {
-          if (turn.silent || typeof d.delta !== 'string') break;
-          // Models often open with blank lines; a message never starts with them.
-          const piece = text ? d.delta : d.delta.trimStart();
-          if (!piece) break;
-          text += piece;
-          wroteText = true;
-          if (msgSeq === null) setLive(botId, { activity: { kind: 'working', since: now() } });
-          if (msgSeq === null || Date.now() - lastFlush > 120) flush(true);
-          break;
+    /** A tool the agent started: its row, its activity (the same on both roads). */
+    const startTool = (rawName: string, callId: string, rawArgs: any) => {
+        // Text written before this call is its own message; what follows starts a new one.
+        closeMessage();
+        const { name, ours } = appToolName(rawName);
+        // The agent looking through its own toolbox is not a step worth showing.
+        if (!ours && TOOLBOX.has(name)) {
+          caption('Finding the right tool', true);
+          return;
         }
-
-        case 'response.reasoning_summary_text.delta':
-        case 'response.reasoning_text.delta': {
-          if (typeof d.delta === 'string') {
-            reasoning = (reasoning + d.delta).slice(-4000);
-            caption(captionFrom(reasoning));
+        const act = activityFor(rawName);
+        let args: any;
+        args = rawArgs;
+        const row = appendRow(botId, 'tool-call', { type: 'tool-call', callId: callId, name, label: act.label, status: 'running', args } satisfies ToolCallBody);
+        turn.tools.push({ seq: row.seq, callId: callId, name, claimed: false, done: false });
+        steps++;
+        const kind: ActivityKind = name === 'send_to_bot' ? 'messaging_named' : act.kind;
+        const detail = name === 'send_to_bot' ? String(args?.bot_name ?? '') || undefined : act.detail;
+        // A call that is waiting for the user keeps its "waiting for you" state.
+        if (!getLive(botId).awaiting) setLive(botId, { isRunning: true, activity: { kind, detail, since: now() }, steps, caption: null });
+        else setLive(botId, { steps });
+        reasoning = '';
+        if (ours && name.startsWith('COMPOSIO_')) {
+          const tk = policyFor(userId, name, args ?? {}).toolkit;
+          if (tk) {
+            void toolkitInfo(tk).then((info) => {
+              const live = getLive(botId);
+              if (info?.name && turns.get(botId) === turn && live.activity?.kind === kind && !live.awaiting) setLive(botId, { activity: { ...live.activity, detail: info.name } });
+            }).catch(() => {});
           }
-          break;
         }
+      
+    };
+    /** A tool that finished: its row says how. */
+    const endTool = (callId: string, guess: Outcome) => {
+      const ref = turn.tools.find((r) => r.callId === callId);
+      if (!ref) return;
+      ref.done = true;
+      const told = turn.outcomes.get(ref.seq);
+      patchToolRow(botId, ref.seq, told?.status && told.status !== 'running' ? told : { status: guess.status, summary: told?.summary ?? guess.summary });
+      if (!getLive(botId).awaiting) setLive(botId, { activity: { kind: 'thinking', since: now() } });
+    };
 
-        case 'hermes.status': {
-          if (typeof d?.text === 'string' && d.text.trim()) caption(d.text.trim().slice(0, 84), true);
-          break;
-        }
+    if (process.env.BILSKIRNIR_TURN_ROAD === 'responses') {
+      const res = await fetch(`${engine.url}/v1/responses`, {
+        method: 'POST',
+        signal: ctrl.signal,
+        headers: { 'content-type': 'application/json', accept: 'text/event-stream', ...(engine.key ? { authorization: `Bearer ${engine.key}` } : {}) },
+        body: JSON.stringify({
+          model: bot.model || 'hermes-agent',
+          ...(bot.provider ? { provider: bot.provider } : {}),
+          input,
+          instructions: await instructionsFor(userId, botId),
+          // One engine-side thread per conversation; "New chat" bumps the generation and starts another.
+          conversation: `hq-${botId}-g${bot.generation}`,
+          stream: true,
+          store: true,
+          model_options: { reasoning_effort: bot.effort ?? 'medium' },
+        }),
+      });
+      if (!res.ok || !res.body) throw new Error(await failureText(res));
 
-        case 'response.output_item.added': {
-          const item = d.item;
-          if (item?.type === 'reasoning') {
-            reasoning = '';
-            if (getLive(botId).activity?.kind !== 'thinking') setLive(botId, { activity: { kind: 'thinking', since: now() } });
+      for await (const ev of sseEvents(res.body)) {
+        const d = ev.data;
+        switch (ev.type) {
+          case 'response.output_text.delta': {
+            if (turn.silent || typeof d.delta !== 'string') break;
+            // Models often open with blank lines; a message never starts with them.
+            const piece = text ? d.delta : d.delta.trimStart();
+            if (!piece) break;
+            text += piece;
+            wroteText = true;
+            if (msgSeq === null) setLive(botId, { activity: { kind: 'working', since: now() } });
+            if (msgSeq === null || Date.now() - lastFlush > 120) flush(true);
+            break;
           }
-          if (item?.type === 'function_call') {
-            // Text written before this call is its own message; what follows starts a new one.
-            closeMessage();
-            const { name, ours } = appToolName(String(item.name ?? ''));
-            // The agent looking through its own toolbox is not a step worth showing.
-            if (!ours && TOOLBOX.has(name)) {
-              caption('Finding the right tool', true);
-              break;
+
+          case 'response.reasoning_summary_text.delta':
+          case 'response.reasoning_text.delta': {
+            if (typeof d.delta === 'string') {
+              reasoning = (reasoning + d.delta).slice(-4000);
+              caption(captionFrom(reasoning));
             }
-            const act = activityFor(String(item.name ?? ''));
-            let args: any;
-            try { args = typeof item.arguments === 'string' ? JSON.parse(item.arguments) : item.arguments; } catch { args = undefined; }
-            const row = appendRow(botId, 'tool-call', { type: 'tool-call', callId: String(item.call_id ?? item.id ?? ''), name, label: act.label, status: 'running', args } satisfies ToolCallBody);
-            turn.tools.push({ seq: row.seq, callId: String(item.call_id ?? item.id ?? ''), name, claimed: false, done: false });
-            steps++;
-            const kind: ActivityKind = name === 'send_to_bot' ? 'messaging_named' : act.kind;
-            const detail = name === 'send_to_bot' ? String(args?.bot_name ?? '') || undefined : act.detail;
-            // A call that is waiting for the user keeps its "waiting for you" state.
-            if (!getLive(botId).awaiting) setLive(botId, { isRunning: true, activity: { kind, detail, since: now() }, steps, caption: null });
-            else setLive(botId, { steps });
-            reasoning = '';
-            if (ours && name.startsWith('COMPOSIO_')) {
-              const tk = policyFor(userId, name, args ?? {}).toolkit;
-              if (tk) {
-                void toolkitInfo(tk).then((info) => {
-                  const live = getLive(botId);
-                  if (info?.name && turns.get(botId) === turn && live.activity?.kind === kind && !live.awaiting) setLive(botId, { activity: { ...live.activity, detail: info.name } });
-                }).catch(() => {});
+            break;
+          }
+
+          case 'hermes.status': {
+            if (typeof d?.text === 'string' && d.text.trim()) caption(d.text.trim().slice(0, 84), true);
+            break;
+          }
+
+          case 'response.output_item.added': {
+            const item = d.item;
+            if (item?.type === 'reasoning') {
+              reasoning = '';
+              if (getLive(botId).activity?.kind !== 'thinking') setLive(botId, { activity: { kind: 'thinking', since: now() } });
+            }
+            if (item?.type === 'function_call') {
+              // Text written before this call is its own message; what follows starts a new one.
+              closeMessage();
+              const { name, ours } = appToolName(String(item.name ?? ''));
+              // The agent looking through its own toolbox is not a step worth showing.
+              if (!ours && TOOLBOX.has(name)) {
+                caption('Finding the right tool', true);
+                break;
+              }
+              const act = activityFor(String(item.name ?? ''));
+              let args: any;
+              try { args = typeof item.arguments === 'string' ? JSON.parse(item.arguments) : item.arguments; } catch { args = undefined; }
+              const row = appendRow(botId, 'tool-call', { type: 'tool-call', callId: String(item.call_id ?? item.id ?? ''), name, label: act.label, status: 'running', args } satisfies ToolCallBody);
+              turn.tools.push({ seq: row.seq, callId: String(item.call_id ?? item.id ?? ''), name, claimed: false, done: false });
+              steps++;
+              const kind: ActivityKind = name === 'send_to_bot' ? 'messaging_named' : act.kind;
+              const detail = name === 'send_to_bot' ? String(args?.bot_name ?? '') || undefined : act.detail;
+              // A call that is waiting for the user keeps its "waiting for you" state.
+              if (!getLive(botId).awaiting) setLive(botId, { isRunning: true, activity: { kind, detail, since: now() }, steps, caption: null });
+              else setLive(botId, { steps });
+              reasoning = '';
+              if (ours && name.startsWith('COMPOSIO_')) {
+                const tk = policyFor(userId, name, args ?? {}).toolkit;
+                if (tk) {
+                  void toolkitInfo(tk).then((info) => {
+                    const live = getLive(botId);
+                    if (info?.name && turns.get(botId) === turn && live.activity?.kind === kind && !live.awaiting) setLive(botId, { activity: { ...live.activity, detail: info.name } });
+                  }).catch(() => {});
+                }
               }
             }
+            break;
           }
-          break;
+
+          case 'response.output_item.done': {
+            const item = d.item;
+            if (item?.type === 'message') {
+              const full = (item.content ?? []).map((c: any) => c?.text ?? '').join('');
+              if (item.phase === 'commentary') say(full);
+              else if (msgSeq !== null) closeMessage();
+              else if (!wroteText) say(full);
+            }
+            break;
+          }
+
+          case 'response.failed':
+          case 'error':
+            throw new Error(d?.response?.error?.message ?? d?.error?.message ?? d?.message ?? 'the agent run failed');
         }
 
-        case 'response.output_item.done': {
-          const item = d.item;
-          if (item?.type === 'message') {
-            const full = (item.content ?? []).map((c: any) => c?.text ?? '').join('');
-            if (item.phase === 'commentary') say(full);
-            else if (msgSeq !== null) closeMessage();
-            else if (!wroteText) say(full);
+        // A tool result arrives as an item of its own (announced twice: added and done).
+        const item = d?.item;
+        if (item?.type === 'function_call_output' && item.call_id && !outputsSeen.has(item.call_id)) {
+          outputsSeen.add(item.call_id);
+          const ref = turn.tools.find((r) => r.callId === item.call_id);
+          if (ref) {
+            ref.done = true;
+            const told = turn.outcomes.get(ref.seq);
+            const guess = readOutcome(item);
+            patchToolRow(botId, ref.seq, told?.status && told.status !== 'running' ? told : { status: guess.status, summary: told?.summary ?? guess.summary });
+            if (!getLive(botId).awaiting) setLive(botId, { activity: { kind: 'thinking', since: now() } });
           }
-          break;
         }
-
-        case 'response.failed':
-        case 'error':
-          throw new Error(d?.response?.error?.message ?? d?.error?.message ?? d?.message ?? 'the agent run failed');
       }
-
-      // A tool result arrives as an item of its own (announced twice: added and done).
-      const item = d?.item;
-      if (item?.type === 'function_call_output' && item.call_id && !outputsSeen.has(item.call_id)) {
-        outputsSeen.add(item.call_id);
-        const ref = turn.tools.find((r) => r.callId === item.call_id);
-        if (ref) {
-          ref.done = true;
-          const told = turn.outcomes.get(ref.seq);
-          const guess = readOutcome(item);
-          patchToolRow(botId, ref.seq, told?.status && told.status !== 'running' ? told : { status: guess.status, summary: told?.summary ?? guess.summary });
-          if (!getLive(botId).awaiting) setLive(botId, { activity: { kind: 'thinking', since: now() } });
+    } else {
+      const auth: Record<string, string> = engine.key ? { authorization: `Bearer ${engine.key}` } : {};
+      const sessionId = hermesSessionFor(botId, bot.generation);
+      await resolveLostRun(engine, botId, bot.generation).catch(() => false);
+      const instructions = await instructionsFor(userId, botId);
+      const startRun = () => fetch(`${engine.url}/v1/runs`, {
+        method: 'POST', signal: ctrl.signal, headers: { 'content-type': 'application/json', ...auth },
+        body: JSON.stringify({
+          input, instructions, session_id: sessionId,
+          ...(bot.model ? { model: bot.model } : {}), ...(bot.provider ? { provider: bot.provider } : {}),
+          // Hermes reads the effort NESTED (model_options.reasoning.effort); a flat reasoning_effort was ignored, and a
+          // bare run on deepseek-v4.1-flash spent 45,421 tokens reasoning over "reply: noted" (2026-11-13)
+          model_options: { reasoning: { effort: bot.effort ?? 'medium' } },
+        }),
+      });
+      let retried = false;
+      runAttempt: for (;;) {
+      let started = await startRun();
+      if (!started.ok) {
+        const why = await failureText(started);
+        const lost = /unknown_execution|paused/i.test(why)
+          && ((await resolveLostRun(engine, botId, bot.generation)) || (await discardLostTurns(botId, sessionId)));
+        if (!lost) throw new Error(why);
+        started = await startRun();
+        if (!started.ok) throw new Error(await failureText(started));
+      }
+      const runId = String(((await started.json()) as any)?.run_id ?? '');
+      if (!runId) throw new Error('the engine started no run');
+      db.prepare('UPDATE engine_runs SET last_run_id=? WHERE bot_id=? AND generation=?').run(runId, botId, bot.generation);
+      liveRuns.set(botId, { url: engine.url, key: engine.key, runId });
+      const evs = await fetch(`${engine.url}/v1/runs/${runId}/events`, { signal: ctrl.signal, headers: { accept: 'text/event-stream', ...auth } });
+      if (!evs.ok || !evs.body) throw new Error(await failureText(evs));
+      let settled = false;
+      runEvents: for await (const ev of sseEvents(evs.body)) {
+        const d = ev.data;
+        switch (d?.event ?? ev.type) {
+          case 'message.delta': {
+            if (turn.silent || typeof d.delta !== 'string') break;
+            const piece = text ? d.delta : d.delta.trimStart();
+            if (!piece) break;
+            text += piece;
+            wroteText = true;
+            if (msgSeq === null) setLive(botId, { activity: { kind: 'working', since: now() } });
+            if (msgSeq === null || Date.now() - lastFlush > 120) flush(true);
+            break;
+          }
+          case 'message.interim':
+            if (!d.already_streamed && typeof d.text === 'string') say(d.text);
+            break;
+          case 'reasoning.available': {
+            const t = d.text ?? d.preview ?? d.delta;
+            if (typeof t === 'string') { reasoning = (reasoning + t).slice(-4000); caption(captionFrom(reasoning)); }
+            if (getLive(botId).activity?.kind !== 'thinking' && !getLive(botId).awaiting) setLive(botId, { activity: { kind: 'thinking', since: now() } });
+            break;
+          }
+          case 'hermes.status':
+            if (typeof d?.text === 'string' && d.text.trim()) caption(d.text.trim().slice(0, 84), true);
+            break;
+          case 'tool.started':
+            startTool(String(d.tool ?? ''), String(d.tool_call_id ?? ''), d.preview !== undefined ? { preview: d.preview } : undefined);
+            break;
+          case 'tool.completed':
+            endTool(String(d.tool_call_id ?? ''), d.error ? { status: 'error', summary: String(d.preview ?? '').slice(0, 200) || 'Failed' } : { status: 'done' });
+            break;
+          case 'subagent.start':
+            caption('Handing part of it to a helper', true);
+            break;
+          case 'approval.request': {
+            const ref = [...turn.tools].reverse().find((r) => !r.done);
+            await answerRunApproval(engine, runId, d, userId, botId, ref?.seq ?? null);
+            break;
+          }
+          case 'run.completed':
+            if (!wroteText && typeof d.output === 'string') say(d.output);
+            settled = true;
+            break runEvents;
+          case 'run.failed': {
+            const why = String(d.error ?? 'the agent run failed');
+            // Hermes held this session behind a turn it lost (a restart mid-turn): acknowledge it and run this turn
+            // once more (plan 275). The lost turn is not replayed; this one is.
+            if (/unknown_execution|paused/i.test(why) && !retried
+              && ((await resolveLostRun(engine, botId, bot.generation)) || (await discardLostTurns(botId, sessionId)))) {
+              retried = true;
+              continue runAttempt;
+            }
+            throw new Error(why);
+          }
+          case 'run.cancelled':
+          case 'run.interrupted':
+            throw new Error(ctrl.signal.aborted ? 'interrupted' : `the run was ${String(d.event).slice(4)}`);
         }
+      }
+      if (!settled && !ctrl.signal.aborted) throw new Error('the engine closed the run before it finished');
+      break;
       }
     }
   } catch (e: any) {
@@ -492,7 +711,7 @@ async function runTurn(botId: string, trigger: Trigger) {
       if (row?.body.type !== 'tool-call' || (row.body.status !== 'running' && row.body.status !== 'awaiting-approval')) continue;
       patchToolRow(botId, ref.seq, failed ? { status: 'error', summary: ctrl.signal.aborted ? 'Stopped' : 'Did not finish' } : { status: 'done' });
     }
-    if (aborts.get(botId) === ctrl) aborts.delete(botId);
+    if (aborts.get(botId) === ctrl) { aborts.delete(botId); liveRuns.delete(botId); }
     if (turns.get(botId) === turn) turns.delete(botId);
     // An approval asked for outside this turn may still be waiting; leave its state alone.
     if (!pendingApprovals(botId).length) setLive(botId, { isRunning: false, activity: null, awaiting: null, startedAt: null, caption: null });

@@ -1,0 +1,49 @@
+# whiteboard-bridge.service — the AI bridge, seated as a service instead of a hand.
+#
+# WHY THIS FILE EXISTS (ticket feature-0037, plan 158 §appended): the bridge was a
+# process someone started in a terminal. It had no owner, so a reboot took the
+# panel's brain with it, and a second copy could only be noticed by the port
+# being busy. Measured 2026-11-13: `systemctl --user status excalidraw-bridge`
+# reported `activating (auto-restart)` in a crash loop, because a hand-started
+# process already held 7313 — two owners of one port, and neither could tell.
+#
+# The two laws this unit keeps:
+#   * ONE OWNER. This unit is the only thing that may hold the bridge's port.
+#   * NO SECRET IN A UNIT. The old unit carried `TTD_MODEL_API_KEY=…` in plain
+#     text, which is a credential in a file nobody thinks of as a credential. The
+#     key is read from an EnvironmentFile only the operator can read.
+#
+# Seating it on a seat (the two values to check are the path and the port):
+#
+#   install -m 600 systems/whiteboard/units/whiteboard-bridge.env.example \
+#           ~/.config/ymir/whiteboard-bridge.env      # then fill in the key
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now whiteboard-bridge.service
+#
+# The file is a template: `YMIR_ROOT` below is the checkout or the pinned runtime
+# the unit runs from, and nothing else in it is specific to one machine.
+
+[Unit]
+Description=Whiteboard AI bridge — one rail, two modes (bare Mermaid · conversation) :7313
+Documentation=file:///YMIR_ROOT/systems/whiteboard/README.md
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=YMIR_ROOT
+# The rail's address and its key. `-` means a missing file is not a fatal start:
+# the bridge itself refuses to start without a model, and says why.
+EnvironmentFile=-%h/.config/ymir/whiteboard-bridge.env
+Environment=TTD_BRIDGE_PORT=7313
+Environment=TTD_BRIDGE_HOST=127.0.0.1
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/env node systems/whiteboard/services/ttd-bridge/index.mjs
+Restart=always
+RestartSec=3
+# A bridge reads a prompt and returns a stream; it needs no privilege and no
+# writable tmp of its own.
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target

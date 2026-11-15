@@ -108,6 +108,12 @@ contract:
     door: bin/engine/home-seed.sh
     required: true
     why: "the roster: which figure stands on which machine. Empty is honest; absent is a refusal"
+  - path: hodd/identity/public-deny.txt
+    kind: stub
+    template: hodd/identity/public-deny.txt.example
+    door: bin/engine/home-seed.sh
+    required: false
+    why: "the words that must never appear in the public repository (people, clients, domains, hosts); absent, the secret scan and the private sweep say so and judge the shared shapes alone (plan 287 §6, plan 288 step 3)"
   - path: hodd/identity/machines.yaml
     kind: stub
     template: hodd/identity/machines.yaml.example
@@ -164,6 +170,15 @@ contract:
     door: bin/engine/home-seed.sh
     required: true
     why: "each agent's harness and model — the one file that decides what runs"
+  # The operator's own desktop answers (2026-11-14, his word: "are this settings able to be
+  # set from env files for diffrent users ? we probly need that"). Not required: without it
+  # every app takes the machine's policy exactly as before.
+  - path: config/desktop.env
+    kind: seeded
+    template: .agents/config/desktop.env.example
+    door: bin/engine/home-seed.sh
+    required: false
+    why: "the person's answer for the GPU, the surface and window placement, read by every app launcher"
   - path: config/models-allowed.yaml
     kind: seeded
     template: .agents/config/models-allowed.yaml.example

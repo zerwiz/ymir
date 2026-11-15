@@ -1,3 +1,7 @@
+import { spawn } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 // Voice calls, the way Grok Bot does them: a second, lightweight voice agent runs in the browser against
 // a realtime API, speaks as the bot, and relays real work to the bot's main text agent loop.
 // This module builds the voice agent's prompt and tools, serves the relay tools, records call start/end
@@ -234,7 +238,7 @@ ${recent || '(no messages yet)'}`;
 
 // ---------- calls ----------
 
-interface ActiveCall { id: string; botId: string; userId: string; startedAt: number; startSeq: number; tasks: string[] }
+interface ActiveCall { id: string; botId: string; userId: string; startedAt: number; startSeq: number; tasks: string[]; lines?: number }
 const calls = new Map<string, ActiveCall>();
 
 function callEvent(text: string, call: VoiceCallRecord): EventBody {
@@ -318,12 +322,54 @@ voiceApi.post('/session', async (c) => {
   });
 });
 
+/** Raise Rödd's engine through the house door, once (a second press while it loads does not start a second). Returns
+ *  the door's refusal when it gives one (a call holds the microphone), else ''. */
+let raising: { at: number; log: string } | null = null;
+function raiseHouseVoice(): string {
+  const said = () => {
+    try {
+      const last = fs.readFileSync(raising!.log, 'utf8').trim().split('\n').pop() ?? '';
+      return /refus|held|in a call|microphone|failed|error/i.test(last) ? `The house voice was not raised: ${last.slice(0, 200)}` : '';
+    } catch { return ''; }
+  };
+  if (raising && Date.now() - raising.at < 120_000) return said();
+  const door = new URL('../../../../bin/voice/voice-door.sh', import.meta.url).pathname;
+  const log = path.join(os.tmpdir(), `bilskirnir-voice-raise-${process.getuid?.() ?? 'u'}.log`);
+  raising = { at: Date.now(), log };
+  try {
+    const out = fs.openSync(log, 'w');
+    spawn('bash', [door, 'host'], { detached: true, stdio: ['ignore', out, out] }).unref();
+    fs.closeSync(out);
+    console.log('[voice] raising the house voice (log:', log + ')');
+  } catch (e: any) {
+    return `The house voice could not be raised: ${String(e?.message ?? e).slice(0, 120)}`;
+  }
+  return '';
+}
+
+/** The door's refusal, if it gave one, read once the wait is over. */
+function raiseRefusal(): string {
+  if (!raising) return '';
+  try {
+    const last = fs.readFileSync(raising.log, 'utf8').trim().split('\n').pop() ?? '';
+    return /refus|held|in a call|microphone|failed|error/i.test(last) ? `The house voice was not raised: ${last.slice(0, 200)}` : '';
+  } catch { return ''; }
+}
+
 /** Open a call on the house road: no secret to mint, the browser speaks to Rödd's engine through our relay. */
 async function houseSession(c: any, userId: string, bot: any, s: ReturnType<typeof settingsOf>) {
-  const rt = await realtimeStatus();
+  let rt = await realtimeStatus();
   if (!rt.up) {
-    console.warn('[voice] house realtime down:', rt.detail);
-    return c.json({ error: 'The house voice is not raised (run bin/voice/voice-door.sh host)' }, 503);
+    // plan 275 (2026-11-13): pressing the mic raises the voice the way Rödd's start does, instead of telling the
+    // person to type a command. The engine is not a boot resident, so after a restart it is simply not up yet. The
+    // house door keeps its own guard (no --now): it will not raise a GPU engine while a call holds the microphone.
+    raiseHouseVoice();
+    for (let i = 0; i < 45 && !rt.up && !raiseRefusal(); i++) { await new Promise((r) => setTimeout(r, 2000)); rt = await realtimeStatus(); }
+    if (!rt.up) {
+      const said = raiseRefusal();
+      console.warn('[voice] house realtime still down:', rt.detail, said);
+      return c.json({ error: said || 'The house voice is still starting — press the mic again in a moment.' }, 503);
+    }
   }
   if (rt.free === 0) return c.json({ error: 'The house voice is busy in another window (Rödd holds its one seat)' }, 409);
 
@@ -450,6 +496,21 @@ async function summarizeCall(botName: string, transcript: { role: string; text: 
   return text ? clip(text.replace(/\s+/g, ' '), 240) : null;
 }
 
+/** One settled line of a live call, written into the room as an ordinary message marked as spoken (plan 275). */
+voiceApi.post('/line', async (c) => {
+  const user = c.get('user');
+  const { botId, callId, role, text } = await c.req.json<{ botId: string; callId: string; role: string; text: string }>().catch(() => ({} as any));
+  const bot = ownBot(user.id, botId);
+  if (!bot) return c.json({ error: 'not found' }, 404);
+  const call = calls.get(callId);
+  if (!call || call.botId !== bot.id) return c.json({ error: 'no such call' }, 404);
+  if ((role !== 'user' && role !== 'assistant') || typeof text !== 'string' || !text.trim()) return c.json({ error: 'empty' }, 400);
+  appendRow(bot.id, 'message', { type: 'message', role, text: clip(text.trim(), 2000), from: { kind: 'voice', id: callId, name: 'Voice call' } });
+  call.lines = (call.lines ?? 0) + 1;
+  emitBot(bot.id);
+  return c.json({ ok: true });
+});
+
 voiceApi.post('/end', async (c) => {
   const user = c.get('user');
   const { botId, callId, transcript, error } = await c.req.json<{ botId: string; callId: string; transcript?: { role: string; text: string }[]; error?: string }>();
@@ -469,10 +530,25 @@ voiceApi.post('/end', async (c) => {
   const row = appendRow(bot.id, 'event', callEvent(base, record));
   emitBot(bot.id);
 
-  // Summarise in the background and rewrite the row.
-  summarizeCall(bot.name, lines, call.tasks)
-    .then((summary) => { if (summary) updateRow(bot.id, row.seq, callEvent(`${base}. ${summary}`, { ...record, summary })); })
-    .catch((e) => console.warn('[voice] call summary failed:', e?.message));
+  if (house.road === 'house') {
+    // plan 275 (2026-11-13): on the house road the agent itself hears the call. Its lines are handed to the agent's own
+    // Hermes conversation — so what was said is in its memory for the next written turn — and the agent answers with
+    // the call's one-line summary, in its own model (the xAI summariser needs a key the house does not have).
+    if (lines.length || call.tasks.length) {
+      const said = lines.map((t) => `${t.role === 'user' ? 'He' : bot.name}: ${t.text}`).join('\n').slice(-8000);
+      enqueue(bot.id, {
+        type: 'user',
+        text: `[The voice call just ended, ${fmtDuration(durationMs)}. What was said:\n${said || '(nothing)'}`
+          + `${call.tasks.length ? `\nWork handed off during the call:\n${call.tasks.map((t) => `- ${t}`).join('\n')}` : ''}\n`
+          + 'Keep what matters from it in mind. Reply with ONE short line that sums up the call — no greeting.]',
+      });
+    }
+  } else {
+    // Summarise in the background and rewrite the row.
+    summarizeCall(bot.name, lines, call.tasks)
+      .then((summary) => { if (summary) updateRow(bot.id, row.seq, callEvent(`${base}. ${summary}`, { ...record, summary })); })
+      .catch((e) => console.warn('[voice] call summary failed:', e?.message));
+  }
   return c.json({ ok: true, seq: row.seq });
 });
 

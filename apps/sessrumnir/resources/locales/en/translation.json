@@ -402,7 +402,8 @@
       "npmPrefix": "npm global prefix",
       "override": "Configured path",
       "path": "PATH",
-      "versionManager": "Version manager"
+      "versionManager": "Version manager",
+      "houseDoor": "House door (one home)"
     },
     "sections": {
       "application": "Application",

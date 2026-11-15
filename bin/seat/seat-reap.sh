@@ -16,7 +16,9 @@
 #                            working (never) / finished (retire) / undecided
 #                            (keep with the reason named)
 #   seat-reap.sh --sweep     the hall: retire finished-idle agents (S2), close
-#                            agentless seats, never touch a working seat
+#                            agentless seats, and close a HAND-SEATED tab whose
+#                            work the audit finds clean, pushed and landed — never
+#                            touch a working seat, never a dirty or unpushed one
 #   seat-reap.sh --list      what --sweep WOULD do, closing nothing
 #   seat-reap.sh --close-pane P  close an ORPHAN pane (a bare shell, no errand) —
 #                            the ONLY door; the Allfather's word, never a sweep
@@ -80,6 +82,12 @@ meta_key() { # <id> <key>
   [ -n "$f" ] || return 1
   awk -F= -v k="$2" '$1==k{sub(/^[^=]*=/,""); print; exit}' "$f" 2>/dev/null
 }
+
+# The workspaces this run has already closed: the tab stage below must not act on a
+# seat whose workspace the errand stage closed a moment before it (two answers to
+# one close is how a sweep prints a "failed" over its own success).
+SEAT_REAP_CLOSED_WS=()
+note_ws_closed() { [ -n "${1:-}" ] && SEAT_REAP_CLOSED_WS+=("$1"); return 0; }
 
 # ── the two readers of herdr, and nothing else ────────────────────────────────
 HAVE_HERDR=0
@@ -506,6 +514,7 @@ retire_seat() {  # <id> <ws> <pane> -> one TOON row; 0 retired, 1 refused/failed
   fi
   if [ -n "$ws" ] && [ "$HAVE_HERDR" = 1 ] && ! agent_live "$ws" "$wt"; then
     if herdr workspace close "$ws" >/dev/null 2>&1; then
+      note_ws_closed "$ws"
       step="${step}+workspace-closed"
       rune_retire "$id" "$pane" "$ws" "$step"
       printf '  "%s","%s","%s","retired: %s — %s (escalation: %s)"\n' "$id" "$ws" "$pane" "$VERDICT" "$REASON" "$step"
@@ -520,7 +529,7 @@ retire_seat() {  # <id> <ws> <pane> -> one TOON row; 0 retired, 1 refused/failed
     step="term-agent-pid-${pid}"
     sleep 2
     if [ -n "$ws" ] && [ "$HAVE_HERDR" = 1 ] && ! agent_live "$ws" "$wt"; then
-      herdr workspace close "$ws" >/dev/null 2>&1 && step="${step}+workspace-closed"
+      herdr workspace close "$ws" >/dev/null 2>&1 && { note_ws_closed "$ws"; step="${step}+workspace-closed"; }
     fi
   fi
 
@@ -560,6 +569,7 @@ close_seat() {
       return 1
     fi
     if herdr workspace close "$ws" >/dev/null 2>&1; then
+      note_ws_closed "$ws"
       printf '  "%s","%s","%s","%s"\n' "$id" "$ws" "$pane" "$why"
       clear_idle "$id"
       local d
@@ -597,6 +607,125 @@ reap_one() { # <id> -> prints rows; 0 closed
   why="closed"
   closed_errand "$id" || why="no live record"
   close_seat "$id" "$ws" "$pane" "$why"
+}
+
+# ── plan 293 · part 1: the hall beyond `eindri-*` — hand-seated tabs ─────────
+#
+# The fault (measured 2026-11-14): the sweep above walks the workspaces the
+# SPAWNER raises, and a worker seated BY HAND — the road projects-and-companies.md
+# teaches, a tab in the helm's own workspace — was invisible to it. 36 panes stood
+# on this machine and the reaper could see none of them; the helm retired them with
+# a shell loop pasted into a pane, and that loop died with the pane.
+#
+# The four checks of the runbook are NOT re-implemented here. bin/seat/seat-audit.sh
+# measures them once, in one voice, for every agent pane (tab, workspace, every
+# hall), and this door acts on its verdict and on nothing it invents — so a person
+# asking "may I close this one?" and this sweep answer with the same word.
+#
+#   landed | recon-with-report   → close: the workspace when the seat OWNS one
+#                                  (`eindri-*`, the spawner's shape), the tab
+#                                  otherwise (a seat the helm seated by hand)
+#   working · dirty · unpushed   → never; his hand is told to commit and push
+#   unmerged · open-pr · …       → keep: the branch is safe and waits for the heart
+#   no-git                       → keep: not an errand's tree
+#
+# Two more refusals, and both are law rather than caution:
+#   * a FOCUSED pane is never closed — herdr reports where the operator's hand is,
+#     and no sweep argues with his hand;
+#   * a branch this run has not merged or a report this run has not found is never
+#     taken on trust; the audit's verdict is the whole case for closing.
+#
+# Every close is written to the report line the runbook names, so the operator can
+# ask "where did that agent's work go?" and read one line back:
+#   state/eindri-reports/<helm>.md  (helm read from the lease; SEAT_REAP_REPORT overrides)
+reap_report_path() {
+  local state seat
+  [ -n "${SEAT_REAP_REPORT:-}" ] && { printf '%s' "$SEAT_REAP_REPORT"; return 0; }
+  state="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
+  seat=""
+  if [ -x "$SCRIPT_DIR/helm-identity.sh" ]; then
+    seat="$(bash "$SCRIPT_DIR/helm-identity.sh" --line 2>/dev/null | sed -n 's/^helm: \([^ ]*\) .*/\1/p')"
+  fi
+  case "$seat" in ''|unnamed|none|unknown) seat=seat-reap ;; esac
+  printf '%s/eindri-reports/%s.md' "$state" "$(printf '%s' "$seat" | tr '/ ' '--')"
+}
+
+reap_report_append() {  # <pane> <branch> <verdict> <how>
+  local f
+  f="$(reap_report_path)"
+  [ -n "$f" ] || return 0
+  mkdir -p "$(dirname "$f")" 2>/dev/null || return 0
+  # ONE dated line per closed pane: pane, branch, verdict — the runbook's record.
+  printf -- '- %s — pane %s · branch %s · %s · %s\n' \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${1:--}" "${2:--}" "${3:--}" "${4:--}" \
+    >>"$f" 2>/dev/null || true
+}
+
+sweep_tabs() { # <do-it: 0|1> — appends to the sweep's own tallies (dynamic scope)
+  local do_it=$1 audit pane st agent tab ws foc folder branch dirty unp inmain pr mg verdict why report
+  local id label how closed_how
+  SEAT_REAP_TABS="${SEAT_REAP_TABS:-1}"
+  [ "$SEAT_REAP_TABS" = 1 ] || return 0
+  [ "$HAVE_HERDR" = 1 ] || return 0
+  local auditor="$SCRIPT_DIR/seat-audit.sh"
+  [ -x "$auditor" ] || return 0
+  local -A label_of=()
+  while IFS=$'\t' read -r ws label _s; do
+    [ -n "$ws" ] && label_of["$ws"]="$label"
+  done < <(ws_rows 2>/dev/null)
+  # The ONE audit, asked with this run's own shelves, so the door that measures and
+  # the door that closes cannot be reading two different halls.
+  audit="$(BROKK_ROOT_OVERRIDE="$ROOT" BROKK_HOME="$BROKK_HOME" \
+           BROKK_STATE_OVERRIDE="${BROKK_STATE_OVERRIDE:-}" \
+           bash "$auditor" --tsv 2>/dev/null)" || return 0
+  [ -n "$audit" ] || return 0
+  while IFS=$'\t' read -r pane st agent tab ws foc folder branch dirty unp inmain pr mg verdict why report; do
+    [ -n "$pane" ] || continue
+    case "$verdict" in landed|recon-with-report) ;; *) continue ;; esac
+    [ "$st" = working ] && continue                       # never a working pane
+    [ "$foc" = true ] && continue                         # never the operator's hand
+    [ -n "${HERDR_PANE_ID:-}" ] && [ "$pane" = "$HERDR_PANE_ID" ] && continue
+    case " ${SEAT_REAP_CLOSED_WS[*]:-} " in *" $ws "*) continue ;; esac
+    id="$(basename "${folder:--}")"; [ -n "$id" ] && [ "$id" != "." ] || id="$pane"
+    label="${label_of[$ws]:-}"
+    how=tab
+    case "$label" in eindri-*) how=workspace ;; esac
+
+    if [ "$do_it" = 0 ]; then
+      n_closed=$((n_closed + 1))
+      closed_rows+=("$(printf '  "%s","%s","%s","would close the %s — %s (branch %s)"' \
+        "$id" "$ws" "$pane" "$how" "$verdict" "$branch")")
+      continue
+    fi
+
+    # Close the workspace when the seat owns one, the tab otherwise — and never
+    # leave an empty `eindri-*` workspace behind, which is the shape that filled
+    # the hall in the first place.
+    closed_how=""
+    if [ "$how" = workspace ]; then
+      if herdr workspace close "$ws" >/dev/null 2>&1; then
+        closed_how="workspace"; note_ws_closed "$ws"
+      fi
+    fi
+    if [ -z "$closed_how" ]; then
+      if [ -n "$tab" ] && [ "$tab" != '-' ] && herdr tab close "$tab" >/dev/null 2>&1; then
+        closed_how="tab"
+      elif herdr pane close "$pane" >/dev/null 2>&1; then
+        closed_how="pane"
+      fi
+    fi
+    if [ -n "$closed_how" ]; then
+      n_closed=$((n_closed + 1))
+      closed_rows+=("$(printf '  "%s","%s","%s","closed the %s — %s (branch %s)"' \
+        "$id" "$ws" "$pane" "$closed_how" "$verdict" "$branch")")
+      reap_report_append "$pane" "$branch" "$verdict" "closed the $closed_how"
+    else
+      n_ref=$((n_ref + 1))
+      refused_rows+=("$(printf '  "%s","%s","%s","refused: the close failed — %s"' \
+        "$id" "$ws" "$pane" "$verdict")")
+    fi
+  done <<<"$audit"
+  return 0
 }
 
 # ── the sweep ────────────────────────────────────────────────────────────────
@@ -694,6 +823,9 @@ sweep() { # <do-it: 0|1>
                     *) n_kept=$((n_kept + 1)); kept_rows+=("$row") ;; esac
     fi
   done < <(ws_rows 2>/dev/null)
+
+  # The hall is wider than the spawner's workspaces (plan 293 · part 1).
+  sweep_tabs "$do_it"
 
   local verb=closed; [ "$do_it" = 0 ] && verb=would-close
   printf 'seat-reap[1]{%s,retired,kept,finished-idle,working,refused}:\n  "%s","%s","%s","%s","%s","%s"\n' \

@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 # gjallarhorn-tunnel.sh — raise/lower the `ymir` Cloudflare tunnel (Gjallarhorn).
-# Exposes Hlidskjalf from this machine at the operator's own hostname
-# (YMIR_TUNNEL_HOST, or read from the cloudflared config).
+#
+# A tunnel in this house fronts a PUBLIC surface — Gimlé, a video forge, a notice
+# door — never one of the three HALLS. The halls are local (plan 275 item 30,
+# plans 277 and 279): they bind loopback, they carry no login, and a tunnel to one
+# is exactly how they used to be exposed by accident. So `start` reads the
+# cloudflared config's ingress and REFUSES a config that points at a hall port.
 #
 # Usage:
 #   gjallarhorn-tunnel.sh [start|stop|status] [--config <path>] [--tunnel <name>]
@@ -71,10 +75,33 @@ case "$ACTION" in
   *) printf 'error: unknown action %s\nhelp: gjallarhorn-tunnel.sh [start|stop|status]\n' "$ACTION" >&2; exit 2 ;;
 esac
 
+# THE HALLS ARE LOCAL. Ports measured on this seat 2026-11-14: the SPA (:3888), the
+# gate (:3889), Bifrost (:4603), the well (:4602), Óðrerir (:4322), Smíðja (:8437),
+# Rödd's head proxy (:8787). A tunnel that names one of them is refused — not
+# warned about, refused — because the whole point of removing the login was that
+# nothing outside this machine can reach a hall.
+HALL_PORTS="3888 3889 4322 4602 4603 8437 8787 3891"
+hall_target() {  # <config> → the first hall service line, or empty
+  local cfg="$1" p
+  [ -r "$cfg" ] || return 0
+  for p in $HALL_PORTS; do
+    grep -nE '^[[:space:]]*service:[[:space:]]*http(s)?://(127\.0\.0\.1|localhost|\[::1\]):'"$p"'([/[:space:]]|$)' "$cfg" 2>/dev/null \
+      | head -1 | sed "s|^|port $p: |"
+  done
+}
+
 command -v cloudflared >/dev/null 2>&1 || { printf 'error: cloudflared not found\nhelp: install cloudflared\n' >&2; exit 1; }
 [ -r "$CONFIG" ] || { printf 'error: tunnel config not found: %s\nhelp: cp midgard/infrastructure/ingress/cloudflared-ymir.yml ~/.cloudflared/config-ymir.yml\n' "$CONFIG" >&2; exit 1; }
 mkdir -p "$YMIR_STATE_DIR"
 if running; then printf 'gjallarhorn[1]{state,host}:\n  "already up","%s"\n' "$HOST"; exit 0; fi
+
+# The ward: a hall is never a tunnel target (plan 275 item 30).
+hit="$(hall_target "$CONFIG")"
+if [ -n "$hit" ]; then
+  printf 'gjallarhorn[1]{state,refused,detail}:\n  "refused","hall","%s — the halls are local: they bind loopback and carry no login (plan 275 item 30)"\n' "${hit//\"/}" >&2
+  printf 'help: a PUBLIC surface (Gimlé, a forge, a notice door) is what a tunnel fronts, never Hlidskjalf, Smíðja or Óðrerir.\n' >&2
+  exit 3
+fi
 
 nohup cloudflared tunnel --config "$CONFIG" run "$TUNNEL" >"$LOG_FILE" 2>&1 &
 echo $! >"$PID_FILE"

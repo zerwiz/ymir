@@ -16,7 +16,6 @@
  *   ymir raise / lower   lift the hall, or lay it down
  *   ymir eir             what stands, and mend what does not
  *   ymir groa            take the latest, and mend this home forward
- *   ymir heimdall        the way in: your credential, and invites
  *   ymir smidja          the smithy's board (:8437) — build · start · stop · status
  *   ymir hlidskjalf      the high seat's window
  *   ymir sessrumnir      the seat-hall's window
@@ -146,8 +145,6 @@ const DOORS = {
   lower:      { script: 'scripts/stop.sh',        about: 'lay the hall down' },
   eir:        { script: 'bin/agents/eir-doctor.sh',      about: 'diagnose every surface; mend what is broken' },
   groa:       { script: 'bin/agents/groa-update.sh',     about: 'take the latest, then mend this home forward' },
-  heimdall:   { script: 'bin/engine/ymir-setup-auth.sh', about: 'the way in — your credential (status · set · github)' },
-  invite:     { script: 'bin/engine/ymir-invite.sh',     about: 'let someone else in (mint · list · revoke)' },
   smidja:     { script: 'bin/desktop/smidja-board.sh',    about: "the smithy's board on :8437 (build · start · stop · status)" },
   hlidskjalf: { script: 'scripts/electron.sh',    about: "the high seat's window", args: ['start', '--view', 'hlidskjalf'] },
   sessrumnir: { script: 'scripts/electron.sh',    about: "the seat-hall's window", args: ['start', '--view', 'sessrumnir'] },
@@ -186,7 +183,6 @@ function menu() {
     ['begin',   ['install', 'plan', 'sense']],
     ['keep it', ['groa', 'migrate', 'eir', 'validate']],
     ['lift it', ['raise', 'lower', 'smidja', 'hlidskjalf', 'sessrumnir']],
-    ['the way in', ['heimdall', 'invite']],
     ['your own', ['config', 'mimir']],
   ];
   for (const [title, verbs] of GROUPS) {

@@ -19,6 +19,13 @@
 #   cron-guard.sh --all      # same
 #   cron-guard.sh --version
 #
+# YMIR_SKIP_CRON_GUARD=1 is the LOUD override (RULES/46). It exists for one shape only:
+# a row the OPERATOR's own home cron carries for a job that does not ship — a schedule a
+# seat's runtime wrote, which no branch of this repo can fix and which would otherwise
+# refuse every push from that seat. The skip prints what it skipped and why, so it is a
+# sentence in the record, never a silent pass. A missing script the REPO's own cron or
+# example names is never covered by it.
+#
 # Exit: 0 every referenced script ships · 1 a reference is missing · 2 usage.
 set -u
 VERSION="1.0.0"
@@ -77,6 +84,12 @@ for f in ${CRONS[@]+"${CRONS[@]}"}; do
 done
 if [ "$missing" -eq 0 ] && [ "$unrunnable" -eq 0 ]; then
   printf '  "none","","every referenced script ships in the repo and can be executed"\n'
+  exit 0
+fi
+# The loud override: only for a HOME-cron row, never for the repo's own schedule.
+if [ "${YMIR_SKIP_CRON_GUARD:-0}" = 1 ]; then
+  printf 'cron-guard: SKIPPED on purpose (YMIR_SKIP_CRON_GUARD=1) — %s missing, %s without an execute bit\n' "$missing" "$unrunnable" >&2
+  printf 'cron-guard: the row is in the OPERATOR'"'"'S OWN home cron, not in this tree'"'"'s schedule; the reason belongs in the handoff packet\n' >&2
   exit 0
 fi
 [ "$missing" -gt 0 ] && printf 'cron-guard: %s referenced script(s) do not ship in the repo\nhelp: jobs run from the REPO root, so bin/… always means the repo — a script kept only in a home cannot resolve; move it into the repo (bin/…) or reference it absolutely where the runner allows it\n' "$missing" >&2

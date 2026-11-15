@@ -129,7 +129,6 @@ style_init
 declare -a IDS STATUS DETAIL
 # The code minted for this install, reported at the end so it is not lost in the
 # step table. Empty on --check, and when no code could be minted.
-INVITE_CODE=""
 add() { IDS+=("$1"); STATUS+=("$2"); DETAIL+=("$3"); }
 have() { command -v "$1" >/dev/null 2>&1; }
 TOON="install[0]{step,status,detail}:"
@@ -1702,44 +1701,18 @@ step_desktop() {
 }
 
 # ── 8. register ──────────────────────────────────────────────────────────────
-# ── 8b. the way in ────────────────────────────────
-# One operator owns the instance; an invite code is how someone *else* is let in
-# to try it. Registration stays closed until a live code exists, so the gate is
-# never open by accident.
+# ── 8b. the way in — RETIRED (plan 275 item 30) ──────────────────────────────
+# The halls are LOCAL. There is no in-app login, no invite code and no GitHub
+# door to seed: the desktop session is the authority and every app listens on
+# loopback only. Hosted, shared surfaces are Gimlé's (plan 284). The steps stay
+# in the list, and say so, so an install report still answers "how do I let
+# someone in?" with the truth instead of silence.
 step_invite() {
-  role_gate invite heart,dev "the control plane's way in" || return 0
-  if [ "$CHECK" = 1 ]; then add invite OK "would mint an invite code"; return; fi
-  if [ ! -x "$ROOT/bin/engine/ymir-invite.sh" ]; then add invite SKIP "bin/engine/ymir-invite.sh not executable"; return; fi
-  if ! command -v bun >/dev/null 2>&1; then add invite SKIP "bun missing — no account store"; return; fi
-  local out
-  if ! out=$(bash "$ROOT/bin/engine/ymir-invite.sh" ensure 2>&1); then add invite WARN "could not mint a code"; return; fi
-  INVITE_CODE=$(printf '%s\n' "$out" | sed -n '2p' | tr -d ' "' | cut -d, -f1)
-  if [ -n "$INVITE_CODE" ]; then add invite OK "invite ${INVITE_CODE} — share it to let someone register"; else add invite WARN "no code found"; fi
+  add invite SKIP "not needed: the halls are local (plan 275 item 30) — a shared, invited surface is Gimlé's (plan 284)"
 }
 
-# ── 8a. the operator's way in ────────────────────────────────────────────────
-# The gate has two doors — a local password (HLIDSKJALF_AUTH) or GitHub sign-in
-# (a GitHub OAuth app). Neither is seeded by a checkout, so a fresh instance has
-# no way in until the operator sets one. Interactive installs prompt; --yes and
-# non-tty leave it to bin/engine/ymir-setup-auth.sh.
 step_auth() {
-  role_gate auth heart,dev "the control plane's way in" || return 0
-  if [ ! -x "$ROOT/bin/engine/ymir-setup-auth.sh" ]; then add auth SKIP "bin/engine/ymir-setup-auth.sh not executable"; return; fi
-  local door
-  door=$(bash "$ROOT/bin/engine/ymir-setup-auth.sh" status 2>/dev/null | sed -n '2p' | cut -d, -f1 | tr -d ' "')
-  if [ -n "$door" ] && [ "$door" != none ]; then add auth OK "operator credential present ($door)"; return; fi
-  if [ "$CHECK" = 1 ]; then add auth WARN "no operator credential — run bin/engine/ymir-setup-auth.sh set|github"; return; fi
-  if [ "$ASSUME_YES" = 1 ] || [ ! -t 0 ]; then
-    add auth WARN "no operator credential — set one: bin/engine/ymir-setup-auth.sh set (or github)"
-    return
-  fi
-  printf '\nSet the operator credential now? [p]assword / [g]ithub / [s]kip: '
-  local choice; IFS= read -r choice || true
-  case "${choice:-s}" in
-    p|P) bash "$ROOT/bin/engine/ymir-setup-auth.sh" set && add auth OK "operator password set" || add auth WARN "password setup failed" ;;
-    g|G) bash "$ROOT/bin/engine/ymir-setup-auth.sh" github && add auth OK "GitHub sign-in configured" || add auth WARN "GitHub setup failed" ;;
-    *)   add auth SKIP "left unset — run bin/engine/ymir-setup-auth.sh set|github later" ;;
-  esac
+  add auth SKIP "not needed: the halls carry no login (plan 275 item 30) — the desktop session is the authority"
 }
 
 step_register() {
@@ -1754,9 +1727,8 @@ step_register() {
     printf '2. Register your projects and their `git{}` blocks in `hoard/identity/projects.yaml`.\n'
     printf '3. The services rise at boot (role-gated; `bin/engine/ymir-autoboot.sh status` shows them).\n'
     printf '   `scripts/start.sh` remains the manual raise when a window is wanted.\n'
-    printf '4. To let someone else try it, share the invite code printed above\n'
-    printf '   (or mint another: `bin/engine/ymir-invite.sh mint <n>`). They register at the\n'
-    printf '   login screen; `bin/engine/ymir-invite.sh list` shows what is spent.\n'
+    printf '4. The halls are local (plan 275 item 30): there is no login to share and no\n'
+    printf '   invite to mint. A shared, invited surface is GIMLE (plan 284), not a hall.\n'
   } >"$out"
   add register OK "wrote workspace/INSTALL.md"
 }
@@ -1944,7 +1916,6 @@ if [ "${STYLE_ON:-0}" = 1 ]; then
   [ -n "$skips" ] && style_hint "skipped:$skips — each with its reason in the table above"
 fi
 printf '\nnext: gh auth login · register your projects in hoard/identity/projects.yaml · open http://127.0.0.1:3888/\n'
-[ -n "$INVITE_CODE" ] && printf 'invite: %s — share it to let someone register (bin/engine/ymir-invite.sh list shows what is spent)\n' "$INVITE_CODE"
 
 for s in "${STATUS[@]}"; do [ "$s" = FAIL ] && exit 1; done
 exit 0

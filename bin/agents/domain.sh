@@ -191,6 +191,7 @@ print((r.get("root_pane") or {}).get("pane_id") or "")' 2>/dev/null)"
     fi
     timeout 30 herdr pane run "$pane" "$line" >/dev/null 2>&1 || true
     sleep 3
+    opening="$(YMIR_MSG_FROM="${YMIR_MSG_FROM:-script domain.sh, seating a domain}" bash "$(dirname "${BASH_SOURCE[0]}")/msg-origin.sh" "$opening")"   # where it came from (2026-11-14)
     timeout 60 herdr agent prompt "$pane" "$opening" >/dev/null 2>&1 || \
       timeout 30 herdr pane send-text "$pane" "$opening" >/dev/null 2>&1 || true
     printf 'domain[1]{domain,state,mode,tab,pane,brief}:\n  "%s","seated","pane","%s","%s","%s"\n' \

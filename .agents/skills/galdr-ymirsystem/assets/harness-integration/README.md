@@ -1232,7 +1232,7 @@ Two tools, and **only** its own (register §12: one tool, one registration — t
 | tool | what it answers |
 |---|---|
 | `ymir_rule <topic>` | the laws that govern it, **quoted by line, with the file named** — and when no law mentions the topic it says so and hands over the whole (small) law rather than inventing one |
-| `ymir_gates` | which gate covers which surface, **read from `bin/gates/ci-verify.sh`** rather than asserted, plus the doors a seat can run — carrying the law it quotes: *a gate that exists and runs nowhere is how a capability is silently absent* |
+| `ymir_gates` | which gate covers which surface, **read from the gate list itself** — every gate is one file under `bin/gates/checks.d/`, sourced by `bin/gates/ci-verify.sh` — rather than asserted, plus the doors a seat can run — carrying the law it quotes: *a gate that exists and runs nowhere is how a capability is silently absent* |
 
 `bash .agents/tests/rules-door.test.sh` → **7 passed, 0 failed**, including the two that matter most:
 a topic no law covers **says so and invents nothing**, and the tool set is **its own two** — no
@@ -1657,3 +1657,18 @@ cannot rewake a session N times. Proved by `bin/gates/tests/test_arm_client_helm
 ## CHANGE LOG
 
 - 2026-11-12 — review-mend: added missing heading for #673
+
+## 2026-11-14 — the gate list became a directory, and `ymir_gates` follows it
+
+At the helm's errand (plan 295, fix S1): the row above said `ymir_gates` reads the gate list from
+`bin/gates/ci-verify.sh`. It no longer can, because the gate list is not in that file any more — it
+is `bin/gates/checks.d/<NNNN>-<name>.sh`, one file per gate, and `ci-verify.sh` sources the directory
+(adding a gate used to mean editing the one file every branch edited, which is why fourteen sound PRs
+conflicted). The tool now reads the fragments in file order and then the driver, so the answer is
+still the list itself and never a copy of it. The how-to for a hand adding a gate is
+`docs/features/adding-a-gate.md`.
+
+Measured while making this change, and owed by someone: `.agents/tests/rules-door.test.sh` names its
+extension source as `.pi/shared/extensions/rules.ts`, which does not exist — the door lives at
+`.pi/extensions/rules.ts`, so the whole test exits 1 at its first line and its "7 passed" line above
+is stale. Nothing calls that test today; `ext-api` and `ext-smoke` judge the extension surface.

@@ -46,7 +46,13 @@ count_for() {  # how many TRACKED files CALL this GNU spelling — comments do n
     esac
     # judged on the COMMIT, never the working tree: a gate that reads churn is a gate that flickers
     # (measured 2026-11-02 — the count moved between runs while a scheduler wrote beside it).
-    if git -C "$ROOT" show "HEAD:$f" 2>/dev/null | grep -v '^[[:space:]]*#' | grep -q -- "$pat"; then n=$((n + 1)); fi
+    #
+    # AND READ THE WHOLE BODY (measured 2026-11-14). `grep -q` exits at the first match, which SIGPIPEs
+    # `git show`; under this file's own `set -o pipefail` the pipeline then returns the broken writer's
+    # status, so a file that DID call the verb was counted or not depending on timing. Two runs over one
+    # unchanged commit gave 38 and 34 for `stat -c` — a gate that flickers is a gate nobody trusts.
+    # `grep -c` consumes all three commands' input, so the answer is the content and nothing else.
+    if git -C "$ROOT" show "HEAD:$f" 2>/dev/null | grep -v '^[[:space:]]*#' | grep -c -- "$pat" >/dev/null; then n=$((n + 1)); fi
   done < <(git -C "$ROOT" ls-files 'bin/*.sh' 'systems/*.sh' 'scripts/*.sh' 'bin/*.py' 'systems/*.py' 2>/dev/null)
   printf '%s' "$n"
 }

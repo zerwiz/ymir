@@ -79,6 +79,54 @@ acclaim_of() {
   [ -r "$f" ] || { printf '(no status line)'; return 0; }
   grep -E '^done:' "$f" | tail -1 | sed 's/^done:[[:space:]]*//' | cut -c1-200
 }
+
+# base_branch_of <id> — the BASE BRANCH a packet names (plan 293 part 7). A worker that built on
+# another UNMERGED branch records that branch in the packet's `base` field (the writer stores the
+# `--base` argument verbatim), and the gather merges it first. A base that is `main`, `origin/main`,
+# a bare sha, or already reachable from origin/main names no branch to reorder, so nothing is printed.
+base_branch_of() {
+  local pf="$STATE/handoff/$1.packet" cell
+  [ -r "$pf" ] || return 0
+  cell="$(python3 - "$pf" <<'PY' 2>/dev/null
+import re,sys
+try: txt=open(sys.argv[1]).read()
+except OSError: sys.exit(0)
+m=re.search(r'^packet\[1\]\{[^}]*\}:\s*\n\s*(.*)$', txt, re.M)
+if not m: sys.exit(0)
+row=re.findall(r'"([^"]*)"', m.group(1))
+print(row[3] if len(row)>3 else "")
+PY
+)"
+  case "$cell" in eindri/*) ;; */*) g show-ref --verify --quiet "refs/heads/$cell" || return 0 ;; *) return 0 ;; esac
+  g show-ref --verify --quiet "refs/heads/$cell" || return 0
+  g merge-base --is-ancestor "$cell" "$REMOTE/$BASE" 2>/dev/null && return 0
+  printf '%s' "$cell"
+}
+
+# order_by_base — stable order where a branch whose packet names another branch in the set comes
+# AFTER that base. A cycle keeps the order given rather than dropping work.
+order_by_base() {
+  local -a rem=("$@") out=()
+  local br bid base i j rj hit moved
+  while [ "${#rem[@]}" -gt 0 ]; do
+    moved=0
+    for i in "${!rem[@]}"; do
+      br="${rem[$i]}"; case "$br" in */*) bid="${br#eindri/}";; *) bid="$br"; br="eindri/$br";; esac
+      base="$(base_branch_of "$bid")"
+      if [ -n "$base" ]; then
+        hit=0
+        for j in "${!rem[@]}"; do
+          rj="${rem[$j]}"; case "$rj" in */*) :;; *) rj="eindri/$rj";; esac
+          [ "$rj" = "$base" ] && { hit=1; break; }
+        done
+        [ "$hit" = 1 ] && continue
+      fi
+      out+=("${rem[$i]}"); unset 'rem[$i]'; rem=("${rem[@]}"); moved=1; break
+    done
+    [ "$moved" = 1 ] || { out+=("${rem[@]}"); break; }
+  done
+  printf '%s\n' "${out[@]}"
+}
 finished_ids() {
   local f id last
   for f in "$STATE"/*.status; do
@@ -127,6 +175,11 @@ else
     while IFS= read -r id; do [ -n "$id" ] && ARGS+=("$id"); done <<<"$(finished_ids)"
   fi
   [ "${#ARGS[@]}" -gt 0 ] || err "nothing to gather" "name errand ids or branches, or pass --finished (see --list-finished)" 2
+
+  # plan 293 part 7 — a branch built on another unmerged branch goes AFTER its base.
+  if [ "${#ARGS[@]}" -gt 1 ]; then
+    mapfile -t ARGS < <(order_by_base "${ARGS[@]}")
+  fi
 
   # rows: branch<TAB>id<TAB>acclaim
   ROWS=""

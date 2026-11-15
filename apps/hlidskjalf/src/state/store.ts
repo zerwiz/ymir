@@ -1,7 +1,9 @@
 import { create } from 'zustand';
 import type {
+  A2ATraffic,
   AgentCard,
   ChatMessage,
+  Doors,
   FileNode,
   GateId,
   DomainId,
@@ -10,15 +12,15 @@ import type {
   ReviewsInfo,
   RecallEpisode,
   RealmId,
+  RealmDef,
   RuneEntry,
   Session,
   SkillDef,
   StreamEvent,
   Task,
 } from '../types';
-import { realmDef, ACCENTS, GATES } from '../data/realms';
+import { realmDef, realmsFromRegistry, ACCENTS, GATES, DEFAULT_REALM, DEFAULT_WORKSPACES } from '../data/realms';
 import {
-  clearSession,
   loadSession,
   provisionWorkspace,
   sessionFor,
@@ -164,6 +166,11 @@ interface YmirState {
   cronError: string | null;
   mimir: MimirHealth | null;
   smidjaDb: string;
+  /** The realms THIS machine has: the operator's registry read at run time, or
+   *  the shipped pair before the gate answers. Never a name written in the repo. */
+  realms: RealmDef[];
+  /** Read the realms the home holds, and keep the seat on one that exists. */
+  loadRealms: () => Promise<void>;
   smidjaSessions: SmidjaSession[];
   smidjaStats: SmidjaStats | null;
   smidjaDecisions: SmidjaDecision[];
@@ -173,6 +180,10 @@ interface YmirState {
   agents: AgentCard[];
   /** Why the roster is what it is: live, unauthorised, unreadable, or offline. */
   agentsStatus: AgentsStatus;
+  /** The herdr traffic between agents (plan 275 item 8), newest first. */
+  a2a: A2ATraffic;
+  /** Every app's DevTools port and every agent's pane (plan 275 item 19). */
+  doors: Doors;
   /** Harness usage: opencode and pi sessions, not only the smithy's runs. */
   usage: import('../services/api').YmirUsage | null;
   tasks: Task[];
@@ -194,8 +205,9 @@ interface YmirState {
   /** Establish the UI session for a login the gate has verified. */
   establishSession: (login: string) => void;
   provision: (input: { login: string; name: string; kind: 'work' | 'personal'; domains: string[] }) => void;
-  signOut: () => void;
   loadLive: () => Promise<void>;
+  /** The Runtime page's own read: the digest lands late, and the page retries. */
+  refreshRuntime: () => Promise<void>;
   startCron: () => Promise<void>;
   stopCron: () => Promise<void>;
   refreshSmidja: () => Promise<void>;
@@ -203,6 +215,8 @@ interface YmirState {
   refreshCalendar: () => Promise<void>;
   /** Re-read the LIVE fleet: the dead leave, and the count follows the source. */
   refreshAgents: () => Promise<void>;
+  refreshA2A: () => Promise<void>;
+  refreshDoors: () => Promise<void>;
   refreshReviews: () => Promise<void>;
   setSelectedSession: (id: string | null) => void;
   loadSessionDetail: (id: string) => Promise<void>;
@@ -268,6 +282,8 @@ function emptyState() {
   return {
     agents: [] as YmirState['agents'],
     agentsStatus: 'loading' as AgentsStatus,
+    a2a: { messages: [], recorded: 0 } as A2ATraffic,
+    doors: { apps: [], agents: [], apps_up: 0, agents_seated: 0 } as Doors,
     usage: null,
     tasks: [] as YmirState['tasks'],
     runes: [] as YmirState['runes'],
@@ -275,7 +291,8 @@ function emptyState() {
     recall: [] as YmirState['recall'],
     processes: [] as YmirState['processes'],
     reviews: null as YmirState['reviews'],
-    files: { name: 'realm', type: 'dir', path: '/', children: [] } as YmirState['files'],
+    // Skrymir's root is the WHOLE home (plan 275 item 21); folders load on open.
+    files: { name: 'ymirhome', type: 'dir', path: '', children: [] } as YmirState['files'],
     chat: [] as YmirState['chat'],
     skills: [] as YmirState['skills'],
   };
@@ -309,15 +326,10 @@ function realmTintOf(state: Pick<YmirState, 'session' | 'realm' | 'tenantColors'
 
 const initialSession = loadSession();
 
-function initialRealm(session: Session | null): RealmId {
-  try {
-    const stored = localStorage.getItem('ymir.workspace') ?? localStorage.getItem('ymir.realm');
-    if (stored) return stored;
-  } catch {
-    /* ignore */
-  }
-  if (session && session.tenants.length > 0) return session.tenants[0].realm;
-  return 'work';
+function initialRealm(_session: Session | null): RealmId {
+  // One runtime (plan 275): a single workspace. The stored mode and the tenant
+  // grants are no longer a switch — every session serves the one active workspace.
+  return DEFAULT_REALM;
 }
 
 export const useYmir = create<YmirState>((set, get) => ({
@@ -340,6 +352,7 @@ export const useYmir = create<YmirState>((set, get) => ({
   cronError: null,
   mimir: null,
   smidjaDb: 'absent',
+  realms: DEFAULT_WORKSPACES,
   smidjaSessions: [],
   smidjaStats: null,
   smidjaDecisions: [],
@@ -363,7 +376,13 @@ export const useYmir = create<YmirState>((set, get) => ({
       // rather than handing the panel a shape it cannot read.
       const ok = <T,>(x: T | null | undefined, prev: T): T =>
         x && !(x as unknown as { error?: unknown }).error ? (x as T) : prev;
-      const [agentsResult, usage, tasks, runes, recall, processes, reviews, files, runtime, cron, cronSeats, mimir, skills] =
+      // TWO BATCHES, on purpose (2026-11-14). Everything used to wait on the
+      // SLOWEST endpoint — `reviews` shells lint + compliance with a 60 s cap — so
+      // the file tree, the runtime page and every board sat blank for a minute
+      // after a session was seated. The FAST group paints first; the slow group
+      // (usage · reviews · the well) arrives when it can. The a2a board and the
+      // doors joined the fast group when the fleet page told the truth.
+      const [agentsResult, a2a, tasks, runes, processes, files, runtime, cron, cronSeats, mimir, skills, doors] =
         await Promise.all([
           // Each call degrades on its own — one bad endpoint must not blank the app.
           // The roster is special: an empty board has four causes, so this call
@@ -375,13 +394,11 @@ export const useYmir = create<YmirState>((set, get) => ({
               return [get().agents, agentsFailureStatus(error)];
             }
           })(),
-          gateApi.usage().then((v) => ok(v, get().usage)).catch(() => get().usage),
+          gateApi.a2aMessages().then((v) => ok(v, get().a2a)).catch(() => get().a2a),
           gateApi.tasks().then((v) => ok(v, get().tasks)).catch(() => get().tasks),
           gateApi.runes().then((v) => ok(v, get().runes)).catch(() => get().runes),
-          gateApi.well('').then((v) => ok(v, get().recall)).catch(() => get().recall),
           gateApi.processes().then((v) => ok(v, get().processes)).catch(() => get().processes),
-          gateApi.reviews().then((v) => ok(v, get().reviews)).catch(() => get().reviews),
-          gateApi.files(get().realm).then((v) => ok(v, get().files)).catch(() => get().files),
+          gateApi.files().then((v) => ok(v, get().files)).catch(() => get().files),
           gateApi.runtime().then((v) => ok(v, get().runtime)).catch(() => get().runtime),
           gateApi.cron()
             .then((v) => {
@@ -395,9 +412,17 @@ export const useYmir = create<YmirState>((set, get) => ({
           gateApi.cronSeats().then((v) => ok(v, get().cronSeats ?? [])).catch(() => get().cronSeats ?? []),
           gateApi.mimirHealth().catch(() => null),
           gateApi.skills().then((v) => ok(v, get().skills)).catch(() => get().skills),
+          gateApi.doors().then((v) => ok(v, get().doors)).catch(() => get().doors),
         ]);
       const [agents, agentsStatus] = agentsResult;
-      set({ agents, agentsStatus, tasks, runes, recall, processes, reviews, files, runtime, cron, cronSeats, mimir, skills, usage, live: true });
+      set({ agents, agentsStatus, a2a, doors, tasks, runes, processes, files, runtime, cron, cronSeats, mimir, skills, live: true });
+
+      const [usage, reviews, recall] = await Promise.all([
+        gateApi.usage().then((v) => ok(v, get().usage)).catch(() => get().usage),
+        gateApi.reviews().then((v) => ok(v, get().reviews)).catch(() => get().reviews),
+        gateApi.well('').then((v) => ok(v, get().recall)).catch(() => get().recall),
+      ]);
+      set({ usage, reviews, recall });
     } catch {
       // Gate API unreachable — stay on the last good data and mark it.
       set((s) => ({
@@ -430,6 +455,20 @@ export const useYmir = create<YmirState>((set, get) => ({
       set({ agents, agentsStatus: 'live' });
     } catch (error) {
       set({ agentsStatus: agentsFailureStatus(error) });
+    }
+  },
+  refreshA2A: async () => {
+    try {
+      set({ a2a: await gateApi.a2aMessages() });
+    } catch {
+      // the panel keeps the last words it read; a dark door never blanks the stream
+    }
+  },
+  refreshDoors: async () => {
+    try {
+      set({ doors: await gateApi.doors() });
+    } catch {
+      // the last door we saw is still a door; a dark gate never blanks the list
     }
   },
   refreshReviews: async () => {
@@ -467,6 +506,15 @@ export const useYmir = create<YmirState>((set, get) => ({
     }
   },
 
+  refreshRuntime: async () => {
+    try {
+      const runtime = await gateApi.runtime();
+      set({ runtime });
+    } catch {
+      /* keep the last good reading */
+    }
+  },
+
   setSelectedSession: (id) => set({ selectedSession: id, sessionDetail: null }),
   loadSessionDetail: async (id) => {
     try {
@@ -479,7 +527,8 @@ export const useYmir = create<YmirState>((set, get) => ({
 
   establishSession: (login) => {
     // The gate already decided; this only shapes what the UI renders.
-    const session = sessionFor(login);
+    const realms = get().realms;
+    const session = sessionFor(login, realms);
     saveSession(session);
     const realm = initialRealm(session);
     document.documentElement.dataset.realm = realm;
@@ -490,11 +539,32 @@ export const useYmir = create<YmirState>((set, get) => ({
       tenantColors[realm] ?? session.tenants.find((x) => x.realm === realm)?.tint,
     );
     set({ session, realm, ...emptyState() });
+    // The realm list is the operator's own registry in the home: read it now.
+    void get().loadRealms();
     void get().loadLive();
   },
 
+  /** Read the realms this home holds and re-shape the seat around them. The
+   *  shipped pair stands until the gate answers; an answer that carries none
+   *  leaves it standing (a registry that cannot be read is not an empty home). */
+  loadRealms: async () => {
+    let realms: RealmDef[] = get().realms;
+    try {
+      const rows = await gateApi.workspaces();
+      realms = realmsFromRegistry(rows);
+    } catch {
+      return;
+    }
+    const { session, realm } = get();
+    const next = realms.some((r) => r.id === realm) ? realm : realms[0].id;
+    const rebuilt = session ? { ...session, tenants: sessionFor(session.user.login, realms).tenants } : session;
+    if (rebuilt) saveSession(rebuilt);
+    set({ realms, session: rebuilt, realm: next });
+  },
+
   provision: (input) => {
-    const session = provisionWorkspace(input);
+    const realms = get().realms;
+    const session = provisionWorkspace(input, realms);
     saveSession(session);
     const slug = input.name.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/(^-|-$)/g, '');
     const realm = session.tenants.find((t) => t.realm === slug)?.realm ?? session.tenants[0]?.realm ?? 'work';
@@ -509,10 +579,9 @@ export const useYmir = create<YmirState>((set, get) => ({
     void get().loadLive();
   },
 
-  signOut: () => {
-    clearSession();
-    set({ session: null, live: null, query: '', agentsStatus: 'offline' });
-  },
+  // No signOut: the halls are local and there is no session to end (plan 275
+  // item 30). `clearSession` still exists in services/auth.ts for a machine that
+  // wants a clean seat; nothing in the UI offers it any more.
 
   setRealm: (realm) => {
     // Single tenant: switch freely between workspaces (work | personal | …).
@@ -746,10 +815,15 @@ export const useYmir = create<YmirState>((set, get) => ({
   applyAccent(a.accentId, a.customAccent, realmTintOf(useYmir.getState()));
 }
 
-// A persisted session boots straight into live mode.
-if (initialSession) void useYmir.getState().loadLive();
+  // A persisted session boots straight into live mode.
+if (initialSession) {
+  // Its realm list is the home's, not a stale copy: read it before the first paint
+  // wherever the gate answers, and let the shipped pair stand where it does not.
+  void useYmir.getState().loadRealms();
+  void useYmir.getState().loadLive();
+}
 
 export const currentRealmDef = () => {
-  const { realm } = useYmir.getState();
-  return realmDef(realm);
+  const { realm, realms } = useYmir.getState();
+  return realms.find((r) => r.id === realm) ?? realmDef(realm);
 };

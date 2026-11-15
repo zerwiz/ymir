@@ -349,6 +349,12 @@ cmd_close() {
   # rehearsal for the review close, and the one that frees the workspace of an
   # errand the arm is already holding for its handoff ack.
   seat_close "$id" close
+  # plan 293 part 4 — the close asks whether this was the LAST errand of a batch and, if it was,
+  # puts one line in the wake queue naming the finished ids and the exact gather command. The batch
+  # is whatever the meta records (`mode=batch`, same `wave`); no second registry is kept.
+  if grep -qx 'mode=batch' "$STATE/$id.meta" 2>/dev/null && [ -x "$ROOT/bin/forge/gather-notice.sh" ]; then
+    _gn="$(bash "$ROOT/bin/forge/gather-notice.sh" "$id" 2>&1)" && [ -n "$_gn" ] && say "$_gn"
+  fi
   say "closed $id → review (the verdict is Brokk/Forseti's, never the arm's)"
 }
 

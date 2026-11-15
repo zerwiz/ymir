@@ -218,6 +218,18 @@ if [ -r "$MP" ]; then
   printf 'open forge orders: %s\n' "${open:-0}"
 fi
 
+section "LANDING"
+# Plan 293 part 3 (2026-11-14). The audit of 36 panes found 22 worker branches pushed and clean, four
+# merged, and nothing anywhere in the session start said the rest were still waiting — while one
+# machine's local main held 19 commits that existed on no remote at all. A branch with no PR is work
+# nobody will review; a commit on no remote is work one disk away from being lost. Measured against
+# origin, read-only and time-bounded; offline is a clean sentence, never a hang.
+if [ -x "$SCRIPT_DIR/saga-land-warnings.sh" ]; then
+  bash "$SCRIPT_DIR/saga-land-warnings.sh" 2>/dev/null || printf 'landing: the warning door did not answer (bin/time/saga-land-warnings.sh --check says why)\n'
+else
+  printf 'landing: bin/time/saga-land-warnings.sh absent — branches with no PR and commits on no remote are unseen\n'
+fi
+
 section "CONTEXT DIGEST"
 emit_context() {  # <path> <label>
   local path=$1 label=$2

@@ -98,6 +98,12 @@ const IGNORED_DIRS = new Set([
   'node_modules', '.git', '.next', 'dist', 'build', 'out',
   '.cache', '__pycache__', '.venv', 'venv', '.tox',
   'target', 'coverage', '.nyc_output',
+  // Yggdrasil's worktree shelf: one directory per parallel checkout, and this
+  // machine had 198 of them inside the watched workspace. chokidar walked every
+  // one of them on the main thread at startup — 43 s of CPU, 1.5 GB RSS, and
+  // the compositor's "not responding" dialog on a window that had done nothing
+  // wrong (measured 2026-11-14). A file tree never shows this shelf.
+  '.yggdrasil',
 ])
 
 /**
@@ -163,6 +169,14 @@ export function isIgnoredHomeRootDirName(name: string, platform: NodeJS.Platform
 
 const WORKSPACE_ROOT_DEPTH = 0
 
+/**
+ * How long the disk watcher waits before its first walk. Long enough that the window
+ * has answered the compositor (the walk alone cost 43 s of main-thread CPU on this
+ * machine's workspace), short enough that nothing a person does in that breath is lost:
+ * `ignoreInitial` already means the walk reports no events for files that existed.
+ */
+const WATCH_START_DELAY_MS = 2500
+
 /** Log each watch error path at most once to avoid console floods. */
 const watchErrorLogged = new Set<string>()
 
@@ -226,6 +240,8 @@ export function buildNewFileDiff(relativePath: string, content: string): string 
 
 export class FileService {
   private watcher: FSWatcher | null = null
+  /** Pending delayed start of the watcher (see startWatching). */
+  private startTimer: ReturnType<typeof setTimeout> | null = null
   private workspacePath: string
   private readonly isHomeWorkspace: boolean
   private debounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -499,7 +515,19 @@ export class FileService {
    */
   startWatching(callback: FileChangeCallback): void {
     this.stopWatching()
+    // THE FIRST WALK WAITS FOR THE WINDOW (measured 2026-11-14). chokidar's setup
+    // walks the whole workspace on the main thread: on this machine that was 43 s of
+    // CPU and 1.5 GB RSS before the app had answered the compositor, and Hyprland put
+    // "Application not responding" on a window that had done nothing wrong. The walk
+    // is still needed; it is not what the first second should be spent on.
+    this.startTimer = setTimeout(() => {
+      this.startTimer = null
+      if (this.watcher) return
+      this.attachWatcher(callback)
+    }, WATCH_START_DELAY_MS)
+  }
 
+  private attachWatcher(callback: FileChangeCallback): void {
     this.watcher = watch(this.workspacePath, {
       ignored: (path) => this.isIgnoredPath(path),
       ignoreInitial: true,
@@ -554,6 +582,10 @@ export class FileService {
    * when no watcher is active.
    */
   stopWatching(): void {
+    if (this.startTimer) {
+      clearTimeout(this.startTimer)
+      this.startTimer = null
+    }
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer)
       this.debounceTimer = null

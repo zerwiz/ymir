@@ -223,7 +223,9 @@ seat_units() {
   # runs of Groa died here. Probe first; skip the root half with a named refusal and
   # still seat the operator's own brain timer below.
   if [ "$dry" = 1 ] || sudo -n true 2>/dev/null; then
-    sed "s|__YMIR_ROOT__|$unit_root|g" "$render/garmr-hound.service" \
+    # The hoard is the operator's, resolved on the machine that renders (a root-run hound has
+    # HOME=/root and no way to find it), so the unit carries a token and never one machine's home.
+    sed -e "s|__YMIR_ROOT__|$unit_root|g" -e "s|__YMIR_OPERATOR_HOME__|$HOME_DIR|g" "$render/garmr-hound.service" \
       | "${run[@]}" tee /etc/systemd/system/garmr-hound.service >/dev/null
     sed "s|__YMIR_ROOT__|$unit_root|g" "$render/garmr-arm.service" \
       | "${run[@]}" tee /etc/systemd/system/garmr-arm.service >/dev/null

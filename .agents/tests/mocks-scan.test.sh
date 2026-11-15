@@ -71,6 +71,37 @@ else
   ok "the fixture excuse stays narrow: a stub in the same tree is still caught"
 fi
 
+# ── a test's own fixtures are excused BY CLASS, and a stub beside them is still caught ──────────
+mkdir -p "$TMP/tree/bin/door/tests" "$TMP/tree/bin/other"
+printf 'stub = TMP / "answer_stub.py"\ntodo = seed()\nmsg = "a placeholder the assertion is about"\n' \
+  > "$TMP/tree/bin/door/tests/test_fixture.py"
+if bash "$SCAN" "$TMP/tree" >/dev/null 2>&1; then
+  ok "a test's fixtures are excused by class (bin/door/tests/)"
+else
+  bad "the tests-dir excuse was not applied: $(bash "$SCAN" "$TMP/tree" 2>&1 | head -n1)"
+fi
+printf 'handler = "stub - the real work is not here"\n' > "$TMP/tree/bin/other/door.sh"
+if bash "$SCAN" "$TMP/tree" >/dev/null 2>&1; then
+  bad "the tests-dir excuse leaked: a stub in a shipped door beside it was NOT caught"
+else
+  ok "the tests-dir excuse stays narrow: a stub outside tests/ is still caught"
+fi
+
+# ── the declared vocabulary files are excused, and a stub beside them is caught ─────────────────
+mkdir -p "$TMP/vocab/bin/records/tests" "$TMP/vocab/bin/records"
+printf 'p.add_argument("--todo")\n_todo_path = "todo-seen.json"\n' > "$TMP/vocab/bin/records/comms.py"
+if bash "$SCAN" "$TMP/vocab" >/dev/null 2>&1; then
+  ok "the ledger's own vocabulary (bin/records/comms.py) is excused"
+else
+  bad "the declared vocabulary file was reported: $(bash "$SCAN" "$TMP/vocab" 2>&1 | head -n1)"
+fi
+printf 'def door():\n    return "stub - not built yet"\n' > "$TMP/vocab/bin/records/other.py"
+if bash "$SCAN" "$TMP/vocab" >/dev/null 2>&1; then
+  bad "the vocabulary excuse leaked: a stub beside the declared file was NOT caught"
+else
+  ok "the vocabulary excuse stays narrow: a stub beside the declared file is still caught"
+fi
+
 # ── the excuses are narrow ──────────────────────────────────────────────────────────────────────
 printf 'x = "todo"\n' > "$TMP/narrow/bin/door/lone.py"
 printf 'def todo(action="list"):\n    pass\n' > "$TMP/narrow/bin/seat/ymir-mcp-extra.py"

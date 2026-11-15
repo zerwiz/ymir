@@ -21,7 +21,11 @@ import type { AvatarColor, AvatarShape, Toolkit } from './types.js';
 
 export const api = new Hono<AuthVars>();
 
-const SHAPES: AvatarShape[] = ['blob', 'pebble', 'bean', 'egg', 'squircle', 'tablet', 'capsule', 'cylinder', 'hex', 'gem', 'crystal', 'wedge', 'shield', 'dome', 'arch', 'cloud', 'teardrop', 'leaf', 'square', 'sparkle', 'clover', 'flower', 'heart', 'house', 'star'];
+/** The house's characters (plan 275): the Ymir mark first, then the fourteen figures. A new agent wears the mark. */
+const HOUSE_CHARACTERS: AvatarShape[] = ['ymir', 'huginn', 'fenrir', 'jormungandr', 'sleipnir', 'ratatoskr', 'hraesvelgr',
+  'heidrun', 'eikthyrnir', 'gullinbursti', 'mjolnir', 'gungnir', 'skidbladnir', 'sol', 'mani'];
+const SHAPES: AvatarShape[] = ['blob', 'pebble', 'bean', 'egg', 'squircle', 'tablet', 'capsule', 'cylinder', 'hex', 'gem', 'crystal', 'wedge', 'shield', 'dome', 'arch', 'cloud', 'teardrop', 'leaf', 'square', 'sparkle', 'clover', 'flower', 'heart', 'house', 'star',
+  ...HOUSE_CHARACTERS];
 const COLORS: AvatarColor[] = ['black', 'brown', 'red', 'orange', 'yellow', 'green', 'cyan', 'blue', 'violet', 'magenta', 'gray'];
 
 function hashPick<T>(id: string, list: T[]): T {
@@ -39,7 +43,7 @@ function createBot(userId: string, b: { name: string; label?: string; descriptio
   // Every bot needs a screen of its own on the one shared computer.
   if (agentCount() >= env.maxBots) throw new UserError(`The team is full: the computer has room for ${env.maxBots} bots. Remove one to add another.`);
   const id = newId('bot');
-  const shape = SHAPES.includes(b.avatarShape as AvatarShape) ? b.avatarShape : hashPick(id, SHAPES.slice(0, 13));
+  const shape = SHAPES.includes(b.avatarShape as AvatarShape) ? b.avatarShape : 'ymir';
   const color = COLORS.includes(b.avatarColor as AvatarColor) ? b.avatarColor : hashPick(id, COLORS.filter((c) => c !== 'black'));
   db.prepare(
     'INSERT INTO bots(id,user_id,name,label,description,instructions,avatar_shape,avatar_color,mode,is_primary,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
@@ -200,6 +204,8 @@ api.patch('/bots/:id', async (c) => {
   const b = ownBot(c.get('user').id, c.req.param('id'));
   if (!b) return c.json({ error: 'not found' }, 404);
   const p = await c.req.json();
+  if (p.avatarShape !== undefined && !SHAPES.includes(p.avatarShape)) return c.json({ error: `unknown character: ${String(p.avatarShape).slice(0, 40)}` }, 400);
+  if (p.avatarColor !== undefined && !COLORS.includes(p.avatarColor)) return c.json({ error: `unknown colour: ${String(p.avatarColor).slice(0, 40)}` }, 400);
   const cols: Record<string, string> = { name: 'name', label: 'label', description: 'description', instructions: 'instructions', avatarShape: 'avatar_shape', avatarColor: 'avatar_color', mode: 'mode', effort: 'effort', pinned: 'pinned', voice: 'voice', voiceSpeed: 'voice_speed', voiceLanguage: 'voice_language' };
   for (const [k, col] of Object.entries(cols)) {
     if (p[k] !== undefined) db.prepare(`UPDATE bots SET ${col}=?, updated_at=? WHERE id=?`).run(typeof p[k] === 'boolean' ? (p[k] ? 1 : 0) : p[k], now(), b.id);
@@ -272,6 +278,18 @@ api.post('/bots/:id/messages', async (c) => {
   // Any pending question card is answered by a free-text message.
   else enqueue(b.id, { type: 'user', text: text.trim() });
   return c.json({ row });
+});
+
+/** Like (or unlike) one of the agent's answers (plan 275). The mark lives on the message; the agent reads it in its instructions. */
+api.post('/bots/:id/rows/:seq/like', async (c) => {
+  const b = ownBot(c.get('user').id, c.req.param('id'));
+  if (!b) return c.json({ error: 'not found' }, 404);
+  const row = getRow(b.id, Number(c.req.param('seq')));
+  if (!row || row.body.type !== 'message' || row.body.role !== 'assistant') return c.json({ error: 'only an answer of the agent can be liked' }, 400);
+  const { liked } = await c.req.json<{ liked?: boolean }>().catch(() => ({ liked: true }));
+  updateRow(b.id, row.seq, { ...row.body, liked: liked !== false });
+  emitBot(b.id);
+  return c.json({ ok: true, liked: liked !== false });
 });
 
 api.post('/bots/:id/interrupt', (c) => {

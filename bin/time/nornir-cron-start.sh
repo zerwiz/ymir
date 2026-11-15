@@ -2,7 +2,8 @@
 # nornir-cron-start.sh - ensure Brokk's scheduled jobs are running (idempotent).
 #
 # Nornir are the fates who govern time. Jobs are declared in config/cron.yaml as
-# `HH:MM <command>` lines (one per line, `#` comments). This script keeps exactly
+# `HH:MM <command>` lines (one per line, `#` comments; `@hourly`, `@hourly:MM`,
+# `@daily` and `@every:N` are the other shapes). This script keeps exactly
 # one lightweight scheduler loop alive via state/cron.pid. The loop:
 #   * date-guards each job under state/.cron-fired/<job> so it runs once a day,
 #     even across a restarted loop;
@@ -153,6 +154,13 @@ at_valid() { # <at> -> 0 when the time token is a shape the scheduler understand
       case "$_m" in ''|*[!0-9]*) return 1 ;; esac
       [ "$_m" -le 59 ] 2>/dev/null && return 0
       return 1 ;;
+    @every:*)
+      # Every N minutes, aligned to the hour (:00, :05, …). Added 2026-11-13 for the
+      # auto-join clock: `@hourly` is too coarse to put a bot into a 30-minute meeting.
+      local _n="${1#@every:}"
+      case "$_n" in ''|*[!0-9]*) return 1 ;; esac
+      [ "$_n" -ge 1 ] 2>/dev/null && [ "$_n" -le 59 ] 2>/dev/null && return 0
+      return 1 ;;
     [01][0-9]:[0-5][0-9]|2[0-3]:[0-5][0-9]) return 0 ;;
   esac
   return 1
@@ -273,6 +281,10 @@ scheduler='
         @hourly)   stamp_key="$this_hour"; [ "${now#*:}" = "00" ] && fire=1 ;;
         @hourly:*) _want=$(printf "%02d" "${at#@hourly:}" 2>/dev/null)
                    stamp_key="$this_hour"; [ "${now#*:}" = "$_want" ] && fire=1 ;;
+        @every:*)  _n=$((10#${at#@every:}))
+                   _min=$((10#$(date +%M)))
+                   stamp_key="$this_hour/slot$((_min / _n))"
+                   [ $((_min % _n)) -eq 0 ] && fire=1 ;;
         @daily)    stamp_key="$today"; [ "$now" = "00:00" ] && fire=1 ;;
         *)         stamp_key="$today"; [ "$at" = "$now" ] && fire=1 ;;
       esac
@@ -368,7 +380,7 @@ _bad=$(
 if [ -n "$_bad" ]; then
   printf 'cron: WARNING — %s line(s) carry a schedule shape Nornir does not understand, and will NOT fire:\n' "$(printf '%s\n' "$_bad" | grep -c .)" >&2
   printf '%s\n' "$_bad" | sed 's/^/  /' >&2
-  printf 'cron: shapes are HH:MM · @hourly · @hourly:MM · @daily (after or before the @role gate)\n' >&2
+  printf 'cron: shapes are HH:MM · @hourly · @hourly:MM · @daily · @every:N (after or before the @role gate)\n' >&2
 fi
 unset _bad _l _p _at
 

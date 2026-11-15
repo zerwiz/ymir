@@ -10,7 +10,7 @@ The glyphs live in `midgard/design-system/icons/*.svg` (24×24 viewBox; render a
 bevel. The primary seat may add a 1px inner bevel via the `--ymir-bevel` token.
 
 ```
-icons[21]{glyph,name,unicode,figure,used_for}:
+icons[22]{glyph,name,unicode,figure,used_for}:
   "fehu","Fehu","ᚠ","Ymir (cattle/wealth)","Fleet — the herd of agents"
   "tiwaz","Tiwaz","ᛏ","Týr (justice)","Tasks — the A2A lifecycle board"
   "ingwaz","Ingwaz","ᛜ","Ing (the well)","Well — Mimirsbrunn recall"
@@ -30,7 +30,8 @@ icons[21]{glyph,name,unicode,figure,used_for}:
   "ratatoskr","Ratatoskr","ᛒ","the squirrel","Ratatoskr — the A2A bus"
   "mimirsbrunn","Mimirsbrunn","ᛜ","the well of wisdom","Mimirsbrunn — memory"
   "valhalla","Wunjo","ᚹ","joy","Valhalla — process health (the glyph ᚹ is drawn here)"
-  "gungnir","Gungnir","ᚦ","the Allfather's spear","Gungnir — skill synthesis"
+  "gungnir","Gungnir","ᚦ","the Allfather's spear","Gungnir — skill synthesis; Bilskirnir's app rune (Thor's hall)"
+  "laguz","Laguz","ᛚ","water, flow","Rödd — the voice that flows (its app rune)"
   "heimdall","Heimdall","ᚺ","the watchman","Heimdall — auth / the gate"
   "gjallarhorn","Gjallarhorn","ᚷ","the horn","Gjallarhorn — the tunnel and its call"
 ```

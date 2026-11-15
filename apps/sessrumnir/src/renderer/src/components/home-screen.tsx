@@ -135,7 +135,17 @@ export function HomeInfoSummary({ compact }: { compact?: boolean }): React.JSX.E
   }
 
   return (
-    <div className={clsx(busy && 'pointer-events-none opacity-60', compact && 'space-y-4', 'relative z-0')}>
+    <div
+      className={clsx(
+        busy && 'pointer-events-none opacity-60',
+        compact && 'space-y-4',
+        // `isolate` is the landing's half of the 2026-09-19 lesson (docs/fixes/sessrumnir):
+        // a canvas at -z-10 sinks BEHIND an ancestor's background unless its own node is
+        // a stacking context. .chat-center got that fix; the start interface never did, so
+        // the fire was drawn every frame into a layer nobody could see. Do not remove it.
+        'relative z-0 isolate'
+      )}
+    >
       {/* The hearth — the landing's fire-dots behind the high seat too */}
       <EmberBackground className="pointer-events-none absolute inset-0 -z-10" />
       <StatsPanel />
