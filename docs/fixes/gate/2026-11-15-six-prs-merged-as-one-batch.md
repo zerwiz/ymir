@@ -26,3 +26,6 @@ word they were merged locally into one branch, so the conflicts between them are
 
 `letter-design.py --self-test` passes; `defaults-guard.sh check` on the three files is clean; the whole gate
 (`bin/gates/ci-verify.sh`) runs on the batch before the PR is opened.
+- **The verdict store guessed the home too.** `bin/forge/merge-verdict.sh` and `bin/gates/gate-verdict.sh` (from
+  #747, already on `main`) read `${YMIR_HOME:-$HOME/Documents/ymirhome}`, which defaults-guard refuses. Both now ask
+  the resolver and refuse when no home resolves.
