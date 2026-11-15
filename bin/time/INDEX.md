@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[143]{file,does,kind,verdict,disposition,callers,lines}:
+bin[144]{file,does,kind,verdict,disposition,callers,lines}:
   "asana_adapter.py","bin/time/snotra/asana_adapter.py -> systems/snotra/services/cron/asana_adapter.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "audio-retention.sh","bin/time/snotra/audio-retention.sh -> systems/snotra/services/ear/audio-retention.sh — RETIRED SHIM","tool","wired","keep",0,12
   "brokk-wake-grant.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",0,128
@@ -55,6 +55,7 @@ bin[143]{file,does,kind,verdict,disposition,callers,lines}:
   "meeting-record-guard.sh","bin/time/snotra/meeting-record-guard.sh -> systems/snotra/services/approve/meeting-record-guard.sh — RETIRED SHIM (plan 129, 2026-10-24); e…","tool","wired","keep",0,16
   "monday_adapter.py","bin/time/snotra/monday_adapter.py -> systems/snotra/services/cron/monday_adapter.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "nornir-cron-start.sh","nornir-cron-start.sh - ensure Brokk's scheduled jobs are running (idempotent).","tool","tested","keep",8,416
+  "nornir-job-agnostic-audit.sh","nornir-job-agnostic-audit.sh — is what we PUBLISHED still free of the words the operator refuses to publish?","tool","wired","keep",0,96
   "nornir-job-asken-handoff.sh","nornir-job-asken-handoff.sh — the rollover, on the schedule.","tool","wired","keep",0,63
   "nornir-job-bragi-scrape.sh","nornir-job-bragi-scrape.sh — Bragi, on the loom: the scheduled scrape round.","tool","wired","keep",0,154
   "nornir-job-daily-briefing.sh","nornir-job-daily-briefing.sh - the 07:00 Sága daily seeing.","tool","wired","keep",1,256
@@ -80,7 +81,7 @@ bin[143]{file,does,kind,verdict,disposition,callers,lines}:
   "readai_ingest.py","bin/time/snotra/readai_ingest.py -> systems/snotra/services/cron/readai_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "reasoning_adapter.py","bin/time/snotra/reasoning_adapter.py -> systems/snotra/services/cron/reasoning_adapter.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "saga-land-warnings.sh","saga-land-warnings.sh — Sága's eye on work that finished and never landed.","tool","wired","keep",2,311
-  "saga-session-start.sh","saga-session-start.sh - the one-command Brokk session start.","tool","tested","keep",8,360
+  "saga-session-start.sh","saga-session-start.sh - the one-command Brokk session start.","tool","tested","keep",9,360
   "saga-sessionstart-run.sh","saga-sessionstart-run.sh - session-open entry point for run-tier harnesses.","tool","wired","keep",0,91
   "saga-wake-drain.sh","saga-wake-drain.sh - present durable Brokk wakes, or acknowledge them.","tool","wired","keep",9,151
   "smoke.sh","bin/time/snotra/smoke.sh -> systems/snotra/tests/smoke.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and says so.","tool","tested","keep",7,16
@@ -166,6 +167,6 @@ bin[143]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-say.sh","bin/time/snotra/ymir-say.sh -> systems/snotra/services/tts-lease/ymir-say.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and…","tool","wired","keep",8,16
   "zoom_ingest.py","bin/time/snotra/zoom_ingest.py -> systems/snotra/services/cron/zoom_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
 
-**Tally.** verdict: wired=134, tested=9
+**Tally.** verdict: wired=135, tested=9
 
-**Tally.** disposition: keep=143
+**Tally.** disposition: keep=144
