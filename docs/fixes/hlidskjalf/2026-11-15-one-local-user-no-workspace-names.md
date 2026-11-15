@@ -23,3 +23,7 @@ code: an older build's setup step added whatever name was typed as a workspace, 
 `tsc --noEmit` clean, and no unused locals in the touched files. The worktree's build was served on a spare loopback port
 and opened headless: Profile shows Personal and Company only; Fleet reads "7/31 agents standing · 1 working · A2A 1.0
 cards published"; the search reads "Search the house…".
+
+## CHANGE LOG
+
+- 2026-11-15 — review-mend: added missing heading for #773
