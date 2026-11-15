@@ -57,3 +57,7 @@ rather than the product, and the `.excalidraw` extension, which boards already s
 
 `docs/fixes/extensions/` is the extension surface's history; the naming law is plan 284 §21, and the board's own
 repository is `zerwiz/gimle-whiteboard` pinned by tag in the Gimlé kit.
+
+## CHANGE LOG
+
+- 2026-11-15 — review-mend: added missing heading for #776
