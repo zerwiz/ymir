@@ -52,3 +52,7 @@ repository's own law is not a standardisation, it is a raid.
 - **It does not touch the code.** No pipeline, no build, no dependency.
 - **It does not enforce anything on GitHub.** Branch protection is unavailable on this plan (`403: Upgrade to GitHub Pro`), so the
   enforcement is the hooks — which means a clone without `core.hooksPath` set is unprotected, and the installer sets it.
+
+## CHANGE LOG
+
+- 2026-11-15 — review-mend: added missing heading for #774
