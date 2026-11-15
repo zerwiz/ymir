@@ -14,7 +14,7 @@ error: <id> is NOT seated — do not steer pane …
 exit 3
 ```
 
-Measured at exactly that moment: `2086134` was alive, cwd `/home/heimdall/ymir/.yggdrasil/skuld-one-surface`, queued behind
+Measured at exactly that moment: `2086134` was alive, cwd `~/ymir/.yggdrasil/skuld-one-surface`, queued behind
 `1305131` (a `pi` in `sindri-mw5ndywa` holding the lock). **A live worker was reported as a dead one**, and the operator
 was told not to steer the errand that was about to begin — which is the worst possible advice, because the correct action
 was to wait.
@@ -46,3 +46,12 @@ spawn still prints `UNPROVEN` and still exits 3.
   because a waiting worker's cmdline carries the **lock's** name, `local-model.lock`. Corrected to
   `local-model[.-]lock` before the branch was offered; recorded here rather than edited away, because the first cut would
   have shipped a probe that could never see a queue.
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: a dev machine (this seat). The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).

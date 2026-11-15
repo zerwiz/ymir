@@ -124,6 +124,25 @@ def _slug(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
 
 
+def _bearings(roots: paths.Roots, project_dir: str, *, runner: proc.Runner) -> str:
+    """The Bearings section every brief carries (plan 291 part 2).
+
+    ONE implementation is asked for it — `bin/agents/eindri-bearings.sh` — so the shell road and
+    this one can never print two different cores. A door that cannot answer is SAID here, never
+    silently dropped: a brief without its core is a brief nobody can check.
+    """
+    door = roots.root / "bin" / "agents" / "eindri-bearings.sh"
+    if not door.is_file():
+        return ("## Bearings\n\n> The bearings door is missing (`bin/agents/eindri-bearings.sh`), so this "
+                "brief carries no core, no records and no map. The seat is recorded with that fault.")
+    result = runner([str(door), str(project_dir)])
+    out = proc.out(result) if proc.ok(result) else ""
+    if not out.strip():
+        return ("## Bearings\n\n> The bearings could not be read from `bin/agents/eindri-bearings.sh` for "
+                f"`{project_dir}`. The brief goes out without its core, and that is recorded.")
+    return out.strip()
+
+
 def _prompt_for(
     roots: paths.Roots,
     errand: Errand,
@@ -132,7 +151,7 @@ def _prompt_for(
     *,
     runner: proc.Runner,
 ) -> tuple[Path, str]:
-    """Write `data/<id>/prompt.md`: the brief plus the well's recall."""
+    """Write `data/<id>/prompt.md`: the bearings, the brief, and the well's recall."""
     data_dir = roots.data / seat_id
     data_dir.mkdir(parents=True, exist_ok=True)
     prompt = data_dir / "prompt.md"
@@ -148,6 +167,10 @@ def _prompt_for(
         if proc.ok(recall):
             recalled = (recall.stdout or "").strip()
     body = brief_text.rstrip("\n") + "\n"
+    # The bearings are PREPENDED, so they are read before the errand — and only when the brief does
+    # not already carry them (eindri-start.sh adds the same section on the ordinary road).
+    if "eindri-bearings:v1" not in body:
+        body = _bearings(roots, str(errand.project_dir or roots.root), runner=runner) + "\n\n---\n\n" + body
     if recalled:
         body += "\n\n---\n\n## Recalled context (the well — Mimirsbrunn)\n\n" + recalled + "\n"
     prompt.write_text(body, encoding="utf-8")

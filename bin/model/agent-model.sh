@@ -6,7 +6,7 @@
 # computers have different models and capabilities.. are we shipping hardcoded models?"* — yes,
 # we were. Nine shipped scripts named a model id (`opencode-go/deepseek-v4.1-flash`,
 # `llamacpp-3050-big/…`), and an id that is true on one machine is a promise another cannot keep:
-# `llamacpp-3050-big` exists on nidavellir and nowhere else. The house already had the truth —
+# a provider alias exists on one machine and nowhere else. The house already had the truth —
 # `bin/model/catalog.sh` — and the shipped code went around it.
 #
 # THE ORDER OF AUTHORITY, stated once, resolved here and nowhere else:

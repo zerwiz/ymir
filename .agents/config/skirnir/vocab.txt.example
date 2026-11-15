@@ -1,0 +1,16 @@
+# vocab.txt.example — the words the ear should expect to hear.
+#
+# Copy to `$YMIR_HOME/config/skirnir/vocab.txt`. One term per line; `#` starts a comment and blank
+# lines are ignored. This is a hint for the speech recogniser, never a private fact: put in it the
+# names a general model has never seen — your clients, your companies, your products, your trade's
+# nouns.
+#
+# WHY IT LIVES IN THE HOME (plan 288 §1, RULES/42): a client's name is personal data, and a public
+# repository that lists it publishes it to every clone. The repository ships only the house's own
+# names as its default.
+#
+# Read by:  systems/skirnir/services/ear.sh
+
+Acme
+Harbour
+ventilation inspection

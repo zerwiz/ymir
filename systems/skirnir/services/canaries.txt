@@ -15,4 +15,3 @@ the-assistant
 llama-swap
 GARMR_NTFY_TOKEN
 TELEGRAM_BOT_TOKEN
-zerwizserver

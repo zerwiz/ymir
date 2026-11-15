@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # learn.sh — a fact learned in conversation, waiting for the Allfather's approval.
 #
-#   bin/assistant/learn.sh --tier owner --chat 123 --fact "Andre prefers email on weekdays"
+#   bin/assistant/learn.sh --tier owner --chat 123 --fact "Blake prefers email on weekdays"
 #
 # Nothing a stranger says becomes knowledge by being said: the fact lands in `pending/` with its
 # provenance, and a notification asks the Allfather to approve it. Approving runs `approve-fact.sh`,

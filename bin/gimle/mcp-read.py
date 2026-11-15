@@ -64,7 +64,7 @@ TOOLS = [
     {"name": "create_card",
      "description": "File a ticket into one place on the board. Refused by name when the place does not resolve or is outside this token's scope, and refused outright while the server runs read-only.",
      "inputSchema": {"type": "object", "required": ["place", "title"],
-                     "properties": {"place": {"type": "string", "description": "the place, e.g. Ymir or whynotproductions/Ymir"},
+                     "properties": {"place": {"type": "string", "description": "the place, e.g. Ymir or example-house/Ymir"},
                                     "title": {"type": "string"},
                                     "description": {"type": "string", "description": "plain text — the evidence, the plan number, the address of the file"},
                                     "state": {"type": "string", "description": "the state name to open in (default the project's first state)"}},
@@ -402,7 +402,7 @@ def result(payload, is_error=False):
 def allowed(visible: list, place: dict) -> bool:
     """Is this place among the ones the token resolved to? Scope by identity, never by string prefix.
 
-    A token says `Ymir`; the board's place is `whynotproductions/Ymir`. Prefix matching refused the
+    A token says `Ymir`; the board's place is `example-house/Ymir`. Prefix matching refused the
     caller's own place (measured 2026-11-07), so the resolved ids are compared instead.
     """
     return any(v["id"] == place["id"] for v in visible)

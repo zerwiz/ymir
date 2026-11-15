@@ -5,7 +5,7 @@
 #   bin/voice/echo-cancel.sh stop      lower it (only its own process; nothing else is touched)
 #   bin/voice/echo-cancel.sh status    up · the source name · the process
 #
-# WHY (measured on heimdall, 2026-11-12). Rödd shares the built-in microphone with the built-in speakers. A video in
+# WHY (measured on the dev machine, 2026-11-12). Rödd shares the built-in microphone with the built-in speakers. A video in
 # the browser and the Discord call on those speakers were heard as speech: 743 turns started in one evening and every
 # answer was cancelled ("speech during response"). The browser's own echo canceller removes only Rödd's own voice, not
 # another program's sound.

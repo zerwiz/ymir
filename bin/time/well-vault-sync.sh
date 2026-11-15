@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# well-vault-sync.sh — Kaia's memory across the Allfather's machines.
+# well-vault-sync.sh — Völundr's memory across the Allfather's machines.
 #
 # One memory, one vault. The well's DURABLE artifact is the append log
 # (`hodd/memory/well/episodes.jsonl`) — text, append-only, and unionable. The
@@ -61,7 +61,7 @@ do_push() {
   if git diff --cached --quiet; then say "well-vault-sync: nothing new in the well"; return 0; fi
   if [ "$DRY" = 1 ]; then git diff --cached --stat | tail -1; return 0; fi
   git -c user.name="Brokk" -c user.email="brokk@ymir.local" \
-      commit -m "well: Kaia's memory, checkpointed and riding the vault" >/dev/null 2>&1 \
+      commit -m "well: Völundr's memory, checkpointed and riding the vault" >/dev/null 2>&1 \
     || { say "well-vault-sync: commit failed"; return 1; }
   if ! git push origin "$BRANCH" >/dev/null 2>&1; then
     say "well-vault-sync: push failed (non-fast-forward?) — run --mode pull first"

@@ -45,3 +45,16 @@ only drafts, and `ship` refuses a path with nothing at it.
 Measured live on 2026-11-01: `who` reproduces the hand audit in ~2.5 s (6 gate accounts entered, 0 remote
 sign-ins, 0 second factors, 0 forge keys); `init --check` on `Inmost-ControlTower` finds its own
 `mix ct.handoff` checker and passes.
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: a client of the house · the fleet's always-on heart. The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #758

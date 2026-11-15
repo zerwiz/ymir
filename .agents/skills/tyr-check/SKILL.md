@@ -104,7 +104,7 @@ Ymir's content-first approach:
 Ymir's contextual disclosure patterns:
 - After open item → suggest closing (e.g., "Run `tasks close <id>`")
 - After empty list → suggest creating (e.g., "No plans found. ADD: <ledger>/<NN>-<name>.md")
-- After list → suggest viewing (e.g., "View plan: svartalfaheim/whynotproductions/workspace/ymir/plans/25-ratatoskr-a2a.md")
+- After list → suggest viewing (e.g., "View plan: svartalfaheim/<realm>/workspace/ymir/plans/25-ratatoskr-a2a.md")
 - Suggestions use placeholders: <id>, <title>, not concrete values
 - Guide discovery, not prescribed workflows
 

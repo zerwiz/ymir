@@ -16,7 +16,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)"
 ENGINE="$SCRIPT_DIR/skirnir.py"
 DOOR="$SCRIPT_DIR/research.py"
-QUERY="OVK ventilation Boverket requirements"
+QUERY="EU energy performance certificate requirements"
 MODEL="${SKIRNIR_MODEL:-}"
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -94,7 +94,7 @@ esac
 ask() { SKIRNIR_MODEL="$MODEL" python3 "$ENGINE" --tier "${2:-owner}" --channel "${3:-console}" \
         --text "$1" 2>/dev/null; }
 
-R="$(ask 'look up what an OVK inspection requires in Sweden' owner)"
+R="$(ask 'look up what an energy performance certificate requires' owner)"
 intent="$(printf '%s' "$R" | jget "d.get('intent','')")"
 answer="$(printf '%s' "$R" | jget "d.get('answer','')")"
 case "$intent" in
@@ -107,16 +107,23 @@ case "$answer" in
   *) pass "no link reached the answer" ;;
 esac
 case "$answer" in
-  *"open web"*|*Boverket*|*Wikipedia*) pass "he says where it came from" ;;
+  *"open web"*|*Wikipedia*|*"according to"*) pass "he says where it came from" ;;
   *) fail "he says where it came from" "$answer" ;;
 esac
-case "$answer" in
-  *"Craig Martin"*|*Andre*|*Isabella*|*Reygan*) fail "no private name rode along" "$answer" ;;
-  *) pass "no private name rode along" ;;
-esac
+# the names are the OPERATOR's, taken from his home at run time — a name in this public file would be
+# the very leak this check exists to stop (plan 288 §1)
+leaked=""
+while IFS= read -r _name; do
+  [ -n "$_name" ] || continue
+  case "$answer" in *"$_name"*) leaked="$_name"; break ;; esac
+done <<NAMES
+$(bash "$SCRIPT_DIR/test-fixtures.sh" names 2>/dev/null)
+NAMES
+[ -z "$leaked" ] && pass "no private name rode along" \
+  || fail "no private name rode along" "a registered name rode along"
 
 # ── 3 · the door is the Allfather's alone ───────────────────────────────────────────────────────
-S="$(ask 'look up what an OVK inspection requires in Sweden' stranger)"
+S="$(ask 'look up what an energy performance certificate requires' stranger)"
 sintent="$(printf '%s' "$S" | jget "d.get('intent','')")"
 sanswer="$(printf '%s' "$S" | jget "d.get('answer','')")"
 case "$sanswer" in
@@ -124,7 +131,7 @@ case "$sanswer" in
   *) fail "a stranger is refused" "$sanswer" ;;
 esac
 case "$sanswer" in
-  *Boverket*|*"certified inspector"*) fail "a stranger got web content" "$sanswer" ;;
+  *"energy"*|*"certificate"*|*"efficiency"*) fail "a stranger got web content" "$sanswer" ;;
   *) pass "a stranger gets no web content" ;;
 esac
 
@@ -137,7 +144,7 @@ uintent="$(printf '%s' "$U" | jget "d.get('intent','')")"
 # ── 5 · the mouth, if a model is named ─────────────────────────────────────────────────────────
 if [ -n "$MODEL" ]; then
   M="$(SKIRNIR_MODEL="$MODEL" python3 "$ENGINE" --tier owner --channel console \
-        --text 'look up what an OVK inspection requires in Sweden' 2>/dev/null)"
+        --text 'look up what an energy performance certificate requires' 2>/dev/null)"
   manswer="$(printf '%s' "$M" | jget "d.get('answer','')")"
   case "$manswer" in
     "") fail "the model phrased the research answer" "empty" ;;

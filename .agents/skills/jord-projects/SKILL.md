@@ -33,6 +33,22 @@ Resolve the project name, destination, delivery posture, and autonomy posture be
 Keep a newly added clone and its registry entry consistent, and roll back only artifacts created by the incomplete operation when a later initialization step fails and that rollback is safe.
 Do not overwrite or repurpose an existing path.
 
+## Records, and the worktree a worker sits in
+
+Every project the house sends workers to declares two optional blocks in the master registry
+(`hodd/identity/projects.yaml`); `project add` asks for both, and the shape ships in
+`registry/projects.yaml.example`:
+
+- **`records:`** — where the project's documents live: `in_repo` (decisions, handoff, schedule,
+  plans, plan_status, docs_index), `in_home` (meetings, seat), `boards`, and `merges` (who seals a
+  merge). `bin/agents/eindri-bearings.sh` prints it into every errand's brief, with the duty read
+  before you write, update before your report. Add a project without a block only when it has no
+  records yet — the bearings then say so plainly rather than inventing a path.
+- **`worktree:`** — the project's OWN convention for where a worker sits (`command`, `path`,
+  `branch`, each with `{id}`). An errand sent to a project that is not Ymir is seated in THAT
+  project's repository, in a worktree made by this convention; without it the default is
+  `git worktree add -b eindri/<id> <clone>/.yggdrasil/<id>` (`bin/agents/project-target.sh`).
+
 ## Delivery posture
 
 The registry records the project's standing posture, which is the Allfather's default for the work rather than any task's answer; `AGENTS.md` section 7 owns how each task's concrete mode and yolo are resolved at intake and passed explicitly to the brief, the spawn, and any promotion.

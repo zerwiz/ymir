@@ -9,6 +9,15 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 G="$ROOT/bin/forge/gather.sh"
 T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
 export HOME="$T/home"; mkdir -p "$HOME"
+# plan 290 §3: a gather pushes only to a repository the operator's registry claims, from a machine the fleet names.
+# The planted origin is "$T/origin.git", so its owner/repo is "<basename $T>/origin"; the planted home claims it.
+export YMIR_HOME="$T/ymirhome"; mkdir -p "$YMIR_HOME/hodd/identity" "$YMIR_HOME/hodd/data"
+cat >"$YMIR_HOME/hodd/identity/projects.yaml" <<YAML
+projects:
+- id: planted
+  git: { host: local, owner: $(basename "$T"), repo: origin, remote: origin, default_branch: main, auth: none }
+YAML
+printf '{"heart": "%s", "hosts": {"%s": {"roles": ["dev"]}}}\n' "$(hostname)" "$(hostname)" >"$YMIR_HOME/hodd/data/fleet.json"
 pass=0; fail=0
 ok()  { pass=$((pass+1)); printf 'ok   %s\n' "$1"; }
 bad() { fail=$((fail+1)); printf 'FAIL %s\n' "$1"; }

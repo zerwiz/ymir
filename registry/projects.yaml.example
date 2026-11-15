@@ -11,5 +11,37 @@
 #
 # Optional: `client: <client-id>` names a client from clients.yaml that this
 # project serves (plan 128).
+#
+# ─── RECORDS ────────────────────────────────────────────────────────────────────────────────
+# `records:` says WHERE this project's documents live, so a worker sent to it reads them before
+# writing and updates them before its report (plan 291 part 2; the bearings every brief carries,
+# bin/agents/eindri-bearings.sh). It is not documentation: it is four kinds of place, each a key
+# a reader can name. A project with no block still works — its bearings say so plainly and name
+# the row to add — but every project the house sends workers to should carry one.
+#
+#   records:
+#     in_repo:                       # paths inside the project's own repository
+#       decisions: docs/DECISIONS.md #   what was decided and why
+#       handoff: handoff/CURRENT.md  #   where the next session starts
+#       schedule: docs/SCHEDULE.md   #   what is due when
+#       plans: plans/                #   the plan ledger
+#       plan_status: <command>       #   the door that prints plan state, when one exists
+#       docs_index: docs/INDEX.md    #   the index before the shelf
+#     in_home:                       # paths inside the private home ($YMIR_HOME)
+#       meetings: svartalfaheim/<realm>/meetings/
+#       seat: svartalfaheim/<realm>/projects/<project>
+#     boards:                        # where the work is tracked
+#       development: <board url>
+#     merges: <who merges>           # a worker opens; this hand seals
+#
+# ─── WORKTREE ───────────────────────────────────────────────────────────────────────────────
+# `worktree:` is the project's OWN convention for where a worker sits, used when an errand names
+# this project and the project is not Ymir itself (plan 291 part 3). Without it the default is
+# `git worktree add -b eindri/<id> <clone>/.yggdrasil/<id>`.
+#
+#   worktree:
+#     command: scripts/worktree.sh new {id}   # optional: the project's own maker, run in the clone
+#     path: .yggdrasil/{id}                   # where the worktree lands, relative to the clone
+#     branch: agent/{id}                      # the branch it stands on
 
 projects: []

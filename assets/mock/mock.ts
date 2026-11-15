@@ -34,15 +34,15 @@ export function seedAgents(realm: RealmId): AgentCard[] {
       traceability: 0.984,
     },
     {
-      id: 'kaia',
-      name: 'Kaia',
-      role: 'Orchestrator — the eye by the well',
+      id: 'volundr',
+      name: 'Völundr',
+      role: 'Master of the smiths — the eye by the well',
       realm: 'way-of',
       house: 'muninn',
       status: 'nominal',
       capabilities: ['recall', 'dispatch', 'veil', 'memory'],
       skills: ['a2a-bridge', 'tyr-check', 'workspace_rag'],
-      interface: { protocol: 'A2A 1.0', endpoint: 'local://kaia', signed: true },
+      interface: { protocol: 'A2A 1.0', endpoint: 'local://volundr', signed: true },
       model: 'hermes-3-8b',
       uptime: 41 * 60 * min,
       tasksDone: 96,
@@ -112,7 +112,7 @@ export function seedAgents(realm: RealmId): AgentCard[] {
 
   // Re-scope the platform Eindri to the active realm, and swap the primary house.
   return base.map((a) =>
-    a.id === 'brokk' || a.id === 'kaia'
+    a.id === 'brokk' || a.id === 'volundr'
       ? { ...a, realm, house: realm === 'zerwiz' ? 'muninn' : realm === 'craig' ? 'brokkforge' : a.house }
       : { ...a, realm },
   );
@@ -162,14 +162,14 @@ export function seedTasks(realm: RealmId): Task[] {
       title: 'Workspace provisioner — idempotent first-login bootstrap',
       state: 'SUBMITTED',
       realm,
-      agent: 'Kaia',
-      agentId: 'kaia',
+      agent: 'Völundr',
+      agentId: 'volundr',
       order: 'W0029',
       progress: 0,
       startedAt: iso(3 * min),
       updatedAt: iso(3 * min),
       artifacts: [],
-      log: ['submitted by Kaia', 'veil verdict: grounded (0.88) — dispatch approved'],
+      log: ['submitted by Völundr', 'veil verdict: grounded (0.88) — dispatch approved'],
     },
     {
       id: 'tsk-2ae4',
@@ -208,8 +208,8 @@ export function seedTasks(realm: RealmId): Task[] {
       title: 'Runes ledger — append-strict JSONL carver',
       state: 'WORKING',
       realm,
-      agent: 'Kaia',
-      agentId: 'kaia',
+      agent: 'Völundr',
+      agentId: 'volundr',
       order: 'W0005',
       progress: 88,
       startedAt: iso(70 * min),
@@ -252,15 +252,15 @@ export function seedTasks(realm: RealmId): Task[] {
 export function seedRunes(realm: RealmId): RuneEntry[] {
   const rows: Omit<RuneEntry, 'realm'>[] = [
     { id: 'run-001', ts: iso(20_000), agent: 'Eindri-01', module: 'hlidskjalf', event: 'shell.grid.ported', checksum: 'a91f3c', order: 'W0026', level: 'ok' },
-    { id: 'run-002', ts: iso(45_000), agent: 'Kaia', module: 'mimirsbrunn', event: 'recall.hybrid 3 hits', checksum: '7c0d22', order: 'W0004', level: 'info' },
+    { id: 'run-002', ts: iso(45_000), agent: 'Völundr', module: 'mimirsbrunn', event: 'recall.hybrid 3 hits', checksum: '7c0d22', order: 'W0004', level: 'info' },
     { id: 'run-003', ts: iso(70_000), agent: 'Eindri-02', module: 'ratatoskr', event: 'card.published eindri-02', checksum: 'b4e881', order: 'W0008', level: 'ok' },
     { id: 'run-004', ts: iso(120_000), agent: 'Eindri-04', module: 'utgard', event: 'cgroup.denied', checksum: 'ff19aa', order: 'W0002', level: 'danger' },
     { id: 'run-005', ts: iso(160_000), agent: 'Brokk', module: 'yggdrasil', event: 'worktree.merge agent/eindri-03', checksum: '2019d7', order: 'W0001', level: 'ok' },
-    { id: 'run-006', ts: iso(200_000), agent: 'Kaia', module: 'runes', event: 'ledger.append strict', checksum: '6ea4b0', order: 'W0005', level: 'info' },
+    { id: 'run-006', ts: iso(200_000), agent: 'Völundr', module: 'runes', event: 'ledger.append strict', checksum: '6ea4b0', order: 'W0005', level: 'info' },
     { id: 'run-007', ts: iso(260_000), agent: 'Eindri-02', module: 'heimdall', event: 'jwt.session issued', checksum: '93bf55', order: 'W0028', level: 'info' },
     { id: 'run-008', ts: iso(320_000), agent: 'Brokk', module: 'valhalla', event: 'pm2 reload ymir-gate', checksum: 'd07c13', order: 'W0019', level: 'warn' },
     { id: 'run-009', ts: iso(400_000), agent: 'Eindri-03', module: 'mimirsbrunn', event: 'observe episode 128', checksum: '1ab9ef', order: 'W0004', level: 'ok' },
-    { id: 'run-010', ts: iso(520_000), agent: 'Kaia', module: 'veil', event: 'verdict grounded 0.88', checksum: '5dd201', order: 'W0006', level: 'ok' },
+    { id: 'run-010', ts: iso(520_000), agent: 'Völundr', module: 'veil', event: 'verdict grounded 0.88', checksum: '5dd201', order: 'W0006', level: 'ok' },
     { id: 'run-011', ts: iso(640_000), agent: 'Eindri-01', module: 'gungnir', event: 'skill forged tyr-check', checksum: 'e3c790', order: 'W0007', level: 'ok' },
     { id: 'run-012', ts: iso(760_000), agent: 'Brokk', module: 'bifrost', event: 'route /files → skrymir', checksum: '88aa12', order: 'W0017', level: 'info' },
   ];
@@ -269,14 +269,14 @@ export function seedRunes(realm: RealmId): RuneEntry[] {
 
 export function seedStream(realm: RealmId): StreamEvent[] {
   const s: Omit<StreamEvent, 'realm' | 'id'>[] = [
-    { ts: iso(8_000), kind: 'ratatoskr', from: 'Eindri-01', to: 'Kaia', taskId: 'tsk-7f1a', state: 'WORKING', message: 'shell grid ported — 236px rail, 56px topbar', checksum: 'a91f3c' },
+    { ts: iso(8_000), kind: 'ratatoskr', from: 'Eindri-01', to: 'Völundr', taskId: 'tsk-7f1a', state: 'WORKING', message: 'shell grid ported — 236px rail, 56px topbar', checksum: 'a91f3c' },
     { ts: iso(12_000), kind: 'rune', from: 'Eindri-01', module: 'hlidskjalf', message: 'shell.grid.ported', checksum: 'a91f3c' },
     { ts: iso(30_000), kind: 'ratatoskr', from: 'Eindri-02', to: 'Brokk', taskId: 'tsk-b731', state: 'WORKING', message: 'agent-card.json published, JWS signed', checksum: 'b4e881' },
-    { ts: iso(55_000), kind: 'ratatoskr', from: 'Kaia', to: 'Eindri-03', taskId: 'tsk-2ae4', state: 'COMPLETED', message: 'recall loop complete — 3 episodes', checksum: '7c0d22' },
+    { ts: iso(55_000), kind: 'ratatoskr', from: 'Völundr', to: 'Eindri-03', taskId: 'tsk-2ae4', state: 'COMPLETED', message: 'recall loop complete — 3 episodes', checksum: '7c0d22' },
     { ts: iso(90_000), kind: 'rune', from: 'Eindri-04', module: 'utgard', message: 'cgroup.denied', checksum: 'ff19aa' },
-    { ts: iso(140_000), kind: 'ratatoskr', from: 'Kaia', to: 'Brokk', taskId: 'tsk-91b0', state: 'SUBMITTED', message: 'dispatch approved — veil 0.88', checksum: '1c9f44' },
+    { ts: iso(140_000), kind: 'ratatoskr', from: 'Völundr', to: 'Brokk', taskId: 'tsk-91b0', state: 'SUBMITTED', message: 'dispatch approved — veil 0.88', checksum: '1c9f44' },
     { ts: iso(210_000), kind: 'rune', from: 'Brokk', module: 'valhalla', message: 'pm2 reload ymir-gate', checksum: 'd07c13' },
-    { ts: iso(300_000), kind: 'ratatoskr', from: 'Eindri-04', to: 'Kaia', taskId: 'tsk-6d12', state: 'FAILED', message: 'cgroup write denied — sandbox destroyed', checksum: 'ff19aa' },
+    { ts: iso(300_000), kind: 'ratatoskr', from: 'Eindri-04', to: 'Völundr', taskId: 'tsk-6d12', state: 'FAILED', message: 'cgroup write denied — sandbox destroyed', checksum: 'ff19aa' },
   ];
   return s.map((x, i) => ({ ...x, id: `evt-${i}`, realm }));
 }
@@ -400,6 +400,7 @@ export function seedSkills(): SkillDef[] {
 }
 
 export function seedChat(): ChatMessage[] {
+  // 'kaia' is the chat's stored role value (kept on every row already written); it renders as Völundr.
   return [
     { id: 'm1', from: 'kaia', body: 'Well is warm. 128 episodes observed. What are we forging?', ts: iso(4 * 60 * min) },
     { id: 'm2', from: 'user', body: 'Build out the Hlidskjalf frontend so I can see it on localhost.', ts: iso(3 * 60 * min) },

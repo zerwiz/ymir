@@ -26,7 +26,7 @@ made, and the gate that should have caught it learns the one case it could not n
 
 ### The fault, reproduced (measured this seat, 2026-10-24)
 
-`~/.pi/agent/settings.json` named the seat tree (`/home/heimdall/ymir/.pi/extensions`)
+`~/.pi/agent/settings.json` named the seat tree (`~/ymir/.pi/extensions`)
 until 11:26 today; that is the state the fault needs. With it in place, a fresh worktree
 of the old road carries its own copy:
 
@@ -82,7 +82,7 @@ home and must pass on its own terms.
 
 ```
 ext-home[1]{tree,state,seat_root,serving}:
-  "…/.yggdrasil/sparse-proof/.pi/extensions","shared","/home/heimdall/ymir","/home/heimdall/ymir/.pi/extensions"
+  "…/.yggdrasil/sparse-proof/.pi/extensions","shared","~/ymir","~/ymir/.pi/extensions"
 ```
 
 `.agents/tests/pi-extensions.test.sh` section 8 proves it hermetically — a scratch
@@ -131,3 +131,16 @@ extensions would, once sparse-checked-out, no longer recognise its own worktree 
 resolve to the seat root instead. The real tree keeps `.pi/agents`, `.pi/shared` and
 `.pi/mcp-adapter.json` there, so the walk is sound here; the test's fixture mirrors that
 shape deliberately, and the walk is not changed by this fix.
+
+## Correction 2026-11-14 — the machine and person names above are roles
+
+Under the agnostic law (`AGENTS.md`, `RULES/04`, `RULES/25`) the machine and person names above are
+read as roles: a dev machine (this seat). The entry above is append-only (`RULES/06`), so it stands exactly as
+it was written and this correction is added, not a rewrite — that is why no name is repeated here.
+Whether the old lines are ever redacted is the Allfather's decision.
+
+- **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #758

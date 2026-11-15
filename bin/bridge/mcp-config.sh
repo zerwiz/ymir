@@ -13,7 +13,7 @@
 # (`bin/model/rail-resolve.sh`), so no surface restates a rail URL. Harnesses read
 # `mcpServers`; the `ymir` block is advisory and ignored by them.
 #
-# The WELL DOOR law (2026-11-10): engram is Kaia's engine only. Every harness reaches
+# The WELL DOOR law (2026-11-10): engram is Völundr's engine only. Every harness reaches
 # memory through the gateway's `well` door, never a direct `engram-mcp --db` stdio
 # server — that one writes the seat's own file, skips the gateway journal, and never
 # reaches the heart. And every harness carries the SAME set as pi's mcp-adapter.json

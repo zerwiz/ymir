@@ -1,6 +1,6 @@
 ---
 name: smidja-start
-description: Start the software-smidja agents for work — exactly how, on which team (roster), with which models (local/online/hybrid), which chain, and how to run the orchestrator (Kaia). Use when the user wants to "send the smidja", start agents on a task, pick local vs online models, launch a run, watch it, or run Kaia's orchestrator. Combines with smidja, smidja-launcher, smidja-instructions and smidja skills; canonical playbooks are START_SMIDJA.md and docs/.
+description: Start the software-smidja agents for work — exactly how, on which team (roster), with which models (local/online/hybrid), which chain, and how to run the orchestrator (Völundr). Use when the user wants to "send the smidja", start agents on a task, pick local vs online models, launch a run, watch it, or run Völundr's orchestrator. Combines with smidja, smidja-launcher, smidja-instructions and smidja skills; canonical playbooks are START_SMIDJA.md and docs/.
 argument-hint: "[local | cloud | hybrid | orchestrate | sdlc | simple-sdlc | scout | service | mode]"
 allowed-tools: read, write, edit, bash, grep, glob
 ---
@@ -58,7 +58,7 @@ scripts/smidja run --mode <name> "<tight ask>"   # ② pick a team+chain and lau
 just sessions / just tail <id>  # ③ watch (reads never block; DB is WAL)
 scripts/smidja audit <id>         # ④ verify tools were really used
 scripts/smidja diagnose <id>      #    failed? why + fix
-scripts/smidja learn <id>         #    write outcome into Kaia's memory
+scripts/smidja learn <id>         #    write outcome into Völundr's memory
 ```
 
 ## 1. First command: `scripts/smidja up` (converge)
@@ -72,7 +72,7 @@ models under the `ocrd` profile). `scripts/smidja` self-resolves its root — ru
 from anywhere, or `cd ~/Ymir` for `just` recipes.
 
 **Project-aware runs:** launch from the target repo (or set `SMIDJA_PROJECT_DIR`)
-so the trace DB + Kaia's memory live in that project's `smidja/smidja_data`:
+so the trace DB + Völundr's memory live in that project's `smidja/smidja_data`:
 
 ```bash
 cd /home/<user>/CodeP/wayoffactoy && $YMIR_ROOT/scripts/smidja run --mode local-fast "…"
@@ -99,7 +99,7 @@ one `roster.yaml` (`stacks:` + `tiers:`). Roles: `orchestrator` · `planner` ·
 | `cloud-reasoning` | all `opencode/nemotron-3-ultra-free` | hard / long cloud tasks |
 | `nemotron` | all `opencode/nemotron-3-ultra-free` (ocrd) | **test roster** — every agent on Nemotron 3 Ultra Free |
 | `nemotron-pi` | all Nemotron 3 Ultra Free via **pi** (`openrouter/…:free`) | same model, pi harness |
-| `nemotron-team` | = `nemotron-pi` agents (**full team**) | Kaia orchestrates — every agent on Nemotron via pi, thinking visible |
+| `nemotron-team` | = `nemotron-pi` agents (**full team**) | Völundr orchestrates — every agent on Nemotron via pi, thinking visible |
 | `hybrid-plan-local` | plan local 35B, build cloud flash | air-gapped plan, cloud build |
 | `hybrid-build-local` | plan cloud, build local 9B | cloud plan, local build |
 | `review` | plan/build local, review cloud | audit a diff |
@@ -121,7 +121,7 @@ default builder), `gemma-4-12b-it@q4_k_m` (90k, reviewer), `qwen3.6-35b-a3b@q2_k
 (`scripts/opencode-go-bridge.py`, tmux `ogb`, port 4603 → `https://opencode.ai/zen/go/v1`,
 key `OPENCODE_GO_API_KEY` in `~/Ymir/.env`): `deepseek-v4-flash` (workhorse),
 `deepseek-v4-pro`, `glm-5.1`, `deepseek-v4-flash-vision-exp` — **pi-reachable,
-so Kaia can dispatch them**; (b) opencode-agent (`ocrd` profile): `big-pickle`
+so Völundr can dispatch them**; (b) opencode-agent (`ocrd` profile): `big-pickle`
 (free), `nemotron-3-ultra-free` (reasoning) — whole-chain runs, not pi subagents.
 **Nemotron 3 Ultra Free is also pi-reachable** as
 `openrouter/nvidia/nemotron-3-ultra-550b-a55b:free` (1M ctx) — the `nemotron-pi`
@@ -151,7 +151,7 @@ scripts/smidja run sdlc "…" --model lmstudio/qwen3.5-9b
 | **sdlc** | `just sdlc` / `--mode local-fast,cloud-free` | plan → build → test [→fix→test…] → commit |
 | **simple-sdlc** | `just simple-sdlc` / `--mode local-planner,cloud-fast` | plan(commit) → build → test → review(commit) → docs(commit) |
 | build-review | `--mode review-gate` | build → review |
-| **orchestrate** | `just orchestrate` / `--service orchestrate` / `--mode orchestrate` | Kaia dispatches sub-agents |
+| **orchestrate** | `just orchestrate` / `--service orchestrate` / `--mode orchestrate` | Völundr dispatches sub-agents |
 
 `just` recipes run only from `~/Ymir` (justfile lives there); they read
 `SMIDJA_CONFIG` / `SMIDJA_ROSTER` / `SMIDJA_MODEL_TIER` for the config.
@@ -172,38 +172,41 @@ tmux new-session -d -s ssf \
 scripts/smidja sessions; scripts/smidja tail <smidja_id>; scripts/smidja phases <smidja_id>
 ```
 
-## 5. Orchestrator (Kaia) — tiers, launch, oversight
+## 5. Orchestrator (Völundr) — tiers, launch, oversight
 
-Kaia coordinates — she does **not** implement. Per-run presence is a tier
-(`--kaia T0|T1|T2`, `SMIDJA_KAIA`, or the roster's `kaia_tier` meta; default **T1**):
+Völundr coordinates — he does **not** implement. Per-run presence is a tier
+(`--kaia T0|T1|T2`, `SMIDJA_KAIA`, or the roster's `kaia_tier` meta; default **T1**).
+The flag, the environment variable and the roster key keep their historical names
+because rosters and scripts already set them — they all mean **Völundr**.
 
-| Tier | What Kaia does | When |
+| Tier | What Völundr does | When |
 |---|---|---|
 | T0 | nothing — no handoff, no one-shot, no tickets | minimal/first runs |
 | **T1** (default) | reads the session handoff, files admission notes into `kaia_notes.md` (injected into every agent call) | any non-trivial run |
-| T2 | T1 + Kaia orchestrates (recon-interval synthesize, orchestrate chain) | big/coordinated work |
+| T2 | T1 + Völundr orchestrates (recon-interval synthesize, orchestrate chain) | big/coordinated work |
 
 ```bash
 scripts/smidja up
 just orchestrate "<problem> — split the work across agents, then review the result"
 scripts/smidja run --service orchestrate "<ask>"          # T2-style whole-run orchestration
-scripts/smidja run --mode local-planner "<big ask>" --kaia T2   # overlay Kaia at T2
+scripts/smidja run --mode local-planner "<big ask>" --kaia T2   # overlay Völundr at T2
 ```
 
 Admission: at run start (non-T0) the harness writes `kaia_handoff.json` + spawns
-one detached one-shot (`scripts/kaia-handoff.py --admit`) → Kaia files
+one detached one-shot (`scripts/kaia-handoff.py --admit`) → Völundr files
 `kaia_notes.md`; recursion is capped (`SMIDJA_NO_ADMIT`) and blocked while a
 `.smidja-emergency` kill-switch exists. Oversight:
 
 ```bash
-scripts/smidja admit <smidja_id>    # refresh handoff + re-ask Kaia for notes
-scripts/smidja recover <smidja_id>  # watchdog ticket → Kaia's ONE decision, prints the apply cmd
+scripts/smidja admit <smidja_id>    # refresh handoff + re-ask Völundr for notes
+scripts/smidja recover <smidja_id>  # watchdog ticket → Völundr's ONE decision, prints the apply cmd
 scripts/smidja watch             # watchdog loop in tmux (also auto-started by smidja up)
 scripts/smidja emergency-stop    # circuit breaker + kill-switch for a runaway smidja
 ```
 
 Memory: `smidja/smidja_data/kaia.engram` (UI `http://localhost:4601#/memory`, CLI
-`scripts/smidja kaia`). `smidja learn <id>` writes outcomes into her memory;
+`scripts/smidja kaia` — the verb and the store file keep their historical names).
+`smidja learn <id>` writes outcomes into his memory;
 `smidja memory <project>` recalls.
 
 ## 6. Watch / control / learn
@@ -217,14 +220,14 @@ Memory: `smidja/smidja_data/kaia.engram` (UI `http://localhost:4601#/memory`, CL
 | `just ui` / `smidja ui` | visualizer `http://localhost:4601` |
 | `smidja audit <id>` | gates + tool-call evidence |
 | `smidja diagnose <id>` | why it failed + fix |
-| `smidja learn <id>` | write audit into Kaia's memory |
+| `smidja learn <id>` | write audit into Völundr's memory |
 | `smidja stop <id>` · `pause <id>` · `resume <id>` · `steer <id> "msg"` | control |
 
 `resume` is not a pause/unpause: it continues a **finished or failed** run at its last green phase (`--from-phase` re-enters at a named phase). It refuses with `no such run` · `nothing green to resume from` · `the roster changed since this run`, and it never resumes a model switch. See `smidja-factory/cookbooks/run_smidja.md` §Resume.
 
 | `smidja record <id>` | the run as ONE record — phases · steps · state · where it stopped (the same shape `resume` reads) |
 | `smidja decide <id> <phase> approve\|decline` | settle an `approval` phase; the block never runs without it (exit 3 while waiting, 4 when declined) |
-| `smidja admit <id>` · `recover <id>` · `watch` | Kaia oversight (see §5) |
+| `smidja admit <id>` · `recover <id>` · `watch` | Völundr oversight (see §5) |
 | `just watch` · `just emergency-stop` | run the watchdog / panic button |
 
 Reads never block a running run (WAL).
@@ -266,7 +269,7 @@ just scout "<read-only recon ask>"
 SMIDJA_MODEL_TIER=local just sdlc "<dev ask>"          # local everyday
 scripts/smidja run --mode cloud-fast "<dev ask>"       # cloud workhorse
 scripts/smidja run --mode local-planner "<big ask>"    # 35B spec + full quality chain
-just orchestrate "<multi-agent ask>"                 # Kaia dispatches
+just orchestrate "<multi-agent ask>"                 # Völundr dispatches
 scripts/smidja mission T1 --config smidja.local-agile    # bench a local team
 ```
 

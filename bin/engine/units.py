@@ -111,6 +111,34 @@ def owed(entry: dict, roles: set[str]) -> bool:
     return want == "all" or not roles or bool(roles & set(want))
 
 
+def outward_doors() -> dict[str, bool]:
+    """Every door that acts outside this machine, and whether THIS machine names it on.
+
+    Plan 290 (2026-11-14). Seating used to follow a ROLE: a unit registered `roles: [heart, forge,
+    dev]` was written on every machine of those roles, so a collaborator's own install seated a
+    merging warden by merely existing. A door now runs where the operator's home names it for THIS
+    machine (`config/machines/<machine>/wardens.yaml`), and nowhere else. A name that is not an
+    outward door is absent from this map and keeps its old role rule.
+
+    The reader is `bin/forge/warden-policy.py` — the one parser of that file, shared with the doors
+    themselves, so the seater and the door can never disagree about whether the door is on.
+    """
+    door = CODE_ROOT / "bin" / "forge" / "warden-policy.py"
+    if not door.exists():
+        return {}
+    try:
+        out = subprocess.run([sys.executable, "-I", str(door), "seat-plan"],
+                             capture_output=True, text=True, timeout=30).stdout
+    except (OSError, subprocess.SubprocessError):
+        return {}
+    plan: dict[str, bool] = {}
+    for line in out.splitlines():
+        parts = line.split("\t")
+        if len(parts) >= 3 and parts[0] and not parts[0].startswith("#"):
+            plan[parts[0]] = parts[2].strip().lower() == "on"
+    return plan
+
+
 # ── the register ─────────────────────────────────────────────────────────────
 def _roots() -> list[Path]:
     """Where the register and the app templates are read from: the code that is running, and the pin.
@@ -347,6 +375,30 @@ def have_systemd() -> bool:
     return not os.environ.get("YMIR_UNITS_NO_SYSTEMCTL") and shutil.which("systemctl") is not None
 
 
+def retire_unit(name: str, dry: bool) -> str:
+    """Turn a unit OFF where an install once seated it. Returns what was done, in one phrase.
+
+    Plan 290 §3 (the Allfather, 2026-11-14): a door its machine does not name must not run. Skipping the
+    write is not enough — the unit file the old install seated stays enabled and keeps its clock. So the
+    file is KEPT (naming the door must restore it in one command) and the clock is stopped and disabled.
+    Idempotent: a unit already off is left alone and says so.
+    """
+    unit = f"{name}.timer" if not Path(name).name.endswith(".timer") else name
+    if dry:
+        return "would be turned off (dry run)"
+    for suffix in ("timer", "service"):
+        u = f"{name}.{suffix}"
+        is_active = systemctl("is-active", u) if have_systemd() else None
+        is_enabled = systemctl("is-enabled", u) if have_systemd() else None
+        running = (is_active is not None and is_active.stdout.strip() == "active") or \
+                  (is_enabled is not None and is_enabled.stdout.strip() in ("enabled", "enabled-runtime", "static"))
+        if not running:
+            continue
+        systemctl("disable", "--now", u)
+        unit = u
+    return f"turned off — this machine's wardens.yaml does not name it (unit file kept, {unit})"
+
+
 def systemctl(*args: str) -> subprocess.CompletedProcess:
     return subprocess.run(["systemctl", "--user", *args], capture_output=True, text=True, timeout=60)
 
@@ -416,6 +468,7 @@ def entry_for(reg: dict, filename: str) -> dict | None:
 def cmd_write(args: argparse.Namespace) -> int:
     reg, pin = load_register(), pin_dir()
     roles = roles_here()
+    doors = outward_doors()
     run = Run(args.dry_run, not args.no_restart)
     overrides = parse_sets(args.set)
     want = set(args.names)
@@ -423,6 +476,13 @@ def cmd_write(args: argparse.Namespace) -> int:
     tpl_launch, tpl_unit = templates(reg)
     for e in reg["units"]:
         if want and e["name"] not in want:
+            continue
+        # plan 290: an outward door is seated ONLY where this machine's home names it on. The role
+        # gate below stays, but a role is a capability, never a decision to act outward. A unit the old
+        # install already seated is turned OFF here, never merely skipped: a clock nobody stops is a
+        # clock that keeps acting.
+        if e["name"] in doors and not doors[e["name"]]:
+            run.row(e["name"], e["kind"], "not-seated", retire_unit(e["name"], args.dry_run))
             continue
         if not want and not owed(e, roles):  # a unit asked for BY NAME is owed; the role gates the sweep
             run.row(e["name"], e["kind"], "skipped", "not this seat's role")

@@ -168,7 +168,7 @@ class TheTextItCompiles(unittest.TestCase):
     def test_no_vault_or_nda_shelf_is_ever_read(self):
         source = open(os.path.abspath(brief.__file__), encoding="utf-8").read()
         for forbidden in ("hodd/secrets", "platform.env.age", "hodd/identity/confidential",
-                          "svartalfaheim/wayof", "svartalfaheim/example-8"):
+                          "svartalfaheim/example-realm", "svartalfaheim/example-client"):
             self.assertNotIn(forbidden, source,
                              f"the briefing door must not even name {forbidden}")
 

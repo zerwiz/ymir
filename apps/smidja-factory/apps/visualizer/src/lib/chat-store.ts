@@ -5,7 +5,7 @@
  * All data comes from the real backend endpoints:
  *   GET  /api/rosters  /api/models   → picker (teams + orchestrator models)
  *   GET  /api/chat/history          → conversation for the active session
- *   POST /api/chat/message          → send to Kaia (Pi)
+ *   POST /api/chat/message          → send to Völundr (Pi)
  *   POST /api/chat/session          → launch a smidja run
  *   POST /api/chat/steer            → inject guidance mid-run
  */
@@ -33,7 +33,7 @@ export const models = ref<ModelInfo[]>([])
 /** Models the chat pi process can actually resolve (pi --list-models catalog). */
 export const chatModels = ref<{ id: string; name: string; provider: string }[]>([])
 
-/** The model the chat talks to Kaia on; '' = server default (orchestrator cloud model). */
+/** The model the chat talks to Völundr on; '' = server default (orchestrator cloud model). */
 export const chatModel = ref('')
 export const pending = ref(false)
 export const error = ref<string | null>(null)
@@ -118,8 +118,20 @@ export async function init(): Promise<void> {
     rosters.value = r
     models.value = m
     chatModels.value = cm as { id: string; name: string; provider: string }[]
-    // Default Kaia to a WORKING local model when one is resolvable: prefer the
-    // llamacpp Q2 (native, 130K) over a stale/cloud entry, so the first message
+    // The operator's own choice comes first: the model named in their home
+    // (config/smidja.env → SMIDJA_CHAT_MODEL), served by /api/chat/default-model.
+    // The repo ships a generic default; the home says what THIS operator wants.
+    if (!chatModel.value) {
+      const cfg = await fetch('/api/chat/default-model')
+        .then((res) => res.json())
+        .catch(() => null)
+      const wanted = (cfg as { model?: string } | null)?.model
+      if (wanted && (cm as { id: string }[]).some((m) => m.id === wanted)) {
+        chatModel.value = wanted
+      }
+    }
+    // Otherwise default Völundr to a WORKING local model when one is resolvable: prefer
+    // the llamacpp Q2 (native, 130K) over a stale/cloud entry, so the first message
     // doesn't 500 with "Connection error" on an unloaded backend. Only applies
     // when the user hasn't already picked a model this session.
     if (!chatModel.value) {
@@ -190,7 +202,7 @@ export async function deleteChat(id: string): Promise<void> {
   }
 }
 
-/** Send one chat message; await Kaia's reply and append both to the thread. */
+/** Send one chat message; await Völundr's reply and append both to the thread. */
 export async function sendMessage(content: string): Promise<void> {
   const trimmed = content.trim()
   if (!trimmed || pending.value) return
@@ -232,7 +244,7 @@ export async function sendMessage(content: string): Promise<void> {
     if (streamed) {
       streamed.streaming = false
       streamed.role = 'error'
-      streamed.content = `Kaia is offline — ${(e as Error).message}`
+      streamed.content = `Völundr is offline — ${(e as Error).message}`
     }
   } finally {
     pending.value = false

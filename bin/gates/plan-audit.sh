@@ -53,14 +53,23 @@ die() { printf 'error: %s\n' "$1" >&2; [ -n "${2:-}" ] && printf 'help: %s\n' "$
 # (Rule 07; defaults-guard refuses exactly that). Same resolution as bin/gates/queue.sh.
 shelf_default() {
   [ -n "${YMIR_PLAN_DIR:-}" ] && { printf '%s' "$YMIR_PLAN_DIR"; return 0; }
-  local h="${YMIR_HOME:-}"
-  if [ -z "$h" ] && [ -r "$ROOT/bin/vault/hoard-lib.sh" ]; then
-    . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
-    command -v ymir_home_root >/dev/null 2>&1 && ymir_home_root h
-  fi
+  local h="${YMIR_HOME:-}" ledger=""
+  # The resolver is what finds a ledger under a realm the repository may not name —
+  # so the library is loaded whether or not YMIR_HOME is already in the env.
+  if [ -r "$ROOT/bin/vault/hoard-lib.sh" ]; then . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true; fi
+  if [ -z "$h" ] && command -v ymir_home_root >/dev/null 2>&1; then ymir_home_root h; fi
   [ -n "$h" ] || h="$(bash "$ROOT/bin/vault/hodd.sh" path 2>/dev/null || true)"
   [ -n "$h" ] || return 1
-  printf '%s' "$h/svartalfaheim/whynotproductions/projects/ymir/plans"
+  # The ledger lives under the operator's own realm, so it is discovered first — and if the
+  # resolver has no such helper (an older home), the canonical shelf is the fallback, so this
+  # door resolves the same ledger it always did rather than dying on a missing function.
+  if command -v ymir_plan_dir >/dev/null 2>&1; then
+    ymir_plan_dir ledger 2>/dev/null || ledger=""   # it names a RESULT VARIABLE; a $(…) would lose it
+  fi
+  [ -n "$ledger" ] || ledger="$h/svartalfaheim/whynotproductions/projects/ymir/plans"
+  # A home with no ledger (a fresh install, CI's planted home) is a clean skip, said aloud — not a red.
+  [ -d "$ledger" ] || return 3
+  printf '%s' "$ledger"
 }
 
 MODE="report"; SHELF=""
@@ -75,7 +84,14 @@ while [ $# -gt 0 ]; do
   esac
 done
 [ "$MODE" = "report" ] && MODE="report"
-[ -n "$SHELF" ] || SHELF="$(shelf_default)" || die "cannot resolve the home" "set YMIR_HOME or name a shelf with --shelf"
+if [ -z "$SHELF" ]; then
+  SHELF="$(shelf_default)"; _rc=$?
+  if [ "$_rc" -eq 3 ]; then
+    printf 'plan-audit: SKIP — this home holds no plan ledger, so there is nothing to judge (RULES/25: a clean skip, said)\n'
+    exit 0
+  fi
+  [ "$_rc" -eq 0 ] || die "cannot resolve the home" "set YMIR_HOME or name a shelf with --shelf"
+fi
 
 # ---------------------------------------------------------------- the self-test shelf
 # A tiny shelf built from three plans whose STRUCTURE differs from their spelling:

@@ -4,6 +4,11 @@
 # time (bin/gates/guards/ndalib.py). This file holds only the opposite — words that appear in the home's
 # registries AND are public or ordinary English — and every entry carries its reason. An entry with no
 # reason is ignored. A real company, client or NDA-project name never belongs here.
+#
+# TWO FILES (RULES/04, RULES/42): these are the GENERIC defaults any operator's tree needs. The
+# operator's OWN words — his realm, his mail domain, his handle — are read from
+# $YMIR_HOME/config/nda-allow.yaml, whose shape ships as nda-allow.operator.yaml.example. Never add
+# a word of his here: this file is public.
 allow:
   - word: work
     reason: ordinary English; also the name of a shelf in the home
@@ -27,14 +32,8 @@ allow:
     reason: the house that publishes Ymir; named in the public contract (RULES/03)
   - word: wayofteams
     reason: the public control plane Ymir's daemon pairs with; named in the public contract
-  - word: whynotproductions
-    reason: the realm that owns Ymir itself; named in the public contract and every plan path
   - word: gimle
     reason: Ymir's own collaboration surface, a public product of this repository
-  - word: zerwiz.org
-    reason: the operator's own public domain, already the identity of this repository's owner
-  - word: whynot productions
-    reason: the spaced form of the realm that owns Ymir itself (see whynotproductions above)
   - word: the-book
     reason: ordinary English words; Ymir's own book shelf, not a client
   - word: zerwiz

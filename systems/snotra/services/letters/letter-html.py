@@ -113,7 +113,7 @@ def render(template: str, subject: str, body_html: str, preheader: str, footer: 
 
 def self_test() -> int:
     failures: list[str] = []
-    body = "Hi Svein,\n\nA letter with a **bold** word and a link to https://example.com/a?b=1.\n\n- first\n- second\n\n# A heading\nAnd a closing line.\n"
+    body = "Hi Blake,\n\nA letter with a **bold** word and a link to https://example.com/a?b=1.\n\n- first\n- second\n\n# A heading\nAnd a closing line.\n"
     page = render("leemunroe-simple", "A subject", blocks(body), "The preview line", "Example9 · sent from the house")
     if "<h2" not in page or "<ul" not in page:
         failures.append("headings and lists are not rendered")

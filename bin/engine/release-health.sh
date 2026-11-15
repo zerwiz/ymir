@@ -255,7 +255,7 @@ live_services() {  # raise the release's own services on probe ports, prove, sto
   tmp="$(mktemp -d)" || { row "service:live" skip "no temp dir to hold the probe"; return 0; }
   pid_file="$tmp/pids"; : >"$pid_file"
   # shellcheck disable=SC2064
-  trap "while IFS= read -r p; do [ -n \"\$p\" ] && kill \"\$p\" 2>/dev/null; done <'$pid_file'; sleep 0.3; while IFS= read -r p; do [ -n \"\$p\" ] && kill -9 \"\$p\" 2>/dev/null; done <'$pid_file'; rm -rf '$tmp'" EXIT
+  trap "while IFS= read -r p; do [ -n \"\$p\" ] && kill \"\$p\" 2>/dev/null; done <'$pid_file'; sleep 0.3; while IFS= read -r p; do [ -n \"\$p\" ] && kill -9 \"\$p\" 2>/dev/null; done <'$pid_file'; rm -rf '$tmp'" EXIT  # kill: a wedged process has no graceful kill — declared, per check_platform
 
   probe() {  # <label> <port> <workdir> <url-path> <cmd...>
     local label="$1" port="$2" wd="$3" path="$4"; shift 4

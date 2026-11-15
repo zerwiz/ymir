@@ -878,6 +878,18 @@ an **Omarchy** host the layer also *records* it (`bin/host/omarchy-sense.sh obse
 and installs a `post-update` hook so Ymir re-learns it every time Omarchy
 updates. On a non-Omarchy host that layer step is a clean SKIP.
 
+The sensor also answers what the desktop wants of a window's **frame**:
+`bin/host/host-sense.sh capability window-buttons` returns `no` on a tiling
+compositor (Hyprland — Omarchy's session — and Sway, Niri, River, which draw no
+title bar and close a window with a key) and `yes` everywhere else. Every app
+launcher asks it through `app_window_buttons` (`bin/desktop/app-lib.sh`) and
+carries the answer in as `YMIR_WINDOW_BUTTONS=on|off`; each Electron shell builds
+its window with `frame:` from that and leaves its application menu set, so the
+shortcuts survive the bar. Proof and the measured before/after:
+`docs/fixes/desktop/2026-11-14-no-window-buttons-on-omarchy.md`;
+`.agents/tests/window-buttons.test.sh` is the gate (a new app or launcher that
+does not ask turns it red).
+
 Rule: the installer is **idempotent** — running it again changes nothing but
 fills gaps. It never overwrites real user data.
 
@@ -1394,7 +1406,7 @@ checkout re-rendering the machine's SOUL.md from older code shows up as a red ro
 
 The `a2a` row above says `bin/bridge/a2a-mcp.sh install wires a2abridge + engram into pi + opencode`. The
 `memory` row says the step "reports MCP coverage". Both rows are kept as the record. Both are corrected here.
-engram is Kaia's engine only, so a harness reaches memory through this body's gateway at `/mcp/well` and never
+engram is Völundr's engine only, so a harness reaches memory through this body's gateway at `/mcp/well` and never
 through a direct `engram-mcp` server.
 
 ```

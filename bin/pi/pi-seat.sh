@@ -61,7 +61,7 @@ fi
 
 # 0. the local-model guard: one local inference at a time per machine.
 case "$PROVIDER" in
-  llama-swap|llamacpp-whynot|llama.cpp|llama-cpp|lmstudio)
+  *llama*|*lmstudio*)
     if [ -x "$SCRIPT_DIR/../model/local-model-lock.sh" ] && ! "$SCRIPT_DIR/../model/local-model-lock.sh" check >/dev/null 2>&1; then
       "$SCRIPT_DIR/../model/local-model-lock.sh" check >&2
       printf 'help: a local seat already runs on this machine — wait, or use a remote/online model\n' >&2
