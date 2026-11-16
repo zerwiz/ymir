@@ -19,3 +19,7 @@
 
 The host runs with `HF_HUB_OFFLINE=1`, so on a fresh machine the speech models are never fetched and the engine
 fails with `LocalEntryNotFoundError`. `--install` should fetch them once, with the network on.
+
+## CHANGE LOG
+
+- 2026-11-15 — review-mend: added missing heading for #787
