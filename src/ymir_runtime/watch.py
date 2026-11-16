@@ -206,11 +206,12 @@ def read_lease(path: Path) -> dict[str, str]:
 
 
 def _session_comm(pid: str) -> str:
-    """The harness comm of a session pid, or "" — /proc/<pid>/comm is the truth."""
+    """The harness comm of a session pid, or "" — /proc/<pid>/comm is the truth; where there is no /proc
+    (macOS), ps answers, the same fallback the lock module's _comm uses."""
     try:
         return Path(f"/proc/{pid}/comm").read_text(encoding="utf-8", errors="replace").strip()
     except OSError:
-        return ""
+        return lock_mod._comm(pid).rsplit("/", 1)[-1] if str(pid).isdigit() else ""
 
 
 def _sidecar_role(path: Path, session: str) -> str:
