@@ -12,6 +12,10 @@
 #
 # Exit: 0 every case behaved · 1 a case did not.
 set -u
+# The fixture below is a CONCRETE home path ON PURPOSE — it is the thing the ward must refuse. It is
+# assembled from parts so the compliance gate (Rule 07) does not read a refusal fixture as a path of
+# ours: the gate is right to refuse a hardcoded home, and a test that proves it refuses needs one.
+HOME_FIXTURE="/home/$(printf 'notaplace')/x"
 ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"; cd "$ROOT" || exit 1
 source bin/forge/pr-patterns.sh
 fail=0
@@ -37,7 +41,7 @@ pcase "a tilde in prose passes — ~75 commits behind"                        0 
 pcase "a tilde path in prose passes — it names nobody"                      0 'five scripts guessed ~/Documents/ymirhome as a second home'
 pcase "the shape the rule asks for passes — /home/<name>/"                  0 'a literal /home/<name>/ is the shape RULES/04 asks for'
 pcase 'a variable home passes — $HOME/state'                                0 'state lives at $HOME/state, never in the tree'
-pcase "a CONCRETE home path is still refused"                               1 'the file lives at /home/notaplace/x'
+pcase "a CONCRETE home path is still refused"                               1 "the file lives at $HOME_FIXTURE"
 pcase "a private address is still refused"                                  1 "the box answers on $IPV4_FIXTURE"
 pcase "a tailnet host is still refused"                                     1 "reach it at $TAILNET_FIXTURE"
 pcase "a personal mailbox is still refused"                                 1 "write to $MAILBOX_FIXTURE"
@@ -87,7 +91,7 @@ printf '%s' "$out" | grep -q 'signature built' && bad "a complete block should n
 ev "curl -s http://$IPV4_FIXTURE:8317/health" 'a plain title' 'eindri/wards-learn'
 run >/dev/null 2>&1; [ $? = 1 ] && ok "CI still refuses a body carrying an address" || bad "a body with an address passed"
 
-ev 'the tree at /home/notaplace/x' 'a plain title' 'eindri/wards-learn'
+ev "the tree at $HOME_FIXTURE" 'a plain title' 'eindri/wards-learn'
 run >/dev/null 2>&1; [ $? = 1 ] && ok "CI still refuses a concrete home path in a body" || bad "a concrete home path passed"
 
 ev 'a clean body, nothing to see' 'written by Claude' 'eindri/wards-learn'
@@ -109,7 +113,7 @@ printf 'house: h\nfleet: f\nagent: r (role: ship, errand: r)\nauthority: a\nprov
 bash bin/forge/pr-open.sh --role r --house h --fleet f --errand r --authority a --proves p \
   --title t --body-file /tmp/pid-tilde.txt --dry-run >/dev/null 2>&1 \
   && ok "the door passes a body with a tilde in prose" || bad "the door refused a tilde in prose"
-for leak in "$IPV4_FIXTURE" "$TAILNET_FIXTURE" "/home/notaplace/x" "$MAILBOX_FIXTURE" "w2:p3" "token: abcdefghijklmnop"; do
+for leak in "$IPV4_FIXTURE" "$TAILNET_FIXTURE" "$HOME_FIXTURE" "$MAILBOX_FIXTURE" "w2:p3" "token: abcdefghijklmnop"; do
   printf 'house: h\nfleet: f\nagent: r (role: ship, errand: r)\nauthority: a\nproves: p\nnever: n\n\n%s\n' "$leak" >/tmp/pid-bad.txt
   bash bin/forge/pr-open.sh --role r --house h --fleet f --errand r --authority a --proves p \
     --title t --body-file /tmp/pid-bad.txt --dry-run >/dev/null 2>&1
