@@ -19,6 +19,8 @@
 # Env: BROKK_ROOT_OVERRIDE · BROKK_HOME · YMIR_HOST (role read) · HLIDSKJALF_PORT
 #      · HLIDSKJALF_API_PORT · SMIDJA_VIZ_API_PORT · SMIDJA_DB
 set -u
+# say() first: on macOS a `say` called before its definition is /usr/bin/say, which speaks aloud (2026-11-15).
+say() { printf '%s\n' "$*"; }
 
 VERSION="2.0.0"
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
@@ -86,7 +88,9 @@ if [ -z "${YMIR_RUNTIME_PIN_RESOLVED:-}" ]; then
   case "$_pin" in "\$HOME"/*) _pin="$HOME/${_pin#\$HOME/}" ;; esac
   if [ -n "$_pin" ] && [ -d "$_pin/.git" ] && [ -d "$_pin/tools/mill/systemd" ]; then
     FLEET_TEMPLATE_ROOT="$_pin"
-    say "fleet:   units pinned to the runtime checkout $_pin (RULES/02 §7)" 2>/dev/null || true
+    # printf, not say(): say() is defined further down, and on macOS a bare `say` is /usr/bin/say —
+    # it read this line ALOUD on a Mac (2026-11-15). docs/fixes/platforms/2026-11-15-the-bash-floor-on-a-mac.md
+    printf '%s\n' "fleet:   units pinned to the runtime checkout $_pin (RULES/02 §7)"
   elif [ -n "$_pin" ]; then
     printf 'fleet: WARNING: the pinned runtime %s is not a usable checkout; the units will execute from %s, which is a WORKING TREE and will be refused by runtime-pinned-guard\n' "$_pin" "$FLEET_TEMPLATE_ROOT" >&2
   fi

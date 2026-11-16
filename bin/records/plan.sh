@@ -26,6 +26,8 @@
 # is a typo, and guessing it would file work in a directory nobody reads.
 # Extracted from the Pi extension so every harness reaches it (behaviour in bin/).
 set -uo pipefail
+# the bash floor (RULES/05): macOS ships bash 3.2 — re-run under bash >= 4, or say how to get one
+[ "${BASH_VERSINFO[0]:-0}" -ge 4 ] || { . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../fleet/ymir-platform.sh" && ymir_bash_floor "$@"; }
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 hoard="$(bash "$ROOT/bin/vault/hodd.sh" path 2>/dev/null || true)"
 [ -n "$hoard" ] || { printf 'plan: no home (bin/vault/hodd.sh path answered nothing)\n' >&2; exit 1; }

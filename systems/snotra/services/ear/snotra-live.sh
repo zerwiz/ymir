@@ -7,6 +7,8 @@
 # pointer at the top of this file was removed 2026-11-12: it aimed at a path
 # that does not exist, so the door answered 127 instead of listening.
 set -euo pipefail
+# the bash floor (RULES/05): macOS ships bash 3.2 — re-run under bash >= 4, or say how to get one
+[ "${BASH_VERSINFO[0]:-0}" -ge 4 ] || { . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../../../../bin/fleet/ymir-platform.sh" && ymir_bash_floor "$@"; }
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # The repo root, found by walking up to the tree that carries RULES/ and
 # .agents/ — the old `../../../../` from services/ear/ landed one level above

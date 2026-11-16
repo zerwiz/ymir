@@ -265,6 +265,17 @@ step_prereqs() {
   # mcp<2 is needed by every role's harness doors; name it in the OK row too.
   [ -z "$miss" ] && ready="$ready gh mcp<2"
   if [ -n "$miss" ]; then add prereqs WARN "missing:$miss"; else add prereqs OK "$ready"; fi
+  # The bash floor (RULES/05): macOS ships bash 3.2, and the doctor, the migrations and the gates need >= 4.
+  # Those scripts re-run themselves under the bash found here (ymir_bash_floor); with none, they refuse.
+  local b4=""
+  if b4="$(ymir_bash4_path 2>/dev/null)"; then
+    add bash OK "bash >= 4 at $b4"
+  else
+    case "$(ymir_os 2>/dev/null)" in
+      macos) add bash WARN "only bash ${BASH_VERSION%%(*} — macOS ships 3.2; run: brew install bash" ;;
+      *)     add bash WARN "only bash ${BASH_VERSION%%(*} — install bash 4 or newer, or set YMIR_BASH" ;;
+    esac
+  fi
   # The well engine: a `hand` reaches the heart's well as a door and does not run
   # the engine locally; heart/dev provision it. engram needs Python 3.12/3.13, so
   # prereq-ensure installs it into a compatible interpreter and records which one.
