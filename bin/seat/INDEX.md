@@ -24,7 +24,7 @@ folder rewrites one file instead of colliding on every branch.
 bin[60]{file,does,kind,verdict,disposition,callers,lines}:
   "agent-state-lib.sh","agent-state-lib.sh — herdr's own word on where an agent stands, and whether it is READY for input.","lib","wired","keep",2,59
   "arm-talk.sh","arm-talk.sh — the heart speaks into every seat's pane, over that seat's own road (plan 234 P1).","tool","wired","keep",1,193
-  "armpin.sh","armpin.sh — does every surface that SUPERVISES run the pin, and is the pin current?","tool","wired","keep",1,100
+  "armpin.sh","armpin.sh — does every surface that SUPERVISES run the pin, and is the pin current?","tool","wired","keep",1,102
   "broken.sh","broken.sh — the register of broken things (RULES/50).","tool","tested","keep",2,165
   "claims.sh","claims.sh — a seat declares what it is building (plan number, branch, errand id, host).","tool","wired","keep",4,95
   "clocks.sh","bin/seat/clocks.sh — seat the three loops: plan-watch, ship-watch, update-loop.","tool","wired","keep",0,116
@@ -55,7 +55,7 @@ bin[60]{file,does,kind,verdict,disposition,callers,lines}:
   "seat-audit.sh","seat-audit.sh — one line per agent pane: is its work safe, landed, and correct?","tool","wired","keep",4,403
   "seat-find.sh","seat-find.sh — find the agent by its WORK, not by its tab title.","tool","wired","keep",1,130
   "seat-prove.sh","seat-prove.sh — a spawn is not a seat until the agent list shows it.","tool","tested","keep",5,110
-  "seat-reap.sh","seat-reap.sh — the hand that closes a finished seat.","tool","wired","keep",14,1094
+  "seat-reap.sh","seat-reap.sh — the hand that closes a finished seat.","tool","wired","keep",14,1096
   "seat-surface.sh","seat-surface.sh — render THIS seat's own name into the AGENTS.md every harness reads.","tool","wired","keep",7,218
   "seat-wake.sh","seat-wake.sh — the seat's word to the ARM, not to a desktop.","tool","wired","keep",3,83
   "seat-wire.sh","seat-wire.sh — one seat speaks into another seat's live pane, and says who it is.","tool","wired","keep",2,393
