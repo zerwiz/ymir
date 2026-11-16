@@ -90,7 +90,8 @@ all_pids() {
 view_pids() {
   local p
   for p in $(all_pids); do
-    tr '\0' ' ' <"/proc/$p/cmdline" 2>/dev/null | grep -q -- "--type=" && continue
+    # /proc is Linux-only; ps answers the same question on a Mac (2026-11-16)
+    { tr '\0' ' ' <"/proc/$p/cmdline" 2>/dev/null || ps -o command= -p "$p" 2>/dev/null; } | grep -q -- "--type=" && continue
     printf '%s\n' "$p"
   done
 }
