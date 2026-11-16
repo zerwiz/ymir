@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """The six verbs a backend answers, and the one resolver that picks a backend.
 
 WHY (plan 303 §14, 2026-11-16): herdr is not a tool the doors call ad hoc — it is a BACKEND
