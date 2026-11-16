@@ -39,6 +39,40 @@ ymir_os() {  # linux | macos | wsl | msys | android | unknown
   esac
 }
 
+# ── the bash floor ───────────────────────────────────────────────────────────
+#
+# macOS ships bash 3.2.57 (the last GPLv2 release) and never a newer one. A script that uses `declare -A`,
+# `mapfile` or `local -n` dies there mid-run with `declare: -A: invalid option` — measured on a stock Mac on
+# 2026-11-15 by eir-doctor.sh and ymir-migrate.sh. `ymir_bash_floor "$@"` is called near the top of such a script:
+# on bash >= 4 it returns at once; on an older bash it re-executes the script under the first bash >= 4 it can find
+# ($YMIR_BASH, Homebrew on Apple silicon and Intel, MacPorts, ~/.local/bin), and when none exists it says so plainly,
+# with the remedy, and exits 2 — never a half-run. YMIR_BASH_FLOOR_REEXEC guards against a loop.
+ymir_bash4_path() {  # the path of a bash >= 4 on this host (this one first), or status 1
+  local _b
+  if [ "${BASH_VERSINFO[0]:-0}" -ge 4 ] && [ -n "${BASH:-}" ]; then printf '%s' "$BASH"; return 0; fi
+  for _b in "${YMIR_BASH:-}" /opt/homebrew/bin/bash /usr/local/bin/bash /opt/local/bin/bash "$HOME/.local/bin/bash" \
+            "$(command -v bash 2>/dev/null)"; do
+    [ -n "$_b" ] && [ -x "$_b" ] || continue
+    "$_b" -c '[ "${BASH_VERSINFO[0]}" -ge 4 ]' 2>/dev/null || continue
+    printf '%s' "$_b"; return 0
+  done
+  return 1
+}
+
+ymir_bash_floor() {
+  [ "${BASH_VERSINFO[0]:-0}" -ge 4 ] && return 0
+  local _b _self="${BASH_SOURCE[1]:-$0}"
+  if [ -z "${YMIR_BASH_FLOOR_REEXEC:-}" ] && _b="$(ymir_bash4_path)"; then
+    YMIR_BASH_FLOOR_REEXEC=1 exec "$_b" "$_self" "$@"
+  fi
+  printf 'error: %s needs bash 4 or newer; this is bash %s\n' "${_self##*/}" "${BASH_VERSION:-unknown}" >&2
+  case "$(uname -s 2>/dev/null)" in
+    Darwin*) printf 'fix: brew install bash   (macOS ships bash 3.2; Homebrew'\''s bash is found on its own, or set YMIR_BASH=<path>)\n' >&2 ;;
+    *)       printf 'fix: install bash 4 or newer, or set YMIR_BASH=<path to it>\n' >&2 ;;
+  esac
+  exit 2
+}
+
 
 # ── basic tools ──────────────────────────────────────────────────────────────
 

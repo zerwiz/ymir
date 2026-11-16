@@ -38,6 +38,8 @@
 #
 # Exit: 0 ok, 1 failure, 2 usage, 3 nothing to do.
 set -u
+# the bash floor (RULES/05): macOS ships bash 3.2 — re-run under bash >= 4, or say how to get one
+[ "${BASH_VERSINFO[0]:-0}" -ge 4 ] || { . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../fleet/ymir-platform.sh" && ymir_bash_floor "$@"; }
 
 VERSION="1.1.0"
 KEYS_FILE="${HEIMDALL_KEYS_FILE:-$HOME/.ssh/authorized_keys}"

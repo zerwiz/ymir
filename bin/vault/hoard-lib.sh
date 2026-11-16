@@ -30,7 +30,12 @@ set -u
 
 # Where a machine records its choices (never in the repo, never in the home).
 YMIR_CONFIG_DIR="${YMIR_CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/ymir}"
-YMIR_HOME_DEFAULT="${YMIR_HOME_DEFAULT:-$HOME/Documents/ymirhome}"
+# On macOS the default sits OUTSIDE ~/Documents: TCC refuses a launchd agent that opens ~/Documents
+# (smidja failed "unable to open database file", 2026-11-15), and iCloud may sync the folder.
+case "$(uname -s 2>/dev/null)" in
+  Darwin*) YMIR_HOME_DEFAULT="${YMIR_HOME_DEFAULT:-$HOME/ymirhome}" ;;
+  *)       YMIR_HOME_DEFAULT="${YMIR_HOME_DEFAULT:-$HOME/Documents/ymirhome}" ;;
+esac
 
 ymir_home_record() {  # <result-var> — the home recorded at installation, or empty
   local result_var=${1-} f="$YMIR_CONFIG_DIR/home"

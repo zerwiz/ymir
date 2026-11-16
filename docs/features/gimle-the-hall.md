@@ -7,6 +7,10 @@ the same record answers the MCP.
 
 **What you need.** A gate account (invitation only), and for the MCP a token minted by the house.
 
+**A second house.** This page is the first installation's. A different company running its **own** copy — its
+own service account, names, gate secrets and members, sharing no secret or document with this one — is a
+separate act with its own page: [a-second-house-suite.md](a-second-house-suite.md).
+
 ## The addresses
 
 | what | where |
@@ -114,3 +118,5 @@ recorded refusal means it is.
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-15** — a pointer added to [a-second-house-suite.md](a-second-house-suite.md): a different company
+  running its own copy of the suite, sharing no secret and no document with this installation.

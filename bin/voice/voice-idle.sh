@@ -45,7 +45,7 @@ CMD="${1:-status}"; shift || true
 while [ $# -gt 0 ]; do case "$1" in --seconds) IDLE_SECONDS=${2-}; shift 2 ;; *) shift ;; esac; done
 
 say() { printf '%s\n' "$*"; }
-log() { mkdir -p "$STATE_DIR" 2>/dev/null; printf '%s %s\n' "$(date -Is)" "$*" >>"$LOG" 2>/dev/null; }
+log() { mkdir -p "$STATE_DIR" 2>/dev/null; printf '%s %s\n' "$(date +%Y-%m-%dT%H:%M:%S%z)" "$*" >>"$LOG" 2>/dev/null; }
 
 unit_up() { systemctl --user is-active --quiet "$UNIT" 2>/dev/null; }
 

@@ -15,6 +15,8 @@
 # service that must be stopped first). It is reported, never recorded as applied —
 # recording it would silence it forever — and never treated as a failure.
 set -u
+# the bash floor (RULES/05): macOS ships bash 3.2 — re-run under bash >= 4, or say how to get one
+[ "${BASH_VERSINFO[0]:-0}" -ge 4 ] || { . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../fleet/ymir-platform.sh" && ymir_bash_floor "$@"; }
 # The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   for _yc in "${ROOT:-}/bin/vault/hoard-lib.sh" \

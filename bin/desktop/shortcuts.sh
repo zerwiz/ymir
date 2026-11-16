@@ -140,6 +140,16 @@ wsl_shortcuts() {
   done < <(catalog)
 }
 
+png_to_icns() {  # <png> <icns> — macOS's own tools (sips, iconutil); returns 1 when either is missing
+  command -v sips >/dev/null 2>&1 && command -v iconutil >/dev/null 2>&1 || return 1
+  local set; set="$(mktemp -d)/ymir.iconset"; mkdir -p "$set"
+  for sz in 16 32 128 256 512; do
+    sips -z $sz $sz "$1" --out "$set/icon_${sz}x${sz}.png" >/dev/null 2>&1 || return 1
+    sips -z $((sz*2)) $((sz*2)) "$1" --out "$set/icon_${sz}x${sz}@2x.png" >/dev/null 2>&1 || return 1
+  done
+  iconutil -c icns "$set" -o "$2" 2>/dev/null; local rc=$?; rm -rf "$(dirname "$set")"; return $rc
+}
+
 # ── macos: a small .app per Ymir app ───────────────────────────────────────────────────────────────────────────
 mac_apps() {
   local name tpl ico file t app
@@ -148,7 +158,9 @@ mac_apps() {
     t="$(title "$name")"; app="$HOME/Applications/$t.app"
     if [ "$MODE" = check ]; then [ -x "$app/Contents/MacOS/ymir-app" ] && row "mac:$name" ok "$app" || { row "mac:$name" OWED "no $app"; owed=1; }; continue; fi
     if [ "$MODE" = remove ]; then rm -rf "$app"; row "mac:$name" removed "$app"; continue; fi
-    mkdir -p "$app/Contents/MacOS"
+    mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
+    local icon_key="" i; i="$(icon_src "$ico" "$tpl")"
+    case "$i" in *.png) png_to_icns "$i" "$app/Contents/Resources/ymir-app.icns" && icon_key="<key>CFBundleIconFile</key><string>ymir-app</string>" ;; esac
     printf '#!/bin/bash\nexec "%s/ymir-app" %s\n' "$BIN" "$name" > "$app/Contents/MacOS/ymir-app"; chmod 755 "$app/Contents/MacOS/ymir-app"
     cat > "$app/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -156,9 +168,11 @@ mac_apps() {
 <plist version="1.0"><dict>
 <key>CFBundleName</key><string>$t</string><key>CFBundleIdentifier</key><string>dev.ymir.$name</string>
 <key>CFBundleExecutable</key><string>ymir-app</string><key>CFBundlePackageType</key><string>APPL</string>
+$icon_key
 </dict></plist>
 PLIST
-    row "mac:$name" written "$app"
+    touch "$app"  # Finder and the Dock re-read the icon when the bundle's date moves
+    row "mac:$name" written "$app${icon_key:+ (icon)}"
   done < <(catalog)
 }
 
