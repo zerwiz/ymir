@@ -32,7 +32,7 @@ started reading `todo.md`; the digest was never taught the same lesson.
    ```
    open: 57 — his half 36 · house-kept 21 · voice ledger 0
      <path>/todo.md (house-kept 21 = derived 10 + from his messages 11) · voice ledger <path>/todos.jsonl
-   - [his · Today] Rödd carries Sebastian's mail — …  (t8495c)
+   - [his · Today] Rödd carries a collaborator's mail — …  (t8495c)
    ```
 
    The halves are counted apart, the voice ledger keeps its own named count, item lines are tagged by half and carry

@@ -32,7 +32,7 @@ The block starts like this:
 ```
 open: 57 — his half 36 · house-kept 21 · voice ledger 0
   …/me/todo.md (house-kept 21 = derived 10 + from his messages 11) · voice ledger …/state/voice/todos.jsonl
-- [his · Today] Rödd carries Sebastian's mail — …  (t8495c)
+- [his · Today] Rödd carries a collaborator's mail — …  (t8495c)
 ```
 
 The tag on each line says which list and which half it came from — `his`, `derived`, `kept` or `voice` — and the
