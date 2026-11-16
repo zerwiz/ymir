@@ -22,3 +22,7 @@ Three app launchers used commands that exist only on Linux, so their windows nev
 - Both setups hash with `sha256sum`, or with `shasum -a 256` where it is missing.
 
 Linux behaviour is unchanged.
+
+## CHANGE LOG
+
+- 2026-11-15 — review-mend: added missing heading for #783
