@@ -15,14 +15,33 @@ git-ignored: schema, scope and retention travel, raw mail does not.
 ```sh
 cd "$YMIR_HOME/hodd/bin/gna-agent"
 
-python3 gna_import.py --account <the scoped account> --days 7 --dry-run   # read, write nothing
-python3 gna_import.py --account <the scoped account> --days 7             # fill the store
+python3 gna_import.py --account <the scoped account> --dry-run   # read since the mark, write nothing
+python3 gna_import.py --account <the scoped account>            # fill the store
+python3 gna_import.py --account <the scoped account> --days 30   # a backfill: ignore the mark
 
 python3 gna_desk.py            # the desk on 127.0.0.1:8490 (token: hodd/state/gna-desk.token)
 python3 gna_desk.py --print-token
 
-python3 tests/test_gna.py      # 16 proofs, including "no file here can send"
+python3 tests/test_gna.py      # 49 proofs, including "no file here can send"
 ```
+
+**The window is a mark, not a number of days.** Each account keeps a high-water mark of the newest
+message the desk has read (`hodd/state/gna-mail-watermark.json`), and every run asks the mailbox
+for **everything since it** — so a run after a week of downtime reads the whole week, and nothing
+that arrived while the desk was down is silently outside the question. `--days` is still there, as an
+override for a deliberate backfill.
+
+**When the desk was blind, the run says so.** Before it reads, the clock measures the silence. When
+that silence is wider than the run interval (`GNA_RUN_INTERVAL_HOURS`, default 24) it is named in
+days, with both ends, in the run's output and in `hodd/state/gna-mail-last-run.json`:
+
+```
+gna-mail[import] GAP the desk was blind for 7 days — from 2026-11-09T18:19:50+00:00 to
+2026-11-16T18:19:51+00:00 (the clock runs every 24h) — this run reads the whole gap
+```
+
+The next notice then opens with it — *"the desk was blind for 7 days — mail: 8 new …"* — once, so
+the outage is never invisible behind a tidy count.
 
 Then open **Hlidskjalf → Gná**. The page forwards three routes
 (`/api/mail/accounts`, `/api/mail/queue`, `/api/mail/message`) to the desk with its token, and the
@@ -48,6 +67,11 @@ desk's refusals come back unchanged.
   **Unsure** with low confidence instead of being guessed at.
 - **Read-only in the gate.** Drafts and approvals (plan 116 · P1) are not built yet; the page cannot
   send, and neither can the service behind it.
+- **A window wider than `--max` is reported, not absorbed.** Gmail answers a page at a time; the
+  importer follows the pages to the cap, and a gap still wider than the cap prints `TRUNCATED` with
+the remedy (`--max`) instead of pretending it read everything.
+- **The mark only moves forward.** A backfill (`--days`) re-reads an old stretch, de-duplicates what
+the store already holds, and leaves the mark where it was.
 
 **If it does not work**
 
@@ -58,6 +82,8 @@ desk's refusals come back unchanged.
 | *"account scope required"* | no account was chosen | pick one at the top; one must be declared in `hodd/memory/mail/accounts.yaml` |
 | *"account not declared in …"* | that address has no grant row | add the row **with its own grant** — never widen another account's |
 | Everything reads as **Unsure** | the sender is not in `collaborators.yaml` | add the person (or teach a rule in P4) — a stranger is meant to wait |
+| A notice opens *"the desk was blind for N days"* | the clock did not run for longer than its interval | nothing to mend in the mail: look at why the machine or the job was down (`bin/time/nornir-cron-start.sh`, `state/gna-mail-last-run.json`) |
+| The run prints `TRUNCATED` | more mail arrived in the gap than `--max` allows | re-run with a larger `--max`, e.g. `--max 800` |
 | A bulk newsletter wants your judgement | its `List-Unsubscribe` / `Precedence` header is missing | that is the rule's evidence; the row says which marker it looked for |
 
 **Measured 2026-10-23.** Seven days of the operator's own mailbox: 61 messages → **needs you 5 · unsure 1 ·
