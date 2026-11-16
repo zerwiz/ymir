@@ -220,7 +220,11 @@ PY
 }
 send(){
   local id="${1-}"; [ -n "$id" ] || die "send needs a draft id"
-  local approve="$ROOT/bin/time/snotra/snotra-approve.sh"
+  # THE DOOR THAT MOVED (2026-11-16): this called bin/time/snotra/, a retired shim that still works and
+  # says so on every send — "has MOVED to systems/snotra" printed beside a letter that went out fine.
+  # A retired path kept "because callers still work" is how a move becomes a mystery; pointed at the
+  # real door, with the shim left in place for any hand that has not been repointed yet.
+  local approve="$ROOT/systems/snotra/services/approve/snotra-approve.sh"
   # THE WORD FIRST. No send is requested until the approval record matches the draft's
   # CURRENT RFC822 bytes; the gate prints the reason (NOT APPROVED · STALE · ALREADY SENT)
   # and carves the refusal into the Runes itself. A door that checked nothing is how a
