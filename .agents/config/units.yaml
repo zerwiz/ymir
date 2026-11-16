@@ -50,6 +50,24 @@ units:
     # gimle share's port; the desk ran there until 2026-11-12.
     retired: { GNA_DESK_PORT: ["8490"] }
 
+  # The relay is what makes the queue a conversation (plan 303 §12.3 step 4): it wakes a READY
+  # target, confirms the agent moved, retries once, and returns the answer to the asker's own
+  # pane. One unit per PERSON, never per agent. It waits for a live arm holder rather than
+  # serving a machine nobody supervises (RULES/55), and it never restarts Hermes.
+  - name: ratatoskr-relay
+    mode: render
+    kind: service
+    roles: all
+    description: "ratatoskr-relay — wake a ready agent with a queued task, confirm it moved, return the answer"
+    workdir: "."
+    exec: "/usr/bin/env bash bin/bridge/ratatoskr-relay.sh run --interval ${RATATOSKR_RELAY_INTERVAL} --require-arm"
+    env: { YMIR_HOME: "${YMIR_HOME}", RATATOSKR_RELAY_INTERVAL: "${RATATOSKR_RELAY_INTERVAL}", PYTHONUNBUFFERED: "1" }
+    vars: { RATATOSKR_RELAY_INTERVAL: "5" }
+    restart: always
+    extra: ["RestartSec=10", "NoNewPrivileges=true"]
+    unit_extra: ["After=network-online.target"]
+    wanted_by: default.target
+
   - name: queue-warden
     mode: render
     kind: timer

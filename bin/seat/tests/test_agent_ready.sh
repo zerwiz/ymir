@@ -89,6 +89,11 @@ answer() { "$door" "$@" 2>/dev/null; }
 row claude idle ',"interactive_ready":true'
 [ "$(answer p)" = ready ] && ok "idle at a prompt → ready" || bad "idle at a prompt answered $(answer p)"
 
+# 2a · a pi agent that FINISHED its turn reports `done` and sits at its prompt: ready
+row pi done ',"interactive_ready":true'
+[ "$(answer p)" = ready ] && ok "done → ready (a finished turn is not a busy one)" \
+  || bad "done answered $(answer p)"
+
 # 2 · a working agent is working, not dead and not ready
 row pi working ''
 [ "$(answer p)" = working ] && ok "working → working" || bad "working answered $(answer p)"

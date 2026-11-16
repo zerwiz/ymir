@@ -41,6 +41,7 @@ Usage:
     ratatoskr-queue.py send <target> <text…>      → prints the task id
     ratatoskr-queue.py inbox [--for T] [--json]   → the tasks waiting
     ratatoskr-queue.py claim <id> [--by T]        → renames inbox → claimed
+    ratatoskr-queue.py answer <id> <text…>        → claim (if still on the shelf) and reply, in one
     ratatoskr-queue.py reply <id> <text…>         → appends the reply, moves to done
     ratatoskr-queue.py show <id>                  → the whole file
     ratatoskr-queue.py count                      → one line per shelf
@@ -345,6 +346,18 @@ def main(argv):
             sys.stderr.write("usage: ratatoskr reply <id> <text…>\n")
             return 2
         return cmd_reply(root, rest[0], " ".join(rest[1:]))
+    if action == "answer":
+        # ONE command for the receiver: claim it if it is still on the shelf, then reply.
+        # Two commands is one too many for an agent woken mid-work, and a claim that is
+        # already ours must not fail the answer.
+        if len(rest) < 2:
+            sys.stderr.write("usage: ratatoskr answer <id> <text…>\n")
+            return 2
+        task_id, text = rest[0], " ".join(rest[1:])
+        shelf, _path = find(root, task_id)
+        if shelf == "inbox":
+            cmd_claim(root, task_id, "")
+        return cmd_reply(root, task_id, text)
     if action in ("inbox", "list"):
         return cmd_inbox(root, flag(rest, "--for", ""), "--json" in argv)
     if action == "show":
