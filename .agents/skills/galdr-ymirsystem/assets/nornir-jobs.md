@@ -325,6 +325,23 @@ that does not answer writes a `FAIL` line to `state/gna-mail.log` and carves a
 Rune — the gate then shows 503 with the command that raises the desk, never an
 empty inbox. `--check` probes health alone; `--dry-run` reads and writes nothing.
 
+**The window is a mark (2026-11-16).** Each account keeps a high-water mark — the
+newest message the desk has read, plus the moment it last looked — in
+`hodd/state/gna-mail-watermark.json`, and `gna_import.py` asks for everything
+since it: `after:<epoch>` on the Gmail path, `SINCE <the mark's day>` on IMAP.
+The old ask was `newer_than:2d`, a width measured from *now*: every hour the desk
+was down was an hour it never asked about, so a run after a week of downtime read
+two days and looked exactly like a quiet inbox. `GNA_DAYS` is now only an
+override for a backfill; the listing is paginated, and a window still wider than
+`--max` is reported as `TRUNCATED` rather than quietly halved.
+
+**The gap speaks.** Before reading, the job measures the silence from the last
+run that ended well (`rc: 0` in `state/gna-mail-last-run.json`; a failed run is
+not a look), falling back to the marks. Wider than `GNA_RUN_INTERVAL_HOURS`
+(default 24) and the run prints `GAP the desk was blind for N days — from … to …`,
+records the same measurement under `gap` in the last-run record, and the next
+notice from `bin/mail/gna_notify.py` opens with that sentence exactly once.
+
 The desk itself is a systemd **user** unit (`gna-desk.service`, `Restart=always`),
 seated once by `bin/mail/install.sh`; a reboot raises it again. Port `8494`
 (`GNA_DESK_PORT`), loopback only. The store and the scope live in the home, and

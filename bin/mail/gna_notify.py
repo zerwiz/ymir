@@ -28,6 +28,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import gna_import  # noqa: E402
 import gna_store  # noqa: E402
 
 TREE = Path(os.environ.get("YMIR_TREE", Path.home() / "ymir"))
@@ -107,6 +108,22 @@ def line_for(rows):
 
 
 TELL = " — tell the operator (Telegram), and say which need him"
+
+
+def blind_prefix() -> str:
+    """The sentence a notice must OPEN with when the desk has been blind.
+
+    A run after downtime reads the whole gap (the high-water mark does that), but reading it
+    silently would still be a lie by omission: mail that should have been told about hours ago
+    is not "new mail". So the first line of the next notice says how long the desk was blind,
+    taken from the run's own record (`gap` in gna-mail-last-run.json), and it is said once."""
+    gap = gna_import.unspoken_gap()
+    if not gap:
+        return ""
+    line = str(gap.get("line") or "").strip()
+    if line:
+        return line
+    return f"the desk was blind for {gna_import._days(gap.get('days') or 0)} days"
 
 
 def helm_held() -> bool:
@@ -255,6 +272,12 @@ def main():
     else:
         lines.append(line_for(rows))
 
+    blind = blind_prefix()
+    if blind:
+        # The FIRST line carries it: a notice that buries the gap under the counts is a
+        # notice that reads as if the desk had been awake the whole time.
+        lines[0] = f"{blind} — {lines[0]}"
+
     for l in lines:
         print(("nudge> " if args.nudge else "would say> ") + l)
 
@@ -270,7 +293,8 @@ def main():
     if not helm_held():
         # Nobody holds the arm, so nobody would read the line: tell the operator directly.
         need = needs_you_count(rows)
-        text = line_for(rows) + (f" — {need} need you" if need else "")
+        text = (f"{blind} — " if blind else "") + line_for(rows)
+        text += f" — {need} need you" if need else ""
         sent, detail = hotline(text, need)
         print(f"gna_notify: the helm is empty, so the operator was told directly: {'sent' if sent else 'FAILED'} {detail}")
         if not sent:
@@ -278,6 +302,9 @@ def main():
     if ok:
         result = mark_notified(rows)
         print(f"gna_notify: marked {result.get('written', 0)} version(s) notified")
+        if blind:
+            gna_import.mark_gap_spoken()
+            print("gna_notify: the gap was said aloud — the next notice opens with the news instead")
         return 0
     return 1
 

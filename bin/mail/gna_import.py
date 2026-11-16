@@ -1,9 +1,21 @@
 #!/usr/bin/env python3
 """Gná's importer: one account, read-only, every message once.
 
-  gna_import.py --account operator@example.com --days 7 --dry-run
-  gna_import.py --account operator@example.com --days 2
-  gna_import.py --account team@example.org --transport imap --days 3
+  gna_import.py --account operator@example.com --dry-run
+  gna_import.py --account operator@example.com
+  gna_import.py --account operator@example.com --days 30     # a backfill
+
+THE WINDOW IS A MARK, NOT A WIDTH (2026-11-16). Each account keeps a high-water mark:
+the newest message the desk has read (`hodd/state/gna-mail-watermark.json`). A run asks
+the server for everything SINCE that mark — Gmail `after:<epoch>`, IMAP `SINCE <day>` —
+so a run after a week of downtime reads the whole week. A fixed "last N days" window is
+the thing that loses mail: it is measured from NOW, so every hour the desk was down is an
+hour it never asks about. `--days` survives as an OVERRIDE for a backfill.
+
+The mark never moves backwards, and it is stamped with the moment the desk LOOKED as well
+as the newest message it SAW — "looked and found nothing" is not "never looked", and the
+gap report below measures the second. A window too narrow for the mailbox is REPORTED
+(`TRUNCATED`), never rendered as a quiet success.
 
 TWO TRANSPORTS, ONE RECORD SHAPE (plan 116 §15.3.2). An account row names how it is
 read — `transport: google` (the default; the Gmail grant) or `transport: imap` — so a
@@ -342,9 +354,214 @@ def _imap_records(account: str, raws: list[tuple[bytes, str]]) -> list[dict]:
     return out
 
 
-def collect_imap(account: str, row: dict, days: int, max_messages: int, to_address: str = "") -> list[dict]:
+# --------------------------------------------------------- the high-water mark
+
+WATERMARK_NAME = "gna-mail-watermark.json"
+LAST_RUN_NAME = "gna-mail-last-run.json"
+DEFAULT_RUN_INTERVAL_HOURS = 24.0
+FIRST_READ_DAYS = 7
+GMAIL_PAGE = 100
+
+
+def watermark_path() -> Path:
+    """Where the mark lives: the machine's state shelf, beside the last-run record."""
+    return gna_store.STATE_DIR / WATERMARK_NAME
+
+
+def _parse_iso(value) -> datetime | None:
+    try:
+        when = datetime.fromisoformat(str(value or "").replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    return when if when.tzinfo else when.replace(tzinfo=timezone.utc)
+
+
+def watermarks() -> dict[str, dict]:
+    """Every account's mark, as read. An unreadable file is {} — a missing mark means a
+    first look, which the window below spells out instead of guessing silence."""
+    try:
+        document = json.loads(watermark_path().read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    accounts = document.get("accounts") if isinstance(document, dict) else None
+    return accounts if isinstance(accounts, dict) else {}
+
+
+def watermark_for(account: str) -> dict:
+    return dict(watermarks().get(account) or {})
+
+
+def note_seen(account: str, records: list[dict], now: datetime | None = None) -> dict:
+    """Advance one account's mark: the newest message READ, and the moment the desk looked.
+
+    NEVER BACKWARDS. `newest` only moves forward, so re-reading an overlap (a backfill, or
+    IMAP's day-granularity SINCE) can never roll the mark back onto mail already behind it.
+    `checked_at` moves every run, including a run that read nothing — "looked and found
+    nothing" is a different fact from "never looked", and the gap report measures the second."""
+    now = now or datetime.now(timezone.utc)
+    marks = watermarks()
+    mark = dict(marks.get(account) or {})
+    newest = str(mark.get("newest") or "")
+    newest_id = str(mark.get("newest_id") or "")
+    for record in records:
+        stamp = str(record.get("received_at") or "")
+        if stamp and stamp > newest:
+            newest, newest_id = stamp, str(record.get("id") or "")
+    mark.update({
+        "account": account,
+        "newest": newest or None,
+        "newest_id": newest_id or None,
+        "checked_at": now.isoformat(timespec="seconds"),
+        "read": len(records),
+    })
+    marks[account] = mark
+    path = watermark_path()
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix(path.suffix + ".tmp")
+        tmp.write_text(json.dumps({"accounts": marks}, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+        os.replace(tmp, path)
+    except OSError as exc:
+        # The mail was READ; only the memory of it was not written. The next run re-reads a
+        # wider window and de-duplicates, so nothing is lost — but the operator is told.
+        print(f"gna: WARN the high-water mark could not be written ({path}): {exc}", file=sys.stderr)
+    return mark
+
+
+def window_start(days: int | None, mark: dict, now: datetime | None = None) -> dict:
+    """Where this run asks the server to start.
+
+    THE MARK IS THE ANSWER: everything from one second before the newest message already
+    read, so a message that landed in the same second is not lost and the store's own
+    de-duplication absorbs the single-second overlap. `--days` overrides it for a backfill.
+    With neither, the first read takes a bounded week and says so."""
+    now = now or datetime.now(timezone.utc)
+    if days is not None and int(days) > 0:
+        start = now - timedelta(days=int(days))
+        return {"at": start.isoformat(timespec="seconds"), "epoch": int(start.timestamp()),
+                "source": "days", "days": int(days)}
+    for field, source in (("newest", "mark"), ("checked_at", "mark")):
+        when = _parse_iso(mark.get(field))
+        if when is not None:
+            start = when - timedelta(seconds=1)
+            return {"at": start.isoformat(timespec="seconds"), "epoch": int(start.timestamp()), "source": source}
+    start = now - timedelta(days=FIRST_READ_DAYS)
+    return {"at": start.isoformat(timespec="seconds"), "epoch": int(start.timestamp()), "source": "first-read"}
+
+
+def last_run_path() -> Path:
+    return gna_store.STATE_DIR / LAST_RUN_NAME
+
+
+def _write_last_run(record: dict) -> None:
+    path = last_run_path()
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix(path.suffix + ".tmp")
+        tmp.write_text(json.dumps(record, ensure_ascii=False) + "\n", encoding="utf-8")
+        os.replace(tmp, path)
+    except OSError as exc:
+        print(f"gna: WARN the last-run record could not be written ({path}): {exc}", file=sys.stderr)
+
+
+def _days(value: float) -> str:
+    """A gap in days, said the way a person says it: 7 not 7.0, 0.5 not 0.50."""
+    rounded = round(float(value), 1)
+    return str(int(rounded)) if rounded == int(rounded) else f"{rounded}"
+
+
+def gap_report(interval_hours: float | None = None, now: datetime | None = None,
+               last_run: dict | None = None, marks: dict | None = None) -> dict:
+    """How long the desk was BLIND, said in days with both ends named.
+
+    Blind means: no successful look. The measurement is the last run that ended well
+    (`rc: 0` in the last-run record) — a run that FAILED to read the mailbox is not a look,
+    and the marks it did not stamp are the fallback. A gap wider than the run interval is a
+    downtime, not a night, and the run says so instead of reporting a quiet empty inbox.
+
+    This is measured BEFORE the import, so the number names the span that is about to be
+    read, not the span after it has been closed."""
+    now = now or datetime.now(timezone.utc)
+    interval = float(os.environ.get("GNA_RUN_INTERVAL_HOURS") or DEFAULT_RUN_INTERVAL_HOURS) \
+        if interval_hours is None else float(interval_hours)
+    last_run = gna_store.last_run() if last_run is None else last_run
+    marks = watermarks() if marks is None else marks
+    looked: list[tuple[str, datetime]] = []
+    if isinstance(last_run, dict) and str(last_run.get("rc") or "0") == "0":
+        when = _parse_iso(last_run.get("at"))
+        if when is not None:
+            looked.append(("last-run", when))
+    if not looked:
+        for account, mark in sorted(marks.items()):
+            for field in ("checked_at", "newest"):
+                when = _parse_iso((mark or {}).get(field))
+                if when is not None:
+                    looked.append((f"{account}:{field}", when))
+                    break
+    if not looked:
+        return {"exceeded": False, "days": 0.0, "from": None, "to": now.isoformat(timespec="seconds"),
+                "interval_hours": interval, "source": "first-run", "line": ""}
+    source, earliest = min(looked, key=lambda item: item[1])
+    days = max(0.0, (now - earliest).total_seconds() / 86400.0)
+    exceeded = days > interval / 24.0
+    frm = earliest.isoformat(timespec="seconds")
+    to = now.isoformat(timespec="seconds")
+    line = (f"the desk was blind for {_days(days)} days — from {frm} to {to} "
+            f"(the clock runs every {_days(interval)}h) — this run reads the whole gap") \
+        if exceeded else ""
+    return {"exceeded": exceeded, "days": round(days, 2), "from": frm, "to": to,
+            "interval_hours": interval, "source": source, "line": line}
+
+
+def mark_gap_spoken(now: datetime | None = None) -> bool:
+    """Record that the gap has been SAID aloud, so the next notice does not repeat it.
+
+    The record is the run's own (`gna-mail-last-run.json`); this only stamps the gap it
+    carries. Returns whether there was an unspoken gap to stamp."""
+    record = gna_store.last_run()
+    gap = record.get("gap") if isinstance(record, dict) else None
+    if not isinstance(gap, dict) or not gap.get("exceeded") or gap.get("spoken_at"):
+        return False
+    gap["spoken_at"] = (now or datetime.now(timezone.utc)).isoformat(timespec="seconds")
+    record["gap"] = gap
+    _write_last_run(record)
+    return True
+
+
+def unspoken_gap() -> dict:
+    """The gap the desk has not told the operator about yet — {} when there is none."""
+    record = gna_store.last_run()
+    gap = record.get("gap") if isinstance(record, dict) else None
+    if not isinstance(gap, dict) or not gap.get("exceeded") or gap.get("spoken_at"):
+        return {}
+    return gap
+
+
+def record_run(gap: dict, rc: int, accounts: int, days: int | None = None,
+               now: datetime | None = None) -> dict:
+    """Write the run's own record: when it ran, what window it used, and the gap it measured.
+
+    ONE OWNER OF THE SHAPE. The clock (bin/time/nornir-job-gna-mail.sh) passes the numbers
+    and the gap it measured before reading; the file is written here, so a reader — the desk's
+    /health, the notice, the next gap report — parses one shape and not a bash printf."""
+    record = {
+        "at": (now or datetime.now(timezone.utc)).isoformat(timespec="seconds"),
+        "window": "days" if days else "mark",
+        "days": int(days) if days else None,
+        "rc": int(rc),
+        "accounts": int(accounts),
+        "gap": gap if isinstance(gap, dict) and gap else {"exceeded": False},
+    }
+    _write_last_run(record)
+    return record
+
+
+def collect_imap(account: str, row: dict, window: dict, max_messages: int, to_address: str = "") -> list[dict]:
     target = imap_target(row)
-    since = (datetime.now(timezone.utc) - timedelta(days=max(days, 1))).strftime("%d-%b-%Y")
+    # IMAP SINCE is day-granular, and date-shaped on purpose: the day the mark falls on is
+    # re-read whole, and the store drops whatever it already holds. Narrower than the mark is
+    # not possible on this protocol; wider is how mail is lost.
+    since = datetime.fromtimestamp(int(window["epoch"]), timezone.utc).strftime("%d-%b-%Y")
     criteria: list[str] = ["SINCE", since]
     if to_address:
         criteria += ["TO", to_address]
@@ -421,26 +638,64 @@ def transport_of(row: dict) -> str:
     )
 
 
-def collect(account: str, days: int, max_messages: int, to_address: str = "") -> list[dict]:
-    """Read one account. The transport is a property of the ACCOUNT's row, never a guess."""
+def collect(account: str, days: int | None = None, max_messages: int = 200, to_address: str = "",
+            window: dict | None = None) -> list[dict]:
+    """Read one account. The transport is a property of the ACCOUNT's row, never a guess.
+
+    The WINDOW is the account's high-water mark unless `days` overrides it; a caller that
+    already resolved one (main, so it can print it) passes it in."""
     row = gna_store.declared_accounts()[account]
     transport = transport_of(row)
+    window = window or window_start(days, watermark_for(account))
     if transport == "imap":
-        return collect_imap(account, row, days, max_messages, to_address=to_address)
-    return collect_google(account, row, days, max_messages, to_address=to_address)
+        return collect_imap(account, row, window, max_messages, to_address=to_address)
+    return collect_google(account, row, window, max_messages, to_address=to_address)
 
 
-def collect_google(account: str, row: dict, days: int, max_messages: int, to_address: str = "") -> list[dict]:
+def _list_ids(token: str, query: str, max_messages: int) -> tuple[list[str], bool]:
+    """Every message id the query answers with, page by page, up to the cap.
+
+    ONE PAGE IS NOT THE WINDOW. Gmail answers newest-first and 100 at a time; reading only
+    the first page after a week of downtime would keep the newest hundred and drop the
+    oldest of the gap — mail nobody would ever be told about. `truncated` says the cap was
+    reached with more left, which the run reports instead of pretending it read it all."""
+    ids: list[str] = []
+    page = ""
+    truncated = False
+    while True:
+        params = {"q": query, "maxResults": str(min(GMAIL_PAGE, max(1, max_messages - len(ids))))}
+        if page:
+            params["pageToken"] = page
+        listing = api(token, "/users/me/messages", params)
+        ids += [m["id"] for m in listing.get("messages", []) if m.get("id")]
+        page = str(listing.get("nextPageToken") or "")
+        if not page:
+            break
+        if len(ids) >= max_messages:
+            truncated = True
+            break
+    return ids[:max_messages], truncated
+
+
+def collect_google(account: str, row: dict, window: dict, max_messages: int,
+                   to_address: str = "") -> list[dict]:
     token = token_for(row)
     profile = api(token, "/users/me/profile")
     owner = (profile.get("emailAddress") or "").lower()
     if owner and owner != account:
         raise SystemExit(f"gna: the grant belongs to {owner}, not {account} — refused")
-    query = f"newer_than:{days}d -in:chats"
+    if window.get("source") == "days":
+        query = f"newer_than:{int(window.get('days') or FIRST_READ_DAYS)}d -in:chats"
+    else:
+        # `after:` takes a unix second, so the ask begins exactly where the mark ends.
+        query = f"after:{int(window['epoch'])} -in:chats"
     if to_address:
         query += f" to:{to_address}"
-    listing = api(token, "/users/me/messages", {"q": query, "maxResults": max_messages})
-    ids = [m["id"] for m in listing.get("messages", [])][:max_messages]
+    ids, truncated = _list_ids(token, query, max_messages)
+    if truncated:
+        print(f"gna: WARN TRUNCATED {account} — the window holds more than {max_messages} messages; "
+              f"raise --max (currently {max_messages}) and read the rest, the mark advanced only past what was read",
+              file=sys.stderr)
     by_email, by_id = people_book()
     out: list[dict] = []
     for mid in ids:
@@ -611,9 +866,19 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Gná's read-only importer")
     ap.add_argument("--self-test", action="store_true")
     ap.add_argument("--account", required=False)
-    ap.add_argument("--days", type=int, default=7)
+    ap.add_argument("--days", type=int, default=None,
+                    help="override the high-water mark with a fixed window — a backfill, not the clock")
     ap.add_argument("--max", type=int, default=200)
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--gap-report", action="store_true",
+                    help="print how long the desk was blind, as JSON, and exit (the clock's own question)")
+    ap.add_argument("--interval-hours", type=float, default=None,
+                    help=f"the run interval a gap is measured against (default {DEFAULT_RUN_INTERVAL_HOURS:g}h)")
+    ap.add_argument("--record-run", action="store_true",
+                    help="write the run's record (with the measured gap) and exit")
+    ap.add_argument("--gap", default="", help="with --record-run: the gap report as JSON")
+    ap.add_argument("--rc", type=int, default=0, help="with --record-run: the import's exit code")
+    ap.add_argument("--accounts", type=int, default=0, help="with --record-run: how many accounts were read")
     ap.add_argument("--rejudge", action="store_true",
                     help="judge the stored mail again with today's rules; appends only the changed verdicts")
     ap.add_argument("--json", action="store_true")
@@ -621,6 +886,17 @@ def main() -> int:
 
     if args.self_test:
         return self_test()
+    if args.gap_report:
+        print(json.dumps(gap_report(args.interval_hours), ensure_ascii=False))
+        return 0
+    if args.record_run:
+        try:
+            gap = json.loads(args.gap) if args.gap.strip() else {}
+        except ValueError:
+            gap = {"exceeded": True, "line": "the gap could not be read (the report was not JSON)"}
+        record = record_run(gap, args.rc, args.accounts, args.days)
+        print(json.dumps(record, ensure_ascii=False))
+        return 0
     if not args.account:
         ap.error("--account is required")
 
@@ -628,7 +904,13 @@ def main() -> int:
     if args.rejudge:
         print(json.dumps(rejudge(account, args.dry_run), ensure_ascii=False, indent=None if args.json else 1))
         return 0
-    records = collect(account, args.days, args.max)
+
+    mark_before = watermark_for(account)
+    window = window_start(args.days, mark_before)
+    records = collect(account, args.days, args.max, window=window)
+    mark_after = mark_before
+    if not args.dry_run:
+        mark_after = note_seen(account, records)
 
     classes: dict[str, int] = {}
     columns = {"needs_you": 0, "unsure": 0, "waiting": 0, "done": 0}
@@ -651,7 +933,10 @@ def main() -> int:
     summary = {
         "account": account,
         "transport": transport_of(gna_store.declared_accounts()[account]),
-        "window_days": args.days,
+        "window": {"at": window["at"], "source": window["source"],
+                   "mark_before": mark_before.get("newest"),
+                   "last_looked": mark_before.get("checked_at")},
+        "mark_after": mark_after.get("newest"),
         "read": len(records),
         "classes": classes,
         "columns": columns,
@@ -664,7 +949,7 @@ def main() -> int:
         print(json.dumps(summary, indent=1, ensure_ascii=False))
         return 0
 
-    print(f"gna · {account} · last {args.days}d · read {len(records)}")
+    print(f"gna · {account} · since {window['at']} ({window['source']}) · read {len(records)}")
     print("  classes  " + (" · ".join(f"{k}={v}" for k, v in sorted(classes.items())) or "none"))
     print("  desk     " + " · ".join(f"{k}={v}" for k, v in columns.items()))
     print("  unknown  " + str(summary["unknown_sender"]) + " sender(s) with no person record")
@@ -672,6 +957,8 @@ def main() -> int:
         print("  store    dry run — nothing written")
     else:
         print(f"  store    {written['written']} written · {written['skipped']} unchanged · {written.get('spine', '')}")
+        print("  mark     " + (str(mark_after.get("newest") or "no message seen yet")
+                              + " (high-water mark)"))
     return 0
 
 
