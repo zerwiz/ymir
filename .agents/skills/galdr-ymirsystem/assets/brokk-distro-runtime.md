@@ -1687,3 +1687,27 @@ every update have the loop. Guard: `bin/bridge/tests/test_ratatoskr_relay.sh` (1
 stub `herdr`, temporary queue). Fix note
 `docs/fixes/bridge/2026-11-16-the-relay-wakes-and-returns.md`, how-to
 `docs/features/ratatoskr-relay.md`.
+
+## The arm door — a task for a machine, or a refusal by name (plan 303 §12.3 step 5, 2026-11-16)
+
+The relay wakes a PANE. A task addressed to a MACHINE has no pane: what answers for a machine
+is its one live arm holder, which is a session holding the lock, not something herdr can be
+told to prompt. `bin/bridge/ratatoskr-arm.sh <machine> "<one line>"` is the one door:
+
+```
+arm_door[4]{rule,why}
+  "the registry decides what a machine is","a name the fleet registry does not hold is refused by name and nothing is handed"
+  "here, eindri-notify.sh","resolves the lock owner's pane and speaks into it; no live holder is REFUSED, exit 1"
+  "there, arm-send.sh","carries the line over that machine's own road and keeps the far door's own words, including `nobody holds the arm on <machine>`"
+  "handed, never delivered","the task counts only when the holder drains it and the queue carries an answer (RULES/49, 56)"
+```
+
+`--who` is the holder's roll per machine and never confuses `no answer` (the road failed) with
+nobody holds the arm (the machine answered and has no holder). The relay routes any task whose
+target has no pane through this door and records the refusal as its miss. A worker never takes
+the arm: the door reads the lock, it never mints one.
+
+Guard: `bin/bridge/tests/test_ratatoskr_arm.sh` (11 cases, both joined doors stubbed, so no
+real holder is ever spoken to). Fix note
+`docs/fixes/bridge/2026-11-16-the-arm-door-refuses-by-name.md`, how-to
+`docs/features/ratatoskr-arm.md`.
