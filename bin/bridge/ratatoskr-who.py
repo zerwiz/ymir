@@ -245,6 +245,26 @@ def main(argv):
     if rows is None:
         sys.stderr.write("ratatoskr-who: herdr did not answer on this machine\n")
         return 1
+    # Hermes sessions have no pane, so they are rows here through the backend adapter
+    # (plan 303 §14, step 9a): the same row shape, one vocabulary, and the state read from
+    # the runtime's own admission rather than guessed from a title.
+    try:
+        import importlib.util
+        bp = os.path.join(ROOT, "bin", "seat", "backends", "resolve.py")
+        if os.path.exists(bp):
+            spec = importlib.util.spec_from_file_location("backend_resolve", bp)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            for r in mod.backends()["hermes"].list():
+                rows.append({"machine": HOST, "harness": "hermes", "pane": "-",
+                             "name": (r.get("name") or "?"),
+                             "state": word(r.get("state", 0), r.get("reason") or ""),
+                             "arm": "no" if want_arm else "-", "road": "hermes session"})
+    except Exception as exc:  # noqa: BLE001
+        rows.append({"machine": HOST, "harness": "hermes", "pane": "-", "name": "?",
+                     "state": word(DEAD), "arm": "-",
+                     "road": "hermes unreadable (%s)" % str(exc)[:60]})
+
     if not want_local:
         hosts = fleet_hosts()
         if only:

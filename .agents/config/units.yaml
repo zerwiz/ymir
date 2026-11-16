@@ -61,7 +61,7 @@ units:
     description: "ratatoskr-relay — wake a ready agent with a queued task, confirm it moved, return the answer"
     workdir: "."
     exec: "/usr/bin/env bash bin/bridge/ratatoskr-relay.sh run --interval ${RATATOSKR_RELAY_INTERVAL} --require-arm"
-    env: { YMIR_HOME: "${YMIR_HOME}", RATATOSKR_RELAY_INTERVAL: "${RATATOSKR_RELAY_INTERVAL}", PYTHONUNBUFFERED: "1" }
+    env: { RATATOSKR_RELAY_INTERVAL: "${RATATOSKR_RELAY_INTERVAL}", PYTHONUNBUFFERED: "1" }
     vars: { RATATOSKR_RELAY_INTERVAL: "5" }
     restart: always
     extra: ["RestartSec=10", "NoNewPrivileges=true"]
