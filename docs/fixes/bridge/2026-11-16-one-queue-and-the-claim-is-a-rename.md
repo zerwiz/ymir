@@ -95,3 +95,7 @@ runs entirely in a temporary queue directory.
 
 It does not wake the target (step 4) and it does not return the answer to the asker's pane
 (step 4). `reply` prints the path it wrote; carrying it back is the relay's work.
+
+## CHANGE LOG
+
+- 2026-11-16 — review-mend: added missing heading for #791
