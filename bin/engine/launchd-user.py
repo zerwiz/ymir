@@ -468,7 +468,7 @@ def do_list(files: bool, args: list[str]) -> int:
     return 0
 
 
-def do_show(names: list[str], props: list[str]) -> int:
+def do_show(names: list[str], props: list[str], value_only: bool = False) -> int:
     for raw in names:
         name = norm(raw)
         st = active_state(name)
@@ -477,7 +477,7 @@ def do_show(names: list[str], props: list[str]) -> int:
                 "MainPID": info.get("pid") or "0", "UnitFileState": "enabled" if is_enabled(name) else "disabled",
                 "LoadState": "loaded" if unit_path(name) else "not-found", "Id": name}
         for k in props or list(vals):
-            print(f"{k}={vals.get(k, '')}")
+            print(vals.get(k, "") if value_only else f"{k}={vals.get(k, '')}")
     return 0
 
 
@@ -560,7 +560,7 @@ def main(argv: list[str]) -> int:
     if verb == "list-unit-files":
         return do_list(True, names + list(flags))
     if verb == "show":
-        return do_show(names, props)
+        return do_show(names, props, "--value" in flags)
     print(f"launchd-user: the verb '{verb}' has no launchd road yet", file=sys.stderr)
     return 1
 
