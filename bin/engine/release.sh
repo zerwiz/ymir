@@ -27,6 +27,12 @@
 # State a running Ymir writes inside its tree (.run, state, .a2a, .yggdrasil, opencode.json, …) lives ONCE in shared/
 # and is linked into each release, so a flip never loses it. Private data stays in $YMIR_HOME (RULES/04).
 set -uo pipefail
+# Portable shims (RULES/05, 2026-11-16): `mv -T`, `date -Is` and /proc are GNU/Linux. On a Mac the release road failed
+# at its first step (adopt), and in_use() saw no process at all, so a release still running could have been pruned.
+mv_t() {  # <src> <dst> — replace dst (a link or an absent dir) with src, never moving src INTO it
+  if mv --version >/dev/null 2>&1; then mv -T "$1" "$2"; else mv -fh "$1" "$2"; fi
+}
+now_iso() { date +%Y-%m-%dT%H:%M:%S%z; }
 
 SELF="$(CDPATH='' cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SRC_DEFAULT="$(CDPATH='' cd "$SELF/../.." && pwd)"
@@ -183,8 +189,8 @@ build() {
     BROKK_ROOT_OVERRIDE="$tmp" bash "$tmp/bin/time/nornir-job-hall-snapshot.sh" >> "$log" 2>&1 || true
   fi
   if ! prove "$tmp"; then say "FAIL	the release did not prove — it stays unbuilt at $tmp"; return 1; fi
-  date -Is > "$tmp/.release-proved"
-  rm -rf "$d"; mv -T "$tmp" "$d"
+  now_iso > "$tmp/.release-proved"
+  rm -rf "$d"; mv_t "$tmp" "$d"
   say "release	$d	built and proved"
 }
 
@@ -216,7 +222,7 @@ flip() {
   local d; d="$(resolve_sha "${1:?flip <sha>}")"
   [ -n "$d" ] && [ -f "$d/.release-proved" ] || fail "no PROVED release for $1"
   readlink -f "$CUR" 2>/dev/null > "$BASE/previous" || true
-  ln -sfn "$d" "$CUR.tmp-$$" && mv -T "$CUR.tmp-$$" "$CUR" || fail "the flip did not land"
+  ln -sfn "$d" "$CUR.tmp-$$" && mv_t "$CUR.tmp-$$" "$CUR" || fail "the flip did not land"
   say "current	$d"
   if [ "$no_restart" = 1 ]; then
     say "restart	skipped	--no-restart — the services still run the release they started in"
@@ -239,6 +245,11 @@ flip() {
 }
 in_use() {  # <release-dir> → 0 when any process runs from it
   local p
+  if [ ! -d /proc/self ]; then  # no /proc (a Mac): ask lsof for working directories and ps for command lines
+    lsof -nP -a -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' | grep -qE "^$1(/|$)" && return 0
+    ps -axo command= 2>/dev/null | grep -qF "$1/" && return 0
+    return 1
+  fi
   for p in /proc/[0-9]*; do
     case "$(readlink "$p/cwd" 2>/dev/null)" in "$1"|"$1"/*) return 0 ;; esac
     { tr '\0' ' ' < "$p/cmdline"; } 2>/dev/null | grep -qF "$1/" && return 0
@@ -259,10 +270,10 @@ adopt() {
   [ -e "$d" ] && fail "$d already exists — build a release and flip it instead"
   # the links are made in the same breath as the move, so the pin's path is absent for microseconds, not for the
   # whole of link_shared (a dev machine, 2026-11-12: a timer started in that gap and failed its CHDIR)
-  ln -sfn "$d" "$CUR.tmp-$$" && mv -T "$PIN" "$d" && mv -T "$CUR.tmp-$$" "$CUR" && ln -sfn "$CUR" "$PIN" \
+  ln -sfn "$d" "$CUR.tmp-$$" && mv_t "$PIN" "$d" && mv_t "$CUR.tmp-$$" "$CUR" && ln -sfn "$CUR" "$PIN" \
     || fail "could not move the pin"
   link_shared "$d"
-  date -Is > "$d/.release-adopted"
+  now_iso > "$d/.release-adopted"
   say "adopt	$PIN → $CUR → $d"
 }
 
