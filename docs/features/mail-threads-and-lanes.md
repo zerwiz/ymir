@@ -73,3 +73,7 @@ look identical on a terminal. Point it at the store with `--store`, or set `YMIR
 `warning: N unreadable row(s) in the store, first at line L` means the store itself has a
 broken line. The rows that do parse are still answered; the count rides in the JSON as
 `totals.unreadable_rows`. A broken row is a finding, never a silent skip.
+
+## CHANGE LOG
+
+- **2026-11-16** — Opened: the door that answers "did we answer this", and the four lanes.
