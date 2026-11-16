@@ -78,3 +78,8 @@ carrying `target`, `backend`, `state` and `word`.
   Check `~/.hermes/state.db` exists and is readable.
 - `dead` for a pane you can see on screen — the pane holds a bare shell, not an agent.
   `bin/seat/seats.sh list` shows the panes herdr actually knows an agent in.
+
+## CHANGE LOG
+
+- **2026-11-16** — written with the change it describes (plan 303 §12.3 step 1, the
+  errand `agents-find-and-answer`).

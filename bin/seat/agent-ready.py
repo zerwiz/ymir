@@ -178,7 +178,7 @@ def hermes_sessions():
     is the last field and is the only one with a stable shape, so it is taken first
     and the rest read to its left — a truncated title still leaves a usable row.
     """
-    exe = shutil.which("hermes") or os.path.join(os.path.expanduser("~"), ".local", "bin", "hermes")
+    exe = shutil.which("hermes") or os.path.expanduser("~/.local/bin/hermes")
     if not os.path.exists(exe) and not shutil.which("hermes"):
         return None
     try:
