@@ -27,3 +27,7 @@ Linux seats that had PyYAML keep the isolated road.
 
 On a Mac with only `/usr/bin/python3` (3.9) on the PATH and PyYAML in the user site, `units.sh list` printed the
 register.
+
+## CHANGE LOG
+
+- 2026-11-15 — review-mend: added missing heading for #785
