@@ -22,6 +22,7 @@ arrived, which is exactly the kind of noise that teaches a reader to ignore the 
 a run with no pane exits 0 and names the queue; a run carrying the `w2:p3` ghost discards it, names it by id, and still
 exits 0. Six assertions, no herdr server, no tmux, no network.
 
-**Not mended here, named:** the arm still records the helm's pane when it starts. That is correct — it is how a live
-turn is aimed — and the door now treats the record as a claim rather than an order, which is the property that matters
-across a reboot.
+**And the writer that never existed.** `state/.arm.pane` was written **by hand on 9 November** — the fix note of that
+day says so in as many words — and three doors read it for a week, aiming turns at a pane that died with the 04:00
+reboot. The arm now records **its own** pane at start, atomically and only when herdr has told it one, so a ghost cannot
+outlive the seat that wrote it.
