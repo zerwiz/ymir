@@ -55,3 +55,7 @@ started reading `todo.md`; the digest was never taught the same lesson.
   which is exactly why the door must read the file rather than a ledger that only knows what was spoken to Rödd.
 - `bin/time/tests/test_saga_head.sh` — 41 pass, 1 fail, and the failure (`the hook runs the home the session is IN`) is
   pre-existing on `main` at `518213713`, proved by running the same test in the unmodified checkout.
+
+## CHANGE LOG
+
+- 2026-11-16 — review-mend: added missing heading for #790
