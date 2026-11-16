@@ -4,6 +4,7 @@
 #   bin/bridge/ratatoskr.sh status            # engine + directory health + served agents
 #   bin/bridge/ratatoskr.sh who [--local]      # THE DIRECTORY: every agent on every fleet machine, and who holds the arm
 #   bin/bridge/ratatoskr.sh send <target> "…"  # ONE QUEUE: write a task, then wake the target (step 4)
+#   bin/bridge/ratatoskr.sh answer <id> "…"    # claim (if still on the shelf) and reply, in ONE command
 #   bin/bridge/ratatoskr.sh reply <id> "…"     # answer a task: the file moves to done/ and the answer is its record
 #   bin/bridge/ratatoskr.sh claim <id>         # take a task off the shelf (the claim is the rename)
 #   bin/bridge/ratatoskr.sh inbox [--for T]    # what is waiting, on all three shelves
@@ -38,7 +39,7 @@ fi
 # step 3). A task is a Markdown file; the claim is a RENAME, so two receivers cannot both
 # win one; a reply moves it to done/ and the file is the record of the whole exchange.
 case "$ACTION" in
-  send|reply|claim|inbox|show|count)
+  send|reply|answer|claim|inbox|show|count)
     exec python3 "$(dirname "$0")/ratatoskr-queue.py" "$ACTION" "$@" ;;
 esac
 

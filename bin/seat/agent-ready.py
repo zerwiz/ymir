@@ -145,9 +145,16 @@ def herdr_ready(pane):
     ready_flag = a.get("interactive_ready")
     detail = "agent=%s status=%s" % (kind or "?", status or "?")
 
-    if status in ("working", "done"):
-        # Both are PAST needing input: a message queues behind the turn, it is not lost.
+    if status == "working":
+        # Mid-turn: a message queues behind the turn, and it is not lost.
         return WORKING, "", detail
+    if status == "done":
+        # MEASURED 2026-11-16, and it cost the relay a stall: pi reports `done` when its
+        # turn has FINISHED and it sits at its prompt again. Mapping `done` to `working`
+        # made every finished pi agent look busy for ever, so the relay never woke it.
+        if ready_flag is False:
+            return BLOCKED, "not at an input prompt", detail
+        return READY, "", detail
     if status == "blocked":
         rule, evidence = herdr_explain(pane)
         return BLOCKED, classify_dialog(rule, evidence), detail
