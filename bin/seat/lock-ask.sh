@@ -107,7 +107,7 @@ lock_starttime() { local p; p="$(lock_path)"; sed -n '1p' "$p.starttime" 2>/dev/
 lease_field() {  # <field>
   local f=$1 l="$STATE/.arm.lease"
   [ -r "$l" ] || return 1
-  sed -n "s/.*\b$f=\([^ ]*\).*/\1/p" "$l" | head -1
+  sed -nE "s/(^|.* )$f=([^ ]*).*/\2/p" "$l" | head -1
 }
 arm_pid()     { lease_field pid; }
 arm_session() { lease_field session; }
