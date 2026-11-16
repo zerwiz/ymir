@@ -12,3 +12,7 @@ generic icon in Finder, Launchpad and the Dock. Linux and Windows already receiv
 `mac_apps` now turns the app's declared PNG into an `.icns` with macOS's own `sips` and `iconutil`. It places the file
 in `Contents/Resources` and names it in `Info.plist` (`CFBundleIconFile`). When either tool is missing, the app is
 still written, without an icon, as before.
+
+## CHANGE LOG
+
+- 2026-11-15 — review-mend: added missing heading for #781
