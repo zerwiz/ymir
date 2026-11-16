@@ -145,9 +145,17 @@ def extra_path() -> list[str]:
 
 
 # ── rendering a launchd agent ────────────────────────────────────────────────
+def transient_dir() -> Path:
+    """Where `systemd-run` units live: outside the unit dir, so an install never mistakes one for its own."""
+    return staged_dir() / "transient"
+
+
 def unit_path(name: str) -> Path | None:
-    p = unit_dir() / norm(name)
-    return p if p.exists() else None
+    for d in (unit_dir(), transient_dir()):
+        p = d / norm(name)
+        if p.exists():
+            return p
+    return None
 
 
 def agent_label(name: str) -> str:
@@ -413,6 +421,10 @@ def stop_one(name: str) -> None:
         return
     boot_out(name)
     p = unit_path(name)
+    if p and p.parent == transient_dir():  # a transient unit is forgotten once stopped, as with --collect
+        p.unlink(missing_ok=True)
+        staged_file(name).unlink(missing_ok=True)
+        return
     if p and not name.endswith(".timer"):
         for x in parse(p).get("Service", {}).get("ExecStop", []):
             subprocess.run(["/bin/bash", "-c", spec(x).lstrip("-@!+:")], capture_output=True, timeout=60)
@@ -565,5 +577,61 @@ def main(argv: list[str]) -> int:
     return 1
 
 
+# ── systemd-run: a transient unit, rendered straight to a launchd agent ──────────────────
+def do_run(argv: list[str]) -> int:
+    """`systemd-run --user --unit=X [--collect] [--setenv=K=V]… [--property=StandardOutput=append:F]… CMD…`."""
+    if "--user" not in argv:
+        print("systemd-run: only the user manager exists on this Mac — run with --user", file=sys.stderr)
+        return 1
+    unit, env, out, err, cmd = "", {}, "", "", []
+    it = iter(argv)
+    for a in it:
+        if cmd:
+            cmd.append(a)
+        elif a == "--":
+            cmd = list(it)
+            break
+        elif a.startswith("--unit="):
+            unit = a.split("=", 1)[1]
+        elif a in ("--unit", "-u"):
+            unit = next(it, "")
+        elif a.startswith("--setenv=") or a in ("--setenv", "-E"):
+            kv = a.split("=", 1)[1] if a.startswith("--setenv=") else next(it, "")
+            if "=" in kv:
+                k, v = kv.split("=", 1)
+                env[k] = v
+        elif a.startswith("--property=") or a in ("--property", "-p"):
+            prop = a.split("=", 1)[1] if a.startswith("--property=") else next(it, "")
+            k, _, v = prop.partition("=")
+            path = v.split(":", 1)[1] if v.startswith(("append:", "file:")) else ""
+            if k == "StandardOutput" and path:
+                out = path
+            elif k == "StandardError" and path:
+                err = path
+        elif a.startswith("-"):
+            continue  # --collect, --quiet, --no-block, --same-dir: no launchd meaning, harmless
+        else:
+            cmd = [a]
+    if not cmd:
+        print("systemd-run: no command given", file=sys.stderr)
+        return 1
+    name = norm(unit or f"run-{os.getpid()}")
+    path = env.get("PATH", "")
+    env["PATH"] = ":".join([p for p in path.split(":") if p] + [p for p in extra_path() if p not in path.split(":")])
+    env.setdefault("HOME", str(HOME))
+    logs = str(log_dir() / f"{stem(name)}.log")
+    pl = {"Label": agent_label(name), "ProgramArguments": cmd, "EnvironmentVariables": env,
+          "StandardOutPath": out or logs, "StandardErrorPath": err or out or logs,
+          "WorkingDirectory": os.getcwd(), "ProcessType": "Standard", "RunAtLoad": True}
+    transient_dir().mkdir(parents=True, exist_ok=True)
+    (transient_dir() / name).write_text("[Unit]\nDescription=transient (systemd-run)\n[Service]\nType=simple\nExecStart="
+                                       + " ".join(shlex.quote(c) for c in cmd).replace("%", "%%") + "\n", encoding="utf-8")
+    write_if_changed(staged_file(name), plist_bytes(pl))
+    if not boot_in(name):
+        return 1
+    print(f"Running as unit: {name}", file=sys.stderr)
+    return 0
+
+
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(do_run(sys.argv[1:]) if Path(sys.argv[0]).name == "systemd-run" else main(sys.argv[1:]))

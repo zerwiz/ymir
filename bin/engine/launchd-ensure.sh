@@ -21,6 +21,7 @@ PIN="${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}"
 TARGET="$PIN/bin/engine/launchd-user.py"
 BIN_DIR="${YMIR_SHORTCUT_BIN:-$HOME/.local/bin}"
 SHIM="$BIN_DIR/systemctl"
+RUN_SHIM="$BIN_DIR/systemd-run"   # the same file answers systemd-run (transient units) by its name
 
 row() { printf '  "%s","%s","%s"\n' "$1" "$2" "$3"; }
 
@@ -50,13 +51,17 @@ case "$cmd" in
     command -v python3 >/dev/null 2>&1 || { row launchd FAIL "python3 is missing — install the Xcode command line tools"; exit 1; }
     chmod +x "$TARGET" 2>/dev/null || true
     mkdir -p "$BIN_DIR" "$HOME/Library/LaunchAgents" "$HOME/Library/Logs/ymir"
-    if seated; then row launchd OK "already seated ($SHIM)"; exit 0; fi
+    if seated; then
+      [ -e "$RUN_SHIM" ] && [ ! -L "$RUN_SHIM" ] || ln -sfn "$TARGET" "$RUN_SHIM"
+      row launchd OK "already seated ($SHIM)"; exit 0
+    fi
     if [ -e "$SHIM" ] && [ ! -L "$SHIM" ]; then row launchd FAIL "$SHIM exists and is not Ymir's — move it aside first"; exit 1; fi
     ln -sfn "$TARGET" "$SHIM" || { row launchd FAIL "could not link $SHIM"; exit 1; }
+    [ -e "$RUN_SHIM" ] && [ ! -L "$RUN_SHIM" ] || ln -sfn "$TARGET" "$RUN_SHIM"
     case ":$PATH:" in *":$BIN_DIR:"*) ;; *) row path WARN "$BIN_DIR is not on this shell's PATH — the installer's shell step adds it" ;; esac
     row launchd OK "seated: systemctl --user -> launchd ($SHIM -> $TARGET)"; exit 0 ;;
   remove)
-    if [ -L "$SHIM" ] && [ "$(readlink "$SHIM")" = "$TARGET" ]; then rm -f "$SHIM"; row launchd OK "removed $SHIM"; else row launchd SKIP "not seated"; fi
+    if [ -L "$SHIM" ] && [ "$(readlink "$SHIM")" = "$TARGET" ]; then rm -f "$SHIM"; [ -L "$RUN_SHIM" ] && rm -f "$RUN_SHIM"; row launchd OK "removed $SHIM"; else row launchd SKIP "not seated"; fi
     exit 0 ;;
   -h|--help|help) sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
   *) printf 'error: unknown command %s (check|ensure|remove)\n' "$cmd" >&2; exit 2 ;;
