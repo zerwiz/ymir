@@ -2,6 +2,7 @@
 # ratatoskr.sh — Ymir's front door to the A2A engine (`a2abridge`).
 #
 #   bin/bridge/ratatoskr.sh status            # engine + directory health + served agents
+#   bin/bridge/ratatoskr.sh who [--local]      # THE DIRECTORY: every agent on every fleet machine, and who holds the arm
 #   bin/bridge/ratatoskr.sh doctor            # a2abridge's full health-check
 #   bin/bridge/ratatoskr.sh directory start|stop|status   # the local discovery daemon
 #   bin/bridge/ratatoskr.sh service ...       # systemd-user / launchd service management
@@ -16,8 +17,18 @@ A2AB="${A2ABRIDGE_BIN:-$HOME/.a2abridge/bin/a2abridge}"
 DIR_URL="${A2A_DIRECTORY:-http://127.0.0.1:7777}"
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
-  -h|--help|"") sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
+  -h|--help|"") sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 ACTION="${1:-status}"; shift || true
+
+# who — the DIRECTORY (plan 303 §12.3 step 2). herdr is the directory: it lists the panes
+# that exist NOW on this machine, and each fleet machine is asked over its own road. No
+# announce step, so a stale peer cannot be listed — and a machine that does not answer is
+# a row that says so, never a row quietly dropped. It is answered BEFORE the engine check,
+# because the directory does not need a2abridge to be present: reading herdr and the hermes
+# store is enough.
+if [ "$ACTION" = who ]; then
+  exec python3 "$(dirname "$0")/ratatoskr-who.py" "$@"
+fi
 
 have() { command -v "$1" >/dev/null 2>&1; }
 
@@ -81,5 +92,5 @@ except Exception: print("?")' 2>/dev/null)"
     esac ;;
   service|cert|worker|install|uninstall|update|completion) exec "$A2AB" "$ACTION" "$@" ;;
   agents) cmd_agents ;;
-  *) printf 'error: unknown action %s\nhelp: bin/bridge/ratatoskr.sh [status|agents|doctor|directory|service|cert|version]\n' "$ACTION" >&2; exit 2 ;;
+  *) printf 'error: unknown action %s\nhelp: bin/bridge/ratatoskr.sh [status|who|agents|doctor|directory|service|cert|version]\n' "$ACTION" >&2; exit 2 ;;
 esac

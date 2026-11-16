@@ -1607,3 +1607,28 @@ Guard: `bin/seat/tests/test_agent_ready.sh` (19 cases, stub `herdr` and stub `he
 is step 4; the directory that lists the fleet is step 2. Fix note
 `docs/fixes/agents/2026-11-16-the-ready-check-speaks-one-vocabulary.md`, how-to
 `docs/features/agent-ready-check.md`.
+
+## The directory is herdr, and a dark machine is a row (plan 303 §12.3 step 2, 2026-11-16)
+
+Discovery used to be opt-in: an agent existed to a peer only after somebody ran an
+announce command by hand, and the one peer that had been announced outlived its agent.
+`bin/bridge/ratatoskr.sh who` (over `bin/bridge/ratatoskr-who.py`) reads what is alive
+instead.
+
+```
+who_contract[5]{piece,rule}
+  "the source","`herdr agent list` on this machine first, then on every machine `hodd/data/fleet.json` names"
+  "the road","each far machine is asked once, in parallel, over its own ssh road; the arm holder is resolved there by `bin/agents/eindri-notify.sh --status`, never by a second copy of that logic"
+  "the state","the same four words `bin/seat/agent-ready.sh` answers with — this machine's reason from `herdr agent explain`, a far machine's `blocked: dialog`"
+  "a dark machine","a ROW that names the road that failed, never silence: 'no agents there' and 'nobody could ask' are different claims"
+  "the arm","`yes` on the holder's pane; when that pane holds no agent herdr lists, a row of its own says so"
+```
+
+`herdr agent list` JSON is read from stdout **or** stderr: herdr answers a present agent
+on stdout and a missing one on stderr with exit 1. A reader that watches one stream calls
+every empty pane "unsure".
+
+Flags: `--local`, `--machine NAME`, `--no-arm`, `--json`. Guard:
+`bin/bridge/tests/test_ratatoskr_who.sh` (15 cases, stub `herdr` and stub `ssh`, fixture
+fleet registry). Fix note `docs/fixes/bridge/2026-11-16-the-directory-is-herdr.md`,
+how-to `docs/features/ratatoskr-who.md`.
