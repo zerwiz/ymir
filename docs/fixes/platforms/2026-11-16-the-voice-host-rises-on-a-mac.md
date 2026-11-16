@@ -20,6 +20,10 @@
 The host runs with `HF_HUB_OFFLINE=1`, so on a fresh machine the speech models are never fetched and the engine
 fails with `LocalEntryNotFoundError`. `--install` should fetch them once, with the network on.
 
+## Also: the arm could not be read on a Mac
+
+`rodd-arm.sh`, `rodd-helm.sh`, `helm-identity.sh` and `lock-ask.sh` read lease fields with `sed "s/.*\b<field>=…"`. `\b` is a GNU extension; BSD sed treats it as a plain `b`, so every field came back empty and `rodd-arm.sh who` said *the lease names no pid* while the lease held one. The fields are now matched with `sed -E "s/(^|.* )<field>=([^ ]*).*/\2/p"`, which both seds read the same way.
+
 ## CHANGE LOG
 
 - 2026-11-15 — review-mend: added missing heading for #787
