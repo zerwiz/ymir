@@ -172,9 +172,16 @@ fi
 # Clause 2: the claimant must be a live harness in HARNESS_COMMS. Clause 3: the
 # role must be one it can work — rodd, counsellor, or a harness name. Anything
 # else is refused LOUDLY with the failing clause named, never silently inherited.
+# The process name of a pid: /proc where it exists (Linux), ps where it does not (macOS).
+proc_comm() {
+  local c=""
+  c="$(cat "/proc/$1/comm" 2>/dev/null || true)"
+  [ -n "$c" ] || c="$(ps -o comm= -p "$1" 2>/dev/null | sed 's#.*/##' | tr -d '[:space:]' || true)"
+  printf '%s' "$c"
+}
 role_from_comm() {
   local comm=""
-  comm="$(cat "/proc/$1/comm" 2>/dev/null || true)"
+  comm="$(proc_comm "$1")"
   case "$comm" in
     pi) printf 'counsellor' ;;
     opencode|claude|cursor|codex|grok|kimi|muse|hermes) printf '%s' "$comm" ;;
@@ -187,7 +194,7 @@ role_is_known() {
     *) return 1 ;;
   esac
 }
-comm="$(cat "/proc/$sess/comm" 2>/dev/null || true)"
+comm="$(proc_comm "$sess")"
 case "$comm" in
   pi|opencode|claude|cursor|codex|grok|kimi|muse|hermes) : ;;
   *) printf 'watcher: refused — clause 2: the claimant (pid %s, comm %s) is not a live harness in HARNESS_COMMS\n' "$sess" "${comm:-unknown}" >&2; exit 1 ;;
@@ -219,7 +226,10 @@ printf 'watcher: helm role=%s session=%s\n' "$ROLE" "$sess"
 clients="$STATE/.arm.clients"
 mkdir -p "$clients" 2>/dev/null || true
 client_file="$clients/$sess.pids"
-_is_arm_client() { grep -qa 'syn-watch-arm' "/proc/$1/cmdline" 2>/dev/null; }
+_is_arm_client() {  # /proc on Linux; ps where there is no /proc (macOS)
+  if [ -r "/proc/$1/cmdline" ]; then grep -qa 'syn-watch-arm' "/proc/$1/cmdline" 2>/dev/null
+  else ps -o command= -p "$1" 2>/dev/null | grep -q 'syn-watch-arm'; fi
+}
 if [ -r "$client_file" ]; then
   while IFS= read -r _p; do
     case "$_p" in ''|*[!0-9]*) continue ;; esac

@@ -62,8 +62,6 @@ YMIR_HOME="${YMIR_HOME:-}"; [ -n "$YMIR_HOME" ] || ymir_home_root YMIR_HOME 2>/d
 
 PORT="${YMIR_VOICE_PORT:-8890}"
 HOST_MACHINE="${YMIR_VOICE_HOST:-}"
-STT="${YMIR_VOICE_STT:-faster-whisper}"
-STT_MODEL="${YMIR_VOICE_STT_MODEL:-small.en}"
 # this machine's own voice settings (plan 275): ~/.config/ymir/voice.env, per machine and never the shared home —
 # one machine has a compute GPU and room for two conversations, another has neither. Only YMIR_VOICE_* keys are read.
 if [ -r "${XDG_CONFIG_HOME:-$HOME/.config}/ymir/voice.env" ]; then
@@ -74,6 +72,9 @@ if [ -r "${XDG_CONFIG_HOME:-$HOME/.config}/ymir/voice.env" ]; then
   # still sent to the fleet's first ear (one machine to another)
   HOST_MACHINE="${YMIR_VOICE_HOST:-$HOST_MACHINE}"
 fi
+# read AFTER the machine's voice.env (2026-11-16: a Mac that named the multilingual `small` still got `small.en`)
+STT="${YMIR_VOICE_STT:-faster-whisper}"
+STT_MODEL="${YMIR_VOICE_STT_MODEL:-small.en}"
 STT_DEVICE="${YMIR_VOICE_STT_DEVICE:-cpu}"
 STT_COMPUTE="${YMIR_VOICE_STT_COMPUTE:-int8}"
 TTS="${YMIR_VOICE_TTS:-kokoro}"
@@ -361,7 +362,7 @@ cmd_host() {
     --property=StandardError=append:"$STATE_DIR/host.log" \
     "$eng" serve "${HOST_ARGV[@]}" "${engine_pin[@]}" ${hk:+--responses_api_api_key "$hk"} >/dev/null || {
       err "error: could not raise $UNIT"; return 1; }
-  printf '%s\n' "$(date -Is) unit=$UNIT port=$PORT head=$HEAD_URL/$HEAD_MODEL" >> "$STATE_DIR/host.seat"
+  printf '%s\n' "$(date +%Y-%m-%dT%H:%M:%S%z) unit=$UNIT port=$PORT head=$HEAD_URL/$HEAD_MODEL" >> "$STATE_DIR/host.seat"
   # THE CARD IS BORROWED, NOT KEPT (plan 275 item 23). Raise the idle watcher beside the
   # engine: after YMIR_VOICE_IDLE_SECONDS with no session in use it stops the engine and the
   # card is free for the rail. It is best-effort by design — an engine that runs and never
@@ -489,7 +490,7 @@ cmd_log() {
   local lines="${1:-40}" host dir
   host="$(resolve_host || true)"
   dir="${YMIR_HOME:?the home is resolved at the top of this door}/hodd/state/voice"
-  printf 'voice_activity[%s]{when,event,detail}:\n' "$(date -Is)"
+  printf 'voice_activity[%s]{when,event,detail}:\n' "$(date +%Y-%m-%dT%H:%M:%S%z)"
   if ls "$dir"/activity-*.jsonl >/dev/null 2>&1; then
     python3 - "$dir" "$lines" <<'PY'
 import glob, json, sys
@@ -504,7 +505,7 @@ for r in rows[-n:]:
     print(f'  "{r.get("ts","")}","{r.get("event","")}","{r.get("tool","")} {str(detail)[:120]}"')
 PY
   else
-    printf '  "%s","none","no tool has been used yet"\n' "$(date -Is)"
+    printf '  "%s","none","no tool has been used yet"\n' "$(date +%Y-%m-%dT%H:%M:%S%z)"
   fi
   if [ -n "$host" ]; then
     printf '# turns, from the host seat log:\n'

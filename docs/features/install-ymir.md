@@ -50,6 +50,12 @@ ymir heimdall · invite   the way in, and letting someone else in
 
 ## Notes and limits
 
+- **On a Mac, install a newer bash first.** macOS ships bash 3.2, and the doctor, the
+  migrations and the gates need bash 4 or newer. Run `brew install bash` once. You do
+  not need to change your login shell: those scripts find Homebrew's bash on their own
+  (or the one you name in `YMIR_BASH`). Without one, they stop with
+  `needs bash 4 or newer` and print the same fix.
+
 - **Your home, your data.** Private data lives at `$YMIR_HOME` (default
   `~/Documents/ymirhome`), never in the installed tree. The tree is code; the home is
   yours; a fresh clone and a package are the same tree.

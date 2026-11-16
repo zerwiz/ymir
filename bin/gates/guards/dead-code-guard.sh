@@ -26,6 +26,8 @@
 # Those are dead code by the rule. This ward catches the shapes that actually occur, and a
 # ward that claims more than it checks is the failure the rule exists to stop.
 set -u
+# the bash floor (RULES/05): macOS ships bash 3.2 — re-run under bash >= 4, or say how to get one
+[ "${BASH_VERSINFO[0]:-0}" -ge 4 ] || { . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../../fleet/ymir-platform.sh" && ymir_bash_floor "$@"; }
 
 _root() {
   local d; d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
