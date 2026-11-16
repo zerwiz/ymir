@@ -188,12 +188,19 @@ def _rpc_http(spec: dict, messages: list[dict], timeout: int) -> list[dict]:
         auth = _pi_auth(_server_name(spec.get("url", "")), spec["url"])
     if auth:
         headers.setdefault("Authorization", f"Bearer {auth}")
+    # streamable HTTP (MCP 2025-03-26+): the server names a session at initialize and refuses every later call
+    # without it ("Missing session ID", measured 2026-11-16 against workspace-mcp) — carry it on the spec
+    if spec.get("_session_id"):
+        headers["Mcp-Session-Id"] = spec["_session_id"]
     body = json.dumps(messages[0] if len(messages) == 1 else messages).encode()
     req = urllib.request.Request(spec["url"], data=body, headers=headers, method="POST")
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             raw = resp.read().decode("utf-8", "ignore")
             ctype = resp.headers.get("Content-Type", "")
+            sid = resp.headers.get("Mcp-Session-Id")
+            if sid:
+                spec["_session_id"] = sid
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", "ignore")[:300]
         raise McpError(f"HTTP {exc.code} from {spec['url']}: {detail or exc.reason}") from None
@@ -211,6 +218,8 @@ def _rpc_http(spec: dict, messages: list[dict], timeout: int) -> list[dict]:
                 except Exception:
                     continue
         return out
+    if not raw.strip():  # a notification is answered 202 with no body
+        return []
     try:
         data = json.loads(raw)
     except Exception as exc:
@@ -282,7 +291,8 @@ def _session(spec: dict, timeout: int) -> list[dict]:
                        "clientInfo": {"name": "rodd", "version": "1.0"}}}
     ready = {"jsonrpc": "2.0", "method": "notifications/initialized", "params": {}}
     lst = {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}
-    return _rpc_http(spec, [init], timeout) + _rpc_http(spec, [lst], timeout) if _remote(spec) \
+    return _rpc_http(spec, [init], timeout) + _rpc_http(spec, [ready], timeout) + _rpc_http(spec, [lst], timeout) \
+        if _remote(spec) \
         else _rpc_stdio(spec, [init, ready, lst], timeout)
 
 
@@ -327,6 +337,7 @@ def call(server: str, tool: str, arguments: dict | None = None, timeout: int = D
           "params": {"name": tool, "arguments": arguments or {}}}
     if _remote(spec):
         _rpc_http(spec, [init], timeout)
+        _rpc_http(spec, [ready], timeout)
         replies = _rpc_http(spec, [do], timeout)
     else:
         replies = _rpc_stdio(spec, [init, ready, do], timeout)
