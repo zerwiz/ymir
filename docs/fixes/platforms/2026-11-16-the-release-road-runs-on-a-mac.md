@@ -28,3 +28,7 @@ Linux behaviour is unchanged.
 
 On one Mac (Apple silicon, macOS 14.7), `release.sh adopt` turned `~/ymir-runtime` into a link to
 `~/.local/share/ymir/current`. `runtime-deploy.sh` then built the release with the apps inside it.
+
+## CHANGE LOG
+
+- 2026-11-15 — review-mend: added missing heading for #784
