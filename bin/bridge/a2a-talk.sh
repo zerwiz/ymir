@@ -3,6 +3,9 @@
 #
 #   bin/bridge/a2a-talk.sh agents                 # who is registered
 #   bin/bridge/a2a-talk.sh send <peer> "<text>"   # send a task, print the reply
+#   bin/bridge/a2a-talk.sh prove [--nonce N] [--live <A> <B>]
+#                                                 # the round trip: the three doors, a nonce, and
+#                                                 # the proof that it came back unchanged
 #
 # Peer is matched by name (exact or prefix). Directory from A2A_DIRECTORY
 # (default http://127.0.0.1:7777). This is the proof-of-channel; pi gets the
@@ -64,5 +67,19 @@ try:
     print("  \"%s\",\"%s\",\"%s\"" % (sys.argv[1], st.get("state","?"), text))
 except Exception as e:
     print("error: no reply:", e)' "$PEER" ;;
-  *) printf 'error: usage: bin/bridge/a2a-talk.sh agents|<send peer text>\n' >&2; exit 2 ;;
+  prove)
+    # THE PROOF (plan 303 §12.3 step 7). One nonce, three doors, and a round trip through
+    # agent A, agent B and back to agent A. This extends the door that already proves the
+    # channel; there is no second prover.
+    #
+    #   him -> A      a task written by the caller into the queue, addressed to A
+    #   A -> B        A forwards the nonce to B through the same door
+    #   B -> A        B answers with the nonce
+    #   A -> him      A returns it, and the nonce must be unchanged at every hop
+    #
+    # `--live` drives that through two real agents and is honest about time: every hop is
+    # waited for, and a hop that does not arrive is reported `unproved` with its name — never
+    # a green that only shows a file moved.
+    exec python3 "$(dirname "$0")/a2a-prove.py" "$@" ;;
+  *) printf 'error: usage: bin/bridge/a2a-talk.sh agents|<send peer text>|prove\n' >&2; exit 2 ;;
 esac

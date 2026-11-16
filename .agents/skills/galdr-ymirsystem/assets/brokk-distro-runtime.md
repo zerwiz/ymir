@@ -1687,3 +1687,74 @@ every update have the loop. Guard: `bin/bridge/tests/test_ratatoskr_relay.sh` (1
 stub `herdr`, temporary queue). Fix note
 `docs/fixes/bridge/2026-11-16-the-relay-wakes-and-returns.md`, how-to
 `docs/features/ratatoskr-relay.md`.
+
+## The arm door — a task for a machine, or a refusal by name (plan 303 §12.3 step 5, 2026-11-16)
+
+The relay wakes a PANE. A task addressed to a MACHINE has no pane: what answers for a machine
+is its one live arm holder, which is a session holding the lock, not something herdr can be
+told to prompt. `bin/bridge/ratatoskr-arm.sh <machine> "<one line>"` is the one door:
+
+```
+arm_door[4]{rule,why}
+  "the registry decides what a machine is","a name the fleet registry does not hold is refused by name and nothing is handed"
+  "here, eindri-notify.sh","resolves the lock owner's pane and speaks into it; no live holder is REFUSED, exit 1"
+  "there, arm-send.sh","carries the line over that machine's own road and keeps the far door's own words, including `nobody holds the arm on <machine>`"
+  "handed, never delivered","the task counts only when the holder drains it and the queue carries an answer (RULES/49, 56)"
+```
+
+`--who` is the holder's roll per machine and never confuses `no answer` (the road failed) with
+nobody holds the arm (the machine answered and has no holder). The relay routes any task whose
+target has no pane through this door and records the refusal as its miss. A worker never takes
+the arm: the door reads the lock, it never mints one.
+
+Guard: `bin/bridge/tests/test_ratatoskr_arm.sh` (11 cases, both joined doors stubbed, so no
+real holder is ever spoken to). Fix note
+`docs/fixes/bridge/2026-11-16-the-arm-door-refuses-by-name.md`, how-to
+`docs/features/ratatoskr-arm.md`.
+
+## The bridge names itself (plan 303 §12.3 step 6, 2026-11-16)
+
+Every session's A2A bridge was spawned with one bind address, no name, no id and no state dir,
+so two sessions on a box collided on the port, shared one inbox, and every card said
+`127.0.0.1`. The wrapper that fixed it lived in `~/.local/bin` — in no repository, seated by no
+installer — so no other machine could have it. It is `bin/bridge/a2a-bridge-session.sh` now,
+and `bin/bridge/a2a-mcp.sh` points every harness's `a2abridge` entry at it.
+
+```
+bridge_identity[6]{field,from,example}
+  "harness","A2A_HARNESS, else the session's own environment, else unknown","pi · claude · hermes · unknown"
+  "pane","HERDR_PANE_ID","w6R:p1"
+  "name and id","<harness>-<pane> — never brokk- for a non-pi agent (RULES/44)","pi-w6R-p1"
+  "address","the fleet registry's name for this machine; bound on that name's own address, every interface if it does not resolve here, loopback only on a box that advertises loopback","<machine>.<tailnet>.ts.net"
+  "state","one directory per session","~/.a2abridge/state/pi-w6R-p1"
+  "port","first free from A2A_PORT, reserved by mkdir; a claim whose pid is gone is swept","8391"
+```
+
+`--identity` prints the row; `--dry` prints the exact argv and claims nothing, which is how the
+guard judges it without spawning a bridge. Guard:
+`bin/bridge/tests/test_a2a_bridge_identity.sh` (11 cases). Fix note
+`docs/fixes/bridge/2026-11-16-the-bridge-names-itself.md`, how-to
+`docs/features/agent-bridge-identity.md`.
+
+## The proof is a round trip, and an unproved hop says so (plan 303 §12.3 step 7, 2026-11-16)
+
+A card answering is not a node answering, and a file moving is not a message delivered. The
+proof is a **nonce**: `bin/bridge/a2a-talk.sh prove` (over `bin/bridge/a2a-prove.py`) sends one
+through the three doors of the loop and checks it comes back unchanged.
+
+```
+prove_doors[3]{door,proves,how}
+  "queue","a task is written, claimed and answered and the file moves","a real task and a real nonce through ratatoskr.sh"
+  "relay","the loop answers and reports what it did","ratatoskr-relay.sh status"
+  "arm","a machine name is handed to its holder or refused by name","ratatoskr-arm.sh"
+```
+
+`--live A B` adds the round trip through two live agents, waits for every hop, and reports a hop
+that does not arrive as `UNPROVED` with the agent's name and the task id — never a partial
+green. Exit 1 means a door failed and is named. It is an action on `a2a-talk.sh`, the door that
+already proves the channel: there is no second prover.
+
+Guard: `bin/bridge/tests/test_a2a_prove.sh` (14 cases, a temporary queue; a failed door and an
+unproved live hop are both asserted to exit 1 and to be named). Fix note
+`docs/fixes/bridge/2026-11-16-the-proof-is-a-round-trip.md`, how-to
+`docs/features/a2a-prove.md`.
