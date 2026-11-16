@@ -818,6 +818,14 @@ step_a2a() {
   else
     add a2a-mcp WARN "run bin/bridge/a2a-mcp.sh install to wire the mesh"
   fi
+  # The relay (plan 303 §12.3 step 4, §15.4): one user unit per PERSON, never per agent. It is
+  # seated here so a fresh install has the loop, and re-seated by every update — the unit
+  # itself refuses to serve a machine with no live arm holder (RULES/55).
+  if [ -x "$SCRIPT_DIR/../engine/units.sh" ] && "$SCRIPT_DIR/../engine/units.sh" write ratatoskr-relay >/dev/null 2>&1; then
+    add ratatoskr-relay OK "the wake-and-return loop is seated (user unit)"
+  else
+    add ratatoskr-relay WARN "run bin/engine/units.sh write ratatoskr-relay"
+  fi
 }
 
 # ── 3b2. Sessrúmnir desktop GUI ──────────────────────────────────────────────

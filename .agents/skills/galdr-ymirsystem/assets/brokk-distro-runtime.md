@@ -1657,3 +1657,33 @@ The queue is private state, so it lives in the home; the tree carries the door o
 claims race and the second is refused). Fix note
 `docs/fixes/bridge/2026-11-16-one-queue-and-the-claim-is-a-rename.md`, how-to
 `docs/features/ratatoskr-queue.md`.
+
+## The relay — wake, confirm, retry once, return (plan 303 §12.3 step 4, 2026-11-16)
+
+A task on a shelf is not a conversation. `bin/bridge/ratatoskr-relay.sh` (over
+`bin/bridge/ratatoskr-relay.py`) is the loop, one process per PERSON, never per agent:
+
+```
+relay_rules[5]{rule,why}
+  "only a ready target is woken","a blocked pane swallows the line (blocked_prompt), a mid-turn agent queues it, a bare shell loses it"
+  "two wake verbs, probed","`herdr agent prompt` on 0.9.1; `agent send` + `pane send-keys Enter` on 0.7.4 — probed from BOTH help shapes, never a version table"
+  "confirm, then retry once, then say so","claimed or answered = the wake worked; still on the shelf and the agent idle = one retry; then `miss: <id> <pane> <why>` in relay/misses.log"
+  "the answer returns to the ASKER's pane","`[ratatoskr · from <claimer> · re <id>] <reply>`, once, and only when the asker is ready; a far machine is `owed` to the edge"
+  "no agent runs unowned","the unit runs `--require-arm`: with no live arm holder it WAITS and logs once, rather than serving a machine nobody supervises (RULES/55)"
+```
+
+**Three faults the live proof found.** (1) pi reports `done` when a turn has finished, and
+`agent-ready.sh` read `done` as `working`, so every finished pi agent looked busy for ever —
+`done` is `ready`. (2) A wake whose text carried newlines was accepted by herdr
+(`agent_prompted`) and never reached the session; the wake is one line. (3) A wake stamped
+`from an agent` is refused by a disciplined agent as data-not-an-order (RULES/39), so the
+wake is stamped as the house's relay service. (4) The verb probe could see only one of
+herdr's two help shapes, so the relay took `agent send` on a herdr without it, typed
+nothing, and reported a wake: both shapes are read now and a refused `send` is a failure.
+
+**Arrival.** `config/units.yaml` carries `ratatoskr-relay`; `bin/engine/ymir-install.sh`
+step `a2a` seats it with `bin/engine/units.sh write ratatoskr-relay`, so a fresh install and
+every update have the loop. Guard: `bin/bridge/tests/test_ratatoskr_relay.sh` (19 cases,
+stub `herdr`, temporary queue). Fix note
+`docs/fixes/bridge/2026-11-16-the-relay-wakes-and-returns.md`, how-to
+`docs/features/ratatoskr-relay.md`.
