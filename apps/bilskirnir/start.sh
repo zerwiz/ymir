@@ -122,7 +122,10 @@ window_up() { alive window; }
 # group (npx → node, hermes → its children) with one signal and never touch anything else.
 spawn() {
   local name="$1" dir="$2"; shift 2
-  setsid bash -c 'echo $$ > "$0"; cd "$1" || exit 1; shift 2; exec "$@"' "$RUN/$name.pid" "$dir" -- "$@" \
+  # macOS has no setsid(1); perl's POSIX::setsid gives the same new session (RULES/05, 2026-11-16)
+  local newsid=(setsid)
+  command -v setsid >/dev/null 2>&1 || newsid=(perl -MPOSIX -e 'POSIX::setsid(); exec @ARGV or die "exec: $!"')
+  "${newsid[@]}" bash -c 'echo $$ > "$0"; cd "$1" || exit 1; shift 2; exec "$@"' "$RUN/$name.pid" "$dir" -- "$@" \
     > "$RUN/$name.log" 2>&1 < /dev/null &
   sleep 0.3
 }

@@ -64,7 +64,10 @@ function findElectron() {
   // left Sessrúmnir with "Electron not found" while the release held a proved 43.8.9 two folders up.
   const candidates = []
   for (let d = join(__dirname, '..'); ; d = dirname(d)) {
-    candidates.push(join(d, 'node_modules', 'electron', 'dist', 'electron'))
+    // the binary's place inside dist/ differs per OS (2026-11-16: a Mac's is Electron.app/Contents/MacOS/Electron)
+    const exe = process.platform === 'darwin' ? join('Electron.app', 'Contents', 'MacOS', 'Electron')
+      : process.platform === 'win32' ? 'electron.exe' : 'electron'
+    candidates.push(join(d, 'node_modules', 'electron', 'dist', exe))
     if (dirname(d) === d) break
   }
 
