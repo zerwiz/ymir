@@ -47,9 +47,9 @@ cat >"$tmp/bin/hermes" <<'SH'
 [ "${1:-}" = "sessions" ] && [ "${2:-}" = "list" ] || exit 0
 printf 'Title                        Workspace          Last Active   ID\n'
 printf '──────────────────────────────────────────────────────────────────\n'
-printf 'Audit Receipt Hunter spec    Inmost-ControlTo   just now      local-fd2ee4d0939d080e51b8c178ea9d6229d805a1fe966f0df808f4293cf6a722ac\n'
-printf 'Audit vaults tech stack      heimdall           just now      local-9e11172e0e979d40aca0c1ab41c408a6dd5a30240b845186d21e7b0b2ccfbe62\n'
-printf 'Ok                           ymir               21h ago       local-59087a9fe825d3c31cd9c3c49d1f2f79592ce98560e695cf064610ff7de1de71\n'
+printf 'Example receipt spec         example-org        just now      local-fd2ee4d0939d080e51b8c178ea9d6229d805a1fe966f0df808f4293cf6a722ac\n'
+printf 'Example vault stack          host-a             just now      local-9e11172e0e979d40aca0c1ab41c408a6dd5a30240b845186d21e7b0b2ccfbe62\n'
+printf 'Example settled chat         example-repo       21h ago       local-59087a9fe825d3c31cd9c3c49d1f2f79592ce98560e695cf064610ff7de1de71\n'
 SH
 chmod +x "$tmp/bin/hermes"
 export PATH="$tmp/bin:$PATH"
@@ -130,11 +130,11 @@ row claude idle ',"interactive_ready":false'
   || bad "a settled Hermes session answered $(answer hermes:59)"
 
 # 10 · the title resolves too, and a missing session is dead by name
-case "$(answer "hermes:Audit vaults")" in working) ok "a title resolves to its session" ;;
-  *) bad "a title answered $(answer "hermes:Audit vaults")" ;; esac
-case "$(answer "hermes:Audit")" in
+case "$(answer "hermes:Example vault")" in working) ok "a title resolves to its session" ;;
+  *) bad "a title answered $(answer "hermes:Example vault")" ;; esac
+case "$(answer "hermes:Example")" in
   "blocked: ambiguous:"*) ok "an ambiguous title is a block that names the candidates" ;;
-  *) bad "an ambiguous title answered $(answer "hermes:Audit")" ;; esac
+  *) bad "an ambiguous title answered $(answer "hermes:Example")" ;; esac
 
 # 11 · a bare target is herdr, so nothing that works today changes shape
 row claude idle ',"interactive_ready":true'
