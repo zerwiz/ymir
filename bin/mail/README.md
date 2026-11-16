@@ -22,6 +22,7 @@ bin/mail/connect.sh       the connect door: one sign-in (google) or three fields
 bin/mail/gna_connect.py   the verbs behind it: consent URL, loopback catcher, the vault write, the proofs
 bin/mail/inbound-test.sh  the acceptance test: send from outside, assert the arrival, or skip
 bin/mail/mail-scan.sh     the earlier one-shot read (kept — it proved the door opened)
+bin/mail/threads.sh       the join: one row per conversation, and the lane it is in (read-only)
 bin/mail/install.sh       seats the desk as a systemd USER unit, restart-always
 bin/mail/tests/           16 proofs, including "no file here can send"
 ```
@@ -46,6 +47,9 @@ The schedule is a Nornir row in the home's `config/cron.yaml`
 
 ## The four columns
 
+The desk's columns are what it PROPOSES; the thread lanes below are what the
+conversation actually is. They answer different questions and neither replaces the other.
+
 | Column | Meaning | Human act |
 |---|---|---|
 | **Needs you** | judged, an action proposed, nothing sent | approve · change · dismiss |
@@ -54,6 +58,26 @@ The schedule is a Nornir row in the home's `config/cron.yaml`
 | **Done** | a notice recorded, or bulk mail that asked nobody anything | read only |
 
 Every row carries `evidence`: the rule **and the word** that fired.
+
+## The lanes — did we answer this, and what is it waiting on
+
+`bin/mail/threads.sh` is the join the store never did (plan 305 §2.1): one row per
+conversation — direction of the last message, when, whether one of ours went out after
+their last one, how many days an answer is owed, and the lane.
+
+```sh
+bash bin/mail/threads.sh                  # every conversation, worst first
+bash bin/mail/threads.sh --lane needs-you  # the only lane owed an answer
+bash bin/mail/threads.sh --json           # one JSON line, for a dispatcher
+```
+
+**needs-you** (inbound tail that owes an answer — the only lane that speaks) ·
+**answered** (we wrote last, quieter than `--nudge-days`, three days by default) ·
+**waiting-on-them** (we wrote last and it has gone quiet — where a nudge comes from) ·
+**closed** (his `handled_at`, a tail that owes nothing by the judge's own verdict, or a
+finished exchange). It **reads the store and writes nothing** — no `handled_at`, no state
+file, not the ledger — and `bin/mail/tests/test_threads.py` proves the store is
+byte-identical afterwards.
 
 ## The laws, in code
 
@@ -164,3 +188,4 @@ second proof that enforces it are in `docs/fixes/mail/2026-11-08-the-connect-doo
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-16** — `bin/mail/threads.sh` added to the map (plan 305 phase 1), with the lane section above; `tests/` now holds **50** proofs (37 + 13 in `test_threads.py`), correcting the count in the 2026-11-08 append.
