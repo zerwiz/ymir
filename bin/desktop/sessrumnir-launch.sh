@@ -82,7 +82,7 @@ WORKSPACE="${1-}"
 # Electron helpers (gpu/utility/renderer). The helpers outlive a dead main —
 # they are re-parented to the user systemd — so this list is for REAPING only.
 all_pids() {
-  pgrep -f "/electron/dist/electron .*sessrumnir" 2>/dev/null || true
+  pgrep -f "/electron/dist/.*sessrumnir" 2>/dev/null || true
 }
 # The MAIN process only. An Electron helper always carries --type=; the main
 # never does. Matching the helpers here is what made `status` say "up" and
@@ -259,7 +259,7 @@ export YMIR_DESKTOP_OZONE_PLATFORM="${YMIR_DESKTOP_OZONE_PLATFORM:-auto}"
 # platform keeps its own. Carried to the app as YMIR_WINDOW_BUTTONS; node passes its env on (Rule 05).
 export YMIR_WINDOW_BUTTONS="$(app_window_buttons)"
 
-START_TS="$(date -Is)"
+START_TS="$(date +%Y-%m-%dT%H:%M:%S%z)"   # -Is is GNU-only (2026-11-16: macOS refused it)
 
 if [ "${SESSRUMNIR_ALLOW_STALE:-0}" != 1 ]; then
   build_probe

@@ -235,7 +235,7 @@ fi
 # ── 6. the code's dependencies, from the lock files ─────────────────────────────
 # Reinstall only when the lock file changed: `npm ci` empties node_modules first, which pulls the floor
 # out from under a running app (2026-11-12: the hall answered "Bad Gateway" mid-conversation).
-LOCK_SUM="$(sha256sum "$APP/package-lock.json" | cut -c1-16)"; STAMP="$APP/node_modules/.bilskirnir-lock"
+LOCK_SUM="$({ command -v sha256sum >/dev/null 2>&1 && sha256sum "$APP/package-lock.json" || shasum -a 256 "$APP/package-lock.json"; } | cut -c1-16)"; STAMP="$APP/node_modules/.bilskirnir-lock"
 if [ "$CHECK" = 0 ] && [ "$(cat "$STAMP" 2>/dev/null)" = "$LOCK_SUM" ] && [ -d "$APP/node_modules/@novnc" ]; then
   say "dependencies current (lock unchanged)"
 elif [ "$CHECK" = 0 ]; then
