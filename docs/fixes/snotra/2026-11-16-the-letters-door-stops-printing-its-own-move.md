@@ -22,3 +22,7 @@ that has not been repointed yet — that is what a retired shim is for — and t
 $ bash systems/snotra/services/letters/mail-send.sh draft --dry-run …
 eml	/tmp/tmp.XXXX.eml        ← no MOVED line
 ```
+
+## CHANGE LOG
+
+- 2026-11-16 — review-mend: added missing heading for #804
