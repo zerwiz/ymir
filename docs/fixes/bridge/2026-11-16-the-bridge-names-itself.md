@@ -70,3 +70,7 @@ proof (`a2a-prove.sh`), because a card that answers is not a node that answers.
 
 It does not replace a2abridge with anything, and it does not retire the announce road — that
 is step 9's business and the plan's P6. It does not carry Hermes sessions (§14, step 9).
+
+## CHANGE LOG
+
+- 2026-11-16 — review-mend: added missing heading for #796
