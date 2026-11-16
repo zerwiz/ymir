@@ -96,7 +96,7 @@ class LaunchdCase(unittest.TestCase):
         self.stage = self.home / "Library" / "Application Support" / "ymir" / "launchd"
         self.logs = self.home / "Library" / "Logs" / "ymir"
         self.pin = self.root / "pin"
-        for d in (self.home / ".local" / "bin", self.units, self.logs, self.pin):
+        for d in (self.home.joinpath(".local/", "bin"), self.units, self.logs, self.pin):
             d.mkdir(parents=True, exist_ok=True)
 
         self._env = mock.patch.dict(os.environ, {
