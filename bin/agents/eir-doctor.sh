@@ -155,7 +155,7 @@ surface_detail_skip() {
 }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors seatpaths hooks packaging herdr a2abridge hermes snotra voice council sessrumnir bilskirnir hnoss shells graphics well memory mail unitdrift mcp harness pidoor claudehooks opencode arm armpin runtimepin roddhelm lock gates migrations hoard autoboot vault ward seats seatreap models)
+SURFACES=(floors seatpaths hooks packaging herdr a2abridge agentroad hermes snotra voice council sessrumnir bilskirnir hnoss shells graphics well memory mail unitdrift mcp harness pidoor claudehooks opencode arm armpin runtimepin roddhelm lock gates migrations hoard autoboot vault ward seats seatreap models)
 
 # ── the register (plan 278): config/surfaces.yaml names the surfaces, their roles and their risk class ──
 # The array above is the FALLBACK, kept until every seat carries the register. Without the register every
@@ -321,6 +321,51 @@ a2ab_fault() {  # prints the fault, or nothing when healthy
   fi
 }
 s_a2abridge() { [ -z "$(a2ab_fault)" ]; }
+
+# agentroad (plan 303 §15.4, step 9): the road an agent is reached on, judged as a road. Three
+# questions, each with a door that already owns the answer — a stale ready check, a relay that
+# is not seated, and a bridge name that lies about its harness. No engine and no bridge is a
+# clean pass: the mesh is optional, and a machine without it is not broken.
+agentroad_fault() {
+  local ready="$SCRIPT_DIR/../seat/backend.sh" relay="$SCRIPT_DIR/../bridge/ratatoskr-relay.sh"
+  if [ ! -x "$ready" ]; then printf 'the backend door is missing — reinstall (bin/engine/ymir-install.sh)'; return 0; fi
+  if ! python3 "$SCRIPT_DIR/../seat/backends/door.py" list >/dev/null 2>&1; then
+    printf 'the backend door cannot list this machine — bin/seat/backend.sh list'
+    return 0
+  fi
+  if [ -x "$relay" ] && command -v systemctl >/dev/null 2>&1; then
+    if ! systemctl --user is-active --quiet ratatoskr-relay 2>/dev/null \
+       && ! systemctl --user is-enabled --quiet ratatoskr-relay 2>/dev/null; then
+      printf 'the relay is not seated — bin/engine/units.sh write ratatoskr-relay'
+      return 0
+    fi
+    # A unit that is enabled and FAILED is worse than one that is absent: it looks seated and
+    # delivers nothing. Measured 2026-11-16 on a seat whose pinned runtime predated the script:
+    # the unit ran `…/ymir-runtime/bin/bridge/ratatoskr-relay.sh`, which did not exist there.
+    if systemctl --user is-failed --quiet ratatoskr-relay 2>/dev/null; then
+      printf 'the relay unit is enabled but FAILED — journalctl --user -u ratatoskr-relay; a pinned runtime that predates the door is the usual cause (update the runtime, then systemctl --user restart ratatoskr-relay)'
+      return 0
+    fi
+  fi
+  # a bridge named brokk- that is not a pi agent is a lie about which harness is answering
+  local ports="$HOME/.a2abridge/state"
+  if [ -d "$ports" ]; then
+    for d in "$ports"/brokk-*; do
+      [ -d "$d" ] || continue
+      if [ -r "$d/model" ] && [ "$(cat "$d/model" 2>/dev/null)" != pi ]; then
+        printf 'a bridge named %s carries model %s — the wrapper names agents by harness and pane (RULES/44)' \
+          "$(basename "$d")" "$(cat "$d/model" 2>/dev/null)"
+        return 0
+      fi
+    done
+  fi
+}
+s_agentroad() { [ -z "$(agentroad_fault)" ]; }
+f_agentroad() { "$SCRIPT_DIR/../engine/units.sh" write ratatoskr-relay >/dev/null 2>&1 || true; s_agentroad; }
+agentroad_detail() {
+  local f; f="$(agentroad_fault)"
+  if [ -n "$f" ]; then printf '%s' "$f"; else printf 'backend door answers · relay seated · no bridge name lies'; fi
+}
 f_a2abridge() { "$SCRIPT_DIR/../bridge/a2abridge-ensure.sh" ensure >/dev/null 2>&1; s_a2abridge; }
 a2abridge_detail() {
   local f; f="$(a2ab_fault)"
@@ -889,6 +934,7 @@ detail() { # <name> -> the command that prints one short fact
     floors)    printf '%s\n' "[ -x $SCRIPT_DIR/../engine/prereq-ensure.sh ] && echo 'tool floors'" ;;
     herdr)     printf '%s\n' "have herdr && herdr --version 2>/dev/null | head -1 || { have tmux && tmux -V | sed 's/^/tmux fallback: /' || echo 'no pane backend'; }" ;;
     a2abridge) printf '%s\n' a2abridge_detail ;;
+    agentroad) printf '%s\n' agentroad_detail ;;
     unitdrift) printf '%s\n' "unitdrift_detail | grep . || echo 'every installed unit runs what its source says'" ;;
     voice)     printf '%s\n' "door_reason $SCRIPT_DIR/../voice/voice-ensure.sh status" ;;
     hnoss)     printf '%s\n' "door_reason $SCRIPT_DIR/../pi/hnoss-ensure.sh status" ;;

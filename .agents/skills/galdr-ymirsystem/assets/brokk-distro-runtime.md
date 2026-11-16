@@ -1758,3 +1758,64 @@ Guard: `bin/bridge/tests/test_a2a_prove.sh` (14 cases, a temporary queue; a fail
 unproved live hop are both asserted to exit 1 and to be named). Fix note
 `docs/fixes/bridge/2026-11-16-the-proof-is-a-round-trip.md`, how-to
 `docs/features/a2a-prove.md`.
+
+## Hermes in the loop: two shapes, one vocabulary (plan 303 §12.3 step 8, 2026-11-16)
+
+```
+hermes_roads[2]{shape,how reached,proved}
+  "an agent in a pane","`herdr agent start <name> --kind hermes --pane <id>`; then the ready check, the queue and the relay treat it as any pane","yes — the round trip proved live between throwaway agents in panes"
+  "a session behind a gateway","addressed by id prefix or title; its state is the runtime's own admission (`unknown` = a turn may have run), so a paused session is `blocked: lost turn, run recover`","the reader is proved against the runtime's own table; a throwaway profile is UNPROVED"
+```
+
+**A throwaway Hermes profile needs its own keys.** Measured 2026-11-16: an isolated
+`HERMES_HOME` in a pane bootstraps its own runtime and stops at `hermes setup` — "no API keys
+or providers found". Copying the operator's credentials into a scratch profile is his decision,
+not a worker's, so the throwaway-Hermes proof is recorded as **unproved** rather than described
+as working.
+
+**The headless road is stated, not claimed.** v0.22.6 has no `hermes mcp serve`; MCP arrives
+through `hermes plugins install mcp-serve`, and the API server / bots decisions are §13.6 items
+2 and 3 — the operator's. A paused session is never resumed by a tool.
+
+Guard: `bin/bridge/tests/test_hermes_road.sh` (5 cases; asserts what is true and asserts the
+absence that keeps the headless road stated). Fix note
+`docs/fixes/bridge/2026-11-16-the-hermes-road-measured.md`, how-to
+`docs/features/hermes-in-the-loop.md`.
+
+## Hermes is a second backend, the way herdr is one (plan 303 §14, 2026-11-16)
+
+A bridge names a process; a **backend** names an address. Hermes has no pane — two sessions of
+one Desktop profile share one gateway and one inbox — so a bridge could not tell them apart, and
+one of them said so: *"my bridge inbox is empty"* while its twin had drained the message. A
+backend is what a session needs, and herdr is the shape to copy.
+
+```
+backend[7]{verb,herdr,hermes}
+  "list","`herdr agent list`","`hermes sessions list` joined with the runtime's admissions table"
+  "get","`herdr agent get`","the session's last admission"
+  "read","`herdr agent read`","the tail of `hermes sessions export`"
+  "prompt","`agent prompt`, else `agent send` + Enter","`hermes chat --resume <id> -q -Q`; a paused session is REFUSED"
+  "wait","poll to the requested state","poll to the requested state"
+  "explain","why herdr says blocked","why it is paused, and the exact recovery"
+  "recover","—","show the lost input, then `hermes sessions discard` — only with `--yes`"
+```
+
+**One resolver**, `bin/seat/backends/resolve.py`: `herdr:<pane>`, `hermes:<id-or-title>`, or
+bare — and bare is herdr, so nothing that worked before changes shape. The door is
+`bin/seat/backend.sh <verb> <target>`; `ratatoskr who` and `ratatoskr send` resolve through it,
+and `bin/mcp/ymir-mcp.py` carries `ymir_hermes_list|send|recover` for every MCP harness.
+
+**Arrival (§15.4).** `.agents/harnesses/hermes.yaml` describes the harness;
+`.agents/migrations/0023-agents-talk.sh` heals an existing home (dead port claims, a stale arm
+pane, the relay unit, a Hermes restart that is owed) and is idempotent; `agentroad` is
+registered in `config/surfaces.yaml`, so Eir checks the road and Gróa mends the mendsafe part.
+The migration never restarts Hermes while a turn is live: it counts the live admissions and
+writes `state/hermes-restart-pending` instead.
+
+**The surface's own rule.** An enabled-but-FAILED unit is worse than an absent one — measured on
+this seat, where the relay's `ExecStart` pointed at a pinned runtime that predated the script.
+`agentroad` fails on `systemctl --user is-failed` and names the remedy.
+
+Guards: `bin/seat/tests/test_backend_door.sh` (19 cases, stubbed harnesses and a fixture of the
+runtime's own table). Fix note `docs/fixes/agents/2026-11-16-hermes-is-a-second-backend.md`,
+how-to `docs/features/agents-talk-to-everyone.md`.
