@@ -76,3 +76,7 @@ machine is asked and no live agent is touched.
 It does not send anything (step 3) and it wakes nobody (step 4). Hermes sessions are not
 yet rows here — that is 9a, because a Hermes session has no pane and needs the backend
 adapter to be addressed at all.
+
+## CHANGE LOG
+
+- 2026-11-16 — review-mend: added missing heading for #791
