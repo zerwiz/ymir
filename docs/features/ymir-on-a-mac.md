@@ -130,3 +130,7 @@ To prove a fault is the layer's and not your machine's, run the gate:
 | `config/units.yaml` | the one register of what is installed; the renderer reads the units written from it |
 | `bin/engine/tests/test_launchd_user.py` | the renderer and the verbs, with a fake home |
 | `bin/engine/tests/test_launchd_step_skips.sh` | the install step: a named skip off a Mac, the seat on one |
+
+## CHANGE LOG
+
+- **2026-11-16** — Opened: what a Mac install does, the launchd step, and how to check it.
