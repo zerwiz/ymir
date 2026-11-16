@@ -27,3 +27,7 @@ fails with `LocalEntryNotFoundError`. `--install` should fetch them once, with t
 ## CHANGE LOG
 
 - 2026-11-15 — review-mend: added missing heading for #787
+
+## Also: Rödd keeps an MCP session
+
+`bin/voice/voice_mcp.py` posted `initialize` and then every call without the `Mcp-Session-Id` the server returned, and never sent `notifications/initialized` over HTTP. A streamable-HTTP server refuses that (`Bad Request: Missing session ID`, measured against workspace-mcp). The client now keeps the session id on the server spec, sends it on every later request, sends the initialized notification, and accepts the empty 202 a notification gets.
