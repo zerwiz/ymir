@@ -27,3 +27,7 @@ Two faults found while proving it are fixed in the same branch:
 
 On one Mac (Apple silicon, macOS 14.7), eleven units came up through launchd and answered on loopback: 3889, 4602,
 8316–8321 and 8437. They restart at login.
+
+## CHANGE LOG
+
+- 2026-11-15 — review-mend: added missing heading for #779
