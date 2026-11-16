@@ -87,3 +87,7 @@ when `fleet-ensure.sh ensure` was run by hand. No other process called it.
 A scan of every tracked `*.sh` for a `say` call with no definition before it found no other live case. Two scripts
 matched only in help text or with an inline definition. A ward for this belongs to plan 293: any helper named like a
 macOS command (`say`, `open`, `pbcopy`) is a hazard when it is called before it is defined.
+
+## CHANGE LOG
+
+- 2026-11-15 — review-mend: added missing heading for #778
