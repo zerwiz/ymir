@@ -32,6 +32,7 @@ Usage:
   public-guard.py --tree            # every tracked file (what CI runs)
   public-guard.py --staged          # what is about to be committed
   public-guard.py FILE...           # named files
+  public-guard.py --added REV FILE… # only the lines these files add since REV (the pre-push posture)
   public-guard.py --list            # the classes and what each allows
   … --strict-names                  # the machine class fails the ward instead of advising
 
@@ -221,10 +222,17 @@ def machine_shape(names: list[str]) -> re.Pattern | None:
         rf"|\b(?:{alt})(?::\d{{2,5}}\b|\.local\b|\.[a-z0-9-]+\.ts\.net\b)", re.I)
 
 
-def scan(path: str, text: str, words: list[str], home: str) -> list[str]:
+def scan(path: str, text: str, words: list[str], home: str, added: set[int] | None = None) -> list[str]:
+    """Judge the lines that matter. `added` is the set this RANGE adds (None: every line).
+
+    A line the branch already carried when the push started is the base tree's line, not this
+    push's: it is reported as inherited by the caller, never refused here (plan 243 §3 part D).
+    """
     findings: list[str] = []
     is_guard = path in GUARD_FILES
     for n, line in enumerate(text.splitlines(), 1):
+        if added is not None and n not in added:
+            continue
         if SECRET.search(line) and not SECRET_ALLOW.search(line) and not is_guard:
             findings.append(f"{path}:{n}: a credential shape")
         if not is_guard:
@@ -232,7 +240,12 @@ def scan(path: str, text: str, words: list[str], home: str) -> list[str]:
             findings.extend(f"{path}:{n}: {msg}" for msg in mailbox_findings(line))
         for w in words:
             if re.search(rf"\b{re.escape(w)}\b", line, re.I):
-                findings.append(f"{path}:{n}: names the operator (RULES/04) — the word is masked here on purpose")
+                # A NAME IS STILL A REFUSAL, and RULES/04 says why: a clone outlives any correction.
+                # What changed on 2026-11-16 is only that the finding names the remedy in the same
+                # breath, so the hand mends the sentence in one pass instead of hunting the rule.
+                findings.append(
+                    f"{path}:{n}: names the operator (RULES/04) — write the ROLE instead "
+                    f"(the operator · the client · a prospective collaborator); the word is masked here on purpose")
                 break
     return findings
 
@@ -254,8 +267,32 @@ def staged(root: Path) -> list[str]:
     return [p for p in out.decode("utf-8", "surrogateescape").split("\0") if p]
 
 
+def added_lines(root: Path, base: str, rel: str) -> set[int] | None:
+    """The lines THIS RANGE adds to a file, or None when the file is new (every line is added)."""
+    try:
+        probe = subprocess.run(["git", "-C", str(root), "cat-file", "-e", f"{base}:{rel}"],
+                               capture_output=True, timeout=30)
+    except Exception:
+        return None
+    if probe.returncode != 0:
+        return None                                    # not in the base: the whole file is new
+    try:
+        out = subprocess.run(["git", "-C", str(root), "diff", "-U0", "--no-color", "--no-renames",
+                              base, "--", rel], capture_output=True, text=True, timeout=60).stdout
+    except Exception:
+        return None
+    lines: set[int] = set()
+    for m in re.finditer(r"^@@ -\S+ \+(\d+)(?:,(\d+))? @@", out, re.M):
+        start = int(m.group(1))
+        count = int(m.group(2)) if m.group(2) is not None else 1
+        lines.update(range(start, start + count))
+    return lines
+
+
 def main(argv: list[str]) -> int:
-    root = Path(__file__).resolve().parents[3]
+    # The checkout the ward judges. YMIR_GUARD_ROOT exists so a test can plant a tree and prove the
+    # ward BITES on it (the same door every other ward already answers to); production never sets it.
+    root = Path(os.environ.get("YMIR_GUARD_ROOT") or Path(__file__).resolve().parents[3])
     words = operator_words(root)
     home = os.environ.get("YMIR_HOME", "")
     strict = "--strict-names" in argv or os.environ.get("YMIR_PUBLIC_GUARD_STRICT") == "1"
@@ -279,12 +316,20 @@ def main(argv: list[str]) -> int:
         return 0
 
     mode = argv[0] if argv and argv[0].startswith("--") else ""
-    if mode == "--tree":
+    added_base = ""
+    if mode == "--added":
+        added_base = argv[1] if len(argv) > 1 else ""
+        if not added_base:
+            print("error: --added needs a revision\nhelp: public-guard.py [--tree|--staged|--added REV|FILE...]", file=sys.stderr)
+            return 2
+        files = [a for a in argv[2:] if not a.startswith("-")]
+        mode = ""
+    elif mode == "--tree":
         files = tracked(root)
     elif mode == "--staged":
         files = staged(root)
     elif mode:
-        print(f"error: unknown flag {mode}\nhelp: public-guard.py [--tree|--staged|FILE...]", file=sys.stderr)
+        print(f"error: unknown flag {mode}\nhelp: public-guard.py [--tree|--staged|--added REV|FILE...]", file=sys.stderr)
         return 2
     else:
         files = [a for a in argv if not a.startswith("-")]
@@ -297,6 +342,7 @@ def main(argv: list[str]) -> int:
     findings: list[str] = []
     advisory: list[str] = []
     judged = exempt = 0
+    inherited = 0
     for rel in files:
         p = root / rel
         if not p.is_file():
@@ -313,10 +359,17 @@ def main(argv: list[str]) -> int:
         except Exception:
             exempt += 1
             continue
+        added = added_lines(root, added_base, rel) if added_base else None
         judged += 1
-        findings.extend(scan(rel, text, words, home))
+        findings.extend(scan(rel, text, words, home, added))
+        # SAY WHAT WAS LEFT TO THE BASE (plan 243 §3 part D): a line this range did not add is not
+        # this push's, and refusing it is how a red main punished the next branch to touch the file.
+        if added is not None and len(added) < len(text.splitlines()):
+            inherited += len(text.splitlines()) - len(added)
         if shape is not None and rel not in GUARD_FILES:
             for n, line in enumerate(text.splitlines(), 1):
+                if added is not None and n not in added:
+                    continue
                 if shape.search(line):
                     advisory.append(f"{rel}:{n}: names a fleet machine as a host (RULES/39) — the name is masked here on purpose")
     if strict:
@@ -324,8 +377,11 @@ def main(argv: list[str]) -> int:
         advisory = []
 
     # THE SCOPE, ALWAYS (plan 278): a guard that prints nothing cannot be told from one that judged nothing.
-    print(f'public_guard_scope[1]{{judged,exempt,words,machines,machine_class}}:\n'
-          f'  "{judged}","{exempt}","{len(words)}","{len(machines)}","{"binding" if strict else "advisory"}"')
+    scope_note = f"added since {added_base}" if added_base else "the whole file"
+    print(f'public_guard_scope[1]{{judged,exempt,words,machines,machine_class,lines}}:'
+          f'\n  "{judged}","{exempt}","{len(words)}","{len(machines)}","{"binding" if strict else "advisory"}","{scope_note}"')
+    if added_base and inherited:
+        print(f'public_guard_inherited[1]{{lines,verdict}}:\n  "{inherited}","carried by the base — the range did not add them, so they cannot refuse this push"')
     if advisory:
         files_hit = len({a.split(":", 1)[0] for a in advisory})
         print(f'public_guard_advisory[1]{{class,lines,files}}:\n  "machine","{len(advisory)}","{files_hit}"')
