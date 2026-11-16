@@ -97,3 +97,7 @@ runtime, and that pin predates this branch. `bin/agents/eir-doctor.sh check` say
 in the `agentroad` row — an enabled-but-failed unit is worse than an absent one, so the surface
 fails on it by name. After the merge and a runtime update, `systemctl --user enable --now
 ratatoskr-relay` is the one command left.
+
+## CHANGE LOG
+
+- 2026-11-16 — review-mend: added missing heading for #803
