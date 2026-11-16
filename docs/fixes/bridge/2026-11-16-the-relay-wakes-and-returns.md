@@ -104,3 +104,7 @@ once, and the 0.7.4 road (`send` + Enter) carries the wake where `prompt` does n
 It does not route a task to a machine's **arm holder** — that is step 5. It does not carry a
 task across machines (the edge, §10). It does not decide anything about Hermes: a Hermes
 session is not a pane, and that road is step 9.
+
+## CHANGE LOG
+
+- 2026-11-16 — review-mend: added missing heading for #796
