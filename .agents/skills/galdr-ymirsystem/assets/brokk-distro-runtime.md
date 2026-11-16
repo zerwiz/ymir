@@ -1567,3 +1567,43 @@ open PR heads from the one `gh` answer it already has, computes their reachable 
 its own kind, `in-pr`: `eindri/x — 5h: in batch PR #750, not merged yet`, action *nothing to gather*.
 Cost on this tree: 12 s → 3.9 s (the first version asked one `--merged` read per open PR). Fix note
 `docs/fixes/time/2026-11-14-a-branch-inside-a-batch-pr-is-not-waiting.md`.
+
+## The ready check — one vocabulary for both backends (plan 303 §12.3 step 1, 2026-11-16)
+
+A relay that wakes an agent must first know whether the agent can take a turn. Until
+2026-11-16 nothing answered that for both backends, and a pane standing on a harness
+dialog swallowed the first line typed into it with no error anywhere.
+
+`bin/seat/agent-ready.sh` (over `bin/seat/agent-ready.py`) is that answer, in four
+words, for herdr panes and Hermes sessions alike:
+
+```
+ready_check[4]{answer,means,exit}
+  "ready","the target can take a turn now","0"
+  "working","mid-turn; a message queues behind it","1"
+  "blocked: <why>","it exists and cannot take a turn — the reason is what a person acts on","2"
+  "dead","the target is not there","3"
+```
+
+- **herdr**: `agent get` for the state, `agent explain` for the reason. `blocked` is
+  classified from herdr's own evidence text — the folder-trust signature is
+  `blocked: trust prompt`, any other dialog is named by its rule
+  (`blocked: prompt (permission)`). `idle` with `interactive_ready: false` is
+  `blocked: not at an input prompt`, never ready (the launch fault of plan 291 row 5).
+- **Hermes**: `hermes sessions list` is the directory; the runtime's own
+  `session_admissions` table, read `mode=ro` by the last admission, is the state.
+  `unknown` → `blocked: lost turn, run recover`; `queued`/`started` → `working`; a
+  settled session → ready, because `hermes chat --resume` still takes a turn.
+- **Targets**: bare `<pane>` or `herdr:<pane>`; `hermes:<id-prefix-or-title>`. A bare
+  target is herdr, so nothing that already works changes shape. `--all` enumerates
+  both backends; `--json` gives `{target, backend, state, word}`. Several targets exit
+  with the worst answer.
+- `HERMES_HOME` and `AGENT_READY_HERMES_DB` point the store elsewhere, which is how the
+  test judges the reader against a fixture of the runtime's own table instead of a mock
+  invented for it.
+
+Guard: `bin/seat/tests/test_agent_ready.sh` (19 cases, stub `herdr` and stub `hermes` on
+`PATH`, `HOME` and the store under a temporary directory). The door that wakes a target
+is step 4; the directory that lists the fleet is step 2. Fix note
+`docs/fixes/agents/2026-11-16-the-ready-check-speaks-one-vocabulary.md`, how-to
+`docs/features/agent-ready-check.md`.
