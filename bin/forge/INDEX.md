@@ -27,8 +27,8 @@ bin[53]{file,does,kind,verdict,disposition,callers,lines}:
   "finding-log.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",1,64
   "finding-tally.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",1,140
   "gather-notice.sh","gather-notice.sh — when the LAST errand of a batch finishes, the helm is told to gather it.","tool","wired","keep",3,186
-  "gather.sh","gather.sh — gather a batch of errand branches into ONE push and ONE PR.","tool","tested","keep",9,321
-  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",521,101
+  "gather.sh","gather.sh — gather a batch of errand branches into ONE push and ONE PR.","tool","tested","keep",9,323
+  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",522,101
   "github-deploy.sh","github-deploy.sh — zero-trust deploys (W0035).","tool","wired","keep",0,96
   "gjallarhorn-expose.sh","gjallarhorn-expose.sh — put EVERY app on its own public hostname (Gjallarhorn).","tool","wired","keep",0,152
   "gjallarhorn-notify.sh","gjallarhorn-notify.sh — the horn (W0036).","tool","wired","keep",1,73
@@ -51,7 +51,7 @@ bin[53]{file,does,kind,verdict,disposition,callers,lines}:
   "pr-patterns.sh","pr-patterns.sh — the ONE place the forbidden-pattern list lives.","tool","wired","keep",5,59
   "pr-pretest.sh","pr-pretest.sh — the PR-time gate: a REAL npm installation, locally, before","tool","wired","keep",2,59
   "pr-watch.sh","pr-watch.sh — TELL HIM a PR arrived.","tool","wired","keep",1,117
-  "queue-warden.sh","queue-warden.sh — PR HYGIENE: five open at most, the stale ones named, a conflicting branch","tool","wired","keep",3,427
+  "queue-warden.sh","queue-warden.sh — PR HYGIENE: five open at most, the stale ones named, a conflicting branch","tool","wired","keep",3,429
   "repair-errand.md","repair-errand.md — the brief a SMITH is handed when a verdict refuses a PR (plan 206 §12.1).","data","wired","keep",2,73
   "review-mend.sh","review-mend.sh — the refusal becomes a router (plan 233 §13/13a/13b)","tool","wired","keep",1,143
   "review-rules.sh","review-rules.sh — the rules floor: load what a reviewer MUST know, or refuse to review.","tool","wired","keep",4,139
@@ -59,7 +59,7 @@ bin[53]{file,does,kind,verdict,disposition,callers,lines}:
   "review-shelf.sh","review-shelf.sh — where a packet LANDS, and the waiting rule that keeps it honest.","tool","wired","keep",1,159
   "review-verdict.sh","review-verdict.sh — the judge's ONE act of writing: its verdict, and nothing else.","tool","wired","keep",2,182
   "review-watch.sh","review-watch.sh — the missing trigger: a PR that arrives is a question the owner is asked.","tool","wired","keep",2,291
-  "ship-watch.sh","ship-watch.sh — the delivery loop: settle branches, then ship proved PRs.","tool","wired","keep",1,129
+  "ship-watch.sh","ship-watch.sh — the delivery loop: settle branches, then ship proved PRs.","tool","wired","keep",1,131
   "ship.sh","ship.sh — the reviewer's merge: the one door that puts a judged PR on main.","tool","wired","keep",5,206
   "skillopt-setup.sh","skillopt-setup.sh — one-time SkillOpt installation for Ymir.","tool","wired","keep",1,77
   "smith-gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","wired","keep",1,101

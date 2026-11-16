@@ -1798,15 +1798,31 @@ def _todo_file():
     return _home() / "hodd" / "life" / "personal" / "me" / "todo.md"
 
 
+# The file states its own halves as top-level headings, and a reader must name them apart: his
+# half is his judgement, the derived half is what the house measured, the house-kept half is what
+# his messages moved. Counting all three as one number is how the session digest came to print
+# "0 open" while his list held 57 (2026-11-16).
+_TODO_HALF_HEADS = (("His half", "his"), ("The derived half", "derived"), ("The house-kept half", "kept"))
+
+
+def _todo_half(heading):
+    for prefix, name in _TODO_HALF_HEADS:
+        if (heading or "").startswith(prefix):
+            return name
+    return "other"
+
+
 def _todo_items():
     import hashlib as _h
     import re as _re
     path = _todo_file()
     lines = path.read_text(encoding="utf-8").splitlines() if path.is_file() else []
-    items, section = [], ""
+    items, section, half = [], "", "other"
     for n, line in enumerate(lines):
-        if line.startswith("## ") or line.startswith("# "):
+        if line.startswith("# ") or line.startswith("## "):
             section = line.lstrip("# ").strip()
+            if line.startswith("# "):
+                half = _todo_half(section)
             continue
         m = _re.match(r"^- \[( |x|X)\] (.*)$", line)
         if not m:
@@ -1820,7 +1836,7 @@ def _todo_items():
         plain = _re.sub(r"[*`_]", "", text)
         tid = "t" + _h.sha1(m.group(2).encode()).hexdigest()[:5]
         items.append({"id": tid, "line": n, "end": k - 1, "status": "done" if m.group(1) in "xX" else "open",
-                      "item": plain, "section": section})
+                      "item": plain, "section": section, "half": half})
     return lines, items
 
 
