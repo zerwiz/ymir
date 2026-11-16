@@ -5,8 +5,10 @@
 #   nornir-job-gna-mail.sh --check       health only, no import (for a gate or a hand)
 #   nornir-job-gna-mail.sh --dry-run     read the mailbox, write nothing, print the counts
 #
-# GNA_DAYS sets the window (default 2: a daily overlap catches late delivery
-# without re-reading a week of mail on every row).
+# GNA_DAYS is an OVERRIDE for a backfill, nothing else: the importer keeps a high-water
+# mark per account and asks the server for everything since it, so a run after downtime
+# reads the whole gap. GNA_RUN_INTERVAL_HOURS (default 24) is the width a silence must
+# exceed before this run calls it blindness and names it.
 #
 # A Nornir job starts, does one thing, writes its record and exits. It never owns
 # state. The one law it carries: ABSENCE IS A FAILURE, NOT AN EMPTY LIST — an
@@ -28,7 +30,10 @@ TOKEN_FILE="$HOME_R/hodd/state/gna-desk.token"
 RUNES="$ROOT/bin/records/runes-append.sh"
 
 MODE="${1:-import}"
-DAYS="${GNA_DAYS:-2}"
+DAYS="${GNA_DAYS:-}"
+INTERVAL_HOURS="${GNA_RUN_INTERVAL_HOURS:-24}"
+LAST_RUN="$HOME_R/hodd/state/gna-mail-last-run.json"
+IMPORTER="$ROOT/bin/mail/gna_import.py"
 
 say() { printf 'gna-mail[%s] %s\n' "$MODE" "$*"; }
 
@@ -119,10 +124,30 @@ fi
 DRY=""
 [ "$MODE" = "--dry-run" ] && DRY="--dry-run"
 
+# THE GAP IS MEASURED BEFORE THE IMPORT. It is the span this run is about to read — how long
+# the desk was blind — not the span after it has been closed. It is printed now, so the run
+# NAMES it, and written into the last-run record, so the next notice can begin with it.
+GAP_JSON="$(python3 "$IMPORTER" --gap-report --interval-hours "$INTERVAL_HOURS" 2>/dev/null)"
+case "$GAP_JSON" in
+  \{*) : ;;
+  *) GAP_JSON="" ;;
+esac
+if [ -n "$GAP_JSON" ]; then
+  GAP_LINE="$(printf '%s' "$GAP_JSON" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("line","") if d.get("exceeded") else "")' 2>/dev/null)"
+  [ -n "$GAP_LINE" ] && say "GAP $GAP_LINE"
+else
+  say "WARN the gap could not be measured (the importer's --gap-report did not answer)"
+fi
+
 rc_total=0
+read_count=0
 while IFS= read -r account; do
   [ -n "$account" ] || continue
-  out="$(python3 "$ROOT/bin/mail/gna_import.py" --account "$account" --days "$DAYS" $DRY 2>&1)"
+  read_count=$((read_count + 1))
+  args=(--account "$account")
+  [ -n "$DAYS" ] && args+=(--days "$DAYS")
+  [ -n "$DRY" ] && args+=("$DRY")
+  out="$(python3 "$IMPORTER" "${args[@]}" 2>&1)"
   rc=$?
   printf '%s\n' "$out"
   if [ $rc -ne 0 ]; then
@@ -134,14 +159,17 @@ done <<< "$ACCOUNTS"
 mkdir -p "$STATE"
 printf '%s gna-mail rc=%s\n' "$(date -Is)" "$rc_total" >> "$STATE/gna-mail.log"
 # Freshness the gate can show: a last RUN, not only a last write — an unchanged
-# store is a success and must not read as "the desk stopped working".
+# store is a success and must not read as "the desk stopped working". The record also
+# carries the WINDOW (mark or backfill) and the GAP the run measured before reading, so the
+# notice can say "the desk was blind for N days" without asking the mailbox again.
 if [ -d "$HOME_R/hodd/state" ]; then
-  printf '{"at":"%s","days":%s,"rc":%s}\n' "$(date -Is)" "$DAYS" "$rc_total" \
-    > "$HOME_R/hodd/state/gna-mail-last-run.json"
+  rec_args=(--record-run --rc "$rc_total" --accounts "$read_count" --gap "${GAP_JSON:-}")
+  [ -n "$DAYS" ] && rec_args+=(--days "$DAYS")
+  python3 "$IMPORTER" "${rec_args[@]}" >/dev/null 2>&1 || say "WARN the last-run record could not be written"
 fi
 
 if [ -x "$RUNES" ]; then
-  "$RUNES" gna gna-mail-import --message "mail desk import: rc=$rc_total · accounts=$(printf '%s' "$ACCOUNTS" | wc -l)" >/dev/null 2>&1 || true
+  "$RUNES" gna gna-mail-import --message "mail desk import: rc=$rc_total · accounts=$read_count · window=${DAYS:+days:$DAYS}${DAYS:-mark}" >/dev/null 2>&1 || true
 
 # AS THEY COME (2026-11-05, plan 193): a successful import tells the arm about arrivals it has
 # not spoken about before. gna_notify marks each message `notified_at` by appending a version,
