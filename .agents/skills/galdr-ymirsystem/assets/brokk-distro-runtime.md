@@ -1758,3 +1758,26 @@ Guard: `bin/bridge/tests/test_a2a_prove.sh` (14 cases, a temporary queue; a fail
 unproved live hop are both asserted to exit 1 and to be named). Fix note
 `docs/fixes/bridge/2026-11-16-the-proof-is-a-round-trip.md`, how-to
 `docs/features/a2a-prove.md`.
+
+## Hermes in the loop: two shapes, one vocabulary (plan 303 §12.3 step 8, 2026-11-16)
+
+```
+hermes_roads[2]{shape,how reached,proved}
+  "an agent in a pane","`herdr agent start <name> --kind hermes --pane <id>`; then the ready check, the queue and the relay treat it as any pane","yes — the round trip proved live between throwaway agents in panes"
+  "a session behind a gateway","addressed by id prefix or title; its state is the runtime's own admission (`unknown` = a turn may have run), so a paused session is `blocked: lost turn, run recover`","the reader is proved against the runtime's own table; a throwaway profile is UNPROVED"
+```
+
+**A throwaway Hermes profile needs its own keys.** Measured 2026-11-16: an isolated
+`HERMES_HOME` in a pane bootstraps its own runtime and stops at `hermes setup` — "no API keys
+or providers found". Copying the operator's credentials into a scratch profile is his decision,
+not a worker's, so the throwaway-Hermes proof is recorded as **unproved** rather than described
+as working.
+
+**The headless road is stated, not claimed.** v0.22.6 has no `hermes mcp serve`; MCP arrives
+through `hermes plugins install mcp-serve`, and the API server / bots decisions are §13.6 items
+2 and 3 — the operator's. A paused session is never resumed by a tool.
+
+Guard: `bin/bridge/tests/test_hermes_road.sh` (5 cases; asserts what is true and asserts the
+absence that keeps the headless road stated). Fix note
+`docs/fixes/bridge/2026-11-16-the-hermes-road-measured.md`, how-to
+`docs/features/hermes-in-the-loop.md`.
