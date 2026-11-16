@@ -11,6 +11,11 @@
 # a second window — takes it and leaves the face silent. This door owns that single seat,
 # so the operator never has to reason about it.
 set -uo pipefail
+# macOS has no setsid(1); perl's POSIX::setsid gives the same new session (RULES/05, 2026-11-16)
+newsid() {
+  if command -v setsid >/dev/null 2>&1; then setsid "$@"
+  else perl -MPOSIX -e 'POSIX::setsid(); exec @ARGV or die "exec: $!"' "$@"; fi
+}
 APP="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$APP/../.." && pwd)"
 RODD_HOME=""; . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null && ymir_home_root RODD_HOME   # the one resolver
@@ -297,12 +302,12 @@ warm_head
 
 # 4 · the toolbox — the house's fourteen hands
 if ! curl -s --max-time 2 "http://127.0.0.1:$PORT_BOX/health" | grep -q '"ok"'; then
-  setsid python3 "$ROOT/bin/voice/voice-toolbox.py" --port "$PORT_BOX" > /tmp/rodd-toolbox.log 2>&1 < /dev/null &
+  newsid python3 "$ROOT/bin/voice/voice-toolbox.py" --port "$PORT_BOX" > /tmp/rodd-toolbox.log 2>&1 < /dev/null &
   sleep 2
 fi
 say "toolbox" "$(curl -s --max-time 3 "http://127.0.0.1:$PORT_BOX/health" | head -c 40)"
 # her web search: the house's own SearXNG, raised in the background so the window never waits for it (plan 275)
-setsid bash "$ROOT/bin/voice/search-ensure.sh" > /tmp/rodd-search.log 2>&1 < /dev/null &
+newsid bash "$ROOT/bin/voice/search-ensure.sh" > /tmp/rodd-search.log 2>&1 < /dev/null &
 
 # 5 · the window — or, when asked, the engine's own terminal client and no face at all.
 # A touchscreen seat with a running shell wants the buttons, not an Electron window over the
@@ -313,7 +318,7 @@ if [ "${1:-}" = "--headless" ] || [ "${RODD_HEADLESS:-0}" = "1" ]; then
     # YMIR_VOICE_HOST is named, not probed: the door's own probe walks the fleet's ears,
     # and this seat's local host is not one of them, so it refused with "no host seat
     # reachable" while the pipeline was answering on loopback.
-    setsid env YMIR_VOICE_PANE=0 YMIR_VOICE_HOST="$seat" "$ROOT/bin/voice/voice-door.sh" client \
+    newsid env YMIR_VOICE_PANE=0 YMIR_VOICE_HOST="$seat" "$ROOT/bin/voice/voice-door.sh" client \
       > /tmp/rodd-headless.log 2>&1 < /dev/null &
     sleep 5
   }
@@ -356,7 +361,7 @@ if [ -r "$ROOT/bin/desktop/app-lib.sh" ]; then
   YMIR_WINDOW_BUTTONS="$(app_window_buttons)"
 fi
 export YMIR_WINDOW_BUTTONS="${YMIR_WINDOW_BUTTONS:-on}"
-setsid env SPEECH_TO_SPEECH_URL="ws://127.0.0.1:$PORT_HOST/v1/realtime" \
+newsid env SPEECH_TO_SPEECH_URL="ws://127.0.0.1:$PORT_HOST/v1/realtime" \
   "$ELECTRON" --remote-debugging-port="${RODD_DEVTOOLS_PORT:-9222}" "$APP" > /tmp/rodd-app.log 2>&1 < /dev/null &
 # The window maps in about two seconds; a fixed 14 s sleep only made the click wait — and it is the click that
 # waits, because ymir-app restarts her unit and a oneshot unit does not return until this script does (measured
