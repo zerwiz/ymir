@@ -65,3 +65,7 @@ The live round trip through two agents is **attempted, not assumed**: `--live` p
 what happened, and a run that timed out is recorded as unproved with its task id. The plan's
 closing proof (§15.5) is the operator's own run, on two machines, after an install and after an
 update; this step gives him the command that proves it, not a claim that it already passed.
+
+## CHANGE LOG
+
+- 2026-11-16 — review-mend: added missing heading for #796
