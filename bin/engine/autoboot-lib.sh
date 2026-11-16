@@ -252,6 +252,9 @@ autoboot_linger() {  # prints `yes` or `no`
 }
 
 autoboot_has_display() {  # exit 0 iff a display is present (a window could open)
+  # a Mac is a login-session seat: launchd starts the user's LaunchAgents at login, with no
+  # DISPLAY variable and no loginctl (plan 293 — bin/engine/launchd-user.py runs the units there)
+  case "$(uname -s 2>/dev/null)" in Darwin*) return 0 ;; esac
   { [ -n "${WAYLAND_DISPLAY:-}" ] || [ -n "${DISPLAY:-}" ]; } && return 0 || return 1
 }
 
