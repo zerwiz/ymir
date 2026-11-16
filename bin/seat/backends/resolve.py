@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """ONE resolver: `herdr:<pane>`, `hermes:<id-or-title>`, or a bare target — and bare is herdr.
 
 WHY (plan 303 §14): five doors reach an agent today, and each learned its own way. A second

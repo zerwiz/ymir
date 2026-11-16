@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Hermes as a backend — the same six verbs, so a session is reached like a pane.
 
 WHY (plan 303 §14, §13.5 9a–9f): a Hermes agent is not a pane. Two sessions of one Desktop
