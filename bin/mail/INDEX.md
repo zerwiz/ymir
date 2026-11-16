@@ -37,7 +37,7 @@ bin[18]{file,does,kind,verdict,disposition,callers,lines}:
   "ledger.sh","ledger.sh — the one mail record: what went out, what came in, and when.","tool","wired","keep",3,279
   "mail-scan.sh","mail-scan.sh — read-only: the last N hours of a mailbox, as compact JSON.","tool","wired","keep",3,80
   "test_gna.py","'''The proofs plan 116 asks for before the desk is shown to a human.'''","tool","wired","keep",3,889
-  "test_headers.py","'''The RFC headers: a reply can name the message it answers (plan 305 §7.1, phase 7).","data","wired","keep",0,539
+  "test_headers.py","'''The RFC headers: a reply can name the message it answers (plan 305 §7.1, phase 7).","tool","wired","keep",0,539
   "test_threads.py","'''The proofs plan 305 phase 1 asks for: three fixtures — answered, unanswered, waiting.","tool","wired","keep",0,244
   "threads.sh","threads.sh — the join: one row per conversation, and the lane that conversation is in.","tool","wired","keep",1,367
 
