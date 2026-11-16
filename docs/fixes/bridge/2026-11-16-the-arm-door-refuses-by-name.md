@@ -87,3 +87,7 @@ daily use, and this step adds no new way to reach one.
 It does not give a second machine's agent a second arm, and it does not let one person's
 agent act in another person's pane without a task in that person's queue (§7). It does not
 route across owners — that is the hub, §10, not this build.
+
+## CHANGE LOG
+
+- 2026-11-16 — review-mend: added missing heading for #796
