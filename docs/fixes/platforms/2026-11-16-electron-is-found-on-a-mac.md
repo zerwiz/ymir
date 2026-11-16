@@ -17,3 +17,7 @@ into `dist/`, which a Mac cannot run. Every app stopped at "the Electron runtime
 | `scripts/electron.sh` | The running-window probe matches any binary under `electron/dist/`, so it also finds a Mac window. |
 
 Linux behaviour is unchanged: there both helpers still answer `electron` and `linux-<arch>`.
+
+## CHANGE LOG
+
+- 2026-11-15 — review-mend: added missing heading for #782
