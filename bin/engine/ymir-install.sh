@@ -400,8 +400,17 @@ step_clients() {
 # interactive run asks once and records the answer under ~/.config/ymir/home, so
 # every later script resolves the same home without being told again. --check
 # never writes; --yes takes what is already recorded (or the documented default).
+home_mac_warn() {  # a Mac home under a TCC-protected folder starves every launchd agent
+  case "$(uname -s 2>/dev/null)" in Darwin*) ;; *) return 0 ;; esac
+  case "$YMIR_HOME" in
+    "$HOME/Documents"/*|"$HOME/Desktop"/*|"$HOME/Downloads"/*|"$HOME/Library/Mobile Documents"/*)
+      add home-mac WARN "the home is under a macOS-protected folder ($YMIR_HOME) — background services cannot open it; move it (e.g. ~/ymirhome) and record it with YMIR_HOME=<path> bin/engine/ymir-install.sh" ;;
+  esac
+}
+
 step_home() {
   local rec="" chosen=""
+  home_mac_warn
   ymir_home_record rec
   if [ -n "${YMIR_HOME:-}" ] && [ "$CHECK" = 1 ]; then add home OK "home: $YMIR_HOME"; return; fi
   if [ -n "$rec" ]; then

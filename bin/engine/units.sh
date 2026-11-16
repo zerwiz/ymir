@@ -23,4 +23,13 @@ case "${1:-}" in
   -h|--help|"") sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
 esac
 command -v python3 >/dev/null 2>&1 || { printf 'error: python3 is required by units.sh\n' >&2; exit 2; }
-exec python3 -I "$HERE/units.py" "$@"
+# -I keeps a stray module in the caller's directory out, but it also hides the user site, which is exactly where
+# prereq-ensure.sh pyyaml installs PyYAML (`pip install --user`). On a stock Mac (Python 3.9, no system yaml) that
+# made every units call fail with "python3-yaml is required" (2026-11-16). So: isolated when isolated works, else
+# the recorded engine interpreter, else python3 with only -E (still no PYTHON* env, user site kept).
+rec="${XDG_CONFIG_HOME:-$HOME/.config}/ymir/engram-python"
+for py in python3 "$(head -n1 "$rec" 2>/dev/null)"; do
+  [ -n "$py" ] && command -v "$py" >/dev/null 2>&1 && "$py" -I -c 'import yaml' >/dev/null 2>&1 && exec "$py" -I "$HERE/units.py" "$@"
+done
+python3 -E -c 'import yaml' >/dev/null 2>&1 && exec python3 -E "$HERE/units.py" "$@"
+exec python3 -I "$HERE/units.py" "$@"   # names the missing parser
