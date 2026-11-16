@@ -144,6 +144,17 @@ def extra_path() -> list[str]:
     return seen
 
 
+def unit_path_env(path: str) -> str:
+    """A unit's PATH for launchd: the user-local dirs FIRST, then the unit's own, then the rest.
+
+    A unit written for Linux names /usr/bin:/bin early, and on a Mac that is bash 3.2 — a script called as `bash x.sh`
+    then dies on a syntax error before its own bash floor can run (2026-11-16: role.sh, so the arm read no fleet role).
+    """
+    first = [d for d in (str(HOME / ".local/bin"), "/opt/homebrew/bin") if os.path.isdir(d)]
+    parts = first + [p for p in path.split(":") if p and p not in first]
+    return ":".join(parts + [p for p in extra_path() if p not in parts])
+
+
 # ── rendering a launchd agent ────────────────────────────────────────────────
 def transient_dir() -> Path:
     """Where `systemd-run` units live: outside the unit dir, so an install never mistakes one for its own."""
@@ -176,7 +187,7 @@ def render(name: str) -> dict | None:
         return None
     env = env_pairs(svc.get("Service", {}).get("Environment", []))
     path = env.get("PATH", "")
-    env["PATH"] = ":".join([p for p in path.split(":") if p] + [p for p in extra_path() if p not in path.split(":")])
+    env["PATH"] = unit_path_env(path)
     env.setdefault("HOME", str(HOME))
     script = ["set -e"] if len(execs) > 1 else []
     for ef in svc.get("Service", {}).get("EnvironmentFile", []):
@@ -617,7 +628,7 @@ def do_run(argv: list[str]) -> int:
         return 1
     name = norm(unit or f"run-{os.getpid()}")
     path = env.get("PATH", "")
-    env["PATH"] = ":".join([p for p in path.split(":") if p] + [p for p in extra_path() if p not in path.split(":")])
+    env["PATH"] = unit_path_env(path)
     env.setdefault("HOME", str(HOME))
     logs = str(log_dir() / f"{stem(name)}.log")
     pl = {"Label": agent_label(name), "ProgramArguments": cmd, "EnvironmentVariables": env,
