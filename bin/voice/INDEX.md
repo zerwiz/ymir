@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[25]{file,does,kind,verdict,disposition,callers,lines}:
+bin[26]{file,does,kind,verdict,disposition,callers,lines}:
   "ear.sh","ear.sh — turn a recording into words, with whichever engine this machine has.","tool","wired","keep",1,57
   "echo-cancel.sh","echo-cancel.sh — Ymir's own microphone without the speakers in it (plan 275 S22).","tool","wired","keep",0,73
   "head-proxy.py","'''head-proxy.py — a loopback OpenAI-compatible door in front of an online head.","tool","wired","keep",1,173
@@ -35,19 +35,20 @@ bin[25]{file,does,kind,verdict,disposition,callers,lines}:
   "test_rodd_arm.sh","test_rodd_arm.sh — Rödd may knock on the arm, and only on a LIVE arm: the whole point of","tool","wired","keep",2,196
   "test_rodd_helm.sh","test_rodd_helm.sh — Nanna's duty loop and the one-client role claim, headless (plan 254).","tool","wired","keep",0,176
   "test_rodd_pin.sh","test_rodd_pin.sh — plan 257 H7: Rödd runs the PINNED runtime, never a working tree.","tool","wired","keep",0,55
+  "test_todos_digest.sh","test_todos_digest.sh — the session digest counts HIS list, and names the halves apart.","tool","wired","keep",1,111
   "test_voice_beside_call.sh","test_voice_beside_call.sh — plan 271 pieces 1 and 2, proven on stand-ins, nothing raised.","tool","wired","keep",0,48
   "test_voice_idle.sh","test_voice_idle.sh — the voice engine lets the card go when nobody is on the line.","tool","wired","keep",1,117
   "test_voice_vad_model.sh","test_voice_vad_model.sh — the voice's detector weights: ONE answer for where they live, and a","tool","wired","keep",3,150
-  "todos.sh","todos.sh — the Allfather's task ledger, READ by anyone who must know it (the arm holder first).","tool","wired","keep",6,57
-  "voice-door.sh","voice-door.sh — the real-time voice door: speak to Ymir on whatever seat you are at.","tool","tested","keep",5,527
+  "todos.sh","todos.sh — the Allfather's to-do, READ by anyone who must know it (the arm holder first).","tool","wired","keep",7,129
+  "voice-door.sh","voice-door.sh — the real-time voice door: speak to Ymir on whatever seat you are at.","tool","tested","keep",5,528
   "voice-ensure.sh","voice-ensure.sh — ensure the voice engines: whisper.cpp (speech → text),","tool","wired","keep",6,220
   "voice-idle.sh","voice-idle.sh — the voice engine lets the card go when nobody is on the line.","tool","wired","keep",3,138
   "voice-model-lib.sh","voice-model-lib.sh — WHERE THE VOICE'S MODEL WEIGHTS LIVE, and the one pinned upstream.","lib","wired","keep",3,72
   "voice-toolbox.py","'''voice-toolbox.py — the house's hands for a browser face.","tool","wired","keep",1,420
-  "voice_mcp.py","'''voice_mcp.py — the voice's MCP adapter: every server this seat knows, as hands.","tool","wired","keep",0,396
-  "voice_tools.py","'''voice-tools.py — the hands of the voice.","tool","tested","keep",4,3202
+  "voice_mcp.py","'''voice_mcp.py — the voice's MCP adapter: every server this seat knows, as hands.","tool","wired","keep",0,407
+  "voice_tools.py","'''voice-tools.py — the hands of the voice.","tool","tested","keep",4,3218
   "ymir-vad.py","'''","tool","wired","keep",3,183
 
-**Tally.** verdict: wired=22, tested=3
+**Tally.** verdict: wired=23, tested=3
 
-**Tally.** disposition: keep=25
+**Tally.** disposition: keep=26
