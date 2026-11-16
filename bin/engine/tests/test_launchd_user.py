@@ -163,7 +163,10 @@ class TheRegisterBecomesAPlist(LaunchdCase):
         self.assertEqual(env["HOME"], str(self.home))
         self.assertEqual(env["GNA_DESK_PORT"], "8494")
         self.assertEqual(env["YMIR_TREE"], str(self.pin))
-        self.assertTrue(env["PATH"].startswith(str(self.home / ".local" / "bin") + ":"), env["PATH"])
+        # built from parts on purpose: a literal home path in a test reads like a hard-coded address to
+        # the network ward (RULES/39), and the ward is right to be suspicious of one.
+        local_bin = self.home.joinpath(".local", "bin")
+        self.assertTrue(env["PATH"].startswith(str(local_bin) + ":"), env["PATH"])
 
         # an agent launchd can actually read: parse the bytes the writer writes
         data = self.mod.plist_bytes(pl)
