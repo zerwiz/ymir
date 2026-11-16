@@ -67,3 +67,7 @@ The Allfather: a throwaway Hermes profile with its own keys (or his word that th
 sessions may be used for the A→B→A between a Hermes and a Claude), and the §13.6 decisions on
 the API server and on bots-versus-sessions. Until then a Hermes agent is addressed by pane,
 which works today, and by session, which the ready check already answers for.
+
+## CHANGE LOG
+
+- 2026-11-16 — review-mend: added missing heading for #797
