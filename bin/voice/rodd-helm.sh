@@ -64,7 +64,7 @@ resolve_state() {
 }
 
 lease_field() {  # <file> <field>
-  sed -n "s/.*\b$2=\([^ ]*\).*/\1/p" "$1" 2>/dev/null | head -1
+  sed -nE "s/(^|.* )$2=([^ ]*).*/\2/p" "$1" 2>/dev/null | head -1
 }
 
 resolve_room() {
