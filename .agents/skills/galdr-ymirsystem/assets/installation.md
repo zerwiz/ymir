@@ -1007,6 +1007,7 @@ sourced, never executed:
 | Detach a process | `ymir_detach` | `setsid` is absent on macOS; falls back to `nohup` |
 | Exclusive lock | `ymir_lock` | `flock` is Linux; falls back to an atomic `mkdir` lock |
 | Services | `ymir_service_backend`, `ymir_service_active` | `systemd` on Linux, `launchd` on macOS, neither elsewhere |
+| `systemctl --user` itself | `bin/engine/launchd-user.py` (seated by `bin/engine/launchd-ensure.sh`, install step `launchd`) | on macOS every unit is rendered as a launchd agent `org.ymir.<unit>`; Linux keeps systemd |
 | GPUs | `ymir_gpu_name`, `ymir_gpu_mem_used` | never assume NVIDIA: `nvidia-smi`, then `rocm-smi`, then Apple's unified memory |
 | Paths | `ymir_tmp`, `ymir_expand_tilde` | `TMPDIR`/`TEMP` vary; a leading `~` must be expanded explicitly |
 
