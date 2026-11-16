@@ -3,6 +3,9 @@
 
 from __future__ import annotations
 
+import base64
+import contextlib
+import io
 import json
 import os
 import re
@@ -10,9 +13,11 @@ import sys
 import socketserver
 import tempfile
 import threading
+import time
 import unittest
 import urllib.error
 import urllib.request
+from datetime import datetime, timedelta, timezone
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 
@@ -47,6 +52,7 @@ import gna_addresses  # noqa: E402
 import gna_desk  # noqa: E402
 import gna_import  # noqa: E402
 import gna_judge  # noqa: E402
+import gna_notify  # noqa: E402
 import gna_store  # noqa: E402
 
 
@@ -71,6 +77,222 @@ def record(**over) -> dict:
     }
     base.update(over)
     return base
+
+
+class StubGmail:
+    """A STUB TRANSPORT: no socket, no grant — the three answers Gmail actually gives.
+
+    It records every query it is asked, so a proof can show WHAT the importer asked for
+    (`after:<epoch>`, never "the last N days") — which is the whole point of the high-water
+    mark and cannot be shown by looking at the records alone."""
+
+    def __init__(self, messages: list[dict], account: str, page: int = 2) -> None:
+        self.account = account
+        self.page = page
+        self.messages = sorted(messages, key=lambda m: m["epoch"], reverse=True)
+        self.queries: list[str] = []
+
+    def token(self, _row: dict) -> str:
+        return "stub-token"
+
+    def api(self, _token: str, path: str, params: dict | None = None) -> dict:
+        params = params or {}
+        if path == "/users/me/profile":
+            return {"emailAddress": self.account}
+        if path == "/users/me/messages":
+            query = str(params.get("q") or "")
+            self.queries.append(query)
+            after = None
+            match = re.search(r"after:(\d+)", query)
+            if match:
+                after = int(match.group(1))
+            wider = re.search(r"newer_than:(\d+)d", query)
+            if wider:
+                after = int(time.time()) - int(wider.group(1)) * 86400
+            picked = [m for m in self.messages if after is None or m["epoch"] >= after]
+            start = int(params.get("pageToken") or 0)
+            page = picked[start:start + self.page]
+            answer: dict = {"messages": [{"id": m["id"]} for m in page]}
+            if start + self.page < len(picked):
+                answer["nextPageToken"] = str(start + self.page)
+            return answer
+        match = re.match(r"/users/me/messages/(.+)$", path)
+        if match:
+            found = next(m for m in self.messages if m["id"] == match.group(1))
+            return found["full"]
+        raise AssertionError(f"the stub was asked for {path}")
+
+
+def gmail_message(mid: str, epoch: int, subject: str) -> dict:
+    body = base64.urlsafe_b64encode(b"sent while the desk was down").decode()
+    return {
+        "id": mid,
+        "epoch": epoch,
+        "full": {
+            "id": mid,
+            "threadId": f"t-{mid}",
+            "internalDate": str(epoch * 1000),
+            "labelIds": ["INBOX", "UNREAD"],
+            "payload": {
+                "mimeType": "text/plain",
+                "headers": [
+                    {"name": "From", "value": "Ada Example <ada@example.com>"},
+                    {"name": "To", "value": "operator@example.com"},
+                    {"name": "Subject", "value": subject},
+                    {"name": "Date", "value": datetime.fromtimestamp(epoch, timezone.utc)
+                        .strftime("%a, %d %b %Y %H:%M:%S +0000")},
+                ],
+                "body": {"data": body},
+            },
+        },
+    }
+
+
+def iso(epoch: int) -> str:
+    return datetime.fromtimestamp(epoch, timezone.utc).isoformat(timespec="seconds")
+
+
+class ImportWindow(unittest.TestCase):
+    """A WEEK OF DOWNTIME, PROVEN AGAINST A STUB TRANSPORT (2026-11-16).
+
+    The failure this closes: a run asked Gmail for "the last N days", measured from NOW. Every
+    hour the desk was down was an hour it never asked about, so the mail that arrived during
+    the outage was lost — silently, and looking exactly like a quiet inbox. The mark makes the
+    ask "everything since the newest message I have read"; the gap makes the outage audible."""
+
+    ACCOUNT = "operator@example.com"
+
+    def setUp(self) -> None:
+        self.now = datetime.now(timezone.utc)
+        self.away = int((self.now - timedelta(days=7)).timestamp())
+        self.state = TMP / "hodd/state"
+        self.state.mkdir(parents=True, exist_ok=True)
+        for name in ("gna-mail-watermark.json", "gna-mail-last-run.json"):
+            try:
+                (self.state / name).unlink()
+            except OSError:
+                pass
+        self.seen = gmail_message("seen-1", self.away, "the last thing before the silence")
+        # mail that arrived WHILE the desk was blind: six days, one message each
+        self.gap = [gmail_message(f"gap-{n}", int((self.now - timedelta(days=n)).timestamp()),
+                                 f"arrived while the desk was blind ({n} days ago)")
+                    for n in range(6, 0, -1)]
+        self.fresh = gmail_message("fresh-1", int(self.now.timestamp()), "arrived this minute")
+        self.transport = StubGmail([self.seen, *self.gap, self.fresh], self.ACCOUNT)
+        self._token, self._api = gna_import.token_for, gna_import.api
+        gna_import.token_for = self.transport.token
+        gna_import.api = self.transport.api
+        self.mark = {"account": self.ACCOUNT, "newest": iso(self.away), "newest_id": "seen-1",
+                     "checked_at": iso(self.away), "read": 1}
+        gna_import.watermark_path().write_text(
+            json.dumps({"accounts": {self.ACCOUNT: self.mark}}), encoding="utf-8")
+        gna_import.last_run_path().write_text(json.dumps({
+            "at": iso(self.away), "window": "mark", "days": None, "rc": 0,
+            "accounts": 1, "gap": {"exceeded": False}}), encoding="utf-8")
+
+    def tearDown(self) -> None:
+        gna_import.token_for, gna_import.api = self._token, self._api
+
+    def run_import(self, *extra: str) -> tuple[int, str]:
+        argv = sys.argv
+        sys.argv = ["gna_import.py", "--account", self.ACCOUNT, *extra]
+        out = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
+                rc = gna_import.main()
+        finally:
+            sys.argv = argv
+        return rc, out.getvalue()
+
+    def run_like_the_clock(self) -> tuple[dict, int, str]:
+        """The job's own order: measure the gap FIRST, then read, then write the record."""
+        gap = gna_import.gap_report(interval_hours=24)
+        rc, out = self.run_import()
+        gna_import.record_run(gap, rc=rc, accounts=1)
+        return gap, rc, out
+
+    def stored_ids(self) -> set[str]:
+        return {str(r.get("id")) for r in gna_store.latest(self.ACCOUNT)}
+
+    def test_a_run_after_a_week_of_downtime_skips_nothing_in_the_gap(self):
+        gap, rc, out = self.run_like_the_clock()
+        self.assertEqual(rc, 0, out)
+        stored = self.stored_ids()
+        for message in self.gap:
+            self.assertIn(message["id"], stored, f"{message['id']} was lost in the gap")
+        self.assertIn("fresh-1", stored)
+        self.assertEqual(len(self.transport.queries), 4, self.transport.queries)  # 8 messages, 2 a page
+
+    def test_the_ask_is_everything_since_the_mark_never_a_fixed_width(self):
+        gap, rc, out = self.run_like_the_clock()
+        self.assertTrue(self.transport.queries, "the stub was never asked")
+        for query in self.transport.queries:
+            self.assertIn("after:", query)
+            self.assertNotIn("newer_than:", query)
+        # one second before the newest message already read: the same-second arrival is not lost
+        self.assertIn(f"after:{self.away - 1}", self.transport.queries[0])
+        self.assertIn(f"since {iso(self.away - 1)} (mark)", out)
+        newest = gna_import._parse_iso(gna_import.watermark_for(self.ACCOUNT)["newest"])
+        self.assertIsNotNone(newest)
+        self.assertGreaterEqual(newest.timestamp(), int(self.now.timestamp()) - 1)
+
+    def test_days_is_still_an_override_for_a_backfill(self):
+        rc, out = self.run_import("--days", "30")
+        self.assertEqual(rc, 0, out)
+        self.assertIn("newer_than:30d", self.transport.queries[0])
+        self.assertIn("(days)", out)
+
+    def test_the_gap_is_named_in_days_with_both_ends(self):
+        gap, rc, out = self.run_like_the_clock()
+        self.assertTrue(gap["exceeded"], gap)
+        self.assertAlmostEqual(gap["days"], 7.0, delta=0.1)
+        self.assertEqual(gap["from"], iso(self.away))
+        self.assertIn("the desk was blind for 7 days", gap["line"])
+        self.assertIn(gap["from"], gap["line"])
+        record = gna_store.last_run()
+        self.assertTrue(record["gap"]["exceeded"])
+        self.assertAlmostEqual(record["gap"]["days"], 7.0, delta=0.1)
+        self.assertEqual(record["gap"]["from"], iso(self.away))
+        self.assertEqual(record["window"], "mark")
+
+    def test_a_normal_interval_is_not_called_blindness(self):
+        recent = (datetime.now(timezone.utc) - timedelta(hours=2)).isoformat(timespec="seconds")
+        gap = gna_import.gap_report(interval_hours=24, last_run={"at": recent, "rc": 0})
+        self.assertFalse(gap["exceeded"], gap)
+        self.assertEqual(gap["line"], "")
+
+    def test_a_failed_run_is_not_a_look(self):
+        recent = (datetime.now(timezone.utc) - timedelta(hours=2)).isoformat(timespec="seconds")
+        gap = gna_import.gap_report(interval_hours=24, last_run={"at": recent, "rc": 2})
+        self.assertTrue(gap["exceeded"], "a run that could not read the mailbox is not a look")
+        self.assertEqual(gap["source"], f"{self.ACCOUNT}:checked_at")
+
+    def test_the_next_notice_opens_with_the_gap_and_says_it_once(self):
+        self.run_like_the_clock()
+        self.assertTrue(gna_import.unspoken_gap())
+        argv = sys.argv
+        sys.argv = ["gna_notify.py", "--pending"]
+        out = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(out):
+                gna_notify.main()
+        finally:
+            sys.argv = argv
+        first = out.getvalue().strip().splitlines()[0]
+        self.assertTrue(first.startswith("would say> the desk was blind for 7 days"), first)
+        self.assertIn(" — mail:", first)
+        self.assertLess(first.index("the desk was blind"), first.index("mail:"),
+                        "the gap must OPEN the notice, not trail it")
+        self.assertTrue(gna_import.mark_gap_spoken())
+        self.assertEqual(gna_import.unspoken_gap(), {})
+        self.assertFalse(gna_import.mark_gap_spoken())
+        self.assertEqual(gna_notify.blind_prefix(), "")
+
+    def test_the_mark_never_moves_backwards(self):
+        older = [{"id": "old-1", "received_at": iso(self.away - 86400)}]
+        mark = gna_import.note_seen(self.ACCOUNT, older)
+        self.assertEqual(mark["newest"], iso(self.away))
+        self.assertEqual(mark["newest_id"], "seen-1")
 
 
 class StoreScope(unittest.TestCase):
@@ -303,7 +525,10 @@ class _ImapHandler(socketserver.StreamRequestHandler):
     def write(self, untagged: str | None, tag: str, tagged: str) -> None:
         payload = ""
         if untagged:
-            payload += untagged + "\r\n"
+            # The caller may hand over one line or several; a double CRLF here would be read as
+            # an EMPTY untagged response and imaplib aborts the command (measured 2026-11-16:
+            # every IMAP proof in this file failed on `unexpected response: b''`).
+            payload += untagged if untagged.endswith("\r\n") else untagged + "\r\n"
         payload += f"{tag} {tagged}\r\n"
         self.wfile.write(payload.encode("utf-8"))
         self.wfile.flush()
