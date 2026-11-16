@@ -1735,3 +1735,26 @@ guard judges it without spawning a bridge. Guard:
 `bin/bridge/tests/test_a2a_bridge_identity.sh` (11 cases). Fix note
 `docs/fixes/bridge/2026-11-16-the-bridge-names-itself.md`, how-to
 `docs/features/agent-bridge-identity.md`.
+
+## The proof is a round trip, and an unproved hop says so (plan 303 §12.3 step 7, 2026-11-16)
+
+A card answering is not a node answering, and a file moving is not a message delivered. The
+proof is a **nonce**: `bin/bridge/a2a-talk.sh prove` (over `bin/bridge/a2a-prove.py`) sends one
+through the three doors of the loop and checks it comes back unchanged.
+
+```
+prove_doors[3]{door,proves,how}
+  "queue","a task is written, claimed and answered and the file moves","a real task and a real nonce through ratatoskr.sh"
+  "relay","the loop answers and reports what it did","ratatoskr-relay.sh status"
+  "arm","a machine name is handed to its holder or refused by name","ratatoskr-arm.sh"
+```
+
+`--live A B` adds the round trip through two live agents, waits for every hop, and reports a hop
+that does not arrive as `UNPROVED` with the agent's name and the task id — never a partial
+green. Exit 1 means a door failed and is named. It is an action on `a2a-talk.sh`, the door that
+already proves the channel: there is no second prover.
+
+Guard: `bin/bridge/tests/test_a2a_prove.sh` (14 cases, a temporary queue; a failed door and an
+unproved live hop are both asserted to exit 1 and to be named). Fix note
+`docs/fixes/bridge/2026-11-16-the-proof-is-a-round-trip.md`, how-to
+`docs/features/a2a-prove.md`.
