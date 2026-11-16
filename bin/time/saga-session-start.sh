@@ -475,7 +475,9 @@ head_needs() {  # what needs the Allfather: counts first, then the newsiest line
   decisions=$(find "$STATE" -maxdepth 1 -name '*.decision' 2>/dev/null | wc -l | tr -d '[:space:]')
   questions=$(find "$STATE/eindri-questions" -maxdepth 1 -name '*.md' 2>/dev/null | wc -l | tr -d '[:space:]')
   if [ -x "$SCRIPT_DIR/../voice/todos.sh" ]; then
-    todos_line="$(timeout 5 bash "$SCRIPT_DIR/../voice/todos.sh" --digest 2>/dev/null | head -1 | sed 's/ — ledger.*//')"
+    # HIS list is the count (his half + house-kept, named apart) and the voice ledger is its own;
+    # the head keeps the short form of that first line, never a bare zero (2026-11-16).
+    todos_line="$(timeout 5 bash "$SCRIPT_DIR/../voice/todos.sh" --digest 2>/dev/null | head -1 | sed 's/ · voice ledger.*//')"
   fi
   printf 'wakes %s · decisions %s · questions %s · %s\n' \
     "${wakes:-0}" "${decisions:-0}" "${questions:-0}" "$(printf '%s' "${todos_line:-todos: unreadable}" | sed 's/^open: /todos: /')"
