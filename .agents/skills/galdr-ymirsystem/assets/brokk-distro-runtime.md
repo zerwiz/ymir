@@ -1632,3 +1632,28 @@ Flags: `--local`, `--machine NAME`, `--no-arm`, `--json`. Guard:
 `bin/bridge/tests/test_ratatoskr_who.sh` (15 cases, stub `herdr` and stub `ssh`, fixture
 fleet registry). Fix note `docs/fixes/bridge/2026-11-16-the-directory-is-herdr.md`,
 how-to `docs/features/ratatoskr-who.md`.
+
+## One queue, and the claim is a rename (plan 303 §12.3 step 3, 2026-11-16)
+
+The house had four mailboxes in four formats (Sága's wake queue, the hall's `todo`, the
+a2abridge inbox, Ratatoskr's tasks), so an agent never knew where to look. There is one
+format now, at `$YMIR_HOME/state/ratatoskr` (override `RATATOSKR_QUEUE`):
+
+```
+queue[3]{shelf,written_by,meaning}
+  "inbox/","the sender","HANDED — not delivered"
+  "claimed/","the receiver, by RENAMING the file","the rename is atomic: one receiver wins, the loser is told which shelf holds it"
+  "done/","the receiver's reply","DELIVERED — the reply is in the same file that carried the question"
+```
+
+Doors: `bin/bridge/ratatoskr.sh send|inbox|claim|reply|show|count` over
+`bin/bridge/ratatoskr-queue.py`. A task file is `id/from/to/created/state/claimed_by/
+claimed_at/answered_at` between `---` fences, then the text, then `## reply`. An address
+matches in all three spellings a pane has, so `--for w1:p2` finds a task sent to
+`herdr:w1:p2` or `host-a/w1:p2`.
+
+The queue is private state, so it lives in the home; the tree carries the door only. Guard:
+`bin/bridge/tests/test_ratatoskr_queue.sh` (23 cases, a temporary queue directory; the two
+claims race and the second is refused). Fix note
+`docs/fixes/bridge/2026-11-16-one-queue-and-the-claim-is-a-rename.md`, how-to
+`docs/features/ratatoskr-queue.md`.
