@@ -1,0 +1,47 @@
+# Hermes — the second backend, and the first that has no pane.
+#
+# Measured 2026-11-16 against v0.22.6 on this machine. Hermes differs from every terminal
+# harness in one way that decides everything else: an agent is a SESSION, not a pane. Two
+# sessions of one Desktop profile share one gateway and one inbox, so a bridge could not tell
+# them apart (§13.2 of plan 303) and neither could answer the other. A session is the address,
+# and `bin/seat/backends/hermes.py` is what reads it.
+name: hermes
+binary: hermes
+detect:
+  process: ["hermes"]
+  env: ["HERMES_HOME"]
+launch: "hermes"
+inject: "hermes chat --resume <session-id> -q <prompt> -Q"
+transcript:
+  shape: sqlite              # state.db: sessions + session_admissions + messages
+  root: ~/.hermes
+  path: "state.db"
+  # `hermes sessions export <id>` is the supported read; the table is the state.
+  state:
+    table: session_admissions
+    # the last admission for a session IS its state: unknown means a turn may have run before
+    # the gateway died, and Hermes pauses the session rather than replay it.
+    values: { queued: working, started: working, unknown: "blocked: lost turn, run recover" }
+sessions:
+  list: "hermes sessions list"
+  export: "hermes sessions export <id>"
+  discard: "hermes sessions discard <id> --yes"    # the ONLY recovery; shows lost input first
+  chat: "hermes chat --resume <id> -q <text> -Q"   # exits 3 while the session is paused
+backend:
+  door: bin/seat/backend.sh
+  adapter: bin/seat/backends/hermes.py
+  verbs: [list, get, read, prompt, wait, explain]
+  extra: [recover]           # Hermes alone can lose a turn, so Hermes alone needs recovery
+capabilities:
+  streaming: partial         # a turn prints as it runs; a session is read after it ends
+  hooks: none                # no lifecycle hook to subscribe to
+  resume: full
+  mcp: plugin                # `hermes plugins install mcp-serve` — NOT built in at 0.22.6
+instructions:
+  global: ~/.hermes/AGENTS.md
+  project: AGENTS.md
+config: ~/.hermes/{config.yaml,auth.json,.env}
+never:
+  - "restart the gateway while a session or subagent is mid-turn"   # plain restart refuses; record "restart pending"
+  - "send into a session whose admission is unknown"
+  - "change the operator's profile, keys or API-server setting"
