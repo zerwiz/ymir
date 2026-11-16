@@ -97,3 +97,7 @@ temporary directory, and never types into a pane it did not start.
 
 It does not wake anything — that is step 4. It does not list the fleet — that is step 2.
 It does not decide the Hermes headless road (§13.6 items 2 and 3 stay the Allfather's).
+
+## CHANGE LOG
+
+- 2026-11-16 — review-mend: added missing heading for #791
