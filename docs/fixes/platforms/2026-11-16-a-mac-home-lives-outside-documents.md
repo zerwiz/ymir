@@ -17,3 +17,7 @@ folder is also often synced by iCloud, which put heavy load on the machine.
 
 A recorded home (`~/.config/ymir/home`) and `YMIR_HOME` still win, so an existing install is not moved silently. The
 warning tells the operator to move it and record the new path.
+
+## CHANGE LOG
+
+- 2026-11-15 — review-mend: added missing heading for #780
