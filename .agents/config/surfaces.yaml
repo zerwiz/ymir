@@ -25,6 +25,7 @@ surfaces:
   - { name: packaging,   risk: never, roles: all, why: "a missing installer input is a code change, not a mend" }
   - { name: herdr,       risk: ask,   roles: all, why: "installing the pane backend downloads it" }
   - { name: a2abridge,   risk: safe,  roles: all, why: "repoints the engine's own unit at the user boot target and starts it; never downloads" }
+  - { name: agentroad,    risk: safe,  roles: all, why: "re-seats the wake-and-return loop and re-checks the backend door; never touches a live session" }
   - { name: hermes,      risk: ask,   roles: all, why: "installing the worker runtime downloads it" }
   - { name: snotra,      risk: ask,   roles: all, why: "installing the meeting ear downloads an engine and a model" }
   - { name: voice,       risk: ask,   roles: all, why: "builds Rödd's face with npm and may fetch voice models" }

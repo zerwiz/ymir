@@ -188,6 +188,34 @@ def ymir_secret_keys(filter: str = "") -> str:
 
 
 @mcp.tool()
+def ymir_hermes_list() -> str:
+    """Every Hermes session on this machine, with its state in the house's one vocabulary
+    (ready · working · blocked: <why> · dead). Read from the runtime's own admissions, never
+    from a title. Use it before sending to a session, so a paused one is not woken."""
+    return _run(["bash", str(ROOT / "bin" / "seat" / "backend.sh"), "list"], 120)
+
+
+@mcp.tool()
+def ymir_hermes_send(session: str, text: str) -> str:
+    """Send one turn to a Hermes session by id prefix or title, through the same door a pane
+    is woken through. A paused session is REFUSED with its reason and never replayed: recover
+    it first, which shows the lost input before anything is discarded."""
+    out = _run(["bash", str(ROOT / "bin" / "seat" / "backend.sh"), "prompt",
+                "hermes:%s" % session, text], 900)
+    return out or "the door refused the wake (is the session paused? read ymir_hermes_list)"
+
+
+@mcp.tool()
+def ymir_hermes_recover(session: str, yes: bool = False) -> str:
+    """Show what a paused Hermes session was carrying when its gateway died, and discard the
+    lost turn only when `yes` is true. Without `yes` it prints the lost input and stops —
+    a person's turn is not an agent's to throw away."""
+    argv = ["bash", str(ROOT / "bin" / "seat" / "backend.sh"), "recover",
+            "hermes:%s" % session] + (["--yes"] if yes else [])
+    return _run(argv, 300)
+
+
+@mcp.tool()
 def ymir_context(json_output: bool = False) -> str:
     """What THIS agent's context actually holds: used, window, remaining, the compaction
     thresholds, and whether a compaction already fired. Read it before deciding the
