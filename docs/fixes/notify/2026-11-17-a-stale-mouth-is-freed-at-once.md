@@ -53,3 +53,7 @@ its own dead transports would make this door redundant, and that would be a good
 
 `bin/seat/tests/test_desk_failsafes.sh`: a dead pid is released and the rest of the document survives; a
 live pid is refused with exit 3 and stays recorded.
+
+## CHANGE LOG
+
+- 2026-11-17 — review-mend: added missing heading for #814
