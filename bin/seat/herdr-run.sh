@@ -22,6 +22,9 @@
 #   bin/seat/herdr-run.sh worth-a-smith "<errand>"       # is this an errand at all?
 #   bin/seat/herdr-run.sh eindri [NAME] [--role R] [--kind K] [--model M] [--space] -- "<task>"
 #       --kind pi|opencode|claude WINS over config/agents.yaml and the model's provider (plan 262)
+#       A seat is an act on this machine: it checks its AUTHORITY first (a live lease for this
+#       project, or the machine arm with a hand that can speak — plan 310 §5.3), prints which
+#       one it used, and refuses with the reason when there is neither.
 #   bin/seat/herdr-run.sh run <name> -- <command...>     # a command in a pane
 #   bin/seat/herdr-run.sh agent-status                   # who stands, and in what state
 #   bin/seat/herdr-run.sh close-all                      # clear the tabs/panes we made
@@ -353,6 +356,20 @@ case "$ACTION" in
     done
     [ "${1:-}" = "--" ] && shift
     PROMPT="${*:-}"
+
+    # ── WHICH AUTHORITY SEATS THIS SMITH (plan 310 §5.3) ──────────────────────
+    # A spawn is an ACT ON THIS MACHINE, so it must say which authority allowed it: a live
+    # LEASE for this project, or the machine ARM whose hand can speak. It is refused when
+    # there is neither, and the refusal names the reason — a hand that acts on nothing is
+    # how a watcher came to hold an arm with no mind behind it (plan 310 §1).
+    # The answer, its reasoning and its row all come from the one door that owns them.
+    authority_out="$(bash "$SCRIPT_DIR/../voice/arm-lease.sh" authority --dir "$PWD" 2>&1)"; authority_rc=$?
+    printf '%s\n' "$authority_out"
+    if [ "$authority_rc" != 0 ]; then
+      printf 'refused: no authority to seat a smith here (plan 310) — nothing was launched\nhelp: bin/voice/arm-lease.sh ranks   ·   bin/voice/arm-lease.sh grant <scope> --holder <name>\n' >&2
+      exit 3
+    fi
+    unset authority_out authority_rc
 
     # The seat brief (plan 46). A worker owns decisions inside its craft and has
     # NO human at its terminal: the ask-user questionnaire reaches whoever sits

@@ -1,0 +1,4 @@
+---
+section: core-install-run-operate
+---
+| Operate | **The arms and the crown** (`bin/voice/rodd-arm.sh` · `bin/voice/arm-lease.sh` · `bin/voice/arm-speak-lib.sh` · `bin/fleet/arm-send.sh`) | Who may act on this machine, and for how long: one **machine arm** per machine, held only by a session that can speak (a live model heartbeat — a watcher is refused by name); a **lease** per project from that arm (`lease{n,holder,machine,scope,hands,granted,expires,heartbeat}` in `<state>/.arm.leases`, renewed by heartbeat, reclaimable by the machine the moment its heartbeat stops and never while it lives); a spawn that **names its authority** (lease or arm) and is refused with the reason when it has neither; a tell that **carries a deadline** and escalates on `--expired`; and a session head that prints **which rank this seat holds** | [The arms and the crown](docs/features/the-arms-and-the-crown.md) |

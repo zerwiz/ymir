@@ -215,6 +215,7 @@ SEC_LOCK() {
     else
       printf 'helm: bin/seat/helm-identity.sh is not installed — the lease cannot be read\n'
     fi
+    head_rank
     return 0
   fi
   [ "$LOCK_KNOWN" = 1 ] || lock_probe
@@ -228,6 +229,19 @@ SEC_LOCK() {
   if [ -x "$SCRIPT_DIR/../seat/helm-identity.sh" ]; then
     bash "$SCRIPT_DIR/../seat/helm-identity.sh" --line 2>/dev/null || printf 'helm: no arm is held\n'
   fi
+  head_rank
+}
+
+# THE RANKS (plan 310 §5.5). Three ranks, one lock each: the machine arm (the right to act
+# on this machine), a project orchestrator (a LEASE's holder — hands, not sovereignty) and
+# the crown (one for the fleet). A seat must know WHICH it is before it acts, so the head
+# prints it in one line — and a seat that holds none says so, together with the one door it
+# keeps: a read-only agent may always ASK the holder (bin/seat/lock-ask.sh).
+head_rank() {
+  local door="$SCRIPT_DIR/../voice/arm-lease.sh" out=""
+  if [ ! -x "$door" ]; then printf 'rank: unknown — bin/voice/arm-lease.sh is not installed on this tree\n'; return 0; fi
+  out="$(YMIR_ARM_LEASE_STATE="${SAGA_STATE_DIR:-${YMIR_ARM_LEASE_STATE:-}}" timeout 8 bash "$door" ranks --line 2>/dev/null)" || out=""
+  printf '%s\n' "${out:-rank: unknown — the lease door did not answer (bin/voice/arm-lease.sh ranks --line says why)}"
 }
 
 SEC_BOOTSTRAP() { stage_bootstrap; }

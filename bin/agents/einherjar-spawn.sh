@@ -38,6 +38,10 @@
 #
 # Every spawn prints:
 #   spawned <id> harness=<h> kind=<kind> [mode=<m> yolo=<y>] backend=<b> target=<t> worktree=<wt> isolation=<on|off>
+#
+# and, BEFORE any of it, the AUTHORITY it used (plan 310 §5.3) — a live lease for this
+# project, or the machine arm with a hand that can speak. A spawn with neither is refused
+# by name and launches nothing; a --dry-run prints the row and creates nothing.
 set -eu
 # The ONE resolver (Rule 07): env -> the recorded choice -> the one default.
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
@@ -868,6 +872,27 @@ if [ "$MODEL_LOCAL" = yes ] && [ -x "$SCRIPT_DIR/../model/local-model-lock.sh" ]
       ;;
     *) LOCKED=yes ;;
   esac
+fi
+
+# --- WHICH AUTHORITY SEATS THIS WORKER (plan 310 §5.3) -----------------------
+# A spawn is an ACT ON THIS MACHINE, so it must say which authority allowed it: a live
+# LEASE for this project, or the machine ARM whose hand can speak (a supervisor that beats
+# with no mind behind it is not an arm — plan 310 §1). With neither, a REAL spawn is refused
+# and the reason is printed; a --dry-run launches nothing, so it only REPORTS the authority
+# and is never refused by it, because the plan must be printable wherever it is read.
+AUTHORITY_ROW=""
+AUTHORITY_BAD=0
+if [ -x "$SCRIPT_DIR/../voice/arm-lease.sh" ]; then
+  AUTHORITY_ROW="$(bash "$SCRIPT_DIR/../voice/arm-lease.sh" authority --dir "${PROJECT_DIR:-$PWD}" 2>&1)" || AUTHORITY_BAD=1
+else
+  AUTHORITY_ROW='authority[1]{verdict,source,scope,machine,detail}:
+  "not checked","none","-","-","bin/voice/arm-lease.sh is not installed on this tree"'
+  AUTHORITY_BAD=1
+fi
+printf '%s\n' "$AUTHORITY_ROW"
+if [ "$AUTHORITY_BAD" -eq 1 ] && [ "$DRY" -eq 0 ]; then
+  printf 'refused: no authority to seat %s (plan 310) — nothing was launched, because a hand that acts on nothing is how a watcher came to hold an arm\nhelp: bin/voice/arm-lease.sh ranks   ·   bin/voice/arm-lease.sh grant <scope> --holder <name>\n' "${ID:-the worker}" >&2
+  exit 3
 fi
 
 # --- engine-first (plan 58, Phase 1): the strangler's hinge -------------------

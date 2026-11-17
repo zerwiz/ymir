@@ -153,8 +153,40 @@ out="$(bash "$ROOT/bin/seat/helm-identity.sh" --lease "$LEASE" --line)"
 case "$out" in *"READ-ONLY (missing fleetrole)"*) ok "a read-only lease names the missing field" ;; *) bad "a read-only lease names the missing field" "$out" ;; esac
 write_lease "$$" "$(date +%s)"
 
+# ── 8c · `speaks` — the one definition of "can speak", asked aloud (plan 310 §1.1) ──
+out="$(BROKK_SESSION_PID="$$" bash "$DOOR" speaks 2>&1)"; rc=$?
+want_rc 1 "speaks refuses a claimant that is not a harness"
+case "$out" in *"a watcher is not a speaker"*) ok "speaks names the reason a watcher cannot speak" ;; *) bad "speaks names the reason a watcher cannot speak" "$out" ;; esac
+out="$(BROKK_SESSION_PID="$$" bash "$DOOR" speaks "$$" 2>&1)"
+case "$out" in *'"no"'*) ok "speaks prints the verdict as a row" ;; *) bad "speaks prints the verdict as a row" "$out" ;; esac
+
 # ── 9 · hold and release (plan 254 B5) ────────────────────────────────────────
-export BROKK_MACHINE_STATE_DIR="$TMP/lockdir" BROKK_SESSION_PID="$$"
+# THE FIRST LAW OF THE ARM (plan 310 §1.1): only a session that can SPEAK may hold it. So a
+# stand-in HARNESS is built here — a copy of a real binary named `pi`, its own working
+# directory, and a transcript shelf keyed to that directory — because the door must be able
+# to tell a session with a model behind it from a watcher that merely beats.
+export BROKK_MACHINE_STATE_DIR="$TMP/lockdir"
+export YMIR_SPEAK_HOME="$TMP/speakhome"
+speaker() {  # start a stand-in harness; sets FAKE_PID and its transcript shelf exists
+  mkdir -p "$TMP/speaker/bin" "$TMP/speaker/work"
+  cp "$(command -v sleep)" "$TMP/speaker/bin/pi"
+  ( cd "$TMP/speaker/work" && exec "$TMP/speaker/bin/pi" 600 ) &
+  FAKE_PID=$!
+  local slug="--$(printf '%s' "$TMP/speaker/work" | sed 's#^/##; s#/#-#g')--"
+  mkdir -p "$YMIR_SPEAK_HOME/.pi/agent/sessions/$slug"
+  printf '{"turn":1}\n' >"$YMIR_SPEAK_HOME/.pi/agent/sessions/$slug/session.jsonl"
+  sleep 0.2
+}
+speaker
+export BROKK_SESSION_PID="$FAKE_PID"
+
+# a claimant that is NOT a harness cannot hold the arm at all, and the refusal says why
+out="$(BROKK_SESSION_PID="$$" bash "$DOOR" hold 2>&1)"; rc=$?
+want_rc 3 "hold from a non-agent process is REFUSED (plan 310 §1.1)"
+case "$out" in *"ONLY A SESSION THAT CAN SPEAK"*) ok "the refusal names the law" ;; *) bad "the refusal names the law" "$out" ;; esac
+case "$out" in *"a watcher is not a speaker"*) ok "the refusal says a watcher is not a speaker" ;; *) bad "the refusal says a watcher is not a speaker" "$out" ;; esac
+[ ! -s "$BROKK_MACHINE_STATE_DIR/brokk.lock" ] && ok "a refused hold took no lock" || bad "a refused hold took no lock" "lock present"
+
 # hold is refused when the machine cannot resolve its fleet role (B1c): no registry, no role
 mkdir -p "$TMP/nohome"
 out="$(env -u YMIR_ROLE YMIR_HOME="$TMP/nohome" bash "$DOOR" hold 2>&1)"; rc=$?
@@ -189,7 +221,8 @@ run_hold
 want_rc 3 "hold on a live holder refuses with the holder named"
 case "$err" in *"held by another live session"*) ok "the refusal names the holder" ;; *) bad "the refusal names the holder" "$err" ;; esac
 kill "$other" 2>/dev/null || true
-unset BROKK_MACHINE_STATE_DIR BROKK_SESSION_PID YMIR_ROLE
+kill "$FAKE_PID" 2>/dev/null || true
+unset BROKK_MACHINE_STATE_DIR BROKK_SESSION_PID YMIR_ROLE YMIR_SPEAK_HOME
 
 printf 'test_rodd_arm: %s passed, %s failed\n' "$pass" "$fail"
 [ "$fail" = 0 ]

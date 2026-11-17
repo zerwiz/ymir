@@ -10,6 +10,14 @@
 #   hear [n]      read the arm's replies from <state>/rodd/room.jsonl, and advance the cursor
 #   hold          take a vacant helm for Rödd and announce the handover (never steals)
 #   release       give the helm back and announce it (never steals)
+#   speaks [<pid>] can this session speak, and how is it proved (plan 310 §1.1)
+#   lease <verb>  the LEASE TABLE (grant · renew · reclaim · list · alive · authority · ranks):
+#                 the one door to it is bin/voice/arm-lease.sh, and this verb is its alias so
+#                 a caller that already talks to the arm need not learn a second path
+#
+# THE FIRST LAW OF THE ARM (plan 310 §1.1): ONLY A SESSION THAT CAN SPEAK MAY HOLD IT. A
+# watcher is not a speaker, and `hold` refuses one by name — the definition lives ONCE, in
+# bin/voice/arm-speak-lib.sh, so the heart's own guard and this door can never disagree.
 #
 # THE LEASE IS THE AUTHORITY, NEVER A PATH. Two state shelves exist on some seats, and only the
 # one named in `.arm.lease` (`state=`) is drained by the arm. So every verb resolves the lease
@@ -30,6 +38,8 @@
 #   rodd-arm.sh room                where the room is, and how many replies it holds
 #   rodd-arm.sh hold                take a vacant helm for Rödd (refuses a live holder)
 #   rodd-arm.sh release             give the helm back (refuses if another session holds it)
+#   rodd-arm.sh speaks [<pid>]      can this session speak (the one definition, asked aloud)
+#   rodd-arm.sh lease <verb> …      the lease table: grant · renew · reclaim · list · ranks
 #   rodd-arm.sh --check             the one-line verdict, for a health surface
 #   rodd-arm.sh --self-test         prove the door against a synthetic lease in a temp state
 #
@@ -51,8 +61,10 @@ STATE_DOOR="$ROOT/bin/records/ymir-state.sh"
 HOARD_LIB="$ROOT/bin/vault/hoard-lib.sh"
 STALE_AFTER="${BROKK_WATCH_HEARTBEAT_STALE_SECONDS:-60}"
 DEFAULT_SHOW=20
+# shellcheck source=bin/voice/arm-speak-lib.sh
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/arm-speak-lib.sh"
 
-usage() { sed -n '2,34p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+usage() { sed -n '2,44p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 # Every sentence a person reads begins with Sol's stamp (plan 272, fault 4).
 _RA_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -r "$_RA_DIR/../time/sol-lib.sh" ]; then . "$_RA_DIR/../time/sol-lib.sh"; else sol_line() { date '+%Y-%m-%d %H:%M %Z'; }; fi
@@ -496,6 +508,17 @@ PY
 cmd_hold() {
   resolve_roots
   require_lock_lib
+  # CLAUSE 0 (plan 310 §1.1) — THE SPEAKER GATE: only a session that can speak may hold an
+  # arm. A watcher (a supervisor with no model behind it) is refused here, by name, before
+  # the lock is even touched: on 2026-11-17 the heart's arm was held all morning by
+  # `ymir_runtime watch run` while every pi on that machine was dead, and a tell handed to
+  # it went nowhere. The definition is bin/voice/arm-speak-lib.sh — ONE place, so the
+  # heart's own guard and this one cannot drift.
+  local _claimant=""
+  speaks_claimant_pid _claimant
+  if ! speaks_probe "$_claimant"; then
+    refuse "the helm is NOT taken: ONLY A SESSION THAT CAN SPEAK MAY HOLD AN ARM — ${SPEAK_WHY}"
+  fi
   # THE HOLDER GATE (plans 254 B1c · 257 H7): a session that cannot resolve its own
   # host or its fleet role may NOT take the helm — it stands read-only and names the
   # field. A supervisor that does not know which machine it stands on cannot tell its
@@ -547,6 +570,26 @@ cmd_release() {
   return 0
 }
 
+# ── speaks / lease ────────────────────────────────────────────────────────────
+# Two thin verbs, so a caller that already holds the arm door does not have to learn a
+# second path to the same two answers. Both delegate: the definitions live in
+# bin/voice/arm-speak-lib.sh (what "can speak" means) and bin/voice/arm-lease.sh (the
+# lease table). This door owns neither, and says so by calling them.
+cmd_speaks() {
+  local pid="${1:-}"
+  if [ -z "$pid" ]; then speaks_claimant_pid pid; fi
+  speaks_probe "$pid"
+  local rc=$?
+  speaks_line
+  return "$rc"
+}
+
+cmd_lease() {
+  local door="$ROOT/bin/voice/arm-lease.sh"
+  [ -x "$door" ] || die "the lease door is missing ($door) — the lease table cannot be read or written"
+  exec bash "$door" "$@"
+}
+
 # ── main ───────────────────────────────────────────────────────────────────────
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
@@ -557,7 +600,9 @@ case "${1-}" in
   room) shift; cmd_room ;;
   hold) shift; cmd_hold ;;
   release) shift; cmd_release ;;
+  speaks) shift; cmd_speaks "${1:-}" ;;
+  lease) shift; cmd_lease "$@" ;;
   --check|check) shift; cmd_check ;;
   --self-test|self-test) shift; self_test ;;
-  *) printf 'error: unknown verb %s\nhelp: rodd-arm.sh [who|tell <text>|hear [n]|room|hold|release|--check|--self-test]\n' "$1" >&2; exit 2 ;;
+  *) printf 'error: unknown verb %s\nhelp: rodd-arm.sh [who|tell <text>|hear [n]|room|hold|release|speaks [pid]|lease <verb>|--check|--self-test]\n' "$1" >&2; exit 2 ;;
 esac

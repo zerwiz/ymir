@@ -1567,3 +1567,97 @@ open PR heads from the one `gh` answer it already has, computes their reachable 
 its own kind, `in-pr`: `eindri/x — 5h: in batch PR #750, not merged yet`, action *nothing to gather*.
 Cost on this tree: 12 s → 3.9 s (the first version asked one `--merged` read per open PR). Fix note
 `docs/fixes/time/2026-11-14-a-branch-inside-a-batch-pr-is-not-waiting.md`.
+
+## 2026-11-17 — the arms and the crown: three ranks, one lock each, and a lease between them
+
+Plan 310. One arm per machine works until a project needs hands, and then the desk's arm and the
+project's need are the same token. So the right to act is now three ranks with one lock each, and a
+**lease** between them.
+
+| Rank | What it is | Where it lives |
+|---|---|---|
+| the machine arm | the right to act on this machine: spawn, steer, merge, drain | `<state>/.arm.lease`, held through `bin/voice/rodd-arm.sh hold` |
+| a project orchestrator | a project's **lease**: "you may have N hands until T", renewed by heartbeat — no arm of its own | `<state>/.arm.leases`, one row per lease |
+| the crown | one for the fleet: reads the room, seats and retires orchestrators, owns the fleet ledger, holds no pane | a lease row whose scope is `crown`; its own service is **not** built here (plan 310 §7.3) |
+
+### Only a session that can speak may hold an arm
+
+`bin/voice/rodd-arm.sh hold` refuses a claimant without a live model heartbeat, and prints the reason.
+A watcher is not a speaker. The definition is **one function in one place** —
+`speaks_probe` in `bin/voice/arm-speak-lib.sh` — so the heart's own guard and the arm door can never
+drift:
+
+- the pid asked about must itself be a live harness (`pi`, `opencode`, `claude`, `cursor`, `codex`,
+  `grok`, `kimi`, `muse`, `hermes` — the lock door's own list, `src/ymir_runtime/state/lock.py`
+  `HARNESS_COMMS`);
+- that harness must have written its own transcript inside `YMIR_SPEAK_MAX_AGE` seconds (default 1800);
+- the proof is named: `transcript:cwd` where the harness keys its transcripts by session directory
+  (`pi` at `~/.pi/agent/sessions/--<slug>--`, `claude` at `~/.claude/projects/-<slug>`),
+  `transcript:harness` where the shelf is not keyed by path (borrowed, and it says so);
+- a harness with no known shelf is refused, naming the row in `speak_shelf` to add.
+
+`bin/voice/rodd-arm.sh speaks [<pid>]` asks it aloud.
+
+### The lease is a file
+
+`<state>/.arm.leases` — one tab-separated row per lease, exactly the plan's shape:
+
+```
+lease{n,holder,machine,scope,hands,granted,expires,heartbeat}
+```
+
+`<state>/.arm.leases.log` is the append-only journal: every grant, renew, reclaim and broken lock. The
+row is state; the journal is history (Rule 06).
+
+`bin/voice/arm-lease.sh` owns it: `grant`, `renew`, `reclaim`, `alive`, `list`, `who`, `--check`,
+`authority`, `ranks`. `bin/voice/rodd-arm.sh lease <verb>` is the alias, one path to one record.
+
+- **`reclaim` needs nobody's permission.** A stopped heartbeat *is* the permission. A **live** lease is
+  refused — reclaiming a living claim would be theft.
+- **One writer.** Every mutation takes a mkdir lock and rewrites through a temporary file, so two grants
+  in the same second cannot lose each other.
+- **A number is never reused**, even after its row is reclaimed: the journal remembers it.
+- The two numbers the Allfather has not yet ruled on (plan 310 §7.2) are one constant each and
+  overridable from the environment: **two hands** (`YMIR_ARM_LEASE_HANDS`), **one hour**
+  (`YMIR_ARM_LEASE_TTL`), and **300s of silence** before a lease is reclaimable (`YMIR_ARM_LEASE_STALE`).
+
+### A spawn says which authority it used
+
+`bin/seat/herdr-run.sh` (the `eindri` road) and `bin/agents/einherjar-spawn.sh` ask
+`bin/voice/arm-lease.sh authority` before they create anything, print the row, and are **refused (exit
+3)** with the reason when the verdict is `none`. The order is the narrower grant first: a live **lease**
+for this project, then the **machine arm** — and the arm is an authority only when a hand that can speak
+is behind it (the session asking, the machine's own hand, or a speaking harness elsewhere on the box,
+named as a **borrowed** hand). An arm held by a watcher grants nothing when no harness on that machine
+can speak, and the refusal says so. A refused spawn launches nothing: no worktree, no pane, no state
+file. `--dry-run` **reports** the authority and is never refused by it, so the plan stays printable on a
+machine with no arm.
+
+### A tell carries a deadline
+
+`bin/fleet/arm-send.sh` stamps every tell with the instant it expires — inside the line the holder reads
+— and writes it to `<state>/arm-tells.tsv` (`id · sent · to · from · deadline · acked · text`).
+`--pending` shows what still stands, `--expired [--notify]` reports what went past its deadline unacked
+(the report **is** the escalation, and the door exits non-zero), and `--ack <tell>` closes one. A
+refused tell writes no deadline: nothing was handed, so nothing is owed. The window is one constant,
+`YMIR_TELL_DEADLINE`, default 1800 seconds.
+
+### The digest prints the ranks
+
+The head's HELM section carries one `rank:` line, from `bin/voice/arm-lease.sh ranks --line`: this seat's
+rank (machine arm · project lease · read-only), who else holds what, and — for a seat with no rank — the
+one door it keeps, `bin/seat/lock-ask.sh ask "<question>"`. A read-only page prints it too.
+
+### Proofs
+
+`bin/voice/tests/test_arm_speaks.sh`, `bin/voice/tests/test_arm_lease.sh`,
+`bin/voice/tests/test_arm_authority.sh`, `bin/fleet/tests/test_arm_send.sh` and
+`bin/time/tests/test_saga_rank.sh`, run by CI as the `arms-speak`, `arms-lease`, `arms-authority`,
+`arms-tell-deadline` and `saga-rank` gates. Every one of them runs against a temporary state: no test
+touches the live arm, the live lock or the live lease table.
+
+Fix notes: `docs/fixes/voice/2026-11-17-only-a-session-that-can-speak-may-hold-an-arm.md`,
+`docs/fixes/voice/2026-11-17-the-lease-is-a-file.md`,
+`docs/fixes/seat/2026-11-17-a-spawn-names-its-authority.md`,
+`docs/fixes/fleet/2026-11-17-a-tell-carries-a-deadline.md`,
+`docs/fixes/time/2026-11-17-the-digest-prints-the-ranks.md`.
