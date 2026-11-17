@@ -121,3 +121,7 @@ it was not proved in this errand, so it is not claimed.
 **The share door's number is on the heart, not in the pin.** `share-scene.py`'s new default takes effect where
 the pin is next fast-forwarded; the live unit names `--port 8488` explicitly, so the door is right today either
 way.
+
+## CHANGE LOG
+
+- 2026-11-17 — review-mend: added missing heading for #814
