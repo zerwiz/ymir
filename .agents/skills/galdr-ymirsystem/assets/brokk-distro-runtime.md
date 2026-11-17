@@ -1567,3 +1567,54 @@ open PR heads from the one `gh` answer it already has, computes their reachable 
 its own kind, `in-pr`: `eindri/x — 5h: in batch PR #750, not merged yet`, action *nothing to gather*.
 Cost on this tree: 12 s → 3.9 s (the first version asked one `--merged` read per open PR). Fix note
 `docs/fixes/time/2026-11-14-a-branch-inside-a-batch-pr-is-not-waiting.md`.
+
+## The heavy slot, and the proof a candidate earns once (plan 002, 2026-11-17)
+
+Two mechanisms close the fault that killed the heart on 2026-11-17: a gate suite running every quarter
+hour on a box that must not build, beside a release build and seven errands, with swap already 3.0 of
+4.0 GB.
+
+**`bin/heavy-slot.sh` is the machine's one queue for heavy work.** `run -- <command…>` takes an exclusive
+lock, prints whose job it waits for when the slot is held, runs the command with the hold **inherited**
+(so a heavy door called from inside a heavy job nests instead of deadlocking on its own lock), and
+releases on exit including on `INT`/`TERM`/`HUP`/`QUIT`. `status` names the holder (pid, start time,
+started, host, name, cmd, how long) and exits 3 when held, so a script can ask without parsing prose. The
+lock is `${XDG_STATE_HOME:-$HOME/.local/state}/ymir/heavy-slot.lock` (`YMIR_HEAVY_SLOT` overrides), one
+per machine and per user — the fault it stops happens between processes on one box.
+
+A lock whose holder is **gone** is reaped, and the record carries the process **start time** beside the
+pid because a pid is reused: a lock naming a live pid with a different start time is stale. The release
+path re-checks pid + start time, so a job never deletes someone else's lock. `--no-wait` refuses (exit 3);
+`--wait-max N` gives up after N seconds, naming the holder.
+
+Two doors ask for it themselves: `bin/engine/update-loop.sh` re-execs under it for every heavy verb
+(`run`, `prove`), so its whole pass is one heavy job; `bin/engine/release-build.sh` takes it for any
+standalone build. The gate is `heavy-slot` (`bin/engine/tests/test_heavy_slot.sh`), the page is
+`docs/features/heavy-slot.md`.
+
+**`bin/engine/update-loop.sh` no longer proves on the heart — it FLIPS a proven release.** A candidate is
+proven **once**, and the proof is a record in `$YMIR_PROOFS_DIR` (default `~/.local/state/ymir/proofs`,
+beside `releases.log`; set it in `<home>/config/releases.env`): `key=value` lines plus a `digest=` over
+them, so a proof written on another machine is **verified** rather than trusted — an edited record fails
+its digest and counts as no proof. `release_proof_write|verify|get` live in `release-lib.sh`, the one
+place that already knows where a release lives.
+
+| verb | answer |
+|---|---|
+| `decide [<sha\|ref>]` | `up-to-date` · `already-proven` · `already-proven-fail` · `prove-once`, with the record quoted |
+| `proof [<sha\|ref>]` | the record for that sha, verified, field by field |
+| `proof-record <sha\|ref> --result pass\|fail [--source L] [--detail T]` | record a proof taken **elsewhere** (the forge, the machine that built it) |
+| `prove [<sha\|ref>] [--force]` | prove it here, once, and record what was measured |
+
+The run pass reads the ledger **before any heavy work**: a **passing** record → `PROVE,already-proven` and
+the flip; a **failing** record → `PROVE,already-proven,fail` → `HOLD`, exit 4, and no build and no suite
+at all for that sha (re-proving is `prove --force`, a person's decision, never a clock's); **no record** →
+`PROVE,once`, the suite runs once **in a git checkout** of that commit (the tree itself when it stands
+there, else a throwaway linked worktree — never `~/ymir-releases/<sha>`, which carries no `.git` and made
+`bin/gates/inventory.sh` fail on `git ls-files`), and the outcome is recorded either way.
+
+Gates: `heavy-slot`, `update-loop-proof`. Fix notes:
+`docs/fixes/engine/2026-11-17-the-heavy-lock-the-runbook-named-now-exists.md` and
+`docs/fixes/engine/2026-11-17-a-candidate-is-proven-once.md`. The runbook these correct is the heart's
+`updating.md` (in the home), whose first law had named `bin/heavy-slot.sh take` — a verb that never
+existed.

@@ -9,7 +9,7 @@
 **Ask the door, do not remember:** `bin/records/where.sh <path or topic>`.
 
 ```
-subsystems[19]{path,entry,canonical,books,doors,missing}:
+subsystems[21]{path,entry,canonical,books,doors,missing}:
   "bin/ward/**","docs/features/the-guardian.md","RULES/24-the-ward.md","RULES/39-the-manner-and-the-alarm.md · docs/fixes/ward/ (one file per fix)","bin/ward/garmr.sh status|off|on · bin/ward/garmr-smoke.sh · .agents/tests/garmr.test.sh","the off/on turns land in a root-only /var/log/ymir/garmr/pause.log that no operator surface reads"
   "bin/gates/**","docs/features/the-wards-the-delivery-gate.md","RULES/08-delivery-gate.md","docs/features/the-wards-the-delivery-gate.md · docs/fixes/gates/ (one file per fix) · plan 203 §14 (the ship door)","bin/gates/guards.sh --list · bin/gates/guards.sh · bin/gates/tests/","a per-ward ledger: which law each ward enforces, and where its own test lives"
   "hodd/docs/collaboration/** (home)","docs/features/fleet-wire.md","docs/features/collaborator-door.md","# the home shelf: the doors register, the fleet-wire runbook, the onboarding sheet (in $YMIR_HOME)","plans 154 · 158 · 184 · 192","the public MCP face for a collaborator tenant (plan 192 §9)"
@@ -18,6 +18,7 @@ subsystems[19]{path,entry,canonical,books,doors,missing}:
   "apps/odrerir/**","docs/features/the-rooms.md",".agents/skills/galdr-ymirsystem/assets/odrerir-hall.md","docs/features/","bin/desktop/app-build.sh","—"
   "apps/sessrumnir/**","docs/features/open-on-the-right-display.md","docs/features/the-seat-name.md","docs/features/","scripts/electron.sh","—"
   "bin/engine/**",".agents/skills/galdr-ymirsystem/assets/installation.md",".agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md","RULES/05-platforms.md · RULES/25-agnostic-by-construction.md","bin/engine/**","—"
+  "bin/heavy-slot.sh","docs/features/heavy-slot.md",".agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md","docs/fixes/engine/ (one file per fix) · plan 002 §6.1 (the heart's plan, in the home)","bin/heavy-slot.sh status · bin/heavy-slot.sh run -- <command…> · gate heavy-slot","the slot is asked for, never enforced: a heavy door that never calls it is caught by nothing"
   "src/ymir_runtime/** | bin/agents/einherjar-spawn.sh | bin/agents/eindri-start.sh",".agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md","AGENTS.md","RULES/08-delivery-gate.md · RULES/02-agents.md","bin/seat/herdr-run.sh","—"
   "bin/records/mimir* | bin/bridge/mimir-bridge.py",".agents/skills/galdr-ymirsystem/assets/memory-well.md","RULES/20-the-well-appends.md","docs/features/","bin/records/mimir.sh","—"
   "bin/time/nornir-* | config/cron.yaml*",".agents/skills/galdr-ymirsystem/assets/nornir-jobs.md","docs/features/the-clock.md","docs/features/","bin/time/nornir-cron-start.sh","—"
