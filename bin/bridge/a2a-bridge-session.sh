@@ -79,9 +79,17 @@ SKILLS="${A2A_SKILLS:-ymir,$(basename "${PWD:-ymir}")}"
 # The address a peer can dial. A fleet seat advertises the name the fleet registry gives it;
 # a lone box advertises loopback, because that is the truth there.
 registry_host() {
-  local root reg me
+  local root reg me home
   root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-  reg="${YMIR_HOME:-}/hodd/data/fleet.json"
+  # The home is RESOLVED, never assumed (defaults-guard): the one resolver names it, and only then
+  # is the fleet registry read. Measured 2026-11-17: this line was the last unresolved default in
+  # the tree, and it blocks every push until it asks.
+  home="${YMIR_HOME:-}"
+  if [ -z "$home" ] && [ -r "$root/bin/vault/hoard-lib.sh" ]; then
+    . "$root/bin/vault/hoard-lib.sh" 2>/dev/null || true
+    declare -f ymir_home_root >/dev/null 2>&1 && ymir_home_root home 2>/dev/null
+  fi
+  reg="${home:-}/hodd/data/fleet.json"
   [ -r "$reg" ] || return 0
   me="$(hostname -s 2>/dev/null || hostname)"
   python3 - "$reg" "$me" <<'PY' 2>/dev/null
