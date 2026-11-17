@@ -18,3 +18,7 @@ door does.
 
 **Proof.** `bin/gates/guards/defaults-guard.sh check` on the branch: `0 default(s), 0 unresolved` (was 9). The ward still
 refuses a genuine guessed home — the self-assignment case is still excluded, and `docs/fixes/` keeps the rule it enforces.
+
+## CHANGE LOG
+
+- 2026-11-16 — review-mend: added missing heading for #813
