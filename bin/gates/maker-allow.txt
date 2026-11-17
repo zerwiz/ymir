@@ -18,3 +18,4 @@ the Allfather's Claude work was invisible | RULES/53: fleet-truth-2's body names
 Codex (the cumulative total, last per rollout), Hermes | RULES/53: fleet-truth-2's body names two harnesses and the shape of their usage rows (2026-11-14)
 the harness page that named a partner, and the OpenCode plugin | RULES/53: agnostic-code's body records the harness whose plugin changed (2026-11-14) — the change itself
 The OpenCode plugin was the one behaviour change | RULES/53: agnostic-code's body names the harness whose plugin is the one behaviour change (2026-11-14)
+(bin/pi/syn-supervisor.sh → bin/engine/ymir-engine.sh supervise) and a judgement | RULES/53: the supervisor errand's body cites the door's own path in the tree (2026-11-17) — a path, not a maker claim
