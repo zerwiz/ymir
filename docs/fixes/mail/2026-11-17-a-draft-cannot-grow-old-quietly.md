@@ -74,3 +74,7 @@ string-matching.
 The door is only as good as the grant on the machine it runs on. On a seat with no Google key it says `SKIP`
 every morning, by name; that is honest, not green. Carrying the grant (or the connect door) to a new seat is the
 work that makes the line real there.
+
+## CHANGE LOG
+
+- 2026-11-16 — review-mend: added missing heading for #809
