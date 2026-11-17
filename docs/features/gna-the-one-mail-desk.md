@@ -190,6 +190,30 @@ copy them into your own home at your own minute.
 machine. Our store, our spine and our notifications stay ours — and your refresh token is
 never ours to hold.
 
+## A reply can name the message it answers (added 2026-11-16, plan 305 phase 7)
+
+Every message in the store now keeps the three headers an ordinary mail uses to say what answers
+what: `Message-ID` (the message's own name), `In-Reply-To` (the message it answers) and
+`References` (the chain of the whole conversation). Nothing extra was fetched for them — the
+importer already read every header of every message it stores.
+
+Rows imported before this change can be filled in with one command:
+
+```sh
+python3 gna_import.py --account <the scoped account> --backfill-headers --dry-run   # count only
+python3 gna_import.py --account <the scoped account> --backfill-headers             # fill them in
+```
+
+It asks Gmail for the headers of those rows only (`format=metadata` — never a body), appends one
+new version of each row, and remembers what it has done: running it a second time writes nothing.
+A message since deleted from the mailbox is reported as `gone` and left exactly as it was.
+
+**Why it matters.** Until now a conversation was joined by a key derived from the subject, and a
+reply is free to rewrite its subject. Now the join is the header a mail client reads: a reply
+whose subject says *"Re: something else entirely"* is still the same conversation, and two
+conversations that happen to share a subject stay apart.
+
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-16** — added *a reply can name the message it answers*: the three RFC headers on every row, and `--backfill-headers` for the rows written before them.
