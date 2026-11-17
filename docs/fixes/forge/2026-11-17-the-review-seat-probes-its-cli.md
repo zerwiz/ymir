@@ -21,3 +21,7 @@ branch and a PR now, because a repair that lives in a runtime tree is a repair o
 
 **Proof.** `bash -n` clean; the seat keeper reports `seat[3]{clone,pane,state}` with a live pane and finishes instead of
 dying; and the probe is visible in the file as `start_shape`.
+
+## CHANGE LOG
+
+- 2026-11-16 — review-mend: added missing heading for #811
