@@ -97,16 +97,35 @@ needs no key, no account, and no signed-in browser. This is the road to reach fo
 first; the Pi harness's own YouTube mode needs `GEMINI_API_KEY` or a
 signed-in Chromium, so it fails closed on a bare box.
 
-**The tool is `bin/agents/yt-transcript.sh`** — one command, all three reads:
+**The tool is `bin/agents/yt-transcript.sh`** — one command, all three reads, and it
+answers even when the captions are refused (plan 316):
 
 ```sh
 bin/agents/yt-transcript.sh <url>                 # metadata + description + transcript
 bin/agents/yt-transcript.sh <url> --meta          # metadata + description only
-bin/agents/yt-transcript.sh <url> --out DIR       # where the transcript lands (default /tmp)
+bin/agents/yt-transcript.sh <url> --out DIR       # where the transcript lands
+bin/agents/yt-transcript.sh <url> --refresh       # ignore the cached transcript
+bin/agents/yt-transcript.sh <url> --keep-audio    # keep the audio too (debugging; off by default)
 ```
 
-It exits **3** when the captions are refused but the metadata was read — partial
-work, reported honestly, never faked. The raw verbs, if you need them by hand:
+It walks a **ladder** and reports every rung it tried: captions on the default
+client, captions on alternate player clients with a 2/6/15 s backoff, the
+`timedtext` endpoint directly, then the **audio through whisper.cpp** — GPU first,
+CPU while the desk is in a call or a local model holds the rail. The audio lives
+in one scratch dir that is deleted on every exit path (the Allfather's second law:
+only the transcript survives), so `--keep-audio` is the only way to end up with a
+file you can hear.
+
+It exits **3** when no road answered, naming each one and its reason — never an
+empty transcript and never a zero dressed as a success. A private, age-gated or
+geo-blocked video is a refusal, also exit 3. A second read of the same video is a
+cache hit (`"cache","hit"`) and makes no network call.
+
+Transcripts land on `$YMIR_HOME/hodd/docs/research/transcripts/` as Markdown with
+front matter — source, uploader, duration, **the road that answered**, the cost in
+seconds, the whisper model, and a `sha256` of the text.
+
+The raw verbs, if you need them by hand:
 
 ```sh
 URL="https://youtu.be/<id>"
@@ -135,22 +154,28 @@ video_road[3]{step,verb,why}:
 
 **Gotchas, learned the hard way:**
 
-- **429 Too Many Requests.** YouTube throttles caption downloads; retry after a
-  pause. The metadata and description calls usually still answer, so take what
-  you can and say what you could not get.
+- **429 Too Many Requests.** YouTube throttles caption downloads; the tool retries
+  and rotates player clients, then takes the audio road. By hand, retry after a pause —
+  the metadata and description calls usually still answer, so take what you can and
+  say what you could not get.
+- **A title may carry a `|`** ("But what is a neural network? | Deep learning chapter 1").
+  Never parse metadata with a pipe delimiter: read `--dump-single-json` instead. The tool
+  learned this the hard way and now splits on NUL.
 - **`--write-auto-sub`** gives the generator's captions when the uploader
   published none — good enough to quote a thesis, and it must be labelled as
   auto-generated when cited.
-- **Write to `/tmp`, not the tree.** A transcript is source material, not an
+- **The transcript goes to the home, never the tree.** It is source material, not an
   artifact; the tree carries only what the campaign needs (Rule 04).
 - **Impersonation warning is harmless** — yt-dlp notes it wanted an impersonation
   target; the download still succeeds.
 - **Cite the video, not the transcript.** A claim carries the video URL and the
   timestamp, never "the transcript says".
 
-**Where it lands:** the scraped/transcribed source goes to the marketing
-workspace (`$YMIR_HOME/workspaces/marketing/`), beside the Firecrawl output —
-the same shelf the daily scrape round fills (plan 49).
+**Where it lands:** the tool writes to `$YMIR_HOME/hodd/docs/research/transcripts/`
+by default; a campaign's distilled reading of it goes to the marketing workspace
+(`$YMIR_HOME/workspaces/marketing/`), beside the Firecrawl output — the same shelf the
+daily scrape round fills (plan 49). The how-to for a person is
+`docs/features/read-a-video.md`.
 
 ## 7. Competitive advantage — the teardown, the screen, and the evidence gate
 
@@ -174,3 +199,4 @@ Load it when the task is positioning, a "why us", a competitor teardown, or the 
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-17** — §6 now describes the door that always answers (plan 316): the ladder of roads, the audio-then-whisper rung, the deleted media, the cache, and the pipe-in-a-title trap. The transcript shelf moved from `/tmp` to the home's research shelf.
