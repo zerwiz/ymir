@@ -232,7 +232,7 @@ if DOOR == "email":
     if check.returncode != 0:
         print(check.stdout)
         fail("the private/NDA guard refused this body (Rule 26)")
-    mail = os.path.join(ROOT, "bin", "time", "snotra", "mail-send.sh")
+    mail = os.path.join(ROOT, "systems", "snotra", "services", "letters", "mail-send.sh")
     args = ["bash", mail, "draft", "--to", ",".join(person["emails"]), "--subject", subject, "--body", body]
     if dry:
         args.append("--dry-run")
