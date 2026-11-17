@@ -38,6 +38,10 @@ bin/ward/harden.sh apply --ufw --i-will-not-travel-blind   # REFUSED without tha
 CRITICAL** — which is how it becomes Eir's `ward` surface: a house with an open door is never
 reported green.
 
+**It knocks.** Every wide bind gets one two-second MCP `initialize`, because a bind is only a
+location and the service itself is the door. A tool is never called and no data is read: a
+handshake is enough to prove the door opens.
+
 **Where the report goes:** `$YMIR_HOME/hodd/memory/ward/YYYY-MM-DD.md` — a new file each time,
 never an edit. A HIGH also speaks on the desktop (`ymir-say`).
 
@@ -49,6 +53,8 @@ never an edit. A HIGH also speaks on the desktop (`ymir-say`).
 | **a port allowed from anywhere** | a `ufw` rule with no source and no `tailscale0` — **HIGH** |
 | **ssh that would let somebody in** | `PasswordAuthentication yes`, `PermitRootLogin yes`, or **no key authorized at all** (CRITICAL: turning passwords off would lock you out) |
 | **an unnamed wide bind** | a socket on `0.0.0.0` nobody wrote a reason for — MEDIUM (loopback and the known-benign are skipped) |
+| **a door that hands out its own key** | an MCP on a wide bind that completes `initialize` with no token — **HIGH**; an SMB share with `guest ok = Yes` and `read only = No` — **HIGH** (read-only is MEDIUM), and `force user = root` is named when it is set |
+| **a tunnel that dials ssh** | any `service: ssh://…` ingress — **HIGH**: that is a shell published from this host, and no web login can gate it |
 | **secrets at rest** | a plaintext secret or the vault key that is not `0600` |
 | **nothing watching** | no fail2ban/CrowdSec/lynis/AIDE/osquery/Falco installed — **HIGH**: nobody would notice |
 
@@ -75,4 +81,5 @@ never an edit. A HIGH also speaks on the desktop (`ymir-say`).
 
 ## CHANGE LOG
 
+- **2026-11-16** — the audit learned three doors it could not see: an MCP that completes a handshake with no token, an SMB share open to guests (named with `force user = root` when it is set), and a tunnel whose ingress dials `ssh://`. The listener list also stopped deduping on an `ss` column, which could collapse two doors into one. Fix note: `docs/fixes/ward/2026-11-16-the-doors-that-hand-out-their-own-key.md`.
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

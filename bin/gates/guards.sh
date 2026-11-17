@@ -322,6 +322,10 @@ run_ward() {  # <ward>
   # arguments — a ward that does not understand them must never be fed them.
   YMIR_GUARD_SCOPE="$CHANGED_LIST"; export YMIR_GUARD_SCOPE
   YMIR_GUARD_SCOPE_COUNT="$SCOPE_COUNT"; export YMIR_GUARD_SCOPE_COUNT
+  # THE BASE TRAVELS TOO (2026-11-16). A scoped ward is handed the changed FILES; the ward that
+  # judges what a push PUBLISHES needs the RANGE, so a line the branch never added is judged as
+  # inherited by the ward itself rather than refused as this push's (public-guard --added).
+  if b0="$(resolve_base)"; then YMIR_GUARD_BASE="$b0"; else YMIR_GUARD_BASE=""; fi; export YMIR_GUARD_BASE
   if is_scoped "$w" && [ "$SCOPE_COUNT" -gt 0 ]; then
     local -a files=()
     mapfile -t files <"$CHANGED_LIST"
