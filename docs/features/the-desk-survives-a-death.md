@@ -94,3 +94,7 @@ bin/voice/rodd-arm.sh hold                                              # F3: re
 bin/notify/telegram-transport.sh status                                 # F4: STALE means the recorded pid is gone
 journalctl -k --since -2h | grep -E "Out of memory|oom-kill"            # F5: what the notifier reads
 ```
+
+## CHANGE LOG
+
+- **2026-11-17** — the page was written for the change that made it true (plans 001–005, 312).

@@ -67,3 +67,7 @@ calling the gate suite, say) nests instead of waiting on your own lock.
   slow", and the slot's whole purpose is that the answer exists.
 - *Two machines.* The slot is **per machine and per user** — the fault it stops happens between processes
   on one box. It is not a fleet-wide lock and does not pretend to be.
+
+## CHANGE LOG
+
+- **2026-11-17** — the page was written for the change that made it true (plans 001–005, 312).
