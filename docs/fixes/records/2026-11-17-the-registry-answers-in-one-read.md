@@ -97,3 +97,7 @@ measured them.
 - **The two shared ports** — `8485` (`board` and `proxies`) and `16585` (`code` and `forgejo-hostinger`) — are real
   faults the audit now names. Whether the Proxies row should name a port the Board fronts, and which of the two
   Forgejos stands, is the Allfather's to settle (plan 312 §4, plan 003).
+
+## CHANGE LOG
+
+- 2026-11-17 — review-mend: added missing heading for #814
