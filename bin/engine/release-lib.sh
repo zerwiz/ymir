@@ -18,8 +18,9 @@
 #
 # Configuration (Rule 07 — resolved, never hardcoded):
 #   $YMIR_HOME/config/releases.env   YMIR_RELEASES_DIR · YMIR_CURRENT_LINK · YMIR_SHARED_DIR
-#                                    YMIR_RELEASES_KEEP · YMIR_RELEASES_LOG · YMIR_FLIP_WINDOW
+#                                    YMIR_RELEASES_KEEP · YMIR_RELEASES_LOG · YMIR_FLIP_WINDOW · YMIR_PROOFS_DIR
 #   defaults: ~/ymir-releases · ~/ymir-current · ~/ymir-shared · 3 · ~/.local/state/ymir/releases.log · 5
+#             · ~/.local/state/ymir/proofs
 set -u
 
 # shellcheck source=/dev/null
@@ -48,9 +49,13 @@ release_config() {
   YMIR_RELEASES_KEEP="${YMIR_RELEASES_KEEP:-3}"
   YMIR_RELEASES_LOG="${YMIR_RELEASES_LOG:-${XDG_STATE_HOME:-$HOME/.local/state}/ymir/releases.log}"
   YMIR_FLIP_WINDOW="${YMIR_FLIP_WINDOW:-5}"
+  # The PROOF LEDGER (plan 002 §6.2): one record per candidate sha, written by whichever
+  # machine actually ran the gate suite, read by every machine that only has to flip. It
+  # sits beside releases.log because it is a fact about a release, not about a tree.
+  YMIR_PROOFS_DIR="${YMIR_PROOFS_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/ymir/proofs}"
 
   RELEASE_HOME="$home"
-  export YMIR_RELEASES_DIR YMIR_CURRENT_LINK YMIR_SHARED_DIR YMIR_RELEASES_KEEP YMIR_RELEASES_LOG YMIR_FLIP_WINDOW
+  export YMIR_RELEASES_DIR YMIR_CURRENT_LINK YMIR_SHARED_DIR YMIR_RELEASES_KEEP YMIR_RELEASES_LOG YMIR_FLIP_WINDOW YMIR_PROOFS_DIR
 }
 
 # realpath without depending on readlink -f (BSD has none) — ymir_readlink_f when present.
@@ -226,4 +231,59 @@ release_under() {  # <path> <root> — 0 when path is root or inside it
   [ "$p" = "$r" ] && return 0
   case "$p" in "$r"/*) return 0 ;; esac
   return 1
+}
+
+# ── the PROOF LEDGER: a candidate is proven ONCE ─────────────────────────────
+# WHY (plan 002 §6.2, measured on the heart 2026-11-17). The update loop ran the whole gate
+# suite on the heart every fifteen minutes and failed on the same candidate `abd366869e90` from
+# noon until night: 6m06s of CPU and a fresh round of memory pressure each quarter hour, forever.
+# A proof is a FACT ABOUT A COMMIT — it does not become truer by being measured a second time on
+# the machine that must not build. So it is recorded once, beside the release log, and every
+# later reader (the same loop in fifteen minutes, or another machine) is spared.
+#
+# A record is `key=value` lines plus a digest over them, so the heart VERIFIES a proof written
+# elsewhere rather than trusting a stray file: a record edited after the fact fails its digest
+# and is treated as no proof at all.
+release_proofs_dir() { printf '%s' "${YMIR_PROOFS_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/ymir/proofs}"; }
+release_proof_file() { printf '%s/%s.proof' "$(release_proofs_dir)" "${1-}"; }
+
+release_digest() {  # stdin → a sha256 hex, or nothing where no tool answers
+  if command -v sha256sum >/dev/null 2>&1; then sha256sum | awk '{print $1}'
+  elif command -v shasum >/dev/null 2>&1; then shasum -a 256 | awk '{print $1}'
+  else return 1; fi
+}
+
+release_proof_write() {  # <id> <result pass|fail> <source> <detail> [<sha>] → 0 written
+  local id="${1-}" result="${2-}" source="${3-}" detail="${4-}" sha="${5-}" dir f body digest
+  [ -n "$id" ] && [ -n "$result" ] || return 2
+  case "$result" in pass|fail) ;; *) return 2 ;; esac
+  dir="$(release_proofs_dir)"; f="$(release_proof_file "$id")"
+  mkdir -p -- "$dir" 2>/dev/null || return 1
+  # One line per field, and the detail may not carry a line break of its own.
+  detail="$(printf '%s' "$detail" | tr '\n\t' '  ' | cut -c1-240)"
+  body="$(printf 'id=%s\nsha=%s\nresult=%s\nsource=%s\nhost=%s\nat=%s\ndetail=%s' \
+    "$id" "${sha:-$id}" "$result" "${source:-unknown}" \
+    "$(hostname -s 2>/dev/null || hostname 2>/dev/null || printf 'unknown')" \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$detail")"
+  digest="$(printf '%s' "$body" | release_digest)" || return 1
+  printf '%s\ndigest=%s\n' "$body" "$digest" >"$f.tmp.$$" 2>/dev/null || return 1
+  mv -f -- "$f.tmp.$$" "$f" || return 1
+  return 0
+}
+
+release_proof_verify() {  # <id> → 0 when a record exists and its digest still holds
+  local f body want got
+  f="$(release_proof_file "${1-}")"
+  [ -r "$f" ] || return 1
+  body="$(grep -v '^digest=' "$f" 2>/dev/null)"
+  [ -n "$body" ] || return 1
+  want="$(sed -n 's/^digest=//p' "$f" 2>/dev/null | head -1)"
+  [ -n "$want" ] || return 1
+  got="$(printf '%s' "$body" | release_digest)" || return 1
+  [ "$want" = "$got" ]
+}
+
+release_proof_get() {  # <id> <key> → the value, printed only when the record verifies
+  release_proof_verify "${1-}" || return 1
+  sed -n "s/^$2=//p" "$(release_proof_file "${1-}")" 2>/dev/null | head -1
 }

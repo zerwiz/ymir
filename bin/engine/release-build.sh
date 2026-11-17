@@ -60,6 +60,7 @@ warn() { printf '%s\n' "$*" >&2; }
 die()  { warn "error: $*"; exit 1; }
 
 action="build"; ref=""
+RAW_ARGS=("$@")
 while [ $# -gt 0 ]; do
   case "${1-}" in
     -h|--help)     usage; exit 0 ;;
@@ -72,6 +73,15 @@ while [ $# -gt 0 ]; do
 done
 
 [ -d "$ROOT/.git" ] || [ -f "$ROOT/.git" ] || die "$ROOT is not a git checkout"
+
+# ── the heavy slot: a build is the heaviest thing this house does (plan 002 §6.1) ──
+# A release build installs a dependency closure and builds three SPAs. On the heart that is the
+# job that must never run beside the updater, beside another build, or beside an errand's test
+# run. The hold is inherited, so the update loop's own call nests instead of deadlocking.
+if [ "$action" = "build" ] && [ "${YMIR_HEAVY_SLOT_HELD:-0}" != 1 ] && [ -x "$ROOT/bin/heavy-slot.sh" ]; then
+  exec bash "$ROOT/bin/heavy-slot.sh" run --name "release-build" -- \
+    bash "$SELF_DIR/release-build.sh" ${RAW_ARGS[@]+"${RAW_ARGS[@]}"}
+fi
 
 if [ "$action" = "prune" ] || [ "$action" = "dry" ]; then
   say "retention[1]{dir,keep}:"
