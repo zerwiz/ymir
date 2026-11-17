@@ -24,6 +24,16 @@ set -u 2>/dev/null || true
 
 cron_fail_detail() {
   local home="${1-}" cmd="${2-}" rc="${3-}" tail="${4-}" word path out
+
+  # A JOB THAT SAID "NOT CLEAN" DID ITS WORK (2026-11-17). The daily brief publishes the file and THEN
+  # exits 1 when a draft has aged, so a notice reading "job failed (rc=1)" is true and misleading: the
+  # brief exists, and its own warning says why the day is not clean. The sentence leads with that, so a
+  # reader does not go looking for a missing document that is sitting where it always sits.
+  case "$tail" in
+    *"NOT CLEAN"*)
+      printf 'the work was done, but not clean — %s' "$(printf '%s' "$tail" | sed 's/.*NOT CLEAN[ —-]*//' | cut -c1-160)"
+      return 0 ;;
+  esac
   word="${cmd%% *}"
   case "$rc" in
     126|127)
