@@ -23,8 +23,11 @@ bin/mail/gna_connect.py   the verbs behind it: consent URL, loopback catcher, th
 bin/mail/inbound-test.sh  the acceptance test: send from outside, assert the arrival, or skip
 bin/mail/mail-scan.sh     the earlier one-shot read (kept — it proved the door opened)
 bin/mail/threads.sh       the join: one row per conversation, and the lane it is in (read-only)
+bin/mail/draft-age.sh     the drafts Gmail still holds, with their age in days — and it FAILS while one has
+                          aged (read-only; the 07:00 brief asks it before it publishes)
 bin/mail/install.sh       seats the desk as a systemd USER unit, restart-always
-bin/mail/tests/           16 proofs, including "no file here can send"
+bin/mail/tests/           proofs, including "no file here can send" (test_gna.py) and the three
+                          draft-age cases the brief names (test_draft_age.py)
 ```
 
 The **store and the scope never live here**: they are the home's
@@ -41,6 +44,9 @@ bash bin/time/nornir-job-gna-mail.sh --dry-run   # read the mailbox, write nothi
 bash bin/time/nornir-job-gna-mail.sh             # import, then prove the desk
 python3 bin/mail/gna_import.py --account <address> --backfill-headers   # the RFC headers on old rows
 python3 bin/mail/tests/test_gna.py               # the proofs
+python3 bin/mail/tests/test_threads.py           # the lanes
+python3 bin/mail/tests/test_draft_age.py         # the drafts, and the brief that must not lie
+bash bin/mail/draft-age.sh --brief               # is any letter sitting unsent past its limit?
 ```
 
 The schedule is a Nornir row in the home's `config/cron.yaml`
@@ -75,10 +81,37 @@ bash bin/mail/threads.sh --json           # one JSON line, for a dispatcher
 **needs-you** (inbound tail that owes an answer — the only lane that speaks) ·
 **answered** (we wrote last, quieter than `--nudge-days`, three days by default) ·
 **waiting-on-them** (we wrote last and it has gone quiet — where a nudge comes from) ·
-**closed** (his `handled_at`, a tail that owes nothing by the judge's own verdict, or a
+**closed** (his `handled_at`, a tail that owes nothing by the judge's own verdict, evidence, or a
 finished exchange). It **reads the store and writes nothing** — no `handled_at`, no state
 file, not the ledger — and `bin/mail/tests/test_threads.py` proves the store is
 byte-identical afterwards.
+
+### Closed by evidence — the four kinds, and the marked fifth
+
+A reply is not the only way a conversation ends. The the mutual NDA was signed on 16 October,
+confirmed on the 19th, and the lane still read open, because it accepted nothing but a
+letter. So `threads.sh` also reads the home's `hodd/memory/mail/evidence.yaml` (or a file
+named with `--evidence FILE`) and closes a thread on
+
+- **document** — a signed or delivered artefact; the row names the path in the home;
+- **meeting** — a meeting that happened; the row names the recap or the note;
+- **filing** — a notice that needed nothing but reading; the row names the register or the reason.
+
+The closed line names it: `document:svartalfaheim/example/NDA/…pdf`, with the message id
+beside it. A `kind: reply` row is refused, because replies are computed from the letters.
+
+The fifth kind is quieter and is always **marked**: `answered-elsewhere`. We wrote to that
+same person inside `--window DAYS` (14 by default) but about something else, so the subject
+is still open in substance. The row closes, it says exactly that, and it is **never counted
+as a reply**.
+
+**A row is checked before it may close anything.** It must cite what closed the conversation
+and it must narrow to a subject, a thread or a message id. A row matching a sender's
+**domain** is refused outright, and a document or meeting row that narrows to the sender
+alone is refused too — that is the mistake that folded the *unsigned* development agreement
+(`Development_Agreement`, chased four times) into the signed NDA and hid it.
+Every refusal is named on stderr and counted in `--json`, because a refused row and an
+absent row must never look the same.
 
 ## The laws, in code
 
@@ -223,3 +256,4 @@ second proof that enforces it are in `docs/fixes/mail/2026-11-08-the-connect-doo
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
 - **2026-11-16** — `bin/mail/threads.sh` added to the map (plan 305 phase 1), with the lane section above; `tests/` now holds **50** proofs (37 + 13 in `test_threads.py`), correcting the count in the 2026-11-08 append.
 - **2026-11-16 (second)** — the RFC headers: `message_id` · `in_reply_to` · `references` on every row, the IMAP thread key taken from the message's own chain, and `--backfill-headers` for the rows already written. `tests/` now holds **74** proofs (62 + 12 in `test_headers.py`).
+- **2026-11-17** — `threads.sh` closes by **evidence**, not only by a letter: a document, a meeting or a filing read from the home's `hodd/memory/mail/evidence.yaml` (or `--evidence FILE`), and the marked fifth — `answered-elsewhere` inside `--window DAYS`, never counted as a reply. A sender's domain is refused as evidence. `test_threads.py` now holds **23** proofs (13 + 10 evidence proofs); the fix note is `docs/fixes/mail/2026-11-17-the-evidence-that-is-not-a-letter.md`.
