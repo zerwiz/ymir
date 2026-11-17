@@ -46,7 +46,7 @@ to the person reading it.
 
 **A row is checked before it may close anything.** It must name its evidence and it must
 narrow to a subject, a thread or a message id. A row that matches on a domain
-(`from_domain:`, or a bare `signwell.example.net` inside `from:`) is refused outright; a row that
+(`from_domain:`, or a bare `docsigner.example.net` inside `from:`) is refused outright; a row that
 narrows to the sender alone is refused for a document or a meeting. Every refusal is named
 on stderr and counted in `--json` as `totals.evidence_refused`, because a refused row and
 an absent row must never look the same.

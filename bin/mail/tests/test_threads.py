@@ -298,13 +298,13 @@ class ThreadsDoor(unittest.TestCase):
 # A conversation closes by a document, a meeting or a filing — each declared with a path, a
 # message id or a meeting record — and by a fifth kind, `answered-elsewhere`, which is
 # marked and never counted as a reply. A row matching only a sender, and above all only a
-# DOMAIN, closes nothing: a rule matching "signwell" alone folded the UNSIGNED development
+# DOMAIN, closes nothing: a rule matching "docsigner" alone folded the UNSIGNED development
 # agreement into the signed NDA and hid it.
 
 NDA_DOCUMENT = {
-    "id": "coherans-nda-signed",
-    "match": {"from": ["partner@inmost.example.net", "docs@signwell.example.net"],
-              "subject_any": ["nda", "coherans", "annex"]},
+    "id": "mutual-nda-signed",
+    "match": {"from": ["partner@example.net", "docs@docsigner.example.net"],
+              "subject_any": ["nda", "mutual nda", "annex"]},
     "kind": "document",
     "evidence": "svartalfaheim/example/NDA/Mutual_NDA_v1.pdf",
     "evidence_message": "fixture-nda-message",
@@ -312,8 +312,8 @@ NDA_DOCUMENT = {
 }
 
 NDA_MEETING = {
-    "id": "coherans-signing-meeting",
-    "match": {"from": ["partner@inmost.example.net"],
+    "id": "mutual-nda-signing",
+    "match": {"from": ["partner@example.net"],
               "subject_any": ["nda sign", "nda review"]},
     "kind": "meeting",
     "evidence": "mail 2026-10-15 'Your meeting recap - NDA signing' (the recorder's own summary)",
@@ -331,15 +331,15 @@ FILING = {
 
 SIGNED_THREAD = message("t-nda", "in", "2026-10-14T10:00:00+00:00",
                         subject="Document completed (Mutual_NDA_v1.7)",
-                        sender="SignWell Docs <docs@signwell.example.net>",
+                        sender="the signing service Docs <docs@docsigner.example.net>",
                         classification="request", proposed_action="reply_needed")
 
-# The contract that one "signwell" rule swallowed: a DIFFERENT agreement, never completed,
+# The contract that one "docsigner" rule swallowed: a DIFFERENT agreement, never completed,
 # chased four times. It is dated before the NDA's closed_on so that only the SUBJECT can
 # keep it open — the date alone must not be what saves it.
 DEVELOPMENT_THREAD = message("t-dev", "in", "2026-10-15T09:00:00+00:00",
                              subject="Please complete Development_Agreement",
-                             sender="SignWell Docs <docs@signwell.example.net>",
+                             sender="the signing service Docs <docs@docsigner.example.net>",
                              classification="request", proposed_action="reply_needed")
 
 
@@ -363,7 +363,7 @@ class EvidenceClosures(unittest.TestCase):
         self.assertEqual(thread["evidence_kind"], "document")
         self.assertEqual(thread["evidence_ref"], "svartalfaheim/example/NDA/Mutual_NDA_v1.pdf")
         self.assertEqual(thread["evidence_id"], "fixture-nda-message")
-        self.assertEqual(thread["evidence_row"], "coherans-nda-signed")
+        self.assertEqual(thread["evidence_row"], "mutual-nda-signed")
         self.assertEqual(thread["evidence_on"], "2026-10-16")
         done = run(store, "--evidence", str(evidence))
         self.assertIn('"document:svartalfaheim/example/NDA/Mutual_NDA_v1.pdf","fixture-nda-message","closed"',
@@ -374,7 +374,7 @@ class EvidenceClosures(unittest.TestCase):
         """A meeting that happened is the record of it; the row names the note."""
         rows = [message("t-sign", "in", "2026-10-15T08:00:00+00:00",
                         subject="NDA signing - Wednesday",
-                        sender="Ina Partner <partner@inmost.example.net>",
+                        sender="Ina Partner <partner@example.net>",
                         classification="request", proposed_action="reply_needed")]
         store = write_store(self.dir, rows)
         evidence = write_evidence(self.dir, [NDA_MEETING])
@@ -402,13 +402,13 @@ class EvidenceClosures(unittest.TestCase):
         """The fifth kind: we wrote to that person about something else. Marked, not a reply."""
         rows = [
             message("t-iso", "in", "2026-11-10T09:00:00+00:00", subject="One question",
-                    sender="Ina Partner <partner@inmost.example.net>",
+                    sender="Ina Partner <partner@example.net>",
                     classification="question", proposed_action="reply_needed"),
             message("t-other", "in", "2026-11-11T09:00:00+00:00", subject="Another matter",
-                    sender="Ina Partner <partner@inmost.example.net>",
+                    sender="Ina Partner <partner@example.net>",
                     classification="request", proposed_action="reply_needed"),
             message("t-other", "out", "2026-11-12T09:00:00+00:00", mid="out-elsewhere",
-                    sender="Ina Partner <partner@inmost.example.net>"),
+                    sender="Ina Partner <partner@example.net>"),
         ]
         store = write_store(self.dir, rows)
         thread = rows_by_key(store)["t-iso"]
@@ -419,7 +419,7 @@ class EvidenceClosures(unittest.TestCase):
         self.assertIsNone(thread["unanswered_days"])
         self.assertEqual(thread["evidence_kind"], "answered-elsewhere")
         self.assertEqual(thread["evidence_id"], "out-elsewhere")
-        self.assertEqual(thread["evidence_to"], "partner@inmost.example.net")
+        self.assertEqual(thread["evidence_to"], "partner@example.net")
         payload = json.loads(run(store, "--json").stdout)
         self.assertEqual(payload["totals"]["closed_answered_elsewhere"], 1)
         self.assertEqual(payload["totals"]["answered_threads"], 1)   # t-other only
@@ -431,10 +431,10 @@ class EvidenceClosures(unittest.TestCase):
         """Two days is inside fourteen and outside one; the boundary is a flag."""
         rows = [
             message("t-iso", "in", "2026-11-10T09:00:00+00:00", subject="One question",
-                    sender="Ina Partner <partner@inmost.example.net>",
+                    sender="Ina Partner <partner@example.net>",
                     classification="question", proposed_action="reply_needed"),
             message("t-other", "out", "2026-11-12T09:00:00+00:00", mid="out-elsewhere",
-                    sender="Ina Partner <partner@inmost.example.net>"),
+                    sender="Ina Partner <partner@example.net>"),
         ]
         store = write_store(self.dir, rows)
         self.assertEqual(rows_by_key(store)["t-iso"]["lane_reason"], "answered-elsewhere")
@@ -449,13 +449,13 @@ class EvidenceClosures(unittest.TestCase):
         """A domain is not evidence. A sender is not evidence. Only the subject protects it."""
         store = write_store(self.dir, [SIGNED_THREAD, DEVELOPMENT_THREAD])
         domain_rows = [
-            {"id": "by-domain", "match": {"from_domain": ["signwell.example.net"]},
+            {"id": "by-domain", "match": {"from_domain": ["docsigner.example.net"]},
              "kind": "document",
              "evidence": "svartalfaheim/example/NDA/Mutual_NDA_v1.pdf"},
-            {"id": "by-bare-domain", "match": {"from": ["signwell.example.net"]},
+            {"id": "by-bare-domain", "match": {"from": ["docsigner.example.net"]},
              "kind": "document",
              "evidence": "svartalfaheim/example/NDA/Mutual_NDA_v1.pdf"},
-            {"id": "by-sender-alone", "match": {"from": ["docs@signwell.example.net"]},
+            {"id": "by-sender-alone", "match": {"from": ["docs@docsigner.example.net"]},
              "kind": "document",
              "evidence": "svartalfaheim/example/NDA/Mutual_NDA_v1.pdf"},
         ]
@@ -482,12 +482,12 @@ class EvidenceClosures(unittest.TestCase):
         """A hand-written `kind: reply` is refused: the letters are the authority on replies."""
         rows = [message("t-nda", "in", "2026-10-14T10:00:00+00:00",
                         subject="Document completed (Mutual_NDA_v1.7)",
-                        sender="SignWell Docs <docs@signwell.example.net>",
+                        sender="the signing service Docs <docs@docsigner.example.net>",
                         classification="request", proposed_action="reply_needed")]
         store = write_store(self.dir, rows)
         evidence = write_evidence(self.dir, [{
             "id": "claimed-reply",
-            "match": {"from": ["docs@signwell.example.net"], "subject_any": ["nda"]},
+            "match": {"from": ["docs@docsigner.example.net"], "subject_any": ["nda"]},
             "kind": "reply",
             "evidence": "fixture-nda-message",
         }])
