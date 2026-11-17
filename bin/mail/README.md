@@ -23,8 +23,11 @@ bin/mail/gna_connect.py   the verbs behind it: consent URL, loopback catcher, th
 bin/mail/inbound-test.sh  the acceptance test: send from outside, assert the arrival, or skip
 bin/mail/mail-scan.sh     the earlier one-shot read (kept — it proved the door opened)
 bin/mail/threads.sh       the join: one row per conversation, and the lane it is in (read-only)
+bin/mail/draft-age.sh     the drafts Gmail still holds, with their age in days — and it FAILS while one has
+                          aged (read-only; the 07:00 brief asks it before it publishes)
 bin/mail/install.sh       seats the desk as a systemd USER unit, restart-always
-bin/mail/tests/           16 proofs, including "no file here can send"
+bin/mail/tests/           proofs, including "no file here can send" (test_gna.py) and the three
+                          draft-age cases the brief names (test_draft_age.py)
 ```
 
 The **store and the scope never live here**: they are the home's
@@ -41,6 +44,9 @@ bash bin/time/nornir-job-gna-mail.sh --dry-run   # read the mailbox, write nothi
 bash bin/time/nornir-job-gna-mail.sh             # import, then prove the desk
 python3 bin/mail/gna_import.py --account <address> --backfill-headers   # the RFC headers on old rows
 python3 bin/mail/tests/test_gna.py               # the proofs
+python3 bin/mail/tests/test_threads.py           # the lanes
+python3 bin/mail/tests/test_draft_age.py         # the drafts, and the brief that must not lie
+bash bin/mail/draft-age.sh --brief               # is any letter sitting unsent past its limit?
 ```
 
 The schedule is a Nornir row in the home's `config/cron.yaml`
