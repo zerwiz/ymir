@@ -1,0 +1,4 @@
+---
+section: agents-work-collaboration
+---
+| Agents | **Read a video — the door that always answers** (`bin/agents/yt-transcript.sh`) | Metadata, description and transcript from a YouTube video with no key and no browser: captions on the default client, then alternate player clients with 2/6/15 s backoff, then the timedtext endpoint, then the audio through whisper.cpp — GPU first, CPU while the desk is in a call or the rail holds a local model. Every rung reports whether it answered and why it did not; no transcript exits 3 and names every road. The media is deleted — one scratch dir per run, traps on EXIT/INT/TERM/HUP, `--keep-audio` the off-by-default exception, and the next run sweeps what a SIGKILL stranded. A transcript on the shelf is a cache verified by sha256, so a second read makes no network call | [docs/features/read-a-video.md](docs/features/read-a-video.md) |

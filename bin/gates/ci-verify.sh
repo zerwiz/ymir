@@ -95,6 +95,11 @@ gate eir-register "Eir reads config/surfaces.yaml, mends only safe surfaces unat
      bash "$ROOT/bin/agents/tests/test_eir_register.sh"
 gate groa-verdict "Gróa's closing line says whole or names every owed surface, and a stopped step fails it" \
      bash "$ROOT/bin/agents/tests/test_groa_verdict.sh"
+# Plan 316 — the video door answers, or names every road that failed, and the media is gone when
+# it is done. Proved against a fake yt-dlp, curl and whisper-cli, so the ladder, the exit codes, the
+# cache and the cleanup are asserted without the network and without a GPU.
+gate yt-transcript "the video door answers or names every failed road, and leaves no media behind" \
+     bash "$ROOT/bin/agents/tests/test_yt_transcript.sh"
 gate unit-drift "an installed unit on a retired value is found and re-seated; a seat's own choice is not drift" \
      bash "$ROOT/bin/engine/tests/test_units_drift.sh"
 gate rodd-face-follows "Rödd's face is re-dressed when its patches change" \
