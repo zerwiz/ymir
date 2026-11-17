@@ -211,6 +211,9 @@ below has an owning asset; a code change not reflected in its asset is an
 incomplete change. The router is `.agents/skills/galdr-ymirsystem/SKILL.md` (its `assets[]`
 table maps every task to its file).
 
+<!-- 2026-11-17: the shims under bin/time/snotra/ were retired; the ear's code now lives under
+     systems/snotra/services/ear/, and the only file left at the old spelling is a door written after the move
+     began. A governed row that resolves to nothing is a stale row, not a path. -->
 ```
 governed[11]{path,load_first}:
   "bin/engine/ymir-install.sh",".agents/skills/galdr-ymirsystem/assets/installation.md"
@@ -222,7 +225,7 @@ governed[11]{path,load_first}:
   "bin/seat/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr-ymirsystem/assets/harness-integration/README.md"
   "RULES/13-pi-extensions.md","governs the Pi extension surface: one home, index.ts per multi-file extension, no thin loaders"
   "bin/desktop/smidja* | .agents/skills/smidja-factory/** | apps/smidja/** | apps/smidja-factory/{cookbooks,skills}/**",".agents/skills/galdr-ymirsystem/assets/smidja.md"
-  "bin/time/snotra/snotra-*",".agents/skills/galdr-ymirsystem/assets/snotra-meeting-ear.md"
+  "systems/snotra/services/ear/** | bin/time/snotra/calendar-write.sh",".agents/skills/galdr-ymirsystem/assets/snotra-meeting-ear.md"
   "tools/snotra/**",".agents/skills/galdr-ymirsystem/assets/snotra-meeting-ear.md"
 ```
 

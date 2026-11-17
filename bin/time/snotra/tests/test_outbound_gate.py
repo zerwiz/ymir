@@ -20,8 +20,8 @@ configuration (Rule 07: YMIR_GMAIL_API_BASE · YMIR_CALENDAR_API_BASE · YMIR_OA
 Nothing here talks to Google, and nothing here mocks the gate: the doors, the approval
 records, the hash binding and the spending are the shipping ones.
 
-    python3 bin/time/snotra/tests/test_outbound_gate.py            # every proof
-    python3 bin/time/snotra/tests/test_outbound_gate.py MailGate   # one hole
+    python3 bin/time/snotra/tests/test_outbound_gate.py            # every proof  # allow-superseded-path: this line records where the door WAS, or names the real tests/ directory that never moved
+    python3 bin/time/snotra/tests/test_outbound_gate.py MailGate   # one hole  # allow-superseded-path: this line records where the door WAS, or names the real tests/ directory that never moved
 """
 
 from __future__ import annotations
