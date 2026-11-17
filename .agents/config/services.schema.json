@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zerwiz/ymir/config/services.schema.json",
+  "title": "hodd/identity/services.yaml — the hosted services registry",
+  "description": "The row shape of the hosted services registry (plan 312). Every row answers seven questions in one read: how the service is raised (`unit` or `compose`), what file actually runs (`script`), what port it owns (`ports`), which kit directory it belongs to (`dir`), which runbook to open when it is down (`runbook`), whether a stop is an incident (`criticality`), and what memory it may hold (`budget`). The audit that reads this file is `bin/records/registry-audit.sh`; the law is `RULES/the-hosted-services-registry.md` and the craft page is `.agents/skills/galdr-ymirsystem/assets/registry.md`. A field this schema requires and a row does not carry is a FINDING, never a pass — the audit names the file, the row and the field.",
+  "type": "object",
+  "required": ["version", "services"],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "minimum": 2,
+      "description": "the registry document version"
+    },
+    "updated": { "type": "string" },
+    "host": {
+      "type": "string",
+      "description": "the machine this file is written for; every row names its own host too, because one registry may describe more than one"
+    },
+    "schema": {
+      "type": "object",
+      "description": "the registry's own header: it declares the shape its rows are written in, so the next hand writes rows that fit without reading a plan",
+      "required": ["version", "shape", "checked_by", "row"],
+      "properties": {
+        "version": { "type": "integer", "minimum": 1 },
+        "shape": {
+          "type": "string",
+          "description": "the schema file this header points at, repo-relative"
+        },
+        "checked_by": {
+          "type": "string",
+          "description": "the door that judges a row against the shape"
+        },
+        "row": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "the fields a row carries, in the order a reader wants them"
+        },
+        "rule": { "type": "string" }
+      }
+    },
+    "companions": { "type": "object" },
+    "services": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/service" }
+    },
+    "tracking": { "type": "object" },
+    "hosts_registry": { "type": "array" },
+    "tunnels": { "type": "array" }
+  },
+  "$defs": {
+    "oneOrMany": {
+      "description": "a field that names one thing on a small row and several on a large one. A list is the honest form when the row really raises four units, and the audit checks every member.",
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      ]
+    },
+    "service": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "id",
+        "name",
+        "host",
+        "ports",
+        "dir",
+        "runbook",
+        "criticality",
+        "budget"
+      ],
+      "anyOf": [
+        { "required": ["unit", "script"] },
+        { "required": ["compose"] }
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "the row's stable name — what `registry-audit.sh --answer <id>` takes"
+        },
+        "name": { "type": "string", "minLength": 1 },
+        "what": { "type": "string" },
+        "why": { "type": "string" },
+        "decided": { "type": "string" },
+        "source": { "type": "string" },
+        "host": {
+          "type": "string",
+          "description": "the machine that owns this row's files and sockets; the audit measures `script`, `dir` and the ports only on the machine the row names"
+        },
+        "unit": {
+          "description": "how it is raised when it is raised by systemd (user or system units). A row raised by several units names them all.",
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+          ]
+        },
+        "compose": {
+          "type": "string",
+          "minLength": 1,
+          "description": "how it is raised when it is raised by a compose file: the absolute path to that file, so `docker compose -f <file> up -d` needs no hunt"
+        },
+        "script": {
+          "description": "the file that actually runs — the resolved path from the unit's ExecStart or the compose service's command, never a symlink into a tree that is gone. A symlink is reported with the target it points at, because that is how the share door died unseen.",
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+          ]
+        },
+        "ports": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 1, "maximum": 65535 },
+          "description": "the ports this row owns, one row per port — a port named by two rows is a fault the audit reports by naming both. An empty list is a declaration that the row owns no port (a dormant service, a job)."
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535,
+          "description": "the singular form of `ports` for a row that owns exactly one. A row may carry `port` or `ports`, never both: two spellings of one fact is two truths."
+        },
+        "dir": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the kit directory the row belongs to — the runbook's first step is `cd` there, so the row must say it"
+        },
+        "runbook": {
+          "type": "string",
+          "minLength": 1,
+          "description": "the page to open when the service is down, home-relative or repo-relative. More than one page is separated by `·` — the audit resolves each and names the one that is missing."
+        },
+        "criticality": {
+          "type": "string",
+          "enum": ["always", "wanted", "dormant"],
+          "description": "whether a stop is an incident. `always` = a stop is an incident; `wanted` = it should be running or being finished; `dormant` = it serves nothing and only the entry says why. An unset criticality is a finding, not an answer."
+        },
+        "budget": {
+          "description": "the memory this service may hold. Plan 003 (the heart estate) writes it as a measured block — `measured_mb`, `memory_ceiling_mb`, `residency` — because a budget you cannot compare with `docker stats` is a wish; a bare systemd size (`96Mi`) is accepted as the shorthand of the same fact. Both spellings are one truth: the audit reads `memory_ceiling_mb`, or the size, and never both at once.",
+          "oneOf": [
+            {
+              "type": "object",
+              "required": ["memory_ceiling_mb"],
+              "properties": {
+                "measured_mb": { "type": "number", "minimum": 0 },
+                "memory_ceiling_mb": { "type": "number", "minimum": 0 },
+                "residency": { "type": "string", "minLength": 1 }
+              }
+            },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?(Ki|Mi|Gi|Ti)?$" }
+          ]
+        },
+        "measured": {
+          "type": "object",
+          "description": "plan 003's measurement block: `date`, `raise` (how the service is actually raised, measured), and `containers` (memory, restarts, last error). Measurement is evidence, never the declaration: `unit` / `compose` say the door, this says what was seen."
+        },
+        "owner": { "type": "string" },
+        "public_url": { "type": "string" },
+        "tunnel": { "type": "string" },
+        "used_by": { "type": "array", "items": { "type": "string" } },
+        "depends_on": { "type": "array", "items": { "type": "string" } },
+        "containers": { "type": "array", "items": { "type": "string" } },
+        "processes": { "type": "array", "items": { "type": "string" } },
+        "data": { "type": "string" },
+        "backup": { "type": "string" },
+        "status": { "type": "string" },
+        "note": { "type": "string" }
+      }
+    }
+  },
+  "examples": [
+    {
+      "id": "whiteboard",
+      "name": "Excalidraw + collab + AI bridge — the whiteboard",
+      "host": "zerwizserver",
+      "unit": [
+        "excalidraw-app.service",
+        "excalidraw-collab.service",
+        "excalidraw-bridge.service",
+        "excalidraw-board.service"
+      ],
+      "script": [
+        "/home/zerwizserver/excalidraw/bin/static-server.mjs",
+        "/home/zerwizserver/gimle/apps/whiteboard/services/collab/index.mjs",
+        "/home/zerwizserver/gimle/apps/whiteboard/services/ttd-bridge/index.mjs",
+        "/home/zerwizserver/gimle/apps/whiteboard/services/tickets/index.mjs"
+      ],
+      "ports": [7311, 7312, 7313, 7314],
+      "dir": "/home/zerwizserver/gimle/apps/whiteboard",
+      "runbook": "hodd/docs/runbooks/gimle.md",
+      "criticality": "always",
+      "budget": {
+        "measured_mb": 58,
+        "memory_ceiling_mb": 96,
+        "residency": "always resident — a stop is an incident"
+      }
+    }
+  ]
+}

@@ -9,7 +9,7 @@
 **Ask the door, do not remember:** `bin/records/where.sh <path or topic>`.
 
 ```
-subsystems[19]{path,entry,canonical,books,doors,missing}:
+subsystems[21]{path,entry,canonical,books,doors,missing}:
   "bin/ward/**","docs/features/the-guardian.md","RULES/24-the-ward.md","RULES/39-the-manner-and-the-alarm.md · docs/fixes/ward/ (one file per fix)","bin/ward/garmr.sh status|off|on · bin/ward/garmr-smoke.sh · .agents/tests/garmr.test.sh","the off/on turns land in a root-only /var/log/ymir/garmr/pause.log that no operator surface reads"
   "bin/gates/**","docs/features/the-wards-the-delivery-gate.md","RULES/08-delivery-gate.md","docs/features/the-wards-the-delivery-gate.md · docs/fixes/gates/ (one file per fix) · plan 203 §14 (the ship door)","bin/gates/guards.sh --list · bin/gates/guards.sh · bin/gates/tests/","a per-ward ledger: which law each ward enforces, and where its own test lives"
   "hodd/docs/collaboration/** (home)","docs/features/fleet-wire.md","docs/features/collaborator-door.md","# the home shelf: the doors register, the fleet-wire runbook, the onboarding sheet (in $YMIR_HOME)","plans 154 · 158 · 184 · 192","the public MCP face for a collaborator tenant (plan 192 §9)"
@@ -20,6 +20,7 @@ subsystems[19]{path,entry,canonical,books,doors,missing}:
   "bin/engine/**",".agents/skills/galdr-ymirsystem/assets/installation.md",".agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md","RULES/05-platforms.md · RULES/25-agnostic-by-construction.md","bin/engine/**","—"
   "src/ymir_runtime/** | bin/agents/einherjar-spawn.sh | bin/agents/eindri-start.sh",".agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md","AGENTS.md","RULES/08-delivery-gate.md · RULES/02-agents.md","bin/seat/herdr-run.sh","—"
   "bin/records/mimir* | bin/bridge/mimir-bridge.py",".agents/skills/galdr-ymirsystem/assets/memory-well.md","RULES/20-the-well-appends.md","docs/features/","bin/records/mimir.sh","—"
+  "bin/records/registry-audit.sh | config/services.schema.json","docs/features/the-service-registry-answers.md",".agents/skills/galdr-ymirsystem/assets/registry.md","hodd/identity/services.yaml (the home) · RULES/the-hosted-services-registry.md (the home) · docs/fixes/records/ (one file per fix)","bin/records/registry-audit.sh --answer <id> · --list · --quiet · tests/test_registry_answers.sh","the rows themselves: most still owe `unit` (or `compose`), `script` and `dir` — plan 312 §5, plan 003"
   "bin/time/nornir-* | config/cron.yaml*",".agents/skills/galdr-ymirsystem/assets/nornir-jobs.md","docs/features/the-clock.md","docs/features/","bin/time/nornir-cron-start.sh","—"
   ".pi/** | .opencode/** | bin/seat/valknut-load.sh",".agents/skills/galdr-ymirsystem/assets/harness-integration/README.md","RULES/13-pi-extensions.md","docs/features/","bin/seat/valknut-load.sh --check","—"
   "tools/**","tools/snotra/DOORS.md","docs/features/the-library-of-records.md","docs/features/","bin/gates/doors.sh","—"
