@@ -62,3 +62,7 @@ which is the operator's call, not a worker's.
 
 `bin/seat/tests/test_desk_failsafes.sh` builds a claim with one live agent process and one empty pane, and
 asserts `live` / `shell` / `lost` / the single operator line.
+
+## CHANGE LOG
+
+- 2026-11-17 — review-mend: added missing heading for #814
