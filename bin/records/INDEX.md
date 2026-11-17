@@ -61,7 +61,7 @@ bin[57]{file,does,kind,verdict,disposition,callers,lines}:
   "registry-audit.sh","registry-audit.sh — is every running container named in the services registry, and is every named service alive?","tool","wired","keep",0,55
   "runes-append.sh","runes-append.sh — the append-only Runes ledger, a THIN SHIM.","tool","tested","keep",38,117
   "runes-project.sh","runes-project.sh — the DAG projector, regenerates runes_audit.md from events.","tool","wired","keep",0,65
-  "running-inventory.sh","running-inventory.sh — what is actually running on this machine, generated rather than remembered.","tool","wired","keep",1,103
+  "running-inventory.sh","running-inventory.sh — what is actually running on this machine, generated rather than remembered, with the restart count of every containe…","tool","wired","keep",1,159
   "snotra-ladder.sh","snotra-ladder.sh — the meeting ladder: transcript → minutes → promises → todos, and a stop that says so.","tool","wired","keep",0,616
   "snotra-what.sh","snotra-what.sh — Snotra's own voice: what the ear is doing, said in one sentence.","tool","wired","keep",1,640
   "test_comms.py","'''The proofs plan 261 asks for: the record, the owed list, the to-do proposals, the brief,","tool","wired","keep",0,508
