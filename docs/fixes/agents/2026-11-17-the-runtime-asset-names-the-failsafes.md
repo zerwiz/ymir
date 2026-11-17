@@ -25,3 +25,7 @@ failsafes"** — records, in the asset's own voice:
 `.agents/assets/agents/subsystem-docs.md`. That gap is older than this change and is recorded here rather
 than papered over: adding those rows is the next hand's honest work, and the runtime asset now carries the
 substance in the meantime.
+
+## CHANGE LOG
+
+- 2026-11-17 — review-mend: added missing heading for #814
