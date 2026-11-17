@@ -84,3 +84,7 @@ this errand adds 26 passing cases.
 Whether Sýn may stop a `criticality: always` unit on its own authority plan 004 §5.1 keeps
 for the Allfather, and the crown/machine-arm rank question belongs to plan 310. Both remain
 open; this change builds the loop and keeps its thresholds named and conservative.
+
+## CHANGE LOG
+
+- 2026-11-17 — review-mend: added missing heading for #814
