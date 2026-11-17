@@ -56,6 +56,12 @@ ymir heimdall · invite   the way in, and letting someone else in
   (or the one you name in `YMIR_BASH`). Without one, they stop with
   `needs bash 4 or newer` and print the same fix.
 
+- **On a Mac, systemd is not there — launchd is.** The install seats a layer that answers
+  `systemctl --user` by rendering each unit as a launchd agent, so the halls, the well and
+  the jobs rise as they do on Linux. If a service is dark, start with the door:
+  `bin/engine/launchd-ensure.sh check`. The whole layer, its limits and its logs are on
+  [Ymir on a Mac](ymir-on-a-mac.md).
+
 - **Your home, your data.** Private data lives at `$YMIR_HOME` (default
   `~/Documents/ymirhome`), never in the installed tree. The tree is code; the home is
   yours; a fresh clone and a package are the same tree.
