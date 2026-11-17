@@ -116,11 +116,20 @@ code_of() {
 }
 while IFS= read -r f; do
   code_of "$f" | grep -qE '\$\{?YMIR_HOME' || continue
+  # A file may say `prose-only` in a comment: the variable is NAMED (a gate description, a probe
+  # string, a doc line) and never READ. A named exception with a reason beats a ward that flags
+  # descriptions, which is how this door blocked a six-PR batch on 2026-11-15.
+  grep -qE '^[[:space:]]*#.*defaults-guard:[[:space:]]*prose-only' "$f" 2>/dev/null && continue
   grep -q 'ymir_home_root' "$f" 2>/dev/null && continue
   # A REAL assignment resolves it by hand and is allowed (the migrations set the old name
   # on purpose). A SELF-assignment is a no-op from the literal pass and is not an answer.
-  if grep -qE '^[[:space:]]*(export[[:space:]]+)?YMIR_HOME=' "$f" 2>/dev/null \
-     && ! grep -qE '^[[:space:]]*(export[[:space:]]+)?YMIR_HOME="\$\{YMIR_HOME\}"[[:space:]]*$' "$f" 2>/dev/null; then
+  # A deliberate assignment counts WHEREVER it sits on the line: `export HOME=… YMIR_HOME=…`
+  # and `env YMIR_HOME=… cmd` are both assignments, and the old anchor (line start) missed
+  # them — that false positive blocked a six-PR batch on 2026-11-15 while every one of the
+  # nine findings was a test fixture naming its own home. A SELF-assignment is still not an
+  # answer: it reads the home it claims to set.
+  if grep -qE '(^|[[:space:];])(export[[:space:]]+)?YMIR_HOME=' "$f" 2>/dev/null \
+     && ! grep -qE '(^|[[:space:];])(export[[:space:]]+)?YMIR_HOME="\$\{YMIR_HOME\}"[[:space:]]*$' "$f" 2>/dev/null; then
     continue
   fi
   printf '  "uses the home, never resolves it","%s","call ymir_home_root (bin/vault/hoard-lib.sh), or assign the home deliberately"\n' "${f#"$ROOT"/}"

@@ -7,6 +7,9 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
 fi
 STATE=""; hoard_state_dir STATE 2>/dev/null || true
 [ -n "$STATE" ] || { echo "finding-tally: state dir unresolved" >&2; exit 1; }
+# The home is RESOLVED, never assumed (the defaults guard's rule): the one resolver names it,
+# and only then is the file read.
+if declare -f ymir_home_root >/dev/null 2>&1; then ymir_home_root YMIR_HOME 2>/dev/null || true; fi
 CONFIG="${YMIR_HOME:-}/config/review-learning.yaml"
 [ -r "$CONFIG" ] || CONFIG="$YMIR_HOME/config/review-learning.yaml"
 
