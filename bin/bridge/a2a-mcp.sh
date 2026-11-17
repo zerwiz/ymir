@@ -108,12 +108,20 @@ def load(p, default):
     try: return json.load(open(p))
     except Exception: return default
 
+# THE SESSION WRAPPER IS THE DOOR (plan 303 §12.3 step 6, §15.4). A raw `a2abridge bridge`
+# entry gives every session the same name, id and state dir, so two sessions on one box
+# collide on the port and share one inbox — and every bridge is named `brokk-…` whatever its
+# harness. The wrapper resolves a per-session identity (harness + pane), advertises the name
+# the fleet registry gives this machine, and gives back a dead port claim. It lives in the
+# tree and is seated here, so a fresh install and every update have it.
+sess = os.path.join(root, "bin", "bridge", "a2a-bridge-session.sh")
+a2a_env = {"A2A_DIRECTORY": durl}
+if advert:
+    a2a_env["A2A_ADVERTISE_HOST"] = advert
 ones = {
     "a2abridge": {
-        "pi":  {"command": a2ab, "args": ["bridge", "-bind", a2a_bind, "-advertise-host", advert],
-                "env": {"A2A_DIRECTORY": durl, "A2A_ADVERTISE_HOST": advert}},
-        "oc":  {"type": "local", "command": [a2ab, "bridge", "-bind", a2a_bind, "-advertise-host", advert],
-                "environment": {"A2A_DIRECTORY": durl, "A2A_ADVERTISE_HOST": advert}},
+        "pi":  {"command": sess, "args": [], "env": a2a_env},
+        "oc":  {"type": "local", "command": [sess], "environment": a2a_env},
     },
     "well": {
         "pi":  {"url": well_url},
