@@ -23,6 +23,16 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 # (`guards.sh --full`) and a person typing the ward by hand both do: nothing is scoped away.
 args=("$@")
 [ "${args[0]-}" = check ] && args=("${args[@]:1}")
+# THE RANGE (2026-11-16). guards.sh hands a scoped ward the changed FILES and, in
+# YMIR_GUARD_BASE, the revision the push starts from. A file the push touched is not the same
+# thing as the lines the push ADDS: a note edited to record a new fix re-carries every sentence
+# it already had, and refusing the push for an old sentence punishes the wrong hand — the
+# "inherited" rule of plan 243 §3 part D, applied to a line rather than a path. With no base (CI's
+# --full, or a person running the ward by hand) every line is judged, which is the binding gate.
+base="${YMIR_GUARD_BASE:-}"
+if [ -n "$base" ] && [ "${#args[@]}" -gt 0 ]; then
+  exec python3 "$ROOT/bin/gates/guards/public-guard.py" --added "$base" "${args[@]}"
+fi
 if [ "${#args[@]}" -gt 0 ]; then
   exec python3 "$ROOT/bin/gates/guards/public-guard.py" "${args[@]}"
 fi
