@@ -347,10 +347,31 @@ cmd_ensure() {
   [ -n "$pane_out" ] || die "the room $ws gave no pane for the judge"
 
   # The name must be unique among live agents: 'pi' collided with every seat already in the room.
-  local start_err=""
-  if ! start_err="$(herdr agent start reviewer --kind pi --pane "$pane_out" -- --model "$model" \
-        --append-system-prompt "$ROLE_FILE" --append-system-prompt "$charter" 2>&1 >/dev/null)"; then
-    die "herdr agent start failed for pane $pane_out (model $model) — $(first_error_line "$start_err")"
+  # THE START SHAPE IS VERSION-DEPENDENT (measured 2026-11-15, and again on the hand the same day).
+  # herdr 0.7.x has no `--kind` and no `--pane`: it starts an agent IN a directory and makes its own
+  # tab (`herdr agent start <name> --cwd <dir> -- <argv>`). Passing the 0.9 flags to 0.7 exited 1, and
+  # the keeper died with "herdr agent start failed for pane w17:p31" every five minutes — so the heart
+  # had NO judge seat at all, and every open PR sat unjudged while review-watch asked a dead pane.
+  # Probe the CLI, never the version string: a session that cannot answer is a session that is refused.
+  local start_err="" start_shape="legacy"
+  if herdr agent start --help 2>&1 | grep -qE -- '--kind'; then start_shape="kind-pane"; fi
+  if [ "$start_shape" = "kind-pane" ]; then
+    start_err="$(herdr agent start reviewer --kind pi --pane "$pane_out" -- --model "$model" \
+        --append-system-prompt "$ROLE_FILE" --append-system-prompt "$charter" 2>&1 >/dev/null)" || {
+      die "herdr agent start failed for pane $pane_out (model $model, shape $start_shape) — $(first_error_line "$start_err")"; }
+  else
+    start_err="$(herdr agent start reviewer --cwd "$clone" --no-focus -- --model "$model" \
+        --append-system-prompt "$ROLE_FILE" --append-system-prompt "$charter" 2>&1 >/dev/null)" || {
+      die "herdr agent start failed in $clone (model $model, shape $start_shape) — $(first_error_line "$start_err")"; }
+    # 0.7.x makes its own pane; adopt it so every later check reads the seat that really exists.
+    local adopted
+    adopted="$(herdr agent list 2>/dev/null | python3 -c 'import json,sys
+try: d=json.load(sys.stdin)
+except Exception: raise SystemExit(0)
+for a in (d.get("result") or {}).get("agents") or []:
+    if (a.get("name") or "")=="reviewer" and (a.get("cwd") or "")==sys.argv[1]:
+        print(a.get("pane_id") or ""); break' "$clone" 2>/dev/null || true)"
+    [ -n "$adopted" ] && pane_out="$adopted"
   fi
   # Seating without verifying leaves an idle agent — the hard contract of the herdr skill.
   local tries=0 st=""
