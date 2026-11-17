@@ -98,3 +98,7 @@ HTTP 403` is usually a missing `gmail.readonly` scope on the consent.
 
 The proofs are `python3 bin/mail/tests/test_draft_age.py` — eleven of them, against a stub Gmail, including the
 three that matter: no drafts, a fresh draft, an aged draft failing.
+
+## CHANGE LOG
+
+- **2026-11-17** — Opened: the door that fails a day when a letter has sat unwritten past its limit.
