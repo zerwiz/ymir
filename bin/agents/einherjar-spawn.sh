@@ -328,6 +328,12 @@ meta_value() {  # <file> <key>
 PROJECT_DIR=
 WT=
 BRIEF=
+# The reuse seat is declared HERE, outside the relaunch branch, because `launch_herdr` (and the
+# dry-run printer) test it with `set -u` on a FRESH spawn too. It sat inside `if RELAUNCH` and
+# every fresh spawn died at `REUSE_PANE: unbound variable` — which is why `--mode batch` could
+# not launch at all on 2026-11-17 (the engine does not own batch, so the old road was required).
+REUSE_PANE=""
+REUSE_WS=""
 if [ "$RELAUNCH" -eq 1 ]; then
   [ -f "$META" ] || { echo "error: --relaunch requires an existing task record at $META" >&2; exit 1; }
   KIND=$(meta_value "$META" kind); KIND=${KIND:-ship}
@@ -366,8 +372,6 @@ if [ "$RELAUNCH" -eq 1 ]; then
 # is the errand's SEAT and is REUSED: a bare shell gets the launch line in place, and an
 # idle or finished agent is refused unless FORCE_RELAUNCH=1. With FORCE_RELAUNCH=1 the old
 # seat is closed before the new one opens, so there is never a second pane beside it.
-REUSE_PANE=""
-REUSE_WS=""
 if command -v herdr >/dev/null 2>&1; then
   _wt_existing="${WT:-$PROJECT_DIR/.yggdrasil/$ID}"
   _seat_rows="$(herdr pane list 2>/dev/null | python3 -c '
