@@ -118,3 +118,32 @@ callouts, and never TOON. TOON stays only where only a machine reads: tool outpu
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+
+---
+
+## Appended 2026-11-17 — the buttons must say what they do, in words he would use
+
+At the Allfather's word: *"I wanna have better answers on the buttons that makes more sence."* He is right, and the fault
+is execution rather than law — the four rules above were already there:
+
+```
+tonights_buttons[5]{label,what_is_wrong,what_it_should_have_said}:
+  "🪢 Fix the reply default","a metaphor and a topic; it does not say what will happen","✅ Make a reply name its message"
+  "🧪 A fake week","an image, not an act — a test for what?","▶️ Run the week on a fixture"
+  "🪛 A without the password","reads as a riddle; a reader must decode the options to find the verb","🔓 Harden Samba with a named user"
+  "🛡 Guard the next move","names a benefit and hides the work","➕ Add the ledger guard"
+  "🗑 Drop the duplicate","correct — one act, one object, and it was already done twice before","(this is the shape)"
+```
+
+**The rule, appended to the four above.**
+
+```
+say_what_it_does[4]{rule,why}:
+  "a label names an ACT and its OBJECT","'Merge 811' · 'Send the letter' · 'Show the log' · 'Hold it' — the reader should not need the sentence above to know what the click does"
+  "the verb is his own","merge, send, show, run, hold, name, drop — the words he uses when he asks for it, never a house metaphor dressed as one"
+  "a button never repeats one already offered","three nights of 'delete the draft' is one button offered three times, which teaches him the buttons are noise"
+  "never a button for what is done","a control over a finished thing is a lie with an emoji on it"
+```
+
+**And one shape that worked, kept as the pattern:** `🗑 Drop the duplicate` — one act, one object, and a prompt that named
+the draft. That is the whole target: the label is the act, the prompt is the same act spelled out enough to run alone.
