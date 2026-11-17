@@ -39,7 +39,7 @@ an unattended loop must not take it for him.
 ./bin/seat/desk-inventory.sh check
   desk-verdict[1]{claimed,live,shells}:  "27","0","27"
 ./bin/seat/desk-inventory.sh save --claimed
-  "/home/zerwizserver/Documents/ymirhome/state/desk-inventory.json","27","25","claim"
+  "/home/example-heart/Documents/ymirhome/state/desk-inventory.json","27","25","claim"
 ./bin/seat/desk-watch.sh check
   "lost","25","the desk lost 25 hand(s) to a restart — panes wV:p1 w18:p1 … w21:p1 w22:p1
               hold shells, not agents; 0 agent(s) still stand"

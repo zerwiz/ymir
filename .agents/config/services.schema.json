@@ -173,7 +173,7 @@
     {
       "id": "whiteboard",
       "name": "Excalidraw + collab + AI bridge — the whiteboard",
-      "host": "zerwizserver",
+      "host": "example-heart",
       "unit": [
         "excalidraw-app.service",
         "excalidraw-collab.service",
@@ -181,13 +181,13 @@
         "excalidraw-board.service"
       ],
       "script": [
-        "/home/zerwizserver/excalidraw/bin/static-server.mjs",
-        "/home/zerwizserver/gimle/apps/whiteboard/services/collab/index.mjs",
-        "/home/zerwizserver/gimle/apps/whiteboard/services/ttd-bridge/index.mjs",
-        "/home/zerwizserver/gimle/apps/whiteboard/services/tickets/index.mjs"
+        "/home/example-heart/excalidraw/bin/static-server.mjs",
+        "/home/example-heart/gimle/apps/whiteboard/services/collab/index.mjs",
+        "/home/example-heart/gimle/apps/whiteboard/services/ttd-bridge/index.mjs",
+        "/home/example-heart/gimle/apps/whiteboard/services/tickets/index.mjs"
       ],
       "ports": [7311, 7312, 7313, 7314],
-      "dir": "/home/zerwizserver/gimle/apps/whiteboard",
+      "dir": "/home/example-heart/gimle/apps/whiteboard",
       "runbook": "hodd/docs/runbooks/gimle.md",
       "criticality": "always",
       "budget": {

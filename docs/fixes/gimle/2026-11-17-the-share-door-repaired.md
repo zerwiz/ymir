@@ -1,7 +1,7 @@
 # The share door stopped its 40,001st restart — a symlink into a tree that is gone, and a port that was never its own
 
 **Component:** `gimle` (the share door, `gimle-share.service`, and the whiteboard's four surfaces).
-**Date:** 2026-11-17. **Plan:** `hodd/machines/zerwizserver/plans/005-the-blunt-loop.md` (§2 and §3).
+**Date:** 2026-11-17. **Plan:** `hodd/machines/example-heart/plans/005-the-blunt-loop.md` (§2 and §3).
 
 ## What was wrong
 
@@ -9,7 +9,7 @@
 hours between). Every five seconds, since long before today, and the reason was in one line of the journal:
 
 ```
-/usr/bin/python3: can't open file '/home/zerwizserver/gimle/desk/share-scene.py':
+/usr/bin/python3: can't open file '/home/example-heart/gimle/desk/share-scene.py':
 [Errno 2] No such file or directory
 ```
 
@@ -39,7 +39,7 @@ silence follows:
 
 ```
 $ systemctl --user disable --now gimle-share.service
-Removed "/home/zerwizserver/.config/systemd/user/default.target.wants/gimle-share.service".
+Removed "/home/example-heart/.config/systemd/user/default.target.wants/gimle-share.service".
 $ systemctl --user show gimle-share.service -p NRestarts --value   # before: 39999 · after: 0
 0
 ```
@@ -48,8 +48,8 @@ The script parses, from the path the unit runs:
 
 ```
 $ python3 -c 'import ast,sys; ast.parse(open(sys.argv[1]).read()); print(sys.argv[1], "parses")' \
-    /home/zerwizserver/gimle/desk/share-scene.py
-/home/zerwizserver/gimle/desk/share-scene.py parses
+    /home/example-heart/gimle/desk/share-scene.py
+/home/example-heart/gimle/desk/share-scene.py parses
 ```
 
 The door answers on its own number, and the ward still refuses what it should:

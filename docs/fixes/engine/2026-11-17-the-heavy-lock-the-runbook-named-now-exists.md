@@ -60,10 +60,10 @@ $ bin/heavy-slot.sh run --name 'job-a (the gate suite)' -- sh -c 'sleep 6; echo 
 $ bin/heavy-slot.sh run --name 'job-b (an errand test run)' -- sh -c 'echo "B: ran only after A"'
 SLOT,waiting,held
 holder[1]{pid,started,starttime,host,name,cmd,running}:
-  "826787","2026-11-17T12:23:02Z","560102","heimdall","job-a (the gate suite)","sh -c sleep 6; echo "A: heavy work done"","00:01"
+  "826787","2026-11-17T12:23:02Z","560102","example-seat","job-a (the gate suite)","sh -c sleep 6; echo "A: heavy work done"","00:01"
 detail,waiting for,job-b (an errand test run) waits for the job above; it runs the moment the slot is free
 slot[1]{lock,state,pid,name,waited}:
-  "/home/heimdall/.local/state/ymir/heavy-slot.lock","held","828254","job-b (an errand test run)","5s"
+  "/home/example-seat/.local/state/ymir/heavy-slot.lock","held","828254","job-b (an errand test run)","5s"
 B: ran only after A
 ```
 

@@ -8,7 +8,7 @@ All morning of 2026-11-17 the heart's arm read **held**, with a heartbeat three 
 `pi` on that machine was dead. Its own lease says who was holding it:
 
 ```
-pid=2289 role=unknown session=2286 heartbeat=1794917606 state=/home/zerwizserver/Documents/ymirhome/state
+pid=2289 role=unknown session=2286 heartbeat=1794917606 state=/home/example-heart/Documents/ymirhome/state
    2289 /usr/bin/python3 -m ymir_runtime watch run
 ```
 

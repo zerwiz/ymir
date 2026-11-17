@@ -8,7 +8,7 @@ pi-telegram records the session that holds the Telegram transport by pid, in its
 `~/.pi/agent/tmp/pi-telegram/state.json`. After the 07:21 death that file still named pid `3599906`:
 
 ```
-"transport": { "pid": 3599906, "cwd": "/home/zerwizserver", "instanceId": "3599906:1794713853068", … }
+"transport": { "pid": 3599906, "cwd": "/home/example-heart", "instanceId": "3599906:1794713853068", … }
 ```
 
 `ps` said the process was gone. The next session to want the mouth waited out its full timeout (~40 s,

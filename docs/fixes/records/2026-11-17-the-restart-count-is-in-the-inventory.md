@@ -2,7 +2,7 @@
 
 ### Why
 
-Plan 003 (`$YMIR_HOME/hodd/machines/zerwizserver/plans/003-the-estate-named.md` §3) says a machine that cannot say
+Plan 003 (`$YMIR_HOME/hodd/machines/example-heart/plans/003-the-estate-named.md` §3) says a machine that cannot say
 "What restarts, and how often" cannot say why it dies. `restarts.md` was written by hand because
 `bin/records/running-inventory.sh` carried no restart column. The heart had 36 containers running, every one at
 `RestartCount = 0`, and a unit at 46 restarts — and neither number was in any generated record.
