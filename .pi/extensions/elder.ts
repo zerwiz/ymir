@@ -80,6 +80,28 @@ function run(cmd: string, args: string[], cwd?: string): string {
   }).trim();
 }
 
+// THE DOOR, not a second implementation (plan 311). Every plan act — file it, ask where it
+// belongs, list it, check the shelves — is `bin/records/plan.sh`, so a harness, a human and a
+// cron row cannot disagree about where a plan goes. A refusal is the door's own words, passed
+// through whole: it names the shelf, or the reason there is none.
+function planDoor(argv: string[]): string {
+  const door = join(ROOT_BIN, "bin", "records", "plan.sh");
+  try {
+    return execFileSync("bash", [door, ...argv], {
+      cwd: HOME,
+      encoding: "utf8",
+      maxBuffer: 8 * 1024 * 1024,
+      stdio: ["ignore", "pipe", "pipe"],
+      env: { ...process.env, YMIR_HOME: HOME },
+    }).trim();
+  } catch (e: any) {
+    const out = String(e?.stdout ?? "").trim();
+    const err = String(e?.stderr ?? "").trim();
+    const said = [err, out].filter(Boolean).join("\n").trim();
+    return said || "failed: " + String(e?.message ?? e).split("\n")[0];
+  }
+}
+
 
 // Pi 1.0's tool contract: the model-facing text is `content`, and THROWING is how a tool
 // reports failure — returning an object does not mark it as an error. `output:` reached the
@@ -134,42 +156,53 @@ export default function elder(pi: ExtensionAPI) {
   pi.registerTool({
     name: "ymir_plan",
     description:
-      "Create the NEXT numbered plan in the canonical ledger, with the index row. Numbering is " +
-      "after the index's highest; numbers are never reused.",
+      "The plan door: file the NEXT numbered plan on the shelf of whoever owns the work, with the " +
+      "index row in the same act. ONE behaviour in bin/records/plan.sh — this tool is a face over it, " +
+      "never a second implementation. action=new (default) files a plan; route reports WHERE a plan " +
+      "belongs and writes nothing; list/next/check/shelves read the ledger. With no `scope` named, " +
+      "the door routes from the home's own registries (projects.yaml, services.yaml, fleet.json): " +
+      "machine work to that machine's shelf (--host names which), personal work to hodd/plans/, and " +
+      "work belonging to Gimlé or to the board (Trello) is REFUSED by name instead of being filed in " +
+      "the ymir ledger.",
     parameters: {
       type: "object",
       properties: {
-        slug: { type: "string", description: "kebab-case slug" },
-        title: { type: "string" },
+        action: { type: "string", description: "new (default) · route · list · next · check · shelves" },
+        slug: { type: "string", description: "kebab-case slug (new, route)" },
+        title: { type: "string", description: "the plan's title (new, route)" },
+        scope: { type: "string", description: "project (default) · realm · machine · personal — the caller's word, and it is honoured" },
+        host: { type: "string", description: "WHICH machine's shelf for scope=machine (e.g. zerwizserver); never assumed" },
+        owner: { type: "string", description: "the realm for scope=realm, or a shelf owner" },
         realm: { type: "string", description: "e.g. whynotproductions" },
-        project: { type: "string", description: "e.g. ymir" },
+        project: { type: "string", description: "e.g. ymir — refused if the registry does not know it" },
+        from_meeting: { type: "string", description: "a meeting id, written into the plan header" },
       },
-      required: ["slug", "title"],
+      required: [],
     },
     execute: async (_toolCallId: string, args: any) => {
       // `required` is a HINT to a well-behaved model, not a guarantee — and this tool WRITES.
       // Called with no arguments it created 28 junk plans in the operator's private vault, each
       // titled "smoke". A writing tool must refuse what it cannot fill in.
-      if (!String(args?.slug ?? "").trim() || !String(args?.title ?? "").trim()) {
-        return piOut("ymir_plan needs `slug` and `title`. This tool WRITES a file into the " +
-          "plan ledger, so it refuses to guess: an empty title once produced 28 files named " +
-          "`NN-undefined.md` in the operator's vault.");
+      const action = String(args?.action ?? "new").trim() || "new";
+      const argv: string[] = [action];
+      if (action === "new" || action === "route") {
+        const slug = String(args?.slug ?? "").trim();
+        const title = String(args?.title ?? "").trim();
+        if (!slug || !title) {
+          return piOut(`ymir_plan ${action} needs \`slug\` and \`title\`. This door WRITES a file into the ` +
+            "plan ledger, so it refuses to guess: an empty title once produced 28 files named " +
+            "`NN-undefined.md` in the operator's vault.");
+        }
+        argv.push(slug, "--title", title);
       }
-      const realm = String(args.realm || "whynotproductions");
-      const project = String(args.project || "ymir");
-      const dir = `${HOME}/svartalfaheim/${realm}/projects/${project}/plans`;
-      try {
-        const nums = run("bash", ["-c", `ls "$1" | grep -oE '^[0-9]+' | sort -n | tail -1`, "_", dir]);
-        const next = (parseInt(nums || "0", 10) || 0) + 1;
-        const nn = String(next).padStart(2, "0");
-        const file = `${dir}/${nn}-${String(args.slug)}.md`;
-        run("bash", ["-c", `printf "# Plan %s - %s\n\n**Opened %s.**\n" "$2" "$3" "$(date -u +%Y-%m-%d)" > "$1"`, "_", file, nn, String(args.title)], HOME);
-        return piOut(`created ${file}\n` +
-            `  number: ${nn} (after the index's highest)\n` +
-            `  next: add the README index row, then ymir_push that ONE path by name.`);
-      } catch (e: any) {
-        return piOut("failed: " + String(e?.message ?? e).split("\n")[0]);
+      for (const [flag, key] of [["--scope", "scope"], ["--host", "host"], ["--owner", "owner"],
+                                 ["--realm", "realm"], ["--project", "project"]] as const) {
+        const v = String(args?.[key] ?? "").trim();
+        if (v) argv.push(flag, v);
       }
+      const meeting = String(args?.from_meeting ?? "").trim();
+      if (meeting && action === "new") argv.push("--from-meeting", meeting);
+      return piOut(planDoor(argv));
     },
   });
 

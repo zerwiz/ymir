@@ -413,52 +413,47 @@ export function createTools({ root, home, state, env = process.env }) {
   );
   add(
     "ymir_plan",
-    "Create a complete plan only after the canonical plan audit passes; realm, project and actual plan body are required.",
-    { slug: S, title: S, realm: S, project: S, body: S },
-    ["slug", "title", "realm", "project", "body"],
+    "The plan door: file the NEXT numbered plan on the shelf of whoever owns the work, with the index row in the same act. ONE behaviour in bin/records/plan.sh — this tool is a face over it, never a second implementation. action=new (default) files a plan; route reports WHERE it belongs and writes nothing; list/next/check/shelves read the ledger. With no scope named the door routes from the home's registries: machine work to that machine's shelf (host names which), personal work to hodd/plans/, and work belonging to Gimlé or to the board (Trello) is REFUSED by name instead of being filed in the ymir ledger.",
+    {
+      action: E("new", "route", "list", "next", "check", "shelves"),
+      slug: S,
+      title: S,
+      scope: E("project", "realm", "machine", "personal"),
+      host: S,
+      owner: S,
+      realm: S,
+      project: S,
+      from_meeting: S,
+      body: S,
+    },
+    [],
     async (a) => {
-      for (const k of ["slug", "realm", "project"]) leaf(a[k]);
-      if (!env.YMIR_REALM || a.realm !== env.YMIR_REALM)
-        throw Error("set YMIR_REALM to the selected realm first");
-      const rel = `svartalfaheim/${a.realm}/workspace/${a.project}/plans`,
-        dir = safe(rel);
-      if (!fs.statSync(dir).isDirectory())
-        throw Error("ledger must already exist");
-      const lock = path.join(dir, ".codex-plan.lock"),
-        fd = fs.openSync(lock, "wx");
-      let staged;
-      try {
-        const index = safe(rel + "/README.md"),
-          text = fs.readFileSync(index, "utf8");
-        const nums = [
-          ...fs.readdirSync(dir).map((n) => /^(\d+)-/.exec(n)?.[1]),
-          ...[...text.matchAll(/(?:\b|\[)(\d+)-[^\s)]+\.md/g)].map((m) => m[1]),
-        ]
-          .filter(Boolean)
-          .map(Number);
-        const n = String(Math.max(0, ...nums) + 1).padStart(2, "0"),
-          name = `${n}-${a.slug}.md`,
-          content = `# Plan ${n} - ${a.title}\n\n${a.body}\n`,
-          row = `\n| ${n} | [${a.title.replace(/[\r\n|]/g, " ")}](${name}) | opened |\n`;
-        shelf(`${rel}/${name}`);
-        staged = fs.mkdtempSync(path.join(dir, ".codex-plan-check-"));
-        fs.writeFileSync(path.join(staged, name), content, { flag: "wx" });
-        fs.writeFileSync(path.join(staged, "README.md"), row, { flag: "wx" });
-        const audit = JSON.parse(
-          await shell("bin/gates/plan-audit.sh", ["--json", "--shelf", staged]),
-        );
-        if (audit.plans !== 1 || audit.gaps !== 0)
-          throw Error(
-            "canonical plan audit refused: " + JSON.stringify(audit.rows),
-          );
-        fs.writeFileSync(safe(`${rel}/${name}`), content, { flag: "wx" });
-        fs.appendFileSync(index, row);
-        return `created ${rel}/${name}; canonical audit passed; appended README index`;
-      } finally {
-        if (staged) fs.rmSync(staged, { recursive: true, force: true });
-        fs.closeSync(fd);
-        fs.unlinkSync(lock);
+      const action = a.action || "new",
+        argv = [action];
+      if (action === "new" || action === "route") {
+        leaf(a.slug);
+        if (!a.title?.trim()) throw Error("ymir_plan needs `title`");
+        argv.push(a.slug, "--title", a.title);
       }
+      for (const [flag, key] of [
+        ["--scope", "scope"],
+        ["--host", "host"],
+        ["--owner", "owner"],
+        ["--realm", "realm"],
+        ["--project", "project"],
+      ])
+        if (a[key]) argv.push(flag, a[key]);
+      if (a.from_meeting && action === "new")
+        argv.push("--from-meeting", a.from_meeting);
+      // The door writes the plan AND its index row in one act (plan 311). A refusal is the
+      // door's own words: the shelf it named, or the reason there is none.
+      const said = await shell("bin/records/plan.sh", argv, home);
+      if (a.body && action === "new") {
+        const created = /^created (\S+)/.exec(said)?.[1];
+        if (!created) throw Error(`the plan door did not name the file it wrote: ${said.slice(0, 200)}`);
+        fs.appendFileSync(created, `\n${a.body}\n`);
+      }
+      return said;
     },
   );
   add(

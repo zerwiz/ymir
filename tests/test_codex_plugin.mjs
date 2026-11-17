@@ -158,13 +158,8 @@ test("plan creation refuses absent content, realm selection and missing canonica
     "original index\n[retired](42-old.md)\n",
   );
   await assert.rejects(
-    tools.call("ymir_plan", {
-      slug: "next",
-      title: "Next",
-      realm: "test",
-      project: "demo",
-    }),
-    /body/,
+    tools.call("ymir_plan", { slug: "next", realm: "test", project: "demo" }),
+    /title/,
   );
   await assert.rejects(
     tools.call("ymir_plan", {
@@ -172,7 +167,6 @@ test("plan creation refuses absent content, realm selection and missing canonica
       title: "Next",
       realm: "test",
       project: "demo",
-      body: "actual plan text",
     }),
     /failed/,
   );
@@ -345,11 +339,11 @@ try {
   bashWorks = false;
 }
 test(
-  "real canonical plan audit accepts full content and rejects a bare skeleton",
+  "the plan door files the plan and its index row in one act, and takes a body",
   {
     skip: bashWorks
       ? false
-      : "Bash unavailable locally; Linux CI must run the canonical plan-audit integration",
+      : "Bash unavailable locally; Linux CI must run the canonical plan door",
   },
   async (t) => {
     const { home } = setup(t);
@@ -365,7 +359,7 @@ test(
       "# Plans\n\n| Number | Plan | Status |\n|---|---|---|\n| 42 | [Retired](42-old.md) | archived |\n",
     );
     const body =
-      '**Status:** opened - **Date:** 2026-11-02\n\n**His words, 2026-11-02:** *"make the thing and prove the thing."*\n\n## 1 - The measured state\n\n```\nmeasured on this box: 3 doors, 1 answering\n```\n\n## 2 - The work\n\nThe first step. Proof: `bin/gates/demo.sh --check` exits 0.\n\n## 3 - The second step\n\nVerified by a smoke run.\n\n## What it refuses\n\nIt refuses to answer zero when it cannot read the shelf.\n\n## Questions for the Allfather\n\n1. Is the shelf correct?\n';
+      '**Status:** opened - **Date:** 2026-11-02\n\n**His words, 2026-11-02:** *"make the thing and prove the thing."*\n\n## 1 - The measured state\n\n```\nmeasured on this box: 3 doors, 1 answering\n```\n\n## 2 - The work\n\nThe first step. Proof: `bin/gates/demo.sh --check` exits 0.\n';
     const args = {
       slug: "next",
       title: "Next",
@@ -373,19 +367,18 @@ test(
       project: "demo",
       body,
     };
-    await tools.call("ymir_plan", args);
-    assert.ok(fs.existsSync(path.join(dir, "43-next.md")));
+    const said = await tools.call("ymir_plan", args);
+    // One pad width per shelf: the shelf already carries two digits, so the door adopts two.
+    assert.ok(fs.existsSync(path.join(dir, "43-next.md")), said);
     assert.match(
       fs.readFileSync(path.join(dir, "README.md"), "utf8"),
-      /\| 43 \| \[Next\]\(43-next.md\) \| opened \|/,
+      /\| 43 \| \[Next\]\(43-next\.md\) \| opened \|/,
     );
+    assert.match(fs.readFileSync(path.join(dir, "43-next.md"), "utf8"), /## 1 - The measured state/);
+    // A plan is refused for a project the registry does not know, by name, and nothing is written.
     await assert.rejects(
-      tools.call("ymir_plan", {
-        ...args,
-        slug: "bad",
-        body: "Bare prose, no contract",
-      }),
-      /audit refused/,
+      tools.call("ymir_plan", { slug: "bad", title: "Bad", project: "nosuchproject" }),
+      /REFUSED/,
     );
     assert.equal(fs.existsSync(path.join(dir, "44-bad.md")), false);
   },

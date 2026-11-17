@@ -9,7 +9,7 @@
 **Ask the door, do not remember:** `bin/records/where.sh <path or topic>`.
 
 ```
-subsystems[19]{path,entry,canonical,books,doors,missing}:
+subsystems[21]{path,entry,canonical,books,doors,missing}:
   "bin/ward/**","docs/features/the-guardian.md","RULES/24-the-ward.md","RULES/39-the-manner-and-the-alarm.md · docs/fixes/ward/ (one file per fix)","bin/ward/garmr.sh status|off|on · bin/ward/garmr-smoke.sh · .agents/tests/garmr.test.sh","the off/on turns land in a root-only /var/log/ymir/garmr/pause.log that no operator surface reads"
   "bin/gates/**","docs/features/the-wards-the-delivery-gate.md","RULES/08-delivery-gate.md","docs/features/the-wards-the-delivery-gate.md · docs/fixes/gates/ (one file per fix) · plan 203 §14 (the ship door)","bin/gates/guards.sh --list · bin/gates/guards.sh · bin/gates/tests/","a per-ward ledger: which law each ward enforces, and where its own test lives"
   "hodd/docs/collaboration/** (home)","docs/features/fleet-wire.md","docs/features/collaborator-door.md","# the home shelf: the doors register, the fleet-wire runbook, the onboarding sheet (in $YMIR_HOME)","plans 154 · 158 · 184 · 192","the public MCP face for a collaborator tenant (plan 192 §9)"
@@ -30,6 +30,7 @@ subsystems[19]{path,entry,canonical,books,doors,missing}:
   "systems/snotra/services/calendar/**",".agents/skills/galdr-ymirsystem/assets/snotra-meeting-ear.md","docs/features/make-and-move-meetings.md","docs/features/connect-the-mail-and-calendar-door.md (the sign-in port, plan 276) · docs/features/the-calendar-watch.md","calendar-write.sh status · calendar-write.sh create --dry-run · bin/mail/connect.sh google --check","no self-test for calendar-auth.sh or google-auth.sh"
   "bin/records/atlas*","docs/features/the-atlas.md","docs/features/the-atlas.md","plan 251 (plan ledger)","atlas.sh --check · atlas.sh --self-test","—"
   "bin/time/daily-line.sh | bin/time/daily_moved.py","docs/features/the-daily-log.md","docs/features/the-daily-log.md","plan 102 · plan 252 (plan ledger)","daily-line.sh --dry-run · daily_moved.py --self-test · bin/records/daily-log.sh today","—"
+  "bin/records/plan.sh","docs/features/plans-for-every-owner.md",".agents/skills/elder-home/assets/ledger.md","docs/fixes/records/ (one file per fix) · plan 240 (the four scopes) · plan 311 (the route and the host)","tests/test_plan_door_knows_where.sh · tests/test_plan_finds_the_shelf.sh · bin/gates/checks.d/0222-plan-door.sh","whether Gimlé's plans live in its own repo or on a shelf in this home, and whether Trello mirrors the ledger — both are the Allfather's (plan 311 §5)"
 ```
 
 **A `missing` cell is a fact, not a footnote:** the book names a door or a file that this tree does not

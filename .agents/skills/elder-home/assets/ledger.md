@@ -104,3 +104,47 @@ apply`, so a fresh home is born able to plan for a machine and an old home gains
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+
+## 2026-11-17 — the door knows where it belongs (plan 311)
+
+The four scopes above said *which shelf*, but a hand still had to know *which scope* before it asked, and the tool an
+agent called was a second implementation of the door. Both are mended here.
+
+**One door, one behaviour.** `bin/records/plan.sh` is the ledger; every harness tool called `ymir_plan` is now a thin
+face over it — Pi's `elder.ts`, OpenCode's `ymir-tools.ts`, Codex's `tools.mjs`, and the MCP face in
+`bin/mcp/ymir-mcp.py`. The tool no longer builds a path, no longer hardcodes a realm, and no longer asks the caller to
+write the index row by hand: the door writes the plan and its row in the same act.
+
+**The host is a parameter.** `--scope machine` used to mean *this host*, so a plan about the heart was filed on the
+laptop's shelf while it was being written. `--host zerwizserver` files it on the heart's shelf from any seat, reading
+the machine's folder from `hodd/data/fleet.json`. A host the fleet does not know is refused by name, with the fleet's
+names printed — the same reason an unknown project is refused.
+
+**The route above the ledger.** With no `--scope` named, the door reads the registries that already exist —
+`hodd/identity/projects.yaml` for what a project is, `hodd/identity/services.yaml` for what a hosted surface is,
+`hodd/data/fleet.json` for what a machine is — and decides:
+
+| Work about | The door does |
+|---|---|
+| Ymir itself, the fleet, the arms | files it on the ymir project's ledger |
+| the Gimlé kit, a hosted surface | **refuses**, and says the plan would be read by nobody there |
+| the board, a card, a queue | **refuses**, and says the board holds it |
+| a machine's repair, limits, faults | files it on that machine's shelf, naming the host |
+| a person's own work | files it in `hodd/plans/` |
+| a project the registry knows | files it on that project's shelf |
+
+A refusal is not a dead end: it names the shelf it meant, and a named `--scope` is always honoured — the caller's word
+beats the router.
+
+**One pad width per shelf.** `plan.sh check` reports a shelf carrying two numbering shapes and exits nonzero. `new`
+adopts the shelf's own width rather than imposing one, and reads the index as well as the files when it takes the next
+number, so a number whose file has moved is still spent.
+
+**Two questions stay the Allfather's (plan 311 §5).** Whether Gimlé's plans live in its own repository or on a shelf
+in this home — today both exist, and that is a choice, not a drift — and whether Trello mirrors the ledger or stays a
+board of its own. The door asks; it does not answer.
+
+## CHANGE LOG
+
+- **2026-11-17** — plan 311: the route above the ledger, `--host`, one pad width per shelf, and every harness tool
+  reduced to a face over `bin/records/plan.sh`.

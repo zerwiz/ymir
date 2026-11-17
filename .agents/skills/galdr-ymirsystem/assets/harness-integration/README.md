@@ -1673,3 +1673,31 @@ Measured while making this change, and owed by someone: `.agents/tests/rules-doo
 extension source as `.pi/shared/extensions/rules.ts`, which does not exist — the door lives at
 `.pi/extensions/rules.ts`, so the whole test exits 1 at its first line and its "7 passed" line above
 is stale. Nothing calls that test today; `ext-api` and `ext-smoke` judge the extension surface.
+
+## 2026-11-17 — `ymir_plan` is a face over the plan door, in every harness
+
+At the helm's errand (plan 311): the plan tool in each harness was a **second implementation** of the ledger. Pi's
+`elder.ts` hardcoded `whynotproductions/ymir`, built the path by concatenation, padded to two digits and told the
+caller to write the index row by hand; OpenCode's `ymir-tools.ts` discovered a ledger but padded the same way; Codex's
+`tools.mjs` kept its own staging-and-audit dance. Three harnesses, three behaviours, and only `bin/records/plan.sh`
+knew the four scopes.
+
+All four faces — Pi, OpenCode, Codex, and the MCP door in `bin/mcp/ymir-mcp.py` — now call
+`bin/records/plan.sh` and pass its answer through whole. The arguments are the door's own:
+
+| argument | meaning |
+|---|---|
+| `action` | `new` (default) · `route` · `list` · `next` · `check` · `shelves` |
+| `slug`, `title` | the plan's name and title (`new`, `route`) |
+| `scope` | `project` · `realm` · `machine` · `personal` — **omit it and the door routes** |
+| `host` | for `scope=machine`: WHICH machine's shelf (`zerwizserver`), never assumed |
+| `owner`, `realm`, `project` | the shelf's owner, as the door defines them |
+| `from_meeting` | the meeting id written into the plan header, in the same act |
+
+Two consequences a hand should expect. First, **a refusal is the door's words**, not a tool error: work belonging to
+Gimlé or to the board comes back as *"this is Gimlé's — a plan here would be read by nobody; open it there"*, and an
+unknown host or project comes back naming what it might have meant. Second, **the index row is written by the door**:
+no tool says "add the README row" any more, because the door does it in the same act.
+
+The check that keeps them honest is `tests/test_plan_door_knows_where.sh` (gated by
+`bin/gates/checks.d/0222-plan-door.sh`) for the door itself, and `tests/test_codex_plugin.mjs` for the Codex face.

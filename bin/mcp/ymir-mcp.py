@@ -300,24 +300,28 @@ def todo(action: str = "list", content: str = "", index: int = -1) -> str:
 
 
 @mcp.tool()
-def ymir_plan(slug: str = "", title: str = "", action: str = "new", realm: str = "", project: str = "",
-              scope: str = "project", owner: str = "", new_shelf: bool = False) -> str:
-    """The plan ledger: a plan is filed on the shelf of whoever owns the work.
+def ymir_plan(slug: str = "", title: str = "", action: str = "new", scope: str = "", owner: str = "",
+              host: str = "", realm: str = "", project: str = "", new_shelf: bool = False) -> str:
+    """The plan door: a plan is filed on the shelf of whoever owns the work (plan 311).
 
-    action: new (slug+title) · list · next · shelves (every realm and project, and whether it has a shelf).
+    action: new (slug+title) · route (WHERE it belongs; writes nothing) · list · next · check (one pad
+    width per shelf) · shelves (every realm and project, and whether it has a shelf).
     scope: project (realm+project; the project is found in any realm, refused if ambiguous or unknown) ·
-    realm (a company, owner=<realm>) · machine · personal. new_shelf opens a known project's first shelf.
+    realm (a company, owner=<realm>) · machine (host names WHICH machine — never assumed) · personal.
+    With NO scope named the door routes from the home's registries: machine work to that machine's
+    shelf, personal work to hodd/plans/, and work belonging to Gimlé or to the board is REFUSED by
+    name instead of being filed in the ymir ledger. new_shelf opens a known project's first shelf.
     """
     argv = ["bash", str(ROOT / "bin" / "records" / "plan.sh"), action]
-    if action == "new":
+    if action in ("new", "route"):
         if not slug or not title:
-            return "new needs slug and title"
+            return f"{action} needs slug and title"
         argv += [slug, "--title", title]
-        if new_shelf:
+        if new_shelf and action == "new":
             argv += ["--new-shelf"]
-    if action != "shelves":
-        argv += ["--scope", scope or "project"]
-        for flag, val in (("--realm", realm), ("--project", project), ("--owner", owner)):
+    if action not in ("shelves", "check"):
+        for flag, val in (("--scope", scope), ("--host", host), ("--owner", owner),
+                          ("--realm", realm), ("--project", project)):
             if val:
                 argv += [flag, val]
     return _run(argv, 60)

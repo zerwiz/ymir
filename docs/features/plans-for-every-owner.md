@@ -22,8 +22,17 @@ and `bin/agents/groa-update.sh` adds them to an existing one through `bin/engine
 ## The commands
 
 ```bash
-# a machine's plan
-bash bin/records/plan.sh new thermal-repair --title "Power, thermals and the fans" --scope machine --owner heimdall
+# a machine's plan, for THIS machine
+bash bin/records/plan.sh new thermal-repair --title "Power, thermals and the fans" --scope machine
+
+# a machine's plan for ANOTHER machine — the host is named, never assumed
+bash bin/records/plan.sh new dead-desk --title "Why the desk died" --scope machine --host zerwizserver
+
+# ask where a plan belongs, without filing anything
+bash bin/records/plan.sh route dead-desk --title "why zerwizserver dies: oom and swap"
+
+# is every shelf one pad width?
+bash bin/records/plan.sh check
 
 # a company's plan
 bash bin/records/plan.sh new pricing --title "Pricing for 2027" --scope realm --owner example-8
@@ -61,8 +70,43 @@ To see every realm and project, and which have no plans yet:
 bash bin/records/plan.sh shelves
 ```
 
-The MCP door `ymir_plan` takes the same choices: `action` (`new`, `list`, `next`, `shelves`), `realm`, `project`,
-`scope`, `owner` and `new_shelf`.
+The tool every harness offers (`ymir_plan`) is a thin face over this same door — Pi, OpenCode, Codex and the MCP take
+the same choices: `action` (`new`, `route`, `list`, `next`, `check`, `shelves`), `scope`, `host`, `owner`, `realm`,
+`project` and `new_shelf`. Nothing is re-implemented in a harness, so a plan lands in the same place whichever hand
+files it.
+
+## Where a plan belongs, when you do not say
+
+Name no `--scope` and the door decides from the home's own registries: what a project is
+(`hodd/identity/projects.yaml`), what a hosted surface is (`hodd/identity/services.yaml`), and what a machine is
+(`hodd/data/fleet.json`).
+
+| The work is about | What the door does |
+|---|---|
+| Ymir itself, the fleet, the arms | files it on the ymir project's ledger |
+| the Gimlé kit, a hosted surface | **refuses**: *"this is Gimlé's — a plan here would be read by nobody; open it there"* |
+| the board, a card, a queue | **refuses**: *"this is a card, not a plan — the board holds it"* |
+| a machine's repair, limits or faults | files it on that machine's shelf, naming the host |
+| your own work | files it in `hodd/plans/` |
+| a project the registry knows | files it on that project's shelf |
+
+A refusal is not a wall. It names the shelf it meant, and if the door guessed wrong you overrule it by naming the
+scope yourself — `--scope project --project gimle` files on Gimlé's shelf in this home.
+
+Two questions the door deliberately does **not** answer, because they are the operator's: whether Gimlé's plans live
+in its own repository or on a shelf in this home (today both exist), and whether Trello mirrors the plan ledger or
+stays a board of its own.
+
+## One pad width per shelf
+
+A shelf numbers its plans `001`, `0001` or `01` — but only ever one of them. `new` adopts the width the shelf already
+carries, and `check` reports a shelf that has two shapes and exits nonzero:
+
+```sh
+bash bin/records/plan.sh check
+# pad[1]{shelf,widths,files}:
+#   "hodd/machines/omarchy/plans","005,0002","0002-two-shapes.md 005-the-other-shape.md"
+```
 
 ## Limits
 
@@ -91,3 +135,7 @@ The MCP door `ymir_plan` takes the same choices: `action` (`new`, `list`, `next`
 - **2026-11-12** — The project's shelf is found after the arguments are read (it used to file every project plan in
   the default project's ledger); ambiguous and unknown projects are refused; `--new-shelf` and `shelves` added; the
   MCP door passes realm and project for every action.
+- **2026-11-17** — Plan 311. `--host` names WHICH machine's shelf, so a plan about the heart is filed on the heart's
+  shelf from any seat, and an unknown host is refused by name. With no `--scope`, the door routes above the ledger
+  from the home's registries and refuses Gimlé's work and a card instead of filing them here. One pad width per shelf,
+  reported by `check`. Every harness tool named `ymir_plan` is now a thin face over this one door.

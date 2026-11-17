@@ -119,6 +119,22 @@ async function runShell(cmd: string, args: string[], cwd?: string): Promise<stri
   }
 }
 
+// THE DOOR, not a second implementation (plan 311): every plan act — file it, ask where it
+// belongs, list it, check the shelves — is `bin/records/plan.sh`, so a harness, a human and a
+// cron row cannot disagree about where a plan goes. A refusal is the door's own words, passed
+// through whole: it names the shelf, or the reason there is none.
+async function planDoor(root: string, home: string, argv: string[]): Promise<string> {
+  const { $ } = await import("bun")
+  const res = await $`bash ${`${root}/bin/records/plan.sh`} ${argv}`
+    .cwd(home)
+    .env({ ...process.env, YMIR_HOME: home })
+    .quiet()
+    .nothrow()
+  const out = res.stdout?.toString?.()?.trim() ?? ""
+  const err = res.stderr?.toString?.()?.trim() ?? ""
+  return [err, out].filter(Boolean).join("\n") || `the plan door exited ${res.exitCode} and said nothing`
+}
+
 // Tool output formatter
 function toolResult(text: string) {
   return { output: { text }, content: text }
@@ -325,34 +341,46 @@ export default Plugin.define({
         },
       })
 
-      // --- ymir_plan: Create next numbered plan in ledger ---
+      // --- ymir_plan: the plan door — WHERE a plan belongs, and filing it there ---
       tools.add({
         name: "ymir_plan",
-        description: "Create the NEXT numbered plan in the canonical ledger, with the index row. Numbering is after the index's highest; numbers are never reused.",
+        description:
+          "The plan door: file the NEXT numbered plan on the shelf of whoever owns the work, with the index row " +
+          "in the same act. ONE behaviour in bin/records/plan.sh — this tool is a face over it, never a second " +
+          "implementation. action=new (default) files a plan; route reports WHERE a plan belongs and writes " +
+          "nothing; list/next/check/shelves read the ledger. With no `scope` named the door routes from the home's " +
+          "registries: machine work to that machine's shelf (host names which), personal work to hodd/plans/, and " +
+          "work belonging to Gimlé or to the board (Trello) is REFUSED by name instead of being filed in the ymir ledger.",
         input: Schema.Struct({
-          slug: Schema.String,
-          title: Schema.String,
+          action: Schema.optional(Schema.String),
+          slug: Schema.optional(Schema.String),
+          title: Schema.optional(Schema.String),
+          scope: Schema.optional(Schema.String),
+          host: Schema.optional(Schema.String),
+          owner: Schema.optional(Schema.String),
           realm: Schema.optional(Schema.String),
           project: Schema.optional(Schema.String),
+          from_meeting: Schema.optional(Schema.String),
         }),
         output: Schema.Struct({ text: Schema.String }),
-        execute: async ({ slug, title, realm, project = "ymir" }) => {
-          try {
-            if (!slug.trim() || !title.trim()) {
-              return toolResult("ymir_plan needs `slug` and `title`. This tool WRITES a file into the plan ledger, so it refuses to guess.")
+        execute: async (a: any) => {
+          const action = String(a?.action ?? "new").trim() || "new"
+          const argv: string[] = [action]
+          if (action === "new" || action === "route") {
+            const slug = String(a?.slug ?? "").trim(), title = String(a?.title ?? "").trim()
+            if (!slug || !title) {
+              return toolResult(`ymir_plan ${action} needs \`slug\` and \`title\`. This door WRITES a file into the plan ledger, so it refuses to guess.`)
             }
-            const ledger = await planLedger(home, realm, project)
-            if (!ledger.dir) return toolResult(`refused: ${ledger.reason}`)
-            const dir = ledger.dir
-            const nums = (await runShell("bash", ["-c", `ls "$1" | grep -oE '^[0-9]+' | sort -n | tail -1`, "_", dir], home)).trim()
-            const next = (parseInt(nums || "0", 10) || 0) + 1
-            const nn = String(next).padStart(2, "0")
-            const file = `${dir}/${nn}-${slug}.md`
-            await runShell("bash", ["-c", `printf '# Plan %s — %s\n\n**Opened %s.**\n' "$2" "$3" "$(date -u +%Y-%m-%d)" > "$1"`, "_", file, nn, title], home)
-            return toolResult(`created ${file}\n  number: ${nn} (after the index's highest)\n  next: add the README index row, then ymir_push that ONE path by name.`)
-          } catch (e: any) {
-            return toolResult("failed: " + e.message.split("\n")[0])
+            argv.push(slug, "--title", title)
           }
+          for (const [flag, key] of [["--scope", "scope"], ["--host", "host"], ["--owner", "owner"],
+                                     ["--realm", "realm"], ["--project", "project"]] as const) {
+            const v = String(a?.[key] ?? "").trim()
+            if (v) argv.push(flag, v)
+          }
+          const meeting = String(a?.from_meeting ?? "").trim()
+          if (meeting && action === "new") argv.push("--from-meeting", meeting)
+          return toolResult(await planDoor(root, home, argv))
         },
       })
 
