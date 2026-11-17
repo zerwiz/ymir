@@ -136,10 +136,16 @@ case "$CMD" in
     if [ "$CMD" = print ]; then
       printf '%s\n' "$LINE"
     else
+      # THE STALE MOUTH IS RELEASED BEFORE pi STARTS (plan 001 §4 F4). pi-telegram names its transport
+      # by pid in its own `state.json`; when that pid is dead the next session waits its full timeout
+      # (~40 s, measured 2026-11-17) for a mouth nobody holds. This runs first and costs nothing when
+      # the recorded holder is alive — the door refuses to touch a live one.
+      LAUNCHER_ROOT="$(CDPATH='' cd "$SCRIPT_DIR/../.." && pwd)"
       {
         printf '#!/usr/bin/env bash\n'
         printf '# written by bin/seat/pi-launcher.sh — do not hand-edit\n'
         printf 'set -eu\n'
+        printf 'bash %s release --quiet 2>/dev/null || true\n' "$(shell_quote "$LAUNCHER_ROOT/bin/notify/telegram-transport.sh")"
         printf 'cd %s\n' "$(shell_quote "$CWD")"
         printf 'exec %s\n' "$LINE"
       } >"$OUT"

@@ -328,6 +328,13 @@ case "$ACTION" in
     # arrives as separate words and the command dies on its own second word.
     cmd=""
     for a in "$@"; do cmd="$cmd$(printf '%q ' "$a")"; done
+    # A HAND IN ITS OWN CGROUP (plan 001 §4 F1): on 2026-11-17 27 agents shared the desk's one cgroup,
+    # the kernel picked one, systemd stopped the unit, and every pane came back a shell. Scoping this
+    # pane's command means the next heavy hand is killed ALONE. `agent-scope.sh` skips cleanly (and
+    # says so) where there is no user manager, so this line is safe on every platform.
+    if [ -x "$SCRIPT_DIR/agent-scope.sh" ] && [ "${YMIR_AGENT_SCOPE:-1}" != "0" ]; then
+      cmd="$(printf '%q ' "$SCRIPT_DIR/agent-scope.sh" --name "ymir-$NAME-$$")$cmd"
+    fi
     hdr pane run "$pane" "$cmd" >/dev/null 2>&1; rc=$?
     hdr pane wait-output "$pane" --idle-ms 800 --timeout-secs "$SETTLE" >/dev/null 2>&1 || true
     printf 'herdr-run[1]{tab,pane,step,exit}:\n  "%s","%s","%s",%s\n' "$tab" "$pane" "$NAME" "$rc"
@@ -565,7 +572,14 @@ $_coretext"
       brief_file="$brief_dir/$NAME.md"; printf '%s\n' "$PROMPT" >"$brief_file"
       oc_line="$("$SCRIPT_DIR/opencode-launcher.sh" print ${oc_model:+--model "$oc_model"} --brief "$brief_file")" || {
         printf 'error: the OpenCode launcher refused this seat\n' >&2; exit 1; }
-      oc_line="cd $(printf '%q' "$SEAT_CWD") && $oc_line"
+      # The same per-agent cgroup the `run` road gets (plan 001 §4 F1): a hand that eats its own
+      # limit dies alone, and the desk keeps its other 26. The scope carries the whole
+      # `cd … && opencode …` line, so the agent's own process is inside the scope, not beside it.
+      if [ -x "$SCRIPT_DIR/agent-scope.sh" ] && [ "${YMIR_AGENT_SCOPE:-1}" != "0" ]; then
+        oc_line="$(printf '%q ' "$SCRIPT_DIR/agent-scope.sh" --name "ymir-$NAME-$$")-- bash -lc $(printf '%q' "cd $(printf '%q' "$SEAT_CWD") && $oc_line")"
+      else
+        oc_line="cd $(printf '%q' "$SEAT_CWD") && $oc_line"
+      fi
       if ! hdr pane run "$pane" "$oc_line" >/dev/null 2>&1; then
         printf 'error: could not run opencode in %s\nhelp: the pane must sit at an interactive shell prompt\n' "$pane" >&2
         exit 1

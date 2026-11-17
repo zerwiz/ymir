@@ -68,6 +68,19 @@ units:
     exec: "/usr/bin/env bash bin/forge/issue-watch.sh"
     timer: { description: "issue-watch — every 5 minutes", boot: 4min, every: 5min, accuracy: 30s }
 
+  # plan 001 §4 (the dead desk, 2026-11-17): one tick that SNAPSHOTS who stands, NAMES the panes a
+  # restart emptied, SPEAKS an OOM death and RELEASES a stale Telegram mouth. It never raises a pane —
+  # whether a pane comes back as an agent is plan 001 §6, the Allfather's decision, and an unattended
+  # loop must not take it for him.
+  - name: desk-failsafe
+    mode: render
+    kind: timer
+    roles: [heart, dev]
+    description: "desk-failsafe — the desk's five failsafes, one pass a minute (plan 001 §4)"
+    workdir: "."
+    exec: "/bin/bash -lc 'bash bin/seat/desk-inventory.sh save; bash bin/seat/desk-watch.sh check --notify; bash bin/seat/desk-notify.sh check; bash bin/notify/telegram-transport.sh release --quiet'"
+    timer: { description: "desk-failsafe — every 60 seconds", boot: 90s, every: 60s, accuracy: 5s }
+
   - name: review-watch
     mode: render
     kind: timer
