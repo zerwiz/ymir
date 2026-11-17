@@ -10,4 +10,4 @@
 # Agenda list with overdue, due-soon, and backlog items grouped.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../" && pwd)"
-exec python3 "$ROOT/bin/time/snotra/snotra-grooming.py" "$@"
+exec python3 "$ROOT/systems/snotra/services/cron/snotra-grooming.py" "$@"

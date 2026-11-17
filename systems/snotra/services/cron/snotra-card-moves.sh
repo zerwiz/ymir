@@ -10,4 +10,4 @@
 # Note-on-mis-move: every automated correction leaves a comment on the card.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../" && pwd)"
-exec python3 "$ROOT/bin/time/snotra/snotra-card-moves.py" "$@"
+exec python3 "$ROOT/systems/snotra/services/cron/snotra-card-moves.py" "$@"
