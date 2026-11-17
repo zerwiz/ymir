@@ -18,7 +18,7 @@ Writes `smidja/smidja_smidja_config/smidja.config.yaml` — creating the directo
 
 ```yaml
 defaults:
-  coding_agent: pi                 # v1: pi only (claude_code is specced, stubbed until v2)
+  coding_agent: pi                 # pi | opencode | herdr (claude_code: specced, stubbed until v2)
   model: google/gemini-3.6-flash   # ALWAYS provider/model-id — a bare id is ambiguous
   thinking: medium                 # off | minimal | low | medium | high | xhigh | max
   harness_engineering: []          # pi extension names
@@ -51,6 +51,23 @@ agents:
 ```
 
 Every agent entry merges over `defaults`, so an entry only states what differs. Pi's builtin tools are `read`, `bash`, `edit`, `write` — a read-only recon agent gets `[read, bash]`; a builder omits `tools` altogether.
+
+### The surface — `coding_agent`, one per agent
+
+`coding_agent` says **where the agent runs**, and it is the same per-agent assignment the models already use: the same role runs on one surface in one team and another surface in another.
+
+| surface | what it is | when to choose it |
+|---|---|---|
+| `pi` | a child process; its JSONL stdout is parsed as it works | the default: fast, headless, cheapest to run in a cron |
+| `opencode` | a child process; its NDJSON event stream is parsed | a hosted model whose provider OpenCode serves better |
+| `herdr` | **an agent seated in its own herdr pane**, spoken to with `bin/agents/eindri-send.sh` and read with `herdr agent read` | when a person should be able to WATCH the team work — a factory floor, a demo, a run the operator wants to look into |
+| `claude_code` | specced, stubbed until v2 | not yet |
+
+A `herdr` seat is raised through the one spawn path (`bin/seat/herdr-run.sh`), so the house's laws still apply to it: the model allow-list, the one-local-model lock, the seat guard, and isolation. The seat starts **in the run's own tree** (`--seat-cwd`), carries the agent's rendered `system.md` as its system prompt, and its **pane id and session id are recorded in `agent_map.json`** beside the model — so a reader can find the agent, not just its session id. `agents.validate()` refuses a `herdr` agent on a machine with no herdr session, by name, before the first phase.
+
+### The team may not exceed the machine
+
+A roster is a team, and a team bigger than the machine can carry does not fail loudly — it swaps until the OOM killer picks a victim. `agents.validate()` and `smidja doctor` refuse it, with the arithmetic printed: seats × the per-seat floor, plus one resident local model, against RAM minus the estate's declared ceilings (`hodd/identity/services.yaml`, plan 003's shape) minus the desk's reserve. Every term is overridable (`SMIDJA_SEAT_FLOOR_MB`, `SMIDJA_DESK_RESERVE_MB`, `SMIDJA_LOCAL_MODEL_MB`) and every term is printed.
 
 ## After generating
 

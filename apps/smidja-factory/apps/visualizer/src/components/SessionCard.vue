@@ -10,8 +10,10 @@ import StatusChip from './StatusChip.vue'
 import StatChip from './StatChip.vue'
 import PhaseDots from './PhaseDots.vue'
 
-const props = defineProps<{ session: SessionSummary; nowMs: number }>()
+const props = defineProps<{ session: SessionSummary; nowMs: number; showArchived?: boolean }>()
 const emit = defineEmits<{ archived: [adwId: string] }>()
+/** In the archived view a run is RESTORED, not archived — one control, two truths. */
+const isArchived = computed(() => Boolean(props.session.archived))
 
 // The card is an <a>; the button lives inside it, so the click must not
 // navigate. Told the parent optimistically — the poll would take up to half a
@@ -19,9 +21,10 @@ const emit = defineEmits<{ archived: [adwId: string] }>()
 async function archive(event: MouseEvent) {
   event.preventDefault()
   event.stopPropagation()
+  const restore = isArchived.value
   emit('archived', props.session.smidja_id)
   try {
-    await archiveSession(props.session.smidja_id)
+    await archiveSession(props.session.smidja_id, !restore)
   } catch {
     emit('archived', '')   // signals the parent to re-sync from the server
   }
@@ -240,11 +243,11 @@ const hiddenRowCount = computed(() =>
     <button
       class="card-archive"
       type="button"
-      title="Archive — remove this run from review"
-      aria-label="Archive run"
+      :title="isArchived ? 'Restore — put this run back in the review list' : 'Archive — remove this run from review'"
+      :aria-label="isArchived ? 'Restore run' : 'Archive run'"
       @click="archive"
     >
-      ×
+      {{ isArchived ? '↺' : '×' }}
     </button>
     <button
       v-if="session.status === 'running'"

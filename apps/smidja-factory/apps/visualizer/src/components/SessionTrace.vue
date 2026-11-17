@@ -28,6 +28,7 @@ import { agentColor, hexAlpha, parseAgentStart } from '../lib/events'
 import { modelKind } from '../lib/models'
 import { navigate, phaseCrumb } from '../lib/router'
 import StatusChip from './StatusChip.vue'
+import TeamStrip from './TeamStrip.vue'
 import StatChip from './StatChip.vue'
 import PhaseDetail from './PhaseDetail.vue'
 
@@ -628,6 +629,12 @@ function selectPhase(p: Phase) {
       </button>
       <span v-if="steerDone" class="steer-done">{{ steerDone }}</span>
     </div>
+
+    <!-- THE TEAM, AS A SESSION (the Allfather, 2026-11-17: "the teams should be
+         ssen as session"). A run IS a team: the agents its roster named, the
+         runtime each ran on, the model, the window, and the pane it is working
+         in — on the run's own page, not only machine-wide. -->
+    <TeamStrip :smidja-id="adwId" :agents="agents" />
 
     <div v-if="phases.length" class="waterfall">
       <div class="row axis-row">

@@ -36,7 +36,7 @@ Respond with ONLY valid JSON matching `ReviewOutput` — no prose before or afte
     { "requirement": "<the ask, in the requester's words>", "met": true, "evidence": "src/server.ts:42 — handler registered" }
   ],
   "blocking": ["<what must change before this can be approved>"],
-  "artifacts": ["<context_handoff_dir>/review.md"],
+  "artifacts": ["/abs/path/to/context_handoff/review.md"],
   "notes_for_next_agent": "<what the builder must fix, or how to verify if approved>"
 }
 ```

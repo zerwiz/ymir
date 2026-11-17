@@ -39,13 +39,14 @@ Respond with ONLY valid JSON matching `DocumentOutput` — no prose before or af
   "summary": "<one sentence describing what you documented>",
   "document_path": "app_docs/<smidja_id>_<slug>.md",
   "documented_files": ["src/server.ts"],
-  "artifacts": ["<context_handoff_dir>/document.md", "app_docs/<smidja_id>_<slug>.md"],
+  "artifacts": ["/abs/path/to/context_handoff/document.md", "app_docs/ab12cd34_health-endpoint.md"],
   "commit_message": "<imperative one-line git subject for committing THIS WRITE-UP, not the change it describes — e.g. 'Document the /health endpoint'>",
   "notes_for_next_agent": "<anything the diff left unexplained>"
 }
 ```
 
-`document_path` and the `app_docs/` entry in `artifacts` are the path you ACTUALLY wrote, `_v2` suffix and all. Gates open these files — a name you meant to use fails them.
+`document_path` and the `app_docs/` entry in `artifacts` are the path you ACTUALLY wrote, `_v2` suffix and all. Gates open these files — a name you meant to use fails them, and so does a
+placeholder copied from this example: `<...>` is a blank, not a path.
 
 ## CHANGE LOG
 

@@ -397,3 +397,55 @@ a stale lease self-heals because the pid is the truth and the file is not.
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+
+## Appended 2026-11-17 — the smithy seats an agent in a pane, and a team is seen as a session
+
+The Smíðja had two surfaces (`pi`, `opencode`) and both are invisible while they work. It now has a
+third, and the board shows the team.
+
+```
+surfaces[4]{coding_agent,what,where}:
+  "pi","a child process; its JSONL stdout is parsed as it works","smidja_modules/agent_pi.py"
+  "opencode","a child process; its NDJSON event stream is parsed","smidja_modules/agent_opencode.py"
+  "herdr","an agent SEATED IN A PANE: raised by the one spawn path, spoken to with eindri-send.sh, read with `herdr agent read`","smidja_modules/agent_herdr.py"
+  "claude_code","specced, stubbed until v2","smidja_modules/agent_cc.py"
+```
+
+**The three facts that make a herdr seat honest.** (1) It is raised through `bin/seat/herdr-run.sh`,
+so the model allow-list, the one-local-model lock, the seat guard and isolation still apply to a
+factory agent — and it starts **in the run's own tree** (`--seat-cwd`), never in a second worktree,
+because the run IS the isolation. (2) It carries the agent's rendered `system.md` as its system
+prompt with `-nc` (no house context files): a factory agent gets its own instruction, not the
+counsellor's contract — without that a seated agent answered "no brief arrived" while the brief was
+on screen. (3) A prompt is **confirmed**, not assumed: a new user turn in the agent's own session
+record is the proof, because `herdr agent prompt` returns 0 even when pi is still booting and
+swallows it.
+
+**The envelope is parsed once, in one place.** `agent_herdr.run` returns the agent's text in a
+`PiResult` exactly as `agent_pi.run` does, and `agents._parse_with_retries` parses it against the
+declared output type — so a bad JSON re-prompts the SAME pane with the same bounded retries. The
+exact words come from the agent's own session record first (a pane is a RENDER: borders, hard wraps,
+a footer — a JSON object pulled out of it can come back with a token split across a wrap), the pane
+second, and the road that answered is traced as a `herdr_seat` event.
+
+**The run closes the panes it opened** (`runner.Run.finish` → `agent_herdr.close_seats`, `pane close`
+not `tab close`), because a seat whose owner is gone still answers `agent list` — the 27-shells
+fault. `SMIDJA_HERDR_KEEP=1` leaves them standing for a look.
+
+**The bound.** A team bigger than the machine is refused before a pane is raised, with the
+arithmetic printed: seats × `SMIDJA_SEAT_FLOOR_MB` (400), plus one resident local model
+(`SMIDJA_LOCAL_MODEL_MB`, 8192) when any member is local, against RAM − Σ(`budget.memory_ceiling_mb`
+from `hodd/identity/services.yaml`, plan 003's shape) − `SMIDJA_DESK_RESERVE_MB` (2048). Enforced in
+`agents.validate()` (so no run starts) and printed by `bin/desktop/smidja-doctor.sh` — the door the
+books call `smidja doctor`, which this tree never had.
+
+**What the board shows.** `GET /api/herdr/seats` asks `herdr agent list` (never a second table) and
+answers `herdr:false` + a reason when it cannot — an empty list would read as "nobody is working".
+`HerdrSeats.vue` is the machine-wide strip under the topbar; `TeamStrip.vue` is the run's own team on
+its page (runtime · model · window · pane · state · tree). A member's runtime is read from evidence:
+a live seat is `herdr`, a finished phase's `agent_sessions.coding_agent` is its surface, and
+anything else prints `—` rather than guessing `pi`.
+
+**A team is not a second shape.** A team is the config's `agents:` list; `roster.yaml` with
+`stacks:` — the file the books describe — is still absent from this tree, and nothing here invented
+one (plan 315 §6.1). The bound is enforced on the list a run actually seats.

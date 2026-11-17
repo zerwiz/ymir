@@ -1,5 +1,8 @@
 # smidja.config.yaml — the smidja's agent roster. One agent, one prompt, one purpose.
-# v1 runs the Pi coding agent only; coding_agent: claude_code arrives in v2.
+# A surface per agent: `coding_agent: pi | opencode | herdr` (claude_code is
+# specced and stubbed until v2). `herdr` seats the agent in its own terminal pane
+# through bin/seat/herdr-run.sh, so a person can watch it work; `pi` and
+# `opencode` run it as a child process. One agent, one surface, its own lane.
 #
 # THIS FILE IS THE ONE SHAPE. `scripts/make_config.py` copies it and
 # `scripts/install.py` stamps it; there is no second factory template, and a

@@ -20,7 +20,8 @@ from typing import Literal, Optional
 
 import yaml
 
-from . import agent_opencode, agent_pi, lm_local, permissions, prompts, stall_watch
+from . import (agent_herdr, agent_opencode, agent_pi, budget, lm_local,
+               permissions, prompts, stall_watch)
 from .data_types import (AgentCall, AgentConfig, EnvelopeBase, EventRecord,
                          GateCheck, GateReport, Phase, PhaseParams, PiRequest,
                          smidjaConfig, UsageBreakdown)
@@ -49,7 +50,7 @@ def _fallback_model(agent) -> str | None:
     surface is unknown.
     """
     fb = (FALLBACK_MODEL_OPENCODE if agent.coding_agent == "opencode"
-          else FALLBACK_MODEL_PI if agent.coding_agent == "pi" else "")
+          else FALLBACK_MODEL_PI if agent.coding_agent in ("pi", "herdr") else "")
     if not fb or fb == agent.model:
         return None
     return fb
@@ -291,15 +292,15 @@ def validate(cfg: smidjaConfig, required: list[str]) -> None:
         except SystemExit as e:
             problems.append(str(e))
             continue
-        if agent.coding_agent not in ("pi", "opencode"):
+        if agent.coding_agent not in ("pi", "opencode", "herdr"):
             problems.append(f"agent {name!r}: coding_agent {agent.coding_agent!r} "
-                            f"is not implemented (pi | opencode)")
+                            f"is not implemented (pi | opencode | herdr)")
         elif not agent.model:
             problems.append(
                 f"agent {name!r}: no model — set SMIDJA_LOCAL_MODEL (or "
                 f"SMIDJA_{name.upper()}_MODEL), or default_model in your hoard "
                 f"config/agents.yaml (resolve with bin/fleet/agents-config.sh)")
-        elif agent.coding_agent == "pi":
+        elif agent.coding_agent in ("pi", "herdr"):
             try:
                 agent_pi.resolve_model(agent.model)
             except ValueError as e:
@@ -312,6 +313,16 @@ def validate(cfg: smidjaConfig, required: list[str]) -> None:
                            ("user", agent.prompt_engineering.user)):
             if not Path(ref).is_file():
                 problems.append(f"agent {name!r}: {label} prompt not found: {ref}")
+        if agent.coding_agent == "herdr":
+            ok, why = agent_herdr.available()
+            if not ok:
+                problems.append(f"agent {name!r}: coding_agent 'herdr' cannot seat "
+                                f"a pane here — {why}")
+    # THE BOUND: a team bigger than this machine can carry is refused BEFORE a
+    # pane is raised (plan 315 §6.3, plan 003's arithmetic).
+    verdict = budget.check(cfg)
+    if not verdict["ok"]:
+        problems.append(budget.refusal(verdict))
     if problems:
         raise SystemExit("config validation failed:\n- " + "\n- ".join(problems))
 
@@ -385,7 +396,9 @@ def _execute(run, phase: Phase, call: AgentCall, agent, agent_dir) -> EnvelopeBa
     # the opposite: every send costs, so usage accumulates across all of them.
     latest: agent_pi.PiResult | None = None
     spent = UsageBreakdown()
-    dispatcher = agent_pi.run if agent.coding_agent == "pi" else agent_opencode.run
+    dispatcher = (agent_pi.run if agent.coding_agent == "pi"
+                  else agent_herdr.run if agent.coding_agent == "herdr"
+                  else agent_opencode.run)
 
     # The model this agent is ACTUALLY on. It starts at the configured model and
     # only ever moves to the fallback (never back), so every send in the phase
@@ -394,7 +407,7 @@ def _execute(run, phase: Phase, call: AgentCall, agent, agent_dir) -> EnvelopeBa
 
     def _dispatch(req: PiRequest) -> agent_pi.PiResult:
         """One dispatcher run, bracketed by process tracking (killable)."""
-        if agent.coding_agent == "pi" and req.model.startswith("lmstudio/"):
+        if agent.coding_agent in ("pi", "herdr") and req.model.startswith("lmstudio/"):
             # Keep VRAM from overflowing between phases: if this model is not
             # already resident, free the others so it can load cleanly (the
             # llama.cpp engine 400s / SIGABRTs when a load won't fit).
@@ -441,9 +454,8 @@ def _execute(run, phase: Phase, call: AgentCall, agent, agent_dir) -> EnvelopeBa
             if seed:
                 fresh = f"smidja-{run.smidja_id}-{agent.name}-{new_id(4)}"
                 session_id = fresh
-                run.save_agent_map(agent.name, {"session_id": fresh,
-                                                "model": current_model,
-                                                "coding_agent": agent.coding_agent})
+                run.save_agent_map(agent.name,
+                                   _agent_map_entry(agent, fresh, agent_dir))
                 prompt_text = _CONTEXT_RESET_HEADER + seed + "\n\n---\n\n" + prompt_text
                 run.tracer.event(EventRecord(
                     smidja_id=run.smidja_id, phase_id=phase.phase_id,
@@ -462,6 +474,8 @@ def _execute(run, phase: Phase, call: AgentCall, agent, agent_dir) -> EnvelopeBa
             tools=agent.tools,
             extensions=agent.harness_engineering,
             cwd=str(run.repo_root),
+            agent=agent.name,
+            smidja_id=run.smidja_id,
         )
         # Primary attempt on the configured model; a hard failure retries ONCE
         # on the always-available fallback (Nemotron 3 Ultra Free). A dispatch
@@ -488,9 +502,8 @@ def _execute(run, phase: Phase, call: AgentCall, agent, agent_dir) -> EnvelopeBa
             fresh = f"smidja-{run.smidja_id}-{agent.name}-{new_id(4)}"
             session_id = fresh
             current_model = fb
-            run.save_agent_map(agent.name, {"session_id": fresh,
-                                            "model": fb,
-                                            "coding_agent": agent.coding_agent})
+            run.save_agent_map(agent.name,
+                               _agent_map_entry(agent, fresh, agent_dir))
             run.tracer.event(EventRecord(
                 smidja_id=run.smidja_id, phase_id=phase.phase_id,
                 type="model_fallback", name=agent.coding_agent,
@@ -507,6 +520,8 @@ def _execute(run, phase: Phase, call: AgentCall, agent, agent_dir) -> EnvelopeBa
                 tools=request.tools,
                 extensions=request.extensions,
                 cwd=request.cwd,
+                agent=request.agent,
+                smidja_id=request.smidja_id,
             )
             result = _dispatch(fb_request)
         if result is not None and not _usable(result):
@@ -583,8 +598,8 @@ def _execute(run, phase: Phase, call: AgentCall, agent, agent_dir) -> EnvelopeBa
     run.tracer.agent_session_row(run.smidja_id, agent, session_id,
                                  context_tokens=context.context_tokens,
                                  context_window=context.context_window)
-    run.save_agent_map(agent.name, {"session_id": session_id, "model": agent.model,
-                                    "coding_agent": agent.coding_agent})
+    run.save_agent_map(agent.name,
+                       _agent_map_entry(agent, session_id, agent_dir))
     run.tracer.event(EventRecord(smidja_id=run.smidja_id, phase_id=phase.phase_id,
                                  type="handoff", name=agent.name,
                                  payload={"artifacts": envelope.artifacts,
@@ -611,6 +626,19 @@ def _as_report(result) -> GateReport:
     if isinstance(result, GateReport):
         return result
     return GateReport(checks=[GateCheck(item=str(v), ok=False) for v in (result or [])])
+
+
+def _agent_map_entry(agent: AgentConfig, session_id: str, agent_dir) -> dict:
+    """The agent_map row: session, model, surface — and the PANE for a herdr seat."""
+    entry = {"session_id": session_id, "model": agent.model,
+             "coding_agent": agent.coding_agent}
+    if agent.coding_agent == "herdr":
+        seat = agent_herdr.load_seat(Path(agent_dir) / "raw_output.jsonl")
+        for key in ("pane", "tab", "name"):
+            if seat.get(key):
+                entry[key] = seat[key]
+        entry["surface"] = "herdr"
+    return entry
 
 
 def _agent_session_id(run, agent: AgentConfig) -> str:

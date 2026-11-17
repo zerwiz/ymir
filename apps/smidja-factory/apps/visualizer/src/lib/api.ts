@@ -21,8 +21,17 @@ async function getJson(url: string): Promise<unknown> {
   return res.json()
 }
 
-export function fetchSessions(): Promise<SessionSummary[]> {
-  return getJson('/api/sessions') as Promise<SessionSummary[]>
+/**
+ * The run list. `scope` decides WHICH list:
+ *   cleaned (default) — the review list: archived runs are out of it, which is
+ *                       what pressing the card's × is FOR. It used to be the
+ *                       other way round, so archiving a run changed nothing on
+ *                       screen and the × looked broken (measured 2026-11-17).
+ *   all               — every run, archived ones included, so nothing is lost.
+ */
+export function fetchSessions(scope: 'cleaned' | 'all' = 'cleaned'): Promise<SessionSummary[]> {
+  const query = scope === 'all' ? '?scope=all' : '?scope=cleaned'
+  return getJson(`/api/sessions${query}`) as Promise<SessionSummary[]>
 }
 
 export async function fetchSession(adwId: string): Promise<SessionDetail> {

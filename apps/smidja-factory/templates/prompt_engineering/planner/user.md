@@ -36,13 +36,14 @@ Respond with ONLY valid JSON matching `PlanOutput` — no prose before or after:
 {
   "status": "success",
   "summary": "<one sentence describing the plan>",
-  "artifacts": ["<context_handoff_dir>/plan.md", "specs/<smidja_id>_<slug>.md"],
+  "artifacts": ["/abs/path/to/context_handoff/plan.md", "specs/ab12cd34_health-endpoint.md"],
   "commit_message": "<imperative one-line git subject for committing THIS PLAN DOCUMENT, not the work it describes — e.g. 'Add spec for the /health endpoint'>",
   "notes_for_next_agent": "<what the builder must know>"
 }
 ```
 
-Both `artifacts` entries are the paths you ACTUALLY wrote, `_v2` suffix and all. Gates open these files — a name you meant to use fails them.
+Both `artifacts` entries are the paths you ACTUALLY wrote, `_v2` suffix and all. Gates open these files — a name you meant to use fails them, and so does a
+placeholder copied from this example: `<...>` is a blank, not a path.
 
 ## CHANGE LOG
 

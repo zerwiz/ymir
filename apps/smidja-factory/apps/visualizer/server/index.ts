@@ -15,6 +15,7 @@ import { dirname, join, resolve, sep } from "node:path";
 import { smidjaDb, resolveDbPath, repoRootOf } from "./db.ts";
 import type { AgentPrompts, ApiError, HealthResponse } from "../shared/types.ts";
 import * as rosterApi from "./roster-api.ts";
+import * as herdrApi from "./herdr-api.ts";
 import * as chat from "./chat.ts";
 import * as settingsApi from "./settings.ts";
 import { isPiResolvable, piModels } from "./model-catalog.ts";
@@ -217,6 +218,27 @@ const server = Bun.serve({
         await proc.exited;
         return json({ view, ok: proc.exitCode === 0, output: out.trim().slice(-400) });
       }),
+    // THE SEATS, LIVE. A herdr agent runs in a pane a person can watch, so the
+    // board asks herdr who is seated right now. `?run=<smidja_id>` narrows to
+    // one run's team; without it, every seat on the machine. A herdr that cannot
+    // answer returns herdr:false and a reason — never an empty list, which would
+    // read as "nobody is working" (RULES/37).
+    "/api/herdr/seats": safely(async (req) => {
+      const run = new URL(req.url).searchParams.get("run") ?? undefined;
+      return json(await herdrApi.seats(run ?? undefined));
+    }),
+
+    // Focus one pane: the reader's click, not a change to the run.
+    "/api/herdr/focus": {
+      POST: safely(async (req) => {
+        const body = (await req.json().catch(() => ({}))) as { pane?: unknown };
+        const pane = typeof body.pane === "string" ? body.pane : "";
+        if (!pane) return json({ error: "pane is required" } satisfies ApiError, 400);
+        const result = await herdrApi.focus(pane);
+        return json(result, result.ok ? 200 : 502);
+      }),
+    },
+
     "/api/sessions": safely((req) => {
       // A run that died without finalizing its own session (killed from old
       // code, crashed, SIGKILL) would otherwise stay "running" and keep

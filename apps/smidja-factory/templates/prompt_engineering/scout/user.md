@@ -29,7 +29,7 @@ Respond with ONLY valid JSON matching `ScoutOutput` — no prose before or after
   "findings": [
     { "file": "src/server.ts", "note": "<why this file matters>" }
   ],
-  "artifacts": ["<context_handoff_dir>/scout_findings.md"]
+  "artifacts": ["/abs/path/to/context_handoff/scout_findings.md"]
 }
 ```
 

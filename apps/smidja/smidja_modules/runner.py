@@ -14,7 +14,7 @@ from contextlib import contextmanager
 from typing import Iterator, Optional
 from pathlib import Path
 
-from . import agents, git_helper
+from . import agent_herdr, agents, git_helper
 from .console import Console
 from .data_types import (AgentCall, ApprovalDecision, EnvelopeBase, EventRecord, Phase,
                          PhaseParams)
@@ -167,6 +167,12 @@ class Run:
             else self.repo_root / cfg.defaults.data_dir
         self.session_dir = ensure_dir(base / "sessions" / smidja_id)
         self.context_handoff_dir = ensure_dir(self.session_dir / "context_handoff")
+        # The phase's context RECEIPT, keyed by phase_id (agents.py writes one per
+        # agent phase; the visualizer reads them). Declared here because it was
+        # written but never owned: every agent phase in this tree died at the last
+        # line of _execute with `'Run' object has no attribute 'context_by_phase'`
+        # (measured 2026-11-17, on the first herdr proof run).
+        self.context_by_phase: dict[str, dict] = {}
         self._agent_map_path = self.session_dir / "agent_map.json"
         self.agent_map: dict = (json.loads(self._agent_map_path.read_text())
                                 if self._agent_map_path.exists() else {})
@@ -402,5 +408,16 @@ class Run:
                 type="error", name="not_accepted", payload={"reason": note}))
             self.console.note(f"not accepted: {note}")
         self.tracer.session_finish(self.smidja_id, ok=ok)
+        # A run closes the panes it opened (plan 315; the 27-shells lesson). A
+        # herdr seat left behind is a shell whose owner is gone: it still answers
+        # `agent list`, so the board shows a team that no longer exists. Set
+        # SMIDJA_HERDR_KEEP=1 to leave the seats standing for a look.
+        closed = agent_herdr.close_seats(self.session_dir)
+        if closed:
+            self.tracer.event(EventRecord(
+                smidja_id=self.smidja_id, phase_id="",
+                type="log", name="herdr_seats_closed",
+                payload={"panes": closed, "count": len(closed)}))
+            self.console.note(f"closed {len(closed)} herdr pane(s): {', '.join(closed)}")
         self.console.session_finished(ok, self.tokens, self.cost, self.cfg.observability.db)
         return 0 if ok else 1

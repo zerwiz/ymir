@@ -10,6 +10,7 @@ import DecisionsView from './components/DecisionsView.vue'
 import StatsView from './components/StatsView.vue'
 import ChatView from './components/ChatView.vue'
 import SettingsView from './components/SettingsView.vue'
+import HerdrSeats from './components/HerdrSeats.vue'
 
 const emberEl = ref<HTMLCanvasElement | null>(null)
 let stopEmbers: (() => void) | undefined
@@ -178,6 +179,10 @@ const hallUrl =
         <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 8.5h8M2 8.5V3l3-2 3 2v5.5" stroke="currentColor" stroke-width="1.1" fill="none" /></svg>
       </button>
     </header>
+    <!-- THE SEATS, LIVE. A herdr agent works in a pane a person can watch, so the
+         board says who is seated and where — on every page, because the question
+         "what is running right now" is not a question about one view. -->
+    <HerdrSeats />
     <main id="main-content">
       <StatsView v-if="isStats" />
       <DecisionsView v-else-if="isDecisions" />

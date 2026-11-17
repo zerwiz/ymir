@@ -14,7 +14,7 @@ from contextlib import contextmanager
 from typing import Iterator, Optional
 from pathlib import Path
 
-from . import agents, git_helper
+from . import agent_herdr, agents, git_helper
 from .console import Console
 from .data_types import (AgentCall, ApprovalDecision, EnvelopeBase, EventRecord, Phase,
                          PhaseParams)
@@ -167,6 +167,10 @@ class Run:
             else self.repo_root / cfg.defaults.data_dir
         self.session_dir = ensure_dir(base / "sessions" / smidja_id)
         self.context_handoff_dir = ensure_dir(self.session_dir / "context_handoff")
+        # The phase's context receipt, keyed by phase_id (agents.py writes one per
+        # agent phase). Declared here: it was written but never owned, and every
+        # agent phase died on the last line of _execute without it.
+        self.context_by_phase: dict[str, dict] = {}
         self._agent_map_path = self.session_dir / "agent_map.json"
         self.agent_map: dict = (json.loads(self._agent_map_path.read_text())
                                 if self._agent_map_path.exists() else {})
@@ -402,5 +406,9 @@ class Run:
                 type="error", name="not_accepted", payload={"reason": note}))
             self.console.note(f"not accepted: {note}")
         self.tracer.session_finish(self.smidja_id, ok=ok)
+        # A run closes the panes it opened (plan 315; the 27-shells lesson).
+        closed = agent_herdr.close_seats(self.session_dir)
+        if closed:
+            self.console.note(f"closed {len(closed)} herdr pane(s): {', '.join(closed)}")
         self.console.session_finished(ok, self.tokens, self.cost, self.cfg.observability.db)
         return 0 if ok else 1

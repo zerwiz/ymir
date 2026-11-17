@@ -316,9 +316,15 @@ class PromptEngineering(BaseModel):
     user: str                       # path to user.md
 
 
+# The SURFACES a smidja may seat an agent on — the schema of record, and it must
+# name every surface `agents.validate()` accepts (see the live module's note).
+#   pi · opencode · herdr · claude_code (specced, stubbed until v2)
+CodingAgent = Literal["pi", "opencode", "herdr", "claude_code"]
+
+
 class AgentConfig(BaseModel):
     name: str
-    coding_agent: Literal["pi", "claude_code"] = "pi"
+    coding_agent: CodingAgent = "pi"
     model: str = ""                 # resolved from hoard; empty = require env or config
     thinking: str = "medium"        # off | minimal | low | medium | high | xhigh | max
     color: str = ""                 # hex swatch for this agent's lane in the UI
@@ -338,7 +344,7 @@ class AgentConfig(BaseModel):
 
 
 class ConfigDefaults(BaseModel):
-    coding_agent: Literal["pi", "claude_code"] = "pi"
+    coding_agent: CodingAgent = "pi"
     model: str = ""                 # resolved from hoard; empty = require env or config
     thinking: str = "medium"
     color: str = ""
@@ -413,6 +419,9 @@ class PiRequest(BaseModel):
     tools: Optional[list[str]] = None
     extensions: list[str] = Field(default_factory=list)
     cwd: str = "."                  # set from run.repo_root — the codebase root agents work in
+    # Who is being seated, for the surfaces that seat a NAMED agent (herdr).
+    agent: str = ""
+    smidja_id: str = ""
 
 
 class UsageBreakdown(BaseModel):
@@ -475,3 +484,7 @@ class PiResult(BaseModel):
     # visualizer's context bar measures against `context_window`.
     context_tokens: int = 0
     context_window: int = 0         # 0 when the registry declares no ceiling
+    # Declared because every surface sets them (pi and opencode did so as
+    # undeclared attributes, which pydantic 2 refuses) and agents.py reads them.
+    last_usage: dict = Field(default_factory=dict)
+    last_finish: str = ""

@@ -9,6 +9,12 @@ const sessions = shallowRef<SessionSummary[]>([])
 const apiError = ref<string | null>(null)
 const loaded = ref(false)
 const nowMs = ref(Date.now())
+/**
+ * WHICH LIST THIS IS. `cleaned` is the review list — a run archived with the
+ * card's × leaves it, which is what the × promises. `all` is the same list with
+ * the archived runs back in it, so archiving is never a way to lose one.
+ */
+const scope = ref<'cleaned' | 'all'>('cleaned')
 
 let timer: ReturnType<typeof setInterval> | undefined
 let inflight = false
@@ -17,7 +23,7 @@ async function tick() {
   if (inflight) return
   inflight = true
   try {
-    sessions.value = await fetchSessions()
+    sessions.value = await fetchSessions(scope.value)
     nowMs.value = Date.now()
     apiError.value = null
     loaded.value = true
@@ -34,6 +40,12 @@ onMounted(() => {
 })
 
 onUnmounted(() => clearInterval(timer))
+
+function toggleScope() {
+  scope.value = scope.value === 'cleaned' ? 'all' : 'cleaned'
+  void tick()
+}
+
 
 /** Optimistic removal; an empty id means the write failed, so re-sync instead. */
 function onArchived(adwId: string) {
@@ -53,7 +65,12 @@ const ordered = computed(() =>
   <div class="sessions">
     <div v-if="apiError" class="error-bar">api unreachable — retrying {{ apiError }}</div>
 
-    <div v-if="ordered.length" class="list-head dim">{{ ordered.length }} runs</div>
+    <div class="list-head dim">
+      <span>{{ ordered.length }} {{ scope === 'all' ? 'runs (archived included)' : 'runs' }}</span>
+      <button type="button" class="scope-toggle" @click="toggleScope">
+        {{ scope === 'all' ? 'hide archived' : 'show archived' }}
+      </button>
+    </div>
 
     <div v-if="ordered.length" class="cards">
       <SessionCard
@@ -61,6 +78,7 @@ const ordered = computed(() =>
         :key="s.smidja_id"
         :session="s"
         :now-ms="nowMs"
+        :show-archived="scope === 'all'"
         @archived="onArchived"
       />
     </div>
@@ -75,7 +93,25 @@ const ordered = computed(() =>
   flex-direction: column;
 }
 
+.scope-toggle {
+  background: transparent;
+  border: 1px solid var(--border-soft);
+  color: var(--dim);
+  border-radius: 6px;
+  padding: 2px 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.scope-toggle:hover {
+  color: var(--accent);
+  border-color: var(--border);
+}
+
 .list-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   padding: 16px 24px 0;
   font-size: 16px;
 }

@@ -22,12 +22,20 @@
 #   bin/seat/herdr-run.sh worth-a-smith "<errand>"       # is this an errand at all?
 #   bin/seat/herdr-run.sh eindri [NAME] [--role R] [--kind K] [--model M] [--space] -- "<task>"
 #       --kind pi|opencode|claude WINS over config/agents.yaml and the model's provider (plan 262)
+#       --seat-cwd DIR            seat in THIS tree, not in a new worktree — for a caller that
+#                                 already owns the isolation (the Smidja seats an agent in the
+#                                 RUN's tree; the run is the isolation, plan 315)
+#       --system-prompt-file F    F IS the seat's system prompt (pi --system-prompt, replaced
+#                                 not appended) and AGENTS.md discovery is off (-nc): a
+#                                 caller that brings an agent's whole instruction brings its
+#                                 whole instruction. This is the Smidja's rendered system.md.
 #   bin/seat/herdr-run.sh run <name> -- <command...>     # a command in a pane
 #   bin/seat/herdr-run.sh agent-status                   # who stands, and in what state
 #   bin/seat/herdr-run.sh close-all                      # clear the tabs/panes we made
 #   bin/seat/herdr-run.sh --version
 #
 # Env:
+#   YMIR_HERDR_WATCH=0      do not arm the errand handoff (a factory seat is watched by its run)
 #   YMIR_HERDR_PANES=0      force inline even inside herdr
 #   YMIR_HERDR_KIND=pi      the agent kind raised for `eindri`
 #   YMIR_HERDR_AGENT_WAIT=1 wait for the Eindri to reach done before returning
@@ -330,6 +338,7 @@ case "$ACTION" in
     exit "$rc" ;;
   agent|eindri)
     NAME=""; ROLE=""; SPACE=0; TAB=0; MODEL_REQ=""; MAIN=0; KIND_EXPLICIT=""
+    SEAT_CWD_REQ=""; SYSTEM_PROMPT_FILE=""
     while [ $# -gt 0 ]; do
       case "$1" in
         --role) ROLE=${2-}; shift 2 ;;
@@ -342,6 +351,10 @@ case "$ACTION" in
         --tab) TAB=1; shift ;;
         --pane) SPACE=0; TAB=0; shift ;;
         --main) MAIN=1; shift ;;
+        --seat-cwd) SEAT_CWD_REQ=${2-}; shift 2 ;;
+        --seat-cwd=*) SEAT_CWD_REQ=${1#--seat-cwd=}; shift ;;
+        --system-prompt-file) SYSTEM_PROMPT_FILE=${2-}; shift 2 ;;
+        --system-prompt-file=*) SYSTEM_PROMPT_FILE=${1#--system-prompt-file=}; shift ;;
         --) shift; break ;;
         -*) shift ;;
         *) if [ -z "$NAME" ]; then NAME="$1"; shift; else break; fi ;;
@@ -461,6 +474,26 @@ Seat law, read first. You are a worker figure, not the primary. A line that star
         printf 'herdr-run[1]{role,prompt,state}:\n  "%s","none","no role file — this seat may default to Brokk"\n' "$ROLE" >&2
       fi
     fi
+    # A caller that brought its own system prompt (the Smidja's rendered
+    # system.md) appends it here. Two appends, not a replace: the figure's role
+    # file and the caller's brief are both standing instruction, and pi merges
+    # them after AGENTS.md.
+    if [ -n "$SYSTEM_PROMPT_FILE" ]; then
+      if [ -r "$SYSTEM_PROMPT_FILE" ]; then
+        [ ${#MODEL_ARGS[@]} -eq 0 ] && MODEL_ARGS=(--)
+        # REPLACED, not appended, and the house's context files are switched off:
+        # an agent whose whole instruction is its own system.md must not also be
+        # carrying the counsellor's contract, the helm state and the fleet digest
+        # — that is how a factory agent ends up answering the wrong question
+        # (measured 2026-11-17: a seated agent reported "no brief arrived"
+        # because the house context drowned the brief).
+        MODEL_ARGS+=(--system-prompt "$SYSTEM_PROMPT_FILE" -nc)
+        printf 'herdr-run[1]{system_prompt,state}:\n  "%s","replaces the default; context files off (-nc)"\n' "$SYSTEM_PROMPT_FILE" >&2
+      else
+        printf 'error: --system-prompt-file %s is not readable\n' "$SYSTEM_PROMPT_FILE" >&2
+        exit 2
+      fi
+    fi
 
     # Guard: the seat must not resolve the primary's helm.
     if ! seat_guard "$NAME"; then
@@ -482,7 +515,14 @@ Seat law, read first. You are a worker figure, not the primary. A line that star
     # ISOLATION (law ygg1): never seat an Eindri in the main tree. Create or
     # reuse a Yggdrasil worktree and seat there.
     SEAT_CWD="$PWD"
-    if [ "${MAIN:-0}" = 1 ]; then
+    if [ -n "$SEAT_CWD_REQ" ]; then
+      # The caller owns the isolation and says so: the Smidja seats an agent in
+      # the RUN's tree (its own session dir, its own branch), so a second
+      # worktree would put the agent where the run cannot see its work.
+      SEAT_CWD="$(cd "$SEAT_CWD_REQ" 2>/dev/null && pwd)" || {
+        printf 'error: --seat-cwd %s is not a directory\n' "$SEAT_CWD_REQ" >&2; exit 2; }
+      printf 'herdr-run[1]{isolation,worktree,why}:\n  "on","%s","caller-owned — the run is the isolation"\n' "$SEAT_CWD" >&2
+    elif [ "${MAIN:-0}" = 1 ]; then
       printf 'herdr-run[1]{isolation,worktree}:\n  "off (main tree — Allfather chose --main)"\n' >&2
     elif [ -x "$SCRIPT_DIR/../forge/yggdrasil.sh" ]; then
       # Reuse an existing worktree for this id; create only when absent.
@@ -572,7 +612,9 @@ Seat law, read first. You are a worker figure, not the primary. A line that star
     # Brokk through state/.wake-queue. Without this a seated worker finishes
     # into silence and the coordinator has to poll by hand — the exact failure
     # plan 42 exists to kill.
-    if [ -x "$SCRIPT_DIR/../agents/eindri-watch.sh" ]; then
+    if [ "${YMIR_HERDR_WATCH:-1}" != "1" ]; then
+      printf 'herdr-run[1]{eindri,armed}:\n  "%s","no — YMIR_HERDR_WATCH=0 (the run watches it)"\n' "$NAME" >&2
+    elif [ -x "$SCRIPT_DIR/../agents/eindri-watch.sh" ]; then
       if "$SCRIPT_DIR/../agents/eindri-watch.sh" arm "$NAME" "$SEAT_CWD" >/dev/null 2>&1; then
         printf 'herdr-run[1]{eindri,armed}:\n  "%s","watch-%s"\n' "$NAME" "$NAME" >&2
       else
@@ -583,8 +625,8 @@ Seat law, read first. You are a worker figure, not the primary. A line that star
     if [ "${YMIR_HERDR_AGENT_WAIT:-1}" = "1" ]; then
       hdr agent wait "$AGENT_REF" --until done --until idle --timeout $((SETTLE * 1000)) >/dev/null 2>&1 || true
     fi
-    printf 'herdr-run[1]{seat,eindri,role,kind,tab,state}:\n  "%s","%s","%s","%s","%s","%s"\n' \
-      "$seat_note" "$NAME" "${ROLE:-unspecified}" "$KIND" "$tab" \
+    printf 'herdr-run[1]{seat,eindri,role,kind,tab,pane,state}:\n  "%s","%s","%s","%s","%s","%s","%s"\n' \
+      "$seat_note" "$NAME" "${ROLE:-unspecified}" "$KIND" "$tab" "$pane" \
       "$(hdr agent get "$AGENT_REF" 2>/dev/null | python3 -c '
 import json,sys
 try:
