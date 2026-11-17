@@ -31,3 +31,7 @@ readers[4]{reader,what_it_reads,verdict}:
 $ cron_fail_detail "$HOME" "bin/time/nornir-job-daily-briefing.sh" 1 'briefing: NOT CLEAN — drafts: 2 of 7 older than 2 days — "spec v2.5" (3 days)'
 the work was done, but not clean — drafts: 2 of 7 older than 2 days — "spec v2.5" (3 days)
 ```
+
+## CHANGE LOG
+
+- 2026-11-16 — review-mend: added missing heading for #807
