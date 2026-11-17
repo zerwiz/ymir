@@ -177,6 +177,12 @@ path_component() {  # <path> -> the component it belongs to, or empty
     # NO component, so a correct ward note could never cover a ward path — the same defect
     # the forge and bin/skuld rows above fixed (found 2026-11-09 while shipping the switch).
     bin/ward/*|.agents/tests/garmr.test.sh) echo ward ;;
+    # The seat's own doors and the desk's failsafes (plan 001 §4, 2026-11-17). Before this row
+    # bin/seat/* mapped to NO component apart from verify-seat, so a correct note could not cover a
+    # seat change — the same defect the forge and skuld rows above fixed. `bin/voice/*` and the unit
+    # register go with them: a seat's services are seat changes.
+    bin/seat/*|bin/voice/*|bin/engine/units.sh|bin/engine/units.py|config/units.yaml) echo runtime ;;
+    bin/notify/*) echo notify ;;
   esac
 }
 covered=0

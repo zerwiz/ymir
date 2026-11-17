@@ -1819,3 +1819,40 @@ this seat, where the relay's `ExecStart` pointed at a pinned runtime that predat
 Guards: `bin/seat/tests/test_backend_door.sh` (19 cases, stubbed harnesses and a fixture of the
 runtime's own table). Fix note `docs/fixes/agents/2026-11-16-hermes-is-a-second-backend.md`,
 how-to `docs/features/agents-talk-to-everyone.md`.
+
+## The desk survives a death — the five failsafes (plan 001 §4, 2026-11-17)
+
+**The death.** At 07:20:59 on the heart the kernel's OOM killer fired with swap at 216 kB of 4 GB. It
+killed one `opencode` inside `herdr-server.service`'s cgroup; systemd answered by stopping the unit with
+`result 'oom-kill'` and restarting it; **27 panes came back as bare shells** while `herdr agent list` still
+said *idle*. One death took every hand, and nothing told the operator.
+
+**The shape of the desk.** `herdr-server.service` is one memory pot with every agent in it. A pane is a
+shell; the agent is the desk's child. So the truth about "who is working" is never the desk's list — it is
+`ps` and `/proc`. That is the runbook's first rule (`the-desk.md` §1) and the failsafes keep it.
+
+| Door | Failsafe | What to know |
+|---|---|---|
+| `bin/seat/desk-ceiling.sh` | the desk keeps a ceiling | `MemoryHigh` 30 % of `MemTotal`, `MemoryMax` 40 %, `MemorySwapMax` 25 % of swap, plus `OOMPolicy=continue` in a **drop-in** (`20-desk-ceiling.conf`) because the seat-keeper rewrites the unit file. Applied live with `set-property`; **never** restarts the desk |
+| `bin/seat/agent-scope.sh` | each hand in its own cgroup | `systemd-run --user --scope` with 10 % / 15 % / 12.5 %; `herdr-run.sh` wraps the command it seats. No user manager → a `clean skip` that names the failsafe as **absent** |
+| `bin/seat/desk-inventory.sh` | who stood where | `save` snapshots panes holding a **live** agent (session file + cwd), atomically; `check` asks `/proc`; `lost` names what is gone. `save --claimed` records the desk's claim for a desk that already lost its hands |
+| `bin/seat/desk-watch.sh` | a restart is noticed | `check` prints ONE line naming every lost pane; `raise --limit N` resumes through `herdr-run.sh`, bounded because 27 at once would swap the machine to death; `install-units` renders the `desk-failsafe` timer from `config/units.yaml` (the register, plan 269) |
+| `bin/voice/rodd-arm.sh hold` | the arm cannot be held by a watcher | a **speech gate** at the top of `cmd_hold`: the lock module resolves the caller's ancestry; if no harness stands there, the hold is refused and the fact is named |
+| `bin/voice/rodd-tell-deadline.sh` | a tell cannot wait forever | a `rodd-` signal wake still queued past its deadline (300 s) escalates **once** to the operator; `list` reads and never acts |
+| `bin/notify/telegram-transport.sh` | a stale mouth is freed | a dead transport pid in pi-telegram's `state.json` is removed at once (0.04 s measured); a **live** holder is refused, never stolen. `pi-launcher.sh` runs it before `exec pi` |
+| `bin/seat/desk-notify.sh` | the death is spoken | one line from `journalctl -k` (who died), systemd's `oom-kill` verdict (which unit) and the panes lost; said **exactly once** per event; `replay --since/--until` for a proof, `YMIR_DESK_NOTIFY_SINK` so a test never alarms |
+
+**What the failsafes do NOT decide.** Whether a pane comes back **as an agent** (resumed) or **closed**
+(after a restart) is plan 001 §6 — the Allfather's decision. The timer therefore *names* lost panes and
+never raises them; `raise` is a hand's deliberate act.
+
+**The residue, named.** `hdr agent start` (the `agent|eindri` road) starts the harness itself, so that road
+is bounded by the desk ceiling but not by a per-agent scope. And the arm **daemon** writes its own lease
+(`role=unknown`, session = a shell) without passing `hold`; refusing that is the engine's change
+(plan 310 §5), and the tell-deadline escalation is what makes it harmless meanwhile.
+
+**Proofs.** `bin/seat/tests/test_desk_failsafes.sh` (44 assertions) covers the arithmetic, the drop-in, the
+liveness judgement, the truncation of the raise, the transport release and refusal, the speech gate and the
+once-only message. On the heart: `MemoryMax=4977590272` with `OOMPolicy=continue`, a scoped hand killed at
+`scope_rc=137` while the desk kept `MainPID=1155541` and its peak, `desk-verdict "27","0","27"`, and the
+07:21 replay producing exactly one line.
