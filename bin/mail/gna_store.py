@@ -103,9 +103,14 @@ def retention() -> dict:
 
 
 def _sha(record: dict) -> str:
+    """The identity of a row's CONTENT. The RFC headers are part of it on purpose: when a row
+    gains `message_id`/`in_reply_to`/`references` it is a different row, so the append-only
+    store keeps the version that lacked them and the backfill writes exactly once. `headers_at`
+    is NOT hashed — stamping when the headers were read must not make every re-read a new row."""
     payload = json.dumps(
         {k: record.get(k) for k in ("subject", "from", "to", "received_at", "body_text",
-                                    "classification", "confidence", "proposed_action", "evidence")},
+                                    "classification", "confidence", "proposed_action", "evidence",
+                                    "message_id", "in_reply_to", "references")},
         sort_keys=True,
         ensure_ascii=False,
     )

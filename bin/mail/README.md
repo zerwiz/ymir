@@ -39,6 +39,7 @@ bash bin/mail/install.sh                 # unit: gna-desk.service, enabled, /hea
 bash bin/time/nornir-job-gna-mail.sh --check     # is the desk answering?
 bash bin/time/nornir-job-gna-mail.sh --dry-run   # read the mailbox, write nothing
 bash bin/time/nornir-job-gna-mail.sh             # import, then prove the desk
+python3 bin/mail/gna_import.py --account <address> --backfill-headers   # the RFC headers on old rows
 python3 bin/mail/tests/test_gna.py               # the proofs
 ```
 
@@ -154,6 +155,38 @@ declares `transport: imap` with no `imap:` block is **refused** ("no IMAP accoun
 declared"), a key named but absent from the vault is refused by name, and plaintext TLS off
 loopback is refused outright.
 
+## The message's own name — the RFC headers (2026-11-16, plan 305 §7.1 phase 7)
+
+Every row now carries `message_id`, `in_reply_to` and `references` beside Gmail's `thread_key`:
+the three headers an ordinary Internet message uses to say *this is me* and *this answers that*.
+`Message-ID` is the message's own name, `In-Reply-To` names the one it answers, and `References`
+is the chain of the whole conversation.
+
+**They cost nothing.** The importer already reads each message with `format=full`, which carries
+every header, so no body is ever fetched for a header's sake. A mailbox read over IMAP has no
+`threadId` to lean on, so its `thread_key` is derived from the same chain — the **root** of
+`References`, which is the first message of the conversation — instead of a subject line.
+
+Rows written before the fields existed are filled in by one door:
+
+```sh
+python3 bin/mail/gna_import.py --account <address> --backfill-headers --dry-run   # count only
+python3 bin/mail/gna_import.py --account <address> --backfill-headers             # fill them in
+```
+
+It reads Gmail's **metadata** for each row (never a body), appends a new version of that row (the
+store is append-only, so the row that lacked the headers stays in the history), and stamps
+`headers_at`. A row is complete when it carries the message's name and that stamp — an absent
+`In-Reply-To` is a fact about the first message of a thread, not a hole — so a second run finds
+nothing, asks nothing and writes nothing. A message deleted from the mailbox since it was imported
+is named in `gone` and keeps what it had.
+
+**Why it matters.** Every join the desk made before this rested on a derived key, and a subject
+line is the one thing a reply is free to change. `bin/mail/tests/test_headers.py` proves both
+halves: two rows in one conversation joined **by the header** while their subjects disagree (and,
+joined by subject, they would be strangers), and a reply drafted through the letters door whose
+`In-Reply-To` and `References` name the very message the store says it answers.
+
 ## Not built yet (plan 116, in order)
 
 Drafts and approvals (P1) on the same gate · a second account with its own grant
@@ -189,3 +222,4 @@ second proof that enforces it are in `docs/fixes/mail/2026-11-08-the-connect-doo
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
 - **2026-11-16** — `bin/mail/threads.sh` added to the map (plan 305 phase 1), with the lane section above; `tests/` now holds **50** proofs (37 + 13 in `test_threads.py`), correcting the count in the 2026-11-08 append.
+- **2026-11-16 (second)** — the RFC headers: `message_id` · `in_reply_to` · `references` on every row, the IMAP thread key taken from the message's own chain, and `--backfill-headers` for the rows already written. `tests/` now holds **74** proofs (62 + 12 in `test_headers.py`).
