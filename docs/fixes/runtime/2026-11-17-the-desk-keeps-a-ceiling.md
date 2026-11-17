@@ -61,3 +61,7 @@ herdr offers a place to put the scope.
 ## Where the proof lives
 
 `bin/seat/tests/test_desk_failsafes.sh` asserts the arithmetic and the drop-in on every run.
+
+## CHANGE LOG
+
+- 2026-11-17 — review-mend: added missing heading for #814
