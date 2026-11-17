@@ -91,3 +91,7 @@ the act ran and the fault survived: read the line, it carries both measurements.
 
 The machine-side page is `hodd/docs/runbooks/the-supervisor.md` in the home, and the loop's
 own record is `hodd/machines/<machine>/fixes.md`.
+
+## CHANGE LOG
+
+- **2026-11-17** — the page was written (plan 004): the supervisor loop — measure, judge with an agent, act under the arm, prove, record — and what it refuses.
