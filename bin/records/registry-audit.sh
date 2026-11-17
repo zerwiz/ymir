@@ -6,6 +6,10 @@
 #
 #   registry-audit.sh            human report + exit 1 on any gap
 #   registry-audit.sh --quiet    one line
+#   registry-audit.sh --registry PATH   audit a registry that is not the home's own
+#                                (the supervisor measures the same registry it acts on,
+#                                so a probe and a machine read the ONE door — never a
+#                                second truth)
 set -uo pipefail
 # The home is resolved, never assumed (RULES/07): the one resolver is bin/vault/hoard-lib.sh.
 _DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -17,6 +21,17 @@ fi
 [ -n "${YMIR_HOME:-}" ] || { printf '%s: the home could not be resolved (bin/vault/hoard-lib.sh, RULES/07)\n' "$(basename "$0")" >&2; exit 2; }
 HOME_DIR="${YMIR_HOME}"
 REG="$HOME_DIR/hodd/identity/services.yaml"
+quiet=0
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --quiet) quiet=1 ;;
+    --registry) shift; [ $# -gt 0 ] || { printf 'registry-audit: --registry needs a path\n' >&2; exit 2; }; REG="$1" ;;
+    --registry=*) REG="${1#--registry=}" ;;
+    -h|--help) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    *) printf 'registry-audit: unknown argument %s\n' "$1" >&2; exit 2 ;;
+  esac
+  shift
+done
 [ -f "$REG" ] || { printf 'registry-audit: no registry at %s\n' "$REG" >&2; exit 2; }
 
 named="$(python3 - "$REG" <<'PY'
@@ -31,7 +46,7 @@ running="$(docker ps --format '{{.Names}}' 2>/dev/null | sort)"
 unnamed="$(comm -23 <(printf '%s\n' "$running") <(printf '%s\n' "$named" | sort -u) | grep -v '^$' || true)"
 missing="$(comm -13 <(printf '%s\n' "$running") <(printf '%s\n' "$named" | sort -u) | grep -v '^$' || true)"
 
-quiet=0; [ "${1:-}" = "--quiet" ] && quiet=1
+quiet_line="$quiet"
 n_running=$(printf '%s\n' "$running" | grep -c . || true)
 n_named=$(printf '%s\n' "$named" | sort -u | grep -c . || true)
 n_unnamed=$(printf '%s\n' "$unnamed" | grep -c . || true)

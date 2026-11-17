@@ -23,7 +23,7 @@ import sys
 from pathlib import Path
 from typing import Mapping, Sequence
 
-from . import __version__, heartbeat, identity, landed as landed_mod, paths, proc, watch
+from . import __version__, heartbeat, identity, landed as landed_mod, paths, proc, supervisor, watch
 from .dispatch import ModelUnavailable, TableRefusal
 from .dispatch import resolve as resolve_dispatch
 from .errors import EngineError, EngineRefusal, NoHelm, SeatNotFound
@@ -74,6 +74,11 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("version", help="print the engine version")
 
     sub.add_parser("watch", help="Sýn — the standing arm's own verbs (status|start|stop|restart|run)")
+
+    sub.add_parser(
+        "supervise",
+        help="Sýn's mind — the supervisor loop: measure → judge (an agent) → act under the arm → prove → record",
+    )
 
     ensure = sub.add_parser("ensure", help="report the interpreter and roots the engine will use")
     ensure.add_argument("--toon", action="store_true")
@@ -143,6 +148,13 @@ def main(
     # unchanged, and the shape of `run --emit` must not be re-spelled here.
     if arguments[:1] == ["watch"]:
         return watch.main(
+            arguments[1:], env=env, runner=runner or proc.run, probe=probe or proc.which
+        )
+    # The supervisor's five steps carry their own flags (a registry, a judge door, a
+    # runbook index, a cadence), exactly as the arm's do: the verb is handed over
+    # rather than re-spelled here, so there is one place its arguments live.
+    if arguments[:1] == ["supervise"]:
+        return supervisor.main(
             arguments[1:], env=env, runner=runner or proc.run, probe=probe or proc.which
         )
     args = build_parser().parse_args(arguments)

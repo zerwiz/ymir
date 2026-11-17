@@ -1856,3 +1856,52 @@ liveness judgement, the truncation of the raise, the transport release and refus
 once-only message. On the heart: `MemoryMax=4977590272` with `OOMPolicy=continue`, a scoped hand killed at
 `scope_rc=137` while the desk kept `MainPID=1155541` and its peak, `desk-verdict "27","0","27"`, and the
 07:21 replay producing exactly one line.
+
+## 8 · Sýn's mind — the supervisor loop (2026-11-17, plan 004)
+
+The arm keeps the standing watch and raises the line that needs a session. It cannot decide what to do
+about what it sees, and eight observers that each test one thing are a **monitor**, not a supervisor.
+The Allfather's correction, 2026-11-17: *"the supervisor must work for the intended outcome … and an
+agent must be involved in the loop."*
+
+The loop is five steps, and the middle one is a hand:
+
+| step | who | what it may not do |
+|---|---|---|
+| measure | `supervisor.measure()` | judge anything; act on an `unknown` state |
+| judge | `bin/agents/syn-judge.sh` (one model turn, read-only) | name a verb the house does not name |
+| act | `supervisor.act()` under `bin/voice/rodd-arm.sh who` | act with no arm; touch `criticality: always` |
+| prove | the SAME measurement again | call a fault fixed while the surface is still down |
+| record | `hodd/machines/<host>/fixes.md` + one rune | write into the code tree |
+
+**Where it lives.** The behaviour is the engine's (`src/ymir_runtime/supervisor.py`), reached by
+`bin/pi/syn-supervisor.sh` → `bin/engine/ymir-engine.sh supervise [--once|--every N] [--toon]`, beside
+`bin/pi/syn-watch.sh`. The judgement's road is its own door: `bin/agents/syn-judge.sh` takes the prompt on
+stdin, resolves the model through `bin/model/agent-model.sh`, checks it with `bin/model/model-allow.sh`,
+and serves it `-nt --no-mcp --no-extensions --no-session` — a judgement that could run bash would be a
+second pair of hands in a loop that gates its acts on the arm. No prompt and no threshold live in the
+door; the prompt is composed from the measurement and the library by the module.
+
+**The vocabulary is the house's, not the model's.** `none · start-container · restart-container ·
+start-unit · restart-unit · escalate`. A verb outside it is refused; a `*-unit` verb pointed at a
+container is refused (measured the first day: the judge said `start-unit` for a docker container — the
+verbs read right and run wrong, so every surface now carries its `kind`); a target the measurement does
+not name is refused. A surface marked `criticality: always` is escalated, never acted on: whether Sýn may
+stop such a unit is the Allfather's (plan 004 §5.1).
+
+**One message, never a retry.** The escalation road is the house's own durable wake: a `check:` line in
+the helm's `.wake-queue` plus one rune (`supervisor-escalate`). Where that queue is, is a rule and not a
+path: `supervisor.helm_state()` is the Python twin of `bin/agents/eindri-wake-lib.sh:eindri_helm_state`,
+so a worker's own `BROKK_STATE_OVERRIDE` — which is its `BROKK_MACHINE_STATE_DIR` — never swallows a
+message meant for the helm (plan 272, fault 1; measured the day this was built).
+
+**The registry is read, never written.** `measure()` reads `<home>/hodd/identity/services.yaml`, keeps
+only the rows whose `host` is this seat, and asks `bin/records/registry-audit.sh --quiet --registry
+<path>` the same question about the same file. A registry that names another host names no surface here,
+and the loop says so instead of acting on a neighbour's estate.
+
+Guards: `src/ymir_runtime/tests/test_supervisor.py` (26 cases — the whole loop, a failed proof, the
+`always` escalation, no-arm refusal, an off-vocabulary verb, a kind mismatch, the helm-state rule). The
+operator's page is `docs/features/the-supervisor-loop.md`; the machine's page is
+`hodd/docs/runbooks/the-supervisor.md` in the home; the fix note is
+`docs/fixes/runtime/2026-11-17-the-supervisor-gets-a-mind.md`.

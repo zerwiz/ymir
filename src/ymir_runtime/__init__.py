@@ -23,9 +23,14 @@ the seat.
 
 Two support modules own behaviour the doors used to carry themselves:
 `watch.py` is Sýn — the standing arm's lease, heartbeat, verdict, and raise
-grammar — and `landed.py` is the teardown gate, so a worktree is never removed
+ grammar — and `landed.py` is the teardown gate, so a worktree is never removed
 while its work has not landed. Both are reached through `bin/pi/syn-watch.sh` and
 `stop --require-landed`.
+
+A third support module is Sýn's MIND: `supervisor.py` is the five-step loop —
+measure → judge (an agent, through `bin/agents/syn-judge.sh`) → act under the arm →
+prove with the same measurement → record in `fixes.md` and the runes (plan 004).
+It is reached through `bin/pi/syn-supervisor.sh` and `supervise`.
 
 Plan 58, Phase 1. Read `docs/fixes/runtime/` for what each release changed.
 """
