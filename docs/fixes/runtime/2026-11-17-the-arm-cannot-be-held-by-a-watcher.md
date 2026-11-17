@@ -65,3 +65,7 @@ The arm **daemon** writes its own lease and does not pass through `hold`, so it 
 
 `bin/seat/tests/test_desk_failsafes.sh` asserts the gate's wording and, on a host with a user manager,
 runs the refusal from a transient service.
+
+## CHANGE LOG
+
+- 2026-11-17 — review-mend: added missing heading for #814
