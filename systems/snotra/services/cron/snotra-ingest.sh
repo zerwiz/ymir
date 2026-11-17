@@ -28,7 +28,7 @@ case "$ACTION" in
 import sys, json
 from pathlib import Path
 root, source = sys.argv[1], sys.argv[2]
-sys.path.insert(0, f"{root}/bin/time/snotra")
+sys.path.insert(0, f"{root}/systems/snotra/services/cron")
 from transcript_ingest import source_for
 since = until = None
 args = sys.argv[3:]
@@ -54,7 +54,7 @@ PY
 import sys, json
 from pathlib import Path
 root, source, mid, outdir = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
-sys.path.insert(0, f"{root}/bin/time/snotra")
+sys.path.insert(0, f"{root}/systems/snotra/services/cron")
 from transcript_ingest import source_for
 src = source_for(source)
 transcript = src.get_transcript(mid)

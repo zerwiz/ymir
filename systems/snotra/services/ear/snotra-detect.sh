@@ -863,7 +863,7 @@ tick() {
     # call to anything that only asks "does an app hold the mic?" — it recorded the
     # room and announced the same minutes over and over. Require a stream that
     # CARRIES a call role (`media.role`), or an explicit arm written by the Thing
-    # room or the operator. bin/time/snotra/snotra-iscall.sh is the one owner of that call.
+    # room or the operator. systems/snotra/services/ear/snotra-iscall.sh is the one owner of that call.
     _iscall="$(door snotra-iscall.sh 2>/dev/null || true)"
     [ -n "$_iscall" ] && [ -x "$_iscall" ] || _iscall="${HOME}/.fleet/snotra-iscall.sh"
     if [ -x "$_iscall" ] && ! "$_iscall" >/dev/null 2>&1; then

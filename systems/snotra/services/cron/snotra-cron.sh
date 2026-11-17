@@ -21,10 +21,10 @@ meetings() {
 sync_one() {
   local d="$1"
   [ -f "$d/signoffs.json" ] || return 0
-  bash "$ROOT/bin/time/snotra/snotra-signoff.sh" sync "$d" --dry-run >/dev/null 2>&1 || true
+  bash "$ROOT/systems/snotra/services/approve/snotra-signoff.sh" sync "$d" --dry-run >/dev/null 2>&1 || true
   # live sync only when a reply exists; --dry-run would never record, so run live
-  bash "$ROOT/bin/time/snotra/snotra-signoff.sh" sync "$d" >>"$LOG" 2>&1 || true
-  bash "$ROOT/bin/time/snotra/snotra-trello.sh" sync "$d" >>"$LOG" 2>&1 || true
+  bash "$ROOT/systems/snotra/services/approve/snotra-signoff.sh" sync "$d" >>"$LOG" 2>&1 || true
+  bash "$ROOT/systems/snotra/services/cron/snotra-trello.sh" sync "$d" >>"$LOG" 2>&1 || true
 }
 
 digest_one() {
@@ -80,20 +80,20 @@ digest() {
 friday_synch() {
   local d; d="$(meetings | head -1)"
   [ -n "$d" ] || { echo "no meetings"; exit 0; }
-  bash "$ROOT/bin/time/snotra/snotra-friday-synch.sh" run "$d" >>"$LOG" 2>&1 || true
+  bash "$ROOT/systems/snotra/services/cron/snotra-friday-synch.sh" run "$d" >>"$LOG" 2>&1 || true
   log "friday synch complete from $d"
 }
 
 grooming() {
   local d; d="$(meetings | head -1)"
   [ -n "$d" ] || { echo "no meetings"; exit 0; }
-  bash "$ROOT/bin/time/snotra/snotra-grooming.sh" run "$d" >>"$LOG" 2>&1 || true
+  bash "$ROOT/systems/snotra/services/cron/snotra-grooming.sh" run "$d" >>"$LOG" 2>&1 || true
   log "grooming card complete from $d"
 }
 
 card_moves() {
   for board in "Example8 — Meetings" "Documentation"; do
-    bash "$ROOT/bin/time/snotra/snotra-card-moves.sh" watch "$board" >>"$LOG" 2>&1 || true
+    bash "$ROOT/systems/snotra/services/cron/snotra-card-moves.sh" watch "$board" >>"$LOG" 2>&1 || true
   done
   log "card moves complete"
 }
@@ -109,7 +109,7 @@ for line in open(sys.argv[1], encoding='utf-8'):
         print(line.split(':',1)[1].strip()); break
 PY2
 )"
-    [ -n "${OPERATOR_EMAIL:-$op}" ] && bash "$ROOT/bin/time/snotra/mail-send.sh" draft --to "${OPERATOR_EMAIL:-$op}" \
+    [ -n "${OPERATOR_EMAIL:-$op}" ] && bash "$ROOT/systems/snotra/services/letters/mail-send.sh" draft --to "${OPERATOR_EMAIL:-$op}" \
       --subject "Agenda draft — next meeting" --body "$d/agenda-next.md" >/dev/null 2>&1 || true
     log "agenda draft prepared from $d"
   fi
