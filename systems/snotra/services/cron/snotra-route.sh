@@ -6,4 +6,4 @@
 #   snotra-route.sh status  <meeting-dir>   one row per item type
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../" && pwd)"
-exec python3 "$ROOT/bin/time/snotra/snotra-route.py" "$@"
+exec python3 "$ROOT/systems/snotra/services/cron/snotra-route.py" "$@"

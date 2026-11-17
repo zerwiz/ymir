@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; ROOT="$(cd "$HERE/.." && pwd)"
-DOOR="$ROOT/bin/time/snotra/snotra-autojoin.sh"
+DOOR="$ROOT/systems/snotra/services/ear/snotra-autojoin.sh"
 PASS=0; FAIL=0
 ok(){ PASS=$((PASS+1)); printf 'ok   %s\n' "$1"; }
 bad(){ FAIL=$((FAIL+1)); printf 'FAIL %s — %s\n' "$1" "${2-}"; }
