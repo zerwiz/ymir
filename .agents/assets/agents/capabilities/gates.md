@@ -74,7 +74,7 @@
 | people-guard.sh | people-guard.sh — the public tree holds no people. | tested | keep (a human or a cron row must run it) |
 | perm-guard.sh | perm-guard.sh — flag agent profiles whose permissions are self-defeati | tested | keep (a human or a cron row must run it) |
 | pkill-guard.sh | (no header line) | tested | keep (a human or a cron row must run it) |
-| pr-identity-guard.sh | (no header line) | tested | keep (a human or a cron row must run it) |
+| pr-identity-guard.sh | pr-identity-guard.sh — the ward that judges a pull request, and the pl | tested | keep (a human or a cron row must run it) |
 | pr-ship-guard.sh | pr-ship-guard.sh — Rule 08, the ship door: the BRANCH is a smith's to  | tested | keep (a human or a cron row must run it) |
 | private-guard.sh | private-guard.sh — private structure and NDA material never cross a su | tested | keep (a human or a cron row must run it) |
 | public-data-guard.sh | public-data-guard.sh — the TREE scan for RULES/04: templates and logic | tested | keep (a human or a cron row must run it) |
@@ -111,6 +111,7 @@
 | test_ci_parity.sh | test_ci_parity.sh — a push run and a pull_request run on one sha print | tested | keep (a human or a cron row must run it) |
 | test_desktop_main_guard.sh | desktop-main-guard names a launcher that points into a worktree AND name | tested | keep (a human or a cron row must run it) |
 | test_finding_tally.sh | ensure config | tested | keep (a human or a cron row must run it) |
+| test_fixes_regate.sh | test_fixes_regate.sh — the record gate judges CONTENT, not ceremony (2 | tested | keep (a human or a cron row must run it) |
 | test_fixes_validate.sh | test_fixes_validate.sh — plan 272 fault 10: the fix-note validator jud | tested | keep (a human or a cron row must run it) |
 | test_fleet_roads.sh | test_fleet_roads.sh — the ssh-roads ward judges the marked block, and  | tested | keep (a human or a cron row must run it) |
 | test_gate_directory.sh | test_gate_directory.sh — plan 295 fix S1: the gate list is a DIRECTORY | tested | keep (a human or a cron row must run it) |
@@ -135,7 +136,7 @@
 | test_pin_refresh.sh | test_pin_refresh.sh — the pin refresher, and the sentence a failed row | tested | keep (a human or a cron row must run it) |
 | test_plan_state.sh | plan missing headers -> finding | tested | keep (a human or a cron row must run it) |
 | test_plan_watch.sh | dry-run prints arithmetic, sends nothing | tested | keep (a human or a cron row must run it) |
-| test_pr_identity.sh | complete body passes | tested | keep (a human or a cron row must run it) |
+| test_pr_identity.sh | test_pr_identity.sh — the ward that judges a pull request: the signatu | tested | keep (a human or a cron row must run it) |
 | test_pr_ship_guard.sh | test_pr_ship_guard.sh — proves the ship door judges the PR and not the | tested | keep (a human or a cron row must run it) |
 | test_queue_warden.sh | test_queue_warden.sh — the warden is HYGIENE, and its one merge is the | tested | keep (a human or a cron row must run it) |
 | test_regenerate_on_merge_cleanup.sh | test_regenerate_on_merge_cleanup.sh — the merge driver leaves no `.mer | tested | keep (a human or a cron row must run it) |

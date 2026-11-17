@@ -31,7 +31,10 @@ plant() {  # <case> <line> <class word the finding must carry>
   fi
 }
 
-plant "a private host address" "the heart listens on 192.168.44.9"                "private address"
+mkaddr() { printf '%s.%s.%s.%s' "$1" "$2" "$3" "$4"; }
+PLACE="$(mkaddr 192 168 44 9)"
+NEWPLACE="$(mkaddr 10 44 55 66)"
+plant "a private host address" "the heart listens on $PLACE"                     "private address"
 plant "a tailnet host"         "reach it at heartbox.tailnet.ts.net"              "tailnet host"
 plant "a personal mailbox"     "write to someone.smith@gmail.com"                 "personal mailbox"
 # A GUARD CONTAINS THE SHAPES IT LOOKS FOR — so the shape is BUILT here, never written: a literal
@@ -99,6 +102,30 @@ PYX
   then say "  ok    the ward carries none of this fleet's machine names"
   else say "  FAIL  the ward names a machine of this fleet (RULES/04)"; fail=1; fi
 fi
+
+# ── the RANGE: a line the branch did not add cannot refuse the push (2026-11-16) ─────────────────
+# A note edited to record a new fix re-carries every sentence it already had. The ward used to judge
+# the whole file, so an old line refused a new push — plan 243 §3 part D's "inherited" rule, applied
+# to a line. Planted here in a throwaway repo (YMIR_GUARD_ROOT), with the same address on each side
+# of the line so the test proves the RANGE is what changed the answer, not the address.
+mkdir -p "$tmp/repo/docs/fixes/gate"
+git -C "$tmp/repo" init -q . >/dev/null 2>&1
+git -C "$tmp/repo" symbolic-ref HEAD refs/heads/main
+git -C "$tmp/repo" config user.email "test@example.com"
+git -C "$tmp/repo" config user.name "test"
+printf '## a note\n\nthe box answers on %s\n' "$PLACE" >"$tmp/repo/docs/fixes/gate/a.md"
+git -C "$tmp/repo" add -A && git -C "$tmp/repo" commit -qm base >/dev/null 2>&1
+range_guard() { YMIR_HOME="$tmp/nohome" YMIR_GUARD_ROOT="$tmp/repo" python3 "$GUARD" --added main docs/fixes/gate/a.md 2>/dev/null; }
+printf '## a note\n\nthe box answers on %s\n\nand a new sentence with no place in it\n' "$PLACE" >"$tmp/repo/docs/fixes/gate/a.md"
+out="$(range_guard)"; rc=$?
+if [ "$rc" = 0 ] && printf '%s' "$out" | grep -q 'public_guard_inherited'; then
+  say "  ok    an inherited address is reported as inherited and does not refuse the push"
+else say "  FAIL  an inherited line refused the push (rc=$rc)"; fail=1; fi
+printf '## a note\n\nthe box answers on %s\n\nand a new sentence naming %s\n' "$PLACE" "$NEWPLACE" >"$tmp/repo/docs/fixes/gate/a.md"
+out="$(range_guard)"; rc=$?
+if [ "$rc" = 1 ] && printf '%s' "$out" | grep -q 'private address'; then
+  say "  ok    an address THIS range adds is still refused"
+else say "  FAIL  a newly added address passed (rc=$rc)"; fail=1; fi
 
 [ "$fail" = 0 ] && say "public-data-ward: all cases behaved" || say "public-data-ward: FAILED"
 exit "$fail"
