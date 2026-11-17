@@ -83,3 +83,7 @@ points at the retired `bin/time/snotra/mail-send.sh`, `calendar-invite.sh` and `
 shims, so seven of its eight proofs fail with exit 127 after the shims were retired in #810. That is
 a broken test harness, not a broken door: the direct proofs in `bin/mail/tests/test_headers.py` are
 green. Repointing that file is its own errand.
+
+## CHANGE LOG
+
+- 2026-11-16 — review-mend: added missing heading for #812
