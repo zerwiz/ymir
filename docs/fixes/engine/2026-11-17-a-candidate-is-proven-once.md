@@ -99,3 +99,7 @@ publish once — `bin/engine/update-loop.sh proof-record <sha> --result pass --s
 The heart's unit still executes `~/ymir/bin/engine/update-loop.sh`, the heart's own checkout of `main`.
 Until this change lands on `main` and that checkout is fast-forwarded, the old code keeps proving every
 quarter hour; the proof record planted on the machine means the first pass after the update holds quietly.
+
+## CHANGE LOG
+
+- 2026-11-17 — review-mend: added missing heading for #814
