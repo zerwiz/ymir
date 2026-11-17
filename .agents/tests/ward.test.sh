@@ -68,6 +68,56 @@ printf '%s' "$out" | grep -q 'control plane' && ok "…and the wide control plan
 # a wide bind is reported, a loopback bind is not
 printf '%s' "$out" | grep -q '0.0.0.0:4602' && bad "a loopback bind was reported" || ok "loopback binds are not findings"
 
+# ── the doors that hand out their own key (2026-11-16) ────────────────────────
+# A wide bind is a location; these two kinds of door say "come in" themselves, and
+# nothing asked them until the heart's second audit. All three sources are fixtures,
+# so the judgement is proved without knocking on a live door.
+DOORS="$TMP/doors"; mkdir -p "$DOORS/cloudflared"
+cat >"$DOORS/ss.out" <<'EOF'
+State  Recv-Q Send-Q Local Address:Port  Peer Address:Port Process
+LISTEN 0      2048         0.0.0.0:8319       0.0.0.0:*     users:(("mcp-proxy",pid=3,fd=9))
+LISTEN 0      511          0.0.0.0:8321       0.0.0.0:*     users:(("node",pid=4,fd=21))
+LISTEN 0      50           0.0.0.0:445        0.0.0.0:*
+EOF
+printf 'DEFAULT_INPUT_POLICY="DROP"\n' >"$DOORS/ufw-default.out"
+printf 'passwordauthentication no\npermitrootlogin prohibit-password\n' >"$DOORS/sshd-T.out"
+printf 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIexamplekey heimdall\n' >"$DOORS/authz.out"
+printf 'lynis\n' >"$DOORS/watchers.out"
+printf '{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05","serverInfo":{"name":"snotra","version":"0.1.0"}}}\n' >"$DOORS/mcp-8321.out"
+printf '{"error":"a token is required"}\n' >"$DOORS/mcp-8319.out"      # gated: not a finding
+cat >"$DOORS/smb.out" <<'EOF'
+[global]
+	map to guest = Bad User
+
+[Models]
+	guest ok = Yes
+	read only = No
+	force user = root
+	path = /srv/Models
+
+[Reference]
+	guest ok = No
+	path = /srv/Reference
+EOF
+cat >"$DOORS/cloudflared/config-ssh-lan.yml" <<'EOF'
+tunnel: x
+ingress:
+  - hostname: laptop.example.org
+    service: ssh://192.0.2.10:22
+  - service: http_status:404
+EOF
+
+dout="$(YMIR_HOME="$TMP/home5" bash "$AUDIT" check --fixtures "$DOORS" 2>&1)"; drc=$?
+[ "$drc" = 1 ] && ok "a box whose doors hand out their own key FAILS" || bad "doors rc=$drc"
+printf '%s' "$dout" | grep -q 'an MCP answers without a credential.*8319' && bad "a gated MCP was reported" || ok "a gated MCP is not a finding"
+printf '%s' "$dout" | grep -q 'an MCP answers without a credential' && ok "…an unauthenticated MCP is named" || bad "unauthenticated MCP missing: $dout"
+printf '%s' "$dout" | grep -q 'snotra' && ok "…with the server's own name" || bad "MCP server name missing"
+printf '%s' "$dout" | grep -q 'an SMB share is open to guests and writable' && ok "…a guest-writable SMB share is a HIGH" || bad "SMB finding missing"
+printf '%s' "$dout" | grep -q 'as root' && ok "…and 'force user = root' is named" || bad "force user not named"
+printf '%s' "$dout" | grep -qi '\[Reference\]' && bad "a keyed share was reported" || ok "a keyed SMB share is not a finding"
+printf '%s' "$dout" | grep -q 'publishes an ssh door' && ok "…a tunnel that dials ssh is named" || bad "ssh tunnel finding missing"
+printf '%s' "$dout" | grep -q 'laptop.example.org' && ok "…with the hostname it publishes" || bad "ssh tunnel hostname missing"
+
 # ── the mends are written out and NOT applied ─────────────────────────────────
 out="$(bash "$HARDEN" plan 2>&1)"; rc=$?
 [ "$rc" = 0 ] && ok "harden plan prints without changing anything" || bad "harden plan rc=$rc"
