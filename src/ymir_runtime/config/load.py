@@ -10,7 +10,7 @@ The kinds are the configs the RUNTIME actually resolves (plan 58, Phase 7):
 
     agents.yaml            bin/fleet/agents-config.sh · bin/fleet/dispatch-profile.sh
                            bin/model/local-model-lock.sh · bin/agents/einherjar-spawn.sh
-    cron.yaml              bin/time/nornir-cron-start.sh · bin/time/snotra/hall-snapshot.sh
+    cron.yaml              bin/time/nornir-cron-start.sh · systems/snotra/services/cron/hall-snapshot.sh
     fleet.json             bin/fleet/topology.sh · bin/agents/eindri-route.sh
                            bin/bridge/mcp-gateway.sh · bin/model/model-placement.sh · bin/model/rail-resolve.sh
     eindri-dispatch.json   bin/fleet/dispatch-profile.sh

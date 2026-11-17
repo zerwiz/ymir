@@ -3,7 +3,7 @@
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
-STORE="$ROOT/bin/time/snotra/snotra-store.sh"
+STORE="$ROOT/systems/snotra/services/record/snotra-store.sh"
 PASS=0; FAIL=0
 ok()   { PASS=$((PASS+1)); printf 'ok   %s\n' "$1"; }
 bad()  { FAIL=$((FAIL+1)); printf 'FAIL %s — %s\n' "$1" "${2-}"; }
