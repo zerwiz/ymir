@@ -37,6 +37,17 @@ if [ -z "$DATA" ]; then
 fi
 STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
 
+# THE ARM WRITES ITS OWN PANE (2026-11-16). Until today NOTHING wrote state/.arm.pane: the file was
+# written by hand on 9 November (the fix note of the 9th says so), and three doors read it for a week
+# — aiming turns at a pane that died with the 04:00 reboot. The arm holder IS in a pane and herdr tells
+# it which; so the arm records it at start, atomically, and only when it actually knows one. A ghost
+# can then never outlive the seat that wrote it.
+if [ -n "${HERDR_PANE_ID:-}" ] && [ -d "${STATE:-.}" ]; then
+  if printf '%s\n' "$HERDR_PANE_ID" >"$STATE/.arm.pane.new" 2>/dev/null; then
+    mv -f "$STATE/.arm.pane.new" "$STATE/.arm.pane" 2>/dev/null || true
+  fi
+fi
+
 ID="${1-}"
 [ -n "$ID" ] || { echo "error: task-id required (eindri-arm.sh <id>)" >&2; exit 2; }
 TTL=86400
