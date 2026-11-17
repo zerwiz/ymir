@@ -29,6 +29,7 @@ as `bin/time/snotra/tests/test_outbound_gate.py` does.  # allow-superseded-path:
 from __future__ import annotations
 
 import contextlib
+import base64
 import io
 import json
 import os
@@ -350,11 +351,45 @@ class ThreadedByHeader(unittest.TestCase):
 
 
 class FakeGmail:
-    """The one Gmail question the letters door asks: what is the message I am answering."""
+    """The two Gmail questions the letters door asks: which message carries this subject, and what is
+    the message I am answering.
+
+    The search answers the way the mailbox does — by subject, ignoring any leading `Re:` — so a proof
+    can stand three letters in a mailbox and watch the door decide: one match is a thread, none or two
+    are a refusal."""
 
     def __init__(self) -> None:
         self.messages: dict[str, dict] = {}
         self.asks: list[dict] = []
+        self.searches: list[str] = []
+        self.drafts: dict[str, bytes] = {}
+        self.draft_threads: dict[str, str] = {}
+
+    @staticmethod
+    def normalised(subject: str) -> str:
+        """The same reading the door makes: every leading Re:, whitespace collapsed, case folded."""
+        text = (subject or "").strip()
+        while True:
+            match = re.match(r"(?is)^\s*re\s*:\s*", text)
+            if not match:
+                break
+            text = text[match.end():]
+        return re.sub(r"\s+", " ", text).strip().lower()
+
+    def matching(self, query: str) -> list[str]:
+        """The ids a `subject:"…"` search returns, in the mailbox's own order."""
+        term = query
+        match = re.match(r'\s*subject\s*:\s*"(.*)"\s*$', query, re.S)
+        if match:
+            term = match.group(1)
+        want = self.normalised(term)
+        found = []
+        for message_id, message in self.messages.items():
+            headers = {h.get("name", "").lower(): h.get("value", "")
+                       for h in ((message.get("payload") or {}).get("headers") or [])}
+            if self.normalised(headers.get("subject", "")) == want:
+                found.append(message_id)
+        return found
 
     def serve(self) -> ThreadingHTTPServer:
         api = self
@@ -376,14 +411,28 @@ class FakeGmail:
             def do_POST(self) -> None:
                 u = urlparse(self.path)
                 length = int(self.headers.get("Content-Length") or 0)
-                if length:
-                    self.rfile.read(length)
+                body = self.rfile.read(length) if length else b""
                 if u.path == "/token":
                     return self._json(200, {"access_token": "fake-token", "expires_in": 3600})
+                if u.path == "/gmail/v1/users/me/drafts":
+                    payload = json.loads(body or b"{}")
+                    message = payload.get("message") or {}
+                    raw = message.get("raw") or ""
+                    draft_id = f"r-auto-{len(api.drafts) + 1}"
+                    api.drafts[draft_id] = base64.urlsafe_b64decode(raw) if raw else b""
+                    api.draft_threads[draft_id] = message.get("threadId") or ""
+                    return self._json(200, {"id": draft_id, "message": {"id": "m-" + draft_id}})
                 return self._json(404, {"error": {"message": "not asked for in this proof"}})
 
             def do_GET(self) -> None:
                 u = urlparse(self.path)
+                if u.path == "/gmail/v1/users/me/messages":
+                    query = (parse_qs(u.query).get("q") or [""])[0]
+                    api.searches.append(query)
+                    ids = api.matching(query)
+                    return self._json(200, {"messages": [{"id": i, "threadId": api.messages[i]["threadId"]}
+                                                        for i in ids],
+                                            "resultSizeEstimate": len(ids)})
                 match = re.match(r"^/gmail/v1/users/me/messages/([^/]+)$", u.path)
                 if not match:
                     return self._json(404, {"error": {"message": "not asked for in this proof"}})
@@ -440,12 +489,12 @@ class MxFixture:
         self.sock.close()
 
 
-class LettersDoorNamesTheMessageItAnswers(Door):
-    """THE LOOP, CLOSED WITH THE REAL DOORS: the importer keeps the name, and the letters door
-    puts that name in `In-Reply-To` and `References` when it drafts the answer.
+class LettersDoor(Door):
+    """One throwaway home, one Gmail stand-in, one MX responder, and the letters door's draft helper.
 
-    `draft --dry-run` renders the exact bytes the door would send (the send path posts those
-    bytes unchanged), so the .eml is the letter — no send socket is opened in a proof."""
+    The proofs below all ask the same question of that door — *what does the letter that leaves say
+    about the message it answers?* — so they share the fixture and differ only in the mailbox they
+    stand up and the arguments they hand it."""
 
     MESSAGE_ID = "<alpha-1@letters.test>"
 
@@ -488,6 +537,10 @@ class LettersDoorNamesTheMessageItAnswers(Door):
                     "YMIR_OAUTH_TOKEN_URL": f"http://127.0.0.1:{port}/token",
                     "GNA_DNS_SERVER": f"127.0.0.1:{self.dns.port}"}
 
+    def draft(self, *args: str) -> subprocess.CompletedProcess:
+        return subprocess.run(["bash", str(MAIL), "draft", *args],
+                              capture_output=True, text=True, env=self.env, timeout=180)
+
     def import_the_message(self) -> dict:
         self.use(RecordingGmail([with_headers(
             gmail_message("alpha-1", int(time.time()) - 120, "The plan for the quarter"),
@@ -496,9 +549,40 @@ class LettersDoorNamesTheMessageItAnswers(Door):
         self.assertEqual(rc, 0, out)
         return self.stored("alpha-1")
 
-    def draft(self, *args: str) -> subprocess.CompletedProcess:
-        return subprocess.run(["bash", str(MAIL), "draft", *args],
-                              capture_output=True, text=True, env=self.env, timeout=180)
+    def seed(self, message_id: str, thread_id: str, subject: str, message_name: str,
+             sender: str = "Partner <partner@letters.test>", date: str = "Mon, 16 Nov 2026 09:00:00 +0000") -> None:
+        """Stand one more message in the mailbox, so a proof can ask what one, none or two matches do."""
+        self.gmail.messages[message_id] = {
+            "id": message_id,
+            "threadId": thread_id,
+            "payload": {"headers": [
+                {"name": "Message-ID", "value": message_name},
+                {"name": "References", "value": ""},
+                {"name": "Subject", "value": subject},
+                {"name": "From", "value": sender},
+                {"name": "Date", "value": date},
+            ]},
+        }
+
+    def reply(self, *args: str, body_text: str = "Agreed, and one question.\n") -> subprocess.CompletedProcess:
+        body = self.tmp / "reply.md"
+        body.write_text(body_text, encoding="utf-8")
+        return self.draft("--to", "partner@letters.test", "--body", str(body), "--plain", *args)
+
+    def letter(self, r: subprocess.CompletedProcess):
+        """The exact bytes the door would have sent: `--dry-run` writes the .eml and posts nothing."""
+        self.assertEqual(r.returncode, 0, r.stderr)
+        printed = [line for line in r.stdout.splitlines() if line.startswith("eml\t")]
+        self.assertTrue(printed, f"the door printed no draft: {r.stdout}{r.stderr}")
+        return BytesParser(policy=policy.default).parsebytes(Path(printed[-1].split("\t", 1)[1]).read_bytes())
+
+
+class LettersDoorNamesTheMessageItAnswers(LettersDoor):
+    """THE LOOP, CLOSED WITH THE REAL DOORS: the importer keeps the name, and the letters door
+    puts that name in `In-Reply-To` and `References` when it drafts the answer.
+
+    `draft --dry-run` renders the exact bytes the door would send (the send path posts those
+    bytes unchanged), so the .eml is the letter — no send socket is opened in a proof."""
 
     def test_1_a_reply_names_the_message_it_answers(self):
         stored = self.import_the_message()
@@ -532,6 +616,99 @@ class LettersDoorNamesTheMessageItAnswers(Door):
         self.assertEqual(asked["format"], "metadata", "a reply read the message body to learn its name")
         self.assertIn("Message-ID", asked["headers"])
         self.assertIn("References", asked["headers"])
+
+
+# ── a "Re:" subject is a claim the door must prove (2026-11-17) ─────────────────────
+
+
+class AReSubjectNamesItsMessage(LettersDoor):
+    """Three letters went out in one night with `Re:` subjects that began NEW threads.
+
+    The subject is the only name a person has for the message they are answering, so the door now
+    reads a `Re:` subject as a claim and proves it against the mailbox: exactly one message carries
+    that subject (normalised), or the letter is refused with the reason and the candidates named.
+    Six proofs, one per promise:
+
+      test_1  one match → In-Reply-To, References and the thread, and it says which message it answers
+      test_2  no match → REFUSED, named reason, nothing drafted
+      test_3  two matches → REFUSED, both candidates listed, nothing drafted
+      test_4  --new-thread → no threading headers, and no lookup either
+      test_5  a non-`Re:` subject → unchanged, and the mailbox is never asked
+      test_6  --reply-to given → the operator's naming wins over any inference
+      test_7  --reply-to with --new-thread → refused as contradictory
+    """
+
+    SUBJECT = "The plan for the quarter"
+
+    def test_1_one_match_joins_the_thread_and_says_which_message(self):
+        # a different case and spacing proves the normalisation, not a lucky string match
+        r = self.reply("--subject", "re:   THE PLAN for the quarter")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("answers\talpha-1", r.stderr,
+                      "the door did not say which message it answers")
+        self.assertIn(self.SUBJECT, r.stderr)
+
+        draft_id = r.stdout.split("\t")[1]
+        letter = BytesParser(policy=policy.default).parsebytes(self.gmail.drafts[draft_id])
+        self.assertEqual(letter["In-Reply-To"], self.MESSAGE_ID,
+                         "the reply does not name the message whose subject it repeats")
+        self.assertIn(self.MESSAGE_ID, letter["References"])
+        self.assertEqual(letter["Subject"], "re:   THE PLAN for the quarter",
+                         "the operator's own words were rewritten")
+        self.assertEqual(self.gmail.draft_threads[draft_id], "t-alpha",
+                         "the letter was not placed in the thread it answers")
+
+    def test_2_no_match_refuses_and_names_the_reason(self):
+        r = self.reply("--subject", "Re: Something nobody wrote about", "--dry-run")
+        self.assertNotEqual(r.returncode, 0, "a reply to a message that does not exist was drafted")
+        self.assertIn("REFUSED", r.stderr)
+        self.assertIn("no message in the mailbox carries that subject", r.stderr)
+        self.assertIn("--new-thread", r.stderr, "the refusal does not name a way forward")
+        self.assertEqual(self.gmail.drafts, {}, "the door posted a draft it had refused")
+
+    def test_3_two_matches_refuses_and_lists_the_candidates(self):
+        self.seed("alpha-2", "t-alpha-2", self.SUBJECT, "<alpha-2@letters.test>",
+                  sender="Other Partner <other@letters.test>",
+                  date="Tue, 17 Nov 2026 10:00:00 +0000")
+        r = self.reply("--subject", "Re: " + self.SUBJECT, "--dry-run")
+        self.assertNotEqual(r.returncode, 0, "the door guessed between two messages with one subject")
+        self.assertIn("2 messages in the mailbox carry that subject", r.stderr)
+        self.assertIn("alpha-1", r.stderr, "the refusal does not list the candidates")
+        self.assertIn("alpha-2", r.stderr, "the refusal does not list the candidates")
+        self.assertIn("other@letters.test", r.stderr, "the listing does not say who wrote them")
+        self.assertIn("--reply-to", r.stderr, "the refusal does not say how to choose")
+        self.assertEqual(self.gmail.drafts, {})
+
+    def test_4_new_thread_starts_one_without_headers(self):
+        letter = self.letter(self.reply("--subject", "Re: " + self.SUBJECT,
+                                        "--new-thread", "--dry-run"))
+        self.assertIsNone(letter["In-Reply-To"], "--new-thread still named a message it answers")
+        self.assertIsNone(letter["References"])
+        self.assertEqual(self.gmail.searches, [],
+                         "--new-thread was supposed to start a conversation, not look one up")
+
+    def test_5_a_subject_that_is_not_a_reply_is_unchanged(self):
+        letter = self.letter(self.reply("--subject", "A plan for the quarter", "--dry-run"))
+        self.assertIsNone(letter["In-Reply-To"])
+        self.assertIsNone(letter["References"])
+        self.assertEqual(self.gmail.searches, [], "a subject that promised nothing was still looked up")
+
+    def test_6_an_explicit_reply_to_wins_over_the_inference(self):
+        self.seed("alpha-2", "t-alpha-2", self.SUBJECT, "<alpha-2@letters.test>")
+        letter = self.letter(self.reply("--subject", "Re: " + self.SUBJECT,
+                                        "--reply-to", "alpha-1", "--dry-run"))
+        self.assertEqual(letter["In-Reply-To"], self.MESSAGE_ID,
+                         "the door inferred over a message the operator named itself")
+        self.assertEqual(self.gmail.searches, [],
+                         "an explicit --reply-to still went looking for a subject")
+
+    def test_7_a_new_thread_and_a_reply_to_are_refused_together(self):
+        r = self.reply("--subject", "Re: " + self.SUBJECT, "--reply-to", "alpha-1",
+                       "--new-thread", "--dry-run")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("REFUSED", r.stderr)
+        self.assertIn("--new-thread", r.stderr)
+        self.assertIn("--reply-to", r.stderr)
 
 
 if __name__ == "__main__":
