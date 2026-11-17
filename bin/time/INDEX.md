@@ -51,7 +51,7 @@ bin[148]{file,does,kind,verdict,disposition,callers,lines}:
   "jira_adapter.py","bin/time/snotra/jira_adapter.py -> systems/snotra/services/cron/jira_adapter.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "knit_ingest.py","bin/time/snotra/knit_ingest.py -> systems/snotra/services/cron/knit_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "linear_adapter.py","bin/time/snotra/linear_adapter.py -> systems/snotra/services/cron/linear_adapter.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
-  "mail-send.sh","bin/time/snotra/mail-send.sh -> systems/snotra/services/letters/mail-send.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and…","tool","wired","keep",11,16
+  "mail-send.sh","bin/time/snotra/mail-send.sh -> systems/snotra/services/letters/mail-send.sh — RETIRED SHIM (plan 129, 2026-10-24); execs the new door and…","tool","wired","keep",12,16
   "meet_ingest.py","bin/time/snotra/meet_ingest.py -> systems/snotra/services/cron/meet_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "meeting-record-guard.sh","bin/time/snotra/meeting-record-guard.sh -> systems/snotra/services/approve/meeting-record-guard.sh — RETIRED SHIM (plan 129, 2026-10-24); e…","tool","wired","keep",0,16
   "monday_adapter.py","bin/time/snotra/monday_adapter.py -> systems/snotra/services/cron/monday_adapter.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
@@ -63,7 +63,7 @@ bin[148]{file,does,kind,verdict,disposition,callers,lines}:
   "nornir-job-doctor.sh","nornir-job-doctor.sh — Eir, the healer, on the schedule.","tool","wired","keep",0,35
   "nornir-job-forgejo-git.sh","nornir-job-forgejo-git.sh — the local git round: issues and PRs on the forge.","tool","wired","keep",0,87
   "nornir-job-git-sync.sh","nornir-job-git-sync.sh - Yggdrasil, the world-tree kept in order.","tool","wired","keep",2,176
-  "nornir-job-gna-mail.sh","nornir-job-gna-mail.sh — the desk's own clock: import, then prove the desk answers.","tool","wired","keep",0,163
+  "nornir-job-gna-mail.sh","nornir-job-gna-mail.sh — the desk's own clock: import, then prove the desk answers.","tool","wired","keep",1,191
   "nornir-job-groa-update.sh","nornir-job-groa-update.sh — every installation keeps itself current, and it decides HOW from its own home.","tool","wired","keep",0,250
   "nornir-job-hall-snapshot.sh","nornir-job-hall-snapshot.sh — Óðrerir: refresh the Live Hall's board.","tool","wired","keep",1,31
   "nornir-job-memory-housekeeping.sh","nornir-job-memory-housekeeping.sh - Muninn, the raven of memory.","tool","wired","keep",0,153
@@ -159,7 +159,7 @@ bin[148]{file,does,kind,verdict,disposition,callers,lines}:
   "stt-wire.sh","bin/time/snotra/stt-wire.sh -> systems/snotra/services/ear/stt-wire.sh — RETIRED SHIM","tool","wired","keep",0,12
   "teams_ingest.py","bin/time/snotra/teams_ingest.py -> systems/snotra/services/cron/teams_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10
   "test_event_trigger.sh","test_event_trigger.sh — a smithy may be started by a person, the clock, or an","tool","wired","keep",1,251
-  "test_outbound_gate.py","'''The outbound gate's proofs — plan 124 §7, his word 2026-10-24:","tool","wired","keep",0,501
+  "test_outbound_gate.py","'''The outbound gate's proofs — plan 124 §7, his word 2026-10-24:","tool","wired","keep",1,501
   "test_saga_head.sh","test_saga_head.sh — Sága's head fits, means what it says, and forgets what is finished","tool","wired","keep",1,152
   "test_saga_land_warnings.sh","test_saga_land_warnings.sh — the digest SEES work that finished and never landed.","tool","wired","keep",1,201
   "transcript_ingest.py","bin/time/snotra/transcript_ingest.py -> systems/snotra/services/cron/transcript_ingest.py — RETIRED SHIM (plan 129)","tool","wired","keep",0,10

@@ -4,6 +4,7 @@
   gna_import.py --account operator@example.com --dry-run
   gna_import.py --account operator@example.com
   gna_import.py --account operator@example.com --days 30     # a backfill
+  gna_import.py --account operator@example.com --backfill-headers   # the RFC headers on old rows
 
 THE WINDOW IS A MARK, NOT A WIDTH (2026-11-16). Each account keeps a high-water mark:
 the newest message the desk has read (`hodd/state/gna-mail-watermark.json`). A run asks
@@ -37,6 +38,13 @@ no IMAP account is declared" is a refusal, not a silent fallback to Gmail.
 READ-ONLY, BOTH WAYS. The IMAP reader opens the mailbox with EXAMINE (`readonly=True`)
 and never issues STORE, COPY, EXPUNGE, APPEND or DELETE. There is no send path in this
 file: it never calls the Gmail sending endpoint, creates no draft, and speaks no SMTP.
+
+THE MESSAGE'S OWN NAME (2026-11-16, plan 305 §7.1 phase 7). Every row carries `message_id`,
+`in_reply_to` and `references` — the RFC 5322 headers a reply uses to name the message it
+answers — beside Gmail's `threadId`, which stays the `thread_key` and the fallback for mail
+imported before the fields existed. They come out of the same `format=full` payload the body
+read already fetched, so keeping them costs no second request; `--backfill-headers` fills the
+rows written before the importer kept them, reading METADATA only.
 """
 
 from __future__ import annotations
@@ -124,7 +132,8 @@ def token_for(account_row: dict) -> str:
 def api(token: str, path: str, params: dict | None = None) -> dict:
     url = "https://gmail.googleapis.com/gmail/v1" + path
     if params:
-        url += "?" + urllib.parse.urlencode(params)
+        # doseq: a metadata read names several headers, and Gmail wants them repeated.
+        url += "?" + urllib.parse.urlencode(params, doseq=True)
     req = urllib.request.Request(url, headers={"Authorization": "Bearer " + token})
     last = None
     for attempt in range(5):
@@ -145,6 +154,42 @@ def header(payload: dict, name: str) -> str:
         if h.get("name", "").lower() == name.lower():
             return h.get("value", "")
     return ""
+
+
+# ------------------------------------------- the message's own NAME (RFC 5322)
+
+IDENTITY_FIELDS = ("message_id", "in_reply_to", "references")
+IDENTITY_HEADERS = ("Message-ID", "In-Reply-To", "References")
+
+
+def rfc_identity(get_header) -> dict:
+    """The three headers that let a message be joined by IDENTITY rather than by subject.
+
+    `Message-ID` is the message's own name, `In-Reply-To` names the one it answers, and
+    `References` is the chain it belongs to. They arrive inside the payload the reader has
+    already asked for — `format=full` carries every header — so keeping them costs no request
+    at all: a body is never fetched for a header's sake (plan 305 §7.1, phase 7)."""
+    return {field: (get_header(name) or "").strip()
+            for field, name in zip(IDENTITY_FIELDS, IDENTITY_HEADERS)}
+
+
+def thread_from_identity(identity: dict) -> str:
+    """Which conversation a message belongs to, read from its headers.
+
+    The FIRST id of `References` is the thread's own beginning, so every message in a chain
+    lands on the same key even though each names a different parent. `In-Reply-To` is the
+    honest fallback for a sender that carries no chain, and the message's own name is the
+    last resort. This is the join a SUBJECT cannot make: a reply whose subject was rewritten
+    still lands where it belongs, and two conversations that share a subject stay apart."""
+    for field in ("references", "in_reply_to"):
+        value = str(identity.get(field) or "").strip()
+        if not value:
+            continue
+        ids = re.findall(r"<([^<>\s]+)>", value)
+        if ids:
+            return ids[0].strip()
+        return value.split()[0].strip("<>")
+    return str(identity.get("message_id") or "").strip().strip("<>")
 
 
 def addresses(value: str) -> list[dict]:
@@ -326,13 +371,16 @@ def _imap_records(account: str, raws: list[tuple[bytes, str]]) -> list[dict]:
             received = parsedate_to_datetime(when).astimezone(timezone.utc).isoformat(timespec="seconds")
         except (TypeError, ValueError):
             received = datetime.now(timezone.utc).isoformat(timespec="seconds")
-        message_id = _hdr(message, "Message-ID").strip()
-        references = _hdr(message, "In-Reply-To").strip() or _hdr(message, "References").strip()
+        identity = rfc_identity(lambda name: _hdr(message, name))
+        message_id = identity["message_id"].strip("<>")
         record = {
-            "id": message_id.strip("<>") or fallback_id,
+            "id": message_id or fallback_id,
             "account": account,
             "direction": "out" if (sender and sender[0]["email"] == account) else "in",
-            "thread_key": (references.split()[0].strip("<>") if references else (message_id.strip("<>") or fallback_id)),
+            # A mailbox with no threadId of its own is joined by the header: the same key the
+            # Gmail road gets from the server, derived from the message's own chain.
+            "thread_key": thread_from_identity(identity) or message_id or fallback_id,
+            **identity,
             "from": sender[0] if sender else {"name": "", "email": ""},
             "to": addresses(_hdr(message, "To")),
             "to_header": _hdr(message, "To"),
@@ -708,6 +756,8 @@ def collect_google(account: str, row: dict, window: dict, max_messages: int,
             "account": account,
             "direction": "out" if (sender and sender[0]["email"] == account) else "in",
             "thread_key": full.get("threadId"),
+            # the message's own name and the chain it belongs to, out of the same payload
+            **rfc_identity(lambda name: header(payload, name)),
             "from": sender[0] if sender else {"name": "", "email": ""},
             "to": addresses(header(payload, "To")),
             "to_header": header(payload, "To"),
@@ -741,6 +791,11 @@ def _finish(record: dict, by_email: dict[str, dict], seen: list[dict]) -> dict:
     record.update(verdict)
     record.setdefault("person_id", (person or {}).get("id"))
     record.setdefault("project_id", (person or {}).get("project") or None)
+    # EVERY row carries the message's name and says WHEN its headers were read, so "this row has
+    # no In-Reply-To" can be told apart from "nobody kept it yet" — the backfill's own question.
+    for field in IDENTITY_FIELDS:
+        record.setdefault(field, "")
+    record.setdefault("headers_at", datetime.now(timezone.utc).isoformat(timespec="seconds"))
     record["read_at"] = None
     record["handled_at"] = None
     record["actor"] = "gna-import"
@@ -781,6 +836,64 @@ def rejudge(account: str, dry_run: bool = False) -> dict:
     written = {"written": 0} if dry_run else gna_store.append(changed)
     return {"account": account, "judged": sum(1 for r in rows if r.get("direction") != "out"),
             "changed": len(changed), "moves": moves, "dry_run": dry_run, **written}
+
+
+def backfill_headers(account: str, dry_run: bool = False) -> dict:
+    """Fill the message's RFC identity on rows written before the importer kept it.
+
+    ONE METADATA READ PER MESSAGE, NEVER A BODY: `format=metadata` with the three header names
+    asks Gmail for exactly the question — where a message sits in its thread — and pays for
+    nothing else. A message deleted from the mailbox since it was imported is counted as `gone`
+    and named, not raised: the row keeps what it had.
+
+    The store is APPEND-ONLY, so a filled row is a NEW version and the row that lacked the
+    headers stays in the history. A row is COMPLETE when it carries the message's own name and
+    the instant its headers were read (`headers_at`): an absent In-Reply-To is a fact about the
+    first message of a thread, not a hole, so a second run finds nothing and writes nothing."""
+    row = gna_store.declared_accounts()[account]
+    transport = transport_of(row)
+    if transport != "google":
+        raise SystemExit(
+            f"gna: --backfill-headers asks Gmail for stored headers; {account} is read over "
+            f"{transport}, whose headers arrive with the message its own fetch already carries — "
+            "re-import that account instead of meeting it here with a second protocol"
+        )
+    token = token_for(row)
+    rows = gna_store.latest(account)
+    incomplete = [r for r in rows
+                  if not (str(r.get("message_id") or "").strip() and r.get("headers_at"))]
+    if not incomplete:
+        return {"account": account, "rows": len(rows), "missing": 0, "filled": 0, "gone": [],
+                "written": 0, "skipped": 0, "dry_run": dry_run}
+    filled: list[dict] = []
+    gone: list[str] = []
+    for old in incomplete:
+        mid = str(old.get("id") or "").strip()
+        if not mid:
+            continue
+        try:
+            meta = api(token, f"/users/me/messages/{urllib.parse.quote(mid)}",
+                       {"format": "metadata", "metadataHeaders": list(IDENTITY_HEADERS)})
+        except urllib.error.HTTPError as exc:
+            if exc.code == 404:
+                gone.append(mid)
+                continue
+            raise
+        identity = rfc_identity(lambda name: header(meta.get("payload") or {}, name))
+        if not identity["message_id"]:
+            gone.append(mid)  # the mailbox answered, but with no name for the message
+            continue
+        new = dict(old)
+        new.update(identity)
+        new["headers_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        new["actor"] = "gna-backfill-headers"
+        for key in ("ingested_at", "body_sha"):
+            new.pop(key, None)
+        filled.append(new)
+        time.sleep(0.25)  # the same courtesy the import pays the API
+    written = {"written": 0, "skipped": 0} if dry_run else gna_store.append(filled)
+    return {"account": account, "rows": len(rows), "missing": len(incomplete),
+            "filled": len(filled), "gone": gone, "dry_run": dry_run, **written}
 
 
 def self_test() -> int:
@@ -834,8 +947,10 @@ def self_test() -> int:
         raw = (
             b"From: Ada Example <ada@example.com>\r\n"
             b"To: desk@example.org\r\n"
-            b"Subject: Faktura 2026-10\r\n"
+            b"Subject: Re: Faktura 2026-10\r\n"
             b"Message-ID: <fixture-1@example.com>\r\n"
+            b"In-Reply-To: <fixture-0@example.com>\r\n"
+            b"References: <fixture-0@example.com>\r\n"
             b"Date: Fri, 23 Oct 2026 10:00:00 +0000\r\n"
             b"Content-Type: text/plain; charset=utf-8\r\n\r\n"
             b"Bifogad faktura for oktober.\r\n"
@@ -846,6 +961,14 @@ def self_test() -> int:
                        first.get("to_header") == "desk@example.org", str(first.get("to_header"))))
         checks.append(("a fetched message carries the id its Message-ID names",
                        first.get("id") == "fixture-1@example.com", str(first.get("id"))))
+        checks.append(("a fetched message keeps the name of the one it answers",
+                       first.get("in_reply_to") == "<fixture-0@example.com>", str(first.get("in_reply_to"))))
+        checks.append(("a fetched message keeps the chain it belongs to",
+                       first.get("references") == "<fixture-0@example.com>", str(first.get("references"))))
+        checks.append(("a reply is joined to its thread BY the header",
+                       first.get("thread_key") == "fixture-0@example.com", str(first.get("thread_key"))))
+        checks.append(("a fetched message says when its headers were read",
+                       bool(first.get("headers_at")), str(first.get("headers_at"))))
         checks.append(("a fetched message is judged like any other",
                        first.get("classification") in gna_judge.CLASSES and bool(first.get("evidence")),
                        str(first.get("classification"))))
@@ -881,6 +1004,9 @@ def main() -> int:
     ap.add_argument("--accounts", type=int, default=0, help="with --record-run: how many accounts were read")
     ap.add_argument("--rejudge", action="store_true",
                     help="judge the stored mail again with today's rules; appends only the changed verdicts")
+    ap.add_argument("--backfill-headers", action="store_true",
+                    help="fill Message-ID · In-Reply-To · References on stored rows that predate them "
+                         "(one metadata read per row, never a body; idempotent)")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
@@ -901,6 +1027,20 @@ def main() -> int:
         ap.error("--account is required")
 
     account = gna_store.require_account(args.account)
+    if args.backfill_headers:
+        result = backfill_headers(account, args.dry_run)
+        if args.json:
+            print(json.dumps(result, indent=1, ensure_ascii=False))
+            return 0
+        print(f"gna · {account} · headers")
+        print(f"  rows     {result['rows']} stored · {result['missing']} without the message's name")
+        print(f"  filled   {result['filled']}" + (
+            " (dry run — nothing written)" if result["dry_run"]
+            else f" · {result['written']} written · {result['skipped']} unchanged"))
+        if result["gone"]:
+            print("  gone     " + " · ".join(result["gone"])
+                  + " (no longer in the mailbox — the row keeps what it had)")
+        return 0
     if args.rejudge:
         print(json.dumps(rejudge(account, args.dry_run), ensure_ascii=False, indent=None if args.json else 1))
         return 0
