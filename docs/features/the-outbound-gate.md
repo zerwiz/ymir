@@ -84,7 +84,7 @@ Each door carries its own proofs; they run against a local server, never your ma
 ```bash
 systems/snotra/services/letters/mail-send.sh --self-test          # 4 proofs: refused · sent once · refused replay · stale
 systems/snotra/services/calendar/calendar-invite.sh --self-test    # 6 proofs: no mail by default · approved only · stale · cancel
-python3 bin/time/snotra/tests/test_outbound_gate.py   # all 12, including Gná's ward
+python3 bin/time/snotra/tests/test_outbound_gate.py   # all 12, including Gná's ward <!-- allow-superseded-path: this line records where the door WAS, or names the real tests/ directory that never moved -->
 ```
 
 ## Notes & limits

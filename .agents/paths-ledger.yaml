@@ -150,8 +150,13 @@ moves:
     date: "2026-10-24"
     why: "ownership is the axis, plan 129 — a domain is the primary folder; a layer is a folder inside it"
     migration: "0014-systems-shelf"
-    partial: true
-    still_current: "tests test_outbound_gate.py asana_adapter.py channel_email.py channel_todo.py clickup_adapter.py jira_adapter.py linear_adapter.py monday_adapter.py notion_adapter.py org_adapter.py snotra-card-moves.py snotra-card-moves.sh snotra-friday-synch.py snotra-friday-synch.sh snotra-grooming.py snotra-grooming.sh snotra-route.py snotra-route.sh snotra-rules.py snotra-rules.sh trello_adapter.py"
+    # 2026-11-17: the move is FINISHED. The 105 retired shims were deleted after every caller was
+    # repointed (PR 806) and a proof run showed zero invocations across the tree — no comment counted,
+    # no migration counted, and the real `tests/` directory excluded. What still lives at the old
+    # spelling is what was never part of the move: one door that was written there after the move
+    # began, and the test suite the doors ship with.
+    superseded: true
+    still_current: "tests calendar-write.sh"
     superseded: true
 
   - old: "bin/assistant/"
