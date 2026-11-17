@@ -63,6 +63,26 @@ for when you want the herdr window; `close` dismisses it.
 A working agent's scrollback cannot be captured (herdr says `agent_not_idle`), so the drawer shows
 the **visible screen** and says so. An idle agent shows its recent scrollback.
 
+## Work in the pane — the live terminal
+
+Press **terminal** in the drawer and you get a REAL terminal: a genuine pseudo-terminal on the
+server (node-pty) attached to the agent's own session (`herdr agent attach`), rendered in the browser
+with xterm.js. It is not a log tail and not a picture of one — what you type reaches the agent, and
+its screen is the run's screen.
+
+- **A reload keeps you attached.** The drawer remembers the pane and the mode, so reloading the page
+  re-attaches to the same session. The agent never notices the viewer left.
+- **A dead terminal says dead**, with its exit code, and offers `attach again`. A frozen screen that
+  looks alive is the one thing this must never be.
+- **It is loopback only.** The visualizer binds `127.0.0.1` and the socket refuses any peer that is
+  not loopback. The only command the terminal ever runs is `herdr agent attach <pane>` — it is not a
+  shell for anything else.
+- **One viewer per terminal.** herdr allows a single attached client; if a viewer died without
+  detaching, the next attach takes the slot over and says so.
+
+Requirements: `node` (the PTY host is a Node process, because node-pty produces nothing under Bun)
+and `node-pty` + `@xterm/xterm` in the visualizer's dependencies.
+
 ## Limits worth knowing
 
 - A herdr agent needs a herdr session. On a machine with none, `smidja doctor` and the run both

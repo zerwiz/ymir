@@ -13,9 +13,19 @@
  * pretend to be the same thing.
  */
 import { onBeforeUnmount, ref, watch } from 'vue'
-import { openPaneRef, closePane } from '../lib/pane-drawer'
+import { openPaneRef, closePane, openPane } from '../lib/pane-drawer'
+import LiveTerminal from './LiveTerminal.vue'
 
 const pane = openPaneRef
+/**
+ * READ or TYPE. `read` is the pane's words, sampled; `terminal` is a REAL PTY
+ * attached to the agent's own session — what you type reaches it. The choice and
+ * the open pane are remembered, so a page reload re-attaches to the same session
+ * instead of silently dropping it (the agent never noticed the viewer left).
+ */
+const mode = ref<'read' | 'terminal'>('read')
+const MODE_KEY = 'smidja-pane-mode'
+const OPEN_KEY = 'smidja-pane-open'
 const text = ref('')
 const state = ref('unknown')
 const why = ref('')
@@ -76,11 +86,39 @@ watch(
     text.value = ''
     why.value = ''
     note.value = ''
-    if (!value) return
+    if (!value) {
+      localStorage.removeItem(OPEN_KEY)
+      return
+    }
+    localStorage.setItem(OPEN_KEY, JSON.stringify({ pane: value, name: pane.value?.name ?? '', cwd: pane.value?.cwd ?? '' }))
+    if (mode.value !== 'read') return
     void load()
     timer = window.setInterval(load, 2000)
   },
 )
+
+watch(mode, (value) => {
+  localStorage.setItem(MODE_KEY, value)
+  if (timer) window.clearInterval(timer)
+  if (value === 'read' && pane.value) {
+    void load()
+    timer = window.setInterval(load, 2000)
+  }
+})
+
+// A reload re-opens the same pane in the same mode: the identity is the PANE,
+// and the agent's session outlives the browser either way.
+const savedMode = localStorage.getItem(MODE_KEY)
+if (savedMode === 'terminal' || savedMode === 'read') mode.value = savedMode
+const savedPane = localStorage.getItem(OPEN_KEY)
+if (savedPane) {
+  try {
+    const parsed = JSON.parse(savedPane) as { pane?: string; name?: string; cwd?: string }
+    if (parsed?.pane) openPane({ pane: parsed.pane, name: parsed.name, cwd: parsed.cwd })
+  } catch {
+    /* a stale entry is not worth a broken drawer */
+  }
+}
 
 onBeforeUnmount(() => {
   if (timer) window.clearInterval(timer)
@@ -99,12 +137,32 @@ onBeforeUnmount(() => {
       </span>
       <span v-if="pane.cwd" class="cwd" :title="pane.cwd">{{ pane.cwd }}</span>
       <span class="spacer" />
+      <button
+        type="button"
+        class="btn"
+        :class="{ active: mode === 'read' }"
+        title="Read the pane's words, sampled"
+        @click="mode = 'read'"
+      >read</button>
+      <button
+        type="button"
+        class="btn"
+        :class="{ active: mode === 'terminal' }"
+        title="A real PTY attached to this agent — what you type reaches it"
+        @click="mode = 'terminal'"
+      >terminal</button>
       <button type="button" class="btn" title="Move herdr's own focus to this pane" @click="raise">raise</button>
       <button type="button" class="btn" title="Close this view" @click="closePane()">close</button>
     </header>
-    <p v-if="why" class="why">could not read the pane — {{ why }}</p>
-    <p v-else-if="note" class="why">{{ note }}</p>
-    <pre v-if="!why" class="pane-text" :class="{ loading }">{{ text || 'reading the pane…' }}</pre>
+
+    <!-- THE LIVE TERMINAL: a real PTY on the agent's own session. -->
+    <LiveTerminal v-if="mode === 'terminal'" :key="pane.pane" :pane="pane.pane" :name="pane.name" />
+
+    <template v-else>
+      <p v-if="why" class="why">could not read the pane — {{ why }}</p>
+      <p v-else-if="note" class="why">{{ note }}</p>
+      <pre v-if="!why" class="pane-text" :class="{ loading }">{{ text || 'reading the pane…' }}</pre>
+    </template>
   </aside>
 </template>
 
@@ -185,6 +243,11 @@ onBeforeUnmount(() => {
 .btn:hover {
   color: var(--accent);
   border-color: var(--border);
+}
+
+.btn.active {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
 }
 
 .why {

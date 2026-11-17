@@ -154,7 +154,15 @@ async function serveStatic(req: Request): Promise<Response> {
   return notFound("not found");
 }
 
-const server = Bun.serve({
+/** What a terminal socket carries between its frames. */
+interface TerminalSocketData {
+  pane: string;
+  cols: number;
+  rows: number;
+  proc?: ReturnType<typeof Bun.spawn>;
+}
+
+const server = Bun.serve<TerminalSocketData>({
   port: PORT,
   hostname: HOST,
   routes: {
@@ -659,10 +667,122 @@ const server = Bun.serve({
     },
   },
 
-  fetch(req) {
-    const { pathname } = new URL(req.url);
+  // ── THE LIVE TERMINAL ────────────────────────────────────────────────────
+  // `ws://127.0.0.1:<port>/api/terminal?pane=<pane>&cols=&rows=` — one REAL
+  // pseudo-terminal per connection, attached to the agent's own session (see
+  // server/terminal-pty.mjs, which is run with `node` because node-pty produces
+  // nothing under Bun).
+  //
+  // It is a SHELL on this machine, so it is bound to loopback twice over: the
+  // server listens on 127.0.0.1 (HOST), and this handler refuses any peer that
+  // is not loopback even if a proxy forwards one. No token, no cookie, no port
+  // beyond the one the board already owns.
+  fetch(req, srv) {
+    const { pathname, searchParams } = new URL(req.url);
+    if (pathname === "/api/terminal") {
+      const pane = searchParams.get("pane") ?? "";
+      const address = srv.requestIP(req)?.address ?? "";
+      const loopback = address === "127.0.0.1" || address === "::1" || address === "::ffff:127.0.0.1";
+      if (!loopback) {
+        return new Response("the terminal is loopback only", { status: 403 });
+      }
+      if (!/^[\w:.@-]+$/.test(pane)) {
+        return new Response("not a pane id", { status: 400 });
+      }
+      const cols = Number(searchParams.get("cols") ?? 120) || 120;
+      const rows = Number(searchParams.get("rows") ?? 32) || 32;
+      if (srv.upgrade(req, { data: { pane, cols, rows } })) return undefined as unknown as Response;
+      return new Response("websocket upgrade refused", { status: 400 });
+    }
     if (pathname.startsWith("/api/")) return notFound(`no route ${pathname}`);
     return serveStatic(req);
+  },
+
+  websocket: {
+    // One PTY host per socket, announced before any output so a dead session is
+    // never mistaken for a quiet one.
+    open(ws) {
+      const data = ws.data;
+      const { pane, cols, rows } = data;
+      const script = join(import.meta.dir, "terminal-pty.mjs");
+      let proc: ReturnType<typeof Bun.spawn>;
+      try {
+        proc = Bun.spawn(["node", script, pane, String(cols), String(rows)], {
+          stdin: "pipe",
+          stdout: "pipe",
+          stderr: "pipe",
+          env: { ...process.env, TERM: "xterm-256color" },
+        });
+      } catch (error) {
+        ws.send(JSON.stringify({ type: "exit", code: -1, why: (error as Error).message }));
+        ws.close();
+        return;
+      }
+      data.proc = proc;
+      ws.send(JSON.stringify({ type: "attach", pane }));
+
+      // stdout → the browser, byte for byte
+      void (async () => {
+        const reader = (proc.stdout as ReadableStream<Uint8Array>).getReader();
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          try {
+            ws.send(value);
+          } catch {
+            break;
+          }
+        }
+      })();
+
+      // stderr → control frames (ready · exit). A dead PTY is ANNOUNCED.
+      void (async () => {
+        const reader = (proc.stderr as ReadableStream<Uint8Array>).getReader();
+        const decoder = new TextDecoder();
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          for (const line of decoder.decode(value).split("\n")) {
+            if (!line.trim()) continue;
+            try {
+              const event = JSON.parse(line);
+              if (event.type === "exit") {
+                ws.send(JSON.stringify({ type: "exit", ...event }));
+                ws.close();
+              }
+            } catch {
+              /* not a control line */
+            }
+          }
+        }
+      })();
+
+      void proc.exited.then(() => {
+        try {
+          ws.close();
+        } catch {
+          /* already closed */
+        }
+      });
+    },
+    // Keystrokes go straight into the PTY. A resize travels as the private
+    // sequence the PTY host strips out (ESC ]999;cols;rows BEL).
+    message(ws, message) {
+      const proc = ws.data.proc;
+      const stdin = proc?.stdin;
+      if (!stdin || typeof stdin === "number") return;
+      if (typeof message === "string") stdin.write(message);
+      else stdin.write(new Uint8Array(message as Uint8Array));
+      stdin.flush();
+    },
+    close(ws) {
+      const proc = ws.data.proc;
+      try {
+        proc?.kill();
+      } catch {
+        /* already gone */
+      }
+    },
   },
 });
 
