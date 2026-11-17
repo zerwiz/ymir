@@ -29,3 +29,7 @@ wove FEATURES.md from 251 entries in 7 sections
 $ grep -n "the-desk-survives-a-death" FEATURES.md
 264:| The desk survives a death | Five failsafes so one OOM kill cannot take every agent … |
 ```
+
+## CHANGE LOG
+
+- 2026-11-17 — review-mend: added missing heading for #814
