@@ -10,4 +10,4 @@
 # since last Friday are moved to Backlog.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../" && pwd)"
-exec python3 "$ROOT/bin/time/snotra/snotra-friday-synch.py" "$@"
+exec python3 "$ROOT/systems/snotra/services/cron/snotra-friday-synch.py" "$@"
