@@ -84,3 +84,7 @@ slot still runs. Every heavy door in this tree that knows it is heavy now asks �
 release build — and the runbook tells a person to start anything heavy through it. Whether the gate suite
 itself should take the slot on every machine is a decision the Allfather has not made, and on CI runners
 it would serialise a suite that is already alone.
+
+## CHANGE LOG
+
+- 2026-11-17 — review-mend: added missing heading for #814
