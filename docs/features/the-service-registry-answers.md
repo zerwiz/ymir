@@ -70,3 +70,7 @@ Four faults are red, and each finding names the registry file, the row and the f
 
 The row shape itself is `config/services.schema.json`, and the registry declares it in its own `schema:` header — so the
 next hand writes rows that fit without reading a plan.
+
+## CHANGE LOG
+
+- **2026-11-17** — the page was written (plan 312): the registry answers in one read — unit, script, port, dir, runbook and budget per service — and the two checks that keep it true.
