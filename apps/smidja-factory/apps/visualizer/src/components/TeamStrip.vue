@@ -20,6 +20,7 @@
  */
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import type { AgentSession } from '../lib/types'
+import { openPane } from '../lib/pane-drawer'
 
 const props = defineProps<{ smidjaId: string; agents: AgentSession[] }>()
 
@@ -91,12 +92,9 @@ function shortPath(path: string): string {
   return parts.length > 1 ? `…/${parts.slice(-2).join('/')}` : path
 }
 
-async function focus(pane: string) {
-  await fetch('/api/herdr/focus', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ pane }),
-  }).catch(() => undefined)
+/** Read the pane in the drawer — `herdr agent focus` alone changes nothing you can see. */
+function look(pane: string, name: string, cwd: string) {
+  openPane({ pane, name, cwd })
 }
 
 const runtimes = computed(() => {
@@ -142,7 +140,11 @@ const anySeat = computed(() => props.agents.some((agent) => runtimeOf(agent) ===
           <code class="member-pane">{{ seatFor(agent.agent)!.pane }}</code>
           <span class="member-state" :class="seatFor(agent.agent)!.status">{{ seatFor(agent.agent)!.status }}</span>
           <span class="member-cwd" :title="seatFor(agent.agent)!.cwd">{{ shortPath(seatFor(agent.agent)!.cwd) }}</span>
-          <button type="button" class="member-look" @click="focus(seatFor(agent.agent)!.pane)">look</button>
+          <button
+            type="button"
+            class="member-look"
+            @click="look(seatFor(agent.agent)!.pane, agent.agent, seatFor(agent.agent)!.cwd)"
+          >look</button>
         </template>
         <span v-else-if="runtimeOf(agent) === 'herdr'" class="member-note">pane closed</span>
         <span v-else class="member-note">a process, no pane</span>

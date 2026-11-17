@@ -21,7 +21,7 @@ from typing import Literal, Optional
 import yaml
 
 from . import (agent_herdr, agent_opencode, agent_pi, budget, lm_local,
-               permissions, prompts, stall_watch)
+               permissions, prompts, roster, stall_watch)
 from .data_types import (AgentCall, AgentConfig, EnvelopeBase, EventRecord,
                          GateCheck, GateReport, Phase, PhaseParams, PiRequest,
                          smidjaConfig, UsageBreakdown)
@@ -262,7 +262,17 @@ def _fill_models_from_hoard(raw: dict) -> str:
 
 
 def load_config(path: str = "smidja/smidja_smidja_config/smidja.config.yaml") -> smidjaConfig:
-    raw = _expand_env(yaml.safe_load(Path(path).read_text()) or {})
+    """One loader, two shapes of ONE truth.
+
+    A `smidja.config.yaml` (`agents:`) loads as it stands; a `roster.yaml`
+    (`stacks:`) is RESOLVED in memory into the same shape by
+    `smidja_modules/roster.py`. A team is a choice at launch, never a second file.
+    """
+    loaded = yaml.safe_load(Path(path).read_text()) or {}
+    if roster.is_roster(loaded):
+        loaded["__path__"] = str(path)
+        loaded = roster.resolve(loaded, os.environ.get("SMIDJA_STACK", ""))
+    raw = _expand_env(loaded)
     # Fill empty models from the hoard BEFORE the defaults-merge below, so a
     # roster entry with no model inherits the operator's choice, not a literal.
     _fill_models_from_hoard(raw)

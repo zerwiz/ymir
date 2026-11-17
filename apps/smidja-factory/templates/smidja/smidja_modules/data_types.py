@@ -368,6 +368,8 @@ class smidjaConfig(BaseModel):
     defaults: ConfigDefaults = Field(default_factory=ConfigDefaults)
     observability: ObservabilityConfig = Field(default_factory=ObservabilityConfig)
     agents: list[AgentConfig] = Field(default_factory=list)
+    # WHICH TEAM THIS IS, when the config came from a roster's `stacks:` block.
+    stack: dict = Field(default_factory=dict)
 
 
 # ── Tracing ──────────────────────────────────────────────────────────────────

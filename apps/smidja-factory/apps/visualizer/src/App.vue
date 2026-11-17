@@ -11,6 +11,7 @@ import StatsView from './components/StatsView.vue'
 import ChatView from './components/ChatView.vue'
 import SettingsView from './components/SettingsView.vue'
 import HerdrSeats from './components/HerdrSeats.vue'
+import PaneDrawer from './components/PaneDrawer.vue'
 
 const emberEl = ref<HTMLCanvasElement | null>(null)
 let stopEmbers: (() => void) | undefined
@@ -183,6 +184,8 @@ const hallUrl =
          board says who is seated and where — on every page, because the question
          "what is running right now" is not a question about one view. -->
     <HerdrSeats />
+    <!-- What a `look` opens: the pane's own words, read live, here. -->
+    <PaneDrawer />
     <main id="main-content">
       <StatsView v-if="isStats" />
       <DecisionsView v-else-if="isDecisions" />

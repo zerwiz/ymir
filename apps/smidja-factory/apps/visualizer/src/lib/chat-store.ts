@@ -5,7 +5,7 @@
  * All data comes from the real backend endpoints:
  *   GET  /api/rosters  /api/models   → picker (teams + orchestrator models)
  *   GET  /api/chat/history          → conversation for the active session
- *   POST /api/chat/message          → send to Kaia (Pi)
+ *   POST /api/chat/message          → send to Völundr (Pi)
  *   POST /api/chat/session          → launch a smidja run
  *   POST /api/chat/steer            → inject guidance mid-run
  */
@@ -33,7 +33,7 @@ export const models = ref<ModelInfo[]>([])
 /** Models the chat pi process can actually resolve (pi --list-models catalog). */
 export const chatModels = ref<{ id: string; name: string; provider: string }[]>([])
 
-/** The model the chat talks to Kaia on; '' = server default (orchestrator cloud model). */
+/** The model the chat talks to Völundr on; '' = the machine's own orchestrator model. */
 export const chatModel = ref('')
 export const pending = ref(false)
 export const error = ref<string | null>(null)
@@ -118,7 +118,7 @@ export async function init(): Promise<void> {
     rosters.value = r
     models.value = m
     chatModels.value = cm as { id: string; name: string; provider: string }[]
-    // Default Kaia to a WORKING local model when one is resolvable: prefer the
+    // Default Völundr to a WORKING local model when one is resolvable: prefer the
     // llamacpp Q2 (native, 130K) over a stale/cloud entry, so the first message
     // doesn't 500 with "Connection error" on an unloaded backend. Only applies
     // when the user hasn't already picked a model this session.
@@ -190,7 +190,7 @@ export async function deleteChat(id: string): Promise<void> {
   }
 }
 
-/** Send one chat message; await Kaia's reply and append both to the thread. */
+/** Send one chat message; await Völundr's reply and append both to the thread. */
 export async function sendMessage(content: string): Promise<void> {
   const trimmed = content.trim()
   if (!trimmed || pending.value) return

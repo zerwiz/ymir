@@ -110,6 +110,58 @@ export async function seats(run?: string): Promise<HerdrSeatsResponse> {
   return { ...data, seats: mine };
 }
 
+/**
+ * What one pane SAYS, right now — the agent's terminal, as text.
+ *
+ * This is the answer to a control that looks broken: `herdr agent focus` moves
+ * herdr's own focus, which does nothing you can SEE while you are sitting in the
+ * Smíðja window. So `look` reads the pane instead, and the board shows it.
+ * `--format text` (never ansi): the reader gets words, not escape codes.
+ */
+export async function pane(paneId: string, lines = 400): Promise<{
+  ok: boolean;
+  why: string;
+  pane: string;
+  state: string;
+  text: string;
+  source: string;
+  at: string;
+}> {
+  const at = new Date().toISOString();
+  const empty = { ok: false, why: "", pane: paneId, state: "unknown", text: "", source: "", at };
+  if (!/^[\w:.@-]+$/.test(paneId)) return { ...empty, why: "not a pane id" };
+  const count = Math.min(Math.max(Number(lines) || 400, 20), 4000);
+  const state = await status(paneId);
+
+  // TWO SOURCES, and the difference is real. A WORKING agent lives on the
+  // alternate screen, whose scrollback herdr can only capture while the pane is
+  // idle — `herdr agent read … --lines 400` refuses with `agent_not_idle` while
+  // it works (measured). So: the scrollback when it is idle, the visible screen
+  // when it is not, and the answer says which one you are looking at.
+  const attempts: Array<{ source: string; lines: number | null }> = [
+    { source: "recent-unwrapped", lines: count },
+    { source: "visible", lines: null },
+  ];
+  let lastWhy = "";
+  for (const attempt of attempts) {
+    const argv = ["agent", "read", paneId, "--source", attempt.source, "--format", "text"];
+    if (attempt.lines !== null) argv.push("--lines", String(attempt.lines));
+    try {
+      const { stdout } = await run(HERDR, argv, { timeout: 10_000 });
+      return { ok: true, why: "", pane: paneId, state, text: stdout ?? "", source: attempt.source, at };
+    } catch (error) {
+      lastWhy = (error as Error).message.split("\n")[0].slice(0, 200);
+    }
+  }
+  return { ...empty, state, why: lastWhy };
+}
+
+/** One pane's live state, from the same `agent list` the strip already asks. */
+export async function status(paneId: string): Promise<string> {
+  const data = await seats();
+  return data.seats.find((seat) => seat.pane === paneId)?.status ?? "gone";
+}
+
 /** Bring one pane to the front. The only write, and it writes no state. */
 export async function focus(pane: string): Promise<{ ok: boolean; why: string }> {
   if (!/^[\w:.@-]+$/.test(pane)) return { ok: false, why: "not a pane id" };

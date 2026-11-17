@@ -12,6 +12,7 @@
  * every seat on the machine is shown and a smidja seat is marked.
  */
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { openPane } from '../lib/pane-drawer'
 
 const props = defineProps<{ run?: string; pollMs?: number }>()
 
@@ -55,22 +56,15 @@ async function load() {
   }
 }
 
-/** Bring a pane to the front — the one action this strip has. */
-async function focus(pane: string) {
+/**
+ * LOOK AT THE PANE, HERE. The old control called `herdr agent focus`, which
+ * moved herdr's own focus — invisible from this window, so the button looked
+ * dead. The drawer reads the pane and shows its words; `raise` inside it still
+ * moves herdr's focus for the operator who wants that window.
+ */
+function look(seat: Seat) {
   focusNote.value = ''
-  try {
-    const response = await fetch('/api/herdr/focus', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ pane }),
-    })
-    if (!response.ok) {
-      const data = (await response.json().catch(() => ({}))) as { why?: string; error?: string }
-      focusNote.value = `could not focus ${pane}: ${data.why ?? data.error ?? response.status}`
-    }
-  } catch (error) {
-    focusNote.value = `could not focus ${pane}: ${(error as Error).message}`
-  }
+  openPane({ pane: seat.pane, name: seat.name, cwd: seat.cwd })
 }
 
 /** A tree's last two segments — enough to recognise the seat, short enough to fit. */
@@ -125,8 +119,8 @@ onBeforeUnmount(() => {
           <button
             type="button"
             class="seat-focus"
-            :title="`Show ${seat.pane} in herdr`"
-            @click="focus(seat.pane)"
+            :title="`Read ${seat.pane} here`"
+            @click="look(seat)"
           >look</button>
         </li>
       </ul>

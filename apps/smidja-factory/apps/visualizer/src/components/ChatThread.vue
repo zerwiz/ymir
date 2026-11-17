@@ -6,7 +6,7 @@ import { modelName } from '../lib/models'
 import type { ChatMessage } from '../lib/types'
 import ToolCallCard from './ToolCallCard.vue'
 
-const props = defineProps<{ messages: ChatMessage[] }>()
+const props = defineProps<{ messages: ChatMessage[]; agentName?: string }>()
 const emit = defineEmits<{ (e: 'launch-click', adwId: string): void }>()
 
 const scrollEl = ref<HTMLElement | null>(null)
@@ -48,11 +48,11 @@ function onScroll() {
           </div>
         </div>
 
-        <!-- Kaia bubble, left-aligned with model footnote -->
+        <!-- Völundr's bubble (the smithy's orchestrator), left-aligned with model footnote -->
         <div v-else class="row kaia-row">
           <div class="bubble kaia">
             <div class="who kaia-who">
-              <Bot :size="14" /> Kaia
+              <Bot :size="14" /> {{ agentName }}
               <span v-if="m.model" class="model" :title="m.model">{{ modelName(m.model) }}</span>
             </div>
             <!-- eslint-disable-next-line vue/no-v-html -->

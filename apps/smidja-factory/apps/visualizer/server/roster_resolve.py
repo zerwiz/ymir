@@ -67,8 +67,30 @@ def _weak(model: str) -> bool:
     return bool(re.search(r"(?:^|[^0-9])(4b|7b|8b|0\.6b|0\.5b)(?:[^0-9]|$)", model.lower()))
 
 
+# THE ONE FILE, wherever a project keeps it. The books say
+# `smidja/smidja_smidja_config/roster.yaml` (beside the config); an older shelf
+# used `smidja/smidja_config/`. This resolver only looked at the older one, so a
+# project that followed the books got an EMPTY picker — "no teams", from a file
+# that was right there (measured 2026-11-17).
+ROSTER_PATHS = (
+    "smidja/smidja_smidja_config/roster.yaml",
+    "smidja/smidja_config/roster.yaml",
+    "smidja/roster.yaml",
+)
+
+
+def find_roster(repo_root: Path, roster_path: Path | None = None) -> Path | None:
+    if roster_path:
+        return roster_path
+    for rel in ROSTER_PATHS:
+        candidate = repo_root / rel
+        if candidate.exists():
+            return candidate
+    return None
+
+
 def resolve_rosters_and_models(repo_root: Path, roster_path: Path | None = None) -> dict:
-    r = roster_path or repo_root / "smidja" / "smidja_config" / "roster.yaml"
+    r = find_roster(repo_root, roster_path)
     data = {}
     if r and r.exists():
         import yaml

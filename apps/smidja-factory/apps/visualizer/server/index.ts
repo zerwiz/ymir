@@ -228,6 +228,15 @@ const server = Bun.serve({
       return json(await herdrApi.seats(run ?? undefined));
     }),
 
+    // WHAT A PANE SAYS. `look` reads the agent's terminal instead of moving a
+    // focus nobody can see from another window.
+    "/api/herdr/pane": safely(async (req) => {
+      const query = new URL(req.url).searchParams;
+      const paneId = query.get("pane") ?? "";
+      if (!paneId) return json({ error: "pane is required" } satisfies ApiError, 400);
+      return json(await herdrApi.pane(paneId, Number(query.get("lines") ?? 400)));
+    }),
+
     // Focus one pane: the reader's click, not a change to the run.
     "/api/herdr/focus": {
       POST: safely(async (req) => {

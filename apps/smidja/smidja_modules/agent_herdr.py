@@ -336,10 +336,21 @@ def wait_turn(pane: str, timeout_s: int = TURN_TIMEOUT_S) -> str:
 
 
 def read_pane(pane: str) -> str:
-    """What the pane says, as a person sees it."""
+    """What the pane says, as a person sees it.
+
+    TWO SOURCES. A working agent lives on the alternate screen, whose scrollback
+    herdr can only capture while the pane is IDLE — asking for 400 lines mid-turn
+    is refused with `agent_not_idle` (measured 2026-11-17). So the scrollback is
+    tried first and the visible screen second, and a read never comes back empty
+    just because the agent was busy.
+    """
     out = _hdr(["agent", "read", pane, "--source", "recent-unwrapped",
                 "--lines", str(READ_LINES), "--format", "text"], timeout=60)
-    return out.stdout if out.returncode == 0 else ""
+    if out.returncode == 0 and out.stdout:
+        return out.stdout
+    visible = _hdr(["agent", "read", pane, "--source", "visible",
+                    "--format", "text"], timeout=60)
+    return visible.stdout if visible.returncode == 0 else ""
 
 
 def _session_path(pane: str) -> str:

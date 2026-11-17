@@ -373,6 +373,10 @@ class smidjaConfig(BaseModel):
     defaults: ConfigDefaults = Field(default_factory=ConfigDefaults)
     observability: ObservabilityConfig = Field(default_factory=ObservabilityConfig)
     agents: list[AgentConfig] = Field(default_factory=list)
+    # WHICH TEAM THIS IS, when the config came from a roster's `stacks:` block:
+    # name · tier · inject · kaia_tier · the roster file. Empty for a plain
+    # config, so a stamped project that never wrote a roster reads the same.
+    stack: dict = Field(default_factory=dict)
 
 
 # ── Tracing ──────────────────────────────────────────────────────────────────

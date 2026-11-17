@@ -65,6 +65,39 @@ Every agent entry merges over `defaults`, so an entry only states what differs. 
 
 A `herdr` seat is raised through the one spawn path (`bin/seat/herdr-run.sh`), so the house's laws still apply to it: the model allow-list, the one-local-model lock, the seat guard, and isolation. The seat starts **in the run's own tree** (`--seat-cwd`), carries the agent's rendered `system.md` as its system prompt, and its **pane id and session id are recorded in `agent_map.json`** beside the model — so a reader can find the agent, not just its session id. `agents.validate()` refuses a `herdr` agent on a machine with no herdr session, by name, before the first phase.
 
+### A team is a `stacks:` block in `roster.yaml` — one file, resolved, never copied
+
+`smidja/smidja_smidja_config/roster.yaml` is where teams live, beside the config it resolves into:
+
+```yaml
+defaults: {data_dir: smidja/smidja_data, prompt_dir: smidja/smidja_data/prompt_engineering}
+observability: {db: smidja/smidja_data/smidja.db}
+role_defaults:                 # per ROLE: the core four
+  planner: {purpose: …, thinking: high, writes: [specs/], tools: [read, grep, find, ls, bash, write]}
+  builder: {purpose: …, tools: [read, grep, find, ls, bash, edit, write]}
+tiers:                         # the model catalog
+  cloud: {defaults: opencode-go/deepseek-v4.1-flash}
+stacks:
+  plan-build-review:           # THE TEAM
+    tier: cloud
+    agents: [planner, builder, reviewer]
+    coding_agent: herdr        # the surface, per team (or per agent, in overrides)
+    overrides:
+      reviewer: {thinking: high}
+```
+
+Launch it by name:
+
+```bash
+SMIDJA_STACK=plan-build-review uv run smidja/smidja_plan_build.py requests/health.md   --config smidja/smidja_smidja_config/roster.yaml
+bin/desktop/smidja-doctor.sh --config smidja/smidja_smidja_config/roster.yaml   # green or refused
+```
+
+`agents.load_config()` sees `stacks:` and resolves the chosen stack **in memory** into the same shape
+a plain config has (`smidja_modules/roster.py`), so there is no second file, no generated config, and
+no drift: the picker and the run read the same resolver's answer. Model precedence is
+`overrides > tier > role_defaults > defaults` — the picker's order, mirrored on purpose.
+
 ### The team may not exceed the machine
 
 A roster is a team, and a team bigger than the machine can carry does not fail loudly — it swaps until the OOM killer picks a victim. `agents.validate()` and `smidja doctor` refuse it, with the arithmetic printed: seats × the per-seat floor, plus one resident local model, against RAM minus the estate's declared ceilings (`hodd/identity/services.yaml`, plan 003's shape) minus the desk's reserve. Every term is overridable (`SMIDJA_SEAT_FLOOR_MB`, `SMIDJA_DESK_RESERVE_MB`, `SMIDJA_LOCAL_MODEL_MB`) and every term is printed.

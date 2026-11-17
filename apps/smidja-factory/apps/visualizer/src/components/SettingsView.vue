@@ -19,7 +19,7 @@ const FIELDS = [
   },
   {
     key: 'WOTEAMS_AGENT_NAME',
-    label: 'Orchestrator name (Kaia)',
+    label: 'Orchestrator name (Völundr)',
     hint: 'What your orchestrator registers as in the Teams work registry (agents_list / update_my_work). Default: kaia-chat.',
     secret: false,
     placeholder: 'kaia-chat',
@@ -106,7 +106,7 @@ onMounted(() => {
     </section>
 
     <p class="note">
-      Kaia (the orchestrator chat) gets these keys on every message — the chat's pi process
+      Völundr (the orchestrator chat) gets these keys on every message — the chat's pi process
       loads the teams MCP tools directly, so it works even if your own
       interactive pi doesn't have the package installed.
     </p>

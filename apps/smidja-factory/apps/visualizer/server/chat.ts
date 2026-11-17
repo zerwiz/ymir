@@ -15,7 +15,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { repoRootOf } from "./db.ts";
-import { piCommand } from "./model-catalog.ts";
+import { piCommand, piModels } from "./model-catalog.ts";
 import type {
   ChatHistoryResponse,
   ChatMessage,
@@ -26,6 +26,35 @@ import type {
 } from "../shared/types.ts";
 
 const VERBOSE = process.env.SMIDJA_CHAT_DEBUG === "1" || process.env.SMIDJA_DEBUG === "1";
+
+/**
+ * The chat's model, from the ONE resolver — `bin/fleet/agents-config.sh`, which
+ * reads the operator's own `config/agents.yaml`. Cached for a minute: the answer
+ * is a machine fact, not a per-message one.
+ */
+let chatModelCache: { at: number; model: string } | null = null;
+
+export async function defaultChatModel(root: string): Promise<string> {
+  if (chatModelCache && Date.now() - chatModelCache.at < 60_000) return chatModelCache.model;
+  const script = join(root, "bin", "fleet", "agents-config.sh");
+  let model = "";
+  if (existsSync(script)) {
+    try {
+      const proc = Bun.spawn(["bash", script, "get", "orchestrator", "model"], {
+        stdout: "pipe",
+        stderr: "pipe",
+        cwd: root,
+      });
+      model = (await new Response(proc.stdout).text()).trim();
+      await proc.exited;
+    } catch {
+      model = "";
+    }
+  }
+  if (!model) model = "opencode-go/deepseek-v4.1-flash";
+  chatModelCache = { at: Date.now(), model };
+  return model;
+}
 
 /** Debug helper: always visible in the server log when chat debugging is on. */
 function dbg(...parts: unknown[]): void {
@@ -183,10 +212,20 @@ export async function sendMessage(req: ChatMessageRequest, dbPath: string): Prom
 
   async function runPi(prompt: string, session: string, requestedModel?: string): Promise<string> {
     const root = repoRootOf(dbPath);
-    // The user picks the chat model in the UI (orchestrator picker); fall back
-    // to the orchestrator's cloud model. Passing it explicitly keeps pi on the
-    // right surface instead of its heavy wayofteams-tools MCP default.
-    const model = requestedModel?.trim() || "opencode-go/deepseek-v4-flash";
+    // The user picks the chat model in the UI (orchestrator picker); otherwise
+    // ask the machine, never a literal. This line used to hardcode
+    // `opencode-go/deepseek-v4-flash`, a model the catalog does not carry — so
+    // every message came back as a provider 400 and the window said "offline"
+    // (measured 2026-11-17). A model this machine cannot serve is a refusal by
+    // name, not a guess (RULES: the catalog is the truth).
+    const model = requestedModel?.trim() || (await defaultChatModel(root));
+    const catalog = await piModels(root);
+    if (catalog.length && !catalog.some((m) => m.id === model)) {
+      throw new Error(
+        `${model} is not in this machine's catalog — pick one in the chat's model list ` +
+          `(bin/model/catalog.sh --has ${model})`,
+      );
+    }
     const args = [
       "--print",
       "--session",
@@ -254,15 +293,24 @@ export async function sendMessage(req: ChatMessageRequest, dbPath: string): Prom
  */
 function kaiaPromptArgs(cwd: string): string[] {
   const candidates = [
-    "apps/smidja/smidja_data/prompt_engineering/orchestrator/system.md",
+    // Völundr's own identity first (the skill's prompt), then a stamped repo's
+    // orchestrator prompt, then the factory template's.
+    ".agents/skills/smidja-factory/skills/volundr/prompt/volundr-system.md",
     ".agents/skills/smidja/skills/volundr/prompt/volundr-system.md",
+    "smidja/smidja_data/prompt_engineering/orchestrator/system.md",
+    "apps/smidja/smidja_data/prompt_engineering/orchestrator/system.md",
+    "apps/smidja-factory/templates/prompt_engineering/orchestrator/system.md",
   ];
-  const args: string[] = [];
   for (const rel of candidates) {
     const abs = join(cwd, rel);
-    if (existsSync(abs)) args.push("--append-system-prompt", abs);
+    if (!existsSync(abs)) continue;
+    // REPLACED, and no context files: this chat IS the smithy's orchestrator,
+    // not the seat's counsellor. Appending left the house contract in front of
+    // it, so every reply began "I am Hœnir, your counsellor" — the wrong agent,
+    // wearing the right name (measured 2026-11-17).
+    return ["--system-prompt", abs, "-nc"];
   }
-  return args;
+  return [];
 }
 
 /**

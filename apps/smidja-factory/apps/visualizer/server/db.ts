@@ -162,14 +162,52 @@ export function resolveDbPath(argv: string[] = Bun.argv): string {
  * smithy moved from `<repo>/smidja/` to `<repo>/apps/smidja/`, and a fixed count
  * would have to change in every module that derived anything from it.
  */
+/**
+ * THE TREE A RUN WORKS IN — never derived from a database alone.
+ *
+ * The db's neighbours are a good guess for a PROJECT (`<repo>/smidja/smidja_data/smidja.db`
+ * → the repo), and a bad one for the operator's own home: `~/Documents/ymirhome` is
+ * a git repo, so a db at `~/Documents/ymirhome/smidja/smidja.db` resolved to the
+ * HOME — where the smithy's code, prompts and teams do not live. Every symptom of
+ * that was confusing in the same way: the chat answered as the seat's counsellor
+ * instead of the smithy's orchestrator, and the team picker came back empty,
+ * because both looked for files that are not in the home (measured 2026-11-17).
+ *
+ * So, in order: an explicit `SMIDJA_REPO_ROOT`; a tree that actually holds the
+ * smithy (the checkout this server runs from); then the db's neighbours.
+ */
 export function repoRootOf(dbPath: string): string {
+  const explicit = process.env.SMIDJA_REPO_ROOT;
+  if (explicit && existsSync(explicit)) return resolve(explicit);
+
+  /** A STAMPED PROJECT: a db under `<root>/smidja/…` with its own config. */
   let dir = dirname(dbPath);
+  let fromDb: string | null = null;
   for (let i = 0; i < 8; i++) {
-    if (existsSync(join(dir, ".agents")) || existsSync(join(dir, ".git"))) return dir;
+    if (existsSync(join(dir, "smidja", "smidja_smidja_config"))) return dir;
+    if (!fromDb && (existsSync(join(dir, ".agents")) || existsSync(join(dir, ".git")))) fromDb = dir;
     const up = dirname(dir);
     if (up === dir) break;
     dir = up;
   }
+
+  /** A REPO ROOT: it has the doors (`bin/`) AND the smithy's code. */
+  const isRepoRoot = (candidate: string): boolean =>
+    existsSync(join(candidate, "bin")) &&
+    (existsSync(join(candidate, "apps", "smidja", "smidja_modules")) ||
+      existsSync(join(candidate, "bin", "desktop", "smidja-doctor.sh")));
+
+  // The checkout the server itself runs from (a clone, or the pinned release).
+  let here = resolve(import.meta.dir);
+  for (let i = 0; i < 10; i++) {
+    if (isRepoRoot(here)) return here;
+    const up = dirname(here);
+    if (up === here) break;
+    here = up;
+  }
+
+  if (fromDb && isRepoRoot(fromDb)) return fromDb;
+  if (fromDb) return fromDb;
   return resolve(dirname(dirname(dirname(dbPath))));   // legacy fallback
 }
 

@@ -54,6 +54,15 @@ Two strips, both live:
   model, how full its context window got, and — for a herdr member — the pane it is working in and
   its live state.
 
+## Look at a pane
+
+Press **look** on any seat. A drawer opens in the corner with that agent's own terminal, live, and
+its state, its pane and the tree it is working in. `raise` inside the drawer moves herdr's own focus
+for when you want the herdr window; `close` dismisses it.
+
+A working agent's scrollback cannot be captured (herdr says `agent_not_idle`), so the drawer shows
+the **visible screen** and says so. An idle agent shows its recent scrollback.
+
 ## Limits worth knowing
 
 - A herdr agent needs a herdr session. On a machine with none, `smidja doctor` and the run both
