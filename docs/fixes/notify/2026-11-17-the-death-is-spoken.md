@@ -53,3 +53,7 @@ is named as owed rather than done quietly.
 ## Where the proof lives
 
 `bin/seat/tests/test_desk_failsafes.sh`: the same death is said once and suppressed the second time.
+
+## CHANGE LOG
+
+- 2026-11-17 — review-mend: added missing heading for #814
