@@ -235,7 +235,7 @@ No SMTP, no `users/me/drafts/send`, no socket of her own — the gate is the onl
 
 The two wards that keep this honest are already standing: `tests/test_gna.py::NoSendCapability` fails if a send
 pattern appears in any file here, and
-`bin/time/snotra/tests/test_outbound_gate.py::GnaOwed` fails if a send in `bin/` does not name the gate.
+`bin/time/snotra/tests/test_outbound_gate.py::GnaOwed` fails if a send in `bin/` does not name the gate. <!-- allow-superseded-path: this line records where the door WAS, or names the real tests/ directory that never moved -->
 
 ## Appended 2026-11-08 — the connect door, and the count above is stale
 

@@ -528,7 +528,7 @@ the home.
 
 **Endpoints are configuration (Rule 07), never constants:** `YMIR_GMAIL_API_BASE` · `YMIR_CALENDAR_API_BASE` ·
 `YMIR_OAUTH_TOKEN_URL`, each defaulting to the real Google door. That is also what makes the gate **provable
-without a mailbox** — `bin/time/snotra/tests/test_outbound_gate.py` stands a local HTTP server behind those three
+without a mailbox** — `bin/time/snotra/tests/test_outbound_gate.py` stands a local HTTP server behind those three <!-- allow-superseded-path: this line records where the door WAS, or names the real tests/ directory that never moved -->
 variables, builds a throwaway home with a real `age` vault, and runs the shipping doors unchanged: 12 proofs
 (unapproved refused and recorded · approved sends once · replay refused · stale refused · invite with attendees
 posts nothing · approved invite sets `sendUpdates=all` · stale event refused · no attendees mails nobody ·
@@ -655,7 +655,7 @@ refusal that patches nothing · the vendor's 403 becoming the named refusal.
 
 **Fix note:** `docs/fixes/snotra/2026-11-09-the-calendar-can-be-written-and-refuses-by-scope.md` ·
 **How-to:** `docs/features/make-and-move-meetings.md`. The same change mended two pre-existing red proofs in
-`bin/time/snotra/tests/test_outbound_gate.py`: the "read the door" tests read retired **shims** (two-line
+`bin/time/snotra/tests/test_outbound_gate.py`: the "read the door" tests read retired **shims** (two-line <!-- allow-superseded-path: this line records where the door WAS, or names the real tests/ directory that never moved -->
 forwarders) instead of the file that implements them, and the send-around-the-gate scan counted a *comment and a
 printed sentence* as a send call.
 

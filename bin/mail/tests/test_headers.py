@@ -20,7 +20,7 @@ Four proofs, one per promise the door makes:
 
 Nothing here talks to Google: the transport is the desk's own stub (test_gna.StubGmail), and
 the letters door is given a local HTTP stand-in for the Gmail API and the token door, exactly
-as `bin/time/snotra/tests/test_outbound_gate.py` does.
+as `bin/time/snotra/tests/test_outbound_gate.py` does.  # allow-superseded-path: this line records where the door WAS, or names the real tests/ directory that never moved
 
     python3 bin/mail/tests/test_headers.py                 # every proof
     python3 bin/mail/tests/test_headers.py ThreadedByHeader # one of them
