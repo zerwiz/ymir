@@ -106,6 +106,20 @@ $map
 EOF
 fi
 
+# ── THE RECALLED PANE IS A CLAIM, NOT A FACT (2026-11-16) ────────────────────────────────────────
+# Every errand that finished today reported "pane w2:p3 reported herdr agent_not_found": w2:p3 was the
+# helm's pane before the 04:00 reboot, and the arm's own state still names it. A remembered pane id is a
+# guess about a machine that restarts, so it is PROVED against herdr before a turn is aimed at it —
+# and a ghost is discarded and resolved again, never spoken to. The wake is already in the queue by
+# this point (acclaim appends it first), so a ghost costs the chat injection and nothing else.
+if [ -n "$pane" ] && command -v herdr >/dev/null 2>&1; then
+  if ! timeout 20 herdr agent list 2>/dev/null | grep -qF "\"pane_id\":\"$pane\""; then
+    printf 'note: the recalled pane %s (%s) holds no live agent — resolving again, and the wake stands\n' \
+      "$pane" "${pane_via:-an unnamed source}" >&2
+    pane=""; pane_via=""
+  fi
+fi
+
 if [ "${status:-0}" = 1 ]; then
   alive="no"; kill -0 "$owner" 2>/dev/null && alive="yes"
   printf 'arm-holder[2]{lock_owner,alive,pane,via}:\n  "%s","%s","%s","%s"\n' "$owner" "$alive" "${pane:-NOT FOUND}" "${pane_via:-nothing matched}"
@@ -114,9 +128,11 @@ fi
 
 [ -n "$line" ] || { printf 'usage: eindri-notify.sh --from <name> -- "<one line>"\n' >&2; exit 2; }
 if [ -z "$pane" ]; then
-  printf 'eindri-notify: refused — the lock owner (pid %s) hosts no pane this machine can see.\n' "$owner" >&2
-  printf '  the report is on the shelf and in the wake queue; the chat injection could not happen.\n' >&2
-  exit 1
+  # THE WAKE QUEUE IS THE FLOOR, AND THE FLOOR HOLDS (2026-11-16). The line is already queued; a chat
+  # injection that cannot happen is a lost convenience, not a lost message. Exiting non-zero here made
+  # seven finished errands report "delivery FAILED" tonight for news the helm had already received.
+  printf 'eindri-notify: no live pane for the lock owner (pid %s) — the line is in the wake queue and the helm drains it at the next turn; the chat injection did not happen.\n' "$owner" >&2
+  exit 0
 fi
 
 # ── 3 · speak it into that session ─────────────────────────────────────────────────────────────────
@@ -135,5 +151,5 @@ if timeout 60 "$ROOT/bin/agents/eindri-send.sh" --from "agent $from" "$pane" "$l
   printf 'injected[1]{from,pane,owner}:\n  "%s","%s","%s"\n' "$from" "$pane" "$owner"
   exit 0
 fi
-printf 'eindri-notify: refused — herdr did not accept the turn for pane %s (owner %s)\n' "$pane" "$owner" >&2
-exit 1
+printf 'eindri-notify: herdr did not accept the turn for pane %s (owner %s) — the line is in the wake queue; the chat injection did not happen.\n' "$pane" "$owner" >&2
+exit 0
