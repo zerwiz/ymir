@@ -21,8 +21,8 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[67]{file,does,kind,verdict,disposition,callers,lines}:
-  "README.md","Gróa — the updater, one per install","data","tested","keep",63,-
+bin[68]{file,does,kind,verdict,disposition,callers,lines}:
+  "README.md","Gróa — the updater, one per install","data","tested","keep",64,-
   "agent-census.sh","agent-census.sh — how many agents are running on THIS machine, and which of them are stale.","tool","wired","keep",1,163
   "agent-run.sh","agent-run.sh — run one agent's errand through the harness the Allfather chose.","tool","wired","keep",2,62
   "areas.sh","areas.sh — the estate door: a project's areas, their keepers, and the seam to the seat.","tool","wired","keep",15,393
@@ -36,8 +36,8 @@ bin[67]{file,does,kind,verdict,disposition,callers,lines}:
   "domain.sh","domain.sh — the ONE door that starts, reports and stops a domain's keeper.","tool","wired","keep",2,218
   "eindri-acclaim-silent.sh","eindri-acclaim-silent.sh — action half of the Eindri silence bridge.","tool","wired","keep",1,57
   "eindri-acclaim.sh","eindri-acclaim.sh — action half of the Eindri→Brokk wake bridge.","tool","tested","keep",11,294
-  "eindri-arm.sh","eindri-arm.sh — the Eindri's own arm (plan 42, the automation law).","tool","wired","keep",2,185
-  "eindri-bearings.sh","eindri-bearings.sh — the Bearings every errand's brief carries: the fixed core, the project's","tool","wired","keep",2,185
+  "eindri-arm.sh","eindri-arm.sh — the Eindri's own arm (plan 42, the automation law).","tool","wired","keep",3,217
+  "eindri-bearings.sh","eindri-bearings.sh — the Bearings every errand's brief carries: the fixed core, the project's","tool","wired","keep",2,184
   "eindri-checkpoint.sh","eindri-checkpoint.sh — a herdr worker's durable checkpoint, so a dead pane resumes.","tool","wired","keep",4,105
   "eindri-control.sh","eindri-control.sh — the CONTROL plane: allowlisted lifecycle verbs for a","tool","wired","keep",2,40
   "eindri-dispatch.sh","eindri-dispatch.sh — the errand loop: ONE command per errand (plan 42","tool","wired","keep",4,513
@@ -51,7 +51,7 @@ bin[67]{file,does,kind,verdict,disposition,callers,lines}:
   "eindri-seat.sh","eindri-seat.sh — seat a worker and PROVE it, in one move.","tool","wired","keep",1,85
   "eindri-seen.sh","eindri-seen.sh — condition half of the Eindri→Brokk wake bridge.","tool","wired","keep",2,57
   "eindri-send.sh","eindri-send.sh — the DATA plane: hand a seated worker one attributed line, safely.","tool","wired","keep",14,277
-  "eindri-start.sh","eindri-start.sh — start an Eindri as the Allfather asks.","tool","wired","keep",4,310
+  "eindri-start.sh","eindri-start.sh — start an Eindri as the Allfather asks.","tool","wired","keep",4,330
   "eindri-wake-lib.sh","eindri-wake-lib.sh — the ONE delivery ledger behind the Eindri push path.","lib","wired","keep",12,71
   "eindri-watch.sh","eindri-watch.sh — the control door on the Eindri→Brokk wake bridge.","tool","wired","keep",6,131
   "einherjar-spawn.sh","einherjar-spawn.sh - gather an Eindri worker (Einherjar = the chosen who are","tool","tested","keep",23,1451
@@ -72,14 +72,15 @@ bin[67]{file,does,kind,verdict,disposition,callers,lines}:
   "report.sh","report.sh — THE handoff door.","tool","tested","keep",13,97
   "research-round.sh","research-round.sh — one reusable research errand: seat a skald or a sage, give","tool","wired","keep",0,144
   "rodd-operational-input.sh","rodd-operational-input.sh - canonical Rödd operational-input protocol.","tool","wired","keep",1,251
-  "seat-identity.sh","seat-identity.sh — print a seat's primary agent and its role file.","tool","wired","keep",6,228
+  "seat-identity.sh","seat-identity.sh — print a seat's primary agent and its role file.","tool","tested","keep",6,232
   "seat-stop.sh","seat-stop.sh — stop a seat WHOLE: every process working in its worktree, not just the pane.","tool","wired","keep",1,78
-  "seat.sh","seat.sh — seat Gróa on THIS machine, once.","tool","tested","migrate → src/ymir_runtime/seat.py",27,110
-  "skill-find.sh","skill-find.sh — find the skill you need, without loading any of them.","tool","tested","keep",6,188
-  "skill-index.sh","skill-index.sh — Sága's sight over the crafts: one index of EVERY skill we","tool","tested","keep",3,244
+  "seat.sh","seat.sh — seat Gróa on THIS machine, once.","tool","tested","migrate → src/ymir_runtime/hermes/seat.py",28,110
+  "skill-find.sh","skill-find.sh — find the skill you need, without loading any of them.","tool","tested","keep",6,235
+  "skill-index.sh","skill-index.sh — Sága's sight over the crafts: one index of EVERY skill we","tool","tested","keep",5,472
   "skill-vendor-sync.sh","skill-vendor-sync.sh — keep imported third-party skill packs current.","tool","wired","keep",0,113
   "spam-guard.sh","spam-guard.sh — a model that loops is a fault, and the agent holding the Gná arm hears of it.","tool","wired","keep",0,182
   "surfaces.py","'''surfaces.py — read config/surfaces.yaml, the ONE register of Eir's surfaces (plan 278).","tool","wired","keep",2,51
+  "syn-judge.sh","syn-judge.sh — the supervisor's JUDGEMENT: one model turn, through doors the house already carries.","tool","wired","keep",1,87
   "test_eindri_bearings.sh","test_eindri_bearings.sh — the four things a brief's bearings must carry (plan 291 part 2).","tool","wired","keep",0,132
   "test_eindri_send.sh","test_eindri_send.sh — the safe sender's three laws, with a stubbed herdr and a fence.","tool","wired","keep",1,179
   "test_eir_mends.sh","test_eir_mends.sh — the Eir rows that read wrong or looked at the wrong place (2026-11-12).","tool","wired","keep",0,34
@@ -90,6 +91,6 @@ bin[67]{file,does,kind,verdict,disposition,callers,lines}:
   "workspace-provision.sh","workspace-provision.sh — carve one workspace for the operator.","tool","wired","keep",0,82
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
 
-**Tally.** verdict: wired=54, tested=13
+**Tally.** verdict: wired=54, tested=14
 
-**Tally.** disposition: keep=65, migrate → src/ymir_runtime/send.py=1, migrate → src/ymir_runtime/seat.py=1
+**Tally.** disposition: keep=66, migrate → src/ymir_runtime/send.py=1, migrate → src/ymir_runtime/hermes/seat.py=1

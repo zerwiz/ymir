@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking-door: library — sourced by a caller that owns the loop and bounds it; never run by hand
 # Behavior tests for remote job workers abandoned by a pruned code root.
 #
 # The leak this pins: a worker launched from a worktree's own bin/ outlives that

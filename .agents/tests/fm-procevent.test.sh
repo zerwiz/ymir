@@ -11,6 +11,9 @@
 # published Lavish poll clears feedback destructively before returning it, so
 # the only durability under test is the runner's own - output that reached the
 # runner is stored before it is announced.
+case "${1-}" in
+  -h|--help) sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+esac
 set -u
 
 # shellcheck source=tests/lib.sh

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking-door: library — sourced by a caller that owns the loop and bounds it; never run by hand
 # fm-busy-lib.sh - the ONE owner of firstmate's semantic busy-state contract.
 #
 # Design source: the captain-approved semantic busy-state redesign

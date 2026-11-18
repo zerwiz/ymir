@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking-door: library — sourced by a caller that owns the loop and bounds it; never run by hand
 # fm-tmux-lib.sh — shared tmux pane primitives for firstmate.
 #
 # ONE tmux source for delivery-busy detection, composer capture primitives,

@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[59]{file,does,kind,verdict,disposition,callers,lines}:
+bin[57]{file,does,kind,verdict,disposition,callers,lines}:
   "agents-status.sh","agents-status.sh — which agents are running, where, on what work, and which are idle.","tool","wired","keep",1,48
   "audit-apply.sh","audit-apply.sh — turn an audit into work, in one door.","tool","wired","keep",0,96
   "behind.sh","behind.sh — the arithmetic of being behind: opened/closed this week, net, stale-30d, unbuilt phases.","tool","wired","keep",0,46
@@ -58,10 +58,10 @@ bin[59]{file,does,kind,verdict,disposition,callers,lines}:
   "project_brief.py","'''project_brief — the 'this project' section of the session-start digest (see project-brief.sh).'''","tool","wired","keep",1,139
   "regenerate-on-merge.sh","regenerate-on-merge.sh — the merge driver for WOVEN documents (Þættir, plan 174).","tool","wired","keep",3,36
   "registries-refresh.sh","registries-refresh.sh — write the four measured registries for this host into the home.","tool","wired","keep",0,33
-  "registry-audit.sh","registry-audit.sh — is every running container named in the services registry, and is every named service alive?","tool","wired","keep",0,55
+  "registry-audit.sh","registry-audit.sh — does the registry answer for every service, and does every row tell the truth?","tool","wired","keep",0,435
   "runes-append.sh","runes-append.sh — the append-only Runes ledger, a THIN SHIM.","tool","tested","keep",42,117
   "runes-project.sh","runes-project.sh — the DAG projector, regenerates runes_audit.md from events.","tool","wired","keep",0,65
-  "running-inventory.sh","running-inventory.sh — what is actually running on this machine, generated rather than remembered.","tool","wired","keep",1,103
+  "running-inventory.sh","running-inventory.sh — what is actually running on this machine, generated rather than remembered, with the restart count of every containe…","tool","wired","keep",1,159
   "snotra-ladder.sh","snotra-ladder.sh — the meeting ladder: transcript → minutes → promises → todos, and a stop that says so.","tool","wired","keep",0,616
   "snotra-what.sh","snotra-what.sh — Snotra's own voice: what the ear is doing, said in one sentence.","tool","wired","keep",1,640
   "test_comms.py","'''The proofs plan 261 asks for: the record, the owed list, the to-do proposals, the brief,","tool","wired","keep",0,508
@@ -80,6 +80,6 @@ bin[59]{file,does,kind,verdict,disposition,callers,lines}:
   "wyrd-db.sh","wyrd-db.sh — the database layer (W0040).","tool","wired","keep",0,49
   "ymir-state.sh","ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runtime/state/`).","tool","wired","keep",12,44
 
-**Tally.** verdict: wired=50, tested=9
+**Tally.** verdict: wired=48, tested=9
 
-**Tally.** disposition: keep=58, migrate → src/ymir_runtime/library.py=1
+**Tally.** disposition: keep=56, migrate → src/ymir_runtime/library.py=1

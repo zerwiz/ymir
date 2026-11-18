@@ -6,6 +6,9 @@
 # itself, and the move is recorded in .agents/paths-ledger.yaml. The shim's
 # pointer at the top of this file was removed 2026-11-12: it aimed at a path
 # that does not exist, so the door answered 127 instead of listening.
+case "${1-}" in
+  -h|--help) sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+esac
 set -euo pipefail
 # the bash floor (RULES/05): macOS ships bash 3.2 — re-run under bash >= 4, or say how to get one
 [ "${BASH_VERSINFO[0]:-0}" -ge 4 ] || { . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../../../../bin/fleet/ymir-platform.sh" && ymir_bash_floor "$@"; }

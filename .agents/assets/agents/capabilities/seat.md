@@ -9,7 +9,7 @@
 
 - **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
 | agent-ready.sh | agent-ready.sh — one answer per target: ready · working · blocked: < | tested+named | keep (a human or a cron row must run it) |
-| agent-scope.sh | agent-scope.sh — every errand's hand stands in its own cgroup, so a ki | uncalled+named | keep (a human or a cron row must run it) |
+| agent-scope.sh | agent-scope.sh — every errand's hand stands in its own cgroup, so a ki | tested+named | keep (a human or a cron row must run it) |
 | agent-state-lib.sh | agent-state-lib.sh — herdr's own word on where an agent stands, and wh | tested+named | keep (a human or a cron row must run it) |
 | arm-talk.sh | arm-talk.sh — the heart speaks into every seat's pane, over that seat' | tested | keep (a human or a cron row must run it) |
 | armpin.sh | armpin.sh — does every surface that SUPERVISES run the pin, and is the | tested+named | keep (a human or a cron row must run it) |
@@ -19,10 +19,10 @@
 | clocks.sh | bin/seat/clocks.sh — seat the three loops: plan-watch, ship-watch, upd | tested | keep (a human or a cron row must run it) |
 | context.sh | context.sh — what the agent's context ACTUALLY holds, right now. | tested+named | keep (a human or a cron row must run it) |
 | core-four.sh | core-four.sh — the four dials that decide an agent's outcome, in ONE r | tested+named | keep (a human or a cron row must run it) |
-| desk-ceiling.sh | desk-ceiling.sh — the desk gets a ceiling, so one heavy neighbour kill | uncalled+named | keep (a human or a cron row must run it) |
-| desk-inventory.sh | desk-inventory.sh — which panes held a LIVE agent, written down before | uncalled+named | keep (a human or a cron row must run it) |
-| desk-notify.sh | desk-notify.sh — the death is SPOKEN: one line to the Allfather, not a | uncalled+named | keep (a human or a cron row must run it) |
-| desk-watch.sh | desk-watch.sh — a desk restart is noticed, and its hands are either ra | uncalled+named | keep (a human or a cron row must run it) |
+| desk-ceiling.sh | desk-ceiling.sh — the desk gets a ceiling, so one heavy neighbour kill | tested+named | keep (a human or a cron row must run it) |
+| desk-inventory.sh | desk-inventory.sh — which panes held a LIVE agent, written down before | tested+named | keep (a human or a cron row must run it) |
+| desk-notify.sh | desk-notify.sh — the death is SPOKEN: one line to the Allfather, not a | tested+named | keep (a human or a cron row must run it) |
+| desk-watch.sh | desk-watch.sh — a desk restart is noticed, and its hands are either ra | tested+named | keep (a human or a cron row must run it) |
 | fleet-plans.sh | fleet-plans.sh — read every LIVE host's claims over the tailnet; merge | tested | keep (a human or a cron row must run it) |
 | harness-contract-install.sh | harness-contract-install.sh — every harness reads ONE contract, and an | tested | keep (a human or a cron row must run it) |
 | harness-extensions-install.sh | harness-extensions-install.sh — every harness gets the house's extensi | tested+named | keep (a human or a cron row must run it) |
@@ -40,7 +40,7 @@
 | pi-launcher.sh | pi-launcher.sh — the ONE launcher generator for a pi seat. | tested+named | keep (a human or a cron row must run it) |
 | rank.sh | rank.sh — ask a jev judge to score items on jev's three categories. | tested+named | keep (a human or a cron row must run it) |
 | roster.sh | (no header line) | tested | keep (a human or a cron row must run it) |
-| runtime-root.sh | runtime-root.sh — the ONE door to the runtime a root agent loads, and  | uncalled+named | keep (a human or a cron row must run it) |
+| runtime-root.sh | runtime-root.sh — the ONE door to the runtime a root agent loads, and  | tested+named | keep (a human or a cron row must run it) |
 | seat-adopt.sh | seat-adopt.sh — a late boot is still a seat. | tested+named | keep (a human or a cron row must run it) |
 | seat-audit.sh | seat-audit.sh — one line per agent pane: is its work safe, landed, and | tested+named | keep (a human or a cron row must run it) |
 | seat-find.sh | seat-find.sh — find the agent by its WORK, not by its tab title. | tested | keep (a human or a cron row must run it) |
@@ -58,7 +58,7 @@
 | test_backend_door.sh | test_backend_door.sh — six verbs, one resolver, and a recovery that sh | tested+named | keep (a human or a cron row must run it) |
 | test_claude_global_arm_opt_in.sh | test_claude_global_arm_opt_in.sh — the global Claude arm is seated onl | tested | keep (a human or a cron row must run it) |
 | test_core_four_pending_factory.sh | The ward for the three near-loop doors: core four, pending, and the fact | tested | keep (a human or a cron row must run it) |
-| test_desk_failsafes.sh | test_desk_failsafes.sh — prove the five failsafes of plan 001 §4 (the | uncalled+named | keep (a human or a cron row must run it) |
+| test_desk_failsafes.sh | test_desk_failsafes.sh — prove the five failsafes of plan 001 §4 (the | tested+named | keep (a human or a cron row must run it) |
 | test_doors_fleet_path.sh | The ward for plan 229 — the near loop on a machine that is not this sh | tested+named | keep (a human or a cron row must run it) |
 | test_everything_up.sh | Wards for the "everything-up" errand: a worker seat is never the helm (S | tested | keep (a human or a cron row must run it) |
 | test_herdr_editor.sh | test_herdr_editor.sh — the input-box reader, judged on the two shapes  | tested | keep (a human or a cron row must run it) |
@@ -66,7 +66,7 @@
 | test_pi_door.sh | The ward for bin/seat/pi-door.sh — one extension home for a seat start | tested | keep (a human or a cron row must run it) |
 | test_pi_loads_the_pin.sh | The ward for "pi loads the pin": every harness binder points at the pinn | tested | keep (a human or a cron row must run it) |
 | test_rank.sh | The ward for bin/seat/rank.sh — the hall's ranking transport. | tested | keep (a human or a cron row must run it) |
-| test_roots_load_the_runtime.sh | The ward for plan 248 P2 + P3 — every root agent loads the PINNED runt | uncalled+named | keep (a human or a cron row must run it) |
+| test_roots_load_the_runtime.sh | The ward for plan 248 P2 + P3 — every root agent loads the PINNED runt | tested+named | keep (a human or a cron row must run it) |
 | test_seat_audit.sh | The ward for "the audit says, in one line, whether a seat's work can be  | tested | keep (a human or a cron row must run it) |
 | test_seat_find.sh | test_seat_find.sh — the finder names the pane whose WORK printed the w | tested | keep (a human or a cron row must run it) |
 | test_seat_reap.sh | The ward for "the arm closes finished Eindri seats" (2026-11-10). | tested | keep (a human or a cron row must run it) |

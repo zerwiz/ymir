@@ -12,6 +12,9 @@
 #
 # Usage: home-sync-clock.sh [--dry-run] [--install-timer]
 # Exit: 0 ok · 1 a fault (named) · 3 refused (dirty tree or a real conflict).
+case "${1-}" in
+  -h|--help) sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+esac
 set -uo pipefail
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(CDPATH='' cd "$SELF_DIR/../.." && pwd)"

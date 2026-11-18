@@ -14,6 +14,9 @@
 # It never steals: if a live session already owns the lock, the holder waits and re-checks. When
 # that session ends, the reaper clears the stale record and the holder takes it over — so the seat
 # always has a primary, whether or not a human is in a pane.
+case "${1-}" in
+  -h|--help) sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+esac
 set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do

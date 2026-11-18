@@ -1,4 +1,5 @@
 #!/bin/bash
+# blocking-door: daemon — started by a unit, and it runs the loop as its job; never invoked from a hand
 # Long-lived per-account worker for remote fm-on jobs.
 #
 # This process is launched by the Firstmate-owned dev.firstmate.remote-job

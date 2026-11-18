@@ -21,12 +21,13 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[4]{file,does,kind,verdict,disposition,callers,lines}:
-  "README.md","<!-- allow-superseded-path: a generated index must name the folder or the script it indexes, by construction -->","data","tested","keep",63,-
+bin[5]{file,does,kind,verdict,disposition,callers,lines}:
+  "README.md","<!-- allow-superseded-path: a generated index must name the folder or the script it indexes, by construction -->","data","tested","keep",64,-
   "bitrate-gate.sh","bitrate-gate.sh — a diffusion clip that 'completes' is not a clip that worked.","tool","wired","keep",0,82
   "brokk","brokk — the primary agent's CLI (Brokk, the bellows-smith).","tool","tested","keep",63,74
-  "no-delete-guard.sh","no-delete-guard.sh — Rule 11, ENFORCED.","tool","wired","keep",4,90
+  "heavy-slot.sh","heavy-slot.sh — ONE heavy job at a time on this machine, and a record of who holds it.","tool","wired","keep",4,304
+  "no-delete-guard.sh","no-delete-guard.sh — Rule 11, ENFORCED.","tool","wired","keep",5,104
 
-**Tally.** verdict: tested=2, wired=2
+**Tally.** verdict: wired=3, tested=2
 
-**Tally.** disposition: keep=4
+**Tally.** disposition: keep=5

@@ -19,6 +19,9 @@
 # Environment (kept from the original interface):
 #   BROKK_ROOT_OVERRIDE, BROKK_HOME, BROKK_STATE_OVERRIDE, BROKK_CONFIG_OVERRIDE
 #   BROKK_CRON_LOG_MAX_BYTES  rotation threshold for state/cron.log (default 1 MiB)
+case "${1-}" in
+  -h|--help) sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+esac
 set -u
 
 # --- portability shim: bin/fleet/ymir-platform.sh --------------------------------

@@ -57,6 +57,9 @@
 # resolves and signals exactly that pid, so it can never touch another home's
 # watcher. NEVER `ymir_kill_matching # bin/backend/fm-watch.sh`: that pattern matches every firstmate home's watcher
 # (secondmate homes run the same script) and would kill siblings.
+case "${1-}" in
+  -h|--help) sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+esac
 set -u
 
 # --- portability shim: bin/fleet/ymir-platform.sh --------------------------------

@@ -13,9 +13,18 @@
 #   timeout    : TTL (default 24h) or the coordinator disarms
 #                (state/<id>.arm removed) → the arm retires.
 #
-# Usage:   eindri-arm.sh <id> [--ttl SECONDS] [--poll SECONDS] [--quiet]
+# Usage:   eindri-arm.sh <id> [--ttl SECONDS] [--poll SECONDS] [--quiet] [--once]
+#          eindri-arm.sh --help | --version
 # Env:     BROKK_HOME / BROKK_DATA_OVERRIDE / BROKK_STATE_OVERRIDE (siblings)
 # Exit:    0 retired/handled, 1 error, 2 usage.
+#
+# A BLOCKING DOOR MUST ANSWER BEFORE IT BLOCKS (2026-11-18). This script was run as
+# `eindri-arm.sh --help` by a hand that wanted its usage; there was no `--help`, so the
+# flag became an ID, an arm named `--help` was claimed, and the `while :` loop held the
+# caller's turn for the full 24-hour TTL — a session lost to a question. Two laws follow,
+# and they are the reason `--once` exists:
+#   - a flag is never an id: an unknown `-…` argument is a usage error, exit 2;
+#   - the help and the version answer and exit, before any arm is claimed.
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -48,18 +57,37 @@ if [ -n "${HERDR_PANE_ID:-}" ] && [ -d "${STATE:-.}" ]; then
   fi
 fi
 
+VERSION="1.1.0"
+case "${1-}" in
+  -h|--help)
+    sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//'
+    exit 0 ;;
+  -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
+esac
+
 ID="${1-}"
-[ -n "$ID" ] || { echo "error: task-id required (eindri-arm.sh <id>)" >&2; exit 2; }
+[ -n "$ID" ] || { echo "error: task-id required (eindri-arm.sh <id>)" >&2; echo "help: eindri-arm.sh --help" >&2; exit 2; }
+case "$ID" in
+  -*)
+    printf 'error: not an id: %s (a flag can never name an errand)\nhelp: eindri-arm.sh --help\n' "$ID" >&2
+    exit 2 ;;
+esac
 TTL=86400
 POLL=5
 QUIET=0
+ONCE=0
 shift || true
 while [ $# -gt 0 ]; do
   case "$1" in
     --ttl) TTL="${2-}"; shift 2 ;;
     --poll) POLL="${2-}"; shift 2 ;;
     --quiet) QUIET=1; shift ;;
-    *) shift ;;
+    --once) ONCE=1; shift ;;          # one cycle, then exit — for a caller that must not block
+    -h|--help) sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
+    *)
+      printf 'error: unknown flag %s\nhelp: eindri-arm.sh <id> [--ttl S] [--poll S] [--quiet] [--once]\n' "$1" >&2
+      exit 2 ;;
   esac
 done
 
@@ -181,5 +209,9 @@ while :; do
     rm -f "$STATE/$ID.answers-seen" 2>/dev/null
   fi
 
+  if [ "$ONCE" = 1 ]; then
+    say "arm: one cycle for $ID done (--once) — the arm stays claimed in $ARM"
+    exit 0
+  fi
   sleep "$POLL"
 done

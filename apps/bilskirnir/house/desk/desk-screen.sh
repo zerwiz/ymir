@@ -10,6 +10,9 @@
 # and it asks for the VNC password mounted at /run/desk-secret/vnc.pass. The X server listens on its
 # unix socket inside the container only (no TCP, no abstract socket), so nothing on the host can draw
 # on an agent's screen except through the VNC door.
+case "${1-}" in
+  -h|--help) sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+esac
 set -u
 BASE="${DESK_VNC_BASE:-5990}"
 GEOMETRY="${DESK_GEOMETRY:-1280x800}"

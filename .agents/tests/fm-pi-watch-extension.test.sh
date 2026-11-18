@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 # Tests for the tracked Pi primary watcher extension and Pi secondmate wiring.
+case "${1-}" in
+  -h|--help) sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+esac
 set -u
 
 # shellcheck source=tests/lib.sh

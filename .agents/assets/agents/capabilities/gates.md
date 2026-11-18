@@ -45,6 +45,7 @@
 | app-folder-guard.sh | (no header line) | tested | keep (a human or a cron row must run it) |
 | app-functional-guard.sh | app-functional-guard.sh — AN UPDATE THAT LEAVES AN APP UNRUNNABLE IS N | tested | keep (a human or a cron row must run it) |
 | areas-guard.sh | areas-guard (tree ward) — the canon and the copy that travels must not | tested+named | keep (a human or a cron row must run it) |
+| blocking-door-guard.sh | (no header line) | tested | keep (a human or a cron row must run it) |
 | branch-guard.sh | branch-guard.sh — Rule 08: no push may land on a protected branch. | tested+named | keep (a human or a cron row must run it) |
 | confidential-guard.sh | confidential-guard.sh — while a confidential session is live, nothing  | tested | keep (a human or a cron row must run it) |
 | constellation-grant-guard.sh | constellation-grant-guard.sh — the road's own ward. | tested+named | keep (a human or a cron row must run it) |
@@ -132,6 +133,7 @@
 | test_mjollnir_intake.sh | test_mjollnir_intake.sh — the forge's senses (plan 210 P0/P1), proved  | tested | keep (a human or a cron row must run it) |
 | test_nda_guard.sh | test_nda_guard.sh — the NDA matcher, the git hooks' commands and the C | tested | keep (a human or a cron row must run it) |
 | test_new_doors.sh | test_new_doors.sh — the production tests for the doors built 2026-11-0 | tested | keep (a human or a cron row must run it) |
+| test_no_delete_merge.sh | test_no_delete_merge.sh — a merge is not blamed for a deletion the mer | tested | keep (a human or a cron row must run it) |
 | test_no_stale_arm_door.sh | test_no_stale_arm_door.sh — plan 272 fault 3. | tested | keep (a human or a cron row must run it) |
 | test_notify_stale_pane.sh | test_notify_stale_pane.sh — a remembered pane is proved before it is s | tested | keep (a human or a cron row must run it) |
 | test_opencode_launcher.sh | test_opencode_launcher.sh — plan 262: an OpenCode worker actually star | tested+named | keep (a human or a cron row must run it) |

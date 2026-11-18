@@ -32,7 +32,7 @@ bin[51]{file,does,kind,verdict,disposition,callers,lines}:
   "event-trigger-resolve.py","'''event-trigger-resolve — who may start a smithy, and when.","tool","wired","keep",2,171
   "event-trigger.sh","event-trigger.sh — the one door that starts a smithy without a person typing.","tool","wired","keep",2,479
   "housewatch.sh","housewatch.sh — the quiet parts of the house, checked on a timer so they cannot go quiet.","tool","wired","keep",0,137
-  "nornir-cron-start.sh","nornir-cron-start.sh - ensure Brokk's scheduled jobs are running (idempotent).","tool","tested","keep",10,466
+  "nornir-cron-start.sh","nornir-cron-start.sh - ensure Brokk's scheduled jobs are running (idempotent).","tool","tested","keep",10,469
   "nornir-job-agnostic-audit.sh","nornir-job-agnostic-audit.sh — is what we PUBLISHED still free of the words the operator refuses to publish?","tool","wired","keep",1,104
   "nornir-job-asken-handoff.sh","nornir-job-asken-handoff.sh — the rollover, on the schedule.","tool","wired","keep",0,63
   "nornir-job-bragi-scrape.sh","nornir-job-bragi-scrape.sh — Bragi, on the loom: the scheduled scrape round.","tool","wired","keep",0,154
@@ -60,7 +60,7 @@ bin[51]{file,does,kind,verdict,disposition,callers,lines}:
   "saga-head-core.md","FIXED CORE — every worker knows this (plan 275 §04:15/04:20/04:25).","data","wired","keep",4,15
   "saga-head-lib.sh","saga-head-lib.sh — what is NEWS in Sága's short head (plan 275, item 28 §3).","lib","wired","keep",3,159
   "saga-land-warnings.sh","saga-land-warnings.sh — Sága's eye on work that finished and never landed.","tool","wired","keep",2,311
-  "saga-session-start.sh","saga-session-start.sh — Sága: the SHORT HEAD at session start, everything else on demand.","tool","tested","keep",12,585
+  "saga-session-start.sh","saga-session-start.sh — Sága: the SHORT HEAD at session start, everything else on demand.","tool","tested","keep",11,585
   "saga-sessionstart-run.sh","saga-sessionstart-run.sh - session-open entry point for run-tier harnesses.","tool","wired","keep",1,117
   "saga-wake-drain.sh","saga-wake-drain.sh - present durable Brokk wakes, or acknowledge them.","tool","wired","keep",9,175
   "sol-lib.sh","sol-lib.sh — Sól's stamp for shell roads.","lib","wired","keep",9,44

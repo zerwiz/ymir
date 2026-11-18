@@ -31,10 +31,10 @@ bin[83]{file,does,kind,verdict,disposition,callers,lines}:
   "LICENSE","MIT No Attribution License","data","wired","keep",2,8
   "LICENSE.MIT","MIT License","data","wired","keep",0,22
   "LICENSE.txt","The arc42 template and documentation is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License.","data","wired","keep",0,19
-  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",63,-
-  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",63,-
-  "README.md","areas/ — what this repository answers for","data","tested","keep",63,-
-  "README.md","plans/tickets/ — the units of work under a validated plan","data","tested","keep",63,-
+  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",64,-
+  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",64,-
+  "README.md","areas/ — what this repository answers for","data","tested","keep",64,-
+  "README.md","plans/tickets/ — the units of work under a validated plan","data","tested","keep",64,-
   "TEMPLATE.md","---","data","wired","keep",5,35
   "TEMPLATE.yaml","areas/TEMPLATE.yaml — what one area's declaration looks like.","data","wired","keep",2,44
   "a-company-suite.md","---","data","wired","keep",1,123
@@ -81,7 +81,7 @@ bin[83]{file,does,kind,verdict,disposition,callers,lines}:
   "new-module-test.sh","new-module-test.sh — a new module arrives with a test, or with a reason it does not need one.","tool","wired","keep",1,31
   "notices.md","---","data","wired","keep",0,89
   "notify-arm.sh","notify-arm.sh — hand a gate's message to the ARM HOLDER, never to whoever happened to type the command.","tool","wired","keep",4,230
-  "plan.md","---","data","tested","keep",10,58
+  "plan.md","---","data","tested","keep",9,58
   "pr-check.sh","pr-check — is every commit that exists proposed for review?","tool","tested","keep",6,26
   "pr-guard.sh","pr-guard — a branch that exists on the remote must have a pull request.","tool","wired","keep",1,35
   "private-data.sh","private-data — the repository is public; the operator's machine is not.","tool","wired","keep",1,41
