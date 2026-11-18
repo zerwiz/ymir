@@ -21,6 +21,15 @@ its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
 - The well door for every harness — one MCP set for pi, opencode, Claude, Cursor, Codex and Hermes, and
   Claude Code loads the project's AGENTS.md: [the-well-door-for-every-harness.md](the-well-door-for-every-harness.md)
 
+**Newest doors** — built 2026-11-17, catalogued the same day:
+
+- Three weekly passes — the mail balance, the pin's distance, the tunnels' uptime: one row a week and a
+  word only when the week is not clean: [three-weekly-passes.md](three-weekly-passes.md)
+**Newest door** — built 2026-11-15, catalogued the same day:
+
+- The plans, as data — every shelf the project registry names, read once, and a plan is done only on
+  evidence: [the-plans-as-data.md](the-plans-as-data.md)
+
 **Newest doors** — built 2026-11-12, catalogued the same day:
 
 - Every service and app runs from the pinned runtime, from the first install — one register, one writer:

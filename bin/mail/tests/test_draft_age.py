@@ -22,6 +22,18 @@ What is proven here, and why each one is a hole worth a test:
   TheBriefing   `bin/time/nornir-job-daily-briefing.sh` carries the line, and an aged draft
                 makes it publish a brief that is not clean and exit non-zero.
 
+The WEEKLY sweep (plan 305, appended 2026-11-17) is a different job and gets its own proofs:
+
+  WeeklyQuiet   a week with no drafts says NOTHING to the phone, records the trend row anyway
+                (zero drafts is a fact, not a silence), and carves one no-op Rune.
+  WeeklyEvery   a week with drafts names EVERY one of them — oldest first, numbered — even the
+                ones too young for the daily limit, and carries three buttons per draft.
+  WeeklyAged    an aged draft makes the sweep exit 1, with the same one line and no second one.
+  WeeklyTrend   two sweeps append two rows to hodd/state/draft-trend.jsonl and never rewrite the
+                first: the trend is the point, and an append-only record that overwrites is not one.
+  WeeklySkip    a seat with no grant records NO trend row and sends nothing — a skip must never
+                look like a quiet week.
+
 The Gmail API is stood in for by a local HTTP server, and the endpoints are configuration
 (Rule 07: YMIR_GMAIL_API_BASE · YMIR_OAUTH_TOKEN_URL). Nothing here talks to Google.
 
@@ -176,9 +188,24 @@ class Case(unittest.TestCase):
             "YMIR_GMAIL_API_BASE": f"http://127.0.0.1:{port}/gmail/v1",
             "YMIR_OAUTH_TOKEN_URL": f"http://127.0.0.1:{port}/token",
         }
+        # The phone line is a DOOR (bin/notify/send.sh) and this file proves the door was
+        # CALLED ONCE with the right words — it does not re-prove send.sh, which has its own
+        # proofs. The stub records its argv, byte for byte, so the assertions read the truth.
+        self.notify_log = self.tmp / "notify-calls.jsonl"
+        self.door_stub = self.tmp / "notify-stub.sh"
+        self.door_stub.write_text(
+            "#!/usr/bin/env bash\n"
+            "python3 -c 'import json,sys; print(json.dumps(sys.argv[1:]))' \"$@\" >>%s\n"
+            "exit 0\n" % json.dumps(str(self.notify_log)),
+            encoding="utf-8",
+        )
+        self.env["YMIR_NOTIFY_DOOR"] = str(self.door_stub)
+        self.env["BROKK_RUNES_FILE"] = str(self.tmp / "runes.md")
         for name in ("GOOGLE_MCP_CLIENT_ID", "GOOGLE_MCP_CLIENT_SECRET",
-                     "SNOTRA_GOOGLE_REFRESH_TOKEN", "YMIR_DRAFT_MAX_DAYS"):
+                     "SNOTRA_GOOGLE_REFRESH_TOKEN", "YMIR_DRAFT_MAX_DAYS",
+                     "YMIR_DRAFT_TREND_FILE", "YMIR_NOTIFY_DOOR"):
             self.env.pop(name, None)
+        self.env["YMIR_NOTIFY_DOOR"] = str(self.door_stub)
 
     # helpers ---------------------------------------------------------------------
 
@@ -189,6 +216,25 @@ class Case(unittest.TestCase):
     def brief(self, env: dict | None = None) -> subprocess.CompletedProcess:
         return subprocess.run(["bash", str(BRIEF)], capture_output=True, text=True,
                               env={**self.env, **(env or {})}, timeout=180)
+
+    @property
+    def trend_file(self) -> Path:
+        """Where the door must write the trend: the HOARD's state, never this public tree."""
+        return self.home / "hodd/state/draft-trend.jsonl"
+
+    def trend(self) -> list[dict]:
+        if not self.trend_file.exists():
+            return []
+        return [json.loads(line) for line in self.trend_file.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+    def calls(self) -> list[list[str]]:
+        if not self.notify_log.exists():
+            return []
+        return [json.loads(line) for line in self.notify_log.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+    def runes(self) -> str:
+        path = self.tmp / "runes.md"
+        return path.read_text(encoding="utf-8") if path.exists() else ""
 
     def brief_text(self) -> str:
         files = sorted((self.tmp / "brief").glob("*.md"))
@@ -328,6 +374,102 @@ class TheBriefing(Case):
         self.assertEqual(r.returncode, 0, "a skip must not fail the morning brief")
         text = self.brief_text()
         self.assertIn("drafts: SKIP", text)
+
+
+# ── the week's sweep (plan 305, appended 2026-11-17) ───────────────────────────────────
+
+
+class WeeklyQuiet(Case):
+    def test_a_week_with_no_drafts_is_silent_and_records_the_truth(self):
+        r = self.door("--weekly")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn('"quiet"', r.stdout, "a week with no drafts is quiet, and says so in the record")
+        self.assertIn("weekly: silent", r.stdout)
+        self.assertEqual(self.calls(), [], "an empty week MUST NOT reach the phone — that is the nag rule")
+        trend = self.trend()
+        self.assertEqual(len(trend), 1, "a quiet week is still a week: the trend row is written")
+        self.assertEqual(trend[0]["drafts"], 0)
+        self.assertEqual(trend[0]["aged"], 0)
+        self.assertIsNone(trend[0]["oldest_days"])
+        self.assertIn("at", trend[0])
+        self.assertIn("no-op", self.runes(), "a silent sweep still leaves a Rune saying it looked")
+
+
+class WeeklyEvery(Case):
+    def test_every_draft_is_named_oldest_first_with_a_button_each(self):
+        self.api.add("r-fresh", "Re: the quarter plan", 6 * 3600)      # 0.2 days — NOT aged
+        self.api.add("r-young", "A note to the partner", 1 * DAY)      # 1 day    — NOT aged
+        r = self.door("--weekly")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn('"unwritten"', r.stdout)
+        calls = self.calls()
+        self.assertEqual(len(calls), 1, "the week is ONE line, not one per draft")
+        call = calls[0]
+        text = call[call.index("--message") + 1]
+        # Every draft, aged or not — the brief lists only the aged; the week lists the week.
+        self.assertIn("Re: the quarter plan", text)
+        self.assertIn("A note to the partner", text)
+        self.assertIn("1 day", text)
+        # Oldest first, numbered, because the buttons answer by number.
+        self.assertLess(text.index("A note to the partner"), text.index("Re: the quarter plan"), text)
+        self.assertIn("1. \u201cA note to the partner\u201d (1 day)", text)
+        self.assertIn("2. \u201cRe: the quarter plan\u201d (0.2 days)", text)
+        # Three buttons per draft: send, edit, discard — a nudge that cannot be acted on is a nag.
+        buttons = call[call.index("--buttons") + 1]
+        self.assertEqual(buttons.count("{"), 6, buttons)
+        for verb in ("send", "edit", "discard"):
+            self.assertEqual(buttons.count(" %s|" % verb), 2, "one '%s' per draft: %s" % (verb, buttons))
+        self.assertIn("Send draft 1,", buttons)
+        self.assertIn("Discard draft 2,", buttons)
+        self.assertTrue(buttons.startswith("[[") and buttons.endswith("]]"),
+                        "the rows are laid one draft to a row: " + buttons)
+        trend = self.trend()
+        self.assertEqual(trend[-1]["drafts"], 2)
+        self.assertEqual(trend[-1]["aged"], 0)
+        self.assertEqual(trend[-1]["oldest_days"], 1.0)
+
+
+class WeeklyAged(Case):
+    def test_an_aged_week_fails_and_still_sends_exactly_one_line(self):
+        self.api.add("r-old", "The letter I never sent", 5 * DAY)
+        self.api.add("r-fresh", "Re: the quarter plan", 2 * 3600)
+        r = self.door("--weekly")
+        self.assertEqual(r.returncode, 1, "an aged draft still fails the sweep\n" + r.stdout)
+        self.assertIn('"aged"', r.stdout)
+        calls = self.calls()
+        self.assertEqual(len(calls), 1, "one line a week, never two")
+        text = calls[0][calls[0].index("--message") + 1]
+        self.assertIn("The letter I never sent", text)
+        self.assertIn("Re: the quarter plan", text)
+        self.assertIn("older than 2 days", text)
+        self.assertEqual(self.trend()[-1]["aged"], 1)
+        self.assertEqual(self.trend()[-1]["oldest_days"], 5.0)
+
+
+class WeeklyTrend(Case):
+    def test_two_sweeps_append_and_never_rewrite(self):
+        self.api.add("r-old", "The letter I never sent", 5 * DAY)
+        self.door("--weekly")
+        first = self.trend()
+        self.api.drafts.clear()
+        self.api.add("r-fresh", "A fresh note", 3600)
+        self.door("--weekly")
+        trend = self.trend()
+        self.assertEqual(len(trend), 2, "the trend is append-only: a week is a row, not a write-over")
+        self.assertEqual(trend[0], first[0], "the first week's row must survive the second sweep")
+        self.assertEqual(trend[1]["drafts"], 1)
+        self.assertEqual(trend[0]["drafts"], 1)
+
+
+class WeeklySkip(Case):
+    def test_a_skip_records_no_trend_and_sends_nothing(self):
+        (self.home / "hodd/secrets/platform.env").write_text("SOMETHING_ELSE=x\n", encoding="utf-8")
+        r = self.door("--weekly")
+        self.assertEqual(r.returncode, 0, "a skip is not a failed mailbox")
+        self.assertIn('"skipped"', r.stdout)
+        self.assertIn("weekly: SKIP", r.stdout)
+        self.assertEqual(self.trend(), [], "a skip MUST NOT look like a quiet week in the trend")
+        self.assertEqual(self.calls(), [], "a skip sends nothing")
 
 
 if __name__ == "__main__":

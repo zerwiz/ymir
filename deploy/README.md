@@ -97,6 +97,38 @@ rootless container as the wall, and run untrusted code in Utgard. Enable the blo
 above only when you have a specific need to confine individual commands and accept
 the looser container.
 
+## The container never holds the vault
+
+A container that mounts the operator's home can read two files that must never be read together:
+`hodd/secrets/age.key` (the age identity) and `hodd/secrets/platform.env.age` (the vault it
+unlocks). With both, the container decrypts the hoard, and the boundary the container exists to
+provide protects nothing.
+
+So every shape here that mounts the home masks that one path with an empty, read-only tmpfs:
+
+```ini
+# deploy/quadlet/ymir.container
+Volume=%h/Documents/Ymir:%h/Documents/Ymir:Z
+Tmpfs=%h/Documents/Ymir/hodd/secrets:size=1m,ro
+```
+
+**What it costs, plainly.** Inside the container `bin/vault/hodd.sh emit` can no longer decrypt.
+That is the point, and it has one consequence to plan for: a service that needs a vault value
+*inside* the container takes it from `ymir.env` — the `EnvironmentFile` above, mode 0600, written
+by the operator's own hand. The sealed vault stays on the host, where its key already lives. The
+mail desk, the Telegram seat and the Nornir jobs read the vault from the host and are unaffected.
+
+The Compose shape mounts only the checkout, so it never holds the vault; the ready-made mask sits
+commented beside the volumes for the day someone adds a home mount. The gate
+`bin/gates/checks.d/0495-container-hides-the-hoard.sh` fails a shipped shape that mounts the home
+and leaves `hodd/secrets` readable, and fails if the mask and the mount drift apart.
+
+> [!IMPORTANT]
+> The mask is proven by reading the shipped shape on any host. The live proof — raise the container,
+> `ls hodd/secrets` inside it, get nothing — is owed on a host with Podman:
+> `quadlet -dryrun -user ~/.config/containers/systemd/ymir.container` then
+> `podman exec ymir ls -A /home/<you>/Documents/Ymir/hodd/secrets`.
+
 ## Portability (Rule 05)
 
 A layer is gated on its host and reports a clean skip elsewhere — the Quadlet layer
@@ -105,4 +137,7 @@ every layer here is updated in the same change.
 
 ## CHANGE LOG
 
+- **2026-11-16** — the container never holds the vault: the home mount is paired with a read-only
+  tmpfs over `hodd/secrets`, both sides of every mount are `%h` (the undefined `$HOME_SEAT` is
+  gone), and a gate holds the pair together. the reviewer's item 5 of the 12 November review.
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

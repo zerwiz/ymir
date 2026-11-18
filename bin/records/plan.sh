@@ -119,11 +119,16 @@ seed_shelf_index() {   # <scope> <owner> — the shelf's own index, written once
         printf 'and no machine (plan 240).\n\n' ;;
       *)  printf '# Plans — %s\n\n' "$owner" ;;
     esac
-    printf '```\nplan[3]{rule,why}:\n'
+    printf '```\nplan[4]{rule,why}:\n'
     printf '  "numbering is per shelf","%s 001 is this shelf'"'"'s first plan; no number is reused within a shelf"\n' "$owner"
     printf '  "one index: this file","every plan gets a row here, in the same change that creates it"\n'
     printf '  "the owner is in the plan header","owner · owner_name, so a plan keeps its provenance if it ever moves"\n'
-    printf '```\n\n## The plans\n'
+    printf '  "the state is in the plan header","Status: open|building|blocked|owed|parked|superseded|done — written at birth, measured by bin/records/plans-state.sh, never guessed from age"\n'
+    printf '```\n\n'
+    printf 'The **State** column below is a reading of each plan'"'"'s header, not a second truth. The door\n'
+    printf '`bin/records/plans-state.sh` reads every shelf the project registry names and answers, per plan,\n'
+    printf 'whether it is done and what proves it; `bin/day/day.sh plans` prints the open ones. A plan whose\n'
+    printf 'state nothing measures is reported open — silence is not finished work.\n\n## The plans\n'
   } > "$f"
 }
 
@@ -260,10 +265,14 @@ case "${1:-}" in
     {
       printf '# Plan %s - %s\n' "$n" "$title"
       printf 'owner: %s\nowner_name: %s\n' "$SCOPE" "${OWNER:-$PROJECT}"
+      # A plan is measurable from the hour it is born (plan 298 §2.1): the header carries its state,
+      # so no list has to be typed from memory later. `Status:` is the field the older readers
+      # (plan-state.sh, plan-board.sh, the Nornir observer) already understand.
+      printf 'Status: open\n'
       [ -n "$from_meeting" ] && printf 'from_meeting: %s\n' "$from_meeting"
       printf '\n**Opened %s.**\n' "$(date +%F)"
     } > "$f"
-    printf '| %s | [%s](%s) | opened |\n' "$n" "$title" "$(basename "$f")" >> "$LEDGER/README.md"
+    printf '| %s | [%s](%s) | open |\n' "$n" "$title" "$(basename "$f")" >> "$LEDGER/README.md"
     printf 'created %s\n  shelf: %s (%s)\n' "$f" "$LEDGER" "$SCOPE" ;;
   shelves)
     # Every realm and every project folder in this home, and whether each has a plans shelf.

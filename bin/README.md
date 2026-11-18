@@ -31,7 +31,7 @@ cause on every branch is designed out (plan 211).
 Counts live in each folder's own index; this page lists the folders.
 
 
-folders[35]{folder,what,index}:
+folders[36]{folder,what,index}:
   "agents","the Einherjar and Eindri doors — spawn, brief, sweep, recover","bin/agents/INDEX.md"
   "assistant","Skirnir's mouth and the assistant doors an answer comes through","bin/assistant/INDEX.md"
   "backend","the model and harness bridges (indexed at .agents/backend/README.md)","bin/backend/INDEX.md"
@@ -41,6 +41,7 @@ folders[35]{folder,what,index}:
   "day","(no purpose recorded)","bin/day/INDEX.md"
   "desk","(no purpose recorded)","bin/desk/INDEX.md"
   "desktop","raise and lower the desktop seats (Smidja board, Sessrumnir, place)","bin/desktop/INDEX.md"
+  "dispatch","the dispatcher — incoming work becomes a bounded errand or a line on his list","bin/dispatch/INDEX.md"
   "engine","install, migrate, update, ensure — the machine's own upkeep","bin/engine/INDEX.md"
   "fleet","the fleet registry, roles, agents-config and the sync doors","bin/fleet/INDEX.md"
   "forge","Yggdrasil worktrees, Utgard sandboxes, Mjollnir and the deploy doors","bin/forge/INDEX.md"

@@ -21,14 +21,14 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[18]{file,does,kind,verdict,disposition,callers,lines}:
-  "approve.sh","approve.sh — one gesture answers one question.","tool","wired","keep",4,61
+bin[19]{file,does,kind,verdict,disposition,callers,lines}:
+  "approve.sh","approve.sh — one gesture answers one question.","tool","wired","keep",3,61
   "intake-gate.sh","intake-gate.sh — is this message signal, or noise?","tool","wired","keep",0,79
-  "mail.sh","mail.sh — the operator-only mail door: a system tells the Allfather, and nobody else.","tool","wired","keep",5,222
+  "mail.sh","mail.sh — the operator-only mail door: a system tells the Allfather, and nobody else.","tool","wired","keep",7,222
   "open-target.sh","open-target.sh — EVERY message carries a target, and the target really opens (plan 230 N1).","tool","wired","keep",4,268
-  "send.sh","send.sh — THE HOTLINE: one door a system calls when it has something to say.","tool","tested","migrate → src/ymir_runtime/send.py",82,217
-  "telegram-buttons.mjs","// telegram-buttons.mjs — the one place that knows Telegram's button grammar.","tool","wired","keep",1,368
-  "telegram-buttons.sh","telegram-buttons.sh — make a Telegram button that actually renders.","tool","wired","keep",3,46
+  "send.sh","send.sh — THE HOTLINE: one door a system calls when it has something to say.","tool","tested","migrate → src/ymir_runtime/send.py",90,260
+  "telegram-buttons.mjs","// telegram-buttons.mjs — the one place that knows Telegram's button grammar.","tool","wired","keep",1,412
+  "telegram-buttons.sh","telegram-buttons.sh — make a Telegram button that actually renders.","tool","wired","keep",6,46
   "telegram-format.py","'''telegram-format — make a reply readable on a phone before it is sent.","tool","wired","keep",2,147
   "telegram-machines.sh","telegram-machines.sh — Telegram across the FLEET: each machine's own bot, and the two roads between them.","tool","wired","keep",2,191
   "telegram-members.sh","telegram-members.sh — who is actually in a Telegram chat, as far as the Bot API will say.","tool","wired","keep",0,151
@@ -36,11 +36,12 @@ bin[18]{file,does,kind,verdict,disposition,callers,lines}:
   "telegram-roster.sh","telegram-roster.sh — who speaks in a chat, remembered (thin door over the tool).","tool","wired","keep",3,28
   "telegram-seat.sh","telegram-seat.sh — WHICH BOT IS WHOSE, and a repair when a journal disagrees.","tool","wired","keep",0,143
   "test_open_target.sh","test_open_target.sh — every kind of target resolves, and every dead one says so (plan 230 §6).","tool","wired","keep",0,86
+  "test_send_buttons.py","'''The proofs for the controls `bin/notify/send.sh` carries — a nag that cannot be acted on.","tool","wired","keep",1,162
   "test_telegram_buttons.sh","test_telegram_buttons.sh — the button grammar, proved both ways.","tool","wired","keep",0,77
   "test_telegram_format.sh","The ward for telegram-format: reads well, protects structure, refuses jargon.","tool","wired","keep",0,27
   "test_telegram_roster.sh","test_telegram_roster.sh — the roster records who speaks, once, per chat.","tool","wired","keep",0,52
   "test_telegram_templates.sh","The ward for the Telegram templates: every shape here must be one the bridge can render","tool","wired","keep",0,19
 
-**Tally.** verdict: wired=17, tested=1
+**Tally.** verdict: wired=18, tested=1
 
-**Tally.** disposition: keep=17, migrate → src/ymir_runtime/send.py=1
+**Tally.** disposition: keep=18, migrate → src/ymir_runtime/send.py=1

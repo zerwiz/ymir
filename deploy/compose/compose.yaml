@@ -17,6 +17,11 @@ services:
     volumes:
       # `:Z` relabels for SELinux hosts; harmless elsewhere.
       - ${YMIR_ROOT:-../..}:/opt/ymir:Z
+      # THIS SHAPE DOES NOT MOUNT THE OPERATOR'S HOME, so it never hands the container its
+      # vault. If you add a home mount here, add the mask below with it — the gate
+      # bin/gates/checks.d/0495-container-hides-the-hoard.sh fails a shipped shape that
+      # mounts the home and leaves `hodd/secrets` readable (the reviewer's item 5, 2026-11-12):
+      #   - ${YMIR_HOME:-$HOME/Documents/Ymir}:${YMIR_HOME_IN_CONTAINER:-/home/operator/Documents/Ymir}:Z
     ports:
       # Loopback-only (127.0.0.1) so Ymir is never exposed externally; 5-digit to
       # avoid collisions on a shared host. Keep in step with HLIDSKJALF_PORT /
@@ -35,6 +40,10 @@ services:
       - ALL
     tmpfs:
       - /tmp
+      # The vault, when a home mount is added: an empty tmpfs over the one path that holds the
+      # age key and the encrypted file together. Uncomment WITH the home mount above, and set
+      # the path to that mount's own `hodd/secrets`.
+      # - /home/operator/Documents/Ymir/hodd/secrets:size=1m,ro
     # Podman rootless: keep the host user so the bind mount stays yours.
     # Docker users: comment this out (Docker only accepts `host`/`private`).
     userns_mode: keep-id

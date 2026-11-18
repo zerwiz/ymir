@@ -31,10 +31,10 @@ bin[83]{file,does,kind,verdict,disposition,callers,lines}:
   "LICENSE","MIT No Attribution License","data","wired","keep",2,8
   "LICENSE.MIT","MIT License","data","wired","keep",0,22
   "LICENSE.txt","The arc42 template and documentation is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License.","data","wired","keep",0,19
-  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",62,-
-  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",62,-
-  "README.md","areas/ — what this repository answers for","data","tested","keep",62,-
-  "README.md","plans/tickets/ — the units of work under a validated plan","data","tested","keep",62,-
+  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",63,-
+  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",63,-
+  "README.md","areas/ — what this repository answers for","data","tested","keep",63,-
+  "README.md","plans/tickets/ — the units of work under a validated plan","data","tested","keep",63,-
   "TEMPLATE.md","---","data","wired","keep",5,35
   "TEMPLATE.yaml","areas/TEMPLATE.yaml — what one area's declaration looks like.","data","wired","keep",2,44
   "a-company-suite.md","---","data","wired","keep",1,123
@@ -52,7 +52,7 @@ bin[83]{file,does,kind,verdict,disposition,callers,lines}:
   "areas.py","'''areas.py — a repository's own answer to the canon of areas.","tool","wired","keep",5,417
   "areas.sh","areas.sh — this repository's own answer to the canon of areas (a thin door; the craft is areas.py).","tool","wired","keep",15,18
   "canon.yaml","areas/canon.yaml — the plain face of the canon: what every project must answer for.","data","wired","keep",6,139
-  "checks.sh","checks.sh — run this repository's own cheap checks, whatever language it is written in.","tool","wired","keep",3,103
+  "checks.sh","checks.sh — run this repository's own cheap checks, whatever language it is written in.","tool","wired","keep",5,103
   "collab-connect.sh","collab-connect.sh — what a collaborator pastes, and the token the house mints.","tool","wired","keep",1,39
   "collab.sh","collab.sh — Vingólf, the assembly hall: who collaborates with the house, on which surface, and at which rung.","tool","wired","keep",6,65
   "collaboration-files.md","Subject: One set of files in every project — can we work this way?","data","wired","keep",2,54
@@ -61,7 +61,7 @@ bin[83]{file,does,kind,verdict,disposition,callers,lines}:
   "decision-minimal.md","{short title, representative of solved problem and found solution}","data","wired","keep",0,30
   "decision.md","---","data","wired","keep",0,80
   "fixes-components.sh","The components of this product — one directory of notes each, and no invented names.","tool","wired","keep",1,4
-  "fixes-guard.sh","fixes-guard — a behaviour change leaves a note, or says why it did not need one.","tool","tested","keep",6,29
+  "fixes-guard.sh","fixes-guard — a behaviour change leaves a note, or says why it did not need one.","tool","tested","keep",7,29
   "fixes.sh","fixes.sh — the fix notes.","tool","wired","keep",6,81
   "gates.md","---","data","wired","keep",4,63
   "glossary.md","Glossary template","data","wired","keep",0,20
@@ -71,9 +71,9 @@ bin[83]{file,does,kind,verdict,disposition,callers,lines}:
   "handoff-check.py","'''handoff/check.sh — the baton: is it there, complete, fresh, and honest about the paths it names?","tool","wired","keep",1,211
   "headers.md","---","data","wired","keep",9,61
   "how-to.md","Title","data","wired","keep",0,66
-  "init.sh","init.sh — put the collaboration shelf into a repository, or check the one it has.","tool","wired","keep",5,124
+  "init.sh","init.sh — put the collaboration shelf into a repository, or check the one it has.","tool","wired","keep",4,124
   "installation-guide.md","Title","data","wired","keep",0,199
-  "letter.sh","letter.sh — the collaboration letter, rendered from a template and left as a DRAFT in the gate.","tool","wired","keep",4,81
+  "letter.sh","letter.sh — the collaboration letter, rendered from a template and left as a DRAFT in the gate.","tool","wired","keep",3,81
   "maker-allow.txt","maker-allow.txt — the one allow file for bin/forge/maker-names.py (RULES/53).","data","wired","keep",7,8
   "maker-guard.sh","maker-guard.sh — the ward over what a commit or a pull request SAYS (RULES/53).","tool","wired","keep",10,58
   "maker-names.py","'''maker-names.py — the ONE matcher for model, model-maker and agent-harness names in prose (RULES/53).","tool","wired","keep",10,155
@@ -87,7 +87,7 @@ bin[83]{file,does,kind,verdict,disposition,callers,lines}:
   "private-data.sh","private-data — the repository is public; the operator's machine is not.","tool","wired","keep",1,41
   "publish.py","'''publish.py — the baton on the Board: what is next and what is blocked become cards.","tool","wired","keep",1,169
   "quickstart.md","Title","data","wired","keep",0,98
-  "readme.md","README template","data","tested","keep",1,158
+  "readme.md","README template","data","tested","keep",2,158
   "referee-guard.sh","referee-guard — the gates, the hooks and the wards are the referee.","tool","wired","keep",1,28
   "reference.md","Reference template","data","wired","keep",1,40
   "release-notes.md","Release notes - {Product name} {Release number - 0.0.0}","data","wired","keep",0,97
@@ -103,7 +103,7 @@ bin[83]{file,does,kind,verdict,disposition,callers,lines}:
   "test_collab.sh","test_collab.sh — the proofs for bin/collab (Vingólf).","tool","wired","keep",0,117
   "troubleshooting.md","Troubleshooting {product name, feature, or task}","data","wired","keep",0,49
   "tutorial.md","Title","data","wired","keep",0,92
-  "who.py","'''who.py — the roll: who was invited into the house's collaboration surfaces, and are they using them?","tool","wired","keep",2,397
+  "who.py","'''who.py — the roll: who was invited into the house's collaboration surfaces, and are they using them?","tool","wired","keep",4,397
   "worktree.sh","worktree.sh — one agent, one worktree.","tool","wired","migrate → src/ymir_runtime/worktree.py",3,45
 
 **Tally.** verdict: wired=73, tested=10

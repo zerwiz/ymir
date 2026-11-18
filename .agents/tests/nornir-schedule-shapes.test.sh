@@ -28,6 +28,8 @@ case "$*" in
   "+%H:%M") printf '%s\n' "${FAKE_NOW#* }" ;;
   "+%Y-%m-%d") printf '%s\n' "${FAKE_NOW%% *}" ;;
   "+%Y-%m-%dT%H") printf '%s\n' "$(printf '%s' "${FAKE_NOW%% *}")T$(printf '%s' "${FAKE_NOW#* }" | cut -d: -f1)" ;;
+  "+%a") printf '%s\n' "$(python3 -c 'import datetime,sys
+print(datetime.date.fromisoformat(sys.argv[1]).strftime("%a"))' "${FAKE_NOW%% *}" 2>/dev/null || printf Mon)" ;;
   "-u +%Y-%m-%dT%H:%M:%SZ") printf '%s\n' "$(printf '%s' "${FAKE_NOW%% *}")T$(printf '%s' "${FAKE_NOW#* }"):00Z" ;;
   *) printf '%s\n' "${FAKE_NOW:-1970-01-01 00:00}" ;;
 esac
@@ -42,18 +44,32 @@ cat >"$CONF/cron.yaml" <<EOS
 03:00 printf 'at3\n' >> $MARK
 @heart @hourly:00 printf 'gated\n' >> $MARK
 @bogus-shape printf 'never\n' >> $MARK
+Mon 09:15 printf 'mon915\n' >> $MARK
+@dev Tue,Fri 09:15 printf 'tuefri\n' >> $MARK
+Funday 09:15 printf 'funday\n' >> $MARK
 EOS
 
 run_at() { # <ISO-ish: "YYYY-MM-DD HH:MM">
+  local prev="" cur quiet=0
   PATH="$FAKE:$PATH" FAKE_NOW="$1" BROKK_CRON_ONCE=1 BROKK_CRON_TICK=1 \
     BROKK_STATE_OVERRIDE="$STATE" BROKK_CONFIG_OVERRIDE="$CONF" BROKK_ROLES="dev" \
     bash "$SCHED" >/dev/null 2>>"$WORK/warn.log"
-  for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
-    sleep 0.3
-    # the child writes cron.pid; once its cmdline is gone, the pass is finished
-    pid=$(cat "$STATE/cron.pid" 2>/dev/null || true)
-    [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null && continue
-    break
+  # WAIT ON THE MARK, NOT ON THE PID (2026-11-18). The loop runs each row in a BACKGROUND subshell
+  # (`( run_row ) &`) and then exits on BROKK_CRON_ONCE, so `cron.pid` is gone — or holds a previous
+  # pass's pid — while the row this pass fired is still writing. Counting on the pid therefore
+  # counted too early under a loaded runner and CI saw `0` where the row fired a moment later
+  # (PR #817: "a day gate fires on its own day — want 1, got 0", while the very next count saw it).
+  # The mark file is the one fact that settles: wait until it has been unchanged for 2 seconds.
+  for _ in $(seq 1 100); do
+    sleep 0.25
+    cur="$(wc -c <"$MARK" 2>/dev/null || echo 0) $(wc -l <"$MARK" 2>/dev/null || echo 0)"
+    if [ -n "$prev" ] && [ "$cur" = "$prev" ]; then
+      quiet=$((quiet + 1))
+      [ "$quiet" -ge 8 ] && break
+    else
+      quiet=0
+    fi
+    prev="$cur"
   done
 }
 
@@ -91,11 +107,32 @@ expect "@daily fires at midnight" 1 "$(count daily)"
 expect "@hourly fires in the new hour" 3 "$(count hourly)"
 expect "the 03:00 row does not fire at 00:00" 1 "$(count at3)"
 
+# ── the DAY gate (plan 305, appended 2026-11-17) ────────────────────────────────────
+# The weekly draft sweep asked for `@heart Mon 09:15 …`, and a shape the scheduler cannot
+# read is a row that never fires while it still looks declared. 2026-11-17 was a Tuesday.
+run_at "2026-11-16 09:15"   # Monday
+expect "a day gate fires on its own day" 1 "$(count mon915)"
+expect "a day list does not fire on another day" 0 "$(count tuefri)"
+
+run_at "2026-11-16 09:15"
+expect "a day-gated row fires once on that day" 1 "$(count mon915)"
+
+run_at "2026-11-16 09:16"
+expect "a day-gated row waits for its minute" 1 "$(count mon915)"
+
+run_at "2026-11-17 09:15"   # Tuesday
+expect "Monday's row does not fire on Tuesday" 1 "$(count mon915)"
+expect "the day list fires on a listed day" 1 "$(count tuefri)"
+
+run_at "2026-11-20 09:15"   # Friday
+expect "the day list fires on its second day" 2 "$(count tuefri)"
+expect "an unreadable day never fires" 0 "$(count funday)"
+
 expect "an unreadable shape never fires" 0 "$(count never)"
 st=$(PATH="$FAKE:$PATH" FAKE_NOW="2026-10-29 00:01" BROKK_STATE_OVERRIDE="$STATE" \
      BROKK_CONFIG_OVERRIDE="$CONF" bash "$SCHED" --status 2>/dev/null)
-case "$st" in *"invalid=1"*) say "--status counts the bad line as INVALID" PASS ;;
-  *) say "--status counts the bad line as INVALID" "FAIL ($st)"; fails=$((fails+1)) ;; esac
+case "$st" in *"invalid=2"*) say "--status counts both bad lines as INVALID" PASS ;;
+  *) say "--status counts both bad lines as INVALID" "FAIL ($st)"; fails=$((fails+1)) ;; esac
 case "$(cat "$WORK/warn.log" 2>/dev/null)" in *"will NOT fire"*) say "the start names the bad line loudly" PASS ;;
   *) say "the start names the bad line loudly" "FAIL (no warning)"; fails=$((fails+1)) ;; esac
 

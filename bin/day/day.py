@@ -5,6 +5,10 @@
     day.py --json           the same, for a surface to render
     day.py acts             only his half, numbered (what `open N` refers to)
     day.py clock            only the schedule, with due · fired · missed · whose role
+    day.py plans            every open plan on every shelf the registry names (plan 298)
+    day.py plans --done 7d  what closed lately — what he should tick off
+    day.py plans --blocked  the plans waiting on a decision, with the question
+    day.py plans --check    exit 1 when a shelf the registry names is absent, or a number collides
     day.py open N [--run]   the door behind act N — print it, or run it in a pane
     day.py --carry          counts and acts only — the only mode a notifier may call
     day.py --quiet          the same, kept as an alias
@@ -17,6 +21,11 @@ The rule this file obeys, and the reason it exists (plan 207):
   • a source that cannot be read prints **unable** with the reason — never a zero, because a
     zero is a fact and an unreadable source is not;
   • nothing here invents a number, a date or a priority.
+
+The plans read (plan 298 §2.2): `plans` answers the same question about the house's work — which
+plans are open, which closed, which wait on his word — from the ONE engine that reads them,
+`bin/records/plans_state.py`, called live so the answer is never a stale copy. This door writes
+nothing, so it never regenerates the registry; `bin/records/plans-state.sh` does that.
 
 Private data (plan 207 §14, RULES/04 and 15):
 
@@ -261,6 +270,149 @@ def evidence_fact() -> dict:
             "as_of": now(), "source": "advantage-audit"}
 
 
+# ── the plans (plan 298) ─────────────────────────────────────────────────────────────────────────
+
+def plans_engine():
+    """The one engine that reads the plans — the same module `bin/records/plans-state.sh` runs."""
+    sys.path.insert(0, str(repo_root() / "bin" / "records"))
+    import plans_state  # noqa: PLC0415 - imported here so a tree without it still prints the day
+    return plans_state
+
+
+def plans_fact(with_prs: bool = False) -> dict:
+    """Every plan on every shelf the registry names, read live. Never a zero for an unread source."""
+    try:
+        engine = plans_engine()
+        return engine.build(home(), with_prs=with_prs)
+    except SystemExit as exc:                      # the engine refuses loudly; carry its words
+        return {"unable": str(exc), "source": "hodd/identity/projects.yaml"}
+    except Exception as exc:                       # a broken door says so, never an empty list
+        return {"unable": "the plans door did not answer (%s: %s)" % (exc.__class__.__name__, exc),
+                "source": "hodd/identity/projects.yaml"}
+
+
+DURATION = re.compile(r"^([0-9]+)\s*([dwmy])$")
+
+
+def parse_duration(text: str) -> int | None:
+    """`7d` · `2w` · `1m` · `1y` → days. `all` → None (no window)."""
+    if not text or text in ("all", "any"):
+        return None
+    m = DURATION.match(text.strip().lower())
+    if not m:
+        return None
+    n, unit = int(m.group(1)), m.group(2)
+    return n * {"d": 1, "w": 7, "m": 30, "y": 365}[unit]
+
+
+def plan_question(path: str, limit_lines: int = 120) -> str:
+    """The first actual question a plan asks — the thing his word would settle.
+
+    Deliberately strict: a section whose heading says *question*, then a line that ENDS in a
+    question mark. A question mark in the middle of a quotation is not a question he is being
+    asked, and a door that quoted one would put noise where his decision belongs.
+    """
+    try:
+        lines = Path(path).read_text(encoding="utf-8", errors="replace").splitlines()[:limit_lines]
+    except OSError:
+        return ""
+
+    def clean(text: str) -> str:
+        s = re.sub(r"^\s*(?:[-*+]|\d+\.)\s+", "", text.strip())
+        s = s.strip("\u201c\u201d\"'*_ ")
+        return s
+
+    def asks(text: str) -> bool:
+        s = clean(text)
+        return s.endswith("?") and 20 <= len(s) <= 300
+
+    # a section that is about questions is the best witness; a plain line is the fallback
+    in_questions = False
+    fallback = ""
+    for line in lines:
+        s = line.strip()
+        if s.startswith("#"):
+            in_questions = bool(re.search(r"question|for him|decision", s, re.I))
+            continue
+        if not s or s.startswith("|") or s.startswith(">"):
+            continue
+        if in_questions and asks(s):
+            return clean(s)
+        if not fallback and asks(s):
+            fallback = clean(s)
+    return fallback
+
+
+def plans_lines(state: dict, *, done_within: int | None = None, blocked_only: bool = False,
+                carry: bool = False, quiet: bool = False, show_all: bool = False,
+                per_project: int = 15) -> list[str]:
+    """The plan read as prose lines: one per plan, with its owner, its age and what proves it.
+
+    A phone read lists the newest `per_project` per project and says how many it left; `--all`
+    lifts the cap, and `--json` always carries every plan. A count that hides a remainder is a
+    lie, so the remainder line is printed, never implied.
+    """
+    if "unable" in state:
+        return ["  unable — %s" % state["unable"]]
+    counts = state["counts"]
+    out: list[str] = []
+    by_project: dict[str, list[dict]] = {}
+    for plan in state["plans"]:
+        by_project.setdefault(plan["project"], []).append(plan)
+
+    if done_within is not None:
+        closed = [p for p in state["plans"] if p["state"] == "done"
+                  and (done_within == 0 or p["age_days"] <= done_within)]
+        out.append("  %d plan(s) done %s" % (len(closed),
+                                              "on the shelves" if done_within == 0
+                                              else "in the last %d day(s), by the file's last change" % done_within))
+        for plan in closed:
+            label = "" if carry else "  %s" % plan["title"][:72]
+            out.append("    %-12s %s%s" % (plan["number"] or "-", plan["state"], label))
+            if not carry and not quiet:
+                out.append("         %s" % "; ".join(plan["evidence"])[:150])
+        return out
+
+    if blocked_only:
+        waiting = [p for p in state["plans"] if p["state"] in ("blocked", "owed")]
+        out.append("  %d plan(s) waiting — %d on a decision, %d on our own debt"
+                   % (len(waiting), counts.get("blocked", 0), counts.get("owed", 0)))
+        for plan in waiting:
+            if carry:
+                out.append("    %-12s %s" % (plan["number"] or "-", plan["state"]))
+                continue
+            out.append("    %-12s %-7s %s" % (plan["number"] or "-", plan["state"], plan["title"][:70]))
+            q = plan_question(plan["path"])
+            if q:
+                out.append("         the question: %s" % q)
+            out.append("         to look at: %s" % plan["path"].replace(str(home()) + "/", ""))
+        return out
+
+    open_states = ("open", "building")
+    for project, plans in by_project.items():
+        open_here = [p for p in plans if p["state"] in open_states]
+        if not open_here:
+            continue
+        open_here.sort(key=lambda p: (0, -int(re.sub(r"\D", "", p["number"]) or 0))
+                       if p["number"] else (1, 0))
+        out.append("  %s — %d open of %d" % (project, len(open_here), len(plans)))
+        shown = open_here if show_all else open_here[:per_project]
+        for plan in shown:
+            if carry:
+                out.append("    %-4s %-8s %dd" % (plan["number"] or "-", plan["state"], plan["age_days"]))
+                continue
+            owner = plan["owner_name"] or plan["owner"] or "-"
+            out.append("    %-12s %-8s %-10s %3dd  %s" % (plan["number"] or "-", plan["state"], owner[:10],
+                                                          plan["age_days"], plan["title"][:64]))
+        if len(shown) < len(open_here):
+            out.append("    … and %d more on this shelf (day.sh plans --all)" % (len(open_here) - len(shown)))
+    for shelf in state["shelves"]:
+        if shelf["state"] != "present":
+            out.append("  ABSENT %s — the registry names %s and it is not there"
+                       % (shelf["project"], shelf["declared"]))
+    return out
+
+
 # ── printing ─────────────────────────────────────────────────────────────────────────────────────
 
 def render(as_json: bool, quiet: bool, carry: bool = False) -> int:
@@ -409,13 +561,23 @@ def privacy() -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(add_help=True)
     ap.add_argument("what", nargs="?", default="day",
-                    choices=["day", "acts", "clock", "mail", "calendar", "evidence", "open", "privacy"])
+                    choices=["day", "acts", "clock", "mail", "calendar", "evidence", "plans", "open", "privacy"])
     ap.add_argument("n", nargs="?", type=int)
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--quiet", action="store_true")
     ap.add_argument("--carry", action="store_true",
                     help="counts and acts only: the only mode a notifier may call")
     ap.add_argument("--run", action="store_true")
+    ap.add_argument("--done", nargs="?", const="all", metavar="WINDOW",
+                    help="plans (with `plans`): only what closed, within 7d / 2w / 1m or all")
+    ap.add_argument("--blocked", action="store_true",
+                    help="plans (with `plans`): only what waits on a decision, with its question")
+    ap.add_argument("--check", action="store_true",
+                    help="plans: exit 1 when a shelf the registry names is absent, or a number collides")
+    ap.add_argument("--with-prs", action="store_true",
+                    help="plans: also ask GitHub whether a named PR merged (the one network call)")
+    ap.add_argument("--all", action="store_true",
+                    help="plans: list every open plan, not the newest per project")
     args = ap.parse_args()
 
     if args.what == "privacy":
@@ -434,6 +596,53 @@ def main() -> int:
             print("day: open needs a number — `day.sh acts` lists them", file=sys.stderr)
             return 2
         return open_act(args.n, args.run)
+    if args.what == "plans":
+        state = plans_fact(with_prs=args.with_prs)
+        if args.check:
+            if "unable" in state:
+                print("day plans check: unable — %s" % state["unable"], file=sys.stderr)
+                return 1
+            problems = plans_engine().findings(state)
+            for p in problems:
+                print("day: %s" % p)
+            print("day plans check: %s" % ("ok" if not problems else "%d finding(s)" % len(problems)))
+            return 1 if problems else 0
+        window = parse_duration(args.done) if args.done is not None else None
+        # `--done` with no window means every closed plan; 0 is the engine's "no window"
+        done_window = (0 if window is None else window) if args.done is not None else None
+        if args.json:
+            payload = dict(state)
+            if args.done is not None:
+                payload = {k: v for k, v in state.items() if k != "plans"}
+                payload["plans"] = [p for p in state.get("plans", []) if p["state"] == "done"
+                                    and (done_window == 0 or p["age_days"] <= done_window)] \
+                    if "unable" not in state else []
+            if args.blocked:
+                payload = {k: v for k, v in state.items() if k != "plans"}
+                payload["plans"] = [p for p in state.get("plans", []) if p["state"] in ("blocked", "owed")] \
+                    if "unable" not in state else []
+            print(json.dumps(payload, indent=2))
+            return 0
+        counts = state.get("counts") or {}
+        head = ("THE PLANS · hodd/identity/projects.yaml · as_of %s" % state.get("as_of", now())
+                if "unable" not in state else "THE PLANS · unable")
+        print(head)
+        if "unable" not in state:
+            print("  %d plan(s) on %d shelf(ves) · %d open · %d building · %d blocked · %d owed · %d done"
+                  % (counts.get("total", 0), len([s for s in state["shelves"] if s["state"] == "present"]),
+                     counts.get("open", 0), counts.get("building", 0), counts.get("blocked", 0),
+                     counts.get("owed", 0), counts.get("done", 0)))
+            if state.get("retired_not_listed") or state.get("reports_not_listed"):
+                print("  not listed as work: %d retired reference plan(s), %d dated report(s)"
+                      % (state.get("retired_not_listed", 0), state.get("reports_not_listed", 0)))
+        for line in plans_lines(state, done_within=done_window,
+                                blocked_only=args.blocked, show_all=args.all,
+                                carry=args.carry and not args.json, quiet=args.quiet):
+            print(line)
+        if "unable" not in state and not args.blocked and args.done is None and not args.quiet:
+            print("  the whole registry: bin/records/plans-state.sh · what closed: day.sh plans --done 7d")
+        return 0 if "unable" not in state else 1
+
     if args.what in ("clock", "mail", "calendar", "evidence"):
         fact = {"clock": clock_fact, "mail": mail_fact,
                 "calendar": calendar_fact, "evidence": evidence_fact}[args.what]()
