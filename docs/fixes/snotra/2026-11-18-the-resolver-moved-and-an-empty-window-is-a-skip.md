@@ -29,3 +29,7 @@
 - Same command after: `snotra-pipeline: SKIP — no meeting folder touched in the last 1 day(s)`, **rc 0**.
 - The resolver itself answers at its new home: `python3 systems/snotra/services/record/snotra_paths.py --recent 5`
   lists the shelves it can see, and the pipeline parses that list unchanged.
+
+## CHANGE LOG
+
+- 2026-11-17 — review-mend: added missing heading for #815
