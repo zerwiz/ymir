@@ -68,7 +68,7 @@ every road and for every harness, and the engine does the same for an errand sea
 |---|---|---|
 | (a) the fixed core | the two repositories and their two laws, the pin, panes and the stamped send door, the arm, the desk guard, the finding tools, and the laws to keep in view | the shipped, agnostic `.agents/assets/agents/eindri-core.md`, then the home's overlay `$YMIR_HOME/config/eindri-core.md` |
 | (b) the project's records | decisions, handoff, schedule, plans, plan status, docs index, meetings, seat, boards, and who merges — each with the duty *read before you write, update before your report* | the row's `records:` block in `$YMIR_HOME/hodd/identity/projects.yaml` |
-| (c) the home's document map | the layout shelves, the knowledge index, the atlas, the plan ledgers and the report shelf | `$YMIR_HOME/.ymir-layout.yaml`, `hodd/docs/INDEX.md`, `svartalfaheim/*/projects/*/plans/README.md` |
+| (c) the home's document map | the layout shelves, the knowledge index, the plan ledgers and the report shelf | `$YMIR_HOME/.ymir-layout.yaml`, `hodd/docs/INDEX.md`, `svartalfaheim/*/projects/*/plans/README.md` |
 
 Read it back, or ask one part for one project:
 

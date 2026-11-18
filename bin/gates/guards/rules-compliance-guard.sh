@@ -36,6 +36,7 @@ fi
 git rev-parse --verify -q "$BASE" >/dev/null || { printf 'rules-compliance: SKIP — base %s is unknown\n' "$BASE"; exit 0; }
 
 added=$(git diff --name-only --diff-filter=A "$BASE..$HEAD")
+added_all=$(git diff --name-only --diff-filter=AM "$BASE..$HEAD")   # R5 reads added AND changed files
 # A fork's sync is not the pusher's work (plan 272, fault 7). A collaborator who merges upstream's default branch
 # "adds" hundreds of files he did not write; judging them charged him with faults that sit in upstream's own main.
 # A file the push adds whose bytes are IDENTICAL to the same path on upstream's default branch is upstream's, and is
@@ -64,7 +65,7 @@ ADDED
   fi
 fi
 
-[ -z "$added" ] && { printf 'rules-compliance[1]{state,detail}:\n  "clean","the push adds no new file"\n'; exit 0; }
+[ -z "$added" ] && [ -z "$added_all" ] && { printf 'rules-compliance[1]{state,detail}:\n  "clean","the push adds no new file"\n'; exit 0; }
 
 fail=0
 say() { printf 'rules-compliance[1]{file,line,rule,finding}:\n  "%s","%s","%s","%s"\n' "$1" "$2" "$3" "$4"; fail=1; }
@@ -149,6 +150,19 @@ while IFS= read -r f; do
   [ -x "$f" ] || say "$f" "-" "RULES/12 · RULES/23" "a new door is not executable (chmod +x)"
 done <<EOF
 $added
+EOF
+
+# R5 — Atlas is a separate project: the whole word "atlas" is not added to Ymir (RULES/58).
+# Whole word only, so "Atlassian" (Jira) is not a hit. Law and history that must NAME it are exempt:
+# a fix note records what it fixed, a rule names what it forbids, and a ward searches for it.
+while IFS= read -r f; do
+  [ -n "$f" ] || continue
+  case "$f" in docs/fixes/*|RULES/*|bin/gates/guards/*|bin/gates/tests/*) continue ;; esac
+  case "$f" in *.md|*.yml|*.yaml|*.json|*.example|*.sh|*.py|*.ts|*.tsx|*.js) ;; *) continue ;; esac
+  hit=$(git diff -U0 "$BASE..$HEAD" -- "$f" 2>/dev/null | grep '^+' | grep -v '^+++' | grep -iwm1 'atlas') || continue
+  [ -n "$hit" ] && say "$f" "added" "RULES/58 · Atlas is not Ymir" "the word 'atlas' in a new line: ${hit:0:90}"
+done <<EOF
+$added_all
 EOF
 
 if [ "$fail" = 0 ]; then

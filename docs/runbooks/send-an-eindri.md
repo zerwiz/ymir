@@ -75,7 +75,7 @@ prepended by `eindri-start.sh` on every road and by the engine for an errand sea
 |---|---|
 | the fixed core | the two repositories and their two laws, the pin, panes and the stamped send door, the arm, the desk guard, the finding tools, and the laws to keep in view — the shipped `.agents/assets/agents/eindri-core.md`, then this fleet's own overlay `$YMIR_HOME/config/eindri-core.md` |
 | the project's records | decisions, handoff, schedule, plans, plan status, docs index, meetings, seat, boards, and who merges — from the row's `records:` block, each with the duty *read before you write, update before your report* |
-| the home's document map | the layout shelves, `hodd/docs/INDEX.md`, the atlas, the plan-ledger READMEs, and the report shelf |
+| the home's document map | the layout shelves, `hodd/docs/INDEX.md`, the plan-ledger READMEs, and the report shelf |
 
 A project with no `records:` block is said plainly — the section names the registry row to add and
 never invents a path.

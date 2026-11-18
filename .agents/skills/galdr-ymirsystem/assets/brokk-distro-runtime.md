@@ -1956,3 +1956,8 @@ Gates: `heavy-slot`, `update-loop-proof`. Fix notes:
 `docs/fixes/engine/2026-11-17-a-candidate-is-proven-once.md`. The runbook these correct is the heart's
 `updating.md` (in the home), whose first law had named `bin/heavy-slot.sh take` — a verb that never
 existed.
+
+
+## Appended 2026-11-18 — the home's top-level map page is not Ymir's
+
+The earlier line that lists the home's top-level map page among its document map is corrected: that page and the tool that wrote it belong to the other project and have moved out of Ymir (RULES/58). The home's document map is its layout shelves, the knowledge index and the plan-ledger READMEs.

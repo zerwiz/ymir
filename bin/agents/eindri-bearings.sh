@@ -154,7 +154,6 @@ else
   printf '- no `.ymir-layout.yaml` in the home (the shape ships at `hodd/.ymir-layout.yaml.example`)\n'
 fi
 [ -r "${YMIR_HOME:-}/hodd/docs/INDEX.md" ] && printf -- '- **the knowledge shelf**: `%s/hodd/docs/INDEX.md` — the index before the shelf\n' "$YMIR_HOME"
-[ -r "${YMIR_HOME:-}/hodd/ATLAS.md" ] && printf -- '- **the atlas**: `%s/hodd/ATLAS.md` — every realm, project and shelf in one map\n' "$YMIR_HOME"
 if [ -d "${YMIR_HOME:-}/svartalfaheim" ]; then
   ledgers=( "${YMIR_HOME}"/svartalfaheim/*/projects/*/plans/README.md )
   [ -e "${ledgers[0]:-}" ] || ledgers=()
