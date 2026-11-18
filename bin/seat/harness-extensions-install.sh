@@ -20,6 +20,7 @@
 #   codex     hooks.json and the skills links under ~/.codex
 #   cursor    the rules into ~/.cursor/rules
 #   every root  the ONE `ymir` skill (~/.agents/skills/ymir, ~/.claude/skills/ymir) over an unscanned store (plan 248 P3b)
+#   hermes    the seat (bin/seat/hermes-seat.sh): the doors by the pin, the skills shelf, the worker script
 # A harness that is not installed is a clean SKIP with its reason, never a failure (RULES/25).
 set -uo pipefail
 
@@ -388,6 +389,32 @@ PY
   fi
 else
   say "  \"claude\",\"absent\",\"no claude on this host\""; absent=$((absent+1))
+fi
+
+# ── hermes: the seat — doors by the pin, the skills shelf, the worker script (plan 317 slice 5) ──
+# The descriptor `.agents/harnesses/hermes.yaml` names the seat door; install and Gróa's update run it,
+# `--check` compares VALUES through it. The seat's own last line is the row's detail, and a failure is
+# printed in the seat's own words — never "not installed" for a seat that broke.
+if command -v hermes >/dev/null 2>&1; then
+  _hs_door="$ROOT/bin/seat/hermes-seat.sh"
+  if [ ! -x "$_hs_door" ]; then
+    say "  \"hermes\",\"stale\",\"no seat door at $_hs_door\""; stale=$((stale+1))
+  else
+    if [ "$mode" = "check" ]; then _hs_out="$(bash "$_hs_door" --check 2>&1)"; _hs_rc=$?
+    else _hs_out="$(bash "$_hs_door" 2>&1)"; _hs_rc=$?; fi
+    _hs_last="$(printf '%s\n' "$_hs_out" | grep -v '^  "' | tail -1 | tr '"' "'")"
+    if [ "$_hs_rc" -ne 0 ]; then
+      say "  \"hermes\",\"stale\",\"$_hs_last\""; stale=$((stale+1))
+      printf '%s\n' "$_hs_out" | grep -E '^  "|^error:|^help:' | sed 's/^/    /'
+    elif [ "$mode" != "check" ] && ! printf '%s' "$_hs_out" | grep -q 'nothing to change'; then
+      say "  \"hermes\",\"synced\",\"$_hs_last\""; changed=$((changed+1))
+    else
+      say "  \"hermes\",\"current\",\"$_hs_last\""
+    fi
+  fi
+  unset _hs_door _hs_out _hs_rc _hs_last
+else
+  say "  \"hermes\",\"absent\",\"no hermes on this host\""; absent=$((absent+1))
 fi
 
 # ── codex: hooks.json and the skills links ───────────────────────────────────

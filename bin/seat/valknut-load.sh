@@ -705,8 +705,18 @@ fi
 
 if [ "$MODE_HERMES" = 1 ]; then
   # Hermes is a first-class harness (2026-11-03): it wears the same packets and skills.
+  # The seat's OWN lines are printed, success or failure (plan 317 slice 4): until 2026-11-18 its output
+  # went to /dev/null and every failure — a config that did not parse, a missing PyYAML — read as
+  # "not installed". Only a host with no `hermes` binary is a skip.
   if [ -x "$ROOT/bin/seat/hermes-seat.sh" ]; then
-    "$ROOT/bin/seat/hermes-seat.sh" >/dev/null 2>&1 && printf 'hermes: packets seated, skills trusted\n' || printf 'hermes: not installed on this seat — skipped\n'
+    if ! command -v hermes >/dev/null 2>&1; then
+      printf 'hermes: not installed on this seat — skipped\n'
+    else
+      _hs_out="$("$ROOT/bin/seat/hermes-seat.sh" 2>&1)"; _hs_rc=$?
+      printf '%s\n' "$_hs_out" | sed 's/^/hermes: /'
+      [ "$_hs_rc" -eq 0 ] || printf 'hermes: the seat FAILED (exit %s) — the lines above are its own words\n' "$_hs_rc"
+      unset _hs_out _hs_rc
+    fi
   fi
 fi
 

@@ -32,11 +32,24 @@ backend:
   adapter: bin/seat/backends/hermes.py
   verbs: [list, get, read, prompt, wait, explain]
   extra: [recover]           # Hermes alone can lose a turn, so Hermes alone needs recovery
+# Corrected 2026-11-18 (plan 317 §1.3, slice 5): the 2026-11-16 lines said `hooks: none` and
+# `mcp: plugin`. Measured the same version that day: `hermes hooks doctor` reports two healthy
+# shell hooks, and `hermes mcp list` shows eleven native MCP servers. A descriptor wrong in two
+# capabilities makes any installer that trusts it skip the two surfaces that work.
+measured_against: 0.22.6     # `ymir hermes doctor` compares this with `hermes --version`
 capabilities:
   streaming: partial         # a turn prints as it runs; a session is read after it ends
-  hooks: none                # no lifecycle hook to subscribe to
+  hooks: shell               # on_session_start, pre_llm_call (`hooks:` in config.yaml); was: none
   resume: full
-  mcp: plugin                # `hermes plugins install mcp-serve` — NOT built in at 0.22.6
+  mcp: native                # config.yaml `mcp_servers`, seated by `ymir hermes seat`; was: plugin
+  skills: external_dirs      # `skills.external_dirs` loads in every cwd; trusted_project_dirs only per project
+  cron: scripts              # ~/.hermes/scripts/ only; `.sh`/`.bash` run by bash, anything else by Hermes' Python; shebangs ignored
+  desktop_plugins: ~/.hermes/desktop-plugins/<id>/plugin.js
+seat:
+  door: bin/seat/hermes-seat.sh            # → python3 -m ymir_runtime.hermes seat [--check|--dry-run]
+  ledger: ~/.hermes/.ymir-owned.json       # what Ymir seated; anything else is the operator's
+  doctor: python3 -m ymir_runtime.hermes doctor
+  wake: python3 -m ymir_runtime.hermes wait-worker   # a supervised unit; delivers by `inject:`
 instructions:
   global: ~/.hermes/AGENTS.md
   project: AGENTS.md

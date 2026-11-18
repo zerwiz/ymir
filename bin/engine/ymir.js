@@ -35,7 +35,9 @@ const { spawnSync } = require('node:child_process');
 const path = require('node:path');
 const fs = require('node:fs');
 
-const ROOT = path.resolve(__dirname, '..');
+// The tree root: this file lives at bin/engine/ymir.js, so the root is TWO levels up. One level (the
+// old bin/ymir.js) resolved to bin/ and every door answered "missing from this install" (2026-11-18).
+const ROOT = path.resolve(__dirname, '..', '..');
 const pkg = (() => {
   try { return require(path.join(ROOT, 'package.json')); } catch { return { version: '0.0.0' }; }
 })();
@@ -216,6 +218,9 @@ function usage() {
   lines.push(bold('  Composed by hand'));
   lines.push(`    ${bronze('ymir groa migrate'.padEnd(11))} ${faint("heal this home's structure (run by groa / install)")}`);
   lines.push(`    ${bronze('ymir heimdall set'.padEnd(11))} ${faint('set the operator password (or `github`)')}`);
+  lines.push(`    ${bronze('ymir doctor hermes'.padEnd(11))} ${faint('every Hermes surface, four states per door (exit 0 only when all answer)')}`);
+  lines.push(`    ${bronze('ymir hermes seat'.padEnd(11))} ${faint('seat Ymir in Hermes: --check compares values, --dry-run shows the diff')}`);
+  lines.push(`    ${bronze('ymir wait-worker'.padEnd(11))} ${faint('a finished herdr worker wakes the Hermes session that asked (supervised)')}`);
   lines.push('');
   lines.push(faint('  A bare `ymir` runs the first setup. Output is TOON; colour only on a TTY.'));
   lines.push('');
@@ -246,6 +251,23 @@ if (first === '--version' || first === '-v' || first === '-V') {
   process.exit(0);
 }
 if (first === '--help' || first === '-h' || first === 'help') { usage(); process.exit(0); }
+
+// The Python core's verbs (plan 317 §4.3, §5): `ymir doctor hermes`, `ymir hermes <verb>`,
+// `ymir wait-worker`. They run `python3 -m ymir_runtime.hermes` from THIS tree's src/, so the pin
+// answers when the pin is what is installed. A bare `ymir doctor` still points at `ymir eir`.
+function runPy(args) {
+  const src = path.join(ROOT, 'src');
+  const env = { ...process.env, PYTHONPATH: src + (process.env.PYTHONPATH ? path.delimiter + process.env.PYTHONPATH : '') };
+  const r = spawnSync('python3', ['-m', 'ymir_runtime.hermes', ...args], { stdio: 'inherit', env });
+  if (r.error) {
+    process.stderr.write(`${blood('error:')} python3 could not be run: ${r.error.message}\n`);
+    process.exit(1);
+  }
+  process.exit(r.status === null ? 1 : r.status);
+}
+if (first === 'doctor' && argv[1] === 'hermes') runPy(['doctor', ...argv.slice(2)]);
+if (first === 'hermes') runPy(argv.slice(1));
+if (first === 'wait-worker') runPy(['wait-worker', ...argv.slice(1)]);
 
 let door = DOORS[first];
 if (!door) {

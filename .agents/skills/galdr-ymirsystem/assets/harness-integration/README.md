@@ -1728,3 +1728,17 @@ The one-home door (`pi-door.sh`, PR #654) is unchanged and coherent with this. A
 still gets that checkout's tree, once. In every other folder the root's runtime serves. Ward:
 `bin/seat/tests/test_roots_load_the_runtime.sh` (throwaway HOME). Feature page: `docs/features/roots-load-the-runtime.md`.
 Fix note: `docs/fixes/seat/2026-11-11-roots-load-the-runtime.md`.
+
+## 2026-11-18 — Hermes is seated from the pin and corrected on every update (plan 317 slices 1–9)
+
+This section corrects the Hermes lines above. They said `bin/seat/hermes-seat.sh` reads the packet list and that "a LIVE entry is never overwritten". Both lines stay as the record of what was true then.
+
+- **The seat is Python now.** `bin/seat/hermes-seat.sh` is a one-line launcher for `python3 -m ymir_runtime.hermes seat [--check|--dry-run]` (`src/ymir_runtime/hermes/seat.py`).
+- **Ownership is a side ledger**, `~/.hermes/.ymir-owned.json`. An owned entry is corrected to the release's value, and only Ymir's keys (`url`, `command`, `args`, `env`) are rewritten. Every other entry is reported `operator-owned` and left alone. An owned entry that leaves the list is disabled, never deleted.
+- **Writes go through `hermes config set|unset`**, key by key. A dated `config.yaml.bak-<UTC>` is taken first.
+- **The `ymir` door names the pin's link** (`~/ymir-runtime/bin/mcp/ymir-mcp.py`). `bin/bridge/mcp-config-seat.py` renders the one packet list the same way, and its `pi --dry-run` prints the JSON diff.
+- **Skills** reach Hermes through `skills.external_dirs: [<pin>/.agents/skills]`, which loads in any cwd. Trust entries for `.yggdrasil` worktrees are pruned.
+- **`valknut-load.sh --hermes`** prints the seat's own lines. A failure is named with its exit code; only a host with no `hermes` is "not installed".
+- **`harness-extensions-install.sh`** prints a `hermes` row in install and in `--check`.
+- **The session hook** (`bin/seat/hermes-session-hook.sh` → `session_hook.py`) injects the Sága digest on the first turn in any cwd. `YMIR_HERMES_DIGEST_SCOPE=house` restores the old scope.
+- **`ymir doctor hermes`** and **`ymir wait-worker`** are new verbs. The how-to is `docs/features/ymir-whole-in-hermes.md`, and the fix note is `docs/fixes/seat/2026-11-18-hermes-seated-from-the-pin-and-woken-by-its-workers.md`.

@@ -1956,3 +1956,10 @@ Gates: `heavy-slot`, `update-loop-proof`. Fix notes:
 `docs/fixes/engine/2026-11-17-a-candidate-is-proven-once.md`. The runbook these correct is the heart's
 `updating.md` (in the home), whose first law had named `bin/heavy-slot.sh take` — a verb that never
 existed.
+## 2026-11-18 — `src/ymir_runtime/hermes/`: the first harness written as core verbs (plan 317)
+
+This is a new subpackage, run as `python3 -m ymir_runtime.hermes <verb>`. Its verbs are `seat`, `doctor`, `wait-worker` and `session-hook`. Every subprocess goes through `hermes/common.py:run`, which always takes a timeout and keeps stderr. Every refusal is a `HermesError` carrying a remedy. Paths come from `ymir_runtime.paths`.
+
+`wait-worker` is deliberately not in `watch.py`, which is the arm. The waiter runs as a transient systemd user unit (`ymir-wait-worker-<session>-<stamp>`). It delivers a turn by the descriptor's `inject:` road, and its state lives under `$XDG_STATE_HOME/ymir/hermes/wait-worker/`.
+
+The tests are `src/ymir_runtime/tests/test_hermes_*.py` (pytest, 28 cases).
