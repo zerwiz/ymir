@@ -185,6 +185,13 @@ path_component() {  # <path> -> the component it belongs to, or empty
     # its own component from 2026-11-16 (plan 304 §4.3) — before this row every path it owns mapped
     # to NO component, so a correct dispatch note covered nothing.
     bin/dispatch/*|bin/time/nornir-job-dispatch.sh) echo dispatch ;;
+    # The seat's own doors and the desk's failsafes (plan 001 §4, 2026-11-17). Before this row
+    # bin/seat/* mapped to NO component apart from verify-seat, so a correct note could not cover a
+    # seat change — the same defect the forge and skuld rows above fixed. `bin/voice/*` and the unit
+    # register go with them: a seat's services are seat changes. (Restored 2026-11-18: PR 818 kept
+    # main's copy of this file and dropped the row PR 814 added.)
+    bin/seat/*|bin/voice/*|bin/engine/units.sh|bin/engine/units.py|config/units.yaml) echo runtime ;;
+    bin/notify/*) echo notify ;;
   esac
 }
 covered=0
