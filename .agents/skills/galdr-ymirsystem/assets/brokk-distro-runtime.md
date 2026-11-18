@@ -1819,3 +1819,140 @@ this seat, where the relay's `ExecStart` pointed at a pinned runtime that predat
 Guards: `bin/seat/tests/test_backend_door.sh` (19 cases, stubbed harnesses and a fixture of the
 runtime's own table). Fix note `docs/fixes/agents/2026-11-16-hermes-is-a-second-backend.md`,
 how-to `docs/features/agents-talk-to-everyone.md`.
+
+## The desk survives a death — the five failsafes (plan 001 §4, 2026-11-17)
+
+**The death.** At 07:20:59 on the heart the kernel's OOM killer fired with swap at 216 kB of 4 GB. It
+killed one `opencode` inside `herdr-server.service`'s cgroup; systemd answered by stopping the unit with
+`result 'oom-kill'` and restarting it; **27 panes came back as bare shells** while `herdr agent list` still
+said *idle*. One death took every hand, and nothing told the operator.
+
+**The shape of the desk.** `herdr-server.service` is one memory pot with every agent in it. A pane is a
+shell; the agent is the desk's child. So the truth about "who is working" is never the desk's list — it is
+`ps` and `/proc`. That is the runbook's first rule (`the-desk.md` §1) and the failsafes keep it.
+
+| Door | Failsafe | What to know |
+|---|---|---|
+| `bin/seat/desk-ceiling.sh` | the desk keeps a ceiling | `MemoryHigh` 30 % of `MemTotal`, `MemoryMax` 40 %, `MemorySwapMax` 25 % of swap, plus `OOMPolicy=continue` in a **drop-in** (`20-desk-ceiling.conf`) because the seat-keeper rewrites the unit file. Applied live with `set-property`; **never** restarts the desk |
+| `bin/seat/agent-scope.sh` | each hand in its own cgroup | `systemd-run --user --scope` with 10 % / 15 % / 12.5 %; `herdr-run.sh` wraps the command it seats. No user manager → a `clean skip` that names the failsafe as **absent** |
+| `bin/seat/desk-inventory.sh` | who stood where | `save` snapshots panes holding a **live** agent (session file + cwd), atomically; `check` asks `/proc`; `lost` names what is gone. `save --claimed` records the desk's claim for a desk that already lost its hands |
+| `bin/seat/desk-watch.sh` | a restart is noticed | `check` prints ONE line naming every lost pane; `raise --limit N` resumes through `herdr-run.sh`, bounded because 27 at once would swap the machine to death; `install-units` renders the `desk-failsafe` timer from `config/units.yaml` (the register, plan 269) |
+| `bin/voice/rodd-arm.sh hold` | the arm cannot be held by a watcher | a **speech gate** at the top of `cmd_hold`: the lock module resolves the caller's ancestry; if no harness stands there, the hold is refused and the fact is named |
+| `bin/voice/rodd-tell-deadline.sh` | a tell cannot wait forever | a `rodd-` signal wake still queued past its deadline (300 s) escalates **once** to the operator; `list` reads and never acts |
+| `bin/notify/telegram-transport.sh` | a stale mouth is freed | a dead transport pid in pi-telegram's `state.json` is removed at once (0.04 s measured); a **live** holder is refused, never stolen. `pi-launcher.sh` runs it before `exec pi` |
+| `bin/seat/desk-notify.sh` | the death is spoken | one line from `journalctl -k` (who died), systemd's `oom-kill` verdict (which unit) and the panes lost; said **exactly once** per event; `replay --since/--until` for a proof, `YMIR_DESK_NOTIFY_SINK` so a test never alarms |
+
+**What the failsafes do NOT decide.** Whether a pane comes back **as an agent** (resumed) or **closed**
+(after a restart) is plan 001 §6 — the Allfather's decision. The timer therefore *names* lost panes and
+never raises them; `raise` is a hand's deliberate act.
+
+**The residue, named.** `hdr agent start` (the `agent|eindri` road) starts the harness itself, so that road
+is bounded by the desk ceiling but not by a per-agent scope. And the arm **daemon** writes its own lease
+(`role=unknown`, session = a shell) without passing `hold`; refusing that is the engine's change
+(plan 310 §5), and the tell-deadline escalation is what makes it harmless meanwhile.
+
+**Proofs.** `bin/seat/tests/test_desk_failsafes.sh` (44 assertions) covers the arithmetic, the drop-in, the
+liveness judgement, the truncation of the raise, the transport release and refusal, the speech gate and the
+once-only message. On the heart: `MemoryMax=4977590272` with `OOMPolicy=continue`, a scoped hand killed at
+`scope_rc=137` while the desk kept `MainPID=1155541` and its peak, `desk-verdict "27","0","27"`, and the
+07:21 replay producing exactly one line.
+
+## 8 · Sýn's mind — the supervisor loop (2026-11-17, plan 004)
+
+The arm keeps the standing watch and raises the line that needs a session. It cannot decide what to do
+about what it sees, and eight observers that each test one thing are a **monitor**, not a supervisor.
+The Allfather's correction, 2026-11-17: *"the supervisor must work for the intended outcome … and an
+agent must be involved in the loop."*
+
+The loop is five steps, and the middle one is a hand:
+
+| step | who | what it may not do |
+|---|---|---|
+| measure | `supervisor.measure()` | judge anything; act on an `unknown` state |
+| judge | `bin/agents/syn-judge.sh` (one model turn, read-only) | name a verb the house does not name |
+| act | `supervisor.act()` under `bin/voice/rodd-arm.sh who` | act with no arm; touch `criticality: always` |
+| prove | the SAME measurement again | call a fault fixed while the surface is still down |
+| record | `hodd/machines/<host>/fixes.md` + one rune | write into the code tree |
+
+**Where it lives.** The behaviour is the engine's (`src/ymir_runtime/supervisor.py`), reached by
+`bin/pi/syn-supervisor.sh` → `bin/engine/ymir-engine.sh supervise [--once|--every N] [--toon]`, beside
+`bin/pi/syn-watch.sh`. The judgement's road is its own door: `bin/agents/syn-judge.sh` takes the prompt on
+stdin, resolves the model through `bin/model/agent-model.sh`, checks it with `bin/model/model-allow.sh`,
+and serves it `-nt --no-mcp --no-extensions --no-session` — a judgement that could run bash would be a
+second pair of hands in a loop that gates its acts on the arm. No prompt and no threshold live in the
+door; the prompt is composed from the measurement and the library by the module.
+
+**The vocabulary is the house's, not the model's.** `none · start-container · restart-container ·
+start-unit · restart-unit · escalate`. A verb outside it is refused; a `*-unit` verb pointed at a
+container is refused (measured the first day: the judge said `start-unit` for a docker container — the
+verbs read right and run wrong, so every surface now carries its `kind`); a target the measurement does
+not name is refused. A surface marked `criticality: always` is escalated, never acted on: whether Sýn may
+stop such a unit is the Allfather's (plan 004 §5.1).
+
+**One message, never a retry.** The escalation road is the house's own durable wake: a `check:` line in
+the helm's `.wake-queue` plus one rune (`supervisor-escalate`). Where that queue is, is a rule and not a
+path: `supervisor.helm_state()` is the Python twin of `bin/agents/eindri-wake-lib.sh:eindri_helm_state`,
+so a worker's own `BROKK_STATE_OVERRIDE` — which is its `BROKK_MACHINE_STATE_DIR` — never swallows a
+message meant for the helm (plan 272, fault 1; measured the day this was built).
+
+**The registry is read, never written.** `measure()` reads `<home>/hodd/identity/services.yaml`, keeps
+only the rows whose `host` is this seat, and asks `bin/records/registry-audit.sh --quiet --registry
+<path>` the same question about the same file. A registry that names another host names no surface here,
+and the loop says so instead of acting on a neighbour's estate.
+
+Guards: `src/ymir_runtime/tests/test_supervisor.py` (26 cases — the whole loop, a failed proof, the
+`always` escalation, no-arm refusal, an off-vocabulary verb, a kind mismatch, the helm-state rule). The
+operator's page is `docs/features/the-supervisor-loop.md`; the machine's page is
+`hodd/docs/runbooks/the-supervisor.md` in the home; the fix note is
+`docs/fixes/runtime/2026-11-17-the-supervisor-gets-a-mind.md`.
+
+## The heavy slot, and the proof a candidate earns once (plan 002, 2026-11-17)
+
+Two mechanisms close the fault that killed the heart on 2026-11-17: a gate suite running every quarter
+hour on a box that must not build, beside a release build and seven errands, with swap already 3.0 of
+4.0 GB.
+
+**`bin/heavy-slot.sh` is the machine's one queue for heavy work.** `run -- <command…>` takes an exclusive
+lock, prints whose job it waits for when the slot is held, runs the command with the hold **inherited**
+(so a heavy door called from inside a heavy job nests instead of deadlocking on its own lock), and
+releases on exit including on `INT`/`TERM`/`HUP`/`QUIT`. `status` names the holder (pid, start time,
+started, host, name, cmd, how long) and exits 3 when held, so a script can ask without parsing prose. The
+lock is `${XDG_STATE_HOME:-$HOME/.local/state}/ymir/heavy-slot.lock` (`YMIR_HEAVY_SLOT` overrides), one
+per machine and per user — the fault it stops happens between processes on one box.
+
+A lock whose holder is **gone** is reaped, and the record carries the process **start time** beside the
+pid because a pid is reused: a lock naming a live pid with a different start time is stale. The release
+path re-checks pid + start time, so a job never deletes someone else's lock. `--no-wait` refuses (exit 3);
+`--wait-max N` gives up after N seconds, naming the holder.
+
+Two doors ask for it themselves: `bin/engine/update-loop.sh` re-execs under it for every heavy verb
+(`run`, `prove`), so its whole pass is one heavy job; `bin/engine/release-build.sh` takes it for any
+standalone build. The gate is `heavy-slot` (`bin/engine/tests/test_heavy_slot.sh`), the page is
+`docs/features/heavy-slot.md`.
+
+**`bin/engine/update-loop.sh` no longer proves on the heart — it FLIPS a proven release.** A candidate is
+proven **once**, and the proof is a record in `$YMIR_PROOFS_DIR` (default `~/.local/state/ymir/proofs`,
+beside `releases.log`; set it in `<home>/config/releases.env`): `key=value` lines plus a `digest=` over
+them, so a proof written on another machine is **verified** rather than trusted — an edited record fails
+its digest and counts as no proof. `release_proof_write|verify|get` live in `release-lib.sh`, the one
+place that already knows where a release lives.
+
+| verb | answer |
+|---|---|
+| `decide [<sha\|ref>]` | `up-to-date` · `already-proven` · `already-proven-fail` · `prove-once`, with the record quoted |
+| `proof [<sha\|ref>]` | the record for that sha, verified, field by field |
+| `proof-record <sha\|ref> --result pass\|fail [--source L] [--detail T]` | record a proof taken **elsewhere** (the forge, the machine that built it) |
+| `prove [<sha\|ref>] [--force]` | prove it here, once, and record what was measured |
+
+The run pass reads the ledger **before any heavy work**: a **passing** record → `PROVE,already-proven` and
+the flip; a **failing** record → `PROVE,already-proven,fail` → `HOLD`, exit 4, and no build and no suite
+at all for that sha (re-proving is `prove --force`, a person's decision, never a clock's); **no record** →
+`PROVE,once`, the suite runs once **in a git checkout** of that commit (the tree itself when it stands
+there, else a throwaway linked worktree — never `~/ymir-releases/<sha>`, which carries no `.git` and made
+`bin/gates/inventory.sh` fail on `git ls-files`), and the outcome is recorded either way.
+
+Gates: `heavy-slot`, `update-loop-proof`. Fix notes:
+`docs/fixes/engine/2026-11-17-the-heavy-lock-the-runbook-named-now-exists.md` and
+`docs/fixes/engine/2026-11-17-a-candidate-is-proven-once.md`. The runbook these correct is the heart's
+`updating.md` (in the home), whose first law had named `bin/heavy-slot.sh take` — a verb that never
+existed.

@@ -328,6 +328,13 @@ case "$ACTION" in
     # arrives as separate words and the command dies on its own second word.
     cmd=""
     for a in "$@"; do cmd="$cmd$(printf '%q ' "$a")"; done
+    # A HAND IN ITS OWN CGROUP (plan 001 §4 F1): on 2026-11-17 27 agents shared the desk's one cgroup,
+    # the kernel picked one, systemd stopped the unit, and every pane came back a shell. Scoping this
+    # pane's command means the next heavy hand is killed ALONE. `agent-scope.sh` skips cleanly (and
+    # says so) where there is no user manager, so this line is safe on every platform.
+    if [ -x "$SCRIPT_DIR/agent-scope.sh" ] && [ "${YMIR_AGENT_SCOPE:-1}" != "0" ]; then
+      cmd="$(printf '%q ' "$SCRIPT_DIR/agent-scope.sh" --name "ymir-$NAME-$$")$cmd"
+    fi
     hdr pane run "$pane" "$cmd" >/dev/null 2>&1; rc=$?
     hdr pane wait-output "$pane" --idle-ms 800 --timeout-secs "$SETTLE" >/dev/null 2>&1 || true
     printf 'herdr-run[1]{tab,pane,step,exit}:\n  "%s","%s","%s",%s\n' "$tab" "$pane" "$NAME" "$rc"
@@ -512,10 +519,19 @@ $_coretext"
       printf 'herdr-run[1]{isolation,worktree}:\n  "off (main tree — Allfather chose --main)"\n' >&2
     elif [ -x "$SCRIPT_DIR/../forge/yggdrasil.sh" ]; then
       # Reuse an existing worktree for this id; create only when absent.
-      wt_path="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null)/.yggdrasil/$NAME"
+      _top="$(git -C "$PWD" rev-parse --show-toplevel 2>/dev/null)"
+      wt_path="$_top/.yggdrasil/$NAME"
       if [ ! -d "$wt_path" ]; then
-        wt_out="$("$SCRIPT_DIR/../forge/yggdrasil.sh" create "$NAME" 2>/dev/null)"
-        wt_path="$(printf '%s' "$wt_out" | sed -n '2p' | cut -d'"' -f6)"
+        # 2026-11-14 (plan 275 item 31): a branch left by an errand whose folder is gone used to refuse the seat
+        # ("worktree already exists") with the error thrown away. Prune, re-attach the branch, else create.
+        git -C "$_top" worktree prune 2>/dev/null || true
+        if git -C "$_top" show-ref --verify --quiet "refs/heads/yggdrasil/$NAME"; then
+          git -C "$_top" worktree add "$wt_path" "yggdrasil/$NAME" >&2 || true
+        else
+          wt_out="$("$SCRIPT_DIR/../forge/yggdrasil.sh" create "$NAME")" || printf 'herdr-run: yggdrasil.sh create %s failed: %s\n' "$NAME" "$wt_out" >&2
+          _rel="$(printf '%s' "$wt_out" | grep -oE '"\.yggdrasil/[^"]+"' | head -1 | tr -d '"')"
+          [ -n "$_rel" ] && wt_path="$_top/$_rel"
+        fi
       fi
       if [ -n "$wt_path" ] && [ -d "$wt_path" ]; then
         SEAT_CWD="$(cd "$wt_path" && pwd)"
@@ -565,7 +581,14 @@ $_coretext"
       brief_file="$brief_dir/$NAME.md"; printf '%s\n' "$PROMPT" >"$brief_file"
       oc_line="$("$SCRIPT_DIR/opencode-launcher.sh" print ${oc_model:+--model "$oc_model"} --brief "$brief_file")" || {
         printf 'error: the OpenCode launcher refused this seat\n' >&2; exit 1; }
-      oc_line="cd $(printf '%q' "$SEAT_CWD") && $oc_line"
+      # The same per-agent cgroup the `run` road gets (plan 001 §4 F1): a hand that eats its own
+      # limit dies alone, and the desk keeps its other 26. The scope carries the whole
+      # `cd … && opencode …` line, so the agent's own process is inside the scope, not beside it.
+      if [ -x "$SCRIPT_DIR/agent-scope.sh" ] && [ "${YMIR_AGENT_SCOPE:-1}" != "0" ]; then
+        oc_line="$(printf '%q ' "$SCRIPT_DIR/agent-scope.sh" --name "ymir-$NAME-$$")-- bash -lc $(printf '%q' "cd $(printf '%q' "$SEAT_CWD") && $oc_line")"
+      else
+        oc_line="cd $(printf '%q' "$SEAT_CWD") && $oc_line"
+      fi
       if ! hdr pane run "$pane" "$oc_line" >/dev/null 2>&1; then
         printf 'error: could not run opencode in %s\nhelp: the pane must sit at an interactive shell prompt\n' "$pane" >&2
         exit 1

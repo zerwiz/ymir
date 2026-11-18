@@ -102,4 +102,4 @@ procs smidja_id:
 
 # boot the trace UI, http://localhost:8438 (api on :8437)
 obs:
-    cd .claude/skills/smidja-factory/apps/visualizer && bun install && (SMIDJA_DB={{justfile_directory()}}/{{db}} bun run server/index.ts &) && bunx vite
+    cd .agents/skills/smidja-factory/apps/visualizer && bun install && (SMIDJA_DB={{justfile_directory()}}/{{db}} bun run server/index.ts &) && bunx vite

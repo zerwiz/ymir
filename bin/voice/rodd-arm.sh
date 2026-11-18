@@ -496,6 +496,25 @@ PY
 cmd_hold() {
   resolve_roots
   require_lock_lib
+  # ── THE SPEECH GATE (plan 001 §4 F3) ────────────────────────────────────────
+  # THE ARM MAY NOT BE HELD BY A HAND THAT CANNOT SPEAK. Measured 2026-11-17 on the heart:
+  # the arm read `held`, heartbeat 3 s, and its holder was `python3 -m ymir_runtime watch run`
+  # (lease role=unknown) — a supervisor with no mind. A tell was handed to it and nothing
+  # answered, because the thing holding the arm has no model heartbeat to answer WITH.
+  #
+  # The verdict is the lock module's own: `session-pid` walks the process ancestry and returns
+  # the live HARNESS when one stands there, and the calling shell when none does. So a caller
+  # whose resolved session IS its own shell has no agent in its tree — a watcher, a cron, a
+  # `sleep` — and it is refused with that fact named. One implementation answers `who can
+  # speak` (src/ymir_runtime/state/lock.py); this gate only asks it.
+  local _sp_sess _sp_parent
+  _sp_sess="$(bash "$STATE_DOOR" lock session-pid --shell-pid $$ 2>/dev/null | head -1)"
+  if [ -z "$_sp_sess" ] || [ "$_sp_sess" = "$$" ] || [ "$_sp_sess" = "$PPID" ]; then
+    _sp_parent="$(tr -d '\n' <"/proc/${PPID}/comm" 2>/dev/null)"
+    refuse "the helm is NOT taken: this session cannot speak — no agent harness stands in its process tree (the lock resolves it to pid ${_sp_sess:-$$}, a shell${_sp_parent:+ whose parent is ${_sp_parent}}), and a watcher has no model heartbeat to answer a tell with"
+  fi
+  kill -0 "$_sp_sess" 2>/dev/null \
+    || refuse "the helm is NOT taken: the session the lock resolves (pid $_sp_sess) is not alive — a dead hand cannot speak"
   # THE HOLDER GATE (plans 254 B1c · 257 H7): a session that cannot resolve its own
   # host or its fleet role may NOT take the helm — it stands read-only and names the
   # field. A supervisor that does not know which machine it stands on cannot tell its
@@ -528,7 +547,8 @@ cmd_hold() {
   [ -n "$lst" ] && [ -d "$lst" ] && side="$lst"
   printf 'role=rodd session=%s seat=%s charter=%s\n' "$sess" "$seat" "$charter" > "$side/.arm.role" 2>/dev/null || true
   room_append "$STATE_ROOT" "Nanna" "hold: Rödd takes the helm (session $sess)" || true
-  printf 'rodd-arm-hold[1]{verb,holder_pid,state_dir}:\n  "hold","%s","%s"\n' "$sess" "$STATE_ROOT"
+  printf 'rodd-arm-hold[1]{verb,holder_pid,state_dir,speaks}:\n  "hold","%s","%s","yes (session pid %s stands in the process tree)"\n' \
+    "$sess" "$STATE_ROOT" "$_sp_sess"
   return 0
 }
 

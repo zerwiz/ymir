@@ -1633,6 +1633,9 @@ merged.
 disk). `logretta_sit`, `whiteboard_tickets` and `whiteboard_servers` keep their logic in the extension's
 TypeScript and need a CLI face first. Those two were named `excalidraw_tickets` and `excalidraw_servers`
 until 2026-11-15; the old names still answer as deprecated aliases for one release (docs/fixes/extensions/).
+TypeScript and need a CLI face first. `whiteboard_tickets` and `whiteboard_servers` are the same two tools
+that used to answer as `excalidraw_tickets` and `excalidraw_servers`; the old names still answer, marked
+deprecated, for one release (plan 284 §21).
 
 ### 2026-11-10 (second) — the Eindri ward, the global arm, and who seats them
 
@@ -1673,3 +1676,55 @@ Measured while making this change, and owed by someone: `.agents/tests/rules-doo
 extension source as `.pi/shared/extensions/rules.ts`, which does not exist — the door lives at
 `.pi/extensions/rules.ts`, so the whole test exits 1 at its first line and its "7 passed" line above
 is stale. Nothing calls that test today; `ext-api` and `ext-smoke` judge the extension surface.
+## Appended 2026-11-11 — one Ymir skill in every root, one unscanned store behind it (plan 248 P3b, RULES/51)
+
+Every skill a harness lists puts its description into every turn. So a root agent lists exactly **one** Ymir skill, `ymir`,
+and its `SKILL.md` is the generated index of every skill on every shelf: name · one-line trigger · absolute path.
+
+```
+root_skill[6]{part,where,owner}:
+  "the root skill","~/.agents/skills/ymir/SKILL.md (pi, OpenCode, Codex read it natively)","bin/agents/skill-index.sh --root"
+  "Claude's view","~/.claude/skills/ymir -> ~/.agents/skills/ymir (Claude reads one level deep)","bin/agents/skill-index.sh --root"
+  "the store","${XDG_DATA_HOME:-~/.local/share}/ymir/skills — one LINK per skill, shipped shelf wins a clash; never under a scanned dir","bin/agents/skill-index.sh --root (refuses a scanned store)"
+  "the box shelf","${XDG_DATA_HOME:-~/.local/share}/ymir/box-skills — a machine's own skills, moved out of ~/.agents/skills intact","bin/agents/skill-index.sh --adopt-box · migration 0022"
+  "seated by","install (step loaders) and update (Gróa) through bin/seat/harness-extensions-install.sh row `ymir-skill`; rebuilt at session start (bin/time/saga-session-start.sh)","—"
+  "judged by","bin/agents/skill-index.sh --root-check · eir-doctor surface `rootskill` · harness-extensions-install --check","—"
+```
+
+- The shipped shelf is read from the **pinned runtime** (`$YMIR_HOME/config/runtime.env`) when one is pinned, never a
+  working tree; the index names the runtime as its tool root, so a seat started in a worktree does not flip it.
+- The index is **generated, never versioned**, and deterministic (no clock in it): an unchanged shelf writes nothing.
+- The repo link `.claude/skills -> ../.agents/skills` is **retired** (RULES/02 as amended): `valknut-load.sh` no longer
+  binds it for Claude and removes a leftover of exactly that shape. Codex and Cursor keep their project links.
+- The rendered root contract (`bin/agents/seat-identity.sh` render, checked by `bin/seat/seat-surface.sh --check`)
+  carries the sentence *for any craft, load the `ymir` skill and follow its index*.
+- The front matter is **quoted YAML**: the description holds `: `, and pi drops a skill whose front matter does not
+  parse without a word (found by the throwaway-HOME proof).
+- Measured in a throwaway HOME (pi's own `DefaultResourceLoader`, from `~` and from an unrelated project): pi lists one
+  `ymir` skill, adding 246 bytes to its skills prompt; Claude's root holds one `ymir` entry (107 bytes of front matter);
+  198 index paths, all resolved.
+
+How-to: `docs/features/one-ymir-skill.md`.
+### 2026-11-11 — root agents load the pinned runtime; pi's root carries Ymir's set (plan 248 P2 + P3, RULES/51)
+
+A harness's **root** (its global config in `$HOME`) is where Ymir runs. That root must load the **pinned runtime**
+(`$YMIR_HOME/config/runtime.env`), never a working tree. Measured today: pi's root settings named `~/ymir/.pi/extensions`.
+`valknut-load.sh` read `runtime.env` with `sed`, so `$HOME/ymir-runtime` stayed literal and the pin was ignored.
+The ymir MCP door in pi, Claude, OpenCode and Cursor named the working tree too.
+
+```
+roots_runtime[6]{piece,where,what}:
+  "the reader","bin/seat/runtime-root.sh","sources runtime.env (so $HOME expands); YMIR_RUNTIME_ROOT/SOURCE/REASON; a fallback to the checkout is always said"
+  "the ward","bin/seat/runtime-roots.py (runtime-root.sh scan|repoint)","every root config: pi settings + mcp-adapter/mcp.json + .ymir-root, ~/.claude.json user mcpServers, ~/.claude/settings.json, opencode.json, ~/.cursor/mcp.json, ~/.codex/{hooks.json,config.toml}"
+  "the refusals","valknut-load.sh --check · harness-extensions-install.sh --check","a working-tree path is FAIL/stale with the remedy named (runtime-root.sh repoint, or the installer)"
+  "the mend","harness-extensions-install.sh (install, Gróa, Eir roots, migration 0022)","binds pi's root with PI_EXT_SRC named; re-points every root to the runtime's twin LAST; a twinless path is held, never guessed"
+  "the pi root set","the pi descriptor .agents/harnesses/pi.yaml","root_extensions: ro · todo · open-editor; packages: pi-mcp-adapter · pi-web-access · @llblab/pi-telegram · @juicesharp/rpiv-ask-user-question — named ONCE"
+  "the package door","bin/pi/pi-ensure.sh","reads the descriptor (refuses to guess without it), installs through `pi install`, proves the root set stands in the runtime's tree and the settings name it"
+```
+
+A checkout is recognised by its own marks: `RULES/` beside `bin/seat/valknut-load.sh`. So a fork, a second clone or
+a Yggdrasil worktree is caught without a list of names. `.ymir-root` now leads with the runtime when one is pinned.
+The one-home door (`pi-door.sh`, PR #654) is unchanged and coherent with this. A session started inside a checkout
+still gets that checkout's tree, once. In every other folder the root's runtime serves. Ward:
+`bin/seat/tests/test_roots_load_the_runtime.sh` (throwaway HOME). Feature page: `docs/features/roots-load-the-runtime.md`.
+Fix note: `docs/fixes/seat/2026-11-11-roots-load-the-runtime.md`.

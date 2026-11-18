@@ -86,6 +86,51 @@ fleet[9]{service,source,unit,port,role}:
   "snotra-detect","systems/snotra/services/ear/snotra-detect.sh","snotra-detect.service","—","CAPABILITY: any seat with a microphone (the ear's watch; never the heart)"
 ```
 
+## The hosted services registry — the row shape (`$YMIR_HOME/hodd/identity/services.yaml`, plan 312)
+
+The registry is the house's answer to "what is this service, and where does it live". Plan 312 gave every row one shape,
+because a row that cannot say where its hands are forces a hunt: the share door was found dead in a symlink into a tree
+that no longer existed, and four questions — which unit, which script, which port, which page — each had to be guessed.
+
+**Write a row in this shape, in this order.** The schema is `config/services.schema.json`; the registry declares it in
+its own `schema:` header; `bin/records/registry-audit.sh` judges every row against it, and a field it requires that a
+row does not carry is a FINDING, never a pass.
+
+```
+row[11]{field,answers,note}:
+  "id","the row's stable name","what `registry-audit.sh --answer <id>` takes"
+  "host","the machine that owns this row's files and sockets","paths and sockets are measured only on the machine the row names"
+  "unit","how it is raised (systemd)","one unit, or a list when the service really is four doors — every member is checked"
+  "compose","how it is raised (containers)","the absolute path of the compose file; `compose` alone satisfies the raise question"
+  "script","the file that actually runs","the resolved ExecStart target, never a symlink into a tree that is gone; required with `unit`"
+  "ports","the ports it owns","a port named by two rows is a fault; `[]` declares a row that owns none; `port` is the singular spelling and never both"
+  "dir","the kit directory","the runbook's first step is `cd` there"
+  "runbook","the page to open when it is down","home-relative or repo-relative; several pages are separated by `·` and each is resolved"
+  "criticality","whether a stop is an incident","always · wanted · dormant — unset is a finding, not an answer"
+  "budget","the memory it may hold","plan 003 writes the measured block (measured_mb · memory_ceiling_mb · residency); a systemd size is the shorthand"
+  "measured","what was seen on a date","plan 003's evidence block: measurement is evidence, the declared fields are the door"
+```
+
+**The checks that keep it true** — `bin/records/registry-audit.sh`, and each finding names the file, the row and the
+field:
+
+1. **A port is owned once.** Two rows naming one port is a fault, and a listening door (anything but loopback) that no
+   row names is a fault.
+2. **A path exists.** A row whose `script` or `dir` does not exist is red; a symlink whose target is gone is named as
+   that, with the target it points at.
+3. **The row fits the shape.** A missing field is a finding. The audit never invents a value for another hand's rows.
+
+```bash
+bin/records/registry-audit.sh --answer whiteboard   # one service in one read
+bin/records/registry-audit.sh --list               # the ids
+bin/records/registry-audit.sh                      # the whole registry, judged
+```
+
+The proof is `tests/test_registry_answers.sh`, which runs every case in a throwaway home: a clean registry green, two
+rows on one port red by port and by both rows, a missing `script` and a broken symlink red by row and path, an unset
+`criticality` a finding, and an unnamed listening socket red by address and port. The operator's page is
+`docs/features/the-service-registry-answers.md`.
+
 ## OpenCode commands
 
 ```
@@ -165,3 +210,4 @@ bin/gates/guards/fixes-guard.sh judges every outgoing branch independently. A re
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-17** — the hosted services registry gained its row shape (plan 312): `unit` or `compose`, `script`, `ports`, `dir`, `runbook`, `criticality`, `budget`, judged by `bin/records/registry-audit.sh` against `config/services.schema.json`, with the two checks (a port owned once, a path that exists) and `--answer <id>` for one read.

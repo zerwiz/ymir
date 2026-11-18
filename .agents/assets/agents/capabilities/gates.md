@@ -101,7 +101,7 @@
 | repo-scrub.sh | repo-scrub.sh — purge private paths from ALL git history before going  | tested | keep (a human or a cron row must run it) |
 | require-check.sh | require-check.sh — the required status check on main, read WHOLE and w | tested | keep (a human or a cron row must run it) |
 | seat-woven-driver.sh | seat-woven-driver.sh — seat the engine behind `merge=regenerate`, and  | tested | keep (a human or a cron row must run it) |
-| secret-scan.sh | secret-scan.sh — the secret scan's door, and the generator for the ope | tested | keep (a human or a cron row must run it) |
+| secret-scan.sh | secret-scan.sh — the secret scan's door, and the generator for the ope | tested+named | keep (a human or a cron row must run it) |
 | soak-pr.sh | soak-pr.sh — the P5 door: a pull request that touches an app runs that | tested | keep (a human or a cron row must run it) |
 | soak.sh | soak.sh — raise one app from the pin and soak it for leaks (plan 286 P | tested+named | keep (a human or a cron row must run it) |
 | test_agnostic_audit.sh | test_agnostic_audit.sh — the agnostic audit BITES, and it never publis | tested | keep (a human or a cron row must run it) |

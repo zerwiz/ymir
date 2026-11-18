@@ -91,6 +91,7 @@ capability_folders[34]{folder,index}:
 | `runes` | runes — the append-only chained audit ledger, Python-owned. | yes | yes (bin/ imports the engine) |
 | `status` | status(seat_id) -> state — the four states, read from the record. | yes | yes (bin/ imports the engine) |
 | `stop` | stop(seat_id) — reap the seat cleanly, leaving no orphan. | yes | yes (bin/ imports the engine) |
+| `supervisor` | Sýn's mind — the supervisor loop: measure → judge → act → prove → reco | yes | yes (bin/ imports the engine) |
 | `support` | Test doubles and fixtures for the engine's unit suite. | yes | yes (bin/ imports the engine) |
 | `test_allow` | allow.py — the operator's model allow-list, its grants, and the use lo | yes | yes (bin/ imports the engine) |
 | `test_backend` | backend.py — herdr first, tmux the verified fallback, nothing assumed. | yes | yes (bin/ imports the engine) |
@@ -108,6 +109,7 @@ capability_folders[34]{folder,index}:
 | `test_seat` | seat.py — the whole errand, end to end, in a temp home and a real repo | yes | yes (bin/ imports the engine) |
 | `test_state` | state/ — locks (Gleipnir) · runes · envelopes · queues, beside their m | yes | yes (bin/ imports the engine) |
 | `test_state_parity` | state/ PARITY — the shim against the shell it replaced, byte for byte. | yes | yes (bin/ imports the engine) |
+| `test_supervisor` | supervisor.py — Sýn's mind: measure → judge → act → prove → record. | yes | yes (bin/ imports the engine) |
 | `test_watch` | watch.py — the arm's behaviour, read from the record it writes. | yes | yes (bin/ imports the engine) |
 | `test_worktree` | worktree.py — Yggdrasil, against a real git repo. | yes | yes (bin/ imports the engine) |
 | `watch` | Sýn — the standing arm's behaviour, owned once by the engine. | yes | yes (bin/ imports the engine) |

@@ -219,3 +219,12 @@ Upstream Brokk registers two `PreToolUse` entries (`Bash` matcher → `fm-arm-pr
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+## Appended 2026-11-11 — skills come from the root, not the repo (plan 248 P3b)
+
+The **Skills** paragraph above (`.claude/skills -> ../.agents/skills`, bound by `valknut-load.sh`) is superseded. That
+link made a session inside the checkout list every shipped skill a second time, and a session anywhere else had none of
+Ymir's craft. Claude now lists exactly one Ymir skill from its **root**: `~/.claude/skills/ymir`, a link to
+`~/.agents/skills/ymir`, whose `SKILL.md` is the generated index of every skill by path into the unscanned store
+`~/.local/share/ymir/skills`. `bin/agents/skill-index.sh --root` seats it (install, update, session start), and
+`valknut-load.sh` no longer binds the repo link and removes a leftover of that exact shape. The whole design is in this
+directory's `README.md` (section of the same date). How-to: `docs/features/one-ymir-skill.md`.

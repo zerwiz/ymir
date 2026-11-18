@@ -193,6 +193,12 @@ function restartHost(url) {
 }
 
 app.whenReady().then(async () => {
+  if (PIN_REFUSAL) {
+    console.error(`[rodd] ${PIN_REFUSAL}`);
+    app.exit(1);
+    return;
+  }
+  console.log('[rodd] code root', RODD_TREE ? `${path.join(__dirname, '..')} (YMIR_RODD_TREE=1 — the working tree, by the loud override)` : PIN);
   Menu.setApplicationMenu(null);
   // The face offers the camera only when the head can see: start.sh says which head it
   // raised (RODD_CAMERA=1 with the vision head), and a picture sent to a text-only head

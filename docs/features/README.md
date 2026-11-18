@@ -16,6 +16,12 @@ its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
 | The outbound gate (nothing leaves until you have read it) | [the-outbound-gate.md](the-outbound-gate.md) |
 | The collaboration doors (who is with us, and how far) | [the-collaboration-doors.md](the-collaboration-doors.md) |
 
+**Built 2026-11-11:**
+
+- Your agents load Ymir from the runtime, in every folder — every harness root names the pinned runtime, never a
+  working tree, and pi's root carries ro · todo · open-editor and its packages:
+  [roots-load-the-runtime.md](roots-load-the-runtime.md)
+
 **Built 2026-11-10:**
 
 - The well door for every harness — one MCP set for pi, opencode, Claude, Cursor, Codex and Hermes, and
@@ -38,6 +44,10 @@ its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
   [bilskirnir.md](bilskirnir.md)
 - An update finishes the installs — Gróa mends the safe surfaces after the check, and the last line says
   `whole` or names what is owed: [an-update-finishes-the-installs.md](an-update-finishes-the-installs.md)
+**Newest doors** — built 2026-11-12, catalogued the same day:
+
+- Bilskirnir, the business hall — every agent in its own room, in its own window, on every screen:
+  [bilskirnir.md](bilskirnir.md)
 
 **Earlier doors** — built 2026-11-09, catalogued the same day:
 
@@ -62,6 +72,8 @@ its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
   [telegram-across-the-fleet.md](telegram-across-the-fleet.md)
 - The home push door — named paths only, never `-A`:
   [the-home-push-door.md](the-home-push-door.md)
+- One Ymir skill in every root — the index of every skill, by path:
+  [one-ymir-skill.md](one-ymir-skill.md)
 
 ## The shape of a page
 

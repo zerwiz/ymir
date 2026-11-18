@@ -11,6 +11,7 @@ At the Allfather's word, plan 275 §2026-11-14 02:50: *"we should not have this 
 only one runtime of hlidskjalf. and all apps that taking one app to another in the header etc
 can also go. we open the apps from the desktop icons instead."* The measured row named the
 **Work · Personal · <a third realm> chips** in the top bar as the modes.
+**Work · Personal · the third realm chips** in the top bar as the modes.
 
 ## What changed
 

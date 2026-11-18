@@ -109,7 +109,7 @@ export default function excalidraw(pi: any) {
     async execute(_id: string, params: any) {
       if (!rootExists()) {
         return bad(
-          `no Excalidraw fork at ${root()} — set EXCALIDRAW_ROOT to the checkout.`,
+          `no whiteboard checkout at ${root()} — set EXCALIDRAW_ROOT to the checkout.`,
         );
       }
 
@@ -213,7 +213,7 @@ export default function excalidraw(pi: any) {
     async execute(_id: string, params: any) {
       if (!rootExists()) {
         return bad(
-          `no Excalidraw fork at ${root()} — set EXCALIDRAW_ROOT to the checkout.`,
+          `no whiteboard checkout at ${root()} — set EXCALIDRAW_ROOT to the checkout.`,
         );
       }
       const action = params?.action ?? "status";

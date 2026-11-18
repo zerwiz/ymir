@@ -20,6 +20,21 @@ extensions:
   # load 44 colliding extensions and refuse them all (2026-11-11). bin/seat/pi-door.sh is
   # seated as ~/.pi/agent/bin/pi and hands such a launch one home, untouched everywhere else.
   door: ~/.pi/agent/bin/pi
+# THE PI ROOT SET (plan 248 P3, RULES/51 — 2026-11-11). What every pi session carries from ANY directory —
+# ~, an unrelated project — after a fresh install and after every update. The root settings `extensions[]`
+# names the PINNED runtime's tree ($YMIR_RUNTIME_DIR/.pi/extensions, resolved by bin/seat/runtime-root.sh),
+# never a working tree, so the whole tree loads; `root_extensions` are the ones that must stand in it.
+# `packages` is the ONE place pi's npm packages are named: bin/pi/pi-ensure.sh reads this list and installs
+# each through `pi install`, and bin/seat/harness-extensions-install.sh calls it on install AND update.
+root_extensions:
+  - ro
+  - todo
+  - open-editor
+packages:
+  - npm:pi-mcp-adapter
+  - npm:pi-web-access
+  - npm:@llblab/pi-telegram
+  - npm:@juicesharp/rpiv-ask-user-question
 instructions:
   global: ~/.pi/agent/AGENTS.md
   project: AGENTS.md

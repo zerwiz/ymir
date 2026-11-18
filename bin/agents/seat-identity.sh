@@ -179,6 +179,10 @@ alone names nobody in a federated hall (Brimir, plan 74), so never leave the nam
 Every fleet's operator is named in its own home (\`hodd/identity/operator.yaml\`);
 a seat that cannot read it says so and invents no name (RULES/44).
 
+**For any craft, load the \`ymir\` skill and follow its index.** It is the one Ymir skill
+in this root (\`~/.agents/skills/ymir\`; Claude reads it as \`~/.claude/skills/ymir\`), and its
+body names every skill on every shelf by path — open only the one the task needs (plan 248, RULES/51).
+
 The Allfather, 2026-11-10, on finding the rule in a contract and the hand ignoring it:
 *"why are not this machine saying the operator's name as the other seat are doing? we should have
 appended logic for ymir to also always call the allfathers by name."* The rule was here

@@ -23,6 +23,7 @@ browser ── HTTP + SSE ──► server ── POST /v1/responses ──► H
 | Apps | `server/src/composio.ts`, `triggers.ts` | Catalog, per-user sessions, connect links, tool execution, and triggers for event routines. Sign-in uses a Composio-managed Google connection |
 | Scheduling | `server/src/routines.ts`, `proactive.ts` | Cron routines, event routines, and check-ins for the primary Bot. Each run is a turn |
 | Voice | `server/src/voice.ts`, `server/src/voice-house.ts`, `web/src/voice/*` | Two roads (`BILSKIRNIR_VOICE`). **house** (default): the browser's call goes through the server's relay (`/api/voice/realtime`) to Rödd's realtime engine; previews come from Kokoro and dictation from whisper.cpp. **xai**: mints short-lived xAI realtime client secrets and the browser connects to xAI directly. Either way the voice agent hands real work to the Bot's turn queue and speaks the result |
+| Voice | `server/src/voice.ts`, `web/src/voice/*` | Mints short-lived xAI realtime client secrets; the browser connects to xAI directly. The voice agent hands real work to the Bot's turn queue and speaks the result. Also proxies TTS previews and dictation |
 | UI | `web/src` | React + zustand. Sidebar, chat with a "thinking" chip that follows the Bot's activity, details panel (screen preview, activity, tasks, Library, engine), settings, viewer, voice call bar |
 
 ## The primary engine
@@ -81,6 +82,7 @@ Secrets live in `.env` on the server and in each Hermes home.
 | Composio | Sign-in, connectors, triggers |
 | The house voice | whisper.cpp (dictation), Rödd's realtime engine (calls), Kokoro (voices, previews) — the default voice road |
 | xAI | Research on X (`x_search`); realtime voice, TTS and dictation only on the xAI road |
+| xAI | Research on X (`x_search`), realtime voice, TTS, dictation |
 
 ## CHANGE LOG
 

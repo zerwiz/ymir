@@ -194,6 +194,13 @@ case "${1:-}" in
     else
       printf 'seat-surface: the operator is not named in the seat file (%s)\n' "${OPERATOR:-<empty>}"; bad=1
     fi
+    # plan 248 P3b: the root contract carries the one sentence that sends every craft to the
+    # `ymir` skill's index — a render that loses it leaves the root agent without Ymir's craft.
+    if grep -qF 'load the `ymir` skill and follow its index' "$SEAT" 2>/dev/null; then
+      printf 'seat-surface: seat file sends every craft to the ymir skill'"'"'s index ✓\n'
+    else
+      printf 'seat-surface: seat file lacks the sentence "load the `ymir` skill and follow its index" (plan 248)\n'; bad=1
+    fi
     while IFS= read -r f; do
       [ -e "$(dirname "$f")" ] || continue
       [ -L "$f" ] && [ "$(readlink -f "$f")" = "$(readlink -f "$SEAT")" ] && continue
