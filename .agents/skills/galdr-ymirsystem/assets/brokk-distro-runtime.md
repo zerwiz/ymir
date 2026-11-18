@@ -1958,6 +1958,6 @@ Gates: `heavy-slot`, `update-loop-proof`. Fix notes:
 existed.
 
 
-## Appended 2026-11-18 — the atlas map is not Ymir's
+## Appended 2026-11-18 — the home's top-level map page is not Ymir's
 
-The line above that names `hodd/ATLAS.md` as part of the home's document map is corrected: the atlas map and its tool belong to Atlas and have moved out of Ymir (RULES/58). The home's document map is its layout shelves, the knowledge index and the plan-ledger READMEs.
+The earlier line that lists the home's top-level map page among its document map is corrected: that page and the tool that wrote it belong to the other project and have moved out of Ymir (RULES/58). The home's document map is its layout shelves, the knowledge index and the plan-ledger READMEs.
