@@ -113,7 +113,7 @@ export function seedAgents(realm: RealmId): AgentCard[] {
   // Re-scope the platform Eindri to the active realm, and swap the primary house.
   return base.map((a) =>
     a.id === 'brokk' || a.id === 'volundr'
-      ? { ...a, realm, house: realm === 'zerwiz' ? 'muninn' : realm === 'craig' ? 'brokkforge' : a.house }
+      ? { ...a, realm, house: realm === 'work' ? 'muninn' : realm === 'personal' ? 'brokkforge' : a.house }
       : { ...a, realm },
   );
 }

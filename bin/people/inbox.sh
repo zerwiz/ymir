@@ -2,7 +2,7 @@
 # inbox.sh — read the mail that matters to a collaborator, and prove you can answer it.
 #
 # The house can SEND mail (systems/snotra/services/letters/mail-send.sh) and it could only READ replies
-# through the meeting sign-off flow. This is the missing door: "has Andrej answered?"
+# through the meeting sign-off flow. This is the missing door: "has the person answered?"
 # asked as a command instead of as an afternoon.
 #
 #   bin/people/inbox.sh [--from ADDRESS] [--to ADDRESS] [--days 7] [--limit 10] [--body]

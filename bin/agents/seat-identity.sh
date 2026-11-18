@@ -24,7 +24,7 @@ ROSTER="${SEAT_ROSTER:-$YMIR_HOME/hodd/identity/seats.yaml}"
 [ -r "$ROSTER" ] || { printf 'error: roster not readable: %s\n' "$ROSTER" >&2; exit 1; }
 
 SELF="${YMIR_HOST:-$(hostname -s)}"
-# Both documented orders are accepted: `--file nidavellir` and `nidavellir --file`.
+# Both documented orders are accepted: `--file <seat>` and `<seat> --file`.
 # The second used to fall through to the name, silently answering the wrong question.
 case "${2-}" in
   --file|--json|--install|--check|--render|--ensure) set -- "${2-}" "${1-}" ;;

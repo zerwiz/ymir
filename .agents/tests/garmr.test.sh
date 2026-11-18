@@ -28,7 +28,7 @@ cases = {
 for name,(text,secret) in cases.items():
     out = redact_text(text) if name != "flag" else text
     print(f"{name}:{'LEAK' if secret in out else 'ok'}")
-path = redact_path("/home/heimdall/Documents/ymirhome/hodd/data/snotra/2026-10-20.json")
+path = redact_path("/home/tester/Documents/ymirhome/hodd/data/snotra/2026-10-20.json")
 print("path:" + ("LEAK" if "snotra" in path else "hashed"))
 PY
 )"
@@ -71,7 +71,7 @@ type=SYSCALL msg=audit(1792581000.100:1): arch=c000003e syscall=59 success=yes e
 type=EXECVE msg=audit(1792581000.100:1): argc=3 a0="curl" a1="-H" a2="Authorization:Bearer_secretvalue"
 type=PROCTITLE msg=audit(1792581000.100:1): proctitle=6375726C002D48
 type=SYSCALL msg=audit(1792581001.200:2): arch=c000003e syscall=257 success=yes exit=3 pid=4321 uid=1000 comm="python3" exe="/usr/bin/python3" key="ymir-sensitive"
-type=PATH msg=audit(1792581001.200:2): item=0 name="/home/heimdall/Documents/ymirhome/hodd/data/snotra/2026-10-20.json"
+type=PATH msg=audit(1792581001.200:2): item=0 name="/home/tester/Documents/ymirhome/hodd/data/snotra/2026-10-20.json"
 type=SYSCALL msg=audit(1792581002.300:3): arch=c000003e syscall=62 success=yes exit=0 pid=999 uid=1000 comm="bash" key="ymir-browserkill" a0=1a2b a1=f
 EOF
 out="$(PYTHONPATH="$GARMR" GARMR_STATE_DIR="$TMP/state" python3 "$GARMR/hound.py" --audit-file "$TMP/audit.log" --stdout 2>/dev/null)"
