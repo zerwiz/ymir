@@ -30,6 +30,9 @@
 #
 # `BROKK_WATCH_INLINE=1` keeps the watch loop in this process — the pre-service
 # shape, for a probe or a host with no way to seat a daemon.
+case "${1-}" in
+  -h|--help) sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+esac
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

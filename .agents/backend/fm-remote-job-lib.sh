@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking-door: library — sourced by a caller that owns the loop and bounds it; never run by hand
 # Shared remote fm-on job-worker protocol.
 #
 # Source this file from the fixed SSH entrypoint, the long-lived worker, or the

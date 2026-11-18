@@ -4,6 +4,9 @@
 #   index-derivative embed the well's episodes on the stone (:8500) -> vector-index.jsonl
 #   recall-rag       embed a query, cosine over the index, observe the top hits
 #   code-review      review a git range on the local model -> $MILL_HOME/reviews/
+case "${1-}" in
+  -h|--help) sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+esac
 set -u
 Q=mill:jobs
 log() { printf '[mill] %s\n' "$*"; }

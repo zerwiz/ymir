@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking-door: daemon — started by a unit, and it runs the loop as its job; never invoked from a hand
 # fm-supervise-daemon.sh — presence-gated sub-supervisor (closes #27's P2).
 #
 # Wraps bin/backend/fm-watch.sh: runs it as a child, presents and classifies every

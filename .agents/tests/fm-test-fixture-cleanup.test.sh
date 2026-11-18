@@ -10,6 +10,9 @@
 # terminating signal - plus that a stale marked fixture from a killed prior
 # run gets reaped on the next source. Nothing here inspects tests/lib.sh's
 # source text; it only observes filesystem state around the real helper.
+case "${1-}" in
+  -h|--help) sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+esac
 set -u
 
 # shellcheck source=tests/lib.sh

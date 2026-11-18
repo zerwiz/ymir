@@ -3,6 +3,9 @@
 #
 # It exists so a caller nobody has repointed yet still works. It is retired by the dated follow-up in
 # docs/fixes/snotra/2026-10-24-snotra-becomes-a-system.md, and .agents/paths-ledger.yaml records the move.
+case "${1-}" in
+  -h|--help) sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+esac
 set -euo pipefail
 # The 'RETIRED SHIM' guard that used to sit here computed its target as $_d/../../../
 # — three levels up from systems/snotra/services/ear, which is <repo>/systems, not the

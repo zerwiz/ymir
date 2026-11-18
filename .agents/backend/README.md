@@ -12,7 +12,7 @@ and report it truthfully*:
 2. **The model bridges** — Ymir's own files. They are why this index exists:
 
 backend[176]{file,does,kind,verdict,disposition,callers,lines}:
-  "README.md","`.agents/backend/` — the backend layer, file by file","data","tested","keep",63,-
+  "README.md","`.agents/backend/` — the backend layer, file by file","data","tested","keep",64,-
   "cmux.sh","bin/backends/cmux.sh - the cmux session-provider adapter (EXPERIMENTAL).","data","tested","keep",1,650
   "fm-afk-launch.sh","fm-afk-launch.sh - the single owner of the away-mode daemon TERMINAL lifecycle:","provenance","tested","keep",5,655
   "fm-afk-return.sh","fm-afk-return.sh - deterministic away-mode return catch-up gate.","provenance","tested","keep",3,242
@@ -21,9 +21,9 @@ backend[176]{file,does,kind,verdict,disposition,callers,lines}:
   "fm-arm-pretool-check.sh","Stable PreToolUse transport for the watcher-arm command policy.","provenance","tested","keep",3,201
   "fm-backend-hometag-lib.sh","bin/backend/fm-backend-hometag-lib.sh - shared per-installation home-tag derivation","provenance","wired","keep",2,53
   "fm-backend.sh","fm-backend.sh - runtime-backend selection, meta helpers, selector resolution,","provenance","tested","keep",24,982
-  "fm-backlog-handoff.sh","Hand already-identified, in-scope backlog items off from the main firstmate","provenance","tested","keep",3,910
+  "fm-backlog-handoff.sh","Hand already-identified, in-scope backlog items off from the main firstmate","provenance","tested","keep",3,913
   "fm-backlog-receive.sh","Receive one delivered remote-secondmate outbox into this home's backlog.","provenance","tested","keep",3,188
-  "fm-backlog-transition-lib.sh","shellcheck shell=bash","provenance","tested","keep",7,780
+  "fm-backlog-transition-lib.sh","shellcheck shell=bash","provenance","tested","keep",7,781
   "fm-bearings-board.sh","fm-bearings-board.sh - build and arm the /bearings lavish fleet board.","provenance","tested","keep",1,205
   "fm-bearings-snapshot.sh","fm-bearings-snapshot.sh - compact, bounded, TOON-by-default bearings projection.","provenance","tested","keep",4,547
   "fm-bootstrap.sh","Bootstrap detection, best-effort fleet refresh/prune, and installs.","provenance","tested","keep",15,1569
@@ -31,7 +31,7 @@ backend[176]{file,does,kind,verdict,disposition,callers,lines}:
   "fm-branch-prompt.sh","fm-branch-prompt.sh - emit the supervision branch's system prompt","provenance","tested","keep",1,102
   "fm-brief.sh","Scaffold a crewmate brief or persistent secondmate charter at","provenance","tested","keep",10,453
   "fm-busy-event.sh","fm-busy-event.sh - the ONLY writer of the semantic busy-state contract","provenance","tested","keep",6,235
-  "fm-busy-lib.sh","fm-busy-lib.sh - the ONE owner of firstmate's semantic busy-state contract.","provenance","tested","keep",11,987
+  "fm-busy-lib.sh","blocking-door: library — sourced by a caller that owns the loop and bounds it; never run by hand","provenance","tested","keep",11,988
   "fm-captain-hold.sh","fm-captain-hold.sh - deterministic mechanics for tasks held for the captain.","provenance","tested","keep",11,1002
   "fm-cd-command-policy.mjs","// Semantic policy for the cd-guard: does a shell command persistently change the","provenance","tested","keep",1,154
   "fm-cd-pretool-check.sh","Stable PreToolUse transport for the cd-guard command policy.","provenance","tested","keep",2,191
@@ -40,7 +40,7 @@ backend[176]{file,does,kind,verdict,disposition,callers,lines}:
   "fm-check-unregister.sh","Retire an intentional custom watcher check and its trust binding.","provenance","tested","keep",2,53
   "fm-classify-lib.sh","fm-classify-lib.sh — the vendored firstmate NAME, now a thin adapter over the","provenance","tested","keep",15,48
   "fm-claude-stop-autoarm.sh","Claude Stop-owned watcher auto-arm (asyncRewake hook).","provenance","tested","keep",6,335
-  "fm-composer-lib.sh","bin/backend/fm-composer-lib.sh - the ONE fleet-wide owner of composer classification:","provenance","tested","keep",9,1421
+  "fm-composer-lib.sh","blocking-door: library — sourced by a caller that owns the loop and bounds it; never run by hand","provenance","tested","keep",9,1422
   "fm-config-inherit-lib.sh","shellcheck shell=bash","provenance","tested","keep",8,1203
   "fm-config-push.sh","Push declared inherited local material to live secondmate homes.","provenance","tested","keep",3,255
   "fm-control-lib.sh","fm-control-lib.sh - the ONE executable owner of firstmate's agent lifecycle","provenance","tested","keep",7,252
@@ -111,7 +111,7 @@ backend[176]{file,does,kind,verdict,disposition,callers,lines}:
   "fm-push-transition-lib.sh","Shared owner of the watcher's native push-transition escalation.","provenance","tested","keep",1,178
   "fm-quota-axi-lib.sh","shellcheck shell=bash","provenance","tested","keep",5,94
   "fm-quota-choose.sh","Choose the first quota-eligible candidate from a ranked list.","provenance","tested","keep",2,385
-  "fm-remote-delta-read.sh","Blocking, non-destructive delta read for a remote secondmate append-only log.","provenance","tested","keep",3,190
+  "fm-remote-delta-read.sh","Blocking, non-destructive delta read for a remote secondmate append-only log.","provenance","tested","keep",3,193
   "fm-remote-doctor.sh","Check, and optionally repair, one remote account's second-mate readiness.","provenance","tested","keep",8,801
   "fm-remote-entrypoint.sh","Fixed remote entrypoint for bin/backend/fm-on.sh.","provenance","tested","keep",4,194
   "fm-remote-file.sh","Path-confined remote file transfer for fm-on.sh.","provenance","tested","keep",4,235
@@ -119,9 +119,9 @@ backend[176]{file,does,kind,verdict,disposition,callers,lines}:
   "fm-remote-home-seed.sh","Register and provision a whole secondmate home on an SSH-reachable host.","provenance","tested","keep",2,260
   "fm-remote-inherit-push.sh","Push the declared inherited-material allowlist to one remote secondmate route.","provenance","wired","keep",5,91
   "fm-remote-inherit.sh","Apply one primary-authoritative inherited item inside the selected remote home.","provenance","tested","keep",3,180
-  "fm-remote-job-lib.sh","Shared remote fm-on job-worker protocol.","provenance","tested","keep",6,1242
+  "fm-remote-job-lib.sh","blocking-door: library — sourced by a caller that owns the loop and bounds it; never run by hand","provenance","tested","keep",6,1243
   "fm-remote-job-reap-orphans.sh","Reap remote job workers whose code root no longer exists.","provenance","tested","keep",3,138
-  "fm-remote-job-worker.sh","Long-lived per-account worker for remote fm-on jobs.","provenance","tested","keep",4,1125
+  "fm-remote-job-worker.sh","blocking-door: daemon — started by a unit, and it runs the loop as its job; never invoked from a hand","provenance","tested","keep",4,1126
   "fm-remote-readiness-lib.sh","fm-remote-readiness-lib.sh - the remote second-mate readiness gate sequence.","provenance","wired","keep",4,45
   "fm-remote-secondmate-control.sh","Host-local lifecycle control for the remote secondmate home selected by fm-on.","provenance","tested","keep",12,341
   "fm-review-diff.sh","Review a crewmate branch against the authoritative base.","provenance","tested","keep",3,159
@@ -131,7 +131,7 @@ backend[176]{file,does,kind,verdict,disposition,callers,lines}:
   "fm-secondmate-reconcile.sh","fm-secondmate-reconcile.sh - ask a secondmate to reconcile its own books, at","provenance","tested","keep",3,372
   "fm-secondmate-registry-lib.sh","shellcheck disable=SC2034 # parsed fields are output globals for sourcing callers.","provenance","tested","keep",11,312
   "fm-secondmate-report.sh","fm-secondmate-report.sh - optional helper to append a correlated parent report.","provenance","tested","keep",4,89
-  "fm-send.sh","Steer a task by durable record: write the message into the task's steering","provenance","tested","keep",23,1060
+  "fm-send.sh","Steer a task by durable record: write the message into the task's steering","provenance","tested","keep",23,1063
   "fm-session-lock-lib.sh","Shared session-lock harness identity.","provenance","tested","keep",7,177
   "fm-session-start.sh","fm-session-start.sh - one command for the whole session start.","provenance","tested","keep",13,971
   "fm-sessionstart-cursor.sh","Cursor session-open adapter: the RUN tier transport for Cursor Agent CLI.","provenance","tested","keep",1,41
@@ -143,7 +143,7 @@ backend[176]{file,does,kind,verdict,disposition,callers,lines}:
   "fm-startup-network.sh","fm-startup-network.sh - the deferred network stage of a session start.","provenance","tested","keep",5,643
   "fm-stow-cascade.sh","Enumerate this home's registered secondmates for an internal /stow cascade.","provenance","tested","keep",2,252
   "fm-subagent-pretool-check.sh","PreToolUse guard against primary-session delegation outside the fleet.","provenance","tested","keep",1,208
-  "fm-supervise-daemon.sh","fm-supervise-daemon.sh — presence-gated sub-supervisor (closes #27's P2).","provenance","tested","keep",7,1733
+  "fm-supervise-daemon.sh","blocking-door: daemon — started by a unit, and it runs the loop as its job; never invoked from a hand","provenance","tested","keep",7,1734
   "fm-supervision-instructions.sh","Render the primary-harness supervision operating block for session start and","provenance","tested","keep",5,216
   "fm-supervision-lib.sh","shellcheck shell=bash","provenance","tested","keep",6,91
   "fm-supervisor-target-lib.sh","fm-supervisor-target-lib.sh - the single owner of supervisor-pane discovery.","provenance","tested","keep",4,79
@@ -155,7 +155,7 @@ backend[176]{file,does,kind,verdict,disposition,callers,lines}:
   "fm-test-run.sh","fm-test-run.sh - single owner of Firstmate's behavior-test runner, lane","provenance","tested","keep",3,2192
   "fm-timeout-lib.sh","fm-timeout-lib.sh — the vendored firstmate NAME, now a thin adapter over the","provenance","tested","keep",17,25
   "fm-timing-lib.sh","fm-timing-lib.sh - the single owner of the deferred network stage's elapsed-time","provenance","tested","keep",4,180
-  "fm-tmux-lib.sh","fm-tmux-lib.sh — shared tmux pane primitives for firstmate.","provenance","tested","keep",8,292
+  "fm-tmux-lib.sh","blocking-door: library — sourced by a caller that owns the loop and bounds it; never run by hand","provenance","tested","keep",8,293
   "fm-tool-update-check.sh","fm-tool-update-check.sh - report watched tooling that has an update available,","provenance","tested","keep",1,899
   "fm-trace-context-lib.sh","shellcheck shell=bash","provenance","tested","keep",5,228
   "fm-transition-lib.sh","Shared, backend-neutral agent-state transition shape and supervision policy.","provenance","tested","keep",3,104
@@ -169,9 +169,9 @@ backend[176]{file,does,kind,verdict,disposition,callers,lines}:
   "fm-wake-drain.sh","Present durable watcher wake records, optionally acknowledge handled records,","provenance","tested","keep",11,593
   "fm-wake-grant.sh","fm-wake-grant.sh — the vendored firstmate NAME, now a thin adapter over the ONE","provenance","tested","keep",1,25
   "fm-wake-lib.sh","fm-wake-lib.sh — the vendored firstmate NAME, now a thin adapter over the ONE","provenance","tested","keep",53,60
-  "fm-watch-arm.sh","Safe, home-scoped (re-)arm of the firstmate watcher, with honest verification.","provenance","tested","keep",4,603
+  "fm-watch-arm.sh","Safe, home-scoped (re-)arm of the firstmate watcher, with honest verification.","provenance","tested","keep",4,606
   "fm-watch-checkpoint.sh","Run one bounded foreground watcher checkpoint for harnesses that should not","provenance","tested","keep",2,110
-  "fm-watch.sh","Firstmate watcher.","provenance","tested","keep",23,1973
+  "fm-watch.sh","blocking-door: daemon — started by a unit, and it runs the loop as its job; never invoked from a hand","provenance","tested","keep",23,1974
   "fm-x-dismiss.sh","Dismiss a pending X-mode mention at the relay WITHOUT replying to it.","provenance","tested","keep",1,117
   "fm-x-followup.sh","Post a completion follow-up for an X-mode-linked task, up to three within a","provenance","tested","keep",5,287
   "fm-x-lib.sh","Shared config resolution for the X-mode connector client (fm-x-poll.sh and","provenance","tested","keep",9,1001
@@ -182,7 +182,7 @@ backend[176]{file,does,kind,verdict,disposition,callers,lines}:
   "fm_voice_records.py","'''fm_voice_records.py - what the voice agent is allowed to know, and how it hands work over.","tool","tested","keep",1,575
   "herdr-eventwait.py","'''Raw AF_UNIX subscriber for herdr's native pane.agent_status_changed stream.","tool","tested","keep",0,158
   "herdr-workspace-move.py","'''Send one narrowly scoped workspace.move request to a Herdr control socket.","tool","tested","keep",0,115
-  "herdr.sh","bin/backends/herdr.sh - the herdr session-provider adapter (EXPERIMENTAL).","data","tested","keep",10,3387
+  "herdr.sh","bin/backends/herdr.sh - the herdr session-provider adapter (EXPERIMENTAL).","data","tested","keep",10,3390
   "model-bridge.py","'''model-bridge.py — expose a model provider to pi via an OpenAI-compatible","data","tested","keep",2,650
   "opencode-go-bridge.py","'''opencode-go-bridge.py — backward-compatible entry point.","tool","wired","keep",0,31
   "orca.sh","bin/backends/orca.sh - the Orca terminal session-provider adapter.","data","tested","keep",2,291

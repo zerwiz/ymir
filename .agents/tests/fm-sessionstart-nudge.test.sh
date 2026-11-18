@@ -6,6 +6,9 @@
 # throwaway home, so they prove routing by the digest that actually appears,
 # not by inspecting the wrapper's source. docs/sessionstart-nudge.md owns the
 # tier assignment and the source table these pin.
+case "${1-}" in
+  -h|--help) sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+esac
 set -u
 
 # Run the whole suite beneath one long-lived fixture harness, matching the real

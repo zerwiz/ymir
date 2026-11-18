@@ -601,9 +601,39 @@ $_coretext"
       AGENT_REF="$NAME"; hdr agent get "$NAME" >/dev/null 2>&1 || AGENT_REF="$pane"
       injected="brief-in-launch"; _try=0
     else
-      if ! hdr agent start "$NAME" --kind "$KIND" --pane "$pane" "${MODEL_ARGS[@]}" >/dev/null 2>&1; then
-        printf 'error: could not start a %s Eindri in %s\nhelp: the pane must sit at an interactive shell prompt\n' "$KIND" "$pane" >&2
-        exit 1
+      # WHICH herdr IS THIS? (2026-11-18, measured on the heart — plan 001's wake). herdr 0.7.4
+      # speaks `agent start <name> [--tab ID] -- <argv…>`, and its prompt verb is `agent send`;
+      # 0.8+ speaks `agent start --kind pi --pane <id> --model M` and `agent prompt`. This script
+      # assumed 0.8, so on a 0.7.4 box the ONE COMMAND that seats an agent refused twice with
+      # "the pane must sit at an interactive shell prompt" — and a hand seated the worker by hand
+      # instead. A door that cannot seat on the machine it runs on is not a door. So: ask the CLI
+      # what verbs it has, then take that road. Never assume a version.
+      AGENT_VERBS="$(hdr agent 2>&1 || true)"
+      HAS_PROMPT=0; case "$AGENT_VERBS" in *"agent prompt"*) HAS_PROMPT=1 ;; esac
+      HAS_KIND=0;   case "$AGENT_VERBS" in *"--kind"*)       HAS_KIND=1 ;; esac
+      if [ "$HAS_KIND" = 1 ] \
+         && hdr agent start "$NAME" --kind "$KIND" --pane "$pane" ${MODEL_ARGS[@]+"${MODEL_ARGS[@]}"} >/dev/null 2>&1; then
+        seat_form="0.8 --kind/--pane"
+      else
+        # the 0.7.4 road: the harness is LAUNCHED IN THE PANE. Measured 2026-11-18: `agent start
+        # <name> --tab <id> -- <argv>` seats the pane at the WRONG cwd (the tab's, not the
+        # worktree's) and hands the brief to nobody — pi came up bare in $HOME. So the road that
+        # works is the one a hand uses: a single shell line in the pane, cd'd, brief as an argument
+        # read from a file (never inline: a quote in a brief must not become a shell metacharacter).
+        brief_dir="$STATE_DIR/eindri-briefs"; mkdir -p "$brief_dir"
+        brief_file="$brief_dir/$NAME.md"; printf '%s\n' "$PROMPT" >"$brief_file"
+        launch="cd $(printf '%q' "$SEAT_CWD") && $(printf '%q' "$KIND")"
+        for (( _i=0; _i<${#MODEL_ARGS[@]}; _i++ )); do launch+=" $(printf '%q' "${MODEL_ARGS[$_i]}")"; done
+        launch+=" -- \"\$(cat $(printf '%q' "$brief_file"))\""
+        if hdr pane run "$pane" "$launch" >/dev/null 2>&1; then
+          seat_form="0.7 pane-run"
+          injected="brief-in-launch"     # the brief is the first turn; nothing is typed after it
+          hdr agent rename "$pane" "$NAME" >/dev/null 2>&1 || true
+          AGENT_REF="$NAME"; hdr agent get "$NAME" >/dev/null 2>&1 || AGENT_REF="$pane"
+        else
+          printf 'error: could not start a %s Eindri in %s (herdr refused both roads)\nhelp: read the pane: herdr pane read %s\n' "$KIND" "$pane" "$pane" >&2
+          exit 1
+        fi
       fi
       # ROW 5 (plan 291, 2026-11-14): `agent start` returns as soon as the pane HOLDS the agent,
       # which is not the same as the agent being ready for input. Measured that day: two hand-seated
@@ -616,11 +646,18 @@ $_coretext"
       done
       # Inject the task, then CONFIRM the agent moved — a prompt that was accepted and swallowed
       # looks identical to one that landed until you look at the state. One retry, never a loop.
+      # `agent prompt` where it exists; `agent send` (the 0.7.4 verb) where it does not.
       retried=no
-      for _try in 1 2 3 4 5 6 7 8 9 10; do
-        if hdr agent prompt "$NAME" "$PROMPT" >/dev/null 2>&1; then injected=yes; break; fi
-        sleep 3
-      done
+      if [ "$injected" != brief-in-launch ]; then
+        for _try in 1 2 3 4 5 6 7 8 9 10; do
+          if [ "$HAS_PROMPT" = 1 ]; then
+            hdr agent prompt "$NAME" "$PROMPT" >/dev/null 2>&1 && { injected=yes; break; }
+          else
+            hdr agent send "$AGENT_REF" "$PROMPT" >/dev/null 2>&1 && { injected=yes; break; }
+          fi
+          sleep 3
+        done
+      fi
       if [ "$injected" = yes ]; then
         for _w in 1 2 3 4 5 6 7 8 9 10; do
           case "$(agent_state "$AGENT_REF")" in
@@ -632,14 +669,16 @@ $_coretext"
           working|done) ;;
           *)
             # the measured fault: ready, but the prompt left no trace — send it once more
-            hdr agent prompt "$NAME" "$PROMPT" >/dev/null 2>&1 && retried=yes
+            if [ "$HAS_PROMPT" = 1 ]; then
+              hdr agent prompt "$NAME" "$PROMPT" >/dev/null 2>&1 && retried=yes
+            else
+              hdr agent send "$AGENT_REF" "$PROMPT" >/dev/null 2>&1 && retried=yes
+            fi
             sleep 2 ;;
         esac
       fi
-      printf 'herdr-run[1]{eindri,interactive_ready,retried,state}:
-  "%s","%s","%s","%s"
-' \
-        "$NAME" "$ready" "$retried" "$(agent_state "$AGENT_REF")" >&2
+      printf 'herdr-run[1]{eindri,form,interactive_ready,retried,state}:\n  "%s","%s","%s","%s","%s"\n' \
+        "$NAME" "$seat_form" "$ready" "$retried" "$(agent_state "$AGENT_REF")" >&2
     fi
     printf 'herdr-run[1]{eindri,injected,attempts}:\n  "%s","%s",%s\n' "$NAME" "$injected" "${_try:-0}" >&2
 
@@ -658,7 +697,12 @@ $_coretext"
     fi
 
     if [ "${YMIR_HERDR_AGENT_WAIT:-1}" = "1" ]; then
-      hdr agent wait "$AGENT_REF" --until done --until idle --timeout $((SETTLE * 1000)) >/dev/null 2>&1 || true
+      # the wait verb moved too: 0.7.4 takes `--status idle|working|done|blocked`, 0.8+ takes `--until`
+      case "$AGENT_VERBS" in
+        *"--until"*) hdr agent wait "$AGENT_REF" --until done --until idle --timeout $((SETTLE * 1000)) >/dev/null 2>&1 || true ;;
+        *)            hdr agent wait "$AGENT_REF" --status done --timeout $((SETTLE * 1000)) >/dev/null 2>&1 \
+                        || hdr agent wait "$AGENT_REF" --status idle --timeout $((SETTLE * 1000)) >/dev/null 2>&1 || true ;;
+      esac
     fi
     printf 'herdr-run[1]{seat,eindri,role,kind,tab,state}:\n  "%s","%s","%s","%s","%s","%s"\n' \
       "$seat_note" "$NAME" "${ROLE:-unspecified}" "$KIND" "$tab" \

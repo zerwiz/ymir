@@ -1,4 +1,5 @@
 # shellcheck shell=bash
+# blocking-door: library — sourced by a caller that owns the loop and bounds it; never run by hand
 # Fused backlog transitions for the scripts that own a task's physical record.
 # Usage: . bin/backend/fm-tasks-axi-lib.sh; . bin/backend/fm-backlog-transition-lib.sh
 # (this library reads that one's backend gate and never sources it itself, so a

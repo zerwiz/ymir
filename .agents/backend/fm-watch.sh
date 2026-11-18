@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking-door: daemon — started by a unit, and it runs the loop as its job; never invoked from a hand
 # Firstmate watcher.
 # Classifies supervision wakes in bash. In normal mode it absorbs benign wakes
 # and keeps blocking; it queues and exits only for actionable wakes.

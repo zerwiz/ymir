@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# blocking-door: library — sourced by a caller that owns the loop and bounds it; never run by hand
 # bin/backend/fm-composer-lib.sh - the ONE fleet-wide owner of composer classification:
 # every shape a verified harness draws, every glyph, every container proof, and
 # the empty|pending|pending-unproven|unknown verdict, shared by every

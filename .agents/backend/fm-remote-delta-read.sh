@@ -15,6 +15,9 @@
 # unblock any queued command other than another reply long-poll, then publishes
 # that preemption as distinct exit 76. The bin/backend/fm-remote-job-lib.sh header owns
 # that contract.
+case "${1-}" in
+  -h|--help) sed -n '2,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+esac
 set -eu
 
 FM_HOME=${FM_HOME:?FM_HOME is required}

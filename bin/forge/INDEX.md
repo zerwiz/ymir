@@ -28,7 +28,7 @@ bin[53]{file,does,kind,verdict,disposition,callers,lines}:
   "finding-tally.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",1,143
   "gather-notice.sh","gather-notice.sh — when the LAST errand of a batch finishes, the helm is told to gather it.","tool","wired","keep",3,186
   "gather.sh","gather.sh — gather a batch of errand branches into ONE push and ONE PR.","tool","tested","keep",9,323
-  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",556,101
+  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",571,101
   "github-deploy.sh","github-deploy.sh — zero-trust deploys (W0035).","tool","wired","keep",0,96
   "gjallarhorn-expose.sh","gjallarhorn-expose.sh — put EVERY app on its own public hostname (Gjallarhorn).","tool","wired","keep",0,152
   "gjallarhorn-notify.sh","gjallarhorn-notify.sh — the horn (W0036).","tool","wired","keep",1,73
@@ -55,7 +55,7 @@ bin[53]{file,does,kind,verdict,disposition,callers,lines}:
   "repair-errand.md","repair-errand.md — the brief a SMITH is handed when a verdict refuses a PR (plan 206 §12.1).","data","wired","keep",2,73
   "review-mend.sh","review-mend.sh — the refusal becomes a router (plan 233 §13/13a/13b)","tool","wired","keep",1,152
   "review-rules.sh","review-rules.sh — the rules floor: load what a reviewer MUST know, or refuse to review.","tool","wired","keep",4,139
-  "review-seat.sh","review-seat.sh — the reviewer's SEAT: pi in a herdr pane, on the heart, on a loop.","tool","wired","keep",3,477
+  "review-seat.sh","review-seat.sh — the reviewer's SEAT: pi in a herdr pane, on the heart, on a loop.","tool","wired","keep",3,498
   "review-shelf.sh","review-shelf.sh — where a packet LANDS, and the waiting rule that keeps it honest.","tool","wired","keep",1,159
   "review-verdict.sh","review-verdict.sh — the judge's ONE act of writing: its verdict, and nothing else.","tool","wired","keep",2,182
   "review-watch.sh","review-watch.sh — the missing trigger: a PR that arrives is a question the owner is asked.","tool","wired","keep",2,291
@@ -74,7 +74,7 @@ bin[53]{file,does,kind,verdict,disposition,callers,lines}:
   "verdict-watch.sh","verdict-watch.sh — EVERY report is delivered, because the ARTEFACT is watched, not the agent.","tool","wired","keep",2,105
   "warden-lib.sh","warden-lib.sh — the shared law every outward warden keeps (plan 290 §3; the Allfather, 2026-11-14).","lib","wired","keep",12,244
   "warden-policy.py","'''warden-policy.py — the ONE reader of a machine's wardens.yaml, and of what a warden may touch.","tool","wired","keep",7,356
-  "yggdrasil.sh","yggdrasil.sh — the worktree manager (Yggdrasil, the world-tree).","tool","tested","keep",9,176
+  "yggdrasil.sh","yggdrasil.sh — the worktree manager (Yggdrasil, the world-tree).","tool","tested","keep",9,186
 
 **Tally.** verdict: wired=48, tested=5
 
