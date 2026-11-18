@@ -67,6 +67,8 @@ REFERENCE = re.compile(r"^\s*(\$\{?[A-Za-z_][A-Za-z0-9_]*\}?|\{env:[A-Za-z_][A-Z
 
 rows: list[tuple[str, str, str]] = []
 drift = 0
+# `--dry-run` (plan 317): print the diff of every JSON a seat would write, and write nothing.
+DRY_RUN = "--dry-run" in sys.argv
 
 
 def say(harness: str, state: str, detail: str) -> None:
@@ -151,6 +153,8 @@ def canonical(gateway_port: str, source: str) -> dict:
     servers = {n: s for n, s in servers.items() if not is_out(n, s)}
     for door in RECORD_DOORS:
         servers[door] = {"url": f"{base}/{door}"}
+    if "ymir" in servers:
+        servers["ymir"] = door_on_pin(servers["ymir"])
     servers.setdefault("firecrawl", {"command": "npx", "args": ["-y", "firecrawl-mcp"],
                                      "env": {"FIRECRAWL_API_URL": "http://localhost:3002"}})
     return servers
@@ -170,11 +174,50 @@ def portable(servers: dict, with_ymir: bool) -> tuple[dict, list[str]]:
     return out, held
 
 
+DOOR_TAIL = ("bin", "mcp", "ymir-mcp.py")
+
+
+def pin_root() -> str:
+    """The pin as its LINK path (``~/ymir-runtime``), never the release it resolves to — so an update
+    that flips the link moves every harness with it (plan 317 slice 1). Read from the ONE resolver
+    (``ymir_runtime.paths.runtime_pin_dir``: ``YMIR_RUNTIME_DIR``, then ``runtime.env``, then the
+    seated default). Empty when no pin carries the door."""
+    pinned = os.environ.get("YMIR_RUNTIME_DIR", "")
+    if not pinned:
+        src = os.path.join(ROOT, "src")
+        if src not in sys.path:
+            sys.path.insert(0, src)
+        try:
+            from ymir_runtime import paths as _paths  # noqa: PLC0415 — the core is optional here
+            pinned = str(_paths.runtime_pin_dir())
+        except Exception as exc:  # noqa: BLE001 — named, then the old road
+            print(f"mcp-config-seat: the pin resolver did not answer ({exc}) — using the checkout", file=sys.stderr)
+            pinned = ""
+    if pinned and pinned != "." and os.path.isfile(os.path.join(pinned, *DOOR_TAIL)):
+        return pinned
+    return ""
+
+
+def door_on_pin(spec):
+    """The ``ymir`` door re-pointed at the pin's link path. A spec that is not Ymir's door, or a seat
+    with no pin, is returned unchanged."""
+    pin = pin_root()
+    if not pin or not isinstance(spec, dict):
+        return spec
+    target = os.path.join(pin, *DOOR_TAIL)
+    args = [str(a) for a in (spec.get("args") or [])]
+    if not any(tuple(a.split(os.sep)[-3:]) == DOOR_TAIL for a in args):
+        return spec
+    out = dict(spec)
+    out["args"] = [target if tuple(a.split(os.sep)[-3:]) == DOOR_TAIL else a for a in args]
+    return out
+
+
 def stable_root() -> str:
     """The checkout a harness should keep pointing at: the pinned runtime when one is
     recorded, else the MAIN checkout — never a Yggdrasil worktree that is reaped later."""
-    pinned = os.environ.get("YMIR_RUNTIME_DIR", "")
-    if pinned and os.path.isfile(os.path.join(pinned, "bin", "mcp", "ymir-mcp.py")):
+    pinned = pin_root()
+    if pinned:
         return pinned
     try:
         common = subprocess.run(["git", "-C", ROOT, "rev-parse", "--path-format=absolute", "--git-common-dir"],
@@ -261,6 +304,15 @@ def seat_json_map(harness: str, path: str, key: str, want: dict, fmt, check: boo
         say(harness, "current", f"{path}: {len(want)} server(s) of the set, engram-free")
         return
     changed = sorted(n for n in set(new) | set(cur) if new.get(n) != cur.get(n))
+    if DRY_RUN:
+        import difflib  # noqa: PLC0415
+        after = dict(doc)
+        after[key] = new
+        before_t = json.dumps(doc, indent=2).splitlines(keepends=True)
+        after_t = json.dumps(after, indent=2).splitlines(keepends=True)
+        sys.stdout.write("".join(difflib.unified_diff(before_t, after_t, f"{path} (now)", f"{path} (after)")))
+        say(harness, "dry-run", f"{path}: would change {', '.join(changed)} — nothing written")
+        return
     if check:
         drift += 1
         say(harness, "stale", f"{path}: would change {', '.join(changed)}"
@@ -461,7 +513,7 @@ def main(argv: list[str]) -> int:
             print(f"error: unknown harness {name} (pi|opencode|claude|cursor|codex)", file=sys.stderr)
             return 2
         return 0
-    check = "--check" in rest
+    check = "--check" in rest or DRY_RUN
     if action == "claude":
         # The Claude half alone, for callers that name it (`harness-extensions-install.sh`,
         # migration `0018-the-home-pulls-first`). It is the SAME law as `seat`: the set with

@@ -70,13 +70,21 @@ capability_folders[34]{folder,index}:
 | `registry` | `dispatch/registry.py` — where a figure's model comes from, and nothin | yes | yes (bin/ imports the engine) |
 | `resolve` | `dispatch/resolve.py` — one errand, one resolution. | yes | yes (bin/ imports the engine) |
 | `table` | `dispatch/table.py` — the decision table, read as DATA. | yes | yes (bin/ imports the engine) |
-| `doors` | doors.py — a door register for ANY directory, rendered from the tree. | no | yes (bin/ imports the engine) |
+| `doors` | doors.py — a door register for ANY directory, rendered from the tree. | yes | yes (bin/ imports the engine) |
 | `errors` | The engine's own failures, so a caller can tell them apart. | yes | yes (bin/ imports the engine) |
 | `__main__` | `python3 -m ymir_runtime.fleet` — the door face of the living rail res | yes | yes (bin/ imports the engine) |
 | `rail` | fleet/rail.py — the LIVING rail resolver (plan 51, Parts 9a/9b/9c). | yes | yes (bin/ imports the engine) |
 | `grants` | The grants law — explicit, signed, cross-operator shares of a company  | yes | yes (bin/ imports the engine) |
 | `harness` | Hamr — which harness wears this errand, and the exact line that launch | yes | yes (bin/ imports the engine) |
 | `heartbeat` | The heartbeat — a dead worker must never look like a thinking one. | yes | yes (bin/ imports the engine) |
+| `__main__` | (no docstring) | yes | yes (bin/ imports the engine) |
+| `cli` | `python3 -m ymir_runtime.hermes <verb>` — the one entry the launchers, | yes | yes (bin/ imports the engine) |
+| `common` | What every Hermes verb shares: where things are, one subprocess helper | yes | yes (bin/ imports the engine) |
+| `doctor` | `ymir doctor hermes` — one row per Hermes surface, four states per doo | yes | yes (bin/ imports the engine) |
+| `mcp_probe` | A minimal MCP client for the doctor — one real, read-only call per doo | yes | yes (bin/ imports the engine) |
+| `seat` | The Hermes seat — Ymir's doors, skills shelf and worker script, seated | yes | yes (bin/ imports the engine) |
+| `session_hook` | Hermes' session side of the Gná arm: the Sága digest, and its delivery | yes | yes (bin/ imports the engine) |
+| `wait_worker` | `wait-worker` — a finished herdr worker wakes the Hermes session that  | yes | yes (bin/ imports the engine) |
 | `identity` | Hœnir's own name — the helm's identity, resolved once and WRITTEN into | yes | yes (bin/ imports the engine) |
 | `landed` | landed.py — did this work LAND? The teardown gate, owned by the engine | yes | yes (bin/ imports the engine) |
 | `library` | library.py — the library of records: one corpus, one contract, one doo | yes | yes (bin/ imports the engine) |
@@ -102,6 +110,10 @@ capability_folders[34]{folder,index}:
 | `test_grants` | grants/ — the realm law: a cross-operator share is signed by each Heim | yes | yes (bin/ imports the engine) |
 | `test_harness` | harness.py — the choice, the provenance, and the exact launch line. | yes | yes (bin/ imports the engine) |
 | `test_heartbeat` | heartbeat.py — the silence judgement, identical to the shell condition | yes | yes (bin/ imports the engine) |
+| `test_hermes_doctor` | `ymir doctor hermes` (plan 317 slice 8): a stale descriptor is red; an | yes | yes (bin/ imports the engine) |
+| `test_hermes_seat` | The Hermes seat (plan 317 slices 1–3, 6): owned entries corrected, the | yes | yes (bin/ imports the engine) |
+| `test_hermes_session_hook` | The Hermes session hook (plan 317 slice 7): the digest on the first tu | yes | yes (bin/ imports the engine) |
+| `test_hermes_wait_worker` | wait-worker (plan 317 slice 9): finished means not-working AND a hando | yes | yes (bin/ imports the engine) |
 | `test_landed` | landed.py — the teardown gate, proven on real repositories. | yes | yes (bin/ imports the engine) |
 | `test_lifecycle` | status · send · stop — the other three verbs, read from the record. | yes | yes (bin/ imports the engine) |
 | `test_paths` | paths.py — the home law, read once. | yes | yes (bin/ imports the engine) |
