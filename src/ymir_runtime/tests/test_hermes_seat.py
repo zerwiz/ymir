@@ -77,7 +77,7 @@ def lines(env, **kw) -> tuple[int, list[str]]:
 
 PACKETS = {
     "ymir": {"command": "python3", "args": ["PIN/bin/mcp/ymir-mcp.py"]},
-    "well": {"url": "http://127.0.0.1:8316/mcp/well"},
+    "well": {"url": "https://example.org/mcp/well"},
     "hnoss": {"command": "PIN/bin/pi/hnoss-mcp-launch.sh", "args": []},
     "firecrawl": {"command": "npx", "args": ["-y", "firecrawl-mcp"]},
 }
@@ -137,9 +137,9 @@ def test_dry_run_writes_nothing(sandbox):
 
 def test_only_ymirs_own_doors_are_adopted():
     packets = {"firecrawl": {"command": "npx", "args": ["-y", "firecrawl-mcp"]},
-               "well": {"url": "http://127.0.0.1:8316/mcp/well"}}
+               "well": {"url": "https://example.org/mcp/well"}}
     config = {"mcp_servers": {"firecrawl": {"command": "npx", "args": ["-y", "firecrawl-mcp"], "enabled": True},
-                              "well": {"url": "http://127.0.0.1:8316/mcp/well", "enabled": True}}}
+                              "well": {"url": "https://example.org/mcp/well", "enabled": True}}}
     p = S.plan(config, packets, {}, Path(""), Path("/nonexistent"))
     states = {n: s for n, s, _ in p.rows}
     assert states["firecrawl"] == S.OPERATOR
@@ -148,11 +148,11 @@ def test_only_ymirs_own_doors_are_adopted():
 
 
 def test_a_correction_keeps_the_operators_extra_keys():
-    packets = {"snotra": {"url": "http://new/mcp"}}
-    config = {"mcp_servers": {"snotra": {"url": "http://old/mcp", "auth": "oauth", "enabled": False}}}
-    ledger = {"mcp_servers": {"snotra": {"value": {"url": "http://old/mcp"}}}}
+    packets = {"snotra": {"url": "https://new.example.org/mcp"}}
+    config = {"mcp_servers": {"snotra": {"url": "https://old.example.org/mcp", "auth": "oauth", "enabled": False}}}
+    ledger = {"mcp_servers": {"snotra": {"value": {"url": "https://old.example.org/mcp"}}}}
     p = S.plan(config, packets, ledger, Path(""), Path("/nonexistent"))
-    assert p.config["mcp_servers"]["snotra"] == {"auth": "oauth", "enabled": False, "url": "http://new/mcp"}
+    assert p.config["mcp_servers"]["snotra"] == {"auth": "oauth", "enabled": False, "url": "https://new.example.org/mcp"}
     assert ("snotra", S.CORRECTED) in [(n, s) for n, s, _ in p.rows]
 
 
