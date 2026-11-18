@@ -1912,23 +1912,39 @@ Two mechanisms close the fault that killed the heart on 2026-11-17: a gate suite
 hour on a box that must not build, beside a release build and seven errands, with swap already 3.0 of
 4.0 GB.
 
-**`bin/heavy-slot.sh` is the machine's one queue for heavy work.** `run -- <command…>` takes an exclusive
-lock, prints whose job it waits for when the slot is held, runs the command with the hold **inherited**
-(so a heavy door called from inside a heavy job nests instead of deadlocking on its own lock), and
-releases on exit including on `INT`/`TERM`/`HUP`/`QUIT`. `status` names the holder (pid, start time,
-started, host, name, cmd, how long) and exits 3 when held, so a script can ask without parsing prose. The
-lock is `${XDG_STATE_HOME:-$HOME/.local/state}/ymir/heavy-slot.lock` (`YMIR_HEAVY_SLOT` overrides), one
-per machine and per user — the fault it stops happens between processes on one box.
+**`bin/heavy-slot.sh` is the machine's queue for heavy work, and it is COUNTED.** `run -- <command…>`
+takes a free lane, prints whose job it waits for when **every** lane is held, runs the command with the hold
+**inherited** (so a heavy door called from inside a heavy job nests instead of deadlocking on its own lane),
+and releases on exit including on `INT`/`TERM`/`HUP`/`QUIT`. `status` names every lane and its holder (pid,
+start time, started, host, name, cmd, how long) and exits 3 when any lane is held, so a script can ask
+without parsing prose; `lanes` prints the count and where it came from.
 
-A lock whose holder is **gone** is reaped, and the record carries the process **start time** beside the
-pid because a pid is reused: a lock naming a live pid with a different start time is stale. The release
+**The count is the MACHINE's, never the repo's (Rule 07 · Rule 25).** `YMIR_HEAVY_SLOTS` when set, else this
+host's own `lanes` in `$YMIR_HOME/hodd/data/fleet.json`, else the documented default of 1 — a registry that
+cannot be read is one lane, the safe floor. Lane 1 keeps the original path
+`${XDG_STATE_HOME:-$HOME/.local/state}/ymir/heavy-slot.lock` (`YMIR_HEAVY_SLOT` overrides it), and lane N is
+the same name with `.<N>` before `.lock`, so an existing single lock **is** lane 1 and an old caller and a
+new one cannot disagree. Lanes are per machine and per user.
+
+A lane whose holder is **gone** is reaped, and the record carries the process **start time** beside the
+pid because a pid is reused: a lane naming a live pid with a different start time is stale. The release
 path re-checks pid + start time, so a job never deletes someone else's lock. `--no-wait` refuses (exit 3);
-`--wait-max N` gives up after N seconds, naming the holder.
+`--wait-max N` gives up after N seconds, naming the holders.
 
-Two doors ask for it themselves: `bin/engine/update-loop.sh` re-execs under it for every heavy verb
+**One lane is one heavy job, never one builder.** That conflation was the first version's fault (the
+Allfather, 2026-11-18: *"we can only have one builder at the time. here. … the server can handle more
+builders"*): an exclusive lock made "one heavy job" and "one builder" the same sentence and left eight
+cores behind one seat. How many **builders** a machine may hold is its own number, `builders` in the same
+registry row, read by `bin/agents/builder-budget.sh` (`read` · `status [--json]` · `check`); an unreadable
+registry is `unknown` and exit 4, never a green zero. `bin/agents/einherjar-spawn.sh` prints a
+`builder-budget,full,…` line at the budget and refuses only under `YMIR_BUILDER_BUDGET_ENFORCE=1` — that
+line raises every worker in the house, so a refusal there waits for a real spawn to prove it.
+
+Two doors ask for a lane themselves: `bin/engine/update-loop.sh` re-execs under it for every heavy verb
 (`run`, `prove`), so its whole pass is one heavy job; `bin/engine/release-build.sh` takes it for any
-standalone build. The gate is `heavy-slot` (`bin/engine/tests/test_heavy_slot.sh`), the page is
-`docs/features/heavy-slot.md`.
+standalone build. Gates: `heavy-slot` (`bin/engine/tests/test_heavy_slot.sh`) and `builder-budget`
+(`bin/agents/tests/test_builder_budget.sh`). Pages: `docs/features/heavy-slot.md` and
+`docs/features/builder-budget.md`.
 
 **`bin/engine/update-loop.sh` no longer proves on the heart — it FLIPS a proven release.** A candidate is
 proven **once**, and the proof is a record in `$YMIR_PROOFS_DIR` (default `~/.local/state/ymir/proofs`,
