@@ -93,3 +93,7 @@ Found by `bin/time/nornir-job-private-scan.sh` (sweep 2026-11-18T04:10:13Z), fix
 `private-scan` errand. The home's side of the triage — the allow reasons, and the template's invented
 entries removed from the deny list — is in `hodd/config/private-scan-allow.txt` and
 `hodd/identity/public-deny.txt`.
+
+## CHANGE LOG
+
+- 2026-11-17 — review-mend: added missing heading for #816
