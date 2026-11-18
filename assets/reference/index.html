@@ -341,7 +341,7 @@ The nine worlds of the myth map onto Ymir's spaces:
 
 | Realm of the myth | What it is in Ymir |
 |---|---|
-| **Svartalfaheim / Nidavellir** — the dwarf-halls under the earth | tenant workspaces: `way-of`, `zerwiz`, `craig` — the shop floors |
+| **Svartalfaheim** — the dwarf-halls under the earth | tenant workspaces: `way-of`, `zerwiz`, `acme` — the shop floors |
 | **Midgard** — the world of humans, middle, shared | cross-tenant shared assets & repos |
 | **Utgard (Jötunheim)** — outside the wall, where giants dwell | the sandbox barrier — untrusted code runs *there*, never in the halls |
 | **Yggdrasil** — the tree that binds all realms | git worktree isolation, zero-collision parallel edits |
@@ -715,7 +715,7 @@ repository, orchestrated by autonomous Norse-named agents.
 └───────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Svartalfaheim** holds the realms (way-of, zerwiz, craig) and per-tenant
+- **Svartalfaheim** holds the realms (way-of, zerwiz, acme) and per-tenant
   A2A discovery; **Midgard** is the shared cross-tenant space; **Runes** is the
   immutable ledger; **Valhalla** supervises the processes.
 
@@ -991,7 +991,7 @@ Inconsistencies worth fixing
 
 Duplicate §3.11 in the architecture doc — "Þjazi Backend Integration" and "Company System — Houses" both carry 3.11, and Firstmate is ## instead of ###. Renumber: Houses → 3.12, Firstmate → 3.13.
 ENTRY-008 is double-booked. design.md cites it as the "UI/UX-is-a-differentiator doctrine"; architecture §3.5 cites it as "the A2A collaboration differentiator" (Ratatoskr). Either one citation is wrong or two entries share a number.
-The left rail conflates gates and realms. §5.1 says "7 realm gates (click = realm switch)" — but the seven gates are daemons (Bifrost…Ratatoskr), while realms are tenants (way-of/zerwiz/craig), switched via the top-bar chip. Suggest calling it a gate rail that opens daemon views, since tenant switching lives elsewhere.
+The left rail conflates gates and realms. §5.1 says "7 realm gates (click = realm switch)" — but the seven gates are daemons (Bifrost…Ratatoskr), while realms are tenants (way-of/zerwiz/acme), switched via the top-bar chip. Suggest calling it a gate rail that opens daemon views, since tenant switching lives elsewhere.
 §3.11 Þjazi is wearing another project's clothes. "Treehouse" worktrees, herdr sessions, fm_backend_herdr_cli, bin/backend/fm-herdr-lab.sh, "the Captain" — that's Firstmate/herdr naming; Ymir's worktree system is Yggdrasil (.treehouses is only the Rut-era term). Same bleed appears in lore §V's Þjazi entry. Worth a name pass or an explicit note on what's being adopted vs. renamed.
 Minor: Askr's accent #34d399 is --ymir-ok. Fine in chrome, but in the fleet graph where house seals and status rings co-occur they'll read as the same signal. Nudge the green or accept it knowingly.
 Ready-to-execute next steps (declared in the docs, not built yet)
@@ -1134,7 +1134,7 @@ Copy
 /* realm tints — structural only (design.md P5) */
 .shell[data-realm="way-of"]{--realm:#c9973f}
 .shell[data-realm="zerwiz"]{--realm:#96a0a8}
-.shell[data-realm="craig"]{--realm:#f59e0b}
+.shell[data-realm="acme"]{--realm:#f59e0b}
 
 /* ============ base ============ */
 *{box-sizing:border-box;margin:0;padding:0}

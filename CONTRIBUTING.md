@@ -64,7 +64,7 @@ The Allfather's hall has more than one set of hands. Current
 contributors who may access the private repo and YMIR_HOME data:
 
 - **zerwiz** — the Allfather, primary operator
-- **craig** — member contributor
+- **a member contributor** — a collaborator the Allfather has invited
 
 Members with private-data access must keep realm boundaries
 sacred and never share another operator's secrets, tokens, or

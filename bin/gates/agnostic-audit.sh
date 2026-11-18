@@ -41,14 +41,25 @@
 #     `inherited` and never refuses the push — a gate that refuses every push over history it did not
 #     write is a gate the house learns to walk around (plan 243 §3, part D).
 #
+# THE FINDINGS A PERSON HAS ALREADY JUDGED SAFE (2026-11-18). Every scanner has false positives — a
+# detector that must SPELL a private address to recognise one, a template whose invented names are the
+# point, a code identifier whose camel-case happens to spell a name (a conjunction plus a noun).
+# Those are written down, with their reason, in the home's allow file (`hodd/config/private-scan-allow.txt`)
+# — one regex per line, anchored on the path — and are then reported as ALLOWED: still counted, still
+# printed, never silent (that file is the record of a decision, not a mute). Until this version only the
+# sweep's own regex rules consulted it; the audit's findings ignored it, so the same documented
+# false positive alarmed twice a day for ever.
+#
 # Usage:
-#   agnostic-audit.sh [tree] [--ref REF] [--root DIR] [--deny FILE] [--quiet]
-#   agnostic-audit.sh check [FILE...] [--base REF] [--root DIR] [--deny FILE]
+#   agnostic-audit.sh [tree] [--ref REF] [--root DIR] [--deny FILE] [--allow FILE] [--quiet]
+#   agnostic-audit.sh check [FILE...] [--base REF] [--root DIR] [--deny FILE] [--allow FILE]
 #   agnostic-audit.sh --list
+#   agnostic-audit.sh --paths-only          one `path:line` per finding, nothing else (a job reads this)
 #
 # Environment (Rule 07 — one documented default each):
 #   YMIR_HOME              resolved through bin/vault/hoard-lib.sh when unset
 #   YMIR_DENY_LIST         the list (default <home>/hodd/identity/public-deny.txt)
+#   YMIR_AUDIT_ALLOW       the judged-safe list (default <home>/hodd/config/private-scan-allow.txt)
 #   YMIR_AUDIT_BASE        the base the ward diffs from (default origin/main, then main)
 #   YMIR_AUDIT_MAX_REPORT  findings printed before "… and N more" (default 200)
 #
@@ -78,9 +89,10 @@ HOME_DIR=""
 [ -n "${YMIR_HOME:-}" ] && HOME_DIR="$YMIR_HOME"
 if [ -z "$HOME_DIR" ] && declare -f ymir_home_root >/dev/null 2>&1; then ymir_home_root HOME_DIR 2>/dev/null || true; fi
 DENY_FILE="${YMIR_DENY_LIST:-${HOME_DIR:+$HOME_DIR/hodd/identity/public-deny.txt}}"
+ALLOW_FILE="${YMIR_AUDIT_ALLOW:-${HOME_DIR:+$HOME_DIR/hodd/config/private-scan-allow.txt}}"
 BASE_REF="${YMIR_AUDIT_BASE:-}"
 MAX_REPORT="${YMIR_AUDIT_MAX_REPORT:-200}"
-REF=""; MODE="tree"; QUIET=0
+REF=""; MODE="tree"; QUIET=0; PATHS_ONLY=0
 SCOPE=()
 
 usage() { sed -n '2,57p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
@@ -96,6 +108,9 @@ while [ $# -gt 0 ]; do
     --root=*) ROOT="${1#*=}"; shift ;;
     --deny) DENY_FILE="${2:?--deny needs a file}"; shift 2 ;;
     --deny=*) DENY_FILE="${1#*=}"; shift ;;
+    --allow) ALLOW_FILE="${2:?--allow needs a file}"; shift 2 ;;
+    --allow=*) ALLOW_FILE="${1#*=}"; shift ;;
+    --paths-only) PATHS_ONLY=1; shift ;;
     --base) BASE_REF="${2:?--base needs a ref}"; shift 2 ;;
     --base=*) BASE_REF="${1#*=}"; shift ;;
     --quiet) QUIET=1; shift ;;
@@ -152,6 +167,28 @@ if [ -n "$DENY_FILE" ] && [ -r "$DENY_FILE" ]; then
 fi
 
 join_alt() { local IFS='|'; printf '%s' "$*"; }
+
+# ── the allow file: the findings a person has already judged safe ───────────────────────────────
+# One regex per line, matched against the finding's `path:line`. Blank and `#` lines are ignored, so
+# every rule can carry its reason beside it. Missing is a clean skip that says so — never a silent one.
+ALLOW_STATE="absent"
+declare -a ALLOW_RULES=()
+if [ -n "$ALLOW_FILE" ] && [ -r "$ALLOW_FILE" ]; then
+  ALLOW_STATE="loaded"
+  while IFS= read -r line || [ -n "$line" ]; do
+    line="${line%$'\r'}"
+    case "$line" in ''|'#'*) continue ;; esac
+    ALLOW_RULES+=("$line")
+  done <"$ALLOW_FILE"
+fi
+allow_reason() {  # <path:line> — the position of the rule that lets it pass, or nothing
+  local where="$1" i=0
+  while [ "$i" -lt "${#ALLOW_RULES[@]}" ]; do
+    i=$((i + 1))
+    printf '%s' "$where" | grep -qE -- "${ALLOW_RULES[$((i - 1))]}" 2>/dev/null && { printf '%s' "$i"; return 0; }
+  done
+  return 1
+}
 
 # ── the classes ─────────────────────────────────────────────────────────────────────────────────
 NAMES_ERE=""; HOSTS_ERE=""; DOMS_ERE=""; ALL_ERE=""
@@ -281,11 +318,20 @@ if [ "$MODE" = "check" ]; then
 fi
 
 # ── the report: for a person, then one row for a machine ────────────────────────────────────────
-FINDINGS=0; NEW=0; INHERITED=0
+FINDINGS=0; NEW=0; INHERITED=0; ALLOWED=0
 : >"$WORK/report"
+: >"$WORK/allowed"
 declare -A FILE_HITS=()
 while IFS=$'\t' read -r p ln class text; do
   [ -n "$p" ] || continue
+  # A recorded reason is not a mute: the finding moves to the allowed block, counted and printed.
+  rule=""
+  if [ "${#ALLOW_RULES[@]}" -gt 0 ] && rule="$(allow_reason "$p:$ln")"; then
+    ALLOWED=$((ALLOWED + 1))
+    [ "$PATHS_ONLY" = 1 ] && continue
+    printf '%s:%s\trule %s\n' "$p" "$ln" "$rule" >>"$WORK/allowed"
+    continue
+  fi
   FINDINGS=$((FINDINGS + 1))
   FILE_HITS["$p"]=1
   tag=""
@@ -313,7 +359,19 @@ done <"$WORK/unique"
 
 FILES_HIT="${#FILE_HITS[@]}"
 
-if [ "$QUIET" = 0 ]; then
+# ── a job's face: one path per finding, nothing to parse (2026-11-18) ─────────────────────────
+# The twice-daily sweep folds these rows into its queue. It used to parse the prose below, which is why
+# a newly printed block (the allowed ones) would have been read as findings; a machine reads this face.
+if [ "$PATHS_ONLY" = 1 ]; then
+  if [ "$MODE" = "check" ]; then
+    awk -F'\t' '$3 !~ /inherited/ {print $1}' "$WORK/report"
+  else
+    cut -f1 "$WORK/report"
+  fi
+fi
+
+# ── the report: for a person, then one row for a machine ────────────────────────────────────────
+if [ "$QUIET" = 0 ] && [ "$PATHS_ONLY" = 0 ]; then
   printf 'agnostic-audit — the public repository, judged agnostic (RULES/04 · plan 287)\n\n'
   if [ "$MODE" = "check" ]; then
     printf 'scope: what this push ADDS in %s file(s), against %s\n' "${#SCOPE[@]}" \
@@ -351,20 +409,31 @@ if [ "$QUIET" = 0 ]; then
     printf '      (Ada, example.org, host-a); a note names a ROLE, not a machine; whatever is the\n'
     printf '      operator'"'"'s own life or tooling lives in the home, never here (RULES/04, RULES/25).\n'
   fi
+  # ALLOWED — a finding a person already judged safe, still printed and still counted (never a mute).
+  if [ "$ALLOWED" -gt 0 ]; then
+    printf '\nallowed: %s finding(s) match a recorded reason in %s\n' "$ALLOWED" "$(basename "$ALLOW_FILE")"
+    shown=0
+    while IFS=$'\t' read -r where why; do
+      [ -n "$where" ] || continue
+      [ "$shown" -ge 50 ] && { printf '  … and %s more\n' "$((ALLOWED - shown))"; break; }
+      printf '  %-58s %s\n' "$where" "$why"
+      shown=$((shown + 1))
+    done <"$WORK/allowed"
+  fi
   printf '\n'
 fi
 
 # One machine row, last, so a job or a page reads the verdict without parsing prose.
 if [ "$MODE" = "check" ]; then
   verdict=CLEAN; [ "$NEW" -gt 0 ] && verdict=FAIL
-  printf 'agnostic_audit[1]{scope,findings,files,entries,new,inherited,verdict}:\n  "%s","%s","%s","%s","%s","%s","%s"\n' \
-    "this push" "$FINDINGS" "${#SCOPE[@]}" "$ENTRIES" "$NEW" "$INHERITED" "$verdict"
+  printf 'agnostic_audit[1]{scope,findings,files,entries,new,inherited,allowed,verdict}:\n  "%s","%s","%s","%s","%s","%s","%s","%s"\n' \
+    "this push" "$FINDINGS" "${#SCOPE[@]}" "$ENTRIES" "$NEW" "$INHERITED" "$ALLOWED" "$verdict"
   [ "$NEW" -gt 0 ] || exit 0
   printf 'agnostic-audit: %s new finding(s) — what this push would publish belongs in the home (RULES/04)\n' "$NEW" >&2
 else
   verdict=CLEAN; [ "$FINDINGS" -gt 0 ] && verdict=FAIL
-  printf 'agnostic_audit[1]{scope,findings,files,entries,verdict}:\n  "%s","%s","%s","%s","%s"\n' \
-    "$([ -n "$REF" ] && printf '%s' "$REF" || printf 'the tree')" "$FINDINGS" "$FILES_HIT" "$ENTRIES" "$verdict"
+  printf 'agnostic_audit[1]{scope,findings,files,entries,allowed,verdict}:\n  "%s","%s","%s","%s","%s","%s"\n' \
+    "$([ -n "$REF" ] && printf '%s' "$REF" || printf 'the tree')" "$FINDINGS" "$FILES_HIT" "$ENTRIES" "$ALLOWED" "$verdict"
   [ "$FINDINGS" -gt 0 ] || exit 0
   printf 'agnostic-audit: %s finding(s) — the public tree carries what belongs in the home (RULES/04)\n' "$FINDINGS" >&2
 fi

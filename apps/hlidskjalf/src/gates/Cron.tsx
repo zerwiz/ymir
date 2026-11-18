@@ -5,7 +5,7 @@ import { MetricTile } from '../components/MetricTile';
 
 /**
  * Cron — the Nornir schedule, both faces (plan 54, 2026-09-24). The LOCAL seat's
- * loop and the SERVER seats' (whynot · zerwizserver) are read from `/api/cron`
+ * loop and the SERVER seats' are read from `/api/cron`
  * and `/api/cron/seats`; the schedule is the file the loop itself reads
  * (`$YMIR_HOME/config/cron.yaml`), so the picture cannot drift from the runtime.
  * A stopped loop says WHY; a seat that cannot be reached says so. Read-only.
@@ -155,7 +155,7 @@ export function Cron() {
             <span className="glyph" aria-hidden="true">ᚨ</span>
             Servers · the fleet's crons
           </div>
-          <span className="mono dim" style={{ fontSize: 10 }}>live over the ssh ring · whynot · zerwizserver</span>
+          <span className="mono dim" style={{ fontSize: 10 }}>live over the ssh ring · each seat answers for itself</span>
         </div>
         <div className="panel-body flush">
           <table className="data-table">

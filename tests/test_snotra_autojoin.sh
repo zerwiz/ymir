@@ -18,7 +18,7 @@ cat > "$TMP/events.json" <<'JSON'
  {"id":"m3","summary":"No link","start":"2026-10-20T12:00:00+03:00","end":"2026-10-20T12:30:00+03:00","status":"confirmed","busy":true,"workspace":"work"},
  {"id":"m4","summary":"Dentist","start":"2026-10-20T13:00:00+03:00","end":"2026-10-20T13:30:00+03:00","status":"confirmed","busy":true,"conference_url":"https://meet.google.com/y","workspace":"personal"},
  {"id":"m5","summary":"Private thing","start":"2026-10-20T14:00:00+03:00","end":"2026-10-20T14:30:00+03:00","status":"confirmed","busy":true,"visibility":"private","conference_url":"https://meet.google.com/z","workspace":"work"},
- {"id":"m6","summary":"1:1 with Craig","start":"2026-10-20T15:00:00+03:00","end":"2026-10-20T15:30:00+03:00","status":"confirmed","busy":true,"conference_url":"https://meet.google.com/b","workspace":"work"},
+ {"id":"m6","summary":"1:1 with a colleague","start":"2026-10-20T15:00:00+03:00","end":"2026-10-20T15:30:00+03:00","status":"confirmed","busy":true,"conference_url":"https://meet.google.com/b","workspace":"work"},
  {"id":"m7","summary":"Patent counsel","start":"2026-10-20T16:00:00+03:00","end":"2026-10-20T17:00:00+03:00","status":"confirmed","busy":true,"conference_url":"https://meet.google.com/c","workspace":"work","classification":"restricted"},
  {"id":"m8","summary":"All day","start":"2026-10-20","end":null,"status":"confirmed","busy":true,"all_day":true,"conference_url":"https://meet.google.com/d","workspace":"work"},
  {"id":"m9","summary":"Ping room","start":"2026-10-20T10:30:00+03:00","end":"2026-10-20T11:00:00+03:00","status":"confirmed","busy":true,"conference_url":"https://ping.zerwiz.org/room","workspace":"work"},

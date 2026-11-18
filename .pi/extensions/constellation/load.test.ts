@@ -119,7 +119,7 @@ test("with no registry configured, list and ask SKIP loudly rather than reportin
     assert.match(listed.content[0].text, /no registry configured/);
     assert.doesNotMatch(listed.content[0].text, /0 peers found/);
 
-    const asked = await ask.execute("t2", { peer: "heart-zerwizserver", skill: "well-recall" });
+    const asked = await ask.execute("t2", { peer: "heart-a", skill: "well-recall" });
     assert.equal(asked.isError, true);
     assert.match(asked.content[0].text, /constellation-skip/);
   } finally {
