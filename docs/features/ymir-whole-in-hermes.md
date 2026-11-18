@@ -59,3 +59,7 @@ The waiter is a transient systemd user unit. It is not a child of your session, 
 - **`doctor` shows `digest` or `cron` red.** The pin is older than this code. Build and flip a release, then run `ymir hermes seat` again.
 - **`seat --check` says `drift`.** Run `ymir hermes seat --dry-run` to see the change, then run it without the flag.
 - **The waiter never delivers.** Read its journal. A `paused` line means the session holds a lost turn; recover it in Hermes. A `busy` line clears once the session's current turn ends.
+
+## CHANGE LOG
+
+- **2026-11-18** — Opened with plan 317 slices 1–9: the seat corrects what it owns, `ymir doctor hermes`, no swallowed errors, and wait-worker wakes the session as a turn.
