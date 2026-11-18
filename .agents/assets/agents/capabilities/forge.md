@@ -8,8 +8,8 @@
 ## CHANGE LOG
 
 - **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
-| finding-log.sh | (no header line) | tested | keep (a human or a cron row must run it) |
-| finding-tally.sh | (no header line) | tested | keep (a human or a cron row must run it) |
+| finding-log.sh | The home is RESOLVED, never assumed (the defaults guard's rule): the one | tested | keep (a human or a cron row must run it) |
+| finding-tally.sh | The home is RESOLVED, never assumed (the defaults guard's rule): the one | tested | keep (a human or a cron row must run it) |
 | gather-notice.sh | gather-notice.sh — when the LAST errand of a batch finishes, the helm  | tested+named | keep (a human or a cron row must run it) |
 | gather.sh | gather.sh — gather a batch of errand branches into ONE push and ONE PR | tested+named | keep (a human or a cron row must run it) |
 | github-deploy.sh | github-deploy.sh — zero-trust deploys (W0035). Sync secrets from the l | tested+named | keep (a human or a cron row must run it) |

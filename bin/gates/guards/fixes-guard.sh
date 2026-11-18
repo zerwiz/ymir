@@ -146,6 +146,10 @@ path_component() {  # <path> -> the component it belongs to, or empty
     tools/mcp-gateway/*|bin/bridge/mcp-gateway.sh|bin/records/journal-*.sh) echo runtime ;;
     bin/bridge/a2a-mcp.sh|bin/bridge/ratatoskr.sh) echo runtime ;;
     bin/engine/ymir-install.sh|bin/agents/groa-update.sh|bin/seat/valknut-load.sh|bin/engine/ymir-migrate.sh) echo install ;;
+    # The shipped deployment layer (Quadlet/Compose/Containerfile). Before this row `deploy/*`
+    # mapped to NO component, so a correct install note could never cover it — the same defect the
+    # forge, ward and bin/skuld rows fixed (found 2026-11-16 while masking the vault in the Quadlet).
+    deploy/*|deploy/**) echo install ;;
     .pi/*|.agents/skills/*|bin/agents/skill-find.sh|bin/gates/fixes.sh|bin/gates/guards/fixes-guard.sh) echo agents ;;
     bin/gates/agnostic-audit.sh|bin/time/nornir-job-private-scan.sh|bin/time/nornir-job-agnostic-audit.sh|hodd/identity/public-deny.txt.example|.agents/home-contract.yaml) echo gate ;;
     bin/gates/capabilities.sh|bin/gates/inventory.sh|bin/gates/registers.sh|bin/gates/registers-*|bin/gates/queue.sh|bin/gates/ci-verify.sh|bin/gates/checks.d/*|bin/gates/checks/*|bin/gates/guards.sh|bin/gates/guards/*|bin/gates/tests/*|bin/no-delete-guard.sh) echo gate ;;
@@ -177,6 +181,10 @@ path_component() {  # <path> -> the component it belongs to, or empty
     # NO component, so a correct ward note could never cover a ward path — the same defect
     # the forge and bin/skuld rows above fixed (found 2026-11-09 while shipping the switch).
     bin/ward/*|.agents/tests/garmr.test.sh) echo ward ;;
+    # The dispatcher: the door that turns the queues into his list, and the job on its timer. It is
+    # its own component from 2026-11-16 (plan 304 §4.3) — before this row every path it owns mapped
+    # to NO component, so a correct dispatch note covered nothing.
+    bin/dispatch/*|bin/time/nornir-job-dispatch.sh) echo dispatch ;;
   esac
 }
 covered=0

@@ -5,7 +5,7 @@ UI, and agents obey it, and a change that contradicts a rule must first change
 the rule (append-only; never silently rewritten).
 
 ```
-rules_index[52]{file,subject}:
+rules_index[53]{file,subject}:
   "01-domains.md","domains (Greinar) · houses · Eindri"
   "02-agents.md","agents: home, kinds, profile contract, no mock"
   "03-houses.md","houses = companies; ownership, records, boundaries"
@@ -37,6 +37,7 @@ rules_index[52]{file,subject}:
   "43-two-tongues.md","two tongues: English for the work, Old Norse for the names — nothing else; a foreign script or letter is refused, a foreign prose is caught by its function words, and the four exceptions (fixture · detector · quotation · table) are declared with a reason"
   "45-start-on-the-latest.md","start on the latest: a base is fetched, not remembered — reading is free, taking a number or a branch point is not, a stale base refuses with its repair, offline is a stated skip"
   "48-a-repository-that-is-not-ours.md","a repository that is not ours: the owner comes from the registry, their law wins, the words are their reader's and never the hall's, our discipline travels and our identity does not, the stack is probed not assumed, an install is proved by one real change, their data stays theirs, the merge is sealed by their door"
+  "57-a-broken-function-is-reported.md","a broken function is reported in the same breath: the function, the command that shows it broken and its output; a workaround is a report with a debt; a broken function that carried something is an incident"
   "56-no-message-until-the-receiver-speaks.md","no message is delivered until the receiver speaks: a write is not a delivery, only the herdr pane and the Gna arm are proven, a new channel is guilty until it answers, and no agent assumes another read it"
   "README.md","this index"
   "37-a-surface-may-not-show-what-it-did-not-receive.md","a surface may not show what it did not receive"
@@ -121,6 +122,7 @@ Keep each rule short and unambiguous; reference it from code where it bites.
 
 - **48 — a repository that is not ours** · `RULES/48-a-repository-that-is-not-ours.md`
 - **56 — no message until the receiver speaks** · `RULES/56-no-message-until-the-receiver-speaks.md`
+- **57 — a broken function is reported** · `RULES/57-a-broken-function-is-reported.md`
 | 49 | `49-workers-are-eindri.md` | Workers are Eindri; no harness spawns its own subagents |
 | 50 | `50-the-home-is-pulled-before-and-pushed-after.md` | 50 — The home is pulled before and pushed after |
 | 51 | `51-ymir-is-a-program.md` | 51 — Ymir is a program; it runs globally, in the user's root agents |
@@ -129,3 +131,8 @@ Keep each rule short and unambiguous; reference it from code where it bites.
 | 54 | `54-no-blue-no-purple.md` | 54 — No blue and no purple |
 | 55 | `55-no-agent-runs-unowned.md` | 55 — No agent runs unowned |
 | 56 | `56-no-message-until-the-receiver-speaks.md` | No message is delivered until the receiver speaks |
+| 57 | `57-a-broken-function-is-reported.md` | A broken function is reported in the same breath |
+
+## CHANGE LOG
+
+- 2026-11-18 — review-mend: added missing heading for #817

@@ -82,6 +82,61 @@ warning, names the draft and its age — and the job **exits 1** instead of gree
 > to appear, or one that appears with everything looking fine, are both worse than one that says out loud which
 > letter is late.
 
+## The weekly sweep — every draft, the trend, one line with buttons
+
+The 07:00 brief answers one question: *is anything too old*. That is not the same question as *what
+did I start and not finish*, and it is asked from inside a job that can itself be dead. So Monday
+morning has its own sweep, at 09:15, on the machine that can read the mailbox:
+
+```bash
+bin/mail/draft-age.sh --weekly       # the week: every draft, the trend, one line to the phone
+```
+
+**It lists every draft, aged or not.** A draft one day old is correct on Tuesday and is the week's
+unfinished correspondence by Friday. The brief lists only the offenders; the sweep lists the week,
+oldest first, numbered, each with its age.
+
+**It keeps the trend.** Every run appends one row to `hodd/state/draft-trend.jsonl` — `{at, drafts,
+aged, oldest_days}`. Nothing is ever rewritten, so a habit is visible across weeks in a way a single
+morning can never show.
+
+**It sends one line, with buttons.** The line names every draft and goes to the phone through
+`bin/notify/send.sh`, carrying a **send · edit · discard** button per draft. The buttons are the
+house's own grammar (`bin/notify/telegram-buttons.sh`) rendered as the Bot API's `reply_markup`,
+because a cron line has no session behind it to parse a wrapper. A draft's prompt reads, for
+example, *Send draft 1, "The letter I never sent", now.*
+
+**A quiet week says nothing at all.** No draft means no message — only one no-op Rune saying the
+sweep looked. A nag gets muted, and a muted door is a dead one.
+
+```mermaid
+flowchart TD
+    row[Nornir · @heart Mon 09:15] --> door[bin/mail/draft-age.sh --weekly]
+    door --> drafts[(Gmail drafts)]
+    door -->|every run| trend[(hodd/state/draft-trend.jsonl<br/>append-only)]
+    door -->|a week with no drafts| rune[one no-op Rune · nothing on the phone]
+    door -->|a week with any draft| line[ONE line via bin/notify/send.sh]
+    line -->|send / edit / discard per draft| phone[the phone]
+```
+
+### What it will not do
+
+A skip and an unread mailbox are **not** a quiet week: with no grant the door prints `weekly: SKIP`
+and writes **no** trend row, and an unreadable mailbox stops the sweep with `UNABLE` (exit 3). Only a
+week it really read, and really found empty, is silent.
+
+The trend lives in your **home**, never in this repository — `hodd/state/draft-trend.jsonl`.
+
+The row is in `config/cron.yaml.example` and is seated into an existing home by migration
+`0025-the-weekly-draft-sweep`:
+
+```
+@heart Mon 09:15 bin/mail/draft-age.sh --weekly
+```
+
+`Mon` before the time is the **day gate** — Nornir reads it, and a day the scheduler does not
+understand (`Funday`) is named in `state/.cron-invalid` instead of being a row that never fires.
+
 ## Limits
 
 - It reads **drafts only** — a letter sent but unopened is the thread door's work (`bin/mail/threads.sh`).
@@ -101,4 +156,6 @@ three that matter: no drafts, a fresh draft, an aged draft failing.
 
 ## CHANGE LOG
 
+- **2026-11-17** — The weekly sweep: every draft oldest first, an append-only trend, one phone line
+  with a send/edit/discard button per draft, and silence (plus a no-op Rune) on a week with none.
 - **2026-11-17** — Opened: the door that fails a day when a letter has sat unwritten past its limit.

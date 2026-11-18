@@ -21,28 +21,35 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[60]{file,does,kind,verdict,disposition,callers,lines}:
+bin[70]{file,does,kind,verdict,disposition,callers,lines}:
+  "agent-ready.py","'''agent-ready.py — is an agent READY for a turn, in one vocabulary, for both backends.","tool","wired","keep",3,375
+  "agent-ready.sh","agent-ready.sh — one answer per target: ready · working · blocked: <why> · dead.","tool","wired","keep",3,33
   "agent-state-lib.sh","agent-state-lib.sh — herdr's own word on where an agent stands, and whether it is READY for input.","lib","wired","keep",2,59
   "arm-talk.sh","arm-talk.sh — the heart speaks into every seat's pane, over that seat's own road (plan 234 P1).","tool","wired","keep",1,193
   "armpin.sh","armpin.sh — does every surface that SUPERVISES run the pin, and is the pin current?","tool","wired","keep",1,102
+  "backend.sh","backend.sh — the six verbs, for whichever backend a target names.","tool","tested","migrate → src/ymir_runtime/backend.py",28,27
+  "base.py","'''The six verbs a backend answers, and the one resolver that picks a backend.","tool","wired","keep",0,57
   "broken.sh","broken.sh — the register of broken things (RULES/50).","tool","tested","keep",2,165
   "claims.sh","claims.sh — a seat declares what it is building (plan number, branch, errand id, host).","tool","wired","keep",4,95
   "clocks.sh","bin/seat/clocks.sh — seat the three loops: plan-watch, ship-watch, update-loop.","tool","wired","keep",0,116
   "codex-plugin-install.mjs","// Valknut's Codex door.","data","wired","keep",3,125
   "context.sh","context.sh — what the agent's context ACTUALLY holds, right now.","tool","tested","keep",3,163
   "core-four.sh","core-four.sh — the four dials that decide an agent's outcome, in ONE read.","tool","wired","keep",4,204
+  "door.py","'''door.py — the six verbs, dispatched through the one resolver.","tool","wired","keep",4,143
   "fleet-plans.sh","fleet-plans.sh — read every LIVE host's claims over the tailnet; merge; report collisions + dark hosts.","tool","wired","keep",0,92
   "harness-contract-install.sh","harness-contract-install.sh — every harness reads ONE contract, and an update keeps it true.","tool","wired","keep",1,81
   "harness-extensions-install.sh","harness-extensions-install.sh — every harness gets the house's extensions and packages, on install AND on update.","tool","wired","keep",8,441
   "helm-identity.sh","helm-identity.sh — WHO holds this helm, WHAT it is for, WHICH machine and fleet it","tool","wired","keep",6,145
   "herdr-agents.py","'''herdr-agents.py — list the agents standing in this herdr session, as TOON.","tool","wired","keep",13,259
-  "herdr-editor.py","'''herdr-editor.py — read the INPUT BOX of an agent's pane, and say what is in it.","tool","wired","keep",2,133
+  "herdr-editor.py","'''herdr-editor.py — read the INPUT BOX of an agent's pane, and say what is in it.","tool","wired","keep",3,133
   "herdr-ensure.sh","herdr-ensure.sh — Þjazi: guarantee the terminal backend Ymir needs.","tool","wired","keep",4,106
   "herdr-run.sh","herdr-run.sh — raise an Eindri in herdr, by the grain that fits the errand.","tool","tested","keep",19,685
+  "herdr.py","'''herdr as a backend — the first one, and the shape the second is measured against.'''","tool","wired","keep",0,111
   "hermes-seat.sh","hermes-seat.sh — seat Ymir's tools into Hermes, the same packets the other harnesses get.","tool","wired","keep",2,91
   "hermes-session-hook.sh","hermes-session-hook.sh — Hermes' session side of the Gná arm: the Sága digest, and its delivery.","tool","wired","keep",1,134
   "hermes-soul.md.in","<!-- ymir-seat:begin - written by bin/seat/seat-surface.sh on install and every update -->","data","wired","keep",1,40
   "hermes-telegram.sh","hermes-telegram.sh — seat THIS machine's Telegram bot into the Hermes gateway (the machine agent's ear).","tool","wired","keep",2,150
+  "hermes.py","'''Hermes as a backend — the same six verbs, so a session is reached like a pane.","tool","wired","keep",0,206
   "lock-ask.sh","lock-ask.sh — a read-only agent asks the LOCK OWNER for work, and the owner answers.","tool","wired","keep",4,376
   "lock-hold.sh","lock-hold.sh — a PRIMARY THAT DOES NOT EXIT: hold this machine's session lock, for the seat's life.","tool","wired","keep",0,53
   "opencode-launcher.sh","opencode-launcher.sh — the ONE launch door for an OpenCode seat, as pi-launcher.sh is pi's.","tool","wired","keep",5,111
@@ -50,6 +57,7 @@ bin[60]{file,does,kind,verdict,disposition,callers,lines}:
   "pi-door.sh","pi-door.sh — the door a SEAT THE OPERATOR STARTS BY HAND passes through.","tool","wired","keep",2,169
   "pi-launcher.sh","pi-launcher.sh — the ONE launcher generator for a pi seat.","tool","tested","keep",3,155
   "rank.sh","rank.sh — ask a jev judge to score items on jev's three categories.","tool","wired","keep",1,122
+  "resolve.py","'''ONE resolver: `herdr:<pane>`, `hermes:<id-or-title>`, or a bare target — and bare is herdr.","tool","wired","migrate → src/ymir_runtime/dispatch/resolve.py",4,55
   "roster.sh","HERE='$(cd -- '$(dirname -- '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",5,120
   "seat-adopt.sh","seat-adopt.sh — a late boot is still a seat.","tool","wired","keep",2,129
   "seat-audit.sh","seat-audit.sh — one line per agent pane: is its work safe, landed, and correct?","tool","wired","keep",4,403
@@ -61,9 +69,11 @@ bin[60]{file,does,kind,verdict,disposition,callers,lines}:
   "seat-wire.sh","seat-wire.sh — one seat speaks into another seat's live pane, and says who it is.","tool","wired","keep",2,393
   "seats.sh","seats.sh — where the work actually is: panes in either backend, and the dead shells named.","tool","wired","keep",6,78
   "sessrumnir-wire.sh","sessrumnir-wire.sh — the seat wire: talk to a Sessrúmnir seat, and read its last answer.","tool","wired","keep",1,224
+  "test_agent_ready.sh","test_agent_ready.sh — the ready-check answers in ONE vocabulary, for both backends.","tool","wired","keep",0,171
   "test_agent_state.sh","test_agent_state.sh — the launcher reads herdr's own word before and after it speaks (plan 291 row 5).","tool","wired","keep",0,71
   "test_arm_pin.sh","test_arm_pin.sh — plan 257 H6: the helm runs the PINNED code, never a working tree.","tool","wired","keep",0,65
   "test_arm_pin_board.sh","test_arm_pin_board.sh — plan 257 H8: the pin's age and reach as one fact (bin/pi/arm-pin.sh).","tool","wired","keep",0,66
+  "test_backend_door.sh","test_backend_door.sh — six verbs, one resolver, and a recovery that shows before it discards.","tool","wired","keep",0,138
   "test_claude_global_arm_opt_in.sh","test_claude_global_arm_opt_in.sh — the global Claude arm is seated only when the operator asks (2026-11-12).","tool","wired","keep",0,49
   "test_core_four_pending_factory.sh","The ward for the three near-loop doors: core four, pending, and the factory preset.","tool","wired","keep",0,26
   "test_doors_fleet_path.sh","The ward for plan 229 — the near loop on a machine that is not this shell.","tool","wired","keep",0,85
@@ -79,10 +89,10 @@ bin[60]{file,does,kind,verdict,disposition,callers,lines}:
   "test_seat_reap_tabs.sh","The ward for 'the reaper sees hand-seated tabs, not only `eindri-*` workspaces'","tool","wired","keep",0,189
   "valknut-load.sh","valknut-load.sh — Valknut, the knot that binds the repo distro into each tool's","tool","tested","keep",11,815
   "verify-seat.sh","verify-seat.sh — is this seat actually whole?","tool","tested","keep",3,177
-  "who.sh","who.sh — WHO IS WHERE: every agent in a pane, its project, its errand, and who holds the lock.","tool","wired","keep",3,141
+  "who.sh","who.sh — WHO IS WHERE: every agent in a pane, its project, its errand, and who holds the lock.","tool","wired","keep",4,141
   "whose-tree.sh","whose-tree.sh — whose code am I standing in?","tool","wired","keep",0,118
   "ymir-mcp.py","'''ymir-mcp.py (seat copy) — a thin pointer, kept because files are moved, never deleted (Rule 11).","tool","tested","keep",7,13
 
-**Tally.** verdict: wired=51, tested=9
+**Tally.** verdict: wired=60, tested=10
 
-**Tally.** disposition: keep=60
+**Tally.** disposition: keep=68, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/dispatch/resolve.py=1
