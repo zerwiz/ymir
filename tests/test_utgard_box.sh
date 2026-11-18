@@ -111,14 +111,16 @@ fi
 # law 1 — no host credentials
 home="$("$ENGINE" exec "${PREFIX}-b1" bash -lc 'printf %s "$HOME"' 2>/dev/null)"
 [ "$home" = "/home/agent" ] && ok "HOME is the box's own ($home)" || bad "HOME is the box's own (got '$home')"
-if "$ENGINE" exec "${PREFIX}-b1" bash -lc 'ls /home/heimdall 2>/dev/null | head -1' 2>/dev/null | grep -q .; then
+# The host's own home is asked for by name, not by a machine's name: a literal here named this
+# operator's machine in a public test (Rule 04) and was the same path on nobody else's box.
+if "$ENGINE" exec "${PREFIX}-b1" bash -lc "ls $HOME 2>/dev/null | head -1" 2>/dev/null | grep -q .; then
   bad "the operator's home is NOT visible"
 else
   ok "the operator's home is NOT visible"
 fi
 mounts="$("$ENGINE" inspect --format '{{range .Mounts}}{{.Source}}:{{.Destination}} {{end}}' "${PREFIX}-b1" 2>/dev/null)"
 case "$mounts" in
-  *"/home/heimdall"*|*"ymirhome"*) bad "no host path is mounted (got: $mounts)" ;;
+  *"$HOME"*|*"ymirhome"*) bad "no host path is mounted (got: $mounts)" ;;
   *) ok "no host path is mounted" ;;
 esac
 key="$("$ENGINE" exec "${PREFIX}-b1" bash -lc 'printf %s "$OPENAI_API_KEY"' 2>/dev/null)"

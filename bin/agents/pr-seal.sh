@@ -11,7 +11,7 @@
 #   1 whose PR     the SEAT'S OWN — opened by this seat or an Eindri it dispatched.
 #                  Another hand's PR is NEVER merged here.
 #   2 what state   CI green, and no conflicts
-#   3 who          the seat's agent (Sindri on nidavellir, Hœnir on heimdall) —
+#   3 who          the seat's own agent (the primary its roster names) —
 #                  never a worker, never a timer alone: the arm wakes the seat
 #   4 one open PR  this seat has exactly ONE open PR, and it is this one
 #   5 the record   one Runes entry naming PR, head and merge commit

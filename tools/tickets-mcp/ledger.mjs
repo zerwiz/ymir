@@ -38,9 +38,16 @@ function ledgerShelves() {  // every `plans` shelf in the home; nobody's list ha
     }
   };
   walk(path.join(LEDGER_HOME, "svartalfaheim"), 0);
-  for (const sub of ["plans", "plans/fleet", "plans/heimdall", "plans/nidavellir", "plans/termux"]) {
-    const p = path.join(LEDGER_HOME, "hodd", sub);
-    try { if (fs.statSync(p).isDirectory()) out.push(p); } catch {}
+  // The hoard's own plan shelves. They were LISTED here — "plans", "plans/fleet", "plans/<machine>" … — which
+  // named this fleet's shelves inside a public tool and found nothing on anyone else's machine (Rule 04,
+  // Rule 07). Now they are DISCOVERED: the shelf itself, and every sub-shelf under it.
+  const hoddPlans = path.join(LEDGER_HOME, "hodd", "plans");
+  try { if (fs.statSync(hoddPlans).isDirectory()) out.push(hoddPlans); } catch {}
+  let shelves = [];
+  try { shelves = fs.readdirSync(hoddPlans, { withFileTypes: true }); } catch { shelves = []; }
+  for (const e of shelves) {
+    if (!e.isDirectory() || skip.has(e.name)) continue;
+    out.push(path.join(hoddPlans, e.name));
   }
   return out;
 }

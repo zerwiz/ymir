@@ -1266,7 +1266,7 @@ those stay doors.
    Bash does not expand variables inside an argument it was handed, so **that tool had never once
    reached the calendar on any seat** — and nothing noticed, because a broken tool and an absent
    tool look identical from outside.
-2. **Five extensions carried a hardcoded `/home/heimdall/ymir`.** Rule 07, introduced by me. The
+2. **Five extensions carried a hardcoded `/home/<user>/ymir`.** Rule 07, introduced by me. The
    contract now: `YMIR_ROOT`, else the root `bin/seat/valknut-load.sh` records in
    `~/.pi/agent/extensions/.ymir-root` — **the first recorded root that really holds
    `bin/pi/syn-watch-arm.sh`**, else a loud failure naming the fix. Note the pointer lives *inside*

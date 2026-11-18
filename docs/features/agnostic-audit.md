@@ -28,13 +28,22 @@ bin/gates/agnostic-audit.sh                     # the census: every tracked file
 bin/gates/agnostic-audit.sh --ref origin/main   # the same, over a fetched ref (what the clock runs)
 bin/gates/agnostic-audit.sh check FILE...       # the ward: only what a push ADDS
 bin/gates/agnostic-audit.sh --list              # the classes, and how many entries were read
+bin/gates/agnostic-audit.sh --paths-only        # one `path:line` per finding, nothing else (a job reads this)
 ```
 
-The last line of every run is one row a machine can read:
+Every scanner has false positives, so a finding you have looked at and judged safe is **written down**
+in your home, `hodd/config/private-scan-allow.txt` — one regex per line, matched against the finding's
+`path:line`, with the reason on the line above it. A finding a rule matches is printed in a separate
+`allowed:` block and **still counted**: the file is the record of a decision, not a mute. A rule is
+anchored, so it lets that path pass and a real name elsewhere in the same file still fails. `--allow
+FILE` names another file; `YMIR_AUDIT_ALLOW` is the environment spelling of the same default.
+
+The last line of every run is one row a machine can read (`allowed` is how many findings a recorded
+reason cleared):
 
 ```
-agnostic_audit[1]{scope,findings,files,entries,verdict}:
-  "origin/main","468","279","19","FAIL"
+agnostic_audit[1]{scope,findings,files,entries,allowed,verdict}:
+  "origin/main","217","123","19","22","FAIL"
 ```
 
 Exit is `0` when the tree is clean and `1` when it is not, so a cron, a CI job or a push hook can

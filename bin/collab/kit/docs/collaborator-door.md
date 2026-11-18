@@ -64,7 +64,7 @@ curl -s -X POST https://<door-host>/ \
 A token is minted by the house, not by the collaborator:
 
 ```bash
-bin/collab/kit/scripts/collab-connect.sh mint --peer andre --skill well-recall --minutes 60
+bin/collab/kit/scripts/collab-connect.sh mint --peer <peer> --skill well-recall --minutes 60
 ```
 
 ## What the collaborator is told, in one paragraph
