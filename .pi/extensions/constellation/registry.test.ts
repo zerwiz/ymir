@@ -32,7 +32,7 @@ function fixtureRegistry(): string {
   writeFileSync(
     join(dir, "heart.json"),
     JSON.stringify({
-      name: "heart-zerwizserver",
+      name: "heart-a",
       description: "the record heart",
       url: "http://peer.example:8301/",
       version: "1.0.0",
@@ -81,7 +81,7 @@ test("a sound card parses; a card missing skills is invalid with the field named
 
   assert.equal(scan.peers.length, 1);
   const heart = scan.peers[0];
-  assert.equal(heart.card.name, "heart-zerwizserver");
+  assert.equal(heart.card.name, "heart-a");
   assert.equal(heart.endpoint, "http://peer.example:8301/");
   assert.equal(heart.protocol, "a2a/1.0");
   assert.equal(heart.streaming, true);
@@ -111,7 +111,7 @@ test("constellation_ask refuses and names the missing grant", () => {
   const dir = fixtureRegistry();
   const { peers, rejected } = scanRegistryDir(dir);
 
-  const refusal = constellationAsk("heart-zerwizserver", "well-recall", peers, rejected);
+  const refusal = constellationAsk("heart-a", "well-recall", peers, rejected);
   assert.equal(refusal.refused, true);
   assert.match(refusal.text, /REFUSED — no grant/);
   assert.match(refusal.text, /missing grant: skills\[\]/);
@@ -122,7 +122,7 @@ test("constellation_ask refuses and names the missing grant", () => {
   assert.match(refusal.text, /well-recall/);
 
   // An undeclared skill is refused for its own, named reason.
-  const undeclared = constellationAsk("heart-zerwizserver", "not-a-skill", peers, rejected);
+  const undeclared = constellationAsk("heart-a", "not-a-skill", peers, rejected);
   assert.match(undeclared.text, /declares no skill/);
   assert.match(undeclared.text, /the card declares: well-recall/);
 

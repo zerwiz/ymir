@@ -48,7 +48,9 @@ for r in svc.get('hosts_registry',[]):
     f=r.get('folder')
     if f and not os.path.isdir(os.path.join(h,f)): problems.append((r['id'],f'folder missing: {f}'))
 for name,row in fleet.get('hosts',{}).items():
-    if row.get('state')=='up' and not row.get('services') and name=='zerwizserver':
+    # THE HEART IS A ROLE, NOT A NAME (Rule 07, 2026-11-18): this line carried one machine's own
+    # name, so it named this fleet in a public tool and skipped the check on every other operator's.
+    if row.get('state')=='up' and not row.get('services') and 'heart' in (row.get('roles') or []):
         problems.append((name,'heart with no services listed'))
 print(json.dumps(problems))
 PY

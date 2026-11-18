@@ -111,7 +111,7 @@ export function provisionWorkspace(input: {
   domains: string[];
 }, realms: RealmDef[] = DEFAULT_WORKSPACES): Session {
   // One Hlidskjalf (plan 275 item 11): the workspaces are the home's registry and nothing else. A name typed
-  // here is never added as a workspace of its own — that is how a person's name ("Svein") became a tenant row.
+  // here is never added as a workspace of its own — that is how a person's own name became a tenant row.
   // The gate creates the realm on disk; the registry then lists it, and loadRealms() shows it.
   return sessionFor(input.login, realms);
 }

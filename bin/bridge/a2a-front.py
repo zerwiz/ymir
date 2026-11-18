@@ -18,8 +18,8 @@ as one of our own seats, and it is DATA — never the Allfather's word (RULES/39
         --arm-door bin/voice/rodd-arm.sh --state <hoard>/state \
         --listen 127.0.0.1:8401 [--rune …]
 
-    a2a-front.py mint  --key <ed25519.key.pem> --peer andre --skill well-recall \
-        --aud heimdall --minutes 60 [--iss heimdall]
+    a2a-front.py mint  --key <ed25519.key.pem> --peer <peer> --skill well-recall \
+        --aud <house> --minutes 60 [--iss <house>]
 
     a2a-front.py verify --token <jwt> --pub <ed25519.pub.pem> --aud heimdall --skill well-recall
 

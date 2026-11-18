@@ -98,7 +98,7 @@ His question this day: *"what happends if one agent are changing from one branch
 need to run some things in containers or something to make it more stable."*
 
 **The measurement that prompted it.** On this seat, **ten systemd user units execute files from
-`/home/heimdall/ymir`** — the same directory agents check branches out in:
+`/home/<user>/ymir`** — the same directory agents check branches out in:
 
 ```
 units[10]{unit,what}

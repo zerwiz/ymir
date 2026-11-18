@@ -92,7 +92,7 @@ moves, and the Glitnir surface still shows every PR; it simply no longer queues 
 seal[6]{condition,rule,evidence}
   "whose PR","THE SEAT'S OWN — opened by this seat or an Eindri it dispatched. Another hand's PR is NEVER merged by us","the PR body carries `Arm: <seat host>`, or its head is `eindri/<id>` for an errand this seat dispatched (state/<id>.meta)"
   "what state","CI green and no conflicts","every check concluded SUCCESS/NEUTRAL/SKIPPED, and mergeable MERGEABLE with no DIRTY/BEHIND/BLOCKED state"
-  "who merges","the seat's agent — Sindri on nidavellir, Hœnir on heimdall — never a worker, never a timer alone","bin/agents/pr-seal.sh seal <n> is run by the seat; the arm only wakes it"
+  "who merges","the seat's own agent — the primary its roster names — never a worker, never a timer alone","bin/agents/pr-seal.sh seal <n> is run by the seat; the arm only wakes it"
   "when notified","through Gná's arm, as a WAKE line in state/.wake-queue, naming PR, head, checks and the exact merge command","bin/agents/pr-seal.sh watch, one wake per (PR, head sha)"
   "the record","ONE Runes entry per seal naming the PR, its head and its merge commit","bin/records/runes-append.sh — carved by the seal, not remembered afterwards"
   "the brake","state/.seal-hold present means the seat merges NOTHING and says why","checked immediately before the merge, and again at watch"

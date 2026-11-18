@@ -34,15 +34,11 @@ esac; done
 
 [ -d "$REPO/.git" ] || { echo "no Ymir checkout at $REPO" >&2; exit 1; }
 
-# stagger per host so installs never update at the same minute
+# Stagger per host so installs never update at the same minute. The minute is DERIVED from the
+# host's own name (a stable hash, never a table of our machines): a list here named this fleet in a
+# public repository and left every other operator's fleet on the same fallback minute (Rule 07).
 if [ -z "$MINUTE" ]; then
-  case "$(hostname -s)" in
-    heimdall) MINUTE=10 ;;
-    omarchy) MINUTE=14 ;;
-    whynot) MINUTE=18 ;;
-    zerwizserver) MINUTE=22 ;;
-    *) MINUTE=26 ;;
-  esac
+  MINUTE=$(( 10 + ( $(printf '%s' "$(hostname -s)" | cksum | cut -d' ' -f1) % 50 ) ))
 fi
 
 # 1. OpenCode

@@ -131,11 +131,6 @@ a {
   --realm-tint-2: #5f686e;
   --realm-tint-dim: rgba(150, 160, 168, 0.14);
 }
-:root[data-realm='craig'] {
-  --realm-tint: #7d5f2a;
-  --realm-tint-2: #6b6250;
-  --realm-tint-dim: rgba(125, 95, 42, 0.14);
-}
 
 /* --- Utilities ------------------------------------------------ */
 .row {
