@@ -45,6 +45,7 @@ The interface is modeled on Grok Bot. Underneath, every bot is a Hermes agent, s
 | **Connected apps with approvals** | Bots ask for the app they need and you connect it through Composio. Actions that write (send, post, delete) wait for your OK on a card in the chat. |
 | **Model and subscription per bot** | Pick the provider and model in the bot's Engine panel, or sign in to a subscription on the bot's own screen. |
 | **Voice** | Talk to a bot, or dictate into the composer, in the house's own voice: whisper.cpp hears, Rödd's realtime engine thinks, Kokoro speaks. Real work is handed to the same bot, with the same memory and tools. xAI's voice remains as an opt-in road. |
+| **Voice** | Talk to a bot with xAI's realtime voice modes. Real work is handed to the same bot, with the same memory and tools. |
 | **Research on X** | Every bot has an `x_search` tool, backed by xAI. |
 | **Routines, tasks and a Library** | Recurring jobs on a schedule, a task list per bot, and a place where bots save the files they make. |
 
@@ -75,6 +76,7 @@ flowchart LR
   S --> C["Composio<br/>connected apps"]
   S --> V["the house voice<br/>whisper · Rödd's engine · Kokoro"]
   S -.-> X["xAI<br/>X search · voice (opt-in)"]
+  S --> X["xAI<br/>voice · X search"]
 ```
 
 - **One computer, one screen per bot.** All bots live on a single Orgo Linux computer. The first bot uses the computer's main screen; each further bot gets an Orgo screen of its own. Orgo allows four screens per computer, so four bots.
@@ -188,6 +190,11 @@ Voice runs on the house's own parts by default (`BILSKIRNIR_VOICE=house`). Nothi
 **Limits.** The house road speaks English: the ear is `small.en`, so the language list offers English and auto-detect only. A call summary on the house road is a plain line made from the call itself, not a model's summary.
 
 **Test it:** `DB_PATH=/tmp/hv.db COMPOSIO_API_KEY=x ORGO_API_KEY=x SESSION_SECRET=x npx tsx tests/house-voice.mts` proves each part (Kokoro speaks, whisper hears it back, the relay carries frames) and, when the engine is raised, that it accepts the hall's session.
+
+| `ORGO_API_KEY`, `ORGO_COMPUTER_ID` | The computer and its screens |
+| `COMPOSIO_API_KEY` | Connected apps |
+| `XAI_API_KEY` | Voice and `x_search` |
+| `SESSION_SECRET` | Sign-in sessions and the tokens agents use to reach `/mcp` |
 
 ## Models and subscriptions
 

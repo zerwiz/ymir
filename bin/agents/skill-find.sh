@@ -53,6 +53,9 @@ if [ -n "$_gd" ]; then
   [ -n "$_canon" ] && [ -d "$_canon/.agents/skills" ] && { SHIPS="$_canon/.agents/skills"; LOCALS="$_canon/.agents/skills-local"; }
 fi
 PISKILLS="$HOME/.pi/agent/skills"
+# The box shelf (plan 248 P3b): a machine's own skills, moved out of every scanned
+# directory by migration 0022 — the same resolution as bin/agents/skill-index.sh.
+BOXSKILLS="${YMIR_BOX_SKILLS:-${XDG_DATA_HOME:-$HOME/.local/share}/ymir/box-skills}"
 # The home is RESOLVED by the one resolver (bin/vault/hoard-lib.sh); a literal
 # path here would be one machine's layout. A wrong source path is how this file
 # silently scanned the SHIP shelf for months — so the resolver is loaded by ROOT.
@@ -62,6 +65,13 @@ if command -v ymir_home_root >/dev/null 2>&1; then
   ymir_home_root YMIR_HOME
 fi
 HOMESKILLS="${YMIR_HOME:-$ROOT}/.agents/skills"
+# A PINNED runtime wins for the shipped shelf (RULES/02 §7, RULES/51) — the same rule
+# the generator follows, so a path read from the index is anchored where it was walked.
+if [ -r "${YMIR_HOME:-/nonexistent}/config/runtime.env" ]; then
+  _rt="$( . "$YMIR_HOME/config/runtime.env" >/dev/null 2>&1; printf '%s' "${YMIR_RUNTIME_DIR:-}")"
+  [ -n "$_rt" ] && [ -d "$_rt/.agents/skills" ] && SHIPS="$_rt/.agents/skills"
+  unset _rt
+fi
 INDEX="$HOMESKILLS/skills.yaml"
 GEN="$ROOT/bin/agents/skill-index.sh"
 
@@ -98,6 +108,7 @@ index_tsv() {
       ships) label="ships";        root="$SHIPS" ;;
       local) label="LOCAL — this machine only"; root="$LOCALS" ;;
       home)  label="home — your own craft";     root="$HOMESKILLS" ;;
+      box)   label="this box";     root="$BOXSKILLS" ;;
       pi)    label="yours";        root="$PISKILLS" ;;
       *)     label="$shelf";       root="" ;;
     esac
@@ -109,13 +120,14 @@ index_tsv() {
 # A live, recursive walk — the fallback when the index cannot be built.
 # Same generic rule as the generator, so the two never disagree in shape.
 live_tsv() {
-  local shelf id label f pack name desc
-  for shelf in "$SHIPS" "$LOCALS" "$HOMESKILLS" "$PISKILLS"; do
+  local shelf id label f pack name desc fl
+  for shelf in "$SHIPS" "$LOCALS" "$HOMESKILLS" "$BOXSKILLS" "$PISKILLS"; do
     [ -d "$shelf" ] || continue
     case "$shelf" in
       "$SHIPS")   id=ships; label="ships" ;;
       "$LOCALS")  id=local; label="LOCAL — this machine only" ;;
       "$HOMESKILLS") id=home; label="home — your own craft" ;;
+      "$BOXSKILLS")  id=box;  label="this box" ;;
       *)          id=pi;    label="yours" ;;
     esac
     while IFS= read -r f; do
@@ -127,7 +139,8 @@ live_tsv() {
       [ -z "$desc" ] && desc="(no description — unfindable; add description: to the front matter)"
       rel="${f#"$shelf"/}"; pack="${rel%%/*}"
       printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$id" "$label" "$pack" "$name" "$f" "$desc"
-    done < <(find "$shelf" -iname 'SKILL.md' \
+    done < <(case "$shelf" in "$PISKILLS"|"$BOXSKILLS") fl=-L ;; *) fl=-P ;; esac
+             find "$fl" "$shelf" -iname 'SKILL.md' \
                -not -path '*/.git/*' -not -path '*/node_modules/*' \
                -not -path '*/.yggdrasil/*' -not -path '*/dist/*' -not -path '*/build/*' \
                2>/dev/null | LC_ALL=C sort)
@@ -139,9 +152,30 @@ rows() {
   if ensure_index; then index_tsv; else live_tsv; fi
 }
 
+# unfindable <-> NAME every skill with no `description:` in its front matter. A skill a
+# harness cannot describe is a skill no index line and no search can lead to; it is
+# fixed before it ships. Named, not failed: a pre-existing gap must not turn an
+# unrelated gate red, but it must never be silent either.
+name_unfindable() {
+  local n=0 p
+  while IFS=$'\t' read -r _id _label _pack _name p _desc; do
+    [ -f "$p" ] || continue
+    head -20 "$p" | grep -q '^description:' && continue
+    [ "$n" -eq 0 ] && printf '%sUNFINDABLE — no description: in the front matter (add one):%s\n' "$YEL" "$OFF" >&2
+    printf '  %s\n' "$p" >&2; n=$((n+1))
+  done < <(rows)
+  [ "$n" -eq 0 ] && printf 'every skill carries a description\n'
+  return 0
+}
+
 # --check
 if [ "${1:-}" = "--check" ]; then
   if [ -x "$GEN" ] && "$GEN" --check; then
+    name_unfindable
+    # plan 248 P3b: the one root skill and its store are judged with the index
+    if grep -q -- '--root-check' "$GEN" 2>/dev/null && ! "$GEN" --root-check >/dev/null 2>&1; then
+      printf '%sthe root ymir skill is stale — bin/agents/skill-index.sh --root-check names why%s\n' "$YEL" "$OFF" >&2
+    fi
     exit 0
   fi
   printf '%sindex is stale or incomplete — regenerating%s\n' "$YEL" "$OFF" >&2
@@ -182,6 +216,19 @@ while IFS=$'\t' read -r id label pack name path desc; do
     printf '        %s%s%s\n' "$DIM" "$desc" "$OFF"
   fi
 done < <(rows)
+
+# Nothing in a name or a description? Search the FULL BODIES (plan 248: the finder
+# keeps reading bodies, so a word that lives only inside a skill still finds it).
+if [ "$HITS" = 0 ]; then
+  while IFS=$'\t' read -r id label pack name path desc; do
+    [ -f "$path" ] || continue
+    if grep -qi -- "$QUERY" "$path" 2>/dev/null; then
+      HITS=$((HITS+1))
+      printf '%s[%s · %s]%s %s %s(in the body)%s\n' "$BOLD" "$label" "$name" "$OFF" "$path" "$DIM" "$OFF"
+      printf '        %s%s%s\n' "$DIM" "$desc" "$OFF"
+    fi
+  done < <(rows)
+fi
 
 [ "$HITS" = 0 ] && printf '%sno skill mentions "%s" — report the gap, do not improvise%s\n' "$YEL" "$QUERY" "$OFF"
 printf '\n%s%d match(es). Read the one you need; do not read them all.%s\n' "$DIM" "$HITS" "$OFF"

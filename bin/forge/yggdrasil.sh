@@ -83,6 +83,16 @@ case "$CMD" in
       printf 'error: worktree already exists: %s\nhelp: bin/forge/yggdrasil.sh list\n' "$BRANCH" >&2; exit 1
     fi
     BASE="${BASE:-$(default_branch)}"
+    # 2026-11-14 (RULES/45, plan 275): a new worktree starts from the REMOTE's tip, never the local branch of the same
+    # name — local main had drifted 59 commits from origin/main (squash-merged PRs), and workers seated on it carried
+    # all 59 into their branches. Fetch, then base on origin/<branch> when it exists; an explicit --base is honoured.
+    case "$BASE" in
+      */*) ;;
+      *) if git -C "$REPO" remote get-url origin >/dev/null 2>&1; then
+           git -C "$REPO" fetch -q origin "$BASE" 2>/dev/null || true
+           git -C "$REPO" rev-parse --verify -q "origin/$BASE" >/dev/null && BASE="origin/$BASE"
+         fi ;;
+    esac
     mkdir -p "$REPO/$WT"
     git -C "$REPO" worktree add -b "$BRANCH" "$WTPATH" "$BASE" >/dev/null 2>&1 || { printf 'error: git worktree add failed (base %s)\n' "$BASE" >&2; exit 1; }
     # ONE EXTENSION HOME PER WORKTREE. A worktree checks `.pi/extensions/` out like

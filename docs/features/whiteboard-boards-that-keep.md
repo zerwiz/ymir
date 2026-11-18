@@ -52,9 +52,11 @@ curl -s http://127.0.0.1:7313/healthz
 
 | What | Where |
 |---|---|
-| A room's snapshots | `hodd/life/boards/_rooms/<room>/<stamp>.scene.json` |
+| A room's snapshots | `$YMIR_HOME/hodd/life/boards/_rooms/<room>/<stamp>.scene.json` — or, where the server runs with no
+`YMIR_HOME` (the heart), the shelf the registry names for the whiteboard: `~/gimle/data/whiteboard/rooms/<room>/` |
 | Your saved boards | `hodd/life/boards/<your gate name>/<room>-<stamp>.excalidraw` |
 | The ledger of every save, list and open | `hodd/memory/runes_audit.md` |
+| The audit line for every shared or refused scene | `~/gimle/desk/data/access.jsonl` (the share door's own record) |
 
 Snapshots are the room's encrypted bytes, exactly as the browser sent them. That means nothing on
 this machine can read a saved room without the room key — including the operator. A board you saved
@@ -85,7 +87,22 @@ If the assistant answers with the Mermaid error text still, the panel is calling
 If a save is refused and the board is genuinely yours, the gate did not assert your name. Check
 `GET /healthz` for the header it reads, and confirm your proxy sets it.
 
+**The four points, as a command.** `node bin/gimle/whiteboard-acceptance.mjs` speaks to the running doors and
+prints one `PASS` or `UNPROVED` line per point: a scene survives a reload, two clients in one room see each
+other, the bridge answers a prompt, and a scene is shared out through the share door with an audit line. Pass
+`--room` with `--store` then `--expect` around a `systemctl --user restart excalidraw-collab` to prove the scene
+came back from **disk** rather than from memory. `--socket-io <dir>` points it at a machine's copy of
+`socket.io-client`, which is the room server's dev dependency and not always on the default path.
+
 ## CHANGE LOG
+
+- **2026-11-17** — measured on the heart: the room server had **no** snapshot shelf configured
+  (`COLLAB_SNAPSHOT_DIR` unset), so a scene survived a browser reload only because it was still in memory, and every
+  restart emptied every room. A drop-in now writes to `~/gimle/data/whiteboard/rooms/`; proved by storing a scene,
+  restarting the service, and receiving the same bytes back. The share door's number is `8488` (it was asking for the
+  mail desk's 8490 and had restarted 40,000 times against a symlink into a deleted tree). `~/gimle/bin/gimle-status.sh`
+  measures the whiteboard's four units instead of reporting "no compose file". The table and the commands above carry
+  the corrections.
 
 - **2026-11-14** — written with the server half: the snapshots, the owner-asserted saves, the
   converse mode, the wall in words, and the bridge's unit. The buttons in the drawing app itself

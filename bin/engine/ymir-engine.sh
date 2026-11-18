@@ -12,6 +12,8 @@
 #   ymir-engine.sh dispatch <role|figure> [--task T] [--brief F] [--kind K] [--toon]
 #   ymir-engine.sh landed <worktree> [--branch b] [--pr url] [--mode m] [--force]
 #   ymir-engine.sh watch <status|start|stop|restart|run>   # Sýn, the standing arm
+#   ymir-engine.sh supervise [--once|--every N] […]         # Sýn's MIND, the supervisor loop
+#     measure → judge (an agent) → act under the arm → prove → record (plan 004)
 #   ymir-engine.sh ensure | version
 #
 # Interpreters: a private venv ($YMIR_ENGINE_VENV, built by

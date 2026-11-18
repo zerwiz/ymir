@@ -127,7 +127,7 @@ sleep 3
 
 # Every door is proved by what it answers, not by what systemd says it is.
 fail=0
-for probe in "8487 / gimle-desk" "8489 /health gimle-mcp" "8490 /health gimle-share"; do
+for probe in "8487 / gimle-desk" "8489 /health gimle-mcp" "8488 /health gimle-share"; do
   set -- $probe; port="$1"; path="$2"; unit="$3"
   code=$(run "curl -s -o /dev/null -w '%{http_code}' -m 6 http://127.0.0.1:$port$path" | tr -d '[:space:]')
   state=$(run "systemctl --user is-active $unit" | tr -d '[:space:]')

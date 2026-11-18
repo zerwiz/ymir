@@ -88,6 +88,17 @@ bash "$HELM" run >"$T/out2" 2>"$T/err2"; rc2=$?
 grep -q 'refused' "$T/state/rodd/room.jsonl" 2>/dev/null && ok "the refusal is written in the room, never dropped" \
   || bad "the refusal is written in the room" "$(cat "$T/state/rodd/room.jsonl" 2>/dev/null)"
 [ ! -s "$LOCK" ] && ok "the helm was released (the lock is gone)" || bad "the helm was released" "lock still names $(cat "$LOCK" 2>/dev/null)"
+grep -q 'beyond her writ' "$T/said.log" 2>/dev/null && ok "the refusal was spoken — to the stand-in, never to the real desktop" \
+  || bad "the refusal was spoken to the stand-in" "$(cat "$T/said.log" 2>/dev/null)"
+# the SAME refusal again inside the window: a second room line, no second toast
+own_lock
+write_lease rodd "$$"
+printf 'please merge PR 999 into main for me\n' > "$T/state/.wake-queue"
+bash "$HELM" run >/dev/null 2>&1
+[ "$(grep -c 'refused: please merge PR 999' "$T/state/rodd/room.jsonl")" = 2 ] && ok "a repeated refusal is still recorded in the room" \
+  || bad "a repeated refusal is still recorded in the room" "$(cat "$T/state/rodd/room.jsonl")"
+[ "$(grep -c 'beyond her writ' "$T/said.log")" = 1 ] && ok "a repeated refusal is keyed — no second toast in the window" \
+  || bad "a repeated refusal is keyed" "$(cat "$T/said.log")"
 
 # ── 3 · the health surface ──────────────────────────────────────────────────
 own_lock

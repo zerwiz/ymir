@@ -19,7 +19,7 @@ python3 gna_import.py --account <the scoped account> --dry-run   # read since th
 python3 gna_import.py --account <the scoped account>            # fill the store
 python3 gna_import.py --account <the scoped account> --days 30   # a backfill: ignore the mark
 
-python3 gna_desk.py            # the desk on 127.0.0.1:8490 (token: hodd/state/gna-desk.token)
+python3 gna_desk.py            # the desk on 127.0.0.1:8494 (token: hodd/state/gna-desk.token)
 python3 gna_desk.py --print-token
 
 python3 tests/test_gna.py      # 49 proofs, including "no file here can send"
@@ -78,7 +78,7 @@ the store already holds, and leaves the mark where it was.
 | Symptom | What it means | The mend |
 |---|---|---|
 | The page says *"the desk has no token yet"* | the desk has never run | `python3 gna_desk.py` in `hodd/bin/gna-agent` |
-| *"the desk did not answer at 127.0.0.1:8490"* | the service is down | raise it, or check `ss -tln \| grep 8490` |
+| *"the desk did not answer at 127.0.0.1:8494"* | the service is down | raise it, or check `ss -tln \| grep 8494` |
 | *"account scope required"* | no account was chosen | pick one at the top; one must be declared in `hodd/memory/mail/accounts.yaml` |
 | *"account not declared in …"* | that address has no grant row | add the row **with its own grant** — never widen another account's |
 | Everything reads as **Unsure** | the sender is not in `collaborators.yaml` | add the person (or teach a rule in P4) — a stranger is meant to wait |
@@ -217,3 +217,7 @@ conversations that happen to share a subject stay apart.
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
 - **2026-11-16** — added *a reply can name the message it answers*: the three RFC headers on every row, and `--backfill-headers` for the rows written before them.
+- **2026-11-17** — the two commands above still said `8490`, which this desk surrendered on 2026-11-06 (see
+  `docs/fixes/mail/2026-11-06-the-mail-desk-claims-its-own-port.md`): it listens on **8494**, and 8490 now belongs to
+  nobody — the share door beside it took 8488 instead. A stale number in a symptom table teaches a person to look at
+  a port that will never answer.

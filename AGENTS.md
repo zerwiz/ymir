@@ -859,10 +859,37 @@ record of what was believed):
 - **One realm does not hide three.** The workspace-mode chips are retired, but every realm stays
   visible: a realm is a folder under `svartalfaheim/` (Skrymir shows the whole home), and a page that scopes its work
   by realm offers every realm the home holds, read from the operator's own registry at run time.
+- **One realm does not hide three.** The Work · Personal · the third realm mode chips are retired, but every realm stays
+  visible: a realm is a folder under `svartalfaheim/` (Skrymir shows the whole home), and a page that scopes its work
+  by realm offers the three as a filter.
 - **Hosted, shared surfaces are Gimlé's** (plan 284). Plans 277 and 279 keep their record; this change closes 277's
   Local reach row for the halls (loopback, no credential) and the residue of 279 row 2 on the halls' side.
 
 The law is plan 275 item 30; the how-to is `docs/features/hlidskjalf-the-control-plane.md`.
+## 2026-11-14 — the repository is 100 % agnostic; the operator's own tooling lives in the home
+
+At the operator's word: *"it's critical that ymir's repo is 100% agnostic; our special tooling etc belongs in ymir
+home"* · *"it's a public repo and users might run their fleets in different ways."* The first law above forbids
+private **data** here; this section widens it to private **shape**.
+
+- **What belongs here:** only what any operator's install needs — the engine, the apps, the tools, the gates, the
+  `*.example` templates, and the documents that teach them.
+- **Never here, in any file (code, comment, prompt, test, fixture, doc, fix note):** a real person, client, company,
+  mail domain, meeting or NDA; the operator's host names, user names, tailnet name or addresses.
+- **Never assumed:** a machine count, a role layout (which machine is the heart), a delivery road (who merges), a
+  model on a particular box. All of these are **read from the operator's home** — `hodd/data/fleet.json`,
+  `hodd/identity/projects.yaml`, `config/` — and the default is a fleet of one machine.
+- **The operator's special tooling lives in the home:** automations written for one company's meetings, one
+  client's boards, one mail domain or one person's workflow go to `$YMIR_HOME/.agents/skills/` and the home's own
+  scripts and config. A feature this repository ships is generic first; the operator's version of it is
+  configuration in the home.
+- **Examples use invented names** (`Ada`, `example.org`, `host-a`); fix notes name roles (*the heart*, *the dev
+  machine*, *a second machine*), never a machine.
+- **It is audited, not trusted:** a whole-tree scan for the operator's names, domains and hosts — the deny list kept
+  in the **home**, never here — runs on the heart's clock twice a day and on every push; a finding is a red gate and a
+  notice to the operator.
+
+The law is `RULES/04` and `RULES/25`, each in its section appended the same day; the work is the operator's plan 287.
 
 ## CHANGE LOG
 
@@ -888,3 +915,4 @@ them a hall. The fix note is `docs/fixes/forge/2026-11-14-no-tunnel-points-at-a-
 Two related corrections belong to the same night, and neither is a tunnel: the model bridge no longer falls back to
 the retired LM Studio (it reads its key through the vault and otherwise serves the local rail — item 22), and every
 house unit's PATH now names the mise shims, so a service can find the tools a shell can find (item 26).
+- 2026-11-14 — appended: the repository is 100 % agnostic; the operator's own tooling lives in the home.

@@ -118,3 +118,12 @@ range qualifies.
 - 2026-11-12 — written with the change it describes.
 - 2026-11-14 — the helm is prompted to gather when the last errand of a batch finishes (plan 293 part 4).
 - 2026-11-14 — added: the gather reads a packet's base branch and merges it first (plan 293 part 7).
+
+## 2026-11-14 — under `reviewer-merges`, the heart gathers, not the helm
+
+At the operator's word: *"i dont merge. its the zerwiz server's worker that is merging"* · *"he should do the
+merging."* For a project whose `delivery` row is `reviewer-merges`, the reviewer on the fleet's heart gathers related errands, opens the PR and merges
+(`RULES/08`, `reviewer-merges`; plan 206 §4). The helm checks each branch and names the order; the road is
+`docs/runbooks/deliver-across-the-fleet.md`. The helm-side `gather.sh` above stays for a project whose delivery row
+is not `reviewer-merges`.
+

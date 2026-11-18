@@ -47,6 +47,14 @@ fi
 YMIR_HOME_ROOT=""
 if command -v ymir_home_root >/dev/null 2>&1; then ymir_home_root YMIR_HOME_ROOT 2>/dev/null; fi
 YMIR_HOME_ROOT="${YMIR_HOME_ROOT:-${YMIR_HOME}}"
+# The ymir door a harness keeps must point at the PINNED runtime, never a working tree (plan 248 P2): the
+# seat writer (mcp-config-seat.py stable_root) reads YMIR_RUNTIME_DIR, which nothing used to export.
+if [ -r "$SCRIPT_DIR/../seat/runtime-root.sh" ]; then
+  # shellcheck disable=SC1091
+  . "$SCRIPT_DIR/../seat/runtime-root.sh"
+  ymir_runtime_resolve "$ROOT"
+  [ "$YMIR_RUNTIME_SOURCE" = "pinned" ] && export YMIR_RUNTIME_DIR="$YMIR_RUNTIME_ROOT"
+fi
 GATEWAY_PORT="${MCP_GATEWAY_PORT:-${YMIR_MCP_GATEWAY_PORT:-8316}}"
 PI_SOURCE="${YMIR_MCP_ADAPTER:-$HOME/.pi/agent/mcp-adapter.json}"
 

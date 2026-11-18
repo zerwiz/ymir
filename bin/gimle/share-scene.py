@@ -164,7 +164,10 @@ class Handler(BaseHTTPRequestHandler):
 
 def main(argv):
     ap = argparse.ArgumentParser()
-    ap.add_argument("--port", type=int, default=8490)
+    # The door's number is the registry's (hodd/identity/services.yaml, id `share`), never a
+    # default that already belongs to another door: 8490 is the mail desk's, and asking for it
+    # is how this unit spent 40,000 restarts colliding with nothing at all.
+    ap.add_argument("--port", type=int, default=int(os.environ.get("GIMLE_SHARE_PORT", "8488")))
     ap.add_argument("--bind", default="127.0.0.1")
     ap.add_argument("--scenes", default=None)
     ap.add_argument("--tokens", default="/etc/gimle/mcp-tokens")

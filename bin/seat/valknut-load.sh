@@ -288,6 +288,32 @@ if [ "$MODE_CHECK" = "1" ]; then
       printf '  %-46s %s\n' "project home holds extensions" "FAIL — $PI_EXT_SRC is absent and this is no worktree of the seat"
       fails=$((fails+1)) ;;
   esac
+  # A PINNED runtime serves, so the resolver above no longer looks at this tree's own copy — but a linked
+  # worktree that carries one is still a second home for a session started inside it (2026-11-11).
+  if [ "$PI_EXT_SRC" != "$ROOT/.pi/extensions" ] && [ -d "$ROOT/.pi/extensions" ] && [ ! -L "$ROOT/.pi/extensions" ] \
+     && [ "$(git -C "$ROOT" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" \
+          != "$(git -C "$ROOT" rev-parse --path-format=absolute --git-dir 2>/dev/null)" ]; then
+    printf '  %-46s %s\n' "the worktree carries no second tree" "FAIL — git -C $ROOT sparse-checkout set --no-cone '/*' '!/.pi/extensions/'"
+    fails=$((fails+1))
+  fi
+  # ROOT AGENTS LOAD THE RUNTIME, NEVER A WORKING TREE (plan 248 P2, RULES/51). Every path pi's root config
+  # holds — settings extensions[], the MCP doors, the .ymir-root record — is judged by the one ward. A path into
+  # any Ymir checkout that is not the runtime is REFUSED with the remedy named; the fallback to the checkout
+  # when nothing is pinned is allowed, and said so.
+  if [ -r "$ROOT/bin/seat/runtime-roots.py" ] && command -v python3 >/dev/null 2>&1 && [ -n "$YMIR_RUNTIME_ROOT" ]; then
+    if _wt="$(python3 "$ROOT/bin/seat/runtime-roots.py" scan --runtime "$YMIR_RUNTIME_ROOT" \
+                --source "$YMIR_RUNTIME_SOURCE" --only pi 2>/dev/null)"; then
+      printf '  %-46s %s\n' "pi's root names no working tree" "PASS -> $YMIR_RUNTIME_ROOT ($YMIR_RUNTIME_SOURCE)"
+    else
+      while IFS= read -r _row; do
+        printf '  %-46s %s\n' "pi's root names a working tree" "FAIL — $_row"
+      done < <(printf '%s\n' "$_wt" | grep '"working-tree"' | sed 's/^ *"pi",//')
+      printf '  %-46s %s\n' "remedy" "bin/seat/runtime-root.sh repoint --only pi  (or bin/seat/harness-extensions-install.sh)"
+      fails=$((fails+1))
+    fi
+    [ "$YMIR_RUNTIME_SOURCE" = "checkout" ] && printf '  %-46s %s\n' "runtime" "NOTE — $YMIR_RUNTIME_REASON"
+    unset _wt _row
+  fi
   # From here on, the tree that SERVES this session: the seated tree when the
   # worktree is sparse, else this tree's own.
   n_src=0
@@ -539,12 +565,19 @@ ymir_root_record() {
   # errand. `git rev-parse --git-common-dir` differs from `--git-dir` exactly when
   # this checkout is a linked worktree (git worktree / Yggdrasil), so that is the
   # test — the path is pruned rather than recorded, and the real root keeps serving.
-  if is_linked_worktree "$ROOT" || case "$ROOT" in */.yggdrasil/*|*/.yggdrasil) true ;; *) false ;; esac; then
+  if [ "$YMIR_RUNTIME_SOURCE" != "pinned" ] && { is_linked_worktree "$ROOT" || case "$ROOT" in */.yggdrasil/*|*/.yggdrasil) true ;; *) false ;; esac; }; then
     printf 'not-recorded'
     return 0
   fi
   tmp="$(mktemp 2>/dev/null)" || return 0
-  printf '%s\n' "$ROOT" >"$tmp"
+  # The PINNED runtime is the root the deployed extensions resolve first (plan 248 P2): a root agent loads
+  # the runtime, so its bin/ is the runtime's too. The checkout this ran from is recorded only when nothing
+  # is pinned.
+  if [ "$YMIR_RUNTIME_SOURCE" = "pinned" ] && [ -x "$YMIR_RUNTIME_ROOT/bin/pi/syn-watch-arm.sh" ]; then
+    printf '%s\n' "$YMIR_RUNTIME_ROOT" >"$tmp"
+  else
+    printf '%s\n' "$ROOT" >"$tmp"
+  fi
   # PRUNE DEAD ROOTS. Measured 2026-10-04: `.ymir-root` carried FOUR roots and TWO of them were
   # `.yggdrasil/` worktrees that no longer exist. Every resolver that reads this file asks "the
   # first recorded root that really holds bin/pi/syn-watch-arm.sh", so a worktree that survives here
@@ -556,6 +589,8 @@ ymir_root_record() {
     while IFS= read -r line; do
       [ -n "$line" ] || continue
       [ "$line" = "$ROOT" ] && continue
+      # pinned: the runtime is THE root; another checkout kept here is a working tree a root agent would load
+      [ "$YMIR_RUNTIME_SOURCE" = "pinned" ] && continue
       grep -qxF -- "$line" "$tmp" 2>/dev/null && continue
       # keep a root only while it still IS a root
       [ -x "$line/bin/pi/syn-watch-arm.sh" ] || continue
@@ -601,8 +636,10 @@ link_agent_dir() {  # <target-dir> <rel-prefix>
 #   pi       — discovery, natively: it walks up from the cwd looking for
 #              `.agents/skills` (and `~/.agents/skills`), so it needs NO link,
 #              and a second root under `.pi/` would only invite double-loading
-#   claude · codex · cursor — project skills live under the harness dir, so each
+#   codex · cursor — project skills live under the harness dir, so each
 #              gets `<harness>/skills -> ../.agents/skills`
+#   claude   — NOT linked (2026-11-11, plan 248 P3b): its root carries the one
+#              `ymir` skill, whose index names every skill by path
 link_skills() {  # <harness-dir>  → binds <harness-dir>/skills
   local dir=$1
   [ -d "$dir" ] || return 1
@@ -626,10 +663,16 @@ if [ "$MODE_STATUS" = 1 ]; then
   else
     add pi-ext-root "$PI_EXT_HOME/.ymir-root" "ERROR no recorded root holds bin/pi/syn-watch-arm.sh — deployed extensions cannot find their bin/ (run: bin/seat/valknut-load.sh --pi)"
   fi
-  for hd in .claude .codex .cursor; do
+  for hd in .codex .cursor; do
     [ -d "$ROOT/$hd" ] || continue
     [ -L "$ROOT/$hd/skills" ] && add "$hd-skills" "$ROOT/$hd/skills" linked || add "$hd-skills" "$ROOT/$hd/skills" absent
   done
+  # Claude's skills come from its ROOT (the one `ymir` skill), never a repo link (plan 248 P3b)
+  if [ -L "$ROOT/.claude/skills" ]; then
+    add .claude-skills "$ROOT/.claude/skills" "ERROR a repo link doubles the root ymir skill — bin/seat/valknut-load.sh retires it"
+  else
+    add .claude-skills "$HOME/.claude/skills/ymir" "$([ -L "$HOME/.claude/skills/ymir" ] && printf 'root ymir skill' || printf 'root ymir skill absent — bin/agents/skill-index.sh --root')"
+  fi
 fi
 
 if [ "$MODE_OPENCODE" = 1 ]; then
@@ -787,12 +830,21 @@ if [ "$MODE_STATUS" = 0 ]; then
   # link (it discovers `.agents/skills` by walking up); opencode reaches that
   # tree through `skills.paths`. claude, codex and cursor each get one link, so
   # all of them read the ONE skills tree.
+  #
+  # Appended 2026-11-11 (plan 248 P3b, RULES/51 + RULES/02): Claude is NOT linked any
+  # more. Its root already carries the ONE `ymir` skill (~/.claude/skills/ymir, seated by
+  # bin/agents/skill-index.sh --root), so a repo-local `.claude/skills` link made a
+  # session inside the checkout list all the shipped skills a second time. A leftover
+  # link of exactly that shape is removed; anything else there is left untouched.
   linked=""
-  for hd in .claude .codex .cursor; do
+  for hd in .codex .cursor; do
     [ -d "$ROOT/$hd" ] || continue
     link_skills "$ROOT/$hd" >/dev/null 2>&1 && linked="$linked $hd"
   done
   [ -n "$linked" ] && add harness-skills "$SKILLS" "linked into:$linked"
+  if [ -L "$ROOT/.claude/skills" ] && [ "$(readlink "$ROOT/.claude/skills")" = "../.agents/skills" ]; then
+    rm -f "$ROOT/.claude/skills" && add claude-skills "$ROOT/.claude/skills" "retired — the root ymir skill serves Claude (plan 248)"
+  fi
 
   # …and AGENTS for the same harnesses, plus opencode, so every tool loads every
   # agent — never a hand-made subset.

@@ -19,6 +19,8 @@ runbooks[14]{file,subject}:
   "gates-and-wards.md","what the wards refuse, how to add one, and what to do when one is red"
   "add-an-app.md","add an app to Ymir: the release, the one launcher command, the rune, both machines"
   "send-an-eindri.md","send a worker: the project resolved to this machine's clone, the worktree in its own repository, the bearings every brief carries, and what the worker owes back"
+  "deliver-across-the-fleet.md","deliver work across the fleet: a worker's branch and handoff packet, the helm's check, the heart's reviewer merges"
+  "send-an-eindri.md","send out an Eindri: the brief and its fixed core, a herdr seat per errand, the stamped send door, one gathered PR"
 ```
 
 Related: `.agents/skills/galdr-ymirsystem/assets/installation.md` (first setup),
@@ -29,3 +31,5 @@ Related: `.agents/skills/galdr-ymirsystem/assets/installation.md` (first setup),
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
 - **2026-11-13** — `add-an-app.md` added to the shelf (plan 275).
 - **2026-11-14** — `send-an-eindri.md` added: the errand road (plan 291 rows 5 and 25).
+- **2026-11-14** — `send-an-eindri.md` added to the shelf (plan 275 item 31).
+- **2026-11-14** — `deliver-across-the-fleet.md` added to the shelf (plan 275).

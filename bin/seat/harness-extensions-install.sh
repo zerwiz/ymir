@@ -10,12 +10,16 @@
 # at all. A user's agent therefore drifts from the house the moment they pull.
 #
 # WHAT IT DOES, per harness, from the descriptors in `.agents/harnesses/`:
-#   pi        the settings `extensions[]` entry, resolved by realpath (bin/seat/valknut-load.sh --global)
-#             AND the one-home door (bin/seat/pi-door.sh) seated as ~/.pi/agent/bin/pi
+#   pi        the settings `extensions[]` entry → the PINNED runtime's tree (bin/seat/valknut-load.sh --global),
+#             the one-home door (bin/seat/pi-door.sh) seated as ~/.pi/agent/bin/pi, and the pi ROOT SET:
+#             the npm packages named once in .agents/harnesses/pi.yaml + ro · todo · open-editor (bin/pi/pi-ensure.sh)
+#   roots     every harness root config: a path into a working tree is re-pointed at the runtime (install)
+#             or refused with the remedy (--check) — bin/seat/runtime-root.sh, plan 248 P2
 #   opencode  the plugin set copied into ~/.config/opencode/plugins
 #   claude    the hook scripts into ~/.claude/hooks  (the JSON wiring is NAMED, never merged blind)
 #   codex     hooks.json and the skills links under ~/.codex
 #   cursor    the rules into ~/.cursor/rules
+#   every root  the ONE `ymir` skill (~/.agents/skills/ymir, ~/.claude/skills/ymir) over an unscanned store (plan 248 P3b)
 # A harness that is not installed is a clean SKIP with its reason, never a failure (RULES/25).
 set -uo pipefail
 
@@ -37,7 +41,7 @@ unset _pin
 
 mode="install"
 case "${1:-}" in
-  -h|--help) sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+  -h|--help) awk 'NR>1 && /^#/{sub(/^# ?/,""); print; next} NR>1{exit}' "$0"; exit 0 ;;
   --check|check) mode="check" ;;
   ""|install|--install) ;;
   *) printf 'error: unknown action %s\nhelp: harness-extensions-install.sh [--check]\n' "$1" >&2; exit 2 ;;
@@ -66,7 +70,7 @@ copy_tree() {  # <src-dir> <dst-dir> <label> — copy only what differs, keep on
   return 0
 }
 
-printf 'harness_extensions[%s]{harness,state,detail}:\n' 6
+printf 'harness_extensions[%s]{harness,state,detail}:\n' 7
 
 # ── pi: the settings entry that makes the extensions load from any directory, and
 #        the DOOR that keeps a seat started by hand to ONE home (2026-11-11) ──────
@@ -120,13 +124,15 @@ pi_door_path_seat() {  # write the block into each file that lacks it; never rew
 if command -v pi >/dev/null 2>&1; then
   state="current"; detail=""
   if [ "$mode" = "check" ]; then
-    if grep -q "$ROOT/.pi/extensions" "$HOME/.pi/agent/settings.json" 2>/dev/null; then
+    if grep -qF "\"$ROOT/.pi/extensions\"" "$HOME/.pi/agent/settings.json" 2>/dev/null; then
       detail="settings extensions[] → $ROOT/.pi/extensions"
     else
-      state="stale"; detail="settings extensions[] does not name this checkout"; stale=$((stale+1))
+      state="stale"; detail="settings extensions[] does not name the runtime's tree ($ROOT/.pi/extensions)"; stale=$((stale+1))
     fi
   else
-    if bash "$ROOT/bin/seat/valknut-load.sh" --global >/dev/null 2>&1; then
+    # PI_EXT_SRC is named, not left to the runtime's own valknut-load to resolve: a runtime deployed before
+    # plan 248 P2 read runtime.env with sed and fell back to the working tree.
+    if PI_EXT_SRC="$ROOT/.pi/extensions" bash "$ROOT/bin/seat/valknut-load.sh" --global >/dev/null 2>&1; then
       state="synced"; detail="settings extensions[] → $ROOT/.pi/extensions"
     else
       state="skip"; detail="valknut-load could not bind the seat"
@@ -428,6 +434,30 @@ if command -v cursor-agent >/dev/null 2>&1 || command -v cursor >/dev/null 2>&1;
   copy_tree "$ROOT/.cursor/rules" "$HOME/.cursor/rules" "cursor-rules" || true
 else
   say "  \"cursor\",\"absent\",\"no cursor on this host\""; absent=$((absent+1))
+fi
+
+# ── every root: the ONE Ymir skill and its unscanned store (plan 248 P3b) ────
+# ~/.agents/skills/ymir is read natively by pi, OpenCode and Codex; Claude gets
+# ~/.claude/skills/ymir as a link. Its SKILL.md is the generated index of every
+# skill on every shelf, by path into ~/.local/share/ymir/skills — a store no harness
+# scans, so the per-turn cost is one description, not two hundred (RULES/51).
+SKIDX="$ROOT/bin/agents/skill-index.sh"
+if [ -f "$SKIDX" ] && grep -q -- '--root-check' "$SKIDX" 2>/dev/null; then
+  if [ "$mode" = "check" ]; then
+    if _ro="$(bash "$SKIDX" --root-check 2>&1)"; then
+      say "  \"ymir-skill\",\"current\",\"$(printf '%s' "$_ro" | tail -1 | tr '"' "'")\""
+    else
+      say "  \"ymir-skill\",\"stale\",\"$(printf '%s' "$_ro" | head -1 | tr '"' "'") — bin/agents/skill-index.sh --root\""
+      stale=$((stale+1))
+    fi
+  elif _ro="$(bash "$SKIDX" --root 2>&1)"; then
+    say "  \"ymir-skill\",\"synced\",\"$(printf '%s' "$_ro" | tail -1 | tr '"' "'")\""
+  else
+    say "  \"ymir-skill\",\"stale\",\"$(printf '%s' "$_ro" | head -1 | tr '"' "'")\""
+  fi
+  unset _ro
+else
+  say "  \"ymir-skill\",\"skip\",\"$ROOT predates the one Ymir skill (plan 248 P3b) — the next update seats it\""
 fi
 
 if [ "$mode" = "check" ] && [ "$stale" -gt 0 ]; then
