@@ -29,8 +29,8 @@
 | helm-identity.sh | helm-identity.sh — WHO holds this helm, WHAT it is for, WHICH machine  | tested+named | keep (a human or a cron row must run it) |
 | herdr-ensure.sh | herdr-ensure.sh — Þjazi: guarantee the terminal backend Ymir needs. | tested+named | keep (a human or a cron row must run it) |
 | herdr-run.sh | herdr-run.sh — raise an Eindri in herdr, by the grain that fits the er | tested+named | keep (a human or a cron row must run it) |
-| hermes-seat.sh | hermes-seat.sh — seat Ymir's tools into Hermes, the same packets the o | tested+named | keep (a human or a cron row must run it) |
-| hermes-session-hook.sh | hermes-session-hook.sh — Hermes' session side of the Gná arm: the Sá | tested+named | keep (a human or a cron row must run it) |
+| hermes-seat.sh | hermes-seat.sh — a one-line launcher: the Hermes seat is src/ymir_runt | tested+named | keep (a human or a cron row must run it) |
+| hermes-session-hook.sh | hermes-session-hook.sh — a one-line launcher: Hermes' session side (th | tested+named | keep (a human or a cron row must run it) |
 | hermes-telegram.sh | hermes-telegram.sh — seat THIS machine's Telegram bot into the Hermes  | tested+named | keep (a human or a cron row must run it) |
 | lock-ask.sh | lock-ask.sh — a read-only agent asks the LOCK OWNER for work, and the  | tested+named | keep (a human or a cron row must run it) |
 | lock-hold.sh | lock-hold.sh — a PRIMARY THAT DOES NOT EXIT: hold this machine's sessi | tested | keep (a human or a cron row must run it) |
