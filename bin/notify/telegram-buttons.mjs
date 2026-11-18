@@ -8,8 +8,18 @@
 // ignored WITHOUT an error, which is how a reply full of controls arrives as a
 // wall of prose.
 //
-//   node telegram-buttons.mjs emit  --button "label|prompt" … [--in-body] [--allow-single]
+//   node telegram-buttons.mjs emit  --button "label|prompt" … [--in-body] [--allow-single] [--allow-many]
+//                                   [--per-row N] [--format wrapper|reply-markup]
+//   node telegram-buttons.mjs emit  --payload "[{label|prompt}…]" [--format reply-markup]
 //   node telegram-buttons.mjs check <file|-> [--json]
+//
+// `--format reply-markup` prints the Bot API's own `{"inline_keyboard":[[{text,callback_data}]]}` instead
+// of a bridge wrapper: a message posted straight to the Bot API (bin/notify/send.sh, a cron row with no
+// session behind it) needs the native markup, and the grammar must still be judged in ONE place. A
+// callback_data is capped at Telegram's 64 bytes, at a word boundary.
+//
+// `--payload` re-renders an existing CML matrix, so a caller that already built rows (three per draft, say)
+// keeps its own row layout instead of being rechunked: send.sh `--buttons` is exactly that caller.
 //
 // Exit: 0 ok, 1 a finding, 2 usage.
 //
@@ -24,6 +34,7 @@
 import { readFileSync } from "node:fs";
 
 const MAX_PER_ROW = 8;
+const CALLBACK_MAX_BYTES = 64;
 const HOUSE_MIN = 2;
 const HOUSE_MAX = 6;
 const LABEL_MAX = 64;
@@ -299,34 +310,67 @@ function scan(text, optsSingle = false, optsMany = false) {
   return { found, findings, total };
 }
 
+/** Telegram caps callback_data at 64 bytes; a long prompt is clipped at a word boundary. */
+function clipBytes(text, limit) {
+  const buf = Buffer.from(String(text ?? ""), "utf8");
+  if (buf.length <= limit) return buf.toString("utf8");
+  let cut = limit;
+  while (cut > 0 && (buf[cut] & 0xc0) === 0x80) cut -= 1; // never split a UTF-8 sequence
+  let out = buf.subarray(0, cut).toString("utf8");
+  const space = out.lastIndexOf(" ");
+  if (space > limit / 2) out = out.slice(0, space);
+  return out.trimEnd();
+}
+
+function chunkRows(list, size) {
+  const out = [];
+  for (let i = 0; i < list.length; i += size) out.push(list.slice(i, i + size));
+  return out;
+}
+
 function emit(opts) {
-  if (!opts.button.length) die(2, "emit: at least one --button \"label|prompt\" is required");
   const findings = [];
-  const cells = opts.button.map((spec, index) => {
-    const parsed = parseCell(spec, `button ${index}`, findings);
-    return parsed;
-  });
+  let rows;
+  if (opts.payload !== undefined) {
+    rows = parseCml(opts.payload, findings);
+    if (!rows.length && !findings.length) findings.push({ where: "payload", fault: "the matrix holds no button" });
+  } else {
+    if (!opts.button.length) die(2, "emit: at least one --button \"label|prompt\" or --payload \"[…]\" is required");
+    const cells = opts.button.map((spec, index) => parseCell(spec, `button ${index}`, findings));
+    const perRow = Math.min(Math.max(parseInt(opts["per-row"] || MAX_PER_ROW, 10) || MAX_PER_ROW, 1), MAX_PER_ROW);
+    rows = chunkRows(cells, perRow);
+  }
   if (findings.length) {
     findings.forEach((f) => process.stderr.write(`refused: ${f.where} — ${f.fault}\n`));
     process.exit(1);
   }
-  if (cells.length > HOUSE_MAX && opts["allow-many"] !== "true") {
+  const total = rows.reduce((n, row) => n + row.length, 0);
+  if (total > HOUSE_MAX && opts["allow-many"] !== "true") {
     process.stderr.write(
-      `refused: ${cells.length} buttons — the house asks for at most ${HOUSE_MAX} (pass --allow-many for a deliberate long row)\n`,
+      `refused: ${total} buttons — the house asks for at most ${HOUSE_MAX} (pass --allow-many for a deliberate long row)\n`,
     );
     process.exit(1);
   }
-  const chunk = (list, size) => {
-    const out = [];
-    for (let i = 0; i < list.length; i += size) out.push(list.slice(i, i + size));
-    return out;
-  };
+  if (rows.some((row) => row.length > MAX_PER_ROW)) {
+    process.stderr.write(`refused: a row holds more than ${MAX_PER_ROW} buttons — Telegram allows no more\n`);
+    process.exit(1);
+  }
+  const format = opts.format || "wrapper";
+  if (format === "reply-markup") {
+    const keyboard = {
+      inline_keyboard: rows.map((row) =>
+        row.map((c) => ({ text: c.label, callback_data: clipBytes(c.prompt || c.label, CALLBACK_MAX_BYTES) })),
+      ),
+    };
+    process.stdout.write(JSON.stringify(keyboard) + "\n");
+    return;
+  }
+  if (format !== "wrapper") die(2, `emit: unknown --format ${format} (wrapper | reply-markup)`);
   const cellText = (c) => {
     const style = c.style ? `|${c.style}` : "";
     const disabled = c.disabled ? "|1" : "";
     return `{${c.label}|${c.prompt}${style}${disabled}}`;
   };
-  const rows = chunk(cells, MAX_PER_ROW);
   const payload =
     rows.length === 1 ? `[${rows[0].map(cellText).join("")}]` : `[${rows.map((r) => `[${r.map(cellText).join("")}]`).join("")}]`;
   if (opts["in-body"] === "true") process.stdout.write("```telegram_button\n" + payload + "\n```\n");

@@ -19,6 +19,7 @@
 | guards-scope.test.sh | guards-scope.test.sh — prove the pre-push gate bites, and only where i | tested | keep (a human or a cron row must run it) |
 | home-contract-check.sh | home-contract-check.sh — the contract that raises a home is itself che | tested | keep (a human or a cron row must run it) |
 | home-index-check.sh | home-index-check.sh — every shelf in the home has an index, and the in | tested | keep (a human or a cron row must run it) |
+| launchd-layer.sh | launchd-layer.sh — both macOS service-layer tests, in one door (plan 2 | tested | keep (a human or a cron row must run it) |
 | model-alias-check.sh | model-alias-check.sh — does every alias a body names resolve in the fl | tested+named | keep (a human or a cron row must run it) |
 | portability-ratchet.sh | portability-ratchet.sh — the GNU-only callers may go DOWN, never up. | tested | keep (a human or a cron row must run it) |
 | public-data-ward.test.sh | public-data-ward.test.sh — prove the RULES/04 ward BITES. | tested | keep (a human or a cron row must run it) |
@@ -98,7 +99,7 @@
 | plan-audit.sh | plan-audit.sh — the plan CONTRACT, as a check over the ledger shelf. | tested | keep (a human or a cron row must run it) |
 | registers.sh | registers.sh — every generated register, through one door. | tested | keep (a human or a cron row must run it) |
 | repo-scrub.sh | repo-scrub.sh — purge private paths from ALL git history before going  | tested | keep (a human or a cron row must run it) |
-| require-check.sh | require-check.sh — make the `gates` job the REQUIRED check on main. | tested | keep (a human or a cron row must run it) |
+| require-check.sh | require-check.sh — the required status check on main, read WHOLE and w | tested | keep (a human or a cron row must run it) |
 | seat-woven-driver.sh | seat-woven-driver.sh — seat the engine behind `merge=regenerate`, and  | tested | keep (a human or a cron row must run it) |
 | secret-scan.sh | secret-scan.sh — the secret scan's door, and the generator for the ope | tested | keep (a human or a cron row must run it) |
 | soak-pr.sh | soak-pr.sh — the P5 door: a pull request that touches an app runs that | tested | keep (a human or a cron row must run it) |
@@ -109,6 +110,7 @@
 | test_arm_talk.sh | bogus host refused with road named | tested | keep (a human or a cron row must run it) |
 | test_broken.sh | add appends | tested | keep (a human or a cron row must run it) |
 | test_ci_parity.sh | test_ci_parity.sh — a push run and a pull_request run on one sha print | tested | keep (a human or a cron row must run it) |
+| test_container_hides_the_hoard.sh | test_container_hides_the_hoard.sh — a container Ymir ships never holds | tested | keep (a human or a cron row must run it) |
 | test_desktop_main_guard.sh | desktop-main-guard names a launcher that points into a worktree AND name | tested | keep (a human or a cron row must run it) |
 | test_finding_tally.sh | ensure config | tested | keep (a human or a cron row must run it) |
 | test_fixes_regate.sh | test_fixes_regate.sh — the record gate judges CONTENT, not ceremony (2 | tested | keep (a human or a cron row must run it) |
@@ -131,6 +133,7 @@
 | test_nda_guard.sh | test_nda_guard.sh — the NDA matcher, the git hooks' commands and the C | tested | keep (a human or a cron row must run it) |
 | test_new_doors.sh | test_new_doors.sh — the production tests for the doors built 2026-11-0 | tested | keep (a human or a cron row must run it) |
 | test_no_stale_arm_door.sh | test_no_stale_arm_door.sh — plan 272 fault 3. | tested | keep (a human or a cron row must run it) |
+| test_notify_stale_pane.sh | test_notify_stale_pane.sh — a remembered pane is proved before it is s | tested | keep (a human or a cron row must run it) |
 | test_opencode_launcher.sh | test_opencode_launcher.sh — plan 262: an OpenCode worker actually star | tested+named | keep (a human or a cron row must run it) |
 | test_people_guard_people.sh | test_people_guard_people.sh — plan 272 fault 11: the people ward reads | tested | keep (a human or a cron row must run it) |
 | test_pin_refresh.sh | test_pin_refresh.sh — the pin refresher, and the sentence a failed row | tested | keep (a human or a cron row must run it) |
@@ -141,11 +144,12 @@
 | test_queue_warden.sh | test_queue_warden.sh — the warden is HYGIENE, and its one merge is the | tested | keep (a human or a cron row must run it) |
 | test_regenerate_on_merge_cleanup.sh | test_regenerate_on_merge_cleanup.sh — the merge driver leaves no `.mer | tested | keep (a human or a cron row must run it) |
 | test_registers.sh | test_registers.sh — one door for every generated register. | tested | keep (a human or a cron row must run it) |
+| test_require_check_keeps_the_checks.sh | test_require_check_keeps_the_checks.sh — the door that writes main's p | tested | keep (a human or a cron row must run it) |
 | test_review_mend.sh | dry-run on PR 624 (missing CHANGE LOG) -> rung per finding + next: | tested | keep (a human or a cron row must run it) |
 | test_review_seat_verdict.sh | test_review_seat_verdict.sh — plan 272 fault 6: a review seat ends in  | tested | keep (a human or a cron row must run it) |
 | test_review_seats.sh | test_review_seats.sh — proves the seats and their mouth, hermetically. | tested | keep (a human or a cron row must run it) |
 | test_roster.sh | (no header line) | tested | keep (a human or a cron row must run it) |
-| test_rules_compliance_env_file.sh | test_rules_compliance_env_file.sh — the ward tells a filename from a h | tested | keep (a human or a cron row must run it) |
+| test_rules_compliance_env_file.sh | !/usr/bin/env bash | tested | keep (a human or a cron row must run it) |
 | test_rules_compliance_fork_sync.sh | test_rules_compliance_fork_sync.sh — plan 272 fault 7. | tested | keep (a human or a cron row must run it) |
 | test_skills_mcp.sh | test_skills_mcp.sh — the skills door, proved by command. | tested | keep (a human or a cron row must run it) |
 | test_smith_pr_open.sh | test_smith_pr_open.sh — a direct-PR smith may open its PR and never me | tested | keep (a human or a cron row must run it) |

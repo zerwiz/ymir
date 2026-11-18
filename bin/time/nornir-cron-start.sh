@@ -146,6 +146,34 @@ is_role() { # <token> -> 0 when it is a role gate (@heart, @dev,forge)
   return 0
 }
 
+is_dow() { # <token> -> 0 when it is a day-of-week gate: Mon · Mon,Fri · Monday
+  case "${1-}" in ''|*[!A-Za-z,]*) return 1 ;; esac
+  local _d _hit=0
+  for _d in $(printf '%s' "$1" | tr ',' ' '); do
+    _hit=1
+    case "$_d" in
+      Mon|Tue|Wed|Thu|Fri|Sat|Sun) ;;
+      Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday) ;;
+      *) return 1 ;;
+    esac
+  done
+  [ "$_hit" = 1 ]
+}
+
+dow_matches() { # <dow> -> 0 when TODAY is one of the days it names
+  local _want _today _d
+  _today=$(date +%a)
+  for _want in $(printf '%s' "${1-}" | tr ',' ' '); do
+    case "$_want" in
+      Mon|Monday) _d=Mon ;; Tue|Tuesday) _d=Tue ;; Wed|Wednesday) _d=Wed ;;
+      Thu|Thursday) _d=Thu ;; Fri|Friday) _d=Fri ;; Sat|Saturday) _d=Sat ;;
+      Sun|Sunday) _d=Sun ;; *) continue ;;
+    esac
+    [ "$_d" = "$_today" ] && return 0
+  done
+  return 1
+}
+
 at_valid() { # <at> -> 0 when the time token is a shape the scheduler understands
   case "${1-}" in
     @hourly|@daily) return 0 ;;
@@ -169,27 +197,30 @@ at_valid() { # <at> -> 0 when the time token is a shape the scheduler understand
 # parse_line <line> -> "gate<TAB>at<TAB>cmd" — the role gate may sit before or after
 # the time (plan 54), and a shape may sit in either place too, so the token that is
 # a ROLE is found by what it is, never by its position.
-parse_line() {
-  local _rest="${1-}" _t1 _t2 _rest2=""
-  _t1=${_rest%% *}
-  if [ "$_t1" = "$_rest" ]; then _rest=""; else _rest=${_rest#* }; fi
-  if is_role "$_t1"; then
-    _t2=${_rest%% *}
-    if [ "$_t2" = "$_rest" ]; then _rest2=""; else _rest2=${_rest#* }; fi
-    printf '%s\t%s\t%s\n' "$_t1" "$_t2" "$_rest2"
-    return 0
+parse_line() { # -> "gate<TAB>at<TAB>dow<TAB>cmd"
+  local _rest="${1-}" _tok _gate="-" _dow="" _at=""
+  # `-` stands for 'no role gate': a leading EMPTY field would be eaten by IFS
+  # (tab is whitespace to `read`), which silently shifts every field by one.
+  _tok=${_rest%% *}
+  if [ "$_tok" = "$_rest" ]; then _rest=""; else _rest=${_rest#* }; fi
+  if is_role "$_tok"; then _gate=$_tok; _tok=${_rest%% *}
+    if [ "$_tok" = "$_rest" ]; then _rest=""; else _rest=${_rest#* }; fi
   fi
-  _t2=${_rest%% *}
-  if [ "$_t2" = "$_rest" ]; then _rest2=""; else _rest2=${_rest#* }; fi
-  if is_role "$_t2"; then
-    printf '%s\t%s\t%s\n' "$_t2" "$_t1" "$_rest2"
-  else
-    # `-` stands for 'no role gate': a leading EMPTY field would be eaten by IFS
-    # (tab is whitespace to `read`), which silently shifts every field by one.
-    printf '%s\t%s\t%s\n' "-" "$_t1" "$_rest"
+  # A DAY gate may sit before the time (`@heart Mon 09:15 …`, or `Mon 09:15 …` on an
+  # ungated row). It is recognised by what it IS, never by its position (plan 305).
+  if is_dow "$_tok"; then _dow=$_tok; _tok=${_rest%% *}
+    if [ "$_tok" = "$_rest" ]; then _rest=""; else _rest=${_rest#* }; fi
   fi
+  # The shape may also sit before the role (`09:15 @heart …`), which is the older form.
+  _at=$_tok
+  if is_role "$_at" && [ -n "$_rest" ]; then
+    [ "$_gate" = "-" ] && _gate=$_at
+    _at=${_rest%% *}
+    if [ "$_at" = "$_rest" ]; then _rest=""; else _rest=${_rest#* }; fi
+  fi
+  printf '%s\t%s\t%s\t%s\n' "$_gate" "$_at" "$_dow" "$_rest"
 }
-export -f is_role at_valid parse_line
+export -f is_role is_dow dow_matches at_valid parse_line
 
 scheduler='
   config="$1"; log="$2"; state="$3"; home="$4"; confdir="$5"; root="$6"
@@ -280,11 +311,13 @@ scheduler='
       # fault: only the after-time shape parsed, so every role-first line was
       # silently DEAD while --status still counted it declared — on every seat,
       # the heart record jobs never fired. Both orders are one gate now (plan 54).
-      gate=""; at=""; cmd=""
+      gate=""; at=""; dow=""; cmd=""
       _parsed=$(parse_line "$line")
       gate=${_parsed%%"$TAB"*}
       _after=${_parsed#*"$TAB"}
       at=${_after%%"$TAB"*}
+      _after=${_after#*"$TAB"}
+      dow=${_after%%"$TAB"*}
       cmd=${_after#*"$TAB"}
       [ "$gate" = "-" ] && gate=""
       [ -n "$cmd" ] || continue
@@ -312,6 +345,12 @@ scheduler='
         *)         stamp_key="$today"; [ "$at" = "$now" ] && fire=1 ;;
       esac
       [ "$fire" = 1 ] || continue
+      # A DAY gate (plan 305): a weekly row fires on its day only, and its stamp is the day, so a
+      # 45-second loop cannot fire it twice on that day. A day the scheduler cannot read never
+      # reaches here: it fails `at_valid` above and is NAMED in state/.cron-invalid.
+      if [ -n "$dow" ]; then
+        dow_matches "$dow" || continue
+      fi
       if [ -n "$gate" ]; then
         _match=0
         for _w in ${gate#@}; do
@@ -381,16 +420,19 @@ fi
 _bad=$(
   grep -vE '^[[:space:]]*(#|$)' "$CRON_CONFIG" 2>/dev/null | while IFS= read -r _l; do
     _p=$(parse_line "$_l")
-    _at=${_p#*	}; _at=${_at%%	*}
-    at_valid "$_at" || printf '%s\n' "$_l"
+    _rest=${_p#*	}
+    _at=${_rest%%	*}
+    _rest=${_rest#*	}
+    _dow=${_rest%%	*}
+    { at_valid "$_at" && { [ -z "$_dow" ] || is_dow "$_dow"; }; } || printf '%s\n' "$_l"
   done
 )
 if [ -n "$_bad" ]; then
   printf 'cron: WARNING — %s line(s) carry a schedule shape Nornir does not understand, and will NOT fire:\n' "$(printf '%s\n' "$_bad" | grep -c .)" >&2
   printf '%s\n' "$_bad" | sed 's/^/  /' >&2
-  printf 'cron: shapes are HH:MM · @hourly · @hourly:MM · @daily · @every:N (after or before the @role gate)\n' >&2
+  printf 'cron: shapes are HH:MM · @hourly · @hourly:MM · @daily · @every:N · Mon|Mon,Fri HH:MM (after or before the @role gate)\n' >&2
 fi
-unset _bad _l _p _at
+unset _bad _l _p _at _dow _rest
 
 mkdir -p "$STAMP_DIR" "$LOCK_DIR"
 rotate_log

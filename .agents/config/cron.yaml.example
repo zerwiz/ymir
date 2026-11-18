@@ -11,6 +11,9 @@
 #   @hourly      the top of every hour
 #   @hourly:MM   minute MM of every hour           (give each machine its own minute,
 #                                                   so twenty boxes do not knock at once)
+#   @every:N     every N minutes, aligned to the hour
+#   Mon HH:MM    once a week, on that weekday      (Mon … Sun; the parser joins the two
+#                                                   words, so a row reads the way it is said)
 # A shape the scheduler cannot read is NAMED when it starts, recorded in
 # state/.cron-invalid, and counted as `invalid=<n>` by --status. It never fires, and it
 # never looks declared.
@@ -40,6 +43,11 @@
 # the supervision it alone performs.
 
 @heart 07:00 bin/time/nornir-job-daily-briefing.sh
+# THE BRIEF'S OWN WATCHDOG (2026-11-17): five minutes after the brief, one row asks whether it fired,
+# whether the file is there, and what its own `drafts:` line says — and speaks ONE line when the day
+# is not clean: the reason in plain words and one drafted next act. A clean day is silent; a row that
+# never fired is not, because silence is exactly what a clean morning sounds like.
+@heart 07:05 bin/time/nornir-job-brief-watch.sh
 @heart 06:00 bin/time/nornir-job-observer.sh
 @heart 08:00 bin/time/nornir-job-hall-snapshot.sh
 @heart 02:30 bin/time/nornir-job-nsr-compliance.sh
@@ -133,3 +141,31 @@
 #   @heart 18:00 bin/time/nornir-job-agnostic-audit.sh
 #   @heart 06:10 bin/time/nornir-job-private-scan.sh
 #   @heart 18:10 bin/time/nornir-job-private-scan.sh
+
+# — THE WEEKLY DRAFT SWEEP (plan 305, appended 2026-11-17 at the Allfather's word) —
+# `bin/mail/draft-age.sh --brief` runs inside the 07:00 daily brief, which means the only
+# check on an unwritten letter lives inside a job that can die, that looks at AGED drafts
+# only, and that keeps no yesterday. The week is a different question — *what did I start and
+# not finish* — so it is a different row, not the same check on a second schedule.
+#
+# What it does on Monday morning: every draft, oldest first, with its age; one trend row in
+# `hodd/state/draft-trend.jsonl` so a habit is visible across weeks; and ONE line to the phone
+# carrying a send / edit / discard button per draft. A week with no drafts says nothing at all
+# and carves one no-op Rune — a sweep that speaks on an empty week is a nag.
+#
+# ON THE HEART, because the mailbox is ingested there: a sweep on a machine that cannot read
+# the mailbox would report a clean week it never looked at. 09:15, AFTER the 07:00 brief, so
+# the week never pre-empts the day's news. `Mon` before the time is the DAY gate (Nornir reads
+# it, and names a day it does not understand in state/.cron-invalid rather than never firing).
+@heart Mon 09:15 bin/mail/draft-age.sh --weekly
+# — THREE WEEKLY PASSES (2026-11-17) — one number a week, in a series, and a word ONLY when the week is
+# not clean. Each appends one row to its own `hodd/state/<name>-week.jsonl` ({at,value,detail}), carves a
+# Rune, and stays silent when the answer is good: a weekly cron that speaks every week is a cron nobody
+# reads. Monday morning, because a week is judged before it is spent.
+#   tunnels  7 up · N failing   — every declared Gimlé surface, on its road
+#   mail     conversations whose last word is theirs and still owe a reply after 14 days
+#   pin      the distance, in commits, between the pinned runtime and main
+# 08:40 · 08:50 · 09:00 in that order — the cheapest first, and 09:15 is the draft sweep's.
+@heart Mon 08:40 bin/time/nornir-job-week-tunnels.sh
+@heart Mon 08:50 bin/time/nornir-job-week-mail.sh
+@heart Mon 09:00 bin/time/nornir-job-week-pin.sh

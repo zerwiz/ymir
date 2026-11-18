@@ -11,6 +11,7 @@ boards	the board doors — what is queued, claimed and shown
 bridge	the wires between engines: mimir, well-door, constellation
 collab	the collaboration kit and what a counterpart is given
 data	readers and writers of the home's data shelves
+dispatch	the dispatcher — incoming work becomes a bounded errand or a line on his list
 desktop	raise and lower the desktop seats (Smidja board, Sessrumnir, place)
 engine	install, migrate, update, ensure — the machine's own upkeep
 fleet	the fleet registry, roles, agents-config and the sync doors

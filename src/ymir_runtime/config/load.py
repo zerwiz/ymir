@@ -37,8 +37,25 @@ from .schema import (
 
 Semantic = Callable[..., None]
 
-_CRON_TIME = re.compile(r"^([01][0-9]|2[0-3]):[0-5][0-9]$")
-_CRON_GATE = re.compile(r"^@[A-Za-z][A-Za-z0-9_-]*(?:,[A-Za-z][A-Za-z0-9_-]*)*$")
+# The shapes the SCHEDULER reads (plan 140). The loader refused @daily/@hourly rows while the schema
+# and bin/time/nornir-cron-start.sh both accepted them, so the same line was legal to the schedule and
+# illegal to the loader — one of the two is always right, and it is the scheduler.
+_CRON_TIME = re.compile(
+    r"^(?:"
+    r"([01][0-9]|2[0-3]):[0-5][0-9]"
+    r"|@daily"
+    r"|@hourly(?::[0-5]?[0-9])?"
+    r"|@every:(?:[1-9]|[1-5][0-9])"
+    r")$"
+)
+# A DAY gate (plan 305, 2026-11-17): `Mon 09:15 …` or `@heart Tue,Fri 09:15 …`. It sits before the
+# time and names the days a weekly row fires, so the loader must know it — a row this parse refuses
+# is a row the operator believes is scheduled.
+_CRON_DAY = re.compile(
+    r"^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)"
+    r"(?:,(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday))*$"
+)
+_CRON_GATE = re.compile(r"^@(?:heart|forge|dev|hand)(?:,(?:heart|forge|dev|hand))*$")
 _AGENT_OVERLAY = re.compile(r"^agents\.[^.]+\.yaml$")
 
 
@@ -132,35 +149,55 @@ def _parse_yaml(path: Path) -> Any:
 
 
 def _parse_cron(path: Path) -> Any:
-    """Parse `HH:MM [@role[,role]] <command>` (either order) into the schema document.
+    """Parse `[Mon[,Fri]] HH:MM [@role[,role]] <command>` (gates in either order).
 
-    A line the scheduler cannot parse is a job that silently never fires — so the
-    parse itself refuses, naming the file and the line.
+    Three things may lead a row — a ROLE gate (`@heart`), a DAY gate (`Mon`, `Tue,Fri`) and the
+    SHAPE (`09:15`, `@daily`, `@hourly`, `@hourly:MM`, `@every:N`) — and the role and day gates may
+    sit on either side of the shape. They are found by what they ARE, never by position, exactly as
+    bin/time/nornir-cron-start.sh finds them: a schedule the loader reads differently from the
+    scheduler is a row the operator believes is running.
+
+    A line the scheduler cannot parse is a job that silently never fires — so the parse itself
+    refuses, naming the file and the line.
     """
     jobs: list[dict[str, Any]] = []
     for number, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         line = raw.strip()
         if not line or line.startswith("#"):
             continue
-        # No role gate, or the role-first form `@heart 06:00 cmd`.
+        tokens = [(m.group(0), m.start(), m.end()) for m in re.finditer(r"\S+", line)]
         gate = ""
-        head, _, rest = line.partition(" ")
-        if head.startswith("@"):
-            gate, line = head, rest.strip()
-        # `HH:MM cmd` or `HH:MM @heart cmd`.
-        time_token, _, after = line.partition(" ")
-        after = after.strip()
-        if after.startswith("@"):
-            gate, _, after = after.partition(" ")
-            after = after.strip()
-        command = after
-        if not _CRON_TIME.match(time_token):
-            raise ConfigError(f"{path}: line {number}: not a valid HH:MM time: {time_token!r}")
+        days: list[str] = []
+        index = 0
+        while index < len(tokens) and not _CRON_TIME.match(tokens[index][0]):
+            token = tokens[index][0]
+            if _CRON_GATE.match(token):
+                gate = token
+            elif _CRON_DAY.match(token):
+                days = [day for day in token.split(",") if day]
+            else:
+                raise ConfigError(
+                    f"{path}: line {number}: {token!r} is neither a role gate (@heart,@forge), "
+                    f"a day (Mon · Tue,Fri) nor a time shape"
+                )
+            index += 1
+        if index >= len(tokens):
+            raise ConfigError(f"{path}: line {number}: no time shape on this row — a job that never runs")
+        time_token = tokens[index][0]
+        index += 1
+        # The older form puts the ROLE gate after the shape: `09:15 @heart cmd`.
+        if index < len(tokens) and _CRON_GATE.match(tokens[index][0]):
+            gate = tokens[index][0]
+            index += 1
+        command = line[tokens[index][1]:].strip() if index < len(tokens) else ""
         if not command:
             raise ConfigError(f"{path}: line {number}: no command after {time_token!r} — a job that never runs")
+        # `@daily` and `@hourly` are SHAPES, never gates — a row that names them is a row, not a gate.
         if gate and not _CRON_GATE.match(gate):
             raise ConfigError(f"{path}: line {number}: malformed role gate {gate!r} (want @heart,@forge)")
         job: dict[str, Any] = {"time": time_token, "command": command}
+        if days:
+            job["day"] = days
         if gate:
             job["roles"] = [role for role in gate[1:].split(",") if role]
         jobs.append(job)

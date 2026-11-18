@@ -36,7 +36,7 @@ FIXES="$ROOT/docs/fixes"
 # 2026-10-24: the seat road (valknut, harness binding, worktree discipline) had its
 # own directory of notes and no name in this list, so every note written there
 # validated as an unknown component.
-COMPONENTS="install runtime skills agents seat hlidskjalf odrerir sessrumnir smidja hoard gate"
+COMPONENTS="install runtime skills agents seat hlidskjalf odrerir sessrumnir smidja hoard gate dispatch"
 
 usage() { sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'; }
 die() { printf 'error: %s\n' "$1" >&2; [ -n "${2:-}" ] && printf 'help: %s\n' "$2" >&2; exit 1; }

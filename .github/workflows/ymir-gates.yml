@@ -27,6 +27,14 @@ name: The gate
 # inherits them without a second copy of the list.
 on:
   pull_request:
+  # THE MERGE QUEUE'S DOOR (2026-11-15). A merge queue tests each entry on top of the current base and
+  # merges exactly what it tested; but a workflow that listens only to `pull_request` leaves the queue
+  # waiting for a required check that never arrives — the documented configuration fault, and it would
+  # freeze every merge. Measured the same day: `strict` + a nine-minute gate + a main that moves on
+  # every merge starved the queue — nine PRs open, nothing merging, because each PR was stale before
+  # its own gate finished. The queue removes the rebase race: one run per PR, on the base it lands on.
+  merge_group:
+    types: [checks_requested]
   push:
     branches: [main]
 
@@ -38,6 +46,8 @@ permissions:
 # A superseded pull request run proves a tree nobody will merge; cancel it. A main run is
 # never cancelled — the last-green commit is what attributes the next red to a commit.
 concurrency:
+  # A queue run carries no pull request number: its own gh-readonly-queue ref is unique per entry, and
+  # keying on the empty PR number would put every entry in one group and cancel the one ahead of it.
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 

@@ -140,9 +140,13 @@ fi
 if [ "$mode" = check ]; then
   if [ "$quiet" = 1 ]; then printf 'pin: %s behind main at %s — bin/engine/pin-refresh.sh from the working tree\n' "$behind" "$head"
   else
-    printf 'pin-refresh[4]{fact,value}:\n'
+    # THE STATE IS ALWAYS A FACT (2026-11-17). The current-verdict block prints `state`; this one
+    # printed only the number, so a reader had to infer "behind" from the presence of `behind` — and
+    # a consumer that asked for `state` got nothing and called a behind pin unreadable.
+    printf 'pin-refresh[5]{fact,value}:\n'
     printf '  "pin","%s"\n' "$PIN"
     printf '  "head","%s"\n' "$head"
+    printf '  "state","behind"\n'
     printf '  "behind","%s"\n' "$behind"
     printf '  "detail","the pin is behind origin/%s — a refresher outside the pin brings it home"\n' "$BRANCH"
   fi

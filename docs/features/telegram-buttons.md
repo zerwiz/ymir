@@ -44,6 +44,27 @@ third field is a style (`primary`, `success`, `danger`) and the fourth disables 
 (`1`/`true`). A button may omit its label with `{|prompt}`; it may not omit its prompt while enabled.
 A row holds at most eight; a reply holds at most six here, because that is the house's rule.
 
+**For a line that no session composed.** A wrapper is parsed by the bridge out of an assistant's
+reply. A door that posts **straight to the Bot API** — `bin/notify/send.sh`, which is how a cron line
+reaches the phone with no session running — needs Telegram's own control block instead. The same
+grammar renders it:
+
+```
+bin/notify/telegram-buttons.sh emit --format reply-markup \
+  --button "✉️ 1 send|Send draft 1, \"The letter I never sent\", now." \
+  --button "✏️ 1 edit|Edit draft 1 and finish it." \
+  --button "🗑 1 discard|Discard draft 1, it will not be sent."
+```
+
+That prints `{"inline_keyboard":[[{"text":…,"callback_data":…}]]}`, and `send.sh --buttons "<payload>"`
+carries it on the line (`--button "label|prompt"` is the shorthand; `--per-row N` lays the rows).
+`callback_data` is capped at Telegram's 64 bytes, cut at a word boundary, so the prompt travels whole
+where it fits. A button that could not render is **refused** (exit 2) rather than sent.
+
+The difference matters and is worth knowing: on a line the bridge composed, a click dispatches the
+prompt into the session that owns the bot; on a line a cron row posted, the prompt travels in the
+callback and no session is listening for it.
+
 **Limits, stated plainly.** Eight buttons per row is Telegram's own limit; six per reply is ours, and
 `--allow-many` exists for the deliberate exception. Labels are capped at 64 characters. `check`
 refuses a reply with exactly one button only when asked (`--allow-single`), because a single control
@@ -65,5 +86,9 @@ usually means a decision that should have been prose or a proper choice. Nothing
   the sent message is what matters, and only recognized wrappers activate.
 
 ## CHANGE LOG
+
+- **2026-11-17** — `emit --format reply-markup` (and `--per-row N`, `--payload`) renders the same cells
+  as the Bot API's control block, and `bin/notify/send.sh` carries them with `--button` / `--buttons`.
+  The grammar is still judged in this one place; a button that cannot render is refused, never sent.
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

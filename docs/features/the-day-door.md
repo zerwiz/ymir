@@ -27,6 +27,9 @@ bin/day/day.sh clock           # due · fired · missed · whose role owns each 
 bin/day/day.sh open 3          # the door behind act 3
 bin/day/day.sh open 3 --run    # …opened in a pane
 bin/day/day.sh privacy         # the private-data contract, and a check of this door against it
+bin/day/day.sh plans           # every open plan on every shelf the project registry names
+bin/day/day.sh plans --done 7d # what closed lately — what you should tick off
+bin/day/day.sh plans --blocked # the plans waiting on your word, with the question each asks
 ```
 
 ## What it shows, and how honest each part is
@@ -38,6 +41,12 @@ bin/day/day.sh privacy         # the private-data contract, and a check of this 
 | the clock | `config/cron.yaml`, this seat's role, `state/.cron-fired` | `unable` with the reason |
 | the calendar | Mánagandr | `unable — stale — no_oauth_grant` (its real answer) |
 | the evidence | the advantage gate over the client-facing claims | `unable` if the gate or the document is absent |
+| the plans | the project registry and every plan shelf it names | `unable` with the engine's own words, never an empty list |
+
+The `plans` mode reads the plans live through the one engine that owns them,
+`bin/records/plans_state.py`, so it never renders a stale copy — the whole page is
+[the plans, as data](the-plans-as-data.md). Because this door writes nothing, it never regenerates the
+registry; `bin/records/plans-state.sh` does that.
 
 ## Private data — the rule it is built to
 
@@ -48,6 +57,8 @@ bin/day/day.sh privacy         # the private-data contract, and a check of this 
   `--carry` withholds them and says so on the line.
 - **Writes**: nothing. No cache, no log, no temp file — and `privacy` checks the door's own source
   for a write-mode `open()`, a vault path, or a second mail store, and refuses if it finds one.
+  `plans` obeys the same rule: `--carry` withholds plan titles and prints numbers, states and ages,
+  because whether a plan title may travel to Telegram is still an open question in plan 298 §6.
 - **Model**: never. Your mail is not sent to a model, not even to summarise.
 
 Law: `RULES/04` (the hoard), `RULES/15` (the vault), and the reasoning in plan 207 §14.

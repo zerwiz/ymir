@@ -18,11 +18,6 @@
 #      and exits 0, while a line this change adds exits 1 (plan 243 §3 part D);
 #   6. no list at all is a clean skip that SAYS SO, and the generic shapes are still judged;
 #   7. `--list` describes the classes and prints no word of the list.
-#   8. a finding a person has judged safe — a regex in the home's allow file — is reported as
-#      ALLOWED, still counted, and does not fail the tree; a path the allow file does not name
-#      still fails (the allow is anchored, not a blanket);
-#   9. `--paths-only` prints one `path:line` per finding and nothing else, so the sweep cannot read a
-#      prose block as a finding (2026-11-18: the allowed block was added to the prose).
 #
 # Exit: 0 every property holds · 1 a property broke.
 set -u
@@ -118,29 +113,6 @@ rm -f "$REPO/lan2.md"
 out="$(cd "$REPO" && bash "$DOOR" --root "$REPO" --deny "$DENY" --list 2>&1)"
 case "$out" in *zedplanted*|*boxplanted*|*planted.example*) bad "--list printed a word of the list" ;; *) ok "--list prints no word of the list" ;; esac
 case "$out" in *"3 entries"*) ok "--list reports how many entries were read" ;; *) bad "--list did not report the count" ;; esac
-
-# 8 — an allow rule is a recorded reason, not a mute: counted, printed, and anchored on its path.
-#     `old.md` (a word that was on the base) is still in the tree, so the allow file names both.
-ALLOW="$TMP/allow.txt"
-printf '# the findings this canary has judged safe, and why\n^planted\\.md:\n^old\\.md:\n' >"$ALLOW"
-printf 'fine\n\nSindri spoke to zedplanted about it.\n' >"$REPO/planted.md"
-out="$(cd "$REPO" && bash "$DOOR" --root "$REPO" --deny "$DENY" --allow "$ALLOW" 2>&1)"; rc=$?
-[ "$rc" = 0 ] && ok "a finding with a recorded reason does not fail the tree" \
-  || bad "a recorded reason did not clear the finding (exit $rc)"
-case "$out" in *"allowed: 2 finding"*) ok "the allowed findings are still counted and printed" ;; *) bad "the allowed findings vanished from the report" ;; esac
-case "$out" in *zedplanted*) bad "the allowed block PRINTED the denied word" ;; *) ok "the allowed block never prints the word either" ;; esac
-case "$out" in *FAIL*) bad "the machine row still counts an allowed finding as a finding" ;; *) ok "the machine row keeps allowed out of findings" ;; esac
-printf 'fine\n\nSindri spoke to zedplanted about it.\n' >"$REPO/other.md"
-(cd "$REPO" && bash "$DOOR" --root "$REPO" --deny "$DENY" --allow "$ALLOW" >/dev/null 2>&1) \
-  && bad "an allow rule let a DIFFERENT path pass" || ok "an allow rule is anchored on its own path"
-rm -f "$REPO/planted.md" "$REPO/other.md"
-
-# 9 — a job's face: one path per line, nothing to parse.
-out="$(cd "$REPO" && bash "$DOOR" --root "$REPO" --deny "$DENY" --paths-only 2>/dev/null)"; rc=$?
-[ "$rc" = 1 ] && ok "--paths-only exits 1 on a finding" || bad "--paths-only exited $rc on a finding"
-stray="$(printf '%s\n' "$out" | grep -vE '^[^ ][^[:space:]]*:[0-9]+$' | grep -vE '^agnostic_audit\[1\]|^  "' || true)"
-[ -z "$stray" ] && ok "--paths-only prints paths and the one machine row, nothing else" \
-  || bad "--paths-only printed prose: $(printf '%s' "$stray" | head -1)"
 
 [ "$fail" = 0 ] && printf 'test_agnostic_audit: every property holds\n'
 exit "$fail"

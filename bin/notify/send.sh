@@ -3,7 +3,16 @@
 #
 #   bin/notify/send.sh --source <errand|garmr|snotra|cron|people|trello|ward|engine> \
 #       --severity INFO|MEDIUM|HIGH|CRITICAL --message "one line" \
-#       [--key <stable-id>] [--record <id>] [--target <kind>:<value>] [--ask] [--dry-run] [--no-telegram]
+#       [--key <stable-id>] [--record <id>] [--target <kind>:<value>] [--ask] [--dry-run] [--no-telegram] \
+#       [--button "<emoji> <label>|<prompt>" …] [--buttons "<CML payload>"]
+#
+# --button / --buttons are the CONTROLS a phone line carries (2026-11-17): a nudge that cannot be acted
+# on is a nag, so a line that leaves a decision travels with its buttons. The grammar is NOT restated
+# here — bin/notify/telegram-buttons.sh owns it — and `--format reply-markup` renders the same cells as
+# the Bot API's own inline_keyboard, because this door posts straight to the Bot API with no session
+# behind it. `--buttons` takes a CML matrix the caller already laid into rows (a fence of three per
+# draft), so its layout survives instead of being rechunked. A button that could not render is a
+# REFUSAL (exit 2), never a message that arrives as prose.
 #
 # --target is plan 230: every message carries something to OPEN (file: · plan: · pr: · yl:), and
 # the desktop leg hands it to bin/notify/open-target.sh, which owns both the toast and the click.
@@ -37,6 +46,7 @@ ymir_home_root HOME_R 2>/dev/null || true
 [ -n "${HOME_R:-}" ] || { printf 'error: the home is unresolved\n' >&2; exit 1; }
 
 SOURCE=""; SEVERITY="MEDIUM"; MESSAGE=""; KEY=""; RECORD=""; TARGET=""; ASK=0; DRY=0; NO_TG=0
+BUTTONS_CML=""; BUTTON_SPECS=()
 while [ $# -gt 0 ]; do
   case "$1" in
     --source) SOURCE="${2:-}"; shift 2 ;;
@@ -45,6 +55,8 @@ while [ $# -gt 0 ]; do
     --key) KEY="${2:-}"; shift 2 ;;
     --record) RECORD="${2:-}"; shift 2 ;;
     --target) TARGET="${2:-}"; shift 2 ;;
+    --button) BUTTON_SPECS+=("${2:-}"); shift 2 ;;
+    --buttons) BUTTONS_CML="${2:-}"; shift 2 ;;
     --ask) ASK=1; shift ;;
     --dry-run) DRY=1; shift ;;
     --no-telegram) NO_TG=1; shift ;;
@@ -57,6 +69,29 @@ done
 [ -n "$SOURCE" ] || { printf 'error: --source is required\nhelp: errand | garmr | snotra | cron | people | trello | ward | engine\n' >&2; exit 2; }
 [ -n "$MESSAGE" ] || { printf 'error: --message is required\n' >&2; exit 2; }
 case "$SEVERITY" in INFO|MEDIUM|HIGH|CRITICAL) ;; *) printf 'error: severity must be INFO|MEDIUM|HIGH|CRITICAL\n' >&2; exit 2 ;; esac
+
+# ── the controls, rendered by the one door that knows the grammar ──────────────
+# A button that cannot render must not be sent at all: the Bot API silently accepts a reply_markup it
+# cannot show, which is how a wall of prose arrives looking like a decision with no controls.
+MARKUP=""
+MARKUP_LABELS=()
+if [ -n "$BUTTONS_CML" ] || [ ${#BUTTON_SPECS[@]} -gt 0 ]; then
+  _btn_args=(emit --format reply-markup --allow-many)
+  if [ -n "$BUTTONS_CML" ]; then
+    _btn_args+=(--payload "$BUTTONS_CML")
+  else
+    _btn_args+=(--per-row "${BUTTON_ROW:-3}")
+    for _spec in "${BUTTON_SPECS[@]}"; do _btn_args+=(--button "$_spec"); done
+  fi
+  if ! MARKUP="$(bash "$ROOT/bin/notify/telegram-buttons.sh" "${_btn_args[@]}" 2>&1)"; then
+    printf 'error: the buttons were refused — %s\nhelp: each button is "<emoji> <label>|<prompt>"; see bin/notify/telegram-buttons.sh\n' "$MARKUP" >&2
+    exit 2
+  fi
+  while IFS= read -r _lbl; do [ -n "$_lbl" ] && MARKUP_LABELS+=("$_lbl"); done \
+    < <(printf '%s' "$MARKUP" | python3 -c 'import json,sys
+for row in json.load(sys.stdin).get("inline_keyboard",[]):
+    for c in row: print(c.get("text",""))' 2>/dev/null)
+fi
 
 [ -n "$KEY" ] || KEY="$(printf '%s|%s' "$SOURCE" "$MESSAGE" | sha256sum | cut -c1-16)"
 STATE_DIR="$HOME_R/hodd/state/notify"
@@ -120,7 +155,7 @@ if [ "$DRY" = 0 ]; then
       --message "suppressed (duplicate ${KEY}): ${MESSAGE}" >/dev/null 2>&1 && SAID_RUNE=1
   else
     bash "$ROOT/bin/records/runes-append.sh" "$SOURCE" notify \
-      --message "$LINE$([ -n "$TARGET" ] && printf ' (opens %s)' "$TARGET")" >/dev/null 2>&1 && SAID_RUNE=1
+      --message "$LINE$([ -n "$TARGET" ] && printf ' (opens %s)' "$TARGET")$([ ${#MARKUP_LABELS[@]} -gt 0 ] && printf ' (%d buttons)' "${#MARKUP_LABELS[@]}")" >/dev/null 2>&1 && SAID_RUNE=1
   fi
 fi
 
@@ -187,10 +222,13 @@ INNER
         [ -n "${SKIRNIR_TELEGRAM_BOT_TOKEN:-}" ] && TELEGRAM_BOT_TOKEN="$SKIRNIR_TELEGRAM_BOT_TOKEN"
       fi
       if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_OWNER_ID:-}" ]; then
+        TG_MARKUP_ARGS=()
+        [ -n "$MARKUP" ] && TG_MARKUP_ARGS=(-d "reply_markup=$MARKUP")
         if curl -s -m 10 -o /dev/null -w '%{http_code}' \
           "${TELEGRAM_API_BASE:-https://api.telegram.org}/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
           --data-urlencode "chat_id=${TELEGRAM_OWNER_ID}" \
           --data-urlencode "text=${LINE}${RECORD:+ · record $RECORD}" \
+          "${TG_MARKUP_ARGS[@]}" \
           -d "disable_web_page_preview=true" 2>/dev/null | grep -q '^200$'; then
           SAID_TG=1
           # plan 261: what the house said on Telegram is a row in the communications record
@@ -206,6 +244,11 @@ fi
 printf 'notify[1]{decision,source,severity,rune,arm,desktop,pocket,telegram}:\n'
 printf '  "%s","%s","%s","%s","%s","%s","%s","%s"\n' \
   "$DECISION" "$SOURCE" "$SEVERITY" "$SAID_RUNE" "$SAID_ARM" "$SAID_DESKTOP" "$SAID_PHONE" "$SAID_TG"
+# The controls are part of the answer: the record says how many buttons the line carried.
+if [ ${#MARKUP_LABELS[@]} -gt 0 ]; then
+  printf 'buttons[%d]{label}:\n' "${#MARKUP_LABELS[@]}"
+  for _lbl in "${MARKUP_LABELS[@]}"; do printf '  "%s"\n' "${_lbl//\"/\'}"; done
+fi
 
 # A message nobody heard is a failure — except a deliberate duplicate, which is the point.
 if [ "$DECISION" = "duplicate" ]; then exit 0; fi
