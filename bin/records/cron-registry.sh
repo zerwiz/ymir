@@ -25,8 +25,10 @@ REPO="${YMIR_REPO:-$HOME/ymir}"
 nornir() {
   [ -f "$ROWS" ] || return 0
   grep -E '^@' "$ROWS" 2>/dev/null | while IFS= read -r line; do
-    when="$(printf '%s' "$line" | awk '{print $1" "$2}')"
-    cmd="$(printf '%s' "$line" | sed -E 's/^@[a-z]+ (@every:[0-9]+|[0-9]{2}:[0-9]{2}) +//')"
+    # A weekly row is `@heart Mon 08:40 cmd` — THREE tokens before the command, so `when` takes
+    # the third with it or the registry shows half a schedule (2026-11-17).
+    when="$(printf '%s' "$line" | awk '{ print ($2 ~ /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)$/) ? $1" "$2" "$3 : $1" "$2 }')"
+    cmd="$(printf '%s' "$line" | sed -E 's/^@[a-z]+ ((Mon|Tue|Wed|Thu|Fri|Sat|Sun) )?(@every:[0-9]+|[0-9]{2}:[0-9]{2}) +//')"
     script="${cmd%% *}"                      # the path is the first token; the rest are arguments
     exists="missing"
     for cand in "$REPO/$script" "$HOME/$script"; do [ -x "$cand" ] && exists="ok" && break; done

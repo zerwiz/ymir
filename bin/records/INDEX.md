@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[57]{file,does,kind,verdict,disposition,callers,lines}:
+bin[59]{file,does,kind,verdict,disposition,callers,lines}:
   "agents-status.sh","agents-status.sh — which agents are running, where, on what work, and which are idle.","tool","wired","keep",1,48
   "atlas.py","'''atlas.py — one page at the top of the home that says where we have it all (plan 251).","tool","wired","keep",1,277
   "atlas.sh","atlas.sh — one page at the top of the home that says where we have it all (plan 251).","tool","wired","keep",1,19
@@ -29,17 +29,17 @@ bin[57]{file,does,kind,verdict,disposition,callers,lines}:
   "behind.sh","behind.sh — the arithmetic of being behind: opened/closed this week, net, stale-30d, unbuilt phases.","tool","wired","keep",0,46
   "comms.py","'''comms.py — every communication, in, out and owed, and the to-do they move (plan 261).","tool","tested","keep",4,1175
   "comms.sh","comms.sh — the one read door over every communication: in, out and owed (plan 261).","tool","wired","keep",3,19
-  "cron-registry.sh","cron-registry.sh — every scheduled thing on this machine: the Nornir rows, the system timers, the user timers.","tool","wired","keep",1,64
+  "cron-registry.sh","cron-registry.sh — every scheduled thing on this machine: the Nornir rows, the system timers, the user timers.","tool","wired","keep",1,66
   "daily-log.sh","daily-log.sh — the day's work, recorded where the contract says it lives.","tool","wired","keep",6,104
   "developers.sh","developers.sh — who can write to a repository, and who actually has.","tool","wired","keep",0,119
-  "gimle-tunnels-check.sh","gimle-tunnels-check.sh — every Gimlé surface must be reachable on a tunnel, and we must KNOW it is, not assume it.","tool","wired","keep",2,74
+  "gimle-tunnels-check.sh","gimle-tunnels-check.sh — every Gimlé surface must be reachable on a tunnel, and we must KNOW it is, not assume it.","tool","wired","keep",3,74
   "grade.sh","grade.sh — Dellingr: how fresh is a document?","tool","wired","keep",2,29
   "header.sh","header.sh — the declared-truth header of a home document: check, or apply a minimal one.","tool","wired","keep",2,28
   "host-status.sh","host-status.sh — CPU, memory and GPU of this machine, in one read.","tool","wired","keep",0,45
   "journal-append.sh","journal-append.sh — write one idempotent entry to THIS machine's outbox.","tool","tested","keep",0,115
   "journal-receive.sh","journal-receive.sh — the HEART folds the bodies' journals into one record.","tool","tested","keep",1,137
   "journal-reconcile.sh","journal-reconcile.sh — push this machine's outbox to the heart, when it answers.","tool","tested","keep",2,131
-  "layout.py","'''layout.py — the placement oracle and the home's shelves, as ONE door.","tool","wired","keep",3,182
+  "layout.py","'''layout.py — the placement oracle and the home's shelves, as ONE door.","tool","wired","keep",2,182
   "library.sh","library.sh — the library of records: one corpus, one contract, one door (plan 115).","tool","wired","migrate → src/ymir_runtime/library.py",0,72
   "meetings.sh","meetings.sh — one report over every meeting the house has, whatever recorded it.","tool","wired","keep",4,313
   "mimir-ingest.sh","mimir-ingest.sh — ingest the repo's data material into the well (Mimirsbrunn).","tool","wired","keep",1,135
@@ -51,15 +51,17 @@ bin[57]{file,does,kind,verdict,disposition,callers,lines}:
   "mimir.sh","mimir.sh — the well (Mimirsbrunn).","tool","tested","keep",23,510
   "note.sh","note.sh — append a DATED section to an existing document in the home (append-only, Rule 06).","tool","wired","keep",4,16
   "open-work.sh","open-work.sh — the open work, rendered for a HUMAN, from the record the doors read.","tool","wired","keep",2,80
-  "plan-board.sh","plan-board.sh — how many plans are done and not done, what to work on next, and which old","tool","wired","keep",0,303
-  "plan-state.sh","plan-state.sh — read and write the Status/Owner header of every plan in the ledger.","tool","wired","keep",2,86
-  "plan.sh","plan.sh — the plan ledger: create the NEXT numbered plan and its index row.","tool","tested","keep",8,305
+  "plan-board.sh","plan-board.sh — how many plans are done and not done, what to work on next, and which old","tool","wired","keep",1,303
+  "plan-state.sh","plan-state.sh — read and write the Status/Owner header of every plan in the ledger.","tool","wired","keep",4,92
+  "plan.sh","plan.sh — the plan ledger: create the NEXT numbered plan and its index row.","tool","tested","keep",8,314
+  "plans-state.sh","plans-state.sh — the plans, as data: every shelf the registry names, read once (plan 298 §2.1).","tool","wired","keep",3,41
+  "plans_state.py","'''plans_state.py — the plans, as data: every shelf the registry names, read once (plan 298 §2.1).","tool","wired","keep",2,848
   "project-brief.sh","project-brief.sh — 'this project', for any session in any harness (Claude Code, Pi, OpenCode, Hermes).","tool","wired","keep",1,21
   "project_brief.py","'''project_brief — the 'this project' section of the session-start digest (see project-brief.sh).'''","tool","wired","keep",1,139
   "regenerate-on-merge.sh","regenerate-on-merge.sh — the merge driver for WOVEN documents (Þættir, plan 174).","tool","wired","keep",3,36
   "registries-refresh.sh","registries-refresh.sh — write the four measured registries for this host into the home.","tool","wired","keep",0,33
   "registry-audit.sh","registry-audit.sh — is every running container named in the services registry, and is every named service alive?","tool","wired","keep",0,55
-  "runes-append.sh","runes-append.sh — the append-only Runes ledger, a THIN SHIM.","tool","tested","keep",38,117
+  "runes-append.sh","runes-append.sh — the append-only Runes ledger, a THIN SHIM.","tool","tested","keep",42,117
   "runes-project.sh","runes-project.sh — the DAG projector, regenerates runes_audit.md from events.","tool","wired","keep",0,65
   "running-inventory.sh","running-inventory.sh — what is actually running on this machine, generated rather than remembered.","tool","wired","keep",1,103
   "snotra-ladder.sh","snotra-ladder.sh — the meeting ladder: transcript → minutes → promises → todos, and a stop that says so.","tool","wired","keep",0,616
@@ -80,6 +82,6 @@ bin[57]{file,does,kind,verdict,disposition,callers,lines}:
   "wyrd-db.sh","wyrd-db.sh — the database layer (W0040).","tool","wired","keep",0,49
   "ymir-state.sh","ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runtime/state/`).","tool","wired","keep",12,44
 
-**Tally.** verdict: wired=48, tested=9
+**Tally.** verdict: wired=50, tested=9
 
-**Tally.** disposition: keep=56, migrate → src/ymir_runtime/library.py=1
+**Tally.** disposition: keep=58, migrate → src/ymir_runtime/library.py=1

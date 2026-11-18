@@ -3,7 +3,8 @@
 Nornir runs Ymir's scheduled jobs from one readable list, `$YMIR_HOME/config/cron.yaml`. Until 2026-10-28
 every line had to name an exact minute of the day (`06:35`), so a job that should run every hour meant
 twenty-four lines — and any one of them could be mistyped and never fire, while still looking scheduled.
-Now a line may also say **`@hourly`**, **`@hourly:MM`** or **`@daily`**.
+Now a line may also say **`@hourly`**, **`@hourly:MM`**, **`@daily`**, **`@every:N`**, and — since 2026-11-17 —
+**a weekday**: `Mon 09:15` runs a job once a week, on that day, at that minute.
 
 ## What you need
 
@@ -19,6 +20,9 @@ Edit `$YMIR_HOME/config/cron.yaml` and pick a shape:
 @hourly:20    bin/time/well-vault-sync.sh --mode sync
 @daily        bin/time/nornir-job-memory-housekeeping.sh
 @heart 07:00  bin/time/nornir-job-daily-briefing.sh
+@every:15     bin/records/registries-refresh.sh
+Mon 09:15     bin/mail/draft-age.sh --weekly
+@heart Tue,Fri 09:15  bin/fleet/registry-check.sh
 ```
 
 Check what the scheduler sees:
@@ -38,13 +42,17 @@ so it can never sit there looking scheduled.
 - A shape fires **once** per hour or per day even though the scheduler checks every 45 seconds; the stamp is
   what stops a double run.
 - `HH:MM` still means once a day at that minute, exactly as before. Nothing old changed.
-- There is deliberately no general cron grammar: no `*/15`, no ranges. If you need every fifteen minutes,
-  that is four `@hourly`-style lines today, and a conversation about the shape tomorrow.
+- A **weekday** before the time is a weekly row: `Mon 09:15 …`, or a comma list `Tue,Fri 09:15 …`. Spell the
+  day; a day the calendar does not have (`Funday`) is refused by name rather than installed as a row that never
+  fires. The stamp is the day, so it runs once on its day and not twice.
+- There is deliberately no general cron grammar: no `*/15`, no ranges, and the weekday is a NAME rather than
+  a field (`Mon`, never `1`). `@every:N` covers the sub-hourly need.
 
 ## If it does not work
 
 `cron: WARNING — 1 line(s) carry a schedule shape Nornir does not understand, and will NOT fire:` — the
-line is printed under it. Fix the shape: it must be `HH:MM`, `@daily`, `@hourly` or `@hourly:MM` (0–59).
+line is printed under it. Fix the shape: it must be `HH:MM`, `@daily`, `@hourly`, `@hourly:MM` (0–59),
+`@every:N` (1–59), `@every:N` minutes, or a weekday name (`Mon` · `Tue,Fri`) before the time.
 
 `--status` shows `invalid=2` and you cannot find them — the rows are recorded in
 `$YMIR_HOME/state/.cron-invalid`; read that file.
@@ -54,5 +62,9 @@ hour. A job that seems to run twice an hour is two lines for the same command wi
 stamp is per command and per shape.
 
 ## CHANGE LOG
+
+- **2026-11-17** — the DAY gate: a row may name the weekday it fires on (`Mon 09:15 …`, `Tue,Fri 09:15 …`),
+  written before the shape and read by the same one parser. A day the scheduler cannot read is named in
+  `state/.cron-invalid` exactly like an unreadable shape. Added for the weekly draft sweep (plan 305).
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.

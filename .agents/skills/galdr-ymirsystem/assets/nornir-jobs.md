@@ -649,11 +649,22 @@ that either never fires or fires every tick.
 | `@daily` | 00:00, once a day | `<date>` | 2026-10-28 |
 | `@hourly` | the top of every hour | `<date>T<HH>` | 2026-10-28 |
 | `@hourly:MM` | minute `MM` of every hour | `<date>T<HH>` | 2026-10-28 |
+| `@every:N` | every `N` minutes, aligned to the hour | `<date>T<HH>/slot<MM/N>` | 2026-11-13 |
+| `Mon HH:MM` | that weekday, once a day, at that minute | `<date>` | 2026-11-17 |
+| `Mon,Fri HH:MM` | each named day, once each | `<date>` | 2026-11-17 |
+
+- **A DAY gate before a shape** (2026-11-17, plan 305). `@heart Mon 09:15 bin/mail/draft-age.sh --weekly` is
+  a weekly row: the weekday name (`Mon` · `Tue,Fri` · `Monday`) sits BEFORE the time, with or without a role
+  gate, and `is_dow` recognises it by what it is. `dow_matches` asks `date +%a` at fire time, and the stamp is
+  the day, so a 45 s loop fires the row once on its day. A day the calendar does not have (`Funday`) is refused
+  by name — `.cron-invalid` and `invalid=<n>`, exactly like an unreadable shape — so a weekly row can never
+  look scheduled while being dead. Proved in `.agents/tests/nornir-schedule-shapes.test.sh` on a fake clock,
+  whose `date` learned `+%a` for it.
 
 - **The role gate parses before or after a shape** (`@heart @hourly:00 …`, `@hourly:00 @heart …`), because
   the token is identified by what it IS (`is_role`), never by its position. The 2026-09-24 fault was a
   position guess; this is the same lesson applied to shapes.
-- **One parser, two callers.** `parse_line` · `is_role` · `at_valid` live in the script and are `export -f`'d,
+- **One parser, two callers.** `parse_line` · `is_role` · `is_dow` · `dow_matches` · `at_valid` live in the script and are `export -f`'d,
   so the loop and the **start-time warning** agree. Two parsers is how a row goes declared-but-dead.
 - **An unreadable shape is named, not skipped.** At start: `cron: WARNING — N line(s) carry a schedule shape
   Nornir does not understand, and will NOT fire:` with the lines under it. During the run it is recorded in
@@ -662,9 +673,10 @@ that either never fires or fires every tick.
   whole line in the first field, and a parser that can eat a row without saying so cannot be trusted.
 - **Two test hooks** exist for exactly one reason — proving the schedule without waiting an hour:
   `BROKK_CRON_TICK` (loop sleep, default 45) and `BROKK_CRON_ONCE=1` (one pass, then exit). The proof is
-  `.agents/tests/nornir-schedule-shapes.test.sh` (16 assertions, fake `date`).
+  `.agents/tests/nornir-schedule-shapes.test.sh` (24 assertions, fake `date`), run by the `nornir-day-gate` CI gate.
 
-**Deliberately not added:** `*/N`, ranges, calendars. Nornir's value is that the whole schedule is legible in
+**Deliberately not added:** `*/N`, ranges, calendars — and the day gate is a NAME, not a cron field: a
+weekly row says `Mon`, never `1`. Nornir's value is that the whole schedule is legible in
 a minute; a general cron grammar costs that and buys an hour-shaped need nothing here has.
 
 ## Appended 2026-11-06 — a smithy's row is generated, never typed

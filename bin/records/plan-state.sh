@@ -16,9 +16,15 @@ fi
 [ -d "$PLAN_DIR" ] || { echo "plan-state: no ledger at $PLAN_DIR" >&2; exit 1; }
 
 header() { sed -n '1,25p' "$1"; }
+# The header field naming a plan's state. `Status:` is the older spelling and the one this door writes;
+# `state:` is accepted too, because plan 298 §2.1 declared it and a reader that refuses the newer
+# spelling would report a plan as stateless when its author said plainly what it is.
+get_state() { header "$1" | grep -iE '^\**state\**:' | head -1 | sed -E 's/^\**state\**:[[:space:]]*\**//I'; }
 get_field() { header "$1" | grep -iE "^$2:" | head -1 | sed -E "s/^$2:[[:space:]]*//I"; }
 
-valid_status() { case "$1" in open|building|done|parked|superseded) return 0;; esac; return 1; }
+get_status_field() { local s; s="$(get_state "$1")"; [ -n "$s" ] && { printf '%s' "$s"; return 0; }; get_field "$1" Status; }
+
+valid_status() { case "$1" in open|building|done|parked|superseded|blocked|owed) return 0;; esac; return 1; }
 
 cmd="${1:-audit}"
 case "$cmd" in
@@ -28,10 +34,10 @@ case "$cmd" in
     for f in "$PLAN_DIR"/*.md; do
       [ -e "$f" ] || continue
       [ "$(basename "$f")" = "README.md" ] && continue
-      s="$(get_field "$f" Status)"; o="$(get_field "$f" Owner)"
+      s="$(get_status_field "$f")"; o="$(get_field "$f" Owner)"
       if [ -z "$s" ] || [ -z "$o" ]; then echo "MISSING: $(basename "$f") (status='${s:-}' owner='${o:-}')"; bad=$((bad+1)); fi
     done
-    [ "$bad" -eq 0 ] && echo "plan-state: all plans carry Status and Owner" || { echo "plan-state: $bad finding(s)"; exit 1; } ;;
+    [ "$bad" -eq 0 ] && echo "plan-state: all plans carry Status (or state) and Owner" || { echo "plan-state: $bad finding(s)"; exit 1; } ;;
   set)
     f="${2:-}"; st="${3:-}"; ow="${4:-}"
     [ -n "$f" ] && [ -f "$f" ] || { echo "plan-state set: file required" >&2; exit 2; }
@@ -73,7 +79,7 @@ PY
       [ -e "$f" ] || continue
       [ "$(basename "$f")" = "README.md" ] && continue
       num="$(basename "$f" | grep -oE '^[0-9]+')"
-      s="$(get_field "$f" Status)"; o="$(get_field "$f" Owner)"
+      s="$(get_status_field "$f")"; o="$(get_field "$f" Owner)"
       [ -z "$s" ] && s="MISSING"; [ -z "$o" ] && o="MISSING"
       case "$s" in done) done=$((done+1));; open) open=$((open+1));; building) building=$((building+1));; parked) parked=$((parked+1));; superseded) superseded=$((superseded+1));; esac
       [ "$o" = "needs-owner" ] && needs=$((needs+1))

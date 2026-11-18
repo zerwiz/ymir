@@ -26,11 +26,28 @@ Volume=%h/dev/Way-Of/ymir:/opt/ymir:Z
 # host's does. Without it every runtime path falls back to $HOME/Documents/ymirhome:
 # the well finds no engram, the visualizer finds no smithy DB, the cron status reads
 # the wrong state dir, and the ledger looks in a directory that does not exist.
-Volume=%h/Documents/Ymir:$HOME_SEAT/Documents/Ymir:Z
+# Both sides are `%h`: the container sees the operator's home at its own path, so the
+# mount, the mask below, and the host all spell one path instead of three guesses.
+Volume=%h/Documents/Ymir:%h/Documents/Ymir:Z
+
+# THE VAULT IS NOT THE CONTAINER'S (the reviewer's item 5, 2026-11-12; masked 2026-11-16).
+# The home mount above used to hand the container `hodd/secrets` whole — the age KEY and
+# the encrypted file side by side — so a container that could read the home could decrypt
+# the vault: the boundary protected nothing it was built to protect. An empty tmpfs over
+# that one path closes it without widening anything else.
+#
+# What this costs, said plainly: inside the container `bin/vault/hodd.sh` can no longer
+# decrypt. A service that needs a vault value inside the container gets it from
+# `ymir.env` (0600, the EnvironmentFile above), which the operator writes; the sealed
+# vault stays on the host, where its key already lives. The mail desk, the Telegram seat
+# and the Nornir jobs read the vault from the host, not from here.
+# `%h/Documents/Ymir/hodd/secrets` must match the home volume above; the gate
+# `bin/gates/checks.d/0495-container-hides-the-hoard.sh` fails when the two drift.
+Tmpfs=%h/Documents/Ymir/hodd/secrets:size=1m,ro
 
 # The harness config (~/.pi): the model registry and the MCP servers the lifecycle
 # smoke test probes.
-Volume=%h/.pi:$HOME_SEAT/.pi:Z
+Volume=%h/.pi:%h/.pi:Z
 
 WorkingDir=/opt/ymir
 EnvironmentFile=%h/.config/ymir/ymir.env
