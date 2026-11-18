@@ -1963,3 +1963,9 @@ This is a new subpackage, run as `python3 -m ymir_runtime.hermes <verb>`. Its ve
 `wait-worker` is deliberately not in `watch.py`, which is the arm. The waiter runs as a transient systemd user unit (`ymir-wait-worker-<session>-<stamp>`). It delivers a turn by the descriptor's `inject:` road, and its state lives under `$XDG_STATE_HOME/ymir/hermes/wait-worker/`.
 
 The tests are `src/ymir_runtime/tests/test_hermes_*.py` (pytest, 28 cases).
+
+
+
+## Appended 2026-11-18 — the home's top-level map page is not Ymir's
+
+The earlier line that lists the home's top-level map page among its document map is corrected: that page and the tool that wrote it belong to the other project and have moved out of Ymir (RULES/58). The home's document map is its layout shelves, the knowledge index and the plan-ledger READMEs.

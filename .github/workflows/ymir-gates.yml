@@ -42,6 +42,7 @@ on:
 permissions:
   contents: read
   issues: write
+  pull-requests: read
 
 # A superseded pull request run proves a tree nobody will merge; cancel it. A main run is
 # never cancelled — the last-green commit is what attributes the next red to a commit.
@@ -112,6 +113,7 @@ jobs:
         run: bash bin/gates/guards/pr-identity-guard.sh --ci
         env:
           GITHUB_EVENT_PATH: ${{ github.event_path }}
+          GH_TOKEN: ${{ github.token }}
 
       # The run page says what failed, in the page — so reading a red does not mean reading
       # four thousand log lines on a phone.
