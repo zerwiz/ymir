@@ -61,6 +61,18 @@ PY
   commits="$(ev_get commits)"
   author="$(ev_get author)"
   head_sha="$(ev_get head_sha)"
+  # A re-run of a workflow replays the event it was first given, so a title or body fixed since is
+  # still judged as it was (measured 2026-11-18: a corrected PR title was refused again on re-run).
+  # Ask the pull request itself when gh can answer; the event stays the fallback.
+  _num="$(python3 -c 'import json,sys;print((json.load(open(sys.argv[1])).get("pull_request") or {}).get("number") or "")' "$GITHUB_EVENT_PATH" 2>/dev/null)"
+  if [ -n "$_num" ] && command -v gh >/dev/null 2>&1 && [ -n "${GH_TOKEN:-${GITHUB_TOKEN:-}}" ]; then
+    _live="$(gh pr view "$_num" --json title,body 2>/dev/null)" && [ -n "$_live" ] && {
+      _t="$(printf '%s' "$_live" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("title") or "")')"
+      _b="$(printf '%s' "$_live" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("body") or "")')"
+      [ -n "$_t" ] && title="$_t"
+      body="$_b"
+    }
+  fi
 else
   [ -z "$pr" ] && { echo "usage: pr-identity-guard.sh <pr-number> [--ci]" >&2; exit 2; }
   body=$(gh pr view "$pr" --json body -q .body 2>/dev/null)
