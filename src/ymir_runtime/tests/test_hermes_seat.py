@@ -157,8 +157,8 @@ def test_a_correction_keeps_the_operators_extra_keys():
 
 
 def test_an_owned_entry_gone_from_the_list_is_disabled_never_deleted():
-    config = {"mcp_servers": {"old": {"url": "http://x", "enabled": True}}}
-    ledger = {"mcp_servers": {"old": {"value": {"url": "http://x"}}}}
+    config = {"mcp_servers": {"old": {"url": "https://mcp.example.org", "enabled": True}}}
+    ledger = {"mcp_servers": {"old": {"value": {"url": "https://mcp.example.org"}}}}
     p = S.plan(config, {}, ledger, Path(""), Path("/nonexistent"))
     assert p.config["mcp_servers"]["old"]["enabled"] is False
     assert p.ledger["mcp_servers"]["old"]["state"] == S.RETIRED
