@@ -1956,3 +1956,8 @@ Gates: `heavy-slot`, `update-loop-proof`. Fix notes:
 `docs/fixes/engine/2026-11-17-a-candidate-is-proven-once.md`. The runbook these correct is the heart's
 `updating.md` (in the home), whose first law had named `bin/heavy-slot.sh take` — a verb that never
 existed.
+
+
+## Appended 2026-11-18 — the atlas map is not Ymir's
+
+The line above that names `hodd/ATLAS.md` as part of the home's document map is corrected: the atlas map and its tool belong to Atlas and have moved out of Ymir (RULES/58). The home's document map is its layout shelves, the knowledge index and the plan-ledger READMEs.
