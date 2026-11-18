@@ -118,7 +118,7 @@ def state_dir(env: Mapping[str, str]) -> Path:
     """Machine-local state for the Hermes verbs — the same place the session hook always used."""
     if env.get("YMIR_HERMES_STATE"):
         return Path(env["YMIR_HERMES_STATE"])
-    base = Path(env["XDG_STATE_HOME"]) if env.get("XDG_STATE_HOME") else user_home(env) / ".local" / "state"
+    base = Path(env["XDG_STATE_HOME"]) if env.get("XDG_STATE_HOME") else user_home(env) / ".local/state"
     return base / "ymir" / "hermes"
 
 
