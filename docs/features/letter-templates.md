@@ -103,6 +103,27 @@ to `Re: <their subject>`; `--subject` still wins.
 
 The id is the `id` of a message in Gná's store, or of any message the Gmail API lists.
 
+**A subject that says `Re:` must be proved.** Since 2026-11-17 the door reads a subject that opens with `Re:` as a
+claim — *this letter answers something* — and joins the thread itself when the claim is unambiguous. You do not need
+the message id for that; your subject is enough.
+
+| Your subject | What the door does |
+|---|---|
+| `Re: The plan for the quarter`, and one message carries that subject | joins that message's thread and prints `answers  <id>  <subject>  <sender>  <date>` |
+| `Re: …`, and nothing carries that subject | refuses, and says nothing in the mailbox has that subject |
+| `Re: …`, and two or more carry it | refuses, and lists every candidate's id, subject, sender and date |
+| `Re: …`, and the mailbox cannot be read | refuses — an unproven reply is not allowed to become a new thread |
+| `Re: …` with `--new-thread` | sends an ordinary letter with no threading headers, on purpose |
+| a subject that does not open `Re:` | unchanged — nothing is looked up |
+
+The comparison ignores case and extra spaces, and ignores any number of leading `Re:` — `re:   THE PLAN for the
+quarter` finds `The plan for the quarter`. `--reply-to <id>` still wins when you give it, and `--reply-to` together
+with `--new-thread` is refused: one says answer a message, the other says start a conversation.
+
+The door refuses rather than guesses because a wrong reply header puts your letter inside somebody else's
+conversation, which is worse than a new thread and much harder to see afterwards. Two matches mean the subject does
+not name one message; pass `--reply-to <id>` to choose.
+
 **Your own companies' themes and private letter types** go in your home, not in this repository:
 `$YMIR_HOME/hodd/identity/letters/themes.yaml` (each theme `extends:` a shipped one) and
 `$YMIR_HOME/hodd/identity/letters/types/`.
@@ -136,6 +157,9 @@ Agents find all of this through the skill `snotra-letters`.
 
 ## CHANGE LOG
 
+- **2026-11-17** — a subject that opens `Re:` is proved against the mailbox: one match joins the thread by itself,
+none or several are refused with the reason and the candidates named, and `--new-thread` starts a conversation
+without looking anything up.
 - **2026-11-12 (evening)** — `--reply-to <gmail-message-id>`: a reply joins its thread (`In-Reply-To`, `References`,
   the `threadId`) and the subject defaults to `Re: <their subject>`.
 - **2026-11-12 (later)** — the made-by line links to Ymir's homepage and shows its address.

@@ -24,7 +24,7 @@ UI="$APP/ui"
 ENGINE="${RODD_ENGINE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/ymir/rodd-engine}"   # allow-home-default: a cache, overridable
 STAMP="$UI/.rodd-face"     # which tag the served face was dressed from
 PATCH_STAMP="$UI/.rodd-patch"   # which patch set dressed it (plan 275: a merged patch must reach the face)
-patch_hash() { cat "$APP/patch/"* 2>/dev/null | sha256sum | cut -c1-16; }
+patch_hash() { cat "$APP/patch/"* 2>/dev/null | { command -v sha256sum >/dev/null 2>&1 && sha256sum || shasum -a 256; } | cut -c1-16; }
 say() { printf '%-42s %s\n' "$1" "$2"; }
 
 # `--check` is the question every installer and every updater asks: is the face present,

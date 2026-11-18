@@ -20,7 +20,10 @@ KIT="$HERE/kit"
 # 1.6.0 (2026-11-12, Ymir RULES/53): the kit carries the maker ward — `scripts/gates/maker-guard.sh`, its matcher
 # `maker-names.py`, the word list `maker-words.txt` (tune it per client) and `maker-allow.txt`; the kit's commit-msg
 # and pre-push hooks call it, so a client's commits never carry a model or harness name.
-VERSION="1.6.0"
+# 1.7.0 (2026-11-15): the kit carries `docs/a-company-suite.md` — a second installation of the suite, owned by
+# another company: its own gate secrets, its own members, its own domain and theme, one MCP token per member,
+# and the proof that the two installations share no secret and no user. Documentation only; no gate changed.
+VERSION="1.7.0"
 
 mode=""; repo=""
 for a in "$@"; do

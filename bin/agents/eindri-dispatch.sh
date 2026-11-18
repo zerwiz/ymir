@@ -42,7 +42,20 @@ fi
 YMIR_HOME="${YMIR_HOME:-${BROKK_ROOT_OVERRIDE:-$ROOT}}"
 export YMIR_HOME
 BROKK_HOME="${BROKK_HOME:-${BROKK_ROOT_OVERRIDE:-$ROOT}}"
-DATA="${BROKK_DATA_OVERRIDE:-$BROKK_HOME/data}"
+# THE RECORDS ARE THE OPERATOR'S, NOT THE CODE TREE'S (2026-11-15). data/ lives in the home's hoard
+# (<home>/hodd/data), and a code root has none of its own — deriving it from BROKK_HOME is how the
+# heart came to read a repo's empty data/ while the rosters sat in the home. One resolver, as everywhere.
+DATA="${BROKK_DATA_OVERRIDE:-}"
+if [ -z "$DATA" ]; then
+  if ! declare -f hoard_data_dir >/dev/null 2>&1; then
+    for _hl in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$ROOT/bin/vault/hoard-lib.sh"; do
+      [ -r "$_hl" ] && { . "$_hl"; break; }
+    done
+    unset _hl
+  fi
+  declare -f hoard_data_dir >/dev/null 2>&1 && hoard_data_dir DATA 2>/dev/null
+  [ -n "${DATA:-}" ] || DATA="$BROKK_HOME/data"
+fi
 STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
 WAVES="${BROKK_WAVES_OVERRIDE:-$DATA/waves.yaml}"
 BACKLOG="$DATA/backlog.md"
@@ -303,7 +316,9 @@ cmd_new() {
 
   # 5) spawn (dry-run reports what would launch)
   if [ "$DRY" = 1 ]; then
-    echo "dry-run: would spawn $id kind=$KIND mode=${MODE:-scout} harness=${HARNESS:-auto} backend=${BACKEND:-auto} road=${ROAD:-space} worktree=${repo:-$ROOT}"
+    # The worktree is the Yggdrasil one the spawn door will cut (<BROKK_HOME>/.yggdrasil/<id>), never
+    # the repository the errand is about — printing the repo there read as "seated in main".
+    echo "dry-run: would spawn $id kind=$KIND mode=${MODE:-scout} harness=${HARNESS:-auto} backend=${BACKEND:-auto} road=${ROAD:-space} repo=${repo:-$ROOT} worktree=$(printf '%s' "${BROKK_HOME:-$ROOT}")/.yggdrasil/$id"
   elif [ -x "$SCRIPT_DIR/eindri-start.sh" ] && [ "$SCOUT" = 1 ]; then
     # a scout seats VISIBLY on the herdr road (space by default — one errand,
     # one space); tmux is the verified fallback (the herdr skill's first law)

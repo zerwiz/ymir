@@ -33,10 +33,12 @@ KNOWS="$HOME_ROOT/hodd/data/knows"
 MACHINES="$HOME_ROOT/hodd/data/machines.md"
 
 seat_of_host() {
-  case "$(hostname 2>/dev/null | tr 'A-Z' 'a-z')" in
-    omarchy) echo omarchy ;; heimdall*) echo heimdall ;; *whynot*|whynot) echo whynot ;;
-    zerwizserver|*server*) echo zerwizserver ;; *) echo "" ;;
-  esac
+  # The seat IS this machine's name, normalised: the home keeps one card per host under
+  # hodd/data/knows/<host>.md, so a fleet of any size works without a table of names here
+  # (RULES/04: the repository does not spell the operator's machines; RULES/25: probe).
+  local h
+  h="$(hostname -s 2>/dev/null | tr 'A-Z' 'a-z')"
+  [ -n "$h" ] && printf '%s\n' "$h"
 }
 
 case "${1-}" in

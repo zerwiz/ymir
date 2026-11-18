@@ -185,7 +185,7 @@ export class smidjaDb {
   readonly journalMode: string;
   private readonly db: Database;
   /** Opened on first archive and kept; null until then. */
-  /// ghost: Kaia auto-admission one-shots (smidja_prompt 'What Kaia already
+  /// ghost: Völundr auto-admission one-shots (smidja_prompt 'What Völundr already
   /// remembers…' / 'You are admitting smidja session…') are plumbing, already
   /// recorded inside the parent run as handoff/admitted events. Hide them from
   /// the session list unless CMD_SHOW_ADMISSIONS=1.
@@ -198,7 +198,10 @@ export class smidjaDb {
     return (
       " AND NOT COALESCE(" +
       nameCond +
-      " (request LIKE 'What Kaia already remembers%' OR request LIKE 'You are admitting smidja session%'), 0)"
+      // The admission one-shot's own request text, in both spellings: rows written
+      // before 2026-11-14 say "Kaia", and they are history that must still be hidden.
+      " (request LIKE 'What Völundr already remembers%' OR request LIKE 'What Kaia already remembers%'" +
+      " OR request LIKE 'You are admitting smidja session%'), 0)"
     );
   }
   private writer: Database | null = null;
@@ -732,7 +735,7 @@ export class smidjaDb {
     // Return an empty list instead of crashing on "no such table: sessions".
     if (!this.hasTable("sessions")) return [];
     // includeAll restores the old list behavior: every run (archived ones and
-    // Kaia's plumbing one-shots) is listed, so the chat sidebar's "Past
+    // Völundr's plumbing one-shots) is listed, so the chat sidebar's "Past
     // sessions" shows everything. Additive — the default stays the current
     // cleaned list.
     const filters: string[] = [];

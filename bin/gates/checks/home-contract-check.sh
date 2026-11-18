@@ -17,6 +17,8 @@
 #
 # Exit: 0 clean · 1 a finding · 2 usage.
 set -uo pipefail
+# the bash floor (RULES/05): macOS ships bash 3.2 — re-run under bash >= 4, or say how to get one
+[ "${BASH_VERSINFO[0]:-0}" -ge 4 ] || { . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../../fleet/ymir-platform.sh" && ymir_bash_floor "$@"; }
 
 VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -66,12 +68,19 @@ while IFS="$(printf '\t')" read -r path kind template door required; do
   [ -n "$path" ] || continue
   rows=$((rows+1))
 
-  # 1 · a path is home-relative, unique, and carries no substitution but {realm}
+  # 1 · a path is home-relative, unique, and carries no substitution but {realm} and {machine}
+  #     ({machine} added 2026-11-14, plan 290 §3: a machine's own wardens.yaml is one file per
+  #     computer, and bin/engine/home-seed.sh resolves it from the fleet registry by hostname)
   case "$path" in
     /*)  say "path is absolute" "$path" "a contract path is relative to the home" ;;
     *..*) say "path escapes the home" "$path" "no .. in a contract path" ;;
   esac
-  case "$path" in *"{"*) case "$path" in *"{realm}"*) ;; *) say "unknown substitution" "$path" "only {realm} is resolved" ;; esac ;; esac
+  case "$path" in
+    *"{"*) case "$path" in
+             *"{realm}"*|*"{machine}"*) ;;
+             *) say "unknown substitution" "$path" "only {realm} and {machine} are resolved" ;;
+           esac ;;
+  esac
   if [ -n "${SEEN[$path]:-}" ]; then say "the same home file is claimed twice" "$path" "one file, one row"; fi
   SEEN[$path]=1
 

@@ -1,6 +1,6 @@
 # Brokk Distro Runtime — the definitive runtime spec
 
-> Purpose: the maintainer's reference for how Ymir turns any verified harness into **Brokk** — home layout, the 8-stage Sága digest, Gleipnir, Sýn/Gná supervision, the Nornir cron spine, the Einherjar/Erindi/Vör worker model, restart semantics, and the production acceptance criteria.
+> Purpose: the maintainer's reference for how Ymir turns any verified harness into **Brokk** — home layout, the short Sága digest head and its on-demand sections, Gleipnir, Sýn/Gná supervision, the Nornir cron spine, the Einherjar/Erindi/Vör worker model, restart semantics, and the production acceptance criteria.
 
 Companion docs: `norse-naming.md` (the component law and map), `porting-upstream-to-norse.md` (how this runtime was ported from the validated upstream distro), `docs/plans/29-brokk-distro-runtime.md` (the plan).
 
@@ -98,59 +98,124 @@ Resolution order used by every script (all overridable):
 | `state/observer.log`, `state/observer.last` | Huginn observation output | read-only bridge |
 | `workspace/memory/runes_audit.md` | Runes chained JSONL ledger | append-only, never rewritten |
 
-## 3. The 8-stage Sága session-start digest
+## 3. The Sága session-start digest — a short head, and sections on demand
 
-`bin/time/saga-session-start.sh` prints **one ordered digest** and does nothing else. It composes existing scripts; it never re-implements them. The section headers it emits are `== LOCK ==`, `== BOOTSTRAP ==`, `== WAKE QUEUE ==`, `== SUPERVISION ==`, `== UPDATE ==`, `== FLEET DIGEST ==`, `== CONTEXT DIGEST ==`, `== TODAY ==`, `== RECALL ==`, `== SKILLS ==`, `== MODEL CATALOG ==`, `== ASSET ROUTING ==`, `== TOOL SURFACE ==`, `== CRON START ==`, `== NEXT STEP ==`.
+**Appended 2026-11-14 (plan 275, item 28) — the digest was built backwards.** It pre-loaded
+nineteen sections: 55–57 KB, **696 lines**, about 14,000 tokens, of which 156 were errands
+finished days ago — and three SessionStart hooks re-injected it at every compaction. A digest
+nobody can afford to read is not a digest.
 
-**Appended 2026-10-26 (plan 136) — `== RECALL ==`.** The digest now opens the well
-before the work: `bin/records/mimir-recall-today.sh` derives the day's topic (a stated
-`$STATE/.session-topic` first, else the newest bullet in today's daily log, else the
-newest open forge order), asks the well scoped to the last 14 days, and prints the
-truth that goes with it — *recall is memory, not authority*. A missing topic is
-reported, never guessed, and the section is capped at twelve lines so a slow or cold
-well cannot stall the session start.
+So `bin/time/saga-session-start.sh` now prints **a head of ≤ 60 lines and ≤ 8 KiB**, and
+everything else is a **section asked for by name**. It still composes existing scripts and
+re-implements none of them.
+
+**Appended 2026-11-14 (plan 293 part 3) — the head says what never landed.** The audit of 36
+agent panes found 22 worker branches pushed and clean, four merged, and nothing anywhere in the
+session start saying the rest were still waiting — while one machine's local `main` held 19
+commits that existed on no remote at all. So the digest gained a **LANDING** section
+(`SEC_LANDING`, backed by `bin/time/saga-land-warnings.sh`): a branch pushed with no pull request
+is named with its age, and a local branch holding commits on no remote is named before it can be
+lost. It is read-only, time-bounded, and offline is a clean sentence rather than a hang. In the
+head it appears where it is now part of the shape — between `FLEET` and `CONTEXT DIGEST` — and it
+stays inside the 60-line budget (measured 48 lines).
+
+| Mode | What it does | Side effects |
+|---|---|---|
+| *(no argument)* | the session start: the stages, then the head | lock, bridges, the well, and — for the helm only — the hall sweep, the handoff and cron |
+| `--head` | the head alone | **none** (this is the compaction path; the lock is only read) |
+| `--page` | the head, for a page that DRAWS it (Hlidskjalf's Runtime page) | **none at all** — a page load is not a hand on the helm: it takes no lock, writes no lease, and names the real holder from the arm lease |
+| `--section <name>` | one section | the section's own (a read, except `bootstrap`, which re-probes idempotently) |
+| `--list` | the twenty section names, one line each | none |
+| `--check` | measures the head; **exit 1 over budget** | none |
+| `--full` | a human wants the whole truth: head + every section | the stages |
+
+The head is, in order: **the fixed core** (below), **the helm** (the lock, the lease line and
+the Gná arm holder), **what needs the Allfather** (wakes, decisions, questions, his open todos
+as counts), **the live errands**, and **the next step** — then one line naming the sections.
+
+### 3.0 The fixed core, and what is news
+
+`bin/time/saga-head-core.md` is **one file** and the only copy: `~/ymir` is public and delivers
+by PR; `$YMIR_HOME` is private and is edited only through `bin/vault/home-sync.sh begin` /
+`ship`; apps run from the pin `~/ymir-runtime` → `releases/<sha>`; herdr and the stamped send
+door (`bin/agents/eindri-send.sh`, `[from …]`); the Gná arm (one session holds it —
+`bin/voice/rodd-arm.sh who`, and a session that does not hold it spawns, merges and drains
+nothing); the finding tools (`skill-find.sh`, `where.sh`, `catalog.sh`, `fixes.sh list`); the
+desk guard (`bin/desk/in-call.sh holder`); and the laws (named staging, no AI attribution, no
+feature removed, DevTools in the real window on both machines, one fix note per change, commit
+on `eindri/<errand>` and let the helm gather the PR). The head prints it; the seat law
+(`bin/seat/herdr-run.sh`) and the spawn road (`bin/agents/einherjar-spawn.sh`) append the same
+file, so a brief and a digest cannot disagree.
+
+`bin/time/saga-head-lib.sh` is the policy for the errand block, and it reads with shell
+builtins plus one `find -newer` (a process per seat record made the head cost 3.5 s):
+
+| Record | Shown |
+|---|---|
+| claims life (non-terminal) | **always**, with its pane and age |
+| terminal, newer than the last head | **once**, then folded into `state/.saga-head-seen` |
+| terminal, older than the last head | never — the old digest already reported it |
+| an UNKNOWN row whose pane cannot be read here (a tmux window on a machine without tmux) | **once**, as `reaped:`, then gone |
+| a wake already presented whose errand has since closed | dropped from the queue by `bin/time/saga-wake-drain.sh` |
+
+### 3.1 The stages (a session start only, and mostly the helm's)
 
 | # | Stage | What it emits | Source / helper |
 |---|---|---|---|
-| 1 | **LOCK** | `session lock held (pid N)` or `READ-ONLY: session lock held by pid N - no spawn, steer, merge, drain, or repair this session` | `bin/vault/gleipnir-lock-lib.sh` → machine-global `brokk.lock` for the primary, per-home `state/.lock` for an Eindri-home |
-| 2 | **BOOTSTRAP** | `tool floors OK` or `MISSING: …`; `realm env: present` or `realm env: ABSENT (svartalfaheim/<realm>/.env.realm)` | checks `git bash node`; checks `.env.realm` in `$BROKK_HOME` then `$ROOT` |
-| 3 | **WAKE QUEUE** | `wake queue: N pending`, each `WAKE <record>`, `WAKE_ACK_REQUIRED`, `open decisions: N` | `bin/agents/eindri-handoff.sh sweep` (the failsafe — sweeps undelivered reports/questions into the queue) **then** `bin/time/saga-wake-drain.sh` → `state/.wake-queue`, `state/*.decision` |
-| 4 | **SUPERVISION** | one operating block: `harness next step: arm supervision via the installed harness adapter; never run bin/pi/syn-watch-arm.sh by hand.` | Sýn/Gná per-harness protocols |
-| 4b | **UPDATE** | `current — no newer Ymir on npm`, or the newer version with its remedy (`npm i -g @zerwiz/ymir`, then `ymir groa`) | `bin/gates/checks/ymir-update-check.sh` — one cached lookup a day; silent with no network; **exit 3** when a newer version stands |
-| 5 | **FLEET DIGEST** | `task metadata records: N` (count of `state/*.meta`) and `open forge orders: N` (`grep -c '^- Status: ADDED' docs/masterplan.md`) | `state/*.meta`, `docs/masterplan.md` |
-| 6 | **CONTEXT DIGEST** | `--- realm ---`, then `data/operator.md`, `data/projects.md`, `data/learnings.md`, each delimited; `ABSENT: <path>` when missing | **`$YMIR_HOME/hodd/data/`** via `bin/vault/hoard-lib.sh` (`BROKK_DATA_OVERRIDE` wins) — never `$BROKK_HOME/data`, the code tree, which no operator record has ever occupied |
-| 6b | **TODAY** | the day's work, appended blocks under each actor | `bin/records/daily-log.sh today` → `$YMIR_HOME/hodd/memory/daily/YYYY-MM-DD.md` |
-| 7 | **CRON START** | `cron: running pid=N jobs=M` or `cron: started …` / `cron: no jobs configured …` | `bin/time/nornir-cron-start.sh` (idempotent) |
-| 7b | **TOOL SURFACE** | the Allfather's own handles: `/edit <path>`, `systems/snotra/services/tts-lease/ymir-say.sh`, `bin/host/omarchy-plugins.sh`, `bin/seat/herdr-run.sh` | inline |
-| 8 | **NEXT STEP** | `Ascend Hlidskjalf as Brokk. Address the Allfather. Read once; act.` | closing pointer |
+| 1 | **lock** | taken, or `READ-ONLY: the session lock is held by pid N` | `bin/vault/gleipnir-lock-lib.sh` → machine-global `brokk.lock` for the primary, per-home lock for an Eindri-home |
+| 2 | **bootstrap** | tool floors, the model bridge, the well, the realm env | `bin/bridge/bifrost-bridge.sh --start`, `bin/bridge/mimir-bridge.sh --start` (both idempotent) |
+| 3 | **handoff** | undelivered reports/questions swept into the wake queue (`--section wake`) | `bin/agents/eindri-handoff.sh sweep` |
+| 4 | **hall sweep** | finished seats closed, a late boot adopted | `bin/seat/seat-reap.sh --sweep`, `bin/seat/seat-adopt.sh --all` |
+| 5 | **cron** | the Nornir scheduler raised if it is down | `bin/time/nornir-cron-start.sh` |
+| 6 | **skill index** | refreshed, never printed | `bin/agents/skill-index.sh` |
 
-**Read-once contract.** The digest is this turn's startup and recovery input. Brokk must **not** re-read the context/backlog/status it just printed unless a source was reported `ABSENT` or corrupt.
+**Stages 3–5 are the HELM's.** A seat takes its own lock, so “the lock is held” alone does not
+make a session the primary: a worker's session start sweeps nothing, writes no queue and starts
+no scheduler (the seat law).
 
-### 3.1 The runner — source routing
+### 3.2 The sections
 
-`bin/time/saga-sessionstart-run.sh` decides, from the session-open source, whether the open needs the full digest, a context re-emit, or a short nudge. It exits 0 on every ordinary transport path: a failed session start must reach the agent as digest text it can act on, never as a refusal to open the session.
+`lock · bootstrap · wake · seats · supervision · todos · agents · update · fleet · context ·
+clock · today · recall · skills · models · assets · tools · cron · liveness · next` — each one
+answers by name (`--section <name>`), and an unknown name is refused with exit 2, never a silent
+empty. `liveness` is the expensive one (it judges every seat record through herdr); `context` is
+the long read (the operator contract, the project registry, the learnings, the HOOD map).
+
+**Appended 2026-10-26 (plan 136), kept as the record — `recall`.** The digest opens the well
+before the work: `bin/records/mimir-recall-today.sh` derives the day's topic (a stated
+`$STATE/.session-topic` first, else the newest bullet in today's daily log, else the newest open
+forge order), asks the well scoped to the last 14 days, and prints the truth that goes with it —
+*recall is memory, not authority*. A missing topic is reported, never guessed, and the section is
+capped at twelve lines so a slow or cold well cannot stall the session start. It is a section
+now, not the head: the head points at it, the agent drinks when the work needs it.
+
+### 3.3 The runner — source routing
+
+`bin/time/saga-sessionstart-run.sh` decides, from the session-open source, whether the open is a
+session start or a reminder. It exits 0 on every ordinary transport path: a failed session start
+must reach the agent as digest text it can act on, never as a refusal to open the session.
 
 | Source | Behavior |
 |---|---|
-| `startup`, `new`, unknown | run the full `bin/time/saga-session-start.sh`; touch `state/.session-start-complete` |
-| `clear`, `compact` | if complete: print `CONTEXT RE-EMIT (source=…)` and a reminder to re-read context only if needed; else run the full digest |
-| `resume`, `reload`, `fork` | print the instruction `Run bash …/saga-session-start.sh exactly once now` |
+| `startup`, `new`, unknown | run `bin/time/saga-session-start.sh` (stages + head); touch `<house state>/.session-start-complete` |
+| `clear`, `compact` (and `resume`, `reload`, `fork`, once the mark exists) | `CONTEXT RE-EMIT (source=…)` then **`--head` only** — the stages already ran, and a compaction is the same session asking to be reminded |
 | `--pi-prerequisite` and `BROKK_SESSIONSTART_INELIGIBLE=1` | intentional stand-down, exit 3 |
 
-The source is passed with `--source` or parsed from a Claude/Codex-shaped JSON hook payload on stdin (`"source":"startup"` etc.).
+The mark lives on the **house's shelf** (`$YMIR_HOME/state/.session-start-complete`), never in
+the tree, which a packaged install replaces. The source is passed with `--source` or parsed
+from a Claude/Codex-shaped JSON hook payload on stdin. Before routing, the runner raises the
+Mimir well bridge so `:4602` listens on **every** open.
 
-Before routing, the runner raises the Mimirsbrunn well bridge
-(`bin/bridge/mimir-bridge.sh --start`, idempotent) so `:4602` listens on **every** open —
-the well extension's `session_start` probe finds it up even on a re-emit or nudge.
-
-### 3.2 Harness adapter matrix
+### 3.4 Harness adapter matrix
 
 | Harness | Surface | Mechanism | Tier |
 |---|---|---|---|
-| OpenCode | `.opencode/plugins/saga-sessionstart.js` | `session.created` → run digest once per session id, inject via `client.session.promptAsync`; `syn-watch-arm.js` owns `session.idle` | nudge/run |
+| OpenCode | `.agents/harness/opencode/plugins/saga-sessionstart.js` | `session.created` → run `bin/time/saga-sessionstart-run.sh` once per session id, inject via `client.session.promptAsync`; `syn-watch-arm.js` owns `session.idle` | nudge/run |
 | Pi | `.pi/extensions/syn-turnend-guard.ts` | native session-open run; digest injected before the first turn; re-emit on compaction; refuse blind turn end | run |
-| Claude Code | `.claude/settings.json` | `SessionStart` runs `saga-sessionstart-run.sh`; `Stop` runs `syn-turnend-guard.sh --claude` then async `syn-watch-arm.sh --restart` | run |
+| Claude Code | `.claude/settings.json` (project) and `~/.claude/hooks/saga-session.sh` (user scope, seated by `bin/seat/harness-extensions-install.sh`) | `SessionStart` runs the runner; the user-scope hook **resolves the current home** (the project, then the pin, then the source) so one entry serves every checkout — the three per-home entries it replaced injected three digests; `Stop` runs the guard and the async arm | run |
 | Codex | `.codex/hooks.json` | `SessionStart` pipes the payload to `saga-sessionstart-run.sh`; `Stop` runs the guard; `PreToolUse` runs the Sýn seatbelts | nudge |
+| Cursor | `.cursor/hooks.json` | `sessionStart` captures digest and returns `{additional_context}`; `stop` returns `{followup_message}` on guard exit 2; `preToolUse` runs seatbelts | interactive only |
+| Grok / Kimi | not yet ported (see `.claude/settings.json` guards `${GROK_AGENT}`/`${GROK_HOOK_EVENT}` to avoid double-fire) | — | — |
 | Cursor | `.cursor/hooks.json` | `sessionStart` captures digest and returns `{additional_context}`; `stop` returns `{followup_message}` on guard exit 2; `preToolUse` runs seatbelts | interactive only |
 | Grok / Kimi | not yet ported (see `.claude/settings.json` guards `${GROK_AGENT}`/`${GROK_HOOK_EVENT}` to avoid double-fire) | — | — |
 
@@ -195,7 +260,7 @@ Mechanics:
 
 ## 6. Nornir — the cron spine
 
-Nornir are the fates who govern time. `bin/time/nornir-cron-start.sh` keeps exactly **one** lightweight scheduler loop alive (idempotent), started by Sága stage 7 at every session start.
+Nornir are the fates who govern time. `bin/time/nornir-cron-start.sh` keeps exactly **one** lightweight scheduler loop alive (idempotent), started by the Sága session-start stage 5 (the helm's own start; a seat leaves it to the helm).
 
 - **Schedule:** `config/cron.yaml`, one `HH:MM <command>` per line, `#` comments, with an optional **role gate**: `@heart[,role] HH:MM <cmd>` or `HH:MM @heart <cmd>`. Both orders parse (the 2026-09-24 fault: only the after-time shape matched, so every role-first line silently never ran). The scheduler runs only the jobs this machine's roles own, resolved from `bin/fleet/topology.sh` / `$YMIR_HOME/hodd/data/fleet.json` — record jobs ride the heart, model/bench jobs ride the forge, a dev body runs only its session jobs.
 - **PID/log:** `state/cron.pid`, `state/cron.log` (rotates at `BROKK_CRON_LOG_MAX_BYTES`, default 1 MiB).
@@ -268,13 +333,13 @@ part.
 
 **Modes** (ship): `direct-PR` (push `eindri/<id>`, open PR; never merge), `local-only` (work on `eindri/<id>`; Brokk merges local `main` after approval), `no-mistakes` (run the `no-mistakes` pipeline, open the PR it produces). Merge authority stays with the **Glitnir human gate** — Brokk never force-merges, and **a worker never merges its own PR**.
 
-**The seat's own PR is sealed by the seat (2026-11-05, RULES/08 appended; plan 190).** A PR left open is a branch drifting from a moving `main`, so the seat's own green, conflict-free PR — its ONLY open one, `state/.seal-hold` absent — is merged by the seat's agent (Sindri on nidavellir, Hœnir on heimdall) through `bin/agents/pr-seal.sh seal <n>`, with one Runes entry naming PR, head and merge commit. `bin/agents/pr-seal.sh watch` raises ONE wake line through the arm (`state/.wake-queue`) naming PR, head, checks and the exact merge command; the sweep walks that road every time. Another hand's PR is never sealed, and no merge happens on red or on a conflict, under any flag.
+**The seat's own PR is sealed by the seat (2026-11-05, RULES/08 appended; plan 190).** A PR left open is a branch drifting from a moving `main`, so the seat's own green, conflict-free PR — its ONLY open one, `state/.seal-hold` absent — is merged by the seat's agent (the smith on its own machine, the helm in the main hall) through `bin/agents/pr-seal.sh seal <n>`, with one Runes entry naming PR, head and merge commit. `bin/agents/pr-seal.sh watch` raises ONE wake line through the arm (`state/.wake-queue`) naming PR, head, checks and the exact merge command; the sweep walks that road every time. Another hand's PR is never sealed, and no merge happens on red or on a conflict, under any flag.
 
 **Isolation.** Every worker runs in a Yggdrasil worktree at `<BROKK_HOME>/.yggdrasil/<id>`, created read-only-referencing the project. herdr is the ORDINARY road — no container. Utgard is the EXCEPTION, chosen for untrusted code or an outsized task, never because an image is present. The brief DECLARES it (`Isolation: herdr|utgard — <why>`); `--isolation auto` honours the declaration, and a declared utgard with no image is a LOUD refusal, never a silent downgrade (2026-09-24). A sealed worker mounts the worktree at `/sandbox/workspace`, plus `state/` and `data/` at their host paths. The brief's first instruction to the worker is to verify isolation with `pwd -P` and `git rev-parse --show-toplevel` before touching anything.
 
 **Status protocol.** A worker appends one line `{state}: {one short line}` to `state/<id>.status`; states are `working, needs-decision, blocked, paused, done, failed` (`paused` is configurable via `BROKK_PAUSED_VERB`). Each append wakes Brokk, so reports are sparse. `Vör` reconciles the possibly-stale log against the authoritative backend endpoint recorded in the meta and never infers current state from `tail -1` alone.
 
-**Report-shelf handoff (2026-09-27).** The status line alone is not enough: the failsafe `bin/agents/eindri-handoff.sh sweep` reads only `$STATE/eindri-reports/<id>.md` and `$STATE/eindri-questions/`, never `state/<id>.status`. A worker's terminal act therefore writes its status line **and** a short report to `$STATE/eindri-reports/<id>.md` (what shipped, the PR, the proof); `bin/agents/erindi-brief.sh` carries that line in its template so every errand inherits it. The sweep runs at session start (Sága stage 3) and on a Nornir cadence, idempotently. The fourth failure mode, written from life: **the worker wrote the wrong shelf.**
+**Report-shelf handoff (2026-09-27).** The status line alone is not enough: the failsafe `bin/agents/eindri-handoff.sh sweep` reads only `$STATE/eindri-reports/<id>.md` and `$STATE/eindri-questions/`, never `state/<id>.status`. A worker's terminal act therefore writes its status line **and** a short report to `$STATE/eindri-reports/<id>.md` (what shipped, the PR, the proof); `bin/agents/erindi-brief.sh` carries that line in its template so every errand inherits it. The sweep runs at a helm session start (Sága stage 3) and on a Nornir cadence, idempotently. The fourth failure mode, written from life: **the worker wrote the wrong shelf.**
 
 **The review spine — the judge sent after every ship (2026-09-27).** The delivery-gate law makes a PR the only way work leaves; the spine makes the PR audited before the Allfather's seal. A ship errand's terminal `done` (the terminal act `bin/agents/eindri-acclaim.sh <id> --terminal done --line "…"`) calls `bin/agents/eindri-review-spawn.sh <id>`, which reads the PR from the task's own record (`state/<id>.status` carries `done: opened PR <url>`) and seats **Forseti** as a scout-kind review errand through the einherjar road: `--scout --backend herdr --harness pi --model opencode-go/deepseek-v4.1-flash --effort high`. The fierce brief is filled from `.agents/assets/templates/review-brief.template.md` for THIS task (PR, branch, task id), and the verdict lands on the wake road at `state/eindri-reports/<id>-review.md`.
 
@@ -625,10 +690,10 @@ Restart is a non-event: **durable `data/` + `state/` + live backend inventory ar
 |---|---|
 | A new harness opens | Sága runs; Gleipnir reclaims a dead-pid lock; stages re-emit |
 | Session process replaced (`/new`, `/resume`, `/fork`, reload) | Pi binds a new live generation so monitoring re-arms without restarting Pi; stale callbacks no-op |
-| Cron loop died / host rebooted | Sága stage 7 restarts it; `state/.cron-fired` date guards prevent a double-run that day |
+| Cron loop died / host rebooted | the Sága session-start stage 5 restarts it; `state/.cron-fired` date guards prevent a double-run that day |
 | Worker pane gone | `Vör` reports `unknown/none` with `backend target gone`; the meta/worktree persist |
 | Supervision was armed and the watcher is stale | Turn-end guard exits 2 and re-prompts; recovery is to re-arm via the extension |
-| Digest already taken this lock (`clear`/`compact`) | runner emits the context re-emit rather than re-running the full digest |
+| Digest already taken this lock (`clear`/`compact`) | the runner re-emits the HEAD only (`--head`) — never the stages, never the sections |
 
 ## 11. Environment reference
 
@@ -1306,7 +1371,7 @@ asks her to merge with `void` and the reason (Rule 08).
 
 - **2026-11-08** — Appended with the capability: the canon, the estate door, the widening of `domain.sh`,
   the tree ward, the kit shelf and its two gates, the card, and the first two estates measured (Ymir 6 held
-  · 12 unheld; Inmost's Example3 4 held · 14 unheld, its tenancy ground refused by name at the gate).
+  · 12 unheld; the client's estate 4 held · 14 unheld, its tenancy ground refused by name at the gate).
   Plan 219; fix note `docs/fixes/collab/2026-11-08-the-kit-carries-the-inventory.md`.
 - **2026-11-08** — Appended with the capability: the release model (build · health · flip), the shared
   shelf, the one-rename law with its forbidden form, the automatic rollback inside the watch window, the
@@ -1349,6 +1414,118 @@ Eir's `runtimepin` surface runs `units.sh check` and its mend is the seat door. 
 (`~/ymir-runtime`, applied once the checkout is seated) lives once in `src/ymir_runtime/paths.py` and
 `bin/pi/arm-pin-lib.sh`.
 
+## Bearings in every brief, and the project's own folder (plan 291 parts 2 and 3, 2026-11-14)
+
+At the Allfather's word — *"we need to update the endri system so they are allways using and updateing this when
+getting send out"* and *"when we sending workers for diffrent projects the need to be send from the project foldeers
+they are going to work in so they dont do the updates in ymirs repos"* — two things moved from the helm's habit into
+the system.
+
+**Bearings.** `bin/agents/eindri-bearings.sh <path|id|alias>` prints one generated Markdown section with three parts:
+(a) the fixed core — the shipped, agnostic `.agents/assets/agents/eindri-core.md` followed by the home's overlay
+`$YMIR_HOME/config/eindri-core.md` (this fleet's names, panes, machines and standing words live only in the overlay);
+(b) the project's records — the row's `records:` block (`in_repo` · `in_home` · `boards` · `merges`) through
+`bin/agents/project-target.sh records`, each with the duty *read before you write, update before your report*, and a
+project with no block gets a plain statement plus the registry row to add, never an invented path; (c) the home's
+document map — `.ymir-layout.yaml` shelves, `hodd/docs/INDEX.md`, `hodd/ATLAS.md`, the plan-ledger READMEs and
+`state/eindri-reports/`. `eindri-start.sh` prepends it to the request on both roads and for every harness, and the
+engine prepends it in `seat._prompt_for` for an errand seated through `einherjar-spawn.sh`; both skip it when the brief
+already carries the marker `<!-- eindri-bearings:v1 … -->`, so a brief is never doubled. `--marker` prints that marker,
+`--check` says whether every door the section reads answers.
+
+**The project's own folder.** `bin/agents/project-target.sh resolve|records|worktree` is the ONE resolver: a path, an
+id or an alias resolves through `hodd/identity/projects.yaml` to *this machine's* clone (`clones.<host>`, then
+`local_clone`, then the row's `repo`), and `kind` is `ymir` only for the tree the door lives in. `eindri-start.sh
+--project` now passes that token through it; when the kind is `other` it makes the worktree **in that repository** by
+the row's own `worktree: {command, path, branch}` (each with `{id}`; default `git worktree add -b eindri/<id>
+<clone>/.yggdrasil/<id>`), cds there, and passes `--main` to `herdr-run.sh` so no second worktree is nested. A row with
+no clone on this machine is refused with the row named. `--dry-run` prints the seat plan (project, clone, worktree,
+branch, seat folder, harness, model, bearings carried) and seats nothing. The engine never owns an errand for another
+project. `registry/projects.yaml.example` documents both blocks and `.agents/skills/jord-projects/SKILL.md` says
+`project add` asks for them.
+
+**The packet carries it.** `bin/forge/handoff-packet.py write` gained `--record "<path>|<what>"` (or
+`--record "none|<why>"`); `check` refuses a packet with no `records[]`, an empty one, or a `none` with no weighable
+reason, and `schemas/handoff-packet.toon` documents the block as rule 7. `bin/agents/erindi-brief.sh` tells every
+worker to write the same line in its report.
+
+Guards: `bin/agents/tests/test_eindri_bearings.sh` (17) and `bin/agents/tests/test_project_target.sh` (20) on planted
+homes and repositories, and `bin/gates/tests/test_handoff_packet.sh` (20, four new records cases). Fix note
+`docs/fixes/agents/2026-11-14-bearings-in-every-brief.md`.
+
+**The launcher waits for the agent (plan 291 row 5).** `herdr agent start` returns when the pane holds an
+agent, not when the harness can take input — measured 2026-11-14, two hand-seated workers sat idle until their
+prompt was sent again. `bin/seat/agent-state-lib.sh` is the one reader of herdr's own `interactive_ready` and
+`agent_status`; `bin/seat/herdr-run.sh` waits for readiness (bounded, 20 s), speaks, confirms the agent moved
+(`working`/`done`) and retries the prompt once if it did not. `idle` + `interactive_ready: false` is not ready;
+`working`/`done` are past needing input; a blind reader answers `unknown`, never `ready`. The runbook is
+`docs/runbooks/send-an-eindri.md`; the guard is `bin/seat/tests/test_agent_state.sh` (9 cases against a stub
+herdr).
+
+## The wardens belong to one named machine (plan 290 §3, 2026-11-14)
+
+A register entry is a **capability**, never a decision to act outward. Until 2026-11-14 the two were the
+same thing: `config/units.yaml` carried `roles: [heart, forge, dev]`, so a machine merely having a role was
+seated a merging warden — and a merging warden from a collaborator's own install merged pull requests in this
+repository under a GitHub account this fleet does not own.
+
+```
+wardens[6]{piece,what,where}
+  "the file","this machine's own decision, one per machine, read by this machine alone","$YMIR_HOME/config/machines/<machine>/wardens.yaml"
+  "the reader","one parser, one precedence rule: door key > machine-wide default > door default","bin/forge/warden-policy.py"
+  "the library","the gate every outward door sources: on, own-repo, identity, merge, Rune","bin/forge/warden-lib.sh"
+  "the seater","asks the reader (`seat-plan`) before writing a unit; `not-seated` otherwise","bin/engine/units.py"
+  "the template","every door off, `merge: off`","`.agents/config/machine-wardens.example.yaml`"
+  "the migration","records what a machine does today as `enabled: on`; starts and stops nothing",".agents/migrations/0023-wardens-per-machine.sh"
+```
+
+The key is **`enabled: on|off`**, never a bare `on:` key: YAML 1.1 reads the key `on` as the boolean `true`,
+so `on: on` loads as `{True: True}` and every reader sees no policy at all. An absent `enabled` is **off** —
+that is what makes a fresh install, a collaborator's or a stranger's, seat nothing outward.
+
+**An existing installation is treated like a new one** (migration `0024-wardens-off-until-named`, run by
+`bin/engine/ymir-migrate.sh apply` — which the installer and Gróa both call): every outward door is turned
+off, the timer the old install seated is stopped and disabled (its unit file is kept), and `was_on: <date>`
+records what it was running so the operator can turn back on what he owns. `bin/engine/units.py` does the
+same on every later write (`retire_unit`), so a door that is off never keeps a live clock.
+
+The five rules a door keeps, in the order the library asks them: is this door named ON here; is every
+`owner/repo` in the operator's registry (`hodd/identity/projects.yaml`); does `gh api user` answer as the
+identity the machine names for that duty (a mismatch is a refusal that prints both names); and — for a merge —
+`merge: on` **and** the fleet registry naming this machine heart **and** `bin/forge/merge-verdict.sh` saying
+yes. Every outward act is one Rune carrying machine, door, identity, repositories and the verdict.
+
+Gated doors: `queue-warden`, `review-watch`, `review-seat`, `review-loop` (`review-shelf.sh tick`), `pr-watch`,
+`issue-watch`, `ship-watch`, and the outward Nornir jobs `gna-mail`, `snotra-mail`, `git-sync` (push only),
+`private-scan`. `gather`, `ship` and `mjollnir` are a hand's doors: never seated, so never held off, but still
+gated by repository, identity and record. The proof is `bin/gates/tests/test_warden_lib.sh`, run by CI as the
+`wardens-own-only` gate; the how-to is `docs/features/wardens-per-machine.md`.
+
+
+## 2026-11-14 — a release builds the smithy's eye, and the release proof says whether it did
+
+`bin/engine/release.sh` (`build` / `prove` / `flip` / `rollback` / `status`) supersedes the
+`release-build.sh` + `release-flip.sh` pair described above; the layout and the one-atomic-rename flip
+are unchanged, and the door now proves a release from the inside before it earns `.release-proved`.
+
+**The fault this section records.** The Smíðja visualizer is a NESTED app
+(`apps/smidja-factory/apps/visualizer`) with its own `bun.lock`, so the root `npm ci` never installs it
+and `release.sh build` never built it. A release therefore served `:8437` with no interface at all,
+while the tree kept a **committed** `dist/` — so a checkout served a bundle and a release could not,
+and no gate compared the two. The bundle left git on 2026-11-14 (plan 288 step 7, plan 287 P4), which
+is what made the hole visible.
+
+```
+release_build[4]{step,what,why}:
+  "the nested app","bun install --frozen-lockfile && bunx vite build in apps/smidja-factory/apps/visualizer","its own lockfile: no root install reaches it; a failure stops the release (exit 19)"
+  "no bun","one SKIP line, never a green","a machine without bun serves the smithy's API with no UI, and says so"
+  "the proof row","visualizer: ok | FAIL (bun present, no dist) | skip (no bun)","the row count in the TOON header is computed, never hardcoded"
+  "the guard","a checkout already carrying a stale dist/ cannot prove a release wrong","that is why the bundle is no longer tracked"
+```
+
+The doors that build this bundle are three and all pre-date the removal: this one,
+`bin/desktop/app-build.sh` (the npm prepack, whose `files` allowlist names `…/dist/**`) and the
+install's `step_smidja`. Fix note: `docs/fixes/engine/2026-11-14-a-release-builds-the-smithys-eye.md`.
 ## What never landed, and the batch that waits (plan 293 parts 3–4, 2026-11-14)
 
 Two gaps the audit of 36 agent panes exposed, both now closed in code rather than in a runbook.
@@ -1390,3 +1567,255 @@ open PR heads from the one `gh` answer it already has, computes their reachable 
 its own kind, `in-pr`: `eindri/x — 5h: in batch PR #750, not merged yet`, action *nothing to gather*.
 Cost on this tree: 12 s → 3.9 s (the first version asked one `--merged` read per open PR). Fix note
 `docs/fixes/time/2026-11-14-a-branch-inside-a-batch-pr-is-not-waiting.md`.
+
+## The ready check — one vocabulary for both backends (plan 303 §12.3 step 1, 2026-11-16)
+
+A relay that wakes an agent must first know whether the agent can take a turn. Until
+2026-11-16 nothing answered that for both backends, and a pane standing on a harness
+dialog swallowed the first line typed into it with no error anywhere.
+
+`bin/seat/agent-ready.sh` (over `bin/seat/agent-ready.py`) is that answer, in four
+words, for herdr panes and Hermes sessions alike:
+
+```
+ready_check[4]{answer,means,exit}
+  "ready","the target can take a turn now","0"
+  "working","mid-turn; a message queues behind it","1"
+  "blocked: <why>","it exists and cannot take a turn — the reason is what a person acts on","2"
+  "dead","the target is not there","3"
+```
+
+- **herdr**: `agent get` for the state, `agent explain` for the reason. `blocked` is
+  classified from herdr's own evidence text — the folder-trust signature is
+  `blocked: trust prompt`, any other dialog is named by its rule
+  (`blocked: prompt (permission)`). `idle` with `interactive_ready: false` is
+  `blocked: not at an input prompt`, never ready (the launch fault of plan 291 row 5).
+- **Hermes**: `hermes sessions list` is the directory; the runtime's own
+  `session_admissions` table, read `mode=ro` by the last admission, is the state.
+  `unknown` → `blocked: lost turn, run recover`; `queued`/`started` → `working`; a
+  settled session → ready, because `hermes chat --resume` still takes a turn.
+- **Targets**: bare `<pane>` or `herdr:<pane>`; `hermes:<id-prefix-or-title>`. A bare
+  target is herdr, so nothing that already works changes shape. `--all` enumerates
+  both backends; `--json` gives `{target, backend, state, word}`. Several targets exit
+  with the worst answer.
+- `HERMES_HOME` and `AGENT_READY_HERMES_DB` point the store elsewhere, which is how the
+  test judges the reader against a fixture of the runtime's own table instead of a mock
+  invented for it.
+
+Guard: `bin/seat/tests/test_agent_ready.sh` (19 cases, stub `herdr` and stub `hermes` on
+`PATH`, `HOME` and the store under a temporary directory). The door that wakes a target
+is step 4; the directory that lists the fleet is step 2. Fix note
+`docs/fixes/agents/2026-11-16-the-ready-check-speaks-one-vocabulary.md`, how-to
+`docs/features/agent-ready-check.md`.
+
+## The directory is herdr, and a dark machine is a row (plan 303 §12.3 step 2, 2026-11-16)
+
+Discovery used to be opt-in: an agent existed to a peer only after somebody ran an
+announce command by hand, and the one peer that had been announced outlived its agent.
+`bin/bridge/ratatoskr.sh who` (over `bin/bridge/ratatoskr-who.py`) reads what is alive
+instead.
+
+```
+who_contract[5]{piece,rule}
+  "the source","`herdr agent list` on this machine first, then on every machine `hodd/data/fleet.json` names"
+  "the road","each far machine is asked once, in parallel, over its own ssh road; the arm holder is resolved there by `bin/agents/eindri-notify.sh --status`, never by a second copy of that logic"
+  "the state","the same four words `bin/seat/agent-ready.sh` answers with — this machine's reason from `herdr agent explain`, a far machine's `blocked: dialog`"
+  "a dark machine","a ROW that names the road that failed, never silence: 'no agents there' and 'nobody could ask' are different claims"
+  "the arm","`yes` on the holder's pane; when that pane holds no agent herdr lists, a row of its own says so"
+```
+
+`herdr agent list` JSON is read from stdout **or** stderr: herdr answers a present agent
+on stdout and a missing one on stderr with exit 1. A reader that watches one stream calls
+every empty pane "unsure".
+
+Flags: `--local`, `--machine NAME`, `--no-arm`, `--json`. Guard:
+`bin/bridge/tests/test_ratatoskr_who.sh` (15 cases, stub `herdr` and stub `ssh`, fixture
+fleet registry). Fix note `docs/fixes/bridge/2026-11-16-the-directory-is-herdr.md`,
+how-to `docs/features/ratatoskr-who.md`.
+
+## One queue, and the claim is a rename (plan 303 §12.3 step 3, 2026-11-16)
+
+The house had four mailboxes in four formats (Sága's wake queue, the hall's `todo`, the
+a2abridge inbox, Ratatoskr's tasks), so an agent never knew where to look. There is one
+format now, at `$YMIR_HOME/state/ratatoskr` (override `RATATOSKR_QUEUE`):
+
+```
+queue[3]{shelf,written_by,meaning}
+  "inbox/","the sender","HANDED — not delivered"
+  "claimed/","the receiver, by RENAMING the file","the rename is atomic: one receiver wins, the loser is told which shelf holds it"
+  "done/","the receiver's reply","DELIVERED — the reply is in the same file that carried the question"
+```
+
+Doors: `bin/bridge/ratatoskr.sh send|inbox|claim|reply|show|count` over
+`bin/bridge/ratatoskr-queue.py`. A task file is `id/from/to/created/state/claimed_by/
+claimed_at/answered_at` between `---` fences, then the text, then `## reply`. An address
+matches in all three spellings a pane has, so `--for w1:p2` finds a task sent to
+`herdr:w1:p2` or `host-a/w1:p2`.
+
+The queue is private state, so it lives in the home; the tree carries the door only. Guard:
+`bin/bridge/tests/test_ratatoskr_queue.sh` (23 cases, a temporary queue directory; the two
+claims race and the second is refused). Fix note
+`docs/fixes/bridge/2026-11-16-one-queue-and-the-claim-is-a-rename.md`, how-to
+`docs/features/ratatoskr-queue.md`.
+
+## The relay — wake, confirm, retry once, return (plan 303 §12.3 step 4, 2026-11-16)
+
+A task on a shelf is not a conversation. `bin/bridge/ratatoskr-relay.sh` (over
+`bin/bridge/ratatoskr-relay.py`) is the loop, one process per PERSON, never per agent:
+
+```
+relay_rules[5]{rule,why}
+  "only a ready target is woken","a blocked pane swallows the line (blocked_prompt), a mid-turn agent queues it, a bare shell loses it"
+  "two wake verbs, probed","`herdr agent prompt` on 0.9.1; `agent send` + `pane send-keys Enter` on 0.7.4 — probed from BOTH help shapes, never a version table"
+  "confirm, then retry once, then say so","claimed or answered = the wake worked; still on the shelf and the agent idle = one retry; then `miss: <id> <pane> <why>` in relay/misses.log"
+  "the answer returns to the ASKER's pane","`[ratatoskr · from <claimer> · re <id>] <reply>`, once, and only when the asker is ready; a far machine is `owed` to the edge"
+  "no agent runs unowned","the unit runs `--require-arm`: with no live arm holder it WAITS and logs once, rather than serving a machine nobody supervises (RULES/55)"
+```
+
+**Three faults the live proof found.** (1) pi reports `done` when a turn has finished, and
+`agent-ready.sh` read `done` as `working`, so every finished pi agent looked busy for ever —
+`done` is `ready`. (2) A wake whose text carried newlines was accepted by herdr
+(`agent_prompted`) and never reached the session; the wake is one line. (3) A wake stamped
+`from an agent` is refused by a disciplined agent as data-not-an-order (RULES/39), so the
+wake is stamped as the house's relay service. (4) The verb probe could see only one of
+herdr's two help shapes, so the relay took `agent send` on a herdr without it, typed
+nothing, and reported a wake: both shapes are read now and a refused `send` is a failure.
+
+**Arrival.** `config/units.yaml` carries `ratatoskr-relay`; `bin/engine/ymir-install.sh`
+step `a2a` seats it with `bin/engine/units.sh write ratatoskr-relay`, so a fresh install and
+every update have the loop. Guard: `bin/bridge/tests/test_ratatoskr_relay.sh` (19 cases,
+stub `herdr`, temporary queue). Fix note
+`docs/fixes/bridge/2026-11-16-the-relay-wakes-and-returns.md`, how-to
+`docs/features/ratatoskr-relay.md`.
+
+## The arm door — a task for a machine, or a refusal by name (plan 303 §12.3 step 5, 2026-11-16)
+
+The relay wakes a PANE. A task addressed to a MACHINE has no pane: what answers for a machine
+is its one live arm holder, which is a session holding the lock, not something herdr can be
+told to prompt. `bin/bridge/ratatoskr-arm.sh <machine> "<one line>"` is the one door:
+
+```
+arm_door[4]{rule,why}
+  "the registry decides what a machine is","a name the fleet registry does not hold is refused by name and nothing is handed"
+  "here, eindri-notify.sh","resolves the lock owner's pane and speaks into it; no live holder is REFUSED, exit 1"
+  "there, arm-send.sh","carries the line over that machine's own road and keeps the far door's own words, including `nobody holds the arm on <machine>`"
+  "handed, never delivered","the task counts only when the holder drains it and the queue carries an answer (RULES/49, 56)"
+```
+
+`--who` is the holder's roll per machine and never confuses `no answer` (the road failed) with
+nobody holds the arm (the machine answered and has no holder). The relay routes any task whose
+target has no pane through this door and records the refusal as its miss. A worker never takes
+the arm: the door reads the lock, it never mints one.
+
+Guard: `bin/bridge/tests/test_ratatoskr_arm.sh` (11 cases, both joined doors stubbed, so no
+real holder is ever spoken to). Fix note
+`docs/fixes/bridge/2026-11-16-the-arm-door-refuses-by-name.md`, how-to
+`docs/features/ratatoskr-arm.md`.
+
+## The bridge names itself (plan 303 §12.3 step 6, 2026-11-16)
+
+Every session's A2A bridge was spawned with one bind address, no name, no id and no state dir,
+so two sessions on a box collided on the port, shared one inbox, and every card said
+`127.0.0.1`. The wrapper that fixed it lived in `~/.local/bin` — in no repository, seated by no
+installer — so no other machine could have it. It is `bin/bridge/a2a-bridge-session.sh` now,
+and `bin/bridge/a2a-mcp.sh` points every harness's `a2abridge` entry at it.
+
+```
+bridge_identity[6]{field,from,example}
+  "harness","A2A_HARNESS, else the session's own environment, else unknown","pi · claude · hermes · unknown"
+  "pane","HERDR_PANE_ID","w6R:p1"
+  "name and id","<harness>-<pane> — never brokk- for a non-pi agent (RULES/44)","pi-w6R-p1"
+  "address","the fleet registry's name for this machine; bound on that name's own address, every interface if it does not resolve here, loopback only on a box that advertises loopback","<machine>.<tailnet>.ts.net"
+  "state","one directory per session","~/.a2abridge/state/pi-w6R-p1"
+  "port","first free from A2A_PORT, reserved by mkdir; a claim whose pid is gone is swept","8391"
+```
+
+`--identity` prints the row; `--dry` prints the exact argv and claims nothing, which is how the
+guard judges it without spawning a bridge. Guard:
+`bin/bridge/tests/test_a2a_bridge_identity.sh` (11 cases). Fix note
+`docs/fixes/bridge/2026-11-16-the-bridge-names-itself.md`, how-to
+`docs/features/agent-bridge-identity.md`.
+
+## The proof is a round trip, and an unproved hop says so (plan 303 §12.3 step 7, 2026-11-16)
+
+A card answering is not a node answering, and a file moving is not a message delivered. The
+proof is a **nonce**: `bin/bridge/a2a-talk.sh prove` (over `bin/bridge/a2a-prove.py`) sends one
+through the three doors of the loop and checks it comes back unchanged.
+
+```
+prove_doors[3]{door,proves,how}
+  "queue","a task is written, claimed and answered and the file moves","a real task and a real nonce through ratatoskr.sh"
+  "relay","the loop answers and reports what it did","ratatoskr-relay.sh status"
+  "arm","a machine name is handed to its holder or refused by name","ratatoskr-arm.sh"
+```
+
+`--live A B` adds the round trip through two live agents, waits for every hop, and reports a hop
+that does not arrive as `UNPROVED` with the agent's name and the task id — never a partial
+green. Exit 1 means a door failed and is named. It is an action on `a2a-talk.sh`, the door that
+already proves the channel: there is no second prover.
+
+Guard: `bin/bridge/tests/test_a2a_prove.sh` (14 cases, a temporary queue; a failed door and an
+unproved live hop are both asserted to exit 1 and to be named). Fix note
+`docs/fixes/bridge/2026-11-16-the-proof-is-a-round-trip.md`, how-to
+`docs/features/a2a-prove.md`.
+
+## Hermes in the loop: two shapes, one vocabulary (plan 303 §12.3 step 8, 2026-11-16)
+
+```
+hermes_roads[2]{shape,how reached,proved}
+  "an agent in a pane","`herdr agent start <name> --kind hermes --pane <id>`; then the ready check, the queue and the relay treat it as any pane","yes — the round trip proved live between throwaway agents in panes"
+  "a session behind a gateway","addressed by id prefix or title; its state is the runtime's own admission (`unknown` = a turn may have run), so a paused session is `blocked: lost turn, run recover`","the reader is proved against the runtime's own table; a throwaway profile is UNPROVED"
+```
+
+**A throwaway Hermes profile needs its own keys.** Measured 2026-11-16: an isolated
+`HERMES_HOME` in a pane bootstraps its own runtime and stops at `hermes setup` — "no API keys
+or providers found". Copying the operator's credentials into a scratch profile is his decision,
+not a worker's, so the throwaway-Hermes proof is recorded as **unproved** rather than described
+as working.
+
+**The headless road is stated, not claimed.** v0.22.6 has no `hermes mcp serve`; MCP arrives
+through `hermes plugins install mcp-serve`, and the API server / bots decisions are §13.6 items
+2 and 3 — the operator's. A paused session is never resumed by a tool.
+
+Guard: `bin/bridge/tests/test_hermes_road.sh` (5 cases; asserts what is true and asserts the
+absence that keeps the headless road stated). Fix note
+`docs/fixes/bridge/2026-11-16-the-hermes-road-measured.md`, how-to
+`docs/features/hermes-in-the-loop.md`.
+
+## Hermes is a second backend, the way herdr is one (plan 303 §14, 2026-11-16)
+
+A bridge names a process; a **backend** names an address. Hermes has no pane — two sessions of
+one Desktop profile share one gateway and one inbox — so a bridge could not tell them apart, and
+one of them said so: *"my bridge inbox is empty"* while its twin had drained the message. A
+backend is what a session needs, and herdr is the shape to copy.
+
+```
+backend[7]{verb,herdr,hermes}
+  "list","`herdr agent list`","`hermes sessions list` joined with the runtime's admissions table"
+  "get","`herdr agent get`","the session's last admission"
+  "read","`herdr agent read`","the tail of `hermes sessions export`"
+  "prompt","`agent prompt`, else `agent send` + Enter","`hermes chat --resume <id> -q -Q`; a paused session is REFUSED"
+  "wait","poll to the requested state","poll to the requested state"
+  "explain","why herdr says blocked","why it is paused, and the exact recovery"
+  "recover","—","show the lost input, then `hermes sessions discard` — only with `--yes`"
+```
+
+**One resolver**, `bin/seat/backends/resolve.py`: `herdr:<pane>`, `hermes:<id-or-title>`, or
+bare — and bare is herdr, so nothing that worked before changes shape. The door is
+`bin/seat/backend.sh <verb> <target>`; `ratatoskr who` and `ratatoskr send` resolve through it,
+and `bin/mcp/ymir-mcp.py` carries `ymir_hermes_list|send|recover` for every MCP harness.
+
+**Arrival (§15.4).** `.agents/harnesses/hermes.yaml` describes the harness;
+`.agents/migrations/0023-agents-talk.sh` heals an existing home (dead port claims, a stale arm
+pane, the relay unit, a Hermes restart that is owed) and is idempotent; `agentroad` is
+registered in `config/surfaces.yaml`, so Eir checks the road and Gróa mends the mendsafe part.
+The migration never restarts Hermes while a turn is live: it counts the live admissions and
+writes `state/hermes-restart-pending` instead.
+
+**The surface's own rule.** An enabled-but-FAILED unit is worse than an absent one — measured on
+this seat, where the relay's `ExecStart` pointed at a pinned runtime that predated the script.
+`agentroad` fails on `systemctl --user is-failed` and names the remedy.
+
+Guards: `bin/seat/tests/test_backend_door.sh` (19 cases, stubbed harnesses and a fixture of the
+runtime's own table). Fix note `docs/fixes/agents/2026-11-16-hermes-is-a-second-backend.md`,
+how-to `docs/features/agents-talk-to-everyone.md`.

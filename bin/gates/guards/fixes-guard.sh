@@ -92,6 +92,22 @@ range="${base}..${head_sha}"
 notes="$(git log --no-merges --diff-filter=A --name-only --format= "$range" 2>/dev/null | grep -E '^docs/fixes/[a-z]+/([0-9]|unversioned-)[^/]*\.md$' || true)"
 touched="$(git log --no-merges --name-only --format= "$range" 2>/dev/null | sed '/^$/d' | sort -u | grep -v '^docs/fixes/' | grep -v '^CHANGELOG' || true)"
 
+# AN EMPTY RE-GATE OWES NO RECORD (2026-11-16). A push whose only new commits change no file —
+# `git commit --allow-empty` to re-trigger the gate, or a branch re-pointed at the same tree —
+# carries no change for a note to describe, and demanding one was the ceremony that made a green
+# pull request be pushed four times to satisfy a gate about content it did not have. The range is
+# judged on what it CHANGES, so an empty range is nothing to record; a range that does change a
+# file still owes its note, and that is the fault this gate exists to refuse.
+empty_range=1
+while IFS= read -r sha; do
+  [ -n "$sha" ] || continue
+  [ -n "$(git diff-tree --no-commit-id --name-only -r "$sha" 2>/dev/null | head -1)" ] && { empty_range=0; break; }
+done < <(git log --no-merges --format=%H "$range" 2>/dev/null)
+if [ "$empty_range" = 1 ] && [ -z "$notes" ]; then
+  printf 'fixes-guard[1]{gate,result}:\n  "push","ok — an empty range carries no change to record (a re-gate, 2026-11-16)"\n'
+  return 0
+fi
+
 if [ -z "$notes" ]; then
   # THE DOCUMENT ROAD (RULES/08, appended 2026-11-12): a range that changes documents
   # only, by branch-guard's exact set, owes no fix note — UNLESS it changes a rule. A rule
@@ -131,6 +147,7 @@ path_component() {  # <path> -> the component it belongs to, or empty
     bin/bridge/a2a-mcp.sh|bin/bridge/ratatoskr.sh) echo runtime ;;
     bin/engine/ymir-install.sh|bin/agents/groa-update.sh|bin/seat/valknut-load.sh|bin/engine/ymir-migrate.sh) echo install ;;
     .pi/*|.agents/skills/*|bin/agents/skill-find.sh|bin/gates/fixes.sh|bin/gates/guards/fixes-guard.sh) echo agents ;;
+    bin/gates/agnostic-audit.sh|bin/time/nornir-job-private-scan.sh|bin/time/nornir-job-agnostic-audit.sh|hodd/identity/public-deny.txt.example|.agents/home-contract.yaml) echo gate ;;
     bin/gates/capabilities.sh|bin/gates/inventory.sh|bin/gates/registers.sh|bin/gates/registers-*|bin/gates/queue.sh|bin/gates/ci-verify.sh|bin/gates/checks.d/*|bin/gates/checks/*|bin/gates/guards.sh|bin/gates/guards/*|bin/gates/tests/*|bin/no-delete-guard.sh) echo gate ;;
     # The woven catalogue (Þættir) and the derived registers belong to the gate suite:
     # a fix to them is a gate fix (2026-11-03 — they mapped to nothing and a correct

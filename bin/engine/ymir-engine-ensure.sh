@@ -61,7 +61,7 @@ if [ ! -x "$VENV/bin/python" ]; then
   python3 -m venv "$VENV" >/dev/null 2>&1 || { printf 'error: python3 -m venv failed at %s\n' "$VENV" >&2; exit 1; }
 fi
 # plan 275 (2026-11-12): the engine runs the PIN's code, never the tree this ran from — installed from ~/ymir it ran
-# the operator's working copy (heimdall: `ymir_runtime watch run` from ~/ymir/src for 16 hours). The pin's path is a
+# the operator's working copy (one dev machine ran `ymir_runtime watch run` from ~/ymir/src for 16 hours). The pin's path is a
 # link to the current release, so the import path is written as that link and follows every update.
 SRCROOT="$ROOT"; _pin="${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}"; [ -d "$_pin/src" ] && SRCROOT="$_pin"
 "$VENV/bin/pip" -q install -e "$SRCROOT/src" >/dev/null 2>&1 || {

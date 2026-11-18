@@ -34,6 +34,7 @@ write_ok() { run python3 "$tool" write ok --task t --plan p --branch work --base
   --gate "site|bash bin/gates/guards.sh|0|guards.sh: 27 PASS, 0 FAIL" \
   --test "bash bin/gates/tests/test_x.sh|0|7 passed, 0 failed" \
   --claim "the door reads the schema|unverified|schemas/handoff-packet.toon" \
+  --record "a.txt|the base document the change stands on" \
   --repo "$repo" --packet "$tmp/ok.packet"; }
 
 # 1 · a truthful packet is written, in the schema's shape
@@ -64,7 +65,8 @@ case "$out" in *understated*) ok "the refusal says understated, and names the pa
 # 5 · a gate tail that is a claim, not evidence
 run python3 "$tool" write claim --task t --plan p --branch work --base "$base" --head "$head" \
   --gate "site|bash bin/gates/guards.sh|0|all pass" \
-  --test "bash t.sh|0|7 passed" --repo "$repo" --packet "$tmp/claim.packet"
+  --test "bash t.sh|0|7 passed" --record "a.txt|a record the change updates" \
+  --repo "$repo" --packet "$tmp/claim.packet"
 [ "$rc" = 1 ] && ok '"all pass" is refused as evidence' || bad '"all pass" was accepted as evidence'
 
 # 6 · the reviewer's block may not be written by the smith
@@ -81,6 +83,7 @@ printf 'one\n' > a.txt; git add a.txt; git commit -qm base; pbase="$(git rev-par
 printf 'two\n' > b.txt; git add b.txt; git commit -qm head; phead="$(git rev-parse HEAD)"
 run python3 "$tool" write partial --task t --plan p --base "$pbase" --head "$phead" \
   --gate "site|bash g.sh|0|g.sh: 1 PASS" --test "bash t.sh|0|1 passed" \
+  --record "none|this throwaway repository has no project record to update" \
   --repo "$norepo" --packet "$tmp/partial.packet"
 grep -q 'partial' "$tmp/partial.packet" && ok "a floor with nothing to read is recorded as partial" \
   || bad "the floor was not recorded as partial"
@@ -93,6 +96,38 @@ case "$out" in *"refusal waiting to happen"*) ok "the refusal says what a partia
 sed 's|^  "t","p","work","[0-9a-f]*"|  "t","p","work","origin/main"|' "$tmp/ok.packet" > "$tmp/nobase.packet"
 run python3 "$tool" check ok --repo "$repo" --packet "$tmp/nobase.packet"
 [ "$rc" = 1 ] && ok "a base with no sha is refused" || bad "a base with no sha was accepted"
+
+# 9 · a packet that says nothing about the project's records (plan 291 part 2)
+run python3 "$tool" write norec --task t --plan p --branch work --base "$base" --head "$head" \
+  --gate "site|bash bin/gates/guards.sh|0|guards.sh: 27 PASS" \
+  --test "bash t.sh|0|7 passed" --repo "$repo" --packet "$tmp/norec.packet"
+[ "$rc" = 2 ] && ok "a write with no --record is refused" || bad "a write with no --record was accepted (rc=$rc)"
+case "$out" in *records*|*--record*) ok "the refusal names the records duty" ;;
+  *) bad "the refusal did not name the records duty" ;; esac
+run python3 "$tool" write bare --task t --plan p --branch work --base "$base" --head "$head" \
+  --gate "site|bash bin/gates/guards.sh|0|guards.sh: 27 PASS" \
+  --test "bash t.sh|0|7 passed" --record "none|none" \
+  --repo "$repo" --packet "$tmp/bare.packet"
+[ "$rc" = 2 ] && ok 'a bare `none` is refused — no record changed needs a reason' \
+  || bad 'a bare `none` was accepted'
+# 9b · a packet whose records block is empty is refused at check, even by hand
+awk '/^records\[[0-9]+\]\{path,what\}:/ {print "records[0]{path,what}:"; skip=1; next} skip && /^  "/ {next} {skip=0; print}' \
+  "$tmp/ok.packet" > "$tmp/emptyrec.packet"
+grep -q '^records\[0\]{path,what}:$' "$tmp/emptyrec.packet" || bad "the empty-records fixture was not built"
+run python3 "$tool" check ok --repo "$repo" --packet "$tmp/emptyrec.packet"
+[ "$rc" = 1 ] && ok "an empty records block is refused at check" || bad "an empty records block passed"
+
+# 10 · a missing packet is a refusal, never an empty pass
+# 10 · a base given as a REF is resolved to its sha, so the door's own packet passes its own check
+run python3 "$tool" write reffed --task t --plan p --branch work --base work --head "$head" \
+  --gate "site|bash g.sh|0|g.sh: 1 PASS" --test "bash t.sh|0|1 passed" \
+  --record "none|the door's own packet test touches no project record" \
+  --repo "$repo" --packet "$tmp/reffed.packet"
+[ "$rc" = 0 ] && ok "a packet may name its base by ref" || bad "write refused a ref base: $out"
+grep -qE '^  "t","p","work","[0-9a-f]{40}"' "$tmp/reffed.packet" \
+  && ok "the ref was resolved to a full sha in the packet" || bad "the packet kept a ref as its base"
+run python3 "$tool" check reffed --repo "$repo" --packet "$tmp/reffed.packet"
+[ "$rc" = 0 ] && ok "the door's own packet passes the door's own check" || bad "the door refused its own packet: $out"
 
 # 9 · a missing packet is a refusal, never an empty pass
 run python3 "$tool" check ghost --repo "$repo" --packet "$tmp/nope.packet"

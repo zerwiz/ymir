@@ -106,7 +106,7 @@ case "$ACTION" in
     ( timeout 25 bash "$ARM" --restart >"$TMP/client2.out" 2>"$TMP/client2.err" ) &
     client=$!
     sleep 2
-    kill -9 "$first" 2>/dev/null
+    kill "$first" 2>/dev/null   # a client that goes away is TERM, not SIGKILL: the arm must re-seat either way
     sleep 6
     second="$(lease_pid)"
     if [ -n "$second" ] && [ "$second" != "$first" ] && kill -0 "$second" 2>/dev/null; then
@@ -149,7 +149,7 @@ case "$ACTION" in
       else
         record "systemd-unit" FAIL "unit not active or no lease"
       fi
-      kill -9 "$first" 2>/dev/null
+      kill "$first" 2>/dev/null
       sleep 5
       second="$(lease_pid)"
       if [ -n "$second" ] && [ "$second" != "$first" ] && [ "$(systemctl --user show -p ActiveState --value "$SYN_WATCH_UNIT" 2>/dev/null)" = "active" ]; then

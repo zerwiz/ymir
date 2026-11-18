@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # ship-watch.sh — the delivery loop: settle branches, then ship proved PRs.
 set -u
+# the bash floor (RULES/05): macOS ships bash 3.2 — re-run under bash >= 4, or say how to get one
+[ "${BASH_VERSINFO[0]:-0}" -ge 4 ] || { . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../fleet/ymir-platform.sh" && ymir_bash_floor "$@"; }
 VERSION="1.0.0"
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help) sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -18,6 +20,9 @@ PROJECTS="$HOME_DIR/hodd/identity/projects.yaml"
 SHIP="$ROOT/bin/forge/ship.sh"
 DRY=0; JSON=0
 while [ $# -gt 0 ]; do case "$1" in --dry-run) DRY=1; shift ;; --json) JSON=1; shift ;; -*) shift ;; *) shift ;; esac; done
+# plan 290 §3 — the shared law every outward door keeps (bin/forge/warden-lib.sh).
+. "$ROOT/bin/forge/warden-lib.sh"
+warden_begin ship-watch || exit 1
 command -v gh >/dev/null 2>&1 || { printf 'ship-watch: gh missing\n' >&2; exit 1; }
 
 # seal-hold brake
@@ -29,6 +34,8 @@ SERVICE="ship-watch.service"; TIMER="ship-watch.timer"
 if [ -n "$TIMER_ACTION" ]; then
   case "$TIMER_ACTION" in
     install)
+      # plan 290 rule 1: seating is the operator's decision for THIS machine, not the door's.
+      warden_seat_allowed ship-watch || exit 3
       # the unit is the register's (config/units.yaml: ship-watch) and the one writer renders it against the
       # PINNED runtime, never the tree this door ran from (plan 269)
       bash "$ROOT/bin/engine/units.sh" write ship-watch --no-restart >/dev/null || { printf 'ship: units.sh could not write the unit\n' >&2; exit 1; }
@@ -53,6 +60,10 @@ if [ -f "$STATE/.seal-hold" ]; then
   exit 0
 fi
 
+# 1 · this machine must NAME the door · 2 · only the operator's own repositories · 3 · its own identity
+warden_require_door || exit 3
+warden_require_identity || exit 3
+
 # list reviewer-merges projects
 mapfile -t REPOS < <(python3 - "$PROJECTS" <<'PY'
 import sys,yaml
@@ -72,6 +83,7 @@ PY
 
 for repo in "${REPOS[@]}"; do
   [ -n "$repo" ] || continue
+  warden_require_repos "$repo" || continue
   prs="$(gh pr list -R "$repo" --state open --limit 100 --json number,headRefOid,mergeable,isDraft,statusCheckRollup 2>/dev/null)" || continue
   [ -n "$prs" ] || prs="[]"
   python3 - "$prs" <<'PY' | while IFS=$'\t' read -r num head mergeable draft ci; do
@@ -95,12 +107,21 @@ PY
     action="waited for a verdict"
     if [ "$mergeable" = "BEHIND" ]; then action="rebased"; fi
     if [ "$mergeable" = "DIRTY" ]; then action="conflicts settled"; fi
-    # ship if proved
+    # ship if proved — and a ship that merges needs the THREE yeses of plan 290 rule 5: the door's
+    # `merge: on`, the heart's own machine, and bin/forge/merge-verdict.sh saying yes for this PR.
     if [ "$draft" != "true" ] && [ "$mergeable" = "MERGEABLE" ] && { [ "$ci" = "green" ] || [ "$ci" = "none" ]; } && [ -n "$verdict" ] && [[ "$verdict" == PASS* ]] && { [ -z "$reviewed" ] || [ "$reviewed" = "$head" ]; }; then
       if [ "$DRY" = 1 ]; then
         action="would merge"
+      elif ! warden_merge_allowed "$num"; then
+        action="refused — merge not allowed here (see above)"
+        warden_runes refused "refused to merge PR $num on $repo — the three yeses of plan 290 rule 5 were not all present" >/dev/null || true
       else
+        WARDEN_REPOS="$repo"
         "$SHIP" "$num" --repo "$repo" >/dev/null 2>&1 && action="merged" || action="refused"
+        case "$action" in
+          merged) warden_runes merged "merged PR $num on $repo at ${head:0:12} — ci $ci, verdict PASS, merge-verdict yes" >/dev/null || true ;;
+          *) warden_runes refused "bin/forge/ship.sh refused PR $num on $repo" >/dev/null || true ;;
+        esac
       fi
     fi
     printf 'ship-watch[4]{pr,action,sha,reason}:\n  "%s","%s","%s","%s"\n' "$num" "$action" "${head:0:12}" "$verdict"

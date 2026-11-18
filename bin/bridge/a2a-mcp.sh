@@ -12,7 +12,7 @@
 # in other areas is left untouched — launch it with `pi --mcp-config .pi/mcp-adapter.json`
 # to pick the repo up.
 #
-# The well (2026-11-10, the Allfather's law): engram is Kaia's engine only. The memory
+# The well (2026-11-10, the Allfather's law): engram is Völundr's engine only. The memory
 # server wired here is the WELL DOOR — this body's gateway (`/mcp/well` on :8316), which
 # journals every write and carries it to the heart — never a direct `engram-mcp --db`
 # stdio server. An `engram` entry an older install wrote is removed on the next install
@@ -64,7 +64,7 @@ done
 if [ "$PROJECT" = 1 ]; then PI_MCP="$ROOT/.pi/mcp-adapter.json"; else PI_MCP="$HOME/.pi/agent/mcp-adapter.json"; fi
 
 WOTES="$(command -v wayofteams-mcp 2>/dev/null || true)"
-# The well door: this body's MCP gateway, never the engine (engram is Kaia's).
+# The well door: this body's MCP gateway, never the engine (engram is Völundr's).
 GATEWAY_PORT="${MCP_GATEWAY_PORT:-${YMIR_MCP_GATEWAY_PORT:-8316}}"
 WELL_URL="http://127.0.0.1:$GATEWAY_PORT/mcp/well"
 
@@ -108,12 +108,20 @@ def load(p, default):
     try: return json.load(open(p))
     except Exception: return default
 
+# THE SESSION WRAPPER IS THE DOOR (plan 303 §12.3 step 6, §15.4). A raw `a2abridge bridge`
+# entry gives every session the same name, id and state dir, so two sessions on one box
+# collide on the port and share one inbox — and every bridge is named `brokk-…` whatever its
+# harness. The wrapper resolves a per-session identity (harness + pane), advertises the name
+# the fleet registry gives this machine, and gives back a dead port claim. It lives in the
+# tree and is seated here, so a fresh install and every update have it.
+sess = os.path.join(root, "bin", "bridge", "a2a-bridge-session.sh")
+a2a_env = {"A2A_DIRECTORY": durl}
+if advert:
+    a2a_env["A2A_ADVERTISE_HOST"] = advert
 ones = {
     "a2abridge": {
-        "pi":  {"command": a2ab, "args": ["bridge", "-bind", a2a_bind, "-advertise-host", advert],
-                "env": {"A2A_DIRECTORY": durl, "A2A_ADVERTISE_HOST": advert}},
-        "oc":  {"type": "local", "command": [a2ab, "bridge", "-bind", a2a_bind, "-advertise-host", advert],
-                "environment": {"A2A_DIRECTORY": durl, "A2A_ADVERTISE_HOST": advert}},
+        "pi":  {"command": sess, "args": [], "env": a2a_env},
+        "oc":  {"type": "local", "command": [sess], "environment": a2a_env},
     },
     "well": {
         "pi":  {"url": well_url},

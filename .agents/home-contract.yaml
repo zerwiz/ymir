@@ -14,7 +14,11 @@
 # a fifth spelling and a parser cannot silently miss a file.
 #
 #   path      home-relative destination. `{realm}` is resolved at run time (the realm
-#             pin, else the active realm) and is the ONLY substitution allowed.
+#             pin, else the active realm) and `{machine}` (this computer's name, from the
+#             fleet registry by hostname) are the only two substitutions allowed.
+#             2026-11-14 (plan 290 §3): `{machine}` added, so a per-machine file — today one
+#             only, config/machines/<machine>/wardens.yaml — reaches every home instead of
+#             living outside the contract.
 #   kind      seeded    · copied once from `template` if absent; an existing file is
 #                         NEVER touched (the operator's record outranks a default)
 #             stub      · the operator's OWN words; `template` is an empty shape with a
@@ -113,7 +117,19 @@ contract:
     template: hodd/identity/public-deny.txt.example
     door: bin/engine/home-seed.sh
     required: false
-    why: "the words that must never appear in the public repository (people, clients, domains, hosts); absent, the secret scan and the private sweep say so and judge the shared shapes alone (plan 287 §6, plan 288 step 3)"
+    why: "the words that must never appear in the public repository (people, clients, domains, hosts); read by bin/gates/agnostic-audit.sh (the census and the pre-push ward) and turned into rules by bin/gates/secret-scan.sh; absent, both say so and judge the shared shapes alone (plan 287 §6)"
+  - path: config/nda-allow.yaml
+    kind: seeded
+    template: .agents/config/nda-allow.operator.yaml.example
+    door: bin/engine/home-seed.sh
+    required: false
+    why: "the operator's OWN words the NDA gate must allow (his realm, his mail domain, his handle), each with a reason; absent, only the repository's generic allowances apply and no word of his is written into the public tree (RULES/04, RULES/42)"
+  - path: hodd/identity/house-domains.txt
+    kind: seeded
+    template: .agents/config/house-domains.txt.example
+    door: bin/engine/home-seed.sh
+    required: false
+    why: "the mail domains that are the operator's OWN: a commit may be authored as <agent>@<domain> and the developers register shows such an author unmasked; absent, both wards fall back to the generic @ymir forms and say so (RULES/04)"
   - path: hodd/identity/machines.yaml
     kind: stub
     template: hodd/identity/machines.yaml.example
@@ -184,6 +200,15 @@ contract:
     template: .agents/config/models-allowed.yaml.example
     door: bin/engine/home-seed.sh
     required: false
+  # The model Smidja's Völundr chat starts on (2026-11-14, his word: "make the default model in
+  # Smidja for me opencode-go/deepseek-v4.1-flash"). Not required: absent, the repo's generic
+  # default answers and the reader says so.
+  - path: config/smidja.env
+    kind: seeded
+    template: .agents/config/smidja.env.example
+    door: bin/engine/home-seed.sh
+    required: false
+    why: "the model the smithy's chat starts on, and the one its picker opens on"
     why: "the models an Eindri may run on — every spawn door refuses any other (bin/model/model-allow.sh)"
   - path: config/cron.yaml
     kind: defaulted
@@ -191,6 +216,12 @@ contract:
     door: "-"
     required: true
     why: "the schedule; absent, the shipped default runs and the operator's edits have nowhere to live"
+  - path: config/machines/{machine}/wardens.yaml
+    kind: seeded
+    template: .agents/config/machine-wardens.example.yaml
+    door: bin/engine/home-seed.sh
+    required: false
+    why: "this machine's own outward wardens (plan 290 §3) — the template ships every door OFF, so a fresh install seats nothing outward; the migration records what a working machine already runs"
   - path: config/model-catalog.yaml
     kind: defaulted
     template: .agents/config/model-catalog.yaml.example
@@ -215,6 +246,12 @@ contract:
     door: "-"
     required: false
     why: "the warden's bite rules; absent, the shipped default applies"
+  - path: config/soak.yaml
+    kind: defaulted
+    template: .agents/config/soak.example.yaml
+    door: "-"
+    required: false
+    why: "the leak ledger's sampling and the restart storm's limit; absent, the shipped default applies"
   - path: config/suite-workspaces.yaml
     kind: defaulted
     template: .agents/config/suite-workspaces.example.yaml
@@ -305,6 +342,46 @@ contract:
     door: "-"
     required: false
     why: "the observation sources; absent, the scan skips with its reason"
+
+  # ── the two SYSTEMS' own settings (plan 288 §1): what is generic stays in systems/, what is one
+  # operator's lives here. Every key inside them may stay empty; the code names the default that
+  # answers then, so a home of one with no values is still a working meeting ear and assistant. ──
+  - path: config/snotra/snotra.conf
+    kind: defaulted
+    template: .agents/config/snotra/snotra.conf.example
+    door: "-"
+    required: false
+    why: "the realm the live hall names, his board's workstreams, his letter homepage, his meeting hosts; absent, the generic defaults answer and say which file did (systems/snotra/services/record/snotra_config.py --source)"
+  - path: config/snotra/workstreams.yaml
+    kind: optional
+    template: .agents/config/snotra/workstreams.yaml.example
+    door: "-"
+    required: false
+    why: "his board ids, list names and keywords; absent, a card is filed on its meeting's own board and linked nowhere else — a declared state, not a fault"
+  - path: config/snotra/voice-subjects.yaml
+    kind: optional
+    template: .agents/config/snotra/voice-subjects.yaml.example
+    door: "-"
+    required: false
+    why: "his clients and companies, and how the ear may hear them; absent, only the house's own names are subjects"
+  - path: config/skirnir.yaml
+    kind: defaulted
+    template: .agents/config/skirnir.yaml.example
+    door: "-"
+    required: false
+    why: "the assistant's mouth, his public page and his subject aliases; absent, the rail's own defaults answer and his subjects are not registered"
+  - path: config/skirnir/vocab.txt
+    kind: optional
+    template: .agents/config/skirnir/vocab.txt.example
+    door: "-"
+    required: false
+    why: "the words the ear should expect, one per line; absent, the house's own names are the hint"
+  - path: config/skirnir/canaries.txt
+    kind: optional
+    template: .agents/config/skirnir/canaries.txt.example
+    door: "-"
+    required: false
+    why: "strings only the owner may hear (his machines, his names); absent, the repository's base wall still binds everyone"
   - path: hodd/data/collaboration.yaml
     kind: optional
     template: "-"

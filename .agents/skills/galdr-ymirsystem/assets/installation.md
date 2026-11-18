@@ -878,6 +878,18 @@ an **Omarchy** host the layer also *records* it (`bin/host/omarchy-sense.sh obse
 and installs a `post-update` hook so Ymir re-learns it every time Omarchy
 updates. On a non-Omarchy host that layer step is a clean SKIP.
 
+The sensor also answers what the desktop wants of a window's **frame**:
+`bin/host/host-sense.sh capability window-buttons` returns `no` on a tiling
+compositor (Hyprland — Omarchy's session — and Sway, Niri, River, which draw no
+title bar and close a window with a key) and `yes` everywhere else. Every app
+launcher asks it through `app_window_buttons` (`bin/desktop/app-lib.sh`) and
+carries the answer in as `YMIR_WINDOW_BUTTONS=on|off`; each Electron shell builds
+its window with `frame:` from that and leaves its application menu set, so the
+shortcuts survive the bar. Proof and the measured before/after:
+`docs/fixes/desktop/2026-11-14-no-window-buttons-on-omarchy.md`;
+`.agents/tests/window-buttons.test.sh` is the gate (a new app or launcher that
+does not ask turns it red).
+
 Rule: the installer is **idempotent** — running it again changes nothing but
 fills gaps. It never overwrites real user data.
 
@@ -986,6 +998,7 @@ sourced, never executed:
 | Need | Function | Why it exists |
 |---|---|---|
 | Which OS | `ymir_os` → `linux` \| `macos` \| `wsl` \| `msys` | branching, once |
+| The bash floor | `ymir_bash_floor "$@"`, `ymir_bash4_path` | macOS ships bash 3.2; a script that needs `declare -A` / `mapfile` re-runs itself under a bash >= 4 (`$YMIR_BASH`, Homebrew, MacPorts, `~/.local/bin`) or refuses with `brew install bash`. The install's `bash` row and the plan's `runtimes bash` row report it |
 | CPU count | `ymir_nproc` | `nproc` is GNU; macOS uses `sysctl -n hw.ncpu` |
 | Resolve a path | `ymir_readlink_f` | BSD `readlink` has no `-f`; mirrors GNU semantics including the "parent must exist" rule |
 | File facts | `ymir_stat_mtime`, `ymir_stat_size`, `ymir_stat_id`, `ymir_stat_birth`, `ymir_stat_mode` | GNU `stat -c` vs BSD `stat -f`, and birth time exists on both but differently |
@@ -995,6 +1008,7 @@ sourced, never executed:
 | Detach a process | `ymir_detach` | `setsid` is absent on macOS; falls back to `nohup` |
 | Exclusive lock | `ymir_lock` | `flock` is Linux; falls back to an atomic `mkdir` lock |
 | Services | `ymir_service_backend`, `ymir_service_active` | `systemd` on Linux, `launchd` on macOS, neither elsewhere |
+| `systemctl --user` itself | `bin/engine/launchd-user.py` (seated by `bin/engine/launchd-ensure.sh`, install step `launchd`) | on macOS every unit is rendered as a launchd agent `org.ymir.<unit>`; Linux keeps systemd |
 | GPUs | `ymir_gpu_name`, `ymir_gpu_mem_used` | never assume NVIDIA: `nvidia-smi`, then `rocm-smi`, then Apple's unified memory |
 | Paths | `ymir_tmp`, `ymir_expand_tilde` | `TMPDIR`/`TEMP` vary; a leading `~` must be expanded explicitly |
 
@@ -1394,7 +1408,7 @@ checkout re-rendering the machine's SOUL.md from older code shows up as a red ro
 
 The `a2a` row above says `bin/bridge/a2a-mcp.sh install wires a2abridge + engram into pi + opencode`. The
 `memory` row says the step "reports MCP coverage". Both rows are kept as the record. Both are corrected here.
-engram is Kaia's engine only, so a harness reaches memory through this body's gateway at `/mcp/well` and never
+engram is Völundr's engine only, so a harness reaches memory through this body's gateway at `/mcp/well` and never
 through a direct `engram-mcp` server.
 
 ```

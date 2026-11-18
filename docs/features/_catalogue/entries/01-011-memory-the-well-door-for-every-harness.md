@@ -1,4 +1,8 @@
 ---
 section: memory-secrets
 ---
-| Memory | **The well door for every harness** (`bin/bridge/mcp-config.sh seat`) | engram is Kaia's engine only. Every harness reaches the well through this body's MCP gateway (`/mcp/well`), which journals each write to the heart, and never through a direct `engram-mcp` server. `seat` copies pi's one MCP set into pi, opencode, Claude Code (user scope, via `claude mcp`), Cursor and Codex (one marked block), each in its own format, and removes a direct engram and the retired `gmail`/`drive`/`docs` from all of them and from Hermes. It merges by name and backs up each file it changes. It does not copy a server that holds a literal secret, and it skips a harness that is not installed. `--check` reports and changes nothing. Claude Code also gets a SessionStart hook that loads the project's `AGENTS.md` | [The well door for every harness](docs/features/the-well-door-for-every-harness.md) |
+| Memory | **The well door for every harness** (`bin/bridge/mcp-config.sh seat`) | engram is Völundr's engine only. Every harness reaches the well through this body's MCP gateway (`/mcp/well`), which journals each write to the heart, and never through a direct `engram-mcp` server. `seat` copies pi's one MCP set into pi, opencode, Claude Code (user scope, via `claude mcp`), Cursor and Codex (one marked block), each in its own format, and removes a direct engram and the retired `gmail`/`drive`/`docs` from all of them and from Hermes. It merges by name and backs up each file it changes. It does not copy a server that holds a literal secret, and it skips a harness that is not installed. `--check` reports and changes nothing. Claude Code also gets a SessionStart hook that loads the project's `AGENTS.md` | [The well door for every harness](docs/features/the-well-door-for-every-harness.md) |
+
+## CHANGE LOG
+
+- 2026-11-14 — review-mend: added missing heading for #760

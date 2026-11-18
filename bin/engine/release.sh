@@ -12,7 +12,7 @@
 #   bin/engine/release.sh adopt                                turn the old in-place pin into the first release (once)
 #   bin/engine/release.sh status                               what current is, what is kept, what is proved
 #
-# WHY (measured 2026-11-12 on heimdall and nidavellir). The pin was a git checkout moved in place with
+# WHY (measured 2026-11-12 on the dev machine and on a second one). The pin was a git checkout moved in place with
 # `git reset --hard` under open windows; dependencies were installed only on a fresh clone and without Electron
 # (a dev dependency); no app was built (Hlidskjalf served Vite's DEV server, Sessrúmnir built itself at the click);
 # and every app found its own Electron (v33.0.0, v33.4.11, v43.7.3, the distribution's 43.8.3 and 41). This door ends
@@ -27,6 +27,12 @@
 # State a running Ymir writes inside its tree (.run, state, .a2a, .yggdrasil, opencode.json, …) lives ONCE in shared/
 # and is linked into each release, so a flip never loses it. Private data stays in $YMIR_HOME (RULES/04).
 set -uo pipefail
+# Portable shims (RULES/05, 2026-11-16): `mv -T`, `date -Is` and /proc are GNU/Linux. On a Mac the release road failed
+# at its first step (adopt), and in_use() saw no process at all, so a release still running could have been pruned.
+mv_t() {  # <src> <dst> — replace dst (a link or an absent dir) with src, never moving src INTO it
+  if mv --version >/dev/null 2>&1; then mv -T "$1" "$2"; else mv -fh "$1" "$2"; fi
+}
+now_iso() { date +%Y-%m-%dT%H:%M:%S%z; }
 
 SELF="$(CDPATH='' cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SRC_DEFAULT="$(CDPATH='' cd "$SELF/../.." && pwd)"
@@ -82,8 +88,10 @@ m=re.search(r'(\d+)',v); print(m.group(1) if m else '')
 PY
 }
 prove() {  # <release> → prints a TOON table, exit 0 only when every row passes
-  local d="$1" bad=0 a bin ver want out
-  say "release-proof[$(echo $APPS | wc -w)]{app,state,detail}:"
+  local d="$1" bad=0 a bin ver want out n
+  n=$(echo $APPS | wc -w)
+  [ -d "$d/apps/smidja-factory/apps/visualizer" ] && n=$((n+1))   # the smithy's eye is judged too
+  say "release-proof[$n]{app,state,detail}:"
   for a in $APPS; do
     [ -d "$d/apps/$a" ] || { row "$a" skip "not in this release"; continue; }
     bin="$(electron_for "$d" "$a")"
@@ -104,6 +112,17 @@ prove() {  # <release> → prints a TOON table, exit 0 only when every row passe
     esac
     row "$a" ok "Electron $ver from the release"
   done
+  # the smithy's eye (plan 288 step 7): its bundle is built in the release, and the server that serves it
+  # reads ./dist — so a release without it answers :8437 with an empty view. Judged, never assumed.
+  if [ -d "$d/apps/smidja-factory/apps/visualizer" ]; then
+    if [ -f "$d/apps/smidja-factory/apps/visualizer/dist/index.html" ]; then
+      row visualizer ok "UI built in the release (served on :8437)"
+    elif command -v bun >/dev/null 2>&1; then
+      row visualizer FAIL "not built (no dist/index.html) — bun is present, so the build was skipped, not impossible"; bad=1
+    else
+      row visualizer skip "not built and no bun on this machine — the smithy serves its API with no UI"
+    fi
+  fi
   return "$bad"
 }
 
@@ -146,6 +165,15 @@ build() {
     ( cd "$tmp/apps/sessrumnir" && npm run build ) || exit 16
     ( cd "$tmp/apps/sessrumnir" && npx --no-install electron-builder install-app-deps ) || exit 17
     ( cd "$tmp/apps/bilskirnir" && npm run build -w web ) || exit 18
+    # The smithy's EYE is a nested app with its own bun lockfile, so the root `npm ci` never installs it
+    # and its bundle was never built here — a release therefore served :8437 with no UI at all
+    # ("No ./dist build found"), while the tree kept a committed dist/ that hid the fault. The bundle
+    # left git on 2026-11-14 (plan 288 step 7, plan 287 P4); the release builds it, or says it did not.
+    if command -v bun >/dev/null 2>&1; then
+      ( cd "$tmp/apps/smidja-factory/apps/visualizer" && bun install --frozen-lockfile && bunx vite build ) || exit 19
+    else
+      printf 'visualizer SKIP no bun on this machine — the smithy serves its API with no UI\n'
+    fi
     # the house's git guards, as the installer seats them in a working tree (Eir judges the pin's hooks too)
     for h in "$tmp"/.githooks/*; do [ -f "$h" ] && install -m 755 "$h" "$tmp/.git/hooks/$(basename "$h")"; done
     link_shared "$tmp"
@@ -161,8 +189,8 @@ build() {
     BROKK_ROOT_OVERRIDE="$tmp" bash "$tmp/bin/time/nornir-job-hall-snapshot.sh" >> "$log" 2>&1 || true
   fi
   if ! prove "$tmp"; then say "FAIL	the release did not prove — it stays unbuilt at $tmp"; return 1; fi
-  date -Is > "$tmp/.release-proved"
-  rm -rf "$d"; mv -T "$tmp" "$d"
+  now_iso > "$tmp/.release-proved"
+  rm -rf "$d"; mv_t "$tmp" "$d"
   say "release	$d	built and proved"
 }
 
@@ -194,7 +222,7 @@ flip() {
   local d; d="$(resolve_sha "${1:?flip <sha>}")"
   [ -n "$d" ] && [ -f "$d/.release-proved" ] || fail "no PROVED release for $1"
   readlink -f "$CUR" 2>/dev/null > "$BASE/previous" || true
-  ln -sfn "$d" "$CUR.tmp-$$" && mv -T "$CUR.tmp-$$" "$CUR" || fail "the flip did not land"
+  ln -sfn "$d" "$CUR.tmp-$$" && mv_t "$CUR.tmp-$$" "$CUR" || fail "the flip did not land"
   say "current	$d"
   if [ "$no_restart" = 1 ]; then
     say "restart	skipped	--no-restart — the services still run the release they started in"
@@ -209,7 +237,7 @@ flip() {
   for r in $(ls -1dt "$REL"/*/ 2>/dev/null); do
     r="${r%/}"; [ "$r" = "$keep_cur" ] || [ "$r" = "$keep_prev" ] && continue
     # a release a running process still uses (its folder, its command line) is never deleted: an app server
-    # started from it would answer 404 the moment its files vanished (nidavellir, 2026-11-12: Óðrerir's page)
+    # started from it would answer 404 the moment its files vanished (a second machine, 2026-11-12: Óðrerir's page)
     if in_use "$r"; then say "kept	$r	(still in use by a running process)"; continue; fi
     n=$((n+1)); if [ "$n" -gt "$KEEP" ]; then rm -rf "$r" && say "pruned	$r"; fi
   done
@@ -217,6 +245,11 @@ flip() {
 }
 in_use() {  # <release-dir> → 0 when any process runs from it
   local p
+  if [ ! -d /proc/self ]; then  # no /proc (a Mac): ask lsof for working directories and ps for command lines
+    lsof -nP -a -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' | grep -qE "^$1(/|$)" && return 0
+    ps -axo command= 2>/dev/null | grep -qF "$1/" && return 0
+    return 1
+  fi
   for p in /proc/[0-9]*; do
     case "$(readlink "$p/cwd" 2>/dev/null)" in "$1"|"$1"/*) return 0 ;; esac
     { tr '\0' ' ' < "$p/cmdline"; } 2>/dev/null | grep -qF "$1/" && return 0
@@ -236,11 +269,11 @@ adopt() {
   local sha d; sha="$(git -C "$PIN" rev-parse --short=12 HEAD)"; d="$REL/$sha"
   [ -e "$d" ] && fail "$d already exists — build a release and flip it instead"
   # the links are made in the same breath as the move, so the pin's path is absent for microseconds, not for the
-  # whole of link_shared (heimdall 2026-11-12: a timer started in that gap and failed its CHDIR)
-  ln -sfn "$d" "$CUR.tmp-$$" && mv -T "$PIN" "$d" && mv -T "$CUR.tmp-$$" "$CUR" && ln -sfn "$CUR" "$PIN" \
+  # whole of link_shared (a dev machine, 2026-11-12: a timer started in that gap and failed its CHDIR)
+  ln -sfn "$d" "$CUR.tmp-$$" && mv_t "$PIN" "$d" && mv_t "$CUR.tmp-$$" "$CUR" && ln -sfn "$CUR" "$PIN" \
     || fail "could not move the pin"
   link_shared "$d"
-  date -Is > "$d/.release-adopted"
+  now_iso > "$d/.release-adopted"
   say "adopt	$PIN → $CUR → $d"
 }
 

@@ -1,5 +1,5 @@
 /**
- * Local settings — WayOfTeams MCP keys for the orchestrator chat (Kaia).
+ * Local settings — WayOfTeams MCP keys for the orchestrator chat (Völundr).
  *
  * Keys are stored in the target repo's `.env` (gitignored per repo convention),
  * chmod 600. The GET endpoint NEVER returns a secret's value — only whether it

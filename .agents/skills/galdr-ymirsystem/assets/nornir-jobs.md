@@ -299,7 +299,7 @@ at sunrise. The forge address is the user's, from the home — never the tree:
 
 - No `FORGEJO_URL` configured → clean exit (the loop is not armed); a closed
   door (tunnel down) → exit 1 and Rune `forgejo / git.door-down`.
-- The forge may be the server's (`forgejo.zerwiz.org` → :3030) or a locally
+- The forge may be the heart's (`<the heart>.<host>` → :3030) or a locally
   provisioned one (`bin/desktop/ymir-marketing-stack.sh --with-forgejo`).
 
 ### 3.8 The marketing stack (`bin/desktop/ymir-marketing-stack.sh`)
@@ -314,8 +314,8 @@ send), then probes `http://127.0.0.1:8494/health` with the desk's own token.
 
 Since 2026-10-24 each round also asks `bin/mail/addresses.sh --check` (plan 116
 §15.3.1) and prints a **WARN** line, plus a `gna-mail.log` row, for any address
-the house uses that cannot receive — measured that evening: `zerwiz.org` publishes
-no MX, so `gimle@`, `snotra@`, `reply+*` and `bounce+*` there are undeliverable.
+the house uses that cannot receive — measured that evening: the house's own mail domain
+published no MX, so its desk and notices addresses, `reply+*` and `bounce+*` were undeliverable.
 The WARN never fails the import: an address that cannot receive is a DNS or
 console fault, and the mail that DOES arrive must still be read.
 
@@ -324,6 +324,23 @@ list.** A missing scope file, an unreadable registry, a failed import or a desk
 that does not answer writes a `FAIL` line to `state/gna-mail.log` and carves a
 Rune — the gate then shows 503 with the command that raises the desk, never an
 empty inbox. `--check` probes health alone; `--dry-run` reads and writes nothing.
+
+**The window is a mark (2026-11-16).** Each account keeps a high-water mark — the
+newest message the desk has read, plus the moment it last looked — in
+`hodd/state/gna-mail-watermark.json`, and `gna_import.py` asks for everything
+since it: `after:<epoch>` on the Gmail path, `SINCE <the mark's day>` on IMAP.
+The old ask was `newer_than:2d`, a width measured from *now*: every hour the desk
+was down was an hour it never asked about, so a run after a week of downtime read
+two days and looked exactly like a quiet inbox. `GNA_DAYS` is now only an
+override for a backfill; the listing is paginated, and a window still wider than
+`--max` is reported as `TRUNCATED` rather than quietly halved.
+
+**The gap speaks.** Before reading, the job measures the silence from the last
+run that ended well (`rc: 0` in `state/gna-mail-last-run.json`; a failed run is
+not a look), falling back to the marks. Wider than `GNA_RUN_INTERVAL_HOURS`
+(default 24) and the run prints `GAP the desk was blind for N days — from … to …`,
+records the same measurement under `gap` in the last-run record, and the next
+notice from `bin/mail/gna_notify.py` opens with that sentence exactly once.
 
 The desk itself is a systemd **user** unit (`gna-desk.service`, `Restart=always`),
 seated once by `bin/mail/install.sh`; a reboot raises it again. Port `8494`
@@ -369,7 +386,7 @@ bin/desktop/ymir-marketing-stack.sh up|status|down|doors
 ```
 
 - Rune `marketing / stack.<action>` carved on each provision action.
-- The Allfather's live stack is the server's (`zerwizserver`); its public
+- The Allfather's live stack is the heart's; its public
   doors are tunnel-driven (`cloudflared`) — see the registry's
   `marketing_doors[]` table.
 - Idempotent: gates are pure checks; the cron date-guard suppresses repeat

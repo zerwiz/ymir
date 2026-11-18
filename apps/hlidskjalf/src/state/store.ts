@@ -226,8 +226,6 @@ interface YmirState {
   setDensity: (density: Density) => void;
   setAccent: (accentId: string) => void;
   setCustomAccent: (hex: string) => void;
-  setTenantColor: (realm: string, hex: string) => void;
-  resetTenantColor: (realm: string) => void;
   setStreamHeight: (height: number) => void;
   setCompanyName: (name: string) => void;
   setCompanyHouse: (domain: DomainId) => void;
@@ -629,35 +627,6 @@ export const useYmir = create<YmirState>((set, get) => ({
     set({ accentId: 'custom', customAccent: hex });
   },
 
-  setTenantColor: (realm, hex) => {
-    const tenantColors = { ...get().tenantColors, [realm]: hex };
-    try {
-      localStorage.setItem('ymir.tenant-colors', JSON.stringify(tenantColors));
-    } catch {
-      /* ignore */
-    }
-    if (get().accentId === 'realm') {
-      applyAccent('realm', get().customAccent, hex);
-    }
-    set({ tenantColors });
-  },
-
-  resetTenantColor: (realm) => {
-    const next = { ...get().tenantColors };
-    delete next[realm];
-    try {
-      localStorage.setItem('ymir.tenant-colors', JSON.stringify(next));
-    } catch {
-      /* ignore */
-    }
-    const session = get().session;
-    const fallback = session?.tenants.find((t) => t.realm === realm)?.tint;
-    if (get().accentId === 'realm') {
-      applyAccent('realm', get().customAccent, fallback);
-    }
-    set({ tenantColors: next });
-  },
-
   setCompanyName: (name) => {
     try {
       localStorage.setItem('ymir.company.name', name);
@@ -722,7 +691,7 @@ export const useYmir = create<YmirState>((set, get) => ({
     const pendingId = `k-${Date.now()}`;
     get().pushChat({
       id: pendingId,
-      from: 'kaia',
+      from: 'kaia', // the stored role of every row already written; the UI names it Völundr
       body: '',
       ts: new Date().toISOString(),
       thinking: true,

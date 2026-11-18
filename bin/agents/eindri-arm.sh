@@ -21,8 +21,32 @@ set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)}"
 BROKK_HOME="${BROKK_HOME:-${BROKK_ROOT_OVERRIDE:-$ROOT}}"
-DATA="${BROKK_DATA_OVERRIDE:-$BROKK_HOME/data}"
+# THE RECORDS ARE THE OPERATOR'S, NOT THE CODE TREE'S (2026-11-15). data/ lives in the home's hoard
+# (<home>/hodd/data), and a code root has none of its own — deriving it from BROKK_HOME is how the
+# heart came to read a repo's empty data/ while the rosters sat in the home. One resolver, as everywhere.
+DATA="${BROKK_DATA_OVERRIDE:-}"
+if [ -z "$DATA" ]; then
+  if ! declare -f hoard_data_dir >/dev/null 2>&1; then
+    for _hl in "$SCRIPT_DIR/../vault/hoard-lib.sh" "$ROOT/bin/vault/hoard-lib.sh"; do
+      [ -r "$_hl" ] && { . "$_hl"; break; }
+    done
+    unset _hl
+  fi
+  declare -f hoard_data_dir >/dev/null 2>&1 && hoard_data_dir DATA 2>/dev/null
+  [ -n "${DATA:-}" ] || DATA="$BROKK_HOME/data"
+fi
 STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
+
+# THE ARM WRITES ITS OWN PANE (2026-11-16). Until today NOTHING wrote state/.arm.pane: the file was
+# written by hand on 9 November (the fix note of the 9th says so), and three doors read it for a week
+# — aiming turns at a pane that died with the 04:00 reboot. The arm holder IS in a pane and herdr tells
+# it which; so the arm records it at start, atomically, and only when it actually knows one. A ghost
+# can then never outlive the seat that wrote it.
+if [ -n "${HERDR_PANE_ID:-}" ] && [ -d "${STATE:-.}" ]; then
+  if printf '%s\n' "$HERDR_PANE_ID" >"$STATE/.arm.pane.new" 2>/dev/null; then
+    mv -f "$STATE/.arm.pane.new" "$STATE/.arm.pane" 2>/dev/null || true
+  fi
+fi
 
 ID="${1-}"
 [ -n "$ID" ] || { echo "error: task-id required (eindri-arm.sh <id>)" >&2; exit 2; }

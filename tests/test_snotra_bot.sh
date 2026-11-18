@@ -10,7 +10,7 @@
 #   * the refusals: plain HTTP off loopback, and a missing key
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; ROOT="$(cd "$HERE/.." && pwd)"
-DOOR="$ROOT/bin/time/snotra/snotra-bot.sh"
+DOOR="$ROOT/systems/snotra/services/ear/snotra-bot.sh"
 PASS=0; FAIL=0
 ok(){ PASS=$((PASS+1)); printf 'ok   %s\n' "$1"; }
 bad(){ FAIL=$((FAIL+1)); printf 'FAIL %s — %s\n' "$1" "${2-}"; }

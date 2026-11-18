@@ -110,7 +110,7 @@ claim() {
     kill "$stranger" 2>/dev/null
     for i in 1 2 3 4 5 6 7 8 9 10; do port_free "$port" && break; sleep 0.5; done
     port_free "$port" && return 1
-    say "$label :$port" "still held by pid $stranger after SIGTERM — lower it: kill -9 $stranger"; return 2
+    say "$label :$port" "still held by pid $stranger after SIGTERM — lower it by hand: kill -KILL $stranger"; return 2
   fi
   say "$label :$port" "STRANGER on the port: pid $stranger (${cwd:-cwd unreadable}), not this app's — refusing to keep or kill it"
   say "  to lower it" "kill $stranger   (then run apps/bilskirnir/start.sh again)"
@@ -122,7 +122,10 @@ window_up() { alive window; }
 # group (npx → node, hermes → its children) with one signal and never touch anything else.
 spawn() {
   local name="$1" dir="$2"; shift 2
-  setsid bash -c 'echo $$ > "$0"; cd "$1" || exit 1; shift 2; exec "$@"' "$RUN/$name.pid" "$dir" -- "$@" \
+  # macOS has no setsid(1); perl's POSIX::setsid gives the same new session (RULES/05, 2026-11-16)
+  local newsid=(setsid)
+  command -v setsid >/dev/null 2>&1 || newsid=(perl -MPOSIX -e 'POSIX::setsid(); exec @ARGV or die "exec: $!"')
+  "${newsid[@]}" bash -c 'echo $$ > "$0"; cd "$1" || exit 1; shift 2; exec "$@"' "$RUN/$name.pid" "$dir" -- "$@" \
     > "$RUN/$name.log" 2>&1 < /dev/null &
   sleep 0.3
 }
@@ -251,6 +254,17 @@ fi
 if window_up; then say "the window" "already open — kept"; exit 0; fi
 ELECTRON="$(resolve_electron)"
 [ -n "$ELECTRON" ] || { say "the window" "no electron binary — install electron, or open $OPEN_URL in a browser"; exit 1; }
+# The frame's buttons are the platform layer's question (bin/host/host-sense.sh): on a tiling
+# compositor (Omarchy's Hyprland) the window is frameless and draws no _ □ ×, elsewhere it keeps
+# them (Rule 05). The answer crosses into the shell as YMIR_WINDOW_BUTTONS; app-lib answers it.
+if [ -r "$(dirname "$(dirname "$APP")")/bin/desktop/app-lib.sh" ]; then
+  # shellcheck source=../../bin/desktop/app-lib.sh
+  . "$(dirname "$(dirname "$APP")")/bin/desktop/app-lib.sh"
+  YMIR_WINDOW_BUTTONS="$(app_window_buttons)"
+else
+  YMIR_WINDOW_BUTTONS="on"
+fi
+export YMIR_WINDOW_BUTTONS
 DEBUG=(); _dp="${BILSKIRNIR_DEBUG_PORT:-${YMIR_DEVTOOLS_PORT:-}}"
 [ -n "$_dp" ] || _dp="$(app_devtools_port bilskirnir 2>/dev/null || true)"
 [ -n "$_dp" ] && DEBUG=(--remote-debugging-port="$_dp")

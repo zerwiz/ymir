@@ -14,9 +14,13 @@
 #   mail-send.sh draft --to a@x,b@y --subject S --body FILE \
 #       [--html FILE | --template NAME | --plain] [--footer LINE] \
 #       (a --body that opens with a `theme:` header is rendered by letter-design.py — the house letter design)
-#       [--attach FILE ...] [--record ID] [--reply-to ID|last:<addr>|q:<search>] [--dry-run]
+#       [--attach FILE ...] [--record ID] [--reply-to ID|last:<addr>|q:<search>] [--new-thread] [--dry-run]
 #       (--reply-to answers INSIDE that message's thread: In-Reply-To + References + the threadId,
 #        and --subject defaults to "Re: <its subject>")
+#       (a --subject that OPENS "Re:" is a claim the door must prove: exactly one message in the
+#        mailbox carries that subject, or the letter is refused with the candidates named. It joins
+#        that message's thread and says which one it answers. --new-thread is the deliberate way to
+#        start a conversation; a subject that does not open "Re:" is never looked up.)
 #   mail-send.sh raw    <draft-id>     # the exact bytes, for an approval hash
 #   mail-send.sh send <draft-id>       # refused unless the approval matches those bytes
 #   mail-send.sh discard <draft-id>
@@ -25,9 +29,9 @@
 #
 # Endpoint configuration (Rule 07): YMIR_GMAIL_API_BASE · YMIR_OAUTH_TOKEN_URL.
 set -euo pipefail
-VERSION="1.0.3"
+VERSION="1.1.0"
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
-  -h|--help|"") sed -n '2,23p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
+  -h|--help|"") sed -n '2,29p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 ACTION="${1:-draft}"; shift || true
 ROOT="$(d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; s="$d"; while [ "$d" != / ] && { [ ! -d "$d/RULES" ] || [ ! -d "$d/.agents" ]; }; do d="$(dirname "$d")"; done; { [ -d "$d/RULES" ] && [ -d "$d/.agents" ]; } || d="$s"; printf '%s' "$d")"
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true; fi
@@ -60,6 +64,26 @@ gmail(){
 # 2026-11-01: `thegleemachine.com` publishes no MX at all (its A record is 127.0.0.1), so every
 # message to <a personal address> was delayed and lost. The register already knows how to ask
 # DNS; this is the send path asking it before the letter leaves.
+# ── a reply names its message ────────────────────────────────────────────────────────────────────
+# The subject is the only name a person has for the message they are answering. So a subject that
+# opens "Re:" is read as a claim — it says this letter answers something — and the door must prove
+# it before the letter leaves, or refuse and say why. These two helpers are that reading.
+
+# The subject a reply claims to answer, normalised: every leading "Re:" (any case, however many),
+# whitespace collapsed, case folded. `Re: Re:  the PLAN` and `the plan` are the same subject.
+norm_subject(){
+  printf '%s' "${1-}" | python3 -c 'import re,sys
+s=sys.stdin.read().strip()
+while True:
+    m=re.match(r"(?is)^\s*re\s*:\s*",s)
+    if not m: break
+    s=s[m.end():]
+print(re.sub(r"\s+"," ",s).strip().lower())'
+}
+
+# Does this subject say it answers a message?
+is_reply_subject(){ printf '%s' "${1-}" | grep -qiE '^[[:space:]]*re[[:space:]]*:'; }
+
 guard_recipients(){
   local to="${1-}" rc=0 addr domain
   [ -n "$to" ] || return 0
@@ -81,7 +105,7 @@ guard_recipients(){
 }
 
 draft(){
-  local to="" subject="" body="" html="" dry=0 record="" from_record="" meeting_dir="" plain=0 template="leemunroe-simple" footer="" reply_to=""; local attaches=()
+  local to="" subject="" body="" html="" dry=0 record="" from_record="" meeting_dir="" plain=0 template="leemunroe-simple" footer="" reply_to="" new_thread=0; local attaches=()
   while [ $# -gt 0 ]; do case "$1" in
     --to) to="${2-}"; shift 2 ;;
     --subject) subject="${2-}"; shift 2 ;;
@@ -95,6 +119,7 @@ draft(){
     --record) record="${2-}"; shift 2 ;;
     --from-record) from_record="${2-}"; shift 2 ;;
     --reply-to) reply_to="${2-}"; shift 2 ;;
+    --new-thread) new_thread=1; shift ;;
     --dry-run) dry=1; shift ;;
     *) die "unknown option: $1" ;; esac; done
   # A reply joins the thread it answers (2026-11-12): Gmail threads a message by its threadId, and every
@@ -106,6 +131,75 @@ draft(){
   # id, which no person does, so every letter started a new thread. `--reply-to` now also takes:
   #   last:<address>   the newest message to or from that address   (last:<their address>)
   #   q:<search>       the newest message matching a Gmail search   (q:subject:"<topic>")
+  # A REPLY NAMES ITS MESSAGE (2026-11-17). Three letters went out in one night with "Re:" subjects that
+  # began NEW threads: the subject claimed to answer a message and the headers that would have joined it
+  # were simply never set, because naming a message meant knowing a Gmail id that nobody has. A subject is
+  # what a person HAS. So a subject that opens "Re:" is a claim, and the door proves it before the letter
+  # leaves: exactly ONE message in the mailbox carries that subject (normalised), or the letter is refused
+  # with the reason and the candidates named. `--new-thread` is the deliberate way to start a conversation.
+  # A subject that does not open "Re:" promised nothing and is never looked up.
+  if [ -n "$reply_to" ] && [ "$new_thread" = 1 ]; then
+    die "REFUSED — --new-thread says start a conversation and --reply-to says answer one; pick a road"
+  fi
+  if [ -z "$reply_to" ] && [ "$new_thread" != 1 ] && is_reply_subject "$subject"; then
+    local norm normq ids cid meta mcode row r_id r_norm r_subj r_from r_date c
+    local -a matched=()
+    norm="$(norm_subject "$subject")"
+    [ -n "$norm" ] || die "REFUSED — a subject of nothing but \"Re:\" cannot name the message it answers; give the subject, or start afresh with --new-thread"
+    normq="$(python3 -c 'import sys,urllib.parse;print(urllib.parse.quote("subject:\""+sys.argv[1].replace("\""," ")+"\""))' "$norm")"
+    ids="$(gmail GET "/users/me/messages?maxResults=20&q=$normq")"
+    mcode="${ids##*$'\n'}"; ids="${ids%$'\n'*}"
+    case "$mcode" in
+      200) ;;
+      *) die "REFUSED — this letter's subject opens \"Re:\" and the mailbox could not be searched to prove it answers a message (HTTP $mcode); pass --new-thread to start a new conversation" ;;
+    esac
+    ids="$(printf '%s' "$ids" | python3 -c 'import json,sys
+d=json.loads(sys.stdin.read() or "{}")
+print("\n".join(m.get("id","") for m in (d.get("messages") or [])))' 2>/dev/null || true)"
+    while IFS= read -r cid; do
+      [ -n "$cid" ] || continue
+      meta="$(gmail GET "/users/me/messages/$cid?format=metadata&metadataHeaders=Message-ID&metadataHeaders=References&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date")"
+      mcode="${meta##*$'\n'}"; meta="${meta%$'\n'*}"
+      # a candidate that cannot be read is not a candidate: it cannot be proven either way, and the count
+      # below is what decides. Silence is safer than a guess — a letter is refused, never mis-threaded.
+      [ "$mcode" = 200 ] || continue
+      row="$(printf '%s' "$meta" | python3 -c 'import json,re,sys
+d=json.loads(sys.stdin.read())
+h={x.get("name","").lower():x.get("value","") for x in (d.get("payload") or {}).get("headers",[])}
+s=h.get("subject","").strip()
+while True:
+    m=re.match(r"(?is)^\s*re\s*:\s*",s)
+    if not m: break
+    s=s[m.end():]
+s=re.sub(r"\s+"," ",s).strip().lower()
+print("\x1f".join([s,h.get("subject",""),h.get("from",""),h.get("date","")]))' 2>/dev/null || true)"
+      [ -n "$row" ] || continue
+      IFS=$'\x1f' read -r r_norm r_subj r_from r_date <<<"$row"
+      if [ "$r_norm" = "$norm" ]; then matched+=("$cid"$'\x1f'"${r_subj:-(no subject)}"$'\x1f'"${r_from:-(unknown sender)}"$'\x1f'"${r_date:-(no date)}"); fi
+    done < <(printf '%s\n' "$ids")
+    case "${#matched[@]}" in
+      1)
+        IFS=$'\x1f' read -r cid r_subj r_from r_date <<<"${matched[0]}"
+        reply_to="$cid"
+        printf 'answers\t%s\t%s\t%s\t%s\n' "$cid" "$r_subj" "$r_from" "$r_date" >&2 ;;
+      0)
+        printf 'mail-send: REFUSED — this letter answers a message, and no message in the mailbox carries that subject\n' >&2
+        printf '  the subject it claims to answer: \"%s\"\n' "$norm" >&2
+        printf '  a \"Re:\" subject with nothing behind it opens a new thread that pretends to be a reply\n' >&2
+        printf '  name the message: --reply-to <id> · or start a new conversation deliberately: --new-thread\n' >&2
+        exit 1 ;;
+      *)
+        printf 'mail-send: REFUSED — this letter answers a message, and %s messages in the mailbox carry that subject\n' "${#matched[@]}" >&2
+        printf '  the subject it claims to answer: \"%s\"\n' "$norm" >&2
+        printf '  a subject that names more than one message cannot choose between them, so the door does not guess:\n' >&2
+        for c in "${matched[@]}"; do
+          IFS=$'\x1f' read -r r_id r_subj r_from r_date <<<"$c"
+          printf '  %s  %s  —  %s  %s\n' "$r_id" "$r_subj" "$r_from" "$r_date" >&2
+        done
+        printf '  say which one: --reply-to <id> · or start a new conversation: --new-thread\n' >&2
+        exit 1 ;;
+    esac
+  fi
   if [ -n "$reply_to" ]; then
     case "$reply_to" in
       last:*|q:*)
@@ -220,7 +314,11 @@ PY
 }
 send(){
   local id="${1-}"; [ -n "$id" ] || die "send needs a draft id"
-  local approve="$ROOT/bin/time/snotra/snotra-approve.sh"
+  # THE DOOR THAT MOVED (2026-11-16): this called bin/time/snotra/, a retired shim that still works and
+  # says so on every send — "has MOVED to systems/snotra" printed beside a letter that went out fine.
+  # A retired path kept "because callers still work" is how a move becomes a mystery; pointed at the
+  # real door, with the shim left in place for any hand that has not been repointed yet.
+  local approve="$ROOT/systems/snotra/services/approve/snotra-approve.sh"
   # THE WORD FIRST. No send is requested until the approval record matches the draft's
   # CURRENT RFC822 bytes; the gate prints the reason (NOT APPROVED · STALE · ALREADY SENT)
   # and carves the refusal into the Runes itself. A door that checked nothing is how a

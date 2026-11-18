@@ -15,7 +15,7 @@ import os
 import sys
 import urllib.request
 
-DEFAULT_URL = os.environ.get("KAIA_MEMORY_URL", "http://127.0.0.1:4602")
+DEFAULT_URL = os.environ.get("VOLUNDR_MEMORY_URL") or os.environ.get("KAIA_MEMORY_URL", "http://127.0.0.1:4602")
 
 
 def main() -> int:
@@ -41,7 +41,7 @@ def main() -> int:
         with urllib.request.urlopen(req, timeout=5) as r:
             resp = json.load(r)
     except Exception as e:
-        print(f"[kaia] observe failed ({args.url}/observe): {e}", file=sys.stderr)
+        print(f"[volundr] observe failed ({args.url}/observe): {e}", file=sys.stderr)
         return 1
 
     print(f"observed episode id: {resp.get('id')}")

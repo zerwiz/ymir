@@ -14,8 +14,8 @@ Nothing else: the registry never carries a token value.
 **The registry, one row per machine.**
 
 ```
-nidavellir   bot id · chat id (once paired) · token_ref: secrets/telegram-nidavellir.env
-heimdall     bot id · chat id (once paired) · token_ref: secrets/telegram-heimdall.env
+heart        bot id · chat id (once paired) · token_ref: secrets/telegram-heart.env
+dev-a        bot id · chat id (once paired) · token_ref: secrets/telegram-dev-a.env
 ```
 
 Store the token with `bin/vault/hodd-set.sh TELEGRAM_BOT_TOKEN <token> secrets/telegram-<machine>.env` — that

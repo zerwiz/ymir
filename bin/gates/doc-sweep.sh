@@ -44,6 +44,8 @@
 #   DOC_SWEEP_CLASSES   a human-curated map, read when present (tab-separated):
 #                         <shell-glob>  <destination-inside-the-home>  <reason>
 set -u
+# the bash floor (RULES/05): macOS ships bash 3.2 — re-run under bash >= 4, or say how to get one
+[ "${BASH_VERSINFO[0]:-0}" -ge 4 ] || { . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../fleet/ymir-platform.sh" && ymir_bash_floor "$@"; }
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
@@ -291,7 +293,7 @@ cmd_scan() {
   REGISTRY="$(registry || true)"
   # The ledger is DISCOVERED, never derived. The ymir project's registry row names
   # the realm it WORKS in (`work`), but the canonical plan ledger lives under a
-  # different realm (`whynotproductions`) — so deriving the destination from the
+  # different realm (the operator's own) — so deriving the destination from the
   # project's realm proposed a path that does not exist (2026-10-01). If exactly
   # one ledger is present, that is the ledger; only when none is found do we fall
   # back to the registry, and then we SAY the fallback was used.

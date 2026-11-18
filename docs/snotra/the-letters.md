@@ -86,7 +86,7 @@ Three things changed, and none of them is a new rule — they make the existing 
 Every refusal and every spend is carved into the Runes. The how-to for the operator is
 `docs/features/the-outbound-gate.md`; the change record is
 `docs/fixes/snotra/2026-10-24-the-gate-is-in-every-door.md`; the proofs are
-`bin/time/snotra/tests/test_outbound_gate.py` (12, with no Google in the loop) and each door's `--self-test`.
+`bin/time/snotra/tests/test_outbound_gate.py` (12, with no Google in the loop) and each door's `--self-test`. <!-- allow-superseded-path: this line records where the door WAS, or names the real tests/ directory that never moved -->
 
 ## CHANGE LOG
 

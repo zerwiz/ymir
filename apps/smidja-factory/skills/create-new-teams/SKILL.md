@@ -1,6 +1,6 @@
 ---
 name: create-new-teams
-description: "Create a new smidja team (roster stack) by interviewing the user first. Ask a lot of questions — purpose, local/cloud/hybrid surface, which agents, which model EACH agent runs (orchestrator gets a big model by default), cost/speed/quality trade-offs, kaia tier, and what context to inject — then hand-edit the roster file and validate. Use when the user wants a new team, a new roster, a new configuration of agents+models, or 'make a team for project X'."
+description: "Create a new smidja team (roster stack) by interviewing the user first. Ask a lot of questions — purpose, local/cloud/hybrid surface, which agents, which model EACH agent runs (orchestrator gets a big model by default), cost/speed/quality trade-offs, Völundr tier, and what context to inject — then hand-edit the roster file and validate. Use when the user wants a new team, a new roster, a new configuration of agents+models, or 'make a team for project X'."
 version: "1.0"
 allowed-tools: read, write, edit, bash, grep, glob
 ---
@@ -42,7 +42,7 @@ down the answers. Ask at least these (adapt order to the conversation):
 | 4 | **Which agents exactly?** Name them (existing roles). If one doesn't exist, branch to `create-new-agent` first. | The stack's `agents:` list. |
 | 5 | **What model should EACH agent run?** Walk the list: orchestrator = big model (biggest context + strongest reasoning available); planner/reviewer = strong; builder/scout = fast + cheap. Ask per agent: "and for the builder?" | The per-agent model assignment — the heart of the stack. **Never a 4B orchestrator/planner/reviewer.** |
 | 6 | **Cost vs speed vs quality?** Cheap & fast (repetition-heavy builders/scouts), or depth (frontier/local-big for the coordinator). | Fine-tunes the picks. |
-| 7 | **Kaia tier?** T0 (none), T1 (admission notes, default), T2 (Kaia synthesizes/coordinates). | `kaia_tier` on the stack. |
+| 7 | **Völundr tier?** T0 (none), T1 (admission notes, default), T2 (Völundr synthesizes/coordinates). | `kaia_tier` on the stack (the key keeps its historical name — it means Völundr). |
 | 8 | **What should be injected into their context?** AGENTS.md? project skills? knowledge/memory? prior spec? | The `inject:` list (context sources per agent/team). |
 | 9 | **Name the team.** | The stack name (`smidja run --roster <name>`). |
 

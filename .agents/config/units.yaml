@@ -50,11 +50,29 @@ units:
     # gimle share's port; the desk ran there until 2026-11-12.
     retired: { GNA_DESK_PORT: ["8490"] }
 
+  # The relay is what makes the queue a conversation (plan 303 §12.3 step 4): it wakes a READY
+  # target, confirms the agent moved, retries once, and returns the answer to the asker's own
+  # pane. One unit per PERSON, never per agent. It waits for a live arm holder rather than
+  # serving a machine nobody supervises (RULES/55), and it never restarts Hermes.
+  - name: ratatoskr-relay
+    mode: render
+    kind: service
+    roles: all
+    description: "ratatoskr-relay — wake a ready agent with a queued task, confirm it moved, return the answer"
+    workdir: "."
+    exec: "/usr/bin/env bash bin/bridge/ratatoskr-relay.sh run --interval ${RATATOSKR_RELAY_INTERVAL} --require-arm"
+    env: { RATATOSKR_RELAY_INTERVAL: "${RATATOSKR_RELAY_INTERVAL}", PYTHONUNBUFFERED: "1" }
+    vars: { RATATOSKR_RELAY_INTERVAL: "5" }
+    restart: always
+    extra: ["RestartSec=10", "NoNewPrivileges=true"]
+    unit_extra: ["After=network-online.target"]
+    wanted_by: default.target
+
   - name: queue-warden
     mode: render
     kind: timer
     roles: [heart, forge, dev]
-    description: "queue-warden — get every open PR into main"
+    description: "queue-warden — PR hygiene: five at most, the stale named, a conflict re-cut onto a new branch; the merge road is the heart's, behind merge-verdict.sh"
     workdir: "."
     exec: "/usr/bin/env bash bin/forge/queue-warden.sh run"
     timer: { description: "queue-warden — every 10 minutes", boot: 3min, every: 10min, accuracy: 30s }

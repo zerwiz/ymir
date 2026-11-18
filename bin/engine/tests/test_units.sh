@@ -26,6 +26,18 @@ export YMIR_UNIT_DIR="$T/units" YMIR_APPLICATIONS_DIR="$T/apps-dir" YMIR_AUTOSTA
 export YMIR_UNITS_NO_SYSTEMCTL=1 YMIR_UNITS_NO_ROLE_PROBE=1
 unset YMIR_RUNTIME_DIR YMIR_RUNTIME_BRANCH YMIR_RUNTIME_UNITS YMIR_ROLE YMIR_UNITS_ROLES 2>/dev/null || true
 mkdir -p "$HOME" "$YMIR_HOME/config" "$YMIR_UNIT_DIR" "$YMIR_APPLICATIONS_DIR" "$YMIR_AUTOSTART_DIR" "$T/state"
+# plan 290 §3 — a unit is seated only where THIS machine's own file names its door
+# (bin/forge/warden-policy.py). The fixture machine names them all on, because what these tests prove is
+# the pin and the writer, never the policy; the policy has its own gate
+# (bin/gates/tests/test_warden_lib.sh, CI gate `wardens-own-only`).
+TEST_MACHINE="$(hostname -s 2>/dev/null | tr 'A-Z' 'a-z')"
+mkdir -p "$YMIR_HOME/config/machines/$TEST_MACHINE"
+{
+  for d in queue-warden review-watch review-seat review-loop pr-watch issue-watch ship-watch \
+           gna-mail snotra-mail git-sync private-scan; do
+    printf '%s:\n  enabled: on\n' "$d"
+  done
+} >"$YMIR_HOME/config/machines/$TEST_MACHINE/wardens.yaml"
 PIN="$HOME/ymir-runtime"
 UNITS="$ROOT/bin/engine/units.sh"
 
@@ -33,7 +45,7 @@ UNITS="$ROOT/bin/engine/units.sh"
 ORIGIN="$T/origin"
 mkdir -p "$ORIGIN"
 ( cd "$ROOT" && git ls-files -co --exclude-standard -- \
-    RULES bin/engine .agents/config/units.yaml bin/vault/hoard-lib.sh \
+    RULES bin/engine bin/forge/warden-policy.py .agents/config/units.yaml bin/vault/hoard-lib.sh \
     'apps/*/electron/*.in' 'apps/sessrumnir/resources/*.in' \
     apps/bilskirnir/start.sh apps/rodd/start.sh scripts/electron.sh bin/desktop/sessrumnir-launch.sh \
   | while IFS= read -r f; do [ -e "$f" ] && { mkdir -p "$ORIGIN/$(dirname "$f")"; cp -p "$f" "$ORIGIN/$f"; }; done )

@@ -306,7 +306,7 @@ src/
   rune, bronze on hover) that opens the Ymir landing page in the browser.
 - Where it lands is resolved in the **main** process (`SYSTEM_HALL_URL`): the
   local site (`http://127.0.0.1:4322`, overridable with `YMIR_HALL_URL`) when it
-  answers, otherwise `https://hall.ymir.zerwiz.org`. The probe lives there
+  answers, otherwise the hostname the operator declares (`YMIR_HALL_URL`). The probe lives there
   because the renderer's CSP (`connect-src 'self'`) forbids a cross-origin fetch.
 - Opening is the same `system:open-external` door the update banner uses —
   http(s) only.

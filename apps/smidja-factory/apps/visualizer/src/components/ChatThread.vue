@@ -48,11 +48,11 @@ function onScroll() {
           </div>
         </div>
 
-        <!-- Kaia bubble, left-aligned with model footnote -->
-        <div v-else class="row kaia-row">
-          <div class="bubble kaia">
-            <div class="who kaia-who">
-              <Bot :size="14" /> Kaia
+        <!-- Völundr bubble, left-aligned with model footnote -->
+        <div v-else class="row volundr-row">
+          <div class="bubble volundr">
+            <div class="who volundr-who">
+              <Bot :size="14" /> Völundr
               <span v-if="m.model" class="model" :title="m.model">{{ modelName(m.model) }}</span>
             </div>
             <!-- eslint-disable-next-line vue/no-v-html -->
@@ -123,7 +123,7 @@ function onScroll() {
 
 .row { display: flex; }
 .user-row { justify-content: flex-end; }
-.kaia-row { justify-content: flex-start; }
+.volundr-row { justify-content: flex-start; }
 
 .bubble {
   max-width: min(760px, 78%);
@@ -135,7 +135,7 @@ function onScroll() {
   border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
   border-top-right-radius: 4px;
 }
-.bubble.kaia {
+.bubble.volundr {
   background: var(--surface);
   border: 1px solid var(--border-soft);
   border-top-left-radius: 4px;
@@ -151,7 +151,7 @@ function onScroll() {
   margin-bottom: 4px;
 }
 .user .who { color: var(--accent); }
-.kaia-who { color: var(--violet); }
+.volundr-who { color: var(--violet); }
 .model {
   margin-left: auto;
   font-family: var(--mono);

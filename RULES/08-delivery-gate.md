@@ -239,3 +239,19 @@ or a body saying it was gathered by `gather.sh`, takes `--merge`; every other PR
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+
+## 2026-11-14 — the queue-warden is not a merger, so it asks nothing of the merge method
+
+The paragraph above names three doors that ask `bin/forge/merge-method.sh` which flag a PR takes. One
+of them no longer merges at all: the heart ruled on 2026-11-14 that `bin/forge/queue-warden.sh` is
+**hygiene only** — cap five open PRs, flag the stale ones, re-cut a conflicting branch onto `main`
+under a new name, never merge, never force (plan 290, section *P1 decided by the heart*). Its merge
+road is gone from the file, and with it the `merge_flag_for_pr` call.
+
+`ship.sh` and `pr-seal.sh` still ask it, so the rule above stands where a merge happens. The record
+of what the warden used to do, and why it stopped, is
+`docs/fixes/forge/2026-11-14-the-warden-stopped-merging.md`.
+
+This also restates an older law it had been quietly breaking: **an agent opens the PR and stops.** A
+laptop's clock merging into `main` under the operator's own GitHub login was never a delivery — it was
+a decision nobody made.

@@ -8,6 +8,7 @@ Three lessons, each bought once:
 """
 import json
 import os
+import subprocess
 import time
 import urllib.error
 import urllib.request
@@ -17,8 +18,36 @@ TOKEN_FILE = os.environ.get("GIMLE_PLANE_TOKEN_FILE", os.path.expanduser("~/giml
 # person → board account email. Private: it lives on the heart beside the token, never in this
 # repository (Rule 04). The file is a flat JSON object, keys lower-cased.
 PEOPLE_FILE = os.environ.get("GIMLE_PEOPLE_FILE", os.path.expanduser("~/gimle/desk/etc/people.json"))
-WORKSPACES = [w for w in os.environ.get(
-    "GIMLE_PLANE_WORKSPACES", "wayof,example-4,example-8,whynotproductions,ymirhome").split(",") if w]
+# WHICH workspaces to read is the operator's fact, never a list in this repository (RULES/04).
+# $GIMLE_PLANE_WORKSPACES (comma-separated), else $GIMLE_PLANE_WORKSPACES_FILE, else the home's
+# own config/gimle/plane-workspaces.txt (one slug per line), resolved through the house's door.
+def _workspaces() -> list[str]:
+    slugs = [w.strip() for w in os.environ.get("GIMLE_PLANE_WORKSPACES", "").split(",") if w.strip()]
+    if slugs:
+        return slugs
+    candidates = []
+    named = os.environ.get("GIMLE_PLANE_WORKSPACES_FILE", "").strip()
+    if named:
+        candidates.append(named)
+    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    door = os.path.join(root, "bin", "vault", "hodd.sh")
+    try:
+        hoard = subprocess.run(["bash", door, "path"], capture_output=True, text=True, timeout=15).stdout.strip()
+        home = os.path.dirname(hoard) if hoard else ""
+    except Exception:
+        home = ""
+    if home:
+        candidates.append(os.path.join(home, "config", "gimle", "plane-workspaces.txt"))
+    for path in candidates:
+        try:
+            with open(path, encoding="utf-8") as fh:
+                return [line.split("#", 1)[0].strip() for line in fh if line.split("#", 1)[0].strip()]
+        except OSError:
+            continue
+    return []
+
+
+WORKSPACES = _workspaces()
 
 
 def _people():

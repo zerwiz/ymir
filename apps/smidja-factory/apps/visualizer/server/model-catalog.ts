@@ -38,7 +38,7 @@ let cache: { at: number; cwd: string; models: PiModel[] } | null = null;
  * Measured 2026-10-20: the visualizer runs as a systemd USER service whose PATH is
  * `%h/.bun/bin:/usr/bin:/bin`, and pi installs to `~/.npm-global/bin`. Every chat
  * message died with `Executable not found in $PATH: "pi"` while `pi` worked perfectly in
- * a terminal — the classic service-PATH failure, and the reason "Kaia is offline" was
+ * a terminal — the classic service-PATH failure, and the reason "Völundr is offline" was
  * showing for a healthy bridge.
  *
  * Order (Rule 07 — one documented default, overridable):

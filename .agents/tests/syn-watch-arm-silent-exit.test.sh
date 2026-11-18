@@ -76,7 +76,7 @@ fi
 
 # ── the service outlives its own death: the client re-seats it ──────────────
 dead="$(sed -n 's/^pid=\([^ ]*\).*/\1/p' "$BROKK_STATE_OVERRIDE/.arm.lease")"
-kill -9 "$dead" 2>/dev/null
+kill -9 "$dead" 2>/dev/null  # kill: a wedged process has no graceful kill — declared, per check_platform
 sleep 1
 printf 'wake three\n' > "$BROKK_STATE_OVERRIDE/.wake-queue"
 BROKK_WATCH_DAEMON_GRACE_SECONDS=3 timeout 20 bash "$ARM" --restart >"$TMP/out4" 2>"$TMP/err4"

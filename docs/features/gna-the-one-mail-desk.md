@@ -15,14 +15,33 @@ git-ignored: schema, scope and retention travel, raw mail does not.
 ```sh
 cd "$YMIR_HOME/hodd/bin/gna-agent"
 
-python3 gna_import.py --account <the scoped account> --days 7 --dry-run   # read, write nothing
-python3 gna_import.py --account <the scoped account> --days 7             # fill the store
+python3 gna_import.py --account <the scoped account> --dry-run   # read since the mark, write nothing
+python3 gna_import.py --account <the scoped account>            # fill the store
+python3 gna_import.py --account <the scoped account> --days 30   # a backfill: ignore the mark
 
 python3 gna_desk.py            # the desk on 127.0.0.1:8490 (token: hodd/state/gna-desk.token)
 python3 gna_desk.py --print-token
 
-python3 tests/test_gna.py      # 16 proofs, including "no file here can send"
+python3 tests/test_gna.py      # 49 proofs, including "no file here can send"
 ```
+
+**The window is a mark, not a number of days.** Each account keeps a high-water mark of the newest
+message the desk has read (`hodd/state/gna-mail-watermark.json`), and every run asks the mailbox
+for **everything since it** — so a run after a week of downtime reads the whole week, and nothing
+that arrived while the desk was down is silently outside the question. `--days` is still there, as an
+override for a deliberate backfill.
+
+**When the desk was blind, the run says so.** Before it reads, the clock measures the silence. When
+that silence is wider than the run interval (`GNA_RUN_INTERVAL_HOURS`, default 24) it is named in
+days, with both ends, in the run's output and in `hodd/state/gna-mail-last-run.json`:
+
+```
+gna-mail[import] GAP the desk was blind for 7 days — from 2026-11-09T18:19:50+00:00 to
+2026-11-16T18:19:51+00:00 (the clock runs every 24h) — this run reads the whole gap
+```
+
+The next notice then opens with it — *"the desk was blind for 7 days — mail: 8 new …"* — once, so
+the outage is never invisible behind a tidy count.
 
 Then open **Hlidskjalf → Gná**. The page forwards three routes
 (`/api/mail/accounts`, `/api/mail/queue`, `/api/mail/message`) to the desk with its token, and the
@@ -48,6 +67,11 @@ desk's refusals come back unchanged.
   **Unsure** with low confidence instead of being guessed at.
 - **Read-only in the gate.** Drafts and approvals (plan 116 · P1) are not built yet; the page cannot
   send, and neither can the service behind it.
+- **A window wider than `--max` is reported, not absorbed.** Gmail answers a page at a time; the
+  importer follows the pages to the cap, and a gap still wider than the cap prints `TRUNCATED` with
+the remedy (`--max`) instead of pretending it read everything.
+- **The mark only moves forward.** A backfill (`--days`) re-reads an old stretch, de-duplicates what
+the store already holds, and leaves the mark where it was.
 
 **If it does not work**
 
@@ -58,6 +82,8 @@ desk's refusals come back unchanged.
 | *"account scope required"* | no account was chosen | pick one at the top; one must be declared in `hodd/memory/mail/accounts.yaml` |
 | *"account not declared in …"* | that address has no grant row | add the row **with its own grant** — never widen another account's |
 | Everything reads as **Unsure** | the sender is not in `collaborators.yaml` | add the person (or teach a rule in P4) — a stranger is meant to wait |
+| A notice opens *"the desk was blind for N days"* | the clock did not run for longer than its interval | nothing to mend in the mail: look at why the machine or the job was down (`bin/time/nornir-cron-start.sh`, `state/gna-mail-last-run.json`) |
+| The run prints `TRUNCATED` | more mail arrived in the gap than `--max` allows | re-run with a larger `--max`, e.g. `--max 800` |
 | A bulk newsletter wants your judgement | its `List-Unsubscribe` / `Precedence` header is missing | that is the rule's evidence; the row says which marker it looked for |
 
 **Measured 2026-10-23.** Seven days of the operator's own mailbox: 61 messages → **needs you 5 · unsure 1 ·
@@ -70,8 +96,8 @@ waiting 20 · done 35**, machine sends 0. The first run judged a forwarded meeti
 
 The desk answered *"what is in the mailbox?"*, and that was not the same question as
 *"can mail arrive at all?"*. Measured on 2026-10-24: `zerwiz.org` published **no MX
-record**, so `gimle@zerwiz.org`, `snotra@zerwiz.org`, `reply+*@zerwiz.org` and
-`bounce+*@zerwiz.org` could not receive anything — while the desk showed an empty inbox
+record**, so the desk's own three addresses (the collaborator door, the meeting desk
+and the reply/bounce pattern on the operator's domain) could not receive anything — while the desk showed an empty inbox
 that looked exactly like "no mail today". Three doors now close that gap.
 
 **The register — `bin/mail/addresses.sh`.** One row per address the house uses: whether the
@@ -103,7 +129,7 @@ exactly what is missing and exits **3** — a skip with a reason, never a pass.
 
 ```sh
 bash bin/mail/inbound-test.sh                    # the registry's acceptance address
-bash bin/mail/inbound-test.sh --to gimle@zerwiz.org
+bash bin/mail/inbound-test.sh --to <the desk's own address>
 bash bin/mail/inbound-test.sh --mx-only          # only "could mail arrive here at all?"
 bash bin/mail/inbound-test.sh --self-test        # the proofs, offline
 ```
@@ -115,7 +141,7 @@ STORE/COPY/EXPUNGE/APPEND/DELETE), refuses a row with no `imap:` block, refuses 
 the vault lacks, and refuses plaintext off loopback.
 
 **What is still missing, exactly.** `zerwiz.org` has no MX: the Cloudflare Email Routing
-records are in plan 116 §15.2. `way-of.com` already receives (Google Workspace MX, plan 116
+records are in plan 116 §15.2. `example.org` already receives (its provider's MX, plan 116
 §16), but `<operator-mailbox>` and `<operator-mailbox>` are not yet aliases on the account — one
 console step each (`Directory → Users → <the account the grant reads> → Aliases`). The
 register prints the exact path for your account when it runs. Until then `--check` fails and
@@ -164,6 +190,30 @@ copy them into your own home at your own minute.
 machine. Our store, our spine and our notifications stay ours — and your refresh token is
 never ours to hold.
 
+## A reply can name the message it answers (added 2026-11-16, plan 305 phase 7)
+
+Every message in the store now keeps the three headers an ordinary mail uses to say what answers
+what: `Message-ID` (the message's own name), `In-Reply-To` (the message it answers) and
+`References` (the chain of the whole conversation). Nothing extra was fetched for them — the
+importer already read every header of every message it stores.
+
+Rows imported before this change can be filled in with one command:
+
+```sh
+python3 gna_import.py --account <the scoped account> --backfill-headers --dry-run   # count only
+python3 gna_import.py --account <the scoped account> --backfill-headers             # fill them in
+```
+
+It asks Gmail for the headers of those rows only (`format=metadata` — never a body), appends one
+new version of each row, and remembers what it has done: running it a second time writes nothing.
+A message since deleted from the mailbox is reported as `gone` and left exactly as it was.
+
+**Why it matters.** Until now a conversation was joined by a key derived from the subject, and a
+reply is free to rewrite its subject. Now the join is the header a mail client reads: a reply
+whose subject says *"Re: something else entirely"* is still the same conversation, and two
+conversations that happen to share a subject stay apart.
+
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-16** — added *a reply can name the message it answers*: the three RFC headers on every row, and `--backfill-headers` for the rows written before them.

@@ -11,6 +11,11 @@
 # a second window — takes it and leaves the face silent. This door owns that single seat,
 # so the operator never has to reason about it.
 set -uo pipefail
+# macOS has no setsid(1); perl's POSIX::setsid gives the same new session (RULES/05, 2026-11-16)
+newsid() {
+  if command -v setsid >/dev/null 2>&1; then setsid "$@"
+  else perl -MPOSIX -e 'POSIX::setsid(); exec @ARGV or die "exec: $!"' "$@"; fi
+}
 APP="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$APP/../.." && pwd)"
 RODD_HOME=""; . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null && ymir_home_root RODD_HOME   # the one resolver
@@ -102,11 +107,11 @@ except Exception:
 PY
 }
 # The host is the first seat that ANSWERS, in the fleet's own order, with this machine
-# last. A registry entry is a wish, not a fact: on 2026-11-09 the ear (heimdall) was
+# last. A registry entry is a wish, not a fact: on 2026-11-09 the ear (a dev machine) was
 # unreachable, ssh timed out, and the whole start failed although this box can host.
 # The host is the first seat that can ACTUALLY serve, not the first that answers ssh:
 #   · this machine first, when it carries a model rail (the head is here, so the
-#     pipeline should be here — heimdall answered ssh on 2026-11-09 while its
+#     pipeline should be here — a machine answered ssh on 2026-11-09 while its
 #     pipeline could not start at all, and the whole start died there);
 #   · then the fleet's ears in their own order.
 local_rail() { curl -s -o /dev/null --max-time 2 "${YMIR_VOICE_HEAD_URL:-http://127.0.0.1:8080/v1}/models"; }
@@ -114,8 +119,8 @@ host_seat() {
   local s me
   me="$(hostname -s)"
   # plan 275 S16 (2026-11-12): ask the voice door, the one resolver of the engine's host. Rödd used to call any
-  # machine with an answering :8080 its own host — nidavellir's small local server made it skip the tunnel to the
-  # real engine on heimdall, and its microphone stream had nothing to connect to.
+  # machine with an answering :8080 its own host — a neighbour's small local server made it skip the tunnel to the
+  # real engine elsewhere, and its microphone stream had nothing to connect to.
   s="$(bash "$ROOT/bin/voice/voice-door.sh" which-host 2>/dev/null | tail -1)"
   [ -n "$s" ] && { printf '%s' "$s"; return 0; }
   if local_rail; then printf '%s' "$me"; return 0; fi
@@ -216,8 +221,8 @@ else
   # qwen3.6-35b-a3b@iq3_s answers 500 "failed to load" on this box (2026-11-09 07:35),
   # while the 3050-tuned qwen3.6-35b-a3b-3050@iq2_xxs loads and answers.
   # plan 275 (2026-11-12): the head is the MIND HE CHOSE in Rödd's settings (bin/voice/rodd-head.py, kept in the private
-  # home), resolved by the voice door. This launcher used to force nidavellir's 3050-tuned alias on every host; the
-  # door reads his choice only when no head is forced, so his online mind was never used, heimdall's rail answered
+  # home), resolved by the voice door. This launcher used to force one machine's GPU-tuned alias on every host; the
+  # door reads his choice only when no head is forced, so his online mind was never used, the rail answered
   # `400 model not found`, the engine exited after 18 s, and Rödd never spoke on either machine.
   HEAD="${RODD_HEAD_MODEL:-}"; RODD_CAMERA=0
   # her eyes (plan 275, 2026-11-12, his question: "Why can't she look through the webcam anymore?"): the camera is
@@ -225,8 +230,8 @@ else
   # (models.dev, cached in the home) lists with image input. His opencode go mind, deepseek-v4.1-flash, takes images;
   # the old rule offered the camera only with --vision, which forced the local vision model instead of his mind.
   _mind="${HEAD:-$(python3 "$ROOT/bin/voice/rodd-head.py" env 2>/dev/null | sed -n 's/^RODD_VOICE_HEAD_MODEL=//p' | head -1)}"
-  # the engine may run on another machine (nidavellir talks to heimdall's): then the mind that answers is THAT
-  # machine's choice, so it is asked there — nidavellir judged by its own empty setting and hid the camera (plan 275)
+  # the engine may run on another machine (a hand talks to the heart's): then the mind that answers is THAT
+  # machine's choice, so it is asked there — a machine judged by its own empty setting and hid the camera (plan 275)
   if [ -z "$HEAD" ] && ! is_local_seat "$seat"; then
     _remote="$(ssh -o BatchMode=yes -o ConnectTimeout=5 "$seat" 'd=${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}; python3 $d/bin/voice/rodd-head.py env' 2>/dev/null | sed -n 's/^RODD_VOICE_HEAD_MODEL=//p' | head -1)"
     [ -n "$_remote" ] && _mind="$_remote"
@@ -297,12 +302,12 @@ warm_head
 
 # 4 · the toolbox — the house's fourteen hands
 if ! curl -s --max-time 2 "http://127.0.0.1:$PORT_BOX/health" | grep -q '"ok"'; then
-  setsid python3 "$ROOT/bin/voice/voice-toolbox.py" --port "$PORT_BOX" > /tmp/rodd-toolbox.log 2>&1 < /dev/null &
+  newsid python3 "$ROOT/bin/voice/voice-toolbox.py" --port "$PORT_BOX" > /tmp/rodd-toolbox.log 2>&1 < /dev/null &
   sleep 2
 fi
 say "toolbox" "$(curl -s --max-time 3 "http://127.0.0.1:$PORT_BOX/health" | head -c 40)"
 # her web search: the house's own SearXNG, raised in the background so the window never waits for it (plan 275)
-setsid bash "$ROOT/bin/voice/search-ensure.sh" > /tmp/rodd-search.log 2>&1 < /dev/null &
+newsid bash "$ROOT/bin/voice/search-ensure.sh" > /tmp/rodd-search.log 2>&1 < /dev/null &
 
 # 5 · the window — or, when asked, the engine's own terminal client and no face at all.
 # A touchscreen seat with a running shell wants the buttons, not an Electron window over the
@@ -313,7 +318,7 @@ if [ "${1:-}" = "--headless" ] || [ "${RODD_HEADLESS:-0}" = "1" ]; then
     # YMIR_VOICE_HOST is named, not probed: the door's own probe walks the fleet's ears,
     # and this seat's local host is not one of them, so it refused with "no host seat
     # reachable" while the pipeline was answering on loopback.
-    setsid env YMIR_VOICE_PANE=0 YMIR_VOICE_HOST="$seat" "$ROOT/bin/voice/voice-door.sh" client \
+    newsid env YMIR_VOICE_PANE=0 YMIR_VOICE_HOST="$seat" "$ROOT/bin/voice/voice-door.sh" client \
       > /tmp/rodd-headless.log 2>&1 < /dev/null &
     sleep 5
   }
@@ -347,7 +352,16 @@ export WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-wayland-1}" XDG_RUNTIME_DIR="${XDG_RU
 [ -r "$ROOT/bin/desktop/app-lib.sh" ] && . "$ROOT/bin/desktop/app-lib.sh"
 RODD_DEVTOOLS_PORT="${YMIR_DEVTOOLS_PORT:-$(app_devtools_port rodd 2>/dev/null || true)}"
 [ -n "$ELECTRON" ] || { say "no electron binary" "install electron43 or run npm ci in apps/rodd"; exit 1; }
-setsid env SPEECH_TO_SPEECH_URL="ws://127.0.0.1:$PORT_HOST/v1/realtime" \
+# The frame's buttons are the platform layer's question (bin/host/host-sense.sh): on a tiling
+# compositor (Omarchy's Hyprland) the window is frameless and draws no _ □ ×, elsewhere the
+# platform keeps its own. The answer crosses into the shell as YMIR_WINDOW_BUTTONS (Rule 05).
+if [ -r "$ROOT/bin/desktop/app-lib.sh" ]; then
+  # shellcheck source=../../bin/desktop/app-lib.sh
+  . "$ROOT/bin/desktop/app-lib.sh"
+  YMIR_WINDOW_BUTTONS="$(app_window_buttons)"
+fi
+export YMIR_WINDOW_BUTTONS="${YMIR_WINDOW_BUTTONS:-on}"
+newsid env SPEECH_TO_SPEECH_URL="ws://127.0.0.1:$PORT_HOST/v1/realtime" \
   "$ELECTRON" --remote-debugging-port="${RODD_DEVTOOLS_PORT:-9222}" "$APP" > /tmp/rodd-app.log 2>&1 < /dev/null &
 # The window maps in about two seconds; a fixed 14 s sleep only made the click wait — and it is the click that
 # waits, because ymir-app restarts her unit and a oneshot unit does not return until this script does (measured

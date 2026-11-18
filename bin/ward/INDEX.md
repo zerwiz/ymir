@@ -21,11 +21,11 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[26]{file,does,kind,verdict,disposition,callers,lines}:
+bin[30]{file,does,kind,verdict,disposition,callers,lines}:
   "brain.py","'''brain.py — the hound's judgement: read findings, apply the rules, speak, record.","tool","tested","keep",1,232
   "browserkill-install.sh","browserkill-install.sh — seat the kill tracer and its GPU note (plan 152 / 271).","tool","wired","keep",0,43
   "browserkill-note.sh","browserkill-note.sh — at every browser/Discord death, write down the GPU's side of it (plan 271 piece 5).","tool","wired","keep",2,33
-  "browserkill.bt","/* plan 242 + 0002 phase 1 (2026-11-11): NAME THE SENDER.","data","wired","keep",3,75
+  "browserkill.bt","/* plan 242 + 0002 phase 1 (2026-11-11): NAME THE SENDER.","data","wired","keep",4,75
   "common.py","'''common.py — the one resolver for Garmr's settings and paths (Rule 07).","tool","wired","keep",1,223
   "escalate.py","'''escalate.py — the severity ladder (plan 98 §'the severity ladder').","tool","tested","keep",1,224
   "garmr-bite-test.sh","garmr-bite-test.sh — the laws of the bite, proven offline (no real bite is ever taken here).","tool","wired","keep",0,94
@@ -37,18 +37,22 @@ bin[26]{file,does,kind,verdict,disposition,callers,lines}:
   "host-watch.sh","host-watch.sh — the watcher a hand can actually have.","tool","wired","keep",1,154
   "hound.py","'''hound.py — Garmr's senses: what executes, who touches the sensitive shelves,","tool","tested","keep",1,467
   "house-status.sh","house-status.sh — the heart's answer: what it hosts, and whether it is up.","tool","wired","keep",0,227
-  "notify.py","'''notify.py — the hound's mouth: one message to the phone, and a record that it landed.","tool","tested","keep",4,230
+  "notify.py","'''notify.py — the hound's mouth: one message to the phone, and a record that it landed.","tool","tested","keep",5,230
   "redact.py","'''redact.py — the guardian's own ward (plan 98 §6, §'the redaction rule').","tool","wired","keep",2,113
+  "restart-storm.sh","restart-storm.sh — the ward that stops a unit spinning on its own face (plan 286 P4).","tool","wired","keep",2,520
   "rules.py","'''rules.py — the judgement, deterministic and first (plan 98 §4.2).","tool","wired","keep",1,103
   "security-audit.sh","security-audit.sh — Vörðr's eyes: WHAT IS THIS MACHINE ACTUALLY EXPOSING?","tool","tested","keep",5,312
   "services-register.sh","services-register.sh — is the register of doors READ, or is it prose?","tool","wired","keep",1,173
+  "soak-sampler.sh","soak-sampler.sh — the leak ledger: one row per house service and per Electron app, every five","tool","wired","keep",1,645
   "test_browserkill_note.sh","test_browserkill_note.sh — plan 271 piece 5: a planted scope stop is named, with the GPU's side.","tool","wired","keep",0,27
+  "test_restart_storm.sh","test_restart_storm.sh — the storm ward's proof, with no real fault (plan 286 P4).","tool","wired","keep",0,183
+  "test_soak_sampler.sh","test_soak_sampler.sh — the leak ledger's proof, without a real leak (plan 286 P0).","tool","wired","keep",0,204
   "verdr.sh","verdr.sh — VÖRÐR, the warden: the standing report.","tool","tested","keep",1,135
   "vidarr-agent.sh","vidarr-agent.sh — seat the DEFENDER as a live pi agent on the fast road.","tool","wired","keep",0,71
   "vidarr.sh","vidarr.sh — VÍÐARR, the silent avenger: the defender's own door.","tool","wired","keep",1,249
   "ward-answer.sh","ward-answer.sh — answer a ward decision.","tool","wired","keep",0,82
   "ward-ask.sh","ward-ask.sh — Vörðr reports, then ASKS.","tool","wired","keep",1,82
 
-**Tally.** verdict: wired=19, tested=7
+**Tally.** verdict: wired=23, tested=7
 
-**Tally.** disposition: keep=26
+**Tally.** disposition: keep=30

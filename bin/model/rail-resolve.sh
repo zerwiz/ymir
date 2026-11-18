@@ -2,7 +2,7 @@
 # rail-resolve.sh — the DOOR to the living rail resolver (plan 51, Parts 9a/9b/9c).
 #
 # The Allfather's doctrine: models come from whichever strong box is CONNECTED at
-# the moment — heimdall · whynot · omarchy. This door is how a shell reaches the
+# the moment — the heart, the forge, a dev seat. This door is how a shell reaches the
 # engine's ONE resolver of that question (`src/ymir_runtime/fleet/rail.py`). It
 # never re-implements a rule: it resolves the operator's home, points PYTHONPATH
 # at the tree, and hands the verb over. Every surface that states a rail URL calls

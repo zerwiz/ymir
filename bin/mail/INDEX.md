@@ -21,23 +21,26 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[15]{file,does,kind,verdict,disposition,callers,lines}:
-  "README.md","Gná — the one mail desk (production)","data","tested","keep",60,-
+bin[18]{file,does,kind,verdict,disposition,callers,lines}:
+  "README.md","Gná — the one mail desk (production)","data","tested","keep",62,-
   "addresses.sh","addresses.sh — THE register of the mail addresses the house uses, and whether mail can reach them.","tool","wired","keep",5,61
   "connect.sh","connect.sh — THE connect door: one button to a signed-in mailbox, and the honest line per account.","tool","wired","keep",3,71
-  "gna_addresses.py","'''Gná's register: the addresses the house USES, and whether mail can reach them.","tool","wired","keep",2,972
+  "gna_addresses.py","'''Gná's register: the addresses the house USES, and whether mail can reach them.","tool","wired","keep",2,973
   "gna_connect.py","'''Gná's connect door — one button to a signed-in mailbox, and the honest line per account.","tool","wired","keep",3,1474
   "gna_desk.py","'''Gná's desk — read-only, loopback, one account per request.","tool","wired","keep",2,269
-  "gna_import.py","'''Gná's importer: one account, read-only, every message once.","tool","wired","keep",2,692
+  "gna_import.py","'''Gná's importer: one account, read-only, every message once.","tool","wired","keep",4,1119
   "gna_judge.py","'''Gná's judge: rules first, and every verdict carries the rule that gave it.","tool","wired","keep",0,229
-  "gna_notify.py","'''gna_notify.py — tell the arm about mail that arrived, once, as it arrives.","tool","wired","keep",1,287
-  "gna_store.py","'''Gná's store: one message once, and the account is the boundary.","tool","wired","keep",0,258
+  "gna_notify.py","'''gna_notify.py — tell the arm about mail that arrived, once, as it arrives.","tool","wired","keep",2,314
+  "gna_store.py","'''Gná's store: one message once, and the account is the boundary.","tool","wired","keep",0,263
   "inbound-test.sh","inbound-test.sh — THE acceptance test for 'people can mail us' (plan 116 §15.3.4).","tool","wired","keep",3,141
-  "install.sh","install.sh — seat Gná's desk on THIS machine.","tool","tested","keep",53,59
-  "ledger.sh","ledger.sh — the one mail record: what went out, what came in, and when.","tool","wired","keep",0,279
+  "install.sh","install.sh — seat Gná's desk on THIS machine.","tool","tested","keep",54,59
+  "ledger.sh","ledger.sh — the one mail record: what went out, what came in, and when.","tool","wired","keep",3,279
   "mail-scan.sh","mail-scan.sh — read-only: the last N hours of a mailbox, as compact JSON.","tool","wired","keep",3,80
-  "test_gna.py","'''The proofs plan 116 asks for before the desk is shown to a human.'''","tool","wired","keep",3,664
+  "test_gna.py","'''The proofs plan 116 asks for before the desk is shown to a human.'''","tool","wired","keep",3,889
+  "test_headers.py","'''The RFC headers: a reply can name the message it answers (plan 305 §7.1, phase 7).","tool","wired","keep",0,539
+  "test_threads.py","'''The proofs plan 305 phase 1 asks for: three fixtures — answered, unanswered, waiting.","tool","wired","keep",0,244
+  "threads.sh","threads.sh — the join: one row per conversation, and the lane that conversation is in.","tool","wired","keep",1,367
 
-**Tally.** verdict: wired=13, tested=2
+**Tally.** verdict: wired=16, tested=2
 
-**Tally.** disposition: keep=15
+**Tally.** disposition: keep=18

@@ -49,6 +49,12 @@ TICK_SECONDS="${REVIEW_TICK_SECONDS:-1800}"
 usage() { sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
 die()   { printf 'review-shelf: %s\n' "$1" >&2; exit "${2:-1}"; }
 
+# plan 290 §3 — the shared law every outward door keeps. The shelf's own verbs (drop, list, take) are a
+# hand's local acts; `tick`, which wakes a person, and the timer that runs it, need this machine to
+# NAME the door (review-loop in config/machines/<machine>/wardens.yaml).
+. "$ROOT/bin/forge/warden-lib.sh"
+warden_begin review-loop || die "this machine cannot be named from the fleet registry"
+
 head_of() { grep -oE '^  "head","[0-9a-f]{40}"' "$1" 2>/dev/null | head -1 | cut -d'"' -f4; }
 
 cmd_drop() {  # <packet>
@@ -126,6 +132,8 @@ cmd_take() {  # <id>
 
 cmd_install_timer() {
   local dir="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
+  # plan 290 rule 1: seating is the operator's decision for THIS machine, not the door's.
+  warden_seat_allowed review-loop || exit 3
   mkdir -p "$dir" || die "cannot create $dir"
   # the units are the register's (config/units.yaml: review-loop) and the one writer renders them against
   # the PINNED runtime, never the tree this door ran from (plan 269)
@@ -143,7 +151,8 @@ case "${1:-}" in
   --install-timer) cmd_install_timer ;;
   drop)  shift; cmd_drop "${1:-}" ;;
   list)  cmd_list ;;
-  tick)  cmd_tick ;;
+  tick)  # plan 290: a tick wakes the operator, so this machine must name the door first.
+         warden_require_door >/dev/null || exit 3; cmd_tick ;;
   take)  shift; cmd_take "${1:-}" ;;
   *) usage ;;
 esac

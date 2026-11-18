@@ -377,7 +377,7 @@ slugify() {  # <text> → a filename-safe token
 # (whisper on the ear lane, :8322) is what costs VRAM, and it is not small:
 # ~900 MiB on a strong box. On a 16 GiB card that is the whole margin — with
 # the engine resident, the rail's 262K model cannot allocate its MTP draft
-# context and every request comes back 500. Measured on heimdall 2026-10-01:
+# context and every request comes back 500. Measured 2026-10-01: 
 # the preset takes 13,790 MiB, the engine 900, and 16,384 is the card.
 #
 # So the engine follows the SAME question the watch already asks, and nothing
@@ -863,7 +863,7 @@ tick() {
     # call to anything that only asks "does an app hold the mic?" — it recorded the
     # room and announced the same minutes over and over. Require a stream that
     # CARRIES a call role (`media.role`), or an explicit arm written by the Thing
-    # room or the operator. bin/time/snotra/snotra-iscall.sh is the one owner of that call.
+    # room or the operator. systems/snotra/services/ear/snotra-iscall.sh is the one owner of that call.
     _iscall="$(door snotra-iscall.sh 2>/dev/null || true)"
     [ -n "$_iscall" ] && [ -x "$_iscall" ] || _iscall="${HOME}/.fleet/snotra-iscall.sh"
     if [ -x "$_iscall" ] && ! "$_iscall" >/dev/null 2>&1; then

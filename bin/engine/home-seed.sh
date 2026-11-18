@@ -129,10 +129,17 @@ if rows=$(contract_rows); then
   realm=""
   [ -r "$home/hodd/data/realm.md" ] && realm=$(sed -n 's/^realm:[[:space:]]*//p' "$home/hodd/data/realm.md" | head -1)
   [ -n "$realm" ] || realm="work"
+  # {machine} (plan 290 §3, 2026-11-14): a machine's own wardens.yaml lives at
+  # config/machines/<machine>/wardens.yaml, so the machine's name is the second — and only other —
+  # substitution a path may carry. It is read the same way every door reads it: the fleet registry
+  # by hostname, then the bare hostname, never a second table.
+  machine="${YMIR_MACHINE:-$(hostname -s 2>/dev/null || hostname 2>/dev/null || printf 'unknown')}"
+  machine="$(printf '%s' "$machine" | tr 'A-Z' 'a-z')"
   seeded=0; stubbed=0; kept=0
   while IFS=$'\t' read -r cpath kind tmpl door required; do
     [ -n "$cpath" ] || continue
     dest="${cpath//\{realm\}/$realm}"
+    dest="${dest//\{machine\}/$machine}"
     case "$kind" in
       seeded|stub|defaulted) ;;
       *) continue ;;                       # generated: a door writes it; optional: no template owed

@@ -188,6 +188,34 @@ def ymir_secret_keys(filter: str = "") -> str:
 
 
 @mcp.tool()
+def ymir_hermes_list() -> str:
+    """Every Hermes session on this machine, with its state in the house's one vocabulary
+    (ready · working · blocked: <why> · dead). Read from the runtime's own admissions, never
+    from a title. Use it before sending to a session, so a paused one is not woken."""
+    return _run(["bash", str(ROOT / "bin" / "seat" / "backend.sh"), "list"], 120)
+
+
+@mcp.tool()
+def ymir_hermes_send(session: str, text: str) -> str:
+    """Send one turn to a Hermes session by id prefix or title, through the same door a pane
+    is woken through. A paused session is REFUSED with its reason and never replayed: recover
+    it first, which shows the lost input before anything is discarded."""
+    out = _run(["bash", str(ROOT / "bin" / "seat" / "backend.sh"), "prompt",
+                "hermes:%s" % session, text], 900)
+    return out or "the door refused the wake (is the session paused? read ymir_hermes_list)"
+
+
+@mcp.tool()
+def ymir_hermes_recover(session: str, yes: bool = False) -> str:
+    """Show what a paused Hermes session was carrying when its gateway died, and discard the
+    lost turn only when `yes` is true. Without `yes` it prints the lost input and stops —
+    a person's turn is not an agent's to throw away."""
+    argv = ["bash", str(ROOT / "bin" / "seat" / "backend.sh"), "recover",
+            "hermes:%s" % session] + (["--yes"] if yes else [])
+    return _run(argv, 300)
+
+
+@mcp.tool()
 def ymir_context(json_output: bool = False) -> str:
     """What THIS agent's context actually holds: used, window, remaining, the compaction
     thresholds, and whether a compaction already fired. Read it before deciding the
@@ -433,7 +461,7 @@ def subagent(agent: str = "", task: str = "") -> str:
 
 @mcp.tool()
 def well_recall(query: str, k: int = 5) -> str:
-    """Drink from the well before acting — Kaia's memory of what was already learned."""
+    """Drink from the well before acting — Völundr's memory of what was already learned."""
     return ymir_recall(query, k)
 
 
@@ -468,7 +496,8 @@ def ymir_telegram(action: str = "list", machine: str = "", text: str = "") -> st
 # so the behaviour has one home. Doors that are pi-SESSION state are deliberately absent:
 #   context_left        pi's own context gauge — `ymir_context` above reads the number on disk
 #   logretta_sit        the council's rounds are orchestrated inside the extension (no CLI yet)
-#   excalidraw_tickets, excalidraw_servers  their logic lives in the extension's TS modules
+#   whiteboard_tickets, whiteboard_servers   their logic lives in the extension's TS modules
+#     (excalidraw_tickets and excalidraw_servers answer as deprecated aliases for one release)
 # `skuld_branch_report` IS ported below — its durable write is `skuld-branch-outcome.sh append`;
 # the branch's merge note into the Allfather-facing conversation stays the branch extension's.
 
@@ -504,9 +533,19 @@ def skuld_plan(topic: str = "", realm: str = "", project: str = "ymir") -> str:
     """What is planned: the plan ledger in the home (one row per plan file, with its headline). Omit topic for the shelf."""
     shelf = os.environ.get("YMIR_PLAN_DIR", "")
     if not shelf:
-        base = _home() / "svartalfaheim" / (realm or "whynotproductions")
-        cands = [base / "projects" / project / "plans", base / "workspace" / project / "plans"]
-        shelf = str(next((c for c in cands if c.is_dir()), cands[0]))
+        # The ledger's realm is the OPERATOR's, so it is discovered inside his home — the
+        # repository never spells one (RULES/04). `realm` still narrows the search.
+        homes = [_home() / "svartalfaheim" / realm] if realm else sorted(
+            p for p in (_home() / "svartalfaheim").glob("*") if p.is_dir())
+        cands = [c for h in homes for c in (h / "projects" / project / "plans", h / "workspace" / project / "plans")]
+        found = [c for c in cands if c.is_dir()]
+        if not found:
+            return ("no plan ledger in this home — set YMIR_PLAN_DIR, or run bin/records/plan.sh "
+                    "from a home that holds one")
+        if len(found) > 1 and not realm:
+            return ("this home holds %d plan ledgers — name one with YMIR_PLAN_DIR or --realm:\n  %s"
+                    % (len(found), "\n  ".join(str(c) for c in found)))
+        shelf = str(found[0])
     d = Path(shelf)
     def _num(n: str) -> int:
         h = n.split("-")[0]

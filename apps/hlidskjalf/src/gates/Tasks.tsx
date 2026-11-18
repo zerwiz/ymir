@@ -19,7 +19,7 @@ export function Tasks() {
       ts: new Date().toISOString(),
       kind: 'ratatoskr',
       from: selected.agent,
-      to: 'Kaia',
+      to: 'Völundr',
       taskId: selected.id,
       state: selected.state,
       module: 'ratatoskr',

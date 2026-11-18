@@ -129,6 +129,39 @@ wide_bind_is_named() {  # <port>
   [ -n "$why" ]
 }
 
+# A wide bind says WHERE a door is, never WHO may knock. Two kinds of door answer a
+# knock with no credential, and both were invisible to this ward until 2026-11-16:
+#   · an MCP server — `initialize` is a complete and harmless request, and a server that
+#     answers it without a token answers every tool it holds the same way;
+#   · an SMB share — `guest ok` with `read only = No` is a writable door for anybody.
+# Measured on the heart that day: :8319 and :8321 both completed an unauthenticated MCP
+# handshake (`snotra` listed and read the meeting record's tools), and five CasaOS shares
+# were guest-writable as root. Neither fact was in the report, because nothing asked.
+MCP_PROBE='{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"security-audit","version":"1"}}}'
+# <port> → the server's own answer, or empty. A fixture `mcp-<port>.out` is used when given.
+mcp_answer() {  # <port>
+  local port="$1"
+  if [ -n "$FIXTURES" ]; then
+    [ -r "$FIXTURES/mcp-$port.out" ] && cat "$FIXTURES/mcp-$port.out"
+    return 0
+  fi
+  command -v curl >/dev/null 2>&1 || return 0
+  curl -s -m 2 -X POST "http://127.0.0.1:$port/mcp" \
+    -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' \
+    -d "$MCP_PROBE" 2>/dev/null | head -c 4000
+}
+# SMB shares, as `testparm -s` prints them (a fixture `smb.out` is used when given).
+smb_shares() {
+  if [ -n "$FIXTURES" ]; then
+    [ -r "$FIXTURES/smb.out" ] && cat "$FIXTURES/smb.out"
+    return 0
+  fi
+  command -v testparm >/dev/null 2>&1 || return 0
+  testparm -s 2>/dev/null || true
+}
+
+WIDE_PORTS=()
+SEEN_PORTS=()
 if [ -n "$SS_OUT" ]; then
   # TCP only, deduped, and the benign wide binds skipped: a ward that reports every
   # browser's ephemeral port is a ward nobody reads. (mDNS 5353, tailscaled 41641,
@@ -147,7 +180,15 @@ if [ -n "$SS_OUT" ]; then
       0.0.0.0|\[::\]|\*|::) ;;
       *) continue ;;
     esac
+    # ONE DOOR, ONE JUDGEMENT: a v4 and a v6 socket are the same service, and so are
+    # two listeners whose peer column reads the same. Dedupe on the PORT, never on a
+    # column of `ss` — the old `sort -u -k5,5` collapsed every wide bind that shared a
+    # peer address, which is every one of them (measured 2026-11-16: :8319 and :8321
+    # both vanished from the report in a fixture because their fifth column matched).
+    case " ${SEEN_PORTS[*]:-} " in *" $port "*) continue ;; esac
+    SEEN_PORTS+=("$port")
     case "$port" in 41641|5353) continue ;; esac
+    case " ${WIDE_PORTS[*]:-} " in *" $port "*) ;; *) WIDE_PORTS+=("$port") ;; esac
     case "$proc:$port" in
       *:5*) ;;                                   # below 32768: keep looking at it
       *) case "$port" in
@@ -176,7 +217,49 @@ if [ -n "$SS_OUT" ]; then
              add MEDIUM "an unnamed wide bind" "0.0.0.0:$port ($proc)" "write down why it listens on every interface in config/declared-ports.txt, or bind it to loopback"
            fi ;;
     esac
-  done < <(printf '%s\n' "$SS_OUT" | awk 'NR>1 && /LISTEN/' | sort -u -k5,5)
+  done < <(printf '%s\n' "$SS_OUT" | awk 'NR>1 && /LISTEN/')
+fi
+
+# ── 1b · the doors that say "come in" themselves ──────────────────────────────
+# A wide bind is a location. These two are the doors that hand out their own key:
+# an MCP that completes `initialize` with no token, and an SMB share open to guests.
+if [ "${#WIDE_PORTS[@]}" -gt 0 ]; then
+  for wp in "${WIDE_PORTS[@]}"; do
+    [ -n "$wp" ] || continue
+    answer="$(mcp_answer "$wp")"
+    case "$answer" in
+      *'"serverInfo"'*)  servername="$(printf '%s' "$answer" | sed -nE 's/.*"name"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' | head -1)"
+                          add HIGH "an MCP answers without a credential" "0.0.0.0:$wp (${servername:-unknown server}) completed an unauthenticated MCP initialize" "bind it to loopback, or put a token in front of every tool it holds; a network is not a credential" ;;
+      *'"error"'*)       : ;;   # gated: the server refused the handshake, so the door is shut
+    esac
+  done
+fi
+
+SMB_OUT="$(smb_shares)"
+if [ -n "$SMB_OUT" ]; then
+  # Each share is a `[name]` header followed by its keys. Both keys are judged, and
+  # `force user = root` is named in the detail because it is what makes the write a
+  # write as root — the difference between a nuisance and a takeover.
+  while IFS="$(printf '\t')" read -r share mode as_root where; do
+    [ -n "$share" ] || continue
+    if [ "$mode" = write ]; then
+      add HIGH "an SMB share is open to guests and writable" "[$share]$as_root → $where" "set 'guest ok = no' on the share (and never 'force user = root' on a write path), or stop samba"
+    else
+      add MEDIUM "an SMB share is open to guests" "[$share] read-only → $where" "set 'guest ok = no' unless the share is meant for the whole house"
+    fi
+  done < <(printf '%s\n' "$SMB_OUT" | awk '
+    function emit() {
+      if (name != "" && guest == "yes")
+        printf "%s\t%s\t%s\t%s\n", name, (rw == "yes" ? "write" : "read"), root, path
+      name = ""; guest = ""; rw = ""; root = ""; path = ""
+    }
+    /^\[/ { emit(); name = $0; gsub(/^\[|\]$/, "", name); next }
+    /^[[:space:]]*guest ok[[:space:]]*=/ { if ($0 ~ /[Yy]es/) guest = "yes"; next }
+    /^[[:space:]]*read only[[:space:]]*=/ { if ($0 ~ /[Nn]o/) rw = "yes"; next }
+    /^[[:space:]]*force user[[:space:]]*=/ { if ($0 ~ /root/) root = " as root"; next }
+    /^[[:space:]]*path[[:space:]]*=/ { path = $0; sub(/^[^=]*=[[:space:]]*/, "", path); next }
+    /^[[:space:]]*$/ { emit() }
+    END { emit() }' 2>/dev/null || true)
 fi
 
 # ── 2 · the wall: does ufw actually cover those doors ─────────────────────────
@@ -231,8 +314,16 @@ if [ -d "$CFG_DIR" ]; then
   for f in "$CFG_DIR"/config-*.yml; do
     [ -r "$f" ] || continue
     hn="$(sed -nE 's/^[[:space:]]*-[[:space:]]*hostname:[[:space:]]*(.*)/\1/p' "$f" | head -1)"
-    svc="$(sed -nE 's/^[[:space:]]*service:[[:space:]]*(http.*)/\1/p' "$f" | head -1)"
+    svc="$(sed -nE 's#^[[:space:]]*service:[[:space:]]*(http[s]?://.*|ssh://.*)#\1#p' "$f" | head -1)"
     [ -n "$hn" ] || continue
+    # A tunnel that dials ssh is not a web surface with a login to check: it is a door
+    # into a shell, published from this host, and no probe below can judge it.
+    case "$svc" in
+      ssh://*)
+        ssh_all="$(sed -nE 's#^[[:space:]]*service:[[:space:]]*ssh://(.*)$#\1#p' "$f" | tr '\n' ' ')"
+        add HIGH "a PUBLIC tunnel publishes an ssh door" "$hn → ssh://${ssh_all% }" "take the ingress out: ssh is reached by key and by the tailnet, never published from another machine's tunnel"
+        continue ;;
+    esac
     # The probe is a SOURCE like the others: a recorded answer (fixture
     # probe-<host>.out) is used when given, so the CRITICAL path is testable without
     # touching the internet.

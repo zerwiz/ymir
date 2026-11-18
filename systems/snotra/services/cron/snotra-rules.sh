@@ -6,4 +6,4 @@
 #   snotra-rules.sh defaults                                           house defaults
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../" && pwd)"
-exec python3 "$ROOT/bin/time/snotra/snotra-rules.py" "$@"
+exec python3 "$ROOT/systems/snotra/services/cron/snotra-rules.py" "$@"

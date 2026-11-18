@@ -120,7 +120,7 @@ log_file() { case "$1" in smidja) printf '%s/electron-smidja.log' "$YMIR_STATE_D
 view_mark() { case "$1" in smidja) printf '%s' 'ymir-smidja' ;; odrerir) printf '%s' 'ymir-odrerir' ;; *) printf '%s' 'ymir-hlidskjalf' ;; esac; }
 view_pids() {  # all live Electron pids for a view
   local mark; mark="$(view_mark "$1")"
-  pgrep -f "electron/dist/electron.*--user-data-dir=.*${mark}" 2>/dev/null || true
+  pgrep -f "electron/dist/.*--user-data-dir=.*${mark}" 2>/dev/null || true
 }
 # An integrated GPU backs its graphics memory with system RAM: a small VRAM
 # carve-out plus a large shared aperture (GTT). When a local model is served
@@ -380,11 +380,20 @@ start_one() {
   # loopback port (bin/desktop/app-lib.sh, plan 275 item 19): a fault found after the fact can be inspected
   # without a restart, and bin/desktop/boot-stopwatch.sh can ask the renderer when it first answered.
   # YMIR_DEVTOOLS_PORT still wins, for a one-off probe.
+  #
+  # Chromium refuses a DevTools websocket that carries an Origin header unless the origins are named, and
+  # every scripted client sends one (node's built-in WebSocket, any harness). Without the flag the door
+  # answers /json and then fails the handshake (measured by Sessrúmnir's launcher, 2026-11-13).
   local dtp="${YMIR_DEVTOOLS_PORT:-}"
   [ -n "$dtp" ] || dtp="$(app_devtools_port "$v" 2>/dev/null || true)"
-  [ -n "$dtp" ] && extra+=(--remote-debugging-port="$dtp")
-  nohup env YMIR_DESKTOP_VIEW="$v" "$(real_electron "$v")" "$(app_dir "$v")" \
-    --user-data-dir="$HOME/.config/$(view_mark "$v")" \
+  [ -n "$dtp" ] && extra+=(--remote-debugging-port="$dtp" --remote-allow-origins=*)
+  # The profile a window writes into. The operator's own is the default; a SOAK passes its own
+  # throwaway profile so a second instance never fights the open window's single-instance lock
+  # (plan 286 P1 needs the same app twice: once as it was, once as it is).
+  local udd="${YMIR_APP_USER_DATA_DIR:-$HOME/.config/$(view_mark "$v")}"
+  mkdir -p "$udd" 2>/dev/null || true
+  nohup env YMIR_DESKTOP_VIEW="$v" YMIR_WINDOW_BUTTONS="$(app_window_buttons)" "$(real_electron "$v")" "$(app_dir "$v")" \
+    --user-data-dir="$udd" \
     "${extra[@]}" >"$l" 2>&1 < /dev/null &
   echo $! >"$f"
   # Wait briefly for the real process to appear, so a following call sees it.

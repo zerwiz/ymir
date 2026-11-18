@@ -11,8 +11,8 @@
 # validate, authorize; and only *then* offer to turn password logins off.
 #
 # Portability (Rule 05): this ward is the UNIVERSAL door — one published GitHub
-# key opens every warded computer. Proven seats (2026-09-22): Omarchy (omarchy,
-# heimdallomarchy) and Ubuntu/Debian (zerwizserver, whynot) — plain bash, the
+# key opens every warded computer. Proven seats (2026-09-22): an Omarchy dev machine
+# and Ubuntu/Debian servers — plain bash, the
 # systemd user timer, Debian's `ssh` unit vs Arch's `sshd` both handled. The
 # install wires it in via bin/host/heimdall-ensure.sh (step `heimdall`), so a fresh
 # seat is warded at setup, Omarchy or Ubuntu alike.
@@ -38,6 +38,8 @@
 #
 # Exit: 0 ok, 1 failure, 2 usage, 3 nothing to do.
 set -u
+# the bash floor (RULES/05): macOS ships bash 3.2 — re-run under bash >= 4, or say how to get one
+[ "${BASH_VERSINFO[0]:-0}" -ge 4 ] || { . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../fleet/ymir-platform.sh" && ymir_bash_floor "$@"; }
 
 VERSION="1.1.0"
 KEYS_FILE="${HEIMDALL_KEYS_FILE:-$HOME/.ssh/authorized_keys}"

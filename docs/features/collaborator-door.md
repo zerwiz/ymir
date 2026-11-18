@@ -17,7 +17,7 @@ per pair, per skill, with an expiry). They get no seat, no ssh, no repository.
 
 ```bash
 # mint a token for one partner, one skill, one hour
-bin/collab/kit/scripts/collab-connect.sh mint --peer andre --skill well-recall --minutes 60
+bin/collab/kit/scripts/collab-connect.sh mint --peer partner-a --skill well-recall --minutes 60
 
 # check a token before you send it
 bin/collab/kit/scripts/collab-connect.sh check --token "$TOK" --pub "$YMIR_HOME/hodd/state/a2a/ed25519.pub.pem" --skill well-recall

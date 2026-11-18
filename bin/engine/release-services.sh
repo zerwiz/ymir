@@ -47,8 +47,13 @@ unit_field() {  # <unit> <property> — one property of one unit (systemctl show
 proc_release() {  # <pid> → a release sha, or empty
   local pid="$1" cwd cmd t
   [ -n "$pid" ] && [ "$pid" != 0 ] || return 0
-  cwd="$(readlink "/proc/$pid/cwd" 2>/dev/null)"
-  cmd="$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null)"
+  if [ -d /proc/self ]; then
+    cwd="$(readlink "/proc/$pid/cwd" 2>/dev/null)"
+    cmd="$(tr '\0' ' ' < "/proc/$pid/cmdline" 2>/dev/null)"
+  else  # no /proc (a Mac, 2026-11-16): lsof gives the cwd, ps the command line
+    cwd="$(lsof -nP -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p' | head -1)"
+    cmd="$(ps -o command= -p "$pid" 2>/dev/null)"
+  fi
   for t in "$cwd" $cmd; do
     case "$t" in
       */releases/*) t="${t#*/releases/}"; printf '%s' "${t%%/*}"; return 0 ;;

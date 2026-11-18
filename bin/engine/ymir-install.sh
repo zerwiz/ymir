@@ -208,6 +208,26 @@ step_runtime() {
   fi
 }
 
+# The macOS service layer (plan 293, RULES/05): a Mac has no systemd, so `systemctl --user` is answered by
+# launchd through bin/engine/launchd-user.py. Seated right after the pin, so every later step that writes
+# or raises a unit finds it. Off a Mac this is a clean skip.
+step_launchd() {
+  local door="$SCRIPT_DIR/launchd-ensure.sh" out
+  case "$(uname -s 2>/dev/null)" in Darwin*) ;; *) add launchd SKIP "not a Mac — systemd runs the units here"; return ;; esac
+  [ -x "$door" ] || { add launchd SKIP "no bin/engine/launchd-ensure.sh in this tree"; return; }
+  if [ "$CHECK" = 1 ]; then
+    if "$door" check >/dev/null 2>&1; then add launchd OK "systemctl --user is answered by launchd"
+    else add launchd WARN "the launchd layer is not seated — a full run seats it (bin/engine/launchd-ensure.sh ensure)"; fi
+    return
+  fi
+  out="$("$door" ensure 2>&1)"
+  hash -r 2>/dev/null || true
+  case "$out" in
+    *'"OK"'*|*'"SKIP"'*) add launchd OK "$(printf '%s' "$out" | grep -m1 '"launchd"' | cut -d'"' -f6)" ;;
+    *) add launchd FAIL "$(printf '%s' "$out" | grep -m1 '"launchd"' | cut -d'"' -f6) — bin/engine/launchd-ensure.sh ensure" ;;
+  esac
+}
+
 # The sweep: steps after "the pinned runtime" (fleet, Gróa, Bilskirnir, the spa) write their own units, so
 # the last word is the one writer's. Anything still on a working tree is moved onto the pin, with its old
 # line logged (plan 269).
@@ -265,6 +285,17 @@ step_prereqs() {
   # mcp<2 is needed by every role's harness doors; name it in the OK row too.
   [ -z "$miss" ] && ready="$ready gh mcp<2"
   if [ -n "$miss" ]; then add prereqs WARN "missing:$miss"; else add prereqs OK "$ready"; fi
+  # The bash floor (RULES/05): macOS ships bash 3.2, and the doctor, the migrations and the gates need >= 4.
+  # Those scripts re-run themselves under the bash found here (ymir_bash_floor); with none, they refuse.
+  local b4=""
+  if b4="$(ymir_bash4_path 2>/dev/null)"; then
+    add bash OK "bash >= 4 at $b4"
+  else
+    case "$(ymir_os 2>/dev/null)" in
+      macos) add bash WARN "only bash ${BASH_VERSION%%(*} — macOS ships 3.2; run: brew install bash" ;;
+      *)     add bash WARN "only bash ${BASH_VERSION%%(*} — install bash 4 or newer, or set YMIR_BASH" ;;
+    esac
+  fi
   # The well engine: a `hand` reaches the heart's well as a door and does not run
   # the engine locally; heart/dev provision it. engram needs Python 3.12/3.13, so
   # prereq-ensure installs it into a compatible interpreter and records which one.
@@ -389,8 +420,17 @@ step_clients() {
 # interactive run asks once and records the answer under ~/.config/ymir/home, so
 # every later script resolves the same home without being told again. --check
 # never writes; --yes takes what is already recorded (or the documented default).
+home_mac_warn() {  # a Mac home under a TCC-protected folder starves every launchd agent
+  case "$(uname -s 2>/dev/null)" in Darwin*) ;; *) return 0 ;; esac
+  case "$YMIR_HOME" in
+    "$HOME/Documents"/*|"$HOME/Desktop"/*|"$HOME/Downloads"/*|"$HOME/Library/Mobile Documents"/*)
+      add home-mac WARN "the home is under a macOS-protected folder ($YMIR_HOME) — background services cannot open it; move it (e.g. ~/ymirhome) and record it with YMIR_HOME=<path> bin/engine/ymir-install.sh" ;;
+  esac
+}
+
 step_home() {
   local rec="" chosen=""
+  home_mac_warn
   ymir_home_record rec
   if [ -n "${YMIR_HOME:-}" ] && [ "$CHECK" = 1 ]; then add home OK "home: $YMIR_HOME"; return; fi
   if [ -n "$rec" ]; then
@@ -778,6 +818,14 @@ step_a2a() {
   else
     add a2a-mcp WARN "run bin/bridge/a2a-mcp.sh install to wire the mesh"
   fi
+  # The relay (plan 303 §12.3 step 4, §15.4): one user unit per PERSON, never per agent. It is
+  # seated here so a fresh install has the loop, and re-seated by every update — the unit
+  # itself refuses to serve a machine with no live arm holder (RULES/55).
+  if [ -x "$SCRIPT_DIR/../engine/units.sh" ] && "$SCRIPT_DIR/../engine/units.sh" write ratatoskr-relay >/dev/null 2>&1; then
+    add ratatoskr-relay OK "the wake-and-return loop is seated (user unit)"
+  else
+    add ratatoskr-relay WARN "run bin/engine/units.sh write ratatoskr-relay"
+  fi
 }
 
 # ── 3b2. Sessrúmnir desktop GUI ──────────────────────────────────────────────
@@ -1132,7 +1180,7 @@ step_sandbox() {
 }
 
 # ── 5. memory (well + harness MCP) ───────────────────────────────────────────
-# engram is Kaia's engine only (the Allfather, 2026-11-10). A harness reaches memory
+# engram is Völundr's engine only (the Allfather, 2026-11-10). A harness reaches memory
 # through the WELL DOOR — this body's gateway, `/mcp/well` — never a direct
 # `engram-mcp --db` stdio server, which writes the seat's own file and never reaches
 # the heart. So the health metric is the door, and a direct engram is a LEAK: the
@@ -1837,6 +1885,7 @@ run_step step_prereqs "prerequisites"
 run_step step_home "home"
 run_step step_tree "workspace tree"
 run_step step_runtime "the pinned runtime"
+run_step step_launchd "the macOS service layer"
 run_step step_clients "the client register"
 run_step step_apps "apps"
 run_step step_engines "engines"

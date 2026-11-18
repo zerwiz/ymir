@@ -79,7 +79,7 @@ $YMIR_HOME/hodd/memory/runes_audit.md  every pipeline run appends a rune
 
 | meeting | cards | smoke | letters |
 |---|---|---|---|
-| `2026-10-22-sync-reygan-craig` | 22 verified · 0 drift | 9 pass · 0 skip · 0 fail | 3 drafted, 5 attachments each, **unsent** |
+| `2026-10-22-sync-ada-grace` | 22 verified · 0 drift | 9 pass · 0 skip · 0 fail | 3 drafted, 5 attachments each, **unsent** |
 | `2026-10-20-roadmap` | 35 verified · 0 drift | 6 pass · 2 skip · 0 fail | 4 rendered, not drafted |
 | the **Ymir** board | created by `snotra-board.sh ensure`, 4 lists · 6 labels · the emblem card | — | — |
 

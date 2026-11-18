@@ -7,6 +7,8 @@
 # pointer at the top of this file was removed 2026-11-12: it aimed at a path
 # that does not exist, so the door answered 127 instead of listening.
 set -euo pipefail
+# the bash floor (RULES/05): macOS ships bash 3.2 — re-run under bash >= 4, or say how to get one
+[ "${BASH_VERSINFO[0]:-0}" -ge 4 ] || { . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../../../../bin/fleet/ymir-platform.sh" && ymir_bash_floor "$@"; }
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # The repo root, found by walking up to the tree that carries RULES/ and
 # .agents/ — the old `../../../../` from services/ear/ landed one level above
@@ -416,7 +418,7 @@ do_stop() {
   # 1) silence the ear first, so the newest slice is finished and complete
   if alive "$ff"; then kill "$ff" 2>/dev/null; local n=0
     while alive "$ff" && [ "$n" -lt 20 ]; do sleep 0.5; n=$((n+1)); done
-    alive "$ff" && kill -9 "$ff" 2>/dev/null
+    alive "$ff" && kill -9 "$ff" 2>/dev/null  # kill: a wedged process has no graceful kill — declared, per check_platform
   fi
   rm -f "$WORK/ffmpeg.pid"
 
@@ -424,7 +426,7 @@ do_stop() {
   : > "$WORK/stop"
   n=0
   while alive "$worker_pid" && [ "$n" -lt 120 ]; do sleep 0.5; n=$((n+1)); done
-  alive "$worker_pid" && kill -9 "$worker_pid" 2>/dev/null
+  alive "$worker_pid" && kill -9 "$worker_pid" 2>/dev/null  # kill: a wedged process has no graceful kill — declared, per check_platform
   rm -f "$WORK/worker.pid" "$LISTENING_FILE"
 
   local base base_name topic minutes transcript actions

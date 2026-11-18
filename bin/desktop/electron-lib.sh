@@ -59,6 +59,22 @@ _electron_foreign_root() {  # <ancestor> <root>
   grep -q '@zerwiz/ymir' "$1/package.json" 2>/dev/null
 }
 
+# The runtime's binary inside dist/ and the release artifact differ per OS (2026-11-16: every path here said the Linux
+# `dist/electron` and every fetch took linux-x64, so a Mac unpacked a Linux ELF and never found Electron.app).
+_electron_exe() {  # → the binary's path inside dist/ on this OS
+  case "$(uname -s 2>/dev/null)" in
+    Darwin*) printf 'Electron.app/Contents/MacOS/Electron' ;;
+    MINGW*|MSYS*|CYGWIN*) printf 'electron.exe' ;;
+    *) printf 'electron' ;;
+  esac
+}
+_electron_artifact() {  # <version> → the release zip for this OS and CPU
+  local os arch
+  case "$(uname -s 2>/dev/null)" in Darwin*) os=darwin ;; MINGW*|MSYS*|CYGWIN*) os=win32 ;; *) os=linux ;; esac
+  case "$(uname -m 2>/dev/null)" in aarch64|arm64) arch=arm64 ;; i?86) arch=ia32 ;; *) arch=x64 ;; esac
+  printf 'electron-v%s-%s-%s.zip' "$1" "$os" "$arch"
+}
+
 # THE one resolver (P1, 2026-09-24). Every shape npm can leave behind, searched
 # in order:
 #   (1) the app-local runtime       $app/node_modules/electron
@@ -96,12 +112,12 @@ electron_bin() {  # <app-dir> [root] [pkg] → prints the binary; exit 0 found /
   # and when a stop IS a node_modules dir, checking electron directly inside it.
   while [ -n "$a" ] && [ "$a" != "/" ]; do
     _electron_foreign_root "$a" "$root" && break
-    if [ "${a##*/}" = node_modules ]; then c="$a/electron/dist/electron"; else c="$a/node_modules/electron/dist/electron"; fi
+    if [ "${a##*/}" = node_modules ]; then c="$a/electron/dist/$(_electron_exe)"; else c="$a/node_modules/electron/dist/$(_electron_exe)"; fi
     [ -x "$c" ] && _electron_fits "$app" "$c" && { printf '%s' "$c"; return 0; }
     a="$(dirname "$a")"
   done
   # (3) the sibling package's own runtime
-  c="$(dirname "$root")/$pkg/node_modules/electron/dist/electron"
+  c="$(dirname "$root")/$pkg/node_modules/electron/dist/$(_electron_exe)"
   [ -x "$c" ] && _electron_fits "$app" "$c" && { printf '%s' "$c"; return 0; }
   return 1
 }
@@ -187,7 +203,7 @@ electron_fetch_runtime() {  # <app-dir> [root] [pkg]
   [ -z "$root" ] && root="$(electron_root "$app")"
   dir="$(electron_place_dir "$app" "$root" "$pkg")" || return 1
   [ -d "$dir" ] || mkdir -p "$dir" || return 1
-  [ -f "$dir/path.txt" ] && [ -x "$dir/dist/electron" ] && return 0
+  [ -f "$dir/path.txt" ] && [ -x "$dir/dist/$(_electron_exe)" ] && return 0
   # The exact version: the app's own manifest when it pins electron, else the
   # electron package's manifest already sitting in the place dir.
   # The exact version npm INSTALLED comes first (the lock decides it); the app's declared range is only a fallback —
@@ -201,12 +217,12 @@ electron_fetch_runtime() {  # <app-dir> [root] [pkg]
   command -v curl >/dev/null 2>&1 || return 1
   command -v unzip >/dev/null 2>&1 || return 1
   tmp="$(mktemp -d)" || return 1
-  url="https://github.com/electron/electron/releases/download/v${v}/electron-v${v}-linux-x64.zip"
+  url="https://github.com/electron/electron/releases/download/v${v}/$(_electron_artifact "$v")"
   if curl -fsSL --max-time 300 -o "$tmp/e.zip" "$url"; then
-    mkdir -p "$dir/dist" && unzip -q -o "$tmp/e.zip" -d "$dir/dist" && printf 'electron' >"$dir/path.txt"
+    mkdir -p "$dir/dist" && unzip -q -o "$tmp/e.zip" -d "$dir/dist" && _electron_exe >"$dir/path.txt"
   fi
   rm -rf "$tmp"
-  [ -f "$dir/path.txt" ] && [ -x "$dir/dist/electron" ] && { "$dir/dist/electron" --version >/dev/null 2>&1; }
+  [ -f "$dir/path.txt" ] && [ -x "$dir/dist/$(_electron_exe)" ] && { "$dir/dist/$(_electron_exe)" --version >/dev/null 2>&1; }
 }
 
 # fetch_electron_zip — the PROVEN road (2026-09-23): the postinstall's silent
@@ -222,7 +238,7 @@ fetch_electron_zip() {  # <app-dir> [root] [pkg]
   local pkgj="$dir/package.json" v url tmp
   [ -f "$pkgj" ] || return 1
   v="$(node -e "console.log(require('$pkgj').version)" 2>/dev/null)" || return 1
-  url="https://github.com/electron/electron/releases/download/v$v/electron-v$v-linux-x64.zip"
+  url="https://github.com/electron/electron/releases/download/v$v/$(_electron_artifact "$v")"
   tmp="$(mktemp /tmp/electron-XXXXXX.zip 2>/dev/null)" || return 1
   if command -v curl >/dev/null 2>&1 && curl -sL -m 540 -o "$tmp" "$url" && [ -s "$tmp" ]; then
     ( cd "$dir" && unzip -oq "$tmp" -d dist 2>/dev/null )
@@ -230,5 +246,5 @@ fetch_electron_zip() {  # <app-dir> [root] [pkg]
   else
     rm -f "$tmp"; return 1
   fi
-  [ -x "$dir/dist/electron" ]
+  [ -x "$dir/dist/$(_electron_exe)" ]
 }

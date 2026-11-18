@@ -69,13 +69,13 @@ export default function excalidraw(pi: any) {
   const rootExists = () =>
     existsSync(join(root(), "tickets")) && existsSync(join(root(), "AGENTS.md"));
 
-  pi.registerTool({
-    name: "excalidraw_tickets",
+  const ticketsTool = {
+    name: "whiteboard_tickets",
     description:
-      "Read the Excalidraw fork's tickets — the behaviour contracts that live in " +
+      "Read the whiteboard's tickets — the behaviour contracts that live in " +
       "`tickets/`. action=board lists them by column (open · in-progress · review · " +
       "done); action=read returns one ticket, either whole or as its contract " +
-      "sections. Use this before touching the fork: nothing starts without a " +
+      "sections. Use this before touching the whiteboard: nothing starts without a " +
       "ticket, and a ticket with no owner is not filed.",
     parameters: {
       type: "object",
@@ -167,12 +167,20 @@ export default function excalidraw(pi: any) {
       lines.push(`${tickets.length} ticket${tickets.length === 1 ? "" : "s"}.`);
       return ok(lines.join("\n"));
     },
+  };
+  pi.registerTool(ticketsTool);
+  // Kept for one release: the old name answers, delegating to the same object.
+  pi.registerTool({
+    ...ticketsTool,
+    name: "excalidraw_tickets",
+    description: "Deprecated alias for whiteboard_tickets — the same answer, the old name, kept for "
+      + "one release. " + ticketsTool.description,
   });
 
-  pi.registerTool({
-    name: "excalidraw_servers",
+  const serversTool = {
+    name: "whiteboard_servers",
     description:
-      "The Excalidraw fork's three services, as status / start / stop. " +
+      "The whiteboard's three services, as status / start / stop. " +
       "board (:4174) reads tickets over HTTP; bridge (:4173) answers the AI panel " +
       "and needs TTD_MODEL_BASE_URL; collab (:3002) is the room server. Actions are " +
       "probes and spawns, never a blanket kill — stop kills only the pid holding " +
@@ -258,6 +266,14 @@ export default function excalidraw(pi: any) {
 
       return bad(`unknown action '${action}'`);
     },
+  };
+  pi.registerTool(serversTool);
+  // Kept for one release: the old name answers, delegating to the same object.
+  pi.registerTool({
+    ...serversTool,
+    name: "excalidraw_servers",
+    description: "Deprecated alias for whiteboard_servers — the same answer, the old name, kept for "
+      + "one release. " + serversTool.description,
   });
 
   pi.registerTool({

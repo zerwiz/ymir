@@ -37,6 +37,8 @@ cp $L/templates/house/types/update.md /tmp/letter.md   # start from a type; fill
 python3 $L/letter-design.py /tmp/letter.md > /tmp/letter.html   # preview in a browser
 bash $L/mail-send.sh draft --to a@x --subject "…" --body /tmp/letter.md   # designed automatically (theme: header)
 bash $L/mail-send.sh draft --to a@x --body /tmp/reply.md --reply-to <gmail-message-id>   # a reply, inside its thread
+bash $L/mail-send.sh draft --to a@x --subject "Re: The plan for the quarter" --body /tmp/reply.md   # joins it by subject, or refuses
+bash $L/mail-send.sh draft --to a@x --subject "Re: …" --body /tmp/reply.md --new-thread   # a new conversation, on purpose
 # sending needs the operator's approval of those exact bytes: snotra-approve.sh approve <draft> → mail-send.sh send <draft>
 ```
 
@@ -52,6 +54,9 @@ separated by a blank line: `## heading` · paragraphs (`**bold**`, `` `code` ``,
 
 - **Never a secret in a letter** — the private guard refuses it, and a key belongs in a password manager.
 - **Never send without the operator's word** — `send` refuses a draft whose approval does not match its bytes.
+- **A `Re:` subject is a claim the door proves** — exactly one message in the mailbox carries that subject, or the
+  draft is refused with the candidates named. `--reply-to <id>` names the message yourself and always wins;
+  `--new-thread` starts a fresh conversation deliberately.
 - **The company's theme for the company's mail** — keeps companies apart in the reader's inbox.
 - **A new letter type** that is generic goes in `templates/house/types/` (public, placeholders only); one with a
   company's or a person's details goes in the home.
@@ -66,6 +71,9 @@ separated by a blank line: `## heading` · paragraphs (`**bold**`, `` `code` ``,
 
 ## CHANGE LOG
 
+- **2026-11-17** — a subject that opens `Re:` is proved against the mailbox: one match joins the thread (and the door
+  names the message it answers), none or several are refused with the reason and the candidates listed, and
+  `--new-thread` is the deliberate way to start one.
 - **2026-11-12 (evening)** — `--reply-to`: a reply joins the thread it answers; the subject defaults to `Re: …`.
 - **2026-11-12 (later)** — the made-by line links Ymir's homepage and shows its address.
 - **2026-11-12** — `made_by`: every letter says it was made with Ymir and by which agent; the house theme with no

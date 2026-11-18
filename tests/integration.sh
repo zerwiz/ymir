@@ -25,11 +25,11 @@ MANAGANDR_CACHE="${MANAGANDR_CACHE:-$YMIR_HOME/hodd/state/calendar/cache.json}"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 
 # 1 — the store against a real filesystem
-if [ -x "$ROOT/bin/time/snotra/snotra-store.sh" ]; then
+if [ -x "$ROOT/systems/snotra/services/record/snotra-store.sh" ]; then
   H="$TMP/home"; mkdir -p "$H"
-  if YMIR_HOME="$H" "$ROOT/bin/time/snotra/snotra-store.sh" new work "integration" --title "Integration" >/dev/null 2>&1 \
-     && YMIR_HOME="$H" "$ROOT/bin/time/snotra/snotra-store.sh" index >/dev/null 2>&1 \
-     && YMIR_HOME="$H" "$ROOT/bin/time/snotra/snotra-store.sh" verify --all >/dev/null 2>&1; then
+  if YMIR_HOME="$H" "$ROOT/systems/snotra/services/record/snotra-store.sh" new work "integration" --title "Integration" >/dev/null 2>&1 \
+     && YMIR_HOME="$H" "$ROOT/systems/snotra/services/record/snotra-store.sh" index >/dev/null 2>&1 \
+     && YMIR_HOME="$H" "$ROOT/systems/snotra/services/record/snotra-store.sh" verify --all >/dev/null 2>&1; then
     pass store "real fs: new, index, verify"
   else fail store "real fs contract failed"; fi
 else skip store "snotra-store.sh not present"; fi
@@ -38,7 +38,7 @@ else skip store "snotra-store.sh not present"; fi
 if [ -r "$MANAGANDR_CACHE" ]; then
   N=$(python3 -c "import json;print(len(json.load(open('$MANAGANDR_CACHE')).get('events',[])))" 2>/dev/null || echo 0)
   NOW=$(python3 -c "import json;print(json.load(open('$MANAGANDR_CACHE')).get('as_of',''))" 2>/dev/null)
-  if [ "$N" -gt 0 ] && [ -n "$NOW" ] && YMIR_HOME="$TMP/aj" AUTOJOIN_NOW="$NOW" "$ROOT/bin/time/snotra/snotra-autojoin.sh" scan --events "$MANAGANDR_CACHE" >/dev/null 2>&1; then
+  if [ "$N" -gt 0 ] && [ -n "$NOW" ] && YMIR_HOME="$TMP/aj" AUTOJOIN_NOW="$NOW" "$ROOT/systems/snotra/services/ear/snotra-autojoin.sh" scan --events "$MANAGANDR_CACHE" >/dev/null 2>&1; then
     J=$(python3 -c "import json;d=json.load(open('$TMP/aj/hodd/state/snotra/autojoin-plan.json'));print(len(d['plan']))" 2>/dev/null || echo 0)
     pass autojoin "real cache: $N events, $J planned (cache as_of $NOW)"
   else fail autojoin "real cache present but scan failed"; fi
@@ -46,7 +46,7 @@ else skip autojoin "no calendar cache at $MANAGANDR_CACHE"; fi
 
 # 3 — Google calendar LIVE (the grant, not the cache)
 if command -v node >/dev/null && [ -r "$ROOT/tools/calendar/reader.mjs" ]; then
-  out="$(timeout 45 bash "$ROOT/bin/time/snotra/calendar-ask.sh" --refresh probe 2>/dev/null || true)"
+  out="$(timeout 45 bash "$ROOT/systems/snotra/services/calendar/calendar-ask.sh" --refresh probe 2>/dev/null || true)"
   st="$(printf '%s' "$out" | python3 -c "import json,sys;print(json.load(sys.stdin).get('status'))" 2>/dev/null || echo unknown)"
   reason="$(printf '%s' "$out" | python3 -c "import json,sys;print(json.load(sys.stdin).get('reason') or '')" 2>/dev/null || true)"
   if [ "$st" = ok ]; then pass calendar "live refresh ok"
