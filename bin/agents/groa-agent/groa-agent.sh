@@ -12,7 +12,7 @@
 #
 # GROA_MODE (plan 275 S8b, 2026-11-12):
 #   script (the default) — the timer runs bin/agents/groa-update.sh ITSELF. An update is a fixed list of commands
-#                          and needs no model. Measured 2026-11-08 → 2026-11-12 on heimdall and nidavellir: every
+#                          and needs no model. Measured 2026-11-08 → 2026-11-12 on the heart and the dev machine: every
 #                          nightly tick printed "Model unavailable: opencode/nemotron-3-ultra-free" and exited 0, so
 #                          no machine updated itself for five days and nothing said so.
 #   agent                — the old road: a leashed OpenCode model types the commands (GROA_MODEL).

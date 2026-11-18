@@ -4109,7 +4109,7 @@ System Role: A massive, multi-tenant monorepo architecture built to house hundre
 In Action: "Bilskirnir safely isolated Tenant A and Tenant B into separate rooms."
 
 3. The Realms of Deep Technology & Iron Mechanics
-Svartalfaheim (or Nidavellir)
+Svartalfaheim
 
 Mythology: The subterranean realm of the dwarves (Dvergar), master craftsmen who forged all the mythic treasures of the gods in subterranean fires.
 

@@ -1,7 +1,7 @@
 # Gróa — the updater, one per install
 
 **What this is:** Gróa — the updater shaman — given a body on every machine
-that carries a Ymir install: `heimdall`, `omarchy`, `whynot`, `zerwizserver`.
+that carries a Ymir install, whatever its name.
 One Gróa per install, because each install is its own tree and each seat is its
 own machine; no Gróa reaches across.
 

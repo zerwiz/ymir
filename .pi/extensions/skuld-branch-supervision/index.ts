@@ -1493,7 +1493,7 @@ ${context.command}
 
   
 // ── resolution: this file must run on ANY seat, so it may not know a machine ──
-// (Rule 07. 2026-10-03: this extension carried a hardcoded `/home/heimdall/ymir`.)
+// (Rule 07. 2026-10-03: this extension carried a hardcoded `/home/<user>/ymir`.)
 // This is the JS mirror of `ymir_root_verified` in bin/seat/valknut-load.sh — same contract,
 // same order: $YMIR_ROOT, then the recorded roots, first one that really holds the house.
 // One reader in the shell, one here; they must agree, or a worktree seat reads a dead path.
