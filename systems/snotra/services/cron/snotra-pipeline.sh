@@ -41,12 +41,28 @@ while [ $# -gt 0 ]; do
 done
 if [ -n "$recent" ]; then
   # every meetings shelf the home keeps — realm meetings, the operator's own work meetings, and the
-  # shared workspace — through the one resolver (snotra_paths.py), never a single hard-coded glob
+  # shared workspace — through the one resolver (snotra_paths.py), never a single hard-coded glob.
+  # The resolver moved to services/record/ (plan 129); this door still asked the old path, so every run
+  # failed silently and ended at "no meeting folder given". A resolver that cannot run is a FAILURE;
+  # a resolver that runs and returns nothing in the window is a clean SKIP — never a failed cron job.
+  RESOLVER="$S/services/record/snotra_paths.py"
+  if [ ! -f "$RESOLVER" ]; then
+    printf 'snotra-pipeline: the meeting-shelf resolver is missing (%s)\n' "$RESOLVER" >&2; exit 1
+  fi
+  if ! shelf_list="$(YMIR_HOME="$HOME_R" python3 "$RESOLVER" --recent "$recent")"; then
+    printf 'snotra-pipeline: the meeting-shelf resolver failed — %s\n' "$(printf '%s' "$shelf_list" | tail -1)" >&2; exit 1
+  fi
   while IFS= read -r c; do
     [ -n "$c" ] && DIRS+=("$c")
-  done < <(YMIR_HOME="$HOME_R" python3 "$S/snotra_paths.py" --recent "$recent" 2>/dev/null)
+  done <<< "$shelf_list"
 fi
-[ ${#DIRS[@]} -gt 0 ] || { printf 'snotra-pipeline: no meeting folder given\n' >&2; exit 2; }
+if [ ${#DIRS[@]} -eq 0 ]; then
+  if [ -n "$recent" ]; then
+    printf 'snotra-pipeline: SKIP — no meeting folder touched in the last %s day(s)\n' "$recent"
+    exit 0
+  fi
+  printf 'snotra-pipeline: no meeting folder given\n' >&2; exit 2
+fi
 
 pass=0; skip=0; fail=0; warn=0; failed_at=""
 step(){ # step <name> <command…> — prints PASS/FAIL with the first line of output
