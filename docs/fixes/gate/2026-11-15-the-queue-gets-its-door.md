@@ -29,3 +29,7 @@ rebase cascade that strict mode creates on a busy base.
 
 **Proof this is the door and not a guess.** `bin/gates/ci-verify.sh` is unchanged — the queue runs the same one command;
 only the event that triggers it is new. The next queue entry will show its run against a `gh-readonly-queue/...` ref.
+
+## CHANGE LOG
+
+- 2026-11-18 — review-mend: added missing heading for #817

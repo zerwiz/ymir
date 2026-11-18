@@ -50,15 +50,26 @@ Funday 09:15 printf 'funday\n' >> $MARK
 EOS
 
 run_at() { # <ISO-ish: "YYYY-MM-DD HH:MM">
+  local prev="" cur quiet=0
   PATH="$FAKE:$PATH" FAKE_NOW="$1" BROKK_CRON_ONCE=1 BROKK_CRON_TICK=1 \
     BROKK_STATE_OVERRIDE="$STATE" BROKK_CONFIG_OVERRIDE="$CONF" BROKK_ROLES="dev" \
     bash "$SCHED" >/dev/null 2>>"$WORK/warn.log"
-  for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
-    sleep 0.3
-    # the child writes cron.pid; once its cmdline is gone, the pass is finished
-    pid=$(cat "$STATE/cron.pid" 2>/dev/null || true)
-    [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null && continue
-    break
+  # WAIT ON THE MARK, NOT ON THE PID (2026-11-18). The loop runs each row in a BACKGROUND subshell
+  # (`( run_row ) &`) and then exits on BROKK_CRON_ONCE, so `cron.pid` is gone — or holds a previous
+  # pass's pid — while the row this pass fired is still writing. Counting on the pid therefore
+  # counted too early under a loaded runner and CI saw `0` where the row fired a moment later
+  # (PR #817: "a day gate fires on its own day — want 1, got 0", while the very next count saw it).
+  # The mark file is the one fact that settles: wait until it has been unchanged for 2 seconds.
+  for _ in $(seq 1 100); do
+    sleep 0.25
+    cur="$(wc -c <"$MARK" 2>/dev/null || echo 0) $(wc -l <"$MARK" 2>/dev/null || echo 0)"
+    if [ -n "$prev" ] && [ "$cur" = "$prev" ]; then
+      quiet=$((quiet + 1))
+      [ "$quiet" -ge 8 ] && break
+    else
+      quiet=0
+    fi
+    prev="$cur"
   done
 }
 

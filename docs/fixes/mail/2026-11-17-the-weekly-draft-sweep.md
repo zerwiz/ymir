@@ -71,3 +71,7 @@ day gate that made the row fire at all.
 One more schedule row, one small state file, and one risk — a weekly nag. The three rules that hold it
 down: one line per week, the same weekly key so a rerun cannot repeat it, and total silence on a clean
 week. Buttons are drawn for the first ten drafts; beyond that the line names them all and says so.
+
+## CHANGE LOG
+
+- 2026-11-18 — review-mend: added missing heading for #817

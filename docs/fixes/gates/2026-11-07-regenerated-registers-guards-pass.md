@@ -2,3 +2,7 @@
 
 Ran `bin/gates/registers.sh generate` then `bin/gates/guards.sh` in this worktree.
 All 28 guards PASS. Committed the regenerated register files and pushed.
+
+## CHANGE LOG
+
+- 2026-11-18 — review-mend: added missing heading for #817

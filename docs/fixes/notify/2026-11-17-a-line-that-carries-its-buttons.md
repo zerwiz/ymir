@@ -50,3 +50,7 @@ prompt travels as `callback_data` and is answered by whichever seat holds the ar
 named here rather than hidden: the sweep's buttons carry a self-contained sentence, so a click is
 never a mystery — but a house that wants every cron button to open a turn needs a callback dispatcher
 in the resident bot, which is a change of its own.
+
+## CHANGE LOG
+
+- 2026-11-18 — review-mend: added missing heading for #817

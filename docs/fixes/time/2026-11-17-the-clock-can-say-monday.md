@@ -59,3 +59,7 @@ would be a worse fault than the one it mends.
 `@daily` / `@hourly` rows keep their per-day and per-hour stamps; the role gate still gates; the
 `.cron-invalid` file is still the only record of a shape that will not fire. The day gate is
 additive: a schedule with no weekday name in it behaves exactly as it did.
+
+## CHANGE LOG
+
+- 2026-11-18 — review-mend: added missing heading for #817

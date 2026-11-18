@@ -46,3 +46,7 @@ what was actually measured.
 Before: `clone origin/main = eb6fe53a`, remote `ef684f00`.
 After `review-seat.sh ask 616`: `clone origin/main = ef684f00`, identical to the remote — and the judgement
 of #616 runs against the tree the PR will actually merge into.
+
+## CHANGE LOG
+
+- 2026-11-18 — review-mend: added missing heading for #817

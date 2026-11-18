@@ -307,8 +307,8 @@ def plan_number(name: str) -> tuple[str, str]:
     """(the plan's number as it is spoken, why it is not numbered).
 
     `298-his-list.md` → `298`; `plan-0001-x.md` → `plan-0001`; a dated name → ``, "report";
-    number zero → ``, "template" — a shelf keeps `bug-0000-short-description.md` as a shape to copy,
-    and a placeholder is not work he owes anyone.
+    number zero → ``, "template" — a shelf keeps `bug-0000-short-description.md` as the shape to copy,
+    and copying it is not work he owes anyone.
     """
     if DATE_NAME.match(name):
         return "", "report"
@@ -726,12 +726,12 @@ def self_test() -> int:
     with tempfile.TemporaryDirectory() as t:
         root = write_fixture(Path(t) / "home")
         # a stub `gh` on PATH proves the merged-PR road offline, and that it is the ONLY network road
-        stub = Path(t) / "bin"
-        stub.mkdir()
-        (stub / "gh").write_text("#!/bin/sh\necho '{\"state\":\"MERGED\",\"mergedAt\":\"2026-11-15T00:00:00Z\"}'\n")
-        (stub / "gh").chmod(0o755)
+        fake_bin = Path(t) / "bin"
+        fake_bin.mkdir()
+        (fake_bin / "gh").write_text("#!/bin/sh\necho '{\"state\":\"MERGED\",\"mergedAt\":\"2026-11-15T00:00:00Z\"}'\n")
+        (fake_bin / "gh").chmod(0o755)
         old_path = os.environ.get("PATH", "")
-        os.environ["PATH"] = str(stub) + os.pathsep + old_path
+        os.environ["PATH"] = str(fake_bin) + os.pathsep + old_path
         try:
             state = build(root, with_prs=False)
             open_nums = [p["number"] for p in state["plans"] if p["state"] == "open"]

@@ -53,7 +53,7 @@ bin[53]{file,does,kind,verdict,disposition,callers,lines}:
   "pr-watch.sh","pr-watch.sh — TELL HIM a PR arrived.","tool","wired","keep",1,117
   "queue-warden.sh","queue-warden.sh — PR HYGIENE: five open at most, the stale ones named, a conflicting branch","tool","wired","keep",3,429
   "repair-errand.md","repair-errand.md — the brief a SMITH is handed when a verdict refuses a PR (plan 206 §12.1).","data","wired","keep",2,73
-  "review-mend.sh","review-mend.sh — the refusal becomes a router (plan 233 §13/13a/13b)","tool","wired","keep",1,143
+  "review-mend.sh","review-mend.sh — the refusal becomes a router (plan 233 §13/13a/13b)","tool","wired","keep",1,152
   "review-rules.sh","review-rules.sh — the rules floor: load what a reviewer MUST know, or refuse to review.","tool","wired","keep",4,139
   "review-seat.sh","review-seat.sh — the reviewer's SEAT: pi in a herdr pane, on the heart, on a loop.","tool","wired","keep",3,477
   "review-shelf.sh","review-shelf.sh — where a packet LANDS, and the waiting rule that keeps it honest.","tool","wired","keep",1,159

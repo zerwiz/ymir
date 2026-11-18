@@ -280,9 +280,17 @@ def _desk_columns(url: str, token: str, account: str, hours: int) -> dict:
 
 
 def _store_columns(gna_store, gna_desk, account: str, hours: int) -> dict:
-    """The desk's own three calls, without its honesty line (which needs DNS): same rows, same rule."""
+    """The desk's own three calls, without its honesty line (which needs DNS): same rows, same rule.
+
+    THE WINDOW IS THIS RUN'S CLOCK, NOT THE STORE'S (2026-11-18). `gna_store.latest(account, hours)`
+    measures the window from the REAL clock, while every other road here is windowed by the run's own
+    stamp (`DISPATCH_NOW` in a test, the run's start in the hall). Two clocks in one run judged one
+    inbox differently: the wake queue's rows came through and the mail rows fell outside a window
+    measured from today, so a date-pinned test went red a day after it was written. Ask the store for
+    every row and window it here, with the same cutoff `wake_items` uses — one clock for both roads.
+    """
     try:
-        every = gna_store.latest(account, hours)
+        every = gna_store.latest(account, None)
     except gna_store.ScopeError as exc:
         raise InputError(f"the mail store refused account {account}: {exc}")
     except OSError as exc:
@@ -290,10 +298,14 @@ def _store_columns(gna_store, gna_desk, account: str, hours: int) -> dict:
     except Exception as exc:
         raise InputError(f"the mail store could not be read for {account} "
                          f"({exc.__class__.__name__}: {exc})")
+    cutoff = now() - dt.timedelta(hours=hours)
     gna_desk.mark_answered(every)
     columns: dict[str, list] = {"needs_you": [], "unsure": [], "waiting": [], "done": []}
     for record in every:
         if (record.get("direction") or "in") != "in":
+            continue
+        when = _parse_stamp(str(record.get("received_at") or ""))
+        if when and when < cutoff:
             continue
         columns[gna_desk.column_of(record)].append(gna_desk.row(record))
     return columns

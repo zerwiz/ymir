@@ -91,3 +91,7 @@ Phases 3–6 of plan 298 — the markers inside `todo.md`, `--write-derived`, th
 `--check-age` cron gate and the Eir surface — are **not** here. This change makes the plans
 measurable; it does not yet write them into his list, and it edits nothing above the derived-half
 boundary because there is no derived half to edit yet.
+
+## CHANGE LOG
+
+- 2026-11-18 — review-mend: added missing heading for #817

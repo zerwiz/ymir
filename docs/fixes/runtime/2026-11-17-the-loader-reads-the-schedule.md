@@ -50,3 +50,7 @@ position**:
 
 The scheduler's own proofs live in `.agents/tests/nornir-schedule-shapes.test.sh`, run by the
 `nornir-day-gate` CI gate; this file proves the OTHER reader of the same file.
+
+## CHANGE LOG
+
+- 2026-11-18 — review-mend: added missing heading for #817

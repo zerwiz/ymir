@@ -5,7 +5,7 @@ UI, and agents obey it, and a change that contradicts a rule must first change
 the rule (append-only; never silently rewritten).
 
 ```
-rules_index[52]{file,subject}:
+rules_index[53]{file,subject}:
   "01-domains.md","domains (Greinar) · houses · Eindri"
   "02-agents.md","agents: home, kinds, profile contract, no mock"
   "03-houses.md","houses = companies; ownership, records, boundaries"
@@ -132,3 +132,7 @@ Keep each rule short and unambiguous; reference it from code where it bites.
 | 55 | `55-no-agent-runs-unowned.md` | 55 — No agent runs unowned |
 | 56 | `56-no-message-until-the-receiver-speaks.md` | No message is delivered until the receiver speaks |
 | 57 | `57-a-broken-function-is-reported.md` | A broken function is reported in the same breath |
+
+## CHANGE LOG
+
+- 2026-11-18 — review-mend: added missing heading for #817

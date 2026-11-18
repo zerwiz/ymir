@@ -84,3 +84,7 @@ week-pin:     clean — the pin is at main at ca7cf755
 The mail number is the owed ones, not every inbound tail: the door's own judge calls a notice, an
 invoice or a bulk sender `closed`, and counting those would put a number in the hundreds in front of
 the Allfather every week until he stopped reading it. The wider count is named in the row's detail.
+
+## CHANGE LOG
+
+- 2026-11-18 — review-mend: added missing heading for #817
