@@ -37,10 +37,10 @@ defaults:
     - apps/smidja/smidja_modules/
     - apps/smidja/smidja_smidja_config/
     - apps/smidja/smidja_*.py
-  data_dir: apps/smidja/smidja_data          # runtime home: {data_dir}/sessions/{smidja_id}/{agent_name}/
+  data_dir: ${SMIDJA_DATA_DIR:-apps/smidja/smidja_data}          # the `smidja` runner sets SMIDJA_DATA_DIR/SMIDJA_DB to the one trace the viewer reads; runtime home: {data_dir}/sessions/{smidja_id}/{agent_name}/
 
 observability:
-  db: apps/smidja/smidja_data/smidja.db        # tracer writes here directly; the UI polls it
+  db: ${SMIDJA_DB:-apps/smidja/smidja_data/smidja.db}        # tracer writes here directly; the UI polls it
   poll_ms: 500                     # visualizer live-poll cadence
 
 agents:

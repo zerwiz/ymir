@@ -475,3 +475,7 @@ class PiResult(BaseModel):
     # visualizer's context bar measures against `context_window`.
     context_tokens: int = 0
     context_window: int = 0         # 0 when the registry declares no ceiling
+    # The LAST turn's raw usage and stop reason (agent_opencode and agent_cli set
+    # them). Declared here because a pydantic model refuses an undeclared field.
+    last_usage: dict = Field(default_factory=dict)
+    last_finish: str = ""

@@ -159,3 +159,4 @@ Any part can be overridden with `--config` / `--chain` / `--model` /
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-19** — the launcher is real again: `scripts/smidja` (and `smidja` on PATH once installed) answers every verb above, the Smíðja MCP gives them to every harness, and `--on <host>` runs them on another machine over ssh. Corrections to the body, which stays as written: the viewer is `http://127.0.0.1:8437` (not `:4600`/`:4601`), LM Studio is retired (use a model from `bin/model/catalog.sh`), there is no `roster.yaml` (teams are `stacks:` in `smidja.config.yaml`), `pause` is undone by `smidja continue <id>` (`resume` restarts a DEAD run), and only pi works inside a run. How-to: `docs/features/smidja-the-command-and-mcp.md`.

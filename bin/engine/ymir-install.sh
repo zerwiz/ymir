@@ -1266,6 +1266,27 @@ step_smidja() {
       if "$SCRIPT_DIR/../desktop/smidja-bootstrap.sh" >/dev/null 2>&1; then add smidja OK "smidja.db ready (visualizer has data)"; else add smidja WARN "could not bootstrap smidja.db — run bin/desktop/smidja-bootstrap.sh to see why"; fi
     fi
   else add smidja SKIP "no smidja-bootstrap.sh"; fi
+  # The smithy's two doors (2026-11-19, the Allfather: "they need to be connected to the
+  # mcp so i can run the smidja from them"): `smidja` on PATH, and the Smíðja MCP in pi's
+  # one set, carried into Claude Code, Codex, OpenCode, Cursor and Hermes by the house's
+  # seating door. Seated from the PIN — a door that names a working tree dies with it.
+  local doors_factory="${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}/apps/smidja-factory"
+  [ -x "$doors_factory/scripts/install-doors.py" ] || smidja_factory_dir doors_factory 2>/dev/null || doors_factory=""
+  if [ -n "$doors_factory" ] && [ -x "$doors_factory/scripts/install-doors.py" ]; then
+    if [ "$CHECK" = 1 ]; then
+      if "$doors_factory/scripts/install-doors.py" --check --no-harnesses >/dev/null 2>&1; then
+        add smidja-doors OK "smidja on PATH · the Smíðja MCP in pi's set"
+      else
+        add smidja-doors WARN "the smithy's doors are not seated — run $doors_factory/scripts/install-doors.py"
+      fi
+    elif "$doors_factory/scripts/install-doors.py" >/dev/null 2>&1; then
+      add smidja-doors OK "smidja on PATH · the Smíðja MCP seated in every harness"
+    else
+      add smidja-doors WARN "a door was not seated — run $doors_factory/scripts/install-doors.py to see which"
+    fi
+  else
+    add smidja-doors SKIP "no install-doors.py in the smithy on this machine"
+  fi
   # The visualizer API serves its UI from ./dist — without a build it answers
   # the API but shows "No ./dist build found". Build it once when absent.
   local viz="${SMIDJA_VIZ:-}"; [ -n "$viz" ] || return 0
