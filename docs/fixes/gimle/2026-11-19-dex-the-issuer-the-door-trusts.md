@@ -46,3 +46,7 @@ operator's step.
 The compose file first defaulted to the image's own uid (1001), which cannot write a `state/` directory made
 by the host user. The documented command now passes `DEX_UID=$(id -u) DEX_GID=$(id -g)`. Measured with
 `docker compose up -d` in a scratch directory: `state/dex.db` appeared and the issuer answered.
+
+## CHANGE LOG
+
+- 2026-11-19 — review-mend: added missing heading for #826
