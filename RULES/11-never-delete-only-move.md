@@ -107,3 +107,11 @@ Removing `apps/<name>/` from this tree is **not** a deletion when, and only when
 
 Anything else that removes a file is still a deletion, and still refused. The plan is the split's plan 02 ("nothing is lost").
 - **2026-11-19** — appended for the app split (plan 01): see the section above.
+
+## Appended 2026-11-19 (later the same day) — where the guard reads the move
+
+The section above says `no-delete-guard` is told of a move "by that record". The record in the home is private, so a
+CI runner cannot read it. The guard therefore reads the **public** half of the same fact: the app's row in
+`config/app-repos.yaml` carries `moved: <owner>/<repo>@<sha>`, and only a path under that app's old folder
+(`repo: apps/<dir>`) is accepted as moved. The home's `hodd/reference/moves/<app>.md` is still written; it carries the
+verify report and the manifest digest. Every other deletion is refused exactly as before.

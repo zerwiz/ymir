@@ -61,6 +61,34 @@ EOF_DEL
 esac
 [ -n "$deleted" ] || { printf 'no-delete-guard[1]{deleted,verdict}:\n  "0","clear"\n'; exit 0; }
 
+# ── an app that LEFT with its history is a move, not a deletion (RULES/11, appended 2026-11-19) ──
+# The registry (config/app-repos.yaml) records each app that has moved to its own repo with
+# `moved: <owner>/<repo>@<sha>` — public, so CI reads the same fact the hook does. A path under that
+# app's old folder (`repo: apps/<dir>`) is accepted as moved; anything else is still judged below.
+# The proof that nothing was lost is bin/apps/split-ledger.py verify, run before the record is written.
+REG="$ROOT/config/app-repos.yaml"
+if [ -r "$REG" ]; then
+  moved_dirs="$(awk '
+    /^- id:/ { if (dir != "" && moved) print dir; dir=""; moved=0 }
+    /^  repo: apps\// { dir=$2 }
+    /^  moved: [A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+@[0-9a-f]{7,}/ { moved=1 }
+    END { if (dir != "" && moved) print dir }' "$REG")"
+  if [ -n "$moved_dirs" ]; then
+    left=""; carried=0
+    while IFS= read -r _f; do
+      [ -n "$_f" ] || continue
+      _hit=0
+      while IFS= read -r _d; do
+        [ -n "$_d" ] && case "$_f" in "$_d"/*) _hit=1 ;; esac
+      done <<< "$moved_dirs"
+      if [ "$_hit" = 1 ]; then carried=$((carried+1)); else left="${left}${_f}"$'\n'; fi
+    done <<< "$deleted"
+    deleted="${left%$'\n'}"
+    [ "$carried" -gt 0 ] && printf 'no-delete-guard: %s file(s) left with their app to its own repo (config/app-repos.yaml moved:) — a move\n' "$carried" >&2
+    [ -n "$deleted" ] || { printf 'no-delete-guard[1]{deleted,verdict}:\n  "0","clear — every removal is an app that moved with its history"\n'; exit 0; }
+  fi
+fi
+
 count=$(printf '%s\n' "$deleted" | grep -c . || true)
 reason="${YMIR_ALLOW_DELETE:-}"
 

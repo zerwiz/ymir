@@ -13,6 +13,8 @@
 #   contract:  0 = still in Ymir's tree (the legacy road) · 1 = its own repo carries the
 #              app contract (app.yaml, install.sh) and `bin/apps/apps.sh` installs it
 #   status:    archived = kept as a record, never installed (the phone app: "no phone app")
+#   moved:     <owner>/<repo>@<sha> — the app left this tree with its history; bin/no-delete-guard.sh reads
+#              it, so removing apps/<dir> is a move (RULES/11), never a deletion
 # `repo: apps/<path>` stays the folder the app has in Ymir's tree until its slice lands.
 
 - id: hlidskjalf
@@ -78,7 +80,8 @@
   git: { host: github.com, owner: zerwiz, repo: hvergelmir, remote: origin, default_branch: main, auth: gh }
   home: hvergelmir
   kind: service
-  contract: 0
+  contract: 1
+  moved: zerwiz/hvergelmir@2f7ce719f511   # left Ymir with its history, 2026-11-19 (bin/apps/split-ledger.py verify: nothing lost)
 
 - id: rodd
   name: Rödd

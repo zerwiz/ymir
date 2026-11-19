@@ -112,8 +112,8 @@ check_tree() {
     [ -n "$d" ] || continue
     say "an apps/ folder inside an app" "${d#"$ROOT"/}" "Rule 23 §3" "one registry: the applications live at apps/; an app's own UI is part of the app, not a second registry"
   done < <(find "$ROOT/apps" -mindepth 2 -maxdepth 3 -type d -name apps -not -path '*/node_modules/*' 2>/dev/null \
-             | grep -v "/apps/smidja-factory/" \
-             | grep -v "/apps/hvergelmir/" )   # a VENDORED UPSTREAM (zerwiz/pi-durable-news-agent, MIT) keeps its own monorepo layout   # a VENDORED UPSTREAM (zerwiz/smidja) keeps its own layout; Rule 23 binds OUR code — see apps/README.md
+             | grep -v "/apps/smidja-factory/" )   # a VENDORED UPSTREAM (zerwiz/smidja) keeps its own layout; Rule 23 binds OUR code — see apps/README.md
+  # (Hvergelmir's exemption left with it, 2026-11-19: it now lives in zerwiz/hvergelmir.)
 }
 
 

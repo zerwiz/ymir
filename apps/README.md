@@ -42,3 +42,17 @@ exception dies with it.
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+
+## Appended 2026-11-19 — the apps leave for their own repos and their own homes
+
+The table above is the record of what lived here. The registry is now `config/app-repos.yaml` (RULES/23,
+appended): every app has its own repo, and once installed it lives in its own home,
+`~/.local/share/ymir-apps/<app>/`, installed and updated by `bin/apps/apps.sh` — never in this folder.
+A folder here is the **legacy road** for an app whose move has not landed yet; `bin/apps/app-path.sh` says
+which road each app is on.
+
+| app | left for | when |
+|---|---|---|
+| `hvergelmir/` | `zerwiz/hvergelmir`, with its history (`moved:` in the registry) | 2026-11-19 |
+
+Hliðskjálf stays here, whole. How-to: `docs/features/apps-install-and-update.md`.
