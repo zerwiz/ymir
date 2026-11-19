@@ -76,7 +76,9 @@
   git: { host: github.com, owner: zerwiz, repo: bilskirnir, remote: origin, default_branch: main, auth: gh }
   home: bilskirnir
   kind: electron
-  contract: 0
+  contract: 1
+  moved: zerwiz/bilskirnir@7a546ae0d2f9   # left Ymir with its history, 2026-11-19
+  install_default: heart, dev   # the roles that installed it while it lived in the tree (step_bilskirnir's role gate)
 
 - id: hvergelmir
   name: Hvergelmir

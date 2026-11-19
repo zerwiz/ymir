@@ -131,8 +131,11 @@ def app_env(app: dict, release: Path) -> dict:
     env.update({"YMIR_APP_NAME": app["home"], "YMIR_APP_RELEASE": str(release),
                 "YMIR_APP_STATE_DIR": str(state), "YMIR_APP_CONFIG_DIR": str(config),
                 "YMIR_APPS_HOME": str(apps_home())})
-    if (ROOT / "bin").is_dir():
-        env.setdefault("YMIR_RUNTIME_DIR", str(ROOT))
+    # Ymir for the app to borrow from: the PIN when this seat has one (what every unit runs), else the tree running
+    # this door. A working tree handed over here is written into the app's config and dies with the tree (found
+    # 2026-11-19: a test install wrote a worktree's ymir-mcp.py into the hall's agent config).
+    pin = Path(os.environ.get("YMIR_RUNTIME_DIR") or Path.home() / "ymir-runtime")
+    env.setdefault("YMIR_RUNTIME_DIR", str(pin if (pin / "bin").is_dir() else ROOT))
     return env
 
 

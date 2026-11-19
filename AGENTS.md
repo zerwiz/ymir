@@ -935,4 +935,6 @@ command, and the Smíðja MCP drives it from every harness; only pi works inside
 - **A move is not a deletion** when the app left with its history and the registry says `moved:` (RULES/11, appended);
   `bin/apps/split-ledger.py verify` proves nothing was lost first.
 - **Hliðskjálf stays in this tree**, whole. Hvergelmir has left too (`zerwiz/hvergelmir`).
+- **Bilskirnir has left** for `zerwiz/bilskirnir` (appended later the same day); its data home did not move, and the
+  launcher and `ymir-app bilskirnir` find it in its own home.
 
