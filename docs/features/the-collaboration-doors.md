@@ -103,3 +103,5 @@ header lacks.
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-19** — `bin/gimle/…` (named under *If it does not work*) has left Ymir for Gimlé's own repository.
+  The suite's health door is now the `gimle` skill's `gimle-check.sh`, or Gimlé's own checkout.

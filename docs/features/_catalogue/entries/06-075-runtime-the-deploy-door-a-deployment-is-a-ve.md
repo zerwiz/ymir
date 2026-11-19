@@ -6,3 +6,4 @@ section: planned-named-and-designed-not-yet-built
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+- 2026-11-19 — the code this row names under `bin/gimle/` has left Ymir for Gimlé's own repository (`zerwiz/gimle`); see the 2026-11-19 section of docs/features/gimle-the-hall.md.

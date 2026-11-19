@@ -155,3 +155,7 @@ link.
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-19** — the pinned-runtime law above cites `bin/gimle/deploy.sh` as the shape a deploy takes. That
+  script has left Ymir with the rest of Gimlé's code (`zerwiz/gimle`); a verbatim copy waits in the operator's
+  home at `hodd/reference/ymir-moved/gimle-bin-2026-11-19/bin/gimle/deploy.sh`. The law itself is unchanged:
+  the shape is still fetch, move to `origin/<default>`, restart, report the running commit.
