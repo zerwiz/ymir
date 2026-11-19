@@ -573,6 +573,18 @@ case "$MODE" in
   start|*)
     stage_prepare
     print_head
+    # THE SESSION START DRAINS (2026-11-19): 31 wakes sat from 2026-11-17 to 2026-11-19 because a
+    # start only counted them. The helm drains, ledgers and acks what was owed; a seat or a session
+    # that does not hold the lock is read-only for drain and only says where the queue stands.
+    if [ -x "$SCRIPT_DIR/saga-wake-drain.sh" ]; then
+      if [ "${LOCKED:-0}" = 1 ] && ! is_seat; then
+        BROKK_HOME="$BROKK_HOME" BROKK_STATE_OVERRIDE="$STATE" "$SCRIPT_DIR/saga-wake-drain.sh" start 2>&1 || true
+      else
+        _q=0; [ -s "$STATE/.wake-queue" ] && _q="$(awk 'END{print NR}' "$STATE/.wake-queue")"
+        printf 'drain: read-only — this session does not hold the helm; %s wake(s) wait for the holder\n' "$_q"
+        unset _q
+      fi
+    fi
     # A head that outgrows its budget says so in the head itself, where the reader is.
     read -r lines bytes <<<"$(head_measure)"
     if [ "${lines:-0}" -gt "$HEAD_MAX_LINES" ] || [ "${bytes:-0}" -gt "$HEAD_MAX_BYTES" ]; then

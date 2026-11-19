@@ -116,6 +116,14 @@ run_real() {  # <args…>
     printf 'pi-door: no pi on PATH (this door is on PATH; the harness behind it is not)\n' >&2
     exit 1
   }
+  # The run is NAMED (2026-11-19): a pi this door started carries YMIR_PI_DOOR=<verdict> in its own
+  # environment, and the last run is written to the machine state. Eir's `pirun` surface reads both to
+  # name which pi actually ran — a live pi without the mark was started around the door.
+  export YMIR_PI_DOOR="${verdict:-pass}"
+  local rec="${XDG_STATE_HOME:-$HOME/.local/state}/ymir/pi-door.last"
+  mkdir -p "$(dirname "$rec")" 2>/dev/null \
+    && printf 'at=%s pid=%s verdict=%s tree=%s bin=%s cwd=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$$" \
+         "${verdict:-pass}" "${tree:--}" "$bin" "$PWD" >"$rec" 2>/dev/null || true
   exec "$bin" "$@"
 }
 

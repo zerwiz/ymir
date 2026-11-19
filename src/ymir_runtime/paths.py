@@ -88,6 +88,34 @@ def brokk_home(env: Mapping[str, str], *, module_file: str = __file__) -> Path:
     return repo_root(env, module_file=module_file)
 
 
+def project_wt_root(project: str | Path, env: Mapping[str, str] | None = None) -> Path:
+    """The `.yggdrasil/` root for an errand on `project` (2026-11-19).
+
+    The worktree follows the PROJECT the errand is for, never the directory the
+    door runs from: a spawn run from the release pin once cut its worktree inside
+    the pin and refused itself ("exists but is not the expected worktree root").
+    `BROKK_WT_ROOT` still overrides; otherwise it is the project's own checkout
+    top (the main worktree, never a linked one) plus `.yggdrasil`.
+    """
+    environ = dict(os.environ) if env is None else dict(env)
+    explicit = environ.get("BROKK_WT_ROOT")
+    if explicit:
+        return Path(explicit).expanduser()
+    import subprocess
+
+    proj = Path(project).expanduser()
+    try:
+        common = subprocess.run(
+            ["git", "-C", str(proj), "rev-parse", "--path-format=absolute", "--git-common-dir"],
+            capture_output=True, text=True, check=False,
+        ).stdout.strip()
+    except OSError:
+        common = ""
+    if common and Path(common).name == ".git":
+        return Path(common).resolve().parent / ".yggdrasil"
+    return proj.resolve() / ".yggdrasil"
+
+
 def _first(env: Mapping[str, str], *keys: str) -> str:
     for key in keys:
         value = env.get(key)

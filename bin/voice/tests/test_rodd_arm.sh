@@ -163,10 +163,10 @@ case "$out" in *fleetrole*) ok "the refusal names fleetrole" ;; *) bad "the refu
 [ ! -s "$BROKK_MACHINE_STATE_DIR/brokk.lock" ] && ok "a refused hold took no lock" || bad "a refused hold took no lock" "lock present"
 export YMIR_ROLE=dev
 mkdir -p "$BROKK_MACHINE_STATE_DIR"
-run_hold() { out="$(bash "$DOOR" hold 2>"$TMP/err")"; rc=$?; err="$(cat "$TMP/err")"; }
+run_hold() { out="$(bash "$DOOR" hold "$@" 2>"$TMP/err")"; rc=$?; err="$(cat "$TMP/err")"; }
 run_release() { out="$(bash "$DOOR" release 2>"$TMP/err")"; rc=$?; err="$(cat "$TMP/err")"; }
 
-run_hold
+run_hold --role rodd
 want_rc 0 "hold on a vacant helm exits 0"
 [ -s "$BROKK_MACHINE_STATE_DIR/brokk.lock" ] && ok "hold took the lock" || bad "hold took the lock" "no lock at $BROKK_MACHINE_STATE_DIR"
 grep -q 'role=rodd session=' "$STATE/.arm.role" 2>/dev/null && ok "hold wrote the role sidecar" \
@@ -182,6 +182,26 @@ want_rc 0 "release gives the helm back"
 [ ! -e "$STATE/.arm.role" ] && ok "release cleared the role sidecar" || bad "release cleared the role sidecar" "sidecar still present"
 grep -q 'release: Rödd gives the helm back' "$STATE/rodd/room.jsonl" 2>/dev/null && ok "release announced the handover" \
   || bad "release announced the handover" "$(cat "$STATE/rodd/room.jsonl" 2>/dev/null)"
+
+# ── 10 · a hold declares the CALLER's role, never Rödd's (2026-11-19) ─────────
+# A session whose harness is pi leases the counsellor role; an unknown harness is the
+# counsellor too; only an explicit --role rodd writes rodd. No hand edit of the sidecar.
+mkdir -p "$TMP/fakebin"; cp "$(command -v sleep)" "$TMP/fakebin/pi"
+"$TMP/fakebin/pi" 600 & fake_pi=$!
+BROKK_SESSION_PID="$fake_pi" run_hold
+want_rc 0 "a hold from a pi seat exits 0"
+grep -q "^role=counsellor session=$fake_pi " "$STATE/.arm.role" 2>/dev/null && ok "a pi seat's hold leases the counsellor role" \
+  || bad "a pi seat's hold leases the counsellor role" "$(cat "$STATE/.arm.role" 2>/dev/null)"
+case "$out" in *'"counsellor"'*) ok "the hold row names the role" ;; *) bad "the hold row names the role" "$out" ;; esac
+grep -q 'hold: the counsellor' "$STATE/rodd/room.jsonl" 2>/dev/null && ok "the room names the counsellor, not Rödd" \
+  || bad "the room names the counsellor, not Rödd" "$(tail -1 "$STATE/rodd/room.jsonl" 2>/dev/null)"
+BROKK_SESSION_PID="$fake_pi" run_release
+want_rc 0 "the counsellor releases the helm"
+grep -q 'release: the counsellor gives the helm back' "$STATE/rodd/room.jsonl" 2>/dev/null && ok "the release names the counsellor" \
+  || bad "the release names the counsellor" "$(tail -1 "$STATE/rodd/room.jsonl" 2>/dev/null)"
+out="$(bash "$DOOR" hold --role steward 2>&1)"; rc=$?
+[ "$rc" -ne 0 ] && ok "an unknown --role is refused" || bad "an unknown --role is refused" "$out"
+kill "$fake_pi" 2>/dev/null || true
 
 bash -c 'sleep 600' & other=$!
 printf '%s\n' "$other" > "$BROKK_MACHINE_STATE_DIR/brokk.lock"

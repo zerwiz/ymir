@@ -5,7 +5,8 @@
 # the queues once the wakes have been handled. Ported/trimmed from the upstream
 # wake-drain contract for plan 29.
 #
-# Usage: saga-wake-drain.sh [drain|ack]
+# Usage: saga-wake-drain.sh [drain|ack|start]
+#   start  the session start's drain: present, write the ledger, ack, report what was owed
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -90,8 +91,39 @@ PY
     fi
     exit 0
     ;;
+  start|--start)
+    # THE SESSION START DRAINS (2026-11-19). Measured: 31 wakes sat in the queue from 2026-11-17 to
+    # 2026-11-19, because the session start only COUNTED them and the arm drains only at a wake. The
+    # helm's session start now runs this: present every owed wake, write each one to the append-only
+    # ledger (<state>/wake-ledger.log, so nothing is lost by the ack), acknowledge exactly what was
+    # presented, and report what was owed in one line. A session that may not ack (another live
+    # session holds the arm) presents and says so; the queue is left for the holder.
+    _out="$(bash "$0" drain 2>&1)"
+    _wakes="$(printf '%s\n' "$_out" | grep '^WAKE ' || true)"
+    _n="$(printf '%s' "$_wakes" | grep -c '^WAKE ' || true)"
+    if [ "${_n:-0}" = 0 ]; then
+      printf 'drain: nothing was owed at session start — wake queue: 0 pending\n'
+      exit 0
+    fi
+    _ledger="$STATE/wake-ledger.log"
+    {
+      printf '== session start %s · %s wake(s) presented\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$_n"
+      printf '%s\n' "$_wakes"
+    } >>"$_ledger" 2>/dev/null || true
+    printf 'drain: %s wake(s) were owed at session start — every one is in %s\n' "$_n" "$_ledger"
+    printf '%s\n' "$_wakes" | head -n "${SAGA_DRAIN_SHOW:-8}" | cut -c1-240
+    [ "$_n" -gt "${SAGA_DRAIN_SHOW:-8}" ] && printf '… and %s more in the ledger\n' "$((_n - ${SAGA_DRAIN_SHOW:-8}))"
+    if _ack="$(bash "$0" ack 2>&1)"; then
+      printf 'drain: %s\n' "$_ack"
+    else
+      printf 'drain: presented, NOT acknowledged — %s\n' "$(printf '%s' "$_ack" | head -1)"
+    fi
+    _left=0; [ -s "$QUEUE" ] && _left="$(awk 'END{print NR}' "$QUEUE")"
+    printf 'wake queue after the drain: %s pending\n' "$_left"
+    exit 0
+    ;;
   drain|--drain|"") ;;
-  *) printf 'error: unknown action %s\nhelp: saga-wake-drain.sh [drain|ack]\n' "$1" >&2; exit 2 ;;
+  *) printf 'error: unknown action %s\nhelp: saga-wake-drain.sh [drain|ack|start]\n' "$1" >&2; exit 2 ;;
 esac
 
 if [ -s "$FMQ" ]; then
