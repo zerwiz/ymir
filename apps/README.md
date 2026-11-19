@@ -1,5 +1,25 @@
 # APPS — the applications, and only the applications
 
+> [!IMPORTANT]
+> **The truth, as of 2026-11-19.** This folder is no longer where Ymir's applications live, and it is no longer
+> the registry. Six applications left for their own repositories with their whole history, and each runs from its
+> own home, `~/.local/share/ymir-apps/<app>/`, installed and updated by `bin/apps/apps.sh`. **Hliðskjálf alone
+> stays here, whole with its gate, by the Allfather's word.** The registry is `config/app-repos.yaml`, and
+> `bin/apps/app-path.sh <app>` says where any app is found.
+>
+> | App | Its repository | Where it runs from |
+> |---|---|---|
+> | Hliðskjálf | this tree, `apps/hlidskjalf/` | the Ymir release (`~/ymir-runtime`) |
+> | Smíðja | `zerwiz/smidja` | `~/.local/share/ymir-apps/smidja/` |
+> | Óðrerir | `zerwiz/odrerir` | `~/.local/share/ymir-apps/odrerir/` |
+> | Sessrúmnir | `zerwiz/sessrumnir` | `~/.local/share/ymir-apps/sessrumnir/` |
+> | Bilskirnir | `zerwiz/bilskirnir` | `~/.local/share/ymir-apps/bilskirnir/` |
+> | Rödd (the window) | `zerwiz/rodd` | `~/.local/share/ymir-apps/rodd/` |
+> | Hvergelmir | `zerwiz/hvergelmir` | `~/.local/share/ymir-apps/hvergelmir/` |
+>
+> Everything below this box is the record of the monorepo years, kept as it was written (RULES/06). Where it says
+> *"a directory here is an application, and an application lives here"*, read the box above instead.
+
 **This directory IS the registry: a directory here is an application, and an
 application lives here.** Nothing else in Ymir may carry an application's name in
 its path (Rule 22).
@@ -63,3 +83,10 @@ which road each app is on.
 With that, every app but Hliðskjálf has left; this folder holds Hliðskjálf and this README.
 
 Hliðskjálf stays here, whole. How-to: `docs/features/apps-install-and-update.md`.
+
+## Appended 2026-11-19 — the opening box tells the truth first (plan 325 step 5)
+
+The opening paragraph still said *"this directory IS the registry: a directory here is an application, and an
+application lives here"*, and a reader met that sentence before the appended section that corrected it. A box now
+stands above it: six apps in their own repositories and the apps home, Hliðskjálf alone here by the Allfather's word,
+and `config/app-repos.yaml` as the registry. Nothing below the box was removed; it stays as the record.
