@@ -49,6 +49,18 @@ APPS="hlidskjalf odrerir sessrumnir bilskirnir rodd"
 say()  { printf '%s\n' "$*"; }
 fail() { printf 'FAIL\t%s\n' "$*" >&2; exit 1; }
 row()  { printf '  "%s","%s","%s"\n' "$1" "$2" "$3"; }
+# <package-lock.json> → every nested node_modules folder a workspace owns (e.g. apps/hlidskjalf/node_modules), one per line
+lock_nested_dirs() {
+  node -e '
+    const p = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).packages || {};
+    const s = new Set();
+    for (const k of Object.keys(p)) {
+      const i = k.indexOf("/node_modules/");
+      if (i > 0 && !k.startsWith("node_modules/")) s.add(k.slice(0, i) + "/node_modules");
+    }
+    for (const d of [...s].sort()) console.log(d);
+  ' "$1"
+}
 
 mkdir -p "$REL" "$SHARED" "$LOGDIR"
 
@@ -154,6 +166,24 @@ build() {
       [ -f "$tmp/$m/package-lock.json" ] || continue
       if [ -n "$prev" ] && [ -d "$prev/$m/node_modules" ] && cmp -s "$prev/$m/package-lock.json" "$tmp/$m/package-lock.json"; then
         cp -al "$prev/$m/node_modules" "$tmp/$m/node_modules" || exit 12
+        # npm nests a workspace's own copy (apps/<ws>/node_modules/…) when its version differs from the root's;
+        # the lock names every such folder, and a borrow that takes only the root drops them (2026-11-19: the
+        # pin could not build because apps/hlidskjalf/node_modules/@xterm/xterm never arrived). Borrow them too —
+        # and when one is missing from the running release, the borrow is incomplete, so install instead.
+        _nested="$(lock_nested_dirs "$tmp/$m/package-lock.json")" || exit 12
+        _whole=1
+        while IFS= read -r _n; do
+          [ -n "$_n" ] || continue
+          if [ -d "$prev/$m/$_n" ]; then
+            [ -e "$tmp/$m/$_n" ] || { mkdir -p "$(dirname "$tmp/$m/$_n")" && cp -al "$prev/$m/$_n" "$tmp/$m/$_n"; } || exit 12
+          else _whole=0; fi
+        done <<< "$_nested"
+        if [ "$_whole" = 0 ]; then
+          rm -rf "$tmp/$m/node_modules"
+          while IFS= read -r _n; do [ -n "$_n" ] && rm -rf "${tmp:?}/$m/$_n"; done <<< "$_nested"
+          ( cd "$tmp/$m" && npm ci --include=dev --no-audit --no-fund ) || exit 13
+        fi
+        unset _nested _whole _n
       else
         ( cd "$tmp/$m" && npm ci --include=dev --no-audit --no-fund ) || exit 13
       fi
