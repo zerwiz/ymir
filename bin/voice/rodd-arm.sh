@@ -596,11 +596,17 @@ cmd_release() {
   if [ -n "$_owner" ] && [ "$_owner" != "$sess" ]; then
     refuse "this session (pid $sess) does not hold the helm — the holder is pid $_owner; a release never steals"
   fi
-  local role=""
-  role="$(sed -n 's/^role=\([^ ]*\).*/\1/p' "$STATE_ROOT/.arm.role" 2>/dev/null | head -1)"
+  # The sidecar is read where the hold WROTE it (the lease's state dir when one exists), and a
+  # release with no sidecar names the releasing session's own role — never Rödd by default
+  # (2026-11-19: the release line said "Rödd gives the helm back" for a counsellor's helm).
+  local role="" side="$STATE_ROOT" lst=""
+  [ -r "$LEASE" ] && lst="$(lease_field "$LEASE" state)"
+  [ -n "$lst" ] && [ -d "$lst" ] && side="$lst"
+  role="$(sed -n 's/^role=\([^ ]*\).*/\1/p' "$side/.arm.role" 2>/dev/null | head -1)"
+  [ -n "$role" ] || role="$(hold_role_of "$sess")"
   gleipnir_lock_release
-  rm -f "$STATE_ROOT/.arm.role" 2>/dev/null || true
-  if [ -z "$role" ] || [ "$role" = rodd ]; then
+  rm -f "$side/.arm.role" "$STATE_ROOT/.arm.role" 2>/dev/null || true
+  if [ "$role" = rodd ]; then
     room_append "$STATE_ROOT" "Nanna" "release: Rödd gives the helm back (session $sess)" || true
   else
     room_append "$STATE_ROOT" "Nanna" "release: the $role gives the helm back (session $sess)" || true
