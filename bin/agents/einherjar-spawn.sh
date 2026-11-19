@@ -537,7 +537,7 @@ if [ -n "${BROKK_WT_ROOT:-}" ]; then
 elif [ -n "$PROJECT_DIR" ] && [ -d "$PROJECT_DIR" ]; then
   WT_ROOT="$(project_wt_root "$PROJECT_DIR")"
 else
-  WT_ROOT="$BROKK_HOME/.yggdrasil"
+  WT_ROOT="$(project_wt_root "$PROJECT_DIR")"   # the WORKTREE follows the project, never the record
 fi
 
 catalog_has() {  # <provider/model> -> 0 when the door says the pair is listed
