@@ -49,3 +49,7 @@ On the dev machine, the desk free (`bin/desk/in-call.sh holder` printed nothing)
 > `apps.sh update hvergelmir` then carries it. The first, unfixed start left a stray `data/` inside
 > `releases/2f7ce719f511/`. It holds no needed data, and it goes with that release when the prune drops it from the
 > last three.
+
+## CHANGE LOG
+
+- 2026-11-19 — review-mend: added missing heading for #826
