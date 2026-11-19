@@ -151,6 +151,8 @@ python3 bin/gimle/mcp/test_dex_login.py     # against the shipped Dex config, in
   write gate and comma-only places (plan 149).
 - **2026-11-19** — appended *the hall's code lives in Gimlé's own repository* (below): the `bin/gimle/` paths
   above name where the code lived until this day.
+- **2026-11-19** — appended *two keys to write, a source on every card, and a status that names its road*
+  (plan 324): see the section below.
 
 ## 2026-11-19 — the hall's code lives in Gimlé's own repository
 
@@ -171,5 +173,37 @@ tree. The sections above stay as the record of how the hall was run while the co
 `GIMLE_READER_DIR` names that reader's folder on the heart (default `~/gimle/desk`, Gimlé's checkout).
 
 > [!IMPORTANT]
-> Owed: a pull request in `zerwiz/gimle` carries the deploy door, the projector, the acceptance script and the
-> board test, plus Ymir's newer `desk.py`. Until it lands, run them from the home's reference shelf.
+> Ymir's newer `desk.py` (with the apps section), the reader and the door changes of plan 324 are carried on
+> Gimlé's branch `eindri/desk-apps-and-door`, which also turns the heart's desk and share links into real files.
+> Still owed in `zerwiz/gimle`: the deploy door, the projector, the acceptance script and the board test. Until
+> they land, run them from the home's reference shelf.
+
+## Two keys to write, a source on every card (plan 324)
+
+This is Gimlé's door, so the change lives in Gimlé's repository (`systems/mcp/gimle-mcp.py`, `systems/mcp/plane_tools.py`, `desk/plane_reader.py`), on its branch `eindri/desk-apps-and-door`. It reaches the live door when the heart's Gimlé checkout moves to it.
+
+**Writing now takes two keys.** The door must be started with `--allow-write`, *and* the token's line must
+carry the word `write`:
+
+```
+<token> <subject> <places> [fleet=<name>] write
+```
+
+A line without `write` still reads. On a writable door its `create_card` is refused with
+`this token carries no write grant`, and the refusal is written to `access.jsonl`.
+
+**Every card says where it came from.** `create_card` requires `source: <path>#<id>`, the record the card
+was made from (for example `meetings/2026-11-19/record.md#A7`). The source is written onto the card.
+
+**A write records what it changed.** Its audit line carries
+`change: {object, id, card, place, fields: {field: [before, after]}}`.
+
+**A missing board says so.** A door started `--plane` with no base, an empty token file, or a base that
+is not Plane answers every board tool with `isError` naming the missing value. It never answers with an
+empty list. No Plane base is defaulted any more (the old default was a model server's port on a dev
+machine).
+
+**Which road answered:** Gimlé's `bin/gimle-hall-status.sh` prints `up (local)`, `up (door)` or `skip <why>` for
+the desk, the MCP, the share, the hosted hall, Plane and Trello.
+
+The board doors themselves, Trello's and Plane's, are on [the-board-doors.md](the-board-doors.md).
