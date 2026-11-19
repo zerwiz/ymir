@@ -125,7 +125,7 @@ cd "$GIMLE/systems/dex"
 cp config.example.yaml config.yaml     # replace every https://id.example.org/dex with the real issuer URL
 cp dex.env.example dex.env && chmod 600 dex.env
 sed -i "s/^GIMLE_MCP_CLIENT_SECRET=.*/GIMLE_MCP_CLIENT_SECRET=$(openssl rand -hex 32)/" dex.env
-mkdir -p state && docker compose up -d
+mkdir -p state && DEX_UID=$(id -u) DEX_GID=$(id -g) docker compose up -d
 curl -s http://127.0.0.1:5556/dex/.well-known/openid-configuration | head -c 200
 ```
 
@@ -145,7 +145,7 @@ Add one ingress rule to the tunnel that already fronts the door, pointing the is
 | GitHub | Settings, Developer settings, OAuth Apps, New OAuth App | `<issuer>/callback` | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` in `dex.env` |
 | Google | Cloud console, APIs and Services, Credentials, OAuth client ID (Web) | `<issuer>/callback` | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` in `dex.env` |
 
-Then run `docker compose up -d` again in the Dex directory. Until then, a login with that provider fails at
+Then run `DEX_UID=$(id -u) DEX_GID=$(id -g) docker compose up -d` again in the Dex directory. Until then, a login with that provider fails at
 the provider. Nothing else waits on it.
 
 ### 5. The door's private files (the operator; `sudo` asks for a password)
