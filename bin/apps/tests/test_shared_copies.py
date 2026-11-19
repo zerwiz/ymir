@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[3]
 # (source in Ymir, app, path inside the app's own folder)
 PAIRS = [
     ("midgard/design-system/ember.js", "smidja", "apps/visualizer/src/lib/ember.js"),
+    ("midgard/design-system/ember.d.ts", "smidja", "apps/visualizer/src/lib/ember.d.ts"),
 ]
 
 
