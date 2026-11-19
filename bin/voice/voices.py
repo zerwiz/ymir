@@ -49,7 +49,7 @@ class VoiceError(Exception):
 
 
 def kokoro_bin() -> str:
-    found = os.environ.get("KOKORO_BIN") or shutil.which("kokoro") or str(Path.home() / ".local" / "bin" / "kokoro")
+    found = os.environ.get("KOKORO_BIN") or shutil.which("kokoro")
     if not (found and Path(found).exists()):
         raise VoiceError("the Kokoro engine is not installed here (no `kokoro` on PATH; set KOKORO_BIN)", 1)
     return found

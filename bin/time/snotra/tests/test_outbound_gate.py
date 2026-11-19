@@ -46,7 +46,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
-# The shims under bin/time/snotra/ were retired on purpose (ca6faff37: "the move is finished"), so the doors
+# The old shims were retired on purpose (ca6faff37: "the move is finished"), so the doors
 # under test are the moved ones themselves (2026-11-19: the test still ran the shims and failed 12 times).
 MAIL = ROOT / "systems/snotra/services/letters/mail-send.sh"
 # …and the file that IMPLEMENTS it, for the proofs that judge the door's own text (plan 231).
