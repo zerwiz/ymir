@@ -357,3 +357,12 @@ puts **julia-1** last. The footer names the door that spoke.
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+
+## Appended 2026-11-19 — the Live Hall has left this tree
+
+Óðrerir now lives in `zerwiz/odrerir` and installs into its own home with `bin/apps/apps.sh install odrerir`. Its live
+board (`livehall.json`) is state in `~/.local/state/odrerir/`; each release links `public/` and `dist/livehall.json` to
+it, and Ymir's nightly hall-snapshot job (`bin/time/nornir-job-hall-snapshot.sh` → `systems/snotra/services/cron/
+hall-snapshot.sh`) keeps writing through those links. What this asset still governs here is that job; a change to the
+hall itself is made in its own repo. The hall carries its own copy of the cloth (`src/house-design/`), kept equal to
+`midgard/design-system` by `bin/apps/tests/test_shared_copies.py`.

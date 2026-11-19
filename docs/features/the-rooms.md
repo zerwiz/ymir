@@ -71,3 +71,9 @@ not addressed to that figure's exact name, or the room's hourly cap is spent.
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+
+## 2026-11-19 — where Óðrerir lives now
+
+Óðrerir, the Live Hall, has its own repo, `zerwiz/odrerir`, and installs into its own home with
+`bin/apps/apps.sh install odrerir`. Its live board is state in `~/.local/state/odrerir/livehall.json`, still refreshed
+nightly by Ymir's hall-snapshot job. Paths above naming `apps/odrerir/` now live in that home.

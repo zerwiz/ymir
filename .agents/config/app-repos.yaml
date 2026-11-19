@@ -46,7 +46,9 @@
   git: { host: github.com, owner: zerwiz, repo: odrerir, remote: origin, default_branch: main, auth: gh }
   home: odrerir
   kind: electron
-  contract: 0
+  contract: 1
+  moved: zerwiz/odrerir@e01d8eb23c4e   # left Ymir with its history, 2026-11-19 (split, not retired: the Allfather's word)
+  install_default: dev   # the seats with a desk, where the Live Hall's window opens
 
 - id: sessrumnir
   name: Sessrúmnir

@@ -219,7 +219,7 @@ governed[11]{path,load_first}:
   "bin/engine/ymir-install.sh",".agents/skills/galdr-ymirsystem/assets/installation.md"
   "src/ymir_runtime/** | bin/engine/ymir-engine*.sh | bin/agents/einherjar-spawn.sh | bin/agents/eindri-start.sh",".agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md"
   "apps/hlidskjalf/**",".agents/skills/galdr-ymirsystem/assets/hlidskjalf-ui.md"
-  "apps/odrerir/**",".agents/skills/galdr-ymirsystem/assets/odrerir-hall.md"
+  "systems/snotra/services/cron/hall-snapshot.sh | bin/time/nornir-job-hall-snapshot.sh",".agents/skills/galdr-ymirsystem/assets/odrerir-hall.md"
   "bin/records/mimir*.sh | bin/bridge/mimir-bridge.py",".agents/skills/galdr-ymirsystem/assets/memory-well.md"
   "bin/time/nornir-* | config/cron.yaml*",".agents/skills/galdr-ymirsystem/assets/nornir-jobs.md"
   "bin/seat/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr-ymirsystem/assets/harness-integration/README.md"
@@ -941,4 +941,6 @@ command, and the Smíðja MCP drives it from every harness; only pi works inside
   (`bin/voice/`) are the house's and stay here.
 - **Sessrúmnir has left** for `zerwiz/sessrumnir` (still a pi-desktop fork); `bin/desktop/sessrumnir-*.sh` and the seat wire
   stay here and find it in its own home.
+- **Óðrerir has left** for `zerwiz/odrerir` (split, not retired); its live board is state in `~/.local/state/odrerir/`,
+  still written nightly by Ymir's hall-snapshot job, which the governed table above now names in place of `apps/odrerir/**`.
 
