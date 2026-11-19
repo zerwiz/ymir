@@ -346,7 +346,7 @@ class MailGate(Case):
         body = self.tmp / "plain.md"
         body.write_text("Machine to machine. No paragraph needs a typeface.\n", encoding="utf-8")
         raw = self._drafted("--to", "partner@letters.test", "--subject", "A bare note",
-                            "--body", str(body), "--plain")
+                            "--body", str(body), "--plain", "--undressed", "a test note needs no typeface (plan 322)")
         message = BytesParser(policy=policy.default).parsebytes(raw)
         self.assertEqual(message.get_content_type(), "text/plain", "--plain still carried an HTML half")
 
@@ -355,7 +355,7 @@ class MailGate(Case):
         body = self.tmp / "reply.md"
         body.write_text("Agreed, and one question.\n", encoding="utf-8")
         r = self.run_script(MAIL, "draft", "--to", "partner@letters.test", "--body", str(body),
-                            "--plain", "--reply-to", "m-orig")
+                            "--plain", "--undressed", "a test note needs no typeface (plan 322)", "--reply-to", "m-orig")
         self.assertEqual(r.returncode, 0, r.stderr)
         did = r.stdout.split("\t")[1]
         message = BytesParser(policy=policy.default).parsebytes(self.api.drafts[did])
@@ -367,13 +367,13 @@ class MailGate(Case):
     def test_8_a_reply_keeps_an_explicit_subject_and_refuses_an_unknown_message(self):
         body = self.tmp / "reply.md"
         body.write_text("Short answer.\n", encoding="utf-8")
-        raw = self._drafted("--to", "partner@letters.test", "--body", str(body), "--plain",
+        raw = self._drafted("--to", "partner@letters.test", "--body", str(body), "--plain", "--undressed", "a test note needs no typeface (plan 322)",
                             "--subject", "Re: our own words", "--reply-to", "m-orig")
         message = BytesParser(policy=policy.default).parsebytes(raw)
         self.assertEqual(message["Subject"], "Re: our own words")
         self.assertEqual(message["In-Reply-To"], "<orig@example.test>")
         r = self.run_script(MAIL, "draft", "--to", "partner@letters.test", "--body", str(body),
-                            "--plain", "--reply-to", "m-missing")
+                            "--plain", "--undressed", "a test note needs no typeface (plan 322)", "--reply-to", "m-missing")
         self.assertNotEqual(r.returncode, 0, "a reply to a message that does not exist was drafted")
         self.assertIn("could not be read", r.stderr)
 

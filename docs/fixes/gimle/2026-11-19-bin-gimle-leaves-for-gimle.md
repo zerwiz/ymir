@@ -70,3 +70,10 @@ first in the home under `hodd/reference/ymir-moved/gimle-bin-2026-11-19/branch-v
 Proof of the rewritten gate: with no Gimlé copy, `skip: no Gimlé copy on this machine`, exit 0. With
 `YMIR_APP_GIMLE_DIR` at that branch: `test_write_grant.py` 7 passed, `test_plane_tools.py` OK,
 `test_plane_reader.py` OK, `green`.
+
+## Main moved while the split was in flight
+
+`main` changed `bin/gimle/project.py` in commit `cb9602a74` (the projector refuses a base that is not Plane). The
+merge resolved it by intent: the removal stands, and that newer `project.py` is kept in the home under
+`hodd/reference/ymir-moved/gimle-bin-2026-11-19/branch-versions/main-cb9602a74/`, so the projector carry into Gimlé
+starts from it.

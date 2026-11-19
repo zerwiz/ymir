@@ -114,3 +114,23 @@ python3 bin/time/snotra/tests/test_outbound_gate.py   # all 12, including Gná's
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+
+## A letter is dressed, and the gate proves it
+
+**2026-11-19.** The door dressed a letter by default — and could not prove it. Three ways round the dressing were
+open: `--plain` with no reason, `--html FILE` from any copy of a template, and a draft made before the stamp existed.
+All three are closed.
+
+- **Every dressed letter carries its own evidence.** The renderer stamps the first line with
+  `<!-- letter: <template> · sha256:<sum> -->`, and the letter itself carries `X-Ymir-Letter: dressed · <template>` in
+  its headers.
+- **`--plain` needs a reason:** `--plain --undressed "<why>"`. Without one the draft is refused, by name — and the reason
+  travels in the letter's headers as `X-Ymir-Letter: undressed · <why>`, so the approval record repeats it.
+- **A hand-dressed `--html` with no stamp is refused** unless you give a reason with `--undressed "<why>"`.
+- **`send` reads the bytes that leave.** A draft carrying no `X-Ymir-Letter` line is refused with the plan named, rather
+  than sent bare. The check runs **after** the approval gate, so a missing word is still reported as a missing word.
+
+**If it does not work.** `a plain letter needs a reason` means you passed `--plain` alone — add `--undressed "<why>"`.
+`this letter carries no dressing stamp` means your `--html` file was not rendered by the shelf — drop `--html` and let the
+door dress it, or state why with `--undressed`. `send refused … no X-Ymir-Letter line` means the draft predates this rule
+or was made outside the door: discard it and draft again.
