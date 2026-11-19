@@ -1841,10 +1841,20 @@ def _todo_items():
 
 
 def _todo_write(lines):
+    # Each write owns its temp file (2026-11-19). One shared `todo.md.tmp` let two writers — Rödd's window
+    # and another seat of the voice — race: the first renamed it away and the second's rename failed with
+    # Errno 2, so his line never landed. The pid and a random part keep two writers apart; the rename is
+    # still one atomic step, so a reader never sees half a list.
     path = _todo_file()
-    tmp = path.with_name(path.name + ".tmp")
-    tmp.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    tmp.replace(path)
+    tmp = path.with_name(f"{path.name}.{os.getpid()}.{os.urandom(4).hex()}.tmp")
+    try:
+        tmp.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        tmp.replace(path)
+    finally:
+        try:
+            tmp.unlink()
+        except OSError:
+            pass
 
 
 def _todo_find(needle):
