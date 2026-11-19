@@ -24,6 +24,8 @@ if [ "${1-}" = --check ]; then
 fi
 
 if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
+# npm may gate install scripts, so esbuild's own binary (which vite builds with) is placed by its installer
+[ -f node_modules/esbuild/install.js ] && ( cd node_modules/esbuild && node install.js ) >/dev/null 2>&1 || true
 npm run build
 # The board is state, never part of a release: written nightly by Ymir's hall-snapshot job, through these links
 # (it writes with a plain redirect, which follows a link and creates the target on its first run).
