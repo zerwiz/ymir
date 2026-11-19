@@ -28,7 +28,7 @@ ten). The home commit was shipped before anything was removed here. The removal 
 | Reference | Change |
 |---|---|
 | `bin/voice/voice_tools.py`, two places | The board road ran `cd ~/ymir` on the heart and imported Ymir's copy of `plane_reader`. It now imports Gimlé's own reader from Gimlé's checkout on the heart. `GIMLE_READER_DIR` names that folder; the one default is `~/gimle/desk`, the same checkout whose `desk/etc/` already holds the board token. |
-| `bin/gates/tests/test_gimle_mcp_board.sh` | Moved with the code it tests (above). |
+| `bin/gates/tests/test_gimle_mcp_board.sh` | Its old body moved with the code it tested (above). The gate stays, rewritten: it finds Gimlé through `bin/apps/app-path.sh` (the dev road `YMIR_APP_GIMLE_DIR`, or the app's own home once Gimlé is installed there) and runs Gimlé's own door suites from it. With no Gimlé copy on the machine it says `skip:` and how to name one. |
 | `bin/README.md`, `bin/gates/INDEX.md` | Rebuilt by `bin/gates/inventory.sh` after the `gimle` row left `bin/gates/registers/folders.tsv`. |
 | `.agents/assets/agents/capabilities.md` and `capabilities/gates.md` | Rebuilt by `bin/gates/capabilities.sh`. |
 | `.agents/tenant-baseline.json`, `.agents/config/tenant-baseline.json` | The `bin/gimle/desk.py` key was dropped. No generator for these files exists in the tree any more (the tenant guard that wrote them is gone), so the key was removed by a script that round-trips the JSON in its own layout. |
@@ -58,4 +58,15 @@ are the same on unchanged `main`, so this change adds none.
 > to restore them, or carry Ymir's newer `desk.py` from the home shelf, in a `zerwiz/gimle` pull request
 > **before** the heart's runtime is moved.
 >
-> Also owed in `zerwiz/gimle`: the deploy door, the projector pair, the acceptance script and the board test.
+> Also owed in `zerwiz/gimle`: the deploy door, the projector pair and the acceptance script.
+
+## The carry into Gimlé (added the same day, by the split errand)
+
+The desk's real files (replacing the heart's links), the apps section (plan 325), and plan 324's reader and door
+changes are on Gimlé's branch `eindri/desk-apps-and-door`, with their own fix notes and suites. The newer
+`bin/gimle` versions from two unmerged Ymir branches (`eindri/mcp-mend-324`, `eindri/gimle-desk-apps`) were kept
+first in the home under `hodd/reference/ymir-moved/gimle-bin-2026-11-19/branch-versions/`, with `SHA256SUMS`.
+
+Proof of the rewritten gate: with no Gimlé copy, `skip: no Gimlé copy on this machine`, exit 0. With
+`YMIR_APP_GIMLE_DIR` at that branch: `test_write_grant.py` 7 passed, `test_plane_tools.py` OK,
+`test_plane_reader.py` OK, `green`.
