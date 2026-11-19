@@ -15,6 +15,8 @@
 #   status:    archived = kept as a record, never installed (the phone app: "no phone app")
 #   moved:     <owner>/<repo>@<sha> — the app left this tree with its history; bin/no-delete-guard.sh reads
 #              it, so removing apps/<dir> is a move (RULES/11), never a deletion
+#   moved_also: paths outside apps/ that left with the app (the guard reads them too)
+#   install_default: true = `apps.sh update --all` (Gróa) installs it on a seat that lacks it
 # `repo: apps/<path>` stays the folder the app has in Ymir's tree until its slice lands.
 
 - id: hlidskjalf
@@ -62,7 +64,10 @@
   git: { host: github.com, owner: zerwiz, repo: smidja, remote: origin, default_branch: main, auth: gh }
   home: smidja
   kind: electron
-  contract: 0
+  contract: 1
+  moved: zerwiz/smidja@42c0d1f5cd88   # left Ymir with its history, 2026-11-19: the factory at the root, the engine at engine/
+  moved_also: apps/smidja, .agents/skills/smidja-factory   # the engine's folder, and the skill shelf's link into the app
+  install_default: true   # every seat carried it in the tree: Gróa's update installs it where it is missing
 
 - id: bilskirnir
   name: Bilskirnir

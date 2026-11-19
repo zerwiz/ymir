@@ -14,5 +14,5 @@ if smidja_factory_dir factory && [ -x "$factory/scripts/smidja" ]; then
   exec "$factory/scripts/smidja" "$@"
 fi
 if command -v smidja >/dev/null 2>&1; then exec smidja "$@"; fi
-printf 'error: the smithy is not installed here — no apps/smidja-factory and no `smidja` on PATH\n' >&2
+printf 'error: the smithy is not installed here — no apps/smidja-factory and no `smidja` on PATH\nhelp: bin/apps/apps.sh install smidja   (it lives in its own repo now, zerwiz/smidja)\n' >&2
 exit 1

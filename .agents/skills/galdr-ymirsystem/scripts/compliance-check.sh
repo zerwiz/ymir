@@ -394,6 +394,9 @@ while IFS= read -r line; do
   esac
   for ref in $(printf '%s' "$line" | grep -oE '\.agents/skills/[A-Za-z0-9._-]+' | sort -u); do
     case "$ref" in *.md) continue ;; esac   # a file in the tree, not a skill dir
+    # An APP-PROVIDED skill lives with its app — in its own repo once the app has left this tree (the
+    # split, 2026-11-19) — so a citation of it is not dead here; the same mark the index already honours.
+    printf '%s\n' "$app_provided" | grep -qxF "${ref##*/}" && continue
     [ -d "$ROOT/$ref" ] || dead_refs="$dead_refs $ref"
   done
 done < <(cat "$GALDR"/assets/*.md "$ROOT/.agents/agents/brokk.md" 2>/dev/null)

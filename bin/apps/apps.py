@@ -231,7 +231,7 @@ def _export(repo: Path, sha: str, dest: Path) -> None:
         tar.extractall(dest, filter="data")
 
 
-def update(app: dict, check: bool = False) -> dict:
+def update(app: dict, check: bool = False, sweeping: bool = False) -> dict:
     if app.get("status") == "archived":
         return {"app": app["id"], "state": "archived", "detail": "never updated"}
     if app["contract"] < 1:
@@ -240,6 +240,11 @@ def update(app: dict, check: bool = False) -> dict:
     guard_home(apps_home())
     repo = home / "repo"
     if not (repo / ".git").is_dir():
+        # `update --all` (Gróa's sweep) installs a missing app only when the registry says every seat
+        # should have it (`install_default: true` — an app that every seat carried while it lived in the
+        # tree). Any other app is installed by the operator's own `apps.sh install <app>`.
+        if sweeping and str(app.get("install_default", "")).lower() != "true":
+            return {"app": app["id"], "state": "not installed", "detail": f"by choice — apps.sh install {app['id']}"}
         return install(app, check=check)
     branch = (app.get("git") or {}).get("default_branch", "main")
     out = sh(["git", "-C", str(repo), "fetch", "-q", "origin", branch])
@@ -396,7 +401,9 @@ def main(argv: list[str]) -> int:
         elif verb in ("install", "update", "check", "rollback", "remove"):
             if not targets:
                 raise Refusal(f"{verb} which app?", "name one, or --all")
-            fn = {"install": lambda a: install(a, "--check" in flags), "update": lambda a: update(a, "--check" in flags),
+            sweeping = "--all" in flags
+            fn = {"install": lambda a: install(a, "--check" in flags),
+                  "update": lambda a: update(a, "--check" in flags, sweeping=sweeping),
                   "check": check, "rollback": rollback, "remove": lambda a: remove(a, "--yes" in flags)}[verb]
             rows = []
             for a in targets:

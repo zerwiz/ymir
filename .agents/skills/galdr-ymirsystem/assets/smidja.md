@@ -444,3 +444,13 @@ The facts a change here must keep:
 - **the doors are seated from the pin** by `scripts/install-doors.py` (from `step_smidja`).
 
 Fix note: `docs/fixes/smidja/unversioned-2026-11-19-the-runner-returns-and-every-harness-drives-it.md`. How-to: `docs/features/smidja-the-command-and-mcp.md`.
+
+## Appended 2026-11-19 (later) — the smithy has left this tree
+
+Everything above that names `apps/smidja/`, `apps/smidja-factory/` or `.agents/skills/smidja-factory/` is the record of the
+smithy in this tree. **It now lives in `zerwiz/smidja`** (the factory at the root, the engine at `engine/`), installed by
+`bin/apps/apps.sh install smidja` into `~/.local/share/ymir-apps/smidja/`; its books are on the harness-wide shelf
+(`~/.pi/agent/skills/smidja-factory`). What this asset still governs here is Ymir's side of the joint:
+`bin/desktop/smidja-*.sh`, `scripts/smidja` and the `smidja` unit's template, each finding the smithy through the
+resolver. A change to the smithy itself is made in its own repo, with its own fix note there. Fix note:
+`docs/fixes/smidja/unversioned-2026-11-19-the-smithy-leaves-for-its-own-repo.md`.

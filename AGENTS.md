@@ -224,7 +224,7 @@ governed[11]{path,load_first}:
   "bin/time/nornir-* | config/cron.yaml*",".agents/skills/galdr-ymirsystem/assets/nornir-jobs.md"
   "bin/seat/valknut-load.sh | .pi/** | .opencode/**",".agents/skills/galdr-ymirsystem/assets/harness-integration/README.md"
   "RULES/13-pi-extensions.md","governs the Pi extension surface: one home, index.ts per multi-file extension, no thin loaders"
-  "bin/desktop/smidja* | .agents/skills/smidja-factory/** | apps/smidja/** | apps/smidja-factory/{cookbooks,skills}/**",".agents/skills/galdr-ymirsystem/assets/smidja.md"
+  "bin/desktop/smidja* | scripts/smidja",".agents/skills/galdr-ymirsystem/assets/smidja.md"
   "systems/snotra/services/ear/** | bin/time/snotra/calendar-write.sh",".agents/skills/galdr-ymirsystem/assets/snotra-meeting-ear.md"
   "tools/snotra/**",".agents/skills/galdr-ymirsystem/assets/snotra-meeting-ear.md"
 ```
@@ -916,3 +916,23 @@ Two related corrections belong to the same night, and neither is a tunnel: the m
 the retired LM Studio (it reads its key through the vault and otherwise serves the local rail — item 22), and every
 house unit's PATH now names the mise shims, so a service can find the tools a shell can find (item 26).
 - 2026-11-14 — appended: the repository is 100 % agnostic; the operator's own tooling lives in the home.
+
+## 2026-11-19 — the apps leave for their own repos (the split)
+
+At the Allfather's word: *"time to separate the mono repo … the apps to their own repos"*, *"i dont wanna them come
+into the apps folder anymore if installed they need their own places"*, *"we can not lose anything"*.
+
+The lines above that name `apps/smidja-factory/`, `apps/smidja/` and `.agents/skills/smidja-factory/` describe the
+smithy as it lived in this tree; they stay as the record. **The smithy now lives in its own repo, `zerwiz/smidja`**,
+with its whole history, and installs into its own home, `~/.local/share/ymir-apps/smidja/`, through
+`bin/apps/apps.sh install smidja`. Its books (`cookbooks/`, `skills/`) and its governing rules travel with it; on this
+machine they are on the harness-wide skill shelf (`~/.pi/agent/skills/smidja-factory`). Read them there before
+changing the smithy — the law above stands, only the path moved. `smidja` (and `scripts/smidja` here) is its one
+command, and the Smíðja MCP drives it from every harness; only pi works inside a run.
+
+- **Every app** is found through `bin/apps/app-path.sh` (`dev` → `home` → `legacy`), installed, updated and rolled
+  back by `bin/apps/apps.sh`, and registered in `config/app-repos.yaml` (RULES/23, appended).
+- **A move is not a deletion** when the app left with its history and the registry says `moved:` (RULES/11, appended);
+  `bin/apps/split-ledger.py verify` proves nothing was lost first.
+- **Hliðskjálf stays in this tree**, whole. Hvergelmir has left too (`zerwiz/hvergelmir`).
+

@@ -54,5 +54,6 @@ which road each app is on.
 | app | left for | when |
 |---|---|---|
 | `hvergelmir/` | `zerwiz/hvergelmir`, with its history (`moved:` in the registry) | 2026-11-19 |
+| `smidja/`, `smidja-factory/` | `zerwiz/smidja`, with their history (the factory at the root, the engine at `engine/`) | 2026-11-19 |
 
 Hliðskjálf stays here, whole. How-to: `docs/features/apps-install-and-update.md`.

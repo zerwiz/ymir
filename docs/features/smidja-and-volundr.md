@@ -134,3 +134,10 @@ catalogue.
 ## CHANGE LOG
 
 - **2026-11-14** — added: how to name the chat's model (the home's `config/smidja.env`).
+
+## 2026-11-19 — where the smithy lives now
+
+The smithy has its own repo, `zerwiz/smidja`, and installs into its own home with `bin/apps/apps.sh install smidja`
+(Gróa's update installs it on a seat that lacks it). Paths above that start `apps/smidja` or
+`.agents/skills/smidja-factory` now live inside that home (`~/.local/share/ymir-apps/smidja/current/`). Its one command
+is `smidja` ([the command and the MCP](smidja-the-command-and-mcp.md)).
