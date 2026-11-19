@@ -427,3 +427,30 @@ a stale lease self-heals because the pid is the truth and the file is not.
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+
+## Appended 2026-11-19 — the `smidja` command and the Smíðja MCP (the lost runner, rebuilt)
+
+The books' front door is real again. `smidja` (`apps/smidja-factory/scripts/smidja`; `scripts/smidja` from Ymir's root) answers every verb the cookbooks and skills teach, and `smidja-mcp` gives the same verbs to Claude Code, Codex, pi, Hermes and OpenCode as 18 tools. Both are thin doors over ONE library, `apps/smidja-factory/runner/smidja_runner/`; a verb in one door is a verb in all. `--on <host>` has another machine answer over ssh (the tailnet where there is one).
+
+**Only pi works inside a run** (the Allfather, 2026-11-19). The other harnesses drive the smithy; they never run in it. pi reaches every provider, so one worker covers them all.
+
+The facts a change here must keep:
+- **one trace** — the runner launches every chain with `SMIDJA_DB`/`SMIDJA_DATA_DIR` set to the viewer's trace (`SMIDJA_DB` · `CMD_DB` · `$YMIR_HOME/smidja/smidja.db` · XDG state); the config reads both through `${…:-…}`.
+- **detached** — `run` and `resume` start their own session, so no tool-call timeout kills a phase.
+- **the ask says Done means** — `run` refuses an ask without it (`how_to_prompt_for_the_eng.md`).
+- **no second table** — teams, modes and services are the config's own `stacks:`/`modes:`/`services:`; empty means "made with the operator", never generated.
+- **`up` stamps missing prompts** from `templates/` and never overwrites one.
+- **engine == templates, byte for byte** — `tests/test_resume.py::ShippedCopyTest` holds it; change both or neither.
+- **the doors are seated from the pin** by `scripts/install-doors.py` (from `step_smidja`).
+
+Fix note: `docs/fixes/smidja/unversioned-2026-11-19-the-runner-returns-and-every-harness-drives-it.md`. How-to: `docs/features/smidja-the-command-and-mcp.md`.
+
+## Appended 2026-11-19 (later) — the smithy has left this tree
+
+Everything above that names `apps/smidja/`, `apps/smidja-factory/` or `.agents/skills/smidja-factory/` is the record of the
+smithy in this tree. **It now lives in `zerwiz/smidja`** (the factory at the root, the engine at `engine/`), installed by
+`bin/apps/apps.sh install smidja` into `~/.local/share/ymir-apps/smidja/`; its books are on the harness-wide shelf
+(`~/.pi/agent/skills/smidja-factory`). What this asset still governs here is Ymir's side of the joint:
+`bin/desktop/smidja-*.sh`, `scripts/smidja` and the `smidja` unit's template, each finding the smithy through the
+resolver. A change to the smithy itself is made in its own repo, with its own fix note there. Fix note:
+`docs/fixes/smidja/unversioned-2026-11-19-the-smithy-leaves-for-its-own-repo.md`.

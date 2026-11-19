@@ -23,13 +23,6 @@
       "why": "as .claude/skills"
     },
     {
-      "path": ".agents/skills/smidja-factory",
-      "kind": "symlink",
-      "target": "../../apps/smidja-factory",
-      "seated_by": "bin/engine/ymir-install.sh (apps step) — the smithy is cloned from zerwiz/smidja",
-      "why": "The factory is a clone of another repository and is deliberately not tracked here; shipping a copy would defeat the clone."
-    },
-    {
       "path": ".agents/skills/tyr-check/assets",
       "kind": "symlink",
       "target": "../galdr-ymirsystem/assets",

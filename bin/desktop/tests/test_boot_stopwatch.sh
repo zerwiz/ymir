@@ -43,8 +43,21 @@ ok "the block is clear of every port the house serves (incl. Rödd's old 9222 an
   && ok "app_devtools_url names the same port" || bad "app_devtools_url disagrees with app_devtools_port"
 
 # 2 · the launchers always open it
+ROOT="$REPO"
+# An app file named `apps/<app>/<rest>` is read wherever the app is (the split, 2026-11-19): this tree while it is
+# here, else its own home through the one resolver. Empty = the app is not on this machine (a named skip).
+app_file() {  # <apps/app/rest> -> prints the path, or nothing
+  local rel="$1" app rest d=""
+  [ -f "$ROOT/$rel" ] && { printf '%s' "$ROOT/$rel"; return 0; }
+  case "$rel" in apps/*) ;; *) return 0 ;; esac
+  app="${rel#apps/}"; rest="${app#*/}"; app="${app%%/*}"
+  d="$(bash "$ROOT/bin/apps/app-path.sh" "$app" 2>/dev/null)" || return 0
+  [ -f "$d/$rest" ] && printf '%s' "$d/$rest"
+}
 for f in scripts/electron.sh apps/bilskirnir/start.sh apps/rodd/start.sh; do
-  if grep -q 'app_devtools_port' "$REPO/$f"; then ok "$f opens the app's own port"; else bad "$f does not use the table"; fi
+  p="$(app_file "$f")"
+  [ -n "$p" ] || { printf 'skip - %s: the app is not on this machine\n' "$f"; continue; }
+  if grep -q 'app_devtools_port' "$p"; then ok "$f opens the app's own port"; else bad "$f does not use the table"; fi
 done
 grep -qE '\[ -n "\$\{?YMIR_DEVTOOLS_PORT' "$REPO/scripts/electron.sh" \
   && bad "electron.sh still gates DevTools on an env var alone" || ok "electron.sh no longer gates the door on an env var"
@@ -76,7 +89,7 @@ grep -q 'tell the helm first' "$S" && ok "the open-window refusal prints the hel
 grep -q 'in-call.sh' "$S" && ok "the desk guard is consulted before a cold boot" || bad "no desk guard in the stopwatch"
 
 # 5 · Bilskirnir's pin check reads the value
-setup="$REPO/apps/bilskirnir/setup.sh"
+setup="$(app_file apps/bilskirnir/setup.sh)"
 awk '/^cdp_pinned\(\) \{/{f=1} f{print} f&&/^\}$/{exit}' "$setup" > "$T/cdp.sh"
 if [ -s "$T/cdp.sh" ]; then
   printf 'browser:\n  cdp_url: http://127.0.0.1:9299\n'            > "$T/unquoted.yaml"   # how yaml.safe_dump writes it

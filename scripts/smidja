@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# scripts/smidja — Ymir's pointer to the smithy's one command.
+#
+# The books teach `scripts/smidja` from the repo root; the command itself ships with
+# the smithy (apps/smidja-factory/scripts/smidja, and on PATH as `smidja` once the
+# app is installed). This file only finds it — through the smithy's own resolver —
+# and hands over every argument unchanged.
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=../bin/desktop/smidja-lib.sh
+. "$ROOT/bin/desktop/smidja-lib.sh"
+factory=""
+if smidja_factory_dir factory && [ -x "$factory/scripts/smidja" ]; then
+  exec "$factory/scripts/smidja" "$@"
+fi
+if command -v smidja >/dev/null 2>&1; then exec smidja "$@"; fi
+printf 'error: the smithy is not installed here — no apps/smidja-factory and no `smidja` on PATH\nhelp: bin/apps/apps.sh install smidja   (it lives in its own repo now, zerwiz/smidja)\n' >&2
+exit 1

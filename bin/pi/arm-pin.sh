@@ -38,7 +38,7 @@ supervisors() {
   # a test hands a recorded table (`<what>\t<path>` lines) instead of the live one
   if [ -n "${ARM_PIN_SUPERVISORS:-}" ]; then cat "$ARM_PIN_SUPERVISORS" 2>/dev/null; return 0; fi
   local pid args
-  for pid in $(pgrep -f 'syn-watch-arm\.sh|apps/rodd|uvicorn' 2>/dev/null); do
+  for pid in $(pgrep -f 'syn-watch-arm\.sh|apps/rodd|ymir-apps/rodd|uvicorn' 2>/dev/null); do
     [ "$pid" = "$$" ] && continue
     args="$(tr '\0' '\n' <"/proc/$pid/cmdline" 2>/dev/null)" || continue
     [ -n "$args" ] || continue
@@ -52,12 +52,13 @@ supervisors() {
         case "$second" in */bin/pi/syn-watch-arm.sh) printf 'arm-client(pid %s)\t%s\n' "$pid" "$second" ;; esac ;;
       electron*)
         # the app path is the last argument that names apps/rodd (renderer children carry no path)
-        local app; app="$(grep -E '^/.*/apps/rodd/?$' <<<"$args" | tail -1)"
+        # …or names the window in its own home (the split, 2026-11-19): <apps home>/rodd/current or /releases/<sha>
+        local app; app="$(grep -E '^/.*/(apps/rodd|ymir-apps/rodd/(current|releases/[^/]+))/?$' <<<"$args" | tail -1)"
         [ -n "$app" ] && printf 'rodd-app(pid %s)\t%s\n' "$pid" "$app" ;;
       *)
         if grep -qx -- '--app-dir' <<<"$args"; then
           local dir; dir="$(grep -A1 -x -- '--app-dir' <<<"$args" | sed -n 2p)"
-          case "$dir" in */apps/rodd/ui) printf 'rodd-tools(pid %s)\t%s\n' "$pid" "$dir" ;; esac
+          case "$dir" in */apps/rodd/ui|*/ymir-apps/rodd/*/ui) printf 'rodd-tools(pid %s)\t%s\n' "$pid" "$dir" ;; esac
         fi ;;
     esac
   done
@@ -106,11 +107,14 @@ else
   behind="$(pin_behind)"
   [ "${behind:-0}" = 0 ] || findings+=("\"pin behind\",\"pin $(pin_sha) · $behind behind origin/$BRANCH (bin/agents/groa-update.sh or bin/engine/runtime-deploy.sh)\"")
   real_pin="$(_arm_real "$PIN")"
+  # An app installed in its OWN home runs a release exported from its repo — never a working tree — so it is as
+  # lawful as the pin (the split, 2026-11-19: Rödd's window lives in <apps home>/rodd/current).
+  apps_home="${YMIR_APPS_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/ymir-apps}"
   while IFS= read -r line; do
     [ -n "$line" ] || continue
     what="${line%%$'\t'*}"; path="${line#*$'\t'}"
     case "$path" in
-      "$PIN"/*|"$real_pin"/*) : ;;
+      "$PIN"/*|"$real_pin"/*|"$apps_home"/*) : ;;
       *) findings+=("\"runs outside the pin\",\"$what executes $path\"") ;;
     esac
   done < <(supervisors)

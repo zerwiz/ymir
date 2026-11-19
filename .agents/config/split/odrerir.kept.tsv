@@ -1,0 +1,14 @@
+path	why
+.agents/config/tenant-baseline.json	a measured baseline of words per file: a record
+.agents/tenant-baseline.json	the same baseline
+.gitignore	old checkouts still hold the hall's node_modules, dist and board; ignoring them stays harmless
+bin/desktop/design-icon.sh	the APPS table names the old folder; row_dir resolves it through the one resolver
+bin/desktop/shortcuts.sh	the catalog skips a template not in this tree; the installed hall seats the same entry (activate.sh)
+bin/engine/release-build.sh	build_asset skips an absent folder, named
+bin/engine/release-health.sh	the hall probe runs only when the release carries a built hall
+bin/engine/release.sh	the build, the shared board links and the board seeding all act only while apps/odrerir is in the tree
+bin/forge/npm/npm-publish.sh	--all keeps only app folders the tree still carries
+bin/gates/guards/fixes-guard.sh	maps a changed path to its fix-note component; a path that no longer changes here is harmless
+bin/gates/soak.sh	a soak command and changed-path pattern for the in-tree hall
+.agents/tests/desktop-classes.test.sh	reads the hall wherever the resolver finds it
+.agents/tests/window-buttons.test.sh	the same

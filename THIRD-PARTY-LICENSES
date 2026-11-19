@@ -99,3 +99,7 @@ run them.
 npm-installed dependencies (react, vite, electron, astro, the editors, …)
 ship inside their own packages, each with its licence text beside it — npm
 carries their terms automatically.
+
+Appended 2026-11-19 (the app split): "pi-desktop" above is no longer vendored in this tree. The modified fork,
+Sessrúmnir, lives in github.com/zerwiz/sessrumnir with its full history, and carries the upstream LICENSE and NOTICE
+at that repository's root.

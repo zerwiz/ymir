@@ -26,6 +26,25 @@ if [ -z "${YMIR_APP_LIB_LOADED:-}" ]; then
   done
   unset _ya _yac
 fi
+# A row's folder, wherever the app now lives (the split, 2026-11-19): `$ROOT/<dir>` while the app is in
+# this tree, else the same path inside the app found by the one resolver (a developer's checkout, or the
+# installed app). An app that has left is never re-created under apps/ by a mint.
+row_dir() {  # <dir as written in APPS> <result-var>
+  local _rd_dir=${1-} _rd_rv=${2-} _rd_rest _rd_surface _rd_base
+  if [ -d "$ROOT/$_rd_dir" ]; then printf -v "$_rd_rv" '%s' "$ROOT/$_rd_dir"; return 0; fi
+  _rd_rest="${_rd_dir#apps/}"; _rd_surface="${_rd_rest%%/*}"
+  case "$_rd_rest" in */*) _rd_rest="/${_rd_rest#*/}" ;; *) _rd_rest="" ;; esac
+  case "$_rd_surface" in smidja-factory) _rd_surface=smidja ;; esac
+  if app_dir "$_rd_surface" _rd_base 2>/dev/null && [ -d "$_rd_base$_rd_rest" ]; then
+    printf -v "$_rd_rv" '%s' "$_rd_base$_rd_rest"; return 0
+  fi
+  printf -v "$_rd_rv" '%s' ""; return 1
+}
+SMIDJA_VIZ_DIR=""; row_dir "apps/smidja-factory/apps/visualizer" SMIDJA_VIZ_DIR || SMIDJA_VIZ_DIR=""
+HALL_DIR=""; row_dir "apps/bilskirnir" HALL_DIR || HALL_DIR=""
+RODD_DIR=""; row_dir "apps/rodd" RODD_DIR || RODD_DIR=""
+SESS_DIR=""; row_dir "apps/sessrumnir" SESS_DIR || SESS_DIR=""
+HALL2_DIR=""; row_dir "apps/odrerir" HALL2_DIR || HALL2_DIR=""
 app_dir hlidskjalf APP_HLIDSKJALF || APP_HLIDSKJALF=""
 app_dir hlidskjalf-mobile APP_HLIDSKJALF_MOBILE || APP_HLIDSKJALF_MOBILE=""
 app_dir odrerir APP_ODRERIR || APP_ODRERIR=""
@@ -82,12 +101,7 @@ mint() {  # <app-dir> <glyph> <tint> <label>
   # node_modules/@zerwiz/<package>. The mint resolves both, so a packaged install
   # gets its favicon too — the same resolver every other script uses.
   local base outdir surface
-  base="$ROOT/$dir"
-  if [ ! -d "$base" ]; then
-    surface="$(basename "$dir")"
-    case "$surface" in smidja-factory) surface=smidja ;; esac
-    app_dir "$surface" base 2>/dev/null || base=""
-  fi
+  row_dir "$dir" base || base=""
   [ -n "$base" ] && [ -d "$base" ] || { printf '  "%s","SKIP (no such app)"\n' "$dir"; return 0; }
   outdir="$base/public"
   mkdir -p "$outdir"
@@ -134,7 +148,8 @@ install_all() {
   for row in "${APPS[@]}"; do
     IFS='|' read -r dir glyph tint says iconname exec klass display <<<"$row"
     case "$EXCLUDE" in *" $(basename "$dir") "*) continue ;; esac
-    src="$ROOT/$dir/public/icon.svg"
+    src=""; row_dir "$dir" src && src="$src/public/icon.svg"
+    [ -n "$src" ] || { printf '  "%s","SKIP (the app is not on this machine)",""\n' "$(basename "$dir")"; continue; }
     if [ ! -f "$src" ]; then
       # mint it first — the icon is defined by this table, so it is never absent
       if [ -r "$ICONS/$glyph.svg" ]; then
@@ -207,14 +222,16 @@ rune_svg() {  # <glyph> <tint> <out.svg> -- the rune alone, no stone (an Android
 raster_targets() {  # <surface> -> "<out>:<size>" lines
   case "$1" in
     hlidskjalf) printf '%s\n' "$ROOT/apps/hlidskjalf/electron/icon.png:512" "$ROOT/apps/hlidskjalf/public/apple-touch-icon.png:180" ;;
-    odrerir)    printf '%s\n' "$ROOT/apps/odrerir/electron/icon.png:512" "$ROOT/apps/odrerir/public/apple-touch-icon.png:180" ;;
-    smidja)     printf '%s\n' "$ROOT/apps/smidja-factory/apps/visualizer/desktop/icon.png:512" ;;
-    bilskirnir) printf '%s\n' "$ROOT/apps/bilskirnir/electron/icon.png:512"
+    odrerir)    [ -n "$HALL2_DIR" ] && printf '%s\n' "$HALL2_DIR/electron/icon.png:512" "$HALL2_DIR/public/apple-touch-icon.png:180" ;;
+    smidja)     [ -n "$SMIDJA_VIZ_DIR" ] && printf '%s\n' "$SMIDJA_VIZ_DIR/desktop/icon.png:512" ;;
+    bilskirnir) [ -n "$HALL_DIR" ] || return 0
+                printf '%s\n' "$HALL_DIR/electron/icon.png:512"
                 # its own theme set, which apps/bilskirnir/setup.sh copies into the icon theme on every setup
-                for s in 16 32 48 64 128 256 512; do printf '%s\n' "$ROOT/apps/bilskirnir/electron/icons/hicolor/${s}x${s}/apps/ymir-bilskirnir.png:$s"; done ;;
-    rodd)       printf '%s\n' "$ROOT/apps/rodd/electron/icon.png:512" ;;
-    sessrumnir) for s in 16 32 48 64 128 256 512; do printf '%s\n' "$ROOT/apps/sessrumnir/resources/icons/icon-$s.png:$s"; done
-                printf '%s\n' "$ROOT/apps/sessrumnir/resources/icons/icon.png:512" "$ROOT/apps/sessrumnir/public/apple-touch-icon.png:180" ;;
+                for s in 16 32 48 64 128 256 512; do printf '%s\n' "$HALL_DIR/electron/icons/hicolor/${s}x${s}/apps/ymir-bilskirnir.png:$s"; done ;;
+    rodd)       [ -n "$RODD_DIR" ] && printf '%s\n' "$RODD_DIR/electron/icon.png:512" ;;
+    sessrumnir) [ -n "$SESS_DIR" ] || return 0
+                for s in 16 32 48 64 128 256 512; do printf '%s\n' "$SESS_DIR/resources/icons/icon-$s.png:$s"; done
+                printf '%s\n' "$SESS_DIR/resources/icons/icon.png:512" "$SESS_DIR/public/apple-touch-icon.png:180" ;;
   esac
 }
 
@@ -226,12 +243,12 @@ raster_all() {
     surface="${icon#ymir-}"
     case "$surface" in
       hlidskjalf) svg="$ROOT/apps/hlidskjalf/public/icon.svg" ;;
-      odrerir)    svg="$ROOT/apps/odrerir/public/icon.svg" ;;
-      sessrumnir) svg="$ROOT/apps/sessrumnir/public/icon.svg" ;;
-      smidja)     svg="$ROOT/apps/smidja-factory/apps/visualizer/public/icon.svg" ;;
-      bilskirnir) svg="$ROOT/apps/bilskirnir/public/icon.svg"
-                  cp -f "$svg" "$ROOT/apps/bilskirnir/electron/icons/hicolor/scalable/apps/ymir-bilskirnir.svg" ;;
-      rodd)       svg="$ROOT/apps/rodd/public/icon.svg" ;;
+      odrerir)    [ -n "$HALL2_DIR" ] || continue; svg="$HALL2_DIR/public/icon.svg" ;;
+      sessrumnir) [ -n "$SESS_DIR" ] || continue; svg="$SESS_DIR/public/icon.svg" ;;
+      smidja)     [ -n "$SMIDJA_VIZ_DIR" ] || continue; svg="$SMIDJA_VIZ_DIR/public/icon.svg" ;;
+      bilskirnir) [ -n "$HALL_DIR" ] || continue; svg="$HALL_DIR/public/icon.svg"
+                  cp -f "$svg" "$HALL_DIR/electron/icons/hicolor/scalable/apps/ymir-bilskirnir.svg" ;;
+      rodd)       [ -n "$RODD_DIR" ] || continue; svg="$RODD_DIR/public/icon.svg" ;;
       *) continue ;;
     esac
     while IFS=: read -r out size; do
@@ -244,7 +261,7 @@ raster_all() {
   if emblem_svg algiz "#c9973f" "$tmp" && rasterize "$tmp" "$ROOT/apps/hlidskjalf/public/ymir-icon.png" 512; then printf '  "ymir","apps/hlidskjalf/public/ymir-icon.png","512"\n'; n=$((n+1)); fi
   rm -f "$tmp"
   # the smithy's own icon inside hlidskjalf's electron dir
-  if rasterize "$ROOT/apps/smidja-factory/apps/visualizer/public/icon.svg" "$ROOT/apps/hlidskjalf/electron/smidja-icon.png" 512; then printf '  "smidja","apps/hlidskjalf/electron/smidja-icon.png","512"\n'; n=$((n+1)); fi
+  if [ -n "$SMIDJA_VIZ_DIR" ] && rasterize "$SMIDJA_VIZ_DIR/public/icon.svg" "$ROOT/apps/hlidskjalf/electron/smidja-icon.png" 512; then printf '  "smidja","apps/hlidskjalf/electron/smidja-icon.png","512"\n'; n=$((n+1)); fi
   # Android launcher tiles (all 512 today): the stone tile, its round twin, and the
   # rune-only foreground layer -- the launcher icons were a stale grayscale relic.
   if [ -d "$ROOT/apps/hlidskjalf/android/app/src/main/res" ]; then
@@ -270,10 +287,10 @@ raster_all() {
     printf '  "android-splash","apps/hlidskjalf/android/.../drawable*/splash.png","as-is"\n'
   fi
   # the Windows .ico files, from the freshly-cut 256 tile
-  if command -v magick >/dev/null 2>&1 && [ -r "$ROOT/apps/sessrumnir/resources/icons/icon-256.png" ]; then
-    for ico in "$ROOT/apps/sessrumnir/resources/icons/icon.ico" "$ROOT/apps/sessrumnir/docs/favicon.ico"; do
+  if command -v magick >/dev/null 2>&1 && [ -n "$SESS_DIR" ] && [ -r "$SESS_DIR/resources/icons/icon-256.png" ]; then
+    for ico in "$SESS_DIR/resources/icons/icon.ico" "$SESS_DIR/docs/favicon.ico"; do
       [ -d "$(dirname "$ico")" ] || continue
-      if magick "$ROOT/apps/sessrumnir/resources/icons/icon-256.png" -define icon:auto-resize=256,128,64,48,32,16 "$ico" 2>/dev/null; then printf '  "%s","%s","ico"\n' "sessrumnir" "${ico#"$ROOT"/}"; n=$((n+1)); fi
+      if magick "$SESS_DIR/resources/icons/icon-256.png" -define icon:auto-resize=256,128,64,48,32,16 "$ico" 2>/dev/null; then printf '  "%s","%s","ico"\n' "sessrumnir" "${ico#"$ROOT"/}"; n=$((n+1)); fi
     done
   fi
   printf '  "total","%s files"\n' "$n"

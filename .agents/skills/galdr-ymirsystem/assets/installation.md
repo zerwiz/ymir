@@ -1529,3 +1529,25 @@ Eir's `runtimepin` surface checks it; the fix note is `docs/fixes/engine/`.
 refuses a working-tree path. Gróa's update and Eir's new `roots` surface use the same door. Migration
 `0022-roots-load-the-runtime` heals an older home. The change is portable core (bash, python3, awk), so every
 platform layer reaches it by the same road (RULES/05).
+
+## Appended 2026-11-19 — `step_smidja` seats the smithy's two doors
+
+`step_smidja` now ends by running the smithy's `scripts/install-doors.py` from the **pin**
+(`${YMIR_RUNTIME_DIR:-~/ymir-runtime}/apps/smidja-factory`, else the resolver's smithy): `smidja`
+and `smidja-mcp` linked into `~/.local/bin`, `smidja` named in pi's MCP set, and the house's seating
+door (`bin/bridge/mcp-config.sh seat`, `bin/seat/hermes-seat.sh`) carrying it into Claude Code, Codex,
+OpenCode, Cursor and Hermes. It runs after `step_memory`'s seat on purpose, so a first install seats
+the new entry too. `--check` reports `smidja-doors` OK/WARN and changes nothing. Seated from the pin
+because a door that names a working tree dies with the tree (Hermes refuses one).
+Fix note: `docs/fixes/smidja/unversioned-2026-11-19-the-runner-returns-and-every-harness-drives-it.md`.
+
+## Appended 2026-11-19 — the apps home and its one door (Slice 0 of the split)
+
+An app with its own repo is installed by `bin/apps/apps.sh`, into `$YMIR_APPS_HOME/<app>/` (default
+`~/.local/share/ymir-apps/`), never into `apps/` or the pin; `bin/apps/app-path.sh` resolves where an app
+runs from (`dev` → `home` → `legacy`), and `app_dir` in `bin/desktop/app-lib.sh` takes `dev`/`home` from
+it first. While an app is still in this tree (`contract: 0` in `config/app-repos.yaml`), `step_apps` and the
+per-app steps install it exactly as before. Each app's slice moves its install logic into its own
+`install.sh` and leaves `step_<app>` a thin `apps.sh install <app>`. Gróa runs `apps.sh update --all` after
+Ymir's update; Eir's `apps` surface runs `apps.sh check`. How-to: `docs/features/apps-install-and-update.md`.
+Fix note: `docs/fixes/apps/2026-11-19-every-app-gets-its-own-home.md`.

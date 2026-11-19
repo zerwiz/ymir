@@ -6,33 +6,107 @@
 # stays authoritative when present; this file is the fork's road.
 #
 # Block shape must match the installer's awk (repo: apps/<path> + git: dict).
+#
+# 2026-11-19 — the split (plan 01): this file is the app REGISTRY (RULES/23, appended).
+#   home:      the app's folder name in the apps home ($YMIR_APPS_HOME/<home>/)
+#   kind:      electron | service — the Allfather: "only electron apps. no web."
+#   contract:  0 = still in Ymir's tree (the legacy road) · 1 = its own repo carries the
+#              app contract (app.yaml, install.sh) and `bin/apps/apps.sh` installs it
+#   status:    archived = kept as a record, never installed (the phone app: "no phone app")
+#   moved:     <owner>/<repo>@<sha> — the app left this tree with its history; bin/no-delete-guard.sh reads
+#              it, so removing apps/<dir> is a move (RULES/11), never a deletion
+#   moved_also: paths outside apps/ that left with the app (the guard reads them too)
+#   install_default: true = `apps.sh update --all` (Gróa) installs it on a seat that lacks it
+# `repo: apps/<path>` stays the folder the app has in Ymir's tree until its slice lands.
 
 - id: hlidskjalf
   name: Hlidskjalf
   repo: apps/hlidskjalf
   posture: direct-PR
   git: { host: github.com, owner: zerwiz, repo: hlidskjalf, remote: origin, default_branch: main, auth: gh }
+  home: hlidskjalf
+  kind: electron
+  contract: 0
+  stays_in_ymir: true   # the Allfather 2026-11-18: "leave hlidskjalf in ymir"
 
 - id: hlidskjalf-mobile
   name: Hlidskjalf Mobile
   repo: apps/hlidskjalf-mobile
   posture: direct-PR
   git: { host: github.com, owner: zerwiz, repo: hlidskjalf-mobile, remote: origin, default_branch: main, auth: gh }
+  home: hlidskjalf-mobile
+  kind: electron
+  contract: 0
+  status: archived       # "no phone app" (2026-11-18)
 
 - id: odrerir
   name: Óðrerir
   repo: apps/odrerir
   posture: direct-PR
-  git: { host: github.com, owner: zerwiz, repo: odrerir, remote: origin, default_branch: main, auth: gh }
+  git: { host: github.com, owner: zerwiz, repo: odrerir, remote: origin, default_branch: split/from-ymir, auth: gh }
+  home: odrerir
+  kind: electron
+  contract: 1
+  # main on GitHub is protected and still holds the September head (tagged pre-split-2026-09); the history cut
+  # from Ymir is on split/from-ymir until the Allfather makes it main (lift the protection, or switch the default).
+  moved: zerwiz/odrerir@e01d8eb23c4e   # left Ymir with its history, 2026-11-19 (split, not retired: the Allfather's word)
+  install_default: dev   # the seats with a desk, where the Live Hall's window opens
 
 - id: sessrumnir
   name: Sessrúmnir
   repo: apps/sessrumnir
   posture: direct-PR
-  git: { host: github.com, owner: zerwiz, repo: sessrumnir, remote: origin, default_branch: main, auth: gh }
+  git: { host: github.com, owner: zerwiz, repo: sessrumnir, remote: origin, default_branch: split/from-ymir, auth: gh }
+  home: sessrumnir
+  kind: electron
+  contract: 1
+  # main on GitHub is protected and still holds the September head (tagged pre-split-2026-09); the history cut
+  # from Ymir is on split/from-ymir until the Allfather makes it main (lift the protection, or switch the default).
+  moved: zerwiz/sessrumnir@133a42991a0c   # left Ymir with its history, 2026-11-19; the fork's upstream is FaqFirebase/pi-desktop
+  install_default: dev   # the seats with a desk: it is the desktop seat over the coding agents
 
 - id: smidja
   name: Smíðja factory
   repo: apps/smidja-factory
   posture: direct-PR
-  git: { host: github.com, owner: zerwiz, repo: smidja, remote: origin, default_branch: main, auth: gh }
+  git: { host: github.com, owner: zerwiz, repo: smidja, remote: origin, default_branch: split/from-ymir, auth: gh }
+  home: smidja
+  kind: electron
+  contract: 1
+  # main on GitHub is protected and still holds the September head (tagged pre-split-2026-09); the history cut
+  # from Ymir is on split/from-ymir until the Allfather makes it main (lift the protection, or switch the default).
+  moved: zerwiz/smidja@a78eabb0e472   # left Ymir with its history, 2026-11-19: the factory at the root, the engine at engine/
+  moved_also: apps/smidja, .agents/skills/smidja-factory   # the engine's folder, and the skill shelf's link into the app
+  install_default: true   # every seat carried it in the tree: Gróa's update installs it where it is missing
+
+- id: bilskirnir
+  name: Bilskirnir
+  repo: apps/bilskirnir
+  posture: direct-PR
+  git: { host: github.com, owner: zerwiz, repo: bilskirnir, remote: origin, default_branch: main, auth: gh }
+  home: bilskirnir
+  kind: electron
+  contract: 1
+  moved: zerwiz/bilskirnir@7a546ae0d2f9   # left Ymir with its history, 2026-11-19
+  install_default: heart, dev   # the roles that installed it while it lived in the tree (step_bilskirnir's role gate)
+
+- id: hvergelmir
+  name: Hvergelmir
+  repo: apps/hvergelmir
+  posture: direct-PR
+  git: { host: github.com, owner: zerwiz, repo: hvergelmir, remote: origin, default_branch: main, auth: gh }
+  home: hvergelmir
+  kind: service
+  contract: 1
+  moved: zerwiz/hvergelmir@2f7ce719f511   # left Ymir with its history, 2026-11-19 (bin/apps/split-ledger.py verify: nothing lost)
+
+- id: rodd
+  name: Rödd
+  repo: apps/rodd
+  posture: direct-PR
+  git: { host: github.com, owner: zerwiz, repo: rodd, remote: origin, default_branch: main, auth: gh }
+  home: rodd
+  kind: electron
+  contract: 1
+  moved: zerwiz/rodd@0d049293d58f   # the voice WINDOW left Ymir with its history, 2026-11-19; the arm, helm and voice stay
+  install_default: dev   # the seats with a desk and a voice; a heart or a hand has no window to show

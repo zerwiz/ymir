@@ -95,6 +95,19 @@ def _desk() -> dict:
 _MODELS_CACHE: dict = {"at": 0.0, "data": None}
 
 
+
+def _hall() -> Path:
+    """Bilskirnir wherever it is (the split, 2026-11-19): this tree while it is here, else its own home —
+    the one resolver (bin/apps/app-path.sh) says which. Its model and provider doors live in it."""
+    try:
+        r = subprocess.run(["bash", str(REPO / "bin" / "apps" / "app-path.sh"), "bilskirnir"],
+                           capture_output=True, text=True, timeout=20)
+        if r.returncode == 0 and r.stdout.strip():
+            return Path(r.stdout.strip())
+    except Exception:
+        pass
+    return REPO / "apps" / "bilskirnir"
+
 def _models() -> dict:
     """Every provider and model this user can already reach, from the house's ONE model door (Bilskirnir's
     detector: pi's and OpenCode's providers, the home's added ones, and local servers on their usual ports),
@@ -103,7 +116,7 @@ def _models() -> dict:
     import time
     if _MODELS_CACHE["data"] is not None and time.time() - _MODELS_CACHE["at"] < 60:
         return _MODELS_CACHE["data"]
-    det = REPO / "apps" / "bilskirnir" / "server" / "src" / "models" / "detect.ts"
+    det = _hall() / "server" / "src" / "models" / "detect.ts"
     out = {"providers": []}
     try:
         r = subprocess.run(["node", str(det), "--json"], capture_output=True, text=True, timeout=60)
@@ -130,10 +143,11 @@ def _models() -> dict:
 def _provider_door(args: list[str], stdin: str = "") -> dict:
     """The house's ONE provider door (Bilskirnir's choose.ts), run through its own tsx. A key goes in on
     standard input, never as an argument, and the answer names where it was kept, never the key."""
-    app = REPO / "apps" / "bilskirnir"
+    app = _hall()
     tsx = app / "node_modules" / ".bin" / "tsx"
     if not tsx.exists():
-        return {"ok": False, "detail": "the provider door is not installed here (apps/bilskirnir has no dependencies yet)"}
+        return {"ok": False, "detail": "the provider door is not installed here (Bilskirnir is not installed, or has no "
+                                       "dependencies yet: bin/apps/apps.sh install bilskirnir)"}
     try:
         r = subprocess.run([str(tsx), str(app / "server" / "src" / "models" / "choose.ts"), *args],
                            input=stdin, capture_output=True, text=True, timeout=60, cwd=str(app))

@@ -153,10 +153,14 @@ install_entries() {
       fi
       sed -e "s|__YMIR_ROOT__|$root|g" -e "s|__YMIR_RUNTIME__|$pin|g" -e "s|__YMIR_APP__|${YMIR_SHORTCUT_BIN:-$HOME/.local/bin}/ymir-app|g" "$f" >"$dst/$(basename "$f" .in)" && n=$((n+1))
     done
+    # __APP_DIR__ is the app's own folder, never a working tree (the split, 2026-11-19): an app still in this tree
+    # is named at the same path inside the pin; an app in its own home by its `current` link, which follows updates.
+    local appdir; appdir="$(dirname "$src")"
+    case "$appdir" in "$ROOT"/apps/*) appdir="$pin/apps/${appdir#"$ROOT"/apps/}" ;; esac
     for f in "$src"/*.service.in; do
       [ -e "$f" ] || continue
       mkdir -p "$units" || continue
-      sed -e "s|__YMIR_RUNTIME__|$pin|g" "$f" >"$units/$(basename "$f" .in)" && u=$((u+1))
+      sed -e "s|__YMIR_RUNTIME__|$pin|g" -e "s|__APP_DIR__|$appdir|g" "$f" >"$units/$(basename "$f" .in)" && u=$((u+1))
     done
     # an app that ships its own icon theme (icons/hicolor/<size>/apps/<name>.png) seats it, so its
     # entry's themed Icon= resolves at every size the launcher asks for

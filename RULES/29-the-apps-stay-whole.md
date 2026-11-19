@@ -61,3 +61,12 @@ contents are still the operator's to judge.
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+
+## Appended 2026-11-19 — the apps stay whole wherever they are installed
+
+The split moves apps into their own repos and their own homes (RULES/23, appended the same day). This rule follows
+them there:
+- the guard runs against every app **where it actually runs**: `bin/apps/app-path.sh` names the road (`dev`, `home`, `legacy`), and an app in its own home is judged by its own `install.sh --check`, through `bin/apps/apps.sh check` (Eir's `apps` surface);
+- an app's own repo carries the same three duties in its CI: it parses, every door it serves is answered, and nothing answers 5xx — or HTML where JSON is owed, the fault of 2026-09-18 (*"Unexpected token '<'"*);
+- an update **never flips a red release**: `apps.sh update` builds into `releases/<sha>`, runs `--check`, and moves `current` only on green; `apps.sh rollback` returns to `previous`.
+- **2026-11-19** — appended for the app split (plan 01): see the section above.

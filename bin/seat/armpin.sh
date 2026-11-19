@@ -62,11 +62,11 @@ supervisor_path() {  # <pid dir> → the code path it runs, or nothing when it i
   [ "${#a[@]}" -eq 1 ] && read -r -a a <<<"${a[0]}"
   case "${a[0]##*/}" in
     electron*)
-      for i in "${a[@]:1}"; do case "$i" in --type=*) return 0 ;; */apps/rodd|*/apps/rodd/) printf '%s' "$i"; return 0 ;; esac; done ;;
+      for i in "${a[@]:1}"; do case "$i" in --type=*) return 0 ;; */apps/rodd|*/apps/rodd/|*/ymir-apps/rodd/current|*/ymir-apps/rodd/releases/*) printf '%s' "$i"; return 0 ;; esac; done ;;
     python*)
       if [ "${a[1]:-}" = -m ] && [ "${a[2]:-}" = uvicorn ]; then
         for ((i = 3; i < ${#a[@]}; i++)); do
-          [ "${a[$i]}" = --app-dir ] && case "${a[$((i+1))]:-}" in */apps/rodd/ui) printf '%s' "${a[$((i+1))]}"; return 0 ;; esac
+          [ "${a[$i]}" = --app-dir ] && case "${a[$((i+1))]:-}" in */apps/rodd/ui|*/ymir-apps/rodd/*/ui) printf '%s' "${a[$((i+1))]}"; return 0 ;; esac
         done
       elif [ "${a[1]:-}" = -m ] && [ "${a[2]:-}" = ymir_runtime ] && [ "${a[3]:-}" = watch ]; then
         tr '\0' '\n' <"$d/environ" 2>/dev/null | sed -n 's/^PYTHONPATH=\([^:]*\).*/\1/p' | head -1
@@ -78,8 +78,9 @@ supervisor_path() {  # <pid dir> → the code path it runs, or nothing when it i
 for d in "$PROC"/[0-9]*; do
   path="$(supervisor_path "$d")"
   [ -n "$path" ] || continue
+  # an app in its OWN home runs a release from its repo, never a working tree: as lawful as the pin (the split, 2026-11-19)
   case "$path" in
-    "$PIN"/*|"$PIN") : ;;
+    "$PIN"/*|"$PIN"|"${YMIR_APPS_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/ymir-apps}"/*) : ;;
     *) outside+=("pid ${d##*/} runs $path") ;;
   esac
 done

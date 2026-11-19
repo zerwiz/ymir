@@ -100,3 +100,13 @@ outgrows its name (plan 129 §15/§18), and the same move for `bin/assistant` �
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+
+## Appended 2026-11-19 — the registry is `config/app-repos.yaml`; `apps/` is the legacy road
+
+The Allfather, 2026-11-18: *"i dont wanna them come into the apps folder anymore if installed they need their own places."*
+
+- **The app registry is `config/app-repos.yaml`** (and the home's `hodd/identity/projects.yaml` where it is present). Every app is a row there, with its own repo, its `home:` name, its `kind:` (`electron` or `service`; *"only electron apps. no web"*) and its `contract:`. `apps/README.md` no longer has to name every app.
+- **An installed app lives in its own home**, `$YMIR_APPS_HOME/<home>/` (default `~/.local/share/ymir-apps/`), with `repo/`, `releases/<sha>/`, `current` and `previous`. Nothing is ever installed into `apps/` or into the pin's `apps/`; `bin/apps/apps.py` refuses an apps home inside either.
+- **`apps/<name>/` is the legacy road** while that app's slice is open: read-only, found by `bin/apps/app-path.sh` after a developer's own checkout and after the apps home. It is never the target of an install or an update, and it closes for each app on the day its slice lands.
+- **Hliðskjálf stays in this tree**, whole (*"leave hlidskjalf in ymir"*). The rule's first law, that an application lives under `apps/` and `bin/` holds only function-named tools, still binds it.
+- **2026-11-19** — appended for the app split (plan 01): see the section above.

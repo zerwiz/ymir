@@ -42,3 +42,24 @@ exception dies with it.
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+
+## Appended 2026-11-19 — the apps leave for their own repos and their own homes
+
+The table above is the record of what lived here. The registry is now `config/app-repos.yaml` (RULES/23,
+appended): every app has its own repo, and once installed it lives in its own home,
+`~/.local/share/ymir-apps/<app>/`, installed and updated by `bin/apps/apps.sh` — never in this folder.
+A folder here is the **legacy road** for an app whose move has not landed yet; `bin/apps/app-path.sh` says
+which road each app is on.
+
+| app | left for | when |
+|---|---|---|
+| `hvergelmir/` | `zerwiz/hvergelmir`, with its history (`moved:` in the registry) | 2026-11-19 |
+| `smidja/`, `smidja-factory/` | `zerwiz/smidja`, with their history (the factory at the root, the engine at `engine/`) | 2026-11-19 |
+| `bilskirnir/` | `zerwiz/bilskirnir`, with its history; its data home stayed where it was | 2026-11-19 |
+| `rodd/` | `zerwiz/rodd`, the voice **window** with its history; the arm and the voice stay in Ymir | 2026-11-19 |
+| `sessrumnir/` | `zerwiz/sessrumnir`, the fork of pi-desktop with its history and its restored fork contract | 2026-11-19 |
+| `odrerir/` | `zerwiz/odrerir`, with its history; its live board is state in `~/.local/state/odrerir/` | 2026-11-19 |
+
+With that, every app but Hliðskjálf has left; this folder holds Hliðskjálf and this README.
+
+Hliðskjálf stays here, whole. How-to: `docs/features/apps-install-and-update.md`.

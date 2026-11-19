@@ -1,0 +1,21 @@
+path	why
+.agents/config/tenant-baseline.json	a measured baseline of words per file: a record
+.agents/tenant-baseline.json	the same baseline
+NOTICE	the attribution of the vendored fork stays as the record; an appended note says where it lives now
+THIRD-PARTY-LICENSES	the same, with an appended note
+bin/desktop/design-icon.sh	the APPS table names the old folder; row_dir resolves it through the one resolver
+bin/desktop/sessrumnir-ensure.sh	messages naming the old folder; the app is found through app_dir
+bin/desktop/sessrumnir-launch.sh	a message naming the old folder; the app is found through app_dir
+bin/desktop/sessrumnir-sync.sh	messages naming the old folder; Ymir keeps its own copy of the sync, over a checkout the resolver names
+bin/desktop/shortcuts.sh	the catalog skips a template not in this tree; the installed app seats the same entry (activate.sh)
+bin/desktop/tests/test_sessrumnir_stays.sh	builds its own temp tree; finds the app's launcher JS through the resolver
+bin/engine/release.sh	the build is guarded by the folder; the Electron loop skips an absent app
+bin/engine/tests/test_units.sh	a template glob in a temp tree
+bin/engine/ymir-install.sh	the in-tree check and the engines summary; a moved app is never cloned back (step_apps)
+bin/forge/npm/npm-publish.sh	--all keeps only app folders the tree still carries
+bin/gates/soak.sh	a changed-path pattern for the in-tree app
+bin/gates/tests/test_soak.sh	a synthetic repo in a test
+bin/seat/sessrumnir-wire.sh	the in-tree raiser is tried before the installed app's
+bin/seat/valknut-load.sh	the in-tree permissions file is tried before the installed app's
+.agents/tests/desktop-classes.test.sh	reads the app wherever the resolver finds it
+.agents/tests/window-buttons.test.sh	the same

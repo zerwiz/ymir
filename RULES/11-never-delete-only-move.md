@@ -92,3 +92,26 @@ in writing with the reason (it runs inside a throwaway three-way merge repo).
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+
+## Appended 2026-11-19 — an app leaving to its own repo, with its history, is a move
+
+The Allfather, 2026-11-18: *"make great splitting plans for all this. we can not lose anything"*, and the apps
+are to be *"installed separately … their own place to be downloaded to, not the apps folder in Ymir"*.
+
+Removing `apps/<name>/` from this tree is **not** a deletion when, and only when, all of these hold:
+- the app's own repo carries every file of it, checked against a manifest of path, bytes and sha256 taken from this tree;
+- that repo carries the app's **history**, cut from this repo with `git filter-repo --subdirectory-filter`, so every commit that touched it is there with its author and date;
+- its fix notes, its feature pages and its catalogue rows **stay here** (RULES/06), with a note pointing at the new repo;
+- a move record is written in the home at `$YMIR_HOME/hodd/reference/moves/<app>.md`: the repo, its sha, the manifest's digest, and this tree's last sha that held the app;
+- `no-delete-guard` is told of the move by that record, not by an override.
+
+Anything else that removes a file is still a deletion, and still refused. The plan is the split's plan 02 ("nothing is lost").
+- **2026-11-19** — appended for the app split (plan 01): see the section above.
+
+## Appended 2026-11-19 (later the same day) — where the guard reads the move
+
+The section above says `no-delete-guard` is told of a move "by that record". The record in the home is private, so a
+CI runner cannot read it. The guard therefore reads the **public** half of the same fact: the app's row in
+`config/app-repos.yaml` carries `moved: <owner>/<repo>@<sha>`, and only a path under that app's old folder
+(`repo: apps/<dir>`) is accepted as moved. The home's `hodd/reference/moves/<app>.md` is still written; it carries the
+verify report and the manifest digest. Every other deletion is refused exactly as before.

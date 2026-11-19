@@ -393,7 +393,9 @@ if [ "$MODE_CHECK" = "1" ]; then
     # permissions extension>` and NO `-ne`, so discovery stays on. The door used to read any
     # `-e` as "the caller owns the set" and pass through to the colliding load. This line
     # holds that reading to account with the app's own argument, not a synthetic one.
+    # the desktop app wherever it is (the split, 2026-11-19): this tree, else its own home; absent = the check skips
     _perm="$ROOT/apps/sessrumnir/resources/pi-desktop-permissions.ts"
+    [ -r "$_perm" ] || _perm="$(bash "$ROOT/bin/apps/app-path.sh" sessrumnir 2>/dev/null)/resources/pi-desktop-permissions.ts"
     if [ -r "$_perm" ]; then
       _c2="$(cd "$ROOT" && timeout 90 bash "$_door" --list-models -e "$_perm" 2>&1 >/dev/null | grep -c 'conflicts with' || true)"
       if [ "${_c2:-1}" = 0 ]; then

@@ -82,3 +82,10 @@ It fails when the page scrolls sideways or the composer leaves the screen.
 - **2026-11-12** — first written: every screen, its own window, install and Gróa, the house's words.
 - **2026-11-12** — the launcher entry is named Bilskirnir and rides the house's desktop road.
 - **2026-11-12** — the model is chosen on Settings › Models, and `setup.sh` no longer needs pi ([choose a model](bilskirnir-choose-a-model.md)).
+
+## 2026-11-19 — where the hall lives now
+
+Bilskirnir has its own repo, `zerwiz/bilskirnir`, and installs into its own home with `bin/apps/apps.sh install bilskirnir`
+(Gróa's update installs it on every heart and dev seat that lacks it). Commands above that start `apps/bilskirnir/` now
+run from that home (`~/.local/share/ymir-apps/bilskirnir/current/`); the launcher and `ymir-app bilskirnir` find it there.
+Its data home did not move.

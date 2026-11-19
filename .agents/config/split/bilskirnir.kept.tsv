@@ -1,0 +1,17 @@
+path	why
+bin/agents/groa-update.sh	the old setup.sh re-run acts only while apps/bilskirnir is in the tree; once it has left, apps.sh update --all updates it in its own home
+bin/engine/release.sh	the dependency loop skips an absent lock, the build and the data-home link are guarded by the folder
+bin/engine/tests/test_units.sh	synthetic fixtures in a temp tree: they build their own apps/bilskirnir to test the unit renderer
+bin/gates/checks.d/0090-hall-data-home.sh	runs the hall's own test only while it is in the tree; its own CI runs it after
+bin/gates/checks.d/0095-hall-keeps-changes.sh	the same
+bin/gates/soak.sh	a soak command and a changed-path pattern for the in-tree hall; it soaks only what changed in this tree
+bin/ward/tests/test_soak_sampler.sh	synthetic process lines in a test
+bin/desktop/shortcuts.sh	the catalog skips an app whose template is not in this tree; the installed hall seats the same entry itself (activate.sh)
+bin/desktop/design-icon.sh	the APPS table names the old folder; row_dir resolves it through the one resolver
+bin/desktop/ymir-app	the pin's tree is the fallback road while the hall is not installed in its own home
+bin/desktop/boot-stopwatch.sh	the same fallback road
+bin/engine/ymir-install.sh	step_bilskirnir runs the in-tree setup.sh while it is here, else apps.sh install bilskirnir
+bin/voice/voice-toolbox.py	the in-tree path is the fallback when the resolver finds no installed hall
+bin/agents/eir-doctor.sh	the surface finds the hall through app_dir; the old path is only in the comment of its detail row
+.agents/tests/window-buttons.test.sh	reads the files wherever the resolver finds the hall; the list names their paths inside the app
+bin/desktop/tests/test_boot_stopwatch.sh	the same

@@ -63,6 +63,9 @@ resolve_sha() {  # <dir|sha> → a release dir
 link_shared() {  # <release-dir>
   local d="$1" p
   for p in $SHARED_PATHS; do
+    # an app's shared file is linked only while that app is in this tree: once it has left for its own home (the
+    # split, 2026-11-19) its state lives there, and a link here would recreate apps/<app>/ in every release
+    case "$p" in apps/*/*) [ -d "$d/apps/$(printf '%s' "$p" | cut -d/ -f2)" ] || continue ;; esac
     mkdir -p "$(dirname "$SHARED/$p")" "$(dirname "$d/$p")"
     if [ -e "$d/$p" ] && [ ! -L "$d/$p" ]; then
       # the release shipped or made one: the shared copy wins once it exists, else this one seeds it
@@ -161,15 +164,25 @@ build() {
       ( . "$tmp/bin/desktop/electron-lib.sh"; [ "$(electron_runtime_state "$tmp/apps/$a" "$tmp")" = ok ] || electron_fetch_runtime "$tmp/apps/$a" "$tmp" ) || exit 14
     done
     # every app built inside the release — nothing builds at a click, nothing serves a dev server
-    ( cd "$tmp" && npm run build -w apps/hlidskjalf && npm run build -w apps/odrerir ) || exit 15
-    ( cd "$tmp/apps/sessrumnir" && npm run build ) || exit 16
-    ( cd "$tmp/apps/sessrumnir" && npx --no-install electron-builder install-app-deps ) || exit 17
-    ( cd "$tmp/apps/bilskirnir" && npm run build -w web ) || exit 18
+    ( cd "$tmp" && npm run build -w apps/hlidskjalf ) || exit 15
+    # Óðrerir only while it is in this tree (the split, 2026-11-19: apps.sh builds it into its own release)
+    if [ -d "$tmp/apps/odrerir" ]; then ( cd "$tmp" && npm run build -w apps/odrerir ) || exit 15; fi
+    # once Sessrúmnir has left for its own repo (the split, 2026-11-19), apps.sh builds it into its own release
+    if [ -d "$tmp/apps/sessrumnir" ]; then
+      ( cd "$tmp/apps/sessrumnir" && npm run build ) || exit 16
+      ( cd "$tmp/apps/sessrumnir" && npx --no-install electron-builder install-app-deps ) || exit 17
+    fi
+    # Once the hall has left for its own repo (the split, 2026-11-19), apps.sh builds it into its own release.
+    if [ -d "$tmp/apps/bilskirnir" ]; then ( cd "$tmp/apps/bilskirnir" && npm run build -w web ) || exit 18; fi
     # The smithy's EYE is a nested app with its own bun lockfile, so the root `npm ci` never installs it
     # and its bundle was never built here — a release therefore served :8437 with no UI at all
     # ("No ./dist build found"), while the tree kept a committed dist/ that hid the fault. The bundle
     # left git on 2026-11-14 (plan 288 step 7, plan 287 P4); the release builds it, or says it did not.
-    if command -v bun >/dev/null 2>&1; then
+    # Once the smithy has left for its own repo (the split, 2026-11-19) a release carries no viewer to
+    # build: bin/apps/apps.sh builds it into the smithy's own release.
+    if [ ! -d "$tmp/apps/smidja-factory/apps/visualizer" ]; then
+      printf 'visualizer SKIP the smithy is not in this tree — it installs into its own home (bin/apps/apps.sh)\n'
+    elif command -v bun >/dev/null 2>&1; then
       ( cd "$tmp/apps/smidja-factory/apps/visualizer" && bun install --frozen-lockfile && bunx vite build ) || exit 19
     else
       printf 'visualizer SKIP no bun on this machine — the smithy serves its API with no UI\n'
@@ -185,7 +198,7 @@ build() {
   if [ -x "$tmp/apps/bilskirnir/scripts/data-home.sh" ]; then ( "$tmp/apps/bilskirnir/scripts/data-home.sh" ) >> "$log" 2>&1 || true; fi
   # Óðrerir's live board is written by a nightly job into the app's folder; a release whose shared copy is still
   # empty gets one now, so the hall never opens on a 404 (plan 275 S16)
-  if [ ! -s "$SHARED/apps/odrerir/public/livehall.json" ] && [ -x "$tmp/bin/time/nornir-job-hall-snapshot.sh" ]; then
+  if [ -d "$tmp/apps/odrerir" ] && [ ! -s "$SHARED/apps/odrerir/public/livehall.json" ] && [ -x "$tmp/bin/time/nornir-job-hall-snapshot.sh" ]; then
     BROKK_ROOT_OVERRIDE="$tmp" bash "$tmp/bin/time/nornir-job-hall-snapshot.sh" >> "$log" 2>&1 || true
   fi
   if ! prove "$tmp"; then say "FAIL	the release did not prove — it stays unbuilt at $tmp"; return 1; fi

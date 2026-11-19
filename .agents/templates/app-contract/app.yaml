@@ -1,0 +1,17 @@
+# app.yaml — the app contract (Ymir plan 01 §3). Every app repo carries one.
+# `bin/apps/apps.sh` (Ymir) and the app's own install.sh read it.
+name: <app>                     # the app's home name: $YMIR_APPS_HOME/<app>/
+title: <Display Name>
+kind: electron                  # electron | service — the Allfather: "only electron apps. no web."
+window_class: ymir-<app>        # --check fails when the running window says otherwise (fault 5's guard)
+ports: []                       # loopback only (plan 275 item 30); the tunnel wards read this list
+units: []                       # user units this app owns, rendered by install.sh from its own templates
+launchers: []                   # .desktop entries install.sh seats
+icons: []                       # every icon a launcher names; --check resolves each (fault 3's guard)
+state_dir: ${XDG_STATE_HOME:-~/.local/state}/<app>     # never inside a release
+config_dir: ${XDG_CONFIG_HOME:-~/.config}/<app>        # never inside a release
+ymir:
+  min_version: ""               # the oldest Ymir this app runs against
+  doors: []                     # Ymir doors it uses, each `{name: <door>, need: hard|optional}`
+  packages: []                  # npm packages it takes from Ymir (@zerwiz/ymir-design, @zerwiz/ymir-contracts)
+upstream: ""                    # a vendored/forked upstream, with its licence carried in this repo

@@ -490,10 +490,22 @@ step_apps() {
   # A CLONE still clones — that is the shape this step exists for.
   # One repo (plan 35): when the surfaces ship IN this tree there is nothing to
   # clone — the resolver's first shape (`<root>/apps/<surface>`) is already true.
-  if [ -f "$ROOT/apps/hlidskjalf/package.json" ] && [ -f "$ROOT/apps/odrerir/package.json" ] \
-     && [ -f "$ROOT/apps/sessrumnir/package.json" ]; then
-    add apps PASS "in-tree — apps/ ships with the package (plan 35)"
-    return 0
+  # The split (2026-11-19): an app with its OWN repo (`contract: 1` in config/app-repos.yaml) is installed into
+  # its own home by bin/apps/apps.sh — NEVER cloned into apps/ (the Allfather: "i dont wanna them come into the
+  # apps folder anymore"). What this step still clones is an app the registry keeps in this tree that is missing
+  # from it; when every such app is present there is nothing to do.
+  if [ -f "$ROOT/apps/hlidskjalf/package.json" ]; then
+    local _owed=""
+    for _id in $(awk '/^- id:/ { if (id != "" && !own && !arch) print id; id=$3; own=0; arch=0 }
+                      /^  contract: 1/ { own=1 } /^  status: archived/ { arch=1 }
+                      END { if (id != "" && !own && !arch) print id }' "$ROOT/config/app-repos.yaml" 2>/dev/null); do
+      _d="$(awk -v want="$_id" '/^- id:/ { id=$3 } id == want && /^  repo: apps\// { print substr($2, 6); exit }' "$ROOT/config/app-repos.yaml")"
+      [ -n "$_d" ] && [ ! -e "$ROOT/apps/$_d" ] && _owed="$_owed $_id"
+    done
+    if [ -z "$_owed" ]; then
+      add apps PASS "in-tree — the apps this tree keeps are here; the apps with their own repos install into their own homes (bin/apps/apps.sh)"
+      return 0
+    fi
   fi
   case "$ROOT" in
     */node_modules/*)
@@ -528,8 +540,15 @@ step_apps() {
     return 0
   fi
   local ok=0 skip=0 fail=0 missing=0
+  # the apps that left for their own repos (contract: 1 in the public registry), by their old folder
+  local moved_rels
+  moved_rels="$(awk '/^- id:/ { if (r != "" && own) print r; r=""; own=0 } /^  repo: apps\// { r=substr($2, 6) }
+                     /^  contract: 1/ { own=1 } END { if (r != "" && own) print r }' "$ROOT/config/app-repos.yaml" 2>/dev/null)"
   while IFS='|' read -r rel host owner grepo; do
     [ -n "$rel" ] || continue
+    if printf '%s\n' "$moved_rels" | grep -qxF "$rel"; then
+      add apps OK "$rel has its own home now — installed by bin/apps/apps.sh, never cloned into apps/"; continue
+    fi
     local path="$ROOT/apps/$rel"
     if [ "$CHECK" = 1 ]; then
       if [ -d "$path/.git" ]; then add apps OK "$rel present ($owner/$grepo)"; ok=$((ok+1));
@@ -853,7 +872,20 @@ step_bilskirnir() {
   role_gate bilskirnir heart,dev "the business hall" || return 0
   [ "$SKIP_ENGINES" = 1 ] && { add bilskirnir SKIP "--skip-engines"; return; }
   local door="$ROOT/apps/bilskirnir/setup.sh"
-  [ -x "$door" ] || { add bilskirnir SKIP "no apps/bilskirnir/setup.sh in this tree"; return; }
+  if [ ! -x "$door" ]; then
+    # The hall has left this tree for its own repo (the split, 2026-11-19): it installs into its own home.
+    if [ -x "$ROOT/bin/apps/apps.sh" ]; then
+      if [ "$CHECK" = 1 ]; then
+        if "$ROOT/bin/apps/apps.sh" check bilskirnir >/dev/null 2>&1; then add bilskirnir OK "installed in its own home (bin/apps/apps.sh)"
+        else add bilskirnir WARN "not installed or red — a full run installs it (bin/apps/apps.sh install bilskirnir)"; fi
+      elif [ "$NO_DESKTOP" = 1 ] && BILSKIRNIR_DESKTOP=0 "$ROOT/bin/apps/apps.sh" install bilskirnir >/dev/null 2>&1; then add bilskirnir OK "installed in its own home (no launcher: --no-desktop)"
+      elif [ "$NO_DESKTOP" != 1 ] && "$ROOT/bin/apps/apps.sh" install bilskirnir >/dev/null 2>&1; then add bilskirnir OK "installed in its own home — open it from the launcher or ymir-app bilskirnir"
+      else add bilskirnir WARN "the install did not finish — run bin/apps/apps.sh install bilskirnir"; fi
+    else
+      add bilskirnir SKIP "no apps/bilskirnir/setup.sh in this tree and no bin/apps/apps.sh"
+    fi
+    return
+  fi
   if [ "$CHECK" = 1 ]; then
     if "$door" --check >/dev/null 2>&1; then add bilskirnir OK "current (apps/bilskirnir/setup.sh --check)"
     else add bilskirnir WARN "stale — a full run executes apps/bilskirnir/setup.sh"; fi
@@ -1266,6 +1298,27 @@ step_smidja() {
       if "$SCRIPT_DIR/../desktop/smidja-bootstrap.sh" >/dev/null 2>&1; then add smidja OK "smidja.db ready (visualizer has data)"; else add smidja WARN "could not bootstrap smidja.db — run bin/desktop/smidja-bootstrap.sh to see why"; fi
     fi
   else add smidja SKIP "no smidja-bootstrap.sh"; fi
+  # The smithy's two doors (2026-11-19, the Allfather: "they need to be connected to the
+  # mcp so i can run the smidja from them"): `smidja` on PATH, and the Smíðja MCP in pi's
+  # one set, carried into Claude Code, Codex, OpenCode, Cursor and Hermes by the house's
+  # seating door. Seated from the PIN — a door that names a working tree dies with it.
+  local doors_factory="${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}/apps/smidja-factory"
+  [ -x "$doors_factory/scripts/install-doors.py" ] || smidja_factory_dir doors_factory 2>/dev/null || doors_factory=""
+  if [ -n "$doors_factory" ] && [ -x "$doors_factory/scripts/install-doors.py" ]; then
+    if [ "$CHECK" = 1 ]; then
+      if "$doors_factory/scripts/install-doors.py" --check --no-harnesses >/dev/null 2>&1; then
+        add smidja-doors OK "smidja on PATH · the Smíðja MCP in pi's set"
+      else
+        add smidja-doors WARN "the smithy's doors are not seated — run $doors_factory/scripts/install-doors.py"
+      fi
+    elif "$doors_factory/scripts/install-doors.py" >/dev/null 2>&1; then
+      add smidja-doors OK "smidja on PATH · the Smíðja MCP seated in every harness"
+    else
+      add smidja-doors WARN "a door was not seated — run $doors_factory/scripts/install-doors.py to see which"
+    fi
+  else
+    add smidja-doors SKIP "no install-doors.py in the smithy on this machine"
+  fi
   # The visualizer API serves its UI from ./dist — without a build it answers
   # the API but shows "No ./dist build found". Build it once when absent.
   local viz="${SMIDJA_VIZ:-}"; [ -n "$viz" ] || return 0

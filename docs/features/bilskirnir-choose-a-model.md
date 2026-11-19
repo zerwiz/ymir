@@ -97,3 +97,10 @@ If nothing is found, `setup.sh` says so in one line and the hall still opens. Ch
 
 - **2026-11-12** — first written: the detector, the Models page, the allow-list filter and the `setup.sh` order
   (Eindri `model-door`, at the Allfather's word via Hœnir).
+
+## 2026-11-19 — where the hall lives now
+
+Bilskirnir has its own repo, `zerwiz/bilskirnir`, and installs into its own home with `bin/apps/apps.sh install bilskirnir`
+(Gróa's update installs it on every heart and dev seat that lacks it). Commands above that start `apps/bilskirnir/` now
+run from that home (`~/.local/share/ymir-apps/bilskirnir/current/`); the launcher and `ymir-app bilskirnir` find it there.
+Its data home did not move.

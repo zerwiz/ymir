@@ -8,10 +8,10 @@
 set dotenv-load
 set positional-arguments
 
-# Every recipe passes this through, so `SMIDJA_CONFIG=other.yaml just sdlc "..."`
-# swaps the whole roster for one run.
-config := env_var_or_default("SMIDJA_CONFIG", "apps/smidja/smidja_smidja_config/smidja.config.yaml")
-db     := "apps/smidja/smidja_data/smidja.db"
+# 2026-11-19 (the split): every recipe goes through `scripts/smidja`, the smithy's one command, which
+# finds the engine wherever it is (this tree, or the installed smithy's own) and the one trace the viewer
+# reads. `SMIDJA_CONFIG=other.yaml just sdlc "..."` still swaps the whole roster for one run (the command
+# honours SMIDJA_CONFIG). Runs are launched DETACHED, as the books ask; watch them with `just sessions`.
 
 # list every recipe
 default:
@@ -28,9 +28,9 @@ default:
 # start here: two cheap read-only runs, end to end
 demo:
     @echo "1/2  smidja_prompt: one agent, one prompt"
-    uv run apps/smidja/smidja_prompt.py --config {{config}} --agent scout "reply with a one-line summary of this repo"
+    scripts/smidja run prompt --no-done-check "reply with a one-line summary of this repo"
     @echo "\n2/2  smidja_scout: read-only recon"
-    uv run apps/smidja/smidja_scout.py --config {{config}} "list the top-level directories in this repo and what each is for. change nothing."
+    scripts/smidja run scout --no-done-check "list the top-level directories in this repo and what each is for. change nothing."
     @echo "\nboth done. now run:  just sessions    (or: just obs)"
 
 # ── run a workflow ──────────────────────────────────────────────────────────
@@ -38,62 +38,62 @@ demo:
 
 # one agent, one prompt: just prompt "summarize this repo"
 prompt *ARGS:
-    uv run apps/smidja/smidja_prompt.py --config {{config}} "$@"
+    scripts/smidja run prompt --no-done-check "$@"
 
 # read-only recon: just scout "where is auth handled"
 scout *ARGS:
-    uv run apps/smidja/smidja_scout.py --config {{config}} "$@"
+    scripts/smidja run scout --no-done-check "$@"
 
 # plan only: just plan "add a /health endpoint"
 plan *ARGS:
-    uv run apps/smidja/smidja_plan.py --config {{config}} "$@"
+    scripts/smidja run plan --no-done-check "$@"
 
 # planner, builder, commit: just plan-build "add a /health endpoint"
 plan-build *ARGS:
-    uv run apps/smidja/smidja_plan_build.py --config {{config}} "$@"
+    scripts/smidja run plan-build --no-done-check "$@"
 
 # plan, build, test, commit: just sdlc "add a /health endpoint"
 sdlc *ARGS:
-    uv run apps/smidja/smidja_plan_build_test.py --config {{config}} "$@"
+    scripts/smidja run plan-build-test --no-done-check "$@"
 
 # the full chain, plus review and docs: just simple-sdlc "add a /health endpoint"
 simple-sdlc *ARGS:
-    uv run apps/smidja/smidja_simple_sdlc.py --config {{config}} "$@"
+    scripts/smidja run simple-sdlc --no-done-check "$@"
 
 # continue a run at its last green phase: just resume <smidja_id> [--from-phase <name>]
 # Refuses rather than guesses: no such run · nothing green to resume from ·
 # the roster changed since this run. Add --dry-run to see the plan and launch nothing.
 resume *ARGS:
-    uv run apps/smidja/smidja_resume.py --config {{config}} "$@"
+    scripts/smidja resume "$@"
 
 # the run as ONE record — phases, steps, state, and where it stopped
 # just record <smidja_id> [--json]; the same shape resume reads.
 record *ARGS:
-    uv run apps/smidja/smidja_record.py --config {{config}} "$@"
+    scripts/smidja record "$@"
 
 # record a person's decision on an `approval` phase: approve | decline | cancel
 # An approval phase never runs its block without one; silence is not a yes.
 decide *ARGS:
-    uv run apps/smidja/smidja_decide.py --config {{config}} "$@"
+    scripts/smidja decide "$@"
 
 # ── watch it ────────────────────────────────────────────────────────────────
 # Reads never block a running workflow, the db is WAL. Poll as hard as you like.
 
 # the last 10 runs
 sessions:
-    @python3 -c "import sqlite3;c=sqlite3.connect('file:{{db}}?mode=ro',uri=True);[print(*r) for r in c.execute(\"select smidja_id,status,substr(request,1,50),total_tokens,round(total_cost,4) from sessions order by started_at desc limit 10\")]"
+    @scripts/smidja sessions
 
 # phase status in sequence: just phases <smidja_id>
 phases smidja_id:
-    @python3 -c "import sqlite3;c=sqlite3.connect('file:{{db}}?mode=ro',uri=True);[print(*r) for r in c.execute(\"select seq,name,kind,owner,status,attempt from phases where smidja_id='{{smidja_id}}' order by seq\")]"
+    @scripts/smidja phases {{smidja_id}}
 
 # the live event tail: just tail <smidja_id>
 tail smidja_id:
-    @python3 -c "import sqlite3;c=sqlite3.connect('file:{{db}}?mode=ro',uri=True);[print(*r) for r in c.execute(\"select rowid,type,name,started_at from events where smidja_id='{{smidja_id}}' order by rowid desc limit 25\")]"
+    @scripts/smidja tail {{smidja_id}}
 
 # what a run has alive right now, with pids: just procs <smidja_id>
 procs smidja_id:
-    @python3 -c "import sqlite3;c=sqlite3.connect('file:{{db}}?mode=ro',uri=True);[print(*r) for r in c.execute(\"select kind,name,pid,command,started_at from processes where smidja_id='{{smidja_id}}' and ended_at is null order by id\")]"
+    @scripts/smidja procs {{smidja_id}}
 
 # ── observability UI ────────────────────────────────────────────────────────
 
@@ -102,4 +102,4 @@ procs smidja_id:
 
 # boot the trace UI, http://localhost:8438 (api on :8437)
 obs:
-    cd .agents/skills/smidja-factory/apps/visualizer && bun install && (SMIDJA_DB={{justfile_directory()}}/{{db}} bun run server/index.ts &) && bunx vite
+    scripts/smidja up   # the viewer, API + UI, on :8437 (the built UI; the old :8438 vite dev server is `bunx vite` in the smithy's apps/visualizer)

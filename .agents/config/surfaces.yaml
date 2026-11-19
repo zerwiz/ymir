@@ -32,6 +32,7 @@ surfaces:
   - { name: council,     risk: safe,  roles: all, why: "writes the council roster only where none exists; never overwrites" }
   - { name: sessrumnir,  risk: ask,   roles: [heart, forge, dev], why: "an npm install and build" }
   - { name: bilskirnir,  risk: ask,   roles: [heart, forge, dev], why: "may reinstall dependencies from the network" }
+  - { name: apps,        risk: ask,   roles: [heart, forge, dev], why: "installs an app into its own home from its own repo (bin/apps/apps.sh), from the network" }
   - { name: hnoss,       risk: safe,  roles: all, why: "seats the launcher and the pi MCP entry; the package install itself is `hnoss-ensure.sh ensure --install`, which asks" }
   - { name: shells,      risk: ask,   roles: [heart, forge, dev], why: "lands the Electron runtime, from the network when the cache lacks it" }
   - { name: graphics,    risk: never, roles: all, why: "a missing render device is a driver or kernel matter" }

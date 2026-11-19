@@ -56,3 +56,8 @@ another house, and an arm shelf that cannot be written.
 ## CHANGE LOG
 
 - **2026-11-12** — Written, and carried into main by the gathered batch; from here appended, never rewritten.
+
+## 2026-11-19 — the window moved; the arm did not
+
+Rödd's window left for its own repo (`zerwiz/rodd`); a path above naming `apps/rodd/` now lives in its own home. The arm,
+the helm and the `tell` road this page describes are the house's and did not move.
