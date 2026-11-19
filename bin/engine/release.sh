@@ -63,6 +63,9 @@ resolve_sha() {  # <dir|sha> → a release dir
 link_shared() {  # <release-dir>
   local d="$1" p
   for p in $SHARED_PATHS; do
+    # an app's shared file is linked only while that app is in this tree: once it has left for its own home (the
+    # split, 2026-11-19) its state lives there, and a link here would recreate apps/<app>/ in every release
+    case "$p" in apps/*/*) [ -d "$d/apps/$(printf '%s' "$p" | cut -d/ -f2)" ] || continue ;; esac
     mkdir -p "$(dirname "$SHARED/$p")" "$(dirname "$d/$p")"
     if [ -e "$d/$p" ] && [ ! -L "$d/$p" ]; then
       # the release shipped or made one: the shared copy wins once it exists, else this one seeds it
@@ -161,7 +164,9 @@ build() {
       ( . "$tmp/bin/desktop/electron-lib.sh"; [ "$(electron_runtime_state "$tmp/apps/$a" "$tmp")" = ok ] || electron_fetch_runtime "$tmp/apps/$a" "$tmp" ) || exit 14
     done
     # every app built inside the release — nothing builds at a click, nothing serves a dev server
-    ( cd "$tmp" && npm run build -w apps/hlidskjalf && npm run build -w apps/odrerir ) || exit 15
+    ( cd "$tmp" && npm run build -w apps/hlidskjalf ) || exit 15
+    # Óðrerir only while it is in this tree (the split, 2026-11-19: apps.sh builds it into its own release)
+    if [ -d "$tmp/apps/odrerir" ]; then ( cd "$tmp" && npm run build -w apps/odrerir ) || exit 15; fi
     # once Sessrúmnir has left for its own repo (the split, 2026-11-19), apps.sh builds it into its own release
     if [ -d "$tmp/apps/sessrumnir" ]; then
       ( cd "$tmp/apps/sessrumnir" && npm run build ) || exit 16
@@ -193,7 +198,7 @@ build() {
   if [ -x "$tmp/apps/bilskirnir/scripts/data-home.sh" ]; then ( "$tmp/apps/bilskirnir/scripts/data-home.sh" ) >> "$log" 2>&1 || true; fi
   # Óðrerir's live board is written by a nightly job into the app's folder; a release whose shared copy is still
   # empty gets one now, so the hall never opens on a 404 (plan 275 S16)
-  if [ ! -s "$SHARED/apps/odrerir/public/livehall.json" ] && [ -x "$tmp/bin/time/nornir-job-hall-snapshot.sh" ]; then
+  if [ -d "$tmp/apps/odrerir" ] && [ ! -s "$SHARED/apps/odrerir/public/livehall.json" ] && [ -x "$tmp/bin/time/nornir-job-hall-snapshot.sh" ]; then
     BROKK_ROOT_OVERRIDE="$tmp" bash "$tmp/bin/time/nornir-job-hall-snapshot.sh" >> "$log" 2>&1 || true
   fi
   if ! prove "$tmp"; then say "FAIL	the release did not prove — it stays unbuilt at $tmp"; return 1; fi

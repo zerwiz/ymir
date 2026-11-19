@@ -44,6 +44,7 @@ SMIDJA_VIZ_DIR=""; row_dir "apps/smidja-factory/apps/visualizer" SMIDJA_VIZ_DIR 
 HALL_DIR=""; row_dir "apps/bilskirnir" HALL_DIR || HALL_DIR=""
 RODD_DIR=""; row_dir "apps/rodd" RODD_DIR || RODD_DIR=""
 SESS_DIR=""; row_dir "apps/sessrumnir" SESS_DIR || SESS_DIR=""
+HALL2_DIR=""; row_dir "apps/odrerir" HALL2_DIR || HALL2_DIR=""
 app_dir hlidskjalf APP_HLIDSKJALF || APP_HLIDSKJALF=""
 app_dir hlidskjalf-mobile APP_HLIDSKJALF_MOBILE || APP_HLIDSKJALF_MOBILE=""
 app_dir odrerir APP_ODRERIR || APP_ODRERIR=""
@@ -221,7 +222,7 @@ rune_svg() {  # <glyph> <tint> <out.svg> -- the rune alone, no stone (an Android
 raster_targets() {  # <surface> -> "<out>:<size>" lines
   case "$1" in
     hlidskjalf) printf '%s\n' "$ROOT/apps/hlidskjalf/electron/icon.png:512" "$ROOT/apps/hlidskjalf/public/apple-touch-icon.png:180" ;;
-    odrerir)    printf '%s\n' "$ROOT/apps/odrerir/electron/icon.png:512" "$ROOT/apps/odrerir/public/apple-touch-icon.png:180" ;;
+    odrerir)    [ -n "$HALL2_DIR" ] && printf '%s\n' "$HALL2_DIR/electron/icon.png:512" "$HALL2_DIR/public/apple-touch-icon.png:180" ;;
     smidja)     [ -n "$SMIDJA_VIZ_DIR" ] && printf '%s\n' "$SMIDJA_VIZ_DIR/desktop/icon.png:512" ;;
     bilskirnir) [ -n "$HALL_DIR" ] || return 0
                 printf '%s\n' "$HALL_DIR/electron/icon.png:512"
@@ -242,7 +243,7 @@ raster_all() {
     surface="${icon#ymir-}"
     case "$surface" in
       hlidskjalf) svg="$ROOT/apps/hlidskjalf/public/icon.svg" ;;
-      odrerir)    svg="$ROOT/apps/odrerir/public/icon.svg" ;;
+      odrerir)    [ -n "$HALL2_DIR" ] || continue; svg="$HALL2_DIR/public/icon.svg" ;;
       sessrumnir) [ -n "$SESS_DIR" ] || continue; svg="$SESS_DIR/public/icon.svg" ;;
       smidja)     [ -n "$SMIDJA_VIZ_DIR" ] || continue; svg="$SMIDJA_VIZ_DIR/public/icon.svg" ;;
       bilskirnir) [ -n "$HALL_DIR" ] || continue; svg="$HALL_DIR/public/icon.svg"

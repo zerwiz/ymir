@@ -103,8 +103,7 @@
     "zod": "^3.23.8"
   },
   "workspaces": [
-    "apps/hlidskjalf",
-    "apps/odrerir"
+    "apps/hlidskjalf"
   ],
   "allowScripts": {
     "electron@43.7.3": true,

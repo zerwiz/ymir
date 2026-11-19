@@ -21,12 +21,13 @@ bad() { printf 'not ok - %s\n' "$1" >&2; fail=1; }
 
 # Sessrúmnir wherever it is (the split, 2026-11-19): this tree, else its own home; absent = its rows skip.
 SESS="$ROOT/apps/sessrumnir"; [ -d "$SESS" ] || SESS="$(bash "$ROOT/bin/apps/app-path.sh" sessrumnir 2>/dev/null)"
+ODR="$ROOT/apps/odrerir"; [ -d "$ODR" ] || ODR="$(bash "$ROOT/bin/apps/app-path.sh" odrerir 2>/dev/null)"
 # The .desktop template each surface ships.
 template_for() {  # <surface>
   case "$1" in
     hlidskjalf) printf '%s' "$ROOT/apps/hlidskjalf/electron/ymir-hlidskjalf.desktop.in" ;;
     smidja)     printf '%s' "$ROOT/apps/hlidskjalf/electron/ymir-smidja.desktop.in" ;;
-    odrerir)    printf '%s' "$ROOT/apps/odrerir/electron/ymir-odrerir.desktop.in" ;;
+    odrerir)    [ -n "$ODR" ] && printf '%s' "$ODR/electron/ymir-odrerir.desktop.in" ;;
     sessrumnir) [ -n "$SESS" ] && printf '%s' "$SESS/resources/ymir-sessrumnir.desktop.in" ;;
   esac
 }
@@ -34,7 +35,7 @@ template_for() {  # <surface>
 slug_dirs() {  # <surface>
   case "$1" in
     hlidskjalf|smidja) printf '%s' "$ROOT/apps/hlidskjalf/electron" ;;
-    odrerir)           printf '%s' "$ROOT/apps/odrerir/electron" ;;
+    odrerir)           [ -n "$ODR" ] && printf '%s' "$ODR/electron" ;;
     sessrumnir)        [ -n "$SESS" ] && printf '%s %s' "$SESS/src" "$SESS/bin" ;;
   esac
 }
@@ -43,8 +44,8 @@ for s in hlidskjalf smidja odrerir sessrumnir; do
   cls="$(app_class "$s")"
   # 1. the .desktop template carries exactly the class
   tpl="$(template_for "$s")"
-  if [ "$s" = sessrumnir ] && [ -z "$SESS" ]; then
-    printf 'skip - sessrumnir: not on this machine (bin/apps/apps.sh install sessrumnir)\n'; continue
+  if { [ "$s" = sessrumnir ] && [ -z "$SESS" ]; } || { [ "$s" = odrerir ] && [ -z "$ODR" ]; }; then
+    printf 'skip - %s: not on this machine (bin/apps/apps.sh install %s)\n' "$s" "$s"; continue
   fi
   if [ ! -f "$tpl" ]; then
     bad "$s: no .desktop template at $tpl"

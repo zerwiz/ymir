@@ -20,6 +20,9 @@ PAIRS = [
     ("midgard/design-system/ember.js", "bilskirnir", "web/src/house-design/ember.js"),
     ("midgard/design-system/ember.d.ts", "bilskirnir", "web/src/house-design/ember.d.ts"),
     ("midgard/design-system/ymir-mark.svg", "bilskirnir", "web/src/house-design/ymir-mark.svg"),
+    ("midgard/design-system/tokens.css", "odrerir", "src/house-design/tokens.css"),
+    ("midgard/design-system/ember.js", "odrerir", "src/house-design/ember.js"),
+    ("midgard/design-system/ember.d.ts", "odrerir", "src/house-design/ember.d.ts"),
 ]
 
 
