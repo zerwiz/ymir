@@ -69,7 +69,7 @@
   home: smidja
   kind: electron
   contract: 1
-  moved: zerwiz/smidja@42c0d1f5cd88   # left Ymir with its history, 2026-11-19: the factory at the root, the engine at engine/
+  moved: zerwiz/smidja@a78eabb0e472   # left Ymir with its history, 2026-11-19: the factory at the root, the engine at engine/
   moved_also: apps/smidja, .agents/skills/smidja-factory   # the engine's folder, and the skill shelf's link into the app
   install_default: true   # every seat carried it in the tree: Gróa's update installs it where it is missing
 
