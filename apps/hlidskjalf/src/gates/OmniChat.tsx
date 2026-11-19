@@ -31,6 +31,8 @@ export function OmniChat() {
   const chatAgents = useYmir((s) => s.chatAgents);
   const toggleChatAgent = useYmir((s) => s.toggleChatAgent);
   const agents = useYmir((s) => s.agents);
+  // the placeholder still names the realm Kaia dispatches into; the drawer's RealmScope changes it
+  const realm = useYmir((s) => s.realm);
   const [draft, setDraft] = useState('');
   const [drawer, setDrawer] = useState(false);
 
