@@ -90,6 +90,12 @@ app_names() {  # every app the registry names, one per line
        END { if (id != "" && !arch) print id }' "$reg"
 }
 
+app_moved() {  # <name> — true when the registry says the app left for its own repo (contract: 1)
+  local _am_root; _app_ymir_root _am_root
+  awk -v want="$1" '/^- id:/ { id=$3 } id == want && /^  contract: 1/ { found=1 } END { exit !found }' \
+    "$_am_root/config/app-repos.yaml" 2>/dev/null
+}
+
 _app_path_main() {
   case "${1-}" in
     --home) local h; apps_home h; printf '%s\n' "$h"; return 0 ;;
@@ -104,6 +110,9 @@ _app_path_main() {
         sha="-"
         if [ "$road" = home ]; then sha="$(basename "$p")"
         elif [ -n "$p" ] && git -C "$p" rev-parse --short HEAD >/dev/null 2>&1; then sha="$(git -C "$p" rev-parse --short HEAD)"; fi
+        # An app that has LEFT for its own repo and is not installed here is a choice, not a fault: only
+        # an app still owed by this tree (contract 0) counts as missing.
+        if [ "$road" = missing ] && app_moved "$n"; then road=not-installed; fi
         [ "$road" = missing ] && missing=$((missing+1))
         printf '  "%s","%s","%s","%s"\n' "$n" "$road" "${p:--}" "$sha"
       done <<< "$names"

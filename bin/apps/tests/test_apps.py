@@ -162,10 +162,12 @@ class Lifecycle(unittest.TestCase):
             apps.guard_home(apps.apps_home())
         self.assertFalse((ROOT / "apps" / "nope-home").exists())
 
-    def test_the_real_registry_installs_nothing_while_apps_are_legacy(self):
+    def test_an_app_still_in_the_tree_installs_nothing(self):
         os.environ.pop("YMIR_APP_REGISTRY")
         before = sorted(p.name for p in (ROOT / "apps").iterdir())
         for a in apps.registry():
+            if a["contract"] >= 1:
+                continue          # a moved app installs from its own repo (the network); not this test's
             self.assertIn(apps.install(a)["state"], ("legacy", "archived"), a["id"])
         self.assertEqual(sorted(p.name for p in (ROOT / "apps").iterdir()), before)
         self.assertFalse(self.home.exists())
