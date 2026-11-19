@@ -67,6 +67,14 @@ rewritten one by one; a one-cycle link carries them to the right shelf (plan 331
   file, a topic under workspaces, a real `hodd/life`, a real `hodd/state`, a stale layout key) is named by path
   and rule.
 - `home-contract-guard.sh`: none. `features-guard.sh`: none.
+- **A fresh home** seeded into an empty folder has `life/<five topics>`, the two links (git-ignored), and no real
+  `hodd/state` or `hodd/workspaces`. `hoard_refusals` returns none and `home-seed.sh --check` says complete. The
+  first try found that the seed never made `smidja/` or `svartalfaheim/`, which its own layout map names, so
+  refusal 3 fired on every fresh install. Both are now in the skeleton.
+- **The live home (heimdall, 2026-11-20).** Run 1 counted 17,204 files before and after, merged 7 runtime files
+  into `state/` (7 clashes kept as `.from-hodd`), and made both links. Run 2 found nothing to do. Within minutes
+  garmr wrote `state/garmr/offset` through the link. Eir now names one real fault there, `hodd/saves/.sync.lock`.
+- `test_eir_register` 19/19, `test_eir_mends` 5/5 and `test_eindri_bearings` 17/17 pass.
 
 ## Not done here
 

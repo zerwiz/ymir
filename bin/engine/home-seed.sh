@@ -96,6 +96,8 @@ life/meetings
 life/outreach
 config
 state
+smidja
+svartalfaheim
 "
 # The four shelves (plan 331): hodd/ the record, life/ the operator's own material, state/ runtime state,
 # config/ settings. A fresh home has NO hodd/state and NO hodd/workspaces — only the one-cycle links
