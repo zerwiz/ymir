@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-// The hearth lives in the design system, not here: one fire, every surface.
-import { startEmbers } from '../../../../../midgard/design-system/ember.js'
+// The hearth lives in the design system: one fire, every surface.
+// The app's own copy of midgard/design-system/ember.js, byte-identical (a gate keeps it so): the
+// smithy builds in its own repo, where a climb into Ymir's tree finds nothing (the split, 2026-11-19).
+import { startEmbers } from './lib/ember.js'
 import { useRoute, hrefFor, hrefForMemory, hrefForDecisions, hrefForStats, hrefForChat, hrefForSettings, phaseCrumb } from './lib/router'
 import SessionsList from './components/SessionsList.vue'
 import SessionTrace from './components/SessionTrace.vue'
