@@ -52,3 +52,11 @@ bin/desktop/desktop-place.sh       # prefers an EMPTY desktop
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+
+## 2026-11-19 — where Sessrúmnir lives now
+
+Sessrúmnir has its own repo, `zerwiz/sessrumnir` (still a fork of pi-desktop, synced by its `scripts/sync-upstream.sh`),
+and installs into its own home with `bin/apps/apps.sh install sessrumnir` (Gróa's update installs it on every dev seat
+that lacks it). Paths above that start `apps/sessrumnir/` now live in that home
+(`~/.local/share/ymir-apps/sessrumnir/current/`); the launcher, `ymir-app sessrumnir` and the seat wire find it there.
+Its store, `~/.config/sessrumnir`, did not move.

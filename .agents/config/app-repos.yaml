@@ -55,7 +55,9 @@
   git: { host: github.com, owner: zerwiz, repo: sessrumnir, remote: origin, default_branch: main, auth: gh }
   home: sessrumnir
   kind: electron
-  contract: 0
+  contract: 1
+  moved: zerwiz/sessrumnir@133a42991a0c   # left Ymir with its history, 2026-11-19; the fork's upstream is FaqFirebase/pi-desktop
+  install_default: dev   # the seats with a desk: it is the desktop seat over the coding agents
 
 - id: smidja
   name: Smíðja factory

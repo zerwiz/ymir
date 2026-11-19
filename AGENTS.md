@@ -939,4 +939,6 @@ command, and the Smíðja MCP drives it from every harness; only pi works inside
   launcher and `ymir-app bilskirnir` find it in its own home.
 - **Rödd's window has left** for `zerwiz/rodd`; the Gná arm, the helm, the wake queue and the voice machinery
   (`bin/voice/`) are the house's and stay here.
+- **Sessrúmnir has left** for `zerwiz/sessrumnir` (still a pi-desktop fork); `bin/desktop/sessrumnir-*.sh` and the seat wire
+  stay here and find it in its own home.
 
