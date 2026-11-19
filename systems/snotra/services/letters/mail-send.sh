@@ -105,7 +105,7 @@ guard_recipients(){
 }
 
 draft(){
-  local to="" subject="" body="" html="" dry=0 record="" from_record="" meeting_dir="" plain=0 template="leemunroe-simple" footer="" reply_to="" new_thread=0; local attaches=()
+  local to="" subject="" body="" html="" dry=0 record="" from_record="" meeting_dir="" plain=0 template="leemunroe-simple" footer="" reply_to="" new_thread=0 undressed=""; local attaches=()
   while [ $# -gt 0 ]; do case "$1" in
     --to) to="${2-}"; shift 2 ;;
     --subject) subject="${2-}"; shift 2 ;;
@@ -114,6 +114,7 @@ draft(){
     --template) template="${2-}"; shift 2 ;;
     --footer) footer="${2-}"; shift 2 ;;
     --plain) plain=1; shift ;;
+    --undressed) undressed="${2-}"; shift 2 ;;
     --meeting-dir) meeting_dir="${2-}"; shift 2 ;;
     --attach) attaches+=("${2-}"); shift 2 ;;
     --record) record="${2-}"; shift 2 ;;
@@ -261,6 +262,25 @@ PY
     local extra; extra="$(python3 -c 'import json,sys;d=json.load(open(sys.argv[1]));print(",".join(p["email"] for p in d.get("participants",[]) if p.get("email")))' "$from_record")"
     [ -n "$extra" ] && to="${to:+$to,}$extra"
   fi
+  # ── A LETTER IS DRESSED, AND THE DOOR PROVES IT (plan 322, 2026-11-19) ────────────────────────────
+  # The default path already dressed a letter. What it could not do was PROVE it: `--plain` was an
+  # unguarded escape, and a hand-dressed `--html` from a stale copy looked identical to one from the
+  # pinned shelf. So the door writes the evidence into the letter itself, as a header:
+  #   X-Ymir-Letter: dressed · <template>      (or)   X-Ymir-Letter: undressed · <why>
+  # and `send` refuses a draft whose bytes carry neither. An undressed letter without a reason does not
+  # exist; the reason is what the approval record repeats.
+  local letter_mark=""
+  if [ "$plain" = 1 ]; then
+    [ -n "$undressed" ] || die "a plain letter needs a reason: --plain --undressed \"<why>\" (plan 322)"
+    letter_mark="undressed · $undressed"
+  elif printf '%s' "$html" | grep -q '<!-- letter: '; then
+    local tname; tname="$(printf '%s' "$html" | sed -n 's/.*<!-- letter: \([^ ]*\) .*/\1/p' | head -1)"
+    letter_mark="dressed · ${tname:-$template}"
+  elif [ -n "$undressed" ]; then
+    letter_mark="undressed · $undressed"
+  else
+    die "this letter carries no dressing stamp — it was not rendered by the shelf (plan 322); drop --html and let the door dress it, or say why with --undressed \"<why>\""
+  fi
   [ -n "$to" ] || die "draft needs --to or --from-record with participant emails"
   guard_recipients "$to" || die "refused: a recipient domain cannot receive mail (see above)"
   # Rule 26 + Rule 27: the sensitive gate first, then the private guard.
@@ -275,11 +295,12 @@ PY
     for a in "${attaches[@]:-}"; do [ -f "$a" ] && { "$guard" check --surface email --to "$to" "$a" >/dev/null 2>&1 || die "private-guard refused attachment: $(basename "$a")"; }; done
   fi
   local eml; eml="$(mktemp --suffix=.eml)"
-  python3 - "$to" "$subject" "$body" "$eml" "$html" "$reply_mid" "$reply_refs" "${attaches[@]}" <<'PY'
+  python3 - "$to" "$subject" "$body" "$eml" "$html" "$reply_mid" "$reply_refs" "$letter_mark" "${attaches[@]}" <<'PY'
 import sys, os, mimetypes
 from email.message import EmailMessage
-to,subject,body,out,html,reply_mid,reply_refs,*att=sys.argv[1:]
+to,subject,body,out,html,reply_mid,reply_refs,letter_mark,*att=sys.argv[1:]
 m=EmailMessage(); m["To"]=to; m["Subject"]=subject
+if letter_mark: m["X-Ymir-Letter"]=letter_mark
 if reply_mid: m["In-Reply-To"]=reply_mid
 if reply_refs: m["References"]=reply_refs
 m.set_content(body)
@@ -324,6 +345,11 @@ send(){
   # and carves the refusal into the Runes itself. A door that checked nothing is how a
   # letter reached the partners on 2026-10-23 — so the check lives here, not in a caller.
   bash "$approve" gate mail "$id" >/dev/null || die "send refused for draft $id — the operator's word is missing, stale, or already spent; nothing was sent"
+  # THE DRESSING IS PROVED ON THE BYTES THAT LEAVE (plan 322). A draft made before the stamp existed, or
+  # by a caller that reached Gmail another way, carries no X-Ymir-Letter line; it is refused here rather
+  # than sent bare.
+  local mark; mark="$(raw "$id" 2>/dev/null | sed -n 's/^X-Ymir-Letter: //p' | head -1)"
+  [ -n "$mark" ] || die "send refused for draft $id — it carries no X-Ymir-Letter line, so nobody can say it was dressed (plan 322); discard it and let the door draft it"
   local out code body sent_id=""; out="$(gmail POST "/users/me/drafts/send" "{\"id\":\"$id\"}")"; code="${out##*$'\n'}"; body="${out%$'\n'*}"
   case "$code" in 200|201) sent_id="$(python3 - "$body" <<'PY'
 import json,sys

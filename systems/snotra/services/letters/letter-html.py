@@ -21,6 +21,7 @@ markers row in TEMPLATES below, or it does not get this script's name on it.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import html
 import os
 import re
@@ -28,6 +29,23 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SHELF = os.path.join(HERE, "templates")
+
+
+def stamp(template: str) -> str:
+    """The mark that proves a letter was dressed, and by which file.
+
+    Plan 322: a dressing nobody can prove is a dressing the next hand at 23:00 will skip. The stamp names the
+template and the sha256 of the exact template file that rendered it, so a letter dressed from a stale local copy
+is not the same letter as one dressed from the pinned shelf.
+    """
+    spec = TEMPLATES.get(template) or {}
+    rel = spec.get("path") or ""
+    try:
+        with open(os.path.join(SHELF, rel), "rb") as handle:
+            digest = hashlib.sha256(handle.read()).hexdigest()[:16]
+    except OSError:
+        digest = "unknown"
+    return f"<!-- letter: {template} · sha256:{digest} -->"
 
 # One row per template this script can render, and the four places it edits. A template that is not here is
 # rendered by hand and sent with --html; pretending otherwise is how a letter silently loses its footer.
@@ -108,7 +126,8 @@ def render(template: str, subject: str, body_html: str, preheader: str, footer: 
     else:
         # no footer line and no invented company address: the block goes rather than making one up
         document = spec["address"].sub("", document, count=1)
-    return document
+    # the stamp goes on the first line: a letter that carries it was dressed, and this is how it can be told
+    return stamp(template) + "\n" + document
 
 
 def self_test() -> int:
