@@ -19,8 +19,9 @@ surfaces[4]{surface,where}:
 `.agents/assets/agents/capabilities/`, generated in the same run, so a change in one folder
 rewrites one file instead of colliding with every other branch (plan 211).
 
-capability_folders[34]{folder,index}:
+capability_folders[35]{folder,index}:
   "agents",".agents/assets/agents/capabilities/agents.md"
+  "apps",".agents/assets/agents/capabilities/apps.md"
   "assistant",".agents/assets/agents/capabilities/assistant.md"
   "backend",".agents/assets/agents/capabilities/backend.md"
   "boards",".agents/assets/agents/capabilities/boards.md"
@@ -154,3 +155,7 @@ one_capability[4]{rule,means}:
   "state before content","a door may be 1 line; anything with parsing or state moves to src/"
   "no unlisted scripts","a new bin/*.sh needs a row here, or it does not ship"
 ```
+
+## CHANGE LOG
+
+- 2026-11-18 — review-mend: added missing heading for #825

@@ -35,7 +35,7 @@ bin[39]{file,does,kind,verdict,disposition,callers,lines}:
   "release-health.sh","release-health.sh — can THIS directory serve the apps?","tool","wired","keep",4,330
   "release-lib.sh","release-lib.sh — the ONE place that knows where a release lives and how a flip happens.","lib","wired","keep",5,290
   "release-services.sh","release-services.sh — which long-running services run from a RELEASE, and whether that release is the pin.","tool","wired","keep",1,169
-  "release.sh","release.sh — Ymir runs from a RELEASE: a complete, built, proved copy behind one link (plan 275 S9; plans 80 and 226).","tool","wired","keep",6,296
+  "release.sh","release.sh — Ymir runs from a RELEASE: a complete, built, proved copy behind one link (plan 275 S9; plans 80 and 226).","tool","wired","keep",6,309
   "runtime-deploy.sh","runtime-deploy.sh — move the PINNED runtime checkout to the merged tree, and prove what is running.","tool","wired","keep",11,182
   "runtime-seat.sh","runtime-seat.sh — SEAT the pinned runtime: the checkout every Ymir service and app runs from (plan 269).","tool","wired","keep",8,88
   "test_heavy_slot.sh","test_heavy_slot.sh — plan 002 §6.1: the machine's heavy lock is real.","tool","wired","keep",1,138
@@ -56,7 +56,7 @@ bin[39]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-edit.sh","ymir-edit.sh — open a file in the Allfather's editor, on its own desktop.","tool","tested","keep",0,183
   "ymir-engine-ensure.sh","ymir-engine-ensure.sh — materialize the engine's private python home.","tool","tested","keep",2,74
   "ymir-engine.sh","ymir-engine.sh — the DOOR to the engine (`src/ymir_runtime/`).","tool","wired","keep",7,63
-  "ymir-install.sh","ymir-install.sh — THE FIRST SETUP.","tool","tested","keep",37,1971
+  "ymir-install.sh","ymir-install.sh — THE FIRST SETUP.","tool","tested","keep",37,2024
   "ymir-isolation.sh","ymir-isolation.sh — capability-probed confinement for a single agent command.","tool","wired","keep",0,89
   "ymir-migrate.sh","ymir-migrate.sh — versioned STRUCTURE migrations for existing Ymir homes.","tool","tested","keep",9,94
   "ymir-validate.sh","ymir-validate.sh — verify the installation actually works.","tool","wired","keep",4,332

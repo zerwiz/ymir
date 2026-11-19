@@ -31,8 +31,9 @@ cause on every branch is designed out (plan 211).
 Counts live in each folder's own index; this page lists the folders.
 
 
-folders[36]{folder,what,index}:
+folders[37]{folder,what,index}:
   "agents","the Einherjar and Eindri doors — spawn, brief, sweep, recover","bin/agents/INDEX.md"
+  "apps","(no purpose recorded)","bin/apps/INDEX.md"
   "assistant","Skirnir's mouth and the assistant doors an answer comes through","bin/assistant/INDEX.md"
   "backend","the model and harness bridges (indexed at .agents/backend/README.md)","bin/backend/INDEX.md"
   "boards","the board doors — what is queued, claimed and shown","bin/boards/INDEX.md"

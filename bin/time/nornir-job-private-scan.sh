@@ -164,20 +164,28 @@ if [ -z "${YMIR_OFFLINE:-}" ] && git -C "$REPO" rev-parse -q --verify origin >/d
     || printf 'private-scan: note — the fetch failed; the engine judged the %s this copy already carries\n' "${engine_ref:-tree}" >&2
 fi
 if [ -r "$ENGINE" ]; then
+  # THE ENGINE'S MACHINE FACE, not its prose (2026-11-18). It used to parse the human report with a shape
+  # regex; the engine now prints `path:line` per finding under `--paths-only`, so a block added to the
+  # prose (the allowed ones) can never be read as a finding. The machine row still comes last, and its
+  # `allowed` field is the count the engine accepted on a recorded reason in hodd/config/private-scan-allow.txt.
+  ag_err="$REPORT_DIR/agnostic-audit.stderr"
   if [ -n "$engine_ref" ]; then
-    # Every finding, not the first screenful: the engine caps its printed report for a person's terminal, and the
-    # queue must carry them all (it was silently cutting at 200 and reporting 201, 2026-11-14).
-    ag_out="$( cd "$REPO" && YMIR_AUDIT_MAX_REPORT=100000 bash "$ENGINE" --ref "$engine_ref" 2>&1 )" || true
+    ag_out="$( cd "$REPO" && YMIR_AUDIT_MAX_REPORT=100000 bash "$ENGINE" --ref "$engine_ref" --paths-only 2>"$ag_err" )" || true
   else
-    ag_out="$( cd "$REPO" && YMIR_AUDIT_MAX_REPORT=100000 bash "$ENGINE" 2>&1 )" || true
+    ag_out="$( cd "$REPO" && YMIR_AUDIT_MAX_REPORT=100000 bash "$ENGINE" --paths-only 2>"$ag_err" )" || true
   fi
-  while IFS= read -r line; do
-    where="$(printf '%s' "$line" | awk '{print $1}')"
+  while IFS= read -r where; do
     [ -n "$where" ] || continue
     printf 'AGNOSTIC\t%s\n' "$where" >> "$out"
     findings=$((findings+1))
-  done < <(printf '%s\n' "$ag_out" | grep -E '^  [^ ].*:[0-9]+ ' | sed 's/^  //')
-  printf '%s\n' "$ag_out" | grep -q 'NONE READ' && \
+  done < <(printf '%s\n' "$ag_out" | grep -E '^[^ ][^[:space:]]*:[0-9]+$')
+  ag_row="$(printf '%s\n' "$ag_out" | grep -E '^  "' | head -1)"
+  if [ -n "$ag_row" ]; then
+    ag_allowed="$(printf '%s' "$ag_row" | awk -F'\",\"' '{print $5}' | tr -dc '0-9')"
+    case "${ag_allowed:-}" in ''|*[!0-9]*) ag_allowed=0 ;; esac
+    allowed=$((allowed + ag_allowed))
+  fi
+  grep -q 'NONE READ' "$ag_err" 2>/dev/null && \
     printf 'private-scan: note — the home holds no deny list, so only the generic shapes were judged (hodd/identity/public-deny.txt)\n' >&2
 else
   printf 'private-scan: note — no bin/gates/agnostic-audit.sh in %s, so the operator'"'"'s words were NOT judged this run\n' "$REPO" >&2
