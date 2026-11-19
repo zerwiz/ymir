@@ -303,6 +303,16 @@ if [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ]; then
     printf 'seat-reap: a harness on this host is NOT seated — bin/seat/seat-reap.sh --check names it\n'
   fi
 fi
+# The MCP set, re-seated after every update (plan 324 F11): the same named merge install runs, so a
+# setting the house owns — `openUi: false`, no browser tab per tool call — reaches every seat by update,
+# never by a hand on one box.
+if [ -x "$SCRIPT_DIR/../bridge/mcp-config.sh" ]; then
+  if gstep mcp-seat 60 "$SCRIPT_DIR/../bridge/mcp-config.sh" seat >/dev/null 2>&1; then
+    printf 'mcp-seat: every harness carries the MCP set (pi: no UI window per call)\n'
+  else
+    printf 'mcp-seat: a harness is NOT seated — bin/bridge/mcp-config.sh seat --check names it\n'
+  fi
+fi
 # the hound's units are rendered from the repo, so an update re-seats them
 # A refresh that waits on a console, a polkit prompt or a missing unit must not
 # stall the whole update: bound it, detach it, and never let it hold our fds.
