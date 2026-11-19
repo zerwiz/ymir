@@ -169,7 +169,11 @@ build() {
     # and its bundle was never built here — a release therefore served :8437 with no UI at all
     # ("No ./dist build found"), while the tree kept a committed dist/ that hid the fault. The bundle
     # left git on 2026-11-14 (plan 288 step 7, plan 287 P4); the release builds it, or says it did not.
-    if command -v bun >/dev/null 2>&1; then
+    # Once the smithy has left for its own repo (the split, 2026-11-19) a release carries no viewer to
+    # build: bin/apps/apps.sh builds it into the smithy's own release.
+    if [ ! -d "$tmp/apps/smidja-factory/apps/visualizer" ]; then
+      printf 'visualizer SKIP the smithy is not in this tree — it installs into its own home (bin/apps/apps.sh)\n'
+    elif command -v bun >/dev/null 2>&1; then
       ( cd "$tmp/apps/smidja-factory/apps/visualizer" && bun install --frozen-lockfile && bunx vite build ) || exit 19
     else
       printf 'visualizer SKIP no bun on this machine — the smithy serves its API with no UI\n'

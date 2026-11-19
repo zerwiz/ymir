@@ -71,17 +71,27 @@ PY=""
 for c in python3; do command -v "$c" >/dev/null 2>&1 && PY="$c"; done
 [ -n "$PY" ] || { printf 'error: python3 not found\n' >&2; exit 1; }
 
-mkdir -p "$(dirname "$DB")" "$ROOT/apps/smidja/smidja_data/sessions/bootstrap"
+mkdir -p "$(dirname "$DB")/sessions/bootstrap"
+# The tracer comes from the engine: in this tree while the smithy is here, else the installed
+# smithy's own engine/ (the split, 2026-11-19) — found through the one resolver.
+SMIDJA_ENGINE_FOR_BS=""
+if [ -f "$SCRIPT_DIR/smidja-lib.sh" ]; then
+  . "$SCRIPT_DIR/smidja-lib.sh"
+  _bs_f=""; smidja_factory_dir _bs_f 2>/dev/null || true
+  [ -n "$_bs_f" ] && [ -d "$_bs_f/engine/smidja_modules" ] && SMIDJA_ENGINE_FOR_BS="$_bs_f/engine"
+fi
 
 if command -v uv >/dev/null 2>&1; then
-  ( cd "$ROOT" && SMIDJA_BS_DB="$DB" uv run --quiet \
+  ( cd "$ROOT" && SMIDJA_BS_DB="$DB" SMIDJA_ENGINE_FOR_BS="$SMIDJA_ENGINE_FOR_BS" uv run --quiet \
       --with pydantic --with pyyaml --with python-dotenv --with rich -- \
       python3 -c '
 import os, sys
 from pathlib import Path
 root = Path.cwd()
-for sub in ("apps/smidja", "smidja"):
-    p = root / sub
+cands = [root / "apps/smidja", root / "smidja"]
+if os.environ.get("SMIDJA_ENGINE_FOR_BS"):
+    cands.append(Path(os.environ["SMIDJA_ENGINE_FOR_BS"]))
+for p in cands:
     if (p / "smidja_modules").is_dir():
         sys.path.insert(0, str(p)); break
 from smidja_modules.tracer import Tracer

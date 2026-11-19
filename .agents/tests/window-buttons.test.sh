@@ -96,11 +96,21 @@ done
 
 # ── 5. the smithy's own drawn controls obey the same answer ───────────────────
 # Smíðja draws _ □ × itself when it runs in its own shell; on a tiling compositor it must not.
-grep -q 'windowButtons' "$ROOT/apps/smidja-factory/apps/visualizer/desktop/preload.js" \
+# The smithy is found through the one resolver (the split, 2026-11-19): in this tree, a developer's
+# checkout, or the installed app. When it is not on this machine at all, the check is a named skip.
+SMIDJA_VIZ=""
+if [ -f "$ROOT/bin/desktop/smidja-lib.sh" ]; then
+  . "$ROOT/bin/desktop/smidja-lib.sh"; smidja_visualizer_dir SMIDJA_VIZ 2>/dev/null || SMIDJA_VIZ=""
+fi
+if [ -z "$SMIDJA_VIZ" ]; then
+  printf 'skip - the smithy is not on this machine (bin/apps/apps.sh install smidja)\n'
+else
+grep -q 'windowButtons' "$SMIDJA_VIZ/desktop/preload.js" \
   && ok "Smíðja's shell hands the renderer the platform answer" \
   || bad "Smíðja's shell never tells the renderer whether to draw its controls"
-grep -q 'showsWindowControls' "$ROOT/apps/smidja-factory/apps/visualizer/src/App.vue" \
+grep -q 'showsWindowControls' "$SMIDJA_VIZ/src/App.vue" \
   && ok "Smíðja's topbar draws its controls only when the platform wants them" \
   || bad "Smíðja's topbar still draws _ □ × unconditionally"
+fi
 
 exit "$fail"

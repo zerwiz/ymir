@@ -300,8 +300,23 @@ def units_of(release: Path) -> list[str]:
     return [u.strip().strip("\"'") for u in m.group(1).split(",") if u.strip()] if m else []
 
 
+def runs_from(unit: str, home: Path) -> bool:
+    """True only when the unit's own WorkingDirectory or ExecStart lies inside this app's home.
+
+    A unit of the same name may still run the app from somewhere else (the in-tree copy in the pin,
+    while the app's move has not landed on this machine); restarting THAT one on this app's update
+    would touch a running service that this update did not change (found 2026-11-19, a fenced test
+    restarted the live viewer)."""
+    out = sh(["systemctl", "--user", "show", "-p", "WorkingDirectory", "-p", "ExecStart", unit], timeout=30)
+    text = out.stdout
+    for root in {str(home), str(home.resolve()) if home.exists() else str(home)}:
+        if root and root in text:
+            return True
+    return False
+
+
 def restart(app: dict, home: Path) -> str:
-    units = units_of(home / "current")
+    units = [u for u in units_of(home / "current") if runs_from(u, home)]
     if not units or in_call():
         return ""
     sh(["systemctl", "--user", "try-restart", *units], timeout=120)

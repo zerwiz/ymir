@@ -1,0 +1,23 @@
+path	why
+.gitignore	old checkouts still hold apps/smidja/smidja_data and the viewer's dist; ignoring them stays harmless
+bin/desktop/smidja-board.sh	a legacy trace path, tried after the home's; a seat that still has an in-tree trace keeps finding it
+bin/desktop/smidja-bootstrap.sh	the same legacy trace fallback, and the in-tree engine is still tried before the installed one
+bin/desktop/smidja-observe.sh	the same legacy trace fallback
+bin/engine/ymir-validate.sh	the same legacy trace fallback
+bin/fleet/fleet-ensure.sh	the same legacy trace fallback
+bin/time/nornir-job-observer.sh	the same legacy trace fallback
+scripts/start.sh	the same legacy trace fallback
+bin/engine/release.sh	guarded by the folder: a release without the smithy skips its viewer, says so
+bin/engine/release-build.sh	build_asset skips an absent folder, named
+bin/engine/release-health.sh	probe skips an absent folder, named
+bin/engine/ymir-install.sh	the in-tree stamp runs only when apps/smidja-factory is present; the doors are seated from the pin's legacy copy or the resolver
+bin/forge/npm/npm-pretest.sh	the smithy's viewer is required only while apps/smidja-factory ships in the package
+bin/forge/npm/npm-publish.sh	--all keeps only app folders the tree still carries
+bin/gates/guards/app-folder-guard.sh	an exemption for a folder that no longer exists; harmless
+bin/gates/soak.sh	a changed-path pattern for a folder that no longer exists; harmless
+scripts/smidja	names the old folder in its error message only
+.agents/config/tenant-baseline.json	a measured baseline of words per file: a record, not a path the code follows
+.agents/tenant-baseline.json	the same baseline
+bin/desktop/design-icon.sh	the APPS table names the old folder; row_dir resolves it through the one resolver
+bin/forge/utgard-box.sh	the in-tree engine is tried before the installed smithy's own engine/
+bin/gates/guards/public-guard.py	the generated-files list names a lockfile in a folder that has left; harmless

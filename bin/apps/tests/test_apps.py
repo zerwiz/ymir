@@ -36,6 +36,13 @@ mkdir -p "$YMIR_APP_STATE_DIR"; echo kept > "$YMIR_APP_STATE_DIR/state.txt"
 """
 
 
+class Restart(unittest.TestCase):
+    def test_a_unit_running_from_elsewhere_is_never_restarted(self):
+        home = Path(tempfile.mkdtemp())
+        # dbus is a user unit on every systemd seat, and it never runs from a temp apps home
+        self.assertFalse(apps.runs_from("dbus.service", home))
+
+
 class Lifecycle(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()

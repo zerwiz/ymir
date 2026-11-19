@@ -51,6 +51,11 @@ done
 # cloned at apps/smidja-factory (the registry maps smidja there), so it is a
 # target like any other app: it publishes as @zerwiz/smidja.
 [ "$ALL" = 1 ] && TARGETS=("$ROOT" "$ROOT/apps/hlidskjalf" "$ROOT/apps/hlidskjalf-mobile" "$ROOT/apps/odrerir" "$ROOT/apps/sessrumnir" "$ROOT/apps/smidja-factory")
+# An app that has left for its own repo (the split, 2026-11-19) publishes from that repo, not from here:
+# --all keeps only the app folders this tree still carries.
+if [ "$ALL" = 1 ]; then
+  _kept=(); for _t in "${TARGETS[@]}"; do [ -d "$_t" ] && _kept+=("$_t"); done; TARGETS=("${_kept[@]}"); unset _kept _t
+fi
 [ "${#TARGETS[@]}" -eq 0 ] && [ "$WHO" = 0 ] && [ "$UNPUBLISH" = 0 ] && TARGETS=("$ROOT")
 # `--unpublish @scope/name@1.2.3` — the spec may also arrive positionally.
 [ "$UNPUBLISH" = 1 ] && UNPUB_SPEC="${UNPUB_SPEC:-${TARGETS[0]:-}}" 

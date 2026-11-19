@@ -43,9 +43,18 @@ HULL=(
   "packages/a2a/ratatoskr/card.ts"
   "packages/contracts/src/agent-card.ts"
   "tools/mill/worker.sh"
-  # the Smiðja visualizer's BUILT UI — without it the app view is blank
-  "apps/smidja-factory/apps/visualizer/dist/index.html"
 )
+# The Smiðja visualizer's BUILT UI — without it the app view is blank. Only while the smithy ships in
+# this package: once it has left for its own repo (the split, 2026-11-19) it is installed by
+# bin/apps/apps.sh, and the package carries no apps/smidja-factory at all.
+[ -d "$ROOT/apps/smidja-factory" ] && HULL+=("apps/smidja-factory/apps/visualizer/dist/index.html")
+# The desktop surfaces the package itself carries — an app that left is not the package's to boot.
+IN_PACKAGE_SURFACES=""
+for _s in hlidskjalf odrerir sessrumnir smidja; do
+  _d="$_s"; [ "$_s" = smidja ] && _d=smidja-factory
+  [ -d "$ROOT/apps/$_d" ] && IN_PACKAGE_SURFACES="$IN_PACKAGE_SURFACES $_s"
+done
+unset _s _d
 
 pack_and_hull() {
   say "== building every surface that serves a bundle (the prepack, run for real) =="
@@ -115,14 +124,14 @@ smoke() {  # <pkg-dir>
   if [ -r "$P/bin/desktop/app-lib.sh" ] && [ -r "$P/bin/desktop/electron-lib.sh" ]; then
     . "$P/bin/desktop/app-lib.sh"; . "$P/bin/desktop/electron-lib.sh"
     local sdir shape_ok=1
-    for sh in hlidskjalf odrerir sessrumnir smidja; do
+    for sh in $IN_PACKAGE_SURFACES; do
       sdir=""
       app_dir "$sh" sdir 2>/dev/null || sdir=""
       [ -n "$sdir" ] || { fail "desktop shape: app_dir $sh empty in the package"; shape_ok=0; continue; }
       local st; st="$(electron_runtime_state "$sdir" "$P" "$(app_pkg "$sh")" 2>/dev/null)"
       case "$st" in ok|partial|absent) ;; *) fail "desktop shape: $sh answered '$st'"; shape_ok=0 ;; esac
     done
-    [ "$shape_ok" = 1 ] && ok "desktop shape resolves for all four surfaces in the package"
+    [ "$shape_ok" = 1 ] && ok "desktop shape resolves for every surface in the package ($IN_PACKAGE_SURFACES )"
     # APPS FULLY BOOTABLE (2026-09-24, the Allfather's law): it is critical
     # that the apps WORK and START, especially the electrons. Run the launcher's
     # own first-run install at the workspace root (the P3 law — the exact road
@@ -132,7 +141,7 @@ smoke() {  # <pkg-dir>
     # it would ever exec a window.
     local boot_ok=1
     if ( cd "$P" && npm install --no-audit --no-fund >/dev/null 2>&1 ); then
-      for sh in hlidskjalf odrerir sessrumnir smidja; do
+      for sh in $IN_PACKAGE_SURFACES; do
         local sdir2 bin idx
         sdir2=""; app_dir "$sh" sdir2 2>/dev/null || sdir2=""
         [ -n "$sdir2" ] || { fail "app-boot: $sh has no app dir in the package"; boot_ok=0; continue; }

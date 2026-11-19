@@ -68,18 +68,22 @@ esac
 # The proof that nothing was lost is bin/apps/split-ledger.py verify, run before the record is written.
 REG="$ROOT/config/app-repos.yaml"
 if [ -r "$REG" ]; then
+  # An app's own folder (`repo: apps/<dir>`), plus any path outside apps/ that is the app's and
+  # left with it (`moved_also: a, b` — e.g. the skill shelf's link into the app).
   moved_dirs="$(awk '
-    /^- id:/ { if (dir != "" && moved) print dir; dir=""; moved=0 }
+    function flush() { if (moved) { if (dir != "") print dir; n = split(also, a, /[, ]+/); for (i = 1; i <= n; i++) if (a[i] != "") print a[i] } }
+    /^- id:/ { flush(); dir=""; also=""; moved=0 }
     /^  repo: apps\// { dir=$2 }
     /^  moved: [A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+@[0-9a-f]{7,}/ { moved=1 }
-    END { if (dir != "" && moved) print dir }' "$REG")"
+    /^  moved_also: / { sub(/^  moved_also:[ ]*/, ""); sub(/[ ]+#.*$/, ""); also=$0 }
+    END { flush() }' "$REG")"
   if [ -n "$moved_dirs" ]; then
     left=""; carried=0
     while IFS= read -r _f; do
       [ -n "$_f" ] || continue
       _hit=0
       while IFS= read -r _d; do
-        [ -n "$_d" ] && case "$_f" in "$_d"/*) _hit=1 ;; esac
+        [ -n "$_d" ] && case "$_f" in "$_d"|"$_d"/*) _hit=1 ;; esac
       done <<< "$moved_dirs"
       if [ "$_hit" = 1 ]; then carried=$((carried+1)); else left="${left}${_f}"$'\n'; fi
     done <<< "$deleted"

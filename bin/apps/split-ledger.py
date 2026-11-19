@@ -40,6 +40,8 @@ ROOT = Path(__file__).resolve().parents[2]
 
 # The folder each app has in Ymir's tree, where it is not the app's own name.
 DIRS = {"smidja": ["smidja-factory", "smidja"]}
+# Where each of those folders sits INSIDE the app's own repo, when not at its root.
+REPO_PREFIX = {("smidja", "smidja"): "engine/"}
 # The files whose job is to name every app: they keep `apps/<dir>` on purpose (decision: kept).
 RESOLVER_FILES = {"bin/apps/app-path.sh", "bin/apps/apps.py", "bin/apps/split-ledger.py",
                   "bin/desktop/app-lib.sh", "config/app-repos.yaml", ".agents/config/app-repos.yaml"}
@@ -191,11 +193,18 @@ def verify(app: str, repo: Path, app_ref: str, ref: str, moved: Path | None, aft
     # 1 · files — the app repo's root is the app's folder
     expected = []
     for d in dirs_of(app):
-        expected += [(p, b) for p, _, b in tree_rows(ref, f"apps/{d}")]
+        pre = REPO_PREFIX.get((app, d), "")
+        expected += [(pre + p, b) for p, _, b in tree_rows(ref, f"apps/{d}")]
     have = {p: b for p, _, b in tree_rows(app_ref, "", repo=repo)}
     changed = {}
     if moved and moved.is_file():
-        changed = {r["path"]: r for r in read_tsv(moved)}
+        changed = {}
+        for r in read_tsv(moved):
+            path = r["path"]
+            for d in dirs_of(app):
+                if path.startswith(f"apps/{d}/"):
+                    path = REPO_PREFIX.get((app, d), "") + path[len(f"apps/{d}/"):]
+            changed[path] = r
     missing = [p for p, b in expected if p not in have and p not in changed]
     differ = [p for p, b in expected if p in have and have[p] != b and p not in changed]
     add("files", not missing and not differ,
@@ -225,7 +234,11 @@ def verify(app: str, repo: Path, app_ref: str, ref: str, moved: Path | None, aft
     add("state", None, "proved by `split-ledger.py state --compare before after` around the migration")
     # 6 · ties
     ties = code_ties(app, None)
-    owed = [t for t in ties if t[2] == "owed"]
+    # A line may stay on purpose: config/split/<app>.kept.tsv names the file and why (every tie gets a
+    # decision — cut, resolved or kept — and a kept one is written down, never assumed).
+    kept_file = ROOT / "config" / "split" / f"{app}.kept.tsv"
+    kept = {r["path"] for r in read_tsv(kept_file)} if kept_file.is_file() else set()
+    owed = [t for t in ties if t[2] == "owed" and t[0] not in kept]
     if after_removal:
         add("ties", not owed, f"{len(owed)} code lines still name apps/{dirs_of(app)[0]}"
             + (f" e.g. {owed[0][0]}:{owed[0][1]}" if owed else ""))

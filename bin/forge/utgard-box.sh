@@ -669,8 +669,14 @@ cmd_factory() {
   local name="${1-}"; [ -n "$name" ] || die "factory: which box?"
   local c; c="$(cname "$name")"
   exists "$c" || die "factory: no box named $name"
-  local src="$ROOT/apps/smidja"
-  [ -d "$src" ] || die "factory: no factory at apps/smidja"
+  # The engine: in this tree while the smithy is here, else the installed smithy's own engine/
+  # (the split, 2026-11-19), found through the one resolver.
+  local src="$ROOT/apps/smidja" _ub_f=""
+  if [ ! -d "$src/smidja_modules" ] && [ -f "$ROOT/bin/desktop/smidja-lib.sh" ]; then
+    . "$ROOT/bin/desktop/smidja-lib.sh"
+    smidja_factory_dir _ub_f 2>/dev/null && [ -d "$_ub_f/engine/smidja_modules" ] && src="$_ub_f/engine"
+  fi
+  [ -d "$src/smidja_modules" ] || die "factory: no smithy engine here (apps/smidja, or an installed smithy: bin/apps/apps.sh install smidja)"
   "$ENGINE" exec "$c" bash -lc "mkdir -p $FACTORY_DIR" >/dev/null 2>&1 \
     || die "factory: cannot make $FACTORY_DIR in $c"
   # Only the factory itself: modules, chains, and its config shelf.
