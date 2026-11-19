@@ -119,7 +119,11 @@ for base in (os.path.join(home, "hodd"),):
         for name in filenames:
             if name.endswith(".md") and name != "INDEX.md":
                 docs.append(os.path.join(dirpath, name))
-for path in sorted(docs)[:400]:
+# NO CAP (2026-11-19). This loop used to read `sorted(docs)[:400]`, and the retire pass below
+# deletes every copy whose document this pass did not produce — so the 401st document onward was
+# deleted from the home on every run, silently. Measured: 74 restored copies of living documents
+# (all under hodd/docs/, sorted late) were deleted that way. Every document is produced now.
+for path in sorted(docs):
     doc_fact(path)
 
 # ── the house law, by title ───────────────────────────────────────────────────────────────────
@@ -178,10 +182,17 @@ for path in glob.glob(os.path.join(dest, "home-*.md")):
     if name in written:
         continue
     body = open(path, encoding="utf-8", errors="replace").read()
-    if STAMP in body:
-        removed.append(name)
-        if not dry:
-            os.remove(path)
+    if STAMP not in body:
+        continue
+    # A COPY DIES ONLY WHEN ITS SOURCE DOES (2026-11-19). Each copy carries `source:` in its front
+    # matter; if that document still exists in the home, the copy is a live document's copy and is
+    # never removed — so no future cap, filter or crash can delete the home's own record again.
+    m = re.search(r"^source:\s*(\S+)\s*$", body, re.M)
+    if m and os.path.exists(os.path.join(home, m.group(1))):
+        continue
+    removed.append(name)
+    if not dry:
+        os.remove(path)
 
 print(f'learn-home{{written,removed,dest,dry}}:"{len(written)}","{len(removed)}","{dest}","{int(dry)}"')
 for name in removed:
