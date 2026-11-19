@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """The apps door, proven on a throwaway app — never on a real home, a real app or apps/.
 
 Fenced (tests-fence-real-paths): YMIR_APPS_HOME, the registry, the state and config dirs

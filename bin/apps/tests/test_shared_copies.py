@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """An app that leaves carries its own copy of what it shared with Ymir; the copy stays the source.
 
 The smithy's viewer imported Ymir's hearth (`midgard/design-system/ember.js`) by climbing five folders
