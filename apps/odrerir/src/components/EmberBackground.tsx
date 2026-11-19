@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { startEmbers } from '../../../../midgard/design-system/ember.js';
+// the app's own copy of midgard/design-system/ember.js (the split, 2026-11-19), kept equal by Ymir's shared-copy test
+import { startEmbers } from '../house-design/ember.js';
 
 /**
  * The hearth — the hall's glow, carried in this repo (not shared or borrowed),

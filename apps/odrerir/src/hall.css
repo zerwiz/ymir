@@ -2,7 +2,9 @@
    The canonical tokens, the ember hearth, the translucent panels, and the
    halls buttons — one design language with Hlidskjalf, one anatomy for the
    boards (the tickets table + detail sheet, worn by the plans board too). */
-@import '../../../midgard/design-system/tokens.css';
+/* the app's own byte-identical copy of midgard/design-system/tokens.css: it builds in its own repo, where a climb
+   into Ymir finds nothing (the split, 2026-11-19; Ymir's bin/apps/tests/test_shared_copies.py keeps it equal) */
+@import './house-design/tokens.css';
 
 :root {
   --hall-bg: #151209;

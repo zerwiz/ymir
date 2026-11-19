@@ -63,8 +63,9 @@ export default defineConfig({
     strictPort: false,
     proxy: apiProxy,
     fs: {
-      // The canonical cloth lives at the repo root (midgard/design-system).
-      allow: ['..', '../..', '../../..'],
+      // The cloth is the app's own copy now (src/house-design, the split 2026-11-19): nothing outside the app is
+      // served, which is also fault 1's guard — an allow-list that climbs is how the panels once got HTML for JSON.
+      allow: ['.'],
     },
   },
   preview: {

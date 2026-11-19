@@ -1,0 +1,21 @@
+# app.yaml — the app contract (Ymir's split, plan 01 §3; the overview tool's plan 04, Road B).
+name: odrerir
+title: Óðrerir — the Live Hall
+kind: electron                 # its window is Ymir's desktop shell (scripts/electron.sh --view odrerir) over :4322
+window_class: ymir-odrerir
+ports: [4322]                  # vite preview of dist/, on loopback; /api is proxied to the Hliðskjálf gate (:3889)
+units: []
+launchers: [ymir-odrerir.desktop]
+icons: [ymir-odrerir]
+# The live board (livehall.json) is STATE, written nightly by Ymir's hall-snapshot job: it lives in
+# ${XDG_STATE_HOME:-~/.local/state}/odrerir/, and each release links public/ and dist/livehall.json to it.
+state_dir: ${XDG_STATE_HOME:-~/.local/state}/odrerir
+config_dir: ${XDG_CONFIG_HOME:-~/.config}/odrerir
+ymir:
+  min_version: ""
+  doors:
+    - { name: gate, need: optional }            # the Hliðskjálf gate (:3889), which the hall's buttons and boards call
+    - { name: hall-snapshot, need: optional }   # the nightly job that writes livehall.json
+    - { name: desktop-shell, need: optional }   # scripts/electron.sh opens its window; without it, a browser does
+  packages: []
+history: "cut from zerwiz/ymir apps/odrerir with git filter-repo, 2026-11-19"
