@@ -108,3 +108,7 @@ came back from **disk** rather than from memory. `--socket-io <dir>` points it a
   converse mode, the wall in words, and the bridge's unit. The buttons in the drawing app itself
   (Save to server, the sessions list, the assistant panel, the wider quick palette) arrive with
   the next app build, because that surface ships as a compiled bundle.
+- **2026-11-19** — `bin/gimle/whiteboard-acceptance.mjs` (named above) has left Ymir with the rest of
+  `bin/gimle/`. It is kept in the operator's home (`hodd/reference/ymir-moved/gimle-bin-2026-11-19/`) until
+  Gimlé's own repository carries it. See the 2026-11-19 section of
+  [gimle-the-hall.md](gimle-the-hall.md).

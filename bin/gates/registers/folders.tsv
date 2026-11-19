@@ -17,7 +17,6 @@ engine	install, migrate, update, ensure — the machine's own upkeep
 fleet	the fleet registry, roles, agents-config and the sync doors
 forge	Yggdrasil worktrees, Utgard sandboxes, Mjollnir and the deploy doors
 gates	the wards, the checks and the registers (this one included)
-gimle	the hall — desk, MCP, share, deploy, projector
 host	the machine itself: packages, plugins, monitors, host facts
 identity	who and what the house is — seats, operator, projects
 mail	the one mail desk — addresses, import, send, inbound proof

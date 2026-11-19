@@ -149,3 +149,61 @@ python3 bin/gimle/mcp/test_dex_login.py     # against the shipped Dex config, in
   running its own copy of the suite, sharing no secret and no document with this installation.
 - **2026-11-19** — appended *the MCP door logs its people in*: the OAuth road, groups for scope, the canvas
   write gate and comma-only places (plan 149).
+- **2026-11-19** — appended *the hall's code lives in Gimlé's own repository* (below): the `bin/gimle/` paths
+  above name where the code lived until this day.
+- **2026-11-19** — appended *two keys to write, a source on every card, and a status that names its road*
+  (plan 324): see the section below.
+
+## 2026-11-19 — the hall's code lives in Gimlé's own repository
+
+The commands above name `bin/gimle/…` and `bin/gates/tests/test_gimle_mcp_board.sh`. Those files have **left
+Ymir**: Gimlé has its own repository (`zerwiz/gimle`), and its code belongs there, not in the public Ymir
+tree. The sections above stay as the record of how the hall was run while the code lived here.
+
+| What | Where it lived in Ymir | Where it lives now |
+|---|---|---|
+| The desk | `bin/gimle/desk.py` | Gimlé's checkout: `desk/desk.py` |
+| The MCP | `bin/gimle/mcp-read.py` | Gimlé's checkout: `systems/mcp/gimle-mcp.py` (the door that serves the board today) |
+| The board reader | `bin/gimle/plane_reader.py` | Gimlé's checkout: `desk/plane_reader.py` |
+| The share door | `bin/gimle/share-scene.py` | Gimlé's checkout: `desk/share-scene.py` |
+| The whiteboard backend | `bin/gimle/brokk-backend.py` | Gimlé's checkout: `desk/brokk-backend.py` |
+| The deploy door, the projector, the acceptance script, the board test | `bin/gimle/deploy.sh`, `project.py`, `project-and-publish.sh`, `whiteboard-acceptance.mjs`, `bin/gates/tests/test_gimle_mcp_board.sh` | Not yet in Gimlé's repository; kept verbatim in the operator's home at `hodd/reference/ymir-moved/gimle-bin-2026-11-19/` until that carry lands |
+
+**What Ymir still does.** The voice reads the board through Gimlé's own reader on the heart.
+`GIMLE_READER_DIR` names that reader's folder on the heart (default `~/gimle/desk`, Gimlé's checkout).
+
+> [!IMPORTANT]
+> Ymir's newer `desk.py` (with the apps section), the reader and the door changes of plan 324 are carried on
+> Gimlé's branch `eindri/desk-apps-and-door`, which also turns the heart's desk and share links into real files.
+> Still owed in `zerwiz/gimle`: the deploy door, the projector, the acceptance script and the board test. Until
+> they land, run them from the home's reference shelf.
+
+## Two keys to write, a source on every card (plan 324)
+
+This is Gimlé's door, so the change lives in Gimlé's repository (`systems/mcp/gimle-mcp.py`, `systems/mcp/plane_tools.py`, `desk/plane_reader.py`), on its branch `eindri/desk-apps-and-door`. It reaches the live door when the heart's Gimlé checkout moves to it.
+
+**Writing now takes two keys.** The door must be started with `--allow-write`, *and* the token's line must
+carry the word `write`:
+
+```
+<token> <subject> <places> [fleet=<name>] write
+```
+
+A line without `write` still reads. On a writable door its `create_card` is refused with
+`this token carries no write grant`, and the refusal is written to `access.jsonl`.
+
+**Every card says where it came from.** `create_card` requires `source: <path>#<id>`, the record the card
+was made from (for example `meetings/2026-11-19/record.md#A7`). The source is written onto the card.
+
+**A write records what it changed.** Its audit line carries
+`change: {object, id, card, place, fields: {field: [before, after]}}`.
+
+**A missing board says so.** A door started `--plane` with no base, an empty token file, or a base that
+is not Plane answers every board tool with `isError` naming the missing value. It never answers with an
+empty list. No Plane base is defaulted any more (the old default was a model server's port on a dev
+machine).
+
+**Which road answered:** Gimlé's `bin/gimle-hall-status.sh` prints `up (local)`, `up (door)` or `skip <why>` for
+the desk, the MCP, the share, the hosted hall, Plane and Trello.
+
+The board doors themselves, Trello's and Plane's, are on [the-board-doors.md](the-board-doors.md).

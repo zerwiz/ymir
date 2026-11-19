@@ -98,7 +98,6 @@
  "bin/gates/doc-sweep.sh": 1,
  "bin/gates/guards/defaults-guard.sh": 1,
  "bin/gates/queue.sh": 1,
- "bin/gimle/desk.py": 4,
  "bin/host/bootstrap-macos.sh": 2,
  "bin/host/heimdall-ssh-keys.sh": 2,
  "bin/host/machine-profile.sh": 5,

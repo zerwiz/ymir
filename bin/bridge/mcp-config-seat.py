@@ -325,6 +325,16 @@ def seat_json_map(harness: str, path: str, key: str, want: dict, fmt, check: boo
         + (f" · dropped {dropped_text(stale, cur)}" if stale else ""))
 
 
+def quiet_ui(spec: dict) -> dict:
+    """pi's adapter opens a UI window per call unless `openUi` is false — in a browser, a tab per call
+    (the operator's plan 324 F11; the adapter's `ui-session.ts` reads `MCP_UI_VIEWER` and the per-server
+    `openUi`). The house's default is no window: seated by install and by every update, never by hand on
+    one box. A server the operator set `openUi: true` on keeps it — the switch is per server on purpose."""
+    out = dict(spec)
+    out.setdefault("openUi", False)
+    return out
+
+
 def seat_pi(want: dict, check: bool, source: str) -> None:
     if not have("pi") and not os.path.exists(source):
         say("pi", "absent", "no pi on this host")
@@ -334,7 +344,7 @@ def seat_pi(want: dict, check: bool, source: str) -> None:
         # pi IS the source: its own specs are kept whole (an oauth block stays where the
         # operator put it); only the engram and the retired names are dropped and the
         # record doors re-pointed.
-        seat_json_map("pi", p, "mcpServers", want, lambda s: s, check, create=True)
+        seat_json_map("pi", p, "mcpServers", want, quiet_ui, check, create=True)
 
 
 def seat_opencode(want: dict, check: bool) -> None:
