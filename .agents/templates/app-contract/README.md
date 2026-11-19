@@ -9,6 +9,7 @@ Every app that leaves Ymir's tree carries these files at its repo root. Ymir's
 | `app.yaml` | name, kind (`electron` or `service`), window class, ports, units, launchers, icons, state and config dirs, the Ymir doors it needs |
 | `install.sh` | builds the release in place; `--check` changes nothing and says what is wrong |
 | `update.sh` | optional: replaces the build step for an update (fetch, flip and rollback stay Ymir's) |
+| `activate.sh` | optional: run from `current` after every flip and rollback, to re-seat what must name the live release (its command on PATH, its MCP entry, its unit) |
 | `start.sh` · `stop.sh` | raise and lower the app alone, on loopback |
 | `uninstall.sh` | removes units and launchers; never state or config |
 

@@ -274,10 +274,22 @@ def update(app: dict, check: bool = False) -> dict:
         flip(home / "previous", Path(os.readlink(home / "current")))
     flip(home / "current", Path("releases") / sha)
     (home / "pending-flip").unlink(missing_ok=True)
+    activated = activate(app, home)
     restarted = restart(app, home)
     gone = prune(home)
-    return {"app": app["id"], "state": "updated", "detail": f"current {sha}" + (f" · restarted {restarted}" if restarted else "")
+    return {"app": app["id"], "state": "updated", "detail": f"current {sha}" + (f" · {activated}" if activated else "")
+            + (f" · restarted {restarted}" if restarted else "")
             + (f" · pruned {len(gone)}" if gone else "")}
+
+
+def activate(app: dict, home: Path) -> str:
+    """The app's own `activate.sh`, run from `current` after a flip (and a rollback): it re-seats
+    what must name the live release — its doors on PATH, its MCP entry, its unit. Optional."""
+    cur = home / "current"
+    if not (cur / "activate.sh").is_file():
+        return ""
+    out = sh(["bash", str(cur / "activate.sh")], cwd=cur, env=app_env(app, cur), timeout=600)
+    return "activated" if out.returncode == 0 else f"activate.sh failed: {(out.stderr or out.stdout).strip()[-160:]}"
 
 
 def units_of(release: Path) -> list[str]:
@@ -306,6 +318,7 @@ def rollback(app: dict) -> dict:
     was = os.readlink(home / "current")
     flip(home / "current", Path(os.readlink(prev)))
     flip(prev, Path(was))
+    activate(app, home)
     return {"app": app["id"], "state": "rolled back", "detail": f"current {current_sha(home)} · previous {was.rsplit('/', 1)[-1]}"
             + (f" · restarted {restart(app, home)}" if units_of(home / 'current') else "")}
 

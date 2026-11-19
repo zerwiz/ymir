@@ -69,7 +69,9 @@ app_path() {  # <name> <path-var> [<road-var>]
   apps_home _ap_home
   _ap_c="$_ap_home/$_ap_name/current"
   if [ -L "$_ap_c" ] && _app_is_app "$_ap_c"; then
-    printf -v "$_ap_rv" '%s' "$(cd "$_ap_c" && pwd -P)"; [ -n "$_ap_road_rv" ] && printf -v "$_ap_road_rv" '%s' home; return 0
+    # The `current` LINK, not the release it points at: a unit or launcher rendered from this path
+    # follows every update and rollback, where a resolved release path would pin it to one sha.
+    printf -v "$_ap_rv" '%s' "$_ap_c"; [ -n "$_ap_road_rv" ] && printf -v "$_ap_road_rv" '%s' home; return 0
   fi
   _app_ymir_root _ap_root
   _ap_c="$_ap_root/apps/$(_app_legacy_dir "$_ap_name")"
@@ -108,7 +110,7 @@ _app_path_main() {
         [ -n "$n" ] || continue
         p=""; road=missing; app_path "$n" p road || true
         sha="-"
-        if [ "$road" = home ]; then sha="$(basename "$p")"
+        if [ "$road" = home ]; then sha="$(basename "$(readlink "$p")")"
         elif [ -n "$p" ] && git -C "$p" rev-parse --short HEAD >/dev/null 2>&1; then sha="$(git -C "$p" rev-parse --short HEAD)"; fi
         # An app that has LEFT for its own repo and is not installed here is a choice, not a fault: only
         # an app still owed by this tree (contract 0) counts as missing.

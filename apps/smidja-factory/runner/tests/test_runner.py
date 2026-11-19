@@ -209,6 +209,38 @@ class TestDoors(Fenced):
         self.assertEqual(cli._remote_argv(["doctor", "--on=whynot"]), ["doctor"])
 
 
+class TestRunConfig(Fenced):
+    """A project without its own engine runs on the installed smithy's: the run gets a config whose
+    prompt paths are absolute, because the agents' cwd is the project, not the engine's root."""
+
+    def test_prompt_paths_are_made_absolute_for_another_project(self):
+        engine = FACTORY.parent / "smidja"
+        if not (engine / "smidja_modules").is_dir():
+            engine = FACTORY / "engine"
+        project = Path(self.tmp.name) / "project"
+        project.mkdir()
+        subprocess.run(["git", "init", "-q", str(project)], check=True)
+        os.environ["SMIDJA_ENGINE_DIR"] = str(engine)
+        try:
+            w = paths.where(str(project))
+            self.assertNotEqual(w.root.resolve(), w.project.resolve())
+            cfg = verbs.run_config(w, "rc1")
+            self.assertTrue(str(cfg).startswith(str(self.db.parent)))
+            text = cfg.read_text()
+            systems = re.findall(r"system: (\S+)", text)
+            self.assertTrue(systems)
+            for path in systems:
+                self.assertTrue(path.startswith("/"), path)
+            self.assertIn("SMIDJA_DB", text)        # env placeholders survive for the engine to expand
+        finally:
+            os.environ.pop("SMIDJA_ENGINE_DIR", None)
+
+    def test_a_project_with_its_own_engine_keeps_its_config(self):
+        w = paths.where(str(FACTORY.parent.parent))
+        if w.root and w.root.resolve() == w.project.resolve():
+            self.assertEqual(verbs.run_config(w, "rc2"), w.config)
+
+
 class TestTheBooksAreTheSpec(unittest.TestCase):
     """Every `scripts/smidja <verb>` the cookbooks and skills teach is a verb the runner answers."""
 

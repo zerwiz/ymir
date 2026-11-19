@@ -6,7 +6,8 @@ so two doors can never disagree about which engine, config or trace they mean.
 Resolution, first hit wins:
   factory   SMIDJA_FACTORY_DIR · the folder this package ships in
   project   --project-dir · SMIDJA_PROJECT_DIR · the git toplevel of the cwd · the cwd
-  engine    SMIDJA_ENGINE_DIR · <project>/smidja · <project>/apps/smidja · the engine beside the factory
+  engine    SMIDJA_ENGINE_DIR · <project>/smidja · <project>/apps/smidja · <factory>/engine (the installed
+            app's own) · the engine beside the factory (Ymir's tree before the split)
   config    SMIDJA_CONFIG · <engine>/smidja_smidja_config/smidja.config.yaml
   db        SMIDJA_DB · CMD_DB (the viewer's own variable) · $YMIR_HOME/smidja/smidja.db
             (when the home exists) · ${XDG_STATE_HOME:-~/.local/state}/smidja/smidja.db
@@ -59,6 +60,9 @@ def engine_dir(project: Path) -> tuple[Path | None, str]:
     for rel, road in (("smidja", "project"), ("apps/smidja", "project")):
         if _is_engine(project / rel):
             return project / rel, road
+    own = factory_dir() / "engine"
+    if _is_engine(own):
+        return own, "the installed smithy's own engine"
     beside = factory_dir().parent / "smidja"
     if _is_engine(beside):
         return beside, "beside the factory"

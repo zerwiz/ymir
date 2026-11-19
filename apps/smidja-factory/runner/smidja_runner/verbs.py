@@ -360,6 +360,46 @@ def stamp_runtime(w: paths.Where) -> list[str]:
     return out
 
 
+def run_config(w: paths.Where, smidja_id: str) -> Path | None:
+    """The config a run is launched with.
+
+    Agents work in the PROJECT (a run's cwd is its git root), while the config's
+    prompt and extension paths are written from the ENGINE's root. They are the same
+    folder when the project carries its own stamped engine; when the engine is the
+    installed smithy's own (the split, 2026-11-19), they are not — so the run gets a
+    copy of the config with those paths made absolute, written beside its trace.
+    The operator's config is never edited."""
+    if not w.config or not w.config.is_file() or w.root is None:
+        return w.config
+    if w.root.resolve() == w.project.resolve():
+        return w.config
+    dest = w.data / "sessions" / smidja_id / "smidja.config.yaml"
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    code = r"""
+import sys, yaml
+from pathlib import Path
+src, root, dest = sys.argv[1], Path(sys.argv[2]), sys.argv[3]
+d = yaml.safe_load(open(src)) or {}
+def ab(v):
+    return str(root / v) if isinstance(v, str) and v and not v.startswith(("/", "$")) else v
+for a in d.get("agents") or []:
+    pe = a.get("prompt_engineering") or {}
+    for k in list(pe):
+        pe[k] = ab(pe[k])
+    if isinstance(a.get("harness_engineering"), list):
+        a["harness_engineering"] = [ab(x) for x in a["harness_engineering"]]
+dfl = d.get("defaults") or {}
+if isinstance(dfl.get("harness_engineering"), list):
+    dfl["harness_engineering"] = [ab(x) for x in dfl["harness_engineering"]]
+yaml.safe_dump(d, open(dest, "w"), sort_keys=False, allow_unicode=True)
+"""
+    out = subprocess.run([_uv(), "run", "--quiet", "--with", "pyyaml", "python", "-c", code,
+                          str(w.config), str(w.root), str(dest)], capture_output=True, text=True, timeout=120)
+    if out.returncode != 0:
+        raise Refusal("the run's config could not be prepared", out.stderr.strip()[-400:])
+    return dest
+
+
 DONE_MEANS = re.compile(r"\bdone means\b", re.I)
 
 
@@ -404,8 +444,9 @@ def run(w: paths.Where, chain: str, ask: str, *, model_id: str | None = None, ti
         env["SMIDJA_ROSTER"] = stack
     session_dir = w.data / "sessions" / smidja_id
     cmd = [_uv(), "run", "--quiet", str(script), request, "--smidja-id", smidja_id]
-    if w.config:
-        cmd += ["--config", str(w.config)]
+    cfg = w.config if dry_run else run_config(w, smidja_id)
+    if cfg:
+        cmd += ["--config", str(cfg)]
     out = {"smidja_id": smidja_id, "chain": script.stem, "project": str(w.project),
            "engine": str(w.engine), "log": str(session_dir / "launch.log"), "viewer": f"{w.viewer}/#/sessions/{smidja_id}",
            "model": model_id or env.get("SMIDJA_LOCAL_MODEL", "(from the config / the home)"),
@@ -415,7 +456,8 @@ def run(w: paths.Where, chain: str, ask: str, *, model_id: str | None = None, ti
         return out
     session_dir.mkdir(parents=True, exist_ok=True)
     log = (session_dir / "launch.log").open("a")
-    proc = subprocess.Popen(cmd, cwd=w.root or w.project, env=env, stdin=subprocess.DEVNULL,
+    # The run's cwd is the PROJECT: the engine spawns every agent in the git root of its cwd.
+    proc = subprocess.Popen(cmd, cwd=w.project, env=env, stdin=subprocess.DEVNULL,
                             stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
     out["pid"] = proc.pid
     # Give it a moment to fail fast (a config refusal exits in under a second).
@@ -522,9 +564,13 @@ def resume(w: paths.Where, smidja_id: str, from_phase: str | None = None, dry_ru
     log = (w.data / "sessions" / smidja_id / "launch.log")
     log.parent.mkdir(parents=True, exist_ok=True)
     cmd = [_uv(), "run", "--quiet", str(engine / "smidja_resume.py")]
-    if w.config:
-        cmd += ["--config", str(w.config)]
-    proc = subprocess.Popen(cmd + args, cwd=w.root or w.project, env=paths.run_env(w),
+    # The run resumes with the config it was launched with (its own copy, when the engine is the
+    # installed smithy's), and its agents work in the project, as on the first launch.
+    own = w.data / "sessions" / smidja_id / "smidja.config.yaml"
+    cfg = own if own.is_file() else w.config
+    if cfg:
+        cmd += ["--config", str(cfg)]
+    proc = subprocess.Popen(cmd + args, cwd=w.project, env=paths.run_env(w),
                             stdin=subprocess.DEVNULL, stdout=log.open("a"), stderr=subprocess.STDOUT,
                             start_new_session=True)
     time.sleep(2)

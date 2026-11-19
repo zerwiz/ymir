@@ -28,7 +28,9 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parents[1]              # apps/smidja-factory
 SHIPPED = HERE / "templates" / "smidja"
-INSTANCE = HERE.parent / "smidja"                       # apps/smidja (the running copy)
+# The running copy: `apps/smidja` beside the factory in Ymir's tree, or the factory's own
+# `engine/` once the smithy lives in its own repo (the split, 2026-11-19).
+INSTANCE = HERE / "engine" if (HERE / "engine" / "smidja_modules").is_dir() else HERE.parent / "smidja"
 sys.path.insert(0, str(SHIPPED))
 
 from smidja_modules import git_helper, quality, resume, runner          # noqa: E402

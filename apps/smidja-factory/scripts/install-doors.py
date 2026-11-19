@@ -29,7 +29,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-FACTORY = Path(__file__).resolve().parents[1]
+# The doors name the smithy by the path that survives an update: the apps home's `current` link when
+# the app is installed there (activate.sh passes it), else the folder this script ships in.
+FACTORY = Path(os.environ.get("SMIDJA_FACTORY_LINK") or Path(__file__).resolve().parents[1])
 HOME = Path(os.environ.get("HOME", str(Path.home())))
 STAMP = _dt.datetime.now(_dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 CHECK = "--check" in sys.argv
