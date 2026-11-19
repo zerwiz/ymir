@@ -47,7 +47,12 @@ case "${1:-drain}" in
     _lease="$STATE/.arm.lease"
     if [ -z "${YMIR_ACK_ANY:-}" ] && [ -r "$_lease" ] && grep -qE "(^| )state=$STATE( |$)" "$_lease" 2>/dev/null; then
       _owner="$(bash "$SCRIPT_DIR/../records/ymir-state.sh" lock owner 2>/dev/null | tr -d '[:space:]')"
-      if [ -n "$_owner" ] && [ -d "/proc/$_owner" ] \
+      # THE HOLDER MAY ACKNOWLEDGE FROM ANY SHELL IT OWNS (2026-11-19). `owned --shell-pid` judged the
+      # shell, so a tool run by the holder itself was refused its own queue and needed YMIR_ACK_ANY=1 —
+      # measured at 18:08 with the arm held by session 477836 and its own drain refusing it. The session
+      # that holds the lock is the owner, whichever of its children asks.
+      _sess="$(bash "$SCRIPT_DIR/../records/ymir-state.sh" lock session-pid 2>/dev/null | tr -d '[:space:]')"
+      if [ -n "$_owner" ] && [ -d "/proc/$_owner" ] && [ "${_sess:-}" != "$_owner" ] \
          && ! bash "$SCRIPT_DIR/../records/ymir-state.sh" lock owned --shell-pid "$$" >/dev/null 2>&1; then
         printf 'error: the arm is held by session %s; this queue is its to acknowledge, not yours\nhelp: tell the arm holder over the arm (bin/voice/rodd-arm.sh tell --from <you> "...") — YMIR_ACK_ANY=1 overrides\n' "$_owner" >&2
         exit 3
