@@ -278,7 +278,13 @@ fi
 # door (`~/.pi/agent/bin/pi`, RULES/13); it must be the FIRST pi on the child's PATH, and
 # the rest of the seat's PATH is kept, never replaced.
 export PATH="${HOME}/.pi/agent/bin:${PATH:-/usr/local/bin:/usr/bin:/bin}:${HOME}/.local/bin:${HOME}/.npm-global/bin"
-printf '[launcher] tree=%s build=%s\n' "$APP" "$(build_state)" >>"$LOG_FILE"
+# ── THE YMIR THE SEAT BORROWS FROM (the split, 2026-11-19) ──
+# The app used to derive Ymir's root as three folders above itself — right only while it lived at
+# <ymir>/apps/sessrumnir. Installed in its own home (…/ymir-apps/sessrumnir/releases/<sha>) that lands in
+# the apps home: the fleet panel answered empty and every pi seat it raised looked for
+# bin/time/saga-session-start.sh there. This launcher knows the tree it runs from; it hands it over.
+[ -d "$ROOT/bin/desktop" ] && export YMIR_ROOT="$ROOT"
+printf '[launcher] tree=%s build=%s ymir=%s\n' "$APP" "$(build_state)" "${YMIR_ROOT:-none}" >>"$LOG_FILE"
 
 nohup node "$APP/bin/sessrumnir.js" "${args[@]}" >"$LOG_FILE" 2>&1 < /dev/null &
 LAUNCH_PID=$!
