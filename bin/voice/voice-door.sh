@@ -130,7 +130,11 @@ raise_head_proxy() {
   command -v systemd-run >/dev/null 2>&1 || return 0
   systemctl --user stop rodd-head-proxy.service 2>/dev/null || true
   mkdir -p "$STATE_DIR"
+  # plan 326.8: the proxy lives for the engine and no longer. PartOf binds a stop of the engine (its own idle stop, a
+  # `host --stop`, Rödd's window closing) to the proxy, though the proxy is raised first — measured: it was still
+  # running hours after the engine it served had been lowered.
   systemd-run --user --unit=rodd-head-proxy.service --collect \
+    --property=PartOf="$UNIT" \
     --property=StandardOutput=append:"$STATE_DIR/head-proxy.log" \
     --property=StandardError=append:"$STATE_DIR/head-proxy.log" \
     python3 "$ROOT/bin/voice/head-proxy.py" --port "$PROXY_PORT" >/dev/null 2>&1 || return 1
@@ -290,6 +294,7 @@ cmd_host() {
   if [ "$DO_STOP" = 1 ]; then
     systemctl --user stop "$IDLE_UNIT" 2>/dev/null || true
     systemctl --user stop "$UNIT" 2>/dev/null && say "stopped $UNIT" || say "was not running"
+    systemctl --user stop rodd-head-proxy.service 2>/dev/null || true   # one raised before PartOf existed
     return 0
   fi
   eng="$(find_engine || true)"
@@ -369,7 +374,9 @@ cmd_host() {
   # lets go is worse, but a missing watcher must not stop the voice from working.
   if [ "${YMIR_VOICE_IDLE_SECONDS:-300}" != 0 ] && command -v systemd-run >/dev/null 2>&1; then
     systemctl --user stop "$IDLE_UNIT" 2>/dev/null || true
+    # BindsTo + After (plan 326.8): the watcher ends whenever the engine does, by any road — a crash included
     systemd-run --user --unit="$IDLE_UNIT" --collect \
+      --property=BindsTo="$UNIT" --property=After="$UNIT" \
       --property=StandardOutput=append:"$STATE_DIR/idle.log" \
       --property=StandardError=append:"$STATE_DIR/idle.log" \
       --setenv=YMIR_VOICE_PORT="$PORT" \
