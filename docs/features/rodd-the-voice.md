@@ -388,3 +388,29 @@ Rödd's **window** has its own repo, `zerwiz/rodd`, and installs into its own ho
 (`~/.local/share/ymir-apps/rodd/current/`); the launcher, `ymir-app rodd` and the `ymir-rodd` unit find it there. Her
 voice — the voice door, the head, the toolbox — and the arm stay in Ymir: the window is a face over them, and says so in
 words on a machine without Ymir.
+
+## 2026-11-19 — what you say is read first (plan 328)
+
+When the arm holder drains its wake queue, your words are no longer read last. The drain
+presents the queue **by class**, not by arrival:
+
+1. **voice**: Rödd, the mail desk, Telegram and you, the operator;
+2. **ask**: an errand's question, because the errand is stopped until it is answered;
+3. **report**: an errand's done, report filed or progress.
+
+The first line names the shape, for example `wake classes: voice 1 · ask 2 · report 19`.
+Two or more routine errand reports fold into one line with their count and ids. Nothing is
+lost: each folded report stays in the queue until it is acknowledged.
+
+| Command | What it does |
+|---|---|
+| `bin/time/saga-wake-drain.sh` | the wakes, people first, reports folded |
+| `bin/time/saga-wake-drain.sh drain --full` | every line on its own, still people first |
+| `bin/time/saga-wake-drain.sh classes` | one row, `voice=N ask=N report=N` |
+| `bin/voice/rodd-arm.sh tell --class voice "…"` | name a tell's class outright |
+
+A tell is `voice` unless `--from` names an errand (`agent <id>`); an errand's tell is `report`,
+or `ask` when it carries a question. On pi, a waiting voice or ask is delivered as a **steer**
+(after the running tool calls) with a window notice, instead of waiting for the whole turn to
+end. Fix notes: `docs/fixes/agents/unversioned-a-wake-is-classed-on-write-voice-ask-or-report.md`
+and its two siblings of the same day.

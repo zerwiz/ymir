@@ -269,6 +269,23 @@ class QueueTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 self._queue(tmp).append("bogus", "k", "p")
 
+    def test_the_class_rides_as_a_trailing_field(self) -> None:
+        # plan 328: the drain presents voice, then ask, then report
+        with tempfile.TemporaryDirectory() as tmp:
+            q = self._queue(tmp)
+            q.append("signal", "rodd-1", "Rödd: hello", epoch=9, wake_class="voice")
+            q.append("signal", "k", "plain", epoch=10)
+            self.assertEqual(
+                q.path.read_text(encoding="utf-8"),
+                "9\t1\tsignal\trodd-1\tRödd: hello\tclass=voice\n10\t2\tsignal\tk\tplain\n",
+            )
+            first, second = q.read()
+            self.assertEqual((first.payload, first.wake_class), ("Rödd: hello", "voice"))
+            self.assertEqual((second.payload, second.wake_class), ("plain", ""))
+            self.assertEqual(first.to_line(), "9\t1\tsignal\trodd-1\tRödd: hello\tclass=voice")
+            with self.assertRaises(ValueError):
+                q.append("signal", "k", "p", wake_class="shout")
+
 
 class EnvelopeTest(unittest.TestCase):
     def test_meta_round_trip_and_atomic_write(self) -> None:

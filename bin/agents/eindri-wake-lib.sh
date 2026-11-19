@@ -62,9 +62,13 @@ eindri_mark_delivered() {  # <id> <kind>
 
 # The durable wake. This is the act the arm only notifies: once it is here,
 # a finished errand reaches Brokk with no poller, no sweep, and no arm.
-eindri_queue_wake() {  # <line>
-  local line=$1 d="$EINDRI_STATE"
+# eindri_queue_wake <line> [class] — the class (plan 328: voice | ask | report) rides as a
+# trailing `class=<c>` tab field, so the drain presents a question before a report and both
+# after a person's voice. Readers that match from the head of the line are untouched.
+eindri_queue_wake() {  # <line> [class]
+  local line=$1 wclass=${2:-} d="$EINDRI_STATE"
   mkdir -p "$d" 2>/dev/null || true
   if command -v sol_stamped >/dev/null 2>&1; then line="$(sol_stamped "$line")"; fi
+  case "$wclass" in voice|ask|report) line="$line"$'\t'"class=$wclass" ;; esac
   printf '%s\n' "$line" >>"$d/.wake-queue"
 }
