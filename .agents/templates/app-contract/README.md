@@ -17,3 +17,7 @@ The release mechanics (export a commit into `releases/<sha>`, build, `--check`, 
 `current` only on green, keep three, roll back, wait out a call) live once, in Ymir's
 `bin/apps/apps.py`, so no app carries its own copy. The how-to is
 `docs/features/apps-install-and-update.md`; the plan is the split's plan 01.
+
+## CHANGE LOG
+
+- **2026-11-19** — written with the app split.
