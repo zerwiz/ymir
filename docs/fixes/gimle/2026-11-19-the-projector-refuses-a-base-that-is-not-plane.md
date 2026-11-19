@@ -37,3 +37,7 @@ leave behind.
 
 The working Plane base and token are not in the vault yet (plan 324 F5). Until they are, `--plane` is a named refusal
 rather than a silent skip — which is the point of both.
+
+## CHANGE LOG
+
+- 2026-11-19 — review-mend: added missing heading for #828
