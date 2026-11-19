@@ -61,7 +61,35 @@ for w in ws:
   done
 }
 
-case "$app" in hlidskjalf|smidja|odrerir|sessrumnir|bilskirnir|rodd) follow_here "ymir-$app" ;; esac   # app_class: ymir-<app>
+# YMIR MAY NAME NO APP (2026-11-20). This door used to carry a `case` line per app, each pointing into
+# Ymir's own tree — so when the split took the apps out, Bilskirnir would not start from the drawer and the
+# fix had to be made twice (once in ~/.local/bin, once here). An app's launcher is the app's own business:
+# its repo ships `app.yaml` and `start.sh`, and this door only reads them.
+case "$app" in
+  --where) printf '%s\n' "$pin" ;;
+  --list|"")
+    for _d in "${XDG_DATA_HOME:-$HOME/.local/share}"/ymir-apps/*/current; do
+      [ -d "$_d" ] && basename "$(dirname "$_d")"
+    done 2>/dev/null | sort
+    for _p in "$pin"/apps/*; do [ -d "$_p" ] && basename "$_p"; done 2>/dev/null
+    ;;
+  -*|"") printf 'ymir-app: usage: ymir-app <app> | --list | --where\n' >&2; exit 2 ;;
+  *)
+    _inst="${XDG_DATA_HOME:-$HOME/.local/share}/ymir-apps/$app/current"
+    _launch=""
+    if [ -f "$_inst/app.yaml" ]; then
+      _launch=$(sed -nE 's/^launch:[[:space:]]*//p' "$_inst/app.yaml" | head -1)
+    fi
+    if [ -n "$_launch" ] && [ -x "$_inst/$_launch" ]; then exec "$_inst/$_launch" "$@"; fi
+    if [ -x "$_inst/start.sh" ]; then exec "$_inst/start.sh" "$@"; fi
+    if [ -d "$pin/apps/$app" ]; then
+      [ -x "$pin/apps/$app/start.sh" ] && exec "$pin/apps/$app/start.sh" "$@"
+      exec bash "$pin/scripts/electron.sh" start --view "$app" "$@"
+    fi
+    printf 'ymir-app: no install for %s — looked in %s and %s/apps/%s; install it with bin/apps/apps.sh\n' \
+      "$app" "$_inst" "$pin" "$app" >&2
+    exit 3 ;;
+esac   # app_class: ymir-<app>
 
 case "$app" in
   hlidskjalf|smidja|odrerir) exec bash "$pin/scripts/electron.sh" start --view "$app" "$@" ;;
