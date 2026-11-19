@@ -96,9 +96,20 @@ pi_door_seat() {
 # operator's shell reads AND to its interactive rc (which runs later and re-prepends), puts the door's
 # directory first. YMIR_PI_DOOR_PATH=print writes nothing and prints the exact block instead.
 PI_DOOR_MARK="# >>> ymir pi door >>>"; PI_DOOR_MARK_END="# <<< ymir pi door <<<"
+# 2026-11-19: a one-time prepend is not enough. mise's activate hook rewrites PATH at EVERY prompt and
+# put its own pi install ahead of the door (measured: `which -a pi` named mise's install first and the door
+# third, and `pi` in ~/ymir loaded two extension trees and refused both). The block now defines one
+# function that moves the door to the front (and drops its duplicates), runs it once, and hangs it LAST on
+# the prompt hook (bash PROMPT_COMMAND, zsh precmd_functions), so it runs after mise's own hook every time.
+# The second line is the version mark: a block without it is stale and is replaced, marker to marker.
+PI_DOOR_VERSION="# ymir pi door v2 — re-asserted after every prompt"
 pi_door_block() {
-  printf '%s\n%s\n%s\n' "$PI_DOOR_MARK" \
-    'case ":$PATH:" in ":$HOME/.pi/agent/bin:"*) ;; *) export PATH="$HOME/.pi/agent/bin:$PATH" ;; esac' "$PI_DOOR_MARK_END"
+  printf '%s\n' "$PI_DOOR_MARK" "$PI_DOOR_VERSION" \
+    '_ymir_pi_door() { local d="$HOME/.pi/agent/bin" p; case ":$PATH:" in ":$d:"*) return 0 ;; esac; p=":$PATH:"; p="${p//:$d:/:}"; p="${p#:}"; p="${p%:}"; export PATH="$d${p:+:$p}"; hash -r 2>/dev/null; return 0; }' \
+    '_ymir_pi_door' \
+    'if [ -n "${BASH_VERSION:-}" ]; then case ";${PROMPT_COMMAND:-};" in *";_ymir_pi_door;"*) ;; *) PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND;}_ymir_pi_door" ;; esac' \
+    'elif [ -n "${ZSH_VERSION:-}" ]; then typeset -ga precmd_functions; precmd_functions=(${precmd_functions:#_ymir_pi_door} _ymir_pi_door); fi' \
+    "$PI_DOOR_MARK_END"
 }
 pi_door_files() {  # the profile and rc files this operator's shell reads
   case "${SHELL##*/}" in
@@ -106,17 +117,39 @@ pi_door_files() {  # the profile and rc files this operator's shell reads
     *)   printf '%s\n' "$HOME/.profile" "$HOME/.bashrc" ;;
   esac
 }
-pi_door_path_state() {  # written | absent
-  local f any=0
+pi_door_path_state() {  # written | stale (an older block) | absent
+  local f st=written
   for f in $(pi_door_files); do
     [ -f "$f" ] && grep -qF "$PI_DOOR_MARK" "$f" 2>/dev/null || { printf 'absent'; return 0; }
+    grep -qF "$PI_DOOR_VERSION" "$f" 2>/dev/null || st=stale
   done
-  printf 'written'
+  printf '%s' "$st"
 }
-pi_door_path_seat() {  # write the block into each file that lacks it; never rewrite a line of the operator's
-  local f
+pi_door_path_seat() {  # write the block where it lacks; replace an older one marker to marker; never touch a line of the operator's
+  local f blk
+  blk="$(pi_door_block)"
   for f in $(pi_door_files); do
-    grep -qF "$PI_DOOR_MARK" "$f" 2>/dev/null && continue
+    if grep -qF "$PI_DOOR_MARK" "$f" 2>/dev/null; then
+      grep -qF "$PI_DOOR_VERSION" "$f" 2>/dev/null && continue
+      [ -w "$f" ] || return 1
+      cp -p "$f" "$f.bak-ymir-pi-door" 2>/dev/null || return 1
+      PI_DOOR_BLK="$blk" python3 -c '
+import os, sys
+path, start, end = sys.argv[1:4]
+lines = open(path, encoding="utf-8").read().split("\n")
+out, skip = [], False
+for ln in lines:
+    if ln.strip() == start and not skip:
+        out.extend(os.environ["PI_DOOR_BLK"].split("\n")); skip = True; continue
+    if skip:
+        if ln.strip() == end:
+            skip = False
+        continue
+    out.append(ln)
+open(path, "w", encoding="utf-8").write("\n".join(out))
+' "$f" "$PI_DOOR_MARK" "$PI_DOOR_MARK_END" || return 1
+      continue
+    fi
     [ -w "$(dirname "$f")" ] || return 1
     { [ -s "$f" ] && printf '\n'; pi_door_block; } >>"$f" 2>/dev/null || return 1
   done
@@ -168,8 +201,8 @@ if command -v pi >/dev/null 2>&1; then
   else
     case "$(pi_door_path_state)" in
       written) detail="$detail · door first on PATH (profile block written)" ;;
-      absent)  if [ "$mode" = "check" ]; then
-                 detail="$detail · door NOT first on PATH (no profile block)"
+      stale|absent)  if [ "$mode" = "check" ]; then
+                 detail="$detail · door NOT first on PATH (no current profile block — mise's prompt hook outruns an older one)"
                  stale=$((stale+1)); [ "$state" = current ] && state="stale"
                elif pi_door_path_seat; then
                  detail="$detail · door first on PATH (profile block written: $(pi_door_files | tr '\n' ' '))"

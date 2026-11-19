@@ -155,7 +155,7 @@ surface_detail_skip() {
 }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors seatpaths hooks packaging herdr a2abridge agentroad hermes snotra voice council sessrumnir bilskirnir apps hnoss shells graphics well memory mail unitdrift mcp harness pidoor claudehooks opencode arm armpin runtimepin roddhelm lock gates migrations hoard autoboot vault ward seats seatreap models)
+SURFACES=(floors seatpaths hooks packaging herdr a2abridge agentroad hermes snotra voice council sessrumnir bilskirnir apps hnoss shells graphics well memory mail unitdrift mcp harness pidoor pirun claudehooks opencode arm armpin runtimepin roddhelm lock gates migrations hoard autoboot vault ward seats seatreap models)
 
 # ── the register (plan 278): config/surfaces.yaml names the surfaces, their roles and their risk class ──
 # The array above is the FALLBACK, kept until every seat carries the register. Without the register every
@@ -681,6 +681,38 @@ pidoor_detail() {
   else printf '`pi` resolves to %s, not the door %s — bin/seat/harness-extensions-install.sh seats the PATH block (YMIR_PI_DOOR_PATH=print shows it)' "$got" "$want"; fi
 }
 f_pidoor() { [ -x "$SCRIPT_DIR/../seat/harness-extensions-install.sh" ] && "$SCRIPT_DIR/../seat/harness-extensions-install.sh" >/dev/null 2>&1; s_pidoor; }
+# Which pi ACTUALLY ran (2026-11-19). `pidoor` asks what a shell would resolve; this asks the running
+# processes. Measured: the pi that held the helm was mise's own install (exe …/mise/installs/pi/…), started
+# around the door, so it loaded two extension trees. The door marks every pi it starts with YMIR_PI_DOOR in
+# that process's environment and writes its last run to <state>/ymir/pi-door.last. A live pi without the
+# mark is NAMED, with its pid and binary. No pi running is healthy. Eir cannot mend a running process: the
+# remedy is to restart that pi from a shell whose `pi` is the door (the pidoor surface seats it).
+_pirun_rows() {  # pid<TAB>exe<TAB>via — one row per live pi this user runs
+  local p exe via
+  for p in $(pgrep -u "$(id -u)" -x pi 2>/dev/null); do
+    exe="$(readlink "/proc/$p/exe" 2>/dev/null)"; [ -n "$exe" ] || exe="?"
+    via="$(tr '\0' '\n' <"/proc/$p/environ" 2>/dev/null | sed -n 's/^YMIR_PI_DOOR=//p' | head -1)"
+    printf '%s\t%s\t%s\n' "$p" "$exe" "${via:-bypassed}"
+  done
+}
+s_pirun() {
+  local rows; rows="$(_pirun_rows)"
+  [ -n "$rows" ] || return 0
+  ! printf '%s\n' "$rows" | awk -F'\t' '$3=="bypassed"{f=1} END{exit !f}'
+}
+pirun_detail() {
+  local rows last by
+  rows="$(_pirun_rows)"
+  last="$(cat "${XDG_STATE_HOME:-$HOME/.local/state}/ymir/pi-door.last" 2>/dev/null | head -1)"
+  if [ -z "$rows" ]; then printf 'no pi is running%s' "${last:+ · last door run: $last}"; return 0; fi
+  by="$(printf '%s\n' "$rows" | awk -F'\t' '$3=="bypassed"{printf "%spid %s ran %s around the door", (n++?"; ":""), $1, $2}')"
+  if [ -n "$by" ]; then
+    printf '%s — restart it from a shell whose pi is the door (%s)' "$by" "$(_pidoor_dst)"
+  else
+    printf '%s' "$(printf '%s\n' "$rows" | awk -F'\t' '{printf "%spid %s ran %s through the door (%s)", (n++?"; ":""), $1, $2, $3}')"
+  fi
+}
+f_pirun() { s_pirun; }
 # Claude hooks (2026-11-10): every Claude seat in the fleet carries THREE user-scope hooks, seated
 # by bin/seat/harness-extensions-install.sh — the AGENTS.md loader (Claude reads CLAUDE.md, never
 # a project's AGENTS.md), the Eindri-only PreToolUse (Claude must never spawn its own subagents),
@@ -960,6 +992,7 @@ detail() { # <name> -> the command that prints one short fact
     graphics)  printf '%s\n' "if [ -z \"\${DISPLAY:-}\${WAYLAND_DISPLAY:-}\" ]; then echo headless; else echo \"\$(graphics_block 2>/dev/null | sed -n '1p' | sed 's/.*{//;s/}//') · \$(graphics_policy 2>/dev/null)\"; fi" ;;
     harness)   printf '%s\n' "s_harness && echo 'deployed extensions resolve their bin/' || echo 'no live root recorded'" ;;
     pidoor) printf '%s\n' pidoor_detail ;;
+    pirun) printf '%s\n' pirun_detail ;;
     claudehooks) printf '%s\n' claudehooks_detail ;;
     opencode)  printf '%s\n' "command -v opencode >/dev/null 2>&1 && $SCRIPT_DIR/../seat/opencode-launcher.sh check 2>&1 | sed -n '2p' | sed -E 's/^ *\"[a-z]+\",//; s/\"//g' || echo 'no opencode on this host'" ;;
     arm)       printf '%s\n' "$SCRIPT_DIR/../pi/syn-watch.sh status --detail 2>/dev/null | head -1 || echo 'arm door missing'" ;;
