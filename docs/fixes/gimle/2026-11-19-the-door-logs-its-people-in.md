@@ -39,3 +39,7 @@ sits between because Dex's `sub` is an opaque encoded id that reads as nothing i
 
 The door's unit on the heart still runs the old file. Copying the two files in, the `/etc/gimle` directory,
 the unit's flags and the restart are the operator's hand; `bin/gimle/mcp/README.md` states each command.
+
+## CHANGE LOG
+
+- 2026-11-19 — review-mend: added missing heading for #826
