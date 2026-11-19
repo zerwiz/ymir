@@ -25,7 +25,7 @@ Both Claude Stop hooks seat it | RULES/53: runtime's body says which hooks recei
 the hall's gateway leaves Hermes's default port | RULES/53: bilskirnir's subject names whose default port the hall's gateway vacated — the change itself (2026-11-19)
 Nanna's gateway defaulted to 8642, Hermes's own default | RULES/53: bilskirnir's body records the port collision it mends (2026-11-19) — the fault
 own Hermes gateway held it: start.sh rightly refused the stranger | RULES/53: bilskirnir's body records which gateway held the port (2026-11-19)
-above itself, which is now the apps home: the fleet panel answered 0 agents | RULES/53: the app errand's body records the PATH fault it mends — the harness's binary in a path, not a maker claim
+# 2026-11-19 struck: this phrase was too broad — striking it left 'and every pi' behind and the guard still refused; the whole sentence is allowed below
 the pi door stays first on PATH, and Eir names which pi ran | RULES/53: the seat fix's subject names the door file that is the change (2026-11-19)
 cannot put its own pi ahead of the door; an older block is replaced marker | RULES/53: the body quotes the profile block the fix rewrites (2026-11-19)
 to marker. The door marks the pi it starts, and Eir's pirun surface names | RULES/53: the body names the door's own marker (2026-11-19)
