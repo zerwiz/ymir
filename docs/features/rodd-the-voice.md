@@ -380,3 +380,11 @@ turn boundary in the pipeline; Rödd's *window* carries its own browser-side VAD
   verified against a pinned sha256, never a file in the repository; one library and one gate hold the
   installer and the loader to one answer (plan 288 step 7, plan 287 P4; fix note
   `docs/fixes/voice/2026-11-14-the-detector-is-fetched-not-committed.md`).
+
+## 2026-11-19 — where the window lives now
+
+Rödd's **window** has its own repo, `zerwiz/rodd`, and installs into its own home with `bin/apps/apps.sh install rodd`
+(Gróa's update installs it on every dev seat that lacks it). Paths above that start `apps/rodd/` now live in that home
+(`~/.local/share/ymir-apps/rodd/current/`); the launcher, `ymir-app rodd` and the `ymir-rodd` unit find it there. Her
+voice — the voice door, the head, the toolbox — and the arm stay in Ymir: the window is a face over them, and says so in
+words on a machine without Ymir.

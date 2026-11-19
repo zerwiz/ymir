@@ -97,4 +97,6 @@
   git: { host: github.com, owner: zerwiz, repo: rodd, remote: origin, default_branch: main, auth: gh }
   home: rodd
   kind: electron
-  contract: 0
+  contract: 1
+  moved: zerwiz/rodd@0d049293d58f   # the voice WINDOW left Ymir with its history, 2026-11-19; the arm, helm and voice stay
+  install_default: dev   # the seats with a desk and a voice; a heart or a hand has no window to show

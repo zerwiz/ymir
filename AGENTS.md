@@ -937,4 +937,6 @@ command, and the Smíðja MCP drives it from every harness; only pi works inside
 - **Hliðskjálf stays in this tree**, whole. Hvergelmir has left too (`zerwiz/hvergelmir`).
 - **Bilskirnir has left** for `zerwiz/bilskirnir` (appended later the same day); its data home did not move, and the
   launcher and `ymir-app bilskirnir` find it in its own home.
+- **Rödd's window has left** for `zerwiz/rodd`; the Gná arm, the helm, the wake queue and the voice machinery
+  (`bin/voice/`) are the house's and stay here.
 

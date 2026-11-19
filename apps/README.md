@@ -56,5 +56,6 @@ which road each app is on.
 | `hvergelmir/` | `zerwiz/hvergelmir`, with its history (`moved:` in the registry) | 2026-11-19 |
 | `smidja/`, `smidja-factory/` | `zerwiz/smidja`, with their history (the factory at the root, the engine at `engine/`) | 2026-11-19 |
 | `bilskirnir/` | `zerwiz/bilskirnir`, with its history; its data home stayed where it was | 2026-11-19 |
+| `rodd/` | `zerwiz/rodd`, the voice **window** with its history; the arm and the voice stay in Ymir | 2026-11-19 |
 
 Hliðskjálf stays here, whole. How-to: `docs/features/apps-install-and-update.md`.
