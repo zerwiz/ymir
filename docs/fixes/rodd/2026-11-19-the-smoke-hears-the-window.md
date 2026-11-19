@@ -37,3 +37,7 @@ the server accepted the session                PASS
 assistant audio arrived                        PASS  390144 bytes
 live window (socket · accepted · audio)        PASS
 ```
+
+## CHANGE LOG
+
+- 2026-11-19 — review-mend: added missing heading for #826
