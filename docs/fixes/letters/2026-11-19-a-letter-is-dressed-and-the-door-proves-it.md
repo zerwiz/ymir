@@ -47,3 +47,7 @@ The two suites that draft letters were updated to state their reason, and both p
 
 `config/letters.yaml` (a letter *kind* choosing its template) is the next phase of plan 322 and is not in this change.
 The stamp covers the one renderer the shelf has, `leemunroe-simple`; a template added later gets its own row or no stamp.
+
+## CHANGE LOG
+
+- 2026-11-19 — review-mend: added missing heading for #828
