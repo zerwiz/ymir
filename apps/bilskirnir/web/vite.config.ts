@@ -10,9 +10,9 @@ export default defineConfig({
     alias: {
       '@shared': fileURLToPath(new URL('../server/src', import.meta.url)),
       // the house's design system: the cloth, the hearth, the mark — the app's own byte-identical copies of
-      // midgard/design-system (src/design/), so it builds in its own repo, where a climb into Ymir finds nothing
+      // midgard/design-system (src/house-design/), so it builds in its own repo, where a climb into Ymir finds nothing
       // (the split, 2026-11-19; Ymir's bin/apps/tests/test_shared_copies.py keeps them equal to the source)
-      '@design': fileURLToPath(new URL('./src/design', import.meta.url)),
+      '@design': fileURLToPath(new URL('./src/house-design', import.meta.url)),
     },
   },
   server: {
