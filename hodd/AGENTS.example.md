@@ -17,50 +17,41 @@ personal setup — so the public file stays clean.
 key, a name, a plan, a schedule, a client, a credential, or a note. Private
 data lives at `$YMIR_HOME`, under `hodd/`, and nowhere else.
 
-## The private layout (current, 2026-09-17)
+## The private layout — read it from the YAML, never from this page
 
 `$YMIR_HOME` (default `~/Documents/ymirhome`, resolved by `bin/vault/hoard-lib.sh`
-`hoard_root`) is the private git repo. `hodd/` **is** the hoard; everything
-else under the home is runtime or realm material.
+`ymir_home_root`) is the private home. **Where each shelf lives is written in two files, and this page
+does not restate it** (plan 331: a document points at the YAML, because the YAML says how *this* home
+actually is):
 
-```
-$YMIR_HOME/
-├── README.md                    # home map (tracked)
-├── AGENTS.md                    # private home contract (tracked)
-├── .ymir-layout.yaml            # the layout map (validated by the placement ward)
-├── hodd/                        # THE HOARD — guard tracks only README + *.example
-│   ├── data/                    # operator data: machines, fleet, inventories
-│   ├── docs/                    # masterplan.md, business/, daily/, server-knowledge/
-│   ├── identity/                # company/domain entity cards, portfolio
-│   ├── memory/                  # runes ledger, daily logs, the well
-│   ├── plans/                   # live working plans (omarchy/…)
-│   ├── secrets/                 # platform.env (+ .age) + age.key — by path, never inline
-│   ├── state/                   # runtime state; stale-* backups (dropped-from-git storage)
-│   └── workspaces/              # marketing/ personal/ work/
-├── svartalfaheim/<realm>/workspace/<project>/plans/   # the plan LEDGER — one canonical shelf per project (tracked)
-├── config/                      # agents.yaml + per-machine overlays, cron.yaml
-├── smidja/  state/              # factory + runtime state (ephemeral)
-└── svartalfaheim/<realm>/       # per-realm scoped material (never crossed without word)
-```
+- `$YMIR_HOME/.ymir-layout.yaml` — the home's shape: every shelf and its path (template:
+  `hodd/.ymir-layout.yaml.example` in the code repo). Eir's `hoard` surface refuses a map that names a
+  path that does not exist.
+- `$YMIR_HOME/hodd/identity/home.yaml` — the master register: every register in the home, the shelf
+  each one governs, and the layout version (template: `hodd/identity/home.yaml.example`).
 
-Rule of thumb: **the hoard holds what must never leave; the archive
-(`memory/plans/`) holds what must sync between machines.** Plans that are
-still living live in `hodd/plans/`; settled plans are filed into
-`memory/plans/<domain>/`.
+What the page keeps is the rule the YAML cannot say — **four shelves, one kind of material each**:
+
+| Shelf | Owns | Must never hold |
+|---|---|---|
+| `hodd/` | the **record**: memory, identity, plans, secrets, reference, docs | runtime artefacts, the operator's own material, build output |
+| `life/` | the **operator's own material**: personal, work, marketing, meetings, outreach | the house's ledger, a secret, runtime state |
+| `state/` | **runtime state** written by supervisors | anything append-only, anything another machine must read |
+| `config/` | **settings**, per machine and per person | a secret value, a record |
+
+Company and project material lives in its realm (`svartalfaheim/<realm>/`); each project's plan ledger is
+discovered by `bin/vault/hoard-lib.sh` `ymir_plan_dir`, never typed here.
 
 ## Where material goes
 
-| Kind | Path |
+| Kind | Shelf (the path is in `.ymir-layout.yaml`) |
 |------|------|
-| Business / strategy | `hodd/identity/companies/` |
-| Marketing / social | `hodd/life/marketing/` |
-| Software specs | `hodd/life/work/` |
-| Personal / schedules | `hodd/life/personal/` |
-| Daily logs | `hodd/memory/daily/YYYY-MM-DD.md` |
-| Plans (live) | `hodd/plans/` |
-| Plans (archive) | `memory/plans/<domain>/` |
-| Global audit ledger | `hodd/memory/runes_audit.md` |
-| Secrets | `hodd/secrets/platform.env` — referenced by path, never inline |
+| Business / strategy | the company's realm under `svartalfaheim/` |
+| Marketing / social, software specs, personal notes, meetings, outreach | `life/<topic>/` |
+| Daily logs, the runes ledger, the well | `hodd/memory/` — append-only, never moved |
+| Plans (personal, live) | `hodd/plans/` |
+| Secrets | `hodd/secrets/` — referenced by path, never inline |
+| Anything a running program writes | `state/` |
 
 ## Secrets
 
@@ -84,3 +75,4 @@ carries its own `.env.realm` and never touches another without the word.
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-19** — plan 331: the layout tree (dated 2026-09-17) and the "where material goes" table that named `hodd/life/*`, `hodd/state/` and `hodd/workspaces/` were replaced by the four shelves and by pointers to `.ymir-layout.yaml` and `hodd/identity/home.yaml`. The old tree is in this file's git history; a home still in that shape is moved by migration `0026-life-and-state-out-of-hodd`.

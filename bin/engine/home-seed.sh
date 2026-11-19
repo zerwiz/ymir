@@ -86,13 +86,22 @@ hodd/memory
 hodd/memory/daily
 hodd/plans
 hodd/secrets
-hodd/state
 hodd/docs
-hodd/workspaces
 hodd/reference
+life
+life/personal
+life/work
+life/marketing
+life/meetings
+life/outreach
 config
 state
 "
+# The four shelves (plan 331): hodd/ the record, life/ the operator's own material, state/ runtime state,
+# config/ settings. A fresh home has NO hodd/state and NO hodd/workspaces — only the one-cycle links
+# hodd/life -> ../life and hodd/state -> ../state below, so a door that still names the old path lands in
+# the right shelf instead of growing a second one (plan 331.7).
+SHIM_LINKS="life state"
 
 printf 'home[1]{what}\n'
 printf '  "Your home is the ONE private place Ymir keeps: identity, memory, plans, secrets, documents and the\n'
@@ -120,6 +129,19 @@ else
   for d in "${missing[@]}"; do mkdir -p "$home/$d"; done
   printf 'home_seed[1]{state,detail}\n  "created","%s director%s under %s"\n' "${#missing[@]}" \
     "$([ "${#missing[@]}" -eq 1 ] && echo y || echo ies)" "$home"
+fi
+
+# The one-cycle compatibility links — only where NOTHING stands yet. A real hodd/life or hodd/state is an
+# old-shape home, and moving it is migration 0026's work, never this seed's.
+if [ "$CHECK" = 0 ]; then
+  for l in $SHIM_LINKS; do
+    if [ ! -e "$home/hodd/$l" ] && [ ! -L "$home/hodd/$l" ]; then
+      ln -s "../$l" "$home/hodd/$l" && printf 'home-seed: linked hodd/%s -> ../%s (one-cycle shim, plan 331.7)\n' "$l" "$l"
+      if [ -f "$home/.gitignore" ] && ! grep -qxF "/hodd/$l" "$home/.gitignore"; then
+        printf '%s\n' "/hodd/$l" >>"$home/.gitignore"
+      fi
+    fi
+  done
 fi
 
 [ "$CHECK" = 1 ] && exit 0
@@ -201,6 +223,9 @@ hodd/secrets/age.key
 hodd/secrets/*.key
 # Runtime churn
 state/
+# the one-cycle compatibility links (plan 331.7) — per machine, never committed
+/hodd/life
+/hodd/state
 *.lock
 *.pid
 *.log

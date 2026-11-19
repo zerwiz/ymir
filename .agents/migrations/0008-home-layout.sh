@@ -12,7 +12,7 @@
 #   a stray hoard                 ~/hodd (created by one line of instructions) -> $YMIR_HOME/hodd/
 #   companies under identity      hodd/identity/companies/<company>/ -> svartalfaheim/<company>/
 #   a company's material in the
-#   operator's own shelf          hodd/life/{work,marketing,meetings} -> the company's shelf
+#   operator's own shelf          (retired 2026-11-19 — plan 331 keeps the operator's work in life/; see step 4)
 #   a layout map naming a
 #   DIFFERENT MACHINE             .ymir-layout.yaml -> regenerated for this machine
 #
@@ -158,14 +158,12 @@ if [ -d "$HOME_DIR/hodd/identity/companies" ]; then
   LEFT=$((LEFT + 1))
 fi
 
-# ── 4. the operator's own shelf holds the operator's own material ────────────
-for sub in work marketing meetings; do
-  d="$HOME_DIR/hodd/life/$sub"
-  [ -d "$d" ] || continue
-  say "  hodd/life/$sub holds company material — holding it for routing, not in the operator's shelf"
-  merge_dir "$d" "$HOME_DIR/svartalfaheim/.inbox/life-$sub-$STAMP"
-  LEFT=$((LEFT + 1))
-done
+# ── 4. RETIRED 2026-11-19 (plan 331): the operator's work, marketing and meetings are HIS ──────────
+# This step used to send hodd/life/{work,marketing,meetings} to svartalfaheim/.inbox for routing. Plan 331
+# settled the opposite: `life/{personal,work,marketing,meetings,outreach}` at the home root is the operator's
+# own shelf, and 0026-life-and-state-out-of-hodd moves hodd/life there. Kept as a no-op, never deleted, so a
+# home that has not yet run 0008 does not lose its work shelf to an inbox — and so that, once 0026 has left
+# the link hodd/life -> ../life, this step can never reach through the link and empty life/work.
 
 # ── 5. two realms differing only by a trailing 's' are one company, misspelt ──
 if [ -d "$HOME_DIR/svartalfaheim" ]; then

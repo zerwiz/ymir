@@ -1,0 +1,115 @@
+# home.yaml.example — the MASTER REGISTER of a home, taught PUBLIC (plan 331.10).
+#
+# Copy to $YMIR_HOME/hodd/identity/home.yaml. Keep the shape; drop a row for a register your home does not
+# hold, add a row for one it does. ZERO private values: file names and what they govern, never their content.
+#
+# It answers one question: "what is this home, and what does it hold?" — by naming every register, the
+# shelf each one governs, and the layout version. It holds NO content of its own: each register below stays
+# the authority for what it says. A document that needs to say where something lives points HERE (or at the
+# register named here), never restates it — prose goes stale the first time a shelf moves (the 2026-11-19
+# audit found the manual and the home map both describing a shape the home no longer had).
+#
+# Eir's `hoard` surface checks the shape
+# (.ymir-layout.yaml) against the disk; this file is where a reader starts.
+version: 1
+
+layout:
+  file: .ymir-layout.yaml          # the home's shape: every shelf and its path
+  version: 2                       # plan 331 — the four shelves
+  migration: 0026-life-and-state-out-of-hodd
+
+shelves:
+  hodd:
+    owns: "the record — memory, identity, plans, secrets, reference, docs"
+    never: "runtime artefacts, the operator's own material, build output"
+  life:
+    owns: "the operator's own material — personal, work, marketing, meetings, outreach"
+    never: "the house's ledger, a secret, runtime state"
+  state:
+    owns: "runtime state written by supervisors — leases, queues, rooms, counters"
+    never: "anything append-only (the well, the ledger), anything another machine must read"
+  config:
+    owns: "settings, per machine and per person"
+    never: "a secret value, a record"
+  svartalfaheim:
+    owns: "the realms — one folder per company, each with its own projects and plan ledgers"
+    never: "the operator's personal material; NDA material (that lives in the vault, Rule 15)"
+
+# The one-cycle compatibility links (plan 331.7). They are a shim, never a shelf; retire them after one
+# release, once the resolvers carry every reader. Git-ignored: they are made per machine by migration 0026.
+compatibility:
+  - link: hodd/life
+    to: ../life
+  - link: hodd/state
+    to: ../state
+retired_paths:                     # refused in NEW files by bin/gates/guards/retired-path-guard.sh
+  - hodd/life/    # retired-path-ok: the register of retired paths
+  - hodd/state/    # retired-path-ok: the register of retired paths
+  - hodd/workspaces/    # retired-path-ok: the register of retired paths
+
+# Every register in the home. `file` is relative to the home; `governs` is the one question it answers.
+registers:
+  # ── who and where: the identity shelf (hodd/identity/) ──
+  - { file: hodd/identity/operator.yaml,          shelf: hodd, governs: "who the operator is — the name every seat addresses" }
+  - { file: hodd/identity/seats.yaml,             shelf: hodd, governs: "the fleet, its house, and each seat's sealed name" }
+  - { file: hodd/identity/seats.md,               shelf: hodd, governs: "the seats as a person reads them (mirrors seats.yaml)" }
+  - { file: hodd/identity/machines.yaml,          shelf: hodd, governs: "the fleet's machines and their roads" }
+  - { file: hodd/identity/profile.yaml,           shelf: hodd, governs: "this machine's hardware profile" }
+  - { file: hodd/identity/names.yaml,             shelf: hodd, governs: "generated names — the figures and what they stand for" }
+  - { file: hodd/identity/reserved-names.txt,     shelf: hodd, governs: "names that are infrastructure, never a seat's persona" }
+  - { file: hodd/identity/machine-homes.txt,      shelf: hodd, governs: "this fleet's home directories, as patterns for the private sweep" }
+  - { file: hodd/identity/companies.yaml,         shelf: hodd, governs: "the companies the operator works with, who is in each, where they live" }
+  - { file: hodd/identity/clients.yaml,           shelf: hodd, governs: "the companies the house serves" }
+  - { file: hodd/identity/domains.yaml,           shelf: hodd, governs: "the domains — who keeps what, and where it lives" }
+  - { file: hodd/identity/house-domains.txt,      shelf: hodd, governs: "the mail domains that are this house's own" }
+  - { file: hodd/identity/projects.yaml,          shelf: hodd, governs: "every project: its repo, remote, default branch and auth reference" }
+  - { file: hodd/identity/workspaces.yaml,        shelf: hodd, governs: "the workspace registry (single tenant)" }
+  - { file: hodd/identity/members.yaml,           shelf: hodd, governs: "who is on what — project membership" }
+  - { file: hodd/identity/collaborators.yaml,     shelf: hodd, governs: "the collaborators and how to address them" }
+  - { file: hodd/identity/grants.yaml,            shelf: hodd, governs: "the federation grants between houses" }
+  - { file: hodd/identity/skills-grants.yaml,     shelf: hodd, governs: "who may call which skill through the skills door" }
+  - { file: hodd/identity/doors.yaml,             shelf: hodd, governs: "the doors a collaborator is offered" }
+  - { file: hodd/identity/mcp-tools.yaml,         shelf: hodd, governs: "the MCP door's tool register" }
+  - { file: hodd/identity/services.yaml,          shelf: hodd, governs: "the hosted services and their tunnels" }
+  - { file: hodd/identity/confidential.yaml,      shelf: hodd, governs: "protected material — read before anything crosses an external surface" }
+  - { file: hodd/identity/public-deny.txt,        shelf: hodd, governs: "words that may never appear in the public repository" }
+  - { file: hodd/identity/smiths.txt,             shelf: hodd, governs: "who is a smith, and so may not open a pull request" }
+  - { file: hodd/identity/cadence.yaml,           shelf: hodd, governs: "the meeting rhythm" }
+  - { file: hodd/identity/meeting-locations.yaml, shelf: hodd, governs: "where each meeting's record is shelved" }
+  - { file: hodd/identity/trello.yaml,            shelf: hodd, governs: "the meeting board, as configuration" }
+  - { file: hodd/identity/trello-map.yaml,        shelf: hodd, governs: "board names to board ids (generated)" }
+  - { file: hodd/identity/voices.yaml,            shelf: hodd, governs: "the voices this machine holds (generated)" }
+  - { file: hodd/identity/places/,                shelf: hodd, governs: "one place profile per company surface (a folder of place.yaml)" }
+  - { file: hodd/identity/rules/,                 shelf: hodd, governs: "per-company rules, with house defaults" }
+  - { file: hodd/identity/speaker-map/,           shelf: hodd, governs: "meeting speakers to people" }
+  - { file: hodd/identity/home.yaml,              shelf: hodd, governs: "this file — the register of registers" }
+  # ── the fleet's records (hodd/data/) ──
+  - { file: hodd/data/fleet.json,                 shelf: hodd, governs: "the fleet: every machine's role (heart · forge · dev · hand)" }
+  - { file: hodd/data/fleet-models.json,          shelf: hodd, governs: "which models each machine serves" }
+  # ── the append-only record (hodd/memory/) — never moved (RULES/06, RULES/20) ──
+  - { file: hodd/memory/runes_audit.md,           shelf: hodd, governs: "the Runes ledger — every significant action, chained" }
+  - { file: hodd/memory/well/,                    shelf: hodd, governs: "the well's episodes" }
+  - { file: hodd/memory/daily/,                   shelf: hodd, governs: "the daily logs" }
+  # ── the plan ledgers — discovered, never typed (bin/vault/hoard-lib.sh ymir_plan_dir) ──
+  - { file: "svartalfaheim/*/projects/*/plans/README.md", shelf: svartalfaheim, governs: "one plan ledger per project; each README is its own index" }
+  - { file: hodd/registry/plans-state.yaml,       shelf: hodd, governs: "the state of every plan across the ledgers" }
+  # ── settings (config/) ──
+  - { file: config/agents.yaml,                   shelf: config, governs: "the operator's combination of smiths and models" }
+  - { file: config/cron.yaml,                     shelf: config, governs: "the scheduled jobs and the role that owns each" }
+  - { file: config/services.yaml,                 shelf: config, governs: "the service manifest — class and gate of every service" }
+  - { file: config/models-allowed.yaml,           shelf: config, governs: "the models an errand may run on" }
+  - { file: config/model-catalog.yaml,            shelf: config, governs: "the menu of public model artefacts" }
+  - { file: config/room.yaml,                     shelf: config, governs: "the fleet room" }
+  - { file: config/seats-door.yaml,               shelf: config, governs: "the seats door's values for this hall" }
+  - { file: config/guardian.yaml,                 shelf: config, governs: "the guardian's settings" }
+  - { file: config/garmr-rules.yaml,              shelf: config, governs: "when the hound may bite" }
+  - { file: config/nda-allow.yaml,                shelf: config, governs: "the NDA gate's words that are this house's own" }
+  - { file: config/jev-doors.yaml,                shelf: config, governs: "where the decision models answer" }
+  - { file: config/logretta-stack.yaml,           shelf: config, governs: "the council's roster" }
+  - { file: config/scrape-sources.yaml,           shelf: config, governs: "what the daily scrape round reads" }
+  - { file: config/skirnir.yaml,                  shelf: config, governs: "Skírnir's settings" }
+  - { file: config/soak.yaml,                     shelf: config, governs: "what the leak ledger samples" }
+  - { file: config/suite-workspaces.yaml,         shelf: config, governs: "the suite's spaces" }
+  - { file: config/tailscale-sync.yaml,           shelf: config, governs: "the machine mesh for the vault's sync" }
+  - { file: config/review-learning.yaml,          shelf: config, governs: "what the review loop learns from" }
+  - { file: config/eindri-core.md,                shelf: config, governs: "this fleet's overlay on the shipped worker core" }

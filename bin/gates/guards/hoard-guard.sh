@@ -147,4 +147,12 @@ fi || {
   printf '  or delete the scratch file; see hodd/docs/secrets-vault.md\n' >&2
   exit 1
 }
+# The retired-path gate (plan 331.9): a NEW file in the home may not name hodd/life/, hodd/state/ or
+# hodd/workspaces/ — the move records under hodd/reference/moves/ are exempt, and a line may say retired-path-ok:.
+if [ "${1:-}" != "--all" ] && [ -x "$(dirname "${BASH_SOURCE[0]}")/retired-path-guard.sh" ]; then
+  "$(dirname "${BASH_SOURCE[0]}")/retired-path-guard.sh" --repo "$HOME_REPO" >/dev/null 2>&1 || {
+    "$(dirname "${BASH_SOURCE[0]}")/retired-path-guard.sh" --repo "$HOME_REPO" >&2
+    exit 1
+  }
+fi
 exit 0

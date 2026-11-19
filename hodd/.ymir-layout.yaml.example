@@ -14,17 +14,35 @@
 # Names mirror the home 1:1 (each key BELOW must name a directory that EXISTS
 # once you raise it). The real home's map — the placement-ward's validation
 # target — sits at your private $YMIR_HOME/.ymir-layout.yaml, not here.
-version: 1
+#
+# ── version 2 (plan 331, 2026-11-19): THE FOUR SHELVES ──────────────────────────
+#
+#   hodd/    the RECORD — memory, identity, plans, secrets, reference, docs.
+#            never: runtime artefacts, the operator's own material, build output.
+#   life/    the OPERATOR'S OWN MATERIAL — personal, work, marketing, meetings, outreach.
+#            never: the house's ledger, a secret, runtime state.
+#   state/   RUNTIME STATE written by supervisors — leases, queues, rooms, counters.
+#            never: anything append-only (the well, the ledger), anything another machine must read.
+#   config/  SETTINGS, per machine and per person.
+#            never: a secret value (a setting references hodd/secrets/), a record.
+#
+# There is no `hodd/life`, no `hodd/state` and no `hodd/workspaces/` in this shape. A home made before
+# version 2 is moved by .agents/migrations/0026-life-and-state-out-of-hodd.sh, which leaves the links
+# `hodd/life -> ../life` and `hodd/state -> ../state` for ONE release cycle (plan 331.7) — those two
+# links are the compatibility shim, never a shelf. The master register that names every register in
+# the home is hodd/identity/home.yaml (template: hodd/identity/home.yaml.example).
+version: 2
 layout:
-  config: "$YMIR_HOME/config"
+  record: "$YMIR_HOME/hodd"                 # the record (the hoard)
+  life: "$YMIR_HOME/life"                   # the operator's own material
+  state: "$YMIR_HOME/state"                 # runtime state; stale-* drop storage
+  config: "$YMIR_HOME/config"               # settings
   secrets: "$YMIR_HOME/hodd/secrets"        # encrypted at rest, by path only
-  identity: "$YMIR_HOME/hodd/identity"
-  workspaces: "$YMIR_HOME/hodd/workspaces"
-  memory: "$YMIR_HOME/hodd/memory"          # the ONE well — kaia.engram
-  smidja: "$YMIR_HOME/smidja"               # runtime only (ephemeral)
-  state: "$YMIR_HOME/state"                 # runtime; stale-* drop storage
+  identity: "$YMIR_HOME/hodd/identity"      # the registers; home.yaml names them all
+  memory: "$YMIR_HOME/hodd/memory"          # the ONE well — append-only, never moved
   data: "$YMIR_HOME/hodd/data"
+  smidja: "$YMIR_HOME/smidja"               # runtime only (ephemeral)
   svartalfaheim: "$YMIR_HOME/svartalfaheim" # realms — the company shelves
 git_repo: "$YMIR_HOME"
-github_repo: "zerwiz/ymirhome"              # the private home well (never public)
+github_repo: "<owner>/<private-home-repo>"  # the private home well (never public) — FORM only, never the real name
 secrets_encrypted: false

@@ -848,9 +848,54 @@ f_migrations(){ [ -x "$SCRIPT_DIR/../engine/ymir-migrate.sh" ] && "$SCRIPT_DIR/.
 # $YMIR_HOME/{identity,data,docs,secrets,tenants} duplicate beside hodd/ — the
 # drift that RULES/04-hoard.md (correction 2026-09-17) forbids.
 _hoard_root() { local r; if [ -x "$SCRIPT_DIR/../vault/hoard-lib.sh" ]; then . "$SCRIPT_DIR/../vault/hoard-lib.sh"; hoard_root r; printf '%s' "$r"; else printf '%s' "${YMIR_HOARD:-$YMIR_HOME/hodd}"; fi; }
+
+# THE FOUR SHELVES (plan 331.3): hodd/ the record, life/ the operator's own material, state/ runtime
+# state, config/ settings. Three refusals, each printed as ONE line — "<path> · <rule>" — so the fault is
+# named by path and rule, never only by a red row. Empty output means the shelves hold their own kind.
+#   1. a runtime artefact inside hodd/   (a real hodd/state, or a pid/sock/lock/lease/woke/launch file)
+#   2. the operator's material in hodd/  (a real hodd/life, or a topic still under hodd/workspaces/)
+#   3. a layout naming a path that does not exist (every key under `layout:` in .ymir-layout.yaml)
+# The one-cycle links hodd/life -> ../life and hodd/state -> ../state are the compatibility shim, never a
+# fault. The well's own database files (kaia.engram-wal/-shm) are the record's, not runtime, and pass.
+hoard_refusals() {
+  local h; h="$(_hoard_root)"
+  [ -d "$h" ] || return 0
+  local f t lay k p
+  # 1. runtime in the record
+  if [ -d "$h/state" ] && [ ! -L "$h/state" ]; then
+    printf '%s · %s\n' "$h/state" "runtime state inside the record — it belongs in \$YMIR_HOME/state (plan 331; migration 0026 moves it)"
+  fi
+  while IFS= read -r f; do
+    [ -n "$f" ] && printf '%s · %s\n' "$f" "a runtime artefact inside the record — runtime belongs in \$YMIR_HOME/state (plan 331)"
+  done < <(find "$h" \( -path "$h/secrets" -o -path "$h/state" -o -path "$h/life" -o -name .git \) -prune -o -type f \
+             \( -name '*.pid' -o -name '*.sock' -o -name '*.lock' -o -name '*.lease' -o -name '*.woke' -o -name '*.launch.sh' \) \
+             -print 2>/dev/null | head -20)
+  # 2. the operator's own material in the record
+  if [ -d "$h/life" ] && [ ! -L "$h/life" ]; then
+    printf '%s · %s\n' "$h/life" "the operator's own material inside the record — it belongs in \$YMIR_HOME/life (plan 331; migration 0026 moves it)"
+  fi
+  for t in personal work marketing meetings outreach; do
+    if [ -d "$h/workspaces/$t" ] && [ -n "$(ls -A "$h/workspaces/$t" 2>/dev/null)" ]; then
+      printf '%s · %s\n' "$h/workspaces/$t" "the operator's own material inside the record — it belongs in \$YMIR_HOME/life/$t (plan 331; migration 0026 moves it)"
+    fi
+  done
+  # 3. a map that names a path that does not exist
+  lay="$YMIR_HOME/.ymir-layout.yaml"
+  if [ -f "$lay" ]; then
+    while IFS='|' read -r k p; do
+      [ -n "$p" ] || continue
+      p="${p//\$YMIR_HOME/$YMIR_HOME}"
+      case "$p" in /*) ;; *) p="$YMIR_HOME/$p" ;; esac
+      [ -d "$p" ] || printf '%s · %s\n' "$lay" "layout key '$k' names $p, which does not exist — a stale map is how work lands outside its shelf (plan 331, Rule 21)"
+    done < <(sed -nE 's/^  ([a-z_]+): "([^"]+)".*/\1|\2/p' "$lay")
+  fi
+  return 0
+}
+
 s_hoard() {
   local h; h="$(_hoard_root)"
   [ -d "$h" ] || return 1
+  [ -z "$(hoard_refusals)" ] || return 1
     local lay="$YMIR_HOME/.ymir-layout.yaml" k p rp maproot
     if [ -f "$lay" ]; then
       # A path naming the SAME home under another root is not foreign: a substrate
@@ -889,8 +934,10 @@ s_hoard() {
   fi
   # A COMPANY OR PROJECT DOCUMENT MUST NOT SIT IN THE OPERATOR'S OWN SHELF (Rule 21):
   # hodd/life is the operator's own, never a company's or a project's.
+  # (plan 331: a REAL hodd/life is already refusal 2 above; the one-cycle link hodd/life -> ../life is the
+  # operator's own life/, where work/ belongs — so this older scan runs only on a real directory.)
   local life="$YMIR_HOME/hodd/life"
-  if [ -d "$life" ]; then
+  if [ -d "$life" ] && [ ! -L "$life" ]; then
     [ -d "$life/work" ] && return 1
     local cid
     for cid in "$YMIR_HOME"/hodd/identity/companies/*/; do
@@ -1003,7 +1050,7 @@ detail() { # <name> -> the command that prints one short fact
     lock)      printf '%s\n' "cat $STATE/.lock 2>/dev/null | tr -d '[:space:]' | sed 's/^/pid /' || echo none" ;;
     migrations)printf '%s\n' "echo 'structure'" ;;
     shells)    printf '%s\n' 'shell_surfaces | while IFS= read -r s; do d=""; app_dir "$s" d 2>/dev/null || d=""; [ -n "$d" ] && printf "%s %s; " "$s" "$(electron_runtime_state "$d" "$ROOT" "$(app_pkg "$s")" 2>/dev/null)"; done' ;;
-    hoard)     printf '%s\n' "printf 'hoard %s' \"\$(_hoard_root)\" ; [ -d \"\$YMIR_HOME/identity\" ] && printf ' +flat-duplicate' ; printf '\n'" ;;
+    hoard)     printf '%s\n' "_hr=\"\$(hoard_refusals)\"; if [ -n \"\$_hr\" ]; then printf '%s\n' \"\$_hr\" | head -3 | paste -sd';' -; else printf 'hoard %s' \"\$(_hoard_root)\" ; [ -d \"\$YMIR_HOME/identity\" ] && printf ' +flat-duplicate' ; printf ' · four shelves hold their own kind\n'; fi" ;;
     autoboot)  printf '%s\n' "$SCRIPT_DIR/../engine/ymir-autoboot.sh verify >/dev/null 2>&1 && echo 'boot proven' || echo 'boot gap — bin/engine/ymir-autoboot.sh verify'" ;;
     seatpaths) printf '%s\n' "printf '%s' \"$(seat_profile)\" ; grep -qF \"$HOME/.bun/bin\" \"$(seat_profile)\" 2>/dev/null && printf ' carries the marked block' || printf ' does not carry ~/.bun/bin — a unit or validator will not find bun'" ;;
     hooks)     printf '%s\n' "printf 'installed hooks' ; _hk=\"$(cd "$ROOT" && git rev-parse --git-path hooks 2>/dev/null || printf '.git/hooks')\"; case \"\$_hk\" in /*) ;; *) _hk=\"$ROOT/\$_hk\" ;; esac; [ -x \"\$_hk/pre-commit\" ] && printf ' present' || printf ' MISSING — a guarded deletion and a staged secret would both pass'" ;;
