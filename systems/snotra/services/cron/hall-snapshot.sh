@@ -80,7 +80,21 @@ SNOTRA_HALL_REALM="${SNOTRA_HALL_REALM:-default}"
 # runtime state belong to the home the operator chose at installation, never in
 # the tree — a packaged install replaces its tree on upgrade (Rule 04).
 STATE="${BROKK_STATE_OVERRIDE:-$YMIR_STATE_DIR}"
-OUT="${1:-$APP_ODRERIR/public/livehall.json}"
+# WHERE THE BOARD LIVES (the split, 2026-11-19). Óðrerir left this tree for its own repo; installed in its own
+# home, its board is STATE (its app.yaml `state_dir`), and each release links public/ and dist/livehall.json to it.
+# So on the home road — and on a seat where the app is not installed at all, such as the heart this job's cron row
+# runs on — the board is written to that state file. Before this, an absent app made the default
+# "/public/livehall.json": the write failed and the job still reported success. In a tree (a checkout, the legacy
+# road, an npm package) the board stays the app's own public/ copy, as it always was.
+ODRERIR_ROAD=""
+if declare -F app_path >/dev/null 2>&1; then app_path odrerir _odrerir_at ODRERIR_ROAD 2>/dev/null || true; fi
+unset _odrerir_at
+ODRERIR_BOARD="${ODRERIR_BOARD:-${YMIR_APP_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/odrerir}/livehall.json}"
+if [ -z "$APP_ODRERIR" ] || [ "$ODRERIR_ROAD" = home ]; then
+  OUT="${1:-$ODRERIR_BOARD}"
+else
+  OUT="${1:-$APP_ODRERIR/public/livehall.json}"
+fi
 
 runes_file="${BROKK_RUNES_FILE:-${YMIR_HOME}/hodd/memory/runes_audit.md}"
 PROJECTS_FILE="${YMIR_HOME}/hodd/identity/projects.yaml"
@@ -157,8 +171,10 @@ payload = {
 print(json.dumps(payload, ensure_ascii=False, indent=2))
 ")"
 
-mkdir -p "$(dirname "$OUT")"
-printf '%s\n' "$OUT_JSON" > "$OUT"
+if ! mkdir -p "$(dirname "$OUT")" || ! printf '%s\n' "$OUT_JSON" > "$OUT"; then
+  printf 'error: hall-snapshot could not write the board to %s\n' "$OUT" >&2
+  exit 1
+fi
 # The packaged shape carries no vite.config.ts, so the request-time plugin never
 # runs: `vite preview` serves the app's dist/ statically (scripts/start.sh).
 # Write the snapshot into dist/ too, so the packaged seat serves THIS job's last
@@ -166,7 +182,8 @@ printf '%s\n' "$OUT_JSON" > "$OUT"
 # shapes: public/ through the plugin in a clone, dist/ through the static
 # server in a package.
 OUT_BUILD=""
-if [ -n "$APP_ODRERIR" ] && [ -d "$APP_ODRERIR/dist" ]; then
+# (on the home road dist/livehall.json is already a link to the board just written)
+if [ -n "$APP_ODRERIR" ] && [ "$ODRERIR_ROAD" != home ] && [ -d "$APP_ODRERIR/dist" ]; then
   OUT_BUILD="$APP_ODRERIR/dist/livehall.json"
   printf '%s\n' "$OUT_JSON" > "$OUT_BUILD"
 fi

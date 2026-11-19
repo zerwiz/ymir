@@ -201,6 +201,15 @@ build() {
   if [ -d "$tmp/apps/odrerir" ] && [ ! -s "$SHARED/apps/odrerir/public/livehall.json" ] && [ -x "$tmp/bin/time/nornir-job-hall-snapshot.sh" ]; then
     BROKK_ROOT_OVERRIDE="$tmp" bash "$tmp/bin/time/nornir-job-hall-snapshot.sh" >> "$log" 2>&1 || true
   fi
+  # After the split (2026-11-19) the hall lives in its own home and its board is STATE
+  # (${XDG_STATE_HOME:-~/.local/state}/odrerir/livehall.json); the gate above never fires again, so the same
+  # first board is written there when the hall is installed and its board is still empty.
+  _odrerir_board="${ODRERIR_BOARD:-${XDG_STATE_HOME:-$HOME/.local/state}/odrerir/livehall.json}"
+  if [ ! -d "$tmp/apps/odrerir" ] && [ ! -s "$_odrerir_board" ] && [ -x "$tmp/bin/time/nornir-job-hall-snapshot.sh" ] \
+     && [ "$(bash "$tmp/bin/apps/app-path.sh" odrerir 2>/dev/null)" != "" ]; then
+    BROKK_ROOT_OVERRIDE="$tmp" bash "$tmp/bin/time/nornir-job-hall-snapshot.sh" >> "$log" 2>&1 || true
+  fi
+  unset _odrerir_board
   if ! prove "$tmp"; then say "FAIL	the release did not prove — it stays unbuilt at $tmp"; return 1; fi
   now_iso > "$tmp/.release-proved"
   rm -rf "$d"; mv_t "$tmp" "$d"
