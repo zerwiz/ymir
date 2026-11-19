@@ -68,6 +68,9 @@ paths = [
   '''^bin/gates/secret-scan\.sh$''',
   # This file names the shapes in prose; nothing else in the tree needs an exemption.
   '''^\.gitleaks\.toml$''',
+  # HISTORY ONLY: a test fixture JWT (commit 0a60b25b1) in a file that has since moved to its
+  # own private repository. No credential; a history cannot be rewritten, so the path is named.
+  '''^bin/gimle/mcp/test_oauth_door\.py$''',
 ]
 
 [[allowlists]]
