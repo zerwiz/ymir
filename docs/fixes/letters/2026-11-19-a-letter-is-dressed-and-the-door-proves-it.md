@@ -27,7 +27,7 @@ next hand at 23:00 will skip.
 ## Proof
 
 ```
-printf 'Hi Craig,\n\nA test.\n' > /tmp/t.md
+printf 'Hi <a colleague>,\n\nA test.\n' > /tmp/t.md
 bash systems/snotra/services/letters/mail-send.sh draft --to <their address> --subject T --body /tmp/t.md --dry-run
   → eml  /tmp/tmp.YP62glCg0z.eml   (grep it: X-Ymir-Letter: dressed · leemunroe-simple
                                     and <!-- letter: leemunroe-simple · sha256:3e63c44ee9df90b9 -->)
