@@ -385,6 +385,20 @@ def main() -> int:
               me.get("places_granted") == ["Ymir"] and me_n.get("places_granted") == [], f"{me} / {me_n}")
         code, hdr, _ = http("GET", f"http://127.0.0.1:{ro}/.well-known/oauth-authorization-server")
         check("13", "the issuer's metadata is reachable from the door (older-spec clients)", code == 200)
+        # the reviewer's names: OAuth(issuer, resource, introspect_client, introspect_secret, allowed_clients, …)
+        o = gimle_oauth.OAuth(issuer.url, "https://mcp.example.org/mcp", "gimle-mcp", issuer.introspect_secret,
+                              ["gimle-mcp"], write_group="hall-write", place_prefix="hall-place-",
+                              all_group="hall-all", ttl=60)
+        tok_named = issuer.mint("gimle-mcp", "ingrid", ["hall-place-Ymir", "hall-write"])
+        who = o.identify(tok_named)
+        refused = ""
+        try:
+            o.identify(issuer.mint("gimle-mcp-cli", "jorunn", ["hall-all"]))
+        except gimle_oauth.Refused as r:
+            refused = r.why
+        check("14", "OAuth(...) with the reviewer's signature: prefixes map, a client outside allowed_clients is refused",
+              who["places"] == ["Ymir"] and who["may_write"] and "gimle-mcp-cli" in refused
+              and gimle_oauth.scope_from_groups(["gimle-all"]) == (["*"], False), f"{who} / {refused!r}")
     finally:
         cleanup()
         time.sleep(0.1)

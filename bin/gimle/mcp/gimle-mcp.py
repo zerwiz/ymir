@@ -823,7 +823,7 @@ ASM_PATH = "/.well-known/oauth-authorization-server"
 
 class Handler(BaseHTTPRequestHandler):
     state: State = None  # set in main()
-    oauth: "gimle_oauth.ResourceServer | None" = None  # set in main() when --oauth-issuer is given
+    oauth: "gimle_oauth.OAuth | None" = None  # set in main() when --oauth-issuer is given
     resource: str = ""  # the door's public /mcp URL (--oauth-resource); derived from the request when empty
     server_version = "gimle-mcp/0.3"
 
@@ -985,12 +985,15 @@ def main(argv):
     ap.add_argument("--oauth-client-id", default=os.environ.get("GIMLE_OAUTH_CLIENT_ID", ""),
                     help="the client id the door introspects as (introspect mode)")
     ap.add_argument("--oauth-secret-file", default=os.environ.get("GIMLE_OAUTH_SECRET_FILE",
-                                                                  "/etc/gimle/oauth-client-secret"),
+                                                                  "/etc/gimle/oauth-introspect-secret"),
                     help="file holding the introspection client secret (never the secret itself on a command line)")
     ap.add_argument("--oauth-groups", default=os.environ.get("GIMLE_OAUTH_GROUPS", ""),
                     help="local groups file: `<username|email|sub> <group>,<group>` per line, for issuers that carry none")
     ap.add_argument("--oauth-groups-claim", default="groups", help="the claim that carries groups")
     ap.add_argument("--oauth-cache", type=int, default=60, help="seconds a verified identity is cached")
+    ap.add_argument("--oauth-write-group", default="gimle-write", help="the group that may write")
+    ap.add_argument("--oauth-place-prefix", default="gimle-place-", help="'<prefix><Name>' grants place Name")
+    ap.add_argument("--oauth-all-group", default="gimle-all", help="the group that grants every place")
     args = ap.parse_args(argv)
     scenes = args.scenes
     if not scenes:
@@ -1013,10 +1016,19 @@ def main(argv):
                           board=board, allow_write=args.allow_write, docs=docs)
     if args.oauth_issuer:
         audiences = [a.strip() for a in args.oauth_audience.split(",") if a.strip()]
-        Handler.oauth = gimle_oauth.ResourceServer(gimle_oauth.OAuthConfig(
-            issuer=args.oauth_issuer, resource=args.oauth_resource, audiences=audiences,
-            mode=args.oauth_mode, client_id=args.oauth_client_id, secret_file=args.oauth_secret_file,
-            groups_file=args.oauth_groups, groups_claim=args.oauth_groups_claim, cache_ttl=args.oauth_cache))
+        secret = ""
+        if args.oauth_client_id:
+            try:
+                with open(args.oauth_secret_file, encoding="utf-8") as fh:
+                    secret = fh.read().strip()
+            except OSError as exc:
+                sys.stderr.write(f"mcp: the introspection secret is unreadable ({args.oauth_secret_file}: "
+                                 f"{exc.strerror}); only JWT tokens can be checked\n")
+        Handler.oauth = gimle_oauth.OAuth(
+            args.oauth_issuer, resource=args.oauth_resource, introspect_client=args.oauth_client_id,
+            introspect_secret=secret, allowed_clients=audiences, write_group=args.oauth_write_group,
+            place_prefix=args.oauth_place_prefix, all_group=args.oauth_all_group, ttl=args.oauth_cache,
+            mode=args.oauth_mode, groups_file=args.oauth_groups, groups_claim=args.oauth_groups_claim)
         Handler.resource = args.oauth_resource
         if not audiences and not args.oauth_resource:
             sys.stderr.write("mcp: --oauth-issuer without --oauth-audience or --oauth-resource accepts no "

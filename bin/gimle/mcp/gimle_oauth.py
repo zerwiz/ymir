@@ -94,21 +94,24 @@ def rsa_verify(alg: str, n: int, e: int, signing_input: bytes, sig: bytes) -> bo
     return hmac.compare_digest(em, expected)
 
 
-def scope_from_groups(groups) -> tuple[list[str], bool]:
-    """Groups → (places, may_write). The door's --allow-write still decides whether writing is possible."""
+def scope_from_groups(groups, all_group: str = GROUP_ALL, write_group: str = GROUP_WRITE,
+                      place_prefix: str = GROUP_PLACE) -> tuple[list[str], bool]:
+    """Groups → (places, may_write): `<place_prefix><Name>` → place Name, `all_group` → '*'.
+
+    The door's --allow-write still decides whether writing is possible at all."""
     places: list[str] = []
     may_write = False
     for raw in groups or []:
         g = str(raw).strip()
         if ":" in g:
             g = g.rsplit(":", 1)[1].strip()
-        if g == GROUP_ALL:
+        if g == all_group:
             if "*" not in places:
                 places.append("*")
-        elif g == GROUP_WRITE:
+        elif g == write_group:
             may_write = True
-        elif g.startswith(GROUP_PLACE):
-            name = g[len(GROUP_PLACE):].strip()
+        elif g.startswith(place_prefix):
+            name = g[len(place_prefix):].strip()
             if name and name not in places:
                 places.append(name)
     return places, may_write
@@ -117,7 +120,8 @@ def scope_from_groups(groups) -> tuple[list[str], bool]:
 class OAuthConfig:
     def __init__(self, issuer: str, resource: str = "", audiences=None, mode: str = "auto",
                  client_id: str = "", secret_file: str = "", groups_file: str = "",
-                 groups_claim: str = "groups", cache_ttl: int = 60, scopes=None):
+                 groups_claim: str = "groups", cache_ttl: int = 60, scopes=None, secret: str = "",
+                 all_group: str = GROUP_ALL, write_group: str = GROUP_WRITE, place_prefix: str = GROUP_PLACE):
         self.issuer = issuer.rstrip("/")
         self.resource = resource
         self.audiences = [a for a in (audiences or []) if a]
@@ -128,6 +132,10 @@ class OAuthConfig:
         self.groups_claim = groups_claim
         self.cache_ttl = cache_ttl
         self.scopes = scopes or ["openid", "profile", "email", "groups", "offline_access"]
+        self.secret = secret  # the introspection secret's VALUE, when given directly (else secret_file)
+        self.all_group = all_group
+        self.write_group = write_group
+        self.place_prefix = place_prefix
 
 
 class ResourceServer:
@@ -197,6 +205,8 @@ class ResourceServer:
         return keys
 
     def _secret(self) -> str:
+        if self.cfg.secret:
+            return self.cfg.secret
         if not self.cfg.secret_file:
             return ""
         try:
@@ -356,13 +366,41 @@ class ResourceServer:
         if isinstance(groups, str):
             groups = [g for g in groups.split(",") if g.strip()]
         groups = list(groups) + self._local_groups([subject, merged.get("email"), merged.get("sub")])
-        places, may_write = scope_from_groups(groups)
+        places, may_write = scope_from_groups(groups, self.cfg.all_group, self.cfg.write_group,
+                                              self.cfg.place_prefix)
         aud = claims.get("aud")
         client = claims.get("client_id") or claims.get("azp") or (aud if isinstance(aud, str) else "")
         ident = {"subject": subject, "sub": str(merged.get("sub", "")), "groups": groups, "places": places,
                  "may_write": may_write, "client": str(client or "")}
         exp = float(claims["exp"]) if "exp" in claims else 0.0
         return ident, exp
+
+
+class OAuth(ResourceServer):
+    """The reviewer's shape of the same resource server — one class, the names his tested diff uses.
+
+        OAuth(issuer, resource, introspect_client, introspect_secret, allowed_clients,
+              write_group='gimle-write', place_prefix='gimle-place-', all_group='gimle-all', ttl=60)
+
+    `allowed_clients` are the issuer's client ids whose tokens the door accepts; a token issued to any other
+    client of the same issuer is refused. `introspect_secret` is the secret's value (the door reads it from
+    /etc/gimle/oauth-introspect-secret). With an introspection client the mode is `auto` — a JWT is checked
+    against the JWKS, anything else is introspected — so Dex and Authelia both fit.
+    """
+
+    def __init__(self, issuer: str, resource: str = "", introspect_client: str = "", introspect_secret: str = "",
+                 allowed_clients=(), write_group: str = GROUP_WRITE, place_prefix: str = GROUP_PLACE,
+                 all_group: str = GROUP_ALL, ttl: int = 60, mode: str = "auto", groups_file: str = "",
+                 groups_claim: str = "groups", fetch=None):
+        super().__init__(OAuthConfig(
+            issuer=issuer, resource=resource, audiences=list(allowed_clients or []), mode=mode,
+            client_id=introspect_client, secret=introspect_secret, groups_file=groups_file,
+            groups_claim=groups_claim, cache_ttl=ttl, all_group=all_group, write_group=write_group,
+            place_prefix=place_prefix), fetch=fetch)
+        self.issuer = self.cfg.issuer
+        self.resource = resource
+        self.allowed_clients = self.cfg.audiences
+        self.write_group, self.place_prefix, self.all_group, self.ttl = write_group, place_prefix, all_group, ttl
 
 
 def _http(method: str, url: str, form=None, headers=None, timeout: float = 8.0):

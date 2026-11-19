@@ -78,9 +78,12 @@ no `preferred_username`, and Dex's own stand-in connector gives none either (mea
 | `--oauth-audience` | none | client ids, comma-separated, whose tokens are accepted; any other app's token is refused |
 | `--oauth-mode` | `auto` | `jwt` checks the issuer's JWKS, `introspect` asks the issuer, `auto` uses JWT when the token looks like one |
 | `--oauth-client-id` | none | the client the door introspects as (introspection only) |
-| `--oauth-secret-file` | `/etc/gimle/oauth-client-secret` | the introspection secret, read from a file, never from the command line |
+| `--oauth-secret-file` | `/etc/gimle/oauth-introspect-secret` | the introspection secret, read from a file, never from the command line |
 | `--oauth-groups` | none | the local groups file |
 | `--oauth-cache` | `60` | seconds a verified identity is cached; a refusal is cached for 10 |
+| `--oauth-write-group` | `gimle-write` | the group that may write |
+| `--oauth-place-prefix` | `gimle-place-` | `<prefix><Name>` grants place Name |
+| `--oauth-all-group` | `gimle-all` | the group that grants every place |
 
 Each flag also reads an environment variable (`GIMLE_OAUTH_ISSUER`, `GIMLE_OAUTH_RESOURCE`,
 `GIMLE_OAUTH_AUDIENCE`, `GIMLE_OAUTH_MODE`, `GIMLE_OAUTH_CLIENT_ID`, `GIMLE_OAUTH_SECRET_FILE`,
@@ -90,6 +93,20 @@ With Dex, use JWT mode. Dex signs its access tokens as RS256 JWTs, so the door c
 published keys and needs no secret of its own. Dex v2.41.1 also publishes an introspection endpoint
 (`/dex/token/introspect`, measured), so introspection works too; it costs a round trip per new token and a
 client secret in `--oauth-secret-file`. Introspection is the natural mode for Authelia.
+
+## The module's shape
+
+`gimle_oauth.OAuth` is the one class a caller needs, with the reviewer's names:
+
+```python
+OAuth(issuer, resource, introspect_client, introspect_secret, allowed_clients,
+      write_group="gimle-write", place_prefix="gimle-place-", all_group="gimle-all", ttl=60)
+```
+
+`allowed_clients` are the issuer's client ids whose tokens are accepted; a token issued to any other client of
+the same issuer is refused. `introspect_secret` is the secret's value; the door reads it from
+`/etc/gimle/oauth-introspect-secret`. `<place_prefix><Name>` maps to place Name, and `all_group` to every
+place. The door's module-level `CANVAS_WRITES` names the four canvas writes the read-only gate covers.
 
 ## What the door serves
 
@@ -154,7 +171,7 @@ the provider. Nothing else waits on it.
 sudo install -d -m 0750 -o "$USER" -g "$USER" /etc/gimle
 sudo install -m 0600 -o "$USER" -g "$USER" /dev/null /etc/gimle/oauth-groups
 # only for an introspecting issuer (Authelia); Dex in JWT mode needs no secret at the door:
-sudo install -m 0600 -o "$USER" -g "$USER" /dev/null /etc/gimle/oauth-client-secret
+sudo install -m 0600 -o "$USER" -g "$USER" /dev/null /etc/gimle/oauth-introspect-secret
 ```
 
 Then write the grants into `/etc/gimle/oauth-groups`, one person per line.
