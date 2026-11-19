@@ -1,0 +1,18 @@
+# app.yaml — the app contract (Ymir's split, plan 01 §3; the coding tool's plan 05).
+name: sessrumnir
+title: Sessrúmnir — the desktop seat over the pi and oh-my-pi coding agents
+kind: electron
+window_class: ymir-sessrumnir      # fault 5 (2026-09-18): the fork renamed itself "Pi Desktop"; --check refuses that
+ports: []                          # DevTools on loopback 9316
+units: []
+launchers: [ymir-sessrumnir.desktop]
+icons: [ymir-sessrumnir]
+state_dir: ~/.config/sessrumnir    # its store, already outside the tree; never in a release
+config_dir: ~/.config/sessrumnir
+ymir:
+  min_version: ""
+  doors:
+    - { name: seat-wire, need: optional }   # Ymir's bin/seat/sessrumnir-wire.sh talks to it; it stays in Ymir
+  packages: []
+upstream: "FaqFirebase/pi-desktop v0.1.7-alpha (Apache-2.0) — a vendored fork; scripts/sync-upstream.sh pulls a release, keeping the Ymir delta"
+history: "cut from zerwiz/ymir apps/sessrumnir with git filter-repo, 2026-11-19"

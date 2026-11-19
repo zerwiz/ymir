@@ -1,144 +1,48 @@
-#!/bin/bash
-# Sessrúmnir — Quick Install Script
-# Usage: curl -fsSL https://raw.githubusercontent.com/zerwiz/ymir/main/apps/sessrumnir/install.sh | bash
+#!/usr/bin/env bash
+# install.sh — build this release of Sessrúmnir in place (the app contract; Ymir's bin/apps/apps.sh runs it).
+#
+#   install.sh          dependencies (npm ci from package-lock.json), the Electron runtime, the build (out/)
+#   install.sh --check  change nothing; exit 1 naming what is not right
+#
+# Piped from curl (`curl -fsSL …/sessrumnir/main/install.sh | bash`) there is no checkout to build, so it hands
+# over to scripts/quick-install.sh, which downloads a packaged release — what this file did before the split.
+set -euo pipefail
+SELF="${BASH_SOURCE[0]:-}"
+if [ -z "$SELF" ] || [ ! -f "$SELF" ] || [ ! -f "$(dirname "$SELF")/package.json" ]; then
+  exec bash -c "$(curl -fsSL "https://raw.githubusercontent.com/${SESSRUMNIR_REPO:-zerwiz/sessrumnir}/main/scripts/quick-install.sh")" "$@"
+fi
+HERE="$(cd "$(dirname "$SELF")" && pwd)"
+cd "$HERE"
+case "$HERE" in */ymir-runtime/apps/*|*/ymir/apps/*)
+  printf 'error: refusing to build inside a Ymir tree (%s) — an installed app has its own home\n' "$HERE" >&2; exit 1 ;;
+esac
+ELECTRON="$HERE/node_modules/electron/dist/electron"
 
-set -e
-
-REPO="zerwiz/ymir"
-RELEASES_PAGE="https://github.com/$REPO/releases"
-RELEASES_API="https://api.github.com/repos/$REPO/releases"
-BINARY_NAME="sessrumnir"
-INSTALL_DIR="${HOME}/.local/bin"
-# How many recent releases the asset lookup scans. More than one, so a release
-# whose installers are still uploading mid-CI-run does not hide the newest
-# release that actually carries them.
-RELEASE_SCAN_COUNT=10
-
-# $1: electron-builder platform target (linux|mac|win), i.e. the package:<target>
-# npm script to run.
-print_build_from_source() {
-  echo ""
-  echo "Or build from source:"
-  echo "  git clone https://github.com/$REPO.git"
-  echo "  cd ymir/apps/sessrumnir"
-  echo "  npm install && npm run package:$1"
+check() {
+  local bad=0
+  [ -d node_modules ] || { printf 'error: dependencies are not installed — run ./install.sh\n' >&2; bad=1; }
+  [ -x "$ELECTRON" ] && "$ELECTRON" --version >/dev/null 2>&1 || { printf 'error: the Electron runtime is missing (node_modules/electron)\n' >&2; bad=1; }
+  [ -f out/main/index.js ] || { printf 'error: the app is not built (out/main/index.js)\n' >&2; bad=1; }
+  # Fault 5 of 2026-09-18: the fork renamed itself "Pi Desktop". The window's name and class are declared here.
+  grep -q "app.setName('Sessrúmnir')" src/main/index.ts && grep -q "'class', 'ymir-sessrumnir'" src/main/index.ts \
+    || { printf 'error: the window does not name itself Sessrúmnir (ymir-sessrumnir) — the fork renamed it\n' >&2; bad=1; }
+  if [ -f out/main/index.js ] && grep -q '"Pi Desktop"\|productName.*Pi Desktop' package.json 2>/dev/null; then
+    printf 'error: package.json carries the upstream product name\n' >&2; bad=1
+  fi
+  # node-pty is the terminal: it must be built for THIS Electron, or the terminal panel dies at first use
+  [ -d node_modules/node-pty ] || { printf 'error: node-pty is not installed\n' >&2; bad=1; }
+  [ "$bad" = 0 ] && printf 'sessrumnir: ready (built, Electron %s, named Sessrúmnir)\n' "$("$ELECTRON" --version 2>/dev/null)"
+  return "$bad"
 }
 
-echo "╔═══════════════════════════════════════╗"
-echo "║       Sessrúmnir — Installer          ║"
-echo "╚═══════════════════════════════════════╝"
-echo ""
+if [ "${1-}" = --check ]; then check; exit $?; fi
 
-# Detect platform
-OS="$(uname -s)"
-ARCH="$(uname -m)"
-
-case "$OS" in
-  Linux*)
-    PLATFORM="linux"
-    # CI packages Linux on an x64 runner only, so x86_64 is the sole
-    # architecture with a published AppImage. Bail out here, before Pi is
-    # installed as a side effect below, rather than after.
-    if [ "$ARCH" != "x86_64" ]; then
-      echo "Error: No Sessrúmnir build is published for $PLATFORM-$ARCH."
-      echo "Prebuilt Linux installers are x86_64 only."
-      print_build_from_source "$PLATFORM"
-      exit 1
-    fi
-    # electron-builder names Linux AppImage artifacts with "x86_64", not "x64"
-    ARCH_NAME="x86_64"
-    ;;
-  Darwin*)
-    PLATFORM="mac"
-    if [ "$ARCH" = "x86_64" ]; then
-      ARCH_NAME="x64"
-    elif [ "$ARCH" = "arm64" ]; then
-      ARCH_NAME="arm64"
-    fi
-    ;;
-  MINGW*|MSYS*|CYGWIN*)
-    PLATFORM="win"
-    ARCH_NAME="x64"
-    ;;
-  *)
-    echo "Error: Unsupported OS: $OS"
-    echo "Please download manually from: $RELEASES_PAGE"
-    exit 1
-    ;;
-esac
-
-echo "Platform: $PLATFORM-$ARCH_NAME"
-
-# Check for Pi dependency
-if ! command -v pi &> /dev/null; then
-  echo ""
-  echo "⚠  Pi is not installed."
-  echo "   Installing Pi first..."
-  echo ""
-  curl -fsSL https://pi.dev/install.sh | sh
-  echo ""
+command -v npm >/dev/null 2>&1 || { printf 'error: npm is required (node 22+)\n' >&2; exit 1; }
+if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
+if ! { [ -x "$ELECTRON" ] && "$ELECTRON" --version >/dev/null 2>&1; }; then
+  # npm gates install scripts, so Electron's own download may not have run (the same mend Ymir's electron-lib does)
+  ( cd node_modules/electron && node install.js ) >/dev/null 2>&1 || true
 fi
-
-echo "✓ Pi found: $(which pi)"
-
-# Download the latest release artifact for this platform.
-# Sessrúmnir is distributed as a packaged binary, not via npm — see MEMORY.md.
-if [ "$PLATFORM" = "linux" ]; then
-  echo ""
-  echo "Downloading AppImage..."
-
-  # Release assets are versioned (Pi-Desktop-<version>-<os>-<arch>.<ext>), so the
-  # URL must be resolved from the release's asset list. /releases/latest excludes
-  # pre-releases, so fall back to the newest releases when only pre-releases
-  # exist. The list endpoint returns them newest-first and the pipeline below
-  # takes the first matching asset in document order, so a release that has not
-  # finished uploading its installers is skipped rather than fatal.
-  RELEASE_JSON="$(curl -fsSL "$RELEASES_API/latest" 2>/dev/null \
-    || curl -fsSL "${RELEASES_API}?per_page=${RELEASE_SCAN_COUNT}" 2>/dev/null \
-    || true)"
-
-  if [ -z "$RELEASE_JSON" ]; then
-    echo "Error: Could not fetch release information from the GitHub API."
-    echo "Please download manually from: $RELEASES_PAGE"
-    exit 1
-  fi
-
-  DOWNLOAD_URL="$(printf '%s\n' "$RELEASE_JSON" \
-    | grep -o '"browser_download_url": *"[^"]*"' \
-    | grep -- "-${PLATFORM}-${ARCH_NAME}\.AppImage\"\$" \
-    | head -n 1 \
-    | sed 's/.*"\(https[^"]*\)".*/\1/')"
-
-  if [ -z "$DOWNLOAD_URL" ]; then
-    echo "Error: No ${PLATFORM}-${ARCH_NAME} AppImage found in the recent releases."
-    echo "Please download manually from: $RELEASES_PAGE"
-    exit 1
-  fi
-
-  mkdir -p "$INSTALL_DIR"
-  OUTPUT="$INSTALL_DIR/$BINARY_NAME"
-
-  echo "Downloading: $DOWNLOAD_URL"
-  curl -fsSL "$DOWNLOAD_URL" -o "$OUTPUT"
-  chmod +x "$OUTPUT"
-
-  if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
-    echo ""
-    echo "Add to your PATH:"
-    echo "  export PATH=\"$INSTALL_DIR:\$PATH\""
-    echo ""
-    echo "Add to ~/.bashrc or ~/.zshrc to make permanent."
-  fi
-
-  echo ""
-  echo "✓ Sessrúmnir installed to $OUTPUT"
-  echo ""
-  echo "Run: $OUTPUT"
-  echo ""
-else
-  echo ""
-  echo "Automated install is currently Linux-only."
-  echo "Download the installer for $PLATFORM from: $RELEASES_PAGE"
-  print_build_from_source "$PLATFORM"
-  exit 1
-fi
+npx --no-install electron-builder install-app-deps >/dev/null 2>&1 || true   # node-pty for this Electron
+npm run build
+printf 'sessrumnir: built — ./start.sh opens it; ./activate.sh seats the launcher\n'
