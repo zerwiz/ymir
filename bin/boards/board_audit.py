@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """board_audit.py — a board write is recorded as a WRITE: what changed, not only who called (plan 324 F12).
 
 `access.jsonl` answers *who read what*. A write needs more: the object, its id, and each field it

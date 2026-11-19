@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """todo_door — the one way the house writes the to-do (plan 261, and the voice's wake 107 on 2026-11-19).
 
 Every house writer of `hodd/life/personal/me/todo.md` and of the voice's record `hodd/state/voice/todos.jsonl`

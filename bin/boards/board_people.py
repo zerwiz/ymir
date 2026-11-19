@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """board_people.py — a person, as the home's register names them, found among a board's members.
 
 `hodd/identity/members.yaml` is the ONE register of who is on what (plan 266). A person there is a slug

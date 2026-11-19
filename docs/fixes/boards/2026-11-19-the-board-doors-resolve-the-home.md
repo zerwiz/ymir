@@ -22,3 +22,7 @@ ward asks of every new door.
 
 - `defaults-guard.sh check bin/boards` reports no finding.
 - `test_gimle_mcp_board.sh`, `test_trello_door.sh` and `test_mcp_seat_quiet_ui.sh` pass.
+
+The same gather set the executable bit (and a `python3` shebang where one was missing) on the five
+new modules the rules ward names: `bin/boards/{board_audit,board_people,plane_base,plane_cards}.py`
+and `bin/records/todo_door.py`.
