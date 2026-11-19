@@ -25,3 +25,7 @@ names for one door would not reconcile when the batch is gathered.
 `test_oauth_door.py` gained test 14. It builds `OAuth(...)` with the reviewer's signature and custom group
 names, checks the prefix mapping and the write group, and checks that a token issued to a client outside
 `allowed_clients` is refused. Result: `14 passed, 0 failed`. `test_dex_login.py` against a real Dex: `all green`.
+
+## CHANGE LOG
+
+- 2026-11-19 — review-mend: added missing heading for #826
