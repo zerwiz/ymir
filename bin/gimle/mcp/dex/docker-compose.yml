@@ -1,0 +1,29 @@
+# Dex for Gimlé's MCP door — its own service, its own state (plan 149).
+#
+#   cp config.example.yaml config.yaml   # then set nothing in it: every value comes from dex.env
+#   cp dex.env.example dex.env && chmod 600 dex.env   # fill the ids and secrets
+#   mkdir -p state && DEX_UID=$(id -u) DEX_GID=$(id -g) docker compose up -d
+#
+# DEX_UID/DEX_GID must own ./state: Dex writes its sqlite file there, and the image's own user (1001) cannot
+# write a directory the host user made (measured: with the host's uid passed in, state/dex.db appears).
+#
+# Dex listens on loopback only; the operator's tunnel publishes it at the issuer's host. Nothing else in
+# the suite shares this state directory or this container.
+services:
+  dex:
+    image: ghcr.io/dexidp/dex:v2.41.1
+    container_name: gimle-dex
+    command: ["dex", "serve", "/etc/dex/config.yaml"]
+    env_file: [dex.env]
+    ports:
+      - "127.0.0.1:${DEX_PORT:-5556}:5556"
+    volumes:
+      - ./config.yaml:/etc/dex/config.yaml:ro
+      - ./state:/var/dex
+    user: "${DEX_UID:-1001}:${DEX_GID:-1001}"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:5556/dex/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

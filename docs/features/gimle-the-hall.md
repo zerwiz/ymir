@@ -115,8 +115,37 @@ http://127.0.0.1:8487/` for the desk; `curl -X POST http://127.0.0.1:8489/mcp -H
 -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'` for the MCP. 401 means the token is not in the file; a
 recorded refusal means it is.
 
+## 2026-11-19 — the MCP door logs its people in
+
+This section adds to **The MCP** above; the text there stays as the record of what was built first.
+
+The door that serves the board today is `bin/gimle/mcp/gimle-mcp.py`, a copy of the one the heart runs from
+the Gimlé kit. It now admits a caller by one of two roads, and every line of `access.jsonl` says which:
+
+- **`bearer-file`**: a static token from the token file, exactly as before;
+- **`oauth`**: a login through an OpenID Connect issuer. The suite's issuer for this is **Dex**, which logs
+  people in with Google or GitHub. Start the door with `--oauth-issuer` to turn it on.
+
+**Groups decide what an OAuth caller may touch:** `gimle-all` is every place, `gimle-place-<Name>` is one
+place, and `gimle-write` allows writing on a door started with `--allow-write`. No place group means no
+places.
+
+**Two faults are fixed for everyone.** The canvas writes (`add_elements`, `update_elements`, `save_room`,
+`share_room`) are now refused on a read-only door, for static tokens too. A place name in the token file may
+now contain a space, because places are split on commas only.
+
+How to install it, which steps need the operator, and how a person connects are in
+[`bin/gimle/mcp/README.md`](../../bin/gimle/mcp/README.md). The proof is two scripts:
+
+```bash
+python3 bin/gimle/mcp/test_oauth_door.py    # against a stand-in issuer
+python3 bin/gimle/mcp/test_dex_login.py     # against the shipped Dex config, in docker
+```
+
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
 - **2026-11-15** — a pointer added to [a-second-house-suite.md](a-second-house-suite.md): a different company
   running its own copy of the suite, sharing no secret and no document with this installation.
+- **2026-11-19** — appended *the MCP door logs its people in*: the OAuth road, groups for scope, the canvas
+  write gate and comma-only places (plan 149).
