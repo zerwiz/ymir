@@ -46,15 +46,17 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
-MAIL = ROOT / "bin/time/snotra/mail-send.sh"  # allow-superseded-path: the SHIM is the door under test — a caller nobody has repointed must still work
+# The shims under bin/time/snotra/ were retired on purpose (ca6faff37: "the move is finished"), so the doors
+# under test are the moved ones themselves (2026-11-19: the test still ran the shims and failed 12 times).
+MAIL = ROOT / "systems/snotra/services/letters/mail-send.sh"
 # …and the file that IMPLEMENTS it, for the proofs that judge the door's own text (plan 231).
 MAIL_REAL = ROOT / "systems/snotra/services/letters/mail-send.sh"
-CAL = ROOT / "bin/time/snotra/calendar-invite.sh"  # allow-superseded-path: as above — the retired shim is what a stale caller still runs
+CAL = ROOT / "systems/snotra/services/calendar/calendar-invite.sh"
 # The door that IMPLEMENTS the write. `CAL` is a shim: it execs this one. A test that reads the
 # shim to judge the tool's defaults judges a two-line forwarder, and it said FAILED from
 # 2026-10-24 until plan 231 read the file that actually holds the value.
 CAL_REAL = ROOT / "systems/snotra/services/calendar/calendar-invite.sh"
-APPROVE = ROOT / "bin/time/snotra/snotra-approve.sh"  # allow-superseded-path: as above — the shim must exec the moved door
+APPROVE = ROOT / "systems/snotra/services/approve/snotra-approve.sh"
 
 # ── the two APIs, stood in for ───────────────────────────────────────────────────────
 
@@ -286,7 +288,10 @@ class MailGate(Case):
         self.assertIn("REFUSED mail r-1", self.ledger(), "the refusal was not carved into the Runes")
 
     def test_2_an_approved_draft_sends_exactly_once_and_a_second_send_is_refused(self):
-        self.draft("r-2", b"To: partner@example.com\r\nSubject: Example4\r\n\r\nhello\r\n")
+        # A draft the door made carries its letter mark (plan 322); one without it is refused before the word
+        # is even read, which is a different hole. This test is about the word, so its draft is marked.
+        self.draft("r-2", b"To: partner@example.com\r\nSubject: Example4\r\n"
+                          b"X-Ymir-Letter: undressed \xc2\xb7 a test draft\r\n\r\nhello\r\n")
         self.assertEqual(self.approve("r-2").returncode, 0)
 
         first = self.run_script(MAIL, "send", "r-2")
