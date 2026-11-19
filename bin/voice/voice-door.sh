@@ -308,6 +308,12 @@ cmd_host() {
   # key for local, the named or typed one for an online endpoint). Falling back to
   # the rail key for an online head sent the wrong bearer and the engine answered 400.
   if [ -n "$RODD_RESOLVED_KEY" ]; then hk="$RODD_RESOLVED_KEY"; else hk="$(head_key || true)"; fi
+  # NO KEY ON A COMMAND LINE (found 2026-11-20 while proving plan 326.8): the key rode the engine's argv, which
+  # any local user reads in `ps` and /proc/<pid>/cmdline. An online head is reached through the loopback proxy,
+  # which adds its own bearer and never forwards the engine's — so the engine needs no key there at all. A local
+  # head still needs one, and it goes by environment (OPENAI_API_KEY, which the engine's client reads), readable
+  # only by its owner.
+  [ "${RODD_HEAD_MODE_RESOLVED:-local}" = "online" ] && hk=""
   # THE DESK STAYS WHOLE (plan 271, the Allfather 2026-11-12: "it needs to work if I'm in Discord also").
   # Two separate facts, kept apart:
   #  1. The `serve` road opens NO microphone — Rödd's window captures through the browser and the sound
@@ -363,9 +369,10 @@ cmd_host() {
     --setenv=CUDA_MODULE_LOADING="${YMIR_VOICE_CUDA_MODULE_LOADING:-LAZY}" \
     ${CUDA_VISIBLE_DEVICES+--setenv=CUDA_VISIBLE_DEVICES="$CUDA_VISIBLE_DEVICES"} \
     ${cu:+--setenv=LD_LIBRARY_PATH="$cu"} \
+    ${hk:+--setenv=OPENAI_API_KEY="$hk"} \
     --property=StandardOutput=append:"$STATE_DIR/host.log" \
     --property=StandardError=append:"$STATE_DIR/host.log" \
-    "$eng" serve "${HOST_ARGV[@]}" "${engine_pin[@]}" ${hk:+--responses_api_api_key "$hk"} >/dev/null || {
+    "$eng" serve "${HOST_ARGV[@]}" "${engine_pin[@]}" >/dev/null || {
       err "error: could not raise $UNIT"; return 1; }
   printf '%s\n' "$(date +%Y-%m-%dT%H:%M:%S%z) unit=$UNIT port=$PORT head=$HEAD_URL/$HEAD_MODEL" >> "$STATE_DIR/host.seat"
   # THE CARD IS BORROWED, NOT KEPT (plan 275 item 23). Raise the idle watcher beside the
