@@ -51,3 +51,16 @@ The stamp covers the one renderer the shelf has, `leemunroe-simple`; a template 
 ## CHANGE LOG
 
 - 2026-11-19 — review-mend: added missing heading for #828
+
+## Appended the same evening — the plain half carries the words, not the markup
+
+Found by reading the draft that was actually made: a nine-bold letter went out with **eighteen stray `**`** in its
+`text/plain` alternative, so a reader on a text-only client saw the Markdown instead of the letter. The body is written in
+Markdown for the template's sake; the plain half now unwraps the emphasis markers (`**x**` → `x`) and leaves every other
+asterisk alone.
+
+Proof: the same letter re-drafted carries HTML with nine `<strong>` and a `text/plain` part with **zero** stray `**`.
+
+Two other things were fixed in the letter that carried it, and they are named here because they are the reason the letter
+exists at all: it pointed at the **superseded** board (`b8Qow4l3`) instead of the live one (`1aREStDq`), and it said the
+invitation "follows this letter" when the invitation had already been posted and mailed.
