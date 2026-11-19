@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[79]{file,does,kind,verdict,disposition,callers,lines}:
+bin[80]{file,does,kind,verdict,disposition,callers,lines}:
   "agent-ready.py","'''agent-ready.py — is an agent READY for a turn, in one vocabulary, for both backends.","tool","wired","keep",3,375
   "agent-ready.sh","agent-ready.sh — one answer per target: ready · working · blocked: <why> · dead.","tool","wired","keep",3,33
   "agent-scope.sh","agent-scope.sh — every errand's hand stands in its own cgroup, so a kill is LOCAL.","tool","wired","keep",3,138
@@ -29,7 +29,7 @@ bin[79]{file,does,kind,verdict,disposition,callers,lines}:
   "arm-talk.sh","arm-talk.sh — the heart speaks into every seat's pane, over that seat's own road (plan 234 P1).","tool","wired","keep",1,193
   "armpin.sh","armpin.sh — does every surface that SUPERVISES run the pin, and is the pin current?","tool","wired","keep",1,103
   "backend.sh","backend.sh — the six verbs, for whichever backend a target names.","tool","tested","migrate → src/ymir_runtime/backend.py",28,27
-  "base.py","'''The six verbs a backend answers, and the one resolver that picks a backend.","tool","wired","keep",0,57
+  "base.py","'''The six verbs a backend answers, and the one resolver that picks a backend.","tool","wired","keep",2,57
   "broken.sh","broken.sh — the register of broken things (RULES/50).","tool","tested","keep",2,165
   "claims.sh","claims.sh — a seat declares what it is building (plan number, branch, errand id, host).","tool","wired","keep",4,95
   "clocks.sh","bin/seat/clocks.sh — seat the three loops: plan-watch, ship-watch, update-loop.","tool","wired","keep",0,116
@@ -43,7 +43,7 @@ bin[79]{file,does,kind,verdict,disposition,callers,lines}:
   "door.py","'''door.py — the six verbs, dispatched through the one resolver.","tool","wired","keep",4,143
   "fleet-plans.sh","fleet-plans.sh — read every LIVE host's claims over the tailnet; merge; report collisions + dark hosts.","tool","wired","keep",0,92
   "harness-contract-install.sh","harness-contract-install.sh — every harness reads ONE contract, and an update keeps it true.","tool","wired","keep",1,81
-  "harness-extensions-install.sh","harness-extensions-install.sh — every harness gets the house's extensions and packages, on install AND on update.","tool","wired","keep",11,498
+  "harness-extensions-install.sh","harness-extensions-install.sh — every harness gets the house's extensions and packages, on install AND on update.","tool","wired","keep",12,531
   "helm-identity.sh","helm-identity.sh — WHO holds this helm, WHAT it is for, WHICH machine and fleet it","tool","wired","keep",6,145
   "herdr-agents.py","'''herdr-agents.py — list the agents standing in this herdr session, as TOON.","tool","wired","keep",13,259
   "herdr-editor.py","'''herdr-editor.py — read the INPUT BOX of an agent's pane, and say what is in it.","tool","wired","keep",3,133
@@ -59,7 +59,7 @@ bin[79]{file,does,kind,verdict,disposition,callers,lines}:
   "lock-hold.sh","lock-hold.sh — a PRIMARY THAT DOES NOT EXIT: hold this machine's session lock, for the seat's life.","tool","wired","keep",0,56
   "opencode-launcher.sh","opencode-launcher.sh — the ONE launch door for an OpenCode seat, as pi-launcher.sh is pi's.","tool","wired","keep",5,111
   "pending.sh","pending.sh — everything that is waiting on the operator, in ONE list.","tool","wired","keep",5,117
-  "pi-door.sh","pi-door.sh — the door a SEAT THE OPERATOR STARTS BY HAND passes through.","tool","wired","keep",3,169
+  "pi-door.sh","pi-door.sh — the door a SEAT THE OPERATOR STARTS BY HAND passes through.","tool","wired","keep",3,177
   "pi-launcher.sh","pi-launcher.sh — the ONE launcher generator for a pi seat.","tool","tested","keep",3,161
   "rank.sh","rank.sh — ask a jev judge to score items on jev's three categories.","tool","wired","keep",1,122
   "resolve.py","'''ONE resolver: `herdr:<pane>`, `hermes:<id-or-title>`, or a bare target — and bare is herdr.","tool","wired","migrate → src/ymir_runtime/dispatch/resolve.py",4,55
@@ -88,7 +88,8 @@ bin[79]{file,does,kind,verdict,disposition,callers,lines}:
   "test_everything_up.sh","Wards for the 'everything-up' errand: a worker seat is never the helm (Stop hook + arm check),","tool","wired","keep",1,136
   "test_herdr_editor.sh","test_herdr_editor.sh — the input-box reader, judged on the two shapes the hall actually draws.","tool","wired","keep",1,74
   "test_lock_ask.sh","The ward for bin/seat/lock-ask.sh — a read-only agent asks the lock owner, and only the","tool","wired","keep",0,155
-  "test_pi_door.sh","The ward for bin/seat/pi-door.sh — one extension home for a seat started by hand.","tool","wired","keep",0,128
+  "test_pi_door.sh","The ward for bin/seat/pi-door.sh — one extension home for a seat started by hand.","tool","wired","keep",0,129
+  "test_pi_door_path.sh","The ward for the pi door's PATH block (bin/seat/harness-extensions-install.sh).","tool","wired","keep",0,67
   "test_pi_loads_the_pin.sh","The ward for 'pi loads the pin': every harness binder points at the pinned runtime whichever","tool","wired","keep",0,45
   "test_rank.sh","The ward for bin/seat/rank.sh — the hall's ranking transport.","tool","wired","keep",0,56
   "test_roots_load_the_runtime.sh","The ward for plan 248 P2 + P3 — every root agent loads the PINNED runtime, never a working tree, and pi's","tool","wired","keep",0,192
@@ -102,6 +103,6 @@ bin[79]{file,does,kind,verdict,disposition,callers,lines}:
   "whose-tree.sh","whose-tree.sh — whose code am I standing in?","tool","wired","keep",0,118
   "ymir-mcp.py","'''ymir-mcp.py (seat copy) — a thin pointer, kept because files are moved, never deleted (Rule 11).","tool","tested","keep",9,13
 
-**Tally.** verdict: wired=68, tested=11
+**Tally.** verdict: wired=69, tested=11
 
-**Tally.** disposition: keep=77, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/dispatch/resolve.py=1
+**Tally.** disposition: keep=78, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/dispatch/resolve.py=1

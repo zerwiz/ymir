@@ -54,11 +54,11 @@ bin[68]{file,does,kind,verdict,disposition,callers,lines}:
   "eindri-start.sh","eindri-start.sh — start an Eindri as the Allfather asks.","tool","wired","keep",4,330
   "eindri-wake-lib.sh","eindri-wake-lib.sh — the ONE delivery ledger behind the Eindri push path.","lib","wired","keep",12,71
   "eindri-watch.sh","eindri-watch.sh — the control door on the Eindri→Brokk wake bridge.","tool","wired","keep",6,131
-  "einherjar-spawn.sh","einherjar-spawn.sh - gather an Eindri worker (Einherjar = the chosen who are","tool","tested","keep",23,1451
-  "eir-doctor.sh","eir-doctor.sh — Eir, the healer: diagnose the running system, then mend it.","tool","wired","keep",15,1084
+  "einherjar-spawn.sh","einherjar-spawn.sh - gather an Eindri worker (Einherjar = the chosen who are","tool","tested","keep",23,1472
+  "eir-doctor.sh","eir-doctor.sh — Eir, the healer: diagnose the running system, then mend it.","tool","wired","keep",15,1117
   "erindi-brief.sh","erindi-brief.sh - scaffold an Eindri worker brief at data/<task-id>/brief.md.","tool","tested","keep",6,456
   "groa-agent.sh","groa-agent.sh — Gróa's body on a schedule: the updater, leashed, one per install.","tool","wired","keep",2,188
-  "groa-update.sh","groa-update.sh — Gróa, the völva who renews.","tool","wired","keep",19,555
+  "groa-update.sh","groa-update.sh — Gróa, the völva who renews.","tool","wired","keep",19,565
   "groa-verdict-lib.sh","groa-verdict-lib.sh — how Gróa's update ends: whole, or owed, and never 'done' when it is not (plan 278).","lib","wired","keep",2,79
   "hall.sh","hall.sh — the whole house in ONE read: the seat, the doors, the queue, the last runes.","tool","wired","keep",3,16
   "msg-log.sh","msg-log.sh — the record of every word sent between agents (2026-11-14, plan 275 item 8).","tool","wired","keep",2,126

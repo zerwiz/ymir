@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[177]{file,does,kind,verdict,disposition,callers,lines}:
+bin[180]{file,does,kind,verdict,disposition,callers,lines}:
   "SKILL.md","---","data","tested","keep",24,23
   "SKILL.md","---","data","tested","keep",24,23
   "SKILL.md","---","data","tested","keep",24,22
@@ -147,6 +147,7 @@ bin[177]{file,does,kind,verdict,disposition,callers,lines}:
   "test_gate_directory.sh","test_gate_directory.sh — plan 295 fix S1: the gate list is a DIRECTORY, so two branches that add","tool","wired","keep",1,128
   "test_gather_merge_guard.sh","test_gather_merge_guard.sh — plan 272 fault 9: a gathered batch that landed as one parent is named.","tool","wired","keep",0,26
   "test_gather_orders_by_base.sh","test_gather_orders_by_base.sh — plan 293 part 7: a packet names the branch it was cut from, and","tool","wired","keep",1,69
+  "test_gimle_mcp_board.sh","test_gimle_mcp_board.sh — the hall's board door, proved where its code now lives (Gimlé's own repository).","tool","wired","keep",0,48
   "test_groa_steps.sh","test_groa_steps.sh — plan 272 fault 5: every Gróa step has a limit and says where it is.","tool","wired","keep",0,39
   "test_guards_inherited.sh","test_guards_inherited.sh — a ward's finding is OURS only when it names OUR copy of the path.","tool","wired","keep",1,56
   "test_handoff_packet.sh","test_handoff_packet.sh — proves the packet door reads the schema's packet and refuses a false one.","tool","wired","keep",1,138
@@ -154,6 +155,7 @@ bin[177]{file,does,kind,verdict,disposition,callers,lines}:
   "test_home_sync_clock.sh","test_home_sync_clock.sh — the clock commits the records the house writes itself, and holds on anything else.","tool","wired","keep",0,28
   "test_main_red.sh","test_main_red.sh — the alarm BITES, and it stays quiet where it must.","tool","wired","keep",1,164
   "test_maker_names.sh","test_maker_names.sh — RULES/53: the maker ward refuses a model, a maker or an agent harness in prose,","tool","wired","keep",0,113
+  "test_mcp_seat_quiet_ui.sh","test_mcp_seat_quiet_ui.sh — a fresh seat opens no UI window per MCP call (plan 324 F11).","tool","wired","keep",0,38
   "test_merge_method.sh","test_merge_method.sh — the merge flag follows the PR's kind (RULES/08, batch road).","tool","wired","keep",0,29
   "test_mjollnir_clone.sh","test_mjollnir_clone.sh — the door that turns a FAR repo into a workable one (plan 210 P3).","tool","wired","keep",0,110
   "test_mjollnir_intake.sh","test_mjollnir_intake.sh — the forge's senses (plan 210 P0/P1), proved without a network.","tool","wired","keep",0,179
@@ -183,6 +185,7 @@ bin[177]{file,does,kind,verdict,disposition,callers,lines}:
   "test_smith_pr_open.sh","test_smith_pr_open.sh — a direct-PR smith may open its PR and never merge it; an empty PR URL","tool","wired","keep",0,28
   "test_soak.sh","test_soak.sh — the planted world for bin/gates/soak.sh (plan 286 P1, P2, P5).","tool","wired","keep",2,136
   "test_sol_stamps.sh","test_sol_stamps.sh — plan 272 fault 4: every line a person or the helm reads begins with a Sól timestamp,","tool","wired","keep",0,42
+  "test_trello_door.sh","test_trello_door.sh — the house's Trello door, proved by command against a stand-in of Trello's REST.","tool","wired","keep",0,190
   "test_unit_settle.sh","test_unit_settle.sh — plan 272 fault 12: no old checkout can re-point a pinned unit.","tool","wired","keep",0,48
   "test_warden_lib.sh","test_warden_lib.sh — plan 290 §3, proven: the wardens act only where the operator names them, only on","tool","wired","keep",2,170
   "test_wardens_off_until_named.sh","test_wardens_off_until_named.sh — the Allfather's word, proven: an existing installation gets the change,","tool","wired","keep",1,144
@@ -200,6 +203,6 @@ bin[177]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-config-check.sh","ymir-config-check.sh — the DOOR to the config layer (`src/ymir_runtime/config/`).","tool","wired","keep",0,44
   "ymir-update-check.sh","ymir-update-check.sh — does a newer Ymir stand on npm?","tool","wired","keep",3,71
 
-**Tally.** verdict: wired=158, tested=19
+**Tally.** verdict: wired=161, tested=19
 
-**Tally.** disposition: keep=174, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/tests/test_hermes_seat.py=1
+**Tally.** disposition: keep=177, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/tests/test_hermes_seat.py=1

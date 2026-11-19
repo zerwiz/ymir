@@ -60,9 +60,9 @@ bin[51]{file,does,kind,verdict,disposition,callers,lines}:
   "saga-head-core.md","FIXED CORE — every worker knows this (plan 275 §04:15/04:20/04:25).","data","wired","keep",4,15
   "saga-head-lib.sh","saga-head-lib.sh — what is NEWS in Sága's short head (plan 275, item 28 §3).","lib","wired","keep",3,159
   "saga-land-warnings.sh","saga-land-warnings.sh — Sága's eye on work that finished and never landed.","tool","wired","keep",2,311
-  "saga-session-start.sh","saga-session-start.sh — Sága: the SHORT HEAD at session start, everything else on demand.","tool","tested","keep",11,585
+  "saga-session-start.sh","saga-session-start.sh — Sága: the SHORT HEAD at session start, everything else on demand.","tool","tested","keep",12,597
   "saga-sessionstart-run.sh","saga-sessionstart-run.sh - session-open entry point for run-tier harnesses.","tool","wired","keep",1,117
-  "saga-wake-drain.sh","saga-wake-drain.sh - present durable Brokk wakes, or acknowledge them.","tool","wired","keep",9,175
+  "saga-wake-drain.sh","saga-wake-drain.sh - present durable Brokk wakes, or acknowledge them.","tool","tested","keep",9,207
   "sol-lib.sh","sol-lib.sh — Sól's stamp for shell roads.","lib","wired","keep",9,44
   "sol.sh","sol.sh — Sól, the sun's wheel: THE clock and date door.","tool","tested","keep",6,248
   "test_brief_watch.sh","test_brief_watch.sh — the morning brief is judged, not just run.","tool","wired","keep",0,198
@@ -74,6 +74,6 @@ bin[51]{file,does,kind,verdict,disposition,callers,lines}:
   "week-pass-lib.sh","week-pass-lib.sh — the one law the three weekly passes share.","lib","wired","keep",3,135
   "well-vault-sync.sh","well-vault-sync.sh — Völundr's memory across the Allfather's machines.","tool","wired","keep",1,105
 
-**Tally.** verdict: wired=47, tested=4
+**Tally.** verdict: wired=46, tested=5
 
 **Tally.** disposition: keep=51

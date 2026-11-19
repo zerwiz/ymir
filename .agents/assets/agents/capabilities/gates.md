@@ -120,6 +120,7 @@
 | test_gate_directory.sh | test_gate_directory.sh — plan 295 fix S1: the gate list is a DIRECTORY | tested | keep (a human or a cron row must run it) |
 | test_gather_merge_guard.sh | test_gather_merge_guard.sh — plan 272 fault 9: a gathered batch that l | tested | keep (a human or a cron row must run it) |
 | test_gather_orders_by_base.sh | test_gather_orders_by_base.sh — plan 293 part 7: a packet names the br | tested | keep (a human or a cron row must run it) |
+| test_gimle_mcp_board.sh | test_gimle_mcp_board.sh — the hall's board door, proved where its code | tested | keep (a human or a cron row must run it) |
 | test_groa_steps.sh | test_groa_steps.sh — plan 272 fault 5: every Gróa step has a limit an | tested | keep (a human or a cron row must run it) |
 | test_guards_inherited.sh | test_guards_inherited.sh — a ward's finding is OURS only when it names | tested | keep (a human or a cron row must run it) |
 | test_handoff_packet.sh | test_handoff_packet.sh — proves the packet door reads the schema's pac | tested+named | keep (a human or a cron row must run it) |
@@ -127,6 +128,7 @@
 | test_home_sync_clock.sh | test_home_sync_clock.sh — the clock commits the records the house writ | tested | keep (a human or a cron row must run it) |
 | test_main_red.sh | test_main_red.sh — the alarm BITES, and it stays quiet where it must. | tested | keep (a human or a cron row must run it) |
 | test_maker_names.sh | test_maker_names.sh — RULES/53: the maker ward refuses a model, a make | tested | keep (a human or a cron row must run it) |
+| test_mcp_seat_quiet_ui.sh | test_mcp_seat_quiet_ui.sh — a fresh seat opens no UI window per MCP ca | tested | keep (a human or a cron row must run it) |
 | test_merge_method.sh | test_merge_method.sh — the merge flag follows the PR's kind (RULES/08, | tested | keep (a human or a cron row must run it) |
 | test_mjollnir_clone.sh | test_mjollnir_clone.sh — the door that turns a FAR repo into a workabl | tested | keep (a human or a cron row must run it) |
 | test_mjollnir_intake.sh | test_mjollnir_intake.sh — the forge's senses (plan 210 P0/P1), proved  | tested | keep (a human or a cron row must run it) |
@@ -156,6 +158,7 @@
 | test_smith_pr_open.sh | test_smith_pr_open.sh — a direct-PR smith may open its PR and never me | tested | keep (a human or a cron row must run it) |
 | test_soak.sh | test_soak.sh — the planted world for bin/gates/soak.sh (plan 286 P1, P | tested | keep (a human or a cron row must run it) |
 | test_sol_stamps.sh | test_sol_stamps.sh — plan 272 fault 4: every line a person or the helm | tested | keep (a human or a cron row must run it) |
+| test_trello_door.sh | test_trello_door.sh — the house's Trello door, proved by command again | tested | keep (a human or a cron row must run it) |
 | test_unit_settle.sh | test_unit_settle.sh — plan 272 fault 12: no old checkout can re-point  | tested | keep (a human or a cron row must run it) |
 | test_warden_lib.sh | test_warden_lib.sh — plan 290 §3, proven: the wardens act only where  | tested+named | keep (a human or a cron row must run it) |
 | test_wardens_off_until_named.sh | test_wardens_off_until_named.sh — the Allfather's word, proven: an exi | tested | keep (a human or a cron row must run it) |
