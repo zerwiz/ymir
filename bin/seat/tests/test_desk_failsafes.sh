@@ -47,7 +47,10 @@ has "$SCOPE" 'ABSENT' "F1 the clean skip names the failsafe as absent"
 # pane's agent has no process at all — the exact shape of the 07:21 death.
 mkdir -p "$T/live-cwd" "$T/dead-cwd"
 cp "$(command -v sleep)" "$T/pi" 2>/dev/null && chmod +x "$T/pi"
-( cd "$T/live-cwd" && "$T/pi" 60 >/dev/null 2>&1 & )
+# The pid is KEPT, not found later by name: a kill by pattern (`pkill`) is not portable, and the
+# platform gate refuses it. `exec` makes $! the binary itself, so the death below is exact.
+( cd "$T/live-cwd" && exec "$T/pi" 60 ) >/dev/null 2>&1 &
+PI_PID=$!
 sleep 1
 
 cat >"$T/agents.json" <<JSON
@@ -76,7 +79,7 @@ has "$LOST" '"1","1","0"' "F2 nothing is lost while that agent stands"
 [ "$LOST_RC" -eq 0 ] && ok "F2 lost exits 0 when the desk is whole" || bad "F2 lost exits 0 when the desk is whole" "rc=$LOST_RC"
 
 # Now the death: the agent process goes away, the pane stays, the desk still says idle.
-pkill -f "$T/pi" >/dev/null 2>&1; sleep 1
+kill "$PI_PID" 2>/dev/null; sleep 1
 LOST="$(bash "$ROOT/bin/seat/desk-inventory.sh" lost 2>&1)"; LOST_RC=$?
 has "$LOST" 'the pane holds a shell, not an agent' "F2 after the process dies the pane is named as lost"
 [ "$LOST_RC" -eq 1 ] && ok "F2 lost exits 1 when a hand is gone" || bad "F2 lost exits 1 when a hand is gone" "rc=$LOST_RC"

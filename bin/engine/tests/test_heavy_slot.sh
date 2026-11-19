@@ -114,7 +114,10 @@ reused_reaped() { "$SLOT" status >"$T/e.out" 2>&1 && grep -q '"free"' "$T/e.out"
 t "a lock whose pid was reused is reaped (start time, not pid)"  reused_reaped
 
 # ── 6. a signal releases the slot ────────────────────────────────────────────
-"$SLOT" run --name signal-job -- sleep 30 >/dev/null 2>&1 &
+# `exec` matters: the job replaces its shell, so the runner's TERM reaches the process itself and no
+# orphan is left behind. (The first version killed the leftovers with `pkill`, which the platform gate
+# refuses — a blunt kill by name is not portable, and it was reaping a process we could have avoided.)
+"$SLOT" run --name signal-job -- sh -c 'exec sleep 30' >/dev/null 2>&1 &
 S=$!
 if wait_lock_with 'name=signal-job'; then
   kill -TERM "$S" 2>/dev/null
@@ -126,7 +129,6 @@ else
   fail=$((fail + 1))
   kill "$S" 2>/dev/null
 fi
-pkill -f 'sleep 30' 2>/dev/null || true
 
 # ── 7. a heavy job inside a heavy job nests ──────────────────────────────────
 nested() {
