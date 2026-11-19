@@ -43,6 +43,17 @@ bash "$ROOT/bin/host/host-sense.sh" 2>/dev/null | grep -q '"window-buttons"' \
   && ok "the host report carries the window-buttons row" \
   || bad "the host report does not carry the window-buttons row"
 
+# An app file named `apps/<app>/<rest>` is read wherever the app is (the split, 2026-11-19): this tree while it is
+# here, else its own home through the one resolver. Empty = the app is not on this machine (a named skip).
+app_file() {  # <apps/app/rest> -> prints the path, or nothing
+  local rel="$1" app rest d=""
+  [ -f "$ROOT/$rel" ] && { printf '%s' "$ROOT/$rel"; return 0; }
+  case "$rel" in apps/*) ;; *) return 0 ;; esac
+  app="${rel#apps/}"; rest="${app#*/}"; app="${app%%/*}"
+  d="$(bash "$ROOT/bin/apps/app-path.sh" "$app" 2>/dev/null)" || return 0
+  [ -f "$d/$rest" ] && printf '%s' "$d/$rest"
+}
+
 # ── 2. every Electron window can be switched ──────────────────────────────────
 # Each file that creates a BrowserWindow must set `frame:` from the platform answer.
 windows=(
@@ -53,11 +64,16 @@ windows=(
   "apps/sessrumnir/src/main/index.ts"
 )
 for f in "${windows[@]}"; do
-  if [ ! -f "$ROOT/$f" ]; then bad "$f is missing — the list of windows is stale"; continue; fi
-  grep -q 'YMIR_WINDOW_BUTTONS' "$ROOT/$f" \
+  p="$(app_file "$f")"
+  if [ -z "$p" ]; then
+    if [ -d "$ROOT/${f%%/*}/$(printf '%s' "$f" | cut -d/ -f2)" ]; then bad "$f is missing — the list of windows is stale"
+    else printf 'skip - %s: the app is not on this machine\n' "$f"; fi
+    continue
+  fi
+  grep -q 'YMIR_WINDOW_BUTTONS' "$p" \
     && ok "$f reads YMIR_WINDOW_BUTTONS" \
     || bad "$f never reads YMIR_WINDOW_BUTTONS — its frame ignores the platform"
-  grep -qE '(frame: *WINDOW_BUTTONS|frame: *windowButtons)' "$ROOT/$f" \
+  grep -qE '(frame: *WINDOW_BUTTONS|frame: *windowButtons)' "$p" \
     && ok "$f builds its window with that frame" \
     || bad "$f does not pass frame: from the platform answer"
 done
@@ -80,8 +96,12 @@ launchers=(
   "bin/desktop/sessrumnir-launch.sh"
 )
 for f in "${launchers[@]}"; do
-  if [ ! -f "$ROOT/$f" ]; then bad "$f is missing — the list of launchers is stale"; continue; fi
-  grep -q 'YMIR_WINDOW_BUTTONS' "$ROOT/$f" \
+  p="$(app_file "$f")"
+  if [ -z "$p" ]; then
+    case "$f" in apps/*) [ -d "$ROOT/apps/$(printf '%s' "$f" | cut -d/ -f2)" ] || { printf 'skip - %s: the app is not on this machine\n' "$f"; continue; } ;; esac
+    bad "$f is missing — the list of launchers is stale"; continue
+  fi
+  grep -q 'YMIR_WINDOW_BUTTONS' "$p" \
     && ok "$f carries the answer into the app" \
     || bad "$f raises a window without asking bin/host for the frame"
 done

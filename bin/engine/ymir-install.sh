@@ -853,7 +853,20 @@ step_bilskirnir() {
   role_gate bilskirnir heart,dev "the business hall" || return 0
   [ "$SKIP_ENGINES" = 1 ] && { add bilskirnir SKIP "--skip-engines"; return; }
   local door="$ROOT/apps/bilskirnir/setup.sh"
-  [ -x "$door" ] || { add bilskirnir SKIP "no apps/bilskirnir/setup.sh in this tree"; return; }
+  if [ ! -x "$door" ]; then
+    # The hall has left this tree for its own repo (the split, 2026-11-19): it installs into its own home.
+    if [ -x "$ROOT/bin/apps/apps.sh" ]; then
+      if [ "$CHECK" = 1 ]; then
+        if "$ROOT/bin/apps/apps.sh" check bilskirnir >/dev/null 2>&1; then add bilskirnir OK "installed in its own home (bin/apps/apps.sh)"
+        else add bilskirnir WARN "not installed or red — a full run installs it (bin/apps/apps.sh install bilskirnir)"; fi
+      elif [ "$NO_DESKTOP" = 1 ] && BILSKIRNIR_DESKTOP=0 "$ROOT/bin/apps/apps.sh" install bilskirnir >/dev/null 2>&1; then add bilskirnir OK "installed in its own home (no launcher: --no-desktop)"
+      elif [ "$NO_DESKTOP" != 1 ] && "$ROOT/bin/apps/apps.sh" install bilskirnir >/dev/null 2>&1; then add bilskirnir OK "installed in its own home — open it from the launcher or ymir-app bilskirnir"
+      else add bilskirnir WARN "the install did not finish — run bin/apps/apps.sh install bilskirnir"; fi
+    else
+      add bilskirnir SKIP "no apps/bilskirnir/setup.sh in this tree and no bin/apps/apps.sh"
+    fi
+    return
+  fi
   if [ "$CHECK" = 1 ]; then
     if "$door" --check >/dev/null 2>&1; then add bilskirnir OK "current (apps/bilskirnir/setup.sh --check)"
     else add bilskirnir WARN "stale — a full run executes apps/bilskirnir/setup.sh"; fi

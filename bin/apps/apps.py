@@ -204,6 +204,29 @@ def _legacy(app: dict) -> dict:
                       "its own installer — nothing installed, and nothing ever written under apps/"}
 
 
+def seat_role() -> str:
+    """This seat's role (heart · forge · dev · hand), read once from the fleet registry by bin/skuld/role.sh."""
+    if "role" not in _ROADS_ROLE:
+        door = ROOT / "bin" / "skuld" / "role.sh"
+        out = sh(["bash", str(door), "resolve"], timeout=30) if door.is_file() else None
+        _ROADS_ROLE["role"] = (out.stdout.strip().splitlines() or [""])[-1] if out and out.returncode == 0 else ""
+    return os.environ.get("YMIR_ROLE") or _ROADS_ROLE["role"]
+
+
+_ROADS_ROLE: dict[str, str] = {}
+
+
+def default_here(app: dict) -> bool:
+    """`install_default:` is `true` (every seat), or a list of roles (`heart, dev`): the roles that carried the app
+    while it lived in the tree. A sweep installs a missing app only where it is a default."""
+    val = str(app.get("install_default", "")).strip().lower()
+    if val in ("", "false", "no"):
+        return False
+    if val in ("true", "yes", "all"):
+        return True
+    return seat_role() in {r.strip() for r in val.split(",") if r.strip()}
+
+
 def install(app: dict, check: bool = False) -> dict:
     if app.get("status") == "archived":
         return {"app": app["id"], "state": "archived", "detail": "a record, never installed"}
@@ -243,7 +266,7 @@ def update(app: dict, check: bool = False, sweeping: bool = False) -> dict:
         # `update --all` (Gróa's sweep) installs a missing app only when the registry says every seat
         # should have it (`install_default: true` — an app that every seat carried while it lived in the
         # tree). Any other app is installed by the operator's own `apps.sh install <app>`.
-        if sweeping and str(app.get("install_default", "")).lower() != "true":
+        if sweeping and not default_here(app):
             return {"app": app["id"], "state": "not installed", "detail": f"by choice — apps.sh install {app['id']}"}
         return install(app, check=check)
     branch = (app.get("git") or {}).get("default_branch", "main")

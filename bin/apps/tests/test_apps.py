@@ -162,7 +162,10 @@ class Lifecycle(unittest.TestCase):
         app = apps.find("toy")
         self.assertEqual(apps.update(app, sweeping=True)["state"], "not installed")
         self.assertFalse((self.home / "toy").exists())
-        app["install_default"] = "true"
+        os.environ["YMIR_ROLE"] = "hand"
+        app["install_default"] = "heart, dev"
+        self.assertEqual(apps.update(app, sweeping=True)["state"], "not installed")
+        os.environ["YMIR_ROLE"] = "dev"
         self.assertEqual(apps.update(app, sweeping=True)["state"], "updated")
 
     def test_remove_needs_yes(self):

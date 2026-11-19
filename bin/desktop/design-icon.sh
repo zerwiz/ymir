@@ -41,6 +41,7 @@ row_dir() {  # <dir as written in APPS> <result-var>
   printf -v "$_rd_rv" '%s' ""; return 1
 }
 SMIDJA_VIZ_DIR=""; row_dir "apps/smidja-factory/apps/visualizer" SMIDJA_VIZ_DIR || SMIDJA_VIZ_DIR=""
+HALL_DIR=""; row_dir "apps/bilskirnir" HALL_DIR || HALL_DIR=""
 app_dir hlidskjalf APP_HLIDSKJALF || APP_HLIDSKJALF=""
 app_dir hlidskjalf-mobile APP_HLIDSKJALF_MOBILE || APP_HLIDSKJALF_MOBILE=""
 app_dir odrerir APP_ODRERIR || APP_ODRERIR=""
@@ -220,9 +221,10 @@ raster_targets() {  # <surface> -> "<out>:<size>" lines
     hlidskjalf) printf '%s\n' "$ROOT/apps/hlidskjalf/electron/icon.png:512" "$ROOT/apps/hlidskjalf/public/apple-touch-icon.png:180" ;;
     odrerir)    printf '%s\n' "$ROOT/apps/odrerir/electron/icon.png:512" "$ROOT/apps/odrerir/public/apple-touch-icon.png:180" ;;
     smidja)     [ -n "$SMIDJA_VIZ_DIR" ] && printf '%s\n' "$SMIDJA_VIZ_DIR/desktop/icon.png:512" ;;
-    bilskirnir) printf '%s\n' "$ROOT/apps/bilskirnir/electron/icon.png:512"
+    bilskirnir) [ -n "$HALL_DIR" ] || return 0
+                printf '%s\n' "$HALL_DIR/electron/icon.png:512"
                 # its own theme set, which apps/bilskirnir/setup.sh copies into the icon theme on every setup
-                for s in 16 32 48 64 128 256 512; do printf '%s\n' "$ROOT/apps/bilskirnir/electron/icons/hicolor/${s}x${s}/apps/ymir-bilskirnir.png:$s"; done ;;
+                for s in 16 32 48 64 128 256 512; do printf '%s\n' "$HALL_DIR/electron/icons/hicolor/${s}x${s}/apps/ymir-bilskirnir.png:$s"; done ;;
     rodd)       printf '%s\n' "$ROOT/apps/rodd/electron/icon.png:512" ;;
     sessrumnir) for s in 16 32 48 64 128 256 512; do printf '%s\n' "$ROOT/apps/sessrumnir/resources/icons/icon-$s.png:$s"; done
                 printf '%s\n' "$ROOT/apps/sessrumnir/resources/icons/icon.png:512" "$ROOT/apps/sessrumnir/public/apple-touch-icon.png:180" ;;
@@ -240,8 +242,8 @@ raster_all() {
       odrerir)    svg="$ROOT/apps/odrerir/public/icon.svg" ;;
       sessrumnir) svg="$ROOT/apps/sessrumnir/public/icon.svg" ;;
       smidja)     [ -n "$SMIDJA_VIZ_DIR" ] || continue; svg="$SMIDJA_VIZ_DIR/public/icon.svg" ;;
-      bilskirnir) svg="$ROOT/apps/bilskirnir/public/icon.svg"
-                  cp -f "$svg" "$ROOT/apps/bilskirnir/electron/icons/hicolor/scalable/apps/ymir-bilskirnir.svg" ;;
+      bilskirnir) [ -n "$HALL_DIR" ] || continue; svg="$HALL_DIR/public/icon.svg"
+                  cp -f "$svg" "$HALL_DIR/electron/icons/hicolor/scalable/apps/ymir-bilskirnir.svg" ;;
       rodd)       svg="$ROOT/apps/rodd/public/icon.svg" ;;
       *) continue ;;
     esac

@@ -16,6 +16,10 @@ ROOT = Path(__file__).resolve().parents[3]
 PAIRS = [
     ("midgard/design-system/ember.js", "smidja", "apps/visualizer/src/lib/ember.js"),
     ("midgard/design-system/ember.d.ts", "smidja", "apps/visualizer/src/lib/ember.d.ts"),
+    ("midgard/design-system/tokens.css", "bilskirnir", "web/src/house-design/tokens.css"),
+    ("midgard/design-system/ember.js", "bilskirnir", "web/src/house-design/ember.js"),
+    ("midgard/design-system/ember.d.ts", "bilskirnir", "web/src/house-design/ember.d.ts"),
+    ("midgard/design-system/ymir-mark.svg", "bilskirnir", "web/src/house-design/ymir-mark.svg"),
 ]
 
 

@@ -411,8 +411,10 @@ s_sessrumnir(){ [ -x "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" ] && "$SCRIPT
 f_sessrumnir(){ "$SCRIPT_DIR/../desktop/sessrumnir-ensure.sh" ensure --install >/dev/null 2>&1; }
 # Bilskirnir, the business hall (plan 259): healthy when its setup door's --check passes (agent home,
 # soul, .env, dependencies); the repair is the door itself. A tree without the app is not owed it.
-s_bilskirnir(){ [ -x "$ROOT/apps/bilskirnir/setup.sh" ] || return 0; "$ROOT/apps/bilskirnir/setup.sh" --check >/dev/null 2>&1; }
-f_bilskirnir(){ [ -x "$ROOT/apps/bilskirnir/setup.sh" ] && "$ROOT/apps/bilskirnir/setup.sh" >/dev/null 2>&1; }
+# The hall wherever it is (the split, 2026-11-19): this tree while it is here, else its own home, through the resolver.
+_hall_dir(){ local d=""; app_dir bilskirnir d 2>/dev/null; printf '%s' "$d"; }
+s_bilskirnir(){ local h; h="$(_hall_dir)"; [ -x "$h/setup.sh" ] || return 0; "$h/setup.sh" --check >/dev/null 2>&1; }
+f_bilskirnir(){ local h; h="$(_hall_dir)"; [ -x "$h/setup.sh" ] && "$h/setup.sh" >/dev/null 2>&1; }
 # The apps in their own homes (the split, plan 01, 2026-11-19): every app the registry gives a contract
 # answers its own --check; an app still in Ymir's tree is on the legacy road and is not this surface's.
 s_apps(){ [ -x "$ROOT/bin/apps/apps.sh" ] || return 0; "$ROOT/bin/apps/apps.sh" check >/dev/null 2>&1; }
@@ -949,7 +951,7 @@ detail() { # <name> -> the command that prints one short fact
     hermes)    printf '%s\n' "have hermes && echo present || echo absent" ;;
     sessrumnir)printf '%s\n' "[ -d $APP_SESSRUMNIR/out ] && echo built || echo 'not built'" ;;
     apps)      printf '%s\n' "$ROOT/bin/apps/apps.sh check 2>&1 | tail -n +2 | tr -d '\"' | paste -sd ';' -" ;;
-    bilskirnir)printf '%s\n' "[ -x $ROOT/apps/bilskirnir/setup.sh ] && { $ROOT/apps/bilskirnir/setup.sh --check 2>&1 | tail -1; } || echo 'not in this tree'" ;;
+    bilskirnir)printf '%s\n' "h=\"\$(. $ROOT/bin/desktop/app-lib.sh; app_dir bilskirnir d; printf %s \"\$d\")\"; [ -x \"\$h/setup.sh\" ] && { \"\$h/setup.sh\" --check 2>&1 | tail -1; } || echo 'not on this machine (bin/apps/apps.sh install bilskirnir)'" ;;
     well)      printf '%s\n' well_detail ;;
     memory)    printf '%s\n' memory_detail ;;
     mail)      printf '%s\n' mail_detail ;;

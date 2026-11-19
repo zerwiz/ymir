@@ -169,7 +169,9 @@ stop_app() {  # <app> — lower the app by its own door, never by pattern
     hlidskjalf|smidja|odrerir)
       [ -n "$tree" ] && [ -r "$tree/scripts/electron.sh" ] && bash "$tree/scripts/electron.sh" stop --view "$app" >/dev/null 2>&1 ;;
     bilskirnir)
-      [ -n "$tree" ] && [ -x "$tree/apps/bilskirnir/start.sh" ] && bash "$tree/apps/bilskirnir/start.sh" --stop >/dev/null 2>&1 ;;
+      _hall=""; [ -n "$tree" ] && [ -r "$tree/bin/apps/app-path.sh" ] && . "$tree/bin/apps/app-path.sh" && app_path bilskirnir _hall 2>/dev/null
+      [ -n "$_hall" ] || _hall="$tree/apps/bilskirnir"
+      [ -x "$_hall/start.sh" ] && bash "$_hall/start.sh" --stop >/dev/null 2>&1 ;;
     rodd)
       # Rödd's window is raised by her unit OR by her own start.sh — both are lowered, because either may be
       # what a click began (ymir-app restarts the unit; a test tree runs start.sh directly). Each door is

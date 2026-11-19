@@ -164,7 +164,8 @@ build() {
     ( cd "$tmp" && npm run build -w apps/hlidskjalf && npm run build -w apps/odrerir ) || exit 15
     ( cd "$tmp/apps/sessrumnir" && npm run build ) || exit 16
     ( cd "$tmp/apps/sessrumnir" && npx --no-install electron-builder install-app-deps ) || exit 17
-    ( cd "$tmp/apps/bilskirnir" && npm run build -w web ) || exit 18
+    # Once the hall has left for its own repo (the split, 2026-11-19), apps.sh builds it into its own release.
+    if [ -d "$tmp/apps/bilskirnir" ]; then ( cd "$tmp/apps/bilskirnir" && npm run build -w web ) || exit 18; fi
     # The smithy's EYE is a nested app with its own bun lockfile, so the root `npm ci` never installs it
     # and its bundle was never built here — a release therefore served :8437 with no UI at all
     # ("No ./dist build found"), while the tree kept a committed dist/ that hid the fault. The bundle

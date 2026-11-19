@@ -66,7 +66,10 @@ case "$app" in hlidskjalf|smidja|odrerir|sessrumnir|bilskirnir|rodd) follow_here
 case "$app" in
   hlidskjalf|smidja|odrerir) exec bash "$pin/scripts/electron.sh" start --view "$app" "$@" ;;
   sessrumnir) exec bash "$pin/bin/desktop/sessrumnir-launch.sh" start "$@" ;;
-  bilskirnir) exec "$pin/apps/bilskirnir/start.sh" "$@" ;;
+  bilskirnir)
+    # In its own home once installed (the split, 2026-11-19), else in the pin's tree: the one resolver says which.
+    _hall=""; . "$pin/bin/apps/app-path.sh" 2>/dev/null && app_path bilskirnir _hall 2>/dev/null || _hall="$pin/apps/bilskirnir"
+    exec "$_hall/start.sh" "$@" ;;
   rodd) systemctl --user restart ymir-rodd.service 2>/dev/null && exit 0; exec "$pin/apps/rodd/start.sh" "$@" ;;
   --where) printf '%s\n' "$pin" ;;
   --list|"") printf '%s\n' hlidskjalf smidja odrerir sessrumnir bilskirnir rodd ;;
