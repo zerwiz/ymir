@@ -50,6 +50,12 @@ while IFS=$'\t' read -r id host road crit; do
   case "$code" in
     200|301|302|303|307|308) http=ok ;;
     404) http=ok; note="api surface (no root page)" ;;      # the MCP and the bridge answer where they should
+    # A SURFACE THAT ASKS FOR A CREDENTIAL IS THE WARD WORKING (2026-11-20). 401/403 used to count as a
+    # failure, so the round reported "3 failing" every quarter hour for three surfaces that were up and
+    # correctly closed — board, whiteboard and documents behind Cloudflare Access. RULES/24 says nothing
+    # public without a credential: a guarded answer is the surface doing exactly what it should, and a
+    # check that calls it a failure trains everyone to ignore this job.
+    401|403) http=ok; note="guarded (auth required)" ;;
     *) http="fail" ;;
   esac
   state=ok
