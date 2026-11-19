@@ -42,3 +42,23 @@ male, and `bf_emma` is British English and female.
 - **"the Kokoro engine is not installed here"** — install it, or set `KOKORO_BIN` to its path.
 - **"no voice named …"** — run `voices.sh list` and use a name or id from that list.
 - **"the desk is held"** — you are on a call. Write the sample to a file with `--to`, or wait until the call ends.
+
+## A voice for each speaker (added 2026-11-20, plan 326.3)
+
+You can keep a voice for each context. Rödd, Snotra, or a person each speak in their own voice, and anything with
+no choice speaks in the default.
+
+| Command | What it does |
+|---|---|
+| `voices.sh choose rodd eric` | Rödd speaks as Eric from her next conversation |
+| `voices.sh choose default bf_emma` | Anything with no choice of its own speaks as Emma |
+| `voices.sh choose person.ada bm_george` | A voice kept for one person |
+| `voices.sh for rodd` | The voice id Rödd speaks in now |
+| `voices.sh choices` | Every choice you have kept |
+
+Choices live in your home at `config/voices.yaml`. `for` looks for the context first, then `default`, then the
+engine's own voice. A name the pack does not have is refused by name, and nothing is changed.
+
+**In Rödd you can just ask:** "talk like Eric" or "use a British voice". She changes voice from her next sentence,
+with no restart. Say "and keep it" to have her start in that voice next time too. A voice you pick in Rödd's
+Settings is kept the same way.

@@ -234,6 +234,27 @@ TOOLS = [
     },
     {
         "type": "function",
+        "name": "voice_list",
+        "description": ("Every voice the house's mouth (Kokoro) can speak in: id, name, language, gender. Call it when he "
+                        "asks which voices there are, or before set_voice when you are unsure of a name."),
+        "parameters": {"type": "object", "properties": {
+            "language": {"type": "string", "description": "optional filter, e.g. 'British' or 'American'"}},
+            "additionalProperties": False},
+    },
+    {
+        "type": "function",
+        "name": "set_voice",
+        "description": ("Change the voice you speak in, from your next sentence, with no restart. Call it when he asks you "
+                        "to speak as someone ('talk like Eric', 'use a British voice'): name is a voice name (eric) or id "
+                        "(am_eric). keep=true also keeps it as Rödd's voice for the next conversation. An unknown or "
+                        "ambiguous name is refused — read the refusal to him, never pretend the voice changed."),
+        "parameters": {"type": "object", "properties": {
+            "name": {"type": "string", "description": "a voice name or id"},
+            "keep": {"type": "boolean", "description": "keep it as Rödd's voice next time too (default false)"}},
+            "required": ["name"], "additionalProperties": False},
+    },
+    {
+        "type": "function",
         "name": "now",
         "description": ("The real date and time right now, in his own time zone, from the house's clock (Sól). Call "
                         "it before saying the time, the day, 'good morning' or 'tonight', or anything 'today'."),
@@ -3237,3 +3258,41 @@ async def _tool_todo_from_mail(args):
 
 NEW_TOOLS["comms"] = _tool_comms
 NEW_TOOLS["todo_from_mail"] = _tool_todo_from_mail
+
+
+# ── the voices (plan 326.3): one door, bin/voice/voices.sh, so a name means the same thing everywhere ─────────────
+
+def _voices_door(args: list[str], timeout: int = 60) -> tuple[int, str, str]:
+    door = Path(__file__).resolve().parent / "voices.sh"
+    r = subprocess.run(["bash", str(door), *args], capture_output=True, text=True, timeout=timeout)
+    return r.returncode, r.stdout.strip(), r.stderr.strip()
+
+
+async def _tool_voice_list(args):
+    rc, out, err = _voices_door(["list", "--json"])
+    if rc != 0:
+        return ToolResult("The voice list did not answer: " + (err or out)[:200])
+    rows = json.loads(out).get("voices", [])
+    want = str(args.get("language") or "").strip().lower()
+    if want:
+        rows = [r for r in rows if want in r["language"].lower()]
+    return ToolResult(f"{len(rows)} voices: " + "; ".join(f"{r['name']} ({r['id']}, {r['language']}, {r['gender']})" for r in rows))
+
+
+async def _tool_set_voice(args):
+    name = str(args.get("name") or "").strip()
+    rc, out, err = _voices_door(["resolve", name])
+    if rc != 0:
+        return ToolResult(f"The voice did not change: {(err or out).replace('voices: ', '')[:200]}")
+    vid = out.splitlines()[-1].strip()
+    kept = ""
+    if args.get("keep"):
+        rc2, _o, e2 = _voices_door(["choose", "rodd", vid])
+        kept = " It is kept as Rödd's voice for next time." if rc2 == 0 else f" It could not be kept: {e2[:120]}"
+    _log("set_voice", voice=vid, keep=bool(args.get("keep")))
+    # the window reads this marker and switches the live session; the words are what she says about it
+    return ToolResult(json.dumps({"rodd_voice": vid, "said": f"From now on I speak as {vid}.{kept}"}, ensure_ascii=False))
+
+
+NEW_TOOLS["voice_list"] = _tool_voice_list
+NEW_TOOLS["set_voice"] = _tool_set_voice
