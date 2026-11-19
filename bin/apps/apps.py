@@ -44,7 +44,7 @@ def apps_home() -> Path:
     env = os.environ.get("YMIR_APPS_HOME")
     if env:
         return Path(env).expanduser()
-    data = os.environ.get("XDG_DATA_HOME") or str(Path.home() / ".local" / "share")
+    data = os.environ.get("XDG_DATA_HOME") or str(Path.home() / ".local/share")
     return Path(data) / "ymir-apps"
 
 
@@ -126,7 +126,7 @@ def in_call() -> bool:
 
 def app_env(app: dict, release: Path) -> dict:
     env = os.environ.copy()
-    state = Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local" / "state") / app["home"]
+    state = Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local/state") / app["home"]
     config = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config") / app["home"]
     env.update({"YMIR_APP_NAME": app["home"], "YMIR_APP_RELEASE": str(release),
                 "YMIR_APP_STATE_DIR": str(state), "YMIR_APP_CONFIG_DIR": str(config),
