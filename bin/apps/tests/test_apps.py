@@ -44,6 +44,58 @@ class Restart(unittest.TestCase):
         self.assertFalse(apps.runs_from("dbus.service", home))
 
 
+class SeatUnits(unittest.TestCase):
+    """A Ymir-rendered unit still serving from elsewhere is re-rendered through the one renderer (2026-11-19)."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        t = Path(self.tmp.name)
+        self.home = t / "smidja"
+        (self.home / "releases" / "abc").mkdir(parents=True)
+        (self.home / "current").symlink_to("releases/abc")
+        self.calls = t / "calls"
+        door = t / "render.sh"
+        door.write_text(f"#!/usr/bin/env bash\necho \"$*\" >> {self.calls}\n")
+        door.chmod(0o755)
+        desk = t / "in-call.sh"
+        desk.write_text("#!/usr/bin/env bash\nexit 0\n")
+        self.saved = dict(os.environ), apps.runs_from, apps.unit_seated, apps.sh
+        os.environ.update({"YMIR_UNIT_RENDER_DOOR": str(door), "YMIR_DESK_DOOR": str(desk)})
+        real_sh = apps.sh
+        # systemctl is never asked for real: daemon-reload is swallowed, everything else runs
+        apps.sh = lambda cmd, **kw: (subprocess.CompletedProcess(cmd, 0, "", "") if cmd[0] == "systemctl"
+                                     else real_sh(cmd, **kw))
+        apps.unit_seated = lambda unit: True
+        apps.runs_from = lambda unit, home: False
+
+    def tearDown(self):
+        env, apps.runs_from, apps.unit_seated, apps.sh = self.saved
+        os.environ.clear()
+        os.environ.update(env)
+        self.tmp.cleanup()
+
+    def units(self, line):
+        (self.home / "releases" / "abc" / "app.yaml").write_text(f"name: smidja\n{line}\n")
+
+    def test_a_ymir_rendered_unit_is_re_seated_through_the_renderer(self):
+        self.units("units: [smidja.service]")   # tools/web/systemd/smidja.service ships in this tree
+        self.assertEqual(apps.seat_units({"id": "smidja"}, self.home), "smidja.service")
+        self.assertEqual(self.calls.read_text().strip(), "unit smidja")
+
+    def test_a_unit_ymir_does_not_render_is_left_alone(self):
+        self.units("units: [toy-only.service]")
+        self.assertEqual(apps.seat_units({"id": "toy"}, self.home), "")
+        self.assertFalse(self.calls.exists())
+
+    def test_a_unit_already_on_the_home_or_not_owed_here_is_left_alone(self):
+        self.units("units: [smidja.service]")
+        apps.runs_from = lambda unit, home: True
+        self.assertEqual(apps.seat_units({"id": "smidja"}, self.home), "")
+        apps.runs_from, apps.unit_seated = (lambda unit, home: False), (lambda unit: False)
+        self.assertEqual(apps.seat_units({"id": "smidja"}, self.home), "")
+        self.assertFalse(self.calls.exists())
+
+
 class Lifecycle(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -67,6 +119,7 @@ class Lifecycle(unittest.TestCase):
         self.env_saved = dict(os.environ)
         os.environ.update({"YMIR_APPS_HOME": str(self.home), "YMIR_APP_REGISTRY": str(reg),
                            "YMIR_APP_TOY_REPO": str(self.repo), "YMIR_DESK_DOOR": str(desk),
+                           "YMIR_UNIT_RENDER_DOOR": str(t / "no-render-door"),
                            "XDG_STATE_HOME": str(t / "state"), "XDG_CONFIG_HOME": str(t / "config"),
                            "YMIR_RUNTIME_DIR": str(t / "pin")})
         apps._ROADS.clear()
