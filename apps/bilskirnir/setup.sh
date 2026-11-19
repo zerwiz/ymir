@@ -162,7 +162,9 @@ if [ "$CHECK" = 0 ]; then
   say "model: $why"
 else
   if [ -n "$MODEL" ]; then
-    grep -q "default: \"$MODEL\"" "$ENGINE/config.yaml" 2>/dev/null && grep -q "ymir-mcp.py" "$ENGINE/config.yaml" && say "agent home current (model $MODEL and Ymir's MCP doors)" || { say "agent home missing or on another model"; fail=1; }
+    # quoted or not: a merged config is rewritten by yaml.safe_dump without the quotes the first render had
+    model_re="$(printf '%s' "$MODEL" | sed 's/[][\.*^$/]/\\&/g')"
+    grep -qE "^[[:space:]]*default:[[:space:]]*[\"']?${model_re}[\"']?[[:space:]]*$" "$ENGINE/config.yaml" 2>/dev/null && grep -q "ymir-mcp.py" "$ENGINE/config.yaml" && say "agent home current (model $MODEL and Ymir's MCP doors)" || { say "agent home missing or on another model"; fail=1; }
   else
     grep -q "ymir-mcp.py" "$ENGINE/config.yaml" 2>/dev/null && say "agent home current (no model chosen yet: $why)" || { say "agent home missing"; fail=1; }
   fi
