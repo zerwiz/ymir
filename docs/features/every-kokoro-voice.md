@@ -42,3 +42,7 @@ male, and `bf_emma` is British English and female.
 - **"the Kokoro engine is not installed here"** — install it, or set `KOKORO_BIN` to its path.
 - **"no voice named …"** — run `voices.sh list` and use a name or id from that list.
 - **"the desk is held"** — you are on a call. Write the sample to a file with `--to`, or wait until the call ends.
+
+## CHANGE LOG
+
+- 2026-11-19 — written: the voices door, its catalogue and its sample (plan 326.1–326.4).
