@@ -24,5 +24,22 @@ bash "$DOOR" catalogue --home >/dev/null
 check "the catalogue lands in the hoard" "$(sed -n 3p "$YMIR_HOME/hodd/identity/voices.yaml")" "count: 6"
 check "no temp file is left" "$(find "$YMIR_HOME/hodd/identity" -name '*.tmp' | wc -l)" "0"
 bash "$DOOR" >/dev/null 2>&1; check "no verb is a usage error (exit 2)" "$?" "2"
+# a choice per context (plan 326.3): kept in the home, checked against the pack, refused by name when unknown
+printf '{"voice": "af_heart"}' > "$tmp/kokoro.json"; export KOKORO_CONFIG="$tmp/kokoro.json"
+check "with nothing kept, a context speaks in the engine's default" "$(bash "$DOOR" for rodd)" "af_heart"
+bash "$DOOR" choose rodd eric >/dev/null
+check "a choice is kept by its id" "$(bash "$DOOR" for rodd)" "am_eric"
+check "the choice lands in the home's config" "$(grep -c '^rodd: am_eric$' "$YMIR_HOME/config/voices.yaml")" "1"
+bash "$DOOR" choose default bm_george >/dev/null
+check "an unnamed context falls to the kept default" "$(bash "$DOOR" for snotra)" "bm_george"
+check "a person falls to the default too" "$(bash "$DOOR" for person.ada)" "bm_george"
+bash "$DOOR" choose rodd nobody >/dev/null 2>&1; check "an unknown voice is refused by name (exit 3)" "$?" "3"
+check "a refused choice changes nothing" "$(bash "$DOOR" for rodd)" "am_eric"
+bash "$DOOR" choose 'Bad Name!' eric >/dev/null 2>&1; check "a malformed context is a usage error (exit 2)" "$?" "2"
+# the generated catalogue is read back when fresh, and a newer pack makes it stale
+unset VOICES_FIXTURE; export KOKORO_BIN=/nonexistent KOKORO_VOICES="$tmp/pack.bin"; touch -d '1 hour ago' "$tmp/pack.bin"
+check "a fresh catalogue answers without the engine" "$(bash "$DOOR" resolve eric)" "am_eric"
+touch "$tmp/pack.bin"; touch -d '2 hours ago' "$YMIR_HOME/hodd/identity/voices.yaml"
+bash "$DOOR" resolve eric >/dev/null 2>&1; check "a pack newer than the catalogue asks the engine (absent here: exit 1)" "$?" "1"
 echo "test_voices: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]
