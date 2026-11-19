@@ -17,7 +17,15 @@ newsid() {
   else perl -MPOSIX -e 'POSIX::setsid(); exec @ARGV or die "exec: $!"' "$@"; fi
 }
 APP="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="$(cd "$APP/../.." && pwd)"
+# Ymir — her voice door, head, toolbox and desk check — found by scripts/ymir-root.sh, never by climbing out of
+# this folder (the split, 2026-11-19). A hard need: without it the window has no voice to give, and says so.
+. "$APP/scripts/ymir-root.sh"; ROOT=""
+if ! ymir_root ROOT; then
+  case "${1-}" in --stop|stop) exit 0 ;; esac
+  printf 'rodd: her voice comes from Ymir (its voice door, head and toolbox), and Ymir is not installed on this machine\n' >&2
+  printf 'help: install Ymir (github.com/zerwiz/ymir), or set YMIR_RUNTIME_DIR to where it is\n' >&2
+  exit 1
+fi
 RODD_HOME=""; . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null && ymir_home_root RODD_HOME   # the one resolver
 PORT_HOST="${RODD_HOST_PORT:-8890}"
 PORT_BOX="${RODD_TOOLBOX_PORT:-8891}"
@@ -32,7 +40,13 @@ say() { printf '%-44s %s\n' "$1" "$2"; }
 # her is always allowed), and YMIR_RODD_TREE=1 is the loud override for testing this face.
 #   apps/rodd/start.sh --install-unit   render ymir-rodd.service (ExecStart names the pin) so
 #                                       bin/gates/guards/runtime-pinned-guard.sh can see her
-if [ "${1:-}" != "--stop" ] && [ "${YMIR_RODD_TREE:-0}" != 1 ]; then
+# The split (2026-11-19): the window may live in its OWN home (~/.local/share/ymir-apps/rodd/current), a release
+# exported from its repo — never a working tree — so it runs where it stands. Only a window that sits inside a
+# Ymir tree (the old road) is handed over to the pin's copy, as before.
+APP_TREE="$(dirname "$(dirname "$APP")")"
+IN_YMIR_TREE=0; [ -f "$APP_TREE/bin/voice/voice-door.sh" ] && IN_YMIR_TREE=1
+APP_LINK="${YMIR_APPS_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/ymir-apps}/rodd/current"
+if [ "${1:-}" != "--stop" ] && [ "${YMIR_RODD_TREE:-0}" != 1 ] && [ "$IN_YMIR_TREE" = 1 ]; then
   # shellcheck source=../../bin/pi/arm-pin-lib.sh
   . "$ROOT/bin/pi/arm-pin-lib.sh"
   RODD_PIN=""; arm_pin_dir RODD_PIN
@@ -40,7 +54,11 @@ if [ "${1:-}" != "--stop" ] && [ "${YMIR_RODD_TREE:-0}" != 1 ]; then
     say "Rödd refuses to start" "no pinned runtime (YMIR_RUNTIME_DIR in <home>/config/runtime.env) — bin/engine/runtime-deploy.sh"
     exit 1
   fi
-  if [ "$(_arm_real "$RODD_PIN")" != "$(_arm_real "$ROOT")" ]; then
+  if [ "$(_arm_real "$RODD_PIN")" != "$(_arm_real "$APP_TREE")" ]; then
+    # the pin no longer carries the window once it has left Ymir's tree: hand over to its own home instead
+    if [ ! -x "$RODD_PIN/apps/rodd/start.sh" ] && [ -x "$APP_LINK/start.sh" ] && [ "${YMIR_RODD_PINNED:-0}" != 1 ]; then
+      exec env YMIR_RODD_PINNED=1 bash "$APP_LINK/start.sh" "$@"
+    fi
     if [ ! -x "$RODD_PIN/apps/rodd/start.sh" ] || [ "${YMIR_RODD_PINNED:-0}" = 1 ]; then
       say "Rödd refuses to start" "the pinned runtime $RODD_PIN has no runnable apps/rodd/start.sh — bin/engine/runtime-deploy.sh"
       exit 1
@@ -76,9 +94,11 @@ resolve_electron() {
   # old probe fell back to another app's runtime and to the distribution's /usr/lib/electron*, which pacman upgrades
   # on its own schedule — so an app ran on whatever Electron was lying around, and broke when that moved.
   [ -n "${RODD_ELECTRON:-}" ] && { printf '%s' "$RODD_ELECTRON"; return 0; }
-  local tree; tree="$(dirname "$(dirname "$APP")")"
-  [ -r "$tree/bin/desktop/electron-lib.sh" ] || return 1
-  ( . "$tree/bin/desktop/electron-lib.sh"; electron_bin "$APP" "$tree" )
+  # The library is Ymir's (found as ROOT); the runtime is the window's own release when it lives in its own home
+  # (the split, 2026-11-19), the tree's workspace when it still sits in Ymir's tree.
+  local lib_tree="$ROOT" ws="$APP"; [ "$IN_YMIR_TREE" = 1 ] && ws="$APP_TREE"
+  [ -r "$lib_tree/bin/desktop/electron-lib.sh" ] || return 1
+  ( . "$lib_tree/bin/desktop/electron-lib.sh"; electron_bin "$APP" "$ws" )
 }
 ELECTRON="$(resolve_electron)"
 is_local_seat() { [ "$1" = "$(hostname -s)" ] || [ "$1" = localhost ] || [ "$1" = 127.0.0.1 ]; }

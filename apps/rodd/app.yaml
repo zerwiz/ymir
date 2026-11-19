@@ -1,0 +1,23 @@
+# app.yaml — the app contract (Ymir's split, plan 01 §3; the voice window's plan 07).
+name: rodd
+title: Rödd — the voice window
+kind: electron
+window_class: ymir-rodd
+ports: [8890, 8891]            # the voice engine's host and the toolbox, both Ymir's, on loopback; DevTools 9315
+units: [ymir-rodd.service]     # rendered by activate.sh (and Ymir's desktop-place.sh) from electron/ymir-rodd.service.in
+launchers: [rodd.desktop]
+icons: [ymir-rodd]
+state_dir: ${XDG_STATE_HOME:-~/.local/state}/rodd
+config_dir: ${XDG_CONFIG_HOME:-~/.config}/rodd
+ymir:
+  min_version: ""
+  doors:
+    # A face over Ymir's voice: without Ymir the window has no voice to give, and says so in words.
+    - { name: voice, need: hard }            # bin/voice/voice-door.sh, rodd-head.py, voice-toolbox.py
+    - { name: desk, need: hard }             # bin/desk/in-call.sh — never warm the head in a call
+    - { name: home, need: optional }
+  packages: []
+# The Gná arm, the helm, the wake queue and the `tell` road carry the name rodd- for history, but they are the
+# house's, not the window's: they stay in Ymir (plan 07) and are never part of this repo.
+upstream: "huggingface/speech-to-speech v1.1.0 (Apache-2.0) — its browser face is fetched at install, never committed"
+history: "cut from zerwiz/ymir apps/rodd with git filter-repo, 2026-11-19"

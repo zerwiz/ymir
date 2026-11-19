@@ -32,6 +32,15 @@ function fromRuntimeEnv(env) {
   return '';
 }
 
+// The split (2026-11-19): the window may live in its OWN home (~/.local/share/ymir-apps/rodd/current), a release
+// exported from its repo — never a working tree. Then its face is its own (`<this app>/ui`), and the pin is only
+// where Ymir's voice and arm are borrowed from. A window that still sits inside a Ymir tree keeps the old road.
+function ownHome() {
+  const app = path.resolve(__dirname, '..');
+  const tree = path.resolve(app, '..', '..');
+  return fs.existsSync(path.join(tree, 'bin', 'voice', 'voice-door.sh')) ? '' : app;
+}
+
 // resolvePin(env) → { root, source } or { error } — the error is the ONE named line.
 function resolvePin(env = process.env) {
   const explicit = (env.YMIR_RUNTIME_DIR || '').trim();
@@ -39,6 +48,13 @@ function resolvePin(env = process.env) {
   const source = explicit ? 'YMIR_RUNTIME_DIR' : 'runtime.env';
   if (!root) {
     return { error: `Rödd refuses to start: no pinned runtime is named (YMIR_RUNTIME_DIR unset and ${path.join(homeDir(env), 'config', 'runtime.env')} names none)` };
+  }
+  const own = ownHome();
+  if (own) {
+    if (!fs.existsSync(path.join(root, 'bin', 'voice', 'voice-door.sh'))) {
+      return { error: `Rödd refuses to start: her voice comes from Ymir, and ${root} (from ${source}) carries no bin/voice/voice-door.sh` };
+    }
+    return { root, app: own, ui: path.join(own, 'ui'), source };
   }
   const app = path.join(root, 'apps', 'rodd');
   if (!fs.existsSync(path.join(app, 'src', 'main.js'))) {
