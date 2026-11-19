@@ -306,9 +306,11 @@ def update(app: dict, check: bool = False, sweeping: bool = False) -> dict:
     flip(home / "current", Path("releases") / sha)
     (home / "pending-flip").unlink(missing_ok=True)
     activated = activate(app, home)
+    seated = seat_units(app, home)
     restarted = restart(app, home)
     gone = prune(home)
     return {"app": app["id"], "state": "updated", "detail": f"current {sha}" + (f" · {activated}" if activated else "")
+            + (f" · units re-seated {seated}" if seated else "")
             + (f" · restarted {restarted}" if restarted else "")
             + (f" · pruned {len(gone)}" if gone else "")}
 
@@ -344,6 +346,39 @@ def runs_from(unit: str, home: Path) -> bool:
         if root and root in text:
             return True
     return False
+
+
+def unit_seated(unit: str) -> bool:
+    """True when this seat already carries the unit (a role owed it, and the units step wrote it)."""
+    out = sh(["systemctl", "--user", "show", "-p", "FragmentPath", "--value", unit], timeout=30)
+    return bool(out.stdout.strip())
+
+
+def seat_units(app: dict, home: Path) -> str:
+    """Move a Ymir-rendered unit onto this app's home, through Ymir's ONE unit renderer.
+
+    Some apps' units are rendered by Ymir (tools/web/systemd/<unit>, `fleet-ensure.sh unit <program>`), and the
+    renderer finds the app through the resolver. Installing the app does not, by itself, move a unit that was
+    rendered while the app still lived in the tree: found 2026-11-19, `apps.sh install smidja` flipped the release
+    and left smidja.service serving the pin's in-tree copy, which a pin without apps/smidja-factory would break.
+    Only a unit this seat already carries is re-rendered (the role that owed it stays the judge), only one whose
+    template Ymir ships, and never while the desk is in a call."""
+    if in_call():
+        return ""
+    door = Path(os.environ.get("YMIR_UNIT_RENDER_DOOR") or ROOT / "bin" / "fleet" / "fleet-ensure.sh")
+    if not door.is_file():
+        return ""
+    seated = []
+    for unit in units_of(home / "current"):
+        if not unit.endswith(".service") or not (ROOT / "tools" / "web" / "systemd" / unit).is_file():
+            continue
+        if not unit_seated(unit) or runs_from(unit, home):
+            continue
+        out = sh(["bash", str(door), "unit", unit.removesuffix(".service")], timeout=120)
+        if out.returncode == 0:
+            sh(["systemctl", "--user", "daemon-reload"], timeout=60)
+            seated.append(unit)
+    return ",".join(seated)
 
 
 def restart(app: dict, home: Path) -> str:

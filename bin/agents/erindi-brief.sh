@@ -224,19 +224,6 @@ Report status by appending one line:
    would act on and the needs-decision/blocked/$PAUSED_VERB/done/failed states.
    A TERMINAL state (done:, failed:, needs-decision:) is ALSO a report. Make the
    terminal act ONE command — it writes the status line, files the report shelf the
-
-**Checkpoint at every boundary.** Before you move from one phase to the next, and before any long step:
-`bin/agents/eindri-checkpoint.sh save $ID --step "<what just finished>" --next "<what is next>"`.
-The pane is a view; the checkpoint is the record. A restart reads the checkpoint, never your scrollback.
-
-**TALK INTO THE PANE, NOT ONLY INTO A FILE.** A report that lands in `state/<id>.status`, the report
-shelf and the wake queue has reached three shelves and no person. It is DELIVERED when the arm holder's
-chat says it: `bin/agents/eindri-notify.sh --from <your id> -- "<one line>"` resolves the lock owner's
-pane and speaks a turn into it. `bin/agents/eindri-acclaim.sh` does this for you in the terminal act —
-if it prints `pane":"failed`, the delivery failed and you must say why in your status line. The
-Allfather's words (2026-11-08, again 2026-11-09): *"why arent they injecting into your session chat? we
-have built that and its not getting used"* · *"no handoff or sutch without also talking direckly in to
-the panes."*
    handoff failsafe sweeps (bin/agents/eindri-handoff.sh), and appends the DURABLE wake
    ($WAKE_QUEUE) so Brokk is woken even with no arm and no sweep running:
       \`bin/agents/eindri-acclaim.sh $ID --terminal done --line "<what shipped and where: PR, path, proof>"\`
@@ -263,6 +250,19 @@ of them the work changed — one line:
 The handoff packet refuses without it (\`bin/forge/handoff-packet.sh write $ID --record "path|what"\`),
 and so does the review: a project's decisions, handoff, plans and boards are updated by the work,
 or the work has not landed (plan 291 part 2).
+
+**Checkpoint at every boundary.** Before you move from one phase to the next, and before any long step:
+\`bin/agents/eindri-checkpoint.sh save $ID --step "<what just finished>" --next "<what is next>"\`.
+The pane is a view; the checkpoint is the record. A restart reads the checkpoint, never your scrollback.
+
+**TALK INTO THE PANE, NOT ONLY INTO A FILE.** A report that lands in \`state/<id>.status\`, the report
+shelf and the wake queue has reached three shelves and no person. It is DELIVERED when the arm holder's
+chat says it: \`bin/agents/eindri-notify.sh --from <your id> -- "<one line>"\` resolves the lock owner's
+pane and speaks a turn into it. \`bin/agents/eindri-acclaim.sh\` does this for you in the terminal act —
+if it prints \`pane":"failed\`, the delivery failed and you must say why in your status line. The
+Allfather's words (2026-11-08, again 2026-11-09): *"why arent they injecting into your session chat? we
+have built that and its not getting used"* · *"no handoff or sutch without also talking direckly in to
+the panes."*
 EOF
 )
 

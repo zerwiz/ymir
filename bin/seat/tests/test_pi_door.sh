@@ -23,6 +23,7 @@ bad() { printf '%s\n' "$*" >&2; return 1; }
 [ -x "$door" ] || { printf 'FAIL the door is not executable: %s\n' "$door"; exit 1; }
 
 work="$(mktemp -d)"; trap 'rm -rf "$work"' EXIT
+export XDG_STATE_HOME="$work/state"   # the door writes its run record; keep it out of the real state
 
 # A fake harness on PATH: it only prints the argv the door handed it.
 mkdir -p "$work/bin"

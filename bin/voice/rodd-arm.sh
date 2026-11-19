@@ -493,7 +493,38 @@ with open(room, "a", encoding="utf-8") as fh:
 PY
 }
 
+# ── the holder's own role (2026-11-19) ──────────────────────────────────────
+# A hold declares the CALLER's role, never Rödd's. Measured: a hold from a pi seat wrote
+# `role=rodd`, so the sidecar said Rödd held a helm a counsellor was working, and the role
+# had to be corrected by hand. The role is the session's harness, read the way the arm
+# client reads it (pi → counsellor, the rest keep their name); a session whose harness is
+# not one we know is the counsellor. `--role rodd` (or BROKK_ARM_ROLE=rodd) is Rödd's own hold.
+hold_role_known() {
+  case "$1" in rodd|counsellor|pi|opencode|claude|cursor|codex|grok|kimi|muse|hermes) return 0 ;; *) return 1 ;; esac
+}
+hold_role_of() {  # <pid> -> the role its harness works
+  local c=""
+  c="$(tr -d '\n' <"/proc/$1/comm" 2>/dev/null || true)"
+  [ -n "$c" ] || c="$(ps -o comm= -p "$1" 2>/dev/null | sed 's#.*/##' | tr -d '[:space:]' || true)"
+  case "$c" in
+    pi) printf 'counsellor' ;;
+    opencode|claude|cursor|codex|grok|kimi|muse|hermes) printf '%s' "$c" ;;
+    *) printf 'counsellor' ;;
+  esac
+}
+
 cmd_hold() {
+  local want_role="${BROKK_ARM_ROLE:-}"
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --role) want_role="${2-}"; shift 2 ;;
+      --role=*) want_role="${1#--role=}"; shift ;;
+      *) die "unknown hold argument: $1 (hold [--role <role>])" ;;
+    esac
+  done
+  if [ -n "$want_role" ] && ! hold_role_known "$want_role"; then
+    die "unknown role '$want_role' — a hold names rodd, counsellor, or a harness name"
+  fi
   resolve_roots
   require_lock_lib
   # ── THE SPEECH GATE (plan 001 §4 F3) ────────────────────────────────────────
@@ -545,10 +576,15 @@ cmd_hold() {
   local side="$STATE_ROOT" lst=""
   [ -r "$LEASE" ] && lst="$(lease_field "$LEASE" state)"
   [ -n "$lst" ] && [ -d "$lst" ] && side="$lst"
-  printf 'role=rodd session=%s seat=%s charter=%s\n' "$sess" "$seat" "$charter" > "$side/.arm.role" 2>/dev/null || true
-  room_append "$STATE_ROOT" "Nanna" "hold: Rödd takes the helm (session $sess)" || true
-  printf 'rodd-arm-hold[1]{verb,holder_pid,state_dir,speaks}:\n  "hold","%s","%s","yes (session pid %s stands in the process tree)"\n' \
-    "$sess" "$STATE_ROOT" "$_sp_sess"
+  local role="${want_role:-$(hold_role_of "$sess")}"
+  printf 'role=%s session=%s seat=%s charter=%s\n' "$role" "$sess" "$seat" "$charter" > "$side/.arm.role" 2>/dev/null || true
+  if [ "$role" = rodd ]; then
+    room_append "$STATE_ROOT" "Nanna" "hold: Rödd takes the helm (session $sess)" || true
+  else
+    room_append "$STATE_ROOT" "Nanna" "hold: the $role ($seat) takes the helm (session $sess)" || true
+  fi
+  printf 'rodd-arm-hold[1]{verb,holder_pid,role,state_dir,speaks}:\n  "hold","%s","%s","%s","yes (session pid %s stands in the process tree)"\n' \
+    "$sess" "$role" "$STATE_ROOT" "$_sp_sess"
   return 0
 }
 
@@ -560,9 +596,15 @@ cmd_release() {
   if [ -n "$_owner" ] && [ "$_owner" != "$sess" ]; then
     refuse "this session (pid $sess) does not hold the helm — the holder is pid $_owner; a release never steals"
   fi
+  local role=""
+  role="$(sed -n 's/^role=\([^ ]*\).*/\1/p' "$STATE_ROOT/.arm.role" 2>/dev/null | head -1)"
   gleipnir_lock_release
   rm -f "$STATE_ROOT/.arm.role" 2>/dev/null || true
-  room_append "$STATE_ROOT" "Nanna" "release: Rödd gives the helm back (session $sess)" || true
+  if [ -z "$role" ] || [ "$role" = rodd ]; then
+    room_append "$STATE_ROOT" "Nanna" "release: Rödd gives the helm back (session $sess)" || true
+  else
+    room_append "$STATE_ROOT" "Nanna" "release: the $role gives the helm back (session $sess)" || true
+  fi
   printf 'rodd-arm-release[1]{verb,released,state_dir}:\n  "release","yes","%s"\n' "$STATE_ROOT"
   return 0
 }
@@ -575,7 +617,7 @@ case "${1-}" in
   tell) shift; cmd_tell "$@" ;;
   hear) shift; cmd_hear "${1:-$DEFAULT_SHOW}" ;;
   room) shift; cmd_room ;;
-  hold) shift; cmd_hold ;;
+  hold) shift; cmd_hold "$@" ;;
   release) shift; cmd_release ;;
   --check|check) shift; cmd_check ;;
   --self-test|self-test) shift; self_test ;;

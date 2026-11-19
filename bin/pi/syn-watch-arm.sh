@@ -26,6 +26,7 @@
 # CLI (unchanged, so every harness adapter works as it stands):
 #   syn-watch-arm.sh --restart
 #   syn-watch-arm.sh --holder <role>     # declare whose helm (rodd, counsellor, or a harness name)
+#   syn-watch-arm.sh --restart --attach-only   # attach to a helm THIS session holds; never acquire
 #   syn-watch-arm.sh --handling-delivered <generation> --watcher-pid <pid>
 #
 # `BROKK_WATCH_INLINE=1` keeps the watch loop in this process — the pre-service
@@ -105,13 +106,33 @@ fi
 # `--holder <role>` or `BROKK_ARM_ROLE` declares WHOSE helm this is; otherwise the
 # session's own harness comm names it (pi → counsellor, the rest keep their name).
 HOLDER_ROLE=""
+# `--attach-only` (or BROKK_ARM_ATTACH_ONLY=1): the hook contract (2026-11-19). A Stop hook
+# runs at every turn end, and the client below enters a VACANT helm by design — so a hook that
+# ran `--restart` made any seat the primary whenever it found no owner (measured: the lock went
+# 2243828 → 1557290 with 2243828 alive). Attach-only never acquires: it attaches when THIS
+# session already holds the helm and exits 0 otherwise. Taking the helm is a deliberate
+# `bin/voice/rodd-arm.sh hold`.
+ATTACH_ONLY="${BROKK_ARM_ATTACH_ONLY:-0}"
 while [ $# -gt 0 ]; do
   case "$1" in
     --holder) HOLDER_ROLE="${2-}"; shift 2 ;;
     --holder=*) HOLDER_ROLE="${1#--holder=}"; shift ;;
+    --attach-only) ATTACH_ONLY=1; shift ;;
     *) shift ;;
   esac
 done
+
+# Attach-only is decided BEFORE any sweep: a session that does not hold the helm is
+# read-only for drain and reap too, so it touches nothing and says so.
+if [ "$ATTACH_ONLY" = 1 ]; then
+  gleipnir_session_pid _ao_sess
+  gleipnir_lock_owner _ao_owner 2>/dev/null || _ao_owner=""
+  if [ -z "${_ao_owner:-}" ] || [ "$_ao_owner" != "${_ao_sess:-$$}" ]; then
+    printf 'watcher: attach-only - this session does not hold the helm (owner=%s); nothing taken\n' "${_ao_owner:-none}" >&2
+    exit 0
+  fi
+  unset _ao_sess _ao_owner
+fi
 
 mkdir -p "$STATE"
 
@@ -148,7 +169,7 @@ fi
 # gone) through the lib's acquire; only a genuinely live other session is refused.
 
 lock_owner=$(gleipnir_lock_owner _lo 2>/dev/null; printf '%s' "${_lo:-}")
-if [ -z "$lock_owner" ] || ! gleipnir_pid_alive "$lock_owner"; then
+if [ "$ATTACH_ONLY" != 1 ] && { [ -z "$lock_owner" ] || ! gleipnir_pid_alive "$lock_owner"; }; then
   if ! gleipnir_lock_acquire; then
     printf 'watcher: read-only - the session helm is held by another live session\n' >&2
     exit 0

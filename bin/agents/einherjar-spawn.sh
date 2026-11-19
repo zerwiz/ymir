@@ -13,7 +13,7 @@
 #   einherjar-spawn.sh <task-id> --relaunch [--harness ...] [--model ...]
 #       [--effort ...] [--isolation ...] [--force] [--dry-run]
 #
-# It creates or reuses the Yggdrasil worktree at <BROKK_HOME>/.yggdrasil/<id>,
+# It creates or reuses the Yggdrasil worktree at <project>/.yggdrasil/<id>,
 # records state/<id>.meta, and refuses to launch a ship task whose brief's
 # fixed "Delivery contract: mode=<mode>" line disagrees with the explicit
 # --mode, so an adjusted brief and the recorded task cannot drift.
@@ -517,7 +517,28 @@ fi
 # the PRIVATE home — never a repo template); (4) the fleet law — local model
 # -> pi, hosted -> opencode. Provenance is printed and recorded.
 MODEL_LOCAL=no
-WT_ROOT="$BROKK_HOME/.yggdrasil"
+# The worktree root follows the PROJECT the errand is for (2026-11-19), never the directory this
+# door runs from. BROKK_HOME defaults to the door's own root, which is the release pin when the
+# door runs from it — measured: a spawn from the pin cut <pin>/.yggdrasil/<id> and refused itself
+# with "exists but is not the expected worktree root". The pin stays the runtime; the worktree is
+# the project's main checkout + .yggdrasil (a linked worktree resolves to its main checkout).
+# BROKK_WT_ROOT still overrides, and the engine resolves the same way (paths.project_wt_root).
+project_wt_root() {  # <project-dir> -> <main checkout>/.yggdrasil
+  local common=""
+  common=$(git -C "$1" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true)
+  if [ -n "$common" ] && [ "$(basename "$common")" = .git ]; then
+    printf '%s/.yggdrasil' "$(CDPATH='' cd -- "$(dirname "$common")" && pwd -P)"
+  else
+    printf '%s/.yggdrasil' "$(CDPATH='' cd -- "$1" && pwd -P)"
+  fi
+}
+if [ -n "${BROKK_WT_ROOT:-}" ]; then
+  WT_ROOT="$BROKK_WT_ROOT"
+elif [ -n "$PROJECT_DIR" ] && [ -d "$PROJECT_DIR" ]; then
+  WT_ROOT="$(project_wt_root "$PROJECT_DIR")"
+else
+  WT_ROOT="$BROKK_HOME/.yggdrasil"
+fi
 
 catalog_has() {  # <provider/model> -> 0 when the door says the pair is listed
   # ONE owner for the answer (audit 2026-10-24): `pi --list-models` behind
@@ -894,7 +915,7 @@ if [ "$DRY" -eq 0 ] && [ "${YMIR_ENGINE:-auto}" != "off" ] && [ -x "$SCRIPT_DIR/
   if [ "$FORCE" -eq 1 ]; then engine_args+=(--force); fi
   engine_args+=(--compat)
   engine_rc=0
-  "$SCRIPT_DIR/../engine/ymir-engine.sh" "${engine_args[@]}" || engine_rc=$?
+  BROKK_WT_ROOT="$WT_ROOT" "$SCRIPT_DIR/../engine/ymir-engine.sh" "${engine_args[@]}" || engine_rc=$?
   if [ "$engine_rc" -eq 0 ]; then exit 0; fi
   if [ "$engine_rc" -ne 4 ]; then
     printf 'error: the engine failed to seat %s (exit %s) — the old road was NOT run, because a half-seat is worse than none\nhelp: bin/engine/ymir-engine.sh seat %s --project %s\n' \
@@ -934,7 +955,7 @@ if [ -z "$WT" ]; then
   mkdir -p "$WT_ROOT"
   if [ -e "$WT/.git" ]; then
     top=$(git -C "$WT" rev-parse --show-toplevel 2>/dev/null || true)
-    [ "$top" = "$WT" ] || { echo "error: $WT exists but is not the expected worktree root" >&2; exit 1; }
+    [ -n "$top" ] && [ "$(CDPATH='' cd -- "$top" && pwd -P)" = "$(CDPATH='' cd -- "$WT" && pwd -P)" ] || { echo "error: $WT exists but is not the expected worktree root" >&2; exit 1; }
   elif [ -e "$WT" ]; then
     echo "error: $WT already exists and is not a Yggdrasil worktree; remove it or choose another task id" >&2
     exit 1

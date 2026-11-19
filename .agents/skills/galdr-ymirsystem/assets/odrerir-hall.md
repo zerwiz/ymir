@@ -366,3 +366,18 @@ it, and Ymir's nightly hall-snapshot job (`bin/time/nornir-job-hall-snapshot.sh`
 hall-snapshot.sh`) keeps writing through those links. What this asset still governs here is that job; a change to the
 hall itself is made in its own repo. The hall carries its own copy of the cloth (`src/house-design/`), kept equal to
 `midgard/design-system` by `bin/apps/tests/test_shared_copies.py`.
+
+## Appended 2026-11-19 — where the snapshot writes, and the window's Electron
+
+The entry above says the job "keeps writing through those links". That held only where the app was installed, and
+only by accident of the default path. Now the snapshot writes the board straight to the app's state file
+(`${XDG_STATE_HOME:-~/.local/state}/odrerir/livehall.json`, overridable with `ODRERIR_BOARD`) on the home road and on
+a seat where the hall is not installed, and exits 1 when it cannot write. In a tree it still writes the app's own
+`public/` copy. `bin/engine/release.sh` seeds that state board when the hall is installed and the board is empty.
+
+The window still opens through `scripts/electron.sh --view odrerir`. The hall ships no Electron, so
+`bin/desktop/electron-lib.sh` lends it the root's runtime when it lives in its own home. Fix notes:
+`docs/fixes/odrerir/2026-11-19-the-board-is-state-after-the-split.md` and
+`docs/fixes/desktop/2026-11-19-an-app-in-its-own-home-finds-the-house-electron.md`.
+
+- **2026-11-19** — appended: the snapshot's board location after the split, and the window's Electron.
