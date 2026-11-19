@@ -40,3 +40,9 @@ removed afterwards.
 The GitHub and Google OAuth apps are the operator's to create in their own consoles. Until they exist, a login
 with that provider fails at the provider and nothing else waits. Publishing Dex on the tunnel is also the
 operator's step.
+
+## Added the same day — Dex runs as the owner of its state
+
+The compose file first defaulted to the image's own uid (1001), which cannot write a `state/` directory made
+by the host user. The documented command now passes `DEX_UID=$(id -u) DEX_GID=$(id -g)`. Measured with
+`docker compose up -d` in a scratch directory: `state/dex.db` appeared and the issuer answered.
