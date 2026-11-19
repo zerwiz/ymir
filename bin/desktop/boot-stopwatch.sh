@@ -177,7 +177,9 @@ stop_app() {  # <app> — lower the app by its own door, never by pattern
       # what a click began (ymir-app restarts the unit; a test tree runs start.sh directly). Each door is
       # idempotent, so asking both never stops anything twice.
       systemctl --user stop ymir-rodd.service >/dev/null 2>&1 || true
-      [ -n "$tree" ] && [ -x "$tree/apps/rodd/start.sh" ] && bash "$tree/apps/rodd/start.sh" --stop >/dev/null 2>&1 ;;
+      _win=""; [ -n "$tree" ] && [ -r "$tree/bin/apps/app-path.sh" ] && . "$tree/bin/apps/app-path.sh" && app_path rodd _win 2>/dev/null
+      [ -n "$_win" ] || _win="$tree/apps/rodd"
+      [ -x "$_win/start.sh" ] && bash "$_win/start.sh" --stop >/dev/null 2>&1 ;;
   esac
   for i in $(seq 1 40); do            # the window must be gone before the next boot is called cold
     [ -z "$(window_state "$(app_class "$app")" "$app")" ] && return 0

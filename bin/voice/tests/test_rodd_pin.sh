@@ -10,6 +10,9 @@
 set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd -P)"
 START="$ROOT/apps/rodd/start.sh"
+# The road this test proves — a window inside a Ymir tree handing over to the pin — exists only while the window is
+# in this tree. Once it has left for its own repo (the split, 2026-11-19), that repo proves its own road.
+[ -f "$START" ] || { printf 'skip: Rödd'"'"'s window has left this tree (zerwiz/rodd) — the old road is gone, its own repo proves the new one\n'; exit 0; }
 pass=0; fail=0
 t() { local name=$1; shift; if "$@"; then printf '  ok   %s\n' "$name"; pass=$((pass+1)); else printf '  FAIL %s\n' "$name"; fail=$((fail+1)); fi; }
 
@@ -46,8 +49,11 @@ target="$(grep -m1 '^ExecStart=' "$unit" | cut -d= -f2- | grep -oE '/[^ ]+\.(sh|
 t "the unit's ExecStart names the pin (what the ward reads)" [ "$target" = "$ROOT/apps/rodd/start.sh" ]
 
 # 5 — static: the face resolves its UI from the pin and refuses without one
-t "main.js resolves the UI from the pin" grep -q "path.join(PIN, 'apps', 'rodd', 'ui')" "$ROOT/apps/rodd/src/main.js"
-t "main.js refuses in one line with no pin" grep -q 'Rödd refuses to start: no pinned runtime' "$ROOT/apps/rodd/src/main.js"
+# (the resolution moved from main.js into src/pin.js, which main.js requires; these read it there)
+t "main.js takes its face from pin.js" grep -q "require('./pin')" "$ROOT/apps/rodd/src/main.js"
+t "pin.js resolves the UI from the pin on the old road" grep -q "path.join(root, 'apps', 'rodd')" "$ROOT/apps/rodd/src/pin.js"
+t "pin.js serves the window's own face in its own home" grep -q "ui: path.join(own, 'ui')" "$ROOT/apps/rodd/src/pin.js"
+t "pin.js refuses in one line with no pin" grep -q 'Rödd refuses to start: no pinned runtime' "$ROOT/apps/rodd/src/pin.js"
 t "main.js parses" node --check "$ROOT/apps/rodd/src/main.js"
 
 printf 'test_rodd_pin: %s passed, %s failed\n' "$pass" "$fail"

@@ -1,0 +1,17 @@
+path	why
+bin/engine/release.sh	the dependency loop skips an absent lock; the face build is guarded by apps/rodd/setup.sh existing
+bin/engine/tests/test_units.sh	synthetic fixtures in a temp tree
+bin/gates/checks.d/0085-rodd-face-follows.sh	runs the window's own test only while it is in the tree
+bin/gates/soak.sh	a changed-path pattern for the in-tree window
+bin/desktop/shortcuts.sh	the catalog skips a template not in this tree; the installed window seats the same entry (activate.sh)
+bin/desktop/design-icon.sh	the APPS table names the old folder; row_dir resolves it through the one resolver
+bin/desktop/ymir-app	the pin's tree is the fallback road while the window is not installed in its own home
+bin/desktop/boot-stopwatch.sh	the same fallback road
+bin/pi/arm-pin.sh	matches the window's processes in either place (apps/rodd, or ymir-apps/rodd) — both roads are recognised
+bin/seat/armpin.sh	the same
+bin/voice/voice-ensure.sh	the in-tree setup.sh is tried before the installed window's
+bin/voice/rodd-head.py	a docstring naming where the config's shape lives
+bin/voice/tests/test_rodd_helm.sh	greps the window's source for a phrase only when it is in the tree (2>/dev/null)
+bin/voice/tests/test_rodd_pin.sh	proves the old in-tree road, and skips once the window has left
+.agents/tests/window-buttons.test.sh	reads the files wherever the resolver finds the window
+bin/desktop/tests/test_boot_stopwatch.sh	the same

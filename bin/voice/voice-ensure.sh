@@ -105,7 +105,12 @@ whisper_status() { [ -x "$SNOTRA_ENSURE" ] && "$SNOTRA_ENSURE" status 2>/dev/nul
 # pinned tag moved — carries no window. It is therefore part of the install and the
 # repair surface, not something the operator has to remember: `voice-ensure install` and
 # `eir fix` both build it, and `status` names it when it is missing or stale.
+# The window is found wherever it is (the split, 2026-11-19): this tree while it is here, else its own home.
 RODD_SETUP="$ROOT/apps/rodd/setup.sh"
+if [ ! -x "$RODD_SETUP" ] && [ -r "$ROOT/bin/apps/app-path.sh" ]; then
+  _win="$(bash "$ROOT/bin/apps/app-path.sh" rodd 2>/dev/null)" && [ -x "$_win/setup.sh" ] && RODD_SETUP="$_win/setup.sh"
+  unset _win
+fi
 face_status() {
   if [ ! -x "$RODD_SETUP" ]; then printf 'absent'; return 0; fi
   # ONE word (plan 278): `setup.sh --check` already prints missing / stale:<why> / present, so a fallback
@@ -118,7 +123,7 @@ face_status() {
 ensure_face() {
   local fst; fst="$(face_status)"
   [ "$fst" = present ] && return 0
-  [ "$fst" = absent ] && { printf 'rodd: apps/rodd/setup.sh is absent — this tree carries no face\n' >&2; return 1; }
+  [ "$fst" = absent ] && { printf 'rodd: the window is not on this machine — bin/apps/apps.sh install rodd\n' >&2; return 1; }
   have npm || { printf 'rodd: npm is required to build the face (node is not on PATH)\n' >&2; return 1; }
   printf 'rodd: building the face (%s) …\n' "$fst" >&2
   "$RODD_SETUP" >&2 || { printf 'rodd: the face build failed — run apps/rodd/setup.sh by hand\n' >&2; return 1; }
