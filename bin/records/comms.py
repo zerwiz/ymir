@@ -16,6 +16,8 @@ line in the house-kept part of the file.
     comms.py owed                                  # every thing waiting to be sent
     comms.py todo-matches [--todo PATH] [--days 3] [--offline] [--json]
     comms.py todo-apply ID... [--todo PATH]        # writes only what he approved
+    comms.py todo add "TEXT" [--due D] [--priority P] [--project P] [--by voice]
+                                                   # a spoken to-do: the record, then the house-kept half
     comms.py brief [--hours 24]                    # the morning brief's Markdown section
 
 Output for agents is TOON; `brief` is Markdown for a person. Mail is never sent, replied to,
@@ -36,6 +38,8 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
+sys.path.insert(0, str(HERE))
+import todo_door  # noqa: E402  — the one way the house writes the to-do
 
 ROW_KEYS = ("channel", "direction", "who", "thread", "project", "at", "ref")
 CHANNELS_WRITTEN = ("telegram",)          # mail keeps its own record; these are appended here
@@ -963,6 +967,11 @@ dated line naming the message. Each line ends with the item's id, so the house n
 def apply(ids: list[str], todo_file: Path, live: bool = True, days: float = 14) -> list[dict]:
     """Write the approved proposals as dated lines in the house-kept half. His own lines are never
     touched; a close ticks the house's own line and says which mail answered it."""
+    with todo_door.locked(todo_file):
+        return _apply_locked(ids, todo_file, live, days)
+
+
+def _apply_locked(ids: list[str], todo_file: Path, live: bool, days: float) -> list[dict]:
     text = todo_file.read_text(encoding="utf-8")
     props = {p["id"]: p for p in match_todo(text, todo_file, days=days, live=live)}
     picked = [props[i] for i in ids if i in props]
@@ -986,8 +995,57 @@ def apply(ids: list[str], todo_file: Path, live: bool = True, days: float = 14) 
         else:
             line = f"- [ ] {day} · {p['item']} — {p['evidence']} (item {p['id']})"
             text = _insert_under(text, "Waiting on others", line)
-    todo_file.write_text(text, encoding="utf-8")
+    todo_door.write_todo(todo_file, text)
     return picked
+
+
+# ── a spoken to-do (wake 107, 2026-11-19) ─────────────────────────────────────
+# The voice asks for a to-do the way the mail does: through this door, into the house-kept half, never his.
+# The voice's record (hodd/state/voice/todos.jsonl) takes the event first and is read back; the list takes a
+# dated line under "Said to Rödd" and is read back; the view is re-rendered and says if it had drifted.
+
+SAID = "Said to Rödd"
+
+
+def voice_paths() -> tuple[Path, Path]:
+    h = home() / "hodd"
+    return h / "state" / "voice" / "todos.jsonl", h / "life" / "personal" / "me" / "todo-voice.md"
+
+
+def todo_add(item: str, due: str = "", priority: str = "", project: str = "", by: str = "voice",
+             todo_file: Path | None = None) -> dict:
+    item = " ".join(str(item or "").split())
+    if not item:
+        raise todo_door.DoorError("nothing to add: the item is empty")
+    tp = Path(todo_file) if todo_file else todo_path()
+    ledger, view = voice_paths()
+    at = now().astimezone()
+    ts = at.isoformat(timespec="seconds")
+    tid = "t" + hashlib.sha1(f"{ts}|{item}".encode()).hexdigest()[:8]
+    ev = {"ts": ts, "action": "add", "id": tid, "item": item, "due": due or "",
+          "priority": priority or "medium", "project": project or "", "by": by}
+    with todo_door.locked(ledger):
+        todo_door.append_record(ledger, ev)
+    notes = [f"said to Rödd {at:%H:%M}"] + [f"{k} {v}" for k, v in
+                                            (("due", due), ("priority", priority), ("project", project)) if v]
+    line = f"- [ ] {at:%Y-%m-%d} · {item} — {'; '.join(notes)} (item {tid})"
+    try:
+        with todo_door.locked(tp):
+            text = tp.read_text(encoding="utf-8") if tp.is_file() else ""
+            if HOUSE_MARK not in text:
+                text = text.rstrip("\n") + "\n" + HOUSE_HALF
+            todo_door.write_todo(tp, _insert_under(text, SAID, line))
+            if f"(item {tid})" not in tp.read_text(encoding="utf-8"):
+                raise todo_door.DoorError(f"the line (item {tid}) is missing from {tp} after the write")
+    except todo_door.DoorError as exc:
+        raise todo_door.DoorError(f"{exc} — it is kept in {ledger} as {tid}, but it is NOT on his list") from exc
+    try:   # the item is saved by now; a view that will not render is said, never a reason to call it lost
+        with todo_door.locked(view):
+            drift = todo_door.render_view(ledger, view, f"{at:%Y-%m-%d %H:%M}")
+        stale = "yes" if (drift["missing_from_view"] or drift["missing_from_record"]) else "no"
+    except todo_door.DoorError as exc:
+        stale = f"not re-rendered: {exc}"
+    return {"id": tid, "item": item, "todo": str(tp), "record": str(ledger), "view_was_stale": stale}
 
 
 def _close_line(text: str, pid: str, note: str) -> str:
@@ -1111,9 +1169,29 @@ def main(argv=None) -> int:
     ta.add_argument("--todo")
     ta.add_argument("--offline", action="store_true")
     ta.add_argument("--days", type=float, default=14)
+    td = sub.add_parser("todo")
+    td.add_argument("verb", choices=["add"])
+    td.add_argument("text")
+    td.add_argument("--due", default="")
+    td.add_argument("--priority", default="")
+    td.add_argument("--project", default="")
+    td.add_argument("--by", default="voice")
+    td.add_argument("--todo")
     br = sub.add_parser("brief")
     br.add_argument("--hours", type=float, default=24)
     a = ap.parse_args(argv)
+
+    if a.cmd == "todo":
+        try:
+            r = todo_add(a.text, a.due, a.priority, a.project, a.by, Path(a.todo) if a.todo else None)
+        except todo_door.DoorError as exc:
+            msg = str(exc)
+            print(toon("todo_add_failed", ["saved", "reason"], [{"saved": "no", "reason": msg}]))
+            print(f"comms.sh todo add: NOT saved — {msg}", file=sys.stderr)
+            return 1
+        print(toon("todo_add", ["saved", "id", "item", "todo", "record", "view_was_stale"],
+                   [{"saved": "yes", **r}]))
+        return 0
 
     if a.cmd == "record":
         ok = append(a.channel, a.direction, a.who, a.thread, a.project, a.ref, a.text, a.at or None)

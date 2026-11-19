@@ -3,6 +3,8 @@
 #
 # Rödd reported: "todo_add on heimdall failed writing the list: …/todo.md.tmp -> todo.md (Errno 2)". Every
 # writer used the same `todo.md.tmp`; the first renamed it away and the second's rename found nothing.
+# 2026-11-19, the gather: the writer is now `bin/records/todo_door.py` (one lock, a mkstemp temp per write), so
+# the race is run against the door itself — the same four writers, the same 800 passes.
 # Fenced: YMIR_HOME and HOME point into a throwaway folder, so the operator's own list is never touched.
 set -u
 SELF="$(CDPATH='' cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -15,7 +17,9 @@ printf '# His half\n\n- [ ] seed\n' > "$YMIR_HOME/hodd/life/personal/me/todo.md"
 python3 - "$VOICE" <<'PY'
 import os, sys
 sys.path.insert(0, sys.argv[1])
+sys.path.insert(0, os.path.join(sys.argv[1], "..", "records"))
 import voice_tools as vt
+import todo_door
 
 kids = []
 for n in range(4):
@@ -24,8 +28,10 @@ for n in range(4):
         errors = 0
         for i in range(200):
             try:
-                vt._todo_write(["# His half", "", f"- [ ] writer {n} pass {i}"])
-            except OSError:
+                p = vt._todo_file()
+                with todo_door.locked(p):
+                    todo_door.atomic_write(p, "\n".join(["# His half", "", f"- [ ] writer {n} pass {i}"]) + "\n")
+            except (OSError, todo_door.DoorError):
                 errors += 1
         os._exit(min(errors, 255))
     kids.append(pid)

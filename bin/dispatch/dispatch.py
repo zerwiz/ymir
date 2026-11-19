@@ -79,6 +79,8 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
+sys.path.insert(0, str(ROOT / "bin" / "records"))
+import todo_door  # noqa: E402  — the one way the house writes the to-do (locked, atomic, his half refused)
 MAIL_LIB = ROOT / "bin" / "mail"
 
 INBOX_OPEN = ("<!-- dispatch:inbox — proposals only (bin/dispatch, kept by the house). "
@@ -502,16 +504,13 @@ def write_proposals(path: Path, text: str, lines: list[str]) -> str:
 
 
 def atomic_write(path: Path, text: str) -> None:
-    tmp = path.with_name(path.name + ".dispatch-tmp")
+    # through the to-do door (2026-11-19): a fixed `.dispatch-tmp` name and no lock could meet the voice in the
+    # same second; the door locks, writes a unique temp, reads back, and refuses a change to his half
     try:
-        tmp.write_text(text, encoding="utf-8")
-        tmp.replace(path)
-    except OSError as exc:
-        try:
-            tmp.unlink()
-        except OSError:
-            pass
-        raise StateError(f"{path} cannot be written ({exc.__class__.__name__}: {exc})")
+        with todo_door.locked(path):
+            todo_door.write_todo(path, text)
+    except todo_door.DoorError as exc:
+        raise StateError(f"{path} cannot be written ({exc})")
 
 
 def proposal_line(item: dict, day: str) -> str:
@@ -594,12 +593,13 @@ def run(args) -> tuple[int, dict]:
     fail_line = ""
     if plan and not args.dry_run:
         day = stamp.astimezone().strftime("%Y-%m-%d")
-        new_text = text
-        for item in plan:
-            new_text = write_proposals(todo_file, new_text, [proposal_line(item, day)])
         try:
-            atomic_write(todo_file, new_text)
-        except StateError as exc:
+            with todo_door.locked(todo_file):   # re-read under the lock, so a line the voice added meanwhile stays
+                new_text = todo_file.read_text(encoding="utf-8") if todo_file.is_file() else text
+                for item in plan:
+                    new_text = write_proposals(todo_file, new_text, [proposal_line(item, day)])
+                atomic_write(todo_file, new_text)
+        except (StateError, todo_door.DoorError) as exc:
             fail_line = str(exc)
             for item in plan:
                 events.append(base | {"kind": "event", "source": item["source"], "item": item["id"],

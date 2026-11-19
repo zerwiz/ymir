@@ -271,7 +271,7 @@ TOOLS = [
     {
         "type": "function",
         "name": "todo_add",
-        "description": "Add an item to HIS to-do list (hodd/life/personal/me/todo.md, the one to-do; under 'Added in conversation'); returns its short id. Optional due, priority, project.",
+        "description": "Add an item to HIS to-do list (hodd/life/personal/me/todo.md, the one to-do) through the to-do door: it lands in the house-kept half under 'Said to Rödd' and is read back before it is called saved; if it could not be saved, the answer says so and you must tell him. Returns its id. Optional due, priority, project.",
         "parameters": {"type": "object", "properties": {
             "item": {"type": "string"}, "due": {"type": "string"},
             "priority": {"type": "string"}, "project": {"type": "string"}},
@@ -1760,40 +1760,18 @@ def _todo_state():
 
 
 def _todo_render():
-    _, view = _todo_paths()
-    view.parent.mkdir(parents=True, exist_ok=True)
-    tasks = _todo_state()
-    opened = [t for t in tasks if t["status"] == "open"]
-    done = [t for t in tasks if t["status"] == "done"]
-    prio = {"high": 0, "medium": 1, "low": 2}
-
-    def line(t):
-        bits = [f"- [{'x' if t['status'] == 'done' else ' '}] {t['item']}", f"`{t['id']}`"]
-        if t["due"]:
-            bits.append(f"due {t['due']}")
-        if t["priority"] != "medium":
-            bits.append(t["priority"])
-        if t["project"]:
-            bits.append(t["project"])
-        return " · ".join(bits)
-
+    """Re-render todo-voice.md from the record — through the door, which names drift instead of hiding it."""
     import datetime as _dt
-    rows = ["# The voice's task ledger", "",
-            f"_rendered {_dt.datetime.now():%Y-%m-%d %H:%M} · derived from "
-            "`hodd/state/voice/todos.jsonl` — a view, never the record_", "",
-            f"## Open ({len(opened)})", ""]
-    rows += [line(t) for t in sorted(opened, key=lambda t: (prio.get(t["priority"], 1), t["due"] or "9999", t["added"]))] or ["_nothing open_"]
-    rows += ["", f"## Done ({len(done)})", ""]
-    rows += [line(t) for t in done[-30:]] or ["_nothing done yet_"]
-    view.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    ledger, view = _todo_paths()
+    with todo_door.locked(view):
+        return todo_door.render_view(ledger, view, f"{_dt.datetime.now():%Y-%m-%d %H:%M}")
 
 
 def _todo_append(ev):
-    import json as _json
+    """Append to the record — through the door (locked, atomic, read back); never a second road to it."""
     ledger, _ = _todo_paths()
-    ledger.parent.mkdir(parents=True, exist_ok=True)
-    with ledger.open("a", encoding="utf-8") as fh:
-        fh.write(_json.dumps(ev, ensure_ascii=False) + "\n")
+    with todo_door.locked(ledger):
+        todo_door.append_record(ledger, ev)
 
 
 # ── the to-do: ONE record, his own todo.md (plan 275, 2026-11-12) ──────────────────────────────────────────────
@@ -1803,6 +1781,7 @@ def _todo_append(ev):
 # and offered to build a fourth system. His word: "It's always written by a machine. It's your file." So the tools
 # read and write todo.md itself: every `- [ ]` / `- [x]` line is an item with a short, stable id; an added item goes
 # under "## Added in conversation" in his half, dated; a tick, a reopen or new wording changes that line in place.
+# (Superseded 2026-11-19 by the door below: an add lands in the house-kept half, and his half is never written.)
 # The file is written whole and renamed into place, so a reader never sees half of it. The old ledger is left as it was.
 
 def _todo_file():
@@ -1848,24 +1827,12 @@ def _todo_items():
         tid = "t" + _h.sha1(m.group(2).encode()).hexdigest()[:5]
         items.append({"id": tid, "line": n, "end": k - 1, "status": "done" if m.group(1) in "xX" else "open",
                       "item": plain, "section": section, "half": half})
+    # one of his lines closed by the house reads as done: the closing is a ticked house-kept line naming it
+    closed = _todo_closings(items)
+    for t in items:
+        if t["half"] == "his" and t["id"] in closed and closed[t["id"]]["status"] == "done":
+            t["status"] = "done"
     return lines, items
-
-
-def _todo_write(lines):
-    # Each write owns its temp file (2026-11-19). One shared `todo.md.tmp` let two writers — Rödd's window
-    # and another seat of the voice — race: the first renamed it away and the second's rename failed with
-    # Errno 2, so his line never landed. The pid and a random part keep two writers apart; the rename is
-    # still one atomic step, so a reader never sees half a list.
-    path = _todo_file()
-    tmp = path.with_name(f"{path.name}.{os.getpid()}.{os.urandom(4).hex()}.tmp")
-    try:
-        tmp.write_text("\n".join(lines) + "\n", encoding="utf-8")
-        tmp.replace(path)
-    finally:
-        try:
-            tmp.unlink()
-        except OSError:
-            pass
 
 
 def _todo_find(needle):
@@ -1885,35 +1852,6 @@ def _stamp():
     return _dt.datetime.now().strftime("%Y-%m-%d %H:%M")
 
 
-async def _tool_todo_add(args):
-    item = str(args.get("item") or "").strip()
-    if not item:
-        raise ValueError("todo_add needs an item")
-    lines, _ = _todo_items()
-    notes = [f"added by Nanna, {_stamp()}"]
-    for k in ("due", "priority", "project"):
-        v = str(args.get(k) or "").strip()
-        if v:
-            notes.append(f"{k} {v}")
-    entry = f"- [ ] **{item}** *({'; '.join(notes)})*"
-    head = "## Added in conversation"
-    if head in lines:
-        at = lines.index(head) + 1
-        while at < len(lines) and lines[at].strip() == "":
-            at += 1
-        lines.insert(at, entry)
-    else:
-        # in his half, before "Held, deliberately" (or before the derived half)
-        at = next((n for n, l in enumerate(lines) if l.startswith("## Held")), None)
-        if at is None:
-            at = next((n for n, l in enumerate(lines) if l.startswith("# The derived half")), len(lines))
-        lines[at:at] = [head, "", entry, ""]
-    _todo_write(lines)
-    _, items = _todo_items()
-    tid = next((t["id"] for t in items if item in t["item"]), "?")
-    return ToolResult(f"Added to his to-do (todo.md, under 'Added in conversation') as {tid}: {item}.", create_response=True)
-
-
 async def _tool_todo_list(args):
     status = str(args.get("status") or "open").lower()
     want = str(args.get("project") or "").strip().lower()
@@ -1929,14 +1867,106 @@ async def _tool_todo_list(args):
     return ToolResult(f"His to-do (todo.md): {len(items)} {status}:\n" + "\n".join(rows) + more)
 
 
-def _todo_mark(args, to_done: bool, verb: str):
+# ── the door (wake 107, 2026-11-19) ─────────────────────────────────────────────────────────────────────────────
+# Four items spoken in one breath ran as four todo_add calls on four toolbox threads, shared one `todo.md.tmp`, and
+# lost three while saying "Added … as ?" (docs/fixes/voice/2026-11-19-four-todos-in-one-breath-lost-three.md).
+# The fix became a door. The voice now asks for a to-do the way the mail does (plan 261):
+#   * an ADD goes through ONE verb, `bin/records/comms.sh todo add "<text>"`. It writes the voice's record
+#     (hodd/state/voice/todos.jsonl) and reads it back, then lands a dated line in the HOUSE-KEPT half of todo.md
+#     under "Said to Rödd" and reads that back, then re-renders todo-voice.md and says if the view had drifted;
+#   * his half is HIS. The file says "his half is written by him and never by a machine", and plan 261 refuses
+#     "writing his own half of the to-do list: a tick is read from it, never made in it". So a tick of one of his
+#     lines is a dated closing line in the house-kept half; his line is never touched. `todo_door.write_todo`
+#     refuses any write that would change his half, so the rule is enforced, not remembered;
+#   * a failure SPEAKS: the tool answers "I could not save that …" with the path and the errno, and logs it.
+import sys as _sys
+_sys.path.insert(0, str(ROOT / "bin" / "records"))
+import todo_door  # noqa: E402
+
+
+def _todo_unsaved(what, exc):
+    """A to-do change that did not land is said aloud — never reported as done."""
+    _log("todo.unsaved", what=str(what)[:160], error=str(exc)[:400])
+    # and to stderr, which the voice host keeps in host.log: the activity log may sit on the very path that failed
+    print(f"voice: todo NOT saved — {what}: {exc}", file=_sys.stderr, flush=True)
+    return ToolResult(f"I could not save that to his to-do — {what} was NOT written: {exc}. "
+                      "Tell him plainly it is not on the list.", create_response=True)
+
+
+def _todo_closings(items):
+    """His lines closed by the house: a ticked house-kept line `done: «…» … (item tXXXXX)` names his item."""
     import re as _re
-    lines, t = _todo_find(str(args.get("id") or ""))
-    if not t:
-        return ToolResult(f"No item in his to-do matches {args.get('id')!r}; list the open ones and ask which.")
-    lines[t["line"]] = _re.sub(r"^- \[( |x|X)\]", "- [x]" if to_done else "- [ ]", lines[t["line"]], count=1)
-    lines[t["end"]] = lines[t["end"]] + f" *({verb} by Nanna, {_stamp()})*"   # the note at the item's end
-    _todo_write(lines)
+    closed = {}
+    for t in items:
+        if t["half"] != "his":
+            m = _re.search(r"done: «.*» .*\(item (t[0-9a-f]{5})\)", t["item"])
+            if m:
+                closed[m.group(1)] = t
+    return closed
+
+
+async def _tool_todo_add(args):
+    item = " ".join(str(args.get("item") or "").split())
+    if not item:
+        raise ValueError("todo_add needs an item")
+    argv = [_door("records/comms.sh"), "todo", "add", item, "--by", "voice"]
+    for k in ("due", "priority", "project"):
+        v = str(args.get(k) or "").strip()
+        if v:
+            argv += [f"--{k}", v]
+    code, out = _run(argv, timeout=30)
+    if code != 0:
+        reason = next((l.split("NOT saved — ", 1)[1] for l in out.splitlines() if "NOT saved — " in l), _clean(out, 300))
+        return _todo_unsaved(repr(item), reason)
+    import csv as _csv
+    row = next((r for r in _csv.reader(l.strip() for l in out.splitlines() if l.startswith('  "yes"'))), None)
+    if not row or len(row) < 6:
+        return _todo_unsaved(repr(item), f"the door answered without a saved row: {_clean(out, 200)}")
+    stale = (" The page todo-voice.md had drifted from the record; it was re-rendered and names what differed."
+             if row[5] == "yes" else f" ({row[5]})" if row[5] != "no" else "")
+    return ToolResult(f"Saved to his to-do (todo.md, the house-kept half, under 'Said to Rödd') as {row[1]}: "
+                      f"{item}.{stale}", create_response=True)
+
+
+def _todo_mark(args, to_done: bool, verb: str):
+    try:
+        return _todo_mark_locked(args, to_done, verb)
+    except todo_door.DoorError as exc:
+        return _todo_unsaved(f"{verb} {args.get('id')!r}", exc)
+
+
+def _todo_mark_locked(args, to_done: bool, verb: str):
+    import re as _re
+    path = _todo_file()
+    with todo_door.locked(path):
+        lines, t = _todo_find(str(args.get("id") or ""))
+        if not t:
+            return ToolResult(f"No item in his to-do matches {args.get('id')!r}; list the open ones and ask which.")
+        if t["half"] == "his":
+            # his line is never touched: the closing is a dated line in the house-kept half (plan 261)
+            _, items = _todo_items()
+            closing = _todo_closings(items).get(t["id"])
+            if to_done:
+                if closing and closing["status"] == "done":
+                    return ToolResult(f"Already ticked in his to-do: {t['item'][:90]}.", create_response=True)
+                text = "\n".join(lines) + "\n"
+                import comms as _comms
+                if _comms.HOUSE_MARK not in text:
+                    text = text.rstrip("\n") + "\n" + _comms.HOUSE_HALF
+                line = (f"- [x] {_stamp()[:10]} · done: «{t['item'][:200]}» ({t['section'][:80]}) — "
+                        f"said to Rödd {_stamp()[11:]} (item {t['id']})")
+                text = _comms._insert_under(text, "Today", line)
+            else:
+                if not closing or closing["status"] != "done":
+                    return ToolResult(f"It is already open in his to-do: {t['item'][:90]}.", create_response=True)
+                n = closing["line"]
+                lines[n] = _re.sub(r"^- \[[xX]\]", "- [ ]", lines[n], count=1) + f" — reopened by Nanna, {_stamp()}"
+                text = "\n".join(lines) + "\n"
+        else:
+            lines[t["line"]] = _re.sub(r"^- \[( |x|X)\]", "- [x]" if to_done else "- [ ]", lines[t["line"]], count=1)
+            lines[t["end"]] = lines[t["end"]] + f" *({verb} by Nanna, {_stamp()})*"   # the note at the item's end
+            text = "\n".join(lines) + "\n"
+        todo_door.write_todo(path, text)
     return ToolResult(f"{verb.capitalize()} in his to-do: {t['item'][:90]}.", create_response=True)
 
 
@@ -1949,22 +1979,44 @@ async def _tool_todo_reopen(args):
 
 
 async def _tool_todo_update(args):
+    try:
+        return _todo_update_locked(args)
+    except todo_door.DoorError as exc:
+        return _todo_unsaved(f"the change to {args.get('id')!r}", exc)
+
+
+def _todo_update_locked(args):
     import re as _re
-    lines, t = _todo_find(str(args.get("id") or ""))
-    if not t:
-        return ToolResult(f"No item in his to-do matches {args.get('id')!r}; list the open ones and ask which.")
     fields = {k: str(args.get(k) or "").strip() for k in ("item", "due", "priority", "project")}
     if not any(fields.values()):
         return ToolResult("Nothing to change — give new wording, a due date, a priority or a project.")
-    line = lines[t["line"]]
-    if fields["item"]:
-        m = _re.match(r"^(- \[[ xX]\] )(.*)$", line)
-        line = m.group(1) + f"**{fields['item']}**"
-    notes = [f"{k} {v}" for k, v in fields.items() if v and k != "item"]
-    lines[t["line"]] = line
-    lines[t["end"]] = lines[t["end"]] + f" *({'; '.join(notes + ['updated by Nanna, ' + _stamp()])})*"
-    _todo_write(lines)
-    return ToolResult("Updated in his to-do: " + ", ".join(f"{k} → {v}" for k, v in fields.items() if v), create_response=True)
+    path = _todo_file()
+    with todo_door.locked(path):
+        lines, t = _todo_find(str(args.get("id") or ""))
+        if not t:
+            return ToolResult(f"No item in his to-do matches {args.get('id')!r}; list the open ones and ask which.")
+        notes = [f"{k} {v}" for k, v in fields.items() if v and k != "item"]
+        if t["half"] == "his":
+            # his wording is his: the change is a dated note in the house-kept half, naming his item
+            import comms as _comms
+            text = "\n".join(lines) + "\n"
+            if _comms.HOUSE_MARK not in text:
+                text = text.rstrip("\n") + "\n" + _comms.HOUSE_HALF
+            change = ([f"say it as «{fields['item']}»"] if fields["item"] else []) + notes
+            line = (f"- [ ] {_stamp()[:10]} · changed: «{t['item'][:200]}» → {'; '.join(change)} — "
+                    f"said to Rödd {_stamp()[11:]} (item {t['id']})")
+            text = _comms._insert_under(text, "Today", line)
+        else:
+            line = lines[t["line"]]
+            if fields["item"]:
+                m = _re.match(r"^(- \[[ xX]\] )(.*)$", line)
+                line = m.group(1) + f"**{fields['item']}**"
+            lines[t["line"]] = line
+            lines[t["end"]] = lines[t["end"]] + f" *({'; '.join(notes + ['updated by Nanna, ' + _stamp()])})*"
+            text = "\n".join(lines) + "\n"
+        todo_door.write_todo(path, text)
+    return ToolResult("Updated in his to-do: " + ", ".join(f"{k} → {v}" for k, v in fields.items() if v),
+                      create_response=True)
 
 
 # ── the web (plan 275, 2026-11-12): her web search went through a Google API key that was never set ("Search is not

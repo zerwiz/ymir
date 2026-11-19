@@ -6,6 +6,8 @@
 #   comms.sh owed [--offline]               # every draft, letter and approval waiting to go
 #   comms.sh todo-matches [--offline]       # proposed to-do changes, each with its message
 #   comms.sh todo-apply <id>...             # writes ONLY what he approved, as dated lines
+#   comms.sh todo add "<text>" [--due D] [--priority P] [--project P]
+#                                           # a spoken to-do: the voice's record, then the house-kept half
 #   comms.sh record --channel C --direction in|out --who W [--thread T] [--ref R] [--text …]
 #   comms.sh brief [--hours 24]             # the morning brief's Markdown section
 #
@@ -14,5 +16,5 @@
 # labels or deletes a message.
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-case "${1-}" in ""|-h|--help) sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; [ -n "${1-}" ]; exit $? ;; esac
+case "${1-}" in ""|-h|--help) sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; [ -n "${1-}" ]; exit $? ;; esac
 exec python3 "$SCRIPT_DIR/comms.py" "$@"
