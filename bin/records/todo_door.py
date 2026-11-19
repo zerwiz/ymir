@@ -26,7 +26,7 @@ import re
 import tempfile
 import threading
 from pathlib import Path
-from threading import local as _thread_local   # named apart: the network ward reads ".local" as an mDNS name
+from threading import local as _thread_local
 
 HIS_MARK = "# His half"
 _THREAD_LOCK = threading.RLock()
