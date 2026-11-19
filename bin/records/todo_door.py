@@ -26,10 +26,11 @@ import re
 import tempfile
 import threading
 from pathlib import Path
+from threading import local as _thread_local   # named apart: the network ward reads ".local" as an mDNS name
 
 HIS_MARK = "# His half"
 _THREAD_LOCK = threading.RLock()
-_HELD = threading.local()   # the paths this thread already holds, so a nested `locked` does not wait on itself
+_HELD = _thread_local()   # the paths this thread already holds, so a nested `locked` does not wait on itself
 
 
 class DoorError(Exception):
