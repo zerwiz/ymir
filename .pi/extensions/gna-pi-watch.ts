@@ -488,6 +488,9 @@ export default function (pi: ExtensionAPI) {
     !calmPresentation.stockExportRendering &&
     !roTranscriptClassIsVisible(itemClass);
 
+  // The window's UI, captured from the session's own context so a wake can notify at once
+  // (plan 328 step 5); absent in a headless run, where the steer alone is the delivery.
+  let lastUi: { notify?: (message: string, level?: string) => void } | undefined;
   let lastWatcherWake = "";
   let lastWatcherWakeAt = 0;
   let lastWatcherWakeDoors = "";
@@ -529,11 +532,49 @@ export default function (pi: ExtensionAPI) {
     lastWatcherWake = message;
     lastWatcherWakeAt = Date.now();
     lastWatcherWakeDoors = doors;
+    // PEOPLE FIRST (plan 328 step 5). A `followUp` waits until the running turn has finished
+    // every tool, so a spoken todo sat unseen behind a long turn while the queue already held
+    // it. When a person's line (voice) or an errand's question (ask) is waiting, the wake is
+    // delivered as a `steer` — after the current tool calls, not after the whole turn — and
+    // the window is told at once. Reports alone still wait for the turn boundary.
+    const people = peopleWaiting();
+    const urgent = people.voice > 0 || people.ask > 0;
+    const shape = `voice ${people.voice} · ask ${people.ask} · report ${people.report}`;
+    if (urgent) {
+      try {
+        lastUi?.notify?.(`Gná: ${shape} — a person is waiting in the wake queue`, "warning");
+      } catch {
+        // a notification is a courtesy; the steer below is the delivery
+      }
+    }
     const content = encodeRoddOperationalInput(
       "watcher",
-      `BROKK WATCHER WAKE: ${message}\n\nRun bin/time/saga-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned.`,
+      `BROKK WATCHER WAKE${urgent ? ` (people first — ${shape})` : ""}: ${message}\n\nRun bin/time/saga-wake-drain.sh first and handle the queued wake. Watcher continuity is extension-owned.`,
     );
-    await pi.sendUserMessage(content, { deliverAs: "followUp" });
+    await pi.sendUserMessage(content, { deliverAs: urgent ? "steer" : "followUp" });
+  }
+
+  // The drain's own read-only verb names the classes, so the extension keeps no second
+  // classifier (plan 328): `saga-wake-drain.sh classes` → `voice=N ask=N report=N`.
+  function peopleWaiting(): { voice: number; ask: number; report: number } {
+    const none = { voice: 0, ask: 0, report: 0 };
+    try {
+      const result = spawnSync("bash", [join(fmRoot, "bin", "time", "saga-wake-drain.sh"), "classes"], {
+        cwd: fmRoot,
+        encoding: "utf8",
+        timeout: 5_000,
+        env: { ...process.env, BROKK_HOME: fmHome, BROKK_STATE_OVERRIDE: state, BROKK_ROOT_OVERRIDE: fmRoot },
+      });
+      if (result.status !== 0) return none;
+      const row = (result.stdout || "").trim();
+      const count = (name: string): number => {
+        const m = new RegExp(`(?:^|\\s)${name}=(\\d+)`).exec(row);
+        return m ? Number(m[1]) : 0;
+      };
+      return { voice: count("voice"), ask: count("ask"), report: count("report") };
+    } catch {
+      return none;
+    }
   }
 
   function confirmHandlingDelivery(recovery: { generation: string; watcherPid: string }): {
@@ -878,7 +919,8 @@ export default function (pi: ExtensionAPI) {
     };
   }
 
-  pi.on?.("session_start", () => {
+  pi.on?.("session_start", (_event: unknown, ctx?: { ui?: { notify?: (message: string, level?: string) => void } }) => {
+    if (ctx?.ui) lastUi = ctx.ui;
     if (generation.stopping) generation = createGeneration();
     activateGeneration(generation);
     markLoaded();
@@ -922,6 +964,7 @@ export default function (pi: ExtensionAPI) {
   pi.registerCommand?.("gna-watch-arm", {
     description: "Arm brokk watcher supervision through the Pi extension instead of foreground bash.",
     handler: async (_args, ctx) => {
+      if (ctx?.ui) lastUi = ctx.ui;
       const result = startArm(generation);
       ctx.ui.notify(result.message, result.ok ? "info" : "warning");
     },

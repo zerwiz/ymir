@@ -381,6 +381,7 @@ def mail_items(H: Path, hours: int) -> tuple[list[dict], dict]:
 
 ASK = re.compile(r"\bneeds-decision\b")
 LOCK_ASK = re.compile(r"\block-ask\b")
+WAKE_CLASS_TAIL = re.compile(r"\s*\tclass=(?:voice|ask|report)\s*$")
 QUESTION = re.compile(r"\bq=(.*)$")
 AT_STAMP = re.compile(r"\bat=(\d{4}-\d{2}-\d{2}T[0-9:.+-]+Z?)")
 LEAD_STAMP = re.compile(r"^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2})(?::\d{2})?")
@@ -440,6 +441,9 @@ def wake_items(path: Path, tail: int, hours: int) -> tuple[list[dict], dict]:
     seen: set[str] = set()
     info.update({"state": "read", "lines": len(lines)})
     for line in lines:
+        # plan 328: a wake may carry its class as a trailing `class=<c>` field — presentation
+        # metadata, never part of the question's words or its identity
+        line = WAKE_CLASS_TAIL.sub("", line)
         if LOCK_ASK.search(line) and not ASK.search(line):
             info["lock_asks"] += 1
             continue

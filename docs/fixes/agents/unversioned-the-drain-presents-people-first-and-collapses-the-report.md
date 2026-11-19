@@ -1,0 +1,8 @@
+## agents · unversioned · 2026-11-19 — the drain presents people first and collapses the reports
+
+### Why
+Plan 328 steps 2-4. bin/time/saga-wake-drain.sh now presents the queue by class, not by arrival: voice (Rödd, the mail desk, Telegram, the operator), then ask (an errand's question), then report, FIFO inside a class. Its first line names the shape, 'wake classes: voice n · ask n · report n', before a single wake is shown. Two or more routine errand reports collapse into ONE line, 'REPORTS <n> errand report line(s), collapsed — <ids>', and a lone report is shown whole. Collapsing is presentation only: the drain still snapshots the queue as it stood and the ack is still a multiset diff, so each collapsed report stays individually ackable and a line filed after the presentation survives. 'drain --full' opens every line uncollapsed (still in class order) and is what the session start's ledger now records; 'classes' is a read-only machine row 'voice=N ask=N report=N'. A line written before this change carries no class and is classed by its source (mail, a tell from a person, the operator's word are voice; QUESTION, needs-decision, blocked: are ask; the rest is report). Proof: .agents/tests/saga-wake-drain-classes.test.sh 23 passed — a voice posted after nineteen reports is presented second, behind only the mail; the mail sits with the voices; neither question is behind a report; nineteen reports are one line naming all nineteen ids; the ack removes exactly the presented lines; the summary is the first line. saga-wake-drain-start.test.sh 10 passed. On a copy of the real queue of 22: 'voice 2 · ask 2 · report 18', Rödd and the mail first.
+
+### Files
+- `bin/time/saga-wake-drain.sh`
+- `.agents/tests/saga-wake-drain-classes.test.sh`

@@ -5,8 +5,17 @@
 # the queues once the wakes have been handled. Ported/trimmed from the upstream
 # wake-drain contract for plan 29.
 #
-# Usage: saga-wake-drain.sh [drain|ack|start]
-#   start  the session start's drain: present, write the ledger, ack, report what was owed
+# Usage: saga-wake-drain.sh [drain [--full]|ack|start|classes]
+#   start    the session start's drain: present, write the ledger, ack, report what was owed
+#   --full   every line, uncollapsed (still in class order) — how a collapsed report is opened
+#   classes  one machine row, `voice=N ask=N report=N`, read-only (the arm extension asks it)
+#
+# PEOPLE FIRST (plan 328). The queue is presented by CLASS, not by arrival: `voice` (Rödd,
+# the mail desk, Telegram, the operator), then `ask` (an errand's question), then `report`
+# (done / report filed / progress) — FIFO inside a class. The first line names the shape,
+# `voice n · ask n · report n`, and routine errand reports collapse to one counted line with
+# their ids. Collapsing is presentation only: the ack still consumes exactly the presented
+# lines (a multiset diff), so every collapsed report stays individually ackable.
 set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -36,8 +45,90 @@ QUEUE="$STATE/.wake-queue"
 . "$SCRIPT_DIR/sol-lib.sh"
 FMQ="$SCRIPT_DIR/../../state/procevent/.wake-queue"
 
+# ── the classes (plan 328) ───────────────────────────────────────────────────────
+# One reader for every line shape the queue holds: a trailing `class=<c>` field written by
+# the door that knows its source wins; an older, unmarked line is classed by its source —
+# the mail desk, a tell from a person, the operator's own word are voice; a QUESTION or a
+# needs-decision is ask; everything else is machinery, a report.
+# Input: queue lines on stdin. WAKE_ORDER_MODE=present prints records `<tag>\t<text>`:
+#   S  the summary   ·  W  one line to present (class tail stripped)   ·  R  the collapsed reports
+# WAKE_ORDER_MODE=classes prints `voice=N ask=N report=N`. WAKE_ORDER_FULL=1 collapses nothing.
+WAKE_ORDER_PY='
+import os, re, sys
+CLASS_TAIL = re.compile(r"\tclass=(voice|ask|report)\s*$")
+STAMP = re.compile(r"^\d{4}-\d\d-\d\d \d\d:\d\d[^—]*—\s*")
+AGENT = re.compile(r"^(agent|eindri|Eindri|seat)\s|^w[A-Za-z0-9]*[-:]p\d")
+ASK = re.compile(r"\bQUESTION\b|needs-decision|\bblocked:")
+def body_of(line):
+    f = line.split("\t")
+    if len(f) >= 5 and f[0].isdigit() and f[1].isdigit():
+        line = "\t".join(f[4:])
+    return STAMP.sub("", line)
+def classify(line):
+    m = CLASS_TAIL.search(line)
+    if m:
+        return m.group(1), line[:m.start()]
+    text = body_of(line)
+    if re.search(r"(^|— )mail: \d+ new", text) or text.startswith("mail:"):
+        return "voice", line
+    t = re.match(r"(.+?) to the arm holder: ", text)
+    if t and not AGENT.search(t.group(1)):
+        return "voice", line
+    if "[from the Allfather" in text or re.match(r"(?i)telegram\b", text):
+        return "voice", line
+    if ASK.search(text):
+        return "ask", line
+    return "report", line
+ID = [re.compile(r"^(?:eindri|seat) (\S+?):? "), re.compile(r"^agent (\S+?) to the arm holder: ")]
+def report_id(line):
+    text = body_of(line)
+    for rx in ID:
+        m = rx.search(text)
+        if m:
+            return m.group(1)
+    return ""
+lines = [l.rstrip("\n") for l in sys.stdin if l.strip()]
+groups = {"voice": [], "ask": [], "report": []}
+for l in lines:
+    c, shown = classify(l)
+    groups[c].append(shown)
+mode = os.environ.get("WAKE_ORDER_MODE", "present")
+n = {c: len(v) for c, v in groups.items()}
+if mode == "classes":
+    print("voice=%d ask=%d report=%d" % (n["voice"], n["ask"], n["report"]))
+    raise SystemExit(0)
+print("S\tvoice %d · ask %d · report %d" % (n["voice"], n["ask"], n["report"]))
+for l in groups["voice"] + groups["ask"]:
+    print("W\t" + l)
+full = os.environ.get("WAKE_ORDER_FULL") == "1"
+try:
+    at = int(os.environ.get("SAGA_DRAIN_COLLAPSE_AT", "2"))
+except ValueError:
+    at = 2
+# a lone report is shown whole: a collapsed row of one hides more than it saves
+if sum(1 for l in groups["report"] if report_id(l)) < at:
+    full = True
+ids, loose = [], []
+for l in groups["report"]:
+    rid = "" if full else report_id(l)
+    if rid:
+        if re.search(r"FAILED|\bfailed\b|DEAD", body_of(l)):
+            rid += "(failed)"
+        ids.append(rid)
+    else:
+        loose.append(l)
+if ids:
+    seen = {}
+    for i in ids:
+        seen[i] = seen.get(i, 0) + 1
+    names = ", ".join(k if v == 1 else "%s×%d" % (k, v) for k, v in seen.items())
+    print("R\t%d errand report line(s), collapsed — %s · each stays queued until acked; read one: state/eindri-reports/<id>.md · every line: saga-wake-drain.sh drain --full" % (len(ids), names))
+for l in loose:
+    print("W\t" + l)
+'
+
 case "${1:-drain}" in
-  -h|--help) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+  -h|--help) sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
   ack|--ack)
     # THE HELM OWNS THE ACK (2026-11-11). The home's queue is drained by the session that holds
     # the lock; a second session (another Claude, a stale watcher's rewake) that acks it eats the
@@ -103,7 +194,9 @@ PY
     # ledger (<state>/wake-ledger.log, so nothing is lost by the ack), acknowledge exactly what was
     # presented, and report what was owed in one line. A session that may not ack (another live
     # session holds the arm) presents and says so; the queue is left for the holder.
-    _out="$(bash "$0" drain 2>&1)"
+    # --full: the ledger and the count hold EVERY line, never the collapsed report row; the
+    # order is already people first, so the lines shown below lead with the voices.
+    _out="$(bash "$0" drain --full 2>&1)"
     _wakes="$(printf '%s\n' "$_out" | grep '^WAKE ' || true)"
     _n="$(printf '%s' "$_wakes" | grep -c '^WAKE ' || true)"
     if [ "${_n:-0}" = 0 ]; then
@@ -116,6 +209,7 @@ PY
       printf '%s\n' "$_wakes"
     } >>"$_ledger" 2>/dev/null || true
     printf 'drain: %s wake(s) were owed at session start — every one is in %s\n' "$_n" "$_ledger"
+    printf '%s\n' "$_out" | grep -m1 '^wake classes: ' || true
     printf '%s\n' "$_wakes" | head -n "${SAGA_DRAIN_SHOW:-8}" | cut -c1-240
     [ "$_n" -gt "${SAGA_DRAIN_SHOW:-8}" ] && printf '… and %s more in the ledger\n' "$((_n - ${SAGA_DRAIN_SHOW:-8}))"
     if _ack="$(bash "$0" ack 2>&1)"; then
@@ -127,27 +221,28 @@ PY
     printf 'wake queue after the drain: %s pending\n' "$_left"
     exit 0
     ;;
-  drain|--drain|"") ;;
-  *) printf 'error: unknown action %s\nhelp: saga-wake-drain.sh [drain|ack|start]\n' "$1" >&2; exit 2 ;;
+  classes|--classes)
+    # Read-only: the class counts of what the queue holds now. No snapshot, no drop, no ack.
+    [ -s "$QUEUE" ] || { printf 'voice=0 ask=0 report=0\n'; exit 0; }
+    WAKE_ORDER_MODE=classes python3 -c "$WAKE_ORDER_PY" <"$QUEUE"
+    exit 0
+    ;;
+  drain|--drain|"")
+    case "${2:-}" in --full|full) SAGA_DRAIN_FULL=1 ;; "") ;; *) printf 'error: drain takes --full or nothing, not %s\n' "$2" >&2; exit 2 ;; esac
+    ;;
+  *) printf 'error: unknown action %s\nhelp: saga-wake-drain.sh [drain [--full]|ack|start|classes]\n' "$1" >&2; exit 2 ;;
 esac
 
-if [ -s "$FMQ" ]; then
-  printf 'FM wake queue: %s pending (fm-queued wakes below)\n' "$(awk 'END{print NR}' "$FMQ")"
-  while IFS= read -r line || [ -n "$line" ]; do
-    [ -n "$line" ] && printf 'WAKE %s\n' "$line"
-  done <"$FMQ"
-  printf 'FM_ACK_REQUIRED: acknowledge handled fm wakes to drop them from the fm queue\n'
-fi
-
-if [ ! -s "$QUEUE" ]; then
-  printf 'wake queue: 0 pending\n'
-else
+# PASS 1 — what is to be presented: the resolved-wake drop (below) decides it, silently, so
+# the classes can be counted and named BEFORE a single line is read (plan 328 step 4).
+resolved=0
+_kept=""
+if [ -s "$QUEUE" ]; then
   # Count LINES, not newlines: the door is judged non-empty by `[ -s ]`, so a queue
   # holding one unterminated line must present that line too. `wc -l` said 0 for
   # exactly that file, while the extension read the same door as non-empty and
   # re-presented one week-old wake at every turn boundary (2026-10-24).
   count=$(awk 'END{print NR}' "$QUEUE")
-  printf '%s — wake queue: %s pending\n' "$(sol_line)" "${count:-0}"
   # A RESOLVED WAKE DROPS ITSELF (plan 275 item 28 §3). A wake is news ONCE: it was
   # presented at the previous drain and its subject's record has since gone terminal, so
   # nothing is owed on it and re-reading it at every turn is noise, not memory. The FIRST
@@ -157,7 +252,6 @@ else
   _kept="$(mktemp "$STATE/.wake-kept.XXXXXX" 2>/dev/null || printf '%s' "$STATE/.wake-kept.tmp")"
   : >"$_kept" 2>/dev/null || true
   _before="$(md5sum <"$QUEUE" 2>/dev/null | cut -d' ' -f1)"
-  resolved=0
   while IFS= read -r line || [ -n "$line" ]; do
     [ -n "$line" ] || continue
     # A wake is presented until Brokk acks it. The errand's status (done/failed)
@@ -174,8 +268,39 @@ else
       esac
     fi
     printf '%s\n' "$line" >>"$_kept" 2>/dev/null || true
-    printf 'WAKE %s\n' "$(sol_stamped "$line")"
   done <"$QUEUE"
+  _order="$(WAKE_ORDER_MODE=present WAKE_ORDER_FULL="${SAGA_DRAIN_FULL:-0}" python3 -c "$WAKE_ORDER_PY" <"$_kept" 2>/dev/null)"
+  # The shape of what waits, before anything else is shown.
+  printf 'wake classes: %s\n' "$(printf '%s\n' "$_order" | sed -n 's/^S\t//p' | head -1)"
+fi
+
+if [ -s "$FMQ" ]; then
+  printf 'FM wake queue: %s pending (fm-queued wakes below)\n' "$(awk 'END{print NR}' "$FMQ")"
+  while IFS= read -r line || [ -n "$line" ]; do
+    [ -n "$line" ] && printf 'WAKE %s\n' "$line"
+  done <"$FMQ"
+  printf 'FM_ACK_REQUIRED: acknowledge handled fm wakes to drop them from the fm queue\n'
+fi
+
+if [ ! -s "$QUEUE" ]; then
+  printf 'wake queue: 0 pending\n'
+else
+  printf '%s — wake queue: %s pending\n' "$(sol_line)" "${count:-0}"
+  # PASS 2 — people first: voice, then ask, then report; FIFO inside a class.
+  if [ -z "$_order" ]; then
+    # the ordering could not run (no python): present in arrival order rather than nothing
+    while IFS= read -r line || [ -n "$line" ]; do
+      [ -n "$line" ] && printf 'WAKE %s\n' "$(sol_stamped "$line")"
+    done <"$_kept"
+  else
+    while IFS= read -r rec || [ -n "$rec" ]; do
+      tag="${rec%%$'\t'*}"; text="${rec#*$'\t'}"
+      case "$tag" in
+        W) printf 'WAKE %s\n' "$(sol_stamped "$text")" ;;
+        R) printf 'REPORTS %s\n' "$text" ;;
+      esac
+    done <<<"$_order"
+  fi
   if [ "$resolved" -gt 0 ] && [ "$(md5sum <"$QUEUE" 2>/dev/null | cut -d' ' -f1)" = "$_before" ]; then
     mv "$_kept" "$QUEUE" 2>/dev/null || true
     printf 'wake_resolved[1]{dropped,why}:\n  %s,"presented once, and its errand has since closed — a resolved wake is not news"\n' "$resolved"
