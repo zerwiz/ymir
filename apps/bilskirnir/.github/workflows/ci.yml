@@ -1,0 +1,13 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  hall:
+    runs-on: ubuntu-latest
+    env: { BILSKIRNIR_DATA_HOME: /tmp/bilskirnir-ci, YMIR_HOME: /tmp/ymirhome-ci, BILSKIRNIR_DESKTOP: "0" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24 }
+      - run: ./install.sh
+      - run: ./install.sh --check
+      - run: npm test --workspaces --if-present

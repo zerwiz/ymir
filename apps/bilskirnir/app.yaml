@@ -1,0 +1,23 @@
+# app.yaml — the app contract (Ymir's split, plan 01 §3; the hall's plan 06).
+name: bilskirnir
+title: Bilskirnir — the business hall
+kind: electron                 # its window is electron/, over the server (:8787) and the web face (web/dist)
+window_class: ymir-bilskirnir
+ports: [8787]                  # loopback; the bots' Hermes engines take 8650+ and the agent's gateway 8642
+units: []
+launchers: [ymir-bilskirnir.desktop]
+icons: [ymir-bilskirnir]
+# The hall's state lives in ONE home per user, never in a release (plan 275 S5): BILSKIRNIR_DATA_HOME, else
+# $YMIR_HOME/bilskirnir, else ${XDG_DATA_HOME}/bilskirnir — scripts/data-home.sh links each release to it.
+state_dir: ${BILSKIRNIR_DATA_HOME:-$YMIR_HOME/bilskirnir}
+config_dir: ${BILSKIRNIR_DATA_HOME:-$YMIR_HOME/bilskirnir}
+ymir:
+  min_version: ""
+  doors:
+    - { name: home, need: optional }          # the operator's name and the seat roster, for Nanna's soul
+    - { name: voice, need: optional }         # bin/voice/voice-door.sh: the house voice
+    - { name: mcp, need: optional }           # the Ymir MCP door and the record doors (well, skuld, bolthorn)
+    - { name: model-catalog, need: optional }
+  packages: []
+mcp: hq                         # it serves its own MCP (server/src/mcp.ts); its harness face is the Allfather's yes
+history: "cut from zerwiz/ymir apps/bilskirnir with git filter-repo, 2026-11-19"

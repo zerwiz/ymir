@@ -35,10 +35,13 @@ APP="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CHECK=0; [ "${1-}" = "--check" ] && CHECK=1
 case "${1-}" in -h|--help) sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 
-. "$APP/../../bin/vault/hoard-lib.sh" && ymir_home_root YMIR_HOME   # the one resolver
+# The home: Ymir's own resolver when Ymir is on this machine, else its one documented default. Ymir is found by
+# scripts/ymir-root.sh, never by climbing out of this folder (the split, 2026-11-19: installed in its own home,
+# a climb finds nothing).
+. "$APP/scripts/ymir-root.sh" && bilskirnir_home_root YMIR_HOME
 HOST="${YMIR_HOST:-$(hostname -s)}"
 HPORT="${BILSKIRNIR_HERMES_PORT:-8642}"
-RUNTIME="${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}"; [ -f "$RUNTIME/bin/mcp/ymir-mcp.py" ] || RUNTIME="$(dirname "$(dirname "$APP")")"
+RUNTIME=""; ymir_root RUNTIME || RUNTIME=""   # the Ymir MCP door's tree; empty = Ymir is not on this machine
 GATEWAY="${BILSKIRNIR_MCP_GATEWAY:-http://127.0.0.1:8316}"
 HOUSE_HOOK="${BILSKIRNIR_SESSION_HOOK:-$HOME/.hermes/agent-hooks/ymir-session-hook.sh}"
 DESK="${BILSKIRNIR_DESK:-local}"
@@ -268,17 +271,26 @@ fi
 # exists (Rule 25: probe, never assume) — a server host gets a clean skip.
 DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 DESK="$DATA_HOME/applications/ymir-bilskirnir.desktop"
-REPO="$(dirname "$(dirname "$APP")")"
+REPO="$RUNTIME"   # Ymir's tree, found by scripts/ymir-root.sh (empty when Ymir is not here)
 # The launcher runs the PINNED runtime, never the tree setup ran from (plan 269, RULES/02 §7): on
 # 2026-11-12 this entry pointed into an errand worktree. One resolver, the arm pin's; the default
 # ~/ymir-runtime applies once install has seated it.
 PINROOT=""
 [ -r "$REPO/bin/pi/arm-pin-lib.sh" ] && . "$REPO/bin/pi/arm-pin-lib.sh" && arm_pin_dir PINROOT
 [ -n "$PINROOT" ] || PINROOT="$HOME/ymir-runtime"
-want_desk="$(sed -e "s|__YMIR_ROOT__|$PINROOT|g" -e "s|__YMIR_APP__|${YMIR_SHORTCUT_BIN:-$HOME/.local/bin}/ymir-app|g" "$APP/electron/ymir-bilskirnir.desktop.in" 2>/dev/null)"
+# The split (2026-11-19): installed in its own home, the hall is found by the apps home's `current` link, which
+# follows every update. Ymir's launcher (`ymir-app bilskirnir`) resolves that home too; without Ymir the entry
+# runs the hall's own start.sh through the same link.
+APP_LINK="${YMIR_APPS_HOME:-$DATA_HOME/ymir-apps}/bilskirnir/current"
+YMIR_APP_BIN="${YMIR_SHORTCUT_BIN:-$HOME/.local/bin}/ymir-app"
+if [ -x "$YMIR_APP_BIN" ]; then
+  want_desk="$(sed -e "s|__YMIR_ROOT__|$PINROOT|g" -e "s|__YMIR_APP__|$YMIR_APP_BIN|g" "$APP/electron/ymir-bilskirnir.desktop.in" 2>/dev/null)"
+else
+  want_desk="$(sed -e "s|__YMIR_ROOT__|$PINROOT|g" -e "s|^Exec=.*|Exec=$APP_LINK/start.sh|" "$APP/electron/ymir-bilskirnir.desktop.in" 2>/dev/null)"
+fi
 if [ "${BILSKIRNIR_DESKTOP:-1}" = 0 ]; then
   say "launcher entry skipped (BILSKIRNIR_DESKTOP=0)"
-elif [ ! -e "$PINROOT/apps/bilskirnir/start.sh" ]; then
+elif [ ! -e "$PINROOT/apps/bilskirnir/start.sh" ] && [ ! -e "$APP_LINK/start.sh" ]; then
   say "launcher entry skipped — the pinned runtime ($PINROOT) does not carry Bilskirnir yet (bin/engine/runtime-deploy.sh moves it)"
 elif [ -z "${WAYLAND_DISPLAY:-}${DISPLAY:-}" ] && [ ! -d "$DATA_HOME/applications" ]; then
   say "no desktop on this host — no launcher entry"

@@ -333,7 +333,15 @@ function raiseHouseVoice(): string {
     } catch { return ''; }
   };
   if (raising && Date.now() - raising.at < 120_000) return said();
-  const door = new URL('../../../../bin/voice/voice-door.sh', import.meta.url).pathname;
+  // The house voice is Ymir's (bin/voice/voice-door.sh). Bilskirnir finds Ymir where it is installed —
+  // YMIR_RUNTIME_DIR, the pin, or the tree it sat in before it had its own home (the split, 2026-11-19) — and
+  // says so in words when Ymir is not on this machine.
+  const door = [process.env.YMIR_RUNTIME_DIR, path.join(os.homedir(), 'ymir-runtime'),
+                new URL('../../../..', import.meta.url).pathname]
+    .filter((r): r is string => !!r)
+    .map((r) => path.join(r, 'bin/voice/voice-door.sh'))
+    .find((p) => fs.existsSync(p));
+  if (!door) return 'The house voice comes from Ymir, and Ymir is not installed on this machine.';
   const log = path.join(os.tmpdir(), `bilskirnir-voice-raise-${process.getuid?.() ?? 'u'}.log`);
   raising = { at: Date.now(), log };
   try {

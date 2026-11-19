@@ -32,7 +32,8 @@
 #   BILSKIRNIR_DEBUG_PORT     open the window's DevTools port   (the app's own fixed port, bin/desktop/app-lib.sh)
 set -uo pipefail
 APP="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TREE="$(cd "$APP/../.." && pwd)"
+# Ymir's tree, when Ymir is on this machine (scripts/ymir-root.sh) — never a climb out of this folder.
+. "$APP/scripts/ymir-root.sh"; TREE=""; ymir_root TREE || TREE=""
 # The DevTools door is a property of the app, not of the caller (plan 275 item 19, 2026-11-14): the fixed
 # loopback port lives in ONE table, bin/desktop/app-lib.sh, and the window always opens it.
 APP_LIB="$TREE/bin/desktop/app-lib.sh"; [ -r "$APP_LIB" ] && . "$APP_LIB"
@@ -267,6 +268,7 @@ fi
 export YMIR_WINDOW_BUTTONS
 DEBUG=(); _dp="${BILSKIRNIR_DEBUG_PORT:-${YMIR_DEVTOOLS_PORT:-}}"
 [ -n "$_dp" ] || _dp="$(app_devtools_port bilskirnir 2>/dev/null || true)"
+[ -n "$_dp" ] || _dp=9314   # its fixed door in Ymir's table (app-lib.sh), when Ymir is not here to ask
 [ -n "$_dp" ] && DEBUG=(--remote-debugging-port="$_dp")
 BILSKIRNIR_URL="$OPEN_URL" spawn window "$APP" "$ELECTRON" "${DEBUG[@]}" "$APP/electron"
 sleep 2
