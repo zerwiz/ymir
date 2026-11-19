@@ -73,6 +73,17 @@ def _home() -> Path:
     return Path(os.environ.get("YMIR_VOICE_STATE", str(Path.home())))
 
 
+def _gimle_reader_dir() -> str:
+    """Where Gimlé's own board reader (`plane_reader.py`) lives ON THE HEART, as that machine's path.
+
+    Gimlé's code is Gimlé's (its own repository, zerwiz/gimle); Ymir no longer carries a copy under
+    bin/gimle/ (moved 2026-11-19). So the voice reads the board through the reader in Gimlé's own
+    checkout on the heart — the same checkout whose desk/etc/ already holds the board's token.
+    RULES/07: GIMLE_READER_DIR wins; the one documented default is that checkout's desk/ shelf.
+    The `~` is left for the heart's own shell to expand, because it names the heart's home, not ours."""
+    return str(os.environ.get("GIMLE_READER_DIR") or "~/gimle/desk").strip()
+
+
 def _log(event: str, **fields) -> None:
     """One line per thing the voice DID, so the Allfather can read what it has done:
     tool calls, memory retrievals, refusals — appended, never rewritten (Rule 06)."""
@@ -988,7 +999,7 @@ async def _execute(name, arguments):
                 f"assigned={bool(arguments.get('assigned'))!r}\n"
                 f"person={str(arguments.get('person') or os.environ.get('YMIR_VOICE_PERSON') or _operator_handle())!r}\n"
                 "if assigned:\n"
-                "    sys.path.insert(0, os.path.expanduser('~/ymir/bin/gimle')); import plane_reader as pr\n"
+                f"    sys.path.insert(0, os.path.expanduser({_gimle_reader_dir()!r})); import plane_reader as pr\n"
                 "    cards, detail = pr.board_for(person, 60)\n"
                 "    from collections import Counter\n"
                 "    tally = Counter(str(c.get('project','(none)')) for c in cards)\n"
@@ -1361,8 +1372,8 @@ async def _execute(name, arguments):
             import base64
             person = os.environ.get("YMIR_VOICE_PERSON") or _operator_handle()
             snippet = (
-                "import sys\n"
-                "sys.path.insert(0, 'bin/gimle')\n"
+                "import os, sys\n"
+                f"sys.path.insert(0, os.path.expanduser({_gimle_reader_dir()!r}))\n"
                 "import plane_reader as p\n"
                 f"cards, detail = p.board_for({person!r}, 12)\n"
                 "print(detail)\n"
@@ -1370,7 +1381,7 @@ async def _execute(name, arguments):
                 "    print('-', str(c.get('name',''))[:70], '|', str(c.get('project','')))\n"
             )
             b64 = base64.b64encode(snippet.encode()).decode()
-            remote = f"cd ~/ymir && echo {b64} | base64 -d | python3 -"
+            remote = f"echo {b64} | base64 -d | python3 -"
             code, out = _run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=6", heart, remote], timeout=90)
             if code == 0 and out.strip():
                 rows = [ln for ln in out.splitlines() if ln.strip()]

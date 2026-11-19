@@ -149,3 +149,27 @@ python3 bin/gimle/mcp/test_dex_login.py     # against the shipped Dex config, in
   running its own copy of the suite, sharing no secret and no document with this installation.
 - **2026-11-19** — appended *the MCP door logs its people in*: the OAuth road, groups for scope, the canvas
   write gate and comma-only places (plan 149).
+- **2026-11-19** — appended *the hall's code lives in Gimlé's own repository* (below): the `bin/gimle/` paths
+  above name where the code lived until this day.
+
+## 2026-11-19 — the hall's code lives in Gimlé's own repository
+
+The commands above name `bin/gimle/…` and `bin/gates/tests/test_gimle_mcp_board.sh`. Those files have **left
+Ymir**: Gimlé has its own repository (`zerwiz/gimle`), and its code belongs there, not in the public Ymir
+tree. The sections above stay as the record of how the hall was run while the code lived here.
+
+| What | Where it lived in Ymir | Where it lives now |
+|---|---|---|
+| The desk | `bin/gimle/desk.py` | Gimlé's checkout: `desk/desk.py` |
+| The MCP | `bin/gimle/mcp-read.py` | Gimlé's checkout: `systems/mcp/gimle-mcp.py` (the door that serves the board today) |
+| The board reader | `bin/gimle/plane_reader.py` | Gimlé's checkout: `desk/plane_reader.py` |
+| The share door | `bin/gimle/share-scene.py` | Gimlé's checkout: `desk/share-scene.py` |
+| The whiteboard backend | `bin/gimle/brokk-backend.py` | Gimlé's checkout: `desk/brokk-backend.py` |
+| The deploy door, the projector, the acceptance script, the board test | `bin/gimle/deploy.sh`, `project.py`, `project-and-publish.sh`, `whiteboard-acceptance.mjs`, `bin/gates/tests/test_gimle_mcp_board.sh` | Not yet in Gimlé's repository; kept verbatim in the operator's home at `hodd/reference/ymir-moved/gimle-bin-2026-11-19/` until that carry lands |
+
+**What Ymir still does.** The voice reads the board through Gimlé's own reader on the heart.
+`GIMLE_READER_DIR` names that reader's folder on the heart (default `~/gimle/desk`, Gimlé's checkout).
+
+> [!IMPORTANT]
+> Owed: a pull request in `zerwiz/gimle` carries the deploy door, the projector, the acceptance script and the
+> board test, plus Ymir's newer `desk.py`. Until it lands, run them from the home's reference shelf.
