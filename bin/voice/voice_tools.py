@@ -1840,11 +1840,92 @@ def _todo_items():
     return lines, items
 
 
+# 2026-11-19, wake 107: four items spoken in one breath ran as four todo_add calls on four threads of the toolbox.
+# All four read the same file and wrote the same `todo.md.tmp`: one rename found its temp already renamed away
+# (Errno 2) and the other three each overwrote the last, so three items were reported "Added … as ?" and lost.
+# Now every change to the list is one read-modify-write held under a lock (a thread lock for this process and an
+# flock in the runtime dir for every other), the temp is unique, flushed and fsynced, carries the
+# target's mode, and a failure is raised as TodoWriteError naming the path and the errno, which the tool speaks back.
+import threading as _threading
+_TODO_THREAD_LOCK = _threading.RLock()
+
+
+class TodoWriteError(Exception):
+    pass
+
+
+class _todo_locked:
+    """Hold the to-do list for one whole read-modify-write, against threads and other processes."""
+
+    def __enter__(self):
+        import fcntl as _fcntl
+        _TODO_THREAD_LOCK.acquire()
+        self._fh = None
+        try:
+            import hashlib as _h
+            import tempfile as _tempfile
+            path = _todo_file()
+            # the lock lives in the runtime dir, not in the home, so it never shows in the home's git status
+            run = os.environ.get("XDG_RUNTIME_DIR") or _tempfile.gettempdir()
+            key = _h.sha1(str(path).encode()).hexdigest()[:12]
+            self._fh = open(os.path.join(run, f"ymir-todo-{key}.lock"), "a")
+            _fcntl.flock(self._fh.fileno(), _fcntl.LOCK_EX)
+        except OSError as exc:
+            if self._fh:
+                self._fh.close()
+            _TODO_THREAD_LOCK.release()
+            raise TodoWriteError(f"could not lock {exc.filename or _todo_file()} "
+                                 f"(Errno {exc.errno}, {exc.strerror})") from exc
+        return self
+
+    def __exit__(self, *exc):
+        try:
+            if self._fh:
+                self._fh.close()   # closing drops the flock
+        finally:
+            _TODO_THREAD_LOCK.release()
+        return False
+
+
 def _todo_write(lines):
+    import tempfile as _tempfile
     path = _todo_file()
-    tmp = path.with_name(path.name + ".tmp")
-    tmp.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    tmp.replace(path)
+    tmp = None
+    try:
+        parent = path.parent
+        if not parent.is_dir():
+            parent.mkdir(parents=True, exist_ok=True)
+            try:   # the new directory takes its parent's owner, as the rest of the home does
+                st = parent.parent.stat()
+                os.chown(parent, st.st_uid, st.st_gid)
+            except OSError:
+                pass
+        mode = (path.stat().st_mode & 0o7777) if path.exists() else 0o644
+        fd, tmp = _tempfile.mkstemp(prefix="." + path.name + ".", suffix=".tmp", dir=str(parent))
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write("\n".join(lines) + "\n")
+            fh.flush()
+            os.fsync(fh.fileno())
+        os.chmod(tmp, mode)
+        os.replace(tmp, path)
+        tmp = None
+    except OSError as exc:
+        where = exc.filename or path
+        if exc.filename2:
+            where = f"{exc.filename} -> {exc.filename2}"
+        raise TodoWriteError(f"could not write {where} (Errno {exc.errno}, {exc.strerror})") from exc
+    finally:
+        if tmp:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+
+
+def _todo_unsaved(what, exc):
+    """A to-do change that did not land is said aloud — never reported as done."""
+    return ToolResult(f"I could not save that to his to-do — {what} was NOT written: {exc}. "
+                      "Tell him plainly it is not on the list.", create_response=True)
 
 
 def _todo_find(needle):
@@ -1868,6 +1949,14 @@ async def _tool_todo_add(args):
     item = str(args.get("item") or "").strip()
     if not item:
         raise ValueError("todo_add needs an item")
+    try:
+        with _todo_locked():
+            return _todo_add_locked(item, args)
+    except TodoWriteError as exc:
+        return _todo_unsaved(repr(item), exc)
+
+
+def _todo_add_locked(item, args):
     lines, _ = _todo_items()
     notes = [f"added by Nanna, {_stamp()}"]
     for k in ("due", "priority", "project"):
@@ -1889,7 +1978,9 @@ async def _tool_todo_add(args):
         lines[at:at] = [head, "", entry, ""]
     _todo_write(lines)
     _, items = _todo_items()
-    tid = next((t["id"] for t in items if item in t["item"]), "?")
+    tid = next((t["id"] for t in items if item in t["item"]), None)
+    if tid is None:   # read back: an item that is not in the file was not added, whatever the write said
+        raise TodoWriteError(f"the item is missing from {_todo_file()} after the write")
     return ToolResult(f"Added to his to-do (todo.md, under 'Added in conversation') as {tid}: {item}.", create_response=True)
 
 
@@ -1909,6 +2000,14 @@ async def _tool_todo_list(args):
 
 
 def _todo_mark(args, to_done: bool, verb: str):
+    try:
+        with _todo_locked():
+            return _todo_mark_locked(args, to_done, verb)
+    except TodoWriteError as exc:
+        return _todo_unsaved(f"{verb} {args.get('id')!r}", exc)
+
+
+def _todo_mark_locked(args, to_done: bool, verb: str):
     import re as _re
     lines, t = _todo_find(str(args.get("id") or ""))
     if not t:
@@ -1928,6 +2027,14 @@ async def _tool_todo_reopen(args):
 
 
 async def _tool_todo_update(args):
+    try:
+        with _todo_locked():
+            return _todo_update_locked(args)
+    except TodoWriteError as exc:
+        return _todo_unsaved(f"the change to {args.get('id')!r}", exc)
+
+
+def _todo_update_locked(args):
     import re as _re
     lines, t = _todo_find(str(args.get("id") or ""))
     if not t:
