@@ -18,6 +18,7 @@ It opens in its own Electron window, like the other Ymir apps, and fits every sc
 - `hermes` on your PATH, so Nanna can answer. Without it the hall still opens, and Nanna stays silent.
 - An `electron` binary for the window: a system package (`/usr/lib/electron*`) or `npm` electron. Without it, open
   the hall in a browser.
+  Installed in its own home, the hall carries its own Electron (`43.8.9`), placed by `install.sh`.
 - A model provider you can reach: anything you already have is found for you, and you choose it in **Settings ›
   Models** ([choose a model](bilskirnir-choose-a-model.md)). No pi needed.
 - The model rail reachable (the rail key is read from `~/.pi/agent/auth.json`).
@@ -55,7 +56,7 @@ It fails when the page scrolls sideways or the composer leaves the screen.
 | Setting | Where | Default |
 |---|---|---|
 | `PORT` | `apps/bilskirnir/.env` | `8787` |
-| `BILSKIRNIR_HERMES_PORT` | the environment, read by `setup.sh` | `8642` |
+| `BILSKIRNIR_HERMES_PORT` | the environment, read by `setup.sh` | `8649` (was `8642`, Hermes's own default; see the 2026-11-19 entry below) |
 | `BILSKIRNIR_MODEL` | the environment, read by `setup.sh` | unset: your choice on Settings › Models, else the first allowed model found |
 | `BILSKIRNIR_MODEL` | the environment, read by `setup.sh` | `qwen3.6-35b-a3b@q4_k_xl-mtp` |
 | `BILSKIRNIR_WEB_PORT` | the environment, read by `start.sh --dev` | `5173` |
@@ -89,3 +90,17 @@ Bilskirnir has its own repo, `zerwiz/bilskirnir`, and installs into its own home
 (Gróa's update installs it on every heart and dev seat that lacks it). Commands above that start `apps/bilskirnir/` now
 run from that home (`~/.local/share/ymir-apps/bilskirnir/current/`); the launcher and `ymir-app bilskirnir` find it there.
 Its data home did not move.
+
+## 2026-11-19 — its own Electron, and its gateway off Hermes's port
+
+The first install into the apps home showed two faults on a dev machine.
+
+- **The window had no Electron.** In Ymir's tree it borrowed another app's. It now declares its own (`43.8.9`), and
+  `install.sh` places the runtime. `install.sh --check` fails by name when it is missing.
+- **Nanna's gateway wanted `8642`**, which is Hermes's own default. Where you run your own Hermes too, `start.sh`
+  refused to raise the hall. The default is now `8649`. A data home seated before this keeps `8642`. To move it, set
+  `API_SERVER_PORT=8649` in `$YMIR_HOME/bilskirnir/data/engines/nanna/.env` and
+  `HERMES_URL=http://127.0.0.1:8649` in `$YMIR_HOME/bilskirnir/.env`, then run `stop.sh` and `start.sh`.
+
+Fix notes: `docs/fixes/bilskirnir/2026-11-19-the-window-carries-its-own-electron.md` and
+`docs/fixes/bilskirnir/2026-11-19-the-gateway-leaves-hermes-default-port.md`.
