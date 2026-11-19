@@ -37,3 +37,7 @@ The running Electron's command line named `~/.local/share/ymir-apps/rodd/release
 > The fix lives in `zerwiz/rodd` on branch `eindri/e2e-rodd` (in the apps home's clone), not yet pushed. The apps home
 > on this machine runs a release built from that branch by hand. The next `apps.sh update rodd` flips back to
 > `origin/main` and brings the fault back until the branch is merged there.
+
+## CHANGE LOG
+
+- 2026-11-19 — review-mend: added missing heading for #826
