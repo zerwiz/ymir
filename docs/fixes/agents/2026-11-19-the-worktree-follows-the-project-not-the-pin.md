@@ -5,8 +5,8 @@
 
 ## What was wrong
 
-`bin/agents/einherjar-spawn.sh <id> /home/heimdall/ymir`, run from the release pin, cut its worktree at
-`/home/heimdall/ymir-runtime/.yggdrasil/<id>` and then refused itself with "exists but is not the expected worktree
+`bin/agents/einherjar-spawn.sh <id> ~/ymir`, run from the release pin, cut its worktree at
+`~/ymir-runtime/.yggdrasil/<id>` and then refused itself with "exists but is not the expected worktree
 root". The worktree root was `$BROKK_HOME/.yggdrasil`, and `BROKK_HOME` defaults to the door's own root. When the
 door runs from the pin, that root is the pin. The engine road did the same through `paths.brokk_home`.
 
@@ -25,10 +25,10 @@ door runs from the pin, that root is the pin. The engine road did the same throu
 A dry run with the pin as `BROKK_HOME`, from the pin's own door and then from this branch's door:
 
 ```
---- door: /home/heimdall/ymir-runtime
-worktree=/home/heimdall/ymir-runtime/.yggdrasil/ymir-faults
---- door: /home/heimdall/ymir/.yggdrasil/ymir-faults
-worktree=/home/heimdall/ymir/.yggdrasil/ymir-faults
+--- door: ~/ymir-runtime
+worktree=~/ymir-runtime/.yggdrasil/ymir-faults
+--- door: ~/ymir/.yggdrasil/ymir-faults
+worktree=~/ymir/.yggdrasil/ymir-faults
 ```
 
 The engine, on a scratch project with a scratch pin as `BROKK_HOME`:

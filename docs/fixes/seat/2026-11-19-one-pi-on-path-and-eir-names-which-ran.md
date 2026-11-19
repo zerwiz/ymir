@@ -52,14 +52,14 @@ ok   a second seat changes nothing
 ```
 -- mise pi, bare:                                   44 "conflicts with" lines
 -- through this branch's door (real pi = mise's):   0 "conflicts with" lines, rc=0, 495 lines of answer
-pi-door: one home -> /home/heimdall/ymir/.pi/extensions (60 pins)
-at=2026-11-19T02:47:37Z pid=3743695 verdict=onehome tree=/home/heimdall/ymir/.pi/extensions bin=…/mise/installs/pi/latest/pi/pi cwd=/home/heimdall/ymir
+pi-door: one home -> ~/ymir/.pi/extensions (60 pins)
+at=2026-11-19T02:47:37Z pid=3743695 verdict=onehome tree=~/ymir/.pi/extensions bin=…/mise/installs/pi/latest/pi/pi cwd=~/ymir
 ```
 
 Eir's `pirun` on this machine, before any release:
 
 ```
-pid 2243828 ran /home/heimdall/.local/share/mise/installs/pi/1.5.2/pi/pi around the door; pid 3683866 ran /usr/bin/node around the door — restart it from a shell whose pi is the door (/home/heimdall/.pi/agent/bin/pi)
+pid 2243828 ran ~/.local/share/mise/installs/pi/1.5.2/pi/pi around the door; pid 3683866 ran /usr/bin/node around the door — restart it from a shell whose pi is the door (~/.pi/agent/bin/pi)
 ```
 
 > [!IMPORTANT]
