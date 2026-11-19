@@ -299,6 +299,11 @@ PY
 import sys, os, mimetypes
 from email.message import EmailMessage
 to,subject,body,out,html,reply_mid,reply_refs,letter_mark,*att=sys.argv[1:]
+import re as _re
+# The plain half is what a reader on a text-only client sees: the words, never the markup. The letters door
+# writes its body in Markdown for the template's sake, so the same emphasis markers are unwrapped here —
+# measured 2026-11-19: eighteen stray "**" in the plain alternative of a nine-bold letter.
+body=_re.sub(r"\*\*([^*\n]+)\*\*", r"\1", body)
 m=EmailMessage(); m["To"]=to; m["Subject"]=subject
 if letter_mark: m["X-Ymir-Letter"]=letter_mark
 if reply_mid: m["In-Reply-To"]=reply_mid
