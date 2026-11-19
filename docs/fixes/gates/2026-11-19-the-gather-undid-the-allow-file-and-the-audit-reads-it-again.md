@@ -75,3 +75,7 @@ what the ward refuses.
 
 - **2026-11-19** — written with the change: four files restored from `8dff432c`, one false positive
   recorded in the home, 217 left for his word.
+
+## CHANGE LOG
+
+- 2026-11-18 — review-mend: added missing heading for #825
