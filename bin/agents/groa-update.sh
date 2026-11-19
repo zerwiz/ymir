@@ -274,6 +274,17 @@ if [ -x "$APPROOT/apps/bilskirnir/setup.sh" ]; then
     printf 'bilskirnir: setup did not finish — run apps/bilskirnir/setup.sh and read its lines\n'
   fi
 fi
+# The apps in their own homes (the split, plan 01, 2026-11-19; the Allfather: "we need installation and update
+# logic for all apps"). After Ymir's own update, every app with a contract updates from ITS repo into ITS home:
+# build, --check, flip on green, the desk law. Each side reports its own verdict — a red app never fails Ymir's
+# update, and an app still in Ymir's tree (the legacy road) is left to the lines above.
+if [ -x "$APPROOT/bin/apps/apps.sh" ]; then
+  if gstep apps 1800 "$APPROOT/bin/apps/apps.sh" update --all >/dev/null 2>&1; then
+    printf 'apps: every app in its own home is current (bin/apps/apps.sh list)\n'
+  else
+    printf 'apps: an app did not update — bin/apps/apps.sh update --all names which; Ymir itself is updated\n'
+  fi
+fi
 if [ -n "${NUDGE_IDS# }" ]; then printf 'nudge-eindri-homes: %s\n' "${NUDGE_IDS# }"; else printf 'nudge-eindri-homes: none\n'; fi
 
 # Keep the whole fleet on the fleet preferences (writes each home's gitignored

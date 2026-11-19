@@ -85,8 +85,21 @@ app_dir() {  # <surface> <result-var> — a clone's apps/<x>, else the package
   # Scratch names are function-prefixed on purpose: `printf -v <name>` writes to THIS
   # function's scope, so a scratch variable sharing the caller's requested name
   # would swallow the answer (a caller asking for "c" or "root" would get nothing).
-  local _apd_surface="${1-}" _apd_rv="${2-}" _apd_root _apd_pkg _apd_c
+  local _apd_surface="${1-}" _apd_rv="${2-}" _apd_root _apd_pkg _apd_c _apd_road
   [ -n "$_apd_surface" ] && [ -n "$_apd_rv" ] || return 2
+  # THE SPLIT (plan 01, 2026-11-19): an app installed in its own home — or a developer's
+  # own checkout named by YMIR_APP_<NAME>_DIR — wins over every shape below. The one
+  # resolver is bin/apps/app-path.sh; its legacy road is exactly the clone shape here, so
+  # only `dev` and `home` are taken from it and everything else falls through unchanged.
+  if ! declare -F app_path >/dev/null 2>&1; then
+    _apd_c="$(cd "$(dirname "${BASH_SOURCE[0]}")/../apps" 2>/dev/null && pwd)/app-path.sh"
+    # shellcheck source=../apps/app-path.sh
+    [ -r "$_apd_c" ] && . "$_apd_c"
+  fi
+  if declare -F app_path >/dev/null 2>&1 && app_path "$_apd_surface" _apd_c _apd_road \
+     && { [ "$_apd_road" = dev ] || [ "$_apd_road" = home ]; }; then
+    printf -v "$_apd_rv" '%s' "$_apd_c"; return 0
+  fi
   _apd_root="${YMIR_ROOT_DIR:-}"
   if [ -z "$_apd_root" ]; then
     # The CHECKOUT, not this script's parent: from bin/desktop a single

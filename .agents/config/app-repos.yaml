@@ -6,33 +6,85 @@
 # stays authoritative when present; this file is the fork's road.
 #
 # Block shape must match the installer's awk (repo: apps/<path> + git: dict).
+#
+# 2026-11-19 — the split (plan 01): this file is the app REGISTRY (RULES/23, appended).
+#   home:      the app's folder name in the apps home ($YMIR_APPS_HOME/<home>/)
+#   kind:      electron | service — the Allfather: "only electron apps. no web."
+#   contract:  0 = still in Ymir's tree (the legacy road) · 1 = its own repo carries the
+#              app contract (app.yaml, install.sh) and `bin/apps/apps.sh` installs it
+#   status:    archived = kept as a record, never installed (the phone app: "no phone app")
+# `repo: apps/<path>` stays the folder the app has in Ymir's tree until its slice lands.
 
 - id: hlidskjalf
   name: Hlidskjalf
   repo: apps/hlidskjalf
   posture: direct-PR
   git: { host: github.com, owner: zerwiz, repo: hlidskjalf, remote: origin, default_branch: main, auth: gh }
+  home: hlidskjalf
+  kind: electron
+  contract: 0
+  stays_in_ymir: true   # the Allfather 2026-11-18: "leave hlidskjalf in ymir"
 
 - id: hlidskjalf-mobile
   name: Hlidskjalf Mobile
   repo: apps/hlidskjalf-mobile
   posture: direct-PR
   git: { host: github.com, owner: zerwiz, repo: hlidskjalf-mobile, remote: origin, default_branch: main, auth: gh }
+  home: hlidskjalf-mobile
+  kind: electron
+  contract: 0
+  status: archived       # "no phone app" (2026-11-18)
 
 - id: odrerir
   name: Óðrerir
   repo: apps/odrerir
   posture: direct-PR
   git: { host: github.com, owner: zerwiz, repo: odrerir, remote: origin, default_branch: main, auth: gh }
+  home: odrerir
+  kind: electron
+  contract: 0
 
 - id: sessrumnir
   name: Sessrúmnir
   repo: apps/sessrumnir
   posture: direct-PR
   git: { host: github.com, owner: zerwiz, repo: sessrumnir, remote: origin, default_branch: main, auth: gh }
+  home: sessrumnir
+  kind: electron
+  contract: 0
 
 - id: smidja
   name: Smíðja factory
   repo: apps/smidja-factory
   posture: direct-PR
   git: { host: github.com, owner: zerwiz, repo: smidja, remote: origin, default_branch: main, auth: gh }
+  home: smidja
+  kind: electron
+  contract: 0
+
+- id: bilskirnir
+  name: Bilskirnir
+  repo: apps/bilskirnir
+  posture: direct-PR
+  git: { host: github.com, owner: zerwiz, repo: bilskirnir, remote: origin, default_branch: main, auth: gh }
+  home: bilskirnir
+  kind: electron
+  contract: 0
+
+- id: hvergelmir
+  name: Hvergelmir
+  repo: apps/hvergelmir
+  posture: direct-PR
+  git: { host: github.com, owner: zerwiz, repo: hvergelmir, remote: origin, default_branch: main, auth: gh }
+  home: hvergelmir
+  kind: service
+  contract: 0
+
+- id: rodd
+  name: Rödd
+  repo: apps/rodd
+  posture: direct-PR
+  git: { host: github.com, owner: zerwiz, repo: rodd, remote: origin, default_branch: main, auth: gh }
+  home: rodd
+  kind: electron
+  contract: 0

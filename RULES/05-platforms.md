@@ -172,3 +172,12 @@ machine.
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
 - **2026-11-14** — the window frame became a sensed capability (`window-buttons`); see the section above.
+
+## Appended 2026-11-19 — an app's platform layers travel with the app
+
+When an app leaves this tree (the split, plan 01), **its** platform layers go with it: the Omarchy launcher and
+window placement, the macOS bundle, the WSL2 shim each live in that app's own `install.sh`, gated on the host and
+reporting a clean skip elsewhere, exactly as this rule asks of Ymir's core. Ymir's own platform layer stops
+installing an app the day that app's slice lands; until then it installs it as before. The duty is unchanged and
+now binds both sides: a change to an app updates every one of that app's layers in the same change.
+- **2026-11-19** — appended for the app split (plan 01): see the section above.
