@@ -27,11 +27,25 @@ done < "$HOME/.pi/agent/extensions/.ymir-root" 2>/dev/null
 [ -n "$root" ] || exit 0
 # inside the house the project's own .claude/settings.json already arms it
 [ "$(readlink -f "${CLAUDE_PROJECT_DIR:-.}")" = "$(readlink -f "$root")" ] && exit 0
+# ATTACH ONLY (2026-11-19, measured): a Claude session that does NOT already hold the helm
+# must never take it. The client enters a VACANT helm by design, and a Stop hook runs at every
+# turn end — so any Claude seat quietly became the primary whenever it found no owner, and took
+# the lock from the seat that held it (measured: 2243828 → 1557290 at 03:02 with 2243828 alive).
+# Taking the helm is a deliberate act: bin/voice/rodd-arm.sh hold. Here we only attach — the
+# owner test below guards an older pin whose client predates `--attach-only`.
+if [ -r "$root/bin/vault/gleipnir-lock-lib.sh" ]; then
+  . "$root/bin/vault/gleipnir-lock-lib.sh" 2>/dev/null || exit 0
+  gleipnir_session_pid _sess 2>/dev/null || true
+  _mine="${_sess:-$$}"
+  _owner=""; gleipnir_lock_owner _owner 2>/dev/null || true
+  [ -n "$_owner" ] && [ "$_owner" = "$_mine" ] || exit 0
+fi
+
 # plan 257 H6: the arm client this hook runs is the PIN's, never the tree's — a session
 # must not carry its own branch into the supervisor. The tree's client hands over too, so
 # an older pin with no lib still lands on one road.
 client=""
 [ -r "$root/bin/pi/arm-pin-lib.sh" ] && . "$root/bin/pi/arm-pin-lib.sh" && arm_pin_client client
-out=$("${client:-$root/bin/pi/syn-watch-arm.sh}" --restart); rc=$?
+out=$("${client:-$root/bin/pi/syn-watch-arm.sh}" --restart --attach-only); rc=$?
 case "$out" in *signal:*|*stale:*|*check:*|*heartbeat:*) printf '%s\n' "$out" >&2; exit 2;; esac
 exit $rc
