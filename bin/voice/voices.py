@@ -10,6 +10,12 @@ gender in the first two letters (Kokoro's convention: `am_eric` is American Engl
     voices.py catalogue [--write <path>]    the YAML catalogue (stdout, or written atomically to <path>)
     voices.py say <name|id> [text] [--to <file>]
                                             speak a sample in that voice; with --to, write the file and play nothing
+    voices.py choose <context> <name|id>    keep a voice for a context (default, rodd, snotra, person.<name>)
+    voices.py for <context>                 the voice id a context speaks in (context -> default -> the engine's)
+    voices.py choices                       every kept choice
+
+A choice is kept in the home (`$YMIR_HOME/config/voices.yaml`, or VOICES_CHOICES), one `context: id` line each, and
+is checked against the pack when it is made: an unknown name is refused by name, never quietly replaced.
 
 The engine already takes the voice with each request (`kokoro-serve` reads `voice` from the body and falls
 back to its configured default), so the default stays a default and never becomes the only voice.
@@ -59,6 +65,9 @@ def voice_ids() -> list[str]:
     fixture = os.environ.get("VOICES_FIXTURE")   # tests name the list; the engine is never needed to test the door
     if fixture:
         return json.loads(Path(fixture).read_text(encoding="utf-8"))["voices"]
+    cached = catalogue_ids()
+    if cached:
+        return cached
     try:
         out = subprocess.run([kokoro_bin(), "voices", "--json"], capture_output=True, text=True, timeout=120)
     except (OSError, subprocess.TimeoutExpired) as exc:
@@ -66,6 +75,30 @@ def voice_ids() -> list[str]:
     if out.returncode != 0:
         raise VoiceError(f"`kokoro voices` failed (rc {out.returncode}): {out.stderr.strip()[:200]}", 1)
     return json.loads(out.stdout)["voices"]
+
+
+def pack_path() -> Path:
+    return Path(os.environ.get("KOKORO_VOICES") or (Path.home() / ".local" / "share" / "kokoro" / "models" / "voices-v1.0.bin"))
+
+
+def catalogue_ids() -> list[str]:
+    """The generated catalogue in the home, when it is at least as new as the pack (the engine takes ~5 s to list).
+
+    A pack newer than the catalogue means a new voices file: then the engine is asked, never the stale list."""
+    if os.environ.get("VOICES_NO_CACHE") == "1":
+        return []
+    home = os.environ.get("YMIR_HOME")
+    if not home:
+        return []
+    cat = Path(home) / "hodd" / "identity" / "voices.yaml"
+    try:
+        if not cat.is_file() or (pack_path().is_file() and pack_path().stat().st_mtime > cat.stat().st_mtime):
+            return []
+        ids = [ln.split(":", 1)[1].strip() for ln in cat.read_text(encoding="utf-8").splitlines()
+               if ln.strip().startswith("- id:")]
+    except OSError:
+        return []
+    return ids
 
 
 def describe(vid: str) -> dict:
@@ -127,6 +160,71 @@ def write_atomic(path: Path, text: str) -> None:
     finally:
         if os.path.exists(tmp):
             os.unlink(tmp)
+
+
+CONTEXT_OK = __import__("re").compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
+
+
+def choices_path() -> Path:
+    named = os.environ.get("VOICES_CHOICES")
+    if named:
+        return Path(named)
+    home = os.environ.get("YMIR_HOME") or str(Path.home() / "Documents" / "ymirhome")  # allow-home-default: the one home
+    return Path(home) / "config" / "voices.yaml"
+
+
+def read_choices() -> dict:
+    p = choices_path()
+    out: dict = {}
+    if not p.is_file():
+        return out
+    for line in p.read_text(encoding="utf-8").splitlines():
+        line = line.split("#", 1)[0].strip()
+        if ":" not in line:
+            continue
+        k, _, v = line.partition(":")
+        k, v = k.strip(), v.strip().strip("'\"")
+        if k and v:
+            out[k] = v
+    return out
+
+
+def engine_default() -> str:
+    """The engine's own configured voice (Kokoro's config.json) — a default, never the only voice."""
+    cfg = Path(os.environ.get("KOKORO_CONFIG") or (Path.home() / ".local" / "share" / "kokoro" / "config.json"))
+    try:
+        return str(json.loads(cfg.read_text(encoding="utf-8")).get("voice") or "")
+    except (OSError, ValueError):
+        return ""
+
+
+def choose(context: str, wanted: str) -> dict:
+    ctx = (context or "").strip().lower()
+    if not CONTEXT_OK.match(ctx):
+        raise VoiceError(f"'{context}' is not a context name — default, rodd, snotra, person.<name>", 2)
+    voice = resolve(wanted)
+    kept = read_choices()
+    kept[ctx] = voice["id"]
+    head = ["# The voice each context speaks in — written by bin/voice/voices.sh choose; ids come from the pack.",
+            "# A context with no line here speaks in `default`, and `default` falls back to the engine's own voice."]
+    write_atomic(choices_path(), "\n".join(head + [f"{k}: {v}" for k, v in sorted(kept.items())]) + "\n")
+    return {"context": ctx, **voice}
+
+
+def voice_for(context: str) -> dict:
+    ctx = (context or "default").strip().lower()
+    kept = read_choices()
+    chain = [ctx]
+    if ctx.startswith("person."):
+        chain.append("person")
+    chain.append("default")
+    for c in chain:
+        if c in kept:
+            return {"context": ctx, "from": c, **resolve(kept[c])}
+    eng = engine_default()
+    if eng:
+        return {"context": ctx, "from": "engine", **resolve(eng)}
+    raise VoiceError(f"no voice is kept for '{ctx}' and the engine names no default — voices.sh choose default <voice>", 3)
 
 
 def desk_holder() -> str:
@@ -207,7 +305,19 @@ def main(argv: list[str]) -> int:
                 raise VoiceError("usage: voices.sh say <name|id> [text] [--to <file>]", 2)
             print(json.dumps(say(rest[0], " ".join(rest[1:]), to), ensure_ascii=False))
             return 0
-        raise VoiceError(f"unknown verb '{verb}' — list · resolve · catalogue · say", 2)
+        if verb == "choose":
+            if len(rest) < 2:
+                raise VoiceError("usage: voices.sh choose <context> <name|id>", 2)
+            print(json.dumps(choose(rest[0], rest[1]), ensure_ascii=False))
+            return 0
+        if verb == "for":
+            print(voice_for(rest[0] if rest else "default")["id"])
+            return 0
+        if verb == "choices":
+            for k, v in sorted(read_choices().items()):
+                print(f"{k}: {v}")
+            return 0
+        raise VoiceError(f"unknown verb '{verb}' — list · resolve · catalogue · say · choose · for · choices", 2)
     except VoiceError as exc:
         print(f"voices: {exc}", file=sys.stderr)
         return exc.code

@@ -44,6 +44,9 @@ context.modules = [
     args = {
       library.name  = aec/libspa-aec-webrtc
       monitor.mode  = true
+      # plan 326.6: gain control OFF, named, never left to the library's default — the ear wants the dynamic range,
+      # and a gain that rides the voice is the "loud, then very quiet" a person hears
+      aec.args = { webrtc.gain_control = false }
       node.latency  = 1024/48000
       capture.props  = { node.name = "ymir-ec-capture"  node.passive = true }
       source.props   = { node.name = "$SRC" node.description = "Ymir · microphone without the speakers"
