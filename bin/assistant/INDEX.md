@@ -45,12 +45,12 @@ bin[28]{file,does,kind,verdict,disposition,callers,lines}:
   "room-squad.sh","bin/assistant/room-squad.sh -> systems/skirnir/services/room-squad.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
   "room-wall-test.sh","bin/assistant/room-wall-test.sh -> systems/skirnir/services/room-wall-test.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and…","tool","wired","keep",1,16
   "room.sh","bin/assistant/room.sh -> systems/skirnir/services/room.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",8,16
-  "smoke.sh","bin/assistant/smoke.sh -> systems/skirnir/services/smoke.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","tested","keep",6,16
+  "smoke.sh","bin/assistant/smoke.sh -> systems/skirnir/services/smoke.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",6,16
   "telegram.sh","bin/assistant/telegram.sh -> systems/skirnir/services/telegram.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",3,16
   "voice-handler.sh","bin/assistant/voice-handler.sh -> systems/skirnir/services/voice-handler.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and s…","tool","wired","keep",0,16
   "voice.sh","bin/assistant/voice.sh -> systems/skirnir/services/voice.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
   "walls-test.sh","bin/assistant/walls-test.sh -> systems/skirnir/services/walls-test.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
 
-**Tally.** verdict: wired=26, tested=2
+**Tally.** verdict: wired=27, tested=1
 
 **Tally.** disposition: keep=28

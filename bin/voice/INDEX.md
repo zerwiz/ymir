@@ -35,21 +35,21 @@ bin[27]{file,does,kind,verdict,disposition,callers,lines}:
   "search-ensure.sh","search-ensure.sh — keep the house's own web search standing: a SearXNG container on loopback (plan 275).","tool","wired","keep",0,60
   "test_rodd_arm.sh","test_rodd_arm.sh — Rödd may knock on the arm, and only on a LIVE arm: the whole point of","tool","wired","keep",2,196
   "test_rodd_helm.sh","test_rodd_helm.sh — Nanna's duty loop and the one-client role claim, headless (plan 254).","tool","wired","keep",0,187
-  "test_rodd_pin.sh","test_rodd_pin.sh — plan 257 H7: Rödd runs the PINNED runtime, never a working tree.","tool","wired","keep",0,55
+  "test_rodd_pin.sh","test_rodd_pin.sh — plan 257 H7: Rödd runs the PINNED runtime, never a working tree.","tool","wired","keep",0,61
   "test_todos_digest.sh","test_todos_digest.sh — the session digest counts HIS list, and names the halves apart.","tool","wired","keep",1,111
   "test_voice_beside_call.sh","test_voice_beside_call.sh — plan 271 pieces 1 and 2, proven on stand-ins, nothing raised.","tool","wired","keep",0,48
   "test_voice_idle.sh","test_voice_idle.sh — the voice engine lets the card go when nobody is on the line.","tool","wired","keep",1,117
   "test_voice_vad_model.sh","test_voice_vad_model.sh — the voice's detector weights: ONE answer for where they live, and a","tool","wired","keep",3,150
   "todos.sh","todos.sh — the Allfather's to-do, READ by anyone who must know it (the arm holder first).","tool","wired","keep",7,129
-  "voice-door.sh","voice-door.sh — the real-time voice door: speak to Ymir on whatever seat you are at.","tool","tested","keep",5,528
-  "voice-ensure.sh","voice-ensure.sh — ensure the voice engines: whisper.cpp (speech → text),","tool","wired","keep",6,220
+  "voice-door.sh","voice-door.sh — the real-time voice door: speak to Ymir on whatever seat you are at.","tool","wired","keep",5,528
+  "voice-ensure.sh","voice-ensure.sh — ensure the voice engines: whisper.cpp (speech → text),","tool","wired","keep",6,225
   "voice-idle.sh","voice-idle.sh — the voice engine lets the card go when nobody is on the line.","tool","wired","keep",3,138
   "voice-model-lib.sh","voice-model-lib.sh — WHERE THE VOICE'S MODEL WEIGHTS LIVE, and the one pinned upstream.","lib","wired","keep",3,72
-  "voice-toolbox.py","'''voice-toolbox.py — the house's hands for a browser face.","tool","wired","keep",1,420
+  "voice-toolbox.py","'''voice-toolbox.py — the house's hands for a browser face.","tool","wired","keep",1,434
   "voice_mcp.py","'''voice_mcp.py — the voice's MCP adapter: every server this seat knows, as hands.","tool","wired","keep",0,407
   "voice_tools.py","'''voice-tools.py — the hands of the voice.","tool","tested","keep",4,3218
   "ymir-vad.py","'''","tool","wired","keep",3,183
 
-**Tally.** verdict: wired=23, tested=4
+**Tally.** verdict: wired=24, tested=3
 
 **Tally.** disposition: keep=27

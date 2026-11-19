@@ -87,7 +87,7 @@ bin[83]{file,does,kind,verdict,disposition,callers,lines}:
   "private-data.sh","private-data — the repository is public; the operator's machine is not.","tool","wired","keep",1,41
   "publish.py","'''publish.py — the baton on the Board: what is next and what is blocked become cards.","tool","wired","keep",1,169
   "quickstart.md","Title","data","wired","keep",0,98
-  "readme.md","README template","data","tested","keep",2,158
+  "readme.md","README template","data","wired","keep",2,158
   "referee-guard.sh","referee-guard — the gates, the hooks and the wards are the referee.","tool","wired","keep",1,28
   "reference.md","Reference template","data","wired","keep",1,40
   "release-notes.md","Release notes - {Product name} {Release number - 0.0.0}","data","wired","keep",0,97
@@ -106,6 +106,6 @@ bin[83]{file,does,kind,verdict,disposition,callers,lines}:
   "who.py","'''who.py — the roll: who was invited into the house's collaboration surfaces, and are they using them?","tool","wired","keep",4,397
   "worktree.sh","worktree.sh — one agent, one worktree.","tool","wired","migrate → src/ymir_runtime/worktree.py",3,45
 
-**Tally.** verdict: wired=73, tested=10
+**Tally.** verdict: wired=74, tested=9
 
 **Tally.** disposition: keep=81, migrate → src/ymir_runtime/status.py=1, migrate → src/ymir_runtime/worktree.py=1

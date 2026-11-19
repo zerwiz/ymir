@@ -22,10 +22,10 @@ The tree replaced a single register on 2026-11-06 (plan 211) so that a change in
 folder rewrites one file instead of colliding on every branch.
 
 bin[178]{file,does,kind,verdict,disposition,callers,lines}:
-  "SKILL.md","---","data","tested","keep",23,23
-  "SKILL.md","---","data","tested","keep",23,23
-  "SKILL.md","---","data","tested","keep",23,22
-  "agnostic-audit.sh","agnostic-audit.sh — the public repository, judged agnostic (RULES/04, RULES/25, plan 287).","tool","wired","keep",7,372
+  "SKILL.md","---","data","tested","keep",24,23
+  "SKILL.md","---","data","tested","keep",24,23
+  "SKILL.md","---","data","tested","keep",24,22
+  "agnostic-audit.sh","agnostic-audit.sh — the public repository, judged agnostic (RULES/04, RULES/25, plan 287).","tool","wired","keep",7,441
   "app-folder-guard.sh","cache: tree — this ward's verdict is a pure function of the tracked tree (no $YMIR_HOME read,","tool","tested","keep",1,138
   "app-functional-guard.sh","app-functional-guard.sh — AN UPDATE THAT LEAVES AN APP UNRUNNABLE IS NOT AN UPDATE.","tool","wired","keep",1,138
   "areas-guard.sh","areas-guard (tree ward) — the canon and the copy that travels must not drift.","tool","wired","keep",7,118
@@ -132,7 +132,7 @@ bin[178]{file,does,kind,verdict,disposition,callers,lines}:
   "syn-guard-pretool-check.sh","syn-guard-pretool-check.sh - PreToolUse seatbelt for the runtime's load-bearing","tool","tested","keep",0,84
   "syn-spawn-pretool-check.sh","syn-spawn-pretool-check.sh - PreToolUse seatbelt for spawning and for typing.","tool","wired","keep",0,59
   "syn-turnend-guard.sh","syn-turnend-guard.sh - refuse to let a Brokk turn end blind.","tool","tested","keep",1,52
-  "test_agnostic_audit.sh","test_agnostic_audit.sh — the agnostic audit BITES, and it never publishes the list.","tool","wired","keep",0,119
+  "test_agnostic_audit.sh","test_agnostic_audit.sh — the agnostic audit BITES, and it never publishes the list.","tool","wired","keep",0,147
   "test_areas_and_injection.sh","test_areas_and_injection.sh — the smoke suite for plan 219 and the arm-holder's inbox.","tool","wired","keep",0,108
   "test_arm_client_helm.sh","test_arm_client_helm.sh — the arm client's two measured faults (2026-11-10), with stubs.","tool","wired","keep",0,83
   "test_arm_talk.sh","ROOT='$(cd '$(dirname '$0')/../../..' && pwd)'","tool","wired","keep",0,19

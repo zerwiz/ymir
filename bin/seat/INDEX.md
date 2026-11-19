@@ -27,7 +27,7 @@ bin[79]{file,does,kind,verdict,disposition,callers,lines}:
   "agent-scope.sh","agent-scope.sh — every errand's hand stands in its own cgroup, so a kill is LOCAL.","tool","wired","keep",3,138
   "agent-state-lib.sh","agent-state-lib.sh — herdr's own word on where an agent stands, and whether it is READY for input.","lib","wired","keep",2,59
   "arm-talk.sh","arm-talk.sh — the heart speaks into every seat's pane, over that seat's own road (plan 234 P1).","tool","wired","keep",1,193
-  "armpin.sh","armpin.sh — does every surface that SUPERVISES run the pin, and is the pin current?","tool","wired","keep",1,102
+  "armpin.sh","armpin.sh — does every surface that SUPERVISES run the pin, and is the pin current?","tool","wired","keep",1,103
   "backend.sh","backend.sh — the six verbs, for whichever backend a target names.","tool","tested","migrate → src/ymir_runtime/backend.py",28,27
   "base.py","'''The six verbs a backend answers, and the one resolver that picks a backend.","tool","wired","keep",0,57
   "broken.sh","broken.sh — the register of broken things (RULES/50).","tool","tested","keep",2,165
@@ -75,7 +75,7 @@ bin[79]{file,does,kind,verdict,disposition,callers,lines}:
   "seat-wake.sh","seat-wake.sh — the seat's word to the ARM, not to a desktop.","tool","wired","keep",3,83
   "seat-wire.sh","seat-wire.sh — one seat speaks into another seat's live pane, and says who it is.","tool","wired","keep",2,393
   "seats.sh","seats.sh — where the work actually is: panes in either backend, and the dead shells named.","tool","wired","keep",6,78
-  "sessrumnir-wire.sh","sessrumnir-wire.sh — the seat wire: talk to a Sessrúmnir seat, and read its last answer.","tool","wired","keep",1,224
+  "sessrumnir-wire.sh","sessrumnir-wire.sh — the seat wire: talk to a Sessrúmnir seat, and read its last answer.","tool","wired","keep",1,226
   "test_agent_ready.sh","test_agent_ready.sh — the ready-check answers in ONE vocabulary, for both backends.","tool","wired","keep",0,171
   "test_agent_state.sh","test_agent_state.sh — the launcher reads herdr's own word before and after it speaks (plan 291 row 5).","tool","wired","keep",0,71
   "test_arm_pin.sh","test_arm_pin.sh — plan 257 H6: the helm runs the PINNED code, never a working tree.","tool","wired","keep",0,65
@@ -96,11 +96,11 @@ bin[79]{file,does,kind,verdict,disposition,callers,lines}:
   "test_seat_find.sh","test_seat_find.sh — the finder names the pane whose WORK printed the words, and nothing else.","tool","wired","keep",1,115
   "test_seat_reap.sh","The ward for 'the arm closes finished Eindri seats' (2026-11-10).","tool","tested","keep",0,349
   "test_seat_reap_tabs.sh","The ward for 'the reaper sees hand-seated tabs, not only `eindri-*` workspaces'","tool","wired","keep",0,189
-  "valknut-load.sh","valknut-load.sh — Valknut, the knot that binds the repo distro into each tool's","tool","tested","keep",13,877
+  "valknut-load.sh","valknut-load.sh — Valknut, the knot that binds the repo distro into each tool's","tool","tested","keep",13,879
   "verify-seat.sh","verify-seat.sh — is this seat actually whole?","tool","tested","keep",3,177
   "who.sh","who.sh — WHO IS WHERE: every agent in a pane, its project, its errand, and who holds the lock.","tool","wired","keep",4,141
   "whose-tree.sh","whose-tree.sh — whose code am I standing in?","tool","wired","keep",0,118
-  "ymir-mcp.py","'''ymir-mcp.py (seat copy) — a thin pointer, kept because files are moved, never deleted (Rule 11).","tool","tested","keep",8,13
+  "ymir-mcp.py","'''ymir-mcp.py (seat copy) — a thin pointer, kept because files are moved, never deleted (Rule 11).","tool","tested","keep",9,13
 
 **Tally.** verdict: wired=68, tested=11
 

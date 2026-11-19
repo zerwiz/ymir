@@ -26,7 +26,7 @@ bin[5]{file,does,kind,verdict,disposition,callers,lines}:
   "bitrate-gate.sh","bitrate-gate.sh — a diffusion clip that 'completes' is not a clip that worked.","tool","wired","keep",0,82
   "brokk","brokk — the primary agent's CLI (Brokk, the bellows-smith).","tool","tested","keep",63,74
   "heavy-slot.sh","heavy-slot.sh — ONE heavy job at a time on this machine, and a record of who holds it.","tool","wired","keep",4,304
-  "no-delete-guard.sh","no-delete-guard.sh — Rule 11, ENFORCED.","tool","wired","keep",5,104
+  "no-delete-guard.sh","no-delete-guard.sh — Rule 11, ENFORCED.","tool","wired","keep",5,136
 
 **Tally.** verdict: wired=3, tested=2
 
