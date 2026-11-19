@@ -67,6 +67,19 @@ usage() {
   exit 2
 }
 
+# A CHMOD THAT CHANGES NOTHING IS STILL AN EVENT. `~/.ssh/authorized_keys` is watched by the house's
+# own audit rule (`-w … -p wa -k ymir-identity`), so an unconditional `chmod 600` on every run raised an
+# identity alert every fifteen minutes — measured on 2026-11-20: fifteen findings in one evening, each a
+# `chmod` with no path, each announced as a possible change to passwd, shadow, sudoers or a key. Set the
+# mode only when it is wrong: a real change still reaches the watch, and an unchanged file says nothing.
+ensure_mode() {  # <path> <octal mode>
+  local p="$1" want="$2" now=""
+  [ -e "$p" ] || return 0
+  now="$(stat -c %a "$p" 2>/dev/null || stat -f %Lp "$p" 2>/dev/null || true)"
+  [ -n "$now" ] && [ "$now" = "$want" ] && return 0
+  chmod "$want" "$p" 2>/dev/null || true
+}
+
 need_curl() { command -v curl >/dev/null 2>&1 || die "curl not found — cannot reach github.com"; }
 need_sshkeygen() { command -v ssh-keygen >/dev/null 2>&1 || die "ssh-keygen not found"; }
 
@@ -201,9 +214,7 @@ cmd_add() {
     die "nothing to authorize — use: add <github-user> or add --key '<public-key>'"
 
   mkdir -p "$(dirname "$KEYS_FILE")"
-  chmod 700 "$(dirname "$KEYS_FILE")" 2>/dev/null || true
   [ -e "$KEYS_FILE" ] || : >"$KEYS_FILE"
-  chmod 600 "$KEYS_FILE"
 
   local staging fetched_keys raw added label tmp before after k key user
   staging="$(mktemp)"
@@ -265,10 +276,15 @@ cmd_add() {
 
   if cmp -s "$staging" "$KEYS_FILE"; then
     rm -f "$staging"
+    # The file did not change, but its MODE might have drifted (a restore, a copy, another tool). The
+    # repair belongs on this path too, or a wrong mode would be tolerated for as long as the keys are
+    # stable — and, being watched, it would fire the identity alert every quarter hour forever.
+    ensure_mode "$KEYS_FILE" 600
     say "heimdall: authorized keys already current"
   else
     cp -a "$KEYS_FILE" "$KEYS_FILE.bak.$(date +%Y%m%d-%H%M%S)" 2>/dev/null || true
     mv "$staging" "$KEYS_FILE"
+    ensure_mode "$KEYS_FILE" 600
     say "heimdall: authorized keys updated ($(count_keys) keys)"
   fi
   return $rc
