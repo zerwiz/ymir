@@ -43,6 +43,7 @@ row_dir() {  # <dir as written in APPS> <result-var>
 SMIDJA_VIZ_DIR=""; row_dir "apps/smidja-factory/apps/visualizer" SMIDJA_VIZ_DIR || SMIDJA_VIZ_DIR=""
 HALL_DIR=""; row_dir "apps/bilskirnir" HALL_DIR || HALL_DIR=""
 RODD_DIR=""; row_dir "apps/rodd" RODD_DIR || RODD_DIR=""
+SESS_DIR=""; row_dir "apps/sessrumnir" SESS_DIR || SESS_DIR=""
 app_dir hlidskjalf APP_HLIDSKJALF || APP_HLIDSKJALF=""
 app_dir hlidskjalf-mobile APP_HLIDSKJALF_MOBILE || APP_HLIDSKJALF_MOBILE=""
 app_dir odrerir APP_ODRERIR || APP_ODRERIR=""
@@ -227,8 +228,9 @@ raster_targets() {  # <surface> -> "<out>:<size>" lines
                 # its own theme set, which apps/bilskirnir/setup.sh copies into the icon theme on every setup
                 for s in 16 32 48 64 128 256 512; do printf '%s\n' "$HALL_DIR/electron/icons/hicolor/${s}x${s}/apps/ymir-bilskirnir.png:$s"; done ;;
     rodd)       [ -n "$RODD_DIR" ] && printf '%s\n' "$RODD_DIR/electron/icon.png:512" ;;
-    sessrumnir) for s in 16 32 48 64 128 256 512; do printf '%s\n' "$ROOT/apps/sessrumnir/resources/icons/icon-$s.png:$s"; done
-                printf '%s\n' "$ROOT/apps/sessrumnir/resources/icons/icon.png:512" "$ROOT/apps/sessrumnir/public/apple-touch-icon.png:180" ;;
+    sessrumnir) [ -n "$SESS_DIR" ] || return 0
+                for s in 16 32 48 64 128 256 512; do printf '%s\n' "$SESS_DIR/resources/icons/icon-$s.png:$s"; done
+                printf '%s\n' "$SESS_DIR/resources/icons/icon.png:512" "$SESS_DIR/public/apple-touch-icon.png:180" ;;
   esac
 }
 
@@ -241,7 +243,7 @@ raster_all() {
     case "$surface" in
       hlidskjalf) svg="$ROOT/apps/hlidskjalf/public/icon.svg" ;;
       odrerir)    svg="$ROOT/apps/odrerir/public/icon.svg" ;;
-      sessrumnir) svg="$ROOT/apps/sessrumnir/public/icon.svg" ;;
+      sessrumnir) [ -n "$SESS_DIR" ] || continue; svg="$SESS_DIR/public/icon.svg" ;;
       smidja)     [ -n "$SMIDJA_VIZ_DIR" ] || continue; svg="$SMIDJA_VIZ_DIR/public/icon.svg" ;;
       bilskirnir) [ -n "$HALL_DIR" ] || continue; svg="$HALL_DIR/public/icon.svg"
                   cp -f "$svg" "$HALL_DIR/electron/icons/hicolor/scalable/apps/ymir-bilskirnir.svg" ;;
@@ -284,10 +286,10 @@ raster_all() {
     printf '  "android-splash","apps/hlidskjalf/android/.../drawable*/splash.png","as-is"\n'
   fi
   # the Windows .ico files, from the freshly-cut 256 tile
-  if command -v magick >/dev/null 2>&1 && [ -r "$ROOT/apps/sessrumnir/resources/icons/icon-256.png" ]; then
-    for ico in "$ROOT/apps/sessrumnir/resources/icons/icon.ico" "$ROOT/apps/sessrumnir/docs/favicon.ico"; do
+  if command -v magick >/dev/null 2>&1 && [ -n "$SESS_DIR" ] && [ -r "$SESS_DIR/resources/icons/icon-256.png" ]; then
+    for ico in "$SESS_DIR/resources/icons/icon.ico" "$SESS_DIR/docs/favicon.ico"; do
       [ -d "$(dirname "$ico")" ] || continue
-      if magick "$ROOT/apps/sessrumnir/resources/icons/icon-256.png" -define icon:auto-resize=256,128,64,48,32,16 "$ico" 2>/dev/null; then printf '  "%s","%s","ico"\n' "sessrumnir" "${ico#"$ROOT"/}"; n=$((n+1)); fi
+      if magick "$SESS_DIR/resources/icons/icon-256.png" -define icon:auto-resize=256,128,64,48,32,16 "$ico" 2>/dev/null; then printf '  "%s","%s","ico"\n' "sessrumnir" "${ico#"$ROOT"/}"; n=$((n+1)); fi
     done
   fi
   printf '  "total","%s files"\n' "$n"

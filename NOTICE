@@ -61,3 +61,9 @@ langchain-ai/langgraph, crewAIInc/crewAI, anthropics/claude-code, openai/openai-
 stanfordnlp/dspy.
 
 Full licence texts and compliance status: THIRD-PARTY-LICENSES
+
+----------------------------------------------------------------------------
+Appended 2026-11-19 (the app split): Sessrúmnir, the fork of pi-desktop named
+above, now lives in its own repository, github.com/zerwiz/sessrumnir, with its
+full history. That repository carries the pi-desktop LICENSE and NOTICE at its
+root; the attribution above stands as the record of what this tree vendored.

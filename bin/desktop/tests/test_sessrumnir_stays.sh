@@ -5,6 +5,9 @@
 set -u
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 L="$HERE/../sessrumnir-launch.sh"; JS="$HERE/../../../apps/sessrumnir/bin/sessrumnir.js"
+# the app wherever it is (the split, 2026-11-19): this tree, else its own home; absent = nothing to prove here
+[ -f "$JS" ] || JS="$(bash "$HERE/../../apps/app-path.sh" sessrumnir 2>/dev/null)/bin/sessrumnir.js"
+[ -f "$JS" ] || { printf 'skip: Sessrúmnir is not on this machine (bin/apps/apps.sh install sessrumnir)\n'; exit 0; }
 T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
 mkdir -p "$T/root/apps/sessrumnir/bin" "$T/root/apps/sessrumnir/out/main" "$T/state" "$T/fake/electron/dist"
 cp "$JS" "$T/root/apps/sessrumnir/bin/"; echo '{"version":"0.0.0"}' > "$T/root/apps/sessrumnir/package.json"

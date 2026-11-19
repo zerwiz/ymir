@@ -26,7 +26,9 @@ VERSION="1.0.0"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
   [ "$PWD" = / ] && break; cd ..; done; pwd)"
+# The seat wire is Ymir's; the shell it raises is the app's, found wherever the app is (the split, 2026-11-19).
 RAISER="$ROOT/apps/sessrumnir/bin/sessrumnir-web.sh"
+[ -x "$RAISER" ] || RAISER="$(bash "$ROOT/bin/apps/app-path.sh" sessrumnir 2>/dev/null)/bin/sessrumnir-web.sh"
 
 # Rule 07 — one resolver, one documented default: the shell's own fixed port.
 # Read at call time, so a test (and a human) can point the door at another shell.

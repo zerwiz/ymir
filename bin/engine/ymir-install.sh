@@ -490,10 +490,22 @@ step_apps() {
   # A CLONE still clones — that is the shape this step exists for.
   # One repo (plan 35): when the surfaces ship IN this tree there is nothing to
   # clone — the resolver's first shape (`<root>/apps/<surface>`) is already true.
-  if [ -f "$ROOT/apps/hlidskjalf/package.json" ] && [ -f "$ROOT/apps/odrerir/package.json" ] \
-     && [ -f "$ROOT/apps/sessrumnir/package.json" ]; then
-    add apps PASS "in-tree — apps/ ships with the package (plan 35)"
-    return 0
+  # The split (2026-11-19): an app with its OWN repo (`contract: 1` in config/app-repos.yaml) is installed into
+  # its own home by bin/apps/apps.sh — NEVER cloned into apps/ (the Allfather: "i dont wanna them come into the
+  # apps folder anymore"). What this step still clones is an app the registry keeps in this tree that is missing
+  # from it; when every such app is present there is nothing to do.
+  if [ -f "$ROOT/apps/hlidskjalf/package.json" ]; then
+    local _owed=""
+    for _id in $(awk '/^- id:/ { if (id != "" && !own && !arch) print id; id=$3; own=0; arch=0 }
+                      /^  contract: 1/ { own=1 } /^  status: archived/ { arch=1 }
+                      END { if (id != "" && !own && !arch) print id }' "$ROOT/config/app-repos.yaml" 2>/dev/null); do
+      _d="$(awk -v want="$_id" '/^- id:/ { id=$3 } id == want && /^  repo: apps\// { print substr($2, 6); exit }' "$ROOT/config/app-repos.yaml")"
+      [ -n "$_d" ] && [ ! -e "$ROOT/apps/$_d" ] && _owed="$_owed $_id"
+    done
+    if [ -z "$_owed" ]; then
+      add apps PASS "in-tree — the apps this tree keeps are here; the apps with their own repos install into their own homes (bin/apps/apps.sh)"
+      return 0
+    fi
   fi
   case "$ROOT" in
     */node_modules/*)
@@ -528,8 +540,15 @@ step_apps() {
     return 0
   fi
   local ok=0 skip=0 fail=0 missing=0
+  # the apps that left for their own repos (contract: 1 in the public registry), by their old folder
+  local moved_rels
+  moved_rels="$(awk '/^- id:/ { if (r != "" && own) print r; r=""; own=0 } /^  repo: apps\// { r=substr($2, 6) }
+                     /^  contract: 1/ { own=1 } END { if (r != "" && own) print r }' "$ROOT/config/app-repos.yaml" 2>/dev/null)"
   while IFS='|' read -r rel host owner grepo; do
     [ -n "$rel" ] || continue
+    if printf '%s\n' "$moved_rels" | grep -qxF "$rel"; then
+      add apps OK "$rel has its own home now — installed by bin/apps/apps.sh, never cloned into apps/"; continue
+    fi
     local path="$ROOT/apps/$rel"
     if [ "$CHECK" = 1 ]; then
       if [ -d "$path/.git" ]; then add apps OK "$rel present ($owner/$grepo)"; ok=$((ok+1));

@@ -109,7 +109,8 @@ done
 # ── 4. the keyboard road in is never removed ─────────────────────────────────
 # The menu stays SET even when the drawn bar goes (Sessrúmnir's shape, now the house's).
 for f in "apps/hlidskjalf/electron/main.cjs" "apps/odrerir/electron/main.cjs" "apps/sessrumnir/src/main/index.ts"; do
-  grep -q 'setApplicationMenu' "$ROOT/$f" \
+  p="$(app_file "$f")"; [ -n "$p" ] || { printf 'skip - %s: the app is not on this machine\n' "$f"; continue; }
+  grep -q 'setApplicationMenu' "$p" \
     && ok "$f keeps its application menu (accelerators stay)" \
     || bad "$f dropped its application menu — the shortcuts would die with the bar"
 done

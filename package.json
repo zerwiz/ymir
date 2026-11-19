@@ -104,8 +104,7 @@
   },
   "workspaces": [
     "apps/hlidskjalf",
-    "apps/odrerir",
-    "apps/sessrumnir"
+    "apps/odrerir"
   ],
   "allowScripts": {
     "electron@43.7.3": true,

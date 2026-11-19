@@ -19,13 +19,15 @@ bad() { printf 'not ok - %s\n' "$1" >&2; fail=1; }
 # shellcheck source=bin/desktop/app-lib.sh
 . "$ROOT/bin/desktop/app-lib.sh"
 
+# Sessrúmnir wherever it is (the split, 2026-11-19): this tree, else its own home; absent = its rows skip.
+SESS="$ROOT/apps/sessrumnir"; [ -d "$SESS" ] || SESS="$(bash "$ROOT/bin/apps/app-path.sh" sessrumnir 2>/dev/null)"
 # The .desktop template each surface ships.
 template_for() {  # <surface>
   case "$1" in
     hlidskjalf) printf '%s' "$ROOT/apps/hlidskjalf/electron/ymir-hlidskjalf.desktop.in" ;;
     smidja)     printf '%s' "$ROOT/apps/hlidskjalf/electron/ymir-smidja.desktop.in" ;;
     odrerir)    printf '%s' "$ROOT/apps/odrerir/electron/ymir-odrerir.desktop.in" ;;
-    sessrumnir) printf '%s' "$ROOT/apps/sessrumnir/resources/ymir-sessrumnir.desktop.in" ;;
+    sessrumnir) [ -n "$SESS" ] && printf '%s' "$SESS/resources/ymir-sessrumnir.desktop.in" ;;
   esac
 }
 # The app sources that SET the class slug.
@@ -33,7 +35,7 @@ slug_dirs() {  # <surface>
   case "$1" in
     hlidskjalf|smidja) printf '%s' "$ROOT/apps/hlidskjalf/electron" ;;
     odrerir)           printf '%s' "$ROOT/apps/odrerir/electron" ;;
-    sessrumnir)        printf '%s %s' "$ROOT/apps/sessrumnir/src" "$ROOT/apps/sessrumnir/bin" ;;
+    sessrumnir)        [ -n "$SESS" ] && printf '%s %s' "$SESS/src" "$SESS/bin" ;;
   esac
 }
 
@@ -41,6 +43,9 @@ for s in hlidskjalf smidja odrerir sessrumnir; do
   cls="$(app_class "$s")"
   # 1. the .desktop template carries exactly the class
   tpl="$(template_for "$s")"
+  if [ "$s" = sessrumnir ] && [ -z "$SESS" ]; then
+    printf 'skip - sessrumnir: not on this machine (bin/apps/apps.sh install sessrumnir)\n'; continue
+  fi
   if [ ! -f "$tpl" ]; then
     bad "$s: no .desktop template at $tpl"
     continue
