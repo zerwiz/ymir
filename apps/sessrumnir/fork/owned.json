@@ -12,11 +12,27 @@
     "src/renderer/src/themes/sessrumnir.json",
     "src/shared/bridge-http.ts",
     "src/shared/bridge.ts",
-    "src/web-server.ts"
+    "src/web-server.ts",
+    "app.yaml",
+    "install.sh",
+    "activate.sh",
+    "start.sh",
+    "stop.sh",
+    "uninstall.sh",
+    "scripts/quick-install.sh",
+    "scripts/sync-upstream.sh",
+    "scripts/probe",
+    "scripts/probe-chat-widths.mjs",
+    "themes",
+    "public",
+    "src/renderer/src/components/chat-layout.test.ts",
+    "src/renderer/src/components/bottom-anchored-scroll.tsx",
+    "src/renderer/src/components/bottom-anchored-scroll.test.ts"
   ],
   "generated": [
     "out",
     "node_modules",
     "package-lock.json"
-  ]
+  ],
+  "comment_2026_11_19": "Extended when Sessrúmnir left Ymir for its own repo: a --check dry run against upstream showed a sync would delete every Ymir addition made since September (the app contract, themes/, public/, the width probe, the bottom-anchored scroll) and overwrite install.sh, which upstream also ships (its curl installer is scripts/quick-install.sh here)."
 }

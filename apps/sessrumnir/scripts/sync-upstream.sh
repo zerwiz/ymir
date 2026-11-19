@@ -119,11 +119,12 @@ copy_tree() { # <src> <dst>   (rsync: refresh files, delete upstream removals)
 # ─── --check: show what a sync would change ───────────────────────────────────
 if [[ "$MODE" == "check" ]]; then
   step "--check: what a sync to $THEIRS_SHORT would change (no writes)"
-  local ex=()
+  ex=()   # top level, not a function: `local` here made bash refuse --check (unseen while owned.json was missing)
   for f in "${GENERATED_PATHS[@]}" ".git" "fork"; do ex+=(--exclude="$f"); done
   for f in "${OWNED_FILES[@]}"; do ex+=(--exclude="$f"); done
-  rsync -a --delete --dry-run "${ex[@]}" "$SCRATCH/theirs/" "$APP/" 2>/dev/null \
-    | grep -E "^deleting|^>f" | head -60
+  # --itemize-changes: the grep below reads rsync's itemised lines (>f…, *deleting), which rsync prints only with -i
+  rsync -a --itemize-changes --delete --dry-run "${ex[@]}" "$SCRATCH/theirs/" "$APP/" 2>/dev/null \
+    | grep -E "deleting|^>f" | head -60
   echo
   echo "  owned files and fork/ are never touched; upstream deletions are respected;"
   echo "  branding rides in fork/mods.patch and is re-merged, not clobbered."
