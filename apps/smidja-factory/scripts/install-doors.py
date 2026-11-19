@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """install-doors.py — put the smithy's two doors where every harness finds them.
 
-  1. the command: `smidja` and `smidja-mcp` linked onto PATH (~/.local/bin)
+  1. the command: `smidja` and `smidja-mcp` linked onto PATH (~/.local/bin), and the smithy's books
+     on the harness-wide skill shelf (~/.pi/agent/skills/smidja-factory)
   2. the MCP: one `smidja` server named in pi's MCP set (~/.pi/agent/mcp-adapter.json
      and mcp.json), the ONE source the house copies to every harness — then, when
      Ymir is on this machine, its seating door (bin/bridge/mcp-config.sh seat, and
@@ -61,6 +62,24 @@ def link(name: str) -> None:
         dest.unlink()
     dest.symlink_to(target)
     say(f"PATH {name}", "linked", f"{dest} -> {target}")
+
+
+def link_skills() -> None:
+    """The smithy's books on the harness-wide shelf (~/.pi/agent/skills, shelf 4), so `skill-find.sh` and
+    the one Ymir skill (which indexes every shelf for every harness) still find them once the app has
+    left Ymir's tree, where `.agents/skills/smidja-factory` used to point into apps/."""
+    dest = HOME / ".pi" / "agent" / "skills" / "smidja-factory"
+    if dest.is_symlink() and Path(os.readlink(dest)) == FACTORY:
+        return say("skills", "ok", str(dest))
+    if dest.exists() and not dest.is_symlink():
+        return say("skills", "refused", f"{dest} is a real folder, not ours — left alone")
+    if CHECK:
+        return say("skills", "would change", f"{dest} -> {FACTORY}")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    if dest.is_symlink():
+        dest.unlink()
+    dest.symlink_to(FACTORY)
+    say("skills", "linked", f"{dest} -> {FACTORY}")
 
 
 def want_entry() -> dict:
@@ -126,6 +145,7 @@ def seat_harnesses() -> None:
 def main() -> int:
     for name in ("smidja", "smidja-mcp"):
         link(name)
+    link_skills()
     seat_pi_source()
     if not NO_HARNESSES:
         seat_harnesses()
