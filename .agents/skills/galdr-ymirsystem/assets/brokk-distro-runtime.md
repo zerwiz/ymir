@@ -1427,7 +1427,7 @@ the system.
 (b) the project's records — the row's `records:` block (`in_repo` · `in_home` · `boards` · `merges`) through
 `bin/agents/project-target.sh records`, each with the duty *read before you write, update before your report*, and a
 project with no block gets a plain statement plus the registry row to add, never an invented path; (c) the home's
-document map — `.ymir-layout.yaml` shelves, `hodd/docs/INDEX.md`, `hodd/ATLAS.md`, the plan-ledger READMEs and
+document map — `.ymir-layout.yaml` shelves, `hodd/docs/INDEX.md`, the home's own map (`hodd/`), the plan-ledger READMEs and
 `state/eindri-reports/`. `eindri-start.sh` prepends it to the request on both roads and for every harness, and the
 engine prepends it in `seat._prompt_for` for an errand seated through `einherjar-spawn.sh`; both skip it when the brief
 already carries the marker `<!-- eindri-bearings:v1 … -->`, so a brief is never doubled. `--marker` prints that marker,
