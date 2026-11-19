@@ -97,6 +97,8 @@ def _queue_parser(sub: argparse._SubParsersAction) -> None:
     append.add_argument("--queue", default="")
     append.add_argument("--epoch", type=int, default=None)
     append.add_argument("--assume-locked", action="store_true")
+    append.add_argument("--class", dest="wake_class", default="",
+                        help="voice | ask | report (plan 328: the drain presents people first)")
     for name in ("keys", "read", "pending"):
         parser = verbs.add_parser(name)
         parser.add_argument("--queue", default="")
@@ -264,6 +266,7 @@ def _queue(args: argparse.Namespace) -> int:
                 args.payload,
                 epoch=args.epoch,
                 assume_locked=args.assume_locked,
+                wake_class=args.wake_class,
             )
         except (ValueError, OSError) as exc:
             print(f"error: {exc}", file=sys.stderr)

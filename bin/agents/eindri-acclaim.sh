@@ -206,11 +206,11 @@ if eindri_is_delivered "$AGENT" "$wake_kind"; then
   detail="$detail (already delivered — no duplicate wake)"
 else
   if [ "$kind" = "QUESTION" ]; then
-    eindri_queue_wake "eindri $AGENT QUESTION: $STATE/eindri-questions/$AGENT.md — answer with bin/agents/eindri-send.sh $AGENT \"…\""
+    eindri_queue_wake "eindri $AGENT QUESTION: $STATE/eindri-questions/$AGENT.md — answer with bin/agents/eindri-send.sh $AGENT \"…\"" ask
   elif [ "$corrected" = 1 ]; then
-    eindri_queue_wake "eindri $AGENT CORRECTED: the sweep's snapshot was a guess — $detail"
+    eindri_queue_wake "eindri $AGENT CORRECTED: the sweep's snapshot was a guess — $detail" report
   else
-    eindri_queue_wake "eindri $AGENT reported: $detail"
+    eindri_queue_wake "eindri $AGENT reported: $detail" report
   fi
   # The queue line is the wake: if it did not land, the errand is not reported — fail, do not mark delivered.
   if ! grep -q -F -- "eindri $AGENT " "$STATE/.wake-queue" 2>/dev/null; then
@@ -260,7 +260,7 @@ if [ "$TERMINAL" = done ] && [ -x "$SCRIPT_DIR/eindri-review-spawn.sh" ]; then
     if [ ! -f "$STATE/.reviewed/$AGENT.failed" ]; then
       mkdir -p "$STATE/.reviewed" 2>/dev/null || true
       printf '%s\n' "$_rv_out" >"$STATE/.reviewed/$AGENT.failed" 2>/dev/null || true
-      eindri_queue_wake "eindri $AGENT review spawn FAILED (rc=$_rv_rc): $(printf '%s' "$_rv_out" | grep -m1 . || true)"
+      eindri_queue_wake "eindri $AGENT review spawn FAILED (rc=$_rv_rc): $(printf '%s' "$_rv_out" | grep -m1 . || true)" report
       if [ -x "$SCRIPT_DIR/../../systems/snotra/services/tts-lease/ymir-say.sh" ]; then
         "$SCRIPT_DIR/../../systems/snotra/services/tts-lease/ymir-say.sh" alarm "Forseti's review spawn failed for $AGENT" >/dev/null 2>&1 || true
       fi

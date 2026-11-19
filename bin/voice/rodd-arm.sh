@@ -183,19 +183,45 @@ unique_key() {  # <epoch>
   done
 }
 
+# THE CLASS OF A TELL (plan 328). A person speaking — Rödd, the operator, the mail desk,
+# Telegram, another seat's voice — is `voice`, and the drain presents it before everything
+# else. An errand speaking through the arm (`--from "agent <id>"`, `--from eindri …`, a pane
+# id) is machinery: `ask` when it carries a question or a needs-decision, else `report`.
+tell_class() {  # <from> <text>
+  local from="$1" text="$2"
+  case "$from" in
+    agent\ *|eindri\ *|Eindri\ *|w[A-Za-z0-9]*-p[0-9]*|w[A-Za-z0-9]*:p[0-9]*)
+      case "$text" in
+        *QUESTION*|*needs-decision*|*blocked:*) printf 'ask' ;;
+        *) printf 'report' ;;
+      esac ;;
+    *) printf 'voice' ;;
+  esac
+}
+
 cmd_tell() {
   # --from <name> names the sender (an Eindri, another seat); the default stays Rödd, the voice.
   # RODD_FROM does the same from the environment. 2026-11-11: nine agents' roll-call knocks all
   # arrived signed "Rödd (the voice)", and the arm holder could not tell them apart.
-  local from="${RODD_FROM:-Rödd (the voice)}"
-  if [ "${1:-}" = "--from" ]; then
-    [ -n "${2:-}" ] || die 'tell --from needs a name: rodd-arm.sh tell --from w4F-p1 "..."'
-    from="$2"; shift 2
-  fi
+  local from="${RODD_FROM:-Rödd (the voice)}" wclass="${RODD_CLASS:-}"
+  # --class voice|ask|report names the line's class outright (plan 328); --from and --class
+  # may come in either order.
+  while :; do
+    case "${1:-}" in
+      --from)
+        [ -n "${2:-}" ] || die 'tell --from needs a name: rodd-arm.sh tell --from w4F-p1 "..."'
+        from="$2"; shift 2 ;;
+      --class)
+        case "${2:-}" in voice|ask|report) wclass="$2" ;; *) die "tell --class takes voice, ask or report, not '${2:-}'" ;; esac
+        shift 2 ;;
+      *) break ;;
+    esac
+  done
   case "$from" in *$'\e'*) die 'refusing a sender name carrying an escape sequence' ;; esac
   local text="$*"
   [ -n "${text//[[:space:]]/}" ] || die 'tell needs a message: rodd-arm.sh tell "the window is too wide"'
   case "$text" in *$'\e'*) die 'refusing a message carrying an escape sequence — one plain line only' ;; esac
+  [ -n "$wclass" ] || wclass="$(tell_class "$from" "$text")"
   held_or_refuse
   [ -x "$STATE_DOOR" ] || die "the queue door is missing ($STATE_DOOR) — the message was NOT handed over"
 
@@ -205,11 +231,11 @@ cmd_tell() {
   epoch="$(now)"
   key="$(unique_key "$epoch")"
   payload="$(flatten "$from") to the arm holder: $(flatten "$text")"
-  "$STATE_DOOR" queue append signal "$key" "$payload" --queue "$QUEUE" --epoch "$epoch" >/dev/null 2>&1 \
+  "$STATE_DOOR" queue append signal "$key" "$payload" --queue "$QUEUE" --epoch "$epoch" --class "$wclass" >/dev/null 2>&1 \
     || die "the queue write to $QUEUE failed — nothing was handed over, and nothing claims it was"
-  printf 'rodd-arm-tell[1]{verb,delivered,key,state_dir,queue,epoch,chars}:\n'
-  printf '  "tell","yes","%s","%s","%s","%s","%s"\n' \
-    "$key" "$LIVESTATE" "$QUEUE" "$epoch" "${#payload}"
+  printf 'rodd-arm-tell[1]{verb,delivered,key,state_dir,queue,epoch,chars,class}:\n'
+  printf '  "tell","yes","%s","%s","%s","%s","%s","%s"\n' \
+    "$key" "$LIVESTATE" "$QUEUE" "$epoch" "${#payload}" "$wclass"
   return 0
 }
 
@@ -406,8 +432,11 @@ self_test() {
     case "$(printf '%s' "$qline" | cut -f4)" in rodd-*) ok "the wake's key is rodd-<epoch>" ;; *) bad "the wake's key is rodd-<epoch>" "$qline" ;; esac
     case "$(printf '%s' "$qline" | cut -f5)" in *"Rödd"*) ok "the wake names Rödd" ;; *) bad "the wake names Rödd" "$qline" ;; esac
     case "$(printf '%s' "$qline" | cut -f5)" in *"too wide"*) ok "the wake carries the text" ;; *) bad "the wake carries the text" "$qline" ;; esac
-    [ "$(printf '%s' "$qline" | awk -F'\t' '{print NF}')" = 5 ] && ok "no field separator was smuggled in" \
-      || bad "no field separator was smuggled in" "$(printf '%s' "$qline" | cat -A | head -1)"
+    [ "$(printf '%s' "$qline" | awk -F'\t' '{print NF}')" = 6 ] && ok "no field separator was smuggled in (five fields and the class)" \
+      || bad "no field separator was smuggled in (five fields and the class)" "$(printf '%s' "$qline" | cat -A | head -1)"
+    # plan 328: the voice's own line carries class=voice, so the drain presents it first
+    [ "$(printf '%s' "$qline" | cut -f6)" = class=voice ] && ok "a tell from Rödd is class=voice" \
+      || bad "a tell from Rödd is class=voice" "$qline"
   fi
 
   run tell "$(printf 'two\nlines\twith a tab')"
@@ -420,6 +449,21 @@ self_test() {
   run tell "$(printf 'two\nlines')"
   [ "$(awk 'END{print NR}' "$T/state/.wake-queue")" = 3 ] && ok "a third tell inside the same second still lands" \
     || bad "a third tell inside the same second still lands" "$(cat "$T/state/.wake-queue")"
+
+  # 4b · plan 328: an errand speaking through the arm is machinery, not a voice
+  local q2="$T/state/.wake-queue"
+  run tell --from "agent w9-errand" "w9-errand done: shipped"
+  [ "$(tail -n1 "$q2" | cut -f6)" = class=report ] && ok "a tell from an agent is class=report" \
+    || bad "a tell from an agent is class=report" "$(tail -n1 "$q2")"
+  run tell --from "agent w9-errand" "w9-errand QUESTION: which road?"
+  [ "$(tail -n1 "$q2" | cut -f6)" = class=ask ] && ok "an agent's question is class=ask" \
+    || bad "an agent's question is class=ask" "$(tail -n1 "$q2")"
+  run tell --class voice --from "agent w9-errand" "the operator said it through me"
+  [ "$(tail -n1 "$q2" | cut -f6)" = class=voice ] && ok "--class names the class outright" \
+    || bad "--class names the class outright" "$(tail -n1 "$q2")"
+  run tell --class shout "x"
+  want_rc 1 "an unknown --class is refused"
+  head -n 3 "$q2" >"$q2.keep" && mv "$q2.keep" "$q2"
 
   # 5 · hear: nothing yet, then a reply the ARM wrote, then the cursor
   run hear

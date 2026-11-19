@@ -236,6 +236,12 @@ def local_queue() -> Path:
     return gna_store.ymir_home() / "state" / ".wake-queue"
 
 
+# Plan 328: mail is a person writing, so the line is `class=voice` and the drain presents it with
+# Rödd's words, before any errand's question or report. The class rides as a trailing tab field so
+# every reader that matches the head of the line is untouched.
+MAIL_CLASS = "\tclass=voice"
+
+
 def nudge(text):
     q = local_queue()
     try:
@@ -245,7 +251,7 @@ def nudge(text):
             import fcntl
             fcntl.flock(lf, fcntl.LOCK_EX)
             with open(q, "a", encoding="utf-8") as fh:
-                fh.write(text.rstrip("\n") + "\n")
+                fh.write(text.rstrip("\n") + MAIL_CLASS + "\n")
         return True, f"queued in {q}"
     except OSError as exc:
         return False, f"cannot write {q}: {exc}"

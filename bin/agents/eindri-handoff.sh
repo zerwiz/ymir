@@ -112,13 +112,14 @@ count_waiting() { waiting_items | grep -c . || true; }
 
 deliver() {  # <kind> <name> <path>
   local kind=$1 name=$2 path=$3 wake_kind line
+  local wclass=report
   case "$kind" in
-    QUESTION) wake_kind=question
+    QUESTION) wake_kind=question; wclass=ask
               line="eindri $name QUESTION: $path — answer with bin/agents/eindri-send.sh $name \"…\" (handoff failsafe)" ;;
     *)        wake_kind=report
               line="eindri $name reported: report filed at $path (handoff failsafe)" ;;
   esac
-  eindri_queue_wake "$line"
+  eindri_queue_wake "$line" "$wclass"
   eindri_mark_delivered "$name" "$wake_kind"
   if [ -x "$SCRIPT_DIR/../../systems/snotra/services/tts-lease/ymir-say.sh" ]; then
     [ "$kind" = "QUESTION" ] && "$SCRIPT_DIR/../../systems/snotra/services/tts-lease/ymir-say.sh" alarm "Eindri $name asks — answer it" >/dev/null 2>&1 \

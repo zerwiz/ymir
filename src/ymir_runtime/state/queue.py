@@ -29,6 +29,21 @@ from typing import Iterable, Mapping
 
 WAKE_KINDS = ("signal", "stale", "check", "heartbeat")
 
+# Plan 328: the arm hears people first. A wake may carry its CLASS as a trailing
+# `class=<c>` field, written by the door that knows its source: `voice` (Rödd, the
+# mail desk, Telegram, the operator) · `ask` (an errand's question) · `report` (an
+# errand's done / report filed / progress). The drain presents voice, then ask,
+# then report. The field is trailing so every reader that matches from the head of
+# the line (the stamp, the key) is untouched.
+WAKE_CLASSES = ("voice", "ask", "report")
+CLASS_FIELD_PREFIX = "class="
+
+
+def class_field(wake_class: str) -> str:
+    if wake_class not in WAKE_CLASSES:
+        raise ValueError(f"invalid wake class: {wake_class}")
+    return f"{CLASS_FIELD_PREFIX}{wake_class}"
+
 
 def _env(env: Mapping[str, str] | None) -> dict[str, str]:
     return dict(os.environ) if env is None else dict(env)
@@ -48,9 +63,13 @@ class Wake:
     kind: str
     key: str
     payload: str
+    wake_class: str = ""
 
     def to_line(self) -> str:
-        return f"{self.epoch}\t{self.seq}\t{self.kind}\t{self.key}\t{self.payload}"
+        line = f"{self.epoch}\t{self.seq}\t{self.kind}\t{self.key}\t{self.payload}"
+        if self.wake_class:
+            line += "\t" + class_field(self.wake_class)
+        return line
 
     @classmethod
     def parse(cls, line: str) -> "Wake | None":
@@ -60,8 +79,14 @@ class Wake:
         epoch, seq, kind, key = fields[0], fields[1], fields[2], fields[3]
         if not epoch.isdigit() or not seq.isdigit():
             return None
-        payload = "\t".join(fields[4:])
-        return cls(epoch=int(epoch), seq=int(seq), kind=kind, key=key, payload=payload)
+        rest = fields[4:]
+        wake_class = ""
+        if len(rest) > 1 and rest[-1].startswith(CLASS_FIELD_PREFIX) \
+                and rest[-1][len(CLASS_FIELD_PREFIX):] in WAKE_CLASSES:
+            wake_class = rest.pop()[len(CLASS_FIELD_PREFIX):]
+        payload = "\t".join(rest)
+        return cls(epoch=int(epoch), seq=int(seq), kind=kind, key=key, payload=payload,
+                   wake_class=wake_class)
 
 
 def parse_all(text: str) -> list[Wake]:
@@ -101,25 +126,30 @@ class WakeQueue:
         *,
         epoch: int | None = None,
         assume_locked: bool = False,
+        wake_class: str = "",
     ) -> Wake:
         if kind not in WAKE_KINDS:
             raise ValueError(f"invalid wake kind: {kind}")
+        if wake_class and wake_class not in WAKE_CLASSES:
+            raise ValueError(f"invalid wake class: {wake_class}")
         clean_key = clean_field(key)
         clean_payload = clean_field(payload)
         moment = int(epoch if epoch is not None else time.time())
         self.path.parent.mkdir(parents=True, exist_ok=True)
         if assume_locked:
-            return self._append_locked(moment, kind, clean_key, clean_payload)
+            return self._append_locked(moment, kind, clean_key, clean_payload, wake_class)
         self.lock_path.parent.mkdir(parents=True, exist_ok=True)
         with self.lock_path.open("a", encoding="utf-8") as handle:
             fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
             try:
-                return self._append_locked(moment, kind, clean_key, clean_payload)
+                return self._append_locked(moment, kind, clean_key, clean_payload, wake_class)
             finally:
                 fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
-    def _append_locked(self, epoch: int, kind: str, key: str, payload: str) -> Wake:
-        wake = Wake(epoch=epoch, seq=self._next_seq(), kind=kind, key=key, payload=payload)
+    def _append_locked(self, epoch: int, kind: str, key: str, payload: str,
+                       wake_class: str = "") -> Wake:
+        wake = Wake(epoch=epoch, seq=self._next_seq(), kind=kind, key=key, payload=payload,
+                    wake_class=wake_class)
         with self.path.open("a", encoding="utf-8") as out:
             out.write(wake.to_line() + "\n")
         return wake

@@ -1427,7 +1427,7 @@ the system.
 (b) the project's records — the row's `records:` block (`in_repo` · `in_home` · `boards` · `merges`) through
 `bin/agents/project-target.sh records`, each with the duty *read before you write, update before your report*, and a
 project with no block gets a plain statement plus the registry row to add, never an invented path; (c) the home's
-document map — `.ymir-layout.yaml` shelves, `hodd/docs/INDEX.md`, `hodd/ATLAS.md`, the plan-ledger READMEs and
+document map — `.ymir-layout.yaml` shelves, `hodd/docs/INDEX.md`, the home's own map (`hodd/`), the plan-ledger READMEs and
 `state/eindri-reports/`. `eindri-start.sh` prepends it to the request on both roads and for every harness, and the
 engine prepends it in `seat._prompt_for` for an errand seated through `einherjar-spawn.sh`; both skip it when the brief
 already carries the marker `<!-- eindri-bearings:v1 … -->`, so a brief is never doubled. `--marker` prints that marker,
@@ -1969,3 +1969,19 @@ The tests are `src/ymir_runtime/tests/test_hermes_*.py` (pytest, 28 cases).
 ## Appended 2026-11-18 — the home's top-level map page is not Ymir's
 
 The earlier line that lists the home's top-level map page among its document map is corrected: that page and the tool that wrote it belong to the other project and have moved out of Ymir (RULES/58). The home's document map is its layout shelves, the knowledge index and the plan-ledger READMEs.
+
+## 2026-11-19 — the wake queue is presented people first (plan 328)
+
+Appended; the sections above stand. `bin/time/saga-wake-drain.sh` no longer presents the durable
+queue in arrival order. Each door that files a wake names its **class** as a trailing
+`class=<voice|ask|report>` tab field (`rodd-arm.sh tell`, `eindri_queue_wake`, the mail desk,
+`ymir-state.sh queue append --class`); an unmarked older line is classed by its source.
+
+| Verb | Output |
+|---|---|
+| `drain` | `wake classes: voice n · ask n · report n` first, then voice, ask, report (FIFO inside a class); two or more errand reports fold to one `REPORTS <n> … — <ids>` line |
+| `drain --full` | the same order, nothing folded (what `start` writes to the ledger) |
+| `classes` | read-only `voice=N ask=N report=N` (the pi arm extension reads it to deliver a voice as a `steer`) |
+| `ack` | unchanged: a multiset diff of exactly what the last drain presented |
+
+The proof is `.agents/tests/saga-wake-drain-classes.test.sh`.
