@@ -19,3 +19,6 @@ Codex (the cumulative total, last per rollout), Hermes | RULES/53: fleet-truth-2
 the harness page that named a partner, and the OpenCode plugin | RULES/53: agnostic-code's body records the harness whose plugin changed (2026-11-14) — the change itself
 The OpenCode plugin was the one behaviour change | RULES/53: agnostic-code's body names the harness whose plugin is the one behaviour change (2026-11-14)
 (bin/pi/syn-supervisor.sh → bin/engine/ymir-engine.sh supervise) and a judgement | RULES/53: the supervisor errand's body cites the door's own path in the tree (2026-11-17) — a path, not a maker claim
+rodd-arm.sh hold leases the session's harness role (pi -> counsellor) | RULES/53: voice's body records the role dict the hold now writes — the harness's role name in a code-shape sentence, not a maker claim
+the Claude arm hook attaches and never takes the helm | RULES/53: runtime's subject names the installed hook file that is the change itself — a path and a behaviour, not a maker claim
+Both Claude Stop hooks seat it | RULES/53: runtime's body says which hooks receive the attach-only template (2026-11-19) — the change, not a maker claim
