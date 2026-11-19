@@ -24,7 +24,7 @@ folder rewrites one file instead of colliding on every branch.
 bin[23]{file,does,kind,verdict,disposition,callers,lines}:
   "arm-pin-lib.sh","arm-pin-lib.sh — where the ARM's code lives: the pinned runtime, never a working tree.","lib","wired","keep",10,113
   "arm-pin.sh","arm-pin.sh — the pin's age and reach, as one fact on the board (plan 257 H8).","tool","wired","keep",2,130
-  "arm.sh","arm.sh — the Gná arm, honestly: what the watch is, and whether THIS harness can arm it.","tool","tested","keep",67,217
+  "arm.sh","arm.sh — the Gná arm, honestly: what the watch is, and whether THIS harness can arm it.","tool","tested","keep",68,217
   "hnoss-ensure.sh","hnoss-ensure.sh — seat and check the Hnoss (OpenDesign) MCP bridge on a machine.","tool","tested","keep",3,201
   "hnoss-mcp-launch.sh","hnoss-mcp-launch.sh — the door that seats the Hnoss (OpenDesign) MCP bridge on the","tool","tested","keep",1,234
   "logretta-council.sh","logretta-council.sh — the council's MODES: who divides the work, who is sent out, who rules.","tool","wired","keep",0,309
@@ -41,7 +41,7 @@ bin[23]{file,does,kind,verdict,disposition,callers,lines}:
   "pi-model-wire.sh","pi-model-wire.sh — wire a chosen local model into the operator's pi.","tool","wired","keep",1,152
   "pi-seat.sh","pi-seat.sh — seat a Pi agent in a VISIBLE herdr pane, optionally on a local","tool","wired","keep",1,115
   "syn-supervisor.sh","syn-supervisor.sh — Sýn's MIND: the supervisor loop, measure → judge → act → prove → record.","tool","wired","keep",1,47
-  "syn-watch-arm.sh","syn-watch-arm.sh — the ARM as a SERVICE, and this is its thin client.","tool","tested","keep",18,335
+  "syn-watch-arm.sh","syn-watch-arm.sh — the ARM as a SERVICE, and this is its thin client.","tool","tested","keep",18,356
   "syn-watch.sh","syn-watch.sh — Sýn as a SERVICE: one supervision watcher per home, seated","tool","tested","keep",10,54
   "test_lease_fields.sh","test_lease_fields.sh — the arm lease carries many key=value fields after state= (seat= charter= host=","tool","wired","keep",0,31
   "tui-frame-check.sh","tui-frame-check.sh — prove that what the TUI writes to the terminal fits the terminal.","tool","wired","keep",0,162

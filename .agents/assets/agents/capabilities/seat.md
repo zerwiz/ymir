@@ -64,7 +64,7 @@
 | test_herdr_editor.sh | test_herdr_editor.sh — the input-box reader, judged on the two shapes  | tested | keep (a human or a cron row must run it) |
 | test_lock_ask.sh | The ward for bin/seat/lock-ask.sh — a read-only agent asks the lock ow | tested | keep (a human or a cron row must run it) |
 | test_pi_door.sh | The ward for bin/seat/pi-door.sh — one extension home for a seat start | tested | keep (a human or a cron row must run it) |
-| test_pi_door_path.sh | The ward for the pi door's PATH block (bin/seat/harness-extensions-insta | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
+| test_pi_door_path.sh | The ward for the pi door's PATH block (bin/seat/harness-extensions-insta | tested | keep (a human or a cron row must run it) |
 | test_pi_loads_the_pin.sh | The ward for "pi loads the pin": every harness binder points at the pinn | tested | keep (a human or a cron row must run it) |
 | test_rank.sh | The ward for bin/seat/rank.sh — the hall's ranking transport. | tested | keep (a human or a cron row must run it) |
 | test_roots_load_the_runtime.sh | The ward for plan 248 P2 + P3 — every root agent loads the PINNED runt | tested+named | keep (a human or a cron row must run it) |
