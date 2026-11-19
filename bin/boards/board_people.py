@@ -17,7 +17,20 @@ import re
 
 
 def _home() -> str:
-    return os.environ.get("YMIR_HOME", "").strip() or os.path.expanduser("~/Documents/ymirhome")
+    # the home resolves as the resolver resolves it (YMIR_HOME, then the install's record, then the default):
+    # never a guessed path (defaults-guard, RULES/07)
+    env = os.environ.get("YMIR_HOME", "").strip()
+    if env:
+        return os.path.expanduser(env)
+    record = os.path.join(os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config"), "ymir", "home")
+    try:
+        with open(record, encoding="utf-8") as fh:
+            first = (fh.readline() or "").strip()
+        if first:
+            return os.path.expanduser(first)
+    except OSError:
+        pass
+    return os.path.join(os.path.expanduser("~"), "Documents", "ymirhome")
 
 
 def register_rows(person: str) -> list[dict]:

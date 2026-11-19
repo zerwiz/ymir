@@ -122,12 +122,29 @@ def probe(base: str, token: str) -> dict:
             "why": f"{base} is not Plane: GET /api/v1/users/me/ answered {said} — set PLANE_API_BASE to the Plane host"}
 
 
+def _home() -> str:
+    """The home, resolved as the resolver resolves it — YMIR_HOME, the install's record, then the default."""
+    env = os.environ.get("YMIR_HOME", "").strip()
+    if env:
+        return os.path.expanduser(env)
+    record = os.path.join(os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config"), "ymir", "home")
+    try:
+        with open(record, encoding="utf-8") as fh:
+            first = (fh.readline() or "").strip()
+        if first:
+            return os.path.expanduser(first)
+    except OSError:
+        pass
+    return os.path.join(os.path.expanduser("~"), "Documents", "ymirhome")
+
+
+
 def named_workspaces() -> list[str]:
     slugs = [w.strip() for w in os.environ.get("GIMLE_PLANE_WORKSPACES", "").split(",") if w.strip()]
     if slugs:
         return slugs
     candidates = [os.environ.get("GIMLE_PLANE_WORKSPACES_FILE", "").strip()]
-    home = os.environ.get("YMIR_HOME", "").strip() or os.path.expanduser("~/Documents/ymirhome")
+    home = _home()
     candidates.append(os.path.join(home, "config", "gimle", "plane-workspaces.txt"))
     for path in candidates:
         if path and os.path.isfile(path):
