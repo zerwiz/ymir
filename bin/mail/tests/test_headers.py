@@ -567,7 +567,7 @@ class LettersDoor(Door):
     def reply(self, *args: str, body_text: str = "Agreed, and one question.\n") -> subprocess.CompletedProcess:
         body = self.tmp / "reply.md"
         body.write_text(body_text, encoding="utf-8")
-        return self.draft("--to", "partner@letters.test", "--body", str(body), "--plain", *args)
+        return self.draft("--to", "partner@letters.test", "--body", str(body), "--plain", "--undressed", "a plain note states its reason (plan 322)", *args)
 
     def letter(self, r: subprocess.CompletedProcess):
         """The exact bytes the door would have sent: `--dry-run` writes the .eml and posts nothing."""
@@ -591,6 +591,7 @@ class LettersDoorNamesTheMessageItAnswers(LettersDoor):
         body = self.tmp / "reply.md"
         body.write_text("Agreed, and one question.\n", encoding="utf-8")
         r = self.draft("--to", "partner@letters.test", "--body", str(body), "--plain",
+                       "--undressed", "a thread reply needs no typeface (plan 322)",
                        "--reply-to", "alpha-1", "--dry-run")
         self.assertEqual(r.returncode, 0, r.stderr)
         printed = [line for line in r.stdout.splitlines() if line.startswith("eml\t")]
@@ -608,6 +609,7 @@ class LettersDoorNamesTheMessageItAnswers(LettersDoor):
         body = self.tmp / "reply.md"
         body.write_text("Agreed.\n", encoding="utf-8")
         r = self.draft("--to", "partner@letters.test", "--body", str(body), "--plain",
+                       "--undressed", "a thread reply needs no typeface (plan 322)",
                        "--reply-to", "alpha-1", "--dry-run")
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertTrue(self.gmail.asks, "the door read nothing about the message it answers")

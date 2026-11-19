@@ -61,6 +61,26 @@ def read_meeting(path: str) -> dict | None:
             "decisions": decisions, "questions": questions, "actions": actions}
 
 
+def probe_plane(api: str, token: str) -> tuple[str, str]:
+    """Is this base actually Plane? Ask it a question only Plane answers, and quote the reply.
+
+    Plan 324 F6: a base that is not the board system must never receive a card. The check is one call and it
+    returns the reason, so a wrong base is a named refusal rather than a silent posting to a stranger.
+    """
+    req = urllib.request.Request(api.rstrip("/") + "/api/v1/workspaces/",
+                                 headers={"X-Api-Key": token})
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            body = r.read().decode("utf-8", "replace")[:160]
+            if r.status == 200 and ("results" in body or body.strip().startswith("[") or body.strip().startswith("{")):
+                return "plane", body.replace("\n", " ")[:80]
+            return "other", f"HTTP {r.status}: {body}"
+    except urllib.error.HTTPError as exc:
+        return "other", f"HTTP {exc.code}: {exc.read().decode('utf-8', 'replace')[:120]}"
+    except Exception as exc:  # noqa: BLE001 — a base that cannot be reached is not Plane either
+        return "other", f"{type(exc).__name__}: {exc}"
+
+
 def plane_card(api: str, token: str, project: str, card: dict, dry: bool) -> str:
     def call(method, path, body=None):
         req = urllib.request.Request(api.rstrip("/") + path, method=method,
@@ -125,9 +145,21 @@ def main(argv):
         note = "places.json left untouched"
     print(f"projected\t{len(meetings)} meeting(s)\tskipped {len(skipped)} (class 3)\t{note}")
     if args.plane:
-        api, token = os.environ.get("PLANE_API", "http://127.0.0.1:8099"), os.environ.get("PLANE_TOKEN", "")
+        # Rule 07 — nothing about an installation is a constant here. The base has NO default on purpose:
+        # on 2026-11-19 this file defaulted to 127.0.0.1:8099, which on the Allfather's own machine is a
+        # `llama-server`, so a token set without repointing would have posted a project's cards at a model.
+        # A base is used only when it ANSWERS AS PLANE; anything else is refused with the reply quoted.
+        api, token = os.environ.get("PLANE_API", "").strip(), os.environ.get("PLANE_TOKEN", "").strip()
+        if not api:
+            print("project: --plane needs PLANE_API (no default — a base that does not answer as Plane would "
+                  "take the cards somewhere else); cards skipped", file=sys.stderr)
+            return 1
         if not token:
             print("project: --plane needs PLANE_TOKEN; cards skipped", file=sys.stderr)
+            return 1
+        verdict, detail = probe_plane(api, token)
+        if verdict != "plane":
+            print(f"project: REFUSED — {api} does not answer as Plane ({detail}); nothing was posted", file=sys.stderr)
             return 1
         if not args.plane_project:
             print("project: --plane needs --plane-project <name-or-id>", file=sys.stderr)
