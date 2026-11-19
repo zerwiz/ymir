@@ -119,6 +119,12 @@ electron_bin() {  # <app-dir> [root] [pkg] → prints the binary; exit 0 found /
   # (3) the sibling package's own runtime
   c="$(dirname "$root")/$pkg/node_modules/electron/dist/$(_electron_exe)"
   [ -x "$c" ] && _electron_fits "$app" "$c" && { printf '%s' "$c"; return 0; }
+  # (4) the house's own runtime. An app installed in its OWN home (the split, 2026-11-19:
+  # ~/.local/share/ymir-apps/<app>/current) is no longer under the tree, so the climb above never
+  # reaches the root's node_modules, and an app whose window IS the house's desktop shell (odrerir)
+  # ships no Electron of its own. The shell's runtime at the root is the one it is opened with.
+  c="$root/node_modules/electron/dist/$(_electron_exe)"
+  [ -n "$root" ] && [ -x "$c" ] && _electron_fits "$app" "$c" && { printf '%s' "$c"; return 0; }
   return 1
 }
 
@@ -139,6 +145,8 @@ electron_pkg_dir() {  # <app-dir> [root] [pkg]
   done
   c="$(dirname "$root")/$pkg/node_modules/electron"
   [ -d "$c" ] && { printf '%s' "$c"; return 0; }
+  c="$root/node_modules/electron"   # (4) the house's own runtime, for an app in its own home
+  [ -n "$root" ] && [ -d "$c" ] && { printf '%s' "$c"; return 0; }
   return 1
 }
 
