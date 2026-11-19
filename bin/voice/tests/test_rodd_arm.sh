@@ -186,8 +186,24 @@ grep -q 'release: Rödd gives the helm back' "$STATE/rodd/room.jsonl" 2>/dev/nul
 # ── 10 · a hold declares the CALLER's role, never Rödd's (2026-11-19) ─────────
 # A session whose harness is pi leases the counsellor role; an unknown harness is the
 # counsellor too; only an explicit --role rodd writes rodd. No hand edit of the sidecar.
-mkdir -p "$TMP/fakebin"; cp "$(command -v sleep)" "$TMP/fakebin/pi"
-"$TMP/fakebin/pi" 600 & fake_pi=$!
+# The fake harness is a SCRIPT named `pi`, not a copied `sleep`: on a runner whose coreutils is
+# one multi-call binary, `sleep` renamed `pi` exits at once, the session pid is dead before the
+# hold, and the hold refuses rc=3 ("not alive") — red in CI, green on a seat. A script's comm is
+# its own file name, and it stays alive by waiting on a child.
+mkdir -p "$TMP/fakebin"
+# (The interpreter path is absolute: `#!/usr/bin/env bash` re-execs bash and the comm becomes `bash`.)
+{
+  printf '#!%s\n' "$(command -v bash)"
+  printf '%s\n' 'trap '\''kill $c 2>/dev/null; exit 0'\'' TERM INT' 'sleep 600 & c=$!' 'wait $c'
+} >"$TMP/fakebin/pi"
+chmod +x "$TMP/fakebin/pi"
+"$TMP/fakebin/pi" & fake_pi=$!
+for _ in 1 2 3 4 5 6 7 8 9 10; do [ "$(tr -d '\n' <"/proc/$fake_pi/comm" 2>/dev/null)" = pi ] && break; sleep 0.1; done
+if kill -0 "$fake_pi" 2>/dev/null && [ "$(tr -d '\n' <"/proc/$fake_pi/comm" 2>/dev/null)" = pi ]; then
+  ok "the fake pi seat stands (alive, comm=pi)"
+else
+  bad "the fake pi seat stands (alive, comm=pi)" "pid $fake_pi comm=$(cat "/proc/$fake_pi/comm" 2>/dev/null || echo gone)"
+fi
 BROKK_SESSION_PID="$fake_pi" run_hold
 want_rc 0 "a hold from a pi seat exits 0"
 grep -q "^role=counsellor session=$fake_pi " "$STATE/.arm.role" 2>/dev/null && ok "a pi seat's hold leases the counsellor role" \
@@ -201,6 +217,13 @@ grep -q 'release: the counsellor gives the helm back' "$STATE/rodd/room.jsonl" 2
   || bad "the release names the counsellor" "$(tail -1 "$STATE/rodd/room.jsonl" 2>/dev/null)"
 out="$(bash "$DOOR" hold --role steward 2>&1)"; rc=$?
 [ "$rc" -ne 0 ] && ok "an unknown --role is refused" || bad "an unknown --role is refused" "$out"
+# A release whose sidecar is gone names the releasing session's own role, never Rödd.
+BROKK_SESSION_PID="$fake_pi" run_hold
+rm -f "$STATE/.arm.role"
+BROKK_SESSION_PID="$fake_pi" run_release
+want_rc 0 "a release with no sidecar exits 0"
+tail -1 "$STATE/rodd/room.jsonl" 2>/dev/null | grep -q 'release: the counsellor gives the helm back' && ok "a release with no sidecar names the caller's own role" \
+  || bad "a release with no sidecar names the caller's own role" "$(tail -1 "$STATE/rodd/room.jsonl" 2>/dev/null)"
 kill "$fake_pi" 2>/dev/null || true
 
 bash -c 'sleep 600' & other=$!

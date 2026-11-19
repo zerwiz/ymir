@@ -155,7 +155,3 @@ one_capability[4]{rule,means}:
   "state before content","a door may be 1 line; anything with parsing or state moves to src/"
   "no unlisted scripts","a new bin/*.sh needs a row here, or it does not ship"
 ```
-
-## CHANGE LOG
-
-- 2026-11-18 — review-mend: added missing heading for #825
