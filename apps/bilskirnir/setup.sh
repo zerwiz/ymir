@@ -58,7 +58,10 @@ cdp_pinned() {  # <config.yaml> <host:port>
   local host port
   host="$(printf '%s' "${2%:*}" | sed 's/[][\.*^$]/\\&/g')"
   port="${2##*:}"
-  grep -qE "^[[:space:]]*cdp_url:[[:space:]]*[\"']?http://${host}:${port}/?[\"']?[[:space:]]*(#.*)?$" "$1" 2>/dev/null
+  # Block form (`  cdp_url: http://…`) or flow form (`browser: {cdp_url: 'http://…'}`): a FRESH config is written by
+  # yaml.safe_dump in the flow form, so the block-only match failed every first install's --check (found 2026-11-19,
+  # when the hall was first installed into a home of its own). The value decides, never the layout.
+  grep -qE "(^|[{,[:space:]])cdp_url:[[:space:]]*[\"']?http://${host}:${port}/?[\"']?[[:space:]]*([,}#]|$)" "$1" 2>/dev/null
 }
 fail=0
 
