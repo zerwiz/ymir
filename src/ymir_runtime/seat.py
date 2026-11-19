@@ -522,7 +522,7 @@ def seat(
             selection = replace(selection, model_provenance=f"{selection.model_provenance} · granted ({verdict.rule})")
 
     try:
-        tree = worktree_mod.ensure(seat_id, project, roots.wt_root, runner=runner)
+        tree = worktree_mod.ensure(seat_id, project, paths.project_wt_root(project, environ), runner=runner)
     except Exception as exc:  # noqa: BLE001 - the caller must see the plain why
         raise EngineRefusal(str(exc), "check the project worktree and the .yggdrasil root") from exc
 
