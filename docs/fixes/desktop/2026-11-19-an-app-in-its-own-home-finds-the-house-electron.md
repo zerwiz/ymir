@@ -28,3 +28,7 @@ is still refused the house's runtime.
   `"odrerir","up",3494204,"http://127.0.0.1:4322/"`, the process ran
   `…/node_modules/electron/dist/electron … /home/<user>/.local/share/ymir-apps/odrerir/current`, and the
   compositor held a mapped window of class `ymir-odrerir`, title `Ymir · Óðrerir`.
+
+## CHANGE LOG
+
+- 2026-11-19 — review-mend: added missing heading for #826

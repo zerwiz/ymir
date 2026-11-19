@@ -34,3 +34,7 @@ No feature was removed: the pin refusal still stands, in the `PIN.error` block.
   `PIN_REFUSAL is not defined`.
 - `hyprctl clients` lists `class= ymir-rodd | title= Rödd · the voice of Ymir | mapped= True`.
 - `/tmp/rodd-app.log` shows `[rodd] ui server answered on port 7841`.
+
+## CHANGE LOG
+
+- 2026-11-19 — review-mend: added missing heading for #826

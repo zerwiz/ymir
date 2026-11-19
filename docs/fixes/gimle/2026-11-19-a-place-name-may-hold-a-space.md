@@ -28,3 +28,7 @@ resolves to nothing is named in `who_am_i`'s `unresolved_places`.
 - On the heart, every one of the 10 lines in the live token file reads the same subject, places and fleet
   under the new reader as under the old one (`token lines read identically: 10, differing: 0`). No live line
   used a fourth field.
+
+## CHANGE LOG
+
+- 2026-11-19 — review-mend: added missing heading for #826

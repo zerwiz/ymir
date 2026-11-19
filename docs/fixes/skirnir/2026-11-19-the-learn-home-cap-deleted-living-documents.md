@@ -39,3 +39,7 @@ A `git status` in the home therefore showed 74 deletions, and any commit was ref
 
 The private home stood unable to commit for a day: the deletion wall refused every push, and a plan the
 Allfather had paid for could not be shipped until the copies were restored from git.
+
+## CHANGE LOG
+
+- 2026-11-19 — review-mend: added missing heading for #826

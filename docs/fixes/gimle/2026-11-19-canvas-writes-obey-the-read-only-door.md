@@ -30,3 +30,7 @@ current scene without changing it; `focus` is a viewport hint.
   `gimle-write` is refused on a writable door, and a login with it passes the gate.
 - On the heart, the new door on a spare read-only port refused `save_room` for a real static token, and the
   ledger line read `bearer-file save_room refused save_room writes, and this door is read-only`.
+
+## CHANGE LOG
+
+- 2026-11-19 — review-mend: added missing heading for #826

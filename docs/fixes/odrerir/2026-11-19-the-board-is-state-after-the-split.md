@@ -32,3 +32,7 @@ contract names `${XDG_STATE_HOME:-~/.local/state}/odrerir`, and each release lin
 The snapshot's cron row is `@heart`, while the hall installs on the `dev` seats (`install_default: dev`). A dev
 seat's board is therefore written once (by the release seed or by hand) and then never refreshed. Which seats
 run the job is the operator's schedule, not this fix.
+
+## CHANGE LOG
+
+- 2026-11-19 — review-mend: added missing heading for #826

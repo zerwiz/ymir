@@ -36,3 +36,7 @@ app's home. So the install left the live service on the legacy road. Once the pi
 ### Not changed
 The other Ymir-rendered units (`hlidskjalf-*`, `mimir`, `bifrost`, `nornir`) belong to apps that stay in the tree, so
 nothing about them moves. An app whose own repo carries its unit still seats it from its own `activate.sh`.
+
+## CHANGE LOG
+
+- 2026-11-19 — review-mend: added missing heading for #826
