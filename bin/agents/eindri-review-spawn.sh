@@ -56,6 +56,45 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
 fi
 hoard_state_dir YMIR_STATE_DIR
 
+# ── THE HOUSE'S DATA SHELF, RESOLVED THROUGH THE ONE DOOR (2026-11-20) ────────
+# The brief and context of an errand live in the OPERATOR'S home (`<home>/hodd/data`), never
+# in the code checkout. This spine used to derive them from the project root — `$PROJECT/data` —
+# and hand that path on as BROKK_DATA_OVERRIDE, so every review judge on a developer seat was
+# refused by einherjar-spawn.sh with "the house is split — data resolves outside the home",
+# after this door had already created `<checkout>/data/<id>-review/` beside the code (measured
+# four times on 2026-11-20, each time moved home by hand). The resolver below is the same one
+# einherjar-spawn.sh uses, so the two doors cannot disagree about where the records live.
+YMIR_HOME_ROOT_RESOLVED=""
+DATA_SHELF=""
+if declare -f ymir_home_root >/dev/null 2>&1; then
+  ymir_home_root YMIR_HOME_ROOT_RESOLVED 2>/dev/null || YMIR_HOME_ROOT_RESOLVED=""
+  hoard_data_dir DATA_SHELF 2>/dev/null || DATA_SHELF=""
+fi
+
+inside_home() {  # <path> — the path lies inside the resolved home; no home resolved means yes
+  local p=${1-}
+  [ -z "$YMIR_HOME_ROOT_RESOLVED" ] && return 0
+  [ -n "$p" ] || return 1
+  case "$p" in
+    "$YMIR_HOME_ROOT_RESOLVED"/*) return 0 ;;
+  esac
+  return 1
+}
+
+house_data() {  # <result-var> — the home's data shelf; an override may MOVE it, never take it out
+  local result_var=${1-} cand="${BROKK_DATA_OVERRIDE:-}"
+  [ -n "$result_var" ] || return 2
+  if [ -n "$cand" ]; then
+    if inside_home "$cand"; then
+      printf -v "$result_var" '%s' "$cand"; return 0
+    fi
+    printf 'review-spawn: BROKK_DATA_OVERRIDE=%s lies outside the home (%s) — the records resolve from the home instead\n' \
+      "$cand" "${YMIR_HOME_ROOT_RESOLVED:-none}" >&2
+  fi
+  [ -n "$DATA_SHELF" ] || return 1
+  printf -v "$result_var" '%s' "$DATA_SHELF"
+}
+
 TEMPLATE="$ROOT/.agents/assets/templates/review-brief.template.md"
 
 usage() {
@@ -167,7 +206,15 @@ WORKTREE="$(meta_value "$TASK_META" worktree)"
 # project's state dir is only a fallback when no task state resolved at all.
 SHARED_ROOT="$PROJECT"
 [ -n "$TASK_STATE" ] && SHARED_STATE="$TASK_STATE" || SHARED_STATE="$SHARED_ROOT/state"
-SHARED_DATA="$SHARED_ROOT/data"
+# The errand's records are the HOME's (Rule 04): no fallback to `<checkout>/data` — a data
+# folder inside a code checkout is the split this door must not create, so a home that does
+# not resolve is named aloud rather than answered with the wrong directory.
+if ! house_data SHARED_DATA; then
+  printf 'error: no data shelf resolved for the review — the house is unreadable, not split by us\n  home:  %s\nhelp: set YMIR_HOME to the operator home (bin/vault/hoard-lib.sh names it), or fix the machine record at ${YMIR_CONFIG_DIR:-~/.config/ymir}/home\n' \
+    "${YMIR_HOME_ROOT_RESOLVED:-none}" >&2
+  release_claim
+  exit 1
+fi
 
 # ── the PR: from the flag, else the task's own terminal status line ──────────
 PR_URL="$PR_URL_ARG"
@@ -211,7 +258,7 @@ if [ "$PR_ONLY" = 1 ]; then
     PROJECT="${PROJECT_ARG:-$ROOT}"
     SHARED_ROOT="$PROJECT"
     SHARED_STATE="$YMIR_STATE_DIR"
-    SHARED_DATA="${BROKK_DATA_OVERRIDE:-$PROJECT/data}"
+    house_data SHARED_DATA || { printf 'error: no data shelf resolved for the review of %s\nhelp: set YMIR_HOME to the operator home\n' "$PR_URL" >&2; exit 1; }
     TASK_BRIEF=""
     TASK_STATUS=""
   fi
