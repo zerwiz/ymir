@@ -23,6 +23,7 @@
 | model-alias-check.sh | model-alias-check.sh — does every alias a body names resolve in the fl | tested+named | keep (a human or a cron row must run it) |
 | portability-ratchet.sh | portability-ratchet.sh — the GNU-only callers may go DOWN, never up. | tested | keep (a human or a cron row must run it) |
 | public-data-ward.test.sh | public-data-ward.test.sh — prove the RULES/04 ward BITES. | tested | keep (a human or a cron row must run it) |
+| push-road.test.sh | push-road.test.sh — prove the push road mends of plan 339.1, in a THRO | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
 | readme-claims.sh | readme-claims.sh — the user-facing documents must not claim what the t | tested | keep (a human or a cron row must run it) |
 | syn-arm-pretool-check.sh | syn-arm-pretool-check.sh - PreToolUse seatbelt for watcher-arm bash comm | tested+named | keep (a human or a cron row must run it) |
 | syn-asset-pretool-check.sh | syn-asset-pretool-check.sh — PreToolUse seatbelt for governed paths. | tested+named | keep (a human or a cron row must run it) |
@@ -64,6 +65,7 @@
 | hoard-guard.sh | hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME). | tested+named | keep (a human or a cron row must run it) |
 | home-contract-guard.sh | home-contract-guard.sh — the contract that raises a user's home is che | tested | keep (a human or a cron row must run it) |
 | house-colour-guard.sh | (no header line) | tested | keep (a human or a cron row must run it) |
+| hypr-door-guard.sh | (no header line) | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
 | identity-guard.sh | identity-guard.sh — a commit that leaves by push must not publish a pr | tested | keep (a human or a cron row must run it) |
 | inventory-guard.sh | inventory-guard.sh — a register that runs in no gate is a capability t | tested | keep (a human or a cron row must run it) |
 | language-guard.sh | language-guard.sh — two tongues: English for the work, Old Norse for t | tested+named | keep (a human or a cron row must run it) |
@@ -128,6 +130,7 @@
 | test_handoff_packet.sh | test_handoff_packet.sh — proves the packet door reads the schema's pac | tested+named | keep (a human or a cron row must run it) |
 | test_hermes_seat.sh | test_hermes_seat.sh — the acceptance test for plan 177 H1/H2/H3: Herme | tested+named | keep (a human or a cron row must run it) |
 | test_home_sync_clock.sh | test_home_sync_clock.sh — the clock commits the records the house writ | tested | keep (a human or a cron row must run it) |
+| test_hypr_door_guard.sh | test_hypr_door_guard.sh — the ward that keeps every Hyprland act in di | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
 | test_main_red.sh | test_main_red.sh — the alarm BITES, and it stays quiet where it must. | tested | keep (a human or a cron row must run it) |
 | test_maker_names.sh | test_maker_names.sh — RULES/53: the maker ward refuses a model, a make | tested | keep (a human or a cron row must run it) |
 | test_merge_method.sh | test_merge_method.sh — the merge flag follows the PR's kind (RULES/08, | tested | keep (a human or a cron row must run it) |
