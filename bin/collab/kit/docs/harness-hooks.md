@@ -27,7 +27,8 @@ flowchart LR
 ## Which worktrees belong to a session
 
 `work.sh start` writes the session id and the agent into the worktree's record. The id is `KIT_SESSION` when set,
-else the harness's own (`CLAUDE_SESSION_ID`, `HERMES_SESSION_ID`, `OPENCODE_SESSION_ID`). `session-end` takes
+else the first variable named in `KIT_SESSION_VARS` (colon-separated) — set it to the variable your harness
+exports its session id in. `session-end` takes
 `--session <id>`, `--agent <name>` or `--all`.
 
 ## The hooks, per harness

@@ -25,6 +25,7 @@
 | every kit document carries a diagram and a table | `kit/RULES`, `kit/docs`, the workbench skill, the tickets shelf |
 | the shared maker matcher is rendered on install with the kit's own setting names | `standardise.py` `INSTALL_RENDER` |
 | `project.yaml` `install.skip` — a piece that does not fit a repository is not installed | `standardise.py`, the monorepo profile |
+| `link_mode: reflink` — a copy-on-write copy of a dependency folder, for tools that refuse a link leaving the project root (Next.js Turbopack refused `web/node_modules`); falls back to a symlink where the filesystem cannot reflink | `scripts/kitlib/worktrees.py`, the monorepo profile |
 | `deploy.sh --dry-run` reports the disk floor instead of stopping before the plan | `scripts/kitlib/deploy.py` |
 
 ## What was run

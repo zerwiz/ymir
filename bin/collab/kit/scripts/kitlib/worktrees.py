@@ -258,25 +258,42 @@ def run_gc(cfg: Config, root, apply: bool, keep: set[str], merged_only=False, on
 
 
 def _link_deps(cfg: Config, main: Path, wt: Path) -> list[str]:
+    """Share the dependency folders the stack profile names with the main tree.
+
+    link_mode symlink (the default) points at the main tree's folder. link_mode reflink makes a copy-on-write copy
+    (btrfs, XFS, APFS): a real folder that costs almost no disk — for tools that refuse a link leaving the project
+    root (Next.js Turbopack does). Where the filesystem cannot reflink, the kit falls back to a symlink and says so.
+    """
     links = []
-    wanted = [(".", l) for l in cfg["stack"].get("link") or []]
+    default_mode = cfg["stack"].get("link_mode") or "symlink"
+    wanted = [(".", l, default_mode) for l in cfg["stack"].get("link") or []]
     for part in cfg["stack"].get("parts") or []:
         for l in part.get("link") or []:
-            wanted.append((part.get("path", "."), l))
+            wanted.append((part.get("path", "."), l, part.get("link_mode") or default_mode))
     exclude = common_dir(main) / "info" / "exclude"
     lines = exclude.read_text().splitlines() if exclude and exclude.is_file() else []
-    for part_path, l in wanted:
+    for part_path, l, mode in wanted:
         rel = os.path.normpath(os.path.join(part_path, l))
         src, dst = main / rel, wt / rel
         if not src.exists() or os.path.lexists(dst) or not dst.parent.is_dir():
             continue  # nothing to share, or the tree already carries it (a tracked link stays as it is)
-        os.symlink(os.path.realpath(src), dst)
-        links.append(rel)
-        if exclude is not None and f"/{rel}" not in lines:
+        done = False
+        if mode == "reflink":
+            r = subprocess.run(["cp", "-a", "--reflink=always", os.path.realpath(src), str(dst)],
+                               text=True, capture_output=True)
+            if r.returncode == 0:
+                done = True
+                print(f"reflinked\t{rel}\t(copy-on-write: shares the main tree's blocks)")
+            else:
+                shutil.rmtree(dst, ignore_errors=True)
+                print(f"note\t{rel}: this filesystem cannot reflink — linked instead")
+        if not done:
+            os.symlink(os.path.realpath(src), dst)
+            links.append(rel)
+        if f"/{rel}" not in lines:
             lines.append(f"/{rel}")
-    if exclude is not None and links:
-        exclude.parent.mkdir(parents=True, exist_ok=True)
-        exclude.write_text("\n".join(lines) + "\n")
+    exclude.parent.mkdir(parents=True, exist_ok=True)
+    exclude.write_text("\n".join(lines) + "\n")
     return links
 
 

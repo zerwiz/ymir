@@ -224,7 +224,10 @@ class K03Profiles(Base):
         f = Fixture(self.tmp, profile="monorepo-bun-uv-mix", setup=setup)
         f.new("m1")
         wt = f.repo / ".worktrees" / "m1"
-        self.assertTrue((wt / "web" / "node_modules").is_symlink())
+        # web uses link_mode reflink (Turbopack refuses a link out of the root): a real folder, or a link where
+        # the filesystem cannot reflink — either way it is shared, never a fresh install
+        self.assertTrue((wt / "web" / "node_modules").is_dir())
+        self.assertEqual(sh("git status --porcelain", wt).stdout.strip(), "", "the shared folder is not a change")
         self.assertTrue((wt / "identity" / "deps").is_symlink())
         self.assertFalse((wt / "identity" / "_build").exists(), "a build output is never shared")
         self.assertEqual(os.readlink(wt / "ui" / "node_modules"), "../web/node_modules", "the tracked link stays")

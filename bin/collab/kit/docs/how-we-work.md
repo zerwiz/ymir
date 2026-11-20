@@ -63,7 +63,7 @@ bash scripts/work.sh stop invoices-list -m "Show the invoices list with its due 
 ## 2b · End a session, or hand over
 
 ```bash
-bash scripts/work.sh session-end            # every worktree this session opened (KIT_SESSION or the harness's id)
+bash scripts/work.sh session-end            # every worktree this session opened (KIT_SESSION, or KIT_SESSION_VARS)
 bash scripts/work.sh session-end --agent ada
 ```
 

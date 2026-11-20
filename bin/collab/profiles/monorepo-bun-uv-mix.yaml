@@ -20,6 +20,7 @@ stack:
       tool: bun
       check: "bun run build"
       link: [node_modules]
+      link_mode: reflink         # Turbopack refuses a node_modules link that leaves the project root
       never_share: [dist, .next]
     - path: ui                   # the shared look; ui/node_modules is a tracked link to ../web/node_modules
       tool: bun

@@ -74,9 +74,12 @@ def _stack(main, verb: str):
 
 
 def session_id() -> str:
-    """The harness session this work belongs to: KIT_SESSION, else the harness's own id when it exports one."""
-    for k in ("KIT_SESSION", "CLAUDE_SESSION_ID", "HERMES_SESSION_ID", "OPENCODE_SESSION_ID"):
-        if os.environ.get(k):
+    """The session this work belongs to: KIT_SESSION, else the first variable named in KIT_SESSION_VARS
+    (colon-separated) that is set — so each harness names its own id without the kit naming the harness."""
+    if os.environ.get("KIT_SESSION"):
+        return os.environ["KIT_SESSION"]
+    for k in (os.environ.get("KIT_SESSION_VARS") or "").split(":"):
+        if k and os.environ.get(k):
             return os.environ[k]
     return ""
 
