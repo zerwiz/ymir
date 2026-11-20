@@ -9,10 +9,10 @@ Measured on heimdall on 2026-11-20, after its disk filled and every worker stopp
 | Fact | Number | What the kit did not catch |
 |---|---|---|
 | `/home` used | 927 G of 952 G | no disk floor before a worktree or a build |
-| worktrees of one repository (AtlasAlpha) | 117, 168 GB | no cap, no cleanup after merge, a full `bun install` per worktree |
+| worktrees of one product repository | 117, 168 GB | no cap, no cleanup after merge, a full `bun install` per worktree |
 | of those, merged and clean | 109 | `RULES/17` said *should be removed*; no tool removed one |
 | with work nobody had pushed | 6 | no salvage: a dead worker's files were one `rm` from lost |
-| `standardise.sh --apply` on AtlasAlpha | moved the shared `core.hooksPath` | the repository's own hooks silently stopped running |
+| `standardise.sh --apply` on that repository | moved the shared `core.hooksPath` | the repository's own hooks silently stopped running |
 | the kit's own words | 31 files naming this house's figures and vocabulary | a client repository received our naming |
 | container images | build storage full of old release builds | no rule for who builds, which tags stay, when a cache goes |
 
@@ -68,4 +68,4 @@ bash bin/gates/tests/test_maker_names.sh        → one failure, present on orig
                                                   (the kit copy of maker-allow.txt lags the house copy)
 ```
 
-The install into AtlasAlpha and atlas-vault, with their hooks and gates, is recorded in plan 267's Built section.
+The install into two product repositories, with their hooks and gates, is recorded in plan 267's Built section.
