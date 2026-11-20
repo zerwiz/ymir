@@ -30,7 +30,19 @@ ok=0; fail=0
 good() { ok=$((ok+1)); printf 'ok   %s\n' "$*"; }
 bad()  { fail=$((fail+1)); printf 'FAIL %s\n     %s\n' "$1" "${2-}"; }
 
-[ -f "$EXT" ] || { printf 'FAIL the pi extension is missing: %s\n' "$EXT"; exit 1; }
+# A Yggdrasil worktree EXCLUDES `.pi/extensions/` on purpose (Rule 13: pi loads both the project tree
+# and the seat's home, so a second tree collides every tool name). The source is read from git when it
+# is not in the working tree, and the copy is imported by absolute path — it needs nothing but node
+# builtins, and ROOT comes from YMIR_ROOT.
+if [ ! -f "$EXT" ]; then
+  if git -C "$ROOT" cat-file -e "HEAD:.pi/extensions/eindri.ts" 2>/dev/null; then
+    git -C "$ROOT" show "HEAD:.pi/extensions/eindri.ts" > "$T/eindri.ts"
+    EXT="$T/eindri.ts"
+    printf 'note: .pi/extensions/ is not checked out here (a sparse worktree, Rule 13) — reading it from HEAD\n'
+  else
+    printf 'FAIL the pi extension is missing: .pi/extensions/eindri.ts (not in the tree, not in HEAD)\n'; exit 1
+  fi
+fi
 [ -f "$PLUGIN" ] || { printf 'FAIL the opencode plugin is missing: %s\n' "$PLUGIN"; exit 1; }
 
 mkdir -p "$T/home/state"
@@ -40,7 +52,7 @@ printf 'working: carving the door\n' > "$T/home/state/a-live-errand.status"
 read_errand() {  # read_errand <id> [extra env assignments…] — the pi reader, through bun
   local id="$1"; shift
   ( cd "$ROOT" && env YMIR_ROOT="$ROOT" YMIR_HOME="$T/home" "$@" \
-      bun -e 'const m = await import("./.pi/extensions/eindri.ts"); console.log(m.readErrand(process.argv[1]))' "$id" 2>&1 )
+      bun -e 'const m = await import(process.argv[2]); console.log(m.readErrand(process.argv[1]))' "$id" "$EXT" 2>&1 )
 }
 
 if command -v bun >/dev/null 2>&1; then
