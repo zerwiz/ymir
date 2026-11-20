@@ -281,7 +281,7 @@ TOOLS = [
     {
         "type": "function",
         "name": "todo_add",
-        "description": "Add an item to HIS to-do list (hodd/life/personal/me/todo.md, the one to-do; under 'Added in conversation'); returns its short id. Optional due, priority, project.",
+        "description": "Add an item to HIS to-do: a card on his private board (bin/records/todo.sh, plan 327) — or, on a seat with no board, a line in todo.md under 'Added in conversation'. Says the card number. Optional due (YYYY-MM-DD), priority, project.",
         "parameters": {"type": "object", "properties": {
             "item": {"type": "string"}, "due": {"type": "string"},
             "priority": {"type": "string"}, "project": {"type": "string"}},
@@ -1895,10 +1895,65 @@ def _stamp():
     return _dt.datetime.now().strftime("%Y-%m-%d %H:%M")
 
 
+def _todo_board_add(item, args):
+    """The board first (plan 327): a spoken to-do becomes a card on his private board through the one door,
+    bin/records/todo.sh. Returns the sentence to speak, or None when this seat has no board (a clean skip), so the
+    old road (the file) still serves a house that never configured one. A board that is dark QUEUES the card —
+    it is not lost and it is not written into the file twice."""
+    lane = "Today" if str(args.get("due") or "").strip() == _dt_today() else "Inbox"
+    argv = [_door("records/todo.sh"), "add", item, "--lane", lane, "--json",
+            "--source", f"spoken to the voice, {_stamp()}"]
+    for k in ("due", "priority"):
+        v = str(args.get(k) or "").strip()
+        if v:
+            argv += [f"--{k}", v]
+    if str(args.get("project") or "").strip():
+        argv += ["--note", f"project {str(args.get('project')).strip()}"]
+    code, out = _run(argv, timeout=30)
+    try:   # stderr rides along in `out`; the verdict is the JSON object the door printed on stdout
+        res = json.loads(out[out.find("{"):]) if "{" in out else {}
+    except ValueError:
+        res = {}
+    v = res.get("verdict")
+    if v in ("filed", "exists"):
+        return f"On his board as card {res.get('card')} ({res.get('lane') or lane}): {item}."
+    if v == "queued":
+        return (f"His board did not answer, so the card is queued and will be filed when it does: {item}. "
+                f"({_clean(res.get('why', ''), 120)})")
+    if v == "skip":
+        return None
+    # the door refused: say so plainly, and do not pretend the item landed anywhere
+    return f"The board refused the card ({_clean(out, 160)}); nothing was added. Say it again or add it by hand."
+
+
+def _dt_today():
+    import datetime as _dt
+    return _dt.date.today().isoformat()
+
+
+def _todo_board_ready():
+    """True when this seat writes the to-do to a board (plan 327); the file verbs then stand aside."""
+    code, out = _run([_door("records/todo.sh"), "status"], timeout=15)
+    try:
+        return bool(json.loads(out[out.find("{"):]).get("ready"))
+    except ValueError:
+        return False
+
+
+def _todo_board_verb(argv, said_ok):
+    code, out = _run([_door("records/todo.sh")] + argv, timeout=40)
+    if code == 0:
+        return ToolResult(said_ok(out), create_response=True)
+    return ToolResult(f"His board refused that ({_clean(out, 160)}). Nothing changed.")
+
+
 async def _tool_todo_add(args):
     item = str(args.get("item") or "").strip()
     if not item:
         raise ValueError("todo_add needs an item")
+    said = _todo_board_add(item, args)
+    if said is not None:
+        return ToolResult(said, create_response=True)
     lines, _ = _todo_items()
     notes = [f"added by Nanna, {_stamp()}"]
     for k in ("due", "priority", "project"):
@@ -1926,6 +1981,18 @@ async def _tool_todo_add(args):
 
 async def _tool_todo_list(args):
     status = str(args.get("status") or "open").lower()
+    if _todo_board_ready():
+        lane = "Done" if status == "done" else ""
+        code, out = _run([_door("records/todo.sh"), "list"] + (["--lane", lane] if lane else []), timeout=40)
+        want = str(args.get("project") or "").strip().lower()
+        rows = [l for l in out.splitlines() if l.startswith("#") and (status == "done" or " Done " not in l)
+                and (not want or want in l.lower())]
+        if code != 0:
+            return ToolResult(f"His board did not answer ({_clean(out, 120)}).")
+        if not rows:
+            return ToolResult(f"Nothing {status} on his board" + (f" about {want}" if want else "") + ".")
+        more = f"\n(and {len(rows) - 20} more)" if len(rows) > 20 else ""
+        return ToolResult(f"His board: {len(rows)} {status} (card · state · due · title):\n" + "\n".join(rows[:20]) + more)
     want = str(args.get("project") or "").strip().lower()
     _, items = _todo_items()
     if want:
@@ -1951,10 +2018,16 @@ def _todo_mark(args, to_done: bool, verb: str):
 
 
 async def _tool_todo_done(args):
+    if _todo_board_ready():   # the card number, or words from its title
+        ref = str(args.get("id") or "").lstrip("#")
+        return _todo_board_verb(["move", ref, "Done"], lambda out: f"Done on his board: {_clean(out, 140)}")
     return _todo_mark(args, True, "ticked")
 
 
 async def _tool_todo_reopen(args):
+    if _todo_board_ready():
+        ref = str(args.get("id") or "").lstrip("#")
+        return _todo_board_verb(["move", ref, "Inbox"], lambda out: f"Reopened on his board: {_clean(out, 140)}")
     return _todo_mark(args, False, "reopened")
 
 
