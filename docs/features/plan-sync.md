@@ -78,3 +78,7 @@ does not ship. An unknown `adapter:` is refused by name.
 | `HTTP 403` / a Cloudflare 1010 | the request lacked a User-Agent or the token is not allowed in that place |
 | `older ones may be hidden` | the board lists only its newest cards; have its owner list the place in full before a write run |
 | `no state in the group` | the board has no state for that group; add one on the board |
+
+## CHANGE LOG
+
+- 2026-11-20 — opened with plan-sync (plan 335, phase 3): one card per plan, through the board contract and the `mcp` adapter.
