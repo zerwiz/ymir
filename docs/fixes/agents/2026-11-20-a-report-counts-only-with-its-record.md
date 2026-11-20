@@ -92,3 +92,7 @@ check: errand probe-ask2 question unanswered for 20 minutes (<scratch>/eindri-qu
 Not proven here: the arm running from the pin (this branch is not gathered, so the pin does not carry it), a second
 machine, and a real Telegram line. `bin/gates/tests/test_sol_stamps.sh` has one failing case (`the acclaim prints one
 stamped human line`) on `main` as well; it is not this change.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #840
