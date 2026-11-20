@@ -234,6 +234,27 @@ TOOLS = [
     },
     {
         "type": "function",
+        "name": "voice_list",
+        "description": ("Every voice the house's mouth (Kokoro) can speak in: id, name, language, gender. Call it when he "
+                        "asks which voices there are, or before set_voice when you are unsure of a name."),
+        "parameters": {"type": "object", "properties": {
+            "language": {"type": "string", "description": "optional filter, e.g. 'British' or 'American'"}},
+            "additionalProperties": False},
+    },
+    {
+        "type": "function",
+        "name": "set_voice",
+        "description": ("Change the voice you speak in, from your next sentence, with no restart. Call it when he asks you "
+                        "to speak as someone ('talk like Eric', 'use a British voice'): name is a voice name (eric) or id "
+                        "(am_eric). keep=true also keeps it as Rödd's voice for the next conversation. An unknown or "
+                        "ambiguous name is refused — read the refusal to him, never pretend the voice changed."),
+        "parameters": {"type": "object", "properties": {
+            "name": {"type": "string", "description": "a voice name or id"},
+            "keep": {"type": "boolean", "description": "keep it as Rödd's voice next time too (default false)"}},
+            "required": ["name"], "additionalProperties": False},
+    },
+    {
+        "type": "function",
         "name": "now",
         "description": ("The real date and time right now, in his own time zone, from the house's clock (Sól). Call "
                         "it before saying the time, the day, 'good morning' or 'tonight', or anything 'today'."),
@@ -273,7 +294,7 @@ TOOLS = [
     {
         "type": "function",
         "name": "todo_add",
-        "description": "Add an item to HIS to-do list (life/personal/me/todo.md, the one to-do; under 'Added in conversation'); returns its short id. Optional due, priority, project.",
+        "description": "Add an item to HIS to-do: a card on his private board (bin/records/todo.sh, plan 327) — or, on a seat with no board, a line in todo.md under 'Added in conversation'. Says the card number. Optional due (YYYY-MM-DD), priority, project.",
         "parameters": {"type": "object", "properties": {
             "item": {"type": "string"}, "due": {"type": "string"},
             "priority": {"type": "string"}, "project": {"type": "string"}},
@@ -1886,10 +1907,65 @@ def _stamp():
     return _dt.datetime.now().strftime("%Y-%m-%d %H:%M")
 
 
+def _todo_board_add(item, args):
+    """The board first (plan 327): a spoken to-do becomes a card on his private board through the one door,
+    bin/records/todo.sh. Returns the sentence to speak, or None when this seat has no board (a clean skip), so the
+    old road (the file) still serves a house that never configured one. A board that is dark QUEUES the card —
+    it is not lost and it is not written into the file twice."""
+    lane = "Today" if str(args.get("due") or "").strip() == _dt_today() else "Inbox"
+    argv = [_door("records/todo.sh"), "add", item, "--lane", lane, "--json",
+            "--source", f"spoken to the voice, {_stamp()}"]
+    for k in ("due", "priority"):
+        v = str(args.get(k) or "").strip()
+        if v:
+            argv += [f"--{k}", v]
+    if str(args.get("project") or "").strip():
+        argv += ["--note", f"project {str(args.get('project')).strip()}"]
+    code, out = _run(argv, timeout=30)
+    try:   # stderr rides along in `out`; the verdict is the JSON object the door printed on stdout
+        res = json.loads(out[out.find("{"):]) if "{" in out else {}
+    except ValueError:
+        res = {}
+    v = res.get("verdict")
+    if v in ("filed", "exists"):
+        return f"On his board as card {res.get('card')} ({res.get('lane') or lane}): {item}."
+    if v == "queued":
+        return (f"His board did not answer, so the card is queued and will be filed when it does: {item}. "
+                f"({_clean(res.get('why', ''), 120)})")
+    if v == "skip":
+        return None
+    # the door refused: say so plainly, and do not pretend the item landed anywhere
+    return f"The board refused the card ({_clean(out, 160)}); nothing was added. Say it again or add it by hand."
+
+
+def _dt_today():
+    import datetime as _dt
+    return _dt.date.today().isoformat()
+
+
+def _todo_board_ready():
+    """True when this seat writes the to-do to a board (plan 327); the file verbs then stand aside."""
+    code, out = _run([_door("records/todo.sh"), "status"], timeout=15)
+    try:
+        return bool(json.loads(out[out.find("{"):]).get("ready"))
+    except ValueError:
+        return False
+
+
+def _todo_board_verb(argv, said_ok):
+    code, out = _run([_door("records/todo.sh")] + argv, timeout=40)
+    if code == 0:
+        return ToolResult(said_ok(out), create_response=True)
+    return ToolResult(f"His board refused that ({_clean(out, 160)}). Nothing changed.")
+
+
 async def _tool_todo_add(args):
     item = str(args.get("item") or "").strip()
     if not item:
         raise ValueError("todo_add needs an item")
+    said = _todo_board_add(item, args)
+    if said is not None:
+        return ToolResult(said, create_response=True)
     lines, _ = _todo_items()
     notes = [f"added by Nanna, {_stamp()}"]
     for k in ("due", "priority", "project"):
@@ -1917,6 +1993,18 @@ async def _tool_todo_add(args):
 
 async def _tool_todo_list(args):
     status = str(args.get("status") or "open").lower()
+    if _todo_board_ready():
+        lane = "Done" if status == "done" else ""
+        code, out = _run([_door("records/todo.sh"), "list"] + (["--lane", lane] if lane else []), timeout=40)
+        want = str(args.get("project") or "").strip().lower()
+        rows = [l for l in out.splitlines() if l.startswith("#") and (status == "done" or " Done " not in l)
+                and (not want or want in l.lower())]
+        if code != 0:
+            return ToolResult(f"His board did not answer ({_clean(out, 120)}).")
+        if not rows:
+            return ToolResult(f"Nothing {status} on his board" + (f" about {want}" if want else "") + ".")
+        more = f"\n(and {len(rows) - 20} more)" if len(rows) > 20 else ""
+        return ToolResult(f"His board: {len(rows)} {status} (card · state · due · title):\n" + "\n".join(rows[:20]) + more)
     want = str(args.get("project") or "").strip().lower()
     _, items = _todo_items()
     if want:
@@ -1942,10 +2030,16 @@ def _todo_mark(args, to_done: bool, verb: str):
 
 
 async def _tool_todo_done(args):
+    if _todo_board_ready():   # the card number, or words from its title
+        ref = str(args.get("id") or "").lstrip("#")
+        return _todo_board_verb(["move", ref, "Done"], lambda out: f"Done on his board: {_clean(out, 140)}")
     return _todo_mark(args, True, "ticked")
 
 
 async def _tool_todo_reopen(args):
+    if _todo_board_ready():
+        ref = str(args.get("id") or "").lstrip("#")
+        return _todo_board_verb(["move", ref, "Inbox"], lambda out: f"Reopened on his board: {_clean(out, 140)}")
     return _todo_mark(args, False, "reopened")
 
 
@@ -3237,3 +3331,41 @@ async def _tool_todo_from_mail(args):
 
 NEW_TOOLS["comms"] = _tool_comms
 NEW_TOOLS["todo_from_mail"] = _tool_todo_from_mail
+
+
+# ── the voices (plan 326.3): one door, bin/voice/voices.sh, so a name means the same thing everywhere ─────────────
+
+def _voices_door(args: list[str], timeout: int = 60) -> tuple[int, str, str]:
+    door = Path(__file__).resolve().parent / "voices.sh"
+    r = subprocess.run(["bash", str(door), *args], capture_output=True, text=True, timeout=timeout)
+    return r.returncode, r.stdout.strip(), r.stderr.strip()
+
+
+async def _tool_voice_list(args):
+    rc, out, err = _voices_door(["list", "--json"])
+    if rc != 0:
+        return ToolResult("The voice list did not answer: " + (err or out)[:200])
+    rows = json.loads(out).get("voices", [])
+    want = str(args.get("language") or "").strip().lower()
+    if want:
+        rows = [r for r in rows if want in r["language"].lower()]
+    return ToolResult(f"{len(rows)} voices: " + "; ".join(f"{r['name']} ({r['id']}, {r['language']}, {r['gender']})" for r in rows))
+
+
+async def _tool_set_voice(args):
+    name = str(args.get("name") or "").strip()
+    rc, out, err = _voices_door(["resolve", name])
+    if rc != 0:
+        return ToolResult(f"The voice did not change: {(err or out).replace('voices: ', '')[:200]}")
+    vid = out.splitlines()[-1].strip()
+    kept = ""
+    if args.get("keep"):
+        rc2, _o, e2 = _voices_door(["choose", "rodd", vid])
+        kept = " It is kept as Rödd's voice for next time." if rc2 == 0 else f" It could not be kept: {e2[:120]}"
+    _log("set_voice", voice=vid, keep=bool(args.get("keep")))
+    # the window reads this marker and switches the live session; the words are what she says about it
+    return ToolResult(json.dumps({"rodd_voice": vid, "said": f"From now on I speak as {vid}.{kept}"}, ensure_ascii=False))
+
+
+NEW_TOOLS["voice_list"] = _tool_voice_list
+NEW_TOOLS["set_voice"] = _tool_set_voice

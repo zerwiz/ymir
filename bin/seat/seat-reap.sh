@@ -18,7 +18,9 @@
 #   seat-reap.sh --sweep     the hall: retire finished-idle agents (S2), close
 #                            agentless seats, and close a HAND-SEATED tab whose
 #                            work the audit finds clean, pushed and landed — never
-#                            touch a working seat, never a dirty or unpushed one
+#                            touch a working seat, never a dirty or unpushed one;
+#                            then the worktrees of closed errands (plan 339.4,
+#                            bin/forge/worktree-reap.py — branches never deleted)
 #   seat-reap.sh --list      what --sweep WOULD do, closing nothing
 #   seat-reap.sh --close-pane P  close an ORPHAN pane (a bare shell, no errand) —
 #                            the ONLY door; the Allfather's word, never a sweep
@@ -1050,10 +1052,26 @@ usage() {
   sed -n '2,40p' "$0" | sed 's/^# \{0,1\}//'
 }
 
+# ── the worktrees (plan 339.4) ───────────────────────────────────────────────
+# A closed seat leaves its worktree behind; the road that made it recorded it, and ONE reaper
+# (bin/forge/worktree-reap.py) removes it when the errand closed done and its work is held
+# (merged · parked · pushed), or closed failed seven days ago. Branches are never deleted; a
+# dirty tree is named, never removed. It runs AFTER the seats close, so a freed tree can go in
+# the same sweep. --list asks the dry run; YMIR_WORKTREE_REAP=off makes --sweep a dry run too.
+sweep_worktrees() { # <do-it: 0|1>
+  local reaper="$ROOT/bin/forge/worktree-reap.py"
+  [ -f "$reaper" ] && command -v python3 >/dev/null 2>&1 || return 0
+  if [ "$1" = 1 ]; then
+    python3 "$reaper" sweep --quiet --apply 2>/dev/null || printf 'worktree-reap[1]{state}:\n  "the reaper did not answer (bin/forge/worktree-reap.py sweep says why)"\n'
+  else
+    python3 "$reaper" sweep --quiet 2>/dev/null || true
+  fi
+}
+
 case "${1:-}" in
   -h|--help|help) usage; exit 0 ;;
-  --sweep)   shift; sweep 1 ;;
-  --list)    shift; sweep 0 ;;
+  --sweep)   shift; sweep 1; sweep_worktrees 1 ;;
+  --list)    shift; sweep 0; sweep_worktrees 0 ;;
   --status)  shift; sweep 0 ;;
   --shell)
     # Close the bare shell holding a worktree — refuse a live agent, as everywhere.

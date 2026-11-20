@@ -11,6 +11,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # "../", because this shelf was moved once (bin/assistant/ -> systems/skirnir/, plan 149) and
 # 25 scripts kept the old depth, so every $ROOT/bin/... pointed into systems/ instead (2026-11-02).
 ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)"
+# where the engine listens is one value (plan 326.0) — the unit binds it, the test dials it
+# shellcheck source=../../../bin/voice/kokoro-lib.sh
+. "$ROOT/bin/voice/kokoro-lib.sh"
+KBASE="$(kokoro_base_url)"; KPORT="$(kokoro_port)"
 ENGINE="$SCRIPT_DIR/skirnir.py"
 TMP="$(mktemp -d)"; AMBIENT_YMIR_HOME="${YMIR_HOME:-}"; export YMIR_HOME="$TMP/home"
 export SKIRNIR_NO_ESCALATE=1   # a test must never page the operator
@@ -250,8 +254,8 @@ print('sv' if m.language_hint('vad är Example4 och vad behöver vi göra') else
   || fail "language hint" "$lang"
 
 # ── a voice note in, a voice note out: the two halves of the same loop ────────────────────────
-if curl -s -m 4 -o /dev/null http://127.0.0.1:8765/v1/audio/speech 2>/dev/null \
-   || (exec 3<>/dev/tcp/127.0.0.1/8765) 2>/dev/null; then
+if curl -s -m 4 -o /dev/null "$KBASE/v1/audio/speech" 2>/dev/null \
+   || (exec 3<>"/dev/tcp/127.0.0.1/$KPORT") 2>/dev/null; then
   if bash "$SCRIPT_DIR/mouth.sh" "Skirnir, what is Example4? The inspection is on Friday." "$TMP/note.ogg" >/dev/null 2>&1 \
      && [ -s "$TMP/note.ogg" ]; then
     pass "the mouth makes a Telegram voice note ($(stat -c%s "$TMP/note.ogg") bytes)"
@@ -265,7 +269,7 @@ if curl -s -m 4 -o /dev/null http://127.0.0.1:8765/v1/audio/speech 2>/dev/null \
     fail "the mouth" "could not produce a voice note"
   fi
 else
-  skip "voice notes" "no synthesiser on :8765"
+  skip "voice notes" "no synthesiser on :$KPORT"
 fi
 
 # the mouth, if the rail is up: it must answer honestly and still pass the gate. A clean skip when

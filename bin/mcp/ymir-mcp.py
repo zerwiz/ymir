@@ -131,6 +131,32 @@ def ymir_recall(query: str, k: int = 5) -> str:
 
 
 @mcp.tool()
+def ymir_todo_board(action: str = "list", title: str = "", lane: str = "", due: str = "", owner: str = "",
+                    priority: str = "", note: str = "", card: str = "", source: str = "") -> str:
+    """The operator's own to-do, as cards on his private board (plan 327) — the ONE door the house writes it
+    through, never the old todo.md. action: add (title, lane Inbox|Today|This week|Waiting|Someday|Done, due
+    YYYY-MM-DD, owner, priority, note) · list (lane) · move (card, lane) · lanes · flush · status."""
+    door = str(ROOT / "bin" / "records" / "todo.sh")
+    if action == "add":
+        if not title.strip():
+            return "todo: add needs a title"
+        argv = [door, "add", title, "--lane", lane or "Inbox", "--source", source or "an agent, over MCP"]
+        for flag, val in (("--due", due), ("--owner", owner), ("--priority", priority), ("--note", note)):
+            if val:
+                argv += [flag, val]
+        return _run(argv, 60)
+    if action == "list":
+        return _run([door, "list"] + (["--lane", lane] if lane else []), 60)
+    if action == "move":
+        if not card or not lane:
+            return "todo: move needs a card and a lane"
+        return _run([door, "move", card, lane], 60)
+    if action in ("lanes", "flush", "status"):
+        return _run([door, action], 60)
+    return f"todo: no action {action!r} (add · list · move · lanes · flush · status)"
+
+
+@mcp.tool()
 def ymir_remember(lesson: str, tags: str = "") -> str:
     """Water the well after: record what was learned, so the next hand starts ahead."""
     argv = ["bash", str(ROOT / "bin" / "records" / "mimir.sh"), "observe", lesson]

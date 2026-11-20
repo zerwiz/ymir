@@ -69,6 +69,52 @@ esac
 
 mkdir -p "$STATE/eindri-reports" "$STATE/eindri-questions" "$STATE/eindri-done"
 
+# write_record <shelf> — append the `## Record` block, measured from the errand's own repo.
+# The repo is the worktree argument, else the meta's worktree, else the directory the act runs in.
+write_record() {
+  local shelf=$1 repo="" wt branch head base ahead files st where tip
+  for wt in "$WORKTREE" "$(sed -n 's/^worktree=//p' "$STATE/$AGENT.meta" "$ROOT/state/$AGENT.meta" 2>/dev/null | head -1)" "$PWD"; do
+    [ -n "$wt" ] && [ -d "$wt" ] || continue
+    repo="$(git -C "$wt" rev-parse --show-toplevel 2>/dev/null)" && [ -n "$repo" ] && break
+    repo=""
+  done
+  if [ -z "$repo" ]; then
+    printf '\n## Record\n\ncommit: none — nothing committed (no git repository found for %s)\n' "$AGENT" >>"$shelf"
+    return 0
+  fi
+  branch="$(git -C "$repo" branch --show-current 2>/dev/null)"
+  base="$(git -C "$repo" symbolic-ref -q --short refs/remotes/origin/HEAD 2>/dev/null)"
+  [ -n "$base" ] || for b in origin/main origin/master; do
+    git -C "$repo" rev-parse -q --verify "refs/remotes/$b" >/dev/null 2>&1 && { base=$b; break; }
+  done
+  ahead="$(git -C "$repo" rev-list --count "${base:-HEAD}..HEAD" 2>/dev/null || echo 0)"
+  st="$(git -C "$repo" status --short 2>/dev/null)"
+  {
+    printf '\n## Record\n\n'
+    if [ "${ahead:-0}" -gt 0 ] 2>/dev/null; then
+      head="$(git -C "$repo" log --oneline -1 2>/dev/null)"
+      where="local only"
+      if git -C "$repo" rev-parse -q --verify "refs/remotes/origin/$branch" >/dev/null 2>&1 \
+        && [ "$(git -C "$repo" rev-list --count "origin/$branch..HEAD" 2>/dev/null)" = 0 ]; then
+        where="pushed"
+      else
+        tip="$(timeout 15 git -C "$repo" ls-remote origin "refs/parked/$AGENT" 2>/dev/null | awk '{print $1}')"
+        [ -n "$tip" ] && [ "$tip" = "$(git -C "$repo" rev-parse HEAD 2>/dev/null)" ] && where="parked"
+      fi
+      printf 'commit: %s\n' "$head"
+    else
+      where="local only"
+      printf 'commit: none — nothing committed (HEAD is %s)\n' "${base:-the base}"
+    fi
+    printf 'branch: %s\nrepo: %s\nmachine: %s\nwhere: %s\n' "${branch:-detached}" "$repo" "$(hostname -s 2>/dev/null || uname -n)" "$where"
+    printf 'files (git diff --name-only %s...HEAD):\n' "${base:-HEAD}"
+    files="$(git -C "$repo" diff --name-only "${base:-HEAD}...HEAD" 2>/dev/null)"
+    if [ -n "$files" ]; then printf '%s\n' "$files" | sed 's/^/    /'; else printf '    (none)\n'; fi
+    printf 'git status --short:\n'
+    if [ -n "$st" ]; then printf '%s\n' "$st" | sed 's/^/    /'; else printf '    (clean)\n'; fi
+  } >>"$shelf"
+}
+
 # 1. The worker's own terminal act, when it passes its line: append the status
 #    line and file the shelf as ONE act, so neither half is ever deferred. Done
 #    before delivery so the same shelf the failsafe sweeps is what gets queued.
@@ -111,6 +157,13 @@ if [ -n "$TERMINAL" ] && [ -n "$LINE" ]; then
   [ -s "$shelf" ] || printf '%s\n' "$(sol_stamped "$LINE")" >"$shelf" 2>/dev/null
   # A shelf the act claims to have filed must be THERE: say so loudly, never claim it silently.
   [ -s "$shelf" ] || { printf 'error: the report did not land — %s is missing or empty (state dir %s)\nhelp: check that the state dir is writable; the wake was NOT queued\n' "$shelf" "$STATE" >&2; exit 1; }
+  # THE RECORD (plan 339.2). A done report counts only with its record: the commit, the files,
+  # git status, and where the commit is. The act writes it from git itself, so no worker can
+  # forget it and no worker can word it; the arm (src/ymir_runtime/watch.py, verify_record)
+  # checks the claim on the machine it names, and a claim git does not bear out is false-done.
+  if [ "$TERMINAL" = "done" ] && ! grep -q '^## Record' "$shelf" 2>/dev/null; then
+    write_record "$shelf"
+  fi
 fi
 
 # 1b. The well remembers what the errand did (the Allfather, 2026-11-12: "when they are DONE

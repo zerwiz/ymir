@@ -525,8 +525,13 @@ $_coretext"
         # 2026-11-14 (plan 275 item 31): a branch left by an errand whose folder is gone used to refuse the seat
         # ("worktree already exists") with the error thrown away. Prune, re-attach the branch, else create.
         git -C "$_top" worktree prune 2>/dev/null || true
+        # Plan 339.4: every worktree this road makes is recorded with its road and owner, so the
+        # reaper removes it when the errand closes. eindri-start names itself; otherwise herdr-run.
+        export YMIR_WORKTREE_ROAD="${YMIR_WORKTREE_ROAD:-herdr-run}" YMIR_WORKTREE_OWNER="${YMIR_WORKTREE_OWNER:-${ROLE:-}}"
         if git -C "$_top" show-ref --verify --quiet "refs/heads/yggdrasil/$NAME"; then
           git -C "$_top" worktree add "$wt_path" "yggdrasil/$NAME" >&2 || true
+          [ -d "$wt_path" ] && python3 "$SCRIPT_DIR/../forge/worktree-reap.py" record --path "$wt_path" --repo "$_top" \
+            --branch "yggdrasil/$NAME" --errand "$NAME" --road "$YMIR_WORKTREE_ROAD" --owner "$YMIR_WORKTREE_OWNER" >/dev/null 2>&1 || true
         else
           wt_out="$("$SCRIPT_DIR/../forge/yggdrasil.sh" create "$NAME")" || printf 'herdr-run: yggdrasil.sh create %s failed: %s\n' "$NAME" "$wt_out" >&2
           _rel="$(printf '%s' "$wt_out" | grep -oE '"\.yggdrasil/[^"]+"' | head -1 | tr -d '"')"

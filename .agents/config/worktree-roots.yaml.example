@@ -1,0 +1,28 @@
+# worktree-roots.yaml — the exterior roads the worktree reaper walks (plan 339.4).
+#
+# Copy to $YMIR_HOME/config/worktree-roots.yaml and name YOUR roots there; this file ships
+# only the shape. The reaper (bin/forge/worktree-reap.py) already walks every repository's own
+# `.yggdrasil/` and every worktree a Ymir road recorded. List here the folders another worker
+# system fills with linked git worktrees, so the SAME reaper covers them — by configuration,
+# never by a second implementation.
+#
+# Every root:
+#   path              the folder whose children are linked worktrees (a `.git` FILE inside)
+#   owner             who made them — printed on every row
+#   rule              status  — reap only when `<child-name>.status` says done (and the work is
+#                               merged, parked or pushed) or failed (after failed_keep_days)
+#                     landed  — no status files: reap when the tree's HEAD is merged, parked or
+#                               pushed
+#   status_dirs       (rule: status) the shelves where `<errand>.status` files live
+#   failed_keep_days  (rule: status) how long a failed errand's tree is held (default 7)
+#   idle_days         (rule: landed) also reap a tree untouched this many days whose commits a
+#                     branch holds (0 or absent = never)
+#
+# Never removed, whatever the rule: a tree with uncommitted changes (it is NAMED), a tree an
+# agent stands in, the main checkout, a detached HEAD that no ref holds. Branches are never
+# deleted.
+roots:
+  - path: ~/.example-worker/hands
+    owner: example-worker
+    rule: landed
+    idle_days: 7

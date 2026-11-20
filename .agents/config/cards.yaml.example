@@ -1,0 +1,130 @@
+# cards.yaml — THE card contract (gimle plan 328 step 1). Copy to $YMIR_HOME/hodd/identity/cards.yaml.
+#
+# A card is a task: one piece of work, one owner, finishable and checkable. This file is what
+# bin/boards/card.sh validates every write against; a card that breaks it is REFUSED BY NAME, the same way the
+# gates refuse a commit. The prose standard it encodes is the house runbook "how to write a card" (seven fields,
+# four kinds, the smells, the personal fields, the WIP limit).
+#
+# required:  always        — refused on every write without it
+#            on_status     — refused when the card is moved into one of `statuses` without it
+#            made_by_agent — refused when the caller is an agent, an MCP tool or a voice door (provenance rule)
+#            derived       — the door fills it when it is absent; never refused
+#            optional      — carried when given
+#
+# boards.<board>:  native   — the board has a real field for it
+#                  degraded — the board has no field; the door keeps it in the body or a label and SAYS SO
+#                  lost     — the board cannot hold it at all; the door says so and the ledger counts it
+version: 1
+
+statuses: [proposed, accepted, doing, done, blocked]
+kinds: [task, bug, chore, spike]
+
+fields:
+  title:
+    required: always
+    rule: "verb + deliverable, <= 80 characters, one deliverable"
+    max: 80
+    boards: {plane: native, trello: native, github: native}
+  owner:
+    required: always
+    rule: "exactly one person or one named agent seat; never 'the team'"
+    boards: {plane: native, trello: native, github: native}   # trello/github fall back to a label/body line when the person is not on the board
+  acceptance:
+    required: always
+    rule: "at least one line someone who did not do the work can check: a command and what it prints, an observable state, or a Given/When/Then"
+    boards: {plane: degraded, trello: degraded, github: degraded}   # no board has an acceptance field; it is the body's spine
+  place:
+    required: always
+    rule: "one project or house, never a mixed board"
+    boards: {plane: native, trello: native, github: native}
+  status:
+    required: derived
+    default: proposed
+    rule: "proposed · accepted · doing · done · blocked; blocked names the blocker in `waiting`"
+    boards: {plane: native, trello: native, github: degraded}   # github: open/closed plus a status label
+  key:
+    required: derived
+    rule: "derived external key (<record-id>:<action-id>, <repo>#<issue>) so a re-run updates instead of duplicating"
+    boards: {plane: native, trello: degraded, github: degraded}
+  due:
+    required: on_status
+    statuses: [accepted, doing]
+    rule: "YYYY-MM-DD, or `unresolved` with decide_by (YYYY-MM-DD)"
+    boards: {plane: native, trello: native, github: degraded}
+  decide_by:
+    required: optional
+    rule: "YYYY-MM-DD — required when due is `unresolved`"
+    boards: {plane: degraded, trello: degraded, github: degraded}
+  evidence:
+    required: made_by_agent
+    rule: "where it came from: file#line, meeting-id:timestamp, message-id"
+    boards: {plane: degraded, trello: degraded, github: degraded}
+  kind:
+    required: derived
+    default: task
+    boards: {plane: degraded, trello: degraded, github: degraded}
+  timebox:
+    required: optional
+    rule: "a spike's time box (15m · 1h · halfday · 1d · 2d)"
+    boards: {plane: degraded, trello: degraded, github: degraded}
+  # the personal fields (runbook, appended 2026-11-20)
+  area:     {required: optional, values: [work, personal, company, machine], boards: {plane: degraded, trello: degraded, github: degraded}}
+  context:  {required: optional, rule: "@desk · @phone · @out · @<person>", boards: {plane: degraded, trello: degraded, github: degraded}}
+  energy:   {required: optional, values: [deep, light, admin], boards: {plane: degraded, trello: degraded, github: degraded}}
+  estimate: {required: optional, values: [15m, 1h, halfday], boards: {plane: degraded, trello: degraded, github: degraded}}
+  start:    {required: optional, rule: "YYYY-MM-DD — when it becomes possible, not when it is due", boards: {plane: native, trello: native, github: degraded}}
+  waiting:  {required: optional, rule: "a person or a thing, by name", boards: {plane: degraded, trello: degraded, github: degraded}}
+
+# The title guard. A task/chore title must open with an imperative verb from this list; a bug names a symptom and a
+# trigger; a spike is a question and carries a timebox.
+title:
+  verbs: [add, adopt, answer, approve, archive, assign, audit, book, build, call, carry, change, check, choose, clean,
+          close, compare, configure, connect, convert, create, decide, delete, deploy, design, discuss, document, draft,
+          enable, ensure, experiment, export, file, find, finish, fix, gather, give, hand, harden, import, install,
+          invite, lead, list, make, map, measure, merge, migrate, move, name, open, order, pay, pin, plan, port,
+          prepare, price, print, prove, publish, push, raise, read, reapproach, record, refuse, release, remove,
+          rename, repair, replace, reply, report, research, reshape, retire, review, rework, run, schedule, search,
+          send, set, share, ship, sign, split, start, stop, stress-test, submit, tell, test, track, train, update,
+          upgrade, verify, wire, work, write,
+          # widened 2026-11-20 after the guard refused 'Store …' on its first real card — the ledger's title refusals
+          # are how this list learns
+          accept, allow, back, bring, buy, cancel, clear, collect, commit, confirm, copy, cut, define, describe,
+          drop, edit, email, enforce, estimate, explain, extract, fetch, fill, flip, follow, forward, get, grant,
+          group, hire, host, identify, implement, inform, keep, label, land, learn, link, load, log, mark, meet,
+          mend, mint, mirror, monitor, note, notify, onboard, outline, pack, pair, patch, pick, poll, post, present,
+          probe, protect, provision, pull, put, rate, reach, rebuild, receive, reduce, refactor, register, reject,
+          renew, request, reserve, reset, resolve, restore, restart, return, revoke, rewrite, route, save, scan,
+          scope, seat, secure, select, serve, settle, show, sort, specify, store, stub, summarise, summarize,
+          support, sync, take, teach, translate, trim, tune, turn, unblock, undo, unify, upload, use, validate,
+          watch, weave]
+  bug_triggers: [when, with, after, on, if, for]
+  smells:   # a title containing one of these names no deliverable — refused by name
+    - "look into"
+    - "handle"
+    - "improve"
+    - "stuff"
+    - "misc"
+    - "various"
+    - "etc"
+  two_deliverables: [" and then ", " & "]   # a title joining two deliverables is two cards
+
+owner:
+  refuse: [team, the team, everyone, all, everybody, anyone, someone, tbd, unassigned, nobody, "?"]
+  separators: [",", " and ", "&", "+", "/"]   # two owners is no owner
+
+personal:
+  wip_limit: {status: doing, max: 3}   # warned on move, per owner per place — the runbook's limit of three
+
+# The people map — which login each owner has on each board. Invented names; the operator's real map lives only in
+# the home copy. An owner the map does not name is still a valid owner: the door keeps it in a label or the body
+# and SAYS SO (the field is reported as degraded on that board, never dropped).
+people:
+  Ada:
+    kind: person
+    aliases: [ada-l]
+    plane: ada
+    trello: ada_l
+    github: ada-l
+  Forseti:
+    kind: agent          # a named agent seat
+    aliases: [forseti-seat]

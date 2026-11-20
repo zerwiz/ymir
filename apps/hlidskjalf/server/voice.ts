@@ -1,5 +1,6 @@
 import { appendFile, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { basename } from 'node:path';
 import { swedishCommand, swedishVoice } from './swedish-voice.ts';
 
@@ -19,7 +20,14 @@ function engineUrl(name: string, fallback: string): string {
   return value;
 }
 const whisper = engineUrl('WHISPER_URL', 'http://127.0.0.1:10300/inference');
-const kokoro = engineUrl('KOKORO_URL', 'http://127.0.0.1:8765/v1/audio/speech');
+/** Where Kokoro listens is ONE value (plan 326.0): bin/voice/kokoro-lib.sh resolves it for the unit and every
+ * client. KOKORO_URL still overrides; KOKORO_SERVICE_URL is the engine's own name; otherwise ask the resolver. */
+function kokoroSpeechUrl(): string {
+  const base = process.env.KOKORO_SERVICE_URL || execFileSync('bash',
+    [join(import.meta.dir, '..', '..', '..', 'bin', 'voice', 'kokoro-lib.sh'), 'base'], { encoding: 'utf8' }).trim();
+  return `${base.replace(/\/+$/, '')}/v1/audio/speech`;
+}
+const kokoro = engineUrl('KOKORO_URL', process.env.KOKORO_URL ? '' : kokoroSpeechUrl());
 const terminal = (turn: Turn) => ['ready', 'stopped', 'error'].includes(turn.phase);
 const json = (data: unknown, status = 200) => Response.json(data, {
   status, headers: { 'cache-control': 'no-store' },

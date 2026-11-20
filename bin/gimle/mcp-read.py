@@ -26,6 +26,11 @@ import sys
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+# gimle plan 328.4: a card filed through this server passes the SAME guard, against the SAME contract, into the SAME
+# ledger as `bin/boards/card.sh` — the door is one module, imported, never a second copy of its rules.
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "boards"))
+import cardlib  # noqa: E402
+
 PROTOCOL = "2025-06-18"
 SERVER_INFO = {"name": "gimle", "version": "0.1.0-read"}
 
@@ -62,11 +67,20 @@ TOOLS = [
                      "properties": {"scene": {"type": "string", "description": "the scene id its owner shared"}},
                      "additionalProperties": False}},
     {"name": "create_card",
-     "description": "File a ticket into one place on the board. Refused by name when the place does not resolve or is outside this token's scope, and refused outright while the server runs read-only.",
+     "description": "File a ticket into one place on the board, through the house card door (bin/boards/card.sh): the title is verb + deliverable, there is exactly one owner, at least one acceptance line, and the evidence it came from. A card that breaks the contract is refused by name, field by field. Also refused when the place does not resolve or is outside this token's scope, and while the server runs read-only.",
      "inputSchema": {"type": "object", "required": ["place", "title"],
                      "properties": {"place": {"type": "string", "description": "the place, e.g. Ymir or example-house/Ymir"},
-                                    "title": {"type": "string"},
-                                    "description": {"type": "string", "description": "plain text — the evidence, the plan number, the address of the file"},
+                                    "title": {"type": "string", "description": "verb + deliverable, at most 80 characters"},
+                                    "owner": {"type": "string", "description": "exactly one person or named agent seat"},
+                                    "acceptance": {"type": "array", "items": {"type": "string"},
+                                                   "description": "what is true when it is done — each line checkable by someone who did not do the work"},
+                                    "evidence": {"type": "string", "description": "where it came from: file#line, meeting-id:timestamp, message-id"},
+                                    "due": {"type": "string", "description": "YYYY-MM-DD, or 'unresolved' with decide_by"},
+                                    "decide_by": {"type": "string", "description": "YYYY-MM-DD, when due is 'unresolved'"},
+                                    "kind": {"type": "string", "description": "task · bug · chore · spike"},
+                                    "timebox": {"type": "string", "description": "a spike's time box"},
+                                    "key": {"type": "string", "description": "the derived external key, so a re-run updates instead of duplicating"},
+                                    "description": {"type": "string", "description": "plain text — the objective and the context"},
                                     "state": {"type": "string", "description": "the state name to open in (default the project's first state)"}},
                      "additionalProperties": False}},
     {"name": "update_card",
@@ -552,9 +566,30 @@ def call_tool(st: State, subject: str, places_allowed: list[str], name: str, arg
         title = str(args.get("title", "")).strip()
         if not title:
             return result({"error": "a title is required"}, True)
-        made = board.create(hit, title, str(args.get("description", "")).strip(), str(args.get("state", "")))
+        # the card door (gimle plan 328.4): the guard runs before the board is touched, and its verdict is in the ledger
+        acc = args.get("acceptance")
+        card = {"title": title, "owner": str(args.get("owner", "")).strip(), "place": hit["place"],
+                "acceptance": acc if isinstance(acc, list) else ([acc] if acc else []),
+                "objective": str(args.get("description", "")).strip()}
+        for f in ("evidence", "due", "decide_by", "kind", "timebox", "key"):
+            if str(args.get(f, "")).strip():
+                card[f] = str(args[f]).strip()
+        ledger = os.environ.get("CARDS_LEDGER") or (
+            "" if cardlib.home() else os.path.join(os.path.dirname(os.path.abspath(st.audit)), "cards.jsonl"))
+        try:
+            row = cardlib.add(card, door="mcp", caller="mcp", who=subject, ledger=ledger or None)
+        except cardlib.Refused as exc:
+            return result({"error": "the card door refused this card — every field it names is owed",
+                           "refused": exc.reasons, "door": "bin/boards/card.sh"}, True)
+        c = cardlib.load_contract()
+        proj = cardlib.plan_projection(row["card"], "plane", c)
+        made = board.create(hit, title, cardlib.render_body(row["card"], proj["degraded"]), str(args.get("state", "")))
+        ref = f"{hit['place']}#{made.get('sequence_id')}"
+        cardlib.bind(row["key"], "plane", ref, ref_id=str(made.get("id") or ""), door="mcp", caller="mcp",
+                     who=subject, ledger=ledger or None)
         return result({"created": {"place": hit["place"], "card": made.get("sequence_id"),
-                                   "title": made.get("name"), "id": made.get("id")}})
+                                   "title": made.get("name"), "id": made.get("id"), "key": row["key"],
+                                   "kept_in_body": proj["degraded"], "lost": proj["lost"]}})
 
     if name == "update_card":
         if board is None:

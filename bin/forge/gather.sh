@@ -225,7 +225,10 @@ else
 
   g fetch -q "$REMOTE" "$BASE" || err "could not fetch $REMOTE $BASE"
   BATCH="gather-$(date -u +%Y%m%d-%H%M%S)"
-  out="$(bash "$MAIN_ROOT/bin/forge/yggdrasil.sh" create "$BATCH" --repo "$MAIN_ROOT" --base "$REMOTE/$BASE" 2>&1)" \
+  # Plan 339.4: the batch worktree is recorded under road `gather`; `done:` lands in
+  # state/<batch>.status once its PR is open, and the reaper removes it when the branch is held.
+  out="$(YMIR_WORKTREE_ROAD=gather YMIR_WORKTREE_OWNER="${YMIR_WORKTREE_OWNER:-helm}" \
+    bash "$MAIN_ROOT/bin/forge/yggdrasil.sh" create "$BATCH" --repo "$MAIN_ROOT" --base "$REMOTE/$BASE" 2>&1)" \
     || err "could not make the integration worktree: $out"
   WTP="$MAIN_ROOT/.yggdrasil/$BATCH"
   MANIFEST="$GDIR/$BATCH.manifest"
@@ -313,6 +316,9 @@ grep -E '^merged=' "$MANIFEST" | while IFS=$'\t' read -r br id acc; do
   [ "$id" = "-" ] && continue
   printf 'done: shipped in PR %s (batch %s)\n' "$url" "$BATCH" >>"$STATE/$id.status"
 done
+# The batch itself closes too, so its integration worktree is reaped once the branch is held
+# on the remote (bin/forge/worktree-reap.py, plan 339.4). The branch is never deleted.
+printf 'done: shipped %s errand(s) in PR %s\n' "$n" "$url" >>"$STATE/$BATCH.status"
 if [ "${GATHER_SKIP_WELL:-0}" != 1 ] && [ -r "$MAIN_ROOT/bin/records/mimir.sh" ]; then
   bash "$MAIN_ROOT/bin/records/mimir.sh" observe \
     "Batch $BATCH gathered $n branches into one PR $url; gates ran once on ${HEAD_SHA:0:12}. Branches: $(grep -E '^merged=' "$MANIFEST" | cut -f1 | sed 's/^merged=//' | tr '\n' ' ')" \

@@ -74,11 +74,14 @@ paths = [
 ]
 
 [[allowlists]]
-description = "third-party lockfiles and generated bundles repeat upstream text verbatim"
+description = "third-party lockfiles, generated bundles and scraped public pages repeat upstream text verbatim"
 paths = [
   '''(^|/)package-lock\.json$''',
   '''(^|/)pnpm-lock\.yaml$''',
   '''(^|/)yarn\.lock$''',
   '''(^|/)dist/.*\.(js|mjs|cjs|css)$''',
   '''(^|/)node_modules/.*$''',
+  # Pages a research errand scraped from public websites (branch salvage/eu-ai-funds-scout-1120,
+  # commit 34b9045df). The keys in them are those sites' own embedded browser keys, not this house's.
+  '''^\.scout/raw/.*\.html$''',
 ]

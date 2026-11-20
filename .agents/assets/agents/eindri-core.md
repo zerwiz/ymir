@@ -61,6 +61,26 @@ Read this once. It is the ground the errand stands on; the errand itself follows
 - **One fix note per change** in `docs/fixes/<component>/`, and a test when behaviour changed.
 - **Commit on your own branch** (`eindri/<errand>`) and **do not push** — the helm gathers one PR.
 
+## Your report counts only with its record
+
+A report that says *done* is a claim, and the helm checks it. Paste these four, exactly as git
+prints them, into the report:
+
+- the commit: `git log --oneline -1`
+- the files: `git diff --name-only origin/main...HEAD`
+- the tree: `git status --short`
+- where the commit is: `pushed`, `parked` or `local only`
+
+With nothing to show, the report says **nothing committed** — never *done* over an empty branch.
+The terminal act (`bin/agents/eindri-acclaim.sh <id> --terminal done …`) writes this record from
+git as a `## Record` block, with the branch, repo and machine. The arm then checks it on that
+machine: the commit must exist there, be on the named branch, and be on origin when it says
+`pushed`. A claim git does not bear out turns the status to `false-done` and wakes the helm.
+
+A question you file in `eindri-questions/<id>.md` wakes the helm after 15 minutes and reaches the
+operator after an hour. Ask it plainly in the first line; that line is what they read.
+
 ## CHANGE LOG
 
 - **2026-11-14** — written: the shipped, agnostic core every errand's brief carries, and the home's overlay is printed after it (plan 291 part 2). This document carries its history from here; its earlier history is its git log. Everything above the CHANGE LOG is printed into a brief; nothing below it is.
+- **2026-11-20** — appended: *Your report counts only with its record* — the four facts a done report carries, the record the terminal act writes, the arm's check, and the question clock (plan 339.2 and 339.3).
