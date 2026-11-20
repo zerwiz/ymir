@@ -39,6 +39,21 @@ skipped() {
   exit 0
 }
 
+# 0 — project.yaml declares its checks (checks.commit for a commit, checks.push for a push): those, and only
+# those, run, each from the repository's top. A declared empty list is a stated skip.
+if [ -f project.yaml ] && [ -f scripts/kit.py ]; then
+  key=commit; [ "$what" = test ] && key=push
+  if declared="$(python3 scripts/kit.py config get "checks.$key" 2>/dev/null)"; then
+    [ -n "$declared" ] || skipped "project.yaml declares no $key check"
+    while IFS= read -r c; do
+      [ -n "$c" ] || continue
+      printf 'checks[%s]: %s\n' "$what" "$c"
+      ( eval "$c" ) || { printf '\nchecks[%s] refused: "%s" failed\nhelp: fix it, or commit with --no-verify and say why in the message\n' "$what" "$c" >&2; exit 1; }
+    done <<< "$declared"
+    exit 0
+  fi
+fi
+
 step() {
   printf 'checks[%s]: %s\n' "$what" "$*"
   "$@" || { printf '\nchecks[%s] refused: "%s" failed\nhelp: fix it, or commit with --no-verify and say why in the message\n' "$what" "$*" >&2; exit 1; }

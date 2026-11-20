@@ -1,0 +1,15 @@
+# house.tsv — the house register: plain phrase<TAB>house phrase, applied to the installed documents.
+# The facts, numbers and refusals are untouched; only the words and names change. Longest phrase first.
+.worktrees/<id>/	.yggdrasil/<id>/
+.worktrees/	.yggdrasil/
+`.worktrees`	`.yggdrasil`
+`work/<id>`	`yggdrasil/<id>`
+`work/`	`yggdrasil/`
+the handoff shelf	the baton shelf
+The handoff shelf	The baton shelf
+a handoff	a baton
+the handoff	the baton
+The handoff	The baton
+handoffs	batons
+the project owner	the Allfather
+the team's rule	the house rule

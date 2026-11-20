@@ -1,34 +1,36 @@
 #!/usr/bin/env bash
-# A commit says what and why; "wip" does not.
+# commit-msg — a commit says what and why, in the project's tongue, and names no model or tool as its author.
 set -u
-
-notify() {
-  [ -x scripts/notify-arm.sh ] && bash scripts/notify-arm.sh "$1" "$2" >/dev/null 2>&1
-  return 0
-}
+. "$(dirname "$0")/_common.sh"
+kit_enter commit-msg
 
 message_file="${1:-}"
 [ -r "$message_file" ] || exit 0
 subject=$(head -1 "$message_file" | tr -d '\r')
 words=$(printf '%s' "$subject" | wc -w)
 
-# the maker ward (RULES/53, kit 1.6.0): a message never names a model, a maker or an agent harness.
+# the maker guard: a message never names a model, a maker or an agent harness
 if [ -x scripts/gates/maker-guard.sh ]; then
-  bash scripts/gates/maker-guard.sh message "$message_file" || { notify commit-msg "a commit message was refused for naming a model or harness"; exit 1; }
+  bash scripts/gates/maker-guard.sh message "$message_file" || { kit_notify commit-msg "a commit message was refused for naming a model or harness"; exit 1; }
+fi
+
+# the project's tongue (RULES/22): a commit is read by every future maintainer
+if [ -f scripts/kit.py ] && [ -f project.yaml ]; then
+  python3 scripts/kit.py lang msg "$message_file" || { kit_notify commit-msg "a commit message was refused for its language"; exit 1; }
 fi
 
 case "$subject" in
-  Merge*|Revert*|fixup!*|squash!*) exit 0 ;;
+  Merge*|Revert*|fixup!*|squash!*) kit_chain commit-msg "$@"; exit $? ;;
 esac
 
 if [ "$words" -lt 3 ]; then
   printf 'commit-msg refused: "%s" is too short.\nhelp: say what changed and why — one imperative line, then a paragraph.\n' "$subject" >&2
-  notify commit-msg "a commit subject was refused as too short: \"$subject\""
+  kit_notify commit-msg "a commit subject was refused as too short: \"$subject\""
   exit 1
 fi
 if printf '%s' "$subject" | grep -qiE '^(wip|update|updates|changes|fix|fixes|misc|temp|test)$'; then
   printf 'commit-msg refused: "%s" says nothing a reader can use.\n' "$subject" >&2
-  notify commit-msg "a commit subject was refused as saying nothing: \"$subject\""
+  kit_notify commit-msg "a commit subject was refused as saying nothing: \"$subject\""
   exit 1
 fi
-exit 0
+kit_chain commit-msg "$@"

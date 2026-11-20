@@ -26,7 +26,7 @@ areas[18]{id,what it owns}:
   "ward","secrets, injection, dependencies, the gate on the door — what may not be committed"
   "tests","the pyramid, fixtures, the regression test — is the test that would have caught the last bug here"
   "delivery","branch, pull request, gates, the fix note — how does a change leave, and who seals it"
-  "docs","the how-to, the decisions, the tickets, the baton — can a stranger run this"
+  "docs","the how-to, the decisions, the tickets, the handoff — can a stranger run this"
   "perf","budgets, N+1, pagination — what is the slowest thing a user waits for"
   "privacy","personal data, retention, region, NDA material — what do we hold, and when may it leave"
   "fleet","every role answers, with its road named — does this work on a machine that did not build it"
@@ -50,7 +50,7 @@ The gate `scripts/gates/areas-guard.sh` runs at pre-push: a change under an `unh
 a skip is a pass, a silent green is a lie.
 
 **What this is not.** It is not a second backlog, not a checklist to tick once, and not a way to
-claim work is done. `held` without evidence is reported as **unproved**, on the baton and on every
+claim work is done. `held` without evidence is reported as **unproved**, on the handoff and on every
 status line, until the evidence lands.
 
 ## CHANGE LOG

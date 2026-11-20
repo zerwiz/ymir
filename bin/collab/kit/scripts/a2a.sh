@@ -11,7 +11,7 @@
 # A held area becomes a skill; an unheld area is NOT offered: you do not advertise work nobody holds.
 #
 # The card is an invitation to ASK. It is never a grant: a peer still needs a per-pair, per-skill grant
-# with an expiry, and every call is recorded. Ports, hosts and paths of the house never appear here.
+# with an expiry, and every call is recorded. Ports, hosts and paths of the team never appear here.
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 exec python3 "$HERE/a2a.py" "$@"

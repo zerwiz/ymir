@@ -30,7 +30,7 @@ may_write: []
 evidence: []
 
 # The canon's questions, answered in this project's own words. An open answer ("") is honest.
-# A question that is closed while this file says otherwise is the fault the baton reports.
+# A question that is closed while this file says otherwise is the fault the handoff reports.
 answers:
   - q: "can one tenant read a row that belongs to another, by any route we expose?"
     a: ""

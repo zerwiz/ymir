@@ -26,7 +26,7 @@ The card lands at `.well-known/agent-card.json`, which is where a peer looks.
    the fleet paid for on 2026-11-05; `a2a.sh check` refuses a loopback `url`.
 2. **A card is metadata, never a secret.** No token, no key, no mailbox. `check` refuses anything that
    looks like a credential or a person's address.
-3. **A card does not name the house.** A repository that is not ours publishes its own name; our
+3. **A card does not name the team.** A repository that is not ours publishes its own name; our
    figures, ports, hosts and paths never travel (`RULES/48`).
 4. **A card is an invitation to ask, never a grant.** A peer still needs a per-pair, per-skill grant
    with an expiry, and a recorded call. Advertising a skill grants nothing.

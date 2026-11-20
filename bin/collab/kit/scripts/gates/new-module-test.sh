@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # new-module-test.sh — a new module arrives with a test, or with a reason it does not need one.
 #
-# The module that taught this house the gate was an 80-line interpreter added with no test at all, and the wards passed,
+# The module that taught this project the gate was an 80-line interpreter added with no test at all, and the wards passed,
 # because reachability is not behaviour.
 #
 # Usage: new-module-test.sh <base> [head]   exit 0 allowed · 1 an untested module · 2 usage

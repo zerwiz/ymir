@@ -1,99 +1,14 @@
 #!/usr/bin/env bash
-# standardise.sh — put the collaboration kit into a repository, or say what is missing.
+# standardise.sh — put the collaboration kit into a repository, upgrade an older one, or say what is missing.
 #
-#   bin/collab/standardise.sh --check <repo>    # a report; changes nothing
-#   bin/collab/standardise.sh --apply <repo>    # copy what is missing, seat the hooks, write the manifest
+#   bin/collab/standardise.sh --check <repo> [--profile P] [--register plain|house] [--languages en:sv]
+#   bin/collab/standardise.sh --apply <repo> [same options]   # install, upgrade older kit files, seat the hooks
+#   bin/collab/standardise.sh --uninstall <repo>              # put the hooks back as they were
 #
-# Never overwrites a rule that already exists; never touches code. Idempotent.
-set -uo pipefail
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-KIT="$HERE/kit"
-# 1.2.0 (2026-11-08, RULES/18 + plan 219): the kit carries the areas shelf — `areas/canon.yaml`,
-# `areas/TEMPLATE.yaml`, `scripts/areas.{sh,py}`, `scripts/gates/areas-guard.sh`, `docs/areas.md`,
-# and RULES/18. A behaviour change to a gate is a referee change, so it arrives with a fix note and a
-# version, never silently.
-# 1.4.0 (2026-11-11, RULES/19): the kit carries `scripts/status.py`, `docs/headers.md`, RULES/19 and the
-# `plans/tickets/` shelf; every kit document carries the header and a References section.
-# 1.5.0 (2026-11-11, RULES/20 + Ymir RULES/52): the kit carries `RULES/20` and the `docs/templates/` shelf (house
-# templates, The Good Docs Project, MADR, arc42, each with its licence); the kit README and `docs/headers.md` are
-# converted from TOON blocks to Markdown tables — format only, every fact kept.
-# 1.6.0 (2026-11-12, Ymir RULES/53): the kit carries the maker ward — `scripts/gates/maker-guard.sh`, its matcher
-# `maker-names.py`, the word list `maker-words.txt` (tune it per client) and `maker-allow.txt`; the kit's commit-msg
-# and pre-push hooks call it, so a client's commits never carry a model or harness name.
-# 1.7.0 (2026-11-15): the kit carries `docs/a-company-suite.md` — a second installation of the suite, owned by
-# another company: its own gate secrets, its own members, its own domain and theme, one MCP token per member,
-# and the proof that the two installations share no secret and no user. Documentation only; no gate changed.
-VERSION="1.7.0"
-
-mode=""; repo=""
-for a in "$@"; do
-  case "$a" in --check) mode=check ;; --apply) mode=apply ;; -*) printf 'unknown option: %s\n' "$a" >&2; exit 2 ;; *) repo="$a" ;; esac
-done
-[ -n "$mode" ] && [ -n "$repo" ] || { printf 'usage: standardise.sh --check|--apply <repo>\n' >&2; exit 2; }
-[ -d "$repo/.git" ] || [ -f "$repo/.git" ] || { printf 'not a git repository: %s\n' "$repo" >&2; exit 2; }
-
-missing=(); present=(); differ=()
-while IFS= read -r rel; do
-  target="$repo/$rel"
-  if [ ! -e "$target" ]; then missing+=("$rel")
-  elif ! cmp -s "$KIT/$rel" "$target"; then differ+=("$rel")
-  else present+=("$rel"); fi
-done < <(cd "$KIT" && find . -type f ! \( -name README.md ! -path './plans/tickets/*' \) | sed 's|^\./||' | sort)
-
-# the baton is not the kit's business: `init.sh` already owns it, and two doors to one shelf is how they drift
-if [ -x "$HERE/init.sh" ]; then
-  bash "$HERE/init.sh" "$repo" --check >/dev/null 2>&1 || printf '  note: the baton shelf is not installed — `bin/collab/collab.sh init %s`\n' "$repo"
-fi
-
-printf '[%s] kit %s\n' "$repo" "$VERSION"
-printf '  present: %s\n' "${#present[@]}"
-printf '  missing: %s\n' "${#missing[@]}"
-[ "${#missing[@]}" -gt 0 ] && printf '    %s\n' "${missing[@]}"
-printf '  different (a local rule wins; it is reported, never replaced): %s\n' "${#differ[@]}"
-[ "${#differ[@]}" -gt 0 ] && printf '    %s\n' "${differ[@]}"
-
-# the estate: what the repository's own areas shelf answers, read by the door it carries. A repository
-# without the shelf gets the door's own clean skip instead of a verdict invented here.
-if [ -x "$repo/scripts/areas.sh" ] && [ -d "$repo/areas" ]; then
-  estate="$(cd "$repo" && bash scripts/areas.sh estate 2>/dev/null | tail -1 | tr -d ' ')"
-  [ -n "$estate" ] && printf '  areas: %s  (areas,held,unproved,waived,na,unheld)\n' "$estate"
-else
-  printf '  areas: not adopted — `bash scripts/areas.sh init` after this install\n'
-fi
-
-# A gate written after an `exit 0` is a gate that never runs — the fault this kit itself carried until 2026-11-06.
-dead_gates=""
-for hook in "$repo"/.githooks/*; do
-  [ -f "$hook" ] || continue
-  first_exit=$(grep -n '^[[:space:]]*exit 0' "$hook" 2>/dev/null | head -1 | cut -d: -f1)
-  [ -n "$first_exit" ] || continue
-  after=$(tail -n "+$((first_exit + 1))" "$hook" | grep -cE '^[[:space:]]*(bash|npm|sh) ')
-  [ "$after" -gt 0 ] && dead_gates="$dead_gates $(basename "$hook"):$after"
-done
-if [ -n "$dead_gates" ]; then
-  printf '  DEAD GATES (a check written after an exit 0 — it never runs):%s\n' "$dead_gates"
-  printf '    fix: move every refusal above the first exit; the kit version already does\n'
-fi
-
-if [ "$mode" = apply ]; then
-  for rel in "${missing[@]:-}"; do
-    [ -n "$rel" ] || continue
-    mkdir -p "$repo/$(dirname "$rel")"
-    cp "$KIT/$rel" "$repo/$rel"
-    chmod +x "$repo/$rel" 2>/dev/null || true
-  done
-  # a manifest so the next run knows what it installed and when
-  # what the kit CARRIES and what this run ADDED — a manifest that says "files: 0" on a refresh reads as an
-  # empty kit. Appended 2026-11-06, after the first install that had nothing missing said exactly that.
-  carried="$(cd "$KIT" && find . -type f ! \( -name README.md ! -path './plans/tickets/*' \) | grep -c . | tr -d ' ')"
-  printf '{\n  "kit": "%s",\n  "applied": "%s",\n  "files": %s,\n  "installed_this_run": %s\n}\n' \
-    "$VERSION" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$carried" \
-    "$(printf '%s\n' "${missing[@]:-}" | grep -c . | tr -d ' ')" > "$repo/.collab-kit.json"
-  # the hooks only run if git is told where they are
-  git -C "$repo" config core.hooksPath .githooks
-  chmod +x "$repo"/.githooks/* 2>/dev/null || true
-  printf '  applied %s file(s); hooks seated at .githooks\n' "${#missing[@]}"
-fi
-
-# a repository with no baton is not standardised, whatever else it has
-[ -e "$repo/handoff/CURRENT.md" ] || printf '  note: no handoff/CURRENT.md yet — copy handoff/TEMPLATE.md and write the first baton\n'
+# Never replaces a file the repository changed for itself (a local rule wins: reported, never replaced); never
+# takes the repository's hooks (they run after the kit's); never touches product code. Idempotent.
+# 2.0.0 (2026-11-20, plan 267 K-1…K-13): plain register by default, project.yaml with stack profiles and
+# languages, the worktree lifecycle and the leftover prune (RULES/17, RULES/24), chained hooks, the container door
+# and check-host (RULES/23), the language rule (RULES/22). The implementation is standardise.py beside this file.
+set -euo pipefail
+exec python3 "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/standardise.py" "$@"

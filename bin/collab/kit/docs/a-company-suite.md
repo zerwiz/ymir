@@ -19,12 +19,12 @@ separate.
 
 ## Two installations, one discipline
 
-The discipline is the same in both: the baton, the fix notes, the gates, the areas, the door with its card and
+The discipline is the same in both: the handoff, the fix notes, the gates, the areas, the door with its card and
 its grant. Nothing else is shared. The suite is software a company runs, not a service it subscribes to.
 
 ```mermaid
 flowchart LR
-    subgraph first["First installation — the house that made the kit"]
+    subgraph first["First installation — the team that made the kit"]
         member1([its members]) --> gate1[its gate]
         gate1 --> suite1[its hall · board · documents]
     end

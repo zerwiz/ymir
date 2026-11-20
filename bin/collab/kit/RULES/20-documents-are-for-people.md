@@ -1,7 +1,6 @@
 # 20 — A document is written for a person to read
 
-Written 2026-11-11, from the house rule of the same day (Ymir `RULES/52`), at the operator's word: *"in documentation
-we want to always use good looking documents so humans can read them simply."*
+Written 2026-11-11. Documentation is laid out so a person can read it simply.
 
 ## The law
 
@@ -34,8 +33,7 @@ kept, and the change log says so.
 - `docs/templates/INDEX.md` — the template shelf
 - `docs/headers.md` — the header every document opens with
 - `RULES/19-plan-validate-execute.md` — plans and tickets
-- Ymir `RULES/52-documents-are-for-people.md` — the house law this rule carries
 
 ## CHANGE LOG
 
-- **2026-11-11** — Written at the Allfather's word: documents are for people — tables, Mermaid and callouts, never TOON.
+- **2026-11-11** — Written: documents are for people — tables, Mermaid and callouts, never TOON.

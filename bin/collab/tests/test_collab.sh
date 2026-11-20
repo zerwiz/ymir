@@ -35,7 +35,7 @@ bash "$_d/init.sh" "$repo" --check >/dev/null 2>&1 && no "an incomplete baton fa
 # ---- 4 · the check passes a complete, fresh one --------------------------------------------------
 stamp="$(date -u +%Y-%m-%d)"
 { printf '# Handoff — a → b\n\n**Date:** %s\n**Branch:** `main` · **Commit:** `abc1234` · **PR:** none\n' "$stamp"
-  printf '**Deployed:** not deployed\n\n'
+  printf '**Deployed:** not deployed\n**For:** the next person on this project\n\n'
   printf '## 1 · Where we are\nx\n## 2 · What is done\nx\n## 3 · What is next\nx\n'
   printf '## 4 · What is blocked, and on whom\nx\n## 5 · How to verify the current state\nx\n'
   printf '## 6 · Read first\nx\n## 7 · Traps\nx\n'; } > "$repo/handoff/CURRENT.md"
@@ -89,11 +89,18 @@ bash "$_d/ship.sh" --repo "$repo" --branch b1 --message m --path nope.txt >/dev/
   && no "ship refuses an empty path" || ok "ship refuses an empty path"
 
 
-# ---- 8 · the kit's template shelf is the Bragi skill's, byte for byte (RULES/52, kit RULES/20) ------
+# ---- 8 · the kit's template shelf is the Bragi skill's (RULES/52, kit RULES/20) ---------------------------------
+# kit 2.0.0 speaks the plain register: the skill's `house/` set ships as `project/`, and the kit's INDEX.md names
+# no house document. Every template file is still the skill's, byte for byte.
 _root="$(cd "$_d/../.." && pwd)"
-if diff -rq "$_root/.agents/skills/bragi-documents/assets/templates" "$_d/kit/docs/templates" >/dev/null 2>&1; then
-  ok "the kit's templates match the bragi-documents skill"
-else no "the kit's templates match the bragi-documents skill — copy assets/templates/ into kit/docs/templates/"; fi
+_tpl_ok=1
+while IFS= read -r rel; do
+  [ "$rel" = INDEX.md ] && continue
+  kitrel="${rel/#house\//project/}"
+  cmp -s "$_root/.agents/skills/bragi-documents/assets/templates/$rel" "$_d/kit/docs/templates/$kitrel" || { _tpl_ok=0; printf '  differs: %s\n' "$rel"; }
+done < <(cd "$_root/.agents/skills/bragi-documents/assets/templates" && find . -type f | sed 's|^\./||')
+[ "$_tpl_ok" = 1 ] && ok "the kit's templates match the bragi-documents skill (house/ shipped as project/)" \
+  || no "the kit's templates match the bragi-documents skill — copy assets/templates/ into kit/docs/templates/"
 [ -f "$_d/kit/RULES/20-documents-are-for-people.md" ] && ok "the kit carries RULES/20" || no "the kit carries RULES/20"
 
 # ---- 9 · a push of only the baton reaches main; code beside it does not (kit RULES/17, 2026-11-11) ---
@@ -101,7 +108,7 @@ _h="$(mktemp -d)"
 git init -q --bare "$_h/remote.git"
 git init -q -b main "$_h/w" && (
   cd "$_h/w" && git config user.email t@example.invalid && git config user.name t
-  mkdir -p handoff .githooks && cp "$_d/kit/.githooks/pre-push" .githooks/pre-push && chmod +x .githooks/pre-push
+  mkdir -p handoff .githooks && cp "$_d/kit/.githooks/pre-push" "$_d/kit/.githooks/_common.sh" .githooks/ && chmod +x .githooks/pre-push
   echo one > handoff/CURRENT.md && echo code > app.txt && git add -A && git commit -qm "first commit of the fixture"
   git remote add origin "$_h/remote.git" && git push -q --no-verify origin main 2>/dev/null
   git config core.hooksPath .githooks
@@ -111,6 +118,10 @@ git init -q -b main "$_h/w" && (
 ( cd "$_h/w" && echo three > handoff/CURRENT.md && echo more >> app.txt && git commit -qam "the baton and a code change" && git push -q origin main ) >/dev/null 2>&1 \
   && no "a push with code beside the baton is refused at main" || ok "a push with code beside the baton is refused at main"
 rm -rf "$_h"
+
+# ---- 10 · kit 2.0.0: every requirement of plan 267 K-1…K-13 and RULES/24, in Python (test_kit.py) -------------
+if python3 "$_d/tests/test_kit.py" >"$tmp/kit.log" 2>&1; then ok "test_kit.py: $(grep -Eo 'Ran [0-9]+ tests' "$tmp/kit.log")"
+else no "test_kit.py"; tail -40 "$tmp/kit.log"; fi
 
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

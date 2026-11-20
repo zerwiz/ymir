@@ -145,7 +145,7 @@ def check():
                 faults.append(f"skill {s.get('id') or '(no id)'} has no `{field}`")
     if not card.get("securitySchemes") and not card.get("securityRequirements"):
         faults.append("no `securitySchemes`/`securityRequirements` — a card that promises anonymity "
-                      "is a lie about this house")
+                      "is a lie about this project")
     blob = json.dumps(card)
     if SECRETISH.search(blob):
         faults.append("something in the card looks like a credential — a card is metadata, never a secret")

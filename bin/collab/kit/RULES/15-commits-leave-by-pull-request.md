@@ -1,6 +1,6 @@
 # 15 — Every commit leaves by a pull request, or it lands in main
 
-**Added 2026-11-02** at the Allfather's word: *"all commits must come up as PRs or into main."*
+**Added 2026-11-02.** Every commit reaches the default branch by a pull request — or, for documents and handoffs, directly.
 
 ## The rule
 
@@ -8,7 +8,7 @@
 law[4]{rule,why}:
   "**a branch without a pull request is unfinished work**","a commit that nobody can see is a commit nobody can review, and a review is the only thing between a change and a surprise"
   "**a pull request names what it changes and what proves it**","the reviewer reads the claim and the evidence in one place, not a diff and a guess"
-  "**only the Allfather merges**","the gate is human by design; an agent that merges has replaced the gate with its own judgement"
+  "**only a person merges**","the gate is human by design; an agent that merges has replaced the gate with its own judgement"
   "**production runs a sealed commit**","a deploy from an unmerged branch means the thing being reviewed is not the thing being run"
 ```
 

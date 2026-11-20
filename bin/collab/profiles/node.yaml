@@ -1,0 +1,54 @@
+# project.yaml — the one file every collaboration-kit tool reads (kit {{kit}}).
+# Change a value here and every tool follows. Anything left out takes the kit's default.
+
+project: {{project}}
+register: {{register}}              # plain | house — how the kit's words and names read; the facts are the same
+names:
+  worktrees: {{worktrees}}          # where worktrees are made, under the main tree
+  branch_prefix: {{branch_prefix}}       # a worktree's branch is <prefix>/<id>
+
+languages:
+  project: {{lang_project}}                    # code, commits, pull requests, documents
+  client: [{{lang_client}}]                 # what a client reads or hears
+  client_paths: [{{client_paths}}]
+  files: report                  # report | refuse — a client tongue outside client_paths at a commit
+
+stack:
+  kind: node                     # npm | bun | pnpm — the check below names the one this project uses
+  link: [node_modules]           # linked from the main tree into every worktree
+  never_share: [dist, .next, build]   # every worktree builds its own
+
+hooks:
+  chain: []                      # tracked hook folders of the repository, run after the kit's hooks
+
+checks:
+  commit: []
+  push: ["npm run --if-present check", "npm run --if-present test"]
+
+worktrees:
+  max: 8                         # per repository on one machine
+  stale_hours: 24                # idle this long, no process inside: the worker is gone
+  expiry_days: 7
+  max_leftovers: 2               # doctor and new refuse past this many leftovers
+  close_merged_on_new: true
+
+disk:
+  min_free_pct: 15               # new, builds and doctor refuse below both floors
+  min_free_gb: 40
+
+containers:
+  engine: podman
+  product_hosts: []              # host names that run the product; a worker removes nothing there
+  keep_tags: 2                   # the current and the previous release
+  labels: [project, purpose, release]
+
+leftovers:                       # RULES/24 — bash scripts/prune.sh reports; --apply acts
+  worktrees: {apply: true}
+  branches: {apply: true}
+  remote_refs: {apply: true}
+  caches: {apply: true, idle_hours: 24}
+  scratch: {apply: true, dir: "", older_than_hours: 24}
+  test_databases: {apply: false, pattern: "", list: "", drop: ""}
+  images: {apply: true}
+  volumes: {apply: true}
+  stopped_containers: {apply: true, older_than_hours: 24}

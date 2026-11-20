@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # reviews-shelf — a review nobody can find is a review that did not happen.
 #
-# Three checks: every review is named after the pull request it judges, every review appears on the shelf index, and the baton
-# names the newest one — because a person starting work reads the baton first, not the folder.
+# Three checks: every review is named after the pull request it judges, every review appears on the shelf index, and the handoff
+# names the newest one — because a person starting work reads the handoff first, not the folder.
 set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 DIR="$ROOT/docs/audit"
 INDEX="$DIR/README.md"
-BATON="$ROOT/handoff/CURRENT.md"
+HANDOFF="$ROOT/handoff/CURRENT.md"
 
 reviews="$(ls -1 "$DIR" 2>/dev/null | grep 'review-of-pr' || true)"
 [ -n "$reviews" ] || { printf 'reviews-shelf: none yet\n'; exit 0; }
@@ -27,8 +27,8 @@ if [ -n "$unlisted" ]; then
 fi
 
 newest="$(printf '%s\n' "$reviews" | sort -r | head -1)"
-if ! grep -q "$newest" "$BATON" 2>/dev/null; then
-  printf 'reviews-shelf refused: the baton does not name the newest review (%s)\n  a review nobody is pointed at is a file, not a review\n' "$newest" >&2
+if ! grep -q "$newest" "$HANDOFF" 2>/dev/null; then
+  printf 'reviews-shelf refused: the handoff does not name the newest review (%s)\n  a review nobody is pointed at is a file, not a review\n' "$newest" >&2
   exit 1
 fi
-printf 'reviews-shelf: %s review(s), indexed, newest named by the baton\n' "$(printf '%s\n' "$reviews" | grep -c .)"
+printf 'reviews-shelf: %s review(s), indexed, newest named by the handoff\n' "$(printf '%s\n' "$reviews" | grep -c .)"

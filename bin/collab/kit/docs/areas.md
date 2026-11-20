@@ -33,7 +33,7 @@ the four.
 ```bash
 bash scripts/areas.sh init          # 18 files, every one honestly unheld
 bash scripts/areas.sh check         # what is unanswered, and what is unproved
-bash scripts/areas.sh estate        # the one line the baton carries
+bash scripts/areas.sh estate        # the one line the handoff carries
 ```
 
 Then take the areas that have work in flight:
@@ -61,7 +61,7 @@ evidence is good, it does not decide what the areas are, and it does not require
 held. A repository that never ran `init` gets a printed skip — a skip is a pass, a silent green is a
 lie.
 
-The override is loud and deliberate: `YMIR_SKIP_AREAS_GUARD=1 git push …` and say why in the commit.
+The override is loud and deliberate: `KIT_SKIP_AREAS_GUARD=1 git push …` and say why in the commit.
 
 ## Keeping it honest
 

@@ -17,8 +17,8 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT" || exit 2
 base="${1:-}"; head="${2:-HEAD}"
 
-if [ "${YMIR_SKIP_A2A_GUARD:-0}" = "1" ]; then
-  printf 'a2a-guard: skipped at the operator\x27s word (YMIR_SKIP_A2A_GUARD=1)\n'
+if [ "${KIT_SKIP_A2A_GUARD:-0}" = "1" ]; then
+  printf 'a2a-guard: skipped at the operator\x27s word (KIT_SKIP_A2A_GUARD=1)\n'
   exit 0
 fi
 [ -e .well-known/agent-card.json ] || { printf 'a2a-guard: no card in this repository — skipped\n'; exit 0; }

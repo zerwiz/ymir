@@ -1,21 +1,20 @@
 ---
-name: smidr-the-workbench
-description: "Smíðr — the craft, taught at the bench: how a hand from another house works inside this repository, from the branch to the pull request, without breaking its law or its gates. Use when you are a contributor's agent in a repository that is not yours, before your first branch, before a fix, before you open the pull request, and when a gate refuses you."
+name: the-workbench
+description: "The workbench: how a contributor from another team works inside this repository, from the branch to the pull request, without breaking its law or its gates. Use when you are a contributor's agent in a repository that is not yours, before your first branch, before a fix, before you open the pull request, and when a gate refuses you."
 domain: collab
 allowed-tools: read,write,bash,glob,grep
 role: craftsman
-norse_name: Smíðr
-descriptor: the craft, taught at the bench
+descriptor: the craft of a contributor
 capabilities:
   - contributor_discipline
   - gate_reading
   - small_slices
 ---
 
-# Smíðr — the craft, taught at the bench
+# The workbench — the craft of a contributor
 
 Read this once, at the start, and once again before the pull request. It is the discipline of a guest hand: the work is
-wanted, the house's law is not yours to edit, and the reviewer's time is the scarcest thing in the building.
+wanted, the project's law is not yours to edit, and the reviewer's time is the scarcest thing in the building.
 
 ## The shape of a slice
 
@@ -35,8 +34,8 @@ slice[6]{step,rule,why}:
 referee[5]{thing,why,what_instead}:
   "the gates (`scripts/gates/`)","they decide whether work may land; a gate edited to pass is not a gate","fix it, and say why — a note under `docs/fixes/` and a word in the message; the referee guard demands both"
   "the hooks (`.githooks/`)","the same","the same"
-  "the wards (`scripts/wards/`)","they are the doctor this house trusts","the same"
-  "another hand's plan or baton","plans and batons are appended, never rewritten","add a dated section citing it, or write your own"
+  "the wards (`scripts/wards/`)","they are the checks this project trusts","the same"
+  "another hand's plan or handoff","plans and handoffs are appended, never rewritten","add a dated section citing it, or write your own"
   "another hand's pull request","it is theirs to tend","review it with a file, and say what is good before what is wrong"
 ```
 
@@ -68,7 +67,7 @@ If a command is missing from the repository, that is a finding worth reporting �
 
 ## What this skill is not
 
-It is not the house's law and it does not replace `AGENTS.md`. Where the two disagree, **the repository wins**; the skill is
+It is not the project's law and it does not replace `AGENTS.md`. Where the two disagree, **the repository wins**; the skill is
 the part a repository usually forgets to write down because everyone senior already knows it.
 
 ## CHANGE LOG

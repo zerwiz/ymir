@@ -19,8 +19,8 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT" || exit 2
 base="${1:-}"; head="${2:-HEAD}"
 
-if [ "${YMIR_SKIP_AREAS_GUARD:-0}" = "1" ]; then
-  printf 'areas-guard: skipped at the operator\x27s word (YMIR_SKIP_AREAS_GUARD=1)\n'
+if [ "${KIT_SKIP_AREAS_GUARD:-0}" = "1" ]; then
+  printf 'areas-guard: skipped at the operator\x27s word (KIT_SKIP_AREAS_GUARD=1)\n'
   exit 0
 fi
 

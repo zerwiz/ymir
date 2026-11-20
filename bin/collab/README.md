@@ -61,3 +61,23 @@ what it leaves alone, commits, merges into the base branch and pushes.
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+
+## Appended 2026-11-20 — the kit itself, 2.0.0
+
+The kit a repository receives (`kit/`, installed by `standardise.sh`) is now plain by default and carries its own
+lifecycle. The doors on this side:
+
+```sh
+bin/collab/standardise.sh --check <repo>                     # missing · older (upgradable) · local (kept)
+bin/collab/standardise.sh --apply <repo> --profile <p> --register plain|house --languages en:sv
+bin/collab/standardise.sh --uninstall <repo>                 # the repository's hooks setting, restored
+bin/collab/kit-history.sh                                    # regenerate kit-history.tsv in a kit release
+python3 bin/collab/tests/test_kit.py -v                      # plan 267 K-1…K-13 and RULES/24, fixtures only
+```
+
+| Piece | Where |
+|---|---|
+| stack profiles | `profiles/*.yaml` → the repository's `project.yaml` |
+| the house register | `registers/house.tsv` — the same facts, the house's words and folder names |
+| every blob the kit ever shipped | `kit-history.tsv` — how an older kit file is told from a local rule |
+| the fix note | `docs/fixes/collab/2026-11-20-the-kit-speaks-plain-and-leaves-no-leftovers.md` |
