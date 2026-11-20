@@ -90,3 +90,7 @@ the real vault and never imports a key.
 - `docs/features/the-vault-locked-to-your-github-keys.md` (new),
   `docs/features/_catalogue/entries/01-013-vault-the-vault-locked-to-your-github-keys.md` (new)
 - `.agents/skills/galdr-ymirsystem/assets/vault-keys.md` (new), `SKILL.md`, `assets/README.md`
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #848
