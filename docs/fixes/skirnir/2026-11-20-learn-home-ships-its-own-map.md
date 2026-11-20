@@ -89,3 +89,7 @@ home's own fact shelf is rewritten by the next nightly run, and that run ships i
   `--no-ship` and `--dry-run`.
 - `systems/skirnir/tests/test_learn_home_ship.sh` — the proof above.
 - `bin/gates/checks.d/0540-learn-home-ship.sh` — the gate that runs it in CI.
+
+## CHANGE LOG
+
+- 2026-11-19 — review-mend: added missing heading for #831
