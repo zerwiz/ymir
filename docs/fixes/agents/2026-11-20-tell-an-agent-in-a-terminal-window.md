@@ -25,3 +25,8 @@ that works is `hyprctl dispatch 'hl.dsp.focus({ window = "address:…" })'`. The
 `--list` found the one hand-started Claude (pid, foot window, workspace 9). A dry run resolved it by pid and by a title
 word; an unknown target refused with rc 2. The first real tell (the helm's letter to that session) was typed and the
 session answered in its transcript.
+
+## Correction (same day)
+
+The first build carried its own Lua-or-classic focus. `bin/desktop/display-lib.sh` already owns the window manager's
+dialect (`display_dialect`, `window_focus`), so `window-tell.sh` now sources it instead of keeping a second copy.
