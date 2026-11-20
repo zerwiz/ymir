@@ -100,3 +100,7 @@ check{pi-extensions-one-home}:
 - `bin/agents/eindri-send.sh` — `errand_pane`, the resolve-before-refuse, `--resolve`
 - `bin/agents/tests/test_eindri_send.sh` — an errand id, a dead errand, and `--resolve`
 - `bin/agents/tests/test_errand_doors_find_the_seat.sh` — the readers, by command
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #842
