@@ -199,6 +199,7 @@ PY
     if docker run -d --name "$CONTAINER" -p "127.0.0.1:$PORT:$PORT" -p "$BIND:$PORT:$PORT" \
         -v "$STATE_DIR/conduwuit.toml:/etc/conduwuit/conduwuit.toml:ro" \
         -v "$STATE_DIR/data:/var/lib/conduwuit" \
+        --label ymir.owner=gladsheim \
         --restart unless-stopped "$IMAGE" /sbin/conduwuit -c /etc/conduwuit/conduwuit.toml >/dev/null 2>&1; then
       sleep 4; engine_up && st="up" || st="starting"
       printf 'gladsheim-ensure[3]{fact,result}:\n'
