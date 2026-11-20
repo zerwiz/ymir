@@ -20,7 +20,7 @@ has() { local needle=$1 file=$2 label=$3; grep -q -- "$needle" "$file" 2>/dev/nu
 T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
 REPO="$T/repo"; HOME_DIR="$T/home"
 mkdir -p "$REPO/bin/gates" "$REPO/bin/vault" "$REPO/bin/forge" "$REPO/bin/notify" "$REPO/bin/agents" \
-         "$HOME_DIR/hodd/state"
+         "$HOME_DIR/hodd" "$HOME_DIR/state"
 git init -q "$REPO"
 printf 'stub\n' >"$REPO/stub.txt"
 git -C "$REPO" add stub.txt
@@ -58,7 +58,7 @@ run() { YMIR_REPO="$REPO" YMIR_HOME="$HOME_DIR" timeout 120 bash "$DOOR" "$@" 2>
 out="$(run)"; rc=$?
 rc_is 0 "$rc" "a scheduled scan with findings exits 0"
 case "$out" in *"1 finding(s)"*) ok "it prints the count" ;; *) bad "it prints the count" "$out" ;; esac
-has "1 finding(s)" "$HOME_DIR/hodd/state/private-scan/queue.md" "the queue carries the finding"
+has "1 finding(s)" "$HOME_DIR/state/private-scan/queue.md" "the queue carries the finding"
 has "twice-daily sweep found 1 thing" "$HOME_DIR/hodd/data/private-scan/brief.md" "the brief is written for the errand"
 
 # ── 2 · the same finding, for a caller that gates ──

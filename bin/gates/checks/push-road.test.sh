@@ -29,6 +29,8 @@ printf 'push_road_test[10]{check,status,detail}:\n'
 
 git clone --quiet --shared "$ROOT" "$WORK/tree" 2>/dev/null || { bad clone "could not clone"; exit 1; }
 T="$WORK/tree"
+# a CI runner has no git identity; the probe commits as a fixture, never as the operator
+git -C "$T" config user.name probe; git -C "$T" config user.email probe@users.noreply.github.com
 # the stamps live in the CLONE's git dir, never in the checkout under test
 export YMIR_GUARD_CACHE="$WORK/cache" YMIR_GUARD_NO_CACHE=1
 GATE_FILES=(.githooks/pre-push bin/gates/guards.sh bin/gates/guards/nda-guard.sh bin/gates/guards/public-guard.py
@@ -40,7 +42,7 @@ cd "$T" || exit 1
 # Stand one in the clone: six empty commits on its own HEAD, named origin/main. The probe needs a
 # history to be behind, not the house's real one; a full checkout takes the real origin/main.
 if ! git rev-parse -q --verify origin/main~5 >/dev/null; then
-  for i in 1 2 3 4 5 6; do git -c user.name=probe -c user.email=probe@example.org commit -q --allow-empty -m "probe base $i" || break; done
+  for i in 1 2 3 4 5 6; do git commit -q --allow-empty -m "probe base $i" || break; done
   git update-ref refs/remotes/origin/main HEAD
 fi
 git rev-parse -q --verify origin/main >/dev/null || { bad clone "the clone has no origin/main"; exit 1; }

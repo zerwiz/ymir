@@ -49,6 +49,8 @@
 #     (gimle plan 328). `todo` is the feature's NAME there, the same class as `comms.py` above.
 #   · `todo-board.yaml` — the board's config FILENAME in the home, wherever a door names it (the same
 #     class as `todo.md`): matched on the filename only, so a stub on that line's neighbours is caught.
+#     The board's door FILENAMES, `todo.sh` and `todo_board.py`, are the same class wherever a generated index
+#     names them (bin/records/INDEX.md).
 #   · `bin/boards/cardlib.py` lines that quote `"todo"` — a board's own LANE NAME in the lane synonym
 #     table (Plane and Trello both ship a list called "Todo"). Data, matched on the quoted word only.
 #   · `bin/voice/voice_tools.py` — the voice fills the operator's letter templates (`placeholder` is the
@@ -78,6 +80,7 @@ hits="$(grep -rnE '\b(mock|stub|placeholder|todo)\b' "$ROOT/bin" 2>/dev/null \
   | grep -vE '^[^:]*bin/voice/voice_tools\.py:[0-9]+:' \
   | grep -vE '^[^:]*bin/records/todo_board\.py:[0-9]+:' \
   | grep -vE 'todo-board\.yaml' \
+  | grep -vE '"todo\.sh"|todo\.sh —|todo_board\.py' \
   | grep -vE '^[^:]*bin/boards/cardlib\.py:[0-9]+:.*"todo"' || true)"
 
 
