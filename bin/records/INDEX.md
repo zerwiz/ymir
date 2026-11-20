@@ -30,7 +30,7 @@ bin[57]{file,does,kind,verdict,disposition,callers,lines}:
   "cron-registry.sh","cron-registry.sh — every scheduled thing on this machine: the Nornir rows, the system timers, the user timers.","tool","wired","keep",1,66
   "daily-log.sh","daily-log.sh — the day's work, recorded where the contract says it lives.","tool","wired","keep",6,104
   "developers.sh","developers.sh — who can write to a repository, and who actually has.","tool","wired","keep",0,119
-  "gimle-tunnels-check.sh","gimle-tunnels-check.sh — every Gimlé surface must be reachable on a tunnel, and we must KNOW it is, not assume it.","tool","wired","keep",3,74
+  "gimle-tunnels-check.sh","gimle-tunnels-check.sh — every Gimlé surface must be reachable on a tunnel, and we must KNOW it is, not assume it.","tool","wired","keep",3,80
   "grade.sh","grade.sh — Dellingr: how fresh is a document?","tool","wired","keep",2,29
   "header.sh","header.sh — the declared-truth header of a home document: check, or apply a minimal one.","tool","wired","keep",2,28
   "host-status.sh","host-status.sh — CPU, memory and GPU of this machine, in one read.","tool","wired","keep",0,45
@@ -78,8 +78,8 @@ bin[57]{file,does,kind,verdict,disposition,callers,lines}:
   "where.sh","where.sh — 'which book do I read before touching this path?'","tool","wired","keep",2,101
   "workspace-rag.sh","workspace-rag.sh — memory over the realm workspaces (W0038).","tool","wired","keep",0,165
   "wyrd-db.sh","wyrd-db.sh — the database layer (W0040).","tool","wired","keep",0,49
-  "ymir-state.sh","ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runtime/state/`).","tool","wired","keep",12,44
+  "ymir-state.sh","ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runtime/state/`).","tool","tested","keep",12,44
 
-**Tally.** verdict: wired=48, tested=9
+**Tally.** verdict: wired=47, tested=10
 
 **Tally.** disposition: keep=56, migrate → src/ymir_runtime/library.py=1

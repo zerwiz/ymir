@@ -82,6 +82,7 @@
 | public-data-guard.sh | public-data-guard.sh — the TREE scan for RULES/04: templates and logic | tested | keep (a human or a cron row must run it) |
 | public-guard.sh | public-guard.sh — the OLDER door to RULES/04's judgement: templates an | tested+named | keep (a human or a cron row must run it) |
 | registers-guard.sh | registers-guard.sh — every generated register is current. | tested | keep (a human or a cron row must run it) |
+| retired-path-guard.sh | retired-path-guard.sh — a NEW file may not name a retired home path (p | tested+named | keep (a human or a cron row must run it) |
 | rules-compliance-guard.sh | rules-compliance-guard.sh — a push proves the house's own rules were f | tested | keep (a human or a cron row must run it) |
 | rules-number-guard.sh | (no header line) | tested | keep (a human or a cron row must run it) |
 | runtime-guard.sh | (no header line) | tested | keep (a human or a cron row must run it) |
@@ -147,6 +148,7 @@
 | test_regenerate_on_merge_cleanup.sh | test_regenerate_on_merge_cleanup.sh — the merge driver leaves no `.mer | tested | keep (a human or a cron row must run it) |
 | test_registers.sh | test_registers.sh — one door for every generated register. | tested | keep (a human or a cron row must run it) |
 | test_require_check_keeps_the_checks.sh | test_require_check_keeps_the_checks.sh — the door that writes main's p | tested | keep (a human or a cron row must run it) |
+| test_retired_path_guard.sh | retired-path-guard refuses a NEW file naming hodd/state/, hodd/life/ or  | tested | keep (a human or a cron row must run it) |
 | test_review_mend.sh | dry-run on PR 624 (missing CHANGE LOG) -> rung per finding + next: | tested | keep (a human or a cron row must run it) |
 | test_review_seat_verdict.sh | test_review_seat_verdict.sh — plan 272 fault 6: a review seat ends in  | tested | keep (a human or a cron row must run it) |
 | test_review_seats.sh | test_review_seats.sh — proves the seats and their mouth, hermetically. | tested | keep (a human or a cron row must run it) |
