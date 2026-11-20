@@ -34,3 +34,7 @@ such as `apps/hlidskjalf`.
 
 `bin/engine/release.sh build --ref origin/main --from ~/ymir` ran to the end and proved the release.
 The release sha is in the errand report.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #840
