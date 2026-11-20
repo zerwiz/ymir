@@ -82,3 +82,7 @@ Do not call `hyprctl dispatch`, `eval`, `keyword` or `reload` yourself. Call thi
 - `type` says `focus did not land`: another window took focus, or the target is on a special desktop. Nothing
   was typed.
 - `config reload` exits 1: read the file and line it names, fix that line, then reload again.
+
+## CHANGE LOG
+
+- **2026-11-20** — written with the change it describes (plan 341.1–341.3).
