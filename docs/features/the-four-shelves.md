@@ -79,3 +79,8 @@ never committed.
   migration again when the machine is quiet.
 - **Eir says a layout key names a path that does not exist.** Your `.ymir-layout.yaml` is stale. Point the key at
   the real folder, or remove it.
+
+## CHANGE LOG
+
+- **2026-11-19** — written with plan 331: the four shelves, migration 0026 and the one-cycle links.
+- **2026-11-20** — carried to main from the developer seat that built it, at the Allfather's word "make so all carry the new home".
