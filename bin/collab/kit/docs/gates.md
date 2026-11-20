@@ -74,3 +74,7 @@ nobody has ever triggered is a tax on every commit.
 
 - `scripts/gates/`, `.githooks/`, `RULES/15-commits-leave-by-pull-request.md`, `RULES/19-plan-validate-execute.md`
 - `docs/headers.md` — the header and References format this document follows
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #841
