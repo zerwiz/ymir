@@ -87,7 +87,7 @@ bin[71]{file,does,kind,verdict,disposition,callers,lines}:
   "test_eindri_send.sh","test_eindri_send.sh — the safe sender's three laws, with a stubbed herdr and a fence.","tool","wired","keep",1,220
   "test_eir_mends.sh","test_eir_mends.sh — the Eir rows that read wrong or looked at the wrong place (2026-11-12).","tool","wired","keep",0,34
   "test_eir_register.sh","test_eir_register.sh — plan 278: Eir reads one register, mends by risk class, and never leaves a broken","tool","wired","keep",1,95
-  "test_errand_doors_find_the_seat.sh","test_errand_doors_find_the_seat.sh — an errand is found by the RECORD, not by a guess.","tool","wired","keep",0,97
+  "test_errand_doors_find_the_seat.sh","test_errand_doors_find_the_seat.sh — an errand is found by the RECORD, not by a guess.","tool","wired","keep",0,109
   "test_groa_verdict.sh","test_groa_verdict.sh — plan 278: the last line of an update tells the truth.","tool","wired","keep",1,68
   "test_project_target.sh","test_project_target.sh — a worker for another project starts in THAT project's folder","tool","wired","keep",0,135
   "valhalla.sh","valhalla.sh — the process hall (Valhalla).","tool","wired","keep",0,116
