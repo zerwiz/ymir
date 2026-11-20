@@ -47,6 +47,16 @@ while IFS=$'\t' read -r id host road crit; do
   why=""; note=""
   dns=$(getent hosts "$host" >/dev/null 2>&1 && echo yes || echo no)
   code=$(curl -s -o /dev/null -w '%{http_code}' -m 10 "https://$host/" 2>/dev/null)
+  # A SLOW ORIGIN IS NOT AN ABSENT ONE (2026-11-20, measured). One pass reported `7 up · 1 failing` with two
+  # surfaces at 000 — documents and the desk — and both answered 401 and 404 within the minute. AFFiNE cold
+  # takes longer than ten seconds, and a monitor that calls that "down" every half hour teaches the operator to
+  # ignore the job. So a surface that does not answer is asked a SECOND time, with more patience, before it is
+  # judged; only a second silence is a failure, and the line then says so.
+  case "$code" in
+    000|'') sleep 2
+            code=$(curl -s -o /dev/null -w '%{http_code}' -m 25 "https://$host/" 2>/dev/null)
+            case "$code" in 000|'') code="000 after two tries" ;; esac ;;
+  esac
   case "$code" in
     200|301|302|303|307|308) http=ok ;;
     404) http=ok; note="api surface (no root page)" ;;      # the MCP and the bridge answer where they should
