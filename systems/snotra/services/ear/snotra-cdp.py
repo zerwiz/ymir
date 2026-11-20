@@ -582,9 +582,10 @@ def cmd_selftest(args) -> int:
         tts = "/tmp/snotra-selftest.wav"
         body = json.dumps({"model": "kokoro", "input": text, "voice": "af_nicole",
                            "response_format": "wav"}).encode()
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "bin", "voice"))
+        import kokoro_url  # the one value (plan 326.0); KOKORO_URL still overrides
         req = urllib.request.Request(
-            os.environ.get("KOKORO_URL", "http://127.0.0.1:8765").rstrip("/")
-            + "/v1/audio/speech", data=body, headers={"Content-Type": "application/json"})
+            kokoro_url.speech(), data=body, headers={"Content-Type": "application/json"})
         with urllib.request.urlopen(req, timeout=120) as r, open(tts, "wb") as f:
             f.write(r.read())
     ws = attach(port)

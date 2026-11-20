@@ -11,6 +11,8 @@ gender in the first two letters (Kokoro's convention: `am_eric` is American Engl
     voices.py say <name|id> [text] [--to <file>]
                                             speak a sample in that voice; with --to, write the file and play nothing
     voices.py choose <context> <name|id>    keep a voice for a context (default, rodd, snotra, person.<name>)
+    voices.py set <context> <name|id>       the same as choose
+    voices.py engine                        where the engine listens (the one value, plan 326.0) and whether it answers
     voices.py for <context>                 the voice id a context speaks in (context -> default -> the engine's)
     voices.py choices                       every kept choice
 
@@ -46,6 +48,8 @@ LANGS = {
 }
 GENDERS = {"f": "female", "m": "male"}
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+import kokoro_url  # noqa: E402  the one value: where the engine listens
 
 
 class VoiceError(Exception):
@@ -238,6 +242,36 @@ def desk_holder() -> str:
     return out.stdout.strip()
 
 
+def engine_health(base: str) -> dict:
+    import urllib.request
+    try:
+        with urllib.request.urlopen(base + "/health", timeout=3) as r:
+            return json.loads(r.read().decode("utf-8") or "{}")
+    except (OSError, ValueError):
+        return {}
+
+
+def engine() -> dict:
+    base = kokoro_url.base()
+    health = engine_health(base)
+    return {"url": base, "port": kokoro_url.port(), "answers": bool(health.get("ready")),
+            "variant": health.get("variant", "")}
+
+
+def ensure_engine(base: str) -> None:
+    """The engine is idle-lowered on purpose; raise it and wait for the socket, never for 'active'."""
+    if engine_health(base).get("ready"):
+        return
+    if os.environ.get("VOICES_NO_RAISE") != "1":
+        subprocess.run(["systemctl", "--user", "start", "kokoro-serve.service"], capture_output=True, timeout=120)
+    import time
+    for _ in range(60):
+        if engine_health(base).get("ready"):
+            return
+        time.sleep(1)
+    raise VoiceError(f"the Kokoro engine does not answer at {base} — systemctl --user start kokoro-serve", 1)
+
+
 def say(wanted: str, text: str, to: str | None) -> dict:
     voice = resolve(wanted)
     if not to:
@@ -245,7 +279,11 @@ def say(wanted: str, text: str, to: str | None) -> dict:
         if held:
             raise VoiceError(f"the desk is held ({held}) — no sound now; write it with --to <file> instead", 4)
     text = text or f"This is {voice['name']}, one of the house's voices."
-    cmd = [kokoro_bin(), "speak", text, "-v", voice["id"], "--lang", voice["lang"]]
+    base = kokoro_url.base()
+    ensure_engine(base)
+    # the resident engine at the one URL, never a cold embedded model behind the house's back
+    cmd = [kokoro_bin(), "speak", text, "-v", voice["id"], "--lang", voice["lang"],
+           "--service", "required", "--service-url", base]
     target = Path(to) if to else None
     if target:
         cmd += ["-o", str(target)]
@@ -256,6 +294,7 @@ def say(wanted: str, text: str, to: str | None) -> dict:
         raise VoiceError(f"`kokoro speak` failed (rc {out.returncode}): {out.stderr.strip()[:200]}", 1)
     result = dict(voice)
     result["said"] = text
+    result["engine"] = base
     if target:
         result["file"] = str(target)
         result["bytes"] = target.stat().st_size if target.exists() else 0
@@ -305,7 +344,10 @@ def main(argv: list[str]) -> int:
                 raise VoiceError("usage: voices.sh say <name|id> [text] [--to <file>]", 2)
             print(json.dumps(say(rest[0], " ".join(rest[1:]), to), ensure_ascii=False))
             return 0
-        if verb == "choose":
+        if verb == "engine":
+            print(json.dumps(engine(), ensure_ascii=False))
+            return 0
+        if verb in ("choose", "set"):
             if len(rest) < 2:
                 raise VoiceError("usage: voices.sh choose <context> <name|id>", 2)
             print(json.dumps(choose(rest[0], rest[1]), ensure_ascii=False))
@@ -317,7 +359,7 @@ def main(argv: list[str]) -> int:
             for k, v in sorted(read_choices().items()):
                 print(f"{k}: {v}")
             return 0
-        raise VoiceError(f"unknown verb '{verb}' — list · resolve · catalogue · say · choose · for · choices", 2)
+        raise VoiceError(f"unknown verb '{verb}' — list · resolve · catalogue · say · choose|set · for · choices · engine", 2)
     except VoiceError as exc:
         print(f"voices: {exc}", file=sys.stderr)
         return exc.code

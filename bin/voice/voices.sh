@@ -8,6 +8,8 @@
 #   voices.sh catalogue --write <path>        written to <path>
 #   voices.sh say <name|id> [text] [--to f]   a sample in that voice; --to writes a file and plays nothing
 #   voices.sh choose <context> <name|id>      keep a voice for a context (default · rodd · snotra · person.<name>)
+#   voices.sh set <context> <name|id>         the same as choose
+#   voices.sh engine                          where the engine listens (bin/voice/kokoro-lib.sh) and if it answers
 #   voices.sh for <context>                   the voice id that context speaks in (context → default → engine)
 #   voices.sh choices                         every kept choice ($YMIR_HOME/config/voices.yaml)
 #
@@ -19,8 +21,8 @@
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 case "${1:-}" in
-  -h|--help) sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
-  "") sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2 ;;
+  -h|--help) sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+  "") sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2 ;;
 esac
 if [ "${1:-}" = "catalogue" ] && [ "${2:-}" = "--home" ]; then
   # shellcheck source=../vault/hoard-lib.sh

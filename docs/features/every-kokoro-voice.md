@@ -62,3 +62,22 @@ engine's own voice. A name the pack does not have is refused by name, and nothin
 **In Rödd you can just ask:** "talk like Eric" or "use a British voice". She changes voice from her next sentence,
 with no restart. Say "and keep it" to have her start in that voice next time too. A voice you pick in Rödd's
 Settings is kept the same way.
+
+## Where the engine listens, and `set` (added 2026-11-20, plan 326.0)
+
+Where Kokoro listens is now **one value**: `KOKORO_SERVICE_URL`, the engine's own name for it. The speaking service
+binds it and every client dials it, so the two can no longer disagree.
+
+| Command | What it does |
+|---|---|
+| `voices.sh engine` | Prints the URL and port the engine listens on, and whether it answers |
+| `voices.sh set rodd eric` | The same as `choose`: keeps Eric for Rödd |
+| `bin/voice/kokoro-lib.sh env` | Prints the resolved URL and where it came from |
+
+The value is read from the environment first, then from your home's `config/voice.env` (copy
+`config/voice.env.example`), then from the engine's own default port. `say` now always speaks through the running
+engine at that URL; if the engine is lowered, `say` raises it and waits until it answers.
+
+## CHANGE LOG
+
+- **2026-11-20** — Appended: one value for where the engine listens; `voices.sh engine` and `set` (plan 326.0).

@@ -3,7 +3,7 @@
 #
 #   bin/assistant/mouth.sh "text" <out.ogg>
 #
-# Kokoro (the resident server on :8765) speaks it, `speech-text.py` normalises what may be SPOKEN
+# Kokoro (the resident server, at kokoro-lib.sh's one URL) speaks it, `speech-text.py` normalises what may be SPOKEN
 # (contractions expanded, punctuation folded), and ffmpeg encodes OGG/Opus — the only format Telegram's
 # sendVoice accepts. The voice is the switcher's (~/.local/bin/kokoro-voice), the same one F11 and the
 # assistant's own mouth use: one voice for the whole house.
@@ -23,7 +23,10 @@ if [ -z "$VOICE" ] && [ -x "$HOME/.local/bin/kokoro-voice" ]; then
   VOICE="$("$HOME/.local/bin/kokoro-voice" 2>/dev/null | sed -n 's/.*voice: \([a-z_0-9]*\).*/\1/p' | head -1)"
 fi
 VOICE="${VOICE:-af_nicole}"
-SERVER="${KOKORO_URL:-http://127.0.0.1:8765/v1/audio/speech}"
+# where the engine listens is one value (bin/voice/kokoro-lib.sh, plan 326.0); KOKORO_URL still overrides
+# shellcheck source=../../../bin/voice/kokoro-lib.sh
+. "$SCRIPT_DIR/../../../bin/voice/kokoro-lib.sh"
+SERVER="$(kokoro_speech_url)" || exit 2
 HOST="${SERVER#*://}"; HOST="${HOST%%/*}"; PORT="${HOST##*:}"; HOST="${HOST%%:*}"
 WAIT="${MOUTH_WAIT_SECONDS:-30}"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT

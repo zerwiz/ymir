@@ -35,12 +35,17 @@ NAME="Skírnir"
 die(){ printf 'error: %s\n' "$*" >&2; exit 2; }
 
 # The voice is idle-lowered by design; every speaking door raises it first.
+# where the engine listens is one value (plan 326.0): the unit binds it, this dials it
+# shellcheck source=../../../../bin/voice/kokoro-lib.sh
+. "$ROOT/bin/voice/kokoro-lib.sh"
 ensure_voice(){
-  systemctl --user is-active kokoro-serve.service >/dev/null 2>&1 && return 0
+  # "active" is not "listening": the engine loads its model before it binds, so the socket is the only proof
+  local port; port="$(kokoro_port)" || return 1
+  (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null && { exec 3>&-; return 0; }
   systemctl --user start kokoro-serve.service >/dev/null 2>&1 || return 1
-  local i; for i in $(seq 1 20); do
+  local i; for i in $(seq 1 30); do
     sleep 1
-    (exec 3<>/dev/tcp/127.0.0.1/8765) 2>/dev/null && { exec 3>&-; return 0; }
+    (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null && { exec 3>&-; return 0; }
   done
   return 1
 }
@@ -77,7 +82,7 @@ case "$ACTION" in
     [ -n "$TEXT" ] || die "say needs text"
     ensure_voice || die "the voice engine did not come up (kokoro-serve)"
     WAV="$(mktemp --suffix=.wav)"
-    curl -sS -m 120 -o "$WAV" -X POST http://127.0.0.1:8765/v1/audio/speech \
+    curl -sS -m 120 -o "$WAV" -X POST "$(kokoro_speech_url)" \
       -H 'Content-Type: application/json' \
       -d "$(python3 -c 'import json,sys;print(json.dumps({"model":"kokoro","input":sys.argv[1],"voice":"af_nicole","response_format":"wav"}))' "$TEXT")" \
       || die "the voice refused the text"
