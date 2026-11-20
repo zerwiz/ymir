@@ -48,7 +48,7 @@ bin[28]{file,does,kind,verdict,disposition,callers,lines}:
   "voice-model-lib.sh","voice-model-lib.sh — WHERE THE VOICE'S MODEL WEIGHTS LIVE, and the one pinned upstream.","lib","wired","keep",3,72
   "voice-toolbox.py","'''voice-toolbox.py — the house's hands for a browser face.","tool","wired","keep",1,434
   "voice_mcp.py","'''voice_mcp.py — the voice's MCP adapter: every server this seat knows, as hands.","tool","wired","keep",0,407
-  "voice_tools.py","'''voice-tools.py — the hands of the voice.","tool","tested","keep",4,3240
+  "voice_tools.py","'''voice-tools.py — the hands of the voice.","tool","tested","keep",4,3203
   "ymir-vad.py","'''","tool","wired","keep",3,183
 
 **Tally.** verdict: wired=25, tested=3

@@ -1,35 +1,38 @@
 #!/usr/bin/env python3
-"""publish.py — the baton on the Board: what is next and what is blocked become cards.
+"""publish.py — the baton on the board: what is next and what is blocked become cards.
 
-    collab.sh publish <repo> [--project NAME] [--workspace WS] [--yes] [--dry-run]
+    collab.sh publish <repo> [--project ID] [--yes] [--dry-run]
 
 It reads `handoff/CURRENT.md` — section 3 (what is next) and section 4 (what is blocked, and on whom) — and
-creates one card per bullet in a Plane project, **idempotently by title**: a card that is already there is
+creates one card per bullet on the project's board, **idempotently by title**: a card that is already there is
 skipped, so running it twice adds nothing.
 
-Writes go through Plane's own API (never its database), so a card leaves a trace in Plane's activity log,
-its validation runs, and its webhooks fire. The token is read from the vault by its one door
-(`bin/vault/hodd-set.sh --get PLANE_API_TOKEN`) — never from a file, never from the environment.
+The board is reached through the **board contract** (plan 335, "the split"), never one engine's API. The
+project's row in the home's registry (`$YMIR_HOME/hodd/identity/projects.yaml`) names its board in a `board:`
+block — the same block `plan-sync.sh` reads — and the adapter it names answers the verbs. Today that is the
+`mcp` adapter (bin/boards/board_adapter_mcp.py): any board that speaks the contract over MCP, given a URL and a
+token reference. Ymir carries no engine here; the board behind the URL decides what a place and a state are.
 
-It never creates a project: a Board place is a decision, not a side effect. It prints the project it could
-not find and stops.
+Cards are labelled `baton` and open in the contract's `unstarted` group. Each carries its source
+(`handoff/CURRENT.md#s3-<n>`), so a board that asks where an agent's card came from is told.
+
+It never creates a project or a place: a board place is a decision, not a side effect. A project with no
+`board:` block is refused by name.
 
 Exit: 0 published or clean dry run · 1 refused or failed · 2 usage.
 """
 import argparse
-import json
 import os
 import re
 import subprocess
 import sys
-import urllib.error
-import urllib.request
 
-# The board and the workspace are the OPERATOR's, so they are configuration, never a default in the
-# repository (RULES/04): set PLANE_API_BASE and GIMLE_PLANE_WORKSPACE (or pass --base / --workspace).
-DEFAULT_BASE = ""
-DEFAULT_WORKSPACE = ""
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.join(ROOT, "bin", "boards"))
+from board_adapter_mcp import BoardRefusal  # noqa: E402
+import plan_sync  # noqa: E402  (the registry reader and the board builder, one copy of each)
+
+LABEL = "baton"
 
 
 def die(message, code=1):
@@ -37,35 +40,18 @@ def die(message, code=1):
     sys.exit(code)
 
 
-def token():
-    door = os.path.join(ROOT, "bin", "vault", "hodd-set.sh")
-    try:
-        out = subprocess.run(["bash", door, "--get", "PLANE_API_TOKEN"], capture_output=True, text=True, check=True)
-    except Exception:
-        die("no PLANE_API_TOKEN in the vault — set it with bin/vault/hodd-set.sh PLANE_API_TOKEN <value>")
-    value = out.stdout.strip()
-    if not value:
-        die("PLANE_API_TOKEN is empty in the vault")
-    return value
-
-
-def api(base, path, key, method="GET", body=None):
-    url = base.rstrip("/") + path
-    data = json.dumps(body).encode() if body is not None else None
-    request = urllib.request.Request(url, data=data, method=method)
-    # Cloudflare answers 1010 to a bare Python-urllib agent; a plain name is enough.
-    request.add_header("User-Agent", "ymir-collab/1.0")
-    request.add_header("X-API-Key", key)
-    request.add_header("Accept", "application/json")
-    if data:
-        request.add_header("Content-Type", "application/json")
-    try:
-        with urllib.request.urlopen(request, timeout=30) as answer:
-            return json.loads(answer.read().decode() or "{}")
-    except urllib.error.HTTPError as exc:
-        die("%s %s → HTTP %s: %s" % (method, path, exc.code, exc.read().decode()[:200]))
-    except Exception as exc:
-        die("%s %s → %s" % (method, path, exc))
+def home():
+    h = os.environ.get("YMIR_HOME", "")
+    if not h:
+        door = os.path.join(ROOT, "bin", "vault", "hodd.sh")
+        try:
+            hoard = subprocess.run(["bash", door, "path"], capture_output=True, text=True, timeout=15).stdout.strip()
+        except Exception:
+            hoard = ""
+        h = os.path.dirname(hoard) if hoard else ""
+    if not h:
+        die("no home — set YMIR_HOME, or make bin/vault/hodd.sh path answer")
+    return h
 
 
 def section(text, number):
@@ -94,16 +80,10 @@ def title_of(bullet, limit=120):
 def main():
     parser = argparse.ArgumentParser(add_help=True)
     parser.add_argument("repo")
-    parser.add_argument("--project", default="")
-    parser.add_argument("--workspace", default=os.environ.get("GIMLE_PLANE_WORKSPACE", DEFAULT_WORKSPACE))
-    parser.add_argument("--base", default=os.environ.get("PLANE_API_BASE", DEFAULT_BASE))
+    parser.add_argument("--project", default="", help="the registry id (default: the repository's folder name)")
     parser.add_argument("--yes", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
-    if not args.base:
-        die("no board — set PLANE_API_BASE (or pass --base) to the address of your Plane install")
-    if not args.workspace:
-        die("no workspace — set GIMLE_PLANE_WORKSPACE (or pass --workspace) to the board's workspace slug")
 
     baton = os.path.join(os.path.abspath(args.repo), "handoff", "CURRENT.md")
     if not os.path.isfile(baton):
@@ -114,49 +94,40 @@ def main():
     date = re.search(r"\*\*Date:\*\*\s*(\d{4}-\d{2}-\d{2})", text)
     date = date.group(1) if date else "unknown"
 
-    wanted = [("next", bullet) for bullet in section(text, 3)] + \
-             [("blocked", bullet) for bullet in section(text, 4)]
+    wanted = [("next", 3, i, b) for i, b in enumerate(section(text, 3), 1)] + \
+             [("blocked", 4, i, b) for i, b in enumerate(section(text, 4), 1)]
     if not wanted:
         die("the baton's sections 3 and 4 carry no bullets — nothing to publish")
 
-    key = token()
-    projects = api(args.base, "/api/v1/workspaces/%s/projects/" % args.workspace, key)
-    projects = projects.get("results", projects if isinstance(projects, list) else [])
+    write = args.yes and not args.dry_run
     name = args.project or os.path.basename(os.path.abspath(args.repo))
-    match = next((p for p in projects
-                  if name.lower() in (p.get("name") or "").lower()
-                  or name.lower() == (p.get("identifier") or "").lower()), None)
-    if not match:
-        names = ", ".join(sorted((p.get("name") or "?") for p in projects)) or "none"
-        die("no Board project matching %r in %s — the projects are: %s" % (name, args.workspace, names))
-
-    issues = api(args.base, "/api/v1/workspaces/%s/projects/%s/issues/?per_page=100"
-                 % (args.workspace, match["id"]), key)
-    existing = {i.get("name", "") for i in issues.get("results", [])}
-
-    created, skipped = [], []
-    for kind, bullet in wanted:
-        title = title_of(bullet)
-        if title in existing:
-            skipped.append(title)
-            continue
-        if args.dry_run or not args.yes:
+    try:
+        row = plan_sync.load_project(home(), name)
+        place, board = plan_sync.build_board(home(), row)
+        if write:
+            board.ensure_label(LABEL)
+        created, skipped = [], []
+        for kind, sec, n, bullet in wanted:
+            title = title_of(bullet)
+            # by title, labelled or not: a card published before the label existed still counts as there
+            if any(c["title"] == title for c in board.find_cards(None, title[:60])):
+                skipped.append(title)
+                continue
+            if write:
+                board.create_card(title,
+                                  "From handoff/CURRENT.md §%d, baton of %s." % (sec, date),
+                                  "unstarted", [LABEL], source="handoff/CURRENT.md#s%d-%d" % (sec, n))
             created.append(title)
-            continue
-        api(args.base, "/api/v1/workspaces/%s/projects/%s/issues/" % (args.workspace, match["id"]), key,
-            method="POST",
-            body={"name": title,
-                  "description_html": "<p>From <code>handoff/CURRENT.md</code> §%s, baton of %s.</p>"
-                                      % ("3" if kind == "next" else "4", date)})
-        created.append(title)
+    except BoardRefusal as exc:
+        die(str(exc))
 
-    verb = "would create" if (args.dry_run or not args.yes) else "created"
+    verb = "created" if write else "would create"
     print("publish[5]{field,value}:")
     print('  "repo","%s"' % os.path.abspath(args.repo))
-    print('  "board","%s / %s"' % (args.workspace, match.get("name")))
+    print('  "board","%s (%s adapter)"' % (place, (row.get("board") or {}).get("adapter", "?")))
     print('  "baton","%s"' % date)
     print('  "cards","%s %d, skipped %d (already there)"' % (verb, len(created), len(skipped)))
-    print('  "mode","%s"' % ("dry run" if (args.dry_run or not args.yes) else "written through Plane's API"))
+    print('  "mode","%s"' % ("written through the board contract" if write else "dry run"))
     for title in created:
         print('  "card","%s"' % title)
     if not (args.dry_run or args.yes):

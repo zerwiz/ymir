@@ -11,7 +11,7 @@ The contract this adapter implements (the card shape is a plain dict):
     list_cards(label) -> [{"card", "title", "group", "labels"}]        # all pages, flagged when a page was full
     find_cards(label, text) -> same, narrowed by a title fragment
     get_card(card) -> {"card", "title", "group", "labels", "description"}
-    create_card(title, description, group, labels)
+    create_card(title, description, group, labels, source=None)   # source: `<path>#<id>`, the record it came from
     update_card(card, title=None, description=None, group=None)
 State groups: backlog · unstarted · started · review · done · cancelled.
 Never prints or stores a token.
@@ -50,8 +50,17 @@ def resolve_token(ref, home, root):
             srv = (json.load(open(cfg)).get("mcpServers") or {}).get(name) or {}
         except (OSError, ValueError):
             srv = {}
-        v = next((x for k, x in (srv.get("headers") or {}).items() if k.lower() == "authorization"), "")
-        v = re.sub(r"^Bearer\s+", "", v, flags=re.I)
+        headers = dict(srv.get("headers") or {})
+        if srv.get("headersHelper") and not any(k.lower() == "authorization" for k in headers):
+            # a seat that mints its header at call time (Claude's headersHelper prints a JSON object of headers)
+            try:
+                got = subprocess.run(["bash", "-c", srv["headersHelper"]], capture_output=True, text=True,
+                                     timeout=30).stdout
+                headers.update(json.loads(got) if got.strip() else {})
+            except (OSError, ValueError, subprocess.TimeoutExpired):
+                pass
+        v = next((x for k, x in headers.items() if k.lower() == "authorization"), "")
+        v = re.sub(r"^Bearer\s+", "", str(v), flags=re.I)
     else:
         raise BoardRefusal(f"token_from '{ref}' is not env:, vault: or claude-mcp:")
     if not v:
@@ -160,15 +169,21 @@ class McpBoard:
         return out
 
     def find_cards(self, label, text):
-        got = self._call("list_cards", {"place": self.place, "label": label, "query": text, "limit": 50}).get("cards", [])
+        a = {"place": self.place, "query": text, "limit": 50}
+        if label:  # no label: every card whose title carries the text (a caller that never labelled its cards)
+            a["label"] = label
+        got = self._call("list_cards", a).get("cards", [])
         return [self._shape(c) for c in got]
 
     def get_card(self, card):
         return self._shape(self._call("get_card", {"place": self.place, "card": str(card)}))
 
-    def create_card(self, title, description, group, labels):
-        return self._write("create_card", {"place": self.place, "title": title, "description": description,
-                                           "state": self.state_name(group), "labels": labels})
+    def create_card(self, title, description, group, labels, source=None):
+        a = {"place": self.place, "title": title, "description": description,
+             "state": self.state_name(group), "labels": labels}
+        if source:  # a board that asks where an agent's card came from (Gimlé's create_card does) is told
+            a["source"] = source
+        return self._write("create_card", a)
 
     def update_card(self, card, title=None, description=None, group=None):
         a = {"place": self.place, "card": str(card)}
