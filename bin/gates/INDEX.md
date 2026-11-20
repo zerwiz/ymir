@@ -91,7 +91,7 @@ bin[171]{file,does,kind,verdict,disposition,callers,lines}:
   "perm-guard.sh","perm-guard.sh — flag agent profiles whose permissions are self-defeating.","tool","wired","keep",0,32
   "pkill-guard.sh","cache: tree — this ward's verdict is a pure function of the tracked tree (no $YMIR_HOME read,","tool","wired","keep",1,182
   "plan-audit.sh","plan-audit.sh — the plan CONTRACT, as a check over the ledger shelf.","tool","wired","keep",1,872
-  "plan.md","Plan template","data","tested","keep",10,32
+  "plan.md","Plan template","data","tested","keep",9,32
   "portability-ratchet.sh","portability-ratchet.sh — the GNU-only callers may go DOWN, never up.","tool","wired","keep",1,110
   "pr-identity-guard.sh","source '$(dirname '$0')/../../forge/pr-patterns.sh'","tool","wired","keep",4,63
   "pr-ship-guard.sh","pr-ship-guard.sh — Rule 08, the ship door: the BRANCH is a smith's to push; the PR is not.","tool","wired","keep",2,175

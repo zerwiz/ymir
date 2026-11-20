@@ -38,12 +38,12 @@ bin[60]{file,does,kind,verdict,disposition,callers,lines}:
   "herdr-agents.py","'''herdr-agents.py — list the agents standing in this herdr session, as TOON.","tool","wired","keep",13,259
   "herdr-editor.py","'''herdr-editor.py — read the INPUT BOX of an agent's pane, and say what is in it.","tool","wired","keep",2,133
   "herdr-ensure.sh","herdr-ensure.sh — Þjazi: guarantee the terminal backend Ymir needs.","tool","wired","keep",4,106
-  "herdr-run.sh","herdr-run.sh — raise an Eindri in herdr, by the grain that fits the errand.","tool","tested","keep",19,685
+  "herdr-run.sh","herdr-run.sh — raise an Eindri in herdr, by the grain that fits the errand.","tool","tested","keep",19,702
   "hermes-seat.sh","hermes-seat.sh — seat Ymir's tools into Hermes, the same packets the other harnesses get.","tool","wired","keep",2,91
   "hermes-session-hook.sh","hermes-session-hook.sh — Hermes' session side of the Gná arm: the Sága digest, and its delivery.","tool","wired","keep",1,134
   "hermes-soul.md.in","<!-- ymir-seat:begin - written by bin/seat/seat-surface.sh on install and every update -->","data","wired","keep",1,40
   "hermes-telegram.sh","hermes-telegram.sh — seat THIS machine's Telegram bot into the Hermes gateway (the machine agent's ear).","tool","wired","keep",2,150
-  "lock-ask.sh","lock-ask.sh — a read-only agent asks the LOCK OWNER for work, and the owner answers.","tool","wired","keep",4,376
+  "lock-ask.sh","lock-ask.sh — a read-only agent asks the LOCK OWNER for work, and the owner answers.","tool","wired","keep",5,376
   "lock-hold.sh","lock-hold.sh — a PRIMARY THAT DOES NOT EXIT: hold this machine's session lock, for the seat's life.","tool","wired","keep",0,53
   "opencode-launcher.sh","opencode-launcher.sh — the ONE launch door for an OpenCode seat, as pi-launcher.sh is pi's.","tool","wired","keep",5,111
   "pending.sh","pending.sh — everything that is waiting on the operator, in ONE list.","tool","wired","keep",5,117

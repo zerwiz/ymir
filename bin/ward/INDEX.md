@@ -37,10 +37,10 @@ bin[30]{file,does,kind,verdict,disposition,callers,lines}:
   "host-watch.sh","host-watch.sh — the watcher a hand can actually have.","tool","wired","keep",1,154
   "hound.py","'''hound.py — Garmr's senses: what executes, who touches the sensitive shelves,","tool","tested","keep",1,467
   "house-status.sh","house-status.sh — the heart's answer: what it hosts, and whether it is up.","tool","wired","keep",0,227
-  "notify.py","'''notify.py — the hound's mouth: one message to the phone, and a record that it landed.","tool","tested","keep",4,230
+  "notify.py","'''notify.py — the hound's mouth: one message to the phone, and a record that it landed.","tool","tested","keep",5,230
   "redact.py","'''redact.py — the guardian's own ward (plan 98 §6, §'the redaction rule').","tool","wired","keep",2,113
   "restart-storm.sh","restart-storm.sh — the ward that stops a unit spinning on its own face (plan 286 P4).","tool","wired","keep",2,520
-  "rules.py","'''rules.py — the judgement, deterministic and first (plan 98 §4.2).","tool","wired","keep",1,103
+  "rules.py","'''rules.py — the judgement, deterministic and first (plan 98 §4.2).","tool","wired","keep",0,103
   "security-audit.sh","security-audit.sh — Vörðr's eyes: WHAT IS THIS MACHINE ACTUALLY EXPOSING?","tool","tested","keep",5,312
   "services-register.sh","services-register.sh — is the register of doors READ, or is it prose?","tool","wired","keep",1,173
   "soak-sampler.sh","soak-sampler.sh — the leak ledger: one row per house service and per Electron app, every five","tool","wired","keep",1,645

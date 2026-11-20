@@ -31,10 +31,10 @@ bin[83]{file,does,kind,verdict,disposition,callers,lines}:
   "LICENSE","MIT No Attribution License","data","wired","keep",2,8
   "LICENSE.MIT","MIT License","data","wired","keep",0,22
   "LICENSE.txt","The arc42 template and documentation is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License.","data","wired","keep",0,19
-  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",62,-
-  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",62,-
-  "README.md","areas/ — what this repository answers for","data","tested","keep",62,-
-  "README.md","plans/tickets/ — the units of work under a validated plan","data","tested","keep",62,-
+  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",61,-
+  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",61,-
+  "README.md","areas/ — what this repository answers for","data","tested","keep",61,-
+  "README.md","plans/tickets/ — the units of work under a validated plan","data","tested","keep",61,-
   "TEMPLATE.md","---","data","wired","keep",5,35
   "TEMPLATE.yaml","areas/TEMPLATE.yaml — what one area's declaration looks like.","data","wired","keep",2,44
   "a-company-suite.md","---","data","wired","keep",1,123
@@ -71,9 +71,9 @@ bin[83]{file,does,kind,verdict,disposition,callers,lines}:
   "handoff-check.py","'''handoff/check.sh — the baton: is it there, complete, fresh, and honest about the paths it names?","tool","wired","keep",1,211
   "headers.md","---","data","wired","keep",9,61
   "how-to.md","Title","data","wired","keep",0,66
-  "init.sh","init.sh — put the collaboration shelf into a repository, or check the one it has.","tool","wired","keep",5,124
+  "init.sh","init.sh — put the collaboration shelf into a repository, or check the one it has.","tool","wired","keep",4,124
   "installation-guide.md","Title","data","wired","keep",0,199
-  "letter.sh","letter.sh — the collaboration letter, rendered from a template and left as a DRAFT in the gate.","tool","wired","keep",4,81
+  "letter.sh","letter.sh — the collaboration letter, rendered from a template and left as a DRAFT in the gate.","tool","wired","keep",3,81
   "maker-allow.txt","maker-allow.txt — the one allow file for bin/forge/maker-names.py (RULES/53).","data","wired","keep",7,8
   "maker-guard.sh","maker-guard.sh — the ward over what a commit or a pull request SAYS (RULES/53).","tool","wired","keep",10,58
   "maker-names.py","'''maker-names.py — the ONE matcher for model, model-maker and agent-harness names in prose (RULES/53).","tool","wired","keep",10,155
@@ -81,7 +81,7 @@ bin[83]{file,does,kind,verdict,disposition,callers,lines}:
   "new-module-test.sh","new-module-test.sh — a new module arrives with a test, or with a reason it does not need one.","tool","wired","keep",1,31
   "notices.md","---","data","wired","keep",0,89
   "notify-arm.sh","notify-arm.sh — hand a gate's message to the ARM HOLDER, never to whoever happened to type the command.","tool","wired","keep",4,230
-  "plan.md","---","data","tested","keep",10,58
+  "plan.md","---","data","tested","keep",9,58
   "pr-check.sh","pr-check — is every commit that exists proposed for review?","tool","tested","keep",6,26
   "pr-guard.sh","pr-guard — a branch that exists on the remote must have a pull request.","tool","wired","keep",1,35
   "private-data.sh","private-data — the repository is public; the operator's machine is not.","tool","wired","keep",1,41

@@ -22,7 +22,7 @@ The tree replaced a single register on 2026-11-06 (plan 211) so that a change in
 folder rewrites one file instead of colliding on every branch.
 
 bin[67]{file,does,kind,verdict,disposition,callers,lines}:
-  "README.md","Gróa — the updater, one per install","data","tested","keep",62,-
+  "README.md","Gróa — the updater, one per install","data","tested","keep",61,-
   "agent-census.sh","agent-census.sh — how many agents are running on THIS machine, and which of them are stale.","tool","wired","keep",1,163
   "agent-run.sh","agent-run.sh — run one agent's errand through the harness the Allfather chose.","tool","wired","keep",2,62
   "areas.sh","areas.sh — the estate door: a project's areas, their keepers, and the seam to the seat.","tool","wired","keep",15,393
@@ -54,7 +54,7 @@ bin[67]{file,does,kind,verdict,disposition,callers,lines}:
   "eindri-start.sh","eindri-start.sh — start an Eindri as the Allfather asks.","tool","wired","keep",4,310
   "eindri-wake-lib.sh","eindri-wake-lib.sh — the ONE delivery ledger behind the Eindri push path.","lib","wired","keep",12,71
   "eindri-watch.sh","eindri-watch.sh — the control door on the Eindri→Brokk wake bridge.","tool","wired","keep",6,131
-  "einherjar-spawn.sh","einherjar-spawn.sh - gather an Eindri worker (Einherjar = the chosen who are","tool","tested","keep",23,1451
+  "einherjar-spawn.sh","einherjar-spawn.sh - gather an Eindri worker (Einherjar = the chosen who are","tool","tested","keep",23,1476
   "eir-doctor.sh","eir-doctor.sh — Eir, the healer: diagnose the running system, then mend it.","tool","wired","keep",15,1031
   "erindi-brief.sh","erindi-brief.sh - scaffold an Eindri worker brief at data/<task-id>/brief.md.","tool","tested","keep",6,456
   "groa-agent.sh","groa-agent.sh — Gróa's body on a schedule: the updater, leashed, one per install.","tool","wired","keep",2,188

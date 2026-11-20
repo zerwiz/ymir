@@ -21,10 +21,8 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[57]{file,does,kind,verdict,disposition,callers,lines}:
+bin[55]{file,does,kind,verdict,disposition,callers,lines}:
   "agents-status.sh","agents-status.sh — which agents are running, where, on what work, and which are idle.","tool","wired","keep",1,48
-  "atlas.py","'''atlas.py — one page at the top of the home that says where we have it all (plan 251).","tool","wired","keep",1,277
-  "atlas.sh","atlas.sh — one page at the top of the home that says where we have it all (plan 251).","tool","wired","keep",1,19
   "audit-apply.sh","audit-apply.sh — turn an audit into work, in one door.","tool","wired","keep",0,96
   "behind.sh","behind.sh — the arithmetic of being behind: opened/closed this week, net, stale-30d, unbuilt phases.","tool","wired","keep",0,46
   "comms.py","'''comms.py — every communication, in, out and owed, and the to-do they move (plan 261).","tool","tested","keep",4,1175
@@ -39,7 +37,7 @@ bin[57]{file,does,kind,verdict,disposition,callers,lines}:
   "journal-append.sh","journal-append.sh — write one idempotent entry to THIS machine's outbox.","tool","tested","keep",0,115
   "journal-receive.sh","journal-receive.sh — the HEART folds the bodies' journals into one record.","tool","tested","keep",1,137
   "journal-reconcile.sh","journal-reconcile.sh — push this machine's outbox to the heart, when it answers.","tool","tested","keep",2,131
-  "layout.py","'''layout.py — the placement oracle and the home's shelves, as ONE door.","tool","wired","keep",3,182
+  "layout.py","'''layout.py — the placement oracle and the home's shelves, as ONE door.","tool","wired","keep",2,182
   "library.sh","library.sh — the library of records: one corpus, one contract, one door (plan 115).","tool","wired","migrate → src/ymir_runtime/library.py",0,72
   "meetings.sh","meetings.sh — one report over every meeting the house has, whatever recorded it.","tool","wired","keep",4,313
   "mimir-ingest.sh","mimir-ingest.sh — ingest the repo's data material into the well (Mimirsbrunn).","tool","wired","keep",1,135
@@ -80,6 +78,6 @@ bin[57]{file,does,kind,verdict,disposition,callers,lines}:
   "wyrd-db.sh","wyrd-db.sh — the database layer (W0040).","tool","wired","keep",0,49
   "ymir-state.sh","ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runtime/state/`).","tool","wired","keep",12,44
 
-**Tally.** verdict: wired=48, tested=9
+**Tally.** verdict: wired=46, tested=9
 
-**Tally.** disposition: keep=56, migrate → src/ymir_runtime/library.py=1
+**Tally.** disposition: keep=54, migrate → src/ymir_runtime/library.py=1
