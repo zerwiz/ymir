@@ -39,7 +39,7 @@ writing-the-lock.md` is the extension's half, and
 2. **ONE writer, and the pair written as one fact.** The lock and its `.starttime` are two
    files and the reaper reads both, so a reader that caught the new pid beside the OLD
    starttime declared a live owner dead. Every decide-and-write now runs under an advisory
-   guard (`<lock>.guard`, `fcntl.flock`) and both files are written atomically
+   guard (`<lock>.guard`, a POSIX record lock via `fcntl.lockf`) and both files are written atomically
    (temp + `os.replace`). A torn or empty `brokk.lock` used to read as "no owner" and hand
    the helm to the next session; it cannot now.
 
