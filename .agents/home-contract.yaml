@@ -130,6 +130,24 @@ contract:
     door: bin/engine/home-seed.sh
     required: false
     why: "the operator's OWN words the NDA gate must allow (his realm, his mail domain, his handle), each with a reason; absent, only the repository's generic allowances apply and no word of his is written into the public tree (RULES/04, RULES/42)"
+  - path: config/worktree-roots.yaml
+    kind: seeded
+    template: .agents/config/worktree-roots.yaml.example
+    door: bin/engine/home-seed.sh
+    required: false
+    why: "the exterior worktree roots the reaper also sweeps (plan 339.4); absent, only the house's own .yggdrasil/ worktrees are reaped"
+  - path: config/voice.env
+    kind: seeded
+    template: .agents/config/voice.env.example
+    door: bin/engine/home-seed.sh
+    required: false
+    why: "the one port the voice engine binds and every voice client dials (plan 326.0, Rule 07); absent, the documented default port is used"
+  - path: hodd/identity/cards.yaml
+    kind: seeded
+    template: .agents/config/cards.yaml.example
+    door: bin/engine/home-seed.sh
+    required: false
+    why: "the one card contract every board door enforces (gimle plan 328); absent, the shipped contract's fields apply"
   - path: hodd/identity/house-domains.txt
     kind: seeded
     template: .agents/config/house-domains.txt.example
