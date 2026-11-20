@@ -49,6 +49,10 @@ a{color:var(--ymir-bronze);text-decoration:none}
 header{display:flex;align-items:baseline;justify-content:space-between;gap:16px;border-bottom:1px solid var(--ymir-line);padding-bottom:14px}
 h1{font-family:var(--f-display);font-weight:400;font-size:40px;margin:0;letter-spacing:.02em}
 h1 em{font-style:italic;color:var(--ymir-bronze)}
+header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.hdr-actions{margin-left:auto;display:flex;gap:8px}
+.hdr-actions a{padding:6px 12px;border:1px solid rgba(201,151,79,.45);border-radius:8px;text-decoration:none;color:inherit;font-size:13px}
+.hdr-actions a:hover{border-color:rgba(201,151,79,.9)}
 .who{font-family:var(--f-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ymir-bone-faint)}
 h2{font-family:var(--f-mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ymir-bronze);margin:34px 0 10px}
 .card{background:var(--ymir-bg-1);border:1px solid var(--ymir-line);border-radius:10px;box-shadow:var(--bevel);padding:16px 18px}
@@ -235,7 +239,7 @@ def render(person: str, data: dict, allowed: list[str] | None = None, docs: list
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,600;1,400&family=Newsreader:opsz,wght@6..72,300;6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>{CLOTH}</style></head><body><div class="wrap">
-<header><h1>The <em>desk</em></h1><span class="who">{html.escape(person or "friend")} · {today.isoformat()}</span></header>
+<header><h1>The <em>desk</em></h1><span class="who">{html.escape(person or "friend")} · {today.isoformat()}</span><nav class="hdr-actions"><a href="/settings" title="your profile">Profile</a><a href="/settings" title="account settings">Settings</a></nav></header>
 {section("From the board — assigned to you", board_cards, board_row)}
 <div class="meta" style="margin:-6px 0 14px 4px;opacity:.6">{html.escape(board_detail)}</div>
 {section("Due this week", mine_actions, due_row)}
@@ -243,7 +247,7 @@ def render(person: str, data: dict, allowed: list[str] | None = None, docs: list
 {section("Questions waiting on me", mine_questions, plain_row)}
 {docs_html}
 <h2>The places</h2><div class="tiles">{tiles}</div>
-<footer>Gimlé — the hall that outlives the fire · on Zerwiz&rsquo;s own hardware · <a href="/manual.html" style="color:inherit;border-bottom:1px solid rgba(201,151,79,.4)">user manual</a></footer>
+<footer>Gimlé — the hall that outlives the fire · on Zerwiz&rsquo;s own hardware · <a href="/settings" style="color:inherit;border-bottom:1px solid rgba(201,151,79,.4)">settings</a> &middot; <a href="/manual.html" style="color:inherit;border-bottom:1px solid rgba(201,151,79,.4)">user manual</a></footer>
 </div></body></html>"""
 
 

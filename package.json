@@ -106,7 +106,6 @@
     "apps/hlidskjalf"
   ],
   "allowScripts": {
-    "electron@43.7.3": true,
-    "electron@33.4.11": true
+    "electron@43.8.9": true
   }
 }
