@@ -194,6 +194,20 @@ case "${1:-}" in
     else
       printf 'seat-surface: the operator is not named in the seat file (%s)\n' "${OPERATOR:-<empty>}"; bad=1
     fi
+    # 2026-11-19: the contract's clarity law must survive every render, because it reaches a USER
+    # on install and on every update and there is no other copy of it. The Allfather: "when we
+    # talking about code it must be clear. i dont understand the buttons." A render that loses the
+    # law, or the button rule that makes a label an instruction, is refused here — not discovered
+    # by a person who could not read an answer.
+    for _law in 'Clarity outranks the voice whenever the subject is code' \
+                'A label is an instruction, not a riddle'; do
+      if grep -qF "$_law" "$SEAT" 2>/dev/null; then
+        printf 'seat-surface: seat file carries the clarity law — "%s" ✓\n' "$_law"
+      else
+        printf 'seat-surface: seat file LOST the clarity law — "%s" is not in it\n' "$_law"; bad=1
+      fi
+    done
+    unset _law
     # plan 248 P3b: the root contract carries the one sentence that sends every craft to the
     # `ymir` skill's index — a render that loses it leaves the root agent without Ymir's craft.
     if grep -qF 'load the `ymir` skill and follow its index' "$SEAT" 2>/dev/null; then
