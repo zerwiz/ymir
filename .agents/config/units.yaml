@@ -127,6 +127,18 @@ units:
     exec: "/usr/bin/env bash bin/forge/pr-watch.sh"
     timer: { description: "pr-watch — every 5 minutes", boot: 2min, every: 5min, accuracy: 30s }
 
+  # plan 339.5/339.6 (2026-11-20): the house says it is in trouble before it is asked. One reading of the
+  # nine silent failures per machine, a notice only when a signal turns red. Same unit on every role that
+  # owes it, read from the fleet registry — never a hand copy per box (RULES/25).
+  - name: trouble-panel
+    mode: render
+    kind: timer
+    roles: [heart, forge, dev]
+    description: "trouble-panel — disk, guardian, pin, unpushed work, questions, errands, Hyprland, tells, commit loops"
+    workdir: "."
+    exec: "/usr/bin/env bash bin/ward/trouble.sh check --notify"
+    timer: { description: "trouble-panel — every 5 minutes", boot: 4min, every: 5min, accuracy: 30s }
+
   - name: review-seat
     mode: render
     kind: timer

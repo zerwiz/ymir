@@ -121,3 +121,4 @@ heartbeat is stale, restart it (`sudo systemctl restart garmr-hound.service`) an
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-20** — the guardian's own silence now reaches the operator unasked: the trouble panel (`bin/ward/trouble.sh`, [its page](the-trouble-panel.md)) reads a failed `housewatch` and a hound heartbeat older than ten minutes as a red signal, and sends one line with buttons when it turns red (plan 339.5).
