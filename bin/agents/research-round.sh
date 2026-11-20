@@ -114,8 +114,8 @@ sleep 6
 # was right, the shelf lied about what it was.
 if [ -z "$OUT" ]; then
   case "$FIGURE" in
-    bragi|hnoss)   OUT="$HOME_DIR/workspaces/marketing/scraped" ;;
-    *)             OUT="$HOME_DIR/workspaces/personal/research" ;;
+    bragi|hnoss)   OUT="$HOME_DIR/life/marketing/scraped" ;;
+    *)             OUT="$HOME_DIR/life/personal/research" ;;
   esac
 fi
 mkdir -p "$OUT" 2>/dev/null || true

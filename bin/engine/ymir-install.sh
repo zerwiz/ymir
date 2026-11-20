@@ -79,7 +79,8 @@ fi
 smidja_visualizer_dir SMIDJA_VIZ
 smidja_factory_dir SMIDJA_FACTORY
 
-WORKSPACE="${YMIR_WORKSPACE:-$YMIR_HOME/workspaces}"
+# The operator's own shelf (plan 331): life/ at the home root — never a workspaces/ beside it.
+WORKSPACE="${YMIR_WORKSPACE:-$YMIR_HOME/life}"
 hoard_root HOARD
 DOMAINS="company marketing development life me"
 
@@ -331,13 +332,12 @@ step_tree() {
     return
   fi
   local created=0
-  for ws in work:company,marketing,development,life personal:me,life,development; do
-    local name="${ws%%:*}" domains="${ws#*:}"
-    for d in ${domains//,/ }; do
-      [ -d "$WORKSPACE/$name/$d" ] || { mkdir -p "$WORKSPACE/$name/$d"; created=$((created+1)); }
-    done
+  # the five topics of the operator's own shelf (plan 331); companies live in their realm, the daily log
+  # in the record — neither is the operator's own material
+  for d in personal work marketing meetings outreach; do
+    [ -d "$WORKSPACE/$d" ] || { mkdir -p "$WORKSPACE/$d"; created=$((created+1)); }
   done
-  mkdir -p "$WORKSPACE/companies" "$WORKSPACE/memory/daily" "$HOARD/identity"
+  mkdir -p "$YMIR_HOME/svartalfaheim" "$HOARD/memory/daily" "$HOARD/identity"
   # The hoard is OUTSIDE the repo (Rule 04): this creates its layout at the
   # resolved root, never in the checkout. Idempotent.
   "$SCRIPT_DIR/../vault/hodd.sh" init >/dev/null 2>&1 || true
@@ -466,7 +466,7 @@ step_home() {
   # Re-resolve the roots the choice moved: the hoard within the home, and the
   # workspace tree beneath it. A second run finds the record and never asks again.
   hoard_root HOARD
-  WORKSPACE="${YMIR_WORKSPACE:-$YMIR_HOME/workspaces}"
+  WORKSPACE="${YMIR_WORKSPACE:-$YMIR_HOME/life}"
   if ymir_home_record_set "$YMIR_HOME"; then
     add home OK "home: $YMIR_HOME (recorded — later runs need not ask)"
   else

@@ -196,10 +196,11 @@ home_phase() {
   else
     emit 2 home hoard DO "create hodd/{identity,secrets,docs,tenants,memory} — all private data lives here"
   fi
-  if [ -d "$YMIR_HOME/workspaces" ]; then
-    emit 2 home workspaces SKIP "$YMIR_HOME/workspaces present"
+  # plan 331: the operator's own shelf is life/ at the home root (never a workspaces/ beside it)
+  if [ -d "$YMIR_HOME/life" ]; then
+    emit 2 home life SKIP "$YMIR_HOME/life present"
   else
-    emit 2 home workspaces DO "create workspaces/{work,personal} and the registries"
+    emit 2 home life DO "create life/{personal,work,marketing,meetings,outreach} and the registries"
   fi
   # Settings are the operator's: they live in the home, never in the package.
   local settings; hoard_settings_dir settings

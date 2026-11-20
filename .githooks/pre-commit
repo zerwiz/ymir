@@ -19,3 +19,13 @@ if [ -x "$root/bin/gates/secret-scan.sh" ] && command -v "${YMIR_GITLEAKS:-gitle
     exit 1
   }
 fi
+
+# …and the retired-path gate (plan 331.9): a NEW file may not name hodd/life/, hodd/state/ or hodd/workspaces/.
+# Existing files are carried by the one-cycle links; only the spread is refused.
+if [ -x "$root/bin/gates/guards/retired-path-guard.sh" ]; then
+  "$root/bin/gates/guards/retired-path-guard.sh" --repo "$root" >/dev/null || {
+    "$root/bin/gates/guards/retired-path-guard.sh" --repo "$root" >&2
+    echo "pre-commit: the retired-path gate refused this commit — see the lines above." >&2
+    exit 1
+  }
+fi

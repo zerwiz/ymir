@@ -974,3 +974,24 @@ command, and the Smíðja MCP drives it from every harness; only pi works inside
 - **Óðrerir has left** for `zerwiz/odrerir` (split, not retired); its live board is state in `~/.local/state/odrerir/`,
   still written nightly by Ymir's hall-snapshot job, which the governed table above now names in place of `apps/odrerir/**`.
 
+
+## 2026-11-19 — the home has four shelves, and the layout is read from the YAML (plan 331)
+
+This corrects the **Directory rules** table above, which sends marketing, software specs and personal notes to
+`$YMIR_HOME/hodd/life/…`. That table stays as the record of what was believed. It is no longer where those things go.
+
+The home has four shelves, one kind of material each:
+
+- `hodd/` is the **record**: memory, identity, plans, secrets, reference and docs.
+- `life/` is the **operator's own material**: personal, work, marketing, meetings and outreach.
+- `state/` is **runtime state** written by supervisors.
+- `config/` is **settings**.
+
+**Where each shelf lives is not restated here.** Read it from `$YMIR_HOME/.ymir-layout.yaml` (the shape) and
+`$YMIR_HOME/hodd/identity/home.yaml` (the master register: every register and the shelf it governs). Prose that
+describes the layout goes stale the first time a shelf moves, and on 2026-11-19 this table and the home map both did.
+
+An older home is moved by migration `0026-life-and-state-out-of-hodd`, which leaves the links `hodd/life -> ../life`
+and `hodd/state -> ../state` for one release cycle. Eir's `hoard` surface names a shelf holding the wrong kind of
+material, and `bin/gates/guards/retired-path-guard.sh` refuses a new file that teaches a retired path. The how-to is
+`docs/features/the-four-shelves.md`.

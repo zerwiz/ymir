@@ -112,6 +112,12 @@ contract:
     door: bin/engine/home-seed.sh
     required: true
     why: "the roster: which figure stands on which machine. Empty is honest; absent is a refusal"
+  - path: hodd/identity/home.yaml
+    kind: seeded
+    template: hodd/identity/home.yaml.example
+    door: bin/engine/home-seed.sh
+    required: false
+    why: "the master register (plan 331.10): every register, the shelf it governs, the layout version — the one file a document points at"
   - path: hodd/identity/public-deny.txt
     kind: stub
     template: hodd/identity/public-deny.txt.example
