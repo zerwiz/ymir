@@ -10,7 +10,7 @@ Every check exists because something **broke this way**:
 covered[9]{surface,checks,why_it_is_there}:
   "the engine and the walls","answers · carries an intent · an unheld subject is refused","the matcher lied twice"
   "the Ymir pitch","\"what is ymir\" · \"tell Regan about Ymir\" · \"explain what ymir is\" · \"introduce ymir to a client\"","one phrasing was not enough: the second shape fell through"
-  "the rooms","an open room answers an unnamed hello · a named-only room stays quiet · the group door lists its rooms","a room ignored Reygan because addressed_only was global and invisible"
+  "the rooms","an open room answers an unnamed hello · a named-only room stays quiet · the group door lists its rooms","a room ignored Berta because addressed_only was global and invisible"
   "the group's members","three ways to ask who is in the room","\"can you see who are in this group\" earned the honest no"
   "the handoff","it carries the person's NAME","it said \"someone in telegram-group\""
   "the tier gate","a stranger cannot hear a contact · the owner can","a leak would be invisible"
@@ -43,3 +43,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

@@ -12,8 +12,8 @@ things"* and then *"update the machinery … FOLLOW THE MEETINGS RULES"*. He was
 |---|---|---|
 | "confirm or correct this record by **2026-10-26** (2 business days)" | `ACT-20261022-03` is due **2026-10-24** | the date was **computed from a cadence** instead of read from the record |
 | "Silence is recorded as provisional acceptance, not as agreement." | nothing of the kind exists; the record's own caveat is `RSK-20261022-02` — *"grade and approver are provisional until confirmed"* | **an invented policy** attributed to a room that never agreed to it |
-| "Ask Reygan and Craig to confirm…" addressed to Reygan | it is **Lars-<the operator>'s** action, not hers | the recipient was told to ask herself |
-| "— **Reygan Assareh**" as the signature | the letter leaves from the operator's mailbox | the chair was signing for the sender |
+| "Ask Berta and Casper to confirm…" addressed to Berta | it is **Lars-<the operator>'s** action, not hers | the recipient was told to ask herself |
+| "— **Berta Lindqvist**" as the signature | the letter leaves from the operator's mailbox | the chair was signing for the sender |
 
 ### What the machinery does now
 - **the ask is quoted, never paraphrased**: the record's confirmation action (`ACT-…`, by its own definition —
@@ -28,11 +28,11 @@ things"* and then *"update the machinery … FOLLOW THE MEETINGS RULES"*. He was
 
 ### Measured
 ```
-subject   Sync — Reygan, Craig — your actions and the record · confirm by 2026-10-24
-ask       "Ask Reygan and Craig to confirm or correct this record within two business days."
+subject   Sync — Berta, Casper — your actions and the record · confirm by 2026-10-24
+ask       "Ask Berta and Casper to confirm or correct this record within two business days."
           — ACT-20261022-03, owned by <the operator> · Done when: Both have replied confirm or objection · By: 2026-10-24
 note      RSK-20261022-02: grade and approver are provisional until confirmed.
-signed    — <the operator>        (Reygan, as chair, holds the register.)
+signed    — <the operator>        (Berta, as chair, holds the register.)
 sent      to <the operator's address> only; the other two remain drafts
 ```
 
@@ -54,3 +54,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

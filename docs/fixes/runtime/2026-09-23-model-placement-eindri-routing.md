@@ -22,7 +22,7 @@
   and non-forge hosts are not; a model errand routes to the forge, a record errand
   to the heart, a ui errand to a dev body; an unmatched kind defaults to `any`
   with this machine first; route JSON parses.
-- On this box: rails `whynot` (reachable), `zerwizserver` (no); `record → whynot`.
+- On this box: rails `third-a` (reachable), `heart-a` (no); `record → third-a`.
 
 ### Files
 - `bin/model/model-placement.sh`
@@ -41,3 +41,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

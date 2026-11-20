@@ -31,7 +31,7 @@ still cannot quote a number alone.
 
 On this seat, one minute apart: the game clone printed `7332edd065bd1ff7` — **exactly** the heart's
 number, from a different machine — and the ymir tree printed `aea8cfbe3da261e2`, both at seat
-`nidavellir`, both at `2026-11-06T10:11:53Z`. The same tool, two repositories, two answers, and the
+`dev-a`, both at `2026-11-06T10:11:53Z`. The same tool, two repositories, two answers, and the
 difference is entirely what each repository declares.
 
 The heart's own words are the evidence for the ymir side: *"my seat moved 08f5954d → f224f614 →
@@ -55,3 +55,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

@@ -22,7 +22,7 @@ whatever folder wrote them; npm's postinstall redrew the Omarchy keys from any f
 shortcut was ever written.
 
 ## Proof
-heimdall and nidavellir: a release of local main builds and proves with all five apps on Electron 43.8.9 from inside
+review-a and dev-a: a release of local main builds and proves with all five apps on Electron 43.8.9 from inside
 the release. `bin/engine/tests/test_units.sh` 50/50; `bin/desktop/tests/test_launcher_worktree_guard.sh` 8/8. The
 WSL and macOS roads are written and not yet proved on a real machine.
 
@@ -38,3 +38,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

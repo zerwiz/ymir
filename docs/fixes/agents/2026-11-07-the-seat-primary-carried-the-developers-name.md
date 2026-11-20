@@ -6,7 +6,7 @@
 
 The Allfather: *"sindri are the developer. youre the nidas 'brokk' agent. your name are conflicting with the developer."*
 
-He was right twice over. `hodd/identity/seats.yaml` read `nidavellir: primary: sindri, role: smith, role_file:
+He was right twice over. `hodd/identity/seats.yaml` read `dev-a: primary: sindri, role: smith, role_file:
 .agents/agents/sindri-developer.md` — and that file is a **subagent**, `mode: subagent`, the developer Eindri. So this
 seat's primary wore the developer's name *and* pointed at the developer's role file, while the counsellor's own file
 (`.agents/agents/brokk.md`, `mode: primary`, `descriptor: the counsellor`) sat unused. The renderer then composed the role
@@ -14,16 +14,16 @@ path from the primary name — `.agents/agents/Hávi.md` — which did not exist
 
 ## What was done
 
-- **the seat is renamed and re-pointed** (in the home, `8384550d`): `nidavellir` primary **Hávi**, role `counsellor`,
+- **the seat is renamed and re-pointed** (in the home, `8384550d`): `dev-a` primary **Hávi**, role `counsellor`,
   `role_file: .agents/agents/brokk.md`. Sindri stays exactly where he belongs, the Eindri who forges.
 - **`.agents/agents/Hávi.md`** — this commit — a link to `brokk.md`, so the render resolves on **every** machine that runs
   `bin/seat/seat-surface.sh`, not only on the one where the link was made by hand. One source, no second copy.
-- **re-rendered**: `bin/seat/seat-surface.sh --check` now reports *every surface reads Hávi on nidavellir*.
+- **re-rendered**: `bin/seat/seat-surface.sh --check` now reports *every surface reads Hávi on dev-a*.
 
 ## How it was verified
 
 ```
-bash bin/seat/seat-surface.sh --check   → every harness reads Hávi on nidavellir
+bash bin/seat/seat-surface.sh --check   → every harness reads Hávi on dev-a
 readlink -f .agents/agents/Hávi.md      → .agents/agents/brokk.md
 bin/gates/guards.sh                     → no failing ward of this range (a mojibake finding in
                                            .agents/assets/agents/capabilities.md is pre-existing on main and belongs to the
@@ -42,3 +42,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

@@ -34,7 +34,7 @@ Measured after naming the four agents that had identified themselves:
 ```
 "w3:p1Z","","ymir","voice-593303","","lock-holder,me","?"
 "w3:p0","gimle-door","ymir",...   "w3:pZ","kit-notifies-arm","ymir",...
-"w3:pY","registry-210","ymir",...  "w3:p21","ct-tenancy","Inmost-ControlTower",...
+"w3:pY","registry-210","ymir",...  "w3:p21","ct-tenancy","Nordan-ControlTower",...
 ```
 
 ## Verified
@@ -64,3 +64,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

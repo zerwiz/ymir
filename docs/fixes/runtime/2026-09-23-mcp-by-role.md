@@ -19,7 +19,7 @@
 - `.agents/tests/mcp-config.test.sh` — **ALL PASS**: a dev body's well/tickets
   point at the heart's tailnet; the heart uses loopback and never self-addresses;
   the config parses; a missing registry falls back to loopback, no crash.
-- On this box (dev): `well → http://whynot.<tailnet>.ts.net:8317/mcp`.
+- On this box (dev): `well → http://third-a.<tailnet>.ts.net:8317/mcp`.
 
 ### Files
 - `bin/bridge/mcp-config.sh`
@@ -37,3 +37,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

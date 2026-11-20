@@ -31,7 +31,7 @@ joined" and is indistinguishable from "failed to join."
 2. Make `snotra-bot.sh status` distinguish "registered but worker not spawned"
    from "joined", so an agent (and operator) can tell whether Snotra is actually
    in the call.
-3. Ensure the Vexa worker is running on whynot/zerwizserver (systemd) so joins
+3. Ensure the Vexa worker is running on third-a/heart-a (systemd) so joins
    spawn containers.
 
 ## Lesson for the agent
@@ -51,3 +51,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

@@ -8,7 +8,7 @@ The kit's hooks asked `npm run check` and `npm run typecheck` (and, at push, `np
 installed on the machine** — not whenever **the project declared the script**. On a workstation that carries
 node for its own sake, that made the hook a lockout in every repository without npm:
 
-- the three Elixir repositories the kit was installed into on 2026-11-07 (`Inmost-ControlTower`,
+- the three Elixir repositories the kit was installed into on 2026-11-07 (`Nordan-ControlTower`,
   `Example14`, `wayof-coe`) have **no `package.json` at all**;
 - `Example5` has one, and declares `build`, `dev`, `lint`, `start`, the `db:*` scripts — **no `check`, no
   `typecheck`**.
@@ -46,7 +46,7 @@ From the branch that carries this fix, against the four installed repositories:
 
 ```
 measured[4]{repo,declares,result}:
-  "Inmost-ControlTower","nothing (no package.json)","pre-commit exits 0 — the baton check is the project's own gate"
+  "Nordan-ControlTower","nothing (no package.json)","pre-commit exits 0 — the baton check is the project's own gate"
   "Example14","nothing (no package.json)","pre-commit exits 0"
   "wayof-coe","nothing (no package.json)","pre-commit exits 0"
   "Example5","package.json, no check/typecheck/test","pre-commit exits 0; the project's own lint stays its own"
@@ -74,3 +74,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

@@ -19,7 +19,7 @@ indistinguishable from a gate nobody hears.
 ```
 built[4]{piece,what,proved}:
   "scripts/notify-arm.sh","the one door: a gate's message is appended to <state>/.wake-queue — the arm's own inbox, which the drain prints in the arm holder's WINDOW — and its receivers are resolved, never guessed","a live lease + a scratch repo: one KIT line per refusal arrived in the queue; `--who` prints repo, state, arm, orchestrator"
-  "the estate receiver","asks the house's own door `bin/agents/areas.sh estate <path>` (path-resolved, no registry restated) and carries its line with the refusal: `areas: 18 · 5 held · 0 unproved · 0 waived · 0 na · 13 unheld (example-3)`","measured on Inmost-ControlTower: 18 · 5 held · 13 unheld, matching `areas.sh estate` exactly"
+  "the estate receiver","asks the house's own door `bin/agents/areas.sh estate <path>` (path-resolved, no registry restated) and carries its line with the refusal: `areas: 18 · 5 held · 0 unproved · 0 waived · 0 na · 13 unheld (example-3)`","measured on Nordan-ControlTower: 18 · 5 held · 13 unheld, matching `areas.sh estate` exactly"
   "the remedy line","where the refusal NAMES an area (`tenancy (unheld): <path>`), a third line names the one command: `bash bin/agents/areas.sh call <project> <area>`","the tenancy refusal produced exactly that line for example-3"
   "the wiring","all three hooks call the door on every refusal — pr-guard, protected branch, fixes/referee/new-module/areas guards, checks, and commit-msg","commit-msg \"wip\" and a failing `check` each delivered a KIT line"
 ```
@@ -78,3 +78,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

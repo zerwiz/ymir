@@ -24,12 +24,12 @@ cron line and the reply→register path. Both are now in the tree rather than in
 ### The reply → register path, measured on a proof record
 ```
 register{decisions:2, answered_by_id:1, confirmed_by_id:1, unnamed_replies:1}
-decision{DEC-…-01, grade:A, answer:confirm, person:Reygan Assareh, line:'DEC-…-01 confirmed from my side.'}
+decision{DEC-…-01, grade:A, answer:confirm, person:Berta Lindqvist, line:'DEC-…-01 confirmed from my side.'}
 decision{DEC-…-02, grade:B, answer:none}
 reply{kind:confirm, names_no_id:true, line:'Confirmed overall, thanks.'}     ← NOT counted per decision
 --apply → refused without --by: "a machine may propose, only a person promotes"
 --apply --by "Lars-<the operator> <the operator>" →
-  promoted{DEC-…-01, from:proposed, to:approved, by:…}   promotions.jsonl: why = "reply … from Reygan: …"
+  promoted{DEC-…-01, from:proposed, to:approved, by:…}   promotions.jsonl: why = "reply … from Berta: …"
 ```
 
 **The law this proves:** a whole-register "confirmed, thanks" is never fourteen signatures. A decision is promoted
@@ -38,7 +38,7 @@ only when the reply names its id, and only by a person; the reply is recorded as
 
 ### Appendix (same day) — `snotra-dispatch.sh who "<person>"`
 
-The Allfather: *"he should know if we have emailed Reygan, cuz we have — and what was in that email."* The answer sat
+The Allfather: *"he should know if we have emailed Berta, cuz we have — and what was in that email."* The answer sat
 in four files and no door read them together. `snotra-dispatch.sh who "<person>"` now prints, per meeting they
 attended: the letter's state (`sent at …` vs `draft … · not sent`), what was filed on the board, the count of replies,
 the date the state file was last written, the letter's opening line, and the last reply with its kind — read-only, from
@@ -59,3 +59,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

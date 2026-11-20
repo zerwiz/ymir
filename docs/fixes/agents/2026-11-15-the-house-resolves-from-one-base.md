@@ -4,8 +4,8 @@
 
 ```
 error: the house is split — data and config resolve to different bases.
-  data:  /home/zerwizserver/ymir/data
-  config:/home/zerwizserver/Documents/ymirhome/config
+  data:  $HOME/ymir/data
+  config:$HOME/Documents/ymirhome/config
 ```
 
 The guard was right; the resolution was the fault. Four doors — `einherjar-spawn.sh`, `eindri-dispatch.sh`,
@@ -32,9 +32,11 @@ was written into the repo's empty `data/` for the same reason.
 **Proof.** Measured on the heart the same morning, with the environment that had split the house:
 
 ```
-before:  error: the house is split — data … /home/zerwizserver/ymir/data
-after:   armed plans-state · worktree=/home/zerwizserver/ymir/.yggdrasil/plans-state
-         open: plans-state → /home/zerwizserver/Documents/ymirhome/hodd/data/backlog.md
+before:  error: the house is split — data … $HOME/ymir/data
+after:   armed plans-state · worktree=$HOME/ymir/.yggdrasil/plans-state
+         open: plans-state → $HOME/Documents/ymirhome/hodd/data/backlog.md
 ```
 
 and the errand was then spawned for real (worktree cut, worker seated).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

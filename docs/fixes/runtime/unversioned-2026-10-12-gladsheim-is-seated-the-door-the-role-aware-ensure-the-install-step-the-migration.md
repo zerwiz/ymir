@@ -26,7 +26,7 @@ before first boot.
   round-trip against a live continuwuity on `:8008`.
 - **The shape law holds, measured on this seat**: `status` reports `shape=fleet`,
   `holds_engine=no`; `ensure` prints *"this seat is a client — the engine belongs to the
-  heart (zerwizserver); skipping cleanly"*; forcing the heart role seats the engine
+  heart (heart-a); skipping cleanly"*; forcing the heart role seats the engine
   (`engine up`, pinned token written).
 - `0008-room.sh` runs against this home and skips cleanly, leaving the existing config
   untouched; the installer lists `step_room "the room"`.
@@ -49,3 +49,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

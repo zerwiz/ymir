@@ -1,6 +1,6 @@
 ## snotra · 2026-10-23 — a meeting record went missing; the guard that makes it survivable
 
-A tracked transcript — `hodd/life/meetings/2026-10-23-ping-reygan-craig-mic.transcript.md` — was **gone from
+A tracked transcript — `hodd/life/meetings/2026-10-23-ping-Berta-Casper-mic.transcript.md` — was **gone from
 disk**. It was caught only because the commit guard refuses a deletion (Rule 11): the push stopped, the file
 was restored from git, and the push went through.
 
@@ -32,3 +32,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

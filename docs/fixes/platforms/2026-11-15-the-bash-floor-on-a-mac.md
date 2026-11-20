@@ -48,7 +48,7 @@ All runs below were on the Mac above, with bash 5.2.37 built into `~/.local/bin`
 
 ## What this does not fix
 
-This is the first step of making Ymir native on a Mac (Josef's plan 293, "One core, three systems"). It does not
+This is the first step of making Ymir native on a Mac (Dana's plan 293, "One core, three systems"). It does not
 replace bash, and it does not touch the GNU-only tools still called directly. Measured on this tree with a pattern
 scan, as an upper bound because many call sites already fall back:
 
@@ -91,3 +91,5 @@ macOS command (`say`, `open`, `pbcopy`) is a hazard when it is called before it 
 ## CHANGE LOG
 
 - 2026-11-15 — review-mend: added missing heading for #778
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

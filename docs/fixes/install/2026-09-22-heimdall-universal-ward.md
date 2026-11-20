@@ -38,8 +38,10 @@ errand.
 - `.agents/skills/galdr-ymirsystem/assets/installation.md`
 
 ### Rollout (fleet)
-- `zerwizserver` (.103) and `whynot` (.111): ward seated this day from omarchy
+- `heart-a` (.103) and `third-a` (.111): ward seated this day from omarchy
   — 10 keys each, timer live (`~/.local/bin/host/heimdall-ssh-keys.sh`); desktop
   seats first, then the heimdall box via `bootstrap-heimdall-ward.sh` (the
   private shelf), then the Ubuntu drive seat at install time.
 - One console action outstanding: `sudo loginctl enable-linger whynot`.
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

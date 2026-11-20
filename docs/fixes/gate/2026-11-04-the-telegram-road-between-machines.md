@@ -74,7 +74,7 @@ door (`hermes config set platforms.telegram.enabled true`) so no secret ever ent
 `token_ref`, and above all **the token is absent**:
 
 ```
-hermes-telegram: no token for nidavellir: secrets/…(.age) is absent from the vault (or will not decrypt) — nothing was written
+hermes-telegram: no token for dev-a: secrets/…(.age) is absent from the vault (or will not decrypt) — nothing was written
 help: create the bot in @BotFather, then bin/vault/hodd-set.sh TELEGRAM_BOT_TOKEN <token> secrets/…
 ```
 
@@ -101,7 +101,7 @@ They are not the same road, and the door's own help now says so:
   `hodd/secrets/telegram-<machine>.env.age` through `bin/vault/hodd-set.sh`. This seat's token now exists in
   the vault and its bot answers (`getMe` returns the bot's own name and id — the id is public metadata and is
   recorded in the home's registry; the token is nowhere). The **Hermes sealing itself is one command and he
-  has not said the word**: `bin/seat/hermes-telegram.sh seat nidavellir`, then `hermes gateway restart`. The
+  has not said the word**: `bin/seat/hermes-telegram.sh seat dev-a`, then `hermes gateway restart`. The
   write path was proved end to end against a throwaway `HERMES_HOME` (token line written, platform enabled,
   temp home shredded afterwards).
 - **A real hop.** Neither machine's registry row carries a `telegram.chat` yet — no chat id exists until the
@@ -144,3 +144,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

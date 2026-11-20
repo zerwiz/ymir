@@ -3,7 +3,7 @@
 ## Why
 The architecture map had not yet learned what the day forged: the one
 Electron runtime resolver, the routing class invariant, the graphics policy,
-the Cron gate's two faces (local + whynot · zerwizserver over the ssh ring),
+the Cron gate's two faces (local + third-a · heart-a over the ssh ring),
 the folding Files tree, Nornir's both-orders role gate, session-started loops
 and the boot gap, and Glitnir's honest GitHub read. A map that lags the code
 teaches the wrong machine.
@@ -35,3 +35,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

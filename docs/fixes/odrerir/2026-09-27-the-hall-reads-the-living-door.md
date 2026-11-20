@@ -6,9 +6,9 @@ Two wounds left the React hall dark, and only one of them was the one first
 measured.
 
 1. **The door named a retired heart.** `apps/odrerir/src/skuld.ts` still
-   defaulted `SKULD_URL` to `http://whynot.<tailnet>.ts.net:8320`, the Astro
+   defaulted `SKULD_URL` to `http://third-a.<tailnet>.ts.net:8320`, the Astro
    door's address. The 2026-09-27 cutover (plan 51 Part 9) retired whynot's Skuld
-   unit and moved the record to the heart (zerwizserver), so every board call —
+   unit and moved the record to the heart, so every board call —
    tickets, plans, comments — rang a dead seat. The book read empty.
 2. **The replacement door had no browser road.** The one local gateway
    (`bin/bridge/mcp-gateway.sh`, :8316) fronts Skuld over the heart and resolves it at
@@ -110,3 +110,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

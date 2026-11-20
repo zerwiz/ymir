@@ -15,7 +15,7 @@ measured[3]{condition,heard,why}:
 - the decode now normalises level — `volume=6dB,loudnorm=I=-16:TP=-1.5:LRA=11` — with a plain decode as
   fallback if the filter graph is unavailable;
 - a **vocabulary hint** rides with the request: *Example4 · OVK · Skírnir · Snotra · Boverket · WayOf ·
-  Whynot Productions · Example8 · ventilation inspection · Isabella · Craig · Brokk · Ymir*. Names only —
+  Nordwind Productions · Example8 · ventilation inspection · Ingrid · Casper · Brokk · Ymir*. Names only —
   it is a bias, never a private fact, and it is overridable with `WHISPER_VOCAB`.
 
 **Verified on both shapes of note:** a Telegram-shaped OGG → *"Skírnir, what is Example4? The inspection is
@@ -37,3 +37,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

@@ -5,12 +5,12 @@
 
 ### Why
 A partner was greeted with the owner's name, "what can you do" was refused, a Swedish request went unanswered, and
-"have we emailed Reygan, and what was in it?" had no answer — while every fact sat in the house's own files.
+"have we emailed Berta, and what was in it?" had no answer — while every fact sat in the house's own files.
 
 ### What it answers
 ```bash
-python3 bin/assistant/ground.py who "@JupiterRoyal"     # → Reygan Assareh · @JupiterRoyal · <a personal address>
-python3 bin/assistant/ground.py person "Reygan Assareh"  # per meeting: letter draft/sent, filed, replies, read date
+python3 bin/assistant/ground.py who "@JupiterExample"     # → Berta Lindqvist · @JupiterExample · <a personal address>
+python3 bin/assistant/ground.py person "Berta Lindqvist"  # per meeting: letter draft/sent, filed, replies, read date
 python3 bin/assistant/ground.py decisions "agenda"       # the record items matching the words, with ids + status
 python3 bin/assistant/ground.py calendar [1d|ISO..ISO]   # free|busy|unknown + the probe's freshness
 ```
@@ -26,8 +26,8 @@ the surface can cite it (Rule 37).
 
 ### Measured tonight
 ```
-who "@JupiterRoyal"     → Reygan Assareh (found: true, telegram JupiterRoyal, email <a personal address>)
-person "Reygan Assareh" → M-20261022-sync-reygan-craig: letter draft · filed 3 · replies 0 · read 2026-10-23
+who "@JupiterExample"     → Berta Lindqvist (found: true, telegram JupiterExample, email <a personal address>)
+person "Berta Lindqvist" → M-20261022-sync-Berta-Casper: letter draft · filed 3 · replies 0 · read 2026-10-23
 calendar 1d             → verdict busy, source cache, as_of 2026-10-23T19:10Z
 ```
 
@@ -64,3 +64,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

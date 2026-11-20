@@ -9,7 +9,7 @@ pulling must exist."*
 `ymir_plan` (→ `bin/records/plan.sh new`) was asked for the next number on this seat while the home was
 **seven commits behind** `origin/main`. It numbered from the directory listing it could see —
 `ls | sort -n | tail -1 | awk '{print $1+1}'` — and answered **182**. The plan was written, the index row
-appended, the commit made. Another machine had already taken 182 that afternoon (`182-the-nidavellir-bench…`,
+appended, the commit made. Another machine had already taken 182 that afternoon (`182-the-dev-a-bench…`,
 pulled minutes later), so the number now named two plans and the second had to be renumbered by hand.
 
 The same shape sat one line away in the errand door: `einherjar-spawn.sh` cut a Yggdrasil worktree from
@@ -62,3 +62,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

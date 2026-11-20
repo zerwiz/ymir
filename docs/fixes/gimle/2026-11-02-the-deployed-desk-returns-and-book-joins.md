@@ -4,8 +4,8 @@
 
 ## What was wrong
 
-`/home/zerwizserver/gimle/desk/desk.py` on the heart was **newer than the file in this repository** and
-`/home/zerwizserver/gimle` is **not a git checkout at all**. The deployed copy carried three things the
+`$HOME/gimle/desk/desk.py` on the heart was **newer than the file in this repository** and
+`$HOME/gimle` is **not a git checkout at all**. The deployed copy carried three things the
 repo did not have:
 
 - `plane_reader.py` — the Board read face, which draws the cards assigned to a person straight from Plane;
@@ -45,7 +45,7 @@ only people who can book are the people who already have an account, which defea
   reads `~/gimle/desk/etc/people.json` (`GIMLE_PEOPLE_FILE`), which lives on the heart with the token. That file
   must exist before the board section can map a person: a flat JSON object of `person: email`.
 - **The Plane token is not missing, it is unhoarded.** It lives at
-  `/home/zerwizserver/gimle/desk/etc/plane-token`. `ymir_secret_keys PLANE` reports nothing because the vault knows
+  `$HOME/gimle/desk/etc/plane-token`. `ymir_secret_keys PLANE` reports nothing because the vault knows
   no such key; moving it into `hodd/secrets/platform.env` is a decision, not a cleanup.
 - Cal.com holds **one** user (username `<the operator>`), 4 event types, 0 bookings, a Google calendar credential, a Google
   video credential, and no teams. Per-member booking places are the Allfather's call: each person gets a Cal.com
@@ -65,3 +65,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

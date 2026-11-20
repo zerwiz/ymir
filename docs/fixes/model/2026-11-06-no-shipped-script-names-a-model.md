@@ -8,7 +8,7 @@ The Allfather: *"this model choosing logic don't make sense. all users and compu
 capabilities.. are we shipping hardcoded models?"* — yes. Five shipped scripts named a model id:
 `bin/agents/eindri-review-spawn.sh` (default), `bin/agents/eindri-checkpoint.sh` (a resume hint),
 `bin/ward/vidarr-agent.sh`, `bin/ward/garmr-bite.sh`, `bin/ward/garmr/common.py` and `bin/ward/garmr/escalate.py`.
-`llamacpp-3050-big/…` exists on nidavellir and nowhere else; `opencode-go/deepseek-v4.1-flash` is a vendor
+`llamacpp-3050-big/…` exists on dev-a and nowhere else; `opencode-go/deepseek-v4.1-flash` is a vendor
 choice baked into a public repo. The house already had the truth — `bin/model/catalog.sh` — and the code
 went around it.
 
@@ -34,7 +34,7 @@ at the Allfather's word. A machine that cannot serve it corrects its own overlay
 
 ## Verified
 
-`agent-model.sh --check` on nidavellir: **10 ok / 0 fail**, every row resolving to
+`agent-model.sh --check` on dev-a: **10 ok / 0 fail**, every row resolving to
 `opencode-go/deepseek-v4.1-flash` from `fleet agents.yaml`. `model-rows-guard` (the 28th ward): `ok`, 10 rows.
 `agent-model.sh forseti --plain` → `opencode-go/deepseek-v4.1-flash`.
 
@@ -52,3 +52,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

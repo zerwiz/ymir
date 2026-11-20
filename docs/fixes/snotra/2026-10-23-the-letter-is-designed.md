@@ -29,7 +29,7 @@ about the letter itself, not claims about the meeting.
 
 ### Measured
 ```
-letters/reygan-assareh.html   21 066 bytes   (was 5 334)
+letters/Berta-lindqvist.html   21 066 bytes   (was 5 334)
 probes: 'Example8 Technologies' 2 · '#12263f' 10 · 'Grade A · Critical' 1 · '2026-10-24' 2 · 'DEC-20261022' 1
 sections: Who does what · What I need from you · How to answer · Next meeting   all present
 sent: the designed letter to <the operator's address> only (approved cde98d0b…)
@@ -50,3 +50,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

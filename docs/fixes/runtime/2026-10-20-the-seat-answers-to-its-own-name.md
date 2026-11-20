@@ -3,7 +3,7 @@
 ### What
 
 Every seat loaded a contract whose first line said **"You are Brokk"**, so a seat on
-omarchy, whynot or zerwizserver inherited the main hall's name. The agent cards already
+omarchy, third-a or heart-a inherited the main hall's name. The agent cards already
 carried four different names; the contract ignored them.
 
 This adds one source and one door:
@@ -52,3 +52,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

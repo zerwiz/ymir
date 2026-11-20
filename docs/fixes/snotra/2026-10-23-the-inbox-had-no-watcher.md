@@ -35,8 +35,8 @@ taking care of my email inbox incoming?"* — and he pasted the paragraph he had
 
 ### Measured, immediately after the real send
 ```
-sent   Reygan Assareh → <a personal address>   (approved b7eabab7…, 5 attachments)
-sent   Craig Martin   → <operator-mailbox>          (approved 798bd333…, 5 attachments)
+sent   Berta Lindqvist → <a personal address>   (approved b7eabab7…, 5 attachments)
+sent   Casper Lindqvist   → <operator-mailbox>          (approved 798bd333…, 5 attachments)
 watch  mail_watch{people:3, answered:0, silent:3}
 ```
 
@@ -58,3 +58,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

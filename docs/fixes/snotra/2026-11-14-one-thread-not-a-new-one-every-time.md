@@ -29,7 +29,7 @@ thread.
 ## Proved
 
 ```
-$ mail-send.sh draft --to a partner,craig@way-of.com \
+$ mail-send.sh draft --to a partner,Casper@nordan.example \
     --reply-to "last:<their address>" --subject "…" --body … --dry-run
 thread	last:<their address> -> 1a1dab212fce2bdf
 eml	/tmp/tmp.PlclxvquDi.eml
@@ -46,3 +46,5 @@ should be a decision, not an accident. The runbook's rule is in `hodd/docs/runbo
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #751
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

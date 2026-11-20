@@ -28,7 +28,7 @@ itself: `ensure --primary` decides that, and refuses when a live primary already
 
 ## Verified
 
-On `zerwizserver`: `review-seat.sh --unit-status` → `herdr_server, keeper_timer` states;
+On `heart-a`: `review-seat.sh --unit-status` → `herdr_server, keeper_timer` states;
 `herdr workspace list` showed the `review` workspace alive with a pi agent in `~/review/ymir`
 **working**, its status line `(opencode-go) deepseek-v4.1-flash • high`, and the machine's
 `brokk.lock` naming that seat's pid with the arm lease's `session=` equal to it — the seat holds the
@@ -46,3 +46,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

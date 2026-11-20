@@ -11,7 +11,7 @@ He is right, and the tree says so plainly: `systems/skirnir/domain.yaml` declare
 `kind: system`, keeper `skirnir`, with doors for voice, knowledge, the gate and the rooms; the
 folder carries his README, AGENTS.md and board. He is a system with no screen of his own — not an
 absent service. What is missing is a **connection** on these seats: no systemd unit on the heart or
-on nidavellir, and no `telegram.heartbeat` in the shared home.
+on dev-a, and no `telegram.heartbeat` in the shared home.
 
 ### What changed
 
@@ -43,3 +43,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

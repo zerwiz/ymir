@@ -106,7 +106,7 @@ bash .agents/tests/install-role-gate.test.sh # behavioural: dev/heart/forge/hand
   component set a *real* run installs was not exercised here, because a real
   install on this box would raise/heal the live runtime and write the operator's
   home. The gates are the same code either way, but the first fresh-seat install
-  (and the first `heart` install on zerwizserver) is the lasting proof.
+  (and the first `heart` install on heart-a) is the lasting proof.
 - **`bin/skuld/role.sh set` on a real run** writes the fleet registry; on this box only
   the reader was exercised (the row for `heimdall` already said `dev`).
 - **The machine card has never been written to the live registry from a real
@@ -134,3 +134,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

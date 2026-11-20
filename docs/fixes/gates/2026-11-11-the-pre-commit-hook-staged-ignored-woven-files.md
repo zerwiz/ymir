@@ -19,7 +19,7 @@ fix and the re-seat: the same commit lands.
 
 ## CHANGE LOG
 
-- **2026-11-11** — written with the change (nidavellir, plan 250).
+- **2026-11-11** — written with the change (dev-a, plan 250).
 - **2026-11-11** — the same branch also widened `rules-compliance-guard.sh`'s template exemption (`is_shape`) to
   `systems/snotra/services/letters/templates/*`: a letter template is a shape mailed to a reader, exactly like
   `.agents/templates/*`, so a CHANGE LOG inside it would be mailed too.
@@ -32,3 +32,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

@@ -16,12 +16,12 @@ Four faults, all in the same formatter (`role_file()` in `bin/agents/seat-identi
    path. That is the shape of the bug, not its cure: a machine's seat name was written into the public tree
    so a dead pointer could resolve.
 2. **The roster's own `role_file:` was ignored.** `seats.yaml` records the card explicitly
-   (`nidavellir: role_file: .agents/agents/brokk.md`) and the formatter never read it. The record was right;
+   (`dev-a: role_file: .agents/agents/brokk.md`) and the formatter never read it. The record was right;
    the code did not consult it.
 3. **The documented call order silently answered the wrong question.** The header documents
    `seat-identity.sh <host> --file`; the parser only accepted `--file <host>`. With the flag second, the door
    returned the seat's *name* and said nothing — a wrong answer that looks like a right one.
-4. **The hand-written exception map was incomplete.** `whynot` (kvasir) and `zerwizserver` (forseti) pointed
+4. **The hand-written exception map was incomplete.** `third-a` (kvasir) and `heart-a` (forseti) pointed
    at `kvasir.md` and `forseti.md`, neither of which exists; their cards are `kvasir-scout.md` and
    `forseti-reviewer.md`. Two seats were reading nothing.
 
@@ -38,7 +38,7 @@ OpenCode never loaded the figure at all — 24 profiles, 23 agents.
 - **`.agents/agents/Hávi.md` is retired.** It was a link to `brokk.md`, created to satisfy the invented path.
   Nothing needs it now: the seat resolves to the card the roster records. A name that belongs to one machine
   does not ship in a public tree.
-- **Both documented argument orders work** (`--file nidavellir` and `nidavellir --file`).
+- **Both documented argument orders work** (`--file dev-a` and `dev-a --file`).
 - **`heimdall` declares its card** (`role_file: .agents/agents/brokk.md`) — the counsellor seat answers as its
   own name and reads the counsellor's text, which is the whole point.
 - **Skírnir gets his frontmatter** — `name`, `mode: subagent`, a description, and a pattern-map permission
@@ -47,9 +47,9 @@ OpenCode never loaded the figure at all — 24 profiles, 23 agents.
 ## How it was verified
 
 ```
-bin/agents/seat-identity.sh --file nidavellir   → .agents/agents/brokk.md        (exists)
+bin/agents/seat-identity.sh --file dev-a   → .agents/agents/brokk.md        (exists)
 bin/agents/seat-identity.sh --file whynot       → .agents/agents/kvasir-scout.md (exists)
-bin/agents/seat-identity.sh --file zerwizserver → .agents/agents/forseti-reviewer.md (exists)
+bin/agents/seat-identity.sh --file heart-a → .agents/agents/forseti-reviewer.md (exists)
 bin/agents/seat-identity.sh --file heimdall     → .agents/agents/brokk.md        (exists)
 bin/seat/valknut-load.sh --all                  → opencode/pi/claude/codex/cursor all bound (24)
 opencode debug agents                           → 36 agents; every one of the 24 figures present
@@ -60,8 +60,8 @@ After: 24 of 24, and no composed path in the tree.
 
 ## Still held (the Allfather's to seal)
 
-The roster still reads `nidavellir: primary: Hávi` and `heimdall: primary: Hœnir`, which contradicts his word
-this day that **Hávi is heimdall's** and **Sindri is nidavellir's**. Names are sealed by him alone (Rule 44),
+The roster still reads `dev-a: primary: Hávi` and `review-a: primary: Hœnir`, which contradicts his word
+this day that **Hávi is review-a's** and **Sindri is dev-a's**. Names are sealed by him alone (Rule 44),
 so this fix leaves them untouched and asks; the card resolution above makes the naming harmless either way.
 
 ## CHANGE LOG
@@ -105,3 +105,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

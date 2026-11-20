@@ -27,7 +27,7 @@ empty set is likewise no evidence, so its aliases fall to `offline`, not
 $ bin/gates/checks/model-alias-check.sh            # whole reachable ring, TOON
 model_alias_seats[4]{seat,state,served_aliases}:
   "whynot","ok","5"
-  "zerwizserver","ok","0"
+  "heart-a","ok","0"
   "omarchy","offline","0"
   "heimdall","ok","49"
 model_alias_offline_seats[1]{seat,reason}:
@@ -112,3 +112,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

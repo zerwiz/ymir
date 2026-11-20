@@ -47,7 +47,7 @@ Two commands, both on a scratch store, neither touching the running board:
 ```
 node systems/whiteboard/services/collab/test/prove-live.mjs
   snapshot on last leave  room=proveroom0001 files=1 20261113T222446.345Z.scene.json
-  GET  /saves/id as reygan  403 reason=not-yours "that save is not yours — a board belongs to the person who saved it"
+  GET  /saves/id as Berta  403 reason=not-yours "that save is not yours — a board belongs to the person who saved it"
   joiner after restart      heard=first-in-room+client-broadcast bytes=12 same-scene=true same-iv=true
   runes carved              5
   RESULT: proven
@@ -89,3 +89,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

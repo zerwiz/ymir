@@ -20,7 +20,7 @@ doors — but the summary could not tell the two apart.
 Now the host is resolved in a stated order, each step a door that exists: `JEV_DOOR_HOST` → a
 `host:` line in the registry itself → the fleet registry's forge (else heart) → nothing. Nothing
 means **`no-host`**, printed with the remedy and an exit of 3. The home's
-`config/jev-doors.yaml` now names `host: heimdall` outright, so no seat depends on a machine
+`config/jev-doors.yaml` now names `host: review-a` outright, so no seat depends on a machine
 default.
 
 ## Fault two — it probed with a body the engine refuses
@@ -116,3 +116,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

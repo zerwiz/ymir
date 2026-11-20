@@ -17,7 +17,7 @@ is the component whose shape moved, and a hand looking here must find it.
 ### The fault, measured
 `zerwiz.org` publishes **no MX record**, so `gimle@`, `snotra@`, `reply+*` and `bounce+*` there
 could not receive a single message — and the desk rendered an empty queue, which is
-indistinguishable from "no mail today". `way-of.com` publishes Google Workspace MX and already
+indistinguishable from "no mail today". `nordan.example` publishes Google Workspace MX and already
 receives; its aliases (`gimle@`, `snotra@`) do not exist yet: `sendAs` on the account lists only
 `<the operator's address>`.
 
@@ -41,3 +41,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

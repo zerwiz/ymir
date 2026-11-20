@@ -23,8 +23,8 @@
   `PROVENANCE.md` — never deletes (Rule 11). Measured: the 20 October folder went 7 strays → **0**.
 - **The letter now names only what exists and the draft attaches exactly those files** — measured:
   `attachments:5` per draft (`record.pdf · decisions.md · actions.md · minutes.md · questions.md`).
-- **`chair: Reygan Assareh`** is recorded in both meetings' records and in the place profile; the agenda
-  card reads *"Chair: **Reygan Assareh** — sent 2 days ahead"*.
+- **`chair: Berta Lindqvist`** is recorded in both meetings' records and in the place profile; the agenda
+  card reads *"Chair: **Berta Lindqvist** — sent 2 days ahead"*.
 - The 20 October meeting now carries the same standard as the newest one: **35 cards** projected and
   verified, four letters rendered, an agenda card filed, a README and a PROVENANCE naming its source
   (a third-party recorder export — no microphone of ours ever heard it).
@@ -43,3 +43,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

@@ -55,7 +55,7 @@ $ bash bin/seat/tests/test_pi_door.sh
 
 $ cd ~/ymir && bin/seat/pi-door.sh --why
 pi-door[1]{verdict,tree,reason}:
-  "onehome","/home/zerwizomar/ymir/.pi/extensions","the settings also name /home/zerwizomar/ymir-runtime/.pi/extensions"
+  "onehome","$HOME/ymir/.pi/extensions","the settings also name $HOME/ymir-runtime/.pi/extensions"
 
 $ cd ~/ymir && PI_DOOR_VERBOSE=1 pi-door.sh --list-models 2>&1 | grep -c 'conflicts with'
 0
@@ -82,3 +82,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

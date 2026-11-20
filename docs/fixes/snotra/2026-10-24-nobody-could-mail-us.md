@@ -18,8 +18,8 @@ mails we are using. Otherwise it's pretty weird."*
 ### Measured, tonight, over DNS and the grant
 | claim | measurement |
 |---|---|
-| `zerwiz.org` can receive | **NO.** The DNS answer carries no MX record at all — every `@zerwiz.org` address is undeliverable, and the relay on `zerwizserver` sends only |
-| `way-of.com` can receive | **YES.** Google Workspace MX (`aspmx.l.google.com`) is published, and the read-only grant we already hold reads the mailbox it delivers into |
+| `zerwiz.org` can receive | **NO.** The DNS answer carries no MX record at all — every `@zerwiz.org` address is undeliverable, and the relay on `heart-a` sends only |
+| `nordan.example` can receive | **YES.** Google Workspace MX (`aspmx.l.google.com`) is published, and the read-only grant we already hold reads the mailbox it delivers into |
 | the Workspace aliases exist | **NO.** `GET /users/me/settings/sendAs` lists exactly one address, `<the operator's address>` — so `<the operator's address>` and `<the operator's address>` are `alias-missing`, one console step each |
 | the desk could tell you that | it could not. It showed an empty queue, which reads exactly like "no mail today" |
 
@@ -58,7 +58,7 @@ bin/time/nornir-job-gna-mail.sh --check    rc=0   desk healthy, WARN with the un
 
 ### Owed
 Two console steps, not code: Cloudflare Email Routing for `zerwiz.org` (plan §15.2 records) or
-the Workspace aliases for `way-of.com` (§16 — recommended, since that domain already receives).
+the Workspace aliases for `nordan.example` (§16 — recommended, since that domain already receives).
 Until one lands, `--check` fails by design. The next hand should re-run
 `bin/mail/inbound-test.sh`; when it exits 0 the register has its own proof and `deliverable`
 stops being a promise.
@@ -77,3 +77,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

@@ -25,7 +25,7 @@ skipped, so a second run adds nothing.
 
 ## Measured
 
-- `Inmost-ControlTower`'s baton yields **9 cards** (5 next, 4 blocked) — and the parser needed ordered lists as
+- `Nordan-ControlTower`'s baton yields **9 cards** (5 next, 4 blocked) — and the parser needed ordered lists as
   well as bullets, because a baton's "what is next" is usually numbered.
 - The project guard printed the whole Board rather than guessing: `AIGeeks Freaks, Example11, Example12, Command,
   Courses Astro teaching site, Gimle, Hlidskjalf, Hlidskjalf Mobile, Moved to WayOf, Sessrúmnir, Smíðja factory,
@@ -35,7 +35,7 @@ skipped, so a second run adds nothing.
 
 ## Owed
 
-`PLANE_API_TOKEN` is in the vault (94 keys, backup taken). The Board has no `Inmost-ControlTower` project — creating
+`PLANE_API_TOKEN` is in the vault (94 keys, backup taken). The Board has no `Nordan-ControlTower` project — creating
 one is the Allfather's call, and until it exists the door prints the list and stops.
 
 ## Correction 2026-11-14 — the machine and person names above are roles
@@ -50,3 +50,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

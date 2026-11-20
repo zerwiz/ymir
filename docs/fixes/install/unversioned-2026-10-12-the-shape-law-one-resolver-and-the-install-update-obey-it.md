@@ -18,7 +18,7 @@ seat.
 
 ### Verified
 
-- `bin/fleet/topology.sh` answers live on this seat: `shape=fleet`, `heart=zerwizserver`,
+- `bin/fleet/topology.sh` answers live on this seat: `shape=fleet`, `heart=heart-a`,
   `roles=dev`, `link=attached` — the resolver works and is already the single source.
 - The notes are marked **planned** where the room is concerned, and **law** where the
   resolver is concerned; nothing claims a step that does not yet run.
@@ -40,3 +40,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

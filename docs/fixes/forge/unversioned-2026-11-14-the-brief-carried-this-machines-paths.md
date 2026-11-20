@@ -4,8 +4,8 @@ The twice-daily private sweep found four things in the public repository that be
 Two of them were in the forge's errand briefs: the text a smith is handed named the checkout and the
 verdict file **of the machine that wrote the brief**, as a literal path.
 
-- `bin/forge/repair-errand.md:9` — *"You are a SMITH (an Eindri) in /home/zerwizserver/ymir."*
-- `bin/forge/repair-errand.md:13` — the verdict path, `/home/zerwizserver/Documents/ymirhome/…`
+- `bin/forge/repair-errand.md:9` — *"You are a SMITH (an Eindri) in $HOME/ymir."*
+- `bin/forge/repair-errand.md:13` — the verdict path, `$HOME/Documents/ymirhome/…`
 
 `bin/forge/conflict-errand.md:11` carried the same checkout path.
 
@@ -38,7 +38,7 @@ sed -e "s|@PR@|1|g" -e "s|@HEAD@|abc123|g" -e "s|@VERDICT@|REFUSE|g" \
     bin/forge/repair-errand.md | sed -n '8,15p'
 ```
 
-The private sweep's own `ADDRESS /home/zerwizserver/` rule now finds nothing in the tree but the
+The private sweep's own `ADDRESS $HOME/` rule now finds nothing in the tree but the
 scanner's rule line itself, which the allowlist covers.
 
 ### Files
@@ -50,7 +50,7 @@ scanner's rule line itself, which the allowlist covers.
 
 Found by `bin/time/nornir-job-private-scan.sh` (sweep 2026-11-14T03:51:38Z), fixed under the
 private-scan errand. The home's record of what moved is
-`hodd/docs/machines/zerwizserver/2026-11-14-the-machine-paths-left-the-public-repo.md`.
+`hodd/docs/machines/heart-a/2026-11-14-the-machine-paths-left-the-public-repo.md`.
 
 ## CHANGE LOG
 
@@ -64,3 +64,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

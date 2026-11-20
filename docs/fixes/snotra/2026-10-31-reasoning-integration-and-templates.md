@@ -27,7 +27,7 @@ The reasoning model (3rd AI model) improves extraction quality, suggested steps,
 
 ## Verification
 
-All Python files pass py_compile. All shell scripts pass bash -n. Smoke test: extract (4 items), steps (5 steps), classify (patent), identity (Reygan Assareh), dedup (duplicate: ACT-001), test (ok). Pipeline with --llm-extract: 4 segments → 2 decisions + 3 actions, 11 documents rendered, no errors.
+All Python files pass py_compile. All shell scripts pass bash -n. Smoke test: extract (4 items), steps (5 steps), classify (patent), identity (Berta Lindqvist), dedup (duplicate: ACT-001), test (ok). Pipeline with --llm-extract: 4 segments → 2 decisions + 3 actions, 11 documents rendered, no errors.
 
 ## Correction 2026-11-14 — the machine and person names above are roles
 
@@ -41,3 +41,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.
