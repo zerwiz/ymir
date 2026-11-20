@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """worktrees — one task, one worktree, and a lifecycle the kit enforces from creation to removal.
 
   new      refuses below the disk floor, past the leftover budget or past the cap; closes merged worktrees

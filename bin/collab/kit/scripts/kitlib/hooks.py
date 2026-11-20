@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """hooks — seat the kit's hooks without taking anyone else's.
 
 install   points core.hooksPath at .githooks. Before it moves, the folder that held the repository's hooks — a

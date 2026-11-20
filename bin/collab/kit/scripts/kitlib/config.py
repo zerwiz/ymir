@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """config — one file, project.yaml, read by every kit tool; defaults for everything it leaves out.
 
 Also the machine facts every tool needs: the disk, the processes working in a folder, whether this machine

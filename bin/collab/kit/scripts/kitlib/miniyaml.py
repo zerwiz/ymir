@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """miniyaml — the small YAML subset project.yaml is written in, read with the standard library only.
 
 The kit must run on any machine with a python3, so it carries no dependency. This reader handles what the

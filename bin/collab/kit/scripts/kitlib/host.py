@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """host — read-only reports about a machine: check-host, doctor (at session start), and the weekly summary.
 
 check-host never changes anything. --strict exits 1 when any line is over its limit, so a timer or a

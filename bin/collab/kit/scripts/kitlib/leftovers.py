@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """leftovers — everything a development task leaves behind, each class declared in project.yaml with its rule.
 
   worktrees           closed when merged, or idle and safe; a dead worker's work is salvaged first
