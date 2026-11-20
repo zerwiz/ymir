@@ -56,3 +56,7 @@ Nobody pressed a key. All three were closed and their worktrees removed.
   `<project>:<id>`, and a `--tab` seat has no workspace at all, so `seat-reap.sh` could not find these seats. The
   proof seats were closed by `/exit` and `herdr tab|workspace close`.
 - The engine road gets the trust mark and `dontAsk`, but not the 20 s and 60 s pane check.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #853
