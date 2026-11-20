@@ -654,7 +654,8 @@ class Standardise(Base):
         hist = standardise.history()
         root = COLLAB.parents[1]
         f = Fixture(self.tmp, apply=False)
-        old_blob = sorted(hist["scripts/worktree.sh"])[0]
+        current = standardise.blob((KIT / "scripts" / "worktree.sh").read_bytes())
+        old_blob = sorted(hist["scripts/worktree.sh"] - {current})[0]
         old = sh(["git", "cat-file", "-p", old_blob], root, check=True).stdout
         (f.repo / "scripts").mkdir()
         (f.repo / "scripts" / "worktree.sh").write_text(old)

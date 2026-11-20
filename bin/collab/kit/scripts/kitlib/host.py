@@ -142,8 +142,7 @@ def timer_units(root) -> dict[str, str]:
     root = str(C.main_tree(str(root)))
     name = "collab-kit-prune-" + Path(root).name.lower().replace(" ", "-")
     svc = (f"[Unit]\nDescription=Close finished worktrees and leftovers in {root}\n\n[Service]\nType=oneshot\n"
-           f"WorkingDirectory={root}\nExecStart=/usr/bin/env bash scripts/prune.sh --apply "
-           f"--class worktrees,branches,remote_refs,caches,scratch\n")
+           f"WorkingDirectory={root}\nExecStart=/usr/bin/env bash scripts/work.sh sweep\n")
     tmr = (f"[Unit]\nDescription=Daily leftover prune for {root}\n\n[Timer]\nOnCalendar=daily\n"
            f"RandomizedDelaySec=1h\nPersistent=true\n\n[Install]\nWantedBy=timers.target\n")
     return {f"{name}.service": svc, f"{name}.timer": tmr}

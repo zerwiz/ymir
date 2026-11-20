@@ -58,11 +58,22 @@ Kit **2.0.0** (major: folder names and file names change for a plain repository)
 - **Upgrades without loss**: `kit-history.tsv` (every blob the kit has shipped) lets `standardise.sh` upgrade a file
   an older kit installed and the repository never changed, and report every changed file as local.
 
+- **Start, stop, sweep, the stack switch and deploy** (added the same day at the operator's word): `work.sh start`
+  refuses under the floor or over the budget and turns the app's dev stack on; `work.sh stop` runs the checks,
+  commits, pushes, opens the pull request, stops the processes, ports and test databases the record tracks, and
+  removes everything once merged (else "waiting for merge" with an expiry); `work.sh sweep` is the daily cleanup.
+  `stack.sh` reads one per-machine manifest (`~/.config/collab-kit/stacks.yaml`) and never stops a `prod` piece.
+  `deploy.sh` picks the storage driver from the filesystem (btrfs on btrfs — podman on one machine had lost its
+  storage and fell back to overlay), takes the lock, builds labelled images, ships, runs the project's hook, keeps
+  two tags and prints the rollback on any failure. `docs/how-we-work.md` is the one page.
+
 ## What was run
 
 ```
 python3 bin/collab/tests/test_kit.py            → Ran 40 tests … OK (K-1…K-13, every leftover class, upgrade)
-bash bin/collab/tests/test_collab.sh            → 27 passed, 0 failed
+python3 bin/collab/tests/test_work.py           → Ran 12 tests … OK (start at low disk, stop after merge, deploy
+                                                  keeps exactly two tags, btrfs driver, off refuses prod, off/on)
+bash bin/collab/tests/test_collab.sh            → 28 passed, 0 failed
 bash bin/gates/tests/test_areas_and_injection.sh → 19 passed · 0 failed
 bash bin/gates/tests/test_maker_names.sh        → one failure, present on origin/main before this change
                                                   (the kit copy of maker-allow.txt lags the house copy)

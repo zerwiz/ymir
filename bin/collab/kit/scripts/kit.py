@@ -17,6 +17,9 @@
   kit.py hooks install|uninstall|check       seat the hooks without taking the repository's own
   kit.py lang msg <file> | lang staged       the project tongue in commits; client tongues in client paths
   kit.py containers build|retain|<engine args>   the container door (see RULES/23)
+  kit.py work start <id> | stop <id> [-m M] | track <id> --pid/--port/--db | sweep [--dry-run]
+  kit.py stack status [app] | on <app>|--all-dev | off <app>|--all-dev [--piece NAME]
+  kit.py deploy --release R [--dry-run] [--rollback]
 
 Common flags: --repo <path> (default: the repository the command runs in), --json (one JSON object per line).
 Exit: 0 ok · 1 refused or over a limit · 2 usage.
@@ -29,13 +32,14 @@ import json
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 sys.dont_write_bytecode = True  # a repository is never left with a __pycache__ the kit made
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from kitlib import config as C  # noqa: E402
 from kitlib import containers as ct  # noqa: E402
-from kitlib import host, hooks, languages, leftovers, worktrees as wt  # noqa: E402
+from kitlib import deploy, host, hooks, languages, leftovers, stack, work, worktrees as wt  # noqa: E402
 
 
 def _root(args) -> Path:
@@ -261,6 +265,37 @@ def cmd_containers(args, rest):
     return ct.door(cfg, rest)
 
 
+def cmd_work(args):
+    root = _root(args)
+    cfg = C.load(root)
+    if args.action == "start":
+        return work.start(cfg, root, args.id, args.base, args.owner or os.environ.get("KIT_OWNER") or getpass.getuser(),
+                          args.purpose or "", args.expires_days)
+    if args.action == "stop":
+        return work.stop(cfg, root, args.id, args.message, args.no_checks)
+    if args.action == "track":
+        return work.track(cfg, root, args.id, args.pid, args.port, args.db, args.what or "")
+    return work.sweep(cfg, root, args.dry_run)
+
+
+def cmd_stack(args):
+    if args.action == "status":
+        rows = stack.status(args.app)
+        C.emit(rows, args.json, ["app", "role", "running", "piece", "mem", "cpu", "since", "owner"])
+        return 0
+    if not args.app and not args.all_dev:
+        print("name an app, or --all-dev")
+        return 2
+    rc, lines = stack.switch(args.action, args.app, args.all_dev, args.piece)
+    print("\n".join(lines))
+    return rc
+
+
+def cmd_deploy(args):
+    root = _root(args)
+    return deploy.run(C.load(root), root, args.release or time.strftime("%Y%m%d-%H%M"), args.dry_run, args.rollback)
+
+
 def main(argv=None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     p = argparse.ArgumentParser(prog="kit.py", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -296,6 +331,15 @@ def main(argv=None) -> int:
     s = sub.add_parser("lang"); s.add_argument("action", choices=["msg", "staged", "files"])
     s.add_argument("file", nargs="?"); s.add_argument("paths", nargs="*")
     sub.add_parser("containers", add_help=False)
+    s = sub.add_parser("work"); s.add_argument("action", choices=["start", "stop", "track", "sweep"])
+    s.add_argument("id", nargs="?"); s.add_argument("--base"); s.add_argument("--owner"); s.add_argument("--purpose")
+    s.add_argument("--expires-days", type=float); s.add_argument("-m", "--message"); s.add_argument("--no-checks", action="store_true")
+    s.add_argument("--pid", type=int); s.add_argument("--port", type=int); s.add_argument("--db"); s.add_argument("--what")
+    s.add_argument("--dry-run", action="store_true")
+    s = sub.add_parser("stack"); s.add_argument("action", choices=["status", "on", "off"]); s.add_argument("app", nargs="?")
+    s.add_argument("--all-dev", action="store_true"); s.add_argument("--piece")
+    s = sub.add_parser("deploy"); s.add_argument("--release"); s.add_argument("--dry-run", action="store_true")
+    s.add_argument("--rollback", action="store_true")
 
     if "containers" in argv:
         i = argv.index("containers")
@@ -304,11 +348,14 @@ def main(argv=None) -> int:
     args = p.parse_args(argv)
     if args.cmd == "lang" and args.action == "files" and args.file:
         args.paths = [args.file] + args.paths
+    if args.cmd == "work" and args.action != "sweep" and not args.id:
+        p.error(f"work {args.action} needs an id")
     if args.cmd in ("worktree",) and args.action in ("new", "done") and not args.id:
         p.error(f"worktree {args.action} needs an id")
     return {"config": cmd_config, "worktree": cmd_worktree, "prune": cmd_prune, "doctor": cmd_doctor,
             "check-host": cmd_check_host, "summary": cmd_summary, "timer": cmd_timer, "merge": cmd_merge,
-            "hooks": cmd_hooks, "lang": cmd_lang, "road": cmd_road}[args.cmd](args)
+            "hooks": cmd_hooks, "lang": cmd_lang, "road": cmd_road,
+            "work": cmd_work, "stack": cmd_stack, "deploy": cmd_deploy}[args.cmd](args)
 
 
 if __name__ == "__main__":

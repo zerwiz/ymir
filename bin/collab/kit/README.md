@@ -23,6 +23,10 @@ flowchart LR
 | Piece | Path | What it does |
 |---|---|---|
 | the one config | `project.yaml` | register (`plain` by default), names, stack profile, languages, worktree and disk limits, container rules, leftover classes |
+| how we work | `docs/how-we-work.md` | one page: start, stop, sweep, deploy |
+| start, stop, sweep | `scripts/work.sh` | a task's beginning (floor, budget, fetch, worktree, record, dev stack on), its end (checks, commit, push, PR, stop what it started, close when merged) and the daily cleanup |
+| the stack switch | `scripts/stack.sh` | `status`, `on`, `off` per app from the machine's `~/.config/collab-kit/stacks.yaml`; a `prod` piece is never stopped |
+| the deploy door | `scripts/deploy.sh` | storage driver by filesystem, disk floor, one-builder lock, labelled build, ship, the project's hook, two tags kept, rollback printed on failure |
 | the one command | `scripts/kit.sh` (`scripts/kit.py`, standard library only) | every subcommand below; `--json` for structured output |
 | the worktree tool | `scripts/worktree.sh` | `new` (disk floor, leftover budget, cap, linked dependencies, a record), `list`, `done`, `gc`, `salvage` |
 | the prune | `scripts/prune.sh` | worktrees, branches, remote refs, caches, scratch, test databases, images, volumes, stopped containers — a report, then `--apply` |

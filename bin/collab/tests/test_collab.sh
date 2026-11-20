@@ -120,6 +120,8 @@ git init -q -b main "$_h/w" && (
 rm -rf "$_h"
 
 # ---- 10 · kit 2.0.0: every requirement of plan 267 K-1…K-13 and RULES/24, in Python (test_kit.py) -------------
+if python3 "$_d/tests/test_work.py" >"$tmp/work.log" 2>&1; then ok "test_work.py: $(grep -Eo 'Ran [0-9]+ tests' "$tmp/work.log")"
+else no "test_work.py"; tail -40 "$tmp/work.log"; fi
 if python3 "$_d/tests/test_kit.py" >"$tmp/kit.log" 2>&1; then ok "test_kit.py: $(grep -Eo 'Ran [0-9]+ tests' "$tmp/kit.log")"
 else no "test_kit.py"; tail -40 "$tmp/kit.log"; fi
 
