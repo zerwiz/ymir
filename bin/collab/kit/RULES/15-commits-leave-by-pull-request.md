@@ -47,3 +47,7 @@ git log --oneline origin/master..HEAD   # and every commit here should be in one
 ```
 
 **A green doctor is not evidence of this rule** — the wards check the code, and only a person checks that the code is proposed.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #841
