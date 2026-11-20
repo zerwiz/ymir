@@ -21,3 +21,7 @@ unchanged: a workspace the lock nests packages in must still exist in the source
 
 `bin/engine/tests/test_release_borrow_closure.sh` gains a case for a departed app (10 of 10 pass). Its first
 case now stands the workspace folder in the new tree, as a real clone does.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #855
