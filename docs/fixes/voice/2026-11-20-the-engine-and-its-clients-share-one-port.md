@@ -49,3 +49,7 @@ repository and keeps its own literal.
 - `mouth.sh` made a voice note through the resolved URL, and a dead URL still exits 3.
 - `bin/voice/tests/test_voices.sh` passes 28 of 28, with 9 new checks for the resolver and the verbs. Hlidskjalf's
   `voice.test.ts` and `swedish-voice.test.ts` pass 10 of 10, and `test_voice_io.py` passes 4 of 4.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #840
