@@ -103,3 +103,7 @@ bash bin/gates/checks/push-road.test.sh   → push-road-test: 10 pass, 0 fail
 bash bin/gates/checks/guards-scope.test.sh → guards-scope-test: 7 pass, 0 fail
 bash bin/gates/checks/public-data-ward.test.sh → public-data-ward: all cases behaved
 ```
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #853
