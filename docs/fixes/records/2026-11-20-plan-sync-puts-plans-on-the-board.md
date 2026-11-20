@@ -45,3 +45,7 @@ The duplicates already on the board are not removed here: this change never dele
 The board engine's own API (modules, pages, sub-items, views) belongs to its own suite and is not reached here. Adapters
 for Trello and GitHub Projects are named in plan 335 and are not part of this change. The home's registry carries the
 `board:` blocks for the Ymir and Gimlé projects; those are home changes and ship separately.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #837
