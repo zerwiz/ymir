@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """kokoro_url.py — the Python face of bin/voice/kokoro-lib.sh (plan 326.0, Rule 07).
 
 Where the Kokoro engine listens is ONE value, KOKORO_SERVICE_URL, resolved by kokoro-lib.sh (environment →
@@ -45,3 +46,9 @@ def port() -> int:
     if not parsed.port:
         raise RuntimeError(f"the Kokoro URL names no port: {base()}")
     return parsed.port
+
+
+if __name__ == "__main__":  # a door too: `kokoro_url.py [base|speech|port]` prints the one resolved value
+    import sys as _sys
+    _verb = (_sys.argv[1:] or ["base"])[0]
+    print({"base": base, "speech": speech, "port": port}.get(_verb, base)())
