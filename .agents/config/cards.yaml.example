@@ -85,7 +85,18 @@ title:
           prepare, price, print, prove, publish, push, raise, read, reapproach, record, refuse, release, remove,
           rename, repair, replace, reply, report, research, reshape, retire, review, rework, run, schedule, search,
           send, set, share, ship, sign, split, start, stop, stress-test, submit, tell, test, track, train, update,
-          upgrade, verify, wire, work, write]
+          upgrade, verify, wire, work, write,
+          # widened 2026-11-20 after the guard refused 'Store …' on its first real card — the ledger's title refusals
+          # are how this list learns
+          accept, allow, back, bring, buy, cancel, clear, collect, commit, confirm, copy, cut, define, describe,
+          drop, edit, email, enforce, estimate, explain, extract, fetch, fill, flip, follow, forward, get, grant,
+          group, hire, host, identify, implement, inform, keep, label, land, learn, link, load, log, mark, meet,
+          mend, mint, mirror, monitor, note, notify, onboard, outline, pack, pair, patch, pick, poll, post, present,
+          probe, protect, provision, pull, put, rate, reach, rebuild, receive, reduce, refactor, register, reject,
+          renew, request, reserve, reset, resolve, restore, restart, return, revoke, rewrite, route, save, scan,
+          scope, seat, secure, select, serve, settle, show, sort, specify, store, stub, summarise, summarize,
+          support, sync, take, teach, translate, trim, tune, turn, unblock, undo, unify, upload, use, validate,
+          watch, weave]
   bug_triggers: [when, with, after, on, if, for]
   smells:   # a title containing one of these names no deliverable — refused by name
     - "look into"
