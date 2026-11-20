@@ -214,7 +214,7 @@ class BuildLaunchCommandTest(unittest.TestCase):
         profile = harness.claude_worker_profile(None)
         self.assertEqual(
             shape,
-            f"claude --permission-mode acceptEdits --settings '{profile}' "
+            f"claude --permission-mode dontAsk --settings '{profile}' "
             "--model 'sonnet' \"$(cat '/d/prompt.md')\"",
         )
 

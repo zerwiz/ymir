@@ -90,7 +90,10 @@ def main():
             payload = json.dumps({'model': 'kokoro', 'input': spoken,
                                   'voice': setting('KOKORO_VOICE', 'af_nicole'),
                                   'lang': 'en-us', 'response_format': 'wav'}).encode()
-            request = urllib.request.Request(setting('KOKORO_URL', 'http://127.0.0.1:8765/v1/audio/speech'),
+            # the same one value as kokoro-lib.sh (plan 326.0): KOKORO_URL, else KOKORO_SERVICE_URL, else the engine default
+            speech = setting('KOKORO_URL', '') or (setting('KOKORO_SERVICE_URL', 'http://127.0.0.1:8765').rstrip('/')
+                                                   + '/v1/audio/speech')
+            request = urllib.request.Request(speech,
                                              data=payload, headers={'Content-Type': 'application/json'})
             with open_request(request) as response:
                 wav.write_bytes(response.read())

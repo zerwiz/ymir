@@ -1,0 +1,4 @@
+[{"address":"0xa1","mapped":true,"hidden":false,"workspace":{"id":1,"name":"1"},"floating":false,"monitor":0,"class":"foot","title":"host-a: ~","initialClass":"foot","pid":4242,"xwayland":false,"focusHistoryID":0},
+ {"address":"0xa2","mapped":true,"hidden":false,"workspace":{"id":2,"name":"2"},"floating":false,"monitor":0,"class":"foot","title":"Ada's notes","initialClass":"foot","pid":4250,"xwayland":false,"focusHistoryID":2},
+ {"address":"0xb1","mapped":true,"hidden":false,"workspace":{"id":4,"name":"4"},"floating":false,"monitor":1,"class":"firefox","title":"example.org — Mozilla Firefox","initialClass":"firefox","pid":5100,"xwayland":false,"focusHistoryID":1},
+ {"address":"0xc1","mapped":true,"hidden":false,"workspace":{"id":5,"name":"5"},"floating":false,"monitor":0,"class":"ymir-sessrumnir","title":"Sessrúmnir","initialClass":"ymir-sessrumnir","pid":6100,"xwayland":false,"focusHistoryID":3}]

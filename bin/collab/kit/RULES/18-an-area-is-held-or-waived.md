@@ -28,6 +28,23 @@ with no name is a disappearance.
 line saying why, or waived with its end date. The file is the record of what the project answered
 and when — so it is appended to, not rewritten into whatever is convenient today.
 
+## At a glance
+
+```mermaid
+flowchart LR
+  a["an area of the project"] --> h["held — by a named keeper, with evidence"]
+  a --> w["waived — with a reason"]
+  a --> n["not applicable"]
+  a --> u["unheld — changes are refused"]
+```
+
+| What | Means |
+|---|---|
+| held | a keeper is named and the evidence is recent |
+| waived | nobody holds it, and the reason is written |
+| na | the area does not apply to this project |
+| unheld | a change to its folders is refused at the push |
+
 ## CHANGE LOG
 
 - **2026-11-08** — Written as RULES/18 of the collaboration kit, with the areas shelf it governs.

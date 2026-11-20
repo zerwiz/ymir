@@ -234,6 +234,27 @@ TOOLS = [
     },
     {
         "type": "function",
+        "name": "voice_list",
+        "description": ("Every voice the house's mouth (Kokoro) can speak in: id, name, language, gender. Call it when he "
+                        "asks which voices there are, or before set_voice when you are unsure of a name."),
+        "parameters": {"type": "object", "properties": {
+            "language": {"type": "string", "description": "optional filter, e.g. 'British' or 'American'"}},
+            "additionalProperties": False},
+    },
+    {
+        "type": "function",
+        "name": "set_voice",
+        "description": ("Change the voice you speak in, from your next sentence, with no restart. Call it when he asks you "
+                        "to speak as someone ('talk like Eric', 'use a British voice'): name is a voice name (eric) or id "
+                        "(am_eric). keep=true also keeps it as Rödd's voice for the next conversation. An unknown or "
+                        "ambiguous name is refused — read the refusal to him, never pretend the voice changed."),
+        "parameters": {"type": "object", "properties": {
+            "name": {"type": "string", "description": "a voice name or id"},
+            "keep": {"type": "boolean", "description": "keep it as Rödd's voice next time too (default false)"}},
+            "required": ["name"], "additionalProperties": False},
+    },
+    {
+        "type": "function",
         "name": "now",
         "description": ("The real date and time right now, in his own time zone, from the house's clock (Sól). Call "
                         "it before saying the time, the day, 'good morning' or 'tonight', or anything 'today'."),
@@ -273,7 +294,7 @@ TOOLS = [
     {
         "type": "function",
         "name": "todo_add",
-        "description": "Add an item to HIS to-do list (life/personal/me/todo.md, the one to-do; under 'Added in conversation'); returns its short id. Optional due, priority, project.",
+        "description": "Add an item to HIS to-do: a card on his private board (bin/records/todo.sh, plan 327) — or, on a seat with no board, a line in todo.md under 'Added in conversation'. Says the card number. Optional due (YYYY-MM-DD), priority, project.",
         "parameters": {"type": "object", "properties": {
             "item": {"type": "string"}, "due": {"type": "string"},
             "priority": {"type": "string"}, "project": {"type": "string"}},
@@ -989,49 +1010,15 @@ async def _execute(name, arguments):
                 heart = ""
         if not heart:
             return ToolResult("No heart seat is known, so Gimlé's MCP cannot be reached.")
-        if tool == "my_tasks":
-            # The MCP's `my_tasks` reads its own place record and answers 0 while the Plane board holds
-            # nine cards for this person. The board is the truth; answer from it and say so.
-            tool = "projects"
-            arguments = {"assigned": True, "person": arguments.get("person") or os.environ.get("YMIR_VOICE_PERSON") or _operator_handle()}
-
+        # plan 335 (the split): Ymir reads the board only through Gimlé's MCP. The old road imported Gimlé's
+        # Plane reader from a Ymir checkout on the heart and read Plane's API with the desk's token; that code
+        # now lives in zerwiz/gimle, whose MCP answers `my_tasks` from the board itself.
+        group_by_place = False
         if tool == "projects":
-            snippet_pr = (
-                "import sys, json,os,urllib.request\n"
-                f"assigned={bool(arguments.get('assigned'))!r}\n"
-                f"person={str(arguments.get('person') or os.environ.get('YMIR_VOICE_PERSON') or _operator_handle())!r}\n"
-                "if assigned:\n"
-                "    sys.path.insert(0, os.path.expanduser('~/ymir/bin/gimle')); import plane_reader as pr\n"
-                "    cards, detail = pr.board_for(person, 60)\n"
-                "    from collections import Counter\n"
-                "    tally = Counter(str(c.get('project','(none)')) for c in cards)\n"
-                "    print(detail)\n"
-                "    for proj, n in tally.most_common(): print('  %s: %d task(s)' % (proj, n))\n"
-                "    raise SystemExit(0)\n"
-                "tok=open(os.path.expanduser('~/gimle/desk/etc/plane-token')).read().strip()\n"
-                "base='http://127.0.0.1:8099'\n"
-                "def get(p):\n"
-                "    r=urllib.request.Request(base+p, headers={'X-Api-Key':tok})\n"
-                "    return json.loads(urllib.request.urlopen(r, timeout=20).read())\n"
-                "def rows(d): return d if isinstance(d,list) else d.get('results',[])\n"
-                "slugs=[s for s in os.environ.get('GIMLE_PLANE_WORKSPACES','').split(',') if s]\n"
-                "if not slugs: print('set GIMLE_PLANE_WORKSPACES to the workspace slugs to read (the board belongs to the operator)'); raise SystemExit(0)\n"
-                f"want=str({str(arguments.get('workspace') or '')!r}).lower()\n"
-                "total=0\n"
-                "for slug in slugs:\n"
-                "    if want and want not in slug: continue\n"
-                "    try: pr=rows(get('/api/v1/workspaces/%s/projects/?per_page=50' % slug))\n"
-                "    except Exception as e: print('  %s: failed (%s)' % (slug, e.__class__.__name__)); continue\n"
-                "    total+=len(pr)\n"
-                "    print('  %s: %d project(s): %s' % (slug, len(pr), ', '.join((p.get('identifier','')+' · '+(p.get('name','') or '')[:30]) for p in pr)))\n"
-                "print('total projects:', total)\n"
-            )
-            b64pr = base64.b64encode(snippet_pr.encode()).decode()
-            code, out = _run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=6", heart,
-                              f"echo {b64pr} | base64 -d | python3 -"], timeout=90)
-            if code != 0 and not out.strip():
-                return ToolResult("Plane did not answer on the heart; say so plainly.")
-            return ToolResult("Gimlé · projects (Plane, read on the heart):\n" + _clean(out, 1400))
+            if arguments.get("assigned"):
+                tool, arguments, group_by_place = "my_tasks", {}, True
+            else:
+                tool, arguments = "list_places", {}
 
         snippet = (
             "import json,os,urllib.request\n"
@@ -1059,6 +1046,15 @@ async def _execute(name, arguments):
                           f"echo {b64} | base64 -d | python3 -"], timeout=90)
         if code != 0 and not out.strip():
             return ToolResult("Gimlé's MCP did not answer on the heart; say so plainly.")
+        if group_by_place:
+            try:
+                rows = _json.loads(out).get("rows") or []
+                from collections import Counter
+                tally = Counter(str(r.get("place") or r.get("project") or "(none)") for r in rows)
+                lines = [f"{len(rows)} task(s) assigned"] + [f"  {k}: {n} task(s)" for k, n in tally.most_common()]
+                return ToolResult("Gimlé · his tasks by project (the board, through Gimlé's MCP):\n" + "\n".join(lines))
+            except (ValueError, AttributeError):
+                pass
         return ToolResult(f"Gimlé · {tool}:\n" + _clean(out, 1500))
 
 
@@ -1361,7 +1357,7 @@ async def _execute(name, arguments):
             rows = [ln for ln in out.splitlines() if ln.strip() and (not query or query.lower() in ln.lower())]
             return ToolResult("Trello (read-only):\n" + "\n".join(rows[:15]))
 
-        # road 2 — the Gimlé board (Plane) on the heart, through its own reader
+        # road 2 — the Gimlé board on the heart, through Gimlé's own MCP (plan 335: Ymir holds no Plane code)
         heart = str(os.environ.get("YMIR_VOICE_BOARD_HOST") or "").strip()
         if not heart:
             try:
@@ -1371,28 +1367,16 @@ async def _execute(name, arguments):
             except Exception:
                 heart = ""
         if heart:
-            import base64
-            person = os.environ.get("YMIR_VOICE_PERSON") or _operator_handle()
-            snippet = (
-                "import sys\n"
-                "sys.path.insert(0, 'bin/gimle')\n"
-                "import plane_reader as p\n"
-                f"cards, detail = p.board_for({person!r}, 12)\n"
-                "print(detail)\n"
-                "for c in cards:\n"
-                "    print('-', str(c.get('name',''))[:70], '|', str(c.get('project','')))\n"
-            )
-            b64 = base64.b64encode(snippet.encode()).decode()
-            remote = f"cd ~/ymir && echo {b64} | base64 -d | python3 -"
-            code, out = _run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=6", heart, remote], timeout=90)
-            if code == 0 and out.strip():
+            res = await _execute("gimle", {"tool": "my_tasks", "arguments": {}})
+            out = str(getattr(res, "output", None) or (res.get("output") if isinstance(res, dict) else "") or "")
+            if out.strip() and "did not answer" not in out and "cannot be reached" not in out:
                 rows = [ln for ln in out.splitlines() if ln.strip()]
                 if query:
                     rows = [ln for ln in rows if query.lower() in ln.lower()]
                 if not rows:
                     return ToolResult(f"The Gimlé board answered and nothing matches {query!r}.")
-                return ToolResult("The Gimlé board (read-only, on the heart):\n" + "\n".join(rows[:14]))
-            _log("board.plane_failed", host=heart, error=_clean(out, 200))
+                return ToolResult("The Gimlé board (read-only, through its MCP on the heart):\n" + "\n".join(rows[:14]))
+            _log("board.gimle_failed", host=heart)
 
         return ToolResult(
             "Neither board can be read right now: Trello has no grant on this seat, and the Gimlé board on the "
@@ -1886,10 +1870,65 @@ def _stamp():
     return _dt.datetime.now().strftime("%Y-%m-%d %H:%M")
 
 
+def _todo_board_add(item, args):
+    """The board first (plan 327): a spoken to-do becomes a card on his private board through the one door,
+    bin/records/todo.sh. Returns the sentence to speak, or None when this seat has no board (a clean skip), so the
+    old road (the file) still serves a house that never configured one. A board that is dark QUEUES the card —
+    it is not lost and it is not written into the file twice."""
+    lane = "Today" if str(args.get("due") or "").strip() == _dt_today() else "Inbox"
+    argv = [_door("records/todo.sh"), "add", item, "--lane", lane, "--json",
+            "--source", f"spoken to the voice, {_stamp()}"]
+    for k in ("due", "priority"):
+        v = str(args.get(k) or "").strip()
+        if v:
+            argv += [f"--{k}", v]
+    if str(args.get("project") or "").strip():
+        argv += ["--note", f"project {str(args.get('project')).strip()}"]
+    code, out = _run(argv, timeout=30)
+    try:   # stderr rides along in `out`; the verdict is the JSON object the door printed on stdout
+        res = json.loads(out[out.find("{"):]) if "{" in out else {}
+    except ValueError:
+        res = {}
+    v = res.get("verdict")
+    if v in ("filed", "exists"):
+        return f"On his board as card {res.get('card')} ({res.get('lane') or lane}): {item}."
+    if v == "queued":
+        return (f"His board did not answer, so the card is queued and will be filed when it does: {item}. "
+                f"({_clean(res.get('why', ''), 120)})")
+    if v == "skip":
+        return None
+    # the door refused: say so plainly, and do not pretend the item landed anywhere
+    return f"The board refused the card ({_clean(out, 160)}); nothing was added. Say it again or add it by hand."
+
+
+def _dt_today():
+    import datetime as _dt
+    return _dt.date.today().isoformat()
+
+
+def _todo_board_ready():
+    """True when this seat writes the to-do to a board (plan 327); the file verbs then stand aside."""
+    code, out = _run([_door("records/todo.sh"), "status"], timeout=15)
+    try:
+        return bool(json.loads(out[out.find("{"):]).get("ready"))
+    except ValueError:
+        return False
+
+
+def _todo_board_verb(argv, said_ok):
+    code, out = _run([_door("records/todo.sh")] + argv, timeout=40)
+    if code == 0:
+        return ToolResult(said_ok(out), create_response=True)
+    return ToolResult(f"His board refused that ({_clean(out, 160)}). Nothing changed.")
+
+
 async def _tool_todo_add(args):
     item = str(args.get("item") or "").strip()
     if not item:
         raise ValueError("todo_add needs an item")
+    said = _todo_board_add(item, args)
+    if said is not None:
+        return ToolResult(said, create_response=True)
     lines, _ = _todo_items()
     notes = [f"added by Nanna, {_stamp()}"]
     for k in ("due", "priority", "project"):
@@ -1917,6 +1956,18 @@ async def _tool_todo_add(args):
 
 async def _tool_todo_list(args):
     status = str(args.get("status") or "open").lower()
+    if _todo_board_ready():
+        lane = "Done" if status == "done" else ""
+        code, out = _run([_door("records/todo.sh"), "list"] + (["--lane", lane] if lane else []), timeout=40)
+        want = str(args.get("project") or "").strip().lower()
+        rows = [l for l in out.splitlines() if l.startswith("#") and (status == "done" or " Done " not in l)
+                and (not want or want in l.lower())]
+        if code != 0:
+            return ToolResult(f"His board did not answer ({_clean(out, 120)}).")
+        if not rows:
+            return ToolResult(f"Nothing {status} on his board" + (f" about {want}" if want else "") + ".")
+        more = f"\n(and {len(rows) - 20} more)" if len(rows) > 20 else ""
+        return ToolResult(f"His board: {len(rows)} {status} (card · state · due · title):\n" + "\n".join(rows[:20]) + more)
     want = str(args.get("project") or "").strip().lower()
     _, items = _todo_items()
     if want:
@@ -1942,10 +1993,16 @@ def _todo_mark(args, to_done: bool, verb: str):
 
 
 async def _tool_todo_done(args):
+    if _todo_board_ready():   # the card number, or words from its title
+        ref = str(args.get("id") or "").lstrip("#")
+        return _todo_board_verb(["move", ref, "Done"], lambda out: f"Done on his board: {_clean(out, 140)}")
     return _todo_mark(args, True, "ticked")
 
 
 async def _tool_todo_reopen(args):
+    if _todo_board_ready():
+        ref = str(args.get("id") or "").lstrip("#")
+        return _todo_board_verb(["move", ref, "Inbox"], lambda out: f"Reopened on his board: {_clean(out, 140)}")
     return _todo_mark(args, False, "reopened")
 
 
@@ -3237,3 +3294,41 @@ async def _tool_todo_from_mail(args):
 
 NEW_TOOLS["comms"] = _tool_comms
 NEW_TOOLS["todo_from_mail"] = _tool_todo_from_mail
+
+
+# ── the voices (plan 326.3): one door, bin/voice/voices.sh, so a name means the same thing everywhere ─────────────
+
+def _voices_door(args: list[str], timeout: int = 60) -> tuple[int, str, str]:
+    door = Path(__file__).resolve().parent / "voices.sh"
+    r = subprocess.run(["bash", str(door), *args], capture_output=True, text=True, timeout=timeout)
+    return r.returncode, r.stdout.strip(), r.stderr.strip()
+
+
+async def _tool_voice_list(args):
+    rc, out, err = _voices_door(["list", "--json"])
+    if rc != 0:
+        return ToolResult("The voice list did not answer: " + (err or out)[:200])
+    rows = json.loads(out).get("voices", [])
+    want = str(args.get("language") or "").strip().lower()
+    if want:
+        rows = [r for r in rows if want in r["language"].lower()]
+    return ToolResult(f"{len(rows)} voices: " + "; ".join(f"{r['name']} ({r['id']}, {r['language']}, {r['gender']})" for r in rows))
+
+
+async def _tool_set_voice(args):
+    name = str(args.get("name") or "").strip()
+    rc, out, err = _voices_door(["resolve", name])
+    if rc != 0:
+        return ToolResult(f"The voice did not change: {(err or out).replace('voices: ', '')[:200]}")
+    vid = out.splitlines()[-1].strip()
+    kept = ""
+    if args.get("keep"):
+        rc2, _o, e2 = _voices_door(["choose", "rodd", vid])
+        kept = " It is kept as Rödd's voice for next time." if rc2 == 0 else f" It could not be kept: {e2[:120]}"
+    _log("set_voice", voice=vid, keep=bool(args.get("keep")))
+    # the window reads this marker and switches the live session; the words are what she says about it
+    return ToolResult(json.dumps({"rodd_voice": vid, "said": f"From now on I speak as {vid}.{kept}"}, ensure_ascii=False))
+
+
+NEW_TOOLS["voice_list"] = _tool_voice_list
+NEW_TOOLS["set_voice"] = _tool_set_voice

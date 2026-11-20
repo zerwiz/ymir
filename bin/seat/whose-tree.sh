@@ -85,8 +85,8 @@ case "$slug" in
 esac
 
 case "$whose" in
-  guest) law="the host repository's own law; the house's kit, and nothing else" ; skill="smidr-the-workbench" ;;
-  project) law="the project's law and the house's rules where they do not disagree" ; skill="smidr-the-workbench" ;;
+  guest) law="the host repository's own law; the house's kit, and nothing else" ; skill="the-workbench" ;;
+  project) law="the project's law and the house's rules where they do not disagree" ; skill="the-workbench" ;;
   house) law="the house's rules; the Allfather seals every merge" ; skill="galdr-ymirsystem" ;;
   *) law="unread — name it before you edit" ; skill="" ;;
 esac

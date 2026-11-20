@@ -7,7 +7,7 @@ set -uo pipefail
 base="${1:-}"; head="${2:-HEAD}"
 [ -z "$base" ] && exit 0
 
-if [ "${YMIR_SKIP_FIXES_GUARD:-0}" = "1" ]; then
+if [ "${KIT_SKIP_FIXES_GUARD:-0}" = "1" ]; then
   printf 'fixes-guard: skipped at the operator'"'"'s word\n'
   exit 0
 fi
@@ -22,7 +22,7 @@ code="$(printf '%s\n' "$changed" | grep -cE '^(\.githooks|apps|backend|bin|confi
 if [ "${code:-0}" -gt 0 ] && [ "${notes:-0}" -eq 0 ]; then
   printf 'fixes-guard refused: this push changes code and adds no fix note.\n'
   printf '  write one:  bash scripts/fixes.sh record --component=<api|data|ui|mail|gates|docs> --title="…"\n'
-  printf '  or, if it truly carries no behaviour:  YMIR_SKIP_FIXES_GUARD=1 git push …  and say why in the commit\n' >&2
+  printf '  or, if it truly carries no behaviour:  KIT_SKIP_FIXES_GUARD=1 git push …  and say why in the commit\n' >&2
   exit 1
 fi
 printf 'fixes-guard: %s code file(s), %s note(s)\n' "${code:-0}" "${notes:-0}"

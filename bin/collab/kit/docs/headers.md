@@ -12,6 +12,13 @@ or a script can tell its state without reading it. `python3 scripts/status.py` r
 table; `--check` fails when one is missing or malformed. A file with no header is reported as `no header`, never
 guessed at. The reader needs no library: the headers are plain `key: "value"` lines.
 
+## At a glance
+
+```mermaid
+flowchart LR
+  h["the header<br/>title · status · owner · updated"] --> b["the body"] --> r["References"] --> l["CHANGE LOG"]
+```
+
 ## A document
 
 ```

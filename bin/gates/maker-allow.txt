@@ -35,3 +35,8 @@ The arm test's fake pi was a copied sleep | RULES/53: the fix note names the tes
 It is now a script named pi | RULES/53: the fix note says what the fixture became — a script name, not a maker claim (2026-11-19)
 On pi a waiting voice or ask is | RULES/53: the arm's fix note names the harness whose queue it repairs, because the behaviour differs by harness — the change itself, not a maker claim (2026-11-19)
 agents: the Claude arm hook attaches and never acquires | RULES/53: the commit subject names the hook FILE whose behaviour is the change — a path and a behaviour, not a maker claim (2026-11-20)
+agents: one door to every agent — tell.sh, and Hermes through its gateway | RULES/53: Hermes is the house's adopted worker runtime (bin/engine/hermes-ensure.sh) and the change is a door TO it — the target of the tool, not a maker claim (2026-11-20)
+a herdr pane or errand, a terminal window, or Hermes (fresh, desktop, or a | RULES/53: names the agent the door reaches, not the maker of the change (2026-11-20)
+hermes-tell.sh speaks to the Hermes gateway's API. The listener and key are | RULES/53: describes the door's target, the adopted runtime's gateway (2026-11-20)
+read from Hermes's own state and env at call time and never printed; a | RULES/53: where the door reads the runtime's settings — a path, not a maker claim (2026-11-20)
+an interpreter by command line (the Hermes CLI) and refuses during a call. | RULES/53: how the door finds the runtime's CLI process — the target, not a maker claim (2026-11-20)

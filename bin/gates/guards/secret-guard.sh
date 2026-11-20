@@ -4,6 +4,7 @@
 #   bin/gates/guards/secret-guard.sh            # scan the staged change (used as pre-commit)
 #   bin/gates/guards/secret-guard.sh --install  # wire it into .git/hooks/pre-commit
 #   bin/gates/guards/secret-guard.sh --all      # scan every tracked file once
+#   bin/gates/guards/secret-guard.sh --range <base> <head>  # the files a push adds, read at <head>
 #
 # Exit 1 on any hit, so a commit is blocked before a secret leaves the machine.
 set -u
@@ -30,7 +31,7 @@ is_ignored() {
 
 case "${1:-}" in
   -v|-V|--version) printf '1.0.0\n'; exit 0 ;;
-  -h|--help) sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+  -h|--help) sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
   --install)
     # ONE HOME FOR THE HOOK TEXT (2026-11-20). This used to GENERATE a pre-commit body here, and the
     # shipped `.githooks/pre-commit` carried a different one: the generated copy wove the catalogue and
@@ -77,15 +78,23 @@ scan_list() {
       .env.local|*/.env.local|*.env.local|.env.realm|*/.env.realm)
         printf 'secret-guard: private env file: %s\n' "$f" >&2; hit=1; continue ;;
     esac
-    if git -C "$ROOT" show ":$f" 2>/dev/null | sed 's/AKIAIOSFODNN7EXAMPLE//g' | grep -Eq "$PATTERNS"; then
+    if git -C "$ROOT" show "${SCAN_REV}:$f" 2>/dev/null | sed 's/AKIAIOSFODNN7EXAMPLE//g' | grep -Eq "$PATTERNS"; then
       printf 'secret-guard: possible secret in %s\n' "$f" >&2; hit=1
     fi
   done
   return "$hit"
 }
 
+# SCAN_REV is what `git show <rev>:<path>` reads: the index (empty) for a commit, a commit for a range.
+SCAN_REV=""
 if [ "${1:-}" = "--all" ]; then
   scan_list < <(git -C "$ROOT" ls-files)
+elif [ "${1:-}" = "--range" ]; then
+  # THE PARKING ROAD (plan 339.1): a parked push is judged by what it ADDS, read from the pushed
+  # commit itself — never the working tree, which a crash-survival push may not even match.
+  [ -n "${2:-}" ] && [ -n "${3:-}" ] || { printf 'error: --range needs <base> <head>\n' >&2; exit 2; }
+  SCAN_REV="$3"
+  scan_list < <(git -C "$ROOT" diff --name-only --diff-filter=ACM "$2" "$3")
 else
   scan_list < <(git -C "$ROOT" diff --cached --name-only --diff-filter=ACM)
 fi || { printf 'secret-guard: blocked — remove the secret or move it to a .example file\n' >&2; exit 1; }

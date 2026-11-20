@@ -18,7 +18,7 @@ fail(){ row "$1" fail "$2"; }
 skip(){ row "$1" skip "$2"; }
 
 YMIR_HOME="${YMIR_HOME:-$HOME/Documents/ymirhome}"
-PING_PUBLIC_URL="${PING_PUBLIC_URL:-https://ping.zerwiz.org}"
+PING_PUBLIC_URL="${PING_PUBLIC_URL:-https://ping.example.org}"  # a fixture host: the real one is the operator's
 PING_TAILNET_URL="${PING_TAILNET_URL:-https://<host>.<host>.tailnet.ts.net:3000}"
 SNOTRA_MCP_URL="${SNOTRA_MCP_URL:-http://<host>.<host>.tailnet.ts.net:8321/mcp}"
 MANAGANDR_CACHE="${MANAGANDR_CACHE:-$YMIR_HOME/state/calendar/cache.json}"

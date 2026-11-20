@@ -28,6 +28,12 @@ The state, all under the resolved state dir (Rule 04: the home, never the tree):
     .wake-last-hash     the flood brake: one signal per DISTINCT queue content
     *.signal / *.check  one-shot raise triggers, consumed as they are raised
     .watcher-stop       the operator's stop request, raised as `stale:`
+    .arm.errand-woke    the errand ledger: "<id>|dead|done|stall" -> the fact last raised
+    .arm.errand-epoch   when `done:` lines were first judged against git (older ones never are)
+    <id>.meta/.status   the dispatched errands the arm now questions (`errand_wake`)
+    eindri-reports/<id>.md  the report whose `## Record` a `done:` is verified against (plan 339.2)
+    eindri-questions/<id>.md  a question; unanswered 15 min wakes the helm, 1 h the operator (plan 339.3)
+    fleet/messages.jsonl  the send log: a line into the worker's pane after its question answers it
 """
 
 from __future__ import annotations
@@ -35,7 +41,9 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import signal
+import socket
 import sys
 import time
 from dataclasses import dataclass
@@ -84,6 +92,49 @@ BRAKED_PREFIXES = ("stale:", "check:")
 # travels the loud acclaim road or the failsafe, never the silent status scan.
 TERMINAL_WAKE_PREFIXES = ("done:", "failed:", "needs-decision:", "paused:")
 
+# ── the errands the house dispatched (2026-11-20) ───────────────────────────
+# The arm raised on what it already knew (the queue, the lease, a status line) but
+# never on the errands themselves: a pane that held no agent, a `done:` over an
+# empty branch, a `working:` that had gone quiet. Three workers ended so in one
+# night and were found by hand. These are the arm's own questions now, each raised
+# once per (errand, kind, fact) through `.arm.errand-woke`.
+#
+# A status that has ended (per the brief: `done:` · `resolved:` · `failed:`) is no
+# longer a dead or a stalled worker — only a `done:` is still checked against git.
+ERRAND_ENDED_PREFIXES = ("done:", "resolved:", "failed:", "false-done:")
+# The lines these checks raise carry their own dedup ledger, so the generic brake
+# (three per hour) must not swallow the fourth dead worker of a bad night.
+ERRAND_PREFIXES = ("stale: errand ", "check: errand ")
+DEFAULT_ERRAND_HORIZON_SECONDS = 86400
+DEFAULT_ERRAND_STALL_SECONDS = 1800
+# herdr reports an agent's state; these two mean "sitting at the prompt".
+IDLE_AGENT_STATES = ("idle", "done")
+
+# ── a report counts only with its record (plan 339.2) ───────────────────────
+# A `done:` is a claim. The terminal act (bin/agents/eindri-acclaim.sh) writes a
+# `## Record` block into the report — the commit, the branch, the repo, the machine
+# and where the commit is (pushed · parked · local only) — and the arm checks that
+# claim against git, on the machine the report names. A claim git does not bear out
+# turns the status to `false-done:` and wakes the helm.
+FALSE_DONE_PREFIX = "false-done:"
+# Errands whose deliverable is a report, not a commit: "nothing committed" is honest.
+NO_COMMIT_MODES = ("scout", "review", "recon")
+# Errands that owe a pushed branch; a record that says `local only` is short of it.
+PUSHING_MODES = ("direct-PR", "no-mistakes", "pr")
+_SHA = re.compile(r"\b([0-9a-f]{7,40})\b")
+_ONELINE = re.compile(r"^\s*[`>*-]*\s*([0-9a-f]{7,40})\s+\S")
+
+# ── the arm's fourth eye: the unanswered question (plan 339.3) ──────────────
+# An errand that files `eindri-questions/<id>.md` stands waiting, and the hall shows it
+# idle. Unanswered past the wake window it wakes the helm; past the escalation window it
+# reaches the operator as one line through the hotline (bin/notify/send.sh).
+DEFAULT_QUESTION_WAKE_SECONDS = 900
+DEFAULT_QUESTION_ESCALATE_SECONDS = 3600
+# A question is answered when the file carries an answer line, when the helm spoke into
+# the worker's pane after it was filed, or when the worker moved on (a new status line).
+_ANSWER_LINE = re.compile(r"^\s*(?:#+\s*answer|answer(?:ed)?\s*[:\u2014-])", re.IGNORECASE)
+WAITING_PREFIXES = ("needs-decision:", "blocked:", "paused:")
+
 
 def _positive_int(value: str | None, default: int) -> int:
     try:
@@ -103,6 +154,26 @@ class ArmPaths:
     stale_seconds: int
     poll_seconds: int
     grace_seconds: int
+    errand_horizon_seconds: int = DEFAULT_ERRAND_HORIZON_SECONDS
+    errand_stall_seconds: int = DEFAULT_ERRAND_STALL_SECONDS
+    question_wake_seconds: int = DEFAULT_QUESTION_WAKE_SECONDS
+    question_escalate_seconds: int = DEFAULT_QUESTION_ESCALATE_SECONDS
+
+    @property
+    def questions(self) -> Path:
+        return self.state / "eindri-questions"
+
+    @property
+    def reports(self) -> Path:
+        return self.state / "eindri-reports"
+
+    @property
+    def message_log(self) -> Path:
+        return self.state / "fleet" / "messages.jsonl"
+
+    @property
+    def errand_woke(self) -> Path:
+        return self.state / ".arm.errand-woke"
 
     @property
     def lease(self) -> Path:
@@ -180,6 +251,18 @@ def arm_paths(
         or _positive_int(environ.get("BROKK_WATCH_POLL_SECONDS"), DEFAULT_POLL_SECONDS),
         grace_seconds=grace_seconds
         or _positive_int(environ.get("BROKK_WATCH_DAEMON_GRACE_SECONDS"), DEFAULT_DAEMON_GRACE_SECONDS),
+        errand_horizon_seconds=_positive_int(
+            environ.get("BROKK_WATCH_ERRAND_HORIZON_SECONDS"), DEFAULT_ERRAND_HORIZON_SECONDS
+        ),
+        errand_stall_seconds=_positive_int(
+            environ.get("BROKK_WATCH_ERRAND_STALL_SECONDS"), DEFAULT_ERRAND_STALL_SECONDS
+        ),
+        question_wake_seconds=_positive_int(
+            environ.get("BROKK_WATCH_QUESTION_WAKE_SECONDS"), DEFAULT_QUESTION_WAKE_SECONDS
+        ),
+        question_escalate_seconds=_positive_int(
+            environ.get("BROKK_WATCH_QUESTION_ESCALATE_SECONDS"), DEFAULT_QUESTION_ESCALATE_SECONDS
+        ),
     )
 
 
@@ -433,13 +516,14 @@ def session_owner(
 # ── the raise ───────────────────────────────────────────────────────────────
 
 
-def raise_line(paths: ArmPaths) -> str:
+def raise_line(paths: ArmPaths, *, runner: proc.Runner = proc.run, now: float | None = None) -> str:
     """The ONE actionable line the arm owes, or "" when nothing is due.
 
     Order is the contract the harvest calls rely on: the durable wake queue
     first (one signal per DISTINCT content — an unconsumed queue must never
-    re-inject on every poll), then the one-shot triggers, then the operator's
-    stop request.
+    re-inject on every poll), then the errands the house dispatched (a dead pane,
+    a false done, a stalled worker), then a terminal status line, then the
+    one-shot triggers, then the operator's stop request.
     """
     try:
         payload = paths.wake_queue.read_bytes()
@@ -467,6 +551,16 @@ def raise_line(paths: ArmPaths) -> str:
     # cursor raises exactly one wake, so a worker that writes only `done: …` wakes
     # the arm within one poll with no acclaim and no sweep. The queue above keeps
     # first call; this is the direct road a finished worker travels by default.
+    # The errands come BEFORE the terminal line, so a false `done:` reaches the helm as
+    # a `check:` ahead of the `signal:` that would otherwise read as a finished job.
+    errand = errand_wake(paths, runner=runner, now=now)
+    if errand:
+        return errand
+
+    asked = question_wake(paths, runner=runner, now=now)
+    if asked:
+        return asked
+
     terminal = terminal_status_wake(paths)
     if terminal:
         return terminal
@@ -535,7 +629,10 @@ def terminal_status_wake(paths: ArmPaths) -> str:
         )
     except OSError:
         return ""
-    epoch = 0.0
+    # Stamped EAGERLY, on the first scan (2026-11-20). Stamped lazily — when the first
+    # terminal line was met — the epoch was always a moment AFTER that line, so the
+    # first `done:` a fresh home ever wrote was seeded in silence, never raised.
+    epoch = _terminal_epoch(paths)
     for status in entries:
         seat_id = status.name[: -len(".status")]
         if not seat_id or seat_id.startswith("."):
@@ -556,7 +653,6 @@ def terminal_status_wake(paths: ArmPaths) -> str:
         if not last.lower().startswith(TERMINAL_WAKE_PREFIXES):
             continue
         if cursor_value <= 0:
-            epoch = epoch or _terminal_epoch(paths)
             if status_mtime < epoch:
                 # older than the record-as-wake itself: seed, never raise
                 try:
@@ -569,6 +665,549 @@ def terminal_status_wake(paths: ArmPaths) -> str:
         except OSError:
             continue  # a cursor that cannot be written would re-wake every poll
         return f"signal: {seat_id} {last}"
+    return ""
+
+
+# ── the errands: dead, falsely done, stalled ────────────────────────────────
+
+
+def _read_kv(path: Path) -> dict[str, str]:
+    """A `key=value` record (the seat meta); last value wins, as the shell readers do."""
+    values: dict[str, str] = {}
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return values
+    for raw in text.splitlines():
+        key, sep, value = raw.partition("=")
+        if sep:
+            values[key.strip()] = value.strip()
+    return values
+
+
+def _mtime(path: Path) -> float:
+    try:
+        return path.stat().st_mtime
+    except OSError:
+        return 0.0
+
+
+def _short(line: str, limit: int = 160) -> str:
+    line = " ".join(line.split())
+    return line if len(line) <= limit else line[: limit - 1] + "…"
+
+
+def herdr_agents(runner: proc.Runner = proc.run) -> dict[str, str] | None:
+    """pane id → agent state, from `herdr agent list`; None when herdr cannot answer.
+
+    None is not "no agents": a door that did not answer proves nothing, so no
+    worker is ever called dead on a silent herdr.
+    """
+    done = runner(["herdr", "agent", "list"], timeout=10)
+    if done.returncode != 0 or not (done.stdout or "").strip():
+        return None
+    try:
+        data = json.loads(done.stdout)
+    except ValueError:
+        return None
+    result = data.get("result", data) if isinstance(data, dict) else {}
+    agents = result.get("agents") if isinstance(result, dict) else None
+    if not isinstance(agents, list):
+        return None
+    panes: dict[str, str] = {}
+    for agent in agents:
+        if isinstance(agent, dict) and agent.get("pane_id"):
+            panes[str(agent["pane_id"])] = str(agent.get("agent_status") or "unknown")
+    return panes
+
+
+def _git(runner: proc.Runner, repo: str, *args: str) -> tuple[int, str]:
+    done = runner(["git", "-C", repo, *args], timeout=15)
+    return done.returncode, (done.stdout or "").strip()
+
+
+def _count(runner: proc.Runner, repo: str, span: str) -> int | None:
+    rc, text = _git(runner, repo, "rev-list", "--count", span)
+    return int(text) if rc == 0 and text.isdigit() else None
+
+
+def parse_record(text: str) -> dict[str, str]:
+    """The record a report carries (plan 339.2): commit · branch · repo · machine · where.
+
+    The terminal act writes a `## Record` block of `key: value` lines; a hand-written
+    report that only pastes `git log --oneline -1` still yields its sha. `nothing` is set
+    when the report says, in words, that nothing was committed and names no commit.
+    """
+    record: dict[str, str] = {}
+    for raw in text.splitlines():
+        line = raw.strip().strip("`").lstrip("-*> ").strip()
+        key, sep, value = line.partition(":")
+        if not sep:
+            continue
+        key = key.strip().strip("*`").lower()
+        value = value.strip().strip("`").strip()
+        if key in ("commit", "branch", "repo", "machine", "where") and value and key not in record:
+            record[key] = value
+    commit = record.get("commit", "")
+    found = _SHA.search(commit) if commit else None
+    if not found:
+        for raw in text.splitlines():
+            found = _ONELINE.match(raw)
+            if found:
+                break
+    if found:
+        record["sha"] = found.group(1)
+    where = record.get("where", "").lower()
+    if "park" in where:
+        record["where"] = "parked"
+    elif "push" in where and "not" not in where:
+        record["where"] = "pushed"
+    elif where:
+        record["where"] = "local"
+    if "sha" not in record and "nothing committed" in text.lower():
+        record["nothing"] = "1"
+    return record
+
+
+def _this_machine() -> str:
+    return socket.gethostname().split(".")[0].lower()
+
+
+def _base_ref(git: Callable[..., tuple[int, str]]) -> str:
+    rc, text = git("symbolic-ref", "-q", "--short", "refs/remotes/origin/HEAD")
+    if rc == 0 and text:
+        return text
+    for candidate in ("origin/main", "origin/master"):
+        if git("rev-parse", "--verify", "-q", f"refs/remotes/{candidate}")[0] == 0:
+            return candidate
+    return ""
+
+
+def verify_record(
+    seat_id: str,
+    meta: Mapping[str, str],
+    record: Mapping[str, str],
+    runner: proc.Runner = proc.run,
+    *,
+    here: str | None = None,
+) -> str | None:
+    """Does git bear out the claim? "" (it does), a fault phrase, or None (cannot judge).
+
+    The sha must exist in the named repo, on the named machine; it must be on the named
+    branch and not already the base's; and where the record says `pushed` (or `parked`),
+    origin must hold it under `refs/heads/<branch>` (or `refs/parked/<id>`). A machine
+    other than this one is asked over ssh; a machine that does not answer proves nothing.
+    """
+    sha = record.get("sha", "")
+    if not sha:
+        return None
+    local_host = (here or _this_machine()).lower()
+    machine = record.get("machine", "").strip()
+    short = machine.split(".")[0].lower()
+    remote = bool(machine) and short not in (local_host, "localhost", "this", "this-machine", "local")
+    repo = record.get("repo", "").strip()
+    if not remote and not (repo and os.path.isdir(repo)):
+        worktree, project = meta.get("worktree", ""), meta.get("project", "")
+        repo = worktree if worktree and os.path.isdir(worktree) else project if project and os.path.isdir(project) else ""
+    if not repo:
+        return None
+    where_text = f"{repo} on {machine}" if remote else repo
+
+    unreachable = False
+
+    def git(*args: str) -> tuple[int, str]:
+        nonlocal unreachable
+        if remote:
+            done = runner(
+                ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=5", machine, "git", "-C", repo, *args],
+                timeout=25,
+            )
+            if done.returncode == 255:
+                unreachable = True
+            return done.returncode, (done.stdout or "").strip()
+        return _git(runner, repo, *args)
+
+    if git("cat-file", "-e", f"{sha}^{{commit}}")[0] != 0:
+        if unreachable:
+            return None
+        return f"commit {sha}, which {where_text} does not hold"
+    branch = record.get("branch", "").strip() or f"eindri/{seat_id}"
+    ref = ""
+    for candidate in (f"refs/heads/{branch}", f"refs/remotes/origin/{branch}"):
+        if git("rev-parse", "--verify", "-q", candidate)[0] == 0:
+            ref = candidate
+            break
+    if not ref:
+        return f"commit {sha} on {branch}, a branch {where_text} does not have"
+    if git("merge-base", "--is-ancestor", sha, ref)[0] != 0:
+        return f"commit {sha}, which is not on {branch}"
+    base = _base_ref(git)
+    if base and git("merge-base", "--is-ancestor", sha, base)[0] == 0:
+        return f"nothing committed (commit {sha} is already on {base})"
+    where = record.get("where", "")
+    if where in ("pushed", "parked"):
+        remote_ref = f"refs/heads/{branch}" if where == "pushed" else f"refs/parked/{seat_id}"
+        rc, text = git("ls-remote", "origin", remote_ref)
+        if rc != 0:
+            return None  # origin did not answer: no verdict on silence
+        tip = text.split()[0] if text.split() else ""
+        if not tip:
+            return f"a claim of {where}, but origin holds no {remote_ref}"
+        if not tip.startswith(sha) and git("merge-base", "--is-ancestor", sha, tip)[0] != 0:
+            return f"a claim of {where}, but origin's {remote_ref} is at {tip[:9]}, not {sha}"
+    elif where == "local" and meta.get("mode", "") in PUSHING_MODES:
+        return "no branch pushed (the record says local only)"
+    return ""
+
+
+def done_verdict(
+    seat_id: str,
+    meta: Mapping[str, str],
+    runner: proc.Runner = proc.run,
+    *,
+    report: str = "",
+    here: str | None = None,
+) -> str | None:
+    """What a `done:` stands on: "" (a record), a fault phrase, or None (cannot judge).
+
+    With a report whose record names a commit, the claim itself is verified
+    (`verify_record`). Without one, the branch is `eindri/<id>`, else the worktree's own
+    branch: it must carry at least one commit ahead of the remote's default branch, and —
+    unless the errand was briefed `mode=batch`, whose contract is commit-and-never-push —
+    that branch must be on the remote with nothing left unpushed. A report is not a record.
+    """
+    record = parse_record(report) if report else {}
+    if record.get("sha"):
+        return verify_record(seat_id, meta, record, runner, here=here)
+    mode = meta.get("mode", "")
+    worktree = meta.get("worktree", "")
+    project = meta.get("project", "")
+    repo = worktree if worktree and os.path.isdir(worktree) else project if project and os.path.isdir(project) else ""
+    if not repo:
+        return None
+    base = _base_ref(lambda *a: _git(runner, repo, *a))
+    if not base:
+        return None
+    branch = f"eindri/{seat_id}"
+    if _git(runner, repo, "rev-parse", "--verify", "-q", f"refs/heads/{branch}")[0] != 0:
+        branch = ""
+        if worktree and os.path.isdir(worktree):
+            rc, text = _git(runner, worktree, "branch", "--show-current")
+            branch = text if rc == 0 else ""
+        if not branch:
+            return "" if mode in NO_COMMIT_MODES or record.get("nothing") else "nothing committed"
+    ahead = _count(runner, repo, f"{base}..{branch}")
+    if ahead is None:
+        return None
+    if ahead == 0:
+        # Honest when the report says so, or when the errand owed a report, not a commit.
+        return "" if mode in NO_COMMIT_MODES or record.get("nothing") else "nothing committed"
+    if mode == "batch":
+        return ""
+    if _git(runner, repo, "rev-parse", "--verify", "-q", f"refs/remotes/origin/{branch}")[0] != 0:
+        return "no branch pushed"
+    unpushed = _count(runner, repo, f"origin/{branch}..{branch}")
+    if unpushed:
+        return f"{unpushed} commit(s) not pushed"
+    return ""
+
+
+def mark_false_done(paths: ArmPaths, seat_id: str, verdict: str) -> None:
+    """Turn the errand's status to `false-done:` — the claim stands corrected on its own shelf."""
+    stamp = time.strftime("%Y-%m-%d %H:%M %Z")
+    try:
+        with (paths.state / f"{seat_id}.status").open("a", encoding="utf-8") as handle:
+            handle.write(f"{FALSE_DONE_PREFIX} {stamp} — the arm checked the record: reported done with {verdict}\n")
+    except OSError:
+        pass
+
+
+def _errand_epoch(paths: ArmPaths) -> float:
+    """When this house first judged `done:` lines against git (`.arm.errand-epoch`).
+
+    A `done:` older than the check was carried by the old roads, and its branch may
+    since have been gathered and merged (and so read as empty); it is never judged.
+    """
+    marker = paths.state / ".arm.errand-epoch"
+    value = _cursor(marker)
+    if value > 0:
+        return value
+    stamp = time.time()
+    try:
+        marker.write_text(f"{stamp}\n", encoding="utf-8")
+    except OSError:
+        pass
+    return stamp
+
+
+def errand_wake(paths: ArmPaths, *, runner: proc.Runner = proc.run, now: float | None = None) -> str:
+    """One `stale:`/`check:` line about a dispatched errand, or "" when all is well.
+
+    For every `state/<id>.meta` touched inside the horizon:
+
+      · DEAD     — the meta names a pane, herdr shows no agent in it, and the status
+                   has not ended: `stale: errand <id> has no agent in <pane> (status: …)`
+      · FALSE DONE — the status says `done:` and git shows nothing committed (or, off
+                   the batch road, nothing pushed): `check: errand <id> reported done with …`
+      · STALLED  — the status says `working:`, neither record has moved for the stall
+                   window, and the pane's agent sits idle:
+                   `stale: errand <id> has said nothing for <n> minutes`
+
+    Each finding is keyed by (errand, kind) in `.arm.errand-woke` with the fact it saw,
+    written BEFORE the line is returned, so the same fact never wakes twice and a new
+    fact (a new status line, another pane) is news once more.
+    """
+    moment = time.time() if now is None else now
+    try:
+        metas = sorted(
+            (entry for entry in paths.state.iterdir() if entry.name.endswith(".meta")),
+            key=lambda entry: entry.name,
+        )
+    except OSError:
+        return ""
+    try:
+        woke = json.loads(paths.errand_woke.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        woke = {}
+    if not isinstance(woke, dict):
+        woke = {}
+
+    agents: dict[str, str] | None = None
+    asked = False
+    epoch = _errand_epoch(paths)  # eager, for the reason `terminal_status_wake` gives
+
+    def mark(key: str, fact: str) -> bool:
+        woke[key] = fact
+        try:
+            temporary = paths.errand_woke.with_name(f"{paths.errand_woke.name}.tmp.{os.getpid()}")
+            temporary.write_text(json.dumps(woke, sort_keys=True), encoding="utf-8")
+            temporary.replace(paths.errand_woke)
+        except OSError:
+            return False  # a ledger that cannot be written would re-wake every poll
+        return True
+
+    for meta_file in metas:
+        seat_id = meta_file.name[: -len(".meta")]
+        if not seat_id or seat_id.startswith("."):
+            continue
+        status = paths.state / f"{seat_id}.status"
+        status_mtime = _mtime(status)
+        meta_mtime = _mtime(meta_file)
+        if not status_mtime:
+            continue
+        if moment - max(status_mtime, meta_mtime) > paths.errand_horizon_seconds:
+            continue  # an old record is the ledger's business, not the arm's
+        try:
+            lines = status.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
+            continue
+        last = next((line.strip() for line in reversed(lines) if line.strip()), "")
+        if not last:
+            continue
+        head = last.lower()
+        meta = _read_kv(meta_file)
+
+        if head.startswith("done:"):
+            if status_mtime < epoch:
+                continue
+            key, fact = f"{seat_id}|done", f"{int(status_mtime)}|{last}"
+            if woke.get(key) == fact:
+                continue
+            try:
+                report = (paths.reports / f"{seat_id}.md").read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                report = ""
+            verdict = done_verdict(seat_id, meta, runner, report=report)
+            if not mark(key, fact) or not verdict:
+                continue  # judged once: a record, or a repo the arm cannot read
+            mark_false_done(paths, seat_id, verdict)
+            return f"check: errand {seat_id} false-done — reported done with {verdict}"
+
+        if head.startswith(ERRAND_ENDED_PREFIXES):
+            continue
+        pane = meta.get("seat_pane", "") or (meta.get("window", "") if meta.get("backend", "") == "herdr" else "")
+        if not pane:
+            continue
+        if not asked:
+            agents, asked = herdr_agents(runner), True
+        if agents is None:
+            continue  # herdr did not answer: no worker is judged dead or idle on silence
+        if pane not in agents:
+            key, fact = f"{seat_id}|dead", f"{pane}|{last}"
+            if woke.get(key) == fact or not mark(key, fact):
+                continue
+            return f"stale: errand {seat_id} has no agent in {pane} (status: {_short(last)})"
+        if head.startswith("working:") and agents.get(pane, "") in IDLE_AGENT_STATES:
+            quiet = moment - max(status_mtime, meta_mtime)
+            if quiet <= paths.errand_stall_seconds:
+                continue
+            key, fact = f"{seat_id}|stall", f"{int(status_mtime)}|{int(meta_mtime)}"
+            if woke.get(key) == fact or not mark(key, fact):
+                continue
+            return f"stale: errand {seat_id} has said nothing for {int(quiet // 60)} minutes"
+    return ""
+
+
+# ── the fourth eye: the unanswered question ─────────────────────────────────
+
+
+def _spoken_to_since(paths: ArmPaths, targets: set[str], since: float) -> bool:
+    """Did anyone speak into one of `targets` after `since`? (the fleet message log)
+
+    `bin/agents/eindri-send.sh` records every send in `fleet/messages.jsonl`; a line to the
+    worker's pane after its question was filed is the helm's answer. Only the tail is read.
+    """
+    if not targets:
+        return False
+    try:
+        with paths.message_log.open("rb") as handle:
+            handle.seek(0, os.SEEK_END)
+            size = handle.tell()
+            handle.seek(max(0, size - 512 * 1024))
+            tail = handle.read().decode("utf-8", errors="replace")
+    except OSError:
+        return False
+    for raw in reversed(tail.splitlines()):
+        try:
+            row = json.loads(raw)
+        except ValueError:
+            continue
+        if not isinstance(row, dict):
+            continue
+        try:
+            epoch = float(row.get("epoch") or 0)
+        except (TypeError, ValueError):
+            continue
+        if epoch < since:
+            break  # the log is appended in time order: nothing older can answer
+        if str(row.get("to", "")) in targets or str(row.get("pane", "")) in targets:
+            return True
+    return False
+
+
+def question_answered(paths: ArmPaths, seat_id: str, question: Path, asked_at: float) -> bool:
+    """True when the question has an answer: in the file, in the pane, or in the worker's moving on."""
+    try:
+        text = question.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return True  # gone: moved to answered/ or withdrawn
+    if any(_ANSWER_LINE.match(line) for line in text.splitlines()):
+        return True
+    meta = _read_kv(paths.state / f"{seat_id}.meta")
+    targets = {seat_id}
+    for key in ("seat_pane", "window", "pane"):
+        if meta.get(key):
+            targets.add(meta[key])
+    if _spoken_to_since(paths, targets, asked_at):
+        return True
+    status = paths.state / f"{seat_id}.status"
+    if _mtime(status) > asked_at + 5:
+        try:
+            lines = status.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
+            lines = []
+        last = next((line.strip().lower() for line in reversed(lines) if line.strip()), "")
+        if last and not last.startswith(WAITING_PREFIXES):
+            return True  # the worker wrote on after the question: it is no longer waiting
+    return False
+
+
+def _first_line(path: Path) -> str:
+    try:
+        for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
+            line = raw.strip().lstrip("#").strip()
+            if line:
+                return _short(line, 120)
+    except OSError:
+        pass
+    return ""
+
+
+def escalate_question(
+    paths: ArmPaths, seat_id: str, question: Path, minutes: int, *, runner: proc.Runner = proc.run
+) -> bool:
+    """One line to the operator through the hotline, with the buttons that act on it."""
+    door = paths.root / "bin" / "notify" / "send.sh"
+    if not os.access(door, os.X_OK):
+        return False
+    gist = _first_line(question)
+    message = f"Worker {seat_id} has waited {minutes} minutes for an answer: {gist}" if gist else (
+        f"Worker {seat_id} has waited {minutes} minutes for an answer"
+    )
+    answer = f"bin/agents/eindri-answer.sh {seat_id} \"<the answer>\""
+    done = runner(
+        [
+            str(door),
+            "--source", "errand",
+            "--severity", "HIGH",
+            "--message", message,
+            "--key", f"question:{seat_id}:{int(_mtime(question))}",
+            "--target", f"file:{question}",
+            "--button", f"✍️ Answer worker {seat_id}|Read {question} and answer it with {answer}",
+            "--button", f"📄 Show the question from {seat_id}|Show me the text of {question}",
+        ],
+        timeout=60,
+    )
+    return done.returncode == 0
+
+
+def question_wake(paths: ArmPaths, *, runner: proc.Runner = proc.run, now: float | None = None) -> str:
+    """One `check:` line about a question an errand filed and nobody answered, or "".
+
+    `eindri-questions/<id>.md` unanswered past the wake window (15 min) wakes the helm once;
+    past the escalation window (1 h) it reaches the operator once, as one line with buttons,
+    and the helm is told it went. Each step is keyed by (errand, step, the file's time) in
+    `.arm.errand-woke`, so a new question from the same errand is news again, and an answer
+    (`question_answered`) ends both steps before they fire.
+    """
+    moment = time.time() if now is None else now
+    try:
+        questions = sorted(entry for entry in paths.questions.iterdir() if entry.is_file() and entry.suffix == ".md")
+    except OSError:
+        return ""
+    try:
+        woke = json.loads(paths.errand_woke.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        woke = {}
+    if not isinstance(woke, dict):
+        woke = {}
+
+    def mark(key: str, fact: str) -> bool:
+        woke[key] = fact
+        try:
+            temporary = paths.errand_woke.with_name(f"{paths.errand_woke.name}.tmp.{os.getpid()}")
+            temporary.write_text(json.dumps(woke, sort_keys=True), encoding="utf-8")
+            temporary.replace(paths.errand_woke)
+        except OSError:
+            return False
+        return True
+
+    for question in questions:
+        seat_id = question.stem
+        if not seat_id or seat_id.startswith("."):
+            continue
+        asked_at = _mtime(question)
+        age = moment - asked_at
+        if not asked_at or age > paths.errand_horizon_seconds or age <= paths.question_wake_seconds:
+            continue
+        fact = str(int(asked_at))
+        escalate = age > paths.question_escalate_seconds
+        if woke.get(f"{seat_id}|ask") == fact and (not escalate or woke.get(f"{seat_id}|ask-operator") == fact):
+            continue  # every step this question is owed has been taken
+        if question_answered(paths, seat_id, question, asked_at):
+            continue
+        minutes = int(age // 60)
+        if woke.get(f"{seat_id}|ask") != fact:
+            if not mark(f"{seat_id}|ask", fact):
+                continue
+            gist = _first_line(question)
+            tail = f": {gist}" if gist else ""
+            return f"check: errand {seat_id} question unanswered for {minutes} minutes ({question}){tail}"
+        if not mark(f"{seat_id}|ask-operator", fact):
+            continue
+        sent = escalate_question(paths, seat_id, question, minutes, runner=runner)
+        road = "sent to the operator" if sent else "the hotline did not take it — tell the operator yourself"
+        return f"check: errand {seat_id} question unanswered for {minutes} minutes — {road}"
     return ""
 
 
@@ -596,7 +1235,8 @@ def brake_line(paths: ArmPaths, line: str, *, now: float | None = None) -> str:
     The queue signal is never braked here — its content hash already makes it one
     line per DISTINCT content, and two different queues may share the same words.
     """
-    if not line.startswith(BRAKED_PREFIXES):
+    if not line.startswith(BRAKED_PREFIXES) or line.startswith(ERRAND_PREFIXES):
+        # the errand lines are deduped per (errand, kind, fact) at their source
         return line
     moment = time.time() if now is None else now
     hour = int(moment // 3600)
@@ -693,7 +1333,12 @@ def cycle(
         pin_behind=pin_behind,
     )
     sweep_handoff(paths, env=env, runner=runner)
-    line = raise_line(paths)
+    if not emit and paths.event.exists() and paths.event.stat().st_size > 0:
+        # The slot still holds an undelivered line. Raising now would consume a
+        # trigger or mark an errand finding as woken while `publish` drops the line
+        # — so the next raise waits for the client to carry the slot out.
+        return ""
+    line = raise_line(paths, runner=runner, now=now)
     if not line:
         return ""
     line = brake_line(paths, line, now=now)
@@ -717,7 +1362,12 @@ def sweep_handoff(paths: ArmPaths, *, env: Mapping[str, str], runner: proc.Runne
     `bin/agents/eindri-handoff.sh` owns the shelf scan and its ledger; this only points
     it at the SAME state dir the arm watches.
     """
-    door = paths.root / "bin" / "eindri-handoff.sh"
+    # The door moved to bin/agents/ with the folder split; the old flat path is kept as a
+    # fallback for an older pin. Before 2026-11-20 only the flat path was asked, so the
+    # mid-session sweep had silently stopped running.
+    door = paths.root / "bin" / "agents" / "eindri-handoff.sh"
+    if not os.access(door, os.X_OK):
+        door = paths.root / "bin" / "eindri-handoff.sh"
     if not os.access(door, os.X_OK):
         return
     child_env = dict(env)

@@ -68,12 +68,12 @@ snapshot() {
   cnf="$(find "$HOME/.config" -maxdepth 3 -type f \
           \( -name '*.lua' -o -name 'shell.json' -o -name '*.conf' -o -name '*.jsonc' \) \
           2>/dev/null | wc -l | tr -d ' ')"
-  monitors="$(hyprctl monitors -j 2>/dev/null \
+  monitors="$(bash "$SCRIPT_DIR/../desktop/hypr.sh" monitors --json 2>/dev/null \
     | python3 -c 'import json,sys
 try:
   m=json.load(sys.stdin); print(len(m))
 except Exception: print(0)' 2>/dev/null || echo 0)"
-  scale="$(hyprctl monitors -j 2>/dev/null \
+  scale="$(bash "$SCRIPT_DIR/../desktop/hypr.sh" monitors --json 2>/dev/null \
     | python3 -c 'import json,sys
 try:
   m=json.load(sys.stdin); print(m[0].get("scale") if m else 0)

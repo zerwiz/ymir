@@ -87,4 +87,15 @@ if [ -x "$root/bin/gates/guards/retired-path-guard.sh" ]; then
     exit 1
   }
 fi
+
+# ── 6. the board-engine gate (plan 335, the split) ──────────────────────────────────────────
+# A NEW file may not name Plane's API, the old bin/gimle/ tree or a Gimlé host (the list is in the home).
+# Ymir speaks the board contract; Plane and Gimlé live in their own repository.
+if [ -x "$root/bin/gates/guards/board-engine-guard.sh" ]; then
+  "$root/bin/gates/guards/board-engine-guard.sh" --repo "$root" --staged >/dev/null || {
+    "$root/bin/gates/guards/board-engine-guard.sh" --repo "$root" --staged >&2
+    echo "pre-commit: the board-engine gate refused this commit — see the lines above." >&2
+    exit 1
+  }
+fi
 exit 0

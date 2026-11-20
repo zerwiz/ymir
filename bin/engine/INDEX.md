@@ -23,7 +23,7 @@ folder rewrites one file instead of colliding on every branch.
 
 bin[40]{file,does,kind,verdict,disposition,callers,lines}:
   "autoboot-lib.sh","autoboot-lib.sh — the boot policy: fleet roles → the Ymir programs they owe.","lib","wired","keep",3,263
-  "hermes-ensure.sh","hermes-ensure.sh — ensure the Hermes agent runtime is present.","tool","wired","keep",3,89
+  "hermes-ensure.sh","hermes-ensure.sh — ensure the Hermes agent runtime is present.","tool","wired","keep",4,89
   "home-seed.sh","home-seed.sh — make a home that a fresh user can understand, and offer to keep it in git.","tool","tested","keep",10,270
   "launchd-ensure.sh","launchd-ensure.sh — seat the macOS service layer: `systemctl --user` answered by launchd.","tool","wired","keep",3,69
   "launchd-user.py","'''launchd-user.py — `systemctl --user` on a Mac: Ymir's systemd user units, run by launchd.","tool","wired","keep",7,649
@@ -54,10 +54,10 @@ bin[40]{file,does,kind,verdict,disposition,callers,lines}:
   "version-stamp.sh","version-stamp.sh — a seat says exactly which build it runs (2026-09-22).","tool","wired","keep",0,25
   "ymir-autoboot.sh","ymir-autoboot.sh — the boot proof: what this seat's roles OWE, and whether","tool","wired","keep",4,165
   "ymir-config.sh","ymir-config.sh — the operator's own preferences, honoured and remembered.","tool","wired","keep",2,77
-  "ymir-edit.sh","ymir-edit.sh — open a file in the Allfather's editor, on its own desktop.","tool","tested","keep",0,183
+  "ymir-edit.sh","ymir-edit.sh — open a file in the Allfather's editor, on its own desktop.","tool","tested","keep",0,170
   "ymir-engine-ensure.sh","ymir-engine-ensure.sh — materialize the engine's private python home.","tool","tested","keep",2,74
   "ymir-engine.sh","ymir-engine.sh — the DOOR to the engine (`src/ymir_runtime/`).","tool","wired","keep",7,63
-  "ymir-install.sh","ymir-install.sh — THE FIRST SETUP.","tool","tested","keep",38,2031
+  "ymir-install.sh","ymir-install.sh — THE FIRST SETUP.","tool","tested","keep",40,2031
   "ymir-isolation.sh","ymir-isolation.sh — capability-probed confinement for a single agent command.","tool","wired","keep",0,89
   "ymir-migrate.sh","ymir-migrate.sh — versioned STRUCTURE migrations for existing Ymir homes.","tool","tested","keep",9,94
   "ymir-validate.sh","ymir-validate.sh — verify the installation actually works.","tool","wired","keep",4,332

@@ -208,6 +208,17 @@ WAKE_QUEUE=$(shell_quote "$DONE_STATE/.wake-queue")
 INBOX_DIR=$(shell_quote "$DONE_STATE/$ID.inbox")
 REPORT_FILE="$DATA/$ID/report.md"
 
+# The command time limit and the ssh rule, rendered from the ONE number
+# (bin/agents/cmd-limit-lib.sh): 30 minutes by default, 2 hours when a build, a gate
+# suite or a release declares it, never unlimited. The Allfather, 2026-11-20, after
+# two errands sat for hours on a single command — the rule every worker is handed is
+# the half of the fix that stops the stall happening at all.
+if [ -z "${YMIR_CMD_LIMIT_LIB_LOADED:-}" ]; then
+  [ -r "$SCRIPT_DIR/cmd-limit-lib.sh" ] && { . "$SCRIPT_DIR/cmd-limit-lib.sh"; YMIR_CMD_LIMIT_LIB_LOADED=1; }
+fi
+LIMIT_RULES=""
+declare -f cmd_limit_rule_lines >/dev/null 2>&1 && LIMIT_RULES="$(cmd_limit_rule_lines)"
+
 INBOX_SECTION=$(cat <<EOF
 # Brokk instruction inbox
 Brokk steers you through durable message files in $INBOX_DIR.
@@ -242,6 +253,13 @@ Report status by appending one line:
    the window is reported as SUSPECT (bin/agents/eindri-heartbeat.sh) — keep a line
    moving whenever you make progress.
 
+**Your report counts only with its record (plan 339.2).** A \`done\` report pastes, exactly as git prints them:
+   the commit (\`git log --oneline -1\`), the files (\`git diff --name-only origin/main...HEAD\`),
+   \`git status --short\`, and where the commit is: \`pushed\`, \`parked\` or \`local only\`.
+   Without them it says **nothing committed**. The terminal act writes this as a \`## Record\` block from git;
+   the arm verifies it on the named machine, and a claim git does not bear out is recorded as \`false-done\`.
+   A question in $DONE_STATE/eindri-questions/$ID.md wakes Brokk after 15 minutes and the operator after an hour.
+
 **Name the project records you touched.** The brief above carries the bearings: the fixed core,
 and the records of the project you were sent to. Before your terminal act, your report says which
 of them the work changed — one line:
@@ -270,6 +288,10 @@ EOF
 # need to remember what they have done to the well"). One episode, written by the worker
 # before its terminal act; eindri-acclaim.sh writes a minimal one from --line and warns
 # loudly when the worker forgot.
+# EXEC_STEP (plan 339.1, 2026-11-20): a new door committed without its executable bit was refused at the
+# push, after the wards had spent their minutes. The template now sets the bit before the last commit,
+# in the INDEX, which is what a push carries.
+EXEC_STEP="- \`bash bin/forge/exec-bits.sh --fix\` prints no \`NOT executable\` row; commit any door it staged (a new door ships executable)."
 WELL_STEP="- Remember what you did in the well — one episode, before the terminal act:
      \`bin/records/mimir.sh observe \"<what was built · the PR or report · the lesson for the next worker · what is left>\" --source eindri --task $ID --tags eindri,done --shape behaviour\`
    A failed errand is remembered too: \`--tags eindri,failed\`, and say why."
@@ -326,6 +348,7 @@ The report is the only thing that survives, so anything worth keeping must be in
 4. If you hit the same obstacle twice, append \`blocked: {why}\` and stop; Brokk will help.
 5. If a decision belongs to the Allfather (product choices, destructive actions), append \`needs-decision: {summary of options}\` and stop. Brokk will reply with the decision.
 6. No AI attribution anywhere you write: no co-author trailer, no "generated with" line, and no model, model-maker or agent-harness name in a commit message, PR title, PR body or status line (RULES/53). Say "the agent harness" or "the worker"; a path or flag stays in \`backticks\`. A ward refuses the rest.
+$LIMIT_RULES
 
 $INBOX_SECTION
 
@@ -351,6 +374,7 @@ case "$MODE" in
     RULE1='Never push to the default branch (push only your `eindri/'"$ID"'` branch). Never merge a PR; the Glitnir human gate owns the merge.'
     DOD_BODY=$(cat <<EOF
 # Definition of done — every gate is a COMMAND; run it and record its output
+$EXEC_STEP
 - \`git diff --quiet\` exits 0 (no uncommitted tracked change beyond the scratch you intend to keep).
 - \`git push -u origin eindri/$ID\` succeeds — your branch reaches the remote.
 - \`gh pr create --fill\` opens the pull request and prints its URL.
@@ -373,6 +397,7 @@ EOF
 # Definition of done — every gate is a COMMAND; run it and record its output
 - \`git branch --show-current\` prints \`eindri/$ID\` (you are on the right branch).
 - Your own tests for what you changed pass; record the command and its last line.
+$EXEC_STEP
 - \`git status --porcelain\` prints nothing (everything committed; git status is clean).
 - Remember your work in the well: \`bash bin/records/mimir.sh observe "<what you built, the lesson, what is left>" --source eindri --task $ID --tags eindri,done\`.
 - Run the terminal act — one command; it writes the status line, files the report shelf, and appends the durable wake:
@@ -387,6 +412,7 @@ EOF
     DOD_BODY=$(cat <<EOF
 # Definition of done — every gate is a COMMAND; run it and record its output
 - \`git branch --show-current\` prints \`eindri/$ID\` (you are on the right branch).
+$EXEC_STEP
 - \`git diff --quiet\` exits 0 (everything committed).
 - \`git status --porcelain\` lists only the scratch files you intend to leave; record the list.
 $WELL_STEP
@@ -402,6 +428,7 @@ EOF
     DOD_BODY=$(cat <<EOF
 # Definition of done — every gate is a COMMAND; run it and record its output
 - \`no-mistakes doctor\` reports the repo is initialized here (run \`no-mistakes init\` first if not).
+$EXEC_STEP
 - \`git push -u origin eindri/$ID\` succeeds — the pipeline branch reaches the remote.
 - The \`no-mistakes\` pipeline run prints its PR URL and a status; record both.
 $WELL_STEP
@@ -444,6 +471,7 @@ $ISOLATION_SETUP
 4. If you hit the same obstacle twice, append \`blocked: {why}\` and stop; Brokk will help.
 5. If a decision belongs to the Allfather (product choices, destructive actions), append \`needs-decision: {summary of options}\` and stop. Brokk will reply with the decision.
 6. No AI attribution anywhere you write: no co-author trailer, no "generated with" line, and no model, model-maker or agent-harness name in a commit message, PR title, PR body or status line (RULES/53). Say "the agent harness" or "the worker"; a path or flag stays in \`backticks\`. A ward refuses the rest.
+$LIMIT_RULES
 
 $INBOX_SECTION
 

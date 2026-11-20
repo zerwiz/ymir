@@ -10,13 +10,27 @@ updated: "2026-11-11"
 Two layers: **wards** (`npm run check`, twenty of them, in `scripts/wards/`) prove the repository is coherent; **gates**
 (`scripts/gates/`, run by the git hooks) stop a specific class of mistake from entering history at all.
 
+## At a glance
+
+```mermaid
+flowchart LR
+  pc["pre-commit<br/>checks · secrets · languages"] --> cm["commit-msg<br/>what and why"] --> pp["pre-push<br/>two roads · notes · tests"]
+  pp --> chain["the repository's own hooks run after"]
+```
+
+| What | Means |
+|---|---|
+| pre-commit | the declared checks, a credential, a machine path, a client tongue outside its paths |
+| commit-msg | a subject that says nothing, another tongue, a tool named as author |
+| pre-push | code pushed to main, a branch without a pull request, a behaviour change without a note, a red tree |
+
 ## The git hooks, and what each refuses
 
 ```
 hooks[3]{hook,refuses,why}:
   "**pre-commit**","a red ward, a type error, **a credential**, **a machine path or a real address** — but **only the checks the project declares** (`package.json` scripts `check`, `typecheck`); a repository with no `package.json` is not a failed doctor","a secret in a commit is a secret in every clone, and a history rewrite is the only cure"
   "**commit-msg**","a subject that says nothing","a commit that cannot be read six months later is a commit nobody trusts"
-  "**pre-push**","a push to `master` or `main`, a branch with no pull request, and a push of a red tree — the declared `check` and `test` scripts, where a project has them","merges are the Allfather's, and the branch guard is the reminder"
+  "**pre-push**","a push to `master` or `main`, a branch with no pull request, and a push of a red tree — the declared `check` and `test` scripts, where a project has them","merges are a person's, and the branch guard is the reminder"
 ```
 
 ## The gates themselves
@@ -24,7 +38,7 @@ hooks[3]{hook,refuses,why}:
 ```
 gates[2]{script,catches,tuned_to_avoid}:
   "`scripts/gates/secret-scan.sh`","private keys, `GOCSPX-`, `sk-`, `ghp_`, `xoxb-`, Google API keys, `postgres://` URLs **with a literal password**, and `"api_key": "<24+ chars>"`","`postgres://user:${VAR}@host` — a reference is not a secret, and a gate that cries wolf teaches people to pass `--no-verify`"
-  "`scripts/gates/private-data.sh`","absolute paths into a person's home, `Documents/ymirhome`, and real addresses at gmail/hotmail/live/outlook/yahoo/icloud","documentation, tests and fixtures, where a fake address is deliberate; `$HOME/...` is home-relative, not a machine path"
+  "`scripts/gates/private-data.sh`","absolute paths into a person's home, and real addresses at gmail/hotmail/live/outlook/yahoo/icloud","documentation, tests and fixtures, where a fake address is deliberate; `$HOME/...` is home-relative, not a machine path"
 ```
 
 **Run them by hand whenever in doubt:**
@@ -43,7 +57,7 @@ Both fired within a minute of being written, and both were right:
 - **The testing documentation carried what looked like live credentials** in copy-pasteable `psql` commands. They are now
   `${TEST_DB_PASSWORD}` references.
 
-## The gates Ymir has that this project does not, and whether it should
+## Gates a larger setup adds, and whether this project should
 
 ```
 borrowed[4]{gate,what_it_does,verdict}:
@@ -60,3 +74,7 @@ nobody has ever triggered is a tax on every commit.
 
 - `scripts/gates/`, `.githooks/`, `RULES/15-commits-leave-by-pull-request.md`, `RULES/19-plan-validate-execute.md`
 - `docs/headers.md` — the header and References format this document follows
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #841

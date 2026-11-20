@@ -25,7 +25,6 @@ import http.client
 import json
 import os
 import re
-import shlex
 import subprocess
 import time
 import urllib.error
@@ -58,16 +57,17 @@ def resolve_token(ref, home, root):
             srv = (json.load(open(cfg)).get("mcpServers") or {}).get(name) or {}
         except (OSError, ValueError):
             srv = {}
-        v = next((x for k, x in (srv.get("headers") or {}).items() if k.lower() == "authorization"), "")
-        if not v and srv.get("headersHelper"):
-            # the harness's own helper prints the headers as JSON (an enrolled seat keeps its token in a 0600 file,
-            # never in the config); asked the same way the harness asks it
+        headers = dict(srv.get("headers") or {})
+        if srv.get("headersHelper") and not any(k.lower() == "authorization" for k in headers):
+            # a seat that mints its header at call time (Claude's headersHelper prints a JSON object of headers)
             try:
-                out = subprocess.run(shlex.split(srv["headersHelper"]), capture_output=True, text=True, timeout=30).stdout
-                v = next((x for k, x in (json.loads(out or "{}") or {}).items() if k.lower() == "authorization"), "")
-            except (OSError, ValueError, subprocess.SubprocessError):
-                v = ""
-        v = re.sub(r"^Bearer\s+", "", v, flags=re.I)
+                got = subprocess.run(["bash", "-c", srv["headersHelper"]], capture_output=True, text=True,
+                                     timeout=30).stdout
+                headers.update(json.loads(got) if got.strip() else {})
+            except (OSError, ValueError, subprocess.TimeoutExpired):
+                pass
+        v = next((x for k, x in headers.items() if k.lower() == "authorization"), "")
+        v = re.sub(r"^Bearer\s+", "", str(v), flags=re.I)
     else:
         raise BoardRefusal(f"token_from '{ref}' is not env:, vault: or claude-mcp:")
     if not v:
@@ -213,7 +213,10 @@ class McpBoard:
         return out
 
     def find_cards(self, label, text):
-        got = self._call("list_cards", {"place": self.place, "label": label, "query": text, "limit": 50}).get("cards", [])
+        a = {"place": self.place, "query": text, "limit": 50}
+        if label:  # no label: every card whose title carries the text (a caller that never labelled its cards)
+            a["label"] = label
+        got = self._call("list_cards", a).get("cards", [])
         return [self._shape(c) for c in got]
 
     def get_card(self, card):

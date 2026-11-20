@@ -52,7 +52,7 @@ ROOT="$(_root)"
 cd "$ROOT" || exit 2
 
 # ONE list. A new tree ward appears here or it does not run anywhere.
-WARDS=(runtime-guard.sh unit-writer-guard.sh runtime-pinned-guard.sh defaults-guard.sh app-folder-guard.sh app-functional-guard.sh rules-number-guard.sh inventory-guard.sh registers-guard.sh fleet-version-guard.sh subsystem-docs-guard.sh path-ledger-guard.sh path-legality-guard.sh packaging-guard.sh public-data-guard.sh cron-guard.sh features-guard.sh weave-guard.sh vault-guard.sh confidential-guard.sh dead-code-guard.sh docs-claims-guard.sh home-contract-guard.sh language-guard.sh pkill-guard.sh blocking-door-guard.sh skills-share-guard.sh rules-compliance-guard.sh pr-ship-guard.sh model-rows-guard.sh areas-guard.sh desktop-main-guard.sh house-colour-guard.sh pr-identity-guard.sh nda-guard.sh hearth-guard.sh bin/gates/agnostic-audit.sh)
+WARDS=(runtime-guard.sh unit-writer-guard.sh runtime-pinned-guard.sh defaults-guard.sh app-folder-guard.sh app-functional-guard.sh rules-number-guard.sh inventory-guard.sh registers-guard.sh fleet-version-guard.sh subsystem-docs-guard.sh path-ledger-guard.sh path-legality-guard.sh packaging-guard.sh public-data-guard.sh cron-guard.sh features-guard.sh weave-guard.sh vault-guard.sh confidential-guard.sh dead-code-guard.sh docs-claims-guard.sh home-contract-guard.sh language-guard.sh pkill-guard.sh blocking-door-guard.sh skills-share-guard.sh rules-compliance-guard.sh pr-ship-guard.sh model-rows-guard.sh areas-guard.sh desktop-main-guard.sh hypr-door-guard.sh house-colour-guard.sh pr-identity-guard.sh nda-guard.sh hearth-guard.sh bin/gates/agnostic-audit.sh board-engine-guard.sh)
 #
 # agnostic-audit (2026-11-14, plan 287 §6, RULES/04 and RULES/25): the repository is 100 % agnostic —
 # the operator's people, clients, companies, mail domains, host names, user names and tailnet never
@@ -63,6 +63,10 @@ WARDS=(runtime-guard.sh unit-writer-guard.sh runtime-pinned-guard.sh defaults-gu
 # what the push ADDS, and a hit already on the base revision prints `inherited` and never blocks
 # (plan 243 §3 part D). The whole-tree census is the same door without `check`, run on the heart's
 # clock twice a day. It reads $YMIR_HOME, so it is never cached.
+#
+# board-engine-guard (2026-11-20, plan 335, the split): Ymir keeps the board contract and Gimlé keeps Plane.
+# A file the push ADDS may not name Plane's API, the old bin/gimle/ tree or a Gimlé host (the list is read
+# from the home, so the ward is never cached). Existing files keep their record.
 #
 # nda-guard (2026-11-12, RULES/04): company, client and NDA-project names never enter the public tree. The
 # names are read from $YMIR_HOME at run time, so the ward is never cached and says UNARMED, aloud, where no
@@ -110,6 +114,11 @@ CI_ONLY_REASON=(
   "docs-claims-guard.sh|37.2s|Rule 27 reads every user-facing page at once (README, FEATURES, docs/, RULES/, .agents/agents/); the claim set is the whole shelf, not the file"
   "language-guard.sh|22.7s|Rule 43 builds the allow list and reads every document and brief in the tree before it judges one line"
   "dead-code-guard.sh|14.0s|the usage index is one multi-pattern pass over the whole tree; a single file cannot say whether a name is reached elsewhere"
+  # plan 339.1, 2026-11-20: re-measured on two of that day's branches, both over the 10 s line in every run
+  # (15.7–25.7 s and 12.1–18.9 s), together a third of every push. The pre-commit hook still weaves, and CI
+  # still runs both on every PR and on main.
+  "defaults-guard.sh|25.7s|every script in bin/ is read for a guessed default before one is judged; the census is the tree, not the diff (re-measured 2026-11-20)"
+  "weave-guard.sh|18.9s|weave.sh --check re-derives every woven index (RULES, plans, features) from the whole tree; the pre-commit hook weaves the same files (re-measured 2026-11-20)"
 )
 # PR_ONLY — a ward that judges a PULL REQUEST, not a tree. It cannot answer before the PR
 # exists, so the pre-push and --full both name it and skip it, and the workflow runs it with
@@ -168,7 +177,7 @@ is_scoped()  { local w; for w in "${SCOPED[@]}"; do [ "$w" = "$1" ] && return 0;
 # The set a push ADDS: what HEAD carries that the base does not. Untracked files that are
 # about to be pushed are added by the caller (the hook passes --changed), because only the
 # hook knows what is staged for the push.
-resolve_base() {
+resolve_ref() {
   [ -n "$BASE" ] && { printf '%s' "$BASE"; return 0; }
   local b
   for b in origin/main origin/master; do
@@ -177,18 +186,38 @@ resolve_base() {
   git rev-parse -q --verify '@{upstream}' >/dev/null 2>&1 && { printf '%s' '@{upstream}'; return 0; }
   return 1
 }
+# THE FORK POINT, NOT THE TIP (plan 339.1, 2026-11-20). The scope was `git diff <base>..HEAD`, a
+# TWO-dot diff against the base's tip: on a branch 30 commits behind main it listed every file main
+# had changed since the fork as well — measured, 209 paths where the branch touched 16. A scoped ward
+# is never `inherited`, so a fault main had already MENDED (a mailbox masked in a fix note) came back
+# as this push's own finding, and the push was refused for a line it never wrote. The set a push
+# adds is what HEAD carries since the fork: `merge-base(base, HEAD)..HEAD`. The same revision travels
+# to the wards as YMIR_GUARD_BASE / YMIR_AUDIT_BASE, so their line-level "added" test agrees.
+resolve_base() {
+  local ref mb
+  ref="$(resolve_ref)" || return 1
+  mb="$(git merge-base "$ref" HEAD 2>/dev/null)" || mb=""
+  if [ -n "$mb" ]; then printf '%s' "$mb"; else printf '%s' "$ref"; fi
+}
 
 CHANGED_LIST="$(mktemp "${TMPDIR:-/tmp}/guard-scope-XXXXXX")"
 SCOPE_NOTE=""
 if [ -n "$CHANGED_FILE" ]; then
   cat "$CHANGED_FILE" >"$CHANGED_LIST" 2>/dev/null || true
 fi
+# A PUSH CARRIES COMMITS, NOTHING ELSE (plan 339.1). The hook sets YMIR_GUARD_PUSH=1: then the scope
+# is the committed range only. Untracked and unstaged files never leave in a push, and judging them
+# is how a worktree holding 3,000 scratch notes cost a push 40 s in one ward and 216 false findings.
+# A person running guards.sh by hand still gets the working tree judged, as before.
+PUSH_POSTURE="${YMIR_GUARD_PUSH:-0}"
 if [ "$FULL" -eq 0 ]; then
   if b="$(resolve_base)"; then
-    git diff --name-only --no-renames "$b"..HEAD 2>/dev/null >>"$CHANGED_LIST" || true
-    git diff --name-only --no-renames --cached 2>/dev/null >>"$CHANGED_LIST" || true
-    git diff --name-only --no-renames 2>/dev/null >>"$CHANGED_LIST" || true
-    git ls-files --others --exclude-standard >>"$CHANGED_LIST" 2>/dev/null || true
+    git diff --name-only --no-renames "$b" HEAD 2>/dev/null >>"$CHANGED_LIST" || true
+    if [ "$PUSH_POSTURE" != 1 ]; then
+      git diff --name-only --no-renames --cached 2>/dev/null >>"$CHANGED_LIST" || true
+      git diff --name-only --no-renames 2>/dev/null >>"$CHANGED_LIST" || true
+      git ls-files --others --exclude-standard >>"$CHANGED_LIST" 2>/dev/null || true
+    fi
     sort -u "$CHANGED_LIST" -o "$CHANGED_LIST"
   else
     SCOPE_NOTE="no base ref — the whole tree is judged (a first push has no diff to scope)"
@@ -206,7 +235,13 @@ SCOPE_COUNT="$(wc -l < "$CHANGED_LIST" | tr -d ' ')"
 # because a cache that hides a real finding is the one thing this house does not ship.
 CACHE="${YMIR_GUARD_CACHE:-$(git rev-parse --git-common-dir 2>/dev/null || printf '.git')/ymir-guard-cache}"
 DIRTY=0
-[ -n "$(git status --porcelain 2>/dev/null)" ] && DIRTY=1
+# In the push posture an untracked file is not in the push and not in the index the cache keys on,
+# so it no longer turns the cache off (plan 339.1); a modified tracked file still does.
+if [ "${YMIR_GUARD_PUSH:-0}" = 1 ]; then
+  [ -n "$(git status --porcelain --untracked-files=no 2>/dev/null)" ] && DIRTY=1
+else
+  [ -n "$(git status --porcelain 2>/dev/null)" ] && DIRTY=1
+fi
 if [ "$FULL" -eq 1 ] || [ "$DIRTY" -eq 1 ] || [ "${YMIR_GUARD_NO_CACHE:-0}" = 1 ]; then
   CACHE_OK=0
 else
@@ -326,15 +361,31 @@ run_ward() {  # <ward>
   # judges what a push PUBLISHES needs the RANGE, so a line the branch never added is judged as
   # inherited by the ward itself rather than refused as this push's (public-guard --added).
   if b0="$(resolve_base)"; then YMIR_GUARD_BASE="$b0"; else YMIR_GUARD_BASE=""; fi; export YMIR_GUARD_BASE
+  # agnostic-audit reads its own base variable; hand it the same fork point unless a caller chose one.
+  if [ -z "${YMIR_AUDIT_BASE:-}" ] && [ -n "$YMIR_GUARD_BASE" ]; then YMIR_AUDIT_BASE="$YMIR_GUARD_BASE"; export YMIR_AUDIT_BASE; fi
+  # THE BUDGET IS A WALL, NOT A WISH (plan 339.1, 2026-11-20). The budget used to stop only the
+  # LAUNCH of new wards; a ward already running ran to its end, and `wait` waited for it — so a
+  # push with a 60 s budget could sit for minutes behind one slow ward. Each ward now runs under
+  # `timeout` with what is left of the budget; one cut off is DEFERRED to CI, never passed.
+  local -a cap=()
+  if [ "$DEADLINE" -gt 0 ] && command -v timeout >/dev/null 2>&1; then
+    local left=$(( DEADLINE - $(date +%s) ))
+    [ "$left" -lt 1 ] && left=1
+    cap=(timeout -k 5 "$left")
+  fi
   if is_scoped "$w" && [ "$SCOPE_COUNT" -gt 0 ]; then
     local -a files=()
     mapfile -t files <"$CHANGED_LIST"
-    out="$(bash "$s" check "${files[@]}" 2>&1)" || rc=$?
+    out="$("${cap[@]}" bash "$s" check "${files[@]}" 2>&1)" || rc=$?
   else
-    out="$(bash "$s" check 2>&1)" || rc=$?
+    out="$("${cap[@]}" bash "$s" check 2>&1)" || rc=$?
   fi
   t1="$(date +%s%N)"
   local ms=$(( (t1 - t0) / 1000000 ))
+  if [ "${#cap[@]}" -gt 0 ] && { [ "$rc" -eq 124 ] || [ "$rc" -eq 137 ]; }; then
+    printf 'DEFERRED\t%s\t%s\n' "$ms" "cut off at the ${BUDGET}s pre-push budget — CI runs this ward on the PR" >"$(rfile "$w")"
+    return 0
+  fi
   if [ "$rc" -eq 0 ]; then
     printf 'PASS\t%s\t\n' "$ms" >"$(rfile "$w")"
     [ -n "$key" ] && cache_write "$w" "$key"

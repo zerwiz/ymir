@@ -12,7 +12,10 @@ is reported as `unread`, never as zero.
 
 Surfaces, measured over ssh on the register's `host`:
   gate       Authelia — users, the authentication log, and whether any second factor is enrolled
-  plane      the Gimlé Board — accounts, last sign-in, workspace membership
+  board      the board — accounts, last sign-in, workspace membership, from the command the register
+             names as `board_roll:` (run on the same host). Ymir holds no board engine's code: the board's
+             own kit answers, in the roll contract {state, users[{email,last_login,active}], members[{workspace,email}]}.
+             An older register's `plane:` account key is still read as the board's (plan 335, the split).
   affine     Gimlé Documents — accounts, when created and verified
   forge      Forgejo — accounts, last sign-in, admin flag, public keys
   shell      the server — which accounts have a login shell, and when they last signed in
@@ -75,32 +78,21 @@ if os.path.exists(db):
         gate["state"] = "unread: %s" % exc
 out["gate"] = gate
 
-# ---- the Board (Plane) ---------------------------------------------------------------------
-plane = {"users": [], "members": [], "state": "unread"}
-env = run(["docker", "inspect", "plane-selfhost-plane-db-1", "--format",
-           "{{range .Config.Env}}{{println .}}{{end}}"])
-pw = ""
-for line in env.stdout.splitlines():
-    if line.startswith("POSTGRES_PASSWORD="):
-        pw = line.split("=", 1)[1]
-if pw:
-    q = lambda sql: run(["docker", "exec", "-e", "PGPASSWORD=" + pw, "plane-selfhost-plane-db-1",
-                         "psql", "-U", "plane", "-d", "plane", "-tAc", sql])
-    r = q("select email, coalesce(last_login_time::text,''), is_active from users")
-    if r.returncode == 0:
-        plane["state"] = "ok"
-        for row in r.stdout.strip().splitlines():
-            if row.count("|") >= 2:
-                email, last, active = row.split("|")[:3]
-                plane["users"].append({"email": email, "last_login": last, "active": active == "t"})
-    r = q("select w.name, u.email from workspace_members m join users u on u.id=m.member_id "
-          "join workspaces w on w.id=m.workspace_id")
-    if r.returncode == 0:
-        for row in r.stdout.strip().splitlines():
-            if "|" in row:
-                ws, email = row.split("|", 1)
-                plane["members"].append({"workspace": ws, "email": email})
-out["plane"] = plane
+# ---- the board, through the roll its own kit serves (plan 335) --------------------------------
+board = {"users": [], "members": [], "state": "unread: the register names no board_roll"}
+if BOARD_ROLL:
+    r = run(["bash", "-c", BOARD_ROLL])
+    try:
+        got = json.loads(r.stdout) if r.returncode == 0 else None
+    except ValueError:
+        got = None
+    if isinstance(got, dict):
+        board = {"users": got.get("users") or [], "members": got.get("members") or [],
+                 "state": got.get("state") or "ok"}
+    else:
+        tail = (r.stderr or r.stdout or "").strip().splitlines()
+        board["state"] = "unread: board_roll answered %s" % (tail[-1][:120] if tail else "nothing")
+out["board"] = board
 
 # ---- Documents (AFFiNE) --------------------------------------------------------------------
 affine = {"users": [], "state": "unread"}
@@ -187,10 +179,11 @@ def register_path():
     return os.path.join(home, "hodd", "data", "collaboration.yaml")
 
 
-def measure(host):
+def measure(host, board_roll=""):
+    script = "BOARD_ROLL = %s\n" % json.dumps(str(board_roll or "")) + REMOTE
     try:
         done = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", host, "python3", "-"],
-                              input=REMOTE, capture_output=True, text=True, timeout=180)
+                              input=script, capture_output=True, text=True, timeout=180)
     except Exception as exc:
         return {"state": "unable", "reason": str(exc)}
     if done.returncode != 0:
@@ -216,7 +209,7 @@ def surface_states(person, measured):
     """One short line per surface, and the list of activity events with an address class."""
     accounts = person.get("accounts") or {}
     gate = measured.get("gate") or {}
-    plane = measured.get("plane") or {}
+    board = measured.get("board") or measured.get("plane") or {}  # a capture made before plan 335 says "plane"
     affine = measured.get("affine") or {}
     forge = measured.get("forge") or {}
     shell = measured.get("shell") or {}
@@ -239,20 +232,20 @@ def surface_states(person, measured):
             cells["gate"] = "%s (%s)" % (login["last"][:10], "+".join(classes))
             events.append({"surface": "gate", "when": login["last"][:10], "class": "+".join(classes)})
 
-    email = accounts.get("plane")
+    email = accounts.get("board") or accounts.get("plane")
     if not email:
-        cells["plane"] = "—"
-    elif plane.get("state") != "ok":
-        cells["plane"] = "unread"
+        cells["board"] = "—"
+    elif board.get("state") != "ok":
+        cells["board"] = "unread"
     else:
-        match = next((u for u in plane.get("users", []) if u["email"] == email), None)
+        match = next((u for u in board.get("users", []) if u["email"] == email), None)
         if not match:
-            cells["plane"] = "absent"
+            cells["board"] = "absent"
         elif not match.get("last_login"):
-            cells["plane"] = "never"
+            cells["board"] = "never"
         else:
-            cells["plane"] = match["last_login"][:10]
-            events.append({"surface": "plane", "when": match["last_login"][:10], "class": "unknown"})
+            cells["board"] = match["last_login"][:10]
+            events.append({"surface": "board", "when": match["last_login"][:10], "class": "unknown"})
 
     email = accounts.get("affine")
     if not email:
@@ -300,7 +293,7 @@ def surface_states(person, measured):
         verdict = "drift"
     # A person whose only surface is one this door cannot measure is not "unentered": they
     # collaborate somewhere we do not read, and saying otherwise would be a false absence.
-    measured = {"gate", "plane", "affine", "forge", "shell"}
+    measured = {"gate", "board", "plane", "affine", "forge", "shell"}
     elsewhere = sorted(key for key in (person.get("accounts") or {}) if key not in measured)
     if verdict == "unentered" and elsewhere:
         verdict = "elsewhere (%s)" % ", ".join(elsewhere)
@@ -350,7 +343,7 @@ def main():
         # The host is the REGISTER's fact, never a default in the code (RULES/04): a register that
         # names none is answered honestly rather than measured against somebody else's machine.
         host = str(register.get("host") or "").strip()
-        measured = (measure(host) if host else
+        measured = (measure(host, register.get("board_roll") or "") if host else
                     {"state": "unable", "reason": "the register names no host — add `host:` to it"})
 
     people = register.get("people") or []
@@ -370,7 +363,7 @@ def main():
     for row in rows:
         print('  "%s","%s","%s","%s","%s","%s","%s","%s","%s"' % (
             row["person"], row["rung"] or "—",
-            row["cells"]["gate"], row["cells"]["plane"], row["cells"]["documents"],
+            row["cells"]["gate"], row["cells"]["board"], row["cells"]["documents"],
             row["cells"]["forge"], row["cells"]["shell"], row["last_seen"], row["verdict"]))
 
     found = gaps(measured, people)

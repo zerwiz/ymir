@@ -83,18 +83,8 @@ is_gui() {
 # An empty numbered desktop, preferring the lowest free one. Mirrors
 # bin/desktop/desktop-place.sh's rule: on Omarchy the numbered desktops are the screens.
 free_desktop() {
-  command -v hyprctl >/dev/null 2>&1 || return 1
-  hyprctl workspaces -j 2>/dev/null | python3 -c '
-import json,sys
-try:
-    d=json.load(sys.stdin)
-except Exception:
-    sys.exit(0)
-used={w.get("id") for w in d if w.get("windows",0)>0}
-for n in range(1,11):
-    if n not in used:
-        print(n); break
-' 2>/dev/null
+  command -v "${YMIR_HYPRCTL:-hyprctl}" >/dev/null 2>&1 || return 1
+  workspace_free 10   # display-lib.sh, the one owner of the Hyprland dialect (plan 341.2)
 }
 
 [ -n "$TARGET" ] || { printf 'error: ymir-edit needs a path\nhelp: bin/engine/ymir-edit.sh <path>\n' >&2; exit 2; }
@@ -147,10 +137,7 @@ fi
 DEST=""
 if [ -z "$ROLE" ]; then
   case "$MODE" in
-    here) DEST="$(hyprctl activeworkspace -j 2>/dev/null | python3 -c 'import json,sys
-try: n=json.load(sys.stdin).get("id",0)
-except Exception: n=0
-print(n if isinstance(n,int) and n>0 else "")' 2>/dev/null)" ;;
+    here) DEST="$(workspace_active)" ;;
     free) DEST="$(free_desktop)" ;;
     ''|*[!0-9]*) DEST="$(free_desktop)" ;;
     *) DEST="$MODE" ;;

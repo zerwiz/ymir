@@ -19,7 +19,8 @@ The letter's header (first lines, between --- and ---):
   made_by: the line under the footer naming who prepared the letter — default "Made with Ymir by <the
            seat's agent>" (the name from ~/.pi/agent/extensions/.ymir-seat, never a machine name); "off" removes it.
            "Ymir" links to Ymir's homepage, and the address is shown beside it
-  made_by_url: the homepage the made-by line links to (default YMIR_HOMEPAGE_URL, else https://ymir.zerwiz.org)
+  made_by_url: the homepage the made-by line links to (default YMIR_HOMEPAGE_URL, then the home's own
+                `homepage` service in hodd/identity/services.yaml, then no link at all)
 
 The blocks (separated by a blank line):
   ## heading                                 a section title
@@ -359,7 +360,10 @@ def render(text: str, theme: str | None = None) -> str:
             f'border:1px solid {t["line"]};">{"".join(out)}</table></td></tr></table></body></html>')
 
 
-YMIR_HOMEPAGE = "https://ymir.zerwiz.org"   # Ymir's public homepage, the one default (Rule 07)
+# THE DEFAULT IS THE OPERATOR'S, ASKED OF HIS HOME (RULES/04, 2026-11-20). This constant used to carry his real
+# hostname in a public repository; the address now comes from `homepage.public_url` in his own services registry,
+# through the one reader (bin/fleet/public-surfaces.py). Empty is a valid answer: the made-by line then shows no link.
+YMIR_HOMEPAGE = ""
 
 
 def default_homepage() -> str:
@@ -375,7 +379,20 @@ def default_homepage() -> str:
         home_url = snotra_config.get("SNOTRA_LETTER_HOMEPAGE", "")
     except Exception:  # noqa: BLE001
         home_url = ""
-    return (home_url or os.environ.get("YMIR_HOMEPAGE_URL", "").strip() or YMIR_HOMEPAGE).rstrip("/")
+    if home_url:
+        return home_url.rstrip("/")
+    env_url = os.environ.get("YMIR_HOMEPAGE_URL", "").strip()
+    if env_url:
+        return env_url.rstrip("/")
+    try:
+        import subprocess  # noqa: PLC0415
+        door = str(Path(__file__).resolve().parents[4] / "bin" / "gimle" / "surfaces.py")
+        out = subprocess.run([sys.executable, door, "--get", "homepage"], capture_output=True, text=True, timeout=20)
+        if out.returncode == 0:
+            return (out.stdout or "").strip().rstrip("/")
+    except Exception:  # noqa: BLE001
+        pass
+    return YMIR_HOMEPAGE.rstrip("/")
 
 
 def made_by_html(made: str, meta: dict, t: dict) -> str:
@@ -383,6 +400,8 @@ def made_by_html(made: str, meta: dict, t: dict) -> str:
     mail program strips links can still find the page. A replaced line that does not name Ymir keeps only the link
     at its end."""
     url = (meta.get("made_by_url", "").strip() or default_homepage())
+    if not url:                      # no address declared anywhere: the made-by line keeps its words, no link
+        return E(made)
     a = f'style="color:{t["muted"]};text-decoration:underline;"'
     shown = re.sub(r"^https?://", "", url).rstrip("/")
     text = E(made)

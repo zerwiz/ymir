@@ -3,6 +3,20 @@
 **Added 2026-11-11** at the operator's word: *"plan, validate plan, then execute. no implementations before
 validations are proven"* and *"tickets are not validated plans. there can be several tickets on one plan."*
 
+## At a glance
+
+```mermaid
+flowchart LR
+  p["plan"] --> v["validated by the area owner"] --> e["executed: tickets, code, PRs"]
+  d["documentation and planning"] -.->|"any time"| p
+```
+
+| What | Means |
+|---|---|
+| plan | what will be built and why; allowed at any time |
+| validate | the area owner named in AGENTS.md agrees, in writing |
+| execute | only after validation: tickets, code, pull requests |
+
 ## The rule
 
 ```

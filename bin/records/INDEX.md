@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[60]{file,does,kind,verdict,disposition,callers,lines}:
+bin[63]{file,does,kind,verdict,disposition,callers,lines}:
   "agents-status.sh","agents-status.sh — which agents are running, where, on what work, and which are idle.","tool","wired","keep",1,48
   "audit-apply.sh","audit-apply.sh — turn an audit into work, in one door.","tool","wired","keep",0,96
   "behind.sh","behind.sh — the arithmetic of being behind: opened/closed this week, net, stale-30d, unbuilt phases.","tool","wired","keep",0,46
@@ -48,11 +48,11 @@ bin[60]{file,does,kind,verdict,disposition,callers,lines}:
   "mimir-recall-today.sh","mimir-recall-today.sh — drink before you act: the session's opening recall.","tool","wired","keep",1,113
   "mimir-reflect.sh","mimir-reflect — smelt the well's episodes into facts, through the LLAMA-ROUTER.","tool","wired","keep",0,35
   "mimir.sh","mimir.sh — the well (Mimirsbrunn).","tool","tested","keep",23,510
-  "note.sh","note.sh — append a DATED section to an existing document in the home (append-only, Rule 06).","tool","wired","keep",4,16
+  "note.sh","note.sh — append a DATED section to an existing document in the home (append-only, Rule 06).","tool","wired","keep",5,18
   "open-work.sh","open-work.sh — the open work, rendered for a HUMAN, from the record the doors read.","tool","wired","keep",2,80
   "plan-board.sh","plan-board.sh — how many plans are done and not done, what to work on next, and which old","tool","wired","keep",1,303
   "plan-state.sh","plan-state.sh — read and write the Status/Owner header of every plan in the ledger.","tool","wired","keep",4,92
-  "plan.sh","plan.sh — the plan ledger: create the NEXT numbered plan and its index row.","tool","tested","keep",8,314
+  "plan.sh","plan.sh — the plan ledger: create the NEXT numbered plan and its index row.","tool","tested","keep",9,316
   "plans-state.sh","plans-state.sh — the plans, as data: every shelf the registry names, read once (plan 298 §2.1).","tool","wired","keep",3,41
   "plans_state.py","'''plans_state.py — the plans, as data: every shelf the registry names, read once (plan 298 §2.1).","tool","wired","keep",2,848
   "project-brief.sh","project-brief.sh — 'this project', for any session in any harness (Claude Code, Pi, OpenCode, Hermes).","tool","wired","keep",1,21
@@ -67,7 +67,10 @@ bin[60]{file,does,kind,verdict,disposition,callers,lines}:
   "snotra-what.sh","snotra-what.sh — Snotra's own voice: what the ear is doing, said in one sentence.","tool","wired","keep",1,640
   "test_comms.py","'''The proofs plan 261 asks for: the record, the owed list, the to-do proposals, the brief,","tool","wired","keep",0,508
   "test_mimir_bridge_health.py","﻿import importlib.util,json,subprocess,sys,tempfile,threading,unittest","tool","wired","keep",0,30
+  "test_todo_board.py","'''test_todo_board — the to-do board door, against a fake board (no network, a fenced home).","tool","wired","keep",0,194
   "test_tunnel_patience.sh","test_tunnel_patience.sh — a slow origin is not an absent one, and a silent one still fails.","tool","wired","keep",1,46
+  "todo.sh","todo.sh — the operator's to-do, as cards on the board.","tool","wired","keep",3,14
+  "todo_board.py","'''todo_board — the operator's to-do lives on a board, and this is the one door that writes it.","tool","wired","keep",2,773
   "todos.sh","todos.sh — THE task board of the house, one writer for one file.","tool","wired","keep",8,184
   "tunnels-registry.sh","tunnels-registry.sh — emit the registry's `tunnels:` block from the cloudflared configs that actually exist.","tool","wired","keep",0,70
   "tunnels-status.sh","tunnels-status.sh — every public name this machine publishes, whether its tunnel is up, and whether its upstream answers.","tool","wired","keep",2,44
@@ -83,6 +86,6 @@ bin[60]{file,does,kind,verdict,disposition,callers,lines}:
   "wyrd-db.sh","wyrd-db.sh — the database layer (W0040).","tool","wired","keep",0,49
   "ymir-state.sh","ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runtime/state/`).","tool","tested","keep",12,44
 
-**Tally.** verdict: wired=50, tested=10
+**Tally.** verdict: wired=53, tested=10
 
-**Tally.** disposition: keep=59, migrate → src/ymir_runtime/library.py=1
+**Tally.** disposition: keep=62, migrate → src/ymir_runtime/library.py=1

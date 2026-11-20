@@ -2,3 +2,8 @@
 section: planned-named-and-designed-not-yet-built
 ---
 | Security | **The vault's edit door** (`bin/vault/hodd-set.sh`) | Set or read ONE key inside the age-encrypted vault without ever touching the file by hand: `KEY VALUE` writes, `--get KEY` prints one value, `--list` prints names only. Four guards, each of which was missing on the day a hand-edit replaced 90 secrets with 3: the decrypted plaintext must be non-empty, the re-encryption is decrypted again and compared before it replaces anything, the old file is kept as a timestamped backup, and the write is atomic at 0600 with every plaintext temp shredded | [docs/features/the-vault-edit-door.md](docs/features/the-vault-edit-door.md) |
+| Security | **The vault's edit door — the guards that exist now** (corrects the row above, 2026-11-20) | Set, replace, delete or read ONE key inside the age-encrypted vault: `KEY VALUE`, `--stdin KEY`, `--get`, `--list`, `--del`. The **sealed copy is the only source** — a plaintext sibling is never read while `.age` exists, and a sealed copy that will not decrypt is refused rather than replaced by it. Five guards: entries are read **whole** (a value may span lines — armoured block, quoted value), the vault is decrypted **again from disk** and counted so a write must leave exactly *before + 1* (new), *before* (replace) or *before − 1* (delete) and a refusal **names** the entries at risk, the re-encrypted file is decrypted again and every other entry compared byte for byte, the old file is kept as a timestamped backup, and the write is atomic at 0600 with every plaintext temp shredded | [docs/features/the-vault-edit-door.md](docs/features/the-vault-edit-door.md) |
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #853

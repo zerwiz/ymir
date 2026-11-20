@@ -2074,3 +2074,74 @@ The proofs are in `bin/agents/tests/test_eir_true_mends.sh`: a throwaway reposit
 worktree and the wards' own words appear; a copied hook does the same; `s_gates` accepts and refuses
 the three install shapes; a fake unit under a temp apps home stays the app's own through `check` and
 `write --dry-run`; and the agentroad mend is watched through stub doors.
+
+## 2026-11-20 — every road that makes a worktree records it, and one reaper removes it (plan 339.4)
+
+Appended; the sections above stand. A worktree is no longer made and forgotten. Each road that
+creates one calls `bin/forge/worktree-reap.py record` straight after `git worktree add`, with the
+errand id, the road and the owner. The record is best effort and never refuses a seat.
+
+| Road | Records as | Owner |
+|---|---|---|
+| `bin/agents/einherjar-spawn.sh` | `einherjar-spawn` | `$YMIR_WORKTREE_OWNER` |
+| `bin/agents/eindri-start.sh` (through `project-target.sh`, `herdr-run.sh` or the engine) | `eindri-start` | the errand's role |
+| `bin/seat/herdr-run.sh` called directly | `herdr-run` | `--role` |
+| `bin/forge/gather.sh` (through `yggdrasil.sh create`) | `gather` | `helm` |
+| `src/ymir_runtime/seat.py` (the engine) | `engine`, unless the caller named a road | the errand's role |
+
+`bin/seat/seat-reap.sh --sweep` runs `worktree-reap.py sweep --quiet --apply` after the seats
+close; `--list` runs the dry run. A tree goes when its errand's last status line is `done:` and
+its HEAD is merged, parked (`refs/parked/<errand>`) or pushed, or `failed:` seven days ago.
+Branches are never deleted, a dirty tree is named and kept, and exterior folders are walked from
+`$YMIR_HOME/config/worktree-roots.yaml`. `gather.sh` now writes `done:` to `state/<batch>.status`
+once its PR is open, so the integration worktree is reaped too. The proof is
+`tests/test_worktree_reap.py`; the how-to is `docs/features/worktree-reaper.md`.
+
+## 2026-11-20 — the stall test: the arm watches, Rödd speaks
+
+Appended; the sections above stand, and this one answers a question they did not ask. `bin/agents/eindri-liveness.sh`
+asks *is an AGENT still standing in the pane?* — the right question for the fault it was built for. Two errands on
+2026-11-20 showed that a pane can be **alive and frozen at once**: `gimle-catch-up` sat 8 h 45 m on one `ssh` command
+(a background process held the session's stdin and stdout) and `retired-paths` 1 h 50 m on `bash test_dispatch.py`
+(a python file run by bash, waiting on input). Both panes held a live agent, so both were judged ALIVE, nothing woke
+the helm, and the operator heard nothing.
+
+**The doors, and who owns what.**
+
+| Door | Owns | Runs |
+|---|---|---|
+| `bin/agents/eindri-stall.sh` | the stall judgement and the three acts, once per stall | on demand, and by the Nornir row |
+| `bin/time/nornir-job-eindri-stall.sh` | the ten-minute clock; silent on a moving fleet | Nornir `@every:10`, ungated — each machine watches the errands it spawned |
+| `bin/agents/cmd-limit-lib.sh` | the ONE command-limit number: 1800 s by default, 7200 s declared, never unlimited | sourced by the brief, the stall test and the pi launcher |
+| `bin/agents/eindri-send.sh` | the steer: one attributed line into the worker | called by the stall test on first detection |
+| `bin/notify/send.sh` | Rödd's voice: ONE Telegram line with look/stop/let-it-run buttons | called ten minutes after the wake, if nothing moved |
+
+**The judgement.** For each errand whose last status line says `working`, read the pane by the id in
+`state/<id>.meta` and hash its last lines after normalizing the harness's own decoration — spinner glyphs, ticking
+durations and clock faces are removed, because a redrawing spinner is not progress. The footer's token counter
+(`↑438k ↓68k`) is a second witness: a turn that advances is movement even when the last screenful stands still. The
+per-errand record lives at `<home>/state/eindri-stall/<id>.state` (`last_hash`, `last_tokens`, `changed_at`,
+`stall_start`, `woke_at`, `escalated_at`). **Stuck** = no change for 20 minutes, or one `Elapsed` past
+`cmd_limit_minutes`. The record's `stall_start` is the key: one wake, one steer, one operator message per stall, and
+a pane that moves again clears it so the next stall can speak.
+
+**The three acts, in order:** a durable wake through `eindri_queue_wake` carrying the errand, the pane and the last
+15 lines; one line into the worker through the send door (*"STALL CHECK from the arm: …"*); and ten minutes later,
+if still unmoved, one message through the notify door with three buttons. `check` judges and writes nothing;
+`reset <id>` is the operator's "let it run".
+
+**What it will not do:** judge a closed claim, act on a pane it cannot read (that is `UNKNOWN`, printed with its
+reason — RULES/25), or speak twice about one stall. A clean fleet is silent, which is the whole discipline: a row
+that speaks on a healthy fleet is a nag, and a nag is muted.
+
+**The time limit, and where it can be held.** The brief every worker is handed carries rules 7 and 8
+(`bin/agents/erindi-brief.sh`): 30 minutes by default, 2 hours declared with `timeout 7200 …`, and over `ssh` a
+background process detaches (`ssh host 'nohup cmd </dev/null >log 2>&1 &'`) or the session never returns. Claude Code's
+own limit is set in its worker profile (`.agents/harnesses/claude-worker.settings.json`:
+`BASH_DEFAULT_TIMEOUT_MS=1800000`, `BASH_MAX_TIMEOUT_MS=7200000`). pi and opencode have **no default-timeout key**, so
+inside those harnesses the limit cannot be imposed — the worker is given the rule, and this door judges the wall
+clock and steers it. That is said plainly because a limit that is claimed and not held is worse than none.
+
+Gates: `the-stall-test` (`bin/gates/checks.d/0392-the-stall-test.sh` → `bin/agents/tests/test_eindri_stall.sh`,
+28 assertions over fake panes and a simulated clock). Fix note:
+`docs/fixes/agents/2026-11-20-the-arm-watches-for-a-stall.md`. How-to: `docs/features/the-stall-test.md`.

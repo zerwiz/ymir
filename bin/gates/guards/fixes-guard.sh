@@ -207,6 +207,11 @@ path_component() {  # <path> -> the component it belongs to, or empty
     # register go with them: a seat's services are seat changes. (Restored 2026-11-18: PR 818 kept
     # main's copy of this file and dropped the row PR 814 added.)
     bin/seat/*|bin/voice/*|bin/engine/units.sh|bin/engine/units.py|config/units.yaml) echo runtime ;;
+    # The vault's own doors: the writer, the reader, the confidential session, the lock. Before
+    # this row `bin/vault/*` mapped to NO component, so a correct vault fix note covered nothing
+    # and the gate passed on a technicality — the same defect the forge, ward and skuld rows above
+    # fixed. (Found 2026-11-20 shipping the mend of the writer that lost 16 secrets.)
+    bin/vault/*) echo hoard ;;
     bin/notify/*) echo notify ;;
   esac
 }

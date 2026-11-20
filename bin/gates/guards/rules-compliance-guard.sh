@@ -34,6 +34,11 @@ if [ -z "$BASE" ]; then
   fi
 fi
 git rev-parse --verify -q "$BASE" >/dev/null || { printf 'rules-compliance: SKIP — base %s is unknown\n' "$BASE"; exit 0; }
+# THE FORK POINT, NOT THE TIP (plan 339.1). `origin/main..HEAD` on a branch behind main lists what
+# MAIN changed since the fork as well, reversed (a file main deleted reads as "added" here). The
+# range a push adds starts where the branch left the base.
+_mb=$(git merge-base "$BASE" "$HEAD" 2>/dev/null || true)
+[ -n "$_mb" ] && BASE=$_mb
 
 added=$(git diff --name-only --diff-filter=A "$BASE..$HEAD")
 added_all=$(git diff --name-only --diff-filter=AM "$BASE..$HEAD")   # R5 reads added AND changed files

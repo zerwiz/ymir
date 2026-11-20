@@ -173,6 +173,15 @@ def resolve(
                 "harness 'claude' has no free model — 'free' is for pi and opencode "
                 "(bin/model/free-models.sh); pass sonnet, opus or haiku, or no model"
             )
+        # A Claude id carried with its provider (`claude/claude-opus-5-5`, `anthropic/…`) is the
+        # same model: the allow-list names it that way, so the seat normalises it rather than
+        # refusing (2026-11-20). Only another harness's token is a refusal.
+        for prefix in ("claude/", "anthropic/"):
+            if model.startswith(prefix):
+                model = model[len(prefix):]
+                if explicit_model.startswith(prefix):
+                    explicit_model = model
+                break
         if "/" in model:
             if model == explicit_model:
                 raise ValueError(
@@ -324,9 +333,27 @@ def build_launch_command(
         # prompt (an unattended worker that stops at a prompt is a dead seat, measured
         # 2026-11-11, pane w4M:p1), and the Allfather's moves — a push to main, a merge,
         # a force-push, `git add -A`, a discard of unrecorded work — are denied.
+        # 2026-11-20: `dontAsk`, not `acceptEdits` — under acceptEdits a tool outside the allow
+        # list (any MCP tool) opened a permission dialog nobody answers. Under dontAsk it is denied
+        # and the worker carries on; the deny list and every hook still apply. The profile is
+        # widened by one allow per configured MCP server, written beside the brief.
         profile = claude_worker_profile(launch_cwd)
+        try:
+            from . import claude_seat  # type: ignore[import-not-found]
+
+            merged = Path(brief_ref).with_suffix(".claude-settings.json")
+            if merged.parent.is_dir():
+                import json as _json
+
+                merged.write_text(
+                    _json.dumps(claude_seat.settings(profile, launch_cwd or Path.cwd()), indent=2) + "\n",
+                    encoding="utf-8",
+                )
+                profile = merged
+        except (ImportError, OSError, ValueError):
+            pass
         return (
-            f"claude --permission-mode acceptEdits --settings {proc.shell_quote(str(profile))} "
+            f"claude --permission-mode dontAsk --settings {proc.shell_quote(str(profile))} "
             f'{model_flag}"$(cat {proc.shell_quote(brief_ref)})"'
         )
     raise ValueError(f"no launch shape for harness '{selection.name}'")

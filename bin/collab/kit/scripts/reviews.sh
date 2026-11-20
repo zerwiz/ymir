@@ -3,7 +3,7 @@
 #
 #   bash scripts/reviews.sh new --pr=19 --title="the guided journey"   # a review note to fill in
 #   bash scripts/reviews.sh list                                       # every review, newest first
-#   bash scripts/reviews.sh newest                                     # the one the baton must point at
+#   bash scripts/reviews.sh newest                                     # the one the handoff must point at
 set -u
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIR="$ROOT/docs/audit"

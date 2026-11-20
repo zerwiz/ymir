@@ -108,3 +108,12 @@ came back from **disk** rather than from memory. `--socket-io <dir>` points it a
   converse mode, the wall in words, and the bridge's unit. The buttons in the drawing app itself
   (Save to server, the sessions list, the assistant panel, the wider quick palette) arrive with
   the next app build, because that surface ships as a compiled bundle.
+
+## 2026-11-20 — the code on this page moved to zerwiz/gimle
+
+The paths above (`bin/gimle/…`, `systems/whiteboard/…`, `bin/gates/tests/test_gimle_mcp_board.sh`) are the
+record of where the code lived in Ymir. They left with their history for the Gimlé repository (plan 335,
+*the split*), and Ymir now reaches the board only through the board contract
+([the-board-contract.md](the-board-contract.md)). In Gimlé they are `desk/`, `bin/gimle-deploy.sh`,
+`systems/board/`, `apps/whiteboard/` and `desk/tests/test_mcp_board.sh`. Ymir keeps a copy of each file
+in the home's reference shelf (Rule 11).

@@ -167,13 +167,14 @@ build_refuse() {
 # Raise the running window. The desktop-placement rule may have opened it on its
 # own numbered desktop (desktop-place.sh), so a launch from elsewhere would
 # otherwise show nothing — the focus dispatch also switches to where it sits.
-# Omarchy configures Hyprland in Lua, so the dispatch is a Lua expression (the
-# classic `focuswindow class:...` form does not parse).
+# Omarchy configures Hyprland in Lua; an older Hyprland speaks the classic dialect. The one door
+# (bin/desktop/hypr.sh, plan 341.2) knows both, so this no longer hard-codes the Lua form — which did
+# nothing at all on a classic Hyprland. No window yet, or no Hyprland, is not a fault here.
 focus_window() {
   [ "${SESSRUMNIR_NO_FOCUS:-0}" = 1 ] && return 0
   [ "${YMIR_APP_FOLLOWING:-0}" = 1 ] && return 0   # ymir-app brings it to the user's desktop (2026-11-14)
   command -v hyprctl >/dev/null 2>&1 || return 0
-  hyprctl dispatch "hl.dsp.focus({window=\"class:^ymir-sessrumnir\$\"})" >/dev/null 2>&1 || true
+  bash "$SCRIPT_DIR/hypr.sh" focus '^ymir-sessrumnir$' --class --first >/dev/null 2>&1 || true
 }
 
 case "$ACTION" in

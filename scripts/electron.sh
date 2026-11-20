@@ -309,7 +309,8 @@ wait_for_service() {
 # cannot be focused, and focusing nothing is exactly the silence a click must not get.
 window_present() {
   command -v hyprctl >/dev/null 2>&1 || return 0   # no compositor to ask: assume yes
-  hyprctl clients 2>/dev/null | grep -qi "$1"
+  # through the one Hyprland door (plan 341.2): one window of this class, or several (--first), is present
+  bash "$ROOT/bin/desktop/hypr.sh" find "$1" --class --first >/dev/null 2>&1
 }
 
 start_one() {
@@ -338,10 +339,10 @@ start_one() {
       # ymir-app is bringing the window to the user's desktop (2026-11-14): no jump to where it sat.
       window_present "$cls" && state=raised
     elif command -v hyprctl >/dev/null 2>&1; then
-      # Omarchy configures Hyprland in Lua, so `hyprctl dispatch` evaluates the
-      # remainder as a Lua expression — the classic `focuswindow class:...`
-      # string form is a syntax error there. This is the working idiom.
-      hyprctl dispatch "hl.dsp.focus({window=\"class:^${cls}\$\"})" >/dev/null 2>&1 && state=raised
+      # Omarchy configures Hyprland in Lua and an older Hyprland speaks the classic dialect; the one door
+      # (bin/desktop/hypr.sh, plan 341.2) knows both, and it says `raised` only when focus truly landed —
+      # the Lua-only dispatch it replaces exited 0 on a refusal and reported a raise that never happened.
+      bash "$ROOT/bin/desktop/hypr.sh" focus "^${cls}\$" --class --first >/dev/null 2>&1 && state=raised
     fi
     # A process whose window is gone cannot be focused — reborn, not silent.
     if [ "$state" = already-up ] && ! window_present "$cls"; then

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# post-checkout — the kit has no check of its own here; it only hands over to the repository's own post-checkout hook,
+# so seating the kit never silences a hook the repository already had (RULES/24, hooks chain, never steal).
+set -u
+. "$(dirname "$0")/_common.sh"
+kit_enter post-checkout
+kit_chain post-checkout "$@"

@@ -29,7 +29,7 @@ bin[22]{file,does,kind,verdict,disposition,callers,lines}:
   "jev-doors.sh","jev-doors.sh — where the decision models answer, in one read.","tool","wired","keep",4,163
   "llama-ensure.sh","llama-ensure.sh — stand a CUDA llama.cpp engine for local models, or adopt the","tool","wired","keep",3,163
   "local-model-lock.sh","local-model-lock.sh — serialize LOCAL model inference on one machine.","tool","tested","keep",9,132
-  "model-allow.sh","model-allow.sh — may an Eindri run on this model?","tool","wired","keep",7,28
+  "model-allow.sh","model-allow.sh — may an Eindri run on this model?","tool","wired","keep",8,28
   "model-fetch.sh","model-fetch.sh — fetch a chosen model into the operator's models directory.","tool","wired","keep",1,124
   "model-fit.sh","model-fit.sh — choose the best local model for THE USER'S hardware, probed at","tool","wired","keep",2,155
   "model-hardware.sh","model-hardware.sh — profile THIS machine for local models and record the","tool","wired","keep",1,98

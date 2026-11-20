@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# post-merge — after a pull or a merge lands in this checkout: close the worktrees whose work just merged.
+#
+# Only merged, clean worktrees with nothing unpushed and no process inside are closed; anything else is left
+# for `bash scripts/worktree.sh gc`. It never fails the merge. Then the repository's own post-merge runs.
+set -u
+. "$(dirname "$0")/_common.sh"
+kit_enter post-merge
+if [ -f scripts/kit.py ] && [ "${KIT_NO_AUTOCLOSE:-0}" != 1 ]; then
+  python3 scripts/kit.py prune --class worktrees --merged-only --apply --quiet 2>/dev/null || true
+fi
+kit_chain post-merge "$@"

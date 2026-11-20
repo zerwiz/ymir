@@ -121,7 +121,12 @@ for d in "${XDG_CURRENT_DESKTOP:-}" "${DESKTOP_SESSION:-}" "${XDG_SESSION_DESKTO
   [ "$DESKTOP" != "unknown" ] && break
 done
 # A running compositor does not lie; an inherited variable can.
-have hyprctl && hyprctl version >/dev/null 2>&1 && DESKTOP="hyprland"
+# Hyprland is asked through the one door (plan 341.2): `dialect` answers none when no instance does.
+HYPR_DOOR="$(dirname "${BASH_SOURCE[0]}")/../desktop/hypr.sh"
+HYPR_DIALECT="none"
+have hyprctl && [ -r "$HYPR_DOOR" ] && HYPR_DIALECT="$(bash "$HYPR_DOOR" dialect 2>/dev/null | sed -n '2s/^  "\([a-z]*\)".*/\1/p')"
+[ -n "$HYPR_DIALECT" ] || HYPR_DIALECT="none"
+[ "$HYPR_DIALECT" != none ] && DESKTOP="hyprland"
 have swaymsg && DESKTOP="sway"
 have gnome-shell && [ "${XDG_CURRENT_DESKTOP:-}" != "" ] && DESKTOP="gnome"
 have plasmashell && DESKTOP="kde"
@@ -137,7 +142,11 @@ have kwin_wayland && COMPOSITOR="kwin_wayland"
 # placement: a script can pin a window to its own numbered workspace.
 PLACEMENT="no"
 case "$COMPOSITOR" in
-  hyprland) have hyprctl && PLACEMENT="yes" ;;   # hyprctl keyword windowrule/dispatch
+  # The rule file (ymir-desktops.lua / .conf, applied at map time) is the placement road; a runtime move goes
+  # through bin/desktop/hypr.sh, which speaks Lua (eval / hl.dsp) or classic as the instance answers.
+  # (Corrected 2026-11-20, plan 341.2: this line used to claim `hyprctl keyword windowrule/dispatch`, and on a
+  # Lua Hyprland `keyword` answers "can't work with non-legacy parsers".)
+  hyprland) have hyprctl && PLACEMENT="yes" ;;
   sway)     have swaymsg && PLACEMENT="yes" ;;   # swaymsg assign
   *)        PLACEMENT="no" ;;                    # GNOME/KDE: dynamic workspaces, no rule
 esac

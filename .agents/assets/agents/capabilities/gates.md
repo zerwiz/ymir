@@ -23,6 +23,7 @@
 | model-alias-check.sh | model-alias-check.sh — does every alias a body names resolve in the fl | tested+named | keep (a human or a cron row must run it) |
 | portability-ratchet.sh | portability-ratchet.sh — the GNU-only callers may go DOWN, never up. | tested | keep (a human or a cron row must run it) |
 | public-data-ward.test.sh | public-data-ward.test.sh — prove the RULES/04 ward BITES. | tested | keep (a human or a cron row must run it) |
+| push-road.test.sh | push-road.test.sh — prove the push road mends of plan 339.1, in a THRO | tested | keep (a human or a cron row must run it) |
 | readme-claims.sh | readme-claims.sh — the user-facing documents must not claim what the t | tested | keep (a human or a cron row must run it) |
 | syn-arm-pretool-check.sh | syn-arm-pretool-check.sh - PreToolUse seatbelt for watcher-arm bash comm | tested+named | keep (a human or a cron row must run it) |
 | syn-asset-pretool-check.sh | syn-asset-pretool-check.sh — PreToolUse seatbelt for governed paths. | tested+named | keep (a human or a cron row must run it) |
@@ -46,6 +47,7 @@
 | app-functional-guard.sh | app-functional-guard.sh — AN UPDATE THAT LEAVES AN APP UNRUNNABLE IS N | tested | keep (a human or a cron row must run it) |
 | areas-guard.sh | areas-guard (tree ward) — the canon and the copy that travels must not | tested+named | keep (a human or a cron row must run it) |
 | blocking-door-guard.sh | (no header line) | tested | keep (a human or a cron row must run it) |
+| board-engine-guard.sh | board-engine-guard.sh — a NEW file in Ymir may not carry one board eng | tested | keep (a human or a cron row must run it) |
 | branch-guard.sh | branch-guard.sh — Rule 08: no push may land on a protected branch. | tested+named | keep (a human or a cron row must run it) |
 | confidential-guard.sh | confidential-guard.sh — while a confidential session is live, nothing  | tested | keep (a human or a cron row must run it) |
 | constellation-grant-guard.sh | constellation-grant-guard.sh — the road's own ward. | tested+named | keep (a human or a cron row must run it) |
@@ -64,6 +66,7 @@
 | hoard-guard.sh | hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME). | tested+named | keep (a human or a cron row must run it) |
 | home-contract-guard.sh | home-contract-guard.sh — the contract that raises a user's home is che | tested | keep (a human or a cron row must run it) |
 | house-colour-guard.sh | (no header line) | tested | keep (a human or a cron row must run it) |
+| hypr-door-guard.sh | (no header line) | tested | keep (a human or a cron row must run it) |
 | identity-guard.sh | identity-guard.sh — a commit that leaves by push must not publish a pr | tested | keep (a human or a cron row must run it) |
 | inventory-guard.sh | inventory-guard.sh — a register that runs in no gate is a capability t | tested | keep (a human or a cron row must run it) |
 | language-guard.sh | language-guard.sh — two tongues: English for the work, Old Norse for t | tested+named | keep (a human or a cron row must run it) |
@@ -111,7 +114,9 @@
 | test_areas_and_injection.sh | test_areas_and_injection.sh — the smoke suite for plan 219 and the arm | tested | keep (a human or a cron row must run it) |
 | test_arm_client_helm.sh | test_arm_client_helm.sh — the arm client's two measured faults (2026-1 | tested+named | keep (a human or a cron row must run it) |
 | test_arm_talk.sh | bogus host refused with road named | tested | keep (a human or a cron row must run it) |
+| test_board_engine_guard.sh | board-engine-guard refuses a NEW file naming Plane's API, the old bin/gi | tested | keep (a human or a cron row must run it) |
 | test_broken.sh | add appends | tested | keep (a human or a cron row must run it) |
+| test_card_door.sh | test_card_door.sh — the card contract, the door, the three adapters, t | tested | keep (a human or a cron row must run it) |
 | test_ci_parity.sh | test_ci_parity.sh — a push run and a pull_request run on one sha print | tested | keep (a human or a cron row must run it) |
 | test_container_hides_the_hoard.sh | test_container_hides_the_hoard.sh — a container Ymir ships never holds | tested | keep (a human or a cron row must run it) |
 | test_desktop_main_guard.sh | desktop-main-guard names a launcher that points into a worktree AND name | tested | keep (a human or a cron row must run it) |
@@ -123,12 +128,12 @@
 | test_gate_directory.sh | test_gate_directory.sh — plan 295 fix S1: the gate list is a DIRECTORY | tested | keep (a human or a cron row must run it) |
 | test_gather_merge_guard.sh | test_gather_merge_guard.sh — plan 272 fault 9: a gathered batch that l | tested | keep (a human or a cron row must run it) |
 | test_gather_orders_by_base.sh | test_gather_orders_by_base.sh — plan 293 part 7: a packet names the br | tested | keep (a human or a cron row must run it) |
-| test_gimle_mcp_board.sh | test_gimle_mcp_board.sh — the Gimlé MCP's board face, proved by comma | tested | keep (a human or a cron row must run it) |
 | test_groa_steps.sh | test_groa_steps.sh — plan 272 fault 5: every Gróa step has a limit an | tested | keep (a human or a cron row must run it) |
 | test_guards_inherited.sh | test_guards_inherited.sh — a ward's finding is OURS only when it names | tested | keep (a human or a cron row must run it) |
 | test_handoff_packet.sh | test_handoff_packet.sh — proves the packet door reads the schema's pac | tested+named | keep (a human or a cron row must run it) |
 | test_hermes_seat.sh | test_hermes_seat.sh — the acceptance test for plan 177 H1/H2/H3: Herme | tested+named | keep (a human or a cron row must run it) |
 | test_home_sync_clock.sh | test_home_sync_clock.sh — the clock commits the records the house writ | tested | keep (a human or a cron row must run it) |
+| test_hypr_door_guard.sh | test_hypr_door_guard.sh — the ward that keeps every Hyprland act in di | tested | keep (a human or a cron row must run it) |
 | test_main_red.sh | test_main_red.sh — the alarm BITES, and it stays quiet where it must. | tested | keep (a human or a cron row must run it) |
 | test_maker_names.sh | test_maker_names.sh — RULES/53: the maker ward refuses a model, a make | tested | keep (a human or a cron row must run it) |
 | test_merge_method.sh | test_merge_method.sh — the merge flag follows the PR's kind (RULES/08, | tested | keep (a human or a cron row must run it) |

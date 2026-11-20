@@ -13,6 +13,21 @@ plans/tickets/
 
 `<PREFIX>` is the project's own plan prefix — the one its plans already use, or the line in `plans/.prefix`.
 
+## At a glance
+
+```mermaid
+flowchart LR
+  p["a validated plan"] --> t1["ticket 1"]
+  p --> t2["ticket 2"]
+  t1 --> pr["a pull request"]
+```
+
+| What | Means |
+|---|---|
+| plan | what and why; validated by the area owner |
+| ticket | one unit of work under one plan |
+| pull request | the delivery of one ticket |
+
 ## Naming
 
 `<PREFIX>-<plan>-T<nn>-<slug>.md`, for example `ACME-028-T03-composite-foreign-keys.md`: the plan number, a
