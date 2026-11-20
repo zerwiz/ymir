@@ -14,6 +14,8 @@
 #   5 · place_board groups by the project's own state names
 #   6 · create_card and update_card refuse while the server is read-only
 #   7 · with --allow-write they file and move a card, and an unknown state is refused by name
+#   7b · create_card passes the card door's guard (gimle plan 328.4): a bad card is refused field by field,
+#        a good one is filed and its board id is bound in the card ledger
 #
 # The board is a STUB that serves exactly the four endpoints the reader uses, in Plane's shapes;
 # nothing here touches a real board, and every fixture name is invented.
@@ -112,6 +114,8 @@ printf '{"tester":"someone@example.invalid","second":"nobody@example.invalid"}' 
 printf '{"meetings":[]}' >"$TMP/meetings.json"
 
 python3 "$TMP/fake-plane.py" >/dev/null 2>&1 & STUB_PID=$!
+# the card door's ledger and contract are fenced into the test's own directory — never the real home
+export CARDS_LEDGER="$TMP/cards.jsonl" CARDS_CONTRACT="$ROOT/config/cards.yaml.example" CARDS_NO_VAULT=1
 export GIMLE_PLANE_TOKEN_FILE="$TMP/plane-token" GIMLE_PEOPLE_FILE="$TMP/people.json" \
        GIMLE_PLANE_WORKSPACES=a-house GIMLE_PLANE_URL="http://127.0.0.1:$PORT_STUB"
 sleep 1
@@ -176,8 +180,16 @@ echo "$out" | grep -q "read-only on this server" \
 
 # 7 · with --allow-write it files, moves, and refuses an unknown state by name
 out=$(call $PORT_RW rw-token '{"name":"create_card","arguments":{"place":"Loomery","title":"Filed by the test"}}')
+echo "$out" | grep -q '"isError": true' && echo "$out" | grep -q '"field": "owner"' && echo "$out" | grep -q '"field": "acceptance"' \
+  && echo "$out" | grep -q '"field": "evidence"' \
+  && ok "a bad card is refused by name:        ok (owner, acceptance, evidence)" || bad "card guard: FAIL ($out)"
+grep -q '"door": "mcp"' "$TMP/cards.jsonl" && grep -q '"ok": false' "$TMP/cards.jsonl" \
+  && ok "the refusal is in the card ledger:    ok" || bad "card ledger refusal: FAIL"
+out=$(call $PORT_RW rw-token '{"name":"create_card","arguments":{"place":"Loomery","title":"Write the test fixture for the loom","owner":"tester","acceptance":["the fixture loads in the test"],"evidence":"test#7"}}')
 echo "$out" | grep -q '"created"' && ok "create_card files a ticket:           ok" \
   || bad "create_card: FAIL ($out)"
+grep -q '"verb": "bind"' "$TMP/cards.jsonl" && grep -q '"board": "plane"' "$TMP/cards.jsonl" \
+  && ok "its board id is bound in the ledger:  ok" || bad "card ledger bind: FAIL"
 out=$(call $PORT_RW rw-token '{"name":"update_card","arguments":{"place":"Loomery","card":"3","state":"Done"}}')
 echo "$out" | grep -q '"state": "Done"' && ok "update_card moves a ticket:           ok" \
   || bad "update_card: FAIL ($out)"
