@@ -35,3 +35,7 @@ is Markdown*.
 `python3 -m unittest tests/test_plan_sync.py` — 8 tests: whole cards with sub-items, a second run with zero writes, a
 status flip, a short card upgraded in place, a file naming its own project, the road refused by name, the after-hook
 saying what it did, and a board that cannot page refused. The live run on the operator's board is in the errand's report.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #851
