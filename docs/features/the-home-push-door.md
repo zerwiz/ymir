@@ -158,6 +158,32 @@ bin/vault/home-sync.sh ship "memory: today's log" hodd/memory/daily/2026-11-10.m
 was; merge by hand (append-only records keep both sides), then `ship` again. Append-only logs and the generated mirror
 merge on their own through the home's `.gitattributes` (seated by migration 0018 on install and update).
 
+## Appended 2026-11-20 — `setup` seats the drivers, and the mail spine is refused without them
+
+Git config does not travel with a clone, so two things the home depends on had to be seated by hand
+on every machine: the `ours` merge driver, and the **mail redaction filter** that keeps a password
+out of `hodd/memory/mail/messages.jsonl` on commit (plan 116 §18). Both are now seated by one verb,
+and the hourly `home-sync-clock.sh` runs it too, so a fresh clone is mended without a hand.
+
+```bash
+bin/vault/home-sync.sh setup                                      # seat merge.ours + filter.gna-redact
+bin/vault/home-sync.sh filter-check hodd/memory/mail/messages.jsonl  # does THIS seat redact? (exit 1 = no)
+```
+
+`ship` now **refuses** to stage a path that carries a filter this seat has not configured — a
+refusal, not a silent commit of raw mail:
+
+```
+home-sync: refusing to stage a path this seat cannot redact — raw mail would travel:
+  hodd/memory/mail/messages.jsonl — filter.gna-redact.clean is not configured
+help: run `home-sync.sh setup` (it seats filter.gna-redact from hodd/bin/mail-redact.py), then ship again
+```
+
+The check is read from git's own `check-attr`, so a newly filtered path is covered the day its
+`.gitattributes` line lands. `--dry-run` prints the same finding as a warning and still stages
+nothing. Proved in `bin/vault/tests/test_home_redaction_filter.sh`.
+
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-20** — `home-sync.sh setup` seats the mail redaction filter as well as the merge driver, `ship` refuses a filtered path it cannot redact, and `filter-check` answers the question directly. The how-to above is appended; the proof is `bin/vault/tests/test_home_redaction_filter.sh`.

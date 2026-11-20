@@ -27,7 +27,8 @@ It does four things before it calls the send a success:
 - `herdr` on this machine, and a live agent standing in the target pane.
 - For another machine: a road to it in the home's fleet registry (it carries the ssh user and the
   tailnet name) and your own ssh key seated there.
-- The target: a pane id on this machine (`<workspace>:<pane>`, one colon), or
+- The target: a pane id on this machine (`<workspace>:<pane>`, one colon), an **errand id** (its
+  seat is read from the errand's own record — `state/<id>.meta`, `seat_pane=`), or
   `<machine>:<pane id>` for another machine.
 
 ## The commands
@@ -40,6 +41,8 @@ It does four things before it calls the send a success:
 | `bin/agents/eindri-send.sh --from "<who>" <pane> "<text>"` | signs the line with your own name |
 | `bin/agents/eindri-send.sh --wait 40 <pane> "<text>"` | waits longer before judging the landing |
 | `bin/agents/eindri-send.sh --once <pane> "<text>"` | never resends |
+| `bin/agents/eindri-send.sh <errand-id> "<text>"` | finds the seat the errand recorded and hands the line there |
+| `bin/agents/eindri-send.sh --resolve <errand-id>\|<pane>` | which pane does this target mean? (no send, no stamp) |
 
 The answer is one row:
 
@@ -86,3 +89,4 @@ Fix notes: `docs/fixes/agents/2026-11-14-the-brief-looks-before-it-types.md`.
 ## CHANGE LOG
 
 - 2026-11-14 — written with the change it describes (plan 293 part 5).
+- 2026-11-20 — an errand id is a target: the door reads the seat from `state/<id>.meta` (`seat_pane=`, else `window=`) instead of asking herdr for a name it cannot know, and `--resolve` answers the question without a send. The fault and its proof: `docs/fixes/agents/2026-11-20-the-errand-doors-find-the-seat.md`.
