@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # _common.sh — sourced by every kit hook; not a hook itself.
 #
 # kit_enter <hook>   stop at once when the kit is already running this hook further up the chain (a repository
