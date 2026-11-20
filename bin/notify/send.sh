@@ -3,7 +3,7 @@
 #
 #   bin/notify/send.sh --source <errand|garmr|snotra|cron|people|trello|ward|engine> \
 #       --severity INFO|MEDIUM|HIGH|CRITICAL --message "one line" \
-#       [--key <stable-id>] [--record <id>] [--target <kind>:<value>] [--ask] [--dry-run] [--no-telegram] \
+#       [--key <stable-id>] [--record <id>] [--target <kind>:<value>] [--ask] [--dry-run] [--print-line] [--no-telegram] \
 #       [--button "<emoji> <label>|<prompt>" …] [--buttons "<CML payload>"]
 #
 # --button / --buttons are the CONTROLS a phone line carries (2026-11-17): a nudge that cannot be acted
@@ -45,7 +45,7 @@ ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 ymir_home_root HOME_R 2>/dev/null || true
 [ -n "${HOME_R:-}" ] || { printf 'error: the home is unresolved\n' >&2; exit 1; }
 
-SOURCE=""; SEVERITY="MEDIUM"; MESSAGE=""; KEY=""; RECORD=""; TARGET=""; ASK=0; DRY=0; NO_TG=0
+SOURCE=""; SEVERITY="MEDIUM"; MESSAGE=""; KEY=""; RECORD=""; TARGET=""; ASK=0; DRY=0; NO_TG=0; PRINT_LINE=0
 BUTTONS_CML=""; BUTTON_SPECS=()
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -59,6 +59,7 @@ while [ $# -gt 0 ]; do
     --buttons) BUTTONS_CML="${2:-}"; shift 2 ;;
     --ask) ASK=1; shift ;;
     --dry-run) DRY=1; shift ;;
+    --print-line) PRINT_LINE=1; shift ;;
     --no-telegram) NO_TG=1; shift ;;
     -h|--help) sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     --version|-v) printf '%s\n' "$VERSION"; exit 0 ;;
@@ -139,12 +140,33 @@ print(verdict)
 PY
 )"
 
-LINE="[${SOURCE}/${SEVERITY}] ${MESSAGE}"
+# ── WHICH MACHINE SAID IT (2026-11-20) ────────────────────────────────────────
+# The Allfather: *"Make alarm lines name the machine they came from — starting with the cron notifier and the
+# garmr and skirnir senders — so a dev machine's failure does not read as the heart's."* Measured the same day:
+# a dev machine's cron failures (a sweep the heart does not even schedule) arrived in the same chat as the
+# heart's, indistinguishable, and the operator read a burst from three machines as one machine failing.
+# The tag is the SENDER's machine, resolved once and carried on every line; a relay may name another with
+# YMIR_NOTIFY_HOST.
+HOST_TAG="${YMIR_NOTIFY_HOST:-$(hostname -s 2>/dev/null | tr 'A-Z' 'a-z')}"
+[ -n "$HOST_TAG" ] || HOST_TAG="an unnamed machine"
+LINE="[${HOST_TAG} · ${SOURCE}/${SEVERITY}] ${MESSAGE}"
+
+# A person, or a test, may ask what the line IS without delivering it: the same construction, printed once.
+if [ "$PRINT_LINE" = 1 ]; then printf '%s\n' "$LINE"; exit 0; fi
 SAID_RUNE=0; SAID_ARM=0; SAID_DESKTOP=0; SAID_PHONE=0; SAID_TG=0
 
 if [ "$DECISION" = "collapse" ] && [ "$SEVERITY" != "CRITICAL" ]; then
   MESSAGE="more than 8 ${SOURCE} events this hour — see the record"
-  LINE="[${SOURCE}/${SEVERITY}] ${MESSAGE}"
+  # ── WHICH MACHINE SAID IT (2026-11-20) ────────────────────────────────────────
+# The Allfather: *"Make alarm lines name the machine they came from — starting with the cron notifier and the
+# garmr and skirnir senders — so a dev machine's failure does not read as the heart's."* Measured the same day:
+# a dev machine's cron failures (a sweep the heart does not even schedule) arrived in the same chat as the
+# heart's, indistinguishable, and the operator read a burst from three machines as one machine failing.
+# The tag is the SENDER's machine, resolved once and carried on every line; a relay may name another with
+# YMIR_NOTIFY_HOST.
+HOST_TAG="${YMIR_NOTIFY_HOST:-$(hostname -s 2>/dev/null | tr 'A-Z' 'a-z')}"
+[ -n "$HOST_TAG" ] || HOST_TAG="an unnamed machine"
+LINE="[${HOST_TAG} · ${SOURCE}/${SEVERITY}] ${MESSAGE}"
   DECISION="send"
 fi
 
