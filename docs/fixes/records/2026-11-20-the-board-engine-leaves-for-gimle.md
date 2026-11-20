@@ -74,3 +74,7 @@ collab.sh publish <fixture> --project ymir --dry-run board "whynotproductions/Ym
   `unread` and says why.
 - Open PR #840 (a gather) edits `bin/gimle/mcp-read.py`, which this change removes. That card-door hunk
   belongs in Gimlé's `systems/mcp/plane_tools.py`, where the newer MCP lives.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #853
