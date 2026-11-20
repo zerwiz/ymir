@@ -152,8 +152,16 @@ build() {
     # the dependency closure — a release whose lock files match the running one borrows its modules as hard links
     for m in . apps/bilskirnir apps/rodd; do
       [ -f "$tmp/$m/package-lock.json" ] || continue
-      if [ -n "$prev" ] && [ -d "$prev/$m/node_modules" ] && cmp -s "$prev/$m/package-lock.json" "$tmp/$m/package-lock.json"; then
+      # A workspace keeps its own node_modules beside the root one whenever the lock nests a package there (two
+      # versions of one dependency, e.g. apps/hlidskjalf/node_modules/@xterm/xterm). Borrowing only the root folder
+      # dropped those, and the build failed with TS2307 on a dependency that WAS declared (2026-11-20). So the borrow
+      # carries every nested folder the lock names, and falls back to `npm ci` when the running release lacks one.
+      nested="$(sed -n 's/^    "\([^"]*\)\/node_modules\/.*": {$/\1/p' "$tmp/$m/package-lock.json" | grep -v '^node_modules' | sort -u)"
+      borrow=1
+      for w in $nested; do [ -d "$prev/$m/$w/node_modules" ] || borrow=0; done
+      if [ "$borrow" = 1 ] && [ -n "$prev" ] && [ -d "$prev/$m/node_modules" ] && cmp -s "$prev/$m/package-lock.json" "$tmp/$m/package-lock.json"; then
         cp -al "$prev/$m/node_modules" "$tmp/$m/node_modules" || exit 12
+        for w in $nested; do cp -al "$prev/$m/$w/node_modules" "$tmp/$m/$w/node_modules" || exit 12; done
       else
         ( cd "$tmp/$m" && npm ci --include=dev --no-audit --no-fund ) || exit 13
       fi
