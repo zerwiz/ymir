@@ -42,14 +42,27 @@ while IFS='|' read -r order title slug; do
   done
 done < "$CAT/_sections.md"
 
+# A HAND SECTION SURVIVES THE WEAVER (2026-11-20, RULES/06) — the same law bin/gates/inventory.sh
+# follows: the generated body is written, and a `## CHANGE LOG` below the sentinel is carried
+# through unchanged. One door owns the rule (bin/records/woven_tail.py), so a second weaver cannot
+# get it a second way.
+TAIL_DOOR="$ROOT/bin/records/woven_tail.py"
+composed="$tmp"
+if [ -f "$TAIL_DOOR" ] && [ -f "$OUT" ]; then
+  composed="$(mktemp)"
+  if ! python3 "$TAIL_DOOR" compose "$tmp" "$OUT" > "$composed" 2>/dev/null; then
+    cp "$tmp" "$composed"
+  fi
+fi
+
 if [ "${1:-}" = "--check" ]; then
   # plan 243 A: FEATURES.md is built, not versioned — when git does not track it, the check is
   # that the fragments weave (they just did), never a diff against a local copy.
   if ! git -C "$ROOT" ls-files --error-unmatch FEATURES.md >/dev/null 2>&1; then
     printf 'FEATURES.md is built, not versioned — the fragments weave (%s entries)\n' "$(ls "$CAT"/entries/*.md 2>/dev/null | wc -l)"; exit 0
   fi
-  if cmp -s "$tmp" "$OUT"; then printf 'FEATURES.md is current (%s entries)\n' "$(ls "$CAT"/entries/*.md 2>/dev/null | wc -l)"; exit 0; fi
+  if cmp -s "$composed" "$OUT"; then printf 'FEATURES.md is current (%s entries)\n' "$(ls "$CAT"/entries/*.md 2>/dev/null | wc -l)"; exit 0; fi
   printf 'FEATURES.md is STALE — run bin/records/weave-features.sh\n' >&2; exit 1
 fi
-cp "$tmp" "$OUT"
+cp "$composed" "$OUT"
 printf 'wove FEATURES.md from %s entries in %s sections\n' "$(ls "$CAT"/entries/*.md 2>/dev/null | wc -l)" "$(grep -c '^[0-9]' "$CAT/_sections.md")"

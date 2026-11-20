@@ -12,7 +12,7 @@ and report it truthfully*:
 2. **The model bridges** — Ymir's own files. They are why this index exists:
 
 backend[176]{file,does,kind,verdict,disposition,callers,lines}:
-  "README.md","`.agents/backend/` — the backend layer, file by file","data","tested","keep",64,-
+  "README.md","`.agents/backend/` — the backend layer, file by file","data","tested","keep",66,-
   "cmux.sh","bin/backends/cmux.sh - the cmux session-provider adapter (EXPERIMENTAL).","data","tested","keep",1,650
   "fm-afk-launch.sh","fm-afk-launch.sh - the single owner of the away-mode daemon TERMINAL lifecycle:","provenance","tested","keep",5,655
   "fm-afk-return.sh","fm-afk-return.sh - deterministic away-mode return catch-up gate.","provenance","tested","keep",3,242
@@ -190,3 +190,16 @@ backend[176]{file,does,kind,verdict,disposition,callers,lines}:
   "zellij.sh","bin/backends/zellij.sh - the zellij session-provider adapter (EXPERIMENTAL).","data","tested","keep",1,701
 
 **Tally.** verdict: tested=165, wired=11
+
+<!-- woven:hand · everything below is carried through unchanged by the weaver (RULES/06) -->
+
+## CHANGE LOG
+
+- 2026-11-18 — review-mend: added missing heading for #821
+- 2026-11-18 — review-mend: added missing heading for #825
+- 2026-11-19 — review-mend: added missing heading for #832
+- 2026-11-19 — review-mend: added missing heading for #833
+- 2026-11-19 — review-mend: added missing heading for #835
+- 2026-11-20 — the section is restored, and the weaver now carries it through unchanged
+  (`bin/records/woven_tail.py`, RULES/06). Every entry above was erased by the next commit that
+  wove this page — the history in `git log -- .agents/backend/README.md` is where they survived.
