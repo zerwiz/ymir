@@ -32,64 +32,33 @@ case "${1:-}" in
   -v|-V|--version) printf '1.0.0\n'; exit 0 ;;
   -h|--help) sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
   --install)
-    # `git rev-parse --git-path hooks` resolves the hooks dir for a clone AND for a worktree,
-    # where `$ROOT/.git` is a FILE — an installer that assumed a directory could seat no ward at
-    # all in the place all the work happens (found 2026-11-03, installing from a worktree).
-    hook="$(cd "$ROOT" && git rev-parse --git-path hooks 2>/dev/null || printf '%s/.git/hooks' "$ROOT")/pre-commit"
+    # ONE HOME FOR THE HOOK TEXT (2026-11-20). This used to GENERATE a pre-commit body here, and the
+    # shipped `.githooks/pre-commit` carried a different one: the generated copy wove the catalogue and
+    # ran public/docs/private/vault/confidential-guard plus no-delete-guard, while the shipped file ran
+    # the NDA gate, the secret scan and the retired-path gate. Two bodies meant the gate a commit met
+    # depended on `core.hooksPath`. Worse, once the install seats the hooks with `core.hooksPath
+    # .githooks`, `git rev-parse --git-path hooks` ANSWERS `.githooks` — so this heredoc would have
+    # overwritten a TRACKED hook in the working tree. The shipped file is the one pre-commit (it now
+    # carries the weaver and the staged wards too); this installer seats THAT file, and seats nothing
+    # when the shipped directory is already the hooks directory.
+    SRC="$ROOT/.githooks/pre-commit"
+    if [ ! -r "$SRC" ]; then
+      printf 'error: %s is missing\nhelp: the pre-commit hook has one home and it is that file\n' "$SRC" >&2
+      exit 1
+    fi
+    # `git rev-parse --git-path hooks` resolves the hooks dir for a clone AND for a worktree, where
+    # `$ROOT/.git` is a FILE — an installer that assumed a directory could seat no ward at all in the
+    # place all the work happens (found 2026-11-03, installing from a worktree), and it honours
+    # `core.hooksPath`, which is where a seat's hooks now live.
+    hook="$(cd "$ROOT" && git rev-parse --git-path hooks 2>/dev/null || printf '%s/.git/hooks' "$ROOT")"
     case "$hook" in /*) ;; *) hook="$ROOT/$hook" ;; esac   # git may answer absolute or relative
-    mkdir -p "$(dirname "$hook")" || exit 1
-    # ROOT IS RESOLVED AT RUN TIME. A hook written with this machine's absolute path dies the
-    # day that tree is reclaimed — and it takes every ward in it with the hook (the pre-push
-    # hook was taught this on 2026-10-20; the pre-commit one still baked a path until now).
-    cat >"$hook" <<'HOOK'
-#!/usr/bin/env bash
-# pre-commit — the weaver first, then the wards that judge a STAGED change.
-# Installed by bin/gates/guards/secret-guard.sh --install.
-set -u
-ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-
-# ── CONVENIENCE, NOT THE LAW (plan 175 §3) ────────────────────────────────────────────────────
-# Weave the documents this commit would otherwise leave stale, PRINT what was written, and stage
-# ONLY those files. A hook may write and stage a WOVEN file and nothing else: the list below is by
-# PATH, never by content, because a hook that rewrote hand-authored prose would be worse than the
-# collision it saves. The ward (bin/gates/guards/weave-guard.sh) is what REFUSES drift; CI keeps
-# the last word. A weave that fails does not block here — the ward says its piece at push and CI.
-WOVEN="FEATURES.md bin/README.md .agents/backend/README.md .agents/assets/agents/capabilities.md"
-# The register is a TREE (plan 211): its rows live in fragment files that are also generated,
-# so a secret pasted into a fragment must be caught exactly as one in the front door is.
-WOVEN_DIRS="bin .agents/assets/agents/capabilities"
-wov_hash() { git hash-object -- "$ROOT/$1" 2>/dev/null || printf 'absent'; }
-weave_woven_files() {
-  local f was now pre=""
-  [ -f "$ROOT/bin/records/weave.sh" ] || return 0
-  for f in $WOVEN; do pre="$pre$(printf '%s=%s\n' "$f" "$(wov_hash "$f")")"; done
-  bash "$ROOT/bin/records/weave.sh" >/dev/null 2>&1 || true
-  for f in $WOVEN; do
-    [ -f "$ROOT/$f" ] || continue
-    now="$(wov_hash "$f")"
-    was="$(printf '%s' "$pre" | awk -v k="$f" 'index($0, k "=") == 1 { print substr($0, length(k) + 2); exit }')"
-    [ "$now" = "$was" ] && continue
-    # A woven file that left git (plan 243: FEATURES.md, bin/README.md … are built, not tracked) is
-    # written and NOT staged — `git add` of an ignored path fails and used to abort every commit
-    # that touched the feature catalogue (found 2026-11-11, plan 250).
-    git -C "$ROOT" check-ignore -q -- "$f" && continue
-    git -C "$ROOT" add -- "$f" || exit 1
-    printf 'weave: wove and staged %s (a woven file — the only kind a hook may write)\n' "$f"
-  done
-  return 0
-}
-weave_woven_files
-
-G="$ROOT/bin/gates/guards"
-for w in public-guard docs-guard private-guard vault-guard confidential-guard; do
-  [ -x "$G/$w.sh" ] && { "$G/$w.sh" "$@" || exit 1; }
-done
-# Rule 11 — never delete, only move (RULES/11). A guarded deletion is logged, never silent.
-[ -x "$ROOT/bin/no-delete-guard.sh" ] && { "$ROOT/bin/no-delete-guard.sh" --staged || exit 1; }
-exec "$G/secret-guard.sh" "$@"
-HOOK
-    chmod +x "$hook"
-    printf 'secret-guard[1]{action,path}:\n  "install","%s"\n' "$hook"
+    if [ -d "$hook" ] && [ "$(cd "$hook" && pwd -P)" = "$(cd "$ROOT/.githooks" && pwd -P)" ]; then
+      printf 'secret-guard[1]{action,path}:\n  "install",".githooks/pre-commit (core.hooksPath names the shipped hook — nothing to copy)"\n'
+      exit 0
+    fi
+    mkdir -p "$hook" || exit 1
+    cp "$SRC" "$hook/pre-commit" && chmod +x "$hook/pre-commit" || exit 1
+    printf 'secret-guard[1]{action,path}:\n  "install","%s"\n' "${hook#"$ROOT"/}/pre-commit"
     exit 0 ;;
 esac
 

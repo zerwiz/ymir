@@ -336,7 +336,7 @@ agentroad_fault() {
   if [ -x "$relay" ] && command -v systemctl >/dev/null 2>&1; then
     if ! systemctl --user is-active --quiet ratatoskr-relay 2>/dev/null \
        && ! systemctl --user is-enabled --quiet ratatoskr-relay 2>/dev/null; then
-      printf 'the relay is not seated — bin/engine/units.sh write ratatoskr-relay'
+      printf 'the relay is not seated — bin/agents/eir-doctor.sh fix agentroad (writes AND enables it); by hand: bin/engine/units.sh write ratatoskr-relay && systemctl --user enable --now ratatoskr-relay'
       return 0
     fi
     # A unit that is enabled and FAILED is worse than one that is absent: it looks seated and
@@ -361,7 +361,21 @@ agentroad_fault() {
   fi
 }
 s_agentroad() { [ -z "$(agentroad_fault)" ]; }
-f_agentroad() { "$SCRIPT_DIR/../engine/units.sh" write ratatoskr-relay >/dev/null 2>&1 || true; s_agentroad; }
+# The mend that CLEARS ITS OWN ROW (2026-11-20). This used to run `units.sh write` alone, which only
+# WRITES the unit file: the row stayed red until someone enabled it by hand, so Eir reported a fault
+# it could not mend and the hint it printed named the wrong command. The 'safe' class covers seating
+# a house unit (config/surfaces.yaml: "re-seats the wake-and-return loop … never touches a live
+# session"), so the mend writes the unit, enables it and starts it, then asks the row again.
+f_agentroad() {
+  local u="$SCRIPT_DIR/../engine/units.sh"
+  [ -x "$u" ] || return 1
+  "$u" write ratatoskr-relay >/dev/null 2>&1 || true
+  if command -v systemctl >/dev/null 2>&1; then
+    systemctl --user enable --now ratatoskr-relay >/dev/null 2>&1 \
+      || systemctl --user start ratatoskr-relay >/dev/null 2>&1 || true
+  fi
+  s_agentroad
+}
 agentroad_detail() {
   local f; f="$(agentroad_fault)"
   if [ -n "$f" ]; then printf '%s' "$f"; else printf 'backend door answers · relay seated · no bridge name lies'; fi
@@ -780,6 +794,21 @@ s_runtimepin() {
   [ -x "$d" ] || return 0            # an older tree: judge the units only, as before
   "$d" --check --quiet >/dev/null 2>&1
 }
+# The row's reason, in one line: the units first, then the pin's own verdict. This used to print
+# "every unit and launcher is on the pin" while the row was RED, because since 2026-11-15 the row also
+# asks pin-refresh — a surface that says all is well beside a red row is the lie this whole mend is
+# about (measured 2026-11-20: the pin stood 28 commits behind main, and the detail said nothing).
+runtimepin_detail() {
+  local comps pin
+  comps="$("$SCRIPT_DIR/../engine/units.sh" check 2>&1 | grep -E 'OFF-PIN|UNREGISTERED|ABSENT' | head -2 | tr -d '"' | paste -sd';' -)"
+  [ -n "$comps" ] || comps="every unit and launcher is on the pin"
+  if [ -x "$SCRIPT_DIR/../engine/pin-refresh.sh" ] \
+     && ! "$SCRIPT_DIR/../engine/pin-refresh.sh" --check --quiet >/dev/null 2>&1; then
+    pin="$("$SCRIPT_DIR/../engine/pin-refresh.sh" --check 2>/dev/null | awk -F'","' '/"detail"/ { v=$2; gsub(/"$/,"",v); printf "%s", v; exit }')"
+    comps="$comps · ${pin:-the pin is not current — bin/engine/pin-refresh.sh}"
+  fi
+  printf '%s' "$comps"
+}
 f_runtimepin() {
   [ -x "$SCRIPT_DIR/../engine/runtime-seat.sh" ] || return 1
   "$SCRIPT_DIR/../engine/runtime-seat.sh" >/dev/null 2>&1
@@ -822,24 +851,52 @@ s_migrations(){ [ ! -x "$SCRIPT_DIR/../engine/ymir-migrate.sh" ] || "$SCRIPT_DIR
 # push from a Yggdrasil worktree was judged against the main tree, and a branch that
 # had regenerated its register was still refused (measured 2026-10-24). A mend that
 # is not re-seated is not a mend: this surface checks the artifact, not the script.
-_gates_hook() {  # <result-var> — the installed pre-push hook's path
+#
+# APPENDED 2026-11-20 (the same fault, found by looking at the artifact). The install copied
+# `.githooks/pre-push` into `<git-dir>/hooks`, where the hook's own `dirname $BASH_SOURCE/..`
+# answered `.git` — a directory with no `bin/gates/guards.sh` — so the seated hook skipped EVERY
+# ward while this row asked only whether its text carried a string the shipped hook had since
+# dropped: red for ever, and the gate itself ran nothing. The row now judges the INSTALL:
+# `core.hooksPath` (git's own answer, `git rev-parse --git-path hooks`) must seat a pre-push that
+# IS the shipped text, or a hook that still judges the pushing worktree, runs the wards and gates
+# the branch. A copy that has drifted from `.githooks/pre-push` is a stale gate, not a pass.
+_gates_hook() {  # <result-var> — the pre-push hook git actually consults
   local hooks
+  # `git rev-parse --git-path hooks` answers `core.hooksPath` when it is set (relative to the
+  # pushing worktree) and `<git-dir>/hooks` otherwise, so one call covers both install roads.
   hooks="$(cd "$ROOT" 2>/dev/null && git rev-parse --git-path hooks 2>/dev/null)" || return 1
   [ -n "$hooks" ] || return 1
   case "$hooks" in /*) ;; *) hooks="$ROOT/$hooks" ;; esac
   printf -v "${1:?}" '%s' "$hooks/pre-push"
 }
+_gates_shipped() { printf '%s' "$ROOT/.githooks/pre-push"; }
 s_gates() {
-  local h
+  local h shipped hp
+  shipped="$(_gates_shipped)"
+  [ -r "$shipped" ] || return 0        # a tree that ships no hook owes none
   _gates_hook h || return 1
   [ -x "$h" ] || return 1
+  # the shipped text IS the gate — seated by hooksPath, or copied where the config cannot be set
+  cmp -s "$h" "$shipped" && return 0
+  # another hooks dir on purpose (a shared or vendored one): then the hook must still do the work
+  hp="$(cd "$ROOT" 2>/dev/null && git config --get core.hooksPath 2>/dev/null)" || true
+  [ -n "$hp" ] || return 1
   grep -q 'git rev-parse --show-toplevel' "$h" 2>/dev/null || return 1
+  grep -q 'bin/gates/guards.sh' "$h" 2>/dev/null || return 1
   grep -q 'branch-current.sh' "$h" 2>/dev/null || return 1
 }
 f_gates() {
-  _gates_hook h >/dev/null 2>&1 || true
   bash "$SCRIPT_DIR/../gates/guards/fixes-guard.sh" --install >/dev/null 2>&1 || return 1
   s_gates
+}
+gates_detail() {
+  local h shipped
+  shipped="$(_gates_shipped)"
+  if ! _gates_hook h; then printf 'this checkout cannot name its hooks directory — git cannot answer here'; return 0; fi
+  if [ ! -x "$h" ]; then printf 'no pre-push hook is installed at %s — bin/gates/guards/fixes-guard.sh --install' "${h#"$ROOT"/}"; return 0; fi
+  if cmp -s "$h" "$shipped"; then printf 'the shipped pre-push hook is seated (%s) — the pushing worktree runs its own wards' "${h#"$ROOT"/}"; return 0; fi
+  if s_gates; then printf 'a pre-push hook in another hooks directory is seated (%s) and still runs the wards' "${h#"$ROOT"/}"; return 0; fi
+  printf 'the installed hook at %s has drifted from .githooks/pre-push — bin/gates/guards/fixes-guard.sh --install' "${h#"$ROOT"/}"
 }
 f_migrations(){ [ -x "$SCRIPT_DIR/../engine/ymir-migrate.sh" ] && "$SCRIPT_DIR/../engine/ymir-migrate.sh" apply >/dev/null 2>&1; }
 # Hoard: private data sits under the hoard, and .ymir-layout.yaml tells the truth.
@@ -1044,9 +1101,9 @@ detail() { # <name> -> the command that prints one short fact
     opencode)  printf '%s\n' "command -v opencode >/dev/null 2>&1 && $SCRIPT_DIR/../seat/opencode-launcher.sh check 2>&1 | sed -n '2p' | sed -E 's/^ *\"[a-z]+\",//; s/\"//g' || echo 'no opencode on this host'" ;;
     arm)       printf '%s\n' "$SCRIPT_DIR/../pi/syn-watch.sh status --detail 2>/dev/null | head -1 || echo 'arm door missing'" ;;
     armpin)    printf '%s\n' "$SCRIPT_DIR/../seat/armpin.sh --detail 2>/dev/null | head -1 || echo 'armpin door missing'" ;;
-    runtimepin) printf '%s\n' "$SCRIPT_DIR/../engine/units.sh check 2>&1 | grep -E 'OFF-PIN|UNREGISTERED|ABSENT' | head -2 | tr -d '\"' | paste -sd';' - | grep . || echo 'every unit and launcher is on the pin'" ;;
+    runtimepin) printf '%s\n' runtimepin_detail ;;
     roddhelm)  printf '%s\n' "$SCRIPT_DIR/../voice/rodd-helm.sh --check 2>&1 | head -1 || echo 'rodd-helm door missing'" ;;
-    gates)     printf '%s\n' "s_gates && echo 'pre-push hook: the worktree that pushes' || echo 'installed hook is stale — bin/gates/guards/fixes-guard.sh --install'" ;;
+    gates)     printf '%s\n' gates_detail ;;
     lock)      printf '%s\n' "cat $STATE/.lock 2>/dev/null | tr -d '[:space:]' | sed 's/^/pid /' || echo none" ;;
     migrations)printf '%s\n' "echo 'structure'" ;;
     shells)    printf '%s\n' 'shell_surfaces | while IFS= read -r s; do d=""; app_dir "$s" d 2>/dev/null || d=""; [ -n "$d" ] && printf "%s %s; " "$s" "$(electron_runtime_state "$d" "$ROOT" "$(app_pkg "$s")" 2>/dev/null)"; done' ;;

@@ -24,10 +24,10 @@ folder rewrites one file instead of colliding on every branch.
 bin[39]{file,does,kind,verdict,disposition,callers,lines}:
   "autoboot-lib.sh","autoboot-lib.sh — the boot policy: fleet roles → the Ymir programs they owe.","lib","wired","keep",3,263
   "hermes-ensure.sh","hermes-ensure.sh — ensure the Hermes agent runtime is present.","tool","wired","keep",3,89
-  "home-seed.sh","home-seed.sh — make a home that a fresh user can understand, and offer to keep it in git.","tool","tested","keep",10,243
+  "home-seed.sh","home-seed.sh — make a home that a fresh user can understand, and offer to keep it in git.","tool","tested","keep",10,270
   "launchd-ensure.sh","launchd-ensure.sh — seat the macOS service layer: `systemctl --user` answered by launchd.","tool","wired","keep",3,69
   "launchd-user.py","'''launchd-user.py — `systemctl --user` on a Mac: Ymir's systemd user units, run by launchd.","tool","wired","keep",7,649
-  "pin-refresh.sh","pin-refresh.sh — bring the PINNED runtime to main, from a tree that is NOT the pin.","tool","wired","keep",6,177
+  "pin-refresh.sh","pin-refresh.sh — bring the PINNED runtime to main, from a tree that is NOT the pin.","tool","wired","keep",7,177
   "prereq-ensure.sh","prereq-ensure.sh — self-healing prerequisite engine for Ymir.","tool","wired","keep",14,354
   "prove-install.sh","prove-install.sh — THE INSTALL CLAUSE, proven or NAMED as a gap.","tool","wired","keep",0,166
   "release-build.sh","release-build.sh — forge an IMMUTABLE release from one commit (plan 221, P0).","tool","wired","keep",5,332
@@ -35,10 +35,10 @@ bin[39]{file,does,kind,verdict,disposition,callers,lines}:
   "release-health.sh","release-health.sh — can THIS directory serve the apps?","tool","wired","keep",4,330
   "release-lib.sh","release-lib.sh — the ONE place that knows where a release lives and how a flip happens.","lib","wired","keep",5,290
   "release-services.sh","release-services.sh — which long-running services run from a RELEASE, and whether that release is the pin.","tool","wired","keep",1,169
-  "release.sh","release.sh — Ymir runs from a RELEASE: a complete, built, proved copy behind one link (plan 275 S9; plans 80 and 226).","tool","wired","keep",6,309
+  "release.sh","release.sh — Ymir runs from a RELEASE: a complete, built, proved copy behind one link (plan 275 S9; plans 80 and 226).","tool","wired","keep",6,318
   "runtime-deploy.sh","runtime-deploy.sh — move the PINNED runtime checkout to the merged tree, and prove what is running.","tool","wired","keep",11,182
   "runtime-seat.sh","runtime-seat.sh — SEAT the pinned runtime: the checkout every Ymir service and app runs from (plan 269).","tool","wired","keep",8,88
-  "test_heavy_slot.sh","test_heavy_slot.sh — plan 002 §6.1: the machine's heavy lock is real.","tool","wired","keep",1,138
+  "test_heavy_slot.sh","test_heavy_slot.sh — plan 002 §6.1: the machine's heavy lock is real.","tool","wired","keep",1,188
   "test_launchd_step_skips.sh","test_launchd_step_skips.sh — the macOS service step skips cleanly on Linux, and never silently (plan 293).","tool","wired","keep",1,112
   "test_launchd_user.py","'''test_launchd_user.py — the macOS service layer proved with no Mac in the room (plan 293).","tool","wired","keep",1,385
   "test_runtime_deploy_stable.sh","test_runtime_deploy_stable.sh — plan 275 S6 and S1 for bin/engine/runtime-deploy.sh, with no real unit touched:","tool","wired","keep",1,75
@@ -47,8 +47,8 @@ bin[39]{file,does,kind,verdict,disposition,callers,lines}:
   "test_units_drift.sh","test_units_drift.sh — plan 278, problem 17: an installed unit that still runs a value its source has","tool","wired","keep",1,66
   "test_update_loop_proof.sh","test_update_loop_proof.sh — plan 002 §6.2: a candidate is PROVEN ONCE, and the heart flips.","tool","wired","keep",1,133
   "unit-settle-lib.sh","unit-settle-lib.sh — every script that writes a unit hands it to the register afterwards (plan 272, fault 12).","lib","wired","keep",5,50
-  "units.py","'''units.py — the ONE writer of every Ymir systemd user unit and desktop launcher (plan 269).","tool","wired","keep",6,736
-  "units.sh","units.sh — the ONE writer of every Ymir systemd user unit and desktop launcher (plan 269).","tool","wired","keep",25,36
+  "units.py","'''units.py — the ONE writer of every Ymir systemd user unit and desktop launcher (plan 269).","tool","wired","keep",7,808
+  "units.sh","units.sh — the ONE writer of every Ymir systemd user unit and desktop launcher (plan 269).","tool","wired","keep",26,36
   "update-loop.sh","update-loop.sh — the heart keeps itself on latest main (plan 233 §10)","tool","wired","keep",2,425
   "version-stamp.sh","version-stamp.sh — a seat says exactly which build it runs (2026-09-22).","tool","wired","keep",0,25
   "ymir-autoboot.sh","ymir-autoboot.sh — the boot proof: what this seat's roles OWE, and whether","tool","wired","keep",4,165
@@ -56,7 +56,7 @@ bin[39]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-edit.sh","ymir-edit.sh — open a file in the Allfather's editor, on its own desktop.","tool","tested","keep",0,183
   "ymir-engine-ensure.sh","ymir-engine-ensure.sh — materialize the engine's private python home.","tool","tested","keep",2,74
   "ymir-engine.sh","ymir-engine.sh — the DOOR to the engine (`src/ymir_runtime/`).","tool","wired","keep",7,63
-  "ymir-install.sh","ymir-install.sh — THE FIRST SETUP.","tool","tested","keep",37,2024
+  "ymir-install.sh","ymir-install.sh — THE FIRST SETUP.","tool","tested","keep",38,2031
   "ymir-isolation.sh","ymir-isolation.sh — capability-probed confinement for a single agent command.","tool","wired","keep",0,89
   "ymir-migrate.sh","ymir-migrate.sh — versioned STRUCTURE migrations for existing Ymir homes.","tool","tested","keep",9,94
   "ymir-validate.sh","ymir-validate.sh — verify the installation actually works.","tool","wired","keep",4,332

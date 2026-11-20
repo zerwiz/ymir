@@ -1,10 +1,67 @@
 #!/usr/bin/env bash
-# pre-commit — the NDA gate over the staged diff (RULES/04, 2026-11-12). Company, client and NDA-project
-# names are private data; a commit that adds one is refused with the file and line. The names are read from
-# $YMIR_HOME at run time. The commit MESSAGE is judged by .githooks/commit-msg, because git gives pre-commit
-# no message to read.
-root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# pre-commit — the weaver, the staged wards, and the NDA/secret/retired-path gates, in one file.
+#
+# ONE HOME FOR THIS TEXT (2026-11-20). Until today this file carried only the NDA gate, the secret
+# scan and the retired-path gate, while `bin/gates/guards/secret-guard.sh --install` GENERATED a
+# different pre-commit into `<git-dir>/hooks` with the weaver and five staged wards. Two bodies,
+# two gates, and which one ran depended on `core.hooksPath` — the drift the pre-push hook was
+# cured of on 2026-11-11. When the install began seating the hooks with `core.hooksPath .githooks`
+# (so a Yggdrasil worktree runs ITS OWN hook), this file became the ONLY pre-commit, so it now
+# carries the generated body's steps as well: nothing a commit met before is lost.
+#
+# The root is RESOLVED, never assumed: this file is right whether git runs it from `.githooks`
+# (hooksPath) or from a copy in `<git-dir>/hooks`.
+root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+[ -n "$root" ] || root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 [ -r "$root/bin/gates/guards/nda-guard.py" ] || exit 0
+
+# ── 1. the weave — CONVENIENCE, NOT THE LAW (plan 175 §3) ─────────────────────────────────────
+# Weave the documents this commit would otherwise leave stale, PRINT what was written, and stage
+# ONLY those files. A hook may write and stage a WOVEN file and nothing else: the list below is by
+# PATH, never by content, because a hook that rewrote hand-authored prose would be worse than the
+# collision it saves. The ward (bin/gates/guards/weave-guard.sh) is what REFUSES drift; CI keeps
+# the last word. A weave that fails does not block here — the ward says its piece at push and CI.
+WOVEN="FEATURES.md bin/README.md .agents/backend/README.md .agents/assets/agents/capabilities.md"
+# The register is a TREE (plan 211): its rows live in fragment files that are also generated,
+# so a stale fragment is as bad as a stale front door.
+WOVEN_DIRS="bin .agents/assets/agents/capabilities"
+wov_hash() { git hash-object -- "$root/$1" 2>/dev/null || printf 'absent'; }
+weave_woven_files() {
+  local f was now pre=""
+  [ -f "$root/bin/records/weave.sh" ] || return 0
+  for f in $WOVEN; do pre="$pre$(printf '%s=%s\n' "$f" "$(wov_hash "$f")")"; done
+  bash "$root/bin/records/weave.sh" >/dev/null 2>&1 || true
+  for f in $WOVEN; do
+    [ -f "$root/$f" ] || continue
+    now="$(wov_hash "$f")"
+    was="$(printf '%s' "$pre" | awk -v k="$f" 'index($0, k "=") == 1 { print substr($0, length(k) + 2); exit }')"
+    [ "$now" = "$was" ] && continue
+    # A woven file that left git (plan 243: FEATURES.md, bin/README.md … are built, not tracked) is
+    # written and NOT staged — `git add` of an ignored path fails and used to abort every commit
+    # that touched the feature catalogue (found 2026-11-11, plan 250).
+    git -C "$root" check-ignore -q -- "$f" && continue
+    git -C "$root" add -- "$f" || exit 1
+    printf 'weave: wove and staged %s (a woven file — the only kind a hook may write)\n' "$f"
+  done
+  return 0
+}
+weave_woven_files
+
+# ── 2. the staged wards — one refusal each, named ─────────────────────────────────────────────
+G="$root/bin/gates/guards"
+for w in public-guard docs-guard private-guard vault-guard confidential-guard; do
+  [ -x "$G/$w.sh" ] && { "$G/$w.sh" "$@" || exit 1; }
+done
+# Rule 11 — never delete, only move (RULES/11). A guarded deletion is logged, never silent.
+[ -x "$root/bin/no-delete-guard.sh" ] && { "$root/bin/no-delete-guard.sh" --staged || exit 1; }
+
+# ── 3. the secret scan over the staged tree (patterns, then gitleaks) ─────────────────────────
+[ -x "$G/secret-guard.sh" ] && { "$G/secret-guard.sh" "$@" || exit 1; }
+
+# ── 4. the NDA gate over the staged diff (RULES/04, 2026-11-12) ───────────────────────────────
+# Company, client and NDA-project names are private data; a commit that adds one is refused with
+# the file and line. The names are read from $YMIR_HOME at run time. The commit MESSAGE is judged
+# by .githooks/commit-msg, because git gives pre-commit no message to read.
 python3 "$root/bin/gates/guards/nda-guard.py" staged || { echo "pre-commit: the NDA gate refused this commit — see the lines above." >&2; exit 1; }
 
 # …and the secret scan over the same staged diff (plan 287 §8). It judges the SHARED key shapes from
@@ -20,8 +77,9 @@ if [ -x "$root/bin/gates/secret-scan.sh" ] && command -v "${YMIR_GITLEAKS:-gitle
   }
 fi
 
-# …and the retired-path gate (plan 331.9): a NEW file may not name hodd/life/, hodd/state/ or hodd/workspaces/.
-# Existing files are carried by the one-cycle links; only the spread is refused.
+# ── 5. the retired-path gate (plan 331.9) ────────────────────────────────────────────────────
+# A NEW file may not name hodd/life/, hodd/state/ or hodd/workspaces/. Existing files are carried by
+# the one-cycle links; only the spread is refused.
 if [ -x "$root/bin/gates/guards/retired-path-guard.sh" ]; then
   "$root/bin/gates/guards/retired-path-guard.sh" --repo "$root" >/dev/null || {
     "$root/bin/gates/guards/retired-path-guard.sh" --repo "$root" >&2
@@ -29,3 +87,4 @@ if [ -x "$root/bin/gates/guards/retired-path-guard.sh" ]; then
     exit 1
   }
 fi
+exit 0

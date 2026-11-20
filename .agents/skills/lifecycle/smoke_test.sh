@@ -485,9 +485,12 @@ if [ -f "$HOME/.pi/agent/models.json" ] \
   ok models-registry "pi model registry parses"
 else bad models-registry "pi models.json missing or invalid"; fi
 
-# 28. the pre-push delivery gate is installed
+# 28. the pre-push delivery gate is installed — judged where git looks for it (`core.hooksPath`
+# is `.githooks` since 2026-11-20, so a fixed `.git/hooks` probe reports the gate missing on a
+# machine that has it)
 _hookdir="$(git -C "$ROOT" rev-parse --git-path hooks 2>/dev/null || true)"
-if [ -n "$_hookdir" ] && [ -x "$_hookdir/pre-push" ]; then ok gates "pre-push gate installed"
+case "$_hookdir" in "") ;; /*) ;; *) _hookdir="$ROOT/$_hookdir" ;; esac
+if [ -n "$_hookdir" ] && [ -x "$_hookdir/pre-push" ]; then ok gates "pre-push gate installed ($_hookdir)"
 else bad gates "pre-push hook missing — bin/gates/guards/fixes-guard.sh --install"; fi
 
 # ── governance (deep) ────────────────────────────────────────────────────────
