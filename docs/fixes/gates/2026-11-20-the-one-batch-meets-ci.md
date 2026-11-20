@@ -25,8 +25,9 @@ came from two good changes meeting in a single tree:
 
 - `mocks-scan.sh` treats the door filenames `todo.sh` and `todo_board.py` like `todo-board.yaml`. This is
   the same to-do exception, given at the Allfather's word ("merge all into one PR", 2026-11-20).
-- `push-road.test.sh` sets a fixture identity in its own clone, using a noreply address so the identity
-  ward accepts it.
+- `push-road.test.sh` exports a fixture identity for every repo it makes (its clone and the catch-up check's
+  scratch remote), using a noreply address so the identity ward accepts it. It passes with no git identity
+  at all (an empty `HOME`).
 - `test_private_scan_exit.sh` looks for the queue on the `state/` shelf.
 - `0513-surfaces-from-the-home.sh` runs the test directly, with no inner shell.
 - `capabilities.sh` writes the `## CHANGE LOG` section itself. The judge and the check now agree, and the

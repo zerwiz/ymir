@@ -29,8 +29,9 @@ printf 'push_road_test[10]{check,status,detail}:\n'
 
 git clone --quiet --shared "$ROOT" "$WORK/tree" 2>/dev/null || { bad clone "could not clone"; exit 1; }
 T="$WORK/tree"
-# a CI runner has no git identity; the probe commits as a fixture, never as the operator
-git -C "$T" config user.name probe; git -C "$T" config user.email probe@users.noreply.github.com
+# a CI runner has no git identity; every repo this test makes commits as a fixture, never as the operator
+export GIT_AUTHOR_NAME=probe GIT_COMMITTER_NAME=probe \
+       GIT_AUTHOR_EMAIL=probe@users.noreply.github.com GIT_COMMITTER_EMAIL=probe@users.noreply.github.com
 # the stamps live in the CLONE's git dir, never in the checkout under test
 export YMIR_GUARD_CACHE="$WORK/cache" YMIR_GUARD_NO_CACHE=1
 GATE_FILES=(.githooks/pre-push bin/gates/guards.sh bin/gates/guards/nda-guard.sh bin/gates/guards/public-guard.py
