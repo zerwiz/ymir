@@ -63,3 +63,7 @@ agents. also into hermes."*
 - **Not yet tested on a second machine from a release.**
 - **The keystroke path will move.** When the hypr door (plan 341.1) lands, `window-tell.sh`'s typing moves to
   `hypr.sh type`, so the house has one guarded keystroke path.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #840
