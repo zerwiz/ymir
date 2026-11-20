@@ -13,7 +13,7 @@ branch-commit-merge on another repository. Each of those is now a verb.
 
 | Door | What it does |
 |---|---|
-| `collab.sh who` | reads the register, measures `zerwizserver` over ssh (gate users and the authentication log, the Board's accounts and last sign-in, Documents' accounts, the forge's accounts and key counts, the shell), and prints one row per person |
+| `collab.sh who` | reads the register, measures `heart-a` over ssh (gate users and the authentication log, the Board's accounts and last sign-in, Documents' accounts, the forge's accounts and key counts, the shell), and prints one row per person |
 | `collab.sh ladder` | the register: the six rungs, who is on which, what each owes, which projects carry the shelf |
 | `collab.sh init <repo>` | installs the baton shelf into any repository — `handoff/README.md`, `TEMPLATE.md`, `CURRENT.md`, `log/`, `check.sh` + `check.py` — and prints the line that wires the check into that project's gate; never overwrites; checks the shelf a repository already has |
 | `collab.sh letter` | renders `letters/collaboration-files.md` and leaves it as a **draft** in the mail gate; there is no send path in it |
@@ -43,7 +43,7 @@ labelled `house+loopback`, a remote sign-in is absent, a missing email is named 
 only drafts, and `ship` refuses a path with nothing at it.
 
 Measured live on 2026-11-01: `who` reproduces the hand audit in ~2.5 s (6 gate accounts entered, 0 remote
-sign-ins, 0 second factors, 0 forge keys); `init --check` on `Inmost-ControlTower` finds its own
+sign-ins, 0 second factors, 0 forge keys); `init --check` on `Nordan-ControlTower` finds its own
 `mix ct.handoff` checker and passes.
 
 ## Correction 2026-11-14 — the machine and person names above are roles
@@ -58,3 +58,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

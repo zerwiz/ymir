@@ -30,7 +30,7 @@ through the spine's new `--pr` mode.
 
 ## Verified
 
-`review-watch.sh --dry-run` on nidavellir: `seen 1 · raised 0` for `zerwiz/ymir` #552 (head `fff945404d00`,
+`review-watch.sh --dry-run` on dev-a: `seen 1 · raised 0` for `zerwiz/ymir` #552 (head `fff945404d00`,
 `CONFLICTING`, `ci=none`). A real pass raised one ask (`ask-20261106T204921Z-5dcd`) into
 `state/.wake-queue`, and a second pass raised nothing. `bin/seat/tests/test_lock_ask.sh` — 9 ok / 0 fail.
 
@@ -48,3 +48,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

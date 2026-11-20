@@ -18,7 +18,7 @@
 
 - projection: **2 meetings**, 0 skipped, `places.json` created empty — *"projected 2 meeting(s) skipped 0
   (class 3) places.json created empty (fail-closed)"*.
-- publication: `published server:/home/zerwizserver/gimle/desk/data`.
+- publication: `published server:$HOME/gimle/desk/data`.
 - the desk with the real session/operator header renders **Due this week · Last decisions · Questions
   waiting on me · The places** and the four tiles **Board · Documents · Whiteboard · Meetings**.
 - a stranger (`Remote-User: someone`) sees **0** lines of the meeting content — fail-closed holds.
@@ -44,3 +44,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

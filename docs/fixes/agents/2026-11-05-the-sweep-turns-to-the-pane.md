@@ -41,7 +41,7 @@ report to deliver and never will.
 # (b) a deliberately killed pane is reported DEAD within one sweep, with its pane named
 $ kill -9 <the pi pid in wT:p1>            # the pane keeps its shell — the zombie shape
 $ herdr pane list --workspace wT
-wT:p1  zerwizomar@nidavellir:~/ymir/.yggdrasil/seal-proof-shell  unknown
+wT:p1  second-a@dev-a:~/ymir/.yggdrasil/seal-proof-shell  unknown
 $ bin/agents/eindri-handoff.sh sweep
   "seal-proof-shell","DEAD","wT:p1","the pane wT:p1 holds no agent — a shell, an exit or a crash where a worker should stand"
 $ tail -1 state/seal-proof-shell.status
@@ -70,3 +70,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

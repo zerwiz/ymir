@@ -32,11 +32,11 @@ seat · text carrying control sequences or over 4000 characters.
 
 ## Verified
 
-- `seat-wire.sh who heimdall` from nidavellir → `heimdall · Hœnir · w39:p5 · <session id>`.
+- `seat-wire.sh who review-a` from dev-a → `review-a · Hœnir · w39:p5 · <session id>`.
 - `seat-wire.sh say heimdall "…"` → `say[1]{to,pane,road,recorded}: "heimdall","w39:p5","pane","the-fleet"`, and the far
   seat reported the line arriving **intact with its attribution prefix**.
-- `seat-wire.sh seats` resolves both seats to their tailnet addresses (`ssh heimdall@<tailnet>`,
-  `ssh zerwizomar@<tailnet>`) with reachability `up`. The addresses themselves are resolved at call time and never
+- `seat-wire.sh seats` resolves both seats to their tailnet addresses (`ssh review-a@<tailnet>`,
+  `ssh second-a@<tailnet>`) with reachability `up`. The addresses themselves are resolved at call time and never
   written into this public repository (Rule 04 · Rule 39); see the redaction note appended below.
 
 ## Left open (plan 189)
@@ -100,3 +100,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

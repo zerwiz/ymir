@@ -6,9 +6,9 @@
 
 ### What now answers, that refused an hour ago
 ```
-"did we email Reygan?"            → Reygan Assareh — 2026-10-22: letter draft, 3 cards filed on the board;
+"did we email Berta?"            → Berta Lindqvist — 2026-10-22: letter draft, 3 cards filed on the board;
                                     2026-10-20: not recorded. (read from the meeting records, 2026-10-23.)
-"which meetings was Reygan in?"   → the same reader, per meeting
+"which meetings was Berta in?"   → the same reader, per meeting
 "are you free tomorrow?"          → "He is busy over the next day, per the calendar reader
                                     (calendar-ask.sh, read 2026-10-23 22:37; the window is the reader's own.)"
 "what did we decide about X?"     → the record items matching, with DEC/ACT/OQ ids and status
@@ -41,3 +41,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

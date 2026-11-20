@@ -29,7 +29,7 @@ strangler doors, what it does not own yet), the gateway (ports, the record MCP
 doors, the `.pi/mcp-adapter.json` bind, the `a2abridge` mesh), the report-shelf
 handoff (status line + `$STATE/eindri-reports/<id>.md`, the failsafe's scope, the
 fourth failure mode), role-gated crons (`@heart`/`@forge`, both orders, roles from
-`bin/fleet/topology.sh` / `fleet.json`), the topology (heart on zerwizserver, plan 51
+`bin/fleet/topology.sh` / `fleet.json`), the topology (heart on heart-a, plan 51
 Part 7), and four corrections to the stale draft (single tenant, SQLite/engram,
 plans in the hoard, the Rut port deferred).
 
@@ -72,3 +72,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

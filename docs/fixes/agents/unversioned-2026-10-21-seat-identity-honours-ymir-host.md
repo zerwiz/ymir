@@ -3,7 +3,7 @@
 ### Why
 `seat-identity.sh` defaulted its host to `hostname -s`, which is `localhost` on the
 phone, so Gróa reported "localhost has no seat identity" even with
-`YMIR_HOST=sleipnir` set. It now resolves `${YMIR_HOST:-$(hostname -s)}` like
+`YMIR_HOST=host-a` set. It now resolves `${YMIR_HOST:-$(hostname -s)}` like
 `topology.sh`, `role.sh`, and the room resolver already do, and `--install` compares
 against that same identity.
 
@@ -24,3 +24,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

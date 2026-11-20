@@ -3,7 +3,7 @@
 The private sweep found `systemd/nornir-job-plan-watch.service:5` carrying a literal checkout path:
 
 ```
-ExecStart=/bin/bash -lc 'cd /home/zerwizserver/ymir/.yggdrasil/plan-watch && …'
+ExecStart=/bin/bash -lc 'cd $HOME/ymir/.yggdrasil/plan-watch && …'
 ```
 
 That file was a **rendered** unit — one machine, one operator, one worktree — committed into a public
@@ -50,7 +50,7 @@ only prints the rendered template. Either way a rendered unit is never committed
 - `bin/engine/units.py`
 
 Found by `bin/time/nornir-job-private-scan.sh` (sweep 2026-11-14T03:51:38Z). The home's record of what
-moved is `hodd/docs/machines/zerwizserver/2026-11-14-the-machine-paths-left-the-public-repo.md`.
+moved is `hodd/docs/machines/heart-a/2026-11-14-the-machine-paths-left-the-public-repo.md`.
 
 ## CHANGE LOG
 
@@ -64,3 +64,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

@@ -38,7 +38,7 @@ journals and no vault keys reports three empty tables and exits 0 — a clean sk
 ## Measured, this seat
 
 ```
-harness    default · credential id=9218478309 (Ymir_Nidavellir_Bot) · label 9218478309      agree
+harness    default · credential id=9218478309 (Ymir_<seat>_Bot) · label 9218478309      agree
 journals   one journal carried 9204230623 → DISAGREES                                     moved aside
 consumers  TELEGRAM_BOT_TOKEN 8961261921 · SKIRNIR_TELEGRAM_BOT_TOKEN 9279551439 ·
            TELEGRAM_BOT_TOKEN_SKIRNIR 9279551439                                           all distinct
@@ -65,3 +65,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

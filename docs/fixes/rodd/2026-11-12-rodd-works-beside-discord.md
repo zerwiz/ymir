@@ -1,7 +1,7 @@
 # rodd · 2026-11-12 — Rödd answers, fast, beside Discord, with his mind, his to-do, his letters, the time and the fleet
 
 ## Files
-- `apps/rodd/start.sh`: the head is the mind he chose in Rödd's settings (never nidavellir's forced alias); the engine
+- `apps/rodd/start.sh`: the head is the mind he chose in Rödd's settings (never dev-a's forced alias); the engine
   line passes a forced head through `env` (an expansion cannot be an assignment prefix)
 - `bin/voice/voice-door.sh`: per-machine settings from `~/.config/ymir/voice.env` (`YMIR_VOICE_GPU=on`,
   `YMIR_VOICE_PIPELINES`); a head the host's rail does not serve is never sent; `which-host`, the one resolver
@@ -18,13 +18,13 @@
 - `bin/model/providers-catalog.sh`, `bin/fleet/fleet-status.sh`, `bin/fleet/arm-send.sh`, `bin/voice/echo-cancel.sh` (new)
 
 ## Why
-Plan 275, the 22:15 and later entries: Rödd never spoke (the engine asked heimdall's rail for nidavellir's alias and
+Plan 275, the 22:15 and later entries: Rödd never spoke (the engine asked review-a's rail for dev-a's alias and
 exited), then spoke in 28 s (the voice on a starved CPU), heard the speakers, did not know his to-do, his letter
 templates, the time or the fleet, and could reach only this machine's arm.
 
 ## Proof
 On heimdall, through the window and the engine's log: first word in 0.2–0.5 s on the A5000; "Good evening … the
-night's gone quiet" at 23:14; the fleet read aloud from five machines; the arm holders on heimdall and nidavellir named;
+night's gone quiet" at 23:14; the fleet read aloud from five machines; the arm holders on review-a and dev-a named;
 the to-do, letter, session and provider tools each run against a fenced copy of the home.
 
 ## Correction 2026-11-14 — the machine and person names above are roles
@@ -39,3 +39,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

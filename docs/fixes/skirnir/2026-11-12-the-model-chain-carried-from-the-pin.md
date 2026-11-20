@@ -4,7 +4,7 @@
 
 **In three sentences.** On 2026-11-09 Skírnir's model chain was written by hand on the pinned runtime
 (`~/ymir-runtime`), not on main, so Gróa could not move the pin without losing it. The Allfather's word
-that night was *"give him the mtp model here and the q2 qwen3.6 on nidavellir"*: one model is one point of
+that night was *"give him the mtp model here and the q2 qwen3.6 on dev-a"*: one model is one point of
 silence, so a second must answer when the first does not. This change ports that intent onto main as it
 stands today, so the pin's hand edit can be discarded when Gróa next moves it.
 
@@ -54,3 +54,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

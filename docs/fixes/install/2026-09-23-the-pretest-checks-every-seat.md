@@ -4,7 +4,7 @@
 The Allfather's decree: the exact tarball a publish would ship must **install and
 smoke on the seats** before the shelf sees it. The gate honoured the *local* seat
 and one remote — defaulting to `heimdall`, which was the seat the pack ran on, so
-the leg had no road (`ssh heimdall` from heimdall: no `known_hosts`, no alias).
+the leg had no road (`ssh review-a` from review-a: no `known_hosts`, no alias).
 A one-host default also checked only wherever the pack happened to run, never the
 fleet.
 
@@ -41,3 +41,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

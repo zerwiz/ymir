@@ -51,14 +51,14 @@ dropped in favour of main's door. It is a choice for the Allfather, not settled 
 `bin/agents/eindri-start.sh "write OK to a file named OK.txt in your working directory and stop" --role ocproof
 --kind opencode --model opencode/deepseek-v4.1-flash-free` seated a worker in herdr (`herdr agent list` showed
 agent `opencode`, pane `w12:p2`, name `ocproof`). It wrote `OK.txt` containing `OK` and its report file, then
-stopped. Proved on nidavellir. Not yet proved on heimdall.
+stopped. Proved on dev-a. Not yet proved on review-a.
 
 ## CHANGE LOG
 
 - **2026-11-12** — note written (plan 262), then reduced after rebasing onto main's #679: the herdr door runs the
   launcher's line and proves the agent, an explicit `--kind` wins, the tmux fallback runs the launcher's line, exact
   models are checked with `opencode models`, and the parity test and Eir's `opencode` surface guard it. Not settled:
-  one-shot versus steerable workers, and the proof is nidavellir only.
+  one-shot versus steerable workers, and the proof is dev-a only.
 
 ## Correction 2026-11-14 — the machine and person names above are roles
 
@@ -68,3 +68,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

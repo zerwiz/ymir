@@ -23,7 +23,7 @@ want of a live session lock (the plan 29 law). Two read-path faults:
   (so "DOWN" says *why*: `no live session lock`, `never started this session`,
   …).
 - **`/api/cron/seats` (new)**: one read-only ssh round-trip per server seat —
-  whynot (host `whynot`) and zerwizserver (host `server`), from `~/.ssh/config`,
+  third-a (host `third-a`) and heart-a (host `server`), from `~/.ssh/config`,
   BatchMode + `ConnectTimeout=3` — returning reachable/running/pid/roles and how
   many of the schedule's jobs that seat's roles run. `YMIR_CRON_SERVER_SEATS`
   overrides the list. Read on demand, machine-local (plan 51 rule 1).
@@ -39,7 +39,7 @@ want of a live session lock (the plan 29 law). Two read-path faults:
 - Live on a test gate: `/api/cron` → `source: home`, 10 jobs, `roles: [dev]`,
   `runs-here: 4`, `why: never started this session` (fresh worktree, no loop).
 - `/api/cron/seats` → whynot `reachable: true, running: true, pid 34965,
-  roles [heart, forge], applies 10/10`; zerwizserver `running: false,
+  roles [heart, forge], applies 10/10`; heart-a `running: false,
   roles [dev], applies 4/10`.
 
 ## Files
@@ -59,3 +59,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

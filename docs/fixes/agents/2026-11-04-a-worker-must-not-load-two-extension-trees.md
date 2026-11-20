@@ -12,7 +12,7 @@ Error: Failed to load extension "~/ymir/.pi/extensions/constellation/index.ts":
 
 The cause is a **two-load-path** defect, the exact thing RULES/13 forbids. The seat's
 `~/.pi/agent/settings.json` names the **primary checkout's** extensions tree absolutely
-(`/home/zerwizomar/ymir/.pi/extensions`), and Pi separately discovers the project tree under the working
+(`$HOME/ymir/.pi/extensions`), and Pi separately discovers the project tree under the working
 directory. Run from `~/ymir` those are one canonical path and Pi dedupes them — which is why the primary
 never showed the fault. Run from `.yggdrasil/<id>` they are two different paths, so all 18 extensions
 registered twice and Pi refused every one of them. The dispatcher's success line was therefore a **false
@@ -29,7 +29,7 @@ opencode seats).
 
 ### Proven
 - The regenerated launch script, measured:
-  `exec pi --model 'opencode-go/deepseek-v4.1-flash' -ne -e '/home/zerwizomar/ymir/.yggdrasil/weaver-hook-and-ci/.pi/extensions/constellation/index.ts' -e … ` (46 `-e` entries, no conflict, no module error).
+  `exec pi --model 'opencode-go/deepseek-v4.1-flash' -ne -e '$HOME/ymir/.yggdrasil/weaver-hook-and-ci/.pi/extensions/constellation/index.ts' -e … ` (46 `-e` entries, no conflict, no module error).
 - A session opened in the worktree with `-ne` + the full `-e` set: **no extension errors**; with the old
   command, 43.
 - All four panes relaunched and each wrote a `working:` line — `weaver-hook-and-ci`, `catalogue-the-doors`
@@ -48,3 +48,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

@@ -6,7 +6,7 @@ chat should be answering on all. groups never. this are a rule."*
 Both true. Two rooms had been set `addressed_only: false` that morning (for a client's sake) and from then
 on he answered every message in them — measured: `19:33:58`, an unaddressed *"hi"* in a room, answered.
 The same evening he answered the wrong subject to the Allfather (*"What do you know about email?"* →
-*"Andre prefers project updates by email"*). An unprompted answer plus a wrong fact is a wrong fact said
+*"Evert prefers project updates by email"*). An unprompted answer plus a wrong fact is a wrong fact said
 in front of a client.
 
 ```
@@ -36,7 +36,7 @@ on this box).
 its first `sendChatAction`, and `adapter-test.sh` failed with *"typing — no sendChatAction"*. It now fires
 immediately, then every four seconds. That is exactly why the adapter suite is now part of `smoke.sh`.
 
-**Still owed, and named:** the one-word matcher that chose Andre. A law about the room stops the wrong
+**Still owed, and named:** the one-word matcher that chose Evert. A law about the room stops the wrong
 fact reaching a room; it does not stop the wrong fact. Plan 112, next.
 
 ## Correction 2026-11-14 — the machine and person names above are roles
@@ -51,3 +51,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

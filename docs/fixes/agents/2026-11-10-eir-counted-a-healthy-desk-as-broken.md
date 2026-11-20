@@ -33,7 +33,7 @@ which is the worst shape a healer's report can take: a fault that is not there, 
 ```
 $ bin/agents/eir-doctor.sh check
 eir[1]{action,root,broken}:
-  "check","/home/zerwizomar/ymir",0
+  "check","$HOME/ymir",0
 ```
 
 ## CHANGE LOG
@@ -48,3 +48,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

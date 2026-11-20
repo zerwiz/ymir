@@ -3,7 +3,7 @@
 ### Why
 - **A project entry can now name its machine.** `machine:` records the host
   where a checkout lives; `data/machines.md` holds the fleet (omarchy-1,
-  zerwiz, zerwizserver live on the tailnet). A repo is no longer assumed to be
+  zerwiz, heart-a live on the tailnet). A repo is no longer assumed to be
   on the box you happen to be standing on.
 - **A project entry can now say what it is for.** `about:` is one plain
   sentence per repo. `bin/agents/project-git.sh list --field about` prints the whole
@@ -31,3 +31,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

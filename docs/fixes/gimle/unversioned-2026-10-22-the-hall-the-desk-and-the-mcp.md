@@ -15,9 +15,9 @@
 The suite had a door and no desk, and no way for an agent to read the work. Plan 105 sets the shape: one
 door, a desk that answers "what is mine", and one MCP rather than three APIs.
 
-### Verified (on `zerwizserver`)
+### Verified (on `heart-a`)
 
-- desk live on `127.0.0.1:8487`; with `Remote-User: craig` it renders the title, all three sections and the tiles.
+- desk live on `127.0.0.1:8487`; with `Remote-User: Casper` it renders the title, all three sections and the tiles.
 - MCP live on `127.0.0.1:8489`; `tools/list` returns the eight tools; `initialize` answers protocol
   `2025-06-18`; `who_am_i` returns the subject and the places.
 - no token → **401**, and the refusal is written to `access.jsonl` as `anonymous · ? · refused`.
@@ -41,3 +41,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

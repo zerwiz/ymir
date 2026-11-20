@@ -45,7 +45,7 @@ fork's own `desktop/stop.sh`, which now carries the same selector.
 - The `--check` gate counts top-level `.ts`/`.js` files only, so a **directory** extension is
   not counted by it (the count stayed 16). Pi loads directories with an `index.ts`, so the
   extension works; the gate's blind spot is recorded here rather than papered over.
-- No certificate, no TLS, no deploy of the fork's services to `zerwizserver` — that is the
+- No certificate, no TLS, no deploy of the fork's services to `heart-a` — that is the
   fork's `feature-0003` and needs the operator's route and word.
 
 ### Files
@@ -69,3 +69,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

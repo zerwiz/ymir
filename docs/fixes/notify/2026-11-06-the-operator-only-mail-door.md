@@ -30,7 +30,7 @@ approval.
 
 ## Verified
 
-`mail.sh --status` on nidavellir and heimdall: `ready` (the grant mints a token); on the heart it answers
+`mail.sh --status` on dev-a and review-a: `ready` (the grant mints a token); on the heart it answers
 `no grant` — the vault cannot be opened there, which is the fault plan 206 §3 F1 names. `--dry-run` builds
 and validates the message without sending.
 
@@ -48,3 +48,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

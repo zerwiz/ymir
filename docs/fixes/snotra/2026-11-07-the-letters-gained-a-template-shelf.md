@@ -54,7 +54,7 @@ clean.
 
 ## CHANGE LOG
 
-- **2026-11-07** — written with the change (nidavellir): the shelf vendored, the doors' help updated, the Galdr asset
+- **2026-11-07** — written with the change (dev-a): the shelf vendored, the doors' help updated, the Galdr asset
   appended, and the two public-data findings mended before the push.
 
 ## Correction 2026-11-14 — the machine and person names above are roles
@@ -65,3 +65,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

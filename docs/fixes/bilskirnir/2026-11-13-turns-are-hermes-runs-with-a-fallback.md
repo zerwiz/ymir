@@ -1,6 +1,6 @@
 # Bilskirnir: every turn is a Hermes run, a lost turn recovers itself, and a failing model falls back
 
-**Status:** built and tested on heimdall and nidavellir, 2026-11-13 (plan 275, wave 1 of
+**Status:** built and tested on review-a and dev-a, 2026-11-13 (plan 275, wave 1 of
 `hodd/docs/research/2026-11-13-hermes-features-for-bilskirnir.md`), at the Allfather's word: *"Okay, continue."*
 
 ## What changed
@@ -17,7 +17,7 @@
 
 ## How it was proven
 
-| Test | heimdall | nidavellir |
+| Test | review-a | dev-a |
 |---|---|---|
 | A question, a question with a tool | "42"; "It's 19:37" with the terminal tool's row | see the plan |
 | Stop in the middle of a turn | the room says "Stopped."; Hermes reports the run `cancelled` | see the plan |
@@ -38,3 +38,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

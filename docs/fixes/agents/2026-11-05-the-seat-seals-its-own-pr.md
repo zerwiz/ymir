@@ -14,7 +14,7 @@ merges it, so the law had to change **first** (append-only, Rule 06) and the cha
 ### The fix
 
 1. **`RULES/08-delivery-gate.md`** gains a dated, appended section (§ above §08.5 is untouched): the seat's own
-   PR is sealed by the seat's agent — Sindri on nidavellir, Hœnir on heimdall — when SIX conditions hold:
+   PR is sealed by the seat's agent — Sindri on dev-a, Hœnir on review-a — when SIX conditions hold:
    the seat's own PR · CI green · no conflicts · the seat's only open PR · one Runes entry naming PR, head and
    merge commit · `state/.seal-hold` absent. Another hand's PR is never merged. **No merge on red or
    conflicted, under any flag.**
@@ -77,3 +77,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

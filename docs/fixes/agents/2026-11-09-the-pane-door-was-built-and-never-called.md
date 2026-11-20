@@ -45,7 +45,7 @@ existed, the wiring did not. And the wiring was never proved because no test ran
 ```
 $ bin/agents/eindri-notify.sh --status
 arm-holder[2]{lock_owner,alive,pane,via}:
-  "324636","yes","w2:p3","the arm holder named its pane (/home/zerwizserver/Documents/ymirhome/state/.arm.pane)"
+  "324636","yes","w2:p3","the arm holder named its pane ($HOME/Documents/ymirhome/state/.arm.pane)"
 
 $ bin/agents/eindri-notify.sh --from arm-voice-test -- "the pane door now resolves: this line is the proof"
 injected[1]{from,pane,owner}:
@@ -71,3 +71,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

@@ -26,7 +26,7 @@
 approved  r-5050758689714317056   sha fcd5507d…
 check     approved
 sent      <the operator> → <the operator's address>   (the operator's own address, on his word)
-status    Lars-<the operator>: sent · Reygan: draft · Craig: draft
+status    Lars-<the operator>: sent · Berta: draft · Casper: draft
 ```
 One letter left the house; the other two stayed drafts, which is the point of `--to`.
 
@@ -44,3 +44,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

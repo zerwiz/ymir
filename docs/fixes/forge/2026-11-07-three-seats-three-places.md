@@ -35,7 +35,7 @@ smith-seat[5]{figure,workspace,pane,model,state}:
 ```
 
 and the refusal before it, in herdr's own words: `agent_name_taken … candidates: pane_id=w4:p1
-workspace_id=w4 … cwd=/home/zerwizserver/review/ymir` — the reviewer's own pane.
+workspace_id=w4 … cwd=$HOME/review/ymir` — the reviewer's own pane.
 
 ### Not done
 
@@ -57,3 +57,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

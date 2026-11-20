@@ -71,7 +71,7 @@ make the pattern universal.
 
 ## CHANGE LOG
 
-- **2026-11-08** — written with the change (nidavellir): the scan extracted to a file, the excuses narrowed and
+- **2026-11-08** — written with the change (dev-a): the scan extracted to a file, the excuses narrowed and
   written down, four strings reworded, the probe added and wired into `ci-verify.sh`, and `galdr.md`'s missing
   mirror row restored.
 
@@ -83,3 +83,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

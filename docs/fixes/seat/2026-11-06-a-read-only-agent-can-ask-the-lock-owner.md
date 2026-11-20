@@ -34,7 +34,7 @@ whoever is waiting.
 `bin/seat/tests/test_lock_ask.sh` — **9 ok / 0 fail**: the ask lands in the owner's queue with an id; the
 owner answers and the asker reads it; a second answer is refused (exit 3); a process outside the owner's tree
 is refused (`setsid --fork`); closing marks it read; a dead owner, no lock, and a disagreeing lease are each
-refused with the reason. A live end-to-end pass on nidavellir wrote `ask-20261106T204447Z-0639`, the owner
+refused with the reason. A live end-to-end pass on dev-a wrote `ask-20261106T204447Z-0639`, the owner
 answered it, and `inbox forseti` showed the answer.
 
 ## CHANGE LOG
@@ -51,3 +51,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

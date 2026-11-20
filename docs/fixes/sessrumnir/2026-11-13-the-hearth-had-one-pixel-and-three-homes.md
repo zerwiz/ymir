@@ -49,7 +49,7 @@ the same dead twin in `src/app/`.
 
 The "after" numbers come from the checkout's own build, run from the checkout, probed at
 `127.0.0.1:9333` (`/json/list` → `Runtime.evaluate`), and captured with `Page.captureScreenshot`.
-nidavellir's own row is appended to plan 283 when it was measured.
+dev-a's own row is appended to plan 283 when it was measured.
 
 ## The launcher now refuses a stale build
 
@@ -119,3 +119,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

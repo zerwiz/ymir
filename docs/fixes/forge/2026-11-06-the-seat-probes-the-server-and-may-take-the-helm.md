@@ -23,7 +23,7 @@ Two faults, both found by running the loop where it is meant to live.
 
 ## Verified
 
-On `zerwizserver`: `herdr agent list` answers, `review-seat.sh status` reports the clone and no seat,
+On `heart-a`: `herdr agent list` answers, `review-seat.sh status` reports the clone and no seat,
 and `lock-ask ask` refused with `the lock names pid '547578', which is not a live process` — the exact
 sentence that sent this change.
 
@@ -39,3 +39,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

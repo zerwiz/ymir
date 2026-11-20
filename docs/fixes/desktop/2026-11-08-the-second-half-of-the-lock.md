@@ -10,7 +10,7 @@ the resolver (`--check` exits 1 inside a worktree), the ward refuses an installe
 and the Exec writer rewrites such a path and says so.
 
 Verified: `start.sh` run inside the worktree prints *"running from a WORKTREE — the app runtime is locked to
-main (/home/zerwizomar/ymir), re-executing there"* and raises the stack from main; the guard reports
+main ($HOME/ymir), re-executing there"* and raises the stack from main; the guard reports
 *"5 launcher(s), every one seated from a real tree"*.
 
 ## CHANGE LOG
@@ -25,3 +25,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

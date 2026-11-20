@@ -10,7 +10,7 @@ on `whiteboard-ai.zerwiz.org` — and that process was already listening. Measur
 
 ```
 LISTEN 127.0.0.1:8490  users:(("python3",pid=1928101,...))
-  1928101 /usr/bin/python3 /home/zerwizserver/gimle/desk/share-scene.py --port 8490 …
+  1928101 /usr/bin/python3 $HOME/gimle/desk/share-scene.py --port 8490 …
 ```
 
 `gna-desk` started at 06:03, answered `GET /health 200`, and was stopped at 06:04 — so the mail desk,
@@ -56,3 +56,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

@@ -8,7 +8,7 @@ Every project divides its work into areas — the database, multi-tenancy, ident
 money, the jobs. **Nothing recorded that the division had happened.** So an area nobody held looked
 exactly like an area that was finished: a decision about the tenant boundary was made by whoever
 happened to hold a frontend task, and no file anywhere said "multi-tenancy" was ever a question.
-Measured on day zero, in the first estate tried: Inmost's Example3 is Elixir/Ash (35 resources
+Measured on day zero, in the first estate tried: Nordan's Example3 is Elixir/Ash (35 resources
 declare `multitenancy strategy(:attribute) attribute(:org_id) global?(false)`, 13 Ash domains), while
 the hoard's own stack plan still said Supabase + Next.js. Nobody held "data-model", so nobody noticed
 that the plan and the client's code described two different systems.
@@ -47,7 +47,7 @@ this note exists before the push.
 
 ## What was verified, on a real repository
 
-Inmost's Example3, `~/CodeP/Inmost-ControlTower`, working tree at `chore/collab-kit`:
+Nordan's Example3, `~/CodeP/Nordan-ControlTower`, working tree at `chore/collab-kit`:
 
 ```
 bash scripts/areas.sh init                    → 18 declarations, every one honestly unheld
@@ -92,3 +92,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

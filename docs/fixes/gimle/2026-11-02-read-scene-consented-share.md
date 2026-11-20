@@ -18,7 +18,7 @@ Plan 157 step 1: Brokk cannot work with a user on their whiteboard unless he can
 collab server relays opaque encrypted bytes with the room key in the URL fragment. The share store is the
 one place the E2E boundary is crossed, and only by explicit consent.
 
-### Verified (on `zerwizserver`)
+### Verified (on `heart-a`)
 
 - `gimle-mcp.service` and `gimle-share.service` both live; a shared test scene returned its elements via
   `read_scene` with `isError: false`, and an unshared scene returned the consent-required refusal.
@@ -37,3 +37,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

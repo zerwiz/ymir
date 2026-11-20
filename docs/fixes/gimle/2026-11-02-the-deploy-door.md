@@ -4,7 +4,7 @@
 
 ## What was wrong
 
-The Gimlé suite on the heart was deployed by **copying files**. `/home/zerwizserver/gimle` was not a git
+The Gimlé suite on the heart was deployed by **copying files**. `$HOME/gimle` was not a git
 checkout, so the newest desk logic — the membership gate, the board section, a Plane reader — existed in one
 place with `.bak-` files for history. Two consequences, both real:
 
@@ -44,7 +44,7 @@ A copy has to be re-made correctly every time, by whoever remembers the list of 
 
 ```
 check before deploy:  deployed  1476cf57  1476cf57
-deploy:               deployed  1476cf57  /home/zerwizserver/gimle/src/ymir
+deploy:               deployed  1476cf57  $HOME/gimle/src/ymir
                       gimle-desk  :8487 http=200 unit=active
                       gimle-mcp   :8489 http=200 unit=active
                       gimle-share :8490 http=200 unit=active
@@ -77,3 +77,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

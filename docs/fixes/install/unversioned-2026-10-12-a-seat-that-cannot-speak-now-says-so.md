@@ -20,7 +20,7 @@ Two defects found while making it work, both by running it:
 
 ### Verified
 
-- This seat: `role=client` · `agent=Brokk` · `homeserver=http://zerwizserver…:8008` ·
+- This seat: `role=client` · `agent=Brokk` · `homeserver=http://heart-a…:8008` ·
   `reachable=up` · `token=yes` · `missing=nothing — this seat can speak` · exit **0**.
 - `bash -n` clean; the engine path (`status`) still reports shape/role/heart correctly.
 
@@ -40,3 +40,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

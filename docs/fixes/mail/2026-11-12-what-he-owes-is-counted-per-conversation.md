@@ -32,7 +32,7 @@ wrong mail, because it took whichever matching mail it read first, drafts includ
 ## Proof
 `python3 bin/mail/tests/test_gna.py` → `Ran 41 tests … OK`. `python3 bin/records/tests/test_comms.py` →
 `Ran 14 tests … OK`. `gna_import.py --self-test` → `9/9`. On his home, `comms.sh todo-matches` proposes the two true
-ticks (the board email cites the 20:42 mail to both Craig and Reygan), seven owed conversations, the one Gmail draft,
+ticks (the board email cites the 20:42 mail to both Casper and Berta), seven owed conversations, the one Gmail draft,
 and four questions he is waiting on.
 
 ## CHANGE LOG
@@ -46,3 +46,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

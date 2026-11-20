@@ -30,11 +30,11 @@ Run locally against a scratch data directory with one mirrored file and one plac
 ```
 Remote-User   document    missing file   traversal attempt
 zerwiz        200         404            403
-craig         200         404            404
+Casper         200         404            404
 nobody        403         403            403
 ```
 
-`craig` reads only the place he was granted; `nobody` reads nothing; the operator reads everything and still
+`Casper` reads only the place he was granted; `nobody` reads nothing; the operator reads everything and still
 gets a `404` for a file that is not there rather than the login page.
 
 ## Why it lives in the desk and not in Caddy
@@ -69,3 +69,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

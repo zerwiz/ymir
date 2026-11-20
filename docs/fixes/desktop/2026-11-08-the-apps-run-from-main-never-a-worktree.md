@@ -12,7 +12,7 @@ otherwise they might break if the user are swithing threes"* — and the same ho
 Five launcher entries pointed into a worktree:
 
 ```
-rodd               Exec=/home/zerwizomar/ymir/.yggdrasil/areas-of-a-project/apps/rodd/start.sh
+rodd               Exec=$HOME/ymir/.yggdrasil/areas-of-a-project/apps/rodd/start.sh
 ymir-sessrumnir    Exec=bash …/.yggdrasil/areas-of-a-project/bin/desktop/sessrumnir-launch.sh start
 ymir-hlidskjalf    Exec=bash …/.yggdrasil/areas-of-a-project/scripts/electron.sh start --view hlidskjalf
 ymir-odrerir       Exec=bash …/.yggdrasil/areas-of-a-project/scripts/electron.sh start --view odrerir
@@ -40,13 +40,13 @@ complains — `· desktop ok` or `· desktop RE-SEATED` in its one line.
 ## Verified
 
 ```
-bin/desktop/main-tree.sh /…/.yggdrasil/areas-of-a-project   → /home/zerwizomar/ymir
+bin/desktop/main-tree.sh /…/.yggdrasil/areas-of-a-project   → $HOME/ymir
 bin/desktop/main-tree.sh --check /…/.yggdrasil/areas-of-a-project → "this is a WORKTREE", exit 1
 bin/gates/guards/desktop-main-guard.sh                      → 5 launcher(s), every one seated from a real tree
 grep -l yggdrasil over the launcher shelf (the entries)   → nothing
 ```
 
-All five entries now read `/home/zerwizomar/ymir/…`, re-seated from the main tree with
+All five entries now read `$HOME/ymir/…`, re-seated from the main tree with
 `bin/host/omarchy-install.sh`.
 
 ## CHANGE LOG
@@ -62,3 +62,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

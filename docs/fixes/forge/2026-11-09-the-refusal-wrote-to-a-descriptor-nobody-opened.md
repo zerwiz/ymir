@@ -13,7 +13,7 @@ refusal — the honest "herdr is not installed", "the server does not answer", "
 died as a shell fault instead:
 
 ```
-/home/zerwizserver/ymir-runtime/bin/forge/review-seat.sh: line 60: 3: Bad file descriptor
+$HOME/ymir-runtime/bin/forge/review-seat.sh: line 60: 3: Bad file descriptor
 ```
 
 The exit status was still 3, so the *shape* of the refusal survived while its *reason* did not.
@@ -35,7 +35,7 @@ Old (the pinned runtime, herdr deliberately unreachable):
 
 ```
 $ PATH=/usr/bin:/bin ~/ymir-runtime/bin/forge/review-seat.sh ensure
-/home/zerwizserver/ymir-runtime/bin/forge/review-seat.sh: line 60: 3: Bad file descriptor
+$HOME/ymir-runtime/bin/forge/review-seat.sh: line 60: 3: Bad file descriptor
 exit=3
 ```
 
@@ -66,3 +66,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

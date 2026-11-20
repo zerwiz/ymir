@@ -18,7 +18,7 @@
   unknown role is refused; validate passes for known roles and **rejects** an
   unknown one; `rm` removes a row.
 - On this box: `heimdall → dev`, roster `heimdall dev · omarchy dev ·
-  whynot heart,forge · zerwizserver forge`.
+  third-a heart,forge · heart-a forge`.
 
 ### Files
 - `bin/skuld/role.sh`
@@ -36,3 +36,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

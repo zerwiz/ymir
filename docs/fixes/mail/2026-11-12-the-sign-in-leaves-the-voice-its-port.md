@@ -15,7 +15,7 @@ redirect_uri_mismatch` (the OAuth client is a Web client), and the port that wor
 Hlidskjalf, Bilskirnir and Skírnir, and the house watch's probe. Two of the three sign-in doors defaulted to 8765.
 
 ## Proof
-On nidavellir with Kokoro running: all three doors, pointed at 8765, refused with `port 8765 is held by kokoro
+On dev-a with Kokoro running: all three doors, pointed at 8765, refused with `port 8765 is held by kokoro
 (pid …)` and Kokoro stayed active; `connect.sh google --no-browser` sent `redirect_uri=http://127.0.0.1:8767/callback`.
 
 ## Owed by the operator
@@ -33,3 +33,5 @@ Whether the old lines are ever redacted is the Allfather's decision.
 ## CHANGE LOG
 
 - 2026-11-14 — review-mend: added missing heading for #758
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

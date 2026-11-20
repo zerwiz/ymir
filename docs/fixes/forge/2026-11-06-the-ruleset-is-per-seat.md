@@ -20,12 +20,12 @@ numbers, and neither is wrong.
 
 ```
 review-rules[7]{facts,value}:
-  "repo","/home/zerwizomar/ymir"
+  "repo","$HOME/ymir"
   "sources",8
   "frozen",2
   "forbidden",9
   "ruleset","d8cbdebadcfb2345"
-  "seat","nidavellir"
+  "seat","dev-a"
   "at","2026-11-06T09:32:50Z"
 note: the ruleset hash is PER SEAT and PER MOMENT (source 4 is the plan ledger, which grows) —
       a review record carries ruleset + seat + at, never the number alone
@@ -37,7 +37,7 @@ three together and a reader can tell "the same law" from "a different law".
 ## How it was proved
 
 Run on this seat after the change: sources 8, frozen 2, forbidden 9, ruleset `d8cbdebadcfb2345`,
-seat `nidavellir`, at `2026-11-06T09:32:50Z`, floor complete. The same command an hour earlier printed
+seat `dev-a`, at `2026-11-06T09:32:50Z`, floor complete. The same command an hour earlier printed
 `73b0883e04947683` and then `f7c802a0752d040d` — three different numbers for one unchanged law, which
 is the whole point: the number alone is not a fact about the law, it is a fact about the moment.
 
@@ -60,3 +60,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

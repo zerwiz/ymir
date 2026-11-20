@@ -12,7 +12,7 @@ printed:
 ```
 seats[2]{seat,primary,reachable,door}:
   "heimdall","Hœnir","unreachable","ssh <user>@<tailnet address>"
-  "nidavellir","Hávi","up","ssh <user>@<tailnet address>"
+  "dev-a","Hávi","up","ssh <user>@<tailnet address>"
 ```
 
 The seat that owns the table reported itself **unreachable**. Read cold it says the fleet
@@ -23,7 +23,7 @@ for a fault that does not exist.
 ## What was actually true
 
 - `ssh <user>@<tailnet address> 'echo hello'` → `Permission denied (publickey)`.
-- from **nidavellir**: `ssh <user>@<tailnet address> 'echo BACK-OK'` → `BACK-OK`, and the same
+- from **dev-a**: `ssh <user>@<tailnet address> 'echo BACK-OK'` → `BACK-OK`, and the same
   by the tailnet name `<seat>.<tailnet>.ts.net`.
 - `~/.ssh/authorized_keys` on this box carries the other seats' keys, the GitHub signing
   keys and a phone key — **not this host's own
@@ -44,7 +44,7 @@ not need a key to talk to itself, and a seat is never unreachable from inside it
 ```
 seats[2]{seat,primary,reachable,door}:
   "heimdall","Hœnir","up (self)","local — this machine"
-  "nidavellir","Hávi","up","ssh <user>@<tailnet address>"
+  "dev-a","Hávi","up","ssh <user>@<tailnet address>"
 ```
 
 ## The proof that the road is real, not merely reported
@@ -52,12 +52,12 @@ seats[2]{seat,primary,reachable,door}:
 Two attributed lines crossed the arm-to-arm wire the same hour, and both survive in the
 queues:
 
-- **heimdall → nidavellir**, `bin/seat/seat-wire.sh nudge nidavellir "…"` → landed on
+- **review-a → dev-a**, `bin/seat/seat-wire.sh nudge dev-a "…"` → landed on
   `<home>/state/.wake-queue`, resolved from
-  `<home>/state/.arm.lease`; nidavellir's helm is
+  `<home>/state/.arm.lease`; dev-a's helm is
   `pid=1182 starttime=1205 gen=29 mode=systemd session=5425`, held.
-- **nidavellir → heimdall**, the same verb run on that seat by hand →
-  `from=nidavellir to=heimdall at=2026-11-11T22:04:33Z` in this box's
+- **dev-a → review-a**, the same verb run on that seat by hand →
+  `from=dev-a to=review-a at=2026-11-11T22:04:33Z` in this box's
   `<peer home>/state/.wake-queue`.
 
 A one-way channel that reports "sent" is the false green this house has paid for before
@@ -88,3 +88,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.

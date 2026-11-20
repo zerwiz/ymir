@@ -60,13 +60,13 @@ store and never write it: one writer.
 ```
 after[3]{command,answer}:
   "bin/records/meetings.sh totals","3 meetings · 2 transcripts · 2 with_minutes · 2 promises · 5 decisions"
-  "bin/records/snotra-ladder.sh run 20261022-1713-20261022-1236-craig-martin","1m30s · minutes.md (28 lines) · 5 decisions · 2 promises · 2 filed as todos"
+  "bin/records/snotra-ladder.sh run 20261022-1713-20261022-1236-Casper-lindqvist","1m30s · minutes.md (28 lines) · 5 decisions · 2 promises · 2 filed as todos"
   "bash tests/test_snotra_ladder.sh","24 passed, 0 failed"
 ```
 
-The Craig Martin meeting's minutes name decisions that exist in its transcript (the SOW, the
+The Casper Lindqvist meeting's minutes name decisions that exist in its transcript (the SOW, the
 payment path, the delivery-window choice) and its two promises are two rows on the board, each
-carrying the meeting id. The Andre Matejic fragment honestly reports `none in the transcript` —
+carrying the meeting id. The Evert Matejic fragment honestly reports `none in the transcript` —
 the model did not invent a decision to fill the page.
 
 ## What this does not do
@@ -93,3 +93,5 @@ it was written and this correction is added, not a rewrite — that is why no na
 Whether the old lines are ever redacted is the Allfather's decision.
 
 - **2026-11-14** — dated correction appended: the names above are read as roles (plan 288 step 8).
+
+- **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.
