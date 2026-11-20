@@ -273,7 +273,9 @@ case "${1:-}" in
       printf '\n**Opened %s.**\n' "$(date +%F)"
     } > "$f"
     printf '| %s | [%s](%s) | open |\n' "$n" "$title" "$(basename "$f")" >> "$LEDGER/README.md"
-    printf 'created %s\n  shelf: %s (%s)\n' "$f" "$LEDGER" "$SCOPE" ;;
+    printf 'created %s\n  shelf: %s (%s)\n' "$f" "$LEDGER" "$SCOPE"
+    # the plan's card follows it onto the board, on any seat with a road; a seat without one says so (plan 335)
+    bash "$ROOT/bin/boards/plan-card-after.sh" "$f" 2>/dev/null || true ;;
   shelves)
     # Every realm and every project folder in this home, and whether each has a plans shelf.
     # Read from the folders, so it holds for any user's home and any number of projects.
