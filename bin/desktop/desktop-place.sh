@@ -186,7 +186,7 @@ DRY=0
 
 # An occupied desktop holds at least one window. Everything else in 1..N is free.
 occupied_desktops() {
-  hyprctl workspaces -j 2>/dev/null | python3 -c '
+  bash "$SCRIPT_DIR/hypr.sh" workspaces --json 2>/dev/null | python3 -c '
 import json,sys
 try:
     d = json.load(sys.stdin)
@@ -268,7 +268,14 @@ include_rule_file() {
 reload_hypr() {
   [ "$DRY" = 1 ] && return 0
   have hyprctl || return 0
-  hyprctl reload >/dev/null 2>&1 || true
+  # plan 341.3: the reload is judged. A broken generated file (ymir-launchers.lua, ymir-desktops.lua) would
+  # break every launcher key, and `|| true` used to throw that answer away. The one door reloads, then names
+  # the file and line; this says so loudly and the apply ends red.
+  local verdict
+  if ! verdict="$(bash "$SCRIPT_DIR/hypr.sh" config reload 2>&1)"; then
+    printf 'desktop-place: Hyprland reported a broken config after the reload:\n%s\n' "$verdict" >&2
+    return 1
+  fi
 }
 
 # ── speed-starts: one key per Ymir app ───────────────────────────────────────
@@ -333,7 +340,8 @@ case "$ACTION" in
     include_rule_file
     write_launchers
     include_launchers_file
-    reload_hypr
+    reload_ok=1
+    reload_hypr || reload_ok=0
     # The launcher entries are part of the same desktop integration: render the
     # templates (they hold __YMIR_ROOT__, not an absolute path) into the user's
     # applications directory.
@@ -347,6 +355,8 @@ case "$ACTION" in
       [ -n "$app" ] || continue
       printf '  "%s","desktop %s"\n' "$app" "$d"
     done <<<"$plan"
+    # plan 341.3: written is not working — a reload that left config errors ends the apply red
+    [ "$reload_ok" = 1 ] || { printf 'desktop-place[1]{state}:\n  "written, but Hyprland reported config errors (see stderr)"\n'; exit 1; }
     ;;
   status)
     dead=0; seen=""

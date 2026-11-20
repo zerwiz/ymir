@@ -21,11 +21,27 @@
 # --show-toplevel` answers the pushing worktree from either seat; the source-relative answer is the
 # fallback for a tree git cannot read.
 #
-#   YMIR_PREPUSH_BUDGET   seconds the wards may spend (default 60)
+#   YMIR_PREPUSH_BUDGET   seconds the tree wards may spend (default 60) — a WALL since plan 339.1
+#   YMIR_PUSH_BUDGET      seconds the whole push may spend before the slowest stage is named (default 180)
 #   YMIR_SKIP_FIXES_GUARD=1  the loud override for the fix-note requirement
+#   YMIR_PARK_ALLOW=1     arms the parking posture (bin/forge/park.sh sets it); off by default
+#
+# THE PUSH ROAD (plan 339.1, 2026-11-20). One push took over thirteen minutes and failed on four
+# wards, and three finished branches never left the machine. So, measured and mended:
+#   · the cheap refusals run FIRST — a stale base or a protected branch is said in 0.1 s, not
+#     after the whole suite has spent its minutes;
+#   · every stage is timed and the table is printed, so the slow ward is named, not guessed;
+#   · a sha this hook already passed (a gathered head — RULES/08's batch road — or a retried
+#     push) carries a stamp in <git-common-dir>/ymir-gated/, and the tree wards are not re-run
+#     over the same content: the batch is judged ONCE;
+#   · a push to refs/parked/<errand> is the SURVIVAL push: only the privacy wards (secret,
+#     public-data, NDA) judge it, it is never a PR and never merged from there, and it is OFF
+#     unless YMIR_PARK_ALLOW=1 (the Allfather has not yet ruled on parking refs in the public repo).
 set -u
-root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
-[ -n "$root" ] || root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# A worktree's hook runs with cwd at the pushing tree; judge THAT tree (it is where the wards are).
+top="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+[ -n "$top" ] && [ -r "$top/bin/gates/guards.sh" ] && root="$top"
 cd "$root" || exit 0
 
 if [ ! -r bin/gates/guards.sh ]; then
@@ -34,40 +50,133 @@ if [ ! -r bin/gates/guards.sh ]; then
 fi
 
 BUDGET="${YMIR_PREPUSH_BUDGET:-60}"
-refs="$(mktemp)"; trap 'rm -f "$refs"' EXIT
+PUSH_BUDGET="${YMIR_PUSH_BUDGET:-180}"
+case "$PUSH_BUDGET" in ''|*[!0-9]*) PUSH_BUDGET=180 ;; esac
+refs="$(mktemp)"; times="$(mktemp)"; trap 'rm -f "$refs" "$times"' EXIT
 cat >"$refs"
+T0="$(date +%s%N)"
 
-# 1. the tree wards — diff-scoped, concurrent, budgeted. A ward that cannot scope is CI's.
-YMIR_PREPUSH_BUDGET="$BUDGET" bash bin/gates/guards.sh || {
-  echo
-  echo "pre-push: a ward refused this push — see the FAIL row above."
-  echo "help: run the failing ward directly; it names the file and the line."
-  echo "help: a finding in a file this push did not touch prints INHERITED and never blocks."
-  exit 1
+# stage <name> <command…> — run one stage, record its wall time, keep its exit code.
+stage() {
+  local name="$1" s e rc=0; shift
+  s="$(date +%s%N)"
+  "$@" || rc=$?
+  e="$(date +%s%N)"
+  printf '%s\t%s\t%s\n' "$name" "$(( (e - s) / 1000000 ))" "$rc" >>"$times"
+  return "$rc"
 }
+report() {  # the timing table, slowest first, and the budget verdict
+  local total=$(( ($(date +%s%N) - T0) / 1000000 ))
+  printf 'prepush_times[%s]{stage,ms,rc}:\n' "$(wc -l <"$times" | tr -d ' ')"
+  sort -t$'\t' -k2,2nr "$times" | while IFS=$'\t' read -r n ms rc; do printf '  "%s","%s","%s"\n' "$n" "$ms" "$rc"; done
+  printf 'pre-push: %s ms in all (push budget %s s)\n' "$total" "$PUSH_BUDGET"
+  if [ "$total" -gt $(( PUSH_BUDGET * 1000 )) ]; then
+    local slow; slow="$(sort -t$'\t' -k2,2nr "$times" | head -1 | cut -f1,2 | tr '\t' ' ')"
+    printf 'pre-push: OVER the %s s push budget — the slowest stage was %s ms; name it in plan 339 and move it to CI or scope it\n' "$PUSH_BUDGET" "$slow" >&2
+  fi
+}
+refuse() { report; printf '%s\n' "$@" >&2; exit 1; }
+
+ZERO=0000000000000000000000000000000000000000
+fork_of() {  # <local sha> <remote sha> → the revision the push starts from
+  if [ "$2" != "$ZERO" ] && git cat-file -e "$2^{commit}" 2>/dev/null; then printf '%s' "$2"; return; fi
+  git merge-base "$1" origin/main 2>/dev/null || git rev-parse "$1^" 2>/dev/null || printf '%s' "$1"
+}
+
+# ── the parking posture: survival, not delivery (plan 339.1) ───────────────────────────────
+n_refs=0; n_parked=0
+while read -r _lref lsha rref _rsha; do
+  [ -n "${lsha:-}" ] || continue
+  n_refs=$((n_refs + 1))
+  case "$rref" in refs/parked/*) n_parked=$((n_parked + 1)) ;; esac
+done <"$refs"
+if [ "$n_parked" -gt 0 ]; then
+  [ "$n_parked" -eq "$n_refs" ] || refuse "pre-push: a parked ref and a delivery ref in one push — push them apart (bin/forge/park.sh parks; a branch delivers)"
+  [ "${YMIR_PARK_ALLOW:-0}" = 1 ] || refuse "pre-push: the parking road is OFF — the Allfather has not ruled on refs/parked/* in this repository (plan 339, question 2)" \
+    "help: bin/forge/park.sh explains the road; it arms itself only where the operator's config allows it"
+  while read -r _lref lsha rref rsha; do
+    [ -n "${lsha:-}" ] || continue
+    [ "$lsha" = "$ZERO" ] && continue                     # deleting a parked ref adds nothing
+    base="$(fork_of "$lsha" "$rsha")"
+    mapfile -t files < <(git diff --name-only --diff-filter=ACM "$base" "$lsha")
+    stage "secret($rref)" bash bin/gates/guards/secret-guard.sh --range "$base" "$lsha" \
+      || refuse "pre-push: the secret ward refused the parked push $rref"
+    if [ "${#files[@]}" -gt 0 ]; then
+      # public-guard reads the working tree; a parked sha that is not the checked-out head is read
+      # from a scratch export of exactly those files, so what is judged is what is pushed.
+      if [ "$(git rev-parse HEAD)" = "$lsha" ] && [ -z "$(git status --porcelain --untracked-files=no)" ]; then
+        stage "public-data($rref)" env YMIR_GUARD_BASE="$base" bash bin/gates/guards/public-data-guard.sh check "${files[@]}" \
+          || refuse "pre-push: the public-data ward refused the parked push $rref"
+      else
+        tmp="$(mktemp -d)"; git archive "$lsha" -- "${files[@]}" | tar -x -C "$tmp"
+        stage "public-data($rref)" env YMIR_GUARD_ROOT="$tmp" python3 bin/gates/guards/public-guard.py "${files[@]}" \
+          || { rm -rf "$tmp"; refuse "pre-push: the public-data ward refused the parked push $rref"; }
+        rm -rf "$tmp"
+      fi
+    fi
+  done <"$refs"
+  stage nda-push sh -c 'python3 bin/gates/guards/nda-guard.py push <"$1"' _ "$refs" \
+    || refuse "pre-push: the NDA gate refused the parked push"
+  report
+  echo "pre-push: PARKED — survival only; never a PR, never merged from refs/parked/*"
+  exit 0
+fi
+
+# ── 0. the cheap refusals, first ──────────────────────────────────────────────────────────
+# branch-guard is first and unconditional: Rule 08 is not a matter of taste. branch-current
+# used to run LAST, so a stale base was refused only after every ward had spent its time —
+# one of the four that bit on 2026-11-20. It is a 0.05 s look at refs already on disk.
+stage branch-guard sh -c 'bash bin/gates/guards/branch-guard.sh <"$1"' _ "$refs" || refuse "pre-push: branch-guard refused"
+stage branch-current bash bin/gates/branch-current.sh check \
+  || refuse "pre-push: the base is stale — rebase (or let bin/forge/gather.sh catch the batch up) and push again"
+stage fixes-guard sh -c 'bash bin/gates/guards/fixes-guard.sh <"$1"' _ "$refs" || refuse "pre-push: fixes-guard refused"
+if git rev-parse -q --verify origin/main >/dev/null 2>&1; then
+  # Rule 11 — a tracked file is MOVED, never deleted.
+  stage no-delete bash bin/no-delete-guard.sh --base origin/main || refuse "pre-push: no-delete-guard refused"
+  # Rule 04/39 — a commit's author line is DATA IN THIS REPOSITORY, and this repository is public.
+  stage identity bash bin/gates/guards/identity-guard.sh --base origin/main || refuse "pre-push: identity-guard refused"
+fi
+
+# ── the gate stamp: a sha is judged once (RULES/08 batch road, plan 339.1) ─────────────────
+# The key is the pushed commit AND the text of this hook and the ward list: a changed gate is a
+# new judgement. Written only after a clean pass over a clean tree whose HEAD is the pushed sha.
+STAMPS="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null || echo .git)/ymir-gated"
+gate_key="$(cat .githooks/pre-push bin/gates/guards.sh 2>/dev/null | sha256sum | cut -c1-16)"
+all_stamped=1; shas=()
+while read -r _lref lsha _rref _rsha; do
+  [ -n "${lsha:-}" ] && [ "$lsha" != "$ZERO" ] || continue
+  shas+=("$lsha")
+  [ "$(cat "$STAMPS/$lsha" 2>/dev/null)" = "$gate_key" ] || all_stamped=0
+done <"$refs"
+[ "${#shas[@]}" -gt 0 ] || all_stamped=0
+if [ "$all_stamped" = 1 ] && [ "${YMIR_PREPUSH_REJUDGE:-0}" != 1 ]; then
+  report
+  echo "pre-push: the tree wards already passed on this exact sha under this exact gate (stamp in $STAMPS) — judged once, not twice"
+  echo "help: YMIR_PREPUSH_REJUDGE=1 git push   to judge it again"
+  exit 0
+fi
+
+# ── 1. the tree wards — diff-scoped, concurrent, budgeted. A ward that cannot scope is CI's. ──
+stage guards env YMIR_GUARD_PUSH=1 YMIR_PREPUSH_BUDGET="$BUDGET" bash bin/gates/guards.sh || refuse \
+  "pre-push: a ward refused this push — see the FAIL row above." \
+  "help: run the failing ward directly; it names the file and the line." \
+  "help: a finding in a file this push did not touch prints INHERITED and never blocks."
 
 # 1b. the NDA gate over exactly what this push adds (RULES/04, 2026-11-12). It reads $YMIR_HOME, so it
 # can never be cached, and it says UNARMED aloud where no home resolves.
-python3 bin/gates/guards/nda-guard.py push <"$refs" || {
-  echo "pre-push: the NDA gate refused this push — a company, client or NDA-project name is in what it adds."
-  exit 1
-}
+stage nda-push sh -c 'python3 bin/gates/guards/nda-guard.py push <"$1"' _ "$refs" || refuse \
+  "pre-push: the NDA gate refused this push — a company, client or NDA-project name is in what it adds."
 
 # 1c. the maker ward over every NEW commit message in the pushed range (RULES/53) — never history.
-bash bin/gates/guards/maker-guard.sh push <"$refs" || exit 1
+stage maker sh -c 'bash bin/gates/guards/maker-guard.sh push <"$1"' _ "$refs" || refuse "pre-push: maker-guard refused"
 
-# 2. the four that judge the PUSH rather than the tree. Each is under 0.1 s (measured
-# 2026-11-11), so they are not budgeted — a gate that can be timed out is a gate a slow
-# machine can walk through. branch-guard is first and unconditional: Rule 08 is not a
-# matter of taste.
-bash bin/gates/guards/branch-guard.sh <"$refs" || exit 1
-bash bin/gates/guards/fixes-guard.sh <"$refs" || exit 1
-
-if git rev-parse -q --verify origin/main >/dev/null 2>&1; then
-  # Rule 11 — a tracked file is MOVED, never deleted.
-  bash bin/no-delete-guard.sh --base origin/main || exit 1
-  # Rule 04/39 — a commit's author line is DATA IN THIS REPOSITORY, and this repository is public.
-  bash bin/gates/guards/identity-guard.sh --base origin/main || exit 1
+# stamp what passed, so a gathered head pushed after `gather.sh --no-pr`, or a retried push, is not
+# judged twice over the same content.
+if [ -z "$(git status --porcelain --untracked-files=no 2>/dev/null)" ]; then
+  head_sha="$(git rev-parse HEAD 2>/dev/null)"
+  mkdir -p "$STAMPS" 2>/dev/null && for s in "${shas[@]}"; do
+    [ "$s" = "$head_sha" ] && printf '%s' "$gate_key" >"$STAMPS/$s"
+  done
 fi
-
-bash bin/gates/branch-current.sh check || exit 1
+report
+exit 0

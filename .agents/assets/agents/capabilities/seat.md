@@ -16,6 +16,7 @@
 | backend.sh | backend.sh — the six verbs, for whichever backend a target names. | tested+named | keep (a human or a cron row must run it) |
 | broken.sh | broken.sh — the register of broken things (RULES/50). | tested | keep (a human or a cron row must run it) |
 | claims.sh | claims.sh — a seat declares what it is building (plan number, branch,  | tested | keep (a human or a cron row must run it) |
+| claude-seat.sh | claude-seat.sh — what a Claude Code worker needs to start with no huma | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
 | clocks.sh | bin/seat/clocks.sh — seat the three loops: plan-watch, ship-watch, upd | tested | keep (a human or a cron row must run it) |
 | context.sh | context.sh — what the agent's context ACTUALLY holds, right now. | tested+named | keep (a human or a cron row must run it) |
 | core-four.sh | core-four.sh — the four dials that decide an agent's outcome, in ONE r | tested+named | keep (a human or a cron row must run it) |

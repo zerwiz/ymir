@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# fake-hyprctl — a recording hyprctl for bin/desktop/tests/test_hypr_door.sh (plan 341.1).
+# It answers from the recorded `hyprctl -j` fixtures of ONE dialect and logs every call, one per line,
+# its arguments joined by '|'. It refuses what the real dialect refuses, in the real words:
+#   lua      a classic dispatcher string -> a Lua parse error · `keyword` -> "can't work with non-legacy parsers"
+#   classic  an hl.* expression -> "Invalid dispatcher" · `eval` -> "unknown request"
+# Env: HYPR_FAKE_DIALECT (lua|classic) · HYPR_FAKE_DIR (the fixture root) · HYPR_FAKE_STATE (a scratch dir)
+#      HYPR_FAKE_NOFOCUS=1 (focus never lands) · HYPR_FAKE_CONFIGERRORS (a file to answer configerrors with)
+set -u
+D="${HYPR_FAKE_DIALECT:?}"; FX="${HYPR_FAKE_DIR:?}/$D"; ST="${HYPR_FAKE_STATE:?}"
+mkdir -p "$ST"; (IFS='|'; printf '%s\n' "$*") >>"$ST/log"
+j() { cat "$FX/$1.json"; }
+set_active() { [ "${HYPR_FAKE_NOFOCUS:-0}" = 1 ] || printf '%s' "$1" >"$ST/active"; }
+case "${1:-}" in
+  version)        j version ;;
+  monitors)       j monitors ;;
+  clients)        j clients ;;
+  workspaces)     j workspaces ;;
+  activeworkspace) j activeworkspace ;;
+  activewindow)
+    if [ -s "$ST/active" ]; then printf '{"address":"%s"}\n' "$(cat "$ST/active")"; else j activewindow; fi ;;
+  eval)
+    [ "$D" = lua ] || { echo "unknown request"; exit 0; }
+    case "${2:-}" in *bad_key*) echo "error: no such config option"; exit 0 ;; esac
+    echo ok ;;
+  keyword)
+    [ "$D" = classic ] && { echo ok; exit 0; }
+    echo "keyword can't work with non-legacy parsers. Use eval."; exit 0 ;;
+  dispatch)
+    shift
+    if [ "$D" = lua ]; then
+      case "${1:-}" in
+        hl.*) a="$(printf '%s' "$1" | sed -nE 's/.*hl\.dsp\.focus\(\{ window = "address:([^"]+)".*/\1/p')"
+              [ -n "$a" ] && set_active "$a"; echo ok ;;
+        *)    echo "error: [string \"return hl.dispatch($*)\"]:1: ')' expected" ;;
+      esac
+    else
+      case "${1:-}" in
+        hl.*) echo "Invalid dispatcher" ;;
+        focuswindow) set_active "${2#address:}"; echo ok ;;
+        *) echo ok ;;
+      esac
+    fi ;;
+  configerrors)
+    if [ -n "${HYPR_FAKE_CONFIGERRORS:-}" ] && [ -r "$HYPR_FAKE_CONFIGERRORS" ]; then cat "$HYPR_FAKE_CONFIGERRORS"; else echo ""; fi ;;
+  reload|notify)  echo ok ;;
+  *) echo "unknown request"; exit 0 ;;
+esac

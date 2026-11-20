@@ -116,7 +116,8 @@ check_live_class() {  # <surface>
   local s="$1" cls
   cls="$(app_class "$s")"
   command -v hyprctl >/dev/null 2>&1 || return 0        # no compositor to ask
-  hyprctl clients 2>/dev/null | grep -qiE "class:[[:space:]]*${cls}[[:space:]]*$" \
+  # through the one Hyprland door (plan 341.2): the class column of `hypr.sh windows`
+  bash "$SCRIPT_DIR/hypr.sh" windows 2>/dev/null | grep -qiE "^  \"[^\"]*\",\"${cls}\"," \
     && vok "$s" "window of class ${cls} held by the compositor" \
     || vfail "$s" "no window of class ${cls} on the compositor — the route is broken (SUPER+<key> would raise nothing)"
 }

@@ -1,0 +1,4 @@
+[{"id":1,"name":"1","monitor":"eDP-1","monitorID":0,"windows":1,"hasfullscreen":false,"lastwindow":"0xa1"},
+ {"id":2,"name":"2","monitor":"eDP-1","monitorID":0,"windows":1,"hasfullscreen":false,"lastwindow":"0xa2"},
+ {"id":4,"name":"4","monitor":"HDMI-A-1","monitorID":1,"windows":1,"hasfullscreen":false,"lastwindow":"0xb1"},
+ {"id":5,"name":"5","monitor":"eDP-1","monitorID":0,"windows":1,"hasfullscreen":false,"lastwindow":"0xc1"}]

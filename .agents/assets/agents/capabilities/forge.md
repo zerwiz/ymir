@@ -8,6 +8,7 @@
 ## CHANGE LOG
 
 - **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
+| exec-bits.sh | exec-bits.sh — a new door leaves the errand executable, or the errand  | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
 | finding-log.sh | The home is RESOLVED, never assumed (the defaults guard's rule): the one | tested | keep (a human or a cron row must run it) |
 | finding-tally.sh | The home is RESOLVED, never assumed (the defaults guard's rule): the one | tested | keep (a human or a cron row must run it) |
 | gather-notice.sh | gather-notice.sh — when the LAST errand of a batch finishes, the helm  | tested+named | keep (a human or a cron row must run it) |
@@ -29,6 +30,7 @@
 | npm-publish.sh | npm-publish.sh — publish through the HOARD's npm token, every single t | tested+named | keep (a human or a cron row must run it) |
 | packaged-gate.sh | packaged-gate.sh — prove the PUBLISHED artifact, not the tree. | tested | keep (a human or a cron row must run it) |
 | pr-pretest.sh | pr-pretest.sh — the PR-time gate: a REAL npm installation, locally, be | tested+named | keep (a human or a cron row must run it) |
+| park.sh | park.sh — the SURVIVAL push: an errand's commits leave this disk witho | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
 | pr-open.sh | (no header line) | tested | keep (a human or a cron row must run it) |
 | pr-patterns.sh | pr-patterns.sh — the ONE place the forbidden-pattern list lives. | tested | keep (a human or a cron row must run it) |
 | pr-watch.sh | pr-watch.sh — TELL HIM a PR arrived. A watcher that only queues a wake | tested | keep (a human or a cron row must run it) |
