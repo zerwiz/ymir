@@ -261,6 +261,36 @@ function agents() {
   });
 }
 
+/* ---- /api/a2a/messages — the herdr traffic between agents ------------------ *
+ * Plan 275 item 8, at the Allfather's word: *"the a2a task stream also should show
+ * the herdr communication between agents"*. The sends are recorded by
+ * bin/agents/msg-log.sh in the hoard's state root, so this door reads the same file
+ * the sender wrote — no second record, no inference. A missing log is an empty list
+ * with `recorded: 0`, never a fabricated event, and a torn line is skipped.
+ */
+const FLEET_LOG = join(
+  process.env.YMIR_MSG_LOG ?? join(process.env.YMIR_STATE_DIR ?? join(HOME_DIR, 'state'), 'fleet/messages.jsonl'),
+);
+
+function a2aMessages(limit: number): { messages: unknown[]; recorded: number } {
+  let lines: string[] = [];
+  try {
+    lines = readFileSync(FLEET_LOG, 'utf8').split('\n').filter((l) => l.trim());
+  } catch {
+    return { messages: [], recorded: 0 };
+  }
+  const messages: unknown[] = [];
+  for (const line of lines.slice(-Math.max(limit, 1))) {
+    try {
+      messages.push(JSON.parse(line));
+    } catch {
+      // one torn line never blanks the stream
+    }
+  }
+  // newest first: the panel shows what was just said without scrolling
+  return { messages: messages.reverse(), recorded: lines.length };
+}
+
 /* ---- /api/tasks (forge orders) ------------------------------------------- */
 function orders_uncached() {
   const text = read(MASTERPLAN);
@@ -1587,42 +1617,98 @@ async function liveStatus() {
   };
 }
 
-/* ---- /api/stream (SSE): new runes lines ---------------------------------- */
-function stream() {
-  let cursor = 0;
+/* ---- /api/stream (SSE): new runes AND new agent-to-agent messages --------- *
+ * Two ledgers, one stream. The Runes tail has been here since the start; the fleet
+ * message log (bin/agents/msg-log.sh) joins it so the footer shows the herdr traffic
+ * between agents as it happens (plan 275 item 8). Both are read by BYTE cursor, and
+ * a file that shrank (rotated, replaced) restarts its cursor at 0 rather than
+ * silently going dark.
+ */
+function tailLines(
+  path: string,
+  from: number,
+): { at: number; lines: string[] } {
+  let size: number;
   try {
-    cursor = statSync(RUNES).size;
+    size = statSync(path).size;
+  } catch {
+    return { at: from, lines: [] };
+  }
+  const cursor = size < from ? 0 : from;
+  if (size <= cursor) return { at: cursor, lines: [] };
+  let tail = '';
+  try {
+    // BYTES, not characters: the cursor is a byte offset from statSync, and slicing a
+    // JS string by it lands mid-character the moment a row carries `Hœnir` or `Smíðja`.
+    // Every line after the first multibyte rune was silently lost to that (2026-11-14).
+    tail = readFileSync(path).subarray(cursor).toString('utf8');
+  } catch {
+    return { at: cursor, lines: [] };
+  }
+  return { at: size, lines: tail.split('\n').filter((l) => l.trim()) };
+}
+
+function stream() {
+  let runeCursor = 0;
+  try {
+    runeCursor = statSync(RUNES).size;
   } catch {
     /* no ledger yet */
+  }
+  // A stream opened now shows what is said NEXT; the A2A panel carries the history.
+  let msgCursor = 0;
+  try {
+    msgCursor = statSync(FLEET_LOG).size;
+  } catch {
+    /* nothing has been sent yet */
   }
   let tick: ReturnType<typeof setInterval> | null = null;
   return new Response(
     new ReadableStream({
       start(controller) {
         const enc = new TextEncoder();
+        const send = (ev: unknown) => controller.enqueue(enc.encode(`data: ${JSON.stringify(ev)}\n\n`));
         tick = setInterval(() => {
-          try {
-            const size = statSync(RUNES).size;
-            if (size > cursor) {
-              const tail = readFileSync(RUNES, 'utf8').slice(cursor);
-              cursor = size;
-              for (const line of tail.split('\n')) {
-                if (!line.trim().startsWith('{')) continue;
-                const e = JSON.parse(line);
-                const ev = {
-                  id: String(e.checksum ?? Date.now()).slice(0, 12),
-                  ts: e.timestamp ?? new Date().toISOString(),
-                  kind: 'rune',
-                  from: e.actor ?? 'brokk',
-                  module: e.event ?? '',
-                  message: e.message ?? '',
-                  checksum: String(e.checksum ?? '').slice(0, 8),
-                };
-                controller.enqueue(enc.encode(`data: ${JSON.stringify(ev)}\n\n`));
-              }
+          const runeTail = tailLines(RUNES, runeCursor);
+          runeCursor = runeTail.at;
+          for (const line of runeTail.lines) {
+            if (!line.trim().startsWith('{')) continue;
+            try {
+              const e = JSON.parse(line);
+              send({
+                id: String(e.checksum ?? Date.now()).slice(0, 12),
+                ts: e.timestamp ?? new Date().toISOString(),
+                kind: 'rune',
+                from: e.actor ?? 'brokk',
+                module: e.event ?? '',
+                message: e.message ?? '',
+                checksum: String(e.checksum ?? '').slice(0, 8),
+              });
+            } catch {
+              /* a torn ledger line never stops the stream */
             }
-          } catch {
-            /* keep streaming */
+          }
+
+          const msgTail = tailLines(FLEET_LOG, msgCursor);
+          msgCursor = msgTail.at;
+          for (const line of msgTail.lines) {
+            try {
+              const m = JSON.parse(line);
+              send({
+                id: `msg-${m.epoch ?? Date.now()}-${String(m.to ?? '').replace(/[^\w:]/g, '')}`,
+                ts: m.ts ?? new Date().toISOString(),
+                kind: 'ratatoskr',
+                from: m.from ?? 'agent',
+                to: m.to ?? '',
+                state: 'SUBMITTED',
+                message: m.text ?? '',
+                // The fleet's own page: a message between agents belongs to Fleet,
+                // not to whichever gate happened to be open when it arrived.
+                gate: 'fleet',
+              });
+            } catch {
+              /* one torn row is skipped, not fatal */
+            }
           }
         }, 2000);
       },
@@ -2655,6 +2741,10 @@ const server = Bun.serve({
         return json(agents());
       }
       if (p === '/api/tasks') return json(tasks());
+      if (p === '/api/a2a/messages') {
+        const n = Number(url.searchParams.get('n') ?? 60);
+        return json(a2aMessages(Number.isFinite(n) ? n : 60));
+      }
       if (p === '/api/orders') return json({ open: orders().filter((o) => o.status !== 'COMPLETED').length, orders: orders() });
       if (p === '/api/runes') return json(runes());
       if (p === '/api/well') return json(await well(url.searchParams.get('q') ?? ''));

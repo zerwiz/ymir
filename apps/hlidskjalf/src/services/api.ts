@@ -9,6 +9,7 @@ import type {
   RuneEntry,
   SkillDef,
   Task,
+  A2ATraffic,
 } from '../types';
 
 /**
@@ -470,6 +471,8 @@ export const gateApi = {
   workspace: () => get<{ realm: RealmId; path: string }>('/api/workspace'),
   agents: () => get<AgentCard[]>('/api/agents'),
   tasks: () => get<Task[]>('/api/tasks'),
+  /** The herdr traffic between agents, newest first — read from the fleet message log. */
+  a2aMessages: (n = 40) => get<A2ATraffic>(`/api/a2a/messages?n=${n}`),
   well: (q: string) => get<RecallEpisode[]>(`/api/well?q=${encodeURIComponent(q)}`),
   runes: () => get<RuneEntry[]>('/api/runes'),
   processes: () => get<ProcessInfo[]>('/api/processes'),

@@ -95,13 +95,37 @@ export interface AgentCard {
   role: string;
   realm: RealmId;
   domain: DomainId;
+  /** NOMINAL means ALIVE — a pane holds the agent. There is no other meaning. */
   status: AgentStatus;
+  alive?: boolean;
   capabilities: string[];
   skills: string[];
   interface: AgentInterface;
   model: string;
+  /** Where the model came from: its launch record, the operator's config, or nothing. */
+  modelSource?: 'launched' | 'configured' | 'none';
+  configuredModel?: string;
   uptime: number;
   tasksDone: number;
+  /** The harness actually running it (claude · pi · hermes), from the pane. */
+  harness?: string;
+  machine?: string;
+  seat?: string;
+  kind?: string;
+  state?: string;
+  pane?: string;
+  /** "<agent> · <errand>" — never the terminal title. */
+  paneLabel?: string;
+  cwd?: string;
+  task?: string;
+  /** The errand record whose launch named this pane, and its last claim. */
+  errand?: string;
+  errandState?: string;
+  errandClaim?: string;
+  /** The last message recorded TO this agent (bin/agents/msg-log.sh). */
+  lastMessage?: string;
+  lastMessageAt?: string;
+  lastMessageFrom?: string;
   /** Live facts from the agent's own pane, when it is genuinely standing. */
   live?: {
     kind: string;
@@ -112,6 +136,23 @@ export interface AgentCard {
     task: string;
   };
   traceability: number;
+}
+
+/** One recorded agent-to-agent message — the herdr traffic the A2A panel shows. */
+export interface A2AMessage {
+  ts: string;
+  epoch?: number;
+  from: string;
+  to: string;
+  pane?: string;
+  machine?: string;
+  text: string;
+}
+
+export interface A2ATraffic {
+  messages: A2AMessage[];
+  /** How many rows the fleet log holds in total (0 = nothing has been sent yet). */
+  recorded: number;
 }
 
 export interface Task {
