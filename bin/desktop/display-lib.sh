@@ -244,14 +244,14 @@ try:
         names[int(d)]=name; kids.setdefault(ppid,[]).append(int(d))
 except Exception: pass
 def agent(pid):
-    seen=set(); todo=list(kids.get(pid,[]))
-    while todo:
-        p=todo.pop(0)
+    seen=set(); queue=list(kids.get(pid,[]))
+    while queue:
+        p=queue.pop(0)
         if p in seen: continue
         seen.add(p)
         n=names.get(p,"")
         if n in AGENTS: return n
-        todo.extend(kids.get(p,[]))
+        queue.extend(kids.get(p,[]))
     return ""
 for w in ws:
     w["agent"]=agent(int(w.get("pid") or 0)) if w.get("pid") else ""

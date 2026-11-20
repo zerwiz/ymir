@@ -36,6 +36,9 @@ GATE_FILES=(.githooks/pre-push bin/gates/guards.sh bin/gates/guards/nda-guard.sh
 overlay() { local f; for f in "${GATE_FILES[@]}"; do mkdir -p "$T/$(dirname "$f")"; cp "$ROOT/$f" "$T/$f"; done; }
 
 cd "$T" || exit 1
+# A CI checkout has no local `main` for the clone to call origin/main; lend it the checkout's own origin/main.
+git rev-parse -q --verify origin/main >/dev/null \
+  || git fetch -q "$ROOT" "+refs/remotes/origin/main:refs/remotes/origin/main" 2>/dev/null || true
 git rev-parse -q --verify origin/main >/dev/null || { bad clone "the clone has no origin/main"; exit 1; }
 # A branch cut five commits behind main, with one commit of its own.
 git checkout -q -b probe/behind origin/main~5 2>/dev/null || { bad clone "origin/main~5 does not exist"; exit 1; }
