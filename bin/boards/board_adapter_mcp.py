@@ -9,11 +9,16 @@ state name (through the board's `list_states`).
 The contract this adapter implements (the card shape is a plain dict):
     ensure_label(name)
     list_cards(label) -> [{"card", "title", "group", "labels"}]        # all pages, flagged when a page was full
+    list_all() -> [{"card", "title", "group", "labels", "parent", "stamp"}]   # every card, paged to the end
     find_cards(label, text) -> same, narrowed by a title fragment
-    get_card(card) -> {"card", "title", "group", "labels", "description"}
-    create_card(title, description, group, labels)
-    update_card(card, title=None, description=None, group=None)
+    get_card(card) -> {"card", "title", "group", "labels", "description", "stamp", "links", "children"}
+    create_card(title, description, group, labels, parent=None, fmt=None, source=None) -> {"card", "diagrams"}
+    update_card(card, title=None, description=None, group=None, fmt=None) -> {"diagrams"}
+    add_link(card, url, title)
 State groups: backlog · unstarted · started · review · done · cancelled.
+A description may be `fmt="markdown"`: the board keeps the document's shape and draws what it can (diagrams); the
+answer's `diagrams` names what it could not. A card may carry `[stamp: <word>]` in its description — the writer's
+own fingerprint — and listings return it, so a writer can tell what it last wrote without reading every card.
 Never prints or stores a token.
 """
 import json
@@ -28,7 +33,8 @@ GROUPS = ("backlog", "unstarted", "started", "review", "done", "cancelled")
 _ENGINE_GROUP = {"completed": "done", "canceled": "cancelled"}  # a board's own spelling → the contract's
 PAGE = 200  # the largest page a board lists
 VISIBLE = 100  # measured 2026-11-20: a board may show only its newest 100 cards of a place, so a full list proves nothing
-PACE = 0.25  # seconds between writes, so a board's rate limit is not met at a run of hundreds
+PACE = float(os.environ.get("YMIR_BOARD_PACE", "1.0"))  # seconds between writes: a board's own API may allow ~60 calls a minute
+WRITE_TIMEOUT = 300  # a write that draws diagrams on the board's side may take a while
 
 
 class BoardRefusal(Exception):
@@ -67,19 +73,20 @@ class McpBoard:
         self.saturated = False  # set when a list shows as many cards as the board is known to reveal: older ones may be hidden
         self._wrote = 0.0
         self._last_count = None
+        self._schemas = None
 
     # ── transport ────────────────────────────────────────────────────────────────────────────
-    def _call(self, tool, args):
+    def _call(self, tool, args, timeout=60):
         self.n += 1
         body = json.dumps({"jsonrpc": "2.0", "id": self.n, "method": "tools/call",
                            "params": {"name": tool, "arguments": args}}).encode()
         hdr = {"Authorization": f"Bearer {self.token}", "Content-Type": "application/json",
                "Accept": "application/json, text/event-stream", "User-Agent": "ymir-board-mcp/1.0"}
         last = ""
-        for attempt in range(6):
-            wait = 2.0 * (attempt + 1)
+        for attempt in range(8):
+            wait = 4.0 * (attempt + 1)
             try:
-                raw = urllib.request.urlopen(urllib.request.Request(self.url, body, hdr), timeout=60).read().decode()
+                raw = urllib.request.urlopen(urllib.request.Request(self.url, body, hdr), timeout=timeout).read().decode()
             except urllib.error.HTTPError as e:
                 last = f"HTTP {e.code}"
                 if e.code not in (429, 500, 502, 503, 504):
@@ -111,9 +118,27 @@ class McpBoard:
         gap = PACE - (time.time() - self._wrote)
         if gap > 0:
             time.sleep(gap)
-        out = self._call(tool, args)
+        out = self._call(tool, args, timeout=WRITE_TIMEOUT)
         self._wrote = time.time()
         return out
+
+    def _accepts(self, tool, prop):
+        """Does the board's `tool` take `prop`? Read once from tools/list; an older board is spoken to as it is."""
+        if self._schemas is None:
+            self.n += 1
+            body = json.dumps({"jsonrpc": "2.0", "id": self.n, "method": "tools/list", "params": {}}).encode()
+            hdr = {"Authorization": f"Bearer {self.token}", "Content-Type": "application/json",
+                   "Accept": "application/json, text/event-stream", "User-Agent": "ymir-board-mcp/1.0"}
+            try:
+                raw = urllib.request.urlopen(urllib.request.Request(self.url, body, hdr), timeout=60).read().decode()
+                if raw.lstrip().startswith(("event:", "data:")):
+                    raw = next((l[5:].strip() for l in raw.splitlines() if l.startswith("data:")), "{}")
+                tools = (json.loads(raw).get("result") or {}).get("tools", [])
+                self._schemas = {t["name"]: set(((t.get("inputSchema") or {}).get("properties") or {}).keys())
+                                 for t in tools}
+            except (urllib.error.URLError, ValueError, KeyError, TimeoutError):
+                self._schemas = {}
+        return prop in self._schemas.get(tool, set())
 
     # ── states: a group is the contract's word, a state name is the board's ─────────────────
     def states(self):
@@ -145,7 +170,24 @@ class McpBoard:
 
     def _shape(self, c):
         return {"card": c["card"], "title": c.get("title", ""), "group": self.group_of(c.get("state")),
-                "labels": c.get("labels") or [], "description": c.get("description")}
+                "labels": c.get("labels") or [], "description": c.get("description"),
+                "parent": c.get("parent"), "stamp": c.get("stamp"), "links": c.get("links") or [],
+                "children": [dict(ch, group=_ENGINE_GROUP.get(ch.get("state_group"), ch.get("state_group")))
+                             for ch in c.get("children") or []]}
+
+    def list_all(self):
+        """Every card of the place, paged to the end with `offset`. A board that cannot page is flagged saturated."""
+        if not self._accepts("list_cards", "offset"):
+            self.saturated = True
+            return [self._shape(c) for c in self._call("list_cards", {"place": self.place, "limit": PAGE}).get("cards", [])]
+        out, offset = [], 0
+        while True:
+            r = self._call("list_cards", {"place": self.place, "limit": PAGE, "offset": offset})
+            got = r.get("cards", [])
+            out += [self._shape(c) for c in got]
+            offset += len(got)
+            if not got or offset >= int(r.get("count") or 0):
+                return out
 
     def list_cards(self, label):
         out = []
@@ -166,16 +208,31 @@ class McpBoard:
     def get_card(self, card):
         return self._shape(self._call("get_card", {"place": self.place, "card": str(card)}))
 
-    def create_card(self, title, description, group, labels):
-        return self._write("create_card", {"place": self.place, "title": title, "description": description,
-                                           "state": self.state_name(group), "labels": labels})
+    def create_card(self, title, description, group, labels, parent=None, fmt=None, source=None):
+        a = {"place": self.place, "title": title, "description": description, "state": self.state_name(group),
+             "labels": labels}
+        if parent is not None:
+            a["parent"] = str(parent)
+        if fmt and self._accepts("create_card", "description_format"):
+            a["description_format"] = fmt
+        if source and self._accepts("create_card", "source"):
+            a["source"] = source
+        out = self._write("create_card", a)
+        made = out.get("created") or {}
+        return {"card": made.get("card"), "diagrams": out.get("diagrams")}
 
-    def update_card(self, card, title=None, description=None, group=None):
+    def update_card(self, card, title=None, description=None, group=None, fmt=None):
         a = {"place": self.place, "card": str(card)}
         if title is not None:
             a["title"] = title
         if description is not None:
             a["description"] = description
+            if fmt and self._accepts("update_card", "description_format"):
+                a["description_format"] = fmt
         if group is not None:
             a["state"] = self.state_name(group)
-        return self._write("update_card", a)
+        out = self._write("update_card", a)
+        return {"diagrams": out.get("diagrams")}
+
+    def add_link(self, card, url, title):
+        return self._write("add_link", {"place": self.place, "card": str(card), "url": url, "title": title})
