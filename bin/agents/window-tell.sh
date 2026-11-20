@@ -20,12 +20,22 @@
 #
 # Requires: Hyprland (hyprctl) and wtype, on Wayland. Elsewhere it refuses by name — a clean skip, never a guess.
 # Safety: it types ONLY if the focused window is the target after focusing; otherwise it types nothing.
+#         While bin/desk/in-call.sh holder prints anything, it refuses: the keys would land in a call.
+# Agents: WINDOW_TELL_AGENTS (process names); WINDOW_TELL_INTERPRETERS + WINDOW_TELL_CMDLINE (an agent
+#         running under python/node, matched by its command line, which is how `hermes chat` is found).
+# Note (plan 341.1): when the hypr door lands, the typing below moves to `hypr.sh type`, so the house
+#         has one guarded keystroke path, not two.
 set -euo pipefail
 
 FROM="script window-tell"
 DRY=0
 LETTER=""
-AGENTS_RE="${WINDOW_TELL_AGENTS:-claude|codex|opencode|pi|omp|gemini|aider}"
+AGENTS_RE="${WINDOW_TELL_AGENTS:-claude|codex|opencode|pi|omp|gemini|aider|hermes}"
+# An agent that runs under an interpreter (Hermes's CLI is `python3 -m hermes_cli.main chat`) has the
+# interpreter's name as its process name, so it is matched by its command line instead. Each regex is
+# configuration: the first capture group that matched, or the whole match, names the agent in --list.
+INTERP_RE="${WINDOW_TELL_INTERPRETERS:-python[0-9.]*|node|bun|deno}"
+CMDLINE_RE="${WINDOW_TELL_CMDLINE:-(hermes)_cli[.]main|bin/(hermes)( |$)|(aider)( |$)}"
 TERMS_RE="${WINDOW_TELL_TERMS:-foot|kitty|alacritty|ghostty|wezterm|konsole|gnome-terminal|xterm|waveterm}"
 
 die() { printf 'window-tell: %s\n' "$*" >&2; exit 2; }
@@ -43,11 +53,19 @@ need() {
 focus() { window_focus "$1" || true; }
 active_addr() { hyprctl activewindow -j | python3 -c 'import json,sys;print(json.load(sys.stdin).get("address",""))'; }
 
+# The desk: while the operator is on a call, typing into a window could land in the call.
+desk_busy() {
+  local d; d="$(cd "$(dirname "${BASH_SOURCE[0]}")/../desk" && pwd)/in-call.sh"
+  [ -x "$d" ] || return 1
+  [ -n "$("$d" holder 2>/dev/null || true)" ]
+}
+
 # One TOON-ish row per agent process whose ancestor is a terminal window: agent_pid term_pid address title cwd
 list_rows() {
-  python3 - "$AGENTS_RE" "$TERMS_RE" <<'PY'
+  python3 - "$AGENTS_RE" "$TERMS_RE" "$INTERP_RE" "$CMDLINE_RE" <<'PY'
 import json, os, re, subprocess, sys
 agents, terms = re.compile(sys.argv[1]), re.compile(sys.argv[2])
+interp, cmdre = re.compile(sys.argv[3]), re.compile(sys.argv[4])
 wins = {c["pid"]: c for c in json.loads(subprocess.check_output(["hyprctl", "clients", "-j"]))}
 def comm(p):
     try: return open(f"/proc/{p}/comm").read().strip()
@@ -55,13 +73,23 @@ def comm(p):
 def ppid(p):
     try: return int(open(f"/proc/{p}/stat").read().rsplit(")", 1)[1].split()[1])
     except (OSError, IndexError, ValueError): return 0
+def cmdline(p):
+    try: return open(f"/proc/{p}/cmdline", "rb").read().replace(b"\0", b" ").decode(errors="replace").strip()
+    except OSError: return ""
+def agent_name(p):
+    c = comm(p)
+    if agents.fullmatch(c): return c
+    if interp.fullmatch(c):
+        m = cmdre.search(cmdline(p))
+        if m: return next((g for g in m.groups() if g), m.group(0)).strip()
+    return ""
 seen = set()
 for d in os.listdir("/proc"):
     if not d.isdigit(): continue
-    p = int(d); c = comm(p)
-    if not agents.fullmatch(c): continue
+    p = int(d); c = agent_name(p)
+    if not c: continue
     q = ppid(p)
-    if agents.fullmatch(comm(q)): continue          # a child of another agent process
+    if agent_name(q): continue                      # a child of another agent process (a wrapper's exec)
     while q > 1 and q not in wins: q = ppid(q)
     if q <= 1 or not terms.search(wins[q]["class"]) or p in seen: continue
     seen.add(p)
@@ -90,7 +118,7 @@ while [ $# -gt 0 ]; do
     --from) FROM="$2"; shift 2 ;;
     --letter) LETTER="$2"; shift 2 ;;
     --dry-run) DRY=1; shift ;;
-    -h|--help) sed -n '2,24p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,29p' "$0"; exit 0 ;;
     *) break ;;
   esac
 done
@@ -115,6 +143,7 @@ text="[from $FROM] $line"
 printf 'window-tell: %s (pid %s) in %s window %s on workspace %s — "%s"\n' "$agent" "$apid" "$(hyprctl clients -j | python3 -c "import json,sys;print(next((c['class'] for c in json.load(sys.stdin) if c['address']=='$addr'),'?'))")" "$addr" "$ws" "$title"
 if [ "$DRY" = 1 ]; then printf 'window-tell: dry run — would type: %s\n' "$text"; exit 0; fi
 
+if desk_busy; then die "the operator is on a call (bin/desk/in-call.sh holder) — typed nothing"; fi
 back="$(active_addr)"
 focus "$addr"; sleep 0.6
 if [ "$(active_addr)" != "$addr" ]; then
