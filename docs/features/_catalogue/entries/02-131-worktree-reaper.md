@@ -2,3 +2,7 @@
 section: agents-work-collaboration
 ---
 | Delivery | **The worktree reaper — a closed errand's worktree goes, its branch stays** (`bin/forge/worktree-reap.py` · [how-to](docs/features/worktree-reaper.md)) | Plan 339.4, 2026-11-20: the disk filled to 100 % and the largest cost was 121 worker worktrees nobody removed. Every road that makes a worktree (`einherjar-spawn.sh`, `eindri-start.sh` through `project-target.sh`, `herdr-run.sh`, `yggdrasil.sh`, `gather.sh`, the engine) now records it with its owner and errand. `seat-reap.sh --sweep` reaps a closed errand's tree: `done:` with the work merged, parked or pushed, or `failed:` after seven days. Branches are never deleted; a dirty tree is named, never removed; exterior worker folders are covered by `$YMIR_HOME/config/worktree-roots.yaml`. `sweep` alone is a dry run. Proved by `tests/test_worktree_reap.py` (11 fenced cases) | [docs/features/worktree-reaper.md](docs/features/worktree-reaper.md) |
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #840
