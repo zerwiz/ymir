@@ -17,6 +17,12 @@
 # It is the ear Gná was missing: her first job is not to carry words but to notice
 # that there are none.
 #
+# THE SIBLING QUESTION (2026-11-20). This door answers "is an AGENT here?"; it cannot answer
+# "is the WORK moving?" — and two errands that sat 8h45m and 1h50m on one command were both
+# judged ALIVE here. That second question is `bin/agents/eindri-stall.sh` (frozen 20 minutes,
+# or one command past its limit → wake the helm, steer the worker, then Rödd tells the
+# operator). A pane can be alive and frozen at once; the two doors are read together.
+#
 # Usage:
 #   eindri-liveness.sh check [<id> …]   judge only — prints rows, changes nothing
 #   eindri-liveness.sh sweep [<id> …]   judge AND correct a DEAD seat's record

@@ -141,10 +141,22 @@ case "$CMD" in
       # (~40 s, measured 2026-11-17) for a mouth nobody holds. This runs first and costs nothing when
       # the recorded holder is alive — the door refuses to touch a live one.
       LAUNCHER_ROOT="$(CDPATH='' cd "$SCRIPT_DIR/../.." && pwd)"
+      # THE SEAT'S OWN CEILING (2026-11-20). pi has no default-timeout key in its settings, so
+      # the limit a worker's single shell call may run is carried into the seat's environment
+      # instead: one number from bin/agents/cmd-limit-lib.sh (30 minutes by default, 2 hours
+      # declared), read by the worker's own scripts and by the arm's stall test. The rule itself
+      # travels in the brief (bin/agents/erindi-brief.sh, rules 7 and 8) and the wall clock is
+      # judged by bin/agents/eindri-stall.sh — this export is what makes the number the SAME one.
+      LIMIT_S="1800"; LIMIT_MAX_S="7200"
+      if [ -r "$LAUNCHER_ROOT/bin/agents/cmd-limit-lib.sh" ]; then
+        LIMIT_S="$(bash "$LAUNCHER_ROOT/bin/agents/cmd-limit-lib.sh" seconds 2>/dev/null || echo 1800)"
+        LIMIT_MAX_S="$(bash "$LAUNCHER_ROOT/bin/agents/cmd-limit-lib.sh" max-seconds 2>/dev/null || echo 7200)"
+      fi
       {
         printf '#!/usr/bin/env bash\n'
         printf '# written by bin/seat/pi-launcher.sh — do not hand-edit\n'
         printf 'set -eu\n'
+        printf 'export YMIR_CMD_LIMIT_S=%s YMIR_CMD_LIMIT_MAX_S=%s\n' "$(shell_quote "$LIMIT_S")" "$(shell_quote "$LIMIT_MAX_S")"
         printf 'bash %s release --quiet 2>/dev/null || true\n' "$(shell_quote "$LAUNCHER_ROOT/bin/notify/telegram-transport.sh")"
         printf 'cd %s\n' "$(shell_quote "$CWD")"
         printf 'exec %s\n' "$LINE"

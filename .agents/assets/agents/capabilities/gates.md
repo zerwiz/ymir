@@ -23,7 +23,6 @@
 | model-alias-check.sh | model-alias-check.sh — does every alias a body names resolve in the fl | tested+named | keep (a human or a cron row must run it) |
 | portability-ratchet.sh | portability-ratchet.sh — the GNU-only callers may go DOWN, never up. | tested | keep (a human or a cron row must run it) |
 | public-data-ward.test.sh | public-data-ward.test.sh — prove the RULES/04 ward BITES. | tested | keep (a human or a cron row must run it) |
-| push-road.test.sh | push-road.test.sh — prove the push road mends of plan 339.1, in a THRO | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
 | readme-claims.sh | readme-claims.sh — the user-facing documents must not claim what the t | tested | keep (a human or a cron row must run it) |
 | syn-arm-pretool-check.sh | syn-arm-pretool-check.sh - PreToolUse seatbelt for watcher-arm bash comm | tested+named | keep (a human or a cron row must run it) |
 | syn-asset-pretool-check.sh | syn-asset-pretool-check.sh — PreToolUse seatbelt for governed paths. | tested+named | keep (a human or a cron row must run it) |
@@ -65,7 +64,6 @@
 | hoard-guard.sh | hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME). | tested+named | keep (a human or a cron row must run it) |
 | home-contract-guard.sh | home-contract-guard.sh — the contract that raises a user's home is che | tested | keep (a human or a cron row must run it) |
 | house-colour-guard.sh | (no header line) | tested | keep (a human or a cron row must run it) |
-| hypr-door-guard.sh | (no header line) | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
 | identity-guard.sh | identity-guard.sh — a commit that leaves by push must not publish a pr | tested | keep (a human or a cron row must run it) |
 | inventory-guard.sh | inventory-guard.sh — a register that runs in no gate is a capability t | tested | keep (a human or a cron row must run it) |
 | language-guard.sh | language-guard.sh — two tongues: English for the work, Old Norse for t | tested+named | keep (a human or a cron row must run it) |
@@ -120,7 +118,6 @@
 | test_fixes_regate.sh | test_fixes_regate.sh — the record gate judges CONTENT, not ceremony (2 | tested | keep (a human or a cron row must run it) |
 | test_fixes_validate.sh | test_fixes_validate.sh — plan 272 fault 10: the fix-note validator jud | tested | keep (a human or a cron row must run it) |
 | test_fleet_roads.sh | test_fleet_roads.sh — the ssh-roads ward judges the marked block, and  | tested | keep (a human or a cron row must run it) |
-| test_four_shelves.sh | test_four_shelves.sh — the readers work with the ONE-CYCLE LINKS REMOV | tested | keep (a human or a cron row must run it) |
 | test_gate_directory.sh | test_gate_directory.sh — plan 295 fix S1: the gate list is a DIRECTORY | tested | keep (a human or a cron row must run it) |
 | test_gather_merge_guard.sh | test_gather_merge_guard.sh — plan 272 fault 9: a gathered batch that l | tested | keep (a human or a cron row must run it) |
 | test_gather_orders_by_base.sh | test_gather_orders_by_base.sh — plan 293 part 7: a packet names the br | tested | keep (a human or a cron row must run it) |
@@ -130,7 +127,6 @@
 | test_handoff_packet.sh | test_handoff_packet.sh — proves the packet door reads the schema's pac | tested+named | keep (a human or a cron row must run it) |
 | test_hermes_seat.sh | test_hermes_seat.sh — the acceptance test for plan 177 H1/H2/H3: Herme | tested+named | keep (a human or a cron row must run it) |
 | test_home_sync_clock.sh | test_home_sync_clock.sh — the clock commits the records the house writ | tested | keep (a human or a cron row must run it) |
-| test_hypr_door_guard.sh | test_hypr_door_guard.sh — the ward that keeps every Hyprland act in di | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
 | test_main_red.sh | test_main_red.sh — the alarm BITES, and it stays quiet where it must. | tested | keep (a human or a cron row must run it) |
 | test_maker_names.sh | test_maker_names.sh — RULES/53: the maker ward refuses a model, a make | tested | keep (a human or a cron row must run it) |
 | test_merge_method.sh | test_merge_method.sh — the merge flag follows the PR's kind (RULES/08, | tested | keep (a human or a cron row must run it) |
@@ -147,7 +143,6 @@
 | test_plan_state.sh | plan missing headers -> finding | tested | keep (a human or a cron row must run it) |
 | test_plan_watch.sh | dry-run prints arithmetic, sends nothing | tested | keep (a human or a cron row must run it) |
 | test_pr_identity.sh | test_pr_identity.sh — the ward that judges a pull request: the signatu | tested | keep (a human or a cron row must run it) |
-| test_pr_patterns_mailbox.sh | test_pr_patterns_mailbox.sh — a MAILBOX is an address, a ROLE TOKEN is | tested | keep (a human or a cron row must run it) |
 | test_pr_ship_guard.sh | test_pr_ship_guard.sh — proves the ship door judges the PR and not the | tested | keep (a human or a cron row must run it) |
 | test_queue_warden.sh | test_queue_warden.sh — the warden is HYGIENE, and its one merge is the | tested | keep (a human or a cron row must run it) |
 | test_regenerate_on_merge_cleanup.sh | test_regenerate_on_merge_cleanup.sh — the merge driver leaves no `.mer | tested | keep (a human or a cron row must run it) |
@@ -168,6 +163,5 @@
 | test_warden_lib.sh | test_warden_lib.sh — plan 290 §3, proven: the wardens act only where  | tested+named | keep (a human or a cron row must run it) |
 | test_wardens_off_until_named.sh | test_wardens_off_until_named.sh — the Allfather's word, proven: an exi | tested | keep (a human or a cron row must run it) |
 | test_worker_speaks_to_helm.sh | test_worker_speaks_to_helm.sh — plan 272 faults 1 and 2. | tested | keep (a human or a cron row must run it) |
-| test_woven_hand_tail.sh | test_woven_hand_tail.sh — a WOVEN page carries a hand section through  | tested | keep (a human or a cron row must run it) |
 | toolchain.sh | toolchain.sh — the provider wrappers (W0033). A typed front door to th | tested+named | keep (a human or a cron row must run it) |
 | wedge-notify.sh | wedge-notify.sh — the Ymir wedge-alarm notifier. | tested+named | keep (a human or a cron row must run it) |

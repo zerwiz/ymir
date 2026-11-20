@@ -118,6 +118,15 @@
 # 0,20,40 * * * is not a shape Nornir reads: use three hourly rows on this machine's own minute.
 @hourly:47 bin/agents/spam-guard.sh
 
+# — A WORKER THAT HAS STOPPED MOVING IS A FAULT TOO (2026-11-20, the Allfather's word: "this should rodd
+# take care of and the arm") — `eindri-liveness.sh` asks whether an AGENT still stands in the pane, so two
+# errands that sat 8h45m and 1h50m on one command were counted ALIVE. This row asks the second question,
+# every ten minutes, while any errand says `working`: has the PANE moved in 20, or has one command run past
+# its 30-minute limit? Once per stall it wakes the helm and types one line into the worker; ten minutes
+# later, if nothing has moved, Rödd sends ONE message with look/stop/let-it-run. A clean fleet is silent.
+# UNGATED on purpose: the errands are on the machine that spawned them, and each machine runs its own arm.
+@every:10 bin/time/nornir-job-eindri-stall.sh
+
 # every N minutes, aligned to the hour — the finest cadence Nornir offers (2026-11-13)
 @heart @every:5 bin/time/nornir-job-snotra-autojoin.sh
 

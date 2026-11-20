@@ -45,7 +45,7 @@ bin[80]{file,does,kind,verdict,disposition,callers,lines}:
   "harness-contract-install.sh","harness-contract-install.sh — every harness reads ONE contract, and an update keeps it true.","tool","wired","keep",1,81
   "harness-extensions-install.sh","harness-extensions-install.sh — every harness gets the house's extensions and packages, on install AND on update.","tool","wired","keep",12,531
   "helm-identity.sh","helm-identity.sh — WHO holds this helm, WHAT it is for, WHICH machine and fleet it","tool","wired","keep",6,145
-  "herdr-agents.py","'''herdr-agents.py — list the agents standing in this herdr session, as TOON.","tool","wired","keep",14,259
+  "herdr-agents.py","'''herdr-agents.py — list the agents standing in this herdr session, as TOON.","tool","wired","keep",15,259
   "herdr-editor.py","'''herdr-editor.py — read the INPUT BOX of an agent's pane, and say what is in it.","tool","wired","keep",3,133
   "herdr-ensure.sh","herdr-ensure.sh — Þjazi: guarantee the terminal backend Ymir needs.","tool","wired","keep",4,106
   "herdr-run.sh","herdr-run.sh — raise an Eindri in herdr, by the grain that fits the errand.","tool","tested","keep",20,752
@@ -60,7 +60,7 @@ bin[80]{file,does,kind,verdict,disposition,callers,lines}:
   "opencode-launcher.sh","opencode-launcher.sh — the ONE launch door for an OpenCode seat, as pi-launcher.sh is pi's.","tool","wired","keep",5,111
   "pending.sh","pending.sh — everything that is waiting on the operator, in ONE list.","tool","wired","keep",5,117
   "pi-door.sh","pi-door.sh — the door a SEAT THE OPERATOR STARTS BY HAND passes through.","tool","wired","keep",3,177
-  "pi-launcher.sh","pi-launcher.sh — the ONE launcher generator for a pi seat.","tool","tested","keep",3,161
+  "pi-launcher.sh","pi-launcher.sh — the ONE launcher generator for a pi seat.","tool","tested","keep",4,173
   "rank.sh","rank.sh — ask a jev judge to score items on jev's three categories.","tool","wired","keep",1,122
   "resolve.py","'''ONE resolver: `herdr:<pane>`, `hermes:<id-or-title>`, or a bare target — and bare is herdr.","tool","wired","migrate → src/ymir_runtime/dispatch/resolve.py",4,55
   "roster.sh","HERE='$(cd -- '$(dirname -- '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",5,120

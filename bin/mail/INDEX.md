@@ -34,7 +34,7 @@ bin[20]{file,does,kind,verdict,disposition,callers,lines}:
   "gna_notify.py","'''gna_notify.py — tell the arm about mail that arrived, once, as it arrives.","tool","wired","keep",2,320
   "gna_store.py","'''Gná's store: one message once, and the account is the boundary.","tool","wired","keep",0,263
   "inbound-test.sh","inbound-test.sh — THE acceptance test for 'people can mail us' (plan 116 §15.3.4).","tool","wired","keep",3,141
-  "install.sh","install.sh — seat Gná's desk on THIS machine.","tool","tested","keep",63,59
+  "install.sh","install.sh — seat Gná's desk on THIS machine.","tool","tested","keep",62,59
   "ledger.sh","ledger.sh — the one mail record: what went out, what came in, and when.","tool","wired","keep",3,279
   "mail-scan.sh","mail-scan.sh — read-only: the last N hours of a mailbox, as compact JSON.","tool","wired","keep",3,80
   "test_draft_age.py","'''The proofs for `bin/mail/draft-age.sh` — a draft cannot grow old quietly.","tool","wired","keep",2,477

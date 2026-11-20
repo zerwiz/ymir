@@ -196,3 +196,4 @@ backend[176]{file,does,kind,verdict,disposition,callers,lines}:
 ## CHANGE LOG
 
 - 2026-11-20 — review-mend: added missing heading for #844
+- 2026-11-20 — review-mend: added missing heading for #843
