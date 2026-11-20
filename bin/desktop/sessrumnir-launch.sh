@@ -135,8 +135,8 @@ if is_running; then
   exit 0
 fi
 
-# plan 271: a new window is not started over the operator's call (YMIR_DESK_NOW=1 is his "now").
-bash "$SCRIPT_DIR/../desk/in-call.sh" check --what "Sessrúmnir" || exit 3
+# plan 275 S8 (2026-11-12): Sessrúmnir is a window over its agents; it takes neither the microphone nor a model, so
+# a call does not hold it back. The call guard stays on the voice doors (bin/voice/voice-door.sh, Rödd's head).
 
 # A dead main leaves its helpers running as orphans of the user systemd. They
 # still carry the identity string, so reaping them before the launch is the
