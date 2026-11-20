@@ -1,0 +1,1806 @@
+
+
+
+<!DOCTYPE html>
+<html lang="en-US" data-lang="en-US" crm-lang="en-US" dir="ltr" crm-lcid="1033" same-site-mode="Lax">
+<head>
+		
+		<meta charset="utf-8"><meta name="viewport" content="width=device-width,&#32;initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<script type="text/javascript" nonce="RIeQ4ndcy2/RSBSu6W5Zk0Z+ldvEIXvnbnO/a/uzoq8=">
+				
+        </script>
+	<title>
+	
+		MAWP
+		
+</title>
+		
+		<script src="/_portal/d4668991-d7b1-4707-9c19-04dfff71ff04/Resources/ResourceManager?lang=en-US"></script>
+	
+	<script type="text/javascript" nonce="RIeQ4ndcy2/RSBSu6W5Zk0Z+ldvEIXvnbnO/a/uzoq8=">
+        // Refresh all powerBI Iframes on Login in one Iframe
+        window.addEventListener('message', function (event) {
+            if (event && event.data && event.data == 'refreshPowerBI') {
+                $("iframe.powerbi").each(function () {
+                    this.src = this.src;
+                });
+            }
+        });
+
+        // Fix for incorrect viewport width setting in IE 10 on Windows Phone 8.
+        if (navigator.userAgent.match(/IEMobile\/10\.0/)) {
+            var msViewportStyle = document.createElement("style");
+            msViewportStyle.appendChild(document.createTextNode("@-ms-viewport{width:auto!important}"));
+            document.getElementsByTagName("head")[0].appendChild(msViewportStyle);
+        }
+    </script>
+		
+	
+		
+		<link href="/bootstrap.min.css" rel="stylesheet">
+
+		<link href="https://content.powerapps.com/resource/powerappsportal/dist/font-awesome.BootstrapV5.bundle-2ce6efb497.css" onerror="javascript:&#32;var&#32;target&#32;=&#32;event.target;&#32;var&#32;link&#32;=&#32;document.createElement(&#39;link&#39;);&#32;link.crossOrigin&#32;=&#32;target.crossOrigin;&#32;link.href&#32;=&#32;&#39;/dist/font-awesome.BootstrapV5.bundle-2ce6efb497.css&#39;;&#32;link.rel&#32;=&#32;&#39;stylesheet&#39;;&#32;target.insertAdjacentElement(&#39;afterend&#39;,link);" rel="stylesheet">
+
+				<link href="https://content.powerapps.com/resource/powerappsportal/dist/preform.BootstrapV5.bundle-e3e84e09a3.css" onerror="javascript:&#32;var&#32;target&#32;=&#32;event.target;&#32;var&#32;link&#32;=&#32;document.createElement(&#39;link&#39;);&#32;link.crossOrigin&#32;=&#32;target.crossOrigin;&#32;link.href&#32;=&#32;&#39;/dist/preform.BootstrapV5.bundle-e3e84e09a3.css&#39;;&#32;link.rel&#32;=&#32;&#39;stylesheet&#39;;&#32;target.insertAdjacentElement(&#39;afterend&#39;,link);" rel="stylesheet">
+
+
+		
+		<link href="https://content.powerapps.com/resource/powerappsportal/dist/privatemode.bundle-049b12b66e.css" onerror="javascript:&#32;var&#32;target&#32;=&#32;event.target;&#32;var&#32;link&#32;=&#32;document.createElement(&#39;link&#39;);&#32;link.crossOrigin&#32;=&#32;target.crossOrigin;&#32;link.href&#32;=&#32;&#39;/dist/privatemode.bundle-049b12b66e.css&#39;;&#32;link.rel&#32;=&#32;&#39;stylesheet&#39;;&#32;target.insertAdjacentElement(&#39;afterend&#39;,link);" rel="stylesheet">
+
+
+		
+			
+
+
+		
+		<link href="/theme.css" rel="stylesheet">
+<link href="/swiper.css" rel="stylesheet">
+<link href="/plugins.css" rel="stylesheet">
+<link href="/datepicker.css" rel="stylesheet">
+<link href="/custom-swiper-1.css" rel="stylesheet">
+<link href="/style.css" rel="stylesheet">
+<link href="/custome&#32;styles.css" rel="stylesheet">
+<link href="/icofont.min.css" rel="stylesheet">
+<link href="/portalbasictheme.css" rel="stylesheet">
+
+		
+		
+		
+		
+		
+	
+		
+		<link href="https://content.powerapps.com/resource/powerappsportal/dist/pwa-style.bundle-55718a4c0d.css" onerror="javascript:&#32;var&#32;target&#32;=&#32;event.target;&#32;var&#32;link&#32;=&#32;document.createElement(&#39;link&#39;);&#32;link.crossOrigin&#32;=&#32;target.crossOrigin;&#32;link.href&#32;=&#32;&#39;/dist/pwa-style.bundle-55718a4c0d.css&#39;;&#32;link.rel&#32;=&#32;&#39;stylesheet&#39;;&#32;target.insertAdjacentElement(&#39;afterend&#39;,link);" rel="stylesheet">
+
+		</head>
+<body data-sitemap-state="/MAWP/:/" data-dateformat="M/d/yyyy" data-timeformat="h:mm tt" data-datetimeformat="M/d/yyyy h:mm tt" data-app-path="/" data-ckeditor-basepath="/js/BaseHtmlContentDesigner/Libs/msdyncrm_/libs/ckeditor/" data-case-deflection-url="/_services/search/d4668991-d7b1-4707-9c19-04dfff71ff04">
+
+
+	
+		<link href="https://content.powerapps.com/resource/powerappsportal/dist/pcf-style.bundle-373a0f4982.css" onerror="javascript:&#32;var&#32;target&#32;=&#32;event.target;&#32;var&#32;link&#32;=&#32;document.createElement(&#39;link&#39;);&#32;link.crossOrigin&#32;=&#32;target.crossOrigin;&#32;link.href&#32;=&#32;&#39;/dist/pcf-style.bundle-373a0f4982.css&#39;;&#32;link.rel&#32;=&#32;&#39;stylesheet&#39;;&#32;target.insertAdjacentElement(&#39;afterend&#39;,link);" rel="stylesheet">
+
+			
+	
+		
+
+	<div id="offlineNotificationBar" class="displayNone">
+		<img alt="web" class="col-3" id="web" onerror="javascript:&#32;var&#32;target&#32;=&#32;event.target;&#32;var&#32;img&#32;=&#32;document.createElement(&#39;img&#39;);&#32;img.src&#32;=&#32;&#39;/css/images/web.png&#39;;&#32;img.alt&#32;=&#32;&#39;web&#39;;&#32;img.id&#32;=&#32;&#39;web&#39;&#32;;&#32;target.insertAdjacentElement(&#39;afterend&#39;,img);&#32;target.remove();" src="https://content.powerapps.com/resource/powerappsportal/img/web.png">
+		<div id="message">You&#8217;re offline. This is a read only version of the page.</div>
+		<div id="close" onclick="this.parentElement.style.display='none';"><img alt="close" class="col-3" onerror="javascript:&#32;var&#32;target&#32;=&#32;event.target;&#32;var&#32;img&#32;=&#32;document.createElement(&#39;img&#39;);&#32;img.src&#32;=&#32;&#39;/css/images/close.png&#39;;&#32;img.alt&#32;=&#32;&#39;close&#39;;&#32;img.id&#32;=&#32;&#39;&#39;&#32;;&#32;target.insertAdjacentElement(&#39;afterend&#39;,img);&#32;target.remove();" src="https://content.powerapps.com/resource/powerappsportal/img/close.png"></div>
+	</div>
+
+	
+
+	<script type="text/javascript" nonce="RIeQ4ndcy2/RSBSu6W5Zk0Z+ldvEIXvnbnO/a/uzoq8=">
+        window.DisableCkEditor = window.DisableCkEditor || {};
+		
+		DisableCkEditor.Value = 'False';
+    </script>
+
+	<script type="text/javascript" nonce="RIeQ4ndcy2/RSBSu6W5Zk0Z+ldvEIXvnbnO/a/uzoq8=">
+        var enableOmniChannelWidgetWithSiteCopilot = 'False';
+        if (enableOmniChannelWidgetWithSiteCopilot === "True" || enableOmniChannelWidgetWithSiteCopilot === "true") {
+            const authUrl = window.location.origin + "/_services/auth/portalusertoken";
+            const fetchWithRetries = async (url, options, retries) => {
+                try {
+                    const authResponse = await fetch(url, options);
+                    const token = await authResponse.text();
+                    sessionStorage['c2Token'] = token;
+                } catch (err) {
+                    if (retries === 1) throw err;
+                    return await fetchWithRetries(url, options, retries - 1);
+                }
+            };
+            fetchWithRetries(authUrl, { method: "POST" }, 4);
+
+            // Enable/disable Omnichannel session refresh on auth state change
+            // When enabled, closeChat() is called when user logs in/out to start a fresh session
+            var enableOmniChannelSessionRefreshSetting = 'True';
+            window.enableOmniChannelSessionRefresh = enableOmniChannelSessionRefreshSetting === 'True' || enableOmniChannelSessionRefreshSetting === 'true';
+        }
+    </script>
+
+	<script type="text/javascript" nonce="RIeQ4ndcy2/RSBSu6W5Zk0Z+ldvEIXvnbnO/a/uzoq8=">
+		var isPvaBotAuthenticated = sessionStorage['isPvaBotAuthenticated'];
+		var isPortalUserLoggedIn = 'False';
+
+        if ((isPvaBotAuthenticated != null || isPvaBotAuthenticated != undefined) && isPvaBotAuthenticated != isPortalUserLoggedIn) {
+			sessionStorage['triggerPvaBotSignOut'] = true;
+			sessionStorage.removeItem('c2Token');
+            sessionStorage.removeItem('directLinetoken');
+            sessionStorage.removeItem('conversation_Id');
+
+			sessionStorage.removeItem('bot_c2Token');
+			sessionStorage.removeItem('botdirectLinetoken');
+            sessionStorage.removeItem('botconversation_Id');
+		}
+		sessionStorage['isPvaBotAuthenticated'] = isPortalUserLoggedIn;
+    </script>
+
+	<script type="text/javascript" nonce="RIeQ4ndcy2/RSBSu6W5Zk0Z+ldvEIXvnbnO/a/uzoq8=">
+		window["CSPSettings"] = window["CSPSettings"] || {};
+		window["CSPSettings"].nonce = 'RIeQ4ndcy2/RSBSu6W5Zk0Z+ldvEIXvnbnO/a/uzoq8=';
+        window["FabricConfig"] = window["FabricConfig"] || {};
+        window["FabricConfig"].mergeStyles = window["FabricConfig"].mergeStyles || {};
+		window["FabricConfig"].mergeStyles.cspSettings = window["CSPSettings"];
+        window["Microsoft"] = window["Microsoft"] || {};
+		window["Microsoft"].Dynamic365 = {
+			Portal: {
+				
+				User: {
+					userName: '',
+					firstName: '',
+					lastName: '',
+					email: '',
+					contactId: '',
+					userRoles: [],
+				},
+				
+				type: 'PowerPages_BlankTemplate_V2',
+				id: 'cc0e3b44-f27a-4e9f-9011-d25e43cfe7df', 
+				geo: 'EUR', 
+				tenant: 'be8afad1-3321-43dd-8725-3473d1c6a59e', 
+				correlationId: 'a32ad85c-2126-4460-8453-cbaacacb08f9',
+                orgEnvironmentId: '8d70172f-d7f3-edd6-9048-fe849c37e857',
+                orgId: 'e4f50e48-095b-4c08-bd3b-1b147eabf324',
+                portalProductionOrTrialType: 'Production',
+                isTelemetryEnabled: 'True',
+                InstrumentationSettings: {
+                    instrumentationKey: '197418c5cb8c4426b201f9db2e87b914-87887378-2790-49b0-9295-51f43b6204b1-7172',
+                    collectorEndpoint: 'https://eu-mobile.events.data.microsoft.com/OneCollector/1.0/'
+                },
+                timerProfileForBatching: 'NEAR_REAL_TIME',
+                activeLanguages: ["en-US"],
+                isClientApiEnabled: 'True',
+                isSpaSite: 'False'
+            }
+        };
+
+		window["Microsoft"].PowerPages = window["Microsoft"].PowerPages || {};
+		window["Microsoft"].PowerPages.onPagesClientApiReady = (callback) => {
+			return new Promise((resolve, reject) => {
+				let isComplete = false;
+				let timeoutId;
+				const timeoutInterval = 10000;
+		
+				function handleReady() {
+					if (!isComplete && window.$pages) {
+						isComplete = true;
+						clearTimeout(timeoutId);
+						try {
+							if (typeof callback === "function") {
+								callback(window.$pages);
+							}
+						} catch (e) {
+							console.error("onPagesClientApiReady callback error:", e);
+						}
+						resolve(window.$pages); // should we reject if callback throws an error
+					}
+				}
+		
+				if (window.$pages) {
+					handleReady();
+					return;
+				}
+		
+				function sdkListener() {
+					handleReady();
+					window.removeEventListener('pagesSDKInitialized', sdkListener);
+				}
+		
+				window.addEventListener('pagesSDKInitialized', sdkListener);
+		
+				timeoutId = setTimeout(() => {
+					if (!isComplete) {
+						window.removeEventListener('pagesSDKInitialized', sdkListener);
+						if (window.$pages) {
+							handleReady();
+						} else {
+							isComplete = true;
+							reject(new Error('window.$pages not available.'));
+						}
+					}
+				}, timeoutInterval);
+			});
+		};
+
+		// Deprecated alias: Microsoft.Dynamic365.Portal.onPagesClientApiReady.
+		// Remove once telemetry shows no callers remain.
+		(function () {
+			var _impl = window["Microsoft"].PowerPages.onPagesClientApiReady;
+			var _logged = false;
+
+			window["Microsoft"].Dynamic365.Portal.onPagesClientApiReady = function (callback) {
+				if (!_logged) {
+					_logged = true;
+					try {
+						if (window.clientLogWrapper && typeof window.clientLogWrapper.traceWarning === "function") {
+							window.clientLogWrapper.traceWarning(
+								"Microsoft.Dynamic365.Portal.onPagesClientApiReady invoked (deprecated)",
+								"DeprecatedApi",
+								"ClientApiReady",
+								"Invoke",
+								"DeprecationTracker"
+							);
+						}
+						if (typeof console !== "undefined" && console.warn) {
+							console.warn(
+								"[DEPRECATED] Microsoft.Dynamic365.Portal.onPagesClientApiReady is deprecated " +
+								"and will be removed in a future release. Use Microsoft.PowerPages.onPagesClientApiReady instead."
+							);
+						}
+					} catch (_) { /* never break the caller */ }
+				}
+
+				return _impl(callback);
+			};
+		})();
+
+        // Mark request not cacheable if Dynamics365PortalAnalytics cookie is being refreshed by the server or if the cookie in request header is invalid
+		
+
+        // For client side telemetry intializing Dynamics365PortalAnalytics cookie object
+		
+        window["Microsoft"].Dynamic365.Portal.dynamics365PortalAnalytics = 'ns4nXimJQu4qyxxlWJXXzL3bJu1NWRud136vHbznu3GtQMbXI6orMlHXWuhcs4vfD5IvFvu65FN2mVpisvWlY7k96s2hvPXdyAaLf5z9OePW-JKZ8qaOb-7zBsM61CjkocPwlC3xbcALgXC_BySzUA2'; // CodeQL [SM00430] False Positive: only alphanumeric chars allowed, for non-alphanumeric char it will return INVALID_CHARACTERS_IN_COOKIE 
+        localStorage.setItem("Dynamics365PortalAnalytics", window["Microsoft"].Dynamic365.Portal.dynamics365PortalAnalytics);
+			
+
+	</script>
+	
+	<script type="text/javascript" nonce="RIeQ4ndcy2/RSBSu6W5Zk0Z+ldvEIXvnbnO/a/uzoq8=">
+
+		
+    </script>
+
+	
+		<link rel="preload" as="image" href="/banner_generic_default.png">
+<header class="transparent">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="de-flex sm-pt10">
+                    <div class="de-flex-col">
+                        <div id="logo">
+                            <a href="/">
+                                <img class="logo-main" src="/CHIPS logo_RGB_white colour.jpg" alt="">
+                                <img class="logo-mobile" src="/CHIPS logo_RGB_white colour.jpg" alt="">
+                            </a>
+                        </div>
+                        </div>
+                    <div class="de-flex-col header-col-mid">
+                        <ul id="mainmenu">
+                            
+                            <li>
+                                <a class="menu-item" href="javascript:void(0);">About</a>
+                                <span class="submenu-arrow">▼</span>
+                                <ul>
+                                    <li><a href="/About-us">About us</a></li>
+                                    <li><a href="/Governance-and-Members">Governance and members</a></li>
+                                    <!--<li><a href="/Team">Team</a></li>-->
+                                    <li><a href="/Vacancies">Vacancies</a></li>
+                                    <li><a href="/Administrative-procurement">Administrative procurement</a></li>
+                                </ul>
+                            </li>
+
+                            <li>
+                                <a class="menu-item" href="javascript:void(0);">Apply for funding</a>
+                                <span class="submenu-arrow">▼</span>
+                                <ul>
+                                    <li><a href="/Open-and-Upcoming-Calls">Open & Upcoming Calls</a></li>
+                                    <li><a href="/Closed-Calls">Closed Calls</a></li>
+                                    <li><a href="/CallsforExperts">Calls for experts</a></li>
+                                    <!--<li><a href="/Calls-QA">Calls Q&A</a></li>
+                                    <li class="separator"></li>
+                                    <li><a href="javascript:void(0);">Finding partners</a></li>-->
+                                    
+                                </ul>
+                            </li>
+
+                            <li>
+                                <a class="menu-item" href="javascript:void(0);">Programme</a>
+                                <span class="submenu-arrow">▼</span>
+                                <ul>
+                                    <li><a href="/Chips-for-Europe">Chips for Europe Initiative</a></li>
+                                    <li><a href="/ECS">Electronics Components and Systems</a></li>
+                                    <li class="separator"></li>
+                                    <!--<li><a href="/Projects">Projects</a></li>-->
+                                    <li><a href="/Operational-Procurement">Operational procurement</a></li>
+                                    <li class="separator"></li>
+                                    <!--<li><a href="/Success-Stories">Success Stories</a></li>-->
+                                </ul>
+                            </li>    
+                            
+                            <li>
+                                <a class="menu-item" href="javascript:void(0);">News and Events</a>
+                                <span class="submenu-arrow">▼</span>
+                                <ul>
+                                    <li><a href="/News">News</a></li>
+                                    <li><a href="/Events">Events</a></li>
+                                    <li class="separator"></li>
+                                    <li><a href="/Podcasts">Podcast</a></li>
+                                    <li><a href="/Newsletter">Newsletter</a></li>
+                                </ul>
+                            </li>
+
+                            <li>
+                                <a class="menu-item" href="javascript:void(0);">Resources</a>
+                                <span class="submenu-arrow">▼</span>
+                                <ul>
+                                    <li><a href="/General-Documents">General documents</a></li>
+                                    <li><a href="/MAWP">Work Programme</a></li>
+                                    <!--<li><a href="/CoordinatorsSpace">Coordinators Space</a></li>-->
+                                </ul>
+                            </li>
+
+
+                            <!--<li>
+                                <a class="menu-item" href="/Chips-for-Europe">Chips for Europe</a>
+                                <span class="submenu-arrow">▼</span>
+                                <ul>
+                                    <li><a href="javascript:void(0);">Pilot Lines</a></li>
+                                    <li><a href="javascript:void(0);">Competence Centers</a></li>
+                                    <li><a href="/DesignPlatform">Design Platform</a></li>
+                                    <li><a href="/QuantumActions">Quantum Actions</a></li>
+                                </ul>
+                            </li>
+
+                            <li>
+                                <a class="menu-item" href="/ECS">ECS R&I</a>
+                                <span class="submenu-arrow">▼</span>
+                                <ul>
+                                    <li><a href="/Projects">Projects</a></li>
+                                    <li><a href="/Success-Stories-ECS">Success Stories</a></li>
+                                </ul>
+                            </li>
+
+                            
+
+    <li>
+        <a class="menu-item" style="color: rgb(255, 152, 0)" href="/SignIn?returnUrl=%2F">
+            Sign in
+        </a>
+    </li>
+
+  -->
+                        </ul>
+                        </div>
+                    
+                    <div class="de-flex-col">
+                        <div id="my-custom-toggle"></div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+<style>
+    /* -----------------------------------------------------------
+       1. DESKTOP STYLES (Restores Laptop View)
+       ----------------------------------------------------------- */
+    #my-custom-toggle { display: none; }
+    .submenu-arrow { display: none; } 
+    .menu-item { color: #ffffff !important; }
+    .separator { border-bottom: 1px solid #555; margin: 5px 0; }
+
+    /* CSP Safe No-Scroll Class */
+    body.body-no-scroll {
+        overflow: hidden !important;
+    }
+
+   /* -----------------------------------------------------------
+       2. MOBILE STYLES (Only for screens smaller than 992px)
+       ----------------------------------------------------------- */
+    @media only screen and (max-width: 992px) {
+        
+        /* FORCE HEADER TO BE ON TOP OF EVERYTHING */
+        header, header.transparent {
+            background-color: rgb(0, 63, 181) !important; /* CHIPS JU BLUE */
+            position: fixed !important;
+            top: 0 !important;
+            width: 100% !important;
+            z-index: 99999999 !important; /* Maximum z-index */
+            height: 75px !important; /* Lock the header height */
+        }
+
+        /* HIDE THEME TOGGLE */
+        #menu-btn, .mobile-nav-button, .menu_side_area {
+            display: none !important;
+            visibility: hidden !important;
+        }
+
+        /* SHOW CUSTOM TOGGLE */
+        #my-custom-toggle {
+            display: block !important;
+            width: 45px;
+            height: 45px;
+            
+            /* Position relative to the header so it never moves */
+            position: absolute !important;
+            right: 20px !important;
+            top: 15px !important;
+            z-index: 99999999 !important; 
+            
+            cursor: pointer;
+            pointer-events: auto;
+            border-radius: 4px;
+            background: linear-gradient(to bottom, white 0%, white 20%, transparent 20%, transparent 40%, white 40%, white 60%, transparent 60%, transparent 80%, white 80%, white 100%);
+            padding: 8px;
+            background-origin: content-box;
+        }
+
+        /* ARROW STYLING */
+        #mainmenu li {
+            position: relative !important;
+            display: block !important;
+            width: 100%;
+            /* Lighter borders to look clean against the blue */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+            margin: 0;
+            padding: 0 !important;
+        }
+
+        .submenu-arrow {
+            display: block !important;
+            position: absolute !important;
+            top: 0 !important;
+            right: 0 !important;
+            width: 50px !important;
+            height: 54px !important;
+            line-height: 54px !important;
+            text-align: center !important;
+            color: #ffffff !important;
+            font-size: 14px !important;
+            cursor: pointer !important;
+            border-left: 1px solid rgba(255, 255, 255, 0.2) !important;
+            z-index: 100 !important;
+        }
+        
+        .mobile-expanded .submenu-arrow {
+            transform: rotate(180deg);
+        }
+
+        /* MAIN MENU CONTAINER */
+        #mainmenu {
+            display: none !important; 
+            
+            /* FIXED TO ALL 4 CORNERS (Prevents iOS gap & scrolling) */
+            position: fixed !important; 
+            top: 0 !important; 
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100% !important; 
+            
+            background-color: rgb(0, 63, 181) !important; /* CHIPS JU BLUE */
+            background: rgb(0, 63, 181) !important; /* CHIPS JU BLUE */
+            
+            /* CRITICAL FIX: Z-Index must be slightly lower than header */
+            z-index: 99999990 !important; 
+            
+            padding: 85px 0 100px 0 !important; /* Starts below the header */
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* TRIGGER MENU OPEN USING CSS CLASS */
+        #mainmenu.is-open {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        /* LINKS */
+        #mainmenu li a.menu-item {
+            display: block !important;
+            padding: 15px 60px 15px 20px !important; 
+            color: #ffffff !important;
+            font-size: 18px !important;
+            text-decoration: none;
+            width: 100%;
+            opacity: 1 !important;
+        }
+
+        /* SUBMENUS (Hidden by default) */
+        #mainmenu li ul {
+            display: none !important; 
+            /* Slightly darker blue for submenus to create contrast */
+            background: rgb(0, 45, 130) !important; 
+            width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        #mainmenu li ul li a {
+            display: block !important;
+            padding: 15px 20px 15px 40px !important;
+            color: #dddddd !important;
+            font-size: 16px !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
+        /* SHOW SUBMENU WHEN PARENT IS EXPANDED */
+        #mainmenu li.mobile-expanded > ul {
+            display: block !important;
+            position: static !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            height: auto !important;
+        }
+    }
+</style>
+<script nonce="RIeQ4ndcy2/RSBSu6W5Zk0Z+ldvEIXvnbnO/a/uzoq8=">
+    function initializeMobileMenu() {
+        var customBtn = document.getElementById('my-custom-toggle');
+        var menu = document.getElementById('mainmenu');
+        
+        if (!customBtn || !menu) return;
+
+        function closeMobileMenu() {
+            menu.classList.remove('is-open');
+            document.body.classList.remove('body-no-scroll');
+
+            var allExpanded = document.querySelectorAll('#mainmenu .mobile-expanded');
+            for (var i = 0; i < allExpanded.length; i++) {
+                allExpanded[i].classList.remove('mobile-expanded');
+            }
+        }
+
+        function openMobileMenu() {
+            menu.classList.add('is-open');
+            document.body.classList.add('body-no-scroll');
+        }
+
+        // 1. Hamburger Toggle Button Logic
+        if(!customBtn.getAttribute('data-bound')) {
+            customBtn.setAttribute('data-bound', 'true'); 
+            
+            customBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (menu.classList.contains('is-open')) {
+                    closeMobileMenu();
+                } else {
+                    openMobileMenu();
+                }
+            });
+        }
+
+        // 2. Submenu Dropdown Logic 
+        var topLevelItems = document.querySelectorAll('#mainmenu > li');
+        
+        for (var t = 0; t < topLevelItems.length; t++) {
+            var li = topLevelItems[t];
+            
+            if(li.getAttribute('data-bound')) continue;
+            li.setAttribute('data-bound', 'true');
+
+            var link = li.querySelector('a.menu-item');
+            var arrow = li.querySelector('.submenu-arrow');
+            var submenu = li.querySelector('ul');
+
+            if (submenu) {
+                var toggleSubmenu = function(e) {
+                    if (window.innerWidth <= 992) {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        var currentLi = this.closest('li');
+
+                        if (currentLi.classList.contains('mobile-expanded')) {
+                            currentLi.classList.remove('mobile-expanded');
+                        } else {
+                            var allOpen = document.querySelectorAll('#mainmenu > li.mobile-expanded');
+                            for (var o = 0; o < allOpen.length; o++) {
+                                allOpen[o].classList.remove('mobile-expanded');
+                            }
+                            currentLi.classList.add('mobile-expanded');
+                        }
+                    }
+                };
+
+                if (link) link.addEventListener('click', toggleSubmenu);
+                if (arrow) arrow.addEventListener('click', toggleSubmenu);
+            } else {
+                if (link) {
+                    link.addEventListener('click', function() {
+                        if (window.innerWidth <= 992) closeMobileMenu();
+                    });
+                }
+            }
+        }
+
+        // 3. Failsafe: Close menu if a user clicks a real link inside a submenu
+        var subLinks = document.querySelectorAll('#mainmenu li ul li a');
+        for (var s = 0; s < subLinks.length; s++) {
+            var subLink = subLinks[s];
+            if(!subLink.getAttribute('data-bound')) {
+                subLink.setAttribute('data-bound', 'true');
+                subLink.addEventListener('click', function() {
+                    if (window.innerWidth <= 992) closeMobileMenu();
+                });
+            }
+        }
+
+        // 4. Clean up cleanly when screen resizes to desktop
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 992) {
+                closeMobileMenu(); 
+            }
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeMobileMenu);
+    } else {
+        initializeMobileMenu();
+    }
+
+   document.addEventListener("DOMContentLoaded", function() {
+    // Target all tables inside main content areas
+    var allTables = document.querySelectorAll("main table, .container table, .page_section table, .services__page table");
+    
+    for (var i = 0; i < allTables.length; i++) {
+        var table = allTables[i];
+        
+        if (table.parentElement && table.parentElement.classList.contains("table-responsive")) {
+            continue;
+        }
+
+        var wrapper = document.createElement("div");
+        wrapper.className = "table-responsive";
+        table.parentNode.insertBefore(wrapper, table);
+        wrapper.appendChild(table);
+    }
+});
+</script>
+<!--
+
+
+<div class=' navbar-expand-xl navbar navbar-dark static-top' style="flex-wrap:wrap;" role='banner'>
+  <div class='skip-to-content'>
+    <a href='#mainContent'>Skip to main content</a>
+  </div>
+... [Remaining Microsoft Default Code Untouched] ...
+-->
+	
+
+	<!-- add anti-forgery token-->
+	<div id="antiforgerytoken" data-url="/_layout/tokenhtml"></div>
+
+	
+			<!-- Client Telemetry init if telemetry enabled-->
+			<script onerror="javascript:&#32;var&#32;target&#32;=&#32;event.target;&#32;var&#32;script&#32;=&#32;document.createElement(&#39;script&#39;);&#32;script.crossOrigin&#32;=&#32;target.crossOrigin;&#32;script.src&#32;=&#32;&#39;/dist/client-telemetry.bundle-d490766e4f.js&#39;;&#32;script.type&#32;=&#32;&#39;text/javascript&#39;;&#32;target.insertAdjacentElement(&#39;afterend&#39;,script);" src="https://content.powerapps.com/resource/powerappsportal/dist/client-telemetry.bundle-d490766e4f.js" type="text/javascript"></script>
+
+		
+	
+		<!-- Client Telemetry Wrapper init -->
+		<script onerror="javascript:&#32;var&#32;target&#32;=&#32;event.target;&#32;var&#32;script&#32;=&#32;document.createElement(&#39;script&#39;);&#32;script.crossOrigin&#32;=&#32;target.crossOrigin;&#32;script.src&#32;=&#32;&#39;/dist/client-telemetry-wrapper.bundle-633e70f51b.js&#39;;&#32;script.type&#32;=&#32;&#39;text/javascript&#39;;&#32;target.insertAdjacentElement(&#39;afterend&#39;,script);" src="https://content.powerapps.com/resource/powerappsportal/dist/client-telemetry-wrapper.bundle-633e70f51b.js" type="text/javascript"></script>
+
+		<script nonce="RIeQ4ndcy2/RSBSu6W5Zk0Z+ldvEIXvnbnO/a/uzoq8=">
+			window.clientLogWrapper = new ClientLogWrapper();
+		</script>
+		<script onerror="javascript:&#32;var&#32;target&#32;=&#32;event.target;&#32;var&#32;script&#32;=&#32;document.createElement(&#39;script&#39;);&#32;script.crossOrigin&#32;=&#32;target.crossOrigin;&#32;script.src&#32;=&#32;&#39;/dist/preform.BootstrapV5.moment_2_29_4.bundle-e6db58f462.js&#39;;&#32;script.type&#32;=&#32;&#39;text/javascript&#39;;&#32;target.insertAdjacentElement(&#39;afterend&#39;,script);" src="https://content.powerapps.com/resource/powerappsportal/dist/preform.BootstrapV5.moment_2_29_4.bundle-e6db58f462.js" type="text/javascript"></script>
+
+		
+
+		<script onerror="javascript:&#32;var&#32;target&#32;=&#32;event.target;&#32;var&#32;script&#32;=&#32;document.createElement(&#39;script&#39;);&#32;script.crossOrigin&#32;=&#32;target.crossOrigin;&#32;script.src&#32;=&#32;&#39;/dist/pcf-dependency.bundle-805a1661b7.js&#39;;&#32;script.type&#32;=&#32;&#39;text/javascript&#39;;&#32;target.insertAdjacentElement(&#39;afterend&#39;,script);" src="https://content.powerapps.com/resource/powerappsportal/dist/pcf-dependency.bundle-805a1661b7.js" type="text/javascript"></script>
+
+							   <script onerror="javascript:&#32;var&#32;target&#32;=&#32;event.target;&#32;var&#32;script&#32;=&#32;document.createElement(&#39;script&#39;);&#32;script.crossOrigin&#32;=&#32;target.crossOrigin;&#32;script.src&#32;=&#32;&#39;/dist/pcf.bundle-60440c37cb.js&#39;;&#32;script.type&#32;=&#32;&#39;text/javascript&#39;;&#32;target.insertAdjacentElement(&#39;afterend&#39;,script);" src="https://content.powerapps.com/resource/powerappsportal/dist/pcf.bundle-60440c37cb.js" type="text/javascript"></script>
+
+							   <script onerror="javascript:&#32;var&#32;target&#32;=&#32;event.target;&#32;var&#32;script&#32;=&#32;document.createElement(&#39;script&#39;);&#32;script.crossOrigin&#32;=&#32;target.crossOrigin;&#32;script.src&#32;=&#32;&#39;/dist/pcf-extended.bundle-b0e01b5622.js&#39;;&#32;script.type&#32;=&#32;&#39;text/javascript&#39;;&#32;target.insertAdjacentElement(&#39;afterend&#39;,script);" src="https://content.powerapps.com/resource/powerappsportal/dist/pcf-extended.bundle-b0e01b5622.js" type="text/javascript"></script>
+
+						
+	<!-- Default studio template. Please do not modify -->
+<div id="mainContent" class="wrapper-body" role="main">
+    <div class="page-copy">
+      <div class="xrm-editable-html&#32;xrm-attribute"><div class="xrm-attribute-value"><style>
+/* 1. Global smooth scroll */
+html { scroll-behavior: smooth; }
+
+/* 2. Accordion Title (The Bar) */
+.accordion-section-title {
+    width: 100%;
+    padding: 20px 25px;
+    display: block;
+    background: #fff; 
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 18px;
+    border-bottom: 1px solid #e0e0e0;
+    transition: background 0.2s ease, color 0.2s ease;
+    position: relative;
+    user-select: none; 
+    color: #333;
+    margin: 0; /* Remove default margins */
+}
+
+.accordion-section-title:hover {
+    background-color: #f8f9fa;
+    color: #000;
+}
+
+.accordion-section-title.active {
+    color: #0d6efd; /* Theme Blue */
+    background-color: #fff;
+    border-bottom: 1px solid #e0e0e0; 
+}
+
+/* 3. The Arrow Icon (Blue Chevron) */
+.accordion-section-title::after {
+    content: '';
+    position: absolute;
+    right: 25px;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    border-right: 2px solid #0d6efd; 
+    border-bottom: 2px solid #0d6efd;
+    transform: translateY(-60%) rotate(45deg); /* Pointing Down */
+    transition: transform 0.3s ease;
+}
+
+.accordion-section-title.active::after {
+    transform: translateY(-20%) rotate(225deg); /* Pointing Up */
+}
+
+/* 4. The Content Box (Robust Animation) */
+.accordion-section-content {
+    background: #fff;
+    overflow: hidden;
+    
+    /* Ensure it is technically visible but height is 0 */
+    display: block !important; 
+    max-height: 0;
+    opacity: 0;
+    
+    /* Padding is 0 when closed to prevent 'thickness' */
+    padding: 0 30px; 
+    
+    border-bottom: 0 solid transparent; 
+    
+    /* Smoothly animate height, opacity and padding */
+    transition: all 0.4s ease-in-out;
+    color: #555;
+    line-height: 1.8; /* More space between lines */
+}
+
+/* When Open */
+.accordion-section-content.open {
+    opacity: 1;
+    padding-top: 30px;    /* Spacious top */
+    padding-bottom: 30px; /* Spacious bottom */
+    border-bottom: 1px solid #e0e0e0;
+}
+
+/* 5. Helper for sticky headers */
+.accordion-section {
+    scroll-margin-top: 120px;
+}
+
+/* 6. Bootstrap Override */
+.accordion-button:focus {
+    box-shadow: none !important;
+}
+</style>
+ <section id="subheader" class="bg-dark text-light relative jarallax">
+                <img src="/banner_generic_default.png" class="jarallax-img" alt="">
+                <div class="container relative z-2">
+                    <div class="row gy-4 gx-5 align-items-center">
+                        <div class="col-lg-12">
+                            <!--div class="spacer-double sm-hide"></div-->
+                            <!--h5 class="wow fadeInUp">Power Your Future with Clean Energy</h5-->
+                            <h1 class="mb-3 wow fadeInUp" data-wow-delay=".2s">Multiannual Work Programme</h1>
+                            <div class="border-bottom mb-3" style="padding-bottom: 0px;"></div>
+                            <ul class="crumb wow fadeInUp">
+                                <li><a href="/">Home</a></li>
+                                <li class="active">Multiannual Work Programme</li>
+                            </ul>   
+                        </div>
+                    </div>
+                </div>
+
+                <div class="gradient-edge-bottom h-50"></div>
+                <div class="sw-overlay"></div>
+    </section>
+<!-- Hero End --> 
+
+<!--Content Start-->
+
+<section>
+    <div class="container">
+        <div class="row mb-0 mt-5 mb-5">
+            <div class="col-xl-12">
+                <div class="col-12 text-start">
+                    <h2 class="wow fadeInUp" style="font-size: 30px !important; font-weight: 600 !important; margin-bottom: 0; margin-top: 0;" data-wow-delay=".2s">
+                        Multiannual Work Programme 
+                    </h2>
+                </div>
+                <div class="services__area-title lg-t-center" style="align-items: center;">
+                    <p class="split_title" style="font-size: 20px !important; font-weight: 500 !important; margin-bottom: 0; margin-top: 0;">
+                        The Chips Joint Undertaking (Chips JU) Multiannual Work Programme covers the activities of the Chips JU from 2023 to 2027, 
+                        both for the Electronic Components and Systems Research and Innovation (ECS R&I), and the Chips for Europe Initiative parts, 
+                        including call descriptions, budgets, call conditions and activities in support to operations.
+                    </p>
+                    <p class="py-2">
+                        The links below lead you to the latest versions of the Multiannual Work Programme documents. 
+                        Earlier versions can be found in the tab “General Documents”.  
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        
+    </div>
+</section>
+
+<!--MAWP First Section-->
+
+<section style="padding: 0;">
+    <div class="container">
+
+
+
+
+        <div class="row mb-4 mt-5">
+            <div class="col-12">
+                <h2 class="wow fadeInUp" style="font-size: 25px !important; font-weight: 500 !important;" data-wow-delay=".2s">
+                    Multi-annual Work Programme 2023-2027
+                </h2>
+            </div>
+        </div>
+        <div class="row g-4">
+            <!-- LEFT SIDE: dynamic items (Title + Button) -->
+            <div class="col-md-6">
+                
+                    <!--<p>Multi-annual Work Programme 2023-2027</p>-->
+                    <strong>Multi-annual Work Programme 2023-2027</strong>
+                    <div style="display: flex; gap: 10px; margin-top: 10px; margin-bottom: 20px;">
+                        
+                            <!--<a class="btn-main"
+                               style="background-color: #FBEC6B; color: #000000; cursor: pointer;"
+                               target="_blank"
+                               onclick="universalPreview('', 'Multi-annual Work Programme 2023-2027')">
+                                <span>Open File</span>
+                            </a>-->
+                                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                                <a class="btn-main" style="background-color: #FBEC6B; color: #000000; padding: 5px 15px; cursor: pointer;" target="_blank" href="https://chips-ju.europa.eu/viewfile/?id=8a806d19-f8fd-f011-8406-6045bd8ad6a4">
+                                                <span>Open File</span>
+                                                </a>
+                                            </div>
+                        
+                    </div>
+                
+                    <!--<p>Multi-annual Work Programme 2023-2027</p>-->
+                    <strong>General Annexes to the Multi-annual Work Programme 2023-2027</strong>
+                    <div style="display: flex; gap: 10px; margin-top: 10px; margin-bottom: 20px;">
+                        
+                            <!--<a class="btn-main"
+                               style="background-color: #FBEC6B; color: #000000; cursor: pointer;"
+                               target="_blank"
+                               onclick="universalPreview('', 'General Annexes to the Multi-annual Work Programme 2023-2027')">
+                                <span>Open File</span>
+                            </a>-->
+                                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                                <a class="btn-main" style="background-color: #FBEC6B; color: #000000; padding: 5px 15px; cursor: pointer;" target="_blank" href="https://www.chips-ju.europa.eu/viewfile/?id=e25424e9-ea79-f111-ab0f-7c1e5234c674">
+                                                <span>Open File</span>
+                                                </a>
+                                            </div>
+                        
+                    </div>
+                
+            </div>
+            
+           <!--<div class="col-md-6">
+                <p>General Annexes to the Multi-annual Work Programme 2023-2027</p>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <a class="btn-main" style="background-color: #FBEC6B; color: #000000; cursor: pointer;" target="_blank" onclick="universalPreview('/WP2023-2027_v9.pdf', 'WP2023-2027_v9.pdf')">
+                        <span>Open File</span>
+                    </a>
+                </div>
+            </div>-->
+        </div>
+        
+
+    </div>
+</section>
+<!--Content End-->
+
+
+<!--2nd Content Start-->
+
+<section style="padding: 0;">
+    <div class="container">
+
+        <div class="row mb-0 mt-5 mb-5">
+            <div class="col-xl-12">
+                <div class="col-12 text-start">
+                    <h2 class="wow fadeInUp" style="font-size: 25px !important; font-weight: 500 !important; margin-bottom: -10.5px; margin-top: 0;" data-wow-delay=".2s">
+                        Appendices to the Work Programme
+                    </h2>
+                </div>
+            </div>
+        </div>
+
+
+
+
+
+
+
+<div class="container">
+    
+        
+        <div class="row mb-5">
+            <div class="col-xl-12">
+                <div class="accordion s2 wow fadeInUp">
+                    <div class="accordion-container">
+                        
+                        <div class="faq-item">
+                            <div class="faq-title services__area-title lg-t-center" data-target="answer-1-2026">
+                                <h2 class="split_title" style="font-size: 20px !important; font-weight: 500 !important; margin-bottom: -10.5px; margin-top: 0;">
+                                    2026
+                                </h2>
+                            </div>
+                            
+                            <div class="faq-answer" id="answer-1-2026">
+                                <div class="faq-content-inner">
+                                    
+                                        <div class="document-entry" style="margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                                            <strong>Appendix 7 to the Work Programme - Electronic Components and Systems (ECS)</strong>
+                                            <p>Appendix 7 of the Multiannual Work Programme 2023-2027 describes the activities to be launched or already launched by the Chips JU for the Electronic Components and Systems part for 2026.</p>
+                                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                                <a class="btn-main" style="background-color: #FBEC6B; color: #000000; padding: 5px 15px; cursor: pointer;" target="_blank" href="https://www.chips-ju.europa.eu/viewfile/?id=7c232276-44a5-f111-b8de-7c1e5234c674">
+                                                <span>Open File</span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    
+                                        <div class="document-entry" style="margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                                            <strong>Appendix 8 to the Work Programme - Chips for Europe initiative (CEI)</strong>
+                                            <p>Appendix 8 of the Multiannual Work Programme 2023-2027 describes the activities to be launched or already launched by the Chips JU for the Chips for Europe Initiative part for 2026.</p>
+                                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                                <a class="btn-main" style="background-color: #FBEC6B; color: #000000; padding: 5px 15px; cursor: pointer;" target="_blank" href="https://www.chips-ju.europa.eu/viewfile/?id=59b3a3b3-2db8-f111-aaab-e4fb1ef9ad95">
+                                                <span>Open File</span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        
+        <div class="row mb-5">
+            <div class="col-xl-12">
+                <div class="accordion s2 wow fadeInUp">
+                    <div class="accordion-container">
+                        
+                        <div class="faq-item">
+                            <div class="faq-title services__area-title lg-t-center" data-target="answer-2-2025">
+                                <h2 class="split_title" style="font-size: 20px !important; font-weight: 500 !important; margin-bottom: -10.5px; margin-top: 0;">
+                                    2025
+                                </h2>
+                            </div>
+                            
+                            <div class="faq-answer" id="answer-2-2025">
+                                <div class="faq-content-inner">
+                                    
+                                        <div class="document-entry" style="margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                                            <strong>Appendix 5 to the Work Programme - Electronic Components and Systems (ECS)</strong>
+                                            <p>Appendix 5 of the Multiannual Work Programme 2023-2027 describes the activities to be launched or already launched by the Chips JU for the Electronic Components and Systems part for 2025.</p>
+                                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                                <a class="btn-main" style="background-color: #FBEC6B; color: #000000; padding: 5px 15px; cursor: pointer;" target="_blank" href="https://chips-ju.europa.eu/viewfile/?id=bf7dd012-f8fd-f011-8406-6045bd8ad6a4">
+                                                <span>Open File</span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    
+                                        <div class="document-entry" style="margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                                            <strong>Appendix 6 to the Work Programme - Chips for Europe initiative (CEI)</strong>
+                                            <p>Appendix 6 of the Multiannual Work Programme 2023-2027 describes the activities to be launched or already launched by the Chips JU for the Chips for Europe Initiative part for 2025.</p>
+                                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                                <a class="btn-main" style="background-color: #FBEC6B; color: #000000; padding: 5px 15px; cursor: pointer;" target="_blank" href="https://chips-ju.europa.eu/viewfile/?id=39e1373e-f334-f111-88b4-7c1e5228e5e7">
+                                                <span>Open File</span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        
+        <div class="row mb-5">
+            <div class="col-xl-12">
+                <div class="accordion s2 wow fadeInUp">
+                    <div class="accordion-container">
+                        
+                        <div class="faq-item">
+                            <div class="faq-title services__area-title lg-t-center" data-target="answer-3-2024">
+                                <h2 class="split_title" style="font-size: 20px !important; font-weight: 500 !important; margin-bottom: -10.5px; margin-top: 0;">
+                                    2024
+                                </h2>
+                            </div>
+                            
+                            <div class="faq-answer" id="answer-3-2024">
+                                <div class="faq-content-inner">
+                                    
+                                        <div class="document-entry" style="margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                                            <strong>Appendix 3 to the Work Programme - Electronic Components and Systems (ECS)</strong>
+                                            <p>Appendix 3 of the Multiannual Work Programme 2023-2027 describes the activities to be launched or already launched by the Chips JU for the [Electronic Components and Systems part for 2024.</p>
+                                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                                <a class="btn-main" style="background-color: #FBEC6B; color: #000000; padding: 5px 15px; cursor: pointer;" target="_blank" href="https://chips-ju.europa.eu/viewfile/?id=a76819d8-f6fd-f011-8406-6045bd8ad6a4">
+                                                <span>Open File</span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    
+                                        <div class="document-entry" style="margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                                            <strong>Appendix 4 to the Work Programme - Chips for Europe initiative (CEI)</strong>
+                                            <p>Appendix 4 of the Multiannual Work Programme 2023-2027 describes the activities to be launched or already launched by the Chips JU for the Chips for Europe Initiative part for 2024.</p>
+                                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                                <a class="btn-main" style="background-color: #FBEC6B; color: #000000; padding: 5px 15px; cursor: pointer;" target="_blank" href="https://www.chips-ju.europa.eu/viewfile/?id=f5303ef4-f7fd-f011-8406-6045bd8ad6a4">
+                                                <span>Open File</span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        
+        <div class="row mb-5">
+            <div class="col-xl-12">
+                <div class="accordion s2 wow fadeInUp">
+                    <div class="accordion-container">
+                        
+                        <div class="faq-item">
+                            <div class="faq-title services__area-title lg-t-center" data-target="answer-4-2023">
+                                <h2 class="split_title" style="font-size: 20px !important; font-weight: 500 !important; margin-bottom: -10.5px; margin-top: 0;">
+                                    2023
+                                </h2>
+                            </div>
+                            
+                            <div class="faq-answer" id="answer-4-2023">
+                                <div class="faq-content-inner">
+                                    
+                                        <div class="document-entry" style="margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                                            <strong>Appendix 1 to the Work Programme - Electronic Components and Systems (ECS)</strong>
+                                            <p>Appendix 1 of the Multiannual Work Programme 2023-2027 describes the activities to be launched or already launched by the Chips JU for the Electronic Components and Systems part for 2023.</p>
+                                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                                <a class="btn-main" style="background-color: #FBEC6B; color: #000000; padding: 5px 15px; cursor: pointer;" target="_blank" href="https://chips-ju.europa.eu/viewfile/?id=005d82aa-e937-f111-88b5-000d3a27d474">
+                                                <span>Open File</span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    
+                                        <div class="document-entry" style="margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                                            <strong>Appendix 2 to the Work Programme - Chips for Europe initiative (CEI)</strong>
+                                            <p>Appendix 2 of the Multiannual Work Programme 2023-2027 describes the activities to be launched or already launched by the Chips JU for the Chips for Europe Initiative part for 2023.</p>
+                                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                                <a class="btn-main" style="background-color: #FBEC6B; color: #000000; padding: 5px 15px; cursor: pointer;" target="_blank" href="https://chips-ju.europa.eu/viewfile/?id=cda4e2d3-e937-f111-88b5-000d3a27d474">
+                                                <span>Open File</span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+</div>
+
+
+
+
+
+ <style>
+    .btn-main {
+        cursor: pointer;
+    }
+</style>   
+</div></section>
+<!--2nd Content End-->
+
+
+<script nonce="RIeQ4ndcy2/RSBSu6W5Zk0Z+ldvEIXvnbnO/a/uzoq8=">
+ document.addEventListener("DOMContentLoaded", function() {
+        const titles = document.querySelectorAll(".faq-title");
+
+        titles.forEach(title => {
+            title.addEventListener("click", function() {
+                
+                // 1. Get the Unique ID for the answer
+                const targetId = this.getAttribute("data-target");
+                const answerDiv = document.getElementById(targetId);
+                const isActive = this.classList.contains("active");
+
+                // 2. CLOSE ALL OTHERS
+                document.querySelectorAll(".faq-title").forEach(t => {
+                    t.classList.remove("active");
+                    // The border is handled by CSS now
+                });
+                document.querySelectorAll(".faq-answer").forEach(a => {
+                    a.style.maxHeight = null; // Close it
+                });
+
+                // 3. OPEN THIS ONE (If it wasn't already open)
+                if (!isActive) {
+                    this.classList.add("active");
+                    // The border is handled by CSS now
+                    
+                    if (answerDiv) {
+                        // Set height to the actual content height
+                        answerDiv.style.maxHeight = answerDiv.scrollHeight + "px";
+                    }
+                }
+            });
+        });
+    });
+    </script>
+
+
+
+<script nonce="RIeQ4ndcy2/RSBSu6W5Zk0Z+ldvEIXvnbnO/a/uzoq8=">
+ async function universalPreview(url, fileName) {
+    // 1. Get the file extension
+    const extension = fileName.split('.').pop().toLowerCase();
+
+    // 2. Define supported types
+    const mimeTypes = {
+        'pdf': 'application/pdf',
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'bmp': 'image/bmp',
+        'webp': 'image/webp'
+    };
+
+    if (mimeTypes[extension]) {
+        // --- PREVIEW LOGIC ---
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error("Failed to load file");
+
+            const rawBlob = await response.blob();
+            
+            // Force PDF type
+            const fileBlob = new Blob([rawBlob], { type: mimeTypes[extension] });
+            
+            // *** THE FIX: Add "#view=FitH" to force "Fit to Width" ***
+            const objectUrl = URL.createObjectURL(fileBlob) + "#view=FitH";
+
+            // Open new window
+            const newWindow = window.open("", "_blank");
+            if (newWindow) {
+                // Determine content tag
+                // Note: width="100%" height="100%" ensures it fills the new window
+                const contentTag = extension === 'pdf' 
+                    ? `<embed width="100%" height="100%" src="${objectUrl}" type="application/pdf">`
+                    : `<img src="${objectUrl}" style="max-width: 100%; height: auto; display: block; margin: 0 auto;">`;
+
+                newWindow.document.write(`
+                    <html>
+                        <head>
+                            <title>${fileName}</title>
+                            <style>
+                                /* Remove all margins so the PDF touches the edges */
+                                body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #525659; }
+                            </style>
+                        </head>
+                        <body>
+                            ${contentTag}
+                        </body>
+                    </html>
+                `);
+            } else {
+                alert("Pop-up blocked. Please allow pop-ups for this site.");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Error previewing file.");
+        }
+    } else {
+        // --- DOWNLOAD LOGIC (Word, Excel) ---
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error("Failed to load file");
+            const rawBlob = await response.blob();
+            const objectUrl = URL.createObjectURL(rawBlob);
+            
+            const link = document.createElement('a');
+            link.href = objectUrl;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (e) {
+             console.error(e);
+             alert("Error downloading file.");
+        }
+    }
+}
+</script> 
+
+<div class="row sectionBlockLayout text-start" style="display: flex; flex-wrap: wrap; margin: 0px; min-height: auto; padding: 8px;">
+  <div class="container" style="padding: 0px; display: flex; flex-wrap: wrap;"><div class="col-lg-12 columnBlockLayout" style="flex-grow: 1; display: flex; flex-direction: column; min-width: 250px;"></div></div>
+</div>
+</div></div>
+    </div>
+</div>
+
+  <script src="/plugins.js"></script>
+    <script src="/designesia.js"></script>
+    <script src="/swiper.js"></script>
+    <!--<script src="/custom-swiper-1.js"></script>-->
+    <script src="/custom-marquee.js"></script>
+
+
+	<script onerror="javascript:&#32;var&#32;target&#32;=&#32;event.target;&#32;var&#32;script&#32;=&#32;document.createElement(&#39;script&#39;);&#32;script.crossOrigin&#32;=&#32;target.crossOrigin;&#32;script.src&#32;=&#32;&#39;/dist/pcf-loader.bundle-f4a0e619b8.js&#39;;&#32;script.type&#32;=&#32;&#39;text/javascript&#39;;&#32;target.insertAdjacentElement(&#39;afterend&#39;,script);" src="https://content.powerapps.com/resource/powerappsportal/dist/pcf-loader.bundle-f4a0e619b8.js" type="text/javascript"></script>
+
+		
+		
+	
+
+	
+		<div id="pp-native-controls-react-root"></div>
+<script nonce="RIeQ4ndcy2/RSBSu6W5Zk0Z+ldvEIXvnbnO/a/uzoq8=">window._nativeControlConfig = { "publicPath":"https://content.powerapps.com/resource/powerappsportal/controls", "versions": {"pcf_loader":"0.0.51","pcf_controls":"3.24.8","mf_shared":"0.2.32","host":"0.15.1","data_grid":"1.12.3","controls_fluent_v9":"0.0.54"}, "pvaEmbedded": { "defaultWidgetMode": "normal", "useCustomTypingIndicator": false, "skipSingleBotWelcomeScreen": false } }</script>
+<script defer="defer" src="https://content.powerapps.com/resource/powerappsportal/controls/host/main.3ee2491f78.chunk.js"></script>
+		
+	
+	
+		<!-- footer begin -->
+<footer class="section-dark footer-responsive">
+  <div class="container relative z-2">
+    <div class="row gx-3 gx-md-5">
+      <!-- Logo & Social Section -->
+      <div class="col-12 col-md-6 col-lg-3 mb-4 mb-md-0">
+        <div id="logo" class="footer-logo">
+          <a href="/" class="logo-link">
+            <div class="mb-3">
+              <img class="logo-main" src="/CHIPS logo_RGB_white colour.jpg" alt="CHIPS JU Logo" style="max-width: 100%; width: 100%; max-width: 180px;">
+            </div>
+            <div class="partnership-label">
+              <a href="#" style="color: #FFFFFFCC; text-decoration: none; font-size: 0.9rem;">European Partnership</a>
+            </div>
+            <div class="mt-2">
+              <img class="logo-EC" src="/EN_Co-fundedbytheEU_RGB_WHITE.png" alt="EU Co-funded Logo" style="max-width: 100%; width: 100%; max-width: 150px;">
+            </div>
+          </a>
+        </div>
+
+        <div class="spacer-20"></div>
+
+        <!-- Social Icons -->
+        <div class="social-icons mb-4 d-flex flex-wrap gap-3">
+          <a href="https://be.linkedin.com/company/chips-ju" class="social-icon-link" aria-label="LinkedIn" title="LinkedIn">
+            <i class="fa-brands fa-linkedin"></i>
+          </a>
+          <a href="mailto:enquiries@chips-ju.europa.eu" class="social-icon-link" aria-label="Email" title="Email">
+            <i class="fa-solid fa-envelope"></i>
+          </a>
+          <a href="https://www.youtube.com/@chipsju" class="social-icon-link" aria-label="YouTube" title="YouTube">
+            <i class="fa-brands fa-youtube"></i>
+          </a>
+          <a href="https://open.spotify.com/show/0LW1TQeBcd1NWzqR2abrQT?si=b2e2674f85cd41e4" class="social-icon-link" aria-label="Spotify" title="Spotify">
+            <i class="fa-brands fa-spotify"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Links Columns -->
+      <div class="col-12 col-md-6 col-lg-9">
+        <div class="row gx-3 gx-md-5">
+          <!-- Chips JU Column -->
+          <div class="col-12 col-sm-6 col-lg-4 mb-4 mb-lg-0">
+            <div class="widget footer-widget">
+              <h5 class="widget-title">Chips JU</h5>
+              <ul class="list-unstyled footer-links">
+                <li><a href="/News" class="footer-link">News</a></li>
+                <li><a href="/Publications" class="footer-link">Publications</a></li>
+                <li><a href="/Data-protection-and-legal-notice" class="footer-link">Data Protection & Legal Notice</a></li>
+                <li><a href="/General-Documents" class="footer-link">General Documents</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Procurement & Vacancies Column -->
+          <div class="col-12 col-sm-6 col-lg-4 mb-4 mb-lg-0">
+            <div class="widget footer-widget">
+              <h5 class="widget-title">&nbsp;</h5>
+              <ul class="list-unstyled footer-links">
+                <li><a href="/Administrative-procurement" class="footer-link">Administrative Procurement</a></li>
+                <li><a href="/Operational-Procurement" class="footer-link">Operational Procurement</a></li>
+                <li><a href="/Vacancies" class="footer-link">Vacancies</a></li>
+                <li><a href="/Media-Package" class="footer-link">Media Package</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Useful Links Column -->
+          <div class="col-12 col-sm-6 col-lg-4 mb-4 mb-lg-0">
+            <div class="widget footer-widget">
+              <h5 class="widget-title">Useful Links</h5>
+              <ul class="list-unstyled footer-links">
+                <li><a href="/Financial-Transparency-System-FTS" class="footer-link">Financial Transparency</a></li>
+                <li><a href="/Contact-us" class="footer-link">Contact us</a></li>
+                <li><a href="/Podcasts" class="footer-link">Podcasts</a></li>
+                <li><a href="/Newsletter" class="footer-link">Newsletter</a></li>
+                <li><a href="/Cookie-Policy" class="footer-link">Cookie Policy</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Decorative Image - Hidden on Mobile -->
+  <div class="footer-decoration">
+    <img src="images/misc/c1.webp" class="w-100 rtl-hide wow fadeInRight" data-wow-duration="2s" alt="">
+    <img src="images/misc/c1-flip.webp" class="w-100 rtl-show wow fadeInLeft" data-wow-duration="2s" alt="">
+  </div>
+</footer>
+<!-- footer end -->
+
+<!-- Responsive Footer CSS -->
+<style>
+/* Mobile-First Responsive Footer Styles */
+
+.footer-responsive {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Logo Section */
+.footer-logo {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-link {
+  text-decoration: none;
+  display: block;
+}
+
+.partnership-label {
+  margin-top: -8px;
+  margin-left: 0;
+  font-size: 0.85rem;
+}
+
+/* Social Icons - Mobile Optimized */
+.social-icons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-left: 0 !important;
+}
+
+.social-icon-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  color: #FFFFFFCC;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  font-size: 1.25rem;
+}
+
+.social-icon-link:hover,
+.social-icon-link:focus {
+  color: #FFFFFF;
+  background-color: rgba(255, 255, 255, 0.1);
+  outline: 2px solid rgba(255, 255, 255, 0.3);
+  outline-offset: 2px;
+}
+
+/* Footer Widgets */
+.footer-widget {
+  margin-bottom: 1.5rem;
+}
+
+.widget-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #FFFFFF;
+  text-transform: none;
+}
+
+/* Footer Links */
+.footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-links li {
+  margin-bottom: 0.75rem;
+}
+
+.footer-link {
+  color: #FFFFFFCC;
+  text-decoration: none;
+  font-size: 0.95rem;
+  display: inline-block;
+  padding: 8px 0;
+  transition: all 0.3s ease;
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+.footer-link:hover,
+.footer-link:focus {
+  color: #FFFFFF;
+  padding-left: 4px;
+  outline: none;
+}
+
+.footer-link:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Decorative Image */
+.footer-decoration {
+  position: absolute;
+  width: 50%;
+  right: 0;
+  bottom: 0;
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.footer-decoration img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Responsive Breakpoints */
+/* Mobile (Under 768px) - Force Center Alignment */
+@media (max-width: 767px) {
+  .footer-responsive {
+    text-align: center !important;
+  }
+  
+  /* Center the Logo */
+  .footer-logo {
+    align-items: center !important;
+  }
+  
+  /* Center the Social Icons */
+  .social-icons {
+    justify-content: center !important;
+  }
+}
+/* Tablet (576px and up) */
+@media (min-width: 576px) {
+  .footer-links li {
+    margin-bottom: 0.85rem;
+  }
+
+  .footer-link {
+    font-size: 0.95rem;
+  }
+}
+
+/* Tablet/Small Desktop (768px and up) */
+@media (min-width: 768px) {
+  .gx-md-5 {
+    --bs-gutter-x: 3rem;
+  }
+
+  .mb-md-0 {
+    margin-bottom: 0 !important;
+  }
+
+  .footer-responsive {
+    padding: 3rem 0;
+  }
+
+  .footer-widget {
+    margin-bottom: 2rem;
+  }
+
+  .widget-title {
+    font-size: 1.05rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .footer-link {
+    font-size: 0.95rem;
+    padding: 6px 0;
+  }
+
+  .partnership-label {
+    margin-left: 15px;
+  }
+
+  .social-icons {
+    margin-left: 5px;
+  }
+}
+
+/* Desktop (1024px and up) */
+@media (min-width: 1024px) {
+  .footer-responsive {
+    padding: 4rem 0;
+  }
+
+  .footer-widget {
+    margin-bottom: 2.5rem;
+  }
+
+  .widget-title {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .footer-link {
+    font-size: 0.95rem;
+  }
+
+  .footer-decoration {
+    width: 50%;
+    opacity: 0.3;
+  }
+}
+
+/* Extra Large (1200px and up) */
+@media (min-width: 1200px) {
+  .footer-decoration {
+    opacity: 0.35;
+  }
+}
+
+/* Accessibility - Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .social-icon-link,
+  .footer-link {
+    transition: none;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .footer-decoration {
+    display: none;
+  }
+
+  .footer-link {
+    color: #000;
+  }
+}
+</style>
+
+<script nonce="RIeQ4ndcy2/RSBSu6W5Zk0Z+ldvEIXvnbnO/a/uzoq8=">
+document.addEventListener("DOMContentLoaded", function() {
+    // Select all images on the site EXCEPT the hero banners and logos
+    // Hero images must load immediately to get a good LCP (Largest Contentful Paint) score
+    const images = document.querySelectorAll('img:not(.jarallax-img):not(.logo-main):not(.logo-mobile)');
+    
+    images.forEach(img => {
+        // Automatically add the native lazy loading attribute
+        if (!img.hasAttribute('loading')) {
+            img.setAttribute('loading', 'lazy');
+        }
+    });
+});
+</script>
+
+
+<!--  
+<footer role="contentinfo" class="footer" data-component-theme="portalThemeColor5">
+  <div class="footer-bottom d-print-none">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-9 col-md-9 col-sm-9 text-start">
+          <div class="xrm-editable-html&#32;xrm-attribute" data-languageContext="English"><div class="xrm-attribute-value"><p class="smallText">Copyright © </p>
+<p class="smallText">2026</p>
+<p class="smallText">. All rights reserved.</p></div></div>
+        </div>
+        <div id="accessibilityLinkContainer" class="col-lg-3 col-md-3 col-sm-3 text-end">
+          
+        </div>
+      </div>
+    </div>
+</footer>
+
+<script nonce="RIeQ4ndcy2/RSBSu6W5Zk0Z+ldvEIXvnbnO/a/uzoq8=" type="text/javascript">
+  window.onload = function() {
+    const accessibilityLinkContainer = document.getElementById("accessibilityLinkContainer");
+    switch(window.navigator.language) {
+      case "fr":
+        if (accessibilityLinkContainer != null) {
+          const accessibilityText="Accessibilité : partiellement conforme";
+          const frenchAccessibilityAnchor = document.createElement("a");
+          frenchAccessibilityAnchor.id = "frenchAccesssibleLink";
+          frenchAccessibilityAnchor.target = "_blank";
+          frenchAccessibilityAnchor.href = "https://go.microsoft.com/fwlink/?linkid=2163806";
+          frenchAccessibilityAnchor.title = accessibilityText;
+          frenchAccessibilityAnchor.innerText = accessibilityText;
+          accessibilityLinkContainer.appendChild(frenchAccessibilityAnchor);
+        }
+        break;
+      case "it":
+        if (accessibilityLinkContainer != null) {
+          const accessibilityText="Accessibilità: parzialmente conforme";
+          const italianAccessibilityAnchor = document.createElement("a");
+          italianAccessibilityAnchor.id = "italianAccesssibleLink";
+          italianAccessibilityAnchor.target = "_blank";
+          italianAccessibilityAnchor.href = "https://go.microsoft.com/fwlink/?linkid=2208177";
+          italianAccessibilityAnchor.title = accessibilityText;
+          italianAccessibilityAnchor.innerText = accessibilityText;
+          accessibilityLinkContainer.appendChild(italianAccessibilityAnchor);
+        }
+        break;
+      default: 
+        accessibilityLinkContainer.remove();
+    }
+  };
+ </script>
+
+ -->
+	
+
+	<script type="text/javascript" nonce="RIeQ4ndcy2/RSBSu6W5Zk0Z+ldvEIXvnbnO/a/uzoq8=">
+
+		function trackCopilotCustomUsage(botSchema) {
+			const request = {
+				botSchemaName: botSchema
+			}
+			var json = JSON.stringify(request);
+			shell.ajaxSafePost({
+				type: "POST",
+				contentType: "application/json",
+				url: "/_services/copilot/TrackUsage",
+				data: json
+			}).done(function () {
+			}).fail(function (jqXhr) {
+			});
+		}
+
+		function findAndLogCustomCopilotUsage() {
+			const pageSource = document.documentElement.outerHTML;
+			const customPvaBotWebchatRegex = /api\.(preprod\.|test\.)?powerplatform\.(com|us|cn|appsplatform\.us)\/powervirtualagents\/botsbyschema\/([^/]+)\/directline\/token/;
+			const customPvaBotIframeRegex = /powerva\.microsoft\.com\/environments\/([0-9a-fA-F\-]+)\/bots\/([^/]+)\/webchat/;
+			const omniChannelRegex = /livechatwidget\/scripts\/LiveChatBootstrapper\.js/;
+
+			const matchPvaBotWebchat = pageSource.match(customPvaBotWebchatRegex);
+			if (matchPvaBotWebchat && matchPvaBotWebchat[3]) {
+				trackCopilotCustomUsage(matchPvaBotWebchat[3]);
+			}
+
+			const matchPvaBotIframe = pageSource.match(customPvaBotIframeRegex);
+			if (matchPvaBotIframe && matchPvaBotIframe[2]) {
+				trackCopilotCustomUsage(matchPvaBotIframe[2]);
+			}
+
+			const matchOmniChannel = pageSource.match(omniChannelRegex);
+			if (matchOmniChannel && matchOmniChannel[0]) {
+				trackCopilotCustomUsage("omnichannelWidget");
+			}
+		}
+
+		window.addEventListener("load", function () {
+			findAndLogCustomCopilotUsage();
+		});
+	</script>
+
+		
+			
+			
+			
+			
+		
+	<script onerror="javascript:&#32;var&#32;target&#32;=&#32;event.target;&#32;var&#32;script&#32;=&#32;document.createElement(&#39;script&#39;);&#32;script.crossOrigin&#32;=&#32;target.crossOrigin;&#32;script.src&#32;=&#32;&#39;/dist/bootstrap.BootstrapV5.bundle-be8391e97d.js&#39;;&#32;script.type&#32;=&#32;&#39;text/javascript&#39;;&#32;target.insertAdjacentElement(&#39;afterend&#39;,script);" src="https://content.powerapps.com/resource/powerappsportal/dist/bootstrap.BootstrapV5.bundle-be8391e97d.js" type="text/javascript"></script>
+
+	<script onerror="javascript:&#32;var&#32;target&#32;=&#32;event.target;&#32;var&#32;script&#32;=&#32;document.createElement(&#39;script&#39;);&#32;script.crossOrigin&#32;=&#32;target.crossOrigin;&#32;script.src&#32;=&#32;&#39;/dist/postpreform.BootstrapV5.bundle-1e48131190.js&#39;;&#32;script.type&#32;=&#32;&#39;text/javascript&#39;;&#32;target.insertAdjacentElement(&#39;afterend&#39;,script);" src="https://content.powerapps.com/resource/powerappsportal/dist/postpreform.BootstrapV5.bundle-1e48131190.js" type="text/javascript"></script>
+
+	<script onerror="javascript:&#32;var&#32;target&#32;=&#32;event.target;&#32;var&#32;script&#32;=&#32;document.createElement(&#39;script&#39;);&#32;script.crossOrigin&#32;=&#32;target.crossOrigin;&#32;script.src&#32;=&#32;&#39;/dist/app.BootstrapV5.bundle-4299f393fc.js&#39;;&#32;script.type&#32;=&#32;&#39;text/javascript&#39;;&#32;target.insertAdjacentElement(&#39;afterend&#39;,script);" src="https://content.powerapps.com/resource/powerappsportal/dist/app.BootstrapV5.bundle-4299f393fc.js" type="text/javascript"></script>
+
+	<script onerror="javascript:&#32;var&#32;target&#32;=&#32;event.target;&#32;var&#32;script&#32;=&#32;document.createElement(&#39;script&#39;);&#32;script.crossOrigin&#32;=&#32;target.crossOrigin;&#32;script.src&#32;=&#32;&#39;/dist/default-1033.moment_2_29_4.bundle-eda4e638fd.js&#39;;&#32;script.type&#32;=&#32;&#39;text/javascript&#39;;&#32;target.insertAdjacentElement(&#39;afterend&#39;,script);" src="https://content.powerapps.com/resource/powerappsportal/dist/default-1033.moment_2_29_4.bundle-eda4e638fd.js" type="text/javascript"></script>
+
+	
+
+	
+	
+	
+	<script nonce="RIeQ4ndcy2/RSBSu6W5Zk0Z+ldvEIXvnbnO/a/uzoq8=">
+        //this event will update the title of the page based on active breadcrumb
+        $('.breadcrumb').ready(function () {
+            if ($('.breadcrumb').is(':visible')) {
+                document.querySelector('title').innerHTML = ($('.breadcrumb > li.active').text() + "");
+            }
+        });
+
+        function GoToNewEditor() {
+            var editCmsUrlSegment = "EditInCms";
+            var currentUrl = window.location.href;
+            if (currentUrl.indexOf('?') > -1) {
+                var urlSegments = currentUrl.split("?");
+                window.location.href = window.location.origin + '/' + editCmsUrlSegment + window.location.pathname + '?' + urlSegments[1];
+            }
+            else {
+                window.location.href = window.location.origin + '/' + editCmsUrlSegment + window.location.pathname;
+            }
+        }
+    </script>
+	
+		
+		
+	
+		
+				<script nonce="RIeQ4ndcy2/RSBSu6W5Zk0Z+ldvEIXvnbnO/a/uzoq8=">
+					if ('serviceWorker' in navigator) {
+						navigator.serviceWorker.getRegistrations().then(function (registrations) {
+							for (let registration of registrations) {
+								registration.unregister();
+							}
+						}).catch(function (err) {
+							console.log('Service Worker unregister action failed: ', err);
+						});
+					}
+				</script>
+			
+	
+		
+	<!--Start Show Session Expire Warning Popup here -->
+    
+		
+</body>
+</html>
+<!-- Generated at 9/27/2026 9:38:20 PM -->
+<!-- Page OK -->
