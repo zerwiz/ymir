@@ -290,7 +290,7 @@ printf 'wTEST:p1\n' >"$T/panes"
 printf 'wTEST:p1 %s\n' "$FAKE_PI" >"$T/pane-pids"
 out="$(YMIR_STATE_DIR="$T/state" YMIR_HERDR_CMD="$T/herdr" bash "$ROOT/bin/seat/arm-handover.sh" --pane "$FAKE_PI" 2>&1)"
 check "$(head -1 "$T/state/.arm.pane" 2>/dev/null)" "wTEST:p1" "the proved pane is written to .arm.pane"
-case "$out" in *'"yes"'*) ok "the door says the pane was proved" ;; *) bad "the door says the pane was proved" "$out" ;; esac
+case "$out" in *'"wTEST:p1","yes"'*) ok "the door says the pane was proved" ;; *) bad "the door says the pane was proved" "$out" ;; esac
 
 # The ghost: the pane on file is no longer held by herdr (measured: w39:p23 lived on
 # for four days after the pane died). --show clears it instead of serving it.

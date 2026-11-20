@@ -137,9 +137,15 @@ resolve_pane() {  # <pid> — print the proved pane, or nothing
   # ONE QUESTION, AND IT IS CHEAP. A harness herdr launched carries HERDR_PANE_ID in
   # its own environment, so the pane is read from the holder and then PROVED against
   # herdr's process table. A process without it was not launched in a pane (a plain
-  # terminal, a cron, a supervisor) and no pane can be proved for it — the search
-  # stops there rather than sweeping every pane of the machine, which would put ~40
-  # herdr calls in front of every turn end.
+  # terminal, a cron, a supervisor), and no pane can be PROVED for it — the door says
+  # so and writes nothing. Sweeping every pane of the machine to guess would put ~40
+  # herdr calls in front of every turn end and would still be a guess.
+  #
+  # The honest limit: a Claude session started in a plain terminal is ADOPTED by
+  # herdr's agent table (by session id), but that id is not in the process environment
+  # and the session file is not held open, so the holder cannot be proved into a pane.
+  # Measured 2026-11-20: the live helm is exactly such a session, and this door
+  # answered "none" rather than name a pane it could not prove.
   local pid="$1" cand=""
   case "$pid" in ''|*[!0-9]*) return 0 ;; esac
   cand="$(tr '\0' '\n' <"/proc/$pid/environ" 2>/dev/null | sed -n 's/^HERDR_PANE_ID=//p' | head -1)"
@@ -190,7 +196,7 @@ cmd_prior_helm() {
   resolve_state
   local line event pid role alive=no why harness
   if ! line="$(last_record)"; then
-    printf 'prior-helm[1]{role,pid,pane,alive,why}:\n  "none","none","none","no","no change of hands is on the record"\n'
+    printf 'prior-helm[1]{role,pid,pane,alive,why,harness}:\n  "none","none","none","no","no change of hands is on the record","no"\n'
     return 1
   fi
   event="$(field "$line" event)"

@@ -2022,9 +2022,12 @@ is a helm-capable harness, the session stands read-only and says so. The Allfath
 stage alone, for a test that must not raise the bridges, the cron or the pin.
 
 **The pane.** `state/.arm.pane` is written only from a PROVED pane — the holder's own
-`HERDR_PANE_ID` from `/proc/<pid>/environ`, or a pane of this herdr whose shell or foreground process
-stands in the holder's ancestry — and removed when nothing can be proved. It named `w39:p23` for four
-days after herdr had dropped that pane.
+`HERDR_PANE_ID`, read from `/proc/<pid>/environ`, checked against herdr (the pane still exists, and one
+of its shell or foreground processes stands in the holder's ancestry) — and removed when nothing can be
+proved. It named `w39:p23` for four days after herdr had dropped that pane. A process with no
+`HERDR_PANE_ID` was not launched in a pane, and the door writes nothing rather than guess: the live helm
+on 2026-11-20 was a Claude session in a plain terminal, adopted by herdr's agent table but not provable
+from its own process, and the door said `none`.
 
 The proof is `bin/seat/tests/test_arm_never_lost.sh` (49 assertions, wired as the `arm-never-lost`
 gate); the notes are `docs/fixes/runtime/2026-11-20-the-arm-is-never-lost-without-a-word.md`,

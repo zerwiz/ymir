@@ -22,9 +22,13 @@ had dropped that pane, so helm notifications went nowhere while claiming to be d
   the last change of hands, the journal, and who held the arm last; it speaks a hand-over
   into both panes (`--announce`, called by `lock.py` after every change of hands, detached
   and never fatal); and it writes `.arm.pane` from a **proved** pane (`--pane <pid>`):
-  the holder's own `HERDR_PANE_ID` from `/proc/<pid>/environ`, or a pane of this herdr
-  whose shell or foreground process stands in the holder's ancestry. Nothing provable means
-  no file — never a ghost, never an invention.
+  the holder's own `HERDR_PANE_ID`, read from `/proc/<pid>/environ`, checked against
+  herdr — the pane must still exist, and one of its shell or foreground processes must
+  stand in the holder's ancestry. Nothing provable means no file: never a ghost, never an
+  invention. The honest limit, measured the same night: a Claude session started in a
+  plain terminal is adopted by herdr's agent table by session id, but that id is in
+  neither the process's environment nor its open files, so the door answered `none` for
+  the live helm rather than name a pane it could not prove.
 - **`saga-session-start.sh`** — `lock_take()` now consults the record first. If the lock is
   vacant but the last recorded helm is ALIVE, the session **stands read-only** and names
   that hand in one line:

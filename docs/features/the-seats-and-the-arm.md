@@ -312,7 +312,9 @@ Two rules follow, and both are the fix:
 can be shown to hold that pane and to host the holder's process, and it is removed
 when no pane can be proved. A pane herdr has dropped is never served: for four days
 this file named `w39:p23`, a pane that no longer existed, and every notification for
-the helm went to a ghost.
+the helm went to a ghost. A session started outside herdr (a plain terminal) has no
+pane to prove, and the file is simply absent; a door that needs a pane then falls
+back instead of aiming at nothing.
 
 The behaviour is proven in `bin/seat/tests/test_arm_never_lost.sh` (49 assertions:
 the record, the refusal, the reap, the surprise guard, the ghost pane, the
