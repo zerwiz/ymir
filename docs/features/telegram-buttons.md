@@ -65,6 +65,21 @@ The difference matters and is worth knowing: on a line the bridge composed, a cl
 prompt into the session that owns the bot; on a line a cron row posted, the prompt travels in the
 callback and no session is listening for it.
 
+**Writing a label a person can act on.** The label is the whole button for whoever is reading it. It
+says, in plain English, **what the tap does, to what, and what comes out**:
+
+| label | why it works, or does not |
+|---|---|
+| `🔧 Fix the failing check` | a verb, the object, and the result — tappable without asking a question |
+| `📤 Open the pull request for branch eindri/heavy-lanes` | names the branch, so the reader knows exactly which work moves |
+| `🎛 Let the gate hear edits` | it has to be decoded: what gate, which edits, and what happens? a puzzle, not a button |
+
+The rule is a law, not taste (2026-11-19, at the operator's word: *"i dont understand the buttons"*):
+`AGENTS.md` carries it as *"a label is an instruction, not a riddle"*, and `bin/seat/seat-surface.sh
+--check` refuses a seat render that loses it, so every install and every update keeps it in front of
+the agent. When a click changes code, the label says which code and which change, and the prompt behind
+it names the file, the command and the branch — a click must never need a follow-up question.
+
 **Limits, stated plainly.** Eight buttons per row is Telegram's own limit; six per reply is ours, and
 `--allow-many` exists for the deliberate exception. Labels are capped at 64 characters. `check`
 refuses a reply with exactly one button only when asked (`--allow-single`), because a single control
