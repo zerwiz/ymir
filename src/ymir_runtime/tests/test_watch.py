@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import subprocess
 import tempfile
@@ -611,3 +612,147 @@ class CadenceTest(ArmTestCase):
 
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()
+
+
+class ErrandWakeTest(ArmTestCase):
+    """The errands the house dispatched: a dead pane, a false done, a stalled worker."""
+
+    def herdr(self, panes: dict[str, str] | None) -> Recorder:
+        if panes is None:
+            return Recorder(responses={"herdr agent list": completed(1, "", "no server")})
+        body = {"result": {"agents": [{"pane_id": p, "agent_status": s} for p, s in panes.items()]}}
+        return Recorder(responses={"herdr agent list": completed(0, json.dumps(body))})
+
+    def errand(self, seat_id: str, status: str, *, age: float = 0, **meta: str) -> None:
+        fields = {"id": seat_id, "backend": "herdr", "mode": "batch"}
+        fields.update(meta)
+        meta_file = self.paths.state / f"{seat_id}.meta"
+        meta_file.write_text("".join(f"{k}={v}\n" for k, v in fields.items()), encoding="utf-8")
+        status_file = self.paths.state / f"{seat_id}.status"
+        status_file.write_text(status + "\n", encoding="utf-8")
+        stamp = time.time() - age
+        os.utime(meta_file, (stamp, stamp))
+        os.utime(status_file, (stamp, stamp))
+
+    def repo(self, *, commits: int, push: bool, branch: str = "eindri/probe") -> Path:
+        origin = self.tmp / "origin.git"
+        work = self.tmp / "work"
+        run = lambda *a, cwd=None: subprocess.run(a, cwd=cwd, check=True, capture_output=True)  # noqa: E731
+        run("git", "init", "-q", "--bare", "-b", "main", str(origin))
+        run("git", "init", "-q", "-b", "main", str(work))
+        git = ("git", "-c", "user.name=t", "-c", "user.email=t@example.org")
+        run(*git, "commit", "-q", "--allow-empty", "-m", "base", cwd=work)
+        run("git", "remote", "add", "origin", str(origin), cwd=work)
+        run("git", "push", "-q", "origin", "main", cwd=work)
+        run("git", "checkout", "-q", "-b", branch, cwd=work)
+        for n in range(commits):
+            run(*git, "commit", "-q", "--allow-empty", "-m", f"work {n}", cwd=work)
+        if push:
+            run("git", "push", "-q", "origin", branch, cwd=work)
+        return work
+
+    def test_a_pane_with_no_agent_is_stale_once(self) -> None:
+        self.errand("probe", "working: busy", window="wX:p1")
+        runner = self.herdr({"wA:p1": "working"})
+        self.assertEqual(
+            watch.raise_line(self.paths, runner=runner),
+            "stale: errand probe has no agent in wX:p1 (status: working: busy)",
+        )
+        self.assertEqual(watch.raise_line(self.paths, runner=runner), "", "the same fact never wakes twice")
+
+    def test_an_ended_errand_with_no_agent_is_quiet(self) -> None:
+        self.errand("probe", "failed: gave up", window="wX:p1")
+        self.assertEqual(watch.raise_line(self.paths, runner=self.herdr({})), "")
+
+    def test_a_silent_herdr_judges_no_worker(self) -> None:
+        self.errand("probe", "working: busy", window="wX:p1")
+        self.assertEqual(watch.raise_line(self.paths, runner=self.herdr(None)), "")
+
+    def test_a_healthy_errand_is_quiet(self) -> None:
+        self.errand("probe", "working: busy", window="wX:p1")
+        self.assertEqual(watch.raise_line(self.paths, runner=self.herdr({"wX:p1": "working"})), "")
+
+    def test_an_errand_older_than_the_horizon_is_not_judged(self) -> None:
+        self.errand("probe", "working: busy", age=watch.DEFAULT_ERRAND_HORIZON_SECONDS + 60, window="wX:p1")
+        self.assertEqual(watch.raise_line(self.paths, runner=self.herdr({})), "")
+
+    def test_a_quiet_idle_worker_is_stalled(self) -> None:
+        self.errand("probe", "working: thinking", age=45 * 60, window="wX:p1")
+        runner = self.herdr({"wX:p1": "idle"})
+        self.assertEqual(
+            watch.raise_line(self.paths, runner=runner), "stale: errand probe has said nothing for 45 minutes"
+        )
+        self.assertEqual(watch.raise_line(self.paths, runner=runner), "")
+
+    def test_a_quiet_but_working_agent_is_not_stalled(self) -> None:
+        self.errand("probe", "working: thinking", age=45 * 60, window="wX:p1")
+        self.assertEqual(watch.raise_line(self.paths, runner=self.herdr({"wX:p1": "working"})), "")
+
+    def test_a_done_over_an_empty_branch_is_a_check(self) -> None:
+        (self.paths.state / ".arm.errand-epoch").write_text("1\n", encoding="utf-8")
+        work = self.repo(commits=0, push=False)
+        self.errand("probe", "done: committed on eindri/probe", worktree=str(work))
+        runner = self.herdr({})
+        self.assertEqual(
+            watch.raise_line(self.paths, runner=runner), "check: errand probe reported done with nothing committed"
+        )
+        self.assertEqual(watch.raise_line(self.paths, runner=runner), "")
+
+    def test_a_batch_done_with_commits_is_quiet(self) -> None:
+        (self.paths.state / ".arm.errand-epoch").write_text("1\n", encoding="utf-8")
+        work = self.repo(commits=1, push=False)
+        self.errand("probe", "done: committed", worktree=str(work), mode="batch")
+        self.assertEqual(watch.raise_line(self.paths, runner=self.herdr({})), "")
+
+    def test_a_lone_done_with_no_branch_pushed_is_a_check(self) -> None:
+        (self.paths.state / ".arm.errand-epoch").write_text("1\n", encoding="utf-8")
+        work = self.repo(commits=1, push=False)
+        self.errand("probe", "done: opened PR", worktree=str(work), mode="pr")
+        self.assertEqual(
+            watch.raise_line(self.paths, runner=self.herdr({})),
+            "check: errand probe reported done with no branch pushed",
+        )
+
+    def test_a_lone_done_pushed_is_quiet(self) -> None:
+        (self.paths.state / ".arm.errand-epoch").write_text("1\n", encoding="utf-8")
+        work = self.repo(commits=2, push=True)
+        self.errand("probe", "done: opened PR", worktree=str(work), mode="pr")
+        self.assertEqual(watch.raise_line(self.paths, runner=self.herdr({})), "")
+
+    def test_a_done_older_than_the_epoch_is_seeded_not_judged(self) -> None:
+        work = self.repo(commits=0, push=False)
+        self.errand("probe", "done: long ago", age=3600, worktree=str(work))
+        self.assertEqual(watch.raise_line(self.paths, runner=self.herdr({})), "")
+
+    def test_errand_lines_pass_the_hourly_brake(self) -> None:
+        for n in range(watch.RAISE_HOURLY_CEILING + 2):
+            line = f"stale: errand e{n} has no agent in w:p1 (status: working: x)"
+            self.assertEqual(watch.brake_line(self.paths, line), line)
+
+    def test_a_full_slot_holds_the_next_raise(self) -> None:
+        self.paths.event.write_text("signal: undelivered\n", encoding="utf-8")
+        (self.paths.state / "42.signal").write_text("", encoding="utf-8")
+        watch.cycle(self.paths, env=self.env, runner=self.herdr({}), helm=identity.Helm())
+        self.assertTrue((self.paths.state / "42.signal").exists(), "a trigger is not consumed into a full slot")
+
+    def test_a_false_done_is_checked_before_it_is_signalled(self) -> None:
+        watch.raise_line(self.paths, runner=self.herdr({}))  # the first scan stamps both epochs
+        time.sleep(0.05)
+        work = self.repo(commits=0, push=False)
+        self.errand("probe", "done: committed", worktree=str(work))
+        runner = self.herdr({})
+        self.assertEqual(
+            watch.raise_line(self.paths, runner=runner), "check: errand probe reported done with nothing committed"
+        )
+        self.assertEqual(watch.raise_line(self.paths, runner=runner), "signal: probe done: committed")
+        self.assertEqual(watch.raise_line(self.paths, runner=runner), "")
+
+
+class EagerEpochTest(ArmTestCase):
+    def test_the_first_done_a_fresh_home_writes_is_raised(self) -> None:
+        # Stamped lazily, the epoch was the moment the first terminal line was MET, so
+        # that line always read as older than the epoch and was seeded in silence.
+        self.assertEqual(watch.raise_line(self.paths), "")
+        time.sleep(0.05)
+        (self.paths.state / "first.status").write_text("done: the first ever\n", encoding="utf-8")
+        self.assertEqual(watch.raise_line(self.paths), "signal: first done: the first ever")
