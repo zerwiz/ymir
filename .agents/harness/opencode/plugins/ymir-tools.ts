@@ -1,5 +1,6 @@
 import { Plugin } from "@opencode/plugin"
 import { Schema } from "effect"
+import { existsSync } from "node:fs"
 
 /**
  * Ymir Tools Plugin for OpenCode V2
@@ -196,17 +197,30 @@ export default Plugin.define({
           try {
             switch (action) {
               case "read": {
-                const statusFile = `${root}/state/${id}.status`
-                const metaFile = `${root}/state/${id}.meta`
+                // AN ERRAND'S RECORD IS THE HOME'S, NOT THE CHECKOUT'S (2026-11-20). `root` is the
+                // repository; the helm writes `state/<id>.meta` in the home (and a seat may override
+                // it). Reading `${root}/state` answered "NOTHING RECORDED" for an errand whose meta and
+                // status both stood in the home. The order is the shell doors': helm override, the
+                // resolved state, then the old in-tree state as a last resort.
+                const stateDirs = [process.env.BROKK_HELM_STATE?.trim(), state, `${root}/state`]
+                  .filter((d, i, a): d is string => !!d && a.indexOf(d) === i)
+                let base = `${stateDirs[0] ?? `${root}/state`}/${id}`
+                for (const d of stateDirs) {
+                  if (existsSync(`${d}/${id}.meta`) || existsSync(`${d}/${id}.status`)) { base = `${d}/${id}`; break }
+                }
+                const statusFile = `${base}.status`
+                const metaFile = `${base}.meta`
                 let out = `errand[1]{id,status,backend,harness,model,worktree}:\n`
                 if (!(await Bun.file(statusFile).exists()) && !(await Bun.file(metaFile).exists())) {
-                  out += `  "${id}","NOTHING RECORDED — no state/${id}.meta and no .status"\n\nThat is the fault this door exists for: an errand that left no record cannot be read, steered or closed by name.`
+                  out += `  "${id}","NOTHING RECORDED — no ${metaFile} and no .status"\n\nLooked in: ${stateDirs.join(", ")}\n\nThat is the fault this door exists for: an errand that left no record cannot be read, steered or closed by name.`
                   return toolResult(out)
                 }
                 const status = (await Bun.file(statusFile).text()).trim().split("\n").pop() || ""
                 const meta = await Bun.file(metaFile).text()
                 const field = (key: string) => (new RegExp(`^${key}=(.*)$`, "m").exec(meta)?.[1] ?? "")
                 out += `  "${id}","${status.slice(0, 70)}","${field("backend")}","${field("harness")}","${field("model")}","${field("worktree")}"`
+                const seat = field("seat_pane") || field("window")
+                if (seat) out += `\n  seat: ${seat}`
                 const wt = field("worktree")
                 if (wt && await Bun.file(wt).exists()) {
                   const g = (a: string[]) => runShell("git", a, wt)
@@ -214,7 +228,7 @@ export default Plugin.define({
                   out += `\n  commits ahead of main: ${await g(["rev-list", "--count", "origin/main..HEAD"])}`
                   out += `\n  changed files: ${(await g(["status", "--porcelain"])).split("\n").filter(Boolean).length}`
                 }
-                const inbox = `${root}/state/${id}.inbox`
+                const inbox = `${base}.inbox`
                 if (await Bun.file(inbox).exists()) {
                   const un = await runShell("bash", ["-c", `ls "$1" 2>/dev/null | wc -l`, "_", inbox])
                   out += `\n  steering inbox: ${un} message(s)`
