@@ -23,6 +23,16 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   done
   unset _yh _i
 fi
+# WHICH KEY OPENS THE VAULT lives in one library (plan 342): this seat's own SSH
+# identity first, the retiring `age.key` only while it still exists.
+if [ -z "${YMIR_VAULT_IDENTITY_LIB_LOADED:-}" ]; then
+  _yv="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)"
+  if [ -r "$_yv/vault-identity-lib.sh" ]; then
+    # shellcheck source=bin/vault/vault-identity-lib.sh
+    . "$_yv/vault-identity-lib.sh"; YMIR_VAULT_IDENTITY_LIB_LOADED=1
+  fi
+  unset _yv
+fi
 if [ -z "${YMIR_HOME:-}" ] && command -v ymir_home_root >/dev/null 2>&1; then
   ymir_home_root YMIR_HOME
 fi
@@ -57,12 +67,27 @@ PY
   printf 'hodd[1]{action,file}:\n  "load","%s"\n' "$f"
 }
 
-# Resolve a secrets path: if the plaintext is absent but an .age sibling and the
-# hoard key exist, decrypt to stdout. Prints a path to a readable file (a temp
-# when decrypted) via the result var. Secrets stay encrypted at rest; the agent
+# Resolve a secrets path: if the plaintext is absent but an .age sibling exists, decrypt
+# it to a 0600 temp and hand back that path. Secrets stay encrypted at rest; the agent
 # never reads ciphertext directly — it asks for the resolved path.
+#
+# THE KEY (plan 342). The vault is locked to the owner's GitHub SSH keys, so the reader
+# opens it with THIS machine's SSH identity (~/.ssh/id_ed25519, or one named in the home's
+# config/vault-recipients.yaml, or $YMIR_VAULT_IDENTITY). The retired `age.key` is still
+# tried LAST while it exists, so a seat that has not yet been given a GitHub key keeps
+# working through the switch instead of going dark.
+age_decrypt_any() {  # <age-file> <out-file> — 0 when some identity opened it
+  local src=$1 out=$2 id
+  command -v age >/dev/null 2>&1 || return 1
+  while IFS= read -r id; do
+    [ -n "$id" ] || continue
+    if age -d -i "$id" "$src" >"$out" 2>/dev/null && [ -s "$out" ]; then return 0; fi
+  done < <(vault_identity_candidates 2>/dev/null)
+  return 1
+}
+
 resolve_secret() {  # <file> <result-var>
-  local f=$1 var=$2 tmp key
+  local f=$1 var=$2 tmp
   # THE SEALED COPY IS THE SOURCE OF TRUTH. `bin/vault/hodd-set.sh` writes the .age and
   # NOTHING else, so a plaintext left beside it goes stale in silence — measured
   # 2026-11-05: three keys were written into platform.env.age (the mail grant) and every
@@ -71,23 +96,20 @@ resolve_secret() {  # <file> <result-var>
   #
   # So: a readable .age that DECRYPTS wins. The plaintext is the fallback, and the older
   # rule still holds inside it — an EMPTY plaintext never shadows the vault (2026-09-23).
-  if [ -r "$f.age" ]; then
-    key="$HOARD/secrets/age.key"
-    if [ -r "$key" ] && command -v age >/dev/null 2>&1; then
-      tmp="$(mktemp)"; chmod 600 "$tmp"
-      if age -d -i "$key" "$f.age" >"$tmp" 2>/dev/null && [ -s "$tmp" ]; then
-        printf -v "$var" '%s' "$tmp"; return 0
-      fi
-      rm -f "$tmp"
+  if [ -r "$f.age" ] && command -v age >/dev/null 2>&1; then
+    tmp="$(mktemp)"; chmod 600 "$tmp"
+    if age_decrypt_any "$f.age" "$tmp"; then
+      printf -v "$var" '%s' "$tmp"; return 0
     fi
+    rm -f "$tmp"
   fi
   if [ -s "$f" ]; then printf -v "$var" '%s' "$f"; return 0; fi
   if [ -r "$f.age" ]; then
-    key="$HOARD/secrets/age.key"
     command -v age >/dev/null 2>&1 || { printf 'error: %s is encrypted but age is not installed\nhelp: sudo pacman -S age\n' "$f.age" >&2; return 1; }
-    [ -r "$key" ] || { printf 'error: encrypted %s but no key at %s\n' "$f.age" "$key" >&2; return 1; }
+    [ -n "$(vault_identity_candidates 2>/dev/null | head -1)" ] \
+      || { printf 'error: encrypted %s and this seat holds no key that could open it\nhelp: put a key at ~/.ssh/id_ed25519, or name one in config/vault-recipients.yaml\n' "$f.age" >&2; return 1; }
     tmp="$(mktemp)"; chmod 600 "$tmp"
-    age -d -i "$key" "$f.age" >"$tmp" 2>/dev/null || { rm -f "$tmp"; printf 'error: cannot decrypt %s\n' "$f.age" >&2; return 1; }
+    age_decrypt_any "$f.age" "$tmp" || { rm -f "$tmp"; printf 'error: cannot decrypt %s — this seat is not a recipient\nhelp: bin/vault/vault-relock.sh --check\n' "$f.age" >&2; return 1; }
     printf -v "$var" '%s' "$tmp"; return 0
   fi
   printf 'error: not readable: %s (and no %s.age)\n' "$f" "$f" >&2; return 1

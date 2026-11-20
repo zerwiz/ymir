@@ -56,7 +56,7 @@ bin[72]{file,does,kind,verdict,disposition,callers,lines}:
   "eindri-wake-lib.sh","eindri-wake-lib.sh — the ONE delivery ledger behind the Eindri push path.","lib","tested","keep",12,75
   "eindri-watch.sh","eindri-watch.sh — the control door on the Eindri→Brokk wake bridge.","tool","wired","keep",6,131
   "einherjar-spawn.sh","einherjar-spawn.sh - gather an Eindri worker (Einherjar = the chosen who are","tool","tested","keep",23,1495
-  "eir-doctor.sh","eir-doctor.sh — Eir, the healer: diagnose the running system, then mend it.","tool","wired","keep",17,1221
+  "eir-doctor.sh","eir-doctor.sh — Eir, the healer: diagnose the running system, then mend it.","tool","wired","keep",17,1237
   "erindi-brief.sh","erindi-brief.sh - scaffold an Eindri worker brief at data/<task-id>/brief.md.","tool","tested","keep",6,456
   "groa-agent.sh","groa-agent.sh — Gróa's body on a schedule: the updater, leashed, one per install.","tool","wired","keep",2,188
   "groa-update.sh","groa-update.sh — Gróa, the völva who renews.","tool","wired","keep",19,555

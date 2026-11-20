@@ -192,6 +192,16 @@ contract:
     door: bin/engine/home-seed.sh
     required: true
     why: "each agent's harness and model — the one file that decides what runs"
+  # Which machines may open the secrets vault (plan 342, 2026-11-20). A STUB, because only
+  # the operator knows which of his keys should be able to read it: the shape prompts and
+  # ships with invented titles commented out, so a seeded home declares nothing and the
+  # vault keeps whatever lock it has until he names his keys.
+  - path: config/vault-recipients.yaml
+    kind: stub
+    template: .agents/config/vault-recipients.yaml.example
+    door: bin/engine/home-seed.sh
+    required: false
+    why: "which GitHub SSH keys may open the secrets vault; absent or empty, the vault keeps its current lock and vault-relock says so by name (plan 342)"
   # The operator's own desktop answers (2026-11-14, his word: "are this settings able to be
   # set from env files for diffrent users ? we probly need that"). Not required: without it
   # every app takes the machine's policy exactly as before.
