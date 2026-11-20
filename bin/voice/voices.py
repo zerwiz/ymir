@@ -195,7 +195,8 @@ def read_choices() -> dict:
 
 def engine_default() -> str:
     """The engine's own configured voice (Kokoro's config.json) — a default, never the only voice."""
-    cfg = Path(os.environ.get("KOKORO_CONFIG") or (Path.home() / ".local" / "share" / "kokoro" / "config.json"))
+    data = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local/share")  # the XDG data home
+    cfg = Path(os.environ.get("KOKORO_CONFIG") or data / "kokoro" / "config.json")
     try:
         return str(json.loads(cfg.read_text(encoding="utf-8")).get("voice") or "")
     except (OSError, ValueError):
