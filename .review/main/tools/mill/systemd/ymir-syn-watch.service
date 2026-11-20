@@ -1,0 +1,21 @@
+[Unit]
+Description=Ymir arm — Sýn, the standing supervision watcher (one per home, idle-not-dead)
+# A flap is bounded and named: Restart=always brings the watch back; ten rapid
+# failures in a minute is a real fault systemd stops shouting about (the unit
+# goes failed, bin/eir-doctor.sh's `arm` surface and bin/syn-watch.sh status
+# both name it).
+StartLimitIntervalSec=60
+StartLimitBurst=10
+
+[Service]
+Type=simple
+Environment=PATH=%h/.bun/bin:/usr/local/bin:/usr/bin:/bin
+Environment=BROKK_STATE_OVERRIDE=__YMIR_OPERATOR_STATE__
+Environment=SYN_WATCH_MODE=systemd
+ExecStart=/bin/bash __YMIR_BIN_DIR__/syn-watch.sh run
+Restart=always
+RestartSec=2
+TimeoutStopSec=10
+
+[Install]
+WantedBy=ymir.target

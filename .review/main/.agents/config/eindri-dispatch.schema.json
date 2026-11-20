@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zerwiz/ymir/config/eindri-dispatch.schema.json",
+  "title": "config/eindri-dispatch.json",
+  "description": "The dispatch profile (plan 42 · plan 58, Phase 7): natural-language rules choosing a per-task harness/model/effort, read by bin/dispatch-profile.sh before an Eindri is seated. `use` MUST be a list — bin/dispatch-profile.sh iterates it, so a single object was silently skipped; that silence is a refusal now. The shipped template carries `<...>` model tokens on purpose and is a VALID document: it is simply not ACTIVE until the machine derives or writes a real profile.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["rules"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "platform": { "type": "string" },
+    "notes": { "type": "string" },
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["when", "use"],
+        "properties": {
+          "when": { "type": "string", "minLength": 1 },
+          "why": { "type": "string" },
+          "use": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/choice" }
+          }
+        }
+      }
+    },
+    "default": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/choice" }
+    }
+  },
+  "$defs": {
+    "effort": { "enum": ["low", "medium", "high", "xhigh", "max"] },
+    "choice": {
+      "oneOf": [
+        {
+          "title": "a launch",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["harness"],
+          "properties": {
+            "harness": {
+              "type": "string",
+              "minLength": 1,
+              "description": "a verified launch harness (opencode · pi · pi-signed)"
+            },
+            "model": { "type": "string", "minLength": 1 },
+            "effort": { "$ref": "#/$defs/effort" }
+          }
+        },
+        {
+          "title": "a resolution",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["resolve", "then"],
+          "properties": {
+            "resolve": { "type": "string", "minLength": 1 },
+            "then": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    }
+  }
+}

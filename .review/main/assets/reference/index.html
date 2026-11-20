@@ -1,0 +1,1172 @@
+
+
+GLM-5.3-Flash
+
+Share
+# YMIR — Design Document
+
+> **Status:** v1.0 · owner: zerwiz · applies to Hlidskjalf (React/Vue), all Norse
+> surfaces, and the houses.
+> Sources: Ymir Rut v2.6 (`docs/ymir-rut.md` Part 3), the mythos (`docs/lore.md`),
+> the UI/UX-is-a-differentiator doctrine (ENTRY-008), and the stack ruling
+> (ENTRY-009/010).
+> Implementation: design tokens live in `midgard/design-system/tokens.css`
+> (consumed by React and Vue apps).
+
+---
+
+## 1. Philosophy — Carved, not skinned
+
+Ymir's UI is not decoration bolted onto a system; it is **forged from the same
+allegory the system runs on**. Every pixel should feel as if it were carved from
+the giant's bones, hammered in a Svartalfaheim forge, lit by Bifrost transit
+beams. The design behaves the way the system behaves:
+
+- **Forged, not painted** — bevels, chiseled edges, material depth. Nothing
+  floats; everything sits.
+- **The well is visible** — memory, telemetry, and audit are first-class surface,
+  never hidden behind "settings".
+- **The forge stays hot** — status is instant, truthful, and always on screen.
+- **Quiet strength** — high legibility, low noise. This is an instrument panel
+  for a single operator running everything.
+
+Design decisions always answer: *"would a dwarf smith build it this way?"*
+
+---
+
+## 2. Brand Identity
+
+### 2.1 Emblem — the Ymir Root Mark
+
+The mark combines two glyphs:
+
+- **Algiz (ᛉ)** — the rune of protection and the branching *worker stems* of the
+  agent tree (also evokes Yggdrasil spreading from the root).
+- **Blacksmith anvil base** — industrial strength, heavy compute, the forge from
+  which every artifact is shaped.
+
+Construction rules:
+- Dual-layer chiseled bevel: dark iron exterior `#334155`, luminous cyan inner
+  edge `#7dd3fc`.
+- One emblem per context; never gradient-bloated, never filled with imagery.
+- On dark obsidian surfaces: cyan-lit variant. On light surfaces: steel variant
+  with indigo edge.
+- Favicon = the rune alone, 24–32px, stroke weight 2.
+
+### 2.2 Houses — brands within the brand
+
+Each house carries the myth that names it and a **house accent** for seals,
+tags, and portal theming (proposed accents — ENTRY-004 mapping):
+
+| House | Name-sake | House accent |
+|---|---|---|
+| Ymir Labs | the giant | cyan `#38bdf8` |
+| Brokk Forge | the bellows-smith | forge amber `#f59e0b` |
+| Runestone Labs (Runir) | the runes | rune crimson `#f43f5e` |
+| Muninn Labs | the raven (memory) | raven violet `#8b5cf6` |
+| Dvalin | the dwarf craftsman | cold steel `#94a3b8` |
+| Utgard Studios | the giant-realm | jötun magenta `#d946ef` |
+| Askr | the first man | ash green `#34d399` |
+| Mannheim | *(reserved)* | slate `#64748b` |
+
+House accents are **structural only** — tags, entity headers, chart series —
+never the page chrome.
+
+---
+
+## 3. Design Principles
+
+1. **The giant is the frame** — one body, many realms. One visual system across
+   every tenant; a realm is a *view*, not a redesign.
+2. **Truth over ornament** — telemetry and logs render exactly as they are. No
+   fake glow, no invented metrics. Traceability index is a real number on screen.
+3. **Status is ambient** — NOMINAL / DEGRADED / DOWN is readable at a glance
+   from across the room (color + glyph + text, never color alone).
+4. **The well is a first-class citizen** — recall results, episodes, and timeline
+   render inline, not in a hidden drawer.
+5. **Isolation by default** — realms are visually distinct (borders, subtle
+   tint), never commingled. A user must *feel* which realm they're in.
+6. **Motion explains, never decorates** — transitions trace real data flow
+   (task state changes, message hops). ~150–240ms, linear-ish, no bounce.
+7. **Dense but calm** — keyboard-first, mono for data, generous breathing room
+   for narrative text.
+
+---
+
+## 4. Visual Language
+
+### 4.1 Typography
+
+| Role | Face | Use |
+|---|---|---|
+| Headings & runes | **Cinzel** | page titles, section headers, the emblem wordmark, runic seals |
+| Code, telemetry, metrics | **JetBrains Mono** | all data: logs, IDs, states, timestamps, task/agent names, CLI |
+| Body & UI | **Inter** | description text, labels, buttons, body of narratives, docs |
+
+Scale (reference — fluid via clamp()):
+
+| Token | Size / Line-height | Used for |
+|---|---|---|
+| s-mono-s | 12 / 16 | timestamps, badges |
+| s-mono-m | 14 / 20 | telemetry, task IDs |
+| s-mono-l | 18 / 24 | hero metrics (traceability index) |
+| s-cinzel | 28–44 / 1.1 | realm/page titles |
+| s-body | 15 / 22 | descriptions |
+| s-caption | 13 / 18 | secondary notes |
+
+Rules: metrics are **always** JetBrains Mono (tabular numerals enabled);
+runes/glyphs are Cinzel; never mix faces mid-line. Title case stays short —
+one lyric line, then the deck explains.
+
+### 4.2 Color system
+
+Foundations (light = dom, dark = forge) — **the forge theme is default and canonical**:
+
+**Canvas (the forge chamber)**
+
+| Token | Value | Role |
+|---|---|---|
+| `--ymir-bg-0` | `#080c14` | deepest canvas, app shell |
+| `--ymir-bg-1` | `#0b101c` | panel surface |
+| `--ymir-bg-2` | `#101726` | elevated surface, cards |
+| `--ymir-bg-3` | `#182334` | hover, wells |
+| light base | `#f4f6fa` | (light theme only, optional) |
+
+**Accents (two lights of Bifrost)**
+
+| Token | Value | Role |
+|---|---|---|
+| `--ymir-cyan-1` | `#38bdf8` | primary accent, active states, focus ring, links |
+| `--ymir-cyan-2` | `#0ea5e9` | hover/darker accent, gradients |
+| `--ymir-violet-1` | `#818cf8` | realm identity, secondary accent |
+| `--ymir-violet-2` | `#6366f1` | darker violet |
+
+**Structure (hammered steel)**
+
+| Token | Value | Role |
+|---|---|---|
+| `--ymir-steel-1` | `#334155` | borders, bevel exteriors |
+| `--ymir-steel-2` | `#475569` | stronger lines, dividers |
+| `--ymir-steel-3` | `#94a3b8` | secondary text, muted glyphs |
+| `--ymir-chisel` | `#7dd3fc` | cyan inner bevel edge (emblem, focus) |
+
+**Semantics (state of the forge)**
+
+| Token | Value | Meaning |
+|---|---|---|
+| `--ymir-ok` | `#34d399` | NOMINAL (emerald) |
+| `--ymir-warn` | `#fbbf24` | DEGRADED (amber) |
+| `--ymir-danger` | `#f87171` | DOWN / sealed (ember red) |
+| `--ymir-info` | `#38bdf8` | transit / neutral-inform |
+| `--ymir-ok-dim` | `rgba(52,211,153,.15)` | background wash of the above three, same pattern for warn/danger/info |
+
+**Text on forge**
+
+| Token | Value | Role |
+|---|---|---|
+| `--ymir-text-0` | `#e8edf6` | primary text |
+| `--ymir-text-1` | `#b3c0d4` | secondary text |
+| `--ymir-text-2` | `#7b8aa3` | tertiary, disabled |
+| `--ymir-text-3` | `#4b5a73` | placeholder |
+
+Contrast: `--ymir-text-0` on `--ymir-bg-1` ≈ 13:1; body 15px meets WCAG AA
+everywhere; never put cyan text on cyan.
+
+### 4.3 Space & grid
+
+- Base unit **4px**; 8px rhythm for layout.
+- Panel padding `--ymir-space-4: 16px`; page gutter 24–48.
+- Max content width 1440; density slider for the data views (comfortable ↔ compact).
+- Components: radius `--ymir-radius: 8px` (panels 12px), 1px steel borders,
+  inset shadows to sell the bevel: `inset 0 0 0 1px rgba(125,211,252,.12)`.
+
+### 4.4 Iconography & glyphs
+
+- **Runecoded, not emoji.** A minimal, hand-drawn-style rune set replaces emoji
+  in all UI: 16×16 and 24×24 grid, 2px stroke, chisel bevel on primary.
+- System subsystems each carry one rune-glyph (reuse Algiz-family geometry:
+  Bifrost gate, Ratatoskr squirrel, the Well). Map is in `midgard/design-system/icons.md` (TBD) — created from this doc.
+- Status dot: filled rune ring (ok) / half-ring (warn) / broken ring (danger), never color-only.
+
+### 4.5 Surface & texture
+
+- Background treatment: **hand-hammered steel** (very subtle noise/specular ~2%),
+  and the **crystalline icosahedral grid** for hero/brand areas only (3–5% opacity).
+- Emblem renders with the chisel bevel; body surfaces stay flat — motif stops at
+  the chrome, never behind text.
+
+### 4.6 Motion
+
+| Context | Pattern | Duration |
+|---|---|---|
+| Task state change | fade + 2px upward drift on the state chip | 180ms |
+| Message hop (Ratatoskr) | light dash along the fleet edge | 220ms |
+| Panel reveal | mask + slight scale 0.99→1 | 160ms |
+| Metric tick | JetBrains Mono numeric roll (monospace, tabular) | 240ms |
+| Loading | screen of the forge (glowing ember + rune), not a spinner wheel | — |
+
+Honor `prefers-reduced-motion`: all transforms collapse to fades ≤120ms.
+
+---
+
+## 5. UI System — Hlidskjalf (React/Vue)
+
+### 5.1 App shell
+
+- Left rail: emblem + the **7 realm gates** (click = realm switch), collapsed to
+  rune-only at <900px.
+- Top bar: current realm chip (house accent + tenant name), global search
+  (realm-scoped), traceability index chip (live), user menu.
+- Main stage: modal-free; views are full panels with a persistent **bottom stream**:
+  Ratatoskr messages + Runes entries in one mono stream (pausable).
+
+Views: **Fleet** (agents/cards) · **Tasks** (A2A lifecycle board) · **Well**
+(memory recall/timeline/observe) · **Runes** (ledger) · **Reviews** (PR cards) ·
+**Processes** (Valhalla) · **Files** (Skrymir) · **Chat** (OmniChat drawer).
+
+### 5.2 Reusable components (token-driver)
+
+| Component | Spec |
+|---|---|
+| `RealmGate` | rune + label + subtle realm tint; active = cyan chisel ring |
+| `AgentCard` | Agent Card JSON rendered: name, capabilities, skills, interface, status dot, house seal |
+| `TaskChip` | A2A state: SUBMITTED→WORKING→terminal; color + rune + label (never color alone) |
+| `TraceRow` | mono line: ts · agent · module · event · checksum |
+| `RecallPanel` | query + ranked episodes (score bar = cyan), timeline view |
+| `MetricTile` | mono number + delta + sparkline; beveled panel |
+| `RuneTag` | house/label pills using house accents |
+| `PRCard` | title, checklist progress, CI runes, review actions (Glitnir) |
+
+All components read tokens from `tokens.css`; color-only states are forbidden
+(append a rune glyph + text).
+
+### 5.3 Data visualization
+
+- Charts: thin 2px cyan/violet lines, no 3D, no pie explosions; gridlines at
+  `--ymir-steel-2` 12% opacity.
+- Series color order: cyan → violet → emerald → amber → crimson.
+- Fleet graph: nodes = Agent Cards, edges = A2A task hops; edge dashes animate on
+  activity; node ring = status.
+- Trace/timeline: JetBrains Mono; branch/merge glyphs reused from Yggdrasil theme.
+
+---
+
+## 6. Content & voice
+
+- **Short, operational, zero flair.** "Task failed. Diagnosis: json_contract.
+  Retried as 6f1a." — not "We encountered an unexpected issue."
+- Headings read like commands; decks read like log lines.
+- Rune labels double as keyboard hints (`ᛉ` = Algiz/protect, used for "seal/approve").
+
+---
+
+## 7. Accessibility & implementation notes
+
+- AA contrast enforced (tokens guarantee it), focus = cyan chisel ring, target
+  size ≥44px, keyboard-first with all views reachable.
+- React and Vue consume the **same token set** — no per-framework color drift.
+  `tokens.css` is the single source; component styling via CSS vars, not hardcoded hex.
+- Agents (Brokk/Eindri) generate UI from **Agent Cards and task JSON** — the
+  design system guarantees any agent-produced surface is on-brand without a
+  designer in the loop.
+
+---
+
+## 8. Files
+
+- `docs/design.md` — this document (master).
+- `midgard/design-system/tokens.css` — the consumable design tokens.
+- `midgard/design-system/icons.md` — rune-glyph map (to create).
+- `docs/ymir-rut.md` Part 3 — the original Rut design-system specification this
+  document implements.
+- `docs/lore.md` §VI — house lineage behind the house accents.
+
+
+# YMIR — The Lore (v2)
+
+> The system carries Norse names not as decoration but as **load-bearing allegory** — every name is chosen because the myth already explains the machine's job. The visual language is the same rule made visible: **carved, not skinned**. ([`docs/design.md`](design.md))
+
+---
+
+## I. The Creation: Ymir, the Primordial Giant
+
+In the old tale, there was nothing before the worlds but cold mist and embers of fire.
+From their meeting in the Void — **Ginnungagap** — came the first being: the giant
+**Ymir (Aurgelmir)**, the ancestor of everything. The gods slew him and made the
+world from his body: flesh became the earth, blood the seas, bones the mountains,
+hair the forests, skull the sky.
+
+That is what this platform is. **Ymir** is the substrate — a single machine, a single
+repo — the primordial body from which every realm of work is carved. Every service,
+every repo, every tool this fleet ships is shaped from Ymir's frame and lives on it.
+
+It is also the reason the UI looks the way it does. Nothing is painted onto Ymir;
+everything is cut **from** him — chiseled bevels, hammered steel surfaces, runes
+cut into obsidian. The design does not decorate the system; it exposes its bones.
+
+---
+
+## II. The Builders: Brokk and Eitri (Eindri)
+
+After the world was made, the gods needed smiths. Two dwarf brothers are the
+greatest craftsmen in the myths:
+
+- **Brokk** works the **bellows** — he drives the forge, keeps the fire fed, drives
+  the work to completion even when he's bitten on the hand.
+- **Eitri** (our **Eindri**) works the **craft** — the hands that shape the metal.
+
+Together they out-forged the sons of Ivaldi and produced the Aesir's finest
+treasures — chief among them **Mjölnir**, the hammer that returns to the hand.
+
+That is the agent fleet:
+
+- **Brokk** is the primary agent — the one who keeps the forge hot, drives each
+  task to a tangible artifact, and works through anything.
+- **Eindri** workers are the delegated hands — isolated smiths struck off in
+  **Utgard** sandboxes so a single bad casting never shatters the forge.
+
+Behind them stands a third worker of the same fabric: **Kaia**, the shaper of
+the fleet itself (see §IV). She is not the hands or the bellows — she is the
+**eye that remembers**, and the will that decides which smith takes which metal.
+
+---
+
+## III. The World Tree and the Realms
+
+The worlds are not separate — they hang in one tree, **Yggdrasil**, connected,
+holding each other up. Same here: worktrees (*branches*) hold parallel effort
+without collision, and every realm routes through the same trunk.
+
+The nine worlds of the myth map onto Ymir's spaces:
+
+| Realm of the myth | What it is in Ymir |
+|---|---|
+| **Svartalfaheim / Nidavellir** — the dwarf-halls under the earth | tenant workspaces: `way-of`, `zerwiz`, `craig` — the shop floors |
+| **Midgard** — the world of humans, middle, shared | cross-tenant shared assets & repos |
+| **Utgard (Jötunheim)** — outside the wall, where giants dwell | the sandbox barrier — untrusted code runs *there*, never in the halls |
+| **Yggdrasil** — the tree that binds all realms | git worktree isolation, zero-collision parallel edits |
+| **Mimirsbrunn** — the well at the root of the tree | the engram memory engine — Kaia's and the platform's long-term memory |
+
+### The Seven Gates
+
+Ymir Rut, the long-form building plan ([`docs/ymir-rut.md`](ymir-rut.md)), is the
+story of **seven interlocked daemons** standing at the gates of the tree — each a
+myth-made-module:
+
+| Gate | Daemon | Job |
+|---|---|---|
+| **Bifrost** | ingress gateway | the burning bridge — every crossing into Ymir passes over it |
+| **Hlidskjalf** | control plane | Odin's high seat — the view of every realm |
+| **Svartalfaheim** | tenant realms | the isolated dwarf-halls — `sandbox_isolated`, nothing bleeds between halls |
+| **Brokk** | agent workers | the forge itself — autonomous workers that build, audit, transform |
+| **Utgard** | ephemeral sandboxes | the walled realm — `docker_ephemeral`, sealed and destroyed after each task |
+| **Yggdrasil** | worktree manager | the tree — `.treehouses` branches hold parallel work without collision |
+| **Ratatoskr** | event bus / A2A backbone | the messenger — carries every word between all gates |
+
+---
+
+## IV. The Well: Mimirsbrunn, Mimir, and Kaia
+
+At the root of Yggdrasil lies **Mimirsbrunn**, the well of wisdom. **Mimir**
+guards it; whoever drinks its water receives the memory of all things. Even Odin
+paid an eye for a single drink.
+
+In Ymir, the water is **engram** — an open-source cognitive memory library
+(single-file SQLite + vector + full-text + local embeddings). The well is named
+**Mimirsbrunn**. The one who speaks from the well — the oracle that answers what
+we remember about a project before we act — is **Kaia**.
+
+- Every meaningful action is **observed** into the well (`POST /observe`).
+- Before any orchestration, the fleet **recalls** (`GET /recall`) what the well
+  remembers about this project.
+- The ledger of the gods is written in runes, not ink — every action is inscribed
+  into **Runes**, the append-only audit ledger. A rune that is carved cannot be
+  un-carved.
+
+**Kaia's charge.** She does not act on faith. Before she dispatches a single
+smith she drinks from the well (recalls what this project has taught before) and
+then she passes every plan through **the veil** — the anti-hallucination gate —
+asking, *is this grounded in what the well holds, or is it spun from air?* Only
+what passes is forged.
+
+**Rule of the well:** memory is always a *boost, never a blocker* — a dry well
+fires cold, but never stops the forge.
+
+---
+
+## V. The Artifacts
+
+The smiths forged the gods' weapons; the system ships the same by analogy:
+
+- **Gungnir** — Odin's spear, which never misses its mark. The **skill
+  synthesis engine**: a skill is forged, validated in Utgard, then it hits its
+  target every time.
+- **Mjölnir** — the hammer that returns. The **issue→PR pipeline**: it strikes,
+  and it comes back with a pull request in hand.
+- **Bifrost** — the burning rainbow bridge to Asgard. The **gateway / reverse
+  proxy**: every ingress crosses it.
+- **Heimdall** — the watchman who stands at Bifrost. **OAuth/security guard**:
+  nothing crosses the bridge unvouched — and the one who *signs every agent's
+  rune of introduction*, so no forged identity crosses either.
+- **Gjallarhorn** — Heimdall's horn. The **Cloudflare tunnel**: outbound signal
+  carrying Ymir to the world.
+- **Hlidskjalf** — Odin's high seat, from which he sees all the realms. The
+  **dashboard**: the sovereign's view of the whole fleet — fleet graph, the A2A
+  task stream, the well, the Runes, the reviews.
+- **Skrymir** — the hulking giant who once tricked Thor himself. The **web file
+  browser**: the huge hand reaching into the halls, deceptively silent.
+- **Ratatoskr** — the squirrel who runs the length of Yggdrasil, carrying
+  messages between the worlds. The **A2A 1.0 collaboration backbone**
+  (see §V.b below): every agent carries a **rune of introduction** — an Agent
+  Card naming its skills and its address, signed by Heimdall — and every task it
+  passes along the tree follows the old law of the messenger: state is announced,
+  work is tracked, gossip is endless and fast. Redis is the squirrel's nest; the
+  A2A task model is the word it carries.
+- **Hermóðr** — the messenger god who traveled to Hel and back, crossing realms
+  to retrieve what was lost. The **MCP/A2A composition**: the bridge pattern where
+  the orchestrator delegates via A2A 1.0 horizontally, and specialists access
+  tools vertically via MCP. Composes two validated OSS standards so agents can
+  delegate horizontally while accessing tools vertically.
+- **Valhalla** — the hall of the slain, where heroes are gathered and watched. The
+  **process health monitor**: PM2/Docker keeps every process's soul alive and watched.
+- **Þjazi** — the experimental terminal backend that drives sub-agent panes.
+  Native per-pane agent state and push events; protocol 14+ required;
+  0.7.1/0.7.3/0.7.4/0.7.5/0.8.0 floors; presentation spaces on 0.8.0+. Þjazi
+  provides the terminal session while Treehouse continues to provide task
+  worktrees. When the Captain spawns a sub-agent, Þjazi opens a visible terminal
+  pane pointing to the Treehouse worktree, enabling real-time observation of the
+  agent's typing, CLI execution, and test runs.
+
+### V.b. The Runes of Introduction (Ratatoskr's law)
+
+Every agent that joins the tree publishes a **rune of introduction** — its Agent
+Card at `/.well-known/agent-card.json`: what it can do, how to reach it, and what
+proof it carries. Discovery is by **capability, never by guessing an address**.
+Heimdall signs the rune (JWS) so no agent can claim another's name. The message
+law is simple, and unbroken:
+
+1. Every message has a **task state** — submitted, working, done, failed — which
+   is *announced*, never whispered.
+2. Terminal states cannot be restarted; retries are the sender's duty.
+3. Every word spoken between realms is **observed into the well and carved into
+   Runes** — the squirrel gossips, but the ledger remembers.
+
+---
+
+## VI. The Houses
+
+The fleet **works for houses** — distinct brands under which the work is
+published. Each house is a venture owned by WayOf, and each carries a piece of
+the myth that names it — and a **seal**, the house accent cut into the rune it
+wears on tags and marks (design.md §2.2).
+
+| House | Name-sake | Seal | What the house does today |
+|---|---|---|---|
+| **Ymir Labs** | the primordial giant; the frame of the world | cyan `#38bdf8` | the platform itself: Ymir OS, Hlidskjalf, the agent fleet, Mimirsbrunn — the body everything else is carved from |
+| **Brokk Forge** | the bellows-smith who drove the forging of Mjölnir | forge amber `#f59e0b` | engineering & build tooling: WayOf Command/Runecode, softwerefactory, wayofmono, the factory |
+| **Runestone Labs** (short: **Runir**) | the runes carved once, that cannot be un-carved | rune crimson `#f43f5e` | records & compliance: `.compliance` gates, rune auditing, docs, runbooks, research |
+| **Muninn Labs** | the raven *(memory)* that flew for Odin daily | raven violet `#8b5cf6` | memory & knowledge: Anchor/wayofteams-mcp anchor-memory, Mimirsbrunn/engram, vector RAG |
+| **Dvalin** | the dwarf smith of the finest crafted things | cold steel `#94a3b8` | crafted tools — OptiCat (HVAC Pro), Linkable, Todo, Desk, Material Files |
+| **Utgard Studios** | the realm where the giants work, outside the walls | jötun magenta `#d946ef` | creative: WhyNot Productions (soul/growth media), AiPic (video), OpenChamber, sensual dojo, sensebit |
+| **Askr** | the first man, shaped from an ash tree | ash green `#34d399` | human-centered products: Relocation Copilot, onboarding automation |
+| **Mannheim** | *(holding — reserving a clan name with no myth yet)* | slate `#64748b` | holding; allocated when a new venture claims it |
+
+> Houses are **names in the mythos, not subsystems** — they are the ventures the
+> fleet ships under, mapped per ENTRY-004. A house may be split or merged only by
+> a new append-only entry, never silently.
+
+---
+
+## VII. The Forge-Master's Rule (open source first)
+
+The dwarves are the greatest smiths in the myths — but even they do not hammer
+every nail themselves. The finest tools are **borrowed anvils**: proven weapons
+already forged by others, taken up and named into the myth rather than rebuilt
+from raw ore.
+
+So it is here. Ymir forges only what makes it Ymir — **the UI and UX
+(Hlidskjalf), the agent runtime (Brokk, Eindri, Kaia), and the collaboration
+(Ratatoskr)**. Everything beneath that is a validated open-source engine given a
+Norse name and a Norn-carved shell:
+
+| Borrowed anvil | Norse name |
+|---|---|
+| engram (`engdbram`) | **Mimirsbrunn** |
+| Redis (queue under the A2A task model) | **Ratatoskr**'s nest |
+| `a2aproject/a2a` + SDKs (A2A 1.0) | the **Ratatoskr** protocol |
+| Traefik/Caddy | **Bifrost** |
+| OAuth2-proxy/Authentik + JWS signing | **Heimdall** |
+| cloudflared | **Gjallarhorn** |
+| Docker (rootless, network-none) | **Utgard** |
+| MinIO/FileBrowser | **Skrymir** |
+| PM2/Docker | **Valhalla** |
+| `command-factory`, `firstmate`, `.compliance`, factory visualizer | the **library of the halls** — existing, adopted, not rebuilt |
+
+The rule: *does a validated OSS project already do this?* If yes, name it and
+use it. Only what differentiates Ymir is smithed in Ymir's own forge.
+
+---
+
+## VIII. The Reforging
+
+The giant is first carved from **light metals** — TypeScript, Python, React, Vue —
+the working metals the smiths are most keen-handed with, so the whole of Ymir can
+be raised and proven end to end. That is the law of the build: **the stack stays
+simple for the agents; the agents stay good at their stack.**
+
+When the machine works — every realm turning, every gate answering — the forging
+is not done; it is *re-forged*. The seven gates are re-hammered in **Rut-steel**
+(Rust, NATS, gRPC, libgit2 — the target spec in `docs/ymir-rut.md`): heavier,
+faster, quieter. Every module is re-floored one-for-one into its Rut crate —
+**never redesigned, only re-forged.** The contract each gate keeps is the same;
+only the metal changes.
+
+---
+
+## IX. The Frame (how to read this repo)
+
+1. **Ymir** is the body — one repo, one machine, all realms carved from it.
+2. **Yggdrasil** is the tree — worktrees and branches keep parallel work alive
+   without collision.
+3. **Svartalfaheim** holds the shop floors — never work outside your realm, a
+   dwarf never meddles in another's hall.
+4. **Mimirsbrunn** is the well — drink before you act, water it afterwards.
+5. **Runes** are the ledger — a rune carved stays carved; every significant
+   action is inscribed.
+6. **Hermóðr** is the bridge — MCP/A2A composition: the orchestrator delegates
+   via A2A 1.0 horizontally, specialists access tools vertically via MCP.
+   Composes two validated OSS standards so agents can delegate horizontally
+   while accessing tools vertically.
+7. **Ratatoskr** is the messenger — every agent carries its rune of
+   introduction, every word is task-tracked, observed, and carved.
+8. **Kaia** is the eye — she drinks from the well before every dispatch and
+   passes every plan through the veil.
+9. **Houses** are the ventures — the fleet forges for them, and honors them with
+   the names and seals they carry.
+10. **The forge rule** — borrow the proven anvil, smith only what Ymir is
+    (UI/UX, the runtime, the collaboration) — and when all of it works end to
+    end, re-forge it in Rut steel.
+
+*The giant is slain so the worlds may stand. The opposite is true here: Ymir
+stands, and from it the worlds are carved — light metal first, Rut steel after.*
+## X. The Skill Forge and the Borrowed Anvil (NEW)
+
+The galdr chants that structure agent-tool interaction are not forged from raw ore —
+they are **chiselled from proven patterns**, named into the myth and given a Norn-carved
+shell. This is the Ymir way of the skill smith.
+
+### The Three Levels of Skill Smithing
+
+**Level 1 — The Borrowed Anvil**
+Proven OSS projects already do the work. Ymir names them and gives them a Norse
+identity, never rebuilding from raw ore.
+
+| Borrowed anvil | Norse name | Domain |
+|---|---|---|
+| `engdbram` (PyPI `engdbram`, v2.2.1) | **Mimirsbrunn** | engram memory engine |
+| Redis (queue under the A2A task model) | **Ratatoskr**'s nest | A2A task queue |
+| `a2aproject/a2a` + SDKs (A2A 1.0) | the **Ratatoskr** protocol | agent↔agent horizontal delegation |
+| Traefik/Caddy | **Bifrost** | gateway / reverse proxy |
+| OAuth2-proxy/Authentik + JWS signing | **Heimdall** | auth / agent card signing |
+| cloudflared | **Gjallarhorn** | outbound encrypted tunnel |
+| Docker (rootless, network-none) | **Utgard** | ephemeral sandboxes |
+| MinIO/FileBrowser | **Skrymir** | file browser |
+| PM2/Docker | **Valhalla** | process health monitor |
+| `command-factory`, `firstmate`, `.compliance`, factory visualizer | the **library of the halls** | existing, adopted, not rebuilt |
+| TOON (Token-Oriented Object Notation) | **Galdr** | token-efficient output format |
+| principles.yaml (10 design principles) | the **runes of ergonomics** | CLI standards |
+
+The rule: *does a validated OSS project already do this?* If yes, name it and use it.
+Only what differentiates Ymir is smithed in Ymir's own forge.
+
+**Level 2 — The Galdr Chant (new skills)**
+When no validated OSS project exists, the galdr craftsperson writes a new skill
+in the Ymir tradition — Norse-named, TOON-output, all 10 principles baked in.
+
+The recent galdr family illustrates this:
+
+- **`galdr`** — Agent experience incantation standards (renamed from `axi`, adapted TOON)
+- **`galdr-compliance`** — Ymir Galdr compliance checker (renamed from `axi-compliance`)
+- **`galdr-crafter`** — generates new Galdr-compliant skills using TOON format (NEW)
+
+Each carries the same 10 principles, each Norse-named, each adapted for Ymir's
+architecture rather than copied wholesale.
+
+**Level 3 — The Frame Integration**
+New skills are not dropped into the repo — they are ** framed** into the Ymir
+structure:
+
+- Skill index: `.agents/skills/README.md` tracks every galdr skill
+- Compliance gate: `galdr-compliance` runs on every new skill before merge
+- Frame placement: skills live in `.agents/skills/<norse-name>/SKILL.md`
+- Session integration: each skill declares its hook or skill-path in its frontmatter
+- The frame remembers: every significant action is observed into Mimirsbrunn
+  before the skill is considered "live"
+
+Once all five gates pass, the skill is "forged" — it joins the library of the halls
+and is available via `npx skills add <owner>/<repo> --skill <name>` or as a managed
+plugin in `.config/opencode/plugins/`.
+
+### The Aett of Skill Naming
+
+Ymir skills follow an **aett** (Norse: "a family of eight") naming pattern:
+
+| Aett name | Pattern | Example |
+|---|---|---|
+| **galdr-** | incantation / chant standards | `galdr`, `galdr-compliance`, `galdr-crafter` |
+| **mimir-** | memory / recall | (planned) |
+| **yggd-** | tree / worktree | (planned) |
+| **rat-** | messenger / A2A | `ratatoskr` (bus), `rat-***`-axi (community) |
+| **heimd-** | gate / guard | (planned) |
+| **bifr-** | bridge / gateway | (planned) |
+| **val-** | hall / health | `valhalla` (process monitor) |
+| **skyr-** | giant / file scope | `skrymir` (file browser) |
+
+New skills are assigned to the aett that best matches their domain. The galdr aett
+is the first tier: skills that structure agent-tool ergonomics and output format.
+
+### The Forging Verification
+
+Before a new galdr skill is considered forged, it must pass:
+
+1. **TOON output test** — all stdout output uses TOON format, measured ~40% smaller
+   than equivalent JSON across 3 sample outputs
+2. **Principle compliance** — all 10 design principles assessed via `galdr-compliance`
+3. **Norse name validity** — skill name follows the aett pattern, not a random label
+4. **Frame integration** — SKILL.md placed in `.agents/skills/<name>/`, referenced in
+   `.agents/skills/README.md`, daily briefing notes the new forge entry
+5. **Mimirsbrunn observation** — the skill's creation is observed into the well
+   (`POST /observe`) before it is deemed "live"
+
+Once all five gates pass, the skill is "forged" — it joins the library of the halls
+and is available via `npx skills add <owner>/<repo> --skill <name>` or as a managed
+plugin in `.config/opencode/plugins/`.
+
+---
+
+# YMIR — Master Architecture
+
+Status: **DRAFT v0.2** — consolidates `Ymir.md`, the Ymir Rut v2.6 target spec
+(`docs/ymir-rut.md`), the A2A collaboration doctrine (ENTRY-008), the engram
+memory engine (ENTRY-007), the house system (ENTRY-004), and the OSS-first
+stack ruling (ENTRY-009/010).
+
+> **Stack ruling (today):** **TypeScript + Python + React + Vue** — the agent-proficient
+> stack, so agents can run and extend the whole platform. Rust/Cargo, NATS, Envoy,
+> and Protobuf are the **Ymir Rut v2.6 target** and are ported to *after* the system
+> works end-to-end. Every service below maps one-for-one to a future Rut crate
+> (see **§6** and `docs/ymir-rut.md`).
+
+## 1. What Ymir Is
+
+Ymir is a lean, single-operator agentic operating system. One person runs an entire
+**business, software development, marketing, and personal life** from a single
+repository, orchestrated by autonomous Norse-named agents.
+
+- **Local-first** — everything runs on your machine or your VPS via Docker Compose.
+- **Mythos-first** — names are load-bearing allegory, not decoration (`docs/lore.md`):
+  the giant (Ymir), the smiths (Brokk/Eindri), the well (Mimirsbrunn), the houses.
+- **OSS-first** — for every feature below the runtime, adopt a **validated open-source
+  project** first; Ymir owns only the **UI/UX (Hlidskjalf)**, the **agent runtime**
+  (Brokk/Eindri/Kaia), and **A2A collaboration** (Ratatoskr).
+- **Self-aware** — `AGENTS.md` in the root governs every agent's behavior.
+- **Isolated-by-default** — sub-agent code executes in ephemeral containers (Utgard)
+  on isolated git worktrees (Yggdrasil).
+- **Memory-native** — every action is *observed* into Mimirsbrunn (engram) and
+  *carved* into Runes; agents recall before they act.
+- **Autonomous** — cron jobs, GitHub webhooks, and an A2A message backbone keep
+  agents working while you're away.
+- **Multi-tenant** — every realm (client/brand/division) gets fully isolated memory,
+  secrets, and projects.
+
+## 2. System Topology (7 realms / modules)
+
+```
+                         ┌─────────────────────────────────────┐
+                         │        USER INTERFACES              │    React · Vue
+                         │  Telegram  │  Web Portal (Hlidskjalf)│
+                         └──────────────┬──────────────────────┘
+                                        │ HTTPS / WebSockets
+                         ┌──────────────▼──────────────────────┐
+                         │        GJALLARHORN (Tunnel)          │
+                         │        cloudflared outbound          │
+                         └──────────────┬──────────────────────┘
+                                        ▼
+                         ┌──────────────────────────────────────┐
+                         │  BIFROST (Gateway / Reverse Proxy)   │  Traefik/Caddy + Heimdall
+                         │  + HEIMDALL (OAuth · signed cards)   │
+                         └──────────────┬──────────────────────┘
+                                        ▼
+┌───────────────────────────────────────────────────────────────────────┐
+│                          YMIR CORE (TS/Python)                       │
+│                                                                       │
+│   ┌──────────────┐   ┌────────────────┐   ┌────────────────────────┐ │
+│   │   AGENTS.md  ├──►│ Brokk/Kaia     ├──►│  GUNGNIR Skill Engine  │ │
+│   │  (Root Laws) │   │ Orchestrator   │   │  (Validated skills)    │ │
+│   └──────────────┘   └───────┬────────┘   └────────────────────────┘ │
+│                              │  A2A 1.0 dispatch (delegation)         │
+│   ┌──────────┬───────────────┼──────────┬──────────────────────┐     │
+│   ▼          ▼               ▼          ▼                      ▼     │
+┌──────────┐┌──────────┐ ┌───────────┐┌───────────┐         ┌──────────┐│
+│MIMIRSBRUNN│ RATATOSKR│ │ YGGDRASIL ││ UTGARD    │         │ MJOLLNIR ││
+│ engram    │ A2A 1.0  │ │ git       ││ Docker    │         │ Issue→PR ││
+│ bridge    │ + Redis  │ │ worktrees ││ sandbox   │         │ pipeline ││
+└──────────┘└──────────┘ └───────────┘└───────────┘         └──────────┘│
+└───────────────────────────────────────────────────────────────────────┘
+```
+
+- **Svartalfaheim** holds the realms (way-of, zerwiz, craig) and per-tenant
+  A2A discovery; **Midgard** is the shared cross-tenant space; **Runes** is the
+  immutable ledger; **Valhalla** supervises the processes.
+
+## 3. Core Subsystems
+
+### 3.1 Agent Runtime — Brokk, Eindri & Kaia
+- **Brokk** is the primary autonomous agent — single-operator executive partner
+  (Development, Marketing, Business Strategy, Life Execution).
+- **Eindri** workers are isolated sub-agents spawned for delegated tasks, always
+  inside Utgard sandboxes on Yggdrasil worktrees.
+- **Kaia** is the orchestrator + the oracle by the Well: she recalls Mimirsbrunn
+  before dispatch, honours the anti-hallucination gate, and dispatches specialists
+  as **A2A tasks** (SSE streaming); specialists reach tools via **MCP**.
+- Realm personae in `svartalfaheim/<realm>/Brokk.md`.
+
+### 3.2 Memory — Mimirsbrunn (engram engine) + Runes
+Adopted from Kaia's proven factory memory (ENTRY-007): the well is **engram**
+(`engdbram`, open source — single-file SQLite + sqlite-vec + FTS5 + local embeddings).
+
+| Tier | Name | Engine | Use |
+|------|------|--------|-----|
+| Tier 1 | Hot / Active | `svartalfaheim/<realm>/workspace/**/*.md` | Human-readable identity, goals, tasks |
+| Tier 2 | Deep memory | **engram** store served by the bridge (`:4602`) | episodic recall, hybrid/cosine/spreading |
+| Tier 3 | Audit | `workspace/memory/runes_audit.md` | append-only ledger (Runes) |
+
+- Every significant action → `POST /observe` (episode into the well) + Runes entry.
+- Before acting: `GET /recall` — "what does the well remember about this project?"
+- **Memory is a boost, never a blocker** — a dry well fires cold, never stops the forge.
+
+### 3.3 Skills — Gungnir
+- Recurring tasks become scripts/skills in `.agents/skills/`.
+- Self-synthesis loop: identify gap → write skill → **validate in Utgard** → register.
+- Skill index: `.agents/skills/README.md`.
+
+### 3.4 Isolation — Yggdrasil + Utgard
+- **Yggdrasil**: complex tasks never edit the main tree; each agent gets
+  `./<repo>/.yggdrasil/<agent-id>/` on its own branch (`.treehouses` in Rut terms).
+- **Utgard**: untrusted code, dynamic skills, Eindri tasks run in ephemeral Docker
+  containers, `--network none`, strict CPU/RAM/timeouts, no root. A failed run never
+  touches main. Destroyed on completion (ephemeral lifecycle).
+
+### 3.5 Inter-Agent Bus — Ratatoskr (A2A 1.0 backbone) ⭐
+The collaboration differentiator (ENTRY-008). Built on the **open A2A Protocol v1.0**
+(Linux Foundation), NOT a bespoke bus:
+
+- **Agent Cards** at `/.well-known/agent-card.json`, realm-scoped registry; discovery
+  = capability, never endpoint guessing. Cards JWS-signed via Heimdall.
+- **Task lifecycle**: SUBMITTED → WORKING → COMPLETED/FAILED/REJECTED/CANCELED/
+  INPUT_REQUIRED/AUTH_REQUIRED; terminal states never restart (retry/idempotency
+  lives in the orchestrator).
+- **Redis pub/sub** is the queue *under* the A2A task model (semantics on A2A,
+  throughput on Redis).
+- Every A2A message is **observed into Mimirsbrunn** and **logged to Runes**.
+- The `a2a-bridge` skill is the canonical collaboration skill (inbox per turn,
+  complete tasks, FYI peers on contract/schema/infra changes).
+- Plan: `docs/plans/25-ratatoskr-a2a.md`.
+
+### 3.6 Multi-Tenancy — Svartalfaheim
+- Each realm = isolated domain: `.env.realm`, `Brokk.md`, `projects/`, `companies/`,
+  `workspace/`.
+- **Rut specification:** realm::namespace + vault::keys — memory pages, env vars, and
+  credential tokens cannot cross tenant boundaries (`sandbox_isolated`).
+- Realm context loader (`tenant_context_loader.ts`) verifies boundaries before any task;
+  cross-realm A2A requires an explicit grant.
+
+### 3.7 Global Shared Space — Midgard
+- Cross-tenant repos, design system, shared packages, infrastructure, company wiki.
+- Parallel work uses Yggdrasil worktrees inside `github_org_repos/`.
+
+### 3.8 Gateway & Security — Bifrost, Heimdall, Gjallarhorn
+- **Bifrost**: Traefik/Caddy routes `/` → Hlidskjalf, `/files/` → Skrymir,
+  `/webhooks/github` → Mjollnir, `/oauth2/` → Heimdall. TLS termination.
+- **Heimdall**: OAuth2-proxy/Authentik (GitHub OAuth) + **Agent Card signing (JWS)**;
+  tenant isolation enforced at the proxy layer.
+- **Gjallarhorn**: cloudflared, outbound-only encrypted tunnel.
+
+### 3.9 User Interfaces — Hlidskjalf & Skrymir (the UI/UX differentiator)
+- **Hlidskjalf** — **React/Vue** master control dashboard per the **Ymir Rut design
+  system** (`docs/ymir-rut.md` Part 3): Cinzel / JetBrains Mono / Inter typography,
+  obsidian + cyan + violet palette, Algiz-anvil emblem. Views: fleet graph, A2A task
+  stream, memory well (`#/memory`), PR review cards, tenant switcher, Runes stream.
+- **Skrymir** — embedded file browser (FileBrowser) scoped per tenant via Bifrost.
+- **Telegram / Web chat** — remote command and approve while away.
+
+### 3.10 Automation — Cron, Mjollnir, Valhalla
+- **Cron runner**: stateless spawn → inject AGENTS.md + task prompt → execute →
+  write realm daily log → exit. Daily briefing 07:00, git backup, social poster.
+- **Mjollnir (Issue→PR)**: HMAC-verified webhook → worktree + Utgard sub-agent →
+  fix + tests → `gh pr create` → human review in Hlidskjalf. Never force-merges.
+- **Valhalla**: PM2/Docker/systemd lifecycle (`process_controller.ts`) + fleet
+  registry (`app_registry.json`). Missions, processes, and worker clusters.
+
+### 3.11 Þjazi Backend Integration
+- **Þjazi** is an experimental agent-native terminal backend with native per-pane agent state and push events, required when running sub-agents inside terminal panes.
+- **Protocol floor**: Þjazi protocol 14 or newer is required; broad backend verification covers versions 0.7.1, 0.7.3, 0.7.4, 0.7.5, and 0.8.0, while protocol-16 features remain gated by availability.
+- **Default-on presentation spaces** have a higher floor of Þjazi 0.8.0; homes can opt out by writing `off` into local `config/herdr-presentation-spaces`, and opt in by writing `on`.
+- **Endpoint metadata** recorded per task: `backend=herdr`, `window=<session>:<pane-id>`, `herdr_session=<session>`, `herdr_workspace_id=<workspace-id>`, `herdr_tab_id=<tab-id>`, `herdr_pane_id=<pane-id>`.
+- **Transport behavior**: Adapter starts and polls a named server before workspace/tab/pane/agent calls. Every Þjazi invocation goes through `fm_backend_herdr_cli`, which sets the environment and passes an explicit trailing `--session <name>`.
+- **Push events**: Protocol 16 can subscribe to `pane.agent_status_changed` over a bounded Unix-socket reader. Polling runs every cycle and remains the permanent fallback when protocol 16, the event schema, Python, connection, subscription, or repeated reader execution is unavailable.
+- **Away-mode supervisor**: Supports tmux and Þjazi supervisor panes only. Refuses Zellij, Orca, and cmux. For Þjazi, target existence, native state, capture, composer state, and verified submit all route through the shared backend dispatcher and the explicit named-session CLI owner.
+- **Destructive lab safety**: `bin/fm-herdr-lab.sh` is the sole supported lifecycle helper for isolated verification. It provisions only non-default names beginning with `fm-lab-`, appends an explicit `--session` to allowed task commands, refuses caller-supplied session flags and server/session lifecycle subcommands, and performs destructive stop/delete only through its guarded lifecycle actions.
+- **Active limits**: Þjazi remains experimental; presentation ordering needs protocol 16 and Python and is best-effort only; mutable labels can collide and are never placement or destructive authority; a Firstmate outside Þjazi cannot resolve a launcher workspace, so a colliding home label refuses new spawns until the collision is cleared; ghost and placeholder recognition uses ANSI de-emphasis when available.
+- **Regression test suite**: 18+ test scripts covering presentation, cleanup, prune safety, focus, respawn, workspace-per-home, launcher workspace, and event wait smoke tests.
+- **Sub-agent orchestration**: When the Captain orchestrates sub-agents, Þjazi opens visible terminal panes/windows via `herdr run --pane-name "<role>-<branch>"` pointing to Treehouse worktrees. The user can see the sub-agent typing, executing CLI tools, and running tests live in real time. Þjazi panes are non-blocking—the main agent remains open to answer user inputs or supervise other sub-agents.
+
+### 3.11 Company System — Houses (ENTRY-004)
+- The fleet forges for **houses**: Ymir Labs, Brokk Forge, Runestone (Runir),
+  Muninn Labs, Dvalin, Utgard Studios, Askr, Mannheim. Each is a real venture with
+  a myth that names it (`docs/lore.md` §VI).
+- Per-tenant `companies/` entity cards + `projects/` (plan 21).
+
+## 3.12 Agentic Engineering Workflow Integration (Firstmate)
+
+### Four-Layer Program Design Framework
+Integrated from Dex Horthy's agentic engineering framework (YouTube `xgkjtF89-44`, August 2026). Ymir incorporates the four-layer system alongside its existing seven realms, reinforcing the OSS-first doctrine (ENTRY-008).
+
+**Layer 1 — Product (What & Why)**
+- Problem statement, success metrics, announcement post, HTML mockups
+- Aligns with Ymir's ticket-creation and PRD workflows
+- Measurable goals tied to business outcomes (conversion rates, resource reduction targets)
+
+**Layer 2 — System Architecture (How Services Fit)**
+- Service topology, request/response flow, endpoint contracts, query outlines
+- Complements Ymir's existing architecture layer in create-plan skill
+- Service boundaries and flow diagrams map to Ymir's service orchestration
+
+**Layer 3 — Program Design ⚠️ THE SKIPPED LAYER** (Critical Integration)
+- **File locations**: Where each piece lives in the Ymir monorepo
+- **Types and method signatures**: Exact interfaces before implementation
+- **Call stack visualization**: Execution path when features run
+- **Test shapes**: Test signatures only (not implementation)
+- **Ymir enforcement**: `validate-plan` skill now mandates Layer 3 capture before spawn
+- **Quote**: *"A good plan ends with the tests and the call stack. The point is that these are decisions the agent will otherwise make silently, and that you may not like."* — Dex Horthy
+
+**Layer 4 — Vertical Slices / Tracer Bullets (Execution Order)**
+- **Anti-horizontal-building**: Prevents DB→Service→API→FE sequencing that leaves nothing testable
+- **Ymir implementation**: `ticket-executor` Phase 0 gate requires vertical slice definition
+- **Tracer bullet approach**: Mock API → stub FE → wire together → then add migrations/logic
+- **Dex's observation**: *"I have never seen a model do this without a human telling it the order."*
+
+### Context Engineering Principles (from Firstmate Research)
+- **"Dumb zone" at ~50% context**: Real for models AND humans — structural decisions early when cheap
+- **Right tokens, not more tokens**: One 43k-token planning session > re-steering 3,000-line diff later
+- **Victor Tali trick**: *"Which choices are you not confident about?"* — pre-mortem before run, not post-hoc
+- **Measurable goals beat instructions**: Agent given a number moves much further than one given description
+
+### Integration with Ymir Systems
+- **Mimirsbrunn memory**: Program design decisions observed into the well before agent dispatch
+- **Ratatoskr A2A backbone**: Vertical slice tasks dispatched as A2A tasks to specialists
+- **Yggdrasil worktrees**: Each slice runs on isolated worktrees with Utgard sandboxing
+- **Brokk/Eindri runtime**: Four-layer framework enforced in plan creation and ticket execution
+- **Mjollnir issue→PR pipeline**: Incident-to-agent patterns integrated (classifier → brief → PR)
+- **Valhalla process supervisor**: Context budget tracking and phase transitions
+
+### Acceptance Criteria (Ymir + Firstmate Integration)
+- [x] Every ship task has all 4 layers documented before spawn
+- [x] Zero horizontal-first builds (Slice 1 e2e testable first)
+- [x] 100% of ship tasks have measurable goals
+- [ ] Context budget warnings visible in fleet digest
+- [x] Pre-mortem confidence check on every program design
+- [ ] High-stakes changes go through multi-model review
+- [ ] Incident-to-PR pipeline operational
+
+## 4. Execution Chain Examples
+
+### 4.1 Inbound GitHub Bug Report
+```
+Webhook → Gjallarhorn → Bifrost → issue_listener.ts (HMAC verify)
+→ Mjollnir routes to realm → commit from Mimirsbrunn (recall project memory)
+→ treehouse worktree (fix-issue-N) → Eindri inside Utgard diagnoses + patches + tests
+→ push branch → gh pr create (Fixes #N)
+→ notify (Telegram + Hlidskjalf) → human reviews → merge
+→ outcome observed into the well + Runes logs everything
+```
+
+### 4.2 Background Daily Briefing
+```
+Cron 07:00 → daily_brief.ts → loads AGENTS.md + realm context
+→ RECALL Mimirsbrunn for active dev/marketing context
+→ assemble prompt (untrusted_context contained)
+→ spawn headless agent → write svartalfaheim/<realm>/workspace/memory/daily/YYYY-MM-DD.md
+→ auto-commit sync (git_backup.ts) → exit
+```
+
+### 4.3 A2A Delegation (Kaia → specialist)
+```
+Kaia recalls the well (what worked here before)
+→ discovers specialist via realm registry (Agent Card) → creates A2A task (SubmitTask)
+→ specialist streams progress over SSE (Working → updates)
+→ specialist finishes (Completed, artifacts) → tools via MCP internally
+→ Kaia observes the outcome into Mimirsbrunn → logs to Runes → Hlidskjalf renders state
+```
+
+### 4.4 Parallel Feature Work (two agents, one shared repo)
+```
+Agent A: yggdrasil create → .yggdrasil/agent-a/ (branch agent/a/auth)
+Agent B: yggdrasil create → .yggdrasil/agent-b/ (branch agent/b/logging)
+Both run tests inside their own Utgard container (mount own worktree only)
+On success: cleanup(merge=true) → merged to main, worktree removed
+```
+
+## 5. Data Flow & Security Boundaries
+
+| Boundary | Enforced by |
+|----------|-------------|
+| Tenant independence | Svartalfaheim realm namespace + vault keys; proxy-level path scoping; per-realm `.env.realm`; realm-scoped A2A registry |
+| Agent identity | **JWS-signed Agent Cards** (Heimdall); rejected tampered cards |
+| Untrusted code | Utgard: network-none containers, resource caps, cgroups, no root, ephemeral destroy |
+| Secrets | Only `.env.local` / `.env.realm`; never in markdown or git |
+| Prompt injection | `<untrusted_context>` containment + immutable system prompt layer |
+| Git safety | Yggdrasil worktrees; Mjollnir never force-merges |
+| Deploy safety | Zero-trust `gh secret set` + human-approved PRs |
+| Traceability | every significant action carved into Runes; target traceability index 0.984 (Rut) |
+
+## 6. Tech Stack Reference (current = TS/Python/React/Vue; target = Ymir Rut v2.6)
+
+### Current stack (build today)
+
+| Layer | Choice | Norse shell |
+|-------|--------|-------------|
+| Control plane daemons | **TypeScript** (Node 22) | Bifrost, Svartalfaheim, Yggdrasil, Ratatoskr, Mjollnir, Valhalla |
+| Agent orchestration | **Python 3.12+** + TS | Brokk / Kaia / Eindri (mirrors factory harness) |
+| UI / UX | **React + Vue** | Hlidskjalf portal, Skrymir |
+| Inter-agent | **A2A 1.0** (JSON-RPC 2.0/SSE) + **Redis** | Ratatoskr |
+| Memory | **engram/engdbram** bridge `:4602` | Mimirsbrunn |
+| Sandbox | Docker (rootless, network-none) + Python | Utgard |
+| Gateway | Traefik/Caddy | Bifrost |
+| Auth | OAuth2-proxy/Authentik + JWS cards | Heimdall |
+| Tunnel | cloudflared | Gjallarhorn |
+| Files | FileBrowser / MinIO | Skrymir |
+| Persistence | Postgres 16 (self-hosted) + engram/SQLite | Runes/Mimirsbrunn |
+| Process mgmt | PM2 / Docker | Valhalla |
+| CI/CD | GitHub Actions + gh CLI | Mjollnir / deploy |
+| Reused systems | `command-factory`, `firstmate`, `.compliance`, factory visualizer | — |
+
+### Target stack (Ymir Rut v2.6 — port AFTER end-to-end, ENTRY-009)
+
+| Layer | Rut choice | Crate/module |
+|-------|-----------|--------------|
+| Control plane | **Rust (Edition 2024) + Tokio** | crates/{bifrost,hlidskjalf,svartalfaheim,ratatoskr,yggdrasil} |
+| Broker | **NATS JetStream** | `bus::nats`, `dispatch::router` |
+| IPC | **gRPC/Protobuf v3** + JSON-RPC/Unix sockets | `proto/v2/` |
+| Worktrees | **libgit2** `.treehouses` | `worktree::libgit2`, `snapshot::diff` |
+| Sandbox | rootless Docker + **cgroups v2** + seccomp | `runtime/utgard/` |
+| Agent harness | Python 3.12+ / Node 22 (unchanged) | `runtime/brokk/` |
+| Persistence | PostgreSQL 16 + MinIO/S3 | storage tier |
+| Deploy | Helm charts + compose | `configs/` |
+
+## 7. Build Order (Updated)
+
+| Phase | Scope | Depends on |
+|-------|-------|-----------|
+| P0 | Monorepo skeleton, AGENTS.md, realm routing, docs (lore, Rut, architecture) | — |
+| P1 | Yggdrasil worktrees + Utgard sandbox | P0 |
+| P2 | Memory — engram bridge (Mimirsbrunn) + Runes audit | P0 |
+| P3 | Skills engine (Gungnir) + validation loop | P1 |
+| P4 | **Ratatoskr A2A 1.0 backbone** (cards, registry, Redis) | P0 |
+| P5 | Cron automation | P2, P3 |
+| P6 | Realm multi-tenancy + tenant context loader + companies/houses | P0 |
+| P7 | Hlidskjalf portal (React/Vue, Rut design system) + Skrymir | P4 |
+| P8 | Bifrost + Heimdall (OAuth + card signing) + Gjallarhorn | P6, P7 |
+| P9 | Mjollnir issue→PR pipeline | P1, P4 |
+| P10 | Toolchain & deploy engine (Valhalla, GitHub CI/CD) | P1 |
+| P11 | **Ymir Rut port** (Rust/NATS/gRPC re-floor) — only after P0–P10 work end-to-end | P0–P10 |
+
+Detailed per-feature plans: `docs/plans/`. Full v2.6 target spec: `docs/ymir-rut.md`.
+Mythos & houses: `docs/lore.md`. Decision history: `docs/append-only-log.md`.  Show full message
+
+Thought Process
+Got all three YMIR docs — design system, lore, and master architecture. They hang together well: the allegory is genuinely load-bearing (every name maps to a real subsystem), the token spec is specific enough to implement directly from the page, and the OSS-first rule is applied consistently. A few things I caught while reading:
+
+Inconsistencies worth fixing
+
+Duplicate §3.11 in the architecture doc — "Þjazi Backend Integration" and "Company System — Houses" both carry 3.11, and Firstmate is ## instead of ###. Renumber: Houses → 3.12, Firstmate → 3.13.
+ENTRY-008 is double-booked. design.md cites it as the "UI/UX-is-a-differentiator doctrine"; architecture §3.5 cites it as "the A2A collaboration differentiator" (Ratatoskr). Either one citation is wrong or two entries share a number.
+The left rail conflates gates and realms. §5.1 says "7 realm gates (click = realm switch)" — but the seven gates are daemons (Bifrost…Ratatoskr), while realms are tenants (way-of/zerwiz/craig), switched via the top-bar chip. Suggest calling it a gate rail that opens daemon views, since tenant switching lives elsewhere.
+§3.11 Þjazi is wearing another project's clothes. "Treehouse" worktrees, herdr sessions, fm_backend_herdr_cli, bin/fm-herdr-lab.sh, "the Captain" — that's Firstmate/herdr naming; Ymir's worktree system is Yggdrasil (.treehouses is only the Rut-era term). Same bleed appears in lore §V's Þjazi entry. Worth a name pass or an explicit note on what's being adopted vs. renamed.
+Minor: Askr's accent #34d399 is --ymir-ok. Fine in chrome, but in the fleet graph where house seals and status rings co-occur they'll read as the same signal. Nudge the green or accept it knowingly.
+Ready-to-execute next steps (declared in the docs, not built yet)
+
+midgard/design-system/tokens.css — every value exists in design.md §4; I can emit the full file (forge + optional light theme, spacing/radius/motion, semantic dim washes).
+midgard/design-system/icons.md — the rune-glyph map (Algiz geometry, status ring states, gate glyphs) is specified but marked TBD.
+Token-driven component skeletons for Hlidskjalf (RealmGate, TaskChip, TraceRow, RecallPanel, …).
+Want me to start on any of these — or were you about to hand me a task against these docs?
+
+i need the ui
+
+Thought Process
+Hlidskjalf v0.1 — the full dashboard as a single self-contained file. Open it in a browser and it runs: all 8 views, live Ratatoskr/Runes stream, realm switching with house accents, the task lifecycle board with state motion, the well recall panel, sealable PRs, the works. Every value comes straight out of design.md, and the token block at the top of the CSS is written to extract 1:1 into tokens.css.
+
+What's implemented
+
+The full token set from design.md §4 — forge theme canonical, chisel inset bevels, steel borders, semantic dim washes. The :root block is ready to lift verbatim into tokens.css.
+All 8 views with real content: Fleet (agent cards + live A2A graph with animated edge hops), Tasks (lifecycle board where SUBMITTED→WORKING→COMPLETED flips on a timer with the 180ms fade+drift), Well (recall with score bars + timeline), Runes (append-only ledger, new carves stream in), Reviews (sealable PRs — ᛉ Seal stamps the card and carves a rune), Processes (Valhalla table with ticking CPU), Files (Skrymir, realm-scoped), Chat.
+Live bottom stream — Ratatoskr + Runes interleaved, pausable with held-event count (p to toggle).
+Realm switching — three tenants with house-accent tints, vault-rotation toast, realm-scoped search placeholder.
+Every state is glyph + color + text (● NOMINAL / ◐ DEGRADED / ◌ DOWN, task runes ᛊᚲᛟᚦ), keyboard-first (1–8, /, p), traceability index ticking at 240ms, density toggle, ember boot screen instead of a spinner, prefers-reduced-motion collapse.
+Choices I made where the docs were ambiguous — flag if you want them different: the left rail carries the 8 views with rune glyphs (this doubles as the seed of icons.md: ᛉ fleet, ᚲ tasks, ᛚ well, ᚨ runes, ᛏ reviews, ᛟ processes, ᚢ files, ᚱ chat); tenant switching lives in the top-bar realm chip, resolving the gates/realms conflation I flagged earlier. Eindri-β shows DEGRADED on purpose so the amber path is visible.
+
+Next: extract tokens.css, or port this into the React shell (React + Vite, components matching §5.2) — say which and I'll cut it.
+
+
+
+Send a Message
+
+
+
+Deep Think
+Max
+
+
+
+
+
+
+Copy
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HLIDSKJALF — Ymir</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 27V7M16 12 8 4M16 12l8-8' stroke='%2338bdf8' stroke-width='2.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   YMIR DESIGN TOKENS — extract verbatim to midgard/design-system/tokens.css
+   ============================================================ */
+:root{
+  /* canvas — the forge chamber */
+  --ymir-bg-0:#080c14; --ymir-bg-1:#0b101c; --ymir-bg-2:#101726; --ymir-bg-3:#182334;
+  /* accents — two lights of Bifrost */
+  --ymir-cyan-1:#38bdf8; --ymir-cyan-2:#0ea5e9; --ymir-violet-1:#818cf8; --ymir-violet-2:#6366f1;
+  /* structure — hammered steel */
+  --ymir-steel-1:#334155; --ymir-steel-2:#475569; --ymir-steel-3:#94a3b8; --ymir-chisel:#7dd3fc;
+  /* semantics — state of the forge */
+  --ymir-ok:#34d399; --ymir-warn:#fbbf24; --ymir-danger:#f87171; --ymir-info:#38bdf8;
+  --ymir-ok-dim:rgba(52,211,153,.15); --ymir-warn-dim:rgba(251,191,36,.15);
+  --ymir-danger-dim:rgba(248,113,113,.15); --ymir-info-dim:rgba(56,189,248,.15);
+  /* text on forge */
+  --ymir-text-0:#e8edf6; --ymir-text-1:#b3c0d4; --ymir-text-2:#7b8aa3; --ymir-text-3:#4b5a73;
+  /* type */
+  --f-rune:'Cinzel',serif; --f-mono:'JetBrains Mono',monospace; --f-body:'Inter',sans-serif;
+  /* space & shape */
+  --ymir-radius:8px; --ymir-radius-panel:12px; --ymir-space-4:16px;
+  /* bevel */
+  --chisel-inset:inset 0 0 0 1px rgba(125,211,252,.12);
+}
+/* realm tints — structural only (design.md P5) */
+.shell[data-realm="way-of"]{--realm:#38bdf8}
+.shell[data-realm="zerwiz"]{--realm:#8b5cf6}
+.shell[data-realm="craig"]{--realm:#f59e0b}
+
+/* ============ base ============ */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--ymir-bg-0);color:var(--ymir-text-0);font:15px/22px var(--f-body);overflow:hidden}
+/* hand-hammered steel — ~2% noise, chrome only, never behind narrative */
+body::before{content:"";position:fixed;inset:0;z-index:99;pointer-events:none;opacity:.025;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+::selection{background:rgba(56,189,248,.3)}
+:focus-visible{outline:2px solid var(--ymir-chisel);outline-offset:2px;border-radius:4px}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input{font:inherit;color:inherit;background:none;border:none;outline:none}
+kbd{font:11px/1 var(--f-mono);color:var(--ymir-text-2);border:1px solid var(--ymir-steel-1);border-radius:4px;padding:2px 5px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+/* ============ shell ============ */
+.shell{display:grid;height:100vh;grid-template-columns:236px 1fr;grid-template-rows:56px 1fr 192px;
+  background:var(--ymir-bg-0)}
+.shell.compact{--ymir-space-4:10px}
+
+/* ============ left rail ============ */
+.rail{grid-row:1/4;background:var(--ymir-bg-1);border-right:1px solid var(--ymir-steel-1);
+  display:flex;flex-direction:column;padding:14px 10px}
+.brand{display:flex;align-items:center;gap:10px;padding:2px 8px 16px}
+.emblem{width:38px;height:38px;flex:none}
+.wordmark{font:700 19px/1 var(--f-rune);letter-spacing:.18em;color:var(--ymir-text-0)}
+.wordmark small{display:block;font:11px/1.6 var(--f-mono);letter-spacing:.08em;color:var(--ymir-text-2);margin-top:4px}
+.nav{display:flex;flex-direction:column;gap:2px;flex:1}
+.gate{display:flex;align-items:center;gap:12px;width:100%;height:46px;padding:0 12px;border-radius:var(--ymir-radius);
+Generated by AI. For reference only.
+Tech Blog
+Contact us
+Terms of Service
+and
+Privacy Policy

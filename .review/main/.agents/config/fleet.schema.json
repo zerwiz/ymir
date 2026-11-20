@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zerwiz/ymir/config/fleet.schema.json",
+  "title": "config/fleet.json",
+  "description": "The fleet registry (plan 51 · plan 58, Phase 7): one row per machine, read by hostname by bin/topology.sh, bin/eindri-route.sh, bin/mcp-gateway.sh and bin/model-placement.sh. A registry that names a heart which is not a host, or a host that is not itself, is refused loudly at load. Roles are the fleet's role law: heart (owns the record) · forge (models/GPU) · dev (a full body) · hand (phone).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["heart", "hosts"],
+  "properties": {
+    "_comment": { "type": "string" },
+    "version": { "type": "integer", "minimum": 1 },
+    "heart": {
+      "type": "string",
+      "minLength": 1,
+      "description": "the host that owns the record; must name a row in hosts"
+    },
+    "hosts": {
+      "type": "object",
+      "minProperties": 1,
+      "description": "hostname -> this machine's row; the machine reads its OWN row",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["roles"],
+        "properties": {
+          "roles": {
+            "type": "array",
+            "items": { "enum": ["heart", "forge", "dev", "hand"] },
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "lan": { "type": "string" },
+          "tailnet": { "type": "string" }
+        }
+      }
+    }
+  }
+}
