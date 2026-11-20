@@ -64,3 +64,7 @@ A line that must stay can be waived with `board-engine-ok: <why>` on the same li
   or its header helper printed nothing.
 - `project '<id>' has no board: block`: add the block to the registry row.
 - The fix note is `docs/fixes/records/2026-11-20-the-board-engine-leaves-for-gimle.md`.
+
+## CHANGE LOG
+
+- 2026-11-20 — first written: the board contract, the split, and the board-engine ward (plan 335).
