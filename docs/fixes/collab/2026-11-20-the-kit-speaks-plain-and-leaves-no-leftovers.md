@@ -80,3 +80,7 @@ bash bin/gates/tests/test_maker_names.sh        → one failure, present on orig
 ```
 
 The install into two product repositories, with their hooks and gates, is recorded in plan 267's Built section.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #841
