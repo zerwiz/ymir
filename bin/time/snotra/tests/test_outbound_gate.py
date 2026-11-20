@@ -42,9 +42,9 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
-MAIL = ROOT / "bin/time/snotra/mail-send.sh"
-CAL = ROOT / "bin/time/snotra/calendar-invite.sh"
-APPROVE = ROOT / "bin/time/snotra/snotra-approve.sh"
+MAIL = ROOT / "systems/snotra/services/letters/mail-send.sh"
+CAL = ROOT / "systems/snotra/services/calendar/calendar-invite.sh"
+APPROVE = ROOT / "systems/snotra/services/approve/snotra-approve.sh"
 
 # ── the two APIs, stood in for ───────────────────────────────────────────────────────
 
