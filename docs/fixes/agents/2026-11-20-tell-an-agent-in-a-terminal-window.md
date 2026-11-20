@@ -30,3 +30,7 @@ session answered in its transcript.
 
 The first build carried its own Lua-or-classic focus. `bin/desktop/display-lib.sh` already owns the window manager's
 dialect (`display_dialect`, `window_focus`), so `window-tell.sh` now sources it instead of keeping a second copy.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #840
