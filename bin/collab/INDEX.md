@@ -31,10 +31,10 @@ bin[82]{file,does,kind,verdict,disposition,callers,lines}:
   "LICENSE","MIT No Attribution License","data","wired","keep",1,8
   "LICENSE.MIT","MIT License","data","wired","keep",0,22
   "LICENSE.txt","The arc42 template and documentation is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License.","data","wired","keep",0,19
-  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",60,-
-  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",60,-
-  "README.md","areas/ — what this repository answers for","data","tested","keep",60,-
-  "README.md","plans/tickets/ — the units of work under a validated plan","data","tested","keep",60,-
+  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",61,-
+  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",61,-
+  "README.md","areas/ — what this repository answers for","data","tested","keep",61,-
+  "README.md","plans/tickets/ — the units of work under a validated plan","data","tested","keep",61,-
   "TEMPLATE.md","---","data","wired","keep",5,35
   "TEMPLATE.yaml","areas/TEMPLATE.yaml — what one area's declaration looks like.","data","wired","keep",2,44
   "a2a-guard.sh","a2a-guard — a card in the constellation must stay true, and a changed one must still be valid.","tool","wired","keep",2,38

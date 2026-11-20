@@ -25,7 +25,7 @@ bin[26]{file,does,kind,verdict,disposition,callers,lines}:
   "brain.py","'''brain.py — the hound's judgement: read findings, apply the rules, speak, record.","tool","tested","keep",1,232
   "browserkill-install.sh","browserkill-install.sh — seat the kill tracer and its GPU note (plan 152 / 271).","tool","wired","keep",0,43
   "browserkill-note.sh","browserkill-note.sh — at every browser/Discord death, write down the GPU's side of it (plan 271 piece 5).","tool","wired","keep",2,33
-  "browserkill.bt","/* plan 242 + 0002 phase 1 (2026-11-11): NAME THE SENDER.","data","wired","keep",3,75
+  "browserkill.bt","/* plan 242 + 0002 phase 1 (2026-11-11): NAME THE SENDER.","data","wired","keep",4,75
   "common.py","'''common.py — the one resolver for Garmr's settings and paths (Rule 07).","tool","wired","keep",1,223
   "escalate.py","'''escalate.py — the severity ladder (plan 98 §'the severity ladder').","tool","tested","keep",1,224
   "garmr-bite-test.sh","garmr-bite-test.sh — the laws of the bite, proven offline (no real bite is ever taken here).","tool","wired","keep",0,94

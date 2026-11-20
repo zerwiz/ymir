@@ -21,10 +21,10 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[51]{file,does,kind,verdict,disposition,callers,lines}:
+bin[58]{file,does,kind,verdict,disposition,callers,lines}:
   "arm-talk.sh","arm-talk.sh — the heart speaks into every seat's pane, over that seat's own road (plan 234 P1).","tool","wired","keep",1,193
   "armpin.sh","armpin.sh — does every surface that SUPERVISES run the pin, and is the pin current?","tool","wired","keep",1,100
-  "broken.sh","broken.sh — the register of broken things (RULES/50).","tool","tested","keep",1,165
+  "broken.sh","broken.sh — the register of broken things (RULES/50).","tool","tested","keep",2,165
   "claims.sh","claims.sh — a seat declares what it is building (plan number, branch, errand id, host).","tool","wired","keep",4,95
   "clocks.sh","bin/seat/clocks.sh — seat the three loops: plan-watch, ship-watch, update-loop.","tool","wired","keep",0,116
   "codex-plugin-install.mjs","// Valknut's Codex door.","data","wired","keep",3,125
@@ -33,8 +33,9 @@ bin[51]{file,does,kind,verdict,disposition,callers,lines}:
   "fleet-plans.sh","fleet-plans.sh — read every LIVE host's claims over the tailnet; merge; report collisions + dark hosts.","tool","wired","keep",0,92
   "harness-contract-install.sh","harness-contract-install.sh — every harness reads ONE contract, and an update keeps it true.","tool","wired","keep",1,81
   "harness-extensions-install.sh","harness-extensions-install.sh — every harness gets the house's extensions and packages, on install AND on update.","tool","wired","keep",8,382
-  "helm-identity.sh","helm-identity.sh — WHO holds this helm, WHAT it is for, WHICH machine and fleet it","tool","wired","keep",5,145
-  "herdr-agents.py","'''herdr-agents.py — list the agents standing in this herdr session, as TOON.","tool","wired","keep",9,85
+  "helm-identity.sh","helm-identity.sh — WHO holds this helm, WHAT it is for, WHICH machine and fleet it","tool","wired","keep",6,145
+  "herdr-agents.py","'''herdr-agents.py — list the agents standing in this herdr session, as TOON.","tool","wired","keep",13,259
+  "herdr-editor.py","'''herdr-editor.py — read the INPUT BOX of an agent's pane, and say what is in it.","tool","wired","keep",2,133
   "herdr-ensure.sh","herdr-ensure.sh — Þjazi: guarantee the terminal backend Ymir needs.","tool","wired","keep",4,106
   "herdr-run.sh","herdr-run.sh — raise an Eindri in herdr, by the grain that fits the errand.","tool","tested","keep",16,631
   "hermes-seat.sh","hermes-seat.sh — seat Ymir's tools into Hermes, the same packets the other harnesses get.","tool","wired","keep",2,91
@@ -50,8 +51,10 @@ bin[51]{file,does,kind,verdict,disposition,callers,lines}:
   "rank.sh","rank.sh — ask a jev judge to score items on jev's three categories.","tool","wired","keep",1,122
   "roster.sh","HERE='$(cd -- '$(dirname -- '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",5,120
   "seat-adopt.sh","seat-adopt.sh — a late boot is still a seat.","tool","wired","keep",2,129
+  "seat-audit.sh","seat-audit.sh — one line per agent pane: is its work safe, landed, and correct?","tool","wired","keep",4,403
+  "seat-find.sh","seat-find.sh — find the agent by its WORK, not by its tab title.","tool","wired","keep",1,130
   "seat-prove.sh","seat-prove.sh — a spawn is not a seat until the agent list shows it.","tool","tested","keep",5,110
-  "seat-reap.sh","seat-reap.sh — the hand that closes a finished seat.","tool","wired","keep",10,962
+  "seat-reap.sh","seat-reap.sh — the hand that closes a finished seat.","tool","wired","keep",14,1094
   "seat-surface.sh","seat-surface.sh — render THIS seat's own name into the AGENTS.md every harness reads.","tool","wired","keep",7,218
   "seat-wake.sh","seat-wake.sh — the seat's word to the ARM, not to a desktop.","tool","wired","keep",3,83
   "seat-wire.sh","seat-wire.sh — one seat speaks into another seat's live pane, and says who it is.","tool","wired","keep",2,393
@@ -63,17 +66,21 @@ bin[51]{file,does,kind,verdict,disposition,callers,lines}:
   "test_core_four_pending_factory.sh","The ward for the three near-loop doors: core four, pending, and the factory preset.","tool","wired","keep",0,26
   "test_doors_fleet_path.sh","The ward for plan 229 — the near loop on a machine that is not this shell.","tool","wired","keep",0,85
   "test_everything_up.sh","Wards for the 'everything-up' errand: a worker seat is never the helm (Stop hook + arm check),","tool","wired","keep",1,136
+  "test_herdr_editor.sh","test_herdr_editor.sh — the input-box reader, judged on the two shapes the hall actually draws.","tool","wired","keep",1,74
   "test_lock_ask.sh","The ward for bin/seat/lock-ask.sh — a read-only agent asks the lock owner, and only the","tool","wired","keep",0,155
   "test_pi_door.sh","The ward for bin/seat/pi-door.sh — one extension home for a seat started by hand.","tool","wired","keep",0,128
   "test_pi_loads_the_pin.sh","The ward for 'pi loads the pin': every harness binder points at the pinned runtime whichever","tool","wired","keep",0,45
   "test_rank.sh","The ward for bin/seat/rank.sh — the hall's ranking transport.","tool","wired","keep",0,56
+  "test_seat_audit.sh","The ward for 'the audit says, in one line, whether a seat's work can be let go'","tool","wired","keep",0,190
+  "test_seat_find.sh","test_seat_find.sh — the finder names the pane whose WORK printed the words, and nothing else.","tool","wired","keep",1,115
   "test_seat_reap.sh","The ward for 'the arm closes finished Eindri seats' (2026-11-10).","tool","tested","keep",0,349
+  "test_seat_reap_tabs.sh","The ward for 'the reaper sees hand-seated tabs, not only `eindri-*` workspaces'","tool","wired","keep",0,189
   "valknut-load.sh","valknut-load.sh — Valknut, the knot that binds the repo distro into each tool's","tool","tested","keep",11,815
   "verify-seat.sh","verify-seat.sh — is this seat actually whole?","tool","tested","keep",3,177
   "who.sh","who.sh — WHO IS WHERE: every agent in a pane, its project, its errand, and who holds the lock.","tool","wired","keep",3,141
   "whose-tree.sh","whose-tree.sh — whose code am I standing in?","tool","wired","keep",0,118
   "ymir-mcp.py","'''ymir-mcp.py (seat copy) — a thin pointer, kept because files are moved, never deleted (Rule 11).","tool","tested","keep",7,13
 
-**Tally.** verdict: wired=42, tested=9
+**Tally.** verdict: wired=49, tested=9
 
-**Tally.** disposition: keep=51
+**Tally.** disposition: keep=58
