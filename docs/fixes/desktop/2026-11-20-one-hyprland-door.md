@@ -70,3 +70,7 @@ waits on the Allfather's answer to plan 341 question 1.
 
 Plan 341.4 to 341.6 (the watch, the Omarchy pass-through and the MCP face) are later phases. `window-tell.sh`
 lives on another branch (`eindri/window-tell`) and already sources `display-lib.sh`.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #853
