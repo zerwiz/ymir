@@ -78,6 +78,17 @@ def evaluate(finding: dict, cfg: dict) -> dict:
     if kind == "file_change":
         what = finding.get("class", "")
         if what == "identity":
+            # A RECORD WITH NO PATH IS NOT A CHANGED FILE (2026-11-20). Measured on this machine: the
+            # identity watch fired every 15-30 minutes with `changed  at` — an empty target — and each
+            # one was announced as "passwd, shadow, sudoers or an authorised key". Nothing had named a
+            # file, so nothing knew what changed: the record matched the KEY, not a path. A CRITICAL that
+            # cannot say what changed teaches the operator to ignore the one alarm that must never be
+            # ignored, so an unnamed target is reported as what it is — HIGH, with no claim about which
+            # file moved.
+            if not str(target).strip():
+                return _out("HIGH", "an identity watch fired with no file named",
+                            f"HIGH: {comm} (pid {pid}, uid {uid}) matched the identity watch at {ts} with no path in the record — no file is named, so read this as a watch to check, not as a change to passwd, shadow, sudoers or a key",
+                            suppress=False)
             return _out("CRITICAL", "an identity or privilege file changed",
                         f"CRITICAL: {comm} (pid {pid}, uid {uid}) changed {target} at {ts} — passwd, shadow, sudoers or an authorised key",
                         suppress=False)
