@@ -1,0 +1,61 @@
+name: Eindri merge — Glitnir human review gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Yggdrasil branch to merge (format: feat/eindri-...)
+        required: true
+        default: "feat/eindri"
+      reviewer:
+        description: Reviewer approving the merge (Glitnir gate)
+        required: true
+        default: "Brokk"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  merge-eindri:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Open Glitnir pull request for review
+        env:
+          BRANCH_NAME: ${{ inputs.branch }}
+          REVIEWER: ${{ inputs.reviewer }}
+        run: |
+          set -e
+          echo "📦 Glitnir review gate for branch: $BRANCH_NAME"
+
+          if ! git show-ref --verify --quiet "refs/heads/$BRANCH_NAME"; then
+            echo "⚠️ Branch $BRANCH_NAME not found — nothing to merge."
+            exit 0
+          fi
+
+          PR_OUTPUT=$(gh pr create \
+            --title "Eindri: changes from $BRANCH_NAME" \
+            --body "Changes from an Eindri worker on branch $BRANCH_NAME.
+
+- **Reviewed by:** @${REVIEWER}
+- **Gate:** Glitnir human approval required — Mjollnir never force-merges.
+
+_Yggdrasil worktree: .yggdrasil/$BRANCH_NAME_"
+            --base main \
+            --head "$BRANCH_NAME" \
+            --label "eindri" \
+            --assignee "$REVIEWER" 2>/dev/null || echo "gh CLI not available — would open PR manually")
+          echo "$PR_OUTPUT"
+          echo "pr_url=$PR_OUTPUT" >> "$GITHUB_ENV"
+
+      - name: Clean up Yggdrasil worktree after merge (automatic, on main)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          # After human approval + merge, the branch no longer exists remotely.
+          # Yggdrasil cleanup keeps each spawn isolated and prunes stale trees.
+          echo "Post-merge: run 'yggdrasil_manager.ts cleanup' locally to prune merged branches."

@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zerwiz/ymir/config/grants.schema.json",
+  "title": "hodd/identity/grants.yaml",
+  "description": "The federation grant registry (plan 58, 'Several Ymirs, one company'): every explicit grant by which one operator's Ymir shares a company namespace with another's. Read by src/ymir_runtime/grants.py through the config layer (kind 'grants'). The realm law (Rule 05) is a semantic check, not a shape: a grant that crosses operators must carry a signature from EACH party's Heimdall, and src/ymir_runtime/grants.py refuses one that does not. `card` is deliberately the SAME shape as the shared agent-card contract (packages/contracts AgentInterface: protocol · endpoint · signed) — one contract, never a second.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "grants"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "operator": {
+      "type": "string",
+      "minLength": 1,
+      "description": "the local operator this registry belongs to; never required, so a heart may carry the whole company's grants"
+    },
+    "grants": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/grant" }
+    }
+  },
+  "$defs": {
+    "card": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "the shared A2A agent-card interface (packages/contracts AgentInterface) — protocol + endpoint + whether the binding is signed",
+      "required": ["protocol", "endpoint", "signed"],
+      "properties": {
+        "protocol": { "type": "string", "minLength": 1, "description": "the wire protocol, e.g. a2a/1.0" },
+        "endpoint": { "type": "string", "minLength": 1, "description": "where the party's card + JSON-RPC are served" },
+        "signed": { "type": "boolean", "description": "does this party's card carry a Heimdall signature?" }
+      }
+    },
+    "party": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ymir", "operator", "heimdall", "card"],
+      "properties": {
+        "ymir": { "type": "string", "minLength": 1, "description": "the Ymir instance's identity (its A2A name)" },
+        "operator": { "type": "string", "minLength": 1, "description": "the human/company operator the Ymir belongs to; the realm boundary is drawn between operators" },
+        "heimdall": { "type": "string", "minLength": 1, "description": "the key id of the operator's Heimdall that signs this side of the grant" },
+        "card": { "$ref": "#/$defs/card" }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["signer", "alg", "key_id", "sig"],
+      "properties": {
+        "signer": { "type": "string", "minLength": 1, "description": "the Heimdall key id that made this signature — must be one of the parties" },
+        "alg": { "enum": ["ed25519"], "description": "the signing algorithm; Heimdall signs ed25519/JWS" },
+        "key_id": { "type": "string", "minLength": 1, "description": "the key the signature verifies against" },
+        "sig": { "type": "string", "minLength": 1, "description": "the base64url JWS signature over the grant body" }
+      }
+    },
+    "grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["grant_id", "namespace", "role", "grantor", "grantee"],
+      "properties": {
+        "grant_id": { "type": "string", "minLength": 1, "description": "the stable id of this grant; a replayed id is refused, never silently applied" },
+        "namespace": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$",
+          "description": "the company namespace this grant opens — the unit Skuld stores rows under and the journal scopes entries to"
+        },
+        "role": { "enum": ["reader", "member", "writer", "admin"] },
+        "state": { "enum": ["active", "revoked"] },
+        "issued": { "type": "string", "description": "ISO 8601 instant the grantor issued the grant" },
+        "expires": { "type": "string", "description": "ISO 8601 instant the grant lapses; empty/absent means no expiry" },
+        "grantor": { "$ref": "#/$defs/party" },
+        "grantee": { "$ref": "#/$defs/party" },
+        "signatures": {
+          "type": "array",
+          "description": "the Heimdall signatures; a cross-operator grant requires one per party",
+          "items": { "$ref": "#/$defs/signature" }
+        }
+      }
+    }
+  }
+}

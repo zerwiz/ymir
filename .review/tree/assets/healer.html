@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ymir — The Renewal and the Healing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,500;600;1,500&family=Newsreader:ital,opsz,wght@0,6..72,300..500;1,6..72,300..500&family=IBM+Plex+Mono:wght@300;400;500&family=Noto+Sans+Runic&display=swap" rel="stylesheet">
+<style>
+/* ============ tokens — obsidian, bone, bronze, blood ============ */
+:root{
+  --bg:#0e0c09; --panel:#151209; --panel3:#14100b;
+  --line:#2b241a; --line-soft:#221d14;
+  --bone:#cfc3a9; --bone-dim:#9a8f75; --bone-faint:#6b6250;
+  --steel:#96a0a8; --steel-dim:#5f686e;
+  --bronze:#c9973f; --bronze-deep:#7d5f2a;
+  --blood:#7c3a30; --blood-lit:#c2584a;
+  --disp:'Cormorant',serif; --serif:'Newsreader',Georgia,serif;
+  --mono:'IBM Plex Mono',monospace; --run:'Noto Sans Runic','Segoe UI Historic',serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--bone);font-family:var(--serif);
+  -webkit-font-smoothing:antialiased;overflow-x:hidden}
+::selection{background:#57411a;color:#f0e6cd}
+:focus-visible{outline:1px solid var(--bronze);outline-offset:3px}
+.rn{font-family:var(--run)}
+
+/* stone grain + vignette */
+body::before{content:'';position:fixed;inset:0;z-index:60;pointer-events:none;opacity:.055;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+body::after{content:'';position:fixed;inset:0;z-index:59;pointer-events:none;
+  box-shadow:inset 0 0 170px 30px rgba(0,0,0,.5)}
+#gap{position:fixed;inset:0;width:100%;height:100%;z-index:0}
+main,footer{position:relative;z-index:2}
+
+/* ============ topbar ============ */
+.topbar{position:fixed;inset:0 0 auto 0;height:46px;display:flex;justify-content:space-between;align-items:center;
+  padding:0 clamp(1rem,3vw,2rem);z-index:50;background:rgba(13,11,8,.78);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line-soft);font-family:var(--mono);font-size:.58rem;
+  letter-spacing:.3em;color:var(--bone-dim);text-transform:uppercase}
+.topbar .rn{color:var(--bronze);margin-right:.6em;font-size:.85rem}
+main{padding-top:46px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* ============ lore head ============ */
+.lore-head{padding:5.5rem 1.5rem 0;text-align:center}
+.lh-k{font-family:var(--mono);font-size:.58rem;letter-spacing:.44em;text-indent:.44em;color:var(--steel-dim);
+  text-transform:uppercase;animation:fadeUp 1s .05s both}
+.lore-head h1{font-family:var(--disp);font-weight:600;font-size:clamp(1.9rem,5.4vw,3.4rem);
+  letter-spacing:.16em;text-indent:.16em;color:var(--bone);margin-top:1.3rem;
+  text-shadow:0 -1px 0 rgba(0,0,0,.85);animation:fadeUp 1s .18s both}
+.lh-motto{font-family:var(--mono);font-size:.6rem;letter-spacing:.34em;text-indent:.34em;color:var(--bronze);
+  text-transform:uppercase;margin-top:1.2rem;animation:fadeUp 1s .32s both}
+.lh-rule{width:150px;height:1px;background:var(--bronze-deep);margin:2.1rem auto 2.3rem;position:relative;
+  animation:fadeUp 1s .42s both}
+.lh-rule::after{content:'';position:absolute;left:50%;top:50%;width:5px;height:5px;background:var(--bronze-deep);
+  transform:translate(-50%,-50%) rotate(45deg)}
+.lh-body{max-width:62ch;margin:0 auto;font-size:1.04rem;line-height:1.95;color:var(--bone-dim);
+  animation:fadeUp 1s .52s both}
+.lh-close{font-family:var(--disp);font-style:italic;font-size:clamp(1.05rem,2.2vw,1.3rem);letter-spacing:.06em;
+  color:var(--bone);margin:1.8rem auto 0;max-width:52ch;line-height:1.7;animation:fadeUp 1s .66s both}
+
+/* ============ stage ============ */
+.stage{position:relative;display:flex;align-items:center;justify-content:center;
+  padding:3.6rem 1rem 1.6rem;animation:fadeUp 1.1s .8s both}
+.scenewrap{width:min(94vw, calc(74svh * .691), 600px);aspect-ratio:760/1100}
+#scene{width:100%;height:100%;display:block}
+.anno{position:absolute;top:110px;max-width:250px;line-height:1.95;font-size:.92rem;z-index:3}
+.anno-l{left:clamp(1rem,4vw,3.2rem);font-style:italic;color:var(--bone-faint)}
+.anno-r{right:clamp(1rem,4vw,3.2rem);text-align:right;font-family:var(--mono);font-size:.56rem;
+  letter-spacing:.26em;color:var(--steel-dim);text-transform:uppercase;line-height:2.6}
+@media(max-width:900px){.anno{display:none}}
+
+/* ============ SVG — the night carving ============ */
+#scene text{font-family:var(--mono);user-select:none}
+#scene g[data-part]{cursor:pointer;outline:none}
+.wgroup{transition:opacity .45s}
+#scene.focus g.wgroup:not(.lit){opacity:.45}
+#treeG{transition:opacity .45s}
+#scene.focus #treeG{opacity:.76}
+
+/* tree anatomy (the myth side) */
+.bpart .gs{stroke:#4a3d2a;fill:#161009;stroke-width:2;transition:stroke .4s,fill .4s}
+.bpart .limb-o{fill:none;stroke:#4a3d2a;stroke-linecap:round;transition:stroke .4s}
+.bpart .limb-i{fill:none;stroke:#0e0c09;stroke-linecap:round}
+.bpart .det{fill:none;stroke:#2e261a;stroke-linecap:round;transition:stroke .4s}
+.bpart .rid{fill:none;stroke:#4a4232;stroke-width:2.5}
+.bpart.lit .gs{stroke:var(--bronze)}
+.bpart.lit .fillable{fill:#241b0e}
+.bpart.lit .limb-o{stroke:var(--bronze)}
+.bpart.lit .det{stroke:var(--bronze)}
+.bpart.lit .lab{fill:var(--bone)}
+.bpart.lit .lab3{fill:var(--bone-dim)}
+
+/* road (the machine side) */
+.wgroup .gs{stroke:#4a4232;fill:#12100b;stroke-width:2;transition:stroke .4s,fill .4s}
+.wgroup.lit .gs{stroke:var(--bronze)}
+.mk{fill:#12100b;stroke:#4a4232;stroke-width:1.5;transition:stroke .5s,fill .5s}
+.wgroup.lit .mk{stroke:var(--bronze);fill:#1a140c}
+.mrune{font-family:var(--run);fill:#6b5b3a;transition:fill .5s}
+.wgroup.lit .mrune{fill:var(--bronze)}
+.rdash{fill:none;stroke:#2e261a;stroke-width:2.5;stroke-dasharray:16 12;transition:stroke .4s}
+.wgroup.lit .rdash{stroke:var(--bronze);animation:march 1.1s linear infinite}
+.gate{fill:none;stroke:#4a4232;stroke-width:3;transition:stroke .4s}
+.wgroup.lit .gate{stroke:var(--bronze)}
+.star{fill:#4f4530;stroke:none;animation:tw 4.5s ease-in-out infinite}
+.wgroup.lit .star{fill:var(--bronze)}
+@keyframes tw{50%{opacity:.25}}
+@keyframes march{to{stroke-dashoffset:-28}}
+
+/* moon */
+#moonG .moonSt{fill:#12100b;stroke:#4a4232;stroke-width:2;transition:stroke .4s}
+#moonG.lit .moonSt{stroke:var(--bronze)}
+#moonG .mstar{fill:#4f4530;transition:fill .4s}
+#moonG.lit .mstar{fill:var(--bronze)}
+
+/* labels */
+.lab{font-size:18px;letter-spacing:4.2px;fill:#6f6650;opacity:.92;paint-order:stroke;
+  stroke:#0e0c09;stroke-width:5;stroke-linejoin:round;transition:fill .4s}
+.lab3{font-size:10px;letter-spacing:3px;fill:#5a5240;transition:fill .4s}
+.wgroup.lit .lab{fill:var(--bone)}
+.wgroup.lit .lab3{fill:var(--bone-dim)}
+
+/* the crack and the mending */
+.crackE{fill:none;stroke:#4a3d2a;stroke-width:9;stroke-linejoin:miter}
+.crack{fill:none;stroke:#060504;stroke-width:5.5;stroke-linejoin:miter}
+.seamBase{fill:none;stroke:#57411a;stroke-width:2;opacity:.55;stroke-linejoin:round}
+.seam{fill:none;stroke:var(--bronze);stroke-width:3;stroke-linejoin:round;
+  stroke-dasharray:380;stroke-dashoffset:380}
+.seam.lit{animation:seamdraw 1.6s ease-out forwards}
+@keyframes seamdraw{to{stroke-dashoffset:0}}
+.msp{fill:#c9973f;opacity:0;transform-box:fill-box;transform-origin:center}
+.msp.lit{animation:mspk 2.4s ease-in-out infinite}
+@keyframes mspk{0%,100%{opacity:0;transform:scale(.5)}50%{opacity:.9;transform:scale(1)}}
+
+/* the pulse that never rests */
+.vein{fill:none;stroke:#3a2f1c;stroke-width:2.5}
+.pdot{fill:none;stroke:#c9973f;stroke-width:4;stroke-linecap:round;stroke-dasharray:14 560;
+  animation:rise 5.2s linear infinite;opacity:.85}
+.pdot.p2{animation-delay:-2.6s}
+@keyframes rise{from{stroke-dashoffset:574}to{stroke-dashoffset:0}}
+.ptick{fill:#6d5426;opacity:.3;animation:tk 5.2s ease-in-out infinite}
+@keyframes tk{0%,18%,100%{opacity:.22}9%{opacity:.95}}
+#scene.healing .pdot{animation-duration:2.6s}
+#scene.healing .pdot.p2{animation-delay:-1.3s}
+#scene.healing .ptick{animation-duration:2.6s;fill:var(--bronze)}
+
+/* new growth on the old wood */
+.shoot{fill:#241d13;stroke:#3f3219;stroke-width:1;opacity:0;transform:scale(0);
+  transform-box:fill-box;transform-origin:50% 100%;transition:fill .4s}
+.shoot.lit{fill:#6d5426;stroke:var(--bronze);animation:grow .55s cubic-bezier(.2,.7,.3,1.25) both}
+@keyframes grow{from{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)}}
+.leaf2{fill:#2e261a;stroke:#3f3219;stroke-width:1;transition:fill .4s}
+.bpart.lit .leaf2{fill:#8a6a34}
+.bs{fill:none;stroke:#4a3d2a;stroke-width:2;transition:stroke .4s}
+.bpart.lit .bs{stroke:var(--bronze)}
+.patch{fill:#1a140d;stroke:#3f3219;stroke-width:1.2;transition:fill .4s,stroke .4s}
+.patch.lit{fill:#2e2214;stroke:var(--bronze)}
+
+/* the lantern */
+.lgow{}
+.lg1{fill:#c98a3f;animation:glowA 3.8s ease-in-out infinite}
+.lg2{fill:#e8b45c;animation:glowB 3.8s ease-in-out infinite}
+@keyframes glowA{0%,100%{opacity:.05}50%{opacity:.11}}
+@keyframes glowB{0%,100%{opacity:.09}50%{opacity:.17}}
+#scene.healing .lg1,#scene.healing .lg2{animation-duration:1.9s}
+.lflame{animation:flick 2.6s ease-in-out infinite}
+@keyframes flick{0%,100%{opacity:.65}50%{opacity:1}}
+.lpost{fill:none;stroke:#4a3d2a;stroke-width:2.5}
+
+/* connectors */
+.lnk{fill:none;stroke:var(--bronze);stroke-width:1.6;stroke-dasharray:3 8;opacity:0;
+  transition:opacity .4s;pointer-events:none}
+.lnk.lit{opacity:.75;animation:march 1.1s linear infinite}
+
+/* hit areas */
+.hit{fill:#000;fill-opacity:0;stroke:#000;stroke-opacity:0;pointer-events:all}
+
+/* ============ caption + plinth ============ */
+.plate{max-width:780px;margin:0 auto;padding:0 1.4rem 3rem}
+.cap-hint{text-align:center;font-family:var(--mono);font-size:.58rem;letter-spacing:.18em;
+  color:var(--bone-faint);text-transform:uppercase;line-height:2.3;margin-bottom:.7rem}
+.cap-hint b{color:var(--bronze);font-weight:400}
+.cap{text-align:center;font-family:var(--mono);font-size:.62rem;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--bone-faint);line-height:2.6}
+.cap button{background:none;border:none;cursor:pointer;font:inherit;color:var(--bone-dim);
+  letter-spacing:inherit;padding:.2em .1em;border-bottom:1px solid transparent;
+  transition:color .25s,border-color .25s}
+.cap button:hover,.cap button.on{color:var(--bronze);border-bottom-color:var(--bronze-deep)}
+.cap button .rn{color:var(--bronze);margin-right:.45em}
+.cap i{font-style:normal;color:var(--bone-faint);margin:0 .3em}
+
+.carved{background:var(--panel3);border:1px solid var(--line);
+  box-shadow:inset 0 1px 0 rgba(255,244,214,.03),inset 0 -1px 0 rgba(0,0,0,.5),0 2px 16px rgba(0,0,0,.35)}
+.plinth{margin-top:1.7rem;padding:1.7rem clamp(1.2rem,4vw,2.1rem) 1.9rem}
+.pl-head{display:flex;align-items:center;gap:1.3rem;padding-bottom:1.2rem;border-bottom:1px solid var(--line)}
+#pRune{font-family:var(--run);font-size:2.4rem;color:var(--bronze);line-height:1;letter-spacing:.08em}
+.pl-k{font-family:var(--mono);font-size:.56rem;letter-spacing:.34em;color:var(--steel-dim);text-transform:uppercase}
+#pName{font-family:var(--disp);font-weight:600;font-size:1.3rem;letter-spacing:.14em;color:var(--bone);margin-top:.35rem}
+.prow{display:grid;grid-template-columns:5.4rem 1fr;gap:1.2rem;padding:1.05rem 0;
+  border-bottom:1px dashed var(--line-soft)}
+.prow:last-of-type{border-bottom:none}
+.ptag{font-family:var(--mono);font-size:.56rem;letter-spacing:.26em;color:var(--bronze);
+  text-transform:uppercase;padding-top:.4rem}
+.pmyth{font-family:var(--serif);font-style:italic;font-size:1.05rem;color:var(--bone);line-height:1.75}
+.pymir{font-family:var(--mono);font-size:.72rem;color:var(--steel);line-height:1.85}
+.pl-head,.prow{transition:opacity .18s}
+.plinth.swap .pl-head,.plinth.swap .prow{opacity:.06}
+@media(max-width:560px){.prow{grid-template-columns:1fr;gap:.3rem}.ptag{padding-top:0}}
+
+.pl-actions{text-align:center;margin-top:1.9rem}
+.btn-carv{font-family:var(--mono);font-size:.64rem;letter-spacing:.32em;text-indent:.32em;text-transform:uppercase;
+  color:var(--bone);background:var(--panel);border:1px solid var(--line);padding:.95rem 1.9rem;cursor:pointer;
+  box-shadow:inset 0 1px 0 rgba(255,244,214,.05),inset 0 -1px 0 rgba(0,0,0,.55),0 2px 10px rgba(0,0,0,.4);
+  transition:border-color .3s,color .3s,transform .1s}
+.btn-carv .rn{color:var(--bronze);margin-right:.7em;font-size:.85rem;letter-spacing:0;text-indent:0}
+.btn-carv:hover{border-color:var(--bronze-deep);color:#e6dcc2}
+.btn-carv:active{transform:translateY(1px)}
+.btn-carv.busy{opacity:.55;pointer-events:none}
+
+/* ============ unfold + pull ============ */
+details.unfold{margin-top:2.4rem;border:1px solid var(--line);background:var(--panel3)}
+details.unfold summary{padding:1.05rem 1.3rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.32em;
+  color:var(--bone-dim);cursor:pointer;list-style:none;display:flex;align-items:center;gap:1rem;
+  text-transform:uppercase;transition:color .3s}
+details.unfold summary::-webkit-details-marker{display:none}
+details.unfold summary:hover{color:var(--bone)}
+details.unfold summary .rn{color:var(--bronze);font-size:.95rem}
+.tend-grid{display:grid;grid-template-columns:1fr 1fr;gap:2.4rem;padding:1.2rem 1.4rem 0}
+@media(max-width:640px){.tend-grid{grid-template-columns:1fr}}
+.tg-k{font-family:var(--mono);font-size:.6rem;letter-spacing:.3em;color:var(--bone-dim);
+  text-transform:uppercase;margin-bottom:.9rem}
+.tg-k .rn{color:var(--bronze);margin-right:.5em;font-size:.9rem}
+.tend-grid ul{list-style:none}
+.tend-grid li{font-family:var(--mono);font-size:.62rem;color:var(--steel);line-height:1.7;
+  padding:.45rem 0 .45rem 1.1rem;border-bottom:1px dashed var(--line-soft);position:relative}
+.tend-grid li::before{content:'—';position:absolute;left:0;color:var(--bronze-deep)}
+.tg-road{font-family:var(--mono);font-size:.62rem;color:var(--steel-dim);padding:1.3rem 1.4rem 1.6rem;line-height:1.9}
+.tg-road .rn{color:var(--bronze);margin-right:.5em}
+
+.pull{font-family:var(--disp);font-size:clamp(1.05rem,2vw,1.3rem);letter-spacing:.06em;line-height:1.8;
+  color:var(--bone);border-left:2px solid var(--bronze-deep);padding:.3rem 0 .3rem 1.6rem;
+  margin:3rem auto 0;max-width:56ch}
+.pull small{display:block;font-family:var(--mono);font-size:.56rem;letter-spacing:.3em;
+  color:var(--steel-dim);margin-top:.9rem;text-transform:uppercase}
+
+/* ============ footer ============ */
+footer{border-top:1px solid var(--line);padding:3.6rem 1.5rem 4rem;text-align:center;animation:fadeUp 1s .5s both}
+.frule{display:flex;align-items:center;gap:1.4rem;max-width:640px;margin:0 auto 2.8rem}
+.frule::before,.frule::after{content:'';flex:1;height:1px;background:var(--line-soft)}
+.frule span{font-family:var(--run);font-size:.7rem;letter-spacing:.42em;color:var(--bone-faint);white-space:nowrap}
+.f-big{font-family:var(--disp);font-weight:600;font-size:clamp(1.15rem,2.6vw,1.65rem);
+  letter-spacing:.14em;color:var(--bone);text-shadow:0 -1px 0 rgba(0,0,0,.8)}
+.f-mono{font-family:var(--mono);font-size:.56rem;letter-spacing:.3em;color:var(--steel-dim);
+  margin-top:1.7rem;text-transform:uppercase;line-height:2.3}
+.f-repo{font-family:var(--mono);font-size:.58rem;color:var(--bone-faint);letter-spacing:.16em;margin-top:1.2rem}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+  .seam{stroke-dashoffset:0}
+  .shoot{opacity:1;transform:scale(1)}
+  .msp{opacity:.7}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span><span class="rn">ᛒᚹ</span>THE RENEWAL AND THE HEALING</span>
+  <span>between the days</span>
+</div>
+
+<canvas id="gap" aria-hidden="true"></canvas>
+
+<main>
+  <!-- ============ THE LORE ============ -->
+  <header class="lore-head">
+    <p class="lh-k">the lore · §xii · between the days</p>
+    <h1>The Renewal and the Healing</h1>
+    <p class="lh-motto">one keeps the tree young · the other keeps it standing</p>
+    <div class="lh-rule"></div>
+    <p class="lh-body">Because the work is long, two figures tend the tree between the days. The first is
+    the renewer — a wise-woman whose hands coax the old metal back to life, who carries the whole tree
+    forward to its newest shape without breaking a single branch, and who mends the road ahead while the
+    smiths sleep. The second is the healer — a gentle one who walks the halls at quiet hours, finds what
+    has cracked, and makes it whole again, asking nothing in return.</p>
+    <p class="lh-close">The one renews the tree; the other heals it. Both are needed, and neither hurries.</p>
+  </header>
+
+  <!-- ============ THE NIGHT CARVING ============ -->
+  <section class="stage">
+    <p class="anno anno-l">Two figures tend the tree between the days — the renewer with a hand on the
+    trunk, the healer kneeling at the crack. The lantern is lit; the smiths are asleep.</p>
+    <p class="anno anno-r">renewal without breakage<br>healing without asking<br>the road mended<br>while the smiths sleep</p>
+
+    <div class="scenewrap">
+      <svg id="scene" viewBox="0 0 760 1100" role="group" aria-label="The tree tended at night by the renewer and the healer, with the road running on from it">
+        <defs>
+          <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stop-color="#1c160e" stop-opacity=".55"/>
+            <stop offset="1" stop-color="#1c160e" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <ellipse cx="380" cy="520" rx="330" ry="440" fill="url(#halo)" pointer-events="none"/>
+
+        <g id="skyStars"></g>
+
+        <!-- the moon, over the road's end -->
+        <g id="moonG" data-part="road" tabindex="0" role="button" aria-label="the moon over the road ahead">
+          <circle class="moonSt" cx="662" cy="138" r="42"/>
+          <circle cx="678" cy="128" r="34" fill="#0e0c09"/>
+          <path class="mstar" d="M688 114 L691 118 L688 122 L685 118 Z"/>
+        </g>
+
+        <!-- ======== THE TREE ======== -->
+        <g id="treeG" class="bpart">
+          <path class="gs fillable" d="M146 308 C112 272 124 226 162 216 C146 178 170 144 208 152
+            C218 112 260 98 290 124 C304 76 356 64 380 98 C404 62 456 72 462 112 C500 94 538 118 534 154
+            C574 158 594 198 570 230 C604 248 600 290 562 304 C580 332 546 352 514 336 C502 360 458 368 440 344
+            C416 368 368 368 352 342 C326 360 286 352 276 324 C240 342 202 332 196 304 C170 318 148 314 146 308 Z"/>
+          <path class="gs" style="fill:#100c07" d="M214 322 C200 294 218 264 252 264 C256 234 296 226 316 248
+            C334 218 380 220 392 250 C418 228 456 242 456 272 C490 274 504 306 482 328 C490 352 464 368 440 358
+            C424 376 384 380 370 360 C346 374 310 368 302 346 C274 354 244 346 238 324 C226 332 212 330 214 322 Z"/>
+          <path class="det" d="M244 236 C264 220 288 226 290 244 C290 258 274 262 268 252" stroke-width="2"/>
+          <path class="det" d="M470 186 C490 170 514 176 516 194 C516 208 500 212 494 202" stroke-width="2"/>
+          <path class="det" d="M336 138 C354 124 376 130 378 146 C378 160 362 164 356 152" stroke-width="2"/>
+          <g id="leafDust"></g>
+
+          <!-- the bare branch — the old wood, waiting -->
+          <path class="limb-o" style="stroke-width:8" d="M248 334 C226 344 204 356 186 372"/>
+          <path class="limb-i" style="stroke-width:4" d="M248 334 C226 344 204 356 186 372"/>
+          <path class="limb-o" style="stroke-width:5" d="M200 352 C190 340 182 334 172 330"/>
+          <path class="limb-i" style="stroke-width:2.5" d="M200 352 C190 340 182 334 172 330"/>
+          <path class="limb-o" style="stroke-width:4" d="M212 350 C210 362 212 372 218 380"/>
+          <path class="limb-i" style="stroke-width:2" d="M212 350 C210 362 212 372 218 380"/>
+
+          <!-- the trunk, with the crack -->
+          <path class="gs fillable" d="M342 336 C334 388 338 438 332 492 C327 544 336 596 331 648
+            C328 688 334 726 328 760 C326 776 318 786 304 796 L456 796 C442 786 434 776 432 760
+            C426 726 432 688 429 648 C424 596 433 544 428 492 C422 438 426 388 418 336
+            C394 326 366 326 342 336 Z"/>
+          <path class="det" d="M346 400 C342 480 344 560 340 660 C338 720 342 760 340 788" stroke-width="2"/>
+          <path class="crackE" d="M410 900 L402 862 L410 824 L398 786 L406 748 L394 712 L402 676 L392 640 L400 604 L392 566"/>
+          <path class="crack"  d="M410 900 L402 862 L410 824 L398 786 L406 748 L394 712 L402 676 L392 640 L400 604 L392 566"/>
+
+          <!-- the roots -->
+          <path class="limb-o" style="stroke-width:17" d="M320 792 C258 812 192 842 142 890 C112 918 94 952 86 992"/>
+          <path class="limb-i" style="stroke-width:10" d="M320 792 C258 812 192 842 142 890 C112 918 94 952 86 992"/>
+          <path class="limb-o" style="stroke-width:14" d="M352 798 C332 842 314 890 304 936 C298 964 296 986 296 1004"/>
+          <path class="limb-i" style="stroke-width:8" d="M352 798 C332 842 314 890 304 936 C298 964 296 986 296 1004"/>
+          <path class="limb-o" style="stroke-width:13" d="M410 798 C428 842 444 886 456 924 C462 944 464 960 462 972"/>
+          <path class="limb-i" style="stroke-width:7.5" d="M410 798 C428 842 444 886 456 924 C462 944 464 960 462 972"/>
+          <path class="limb-o" style="stroke-width:9" d="M420 800 C452 826 478 854 494 882 C502 896 498 908 486 908"/>
+          <path class="limb-i" style="stroke-width:4.5" d="M420 800 C452 826 478 854 494 882 C502 896 498 908 486 908"/>
+          <path class="limb-o" style="stroke-width:17" d="M446 792 C508 812 560 846 588 892 C604 918 610 946 610 972"/>
+          <path class="limb-i" style="stroke-width:10" d="M446 792 C508 812 560 846 588 892 C604 918 610 946 610 972"/>
+          <path class="gs" d="M80 985 L87 993 L80 1001 L73 993 Z"/>
+          <path class="gs" d="M290 999 L297 1007 L290 1015 L283 1007 Z"/>
+
+          <!-- the ground -->
+          <path class="rid" d="M60 1006 L745 1006"/>
+          <path id="ridgeHatch" class="det" stroke-width="1.2" d=""/>
+        </g>
+
+        <!-- ======== THE ROAD AHEAD ======== -->
+        <g id="roadG" class="wgroup" data-part="road" tabindex="0" role="button"
+           aria-label="the road ahead — mended by the renewer, walked by the fleet">
+          <path class="gs" style="fill:#100d08;stroke:none" d="M540 1004 L748 1004 L692 838 L668 838 Z"/>
+          <path class="gs" style="fill:none" d="M540 1004 L668 838"/>
+          <path class="gs" style="fill:none" d="M748 1004 L692 838"/>
+          <path class="rdash" d="M644 1000 L680 844"/>
+          <path class="mk" style="transition-delay:0ms" d="M541 996 L555 996 L555 966 L548 960 L541 966 Z"/>
+          <text class="mrune" x="548" y="988" text-anchor="middle" font-size="11">ᚠ</text>
+          <path class="mk" style="transition-delay:.15s" d="M576.5 951 L587.5 951 L587.5 929 L582 924 L576.5 929 Z"/>
+          <text class="mrune" x="582" y="945" text-anchor="middle" font-size="9">ᚱ</text>
+          <path class="mk" style="transition-delay:.3s" d="M609.5 910 L618.5 910 L618.5 895 L614 891 L609.5 895 Z"/>
+          <text class="mrune" x="614" y="905" text-anchor="middle" font-size="8">ᛏ</text>
+          <path class="mk" style="transition-delay:.45s" d="M638.5 873 L645.5 873 L645.5 862 L642 858 L638.5 862 Z"/>
+          <text class="mrune" x="642" y="869" text-anchor="middle" font-size="7">ᛊ</text>
+          <path class="gate" d="M664 838 L664 806"/>
+          <path class="gate" d="M694 838 L694 806"/>
+          <path class="gate" d="M656 808 L702 808"/>
+          <path class="gate" d="M679 798 L684 803 L679 808 L674 803 Z"/>
+          <path class="star" style="animation-delay:-1.2s" d="M679 770 L682.5 774 L679 778 L675.5 774 Z"/>
+          <text class="lab" x="644" y="1078" text-anchor="middle">THE ROAD AHEAD</text>
+          <text class="lab3" x="644" y="1095" text-anchor="middle">rut steel waits</text>
+          <path class="hit" d="M534 1008 L748 1008 L704 828 L656 824 Z"/>
+        </g>
+
+        <!-- the mended patch of road — the renewer's night work -->
+        <path class="patch" data-part="renewer" pointer-events="none"
+          d="M598 986 C618 992 640 992 660 986 C640 996 618 996 598 986 Z"/>
+
+        <!-- ======== THE RENEWER ======== -->
+        <g id="renewerG" class="bpart" data-part="renewer" tabindex="0" role="button"
+           aria-label="the renewer — the wise-woman who carries the tree forward">
+          <text class="lab" x="252" y="662" text-anchor="middle">THE RENEWER</text>
+          <text class="lab3" x="252" y="680" text-anchor="middle">the carrying hand</text>
+          <path class="gs" style="fill:none;stroke-width:3.5" d="M202 815 C199 794 197 772 199 754"/>
+          <path class="gs" style="fill:none;stroke-width:2" d="M199 776 C195 768 190 763 185 760"/>
+          <path class="leaf2" d="M199 752 C194 746 196 738 204 738 C207 745 205 751 199 752 Z"/>
+          <path class="leaf2" d="M185 760 C179 755 179 747 186 746 C190 752 190 758 185 760 Z"/>
+          <path class="leaf2" d="M193 772 C188 766 190 758 197 758 C200 765 199 771 193 772 Z"/>
+          <path class="limb-o" style="stroke-width:15" d="M260 748 C288 744 306 740 322 736"/>
+          <path class="limb-i" style="stroke-width:8" d="M260 748 C288 744 306 740 322 736"/>
+          <path class="limb-o" style="stroke-width:14" d="M240 752 C226 776 214 796 204 812"/>
+          <path class="limb-i" style="stroke-width:7" d="M240 752 C226 776 214 796 204 812"/>
+          <circle class="gs" cx="325" cy="734" r="6.5"/>
+          <circle class="gs" cx="202" cy="815" r="6"/>
+          <path class="gs" d="M233 721 C229 700 239 688 251 688 C264 688 272 700 270 720 C266 706 260 700 251 699 C243 699 237 707 235 721 Z"/>
+          <path class="gs" style="fill:#100c07" d="M235 718 C229 748 227 778 231 806 L243 801 C239 773 239 745 241 720 Z"/>
+          <circle class="gs" cx="251" cy="715" r="14"/>
+          <circle cx="256" cy="712" r="1.4" fill="#7d5f2a"/>
+          <path class="gs fillable" d="M238 730 C234 760 234 790 236 820 L232 900 C230 940 228 970 224 993 L276 993
+            C272 970 270 940 268 900 L264 820 C266 790 266 760 262 730 C254 724 246 724 238 730 Z"/>
+          <path class="det" d="M244 762 C242 830 244 900 242 968" stroke-width="1.6"/>
+          <path class="det" d="M256 764 C258 830 256 900 258 966" stroke-width="1.6"/>
+          <path class="det" d="M228 980 C244 986 258 986 272 980" stroke-width="1.6"/>
+          <path class="gs" d="M250 996 L294 996 L298 1004 L288 1004 L286 1012 L258 1012 L256 1004 L246 1004 Z"/>
+          <path class="gs" d="M258 992 C266 983 282 983 288 991 L284 996 L262 996 Z"/>
+          <path class="bs" d="M273 984 L273 996"/>
+          <rect class="hit" x="166" y="636" width="188" height="384"/>
+        </g>
+
+        <!-- ======== THE HEALER ======== -->
+        <g id="healerG" class="bpart" data-part="healer" tabindex="0" role="button"
+           aria-label="the healer — the gentle one who mends what has cracked">
+          <text class="lab" x="494" y="810" text-anchor="middle">THE HEALER</text>
+          <text class="lab3" x="494" y="828" text-anchor="middle">the mending hand</text>
+          <path class="limb-o" style="stroke-width:11" d="M470 892 C456 902 444 912 436 920"/>
+          <path class="limb-i" style="stroke-width:5.5" d="M470 892 C456 902 444 912 436 920"/>
+          <path class="limb-o" style="stroke-width:11" d="M480 898 C466 908 454 918 446 926"/>
+          <path class="limb-i" style="stroke-width:5.5" d="M480 898 C466 908 454 918 446 926"/>
+          <circle class="gs" cx="434" cy="921" r="5"/>
+          <circle class="gs" cx="443" cy="927" r="5"/>
+          <path class="gs" d="M466 870 C460 894 464 918 476 934 C468 954 460 974 454 993 L534 995
+            C542 970 540 942 528 918 C536 900 536 882 528 868 C514 878 496 880 484 872 C478 876 470 876 466 870 Z"/>
+          <circle class="gs" cx="487" cy="849" r="6.5"/>
+          <circle class="gs" cx="474" cy="858" r="13"/>
+          <circle cx="469" cy="856" r="1.3" fill="#7d5f2a"/>
+          <path class="det" d="M486 902 C494 922 500 946 504 970" stroke-width="1.5"/>
+          <path class="det" d="M508 894 C516 916 520 942 522 966" stroke-width="1.5"/>
+          <path class="gs" d="M516 924 C524 924 530 930 530 938 C526 944 516 944 512 938 C512 930 512 926 516 924 Z"/>
+          <path class="det" d="M512 900 L520 924" stroke-width="1.5"/>
+          <rect class="hit" x="428" y="794" width="136" height="222"/>
+        </g>
+
+        <!-- the lantern at the quiet hours -->
+        <g id="lanternG" pointer-events="none">
+          <ellipse class="lg1" cx="428" cy="990" rx="27" ry="15"/>
+          <ellipse class="lg2" cx="428" cy="990" rx="14" ry="9"/>
+          <path class="lpost" d="M440 1006 C438 992 434 982 428 974"/>
+          <rect x="421" y="976" width="14" height="18" fill="#161009" stroke="#4a3d2a" stroke-width="2"/>
+          <path class="lflame" d="M428 982 L432 986 L428 990 L424 986 Z" fill="#e8b45c"/>
+        </g>
+
+        <!-- ======== THE MENDING + THE PULSE ======== -->
+        <g id="mendG" pointer-events="none">
+          <path class="seamBase" d="M410 900 L402 862 L410 824 L398 786 L406 748 L394 712 L402 676 L392 640 L400 604 L392 566"/>
+          <path class="seam" data-part="healer" d="M410 900 L402 862 L410 824 L398 786 L406 748 L394 712 L402 676 L392 640 L400 604 L392 566"/>
+          <path class="msp" data-part="healer" style="animation-delay:.2s" d="M405 794 L410 800 L405 806 L400 800 Z"/>
+          <path class="msp" data-part="healer" style="animation-delay:.9s" d="M399 694 L404 700 L399 706 L394 700 Z"/>
+          <path class="msp" data-part="healer" style="animation-delay:1.6s" d="M396 609 L401 615 L396 621 L391 615 Z"/>
+          <path class="vein" d="M366 792 C362 700 364 600 360 500 C358 440 362 380 374 336"/>
+          <path class="pdot" d="M366 792 C362 700 364 600 360 500 C358 440 362 380 374 336"/>
+          <path class="pdot p2" d="M366 792 C362 700 364 600 360 500 C358 440 362 380 374 336"/>
+          <path class="ptick" style="animation-delay:0s" d="M358 736 L363 729 L368 736 L363 743 Z"/>
+          <path class="ptick" style="animation-delay:-1.04s" d="M357 672 L362 665 L367 672 L362 679 Z"/>
+          <path class="ptick" style="animation-delay:-2.08s" d="M356 608 L361 601 L366 608 L361 615 Z"/>
+          <path class="ptick" style="animation-delay:-3.12s" d="M355 544 L360 537 L365 544 L360 551 Z"/>
+          <path class="ptick" style="animation-delay:-4.16s" d="M356 486 L361 479 L366 486 L361 493 Z"/>
+        </g>
+
+        <!-- new growth on the old wood (generated) -->
+        <g id="shootsG" pointer-events="none"></g>
+
+        <!-- connectors -->
+        <g id="links">
+          <path class="lnk" data-part="renewer" d="M196 745 C168 640 162 500 182 396"/>
+          <path class="lnk" data-part="renewer" d="M286 1002 C386 1016 486 1018 594 1002"/>
+          <path class="lnk" data-part="healer"  d="M432 916 C424 910 416 906 410 902"/>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ============ caption + plinth ============ -->
+  <section class="plate">
+    <p class="cap-hint"><b>◆</b> touch the renewer, the healer, or the road · the pulse on the trunk is the healing that never rests</p>
+    <p class="cap">hover or touch the carving —
+      <button data-p="renewer"><span class="rn">ᛒ</span>the renewer</button><i>·</i>
+      <button data-p="healer"><span class="rn">ᚹ</span>the healer</button><i>·</i>
+      <button data-p="road"><span class="rn">ᛚ</span>the road ahead</button>
+    </p>
+
+    <div class="plinth carved" id="plinth" aria-live="polite">
+      <div class="pl-head">
+        <span id="pRune">ᛒᚹ</span>
+        <div>
+          <p class="pl-k">the tending — touch a figure</p>
+          <p id="pName">Two Hands</p>
+        </div>
+      </div>
+      <div class="prow">
+        <span class="ptag">The myth</span>
+        <p class="pmyth" id="pMyth">One keeps the tree young; the other keeps it standing. Both are needed, and neither hurries.</p>
+      </div>
+      <div class="prow">
+        <span class="ptag">In Ymir</span>
+        <p class="pymir" id="pYmir">In Ymir: the renewer carries the tree forward; the healer makes whole what has cracked.</p>
+      </div>
+    </div>
+
+    <details class="unfold">
+      <summary><span class="rn">ᛒ</span>Unfold what is renewed and what is healed</summary>
+      <div class="tend-grid">
+        <div>
+          <p class="tg-k"><span class="rn">ᛒ</span>what is renewed</p>
+          <ul>
+            <li>the whole tree, carried to its newest shape — no branch broken</li>
+            <li>the old metal, coaxed back to life on the anvil</li>
+            <li>every hall's floor — versions and schemas kept whole as they move</li>
+            <li>the tools — sharpened by the update, never broken by it</li>
+          </ul>
+        </div>
+        <div>
+          <p class="tg-k"><span class="rn">ᚹ</span>what is healed</p>
+          <ul>
+            <li>what has cracked — found at the quiet hours, mended with gold</li>
+            <li>the stuck worker — recovered or replaced, never left in silence</li>
+            <li>the failing run — retraced, mended, watched again</li>
+            <li>the halls — walked nightly, kept standing, asking nothing</li>
+          </ul>
+        </div>
+      </div>
+      <p class="tg-road"><span class="rn">ᛚ</span>and the road ahead is mended while the smiths sleep — past the last marker, the Rut-steel reforging waits.</p>
+    </details>
+
+    <blockquote class="pull">One keeps the tree young; the other keeps it standing.
+    <small>the lore · §XII</small></blockquote>
+
+    <div class="pl-actions">
+      <button class="btn-carv" id="tourBtn"><span class="rn">ᚠ</span><span id="tourLabel">tend the tree</span></button>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="frule"><span>ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ ᚺ ᚾ ᛁ ᛇ ᛈ ᛉ ᛊ ᛏ ᛒ ᛖ ᛗ ᛚ ᛜ ᛞ ᛟ</span></div>
+  <p class="f-big">The work is long — the tending is quiet.</p>
+  <p class="f-mono">renew · heal · walk on</p>
+  <p class="f-repo">zerwiz/ymir · docs/design.md · the lore · §XII</p>
+</footer>
+
+<script>
+(function(){
+'use strict';
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const NS = 'http://www.w3.org/2000/svg';
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- generated texture: stars, crown dust, ground hatch, new growth ---------- */
+const STARS = [[66,110],[108,196],[84,286],[300,48],[500,44],[560,84],[712,236],[738,190],[700,420]];
+STARS.forEach(([x,y],i)=>{
+  const s = 4.5 + (i % 3);
+  const p = document.createElementNS(NS,'path');
+  p.setAttribute('d', `M${x} ${y-s} L${x+s*.33} ${y-s*.33} L${x+s} ${y} L${x+s*.33} ${y+s*.33}
+    L${x} ${y+s} L${x-s*.33} ${y+s*.33} L${x-s} ${y} L${x-s*.33} ${y-s*.33} Z`);
+  p.setAttribute('class','star');
+  p.style.animationDelay = (-(i*0.85)) + 's';
+  p.style.animationDuration = (3.4 + (i%4)*.9) + 's';
+  $('#skyStars').appendChild(p);
+});
+(function(){
+  let dd = '', db = '';
+  for(let i = 0; i < 24; i++){
+    const x = (180 + Math.random()*400).toFixed(1), y = (130 + Math.random()*190).toFixed(1);
+    const s = (1.6 + Math.random()*2.6).toFixed(1);
+    const m = `M${x} ${y}l${s} -${s}l${s} ${s}l-${s} ${s}z`;
+    if(i % 3 === 0) db += m; else dd += m;
+  }
+  [['#2b2214', dd], ['#3f3219', db]].forEach(([f, d]) => {
+    const p = document.createElementNS(NS,'path');
+    p.setAttribute('d', d); p.setAttribute('fill', f);
+    $('#leafDust').appendChild(p);
+  });
+  let rh = '';
+  for(let x = 72; x <= 736; x += 24) rh += `M${x} 1009 l-8 9 `;
+  $('#ridgeHatch').setAttribute('d', rh);
+})();
+const LEAVES = [[168,326,-25],[184,340,-10],[200,358,-35],[216,384,15],[228,372,30],[240,356,50]];
+LEAVES.forEach(([x,y,r],i)=>{
+  const g = document.createElementNS(NS,'g');
+  g.setAttribute('transform', `translate(${x} ${y}) rotate(${r})`);
+  const p = document.createElementNS(NS,'path');
+  p.setAttribute('class','shoot');
+  p.setAttribute('data-part','renewer');
+  p.setAttribute('d','M0 0 C-5 -7 1 -14 8 -11 C10 -4 4 2 0 0 Z');
+  p.style.animationDelay = (i*95) + 'ms';
+  g.appendChild(p);
+  $('#shootsG').appendChild(g);
+});
+
+/* ---------- the carving speaks ---------- */
+const PARTS = {
+  renewer:{ rune:'ᛒ', name:'the renewer',
+    myth:'A wise-woman whose hands coax the old metal back to life — she carries the whole tree forward to its newest shape without breaking a single branch, and mends the road ahead while the smiths sleep.',
+    ymir:'The carrying hand — versions carried forward, migrations that keep every hall whole; the self-update that only sharpens the tools, never breaks the forge.'},
+  healer:{ rune:'ᚹ', name:'the healer',
+    myth:'A gentle one who walks the halls at quiet hours, finds what has cracked, and makes it whole again — asking nothing in return.',
+    ymir:'The mending hand — the stuck worker recovered, the failing run retraced, every soul kept alive and watched; a run that is not watched cannot be trusted.'},
+  road:{ rune:'ᛚ', name:'the road ahead',
+    myth:'The road runs on from the tree — mended by the renewer while the smiths sleep, walked by the fleet when the day returns.',
+    ymir:'The way on — past the last marker waits the Rut-steel reforging: every gate re-floored one-for-one; the contract stays the same, only the metal changes.'}
+};
+const plinth = $('#plinth');
+let swapT = null, pinned = null, touring = false;
+
+function light(p){
+  $$('[data-part]').forEach(el =>
+    el.classList.toggle('lit', !!p && el.dataset.part === p));
+  const sc = $('#scene');
+  sc.classList.toggle('focus', !!p);
+  sc.classList.toggle('healing', p === 'healer');
+  $$('.cap button').forEach(b => b.classList.toggle('on', !!p && b.dataset.p === p));
+  plinth.classList.add('swap');
+  clearTimeout(swapT);
+  swapT = setTimeout(() => {
+    $('#pRune').textContent = p ? PARTS[p].rune : 'ᛒᚹ';
+    $('#pName').textContent = p ? PARTS[p].name : 'Two Hands';
+    $('#pMyth').textContent = p ? PARTS[p].myth :
+      'One keeps the tree young; the other keeps it standing. Both are needed, and neither hurries.';
+    $('#pYmir').textContent = p ? PARTS[p].ymir :
+      'In Ymir: the renewer carries the tree forward; the healer makes whole what has cracked.';
+    plinth.classList.remove('swap');
+  }, 170);
+}
+function hook(el, p){
+  el.addEventListener('mouseenter', () => { if(!touring) light(p); });
+  el.addEventListener('mouseleave', () => { if(!touring) light(pinned); });
+  const act = () => { pinned = (pinned === p) ? null : p; light(pinned); };
+  el.addEventListener('click', act);
+  el.addEventListener('keydown', e => {
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); act(); }
+  });
+  el.addEventListener('focus', () => { if(!touring) light(p); });
+  el.addEventListener('blur',  () => { if(!touring) light(pinned); });
+}
+ $$('#scene g[data-part]').forEach(g => hook(g, g.dataset.part));
+ $$('.cap button').forEach(b => hook(b, b.dataset.p));
+
+/* ---------- the tending: renewer → healer → road ---------- */
+ $('#tourBtn').addEventListener('click', () => {
+  if(touring) return;
+  touring = true; pinned = null;
+  const btn = $('#tourBtn');
+  btn.classList.add('busy');
+  $('#tourLabel').textContent = 'neither hurries';
+  const order = ['renewer','healer','road'];
+  let i = 0;
+  (function step(){
+    if(i < order.length){ light(order[i++]); setTimeout(step, 2600); }
+    else{
+      light(null); touring = false;
+      btn.classList.remove('busy');
+      $('#tourLabel').textContent = 'tend the tree';
+    }
+  })();
+});
+
+/* ---------- ambience: cold night, fireflies, sleeping forge ---------- */
+(function(){
+  const cv = $('#gap'), ctx = cv.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  let W = 0, H = 0, mist = [], flies = [], t = 0;
+  function size(){
+    W = innerWidth; H = innerHeight;
+    cv.width = W*dpr; cv.height = H*dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  function init(){
+    mist = []; flies = [];
+    for(let i=0;i<6;i++) mist.push({ x:Math.random()*W, y:H*.2+Math.random()*H*.7,
+      r:170+Math.random()*230, v:(Math.random()-.5)*.13 });
+    for(let i=0;i<7;i++) flies.push({ x:Math.random()*W, y:H*.55+Math.random()*H*.4,
+      r:1+Math.random()*.8, ph:Math.random()*6.28, sp:.18+Math.random()*.3 });
+  }
+  function frame(){
+    t += .016; ctx.clearRect(0,0,W,H);
+    for(const m of mist){
+      m.x += m.v;
+      if(m.x < -m.r) m.x = W+m.r;
+      if(m.x > W+m.r) m.x = -m.r;
+      const g = ctx.createRadialGradient(m.x,m.y,0,m.x,m.y,m.r);
+      g.addColorStop(0,'rgba(96,110,128,.05)');
+      g.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(m.x,m.y,m.r,0,6.283); ctx.fill();
+    }
+    for(const f of flies){
+      f.x += Math.sin(t*f.sp*3 + f.ph)*.28;
+      f.y += Math.cos(t*f.sp*2.4 + f.ph)*.2;
+      const a = .06 + .3*(.5 + .5*Math.sin(t*1.4 + f.ph*2));
+      ctx.fillStyle = `rgba(224,190,120,${a.toFixed(3)})`;
+      ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,6.283); ctx.fill();
+    }
+  }
+  addEventListener('resize', () => { size(); init(); if(RM) frame(); });
+  size(); init();
+  if(RM) frame(); else (function loop(){ frame(); requestAnimationFrame(loop); })();
+})();
+})();
+</script>
+</body>
+</html>

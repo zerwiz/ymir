@@ -1,0 +1,19 @@
+{
+  "name": "@zerwiz/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Ymir's shared typed surfaces — the A2A 1.0 agent-card contract the A2A server serves and Hlidskjalf renders.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src",
+    "test"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/"
+  }
+}

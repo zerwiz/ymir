@@ -1,0 +1,56 @@
+{
+  "generated_at": "2026-09-25T05:00:37Z",
+  "realm": "wayof",
+  "tally": {
+    "runes": 272,
+    "projects": 16,
+    "loom": 4,
+    "wake": 0,
+    "smiths": 3
+  },
+  "errands_armed": [
+    "bragi",
+    "huginn",
+    "sindri",
+    "snotra"
+  ],
+  "smiths": [
+    {
+      "smith": "π - desktop-runtime-guarantee",
+      "state": "idle",
+      "pane": "w4:p1"
+    },
+    {
+      "smith": "π - meetily-fleet",
+      "state": "idle",
+      "pane": "wK:p1"
+    },
+    {
+      "smith": "π - sindri",
+      "state": "idle",
+      "pane": "wK:p3"
+    }
+  ],
+  "ledger": {
+    "underway": [],
+    "landed": [],
+    "charted": [
+      "ymir-platform",
+      "ymir-home",
+      "ymir-homepage",
+      "hlidskjalf",
+      "hlidskjalf-mobile",
+      "odrerir",
+      "sessrumnir",
+      "smidja",
+      "wayofteams",
+      "command",
+      "aigf",
+      "piper-studio",
+      "hermes-agent",
+      "foremanai",
+      "wayoffactory",
+      "courses"
+    ]
+  }
+}

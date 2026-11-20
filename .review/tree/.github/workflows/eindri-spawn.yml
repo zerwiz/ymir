@@ -1,0 +1,71 @@
+name: Eindri spawn — Yggdrasil worktree + Utgard launch
+
+on:
+  workflow_dispatch:
+    inputs:
+      role:
+        description: Sub-agent role (developer|marketer|researcher)
+        required: true
+        default: developer
+      task:
+        description: Task description for the Eindri worker
+        required: true
+        default: "New development task"
+      branch:
+        description: Yggdrasil branch name (optional, auto-generated if not provided)
+        required: false
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  spawn-eindri:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create Yggdrasil worktree
+        env:
+          TASK_DESCRIPTION: ${{ inputs.task }}
+          SUBAGENT_ROLE: ${{ inputs.role }}
+          BRANCH_NAME: ${{ inputs.branch || format('feat/eindri-{0}', github.run_id) }}
+        run: |
+          set -e
+          echo "🌳 Yggdrasil: creating worktree for $BRANCH_NAME"
+          git worktree add -b "$BRANCH_NAME" ".yggdrasil/$BRANCH_NAME"
+          echo "branch_name=$BRANCH_NAME" >> "$GITHUB_ENV"
+
+      - name: Assemble Eindri system prompt
+        env:
+          TASK_DESCRIPTION: ${{ inputs.task }}
+          SUBAGENT_ROLE: ${{ inputs.role }}
+        run: |
+          set -e
+          ROLE_FILE=".agents/subagents/${{ inputs.role }}.md"
+          mkdir -p .yggdrasil/eindri-prompts
+          cat > .yggdrasil/eindri-prompts/${{ inputs.role }}.prompt.md << 'EOF'
+          You are an Eindri worker in the role of {role}.
+
+          Target Directory: {branch}
+          Task Instructions: {task}
+
+          Rules of the realm:
+          - Work ONLY inside the Yggdrasil worktree (.yggdrasil/<branch>/)
+          - Never touch files outside the worktree
+          - Validate inside Utgard before claiming done
+          - When finished, report a change summary
+          EOF
+          sed -i "s/{role}/${{ inputs.role }}/g; s|{branch}|${{ env.branch_name }}|g; s|{task}|${TASK_DESCRIPTION}|g" \
+            .yggdrasil/eindri-prompts/${{ inputs.role }}.prompt.md
+          echo "Eindri prompt written."
+          echo "spawned_role=${{ inputs.role }}" >> "$GITHUB_ENV"
+          echo "spawned_branch=${{ env.branch_name }}" >> "$GITHUB_ENV"
+
+      - name: Verify Utgard isolation instructions present
+        run: |
+          echo "✅ Eindri [${{ env.spawned_role }}] launched for Yggdrasil branch ${{ env.spawned_branch }}."
+          echo "Open in OpenCode target: .yggdrasil/${{ env.spawned_branch }}"

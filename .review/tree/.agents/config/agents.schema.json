@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zerwiz/ymir/config/agents.schema.json",
+  "title": "config/agents.yaml",
+  "description": "The operator's harness/model map (plan 58, Phase 7). This is the shape bin/agents-config.sh, bin/dispatch-profile.sh, bin/local-model-lock.sh and bin/einherjar-spawn.sh resolve at boot; a shape fault is refused loudly, naming the key and the file. Model and provider ids are NOT enumerated here — they are the operator's own and resolve from the hoard (Rule 07).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["agents"],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "the config format version; the reader accepts 1"
+    },
+    "harness": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "the local/online rule: which harness owns a model by where it lives",
+      "properties": {
+        "local": { "type": "string", "minLength": 1 },
+        "online": { "type": "string", "minLength": 1 },
+        "local_providers": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "providers": {
+          "type": "object",
+          "description": "provider rename per harness, e.g. { llama.cpp: { pi: llama-cpp } }",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "default_model": {
+      "type": "string",
+      "minLength": 1,
+      "description": "the fallback model for any agent that does not name one"
+    },
+    "default_harness": {
+      "type": "string",
+      "minLength": 1,
+      "description": "the fallback harness when no local/online rule applies"
+    },
+    "local_concurrency": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "how many LOCAL models this machine may run at once (default 1)"
+    },
+    "providers": {
+      "type": "object",
+      "description": "local, keyless model servers; `apply` writes these into the project harness config",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "npm": { "type": "string" },
+          "name": { "type": "string" },
+          "base_url": { "type": "string", "pattern": "^https?://" },
+          "models": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "agents": {
+      "type": "object",
+      "minProperties": 1,
+      "description": "agent name -> model string, or { model, harness?, primary? }",
+      "additionalProperties": {
+        "oneOf": [
+          { "type": "string", "minLength": 1 },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "model": { "type": "string", "minLength": 1 },
+              "harness": { "type": "string", "minLength": 1 },
+              "primary": { "type": "boolean" }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

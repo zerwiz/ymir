@@ -1,0 +1,31 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -z \"${GROK_AGENT:-}${GROK_HOOK_EVENT:-}\" ] || exit 0; exec \"$CLAUDE_PROJECT_DIR\"/bin/saga-sessionstart-run.sh",
+            "timeout": 180
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -z \"${GROK_AGENT:-}${GROK_HOOK_EVENT:-}\" ] || exit 0; exec \"$CLAUDE_PROJECT_DIR\"/bin/syn-turnend-guard.sh --claude"
+          },
+          {
+            "type": "command",
+            "command": "[ -z \"${GROK_AGENT:-}${GROK_HOOK_EVENT:-}\" ] || exit 0; out=$(exec \"$CLAUDE_PROJECT_DIR\"/bin/syn-watch-arm.sh --restart); rc=$?; case \"$out\" in *signal:*|*stale:*|*check:*|*heartbeat:*) printf '%s\n' \"$out\" >&2; exit 2;; esac; exit $rc",
+            "asyncRewake": true,
+            "timeout": 28800
+          }
+        ]
+      }
+    ]
+  }
+}

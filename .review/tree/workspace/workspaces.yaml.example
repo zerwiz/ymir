@@ -1,0 +1,12 @@
+# Workspace registry — the SHAPE only. The real registry lives at
+# $YMIR_HOME/identity/workspaces.yaml (private; see RULES/04-hoard.md).
+# Single tenant: one operator, no company.
+workspaces:
+  - id: work
+    name: Work
+    kind: work
+    domains: [company, marketing, development, life]
+  - id: personal
+    name: Personal
+    kind: personal
+    domains: [me, life, development]
