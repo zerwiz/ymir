@@ -19,12 +19,18 @@
 # its node_modules, its built assets and the processes it raises. So a worktree re-executes the canonical
 # tree's copy of this very script, and everything below it — Electron, the assets, the API — comes from main.
 if [ -z "${YMIR_ALLOW_WORKTREE_RUNTIME:-}" ]; then
-  _mt="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  _canon="$(bash "$(cd "$_mt/.." && pwd)/bin/desktop/main-tree.sh" "$_mt" 2>/dev/null || true)"
-  if [ -n "${_canon:-}" ] && [ "$_canon" != "$(cd "$_mt" && pwd)" ]; then
-    printf '%s: running from a WORKTREE — the app runtime is locked to main (%s), re-executing there\n' \
+  # Compare ROOT with ROOT (2026-11-12): the old guard compared the canonical root with this script's own
+  # folder, so from scripts/ it always fired and re-ran "<root>/electron.sh" (no such file) — every icon on
+  # the pin died; from bin/desktop/ it looked for the resolver one level too high and never ran at all.
+  _self="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+  _root="$(dirname "$_self")"
+  while [ "$_root" != / ] && [ ! -f "$_root/bin/desktop/main-tree.sh" ]; do _root="$(dirname "$_root")"; done
+  _canon="$(bash "$_root/bin/desktop/main-tree.sh" "$_root" 2>/dev/null || true)"
+  if [ -n "${_canon:-}" ] && [ "$_canon" != "$_root" ] && [ -f "$_canon/${_self#"$_root"/}" ]; then
+    printf '%s: running from a WORKTREE — the app runtime is locked to main (%s), re-executing there
+' \
       "$(basename "$0")" "$_canon" >&2
-    exec bash "$_canon/${BASH_SOURCE[0]#"$(cd "$_mt" && pwd)"/}" "$@"
+    exec bash "$_canon/${_self#"$_root"/}" "$@"
   fi
 fi
 
