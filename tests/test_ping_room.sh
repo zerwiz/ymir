@@ -28,7 +28,7 @@ check "tailnet url is https magicdns" bash -c "'$DOOR' url | grep -q '^https://.
 check "claim is refused without a raised room after stop" bash -c "'$DOOR' stop >/dev/null; '$DOOR' claim >/dev/null 2>&1; test \$? -ne 0"
 check "start for claim" "$DOOR" start --port 3011 --mode local
 check "claim records the host" "$DOOR" claim
-check "claim file names ping.zerwiz.org" bash -c "grep -q 'ping.zerwiz.org' '$YMIR_HOME/state/thing/claim.json'"
+check "claim file names the ping host the run was told" bash -c "grep -q 'example.org' '\$YMIR_HOME/state/thing/claim.json'"
 python3 - "$YMIR_HOME/state/thing/claim.json" <<'PY'
 import json,sys
 p=sys.argv[1]; d=json.load(open(p)); d['host']='other-host'; json.dump(d,open(p,'w'))

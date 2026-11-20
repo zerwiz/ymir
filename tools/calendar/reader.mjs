@@ -59,13 +59,20 @@ function conferenceUrl(raw) {
   const m = text.match(/https?:\/\/[^\s)>"']+/);
   return m ? m[0].replace(/[.,;]+$/, "") : "";
 }
+function hostOf(url) {
+  const m = String(url || "").match(/^https?:\/\/([^/]+)/i);
+  return m ? m[1] : "";
+}
 function conferenceType(raw) {
   const u = conferenceUrl(raw);
   if (u.includes("meet.google.")) return "google_meet";
   if (u.includes("zoom.us")) return "zoom";
   if (u.includes("teams.microsoft.")) return "teams";
   if (u.includes("jitsi")) return "jitsi";
-  if (u.includes("ping.zerwiz.org")) return "ping";
+  // THE PING ROOM'S ADDRESS IS THE OPERATOR'S (RULES/04, 2026-11-20): it is read from YMIR_PING_HOST (or the
+  // YMIR_PING_URL's host) and never spelled into this public file. No address declared, no classification.
+  const pingHost = (process.env.YMIR_PING_HOST || hostOf(process.env.YMIR_PING_URL || "")).trim();
+  if (pingHost && u.includes(pingHost)) return "ping";
   return u ? "other" : "";
 }
 
