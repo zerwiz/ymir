@@ -21,3 +21,7 @@ whole-tree gate, for three reasons that only a full tree shows:
 - `bin/gates/capabilities.sh` was run, and the register and its fragments were committed.
 
 No ward was changed or turned off.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #853
