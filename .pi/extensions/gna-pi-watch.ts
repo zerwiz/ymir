@@ -325,47 +325,41 @@ function lockOwnership(): LockOwnership {
   // recorded holder is verifiably gone — never a live "other" session.
   if (!pidAlive(lockPid, recordedStarttime)) return "missing";
 
-  // A LIVE PROCESS IS NOT A LIVE SUPERVISOR. Measured 2026-10-03: an idle `pi` window held
-  // the helm for two days with 21 minutes of CPU in total, and because its arm child was
-  // long dead nothing could ever reclaim it — so `gna_watch_arm` answered "read-only" to the
-  // one session that could actually supervise, and the watch looked perfectly healthy while
-  // no session owned it. A pid is a PROXY for "this session is supervising"; the thing itself
-  // is the supervisor process. Ask about the thing.
-  //
-  // Recorded when an arm child starts (`<lock>.child`), cleared when it exits.
-  let childPid = "";
-  try {
-    childPid = readFileSync(`${lockPath}.child`, "utf8").trim();
-  } catch {
-    // no sidecar: this holder never recorded a supervisor, or predates the rule
-  }
-  if (!/^[0-9]+$/.test(childPid)) return "missing";   // no verifiable supervisor
-  if (!pidAlive(childPid, "")) return "missing";      // supervisor gone — reclaim it
+  // A LIVE PROCESS IS NOT A LIVE SUPERVISOR — AND THAT IS NO LONGER A REASON TO
+  // TAKE THE HELM (2026-11-20, at the Allfather's word: "the arm cant randomly
+  // lose"). This used to read `<lock>.child` and answer "missing" when no arm
+  // child was recorded or it had died — so a LIVE session (measured: a claude helm
+  // never writes `.child` at all) was reclaimed by whichever pi booted next. The
+  // helm moved four times in ninety minutes that night, recorded nowhere. A live
+  // owner is now "other", full stop: the arm changes hands when it is released or
+  // when its owner dies, and every change is recorded by the one implementation
+  // (src/ymir_runtime/state/lock.py). The `.child` sidecar is still written below
+  // as information; it decides nothing.
   return "other";
 }
 
-// A stale lock (owner dead / zombie / pid reused) is cleared and the helm is
-// taken directly, so a leftover lock can never strand supervision. This mirrors
-// gleipnir_lock_acquire in bin/vault/gleipnir-lock-lib.sh (pid + starttime sidecar +
-// state/.lock-path pointer; the legacy state/.lock is dropped).
-function reclaimStaleLock(lockPath: string): void {
-  mkdirSync(dirname(lockPath), { recursive: true });
-  writeFileSync(lockPath, `${process.pid}\n`);
-  rmSync(`${lockPath}.child`, { force: true });   // the old supervisor is not ours
-  const starttime = procStarttime(String(process.pid));
-  if (starttime) writeFileSync(`${lockPath}.starttime`, `${starttime}\n`);
-  const legacyPath = `${state}/.lock`;
-  if (legacyPath !== lockPath) {
-    try {
-      const legacyOwner = readFileSync(legacyPath, "utf8").trim();
-      if (legacyOwner === String(process.pid) || !pidAlive(legacyOwner)) {
-        rmSync(legacyPath, { force: true });
-      }
-    } catch {
-      // no legacy lock to clear
-    }
-  }
-  writeFileSync(`${state}/.lock-path`, `${lockPath}\n`);
+// A stale lock (owner dead / zombie / pid reused) is cleared and the helm taken —
+// BY THE ONE IMPLEMENTATION, never by a second writer here.
+//
+// 2026-11-20: this function used to write `brokk.lock` and `brokk.lock.starttime`
+// itself, which made a SECOND writer of the pair the reaper reads. A reader that
+// caught the new pid beside a stale starttime recorded a live owner as dead and
+// took the arm from it. The door below owns the pair, the record and the
+// announcement; this extension only asks it and takes its answer.
+function reclaimStaleLock(lockPath: string): boolean {
+  const door = `${fmRoot}/bin/records/ymir-state.sh`;
+  const result = spawnSync("bash", [door, "lock", "acquire"], {
+    encoding: "utf8",
+    timeout: 15000,
+    stdio: ["ignore", "pipe", "pipe"],
+    env: {
+      ...process.env,
+      BROKK_SESSION_PID: String(process.pid),
+      BROKK_MACHINE_STATE_DIR: dirname(lockPath),
+    },
+  });
+  // The door refuses when a live session owns the arm, so this never writes over one.
+  return result.status === 0;
 }
 
 // On real process exit (never on in-process /new resets, which reuse the same
@@ -374,13 +368,19 @@ function reclaimStaleLock(lockPath: string): void {
 // this hook is covered by the next session's reap (zombie/pid-reuse aware).
 function releaseLockIfOwned(): void {
   if (lockOwnership() !== "owned") return;
-  const lockPath = resolvedLockPath();
-  try {
-    rmSync(lockPath, { force: true });
-    rmSync(`${lockPath}.starttime`, { force: true });
-  } catch {
-    // best-effort: the next session's reap covers a leftover lock
-  }
+  // The release goes through the DOOR so it lands on the record like every other
+  // change of hands (2026-11-20). A lock file deleted here would be a second
+  // writer and a silent hand-over both.
+  spawnSync("bash", [`${fmRoot}/bin/records/ymir-state.sh`, "lock", "release"], {
+    encoding: "utf8",
+    timeout: 15000,
+    stdio: ["ignore", "pipe", "pipe"],
+    env: {
+      ...process.env,
+      BROKK_SESSION_PID: String(process.pid),
+      BROKK_MACHINE_STATE_DIR: dirname(resolvedLockPath()),
+    },
+  });
 }
 
 function markLoaded(): void {
@@ -784,9 +784,12 @@ export default function (pi: ExtensionAPI) {
     if (ownership === "other") return { ok: false, message: "watcher: read-only - session lock is held by another brokk session" };
     if (ownership === "missing") {
       // No verifiably-live holder: the recorded owner is dead, a zombie, or a
-      // recycled pid. Reclaim the helm directly (was: punt to
-      // saga-session-start.sh) so a leftover lock never strands supervision.
-      reclaimStaleLock(resolvedLockPath());
+      // recycled pid. The DOOR takes the helm (it writes the pair, records who it
+      // was taken from and why, and announces the hand-over); if a live owner is
+      // in fact there the door refuses, and this session stands read-only.
+      if (!reclaimStaleLock(resolvedLockPath())) {
+        return { ok: false, message: "watcher: read-only - the session lock is held by another live session" };
+      }
       return startArm(owner, predecessorArmPid);
     }
     markLoaded();

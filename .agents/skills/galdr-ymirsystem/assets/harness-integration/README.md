@@ -1742,3 +1742,35 @@ This section corrects the Hermes lines above. They said `bin/seat/hermes-seat.sh
 - **`harness-extensions-install.sh`** prints a `hermes` row in install and in `--check`.
 - **The session hook** (`bin/seat/hermes-session-hook.sh` → `session_hook.py`) injects the Sága digest on the first turn in any cwd. `YMIR_HERMES_DIGEST_SCOPE=house` restores the old scope.
 - **`ymir doctor hermes`** and **`ymir wait-worker`** are new verbs. The how-to is `docs/features/ymir-whole-in-hermes.md`, and the fix note is `docs/fixes/seat/2026-11-18-hermes-seated-from-the-pin-and-woken-by-its-workers.md`.
+
+## 2026-11-20 — the Pi watch extension stops writing the session lock
+
+This corrects the extension's part in the session lock (§13 and the `gna-pi-watch.ts` rows above
+stand as the record of what was true then).
+
+`.pi/extensions/gna-pi-watch.ts` was the **second writer** of `brokk.lock`, and its rule for taking
+the helm from another session was a road by which a live helm lost the arm on 2026-11-20:
+
+- `lockOwnership()` answered `missing` — "the helm is vacant, take it" — whenever `<lock>.child`
+  named no pid or a dead one, even though the lock's owner was alive. A claude helm never writes
+  `.child` at all, so the next pi that booted reclaimed a live claude's helm.
+- `reclaimStaleLock()` then wrote `brokk.lock` and `brokk.lock.starttime` itself, with no guard and
+  no record.
+
+Both are gone. A live owner is `other`, full stop — the arm changes hands when it is released or when
+its owner dies, and every change is recorded by the one implementation,
+`src/ymir_runtime/state/lock.py` (`<state>/.lock-journal`, `<state>/.arm.handover`). The extension
+takes a vacant helm and releases its own through `bin/records/ymir-state.sh lock acquire|release`,
+with `BROKK_SESSION_PID` and `BROKK_MACHINE_STATE_DIR` set so the door resolves exactly the lock the
+extension resolved; a door refusal is the extension standing read-only. `.child` is still written,
+and decides nothing.
+
+`bin/pi/syn-watch-arm.sh` (the client the extension spawns) refreshes `state/.arm.pane` through
+`bin/seat/arm-handover.sh --pane <session>` when it takes the helm, and `bin/voice/rodd-arm.sh
+release` clears it: no helm, no pane.
+
+The proof is `bin/seat/tests/test_arm_never_lost.sh` (it asserts, by source and by behaviour, that
+the extension writes no lock, takes a vacant helm through the door, and no longer holds the `.child`
+steal rule). The fix notes are
+`docs/fixes/agents/2026-11-20-the-watch-extension-stops-writing-the-lock.md` and
+`docs/fixes/runtime/2026-11-20-the-arm-is-never-lost-without-a-word.md`.

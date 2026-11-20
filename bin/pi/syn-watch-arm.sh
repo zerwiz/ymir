@@ -240,6 +240,13 @@ if [ -x "$SCRIPT_DIR/../seat/helm-identity.sh" ]; then
   fi
 fi
 printf 'role=%s session=%s\n' "$ROLE" "$sess" > "$STATE/.arm.role" 2>/dev/null || true
+# THE PANE THE HELM ACTUALLY SITS IN (2026-11-20). `state/.arm.pane` named a pane
+# herdr had dropped for four days, so every door aiming a line at the helm aimed at
+# a ghost. The pane is PROVED from the holder's own process and herdr's table, and
+# cleared when it cannot be proved — never inherited, never invented.
+if [ -x "$SCRIPT_DIR/../seat/arm-handover.sh" ]; then
+  YMIR_STATE_DIR="$STATE" bash "$SCRIPT_DIR/../seat/arm-handover.sh" --pane "$sess" >/dev/null 2>&1 || true
+fi
 printf 'watcher: helm role=%s session=%s\n' "$ROLE" "$sess"
 
 # ONE client per session (2026-11-10). Every Stop spawns a new client, and the earlier

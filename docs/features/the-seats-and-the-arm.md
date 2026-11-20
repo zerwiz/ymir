@@ -276,6 +276,51 @@ The five cases are proven in `bin/seat/tests/test_seat_reap.sh`: working kept,
 finished retired, needs-decision kept, dirty worktree refused, grace-not-yet-elapsed
 kept — 70 assertions, all green.
 
+## Who holds the arm, and how a hand finds out it lost it
+
+The arm is one per machine: the session that holds it drains the wakes, sends the
+errands out and answers for the house. What that session holds is a lock, and until
+2026-11-20 nothing wrote down when the lock changed hands. On the night of the 19th
+the helm moved four times in ninety minutes and `state/` held no line about any of
+it, so three sessions each believed they were the helm and the room went quiet.
+
+Every change of hands is now one line on an append-only record, `<state>/.lock-journal`,
+with the last one mirrored into `<state>/.arm.handover`:
+
+```bash
+bin/seat/arm-handover.sh                     # the last change of hands
+bin/seat/arm-handover.sh --journal 5         # the last five
+bin/seat/arm-handover.sh --prior-helm        # who held it last, and is that hand alive
+```
+
+A line says `event=acquire pid=2425137 from_pid=2354925 why=starttime-mismatch
+role=claude harness=yes`. When the arm moves, the panes are told: the hand that lost
+it gets a line naming the new holder, the hand that took it gets a line naming the
+record. A session in a pane whose agent herdr no longer tracks is never spoken to.
+
+Two rules follow, and both are the fix:
+
+- **A live helm keeps the arm until it releases it or dies.** Nothing takes it from a
+  live process. Only `bin/voice/rodd-arm.sh hold` (or `release`) moves a held arm,
+  and a release from any other hand is refused by name.
+- **A free arm is not a free hand.** If the lock is vacant but the last recorded helm
+  is still ALIVE, a new session start does not take the arm in silence: it stands
+  read-only and says whose it thinks the helm still is. He seats it with
+  `bin/voice/rodd-arm.sh hold`, or a deliberate takeover sets `BROKK_TAKE_HELM=1`.
+
+`state/.arm.pane` — the file every door aims a line at — is written only when herdr
+can be shown to hold that pane and to host the holder's process, and it is removed
+when no pane can be proved. A pane herdr has dropped is never served: for four days
+this file named `w39:p23`, a pane that no longer existed, and every notification for
+the helm went to a ghost.
+
+The behaviour is proven in `bin/seat/tests/test_arm_never_lost.sh` (49 assertions:
+the record, the refusal, the reap, the surprise guard, the ghost pane, the
+announcement).
+
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-20** — appended "Who holds the arm, and how a hand finds out it lost it": the
+  hand-over record, the live-helm rule, the free-arm guard and the proved pane
+  (`bin/seat/arm-handover.sh`, `saga-session-start.sh --lock-only`).

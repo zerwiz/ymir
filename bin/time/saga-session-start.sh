@@ -24,6 +24,7 @@
 #   saga-session-start.sh --list              # the sections, one line each
 #   saga-session-start.sh --check             # measure the head; exit 1 over budget
 #   saga-session-start.sh --full              # a human wants the whole truth: head + all
+#   saga-session-start.sh --lock-only         # the lock stage alone (a test; no side effects)
 #
 # The stages (lock, bridges, the well, the handoff sweep, the hall sweep, cron) are
 # MUTATING and run ONLY at a session start, and the hall sweep ONLY when this session
@@ -97,9 +98,34 @@ section() { printf '\n== %s ==\n' "$1"; }
 # ── the lock: taken once, at a session start, and never inferred ─────────────
 LOCKED=0        # this session HOLDS the lock
 LOCK_OWNER=""  # a live pid holds it, and it is not us
+LOCK_WHY=""    # why this session stands read-only when the lock looks free
 LOCK_KNOWN=0
 lock_take() {
   load_lock_lib
+  # A SESSION START NEVER BECOMES THE HELM BY SURPRISE (2026-11-20, at the
+  # Allfather's word: "the arm cant randomly lose"). A vacant lock is not the same
+  # fact as "the hand that held it is gone": the record keeps the last helm's pid,
+  # and when that hand is still ALIVE this session does not take the arm in silence
+  # out from under it. It stands read-only and says so; the Allfather seats it with
+  # `bin/voice/rodd-arm.sh hold` (or BROKK_TAKE_HELM=1 for a deliberate takeover).
+  LOCK_WHY=""
+  if [ "${BROKK_TAKE_HELM:-0}" != 1 ] && ! is_seat; then
+    local _owner="" _prior="" _pid="" _alive="" _harness=""
+    gleipnir_lock_owner _owner 2>/dev/null || _owner=""
+    if [ -z "${_owner:-}" ] && [ -x "$ROOT/bin/seat/arm-handover.sh" ]; then
+      _prior="$(YMIR_STATE_DIR="$STATE" bash "$ROOT/bin/seat/arm-handover.sh" --prior-helm 2>/dev/null | sed -n '2p' | sed 's/^ *"//; s/"$//')"
+      _pid="$(printf '%s' "$_prior" | awk -F'\",\"' '{print $2}')"
+      _alive="$(printf '%s' "$_prior" | awk -F'\",\"' '{print $4}')"
+      _harness="$(printf '%s' "$_prior" | awk -F'\",\"' '{print $6}')"
+      if [ "${_alive:-}" = yes ] && [ "${_harness:-}" = yes ] && [ -n "${_pid:-}" ]; then
+        LOCKED=0; LOCK_KNOWN=1; LOCK_OWNER="$_pid"
+        LOCK_WHY="the arm is free, but the last helm (pid $_pid) is ALIVE and still names itself the helm - this session stands read-only; the Allfather seats it with bin/voice/rodd-arm.sh hold"
+        unset _owner _prior _pid _alive _harness
+        return 0
+      fi
+    fi
+    unset _owner _prior _pid _alive _harness
+  fi
   if gleipnir_lock_acquire; then LOCKED=1
   else gleipnir_lock_owner owner; LOCK_OWNER="${owner:-}"; fi
   LOCK_KNOWN=1
@@ -220,6 +246,8 @@ SEC_LOCK() {
   [ "$LOCK_KNOWN" = 1 ] || lock_probe
   if [ "$LOCKED" = 1 ]; then
     printf 'lock: held by this session (pid %s)\n' "${BROKK_SESSION_PID:-$$}"
+  elif [ -n "${LOCK_WHY:-}" ]; then
+    printf 'READ-ONLY: %s\n' "$LOCK_WHY"
   elif [ -n "$LOCK_OWNER" ]; then
     printf 'READ-ONLY: the session lock is held by pid %s - no spawn, steer, merge, drain, or repair this session\n' "$LOCK_OWNER"
   else
@@ -530,6 +558,12 @@ while [ $# -gt 0 ]; do
     --check|check) MODE=check; shift ;;
     --section) SECTION="${2-}"; MODE=section; [ $# -ge 2 ] && shift 2 || shift ;;
     --section=*) SECTION="${1#--section=}"; MODE=section; shift ;;
+    # THE LOCK STAGE ALONE (2026-11-20). A session start takes the helm and then raises
+    # the bridges, the cron and the pin — none of which a test may touch. This runs the
+    # ONE stage whose decision changed (who holds the arm) and prints the LOCK section
+    # that names it, so `bin/seat/tests/test_arm_never_lost.sh` can prove the guard on a
+    # temp state without raising the house.
+    --lock-only) MODE=lockonly; shift ;;
     *) printf 'error: unknown argument %s\nhelp: saga-session-start.sh [--head|--page|--section <name>|--list|--check|--full]\n' "$1" >&2; exit 2 ;;
   esac
 done
@@ -569,6 +603,13 @@ case "$MODE" in
     stage_prepare
     print_head
     for s in $SECTIONS; do section "$(printf '%s' "$s" | tr '[:lower:]' '[:upper:]')"; SEC_NAME "$s" || true; done
+    ;;
+  lockonly)
+    # see --lock-only: the lock stage and the row that names it, nothing else
+    load_lock_lib
+    gleipnir_lock_reap >/dev/null 2>&1 || true
+    lock_take
+    SEC_LOCK
     ;;
   start|*)
     stage_prepare

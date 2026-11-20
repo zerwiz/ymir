@@ -1985,3 +1985,48 @@ queue in arrival order. Each door that files a wake names its **class** as a tra
 | `ack` | unchanged: a multiset diff of exactly what the last drain presented |
 
 The proof is `.agents/tests/saga-wake-drain-classes.test.sh`.
+
+## 2026-11-20 — the arm is never lost without a word, and a free arm is not a free hand
+
+Appended; §4 (Gleipnir) and §3 (the Sága session start) above stand, and this section says what
+changed in them.
+
+**The fault.** Measured on heimdall the night of 2026-11-19/20: the helm changed hands four times in
+ninety minutes — `pi 2243828` → `claude 1074973` at 00:34 → `pi 2354925` at 01:05 → `claude 2425137`
+at 01:06 — and every one of the hands it moved away from was **still alive**. `state/` held no line
+about any of it, so a session that had lost the helm could not know it.
+
+**The record.** `src/ymir_runtime/state/lock.py` writes one append-only line per change of hands to
+`<state>/.lock-journal`, and mirrors the last of them into `<state>/.arm.handover`:
+
+```
+2026-11-20T01:06:35+0100 event=acquire pid=2425137 starttime=13526571 \
+  from_pid=2354925 to_pid=2425137 why=starttime-mismatch role=claude harness=yes
+```
+
+`acquire`, `release` and every `reap` are recorded (a reap inside an acquire included); `why` is
+`vacant` · `dead` · `starttime-mismatch` · `released`; `harness=no` names a lock held by a hand that
+cannot speak. `bin/seat/arm-handover.sh` is the door a person and a script both read — `--show`,
+`--journal [n]`, `--prior-helm`, `--pane <pid>`, `--announce`. `ymir-state.sh lock journal|handover|
+announce` reach the same record from a shell.
+
+**One writer.** Only `lock.py` writes the lock. The lock and its `.starttime` are written as one fact,
+atomically and under an advisory guard (`<lock>.guard`, `fcntl.lockf`), because a reader that caught
+the new pid beside the old starttime declared a live owner dead. The Pi watch extension no longer
+writes the lock: `reclaimStaleLock()` and `releaseLockIfOwned()` call the door.
+
+**§3 changed — a session start never becomes the helm by surprise.** `saga-session-start.sh`'s
+`lock_take()` consults the record before taking a VACANT lock: if the last recorded helm is alive and
+is a helm-capable harness, the session stands read-only and says so. The Allfather seats it with
+`bin/voice/rodd-arm.sh hold`; a deliberate takeover sets `BROKK_TAKE_HELM=1`. `--lock-only` runs that
+stage alone, for a test that must not raise the bridges, the cron or the pin.
+
+**The pane.** `state/.arm.pane` is written only from a PROVED pane — the holder's own
+`HERDR_PANE_ID` from `/proc/<pid>/environ`, or a pane of this herdr whose shell or foreground process
+stands in the holder's ancestry — and removed when nothing can be proved. It named `w39:p23` for four
+days after herdr had dropped that pane.
+
+The proof is `bin/seat/tests/test_arm_never_lost.sh` (49 assertions, wired as the `arm-never-lost`
+gate); the notes are `docs/fixes/runtime/2026-11-20-the-arm-is-never-lost-without-a-word.md`,
+`docs/fixes/runtime/2026-11-20-a-free-arm-is-not-a-free-hand.md` and
+`docs/fixes/agents/2026-11-20-the-watch-extension-stops-writing-the-lock.md`.

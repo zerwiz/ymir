@@ -20,19 +20,46 @@ The contract, preserved to the byte from the shell library it replaces:
   reap          a lock whose owner is verifiably gone is removed and reported
                 loud on stderr; a lock whose owner lives is REFUSED
 
+The arm that is never lost (2026-11-20). A live helm keeps the arm until it
+releases it or dies, and EVERY change of hands is on the record: `append_journal`
+writes one append-only line to `<state>/.lock-journal` (who, from whom, why) and
+mirrors the last one into `<state>/.arm.handover`, which `bin/seat/arm-handover.sh`
+reads to announce the hand-over into the panes. What was measured before this:
+the lock changed hands four times in ninety minutes with no line anywhere saying
+the helm had moved.
+
+ONE WRITER. Only this module writes the lock. The lock and its starttime are
+written as a PAIR under an advisory guard (`<lock>.guard`), because a reader that
+caught the new pid beside the old starttime declared a live owner dead and took
+the helm from it; and because a second writer (a harness extension) left exactly
+that pair behind.
+
 A parity mismatch is a refusal, never a rewrite: the harness readers read the
 same pointer, the same owner file, and the same starttime beside it.
 """
 
 from __future__ import annotations
 
+import contextlib
 import os
 import re
 import subprocess
 import sys
+import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Mapping
+from typing import Iterator, Mapping
+
+try:  # the guard is an optimisation on a seat without fcntl; it is never a failure
+    import fcntl
+    _HAVE_FCNTL = True
+except ImportError:  # pragma: no cover — macOS/Linux both ship it
+    fcntl = None  # type: ignore[assignment]
+    _HAVE_FCNTL = False
+
+# A POSIX record lock (`fcntl.lockf`), not `flock(1)`'s syscall by name: it is the
+# portable call in the standard library, and it keeps the house's GNU-name ratchet
+# honest — that ward counts a shell's GNU spelling, and this is not one.
 
 from ..paths import DEFAULT_HOME
 
@@ -49,6 +76,9 @@ HARNESS_COMMS = (
 )
 ANCESTRY_LIMIT = 8
 PROC_ROOT = "/proc"
+JOURNAL_NAME = ".lock-journal"
+HANDOVER_NAME = ".arm.handover"
+GUARD_SUFFIX = ".guard"
 
 
 def _env(env: Mapping[str, str] | None) -> dict[str, str]:
@@ -305,12 +335,7 @@ def lock_owned(env: Mapping[str, str] | None = None, *, shell_pid: int | str | N
 
 
 def write_pointer(lock: Path, env: Mapping[str, str] | None = None) -> None:
-    pointer = pointer_path(env)
-    try:
-        pointer.parent.mkdir(parents=True, exist_ok=True)
-        pointer.write_text(f"{lock}\n", encoding="utf-8")
-    except OSError:
-        pass
+    _write(pointer_path(env), f"{lock}\n")
 
 
 def drop_legacy(want: str, env: Mapping[str, str] | None = None) -> None:
@@ -331,21 +356,184 @@ def _remove(path: Path) -> None:
 
 
 def _write(path: Path, text: str) -> bool:
+    """Write one file atomically — a reader never sees it torn.
+
+    A torn lock is a lying lock: an empty `brokk.lock` mid-write reads as "no
+    owner" in every reader, and a reaper that catches it hands the helm away.
+    """
+    temporary = path.with_name(f"{path.name}.{os.getpid()}.tmp")
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(text, encoding="utf-8")
+        temporary.write_text(text, encoding="utf-8")
+        os.replace(temporary, path)
+        return True
+    except OSError:
+        _remove(temporary)
+        return False
+
+
+# --- one writer, one record (2026-11-20) -----------------------------------
+
+
+def guard_path(env: Mapping[str, str] | None = None) -> Path:
+    return Path(str(lock_path(env)) + GUARD_SUFFIX)
+
+
+@contextlib.contextmanager
+def _guard(env: Mapping[str, str] | None = None) -> Iterator[None]:
+    """Serialise every decide-and-write on the lock.
+
+    The lock and its starttime are two files, and the decision reads both. A
+    reader that catches the new pid beside the OLD starttime declares a live
+    owner dead (`pid_alive` sees a recycled pid) and takes the arm from a live
+    hand — measured: four changes of hands in ninety minutes, none recorded.
+    Everything that decides about the lock holds this guard, so the pair is
+    always observed as one fact.
+    """
+    fd = -1
+    try:
+        path = guard_path(env)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        fd = os.open(path, os.O_CREAT | os.O_RDWR, 0o644)
+        if _HAVE_FCNTL:
+            fcntl.lockf(fd, fcntl.LOCK_EX)
+    except OSError:
+        fd = -1
+    try:
+        yield
+    finally:
+        if fd >= 0:
+            try:
+                if _HAVE_FCNTL:
+                    fcntl.lockf(fd, fcntl.LOCK_UN)
+            except OSError:
+                pass
+            try:
+                os.close(fd)
+            except OSError:
+                pass
+
+
+def journal_path(env: Mapping[str, str] | None = None) -> Path:
+    return state_dir(env) / JOURNAL_NAME
+
+
+def handover_path(env: Mapping[str, str] | None = None) -> Path:
+    return state_dir(env) / HANDOVER_NAME
+
+
+def _flat(value: object) -> str:
+    return re.sub(r"\s+", "_", str(value)).strip("_")
+
+
+def append_journal(env: Mapping[str, str] | None = None, event: str = "", **fields: object) -> str:
+    """Record one change of the arm — append-only, never rewritten.
+
+    `<state>/.lock-journal` is the history; `<state>/.arm.handover` is the same
+    line when it moved the helm, so a door can read the last hand-over whole
+    without parsing a log. A write that cannot land is reported and swallowed:
+    losing the record must never lose the lock.
+    """
+    values = [(key, value) for key, value in fields.items() if value not in (None, "")]
+    line = " ".join([time.strftime("%Y-%m-%dT%H:%M:%S%z"), f"event={_flat(event)}"]
+                    + [f"{key}={_flat(value)}" for key, value in values])
+    try:
+        path = journal_path(env)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "a", encoding="utf-8") as handle:
+            handle.write(line + "\n")
+    except OSError as exc:
+        print(f"gleipnir: the hand-over record could not be written ({exc})", file=sys.stderr)
+        return line
+    if event in ("acquire", "release", "reap"):
+        _write(handover_path(env), line + "\n")
+    return line
+
+
+def last_handover(env: Mapping[str, str] | None = None) -> dict[str, str]:
+    """The last recorded change of the arm as a mapping (`{}` when none)."""
+    try:
+        text = handover_path(env).read_text(encoding="utf-8").splitlines()[0].strip()
+    except (OSError, IndexError):
+        return {}
+    record: dict[str, str] = {}
+    for index, token in enumerate(text.split()):
+        key, _, value = token.partition("=")
+        if index == 0 and not value:
+            record["at"] = token          # the Sol-style stamp opens every line
+            continue
+        if key and value and key not in record:
+            record[key] = value
+    return record
+
+
+def _role_of(pid: str) -> str:
+    comm = _comm(int(pid)) if str(pid).isdigit() else ""
+    if comm == "pi":
+        return "counsellor"
+    return comm or "unknown"
+
+
+def announce(env: Mapping[str, str] | None = None) -> bool:
+    """Speak a hand-over into the panes — a detached best-effort courtesy.
+
+    The RECORD above is the durable fact; the announcement is the courtesy that
+    stops the room going quiet. It is never waited on (a session start must not
+    block on herdr) and never fatal. `YMIR_LOCK_ANNOUNCE=0` silences it, which
+    is what a test that owns a temp state does.
+    """
+    e = _env(env)
+    if e.get("YMIR_LOCK_ANNOUNCE", "1").strip().lower() in ("0", "no", "off", "false"):
+        return False
+    script = repo_root(e) / "bin" / "seat" / "arm-handover.sh"
+    if not script.is_file() or not os.access(script, os.X_OK):
+        return False
+    child = dict(os.environ)
+    child.update(e)
+    child["YMIR_STATE_DIR"] = str(state_dir(e))
+    try:
+        subprocess.Popen(  # noqa: S603 — a fixed path in this tree, no shell
+            [str(script), "--announce"],
+            env=child,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
         return True
     except OSError:
         return False
 
 
-def reap(env: Mapping[str, str] | None = None) -> list[str]:
-    """Remove any lock whose owner is verifiably gone; report it loud.
+def _read_pair(env: Mapping[str, str] | None = None) -> tuple[str, str]:
+    """The lock as ONE fact: owner pid and the starttime recorded beside it."""
+    lock = lock_path(env)
+    owner = _read_pid(lock)
+    if not owner:
+        legacy = legacy_lock_path(env)
+        if legacy != lock:
+            return _read_pid(legacy), _read_pid(Path(str(legacy) + ".starttime"))
+        return "", ""
+    return owner, _read_pid(Path(str(lock) + ".starttime"))
 
-    Resolved and legacy paths are both swept, so an abnormal close (crash,
-    kill, closing the terminal) can never leave a stale lock holding supervision.
-    """
-    reaped: list[str] = []
+
+def _write_pair(env: Mapping[str, str] | None = None, want: str = "") -> bool:
+    """Write the lock and its starttime as one fact, under the guard."""
+    lock = lock_path(env)
+    side = Path(str(lock) + ".starttime")
+    if not _write(lock, f"{want}\n"):
+        return False
+    starttime = proc_starttime(want)
+    if starttime:
+        _write(side, f"{starttime}\n")
+    else:
+        _remove(side)
+    return True
+
+
+def _reap_locked(env: Mapping[str, str] | None = None) -> list[tuple[str, str]]:
+    """Reap every lock whose owner is verifiably gone; keep the reason."""
+    reaped: list[tuple[str, str]] = []
     for path in (lock_path(env), legacy_lock_path(env)):
         if not path or not path.exists():
             continue
@@ -353,52 +541,92 @@ def reap(env: Mapping[str, str] | None = None) -> list[str]:
         if not owner:
             continue
         expect = _read_pid(Path(str(path) + ".starttime"))
-        if not pid_alive(owner, expect):
-            _remove(path)
-            _remove(Path(str(path) + ".starttime"))
-            print(f"gleipnir: reaped stale lock (dead pid {owner})", file=sys.stderr)
-            reaped.append(owner)
+        if pid_alive(owner, expect):
+            continue
+        why = "dead" if not pid_alive(owner) else "starttime-mismatch"
+        _remove(path)
+        _remove(Path(str(path) + ".starttime"))
+        print(
+            f"gleipnir: reaped stale lock (pid {owner}, {why}) — recorded in {journal_path(env)}",
+            file=sys.stderr,
+        )
+        reaped.append((owner, why))
     return reaped
 
 
+def reap(env: Mapping[str, str] | None = None) -> list[str]:
+    """Remove any lock whose owner is verifiably gone; report it loud, and record it.
+
+    Resolved and legacy paths are both swept, so an abnormal close (crash,
+    kill, closing the terminal) can never leave a stale lock holding supervision.
+    A reap is a change of hands and goes on the record like any other.
+    """
+    with _guard(env):
+        reaped = _reap_locked(env)
+    for owner, why in reaped:
+        append_journal(env, "reap", pid=owner, reason=why, role=_role_of(owner),
+                       from_pid="none", to_pid="none")
+    if reaped:
+        announce(env)
+    return [owner for owner, _ in reaped]
+
+
 def acquire(env: Mapping[str, str] | None = None, *, shell_pid: int | str | None = None) -> bool:
-    state = state_dir(env)
+    e = _env(env)
+    state = state_dir(e)
     try:
         state.mkdir(parents=True, exist_ok=True)
     except OSError:
         return False
-    reap(env)
-    lock = lock_path(env)
-    want = session_pid(env, shell_pid=shell_pid)
-    owner = lock_owner(env)
-    expect = _read_pid(Path(str(lock) + ".starttime")) if owner else ""
-    if owner and owner != want and pid_alive(owner, expect):
-        return False
-    if not _write(lock, f"{want}\n"):
-        return False
-    starttime = proc_starttime(want)
-    if starttime:
-        _write(Path(str(lock) + ".starttime"), f"{starttime}\n")
-    else:
-        _remove(Path(str(lock) + ".starttime"))
-    write_pointer(lock, env)
-    drop_legacy(want, env)
+    want = session_pid(e, shell_pid=shell_pid)
+    reaped: list[tuple[str, str]] = []
+    with _guard(e):
+        reaped = _reap_locked(e)
+        owner, expect = _read_pair(e)
+        if owner and owner != want and pid_alive(owner, expect):
+            return False
+        if not _write_pair(e, want):
+            return False
+        write_pointer(lock_path(e), e)
+        drop_legacy(want, e)
+    if owner == want and not reaped:
+        return True
+    # EVERY change of hands is recorded, including the reap that cleared the way:
+    # a lock that quietly stood aside is the silence this record exists to end.
+    for gone, reason in reaped:
+        append_journal(e, "reap", pid=gone, reason=reason, role=_role_of(gone),
+                       from_pid="none", to_pid="none")
+    if owner == want:
+        announce(e)
+        return True
+    why = reaped[0][1] if reaped else ("vacant" if not owner else "reaped")
+    came_from = owner or (reaped[0][0] if reaped else "none")
+    starttime = proc_starttime(want) or ""
+    append_journal(e, "acquire", pid=want, starttime=starttime, from_pid=came_from,
+                   to_pid=want, why=why, role=_role_of(want),
+                   harness="yes" if _role_of(want) in ("counsellor",) + HARNESS_COMMS else "no")
+    announce(e)
     return True
 
 
 def release(env: Mapping[str, str] | None = None, *, shell_pid: int | str | None = None) -> bool:
-    lock = lock_path(env)
-    legacy = legacy_lock_path(env)
-    want = session_pid(env, shell_pid=shell_pid)
-    owner = lock_owner(env)
-    if owner != want:
-        return False
-    _remove(lock)
-    _remove(Path(str(lock) + ".starttime"))
-    if legacy != lock:
-        _remove(legacy)
-        _remove(Path(str(legacy) + ".starttime"))
-    _remove(pointer_path(env))
+    e = _env(env)
+    lock = lock_path(e)
+    legacy = legacy_lock_path(e)
+    want = session_pid(e, shell_pid=shell_pid)
+    with _guard(e):
+        owner, _expect = _read_pair(e)
+        if owner != want:
+            return False
+        _remove(lock)
+        _remove(Path(str(lock) + ".starttime"))
+        if legacy != lock:
+            _remove(legacy)
+            _remove(Path(str(legacy) + ".starttime"))
+        _remove(pointer_path(e))
+    append_journal(e, "release", pid=want, from_pid=want, to_pid="none", why="released",
+                   role=_role_of(want))
+    announce(e)
     return True
 
 

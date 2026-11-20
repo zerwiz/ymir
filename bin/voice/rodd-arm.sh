@@ -622,6 +622,11 @@ cmd_hold() {
   [ -n "$lst" ] && [ -d "$lst" ] && side="$lst"
   local role="${want_role:-$(hold_role_of "$sess")}"
   printf 'role=%s session=%s seat=%s charter=%s\n' "$role" "$sess" "$seat" "$charter" > "$side/.arm.role" 2>/dev/null || true
+  # THE HOLDER'S PANE, PROVED (2026-11-20): the hand-over record names the pane the
+  # helm really sits in, or no pane at all — a file herdr has dropped is not a pane.
+  if [ -x "$ROOT/bin/seat/arm-handover.sh" ]; then
+    YMIR_STATE_DIR="$side" bash "$ROOT/bin/seat/arm-handover.sh" --pane "$sess" >/dev/null 2>&1 || true
+  fi
   if [ "$role" = rodd ]; then
     room_append "$STATE_ROOT" "Nanna" "hold: Rödd takes the helm (session $sess)" || true
   else
@@ -650,6 +655,8 @@ cmd_release() {
   [ -n "$role" ] || role="$(hold_role_of "$sess")"
   gleipnir_lock_release
   rm -f "$side/.arm.role" "$STATE_ROOT/.arm.role" 2>/dev/null || true
+  # no helm, no pane: a file naming the pane of a hand that let go is a ghost (2026-11-20)
+  rm -f "$side/.arm.pane" "$STATE_ROOT/.arm.pane" 2>/dev/null || true
   if [ "$role" = rodd ]; then
     room_append "$STATE_ROOT" "Nanna" "release: Rödd gives the helm back (session $sess)" || true
   else

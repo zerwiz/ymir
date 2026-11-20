@@ -58,6 +58,9 @@ def _lock_parser(sub: argparse._SubParsersAction) -> None:
         parser = verbs.add_parser(name)
         parser.add_argument("--shell-pid", type=int, default=None)
     verbs.add_parser("reap")
+    verbs.add_parser("journal")          # the whole hand-over history, as recorded
+    verbs.add_parser("handover")         # the LAST change of hands, one TOON row
+    verbs.add_parser("announce")         # speak the last change of hands into the panes
     verbs.add_parser("is-eindri-home")
     inspect = verbs.add_parser("inspect")
     inspect.add_argument("--toon", action="store_true")
@@ -193,6 +196,25 @@ def _lock(args: argparse.Namespace) -> int:
     if verb == "reap":
         lock_mod.reap()
         return EXIT_OK
+    if verb == "journal":
+        try:
+            print(lock_mod.journal_path().read_text(encoding="utf-8"), end="")
+        except OSError:
+            return EXIT_NO
+        return EXIT_OK
+    if verb == "handover":
+        record = lock_mod.last_handover()
+        print("handover[1]{at,event,holder,from,to,why,role,harness}:")
+        print(
+            '  "%s","%s","%s","%s","%s","%s","%s","%s"'
+            % tuple(
+                record.get(key, "")
+                for key in ("at", "event", "pid", "from_pid", "to_pid", "why", "role", "harness")
+            )
+        )
+        return EXIT_OK if record else EXIT_NO
+    if verb == "announce":
+        return EXIT_OK if lock_mod.announce() else EXIT_NO
     if verb == "is-eindri-home":
         return EXIT_OK if lock_mod.is_eindri_home() else EXIT_NO
     if verb == "inspect":
