@@ -212,56 +212,48 @@ def ymir_errand(action: str, id: str, project: str = "", mode: str = "direct-PR"
     return "action must be start | read | close"
 
 
-# --- todo: a Ymir todo store, so every harness has the same board -------------
-def _todo_path() -> Path:
-    p = _home() / "state" / "todos.json"
-    p.parent.mkdir(parents=True, exist_ok=True)
-    return p
-
-
-def _todo_load() -> list:
-    import json
-    p = _todo_path()
-    if not p.exists():
-        return []
-    try:
-        return json.loads(p.read_text())
-    except Exception:
-        return []
-
-
-def _todo_save(items: list) -> None:
-    import json
-    _todo_path().write_text(json.dumps(items, indent=2))
+# --- the house task board: ONE writer, and it is a door in bin/ ---------------
+# Plan 228 §3 (F2): a promise a meeting makes must become a piece of work in the
+# SAME act as the minutes. That cannot be true if the harness writes its own store
+# and the meeting ladder writes another, so this face no longer owns the file: it
+# CALLS `bin/records/todos.sh`, the one writer of `<home>/state/todos.json`.
+# Two boards is one board too many (2026-11-09).
+def _tasks_door() -> Path:
+    return ROOT / "bin" / "records" / "todos.sh"
 
 
 @mcp.tool()
 def todo(action: str = "list", content: str = "", index: int = -1) -> str:
-    """The house todo board, shared by every harness: list · add · update · remove · clear."""
-    items = _todo_load()
+    """The house task board, shared by every harness: list · add · update · remove · clear."""
+    door = _tasks_door()
+    if not door.exists():
+        return f"the task door is missing: {door} (bin/records/todos.sh)"
     if action == "list":
-        if not items:
-            return "(no todos)"
-        return "\n".join(f"{i}. [{t.get('status','pending')}] {t.get('content','')}" for i, t in enumerate(items))
+        return _run(["bash", str(door), "list"])
     if action == "add":
         if not content:
             return "add needs content"
-        items.append({"content": content, "status": "pending"})
-        _todo_save(items)
-        return f"added #{len(items)-1}: {content}"
-    if action in ("update", "remove"):
-        if index < 0 or index >= len(items):
-            return f"no todo at index {index}"
-        if action == "remove":
-            gone = items.pop(index)
-            _todo_save(items)
-            return f"removed: {gone.get('content','')}"
-        items[index]["status"] = content or items[index].get("status", "pending")
-        _todo_save(items)
-        return f"#{index} -> {items[index]['status']}"
+        return _run(["bash", str(door), "add", content])
+    if action == "update":
+        if index < 0:
+            return "update needs an index (see `list`)"
+        # `update` takes the new status; a task is open or done, nothing else.
+        want = (content or "done").strip().lower()
+        verb = "done" if want in ("done", "closed", "complete", "completed") else "reopen"
+        return _run(["bash", str(door), verb, str(index)])
+    if action == "remove":
+        if index < 0:
+            return "remove needs an index (see `list`)"
+        return _run(["bash", str(door), "remove", str(index)])
     if action == "clear":
-        _todo_save([])
-        return "cleared"
+        # clear is expressed through the door, never by truncating the file here.
+        out = []
+        listing = _run(["bash", str(door), "list"])
+        for row in listing.splitlines():
+            m = row.strip().split('"')
+            if row.startswith("  \"") and len(m) > 1 and m[1].isdigit():
+                out.append(_run(["bash", str(door), "remove", m[1]]))
+        return "cleared" if out else "(no tasks to clear)"
     return "action must be list | add | update | remove | clear"
 
 if __name__ == "__main__":
