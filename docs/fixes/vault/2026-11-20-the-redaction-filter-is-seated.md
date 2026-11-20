@@ -74,3 +74,7 @@ not silently exposed.
 - `bin/vault/home-sync-clock.sh` — seats the drivers at every hourly run
 - `bin/vault/tests/test_home_redaction_filter.sh` — all four cases, end to end
 - `bin/mail/README.md` — the privacy line corrected, and a change-log entry appended
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #842
