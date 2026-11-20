@@ -31,7 +31,7 @@ cause on every branch is designed out (plan 211).
 Counts live in each folder's own index; this page lists the folders.
 
 
-folders[37]{folder,what,index}:
+folders[36]{folder,what,index}:
   "agents","the Einherjar and Eindri doors — spawn, brief, sweep, recover","bin/agents/INDEX.md"
   "apps","(no purpose recorded)","bin/apps/INDEX.md"
   "assistant","Skirnir's mouth and the assistant doors an answer comes through","bin/assistant/INDEX.md"
@@ -47,7 +47,6 @@ folders[37]{folder,what,index}:
   "fleet","the fleet registry, roles, agents-config and the sync doors","bin/fleet/INDEX.md"
   "forge","Yggdrasil worktrees, Utgard sandboxes, Mjollnir and the deploy doors","bin/forge/INDEX.md"
   "gates","the wards, the checks and the registers (this one included)","bin/gates/INDEX.md"
-  "gimle","the hall — desk, MCP, share, deploy, projector","bin/gimle/INDEX.md"
   "host","the machine itself: packages, plugins, monitors, host facts","bin/host/INDEX.md"
   "identity","who and what the house is — seats, operator, projects","bin/identity/INDEX.md"
   "mail","the one mail desk — addresses, import, send, inbound proof","bin/mail/INDEX.md"

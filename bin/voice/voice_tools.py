@@ -1010,49 +1010,15 @@ async def _execute(name, arguments):
                 heart = ""
         if not heart:
             return ToolResult("No heart seat is known, so Gimlé's MCP cannot be reached.")
-        if tool == "my_tasks":
-            # The MCP's `my_tasks` reads its own place record and answers 0 while the Plane board holds
-            # nine cards for this person. The board is the truth; answer from it and say so.
-            tool = "projects"
-            arguments = {"assigned": True, "person": arguments.get("person") or os.environ.get("YMIR_VOICE_PERSON") or _operator_handle()}
-
+        # plan 335 (the split): Ymir reads the board only through Gimlé's MCP. The old road imported Gimlé's
+        # Plane reader from a Ymir checkout on the heart and read Plane's API with the desk's token; that code
+        # now lives in zerwiz/gimle, whose MCP answers `my_tasks` from the board itself.
+        group_by_place = False
         if tool == "projects":
-            snippet_pr = (
-                "import sys, json,os,urllib.request\n"
-                f"assigned={bool(arguments.get('assigned'))!r}\n"
-                f"person={str(arguments.get('person') or os.environ.get('YMIR_VOICE_PERSON') or _operator_handle())!r}\n"
-                "if assigned:\n"
-                "    sys.path.insert(0, os.path.expanduser('~/ymir/bin/gimle')); import plane_reader as pr\n"
-                "    cards, detail = pr.board_for(person, 60)\n"
-                "    from collections import Counter\n"
-                "    tally = Counter(str(c.get('project','(none)')) for c in cards)\n"
-                "    print(detail)\n"
-                "    for proj, n in tally.most_common(): print('  %s: %d task(s)' % (proj, n))\n"
-                "    raise SystemExit(0)\n"
-                "tok=open(os.path.expanduser('~/gimle/desk/etc/plane-token')).read().strip()\n"
-                "base='http://127.0.0.1:8099'\n"
-                "def get(p):\n"
-                "    r=urllib.request.Request(base+p, headers={'X-Api-Key':tok})\n"
-                "    return json.loads(urllib.request.urlopen(r, timeout=20).read())\n"
-                "def rows(d): return d if isinstance(d,list) else d.get('results',[])\n"
-                "slugs=[s for s in os.environ.get('GIMLE_PLANE_WORKSPACES','').split(',') if s]\n"
-                "if not slugs: print('set GIMLE_PLANE_WORKSPACES to the workspace slugs to read (the board belongs to the operator)'); raise SystemExit(0)\n"
-                f"want=str({str(arguments.get('workspace') or '')!r}).lower()\n"
-                "total=0\n"
-                "for slug in slugs:\n"
-                "    if want and want not in slug: continue\n"
-                "    try: pr=rows(get('/api/v1/workspaces/%s/projects/?per_page=50' % slug))\n"
-                "    except Exception as e: print('  %s: failed (%s)' % (slug, e.__class__.__name__)); continue\n"
-                "    total+=len(pr)\n"
-                "    print('  %s: %d project(s): %s' % (slug, len(pr), ', '.join((p.get('identifier','')+' · '+(p.get('name','') or '')[:30]) for p in pr)))\n"
-                "print('total projects:', total)\n"
-            )
-            b64pr = base64.b64encode(snippet_pr.encode()).decode()
-            code, out = _run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=6", heart,
-                              f"echo {b64pr} | base64 -d | python3 -"], timeout=90)
-            if code != 0 and not out.strip():
-                return ToolResult("Plane did not answer on the heart; say so plainly.")
-            return ToolResult("Gimlé · projects (Plane, read on the heart):\n" + _clean(out, 1400))
+            if arguments.get("assigned"):
+                tool, arguments, group_by_place = "my_tasks", {}, True
+            else:
+                tool, arguments = "list_places", {}
 
         snippet = (
             "import json,os,urllib.request\n"
@@ -1080,6 +1046,15 @@ async def _execute(name, arguments):
                           f"echo {b64} | base64 -d | python3 -"], timeout=90)
         if code != 0 and not out.strip():
             return ToolResult("Gimlé's MCP did not answer on the heart; say so plainly.")
+        if group_by_place:
+            try:
+                rows = _json.loads(out).get("rows") or []
+                from collections import Counter
+                tally = Counter(str(r.get("place") or r.get("project") or "(none)") for r in rows)
+                lines = [f"{len(rows)} task(s) assigned"] + [f"  {k}: {n} task(s)" for k, n in tally.most_common()]
+                return ToolResult("Gimlé · his tasks by project (the board, through Gimlé's MCP):\n" + "\n".join(lines))
+            except (ValueError, AttributeError):
+                pass
         return ToolResult(f"Gimlé · {tool}:\n" + _clean(out, 1500))
 
 
@@ -1382,7 +1357,7 @@ async def _execute(name, arguments):
             rows = [ln for ln in out.splitlines() if ln.strip() and (not query or query.lower() in ln.lower())]
             return ToolResult("Trello (read-only):\n" + "\n".join(rows[:15]))
 
-        # road 2 — the Gimlé board (Plane) on the heart, through its own reader
+        # road 2 — the Gimlé board on the heart, through Gimlé's own MCP (plan 335: Ymir holds no Plane code)
         heart = str(os.environ.get("YMIR_VOICE_BOARD_HOST") or "").strip()
         if not heart:
             try:
@@ -1392,28 +1367,16 @@ async def _execute(name, arguments):
             except Exception:
                 heart = ""
         if heart:
-            import base64
-            person = os.environ.get("YMIR_VOICE_PERSON") or _operator_handle()
-            snippet = (
-                "import sys\n"
-                "sys.path.insert(0, 'bin/gimle')\n"
-                "import plane_reader as p\n"
-                f"cards, detail = p.board_for({person!r}, 12)\n"
-                "print(detail)\n"
-                "for c in cards:\n"
-                "    print('-', str(c.get('name',''))[:70], '|', str(c.get('project','')))\n"
-            )
-            b64 = base64.b64encode(snippet.encode()).decode()
-            remote = f"cd ~/ymir && echo {b64} | base64 -d | python3 -"
-            code, out = _run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=6", heart, remote], timeout=90)
-            if code == 0 and out.strip():
+            res = await _execute("gimle", {"tool": "my_tasks", "arguments": {}})
+            out = str(getattr(res, "output", None) or (res.get("output") if isinstance(res, dict) else "") or "")
+            if out.strip() and "did not answer" not in out and "cannot be reached" not in out:
                 rows = [ln for ln in out.splitlines() if ln.strip()]
                 if query:
                     rows = [ln for ln in rows if query.lower() in ln.lower()]
                 if not rows:
                     return ToolResult(f"The Gimlé board answered and nothing matches {query!r}.")
-                return ToolResult("The Gimlé board (read-only, on the heart):\n" + "\n".join(rows[:14]))
-            _log("board.plane_failed", host=heart, error=_clean(out, 200))
+                return ToolResult("The Gimlé board (read-only, through its MCP on the heart):\n" + "\n".join(rows[:14]))
+            _log("board.gimle_failed", host=heart)
 
         return ToolResult(
             "Neither board can be read right now: Trello has no grant on this seat, and the Gimlé board on the "

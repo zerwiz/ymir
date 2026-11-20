@@ -41,14 +41,14 @@ bin[28]{file,does,kind,verdict,disposition,callers,lines}:
   "test_voice_beside_call.sh","test_voice_beside_call.sh — plan 271 pieces 1 and 2, proven on stand-ins, nothing raised.","tool","wired","keep",0,48
   "test_voice_idle.sh","test_voice_idle.sh — the voice engine lets the card go when nobody is on the line.","tool","wired","keep",1,117
   "test_voice_vad_model.sh","test_voice_vad_model.sh — the voice's detector weights: ONE answer for where they live, and a","tool","wired","keep",3,150
-  "todos.sh","todos.sh — the Allfather's to-do, READ by anyone who must know it (the arm holder first).","tool","wired","keep",7,129
+  "todos.sh","todos.sh — the Allfather's to-do, READ by anyone who must know it (the arm holder first).","tool","wired","keep",8,129
   "voice-door.sh","voice-door.sh — the real-time voice door: speak to Ymir on whatever seat you are at.","tool","wired","keep",5,528
   "voice-ensure.sh","voice-ensure.sh — ensure the voice engines: whisper.cpp (speech → text),","tool","wired","keep",6,225
   "voice-idle.sh","voice-idle.sh — the voice engine lets the card go when nobody is on the line.","tool","wired","keep",3,138
   "voice-model-lib.sh","voice-model-lib.sh — WHERE THE VOICE'S MODEL WEIGHTS LIVE, and the one pinned upstream.","lib","wired","keep",3,72
   "voice-toolbox.py","'''voice-toolbox.py — the house's hands for a browser face.","tool","wired","keep",1,434
   "voice_mcp.py","'''voice_mcp.py — the voice's MCP adapter: every server this seat knows, as hands.","tool","wired","keep",0,407
-  "voice_tools.py","'''voice-tools.py — the hands of the voice.","tool","tested","keep",4,3228
+  "voice_tools.py","'''voice-tools.py — the hands of the voice.","tool","tested","keep",4,3203
   "ymir-vad.py","'''","tool","wired","keep",3,183
 
 **Tally.** verdict: wired=25, tested=3

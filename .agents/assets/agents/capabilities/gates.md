@@ -46,6 +46,7 @@
 | app-functional-guard.sh | app-functional-guard.sh — AN UPDATE THAT LEAVES AN APP UNRUNNABLE IS N | tested | keep (a human or a cron row must run it) |
 | areas-guard.sh | areas-guard (tree ward) — the canon and the copy that travels must not | tested+named | keep (a human or a cron row must run it) |
 | blocking-door-guard.sh | (no header line) | tested | keep (a human or a cron row must run it) |
+| board-engine-guard.sh | board-engine-guard.sh — a NEW file in Ymir may not carry one board eng | tested | keep (a human or a cron row must run it) |
 | branch-guard.sh | branch-guard.sh — Rule 08: no push may land on a protected branch. | tested+named | keep (a human or a cron row must run it) |
 | confidential-guard.sh | confidential-guard.sh — while a confidential session is live, nothing  | tested | keep (a human or a cron row must run it) |
 | constellation-grant-guard.sh | constellation-grant-guard.sh — the road's own ward. | tested+named | keep (a human or a cron row must run it) |
@@ -88,6 +89,7 @@
 | runtime-guard.sh | (no header line) | tested | keep (a human or a cron row must run it) |
 | runtime-pinned-guard.sh | runtime-pinned-guard.sh — a unit that executes from a WORKING tree is  | tested+named | keep (a human or a cron row must run it) |
 | secret-guard.sh | secret-guard.sh — refuse to commit obvious secrets or private env file | tested+named | keep (a human or a cron row must run it) |
+| secrets-plaintext-guard.sh | secrets-plaintext-guard.sh — the ward for the vault's own shelf (plan  | tested+named | keep (a human or a cron row must run it) |
 | sensitive-gate.sh | sensitive-gate.sh — one gate for every external surface of a sensitive | tested | keep (a human or a cron row must run it) |
 | skills-share-guard.sh | skills-share-guard.sh — nothing private crosses the skills door. | tested | keep (a human or a cron row must run it) |
 | ssh-roads-guard.sh | The home is RESOLVED, never guessed (Rule 07) — the same door every ot | tested | keep (a human or a cron row must run it) |
@@ -110,6 +112,7 @@
 | test_areas_and_injection.sh | test_areas_and_injection.sh — the smoke suite for plan 219 and the arm | tested | keep (a human or a cron row must run it) |
 | test_arm_client_helm.sh | test_arm_client_helm.sh — the arm client's two measured faults (2026-1 | tested+named | keep (a human or a cron row must run it) |
 | test_arm_talk.sh | bogus host refused with road named | tested | keep (a human or a cron row must run it) |
+| test_board_engine_guard.sh | board-engine-guard refuses a NEW file naming Plane's API, the old bin/gi | tested | keep (a human or a cron row must run it) |
 | test_broken.sh | add appends | tested | keep (a human or a cron row must run it) |
 | test_ci_parity.sh | test_ci_parity.sh — a push run and a pull_request run on one sha print | tested | keep (a human or a cron row must run it) |
 | test_container_hides_the_hoard.sh | test_container_hides_the_hoard.sh — a container Ymir ships never holds | tested | keep (a human or a cron row must run it) |
@@ -118,10 +121,10 @@
 | test_fixes_regate.sh | test_fixes_regate.sh — the record gate judges CONTENT, not ceremony (2 | tested | keep (a human or a cron row must run it) |
 | test_fixes_validate.sh | test_fixes_validate.sh — plan 272 fault 10: the fix-note validator jud | tested | keep (a human or a cron row must run it) |
 | test_fleet_roads.sh | test_fleet_roads.sh — the ssh-roads ward judges the marked block, and  | tested | keep (a human or a cron row must run it) |
+| test_four_shelves.sh | test_four_shelves.sh — the readers work with the ONE-CYCLE LINKS REMOV | tested | keep (a human or a cron row must run it) |
 | test_gate_directory.sh | test_gate_directory.sh — plan 295 fix S1: the gate list is a DIRECTORY | tested | keep (a human or a cron row must run it) |
 | test_gather_merge_guard.sh | test_gather_merge_guard.sh — plan 272 fault 9: a gathered batch that l | tested | keep (a human or a cron row must run it) |
 | test_gather_orders_by_base.sh | test_gather_orders_by_base.sh — plan 293 part 7: a packet names the br | tested | keep (a human or a cron row must run it) |
-| test_gimle_mcp_board.sh | test_gimle_mcp_board.sh — the Gimlé MCP's board face, proved by comma | tested | keep (a human or a cron row must run it) |
 | test_groa_steps.sh | test_groa_steps.sh — plan 272 fault 5: every Gróa step has a limit an | tested | keep (a human or a cron row must run it) |
 | test_guards_inherited.sh | test_guards_inherited.sh — a ward's finding is OURS only when it names | tested | keep (a human or a cron row must run it) |
 | test_handoff_packet.sh | test_handoff_packet.sh — proves the packet door reads the schema's pac | tested+named | keep (a human or a cron row must run it) |
@@ -143,6 +146,7 @@
 | test_plan_state.sh | plan missing headers -> finding | tested | keep (a human or a cron row must run it) |
 | test_plan_watch.sh | dry-run prints arithmetic, sends nothing | tested | keep (a human or a cron row must run it) |
 | test_pr_identity.sh | test_pr_identity.sh — the ward that judges a pull request: the signatu | tested | keep (a human or a cron row must run it) |
+| test_pr_patterns_mailbox.sh | test_pr_patterns_mailbox.sh — a MAILBOX is an address, a ROLE TOKEN is | tested | keep (a human or a cron row must run it) |
 | test_pr_ship_guard.sh | test_pr_ship_guard.sh — proves the ship door judges the PR and not the | tested | keep (a human or a cron row must run it) |
 | test_queue_warden.sh | test_queue_warden.sh — the warden is HYGIENE, and its one merge is the | tested | keep (a human or a cron row must run it) |
 | test_regenerate_on_merge_cleanup.sh | test_regenerate_on_merge_cleanup.sh — the merge driver leaves no `.mer | tested | keep (a human or a cron row must run it) |
@@ -163,5 +167,6 @@
 | test_warden_lib.sh | test_warden_lib.sh — plan 290 §3, proven: the wardens act only where  | tested+named | keep (a human or a cron row must run it) |
 | test_wardens_off_until_named.sh | test_wardens_off_until_named.sh — the Allfather's word, proven: an exi | tested | keep (a human or a cron row must run it) |
 | test_worker_speaks_to_helm.sh | test_worker_speaks_to_helm.sh — plan 272 faults 1 and 2. | tested | keep (a human or a cron row must run it) |
+| test_woven_hand_tail.sh | test_woven_hand_tail.sh — a WOVEN page carries a hand section through  | tested | keep (a human or a cron row must run it) |
 | toolchain.sh | toolchain.sh — the provider wrappers (W0033). A typed front door to th | tested+named | keep (a human or a cron row must run it) |
 | wedge-notify.sh | wedge-notify.sh — the Ymir wedge-alarm notifier. | tested+named | keep (a human or a cron row must run it) |

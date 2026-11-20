@@ -76,6 +76,26 @@ printf '%s' "$out" | grep -q 'B Person","L0","no sign-in"' && ok "who reports a 
 printf '%s' "$out" | grep -q 'B Person has no email on file' && ok "who names a missing email as a gap" || no "who names a missing email"
 printf '%s' "$out" | grep -q 'C Person","L2".*"elsewhere (trello)"' && ok "who says elsewhere for a surface it cannot measure" || no "who says elsewhere"
 
+# ---- 5b · the board column comes from the register's board_roll (plan 335), never an engine's database ----
+cat > "$tmp/collab-board.yaml" <<'YAML'
+host: fixture
+board_roll: "printf '%s' fixture"
+people:
+  - id: d
+    name: D Person
+    rung: L1
+    accounts: {board: d@example.com}
+YAML
+cat > "$tmp/measured-board.json" <<'JSON'
+{"state": "ok", "house_ips": [], "gate": {"state": "ok", "users": []},
+ "board": {"state": "ok", "users": [{"email": "d@example.com", "last_login": "2026-11-19 09:00:00", "active": true}], "members": []},
+ "affine": {"state": "ok", "users": []}, "forge": {"state": "ok", "users": []}, "shell": {"state": "ok", "accounts": []}}
+JSON
+out="$(python3 "$_d/who.py" --register "$tmp/collab-board.yaml" --from "$tmp/measured-board.json" 2>&1)"
+printf '%s' "$out" | grep -q 'D Person","L1","—","2026-11-19"' && ok "who reads the board column from the board roll" || no "who reads the board column from the board roll"
+grep -qE "plane-selfhost|psql -U plane" "$_d/who.py" && no "who.py still reads an engine's database" || ok "who.py carries no board engine's query"
+grep -qE "/api/v1/workspaces|PLANE_API" "$_d/publish.py" && no "publish.py still calls an engine's API" || ok "publish.py speaks only the board contract"
+
 # ---- 6 · the letter renders and never sends ------------------------------------------------------
 if bash "$_d/letter.sh" --to a@example.com --person "A Person" --dry-run >/dev/null 2>&1; then
   ok "letter renders"

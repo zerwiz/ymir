@@ -61,7 +61,7 @@ bin[83]{file,does,kind,verdict,disposition,callers,lines}:
   "decision-minimal.md","{short title, representative of solved problem and found solution}","data","wired","keep",0,30
   "decision.md","---","data","wired","keep",0,80
   "fixes-components.sh","The components of this product — one directory of notes each, and no invented names.","tool","wired","keep",1,4
-  "fixes-guard.sh","fixes-guard — a behaviour change leaves a note, or says why it did not need one.","tool","tested","keep",7,29
+  "fixes-guard.sh","fixes-guard — a behaviour change leaves a note, or says why it did not need one.","tool","tested","keep",8,29
   "fixes.sh","fixes.sh — the fix notes.","tool","wired","keep",6,81
   "gates.md","---","data","wired","keep",4,63
   "glossary.md","Glossary template","data","wired","keep",0,20
@@ -75,7 +75,7 @@ bin[83]{file,does,kind,verdict,disposition,callers,lines}:
   "installation-guide.md","Title","data","wired","keep",0,199
   "letter.sh","letter.sh — the collaboration letter, rendered from a template and left as a DRAFT in the gate.","tool","wired","keep",3,81
   "maker-allow.txt","maker-allow.txt — the one allow file for bin/forge/maker-names.py (RULES/53).","data","wired","keep",7,8
-  "maker-guard.sh","maker-guard.sh — the ward over what a commit or a pull request SAYS (RULES/53).","tool","wired","keep",10,58
+  "maker-guard.sh","maker-guard.sh — the ward over what a commit or a pull request SAYS (RULES/53).","tool","wired","keep",11,58
   "maker-names.py","'''maker-names.py — the ONE matcher for model, model-maker and agent-harness names in prose (RULES/53).","tool","wired","keep",10,155
   "maker-words.txt","maker-words.txt — the word list for bin/forge/maker-names.py (RULES/53).","data","wired","keep",7,36
   "new-module-test.sh","new-module-test.sh — a new module arrives with a test, or with a reason it does not need one.","tool","wired","keep",1,31
@@ -85,7 +85,7 @@ bin[83]{file,does,kind,verdict,disposition,callers,lines}:
   "pr-check.sh","pr-check — is every commit that exists proposed for review?","tool","tested","keep",6,26
   "pr-guard.sh","pr-guard — a branch that exists on the remote must have a pull request.","tool","wired","keep",1,35
   "private-data.sh","private-data — the repository is public; the operator's machine is not.","tool","wired","keep",1,41
-  "publish.py","'''publish.py — the baton on the Board: what is next and what is blocked become cards.","tool","wired","keep",1,169
+  "publish.py","'''publish.py — the baton on the board: what is next and what is blocked become cards.","tool","wired","keep",2,140
   "quickstart.md","Title","data","wired","keep",0,98
   "readme.md","README template","data","wired","keep",2,158
   "referee-guard.sh","referee-guard — the gates, the hooks and the wards are the referee.","tool","wired","keep",1,28
@@ -100,10 +100,10 @@ bin[83]{file,does,kind,verdict,disposition,callers,lines}:
   "ship.sh","ship.sh — the house's git discipline as one door: branch, commit named paths, merge to the base, push.","tool","wired","keep",6,63
   "standardise.sh","standardise.sh — put the collaboration kit into a repository, or say what is missing.","tool","wired","keep",1,100
   "status.py","'''status.py — the status of every plan, ticket and document in this repository, read from their headers.","tool","wired","migrate → src/ymir_runtime/status.py",3,310
-  "test_collab.sh","test_collab.sh — the proofs for bin/collab (Vingólf).","tool","wired","keep",0,117
+  "test_collab.sh","test_collab.sh — the proofs for bin/collab (Vingólf).","tool","wired","keep",0,137
   "troubleshooting.md","Troubleshooting {product name, feature, or task}","data","wired","keep",0,49
   "tutorial.md","Title","data","wired","keep",0,92
-  "who.py","'''who.py — the roll: who was invited into the house's collaboration surfaces, and are they using them?","tool","wired","keep",4,397
+  "who.py","'''who.py — the roll: who was invited into the house's collaboration surfaces, and are they using them?","tool","wired","keep",4,390
   "worktree.sh","worktree.sh — one agent, one worktree.","tool","wired","migrate → src/ymir_runtime/worktree.py",3,45
 
 **Tally.** verdict: wired=74, tested=9

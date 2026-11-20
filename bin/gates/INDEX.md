@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[180]{file,does,kind,verdict,disposition,callers,lines}:
+bin[185]{file,does,kind,verdict,disposition,callers,lines}:
   "SKILL.md","---","data","tested","keep",24,23
   "SKILL.md","---","data","tested","keep",24,23
   "SKILL.md","---","data","tested","keep",24,22
@@ -30,8 +30,9 @@ bin[180]{file,does,kind,verdict,disposition,callers,lines}:
   "app-functional-guard.sh","app-functional-guard.sh — AN UPDATE THAT LEAVES AN APP UNRUNNABLE IS NOT AN UPDATE.","tool","wired","keep",1,138
   "areas-guard.sh","areas-guard (tree ward) — the canon and the copy that travels must not drift.","tool","wired","keep",7,118
   "blocking-door-guard.sh","cache: tree — the verdict is a pure function of the tracked tree.","tool","wired","keep",1,69
-  "branch-current.sh","branch-current.sh — a branch is based on CURRENT main before it is offered.","tool","tested","keep",1,82
-  "branch-guard.sh","branch-guard.sh — Rule 08: no push may land on a protected branch.","tool","tested","keep",2,149
+  "board-engine-guard.sh","board-engine-guard.sh — a NEW file in Ymir may not carry one board engine's code (plan 335, the split).","tool","wired","keep",2,123
+  "branch-current.sh","branch-current.sh — a branch is based on CURRENT main before it is offered.","tool","tested","keep",2,82
+  "branch-guard.sh","branch-guard.sh — Rule 08: no push may land on a protected branch.","tool","tested","keep",3,149
   "capabilities.sh","A GENERATED FILE MUST BE A FUNCTION OF CONTENT ALONE (0.1.94/0.1.95/0.1.97 — three","tool","wired","keep",12,325
   "cdp.mjs","// cdp.mjs — the DevTools driver behind bin/gates/soak.sh (plan 286 P1, P2, P5).","data","wired","keep",2,940
   "check-row.md","One measured row","data","wired","keep",2,14
@@ -54,7 +55,7 @@ bin[180]{file,does,kind,verdict,disposition,callers,lines}:
   "feature-inventory.sh","feature-inventory.sh — every feature the system CLAIMS, in one checklist.","tool","wired","keep",0,88
   "features-guard.sh","features-guard.sh — every feature page is catalogued (Rule 14).","tool","wired","keep",2,73
   "fix-note.md","Fix note template","data","wired","keep",2,26
-  "fixes-guard.sh","fixes-guard.sh — the delivery gate reads, and it checks the RECORD.","tool","tested","keep",7,252
+  "fixes-guard.sh","fixes-guard.sh — the delivery gate reads, and it checks the RECORD.","tool","tested","keep",8,268
   "fixes.sh","fixes.sh — the fix notes.","tool","wired","keep",6,167
   "fleet-version-guard.sh","fleet-version-guard.sh — the three labels and the two trees must agree, or say so.","tool","wired","keep",1,62
   "folders.tsv","The purpose of every folder under bin/ — ONE line each, the single place it is kept.","data","wired","keep",1,40
@@ -63,9 +64,9 @@ bin[180]{file,does,kind,verdict,disposition,callers,lines}:
   "gather-merge-guard.sh","gather-merge-guard.sh — a gathered batch keeps its history (plan 272, fault 9).","tool","wired","keep",1,61
   "git-clobber-guard.sh","git-clobber-guard.sh — no command that throws away uncommitted work.","tool","wired","keep",0,86
   "guards-scope.test.sh","guards-scope.test.sh — prove the pre-push gate bites, and only where it should.","tool","wired","keep",0,126
-  "guards.sh","guards.sh — every TREE ward, in one command.","tool","wired","keep",27,441
+  "guards.sh","guards.sh — every TREE ward, in one command.","tool","wired","keep",30,445
   "hearth-guard.sh","hearth-guard.sh — one capability, one implementation: a second copy is a fault, and two","tool","wired","keep",1,91
-  "hoard-guard.sh","hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME).","tool","wired","keep",2,159
+  "hoard-guard.sh","hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME).","tool","wired","keep",3,159
   "home-contract-check.sh","home-contract-check.sh — the contract that raises a home is itself checked.","tool","wired","keep",2,169
   "home-contract-guard.sh","home-contract-guard.sh — the contract that raises a user's home is checked (Rule 42).","tool","wired","keep",1,57
   "home-index-check.sh","home-index-check.sh — every shelf in the home has an index, and the index is honest.","tool","wired","keep",1,82
@@ -73,16 +74,16 @@ bin[180]{file,does,kind,verdict,disposition,callers,lines}:
   "house-colour-guard.sh","cache: tree — this ward's verdict is a pure function of the tracked tree (no $YMIR_HOME read,","tool","wired","keep",2,94
   "identity-guard.sh","identity-guard.sh — a commit that leaves by push must not publish a private mailbox.","tool","wired","keep",7,162
   "inventory-guard.sh","inventory-guard.sh — a register that runs in no gate is a capability that is silently absent.","tool","wired","keep",4,54
-  "inventory.sh","inventory.sh — the honest index of the two shelves nobody can read.","tool","wired","keep",21,446
+  "inventory.sh","inventory.sh — the honest index of the two shelves nobody can read.","tool","wired","keep",24,462
   "language-guard.sh","language-guard.sh — two tongues: English for the work, Old Norse for the names.","tool","wired","keep",2,270
   "launchd-layer.sh","launchd-layer.sh — both macOS service-layer tests, in one door (plan 293).","tool","wired","keep",1,54
   "main-red.sh","main-red.sh — ONE issue names a red main, and it names the hand that broke it.","tool","wired","keep",4,348
   "maker-allow.txt","maker-allow.txt — the one allow file for bin/forge/maker-names.py (RULES/53).","data","wired","keep",7,38
-  "maker-guard.sh","maker-guard.sh — the ward over what a commit or a pull request SAYS (RULES/53).","tool","wired","keep",10,58
+  "maker-guard.sh","maker-guard.sh — the ward over what a commit or a pull request SAYS (RULES/53).","tool","wired","keep",11,58
   "maker-words.txt","maker-words.txt — the word list for bin/forge/maker-names.py (RULES/53).","data","wired","keep",7,36
   "model-alias-check.sh","model-alias-check.sh — does every alias a body names resolve in the fleet?","tool","wired","keep",1,332
   "model-rows-guard.sh","model-rows-guard.sh — every agent row names a model THIS machine can actually serve.","tool","wired","keep",1,106
-  "nda-guard.py","'''nda-guard — company, client and NDA-project names never reach Ymir's public repository.","tool","wired","keep",2,178
+  "nda-guard.py","'''nda-guard — company, client and NDA-project names never reach Ymir's public repository.","tool","wired","keep",3,178
   "nda-guard.sh","nda-guard.sh — company, client and NDA-project names never reach the public repo (RULES/04, 2026-11-12).","tool","wired","keep",1,14
   "ndalib.py","'''ndalib — the NDA matcher: company, client and NDA-project names never enter the public tree.","tool","wired","keep",3,208
   "nidhogg.sh","nidhogg.sh — Níðhöggr, the gnawer at the root.","tool","wired","keep",0,230
@@ -115,8 +116,9 @@ bin[180]{file,does,kind,verdict,disposition,callers,lines}:
   "runtime-guard.sh","cache: tree — this ward's verdict is a pure function of the tracked tree (no $YMIR_HOME read,","tool","wired","keep",1,132
   "runtime-pinned-guard.sh","runtime-pinned-guard.sh — a unit that executes from a WORKING tree is a machine running whatever branch","tool","wired","keep",5,77
   "seat-woven-driver.sh","seat-woven-driver.sh — seat the engine behind `merge=regenerate`, and PROVE it runs.","tool","wired","keep",1,101
-  "secret-guard.sh","secret-guard.sh — refuse to commit obvious secrets or private env files.","tool","wired","keep",5,124
+  "secret-guard.sh","secret-guard.sh — refuse to commit obvious secrets or private env files.","tool","wired","keep",6,93
   "secret-scan.sh","secret-scan.sh — the secret scan's door, and the generator for the operator's own rules.","tool","wired","keep",3,254
+  "secrets-plaintext-guard.sh","secrets-plaintext-guard.sh — the ward for the vault's own shelf (plan 342).","tool","wired","keep",2,142
   "sensitive-gate.sh","sensitive-gate.sh — one gate for every external surface of a sensitive artifact set.","tool","wired","keep",0,81
   "share.yaml","The share list for the skills-MCP fixtures — three invented skills, nothing real.","data","wired","keep",2,13
   "skill.yaml","name: hearth-keeping","data","wired","keep",3,9
@@ -137,6 +139,7 @@ bin[180]{file,does,kind,verdict,disposition,callers,lines}:
   "test_areas_and_injection.sh","test_areas_and_injection.sh — the smoke suite for plan 219 and the arm-holder's inbox.","tool","wired","keep",0,108
   "test_arm_client_helm.sh","test_arm_client_helm.sh — the arm client's two measured faults (2026-11-10), with stubs.","tool","wired","keep",0,83
   "test_arm_talk.sh","ROOT='$(cd '$(dirname '$0')/../../..' && pwd)'","tool","wired","keep",0,19
+  "test_board_engine_guard.sh","board-engine-guard refuses a NEW file naming Plane's API, the old bin/gimle/ tree or a Gimlé host from the","tool","wired","keep",1,53
   "test_broken.sh","export YMIR_HOME='${YMIR_HOME:-$HOME/Documents/ymirhome}'","tool","wired","keep",0,25
   "test_ci_parity.sh","test_ci_parity.sh — a push run and a pull_request run on one sha print the same verdict.","tool","wired","keep",0,10
   "test_container_hides_the_hoard.sh","test_container_hides_the_hoard.sh — a container Ymir ships never holds the vault.","tool","wired","keep",1,126
@@ -145,10 +148,10 @@ bin[180]{file,does,kind,verdict,disposition,callers,lines}:
   "test_fixes_regate.sh","test_fixes_regate.sh — the record gate judges CONTENT, not ceremony (2026-11-16).","tool","wired","keep",1,71
   "test_fixes_validate.sh","test_fixes_validate.sh — plan 272 fault 10: the fix-note validator judges what a reader needs.","tool","wired","keep",0,23
   "test_fleet_roads.sh","test_fleet_roads.sh — the ssh-roads ward judges the marked block, and only the marked block.","tool","wired","keep",0,67
+  "test_four_shelves.sh","test_four_shelves.sh — the readers work with the ONE-CYCLE LINKS REMOVED (plan 331.6, 331.8).","tool","wired","keep",0,91
   "test_gate_directory.sh","test_gate_directory.sh — plan 295 fix S1: the gate list is a DIRECTORY, so two branches that add","tool","wired","keep",1,128
   "test_gather_merge_guard.sh","test_gather_merge_guard.sh — plan 272 fault 9: a gathered batch that landed as one parent is named.","tool","wired","keep",0,26
   "test_gather_orders_by_base.sh","test_gather_orders_by_base.sh — plan 293 part 7: a packet names the branch it was cut from, and","tool","wired","keep",1,69
-  "test_gimle_mcp_board.sh","test_gimle_mcp_board.sh — the Gimlé MCP's board face, proved by command.","tool","wired","keep",0,195
   "test_groa_steps.sh","test_groa_steps.sh — plan 272 fault 5: every Gróa step has a limit and says where it is.","tool","wired","keep",0,39
   "test_guards_inherited.sh","test_guards_inherited.sh — a ward's finding is OURS only when it names OUR copy of the path.","tool","wired","keep",1,56
   "test_handoff_packet.sh","test_handoff_packet.sh — proves the packet door reads the schema's packet and refuses a false one.","tool","wired","keep",1,138
@@ -166,10 +169,11 @@ bin[180]{file,does,kind,verdict,disposition,callers,lines}:
   "test_notify_stale_pane.sh","test_notify_stale_pane.sh — a remembered pane is proved before it is spoken to (2026-11-16).","tool","wired","keep",0,55
   "test_opencode_launcher.sh","test_opencode_launcher.sh — plan 262: an OpenCode worker actually starts, and every door","tool","wired","keep",1,155
   "test_people_guard_people.sh","test_people_guard_people.sh — plan 272 fault 11: the people ward reads handles and rosters, not only names.","tool","wired","keep",0,25
-  "test_pin_refresh.sh","test_pin_refresh.sh — the pin refresher, and the sentence a failed row gets (plan 292).","tool","wired","keep",0,105
+  "test_pin_refresh.sh","test_pin_refresh.sh — the pin refresher, and the sentence a failed row gets (plan 292).","tool","wired","keep",0,120
   "test_plan_state.sh","ROOT='$(cd '$(dirname '${BASH_SOURCE[0]}')/../..' && pwd)'; ROOT='$(cd '$ROOT/..' && pwd)'","tool","wired","keep",0,22
   "test_plan_watch.sh","ROOT='$(cd '$(dirname '$0')/../../..' && pwd)'","tool","wired","keep",0,23
   "test_pr_identity.sh","test_pr_identity.sh — the ward that judges a pull request: the signature is BUILT, the leaks still refuse.","tool","wired","keep",1,126
+  "test_pr_patterns_mailbox.sh","test_pr_patterns_mailbox.sh — a MAILBOX is an address, a ROLE TOKEN is not.","tool","wired","keep",0,59
   "test_pr_ship_guard.sh","test_pr_ship_guard.sh — proves the ship door judges the PR and not the branch.","tool","wired","keep",0,49
   "test_queue_warden.sh","test_queue_warden.sh — the warden is HYGIENE, and its one merge is the heart's, behind one gate.","tool","wired","keep",0,97
   "test_regenerate_on_merge_cleanup.sh","test_regenerate_on_merge_cleanup.sh — the merge driver leaves no `.merge_file_*` behind (2026-11-12).","tool","wired","keep",0,21
@@ -178,7 +182,7 @@ bin[180]{file,does,kind,verdict,disposition,callers,lines}:
   "test_retired_path_guard.sh","retired-path-guard refuses a NEW file naming hodd/state/, hodd/life/ or hodd/workspaces/ (plan 331.9), names","tool","wired","keep",1,42
   "test_review_mend.sh","here='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",0,21
   "test_review_seat_verdict.sh","test_review_seat_verdict.sh — plan 272 fault 6: a review seat ends in a verdict, or says why it has none.","tool","wired","keep",0,37
-  "test_review_seats.sh","test_review_seats.sh — proves the seats and their mouth, hermetically.","tool","wired","keep",0,91
+  "test_review_seats.sh","test_review_seats.sh — proves the seats and their mouth, hermetically.","tool","wired","keep",0,92
   "test_roster.sh","HERE=$(cd -- '$(dirname -- '${BASH_SOURCE[0]}')' && pwd)","tool","wired","keep",0,43
   "test_rules_compliance_env_file.sh","defaults-guard: prose-only — $YMIR_HOME is NAMED in this file (a gate description, a probe string, a comment) and never read.","tool","wired","keep",1,69
   "test_rules_compliance_fork_sync.sh","test_rules_compliance_fork_sync.sh — plan 272 fault 7.","tool","wired","keep",0,35
@@ -190,6 +194,7 @@ bin[180]{file,does,kind,verdict,disposition,callers,lines}:
   "test_warden_lib.sh","test_warden_lib.sh — plan 290 §3, proven: the wardens act only where the operator names them, only on","tool","wired","keep",2,170
   "test_wardens_off_until_named.sh","test_wardens_off_until_named.sh — the Allfather's word, proven: an existing installation gets the change,","tool","wired","keep",1,144
   "test_worker_speaks_to_helm.sh","test_worker_speaks_to_helm.sh — plan 272 faults 1 and 2.","tool","wired","keep",0,43
+  "test_woven_hand_tail.sh","test_woven_hand_tail.sh — a WOVEN page carries a hand section through (RULES/06).","tool","wired","keep",0,133
   "toolchain.sh","toolchain.sh — the provider wrappers (W0033).","tool","wired","keep",0,75
   "ui-truth-check.sh","ui-truth-check.sh — the panel's number must equal the machine's number.","tool","wired","keep",0,77
   "unit-template-check.sh","unit-template-check.sh — every shipped systemd unit template must be a unit systemd","tool","wired","keep",2,99
@@ -197,12 +202,12 @@ bin[180]{file,does,kind,verdict,disposition,callers,lines}:
   "update-notes.sh","update-notes.sh — WHAT CHANGED FOR YOU, since your last update.","tool","wired","keep",3,76
   "usage-ratchet.sh","usage-ratchet.sh — PROVE the doors are used, and fail when the unused pile grows.","tool","wired","keep",1,103
   "vault-guard.sh","vault-guard.sh — nothing may copy content OUT of the vault (Rule 15).","tool","wired","keep",2,101
-  "weave-guard.sh","weave-guard.sh — an index that does not name every file it indexes is refused.","tool","wired","keep",3,85
+  "weave-guard.sh","weave-guard.sh — an index that does not name every file it indexes is refused.","tool","wired","keep",2,85
   "wedge-notify.sh","wedge-notify.sh — the Ymir wedge-alarm notifier.","tool","wired","keep",1,62
   "workflow-check.sh","workflow-check.sh — every GitHub Actions workflow must PARSE, before CI is asked to run.","tool","wired","keep",1,78
   "ymir-config-check.sh","ymir-config-check.sh — the DOOR to the config layer (`src/ymir_runtime/config/`).","tool","wired","keep",0,44
   "ymir-update-check.sh","ymir-update-check.sh — does a newer Ymir stand on npm?","tool","wired","keep",3,71
 
-**Tally.** verdict: wired=161, tested=19
+**Tally.** verdict: wired=166, tested=19
 
-**Tally.** disposition: keep=177, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/tests/test_hermes_seat.py=1
+**Tally.** disposition: keep=182, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/tests/test_hermes_seat.py=1

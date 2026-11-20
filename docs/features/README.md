@@ -16,6 +16,11 @@ its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
 | The outbound gate (nothing leaves until you have read it) | [the-outbound-gate.md](the-outbound-gate.md) |
 | The collaboration doors (who is with us, and how far) | [the-collaboration-doors.md](the-collaboration-doors.md) |
 
+**Built 2026-11-20:**
+
+- The board contract — Ymir talks to any board through one contract, and Plane lives with Gimlé:
+  [the-board-contract.md](the-board-contract.md)
+
 **Built 2026-11-11:**
 
 - Your agents load Ymir from the runtime, in every folder — every harness root names the pinned runtime, never a
