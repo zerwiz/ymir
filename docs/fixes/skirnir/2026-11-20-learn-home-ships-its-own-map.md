@@ -90,6 +90,25 @@ home's own fact shelf is rewritten by the next nightly run, and that run ships i
 - `systems/skirnir/tests/test_learn_home_ship.sh` — the proof above.
 - `bin/gates/checks.d/0540-learn-home-ship.sh` — the gate that runs it in CI.
 
+## Review mend (2026-11-20) — what Forseti found, and the one item answered by a record
+
+Forseti judged the first offer NEEDS-REWORK (3). Two items are mended in the code:
+
+- `RULES/50` carries a dated correction: "the next run re-stamps it" is superseded, because an unchanged fact is no
+  longer re-stamped.
+- `systems/skirnir/services/learn-home.sh` ends with a newline.
+
+The third item, the erased `## CHANGE LOG` in `.agents/backend/README.md`, is answered by this record and not by
+restoring the lines. That README is a **woven** file: the pre-commit hook runs `bin/records/weave.sh` and stages its
+output on every commit, and the weave does not carry a section a hand added to the generated text. The entry was
+hand-written into the woven file on 2026-11-18, so every later commit would erase it again. It is kept here, word
+for word, so the history is not lost (RULES/06):
+
+> - 2026-11-18 — review-mend: added missing heading for #825
+
+The lasting fix is for the weaver to carry a hand section, or for such entries to go into a fix note. That belongs
+to its own PR.
+
 ## CHANGE LOG
 
 - 2026-11-19 — review-mend: added missing heading for #831
