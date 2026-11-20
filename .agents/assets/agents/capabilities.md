@@ -448,7 +448,7 @@ capabilities[5]{surface,count}:
 | approve.sh | approve.sh — one gesture answers one question. | tested+named | keep (a human or a cron row must run it) |
 | send.sh | send.sh — THE HOTLINE: one door a system calls when it has something t | tested+named | keep (a human or a cron row must run it) |
 | telegram-buttons.sh | telegram-buttons.sh — make a Telegram button that actually renders. | tested | keep (a human or a cron row must run it) |
-| telegram-members.sh | telegram-members.sh — who is actually in a Telegram chat, as far as th | tested | keep (a human or a cron row must run it) |
+| telegram-members.sh | telegram-members.sh — who is actually in a Telegram chat, as far as th | uncalled | **decide** — unnamed and untested: move it to src/ or hodd/reference/ (Rule 11), never delete |
 | test_telegram_buttons.sh | test_telegram_buttons.sh — the button grammar, proved both ways. | tested | keep (a human or a cron row must run it) |
 | collaborators.sh | collaborators.sh — the people we work with: clients, collaborators, ad | tested | keep (a human or a cron row must run it) |
 | inbox-watch.sh | inbox-watch.sh — notice when someone answers, without a human opening  | tested | keep (a human or a cron row must run it) |
@@ -501,7 +501,7 @@ capabilities[5]{surface,count}:
 | harness-extensions-install.sh | harness-extensions-install.sh — every harness gets the house's extensi | tested | keep (a human or a cron row must run it) |
 | herdr-ensure.sh | herdr-ensure.sh — Þjazi: guarantee the terminal backend Ymir needs. | tested+named | keep (a human or a cron row must run it) |
 | herdr-run.sh | herdr-run.sh — raise an Eindri in herdr, by the grain that fits the er | tested+named | keep (a human or a cron row must run it) |
-| hermes-seat.sh | hermes-seat.sh — seat Ymir's tools into Hermes, the same packets the o | tested+named | keep (a human or a cron row must run it) |
+| hermes-seat.sh | hermes-seat.sh — seat Ymir's tools into Hermes, the same packets the o | uncalled+named | keep (a human or a cron row must run it) |
 | seat-surface.sh | seat-surface.sh — render THIS seat's own name into the AGENTS.md every | tested+named | keep (a human or a cron row must run it) |
 | valknut-load.sh | valknut-load.sh — Valknut, the knot that binds the repo distro into ea | tested+named | keep (a human or a cron row must run it) |
 | realm-lib.sh | realm-lib.sh — resolve the ACTIVE realm (tenant) without assuming the  | tested+named | keep (a human or a cron row must run it) |
