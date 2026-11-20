@@ -108,13 +108,16 @@ description: How we measured the models on our own machines.
 ---
 # Bench-ledger
 
-We ran the sweep on a bench directory with 203.0.113.10:8443 as the judge.
+We ran the sweep on __MACHINE_HOME__/canary/bench with 203.0.113.10:8443 as the judge.
 Ask Bertil Kanariefagel at bertil.kanariefagel@corvid-bench.test or +46 70 123 45 67.
 
 | run | model | tok/s | latency |
 |---|---|---|---|
 | 4 | openrouter/qwen3.6-35b-a3b | 41 | 900 |
 MD
+# The canary must carry a MACHINE-PATH sample (test line 145 demands one) while no literal
+# user path is committed (Rule 07). Compose it at run time.
+sed -i "s|__MACHINE_HOME__|/home|" "$CAN/shelf/bench-ledger/SKILL.md"
 printf 'name: bench-ledger\nkind: craft\nowner: house\ndescription: How we measured the models on our own machines.\nvisibility: share-method\nversion: 0.0.1\n' \
   > "$CAN/shelf/bench-ledger/skill.yaml"
 printf 'skills:\n  - name: bench-ledger\n    reason: the method only, never the runs\n    form: skill\n' \
