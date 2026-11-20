@@ -12,7 +12,7 @@ and report it truthfully*:
 2. **The model bridges** — Ymir's own files. They are why this index exists:
 
 backend[175]{file,does,kind,verdict,disposition,callers,lines}:
-  "README.md","`.agents/backend/` — the backend layer, file by file","data","tested","keep",22,-
+  "README.md","`.agents/backend/` — the backend layer, file by file","data","tested","keep",20,-
   "cmux.sh","bin/backends/cmux.sh - the cmux session-provider adapter (EXPERIMENTAL).","data","tested","keep",1,650
   "fm-afk-launch.sh","fm-afk-launch.sh - the single owner of the away-mode daemon TERMINAL lifecycle:","provenance","tested","keep",5,655
   "fm-afk-return.sh","fm-afk-return.sh - deterministic away-mode return catch-up gate.","provenance","tested","keep",3,242
@@ -100,7 +100,7 @@ backend[175]{file,does,kind,verdict,disposition,callers,lines}:
   "fm-procevent-quota.sh","Quota-exhaustion process-event adapter.","provenance","tested","keep",2,291
   "fm-procevent-remote-reply.sh","Remote-secondmate reply adapter for the generic process-event runner.","provenance","tested","keep",6,578
   "fm-procevent-when.sh","Condition->action adapter for the generic process-to-event runner: register a","provenance","tested","keep",2,505
-  "fm-procevent.sh","Generic process-to-event runner: supervise a registered long-polling child","provenance","tested","keep",13,1467
+  "fm-procevent.sh","Generic process-to-event runner: supervise a registered long-polling child","provenance","tested","keep",12,1467
   "fm-project-mode.sh","Resolve a project's REGISTERED delivery posture from the data/projects.md registry.","provenance","tested","keep",6,93
   "fm-project-origin-lib.sh","Validate a project origin URL that one home hands to another.","provenance","tested","keep",2,181
   "fm-promote.sh","Promote a scout task to a ship task in place: the crewmate keeps its window,","provenance","tested","keep",6,283

@@ -73,15 +73,25 @@ esac
 # The range: from stdin when a hook calls us, else the branch against its base.
 refs="$(cat 2>/dev/null || true)"
 head_sha=""; remote_sha=""
-saw_ref=0; delete_only=1
+saw_ref=0; delete_only=1; only_tags=1
 if [ -n "$refs" ]; then
-  while read -r _local local_sha _remote remote_sha2; do
+  while read -r _local local_sha remote_ref remote_sha2; do
     [ -n "${local_sha:-}" ] || continue
     saw_ref=1
+    # A TAG IS A POINTER, NOT NEW CONTENT. Its commits were judged when they landed
+    # on a branch; a tag push therefore has no range of its own, and the range this
+    # gate computed from it (`origin/main..<an old tip>`) could never contain the note
+    # it demanded. Three archive-tag pushes were refused tonight while the remedy
+    # the gate printed was already committed (2026-10-24).
+    case "$remote_ref" in refs/tags/*) ;; *) only_tags=0 ;; esac
     case "$local_sha" in 000000*) continue ;; esac
     delete_only=0
     head_sha="$local_sha"; remote_sha="${remote_sha2:-}"
   done <<<"$refs"
+fi
+if [ "$saw_ref" = 1 ] && [ "$only_tags" = 1 ]; then
+  printf 'fixes-guard[1]{gate,result}:\n  "push","ok — a tag is a pointer; the commits it names were judged when they landed on a branch"\n'
+  exit 0
 fi
 # A branch DELETION delivers no content, so there is nothing to record. Git feeds
 # a delete as an all-zero local sha; a push whose every ref is a delete is a

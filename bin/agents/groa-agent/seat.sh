@@ -44,8 +44,14 @@ fi
 # 1. OpenCode
 if ! command -v opencode >/dev/null 2>&1; then
   echo "installing opencode…"
-  if ! npm i -g opencode-ai >/dev/null 2>&1; then
-    sudo npm i -g opencode-ai >/dev/null 2>&1 || { echo "could not install opencode" >&2; exit 1; }
+  if ! npm i -g opencode-ai </dev/null >/dev/null 2>&1; then
+    # never block on a password prompt — sudo hangs pi when there is no tty.
+    if sudo -n true 2>/dev/null; then
+      sudo -n npm i -g opencode-ai </dev/null >/dev/null 2>&1 || { echo "could not install opencode" >&2; exit 1; }
+    else
+      echo "opencode install needs a password — run: npm i -g opencode-ai (user prefix) or sudo npm i -g opencode-ai" >&2
+      exit 1
+    fi
   fi
 fi
 command -v opencode >/dev/null || { echo "opencode still absent" >&2; exit 1; }

@@ -60,12 +60,27 @@ export default function well(pi: any) {
       properties: {
         query: { type: "string", description: "what you want to remember, in words" },
         k: { type: "number", description: "how many episodes (default 5)" },
+        // SCOPED RECALL (plan 136): the shelf is chosen BEFORE the search, so a
+        // keeper's own memory is not out-competed by everyone's.
+        store: {
+          type: "string",
+          description: "shelf to search: episodic (events) | semantic (facts, preferences) | procedural (how-to)",
+        },
+        tag: { type: "string", description: "only episodes carrying this tag, e.g. 'domain:snotra'" },
+        since: { type: "string", description: "only episodes at or after this date (YYYY-MM-DD)" },
       },
       required: ["query"],
     },
-    async execute(_id: string, params: { query: string; k?: number }) {
+    async execute(
+      _id: string,
+      params: { query: string; k?: number; store?: string; tag?: string; since?: string },
+    ) {
       const k = Math.max(1, Math.min(20, Number(params.k ?? 5)));
-      const r = await call(`/recall?q=${encodeURIComponent(params.query)}&k=${k}`);
+      const qs = new URLSearchParams({ q: params.query, k: String(k) });
+      if (params.store) qs.set("store", params.store);
+      if (params.tag) qs.set("tag", params.tag);
+      if (params.since) qs.set("since", params.since);
+      const r = await call(`/recall?${qs.toString()}`);
       if (!r.ok) {
         return { content: [{ type: "text", text: `the well did not answer (${r.status}): ${r.body}` }], isError: true };
       }
@@ -77,7 +92,10 @@ export default function well(pi: any) {
         .map((h: any, i: number) => {
           const e = h.episode ?? {};
           const tags = Array.isArray(e.tags) ? e.tags.join(", ") : String(e.tags ?? "");
-          return `${i + 1}. [${Number(h.score ?? 0).toFixed(2)}] ${String(e.content ?? "").slice(0, 600)}${tags ? `\n   tags: ${tags}` : ""}`;
+          // The shelf and the write's source are shown, not buried: a keeper must
+          // be able to tell a fact from a workflow from an event at a glance.
+          const shelf = e.store ? `{${e.store}}` : "";
+          return `${i + 1}. [${Number(h.score ?? 0).toFixed(2)}]${shelf} ${String(e.content ?? "").slice(0, 600)}${tags ? `\n   tags: ${tags}` : ""}`;
         })
         .join("\n");
       return { content: [{ type: "text", text }] };
@@ -97,12 +115,43 @@ export default function well(pi: any) {
         tags: { type: "string", description: "comma-separated labels, e.g. 'run,lesson'" },
         actors: { type: "string", description: "comma-separated names involved" },
         salience: { type: "number", description: "importance 0..1 (default 0.7)" },
+        // THE GATE (plan 136). A write that changes no behaviour, commits to
+        // nothing and decides nothing is DROPPED, so say which of the three this
+        // is, and what kind of memory it is. Stating the shape is a claim the
+        // writer makes; it is recorded and audited, never assumed.
+        shape: {
+          type: "string",
+          description: "which question this answers: behaviour | commitment | decision",
+        },
+        store: {
+          type: "string",
+          description: "the shelf: episodic (an event) | semantic (a fact/preference) | procedural (a workflow)",
+        },
+        task: { type: "string", description: "what work this lesson belongs to (raises its relevance)" },
+        retention: {
+          type: "string",
+          description: "how long it matters: 'keep' (default), 'season:<days>', 'ephemeral'",
+        },
+        privacy: {
+          type: "string",
+          description: "public | internal (default) | private. The vault and confidential material are REFUSED",
+        },
       },
       required: ["content"],
     },
     async execute(
       _id: string,
-      params: { content: string; tags?: string; actors?: string; salience?: number },
+      params: {
+        content: string;
+        tags?: string;
+        actors?: string;
+        salience?: number;
+        shape?: string;
+        store?: string;
+        task?: string;
+        retention?: string;
+        privacy?: string;
+      },
     ) {
       // LISTS, never comma-strings: the store keeps a string as an array of
       // CHARACTERS, and a later recall then reads tags as "r,u,n".
@@ -115,13 +164,38 @@ export default function well(pi: any) {
           tags: list(params.tags ?? "run,lesson"),
           actors: list(params.actors),
           salience: Math.max(0, Math.min(1, Number(params.salience ?? 0.7))),
+          shape: params.shape,
+          store: params.store,
+          task: params.task,
+          retention: params.retention,
+          privacy: params.privacy,
         }),
       });
       if (!r.ok) {
         return { content: [{ type: "text", text: `the lesson was NOT written (${r.status}): ${r.body}` }], isError: true };
       }
-      const id = (r.body as any)?.id ?? "?";
-      return { content: [{ type: "text", text: `written to the well: ${id}` }] };
+      const b = (r.body as any) ?? {};
+      // A DROP IS A NORMAL ANSWER, and it must not read as success: the gate
+      // exists so the well holds what is worth keeping, and the writer is told
+      // which of the three questions it failed.
+      if (b.stored === false) {
+        const g = b.gate ?? {};
+        return {
+          content: [{
+            type: "text",
+            text: `the gate DROPPED it: ${g.why ?? "no reason given"}` +
+              (g.duplicate_of ? `\n   it is already in the well as ${g.duplicate_of}` : "") +
+              "\n   (a write must change future behaviour, be a commitment, or be a decision with rationale)",
+          }],
+        };
+      }
+      const tags = Array.isArray(b.tags) ? b.tags.join(", ") : "";
+      return {
+        content: [{
+          type: "text",
+          text: `written to the well: ${b.id ?? "?"} [${b.store ?? "?"}]` + (tags ? `\n   tags: ${tags}` : ""),
+        }],
+      };
     },
   });
 

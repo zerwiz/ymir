@@ -218,7 +218,10 @@ RUNES_LEDGER=""
 # hodd/memory/. Try the hoard first, then the pre-move locations.
 for c in "${YMIR_HOME:+${YMIR_HOARD:-$YMIR_HOME/hodd}/memory/runes_audit.md}" \
          "${YMIR_HOME:+$YMIR_HOME/memory/runes_audit.md}" \
-         "$ROOT/workspace/memory/runes_audit.md"; do
+         "${YMIR_HOME:+$YMIR_HOME/hodd/memory/runes_audit.md}"; do
+  # The flat `workspace/` shelf was retired by 0001-hoard-layout; a validator that
+  # still names it is a stale reader, not a fallback (smoke: rename-sweep FAIL,
+  # measured 2026-10-24). The hoard is the only home for the ledger (Rule 06).
   [ -n "$c" ] && [ -r "$c" ] && { RUNES_LEDGER="$c"; break; }
 done
 if [ -r "$RUNES_LEDGER" ]; then

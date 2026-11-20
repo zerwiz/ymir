@@ -96,9 +96,17 @@ else
   # re-presented one week-old wake at every turn boundary (2026-10-24).
   count=$(awk 'END{print NR}' "$QUEUE")
   printf 'wake queue: %s pending\n' "${count:-0}"
+  dropped=0
   while IFS= read -r line; do
-    [ -n "$line" ] && printf 'WAKE %s\n' "$line"
+    [ -n "$line" ] || continue
+    # A wake is presented until Brokk acks it. The errand's status (done/failed)
+    # does NOT make it an echo: a self-finishing worker's terminal wake is the
+    # FIRST notice Brokk gets, and dropping it on status makes the worker invisible
+    # (plan 137). Echoes from Brokk closing his own errand are still presented once
+    # and cleared by `ack` — harmless noise, not a reason to drop the real news.
+    printf 'WAKE %s\n' "$line"
   done <"$QUEUE"
+  [ "${dropped:-0}" -gt 0 ] && printf 'wake_echo[1]{dropped,why}:\n  %s,"errands already closed — ack clears them, they are not presented as news"\n' "$dropped"
   printf 'WAKE_ACK_REQUIRED: acknowledge handled wakes to drop them from the queue\n'
 fi
 

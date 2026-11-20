@@ -13,7 +13,7 @@ Environment=PORT=__YMIR_HLIDSKJALF_PORT__
 # The packaged install ships ./dist and is previewed; a clone gets the dev
 # server — both on the SAME port (the port every other door expects, never the
 # vite default). One shell picks the honest shape per seat.
-ExecStart=/bin/bash -c 'if [ -d dist ]; then exec npx --no-install vite preview --port __YMIR_HLIDSKJALF_PORT__ --strictPort --host; else exec npm run dev -- --port __YMIR_HLIDSKJALF_PORT__ --strictPort --host; fi'
+ExecStart=/bin/bash -c 'if [ -d dist ]; then exec npx --no-install vite preview --port __YMIR_HLIDSKJALF_PORT__ --strictPort --host 127.0.0.1; else exec npm run dev -- --port __YMIR_HLIDSKJALF_PORT__ --strictPort --host 127.0.0.1; fi'
 Restart=on-failure
 RestartSec=5
 

@@ -157,7 +157,7 @@ export default function elder(pi: ExtensionAPI) {
         const next = (parseInt(nums || "0", 10) || 0) + 1;
         const nn = String(next).padStart(2, "0");
         const file = `${dir}/${nn}-${String(args.slug)}.md`;
-        run("bash", ["-c", `printf '# Plan %s — %s\n\n**Opened %s.**\n' "$2" "$3" "$(date -u +%Y-%m-%d)" > "$1"`, "_", file, nn, String(args.title)], HOME);
+        run("bash", ["-c", `printf "# Plan %s - %s\n\n**Opened %s.**\n" "$2" "$3" "$(date -u +%Y-%m-%d)" > "$1"`, "_", file, nn, String(args.title)], HOME);
         return piOut(`created ${file}\n` +
             `  number: ${nn} (after the index's highest)\n` +
             `  next: add the README index row, then ymir_push that ONE path by name.`);

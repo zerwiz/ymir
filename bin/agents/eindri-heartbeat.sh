@@ -95,5 +95,12 @@ else
   fi
 fi
 
+# Surface the silence: queue a durable wake so Brokk is woken even with no arm.
+if [ -r "$SCRIPT_DIR/eindri-wake-lib.sh" ]; then
+  . "$SCRIPT_DIR/eindri-wake-lib.sh"
+  EINDRI_STATE="$STATE"
+  export EINDRI_STATE
+  eindri_queue_wake "eindri $AGENT SILENT: no status append for ${age}s (window ${WINDOW}s); last: $last"
+fi
 verdict silent "$((NOW - launched))" "$last"
 exit 0

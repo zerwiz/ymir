@@ -10,11 +10,11 @@ the register becoming a to-do list twice, and to 390 doors with no name for the 
 ## 1 · The doors, by the job they serve
 
 capabilities[5]{surface,count}:
-  "shell doors (bin/*.sh)",596
+  "shell doors (bin/*.sh)",600
   "runtime modules (src/ymir_runtime/*.py)",56
   "skills (.agents/skills/*)",28
   "Pi extension tools",0
-  "generated","2026-10-23"
+  "generated","2026-10-24"
 
 | door | the job | verdict | tech decision |
 |---|---|---|---|
@@ -393,9 +393,13 @@ capabilities[5]{surface,count}:
 | omarchy-install.sh | omarchy-install.sh — the Omarchy installation layer (Rule 05). | tested | keep (a human or a cron row must run it) |
 | omarchy-plugins.sh | omarchy-plugins.sh — the Omarchy plugins Ymir suggests, and installs o | tested+named | keep (a human or a cron row must run it) |
 | omarchy-sense.sh | omarchy-sense.sh — learn the Allfather's Omarchy machine. | tested+named | keep (a human or a cron row must run it) |
+| clients.sh | clients.sh — the clients register: load, validate, and check. | tested | keep (a human or a cron row must run it) |
+| place-validate.sh | place-validate.sh — validate a place.yaml against the clients register | tested | keep (a human or a cron row must run it) |
+| projects-validate.sh | projects-validate.sh — validate projects.yaml, including the optional  | tested | keep (a human or a cron row must run it) |
 | install.sh | install.sh — seat Gná's desk on THIS machine. Idempotent: one desk pe | tested+named | keep (a human or a cron row must run it) |
 | mail-scan.sh | mail-scan.sh — read-only: the last N hours of a mailbox, as compact JS | tested | keep (a human or a cron row must run it) |
 | apodex-smoke-test.sh | apodex-smoke-test — validate an Apodex endpoint (GGUF via llama-router | tested+named | keep (a human or a cron row must run it) |
+| catalog.sh | catalog.sh — THE door to what this machine can serve. | tested+named | keep (a human or a cron row must run it) |
 | llama-ensure.sh | llama-ensure.sh — stand a CUDA llama.cpp engine for local models, or a | tested+named | keep (a human or a cron row must run it) |
 | local-model-lock.sh | local-model-lock.sh — serialize LOCAL model inference on one machine. | tested+named | keep (a human or a cron row must run it) |
 | model-fetch.sh | model-fetch.sh — fetch a chosen model into the operator's models direc | tested+named | keep (a human or a cron row must run it) |
@@ -616,3 +620,31 @@ capabilities[5]{surface,count}:
 | `test_worktree` | worktree.py — Yggdrasil, against a real git repo. | yes | yes (bin/ imports the engine) |
 | `watch` | Sýn — the standing arm's behaviour, owned once by the engine. | yes | yes (bin/ imports the engine) |
 | `worktree` | Yggdrasil — the worktree. One errand, one checkout, zero collision. | yes | yes (bin/ imports the engine) |
+
+## 2 · The extension's own tools (registered once, by the door)
+
+
+
+## 2 · The extension's own tools (registered once, by the door)
+
+
+
+**One tool, ONE registration.** Another extension imports the shared lib; it never re-registers
+a tool another already registers (plan 66 Part 8, register §12).
+
+## 3 · The uncovered jobs — where a new script would otherwise appear
+
+Anything **uncalled** in §1 is a job with no door an agent can find. Two honest answers, never a
+third:
+1. **it is a real capability** → add a row here with its door and its tech decision, or
+2. **it is retired** → move the file to `hodd/reference/` and say why (Rule 11).
+
+## 4 · The rule for new work
+
+```
+one_capability[4]{rule,means}:
+  "one name","a capability has ONE name and ONE door; two doors is a bug the seat check names"
+  "thin doors","the door calls bin/ so a human and a cron row run the same thing"
+  "state before content","a door may be 1 line; anything with parsing or state moves to src/"
+  "no unlisted scripts","a new bin/*.sh needs a row here, or it does not ship"
+```

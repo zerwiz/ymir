@@ -104,7 +104,32 @@ else
   fi
 fi
 
-# ---- 3. Prune (opt-in, backup-gated, never runes/masterplan) -------------
+# ---- 3. Grading (continuous forgetting — plan 136) ----------------------
+# Muninn prunes: nýr · eldri · forn · safn, by recency and access frequency. This is
+# the CONTINUOUS pass, run nightly, and it is the opposite of a tidy-up — decay
+# rescored, exact duplicates annotated void against the copy that stands, expired
+# retention archived, and a document that DECLARES a successor moved to
+# hodd/reference/ with why it went. Nothing is deleted and the episode count is
+# checked: a run that lowers it is a failure (Rule 20), reported, never hidden.
+#
+# It rides the backup above: annotations are harmless without one, but a document
+# MOVE is only attempted after the memory trees were archived, so `--apply` is
+# passed only when the backup succeeded. Disable with BROKK_WELL_GRADE=0.
+WELL_STORE="${ENGRAM_DB:-${YMIR_HOME}/hodd/memory/kaia.engram}"
+if [ "${BROKK_WELL_GRADE:-1}" = "1" ] && [ -x "$SCRIPT_DIR/../records/mimir.sh" ]; then
+  if [ "$backup_ok" = "1" ]; then
+    grade_out="$(ENGRAM_DB="$WELL_STORE" "$SCRIPT_DIR/../records/mimir.sh" grade --apply 2>&1)"; grade_rc=$?
+  else
+    grade_out="$(ENGRAM_DB="$WELL_STORE" "$SCRIPT_DIR/../records/mimir.sh" grade 2>&1)"; grade_rc=$?
+    printf 'grading: report only — the backup did not succeed, so nothing was annotated\n'
+  fi
+  printf '%s\n' "$grade_out" | sed -n '1,12p'
+  printf 'grading: rc=%s store=%s\n' "$grade_rc" "$WELL_STORE"
+else
+  printf 'grading: skipped (BROKK_WELL_GRADE=%s)\n' "${BROKK_WELL_GRADE:-1}"
+fi
+
+# ---- 4. Prune (opt-in, backup-gated, never runes/masterplan) -------------
 pruned=0
 if [ "${BROKK_MEMORY_PRUNE:-0}" = "1" ]; then
   if [ "$backup_ok" != "1" ]; then

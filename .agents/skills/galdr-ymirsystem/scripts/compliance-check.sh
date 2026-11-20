@@ -490,6 +490,19 @@ while IFS= read -r spec; do
     gov_count=$((gov_count + 1))
     [ -e "$ROOT/$alt" ] && continue
     case "$alt" in
+      # BRACE EXPANSION IS THE SHELL'S JOB, NOT compgen's. A governed path written
+      # `apps/x/{cookbooks,skills}/**` never matches a glob test — compgen knows `*`, `?`
+      # and `[`, but `{a,b}` is expanded by bash before any command runs. So a governed
+      # path that EXISTED was reported missing forever and CI could never pass
+      # (measured 2026-10-24, PR 423's failing gates job).
+      *'{'*)
+        _pre="${alt%%\{*}"; _rest="${alt#*\{}"; _mid="${_rest%%\}*}"; _post="${_rest#*\}}"
+        _ok=0; _old_ifs="$IFS"; IFS=','
+        for _piece in $_mid; do
+          compgen -G "$ROOT/$_pre$_piece$_post" >/dev/null 2>&1 && { _ok=1; break; }
+        done
+        IFS="$_old_ifs"
+        [ "$_ok" = 1 ] || gov_missing="$gov_missing $alt" ;;
       *'*'*|*'?'*|*'['*)
         compgen -G "$ROOT/$alt" >/dev/null 2>&1 || gov_missing="$gov_missing $alt" ;;
       *)

@@ -175,14 +175,21 @@ PYD
   printf '| `%s` | %s | %s | %s |\n' "$m" "$owns" "$tested" "$reach"
 done
 
-cat <<EOM
+# THE INSIDE OF A HEREDOC IS NOT A SCRIPT. This block used to run a command
+# substitution INSIDE an unquoted heredoc, whose escaping of backticks is then re-parsed
+# by the outer shell — bash answered `bad substitution: no closing "\`"` on line 178 and
+# the whole capability register could not be generated, so `capabilities --check` failed
+# forever and CI could not pass (measured 2026-10-24, PR 423's failing gates job).
+# Compute the list here, in real code, and interpolate the result.
+ext_tools="$(grep -rhoE 'name: "[a-z_]+"' .pi/shared/extensions/ymirhome.ts 2>/dev/null \
+  | grep -oE '"[a-z_]+"' | tr -d '"' | sort -u | while read -r t; do printf -- '- `%s`\n' "$t"; done)"
+
+printf "\n## 2 · The extension's own tools (registered once, by the door)\n\n%s\n" "$ext_tools"
+cat <<'EOM'
 
 ## 2 · The extension's own tools (registered once, by the door)
 
-$(
-  grep -rhoE 'name: "[a-z_]+"' .pi/shared/extensions/ymirhome.ts 2>/dev/null | grep -oE '"[a-z_]+"' | tr -d '"' | sort -u \
-  | while read -r t; do printf -- '- \`%s\`\n' "$t"; done
-)
+
 
 **One tool, ONE registration.** Another extension imports the shared lib; it never re-registers
 a tool another already registers (plan 66 Part 8, register §12).
@@ -192,7 +199,7 @@ a tool another already registers (plan 66 Part 8, register §12).
 Anything **uncalled** in §1 is a job with no door an agent can find. Two honest answers, never a
 third:
 1. **it is a real capability** → add a row here with its door and its tech decision, or
-2. **it is retired** → move the file to \`hodd/reference/\` and say why (Rule 11).
+2. **it is retired** → move the file to `hodd/reference/` and say why (Rule 11).
 
 ## 4 · The rule for new work
 
@@ -202,7 +209,7 @@ one_capability[4]{rule,means}:
   "thin doors","the door calls bin/ so a human and a cron row run the same thing"
   "state before content","a door may be 1 line; anything with parsing or state moves to src/"
   "no unlisted scripts","a new bin/*.sh needs a row here, or it does not ship"
-\`\`\`
+```
 EOM
 }
 

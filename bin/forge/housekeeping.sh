@@ -241,7 +241,7 @@ if [ "$JSON" = 1 ]; then
   printf '{"worktrees":['
   first=1
   for l in "${LINES[@]}"; do
-    IFS=$'\t' read -r p b v s _abs <<<"$l"
+    IFS=$'\t' read -r p b v s _abs detail <<<"$l"
     [ "$first" = 1 ] || printf ','
     first=0
     printf '{"path":"%s","branch":"%s","verdict":"%s","size":"%s"}' "$p" "$b" "$v" "$s"
@@ -285,7 +285,7 @@ if [ "$CMD" = "clean" ]; then
   if [ "$YES" = 0 ]; then
     printf 'plan[%s]{action,target,why}:\n' "$TOTAL_RECLAIM"
     for l in "${LINES[@]}"; do
-      IFS=$'\t' read -r p b v s _abs <<<"$l"
+      IFS=$'\t' read -r p b v s _abs detail <<<"$l"
       case "$v" in reclaimable:merged) ;; reclaimable:pushed) [ "$MERGED_ONLY" = 1 ] && continue ;; reclaimable:*) ;; *) continue ;; esac
       case "$v" in reclaimable:*) printf '  "worktree-remove","%s (%s, %s)","%s"\n' "$p" "$b" "$s" "$v" ;; esac
     done
@@ -307,7 +307,7 @@ if [ "$CMD" = "clean" ]; then
   [ -d "$WT_ROOT" ] || WT_ROOT="$ROOT/.yggdrasil"
   removed=0; freed_before="$(du -sh "$WT_ROOT" 2>/dev/null | awk '{print $1}')"
   for l in "${LINES[@]}"; do
-    IFS=$'\t' read -r p b v s _abs <<<"$l"
+    IFS=$'\t' read -r p b v s _abs detail <<<"$l"
     case "$v" in
       reclaimable:merged) ;;
       reclaimable:pushed) [ "$MERGED_ONLY" = 1 ] && continue ;;
@@ -339,7 +339,15 @@ if [ "$CMD" = "clean" ]; then
     # a feature branch (it did: feat/snotra-letter), so a branch fully merged into main was
     # refused. The safety proof is the one the verdict already made — the tip is an ancestor
     # of the base — so -D is used ONLY under that proof, and said out loud.
-    if git merge-base --is-ancestor "$b" "$BASE" 2>/dev/null; then
+    # THE VERDICT IS THE PROOF, not ancestry: a rebase or a cherry-pick merge leaves a
+    # different SHA for identical content, so `--is-ancestor` is false for work that is
+    # already home, and `git branch -d` then refused it as "not merged" — the door kept
+    # every branch it had just called reclaimable (measured 2026-10-24: 80 reclaimable,
+    # 0 deleted). -D is used ONLY under a reclaimable verdict, and said out loud.
+    # The verdict already proved the content is home (merged · every patch upstream ·
+    # byte-identical content in main), so the delete is made with -D under that proof alone;
+    # ancestry is merely the strongest case of it.
+    if git merge-base --is-ancestor "$b" "$BASE" 2>/dev/null ||        case "$v" in reclaimable:*) true ;; *) false ;; esac; then
       git branch -D "$b" >/dev/null 2>&1 && { printf '  removed-branch:"%s"\n' "$b"; removed=$((removed + 1)); } \
         || printf '  kept-branch:"%s" (git refused)\n' "$b"
     else

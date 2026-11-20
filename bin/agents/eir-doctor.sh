@@ -104,7 +104,7 @@ surface_detail_skip() {
 }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors herdr a2abridge hermes snotra voice council sessrumnir shells graphics well mcp harness arm lock migrations hoard autoboot vault ward)
+SURFACES=(floors herdr a2abridge hermes snotra voice council sessrumnir shells graphics well memory mcp harness arm lock gates migrations hoard autoboot vault ward)
 
 s_floors()    { [ -x "$SCRIPT_DIR/../engine/prereq-ensure.sh" ] && "$SCRIPT_DIR/../engine/prereq-ensure.sh" status >/dev/null 2>&1; }
 f_floors()    { "$SCRIPT_DIR/../engine/prereq-ensure.sh" ensure --install >/dev/null 2>&1; }
@@ -203,6 +203,28 @@ s_well()      {
   return 1
 }
 f_well()      { "$SCRIPT_DIR/../records/mimir.sh" start >/dev/null 2>&1; "$SCRIPT_DIR/../records/well-guard.sh" record >/dev/null 2>&1; }
+
+# MEMORY — the well's PRACTICE, not just its port (plan 136). `well` asks whether
+# someone is listening; `memory` asks whether there is anything worth listening to:
+# how big the store is, when it was last watered, last drunk from, last written as
+# a day, and last pruned. A well that answers and is never fed is green on `well`
+# and useless to the Allfather, which is exactly the failure this surface names.
+# The measuring lives in bin/records/mimir.sh memory (one door, stdlib only), so a
+# broken bridge still yields a report rather than a blank row.
+memory_detail() {
+  local out
+  out="$("$SCRIPT_DIR/../records/mimir.sh" memory --line 2>/dev/null)"
+  [ -n "$out" ] || { printf 'the memory door did not answer — bin/records/mimir.sh memory\n'; return 1; }
+  printf '%s\n' "$out"
+}
+s_memory()    { "$SCRIPT_DIR/../records/mimir.sh" memory --check >/dev/null 2>&1; }
+f_memory()    {
+  # The mends are: raise the well, then let the grading pass run (it only annotates
+  # and moves; it never lowers the count). A stale DAILY record is not something a
+  # healer can write honestly — the row keeps saying so.
+  "$SCRIPT_DIR/../records/mimir.sh" start >/dev/null 2>&1
+  "$SCRIPT_DIR/../records/mimir.sh" grade --apply >/dev/null 2>&1
+}
 # MCP: both A2A servers wired into opencode + pi.
 s_mcp() {
   local pi="$HOME/.pi/agent/mcp-adapter.json" oc="$ROOT/opencode.json"
@@ -271,6 +293,33 @@ f_lock() {
   fi
 }
 s_migrations(){ [ ! -x "$SCRIPT_DIR/../engine/ymir-migrate.sh" ] || "$SCRIPT_DIR/../engine/ymir-migrate.sh" status >/dev/null 2>&1; }
+
+# Gates: the delivery hook that is INSTALLED, not the installer that is right.
+# `fixes-guard.sh --install` was fixed on 2026-10-20 to judge the PUSHING worktree
+# (`git rev-parse --show-toplevel`) instead of the checkout that installed it — but
+# the hook already seated on this machine kept the old shape, so for four days every
+# push from a Yggdrasil worktree was judged against the main tree, and a branch that
+# had regenerated its register was still refused (measured 2026-10-24). A mend that
+# is not re-seated is not a mend: this surface checks the artifact, not the script.
+_gates_hook() {  # <result-var> — the installed pre-push hook's path
+  local hooks
+  hooks="$(cd "$ROOT" 2>/dev/null && git rev-parse --git-path hooks 2>/dev/null)" || return 1
+  [ -n "$hooks" ] || return 1
+  case "$hooks" in /*) ;; *) hooks="$ROOT/$hooks" ;; esac
+  printf -v "${1:?}" '%s' "$hooks/pre-push"
+}
+s_gates() {
+  local h
+  _gates_hook h || return 1
+  [ -x "$h" ] || return 1
+  grep -q 'git rev-parse --show-toplevel' "$h" 2>/dev/null || return 1
+  grep -q 'branch-current.sh' "$h" 2>/dev/null || return 1
+}
+f_gates() {
+  _gates_hook h >/dev/null 2>&1 || true
+  bash "$SCRIPT_DIR/../gates/guards/fixes-guard.sh" --install >/dev/null 2>&1 || return 1
+  s_gates
+}
 f_migrations(){ [ -x "$SCRIPT_DIR/../engine/ymir-migrate.sh" ] && "$SCRIPT_DIR/../engine/ymir-migrate.sh" apply >/dev/null 2>&1; }
 # Hoard: private data sits under the hoard, and .ymir-layout.yaml tells the truth.
 # Two failures this catches: (1) a declared layout path that does not exist — a
@@ -287,7 +336,7 @@ s_hoard() {
       # THE MAP MUST DESCRIBE *THIS* MACHINE. The previous code RETRIED a foreign path
       # under this root, which made a map naming another computer pass as 'ok' —
       # masking the very fault this surface exists to catch (measured 2026-10-13:
-      # .ymir-layout.yaml pointed at /home/heimdall/… for every path, and this
+      # .ymir-layout.yaml pointed at an absolute per-user home for every path, and this
       # surface still reported 'ok'). A foreign map is now a FAILURE.
       maproot="$(sed -nE 's/^git_repo: "([^"]+)".*/\1/p' "$lay" 2>/dev/null | head -1)"
       if [ -n "$maproot" ] && [ "$maproot" != "$YMIR_HOME" ]; then
@@ -396,10 +445,12 @@ detail() { # <name> -> the command that prints one short fact
     hermes)    printf '%s\n' "have hermes && echo present || echo absent" ;;
     sessrumnir)printf '%s\n' "[ -d $APP_SESSRUMNIR/out ] && echo built || echo 'not built'" ;;
     well)      printf '%s\n' well_detail ;;
+    memory)    printf '%s\n' memory_detail ;;
     mcp)       printf '%s\n' "echo 'a2abridge + engram'" ;;
     graphics)  printf '%s\n' "if [ -z \"\${DISPLAY:-}\${WAYLAND_DISPLAY:-}\" ]; then echo headless; else echo \"\$(graphics_block 2>/dev/null | sed -n '1p' | sed 's/.*{//;s/}//') · \$(graphics_policy 2>/dev/null)\"; fi" ;;
     harness)   printf '%s\n' "s_harness && echo 'deployed extensions resolve their bin/' || echo 'no live root recorded'" ;;
     arm)       printf '%s\n' "$SCRIPT_DIR/../pi/syn-watch.sh status --detail 2>/dev/null | head -1 || echo 'arm door missing'" ;;
+    gates)     printf '%s\n' "s_gates && echo 'pre-push hook: the worktree that pushes' || echo 'installed hook is stale — bin/gates/guards/fixes-guard.sh --install'" ;;
     lock)      printf '%s\n' "cat $STATE/.lock 2>/dev/null | tr -d '[:space:]' | sed 's/^/pid /' || echo none" ;;
     migrations)printf '%s\n' "echo 'structure'" ;;
     shells)    printf '%s\n' 'shell_surfaces | while IFS= read -r s; do d=""; app_dir "$s" d 2>/dev/null || d=""; [ -n "$d" ] && printf "%s %s; " "$s" "$(electron_runtime_state "$d" "$ROOT" "$(app_pkg "$s")" 2>/dev/null)"; done' ;;

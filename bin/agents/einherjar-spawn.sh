@@ -981,9 +981,24 @@ META_TMP="$STATE/.$ID.meta.${BASHPID:-$$}"
 } > "$META_TMP"
 mv "$META_TMP" "$META"
 
-# --- arm the silence watch (best effort) -------------------------------------
+# --- arm the silence watch, AND PROVE IT ARMED -------------------------------
+# This used to be `|| true`, so a seat could be launched with no watchdog and nobody knew:
+# eighteen statuses claimed to be working for up to 719 hours because nothing was ever
+# going to notice the silence (2026-10-24). Arming is now verified, and a failure is loud
+# and recorded in the meta — a seat without a watchdog is a fact the next reader can see.
+WATCH_STATE=unarmed
 if [ -x "$SCRIPT_DIR/eindri-watch.sh" ]; then
-  "$SCRIPT_DIR/eindri-watch.sh" arm-silence "$ID" --window "${EINDRI_SILENT_WINDOW:-1800}" >/dev/null 2>&1 || true
+  if "$SCRIPT_DIR/eindri-watch.sh" arm-silence "$ID" --window "${EINDRI_SILENT_WINDOW:-1800}" >/dev/null 2>&1; then
+    "$SCRIPT_DIR/eindri-watch.sh" list 2>/dev/null | grep -q "when-${ID}-silent" && WATCH_STATE=armed
+  fi
+fi
+if [ "$WATCH_STATE" != armed ]; then
+  printf 'watch[1]{seat,state,why}:\n  "%s","UNARMED","the silence watch did not register — nobody will notice this seat going quiet"\n' "$ID" >&2
+  printf 'watch=unarmed\n' >> "$META" 2>/dev/null || true
+  [ -x "$ROOT/bin/notify/send.sh" ] && bash "$ROOT/bin/notify/send.sh" --source seat --severity HIGH \
+    --key "seat-unwatched:$ID" --message "seat $ID launched with NO silence watch — it can die silently" >/dev/null 2>&1 || true
+else
+  printf 'watch=armed window=%s\n' "${EINDRI_SILENT_WINDOW:-1800}" >> "$META" 2>/dev/null || true
 fi
 
 if [ "$KIND" = ship ]; then

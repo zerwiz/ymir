@@ -12,17 +12,71 @@ const server = new McpServer({ name: "well", version: "0.1.0" });
 
 server.registerTool(
   "well_recall",
-  { title: "Recall from the well", description: "Recall memories relevant to a query (the engram hybrid recall)", inputSchema: { query: z.string(), limit: z.number().optional() } },
-  async ({ query, limit }) => {
-    const r = await fetch(`${WELL}/recall?q=${encodeURIComponent(query)}${limit ? `&k=${limit}` : ""}`);
+  {
+    title: "Recall from the well",
+    description:
+      "Recall memories relevant to a query. SCOPE FIRST (plan 136): pass a store, a tag or a since date " +
+      "and the search is confined to that shelf before similarity is scored. Voided and archived episodes " +
+      "are never returned.",
+    inputSchema: {
+      query: z.string(),
+      limit: z.number().optional(),
+      store: z.enum(["episodic", "semantic", "procedural"]).optional(),
+      tag: z.string().optional(),
+      since: z.string().optional(),
+    },
+  },
+  async ({ query, limit, store, tag, since }) => {
+    const qs = new URLSearchParams({ q: query });
+    if (limit) qs.set("k", String(limit));
+    if (store) qs.set("store", store);
+    if (tag) qs.set("tag", tag);
+    if (since) qs.set("since", since);
+    const r = await fetch(`${WELL}/recall?${qs.toString()}`);
     return { content: [{ type: "text", text: await r.text() }] };
   },
 );
 server.registerTool(
   "well_remember",
-  { title: "Observe into the well", description: "Store a memory into the well (observe: content, actors, tags)", inputSchema: { content: z.string(), actors: z.string().optional(), tags: z.string().optional() } },
-  async ({ content, actors, tags }) => {
-    const r = await fetch(`${WELL}/observe`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ content, actors, tags }) });
+  {
+    title: "Observe into the well",
+    description:
+      "Store a memory. THE GATE (plan 136): a write must change future behaviour, be a commitment with " +
+      "consequences, or be a decision with rationale — otherwise it is dropped and the reason comes back. " +
+      "State the shape and the shelf when you know them.",
+    inputSchema: {
+      content: z.string(),
+      actors: z.string().optional(),
+      tags: z.string().optional(),
+      shape: z.enum(["behaviour", "commitment", "decision"]).optional(),
+      store: z.enum(["episodic", "semantic", "procedural"]).optional(),
+      task: z.string().optional(),
+    },
+  },
+  async ({ content, actors, tags, shape, store, task }) => {
+    const r = await fetch(`${WELL}/observe`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ content, actors, tags, shape, store, task }),
+    });
+    return { content: [{ type: "text", text: await r.text() }] };
+  },
+);
+server.registerTool(
+  "well_correct",
+  {
+    title: "Correct a memory",
+    description:
+      "Append a correction that CHAINS to the original by id (never an overwrite): the replacement names " +
+      "the original, the original is annotated void, and recall stops handing the old version back as fact.",
+    inputSchema: { original_id: z.string(), content: z.string(), actors: z.string().optional() },
+  },
+  async ({ original_id, content, actors }) => {
+    const r = await fetch(`${WELL}/correct`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ original_id, content, actors }),
+    });
     return { content: [{ type: "text", text: await r.text() }] };
   },
 );

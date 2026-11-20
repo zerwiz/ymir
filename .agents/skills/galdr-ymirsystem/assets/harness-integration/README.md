@@ -724,6 +724,21 @@ times at one-second spacing because a birth race (or a bridge that died since
 the last open) is not an outage. A refused or timed-out connection is shaped as
 the same `{ok:false}` answer every HTTP miss uses (status 0), so `well_recall` /
 `well_observe` report a down well into the thread instead of throwing out of it.
+
+**Appended 2026-10-26 (plan 136) — the well's tools now speak the GATE.** The write
+door gained a policy (see `assets/memory-well.md` §"The policy"), and the harness
+surfaces had to carry it or the policy would be invisible to every agent:
+
+| Surface | What it now does |
+|---|---|
+| `well_observe` (`ymir-well.ts`) | params `shape` (behaviour/commitment/decision), `store` (episodic/semantic/procedural), `task`, `retention`, `privacy`; a bridge answer of `stored:false` is printed as **"the gate DROPPED it"** with the reason — never as success |
+| `well_recall` (`ymir-well.ts`) | params `store`, `tag`, `since` — the shelf and the window are chosen BEFORE similarity, and each row prints its shelf (`{semantic}`) so a fact is distinguishable from a workflow |
+| `ymir_remember` (`ymirhome.ts`) | passes the lesson as **argv** (the old `parts.join(" ")` re-parsed prose as shell words), accepts `shape`/`store`/`task`, and reports a refusal with the gate's own words |
+| `well_remember` / `well_recall` / `well_correct` (`tools/well-mcp/server.ts`) | the same three: shape+shelf on write, scoping on recall, and a correction door that appends and chains by id |
+
+The rule for every harness: **a drop must not read as success.** A tool that prints
+"written" when the gate refused teaches the model that the well holds something it
+does not, and the next session trusts it.
 Each call carries a 60s abort cap (`YMIR_WELL_TIMEOUT_MS` to tune) so a
 cold-start embedding-model fetch cannot strangle a recall on its first breath.
 
