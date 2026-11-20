@@ -168,6 +168,9 @@ fi
 #     always has; in another project's repository this door makes it, in that repository, and the
 #     pane opens there. `--main` then tells herdr-run not to nest a second worktree inside it.
 SEAT_MAIN="$MAIN"; WORKTREE=""; WORK_BRANCH=""; WORK_MADE=""
+# Plan 339.4: every worktree made below — by project-target.sh, herdr-run or the engine — is
+# recorded in the reaper's ledger under THIS road and the errand's role as its owner.
+export YMIR_WORKTREE_ROAD="${YMIR_WORKTREE_ROAD:-eindri-start}" YMIR_WORKTREE_OWNER="${YMIR_WORKTREE_OWNER:-$ROLE}"
 if [ "$PROJECT_KIND" = other ]; then
   WORK_ID="${TASK_ID:-$LABEL}"
   dry_flag=""; [ "$DRY" = 1 ] && dry_flag="--dry-run"

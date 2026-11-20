@@ -285,6 +285,11 @@ case "$ACTION" in
       fi
       made="yes"
     fi
+    # Plan 339.4: record what this road made, so the reaper removes it when the errand closes.
+    if [ "$made" = yes ]; then
+      python3 "$ROOT/bin/forge/worktree-reap.py" record --path "$WT" --repo "$CLONE" --branch "$BRANCH" \
+        --errand "$ID_ARG" --road "${YMIR_WORKTREE_ROAD:-eindri-start}" --owner "${YMIR_WORKTREE_OWNER:-}" >/dev/null 2>&1 || true
+    fi
     printf 'worktree\t%s\nbranch\t%s\nhow\t%s\ncreated\t%s\n' "$WT" "$BRANCH" "created in the project's own repository" "$made"
     ;;
 esac
