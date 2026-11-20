@@ -22,7 +22,7 @@
 # from inside a job that can itself be dead; the week asks "what did I start and not finish". So
 # the sweep lists EVERY draft oldest first — a day-old draft is correct on Tuesday and is the
 # week's unfinished correspondence by Friday — appends one trend record
-# (`{at, drafts, aged, oldest_days}`) to hodd/state/draft-trend.jsonl so a habit is visible
+# (`{at, drafts, aged, oldest_days}`) to state/draft-trend.jsonl so a habit is visible
 # across weeks, and sends ONE line to the phone carrying a send / edit / discard button per draft.
 #
 # THE SILENCE RULE: a week with no drafts says NOTHING to the phone and carves one no-op Rune.
@@ -95,8 +95,8 @@ OAUTH_URL="${YMIR_OAUTH_TOKEN_URL:-https://oauth2.googleapis.com/token}"
 # The trend is a HOME record (Rule 04: state lives in the hoard, never in this public tree) and it
 # is APPEND-ONLY (Rule 06): a week is never rewritten, so the habit stays readable across months.
 HOARD_STATE=""
-hoard_root _hoard 2>/dev/null && HOARD_STATE="${_hoard:-}/state"
-[ -n "$HOARD_STATE" ] || HOARD_STATE="${HOME_DIR:-}/hodd/state"
+hoard_state_dir _state 2>/dev/null && HOARD_STATE="${_state:-}"      # the STATE shelf, by name (plan 331)
+[ -n "$HOARD_STATE" ] || HOARD_STATE="${HOME_DIR:-}/state"
 TREND_FILE="${YMIR_DRAFT_TREND_FILE:-$HOARD_STATE/draft-trend.jsonl}"
 NOTIFY_DOOR="${YMIR_NOTIFY_DOOR:-$ROOT/bin/notify/send.sh}"
 RUNES_APPEND="$ROOT/bin/records/runes-append.sh"

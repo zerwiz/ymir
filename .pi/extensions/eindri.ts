@@ -48,6 +48,48 @@ function resolveRoot(): string {
 
 const ROOT = resolveRoot();
 
+// ── WHERE THE ERRAND'S RECORD LIVES (2026-11-20) ─────────────────────────────────────────────
+// An errand's status and meta are the HOME's (`<home>/state/<id>.meta`), never the checkout's:
+// the home is where the helm writes, and a seat that read `<root>/state` answered "NOTHING
+// RECORDED — no state/<id>.meta" for an errand whose meta and status both stood in the home
+// (measured 2026-11-20 on `ymir_errand read`). This mirrors the shell doors —
+// `eindri_helm_state` in bin/agents/eindri-wake-lib.sh: BROKK_HELM_STATE, then
+// BROKK_STATE_OVERRIDE, then the home — and keeps the old in-tree `state/` as a last resort, so an
+// older seat is still read rather than refused.
+export function resolveHome(): string {
+  const fromEnv = process.env.YMIR_HOME?.trim();
+  if (fromEnv) return fromEnv;
+  const hodd = run("bash", [join(ROOT, "bin", "vault", "hodd.sh"), "path"]);
+  const hoard = hodd.rc === 0 ? hodd.out.trim() : "";
+  if (hoard) return hoard.replace(/\/hodd$/, "");
+  return "";
+}
+
+const HOME = resolveHome();
+
+/** The state dirs an errand's record is looked for in, in the order the shell doors use. */
+export function errandStateDirs(): string[] {
+  const override = process.env.BROKK_STATE_OVERRIDE?.trim();
+  const helm = process.env.BROKK_HELM_STATE?.trim();
+  const dirs = [
+    helm || "",
+    override && override !== process.env.BROKK_MACHINE_STATE_DIR ? override : "",
+    HOME ? join(HOME, "state") : "",
+    join(ROOT, "state"),
+  ];
+  return dirs.filter((d, i) => d && dirs.indexOf(d) === i);
+}
+
+/** Where the errand's record is, or the first candidate when it has none (so the message names a path). */
+function errandBase(id: string): { base: string; found: boolean } {
+  const dirs = errandStateDirs();
+  for (const d of dirs) {
+    const base = join(d, id);
+    if (existsSync(`${base}.meta`) || existsSync(`${base}.status`)) return { base, found: true };
+  }
+  return { base: join(dirs[0] ?? join(ROOT, "state"), id), found: false };
+}
+
 /** A tool result is read, not scrolled: keep the head, and say how much was cut. */
 function brief(text: string, limit = 3000): string {
   const out = (text ?? "").trim();
@@ -83,20 +125,25 @@ function field(file: string, key: string): string {
   return (new RegExp(`^${key}=(.*)$`, "m").exec(readFileSync(file, "utf8"))?.[1] ?? "");
 }
 
-function readErrand(id: string): string {
-  const base = `${ROOT}/state/${id}`;
+// EXPORTED for the test (bin/agents/tests/test_errand_doors_find_the_seat.sh): the reader is a
+// pure function of the state dirs, and a reader that cannot be called cannot be proved.
+export function readErrand(id: string): string {
+  const { base, found } = errandBase(id);
   const statusFile = `${base}.status`;
   const status = existsSync(statusFile) ? readFileSync(statusFile, "utf8").trim().split("\n").pop() ?? "" : "";
   const meta = `${base}.meta`;
   const out: string[] = [];
   out.push(`errand[1]{id,status,backend,harness,model,worktree}:`);
-  if (!existsSync(meta) && !existsSync(`${base}.status`)) {
-    out.push(`  "${id}","NOTHING RECORDED — no state/${id}.meta and no .status`);
+  if (!found) {
+    out.push(`  "${id}","NOTHING RECORDED — no ${base}.meta and no .status"`);
     out.push("");
+    out.push(`Looked in: ${errandStateDirs().join(", ") || "(no state dir resolved)"}.`);
     out.push("That is the fault this door exists for: an errand that left no record cannot be read, steered or closed by name.");
     return out.join("\n");
   }
   out.push(`  "${id}","${status.slice(0, 70)}","${field(meta, "backend")}","${field(meta, "harness")}","${field(meta, "model")}","${field(meta, "worktree")}"`);
+  const seat = field(meta, "seat_pane") || field(meta, "window");
+  if (seat) out.push(`  seat: ${seat}${field(meta, "seat_pane") ? "" : " (recorded `window`)"}`);
   const wt = field(meta, "worktree");
   if (wt && existsSync(wt)) {
     const g = (a: string[]) => run("git", a).out;

@@ -116,7 +116,7 @@ class Door(unittest.TestCase):
         declare_account()
         for name in ("gna-mail-watermark.json", "gna-mail-last-run.json"):
             try:
-                (TMP / "hodd/state" / name).unlink()
+                (TMP / "state" / name).unlink()
             except OSError:
                 pass
         self._token, self._api = gna_import.token_for, gna_import.api

@@ -1,5 +1,6 @@
 import { Plugin } from "@opencode/plugin"
 import { Schema } from "effect"
+import { existsSync } from "node:fs"
 
 /**
  * Ymir Tools Plugin for OpenCode V2
@@ -196,17 +197,30 @@ export default Plugin.define({
           try {
             switch (action) {
               case "read": {
-                const statusFile = `${root}/state/${id}.status`
-                const metaFile = `${root}/state/${id}.meta`
+                // AN ERRAND'S RECORD IS THE HOME'S, NOT THE CHECKOUT'S (2026-11-20). `root` is the
+                // repository; the helm writes `state/<id>.meta` in the home (and a seat may override
+                // it). Reading `${root}/state` answered "NOTHING RECORDED" for an errand whose meta and
+                // status both stood in the home. The order is the shell doors': helm override, the
+                // resolved state, then the old in-tree state as a last resort.
+                const stateDirs = [process.env.BROKK_HELM_STATE?.trim(), state, `${root}/state`]
+                  .filter((d, i, a): d is string => !!d && a.indexOf(d) === i)
+                let base = `${stateDirs[0] ?? `${root}/state`}/${id}`
+                for (const d of stateDirs) {
+                  if (existsSync(`${d}/${id}.meta`) || existsSync(`${d}/${id}.status`)) { base = `${d}/${id}`; break }
+                }
+                const statusFile = `${base}.status`
+                const metaFile = `${base}.meta`
                 let out = `errand[1]{id,status,backend,harness,model,worktree}:\n`
                 if (!(await Bun.file(statusFile).exists()) && !(await Bun.file(metaFile).exists())) {
-                  out += `  "${id}","NOTHING RECORDED — no state/${id}.meta and no .status"\n\nThat is the fault this door exists for: an errand that left no record cannot be read, steered or closed by name.`
+                  out += `  "${id}","NOTHING RECORDED — no ${metaFile} and no .status"\n\nLooked in: ${stateDirs.join(", ")}\n\nThat is the fault this door exists for: an errand that left no record cannot be read, steered or closed by name.`
                   return toolResult(out)
                 }
                 const status = (await Bun.file(statusFile).text()).trim().split("\n").pop() || ""
                 const meta = await Bun.file(metaFile).text()
                 const field = (key: string) => (new RegExp(`^${key}=(.*)$`, "m").exec(meta)?.[1] ?? "")
                 out += `  "${id}","${status.slice(0, 70)}","${field("backend")}","${field("harness")}","${field("model")}","${field("worktree")}"`
+                const seat = field("seat_pane") || field("window")
+                if (seat) out += `\n  seat: ${seat}`
                 const wt = field("worktree")
                 if (wt && await Bun.file(wt).exists()) {
                   const g = (a: string[]) => runShell("git", a, wt)
@@ -214,7 +228,7 @@ export default Plugin.define({
                   out += `\n  commits ahead of main: ${await g(["rev-list", "--count", "origin/main..HEAD"])}`
                   out += `\n  changed files: ${(await g(["status", "--porcelain"])).split("\n").filter(Boolean).length}`
                 }
-                const inbox = `${root}/state/${id}.inbox`
+                const inbox = `${base}.inbox`
                 if (await Bun.file(inbox).exists()) {
                   const un = await runShell("bash", ["-c", `ls "$1" 2>/dev/null | wc -l`, "_", inbox])
                   out += `\n  steering inbox: ${un} message(s)`
@@ -460,9 +474,9 @@ export default Plugin.define({
               { re: /masterplan|plan 66|roadmap|master plan/, shelf: ledgerShelf, why: "a masterplan or architecture plan belongs in the ledger" },
               { re: /register|inventory|index/, shelf: ledgerShelf, why: "a register is an index — it lives with the plans it indexes" },
               { re: /calendar|mánagandr|managandr|memory|well|engram/, shelf: ledgerShelf, why: "a feature's design belongs in its plan, not loose" },
-              { re: /postiz|social|campaign|marketing|brand|content/, shelf: "hodd/life/marketing/", why: "the operator's own marketing domain" },
-              { re: /meeting|minute|standup|1:1/, shelf: "hodd/life/meetings/", why: "a meeting artefact" },
-              { re: /journal|diary|personal/, shelf: "hodd/life/personal/", why: "the operator's own personal domain" },
+              { re: /postiz|social|campaign|marketing|brand|content/, shelf: "life/marketing/", why: "the operator's own marketing domain" },
+              { re: /meeting|minute|standup|1:1/, shelf: "life/meetings/", why: "a meeting artefact" },
+              { re: /journal|diary|personal/, shelf: "life/personal/", why: "the operator's own personal domain" },
               { re: /runbook|howto|setup|install/, shelf: "hodd/docs/runbooks/", why: "a runbook is a doc about a machine" },
               { re: /architecture|deep.?dive|audit/, shelf: "hodd/docs/", why: "architecture or audit material about the house" },
               { re: /readme|changelog|contribut/, shelf: "hodd/reference/", why: "repo boilerplate — reference, not a house doc" },
@@ -544,10 +558,10 @@ export default Plugin.define({
               const base = src.split("/").pop() ?? ""
               let dest = ""
               const hint = (area || base).toLowerCase()
-              if (/market|ads|campaign|brand|postiz/.test(hint)) dest = "hodd/life/marketing/imported/"
-              else if (/meeting|note|personal|journal/.test(hint)) dest = "hodd/life/personal/imported/"
+              if (/market|ads|campaign|brand|postiz/.test(hint)) dest = "life/marketing/imported/"
+              else if (/meeting|note|personal|journal/.test(hint)) dest = "life/personal/imported/"
               else if (/research|paper|arxiv|readme/.test(hint)) dest = "hodd/docs/research/imported/"
-              else if (/plan|roadmap|proposal|strategy/.test(hint)) dest = "hodd/life/work/imported/"
+              else if (/plan|roadmap|proposal|strategy/.test(hint)) dest = "life/work/imported/"
               else dest = "hodd/reference/imported/"
               const verdict = classifyPath(`${dest}${base}`)
               if (!verdict.ok) { lines.push(`refused ${base}: ${verdict.why}`); continue }
@@ -690,7 +704,7 @@ export default Plugin.define({
             return toolResult(v.ok ? `${path}\n  shelf: ${v.shelf}\n  because: ${v.why}` : `refused: ${v.why}`)
           }
           return toolResult("hodd/            private material (docs · data · memory · identity · life/<domain>)\n" +
-            "  hodd/life/<domain>/   the operator's own domains: marketing · personal · work · meetings\n" +
+            "  life/<domain>/        the operator's own domains: marketing · personal · work · meetings\n" +
             "  hodd/reference/       retired files, kept to be learned from (Rule 11)\n" +
             "  hodd/secrets/         credentials — never a document\n" +
             "svartalfaheim/<realm>/projects/<project>/\n" +

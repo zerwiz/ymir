@@ -385,9 +385,25 @@ for shelf, rows in shelves.items():
 #   · a tracked door no index can SEE     -> an empty row, or a shelf the walk cannot reach
 #   · a door with no header to DESCRIBE   -> the index cannot say what it does
 #   · a row for a file git does not track -> the register would name something no clone has
+# A HAND SECTION SURVIVES THE WEAVER (2026-11-20, RULES/06). This write used to replace the whole
+# file, so a `## CHANGE LOG` a person appended to .agents/backend/README.md was erased by the next
+# commit that wove it — measured on this branch: commit 30a65576, an unrelated gates fix, deleted
+# the 2026-11-19 entry. The rule lives in ONE door (bin/records/woven_tail.py) and every weaver
+# calls it; a seat on an older pin simply writes the body, because a missing helper must never
+# stop the register from rendering.
+try:
+    sys.path.insert(0, str(ROOT / "bin" / "records"))
+    import woven_tail  # noqa: PLC0415 — the helper ships beside the weavers that call it
+except Exception as _exc:  # noqa: BLE001
+    woven_tail = None
+    print(f"inventory: bin/records/woven_tail.py did not load ({_exc}) — a hand section will not be carried",
+          file=sys.stderr)
+
 if MODE != "--check":
     for target, body, count in written:
         target.parent.mkdir(parents=True, exist_ok=True)
+        if woven_tail is not None and target.exists():
+            body = woven_tail.compose(body, target.read_text(encoding="utf-8"))
         target.write_text(body, encoding="utf-8", newline="\n")
     for target, _body, count in written:
         print(f"wrote {target.relative_to(ROOT)} — {count} files")

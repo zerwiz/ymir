@@ -24,7 +24,7 @@ command -v python3 >/dev/null 2>&1 || { printf '1..0 # skip python3 is absent\n'
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 export YMIR_HOME="$TMP/home"
-mkdir -p "$YMIR_HOME/hodd/state"
+mkdir -p "$YMIR_HOME/state"
 
 # ── 1. declared AND wired, one door each ───────────────────────────────────────
 python3 - "$VT" <<'PY'

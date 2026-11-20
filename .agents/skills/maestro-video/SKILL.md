@@ -182,8 +182,8 @@ The finished film goes to the operator's **private** shelf, never into a public
 repo tree:
 
 ```
-$YMIR_HOME/hodd/workspaces/marketing/video/<YYYY-MM-DD>-<slug>.mp4
-$YMIR_HOME/hodd/workspaces/marketing/video/<YYYY-MM-DD>-<slug>_shotlist.md
+$YMIR_HOME/life/marketing/video/<YYYY-MM-DD>-<slug>.mp4
+$YMIR_HOME/life/marketing/video/<YYYY-MM-DD>-<slug>_shotlist.md
 ```
 
 Write the `_shotlist.md` beside it: one row per clip — the `model_type`, the

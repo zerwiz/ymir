@@ -33,7 +33,7 @@ def identity_dir() -> str:
 
 def state_dir() -> str:
     """The database, the digest, the audit, heartbeats — runtime, and never committed."""
-    return os.path.join(home(), "hodd", "state", "assistant")
+    return os.path.join(home(), "state", "assistant")
 
 
 def approved_dir() -> str:

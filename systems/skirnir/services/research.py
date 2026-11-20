@@ -48,7 +48,7 @@ CACHE_TTL = 600          # seconds: the same query inside ten minutes costs neit
 
 
 def _state_dir() -> str:
-    """$YMIR_HOME/hodd/state/assistant — resolved, never guessed (Rule 07). No home, no cache."""
+    """$YMIR_HOME/state/assistant — resolved, never guessed (Rule 07). No home, no cache."""
     home = os.environ.get("YMIR_HOME", "").strip()
     if not home:
         lib = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
@@ -63,7 +63,7 @@ def _state_dir() -> str:
             home = ""
     if not home:
         return ""
-    path = os.path.join(home, "hodd", "state", "assistant", "research-cache")
+    path = os.path.join(home, "state", "assistant", "research-cache")
     try:
         os.makedirs(path, exist_ok=True)
     except Exception:

@@ -31,7 +31,7 @@ flowchart LR
 | Your home | `$YMIR_HOME` | resolved the usual way (`bin/vault/hodd.sh path`) |
 | The mail record | `hodd/memory/mail/messages.jsonl` | written by the mail desk's ingest; the door only reads it |
 | The Telegram record | `hodd/memory/comms/telegram.jsonl` | appended by the Skírnir bot (both ways) and by the hotline when it sends |
-| Your to-do | `hodd/life/personal/me/todo.md` | the door adds a house-kept half at the end; your half is never edited |
+| Your to-do | `life/personal/me/todo.md` | the door adds a house-kept half at the end; your half is never edited |
 | Gmail (optional) | the mailbox grant | read-only search, for your Gmail drafts and a signing platform's reminders |
 
 ## Do it

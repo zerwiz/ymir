@@ -118,21 +118,21 @@ def seed():
     (TMP / "hodd/memory/mail").mkdir(parents=True, exist_ok=True)
     (TMP / "hodd/memory/mail/messages.jsonl").write_text("".join(json.dumps(m) + "\n" for m in MAILS))
     for shelf in ("letters", "mail-drafts", "mail/drafts", "collab/letters", "notify/approvals"):
-        (TMP / "hodd/state" / shelf).mkdir(parents=True, exist_ok=True)
-    (TMP / "hodd/state/letters/2026-11-06-playbook-audit-carl.txt").write_text("Carl,\n\nThe playbook.\n")
-    (TMP / "hodd/state/letters/2026-11-06-playbook-audit-carl.html").write_text("<p>Carl,</p>")
-    (TMP / "hodd/state/mail-drafts/sam-notes.md").write_text("Sam,\n\nNotes.\n")
-    (TMP / "hodd/state/mail/drafts/vic-login.md").write_text("Hi Vic,\n\nYour login.\n")
-    (TMP / "hodd/state/collab/letters/2026-11-03-to-sam.md").write_text("# Letter to Sam — the door\n\nSam,\n")
-    (TMP / "hodd/state/notify/approvals/abc.json").write_text(json.dumps(
+        (TMP / "state" / shelf).mkdir(parents=True, exist_ok=True)
+    (TMP / "state/letters/2026-11-06-playbook-audit-carl.txt").write_text("Carl,\n\nThe playbook.\n")
+    (TMP / "state/letters/2026-11-06-playbook-audit-carl.html").write_text("<p>Carl,</p>")
+    (TMP / "state/mail-drafts/sam-notes.md").write_text("Sam,\n\nNotes.\n")
+    (TMP / "state/mail/drafts/vic-login.md").write_text("Hi Vic,\n\nYour login.\n")
+    (TMP / "state/collab/letters/2026-11-03-to-sam.md").write_text("# Letter to Sam — the door\n\nSam,\n")
+    (TMP / "state/notify/approvals/abc.json").write_text(json.dumps(
         {"id": "abc", "question": "Approve the bot to stay armed?", "asked_at": "2026-10-21T20:58:48+0300",
          "decision": None}))
-    (TMP / "hodd/state/notify/approvals/done.json").write_text(json.dumps(
+    (TMP / "state/notify/approvals/done.json").write_text(json.dumps(
         {"id": "done", "question": "Old", "asked_at": "2026-10-01", "decision": "yes"}))
     fx = TMP / "live.json"
     fx.write_text(json.dumps(LIVE))
     os.environ["COMMS_GMAIL_FIXTURE"] = str(fx)
-    todo = TMP / "hodd/life/personal/me/todo.md"
+    todo = TMP / "life/personal/me/todo.md"
     todo.parent.mkdir(parents=True, exist_ok=True)
     todo.write_text(TODO)
     return todo

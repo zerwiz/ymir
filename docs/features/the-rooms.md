@@ -60,7 +60,7 @@ Models come from `config/agents.yaml` — one place. Figures default to the onli
 
 ```bash
 systems/skirnir/services/room.sh ---help                       # usage
-ls $YMIR_HOME/hodd/state/assistant/rooms/           # one .jsonl per room
+ls $YMIR_HOME/state/assistant/rooms/           # one .jsonl per room
 $YMIR_HOME/state/room-tap.log                       # every admission and refusal
 ls $YMIR_HOME/state/.pi-room-tap-loaded             # armed? (written on session_start)
 ```

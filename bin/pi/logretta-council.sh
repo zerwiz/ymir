@@ -214,7 +214,7 @@ ${BRIEF}")
     done
 
     # 3 · the chair reports to the Allfather with what came back
-    RETURNS=$(python3 - "$H/hodd/state/assistant/rooms/$ROOM.jsonl" "$TASK_LINE" <<'PY'
+    RETURNS=$(python3 - "$H/state/assistant/rooms/$ROOM.jsonl" "$TASK_LINE" <<'PY'
 import sys, json
 path, since = sys.argv[1], int(sys.argv[2])
 rows = [json.loads(l) for l in open(path, encoding="utf-8") if l.strip()]
@@ -271,7 +271,7 @@ ${BRIEF}" > "$OUTDIR/$seat" ) &
       emit "$seat" "allfather" "$TASK_LINE" "$out"
     done
     rm -rf "$OUTDIR"
-    SWEEP=$(tail -n +1 "$H/hodd/state/assistant/rooms/$ROOM.jsonl" | python3 -c '
+    SWEEP=$(tail -n +1 "$H/state/assistant/rooms/$ROOM.jsonl" | python3 -c '
 import sys, json
 since = int(sys.argv[1])
 out = []

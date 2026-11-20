@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[57]{file,does,kind,verdict,disposition,callers,lines}:
+bin[60]{file,does,kind,verdict,disposition,callers,lines}:
   "agents-status.sh","agents-status.sh — which agents are running, where, on what work, and which are idle.","tool","wired","keep",1,48
   "audit-apply.sh","audit-apply.sh — turn an audit into work, in one door.","tool","wired","keep",0,96
   "behind.sh","behind.sh — the arithmetic of being behind: opened/closed this week, net, stale-30d, unbuilt phases.","tool","wired","keep",0,46
@@ -30,9 +30,10 @@ bin[57]{file,does,kind,verdict,disposition,callers,lines}:
   "cron-registry.sh","cron-registry.sh — every scheduled thing on this machine: the Nornir rows, the system timers, the user timers.","tool","wired","keep",1,66
   "daily-log.sh","daily-log.sh — the day's work, recorded where the contract says it lives.","tool","wired","keep",6,104
   "developers.sh","developers.sh — who can write to a repository, and who actually has.","tool","wired","keep",0,119
-  "gimle-tunnels-check.sh","gimle-tunnels-check.sh — every Gimlé surface must be reachable on a tunnel, and we must KNOW it is, not assume it.","tool","wired","keep",3,74
+  "gimle-tunnels-check.sh","gimle-tunnels-check.sh — every Gimlé surface must be reachable on a tunnel, and we must KNOW it is, not assume it.","tool","wired","keep",4,90
   "grade.sh","grade.sh — Dellingr: how fresh is a document?","tool","wired","keep",2,29
   "header.sh","header.sh — the declared-truth header of a home document: check, or apply a minimal one.","tool","wired","keep",2,28
+  "home_shelves.py","'''home_shelves.py — the home's four shelves for Python, behind the ONE resolver (plan 331.6).","tool","wired","keep",2,101
   "host-status.sh","host-status.sh — CPU, memory and GPU of this machine, in one read.","tool","wired","keep",0,45
   "journal-append.sh","journal-append.sh — write one idempotent entry to THIS machine's outbox.","tool","tested","keep",0,115
   "journal-receive.sh","journal-receive.sh — the HEART folds the bodies' journals into one record.","tool","tested","keep",1,137
@@ -66,20 +67,22 @@ bin[57]{file,does,kind,verdict,disposition,callers,lines}:
   "snotra-what.sh","snotra-what.sh — Snotra's own voice: what the ear is doing, said in one sentence.","tool","wired","keep",1,640
   "test_comms.py","'''The proofs plan 261 asks for: the record, the owed list, the to-do proposals, the brief,","tool","wired","keep",0,508
   "test_mimir_bridge_health.py","﻿import importlib.util,json,subprocess,sys,tempfile,threading,unittest","tool","wired","keep",0,30
-  "todos.sh","todos.sh — THE task board of the house, one writer for one file.","tool","wired","keep",7,184
+  "test_tunnel_patience.sh","test_tunnel_patience.sh — a slow origin is not an absent one, and a silent one still fails.","tool","wired","keep",1,46
+  "todos.sh","todos.sh — THE task board of the house, one writer for one file.","tool","wired","keep",8,184
   "tunnels-registry.sh","tunnels-registry.sh — emit the registry's `tunnels:` block from the cloudflared configs that actually exist.","tool","wired","keep",0,70
   "tunnels-status.sh","tunnels-status.sh — every public name this machine publishes, whether its tunnel is up, and whether its upstream answers.","tool","wired","keep",2,44
   "vor-crew-state.sh","vor-crew-state.sh - deterministic read of an Eindri worker's CURRENT state.","tool","wired","keep",2,125
-  "weave-features.sh","weave-features.sh — FEATURES.md is WOVEN from fragments, never hand-edited.","tool","wired","keep",6,56
-  "weave.sh","weave.sh — the dispatcher for every WOVEN document and every INDEX (Þættir, plan 174/175).","tool","wired","keep",7,92
+  "weave-features.sh","weave-features.sh — FEATURES.md is WOVEN from fragments, never hand-edited.","tool","wired","keep",6,69
+  "weave.sh","weave.sh — the dispatcher for every WOVEN document and every INDEX (Þættir, plan 174/175).","tool","wired","keep",6,92
   "well-door.sh","well-door.sh — the hand's door to the heart's well, raised over SSH.","tool","tested","keep",1,128
   "well-guard.sh","well-guard.sh — the WARD behind RULES/20-the-well-appends.md.","tool","wired","keep",3,206
   "well-selftest.sh","well-selftest.sh — prove a keeper can find its own memory, and only its own —","tool","wired","keep",0,78
   "where.sh","where.sh — 'which book do I read before touching this path?'","tool","wired","keep",2,101
   "workspace-rag.sh","workspace-rag.sh — memory over the realm workspaces (W0038).","tool","wired","keep",0,165
+  "woven_tail.py","'''woven_tail.py — a WOVEN file carries a HAND SECTION through, unchanged (RULES/06).","tool","wired","keep",3,104
   "wyrd-db.sh","wyrd-db.sh — the database layer (W0040).","tool","wired","keep",0,49
-  "ymir-state.sh","ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runtime/state/`).","tool","wired","keep",12,44
+  "ymir-state.sh","ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runtime/state/`).","tool","tested","keep",12,44
 
-**Tally.** verdict: wired=48, tested=9
+**Tally.** verdict: wired=50, tested=10
 
-**Tally.** disposition: keep=56, migrate → src/ymir_runtime/library.py=1
+**Tally.** disposition: keep=59, migrate → src/ymir_runtime/library.py=1

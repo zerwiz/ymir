@@ -55,7 +55,7 @@ REQUIRED_FOR_TYPED = ("kind", "status")
 REPO_SHELVES = ["docs/features", "docs/audits", "docs/fixes", "RULES", "docs/guides", "docs/developer-setup"]
 HOME_SHELVES = [
     "hodd/library", "hodd/docs", "hodd/identity", "hodd/memory", "hodd/plans",
-    "hodd/workspaces", "hodd/life", "hodd/data", "hodd/security", "hodd/evidence",
+    "hodd/workspaces", "hodd/life", "hodd/data", "hodd/security", "hodd/evidence",  # retired-path-ok: the LEGACY list this reader tolerates
     "svartalfaheim",
 ]
 

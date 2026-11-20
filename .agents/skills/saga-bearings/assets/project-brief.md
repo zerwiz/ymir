@@ -17,7 +17,7 @@ It finds the project in `$YMIR_HOME/hodd/identity/projects.yaml` by the director
 path; a worktree resolves to its main checkout), then prints:
 
 1. the project's **home folder** (the entry's `seat:`) and its where-we-are note — `NOW.md`, else `README.md`;
-2. the **open to-do lines** that name it (`hodd/life/personal/me/todo.md`);
+2. the **open to-do lines** that name it (`life/personal/me/todo.md`);
 3. the **newest daily-log lines** that name it.
 
 Names are the entry's `id`, `name` and optional `aliases:` (for example a short name people actually write).

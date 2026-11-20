@@ -27,7 +27,7 @@ AGENT_DIR = HERE.parent
 TMP = Path(tempfile.mkdtemp(prefix="gna-test-"))
 os.environ["YMIR_HOME"] = str(TMP)
 (TMP / "hodd/memory/mail").mkdir(parents=True)
-(TMP / "hodd/state").mkdir(parents=True)
+(TMP / "state").mkdir(parents=True)
 (TMP / "hodd/memory/mail/accounts.yaml").write_text(
     "accounts:\n"
     "  - id: operator@example.com\n    grant: X\n    status: scoped\n"
@@ -165,7 +165,7 @@ class ImportWindow(unittest.TestCase):
     def setUp(self) -> None:
         self.now = datetime.now(timezone.utc)
         self.away = int((self.now - timedelta(days=7)).timestamp())
-        self.state = TMP / "hodd/state"
+        self.state = TMP / "state"
         self.state.mkdir(parents=True, exist_ok=True)
         for name in ("gna-mail-watermark.json", "gna-mail-last-run.json"):
             try:
@@ -666,8 +666,8 @@ class Addresses(unittest.TestCase):
         cls.dns.start()
         os.environ["GNA_DNS_SERVER"] = f"127.0.0.1:{cls.dns.port}"
         os.environ.pop("GNA_DNS_OFFLINE", None)
-        gna_addresses.ARRIVALS = TMP / "hodd/state/mail/inbound-arrivals.jsonl"
-        gna_addresses.ALIAS_CACHE = TMP / "hodd/state/mail/alias-probe.json"
+        gna_addresses.ARRIVALS = TMP / "state/mail/inbound-arrivals.jsonl"
+        gna_addresses.ALIAS_CACHE = TMP / "state/mail/alias-probe.json"
 
     @classmethod
     def tearDownClass(cls) -> None:

@@ -762,7 +762,7 @@ def self_test() -> int:
 
         tmp = Path(os.environ.get("TMPDIR", "/tmp")) / f"gna-addresses-selftest-{os.getpid()}"
         (tmp / "hodd/memory/mail").mkdir(parents=True, exist_ok=True)
-        (tmp / "hodd/state/mail").mkdir(parents=True, exist_ok=True)
+        (tmp / "state/mail").mkdir(parents=True, exist_ok=True)
         (tmp / "hodd/memory/mail/accounts.yaml").write_text(
             "accounts:\n  - id: reader@good.example\n    status: scoped\n"
             "house:\n  - address: gimle@nothing.example\n    route: catch-all\n    forward_to: reader@good.example\n"
@@ -773,7 +773,7 @@ def self_test() -> int:
             "    forward_to: reader@good.example\n    alias_of: reader@good.example\n",
             encoding="utf-8",
         )
-        (tmp / "hodd/state/mail/alias-probe.json").write_text(
+        (tmp / "state/mail/alias-probe.json").write_text(
             json.dumps({"at": now_iso(), "results": {"alias@good.example": {
                 "state": "missing", "owner": "reader@good.example",
                 "detail": "reader@good.example can send as reader@good.example"}}}),
@@ -783,7 +783,7 @@ def self_test() -> int:
         gna_store.HOME = tmp
         gna_store.MAIL_DIR = tmp / "hodd" / "memory" / "mail"
         gna_store.ACCOUNTS = gna_store.MAIL_DIR / "accounts.yaml"
-        gna_store.STATE_DIR = tmp / "hodd" / "state"
+        gna_store.STATE_DIR = tmp / "state"
         globals()["ARRIVALS"] = gna_store.STATE_DIR / "mail" / "inbound-arrivals.jsonl"
         globals()["ALIAS_CACHE"] = gna_store.STATE_DIR / "mail" / "alias-probe.json"
         rows = {r["address"]: r for r in register()}

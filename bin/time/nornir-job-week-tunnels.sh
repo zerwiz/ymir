@@ -14,7 +14,7 @@
 #   nornir-job-week-tunnels.sh --rc N       the exit code that captured answer carries
 #   nornir-job-week-tunnels.sh --now ISO    the instant the row carries (a fixture)
 #
-# WHAT IT WRITES: one row in <home>/hodd/state/tunnels-week.jsonl — {at,value,detail} — where `value`
+# WHAT IT WRITES: one row in <home>/state/tunnels-week.jsonl — {at,value,detail} — where `value`
 # is the number of surfaces that answered, and `detail` carries "7 up · 0 failing" and the names of
 # any that did not. Appended, never rewritten (bin/time/week-pass-lib.sh owns that law for all three
 # weekly passes).

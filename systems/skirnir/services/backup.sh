@@ -3,7 +3,7 @@
 #
 #   bin/assistant/backup.sh [--keep N] [--commit] [--push]
 #
-# `hodd/state/` is gitignored, so `assistant.db` — every question anyone asked him, every refusal,
+# `state/` is gitignored, so `assistant.db` — every question anyone asked him, every refusal,
 # every answer — is the ONE artifact in this house that dies with the hardware (measured 2026-10-22:
 # 372 turns in a day, no copy anywhere). This snapshots the ledger and its policy files into
 # `hodd/saves/assistant/<date>/`, which IS tracked, and prunes old snapshots.
@@ -31,7 +31,7 @@ while [ $# -gt 0 ]; do
     *) shift ;;
   esac
 done
-STATE="$HOME_R/hodd/state/assistant"
+STATE="$HOME_R/state/assistant"
 # plan 275 (2026-11-12): one folder per MACHINE — the home is shared, and two seats writing the same
 # hodd/saves/assistant/<date>/ overwrote each other's snapshot (one seat's 56 asks against another's 6)
 SEAT="$(hostname -s 2>/dev/null || echo seat)"

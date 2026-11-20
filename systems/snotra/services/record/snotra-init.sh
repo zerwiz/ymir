@@ -23,7 +23,7 @@ MISSING=0
 need() { MISSING=$((MISSING+1)); printf 'missing\t%s\n' "$1"; }
 have() { printf 'ok\t%s\n' "$1"; }
 
-MEETINGS="$HOME_DIR/hodd/life/meetings"
+MEETINGS="$(hoard_life)/meetings"
 OP="$HOME_DIR/hodd/identity/operator.yaml"
 CONF="$HOME_DIR/hodd/identity/confidential.yaml"
 FRAME="$MEETINGS/meeting-framework.md"

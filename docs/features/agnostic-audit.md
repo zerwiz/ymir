@@ -105,7 +105,7 @@ work, guided by the report.
   ordinary words; a word that is also a subsystem of the lore belongs in `host:`, not `name:`.
 - *The clock says nothing at all* — the sweep prints a `note` when it could not read something (no
   deny list, no ripgrep, a failed fetch) rather than reporting a clean it did not perform;
-  `hodd/state/private-scan/scan.log` and `state/cron.log` in your home have the rows.
+  `state/private-scan/scan.log` and `state/cron.log` in your home have the rows.
 
 **The proof it ships with.** `bin/gates/tests/test_agnostic_audit.sh` builds a throwaway repository
 and an invented list, and proves that a planted name fails the census, that the word is never

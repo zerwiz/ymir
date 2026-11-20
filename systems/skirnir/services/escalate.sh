@@ -39,7 +39,7 @@ if [ -z "${CONTEXT:-}" ]; then
 CONTEXT="$(CHAT_Q="$CHAT" python3 - <<'PY'
 import os, sqlite3
 chat = os.environ.get("CHAT_Q") or ""
-state = os.path.join(os.path.expanduser("~"), "Documents", "ymirhome", "hodd", "state", "assistant")
+state = os.path.join(os.path.expanduser("~"), "Documents", "ymirhome", "state", "assistant")
 try:
     con = sqlite3.connect(os.path.join(state, "assistant.db"))
     rows = con.execute("SELECT text FROM turns WHERE chat=? AND role='user' "
@@ -56,7 +56,7 @@ FULL="${TEXT}"
 [ -n "$CONTEXT" ] && FULL="${FULL} — suggested reply: ${DRAFT}"
 
 # one DM, through the assistant's own bot
-STATE="$HOME_R/hodd/state/assistant"
+STATE="$HOME_R/state/assistant"
 mkdir -p "$STATE" 2>/dev/null || true
 TOKEN="$(bash "$ROOT/bin/vault/hodd.sh" emit secrets/platform.env 2>/dev/null \
   | sed -n 's/^export SKIRNIR_TELEGRAM_BOT_TOKEN=//p' | tr -d "'")"

@@ -38,7 +38,7 @@ YMIR_HOME="${YMIR_HOME:-}"; [ -n "$YMIR_HOME" ] || ymir_home_root YMIR_HOME 2>/d
 PORT="${YMIR_VOICE_PORT:-8890}"
 IDLE_SECONDS="${YMIR_VOICE_IDLE_SECONDS:-300}"
 UNIT="${YMIR_VOICE_HOST_UNIT:-ymir-voice-host.service}"
-STATE_DIR="${YMIR_HOME:-$HOME}/hodd/state/voice"
+STATE_DIR="${YMIR_HOME:-$HOME}/state/voice"
 LOG="$STATE_DIR/idle.log"
 
 CMD="${1:-status}"; shift || true

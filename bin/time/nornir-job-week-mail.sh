@@ -21,7 +21,7 @@
 #   nornir-job-week-mail.sh --from FILE     read a captured door answer instead of running it
 #   nornir-job-week-mail.sh --rc N          the exit code that captured answer carries
 #
-# WHAT IT WRITES: one row in <home>/hodd/state/mail-week.jsonl — {at,value,detail} — where `value` is
+# WHAT IT WRITES: one row in <home>/state/mail-week.jsonl — {at,value,detail} — where `value` is
 # the number of conversations whose last word is theirs and older than 14 days. Appended, never
 # rewritten (bin/time/week-pass-lib.sh owns that law for all three weekly passes).
 #

@@ -12,7 +12,7 @@
 # own DM and the person who asked never hears it — measured 2026-10-22. Every ask is a record here,
 # so it can be answered, reminded about, and reported.
 #
-# State: $YMIR_HOME/hodd/state/assistant/asks.json (runtime, never the repo).
+# State: $YMIR_HOME/state/assistant/asks.json (runtime, never the repo).
 # Delivery: the assistant's OWN bot, to the asker's chat, labelled as his answer. Nothing else sends.
 set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -23,7 +23,7 @@ ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 ymir_home_root HOME_R 2>/dev/null || true
 [ -n "${HOME_R:-}" ] || { printf 'asks: the hoard is unresolved\n' >&2; exit 2; }
-STATE="$HOME_R/hodd/state/assistant"
+STATE="$HOME_R/state/assistant"
 FILE="$STATE/asks.json"
 mkdir -p "$STATE" 2>/dev/null || true
 

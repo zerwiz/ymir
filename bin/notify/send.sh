@@ -94,13 +94,13 @@ for row in json.load(sys.stdin).get("inline_keyboard",[]):
 fi
 
 [ -n "$KEY" ] || KEY="$(printf '%s|%s' "$SOURCE" "$MESSAGE" | sha256sum | cut -c1-16)"
-STATE_DIR="$HOME_R/hodd/state/notify"
+STATE_DIR="$HOME_R/state/notify"
 APPROVALS="$STATE_DIR/approvals"
 STATE_FILE="$STATE_DIR/state.json"
-# THE ARM'S QUEUE IS THE ONE THE ARM READS. It used to be restated here as `hodd/state/.wake-queue`
+# THE ARM'S QUEUE IS THE ONE THE ARM READS. It used to be restated here as `state/.wake-queue`
 # while the arm and `bin/seat/lock-ask.sh` drain `<home>/state/.wake-queue` — two queues, so every
 # notify was delivered "to the arm" into a file nothing reads (measured 2026-11-07: notify wrote 1.3 KB
-# at hodd/state while the live queue held 6.2 KB of asks and no verdicts). Resolved, never restated.
+# at state while the live queue held 6.2 KB of asks and no verdicts). Resolved, never restated.
 WAKE_QUEUE=""
 if declare -f hoard_state_dir >/dev/null 2>&1; then hoard_state_dir _wq_sd && [ -n "${_wq_sd:-}" ] && WAKE_QUEUE="$_wq_sd/.wake-queue"; fi
 [ -n "${WAKE_QUEUE:-}" ] || WAKE_QUEUE="$HOME_R/state/.wake-queue"
@@ -204,7 +204,7 @@ INNER
   # ── the pocket: HIGH+ (notify.py owns the ladder and its own quiet hours) ──
   if [ "$SEVERITY" = "HIGH" ] || [ "$SEVERITY" = "CRITICAL" ]; then
     if [ "$DRY" = 0 ]; then
-      GARMR_STATE_DIR="$HOME_R/hodd/state/garmr" python3 "$ROOT/bin/ward/garmr/notify.py" \
+      GARMR_STATE_DIR="$HOME_R/state/garmr" python3 "$ROOT/bin/ward/garmr/notify.py" \
         --severity "$SEVERITY" --line "$MESSAGE" >/dev/null 2>&1 && SAID_PHONE=1
     fi
   fi

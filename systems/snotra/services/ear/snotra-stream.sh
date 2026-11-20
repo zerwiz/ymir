@@ -24,7 +24,7 @@ ACTION="${1:-status}"; shift || true
 ROOT="$(d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; s="$d"; while [ "$d" != / ] && { [ ! -d "$d/RULES" ] || [ ! -d "$d/.agents" ]; }; do d="$(dirname "$d")"; done; { [ -d "$d/RULES" ] && [ -d "$d/.agents" ]; } || d="$s"; printf '%s' "$d")"
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true; fi
 YMIR_HOME="${YMIR_HOME:-}"; [ -n "$YMIR_HOME" ] || ymir_home_root YMIR_HOME 2>/dev/null || true
-STATE_DIR="${YMIR_HOME:-$HOME}/hodd/state/snotra"; mkdir -p "$STATE_DIR"
+STATE_DIR="${YMIR_HOME:-$HOME}/state/snotra"; mkdir -p "$STATE_DIR"
 LOG="$STATE_DIR/talk.log"
 MIC="${SNOTRA_MIC_NAME:-snotra_mic}"
 VOICE="${SNOTRA_VOICE:-am_onyx}"

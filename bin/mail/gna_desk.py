@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Gná's desk — read-only, loopback, one account per request.
 
-  gna_desk.py                 # 127.0.0.1:8494, token in hodd/state/gna-desk.token
+  gna_desk.py                 # 127.0.0.1:8494, token in state/gna-desk.token
   gna_desk.py --port 8494 --print-token
 
   gna_desk.py --honesty          the honesty line on stdout, TOON (no server)

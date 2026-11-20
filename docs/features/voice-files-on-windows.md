@@ -23,7 +23,7 @@ Use `-Json` for diagnostic process IDs; the default output is compact TOON.
 
 Discovery reads process environment, then user environment, then defaults:
 `YMIR_HOME` defaults to Documents/ymirhome; `YMIR_VOICE_RUNTIME` defaults to
-`$YMIR_HOME/hodd/state/runtime`; `WHISPER_SERVER` defaults to
+`$YMIR_HOME/state/runtime`; `WHISPER_SERVER` defaults to
 `snotra/whisper-v1.9.2/Release/whisper-server.exe` under that runtime;
 `WHISPER_MODEL` defaults to `snotra/models/ggml-small.bin`;
 `WHISPER_PORT` defaults to 10300. Kokoro uses `kokoro/installation.json`.

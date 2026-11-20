@@ -97,7 +97,7 @@ called drift.
 - **A stopped step is a failure.** If a step runs past its limit, the update goes on, but the last line names
   the step and the update exits 4.
 - **A fault report.** When the owed list changes, Gróa writes one report to
-  `$YMIR_HOME/hodd/state/groa/faults/`. While the list stays the same, she writes nothing new.
+  `$YMIR_HOME/state/groa/faults/`. While the list stays the same, she writes nothing new.
 - **Not yet built.** Sending a worker to solve an owed surface, the scan of the models and services you already
   have, and starting an application that raises what it needs are later steps of plan 278.
 

@@ -46,8 +46,8 @@ if [ -z "$HOME_DIR" ] && [ -r "$REPO/bin/vault/hoard-lib.sh" ]; then
   if declare -f ymir_home_root >/dev/null 2>&1; then ymir_home_root HOME_DIR 2>/dev/null || true; fi
 fi
 [ -n "$HOME_DIR" ] || { printf 'private-scan: no Ymir home resolves (YMIR_HOME unset, no hoard-lib) — the queue has nowhere to live\n' >&2; exit 2; }
-QUEUE="$HOME_DIR/hodd/state/private-scan/queue.md"
-REPORT_DIR="$HOME_DIR/hodd/state/private-scan"
+QUEUE="$HOME_DIR/state/private-scan/queue.md"
+REPORT_DIR="$HOME_DIR/state/private-scan"
 LOG="$REPORT_DIR/scan.log"
 MODE="${1:-}"
 
@@ -117,7 +117,7 @@ fi
 
 # A false positive must be written down, not silently tolerated: the allow file lives in the home (private) and holds
 # one regex per line — each with a comment saying why it is safe. A finding that matches is still counted as `allow`.
-# THE ALLOW LIST LIVES IN config/, NOT state/ (carried from fix/agnostic-audit-job, 2026-11-14): `hodd/state/` is
+# THE ALLOW LIST LIVES IN config/, NOT state/ (carried from fix/agnostic-audit-job, 2026-11-14): `state/` is
 # gitignored, so the REASON for every accepted finding would be lost on the next clone — and an allow list whose
 # reasons are lost is an allow list nobody can audit. One path, and it is the one that travels.
 allow_file="$HOME_DIR/hodd/config/private-scan-allow.txt"
@@ -228,7 +228,7 @@ fi
 if [ -r "$REPO/bin/notify/send.sh" ]; then
   bash "$REPO/bin/notify/send.sh" --source cron --severity MEDIUM \
     --key "private-scan:$(date +%F)" \
-    --message "the public tree carries $findings thing(s) that belong in the home ($stamp); the queue is hodd/state/private-scan/queue.md" \
+    --message "the public tree carries $findings thing(s) that belong in the home ($stamp); the queue is state/private-scan/queue.md" \
     >/dev/null 2>&1 || printf 'private-scan: the hotline could not be reached; the queue and the journal carry it\n' >&2
 fi
 

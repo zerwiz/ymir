@@ -21,21 +21,22 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[13]{file,does,kind,verdict,disposition,callers,lines}:
+bin[14]{file,does,kind,verdict,disposition,callers,lines}:
   "confidential.sh","confidential.sh — a session where vault work has no route off the vault (Rule 16).","tool","tested","keep",1,156
   "converge-home-defaults.py","'''converge-home-defaults.py — converge every private home default on the one resolver.","tool","wired","keep",0,182
   "gleipnir-lock-lib.sh","gleipnir-lock-lib.sh — the session lock (Gleipnir), a THIN SHIM.","lib","tested","keep",8,164
   "hnitbjorg-ensure.sh","hnitbjorg-ensure.sh — ensure the vault's tooling stands and its path is sound.","tool","wired","keep",2,111
   "hnitbjorg.sh","hnitbjorg.sh — Hnitbjörg: the encrypted document vault.","tool","wired","keep",3,250
-  "hoard-lib.sh","hoard-lib.sh — where the operator's HOME lives, and the two roots beneath it.","lib","tested","keep",338,204
+  "hoard-lib.sh","hoard-lib.sh — where the operator's HOME lives, and the two roots beneath it.","lib","tested","keep",343,251
   "hodd-set.sh","hodd-set.sh — set ONE key in an age-encrypted secret file, with guards that make a","tool","wired","keep",5,135
-  "hodd.sh","hodd.sh — the Allfather's private hoard: path, init, ls, load, tenant.","tool","tested","keep",53,135
-  "home-sync-clock.sh","home-sync-clock.sh — the home pulls and pushes itself, hourly, without a hand.","tool","wired","keep",1,89
-  "home-sync.sh","home-sync.sh — the one door for editing the home: pull first, ship right after (RULES/50).","tool","wired","keep",3,130
+  "hodd.sh","hodd.sh — the Allfather's private hoard: path, init, ls, load, tenant.","tool","tested","keep",54,135
+  "home-sync-clock.sh","home-sync-clock.sh — the home pulls and pushes itself, hourly, without a hand.","tool","wired","keep",2,97
+  "home-sync.sh","home-sync.sh — the one door for editing the home: pull first, ship right after (RULES/50).","tool","wired","keep",5,190
   "phone-lib.sh","phone-lib.sh — reach the operator's phone storage for the vault's phone key.","lib","wired","keep",1,69
   "push.sh","push.sh — commit and push NAMED paths in the home (never `git add -A`).","tool","tested","keep",7,19
+  "test_home_redaction_filter.sh","test_home_redaction_filter.sh — the mail spine is redacted on commit, on EVERY seat.","tool","wired","keep",0,116
   "test_home_resolvers.sh","test_home_resolvers.sh — the two resolvers that keep the operator's own realm and heart","tool","wired","keep",0,105
 
-**Tally.** verdict: wired=8, tested=5
+**Tally.** verdict: wired=9, tested=5
 
-**Tally.** disposition: keep=13
+**Tally.** disposition: keep=14

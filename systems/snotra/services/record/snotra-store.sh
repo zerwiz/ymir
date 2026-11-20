@@ -3,7 +3,7 @@
 #
 # A meeting is a directory, not a row in someone's database:
 #
-#   $YMIR_HOME/hodd/life/meetings/<workspace>/<YYYYMMDD-HHMM>-<slug>/
+#   <home>/life/meetings/<workspace>/<YYYYMMDD-HHMM>-<slug>/   (plan 331: `life/`)
 #     meeting.json  transcript.md  minutes.md  decisions.md  actions.md  cards.json
 #     audio/  .owner  .state  .transcribe.lock  .corrections.md
 #
@@ -44,8 +44,8 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
 fi
 ymir_home_root YMIR_HOME 2>/dev/null || true
 YMIR_HOME="${YMIR_HOME:?YMIR_HOME unresolved — run from a Ymir checkout or set it}"
-MEETINGS="$YMIR_HOME/hodd/life/meetings"
-STATE_DIR="$YMIR_HOME/hodd/state/snotra"
+MEETINGS="$(hoard_life)/meetings"
+STATE_DIR="$YMIR_HOME/state/snotra"
 mkdir -p "$MEETINGS" "$STATE_DIR"
 
 die() { printf 'error: %s\n' "$*" >&2; exit 1; }
@@ -146,7 +146,7 @@ cmd_put() {
       local ext="${file##*.}"; [ "$ext" = "$file" ] && ext="wav"
       target="$dir/audio/recording.$ext"
       if git -C "$YMIR_HOME" rev-parse --git-dir >/dev/null 2>&1; then
-        git -C "$YMIR_HOME" check-ignore -q "$target" || die "audio is not git-ignored: $target (add hodd/life/meetings/**/audio/ to .gitignore)"
+        git -C "$YMIR_HOME" check-ignore -q "$target" || die "audio is not git-ignored: $target (add life/meetings/**/audio/ to .gitignore)"
       fi
       ;;
     corrections)

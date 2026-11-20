@@ -537,8 +537,8 @@ self_test() {
   export SNOTRA_WATCH_UNIT="snotra-selftest-no-such-unit.service"   # the log, not this host, decides
   # three days old: inside the week's window, outside the 24h one — the two clocks the door reads
   local WHEN; WHEN="$(python3 -c 'import datetime;print((datetime.date.today()-datetime.timedelta(days=3)).isoformat())')"
-  mkdir -p "$YMIR_STATE_DIR" "$YMIR_HOME/hodd/life/meetings/self/$WHEN-self-test"
-  local M="$YMIR_HOME/hodd/life/meetings/self/$WHEN-self-test"
+  mkdir -p "$YMIR_STATE_DIR" "$(hoard_life)/meetings/self/$WHEN-self-test"
+  local M="$(hoard_life)/meetings/self/$WHEN-self-test"
   cat >"$M/meeting.json" <<EOF
 {"id":"$WHEN-self-test","title":"The self test call","started_at":"${WHEN}T10:00:00",
  "source":"ear","platform":"local","attendees":["Test Person","Second Person"],"state":"captured"}

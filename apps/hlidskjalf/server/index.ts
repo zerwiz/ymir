@@ -44,6 +44,10 @@ const HOME_DIR = process.env.YMIR_HOME ?? (() => {
   return join(homedir(), 'Documents', 'ymirhome');
 })();
 const HOARD = process.env.YMIR_HOARD ?? join(process.env.YMIR_HOME ?? join(homedir(), 'Documents', 'ymirhome'), 'hodd');
+// The four shelves (plan 331): `hodd/` the record, `life/` the operator's own material, `state/` runtime
+// state, `config/` settings. Both are resolved HERE, beside the record, never spelled at a call site.
+const LIFE = process.env.YMIR_LIFE_DIR ?? join(HOME_DIR, 'life');
+const HOME_STATE_DIR = process.env.YMIR_STATE_DIR ?? join(HOME_DIR, 'state');
 const RUNES = join(HOARD, 'memory/runes_audit.md');
 const rodd = createRoddHandler({ root: ROOT, home: process.env.SKIRNIR_HOME ?? HOME_DIR });
 const voice = createVoiceHandler({ root: ROOT, home: process.env.SKIRNIR_HOME ?? HOME_DIR,
@@ -1663,7 +1667,7 @@ function calendar(): CalendarAnswer {
 /* ---- /api/snotra (the meeting record, plan 93) --------------------------- */
 // Reads the store and the project meeting shelves. Draft/send call the Snotra
 // doors; they never write a record and never send without the approval call.
-const SNOTRA_STORE = process.env.SNOTRA_MEETINGS_DIR ?? join(HOARD, 'life', 'meetings');
+const SNOTRA_STORE = process.env.SNOTRA_MEETINGS_DIR ?? join(LIFE, 'meetings');
 const SNOTRA_ROOTS = [SNOTRA_STORE, join(HOME_DIR, 'svartalfaheim')];
 
 interface SnotraMeetingOut {
@@ -1691,10 +1695,10 @@ function snotraDirs(): { dir: string; file: string }[] {
       }
     }
   } catch { /* store absent is not an error */ }
-  // Private meetings: the hoard's own shelf.
+  // The operator's own meetings: the `life/` shelf (plan 331 — the old topic and life shelves are one).
   try {
-    for (const m of readdirSync(join(HOARD, 'workspaces', 'meetings'), { withFileTypes: true })) {
-      if (m.isDirectory()) push(join(HOARD, 'workspaces', 'meetings', m.name));
+    for (const m of readdirSync(join(LIFE, 'meetings'), { withFileTypes: true })) {
+      if (m.isDirectory()) push(join(LIFE, 'meetings', m.name));
     }
   } catch { /* no private shelf */ }
   try {
@@ -1732,12 +1736,14 @@ function snotraMeetings(): SnotraMeetingOut[] {
         id: String(m.id ?? m.meeting_id ?? dir.split('/').pop()),
         title: String(m.title ?? m.summary ?? '(untitled)'),
         started_at: m.started_at ?? m.start ?? null,
-        workspace: String(m.workspace ?? (dir.includes('/hodd/workspaces/meetings/') ? 'private'
+        // Plan 331: the two old meeting shelves (`hodd/workspaces/meetings/` and `hodd/life/meetings/`)
+        // are ONE shelf now — `<home>/life/meetings/` — so the two labels they carried merge here: the
+        // shelf is the operator's own (private) and it is the meeting STORE.
+        workspace: String(m.workspace ?? (dir.includes('/life/meetings/') ? 'private'
           : dir.includes('/personal/') ? 'personal'
           : (dir.match(/svartalfaheim\/([^/]+)\/(?:meetings|projects)\//) ?? [])[1] ?? 'work')),
-        scope: dir.includes('/hodd/workspaces/meetings/') ? 'private'
+        scope: dir.includes('/life/meetings/') ? 'store'
           : dir.includes('/projects/') ? 'project'
-          : dir.includes('/hodd/life/meetings/') ? 'store'
           : 'company',
         source: String(m.source ?? 'manual'),
         state: String(m.state ?? d.state ?? 'captured'),
@@ -1828,7 +1834,7 @@ function settings() {
 /* ---- the live tail (Snotra) — a FRONT for snotra-live.sh, never a second --- *
  * pipeline. The SCRIPT owns the truth: the gate asks it and reports what the
  * script says. Nothing here re-implements transcription, slice timing or engine
- * discovery. The document stays in the hoard (`$YMIR_HOME/hodd/life/meetings/`);
+ * discovery. The document stays on the operator's own shelf (`<home>/life/meetings/`, plan 331);
  * only these three authenticated routes read it, and only for the operator. */
 const LIVE_SCRIPT = 'systems/snotra/services/ear/snotra-live.sh';
 
@@ -3034,8 +3040,8 @@ function wardState() {
   // the home is already resolved once at the top of this file (Rule 07): env ->
   // the recorded choice -> one default. Never a second guess here.
   const home = HOME_DIR;
-  const judged = join(home, 'hodd/state/garmr/judged.jsonl');
-  const pausedMarker = join(home, 'hodd/state/garmr/PAUSED');
+  const judged = join(home, 'state/garmr/judged.jsonl');
+  const pausedMarker = join(home, 'state/garmr/PAUSED');
   const heartbeatFile = '/var/log/ymir/garmr/state/hound.heartbeat';
   const findingsFile = '/var/log/ymir/garmr/findings.jsonl';
 
@@ -3067,7 +3073,7 @@ function wardState() {
     ? read(findingsFile).split('\n').filter((l) => l.trim()).length : 0;
 
   // Skírnir: a bot that stopped answering must be visible, not discovered
-  const assistantDir = join(home, 'hodd/state/assistant');
+  const assistantDir = join(home, 'state/assistant');
   const beatFile = join(assistantDir, 'telegram.heartbeat');
   const assistantBeat = existsSync(beatFile) ? read(beatFile).trim() : '';
   const beatAge = assistantBeat ? Math.max(0, Math.round((Date.now() - Date.parse(assistantBeat)) / 1000)) : -1;

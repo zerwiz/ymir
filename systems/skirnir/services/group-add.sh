@@ -20,7 +20,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)"
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 ymir_home_root H 2>/dev/null || true
-SEEN="$H/hodd/state/assistant/seen-groups.json"
+SEEN="$H/state/assistant/seen-groups.json"
 GROUPFILE="$H/hodd/identity/assistant/groups.yaml"   # NOT `GROUPS`: that is a bash BUILT-IN array
                                                      # (the user's unix groups) and the assignment
                                                      # silently becomes `1000` — measured 2026-10-23

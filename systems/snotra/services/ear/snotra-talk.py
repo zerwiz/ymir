@@ -56,7 +56,7 @@ def home() -> str:
 
 
 HOME = home()
-STATE = os.path.join(HOME, "hodd", "state", "snotra")
+STATE = os.path.join(HOME, "state", "snotra")
 MUTE = os.path.join(STATE, "voice-muted")
 MODEL = os.environ.get("SNOTRA_TALK_MODEL", "qwen3.6-35b-a3b@iq3_s")
 BASE = os.environ.get("SNOTRA_TALK_BASE", "http://127.0.0.1:8080/v1").rstrip("/")

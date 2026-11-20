@@ -32,8 +32,8 @@ REPO="$TMP/repo"          # stands in for the public code tree
 export YMIR_HOME="$HOME_DIR"
 export YMIR_STATE_DIR="$TMP/state"
 
-mkdir -p "$HOARD/identity" "$HOARD/life/marketing" "$HOARD/life/personal" \
-         "$HOARD/life/work" "$HOARD/life/meetings" \
+mkdir -p "$HOARD/identity" "$HOME_DIR/life/marketing" "$HOME_DIR/life/personal" \
+         "$HOME_DIR/life/work" "$HOME_DIR/life/meetings" \
          "$HOME_DIR/svartalfaheim/work/projects/ymir/plans" "$DOCS" "$REPO/docs"
 
 cat >"$HOARD/identity/projects.yaml" <<'YAML'
@@ -122,15 +122,15 @@ else
   bad "a numbered plan was not proposed to the ledger"
   grep -E '42-the-second' "$plan" | head -2 >&2
 fi
-if grep -qE "^MOVE .*2026-09-30-marketing-notes\.md  ->  $HOARD/life/marketing/" "$plan"; then
-  ok "a dated note carrying a known domain lands in hodd/life/<domain>/"
+if grep -qE "^MOVE .*2026-09-30-marketing-notes\.md  ->  $HOME_DIR/life/marketing/" "$plan"; then
+  ok "a dated note carrying a known domain lands in life/<domain>/"
 else
-  bad "a dated domain note was not placed in hodd/life/marketing/"
+  bad "a dated domain note was not placed in life/marketing/"
 fi
-if grep -qE "^MOVE .*personal diary\.md  ->  $HOARD/life/personal/" "$plan"; then
-  ok "a note naming the personal domain lands in hodd/life/personal/"
+if grep -qE "^MOVE .*personal diary\.md  ->  $HOME_DIR/life/personal/" "$plan"; then
+  ok "a note naming the personal domain lands in life/personal/"
 else
-  bad "a personal note was not placed in hodd/life/personal/"
+  bad "a personal note was not placed in life/personal/"
 fi
 if grep -qE "^REPORT .*plain scratch\.txt .*because: no evidence" "$plan"; then
   ok "an unplaceable file is reported as unplaceable, never dumped into docs/"
@@ -173,7 +173,7 @@ small="$TMP/small.plan"
 {
   printf '# a hand-written plan: two lines, two moves\n'
   printf 'MOVE    %s  ->  %s   because: a dated note carrying a known domain\n' \
-    "$DOCS/2026-09-30-marketing-notes.md" "$HOARD/life/marketing/2026-09-30-marketing-notes.md"
+    "$DOCS/2026-09-30-marketing-notes.md" "$HOME_DIR/life/marketing/2026-09-30-marketing-notes.md"
   printf 'PROPOSE %s  ->  %s   because: a machine proposes, a human moves\n' \
     "$DOCS/42-the-second-plan.md" "$HOME_DIR/svartalfaheim/work/projects/ymir/plans/42-the-second-plan.md"
   printf 'MOVE    %s  ->  %s   because: names the known project lantern-platform\n' \
@@ -182,7 +182,7 @@ small="$TMP/small.plan"
 
 out="$(bash "$SWEEP" apply --plan "$small" 2>&1)"; rc=$?
 if [ "$rc" -eq 0 ]; then ok "apply exits 0"; else bad "apply exited $rc"; printf '%s\n' "$out" >&2; fi
-if [ -f "$HOARD/life/marketing/2026-09-30-marketing-notes.md" ] \
+if [ -f "$HOME_DIR/life/marketing/2026-09-30-marketing-notes.md" ] \
    && [ -f "$HOME_DIR/svartalfaheim/work/projects/lantern-platform/docs/lantern-platform notes.txt" ]; then
   ok "both MOVE lines landed where the plan said"
 else
@@ -227,12 +227,12 @@ fi
 mixed="$TMP/mixed.plan"
 {
   printf 'MOVE    %s  ->  %s   because: a good line\n' \
-    "$DOCS/personal diary.md" "$HOARD/life/personal/personal diary.md"
+    "$DOCS/personal diary.md" "$HOME_DIR/life/personal/personal diary.md"
   printf 'MOVE    %s  ->  %s   because: a bad line\n' \
     "$DOCS/copy one.txt" "$REPO/docs/copy one.txt"
 } >"$mixed"
 out5="$(bash "$SWEEP" apply --plan "$mixed" 2>&1)"; rc5=$?
-if [ "$rc5" -ne 0 ] && [ -f "$DOCS/personal diary.md" ] && [ ! -e "$HOARD/life/personal/personal diary.md" ]; then
+if [ "$rc5" -ne 0 ] && [ -f "$DOCS/personal diary.md" ] && [ ! -e "$HOME_DIR/life/personal/personal diary.md" ]; then
   ok "one bad line refuses the WHOLE plan — a half-applied plan is worse than none"
 else
   bad "a plan with one bad line still moved the good line (rc=$rc5)"; printf '%s\n' "$out5" >&2
@@ -242,9 +242,9 @@ fi
 forbidden="$TMP/forbidden.plan"
 {
   printf 'MOVE    %s  ->  %s   because: a plan may not move a symlink\n' \
-    "$DOCS/a link to the scratch note" "$HOARD/life/personal/a link to the scratch note"
+    "$DOCS/a link to the scratch note" "$HOME_DIR/life/personal/a link to the scratch note"
   printf 'MOVE    %s  ->  %s   because: a plan may not move a credential\n' \
-    "$DOCS/some-service-token.txt" "$HOARD/life/work/some-service-token.txt"
+    "$DOCS/some-service-token.txt" "$HOME_DIR/life/work/some-service-token.txt"
 } >"$forbidden"
 out6="$(bash "$SWEEP" apply --plan "$forbidden" 2>&1)"; rc6=$?
 if [ "$rc6" -ne 0 ] && [ -L "$DOCS/a link to the scratch note" ] && [ -f "$DOCS/some-service-token.txt" ]; then
@@ -256,7 +256,7 @@ fi
 # an overwrite is refused: nothing is ever overwritten
 overwrite="$TMP/overwrite.plan"
 printf 'MOVE    %s  ->  %s   because: the destination exists\n' \
-  "$DOCS/copy one.txt" "$HOARD/life/marketing/2026-09-30-marketing-notes.md" >"$overwrite"
+  "$DOCS/copy one.txt" "$HOME_DIR/life/marketing/2026-09-30-marketing-notes.md" >"$overwrite"
 out7="$(bash "$SWEEP" apply --plan "$overwrite" 2>&1)"; rc7=$?
 if [ "$rc7" -ne 0 ] && printf '%s' "$out7" | grep -q 'overwritten' \
    && [ -f "$DOCS/copy one.txt" ]; then
@@ -267,9 +267,9 @@ fi
 
 # ── 7. a file already on its shelf is a no-op, and inside the home the sweep ──
 #       reports what is already filed rather than proposing a move
-mkdir -p "$HOARD/life/work"
-printf 'a filed note\n' >"$HOARD/life/work/2026-01-01-work-note.md"
-out8="$(bash "$SWEEP" scan --depth 2 "$HOARD/life" 2>&1)"
+mkdir -p "$HOME_DIR/life/work"
+printf 'a filed note\n' >"$HOME_DIR/life/work/2026-01-01-work-note.md"
+out8="$(bash "$SWEEP" scan --depth 2 "$HOME_DIR/life" 2>&1)"
 if printf '%s' "$out8" | grep -qE '^REPORT .*2026-01-01-work-note\.md .*already on its shelf'; then
   ok "a document already on its shelf is reported in place, not re-moved"
 else

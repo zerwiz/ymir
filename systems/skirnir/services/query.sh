@@ -27,7 +27,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 [ -n "$MODE" ] || { printf 'usage: query.sh --tier T (--who NAME | --search TEXT | --fact SLUG)\n' >&2; exit 2; }
-TIER="$TIER" MODE="$MODE" ARG="$ARG" CHANNEL="$CHANNEL" STATE="$HOME_R/hodd/state/assistant"
+TIER="$TIER" MODE="$MODE" ARG="$ARG" CHANNEL="$CHANNEL" STATE="$HOME_R/state/assistant"
 IDENTITY="$HOME_R/hodd/identity/assistant" python3 - <<'PY'
 import json, os, re, sqlite3, time, yaml
 state = os.environ["STATE"]

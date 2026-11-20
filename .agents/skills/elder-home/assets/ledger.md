@@ -61,7 +61,7 @@ retired** (plan 62, "one word, three meanings"). The canonical shelf is now:
 
 ```
 $YMIR_HOME/svartalfaheim/<realm>/projects/<project>/plans/    # plans, and the index
-$YMIR_HOME/hodd/life/<domain>/                               # the operator's life shelves
+$YMIR_HOME/life/<domain>/                               # the operator's life shelves
 $YMIR_HOME/hodd/identity/{projects,workspaces}.yaml           # the registries
 ```
 

@@ -52,9 +52,9 @@ curl -s http://127.0.0.1:7313/healthz
 
 | What | Where |
 |---|---|
-| A room's snapshots | `$YMIR_HOME/hodd/life/boards/_rooms/<room>/<stamp>.scene.json` — or, where the server runs with no
+| A room's snapshots | `$YMIR_HOME/life/boards/_rooms/<room>/<stamp>.scene.json` — or, where the server runs with no
 `YMIR_HOME` (the heart), the shelf the registry names for the whiteboard: `~/gimle/data/whiteboard/rooms/<room>/` |
-| Your saved boards | `hodd/life/boards/<your gate name>/<room>-<stamp>.excalidraw` |
+| Your saved boards | `life/boards/<your gate name>/<room>-<stamp>.excalidraw` |
 | The ledger of every save, list and open | `hodd/memory/runes_audit.md` |
 | The audit line for every shared or refused scene | `~/gimle/desk/data/access.jsonl` (the share door's own record) |
 

@@ -9,8 +9,8 @@ SELF="$(CDPATH='' cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VOICE="$SELF/.."
 tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
 export HOME="$tmp/home" YMIR_HOME="$tmp/ymirhome"
-mkdir -p "$HOME" "$YMIR_HOME/hodd/life/personal/me"
-printf '# His half\n\n- [ ] seed\n' > "$YMIR_HOME/hodd/life/personal/me/todo.md"
+mkdir -p "$HOME" "$YMIR_HOME/life/personal/me"
+printf '# His half\n\n- [ ] seed\n' > "$YMIR_HOME/life/personal/me/todo.md"
 
 python3 - "$VOICE" <<'PY'
 import os, sys

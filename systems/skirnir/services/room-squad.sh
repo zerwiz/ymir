@@ -98,7 +98,7 @@ cmd_ask() {
 
   # The line the figure must answer: the newest one addressed to it, unanswered by it.
   local call
-  call=$(python3 - "$H/hodd/state/assistant/rooms/$room.jsonl" "$figure" <<'PY'
+  call=$(python3 - "$H/state/assistant/rooms/$room.jsonl" "$figure" <<'PY'
 import sys, json, os
 path, figure = sys.argv[1], sys.argv[2]
 if not os.path.exists(path):

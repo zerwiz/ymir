@@ -2,8 +2,8 @@
 # test_todos_digest.sh — the session digest counts HIS list, and names the halves apart.
 #
 # The fault this guards, measured 2026-11-16: `bin/voice/todos.sh --digest` folded only the
-# voice's ledger (`hodd/state/voice/todos.jsonl`), which was empty, so Sága's head printed
-# `todos: 0` every session while `hodd/life/personal/me/todo.md` held 57 open items. A count
+# voice's ledger (`state/voice/todos.jsonl`), which was empty, so Sága's head printed
+# `todos: 0` every session while `life/personal/me/todo.md` held 57 open items. A count
 # that is confidently zero about the Allfather's day is worse than no count at all.
 #
 # The laws proved here, each with a command:
@@ -34,7 +34,7 @@ printf 'test_todos_digest\n'
 # ── a home with a list that has three open items in his half ─────────────────
 home_with_list() {  # <dir> <his-open> <his-done> <derived-open> <kept-open>
   local d="$1" ho="$2" hd="$3" dv="$4" kp="$5" i
-  mkdir -p "$d/hodd/life/personal/me" "$d/hodd/state/voice"
+  mkdir -p "$d/life/personal/me" "$d/state/voice"
   {
     printf '# The Allfather'"'"'s day — his acts, and what the house knows\n\n'
     printf '# His half — what only he can do\n\n## Today\n\n'
@@ -44,7 +44,7 @@ home_with_list() {  # <dir> <his-open> <his-done> <derived-open> <kept-open>
     for ((i = 1; i <= dv; i++)); do printf -- '- [ ] 2026-11-12 · derived item %s\n' "$i"; done
     printf '\n# The house-kept half — what his messages moved\n\n## Today\n\n'
     for ((i = 1; i <= kp; i++)); do printf -- '- [ ] 2026-11-12 · kept item %s (item a%04d)\n' "$i" "$i"; done
-  } >"$d/hodd/life/personal/me/todo.md"
+  } >"$d/life/personal/me/todo.md"
 }
 
 digest() { YMIR_HOME="$1" bash "$DOOR" --digest 2>&1; }
@@ -71,16 +71,16 @@ printf '%s' "$first" | grep -q '^open: 9 — his half 3 · house-kept 6 · voice
   && ok "his half and the house-kept half are counted apart (3 + 6 = 9)" || bad "the halves are counted apart" "$first"
 printf '%s' "$second" | grep -q 'derived 2 + from his messages 4' \
   && ok "the house-kept total names its own split (derived 2 + messages 4)" || bad "the house-kept split is named" "$second"
-printf '%s' "$second" | grep -q 'hodd/life/personal/me/todo.md' \
+printf '%s' "$second" | grep -q 'life/personal/me/todo.md' \
   && ok "the source file is named on the second line" || bad "the source file is named" "$second"
 
 # ══ 3 · the voice ledger is its own named count ══════════════════════════════
 H4="$T/h4"; home_with_list "$H4" 3 0 2 4
 printf '{"id":"v1","action":"add","item":"a voiced todo","ts":"2026-11-16T09:00:00Z","project":"personal"}\n' \
-  >"$H4/hodd/state/voice/todos.jsonl"
+  >"$H4/state/voice/todos.jsonl"
 printf '{"id":"v2","action":"add","item":"a voiced todo already done","ts":"2026-11-16T09:01:00Z"}\n' \
-  >>"$H4/hodd/state/voice/todos.jsonl"
-printf '{"id":"v2","action":"done","ts":"2026-11-16T09:02:00Z"}\n' >>"$H4/hodd/state/voice/todos.jsonl"
+  >>"$H4/state/voice/todos.jsonl"
+printf '{"id":"v2","action":"done","ts":"2026-11-16T09:02:00Z"}\n' >>"$H4/state/voice/todos.jsonl"
 first="$(digest "$H4" | head -1)"
 printf '%s' "$first" | grep -q 'his half 3 · house-kept 6 · voice ledger 1' \
   && ok "the voice ledger keeps its own named count (1) and never joins his" || bad "the voice ledger is its own count" "$first"

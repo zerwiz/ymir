@@ -3,10 +3,10 @@
 #
 # TWO lists, both printed, never one mistaken for the other:
 #
-#   • HIS LIST — `hodd/life/personal/me/todo.md`, the one to-do (plan 275, 2026-11-12). Every `- [ ]`
+#   • HIS LIST — `life/personal/me/todo.md` (plan 331), the one to-do (plan 275, 2026-11-12). Every `- [ ]`
 #     line in it is an open item; the file names its own halves (his half · the derived half · the
 #     house-kept half) and each is counted apart.
-#   • THE VOICE LEDGER — `hodd/state/voice/todos.jsonl`, one event per line (add · done · reopen ·
+#   • THE VOICE LEDGER — `state/voice/todos.jsonl`, one event per line (add · done · reopen ·
 #     update), folded by `_todo_state()` in bin/voice/voice_tools.py. It is kept as its own count.
 #
 # Until 2026-11-16 this door read only the ledger, so the session digest printed `0 open` while his

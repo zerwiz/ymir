@@ -68,7 +68,7 @@ def mail_record() -> Path:
 
 
 def todo_path() -> Path:
-    return home() / "hodd" / "life" / "personal" / "me" / "todo.md"
+    return home() / "life" / "personal" / "me" / "todo.md"
 
 
 def now() -> dt.datetime:
@@ -188,11 +188,11 @@ def recent(rows: list[dict], hours: float) -> list[dict]:
 # ── C2 · the owed list ────────────────────────────────────────────────────────
 
 OWED_SHELVES = (
-    ("letters", "hodd/state/letters"),
-    ("mail-drafts", "hodd/state/mail-drafts"),
-    ("mail/drafts", "hodd/state/mail/drafts"),
-    ("collab/letters", "hodd/state/collab/letters"),
-    ("approvals", "hodd/state/notify/approvals"),
+    ("letters", "state/letters"),
+    ("mail-drafts", "state/mail-drafts"),
+    ("mail/drafts", "state/mail/drafts"),
+    ("collab/letters", "state/collab/letters"),
+    ("approvals", "state/notify/approvals"),
 )
 GREETING = re.compile(r"^\s*(?:hi|hello|dear|hej)?\s*([A-ZÅÄÖ][\w'-]+(?:\s[A-ZÅÄÖ][\w'-]+)?)\s*,\s*$", re.I)
 LETTER_TITLE = re.compile(r"^#\s*letter to\s+([A-ZÅÄÖ][\w'-]+)", re.I)

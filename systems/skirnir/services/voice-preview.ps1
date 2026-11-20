@@ -5,7 +5,7 @@ $ErrorActionPreference = 'Stop'
 $root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../..'))
 $homeRoot = [Environment]::GetEnvironmentVariable('YMIR_HOME', 'User')
 if (!$homeRoot) { $homeRoot = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'ymirhome' }
-$state = Join-Path $homeRoot ('hodd/state/runtime/skirnir-preview-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
+$state = Join-Path $homeRoot ('state/runtime/skirnir-preview-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
 foreach ($port in @($UiPort,$ApiPort)) {
     if (Get-NetTCPConnection -State Listen -ErrorAction Stop | Where-Object LocalPort -eq $port) {
         throw "Preview port $port is occupied; choose a free preview port. No process was stopped."

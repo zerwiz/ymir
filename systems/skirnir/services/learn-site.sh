@@ -151,6 +151,6 @@ if [ "$DRY" -eq 0 ]; then
   bash "$SCRIPT_DIR/kb-export.sh" >/dev/null 2>&1 || true
   printf 'learn-site: digest rebuilt — %s facts\n' "$(python3 -c "
 import os
-p = os.path.join('$HOME_R', 'hodd', 'state', 'assistant', 'digest.jsonl')
+p = os.path.join('$HOME_R', 'state', 'assistant', 'digest.jsonl')
 print(sum(1 for l in open(p) if l.strip()) if os.path.exists(p) else 0)")"
 fi

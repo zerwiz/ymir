@@ -10,7 +10,7 @@
 # WHAT IT READS   Gná's desk needs-you queue (the desk over loopback, else the store it reads) and the
 #                 durable wake queue — only the lines that ask the Allfather.
 # WHAT IT WRITES  a proposal block between two markers inside the house-kept half of his to-do, and
-#                 hodd/state/dispatch/runs.jsonl (append-only: one row per event, one row per run).
+#                 state/dispatch/runs.jsonl (append-only: one row per event, one row per run).
 # WHAT IT NEVER   sends mail · writes his half · spawns an errand · takes the arm · rewrites the ledger.
 #
 # Exit: 0 ran · 2 usage · 3 an input is unreadable · 4 the record cannot be read or written.

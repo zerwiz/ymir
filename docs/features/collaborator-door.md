@@ -10,7 +10,7 @@ per pair, per skill, with an expiry). They get no seat, no ssh, no repository.
 ## What you need
 
 - A seat with `bin/bridge/a2a-front.py` (this tree).
-- An Ed25519 key pair under `$YMIR_HOME/hodd/state/a2a/` (never in the repo).
+- An Ed25519 key pair under `$YMIR_HOME/state/a2a/` (never in the repo).
 - A tunnel hostname pointing at the front's loopback port.
 
 ## The commands
@@ -20,7 +20,7 @@ per pair, per skill, with an expiry). They get no seat, no ssh, no repository.
 bin/collab/kit/scripts/collab-connect.sh mint --peer partner-a --skill well-recall --minutes 60
 
 # check a token before you send it
-bin/collab/kit/scripts/collab-connect.sh check --token "$TOK" --pub "$YMIR_HOME/hodd/state/a2a/ed25519.pub.pem" --skill well-recall
+bin/collab/kit/scripts/collab-connect.sh check --token "$TOK" --pub "$YMIR_HOME/state/a2a/ed25519.pub.pem" --skill well-recall
 
 # what the partner pastes into their harness
 bin/collab/kit/scripts/collab-connect.sh snippet --endpoint http://<host>:8321 --harness pi

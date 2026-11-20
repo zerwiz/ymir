@@ -26,7 +26,7 @@ bin/seat/context.sh --json          # the same facts, machine-readable
 ```
 
 Inside a session, the agent calls its own `context_left` tool, which answers with the same three facts and
-also publishes them to `hodd/state/context-left/<session>.json` so the voice repeats one counter instead of
+also publishes them to `state/context-left/<session>.json` so the voice repeats one counter instead of
 keeping its own.
 
 You should see something like:

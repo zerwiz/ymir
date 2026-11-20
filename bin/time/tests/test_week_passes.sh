@@ -27,7 +27,7 @@ bad() { fail=$((fail + 1)); printf '  FAIL  %s\n' "$1"; [ -n "${2:-}" ] && print
 T=$(mktemp -d)
 trap 'rm -rf "$T"' EXIT
 H="$T/home"
-mkdir -p "$H/config" "$H/hodd/state" "$H/hodd/memory" "$T/bin" "$T/state"
+mkdir -p "$H/config" "$H/state" "$H/hodd/memory" "$T/bin" "$T/state"
 
 # The notice door, recorded instead of sent: the test proves the CALL (one line, one week key), never
 # the far end. Real sends are the door's own business and its own tests.
@@ -50,15 +50,15 @@ count_lines() { # <file> -> how many non-empty lines, and 0 rather than the shel
   n=$(grep -c . "$1" 2>/dev/null)
   printf '%s' "${n:-0}"
 }
-rows() { count_lines "$H/hodd/state/$1-week.jsonl"; }
+rows() { count_lines "$H/state/$1-week.jsonl"; }
 count_lines_matching() { # <pattern> <file> -> how many lines carry it, 0 when the file is absent
   local n
   n=$(grep -c -- "$1" "$2" 2>/dev/null)
   printf '%s' "${n:-0}"
 }
-first_row() { head -n 1 "$H/hodd/state/$1-week.jsonl" 2>/dev/null; }
+first_row() { head -n 1 "$H/state/$1-week.jsonl" 2>/dev/null; }
 last_value() { # <name> -> the last row's `value` as JSON text
-  python3 - "$H/hodd/state/$1-week.jsonl" <<'PY'
+  python3 - "$H/state/$1-week.jsonl" <<'PY'
 import json, sys
 last = None
 for line in open(sys.argv[1], encoding="utf-8"):
@@ -69,7 +69,7 @@ print(json.dumps(last["value"]) if last else "")
 PY
 }
 last_detail() {
-  python3 - "$H/hodd/state/$1-week.jsonl" <<'PY'
+  python3 - "$H/state/$1-week.jsonl" <<'PY'
 import json, sys
 last = None
 for line in open(sys.argv[1], encoding="utf-8"):
@@ -80,7 +80,7 @@ print(last["detail"] if last else "")
 PY
 }
 row_keys() { # <name> -> the keys of the last row, sorted, comma-joined
-  python3 - "$H/hodd/state/$1-week.jsonl" <<'PY'
+  python3 - "$H/state/$1-week.jsonl" <<'PY'
 import json, sys
 last = None
 for line in open(sys.argv[1], encoding="utf-8"):

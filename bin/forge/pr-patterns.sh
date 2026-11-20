@@ -14,6 +14,14 @@ set -u
 #     house stands, refused in prose and in code alike, because the address is the leak.
 PR_HOME_PLACEHOLDER='example|user|username|name|nobody|anonymous|operator|you|me|someone|shared'
 
+# ── a MAILBOX has a DOMAIN, a role token does not (2026-11-20) ─────────────────────────────────────
+# The ward read any `word@word` as an address, so a pull-request body quoting a cron row —
+# "The Nornir row `@dev 03:05 …` runs" — was refused by pr-identity-guard in CI as if it published
+# a mailbox. `@dev` and `@heart` are ROLE tokens in the schedule the house writes; an address is a
+# local part and a DOT-SEPARATED domain (`example.org`, `sub.example.co.uk`). The dot is the test:
+# without it there is no address to publish, and refusing one teaches the hand to hide the schedule.
+PR_MAILBOX='[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+'
+
 # pr_homepath_value <line> — prints the concrete home path the line carries, or nothing.
 pr_homepath_value() {
   local line="$1" p u
@@ -59,16 +67,9 @@ pr_pattern_check_line() {
   if printf '%s' "$line" | grep -Eiq 'tailscale'; then echo "tailscale"; return; fi
   # paths — a VALUE only: `~` is a shape and names nobody (2026-11-16)
   if hp=$(pr_homepath_value "$line"); then echo "homepath ($hp)"; return; fi
-  # mailbox (not noreply)
-  if printf '%s' "$line" | grep -Eo '[^[:space:]]+@[^[:space:]]+' | grep -vq 'users\.noreply\.github\.com'; then
-    # only flag if there IS a mailbox not noreply
-    if printf '%s' "$line" | grep -Eq '[^[:space:]]+@[^[:space:]]+'; then
-      if ! printf '%s' "$line" | grep -Eq '@users\.noreply\.github\.com'; then echo "mailbox"; return; fi
-      # mixed: a non-noreply mailbox alongside noreply
-      local m; m=$(printf '%s' "$line" | grep -Eo '[^[:space:]]+@[^[:space:]]+' | grep -v 'users\.noreply\.github\.com' || true)
-      [ -n "$m" ] && { echo "mailbox"; return; }
-    fi
-  fi
+  # mailbox (not noreply) — an address carries a dot-separated domain; `@dev` is a role token
+  local m; m=$(printf '%s' "$line" | grep -Eo "$PR_MAILBOX" | grep -v 'users\.noreply\.github\.com' || true)
+  if [ -n "$m" ]; then echo "mailbox"; return; fi
   # pane id
   if printf '%s' "$line" | grep -Eq 'w[0-9]+:p[0-9]+'; then echo "paneid"; return; fi
   # token-shaped

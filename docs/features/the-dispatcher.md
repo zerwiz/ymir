@@ -10,7 +10,7 @@ A proposal is a line, never an act. Nothing is sent, nothing is started, nothing
 ends with its key, and each names what it unblocks.
 
 **What you need.** Nothing to set up. The dispatcher reads the home it runs from: the mail desk's store
-(if that seat has mail) and `state/.wake-queue`. It writes its ledger to `hodd/state/dispatch/`.
+(if that seat has mail) and `state/.wake-queue`. It writes its ledger to `state/dispatch/`.
 
 **The commands**
 
@@ -22,7 +22,7 @@ bin/dispatch/dispatch.sh --json       # the same answer for a program
 ```
 
 The timer runs it every ten minutes. To read what it decided, look at the last row of
-`hodd/state/dispatch/runs.jsonl`: it names the verdict — `work` or `no-op` — the counts, and the reason.
+`state/dispatch/runs.jsonl`: it names the verdict — `work` or `no-op` — the counts, and the reason.
 
 **What you will see in your to-do.** A block between two markers, at the end of the house-kept half:
 

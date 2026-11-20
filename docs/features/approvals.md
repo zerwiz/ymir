@@ -17,7 +17,7 @@ bin/notify/send.sh --source assistant --severity MEDIUM --ask \
 bin/notify/approve.sh <id>          # what the click runs (zenity, foot as a fallback)
 ```
 
-**Where the answer lives.** `$YMIR_HOME/hodd/state/notify/approvals/<id>.json` — the question, who
+**Where the answer lives.** `$YMIR_HOME/state/notify/approvals/<id>.json` — the question, who
 asked, when, and the decision with its timestamp. A Rune carries the same line.
 
 **Limits.** One question per notification, two answers (approve / decline), and no silent default: a

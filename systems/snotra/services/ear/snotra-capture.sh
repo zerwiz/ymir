@@ -30,7 +30,7 @@ fi
 [ -n "${YMIR_HOME:-}" ] || { printf 'snotra-capture: the home is unresolved — bin/vault/hoard-lib.sh answered nothing\n' >&2; exit 2; }
 
 YMIR_HOME="${YMIR_HOME}"
-HOARD="$YMIR_HOME/hodd/life/meetings"
+HOARD="$(hoard_life)/meetings"
 STATE_DIR="${YMIR_STATE_DIR:-$YMIR_HOME/state}"
 LISTENING_FILE="$STATE_DIR/.snotra-listening"
 PID_FILE="$STATE_DIR/.snotra-pid"

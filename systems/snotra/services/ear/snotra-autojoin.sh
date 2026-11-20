@@ -12,7 +12,7 @@
 # Env/conf:
 #   YMIR_HOME              the hoard
 #   AUTOJOIN_CONFIG        config file (default <root>/config/snotra/autojoin.conf)
-#   MANAGANDR_CACHE        calendar cache (default <home>/hodd/state/calendar/cache.json)
+#   MANAGANDR_CACHE        calendar cache (default <home>/state/calendar/cache.json)
 #   SNOTRA_BOT             bot door (default <root>/systems/snotra/services/ear/snotra-bot.sh)
 #
 # Exit: 0 ok · 1 error · 2 usage · 3 refused (auto-join disabled)
@@ -28,10 +28,10 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
 fi
 ymir_home_root YMIR_HOME 2>/dev/null || true
 YMIR_HOME="${YMIR_HOME:?YMIR_HOME unresolved}"
-STATE_DIR="$YMIR_HOME/hodd/state/snotra"; mkdir -p "$STATE_DIR"
+STATE_DIR="$YMIR_HOME/state/snotra"; mkdir -p "$STATE_DIR"
 PLAN="$STATE_DIR/autojoin-plan.json"
 JOINED="$STATE_DIR/autojoin-joined.json"
-CACHE="${MANAGANDR_CACHE:-$YMIR_HOME/hodd/state/calendar/cache.json}"
+CACHE="${MANAGANDR_CACHE:-$YMIR_HOME/state/calendar/cache.json}"
 CONF="${AUTOJOIN_CONFIG:-$ROOT/config/snotra/autojoin.conf}"
 [ -r "$CONF" ] && . "$CONF"
 # His own meeting hosts (plan 288 §1, RULES/42): a host name is one operator's, so it lives in his home

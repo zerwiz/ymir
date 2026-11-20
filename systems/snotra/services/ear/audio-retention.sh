@@ -7,7 +7,7 @@
 #                              [--send HOST:PATH]  send it to a remote disk (rsync over ssh)
 #
 # WHAT IT TOUCHES
-#   1. meeting audio under <home>/hodd/life/meetings/**  (*.wav *.ogg *.opus *.mp3 *.webm)
+#   1. meeting audio under <home>/life/meetings/**  (*.wav *.ogg *.opus *.mp3 *.webm)  (plan 331: `life/`)
 #   2. the meeting bot's recording shelf (the Vexa storage volume), oldest first
 #   3. stray captures in /tmp (meeting-mic-*.wav and friends)
 #
@@ -41,7 +41,7 @@ if [ -z "$ARCHIVE" ] && [ -d /run/media ]; then
 fi
 [ "$ACTION" = "scan" ] || [ "$ACTION" = "apply" ] || { printf 'usage: audio-retention.sh scan|apply\n' >&2; exit 2; }
 
-MEETINGS="$HOME_R/hodd/life/meetings"
+MEETINGS="$(hoard_life)/meetings"
 HOURS_Q="$HOURS" CAP_Q="$CAP_MB" FORCE_Q="$FORCE" ACTION_Q="$ACTION" MEETINGS_Q="$MEETINGS" \
 ARCHIVE_Q="$ARCHIVE" SEND_Q="$SEND" \
 ROOT_Q="$ROOT" HOME_Q="$HOME_R" python3 - <<'PY'
