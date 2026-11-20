@@ -73,13 +73,14 @@ WELL_URL="http://127.0.0.1:$GATEWAY_PORT/mcp/well"
 # tracked tree. Pi has no remote transport, so it reaches them through the
 # `mcp-remote` stdio bridge; OpenCode speaks `type: remote` natively.
 # The environment wins; else the private platform env, so no caller must export.
+# The environment wins; else the private platform env THROUGH ITS DOOR, so the value comes
+# from the sealed copy when one exists. Reading `platform.env` here directly was a second
+# reader of a file the vault's writer never refreshed: on this seat that plaintext was five
+# weeks stale and served 69 of the vault's 93 keys (measured 2026-11-20).
 platform_env_val() {  # <KEY>
-  local k=$1 f v
-  for f in "${YMIR_HOARD:-$YMIR_HOME/hodd}/secrets/platform.env" "$YMIR_HOME/hodd/secrets/platform.env" "$YMIR_HOME/secrets/platform.env"; do
-    [ -r "$f" ] || continue
-    v="$(grep -E "^$k=" "$f" 2>/dev/null | tail -1 | cut -d= -f2-)"
-    [ -n "$v" ] && { printf '%s' "$v"; return 0; }
-  done
+  local k=$1 v
+  v="$(bash "$ROOT/bin/vault/hodd.sh" get secrets/platform.env "$k" 2>/dev/null | head -1)"
+  [ -n "$v" ] && printf '%s' "$v"
 }
 TEAMS_URL="${WAYOFTEAMS_MCP_URL:-}";  [ -n "$TEAMS_URL" ]  || TEAMS_URL="$(platform_env_val WAYOFTEAMS_MCP_URL)"
 ANCHOR_URL="${ANCHOR_MCP_URL:-}";     [ -n "$ANCHOR_URL" ] || ANCHOR_URL="$(platform_env_val ANCHOR_MCP_URL)"

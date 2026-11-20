@@ -1,11 +1,6 @@
 #!/usr/bin/env bash
-# hodd-set.sh — set ONE key in an age-encrypted secret file, with guards that make a
-# hand-edit unnecessary (and a hand-edit's failure impossible).
-#
-# Why this exists: on 2026-10-21 a hand-edit of `hodd/secrets/platform.env.age` decrypted
-# to nothing (the cause was never proven), the append still ran, and the re-encrypted file
-# replaced 87 secrets with 3. A backup taken seconds earlier restored the vault — luck, not
-# design. This door exists so the guard is the code, not the operator's care.
+# hodd-set.sh — set, replace or remove ONE key in an age-encrypted secret file.
+# usage-start
 #
 #   bin/vault/hodd-set.sh KEY VALUE [FILE]     # FILE defaults to secrets/platform.env
 #   bin/vault/hodd-set.sh --stdin KEY [FILE]   # the VALUE arrives on stdin, so it never
@@ -16,29 +11,47 @@
 #   bin/vault/hodd-set.sh --get KEY [FILE]     # print one value (never the file)
 #   bin/vault/hodd-set.sh --list [FILE]        # print the KEY NAMES only
 #
-# Guards, each of which failed that day:
-#   1. the decrypted plaintext must be NON-EMPTY, and must contain at least as many keys
-#      as the encrypted copy claims — otherwise nothing is written at all;
-#   2. the re-encrypted file is decrypted AGAIN and compared before it replaces anything;
-#   3. the old file is kept as a timestamped backup beside it;
-#   4. the write is atomic (temp file + mv), mode 0600, and any plaintext temp is shredded.
+# The sealed copy is the ONLY source. `FILE.age` is decrypted and that is what is read,
+# edited and written back; a plaintext `FILE` left beside it is never read while the
+# sealed copy exists (2026-11-20: reading a stale plaintext took a 91-key vault to 75).
+#
+# Guards, each of which failed on 2026-11-20:
+#   1. WHOLE ENTRIES. The file is parsed by `bin/vault/envfile.py`: a value may span
+#      lines (a quoted value, a backslash continuation, a PEM/OpenSSH block), and every
+#      entry that is not being edited is carried through byte for byte.
+#   2. AN INDEPENDENT COUNT. The vault is decrypted AGAIN from disk and its entries are
+#      counted with the same parser; the write is refused unless the result holds
+#      exactly before+1 (a new key), before (a replaced key) or before-1 (a deleted one).
+#      The entries that would go missing are printed — by NAME only.
+#   3. A ROUND TRIP. The re-encrypted file is decrypted again and every entry except the
+#      touched one is compared byte for byte with the vault on disk; any difference
+#      refuses the write and the old file stays.
+#   4. the old file is kept as a timestamped backup beside it;
+#   5. the write is atomic (temp file + mv), mode 0600, and any plaintext temp is shredded.
 #
 # Exit: 0 ok · 1 a guard refused · 2 usage · 3 --del found no such key.
+# usage-end
 set -u
-VERSION="1.0.0"
+VERSION="2.0.0"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 # shellcheck disable=SC1091
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
-HOARD=""
 ymir_home_root YMIR_HOME_R 2>/dev/null || true
 [ -n "${YMIR_HOME_R:-}" ] || { printf 'error: the home is unresolved\n' >&2; exit 1; }
 HOARD="$YMIR_HOME_R/hodd"
+PARSER="$SCRIPT_DIR/envfile.py"
+KEYFILE="$HOARD/secrets/age.key"
 
-usage() { sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '/^# usage-start$/,/^# usage-end$/p' "$0" | sed 's/^# \{0,1\}//' | sed '1d;$d'; }
+die()   { printf 'error: %s\n' "$*" >&2; exit 1; }
+need_py() {
+  command -v python3 >/dev/null 2>&1 || die "python3 is missing — cannot read the entries"
+  [ -r "$PARSER" ] || die "the entry parser is missing at $PARSER"
+}
 
-mode="set"; key=""; value=""; rel="secrets/platform.env"
+mode="set"; key=""; value=""; rel="secrets/platform.env"; value_file=""
 case "${1:-}" in
   -h|--help) usage; exit 0 ;;
   --version|-v) printf '%s\n' "$VERSION"; exit 0 ;;
@@ -53,82 +66,130 @@ esac
 plain="$HOARD/$rel"
 secret="$plain.age"
 
-[ -r "$secret" ] || [ -s "$plain" ] || { printf 'error: no secret at %s (nor %s.age)\n' "$plain" "$secret" >&2; exit 1; }
+[ -r "$secret" ] || [ -s "$plain" ] || die "no secret at $plain (nor $plain.age)"
+need_py
 
 work="$(mktemp -d)"; chmod 700 "$work"
-cleanup() { shred -u "$work"/* 2>/dev/null || rm -f "$work"/*; rmdir "$work" 2>/dev/null; }
+cleanup() { find "$work" -type f -exec shred -u {} + 2>/dev/null || true; rm -rf "$work"; }
 trap cleanup EXIT
 
-# ── guard 1: the plaintext must be real ────────────────────────────────────────────
-if [ -s "$plain" ]; then
-  cp "$plain" "$work/current"
+# ── THE SOURCE OF TRUTH: the sealed copy on disk ─────────────────────────────────
+# A plaintext beside the sealed file is a record that has gone stale in silence: the
+# writer never refreshed it (2026-11-05) and, on 2026-11-20, reading it took a 91-key
+# vault to 75 in one write. So: when the .age exists, the plaintext is not opened at all.
+sealed=0
+if [ -r "$secret" ]; then
+  age -d -i "$KEYFILE" "$secret" > "$work/vault" 2>"$work/err" \
+    || die "cannot decrypt $secret — $(head -c 200 "$work/err")"
+  [ -s "$work/vault" ] || die "$secret decrypted to NOTHING — refusing to touch it"
+  sealed=1
+  cp "$work/vault" "$work/current"
+  truth="$work/vault"
+  if [ -s "$plain" ]; then
+    printf 'note: a plaintext %s sits beside the sealed copy and is STALE — this door reads only %s\n' \
+      "$plain" "$(basename "$secret")" >&2
+  fi
 else
-  age -d -i "$HOARD/secrets/age.key" "$secret" > "$work/current" 2>"$work/err" \
-    || { printf 'error: cannot decrypt %s — %s\n' "$secret" "$(head -c 200 "$work/err")" >&2; exit 1; }
+  # The first write of a file that has never been sealed: the plaintext is the only
+  # source there is, and this write is what creates the sealed copy.
+  cp "$plain" "$work/current"
+  truth="$work/current"
+  printf 'note: no sealed copy yet — reading %s once; this write creates %s\n' "$plain" "$(basename "$secret")" >&2
 fi
-[ -s "$work/current" ] || { printf 'error: %s decrypted to NOTHING — refusing to touch it\n' "$secret" >&2; exit 1; }
-keys_before="$(grep -cE '^[A-Za-z_][A-Za-z0-9_]*=' "$work/current" || true)"
-[ "${keys_before:-0}" -gt 0 ] || { printf 'error: no KEY=value lines in %s — refusing to touch it\n' "$secret" >&2; exit 1; }
+
+before_count="$(python3 "$PARSER" count "$truth")" || die "the entries could not be read from $(basename "$truth")"
+# An armoured block whose END was lost is CARRIED THROUGH, never repaired and never used
+# as a reason to swallow the entries below it. It is named, so the operator can see it.
+unterminated="$(python3 "$PARSER" unterminated "$truth" 2>/dev/null || true)"
+[ -n "$unterminated" ] \
+  && printf 'warning: %s holds a block with no END line — %s; carried through as it is\n' \
+       "$(basename "$truth")" "$(printf '%s' "$unterminated" | tr '\n' ' ')" >&2
 
 case "$mode" in
   list)
-    grep -oE '^[A-Za-z_][A-Za-z0-9_]*' "$work/current"
+    python3 "$PARSER" names "$truth"
     exit 0 ;;
   get)
     [ -n "$key" ] || { usage >&2; exit 2; }
-    grep -E "^${key}=" "$work/current" | head -1 | cut -d= -f2-
-    exit 0 ;;
+    python3 "$PARSER" get "$truth" "$key"
+    exit $? ;;
 esac
 
 [ -n "$key" ] || { usage >&2; exit 2; }
-case "$key" in *[!A-Za-z0-9_]*|[0-9]*) printf 'error: %s is not a key name\n' "$key" >&2; exit 2 ;; esac
+case "$key" in
+  *[!A-Za-z0-9_]*|[0-9]*) printf 'error: %s is not a key name\n' "$key" >&2; exit 2 ;;
+esac
 
 if [ "$mode" = "stdin" ]; then
   # The value never touches argv: a token on a command line is visible to every
   # process of the same user, and a mail grant is exactly that kind of secret.
-  value="$(cat)"
-  [ -n "$value" ] || { printf 'error: --stdin received nothing — nothing written\n' >&2; exit 1; }
+  cat > "$work/value.raw" || die "stdin could not be read — nothing written"
+  # One trailing newline is the shell's line end, not part of the secret; anything else
+  # (a multi-line value, a whole armoured block) is the value, kept as it arrived.
+  python3 - "$work/value.raw" "$work/value" <<'PY' || die "the value could not be read"
+import sys
+raw = open(sys.argv[1], "rb").read().decode("utf-8", "surrogateescape")
+open(sys.argv[2], "wb").write(raw.rstrip("\n").encode("utf-8", "surrogateescape"))
+PY
+  value_file="$work/value"
+  [ -s "$value_file" ] || die "--stdin received nothing — nothing written"
   mode="set"
 fi
 
+if [ "$mode" = "set" ] && [ -z "$value_file" ]; then
+  value_file="$work/value"
+  printf '%s' "$value" > "$value_file"
+fi
+
+# ── the edit, through the whole-entry parser ─────────────────────────────────────
 if [ "$mode" = "del" ]; then
-  grep -qE "^${key}=" "$work/current" \
+  python3 "$PARSER" has "$truth" "$key" \
     || { printf 'hodd-set[1]{action,key}:\n  "absent","%s"\n' "$key"; exit 3; }
-  grep -vE "^${key}=" "$work/current" > "$work/next"
+  python3 "$PARSER" del "$truth" "$key" --out "$work/next" || die "the entry could not be removed"
 else
-# ── replace or append, idempotently ───────────────────────────────────────────────
-awk -v k="$key" -v v="$value" '
-  BEGIN { done = 0 }
-  $0 ~ "^" k "=" { if (!done) { print k "=" v; done = 1 } ; next }
-  { print }
-  END { if (!done) print k "=" v }
-' "$work/current" > "$work/next"
+  python3 "$PARSER" set "$truth" "$key" --value-file "$value_file" --out "$work/next" \
+    || die "the entry could not be written"
 fi
 
-keys_after="$(grep -cE '^[A-Za-z_][A-Za-z0-9_]*=' "$work/next" || true)"
+# ── guard 2: an INDEPENDENT count, taken from the vault on disk ──────────────────
+# Not a count of the thing we just built compared against itself: the sealed file is
+# decrypted a second time, straight from disk, and that copy is what the guard judges.
+if [ "$sealed" = 1 ]; then
+  age -d -i "$KEYFILE" "$secret" > "$work/before" 2>"$work/err" \
+    || die "the sealed file could not be read again — nothing written"
+else
+  cp "$truth" "$work/before"
+fi
+
+action="set"
 if [ "$mode" = "del" ]; then
-  [ "${keys_after:-0}" -ge 1 ] \
-    || { printf 'error: %s is the only key — deleting it would empty the vault, refused\n' "$key" >&2; exit 1; }
-  [ "${keys_after:-0}" -eq "$((keys_before - 1))" ] \
-    || { printf 'error: --del would leave %s keys, not %s — refused\n' "$keys_after" "$((keys_before - 1))" >&2; exit 1; }
-else
-  [ "${keys_after:-0}" -ge "${keys_before:-0}" ] \
-    || { printf 'error: the edit would LOSE keys (%s → %s) — refused\n' "$keys_before" "$keys_after" >&2; exit 1; }
+  action="del"
+elif python3 "$PARSER" has "$work/before" "$key"; then
+  action="replace"
 fi
 
-# ── guard 2 and 3: re-encrypt, decrypt again, compare; keep the old ───────────────
-recipient="$(age-keygen -y "$HOARD/secrets/age.key" 2>/dev/null || true)"
-[ -n "$recipient" ] || { printf 'error: could not read the recipient from age.key\n' >&2; exit 1; }
-age -e -r "$recipient" -o "$work/next.age" "$work/next" 2>"$work/err" \
-  || { printf 'error: re-encryption failed — %s\n' "$(head -c 200 "$work/err")" >&2; exit 1; }
-age -d -i "$HOARD/secrets/age.key" "$work/next.age" > "$work/verify" 2>/dev/null \
-  || { printf 'error: the re-encrypted file does not decrypt — nothing written\n' >&2; exit 1; }
-cmp -s "$work/next" "$work/verify" \
-  || { printf 'error: the round-trip does not match — nothing written\n' >&2; exit 1; }
+python3 "$PARSER" guard --before "$work/before" --after "$work/next" --key "$key" --action "$action" \
+  || exit 1
 
+if [ "$mode" = "del" ] && [ "$(python3 "$PARSER" count "$work/next")" -lt 1 ]; then
+  die "$key is the only key — deleting it would empty the vault, refused"
+fi
+
+# ── guards 3–5: re-encrypt, decrypt again, compare every other entry; keep the old ──
+recipient="$(age-keygen -y "$KEYFILE" 2>/dev/null || true)"
+[ -n "$recipient" ] || die "could not read the recipient from age.key"
+age -e -r "$recipient" -o "$work/next.age" "$work/next" 2>"$work/err" \
+  || die "re-encryption failed — $(head -c 200 "$work/err")"
+age -d -i "$KEYFILE" "$work/next.age" > "$work/verify" 2>/dev/null \
+  || die "the re-encrypted file does not decrypt — nothing written"
+python3 "$PARSER" diff "$work/before" "$work/verify" --except "$key" > "$work/diff" 2>&1 \
+  || { printf 'error: the round trip changed an entry this edit did not touch — nothing written\n' >&2
+       sed -n '1,10p' "$work/diff" >&2; exit 1; }
+
+after_count="$(python3 "$PARSER" count "$work/verify")"
 backup="$secret.bak-$(date -u +%Y%m%dT%H%M%SZ)"
 [ -s "$secret" ] && cp -p "$secret" "$backup"
 install -m 600 "$work/next.age" "$secret.new" && mv "$secret.new" "$secret"
 
-printf 'hodd-set[4]{file,action,key,keys}:\n  "%s","%s","%s","%s → %s"\n  "backup","%s",""\n' \
-  "$rel" "${mode}" "$key" "$keys_before" "$keys_after" "$(basename "$backup" 2>/dev/null)"
+printf 'hodd-set[5]{file,action,key,entries,backup}:\n  "%s","%s","%s","%s → %s","%s"\n' \
+  "$rel" "${action}" "$key" "$before_count" "$after_count" "$(basename "$backup" 2>/dev/null)"
