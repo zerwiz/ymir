@@ -35,6 +35,12 @@ Gróa's update (`/updateymir`) runs `apps.sh update --all` after Ymir's own upda
 
 To work on an app from your own checkout, set `YMIR_APP_<NAME>_DIR=/path/to/checkout` and every Ymir script will use it.
 
+## Which window an app opens in
+
+An app says what kind of window it has in its own `app.yaml`: `kind: electron` or `kind: tauri`, and it may say it per platform, as in `kind: { default: electron, linux: tauri }`. A `tauri` app also names its launcher for each platform under `launch: tauri:`.
+
+`ymir-app <app>` reads that, so every launcher icon opens the right window with no change. To try an app's Tauri window once, without editing anything, run `YMIR_APP_KIND_<APP>=tauri ymir-app <app>` (for example `YMIR_APP_KIND_ODRERIR=tauri ymir-app odrerir`). If the app has no Tauri launcher on this platform, the command says so and opens nothing.
+
 ## Limits
 
 - An update never switches to a release whose check is red. The app stays on the release it was on.
@@ -55,3 +61,4 @@ To work on an app from your own checkout, set `YMIR_APP_<NAME>_DIR=/path/to/chec
 
 - **2026-11-19** — written with Slice 0 of the split: the apps home, the resolver, the door, the contract.
 - **2026-11-19** — appended: an install or update moves a Ymir-written service onto the app's home.
+- **2026-11-20** — added "Which window an app opens in": `kind:` and `launch:` in `app.yaml`, read by `ymir-app`.

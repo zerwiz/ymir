@@ -61,6 +61,28 @@ for w in ws:
   done
 }
 
+# The window's KIND is the app's own word (app.yaml `kind:`, per platform), never this file's: an app that declares
+# `tauri` here is opened by the launcher its app.yaml names under `launch: tauri: <platform>:`, through this same door.
+# Every other app keeps the road below. A trial without editing the app: YMIR_APP_KIND_<APP>=tauri ymir-app <app>.
+case "$app" in --*|"") ;; *)
+  if [ -r "$pin/bin/apps/app-kind.sh" ] && [ -r "$pin/bin/apps/app-path.sh" ]; then
+    _home=""
+    # shellcheck source=../apps/app-path.sh
+    . "$pin/bin/apps/app-path.sh" 2>/dev/null && app_path "$app" _home 2>/dev/null || _home=""
+    # shellcheck source=../apps/app-kind.sh
+    . "$pin/bin/apps/app-kind.sh"
+    if [ -n "$_home" ] && [ "$(app_kind "$app" "$_home")" = tauri ]; then
+      _launch="$(app_launcher "$_home" tauri)" || exit 1
+      _cls="$(app_window_class "$_home")"; follow_here "${_cls:-ymir-$app}"
+      if [ -z "${YMIR_WINDOW_BUTTONS:-}" ] && [ -r "$pin/bin/desktop/app-lib.sh" ]; then
+        YMIR_WINDOW_BUTTONS="$( . "$pin/bin/desktop/app-lib.sh" >/dev/null 2>&1; app_window_buttons 2>/dev/null)" || true
+        [ -n "$YMIR_WINDOW_BUTTONS" ] && export YMIR_WINDOW_BUTTONS || unset YMIR_WINDOW_BUTTONS
+      fi
+      exec "$_launch" "$@"
+    fi
+  fi ;;
+esac
+
 case "$app" in hlidskjalf|smidja|odrerir|sessrumnir|bilskirnir|rodd) follow_here "ymir-$app" ;; esac   # app_class: ymir-<app>
 
 case "$app" in
