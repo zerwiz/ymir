@@ -31,10 +31,10 @@ bin[83]{file,does,kind,verdict,disposition,callers,lines}:
   "LICENSE","MIT No Attribution License","data","wired","keep",2,8
   "LICENSE.MIT","MIT License","data","wired","keep",0,22
   "LICENSE.txt","The arc42 template and documentation is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License.","data","wired","keep",0,19
-  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",64,-
-  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",64,-
-  "README.md","areas/ — what this repository answers for","data","tested","keep",64,-
-  "README.md","plans/tickets/ — the units of work under a validated plan","data","tested","keep",64,-
+  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",65,-
+  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",65,-
+  "README.md","areas/ — what this repository answers for","data","tested","keep",65,-
+  "README.md","plans/tickets/ — the units of work under a validated plan","data","tested","keep",65,-
   "TEMPLATE.md","---","data","wired","keep",5,35
   "TEMPLATE.yaml","areas/TEMPLATE.yaml — what one area's declaration looks like.","data","wired","keep",2,44
   "a-company-suite.md","---","data","wired","keep",1,123
@@ -61,7 +61,7 @@ bin[83]{file,does,kind,verdict,disposition,callers,lines}:
   "decision-minimal.md","{short title, representative of solved problem and found solution}","data","wired","keep",0,30
   "decision.md","---","data","wired","keep",0,80
   "fixes-components.sh","The components of this product — one directory of notes each, and no invented names.","tool","wired","keep",1,4
-  "fixes-guard.sh","fixes-guard — a behaviour change leaves a note, or says why it did not need one.","tool","tested","keep",7,29
+  "fixes-guard.sh","fixes-guard — a behaviour change leaves a note, or says why it did not need one.","tool","tested","keep",8,29
   "fixes.sh","fixes.sh — the fix notes.","tool","wired","keep",6,81
   "gates.md","---","data","wired","keep",4,63
   "glossary.md","Glossary template","data","wired","keep",0,20
@@ -75,7 +75,7 @@ bin[83]{file,does,kind,verdict,disposition,callers,lines}:
   "installation-guide.md","Title","data","wired","keep",0,199
   "letter.sh","letter.sh — the collaboration letter, rendered from a template and left as a DRAFT in the gate.","tool","wired","keep",3,81
   "maker-allow.txt","maker-allow.txt — the one allow file for bin/forge/maker-names.py (RULES/53).","data","wired","keep",7,8
-  "maker-guard.sh","maker-guard.sh — the ward over what a commit or a pull request SAYS (RULES/53).","tool","wired","keep",10,58
+  "maker-guard.sh","maker-guard.sh — the ward over what a commit or a pull request SAYS (RULES/53).","tool","wired","keep",11,58
   "maker-names.py","'''maker-names.py — the ONE matcher for model, model-maker and agent-harness names in prose (RULES/53).","tool","wired","keep",10,155
   "maker-words.txt","maker-words.txt — the word list for bin/forge/maker-names.py (RULES/53).","data","wired","keep",7,36
   "new-module-test.sh","new-module-test.sh — a new module arrives with a test, or with a reason it does not need one.","tool","wired","keep",1,31

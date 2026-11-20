@@ -118,6 +118,7 @@
 | test_fixes_regate.sh | test_fixes_regate.sh — the record gate judges CONTENT, not ceremony (2 | tested | keep (a human or a cron row must run it) |
 | test_fixes_validate.sh | test_fixes_validate.sh — plan 272 fault 10: the fix-note validator jud | tested | keep (a human or a cron row must run it) |
 | test_fleet_roads.sh | test_fleet_roads.sh — the ssh-roads ward judges the marked block, and  | tested | keep (a human or a cron row must run it) |
+| test_four_shelves.sh | test_four_shelves.sh — the readers work with the ONE-CYCLE LINKS REMOV | tested | keep (a human or a cron row must run it) |
 | test_gate_directory.sh | test_gate_directory.sh — plan 295 fix S1: the gate list is a DIRECTORY | tested | keep (a human or a cron row must run it) |
 | test_gather_merge_guard.sh | test_gather_merge_guard.sh — plan 272 fault 9: a gathered batch that l | tested | keep (a human or a cron row must run it) |
 | test_gather_orders_by_base.sh | test_gather_orders_by_base.sh — plan 293 part 7: a packet names the br | tested | keep (a human or a cron row must run it) |
@@ -143,6 +144,7 @@
 | test_plan_state.sh | plan missing headers -> finding | tested | keep (a human or a cron row must run it) |
 | test_plan_watch.sh | dry-run prints arithmetic, sends nothing | tested | keep (a human or a cron row must run it) |
 | test_pr_identity.sh | test_pr_identity.sh — the ward that judges a pull request: the signatu | tested | keep (a human or a cron row must run it) |
+| test_pr_patterns_mailbox.sh | test_pr_patterns_mailbox.sh — a MAILBOX is an address, a ROLE TOKEN is | tested | keep (a human or a cron row must run it) |
 | test_pr_ship_guard.sh | test_pr_ship_guard.sh — proves the ship door judges the PR and not the | tested | keep (a human or a cron row must run it) |
 | test_queue_warden.sh | test_queue_warden.sh — the warden is HYGIENE, and its one merge is the | tested | keep (a human or a cron row must run it) |
 | test_regenerate_on_merge_cleanup.sh | test_regenerate_on_merge_cleanup.sh — the merge driver leaves no `.mer | tested | keep (a human or a cron row must run it) |
@@ -163,5 +165,6 @@
 | test_warden_lib.sh | test_warden_lib.sh — plan 290 §3, proven: the wardens act only where  | tested+named | keep (a human or a cron row must run it) |
 | test_wardens_off_until_named.sh | test_wardens_off_until_named.sh — the Allfather's word, proven: an exi | tested | keep (a human or a cron row must run it) |
 | test_worker_speaks_to_helm.sh | test_worker_speaks_to_helm.sh — plan 272 faults 1 and 2. | tested | keep (a human or a cron row must run it) |
+| test_woven_hand_tail.sh | test_woven_hand_tail.sh — a WOVEN page carries a hand section through  | tested | keep (a human or a cron row must run it) |
 | toolchain.sh | toolchain.sh — the provider wrappers (W0033). A typed front door to th | tested+named | keep (a human or a cron row must run it) |
 | wedge-notify.sh | wedge-notify.sh — the Ymir wedge-alarm notifier. | tested+named | keep (a human or a cron row must run it) |
