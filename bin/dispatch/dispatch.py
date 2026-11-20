@@ -9,7 +9,7 @@ WHAT IT READS. Two sources, and nothing else is trusted:
 
   1. THE DESK'S NEEDS-YOU QUEUE — the rows Gná's desk puts in `needs_you` and `unsure` for every
      account the home declares (`hodd/memory/mail/accounts.yaml`). Two roads reach the same rows:
-     the desk over loopback (`GNA_DESK_URL`, token from `hodd/state/gna-desk.token`) and, when the
+     the desk over loopback (`GNA_DESK_URL`, token from `state/gna-desk.token`) and, when the
      desk does not answer, the store it reads (`hodd/memory/mail/messages.jsonl`), through Gná's own
      `column_of` so the classification is never a second opinion. The run names the road that
      answered — a borrowed answer says so.
@@ -22,10 +22,10 @@ WHAT IT READS. Two sources, and nothing else is trusted:
 
 WHAT IT WRITES. Two paths, and nothing else:
 
-  * `hodd/life/personal/me/todo.md` — a proposal block between two markers, inside the house-kept
+  * `life/personal/me/todo.md` — a proposal block between two markers, inside the house-kept
     half. His own half is never touched. A proposal is a line the house believes wants him, never an
     act: nothing is sent, nothing is spawned, nothing is closed.
-  * `hodd/state/dispatch/runs.jsonl` — append-only. One row per state-changing event (a proposal, a
+  * `state/dispatch/runs.jsonl` — append-only. One row per state-changing event (a proposal, a
     refusal, a failure) and ONE row per run saying `work` or `no-op` and why.
 
 THE THREE LAWS, each proved in bin/dispatch/tests/test_dispatch.py:
@@ -48,11 +48,11 @@ it, `line` when the judgement is his alone).
 Environment (Rule 07 — every one has one documented default):
 
     YMIR_HOME              the private home (else bin/vault/hoard-lib.sh resolves it)
-    DISPATCH_STATE_DIR     <home>/hodd/state/dispatch
-    DISPATCH_TODO          <home>/hodd/life/personal/me/todo.md
+    DISPATCH_STATE_DIR     <home>/state/dispatch
+    DISPATCH_TODO          <home>/life/personal/me/todo.md
     DISPATCH_WAKE_QUEUE    <home>/state/.wake-queue
     GNA_DESK_URL           http://127.0.0.1:8494   (empty: read the store only)
-    GNA_DESK_TOKEN_FILE    <home>/hodd/state/gna-desk.token
+    GNA_DESK_TOKEN_FILE    <home>/state/gna-desk.token
     DISPATCH_HOURS         48      the window for mail rows AND for a wake-queue ask
     DISPATCH_MAX           5       proposals written by one run
     DISPATCH_ATTEMPT_CAP   3       failed attempts before a key is terminal
@@ -133,14 +133,27 @@ def iso(instant: dt.datetime) -> str:
     return instant.astimezone(dt.timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
+def life_shelf(H: Path) -> Path:
+    """The operator's own shelf through the ONE resolver (plan 331.6) — never `hodd/life`."""
+    lib = ROOT / "bin" / "vault" / "hoard-lib.sh"
+    try:
+        out = subprocess.run(
+            ["bash", "-c", f'. "{lib}" >/dev/null 2>&1; d="${YMIR_LIFE_DIR:-}";'
+                            'hoard_life d 2>/dev/null; printf "%s" "$d"' ],
+            capture_output=True, text=True, timeout=10).stdout.strip()
+    except Exception:
+        out = ""
+    return Path(out).expanduser() if out else H / "life"
+
+
 def state_dir(H: Path) -> Path:
     env = os.environ.get("DISPATCH_STATE_DIR")
-    return Path(env).expanduser() if env else H / "hodd" / "state" / "dispatch"
+    return Path(env).expanduser() if env else H / "state" / "dispatch"
 
 
 def todo_path(H: Path) -> Path:
     env = os.environ.get("DISPATCH_TODO")
-    return Path(env).expanduser() if env else H / "hodd" / "life" / "personal" / "me" / "todo.md"
+    return Path(env).expanduser() if env else life_shelf(H) / "personal" / "me" / "todo.md"
 
 
 def wake_queue(H: Path) -> Path:
@@ -262,7 +275,7 @@ def _desk_token(H: Path) -> str:
     env = os.environ.get("GNA_DESK_TOKEN")
     if env:
         return env.strip()
-    path = Path(os.environ.get("GNA_DESK_TOKEN_FILE") or (H / "hodd" / "state" / "gna-desk.token"))
+    path = Path(os.environ.get("GNA_DESK_TOKEN_FILE") or (H / "state" / "gna-desk.token"))
     try:
         return path.read_text(encoding="utf-8").strip()
     except OSError:
@@ -355,7 +368,7 @@ def mail_items(H: Path, hours: int) -> tuple[list[dict], dict]:
     if not url:
         desk_state = "disabled (GNA_DESK_URL is empty)"
     elif not token:
-        desk_state = "no token (hodd/state/gna-desk.token)"
+        desk_state = "no token (state/gna-desk.token)"
     for account in accounts:
         columns, road = None, "store"
         if url and token:

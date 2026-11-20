@@ -84,7 +84,7 @@ pasted in a message.
 leash[4]{control,how}:
   "start/stop","groa-agent.sh start | stop | status"
   "timeout","YMIR_UPDATE_TIMEOUT (default 900s) — the agent cannot hang the machine"
-  "log","$YMIR_HOME/hodd/state/groa-agent.log"
+  "log","$YMIR_HOME/state/groa-agent.log"
   "schedule","systemd --user timer, daily, staggered per host so installs never update at once"
 ```
 

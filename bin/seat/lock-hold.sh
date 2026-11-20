@@ -3,7 +3,7 @@
 #
 # WHY (plan 206 §11.3 #1): the review loop does not decide — it ASKS the lock owner, by design
 # ("a read-only agent waits for a primary rather than deciding for one"). On a headless heart no
-# interactive session exists to hold that lock: `hodd/state/.lock-path` named a `brokk.lock` that
+# interactive session exists to hold that lock: `state/.lock-path` named a `brokk.lock` that
 # did not exist, so `review-watch` saw five open PRs every ten minutes and raised none —
 #   "there is NO lock on this machine — nobody holds it, so there is nobody to ask".
 # A lock taken by a shell that then exits is not a lock. This is the process that stays.

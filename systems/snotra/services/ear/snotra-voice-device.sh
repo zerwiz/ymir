@@ -17,7 +17,7 @@ NAME="${SNOTRA_MIC_NAME:-snotra_mic}"
 ROOT="$(d="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; s="$d"; while [ "$d" != / ] && { [ ! -d "$d/RULES" ] || [ ! -d "$d/.agents" ]; }; do d="$(dirname "$d")"; done; { [ -d "$d/RULES" ] && [ -d "$d/.agents" ]; } || d="$s"; printf '%s' "$d")"
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true; fi
 YMIR_HOME="${YMIR_HOME:-}"; [ -n "$YMIR_HOME" ] || ymir_home_root YMIR_HOME 2>/dev/null || true
-STATE="${YMIR_HOME:-$HOME}/hodd/state/snotra/voice-device.json"
+STATE="${YMIR_HOME:-$HOME}/state/snotra/voice-device.json"
 mkdir -p "$(dirname "$STATE")"
 die(){ printf 'error: %s\n' "$*" >&2; exit 1; }
 command -v pactl >/dev/null || die "pactl not found"

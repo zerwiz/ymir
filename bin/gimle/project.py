@@ -3,7 +3,7 @@
 
     project.py [--home $YMIR_HOME] [--out DIR] [--plane] [--dry-run]
 
-Reads every meeting under `hodd/life/meetings/<workspace>/<id>/` — `meeting.json` for the title and the
+Reads every meeting under `life/meetings/<workspace>/<id>/` (plan 331) — `meeting.json` for the title and the
 classification, `by-house.md` for decisions, questions and actions with their evidence — and writes:
 
     <out>/meetings.json   what the desk renders
@@ -119,7 +119,7 @@ def main(argv):
     if not args.home or not os.path.isdir(args.home):
         print("project: YMIR_HOME is unresolved — nothing is guessed", file=sys.stderr)
         return 1
-    root = os.path.join(args.home, "hodd", "life", "meetings", args.workspace)
+    root = os.path.join(args.home, "life", "meetings", args.workspace)
     meetings, skipped = [], []
     if os.path.isdir(root):
         for name in sorted(os.listdir(root)):

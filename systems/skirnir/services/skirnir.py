@@ -304,7 +304,7 @@ def home() -> str:
     raise SystemExit("skirnir: the hoard is unresolved — set YMIR_HOME")
 
 
-STATE = os.path.join(home(), "hodd", "state", "assistant")
+STATE = os.path.join(home(), "state", "assistant")
 IDENTITY = os.path.join(home(), "hodd", "identity", "assistant")
 DIGEST = os.path.join(STATE, "digest.jsonl")
 DB = os.path.join(STATE, "assistant.db")

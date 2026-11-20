@@ -263,6 +263,66 @@ def names_ymir(text: str) -> bool:
     return False
 
 
+# ── the apps home: an app's own unit is the APP's, never a stray Ymir tree ──────────────────────
+# THE MEND, 2026-11-20. `ymir-rodd.service` runs from `~/.local/share/ymir-apps/rodd/current` — the
+# apps home the split of 2026-11-19 gave every app that left this tree. It names that home and the
+# pin (Environment=YMIR_RUNTIME_DIR), so this tool judged it "names a Ymir tree but is not in
+# config/units.yaml" and would have RETARGETED it into the pin, which no longer carries `apps/rodd`
+# — a mend that breaks the window it was mending. An app's home is resolved through the one door
+# (`bin/apps/app-path.sh`), never a path written here: a second table is a second answer.
+_APP_HOMES: tuple[Path, tuple[Path, ...]] | None = None
+
+
+def app_homes() -> tuple[Path, tuple[Path, ...]]:
+    """(the apps home, each installed app's path) — asked of `bin/apps/app-path.sh`, never guessed."""
+    global _APP_HOMES
+    if _APP_HOMES is not None:
+        return _APP_HOMES
+    door = CODE_ROOT / "bin" / "apps" / "app-path.sh"
+    home: Path | None = None
+    found: list[Path] = []
+    try:
+        got = subprocess.run(["bash", str(door), "--home"], capture_output=True, text=True, timeout=15)
+        if got.returncode == 0 and got.stdout.strip():
+            home = Path(got.stdout.strip())
+    except (OSError, subprocess.SubprocessError):
+        home = None
+    try:
+        got = subprocess.run(["bash", str(door), "--list"], capture_output=True, text=True, timeout=20)
+        for line in got.stdout.splitlines():
+            # "app","road","path","sha"  — a missing app carries `-` as its path
+            m = re.match(r'\s*"([^"]*)","([^"]*)","([^"]*)",', line)
+            if not m:
+                continue
+            road, path = m.group(2), m.group(3)
+            if road in ("missing", "not-installed") or path in ("", "-"):
+                continue
+            found.append(Path(path))
+    except (OSError, subprocess.SubprocessError):
+        pass
+    if home is None:
+        # the door's own documented default (app-path.sh: ${YMIR_APPS_HOME:-$XDG_DATA_HOME/ymir-apps}),
+        # used only when the door cannot answer at all.
+        data = Path(os.environ.get("XDG_DATA_HOME") or HOME / ".local" / "share")
+        home = Path(os.environ.get("YMIR_APPS_HOME") or data / "ymir-apps")
+    _APP_HOMES = (home, tuple(found))
+    return _APP_HOMES
+
+
+def is_app_unit(text: str) -> bool:
+    """True when this unit or launcher runs from an app's own home, not from a Ymir tree to retarget."""
+    home, apps = app_homes()
+    roots = [home, *apps]
+    for line in text.splitlines():
+        if line.split("=", 1)[0].strip() not in SCAN_KEYS:
+            continue
+        for m in TOKEN.finditer(line):
+            path = _expand_unit(m.group(0))
+            if any(_under(path, r) for r in roots):
+                return True
+    return False
+
+
 # ── rendering ────────────────────────────────────────────────────────────────
 def substitute(value: str, pin: Path, vars_: dict[str, str]) -> str:
     value = value.replace("@ROOT@", str(pin)).replace("@HOME@", os.path.expanduser("~"))
@@ -540,6 +600,11 @@ def cmd_write(args: argparse.Namespace) -> int:
             if owner in names or entry_for(reg, owner):
                 continue
             old = f.read_text(encoding="utf-8")
+            if is_app_unit(old):
+                # an app's own unit belongs to its home (bin/apps/app-path.sh); retargeting it into the
+                # pin would point it at a tree that no longer carries the app (the split, 2026-11-19).
+                run.row(f.stem, "unregistered", "app-owned", "under the apps home — the app's own, not retargeted")
+                continue
             roots = stray_roots(old, pin)
             if roots:
                 run.put(f, retarget(old, roots, pin), f.stem, "unregistered")
@@ -549,6 +614,8 @@ def cmd_write(args: argparse.Namespace) -> int:
                 old = f.read_text(encoding="utf-8")
                 if f.name in {p.name[:-3] for p in tpl_launch}:
                     continue
+                if is_app_unit(old):
+                    continue   # an app's own launcher lives under the apps home; nothing to retarget
                 roots = stray_roots(old, pin)
                 if roots:
                     run.put(f, retarget(old, roots, pin), f.name, "launcher")
@@ -650,7 +717,10 @@ def cmd_check(args: argparse.Namespace) -> int:
         if roots:
             run.row(label, "unit", "OFF-PIN", f"runs {roots[0]}, not the pin {pin}", bad=True)
         elif names_ymir(text):
-            if registered:
+            if is_app_unit(text):
+                # the app's own home (bin/apps/app-path.sh): its unit is not Ymir's to register or move
+                run.row(label, "unit", "ok", "an app's own unit, under the apps home")
+            elif registered:
                 run.row(label, "unit", "ok", "on the pin, in the register")
             else:
                 run.row(label, "unit", "UNREGISTERED", "names a Ymir tree but is not in config/units.yaml", bad=True)
@@ -668,7 +738,9 @@ def cmd_check(args: argparse.Namespace) -> int:
             if roots:
                 run.row(f.name, "launcher", "OFF-PIN", f"points at {roots[0]}, not the pin {pin}", bad=True)
             elif names_ymir(text):
-                if f.name in launch_names:
+                if is_app_unit(text):
+                    run.row(f.name, "launcher", "ok", "an app's own launcher, under the apps home")
+                elif f.name in launch_names:
                     run.row(f.name, "launcher", "ok", "on the pin, in the register")
                 else:
                     run.row(f.name, "launcher", "UNREGISTERED", "names a Ymir tree but no app ships its template", bad=True)

@@ -129,6 +129,28 @@ prove() {  # <release> → prints a TOON table, exit 0 only when every row passe
   return "$bad"
 }
 
+# ── the dependency closure: borrow a proved one, or install it ─────────────────────────────────────────────────
+# borrow_closure <prev> <new> — hard-link prev's installed modules into a new release; exit 1 when it cannot be honest.
+#
+# npm HOISTS most packages to the root node_modules, but it NESTS a package inside the workspace that owns it
+# whenever it cannot hoist it. Measured on 2026-11-20: @xterm/xterm 6 lives at apps/hlidskjalf/node_modules/@xterm/xterm
+# and nowhere else. Copying the root closure alone therefore drops it, Hlidskjalf's `tsc --noEmit` fails with TS2307,
+# and the release still reported that it had borrowed a proved closure. So every nested node_modules is borrowed too,
+# and a borrow that cannot deliver what the destination's own lock declares is REFUSED — the caller installs instead.
+borrow_closure() {  # <prev-dir> <new-dir>
+  local src="${1%/.}" dst="${2%/.}" nm rel ws
+  for ws in $(grep -oE '"(apps|packages|systems|tools|src)/[^"]+/node_modules/' "$dst/package-lock.json" 2>/dev/null | tr -d '"' | sed 's#/node_modules/$##' | sort -u); do
+    [ -d "$src/$ws/node_modules" ] || return 1
+  done
+  cp -al "$src/node_modules" "$dst/node_modules" || return 1
+  while IFS= read -r nm; do
+    rel="${nm#"$src"/}"
+    [ "$rel" = node_modules ] && continue
+    mkdir -p "$dst/$(dirname "$rel")" && cp -al "$nm" "$dst/$rel" || return 1
+  done < <(find "$src" -mindepth 2 -maxdepth 4 -type d -name node_modules -not -path '*/node_modules/*' -prune -print 2>/dev/null)
+  return 0
+}
+
 # ── build ──────────────────────────────────────────────────────────────────────────────────────────────────────
 build() {
   local ref="origin/main" from="$SRC_DEFAULT" sha url tmp log d prev
@@ -152,9 +174,11 @@ build() {
     # the dependency closure — a release whose lock files match the running one borrows its modules as hard links
     for m in . apps/bilskirnir apps/rodd; do
       [ -f "$tmp/$m/package-lock.json" ] || continue
-      if [ -n "$prev" ] && [ -d "$prev/$m/node_modules" ] && cmp -s "$prev/$m/package-lock.json" "$tmp/$m/package-lock.json"; then
-        cp -al "$prev/$m/node_modules" "$tmp/$m/node_modules" || exit 12
+      if [ -n "$prev" ] && [ -d "$prev/$m/node_modules" ] && cmp -s "$prev/$m/package-lock.json" "$tmp/$m/package-lock.json" \
+         && borrow_closure "$prev/$m" "$tmp/$m"; then
+        :   # borrowed as hard links, whole (the root closure AND every workspace's own nested modules)
       else
+        rm -rf "$tmp/$m/node_modules"
         ( cd "$tmp/$m" && npm ci --include=dev --no-audit --no-fund ) || exit 13
       fi
     done

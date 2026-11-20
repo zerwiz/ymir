@@ -29,7 +29,7 @@ command -v python3 >/dev/null 2>&1 || { printf '1..0 # skip python3 is absent\n'
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 HOME_R="$TMP/home"
-mkdir -p "$HOME_R/hodd/state"
+mkdir -p "$HOME_R/state"
 
 # ── 1. shape: Rule 13 — a directory with an index.ts, and the logic beside it ──
 [ -f "$EXT/index.ts" ] && ok "the extension is a directory with an index.ts" \
@@ -143,9 +143,9 @@ PY
 fi
 
 # ── 4. the publication is real, and one file per session ───────────────────────
-PUB="$HOME_R/hodd/state/context-left/session-under-test.json"
+PUB="$HOME_R/state/context-left/session-under-test.json"
 if [ -f "$PUB" ]; then
-  ok "the reading is published at hodd/state/context-left/<session>.json"
+  ok "the reading is published at state/context-left/<session>.json"
   python3 - "$PUB" <<'PY'
 import json, sys
 rec = json.load(open(sys.argv[1]))
@@ -158,7 +158,7 @@ print("ok - the published record carries the facts, the rendered answer, and the
 PY
   [ $? -eq 0 ] || fail=1
 else
-  bad "the reading is published at hodd/state/context-left/<session>.json"
+  bad "the reading is published at state/context-left/<session>.json"
 fi
 
 # ── 4b. the house's own context door prefers the live reading ────────────────
@@ -166,7 +166,7 @@ DOOR="$ROOT/bin/seat/context.sh"
 if [ -x "$DOOR" ]; then
   ( cd "$TMP" && TEST_SESSION_FILE="$TMP/session-under-test.jsonl" HOLD_MS=20000 YMIR_HOME="$HOME_R" YMIR_ROOT="$ROOT" HOME="$TMP" \
       node "$TMP/harness.mjs" "$EXT/index.ts" >/dev/null 2>&1 & echo $! > "$TMP/holder.pid" )
-  i=0; while [ "$i" -lt 60 ] && [ ! -s "$HOME_R/hodd/state/context-left/session-under-test.json" ]; do i=$((i+1)); sleep 0.1; done
+  i=0; while [ "$i" -lt 60 ] && [ ! -s "$HOME_R/state/context-left/session-under-test.json" ]; do i=$((i+1)); sleep 0.1; done
   LIVE="$(YMIR_HOME="$HOME_R" bash "$DOOR" --session "$TMP/session-under-test.jsonl" --json 2>&1)"
   case "$LIVE" in
     *"live harness reading (pi extension)"*) ok "bin/seat/context.sh prints the live extension reading, not a second count" ;;
@@ -177,7 +177,7 @@ if [ -x "$DOOR" ]; then
     *) bad "the door's numbers are the extension's own (got: $(printf '%s' "$LIVE" | head -2 | tr '\n' ' '))" ;;
   esac
   kill "$(cat "$TMP/holder.pid" 2>/dev/null)" 2>/dev/null || true
-  rm -f "$HOME_R/hodd/state/context-left/"*.json
+  rm -f "$HOME_R/state/context-left/"*.json
   FALLBACK="$(YMIR_HOME="$HOME_R" bash "$DOOR" --session "$TMP/session-under-test.jsonl" --json 2>&1)"
   case "$FALLBACK" in
     *"live harness reading"*) bad "with no published reading the door must not claim a live one" ;;
@@ -189,7 +189,7 @@ fi
 
 # ── 5. one source of truth: the voice repeats it, and keeps no counter ────────
 VT="$ROOT/bin/voice/voice_tools.py"
-grep -q 'hodd/state/context-left\|"context-left"' "$VT" 2>/dev/null \
+grep -q 'state/context-left\|"context-left"' "$VT" 2>/dev/null \
   && ok "the voice tool reads the published reading" \
   || bad "the voice tool reads the published reading"
 python3 - "$VT" <<'PY'
@@ -221,7 +221,7 @@ case "$VOICE_OUT" in
   *) bad "the voice repeats the extension's reading (got: $(printf '%s' "$VOICE_OUT" | head -2 | tr '\n' ' '))" ;;
 esac
 
-rm -f "$HOME_R/hodd/state/context-left/"*.json
+rm -f "$HOME_R/state/context-left/"*.json
 VOICE_NONE="$(YMIR_HOME="$HOME_R" python3 - "$VT" <<'PY' 2>&1
 import asyncio, importlib.util, sys
 spec = importlib.util.spec_from_file_location("voice_tools", sys.argv[1])

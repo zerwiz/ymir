@@ -60,7 +60,7 @@ folders of the old `hodd/workspaces` into `life/<topic>/`.
 - It counts the files before and after, and stops loudly if the two differ.
 - Run it twice and the second run says there is nothing to do.
 
-It then leaves two links, `hodd/life` and `hodd/state`, pointing at the new shelves. Older scripts that still
+It then leaves two links, `hodd/life` and `hodd/state`, pointing at the new shelves.  (retired-path-ok: it names the compatibility links the migration leaves) Older scripts that still
 name the old folders keep working and write to the right place. The links last one release cycle, and they are
 never committed.
 
@@ -75,7 +75,7 @@ never committed.
 
 - **The count did not match.** Nothing further runs. Read the newest file under `hodd/reference/moves/`. It lists
   every move that happened.
-- **"could not link hodd/state".** A program kept writing into the old folder during the move. Run the
+- **"could not link state".** A program kept writing into the old folder during the move. Run the
   migration again when the machine is quiet.
 - **Eir says a layout key names a path that does not exist.** Your `.ymir-layout.yaml` is stale. Point the key at
   the real folder, or remove it.

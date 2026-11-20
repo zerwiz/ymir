@@ -486,8 +486,8 @@ self_test() {
   export YMIR_HOME="$tmp/home" SNOTRA_LADDER_QUIET=0
   export SNOTRA_LADDER_NOTIFY_LOG="$tmp/hotline.log"
   export YMIR_STATE_DIR="$tmp/state"     # the board's store lives here in the fixture
-  local M="$YMIR_HOME/hodd/life/meetings/self/2026-01-02-good"
-  local B="$YMIR_HOME/hodd/life/meetings/self/2026-01-03-bad"
+  local M="$(hoard_life)/meetings/self/2026-01-02-good"
+  local B="$(hoard_life)/meetings/self/2026-01-03-bad"
   mkdir -p "$M" "$B"
   for pair in "good:$M" "bad:$B"; do
     local id="${pair%%:*}" dir="${pair#*:}"

@@ -20,7 +20,7 @@ They are scheduled on the heart, on Monday morning — the week is judged before
 
 ## What you need
 
-- A home at `$YMIR_HOME`. The numbers are kept in `hodd/state/<name>-week.jsonl`.
+- A home at `$YMIR_HOME`. The numbers are kept in `state/<name>-week.jsonl`.
 - For the mail balance: a mailbox the desk has imported (`bin/time/nornir-job-gna-mail.sh`).
 - For the pin's distance: the pinned runtime (`~/ymir-runtime`, or `YMIR_RUNTIME_DIR`), and a working
   tree that is **not** the pin — the door refuses to report on itself from inside it.
@@ -46,9 +46,9 @@ bin/time/nornir-job-week-mail.sh
 Read the history (one JSON object per week, oldest first):
 
 ```sh
-tail -5 "$YMIR_HOME"/hodd/state/mail-week.jsonl
-tail -5 "$YMIR_HOME"/hodd/state/pin-week.jsonl
-tail -5 "$YMIR_HOME"/hodd/state/tunnels-week.jsonl
+tail -5 "$YMIR_HOME"/state/mail-week.jsonl
+tail -5 "$YMIR_HOME"/state/pin-week.jsonl
+tail -5 "$YMIR_HOME"/state/tunnels-week.jsonl
 ```
 
 Put the rows on a schedule: install or update copies `config/cron.yaml.example` on a fresh machine,

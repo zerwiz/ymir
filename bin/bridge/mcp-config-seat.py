@@ -32,6 +32,12 @@ It is a NAMED merge: only the server names in the set (and the stale engram) are
 touched; every other server the operator seated stays. A file it changes is backed up
 first (``<file>.bak-<UTC stamp>``).
 
+The set itself is the UNION of pi's TWO files — ``mcp-adapter.json`` (what the MCP gateway and
+Ymir's tools read on a seat whose builtin MCP is off) and ``mcp.json`` (pi 1.3+'s own) — because
+taking one alone left a server the operator seated in the other unreachable. Measured 2026-11-20:
+``gimle`` stood in ``mcp.json`` with its url and Authorization header, ``mcp-adapter.json`` never
+held it, and ``mcp({ server: "gimle" })`` answered not found.
+
 Secrets by reference only: a server whose spec carries a literal secret (an inline
 ``clientSecret``, a token in ``env`` or ``headers``) is NOT copied to another harness —
 it is named in the output so the operator can move it to a reference. A value that is
@@ -144,12 +150,33 @@ def inline_secrets(spec, path: str = "") -> list[str]:
     return found
 
 
+def pi_pair(source: str) -> list[str]:
+    """The two names pi and Ymir read, as ONE set: `mcp-adapter.json` (Ymir's tools, and the MCP
+    gateway on a seat whose builtin MCP is off) and `mcp.json` (pi 1.3+'s own file)."""
+    d = os.path.dirname(os.path.abspath(source))
+    return [os.path.join(d, "mcp-adapter.json"), os.path.join(d, "mcp.json")]
+
+
 def canonical(gateway_port: str, source: str) -> dict:
     """pi's set — the one source — with the direct engram dropped and the record
     doors pointed at this body's gateway."""
     base = f"http://127.0.0.1:{gateway_port}/mcp"
     src = load_json(source, {}) if source else {}
     servers = copy.deepcopy(src.get("mcpServers") or src.get("servers") or {})
+    # ── A SERVER SEATED IN EITHER PI FILE IS IN THE SET (2026-11-20) ────────────────────────
+    # The set was taken from `mcp-adapter.json` ALONE, so a server the operator added where pi's
+    # own documentation says to put it (`~/.pi/agent/mcp.json`, url + Authorization) never reached
+    # the adapter — the file the MCP gateway reads on a seat whose builtin MCP is off — and
+    # `mcp({ server: "gimle" })` answered not found while the json plainly named it. The two files
+    # are ONE set: the source keeps its own spec on a shared name, the sibling fills in the rest,
+    # and every harness is seated from the union so no seat carries half a list.
+    if source:
+        for sibling in pi_pair(source):
+            if os.path.abspath(sibling) == os.path.abspath(source):
+                continue
+            other = load_json(sibling, {}) or {}
+            for name, spec in (other.get("mcpServers") or other.get("servers") or {}).items():
+                servers.setdefault(name, copy.deepcopy(spec))
     servers = {n: s for n, s in servers.items() if not is_out(n, s)}
     for door in RECORD_DOORS:
         servers[door] = {"url": f"{base}/{door}"}

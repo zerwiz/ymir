@@ -17,7 +17,7 @@
 //   2. refresh the OAuth grant from the vault key (never a build input)
 //   3. fetch a bounded window (default ±6 weeks — the month grid's neighbour weeks)
 //   4. normalise the events (all-day, multi-day, tz-offset, cancelled)
-//   5. write ONE rolling cache under <home>/hodd/state/calendar/cache.json
+//   5. write ONE rolling cache under <home>/state/calendar/cache.json
 //   6. return the normalised set, carrying an `as_of` on every path
 //
 // UNKNOWN IS NOT EMPTY. When the reader cannot produce data it says so with a
@@ -142,7 +142,7 @@ export function resolveHome(env = process.env) {
 
 export function resolveConfig(env = process.env) {
   const home = resolveHome(env);
-  const cacheDir = env.MANAGANDR_CACHE_DIR || join(home, "hodd", "state", "calendar");
+  const cacheDir = env.MANAGANDR_CACHE_DIR || join(home, "state", "calendar");
   const refreshTokenKey = env.MANAGANDR_OAUTH_KEY || DEFAULT_REFRESH_TOKEN_KEY;
   return {
     home,

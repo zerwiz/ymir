@@ -14,7 +14,7 @@ ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/
 ENGINE="$SCRIPT_DIR/skirnir.py"
 TMP="$(mktemp -d)"; AMBIENT_YMIR_HOME="${YMIR_HOME:-}"; export YMIR_HOME="$TMP/home"
 export SKIRNIR_NO_ESCALATE=1   # a test must never page the operator
-mkdir -p "$YMIR_HOME/hodd/state/assistant/approved" "$YMIR_HOME/hodd/identity/assistant/approved"
+mkdir -p "$YMIR_HOME/state/assistant/approved" "$YMIR_HOME/hodd/identity/assistant/approved"
 # the approved facts are the OPERATOR's: resolve the hoard, never guess it (Rule 07). They live on the
 # IDENTITY shelf since the 2026-10-21 move (plan 101 §7) — reading only the old state path silently
 # gave this suite an EMPTY digest. Both are read, and the count is asserted below, so a move can never
@@ -34,7 +34,7 @@ ask() { python3 "$ENGINE" --tier "${2:-stranger}" --text "$1" 2>/dev/null; }
 
 bash "$SCRIPT_DIR/kb-export.sh" >/dev/null 2>&1
 # the suite must be testing the REAL digest, not an empty one
-n_facts="$(python3 -c "import os;print(sum(1 for l in open(os.path.join(os.environ['YMIR_HOME'],'hodd/state/assistant/digest.jsonl')) if l.strip()))" 2>/dev/null)"
+n_facts="$(python3 -c "import os;print(sum(1 for l in open(os.path.join(os.environ['YMIR_HOME'],'state/assistant/digest.jsonl')) if l.strip()))" 2>/dev/null)"
 [ "${n_facts:-0}" -ge 5 ] && pass "the digest carries the operator's approved facts (${n_facts})" \
   || fail "empty digest" "only ${n_facts:-0} facts — the suite would test nothing"
 
@@ -61,7 +61,7 @@ out="$(ask 'send this message to Anna' owner)"
 case "$out" in *"Sent"*|*"sent to"*) fail "action request" "$out" ;; *) pass "an action request is refused" ;; esac
 
 # the canary wall: an approved fact that CONTAINS a canary must never be spoken
-cat > "$YMIR_HOME/hodd/state/assistant/approved/leaky.md" <<'DOC'
+cat > "$YMIR_HOME/state/assistant/approved/leaky.md" <<'DOC'
 ---
 approved_by: the Allfather
 approved_at: 2026-10-21
@@ -80,7 +80,7 @@ elapsed=$(( $(date +%s) - start ))
 [ "$elapsed" -lt 120 ] && pass "50 messages handled in ${elapsed}s" || fail "flood" "took ${elapsed}s"
 
 # the NDA wall: a contracted fact must not reach someone who is not a named party
-cat > "$YMIR_HOME/hodd/state/assistant/approved/nda-fact.md" <<'DOC'
+cat > "$YMIR_HOME/state/assistant/approved/nda-fact.md" <<'DOC'
 ---
 approved_by: the Allfather
 approved_at: 2026-10-21
@@ -89,7 +89,7 @@ parties: anna@example.com
 ---
 The contracted deliverables for Example Ltd cover phase two only.
 DOC
-cat >> "$YMIR_HOME/hodd/state/assistant/approved/leaky.md" <<'DOC'
+cat >> "$YMIR_HOME/state/assistant/approved/leaky.md" <<'DOC'
 The contracted deliverables for Example Ltd cover phase two only, and Hnitbjörg seals them.
 DOC
 bash "$SCRIPT_DIR/kb-export.sh" >/dev/null 2>&1

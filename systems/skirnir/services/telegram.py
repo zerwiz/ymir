@@ -48,7 +48,7 @@ def home() -> str:
     raise SystemExit("telegram: the hoard is unresolved — set YMIR_HOME")
 
 
-STATE = os.path.join(home(), "hodd", "state", "assistant")
+STATE = os.path.join(home(), "state", "assistant")
 SEEN = os.path.join(STATE, "seen-groups.json")
 OFFSET = os.path.join(STATE, "telegram.offset")
 IDENTITY = os.path.join(home(), "hodd", "identity", "assistant")

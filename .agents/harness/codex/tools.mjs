@@ -553,9 +553,9 @@ export function createTools({ root, home, state, env = process.env }) {
       if (a.dryRun === false && !a.area)
         throw Error("apply requires explicit area");
       const base = {
-          marketing: "hodd/life/marketing/imported",
-          personal: "hodd/life/personal/imported",
-          work: "hodd/life/work/imported",
+          marketing: "life/marketing/imported",
+          personal: "life/personal/imported",
+          work: "life/work/imported",
           research: "hodd/docs/research/imported",
           reference: "hodd/reference/imported",
         }[a.area || "reference"],

@@ -331,9 +331,9 @@ them may ever be written inside this repo** (see "Private data — YMIR_HOME").
 ```
 outputs[7]{kind,path}:
   "Business / strategy","$YMIR_HOME/hodd/identity/companies/"
-  "Marketing / social","$YMIR_HOME/hodd/life/marketing/"
-  "Software specs","$YMIR_HOME/hodd/life/work/"
-  "Personal / schedules","$YMIR_HOME/hodd/life/personal/"
+  "Marketing / social","$YMIR_HOME/life/marketing/"
+  "Software specs","$YMIR_HOME/life/work/"
+  "Personal / schedules","$YMIR_HOME/life/personal/"
   "Daily logs","$YMIR_HOME/hodd/memory/daily/YYYY-MM-DD.md"
   "Shared PUBLIC assets","midgard/"
   "Global audit entries","$YMIR_HOME/hodd/memory/runes_audit.md"

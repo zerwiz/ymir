@@ -30,7 +30,7 @@ PROBE='pin="${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}"
 c=$(git -C "$pin" log -1 --format="%h %cr" 2>/dev/null || echo "none")
 rel=$([ -L "$pin" ] && echo release || echo checkout)
 h=""; . "$pin/bin/vault/hoard-lib.sh" 2>/dev/null && ymir_home_root h
-u=$(grep -E "^UPDATED|^GUARD|Model unavailable" "$h/hodd/state/groa-agent.log" 2>/dev/null | tail -1 | cut -c1-70); t=$(grep -oE "^── [0-9T:+-]+ tick finished \(rc [0-9]+\)" "$h/hodd/state/groa-agent.log" 2>/dev/null | tail -1 | sed -E "s/^── ([0-9-]+)T([0-9:]{5}).*\(rc ([0-9]+)\)/\1 \2 rc \3/"); u="${t:-never} · ${u:-no outcome line}"
+u=$(grep -E "^UPDATED|^GUARD|Model unavailable" "$h/state/groa-agent.log" 2>/dev/null | tail -1 | cut -c1-70); t=$(grep -oE "^── [0-9T:+-]+ tick finished \(rc [0-9]+\)" "$h/state/groa-agent.log" 2>/dev/null | tail -1 | sed -E "s/^── ([0-9-]+)T([0-9:]{5}).*\(rc ([0-9]+)\)/\1 \2 rc \3/"); u="${t:-never} · ${u:-no outcome line}"
 l=$(cut -d" " -f1 /proc/loadavg 2>/dev/null); n=$(nproc 2>/dev/null)
 f=$(systemctl --user --failed --no-legend 2>/dev/null | wc -l)
 v=$(curl -s -o /dev/null -w "%{http_code}" --max-time 2 http://127.0.0.1:8890/docs 2>/dev/null)

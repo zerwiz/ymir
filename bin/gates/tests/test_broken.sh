@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -u
 export YMIR_HOME="${YMIR_HOME:-$HOME/Documents/ymirhome}"
-F="$YMIR_HOME/hodd/state/broken.md"
+F="$YMIR_HOME/state/broken.md"
 rm -f "$F"
 BIN="$(cd "$(dirname "$0")/../.." && pwd)/seat/broken.sh"
 # add appends

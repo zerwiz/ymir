@@ -29,7 +29,7 @@
 #     somebody else's errand. Declared here rather than hidden in the ward: a fixture the
 #     scan knows about is a fixture, one it does not is a stub.
 #   · a path ending in `todo.md` or `todo-<name>.md` — the operator's own note file
-#     (`hodd/life/personal/me/todo.md`) and the lists the voice keeps beside it
+#     (`life/personal/me/todo.md`, plan 331) and the lists the voice keeps beside it
 #     (`todo-voice.md`). A FILENAME, not a stub; `bin/gates/guards/public-guard.sh`
 #     already allows `TODO.md` for the same reason.
 #   · `bin/forge/gather.sh`'s `todo=` key — the batch manifest's own STATE FIELD (a branch waiting to be

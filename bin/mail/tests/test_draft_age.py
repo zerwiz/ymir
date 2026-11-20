@@ -29,7 +29,7 @@ The WEEKLY sweep (plan 305, appended 2026-11-17) is a different job and gets its
   WeeklyEvery   a week with drafts names EVERY one of them — oldest first, numbered — even the
                 ones too young for the daily limit, and carries three buttons per draft.
   WeeklyAged    an aged draft makes the sweep exit 1, with the same one line and no second one.
-  WeeklyTrend   two sweeps append two rows to hodd/state/draft-trend.jsonl and never rewrite the
+  WeeklyTrend   two sweeps append two rows to state/draft-trend.jsonl and never rewrite the
                 first: the trend is the point, and an append-only record that overwrites is not one.
   WeeklySkip    a seat with no grant records NO trend row and sends nothing — a skip must never
                 look like a quiet week.
@@ -220,7 +220,7 @@ class Case(unittest.TestCase):
     @property
     def trend_file(self) -> Path:
         """Where the door must write the trend: the HOARD's state, never this public tree."""
-        return self.home / "hodd/state/draft-trend.jsonl"
+        return self.home / "state/draft-trend.jsonl"
 
     def trend(self) -> list[dict]:
         if not self.trend_file.exists():

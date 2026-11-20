@@ -21,7 +21,7 @@ VERBOSE=0; [ "${1-}" = "--verbose" ] && VERBOSE=1
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
-mkdir -p "$TMP/hodd/identity/assistant" "$TMP/hodd/state/assistant/rooms"
+mkdir -p "$TMP/hodd/identity/assistant" "$TMP/state/assistant/rooms"
 cat > "$TMP/hodd/identity/assistant/rooms.yaml" <<'YAML'
 rooms:
 - id: test-room
@@ -43,7 +43,7 @@ check() {  # <name> <expected-rc> <actual-rc> [note]
   fi
 }
 room() { YMIR_HOME="$TMP" bash "$ROOT/systems/skirnir/services/room.sh" "$@" 2>/dev/null; }
-lines() { local f="$TMP/hodd/state/assistant/rooms/test-room.jsonl"; [ -f "$f" ] && wc -l <"$f" | tr -d ' ' || echo 0; }
+lines() { local f="$TMP/state/assistant/rooms/test-room.jsonl"; [ -f "$f" ] && wc -l <"$f" | tr -d ' ' || echo 0; }
 
 printf 'room_wall_test[9]{case,expectation}:\n'
 

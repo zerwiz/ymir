@@ -324,7 +324,7 @@ month navigation and a `⟨ Today ⟩` return, and four lane toggles.
 
 - **`/api/calendar`** (new, read-only, under the same `/api/*` auth — 401
   without a session) reads the reader's rolling cache
-  (`$YMIR_HOME/hodd/state/calendar/cache.json`, written by `tools/calendar/reader.mjs`;
+  (`$YMIR_HOME/state/calendar/cache.json`, written by `tools/calendar/reader.mjs`;
   `MANAGANDR_CACHE` overrides the path, `MANAGANDR_CALENDAR_TTL_SECONDS` the
   freshness window) and answers exactly
   `{ as_of, state: "ok"|"unknown"|"absent", events: Event[] }` with
@@ -498,7 +498,7 @@ next decision is evidence-based.
 ## The live tail (Snotra) — one chip, three routes
 
 `systems/snotra/services/ear/snotra-live.sh` transcribes this machine as you speak and writes the
-words into a document under `$YMIR_HOME/hodd/life/meetings/`. **The UI is a front for
+words into a document under `$YMIR_HOME/life/meetings/`. **The UI is a front for
 that script and never a second pipeline**: it calls the script and reports what the
 script says. No transcription, slice timing or engine discovery is re-implemented in
 `apps/hlidskjalf/`.
@@ -994,7 +994,7 @@ the controls; F8 never bypasses checkbox or browser microphone permission.
 English speech is pinned to American female Kokoro af_nicole and its returned
 adapter metadata is checked. Swedish uses Microsoft Bengt sv-SE through the
 private file contract, not Kokoro: SKIRNIR_SWEDISH_DIR defaults to the home's
-hodd/state/runtime/skirnir-swedish; installation.json.executable records the
+state/runtime/skirnir-swedish; installation.json.executable records the
 verified default PowerShell 7.6.5 path. SKIRNIR_SWEDISH_PWSH and
 SKIRNIR_SWEDISH_SCRIPT are documented overrides. Version 5.1 is never a fallback.
 The gate writes UTF-8 answer text into its private turn directory, invokes the

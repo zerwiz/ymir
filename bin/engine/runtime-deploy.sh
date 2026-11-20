@@ -13,7 +13,7 @@
 #   · the commit that was running is recorded first; when a unit does not settle on the new commit, the pin is
 #     moved BACK to it and the units restart onto the last good code — the machine is never left broken
 #   · every good move writes $YMIR_HOME/state/runtime/last-good (the canary's record, S2); every refusal and
-#     every rollback writes a dated fault report under $YMIR_HOME/hodd/state/groa/faults/ (plan 275 step B)
+#     every rollback writes a dated fault report under $YMIR_HOME/state/groa/faults/ (plan 275 step B)
 #   YMIR_RUNTIME_NO_ROLLBACK=1 leaves a failed move in place (a person debugging it on purpose).
 #
 # WHY. On 2026-11-02 ten systemd user units were found executing files from the operator's WORKING tree — the
@@ -59,7 +59,7 @@ running=$(git -C "$RUN_DIR" rev-parse --short HEAD 2>/dev/null | tr -d '[:space:
 previous=$(git -C "$RUN_DIR" rev-parse HEAD 2>/dev/null | tr -d '[:space:]')
 
 # where the record lives: the home's state (the canary's last-good) and the hoard's fault shelf
-STATE_RT="${home:+$home/state/runtime}"; FAULTS="${home:+$home/hodd/state/groa/faults}"
+STATE_RT="${home:+$home/state/runtime}"; FAULTS="${home:+$home/state/groa/faults}"
 . "$ROOT/bin/time/sol-lib.sh" 2>/dev/null || true
 stamp() { if declare -f sol_line >/dev/null 2>&1; then sol_line; else date '+%F %H:%M %Z'; fi; }
 fault() {  # <slug> <title> <body…> — one dated report the operator and Gróa's smith can read

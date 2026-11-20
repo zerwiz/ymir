@@ -222,11 +222,11 @@ export const readConfig = (env = process.env) => {
   const home = env.YMIR_HOME ?? "";
   return {
     /**
-     * The board shelf. It is in the HOME, not in the repo (Rule 04): `hodd/life/boards`.
+     * The board shelf. It is in the HOME, not in the repo (Rule 04): `life/boards` (plan 331).
      * Unset home means the shelf is off, and the door says so instead of writing
      * a board into whatever directory the process happened to start in.
      */
-    dir: env.COLLAB_SAVES_DIR ?? (home ? join(home, "hodd", "life", "boards") : ""),
+    dir: env.COLLAB_SAVES_DIR ?? (home ? join(home, "life", "boards") : ""),
     maxBytes: Number(env.COLLAB_MAX_SAVE_BYTES ?? MAX_SAVE_BYTES),
   };
 };

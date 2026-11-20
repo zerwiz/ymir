@@ -10,7 +10,8 @@ import { join } from "node:path";
 
 const PORT = Number(process.env.PORT || 8321);
 const VAULT = process.env.SNOTRA_VAULT || process.env.YMIR_HOME || join(process.env.HOME, "Documents", "ymirhome");
-const MINUTES_DIR = process.env.SNOTRA_MINUTES_DIR || join(VAULT, "hodd", "workspaces", "meetings");
+// Plan 331: the operator's own material lives on the life/ shelf, never inside the record.
+const MINUTES_DIR = process.env.SNOTRA_MINUTES_DIR || join(VAULT, "life", "meetings");
 
 const SERVER_DEF = { name: "snotra", version: "0.1.0" };
 

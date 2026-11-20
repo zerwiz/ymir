@@ -150,7 +150,7 @@ done
 [ "$RULING" = 1 ] || exit 0
 
 # 2 · the chair reads every report and rules
-REPORTS=$(python3 - "$H/hodd/state/assistant/rooms/$ROOM.jsonl" "$LINE" <<'PY'
+REPORTS=$(python3 - "$H/state/assistant/rooms/$ROOM.jsonl" "$LINE" <<'PY'
 import sys, json
 path, qid = sys.argv[1], int(sys.argv[2])
 rows = [json.loads(l) for l in open(path, encoding="utf-8") if l.strip()]
@@ -185,7 +185,7 @@ what you liked, no fixing. If a seat admitted it holds no evidence, say so in it
 # 3 · the chair answers back. A chair that only judges teaches nothing: a seat whose claim was
 # refused is told the one thing it must bring back, and the record shows the challenge.
 RULING=$(room_line "$ROOM" "$LINE") || true
-LAST_RULING=$(python3 - "$H/hodd/state/assistant/rooms/$ROOM.jsonl" "$CHAIR" <<'PYR'
+LAST_RULING=$(python3 - "$H/state/assistant/rooms/$ROOM.jsonl" "$CHAIR" <<'PYR'
 import sys, json, os
 path, chair = sys.argv[1], sys.argv[2]
 if not os.path.exists(path): raise SystemExit(0)

@@ -10,7 +10,14 @@
 #   ymir_home_root   the chosen home        ($YMIR_HOME → the recorded choice → the default)
 #   hoard_root       the hoard within it    ($YMIR_HOARD → <home>/hodd)
 #   hoard_data_dir   this machine's records ($YMIR_DATA_DIR → <hoard>/data)
+#   hoard_life_dir   the operator's own material, OUTSIDE the record ($YMIR_LIFE_DIR → <home>/life)
 #   hoard_state_dir  runtime state          ($YMIR_STATE_DIR → <home>/state)
+#   hoard_shelf      any of the four shelves by name, for a caller that has one as a variable
+#
+# The four shelves (plan 331): `hodd/` the record · `life/` the operator's own material ·
+# `state/` runtime state · `config/` settings. The paths `hodd/life/`, `hodd/state/` and
+# `hodd/workspaces/<topic>/` were RETIRED by plan 331.6/331.8: code names a SHELF here and never
+# an old path, so a home that has moved needs no code change to be read correctly.
 #   ymir_fleet_heart the fleet's heart      ($YMIR_HEART → the home's fleet.json `heart`)
 #   ymir_plan_dir    the plan ledger        ($YMIR_PLAN_DIR → the single ledger under the home)
 #
@@ -70,6 +77,22 @@ ymir_home_record_set() {  # <path> — record the operator's choice (machine sta
   printf '%s\n' "$home" >"$YMIR_CONFIG_DIR/home" || return 1
 }
 
+# The same shelves as a VALUE on stdout, for a caller that needs one inline inside a longer
+# argument (`grep … "$(hoard_state)/groa.log"`). The `<result-var>` form above stays the rule
+# for a script that can name a variable; these two exist so a single site need not be rewritten
+# into a variable block just to stop naming a retired path (plan 331.8).
+hoard_life() {  # stdout — the operator's own material
+  local d
+  hoard_life_dir d || return 2
+  printf '%s\n' "$d"
+}
+
+hoard_state() {  # stdout — runtime state
+  local d
+  hoard_state_dir d || return 2
+  printf '%s\n' "$d"
+}
+
 hoard_root() {  # <result-var> — the hoard inside the home (may not exist yet)
   local result_var=${1-} home
   [ -n "$result_var" ] || return 2
@@ -97,6 +120,30 @@ hoard_data_dir() {  # <result-var> — where this machine's records live
   [ -n "$result_var" ] || return 2
   hoard_root root
   printf -v "$result_var" '%s' "${YMIR_DATA_DIR:-$root/data}"
+}
+
+hoard_life_dir() {  # <result-var> — the operator's own material: personal, work, marketing, meetings
+  # The RECORD is `hodd/`; a journal, a client's file, a meeting transcript, a campaign is the
+  # operator's own material and sits beside it (plan 331). Before that rule they lived in
+  # `hodd/life/` and `hodd/workspaces/<topic>/`; code asks HERE and gets `<home>/life`.
+  local result_var=${1-} home
+  [ -n "$result_var" ] || return 2
+  ymir_home_root home
+  printf -v "$result_var" '%s' "${YMIR_LIFE_DIR:-$home/life}"
+}
+
+hoard_shelf() {  # <result-var> <life|state|config|record> — a shelf BY NAME
+  # A caller that carries the shelf in a variable (a loop over shelves, a repaired home) gets the
+  # path from ONE place. An unknown name answers 2 rather than inventing a directory.
+  local result_var=${1-} name=${2-}
+  [ -n "$result_var" ] || return 2
+  case "$name" in
+    life)   hoard_life_dir "$result_var" ;;
+    state)  hoard_state_dir "$result_var" ;;
+    config) hoard_settings_dir "$result_var" ;;
+    record) hoard_root "$result_var" ;;
+    *) return 2 ;;
+  esac
 }
 
 hoard_state_dir() {  # <result-var> — runtime state: ephemeral, outside the tree

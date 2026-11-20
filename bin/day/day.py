@@ -16,7 +16,8 @@
 
 The rule this file obeys, and the reason it exists (plan 207):
 
-  • his half is READ, never written. `hodd/life/personal/me/todo.md` is his;
+  • his half is READ, never written. `life/personal/me/todo.md` is his (plan 331: the
+    operator's own material lives on the `life/` shelf, resolved through bin/records/home_shelves.py);
   • every derived line carries its source and its `as_of`;
   • a source that cannot be read prints **unable** with the reason — never a zero, because a
     zero is a fact and an unreadable source is not;
@@ -86,14 +87,21 @@ def repo_root() -> Path:
 
 # ── his half ─────────────────────────────────────────────────────────────────────────────────────
 
-HIS_FILE = Path("hodd/life/personal/me/todo.md")
+HIS_FILE = Path("personal/me/todo.md")   # under the operator's OWN shelf, never the record
+
+
+def life_shelf() -> Path:
+    """The operator's own shelf (`life/`) through the one resolver (plan 331.6)."""
+    sys.path.insert(0, str(repo_root() / "bin" / "records"))
+    from home_shelves import shelf  # noqa: PLC0415
+    return shelf("life")
 
 
 def acts() -> tuple[list[dict], str]:
     """The unchecked lines under his half, with the section they sit in."""
-    path = home() / HIS_FILE
+    path = life_shelf() / HIS_FILE
     if not path.is_file():
-        return [], "unable — %s is not there" % HIS_FILE
+        return [], "unable — %s is not there" % (Path("life") / HIS_FILE)
     text = path.read_text(encoding="utf-8")
     # his half ends where the derived half begins
     cut = re.split(r"\n#\s+The derived half", text)[0]
@@ -156,9 +164,9 @@ def mail_fact() -> dict:
 
 def log_fact() -> dict:
     """Today's daily log against his list (plan 274): entries, those marked open, those not listed yet."""
-    list_file = home() / "hodd/life/personal/me/todo.md"
+    list_file = life_shelf() / HIS_FILE
     if not list_file.is_file():                         # no list is said, never counted as an empty one
-        return {"unable": "no to-do list at hodd/life/personal/me/todo.md"}
+        return {"unable": "no to-do list at life/personal/me/todo.md"}
     try:
         sys.path.insert(0, str(repo_root() / "bin" / "records"))
         import comms  # noqa: PLC0415

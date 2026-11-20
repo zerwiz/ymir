@@ -94,16 +94,15 @@ class Fixture:
         self.dir = Path(tempfile.mkdtemp(prefix="dispatch-test-"))
         self.home = self.dir / "home"
         (self.home / "hodd" / "memory" / "mail").mkdir(parents=True)
-        (self.home / "hodd" / "life" / "personal" / "me").mkdir(parents=True)
-        (self.home / "hodd" / "state").mkdir(parents=True)
+        (self.home / "life" / "personal" / "me").mkdir(parents=True)
         (self.home / "state").mkdir(parents=True)
-        self.todo = self.home / "hodd" / "life" / "personal" / "me" / "todo.md"
+        self.todo = self.home / "life" / "personal" / "me" / "todo.md"
         self.todo.write_text(HIS_HALF, encoding="utf-8")
         self.accounts = self.home / "hodd" / "memory" / "mail" / "accounts.yaml"
         self.accounts.write_text(ACCOUNTS, encoding="utf-8")
         self.spine = self.home / "hodd" / "memory" / "mail" / "messages.jsonl"
         self.wake = self.home / "state" / ".wake-queue"
-        self.ledger = self.home / "hodd" / "state" / "dispatch" / "runs.jsonl"
+        self.ledger = self.home / "state" / "dispatch" / "runs.jsonl"
         self.spine.write_text(json.dumps(message("m-one", "Spec v2.5 and the prototype copy")) + "\n"
                              + json.dumps(message("m-two", "The staging accounts")) + "\n",
                              encoding="utf-8")
@@ -123,7 +122,7 @@ class Fixture:
             "YMIR_HOME": str(self.home),
             "GNA_DESK_URL": "",                      # read the store: no daemon, no network in a test
             "DISPATCH_NOW": "2026-11-16T17:00:00Z",
-            "DISPATCH_STATE_DIR": str(self.home / "hodd" / "state" / "dispatch"),
+            "DISPATCH_STATE_DIR": str(self.home / "state" / "dispatch"),
             "DISPATCH_TODO": str(self.todo),
             "DISPATCH_WAKE_QUEUE": str(self.wake),
             "TZ": "UTC",

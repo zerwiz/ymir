@@ -55,9 +55,9 @@ case "$(printf '%s' "$P" | j "d.get('answer','')")" in
 esac
 
 # ── 2 · the digest is the operator's, and it is not empty ─────────────────────────────────────
-N=$(wc -l < "$H/hodd/state/assistant/digest.jsonl" 2>/dev/null || echo 0)
+N=$(wc -l < "$H/state/assistant/digest.jsonl" 2>/dev/null || echo 0)
 [ "${N:-0}" -ge 20 ] && ok "the digest holds ${N} facts" || bad "digest" "only ${N} facts"
-C=$(wc -l < "$H/hodd/state/assistant/canaries.derived.txt" 2>/dev/null || echo 0)
+C=$(wc -l < "$H/state/assistant/canaries.derived.txt" 2>/dev/null || echo 0)
 [ "${C:-0}" -ge 50 ] && ok "the canaries are derived (${C})" || bad "canaries" "only ${C}"
 
 # ── 3 · the voice OUT (the fault of 2026-10-23) ───────────────────────────────────────────────

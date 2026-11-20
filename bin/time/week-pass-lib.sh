@@ -24,7 +24,7 @@
 # the scheduler's notice.
 #
 # ENV — the test seams, named so (the same habit `bin/ward/soak-sampler.sh` documents):
-#   YMIR_WEEK_STATE    the series dir            (default <home>/hodd/state)
+#   YMIR_WEEK_STATE    the series dir            (default <home>/state)
 #   YMIR_WEEK_NOTIFY   the notice door           (default <root>/bin/notify/send.sh)
 #   YMIR_WEEK_NOW      the instant a row carries (default the clock, UTC)
 # Runes go to the home's ledger; `BROKK_RUNES_FILE` names another one (the engine's own override).
@@ -42,7 +42,7 @@ week_pass_init() { # <name>
   fi
   [ -n "$WEEK_HOME" ] || WEEK_HOME="$WEEK_ROOT"
 
-  WEEK_STATE="${YMIR_WEEK_STATE:-$WEEK_HOME/hodd/state}"
+  WEEK_STATE="${YMIR_WEEK_STATE:-$WEEK_HOME/state}"
   WEEK_NOTIFY="${YMIR_WEEK_NOTIFY:-$WEEK_ROOT/bin/notify/send.sh}"
   WEEK_NOW="${YMIR_WEEK_NOW:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
   WEEK_SERIES="$WEEK_STATE/$WEEK_NAME-week.jsonl"

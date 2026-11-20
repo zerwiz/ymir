@@ -10,7 +10,7 @@
 #
 # The desk reads its store and scope from the HOME (Rule 04):
 #   $YMIR_HOME/hodd/memory/mail/{accounts.yaml,retention.yaml,messages.jsonl}
-#   $YMIR_HOME/hodd/state/gna-desk.token
+#   $YMIR_HOME/state/gna-desk.token
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -48,7 +48,7 @@ for _ in 1 2 3 4 5 6 7 8 9 10; do
     HEALTH="$(curl -fsS -m 3 "http://127.0.0.1:$PORT/health" 2>/dev/null)"
     printf 'install{desk,port,unit,health}:\n'
     printf '  "gna-desk","%s","%s","%s"\n' "$PORT" "$UNIT" "$(printf '%s' "$HEALTH" | head -c 160)"
-    printf '  token in hodd/state/gna-desk.token (inside the home) · a reboot raises it again\n'
+    printf '  token in state/gna-desk.token (inside the home) · a reboot raises it again\n'
     exit 0
   fi
 done

@@ -44,7 +44,7 @@ MAIL_DIR = HOME / "hodd" / "memory" / "mail"
 SPINE = MAIL_DIR / "messages.jsonl"
 ACCOUNTS = MAIL_DIR / "accounts.yaml"
 RETENTION = MAIL_DIR / "retention.yaml"
-STATE_DIR = HOME / "hodd" / "state"
+STATE_DIR = HOME / "state"
 TOKEN_FILE = STATE_DIR / "gna-desk.token"
 
 ACCOUNT_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")

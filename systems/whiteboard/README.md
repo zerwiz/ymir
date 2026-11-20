@@ -46,10 +46,10 @@ list would read as *you saved nothing*, which is a lie.
 ```mermaid
 flowchart LR
   browser["Browser<br/>holds the room key"] -- "encrypted scene" --> collab["Room server<br/>reads nothing"]
-  collab -- "one file per save" --> snap["hodd/life/boards/_rooms/&lt;room&gt;/"]
+  collab -- "one file per save" --> snap["life/boards/_rooms/&lt;room&gt;/"]
   gate["The gate<br/>Remote-User"] -- "identity" --> collab
   browser -- "POST /saves" --> saves["Saves door<br/>owner = the header"]
-  saves --> shelf["hodd/life/boards/&lt;identity&gt;/"]
+  saves --> shelf["life/boards/&lt;identity&gt;/"]
   browser -- "POST /v1/ai/converse" --> bridge["Bridge<br/>two modes, one rail"]
   bridge -- "tools: the board's own" --> browser
 ```

@@ -28,7 +28,7 @@
 #   CONSTELLATION_REGISTRY registry of agent cards (default: <hoard>/data/constellation/agents)
 #   CONSTELLATION_SELF     this house's ymir name, as its own card declares it
 #   CONSTELLATION_OPERATOR the operator this house speaks for
-#   CONSTELLATION_KEY      this house's ed25519 private key (default: <hoard>/state/constellation/<self>.ed25519.key)
+#   CONSTELLATION_KEY      this house's ed25519 private key (default: <state>/constellation/<self>.ed25519.key)
 #
 # Exit: 0 ok, 1 refused, 2 usage, 3 unavailable.
 set -u
@@ -47,6 +47,10 @@ toon() { printf '%s\n' "$1"; }
 hoard=""
 if declare -F hoard_root >/dev/null 2>&1; then hoard_root hoard 2>/dev/null || true; fi
 [ -n "$hoard" ] || die 3 "constellation: cannot resolve the home — bin/vault/hoard-lib.sh did not answer"
+# Runtime state is its own shelf (plan 331): `state/` beside the record, never a `state` INSIDE it.
+state=""
+if declare -F hoard_state_dir >/dev/null 2>&1; then hoard_state_dir state 2>/dev/null || true; fi
+[ -n "$state" ] || state="$(dirname "$hoard")/state"
 
 registry="${CONSTELLATION_REGISTRY:-$hoard/data/constellation/agents}"
 grants_file="$hoard/identity/grants.yaml"
@@ -79,7 +83,7 @@ case "$cmd" in
     [ -n "$name" ] || die 2 "usage: constellation.sh keygen <name> [--out DIR]"
     out=""
     while [ $# -gt 0 ]; do case "$1" in --out) out=${2:-}; shift 2 ;; *) die 2 "keygen: unknown argument $1" ;; esac; done
-    out=${out:-$hoard/state/constellation}
+    out=${out:-$state/constellation}
     res=$(node "$TOOL" keygen --name "$name" --out "$out") || die 1 "keygen failed"
     toon "$res"
     ;;
@@ -183,7 +187,7 @@ case "$cmd" in
       got=$(skill_of_card "$peer" "$skill") || die 1 "constellation: cannot read $peer's card"
       [ "$got" = "yes" ] || die 1 "constellation: $peer does not declare skill '$skill' (declared: $got) — a grant may not name a capability the card does not carry"
     done
-    key=${key:-$hoard/state/constellation/$self_name.ed25519.key}
+    key=${key:-$state/constellation/$self_name.ed25519.key}
     [ -f "$key" ] || die 1 "constellation: no private key at $key — run: constellation.sh keygen $self_name"
     mkdir -p "$(dirname "$grants_file")"
     draft=$(mktemp); body=$(mktemp)
@@ -230,12 +234,13 @@ json.dump(grant, open(draft, "w", encoding="utf-8"), indent=2)
 PY
     python3 "$GRANTS" add "$grants_file" --json "$draft" || die 1 "constellation: the grant was refused"
     gid=$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["grant_id"])' "$draft")
-    cp "$body" "$(dirname "$grants_file")/../state/constellation/$gid.body" 2>/dev/null || true
+    mkdir -p "$state/constellation" 2>/dev/null || true
+    cp "$body" "$state/constellation/$gid.body" 2>/dev/null || true
     rm -f "$draft" "$body"
     "$ROOT/bin/records/runes-append.sh" constellation grant --message "grant $gid to $peer for ${skills[*]} (pending countersignature)" >/dev/null 2>&1 || true
     toon "grant[4]{grant_id,peer,skills,state}:"
     toon "  \"$gid\",\"$peer\",\"${skills[*]}\",\"pending\""
-    toon "the canonical body to countersign is $(dirname "$grants_file")/../state/constellation/$gid.body"
+    toon "the canonical body to countersign is $state/constellation/$gid.body"
     ;;
 
   countersign|activate)
@@ -244,7 +249,7 @@ PY
     [ -n "$gid" ] || die 2 "usage: constellation.sh countersign <grant-id> [--sig SIG] [--pub FILE]"
     sig="" pub=""
     while [ $# -gt 0 ]; do case "$1" in --sig) sig=${2:-}; shift 2 ;; --pub) pub=${2:-}; shift 2 ;; --*) die 2 "countersign: unknown flag $1" ;; *) shift ;; esac; done
-    body="$hoard/state/constellation/$gid.body"
+    body="$state/constellation/$gid.body"
     if [ "$cmd" = countersign ]; then
       [ -n "$sig" ] || die 2 "countersign: --sig is required"
       [ -f "$body" ] || die 1 "constellation: no canonical body for $gid at $body"
@@ -256,7 +261,7 @@ for g in doc.get("grants") or []:
         print(g["grantee"]["ymir"] + ".ed25519.pub")
 PY
 )"
-      [ -f "$pub" ] || pub="$hoard/state/constellation/$(basename "$pub")"
+      [ -f "$pub" ] || pub="$state/constellation/$(basename "$pub")"
       [ -f "$pub" ] || die 1 "constellation: no public key for the peer at $pub — pass --pub FILE"
       node "$TOOL" verifysig --pub "$pub" --body "$body" --sig "$sig" >/dev/null || die 1 "constellation: the countersignature does not verify against $pub"
       signer=$(node "$TOOL" kid --pub "$pub")
@@ -301,7 +306,7 @@ PY
     done
     [ -n "$peer" ] && [ -n "$skill" ] || die 2 "usage: constellation.sh mint --peer NAME --skill ID"
     [ -n "$self_name" ] || die 2 "mint: --self (or CONSTELLATION_SELF) must name this house"
-    key=${key:-$hoard/state/constellation/$self_name.ed25519.key}
+    key=${key:-$state/constellation/$self_name.ed25519.key}
     [ -f "$key" ] || die 1 "constellation: no private key at $key"
     granted=$(python3 - "$grants_file" "$peer" "$skill" <<'PY'
 import sys, yaml
@@ -353,7 +358,7 @@ PY
     if command -v node >/dev/null 2>&1; then toon "  \"node\",\"present\",\"$(node --version)\""; else toon "  \"node\",\"absent\",\"the card contract is validated by node\""; ok=0; fi
     if [ -f "$ROOT/packages/contracts/src/agent-card.ts" ]; then toon "  \"contract\",\"present\",\"packages/contracts/src/agent-card.ts\""; else toon "  \"contract\",\"absent\",\"the shared agent-card contract\""; ok=0; fi
     if [ -n "$self_name" ]; then toon "  \"self\",\"$self_name\",\"from CONSTELLATION_SELF\""; else toon "  \"self\",\"unset\",\"set CONSTELLATION_SELF to this house's card name\""; fi
-    if [ -n "${key:-}" ] || [ -f "$hoard/state/constellation/$self_name.ed25519.key" ]; then toon "  \"key\",\"present\",\"this house may sign\""; else toon "  \"key\",\"absent\",\"run: constellation.sh keygen $self_name\""; fi
+    if [ -n "${key:-}" ] || [ -f "$state/constellation/$self_name.ed25519.key" ]; then toon "  \"key\",\"present\",\"this house may sign\""; else toon "  \"key\",\"absent\",\"run: constellation.sh keygen $self_name\""; fi
     [ "$ok" = 1 ] || exit 3
     ;;
 

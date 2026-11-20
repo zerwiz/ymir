@@ -100,7 +100,7 @@ smidja
 svartalfaheim
 "
 # The four shelves (plan 331): hodd/ the record, life/ the operator's own material, state/ runtime state,
-# config/ settings. A fresh home has NO hodd/state and NO hodd/workspaces — only the one-cycle links
+# config/ settings. A fresh home has NO `hodd/state` and NO `hodd/workspaces` — only the one-cycle links
 # hodd/life -> ../life and hodd/state -> ../state below, so a door that still names the old path lands in
 # the right shelf instead of growing a second one (plan 331.7).
 SHIM_LINKS="life state"

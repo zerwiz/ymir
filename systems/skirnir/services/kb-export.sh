@@ -2,7 +2,7 @@
 # kb-export.sh — build Skírnir's digest from facts the Allfather APPROVED, and nothing else.
 #
 # The digest is not a filtered copy of the house; it is a set of separately approved facts, one
-# file each, in $YMIR_HOME/hodd/state/assistant/approved/. A fact without an approval header is
+# file each, in $YMIR_HOME/state/assistant/approved/. A fact without an approval header is
 # refused. The vault is never read, never mounted, never indexed.
 #
 #   bin/assistant/kb-export.sh           # rebuild digest.jsonl
@@ -21,7 +21,7 @@ ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/
 ymir_home_root HOME_R 2>/dev/null || true
 [ -n "${HOME_R:-}" ] || { printf 'error: the home is unresolved\n' >&2; exit 1; }
 APPROVED="$HOME_R/hodd/identity/assistant/approved"
-DIGEST="$HOME_R/hodd/state/assistant/digest.jsonl"
+DIGEST="$HOME_R/state/assistant/digest.jsonl"
 IDENTITY="$HOME_R/hodd/identity/assistant"
 
 [ "${1:-}" = "--list" ] && { ls -1 "$APPROVED"/*.md 2>/dev/null | sed 's|.*/||;s|\.md$||'; exit 0; }

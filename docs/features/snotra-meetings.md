@@ -47,7 +47,7 @@ none is — a registered request is not a join.
 ## The record
 
 ```
-$YMIR_HOME/hodd/life/meetings/<work|personal>/<YYYYMMDD-HHMM>-<slug>/
+$YMIR_HOME/life/meetings/<work|personal>/<YYYYMMDD-HHMM>-<slug>/
   meeting.json  transcript.md  minutes.md  decisions.md  actions.md  cards.json
   audio/  .owner  .state  .transcribe.lock  .corrections.md
 ```
@@ -77,7 +77,7 @@ append-only: `put` refuses to overwrite; a correction is `--as corrections`.
 |---|---|---|
 | `workspace != lane` | the JSON and the directory disagree | move the directory or fix the field; never guess |
 | `refusing to overwrite` | the record is append-only | use `--as corrections` |
-| `audio is not git-ignored` | the home's `.gitignore` lacks the rule | add `hodd/life/meetings/**/audio/` |
+| `audio is not git-ignored` | the home's `.gitignore` lacks the rule | add `life/meetings/**/audio/` |
 | `VEXA_API_URL is not set` | no bot endpoint | set it in the vault; HTTPS only |
 | `no MiroTalk` | no checkout, image or command | set `PING_MIROTALK_DIR` or `PING_IMAGE` |
 | `no video link` | the event has no conference URL | the calendar reader must expose it |

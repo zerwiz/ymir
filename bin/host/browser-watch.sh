@@ -10,7 +10,7 @@
 #   browser-watch.sh status     # what is running, and the last exits
 #   browser-watch.sh watch      # loop every 30 s
 #
-# State: $YMIR_HOME/hodd/state/browser-watch.json
+# State: $YMIR_HOME/state/browser-watch.json
 # Record: $YMIR_HOME/hodd/memory/browser-exits.log  (append-only)
 set -u
 VERSION="1.0.0"
@@ -21,7 +21,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true; fi
 YMIR_HOME="${YMIR_HOME:-}"; [ -n "$YMIR_HOME" ] || ymir_home_root YMIR_HOME 2>/dev/null || true
 YMIR_HOME="${YMIR_HOME:?YMIR_HOME unresolved}"
-STATE="$YMIR_HOME/hodd/state/browser-watch.json"
+STATE="$YMIR_HOME/state/browser-watch.json"
 LOG="$YMIR_HOME/hodd/memory/browser-exits.log"
 mkdir -p "$(dirname "$STATE")" "$(dirname "$LOG")"
 

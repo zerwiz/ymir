@@ -38,7 +38,7 @@ into `apps/rodd/ui`, then stamps the served face with the tag; a second run is a
 window is an Electron shell over that face, and it serves it through the demo's own uvicorn —
 so if the window is blank or silent, read `apps/rodd`'s own log line first: a face that never
 opened says so there, and a pipeline that never answered says so in
-`$YMIR_HOME/hodd/state/voice/host.log`.
+`$YMIR_HOME/state/voice/host.log`.
 
 ## The commands — start, stop, see
 
@@ -92,7 +92,7 @@ and `mcp`. They are the same doors every other agent has, with three laws on the
 window's own browser, `well`, `bolthorn`, `skuld`, `snotra`, `ymir`, `engram`, `trello`) and `mcp` calls one
 of their tools. A remote server that wants an interactive sign-in says so: the voice cannot open a browser.
 
-Every one of them writes a line to `$YMIR_HOME/hodd/state/voice/activity-YYYY-MM-DD.jsonl`, and the
+Every one of them writes a line to `$YMIR_HOME/state/voice/activity-YYYY-MM-DD.jsonl`, and the
 same view is one button away in Hlidskjalf — *Show what it has done*.
 
 The Python client (`voice_tools.py`) and the window's toolbox (`voice-toolbox.py` on `:8891`) are the
@@ -135,7 +135,7 @@ head key is read by NAME from the vault (or from the seat's own pi auth for its 
 ## If it does not work
 
 - nothing answers → `bin/voice/voice-door.sh status`; the host log is
-  `$YMIR_HOME/hodd/state/voice/host.log` (or the host's own path of the same shape);
+  `$YMIR_HOME/state/voice/host.log` (or the host's own path of the same shape);
 - it hears itself, or stops after one sentence → `YMIR_VOICE_BARGE_IN` must stay `0` until
   echo cancellation exists;
 - `ModuleNotFoundError: voice_tools` → the tool module must travel on the command's

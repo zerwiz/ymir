@@ -27,7 +27,7 @@ fi
 [ -n "${YMIR_HOME:-}" ] || { printf '%s: the home could not be resolved (bin/vault/hoard-lib.sh, RULES/07)\n' "$(basename "$0")" >&2; exit 2; }
 HOME_DIR="${YMIR_HOME}"
 DENY="$HOME_DIR/hodd/identity/public-deny.txt"
-STATE="$HOME_DIR/hodd/state/agnostic-audit"
+STATE="$HOME_DIR/state/agnostic-audit"
 LOG="$STATE/audit.log"
 NOTIFY="$REPO/bin/notify/send.sh"
 REF="origin/main"

@@ -174,7 +174,7 @@ bin/time/nornir-cron-start.sh            # resolve + start (idempotent)
   (beside `agents.yaml` and `cron.yaml`, NOT under `hodd/config/`, which does not
   exist). Each entry: `name`, `url`, `kind` (scrape | search), `note`.
 - **Writes**: one markdown file per source, `YYYY-MM-DD-<name>.md`, into
-  `$YMIR_HOME/hodd/life/marketing/scraped/`, plus a Rune
+  `$YMIR_HOME/life/marketing/scraped/`, plus a Rune
   (`bragi / scrape.round`).
 - **The engine is Firecrawl, and it may be SELF-HOSTED.** A self-hosted engine
   needs a **URL**, not a key: `FIRECRAWL_API_URL` (env → the home's local env →
@@ -342,7 +342,7 @@ empty inbox. `--check` probes health alone; `--dry-run` reads and writes nothing
 
 **The window is a mark (2026-11-16).** Each account keeps a high-water mark — the
 newest message the desk has read, plus the moment it last looked — in
-`hodd/state/gna-mail-watermark.json`, and `gna_import.py` asks for everything
+`state/gna-mail-watermark.json`, and `gna_import.py` asks for everything
 since it: `after:<epoch>` on the Gmail path, `SINCE <the mark's day>` on IMAP.
 The old ask was `newer_than:2d`, a width measured from *now*: every hour the desk
 was down was an hour it never asked about, so a run after a week of downtime read

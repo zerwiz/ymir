@@ -91,7 +91,7 @@ fi
 
 # ── Skírnir: a mouth that stopped answering must be visible, not discovered ───
 checked=$((checked + 1))
-ABEAT="$HOME_R/hodd/state/assistant/telegram.heartbeat"
+ABEAT="$HOME_R/state/assistant/telegram.heartbeat"
 # The heartbeat lives in the SHARED home, so it is not a local fact (plan 203 §19): a seat
 # where the assistant does not run reads another seat's beat as its own, or an absent beat as
 # "not yet", and both are wrong. Measured 2026-11-06: no skirnir unit on this seat, none on the
@@ -116,13 +116,13 @@ fi
 # ── the hound's heartbeat: a silent watcher is a finding ──────────────────────
 # the hound runs as root: its state lives beside its findings, not in the user's home
 BEAT="/var/log/ymir/garmr/state/hound.heartbeat"
-[ -f "$BEAT" ] || BEAT="$HOME_R/hodd/state/garmr/hound.heartbeat"
+[ -f "$BEAT" ] || BEAT="$HOME_R/state/garmr/hound.heartbeat"
 checked=$((checked + 1))
 if [ -f "$BEAT" ]; then
   age=$(( $(date +%s) - $(date -r "$BEAT" +%s) ))
   if [ "$age" -le 600 ]; then
     printf '  "hound","ok","heartbeat %ss old"\n' "$age"
-  elif [ -f "$HOME_R/hodd/state/garmr/PAUSED" ]; then
+  elif [ -f "$HOME_R/state/garmr/PAUSED" ]; then
     printf '  "hound","SKIP","paused by root"\n'
   else
     printf '  "hound","FAIL","heartbeat %ss old"\n' "$age"; fails=$((fails + 1))

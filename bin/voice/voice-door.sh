@@ -95,7 +95,7 @@ PIPELINES="${YMIR_VOICE_PIPELINES:-1}"
 VOICE_NAME="${YMIR_VOICE_NAME:-Skirnir}"
 OPERATOR_NAME="${YMIR_VOICE_OPERATOR:-Allfather}"
 VENV="${YMIR_VOICE_VENV:-$HOME/venvs/s2s}"
-STATE_DIR="${YMIR_HOME:-$HOME}/hodd/state/voice"
+STATE_DIR="${YMIR_HOME:-$HOME}/state/voice"
 UNIT="ymir-voice-host.service"
 # The engine lets the card go when nobody is on the line (plan 275 item 23): a watcher is
 # raised beside it, and it stops the engine after a quiet window. See bin/voice/voice-idle.sh.
@@ -489,7 +489,7 @@ cmd_stop() {
 cmd_log() {
   local lines="${1:-40}" host dir
   host="$(resolve_host || true)"
-  dir="${YMIR_HOME:?the home is resolved at the top of this door}/hodd/state/voice"
+  dir="${YMIR_HOME:?the home is resolved at the top of this door}/state/voice"
   printf 'voice_activity[%s]{when,event,detail}:\n' "$(date +%Y-%m-%dT%H:%M:%S%z)"
   if ls "$dir"/activity-*.jsonl >/dev/null 2>&1; then
     python3 - "$dir" "$lines" <<'PY'
@@ -510,7 +510,7 @@ PY
   if [ -n "$host" ]; then
     printf '# turns, from the host seat log:\n'
     timeout 12 ssh -o BatchMode=yes -o ConnectTimeout=5 "$host" \
-      'h=$(bash -lc '. ~/ymir/bin/vault/hoard-lib.sh >/dev/null 2>&1; ymir_home_root YMIR_HOME >/dev/null 2>&1; printf %s "$YMIR_HOME"' 2>/dev/null); d="$h/hodd/state/voice/host.log"; tail -n 800 "$d" 2>/dev/null | grep -E "USER:|ASSISTANT:|latency:" | tail -n '"$lines" 2>/dev/null | cut -c1-160
+      'h=$(bash -lc '. ~/ymir/bin/vault/hoard-lib.sh >/dev/null 2>&1; ymir_home_root YMIR_HOME >/dev/null 2>&1; printf %s "$YMIR_HOME"' 2>/dev/null); d="$h/state/voice/host.log"; tail -n 800 "$d" 2>/dev/null | grep -E "USER:|ASSISTANT:|latency:" | tail -n '"$lines" 2>/dev/null | cut -c1-160
   fi
 }
 

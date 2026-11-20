@@ -7,7 +7,7 @@
   gna_import.py --account operator@example.com --backfill-headers   # the RFC headers on old rows
 
 THE WINDOW IS A MARK, NOT A WIDTH (2026-11-16). Each account keeps a high-water mark:
-the newest message the desk has read (`hodd/state/gna-mail-watermark.json`). A run asks
+the newest message the desk has read (`state/gna-mail-watermark.json`). A run asks
 the server for everything SINCE that mark — Gmail `after:<epoch>`, IMAP `SINCE <day>` —
 so a run after a week of downtime reads the whole week. A fixed "last N days" window is
 the thing that loses mail: it is measured from NOW, so every hour the desk was down is an

@@ -29,7 +29,7 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then . "$ROOT/bin/vault/hoard-lib.sh" 2>
 YMIR_HOME="${YMIR_HOME:-}"; [ -n "$YMIR_HOME" ] || ymir_home_root YMIR_HOME 2>/dev/null || true
 BRIDGE="$ROOT/systems/snotra/services/ear/snotra-cdp.py"
 TALK="$ROOT/systems/snotra/services/ear/snotra-talk.py"
-STATE_DIR="${YMIR_HOME:-$HOME}/hodd/state/snotra"; mkdir -p "$STATE_DIR"
+STATE_DIR="${YMIR_HOME:-$HOME}/state/snotra"; mkdir -p "$STATE_DIR"
 PORT=9222
 NAME="Skírnir"
 die(){ printf 'error: %s\n' "$*" >&2; exit 2; }

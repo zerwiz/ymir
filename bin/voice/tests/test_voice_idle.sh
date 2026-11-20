@@ -28,7 +28,7 @@ pass=0; fail=0
 ok()  { pass=$((pass+1)); printf '  ok   %s\n' "$1"; }
 bad() { fail=$((fail+1)); printf '  FAIL %s\n' "$1"; [ -n "${2:-}" ] && printf '       %s\n' "$2"; }
 
-mkdir -p "$T/bin" "$T/home/hodd/state/voice"
+mkdir -p "$T/bin" "$T/home/state/voice"
 : > "$T/pool.json"
 cat > "$T/bin/systemctl" <<'SH'
 #!/usr/bin/env bash
@@ -96,9 +96,9 @@ else bad "a long-draining session lets go" "$out"; fi
 printf '{"size":2,"in_use":0,"units":[{"index":0,"state":"idle","session_id":null}]}\n' > "$T/pool.json"
 rm -f "$UNIT_STOPPED"
 out="$(run reap YMIR_VOICE_IDLE_SECONDS=5 2>&1)"
-if [ -f "$UNIT_STOPPED" ] && grep -q 'idle-out: stopped ymir-voice-host.service' "$T/home/hodd/state/voice/idle.log" 2>/dev/null; then
+if [ -f "$UNIT_STOPPED" ] && grep -q 'idle-out: stopped ymir-voice-host.service' "$T/home/state/voice/idle.log" 2>/dev/null; then
   ok "after the quiet window the engine is stopped and the reason is logged"
-else bad "the quiet window stops the engine" "$out $(cat "$T/home/hodd/state/voice/idle.log" 2>/dev/null | tail -2)"; fi
+else bad "the quiet window stops the engine" "$out $(cat "$T/home/state/voice/idle.log" 2>/dev/null | tail -2)"; fi
 
 # 5 — the window can be turned off
 rm -f "$UNIT_STOPPED"

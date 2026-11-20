@@ -67,7 +67,7 @@ hoard() {
   printf '%s' "$home"
 }
 HOME_DIR="$(hoard)"
-STATE="$HOME_DIR/hodd/state/garmr"
+STATE="$HOME_DIR/state/garmr"
 FINDINGS="/var/log/ymir/garmr/findings.jsonl"
 AUDIT_LOG="/var/log/audit/audit.log"
 # THE SWITCH has one authority and one readable copy. The authority is ROOT's marker, so no
@@ -164,7 +164,7 @@ RULES
   for p in /etc/systemd/system /etc/systemd/user /etc/cron.d /etc/crontab /var/spool/cron; do
     [ -e "$p" ] && printf -- '-w %s -p wa -k ymir-persist\n' "$p"
   done
-  for dir in "$home/hodd/data/snotra" "$home/hodd/evidence" "$home/hodd/life/meetings" \
+  for dir in "$home/hodd/data/snotra" "$home/hodd/evidence" "$(hoard_life)/meetings" \
              "$home/hodd/memory/snotra" "$home/hodd/secrets"; do
     [ -d "$dir" ] && printf -- '-w %s -p wa -k ymir-sensitive\n' "$dir"
   done
@@ -178,7 +178,7 @@ arm_senses() {
   local sensitive=(
     "$HOME_DIR/hodd/data/snotra"
     "$HOME_DIR/hodd/evidence"
-    "$HOME_DIR/hodd/life/meetings"
+    "$(hoard_life)/meetings"
     "$HOME_DIR/hodd/memory/snotra"
     "$HOME_DIR/hodd/secrets"
   )

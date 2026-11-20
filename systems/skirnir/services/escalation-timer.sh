@@ -13,14 +13,14 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)"
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 ymir_home_root HOME_R 2>/dev/null || true
-DIR="$HOME_R/hodd/state/notify/approvals"
+DIR="$HOME_R/state/notify/approvals"
 DOOR="$ROOT/bin/notify/send.sh"
 [ -d "$DIR" ] || { printf 'escalation-timer[1]{state}: "nothing pending"\n'; exit 0; }
 
 # ── and the ASKS: a question handed to him that nobody has answered ────────────────────────────
 # The approvals pass below covers `notify/approvals` only. An ask from a PERSON sat silently forever
 # (measured 2026-10-22), so it gets the same treatment: one reminder after four hours.
-ASKS="$HOME_R/hodd/state/assistant/asks.json"
+ASKS="$HOME_R/state/assistant/asks.json"
 if [ -f "$ASKS" ]; then
   ROOT_DIR="$ROOT" ASKS_Q="$ASKS" DOOR_Q="$DOOR" python3 - <<'PY'
 import json, os, subprocess, time

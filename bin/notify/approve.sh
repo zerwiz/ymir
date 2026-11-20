@@ -16,7 +16,7 @@ ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 ymir_home_root HOME_R 2>/dev/null || true
 ID="${1:-}"
 [ -n "$ID" ] || { printf 'usage: approve.sh <approval-id>\n' >&2; exit 2; }
-DIR="$HOME_R/hodd/state/notify/approvals"
+DIR="$HOME_R/state/notify/approvals"
 REC="$DIR/$ID.json"
 [ -r "$REC" ] || { printf 'approve: no approval %s\n' "$ID" >&2; exit 2; }
 

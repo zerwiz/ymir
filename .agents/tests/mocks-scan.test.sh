@@ -37,7 +37,7 @@ kinds="seeded · stub · defaulted · optional · generated"
 SH
 printf 'def todo(action="list"):\n    return "no todo here"\n' > "$TMP/clean/bin/seat/ymir-mcp.py"
 printf 'def todo(action="list"):\n    return "no todo here"\n' > "$TMP/clean/bin/mcp/ymir-mcp.py"
-printf 'HIS_FILE = Path("hodd/life/personal/me/todo.md")\n' > "$TMP/clean/bin/door/day.py"
+printf 'HIS_FILE = Path("personal/me/todo.md")  # life/ shelf, plan 331\n' > "$TMP/clean/bin/door/day.py"
 printf 'return "PLACEHOLDER", "a placeholder is not evidence"\n' > "$TMP/clean/bin/collab/kit/scripts/advantage-audit.sh"
 if bash "$SCAN" "$TMP/clean" >/dev/null 2>&1; then
   ok "the excused shapes pass (comment · PUBLIC= · kind list · consumer/todo pair · mcp names · todo.md · audit vocabulary)"

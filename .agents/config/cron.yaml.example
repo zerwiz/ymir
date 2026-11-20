@@ -149,7 +149,7 @@
 # not finish* — so it is a different row, not the same check on a second schedule.
 #
 # What it does on Monday morning: every draft, oldest first, with its age; one trend row in
-# `hodd/state/draft-trend.jsonl` so a habit is visible across weeks; and ONE line to the phone
+# `state/draft-trend.jsonl` so a habit is visible across weeks; and ONE line to the phone
 # carrying a send / edit / discard button per draft. A week with no drafts says nothing at all
 # and carves one no-op Rune — a sweep that speaks on an empty week is a nag.
 #
@@ -159,7 +159,7 @@
 # it, and names a day it does not understand in state/.cron-invalid rather than never firing).
 @heart Mon 09:15 bin/mail/draft-age.sh --weekly
 # — THREE WEEKLY PASSES (2026-11-17) — one number a week, in a series, and a word ONLY when the week is
-# not clean. Each appends one row to its own `hodd/state/<name>-week.jsonl` ({at,value,detail}), carves a
+# not clean. Each appends one row to its own `state/<name>-week.jsonl` ({at,value,detail}), carves a
 # Rune, and stays silent when the answer is good: a weekly cron that speaks every week is a cron nobody
 # reads. Monday morning, because a week is judged before it is spent.
 #   tunnels  7 up · N failing   — every declared Gimlé surface, on its road

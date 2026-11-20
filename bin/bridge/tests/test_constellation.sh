@@ -27,7 +27,7 @@ export YMIR_HOME="$TMP/home"
 export CONSTELLATION_REGISTRY="$TMP/registry"
 export CONSTELLATION_SELF="hearth"
 export CONSTELLATION_OPERATOR="the operator"
-mkdir -p "$CONSTELLATION_REGISTRY" "$YMIR_HOME/hodd/identity" "$YMIR_HOME/hodd/state/constellation"
+mkdir -p "$CONSTELLATION_REGISTRY" "$YMIR_HOME/hodd/identity" "$YMIR_HOME/state/constellation"
 GRANTS="$YMIR_HOME/hodd/identity/grants.yaml"
 
 pass=0; fail=0
@@ -39,9 +39,9 @@ expect_fail() { local why=$1; shift; if "$@" >"$TMP/out" 2>"$TMP/err"; then bad 
 printf 'constellation road test\n'
 
 # --- keys -------------------------------------------------------------------
-expect_ok "keygen makes this house a key pair" "$CLI" keygen hearth --out "$YMIR_HOME/hodd/state/constellation"
-KEY="$YMIR_HOME/hodd/state/constellation/hearth.ed25519.key"
-PUB="$YMIR_HOME/hodd/state/constellation/hearth.ed25519.pub"
+expect_ok "keygen makes this house a key pair" "$CLI" keygen hearth --out "$YMIR_HOME/state/constellation"
+KEY="$YMIR_HOME/state/constellation/hearth.ed25519.key"
+PUB="$YMIR_HOME/state/constellation/hearth.ed25519.pub"
 [ -f "$KEY" ] && [ -f "$PUB" ] && ok "the key pair exists" || bad "the key pair exists"
 
 # --- a peer's key and card ---------------------------------------------------
@@ -72,7 +72,7 @@ GID=$(python3 -c 'import yaml;print(yaml.safe_load(open("'"$GRANTS"'"))["grants"
 expect_fail "a token cannot be minted for a pending grant" "$CLI" mint --peer farhall --skill ask --self hearth
 expect_ok "the grant guard is clean for a pending grant" "$CLI" guard
 
-BODY="$YMIR_HOME/hodd/state/constellation/$GID.body"
+BODY="$YMIR_HOME/state/constellation/$GID.body"
 [ -f "$BODY" ] && ok "the canonical body is kept for the countersignature" || bad "the canonical body is kept" "$BODY"
 PEER_SIG=$(node "$TOOL" signbody --key "$TMP/peer/farhall.ed25519.key" --body "$BODY")
 expect_fail "activate refuses without the peer's countersignature" "$CLI" activate "$GID"

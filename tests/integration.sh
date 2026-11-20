@@ -21,7 +21,7 @@ YMIR_HOME="${YMIR_HOME:-$HOME/Documents/ymirhome}"
 PING_PUBLIC_URL="${PING_PUBLIC_URL:-https://ping.zerwiz.org}"
 PING_TAILNET_URL="${PING_TAILNET_URL:-https://<host>.<host>.tailnet.ts.net:3000}"
 SNOTRA_MCP_URL="${SNOTRA_MCP_URL:-http://<host>.<host>.tailnet.ts.net:8321/mcp}"
-MANAGANDR_CACHE="${MANAGANDR_CACHE:-$YMIR_HOME/hodd/state/calendar/cache.json}"
+MANAGANDR_CACHE="${MANAGANDR_CACHE:-$YMIR_HOME/state/calendar/cache.json}"
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 
 # 1 — the store against a real filesystem
@@ -39,7 +39,7 @@ if [ -r "$MANAGANDR_CACHE" ]; then
   N=$(python3 -c "import json;print(len(json.load(open('$MANAGANDR_CACHE')).get('events',[])))" 2>/dev/null || echo 0)
   NOW=$(python3 -c "import json;print(json.load(open('$MANAGANDR_CACHE')).get('as_of',''))" 2>/dev/null)
   if [ "$N" -gt 0 ] && [ -n "$NOW" ] && YMIR_HOME="$TMP/aj" AUTOJOIN_NOW="$NOW" "$ROOT/systems/snotra/services/ear/snotra-autojoin.sh" scan --events "$MANAGANDR_CACHE" >/dev/null 2>&1; then
-    J=$(python3 -c "import json;d=json.load(open('$TMP/aj/hodd/state/snotra/autojoin-plan.json'));print(len(d['plan']))" 2>/dev/null || echo 0)
+    J=$(python3 -c "import json;d=json.load(open('$TMP/aj/state/snotra/autojoin-plan.json'));print(len(d['plan']))" 2>/dev/null || echo 0)
     pass autojoin "real cache: $N events, $J planned (cache as_of $NOW)"
   else fail autojoin "real cache present but scan failed"; fi
 else skip autojoin "no calendar cache at $MANAGANDR_CACHE"; fi

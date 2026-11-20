@@ -8,7 +8,7 @@ import { swedishCommand, swedishVoice } from './swedish-voice.ts';
 const homes: string[] = [];
 function fixture() {
   const home = mkdtempSync(join(tmpdir(), 'skirnir-contract-')); homes.push(home);
-  const directory = join(home, 'hodd/state/runtime/skirnir-swedish'); mkdirSync(directory, { recursive: true });
+  const directory = join(home, 'state/runtime/skirnir-swedish'); mkdirSync(directory, { recursive: true });
   const executable = join(directory, 'test-runtime.exe'); writeFileSync(executable, 'test-only; never executed');
   const script = join(directory, 'recorded-contract-name.ps1'); const body = '# fixture only'; writeFileSync(script, body);
   const manifest = { executable, arguments: ['-NoProfile', '-NonInteractive', '-File', script,

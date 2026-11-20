@@ -15,7 +15,7 @@ ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 ymir_home_root HOME_R 2>/dev/null || true
 S="$HOME_R/hodd/identity/assistant"
-R="$HOME_R/hodd/state/assistant"
+R="$HOME_R/state/assistant"
 TIER=""; CHAT=""; FACT=""
 while [ $# -gt 0 ]; do
   case "$1" in

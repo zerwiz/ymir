@@ -301,7 +301,7 @@ THE RECORD (store/serve)  the heart — minutes in the vault, synced by the home
   system audio via PipeWire (no virtual loopback device); `systems/snotra/services/ear/snotra-transcribe.sh`
   discovers the seat's whisper engine (env → PATH → build trees → `voxtype`),
   normalises to 16 kHz mono, and writes Markdown minutes under
-  `$YMIR_HOME/hodd/life/meetings/` with a Rune per meeting. Minutes are
+  `$YMIR_HOME/life/meetings/` with a Rune per meeting. Minutes are
   summarised by the **local rail** (`llama-swap`, no cloud key).
 - **The MCP face** (`tools/snotra/server.mjs`, streamable HTTP `:8321`, read-only)
   lets any seat's agent ask *"what did we decide about X?"* — `snotra_list`,
@@ -329,7 +329,7 @@ belongs — and refuses to act on its own judgement.
 - **`scan` is a report, never a move.** It classifies by evidence, in this order: a
   path naming a known project in `hodd/identity/projects.yaml` → that project's
   shelf; a plan-shaped document → the plan ledger, **proposed only**; a note carrying
-  a known domain → `hodd/life/<domain>/`; anything else → **unplaceable**, with the
+  a known domain → `life/<domain>/`; anything else → **unplaceable**, with the
   reason. A symlink, a socket, a binary, an archive, a credential, an OS folder and
   the vault itself are reported and never moved, whatever they are named.
 - **`apply` moves what a PLAN says and nothing else.** The plan file is the word

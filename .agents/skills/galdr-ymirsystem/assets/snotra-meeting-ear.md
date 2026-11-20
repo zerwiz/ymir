@@ -102,7 +102,7 @@ Measured on the WSL2 hand, 8-second clip: `haswell` 2.5 s against `x64` 11.8 s.
 
 - Transcribes WAV with whisper.cpp (local GPU)
 - Produces structured Markdown minutes
-- Stores under `$YMIR_HOME/hodd/life/meetings/`
+- Stores under `$YMIR_HOME/life/meetings/`
   (the workspaces shelf: meetings are work-adjacent artifacts that follow the
   operator across domains; the hoard's `workspaces/` is the natural home)
 - Appends a Rune via `bin/records/runes-append.sh`
@@ -245,7 +245,7 @@ detect_env[10]{key,default,meaning}:
 ## Private data
 
 Audio recordings, transcripts, and meeting content are **private data**. They
-live under `$YMIR_HOME/hodd/life/meetings/` and are never committed to
+live under `$YMIR_HOME/life/meetings/` and are never committed to
 the public repo. The repo carries only the wiring scripts and the MCP server.
 
 ## First Law compliance
@@ -421,7 +421,7 @@ version pinned. The ensure script can include this fetch step.
 The ear is one transport. The record is now a contract every transport writes into:
 
 ```
-$YMIR_HOME/hodd/life/meetings/<work|personal>/<YYYYMMDD-HHMM>-<slug>/
+$YMIR_HOME/life/meetings/<work|personal>/<YYYYMMDD-HHMM>-<slug>/
   meeting.json  transcript.md  minutes.md  decisions.md  actions.md  cards.json
   audio/  .owner  .state  .transcribe.lock  .corrections.md
 ```

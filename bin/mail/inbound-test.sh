@@ -19,7 +19,7 @@
 #   3. WAIT AND ASSERT. The arrival is searched for by the To: header, and the header
 #      is kept VERBATIM: "did it arrive still addressed to the address we used" is the
 #      whole question. The proof is appended to
-#      $YMIR_HOME/hodd/state/mail/inbound-arrivals.jsonl, which
+#      $YMIR_HOME/state/mail/inbound-arrivals.jsonl, which
 #      bin/mail/addresses.sh reads — so `deliverable` is something a machine measured,
 #      never something a document promised.
 #

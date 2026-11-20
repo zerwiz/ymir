@@ -5,17 +5,17 @@
 `bin/voice/todos.sh` reads the two lists the house keeps about what is owed, so the session holding the arm sees them
 at session start. They are printed together and never confused:
 
-- **Your list** — `hodd/life/personal/me/todo.md`, the one to-do. The file names its own halves (his half, the derived
+- **Your list** — `life/personal/me/todo.md`, the one to-do. The file names its own halves (his half, the derived
   half, the house-kept half) and each is counted apart, because they mean different things: his half is your
   judgement, the derived half is what the house measured, the house-kept half is what your messages moved.
-- **The voice's ledger** — `hodd/state/voice/todos.jsonl`, where a to-do spoken to Rödd lands. It is kept as its own,
+- **The voice's ledger** — `state/voice/todos.jsonl`, where a to-do spoken to Rödd lands. It is kept as its own,
   separately named count.
 
 Nothing here writes either list. Reading only.
 
 ## What you need
 
-Your list at `$YMIR_HOME/hodd/life/personal/me/todo.md`. The voice's ledger may be absent — an empty ledger is a
+Your list at `$YMIR_HOME/life/personal/me/todo.md`. The voice's ledger may be absent — an empty ledger is a
 zero, not an error.
 
 ## Do it
@@ -48,7 +48,7 @@ short id in brackets is the id the to-do tools tick, reopen and reword by.
 
 ## If it does not work
 
-- `open: unable — his list … no such file`: your home does not hold `hodd/life/personal/me/todo.md`. Check `YMIR_HOME`
+- `open: unable — his list … no such file`: your home does not hold `life/personal/me/todo.md`. Check `YMIR_HOME`
   resolves to your home (`bin/vault/hodd.sh path`).
 - A number you disagree with: open the file and count the `- [ ]` lines in the half named on the first line. The
   second line names the file it read, so the comparison is exact.

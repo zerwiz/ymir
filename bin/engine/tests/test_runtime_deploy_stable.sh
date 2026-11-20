@@ -13,7 +13,7 @@ ok()  { pass=$((pass+1)); printf 'ok   %s\n' "$1"; }
 bad() { fail=$((fail+1)); printf 'FAIL %s\n' "$1"; }
 
 # the stand-in systemctl: every call is logged; `show` answers the state FAKE_STATE names
-mkdir -p "$T/bin" "$T/home/state" "$T/home/hodd/state" "$T/home/config"
+mkdir -p "$T/bin" "$T/home/state" "$T/home/state" "$T/home/config"
 cat > "$T/bin/systemctl" <<'EOF'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >> "$FAKE_LOG"
@@ -51,7 +51,7 @@ printf 'hand edit\n' > "$T/pin/app.txt"
 out=$(FAKE_STATE=ok run); rc=$?
 [ "$rc" = 3 ] && ok "a dirty pin is refused (exit 3)" || bad "dirty pin: rc=$rc out=$out"
 [ "$(cat "$T/pin/app.txt")" = "hand edit" ] && ok "the hand edit is still there" || bad "the hand edit was wiped"
-ls "$T/home/hodd/state/groa/faults/"*dirty-pin.md >/dev/null 2>&1 && ok "a dirty-pin fault report is filed" || bad "no fault report"
+ls "$T/home/state/groa/faults/"*dirty-pin.md >/dev/null 2>&1 && ok "a dirty-pin fault report is filed" || bad "no fault report"
 git -C "$T/pin" checkout -q -- app.txt
 
 # 2 · a good move settles and records last-good
@@ -65,7 +65,7 @@ git -C "$T/pin" reset -q --hard "$first"
 out=$(FAKE_STATE=fail run); rc=$?
 [ "$rc" = 4 ] && ok "an unsettled move exits 4 (rolled back)" || bad "rollback: rc=$rc out=$out"
 [ "$(git -C "$T/pin" rev-parse HEAD)" = "$first" ] && ok "the pin stands on the last good commit again" || bad "pin was not rolled back"
-ls "$T/home/hodd/state/groa/faults/"*rolled-back.md >/dev/null 2>&1 && ok "a rolled-back fault report is filed" || bad "no rollback report"
+ls "$T/home/state/groa/faults/"*rolled-back.md >/dev/null 2>&1 && ok "a rolled-back fault report is filed" || bad "no rollback report"
 
 # no real unit was ever addressed: every systemctl call went to the stand-in
 grep -q 'restart fake.service' "$FAKE_LOG" && ok "restarts went to the stand-in only" || bad "the stand-in saw no restart"

@@ -11,9 +11,9 @@ check(){ local name=$1; shift; if "$@" >/dev/null 2>&1; then ok "$name"; else ba
 refute(){ local name=$1; shift; if "$@" >/dev/null 2>&1; then bad "$name" "expected failure"; else ok "$name"; fi; }
 
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
-export YMIR_HOME="$TMP/home"; mkdir -p "$YMIR_HOME/hodd/life/meetings"
+export YMIR_HOME="$TMP/home"; mkdir -p "$YMIR_HOME/life/meetings"
 git -C "$YMIR_HOME" init -q
-printf 'hodd/life/meetings/**/audio/\n*.wav\n' > "$YMIR_HOME/.gitignore"
+printf 'life/meetings/**/audio/\n*.wav\n' > "$YMIR_HOME/.gitignore"
 git -C "$YMIR_HOME" add .gitignore && git -C "$YMIR_HOME" -c user.email=t@t -c user.name=t commit -qm init
 
 D1="$("$STORE" new work "Roadmap and Trello" --title "Road map & Trello" --date 2026-10-20 --source ping --platform ping --classification confidential --account work --consent announced)"
@@ -38,7 +38,7 @@ check "put minutes" "$STORE" put "$ID1" "$TMP/m.md" --as minutes
 check "state advanced to recorded" test "$(cat "$D1/.state")" = recorded
 
 check "index generates" "$STORE" index
-check "index lists both lanes" bash -c "grep -q '| work |' '$YMIR_HOME/hodd/life/meetings/index.md' && grep -q '| personal |' '$YMIR_HOME/hodd/life/meetings/index.md'"
+check "index lists both lanes" bash -c "grep -q '| work |' '$YMIR_HOME/life/meetings/index.md' && grep -q '| personal |' '$YMIR_HOME/life/meetings/index.md'"
 check "verify --all passes" "$STORE" verify --all
 
 # lane mismatch is refused by verify

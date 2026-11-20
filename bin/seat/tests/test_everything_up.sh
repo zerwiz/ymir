@@ -104,7 +104,7 @@ printf '#!/usr/bin/env bash\nprintf "%%b\\n" "$FAKE_OUT"\n' > "$gr/path/opencode
 GA=(env GROA_MODE=agent PATH="$gr/path:$PATH" YMIR_REPO="$gr/repo" YMIR_HOME="$gr/ymirhome" GROA_PROMPT=/dev/null bash "$repo/bin/agents/groa-agent/groa-agent.sh" tick)
 FAKE_OUT="BEHIND: omarchy\\nUPDATED: omarchy\\nMIGRATIONS: none" "${GA[@]}" >/dev/null 2>&1
 chk "a moved tree is written to the daily log, Runes and the well (agent road)" "3" "$(cat "$gr/calls" 2>/dev/null | wc -l)"
-rm -f "$gr/calls"; rm -f "$gr/ymirhome/hodd/state/groa-agent.pid"
+rm -f "$gr/calls"; rm -f "$gr/ymirhome/state/groa-agent.pid"
 FAKE_OUT="BEHIND: none\\nUPDATED: nothing\\nMIGRATIONS: none" "${GA[@]}" >/dev/null 2>&1
 chk "nothing behind, nothing moved: no record, no noise (agent road)" "0" "$(cat "$gr/calls" 2>/dev/null | wc -l)"
 # The script road is the default: the tree's own groa-update.sh is run, so the stub IS the update.
@@ -115,7 +115,7 @@ printf '#!/usr/bin/env bash\nprintf "%%b\\n" "$FAKE_OUT"\n' > "$gs/repo/bin/agen
 GS=(env GROA_MODE=script YMIR_REPO="$gs/repo" YMIR_HOME="$gs/ymirhome" bash "$repo/bin/agents/groa-agent/groa-agent.sh" tick)
 FAKE_OUT="BEHIND: host-a\\nUPDATED: host-a\\nMIGRATIONS: none" "${GS[@]}" >/dev/null 2>&1
 chk "a moved tree is written to the daily log, Runes and the well (script road)" "3" "$(cat "$gs/calls" 2>/dev/null | wc -l)"
-rm -f "$gs/calls"; rm -f "$gs/ymirhome/hodd/state/groa-agent.pid"
+rm -f "$gs/calls"; rm -f "$gs/ymirhome/state/groa-agent.pid"
 FAKE_OUT="BEHIND: none\\nUPDATED: nothing\\nMIGRATIONS: none" "${GS[@]}" >/dev/null 2>&1
 chk "nothing behind, nothing moved: no record, no noise (script road)" "0" "$(cat "$gs/calls" 2>/dev/null | wc -l)"
 
