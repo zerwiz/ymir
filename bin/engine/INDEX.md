@@ -24,7 +24,7 @@ folder rewrites one file instead of colliding on every branch.
 bin[39]{file,does,kind,verdict,disposition,callers,lines}:
   "autoboot-lib.sh","autoboot-lib.sh — the boot policy: fleet roles → the Ymir programs they owe.","lib","wired","keep",3,263
   "hermes-ensure.sh","hermes-ensure.sh — ensure the Hermes agent runtime is present.","tool","wired","keep",3,89
-  "home-seed.sh","home-seed.sh — make a home that a fresh user can understand, and offer to keep it in git.","tool","tested","keep",10,243
+  "home-seed.sh","home-seed.sh — make a home that a fresh user can understand, and offer to keep it in git.","tool","tested","keep",10,270
   "launchd-ensure.sh","launchd-ensure.sh — seat the macOS service layer: `systemctl --user` answered by launchd.","tool","wired","keep",3,69
   "launchd-user.py","'''launchd-user.py — `systemctl --user` on a Mac: Ymir's systemd user units, run by launchd.","tool","wired","keep",7,649
   "pin-refresh.sh","pin-refresh.sh — bring the PINNED runtime to main, from a tree that is NOT the pin.","tool","wired","keep",6,177
@@ -35,10 +35,10 @@ bin[39]{file,does,kind,verdict,disposition,callers,lines}:
   "release-health.sh","release-health.sh — can THIS directory serve the apps?","tool","wired","keep",4,330
   "release-lib.sh","release-lib.sh — the ONE place that knows where a release lives and how a flip happens.","lib","wired","keep",5,290
   "release-services.sh","release-services.sh — which long-running services run from a RELEASE, and whether that release is the pin.","tool","wired","keep",1,169
-  "release.sh","release.sh — Ymir runs from a RELEASE: a complete, built, proved copy behind one link (plan 275 S9; plans 80 and 226).","tool","wired","keep",6,309
+  "release.sh","release.sh — Ymir runs from a RELEASE: a complete, built, proved copy behind one link (plan 275 S9; plans 80 and 226).","tool","wired","keep",6,318
   "runtime-deploy.sh","runtime-deploy.sh — move the PINNED runtime checkout to the merged tree, and prove what is running.","tool","wired","keep",11,182
   "runtime-seat.sh","runtime-seat.sh — SEAT the pinned runtime: the checkout every Ymir service and app runs from (plan 269).","tool","wired","keep",8,88
-  "test_heavy_slot.sh","test_heavy_slot.sh — plan 002 §6.1: the machine's heavy lock is real.","tool","wired","keep",1,138
+  "test_heavy_slot.sh","test_heavy_slot.sh — plan 002 §6.1: the machine's heavy lock is real.","tool","wired","keep",1,188
   "test_launchd_step_skips.sh","test_launchd_step_skips.sh — the macOS service step skips cleanly on Linux, and never silently (plan 293).","tool","wired","keep",1,112
   "test_launchd_user.py","'''test_launchd_user.py — the macOS service layer proved with no Mac in the room (plan 293).","tool","wired","keep",1,385
   "test_runtime_deploy_stable.sh","test_runtime_deploy_stable.sh — plan 275 S6 and S1 for bin/engine/runtime-deploy.sh, with no real unit touched:","tool","wired","keep",1,75

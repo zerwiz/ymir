@@ -82,6 +82,7 @@
 | public-data-guard.sh | public-data-guard.sh — the TREE scan for RULES/04: templates and logic | tested | keep (a human or a cron row must run it) |
 | public-guard.sh | public-guard.sh — the OLDER door to RULES/04's judgement: templates an | tested+named | keep (a human or a cron row must run it) |
 | registers-guard.sh | registers-guard.sh — every generated register is current. | tested | keep (a human or a cron row must run it) |
+| retired-path-guard.sh | retired-path-guard.sh — a NEW file may not name a retired home path (p | tested+named | keep (a human or a cron row must run it) |
 | rules-compliance-guard.sh | rules-compliance-guard.sh — a push proves the house's own rules were f | tested | keep (a human or a cron row must run it) |
 | rules-number-guard.sh | (no header line) | tested | keep (a human or a cron row must run it) |
 | runtime-guard.sh | (no header line) | tested | keep (a human or a cron row must run it) |
@@ -142,11 +143,13 @@
 | test_plan_state.sh | plan missing headers -> finding | tested | keep (a human or a cron row must run it) |
 | test_plan_watch.sh | dry-run prints arithmetic, sends nothing | tested | keep (a human or a cron row must run it) |
 | test_pr_identity.sh | test_pr_identity.sh — the ward that judges a pull request: the signatu | tested | keep (a human or a cron row must run it) |
+| test_pr_patterns_mailbox.sh | test_pr_patterns_mailbox.sh — a MAILBOX is an address, a ROLE TOKEN is | tested | keep (a human or a cron row must run it) |
 | test_pr_ship_guard.sh | test_pr_ship_guard.sh — proves the ship door judges the PR and not the | tested | keep (a human or a cron row must run it) |
 | test_queue_warden.sh | test_queue_warden.sh — the warden is HYGIENE, and its one merge is the | tested | keep (a human or a cron row must run it) |
 | test_regenerate_on_merge_cleanup.sh | test_regenerate_on_merge_cleanup.sh — the merge driver leaves no `.mer | tested | keep (a human or a cron row must run it) |
 | test_registers.sh | test_registers.sh — one door for every generated register. | tested | keep (a human or a cron row must run it) |
 | test_require_check_keeps_the_checks.sh | test_require_check_keeps_the_checks.sh — the door that writes main's p | tested | keep (a human or a cron row must run it) |
+| test_retired_path_guard.sh | retired-path-guard refuses a NEW file naming hodd/state/, hodd/life/ or  | tested | keep (a human or a cron row must run it) |
 | test_review_mend.sh | dry-run on PR 624 (missing CHANGE LOG) -> rung per finding + next: | tested | keep (a human or a cron row must run it) |
 | test_review_seat_verdict.sh | test_review_seat_verdict.sh — plan 272 fault 6: a review seat ends in  | tested | keep (a human or a cron row must run it) |
 | test_review_seats.sh | test_review_seats.sh — proves the seats and their mouth, hermetically. | tested | keep (a human or a cron row must run it) |
@@ -161,5 +164,6 @@
 | test_warden_lib.sh | test_warden_lib.sh — plan 290 §3, proven: the wardens act only where  | tested+named | keep (a human or a cron row must run it) |
 | test_wardens_off_until_named.sh | test_wardens_off_until_named.sh — the Allfather's word, proven: an exi | tested | keep (a human or a cron row must run it) |
 | test_worker_speaks_to_helm.sh | test_worker_speaks_to_helm.sh — plan 272 faults 1 and 2. | tested | keep (a human or a cron row must run it) |
+| test_woven_hand_tail.sh | test_woven_hand_tail.sh — a WOVEN page carries a hand section through  | tested | keep (a human or a cron row must run it) |
 | toolchain.sh | toolchain.sh — the provider wrappers (W0033). A typed front door to th | tested+named | keep (a human or a cron row must run it) |
 | wedge-notify.sh | wedge-notify.sh — the Ymir wedge-alarm notifier. | tested+named | keep (a human or a cron row must run it) |

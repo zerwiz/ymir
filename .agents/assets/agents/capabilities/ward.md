@@ -23,6 +23,7 @@
 | services-register.sh | services-register.sh — is the register of doors READ, or is it prose? | tested | keep (a human or a cron row must run it) |
 | soak-sampler.sh | soak-sampler.sh — the leak ledger: one row per house service and per E | tested+named | keep (a human or a cron row must run it) |
 | test_browserkill_note.sh | test_browserkill_note.sh — plan 271 piece 5: a planted scope stop is n | tested | keep (a human or a cron row must run it) |
+| test_garmr_identity_named.sh | test_garmr_identity_named.sh — a CRITICAL must name what changed, or i | tested | keep (a human or a cron row must run it) |
 | test_restart_storm.sh | test_restart_storm.sh — the storm ward's proof, with no real fault (pl | tested | keep (a human or a cron row must run it) |
 | test_soak_sampler.sh | test_soak_sampler.sh — the leak ledger's proof, without a real leak (p | tested | keep (a human or a cron row must run it) |
 | verdr.sh | verdr.sh — VÖRÐR, the warden: the standing report. | tested | keep (a human or a cron row must run it) |

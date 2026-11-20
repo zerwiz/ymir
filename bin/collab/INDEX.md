@@ -31,10 +31,10 @@ bin[83]{file,does,kind,verdict,disposition,callers,lines}:
   "LICENSE","MIT No Attribution License","data","wired","keep",2,8
   "LICENSE.MIT","MIT License","data","wired","keep",0,22
   "LICENSE.txt","The arc42 template and documentation is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License.","data","wired","keep",0,19
-  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",64,-
-  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",64,-
-  "README.md","areas/ — what this repository answers for","data","tested","keep",64,-
-  "README.md","plans/tickets/ — the units of work under a validated plan","data","tested","keep",64,-
+  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",66,-
+  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",66,-
+  "README.md","areas/ — what this repository answers for","data","tested","keep",66,-
+  "README.md","plans/tickets/ — the units of work under a validated plan","data","tested","keep",66,-
   "TEMPLATE.md","---","data","wired","keep",5,35
   "TEMPLATE.yaml","areas/TEMPLATE.yaml — what one area's declaration looks like.","data","wired","keep",2,44
   "a-company-suite.md","---","data","wired","keep",1,123
@@ -97,7 +97,7 @@ bin[83]{file,does,kind,verdict,disposition,callers,lines}:
   "rule.md","{NN} — {The rule, said as a sentence}","data","tested","keep",0,32
   "runbook.md","Runbook template","data","wired","keep",1,146
   "secret-scan.sh","secret-scan — a credential must never enter this repository, and a hook is cheaper than a history rewrite.","tool","wired","keep",3,37
-  "ship.sh","ship.sh — the house's git discipline as one door: branch, commit named paths, merge to the base, push.","tool","wired","keep",5,63
+  "ship.sh","ship.sh — the house's git discipline as one door: branch, commit named paths, merge to the base, push.","tool","wired","keep",6,63
   "standardise.sh","standardise.sh — put the collaboration kit into a repository, or say what is missing.","tool","wired","keep",1,100
   "status.py","'''status.py — the status of every plan, ticket and document in this repository, read from their headers.","tool","wired","migrate → src/ymir_runtime/status.py",3,310
   "test_collab.sh","test_collab.sh — the proofs for bin/collab (Vingólf).","tool","wired","keep",0,117
