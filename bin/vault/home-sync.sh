@@ -162,7 +162,10 @@ ship() {
   local i=1
   while [ "$i" -le "$TRIES" ]; do
     if g push -q "$REMOTE" "HEAD:$BRANCH" 2>/dev/null; then
-      printf 'home-sync: shipped %s path(s) to %s/%s (try %s)\n' "$#" "$REMOTE" "$BRANCH" "$i"; return 0
+      printf 'home-sync: shipped %s path(s) to %s/%s (try %s)\n' "$#" "$REMOTE" "$BRANCH" "$i"
+      # a shipped plan's card follows it onto the board (plan 335); paths that are not plans are ignored there
+      ( cd "$HOME_DIR" && YMIR_HOME="$HOME_DIR" bash "$ROOT/bin/boards/plan-card-after.sh" "$@" ) 2>/dev/null || true
+      return 0
     fi
     # Lost the race: another seat pushed between our fetch and our push. Merge, retry.
     sleep "$(( (RANDOM % 3) + i ))"
