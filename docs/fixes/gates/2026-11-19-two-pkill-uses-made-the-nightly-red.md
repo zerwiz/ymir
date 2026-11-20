@@ -62,8 +62,9 @@ nsr-compliance: gates=5 passed=5 failed=0
 ## What this does not decide
 
 **It does not go green on `main` until this branch merges.** Measured while the branch was open: the cron
-job resolves `ROOT` to the checkout the session runs in (`/home/zerwizserver/ymir` here), not to the
-worktree, so a fix on a branch cannot mend the nightly by sitting in a worktree. The nightly stays red, and
+job resolves `ROOT` to the checkout the session runs in (`$BROKK_ROOT_OVERRIDE` when it is set, else the
+tree the door walks up to), not to the worktree, so a fix on a branch cannot mend the nightly by sitting in
+a worktree. The nightly stays red, and
 says so honestly, until the merge.
 
 ## CHANGE LOG
