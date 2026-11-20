@@ -52,3 +52,7 @@ merged tree and named the dirty one. Nothing was removed by the proof.
 
 The runtime suite (`python3 -m unittest discover -s src -t src`) shows the same 14 failures
 before and after the change; none touches the seat road's new record.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #840
