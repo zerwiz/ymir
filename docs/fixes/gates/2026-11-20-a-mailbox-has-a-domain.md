@@ -48,3 +48,7 @@ cannot quietly disarm the rest of the ward.
 
 - `bin/forge/pr-patterns.sh` — `PR_MAILBOX`, and one mailbox test instead of three
 - `bin/gates/tests/test_pr_patterns_mailbox.sh` — both halves, by command
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #842
