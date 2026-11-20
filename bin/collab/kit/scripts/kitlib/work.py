@@ -15,12 +15,11 @@ from __future__ import annotations
 import json
 import os
 import shlex
-import signal
 import subprocess
 import time
 from pathlib import Path
 
-from . import host, leftovers, stack, worktrees as wt
+from . import host, leftovers, platform, stack, worktrees as wt
 from .config import Config, busy_paths, disk_gate, git, ledger, main_tree
 
 
@@ -51,7 +50,8 @@ def start(cfg: Config, root, wid, base, owner, purpose, days) -> int:
         return rc
     path = main / cfg["names"]["worktrees"] / wid
     rec = wt.read_record(path)
-    rec.update({"started": rec.get("created"), "state": "working", "processes": [], "ports": [], "databases": []})
+    rec.update({"started": rec.get("created"), "state": "working", "processes": [], "ports": [], "databases": [],
+                "session": session_id(), "agent": os.environ.get("KIT_AGENT") or owner})
     _write_record(path, rec)
     _stack(main, "on")
     print(f"next\tcd {path}   (when finished: bash scripts/work.sh stop {wid} -m \"what changed and why\")")
@@ -71,6 +71,61 @@ def _stack(main, verb: str):
     _, lines = stack.switch(verb, app, False)
     for line in lines:
         print(f"stack\t{line}")
+
+
+def session_id() -> str:
+    """The harness session this work belongs to: KIT_SESSION, else the harness's own id when it exports one."""
+    for k in ("KIT_SESSION", "CLAUDE_SESSION_ID", "HERMES_SESSION_ID", "OPENCODE_SESSION_ID"):
+        if os.environ.get(k):
+            return os.environ[k]
+    return ""
+
+
+def session_end(cfg: Config, root, session: str, agent: str, everything: bool, checks: bool = True) -> int:
+    """Close every worktree a session (or an agent) opened: stop it, keep nothing that is safe elsewhere, and
+    write one paragraph saying what was left and why."""
+    main = main_tree(str(root))
+    mine = []
+    for t in wt.inspect(cfg, main):
+        rec = t.record or {}
+        if everything or (session and rec.get("session") == session) or (agent and rec.get("agent") == agent):
+            mine.append(t)
+    lines, left = [], []
+    for t in mine:
+        purpose = (t.record or {}).get("purpose") or t.id
+        msg = f"Session end: {purpose} — saved for the next person"
+        rc = stop(cfg, main, t.id, msg if t.dirty else None, no_checks=not checks, quiet_stack=True)
+        if rc != 0:  # the checks or a hook refused: save it as found rather than lose it
+            t2 = _find(cfg, main, t.id)
+            if t2 and (t2.dirty or t2.unpushed):
+                ok, note = wt.salvage(main, t2)
+                lines.append(f"{t.id}: the checks refused; {note}")
+                if not ok:
+                    left.append(f"{t.id} ({t2.path}): could not be saved to the remote — {note}")
+                    continue
+        t3 = _find(cfg, main, t.id)
+        if t3 and t3.exists and not t3.dirty and not t3.unpushed and not t3.busy_pid:
+            rec = t3.record or {}
+            note = wt.remove(main, t3, wt.default_branch(main))
+            lines.append(f"{t.id}: {note}; its branch and pull request ({rec.get('pr') or 'none'}) wait for review")
+        elif t3 and t3.exists:
+            left.append(f"{t.id} ({t3.path}): kept — {'a process works in it' if t3.busy_pid else 'work not on the remote'}")
+        else:
+            lines.append(f"{t.id}: closed")
+    leftovers.run(cfg, main, ["scratch"], apply=True, keep=set())
+    _stack(main, "off")
+    when = time.strftime("%Y-%m-%d %H:%M %Z")
+    para = (f"Session {session or agent or 'end'} ended {when} in {main.name}: {len(mine)} worktree(s) handled. "
+            + " ".join(lines)
+            + (" Left behind, and why: " + "; ".join(left) + "." if left else " Nothing was left behind."))
+    d = wt.common_dir(main) / "kit-handoffs"
+    d.mkdir(exist_ok=True)
+    out = d / f"{time.strftime('%Y%m%d-%H%M%S')}-{(session or agent or 'session')[:24]}.md"
+    out.write_text(f"# Session end — {main.name}\n\n{para}\n")
+    ledger(main, "session-end", session=session, agent=agent, handled=len(mine), left=len(left))
+    print(para)
+    print(f"note\t{out}")
+    return 1 if left else 0
 
 
 def _print_cleanup(cfg, main):
@@ -118,17 +173,7 @@ def _stop_started(cfg, t) -> list[str]:
     for port in rec.get("ports", []):
         pids += _pids_on_port(port)
     for pid in sorted(set(pids)):
-        try:
-            os.kill(pid, signal.SIGTERM)
-            for _ in range(20):
-                time.sleep(0.1)
-                os.kill(pid, 0)
-            os.kill(pid, signal.SIGKILL)
-            notes.append(f"stopped pid {pid} (killed after 2 s)")
-        except ProcessLookupError:
-            notes.append(f"stopped pid {pid}")
-        except PermissionError:
-            notes.append(f"pid {pid} belongs to another user — left running")
+        notes.append(platform.stop_process(pid))
     drop = cfg["leftovers"]["test_databases"].get("drop")
     for db in rec.get("databases", []):
         if not drop:
@@ -159,7 +204,7 @@ def shutil_which(name):
     return shutil.which(name)
 
 
-def stop(cfg: Config, root, wid, message: str | None, no_checks: bool) -> int:
+def stop(cfg: Config, root, wid, message: str | None, no_checks: bool, quiet_stack: bool = False) -> int:
     main = main_tree(str(root))
     t = _find(cfg, main, wid)
     if not t:
@@ -196,7 +241,8 @@ def stop(cfg: Config, root, wid, message: str | None, no_checks: bool) -> int:
     if state == "MERGED" or (t and t.merged and not t.dirty and not t.unpushed and state != "OPEN"):
         print(f"closed\t{wid}\t{wt.remove(main, t, wt.default_branch(main))}")
         ledger(main, "close", id=wid, path=t.path, why="stopped after merge")
-        _stack(main, "off")
+        if not quiet_stack:
+            _stack(main, "off")
         return 0
     rec = t.record or {"id": wid}
     days = float(cfg["worktrees"]["expiry_days"])
@@ -205,7 +251,8 @@ def stop(cfg: Config, root, wid, message: str | None, no_checks: bool) -> int:
                 "expires": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(time.time() + days * 86400))})
     _write_record(t.path, rec)
     ledger(main, "stop", id=wid, state="waiting for merge", pr=url)
-    _stack(main, "off")
+    if not quiet_stack:
+        _stack(main, "off")
     print(f"waiting\t{wid}\twaiting for merge until {rec['expires']}; the merge door, post-merge or sweep closes it")
     return 0
 

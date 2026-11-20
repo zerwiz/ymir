@@ -16,6 +16,14 @@ memory in somebody's head.
 **Why a file.** An area nobody held looks exactly like an area that was finished. That is the cheapest
 lie in software, and it is not caught by tests — the tests pass for the areas somebody thought about.
 
+## At a glance
+
+```mermaid
+flowchart LR
+  canon["areas/canon.yaml<br/>the questions"] --> decl["areas/&lt;id&gt;.yaml<br/>this project's answers"]
+  decl --> g["areas-guard<br/>refuses changes to an unheld area"]
+```
+
 ## The four states
 
 | state | means | what the gate does |

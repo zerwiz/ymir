@@ -2,6 +2,23 @@
 
 Written 2026-11-11. Documentation is laid out so a person can read it simply.
 
+## At a glance
+
+```mermaid
+flowchart LR
+  w["a document"] --> h["headings and short paragraphs"]
+  w --> t["tables for facts"]
+  w --> d["diagrams for shape"]
+  w --> c["callouts for warnings"]
+```
+
+| What | Means |
+|---|---|
+| headings, short paragraphs | a reader scans before reading |
+| Markdown tables | facts side by side, never a machine-shaped block |
+| Mermaid diagrams | the shape of a flow or a system at a glance |
+| callouts | the one thing a reader must not miss |
+
 ## The law
 
 Any document a person will read is written **for that person**. That includes a plan, a ticket, an architecture page, a

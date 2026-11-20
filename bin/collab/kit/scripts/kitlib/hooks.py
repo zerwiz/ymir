@@ -26,43 +26,74 @@ def _has_real_hook(d: Path) -> bool:
 
 
 def install(cfg: Config, root: Path) -> list[str]:
+    """Seat .githooks for THIS checkout only.
+
+    core.hooksPath in the shared config would change every other checkout of the repository — a worktree on
+    another branch, or the main clone, where .githooks may not exist, so their hooks would silently stop. The kit
+    therefore writes it to this worktree's own config (git's extensions.worktreeConfig), and leaves the shared
+    setting as it was. A shared setting that already points at .githooks (an earlier kit) is kept.
+    """
     out = []
-    cur = git("config", "--get", "core.hooksPath", cwd=str(root)).stdout.strip()
+    shared = git("config", "--local", "--get", "core.hooksPath", cwd=str(root)).stdout.strip()
     prev = git("config", "--get", KEY, cwd=str(root)).stdout.strip()
     common = common_dir(root)
-    if cur and cur.rstrip("/") not in (OURS, os.path.join(str(root), OURS)):
-        if not prev:
-            git("config", KEY, cur, cwd=str(root))
-            out.append(f"kept: the hooks in {cur} keep running after the kit's ({KEY})")
-        else:
+    if shared.rstrip("/") == OURS:
+        out.append(f"kept: the shared core.hooksPath already is {OURS}")
+    else:
+        if shared and not prev:
+            prev = shared if os.path.isabs(shared) else str(main_tree_of(root) / shared)
+            git("config", KEY, prev, cwd=str(root))
+            out.append(f"kept: the hooks in {shared} keep running after the kit's ({KEY})")
+        elif not shared and _has_real_hook(common / "hooks") and not prev:
+            git("config", KEY, str(common / "hooks"), cwd=str(root))
+            names = sorted(f.name for f in (common / "hooks").iterdir()
+                           if os.access(f, os.X_OK) and not f.name.endswith(".sample"))
+            out.append(f"kept: {', '.join(names)} in {common / 'hooks'} keep running after the kit's ({KEY})")
+        elif prev:
             out.append(f"kept: {KEY} = {prev} (already recorded)")
-    elif not cur and _has_real_hook(common / "hooks") and not prev:
-        git("config", KEY, str(common / "hooks"), cwd=str(root))
-        names = sorted(f.name for f in (common / "hooks").iterdir()
-                       if os.access(f, os.X_OK) and not f.name.endswith(".sample"))
-        out.append(f"kept: {', '.join(names)} in {common / 'hooks'} keep running after the kit's ({KEY})")
+        git("config", "extensions.worktreeConfig", "true", cwd=str(root))
+        git("config", "--worktree", "core.hooksPath", OURS, cwd=str(root))
+        out.append(f"seated: core.hooksPath = {OURS} for this checkout only (other checkouts keep "
+                   f"{shared or 'their own hooks'})")
     for d in cfg["hooks"].get("chain") or []:
         out.append(f"kept: the repository's own hooks in {d} run after the kit's (project.yaml hooks.chain)")
     hooks_dir = root / OURS
     for f in hooks_dir.iterdir() if hooks_dir.is_dir() else []:
         if f.is_file():
             f.chmod(f.stat().st_mode | 0o111)
-    git("config", "core.hooksPath", OURS, cwd=str(root))
-    out.append(f"seated: core.hooksPath = {OURS}")
     return out
+
+
+def seat_worktree(root: Path, wt: Path) -> bool:
+    """A new worktree of a repository whose hooks the kit seated gets them too."""
+    if not (wt / OURS).is_dir():
+        return False
+    if git("config", "--local", "--get", "core.hooksPath", cwd=str(root)).stdout.strip().rstrip("/") == OURS:
+        return True
+    if git("config", "--get", "extensions.worktreeConfig", cwd=str(root)).stdout.strip() != "true":
+        return False
+    git("config", "--worktree", "core.hooksPath", OURS, cwd=str(wt))
+    return True
+
+
+def main_tree_of(root: Path) -> Path:
+    c = common_dir(root)
+    return c.parent if c.name == ".git" else c
 
 
 def uninstall(root: Path) -> list[str]:
     prev = git("config", "--get", KEY, cwd=str(root)).stdout.strip()
     common = str(common_dir(root) / "hooks")
-    if prev and prev != common:
-        git("config", "core.hooksPath", prev, cwd=str(root))
-        msg = f"restored: core.hooksPath = {prev} (as it was before the kit)"
-    else:
-        git("config", "--unset", "core.hooksPath", cwd=str(root))
-        msg = "restored: core.hooksPath unset (git uses .git/hooks again)"
+    git("config", "--worktree", "--unset", "core.hooksPath", cwd=str(root))
+    shared = git("config", "--local", "--get", "core.hooksPath", cwd=str(root)).stdout.strip()
+    if shared.rstrip("/") == OURS:  # an earlier kit wrote the shared setting
+        if prev and prev != common:
+            git("config", "core.hooksPath", prev, cwd=str(root))
+        else:
+            git("config", "--unset", "core.hooksPath", cwd=str(root))
+    shared = git("config", "--get", "core.hooksPath", cwd=str(root)).stdout.strip()
     git("config", "--unset", KEY, cwd=str(root))
-    return [msg]
+    return [f"restored: core.hooksPath = {shared or '(unset — git uses .git/hooks again)'}"]
 
 
 def chain_targets(cfg: Config, root: Path) -> list[str]:

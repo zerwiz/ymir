@@ -196,6 +196,35 @@ class Sweep(WorkBase):
         self.assertFalse((f.repo / ".worktrees" / "z1").exists())
 
 
+class SessionEnd(WorkBase):
+    def test_a_session_with_two_worktrees_ends_with_both_handled_and_the_stack_off(self):
+        f = Fixture(self.tmp)
+        set_yaml(f.repo, "worktrees.close_merged_on_new", "false")
+        sh("git commit -qam 'adjust the fixture limits' --no-verify && git push -q --no-verify origin main", f.repo, check=True)
+        env = self.fakes()
+        env["KIT_SESSION"] = "sess-42"
+        self.manifest(f.repo)
+        f.kit("work", "start", "clean-one", env=env)
+        f.kit("work", "start", "busy-one", "--purpose", "the half-done screen", env=env)
+        (f.repo / ".worktrees" / "busy-one" / "half.txt").write_text("half done\n")
+        other = dict(env, KIT_SESSION="someone-else")
+        f.kit("work", "start", "not-mine", env=other)
+        r = f.kit("work", "session-end", "--no-checks", env=env)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertFalse((f.repo / ".worktrees" / "clean-one").exists())
+        self.assertFalse((f.repo / ".worktrees" / "busy-one").exists())
+        self.assertTrue((f.repo / ".worktrees" / "not-mine").exists(), "another session's worktree is not touched")
+        files = sh(["git", "--git-dir", str(f.remote), "ls-tree", "--name-only", "work/busy-one"], self.tmp).stdout
+        self.assertIn("half.txt", files, "the unfinished work is on the remote")
+        self.assertIn("2 worktree(s) handled", r.stdout)
+        note = r.stdout.split("note\t", 1)[1].strip()
+        self.assertTrue(Path(note).is_file())
+        # one worktree (another session's) is still open, so the dev stack stays on; end it too and it goes off
+        r = f.kit("work", "session-end", "--no-checks", env=other)
+        self.assertIn("systemctl stop app-dev.service", self.calls(env))
+        self.assertIn("stop app-db", self.calls(env))
+
+
 class Stack(WorkBase):
     def test_off_refuses_a_prod_piece(self):
         f = Fixture(self.tmp)

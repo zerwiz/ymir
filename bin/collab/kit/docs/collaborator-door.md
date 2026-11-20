@@ -12,6 +12,21 @@ updated: "2026-11-11"
 A seat is a machine of this fleet. A collaborator is another hand with its own team, its own repos and its own operator.
 They get a **door**, not a membership.
 
+## At a glance
+
+```mermaid
+flowchart LR
+  c["a collaborator's agent"] --> card["the public card"]
+  card --> tok["a short-lived token<br/>one skill"]
+  tok --> g["a grant"] --> call["one call, recorded"]
+```
+
+| What | Means |
+|---|---|
+| the card | public: who we are and which skills exist |
+| the token | short-lived, scoped to one skill and one collaborator |
+| the grant | a row naming the pair and the skill; no grant names a shell |
+
 ## The three layers
 
 ```

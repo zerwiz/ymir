@@ -44,6 +44,18 @@ stack:
       link: [deps]
       never_share: [_build]
 
+install:
+  skip:   # kit pieces a product repository does not carry (its own docs law, no workshop tools)
+    - "docs/templates/*"
+    - "docs/a-company-suite.md"
+    - "docs/collaborator-door.md"
+    - "scripts/collab-connect.sh"
+    - "docs/a2a.md"
+    - "scripts/a2a.*"
+    - "scripts/gates/a2a-guard.sh"
+    - "docs/advantage.md"
+    - "scripts/advantage-audit.sh"
+
 hooks:
   chain: [scripts/hooks]         # the repository's own pre-commit and pre-push run after the kit's
 

@@ -330,6 +330,8 @@ def new(cfg: Config, root, wid: str, base: str | None, owner: str, purpose: str,
         print(f"refused: git worktree add failed: {r.stderr.strip()}")
         return 1
     links = _link_deps(cfg, main, path)
+    from .hooks import seat_worktree
+    seat_worktree(main, path)
     now = time.time()
     days = float(expiry_days if expiry_days is not None else wcfg["expiry_days"])
     rec = {"id": wid, "branch": branch, "base": base_ref, "owner": owner, "purpose": purpose,

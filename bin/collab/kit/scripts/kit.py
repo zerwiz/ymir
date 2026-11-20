@@ -18,6 +18,7 @@
   kit.py lang msg <file> | lang staged       the project tongue in commits; client tongues in client paths
   kit.py containers build|retain|<engine args>   the container door (see RULES/23)
   kit.py work start <id> | stop <id> [-m M] | track <id> --pid/--port/--db | sweep [--dry-run]
+  kit.py work session-end [--session S | --agent A | --all] [--from-hook]   close what a session opened
   kit.py stack status [app] | on <app>|--all-dev | off <app>|--all-dev [--piece NAME]
   kit.py deploy --release R [--dry-run] [--rollback]
 
@@ -275,6 +276,24 @@ def cmd_work(args):
         return work.stop(cfg, root, args.id, args.message, args.no_checks)
     if args.action == "track":
         return work.track(cfg, root, args.id, args.pid, args.port, args.db, args.what or "")
+    if args.action == "session-end":
+        session = args.session or work.session_id()
+        if args.from_hook:  # a harness hook: read its JSON quickly, then finish detached so the harness can exit
+            try:
+                payload = json.loads(sys.stdin.read() or "{}")
+            except ValueError:
+                payload = {}
+            session = session or payload.get("session_id") or payload.get("sessionID") or ""
+            if not os.environ.get("KIT_HOOK_FOREGROUND"):
+                subprocess.Popen([sys.executable, __file__, "--repo", str(root), "work", "session-end",
+                                  "--session", session] + (["--agent", args.agent] if args.agent else []),
+                                 start_new_session=True, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                                 stderr=subprocess.DEVNULL)
+                return 0
+        if not (session or args.agent or args.all):
+            print("refused: no session to end — pass --session, --agent or --all (or set KIT_SESSION)")
+            return 2
+        return work.session_end(cfg, root, session, args.agent or "", args.all, checks=not args.no_checks)
     return work.sweep(cfg, root, args.dry_run)
 
 
@@ -331,7 +350,9 @@ def main(argv=None) -> int:
     s = sub.add_parser("lang"); s.add_argument("action", choices=["msg", "staged", "files"])
     s.add_argument("file", nargs="?"); s.add_argument("paths", nargs="*")
     sub.add_parser("containers", add_help=False)
-    s = sub.add_parser("work"); s.add_argument("action", choices=["start", "stop", "track", "sweep"])
+    s = sub.add_parser("work"); s.add_argument("action", choices=["start", "stop", "track", "sweep", "session-end"])
+    s.add_argument("--session"); s.add_argument("--agent"); s.add_argument("--all", action="store_true")
+    s.add_argument("--from-hook", action="store_true")
     s.add_argument("id", nargs="?"); s.add_argument("--base"); s.add_argument("--owner"); s.add_argument("--purpose")
     s.add_argument("--expires-days", type=float); s.add_argument("-m", "--message"); s.add_argument("--no-checks", action="store_true")
     s.add_argument("--pid", type=int); s.add_argument("--port", type=int); s.add_argument("--db"); s.add_argument("--what")
@@ -348,7 +369,7 @@ def main(argv=None) -> int:
     args = p.parse_args(argv)
     if args.cmd == "lang" and args.action == "files" and args.file:
         args.paths = [args.file] + args.paths
-    if args.cmd == "work" and args.action != "sweep" and not args.id:
+    if args.cmd == "work" and args.action not in ("sweep", "session-end") and not args.id:
         p.error(f"work {args.action} needs an id")
     if args.cmd in ("worktree",) and args.action in ("new", "done") and not args.id:
         p.error(f"worktree {args.action} needs an id")

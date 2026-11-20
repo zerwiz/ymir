@@ -10,6 +10,20 @@ updated: "2026-11-11"
 Two layers: **wards** (`npm run check`, twenty of them, in `scripts/wards/`) prove the repository is coherent; **gates**
 (`scripts/gates/`, run by the git hooks) stop a specific class of mistake from entering history at all.
 
+## At a glance
+
+```mermaid
+flowchart LR
+  pc["pre-commit<br/>checks · secrets · languages"] --> cm["commit-msg<br/>what and why"] --> pp["pre-push<br/>two roads · notes · tests"]
+  pp --> chain["the repository's own hooks run after"]
+```
+
+| What | Means |
+|---|---|
+| pre-commit | the declared checks, a credential, a machine path, a client tongue outside its paths |
+| commit-msg | a subject that says nothing, another tongue, a tool named as author |
+| pre-push | code pushed to main, a branch without a pull request, a behaviour change without a note, a red tree |
+
 ## The git hooks, and what each refuses
 
 ```

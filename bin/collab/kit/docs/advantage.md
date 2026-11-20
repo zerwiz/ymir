@@ -14,6 +14,15 @@ weaker rival with a better-shaped sentence.
 
 This shelf is the method that avoids both, and one gate that enforces the second half.
 
+## At a glance
+
+```mermaid
+flowchart LR
+  c["a claim about why we win"] --> e{"evidence?"}
+  e -->|"yes"| k["kept"]
+  e -->|"no"| x["refused by the audit"]
+```
+
 ## 1 · The rule, first
 
 > **A claim with an empty evidence line is deleted, never softened.**

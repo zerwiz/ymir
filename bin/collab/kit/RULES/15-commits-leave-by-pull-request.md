@@ -2,6 +2,21 @@
 
 **Added 2026-11-02.** Every commit reaches the default branch by a pull request — or, for documents and handoffs, directly.
 
+## At a glance
+
+```mermaid
+flowchart LR
+  c["a commit"] --> q{"what does it change?"}
+  q -->|"documents, handoffs"| m["straight to main"]
+  q -->|"code"| b["its own branch"] --> p["pull request"] --> h["a person merges"]
+```
+
+| What | Means |
+|---|---|
+| documents and handoffs only | directly to the default branch; the checks still run |
+| code, tests, configuration, hooks | a pull request from its own worktree; a person merges |
+| both in one push | a pull request — the code decides the road |
+
 ## The rule
 
 ```

@@ -397,6 +397,8 @@ class K09Hooks(Base):
         out = f.apply("node")
         self.assertIn("keep running after the kit", out)
         self.assertEqual(sh("git config core.hooksPath", f.repo).stdout.strip(), ".githooks")
+        self.assertEqual(sh("git config --local core.hooksPath", f.repo).stdout.strip(), "myhooks",
+                         "the shared setting other checkouts read is not taken")
         marker.unlink(missing_ok=True)
         (f.repo / "b.txt").write_text("b\n")
         sh("git add b.txt", f.repo, check=True)

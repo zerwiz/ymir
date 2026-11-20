@@ -15,6 +15,19 @@ pr_url: ""
 Copy this file to `<PREFIX>-<plan>-T<nn>-<slug>.md`, replacing `PREFIX` with the project's plan prefix. Do not move
 it past Open until its plan is Validated (`RULES/19`).
 
+## At a glance
+
+```mermaid
+flowchart LR
+  w["What"] --> why["Why"] --> d["Done when"]
+```
+
+| What | Means |
+|---|---|
+| What | the unit of work, in one sentence |
+| Why | the plan it serves |
+| Done when | the line a reviewer can check |
+
 ## What
 
 One unit of work, in a few sentences: what changes and where.

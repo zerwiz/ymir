@@ -13,6 +13,11 @@ read (`RULES/20` in a repository that carries the collaboration kit). Copy the o
 
 ## Which template
 
+```mermaid
+flowchart LR
+  w["what the reader wants to do"] --> t["the template"] --> c["copy, fill in, delete the guidance"]
+```
+
 Start from what the reader wants to do.
 
 | You are writing… | The reader wants to… | Template |

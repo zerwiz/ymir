@@ -20,6 +20,21 @@ bash scripts/a2a.sh skills                                   # area · state · 
 
 The card lands at `.well-known/agent-card.json`, which is where a peer looks.
 
+## At a glance
+
+```mermaid
+flowchart LR
+  r["this repository"] --> card[".well-known/agent-card.json"]
+  card --> peer["another team's agent"]
+  peer -->|"one skill, with a token"| r
+```
+
+| What | Means |
+|---|---|
+| the card | says what this repository's agent can do, and nothing about the machine it runs on |
+| a skill | one named capability a peer may call |
+| the guard | refuses a card that lies or leaks an address |
+
 ## The five rules a card obeys
 
 1. **Publish the address that answers, or publish none.** `127.0.0.1` dressed as a host is the failure

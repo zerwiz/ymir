@@ -49,6 +49,21 @@ does not exist · an empty `log/`.
 - Node: add `"handoff": "handoff/check.sh --check"` to `package.json` scripts, and call it from CI.
 - Anything else: add `handoff/check.sh --check` to the CI job that must pass before a merge.
 
+## Before you write it — appended 2026-11-20
+
+Run `bash scripts/work.sh session-end` first (collaboration kit 2.0.0): it closes every worktree the session
+opened, stops what it started, and writes a paragraph of what was left and why — paste it into section 4.
+
+| Step | Command |
+|---|---|
+| close the session's work | `bash scripts/work.sh session-end` |
+| write the handoff | copy `handoff/TEMPLATE.md`, fill all seven sections |
+
+```mermaid
+flowchart LR
+  s["work.sh session-end"] --> n["what was left, and why"] --> h["handoff/CURRENT.md"]
+```
+
 ## Written for a business reader — appended 2026-11-06
 
 These repositories are shared. A handoff is read by the client who owns the product, the partner whose name is on

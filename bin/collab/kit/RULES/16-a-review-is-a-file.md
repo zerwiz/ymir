@@ -2,6 +2,21 @@
 
 **Added 2026-11-03.** A review lives in the repository, so a partner who starts work again finds it without asking.
 
+## At a glance
+
+```mermaid
+flowchart LR
+  pr["pull request #N"] --> r["docs/audit/review-N.md"]
+  r --> i["the review index"]
+  i --> h["the handoff names the newest"]
+```
+
+| What | Means |
+|---|---|
+| a review | is a file named for its pull request, under docs/audit/ |
+| the index | lists every review |
+| the handoff | names the newest one, so the next person starts there |
+
 ## The rule
 
 ```

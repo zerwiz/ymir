@@ -16,6 +16,20 @@ capabilities:
 Read this once, at the start, and once again before the pull request. It is the discipline of a guest hand: the work is
 wanted, the project's law is not yours to edit, and the reviewer's time is the scarcest thing in the building.
 
+## At a glance
+
+```mermaid
+flowchart LR
+  r["read the rules"] --> b["branch from the latest base"] --> s["one concern"]
+  s --> n["the note with the change"] --> t["a test beside a new module"] --> p["the pull request, same session"]
+```
+
+| What | Means |
+|---|---|
+| read before you branch | AGENTS.md, RULES/, the plan that owns the work |
+| one concern, one pull request | a reviewer can hold it in their head |
+| the note with the change | docs/fixes/ — the reason survives the session |
+
 ## The shape of a slice
 
 ```

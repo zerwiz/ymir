@@ -104,7 +104,7 @@ def run(cfg: Config, root, release: str, dry_run: bool, rollback: bool) -> int:
     previous = {i["name"]: (_tags(E, project, i["name"]) or [(0, "")])[0][1] for i in images}
     prev_release = next((t.rsplit(":", 1)[1] for t in previous.values() if t), "")
     env = {"RELEASE": release, "PREVIOUS": prev_release, "KIT_STORAGE_FLAGS": " ".join(flags)}
-    back = (spec.get("rollback") or "").replace("{previous}", prev_release)
+    back = (spec.get("rollback") or "").replace("{previous}", prev_release or "previous")
     rollback_line = back or (f"the previous images ({', '.join(t for t in previous.values() if t) or 'none'}) are untouched; "
                              "point the hosts back at them")
     if rollback:
@@ -113,9 +113,10 @@ def run(cfg: Config, root, release: str, dry_run: bool, rollback: bool) -> int:
             return 2
         return _sh(back, env)
     ok, msg = disk_gate(cfg, root)
-    if not ok:
+    if not ok and not dry_run:
         print(f"refused: the disk is below the floor — {msg}")
         return 1
+    print(f"disk: {msg}" + ("" if ok else " — BELOW THE FLOOR: a real deploy refuses here"))
     plan = ([f"build {i['name']}:{release}" for i in images] if not spec.get("build") else [f"build: {spec['build']}"])
     plan += [f"ship: {spec['ship']}"] if spec.get("ship") else []
     plan += [f"hook: {spec['hook']}"] if spec.get("hook") else []

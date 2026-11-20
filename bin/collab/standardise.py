@@ -18,6 +18,7 @@ by the kit's chaining installer: the repository's own hooks keep running after t
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import hashlib
 import json
 import os
@@ -51,8 +52,16 @@ CLIENT_PATHS_DEFAULT = {
 # the words of one team's own naming that must never reach a plain repository
 HOUSE_WORDS = re.compile(r"\b(Ymir|Yggdrasil|Allfather|batons?|Vingólf|Smíðr|Gimlé|Snotra|Eindri|Hœnir|Brokk|Bragi|"
                          r"Galdr|Sága|Mímir|Bifrost|Utgard|ymirhome)\b|\bthe house\b|\.yggdrasil\b", re.IGNORECASE)
-PLAIN_EXCEPTIONS = {  # a file shared byte for byte with the maintainers' own guard; it names env keys, not people
-    "scripts/gates/maker-names.py": "the maker matcher is one file shared with its maintainers' guard (byte-identical test)",
+PLAIN_EXCEPTIONS: dict[str, str] = {}
+# A file the kit shares byte for byte with its maintainers' own guard is rendered on install: the same code, the
+# kit's own setting names. The source stays identical to the guard it is copied from (test_maker_names.sh).
+INSTALL_RENDER = {
+    "scripts/gates/maker-names.py": [
+        ("YMIR_MAKER_", "KIT_MAKER_"),
+        ('os.environ.get("XDG_CACHE_HOME") or os.path.expanduser("~/.cache"), "ymir", "maker-catalog.txt")',
+         'os.environ.get("XDG_CACHE_HOME", ""), "collab-kit", "maker-catalog.txt")'),
+        ("`.claude/hooks/ymir-arm.sh`", "`.claude/hooks/arm.sh`"),
+    ],
 }
 
 
@@ -95,6 +104,11 @@ def house_map() -> list[tuple[str, str]]:
 
 
 def render(rel: str, data: bytes, register: str) -> bytes:
+    if rel in INSTALL_RENDER:
+        text = data.decode("utf-8")
+        for a, b in INSTALL_RENDER[rel]:
+            text = text.replace(a, b)
+        data = text.encode("utf-8")
     if register != "house" or not rel.endswith(".md"):
         return data
     text = data.decode("utf-8")
@@ -162,6 +176,7 @@ def main(argv=None) -> int:
     ap.add_argument("--profile", choices=sorted(p.stem for p in PROFILES.glob("*.yaml")))
     ap.add_argument("--register", choices=["plain", "house"])
     ap.add_argument("--languages", default=None, help="project:client,client — e.g. en:sv")
+    ap.add_argument("--skip", action="append", default=[], help="a glob of kit files not to install (also project.yaml install.skip)")
     a = ap.parse_args(argv)
     repo = Path(a.repo).resolve()
     if not (repo / ".git").exists():
@@ -184,9 +199,14 @@ def main(argv=None) -> int:
     profile = a.profile or detect_profile(repo)
     langs = a.languages or "en"
 
-    rows = {"missing": [], "same": [], "older": [], "local": [], "renamed": [], "kept-old-name": []}
+    rows = {"missing": [], "same": [], "older": [], "local": [], "renamed": [], "kept-old-name": [], "skipped": []}
     plan: dict[str, bytes] = {}
+    skip = _skips(existing_cfg if existing_cfg.is_file() else None, a.skip,
+                  None if existing_cfg.is_file() else render_project(repo, profile, register, langs))
     for rel in kit_files():
+        if any(fnmatch.fnmatch(rel, g) for g in skip):
+            rows["skipped"].append(rel)
+            continue
         data = render(rel, (KIT / rel).read_bytes(), register)
         target = repo / rel
         old = RENAMED.get(rel)
@@ -213,9 +233,10 @@ def main(argv=None) -> int:
     for k, label in [("same", "present"), ("missing", "missing"), ("older", "older kit files (upgraded by --apply)"),
                      ("renamed", "renamed pieces (moved by --apply)"),
                      ("local", "local (a local rule wins; it is reported, never replaced)"),
-                     ("kept-old-name", "kept under the old name")]:
+                     ("kept-old-name", "kept under the old name"),
+                     ("skipped", "not installed (project.yaml install.skip — a piece that does not fit)")]:
         print(f"  {label}: {len(rows[k])}")
-        if k != "same":
+        if k not in ("same", "skipped"):
             for r in rows[k]:
                 print(f"    {r}")
     print(f"  project.yaml: {'present — kept as the repository wrote it' if existing_cfg.is_file() else 'missing — rendered from profile ' + profile + ' by --apply'}")
@@ -272,9 +293,12 @@ def main(argv=None) -> int:
                        text=True, capture_output=True)
     for line in (r.stdout + r.stderr).splitlines():
         print(f"  {line}")
+    if not any(fnmatch.fnmatch(".claude/settings.json", g) for g in skip):
+        print(seat_claude_hook(repo))
     manifest = {"kit": VERSION, "applied": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "register": register,
                 "profile": profile, "files": len(kit_files()), "installed_this_run": len(rows["missing"]),
                 "upgraded_this_run": len(rows["older"]) + len(rows["renamed"]), "local": rows["local"],
+                "skipped": rows["skipped"],
                 "blobs": {rel: blob((repo / rel).read_bytes()) for rel in kit_files() if (repo / rel).is_file()}}
     (repo / ".collab-kit.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
     print(f"  applied: {len(rows['missing'])} installed, {len(rows['older'])} upgraded, {len(rows['renamed'])} renamed, "
@@ -287,6 +311,38 @@ def main(argv=None) -> int:
     if not (repo / "handoff" / "CURRENT.md").exists():
         print("  note: no handoff/CURRENT.md — `bin/collab/collab.sh init <repo>` installs the handoff shelf")
     return 0
+
+
+SESSION_END_CMD = "bash scripts/work.sh session-end --from-hook"
+
+
+def seat_claude_hook(repo: Path) -> str:
+    """Claude Code runs SessionEnd hooks from .claude/settings.json (code.claude.com/docs/en/hooks). Add the kit's
+    session end beside whatever the repository already has; never replace a hook."""
+    p = repo / ".claude" / "settings.json"
+    data = {}
+    if p.is_file():
+        try:
+            data = json.loads(p.read_text() or "{}")
+        except ValueError:
+            return "  .claude/settings.json does not parse — the session-end hook was not added (add it by hand)"
+    hooks = data.setdefault("hooks", {})
+    groups = hooks.setdefault("SessionEnd", [])
+    if any(SESSION_END_CMD in (h.get("command") or "") for g in groups for h in g.get("hooks", [])):
+        return "  .claude/settings.json: the session-end hook is already there"
+    groups.append({"hooks": [{"type": "command", "command": SESSION_END_CMD, "timeout": 10}]})
+    p.parent.mkdir(exist_ok=True)
+    p.write_text(json.dumps(data, indent=2) + "\n")
+    return "  .claude/settings.json: SessionEnd runs `work.sh session-end` (beside the repository's own hooks)"
+
+
+def _skips(cfg_path, extra, rendered=None) -> list[str]:
+    globs = list(extra or [])
+    sys.path.insert(0, str(KIT / "scripts"))
+    from kitlib import miniyaml  # noqa: E402
+    data = miniyaml.load(str(cfg_path)) if cfg_path else (miniyaml.loads(rendered) if rendered else {})
+    globs += ((data or {}).get("install") or {}).get("skip") or []
+    return globs
 
 
 def _manifest_blobs(repo: Path, rel: str) -> set[str]:

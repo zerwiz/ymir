@@ -60,6 +60,18 @@ bash scripts/work.sh stop invoices-list -m "Show the invoices list with its due 
 | not merged | the record says **waiting for merge** with a new expiry; the merge door (`kit.sh merge <pr>`), the `post-merge` hook or the sweep closes it |
 | the dev stack | turned off when no worktree of the app is still open |
 
+## 2b · End a session, or hand over
+
+```bash
+bash scripts/work.sh session-end            # every worktree this session opened (KIT_SESSION or the harness's id)
+bash scripts/work.sh session-end --agent ada
+```
+
+Each worktree is stopped as above; what is safely on the remote is removed, what the checks refuse is saved as
+found, the dev stack goes off when no other worktree of the app is open, and one paragraph — what was left and why —
+is written to `.git/kit-handoffs/`. Run it before you write a handoff. The harnesses call it at their own session
+end (`docs/harness-hooks.md`).
+
 ## 3 · Sweep
 
 ```bash
