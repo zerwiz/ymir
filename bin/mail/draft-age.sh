@@ -103,12 +103,15 @@ RUNES_APPEND="$ROOT/bin/records/runes-append.sh"
 
 # ── the grant ────────────────────────────────────────────────────────────────────────
 # The vault door decides how to decrypt; a plaintext record on this machine is the same
-# record, so it is the fallback and never the winner. An environment value wins over both,
-# which is the seam a test uses — it stands a stub endpoint in front of the same door.
+# record, so it is the fallback and never the winner — and NOT a fallback at all when a
+# sealed copy exists, because a stale sibling served 69 of 93 keys on this seat
+# (measured 2026-11-20) while every reader believed it. An environment value wins over
+# both, which is the seam a test uses — it stands a stub endpoint in front of the same door.
 VAULT_TEXT=""
 if [ -n "${SEC:-}" ]; then
   VAULT_TEXT="$(bash "$ROOT/bin/vault/hodd.sh" emit secrets/platform.env 2>/dev/null || true)"
-  [ -n "$VAULT_TEXT" ] || VAULT_TEXT="$(cat "$SEC/platform.env" 2>/dev/null || true)"
+  [ -n "$VAULT_TEXT" ] || [ -r "$SEC/platform.env.age" ] \
+    || VAULT_TEXT="$(cat "$SEC/platform.env" 2>/dev/null || true)"
 fi
 cred() {  # <KEY> — env, then the vault (both `KEY=` and `export KEY=` forms)
   local k=$1 v="${!1:-}"

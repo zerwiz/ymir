@@ -66,9 +66,12 @@ operator_address() {
 }
 vault_get() {  # <KEY>
   local key=$1 val
-  # The vault door first (it decides how to decrypt); a plaintext fallback never wins over it.
+  # The vault door first (it decides how to decrypt, and it refuses a sealed copy it cannot
+  # open). The plaintext is the fallback ONLY when no sealed copy exists at all: a stale
+  # sibling must never stand in for the vault — which is the fault of 2026-11-20.
   val="$(bash "$ROOT/bin/vault/hodd.sh" emit secrets/platform.env 2>/dev/null | sed -n "s/^export $key=//p" | head -1 | sed "s/^['\"]//; s/['\"]$//")"
-  [ -n "$val" ] || val="$(sed -n "s/^$key=//p" "$SECRETS/platform.env" 2>/dev/null | head -1 | sed "s/^['\"]//; s/['\"]$//")"
+  [ -n "$val" ] || [ -r "$SECRETS/platform.env.age" ] \
+    || val="$(sed -n "s/^$key=//p" "$SECRETS/platform.env" 2>/dev/null | head -1 | sed "s/^['\"]//; s/['\"]$//")"
   printf '%s' "$val"
 }
 
