@@ -72,7 +72,7 @@ case "${1:-}" in
       if check_one "$g"; then printf '  "%s","current"\n' "$g"; else printf '  "%s","STALE"\n' "$g"; stale=1; fi
     done
     if [ "$stale" -ne 0 ]; then
-      printf 'registers: a register is stale — run bin/gates/registers.sh generate, then commit it in the same change\n' >&2
+      printf 'registers-guard: a register is stale — run bin/gates/registers.sh generate, then commit it in the same change\n' >&2
     fi
     exit "$stale"
     ;;
