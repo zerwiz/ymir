@@ -94,3 +94,7 @@ EXIT=0
 fixer. That is the same class of fault — the code root used as the records shelf — but it
 is a read in a different door, it is outside what this errand names, and changing it here
 would put two behaviours in one change. It waits for its own note.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #849
