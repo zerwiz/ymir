@@ -525,7 +525,19 @@ def seat(
         tree = worktree_mod.ensure(seat_id, project, paths.project_wt_root(project, environ), runner=runner)
     except Exception as exc:  # noqa: BLE001 - the caller must see the plain why
         raise EngineRefusal(str(exc), "check the project worktree and the .yggdrasil root") from exc
-
+    # Plan 339.4: the road that made a worktree records it (owner + errand) so the reaper
+    # (bin/forge/worktree-reap.py) removes it when the errand closes. One ledger, one writer —
+    # the engine asks the same door the shell roads ask. Best effort: never a refusal.
+    reaper = roots.root / "bin" / "forge" / "worktree-reap.py"
+    if tree.created and reaper.is_file():
+        runner(
+            [
+                "python3", str(reaper), "record", "--path", str(tree.path), "--repo", str(project),
+                "--errand", seat_id,
+                "--road", environ.get("YMIR_WORKTREE_ROAD") or "engine",
+                "--owner", environ.get("YMIR_WORKTREE_OWNER") or errand.role,
+            ]
+        )
 
     if not selection.is_verified and not selection.is_raw:
         raise EngineRefusal(

@@ -981,6 +981,10 @@ if [ -z "$WT" ]; then
       echo "error: Yggdrasil could not create worktree $WT from $PROJECT_DIR" >&2
       exit 1
     }
+    # Plan 339.4: the road that made it records it (owner + errand), so the reaper removes it when
+    # the errand closes done and landed, or failed and seven days old. Best effort, never a refusal.
+    python3 "$SCRIPT_DIR/../forge/worktree-reap.py" record --path "$WT" --repo "$PROJECT_DIR" --errand "$ID" \
+      --road "${YMIR_WORKTREE_ROAD:-einherjar-spawn}" --owner "${YMIR_WORKTREE_OWNER:-}" >/dev/null 2>&1 || true
   fi
 fi
 [ -d "$WT" ] || { echo "error: Yggdrasil worktree missing: $WT" >&2; exit 1; }

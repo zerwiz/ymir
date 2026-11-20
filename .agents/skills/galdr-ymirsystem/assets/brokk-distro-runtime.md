@@ -2074,3 +2074,25 @@ The proofs are in `bin/agents/tests/test_eir_true_mends.sh`: a throwaway reposit
 worktree and the wards' own words appear; a copied hook does the same; `s_gates` accepts and refuses
 the three install shapes; a fake unit under a temp apps home stays the app's own through `check` and
 `write --dry-run`; and the agentroad mend is watched through stub doors.
+
+## 2026-11-20 — every road that makes a worktree records it, and one reaper removes it (plan 339.4)
+
+Appended; the sections above stand. A worktree is no longer made and forgotten. Each road that
+creates one calls `bin/forge/worktree-reap.py record` straight after `git worktree add`, with the
+errand id, the road and the owner. The record is best effort and never refuses a seat.
+
+| Road | Records as | Owner |
+|---|---|---|
+| `bin/agents/einherjar-spawn.sh` | `einherjar-spawn` | `$YMIR_WORKTREE_OWNER` |
+| `bin/agents/eindri-start.sh` (through `project-target.sh`, `herdr-run.sh` or the engine) | `eindri-start` | the errand's role |
+| `bin/seat/herdr-run.sh` called directly | `herdr-run` | `--role` |
+| `bin/forge/gather.sh` (through `yggdrasil.sh create`) | `gather` | `helm` |
+| `src/ymir_runtime/seat.py` (the engine) | `engine`, unless the caller named a road | the errand's role |
+
+`bin/seat/seat-reap.sh --sweep` runs `worktree-reap.py sweep --quiet --apply` after the seats
+close; `--list` runs the dry run. A tree goes when its errand's last status line is `done:` and
+its HEAD is merged, parked (`refs/parked/<errand>`) or pushed, or `failed:` seven days ago.
+Branches are never deleted, a dirty tree is named and kept, and exterior folders are walked from
+`$YMIR_HOME/config/worktree-roots.yaml`. `gather.sh` now writes `done:` to `state/<batch>.status`
+once its PR is open, so the integration worktree is reaped too. The proof is
+`tests/test_worktree_reap.py`; the how-to is `docs/features/worktree-reaper.md`.

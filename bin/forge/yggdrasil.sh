@@ -115,6 +115,11 @@ case "$CMD" in
         "$BRANCH" "$WTPATH" "'/*'" "'!/.pi/extensions/'" >&2
       exit 1
     fi
+    # Plan 339.4: the road that made a worktree records it, so the reaper can remove it when the
+    # errand closes. The caller names its road and owner (gather.sh, herdr-run); the record is
+    # best effort — a ledger that cannot be written never refuses a seat.
+    python3 "$SCRIPT_DIR/worktree-reap.py" record --path "$WTPATH" --repo "$REPO" --branch "$BRANCH" --errand "$ID" \
+      --road "${YMIR_WORKTREE_ROAD:-yggdrasil}" --owner "${YMIR_WORKTREE_OWNER:-}" >/dev/null 2>&1 || true
     printf 'worktree[1]{id,branch,path,base}:\n  "%s","%s","%s","%s"\n' "$ID" "$BRANCH" "$WT/$ID" "$BASE"
     printf 'sparse[1]{excluded,state,why}:\n  ".pi/extensions","not checked out","one extension home — the seat tree serves the worktree"\n'
     ;;
