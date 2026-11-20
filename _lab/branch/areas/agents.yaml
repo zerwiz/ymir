@@ -1,0 +1,30 @@
+# areas/agents.yaml — agent integration
+#
+# A project answers every canon area: held · waived · na. `held` needs evidence.
+# `unheld` is legal in the file and is what the gate refuses once work touches the area.
+# This file is the project's own record; the canon of questions lives in Ymir.
+
+version: 1
+area: agents
+project: ymir-platform
+state: held
+
+keeper: Muninn the rememberer
+lens: memory
+
+# the folders this keeper may write. The gate refuses a push that changes one of these
+# paths while the area is unheld. Empty = nothing is claimed yet.
+may_write: ["bin/records/"]
+
+evidence: ["bin/records/mimir.sh — the well door", ".agents/skills/ — the four skill shelves"]
+
+# the canon's questions, with this project's answers. An open answer is honest; a blank is not.
+answers:
+  - q: "can an agent recall this project's knowledge and act on it without a human translating?"
+    a: ""
+  - q: "a memory namespace the project's work is written into"
+    a: ""
+  - q: "a door an agent can call, or a card it can read"
+    a: ""
+
+closed: ""                    # the date the evidence last proved it

@@ -1,0 +1,15 @@
+{
+  "name": "@zerwiz/rodd",
+  "version": "0.1.0",
+  "private": true,
+  "description": "R\u00f6dd \u2014 the voice of Ymir, as a desk app: an Electron shell over the house's realtime voice UI.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "start:system": "/usr/lib/electron41/electron .",
+    "ui:install": "npm ci --prefix ui"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0"
+  }
+}

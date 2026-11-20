@@ -1,0 +1,111 @@
+# Nornir cron schedule — TEMPLATE, never the live job list.
+# Copy to YOUR home and edit there:  cp config/cron.yaml.example $YMIR_HOME/config/cron.yaml
+# The runtime reads the operator's own schedule from $YMIR_HOME/config/cron.yaml
+# (or BROKK_CONFIG_OVERRIDE) — the tracked tree ships only this shape.
+# Format: <shape> <command>. Started idempotently by bin/time/nornir-cron-start.sh.
+#
+# SHAPES (plan 140) — the shape decides both WHEN the row fires and which stamp it
+# writes, so it can never fire twice for one period:
+#   HH:MM        once a day, at that minute        (the original form, unchanged)
+#   @daily       00:00, once a day                 (no minute to guess)
+#   @hourly      the top of every hour
+#   @hourly:MM   minute MM of every hour           (give each machine its own minute,
+#                                                   so twenty boxes do not knock at once)
+# A shape the scheduler cannot read is NAMED when it starts, recorded in
+# state/.cron-invalid, and counted as `invalid=<n>` by --status. It never fires, and it
+# never looks declared.
+#
+# ROLE GATE (plan 51): prefix a job with @<role>[,<role>] so it runs only on the
+# machines whose roles match — @heart (the record), @forge (models/GPU),
+# @dev (a full body), @hand. No gate means any role. A dev body must NOT run the
+# record jobs; that is how 8 orphan seat schedulers came to run a heart's work.
+#   # @hourly:20 bin/time/well-vault-sync.sh --mode sync     # every hour, this box's minute
+# SKÍRNIR'S DATABASE (plan 227 §S1.5.3): the assistant compiles the house's current state into ONE dated
+# briefing — the plan ledger, the errands alive and dead, the week's merged PRs, the decisions and the
+# runes — and observes it into the well. 05:40, so the 07:00 briefing and the assistant share one text.
+# His own phrase "update skirnirs database" (and /update) runs the same door on demand.
+@dev 05:40 systems/skirnir/services/assistant-brief.sh refresh
+@heart 07:00 bin/time/nornir-job-daily-briefing.sh
+# THE DAILY LINE (documentation design, 2026-11-01): what moved, what is blocked, what is owed, written
+# from the handoffs and the cards rather than from memory. The briefing above is the morning read; this is
+# the day's close, and it is the half that was missing for six days.
+@dev 18:00 bin/time/daily-line.sh
+#   07:30 bin/time/nornir-job-ungated.sh   # any role
+#
+# GATE EVERY LINE THAT BELONGS TO A ROLE. An ungated machine job runs on EVERY
+# seat of every machine, so with N sessions on one box it fires N times a day
+# (2026-09-28: five seats ran the machine's whole crontab, so the same briefing
+# and snapshot went off five times). The list below is the shape to follow: the
+# record belongs to the heart, the model work to the forge, and a full body keeps
+# the supervision it alone performs.
+
+@heart 07:00 bin/time/nornir-job-daily-briefing.sh
+@heart 06:00 bin/time/nornir-job-observer.sh
+@heart 08:00 bin/time/nornir-job-hall-snapshot.sh
+@heart 02:30 bin/time/nornir-job-nsr-compliance.sh
+@forge 00:30 bin/time/nornir-job-skillopt-sleep.sh
+@heart 00:15 bin/time/nornir-job-memory-housekeeping.sh
+# The worktrees' daily reckoning: how many stand, how much is provably reclaimable, and how
+# much work exists ONLY on this machine. REPORT ONLY — removing a worktree is a human's
+# `bin/forge/housekeeping.sh clean --yes`, never a cron row's decision.
+@heart 00:45 bin/time/nornir-job-worktree-housekeeping.sh
+@heart 00:00 bin/time/nornir-job-git-sync.sh
+# Eir checks every surface daily (P8) — a desktop that cannot open is reported.
+@heart 08:15 bin/time/nornir-job-doctor.sh
+# The rollover backstop: hand off every repository that carries a .asken state,
+# so a session that died without a reporter still leaves a fresh HANDOFF.md.
+@heart 04:00 bin/time/nornir-job-asken-handoff.sh
+
+# Snotra listens for the answers: every meeting that sent letters is read for replies, and each reply is
+# recorded beside the decision it names. Read-only on the mailbox; it never sends and never promotes —
+# `snotra-mail-watch.sh register <dir> --apply --by "<name>"` is the operator's act.
+# Gated @dev: the mailbox belongs to the seat that holds the letters, not the heart.
+@dev 07:10 bin/time/nornir-job-snotra-mail.sh
+
+# — Snotra: meeting rhythm automation (Plan 143 phases 3-4) —
+# Friday Synch: post status updates on This Week cards after a Friday meeting.
+# Gated @dev: the board belongs to the seat that holds the place profile.
+@dev 17:00 bin/time/snotra/snotra-friday-synch.sh run
+# Monthly Grooming: create the grooming card on Next Meeting Agenda every month.
+@dev 09:00 bin/time/snotra/snotra-grooming.sh run
+# Card-movement watcher: Rule A (This Week + member → assign+notify+steps),
+# Rule B (Done + sign-off → To Sign-off), note-on-mis-move.
+# Gated @dev: the board belongs to the seat that holds the place profile.
+@dev 10:00 bin/time/snotra/snotra-card-moves.sh watch
+
+# — Gná: the mail desk reads, judges, and TELLS THE ARM as mail arrives (plan 193) —
+# Armed only on a seat that declares an account row in hodd/memory/mail/accounts.yaml:
+# bin/fleet/fleet-ensure.sh does not seat the desk without one, and this job exits 3
+# (a named FAIL, never an empty inbox) when the scope file is absent.
+# THE SHAPE IS RULED (plan 193 §15, 2026-11-05): every two hours through the working day,
+# 07:00–18:00, and INCREMENTAL — each run tells the arm what it has not told it before
+# (the notification ledger does that, not the window), so a run has nothing to re-read.
+# Copy the rows into YOUR home, in your own minute slot, and uncomment.
+#   @heart,forge,dev 07:20 bin/time/nornir-job-gna-mail.sh
+#   @heart,forge,dev 09:20 bin/time/nornir-job-gna-mail.sh
+#   @heart,forge,dev 11:20 bin/time/nornir-job-gna-mail.sh
+#   @heart,forge,dev 13:20 bin/time/nornir-job-gna-mail.sh
+#   @heart,forge,dev 15:20 bin/time/nornir-job-gna-mail.sh
+#   @heart,forge,dev 17:20 bin/time/nornir-job-gna-mail.sh
+
+# — A SMITHY STARTED BY THE CLOCK IS NOT WRITTEN HERE BY HAND —
+# Its own config declares it (`trigger:` in smidja/smidja_smidja_config/smidja.config.yaml),
+# and `bin/time/event-trigger.sh --install-cron` writes the row into this file, inside a
+# managed block at the end. Two places claiming one schedule is how a row keeps firing
+# after the trigger was turned off.
+#   bin/time/event-trigger.sh --list            # who may start each smithy
+#   bin/time/event-trigger.sh --install-cron    # write the rows it declares
+
+# — THE MACHINE KEEPS ITSELF CURRENT (2026-11-08, the Allfather's word: "all ymir installations runs an
+# auto update nornir job on running groa to update latest from main") —
+# Gróa fast-forwards this checkout and every registered Eindri-home from main, then mends forward. She
+# never forces: a dirty tree, a non-default branch and an offline box are SKIPS she names, never faults.
+# Give your own minute so twenty boxes do not knock at once; hourly is fine on a small fleet
+# (`@hourly:41`) and a hand on a metered link can opt out entirely with YMIR_AUTO_UPDATE=0.
+03:41 bin/time/nornir-job-groa-update.sh
+
+# — A MODEL THAT LOOPS IS A FAULT (the Allfather, 2026-11-08: "this are not allwod. ths bust be notifiet do
+# the agent that hold the gna arm") — one look at every seated agent's mouth, every twenty minutes. It names
+# the pane and the symptom, tells the arm holder, carves a rune, and stops nothing unless told --stop.
+# 0,20,40 * * * is not a shape Nornir reads: use three hourly rows on this machine's own minute.
+@hourly:47 bin/agents/spam-guard.sh

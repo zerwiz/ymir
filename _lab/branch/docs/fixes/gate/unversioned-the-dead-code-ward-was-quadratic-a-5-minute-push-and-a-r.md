@@ -1,0 +1,10 @@
+## gate · unversioned · 2026-10-12 — the dead-code ward was quadratic — a 5-minute push and a rule that never ran
+
+### Why
+The pre-push hook appeared to hang: dead-code-guard ran a FULL-TREE grep per function name — ~6,600 names over ~1,260 scripts in bin/ and scripts/ = ~8.3M file scans, ~5 minutes, so the push timed out (or was bypassed with --no-verify). Because it never finished, its own failures were masked: it counted a worktree checkout under bin/.yggdrasil/ as source (101 false findings), could not see runtime-built names like "s_$s" in eir-doctor.sh, and searched for callers only in bin/ and scripts/ while real callers live in .agents/, apps/ and tools/. Fix: O(tree), not O(names x tree). (1) ONE multi-pattern pass — grep -F -o -f over the non-definition shell lines — instead of a grep per name. (2) The judged set stays bin/ and scripts/, but the USAGE index now covers the whole tree, minus .yggdrasil worktrees and node_modules. (3) Dynamic-dispatch prefixes ("prefix_$x") mark every name with that prefix reachable. 5 minutes -> 9 seconds. It now completes and correctly reports 27 genuinely dead shell functions (verified: zero .sh references outside their definitions) — the cleaning Rule 16 asks for, which the ward could never surface while it hung.
+
+The same defect broke a second ward: no ward excluded `.yggdrasil/` at all, so every tree walk read the stray worktree nested at `bin/.yggdrasil/snotra-live-ui` (gitdir `.git/worktrees/snotra-live-ui1`). defaults-guard proved it on 7 "a home guessed" findings, 5 of them the worktree's own copies; excluding worktrees leaves 2 real findings in an untracked generated launcher under `bin/state/`. Worktrees are checkouts, never source: a tree ward must not read them.
+
+### Files
+- `bin/gates/guards/dead-code-guard.sh`
+- `bin/gates/guards/defaults-guard.sh`

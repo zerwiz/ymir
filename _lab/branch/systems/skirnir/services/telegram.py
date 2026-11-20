@@ -1,0 +1,506 @@
+#!/usr/bin/env python3
+"""telegram.py — Skírnir's second mouth: his own bot, in DMs and in groups.
+
+    bin/assistant/telegram.py [--once] [--verbose]
+
+One bot, its own token (`SKIRNIR_TELEGRAM_BOT_TOKEN` in the vault), its own identity — never Brokk's.
+Who may hear what is decided by the CHAT, not by the message:
+
+    the operator's DM            → owner       (everything the digest and the walls allow)
+    an allowlisted group         → collaborator (public facts only; NEVER NDA — a group is other people)
+    anyone else                  → stranger    (public facts, and the honest no)
+
+Safety rules, each a line of code:
+  * messages from other bots are IGNORED (a bot that answers a bot is a loop);
+  * one answer per chat per 5 seconds, 30 an hour;
+  * a group must be in `groups.yaml` — an unknown group is not answered at all;
+  * the answer comes from skirnir.py, so the four walls apply unchanged.
+"""
+from __future__ import annotations
+
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import threading
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
+
+
+def home() -> str:
+    env = os.environ.get("YMIR_HOME")
+    if env:
+        return os.path.expanduser(env)
+    lib = os.path.join(ROOT, "bin", "vault", "hoard-lib.sh")
+    out = subprocess.run(["bash", "-c",
+                          f'. "{lib}" >/dev/null 2>&1; r=""; ymir_home_root r 2>/dev/null; printf "%s" "$r"'],
+                         capture_output=True, text=True, timeout=10).stdout.strip()
+    if out and os.path.isdir(out):
+        return out
+    raise SystemExit("telegram: the hoard is unresolved — set YMIR_HOME")
+
+
+STATE = os.path.join(home(), "hodd", "state", "assistant")
+SEEN = os.path.join(STATE, "seen-groups.json")
+OFFSET = os.path.join(STATE, "telegram.offset")
+IDENTITY = os.path.join(home(), "hodd", "identity", "assistant")
+GROUPS = os.path.join(IDENTITY, "groups.yaml")
+LIMITS = os.path.join(STATE, "telegram.limits.json")
+OWNER_ID = os.environ.get("TELEGRAM_OWNER_ID", "")
+
+
+def vault(key: str) -> str:
+    out = subprocess.run(["bash", os.path.join(ROOT, "bin", "vault", "hodd.sh"),
+                          "emit", "secrets/platform.env"], capture_output=True, text=True).stdout
+    for line in out.splitlines():
+        m = re.match(rf"^export {key}=(.*)$", line)
+        if m:
+            return m.group(1).strip("'\"")
+    return ""
+
+
+TOKEN = os.environ.get("SKIRNIR_TELEGRAM_BOT_TOKEN") or vault("SKIRNIR_TELEGRAM_BOT_TOKEN")
+BOT_USERNAME = os.environ.get("SKIRNIR_BOT_USERNAME", "SkirnirymirassistantBot")
+if not TOKEN:
+    print('telegram[1]{error}: "SKIRNIR_TELEGRAM_BOT_TOKEN is missing from the vault"')
+    sys.exit(1)
+if not OWNER_ID:
+    OWNER_ID = vault("TELEGRAM_OWNER_ID")
+
+
+API_BASE = os.environ.get("TELEGRAM_API_BASE", "https://api.telegram.org")
+# A warm answer takes under a second; the first question after the rail evicted a model can take a
+# minute (a load happens inside the request). Bounded, and it must SPEAK when the bound is hit.
+ANSWER_TIMEOUT = int(os.environ.get("SKIRNIR_ANSWER_TIMEOUT", "120"))
+
+
+def api(method: str, **params):
+    url = f"{API_BASE}/bot{TOKEN}/{method}"
+    data = urllib.parse.urlencode({k: v for k, v in params.items() if v is not None}).encode()
+    with urllib.request.urlopen(urllib.request.Request(url, data=data), timeout=60) as resp:
+        return json.load(resp)
+
+
+def api_patient(method: str, tries: int = 3, **params):
+    """A SEND that waits instead of dropping. Telegram answers a flood with 429 + `retry_after`.
+
+    WHY (2026-11-09): the offset is saved as soon as a message is handled, so a send that failed on
+    429 lost that answer FOR EVER — the message was consumed and the reply never left. That is
+    deafness with a green process. The door now honours `retry_after` and tries again.
+    """
+    for attempt in range(tries):
+        try:
+            return api(method, **params)
+        except Exception as err:
+            wait = 0
+            body = getattr(err, "read", None)
+            if body:
+                try:
+                    wait = int(json.loads(err.read() or b"{}").get("parameters", {})
+                               .get("retry_after") or 0)
+                except Exception:
+                    wait = 0
+            if isinstance(err, urllib.error.HTTPError) and err.code == 429 and attempt + 1 < tries:
+                time.sleep(min(60, wait or 5 * (attempt + 1)))
+                continue
+            raise
+
+
+def send_voice(chat_id, text: str, reply_to=None) -> None:
+    """Speak the answer and send it as a voice note, with the words as the caption.
+
+    A voice note in, a voice note out — the medium the Allfather used. The text rides as the caption so
+    the answer is also readable, and if the synthesiser is down the caller falls back to a message:
+    a broken mouth must never mean a silent assistant.
+    """
+    # the medium he is about to receive: "recording audio", not "typing"
+    try:
+        api("sendChatAction", chat_id=chat_id, action="record_voice")
+    except Exception:
+        pass
+    tmp = tempfile.mkdtemp(prefix="skirnir-voice-")
+    ogg = os.path.join(tmp, "say.ogg")
+    try:
+        made = subprocess.run(["bash", os.path.join(HERE, "mouth.sh"), text, ogg],
+                              capture_output=True, text=True, timeout=300)
+        if made.returncode != 0 or not os.path.exists(ogg):
+            print(f"telegram: voice note failed — {made.stderr.strip()[:160]}", file=sys.stderr)
+            api("sendMessage", chat_id=chat_id, text=text, reply_to_message_id=reply_to,
+                disable_web_page_preview="true")
+            return
+        fields = [f"chat_id={chat_id}"]
+        if reply_to:
+            fields.append(f"reply_to_message_id={reply_to}")
+        if text and len(text) <= 1000:
+            # curl encodes multipart fields itself: quoting here double-encoded the caption into
+            # "This%20is%20Sk%C3%ADrnir…" — measured 2026-10-22.
+            fields.append("caption=" + text)
+        cmd = ["curl", "-s", "-m", "120", f"{API_BASE}/bot{TOKEN}/sendVoice"]
+        for f in fields:
+            cmd += ["-F", f]
+        cmd += ["-F", f"voice=@{ogg}"]
+        out = subprocess.run(cmd, capture_output=True, text=True).stdout
+        if '"ok":true' not in out:
+            print(f"telegram: sendVoice refused — {out[:160]}", file=sys.stderr)
+            api("sendMessage", chat_id=chat_id, text=text, reply_to_message_id=reply_to,
+                disable_web_page_preview="true")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def load_groups() -> dict:
+    """chat id → {tier, members}. The members matter: a group's audience is their INTERSECTION."""
+    groups = {}
+    try:
+        import yaml
+        with open(GROUPS) as fh:
+            data = yaml.safe_load(fh) or {}
+        for row in data.get("groups", []) or []:
+            groups[str(row.get("id"))] = {"tier": row.get("tier", "collaborator"),
+                                          "members": row.get("members") or [],
+                                          "owner_trusted": bool(row.get("owner_trusted"))}
+    except Exception:
+        pass
+    return groups
+
+
+def allowed(chat_id: str) -> tuple[bool, str]:
+    """Rate limits live here so a flood cannot turn him into a nuisance."""
+    now = time.time()
+    try:
+        state = json.load(open(LIMITS))
+    except Exception:
+        state = {}
+    stamps = [t for t in state.get(chat_id, []) if now - t < 3600]
+    if stamps and now - stamps[-1] < 5:
+        return False, "too fast"
+    if len(stamps) >= 30:
+        return False, "30/hour in this chat"
+    stamps.append(now)
+    state[chat_id] = stamps
+    os.makedirs(os.path.dirname(LIMITS), exist_ok=True)
+    json.dump(state, open(LIMITS, "w"))
+    return True, ""
+
+
+NOTICED: dict[str, float] = {}
+NOTICE_EVERY = 120.0
+
+
+def rate_notice(chat_id: str, why: str, verbose: bool = False) -> None:
+    """A rate limit TELLS HIM, instead of dropping the message into a log line.
+
+    WHY (2026-11-09, plan 227 §S1.5): `telegram: rate limited (too fast)` went to stderr and the
+    Allfather's message vanished with no sentence at all — the assistant looked deaf exactly when
+    he was typing fastest. One notice per two minutes per chat, so a flood cannot become a
+    storm of notices (a bot that answers a flood with a flood is the fault, not the fix).
+    """
+    now = time.time()
+    if now - NOTICED.get(chat_id, 0) < NOTICE_EVERY:
+        if verbose:
+            print(f"telegram: rate limited ({why}) — notice already sent", file=sys.stderr)
+        return
+    NOTICED[chat_id] = now
+    if why == "too fast":
+        text = ("One at a time — give me a few seconds between messages and I will answer each "
+                "of them. This one arrived while I was still catching up, so send it again.")
+    else:
+        text = (f"I have answered thirty messages from you in this hour, which is my cap for a "
+                f"chat. Nothing is broken: wait a little and I will pick up where we left off.")
+    try:
+        api_patient("sendMessage", chat_id=chat_id, text=text, disable_web_page_preview="true")
+        if verbose:
+            print(f"telegram: rate limited ({why}) — told the chat to wait", file=sys.stderr)
+    except Exception as err:
+        print(f"telegram: rate limit notice failed ({why}): {err}", file=sys.stderr)
+
+
+def is_owner(sender: dict) -> bool:
+    if str(sender.get("id")) == str(OWNER_ID):
+        return True
+    try:
+        import yaml as _y
+        ids = (_y.safe_load(open(os.path.join(IDENTITY, "grants.yaml"))) or {}).get("identities") or {}
+        return str(ids.get(str(sender.get("username", "")).lstrip("@"), "")) == "owner"
+    except Exception:
+        return False
+
+
+def tier_for(chat: dict, sender: dict | None = None) -> tuple[str, str]:
+    kind = chat.get("type")
+    chat_id = str(chat.get("id"))
+    if kind == "private" and str(chat.get("id")) == str(OWNER_ID):
+        return "owner", "telegram-dm"
+    if kind in ("group", "supergroup"):
+        groups = load_groups()
+        if chat_id in groups:
+            group = groups[chat_id]
+            # a group may be declared owner-trusted: the Allfather is the Allfather in it too.
+            # Everything he hears there is heard by the whole room — which is why this is opt-in.
+            if group.get("owner_trusted") and sender and is_owner(sender or {}):
+                return "owner", "telegram-group"
+            return group.get("tier", "collaborator"), "telegram-group"
+        return "unknown-group", "telegram-group"
+    return "stranger", "telegram-dm"
+
+
+def answer(text: str, tier: str, channel: str, sender: str, chat_id: str = "", sender_id: str = "",
+           members: list | None = None) -> str:
+    args = [sys.executable, os.path.join(HERE, "skirnir.py"),
+            "--tier", tier if tier != "unknown-group" else "stranger",
+            "--channel", channel, "--sender", sender, "--text", text,
+            "--chat", str(chat_id), "--sender-id", str(sender_id)]
+    if members:
+        args += ["--group-members", ",".join(members)]
+    # A TIMEOUT USED TO KILL THE WHOLE BOT. subprocess.run raised TimeoutExpired out of main(), the
+    # process exited 1, systemd restarted it — and the Allfather's message vanished with no sentence
+    # at all (measured 2026-10-23 01:55). A slow answer is now bounded and it is SAID.
+    try:
+        proc = subprocess.run(args, capture_output=True, text=True, timeout=ANSWER_TIMEOUT)
+    except subprocess.TimeoutExpired:
+        print(f"telegram: the engine did not answer within {ANSWER_TIMEOUT}s", file=sys.stderr)
+        return ("My thinking is slow just now — the model is reloading. "
+                "Ask me again in a minute and I will answer properly.")
+    for line in proc.stdout.splitlines():
+        if line.strip().startswith("{"):
+            return json.loads(line).get("answer", "")
+    tail = (proc.stderr or "").strip().splitlines()[-1:] or ["no stderr"]
+    print(f"telegram: skirnir.py failed — {tail[0][:200]}", file=sys.stderr)
+    return "I'm having trouble answering just now — I'll ask the Allfather."
+
+
+def main() -> int:
+    once = "--once" in sys.argv
+    verbose = "--verbose" in sys.argv
+    offset = 0
+    try:
+        offset = int(open(OFFSET).read().strip() or 0)
+    except Exception:
+        pass
+    failed_polls = 0
+    while True:
+        try:
+            data = api("getUpdates", offset=offset, timeout=25,
+                       allowed_updates=json.dumps(["message"]))
+            if failed_polls:
+                print(f"telegram: the poll answers again after {failed_polls} failed attempt(s)",
+                      file=sys.stderr)
+                failed_polls = 0
+        except Exception as err:
+            # A TIMEOUT IS NOT DEAFNESS — and it is not silent either. The heartbeat is written only
+            # on a good poll, so a bot that has really gone deaf is never papered over; a poll that
+            # merely timed out says so and asks again at once (2026-11-09).
+            failed_polls += 1
+            print(f"telegram: poll failed ({failed_polls}): {type(err).__name__}: {err}",
+                  file=sys.stderr)
+            time.sleep(3 if failed_polls < 10 else 15)
+            continue
+        for update in data.get("result", []):
+            offset = max(offset, update.get("update_id", 0) + 1)
+            # ONE BAD MESSAGE MUST NOT DEAFEN HIM. An exception here used to leave the poll
+            # loop entirely: systemd restarted the bot, Telegram replayed the same update, and
+            # it crashed again — a poison message became permanent deafness (2026-11-09).
+            try:
+                msg = update.get("message") or update.get("channel_post") or update.get("edited_message") or {}
+                sender = msg.get("from") or {}
+                chat = msg.get("chat") or {}
+                fwd = msg.get("forward_from_chat") or (msg.get("forward_origin") or {}).get("chat") or {}
+                if fwd.get("id"):
+                    try:
+                        seen = json.load(open(SEEN))
+                    except Exception:
+                        seen = {}
+                    cid = str(fwd.get("id"))
+                    if cid not in seen:
+                        seen[cid] = {"title": fwd.get("title", ""), "seen": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+                                     "learned_from": "a forwarded message"}
+                        os.makedirs(STATE, exist_ok=True)
+                        json.dump(seen, open(SEEN, "w"), ensure_ascii=False, indent=1)
+                        print(f"telegram: learned a chat from a forward — {cid} {fwd.get('title')!r}", file=sys.stderr)
+                        try:
+                            api("sendMessage", chat_id=chat.get("id"),
+                                text=f"Learned that chat: “{fwd.get('title','')}” — id {cid}. "
+                                     f"Say `allow {cid}` and I will answer there.",
+                                disable_web_page_preview="true")
+                        except Exception:
+                            pass
+                if verbose:
+                    print(f"telegram: update {update.get('update_id')} kind={[k for k in update if k != 'update_id']} "
+                          f"chat={chat.get('id')} type={chat.get('type')} title={chat.get('title')!r}", file=sys.stderr)
+                text = msg.get("text") or ""
+                was_voice = False
+                # A VOICE NOTE IS A MESSAGE. The ear is Snotra's whisper server (one transcription path in
+                # this house), and the words it returns are treated exactly like typed ones — same tiers,
+                # same walls, same gate. Nothing about a voice bypasses a wall.
+                note = msg.get("voice") or msg.get("audio") or msg.get("video_note")
+                if not text and note and not sender.get("is_bot"):
+                    try:
+                        got = api("getFile", file_id=note.get("file_id"))
+                        path = ((got or {}).get("result") or {}).get("file_path")
+                        if path:
+                            url = f"{API_BASE}/file/bot{TOKEN}/{path}"
+                            with urllib.request.urlopen(url, timeout=120) as resp:
+                                blob = resp.read()
+                            with tempfile.NamedTemporaryFile(suffix=".oga", delete=False) as fh:
+                                fh.write(blob)
+                                local = fh.name
+                            heard = subprocess.run(["bash", os.path.join(HERE, "ear.sh"), local],
+                                                   capture_output=True, text=True, timeout=180)
+                            os.unlink(local)
+                            text = (heard.stdout or "").strip()
+                            was_voice = bool(text)
+                            if verbose:
+                                print(f"telegram: heard a voice note ({len(text)} chars)", file=sys.stderr)
+                    except Exception as err:
+                        print(f"telegram: could not hear the voice note: {err}", file=sys.stderr)
+                if not text or sender.get("is_bot"):
+                    continue
+                # every group or channel he is put in is RECORDED first, before any filter — that is how
+                # the Allfather gets a chat id to allowlist instead of guessing one.
+                if chat.get("type") in ("group", "supergroup", "channel"):
+                    try:
+                        seen = json.load(open(SEEN))
+                    except Exception:
+                        seen = {}
+                    cid = str(chat.get("id"))
+                    is_new = cid not in seen
+                    seen[cid] = {"title": chat.get("title", ""),
+                                 "seen": time.strftime("%Y-%m-%dT%H:%M:%S%z")}
+                    os.makedirs(STATE, exist_ok=True)
+                    json.dump(seen, open(SEEN, "w"), ensure_ascii=False, indent=1)
+                    if is_new:
+                        # a NEW audience: ask before speaking in it. Anyone can add a bot to a group.
+                        door = os.path.join(ROOT, "bin", "notify", "send.sh")
+                        approve = os.path.join(HERE, "group-allow.sh")
+                        if os.path.isfile(door):
+                            subprocess.run(["bash", door, "--source", "assistant", "--severity", "MEDIUM",
+                                            "--ask", "--key", f"group-allow:{cid}",
+                                            "--message",
+                                            f"Skírnir was added to a group: “{chat.get('title','')}”. Allow him to answer there?",
+                                            "--exec", f"{approve} {cid}"],
+                                           check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+                # `allow <id>` in the owner's DM: the one-word path from a phone
+                if chat.get("type") == "private" and is_owner(sender):
+                    m = __import__("re").match(r"^\s*allow\s+(-?\d{6,})\s*$", text.strip(), __import__("re").I)
+                    if m:
+                        cid = m.group(1)
+                        subprocess.run(["bash", os.path.join(HERE, "group-allow.sh"), cid,
+                                        "allowed from the owner's DM"], check=False,
+                                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        try:
+                            api("sendMessage", chat_id=chat.get("id"),
+                                text=f"Allowed {cid}. Write there and I will answer.",
+                                disable_web_page_preview="true")
+                        except Exception:
+                            pass
+                        continue
+
+                tier, channel = tier_for(chat, sender)
+                if chat.get("type") in ("group", "supergroup", "channel"):
+                    low = text.lower()
+                    named = any(tok in low for tok in ("skirn", "skirm", "skrin", "skírni", "skirnir",
+                                                       "brokk", "ymir", f"@{BOT_USERNAME.lower()}"))
+                    trusted_owner = (tier == "owner")
+                    # THE LAW (the Allfather's word, 2026-10-23): ONLY HIS PRIVATE CHAT ANSWERS EVERY
+                    # MESSAGE. A group answers a message that NAMES him, or one from himself — never an
+                    # unnamed message. There is deliberately no per-room switch: a room is other people,
+                    # and a mouth that answers everything in a room is a mouth talking to strangers (it
+                    # did exactly that for one evening, and a wrong fact went with it).
+                    if not (named or trusted_owner):
+                        if verbose:
+                            print("telegram: skipped an unaddressed group message", file=sys.stderr)
+                        continue
+                if tier == "unknown-group":
+                    if verbose:
+                        print(f"telegram: ignoring unknown group {chat.get('id')}", file=sys.stderr)
+                    continue
+                ok, why = allowed(str(chat.get("id")))
+                if not ok:
+                    # A RATE LIMIT THAT DROPS THE MESSAGE IS DEAFNESS (his fault, 2026-11-09: the
+                    # line `telegram: rate limited (too fast)` went to stderr and the message
+                    # vanished with no sentence at all). The chat is TOLD to wait instead.
+                    rate_notice(str(chat.get("id")), why, verbose)
+                    continue
+                # a banned chat is not answered at all, and not told why
+                try:
+                    import yaml as _y
+                    _b = _y.safe_load(open(os.path.join(IDENTITY, "banned.yaml"))) or {}
+                    if str(chat.get("id")) in {str(x) for x in (_b.get("banned") or [])}:
+                        continue
+                except Exception:
+                    pass
+                # typing: ONE call is not enough. Telegram lapses the indicator after about five seconds
+                # and an answer can take a minute, so the bot looked dead exactly while it was thinking
+                # (measured 2026-10-23). Keep it alive until the words are ready; a voice note in gets
+                # "recording audio" out, so the medium is visible before it arrives.
+                typing_stop = threading.Event()
+                typing_action = "record_voice" if was_voice else "typing"
+
+                def keep_typing(chat_id=chat.get("id"), action=typing_action, stop=typing_stop):
+                    while True:
+                        try:
+                            api("sendChatAction", chat_id=chat_id, action=action)
+                        except Exception:
+                            return
+                        if stop.wait(4):
+                            return
+
+                threading.Thread(target=keep_typing, daemon=True).start()
+                members = None
+                if chat.get("type") in ("group", "supergroup", "channel"):
+                    members = (load_groups().get(str(chat.get("id"))) or {}).get("members") or []
+                # the person's own name, so a handoff says WHO: username, else the display name
+                who = sender.get("username") or " ".join(
+                    x for x in (sender.get("first_name"), sender.get("last_name")) if x) or ""
+                try:
+                    reply = answer(text, tier, channel, who, chat.get("id"),
+                                   sender.get("id", ""), members)
+                finally:
+                    typing_stop.set()
+                if not reply:
+                    continue
+                try:
+                    if was_voice:
+                        send_voice(chat.get("id"), reply, msg.get("message_id"))
+                    else:
+                        # patient: Telegram answers a flood with 429 + retry_after, and the offset
+                        # has already moved — a dropped send is an answer he never hears.
+                        api_patient("sendMessage", chat_id=chat.get("id"), text=reply,
+                                    reply_to_message_id=msg.get("message_id"),
+                                    disable_web_page_preview="true")
+                except Exception as err:
+                    print(f"telegram: send failed for update {update.get('update_id')}: {err}",
+                          file=sys.stderr)
+                if verbose:
+                    print(f"telegram: {tier} asked, answered ({len(reply)} chars)", file=sys.stderr)
+            except Exception as err:
+                # the offset has already moved past it, so the replay cannot happen: the fault
+                # is PRINTED and the next message is still heard.
+                print(f"telegram: update {update.get('update_id')} could not be handled "
+                      f"({type(err).__name__}: {err}) — skipped, the poll goes on",
+                      file=sys.stderr)
+        # THE PEN MUST NOT BREAK THE POLLER. A read-only home or a full disk threw here, and the
+        # process died with the loop one line from safety — deafness caused by the bookkeeping.
+        try:
+            os.makedirs(STATE, exist_ok=True)
+            open(OFFSET, "w").write(str(offset))
+            open(os.path.join(STATE, "telegram.heartbeat"), "w").write(
+                time.strftime("%Y-%m-%dT%H:%M:%S%z"))
+        except Exception as err:
+            print(f"telegram: the offset/heartbeat could not be written ({err}) — "
+                  f"still listening, offset={offset}", file=sys.stderr)
+        if once:
+            return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

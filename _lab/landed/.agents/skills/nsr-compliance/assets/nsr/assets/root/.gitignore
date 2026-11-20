@@ -1,0 +1,16 @@
+# Environment & secrets — never commit
+.env
+.env.*
+!.env.example
+
+# Runtime
+node_modules/
+dist/
+build/
+
+# Telemetry / logs
+.compliance/telemetry/logs/
+
+# OS
+.DS_Store
+Thumbs.db

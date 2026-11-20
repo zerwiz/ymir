@@ -1,0 +1,105 @@
+<script id="lh-saga" type="application/json">
+{
+  "schema": "ymir-livehall.v1",
+  "source": "saga",
+  "generated": "the saga, v2",
+  "smiths": ["brokk", "sindri", "bragi", "huginn", "mimir", "kvasir", "forseti", "snotra", "galdr"],
+  "houses": ["ymir labs", "brokk forge", "runestone labs", "muninn labs", "dvalin", "utgard studios", "askr", "mannheim"],
+  "captains_call": [
+    {
+      "key": "hall.forge",
+      "type": "decision",
+      "repo": "the forge",
+      "title": "What does the fleet forge next?",
+      "about": "the forge takes one order at a time — the smiths do not begin blind",
+      "decide": "which house's work the next blow falls on",
+      "recommend_value": "brokk",
+      "allow_freeform": true,
+      "freeform_hint": "or name the work in your own words…",
+      "options": [
+        { "value": "brokk", "label": "Brokk Forge", "hint": "engineering & build tooling — isolated workers drive the task to a finished artifact" },
+        { "value": "runestone", "label": "Runestone Labs", "hint": "records & compliance — the ledger and the gates; every action is inscribed" },
+        { "value": "muninn", "label": "Muninn Labs", "hint": "memory & knowledge — the well and its engine; what is observed is remembered" },
+        { "value": "utgard", "label": "Utgard Studios", "hint": "creative — shaped outside the walls, sealed and destroyed after each run" }
+      ]
+    },
+    {
+      "key": "hall.engine",
+      "type": "decision",
+      "repo": "the answer",
+      "title": "Which engine answers this task?",
+      "about": "no plan is spun from air — the answer is chosen before the work begins",
+      "decide": "where the task is answered",
+      "recommend_value": "local",
+      "allow_freeform": false,
+      "options": [
+        { "value": "local", "label": "The hand on the machine", "hint": "a keyless model runs local — the work never leaves the hall" },
+        { "value": "hosted", "label": "The far seeing", "hint": "a hosted model answers; the task crosses the bridge" },
+        { "value": "sealed", "label": "The walled realm", "hint": "the task runs sealed in Utgard and is believed only when the artifact returns" },
+        { "value": "well", "label": "The well", "hint": "the answer is drunk from memory before a single blow is struck" }
+      ]
+    },
+    {
+      "key": "hall.gate",
+      "type": "decision",
+      "repo": "the crossing",
+      "title": "Which gate does the crossing take?",
+      "about": "every crossing into Ymir passes over a gate; nothing bleeds between the halls",
+      "decide": "the road this work travels",
+      "recommend_value": "bifrost",
+      "allow_freeform": false,
+      "options": [
+        { "value": "bifrost", "label": "Bifrost", "hint": "the burning bridge — the ingress every crossing passes over" },
+        { "value": "svartalfaheim", "label": "Svartalfaheim", "hint": "the tenant halls — sandbox_isolated; nothing bleeds between halls" },
+        { "value": "utgard", "label": "Utgard", "hint": "the walled outside — docker_ephemeral, sealed and destroyed after each task" },
+        { "value": "ratatoskr", "label": "Ratatoskr", "hint": "the event stream — every word between gates, announced and carved" }
+      ]
+    },
+    {
+      "key": "hall.rune",
+      "type": "decision",
+      "repo": "the ledger",
+      "title": "What is carved into the ledger?",
+      "about": "the runes are carved once and cannot be un-carved",
+      "decide": "what the day's record will keep",
+      "recommend_value": "evidence",
+      "allow_freeform": true,
+      "freeform_hint": "or inscribe it in your own words…",
+      "options": [
+        { "value": "act", "label": "The act and its actor", "hint": "who struck, and what was struck" },
+        { "value": "reason", "label": "The reason", "hint": "why the blow fell where it did" },
+        { "value": "evidence", "label": "The evidence", "hint": "nothing passes without evidence from the well — what is spun from air is not forged" },
+        { "value": "seal", "label": "The seal", "hint": "the word of the one who approved it, kept in the human loop" }
+      ]
+    }
+  ],
+  "underway": [
+    { "state": "working", "doing": "The forge is lit", "kind": "the hearth", "repo": "tended, never relit" },
+    { "state": "working", "doing": "The watch is set", "kind": "the ward", "repo": "one who sees does not sleep" },
+    { "state": "drawn", "doing": "The nornir are at their loom", "kind": "the seating", "repo": "schedule · select · source" }
+  ],
+  "landed": [
+    { "what": "The Creation", "repo": "ᚢ · the firth", "owner": "§I" },
+    { "what": "The Builders", "repo": "ᚲ · the smiths", "owner": "§II" },
+    { "what": "The Tree & the Seven Gates", "repo": "ᛇ · the trunk", "owner": "§III" },
+    { "what": "The Well", "repo": "ᛚ · the memory", "owner": "§IV" },
+    { "what": "The Artifacts", "repo": "ᛏ · the ledger", "owner": "§V" },
+    { "what": "The Houses", "repo": "ᛟ · the seals", "owner": "§VI" },
+    { "what": "The Forge-Master's Rule", "repo": "ᚠ · the anvil", "owner": "§VII" },
+    { "what": "The Reforging", "repo": "ᛒ · the strike", "owner": "§VIII" },
+    { "what": "The Frame", "repo": "ᛞ · the laws", "owner": "§IX" },
+    { "what": "The Seating", "repo": "ᛊ · the seat", "owner": "§X" },
+    { "what": "The Watch", "repo": "ᛉ · the ward", "owner": "§XI" },
+    { "what": "The Renewal and the Healing", "repo": "ᛜ · the two hands", "owner": "§XII" },
+    { "what": "The House Endures", "repo": "ᚦ · the roots", "owner": "§XIII" }
+  ],
+  "charted": [
+    { "id": "mannheim", "title": "Mannheim — the held seat", "repo": "a name reserved, its hall unbuilt", "reason": "on the chart", "dispatchable": true },
+    { "id": "askr", "title": "Askr — human-facing flows", "repo": "onboarding and the first steps", "reason": "on the chart", "dispatchable": true },
+    { "id": "utgard", "title": "Utgard Studios — the walled creative realm", "repo": "shaped outside the walls", "reason": "on the chart", "dispatchable": true },
+    { "id": "the-cracks", "title": "The cracks found in the quiet hours", "repo": "the healer's round · §XII", "kind": "warning", "dispatchable": false }
+  ],
+  "charted_more": 5,
+  "charted_warning_more": 0
+}
+</script>

@@ -1,0 +1,771 @@
+/* Óðrerir — the Live Hall, cut from the high seat's cloth (plan 55, 2026-09-24).
+   The canonical tokens, the ember hearth, the translucent panels, and the
+   halls buttons — one design language with Hlidskjalf, one anatomy for the
+   boards (the tickets table + detail sheet, worn by the plans board too). */
+@import '../../../midgard/design-system/tokens.css';
+
+:root {
+  --hall-bg: #151209;
+  --hall-bone: #cfc3a9;
+  --hall-bone-dim: #9a8f75;
+  --hall-steel: #2b241a;
+  --hall-bronze: #c9973f;
+  --hall-bronze-deep: #7d5f2a;
+  --hall-glass: rgba(21, 18, 11, 0.58);
+  --hall-glass-strong: rgba(14, 12, 9, 0.72);
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  margin: 0;
+  background: #0e0c09;
+  color: var(--hall-bone);
+  font-family: var(--ymir-font-body, Georgia, serif);
+  overflow: hidden;
+}
+
+/* ── the hearth ─────────────────────────────────────────────── */
+.ember-bg {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  opacity: 0.9;
+}
+
+/* ── the top: mast · boards · halls buttons ─────────────────── */
+.hall-top {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--hall-steel);
+  background: var(--hall-glass-strong);
+  backdrop-filter: blur(10px);
+}
+.hall-mast {
+  font-family: var(--ymir-font-mono, monospace);
+  font-size: 0.74rem;
+  letter-spacing: 0.18em;
+  color: var(--hall-bone);
+  white-space: nowrap;
+}
+.hall-links {
+  display: inline-flex;
+  gap: 0.8rem;
+  margin-left: auto;
+}
+.hall-back {
+  color: var(--hall-bone-dim);
+  text-decoration: none;
+  font-family: var(--ymir-font-mono, monospace);
+  font-size: 0.72rem;
+  border-bottom: 1px solid transparent;
+  transition: color 120ms;
+}
+.hall-back:hover {
+  color: var(--hall-bone);
+}
+.hall-back[data-here='1'] {
+  color: var(--hall-bronze);
+  border-bottom-color: var(--hall-bronze);
+}
+.hall-btns {
+  display: inline-flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.hall-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--hall-bronze) 35%, transparent);
+  background: transparent;
+  color: var(--hall-bronze);
+  font-family: var(--ymir-font-mono, monospace);
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 120ms, color 120ms;
+}
+.hall-btn:hover {
+  background: var(--hall-bronze);
+  color: #0e0c09;
+}
+.hall-btn[aria-pressed='true'] {
+  background: var(--hall-bronze);
+  color: #0e0c09;
+}
+
+/* ── the stage ──────────────────────────────────────────────── */
+/* the hall board is the ORIGINAL <main id="livehall">, carried whole — its
+   wrapper is scanty so the board's own (restored) layout is the one that
+   shows (2026-09-24: never simplify). */
+.hall-stage {
+  position: relative;
+  z-index: 1;
+  height: calc(100% - 60px);
+  overflow-y: auto;
+}
+.hall-wrap {
+  position: relative;
+  z-index: 1;
+  height: calc(100% - 60px);
+  overflow-y: auto;
+  padding: 1.2rem 1.4rem 2.5rem;
+}
+.shead {
+  margin: 0.4rem 0 1rem;
+}
+.skicker {
+  margin: 0 0 0.15rem;
+  font-family: var(--ymir-font-mono, monospace);
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+  text-transform: lowercase;
+  color: var(--hall-bronze);
+}
+.shead h1 {
+  margin: 0;
+  font-family: var(--ymir-font-head, Georgia, serif);
+  font-size: 1.7rem;
+  color: var(--hall-bone);
+}
+.ssub {
+  margin: 0.35rem 0 0;
+  color: var(--hall-bone-dim);
+  font-size: 0.86rem;
+}
+
+/* ── the translucent panels ─────────────────────────────────── */
+.panel {
+  background: var(--hall-glass);
+  backdrop-filter: blur(14px) saturate(1.15);
+  border: 1px solid var(--hall-steel);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.32);
+}
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--hall-steel);
+}
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--ymir-font-head, Georgia, serif);
+  font-size: 1rem;
+  color: var(--hall-bone);
+}
+.panel-body {
+  padding: 0.6rem 0.9rem;
+}
+.panel-body.flush {
+  padding: 0;
+}
+.glyph {
+  opacity: 0.7;
+}
+
+/* ── the boards — ONE anatomy: the tickets table + detail ───── */
+.filters {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid var(--hall-steel);
+}
+.filters select {
+  background: var(--hall-bg);
+  color: var(--hall-bone);
+  border: 1px solid var(--hall-steel);
+  border-radius: 2px;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.74rem;
+  font-family: var(--ymir-font-mono, monospace);
+}
+.tick-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+.tick-table th {
+  text-align: left;
+  padding: 0.5rem 0.7rem;
+  color: var(--hall-bone-dim);
+  letter-spacing: 0.08em;
+  font-weight: 400;
+  text-transform: lowercase;
+  border-bottom: 1px solid var(--hall-steel);
+  font-size: 0.7rem;
+  font-family: var(--ymir-font-mono, monospace);
+}
+.tick-table td {
+  padding: 0.5rem 0.7rem;
+  border-bottom: 1px solid var(--hall-steel);
+  vertical-align: top;
+}
+.tick-table tbody tr {
+  cursor: pointer;
+}
+.tick-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+.st-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  padding: 0.14rem 0.5rem;
+  border-radius: 999px;
+  font-family: var(--ymir-font-mono, monospace);
+}
+.book-form {
+  display: grid;
+  gap: 0.6rem;
+}
+.book-row {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.book-form input,
+.book-form select,
+.book-form textarea {
+  background: var(--hall-bg);
+  color: var(--hall-bone);
+  border: 1px solid var(--hall-steel);
+  border-radius: 2px;
+  padding: 0.5rem 0.6rem;
+  font: inherit;
+}
+.book-form button {
+  background: transparent;
+  color: var(--hall-bronze);
+  border: 1px solid var(--hall-bronze);
+  border-radius: 2px;
+  padding: 0.5rem 1.1rem;
+  cursor: pointer;
+  letter-spacing: 0.12em;
+  font-family: var(--ymir-font-mono, monospace);
+}
+.book-form button:hover {
+  background: var(--hall-bronze);
+  color: var(--hall-bg);
+}
+.td-act {
+  background: transparent;
+  color: var(--hall-bronze);
+  border: 1px solid var(--hall-bronze);
+  border-radius: 2px;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  font-family: var(--ymir-font-mono, monospace);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+}
+.td-act:hover {
+  background: var(--hall-bronze);
+  color: var(--hall-bg);
+}
+.chip {
+  background: transparent;
+  color: var(--hall-bone-dim);
+  border: 1px solid var(--hall-steel);
+  border-radius: 999px;
+  font-family: var(--ymir-font-mono, monospace);
+  font-size: 0.66rem;
+  padding: 0.26rem 0.65rem;
+  cursor: pointer;
+}
+.chip.on {
+  background: var(--hall-bronze);
+  color: var(--hall-bg);
+  border-color: var(--hall-bronze);
+}
+.msg {
+  white-space: pre-wrap;
+  font-size: 0.8rem;
+  font-family: var(--ymir-font-mono, monospace);
+  padding: 0.5rem 0.6rem;
+}
+.err {
+  color: #c2584a;
+  border: 1px solid #c2584a;
+}
+.ok {
+  color: #96a0a8;
+  border: 1px solid #96a0a8;
+}
+.dim {
+  color: var(--hall-bone-dim);
+}
+.mono {
+  font-family: var(--ymir-font-mono, monospace);
+}
+
+/* the detail sheet */
+.ticket-detail {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+}
+.td-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 7, 5, 0.74);
+}
+.td-panel {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(560px, 92vw);
+  max-height: 86vh;
+  overflow: auto;
+  background: var(--hall-glass-strong);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--hall-bronze-deep);
+  border-radius: 6px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.5);
+  padding: 1.2rem 1.4rem;
+}
+.td-strip {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.td-strip > div {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--hall-steel);
+  border-radius: 4px;
+  padding: 0.45rem 0.6rem;
+  text-align: center;
+}
+.td-strip b {
+  display: block;
+  font-size: 1.1rem;
+  color: var(--hall-bone);
+}
+.td-strip span {
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: lowercase;
+  color: var(--hall-bone-dim);
+}
+
+/* ── the near loop — the card anatomy, reused from pi-durable-news-agent's
+   browser client (MIT, see src/vendor/jev/VENDOR.md): title · category chip ·
+   score + confidence · source + age · two actions. The STRUCTURE is that app's;
+   the colours are this hall's cloth, so the page is a sibling, not a stranger. */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 0.7rem;
+}
+.card {
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr);
+  min-height: 148px;
+  background: var(--hall-glass-strong);
+  border: 1px solid var(--hall-steel);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.card[data-category='unread'] {
+  border-color: var(--ymir-danger);
+}
+.card-media {
+  display: grid;
+  place-items: center;
+  align-self: start;
+  margin: 0.5rem 0 0.5rem 0.5rem;
+  aspect-ratio: 1;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--hall-steel);
+  border-radius: 4px;
+  font-family: var(--ymir-font-head, Georgia, serif);
+  font-size: 1.4rem;
+  color: var(--hall-bronze);
+  opacity: 0.9;
+}
+.card-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.55rem 0.75rem 0.6rem;
+}
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--ymir-font-mono, monospace);
+  font-size: 0.66rem;
+  color: var(--hall-bone-dim);
+  flex: none;
+}
+.card-meta .source {
+  color: var(--hall-bone);
+  max-width: 13rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-decoration: none;
+}
+a.source:hover {
+  color: var(--hall-bronze);
+}
+.card-meta .time {
+  white-space: nowrap;
+}
+.timeline-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid var(--hall-bronze-deep);
+  border-radius: 999px;
+  background: rgba(201, 151, 63, 0.08);
+  color: var(--hall-bronze);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.grow {
+  flex: 1 1 auto;
+}
+.card-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.card-title {
+  margin: 0;
+  font-family: var(--ymir-font-head, Georgia, serif);
+  font-size: 0.98rem;
+  line-height: 1.3;
+  color: var(--hall-bone);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.card-title.big {
+  font-size: 1.18rem;
+}
+.card-dek,
+.card-body {
+  margin: 0;
+  font-size: 0.79rem;
+  line-height: 1.4;
+  color: var(--hall-bone);
+}
+.card-body.muted {
+  color: var(--hall-bone-dim);
+}
+.card-action {
+  margin: 0;
+  padding-left: 0.45rem;
+  border-left: 2px solid var(--hall-bronze);
+  font-size: 0.78rem;
+  color: var(--hall-bone);
+}
+.verdict {
+  margin: 0;
+  font-size: 0.79rem;
+  font-weight: 600;
+  color: var(--ymir-danger);
+}
+.icon-list {
+  margin: 0;
+  padding-left: 1rem;
+  font-size: 0.74rem;
+  color: var(--hall-bone-dim);
+}
+.card-foot {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+/* score + confidence, in jev's vocabulary */
+.hfs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+}
+.hfs.pending {
+  font-family: var(--ymir-font-mono, monospace);
+  font-size: 0.64rem;
+  color: var(--hall-bone-dim);
+}
+.hfs-chip {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid var(--hall-steel);
+  border-radius: 999px;
+  font-size: 0.63rem;
+  color: var(--hall-bone-dim);
+  overflow: hidden;
+}
+.hfs-chip::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--fill, 0%);
+  background: currentColor;
+  opacity: 0.16;
+  z-index: -1;
+}
+.hfs-chip > * {
+  position: relative;
+}
+.hfs-chip strong {
+  font-family: var(--ymir-font-mono, monospace);
+  color: var(--hall-bone);
+}
+.hfs-chip.signal.primary {
+  border-color: var(--hall-bronze);
+  color: var(--hall-bronze);
+}
+.hfs-chip.facts.primary {
+  border-color: var(--ymir-ok);
+  color: var(--ymir-ok);
+}
+.hfs-chip.hype.primary {
+  border-color: var(--ymir-danger);
+  color: var(--ymir-danger);
+}
+.hfs-warn {
+  font-size: 0.62rem;
+  color: var(--ymir-danger);
+}
+/* open · dismiss */
+.fb {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--hall-steel);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--hall-bone-dim);
+  font-family: var(--ymir-font-mono, monospace);
+  font-size: 0.64rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+.fb:hover {
+  color: var(--hall-bone);
+  border-color: var(--hall-bronze-deep);
+}
+.fb.dismiss:hover {
+  color: var(--ymir-danger);
+  border-color: var(--ymir-danger);
+}
+.td-panel h2 {
+  font-family: var(--ymir-font-head, Georgia, serif);
+  font-size: 1.15rem;
+  color: var(--hall-bone);
+  margin: 0.5rem 0 0.4rem;
+}
+.td-desc {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--hall-bone-dim);
+  margin: 0 0 0.8rem;
+  white-space: pre-wrap;
+}
+.td-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 0.8rem;
+}
+.td-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.8rem;
+}
+.td-comments {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.td-comment {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--hall-steel);
+  border-radius: 4px;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.78rem;
+}
+.td-comment .a {
+  font-family: var(--ymir-font-mono, monospace);
+  font-size: 0.62rem;
+  color: var(--hall-bronze);
+}
+.td-close {
+  background: transparent;
+  color: var(--hall-bone-dim);
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-left: auto;
+}
+/* the book's connection chip (2026-09-24) — the user must SEE the door */
+.skuld-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: 0.6rem;
+}
+.skuld-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 6px currentColor;
+}
+
+/* the hall's own board — the livehall (tally · smiths · call · ledger) */
+.lh-board .panel-body {
+  padding: 1rem;
+}
+.lh-tally {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.lh-tally-cell {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--hall-steel);
+  border-radius: 4px;
+  padding: 0.55rem 0.6rem;
+  text-align: center;
+}
+.lh-tally-cell b {
+  display: block;
+  font-size: 1.25rem;
+  color: var(--hall-bone);
+  font-family: var(--ymir-font-head, Georgia, serif);
+}
+.lh-tally-cell span {
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: lowercase;
+  color: var(--hall-bone-dim);
+  font-family: var(--ymir-font-mono, monospace);
+}
+.lh-smiths {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.lh-smith {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid var(--hall-steel);
+  border-radius: 999px;
+  padding: 0.28rem 0.65rem;
+  font-size: 0.72rem;
+}
+.lh-state {
+  color: var(--hall-bronze);
+  font-family: var(--ymir-font-mono, monospace);
+  font-size: 0.6rem;
+  text-transform: lowercase;
+}
+.lh-cols {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 1fr;
+  gap: 0.6rem;
+}
+.lh-sec {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--hall-steel);
+  border-radius: 6px;
+  padding: 0.65rem 0.7rem;
+  min-height: 5rem;
+}
+.lh-sec-head {
+  margin-bottom: 0.45rem;
+}
+.lh-eyebrow {
+  font-family: var(--ymir-font-mono, monospace);
+  font-size: 0.64rem;
+  letter-spacing: 0.16em;
+  text-transform: lowercase;
+  color: var(--hall-bronze);
+}
+.lh-call-line {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+.lh-ledger {
+  margin: 0;
+  padding-left: 1rem;
+  font-size: 0.76rem;
+  line-height: 1.6;
+}
+.lh-count {
+  margin: 0.9rem 0 0;
+  font-size: 0.66rem;
+}
+@media (max-width: 900px) {
+  .lh-cols {
+    grid-template-columns: 1fr 1fr;
+  }
+  .lh-tally {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 700px) {
+  .td-strip {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .hall-top {
+    gap: 0.5rem;
+  }
+  .hall-links {
+    margin-left: 0;
+    order: 3;
+    width: 100%;
+  }
+}
+/* the ORIGINAL hall board kit, scoped to #livehall (2026-09-24: never simplify)
+   is imported by JS, not by @import HERE: CSS requires @import to precede every other
+   statement, so an import at the END of this file was silently DROPPED by the build —
+   `#livehall` appeared 0 times in the bundle and the board rendered with no kit at all.
+   It is imported in src/main.tsx after this file, which keeps the kit's intended order
+   (the kit wins over the hall's own rules). Measured 2026-10-11. */

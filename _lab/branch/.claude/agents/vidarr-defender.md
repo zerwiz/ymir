@@ -1,0 +1,1 @@
+../../.agents/agents/vidarr-defender.md

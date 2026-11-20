@@ -1,0 +1,63 @@
+{
+  "name": "@zerwiz/hlidskjalf",
+  "private": false,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Hlidskjalf — the Allfather's high seat. The Ymir master control dashboard.",
+  "scripts": {
+    "dev": "vite",
+    "api": "bun run server/index.ts",
+    "dev:all": "bun run server/index.ts & vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test:voice": "bun test server/voice.test.ts server/voice-keys.test.ts server/swedish-voice.test.ts",
+    "test:voice:browser": "node tests/voice.e2e.mjs",
+    "test:voice:contract": "bun scripts/swedish-contract.integration.ts",
+    "desktop": "electron .",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.2",
+    "@capacitor/core": "^6.2.2",
+    "@capacitor/ios": "^6.2.2",
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/addon-web-links": "^0.12.0",
+    "@xterm/xterm": "^6.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "zustand": "^5.0.2"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1",
+    "@capacitor/cli": "^6.2.2",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^33.0.0",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.5"
+  },
+  "main": "electron/main.cjs",
+  "allowScripts": {
+    "electron@33.4.11": true,
+    "esbuild@0.25.12": true
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zerwiz/hlidskjalf.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "!dist/*.apk",
+    "server",
+    "README.md",
+    "electron"
+  ]
+}

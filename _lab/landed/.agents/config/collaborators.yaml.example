@@ -1,0 +1,20 @@
+# collaborators.yaml.example — the people Ymir works with.
+#
+# Copy to $YMIR_HOME/hodd/identity/collaborators.yaml (private, never in this repo) and
+# drive it with `bin/people/collaborators.sh` — which validates every record and is the
+# only sanctioned way to email a person from the house.
+version: 1
+people:
+  - id: jane-example                 # stable, kebab-case
+    name: Jane Example
+    kind: client                     # client | collaborator | adviser | partner | prospect
+    status: prospect                 # prospect | active | paused | former
+    org: "Example Ltd"
+    emails:
+      - jane@example.com
+    project: ""                      # the project id in registry/projects.yaml, or a name
+    nda: unknown                     # true | false | unknown — checked against the NDA register
+    consent:
+      email: true                    # may we write to her at all
+      marketing: false                # may we put her on a list
+    notes: "how you met, what she cares about, what not to say"

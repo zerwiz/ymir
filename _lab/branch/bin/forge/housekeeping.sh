@@ -1,0 +1,405 @@
+#!/usr/bin/env bash
+# housekeeping.sh — what the worktrees cost, what is already safe to forget, and what has
+# NOT been pushed. Read-only by default; removal needs an explicit --yes.
+#
+# THE PROBLEM (measured 2026-10-20 on this box): `.yggdrasil/` held **5.9 GB across 55
+# worktrees** and 144 local branches, most of them work that had long since landed on
+# `origin/main`. The disk pays for every one of them, and the one thing that must never
+# happen — losing an unpushed commit — is exactly the thing an over-eager cleanup does.
+#
+# So the order is: PROVE, then report, then (only with --yes) reclaim.
+#
+#   housekeeping.sh                 # the report: every worktree and branch, with a verdict
+#   housekeeping.sh report --json   # the same, machine-readable
+#   housekeeping.sh clean           # the PLAN (nothing is removed)
+#   housekeeping.sh clean --yes     # remove only what the plan proved reclaimable
+#   housekeeping.sh clean --yes --merged-only   # only work already IN origin/main (the
+#                                              # strictest form: a pushed branch with an open
+#                                              # PR is deliberately kept, because you may still
+#                                              # be working in it)
+#   housekeeping.sh check           # exit 1 when any work is unpushed (for a cron/gate)
+#
+# Verdicts:
+#   reclaimable:merged   every commit is already in origin/main — the worktree/branch is a copy
+#   reclaimable:upstream every PATCH is already in main (rebase/cherry-pick merge — different
+#                        SHAs, same content). The commit count lies; `git cherry` does not.
+#   reclaimable:pushed   HEAD is exactly the remote branch — the work lives on the remote
+#   reclaimable:content-in-main  every file the branch changed is byte-identical in main
+#                        (merged under a different patch, e.g. a rebase with a change). The
+#                        plain answer to "is this code already in main?" — it is.
+#   keep:archive         no common history with main: a different lineage (pre-rebuild
+#                        history). Its "N ahead" is meaningless and deleting it destroys a
+#                        record — a human decides.
+#   keep:dirty           uncommitted changes (tracked or untracked) — never touched
+#   keep:in-use          a live process is working inside it (an agent's shell, a herdr pane)
+#   keep:unpushed:N      N commits that exist nowhere but this machine — never touched.
+#                        (No separate "unmerged" verdict: a commit on no remote IS unpushed,
+#                        and the remedy is the same — push it or merge it.)
+#
+# NEVER touched: the main worktree, main itself, anything dirty, anything with unpushed
+# commits. `git worktree remove` runs WITHOUT --force, and `git branch -d` (not -D) is the
+# branch remover — the safe form, so a bug here still cannot delete live work.
+#
+# Exit: 0 ok · 1 `check` found unpushed work · 2 usage.
+set -u
+
+VERSION="1.0.0"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="${BROKK_ROOT_OVERRIDE:-$(cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do
+  [ "$PWD" = / ] && break; cd ..; done; pwd)}"
+
+CMD="report"; YES=0; JSON=0; MERGED_ONLY=0
+for a in "$@"; do
+  case "$a" in
+    -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
+    -h|--help) sed -n '2,32p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    report|clean|check) CMD="$a" ;;
+    --yes|-y) YES=1 ;;
+    --merged-only) MERGED_ONLY=1 ;;
+    --json) JSON=1 ;;
+    *) printf 'error: unknown flag %s\nhelp: bin/forge/housekeeping.sh [report|clean|check] [--yes] [--json]\n' "$a" >&2; exit 2 ;;
+  esac
+done
+
+cd "$ROOT" || exit 1
+command -v git >/dev/null 2>&1 || { printf 'housekeeping[1]{state}:\n  "skip","no git"\n'; exit 0; }
+
+BASE="origin/main"
+git rev-parse --verify --quiet "$BASE" >/dev/null 2>&1 || BASE="main"
+MAIN_WT="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null | xargs -r dirname 2>/dev/null || printf '%s' "$ROOT")"
+
+# ── the facts, gathered once ─────────────────────────────────────────────────
+# worktrees: path<TAB>branch   (the main worktree is excluded from every verdict)
+wt_rows() {
+  git worktree list --porcelain 2>/dev/null | awk '
+    /^worktree / { path = substr($0, 10) }
+    /^branch /   { br = substr($0, 8); sub("^refs/heads/", "", br); print path "\t" br }
+    /^detached$/ { print path "\t(detached)" }
+  '
+}
+
+# branches with no worktree: branch<TAB>upstream
+bare_branches() {
+  local in_wt; in_wt="$(wt_rows | cut -f2 | sort -u)"
+  git for-each-ref --format='%(refname:short)%09%(upstream:short)' refs/heads 2>/dev/null | while IFS=$'\t' read -r br up; do
+    printf '%s\n' "$in_wt" | grep -qxF "$br" && continue
+    printf '%s\t%s\n' "$br" "$up"
+  done
+}
+
+size_of() { du -sh "$1" 2>/dev/null | awk '{print $1}'; }
+
+# The commit COUNT is not the question — the PATCH is. A branch merged by rebase or by
+# cherry-pick keeps different SHAs, so `rev-list --count` calls it "1000 commits ahead" while
+# every change in it is already in main. `git cherry` compares patch-ids and answers the real
+# question: how many of this branch's commits are NOT already upstream. Measured 2026-10-20:
+# feat/snotra-voice showed 12 "unpushed" commits and cherry said 0 — it was merged all along.
+patches_not_upstream() {  # <ref> → count of commits whose patch main does not have
+  git cherry "$BASE" "$1" 2>/dev/null | grep -c '^+' || true
+}
+
+shares_history() {  # <ref> → 0 when a merge-base with BASE exists
+  [ -n "$(git merge-base "$BASE" "$1" 2>/dev/null || true)" ]
+}
+
+own_diffstat() {  # <ref> → the branch's own change relative to its fork point
+  local mb; mb="$(git merge-base "$BASE" "$1" 2>/dev/null || true)"
+  [ -n "$mb" ] || return 0
+  git diff --shortstat "$mb" "$1" 2>/dev/null | sed 's/^ *//'
+}
+
+# THE QUESTION THE OPERATOR ACTUALLY ASKS: "is this code already in main?"
+#
+# Neither the commit count nor `git cherry` answers it exactly. A branch that was rebased
+# WITH A CHANGE, or merged under a slightly different patch, keeps patches `git cherry` calls
+# unique while every file it touched is byte-identical in main (measured 2026-10-20:
+# fix/one-extension-tree's constellation work sits in main as ac5fd8ad, and main has the
+# exact file). So the last test is the plain one: compare the BLOB of every file the branch
+# changed against main's blob. If they all match, the branch contributes no content.
+content_in_main() {  # <ref> → 0 when every changed file already matches main's copy
+  local ref=$1 mb changed path a b n=0 same=0
+  mb="$(git merge-base "$BASE" "$ref" 2>/dev/null || true)"
+  [ -n "$mb" ] || return 1
+  changed="$(git diff --name-only "$mb" "$ref" 2>/dev/null)"
+  [ -n "$changed" ] || return 0
+  while IFS= read -r path; do
+    [ -n "$path" ] || continue
+    n=$((n + 1))
+    a="$(git rev-parse "$ref:$path" 2>/dev/null || echo MISSING)"
+    b="$(git rev-parse "$BASE:$path" 2>/dev/null || echo MISSING)"
+    [ "$a" = "$b" ] && same=$((same + 1))
+  done <<<"$changed"
+  [ "$n" -gt 0 ] && [ "$same" = "$n" ]
+}
+
+# Is any live process working INSIDE this path? A merged worktree can still be someone's
+# shell — the Allfather's own agent may be sitting in it. Measured 2026-10-20: reclaiming a
+# tree holds a cwd a live shell depends on (my own session was killed twice by exactly that
+# class of shortcut). `$PWD` of a process is `/proc/<pid>/cwd`.
+in_use() {  # <abs-path> → exit 0 when a live process stands inside it
+  local target="$1" pid cwd
+  for pid in /proc/[0-9]*; do
+    cwd="$(readlink -f "$pid/cwd" 2>/dev/null)" || continue
+    [ -n "$cwd" ] || continue
+    case "$cwd" in "$target"|"$target"/*) return 0 ;; esac
+  done
+  return 1
+}
+
+# A process standing inside a tree is NOT proof the tree is in use. Measured
+# 2026-11-10: an Eindri exits to a bare shell, herdr restores that shell after a
+# restart, and the shell's cwd kept the worktree `keep:in-use` forever — 80 trees
+# under .yggdrasil/ that nothing would ever reclaim. The question is not "is a
+# process here", it is "does an AGENT stand here", and only one door can answer
+# that: bin/seat/herdr-agents.py, the ONE reader of `herdr agent list`.
+#
+# When the door cannot answer, the OLD answer stands (live): an unknown seat is
+# never assumed dead, because assuming dead is the irreversible direction.
+AGENT_PROBE=unknown
+if [ -x "$SCRIPT_DIR/../seat/herdr-agents.py" ] \
+   && python3 "$SCRIPT_DIR/../seat/herdr-agents.py" --json >/dev/null 2>&1; then
+  AGENT_PROBE=ok
+fi
+agent_here() {  # <abs-path> → 0 when an agent stands here (or cannot be ruled out)
+  [ "$AGENT_PROBE" = ok ] || return 0
+  python3 "$SCRIPT_DIR/../seat/herdr-agents.py" --find --cwd "$1" >/dev/null 2>&1
+}
+bare_shell() {  # <abs-path> → 0 when a process holds it but no agent does
+  [ "$AGENT_PROBE" = ok ] || return 1
+  in_use "$1" && ! agent_here "$1"
+}
+
+# verdict <path> <branch> → one of the five, with a count where useful
+verdict() {
+  local path=$1 br=$2
+  [ "$path" = "$MAIN_WT" ] && { printf 'main-worktree'; return; }
+  [ "$br" = "main" ] && { printf 'keep:main'; return; }
+  [ "$br" = "(detached)" ] && { printf 'keep:detached'; return; }
+
+  if [ -n "$(git -C "$path" status --porcelain 2>/dev/null)" ]; then printf 'keep:dirty'; return; fi
+  # A bare shell is a dead seat, not a live one: the tree goes on to be judged by
+  # whether any of its work is missing from the remote (below). A LIVE agent is
+  # the one thing that stops the judgement here.
+  if in_use "$path" && agent_here "$path"; then printf 'keep:in-use'; return; fi
+
+  local head up_name ahead
+  head="$(git -C "$path" rev-parse HEAD 2>/dev/null)" || { printf 'keep:unreadable'; return; }
+  if git merge-base --is-ancestor "$head" "$BASE" 2>/dev/null; then printf 'reclaimable:merged'; return; fi
+  # SAFETY ORDER: "is this content held elsewhere?" first. An unrelated-history branch that
+  # is ALSO identical to its remote branch loses nothing by going — the remote keeps it.
+  if git rev-parse --verify --quiet "origin/$br" >/dev/null 2>&1 \
+     && [ "$(git rev-parse "origin/$br" 2>/dev/null)" = "$head" ]; then
+    printf 'reclaimable:pushed'; return
+  fi
+  if ! shares_history "$br"; then printf 'keep:archive'; return; fi
+  # Every patch already upstream (rebase/cherry-pick merge): nothing here is missing from main.
+  if [ "$(patches_not_upstream "$br")" = 0 ]; then printf 'reclaimable:upstream'; return; fi
+  if content_in_main "$br"; then printf 'reclaimable:content-in-main'; return; fi
+
+  up_name="$(git -C "$path" rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)"
+  if [ -n "$up_name" ]; then
+    ahead="$(git -C "$path" rev-list --count "${up_name}..HEAD" 2>/dev/null || echo 0)"
+    [ "${ahead:-0}" = 0 ] && { printf 'reclaimable:pushed'; return; }
+    printf 'keep:unpushed:%s' "$ahead"; return
+  fi
+
+  # No upstream: is the remote branch identical, and does it exist at all?
+  if git rev-parse --verify --quiet "origin/$br" >/dev/null 2>&1; then
+    if [ "$(git rev-parse "origin/$br")" = "$head" ]; then printf 'reclaimable:pushed'; return; fi
+  fi
+  # `-C "$path"`: measured in the fixture — counting from the repo root counted MAIN's
+  # commits, not the worktree's, and called real local work "0".
+  printf 'keep:unpushed:%s' "$(patches_not_upstream "$br")"
+}
+
+# ── gather ───────────────────────────────────────────────────────────────────
+TOTAL_WT=0; TOTAL_RECLAIM=0; UNPUSHED=0; DIRTY=0; IN_USE=0
+declare -a LINES=()
+while IFS=$'\t' read -r path br; do
+  [ -n "${path:-}" ] || continue
+  TOTAL_WT=$((TOTAL_WT + 1))
+  v="$(verdict "$path" "$br")"
+  s="$(size_of "$path")"
+  case "$v" in
+    reclaimable:*) TOTAL_RECLAIM=$((TOTAL_RECLAIM + 1)) ;;
+    keep:unpushed*) UNPUSHED=$((UNPUSHED + 1)) ;;
+    keep:dirty) DIRTY=$((DIRTY + 1)) ;;
+    keep:in-use) IN_USE=$((IN_USE + 1)) ;;
+  esac
+  idx="${path#$ROOT/.yggdrasil/}"
+  detail=""
+  case "$v" in keep:*) detail="$(own_diffstat "$br")" ;; esac
+  if [ "$v" != "main-worktree" ] && bare_shell "$path"; then
+    detail="bare shell, no agent${detail:+ · $detail}"
+  fi
+  LINES+=("$(printf "%s\t%s\t%s\t%s\t%s\t%s" "$idx" "$br" "$v" "${s:-?}" "$path" "$detail")")
+done < <(wt_rows)
+
+declare -a BRANCHES=()
+while IFS=$'\t' read -r br up; do
+  [ -n "${br:-}" ] || continue
+  [ "$br" = "main" ] && continue
+  if git merge-base --is-ancestor "$br" "$BASE" 2>/dev/null; then
+    v="reclaimable:merged"
+  elif [ -n "${up:-}" ] && [ "$(git rev-list --count "$up..$br" 2>/dev/null || echo 0)" = 0 ]; then
+    # identical to its remote branch: the content is held elsewhere, whatever its lineage.
+    v="reclaimable:pushed"
+  elif ! shares_history "$br"; then
+    # no common ancestor AND not held on a remote: a different lineage (the pre-rebuild
+    # history, an examined archive). Its commit count says nothing about pending work, and
+    # deleting it destroys the only copy of a record.
+    v="keep:archive"
+  elif [ "$(patches_not_upstream "$br")" = 0 ]; then
+    v="reclaimable:upstream"
+  elif content_in_main "$br"; then
+    v="reclaimable:content-in-main"
+  elif [ -n "${up:-}" ]; then
+    ahead="$(git rev-list --count "$up..$br" 2>/dev/null || echo 0)"
+    if [ "${ahead:-0}" = 0 ]; then v="reclaimable:pushed"; else v="keep:unpushed:$ahead"; UNPUSHED=$((UNPUSHED + 1)); fi
+  else
+    v="keep:unpushed:$(git rev-list --count "$BASE..$br" 2>/dev/null || echo 0)"
+  fi
+  case "$v" in reclaimable:*) TOTAL_RECLAIM=$((TOTAL_RECLAIM + 1)) ;; esac
+  bdetail=""
+  case "$v" in keep:*) bdetail="$(own_diffstat "$br")" ;; esac
+  BRANCHES+=("$(printf '%s\t%s\t%s' "$br" "$v" "$bdetail")")
+done < <(bare_branches)
+
+# ── report ───────────────────────────────────────────────────────────────────
+if [ "$JSON" = 1 ]; then
+  printf '{"worktrees":['
+  first=1
+  for l in "${LINES[@]}"; do
+    IFS=$'\t' read -r p b v s _abs detail <<<"$l"
+    [ "$first" = 1 ] || printf ','
+    first=0
+    printf '{"path":"%s","branch":"%s","verdict":"%s","size":"%s"}' "$p" "$b" "$v" "$s"
+  done
+  printf '],"branches":['
+  first=1
+  for l in "${BRANCHES[@]}"; do
+    IFS=$'\t' read -r b v <<<"$l"
+    [ "$first" = 1 ] || printf ','
+    first=0
+    printf '{"branch":"%s","verdict":"%s"}' "$b" "$v"
+  done
+  printf ']}\n'
+else
+  printf 'housekeeping[1]{base,worktrees,branches,reclaimable,unpushed,dirty,in_use}:\n'
+  printf '  "%s",%s,%s,%s,%s,%s,%s\n' "$BASE" "$TOTAL_WT" "$(git branch | wc -l | tr -d ' ')" "$TOTAL_RECLAIM" "$UNPUSHED" "$DIRTY" "$IN_USE"
+  printf 'worktrees[%s]{path,branch,verdict,size,detail}:\n' "${#LINES[@]}"
+  for l in "${LINES[@]}"; do
+    IFS=$'\t' read -r p b v s _abs detail <<<"$l"
+    printf '  "%s","%s","%s","%s","%s"\n' "$p" "$b" "$v" "$s" "${detail:-}"
+  done
+  if [ "${#BRANCHES[@]}" -gt 0 ]; then
+    printf 'branches[%s]{branch,verdict,detail}:\n' "${#BRANCHES[@]}"
+    for l in "${BRANCHES[@]}"; do
+      IFS=$'\t' read -r b v bdetail <<<"$l"
+      printf '  "%s","%s","%s"\n' "$b" "$v" "${bdetail:-}"
+    done
+  fi
+fi
+
+if [ "$CMD" = "check" ]; then
+  if [ "$UNPUSHED" -gt 0 ] || [ "$DIRTY" -gt 0 ]; then
+    printf 'housekeeping[1]{state}:\n  "unpushed-work","%s worktree/branch(es) carry work that exists only here — push or merge before anything is reclaimed"\n' "$UNPUSHED"
+    exit 1
+  fi
+  printf 'housekeeping[1]{state}:\n  "clean","nothing unpushed; %s item(s) reclaimable"\n' "$TOTAL_RECLAIM"
+  exit 0
+fi
+
+if [ "$CMD" = "clean" ]; then
+  if [ "$YES" = 0 ]; then
+    printf 'plan[%s]{action,target,why}:\n' "$TOTAL_RECLAIM"
+    for l in "${LINES[@]}"; do
+      IFS=$'\t' read -r p b v s _abs detail <<<"$l"
+      case "$v" in reclaimable:merged) ;; reclaimable:pushed) [ "$MERGED_ONLY" = 1 ] && continue ;; reclaimable:*) ;; *) continue ;; esac
+      case "$v" in reclaimable:*) printf '  "worktree-remove","%s (%s, %s)","%s"\n' "$p" "$b" "$s" "$v" ;; esac
+    done
+    for l in "${BRANCHES[@]}"; do
+      IFS=$'\t' read -r b v <<<"$l"
+      case "$v" in
+        reclaimable:merged) ;;
+        reclaimable:pushed) [ "$MERGED_ONLY" = 1 ] && continue ;;
+        reclaimable:*) ;;
+        *) continue ;;
+      esac
+      printf '  "branch-delete","%s","%s"\n' "$b" "$v"
+    done
+    printf 'nothing was removed. re-run with --yes to reclaim.\n'
+    exit 0
+  fi
+
+  WT_ROOT="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null | xargs -r dirname)/.yggdrasil"
+  [ -d "$WT_ROOT" ] || WT_ROOT="$ROOT/.yggdrasil"
+  removed=0; freed_before="$(du -sh "$WT_ROOT" 2>/dev/null | awk '{print $1}')"
+  for l in "${LINES[@]}"; do
+    IFS=$'\t' read -r p b v s _abs detail <<<"$l"
+    case "$v" in
+      reclaimable:merged) ;;
+      reclaimable:pushed) [ "$MERGED_ONLY" = 1 ] && continue ;;
+      *) continue ;;
+    esac
+    # `$_abs` is the ABSOLUTE path git reported; the first field is the short display index.
+    # Using the display index here is what made one run remove nothing at all.
+    full="$_abs"
+    [ -d "$full" ] || continue
+    # Double guard: re-ask the verdict immediately before touching it.
+    now="$(verdict "$full" "$b")"
+    case "$now" in reclaimable:*) ;; *) printf '  refused:"%s" changed to %s\n' "$p" "$now"; continue ;; esac
+    # A bare shell standing in it is a dead seat, not a live one: close the seat
+    # first (this door refuses a live agent), then reclaim. If it will not close,
+    # the tree is left alone — never a cwd yanked out from under a process.
+    if bare_shell "$full"; then
+      if [ -x "$SCRIPT_DIR/../seat/seat-reap.sh" ] \
+         && "$SCRIPT_DIR/../seat/seat-reap.sh" --shell "$full" >/dev/null 2>&1; then
+        printf '  closed-bare-shell:"%s"\n' "$p"
+      else
+        printf '  refused:"%s" a bare shell holds it and would not close (bin/seat/seat-reap.sh --shell)%s\n' "$p" ""
+        continue
+      fi
+    fi
+    if git worktree remove "$full" 2>/dev/null; then
+      printf '  removed-worktree:"%s" (%s)\n' "$p" "$s"; removed=$((removed + 1))
+    else
+      printf '  kept:"%s" (git refused to remove it)\n' "$p"
+    fi
+  done
+  git worktree prune 2>/dev/null || true
+
+  for l in "${BRANCHES[@]}"; do
+    IFS=$'\t' read -r b v <<<"$l"
+    case "$v" in
+      reclaimable:merged) ;;
+      reclaimable:pushed) [ "$MERGED_ONLY" = 1 ] && continue ;;
+      *) continue ;;
+    esac
+    # `git branch -d` judges "merged" against the CURRENT HEAD, and this checkout may sit on
+    # a feature branch (it did: feat/snotra-letter), so a branch fully merged into main was
+    # refused. The safety proof is the one the verdict already made — the tip is an ancestor
+    # of the base — so -D is used ONLY under that proof, and said out loud.
+    # THE VERDICT IS THE PROOF, not ancestry: a rebase or a cherry-pick merge leaves a
+    # different SHA for identical content, so `--is-ancestor` is false for work that is
+    # already home, and `git branch -d` then refused it as "not merged" — the door kept
+    # every branch it had just called reclaimable (measured 2026-10-24: 80 reclaimable,
+    # 0 deleted). -D is used ONLY under a reclaimable verdict, and said out loud.
+    # The verdict already proved the content is home (merged · every patch upstream ·
+    # byte-identical content in main), so the delete is made with -D under that proof alone;
+    # ancestry is merely the strongest case of it.
+    if git merge-base --is-ancestor "$b" "$BASE" 2>/dev/null ||        case "$v" in reclaimable:*) true ;; *) false ;; esac; then
+      git branch -D "$b" >/dev/null 2>&1 && { printf '  removed-branch:"%s"\n' "$b"; removed=$((removed + 1)); } \
+        || printf '  kept-branch:"%s" (git refused)\n' "$b"
+    else
+      git branch -d "$b" >/dev/null 2>&1 && { printf '  removed-branch:"%s"\n' "$b"; removed=$((removed + 1)); } \
+        || printf '  kept-branch:"%s" (not merged)\n' "$b"
+    fi
+  done
+
+  printf 'housekeeping[1]{removed,freed_overall}:\n  %s,"%s (whole .yggdrasil now)"\n' "$removed" "$(du -sh "$WT_ROOT" 2>/dev/null | awk '{print $1}')"
+  [ -n "${freed_before:-}" ] && printf 'was %s\n' "$freed_before"
+  exit 0
+fi
+
+exit 0

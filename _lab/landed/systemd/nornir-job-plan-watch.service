@@ -1,0 +1,5 @@
+[Unit]
+Description=Plan watch (Nornir job)
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -lc 'cd /home/zerwizserver/ymir/.yggdrasil/plan-watch && bin/time/nornir-job-plan-watch.sh'

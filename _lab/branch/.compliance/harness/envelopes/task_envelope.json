@@ -1,0 +1,20 @@
+{
+  "envelope": "task",
+  "version": "2.0",
+  "description": "Structured task packet (murraycole): objective, non-goals, context, acceptance, capabilities, checks, terminal states, evidence, rollback.",
+  "fields": {
+    "task_id": { "type": "string", "required": true },
+    "feature": { "type": "string", "required": true },
+    "objective": { "type": "string", "required": true },
+    "non_goals": { "type": "array", "items": { "type": "string" }, "required": false },
+    "context": { "type": "string", "required": false },
+    "acceptance_criteria": { "type": "array", "items": { "type": "string" }, "required": true },
+    "checks": { "type": "array", "items": { "type": "string" }, "required": false },
+    "terminal_states": { "type": "array", "items": { "type": "string" }, "required": false },
+    "evidence": { "type": "array", "items": { "type": "string" }, "required": false },
+    "rollback": { "type": "string", "required": false },
+    "capabilities": { "type": "object", "required": false },
+    "artifacts": { "type": "array", "items": { "type": "string" }, "required": false },
+    "status": { "enum": ["success", "fail", "retry", "noop", "escalate"] }
+  }
+}

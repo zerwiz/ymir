@@ -1,0 +1,119 @@
+# The guardian — Garmr, the hound at the gate
+
+**What it is.** A watcher that lives on your machine and writes down what happens on it:
+what ran, who opened a protected file, what started listening, what connected out, and what
+signal was sent to what. It turns those into plain sentences, wakes you when one matters,
+and keeps the record. It is **read-only against the machine** — it never closes a door,
+never kills a process, never changes a setting.
+
+**What you need.** Linux with `auditd` (present on most distributions, not always running),
+`ss`, and `python3`. One `sudo` to seat it. No account, no cloud, no key for the base
+feature: the senses are the kernel's own audit log.
+
+**The commands**
+
+```sh
+bin/ward/garmr.sh status      # what is armed, what is running, OFF or ON
+sudo bin/ward/garmr.sh install   # arm the senses and seat the two services (once)
+sudo bin/ward/garmr.sh off        # turn the guardian off, and keep him off
+sudo bin/ward/garmr.sh on         # wake him again
+bin/ward/garmr.sh judge       # apply the rules to the newest findings, now
+bin/ward/garmr.sh tail 20     # the newest judgements, HIGH and CRITICAL first
+bin/ward/garmr.sh verify      # prove it is not silently dead
+bin/ward/garmr-smoke.sh       # the reusable 9-check smoke test (running ≠ armed ≠ working)
+bin/ward/garmr.sh refresh     # re-render the units after an update (Gróa runs this)
+```
+
+**On and off.** One word each way, and it is a **standing** word, not a moment:
+
+```sh
+sudo bin/ward/garmr.sh off     # turn the guardian off (and keep him off)
+bin/ward/garmr.sh status       # says plainly: OFF (since …) — not "all clear"
+sudo bin/ward/garmr.sh on      # wake him
+bin/ward/garmr.sh off --dry-run   # see exactly what the turn will do, no root needed
+```
+
+`off` stops the hound and the judgement, writes a **root-owned** marker (that marker is the gate —
+no ordinary process can silence him) plus a readable **copy** the tower and housewatch use to
+*say* `OFF`; a report the operator can write is never the switch, or the intruder flips it first.
+It also **disables** the units — so a reboot, a re-install, or an update by Gróa will not quietly
+raise a guardian you put down. `on` clears both, enables the units and starts them. The kernel
+audit rules stay loaded while he is off (they are auditd's, they cost almost nothing, and
+forgetting them is how a seat ends up deaf after a quiet week); he stops **watching and judging**,
+not un-seeing what the kernel already wrote.
+
+`pause` and `resume` are the same switch under its older names and still work. **Every one of
+these needs root on purpose** — a guardian an ordinary process can silence is a guardian the
+intruder silences first, and the smoke test asserts that a non-root `off` is refused. `install`
+is idempotent, and it leaves a hound that is OFF still off.
+
+**Where you see it.** The Hlidskjalf topbar carries a **ᛉ hound** chip: green when it is
+watching and quiet, amber at HIGH, red at CRITICAL, and a loud **silent** state if the
+heartbeat stops. Clicking it opens *Himinbjörg*, the watchtower: the heartbeat, the counts,
+and the newest serious findings with the reasoner that answered, if one did.
+
+**What it watches**
+
+| Sense | What it records |
+|---|---|
+| exec | a program running (path, command line **redacted**, uid) |
+| file_change · identity | `/etc/passwd`, `/etc/shadow`, `/etc/group`, `/etc/sudoers`, `/etc/sudoers.d`, `~/.ssh/authorized_keys` changed — **CRITICAL** |
+| file_change · persistence | a unit, a cron row, or an autostart entry changed — `/etc/systemd/{system,user}`, `/etc/cron.d`, `/etc/crontab`, `/var/spool/cron`, `~/.config/systemd/user`, `~/.config/autostart` — **HIGH** |
+| sensitive | a read or write on a protected shelf (meeting data, evidence, the vault, secrets) — the path is stored as a **hash**, never as text |
+| listener | a socket that starts listening |
+| egress | a connection to a host that is not on your list |
+| kill | a signal sent to a process, with the sender and the target |
+
+**What it deliberately does not do**
+
+- It never records file **contents**, a transcript, a recording, or a secret **value**. A
+  password on a command line is replaced before it is written; a sensitive path is hashed.
+  An observer that copies what it guards is a leak with a badge.
+- It never decides with a model. The severity is a rule; the sentence is a template. A
+  reasoner is asked for a paragraph **only** above the configured threshold, and the answer
+  is recorded with its rung and model.
+- It never closes anything. A finding is a report; the mend is yours.
+
+**The pocket.** A finding at or above `alert.phone_at` (default **HIGH**) is sent to your phone
+through **Gotify** or **ntfy** — one channel, chosen in the config, never both:
+
+```yaml
+alert:
+  phone: gotify              # none | gotify | ntfy
+  phone_at: high
+  quiet_hours: "23:00-07:00" # MEDIUM is suppressed here; CRITICAL never is
+  gotify:
+    url: https://notify.example.org
+    token_ref: GARMR_GOTIFY_TOKEN   # a REFERENCE to the vault, never a value
+```
+
+The message carries the **severity, the finding line and the Rune id** — pid, process name, a
+hashed sensitive path. Never content. `notify.py --test` sends one message so you can confirm the
+road before you need it. Delivery is **proved**: the server's message id comes back and a failure
+says whether it was the channel or the network. Ten messages an hour at most, and a storm collapses
+to one line — a channel that cries wolf gets muted, and a muted guardian is a dead one.
+
+**Settings.** `$YMIR_HOME/config/guardian.yaml` (copy `config/guardian.yaml.example`).
+Allow-lists for readers and ports, the poll interval, whether the desktop speaks, the
+escalation ladder (local model → fleet rail → online), and a daily budget for the online
+rung — `0` means never. Every value has a documented default; omit what you do not care about.
+
+**Limits, said honestly.** Audit rules armed with `auditctl` are **runtime only** — a reboot
+clears them; `garmr.sh install` re-arms them, and making them survive a reboot is the next
+phase (plan 98, G10). The hound needs root to read the kernel's audit log, so it runs as a
+system service; the judgement runs as you, so your model keys are never root's. A machine
+without passwordless `sudo` gets a clean skip at install, not a pretend success.
+
+**If it does not work**
+
+```sh
+systemctl status garmr-hound.service          # the senses (root)
+systemctl --user status garmr-brain.timer     # the judgement (you)
+sudo auditctl -l | grep ymir-                 # are the rules still armed?
+sudo tail -5 /var/log/ymir/garmr/findings.jsonl
+bin/ward/garmr.sh verify
+```
+
+A hound that is **silent** is reported as a finding, not as calm. If `verify` says the
+heartbeat is stale, restart it (`sudo systemctl restart garmr-hound.service`) and read
+`journalctl -u garmr-hound.service`.

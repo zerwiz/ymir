@@ -1,0 +1,1 @@
+../../.agents/agents/vor-diagnostics.md

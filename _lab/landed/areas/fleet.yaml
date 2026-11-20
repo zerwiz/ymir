@@ -1,0 +1,30 @@
+# areas/fleet.yaml — fleet and agnosticism
+#
+# A project answers every canon area: held · waived · na. `held` needs evidence.
+# `unheld` is legal in the file and is what the gate refuses once work touches the area.
+# This file is the project's own record; the canon of questions lives in Ymir.
+
+version: 1
+area: fleet
+project: ymir-platform
+state: held
+
+keeper: Galdr the builder
+lens: fleet
+
+# the folders this keeper may write. The gate refuses a push that changes one of these
+# paths while the area is unheld. Empty = nothing is claimed yet.
+may_write: ["bin/skuld/"]
+
+evidence: ["bin/skuld/role.sh — the role read once, from the registry", "RULES/25-agnostic-by-construction.md"]
+
+# the canon's questions, with this project's answers. An open answer is honest; a blank is not.
+answers:
+  - q: "does this work on a machine that is not the one that built it?"
+    a: ""
+  - q: "the same verb answering on a second role, naming the road it took"
+    a: ""
+  - q: "no host, path or port assumed in code"
+    a: ""
+
+closed: ""                    # the date the evidence last proved it

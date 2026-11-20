@@ -1,0 +1,8 @@
+[Unit]
+Description=Calendar watch — remind before a meeting starts, through the one notify door
+Documentation=file://__YMIR_ROOT__/docs/features/the-hotline.md
+
+[Service]
+Type=oneshot
+ExecStart=__PYTHON__ __YMIR_ROOT__/bin/time/calendar-watch.sh
+Nice=10

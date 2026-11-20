@@ -1,0 +1,44 @@
+# Bifrost — the burning bridge (reverse proxy / HTTP ingress)
+# Every crossing into Ymir passes here. Config is env-driven; no secrets inline.
+#
+#   HLIDSKJALF_DOMAIN=ymir.local   the public hostname
+#   ACME_EMAIL=you@example.com     TLS contact (Cloudflare origin cert also fine)
+
+{
+	admin off
+	email {$ACME_EMAIL}
+	servers {
+		protocols h1 h2 h3
+	}
+}
+
+# The seat: the SPA on :3888, its gate API on :3889 behind /api/*.
+{$HLIDSKJALF_DOMAIN} {
+	encode zstd gzip
+
+	# Gate API — JSON + SSE.
+	reverse_proxy /api/* 127.0.0.1:3889 {
+		header_up X-Real-IP {remote_host}
+	}
+	# Stream — SSE needs buffering off.
+	reverse_proxy /api/stream 127.0.0.1:3889 {
+		flush_interval -1
+	}
+
+	# The SPA.
+	reverse_proxy 127.0.0.1:3888 {
+		header_up X-Real-IP {remote_host}
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	log {
+		output file /var/log/caddy/bifrost.log
+	}
+}

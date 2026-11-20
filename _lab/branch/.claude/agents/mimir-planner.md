@@ -1,0 +1,1 @@
+../../.agents/agents/mimir-planner.md

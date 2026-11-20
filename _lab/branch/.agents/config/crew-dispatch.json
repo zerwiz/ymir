@@ -1,0 +1,22 @@
+{
+  "rules": [
+    {
+      "when": "General coding tasks, implementation, refactoring, or bug fixes",
+      "use": { "harness": "opencode", "model": "opencode/nemotron-3-ultra-free", "effort": "medium" },
+      "why": "Nemotron 3 Ultra Free provides strong reasoning for coding tasks at no cost via opencode"
+    },
+    {
+      "when": "Investigation, diagnosis, planning, or ambiguous design work requiring deep reasoning",
+      "use": { "harness": "opencode", "model": "opencode/nemotron-3-ultra-free", "effort": "xhigh" },
+      "why": "Maximum reasoning for open-ended investigation and design work"
+    },
+    {
+      "when": "Trivial mechanical edits such as rote renames, formatting sweeps, or simple file gathering",
+      "use": { "harness": "opencode", "model": "opencode/nemotron-3-ultra-free", "effort": "low" },
+      "why": "Fast, cheap profile for narrow low-ambiguity tasks"
+    }
+  ],
+  "default": [
+    { "harness": "opencode", "model": "opencode/nemotron-3-ultra-free", "effort": "medium" }
+  ]
+}

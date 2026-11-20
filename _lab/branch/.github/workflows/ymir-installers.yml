@@ -1,0 +1,59 @@
+name: ymir-installers
+
+# Builds the Windows and macOS installers. Neither needs a matching host:
+#   • the .exe is an NSIS installer — NSIS is a compiler, so Ubuntu builds it;
+#   • the .pkg needs Apple's pkgbuild, so it builds on a macos runner.
+# Signing/notarisation need the operator's own Apple/Windows credentials and are
+# deliberately left to the operator (the artefacts here are unsigned).
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+  # A PACKAGING CHANGE MUST BUILD. Until 2026-11-03 this workflow ran only on `workflow_dispatch`
+  # and on a `v*` tag, and no tag had been cut since Rule 22 moved bin/bootstrap-windows.ps1 to
+  # bin/host/ — so the NSIS installer named a file that no longer existed, could not compile, and
+  # every gate in the house stayed green because none of them built anything.
+  pull_request:
+    paths:
+      - "packaging/**"
+      - "bin/host/**"
+      - ".github/workflows/ymir-installers.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  exe:
+    name: windows .exe (NSIS)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install NSIS
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq nsis
+      - name: Build
+        run: bash packaging/build.sh --exe
+        env:
+          YMIR_REPO: ${{ github.server_url }}/${{ github.repository }}.git
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ymir-windows-installer
+          path: packaging/out/*.exe
+          if-no-files-found: error
+
+  pkg:
+    name: macos .pkg (pkgbuild)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: bash packaging/build.sh --mac
+        env:
+          YMIR_REPO: ${{ github.server_url }}/${{ github.repository }}.git
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ymir-macos-installer
+          path: packaging/out/*.pkg
+          if-no-files-found: error

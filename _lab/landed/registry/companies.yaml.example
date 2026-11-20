@@ -1,0 +1,8 @@
+# The companies the Allfather works with — who is in each, and where they live.
+#
+# NOT projects: a company owns a realm, its meetings, its documents and its plans.
+# A client (served by a company) lives in clients.yaml, not here.
+
+version: 1
+updated: "2026-10-24"
+companies: []

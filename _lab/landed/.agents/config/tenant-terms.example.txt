@@ -1,0 +1,14 @@
+# The operator's own terms — a SHAPE, not a list. Rule 29 / Rule 04.
+#
+# The real list is private and lives in the hoard:
+#     $YMIR_HOME/config/tenant-terms.txt
+# One term or regex per line; '#' starts a comment. The ward refuses NEW appearances of
+# these in the tracked tree, and tolerates the recorded backlog (config/tenant-baseline.json).
+#
+# Replace these placeholder patterns with your own before enabling the ward:
+OPERATOR_HOSTNAME_PLACEHOLDER
+operator-domain\.example
+OperatorCompanyName
+OperatorClientName
+OperatorPerson Surname
+/home/OPERATOR/private/path

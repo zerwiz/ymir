@@ -1,0 +1,21 @@
+# The meeting board, as configuration. Copy to hodd/identity/trello.yaml.
+# Every name here is what Snotra will create or expect; none is company-specific.
+version: 1
+board: "Meetings"
+lists:
+  - Meetings
+  - Agenda
+  - Proposed
+  - Decided
+  - Actions
+  - Blocked
+  - Done
+  - Open Questions
+  - Sign-off
+  - Signed
+labels:
+  Grade A: red
+  Grade B: orange
+  Grade C: green
+  Blocking: purple
+  Question: sky

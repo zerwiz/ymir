@@ -1,0 +1,18 @@
+# Where meeting records live, by scope. Copy to hodd/identity/meeting-locations.yaml
+# and edit the shelves to match the house. One meeting, one shelf.
+version: 1
+version: 1
+shelves:
+  - id: private
+    path: hodd/life/meetings
+    scope: private
+  - id: company
+    path: hodd/life/meetings/company
+    scope: company
+  - id: project
+    path: hodd/life/meetings/projects/<project>
+    scope: project
+rules:
+  - "most specific container wins: project > company > private"
+  - "one meeting, one shelf; never copy a record between shelves"
+  - "the record shape is identical everywhere"

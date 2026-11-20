@@ -1,0 +1,308 @@
+/* ============================================================
+   Mánagandr — the read calendar (plan 60).
+   The cloth is never mixed: every colour is a token (var(--ymir-*)).
+   Tokens only, no raw hex, per the governed-asset law.
+   ============================================================ */
+
+.mg-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ymir-space-3);
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--ymir-space-3);
+}
+.mg-nav { display: flex; align-items: center; gap: var(--ymir-space-2); }
+.mg-month {
+  font-family: var(--ymir-font-head);
+  font-size: 20px;
+  min-width: 190px;
+  text-align: center;
+  color: var(--ymir-text-0);
+}
+.mg-btn {
+  width: 30px;
+  height: 30px;
+  border: var(--ymir-border);
+  border-radius: var(--ymir-radius);
+  background: var(--ymir-bg-2);
+  color: var(--ymir-cyan-1);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+.mg-today {
+  height: 30px;
+  padding: 0 var(--ymir-space-3);
+  border: var(--ymir-border);
+  border-radius: var(--ymir-radius);
+  background: var(--ymir-bg-2);
+  color: var(--ymir-text-1);
+  font-family: var(--ymir-font-mono);
+  font-size: 12px;
+  cursor: pointer;
+}
+.mg-btn:hover, .mg-today:hover { border-color: var(--ymir-steel-2); color: var(--ymir-chisel); }
+
+.mg-lanes { display: flex; flex-wrap: wrap; gap: var(--ymir-space-1); }
+.mg-lane {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: var(--ymir-border);
+  border-radius: 999px;
+  background: var(--ymir-bg-2);
+  color: var(--ymir-text-2);
+  font-family: var(--ymir-font-mono);
+  font-size: 11px;
+  cursor: pointer;
+}
+.mg-lane.on {
+  color: var(--ymir-text-0);
+  border-color: var(--ymir-steel-2);
+  background: color-mix(in srgb, var(--ymir-cyan-1) 12%, var(--ymir-bg-2));
+}
+
+.mg-note {
+  margin-bottom: var(--ymir-space-3);
+  padding: var(--ymir-space-3);
+  border: var(--ymir-border);
+  border-radius: var(--ymir-radius);
+  font-size: 12px;
+  background: var(--ymir-bg-1);
+}
+.mg-note.info { color: var(--ymir-info); border-color: var(--ymir-steel-2); }
+.mg-note.warn { color: var(--ymir-warn); border-color: var(--ymir-steel-2); }
+.mg-note.muted { color: var(--ymir-text-2); }
+
+.mg-scroll {
+  max-height: 62vh;
+  overflow: auto;
+  border: var(--ymir-border);
+  border-radius: var(--ymir-radius-panel);
+  background: var(--ymir-bg-1);
+  box-shadow: var(--ymir-bevel);
+}
+.mg-grid { display: flex; flex-direction: column; --mg-hour: 15px; }
+.mg-week { border-bottom: var(--ymir-border); }
+.mg-week:last-child { border-bottom: none; }
+
+.mg-week-head, .mg-week-allday, .mg-week-body { display: flex; align-items: stretch; }
+.mg-gutter-spacer, .mg-gutter-label, .mg-gutter { width: 56px; flex: 0 0 56px; }
+.mg-gutter-label {
+  font-family: var(--ymir-font-mono);
+  font-size: 9px;
+  color: var(--ymir-text-3);
+  padding: 2px 4px;
+  text-align: right;
+}
+
+.mg-day-head {
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
+  padding: 4px 2px;
+  border-left: var(--ymir-border);
+  color: var(--ymir-text-1);
+}
+.mg-day-head .mg-wd {
+  display: block;
+  font-family: var(--ymir-font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ymir-text-3);
+}
+.mg-day-head .mg-dom { font-size: 14px; }
+.mg-day-head.out { color: var(--ymir-text-3); }
+.mg-day-head.out .mg-dom { opacity: 0.5; }
+.mg-day-head.wk-start { border-left: 1px solid var(--ymir-steel-2); }
+.mg-day-head.today {
+  color: var(--ymir-chisel);
+  background: color-mix(in srgb, var(--ymir-cyan-1) 10%, transparent);
+}
+.mg-day-head.today .mg-dom { font-weight: 700; }
+
+.mg-week-allday { min-height: 22px; }
+.mg-allday-cell {
+  flex: 1 1 0;
+  min-width: 0;
+  border-left: var(--ymir-border);
+  padding: 1px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.mg-allday-cell.out { opacity: 0.5; }
+.mg-allday-chip {
+  display: block;
+  width: 100%;
+  border: none;
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-family: var(--ymir-font-mono);
+  font-size: 9px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  color: var(--ymir-text-0);
+}
+
+.mg-gutter { border-left: none; }
+.mg-hour { position: relative; }
+.mg-hour span {
+  position: absolute;
+  top: -5px;
+  right: 4px;
+  font-family: var(--ymir-font-mono);
+  font-size: 8px;
+  color: var(--ymir-text-3);
+}
+
+.mg-day {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  border-left: var(--ymir-border);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--ymir-steel-1) 0,
+    var(--ymir-steel-1) 1px,
+    transparent 1px,
+    transparent var(--mg-hour, 15px)
+  );
+}
+.mg-day.today { background-color: color-mix(in srgb, var(--ymir-cyan-1) 5%, transparent); }
+
+.mg-event {
+  position: absolute;
+  border: none;
+  border-left: 2px solid var(--ymir-cyan-1);
+  border-radius: 2px;
+  padding: 0;
+  background: color-mix(in srgb, var(--ymir-cyan-1) 26%, transparent);
+  cursor: pointer;
+  overflow: hidden;
+}
+.mg-event:hover { background: color-mix(in srgb, var(--ymir-cyan-1) 44%, transparent); }
+.mg-cancelled { opacity: 0.45; border-left-style: dashed; }
+.mg-cal-0 { border-left-color: var(--ymir-cyan-1); background: color-mix(in srgb, var(--ymir-cyan-1) 26%, transparent); }
+.mg-cal-1 { border-left-color: var(--ymir-violet-1); background: color-mix(in srgb, var(--ymir-violet-1) 26%, transparent); }
+.mg-cal-2 { border-left-color: var(--ymir-ok); background: color-mix(in srgb, var(--ymir-ok) 24%, transparent); }
+.mg-cal-3 { border-left-color: var(--ymir-warn); background: color-mix(in srgb, var(--ymir-warn) 24%, transparent); }
+.mg-cal-4 { border-left-color: var(--ymir-info); background: color-mix(in srgb, var(--ymir-info) 26%, transparent); }
+.mg-cal-5 { border-left-color: var(--ymir-chisel); background: color-mix(in srgb, var(--ymir-chisel) 24%, transparent); }
+.mg-allday-chip.mg-cal-0, .mg-allday-chip.mg-cal-1, .mg-allday-chip.mg-cal-2,
+.mg-allday-chip.mg-cal-3, .mg-allday-chip.mg-cal-4, .mg-allday-chip.mg-cal-5 {
+  border-left: 2px solid;
+}
+
+.mg-now {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 2px solid var(--ymir-danger);
+  z-index: 4;
+  pointer-events: none;
+}
+.mg-now::before {
+  content: '';
+  position: absolute;
+  left: -2px;
+  top: -3px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ymir-danger);
+}
+
+.mg-hair {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.mg-hair.hollow { border-top: 1px dashed var(--ymir-violet-1); }
+.mg-hair.filled { border-top: 1px solid var(--ymir-ok); }
+.mg-hair.blood { border-top: 1px solid var(--ymir-danger); }
+.mg-hair::after {
+  content: '';
+  position: absolute;
+  left: 1px;
+  top: -2px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+}
+.mg-hair.hollow::after { border: 1px solid var(--ymir-violet-1); background: transparent; }
+.mg-hair.filled::after { background: var(--ymir-ok); }
+.mg-hair.blood::after { background: var(--ymir-danger); }
+
+.mg-rail {
+  position: absolute;
+  left: 1px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--ymir-violet-2);
+  opacity: 0.7;
+  z-index: 2;
+  pointer-events: none;
+}
+.mg-phase {
+  position: absolute;
+  left: 6px;
+  right: 3px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--ymir-violet-1) 40%, transparent);
+  border-left: 2px solid var(--ymir-violet-1);
+  z-index: 2;
+  pointer-events: none;
+}
+.mg-phase.refused { outline: 1px solid var(--ymir-danger); }
+
+.mg-tick {
+  position: absolute;
+  left: 2px;
+  width: 5px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--ymir-info);
+  z-index: 2;
+  pointer-events: none;
+}
+.mg-super {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 3px;
+  width: 0;
+  border-left: 1px solid var(--ymir-danger);
+  opacity: 0.5;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.mg-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ymir-space-3);
+  margin: var(--ymir-space-2) 0 var(--ymir-space-3);
+  font-family: var(--ymir-font-mono);
+  font-size: 10px;
+  color: var(--ymir-text-2);
+}
+.mg-key { display: inline-flex; align-items: center; gap: 6px; }
+.mg-swatch { display: inline-block; width: 14px; height: 0; }
+.mg-swatch.hollow { border-top: 1px dashed var(--ymir-violet-1); }
+.mg-swatch.filled { border-top: 1px solid var(--ymir-ok); }
+.mg-swatch.blood { border-top: 1px solid var(--ymir-danger); }
+.mg-swatch.event { border-top: 3px solid var(--ymir-cyan-1); }
+.mg-swatch.phase { border-top: 3px solid var(--ymir-violet-1); }
+.mg-swatch.tick { border-top: 2px solid var(--ymir-info); }
+.mg-swatch.rule { border-top: 3px solid var(--ymir-danger); }

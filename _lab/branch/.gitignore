@@ -1,0 +1,211 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+.venv/
+
+# Secrets - NEVER commit
+.env.local
+.env.realm
+*.env.local
+
+# Build
+dist/
+build/
+.next/
+out/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Runtime
+*.log
+logs/
+.pids
+*.pid
+.run/
+
+# Docker
+docker-compose.override.yml
+
+# Agent artifacts (generated)
+.agents/memory/*.db
+.agents/bus/messages.json
+.agents/filebrowser/filebrowser.db
+
+# Treehouse worktrees (ephemeral)
+.yggdrasil/
+.treehouses/
+
+# Realm & company secrets — the real files never leave the machine; the
+# *.example templates are the tracked copies (see svartalfaheim/examples/SECRETS.md).
+svartalfaheim/*/.env
+svartalfaheim/*/.env.*
+svartalfaheim/*/*/.env
+svartalfaheim/*/*/.env.*
+!svartalfaheim/*/.env*.example
+!svartalfaheim/*/*/.env*.example
+svartalfaheim/*/.env.realm
+
+# Certs
+certs/*.pem
+certs/*.key
+certs/*.crt
+
+# Portal
+apps/hlidskjalf/node_modules/
+apps/hlidskjalf/.expo/
+apps/hlidskjalf/dist/
+
+# Óðrerir — the Live Hall
+apps/odrerir/node_modules/
+apps/odrerir/dist/
+apps/odrerir/public/livehall.json
+
+# Brokk runtime home — private (ship *.example templates only)
+data/*
+!data/*.example
+# The state dir is DERIVED per machine: bin/vault/hoard-lib.sh resolves it to
+# ${YMIR_STATE_DIR:-$YMIR_HOME/state} (Rule 04/07 — the operator's home owns
+# it, never the tree; bin/bridge/ymir-plan.sh's purity row names a repo state/ as the
+# drift it is). The rule must cover the path ITSELF, not only what sits inside
+# it — `state/*` cannot match a symlink NAMED state, which is how one pointing
+# at another machine's home ($HOME_SEAT/Documents/ymirhome/state) came to be
+# tracked here and shipped to every clone. A clone gets no state/ at all; each
+# seat creates its own.
+/state
+config/*
+!config/*.example
+.pi/extensions/*.local.ts
+
+# Mimirsbrunn — the well is PER-MACHINE, never shared.
+# It is "one repo-local store shared by every agent" on THIS machine, not between
+# machines/users: a clone must never inherit another user's memory, and the
+# SQLite -wal/-shm sidecars are volatile runtime files that must never be
+# versioned (a stale WAL can corrupt a fresh clone's store).
+# The append log under memory/well/ is the same class of data. Only the
+# README (the contract) is tracked; the store is rebuilt per machine.
+.agents/memory/kaia.engram*
+.agents/memory/*.db
+.agents/memory/well/*.jsonl
+
+# smidja runtime — ALL of smidja_data/ is runtime data, never tracked
+apps/smidja/smidja_data/
+apps/smidja/smidja.db*
+
+# Óðrerir's Astro dev-server state: rewritten on every start with a live pid and
+# the host's own addresses (a private-IP leak in a public tree). Runtime data —
+# never tracked. The generated types beside it stay tracked.
+apps/odrerir/.astro/dev.json
+.env
+__pycache__/
+*.pyc
+*.egg-info/
+
+# Capacitor / Android build artifacts
+apps/hlidskjalf/android/app/build/
+apps/hlidskjalf/android/build/
+apps/hlidskjalf/android/.gradle/
+apps/hlidskjalf/android/local.properties
+
+# Large generated mobile artifact (build it — see README)
+apps/hlidskjalf/public/ymir.apk
+
+# Android release signing (never commit)
+apps/hlidskjalf/android/ymir-release.keystore
+apps/hlidskjalf/android/keystore.properties
+
+# Per-user Ró preference (moved to state/; never tracked)
+.agents/config/ro
+# The Allfather's personal agent/harness/model setup — private, from the
+# tracked template .agents/config/agents.yaml.example. Push it to a private repo.
+.agents/config/agents.yaml
+# The pinned terminal backend (herdr/tmux/zellij/cmux) — machine-local, never
+# tracked. `config` is a symlink to `.agents/config`, so a `config/*` rule does
+# not match these files; they are named here instead.
+.agents/config/backend
+
+# workspace/ — the operator's private world-tree. A clone must never inherit
+# another operator's work, personal, memory, or company data. Only the scaffold
+# (README.md, projects.yaml.example, workspaces.yaml.example) is tracked.
+workspace/work/
+workspace/personal/
+workspace/memory/
+workspace/companies/
+workspace/config/
+workspace/marketing/
+workspace/INSTALL.md
+
+# Session logs can carry live credentials and prompts — never tracked.
+assets/reference/state/
+
+# The private machine mesh (from config/tailscale-sync.example.yaml).
+.agents/config/tailscale-sync.yaml
+
+# Per-machine agent/model overlays (private); track only the .example shape.
+.agents/config/agents.*.yaml
+!*.example
+
+# machine config rendered from opencode.json.example (holds absolute paths)
+/opencode.json
+
+# machine config rendered from .pi/mcp-adapter.json.example (holds absolute paths)
+.pi/mcp-adapter.json
+# the same for the bare pi mcp list — a rendered copy of the example, never the
+# template itself. It was tracked by mistake and carried a seat's absolute paths
+# (and a wrong one: ~/hodd instead of $YMIR_HOME/hodd).
+.pi/mcp.json
+.pi/*.bak-*
+
+# The away-mode alarm channel: written per machine by the Omarchy layer.
+.agents/config/wedge-alarm
+*.tsbuildinfo
+.agents/state/
+
+# Apps live in their own repos (registered in the home registry), pulled by the
+# installer's step_apps — never tracked in the monorepo.
+#
+# CORRECTION (2026-11-06): `apps/smidja/` was listed here and that was wrong —
+# the smithy is TRACKED (`git ls-files apps/smidja`), and the blanket ignore meant
+# every NEW smidja file was silently swallowed: written to the tree, invisible to
+# `git status`, and absent from any clone. It bit this change: `runrecord.py` and
+# the two doors were ignored while 34 smidja files were already tracked. Only its
+# RUNTIME data is untracked, and that is named above (`smidja_data/`, `smidja.db*`).
+!apps/README.md
+
+# The seat's chat belongs to the operator — in the home, never the repo (Rule 04).
+chat/
+
+# The Smiðja visualizer's BUILT UI must SHIP in the npm package. npm honours
+# .gitignore when no .npmignore exists, so the blanket `dist/` rule dropped the
+# whole interface from the tarball: the API answered and the app view showed
+# nothing. Un-ignore it by name (a build artifact that is part of the product).
+!apps/smidja-factory/apps/visualizer/dist/
+!apps/smidja-factory/apps/visualizer/dist/**
+
+# A local config backup, never tracked (and this repo is public).
+opencode.json.bak*
+
+# The local skills shelf — the Allfather's own craft, never published.
+# Ships nothing, clones to nobody, and is not in the npm package.
+.agents/skills-local/
+
+# runtime output: the engine writes here, never tracked
+bin/state/
+
+# Generated dispatch briefs. `bin/backend/fm-brief.sh` writes
+# data/<task-id>/brief.md under the active firstmate home, and that brief
+# INTERPOLATES the machine's real repo path — so a committed one publishes the
+# operator's home in a public repo, which is exactly what private-guard catches.
+# They are outputs, not templates: nothing reads them back. Keep them out.
+bin/data/
+
+# The seat identity Hermes loads (machine-local; never published)
+.hermes.md
