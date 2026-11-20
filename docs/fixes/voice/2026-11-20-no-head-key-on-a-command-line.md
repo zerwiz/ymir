@@ -34,3 +34,7 @@ Measured on the dev machine with the online head:
 ## Still owed
 
 The key that was exposed is in the head's settings, not in any repository. Rotating it is the operator's call.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #840
