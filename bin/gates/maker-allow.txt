@@ -34,3 +34,4 @@ the fleet panel answered 0 agents and every pi | RULES/53: the app errand's body
 The arm test's fake pi was a copied sleep | RULES/53: the fix note names the test fixture the change replaces — a fixture, not a maker claim (2026-11-19)
 It is now a script named pi | RULES/53: the fix note says what the fixture became — a script name, not a maker claim (2026-11-19)
 On pi a waiting voice or ask is | RULES/53: the arm's fix note names the harness whose queue it repairs, because the behaviour differs by harness — the change itself, not a maker claim (2026-11-19)
+agents: the Claude arm hook attaches and never acquires | RULES/53: the commit subject names the hook FILE whose behaviour is the change — a path and a behaviour, not a maker claim (2026-11-20)
