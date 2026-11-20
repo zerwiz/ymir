@@ -26,6 +26,7 @@ import urllib.request
 GROUPS = ("backlog", "unstarted", "started", "review", "done", "cancelled")
 _ENGINE_GROUP = {"completed": "done", "canceled": "cancelled"}  # a board's own spelling → the contract's
 PAGE = 200  # the largest page a board lists
+VISIBLE = 100  # measured 2026-11-20: a board may show only its newest 100 cards of a place, so a full list proves nothing
 PACE = 0.25  # seconds between writes, so a board's rate limit is not met at a run of hundreds
 
 
@@ -62,7 +63,9 @@ class McpBoard:
         self.place, self.url, self.token, self.n = place, url, token, 0
         self._states = None
         self.page_full = False  # set when a list came back at the page limit: more may exist
+        self.saturated = False  # set when a list shows as many cards as the board is known to reveal: older ones may be hidden
         self._wrote = 0.0
+        self._last_count = None
 
     # ── transport ────────────────────────────────────────────────────────────────────────────
     def _call(self, tool, args):
@@ -146,9 +149,12 @@ class McpBoard:
     def list_cards(self, label):
         out = []
         for name, _ in self.states():
-            got = self._call("list_cards", {"place": self.place, "label": label, "state": name, "limit": PAGE}).get("cards", [])
+            r = self._call("list_cards", {"place": self.place, "label": label, "state": name, "limit": PAGE})
+            got, self._last_count = r.get("cards", []), r.get("count")
             if len(got) >= PAGE:
                 self.page_full = True
+            if len(got) >= VISIBLE or (self._last_count or 0) >= VISIBLE:
+                self.saturated = True
             out += [self._shape(c) for c in got]
         return out
 

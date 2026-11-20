@@ -25,6 +25,7 @@ URL or state name is written in this repository.
 | Idempotent | a card is found by number and title; a second run changes nothing |
 | Safe | only cards with the `plan` label and the `NNN · ` title shape are touched; nothing is deleted |
 | Hand moves stand | a card moved on the board stays until the ledger's own status changes |
+| A board that hides cards | when a list is as full as the board is known to reveal (100), a write run is refused: older cards may be hidden and would be created again |
 | Rate limits | a rate-limited or failing board is waited out and retried; writes are paced |
 
 ## Proof
@@ -32,6 +33,12 @@ URL or state name is written in this repository.
 `tests/test_plan_sync.py` runs against a stub board: the first run creates three cards, the second creates none, and a
 status flip moves exactly one. It also proves that a stranger's cards are left alone, a dry run writes nothing, and a
 project with no `board:` block is refused.
+
+## What the first real run taught
+
+The board's MCP shows only the newest 100 cards of a place. Two re-runs after a rate-limited first pass could not see the
+cards the earlier passes had created, so they created plans again. The guard above is the repair in this repository.
+The duplicates already on the board are not removed here: this change never deletes a card.
 
 ## Left for later
 

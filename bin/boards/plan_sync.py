@@ -244,6 +244,10 @@ def run(args):
         if m and LABEL in c["labels"]:
             by_num.setdefault(int(m.group(1)), []).append(c)
 
+    if board.saturated and not args.dry_run:
+        raise Refusal("the board lists as many plan cards as it is known to reveal, so older ones may be hidden and a "
+                      "second pass would create them again. Nothing was written; run with --dry-run, or have the board's "
+                      "owner list the place in full")
     n = {"created": 0, "updated": 0, "unchanged": 0}
     for p in plans:
         card = find_card(board, by_num, p, plans_by_num)

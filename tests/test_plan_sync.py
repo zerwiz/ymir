@@ -145,6 +145,15 @@ class PlanSync(unittest.TestCase):
         self.assertNotIn("create_card", self.board.calls)
         self.assertNotIn("Old", out)
 
+    def test_a_board_that_hides_older_cards_is_refused_a_write(self):
+        for i in range(100):  # a full window: the board may be hiding more
+            self.board.cards.append(dict(card=200 + i, title=f"{900 + i} · hidden-window", state="Icebox", labels=["plan"], description=""))
+        env = dict(os.environ, YMIR_HOME=self.home, PS_TOKEN="s3cret")
+        r = subprocess.run([DOOR, "--project", "demo"], capture_output=True, text=True, env=env)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("older ones may be hidden", r.stderr)
+        self.assertNotIn("create_card", self.board.calls)
+
     def test_a_missing_board_block_is_refused(self):
         p = os.path.join(self.home, "hodd", "identity", "projects.yaml")
         open(p, "w").write("projects:\n- id: demo\n  realm: acme\n")

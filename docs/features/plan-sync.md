@@ -58,6 +58,9 @@ The status comes from the README index row when it has one, otherwise from the p
   status changes.
 - **Only its own cards.** It touches cards that carry the `plan` label *and* the `NNN · ` title shape. It never deletes
   a card, and never edits one of yours.
+- **A board that hides its older cards stops the run.** Measured 2026-11-20: one board's MCP shows only the newest 100
+  cards of a place. When a list is that full, plan-sync refuses to write, because a second pass could not see what the
+  first created and would create it again. `--dry-run` still works.
 - A board that answers *too many requests* is waited out and retried; writes are paced.
 
 ## What it does not do yet
@@ -73,4 +76,5 @@ does not ship. An unknown `adapter:` is refused by name.
 | `has no board: block` | the project's registry row names no board |
 | `the token named by '…' is not there` | the reference resolves to nothing on this seat; the value is never printed |
 | `HTTP 403` / a Cloudflare 1010 | the request lacked a User-Agent or the token is not allowed in that place |
+| `older ones may be hidden` | the board lists only its newest cards; have its owner list the place in full before a write run |
 | `no state in the group` | the board has no state for that group; add one on the board |
