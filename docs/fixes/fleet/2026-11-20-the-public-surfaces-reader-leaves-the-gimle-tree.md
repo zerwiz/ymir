@@ -21,3 +21,7 @@ The callers follow: `bin/gates/checks.d/0513-surfaces-from-the-home.sh`,
 `systems/skirnir/services/learn-site.sh` and `systems/snotra/services/letters/letter-design.py`. The CLI is
 unchanged (`--get`, `--list`, `--json`), and the test passes (7 of 7). The earlier fix note
 `docs/fixes/gimle/2026-11-20-the-surfaces-come-from-the-home.md` stays as the record of where it was born.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #853
