@@ -20,3 +20,7 @@ The test makes `$T/tmp` and exports `TMPDIR` before the loop runs, so the fixtur
 
 `bash bin/engine/tests/test_update_loop_proof.sh` — 16 passed. The real red gate behind the heart's hold must be
 re-measured once this lands: `bin/engine/update-loop.sh prove 149f38ebd294 --force` (or the next main, proved fresh).
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #856
