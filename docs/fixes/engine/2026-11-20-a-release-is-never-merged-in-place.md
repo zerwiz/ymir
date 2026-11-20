@@ -23,3 +23,7 @@ saw, and every reader of the folder name was told the wrong version.
 
 `bash bin/gates/tests/test_pin_refresh.sh` — 27 pass (three new: the refusal, the release left on its sha, and
 `moved-in-place`). Live: `pin: moved-in-place — release abefc4f06932 carries 149f38ebd294 …`, rc 3.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #856
