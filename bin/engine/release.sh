@@ -101,14 +101,23 @@ prove() {  # <release> → prints a TOON table, exit 0 only when every row passe
     case "$a" in bilskirnir|rodd) [ -n "$bin" ] || bin="" ;; esac
     if [ -z "$bin" ]; then row "$a" FAIL "no Electron inside the release"; bad=1; continue; fi
     case "$bin" in "$d"/*) ;; *) row "$a" FAIL "Electron comes from outside the release: $bin"; bad=1; continue ;; esac
-    ver="$("$bin" --version 2>/dev/null | tr -d v)"
-    [ -n "$ver" ] || { row "$a" FAIL "$bin does not answer --version"; bad=1; continue; }
+    # A PROBE IS NOT A BROWSER (2026-11-20, measured). `electron --version` aborts on a machine where the packaged
+    # `chrome-sandbox` is not root-owned 4755 — which is every per-user install — so the proof failed on a box whose
+    # release was perfectly good: "The SUID sandbox helper binary was found, but is not configured correctly", exit 14.
+    # The version is a FILE the package ships (`dist/version`); ask that first, and only fall back to running the
+    # binary with the sandbox disabled, which is exactly what a version probe is.
+    ver=""
+    for vf in "$(dirname "$bin")/version" "$(dirname "$bin")/dist/version"; do
+      [ -r "$vf" ] && { ver="$(tr -d 'v\n' <"$vf")"; break; }
+    done
+    [ -n "$ver" ] || ver="$(ELECTRON_DISABLE_SANDBOX=1 "$bin" --version --no-sandbox 2>/dev/null | tr -d v)"
+    [ -n "$ver" ] || { row "$a" FAIL "$bin does not answer --version (no dist/version file, and the sandbox helper is not usable)"; bad=1; continue; }
     want="$(declared_major "$d" "$a")"
     if [ -n "$want" ] && [ "${ver%%.*}" != "$want" ]; then row "$a" FAIL "declares Electron $want, would run $ver"; bad=1; continue; fi
     case "$a" in
       hlidskjalf|odrerir) [ -f "$d/apps/$a/dist/index.html" ] || { row "$a" FAIL "not built (no dist/index.html)"; bad=1; continue; } ;;
       sessrumnir) [ -d "$d/apps/$a/out/main" ] || { row "$a" FAIL "not built (no out/main)"; bad=1; continue; }
-                  out="$(cd "$d/apps/$a" && ELECTRON_RUN_AS_NODE=1 "$bin" -e "require('node-pty');console.log('ok')" 2>&1 | tail -1)"
+                  out="$(cd "$d/apps/$a" && ELECTRON_RUN_AS_NODE=1 ELECTRON_DISABLE_SANDBOX=1 "$bin" --no-sandbox -e "require('node-pty');console.log('ok')" 2>&1 | tail -1)"
                   [ "$out" = ok ] || { row "$a" FAIL "node-pty does not load in Electron $ver: $out"; bad=1; continue; } ;;
       bilskirnir) [ -f "$d/apps/$a/web/dist/index.html" ] || { row "$a" FAIL "not built (no web/dist/index.html)"; bad=1; continue; } ;;
       rodd) [ -d "$d/apps/$a/ui" ] || { row "$a" FAIL "the face is not fetched (no ui/)"; bad=1; continue; } ;;

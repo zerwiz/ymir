@@ -230,7 +230,9 @@ electron_fetch_runtime() {  # <app-dir> [root] [pkg]
     mkdir -p "$dir/dist" && unzip -q -o "$tmp/e.zip" -d "$dir/dist" && _electron_exe >"$dir/path.txt"
   fi
   rm -rf "$tmp"
-  [ -f "$dir/path.txt" ] && [ -x "$dir/dist/$(_electron_exe)" ] && { "$dir/dist/$(_electron_exe)" --version >/dev/null 2>&1; }
+  # A probe is not a browser: on a per-user install the packaged chrome-sandbox is never root-owned 4755, so a bare
+  # `--version` aborts (measured 2026-11-20: "The SUID sandbox helper binary ... is not configured correctly").
+  [ -f "$dir/path.txt" ] && [ -x "$dir/dist/$(_electron_exe)" ] && { ELECTRON_DISABLE_SANDBOX=1 "$dir/dist/$(_electron_exe)" --version --no-sandbox >/dev/null 2>&1; }
 }
 
 # fetch_electron_zip — the PROVEN road (2026-09-23): the postinstall's silent
