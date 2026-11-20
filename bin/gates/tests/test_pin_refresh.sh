@@ -60,6 +60,21 @@ case "$out" in *inside\ the\ pin*) check 0 "the refusal names the fault" ;; *) c
   ; check $? "the refused run left the pin where it was"
 rm -rf "$W/pin/bin"   # the seated copy goes again: the next checks are about the pin proper
 
+# 3b · THE SCHEDULE'S ROAD (2026-11-20): the scheduler runs FROM the pin, so --auto-tree resolves a tree that
+# is not the pin and re-execs ITS copy. Without this the refresher could never be scheduled at all — which is
+# why the pin was 182 commits behind while a weekly job measured the distance and nobody moved it.
+mkdir -p "$W/pin/bin/engine"
+cp "$W/tree/bin/engine/pin-refresh.sh" "$W/pin/bin/engine/pin-refresh.sh"
+out="$( cd "$W/pin" && YMIR_HOME="$YMIR_HOME" YMIR_STATE_DIR="$YMIR_STATE_DIR" YMIR_SOURCE_TREE="$W/tree" \
+        bash bin/engine/pin-refresh.sh --auto-tree --quiet 2>&1 )"; rc=$?
+[ "$rc" = 0 ]; check $? "--auto-tree refreshes from a tree that is not the pin (rc=$rc: $out)"
+[ "$(git -C "$W/pin" rev-parse --short HEAD)" = "$(git -C "$W/seed" rev-parse --short HEAD)" ]
+check $? "--auto-tree moved the pin to origin/main"
+out="$( cd "$W/pin" && YMIR_HOME="$YMIR_HOME" YMIR_STATE_DIR="$YMIR_STATE_DIR" \
+        bash bin/engine/pin-refresh.sh --from-tree "$W/pin" --quiet 2>&1 )"; rc=$?
+[ "$rc" = 4 ]; check $? "naming the pin itself as the source tree is refused (rc=$rc)"
+rm -rf "$W/pin/bin"   # the seated copy goes again
+
 # 4 · the working tree's copy brings it home, once, and logs the move
 "$W/tree/bin/engine/pin-refresh.sh" --quiet >"$W/refresh.out" 2>&1; rc=$?
 [ "$rc" = 0 ]; check $? "the working tree refreshes the pin (rc=$rc: $(cat "$W/refresh.out"))"
