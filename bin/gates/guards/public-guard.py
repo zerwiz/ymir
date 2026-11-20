@@ -151,6 +151,53 @@ def mailbox_findings(line: str) -> list[str]:
     return out
 
 
+# THE MASKED FORM (plan 339.1, 2026-11-20). The ward named the line; the hand then had to find the
+# address, invent a placeholder and hope the next run agreed. It now offers the mend itself:
+# `--mask <path>:<line>` rewrites ONLY the refused mailboxes on that line to the placeholder the
+# ward already allows, leaving every allowed address (example.org, noreply, git@github.com) as it
+# stood. The command names a path and a line number, never the address, so the help line is safe
+# to paste into a log or a report.
+MASKED_FORM = "<a personal address>"
+
+
+def mask_line(line: str) -> tuple[str, int]:
+    count = 0
+
+    def repl(m: re.Match) -> str:
+        nonlocal count
+        if mailbox_findings(m.group(0)):
+            count += 1
+            return MASKED_FORM
+        return m.group(0)
+
+    return MAILBOX.sub(repl, line), count
+
+
+def mask(root: Path, targets: list[str]) -> int:
+    total = 0
+    for t in targets:
+        rel, _, num = t.rpartition(":")
+        if not rel or not num.isdigit():
+            print(f"error: --mask wants <path>:<line>, got {t}", file=sys.stderr)
+            return 2
+        p = root / rel
+        if not p.is_file():
+            print(f"error: no file {rel}", file=sys.stderr)
+            return 2
+        text = p.read_text(encoding="utf-8", errors="surrogateescape")
+        lines = text.split("\n")
+        n = int(num)
+        if not 1 <= n <= len(lines):
+            print(f"error: {rel} has no line {n}", file=sys.stderr)
+            return 2
+        lines[n - 1], c = mask_line(lines[n - 1])
+        if c:
+            p.write_text("\n".join(lines), encoding="utf-8", errors="surrogateescape")
+        total += c
+        print(f'public_guard_mask[1]{{file,line,masked}}:\n  "{rel}","{n}","{c}"')
+    return 0 if total else 1
+
+
 def resolve_home(root: Path) -> str:
     home = os.environ.get("YMIR_HOME", "")
     if not home:
@@ -315,6 +362,9 @@ def main(argv: list[str]) -> int:
         print(f'  "machine","a fleet machine named as a host (@, ssh, host=, //, :port, .local, a tailnet suffix)","the same word anywhere else — a machine may share a name with the lore" ({len(machines)} read from the fleet registry; {"binding" if strict else "advisory"})')
         return 0
 
+    if argv and argv[0] == "--mask":
+        return mask(root, argv[1:])
+
     mode = argv[0] if argv and argv[0].startswith("--") else ""
     added_base = ""
     if mode == "--added":
@@ -399,6 +449,10 @@ def main(argv: list[str]) -> int:
         print("  " + f)
     if len(findings) > 20:
         print(f'  "…","{len(findings) - 20} more"')
+    mailbox_rows = [f.split(": a personal mailbox", 1)[0] for f in findings if ": a personal mailbox" in f]
+    if mailbox_rows:
+        print(f"help: a mailbox is masked in place, address unspoken — it becomes {MASKED_FORM}:", file=sys.stderr)
+        print("  python3 bin/gates/guards/public-guard.py --mask " + " ".join(sorted(set(mailbox_rows))[:20]), file=sys.stderr)
     print("help: a private value belongs in $YMIR_HOME; a private address is allowed only as a CIDR range "
           "or RFC 5737 space; a fixture is judged like any other file (RULES/04)", file=sys.stderr)
     return 1

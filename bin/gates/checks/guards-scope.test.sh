@@ -69,7 +69,11 @@ else
   printf '%s\n' "$out_in" | grep -E 'FAIL|INHERITED' | head -5
 fi
 
-out_out="$(cd "$T" && bash bin/gates/guards.sh --base "$BASE" --changed "$(scope_of bin/gates/guards.sh)" 2>&1)"; rc_out=$?
+# The push posture (plan 339.1): a push carries commits, so the untracked probe page is NOT in the
+# changed set here — which is exactly the "a file this push did not touch" the check needs. Without
+# it the hand-run posture judges untracked files too, and the page was its own finding (red on main
+# until 2026-11-20).
+out_out="$(cd "$T" && YMIR_GUARD_PUSH=1 bash bin/gates/guards.sh --base "$BASE" --changed "$(scope_of bin/gates/guards.sh)" 2>&1)"; rc_out=$?
 if [ "$rc_out" -eq 0 ] && printf '%s' "$out_out" | grep -q '"\(features\|weave\)-guard.sh","INHERITED"'; then
   ok inherited "the same finding, in a file the push did not touch, prints INHERITED and passes"
 else

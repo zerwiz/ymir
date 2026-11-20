@@ -257,16 +257,49 @@ done
 HEAD_SHA="$(git -C "$WTP" rev-parse HEAD)"
 BRANCH="$(grep '^branch=' "$MANIFEST" | cut -d= -f2-)"
 
+# ── a stale base is caught up, not refused at the end (plan 339.1) ──────────
+# On 2026-11-20 a batch spent its whole gate run and was then refused by branch-current because
+# main had moved while the wards ran. The batch is merge-shaped (every errand enters with a merge
+# commit), so the base is caught up the same way: fetch, and merge the moved base INTO the batch.
+# A clean merge carries on; a conflict stops exactly like an errand conflict, named, resumable.
+# Returns 0 when the base had not moved, 10 when it merged the moved base in.
+catch_up() {
+  git -C "$WTP" fetch -q "$REMOTE" "$BASE" 2>/dev/null || { printf 'warning: could not fetch %s %s — judging against the base on disk\n' "$REMOTE" "$BASE" >&2; return 0; }
+  git -C "$WTP" merge-base --is-ancestor "$REMOTE/$BASE" HEAD 2>/dev/null && return 0
+  local behind; behind="$(git -C "$WTP" rev-list --count "HEAD..$REMOTE/$BASE" 2>/dev/null || echo '?')"
+  if git -C "$WTP" merge --no-ff --no-edit -m "gather: catch up with $REMOTE/$BASE ($behind commit(s) moved while the batch was gathered)" "$REMOTE/$BASE" >/dev/null 2>&1; then
+    printf 'gather: %s/%s had moved %s commit(s) — merged into the batch, not refused\n' "$REMOTE" "$BASE" "$behind"
+    return 10
+  fi
+  files="$(git -C "$WTP" diff --name-only --diff-filter=U | tr '\n' ' ')"
+  printf 'conflict[1]{branch,files,worktree}:\n  "%s/%s","%s","%s"\n' "$REMOTE" "$BASE" "$files" "$WTP" >&2
+  printf 'help: the moved base conflicts with the batch — resolve in %s, git add, git commit --no-edit, then: bin/forge/gather.sh --continue %s\n' "$WTP" "$BATCH" >&2
+  exit 3
+}
+
 # ── the gates, ONCE ─────────────────────────────────────────────────────────
 GATES="${GATHER_GATES:-$WTP/.githooks/pre-push}"
-if [ -r "$GATES" ]; then
+[ -r "$GATES" ] || err "no gates at $GATES" "a batch never ships ungated"
+run_gates() {
+  HEAD_SHA="$(git -C "$WTP" rev-parse HEAD)"
   remote_sha="$(git -C "$WTP" rev-parse "$REMOTE/$BASE")"
   printf 'refs/heads/%s %s refs/heads/%s %s\n' "$BRANCH" "$HEAD_SHA" "$BRANCH" "$remote_sha" \
     | ( cd "$WTP" && bash "$GATES" ) || err "the gates refused the gathered head $HEAD_SHA — see the rows above" "fix in $WTP, commit, then --continue $BATCH"
   printf 'gather: gates passed once on %s\n' "${HEAD_SHA:0:12}"
-else
-  err "no gates at $GATES" "a batch never ships ungated"
-fi
+}
+catch_up || true
+run_gates
+# Main may move WHILE the wards run. Catch up again before the push; a moved base means a new head,
+# and a new head is gated again (its stamp is new). Twice at most — a base moving faster than the
+# gate is a fault to name, not a loop to run.
+tries=0
+while [ "$NOPR" = 0 ]; do
+  rc=0; catch_up || rc=$?
+  [ "$rc" = 10 ] || break
+  tries=$((tries + 1))
+  [ "$tries" -le 2 ] || err "$REMOTE/$BASE moved three times while the batch was gated" "run --continue $BATCH when main is quieter"
+  run_gates
+done
 printf 'gated=%s\n' "$HEAD_SHA" >>"$MANIFEST"
 
 if [ "$NOPR" = 1 ]; then
