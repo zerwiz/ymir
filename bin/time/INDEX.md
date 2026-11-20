@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[53]{file,does,kind,verdict,disposition,callers,lines}:
+bin[54]{file,does,kind,verdict,disposition,callers,lines}:
   "brokk-wake-grant.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",0,128
   "brokk-wake-lib.sh","Shared durable wake queue and portable lock helpers.","lib","tested","keep",4,1883
   "calendar-watch.sh","calendar-watch.sh — do not walk into a meeting by accident.","tool","wired","keep",0,81
@@ -50,7 +50,7 @@ bin[53]{file,does,kind,verdict,disposition,callers,lines}:
   "nornir-job-nsr-compliance.sh","nornir-job-nsr-compliance.sh — the NorthStar compliance round, nightly.","tool","wired","keep",0,54
   "nornir-job-observer.sh","nornir-job-observer.sh - Huginn, the raven of observation.","tool","wired","keep",0,181
   "nornir-job-plan-watch.sh","nornir-job-plan-watch.sh — the clock that watches the master plan.","tool","wired","keep",2,181
-  "nornir-job-private-scan.sh","nornir-job-private-scan.sh — the twice-daily sweep of the Ymir repository for things that belong in the home.","tool","wired","keep",1,271
+  "nornir-job-private-scan.sh","nornir-job-private-scan.sh — the twice-daily sweep of the Ymir repository for things that belong in the home.","tool","wired","keep",2,290
   "nornir-job-skillopt-sleep.sh","nornir-job-skillopt-sleep.sh — SkillOpt overnight self-evolution.","tool","wired","keep",1,77
   "nornir-job-snotra-autojoin.sh","nornir-job-snotra-autojoin.sh — the clock that keeps Snotra in the Allfather's meetings.","tool","wired","keep",0,52
   "nornir-job-snotra-mail.sh","nornir-job-snotra-mail.sh — Snotra listens for the answers.","tool","wired","keep",0,51
@@ -70,12 +70,13 @@ bin[53]{file,does,kind,verdict,disposition,callers,lines}:
   "test_brief_watch.sh","test_brief_watch.sh — the morning brief is judged, not just run.","tool","wired","keep",0,198
   "test_event_trigger.sh","test_event_trigger.sh — a smithy may be started by a person, the clock, or an","tool","wired","keep",1,251
   "test_outbound_gate.py","'''The outbound gate's proofs — plan 124 §7, his word 2026-10-24:","tool","wired","keep",1,501
+  "test_private_scan_exit.sh","test_private_scan_exit.sh — a finding is work in the queue, not a broken job; a scan that cannot run still says so.","tool","wired","keep",1,94
   "test_saga_head.sh","test_saga_head.sh — Sága's head fits, means what it says, and forgets what is finished","tool","wired","keep",1,152
   "test_saga_land_warnings.sh","test_saga_land_warnings.sh — the digest SEES work that finished and never landed.","tool","wired","keep",1,201
   "test_week_passes.sh","test_week_passes.sh — the three weekly passes keep their four promises, on every path.","tool","wired","keep",0,238
   "week-pass-lib.sh","week-pass-lib.sh — the one law the three weekly passes share.","lib","wired","keep",3,135
   "well-vault-sync.sh","well-vault-sync.sh — Völundr's memory across the Allfather's machines.","tool","wired","keep",1,105
 
-**Tally.** verdict: wired=48, tested=5
+**Tally.** verdict: wired=49, tested=5
 
-**Tally.** disposition: keep=53
+**Tally.** disposition: keep=54

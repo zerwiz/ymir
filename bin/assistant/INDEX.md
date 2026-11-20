@@ -39,7 +39,7 @@ bin[28]{file,does,kind,verdict,disposition,callers,lines}:
   "learn-site.sh","bin/assistant/learn-site.sh -> systems/skirnir/services/learn-site.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
   "learn.sh","bin/assistant/learn.sh -> systems/skirnir/services/learn.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
   "mouth.sh","bin/assistant/mouth.sh -> systems/skirnir/services/mouth.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
-  "prune.sh","bin/assistant/prune.sh -> systems/skirnir/services/prune.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
+  "prune.sh","bin/assistant/prune.sh -> systems/skirnir/services/prune.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",11,16
   "query.sh","bin/assistant/query.sh -> systems/skirnir/services/query.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16
   "research-smoke.sh","bin/assistant/research-smoke.sh -> systems/skirnir/services/research-smoke.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and…","tool","wired","keep",0,16
   "room-squad.sh","bin/assistant/room-squad.sh -> systems/skirnir/services/room-squad.sh — RETIRED SHIM (plan 149, 2026-10-31); execs the new door and says so.","tool","wired","keep",0,16

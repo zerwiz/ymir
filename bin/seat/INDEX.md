@@ -21,17 +21,18 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[80]{file,does,kind,verdict,disposition,callers,lines}:
+bin[81]{file,does,kind,verdict,disposition,callers,lines}:
   "agent-ready.py","'''agent-ready.py — is an agent READY for a turn, in one vocabulary, for both backends.","tool","wired","keep",3,375
   "agent-ready.sh","agent-ready.sh — one answer per target: ready · working · blocked: <why> · dead.","tool","wired","keep",3,33
   "agent-scope.sh","agent-scope.sh — every errand's hand stands in its own cgroup, so a kill is LOCAL.","tool","wired","keep",3,138
   "agent-state-lib.sh","agent-state-lib.sh — herdr's own word on where an agent stands, and whether it is READY for input.","lib","wired","keep",2,59
   "arm-talk.sh","arm-talk.sh — the heart speaks into every seat's pane, over that seat's own road (plan 234 P1).","tool","wired","keep",1,193
   "armpin.sh","armpin.sh — does every surface that SUPERVISES run the pin, and is the pin current?","tool","wired","keep",1,103
-  "backend.sh","backend.sh — the six verbs, for whichever backend a target names.","tool","tested","migrate → src/ymir_runtime/backend.py",28,27
+  "backend.sh","backend.sh — the six verbs, for whichever backend a target names.","tool","tested","migrate → src/ymir_runtime/backend.py",29,27
   "base.py","'''The six verbs a backend answers, and the one resolver that picks a backend.","tool","wired","keep",0,57
   "broken.sh","broken.sh — the register of broken things (RULES/50).","tool","tested","keep",2,165
   "claims.sh","claims.sh — a seat declares what it is building (plan number, branch, errand id, host).","tool","wired","keep",4,95
+  "claude-seat.sh","claude-seat.sh — what a Claude Code worker needs to start with no human click.","tool","wired","migrate → src/ymir_runtime/claude_seat.py",1,104
   "clocks.sh","bin/seat/clocks.sh — seat the three loops: plan-watch, ship-watch, update-loop.","tool","wired","keep",0,116
   "codex-plugin-install.mjs","// Valknut's Codex door.","data","wired","keep",3,125
   "context.sh","context.sh — what the agent's context ACTUALLY holds, right now.","tool","tested","keep",3,163
@@ -45,10 +46,10 @@ bin[80]{file,does,kind,verdict,disposition,callers,lines}:
   "harness-contract-install.sh","harness-contract-install.sh — every harness reads ONE contract, and an update keeps it true.","tool","wired","keep",1,81
   "harness-extensions-install.sh","harness-extensions-install.sh — every harness gets the house's extensions and packages, on install AND on update.","tool","wired","keep",12,531
   "helm-identity.sh","helm-identity.sh — WHO holds this helm, WHAT it is for, WHICH machine and fleet it","tool","wired","keep",6,145
-  "herdr-agents.py","'''herdr-agents.py — list the agents standing in this herdr session, as TOON.","tool","wired","keep",15,259
+  "herdr-agents.py","'''herdr-agents.py — list the agents standing in this herdr session, as TOON.","tool","wired","keep",16,259
   "herdr-editor.py","'''herdr-editor.py — read the INPUT BOX of an agent's pane, and say what is in it.","tool","wired","keep",3,133
   "herdr-ensure.sh","herdr-ensure.sh — Þjazi: guarantee the terminal backend Ymir needs.","tool","wired","keep",4,106
-  "herdr-run.sh","herdr-run.sh — raise an Eindri in herdr, by the grain that fits the errand.","tool","tested","keep",20,752
+  "herdr-run.sh","herdr-run.sh — raise an Eindri in herdr, by the grain that fits the errand.","tool","tested","keep",20,832
   "herdr.py","'''herdr as a backend — the first one, and the shape the second is measured against.'''","tool","wired","keep",0,111
   "hermes-seat.sh","hermes-seat.sh — a one-line launcher: the Hermes seat is src/ymir_runtime/hermes/seat.py (plan 317 slices 2–3).","tool","wired","keep",3,5
   "hermes-session-hook.sh","hermes-session-hook.sh — a one-line launcher: Hermes' session side (the Sága digest on the first turn, in any cwd)","tool","wired","keep",1,5
@@ -70,7 +71,7 @@ bin[80]{file,does,kind,verdict,disposition,callers,lines}:
   "seat-audit.sh","seat-audit.sh — one line per agent pane: is its work safe, landed, and correct?","tool","wired","keep",4,403
   "seat-find.sh","seat-find.sh — find the agent by its WORK, not by its tab title.","tool","wired","keep",1,130
   "seat-prove.sh","seat-prove.sh — a spawn is not a seat until the agent list shows it.","tool","tested","keep",5,110
-  "seat-reap.sh","seat-reap.sh — the hand that closes a finished seat.","tool","wired","keep",14,1096
+  "seat-reap.sh","seat-reap.sh — the hand that closes a finished seat.","tool","wired","keep",16,1114
   "seat-surface.sh","seat-surface.sh — render THIS seat's own name into the AGENTS.md every harness reads.","tool","tested","keep",7,239
   "seat-wake.sh","seat-wake.sh — the seat's word to the ARM, not to a desktop.","tool","wired","keep",3,83
   "seat-wire.sh","seat-wire.sh — one seat speaks into another seat's live pane, and says who it is.","tool","wired","keep",2,393
@@ -103,6 +104,6 @@ bin[80]{file,does,kind,verdict,disposition,callers,lines}:
   "whose-tree.sh","whose-tree.sh — whose code am I standing in?","tool","wired","keep",0,118
   "ymir-mcp.py","'''ymir-mcp.py (seat copy) — a thin pointer, kept because files are moved, never deleted (Rule 11).","tool","tested","keep",9,13
 
-**Tally.** verdict: wired=69, tested=11
+**Tally.** verdict: wired=70, tested=11
 
-**Tally.** disposition: keep=78, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/dispatch/resolve.py=1
+**Tally.** disposition: keep=78, migrate → src/ymir_runtime/backend.py=1, migrate → src/ymir_runtime/dispatch/resolve.py=1, migrate → src/ymir_runtime/claude_seat.py=1

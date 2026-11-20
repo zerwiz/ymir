@@ -62,6 +62,7 @@ capability_folders[34]{folder,index}:
 | `__main__` | The engine's door face — `python3 -m ymir_runtime <verb>`. | yes | yes (bin/ imports the engine) |
 | `allow` | Which models an Eindri may run on: the allow-list and its grants. | yes | yes (bin/ imports the engine) |
 | `backend` | The backend — where a seat's pane actually lives (herdr first, tmux fa | yes | yes (bin/ imports the engine) |
+| `claude_seat` | claude_seat — what a Claude Code worker needs to start with no human c | yes | yes (bin/ imports the engine) |
 | `__main__` | `python3 -m ymir_runtime.config` — the door face of the config layer. | yes | yes (bin/ imports the engine) |
 | `load` | Load a hoard config WITH its schema — one road from a file to trusted  | yes | yes (bin/ imports the engine) |
 | `schema` | JSON Schema validation for the hoard's configs — a loud refusal, never | yes | yes (bin/ imports the engine) |
@@ -103,6 +104,7 @@ capability_folders[34]{folder,index}:
 | `support` | Test doubles and fixtures for the engine's unit suite. | yes | yes (bin/ imports the engine) |
 | `test_allow` | allow.py — the operator's model allow-list, its grants, and the use lo | yes | yes (bin/ imports the engine) |
 | `test_backend` | backend.py — herdr first, tmux the verified fallback, nothing assumed. | yes | yes (bin/ imports the engine) |
+| `test_claude_seat` | claude_seat.py — a Claude worker starts with no human click (2026-11-2 | yes | yes (bin/ imports the engine) |
 | `test_cli` | __main__.py — the door face, its exit codes, and the compat line. | yes | yes (bin/ imports the engine) |
 | `test_config` | config/ — load-with-schema, a loud refusal naming the key and the file | yes | yes (bin/ imports the engine) |
 | `test_container` | container.py — the sandbox decision, and the refusals it must make. | yes | yes (bin/ imports the engine) |
