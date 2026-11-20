@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # learn-site.sh — Skírnir learns the house's own public site.
 #
-#   bin/assistant/learn-site.sh [--url https://ymir.zerwiz.org/] [--dry-run]
+#   bin/assistant/learn-site.sh [--url <the site>] [--dry-run]
 #
-# His words, 2026-10-22: *"he needs to know everything https://ymir.zerwiz.org/"*. The site is PUBLIC, so
+# His words, 2026-10-22: *"he needs to know everything"* about his own site. The site is PUBLIC, so
 # nothing private crosses into the digest; it carries what the repo's lore and catalogue do not say in
 # the same words — the houses, the eleven treasures, the laws, the watch, the renewal.
 #
@@ -43,7 +43,16 @@ except Exception:
 PYCFG
 )"
 fi
-[ -n "$URL" ] || URL="https://ymir.zerwiz.org/"
+# The address is the OPERATOR's, so it is asked of his home and never spelled here (RULES/04, 2026-11-20).
+#   1. the argument or SITE_URL the caller gave
+#   2. the home's own config (config/assistant/site_url — read above)
+#   3. the `homepage` service's public_url in <home>/hodd/identity/services.yaml, through the one reader
+# No address, no run: learning a site nobody named is not a job, and inventing a default is how this tree came to
+# publish the operator's hostname in the first place.
+if [ -z "$URL" ]; then
+  URL="$("$ROOT/bin/gimle/surfaces.py" --get homepage 2>/dev/null || true)"
+fi
+[ -n "$URL" ] || { printf 'learn-site: no site to learn — set site_url in the home config, or declare the homepage public_url in hodd/identity/services.yaml\n' >&2; exit 2; }
 DEST="$HOME_R/hodd/identity/assistant/approved"
 mkdir -p "$DEST" 2>/dev/null || exit 3
 

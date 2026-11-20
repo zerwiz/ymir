@@ -26,7 +26,11 @@ export const HALL_URL = (() => {
   if (override) return override;
   const host = typeof window === 'undefined' ? '' : window.location.host;
   const local = host.startsWith('localhost') || host.startsWith('127.0.0.1');
-  return local ? 'http://localhost:4322' : 'https://hall.ymir.zerwiz.org';
+  if (local) return 'http://localhost:4322';
+  // THE PUBLIC HALL IS THE DEPLOYMENT'S, NOT THIS REPOSITORY'S (RULES/04, 2026-11-20): a public tree never names
+  // the operator's own host. A deployment declares VITE_HALL_URL; without it the door is not offered, which is
+  // honest for a copy that has not been told where its hall lives.
+  return '';
 })();
 
 /** Per-gate metadata — every view is a page and declares its own story. */
