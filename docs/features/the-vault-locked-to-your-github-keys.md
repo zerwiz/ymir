@@ -148,3 +148,7 @@ bin/vault/vault-relock.sh --add-machine [--title NAME]  # this machine's key, th
 bin/vault/vault-relock.sh --check [--strict] [--quiet]  # does this seat open it, does it match GitHub
 bin/vault/hodd.sh emit secrets/platform.env             # read it, through this seat's SSH key
 ```
+
+## CHANGE LOG
+
+- **2026-11-20** — written with phase 1 of plan 342, at the Allfather's word: the re-lock door, the readers decrypting by SSH identity, the ward, and Eir's `vaultkeys` surface. The proof is `bin/vault/tests/test_vault_relock.sh`.
