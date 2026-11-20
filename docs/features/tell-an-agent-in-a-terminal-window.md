@@ -44,3 +44,7 @@ only the pointer: *"Please read <file> and answer by appending to it."* The agen
 - `focus did not land` — the window is on a locked or special workspace; open it yourself and try again.
 - Hyprland with a Lua config takes `hl.dsp.focus({ window = "address:…" })`; the door tries that first and falls back to
   the classic `focuswindow`.
+
+## CHANGE LOG
+
+- 2026-11-20 — first written.

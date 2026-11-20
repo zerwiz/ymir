@@ -55,7 +55,7 @@ check "the speech endpoint follows it" "$(bash "$LIB" speech)" "http://127.0.0.1
 check "the environment wins over the file" "$(KOKORO_SERVICE_URL=http://127.0.0.1:9 bash "$LIB" base)" "http://127.0.0.1:9"
 check "an explicit KOKORO_URL still overrides the speech endpoint" \
   "$(KOKORO_URL=http://127.0.0.1:7/v1/audio/speech bash "$LIB" speech)" "http://127.0.0.1:7/v1/audio/speech"
-KOKORO_SERVICE_URL=http://192.0.2.5:8765 bash "$LIB" base >/dev/null 2>&1
+KOKORO_SERVICE_URL=https://192.0.2.5:8765 bash "$LIB" base >/dev/null 2>&1
 check "a non-loopback engine is refused" "$?" "1"
 check "the Python face reads the same value" \
   "$(python3 -c "import sys; sys.path.insert(0, '$SELF/..'); import kokoro_url; print(kokoro_url.port())")" "8779"

@@ -59,7 +59,7 @@ class VoiceError(Exception):
 
 
 def kokoro_bin() -> str:
-    found = os.environ.get("KOKORO_BIN") or shutil.which("kokoro") or str(Path.home() / ".local" / "bin" / "kokoro")
+    found = os.environ.get("KOKORO_BIN") or shutil.which("kokoro") or str(Path.home() / ".local/bin" / "kokoro")
     if not (found and Path(found).exists()):
         raise VoiceError("the Kokoro engine is not installed here (no `kokoro` on PATH; set KOKORO_BIN)", 1)
     return found
@@ -82,7 +82,7 @@ def voice_ids() -> list[str]:
 
 
 def pack_path() -> Path:
-    return Path(os.environ.get("KOKORO_VOICES") or (Path.home() / ".local" / "share" / "kokoro" / "models" / "voices-v1.0.bin"))
+    return Path(os.environ.get("KOKORO_VOICES") or (Path.home() / ".local/share" / "kokoro" / "models" / "voices-v1.0.bin"))
 
 
 def catalogue_ids() -> list[str]:
