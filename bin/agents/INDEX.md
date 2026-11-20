@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[73]{file,does,kind,verdict,disposition,callers,lines}:
+bin[72]{file,does,kind,verdict,disposition,callers,lines}:
   "README.md","Gróa — the updater, one per install","data","tested","keep",65,-
   "agent-census.sh","agent-census.sh — how many agents are running on THIS machine, and which of them are stale.","tool","wired","keep",1,163
   "agent-run.sh","agent-run.sh — run one agent's errand through the harness the Allfather chose.","tool","wired","keep",2,62
@@ -34,10 +34,9 @@ bin[73]{file,does,kind,verdict,disposition,callers,lines}:
   "brokk-timeout-lib.sh","brokk-timeout-lib.sh - the single owner of bounded command execution.","lib","wired","keep",1,145
   "brokk-update.sh","brokk-update.sh — back-compat alias.","tool","wired","keep",2,10
   "builder-budget.sh","builder-budget.sh — how many BUILDERS this machine may hold, and how many stand.","tool","wired","keep",2,190
-  "cmd-limit-lib.sh","cmd-limit-lib.sh — ONE number for how long a worker's single shell call may run.","lib","wired","keep",3,80
   "domain.sh","domain.sh — the ONE door that starts, reports and stops a domain's keeper.","tool","wired","keep",2,218
   "eindri-acclaim-silent.sh","eindri-acclaim-silent.sh — action half of the Eindri silence bridge.","tool","wired","keep",1,57
-  "eindri-acclaim.sh","eindri-acclaim.sh — action half of the Eindri→Brokk wake bridge.","tool","tested","keep",11,294
+  "eindri-acclaim.sh","eindri-acclaim.sh — action half of the Eindri→Brokk wake bridge.","tool","tested","keep",12,294
   "eindri-arm.sh","eindri-arm.sh — the Eindri's own arm (plan 42, the automation law).","tool","wired","keep",3,217
   "eindri-bearings.sh","eindri-bearings.sh — the Bearings every errand's brief carries: the fixed core, the project's","tool","wired","keep",2,184
   "eindri-checkpoint.sh","eindri-checkpoint.sh — a herdr worker's durable checkpoint, so a dead pane resumes.","tool","wired","keep",4,105
@@ -45,21 +44,20 @@ bin[73]{file,does,kind,verdict,disposition,callers,lines}:
   "eindri-dispatch.sh","eindri-dispatch.sh — the errand loop: ONE command per errand (plan 42","tool","wired","keep",4,513
   "eindri-handoff.sh","eindri-handoff.sh — the handoff failsafe.","tool","wired","keep",6,242
   "eindri-heartbeat.sh","eindri-heartbeat.sh — condition half of the Eindri silence bridge.","tool","wired","keep",3,106
-  "eindri-liveness.sh","eindri-liveness.sh — the sweep's second question: is the pane still a worker?","tool","wired","keep",6,262
+  "eindri-liveness.sh","eindri-liveness.sh — the sweep's second question: is the pane still a worker?","tool","wired","keep",4,256
   "eindri-notify.sh","eindri-notify.sh — the ARM-HOLDER'S INBOX: inject one line into the session that holds the lock.","tool","wired","keep",15,156
-  "eindri-review-spawn.sh","eindri-review-spawn.sh — the review spine.","tool","tested","keep",3,340
+  "eindri-review-spawn.sh","eindri-review-spawn.sh — the review spine.","tool","tested","keep",3,387
   "eindri-role.sh","eindri-role.sh — the right smith for the right metal.","tool","wired","keep",2,117
   "eindri-route.sh","eindri-route.sh — which machine should host an errand, by its nature?","tool","tested","keep",0,108
   "eindri-seat.sh","eindri-seat.sh — seat a worker and PROVE it, in one move.","tool","wired","keep",1,85
   "eindri-seen.sh","eindri-seen.sh — condition half of the Eindri→Brokk wake bridge.","tool","wired","keep",2,57
-  "eindri-send.sh","eindri-send.sh — the DATA plane: hand a seated worker one attributed line, safely.","tool","tested","keep",15,277
-  "eindri-stall.sh","eindri-stall.sh — the arm's stall test: is a WORKING errand still MOVING?","tool","wired","keep",5,393
+  "eindri-send.sh","eindri-send.sh — the DATA plane: hand a seated worker one attributed line, safely.","tool","tested","keep",15,329
   "eindri-start.sh","eindri-start.sh — start an Eindri as the Allfather asks.","tool","wired","keep",4,330
-  "eindri-wake-lib.sh","eindri-wake-lib.sh — the ONE delivery ledger behind the Eindri push path.","lib","tested","keep",13,75
+  "eindri-wake-lib.sh","eindri-wake-lib.sh — the ONE delivery ledger behind the Eindri push path.","lib","tested","keep",12,75
   "eindri-watch.sh","eindri-watch.sh — the control door on the Eindri→Brokk wake bridge.","tool","wired","keep",6,131
   "einherjar-spawn.sh","einherjar-spawn.sh - gather an Eindri worker (Einherjar = the chosen who are","tool","tested","keep",23,1495
-  "eir-doctor.sh","eir-doctor.sh — Eir, the healer: diagnose the running system, then mend it.","tool","wired","keep",15,1164
-  "erindi-brief.sh","erindi-brief.sh - scaffold an Eindri worker brief at data/<task-id>/brief.md.","tool","tested","keep",8,469
+  "eir-doctor.sh","eir-doctor.sh — Eir, the healer: diagnose the running system, then mend it.","tool","wired","keep",17,1221
+  "erindi-brief.sh","erindi-brief.sh - scaffold an Eindri worker brief at data/<task-id>/brief.md.","tool","tested","keep",6,456
   "groa-agent.sh","groa-agent.sh — Gróa's body on a schedule: the updater, leashed, one per install.","tool","wired","keep",2,188
   "groa-update.sh","groa-update.sh — Gróa, the völva who renews.","tool","wired","keep",19,555
   "groa-verdict-lib.sh","groa-verdict-lib.sh — how Gróa's update ends: whole, or owed, and never 'done' when it is not (plan 278).","lib","wired","keep",2,79
@@ -77,7 +75,7 @@ bin[73]{file,does,kind,verdict,disposition,callers,lines}:
   "rodd-operational-input.sh","rodd-operational-input.sh - canonical Rödd operational-input protocol.","tool","wired","keep",1,251
   "seat-identity.sh","seat-identity.sh — print a seat's primary agent and its role file.","tool","tested","keep",6,232
   "seat-stop.sh","seat-stop.sh — stop a seat WHOLE: every process working in its worktree, not just the pane.","tool","wired","keep",1,78
-  "seat.sh","seat.sh — seat Gróa on THIS machine, once.","tool","tested","migrate → src/ymir_runtime/hermes/seat.py",28,110
+  "seat.sh","seat.sh — seat Gróa on THIS machine, once.","tool","tested","migrate → src/ymir_runtime/hermes/seat.py",29,110
   "skill-find.sh","skill-find.sh — find the skill you need, without loading any of them.","tool","tested","keep",6,235
   "skill-index.sh","skill-index.sh — Sága's sight over the crafts: one index of EVERY skill we","tool","tested","keep",5,472
   "skill-vendor-sync.sh","skill-vendor-sync.sh — keep imported third-party skill packs current.","tool","wired","keep",0,113
@@ -86,16 +84,17 @@ bin[73]{file,does,kind,verdict,disposition,callers,lines}:
   "syn-judge.sh","syn-judge.sh — the supervisor's JUDGEMENT: one model turn, through doors the house already carries.","tool","wired","keep",1,87
   "test_builder_budget.sh","test_builder_budget.sh — the machine says how many builders it carries, and the door tells the truth.","tool","wired","keep",1,100
   "test_eindri_bearings.sh","test_eindri_bearings.sh — the four things a brief's bearings must carry (plan 291 part 2).","tool","wired","keep",0,132
-  "test_eindri_send.sh","test_eindri_send.sh — the safe sender's three laws, with a stubbed herdr and a fence.","tool","wired","keep",1,179
-  "test_eindri_stall.sh","test_eindri_stall.sh — the arm's stall test, driven by a frozen pane and a simulated clock.","tool","wired","keep",1,148
+  "test_eindri_send.sh","test_eindri_send.sh — the safe sender's three laws, with a stubbed herdr and a fence.","tool","wired","keep",1,220
   "test_eir_mends.sh","test_eir_mends.sh — the Eir rows that read wrong or looked at the wrong place (2026-11-12).","tool","wired","keep",0,34
   "test_eir_register.sh","test_eir_register.sh — plan 278: Eir reads one register, mends by risk class, and never leaves a broken","tool","wired","keep",1,95
+  "test_eir_true_mends.sh","test_eir_true_mends.sh — the three Eir rows that lied or could not mend themselves (2026-11-20).","tool","wired","keep",0,145
+  "test_errand_doors_find_the_seat.sh","test_errand_doors_find_the_seat.sh — an errand is found by the RECORD, not by a guess.","tool","wired","keep",0,109
   "test_groa_verdict.sh","test_groa_verdict.sh — plan 278: the last line of an update tells the truth.","tool","wired","keep",1,68
   "test_project_target.sh","test_project_target.sh — a worker for another project starts in THAT project's folder","tool","wired","keep",0,135
   "valhalla.sh","valhalla.sh — the process hall (Valhalla).","tool","wired","keep",0,116
   "workspace-provision.sh","workspace-provision.sh — carve one workspace for the operator.","tool","wired","keep",0,82
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
 
-**Tally.** verdict: wired=57, tested=16
+**Tally.** verdict: wired=56, tested=16
 
-**Tally.** disposition: keep=71, migrate → src/ymir_runtime/send.py=1, migrate → src/ymir_runtime/hermes/seat.py=1
+**Tally.** disposition: keep=70, migrate → src/ymir_runtime/send.py=1, migrate → src/ymir_runtime/hermes/seat.py=1

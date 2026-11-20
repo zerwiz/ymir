@@ -28,7 +28,7 @@ bin[53]{file,does,kind,verdict,disposition,callers,lines}:
   "finding-tally.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",1,143
   "gather-notice.sh","gather-notice.sh — when the LAST errand of a batch finishes, the helm is told to gather it.","tool","wired","keep",3,186
   "gather.sh","gather.sh — gather a batch of errand branches into ONE push and ONE PR.","tool","tested","keep",9,323
-  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",592,101
+  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",600,101
   "github-deploy.sh","github-deploy.sh — zero-trust deploys (W0035).","tool","wired","keep",0,96
   "gjallarhorn-expose.sh","gjallarhorn-expose.sh — put EVERY app on its own public hostname (Gjallarhorn).","tool","wired","keep",0,152
   "gjallarhorn-notify.sh","gjallarhorn-notify.sh — the horn (W0036).","tool","wired","keep",1,73
@@ -48,7 +48,7 @@ bin[53]{file,does,kind,verdict,disposition,callers,lines}:
   "npm-publish.sh","npm-publish.sh — publish through the HOARD's npm token, every single time.","tool","wired","keep",0,166
   "packaged-gate.sh","packaged-gate.sh — prove the PUBLISHED artifact, not the tree.","tool","wired","keep",0,103
   "pr-open.sh","source '$(dirname '$0')/pr-patterns.sh'","tool","tested","keep",5,65
-  "pr-patterns.sh","pr-patterns.sh — the ONE place the forbidden-pattern list lives.","tool","wired","keep",5,101
+  "pr-patterns.sh","pr-patterns.sh — the ONE place the forbidden-pattern list lives.","tool","wired","keep",6,102
   "pr-pretest.sh","pr-pretest.sh — the PR-time gate: a REAL npm installation, locally, before","tool","wired","keep",2,59
   "pr-watch.sh","pr-watch.sh — TELL HIM a PR arrived.","tool","wired","keep",1,117
   "queue-warden.sh","queue-warden.sh — PR HYGIENE: five open at most, the stale ones named, a conflicting branch","tool","wired","keep",3,429
