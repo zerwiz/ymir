@@ -414,6 +414,27 @@ $_coretext"
     # Resolve a model request (friendly or exact) to harness+provider+model.
     # local -> pi, online -> opencode. Unresolved -> report and continue default.
     MODEL_ARGS=()
+    # A CLAUDE seat names its model the way Claude takes it (2026-11-20). Measured that day:
+    # `--model claude/claude-opus-5-5` reached the CLI as a provider/model token, Claude answered
+    # "There's an issue with the selected model", the pane sat, and herdr called it done. The
+    # allow-list names the bare id (claude/claude-opus-5-5, anthropic/…, opus, sonnet all map to
+    # it), so the policy and the seat cannot disagree. No model named: the list's Claude default —
+    # never the role's agents.yaml model, which belongs to pi or opencode.
+    CLAUDE_MODEL=""
+    if [ "$KIND" = claude ]; then
+      if [ -n "$MODEL_REQ" ]; then
+        if ! CLAUDE_MODEL="$("$SCRIPT_DIR/claude-seat.sh" model "$MODEL_REQ" 2>"$STATE_DIR/.claude-model.err")"; then
+          printf 'refused: Claude cannot be seated on %s\n' "$MODEL_REQ" >&2
+          cat "$STATE_DIR/.claude-model.err" >&2 2>/dev/null; rm -f "$STATE_DIR/.claude-model.err"
+          exit 1
+        fi
+        rm -f "$STATE_DIR/.claude-model.err"
+      else
+        CLAUDE_MODEL="$("$SCRIPT_DIR/claude-seat.sh" default 2>/dev/null)"
+      fi
+      printf 'herdr-run[1]{model,harness,claude_model}:\n  "%s","claude","%s"\n' "${MODEL_REQ:-default}" "${CLAUDE_MODEL:-claude default}" >&2
+      MODEL_REQ=""; MODEL_VERBATIM=1
+    fi
     # An exact provider/model token that the harness itself serves is used VERBATIM. The resolver is
     # for friendly names; fed `opencode/deepseek-v4.1-flash-free` it answered the paid
     # `opencode-go/deepseek-v4.1-flash` and the worker ran on the wrong model (measured 2026-11-12).
@@ -609,6 +630,28 @@ $_coretext"
       # instead. A door that cannot seat on the machine it runs on is not a door. So: ask the CLI
       # what verbs it has, then take that road. Never assume a version.
       AGENT_VERBS="$(hdr agent 2>&1 || true)"
+      # A CLAUDE seat (2026-11-20): the worktree is marked trusted first (else "Yes, I trust this
+      # folder" waits for a hand nobody lends), and the launch carries the worker profile in
+      # `dontAsk` mode (an unlisted tool is DENIED, never asked about — the deny list and every
+      # hook still apply) plus the bare model name. The brief is kept on disk for the seat check's
+      # one repair.
+      if [ "$KIND" = claude ]; then
+        brief_dir="$STATE_DIR/eindri-briefs"; mkdir -p "$brief_dir"
+        brief_file="$brief_dir/$NAME.md"; printf '%s\n' "$PROMPT" >"$brief_file"
+        if _trust="$("$SCRIPT_DIR/claude-seat.sh" trust "$SEAT_CWD" 2>&1)"; then
+          printf 'herdr-run[1]{claude,trust}:\n  "%s","%s"\n' "$SEAT_CWD" "${_trust%%$'\t'*}" >&2
+        else
+          printf 'herdr-run[1]{claude,trust}:\n  "%s","not marked — %s"\n' "$SEAT_CWD" "$_trust" >&2
+        fi
+        if ! mapfile -t _cargs < <("$SCRIPT_DIR/claude-seat.sh" args "$SEAT_CWD" "$CLAUDE_MODEL" "$brief_dir/$NAME.claude-settings.json") \
+           || [ ${#_cargs[@]} -eq 0 ]; then
+          printf 'error: the Claude worker profile could not be written — a Claude seat without it stops at its first permission dialog\n' >&2
+          exit 1
+        fi
+        MODEL_ARGS=(-- "${_cargs[@]}")
+        unset _cargs _trust
+      fi
+      SEAT_T0="$(date +%s)"
       HAS_PROMPT=0; case "$AGENT_VERBS" in *"agent prompt"*) HAS_PROMPT=1 ;; esac
       HAS_KIND=0;   case "$AGENT_VERBS" in *"--kind"*)       HAS_KIND=1 ;; esac
       if [ "$HAS_KIND" = 1 ] \
@@ -679,6 +722,38 @@ $_coretext"
       fi
       printf 'herdr-run[1]{eindri,form,interactive_ready,retried,state}:\n  "%s","%s","%s","%s","%s"\n' \
         "$NAME" "$seat_form" "$ready" "$retried" "$(agent_state "$AGENT_REF")" >&2
+
+      # THE SEAT CHECK (2026-11-20). herdr reported "done" for Claude panes sitting on a model
+      # error or a trust dialog. So the pane itself is read at ~20 s and ~60 s after launch: a model
+      # error, a trust/confirm/permission dialog, a login screen or a brief that never landed is a
+      # FAILED seat with its reason named — after ONE automatic repair (bin/seat/claude-seat.sh).
+      if [ "$KIND" = claude ]; then
+        seat_fail=""; repaired=no
+        for _at in ${YMIR_CLAUDE_SEAT_CHECKS:-20 60}; do
+          _left=$(( _at - ( $(date +%s) - ${SEAT_T0:-$(date +%s)} ) )); [ "$_left" -gt 0 ] && sleep "$_left"
+          _v="$("$SCRIPT_DIR/claude-seat.sh" check "$pane" "$(agent_state "$AGENT_REF")")"
+          _f="${_v%%$'\t'*}"
+          [ "$_f" = ok ] && continue
+          if [ "$repaired" = no ]; then
+            repaired="$_f"
+            printf 'herdr-run[1]{eindri,seat_check,repair}:\n  "%s","%s","%s"\n' "$NAME" "${_v#*$'\t'}" "$_f" >&2
+            "$SCRIPT_DIR/claude-seat.sh" repair "$pane" "$_f" "$CLAUDE_MODEL" "${brief_file:-}" >/dev/null 2>&1 || true
+            sleep "${YMIR_CLAUDE_SEAT_REPAIR_WAIT:-15}"
+            _v="$("$SCRIPT_DIR/claude-seat.sh" check "$pane" "$(agent_state "$AGENT_REF")")"
+            _f="${_v%%$'\t'*}"
+            [ "$_f" = ok ] && continue
+          fi
+          seat_fail="$_v"; break
+        done
+        if [ -n "$seat_fail" ]; then
+          printf 'herdr-run[1]{eindri,seat,reason,repair_tried}:\n  "%s","FAILED","%s","%s"\n' \
+            "$NAME" "$(printf '%s' "$seat_fail" | tr '\t' ' ')" "$repaired" >&2
+          printf 'error: the Claude seat %s is stuck (%s) — not a seat\nhelp: read the pane: herdr agent read %s; close it: bin/seat/seat-reap.sh\n' \
+            "$NAME" "${seat_fail#*$'\t'}" "$pane" >&2
+          exit 5
+        fi
+        printf 'herdr-run[1]{eindri,seat_check,repair}:\n  "%s","ok","%s"\n' "$NAME" "$repaired" >&2
+      fi
     fi
     printf 'herdr-run[1]{eindri,injected,attempts}:\n  "%s","%s",%s\n' "$NAME" "$injected" "${_try:-0}" >&2
 
