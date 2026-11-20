@@ -4,6 +4,8 @@
 #   bin/engine/pin-refresh.sh             fetch, then fast-forward the pin to origin/<branch>
 #   bin/engine/pin-refresh.sh --check     report only; exit 3 when the pin is behind, absent or dirty
 #   bin/engine/pin-refresh.sh --quiet     one line instead of the TOON block
+#   bin/engine/pin-refresh.sh --from-tree DIR   run the copy of this door in DIR (which must not be the pin)
+#   bin/engine/pin-refresh.sh --auto-tree       find such a tree (the source checkout, then a release) and use it
 #   bin/engine/pin-refresh.sh --help
 #
 # WHY THIS DOOR EXISTS (measured 2026-11-15). Every Ymir unit and app runs from the pinned runtime
@@ -50,12 +52,16 @@ fi
 
 mode=apply
 quiet=0
+FROM_TREE=""
+AUTO_TREE=0
 while [ $# -gt 0 ]; do
   case "$1" in
     -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
     -h|--help) sed -n '2,36p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     --check) mode=check ;;
     --quiet|-q) quiet=1 ;;
+    --from-tree) shift; FROM_TREE="${1:-}" ;;
+    --auto-tree) AUTO_TREE=1 ;;
     "") ;;
     *) printf 'error: unknown option %s\nhelp: bin/engine/pin-refresh.sh [--check] [--quiet]\n' "$1" >&2; exit 2 ;;
   esac
@@ -85,6 +91,33 @@ verdict() {  # <state> <behind> <detail> <rc>
 [ -e "$PIN" ] || verdict absent 0 "no pinned runtime at $PIN — run bin/engine/runtime-seat.sh" 3
 [ -d "$PIN/.git" ] || verdict not-a-checkout 0 "$PIN exists and is not a git checkout" 3
 command -v git >/dev/null 2>&1 || verdict no-git 0 "git is not on PATH — cannot tell" 3
+
+# THE SCHEDULE'S ROAD (2026-11-20). The scheduler on this machine runs FROM the pin, so the one place this door
+# must not run is exactly the place a schedule finds it — and so the refresher was never scheduled at all, only
+# measured weekly. `--auto-tree` resolves a tree that is not the pin and re-execs ITS copy of this door, which
+# keeps the refusal intact: the code that moves the pin is still never the pin's own possibly-stale copy.
+if [ "$mode" = apply ] && { [ -n "$FROM_TREE" ] || [ "$AUTO_TREE" = 1 ]; }; then
+  pin_real0="$(cd "$PIN" 2>/dev/null && pwd -P)"
+  tree="$FROM_TREE"
+  tries=""
+  if [ -z "$tree" ] && [ "$AUTO_TREE" = 1 ]; then
+    for cand in "${YMIR_SOURCE_TREE:-}" "$HOME/ymir" "${YMIR_RELEASES:-$HOME/.local/share/ymir}/current"; do
+      [ -n "$cand" ] || continue
+      tries="$tries $cand"
+      [ -d "$cand" ] || continue
+      [ "$(cd "$cand" 2>/dev/null && pwd -P)" = "$pin_real0" ] && continue
+      [ -x "$cand/bin/engine/pin-refresh.sh" ] || continue
+      tree="$cand"; break
+    done
+  fi
+  if [ -z "$tree" ] || [ ! -x "$tree/bin/engine/pin-refresh.sh" ]; then
+    verdict no-source-tree 0 "no tree to run from: tried${tries:- (none)} — set YMIR_SOURCE_TREE, or run Gróa from the working tree" 4
+  fi
+  tree_real="$(cd "$tree" 2>/dev/null && pwd -P)"
+  [ "$tree_real" = "$pin_real0" ] && verdict refused 0 "the tree named IS the pin ($tree) — a refresher seated in the thing it refreshes proves nothing" 4
+  if [ "$quiet" = 1 ]; then exec "$tree/bin/engine/pin-refresh.sh" --quiet
+  else exec "$tree/bin/engine/pin-refresh.sh"; fi
+fi
 
 # THE REFUSAL. The apply path must not run from inside the pin: a refresher in the thing it refreshes
 # cannot be trusted to be current, and that is exactly how the heart's pin froze for 28 days.
