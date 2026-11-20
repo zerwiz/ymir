@@ -36,9 +36,13 @@ GATE_FILES=(.githooks/pre-push bin/gates/guards.sh bin/gates/guards/nda-guard.sh
 overlay() { local f; for f in "${GATE_FILES[@]}"; do mkdir -p "$T/$(dirname "$f")"; cp "$ROOT/$f" "$T/$f"; done; }
 
 cd "$T" || exit 1
-# A CI checkout has no local `main` for the clone to call origin/main; lend it the checkout's own origin/main.
-git rev-parse -q --verify origin/main >/dev/null \
-  || git fetch -q "$ROOT" "+refs/remotes/origin/main:refs/remotes/origin/main" 2>/dev/null || true
+# A CI checkout is shallow (one commit, no local `main`), so the clone has no origin/main five deep.
+# Stand one in the clone: six empty commits on its own HEAD, named origin/main. The probe needs a
+# history to be behind, not the house's real one; a full checkout takes the real origin/main.
+if ! git rev-parse -q --verify origin/main~5 >/dev/null; then
+  for i in 1 2 3 4 5 6; do git -c user.name=probe -c user.email=probe@example.org commit -q --allow-empty -m "probe base $i" || break; done
+  git update-ref refs/remotes/origin/main HEAD
+fi
 git rev-parse -q --verify origin/main >/dev/null || { bad clone "the clone has no origin/main"; exit 1; }
 # A branch cut five commits behind main, with one commit of its own.
 git checkout -q -b probe/behind origin/main~5 2>/dev/null || { bad clone "origin/main~5 does not exist"; exit 1; }
