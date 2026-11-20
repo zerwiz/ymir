@@ -31,3 +31,7 @@ configured default only when a request names none. So 326.5 holds already.
 ## Still owed
 
 Rödd choosing a voice per context is not built here. The door gives it a name-to-id map to read.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #840
