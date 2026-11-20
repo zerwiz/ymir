@@ -35,6 +35,14 @@ if [ "${TIMER:-0}" = 1 ]; then
   exit 0
 fi
 [ -d "$HOME_DIR/.git" ] || { printf 'home-sync-clock: no home repo at %s\n' "$HOME_DIR" >&2; exit 1; }
+# ── THE DRIVERS THAT LIVE IN GIT CONFIG ARE SEATED BY THE CLOCK (2026-11-20) ────────────────────────
+# Git config does not travel with a clone, and this clock is the one thing that touches the home on
+# every seat whether or not a hand ever runs a command there. `home-sync.sh setup` is idempotent and
+# offline: it seats `merge.ours.driver` and the mail spine's clean filter
+# (`filter.gna-redact` → hodd/bin/mail-redact.py, required). Until now both were seated by hand on
+# one machine, so a fresh clone had the `.gitattributes` and no filter — and would have committed
+# raw mail. This call is the mend; `home-sync.sh ship` then REFUSES a filtered path it cannot redact.
+[ -f "$ROOT/bin/vault/home-sync.sh" ] && bash "$ROOT/bin/vault/home-sync.sh" setup >/dev/null 2>&1 || true
 cd "$HOME_DIR" || exit 1
 # THE RECORDS THE HOUSE WRITES ITSELF are committed by the clock; anything else holds it. The runes and the
 # room files are append-only unions written by the arm on every cycle — they are not scratch, and leaving them
