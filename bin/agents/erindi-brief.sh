@@ -208,6 +208,17 @@ WAKE_QUEUE=$(shell_quote "$DONE_STATE/.wake-queue")
 INBOX_DIR=$(shell_quote "$DONE_STATE/$ID.inbox")
 REPORT_FILE="$DATA/$ID/report.md"
 
+# The command time limit and the ssh rule, rendered from the ONE number
+# (bin/agents/cmd-limit-lib.sh): 30 minutes by default, 2 hours when a build, a gate
+# suite or a release declares it, never unlimited. The Allfather, 2026-11-20, after
+# two errands sat for hours on a single command — the rule every worker is handed is
+# the half of the fix that stops the stall happening at all.
+if [ -z "${YMIR_CMD_LIMIT_LIB_LOADED:-}" ]; then
+  [ -r "$SCRIPT_DIR/cmd-limit-lib.sh" ] && { . "$SCRIPT_DIR/cmd-limit-lib.sh"; YMIR_CMD_LIMIT_LIB_LOADED=1; }
+fi
+LIMIT_RULES=""
+declare -f cmd_limit_rule_lines >/dev/null 2>&1 && LIMIT_RULES="$(cmd_limit_rule_lines)"
+
 INBOX_SECTION=$(cat <<EOF
 # Brokk instruction inbox
 Brokk steers you through durable message files in $INBOX_DIR.
@@ -326,6 +337,7 @@ The report is the only thing that survives, so anything worth keeping must be in
 4. If you hit the same obstacle twice, append \`blocked: {why}\` and stop; Brokk will help.
 5. If a decision belongs to the Allfather (product choices, destructive actions), append \`needs-decision: {summary of options}\` and stop. Brokk will reply with the decision.
 6. No AI attribution anywhere you write: no co-author trailer, no "generated with" line, and no model, model-maker or agent-harness name in a commit message, PR title, PR body or status line (RULES/53). Say "the agent harness" or "the worker"; a path or flag stays in \`backticks\`. A ward refuses the rest.
+$LIMIT_RULES
 
 $INBOX_SECTION
 
@@ -444,6 +456,7 @@ $ISOLATION_SETUP
 4. If you hit the same obstacle twice, append \`blocked: {why}\` and stop; Brokk will help.
 5. If a decision belongs to the Allfather (product choices, destructive actions), append \`needs-decision: {summary of options}\` and stop. Brokk will reply with the decision.
 6. No AI attribution anywhere you write: no co-author trailer, no "generated with" line, and no model, model-maker or agent-harness name in a commit message, PR title, PR body or status line (RULES/53). Say "the agent harness" or "the worker"; a path or flag stays in \`backticks\`. A ward refuses the rest.
+$LIMIT_RULES
 
 $INBOX_SECTION
 

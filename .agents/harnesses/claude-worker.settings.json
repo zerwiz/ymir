@@ -1,5 +1,9 @@
 {
-  "$comment": "The permission profile every Claude Eindri is launched with (plan 239 P5c). A worker runs unattended in its own Yggdrasil worktree, so it may edit and run commands without a prompt (the same latitude opencode workers get from OPENCODE_CONFIG_CONTENT permission *:allow), while the moves that only the Allfather makes, or that destroy unrecorded work, are denied. Deny rules win over allow rules.",
+  "$comment": "The permission profile every Claude Eindri is launched with (plan 239 P5c). A worker runs unattended in its own Yggdrasil worktree, so it may edit and run commands without a prompt (the same latitude opencode workers get from OPENCODE_CONFIG_CONTENT permission *:allow), while the moves that only the Allfather makes, or that destroy unrecorded work, are denied. Deny rules win over allow rules. THE COMMAND TIME LIMIT (2026-11-20, \"yes not to small tho\"): a Bash call defaults to 2 minutes and may declare at most 10, which is short enough that a real build is killed and long enough that a hung ssh hides for hours. 30 minutes by default, 2 hours when a build or a gate suite declares it, never unlimited — the same numbers as bin/agents/cmd-limit-lib.sh, which is where the brief rule and the arm's judgement read them.",
+  "env": {
+    "BASH_DEFAULT_TIMEOUT_MS": "1800000",
+    "BASH_MAX_TIMEOUT_MS": "7200000"
+  },
   "permissions": {
     "allow": ["Read", "Edit", "Write", "Glob", "Grep", "Bash", "WebFetch", "WebSearch", "TodoWrite"],
     "deny": [

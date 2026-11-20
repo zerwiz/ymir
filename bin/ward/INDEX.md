@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[30]{file,does,kind,verdict,disposition,callers,lines}:
+bin[31]{file,does,kind,verdict,disposition,callers,lines}:
   "brain.py","'''brain.py — the hound's judgement: read findings, apply the rules, speak, record.","tool","tested","keep",1,232
   "browserkill-install.sh","browserkill-install.sh — seat the kill tracer and its GPU note (plan 152 / 271).","tool","wired","keep",0,43
   "browserkill-note.sh","browserkill-note.sh — at every browser/Discord death, write down the GPU's side of it (plan 271 piece 5).","tool","wired","keep",2,33
@@ -40,11 +40,12 @@ bin[30]{file,does,kind,verdict,disposition,callers,lines}:
   "notify.py","'''notify.py — the hound's mouth: one message to the phone, and a record that it landed.","tool","tested","keep",5,230
   "redact.py","'''redact.py — the guardian's own ward (plan 98 §6, §'the redaction rule').","tool","wired","keep",2,113
   "restart-storm.sh","restart-storm.sh — the ward that stops a unit spinning on its own face (plan 286 P4).","tool","wired","keep",2,520
-  "rules.py","'''rules.py — the judgement, deterministic and first (plan 98 §4.2).","tool","wired","keep",0,103
+  "rules.py","'''rules.py — the judgement, deterministic and first (plan 98 §4.2).","tool","wired","keep",0,114
   "security-audit.sh","security-audit.sh — Vörðr's eyes: WHAT IS THIS MACHINE ACTUALLY EXPOSING?","tool","tested","keep",5,403
   "services-register.sh","services-register.sh — is the register of doors READ, or is it prose?","tool","wired","keep",1,173
   "soak-sampler.sh","soak-sampler.sh — the leak ledger: one row per house service and per Electron app, every five","tool","wired","keep",2,645
   "test_browserkill_note.sh","test_browserkill_note.sh — plan 271 piece 5: a planted scope stop is named, with the GPU's side.","tool","wired","keep",0,27
+  "test_garmr_identity_named.sh","test_garmr_identity_named.sh — a CRITICAL must name what changed, or it is not a CRITICAL.","tool","wired","keep",1,40
   "test_restart_storm.sh","test_restart_storm.sh — the storm ward's proof, with no real fault (plan 286 P4).","tool","wired","keep",0,183
   "test_soak_sampler.sh","test_soak_sampler.sh — the leak ledger's proof, without a real leak (plan 286 P0).","tool","wired","keep",0,204
   "verdr.sh","verdr.sh — VÖRÐR, the warden: the standing report.","tool","tested","keep",1,135
@@ -53,6 +54,6 @@ bin[30]{file,does,kind,verdict,disposition,callers,lines}:
   "ward-answer.sh","ward-answer.sh — answer a ward decision.","tool","wired","keep",0,82
   "ward-ask.sh","ward-ask.sh — Vörðr reports, then ASKS.","tool","wired","keep",1,82
 
-**Tally.** verdict: wired=23, tested=7
+**Tally.** verdict: wired=24, tested=7
 
-**Tally.** disposition: keep=29, migrate → src/ymir_runtime/hermes/common.py=1
+**Tally.** disposition: keep=30, migrate → src/ymir_runtime/hermes/common.py=1

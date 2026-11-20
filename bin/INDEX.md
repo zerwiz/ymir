@@ -22,10 +22,10 @@ The tree replaced a single register on 2026-11-06 (plan 211) so that a change in
 folder rewrites one file instead of colliding on every branch.
 
 bin[5]{file,does,kind,verdict,disposition,callers,lines}:
-  "README.md","<!-- allow-superseded-path: a generated index must name the folder or the script it indexes, by construction -->","data","tested","keep",64,-
+  "README.md","<!-- allow-superseded-path: a generated index must name the folder or the script it indexes, by construction -->","data","tested","keep",65,-
   "bitrate-gate.sh","bitrate-gate.sh — a diffusion clip that 'completes' is not a clip that worked.","tool","wired","keep",0,82
-  "brokk","brokk — the primary agent's CLI (Brokk, the bellows-smith).","tool","tested","keep",63,74
-  "heavy-slot.sh","heavy-slot.sh — ONE heavy job at a time on this machine, and a record of who holds it.","tool","wired","keep",4,304
+  "brokk","brokk — the primary agent's CLI (Brokk, the bellows-smith).","tool","tested","keep",64,74
+  "heavy-slot.sh","heavy-slot.sh — this machine's HEAVY LANES: a counted number of heavy jobs at once, and a","tool","wired","keep",5,457
   "no-delete-guard.sh","no-delete-guard.sh — Rule 11, ENFORCED.","tool","wired","keep",5,136
 
 **Tally.** verdict: wired=3, tested=2
