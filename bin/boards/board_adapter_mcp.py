@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """board_adapter_mcp.py — the generic `mcp` adapter of the board contract (plan 335, "the split").
 
 Any board that speaks the contract over MCP is reached with a URL and a token REFERENCE, both read from the
@@ -139,7 +140,7 @@ class McpBoard:
         if name in have:
             return False
         if not dry:
-            self._write("create_label", {"place": self.place, "name": name, "color": "#7c6f9f"})
+            self._write("create_label", {"place": self.place, "name": name, "color": "#9a8f75"})
         return True
 
     def _shape(self, c):

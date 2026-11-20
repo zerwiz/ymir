@@ -50,10 +50,10 @@ class Refusal(BoardRefusal):
 # ── the home and the registry ────────────────────────────────────────────────────────────────
 
 def home_root():
-    h = os.environ.get("YMIR_HOME")
-    if h:
-        return h
-    return os.path.expanduser("~/Documents/ymirhome")
+    h = os.environ.get("YMIR_HOME")  # plan-sync.sh resolves it through the one resolver and exports it
+    if not h:
+        raise Refusal("YMIR_HOME is not set — run through bin/boards/plan-sync.sh, or set it")
+    return h
 
 
 def load_project(home, wanted):
