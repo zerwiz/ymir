@@ -134,3 +134,7 @@ Also run in this change: `bin/agents/tests/test_eir_mends.sh` (5 passing) and
 - `bin/agents/tests/test_eir_true_mends.sh` — the proof.
 - `docs/features/the-wards-the-delivery-gate.md`, `.agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md` — the
   hook install and the three rows, described as they now behave.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #842
