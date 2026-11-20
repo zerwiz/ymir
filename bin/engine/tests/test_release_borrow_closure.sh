@@ -40,7 +40,7 @@ locked_hoisted() { # a lock whose packages all hoist
 APP="$TMP/prev/apps/hlidskjalf/node_modules/@xterm/xterm"
 mkdir -p "$APP" && printf 'types\n' > "$APP/xterm.d.ts"
 mk "$TMP/prev"; locked_nested "$TMP/prev"
-mkdir -p "$TMP/new"; locked_nested "$TMP/new"
+mkdir -p "$TMP/new/apps/hlidskjalf"; locked_nested "$TMP/new"   # the clone carries the workspace, as a real one does
 t "a complete borrow succeeds" borrow_closure "$TMP/prev" "$TMP/new"
 t "  it carries the root closure" test -f "$TMP/new/node_modules/@x/pkg/index.js"
 t "  it carries the app-local package" test -f "$TMP/new/apps/hlidskjalf/node_modules/@xterm/xterm/xterm.d.ts"
@@ -57,6 +57,13 @@ mk "$TMP/prev3"; locked_hoisted "$TMP/prev3"
 mkdir -p "$TMP/new3"; locked_hoisted "$TMP/new3"
 t "a hoisted-only lock borrows from the root closure" borrow_closure "$TMP/prev3" "$TMP/new3"
 t "  and the closure arrived" test -f "$TMP/new3/node_modules/@x/pkg/index.js"
+
+# ── 4. an app that left the tree: its old modules are not carried, and its folder is not recreated ────────────
+mk "$TMP/prev4"; locked_hoisted "$TMP/prev4"
+mkdir -p "$TMP/prev4/apps/gone/node_modules/x" && printf 'old\n' > "$TMP/prev4/apps/gone/node_modules/x/i.js"
+mkdir -p "$TMP/new4"; locked_hoisted "$TMP/new4"
+t "a borrow beside a departed app still succeeds" borrow_closure "$TMP/prev4" "$TMP/new4"
+t "  and the departed app's folder is not recreated" test ! -e "$TMP/new4/apps/gone"
 
 printf '%s\n' "release-borrow-closure test: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]
