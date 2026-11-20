@@ -111,3 +111,7 @@ change, and they are named here rather than hidden.
 - **`docs/fixes/` and `RULES/` were not touched** — the record of what was believed stays.
 - **One fix note**, this file, for the three passes.
 - Nothing was pushed: the batch is gathered by the helm, one PR for all four errands of the hour.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #842
