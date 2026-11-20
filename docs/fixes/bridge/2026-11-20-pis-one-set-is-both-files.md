@@ -76,3 +76,7 @@ operator's call, not a script's.
 
 - `bin/bridge/mcp-config-seat.py` — `pi_pair()`, and `canonical()` reads the union of both files
 - `bin/bridge/tests/test_mcp_pi_union.sh` — every case above, by command
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #842
