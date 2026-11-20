@@ -37,13 +37,10 @@ need() {
   command -v python3 >/dev/null || die "python3 not found"
 }
 
-# Focus a window by address. Hyprland's Lua config takes hl.dsp.focus({window=…}); the classic config
-# takes `focuswindow address:…`. Try the Lua form first and fall back.
-focus() {
-  local addr="$1"
-  hyprctl dispatch "hl.dsp.focus({ window = \"address:$addr\" })" >/dev/null 2>&1 \
-    || hyprctl dispatch focuswindow "address:$addr" >/dev/null 2>&1 || true
-}
+# The window manager's dialect (Lua vs classic) is display-lib's to know, never this file's.
+# shellcheck source=../desktop/display-lib.sh
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")/../desktop" && pwd)/display-lib.sh"
+focus() { window_focus "$1" || true; }
 active_addr() { hyprctl activewindow -j | python3 -c 'import json,sys;print(json.load(sys.stdin).get("address",""))'; }
 
 # One TOON-ish row per agent process whose ancestor is a terminal window: agent_pid term_pid address title cwd
