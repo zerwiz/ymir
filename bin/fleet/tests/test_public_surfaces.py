@@ -16,7 +16,7 @@ import sys
 import tempfile
 
 _HERE = os.path.dirname(os.path.abspath(__file__))                      # <repo>/bin/gimle/tests
-DOOR = os.path.join(os.path.dirname(_HERE), "surfaces.py")             # <repo>/bin/gimle/surfaces.py
+DOOR = os.path.join(os.path.dirname(_HERE), "public-surfaces.py")      # <repo>/bin/fleet/public-surfaces.py
 passed = failed = 0
 
 

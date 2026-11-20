@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""surfaces.py — the operator's PUBLIC SURFACES, asked of his home and never spelled here.
+"""public-surfaces.py — the operator's PUBLIC SURFACES, asked of his home and never spelled here.
 
 WHY (2026-11-20). The Allfather: *"replace the literal <the domain> hostnames in the repo with configuration read
 from the home."* The public tree carried his domain literally in code, in an example env file and in test
@@ -8,9 +8,9 @@ exists to stop. There is already ONE registry of the house's services, with one 
 `<home>/hodd/identity/services.yaml`, written by the operator and read by the tunnel round. This door is the
 reader, so a program asks *which surface* and never *which address*.
 
-  surfaces.py --get <id>        the public_url for that service (exit 3 when it is not declared)
-  surfaces.py --list            `id<TAB>url` for every service that declares one
-  surfaces.py --json            the whole map as JSON
+  public-surfaces.py --get <id>        the public_url for that service (exit 3 when it is not declared)
+  public-surfaces.py --list            `id<TAB>url` for every service that declares one
+  public-surfaces.py --json            the whole map as JSON
 
 Configuration (Rule 07):
   YMIR_HOME                    the home; resolved through bin/vault/hodd.sh when it is unset

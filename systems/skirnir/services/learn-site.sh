@@ -50,7 +50,7 @@ fi
 # No address, no run: learning a site nobody named is not a job, and inventing a default is how this tree came to
 # publish the operator's hostname in the first place.
 if [ -z "$URL" ]; then
-  URL="$("$ROOT/bin/gimle/surfaces.py" --get homepage 2>/dev/null || true)"
+  URL="$("$ROOT/bin/fleet/public-surfaces.py" --get homepage 2>/dev/null || true)"
 fi
 [ -n "$URL" ] || { printf 'learn-site: no site to learn — set site_url in the home config, or declare the homepage public_url in hodd/identity/services.yaml\n' >&2; exit 2; }
 DEST="$HOME_R/hodd/identity/assistant/approved"

@@ -362,7 +362,7 @@ def render(text: str, theme: str | None = None) -> str:
 
 # THE DEFAULT IS THE OPERATOR'S, ASKED OF HIS HOME (RULES/04, 2026-11-20). This constant used to carry his real
 # hostname in a public repository; the address now comes from `homepage.public_url` in his own services registry,
-# through the one reader (bin/gimle/surfaces.py). Empty is a valid answer: the made-by line then shows no link.
+# through the one reader (bin/fleet/public-surfaces.py). Empty is a valid answer: the made-by line then shows no link.
 YMIR_HOMEPAGE = ""
 
 
