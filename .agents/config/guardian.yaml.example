@@ -15,6 +15,7 @@ hound:                         # the senses (root service, read-only)
   findings: /var/log/ymir/garmr/findings.jsonl
   audit_log: /var/log/audit/audit.log
   poll_seconds: 60             # egress + listeners
+  heartbeat_seconds: 60        # liveness pulse, written every tick on this clock — quiet audit or not
   doors_seconds: 300           # listener diff
   max_bytes: 5242880           # rotate findings past this
 

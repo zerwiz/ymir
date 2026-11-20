@@ -223,8 +223,62 @@ def _remember_binary(path: str) -> None:
         pass
 
 
-def follow_audit(path: str, on_findings) -> None:
+class Pulse:
+    """The hound's own pulse and its second sense, run on EVERY tick of the follow loop.
+
+    Liveness is not a finding (2026-11-20, plan 337). The heartbeat used to be written only
+    inside the findings sink, and `follow_audit` never returns — so on a quiet box (no
+    `key="ymir-` records) the hound stayed alive and wrote its last heartbeat at start-up,
+    and housewatch called a quiet hour a dead guardian. The listener snapshot had the same
+    fault: it ran between `follow_audit` calls, which is to say once. Both now have their
+    own schedule here, independent of what the audit log carries.
+    """
+
+    def __init__(self, sink, state: str, heartbeat_seconds: float = 60.0,
+                 poll_seconds: float = 60.0, snapshot=None, clock=time.time):
+        self.sink = sink
+        self.state = state
+        self.heartbeat_seconds = max(float(heartbeat_seconds or 0), 0.0)
+        self.poll_seconds = max(float(poll_seconds or 0), 0.0)
+        self.snapshot = snapshot if snapshot is not None else snapshot_listeners
+        self.clock = clock
+        self.last_beat = float("-inf")
+        self.last_poll = float("-inf")
+        self.seen: set[str] = set()
+
+    def beat(self) -> None:
+        try:
+            common.heartbeat(self.state)
+        except OSError:
+            pass  # a heartbeat that cannot be written must not stop the senses
+        self.last_beat = self.clock()
+
+    def poll(self) -> None:
+        rows = []
+        for row in self.snapshot():
+            fingerprint = common.emit({k: row.get(k) for k in ("kind", "comm", "addr", "peer", "pid")})
+            if fingerprint in self.seen:
+                continue
+            self.seen.add(fingerprint)
+            rows.append(row)
+        if rows:
+            self.sink(rows)
+        self.last_poll = self.clock()
+
+    def __call__(self) -> None:
+        now = self.clock()
+        if now - self.last_poll >= self.poll_seconds:
+            self.poll()
+        if now - self.last_beat >= self.heartbeat_seconds:
+            self.beat()
+
+
+def follow_audit(path: str, on_findings, on_tick=None, max_ticks: int | None = None) -> None:
     """Tail the audit log and survive its rotation.
+
+    `on_tick` is called once per tick whatever the log carried — that is where the
+    heartbeat and the listener snapshot live, so a quiet log never silences them.
+    `max_ticks` bounds the loop (tests); None follows for ever.
 
     auditd's log is logrotate'd. A process that opens it once keeps reading the OLD
     inode for ever and goes quietly blind — measured here: the hound sat on
@@ -236,13 +290,26 @@ def follow_audit(path: str, on_findings) -> None:
     group: dict = {}
     state: dict = {}
     cfg = _hound_cfg()
+    ticks = 0
+
+    def tick_done() -> bool:
+        nonlocal ticks
+        if on_tick is not None:
+            on_tick()
+        ticks += 1
+        return max_ticks is not None and ticks >= max_ticks
+
     while True:
         if not os.path.exists(path):
-            time.sleep(5)
+            if tick_done():
+                return
+            time.sleep(min(5.0, float(cfg.get("tick_seconds", 1.0) or 1.0) * 5))
             continue
         try:
             stat = os.stat(path)
         except OSError:
+            if tick_done():
+                return
             time.sleep(1)
             continue
         if handle is None or inode != stat.st_ino:
@@ -295,6 +362,10 @@ def follow_audit(path: str, on_findings) -> None:
                           "note": "the audit log is outrunning the budget — raise max_lines_per_tick or narrow the audit rules"}])
         elif state.get("lagged") and backlog <= lag_alert:
             state["lagged"] = False
+        if tick_done():
+            if handle:
+                handle.close()
+            return
         time.sleep(tick)
 
 
@@ -446,20 +517,13 @@ def main() -> int:
         print("garmr: the hound is OFF at the Allfather's word — nothing watched "
               "(bin/ward/garmr.sh on)", file=sys.stderr)
         return 0
-    last_poll = 0.0
-    seen: set[str] = set()
+    # The pulse (2026-11-20): the heartbeat and the listener snapshot run on every tick of
+    # the follow loop, on their own clocks — never only when the audit log has a finding.
+    pulse = Pulse(sink, common.state_dir(),
+                  heartbeat_seconds=float(cfg["hound"].get("heartbeat_seconds", 60) or 60),
+                  poll_seconds=poll)
     while True:
-        if time.time() - last_poll >= poll:
-            rows = []
-            for row in snapshot_listeners():
-                fingerprint = common.emit({k: row.get(k) for k in ("kind", "comm", "addr", "peer", "pid")})
-                if fingerprint in seen:
-                    continue
-                seen.add(fingerprint)
-                rows.append(row)
-            sink(rows)
-            last_poll = time.time()
-        follow_audit(audit_path, sink)
+        follow_audit(audit_path, sink, on_tick=pulse)
 
 
 if __name__ == "__main__":
