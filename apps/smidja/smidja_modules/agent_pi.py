@@ -311,8 +311,13 @@ def run(request: PiRequest, on_event: Optional[Callable[[dict], None]] = None,
     to hunt for in `ps` while the run sits there.
     """
     provider, model_id = resolve_model(request.model)
+    # -ne: NO auto-discovered extensions. A worktree carries its own `.pi/extensions/`, and pi
+    # refuses to start when a project extension and the seat's registered extension declare the
+    # same tool ("Tool ymir_find conflicts with …/.yggdrasil/…/.pi/extensions/ymirhome.ts"). That
+    # refusal killed every builder turn on 2026-10-23 (run dae6d893: 2 phases, 17 events, fail in
+    # 8.1s) and every errand before it. The extensions THIS run declares are added with -e below.
     cmd = [
-        PI_PATH, "-p", "--mode", "json",
+        PI_PATH, "-ne", "-p", "--mode", "json",
         "--provider", provider, "--model", model_id,
         "--thinking", request.thinking,
         "--session-id", request.session_id,

@@ -173,6 +173,36 @@ export function repoRootOf(dbPath: string): string {
   return resolve(dirname(dirname(dirname(dbPath))));   // legacy fallback
 }
 
+/**
+ * The repo root for roster/model resolution — the ONLY source of truth.
+ *
+ * The database lives in the HOME (`$YMIR_HOME/smidja/smidja.db`), so deriving
+ * the repo root from the DB path (as `repoRootOf` does) walks up into the
+ * hoard tree, which has no roster. This function is the single source of truth:
+ *
+ *   1. `SMIDJA_REPO_ROOT` env var — explicit, always wins
+ *   2. The visualizer's own checkout — walk up from this file to the nearest
+ *      directory carrying `.pi/` or `RULES/` (the ymir marker)
+ *
+ * The caller (`roster-api.ts`) passes `dbPath` only for the chat module's
+ * `repoRootOf` calls; roster resolution never touches the DB path.
+ */
+export function repoRoot(): string {
+  const env = process.env.SMIDJA_REPO_ROOT;
+  if (env) return resolve(env);
+
+  // Walk up from this file to the ymir checkout.
+  let dir = dirname(import.meta.dir);
+  for (let i = 0; i < 12; i++) {
+    if (existsSync(join(dir, ".pi")) || existsSync(join(dir, "RULES"))) return dir;
+    const up = dirname(dir);
+    if (up === dir) break;
+    dir = up;
+  }
+  // Last resort: the directory that holds this file (the visualizer package).
+  return resolve(dirname(import.meta.dir));
+}
+
 export class smidjaDb {
   readonly path: string;
   /**

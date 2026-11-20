@@ -13,7 +13,7 @@
 import { existsSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
 import { smidjaDb, resolveDbPath, repoRootOf } from "./db.ts";
-import type { AgentPrompts, ApiError, HealthResponse } from "../shared/types.ts";
+import type { AgentPrompts, ApiError, HealthResponse, RosterInfo, ModelInfo } from "../shared/types.ts";
 import * as rosterApi from "./roster-api.ts";
 import * as chat from "./chat.ts";
 import * as settingsApi from "./settings.ts";
@@ -520,10 +520,32 @@ const server = Bun.serve({
     },
 
     // ── Orchestrator chat: picker + conversation + session launch ─────────
-    "/api/rosters": safely(async () => json(await rosterApi.rosters(dbPath))),
+    "/api/rosters": safely(async () => {
+      const rosters = await rosterApi.rosters(dbPath);
+      // A roster that returns nothing must say why — an empty list is
+      // indistinguishable from an empty house.
+      if (rosters.length === 0) {
+        return json({
+          rosters: [] as RosterInfo[],
+          cause: "no roster source found — the visualizer needs either " +
+            "a roster.yaml or config/agents.yaml + .agents/agents/*.md " +
+            "at the repo root (set SMIDJA_REPO_ROOT to point at it)",
+        });
+      }
+      return json(rosters);
+    }),
     "/api/models": safely(async () => {
       const rosterModels = await rosterApi.models(dbPath);
       const catalog = await piModels(repoRoot);
+      // A model list that returns nothing must say why.
+      if (rosterModels.length === 0) {
+        return json({
+          models: [] as ModelInfo[],
+          cause: "no roster source found — the visualizer needs either " +
+            "a roster.yaml or config/agents.yaml + .agents/agents/*.md " +
+            "at the repo root (set SMIDJA_REPO_ROOT to point at it)",
+        });
+      }
       return json(
         rosterModels.map((m: { id: string }) => ({ ...m, available: isPiResolvable(m.id, catalog) })),
       );

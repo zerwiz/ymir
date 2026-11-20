@@ -14,7 +14,7 @@
  */
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { repoRootOf as repoRoot } from "./db.ts";
+import { repoRoot } from "./db.ts";
 import type { ModelInfo, RosterInfo, RostersResponse, ModelsResponse } from "../shared/types.ts";
 
 /** Where the python helper lives, relative to this server dir. */
@@ -30,8 +30,11 @@ interface ResolvedPayload {
 const cache = new Map<string, { ts: number; data: ResolvedPayload }>();
 const CACHE_TTL_MS = 5_000;
 
-async function resolvePayload(dbPath: string): Promise<ResolvedPayload> {
-  const root = repoRoot(dbPath);
+async function resolvePayload(_dbPath: string): Promise<ResolvedPayload> {
+  // The repo root for roster resolution is SMIDJA_REPO_ROOT (or the checkout),
+  // NOT derived from the DB path — the DB lives in the HOME, not the repo.
+  const root = repoRoot();
+  void _dbPath; // kept for API compat — callers pass dbPath but it is unused
   const key = root;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.ts < CACHE_TTL_MS) return hit.data;

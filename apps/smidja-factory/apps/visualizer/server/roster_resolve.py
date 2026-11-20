@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-"""Resolve the target repo's roster.yaml into the JSON the chat picker needs.
+"""Resolve the target repo's roster into the JSON the chat picker needs.
 
 Emits a single JSON object on stdout:
 
-    { "rosters": [RosterInfo...], "models": [ModelInfo...] }
+    { "rosters": [RosterInfo...], "models": [ModelInfo...], "source": "..." }
+
+Sources (in priority order):
+  1. roster.yaml — the explicit roster file (if present)
+  2. config/agents.yaml + .agents/agents/*.md — the fleet roster (default)
 
 Mirrors scripts/resolve-config.py's exact model resolution for each stack
 (overrides > tier map > defaults) so the UI picker reflects what a real
@@ -17,6 +21,7 @@ import json
 import os
 import re
 import sys
+import yaml
 from pathlib import Path
 
 ROLE_COLORS = {
@@ -68,14 +73,25 @@ def _weak(model: str) -> bool:
 
 
 def resolve_rosters_and_models(repo_root: Path, roster_path: Path | None = None) -> dict:
-    r = roster_path or repo_root / "smidja" / "smidja_config" / "roster.yaml"
+    source = ""
     data = {}
+
+    # Try roster.yaml first (explicit roster).
+    r = roster_path or repo_root / "smidja" / "smidja_config" / "roster.yaml"
     if r and r.exists():
-        import yaml
         try:
             data = yaml.safe_load(r.read_text()) or {}
+            source = "roster.yaml"
         except Exception:
             data = {}
+
+    # Fallback: config/agents.yaml + .agents/agents/*.md (the fleet roster).
+    if not source:
+        agents_yaml = repo_root / "config" / "agents.yaml"
+        agents_dir = repo_root / ".agents" / "agents"
+        if agents_yaml.exists() and agents_dir.is_dir():
+            data = _build_fleet_roster(agents_yaml, agents_dir)
+            source = "config/agents.yaml"
 
     defaults = data.get("role_defaults") or {}
     tier_map_by_name = {k: v or {} for k, v in _tiers(data).items()}
@@ -154,7 +170,97 @@ def resolve_rosters_and_models(repo_root: Path, roster_path: Path | None = None)
             "summary": (resolved and ", ".join(a["role"] for a in resolved)) or None,
         })
 
-    return {"rosters": rosters, "models": list(models_by_id.values())}
+    return {"rosters": rosters, "models": list(models_by_id.values()), "source": source}
+
+
+def _build_fleet_roster(agents_yaml: Path, agents_dir: Path) -> dict:
+    """Build a roster from config/agents.yaml + .agents/agents/*.md.
+
+    Reads the agents.yaml to get the model per figure, then reads each
+    .agents/agents/<name>.md front-matter for the figure's role, capabilities,
+    and description. Produces a single roster called "fleet" with one agent
+    per figure.
+    """
+    try:
+        with open(agents_yaml) as f:
+            cfg = yaml.safe_load(f) or {}
+    except Exception:
+        return {}
+
+    agents_cfg = cfg.get("agents", {})
+    default_model = cfg.get("default_model", "")
+
+    # Read each agent .md for role/capabilities.
+    figures: dict[str, dict] = {}
+    try:
+        for entry in sorted(agents_dir.iterdir()):
+            if not entry.name.endswith(".md"):
+                continue
+            front = _read_frontmatter(entry)
+            name = front.get("name", entry.stem)
+            figures[name] = {
+                "role": front.get("role", ""),
+                "capabilities": front.get("capabilities", []),
+                "norse_name": front.get("norse_name", name),
+                "descriptor": front.get("descriptor", ""),
+            }
+    except Exception:
+        pass
+
+    # Build stacks: one per capability group, or a single "all" roster.
+    # Group figures by their role for meaningful roster names.
+    role_groups: dict[str, list[str]] = {}
+    for fig_name, fig in figures.items():
+        role = fig.get("role", "unknown")
+        role_groups.setdefault(role, []).append(fig_name)
+
+    # Build overrides: fig_name -> {"model": ...}
+    overrides: dict[str, dict] = {}
+    for fig_name in sorted(figures.keys()):
+        model = agents_cfg.get(fig_name, {}).get("model", default_model)
+        if model:
+            overrides[fig_name] = {"model": model}
+
+    stacks = {}
+    for role, fig_names in sorted(role_groups.items()):
+        stacks[role] = {
+            "tier": role,
+            "agents": sorted(fig_names),
+            "overrides": {fn: overrides.get(fn, {}) for fn in sorted(fig_names)},
+        }
+
+    # Also build a flat "all" roster with every figure.
+    all_names = sorted(figures.keys())
+    stacks["all"] = {
+        "tier": "",
+        "agents": all_names,
+        "overrides": {fn: overrides.get(fn, {}) for fn in all_names},
+    }
+
+    return {
+        "role_defaults": {},
+        "stacks": stacks,
+    }
+
+
+def _read_frontmatter(path: Path) -> dict:
+    """Read YAML front-matter (--- ... ---) from a markdown file."""
+    try:
+        text = path.read_text()
+    except Exception:
+        return {}
+    # Find the first --- block.
+    start = text.find("---")
+    if start == -1:
+        return {}
+    end = text.find("---", start + 3)
+    if end == -1:
+        return {}
+    fm_text = text[start + 3:end].strip()
+    try:
+        return yaml.safe_load(fm_text) or {}
+    except Exception:
+        return {}
 
 
 def role_defaults_model(data: dict, role: str) -> str:
