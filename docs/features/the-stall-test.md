@@ -77,3 +77,8 @@ bin/agents/cmd-limit-lib.sh rule           # the rule every brief carries
 - **The operator message does not arrive.** `bin/notify/send.sh --source errand --severity HIGH --message test`
   proves the road without waiting for a stall.
 - **Reset one errand** after a deliberate long wait: `bin/agents/eindri-stall.sh reset <id>`.
+
+## CHANGE LOG
+
+- 2026-11-20 — written with the change it describes: the stall test, the ten-minute clock, the three acts, and the
+  one command-limit number.
