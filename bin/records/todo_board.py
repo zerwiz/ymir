@@ -76,18 +76,20 @@ class BoardDark(Exception):
 # ── where things live ──────────────────────────────────────────────────────────────────────────────────
 
 def home() -> Path:
+    """The private home, through the one resolver (bin/vault/hoard-lib.sh ymir_home_root) — never guessed."""
     env = os.environ.get("YMIR_HOME")
     if env:
-        return Path(env)
-    try:
-        out = subprocess.run(["bash", str(ROOT / "bin" / "vault" / "hodd.sh"), "path"],
-                             capture_output=True, text=True, timeout=20)
-        p = Path(out.stdout.strip())
-        if p.exists():
-            return p.parent
-    except Exception:
-        pass
-    return Path.home() / "Documents" / "ymirhome"
+        return Path(env).expanduser()
+    lib = ROOT / "bin" / "vault" / "hoard-lib.sh"
+    if lib.exists():
+        try:
+            out = subprocess.run(["bash", "-c", f'. "{lib}" >/dev/null 2>&1; ymir_home_root H >/dev/null 2>&1; printf %s "$H"'],
+                                 capture_output=True, text=True, timeout=10).stdout.strip()
+            if out:
+                return Path(out)
+        except Exception:  # noqa: BLE001
+            pass
+    raise SystemExit("no home: set YMIR_HOME or run bin/engine/ymir-install.sh (the resolver found none)")
 
 
 def state_dir() -> Path:

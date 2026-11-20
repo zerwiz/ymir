@@ -32,7 +32,7 @@ Usage:
 Env:
   YMIR_WORKTREE_LEDGER   the ledger dir (default $XDG_STATE_HOME/ymir/worktrees)
   YMIR_WORKTREE_ROOTS    the roots config (default $YMIR_HOME/config/worktree-roots.yaml)
-  YMIR_HOME              the private home (default ~/Documents/ymirhome)
+  YMIR_HOME              the private home (else resolved by bin/vault/hoard-lib.sh)
   BROKK_STATE_OVERRIDE   one more shelf where `<errand>.status` may live
   YMIR_WORKTREE_REAP=off the sweep reports and removes nothing (the kill switch)
   YMIR_WORKTREE_NOW      epoch override (tests)
@@ -65,7 +65,20 @@ def now() -> float:
 
 
 def home() -> Path:
-    return Path(os.environ.get("YMIR_HOME") or Path.home() / "Documents" / "ymirhome").expanduser()
+    """The private home, through the one resolver (bin/vault/hoard-lib.sh ymir_home_root) — never guessed."""
+    env = os.environ.get("YMIR_HOME")
+    if env:
+        return Path(env).expanduser()
+    lib = ROOT / "bin" / "vault" / "hoard-lib.sh"
+    if lib.exists():
+        try:
+            out = subprocess.run(["bash", "-c", f'. "{lib}" >/dev/null 2>&1; ymir_home_root H >/dev/null 2>&1; printf %s "$H"'],
+                                 capture_output=True, text=True, timeout=10).stdout.strip()
+            if out:
+                return Path(out)
+        except Exception:  # noqa: BLE001
+            pass
+    raise SystemExit("no home: set YMIR_HOME or run bin/engine/ymir-install.sh (the resolver found none)")
 
 
 def ledger_dir() -> Path:
