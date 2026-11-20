@@ -78,12 +78,25 @@ want_rc 0 "tell hands the message over"
 if [ -s "$STATE/.wake-queue" ]; then
   line="$(cat "$STATE/.wake-queue")"
   [ "$(awk 'END{print NR}' "$STATE/.wake-queue")" = 1 ] && ok "one wake is one line" || bad "one wake is one line" "$line"
-  [ "$(printf '%s' "$line" | awk -F'\t' '{print NF}')" = 5 ] && ok "the message's tabs did not become fields" \
-    || bad "the message's tabs did not become fields" "$(printf '%s' "$line" | cat -A)"
+  # A wake is six fields: the five the door has always written, plus plan 328's TRAILING
+  # `class=<voice|ask|report>`. Trailing on purpose — a reader that matches from the head of
+  # the line is unmoved — so the count is six, and the class is last (below).
+  [ "$(printf '%s' "$line" | awk -F'\t' '{print NF}')" = 6 ] && ok "a wake is six fields, the class trailing" \
+    || bad "a wake is six fields, the class trailing" "$(printf '%s' "$line" | cat -A)"
   [ "$(printf '%s' "$line" | cut -f3)" = signal ] && ok "the wake's kind is signal" || bad "the wake's kind is signal" "$line"
   case "$(printf '%s' "$line" | cut -f4)" in rodd-*) ok "the wake's key is rodd-<epoch>" ;; *) bad "the wake's key is rodd-<epoch>" "$line" ;; esac
   case "$(printf '%s' "$line" | cut -f5)" in *Rödd*) ok "the wake names Rödd" ;; *) bad "the wake names Rödd" "$line" ;; esac
-  case "$(printf '%s' "$line" | cut -f5)" in *"hand this on with a tab"*) ok "the text survives, flattened" ;; *) bad "the text survives, flattened" "$line" ;; esac
+  # The tab-proof stated exactly: field 5 IS the flattened payload, whole. A tab or a newline
+  # in the message that had become a field would shift this and the count above.
+  [ "$(printf '%s' "$line" | cut -f5)" = 'Rödd (the voice) to the arm holder: hand this on with a tab' ] \
+    && ok "the text survives, flattened — a tab in the message is not a field" \
+    || bad "the text survives, flattened — a tab in the message is not a field" "$(printf '%s' "$line" | cut -f5)"
+  case "$(printf '%s' "$line" | cut -f6)" in
+    class=voice|class=ask|class=report) ok "the class is a well-formed trailing class= field" ;;
+    *) bad "the class is a well-formed trailing class= field" "$(printf '%s' "$line" | cat -A)" ;;
+  esac
+  [ "$(printf '%s' "$line" | cut -f6)" = class=voice ] && ok "a tell from Rödd is class=voice" \
+    || bad "a tell from Rödd is class=voice" "$(printf '%s' "$line" | cut -f6)"
 fi
 run tell "and a second"
 [ "$(awk 'END{print NR}' "$STATE/.wake-queue")" = 2 ] && ok "a second tell does not overwrite the first" \
