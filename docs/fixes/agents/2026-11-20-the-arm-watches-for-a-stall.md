@@ -82,3 +82,7 @@ alarm on a healthy hall.
 - `.agents/harnesses/claude-worker.settings.json` — Claude's own bash timeout, set at last
 - `.agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md` — the arm and the sweep documented
 - `docs/features/the-stall-test.md` — the how-to, with its catalogue row
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #843
