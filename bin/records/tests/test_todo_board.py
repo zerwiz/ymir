@@ -114,7 +114,7 @@ def main() -> int:
         r = tb.add({"title": "x"})
         check("unconfigured add is a skip", r["verdict"] == "skip", r)
 
-        cfg = {"place": "house/private", "url": "http://fake", "token": "t", "owners": {"Ada": "ada"}}
+        cfg = {"place": "house/private", "url": "https://fake.invalid", "token": "t", "owners": {"Ada": "ada"}}
         fake = FakeBoard()
         board = tb.Board(cfg, call=fake)
 

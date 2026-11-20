@@ -71,3 +71,7 @@ bin/agents/hermes-tell.sh --new "…"     # prints the new session's id, so you 
 - **"is busy: …":** Hermes is working in that session. Read `hermes-tell.sh --sessions` and try again when it shows
   `ready`.
 - **HTTP 403:** `API_SERVER_KEY` is missing from Hermes's `.env`. Hermes will not continue a named session without it.
+
+## CHANGE LOG
+
+- 2026-11-20 — first written.

@@ -85,7 +85,7 @@ def ledger_dir() -> Path:
     v = os.environ.get("YMIR_WORKTREE_LEDGER")
     if v:
         return Path(v).expanduser()
-    base = os.environ.get("XDG_STATE_HOME") or str(Path.home() / ".local" / "state")
+    base = os.environ.get("XDG_STATE_HOME") or str(Path.home() / ".local/state")
     return Path(base) / "ymir" / "worktrees"
 
 

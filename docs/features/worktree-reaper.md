@@ -61,3 +61,7 @@ For **another worker system** that fills a folder with linked worktrees, list th
   read its `why` column.
 - **An exterior folder is not walked:** `bin/forge/worktree-reap.py roots` shows whether the home
   config was read; a child counts only when it holds a `.git` *file* (a linked worktree).
+
+## CHANGE LOG
+
+- 2026-11-20 — first written.

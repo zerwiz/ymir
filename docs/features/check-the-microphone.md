@@ -49,3 +49,7 @@ A steady voice stays in one band. A spread of more than 12 dB across the seconds
 - **"no voice heard"**: check that the right microphone is chosen in Rödd's Settings, or name it with `--source`.
 - **"NOT steady"** in Rödd, but steady in `mic-check.sh level`: something between the microphone and the page is
   riding the gain. Rödd turns the browser's gain control off; report it with both traces.
+
+## CHANGE LOG
+
+- 2026-11-20 — first written.
