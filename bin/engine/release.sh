@@ -155,7 +155,10 @@ borrow_closure() {  # <prev-dir> <new-dir>
   while IFS= read -r nm; do
     rel="${nm#"$src"/}"
     [ "$rel" = node_modules ] && continue
-    mkdir -p "$dst/$(dirname "$rel")" && cp -al "$nm" "$dst/$rel" || return 1
+    # only into a workspace the NEW tree has: an app that left (the split) keeps its modules in the old release,
+    # and recreating its folder here made the build compile an app that is no longer in this tree (2026-11-20)
+    [ -d "$dst/$(dirname "$rel")" ] || continue
+    cp -al "$nm" "$dst/$rel" || return 1
   done < <(find "$src" -mindepth 2 -maxdepth 4 -type d -name node_modules -not -path '*/node_modules/*' -prune -print 2>/dev/null)
   return 0
 }
