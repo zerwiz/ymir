@@ -78,16 +78,26 @@ want_rc 0 "tell hands the message over"
 if [ -s "$STATE/.wake-queue" ]; then
   line="$(cat "$STATE/.wake-queue")"
   [ "$(awk 'END{print NR}' "$STATE/.wake-queue")" = 1 ] && ok "one wake is one line" || bad "one wake is one line" "$line"
-  [ "$(printf '%s' "$line" | awk -F'\t' '{print NF}')" = 5 ] && ok "the message's tabs did not become fields" \
-    || bad "the message's tabs did not become fields" "$(printf '%s' "$line" | cat -A)"
+  # THE ARITY IS THE QUEUE'S, THE TABS ARE THIS TEST'S (2026-11-20). The queue line gained a class
+  # field and this assertion, hardcoded to five, turned the whole-tree gate red for every branch
+  # while nothing was wrong with the message. What this proves is narrower and still true: a message
+  # carrying its own tabs does not produce more fields than a message carrying none.
+  tabbed_fields="$(printf '%s' "$line" | awk -F'\t' '{print NF}')"
   [ "$(printf '%s' "$line" | cut -f3)" = signal ] && ok "the wake's kind is signal" || bad "the wake's kind is signal" "$line"
   case "$(printf '%s' "$line" | cut -f4)" in rodd-*) ok "the wake's key is rodd-<epoch>" ;; *) bad "the wake's key is rodd-<epoch>" "$line" ;; esac
   case "$(printf '%s' "$line" | cut -f5)" in *Rödd*) ok "the wake names Rödd" ;; *) bad "the wake names Rödd" "$line" ;; esac
   case "$(printf '%s' "$line" | cut -f5)" in *"hand this on with a tab"*) ok "the text survives, flattened" ;; *) bad "the text survives, flattened" "$line" ;; esac
 fi
+run tell "a control line with no tabs of its own"
+control_fields="$(tail -n1 "$STATE/.wake-queue" | awk -F'\t' '{print NF}')"
+[ "${tabbed_fields:-0}" = "${control_fields:-x}" ] && ok "a message's own tabs add no fields" \
+  || bad "a message's own tabs add no fields" "tabbed=${tabbed_fields:-?} control=${control_fields:-?}"
+
+before_tell="$(awk 'END{print NR}' "$STATE/.wake-queue")"
 run tell "and a second"
-[ "$(awk 'END{print NR}' "$STATE/.wake-queue")" = 2 ] && ok "a second tell does not overwrite the first" \
-  || bad "a second tell does not overwrite the first" "$(cat "$STATE/.wake-queue")"
+after_tell="$(awk 'END{print NR}' "$STATE/.wake-queue")"
+[ "$after_tell" -eq $((before_tell + 1)) ] && ok "a second tell does not overwrite the first" \
+  || bad "a second tell does not overwrite the first" "before=$before_tell after=$after_tell $(cat "$STATE/.wake-queue")"
 
 # ── 5 · a state dir the lease does not name ───────────────────────────────────
 write_lease "$$" "$(date +%s)" "$TMP/not-there"
