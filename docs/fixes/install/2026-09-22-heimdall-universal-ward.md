@@ -45,3 +45,7 @@ errand.
 - One console action outstanding: `sudo loginctl enable-linger whynot`.
 
 - **2026-11-20** — redacted: a machine, a user or a person named above now reads as a role or an invented example (RULES/04 · plan 287 §3). No fact of the fix changed; the original text stands in the repository's history.
+
+## CHANGE LOG
+
+- 2026-11-19 — review-mend: added missing heading for #835
