@@ -36,3 +36,7 @@ python3 bin/collab/tests/test_work.py   → Ran 13 tests … OK (a session with 
 python3 bin/collab/tests/test_kit.py    → Ran 40 tests … OK (the shared hooksPath is not taken)
 bash bin/collab/tests/test_collab.sh    → 28 passed, 0 failed
 ```
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #841
