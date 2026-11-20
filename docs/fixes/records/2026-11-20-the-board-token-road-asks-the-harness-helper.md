@@ -26,3 +26,7 @@ harness itself reached the same board without trouble.
 
 On the dev seat: `resolve_token('claude-mcp:<server>', …)` returned a token (its length only was checked), and a dry run
 of the Gimlé ledger listed its place in full through it.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #851
