@@ -24,6 +24,10 @@ pass=0; fail=0
 t() { local name=$1; shift; if "$@"; then printf '  ok   %s\n' "$name"; pass=$((pass+1)); else printf '  FAIL %s\n' "$name"; fail=$((fail+1)); fi; }
 
 T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
+# the loop logs its proof to ${TMPDIR:-/tmp}/ul-prove.log: without its own TMPDIR this fixture overwrote the REAL
+# loop's log while the real ci-verify ran this very test, and the heart's proof record then named this fixture's
+# FAIL row as the failed gate (the heart, 149f38ebd294, 2026-11-20)
+mkdir -p "$T/tmp"; export TMPDIR="$T/tmp"
 export YMIR_HOME="$T/ymirhome" YMIR_RELEASES_DIR="$T/releases" YMIR_CURRENT_LINK="$T/current" \
        YMIR_SHARED_DIR="$T/shared" YMIR_PROOFS_DIR="$T/proofs" XDG_STATE_HOME="$T/state" \
        YMIR_HEAVY_SLOT="$T/state/heavy-slot.lock" YMIR_HEAVY_SLOT_HELD=0

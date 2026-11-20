@@ -27,6 +27,7 @@
 # <home>/config/runtime.env, with the documented defaults ~/ymir-runtime and main.
 #
 # Exit: 0 current (or refreshed) · 3 behind/absent/dirty on --check · 4 refused (this tree is the pin)
+#       6 the pin is a release: never merged in place, Gróa builds and flips a new one (2026-11-20)
 #       5 the fast-forward failed (the pin has diverged) · 2 usage · 1 no pin/configuration at all.
 set -uo pipefail
 
@@ -153,6 +154,22 @@ head="$(git -C "$PIN" rev-parse --short HEAD 2>/dev/null)"
 target="$(git -C "$PIN" rev-parse --short "origin/$BRANCH" 2>/dev/null)"
 behind="$(git -C "$PIN" rev-list --count "HEAD..origin/$BRANCH" 2>/dev/null || printf '0')"
 ahead="$(git -C "$PIN" rev-list --count "origin/$BRANCH..HEAD" 2>/dev/null || printf '0')"
+
+# A pin that is a LINK to a release (plan 275 S9) is never merged in place (2026-11-20). A release is a proved copy
+# named for its sha; on the dev machine this door fast-forwarded releases/abefc4f06932 to 149f38ebd, so the seat ran code
+# its proof never saw under a name that lied. A release is moved by building a new one beside it and flipping:
+# bin/engine/runtime-deploy.sh, which Gróa runs. This door reports, and refuses the merge.
+if [ -L "$PIN" ]; then
+  rel_name="$(basename "$(cd "$PIN" 2>/dev/null && pwd -P)")"
+  rel_head="$(git -C "$PIN" rev-parse HEAD 2>/dev/null)"
+  case "$rel_name" in
+    [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*) case "$rel_head" in "$rel_name"*) ;; *)
+      verdict moved-in-place "$behind" "release $rel_name carries ${rel_head:0:12} — it was merged in place; Gróa (bin/engine/runtime-deploy.sh) builds and flips an honest one" "$([ "$mode" = check ] && echo 3 || echo 6)" ;; esac ;;
+  esac
+  if [ "${behind:-0}" != 0 ] && [ "$mode" = apply ]; then
+    verdict release-road "$behind" "the pin is a release, never merged in place — Gróa (bin/engine/runtime-deploy.sh) builds a new release of origin/$BRANCH and flips it" 6
+  fi
+fi
 
 if [ "${ahead:-0}" != 0 ]; then
   verdict diverged "$behind" "$ahead commit(s) on the pin are not on origin/$BRANCH — a human must decide" 5
