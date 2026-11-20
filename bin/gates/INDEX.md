@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[184]{file,does,kind,verdict,disposition,callers,lines}:
+bin[185]{file,does,kind,verdict,disposition,callers,lines}:
   "SKILL.md","---","data","tested","keep",24,23
   "SKILL.md","---","data","tested","keep",24,23
   "SKILL.md","---","data","tested","keep",24,22
@@ -30,6 +30,7 @@ bin[184]{file,does,kind,verdict,disposition,callers,lines}:
   "app-functional-guard.sh","app-functional-guard.sh — AN UPDATE THAT LEAVES AN APP UNRUNNABLE IS NOT AN UPDATE.","tool","wired","keep",1,138
   "areas-guard.sh","areas-guard (tree ward) — the canon and the copy that travels must not drift.","tool","wired","keep",7,118
   "blocking-door-guard.sh","cache: tree — the verdict is a pure function of the tracked tree.","tool","wired","keep",1,69
+  "board-engine-guard.sh","board-engine-guard.sh — a NEW file in Ymir may not carry one board engine's code (plan 335, the split).","tool","wired","keep",2,123
   "branch-current.sh","branch-current.sh — a branch is based on CURRENT main before it is offered.","tool","tested","keep",2,82
   "branch-guard.sh","branch-guard.sh — Rule 08: no push may land on a protected branch.","tool","tested","keep",3,149
   "capabilities.sh","A GENERATED FILE MUST BE A FUNCTION OF CONTENT ALONE (0.1.94/0.1.95/0.1.97 — three","tool","wired","keep",12,325
@@ -63,7 +64,7 @@ bin[184]{file,does,kind,verdict,disposition,callers,lines}:
   "gather-merge-guard.sh","gather-merge-guard.sh — a gathered batch keeps its history (plan 272, fault 9).","tool","wired","keep",1,61
   "git-clobber-guard.sh","git-clobber-guard.sh — no command that throws away uncommitted work.","tool","wired","keep",0,86
   "guards-scope.test.sh","guards-scope.test.sh — prove the pre-push gate bites, and only where it should.","tool","wired","keep",0,126
-  "guards.sh","guards.sh — every TREE ward, in one command.","tool","wired","keep",29,441
+  "guards.sh","guards.sh — every TREE ward, in one command.","tool","wired","keep",30,445
   "hearth-guard.sh","hearth-guard.sh — one capability, one implementation: a second copy is a fault, and two","tool","wired","keep",1,91
   "hoard-guard.sh","hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME).","tool","wired","keep",3,159
   "home-contract-check.sh","home-contract-check.sh — the contract that raises a home is itself checked.","tool","wired","keep",2,169
@@ -138,6 +139,7 @@ bin[184]{file,does,kind,verdict,disposition,callers,lines}:
   "test_areas_and_injection.sh","test_areas_and_injection.sh — the smoke suite for plan 219 and the arm-holder's inbox.","tool","wired","keep",0,108
   "test_arm_client_helm.sh","test_arm_client_helm.sh — the arm client's two measured faults (2026-11-10), with stubs.","tool","wired","keep",0,83
   "test_arm_talk.sh","ROOT='$(cd '$(dirname '$0')/../../..' && pwd)'","tool","wired","keep",0,19
+  "test_board_engine_guard.sh","board-engine-guard refuses a NEW file naming Plane's API, the old bin/gimle/ tree or a Gimlé host from the","tool","wired","keep",1,53
   "test_broken.sh","export YMIR_HOME='${YMIR_HOME:-$HOME/Documents/ymirhome}'","tool","wired","keep",0,25
   "test_ci_parity.sh","test_ci_parity.sh — a push run and a pull_request run on one sha print the same verdict.","tool","wired","keep",0,10
   "test_container_hides_the_hoard.sh","test_container_hides_the_hoard.sh — a container Ymir ships never holds the vault.","tool","wired","keep",1,126
@@ -150,7 +152,6 @@ bin[184]{file,does,kind,verdict,disposition,callers,lines}:
   "test_gate_directory.sh","test_gate_directory.sh — plan 295 fix S1: the gate list is a DIRECTORY, so two branches that add","tool","wired","keep",1,128
   "test_gather_merge_guard.sh","test_gather_merge_guard.sh — plan 272 fault 9: a gathered batch that landed as one parent is named.","tool","wired","keep",0,26
   "test_gather_orders_by_base.sh","test_gather_orders_by_base.sh — plan 293 part 7: a packet names the branch it was cut from, and","tool","wired","keep",1,69
-  "test_gimle_mcp_board.sh","test_gimle_mcp_board.sh — the Gimlé MCP's board face, proved by command.","tool","wired","keep",0,195
   "test_groa_steps.sh","test_groa_steps.sh — plan 272 fault 5: every Gróa step has a limit and says where it is.","tool","wired","keep",0,39
   "test_guards_inherited.sh","test_guards_inherited.sh — a ward's finding is OURS only when it names OUR copy of the path.","tool","wired","keep",1,56
   "test_handoff_packet.sh","test_handoff_packet.sh — proves the packet door reads the schema's packet and refuses a false one.","tool","wired","keep",1,138
@@ -207,6 +208,6 @@ bin[184]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-config-check.sh","ymir-config-check.sh — the DOOR to the config layer (`src/ymir_runtime/config/`).","tool","wired","keep",0,44
   "ymir-update-check.sh","ymir-update-check.sh — does a newer Ymir stand on npm?","tool","wired","keep",3,71
 
-**Tally.** verdict: wired=165, tested=19
+**Tally.** verdict: wired=166, tested=19
 
-**Tally.** disposition: keep=181, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/tests/test_hermes_seat.py=1
+**Tally.** disposition: keep=182, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/tests/test_hermes_seat.py=1

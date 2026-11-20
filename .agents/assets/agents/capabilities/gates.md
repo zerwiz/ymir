@@ -46,6 +46,7 @@
 | app-functional-guard.sh | app-functional-guard.sh — AN UPDATE THAT LEAVES AN APP UNRUNNABLE IS N | tested | keep (a human or a cron row must run it) |
 | areas-guard.sh | areas-guard (tree ward) — the canon and the copy that travels must not | tested+named | keep (a human or a cron row must run it) |
 | blocking-door-guard.sh | (no header line) | tested | keep (a human or a cron row must run it) |
+| board-engine-guard.sh | board-engine-guard.sh — a NEW file in Ymir may not carry one board eng | tested | keep (a human or a cron row must run it) |
 | branch-guard.sh | branch-guard.sh — Rule 08: no push may land on a protected branch. | tested+named | keep (a human or a cron row must run it) |
 | confidential-guard.sh | confidential-guard.sh — while a confidential session is live, nothing  | tested | keep (a human or a cron row must run it) |
 | constellation-grant-guard.sh | constellation-grant-guard.sh — the road's own ward. | tested+named | keep (a human or a cron row must run it) |
@@ -111,6 +112,7 @@
 | test_areas_and_injection.sh | test_areas_and_injection.sh — the smoke suite for plan 219 and the arm | tested | keep (a human or a cron row must run it) |
 | test_arm_client_helm.sh | test_arm_client_helm.sh — the arm client's two measured faults (2026-1 | tested+named | keep (a human or a cron row must run it) |
 | test_arm_talk.sh | bogus host refused with road named | tested | keep (a human or a cron row must run it) |
+| test_board_engine_guard.sh | board-engine-guard refuses a NEW file naming Plane's API, the old bin/gi | tested | keep (a human or a cron row must run it) |
 | test_broken.sh | add appends | tested | keep (a human or a cron row must run it) |
 | test_ci_parity.sh | test_ci_parity.sh — a push run and a pull_request run on one sha print | tested | keep (a human or a cron row must run it) |
 | test_container_hides_the_hoard.sh | test_container_hides_the_hoard.sh — a container Ymir ships never holds | tested | keep (a human or a cron row must run it) |
@@ -123,7 +125,6 @@
 | test_gate_directory.sh | test_gate_directory.sh — plan 295 fix S1: the gate list is a DIRECTORY | tested | keep (a human or a cron row must run it) |
 | test_gather_merge_guard.sh | test_gather_merge_guard.sh — plan 272 fault 9: a gathered batch that l | tested | keep (a human or a cron row must run it) |
 | test_gather_orders_by_base.sh | test_gather_orders_by_base.sh — plan 293 part 7: a packet names the br | tested | keep (a human or a cron row must run it) |
-| test_gimle_mcp_board.sh | test_gimle_mcp_board.sh — the Gimlé MCP's board face, proved by comma | tested | keep (a human or a cron row must run it) |
 | test_groa_steps.sh | test_groa_steps.sh — plan 272 fault 5: every Gróa step has a limit an | tested | keep (a human or a cron row must run it) |
 | test_guards_inherited.sh | test_guards_inherited.sh — a ward's finding is OURS only when it names | tested | keep (a human or a cron row must run it) |
 | test_handoff_packet.sh | test_handoff_packet.sh — proves the packet door reads the schema's pac | tested+named | keep (a human or a cron row must run it) |
