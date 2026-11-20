@@ -83,3 +83,7 @@ rewritten one by one; a one-cycle link carries them to the right shelf (plan 331
 - Plan 331.6/331.8: the resolvers and the pass-by-pass rewrite of the ~36k old references. The link carries them
   for one cycle; the gate stops new ones.
 - Retiring the links after one release cycle.
+
+## CHANGE LOG
+
+- 2026-11-19 — review-mend: added missing heading for #833
