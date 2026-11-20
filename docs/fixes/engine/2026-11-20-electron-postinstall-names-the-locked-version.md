@@ -12,3 +12,7 @@ house's own fallback. The heart's old checkout carried this one-line fix as a ha
 ## What was built
 
 `"electron@43.8.9": true` is added. The older entries stay, so an older lock still installs.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #856
