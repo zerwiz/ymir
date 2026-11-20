@@ -46,7 +46,7 @@ bin[72]{file,does,kind,verdict,disposition,callers,lines}:
   "eindri-heartbeat.sh","eindri-heartbeat.sh — condition half of the Eindri silence bridge.","tool","wired","keep",3,106
   "eindri-liveness.sh","eindri-liveness.sh — the sweep's second question: is the pane still a worker?","tool","wired","keep",4,256
   "eindri-notify.sh","eindri-notify.sh — the ARM-HOLDER'S INBOX: inject one line into the session that holds the lock.","tool","wired","keep",15,156
-  "eindri-review-spawn.sh","eindri-review-spawn.sh — the review spine.","tool","tested","keep",3,340
+  "eindri-review-spawn.sh","eindri-review-spawn.sh — the review spine.","tool","tested","keep",3,387
   "eindri-role.sh","eindri-role.sh — the right smith for the right metal.","tool","wired","keep",2,117
   "eindri-route.sh","eindri-route.sh — which machine should host an errand, by its nature?","tool","tested","keep",0,108
   "eindri-seat.sh","eindri-seat.sh — seat a worker and PROVE it, in one move.","tool","wired","keep",1,85
