@@ -13,3 +13,7 @@ its home path and what happens when it is absent. A new test door also lacked it
 `bin/forge/worktree-reap.py` and `bin/records/todo_board.py`. Both now take `$YMIR_HOME` or the one resolver
 (`hoard-lib.sh` `ymir_home_root`), and refuse by name when neither answers. Two more doors gained their exec bits
 (`bin/voice/kokoro_url.py`, `bin/boards/card_audit.py`).
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #840
