@@ -86,3 +86,7 @@ stale: errand probe-stall has said nothing for 40 minutes
 == 3: next pass ==
 [exit 124]
 ```
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #840
