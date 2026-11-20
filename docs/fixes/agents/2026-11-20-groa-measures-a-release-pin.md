@@ -28,3 +28,7 @@ Run from the pin itself (the heart has no working tree on its schedule), row 1 m
 
 `bash bin/agents/tests/test_groa_release_pin.sh` — 8 passed; `bash bin/gates/tests/test_groa_steps.sh` — 17 passed.
 Live on the dev machine: `"pin","…/ymir-runtime","behind","release abefc4f06932 carries 149f38ebd294 — moved in place; a new release is built and flipped"`.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #856
