@@ -98,6 +98,17 @@ def skeleton(text: str) -> str:
 SELF_ECHO = re.compile(r"\bassistant[,]?\s+speaking\b", re.I)
 
 
+def delta_words(prev: str, cur: str) -> str:
+    """The words in `cur` that were not in `prev`, allowing the window to slide."""
+    pw, cw = prev.split(), cur.split()
+    if not pw:
+        return " ".join(cw)
+    for k in range(min(len(pw), len(cw)), 0, -1):
+        if pw[-k:] == cw[:k]:
+            return " ".join(cw[k:])
+    return " ".join(cw)
+
+
 def addressed(text: str, name: str) -> bool:
     if SELF_ECHO.search(text):
         return False
@@ -106,11 +117,18 @@ def addressed(text: str, name: str) -> bool:
         return True
     target = skeleton(name)
     words = [w for w in re.split(r"[^a-z]+", low) if w]
+    # a name is called in the last few words, and it begins with a sibilant or a k: this
+    # kills the false positives that answered "(burps)", "Magic!" and "the film is going…"
+    words = words[-12:]
     for i in range(len(words)):
         if len(words[i]) >= 4 and lev(skeleton(words[i]), target) <= 2:
             return True
         for span in (2, 3):
-            phrase = skeleton(" ".join(words[i:i + span]))
+            chunk = " ".join(words[i:i + span])
+            phrase = skeleton(chunk)
+            if not phrase.startswith("sk"):        # a name is Sk…, never "is going"
+
+                continue
             if len(phrase) >= 3 and abs(len(phrase) - len(target)) <= 1 and lev(phrase, target) <= 3:
                 return True
     return False
@@ -543,17 +561,30 @@ class Voice:
 
     # ---- capture: drain the page continuously
     def capture(self):
+        """Continuous drain. A closed socket is retried, never fatal: a capture thread that
+        dies silently makes the voice deaf while the process still looks alive (measured —
+        eight minutes of silence with the unit 'active')."""
+        misses = 0
         while self.running:
             try:
                 with self.wslock:
                     got = self.ws.js("window.__skirnir.drain(0)") or {}
+                misses = 0
                 pcm = base64.b64decode(got.get("b64") or "")
                 if pcm:
                     with self.lock:
                         self.blocks.append(pcm)
-            except Exception:
-                self.running = False
-                return
+            except Exception as exc:
+                misses += 1
+                log(stage="capture_error", err=str(exc)[:80], misses=misses)
+                if misses % 5 == 0:
+                    try:
+                        self.mod, self.ws = page(self.args.port)
+                        log(stage="capture_reconnect", ok=True)
+                    except SystemExit:
+                        log(stage="capture_reconnect", ok=False)
+                time.sleep(1.0)
+                continue
             time.sleep(self.args.hop)
 
     def take_pcm(self) -> bytes:
@@ -598,13 +629,12 @@ class Voice:
                           " ", text, flags=re.I).strip()
             if not text:
                 continue
-            # delta against the previous partial, so the turn grows word by word
-            if text.startswith(self.last_partial) and len(text) > len(self.last_partial):
-                new = text[len(self.last_partial):].strip()
-                self.last_partial = text
-            else:
-                new = ""
-                self.last_partial = text
+            # delta against the previous partial. The window SLIDES, so the transcript no
+            # longer starts with the old partial — a prefix test therefore yielded nothing
+            # forever and the turn never formed (measured: rms 24 000, `new=-` every step).
+            # Match the old words' longest suffix against the new words' prefix instead.
+            new = delta_words(self.last_partial, text)
+            self.last_partial = text
             self.turn = f"{self.turn} {new}".strip()[-400:]
             log(stage="asr", stt_ms=ms, rms=int(level), new=new[-80:] or "-")
             clean = re.sub(r"\[BLANK_AUDIO\]", "", text).strip()
@@ -689,7 +719,7 @@ class Voice:
         def producer():
             pcms = 0
             spoken = 0
-            max_clauses = int(os.environ.get("SNOTRA_MAX_CLAUSES", "4"))
+            max_clauses = int(os.environ.get("SNOTRA_MAX_CLAUSES", "2"))
             for clause in self.compose_clauses(heard):
                 if self.cancel.is_set() or spoken >= max_clauses:
                     break
@@ -722,7 +752,7 @@ class Voice:
         audio_s = 0.0
         started = None
         pending: list[bytes] = []
-        prebuffer_s = float(os.environ.get("SNOTRA_PREBUFFER", "1.0"))
+        prebuffer_s = float(os.environ.get("SNOTRA_PREBUFFER", "0.35"))
         ahead_max = float(os.environ.get("SNOTRA_AHEAD", "6.0"))
         while True:
             item = blocks.get()
@@ -749,6 +779,17 @@ class Voice:
         self.last_push = time.time()
         log(stage="done", total_ms=int((time.time() - t0) * 1000), audio_s=round(audio_s, 1))
 
+    def pi_bin(self) -> str:
+        import shutil
+        found = shutil.which("pi")
+        if found:
+            return found
+        for cand in (os.path.expanduser("~/.npm-global/bin/pi"),
+                     "/usr/local/bin/pi", "/usr/bin/pi"):
+            if os.access(cand, os.X_OK):
+                return cand
+        return ""
+
     def research(self, question: str) -> str:
         """Ask the harness to search, and take back two sentences.
 
@@ -759,10 +800,23 @@ class Voice:
         prompt = ("Search the web and answer in at most two spoken sentences. Name the "
                   "sources in parentheses at the end, never in the middle. No lists, no "
                   "markdown. Question: " + question)
+        binary = self.pi_bin()
+        if not binary:
+            return "I cannot reach the web from this seat right now."
+        env = dict(os.environ)
+        env["PATH"] = env.get("PATH", "") + ":" + os.path.expanduser("~/.npm-global/bin")
+        # run from the MAIN checkout: inside a worktree the harness refuses to start
+        # ("Tool 'ymir_index' conflicts with …/.yggdrasil/…/.pi/extensions/ymirhome.ts")
+        cwd = os.environ.get("YMIR_MAIN_REPO") or (
+            ROOT.split("/.yggdrasil/")[0] if "/.yggdrasil/" in ROOT else ROOT)
         try:
-            out = subprocess.run(["pi", "-p", "--no-session", prompt],
-                                 capture_output=True, text=True, timeout=120).stdout
-            text = " ".join(out.split())
+            proc = subprocess.run([binary, "-p", "--no-session", prompt],
+                                  capture_output=True, text=True, timeout=120, env=env,
+                                  cwd=cwd)
+            text = " ".join((proc.stdout or "").split())
+            if not text:
+                log(stage="research_empty", rc=proc.returncode,
+                    err=(proc.stderr or "")[-160:])
             return text[:600]
         except Exception as exc:
             return f"I could not reach the web just now ({type(exc).__name__})."
@@ -773,6 +827,7 @@ class Voice:
         if re.search(r"\b(look (it )?up|search|research|find out|google|check online|"
                      r"what.s online)\b", heard, re.I):
             log(stage="research", question=heard[:90])
+            yield "Let me look that up."
             for clause in sentences(self.research(heard)):
                 yield clause
             return
@@ -859,6 +914,7 @@ class Voice:
         if re.search(r"\b(look (it )?up|search|research|find out|google|check online|"
                      r"what.s online)\b", heard, re.I):
             log(stage="research", question=heard[:90])
+            yield "Let me look that up."
             for clause in sentences(self.research(heard)):
                 yield clause
             return
