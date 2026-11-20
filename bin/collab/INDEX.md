@@ -24,11 +24,11 @@ bin[36]{file,does,kind,verdict,disposition,callers,lines}:
   "15-commits-leave-by-pull-request.md","15 — Every commit leaves by a pull request, or it lands in main","data","wired","keep",0,35
   "16-a-review-is-a-file.md","16 — A review is a file in the repository","data","wired","keep",0,32
   "17-one-agent-one-worktree.md","17 — One agent, one worktree","data","wired","keep",0,36
-  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",42,-
-  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",42,-
+  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",43,-
+  "README.md","The collaboration kit — the same discipline in every repository","data","tested","keep",43,-
   "advantage-audit.sh","advantage-audit.sh — is every claim we make backed by evidence, or only by confidence?","tool","wired","keep",2,141
   "advantage.md","Competitive advantage — how we research it, and how we are allowed to state it","data","wired","keep",0,129
-  "checks.sh","checks.sh — run this repository's own cheap checks, whatever language it is written in.","tool","wired","keep",3,72
+  "checks.sh","checks.sh — run this repository's own cheap checks, whatever language it is written in.","tool","wired","keep",3,92
   "collab-connect.sh","collab-connect.sh — what a collaborator pastes, and the token the house mints.","tool","wired","keep",1,39
   "collab.sh","collab.sh — Vingólf, the assembly hall: who collaborates with the house, on which surface, and at which rung.","tool","wired","keep",6,65
   "collaboration-files.md","Subject: One set of files in every project — can we work this way?","data","wired","keep",2,50

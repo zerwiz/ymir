@@ -22,9 +22,9 @@ folder rewrites one file instead of colliding on every branch.
 
 bin[23]{file,does,kind,verdict,disposition,callers,lines}:
   "app-build.sh","app-build — build the in-tree apps (plan 35).","tool","wired","keep",2,57
-  "app-lib.sh","app-lib.sh — where an app actually lives.","lib","tested","keep",15,99
+  "app-lib.sh","app-lib.sh — where an app actually lives.","lib","tested","keep",15,100
   "design-icon.sh","design-icon.sh — every app wears its own rune.","tool","wired","keep",2,299
-  "desktop-place.sh","desktop-place.sh — put the Ymir apps on their own Hyprland desktops.","tool","tested","keep",8,320
+  "desktop-place.sh","desktop-place.sh — put the Ymir apps on their own Hyprland desktops.","tool","tested","keep",8,321
   "desktop-verify.sh","desktop-verify.sh — the INSTALL-time guarantee: every desktop surface can run,","tool","wired","keep",2,199
   "display-lib.sh","display-lib.sh — the ONE place that knows the displays, and how to talk to the","lib","wired","keep",2,176
   "editor-place.sh","editor-place.sh — the editor is UNMANAGED by default: it opens on the","tool","wired","keep",3,223

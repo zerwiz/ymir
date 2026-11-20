@@ -8,4 +8,6 @@
 ## CHANGE LOG
 
 - **generated $FRAG_STAMP** — rows for this folder, from the tree, by bin/gates/capabilities.sh.
+| model-sync.sh | model-sync.sh — take the voice models over the LOCAL NETWORK, never fr | tested | keep (a human or a cron row must run it) |
+| voice-door.sh | voice-door.sh — the real-time voice door: speak to Ymir on whatever se | tested | keep (a human or a cron row must run it) |
 | voice-ensure.sh | voice-ensure.sh — ensure the voice engines: whisper.cpp (speech → te | tested+named | keep (a human or a cron row must run it) |
