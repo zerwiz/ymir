@@ -28,8 +28,11 @@
 #   nornir-job-private-scan.sh            sweep the working tree, write the queue, seat an errand on findings
 #   nornir-job-private-scan.sh --report   same, print, do not seat
 #   nornir-job-private-scan.sh --json     machine-readable
+#   --fail-on-findings                    (any mode) exit 1 when there are findings — for a caller that gates
 #
-# Exit: 0 clean · 1 findings (the hotline) · 2 could not scan
+# Exit: 0 ran (whether or not there were findings — a finding is WORK IN THE QUEUE, not a broken job)
+#       1 ran, and --fail-on-findings was asked for and there are findings
+#       2 could not scan (no home, no repository) · 3 this machine cannot be named
 set -uo pipefail
 
 # The tree and the home are RESOLVED, never guessed (Rule 07). Until 2026-11-14 this line carried
@@ -49,7 +52,23 @@ fi
 QUEUE="$HOME_DIR/state/private-scan/queue.md"
 REPORT_DIR="$HOME_DIR/state/private-scan"
 LOG="$REPORT_DIR/scan.log"
-MODE="${1:-}"
+MODE=""
+FAIL_ON_FINDINGS=0
+for arg in "$@"; do
+  case "$arg" in
+    --fail-on-findings) FAIL_ON_FINDINGS=1 ;;
+    --report|--json)    MODE="$arg" ;;
+    "") ;;
+    *) printf 'private-scan: unknown option %s (--report | --json | --fail-on-findings)\n' "$arg" >&2; exit 2 ;;
+  esac
+done
+
+# A FINDING IS WORK, NOT A BROKEN JOB (2026-11-20, the Allfather). This job was scheduled twice a day and exited 1
+# whenever it found anything, so every finding rang the operator's phone as a cron FAILURE — 63 of them, all the
+# operator's own domain names written into the public tree — twice a day, for as long as nobody had time to triage.
+# The findings are already written where work lives (the queue and the brief); failing the job adds nothing but
+# noise. So a scan that RAN exits 0, and a scan that could not run still exits non-zero above and below.
+findings_rc() { [ "$FAIL_ON_FINDINGS" = 1 ] && return 1; return 0; }
 
 # A WORKTREE IS A CHECKOUT TOO (2026-11-14): `-d "$REPO/.git"` answered no for every Yggdrasil worktree, because a
 # worktree's `.git` is a FILE that points at the shared gitdir — so the sweep refused to run on exactly the trees a
@@ -200,7 +219,7 @@ by=collections.Counter(r[0] for r in rows)
 print(json.dumps({"at":sys.argv[2],"count":len(rows),"by_category":dict(by),
                   "findings":[{"category":c,"where":w} for c,w in rows]},indent=2))
 PY
-  [ "$findings" -gt 0 ] && exit 1 || exit 0
+  findings_rc; exit $?
 fi
 
 printf '%s private-scan: %s high · %s low · %s allowed in %s\n' "$stamp" "$findings" "$low" "$allowed" "$REPO" >> "$LOG"
@@ -220,7 +239,7 @@ fi
 if [ "$MODE" = "--report" ]; then
   cat "$out" | head -40
   printf '\nprivate-scan: %s finding(s) — queued at %s\n' "$findings" "$QUEUE"
-  exit 1
+  findings_rc; exit $?
 fi
 
 # The operator hears it once, through the one hotline (plan 287 §6). It is reached ONLY on a finding: a clean run has
@@ -236,7 +255,7 @@ fi
 # sweep while an errand is already working would duplicate the triage. So: seat only when no private-scan seat lives.
 if pgrep -f "yggdrasil/private-scan" >/dev/null 2>&1; then
   printf 'private-scan: %s finding(s) queued; an errand is already triaging — not seating another\n' "$findings"
-  exit 1
+  findings_rc; exit $?
 fi
 
 brief="$HOME_DIR/hodd/data/private-scan/brief.md"
@@ -267,4 +286,4 @@ printf 'private-scan: %s finding(s) — brief written, seating an errand\n' "$fi
 printf 'private-scan %s findings — see %s\n' "$findings" "$QUEUE"
 ( cd "$REPO" && bin/agents/einherjar-spawn.sh private-scan "$REPO" --mode direct-PR --harness pi \
     --model opencode-go/deepseek-v4.1-flash --force >>"$LOG" 2>&1 & )
-exit 1
+findings_rc; exit $?
