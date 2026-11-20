@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# handoff/check.sh — the stable door for the baton, in any project.
+# handoff/check.sh — the stable door for the handoff, in any project.
 #
 # The rules live in check.py beside this file; this wrapper exists so a project can call one path from
 # its build regardless of stack. Installed by `bin/collab/collab.sh init`.

@@ -1,6 +1,21 @@
 # 15 — Every commit leaves by a pull request, or it lands in main
 
-**Added 2026-11-02** at the Allfather's word: *"all commits must come up as PRs or into main."*
+**Added 2026-11-02.** Every commit reaches the default branch by a pull request — or, for documents and handoffs, directly.
+
+## At a glance
+
+```mermaid
+flowchart LR
+  c["a commit"] --> q{"what does it change?"}
+  q -->|"documents, handoffs"| m["straight to main"]
+  q -->|"code"| b["its own branch"] --> p["pull request"] --> h["a person merges"]
+```
+
+| What | Means |
+|---|---|
+| documents and handoffs only | directly to the default branch; the checks still run |
+| code, tests, configuration, hooks | a pull request from its own worktree; a person merges |
+| both in one push | a pull request — the code decides the road |
 
 ## The rule
 
@@ -8,7 +23,7 @@
 law[4]{rule,why}:
   "**a branch without a pull request is unfinished work**","a commit that nobody can see is a commit nobody can review, and a review is the only thing between a change and a surprise"
   "**a pull request names what it changes and what proves it**","the reviewer reads the claim and the evidence in one place, not a diff and a guess"
-  "**only the Allfather merges**","the gate is human by design; an agent that merges has replaced the gate with its own judgement"
+  "**only a person merges**","the gate is human by design; an agent that merges has replaced the gate with its own judgement"
   "**production runs a sealed commit**","a deploy from an unmerged branch means the thing being reviewed is not the thing being run"
 ```
 
@@ -32,3 +47,7 @@ git log --oneline origin/master..HEAD   # and every commit here should be in one
 ```
 
 **A green doctor is not evidence of this rule** — the wards check the code, and only a person checks that the code is proposed.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #841

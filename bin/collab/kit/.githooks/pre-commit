@@ -1,28 +1,29 @@
 #!/usr/bin/env bash
-# The cheap checks, so a commit never carries a broken tree.
+# pre-commit — the cheap checks, so a commit never carries a broken tree.
 #
-# The kit is installed in Node, Elixir and shell repositories, so this hook does not name a tool: it asks
-# scripts/checks.sh, which probes for the repository's own check. A repository with no check of its own is a
-# printed skip, never a silent pass — and never a refusal it cannot satisfy.
+# The kit goes into Node, Python, Elixir and shell repositories, so this hook names no tool: it asks
+# scripts/checks.sh, which runs what project.yaml declares (checks.commit) or probes the stack. A repository
+# with no check is a printed skip, never a silent pass. Then the language check on what is staged (RULES/22),
+# then the repository's own pre-commit, if it had one before the kit (hooks chain, never steal).
 set -u
+. "$(dirname "$0")/_common.sh"
+kit_enter pre-commit
 
-notify() {
-  [ -x scripts/notify-arm.sh ] && bash scripts/notify-arm.sh "$1" "$2" >/dev/null 2>&1
-  return 0
-}
-
-if [ ! -f scripts/checks.sh ]; then
+if [ -f scripts/checks.sh ]; then
+  if ! out="$(bash scripts/checks.sh doctor 2>&1)"; then
+    printf '%s\n' "$out" >&2
+    msg="pre-commit refused: a check found a fault — fix it, or commit with --no-verify and say why in the message"
+    printf '\n%s\n' "$msg" >&2
+    kit_notify checks "$out"
+    exit 1
+  fi
+  [ -n "$out" ] && printf '%s\n' "$out" >&2
+else
   printf 'pre-commit: scripts/checks.sh is missing — this repository carries an older kit; nothing was checked\n' >&2
-  exit 0
 fi
 
-if ! out="$(bash scripts/checks.sh doctor 2>&1)"; then
-  printf '%s\n' "$out" >&2
-  msg="pre-commit refused: a check found a fault — fix it, or commit with --no-verify and say why in the message"
-  printf '\n%s\n' "$msg" >&2
-  notify checks "$out"
-  exit 1
+if [ -f scripts/kit.py ] && [ -f project.yaml ]; then
+  python3 scripts/kit.py lang staged || { kit_notify language "a staged file is in a tongue this path does not take"; exit 1; }
 fi
-[ -n "$out" ] && printf '%s\n' "$out" >&2
 
-exit 0
+kit_chain pre-commit "$@"

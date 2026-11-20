@@ -16,6 +16,14 @@ memory in somebody's head.
 **Why a file.** An area nobody held looks exactly like an area that was finished. That is the cheapest
 lie in software, and it is not caught by tests — the tests pass for the areas somebody thought about.
 
+## At a glance
+
+```mermaid
+flowchart LR
+  canon["areas/canon.yaml<br/>the questions"] --> decl["areas/&lt;id&gt;.yaml<br/>this project's answers"]
+  decl --> g["areas-guard<br/>refuses changes to an unheld area"]
+```
+
 ## The four states
 
 | state | means | what the gate does |
@@ -33,7 +41,7 @@ the four.
 ```bash
 bash scripts/areas.sh init          # 18 files, every one honestly unheld
 bash scripts/areas.sh check         # what is unanswered, and what is unproved
-bash scripts/areas.sh estate        # the one line the baton carries
+bash scripts/areas.sh estate        # the one line the handoff carries
 ```
 
 Then take the areas that have work in flight:
@@ -61,7 +69,7 @@ evidence is good, it does not decide what the areas are, and it does not require
 held. A repository that never ran `init` gets a printed skip — a skip is a pass, a silent green is a
 lie.
 
-The override is loud and deliberate: `YMIR_SKIP_AREAS_GUARD=1 git push …` and say why in the commit.
+The override is loud and deliberate: `KIT_SKIP_AREAS_GUARD=1 git push …` and say why in the commit.
 
 ## Keeping it honest
 

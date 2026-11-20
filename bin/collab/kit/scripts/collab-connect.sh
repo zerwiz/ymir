@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# collab-connect.sh — what a collaborator pastes, and the token the house mints.
+# collab-connect.sh — what a collaborator pastes, and the token the team mints.
 #
 #   collab-connect.sh snippet --endpoint URL [--harness pi|opencode]
 #   collab-connect.sh mint --peer NAME --skill ID [--aud NAME] [--minutes N] [--key FILE]
@@ -22,8 +22,8 @@ case "${1-}" in
     esac; done
     [ -n "$url" ] || die "usage: collab-connect.sh snippet --endpoint URL [--harness pi|opencode]"
     case "$harness" in
-      pi) printf '{ "mcpServers": { "snotra": { "url": "%s/mcp" } } }\n' "${url%/}" ;;
-      opencode) printf '{ "mcp": { "snotra": { "type": "remote", "url": "%s/mcp" } } }\n' "${url%/}" ;;
+      pi) printf '{ "mcpServers": { "assistant": { "url": "%s/mcp" } } }\n' "${url%/}" ;;
+      opencode) printf '{ "mcp": { "assistant": { "type": "remote", "url": "%s/mcp" } } }\n' "${url%/}" ;;
       *) die "unknown harness '$harness' (pi|opencode)" ;;
     esac
     ;;

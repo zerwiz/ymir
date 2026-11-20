@@ -1,5 +1,19 @@
 # Why small, and why the note
 
+## At a glance
+
+```mermaid
+flowchart LR
+  s["a small slice"] --> r["read twice, understood"]
+  l["a large slice"] --> k["skimmed, approved, trusted"]
+```
+
+| What | Means |
+|---|---|
+| forty lines | read twice and understood |
+| eight hundred lines | skimmed and signed, which is not review |
+| the fix note | what was wrong, what was done, how it was verified |
+
 ## The arithmetic a reviewer pays
 
 A reader holds about a screenful in their head. A change of forty lines is read twice and understood; a change of eight

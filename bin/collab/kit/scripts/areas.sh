@@ -5,7 +5,7 @@
 #   bash scripts/areas.sh list            # area · state · keeper · open questions
 #   bash scripts/areas.sh check           # names what is unanswered or unproved; exit 1 on a fault
 #   bash scripts/areas.sh check --strict  # also refuses an area that is merely `unheld`
-#   bash scripts/areas.sh estate          # the one line the baton carries
+#   bash scripts/areas.sh estate          # the one line the handoff carries
 #   bash scripts/areas.sh canon           # the eighteen ids and their questions
 #   bash scripts/areas.sh claim <area> --keeper "…" --path "…" --evidence "…" [--lens "…"]
 #   bash scripts/areas.sh waive <area> --by "…" --why "…" --until YYYY-MM-DD

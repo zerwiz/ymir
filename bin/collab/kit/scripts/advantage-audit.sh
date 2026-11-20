@@ -14,7 +14,7 @@
 # TBD, TODO, ____, "to be measured", "n/a".
 #
 # WHY: an advantage with no evidence line competes on adjectives, and adjectives lose
-# to whoever is cheaper. The rule this enforces is the house rule: a claim with an
+# to whoever is cheaper. The rule this enforces is the team's rule: a claim with an
 # empty evidence line is deleted, never softened.
 #
 # Exit: 0 every claim supported · 1 at least one unsupported (with --check) · 2 usage.

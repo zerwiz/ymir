@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # referee-guard — the gates, the hooks and the wards are the referee. A change to one of them must be explained.
 #
-# A player may fix the referee: the houses' own record is full of honest repairs to a gate. What is refused is a
+# A player may fix the referee: the teams' own record is full of honest repairs to a gate. What is refused is a
 # SILENT one — because a gate quietly weakened looks exactly like a gate that passes.
 #
 # Usage: referee-guard.sh <base> [head]     exit 0 allowed · 1 unexplained · 2 usage

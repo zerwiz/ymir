@@ -1,9 +1,8 @@
 # areas/canon.yaml — the plain face of the canon: what every project must answer for.
 #
 # Carried by the collaboration kit so a repository that is not ours still knows the questions.
-# NO HOUSE FIGURE IS NAMED HERE, ON PURPOSE (RULES/48): the keeper's name is Ymir's business; the
-# questions are everyone's. Generated from Ymir's `.agents/areas.yaml` — regenerate, never edit:
-#   bin/agents/areas.sh canon --kit
+# No keeper is named here, on purpose: who keeps an area is each project's own business; the questions
+# are everyone's. Generated from the kit maintainers' canon — regenerate it there, never edit it here.
 
 version: 1
 updated: "2026-11-08"
@@ -103,7 +102,7 @@ areas:
       - "the delivery posture declared — who merges"
   - id: docs
     name: "documentation and records"
-    owns: "the how-to, the decisions, the tickets, the baton"
+    owns: "the how-to, the decisions, the tickets, the handoff"
     question: "can a stranger run this without asking a question?"
     evidence:
       - "a page per user-facing feature"

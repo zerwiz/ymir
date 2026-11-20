@@ -5,13 +5,13 @@
 #
 # The shelf is four files and a check, and it is the same in every project:
 #
-#   handoff/README.md     the law: what the baton is, when it is written
+#   handoff/README.md     the law: what the handoff is, when it is written
 #   handoff/TEMPLATE.md   the seven sections and the four header fields
-#   handoff/CURRENT.md    the live baton, filled with today's branch and commit
-#   handoff/log/          every past baton, append-only
+#   handoff/CURRENT.md    the live handoff, filled with today's branch and commit
+#   handoff/log/          every past handoff, append-only
 #   handoff/check.sh      the check (check.py beside it), wired into the project's gate
 #
-# It never overwrites: a repository that already has a baton is checked, not rewritten. The check
+# It never overwrites: a repository that already has a handoff is checked, not rewritten. The check
 # prefers the project's own checker (an Elixir mix task, a node script) and falls back to the shelf's.
 #
 # Exit: 0 installed/clean · 1 a check failed or the shelf is missing · 2 usage.
@@ -75,7 +75,7 @@ if [ -f "$repo/handoff/CURRENT.md" ] || [ "$check" = 1 ]; then
   fi
   printf 'collab[2]{field,value}:\n'
   printf '  "repo","%s"\n' "$repo"
-  printf '  "checker","none — a baton with no check is a document, not a gate"\n'
+  printf '  "checker","none — a handoff with no check is a document, not a gate"\n'
   exit 1
 fi
 
@@ -110,7 +110,7 @@ printf '%s\n' "$body" > "$repo/handoff/log/$date_day-$from.md"
 printf 'collab[5]{field,value}:\n'
 printf '  "repo","%s"\n' "$repo"
 printf '  "shelf","handoff/ — README · TEMPLATE · CURRENT · log/ · check.sh"\n'
-printf '  "baton","%s\n' "handoff/log/$date_day-$from.md"
+printf '  "handoff","%s\n' "handoff/log/$date_day-$from.md"
 printf '  "branch","%s at %s"\n' "$branch" "$sha"
 printf '  "next","fill the seven sections, then wire the check into the gate:"\n'
 

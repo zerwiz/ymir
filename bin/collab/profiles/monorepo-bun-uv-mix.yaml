@@ -1,0 +1,93 @@
+# project.yaml — the one file every collaboration-kit tool reads (kit {{kit}}).
+# Change a value here and every tool follows. Anything left out takes the kit's default.
+
+project: {{project}}
+register: {{register}}              # plain | house — how the kit's words and names read; the facts are the same
+names:
+  worktrees: {{worktrees}}          # where worktrees are made, under the main tree
+  branch_prefix: {{branch_prefix}}       # a worktree's branch is <prefix>/<id>
+
+languages:
+  project: {{lang_project}}                    # code, commits, pull requests, documents
+  client: [{{lang_client}}]                 # what a client reads or hears
+  client_paths: [{{client_paths}}]
+  files: report                  # report | refuse — a client tongue outside client_paths at a commit
+
+stack:
+  kind: monorepo
+  parts:
+    - path: web                  # the browser shell
+      tool: bun
+      check: "bun run build"
+      link: [node_modules]
+      link_mode: reflink         # Turbopack refuses a node_modules link that leaves the project root
+      never_share: [dist, .next]
+    - path: ui                   # the shared look; ui/node_modules is a tracked link to ../web/node_modules
+      tool: bun
+      check: "bunx tsc --noEmit"
+      link: []
+    - path: server
+      tool: uv
+      check: ".venv/bin/python -m pytest tests -q"
+      never_share: [.venv, .pytest_cache]
+    - path: base
+      tool: uv
+      never_share: [.venv]
+    - path: receipt-hunter
+      tool: uv
+      never_share: [.venv]
+    - path: shelf
+      tool: uv
+      never_share: [.venv]
+    - path: identity
+      tool: mix
+      check: "mix compile --warnings-as-errors"
+      link: [deps]
+      never_share: [_build]
+
+install:
+  skip:   # kit pieces a product repository does not carry (its own docs law, no workshop tools)
+    - "docs/templates/*"
+    - "docs/a-company-suite.md"
+    - "docs/collaborator-door.md"
+    - "scripts/collab-connect.sh"
+    - "docs/a2a.md"
+    - "scripts/a2a.*"
+    - "scripts/gates/a2a-guard.sh"
+    - "docs/advantage.md"
+    - "scripts/advantage-audit.sh"
+
+hooks:
+  chain: [scripts/hooks]         # the repository's own pre-commit and pre-push run after the kit's
+
+checks:
+  commit: []                     # the repository's own pre-commit (chained) runs its cheap checks
+  push: ["cd ui && bunx tsc --noEmit"]
+
+worktrees:
+  max: 8                         # per repository on one machine
+  stale_hours: 24                # idle this long, no process inside: the worker is gone
+  expiry_days: 7
+  max_leftovers: 2               # doctor and new refuse past this many leftovers
+  close_merged_on_new: true
+
+disk:
+  min_free_pct: 15               # new, builds and doctor refuse below both floors
+  min_free_gb: 40
+
+containers:
+  engine: podman
+  product_hosts: []              # host names that run the product; a worker removes nothing there
+  keep_tags: 2                   # the current and the previous release
+  labels: [project, purpose, release]
+
+leftovers:                       # RULES/24 — bash scripts/prune.sh reports; --apply acts
+  worktrees: {apply: true}
+  branches: {apply: true}
+  remote_refs: {apply: true}
+  caches: {apply: true, idle_hours: 24}
+  scratch: {apply: true, dir: "", older_than_hours: 24}
+  test_databases: {apply: false, pattern: "", list: "", drop: ""}
+  images: {apply: true}
+  volumes: {apply: true}
+  stopped_containers: {apply: true, older_than_hours: 24}

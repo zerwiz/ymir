@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
-"""handoff/check.sh — the baton: is it there, complete, fresh, and honest about the paths it names?
+"""handoff/check.sh — the handoff: is it there, complete, fresh, and honest about the paths it names?
 
 This file is COPIED INTO THE PROJECT IT GUARDS by `bin/collab/collab.sh init`, so it must run with
-nothing but python3 in the repository it sits in. It has no dependency on Ymir being installed.
+nothing but python3 in the repository it sits in. It needs nothing installed but python3.
 
-    handoff/check.sh                      check the baton (default)
+    handoff/check.sh                      check the handoff (default)
     handoff/check.sh --check [--max-age-days N]
     handoff/check.sh --new --from <name> [--to <name>] [--note "one line"]
 
-It fails when the baton is missing, a section is missing, the date is absent or older than the limit,
+It fails when the handoff is missing, a section is missing, the date is absent or older than the limit,
 the branch or the deployment is unnamed, the reader is unnamed, a house word reached a document a client
 reads, a backticked path it names does not exist, or handoff/log/ is empty. The seven sections are fixed
 by handoff/TEMPLATE.md; the check reads the headings.
 
 Appended 2026-11-06: these repositories are read by more people than the people who work in them, so a
-baton is written for a business reader. `**For:**` names that reader, and the house personae are refused
+handoff is written for a business reader. `**For:**` names that reader, and a team's internal names are refused
 unless the line that carries one waives it with `allow-house-word:`.
 
 Exit: 0 clean · 1 a problem · 2 usage.
@@ -49,8 +49,8 @@ SHELVES = ["apps", "bench", "bin", "config", "docs", "handoff", "infra", "lib", 
 PATH_RE = re.compile(r"`((?:%s)/[A-Za-z0-9._/-]+\.[a-z]+)`" % "|".join(SHELVES))
 DATE_RE = re.compile(r"\*\*Date:\*\*\s*(\d{4}-\d{2}-\d{2})")
 
-# House words carry meaning inside our hall and none outside it. A client, a partner, an auditor or a new
-# developer reads the baton; none of them has the glossary. A line that must carry one waives it in
+# Internal names carry meaning inside a team and none outside it. A client, a partner, an auditor or a new
+# developer reads the handoff; none of them has the glossary. A line that must carry one waives it in
 # writing — on the line it waives, never by widening the list.
 HOUSE_WORDS = ["Allfather", "Brokk", "Eindri", "Galdr", "S\u00e1ga", "Hlidskjalf", "M\u00edmir", "Mimir",
                "Muninn", "Huginn", "Yggdrasil", "Utgard", "Bifrost", "runes", "the well"]
@@ -84,20 +84,20 @@ def check(max_age_days):
 
     match = DATE_RE.search(text)
     if not match:
-        problems.append("handoff/CURRENT.md: no `**Date:**` line — a baton without a date cannot be known to be current")
+        problems.append("handoff/CURRENT.md: no `**Date:**` line — a handoff without a date cannot be known to be current")
     else:
         try:
             written = datetime.date.fromisoformat(match.group(1))
             age = (datetime.date.today() - written).days
             if age > max_age_days:
-                problems.append("handoff/CURRENT.md: the baton is %d days old (limit %d) — write a new one"
+                problems.append("handoff/CURRENT.md: the handoff is %d days old (limit %d) — write a new one"
                                 % (age, max_age_days))
         except ValueError:
             problems.append("handoff/CURRENT.md: `**Date:** %s` is not a date" % match.group(1))
 
     for field in ("Branch", "Deployed"):
         if "**%s:**" % field not in text:
-            problems.append("handoff/CURRENT.md: no `**%s:**` line — the baton says where the work is, "
+            problems.append("handoff/CURRENT.md: no `**%s:**` line — the handoff says where the work is, "
                             "not what it was like" % field)
 
     if "**For:**" not in text:
@@ -114,7 +114,7 @@ def check(max_age_days):
             problems.append("handoff/CURRENT.md: names `%s`, which does not exist" % path)
 
     if not os.path.isdir(LOG_DIR) or not [f for f in os.listdir(LOG_DIR) if f.endswith(".md")]:
-        problems.append("handoff/log/ is empty — the baton has no history")
+        problems.append("handoff/log/ is empty — the handoff has no history")
 
     return problems
 
@@ -129,7 +129,7 @@ def git(args):
 
 def write_new(origin, to, note):
     if not os.path.isfile(TEMPLATE):
-        sys.exit("handoff/TEMPLATE.md does not exist — the baton has no shape to be written into")
+        sys.exit("handoff/TEMPLATE.md does not exist — the handoff has no shape to be written into")
     with open(TEMPLATE, encoding="utf-8") as handle:
         body = handle.read()
     stamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
@@ -193,7 +193,7 @@ def main():
     for problem in problems:
         print("handoff: %s" % problem, file=sys.stderr)
     # The estate line (kit 1.2.0, RULES/18): what the areas shelf answers, printed and NEVER a reason
-    # to fail the baton. The baton's seven headings are a contract three repositories already honour;
+    # to fail the handoff. The handoff's seven headings are a contract three repositories already honour;
     # a new heading would be a raid, not a standardisation. An unanswered estate is a warning here and
     # a refusal at the push, where it can be acted on.
     estate = estate_line()

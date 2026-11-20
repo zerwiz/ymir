@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-# The kit goes into Node, Elixir and shell repositories, so the checks are asked of scripts/checks.sh rather than named
-# here — and every gate is reachable: a gate after an `exit` is a gate that never ran. That fault lived in this hook until
-# 2026-11-06 (docs/fixes/collab/); the order below is the repair.
+# pre-push — the gates at the last cheap moment, then the repository's own pre-push (hooks chain, never steal).
 #
-# Six gates: never push a protected branch (a push carrying only the handoff is not code, and goes in), never push work nobody can review, never push a behaviour change without its
-# note, never change the referee in silence, never add a module with no test, and never push a red tree.
+# Two roads (RULES/15): documents and handoffs go straight to the default branch; code goes by a pull request
+# from its own worktree. A push to main or master that carries only documents (`kit.py road`: docs/, handoff/,
+# plans/, RULES/, areas/, *.md outside the code paths, plus .docs-paths) goes in; anything else is refused there.
+# An unknown file is code — the road fails closed.
+#
+# Then: never push work nobody can review, never push a behaviour change without its note, never change the
+# referee in silence, never add a module with no test, and never push a red tree. Every gate is reachable: a
+# gate written after an `exit` is a gate that never runs.
 set -u
+. "$(dirname "$0")/_common.sh"
+kit_enter pre-push
+input="$(cat)"
 
-# A gate's message belongs to the ARM HOLDER, not to whoever typed the command (2026-11-08). The door resolves
-# the arm and the project's orchestrator; with no arm it is silent by construction, and it never fails a push.
-notify() {
-  [ -x scripts/notify-arm.sh ] && bash scripts/notify-arm.sh "$1" "$2" >/dev/null 2>&1
-  return 0
-}
-
-# gate <name> <command…> — run it, keep its words, and hand a refusal to the arm as well as to the terminal.
+# gate <name> <command…> — run it, keep its words, and hand a refusal to the notice command as well.
 gate() {
   local name="$1"; shift
   local out
@@ -23,45 +23,50 @@ gate() {
     return 0
   fi
   printf '%s\n' "$out" >&2
-  notify "$name" "$out"
+  kit_notify "$name" "$out"
   exit 1
 }
 
 protected="master main"
-# handoff_only <old-sha> <new-sha> — true when the push changes nothing but the baton (handoff/).
-handoff_only() {
-  case "${1:-}" in ""|0000000000000000000000000000000000000000) return 1 ;; esac
+# docs_only <old-sha> <new-sha> — true when the push changes nothing but documents and handoffs.
+docs_only() {
+  case "${1:-}" in "") return 1 ;; esac
+  case "$1" in *[!0]*) ;; *) return 1 ;; esac
+  if [ -f scripts/kit.py ]; then
+    python3 scripts/kit.py road "$1" "$2" >/dev/null 2>&1
+    return $?
+  fi
   local touched
   touched="$(git diff --name-only "$1" "$2" 2>/dev/null)" || return 1
   [ -n "$touched" ] && ! printf '%s\n' "$touched" | grep -qv '^handoff/'
 }
 
 while read -r _local_ref _local_sha remote_ref _remote_sha; do
-  # A handoff is not a code change (RULES/17, appended 2026-11-11): a push to the protected branch that carries only
-  # the baton (handoff/CURRENT.md and handoff/log/) goes straight in from the main tree — no worktree, no pull request.
-  # Every other change still needs its worktree and its PR, and the checks below still run on the baton.
+  [ -n "${remote_ref:-}" ] || continue
   case "$remote_ref" in
     refs/heads/master|refs/heads/main)
-      if handoff_only "$_remote_sha" "$_local_sha"; then
-        printf 'pre-push: %s carries only the handoff — a baton needs no worktree and no pull request\n' "${remote_ref#refs/heads/}" >&2
+      if docs_only "$_remote_sha" "$_local_sha"; then
+        printf 'pre-push: %s carries only documents and handoffs — they need no worktree and no pull request\n' "${remote_ref#refs/heads/}" >&2
         continue
       fi ;;
   esac
-  gate pr-guard bash scripts/gates/pr-guard.sh "${1:-origin}" "$_local_ref" "$remote_ref" "$_remote_sha"
   case "$remote_ref" in
     refs/heads/*)
       branch="${remote_ref#refs/heads/}"
       for p in $protected; do
         if [ "$branch" = "$p" ]; then
-          msg="pre-push refused: $branch is protected — open a pull request; the operator seals merges"
+          msg="pre-push refused: $branch is protected — code goes by a pull request; a person merges it"
+          [ -f scripts/kit.py ] && msg="$msg
+$(python3 scripts/kit.py road "$_remote_sha" "$_local_sha" 2>&1 | head -5)"
           printf '%s\n' "$msg" >&2
-          notify protected-branch "$msg"
+          kit_notify protected-branch "$msg"
           exit 1
         fi
       done
       ;;
   esac
-done
+  gate pr-guard bash scripts/gates/pr-guard.sh "${1:-origin}" "$_local_ref" "$remote_ref" "$_remote_sha"
+done <<< "$input"
 
 # The range this push carries: the upstream, or the base branch when the branch is new.
 range_base() {
@@ -79,9 +84,9 @@ if [ -n "$base" ] && [ "$base" != "$head" ]; then
   [ -x scripts/gates/fixes-guard.sh ] && gate fixes-guard bash scripts/gates/fixes-guard.sh "$base" "$head"
   [ -x scripts/gates/referee-guard.sh ] && gate referee-guard bash scripts/gates/referee-guard.sh "$base" "$head"
   [ -x scripts/gates/new-module-test.sh ] && gate new-module-test bash scripts/gates/new-module-test.sh "$base" "$head"
-  # Seated in 1.6.0: a commit message never names a model, a maker or an agent harness (RULES/53).
+  # a commit message never names a model, a maker or an agent harness
   [ -x scripts/gates/maker-guard.sh ] && gate maker-guard bash scripts/gates/maker-guard.sh range "$base" "$head"
-  # Seated in 1.2.0: an area nobody holds must not receive changes quietly (RULES/18).
+  # an area nobody holds must not receive changes quietly (RULES/18)
   [ -x scripts/gates/areas-guard.sh ] && gate areas-guard bash scripts/gates/areas-guard.sh "$base" "$head"
 fi
 
@@ -90,11 +95,11 @@ if [ -f scripts/checks.sh ]; then
   bash scripts/checks.sh test || {
     msg="pre-push refused: a check failed — fix it, or push with --no-verify and say why in the commit"
     printf '\n%s\n' "$msg" >&2
-    notify checks "$msg"
+    kit_notify checks "$msg"
     exit 1
   }
 else
   printf 'pre-push: scripts/checks.sh is missing — this repository carries an older kit; nothing was checked\n' >&2
 fi
 
-exit 0
+printf '%s\n' "$input" | kit_chain pre-push "$@"

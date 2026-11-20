@@ -1,59 +1,70 @@
-# 17 — One agent, one worktree
+# 17 — One task, one worktree, and it is closed when the task is
 
-**Added 2026-11-03** at the Allfather's word: *"use Yggdrasil for the development in the projects, so different agents will not collide
-when working in the projects."*
+**Added 2026-11-03; rewritten 2026-11-20 (kit 2.0.0)** after one machine filled its disk with 117 worktrees of a
+single repository — 109 of them merged and clean, six holding work nobody had pushed — and every worker on it
+stopped. The rule below is the lifecycle that prevents it; `scripts/worktree.sh` enforces it.
+
+```mermaid
+flowchart LR
+  n["new<br/>disk floor · leftover budget · cap"] --> w["work<br/>own branch · linked dependencies"]
+  w --> p["pull request"]
+  p -->|merged| c["closed<br/>merge door · post-merge hook · daily gc"]
+  w -->|"worker gone"| s["salvage<br/>commit + push as found"]
+  s --> c
+```
 
 ## The rule
 
-```
-law[3]{rule,why}:
-  "**an agent works in `.yggdrasil/<id>/`, never in the main tree**","two hands in one tree overwrite each other's edits, share one build directory and fight over one lock; the collision is invisible until a change vanishes"
-  "**the worktree has its own branch** (`agent/<id>`), and it leaves by a pull request like every other change","isolation without a delivery is just a private copy"
-  "**the worktree is removed when its pull request is merged**","a folder nobody removes is a second checkout of the same code, and the next hand will edit the wrong one"
-```
+| Rule | Why |
+|---|---|
+| **code is changed in a worktree, never in the main tree** — `bash scripts/worktree.sh new <id>` makes `<worktrees>/<id>/` on branch `<prefix>/<id>` (names from `project.yaml`, default `.worktrees/` and `work/`) | two hands in one tree overwrite each other's edits, share one build folder and fight over one lock |
+| **a worktree is born with a record**: owner, purpose, created, expires (in the worktree's own git folder, `kit.json`) | a folder whose owner and purpose nobody knows is a folder nobody dares remove |
+| **at most `worktrees.max` per repository on one machine** (default 8). The ninth `new` is refused and names the oldest merged one | each worktree is a full checkout; without a cap a busy day makes a hundred |
+| **no `new` below the disk floor** (`disk.min_free_pct` and `disk.min_free_gb`, default 15 % and 40 GB) | a full disk stops every worker at once, mid-write |
+| **no `new` while more than `worktrees.max_leftovers` leftovers wait** (default 2) — clean up first | a cap without a cleanup only moves the wall |
+| **dependencies are linked, build outputs never are** — the stack profile in `project.yaml` lists the dependency folders a worktree links from the main tree (`node_modules`, `deps`) and the outputs it must build itself (`dist`, `_build`, `.next`) | a second `node_modules` costs a gigabyte for nothing; a shared build output is a collision |
+| **a worktree is closed when its pull request merges** — by the merge door (`kit.sh merge <pr>`), by the `post-merge` hook, by `new` itself, and by the daily `gc` | a finished worktree left open is a second copy of the code that the next hand edits by mistake |
+| **a dead worker's work is saved before anything is removed** — idle longer than `worktrees.stale_hours` with no process inside, its uncommitted and unpushed work is committed as `WIP (worker gone): saved as found, not reviewed` on its own branch and pushed | the only copy of an afternoon's work must never be one `rm` from gone |
+| **nothing is removed while a process works inside it, or while it holds work that exists nowhere else** | a cleanup that loses work is worse than the disk it saves |
 
 ## How it is used
 
 ```bash
-bash scripts/worktree.sh new ada-c1        # .yggdrasil/ada-c1 on agent/ada-c1
-cd .yggdrasil/ada-c1 && npm run check
-# …work, commit, push, open the pull request…
-bash scripts/worktree.sh done ada-c1       # after the merge
-bash scripts/worktree.sh list
+bash scripts/kit.sh doctor                         # at session start: safe to begin?
+bash scripts/worktree.sh new ada-c1 --purpose "the invoices list"
+cd .worktrees/ada-c1                               # …work, commit, push, open the pull request…
+bash scripts/kit.sh merge 42                       # merges, then closes the worktree and its branch
+bash scripts/worktree.sh list                      # every worktree, its state and why
+bash scripts/worktree.sh gc                        # what would be closed; --apply closes it
 ```
 
-**What it gives you that a branch alone does not:** a separate working directory. Two agents can run `npm run check`, `npm test` and
-`npm run build` at the same time without fighting over `dist/`, `node_modules/.cache` or a lock file — which is exactly the collision
-that makes a parallel session look haunted.
-
-**`node_modules` is symlinked from the main tree**, deliberately: dependencies are identical across worktrees and a second copy costs a
-gigabyte for nothing. A build output is *not* shared, and must not be.
-
-## What this does not answer
-
-**Which agent is which.** A worktree named `ada-c1` is a name, not an identity; the branch's commits carry their own author. This
-rule prevents collision, not confusion — and the baton is what prevents confusion.
-
-## 2026-11-11 — only a code change needs a worktree; a handoff does not (appended)
-
-At the Allfather's word: *"only handoffs don't need a new worktree. only code changes need a new worktree."*
-
-The rule above stands for every **code change**: an agent forges it in `.yggdrasil/<id>/` on its own branch, and it
-leaves by a pull request. A **handoff** is not a code change. It is the baton, written at the end of a session for the
-next hand, and it must reach the shared branch at once or the next hand reads a stale one.
+## Only a code change needs a worktree; a handoff does not
 
 | The change | Worktree | Pull request | Pushed to |
 |---|---|---|---|
-| code, tests, plans, documents, configuration | yes, `.yggdrasil/<id>/` | yes, and the operator merges | its own branch |
-| **only** `handoff/CURRENT.md` and `handoff/log/` | no, written in the main tree | no | the default branch, directly |
+| code, tests, configuration, scripts, hooks | yes | yes, and a person merges | its own branch |
+| documents and handoffs only (`docs/`, `handoff/`, `plans/`, `RULES/`, `areas/`, `*.md` outside code paths) | no, written in the main tree | no | the default branch, directly |
 
-**What enforces it.** The kit's `.githooks/pre-push` lets a push to `main` or `master` through when every file it changes
-is under `handoff/`, and says so. A push that carries anything else alongside the baton is refused as before. The
-checks (`scripts/checks.sh`) still run on a handoff push, so a baton the check refuses still cannot land.
+The kit's `pre-push` lets a push to `main` or `master` through when every file it changes is a document, and says
+so. A push that carries code beside the documents is refused there. A handoff that also fixes "one small thing" in
+code is a code change: split it.
 
-**What it does not excuse.** A handoff that also fixes "one small thing" in code is a code change. Split it: the code
-goes by worktree and pull request, the baton goes straight in.
+## What this does not answer
+
+**Which agent is which.** A worktree named `ada-c1` is a name, not an identity; the record names an owner and the
+commits carry their own author. The rule prevents collision and leftovers, not confusion — the handoff prevents
+confusion.
+
+## References
+
+- `scripts/worktree.sh`, `scripts/kit.py` — the tool
+- `RULES/24-leave-no-leftovers.md` — every other class of leftover
+- `project.yaml` — names, cap, floors, stack profile
 
 ## CHANGE LOG
 
-- 2026-11-11 — review-mend: added missing heading for #666
+- **2026-11-20** — Rewritten for kit 2.0.0: names from `project.yaml` (plain `.worktrees/` + `work/` by default), the
+  record, the cap, the disk floor, the leftover budget, linked dependencies per stack profile, closing on merge, and
+  salvage before removal. The handoff road widened to documents (RULES/15).
+- **2026-11-11** — Only a code change needs a worktree; a handoff goes straight to the default branch.
+- **2026-11-03** — Added: one agent, one worktree.
