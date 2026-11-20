@@ -31,3 +31,7 @@ python3 bin/collab/tests/test_work.py   → Ran 12 tests … OK
   tags · a failed hook keeps the previous release and prints the rollback · btrfs picks the btrfs driver
 bash bin/collab/tests/test_collab.sh    → every case passed
 ```
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #841
