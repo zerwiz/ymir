@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[183]{file,does,kind,verdict,disposition,callers,lines}:
+bin[184]{file,does,kind,verdict,disposition,callers,lines}:
   "SKILL.md","---","data","tested","keep",24,23
   "SKILL.md","---","data","tested","keep",24,23
   "SKILL.md","---","data","tested","keep",24,22
@@ -65,7 +65,7 @@ bin[183]{file,does,kind,verdict,disposition,callers,lines}:
   "guards-scope.test.sh","guards-scope.test.sh — prove the pre-push gate bites, and only where it should.","tool","wired","keep",0,126
   "guards.sh","guards.sh — every TREE ward, in one command.","tool","wired","keep",29,441
   "hearth-guard.sh","hearth-guard.sh — one capability, one implementation: a second copy is a fault, and two","tool","wired","keep",1,91
-  "hoard-guard.sh","hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME).","tool","wired","keep",2,159
+  "hoard-guard.sh","hoard-guard.sh — the ward for the PRIVATE HOME repo ($YMIR_HOME).","tool","wired","keep",3,159
   "home-contract-check.sh","home-contract-check.sh — the contract that raises a home is itself checked.","tool","wired","keep",2,169
   "home-contract-guard.sh","home-contract-guard.sh — the contract that raises a user's home is checked (Rule 42).","tool","wired","keep",1,57
   "home-index-check.sh","home-index-check.sh — every shelf in the home has an index, and the index is honest.","tool","wired","keep",1,82
@@ -117,6 +117,7 @@ bin[183]{file,does,kind,verdict,disposition,callers,lines}:
   "seat-woven-driver.sh","seat-woven-driver.sh — seat the engine behind `merge=regenerate`, and PROVE it runs.","tool","wired","keep",1,101
   "secret-guard.sh","secret-guard.sh — refuse to commit obvious secrets or private env files.","tool","wired","keep",6,93
   "secret-scan.sh","secret-scan.sh — the secret scan's door, and the generator for the operator's own rules.","tool","wired","keep",3,254
+  "secrets-plaintext-guard.sh","secrets-plaintext-guard.sh — the ward for the vault's own shelf (plan 342).","tool","wired","keep",2,142
   "sensitive-gate.sh","sensitive-gate.sh — one gate for every external surface of a sensitive artifact set.","tool","wired","keep",0,81
   "share.yaml","The share list for the skills-MCP fixtures — three invented skills, nothing real.","data","wired","keep",2,13
   "skill.yaml","name: hearth-keeping","data","wired","keep",3,9
@@ -206,6 +207,6 @@ bin[183]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-config-check.sh","ymir-config-check.sh — the DOOR to the config layer (`src/ymir_runtime/config/`).","tool","wired","keep",0,44
   "ymir-update-check.sh","ymir-update-check.sh — does a newer Ymir stand on npm?","tool","wired","keep",3,71
 
-**Tally.** verdict: wired=164, tested=19
+**Tally.** verdict: wired=165, tested=19
 
-**Tally.** disposition: keep=180, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/tests/test_hermes_seat.py=1
+**Tally.** disposition: keep=181, migrate → src/ymir_runtime/doors.py=1, migrate → src/ymir_runtime/state/queue.py=1, migrate → src/ymir_runtime/tests/test_hermes_seat.py=1
