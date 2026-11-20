@@ -1203,6 +1203,29 @@ SEAT_STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/ymir/seats/$ID"
 mkdir -p "$SEAT_STATE_DIR" 2>/dev/null || true
 PANE_CMD="BROKK_MACHINE_STATE_DIR=$(shell_quote "$SEAT_STATE_DIR") BROKK_STATE_OVERRIDE=$(shell_quote "$SEAT_STATE_DIR") $PANE_CMD"
 
+# --- the machine's BUILDER BUDGET (2026-11-18) -------------------------------
+# The Allfather: "we can only have one builder at the time. here. … the server can handle more
+# builders". How many builders may stand at once is the MACHINE's number, recorded in its own row
+# in the home's fleet registry (hosts.<host>.builders) and read here by the one door that owns the
+# question (bin/agents/builder-budget.sh). It is NOT the heavy lock: a builder is cheap, and it is
+# the build INSIDE it that takes a heavy lane.
+# A full machine is a WARNING here, and a refusal only when the operator has said so
+# (YMIR_BUILDER_BUDGET_ENFORCE=1): this is the one road that raises every worker, so a refusal on
+# this line must be proved by a real spawn on a real machine before it holds the house.
+if [ -x "$SCRIPT_DIR/builder-budget.sh" ]; then
+  BB_RC=0
+  BB_OUT="$("$SCRIPT_DIR/builder-budget.sh" check 2>&1)" || BB_RC=$?
+  if [ "$BB_RC" -eq 3 ]; then
+    BB_ROOM="$(printf '%s\n' "${BB_OUT:-}" | sed -n 's/^room,//p' | head -1)"
+    printf 'builder-budget,full,this machine is at its budget — %s\n' "${BB_ROOM:-the budget is full}"
+    if [ "${YMIR_BUILDER_BUDGET_ENFORCE:-0}" = 1 ]; then
+      printf 'error: the builder budget on this machine is full (%s). Wait for a builder to finish, or raise hosts.%s.builders in the home registry.\n' \
+        "${BB_ROOM:-full}" "$(hostname -s 2>/dev/null | tr 'A-Z' 'a-z')" >&2
+      exit 3
+    fi
+  fi
+fi
+
 # --- backend launch ----------------------------------------------------------
 launch_tmux() {  # -> prints target
   local session wname wid
