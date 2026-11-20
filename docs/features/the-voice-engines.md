@@ -142,3 +142,23 @@ sign-in finds a port busy, it names the holder and stops, and Kokoro is never pa
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
 - **2026-11-12 (evening)** — Appended: 8765 is Kokoro's alone; the sign-ins moved off it (plan 276).
+- **2026-11-20** — Appended: the port is now one value, `KOKORO_SERVICE_URL` (plan 326.0).
+
+## Kokoro's port is one value (added 2026-11-20, plan 326.0)
+
+The section above names the port as a fact. It is now a setting. `KOKORO_SERVICE_URL` in your home's
+`config/voice.env` (template `config/voice.env.example`) says where Kokoro listens. The service binds it through the
+drop-in `tools/systemd/kokoro-serve.service.d/20-one-port.conf`, and every client reads the same value through
+`bin/voice/kokoro-lib.sh` (shell) or `bin/voice/kokoro_url.py` (Python). With no file, the engine's own default port
+8765 is used.
+
+To seat the drop-in on a machine:
+
+```bash
+install -Dm644 tools/systemd/kokoro-serve.service.d/20-one-port.conf \
+  ~/.config/systemd/user/kokoro-serve.service.d/20-one-port.conf
+systemctl --user daemon-reload && systemctl --user restart kokoro-serve
+```
+
+With the drop-in, `systemctl --user is-active kokoro-serve` says `active` only once the engine has bound its port.
+Before, it said `active` while the model was still loading and nothing answered yet.

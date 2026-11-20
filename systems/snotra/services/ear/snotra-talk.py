@@ -18,7 +18,7 @@ Env:
   SNOTRA_TALK_MODEL     rail model id (default qwen3.6-35b-a3b@iq3_s)
   SNOTRA_TALK_BASE      OpenAI-compatible base (default http://127.0.0.1:8080/v1)
   SNOTRA_WHISPER_URL    whisper.cpp server (default http://127.0.0.1:10300)
-  KOKORO_URL            Kokoro TTS (default http://127.0.0.1:8765)
+  KOKORO_URL            Kokoro TTS (default: bin/voice/kokoro-lib.sh, the one value)
   SNOTRA_MIC_NAME       the PipeWire sink the voice plays into (default snotra_mic)
   SNOTRA_MAX_SPEAK_SECONDS  the cap on one answer (default 20)
 
@@ -61,7 +61,10 @@ MUTE = os.path.join(STATE, "voice-muted")
 MODEL = os.environ.get("SNOTRA_TALK_MODEL", "qwen3.6-35b-a3b@iq3_s")
 BASE = os.environ.get("SNOTRA_TALK_BASE", "http://127.0.0.1:8080/v1").rstrip("/")
 WHISPER = os.environ.get("SNOTRA_WHISPER_URL", "http://127.0.0.1:10300").rstrip("/")
-KOKORO = os.environ.get("KOKORO_URL", "http://127.0.0.1:8765").rstrip("/")
+# where the engine listens is one value (bin/voice/kokoro-lib.sh, plan 326.0); KOKORO_URL still overrides
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "bin", "voice"))
+import kokoro_url  # noqa: E402
+KOKORO = kokoro_url.base()
 MIC = os.environ.get("SNOTRA_MIC_NAME", "snotra_mic")
 CAP = float(os.environ.get("SNOTRA_MAX_SPEAK_SECONDS", "120"))
 MAX_SENTENCES = int(os.environ.get("SNOTRA_MAX_SENTENCES", "8"))
@@ -368,7 +371,7 @@ def ensure_voice() -> bool:
     import socket
     from urllib.parse import urlparse
     host = urlparse(KOKORO).hostname or "127.0.0.1"
-    port = urlparse(KOKORO).port or 8765
+    port = urlparse(KOKORO).port or kokoro_url.port()
 
     def up() -> bool:
         try:

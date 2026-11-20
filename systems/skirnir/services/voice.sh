@@ -21,7 +21,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # 25 scripts kept the old depth, so every $ROOT/bin/... pointed into systems/ instead (2026-11-02).
 ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)"
 
-SECONDS_TO_REC=6; TEXT=""; WAV=""; MODEL=""; SPEAK=1; KOKORO_URL="${KOKORO_URL:-http://127.0.0.1:8765/v1/audio/speech}"
+SECONDS_TO_REC=6; TEXT=""; WAV=""; MODEL=""; SPEAK=1; KOKORO_URL="$(. "$SCRIPT_DIR/../../../bin/voice/kokoro-lib.sh" && kokoro_speech_url)"
 while [ $# -gt 0 ]; do
   case "$1" in
     --seconds) SECONDS_TO_REC="${2:-6}"; shift 2 ;;

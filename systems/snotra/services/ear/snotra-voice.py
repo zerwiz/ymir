@@ -43,7 +43,10 @@ sys.path.insert(0, HERE)
 RATE = 48000
 ASR_RATE = 16000
 WHISPER = os.environ.get("SNOTRA_WHISPER_URL", "http://127.0.0.1:10300").rstrip("/")
-KOKORO = os.environ.get("KOKORO_URL", "http://127.0.0.1:8765").rstrip("/")
+# where the engine listens is one value (bin/voice/kokoro-lib.sh, plan 326.0); KOKORO_URL still overrides
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "bin", "voice"))
+import kokoro_url  # noqa: E402
+KOKORO = kokoro_url.base()
 BASE = os.environ.get("SNOTRA_TALK_BASE", "http://127.0.0.1:8080/v1").rstrip("/")
 MODEL = os.environ.get("SNOTRA_TALK_MODEL", "qwen3.5-9b@q4_k_s-summarizer")
 STATE = os.path.join(os.environ.get("YMIR_HOME", os.path.expanduser("~")),
@@ -173,12 +176,12 @@ def rms(pcm16: bytes) -> float:
 def ensure_voice() -> bool:
     key = _rail_key()
     for _ in range(2):
-        if _port_open(8765):
+        if _port_open(kokoro_url.port()):
             return _ensure_vram(key)
         subprocess.run(["systemctl", "--user", "start", "kokoro-serve.service"], capture_output=True)
         for _ in range(20):
             time.sleep(1)
-            if _port_open(8765):
+            if _port_open(kokoro_url.port()):
                 return _ensure_vram(key)
     return False
 

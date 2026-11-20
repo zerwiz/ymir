@@ -19,6 +19,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # "../", because this shelf was moved once (bin/assistant/ -> systems/skirnir/, plan 149) and
 # 25 scripts kept the old depth, so every $ROOT/bin/... pointed into systems/ instead (2026-11-02).
 ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/RULES" ]; do [ "$PWD" = / ] && break; cd ..; done; pwd)"
+# where the engine listens is one value (plan 326.0) — the unit binds it, the test dials it
+# shellcheck source=../../../bin/voice/kokoro-lib.sh
+. "$ROOT/bin/voice/kokoro-lib.sh"
+KBASE="$(kokoro_base_url)"; KPORT="$(kokoro_port)"
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 ymir_home_root H 2>/dev/null || true
 QUICK=0; QUIET=0
@@ -63,15 +67,15 @@ C=$(wc -l < "$H/hodd/state/assistant/canaries.derived.txt" 2>/dev/null || echo 0
 # ── 3 · the voice OUT (the fault of 2026-10-23) ───────────────────────────────────────────────
 # the idle-stop is CORRECT to lower an unused voice — so the smoke raises it first, and only a voice
 # that cannot be raised is a fault
-if ! curl -s -m 3 -o /dev/null http://127.0.0.1:8765/ 2>/dev/null; then
+if ! curl -s -m 3 -o /dev/null "$KBASE/" 2>/dev/null; then
   systemctl --user start kokoro-serve.service >/dev/null 2>&1
   for _i in $(seq 1 12); do sleep 2
-    curl -s -m 3 -o /dev/null http://127.0.0.1:8765/ 2>/dev/null && break
+    curl -s -m 3 -o /dev/null "$KBASE/" 2>/dev/null && break
   done
 fi
-if curl -s -m 6 -o /dev/null -X POST http://127.0.0.1:8765/v1/audio/speech \
+if curl -s -m 6 -o /dev/null -X POST "$KBASE/v1/audio/speech" \
      -H 'content-type: application/json' -d '{"input":"x","voice":"af_nicole","response_format":"wav"}' 2>/dev/null; then
-  ok "kokoro answers on :8765"
+  ok "kokoro answers on :$KPORT"
   bash "$ROOT/systems/snotra/services/tts-lease/tts-lease.sh" touch >/dev/null 2>&1
   if [ -f "$HOME/.local/share/skirnir/tts.lease" ]; then ok "the TTS lease is held"; else bad "tts lease" "no lease file"; fi
   if bash "$SCRIPT_DIR/mouth.sh" "smoke test of the voice" /tmp/smoke-voice.ogg >/dev/null 2>&1 \
@@ -79,7 +83,7 @@ if curl -s -m 6 -o /dev/null -X POST http://127.0.0.1:8765/v1/audio/speech \
     ok "the mouth makes a voice note ($(stat -c%s /tmp/smoke-voice.ogg) bytes)"
   else bad "the mouth" "no voice note produced"; fi
 else
-  bad "kokoro" "no answer on :8765 — systemctl --user start kokoro-serve"
+  bad "kokoro" "no answer on :$KPORT — systemctl --user start kokoro-serve"
 fi
 
 # ── 4 · the voice IN (the ear) ────────────────────────────────────────────────────────────────
@@ -264,7 +268,7 @@ else
   [ "$RC" -eq 3 ] && ok "a synthesiser that cannot be raised fails loudly (exit 3)" || ok "a dead synthesiser fails (exit $RC)"
 fi
 systemctl --user start kokoro-serve.service >/dev/null 2>&1
-for _i in $(seq 1 12); do sleep 2; curl -s -m 3 -o /dev/null http://127.0.0.1:8765/ 2>/dev/null && break; done
+for _i in $(seq 1 12); do sleep 2; curl -s -m 3 -o /dev/null "$KBASE/" 2>/dev/null && break; done
 bash "$SCRIPT_DIR/mouth.sh" "the voice is back" /tmp/smoke-up.ogg >/dev/null 2>&1 \
   && ok "the voice comes back after a restart" || bad "voice restart" "no voice after restarting kokoro"
 

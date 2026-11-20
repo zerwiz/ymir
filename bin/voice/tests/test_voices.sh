@@ -7,6 +7,7 @@ SELF="$(CDPATH='' cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOOR="$SELF/../voices.sh"
 tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
 export HOME="$tmp/home" YMIR_HOME="$tmp/ymirhome" XDG_CONFIG_HOME="$tmp/config"
+unset KOKORO_SERVICE_URL KOKORO_URL
 mkdir -p "$HOME" "$YMIR_HOME/hodd/identity"
 printf '{"voices": ["af_heart", "am_eric", "bm_george", "em_santa", "am_santa", "zf_xiaobei"]}' > "$tmp/voices.json"
 export VOICES_FIXTURE="$tmp/voices.json"
@@ -41,5 +42,24 @@ unset VOICES_FIXTURE; export KOKORO_BIN=/nonexistent KOKORO_VOICES="$tmp/pack.bi
 check "a fresh catalogue answers without the engine" "$(bash "$DOOR" resolve eric)" "am_eric"
 touch "$tmp/pack.bin"; touch -d '2 hours ago' "$YMIR_HOME/hodd/identity/voices.yaml"
 bash "$DOOR" resolve eric >/dev/null 2>&1; check "a pack newer than the catalogue asks the engine (absent here: exit 1)" "$?" "1"
+# `set` is `choose` by another name (the brief's word for it)
+export VOICES_FIXTURE="$tmp/voices.json"; unset KOKORO_BIN KOKORO_VOICES
+bash "$DOOR" set snotra af_heart >/dev/null
+check "set keeps a voice for a context" "$(bash "$DOOR" for snotra)" "af_heart"
+# where the engine listens is one value (plan 326.0): env → the home's voice.env → the engine default
+LIB="$SELF/../kokoro-lib.sh"
+check "with no voice.env, the engine's own default" "$(bash "$LIB" port)" "8765"
+printf 'KOKORO_SERVICE_URL=http://127.0.0.1:8779\n' > "$YMIR_HOME/config/voice.env"
+check "the home's voice.env names the port" "$(bash "$LIB" port)" "8779"
+check "the speech endpoint follows it" "$(bash "$LIB" speech)" "http://127.0.0.1:8779/v1/audio/speech"
+check "the environment wins over the file" "$(KOKORO_SERVICE_URL=http://127.0.0.1:9 bash "$LIB" base)" "http://127.0.0.1:9"
+check "an explicit KOKORO_URL still overrides the speech endpoint" \
+  "$(KOKORO_URL=http://127.0.0.1:7/v1/audio/speech bash "$LIB" speech)" "http://127.0.0.1:7/v1/audio/speech"
+KOKORO_SERVICE_URL=http://192.0.2.5:8765 bash "$LIB" base >/dev/null 2>&1
+check "a non-loopback engine is refused" "$?" "1"
+check "the Python face reads the same value" \
+  "$(python3 -c "import sys; sys.path.insert(0, '$SELF/..'); import kokoro_url; print(kokoro_url.port())")" "8779"
+check "voices.sh engine names the same port" \
+  "$(bash "$DOOR" engine | python3 -c 'import json,sys;print(json.load(sys.stdin)["port"])')" "8779"
 echo "test_voices: $pass passed, $fail failed"
 [ "$fail" -eq 0 ]
