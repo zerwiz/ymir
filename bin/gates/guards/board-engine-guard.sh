@@ -33,6 +33,7 @@ while [ $# -gt 0 ]; do
     --repo)   REPO="${2:?--repo needs a directory}"; shift 2 ;;
     --range)  MODE=range; RANGE="${2:?--range needs A..B}"; shift 2 ;;
     --staged) MODE=staged; shift ;;
+    check)    shift ;;   # guards.sh hands every ward `check`; the default mode is the right one
     -h|--help) sed -n '2,25p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) printf 'error: unknown argument %s\n' "$1" >&2; exit 2 ;;
   esac
