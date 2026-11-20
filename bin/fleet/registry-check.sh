@@ -39,7 +39,13 @@ for name,row in fleet.get('hosts',{}).items():
     elif not os.path.isdir(os.path.join(h,folder)): problems.append((name,f'folder missing: {folder}'))
     elif not os.path.isfile(os.path.join(h,folder,'README.md')): problems.append((name,f'no card: {folder}/README.md'))
     if not row.get('roles'): problems.append((name,'no roles'))
-    if row.get('state')=='up' and not row.get('tailnet') and name!='localhost': problems.append((name,'state up but no tailnet name'))
+    # A RENTED HOST HAS ITS OWN ROAD (2026-11-20). The rule was "state up means a tailnet name", which is right
+    # for the house's own machines and wrong for one that is rented and reached by its public address and an ssh
+    # alias (`address` in the row). The check called that an incoherence every night, and an incoherence that is
+    # really a naming convention teaches nobody anything. A row is coherent when it names a road: a tailnet name,
+    # or an address. Neither is still a finding.
+    if row.get('state')=='up' and not row.get('tailnet') and not row.get('address') and name!='localhost':
+        problems.append((name,'state up but no tailnet name and no address — no road is named'))
 for s in svc.get('services',[]):
     host=s.get('host')
     if host and host not in hosts: problems.append((s['id'], f'hosted on unknown machine: {host}'))

@@ -52,3 +52,28 @@ for real and still fails honestly. Gate: `tunnel-patience`.
 ## CHANGE LOG
 
 - 2026-11-20 — written the hour the alarm rang for a surface that was answering.
+
+## Appended 2026-11-20 — the second alarm in the same burst: a rented host has its own road
+
+`bin/fleet/registry-check.sh --quiet` failed at the same hour, and ran by hand it named exactly one
+incoherence:
+
+```
+<a rented host>: state up but no tailnet name
+```
+
+The rule was *"state `up` means a tailnet name"*. That is right for the house's own machines and wrong for the
+one that is **rented** and reached by its public address and an ssh alias — the row already carries
+`"address"`, and never a tailnet name, because it is not on the tailnet. So the check called a naming
+convention an incoherence every night.
+
+It now requires **a road**, not a tailnet: `tailnet` or `address`. A row that names neither is still a finding,
+and the message now says so (`state up but no tailnet name and no address — no road is named`).
+
+```
+$ bash bin/fleet/registry-check.sh
+FLEET REGISTRY — coherent
+  fleet.json · machines.yaml · services.yaml · hodd/machines/*/ all agree
+```
+
+Nothing in the home's registry was changed to satisfy the check: the row was right, and the rule was too narrow.
