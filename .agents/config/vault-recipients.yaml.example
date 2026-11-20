@@ -1,0 +1,42 @@
+# vault-recipients.yaml — which keys may open the secrets vault (plan 342)
+#
+# This is a SHAPE with a prompt, not a working declaration: the recipients are commented
+# out, because only you know which machines you want to be able to open the vault.
+#
+# Uncomment, and put YOUR OWN keys' titles and fingerprints in their place. The titles
+# below are INVENTED. Read a machine's fingerprint with
+#     ssh-keygen -lf ~/.ssh/id_ed25519.pub
+# and see the titles on your account with
+#     gh ssh-key list
+#
+# A key GitHub lists that is NOT named here is reported by
+# `bin/vault/vault-relock.sh --plan` and never used: a phone or an old box need not open
+# the vault. A key named here that GitHub does not list REFUSES the re-lock — taking a
+# machine's access away in silence is the one thing this file exists to prevent.
+#
+# Read the whole road in docs/features/the-vault-locked-to-your-github-keys.md.
+
+# The vault this declaration locks. Home-relative; this is the ordinary secrets vault.
+vault: hodd/secrets/platform.env.age
+
+# The GitHub login whose SSH keys are read. Left out, the door asks `gh` for the login of
+# the account that is signed in — which is the agnostic way, with your own account and
+# never a shared token.
+# login: your-github-login
+
+# This seat's own private key, when it is not the ordinary `~/.ssh/id_ed25519`.
+# identity: ~/.ssh/id_ed25519
+
+# One row per key that may open the vault:
+#   title        the TITLE of the key on GitHub — required; it is how you find it there
+#   fingerprint  the SHA256 fingerprint, as `ssh-keygen -lf` prints it. Optional, and
+#                worth having: a title can be reused, a fingerprint cannot
+#   machine      free text: which box this is, for the human reading the plan
+recipients:
+  # - title: laptop-a
+  #   fingerprint: SHA256:0000000000000000000000000000000000000000000
+  #   machine: the everyday laptop
+  #
+  # - title: server-a
+  #   fingerprint: SHA256:1111111111111111111111111111111111111111111
+  #   machine: the always-on host
