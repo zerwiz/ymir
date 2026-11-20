@@ -57,6 +57,8 @@ its page here in the same change (see `AGENTS.md` → *Feature how-tos*).
   [rodd-the-hands.md](rodd-the-hands.md)
 - Every message opens something — or says in its title that it cannot:
   [every-message-opens.md](every-message-opens.md)
+- Honest reports and unanswered questions — a "done" is checked, a waiting worker is heard:
+  [honest-reports-and-questions.md](honest-reports-and-questions.md)
 
 **Earlier doors** — built 2026-11-04, catalogued the same day:
 

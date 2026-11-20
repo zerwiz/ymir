@@ -242,6 +242,13 @@ Report status by appending one line:
    the window is reported as SUSPECT (bin/agents/eindri-heartbeat.sh) — keep a line
    moving whenever you make progress.
 
+**Your report counts only with its record (plan 339.2).** A \`done\` report pastes, exactly as git prints them:
+   the commit (\`git log --oneline -1\`), the files (\`git diff --name-only origin/main...HEAD\`),
+   \`git status --short\`, and where the commit is: \`pushed\`, \`parked\` or \`local only\`.
+   Without them it says **nothing committed**. The terminal act writes this as a \`## Record\` block from git;
+   the arm verifies it on the named machine, and a claim git does not bear out is recorded as \`false-done\`.
+   A question in $DONE_STATE/eindri-questions/$ID.md wakes Brokk after 15 minutes and the operator after an hour.
+
 **Name the project records you touched.** The brief above carries the bearings: the fixed core,
 and the records of the project you were sent to. Before your terminal act, your report says which
 of them the work changed — one line:
