@@ -74,7 +74,7 @@ bin/agents/seat-identity.sh set <this-host> brokk
 - **A stub is not advice.** It teaches the shape and asks the questions; the answers
   are yours, and no update will replace them.
 - **The contract covers what the runtime reads**, not what it writes while you work:
-  `hodd/state/`, `hodd/memory/` (the well and the daily log), `hodd/secrets/` and your
+  `state/`, `hodd/memory/` (the well and the daily log), `hodd/secrets/` and your
   plans are outside it by design — a record is created by its own door, and a secret
   is never templated.
 - **A `{realm}` row** resolves to the realm your home pins in `hodd/data/realm.md`,

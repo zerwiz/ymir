@@ -26,13 +26,13 @@ ymir_home_root HOME_R 2>/dev/null || true
 MAIL_DIR="$HOME_R/hodd/memory/mail"
 STATE="${BROKK_MACHINE_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/ymir}"
 DESK_URL="${GNA_DESK_URL:-http://127.0.0.1:8494}"
-TOKEN_FILE="$HOME_R/hodd/state/gna-desk.token"
+TOKEN_FILE="$HOME_R/state/gna-desk.token"
 RUNES="$ROOT/bin/records/runes-append.sh"
 
 MODE="${1:-import}"
 DAYS="${GNA_DAYS:-}"
 INTERVAL_HOURS="${GNA_RUN_INTERVAL_HOURS:-24}"
-LAST_RUN="$HOME_R/hodd/state/gna-mail-last-run.json"
+LAST_RUN="$HOME_R/state/gna-mail-last-run.json"
 IMPORTER="$ROOT/bin/mail/gna_import.py"
 
 say() { printf 'gna-mail[%s] %s\n' "$MODE" "$*"; }
@@ -162,7 +162,7 @@ printf '%s gna-mail rc=%s\n' "$(date -Is)" "$rc_total" >> "$STATE/gna-mail.log"
 # store is a success and must not read as "the desk stopped working". The record also
 # carries the WINDOW (mark or backfill) and the GAP the run measured before reading, so the
 # notice can say "the desk was blind for N days" without asking the mailbox again.
-if [ -d "$HOME_R/hodd/state" ]; then
+if [ -d "$HOME_R/state" ]; then
   rec_args=(--record-run --rc "$rc_total" --accounts "$read_count" --gap "${GAP_JSON:-}")
   [ -n "$DAYS" ] && rec_args+=(--days "$DAYS")
   python3 "$IMPORTER" "${rec_args[@]}" >/dev/null 2>&1 || say "WARN the last-run record could not be written"

@@ -6,14 +6,14 @@
 #   bin/seat/broken.sh close <id> --sha <sha>
 #   bin/seat/broken.sh count --class
 #
-# Data: $YMIR_HOME/hodd/state/broken.md — APPEND-ONLY, one line per finding.
+# Data: $YMIR_HOME/state/broken.md — APPEND-ONLY, one line per finding.
 # A close appends a CLOSING LINE; it never edits the original (RULES/06).
 set -u
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 ymir_home_root HOME_DIR 2>/dev/null || { printf "%s: home unresolved\n" "$(basename "$0")" >&2; exit 2; }
-FILE="$HOME_DIR/hodd/state/broken.md"
+FILE="$HOME_DIR/state/broken.md"
 mkdir -p "$(dirname "$FILE")"
 touch "$FILE"
 

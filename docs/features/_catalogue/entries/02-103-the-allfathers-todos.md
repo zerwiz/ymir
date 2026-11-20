@@ -1,7 +1,7 @@
 ---
 section: agents-work-collaboration
 ---
-| Voice | **The Allfather's todos** (`bin/voice/todos.sh`) | The two lists read by the arm holder at session start: HIS list (`hodd/life/personal/me/todo.md`) counted by half — his half, the derived half, the house-kept half — first, and the voice's ledger as its own named count; a list that cannot be read prints `unable`, never `0`; read-only | [how-to](docs/features/the-allfathers-todos.md) |
+| Voice | **The Allfather's todos** (`bin/voice/todos.sh`) | The two lists read by the arm holder at session start: HIS list (`life/personal/me/todo.md`) counted by half — his half, the derived half, the house-kept half — first, and the voice's ledger as its own named count; a list that cannot be read prints `unable`, never `0`; read-only | [how-to](docs/features/the-allfathers-todos.md) |
 
 See docs/features/the-allfathers-todos.md
 

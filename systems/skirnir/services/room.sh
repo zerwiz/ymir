@@ -2,7 +2,7 @@
 # room.sh — the record of a room: append an utterance, or read what was said.
 #
 # A room is defined by WHO MAY HEAR IT, and its record is a file: append-only JSONL under
-# `hodd/state/assistant/rooms/<room>.jsonl`. Nothing enters a room except through this door,
+# `state/assistant/rooms/<room>.jsonl`. Nothing enters a room except through this door,
 # and nothing leaves a record except by reading it. There is no rewrite and no delete — a
 # conversation that exists only in a chat window does not exist.
 #
@@ -42,7 +42,7 @@ home_or_die() {
 
 H="$(home_or_die)"
 REG="$H/hodd/identity/assistant/rooms.yaml"
-STORE="$H/hodd/state/assistant/rooms"
+STORE="$H/state/assistant/rooms"
 
 case "${1-}" in -v|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") usage; exit 0 ;; esac
 CMD="$1"; shift

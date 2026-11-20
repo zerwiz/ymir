@@ -9,7 +9,7 @@
 # the door (bin/dispatch/dispatch.sh) and are documented there; this job adds no second setting.
 #
 # A Nornir job starts, does one thing, writes its record and exits. It owns no state: the run ledger
-# (hodd/state/dispatch/runs.jsonl) is the door's, and this file only reports what the door said.
+# (state/dispatch/runs.jsonl) is the door's, and this file only reports what the door said.
 #
 # THE ONE LAW THIS JOB CARRIES: ABSENCE IS A FAILURE, NOT AN EMPTY LIST. A door that cannot read its
 # input says so in Runes and on stdout, and the job exits non-zero — it never renders an unreadable
@@ -55,7 +55,7 @@ case "$rc" in
   0)
     if printf '%s\n' "$out" | grep -q '^verdict: work'; then
       [ -x "$RUNES" ] && "$RUNES" dispatch dispatch-run \
-        --message "work: proposals written to his list — every row in hodd/state/dispatch/runs.jsonl" \
+        --message "work: proposals written to his list — every row in state/dispatch/runs.jsonl" \
         >/dev/null 2>&1 || true
     fi
     ;;

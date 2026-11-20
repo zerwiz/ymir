@@ -11,7 +11,7 @@ const json = (data: unknown, status = 200) => Response.json(data, {
  * Access is the gate's existing local-owner policy, reused from the voice door. */
 export function createRoddHandler({ root, home }: Options) {
   const door = join(root, 'bin/voice/voice-door.sh');
-  const log = join(home, 'hodd/state/voice/host.log');
+  const log = join(home, 'state/voice/host.log');
 
   async function run(args: string[], timeoutSeconds: number): Promise<{ code: number; out: string }> {
     const proc = Bun.spawn(['timeout', String(timeoutSeconds), door, ...args], {

@@ -12,7 +12,7 @@
 # touched paths that note's component covers — a mismatch is reported, never
 # silently accepted.
 #
-#   fixes-guard.sh --install     # seat it as the pre-push hook (replacing the old one)
+#   fixes-guard.sh --install     # seat the pre-push hook: `git config core.hooksPath .githooks`
 #   fixes-guard.sh --check       # judge the current branch against its base, by hand
 #   git push                     # the hook runs it with the refs on stdin
 #
@@ -37,22 +37,38 @@ case "${1-}" in
     # body here, and the two drifted: `.githooks/pre-push` ran the tree wards only, while this
     # copy ran the whole chain — so which gates a push met depended on whether the seat had set
     # `core.hooksPath`. Measured that day: the checkout doing the work had no hooksPath, so the
-    # generated copy ran and the shipped one was dead text. The shipped file IS the hook; the
-    # install copies it, and a missing file is a refusal rather than a silently different gate.
-    H="$(git rev-parse --git-path hooks)/pre-push"
-    case "$H" in /*) ;; *) H="$ROOT/$H" ;; esac
-    mkdir -p "$(dirname "$H")" || exit 1
+    # generated copy ran and the shipped one was dead text. The shipped file IS the hook, and a
+    # missing file is a refusal rather than a silently different gate.
+    #
+    # APPENDED 2026-11-20 (the mend that never re-seated itself returned): the install used to
+    # COPY the hook into `<git-dir>/hooks/pre-push`, where the hook's own
+    # `dirname "${BASH_SOURCE[0]}"/..` answered `.git` — a directory with no `bin/gates/guards.sh` —
+    # so the copied hook skipped EVERY ward and said nothing. Eir's `gates` row asked whether the
+    # copy contained a string the shipped hook no longer carried, so it was red for ever while the
+    # gate ran nothing. The shipped hook's header names the road, and it is set here first:
+    # `core.hooksPath .githooks`. A RELATIVE hooksPath is resolved against the worktree that is
+    # PUSHING (measured: hooks run with cwd = that worktree's top level), so a Yggdrasil worktree
+    # runs ITS OWN hook and never the main tree's — the very fault the 2026-10-20 fix chased.
+    # The copy road survives only where the config cannot be written, and it is correct there too
+    # because the shipped hook resolves its root with `git rev-parse --show-toplevel`.
     SRC="$ROOT/.githooks/pre-push"
     if [ ! -r "$SRC" ]; then
       printf 'error: %s is missing\nhelp: the pre-push hook has one home and it is that file\n' "$SRC" >&2
       exit 1
     fi
+    if git -C "$ROOT" config core.hooksPath .githooks 2>/dev/null; then
+      printf 'fixes-guard[1]{gate,result}:\n  "hook","core.hooksPath = .githooks (the pushing worktree runs its own .githooks/pre-push)"\n'
+      exit 0
+    fi
+    H="$(git -C "$ROOT" rev-parse --git-path hooks 2>/dev/null)/pre-push"
+    case "$H" in /*) ;; *) H="$ROOT/$H" ;; esac
+    mkdir -p "$(dirname "$H")" || exit 1
     cp "$SRC" "$H" && chmod +x "$H" || exit 1
     # the NDA gate's two hooks (RULES/04, 2026-11-12) ride the same install
     for extra in pre-commit commit-msg; do
       [ -r "$ROOT/.githooks/$extra" ] && cp "$ROOT/.githooks/$extra" "$(dirname "$H")/$extra" && chmod +x "$(dirname "$H")/$extra"
     done
-    printf 'fixes-guard[1]{gate,result}:\n  "hook","installed from .githooks/pre-push at %s"\n' "${H#"$ROOT"/}"
+    printf 'fixes-guard[1]{gate,result}:\n  "hook","copied from .githooks/pre-push to %s (core.hooksPath could not be set)"\n' "${H#"$ROOT"/}"
     exit 0 ;;
   --check) ;;
   "") ;;

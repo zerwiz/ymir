@@ -5,7 +5,7 @@
 # is a test, not a promise. Four things are proved here, each the reason something failed tonight:
 #
 #   1 · notify writes the queue THE ARM READS (one resolved path, never a restated one) — the fault
-#       where 1.3 KB of notifications went into hodd/state while 6.2 KB of asks sat in state/.
+#       where 1.3 KB of notifications went into state while 6.2 KB of asks sat in state/.
 #   2 · verdict-watch delivers a report that appears on disk, WITHOUT the seat saying anything.
 #   3 · verdict-watch delivers each fingerprint once — a report is not re-delivered every ten minutes.
 #   4 · a delivery that fails exits non-zero, so the loop can say so instead of going quiet.
@@ -30,12 +30,13 @@ mkdir -p "$tmp/state/eindri-reports" "$tmp/state/.reviewed"
 # ── 1 · notify writes the arm's queue, under the home it resolves ────────────────────────────────
 judge "YMIR_HOME='$tmp' bash '$root/bin/notify/send.sh' --source review --severity HIGH --message 'a verdict that must reach the arm'"
 [ "$rc" = 0 ] && ok "notify exits 0 under a throwaway home" || bad "notify failed: rc=$rc"
-arm_q="$tmp/state/.wake-queue"; stray_q="$tmp/hodd/state/.wake-queue"
+arm_q="$tmp/state/.wake-queue"
+stray_q="$tmp/hodd/state/.wake-queue"   # retired-path-ok: this test asserts the OLD restated queue is never written
 [ -s "$arm_q" ] && grep -q "must reach the arm" "$arm_q" \
   && ok "the line lands in the arm's queue (<home>/state/.wake-queue)" \
   || bad "the line is NOT in the arm's queue"
-[ -s "$stray_q" ] && bad "notify ALSO wrote the restated hodd/state queue — the fault is back" \
-  || ok "the restated hodd/state queue is not written"
+[ -s "$stray_q" ] && bad "notify ALSO wrote the restated state queue — the fault is back" \
+  || ok "the restated state queue is not written"
 
 # ── 2 · a report on disk is delivered with no seat saying anything ──────────────────────────────
 printf 'REFUSE — PR #4242\n\npr: 4242\nhead: 1111111111111111111111111111111111111111\n\n## The verdict\nthe reason\n' \

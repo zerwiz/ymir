@@ -73,12 +73,25 @@ def _home() -> Path:
     return Path(os.environ.get("YMIR_VOICE_STATE", str(Path.home())))
 
 
+def _shelf(name: str) -> Path:
+    """A home SHELF through the ONE resolver (plan 331.6): `life` · `state` · `config` · `record`.
+    Never a retired path: the record's old `hodd/life` and `state` are gone — `life/` and
+    `state/` are their shelves, and bin/records/home_shelves.py answers where each one is."""
+    import sys as _sys
+    _sys.path.insert(0, str(ROOT / "bin" / "records"))
+    try:
+        from home_shelves import shelf  # noqa: PLC0415
+        return shelf(name)
+    except Exception:
+        return _home() / {"record": "hodd"}.get(name, name)
+
+
 def _log(event: str, **fields) -> None:
     """One line per thing the voice DID, so the Allfather can read what it has done:
     tool calls, memory retrievals, refusals — appended, never rewritten (Rule 06)."""
     import datetime
     stamp = datetime.datetime.now()
-    path = _home() / "hodd" / "state" / "voice" / f"activity-{stamp:%Y-%m-%d}.jsonl"
+    path = _home() / "state" / "voice" / f"activity-{stamp:%Y-%m-%d}.jsonl"
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         row = {"ts": stamp.isoformat(timespec="seconds"), "event": event, **fields}
@@ -260,7 +273,7 @@ TOOLS = [
     {
         "type": "function",
         "name": "todo_add",
-        "description": "Add an item to HIS to-do list (hodd/life/personal/me/todo.md, the one to-do; under 'Added in conversation'); returns its short id. Optional due, priority, project.",
+        "description": "Add an item to HIS to-do list (life/personal/me/todo.md, the one to-do; under 'Added in conversation'); returns its short id. Optional due, priority, project.",
         "parameters": {"type": "object", "properties": {
             "item": {"type": "string"}, "due": {"type": "string"},
             "priority": {"type": "string"}, "project": {"type": "string"}},
@@ -269,7 +282,7 @@ TOOLS = [
     {
         "type": "function",
         "name": "todo_list",
-        "description": "HIS to-do list (hodd/life/personal/me/todo.md, the one to-do): its open items with short ids and the section each is in — or the done ones. `project` filters by section or words.",
+        "description": "HIS to-do list (life/personal/me/todo.md, the one to-do): its open items with short ids and the section each is in — or the done ones. `project` filters by section or words.",
         "parameters": {"type": "object", "properties": {
             "status": {"type": "string"}, "project": {"type": "string"}},
             "additionalProperties": False},
@@ -924,7 +937,7 @@ async def _execute(name, arguments):
 
         # THE ALLFATHER'S RULE (2026-11-07): no worker is sent out on a spoken word alone.
         # First call: remember the errand and ask him. Second call with confirm=true: send it.
-        pending_path = _home() / "hodd" / "state" / "voice" / "pending-handover.json"
+        pending_path = _home() / "state" / "voice" / "pending-handover.json"
         if not args.get("confirm"):
             try:
                 pending_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1056,7 +1069,7 @@ async def _execute(name, arguments):
         agent = str(args.get("agent") or "").strip()
         if not steps:
             raise ValueError("plan_write needs at least one step")
-        plan_dir = _home() / "hodd" / "state" / "voice" / "plans"
+        plan_dir = _home() / "state" / "voice" / "plans"
         plan_dir.mkdir(parents=True, exist_ok=True)
         slug = "".join(ch.lower() if ch.isalnum() else "-" for ch in title)[:40].strip("-") or "plan"
         path = plan_dir / f"{_dt.datetime.now():%Y%m%dT%H%M%S}-{slug}.md"
@@ -1077,10 +1090,10 @@ async def _execute(name, arguments):
         # `.pi/extensions/context-left/` is the only thing that measures a pi session: it
         # asks the harness for the token count and the model's window, derives the turns
         # until compaction, and PUBLISHES that reading to
-        # <home>/hodd/state/context-left/<session>.json. This tool repeats it. It keeps no
+        # <home>/state/context-left/<session>.json. This tool repeats it. It keeps no
         # counter of its own, because two counters disagree and then neither is trusted.
         import json as _json
-        state_dir = _home() / "hodd" / "state" / "context-left"
+        state_dir = _home() / "state" / "context-left"
         readings = []
         try:
             files = sorted(state_dir.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)[:20]
@@ -1197,8 +1210,8 @@ async def _execute(name, arguments):
         proc = _sp.run(["grep", "-rIniE", "--exclude-dir=.git", "--exclude-dir=node_modules",
                         "--exclude-dir=__pycache__", pattern, str(base)],
                        capture_output=True, text=True, timeout=45)
-        priority = {"hodd/life/personal/me/": 0, "hodd/identity/": 1, "hodd/docs/": 2,
-                    "hodd/life/": 2, "hodd/data/": 4, "hodd/workspaces/": 4}
+        priority = {"life/personal/me/": 0, "hodd/identity/": 1, "hodd/docs/": 2,
+                    "life/": 2, "hodd/data/": 4}
         scored, one_per_file = [], {}
         for line in proc.stdout.splitlines():
             if any(d in line for d in deny):
@@ -1445,7 +1458,7 @@ async def _execute(name, arguments):
             raise ValueError("add_todo needs an item")
         # his own day/todo file says "his half is written by him and never by a machine",
         # so the voice keeps its own list beside it and never writes into his
-        path = _home() / "hodd" / "life" / "personal" / "me" / "todo-voice.md"
+        path = _shelf("life") / "personal" / "me" / "todo-voice.md"
         path.parent.mkdir(parents=True, exist_ok=True)
         with path.open("a", encoding="utf-8") as fh:
             fh.write(f"- [ ] {item}  ({ _dt.date.today().isoformat()} · by voice)\n")
@@ -1517,7 +1530,7 @@ async def _tool_draft_write(args):
     to = str(args.get("to") or "").strip()
     if not title or not body:
         raise ValueError("draft_write needs a title and a body")
-    shelf = _home() / "hodd" / "workspaces" / "work" / "drafts"
+    shelf = _shelf("life") / "work" / "drafts"
     shelf.mkdir(parents=True, exist_ok=True)
     slug = _re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")[:50] or "draft"
     path = shelf / f"{_dt.date.today().isoformat()}-{slug}.md"
@@ -1626,7 +1639,7 @@ def _session_files():
 
 
 def _session_log() -> str:
-    remote = ('h=$(bash -lc ". ~/ymir/bin/vault/hoard-lib.sh >/dev/null 2>&1; ymir_home_root YMIR_HOME >/dev/null 2>&1; printf %s \"\\$YMIR_HOME\"" 2>/dev/null); d="$h/hodd/state/voice/host.log"; cat "$d" 2>/dev/null')
+    remote = ('h=$(bash -lc ". ~/ymir/bin/vault/hoard-lib.sh >/dev/null 2>&1; ymir_home_root YMIR_HOME >/dev/null 2>&1; printf %s \"\\$YMIR_HOME\"" 2>/dev/null); d="$h/state/voice/host.log"; cat "$d" 2>/dev/null')
     seat = str(os.environ.get("YMIR_VOICE_HOST_SEAT") or "").strip()
     if not seat:
         try:
@@ -1640,7 +1653,7 @@ def _session_log() -> str:
     # itself, which a seat with no key for its own login refuses, so "last_session" and "search_sessions" answered
     # "could not be read" on the dev machine for every conversation.
     import socket as _socket
-    local = _home() / "hodd" / "state" / "voice" / "host.log"
+    local = _home() / "state" / "voice" / "host.log"
     if seat in (_socket.gethostname().split(".")[0], "localhost", "127.0.0.1") or not seat:
         try:
             return local.read_text(encoding="utf-8", errors="replace")
@@ -1706,9 +1719,8 @@ async def _tool_search_sessions(args):
 
 
 def _todo_paths():
-    base = _home() / "hodd"
-    return (base / "state" / "voice" / "todos.jsonl",
-            base / "life" / "personal" / "me" / "todo-voice.md")
+    return (_shelf("state") / "voice" / "todos.jsonl",
+            _shelf("life") / "personal" / "me" / "todo-voice.md")
 
 
 def _todo_events():
@@ -1769,7 +1781,7 @@ def _todo_render():
     import datetime as _dt
     rows = ["# The voice's task ledger", "",
             f"_rendered {_dt.datetime.now():%Y-%m-%d %H:%M} · derived from "
-            "`hodd/state/voice/todos.jsonl` — a view, never the record_", "",
+            "`state/voice/todos.jsonl` — a view, never the record_", "",
             f"## Open ({len(opened)})", ""]
     rows += [line(t) for t in sorted(opened, key=lambda t: (prio.get(t["priority"], 1), t["due"] or "9999", t["added"]))] or ["_nothing open_"]
     rows += ["", f"## Done ({len(done)})", ""]
@@ -1786,8 +1798,8 @@ def _todo_append(ev):
 
 
 # ── the to-do: ONE record, his own todo.md (plan 275, 2026-11-12) ──────────────────────────────────────────────
-# Three to-do stores had grown: his hodd/life/personal/me/todo.md (43 open items), this voice's own ledger
-# (hodd/state/voice/todos.jsonl, five test rows) and the MCP task board. These tools pointed at the voice's ledger
+# Three to-do stores had grown: his life/personal/me/todo.md (43 open items), this voice's own ledger
+# (state/voice/todos.jsonl, five test rows) and the MCP task board. These tools pointed at the voice's ledger
 # and told her his file was "written by him alone", so asked about his to-do she knew nothing, edited the file raw,
 # and offered to build a fourth system. His word: "It's always written by a machine. It's your file." So the tools
 # read and write todo.md itself: every `- [ ]` / `- [x]` line is an item with a short, stable id; an added item goes
@@ -1795,7 +1807,7 @@ def _todo_append(ev):
 # The file is written whole and renamed into place, so a reader never sees half of it. The old ledger is left as it was.
 
 def _todo_file():
-    return _home() / "hodd" / "life" / "personal" / "me" / "todo.md"
+    return _shelf("life") / "personal" / "me" / "todo.md"
 
 
 # The file states its own halves as top-level headings, and a reader must name them apart: his
@@ -2445,7 +2457,7 @@ async def _tool_research(args):
     if not question:
         raise ValueError("research needs a question")
     role = _role_for("huginn") or "researcher"
-    pending_path = _home() / "hodd" / "state" / "voice" / "pending-research.json"
+    pending_path = _home() / "state" / "voice" / "pending-research.json"
     if not args.get("confirm"):
         try:
             pending_path.parent.mkdir(parents=True, exist_ok=True)
@@ -2781,7 +2793,7 @@ def _looks_read_only(tool: str) -> bool:
 
 async def _ask_first(kind: str, key: str, ask: str, confirmed: bool) -> str | None:
     """The two-phase gate: return None when it may proceed, or the words to say instead."""
-    path = _home() / "hodd" / "state" / "voice" / _SHELL_PENDING
+    path = _home() / "state" / "voice" / _SHELL_PENDING
     record = {"kind": kind, "key": key, "asked_at": __import__("datetime").datetime.now().isoformat(timespec="seconds")}
     if not confirmed:
         try:

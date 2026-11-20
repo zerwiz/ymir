@@ -16,7 +16,7 @@
 #                          nightly tick printed "Model unavailable: opencode/nemotron-3-ultra-free" and exited 0, so
 #                          no machine updated itself for five days and nothing said so.
 #   agent                — the old road: a leashed OpenCode model types the commands (GROA_MODEL).
-# A failed update exits non-zero and files a dated fault under $YMIR_HOME/hodd/state/groa/faults/.
+# A failed update exits non-zero and files a dated fault under $YMIR_HOME/state/groa/faults/.
 set -uo pipefail
 
 # The tree Gróa runs from is the tree she installs into: the PIN (what every icon and unit runs), never the
@@ -35,7 +35,7 @@ if [ -z "$HOME_DIR" ]; then
   unset _lib
 fi
 [ -n "$HOME_DIR" ] || HOME_DIR="$HOME/.local/state"
-STATE_DIR="$HOME_DIR/hodd/state"
+STATE_DIR="$HOME_DIR/state"
 LOG="$STATE_DIR/groa-agent.log"
 PIDFILE="$STATE_DIR/groa-agent.pid"
 MODEL="${GROA_MODEL:-opencode/nemotron-3-ultra-free}"
@@ -109,7 +109,7 @@ record_report(){
 
 # a failed nightly run is a dated fault the operator (and Gróa's smith) can find, never a quiet log line
 file_fault(){  # <rc> <what>
-  local d="$HOME_DIR/hodd/state/groa/faults" f
+  local d="$HOME_DIR/state/groa/faults" f
   mkdir -p "$d" 2>/dev/null || return 0
   f="$d/$(date +%Y%m%d-%H%M%S)-nightly-update.md"
   { printf '# The nightly update failed — %s\n\n' "$(date -Is)"

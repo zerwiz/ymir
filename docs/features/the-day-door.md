@@ -11,7 +11,7 @@ desk in the hall, a desktop pane) is meant to render this door rather than inven
 ## What you need
 
 - The home at `$YMIR_HOME` (resolved from the environment, then `~/.config/ymir/home`).
-- Your own list at `hodd/life/personal/me/todo.md`, with acts written as
+- Your own list at `life/personal/me/todo.md`, with acts written as
   `- [ ] **The act** — what it unblocks`.
 - Optional: the mail store (`hodd/memory/mail/messages.jsonl`), `config/cron.yaml`, and the calendar
   door. Each missing piece is reported, never guessed.

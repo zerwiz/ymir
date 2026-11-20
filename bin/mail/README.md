@@ -32,8 +32,19 @@ bin/mail/tests/           proofs, including "no file here can send" (test_gna.py
 
 The **store and the scope never live here**: they are the home's
 (`$YMIR_HOME/hodd/memory/mail/` — `accounts.yaml`, `retention.yaml`,
-`messages.jsonl`), and the message spine is git-ignored. Schema, scope and
-retention travel; raw mail does not.
+`messages.jsonl`). Schema, scope and retention travel with the home — and so does the message
+spine, **redacted on commit**: `.gitattributes` marks `hodd/memory/mail/messages.jsonl`
+`filter=gna-redact`, and the clean filter is `hodd/bin/mail-redact.py`, which replaces
+credential values with `[redacted]` in the committed blob while the working copy keeps the
+letter whole (plan 116 §18). The letter travels; the password does not.
+
+> [!IMPORTANT]
+> **Git config does not travel with a clone.** A seat that pulls the home has the attribute and,
+> without the filter, would commit raw mail. So `bin/vault/home-sync.sh setup` seats
+> `filter.gna-redact.clean` (`python3 hodd/bin/mail-redact.py`), `.smudge cat` and
+> `.required true`, and `home-sync.sh ship` **refuses** to stage the spine on a seat where they
+> are not configured. Run `home-sync.sh setup` once in every home you clone, and
+> `home-sync.sh filter-check hodd/memory/mail/messages.jsonl` answers whether this seat redacts.
 
 ## Install and run
 
@@ -147,7 +158,7 @@ Three facts per address, and none of them is an assumption:
   (RFC 7505) is a deliberate refusal, not a mailbox.
 - **route** — *declared* in the home's `accounts.yaml` under `house:` (routing lives in a
   dashboard, not in DNS), so the register can say "explicit" or "catch-all" honestly.
-- **arrived** — *measured*: a proof line in `hodd/state/mail/inbound-arrivals.jsonl`, written
+- **arrived** — *measured*: a proof line in `state/mail/inbound-arrivals.jsonl`, written
   only by `inbound-test.sh` when a message actually landed with its `To:` intact. Until one
   does, a routed address is **unproven** — `deliverable` is something a machine measured.
 
@@ -257,3 +268,4 @@ second proof that enforces it are in `docs/fixes/mail/2026-11-08-the-connect-doo
 - **2026-11-16** — `bin/mail/threads.sh` added to the map (plan 305 phase 1), with the lane section above; `tests/` now holds **50** proofs (37 + 13 in `test_threads.py`), correcting the count in the 2026-11-08 append.
 - **2026-11-16 (second)** — the RFC headers: `message_id` · `in_reply_to` · `references` on every row, the IMAP thread key taken from the message's own chain, and `--backfill-headers` for the rows already written. `tests/` now holds **74** proofs (62 + 12 in `test_headers.py`).
 - **2026-11-17** — `threads.sh` closes by **evidence**, not only by a letter: a document, a meeting or a filing read from the home's `hodd/memory/mail/evidence.yaml` (or `--evidence FILE`), and the marked fifth — `answered-elsewhere` inside `--window DAYS`, never counted as a reply. A sender's domain is refused as evidence. `test_threads.py` now holds **23** proofs (13 + 10 evidence proofs); the fix note is `docs/fixes/mail/2026-11-17-the-evidence-that-is-not-a-letter.md`.
+- **2026-11-20** — the map's privacy line was wrong and is corrected above: the message spine is **not** git-ignored, it **travels** with the home and is redacted on commit by the `gna-redact` clean filter (`hodd/bin/mail-redact.py`, plan 116 §18). The filter is now seated by `bin/vault/home-sync.sh setup` — and by `bin/vault/home-sync-clock.sh`, which the hourly timer runs on every seat — and `home-sync.sh ship` refuses the spine where it is not configured, so a fresh clone can no longer commit raw mail with a password in it. `bin/vault/tests/test_home_redaction_filter.sh` proves all of it against a real repo.

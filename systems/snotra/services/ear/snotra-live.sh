@@ -34,7 +34,7 @@ fi
   exit 2
 }
 
-HOARD="$YMIR_HOME/hodd/life/meetings"
+HOARD="$(hoard_life)/meetings"
 STATE="$YMIR_HOME/state"
 WORK="$STATE/snotra-live"
 SLICES="$WORK/slices"
@@ -499,7 +499,7 @@ The live tail — the microphone transcribed as it is spoken.
   snotra-live.sh tail                   follow the document
   snotra-live.sh stop                   close, then mine -> minutes -> Rune
 
-The document lands in $YMIR_HOME/hodd/life/meetings/<date>-<lane>-<slug>.live.md
+The document lands in <home>/life/meetings/<date>-<lane>-<slug>.live.md  (plan 331: `life/`)
 USAGE
     ;;
 esac

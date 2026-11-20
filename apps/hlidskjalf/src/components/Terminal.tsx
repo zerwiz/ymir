@@ -133,7 +133,7 @@ export function Terminal({
     ws.onclose = () => set({ state: 'closed', detail: 'connection closed' });
     ws.onerror = () => set({ state: 'refused', detail: 'the gate refused the socket' });
 
-    const dataSub = term.onData((d) => {
+    const dataSub = term.onData((d: string) => {
       if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ t: 'i', d }));
     });
 

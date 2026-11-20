@@ -3,7 +3,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
-export YMIR_HOME="$T/home"; mkdir -p "$YMIR_HOME/hodd/identity" "$YMIR_HOME/hodd/life/meetings"
+export YMIR_HOME="$T/home"; mkdir -p "$YMIR_HOME/hodd/identity" "$YMIR_HOME/life/meetings"
 pass=0; fail=0
 ok(){ pass=$((pass+1)); printf 'ok\t%s\n' "$1"; }
 bad(){ fail=$((fail+1)); printf 'FAIL\t%s\n' "$1"; }

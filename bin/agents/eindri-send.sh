@@ -2,7 +2,11 @@
 # eindri-send.sh — the DATA plane: hand a seated worker one attributed line, safely.
 #
 #   bin/agents/eindri-send.sh [--from "<who>"] [--machine <name>] [--wait <seconds>] \
-#                             <pane>|<machine>:<pane> "<text>"
+#                             <pane>|<errand-id>|<machine>:<pane> "<text>"
+#   bin/agents/eindri-send.sh --resolve <pane>|<errand-id>     # which pane does this mean?
+#
+# A target is a PANE, or the ID of an errand whose seat is recorded (`state/<id>.meta`,
+# `seat_pane=`); an id is resolved to its pane before anything is typed (2026-11-20).
 #
 # The agent reads it as a new turn (herdr steers the running agent); the reply is read with
 # `herdr agent read`. This is how the helm talks to a worker, and plan 293 part 5 makes three
@@ -51,24 +55,22 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 die() { printf '%s: %s\n' "$SELF" "$*" >&2; exit "${2:-2}"; }
 have() { command -v "$1" >/dev/null 2>&1; }
 
-MACHINE=""; WAIT="${EINDRI_SEND_WAIT:-20}"; RESEND=1
+MACHINE=""; WAIT="${EINDRI_SEND_WAIT:-20}"; RESEND=1; RESOLVE=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --from)    export YMIR_MSG_FROM="${2-}"; shift 2 ;;
     --machine) MACHINE="${2-}"; shift 2 ;;
     --wait)    WAIT="${2-}"; shift 2 ;;
     --once)    RESEND=0; shift ;;
-    -h|--help) sed -n '2,40p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
+    --resolve) RESOLVE=1; shift ;;
+    -h|--help) sed -n '2,45p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
     --) shift; break ;;
     *) break ;;
   esac
 done
 TARGET="${1-}"; shift || true; TEXT="${*:-}"
-[ -n "$TARGET" ] && [ -n "$TEXT" ] || die "usage: $SELF [--machine <name>] <pane>|<machine>:<pane> \"<text>\""
-case "$TEXT" in *$'\e'*|*$'\r'*) die "refusing text with control sequences — a brief is plain text, the pane is a terminal" ;; esac
-[ "${YMIR_MSG_STAMP:-1}" = 0 ] || TEXT="$(msg_stamp "$TEXT")"
 
-# --- where the words go ---------------------------------------------------------------
+# --- where the words go, and where an ERRAND's record lives ---------------------------
 # The fleet registry is the only source of machine names (never a table here). It is read at
 # run time, and a machine that is not in it is refused by name.
 HOME_DIR=""
@@ -76,6 +78,42 @@ HOME_DIR=""
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 have ymir_home_root && ymir_home_root HOME_DIR 2>/dev/null
 REG="${YMIR_FLEET_REGISTRY:-${HOME_DIR:-}/hodd/data/fleet.json}"
+
+# --- an errand is not a pane: read the seat it recorded --------------------------------
+# 2026-11-20: `eindri-send.sh <errand-id> "…"` was refused with "no agent stands in <id>"
+# (herdr: agent_not_found) while the pane that held the working agent stood in the errand's own
+# record — `state/<id>.meta`, `seat_pane=w1D:p1`. The errand's NAME is not an address; the record
+# is. So the door asks the record before it refuses, and speaks to the pane the record names. The
+# state dirs are read in the order every other door uses (BROKK_HELM_STATE → BROKK_STATE_OVERRIDE
+# → the home's state/ → the old in-tree state/), so a seat whose home moved is still found.
+errand_pane() {  # <errand-id> -> its recorded pane, or nothing
+  local id="$1" d f p
+  case "$id" in ''|*/*|*:*) return 1 ;; esac
+  for d in "${BROKK_HELM_STATE:-}" "${BROKK_STATE_OVERRIDE:-}" "${HOME_DIR:+$HOME_DIR/state}" "$ROOT/state"; do
+    [ -n "$d" ] && [ -f "$d/$id.meta" ] || continue
+    f="$d/$id.meta"
+    p="$(sed -n 's/^seat_pane=//p' "$f" 2>/dev/null | head -1)"
+    [ -n "$p" ] || p="$(sed -n 's/^window=//p' "$f" 2>/dev/null | head -1)"
+    [ -n "$p" ] && { printf '%s' "$p"; return 0; }
+  done
+  return 1
+}
+
+# `--resolve` answers the question with no herdr, no send and no stamp: which pane does this
+# target mean? It is the door a caller (and this errand's test) asks before typing.
+if [ "$RESOLVE" = 1 ]; then
+  [ -n "$TARGET" ] || die "usage: $SELF --resolve <errand-id|pane>" 2
+  if rec="$(errand_pane "$TARGET")"; then
+    printf 'eindri-send[1]{target,pane,source}:\n  "%s","%s","state/%s.meta"\n' "$TARGET" "$rec" "$TARGET"
+  else
+    printf 'eindri-send[1]{target,pane,source}:\n  "%s","%s","no errand record — used as a pane"\n' "$TARGET" "$TARGET"
+  fi
+  exit 0
+fi
+
+[ -n "$TARGET" ] && [ -n "$TEXT" ] || die "usage: $SELF [--machine <name>] <pane>|<errand-id>|<machine>:<pane> \"<text>\""
+case "$TEXT" in *$'\e'*|*$'\r'*) die "refusing text with control sequences — a brief is plain text, the pane is a terminal" ;; esac
+[ "${YMIR_MSG_STAMP:-1}" = 0 ] || TEXT="$(msg_stamp "$TEXT")"
 
 fleet_machines() {  # one name per line
   [ -r "$REG" ] || return 0
@@ -158,6 +196,20 @@ fi
 unset VERBS
 
 # --- an agent must stand there ------------------------------------------------------
+# The record is asked BEFORE the refusal: an errand id is resolved to the pane its own meta names,
+# so `eindri-send.sh <errand-id> "…"` speaks to the seat the errand actually holds (2026-11-20).
+agent_here() {  # <pane> — herdr knows an agent in it
+  case "$(far "herdr agent get $(printf '%q' "$1")")" in
+    *'"agent_status"'*) return 0 ;;
+  esac
+  return 1
+}
+if ! agent_here "$PANE"; then
+  if rec="$(errand_pane "$PANE")" && [ -n "$rec" ] && agent_here "$rec"; then
+    printf '%s: %s is an errand, not a pane — its seat is %s (state/%s.meta)\n' "$SELF" "$PANE" "$rec" "$PANE" >&2
+    PANE="$rec"
+  fi
+fi
 AGENT_JSON="$(far "herdr agent get $(printf '%q' "$PANE")")"
 case "$AGENT_JSON" in
   *'"agent_status"'*) ;;

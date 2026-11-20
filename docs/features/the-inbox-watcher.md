@@ -19,7 +19,7 @@ bin/people/inbox-watch.sh --dry-run                              # say what it w
 ```
 
 **How it decides what is new.** One message id, announced once. The ids live in
-`$YMIR_HOME/hodd/state/people/inbox-seen.json`, so a reply is never spoken twice, and a quiet run is
+`$YMIR_HOME/state/people/inbox-seen.json`, so a reply is never spoken twice, and a quiet run is
 genuinely quiet.
 
 **The schedule.** `config/cron.yaml` runs it at **08:20, 14:20 and 19:20** — three times a day, which

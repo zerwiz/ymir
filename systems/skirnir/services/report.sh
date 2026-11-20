@@ -16,7 +16,7 @@ ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 ymir_home_root HOME_R 2>/dev/null || true
 [ -n "${HOME_R:-}" ] || { printf 'report: the hoard is unresolved\n' >&2; exit 2; }
-STATE="$HOME_R/hodd/state/assistant"
+STATE="$HOME_R/state/assistant"
 NOTIFY=0
 [ "${1:-}" = "--notify" ] && NOTIFY=1
 

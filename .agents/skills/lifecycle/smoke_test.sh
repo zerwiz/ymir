@@ -485,9 +485,12 @@ if [ -f "$HOME/.pi/agent/models.json" ] \
   ok models-registry "pi model registry parses"
 else bad models-registry "pi models.json missing or invalid"; fi
 
-# 28. the pre-push delivery gate is installed
+# 28. the pre-push delivery gate is installed — judged where git looks for it (`core.hooksPath`
+# is `.githooks` since 2026-11-20, so a fixed `.git/hooks` probe reports the gate missing on a
+# machine that has it)
 _hookdir="$(git -C "$ROOT" rev-parse --git-path hooks 2>/dev/null || true)"
-if [ -n "$_hookdir" ] && [ -x "$_hookdir/pre-push" ]; then ok gates "pre-push gate installed"
+case "$_hookdir" in "") ;; /*) ;; *) _hookdir="$ROOT/$_hookdir" ;; esac
+if [ -n "$_hookdir" ] && [ -x "$_hookdir/pre-push" ]; then ok gates "pre-push gate installed ($_hookdir)"
 else bad gates "pre-push hook missing — bin/gates/guards/fixes-guard.sh --install"; fi
 
 # ── governance (deep) ────────────────────────────────────────────────────────
@@ -552,8 +555,8 @@ if [ "$DEEP" = 1 ]; then
     [ -n "${HM:-}" ] || HM="${YMIR_HOME:-}"
   fi
   if [ -d "$HM" ]; then
-    if [ -d "$HM/hodd/life" ] && [ ! -d "$HM/hodd/workspaces" ]; then
-      ok rename-home "hodd/life/ present, hodd/workspaces/ gone"
+    if [ -d "$HM/life" ]; then
+      ok rename-home "life/ present (plan 331: the operator's own shelf, outside the record)"
     else
       skip rename-home "home present but the life shelf is not renamed yet (run bin/engine/ymir-migrate.sh apply)"
     fi
@@ -574,7 +577,7 @@ if [ "$DEEP" = 1 ]; then
   # A rename is only done when nothing still speaks the old name. Excluded on
   # purpose: a migration (it MUST name what it moves), the fix notes (the
   # append-only record of what the old name was), and worktrees.
-  # `hodd/workspaces/` is NOT stale: the home carries it and it holds real shelves
+  # `life/<topic>/` is NOT stale: the home carries it and it holds real shelves (plan 331)
   # (aizerwiz · meetings). The rename this checks is `svartalfaheim/<realm>/workspace/`
   # → `projects/` and the retired flat `workspace/` in the REPO. Flagging the home's own
   # shelf made the suite red for code that was right (measured 2026-10-24).

@@ -9,7 +9,7 @@ check(){ local n=$1; shift; if "$@" >/dev/null 2>&1; then ok "$n"; else bad "$n"
 refute(){ local n=$1; shift; if "$@" >/dev/null 2>&1; then bad "$n" "expected failure"; else ok "$n"; fi; }
 
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
-export YMIR_HOME="$TMP/home"; mkdir -p "$YMIR_HOME/hodd/state/calendar"
+export YMIR_HOME="$TMP/home"; mkdir -p "$YMIR_HOME/state/calendar"
 export AUTOJOIN_NOW="2026-10-20T09:00:00+03:00" AUTOJOIN_WINDOW_HOURS=24 AUTOJOIN_MAX_PER_RUN=3
 cat > "$TMP/events.json" <<'JSON'
 {"events":[
@@ -27,7 +27,7 @@ cat > "$TMP/events.json" <<'JSON'
 ]}
 JSON
 check "scan builds a plan" "$DOOR" scan --events "$TMP/events.json"
-PLAN="$YMIR_HOME/hodd/state/snotra/autojoin-plan.json"
+PLAN="$YMIR_HOME/state/snotra/autojoin-plan.json"
 check "plan is valid json" python3 -c "import json;json.load(open('$PLAN'))"
 check "meet is joined" python3 -c "
 import json;d=json.load(open('$PLAN'));m={p['id']:p for p in d['plan']};assert m['m1']['decision']=='join'"
@@ -52,7 +52,7 @@ import json;d=json.load(open('$PLAN'));m={p['id']:p for p in d['plan']};assert m
 check "max per run caps the joins" python3 -c "
 import json;d=json.load(open('$PLAN'));j=[p for p in d['plan'] if p['decision']=='join'];assert len(j)==3, len(j)"
 check "dry run prints WOULD-JOIN" bash -c "'$DOOR' run | grep -q WOULD-JOIN"
-check "dry run does not record a join" test ! -s "$YMIR_HOME/hodd/state/snotra/autojoin-joined.json"
+check "dry run does not record a join" test ! -s "$YMIR_HOME/state/snotra/autojoin-joined.json"
 check "status prints the plan" bash -c "'$DOOR' status | grep -q 'plan\\[1\\]'"
 
 # --apply records a meeting as joined ONLY when the door succeeded. Measured fault
@@ -60,9 +60,9 @@ check "status prints the plan" bash -c "'$DOOR' status | grep -q 'plan\\[1\\]'"
 # and the meeting was never retried — plan 147's fault, one layer lower.
 check "a refused join is not recorded as joined" bash -c "
   SNOTRA_BOT=/bin/false '$DOOR' run --apply >/dev/null 2>&1
-  test ! -s '$YMIR_HOME/hodd/state/snotra/autojoin-joined.json'"
+  test ! -s '$YMIR_HOME/state/snotra/autojoin-joined.json'"
 check "a successful join is recorded" bash -c "
   SNOTRA_BOT=/bin/true '$DOOR' run --apply >/dev/null 2>&1
-  python3 -c \"import json;d=json.load(open('$YMIR_HOME/hodd/state/snotra/autojoin-joined.json'));assert d, d\""
+  python3 -c \"import json;d=json.load(open('$YMIR_HOME/state/snotra/autojoin-joined.json'));assert d, d\""
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"; [ "$FAIL" -eq 0 ]

@@ -2,7 +2,7 @@
 """snotra_paths — where a meeting may live. One list, read by every door that scans.
 
 WHY: the doors scanned `svartalfaheim/<realm>/meetings/` and nothing else, so a meeting about the house's own
-work (`hodd/life/meetings/work/…`) was invisible to `--recent`, to the smoke and to the layout gate. A shelf
+work (`life/meetings/work/…`, plan 331) was invisible to `--recent`, to the smoke and to the layout gate. A shelf
 that no door scans is a folder, not a meeting.
 
 CONFIG (Rule 07): `SNOTRA_MEETING_SHELVES` — a colon-separated list. The defaults are the shelves this home
@@ -41,8 +41,9 @@ def shelves() -> list[Path]:
     out += sorted(h.glob("svartalfaheim/*/meetings"))
     out += sorted(h.glob("svartalfaheim/*/projects/*/meetings"))
     out += sorted(h.glob("svartalfaheim/*/workspace/*/meetings"))
-    out += sorted(h.glob("hodd/life/meetings/*"))
-    out += sorted(h.glob("hodd/workspaces/meetings/*"))
+    out += sorted(h.glob("life/meetings/*"))
+    out += sorted(h.glob("life/meetings/*"))        # retired-path-ok: a home not yet migrated still reads
+    out += sorted(h.glob("hodd/workspaces/meetings/*"))  # retired-path-ok: the older topic shelf, read tolerantly
     return [p for p in out if p.is_dir()]
 
 

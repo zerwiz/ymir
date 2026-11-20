@@ -16,7 +16,7 @@ ROOT="$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/.pi" ] || [ ! -d "$PWD/
 ymir_home_root HOME_R 2>/dev/null || true
 [ -n "${HOME_R:-}" ] || { printf 'error: the home is unresolved\n' >&2; exit 1; }
 ID="${1:-}"; TITLE="${2:-}"
-[ -n "$TITLE" ] || TITLE="$(python3 - "$HOME_R/hodd/state/assistant/seen-groups.json" "$ID" 2>/dev/null <<'PY'
+[ -n "$TITLE" ] || TITLE="$(python3 - "$HOME_R/state/assistant/seen-groups.json" "$ID" 2>/dev/null <<'PY'
 import json, sys
 try:
     seen = json.load(open(sys.argv[1]))

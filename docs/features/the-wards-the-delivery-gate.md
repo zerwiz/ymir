@@ -47,9 +47,13 @@ Wards also run themselves:
 
 - **`bin/gates/guards.sh`** — the pre‑push hook and both CI hosts call it; a fault
   stops the push.
-- **pre‑commit** — `secret-guard --install` seats the repo hook (public, docs, private,
-  vault, confidential, secret); `hoard-guard --install` seats the home's. Git runs them
-  on every commit, including the hasty ones.
+- **pre‑commit** — the repo's hook is `.githooks/pre-commit`, seated with
+  `git config core.hooksPath .githooks` by `bin/gates/guards/fixes-guard.sh --install` (the same
+  install seats the pre‑push and commit‑msg hooks). It weaves the catalogue and runs the staged
+  wards (public, docs, private, vault, confidential, secret, no‑delete, NDA, retired‑path) in one
+  file; `secret-guard.sh --install` copies that same file where `hooksPath` is not used, and
+  `hoard-guard --install` seats the home's hook. Git runs them on every commit, including the
+  hasty ones.
 
 ## The wards
 

@@ -10,7 +10,7 @@
 # whether a compaction has already fired in this session.
 #
 # ONE COUNTER (2026-11-09). A LIVE pi session publishes its own reading — the harness's
-# number, from `ctx.getContextUsage()` — to <home>/hodd/state/context-left/<session>.json,
+# number, from `ctx.getContextUsage()` — to <home>/state/context-left/<session>.json,
 # written by `.pi/extensions/context-left`. When such a reading names THIS session file and
 # the session is still alive, this door prints it verbatim: one counter, not two. Only when
 # no live reading exists (a finished session, a seat without the extension) does it read the
@@ -48,7 +48,7 @@ _published() {   # <session-file> <json?> → the extension's reading, or nothin
   local sf="$1" want_json="$2" home dir
   home="$(bash -c '. "$1" 2>/dev/null; ymir_home_root H; printf "%s" "$H"' _ "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null | tail -1)"
   [ -n "$home" ] || return 1
-  dir="$home/hodd/state/context-left"
+  dir="$home/state/context-left"
   [ -d "$dir" ] || return 1
   WANT_JSON="$want_json" python3 - "$dir" "$sf" <<'PYPUB'
 import glob, json, os, sys

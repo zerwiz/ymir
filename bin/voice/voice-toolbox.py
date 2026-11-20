@@ -38,9 +38,9 @@ import voice_tools  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[2]
 HOME = Path(os.environ.get("YMIR_HOME") or (Path.home() / "Documents" / "ymirhome"))
-SETTINGS = HOME / "hodd" / "state" / "rodd" / "settings.json"
-MEMORY = HOME / "hodd" / "state" / "rodd" / "memory.jsonl"
-LOSSES = HOME / "hodd" / "state" / "rodd" / "losses.jsonl"
+SETTINGS = HOME / "state" / "rodd" / "settings.json"
+MEMORY = HOME / "state" / "rodd" / "memory.jsonl"
+LOSSES = HOME / "state" / "rodd" / "losses.jsonl"
 LOOPBACK = ("127.0.0.1", "localhost", "[::1]")
 
 # A memory item that asks her to MERGE is void (plan 254 B7, 2026-11-11): merging is the

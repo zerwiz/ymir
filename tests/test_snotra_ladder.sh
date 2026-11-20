@@ -28,12 +28,12 @@ export YMIR_STATE_DIR="$TMP/state"
 export SNOTRA_LADDER_NOTIFY_LOG="$TMP/hotline.log"
 export SNOTRA_WATCH_UNIT="snotra-selftest-no-such-unit.service"
 export SNOTRA_LADDER_QUIET=0
-mkdir -p "$YMIR_STATE_DIR" "$YMIR_HOME/hodd/life/meetings/self"
+mkdir -p "$YMIR_STATE_DIR" "$YMIR_HOME/life/meetings/self"
 
 # the GOOD meeting is the NEWER one, so `last` (which reads the newest) is the one this
 # test changes its mind about — otherwise the stopped meeting would always be "last".
-good="$YMIR_HOME/hodd/life/meetings/self/2026-01-04-good"
-bad_dir="$YMIR_HOME/hodd/life/meetings/self/2026-01-03-bad"
+good="$YMIR_HOME/life/meetings/self/2026-01-04-good"
+bad_dir="$YMIR_HOME/life/meetings/self/2026-01-03-bad"
 mkdir -p "$good" "$bad_dir"
 printf '%s\n' '{"id":"2026-01-04-good","title":"The good call","started_at":"2026-01-04T10:00:00","state":"captured"}' >"$good/meeting.json"
 printf '%s\n' '{"id":"2026-01-03-bad","title":"The bad call","started_at":"2026-01-03T10:00:00","state":"captured"}' >"$bad_dir/meeting.json"

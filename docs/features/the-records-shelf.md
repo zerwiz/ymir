@@ -149,7 +149,7 @@ where the shelves are:
 
 ```
   legal: False
-  because: it is inside the home but on no legal shelf — file it under hodd/docs · hodd/life/<domain> · hodd/plans · hodd/data · hodd/identity · hodd/memory · hodd/reference
+  because: it is inside the home but on no legal shelf — file it under hodd/docs · life/<domain> · hodd/plans · hodd/data · hodd/identity · hodd/memory · hodd/reference
 ```
 
 Move a file in (it is a `git mv`, so the home's history shows a rename, not a

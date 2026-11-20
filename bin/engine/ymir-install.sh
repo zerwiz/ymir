@@ -1617,7 +1617,14 @@ step_room() {
 }
 
 step_gates() {
-  local hooks="$ROOT/.git/hooks" pre_commit="$ROOT/.git/hooks/pre-commit" pre_push="$ROOT/.git/hooks/pre-push"
+  # The hooks directory GIT consults, not a guessed `.git/hooks`: the install seats
+  # `core.hooksPath .githooks` (2026-11-20), so this check must ask git or it would report the
+  # shipped hooks as absent on every machine that has them.
+  local hooks pre_commit pre_push
+  hooks="$(git -C "$ROOT" rev-parse --git-path hooks 2>/dev/null)" || hooks=""
+  [ -n "$hooks" ] || { add gates SKIP "not a git checkout"; return; }
+  case "$hooks" in /*) ;; *) hooks="$ROOT/$hooks" ;; esac
+  pre_commit="$hooks/pre-commit"; pre_push="$hooks/pre-push"
   if [ ! -d "$hooks" ]; then add gates SKIP "not a git checkout"; return; fi
   if [ "$CHECK" = 1 ]; then
     if [ -x "$SCRIPT_DIR/../gates/seat-woven-driver.sh" ] && "$SCRIPT_DIR/../gates/seat-woven-driver.sh" --check >/dev/null 2>&1; then

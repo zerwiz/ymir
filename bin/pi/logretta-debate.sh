@@ -56,7 +56,7 @@ seats_list() { python3 -c "import sys,yaml;d=yaml.safe_load(open('$STACK')) or {
 persona() { ls "$ROOT"/.agents/agents/"$1"-*.md "$ROOT"/.agents/agents/"$1".md 2>/dev/null | head -1; }
 
 last_line_of() {  # <room> <speaker> → "id<TAB>text"
-  python3 - "$H/hodd/state/assistant/rooms/$1.jsonl" "$2" <<'PY'
+  python3 - "$H/state/assistant/rooms/$1.jsonl" "$2" <<'PY'
 import sys, json, os
 path, who = sys.argv[1], sys.argv[2]
 if not os.path.exists(path): raise SystemExit(0)

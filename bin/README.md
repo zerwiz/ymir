@@ -75,4 +75,3 @@ A folder with no row in `bin/gates/registers/folders.tsv` is not an error — it
 renders `(no purpose recorded)`, and adding the line there is the one place the
 
 purpose is kept.
-

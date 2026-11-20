@@ -85,7 +85,7 @@ can start the existing services through `voice-service.ps1`; Linux uses its
 already running engines. See [file voice controls](voice-files-on-windows.md).
 
 Swedish uses the private installer contract at
-`$YMIR_HOME/hodd/state/runtime/skirnir-swedish/installation.json`. Its recorded
+`$YMIR_HOME/state/runtime/skirnir-swedish/installation.json`. Its recorded
 `executable` and `arguments` provide the verified file-only invocation; the
 actual script bytes must match `script_sha256` before execution. Missing or
 changed checksums and unexpected invocation flags disable the Swedish route.

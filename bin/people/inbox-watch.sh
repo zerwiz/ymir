@@ -7,7 +7,7 @@
 #
 #   bin/people/inbox-watch.sh [--days 3] [--dry-run] [--quiet]
 #
-# State: $YMIR_HOME/hodd/state/people/inbox-seen.json — message ids already announced, so a
+# State: $YMIR_HOME/state/people/inbox-seen.json — message ids already announced, so a
 # reply is announced once. Stateless otherwise: read → compare → announce → exit.
 #
 # Exit: 0 ok (including "nothing new") · 1 a surface could not be read · 2 usage.
@@ -33,7 +33,7 @@ while [ $# -gt 0 ]; do
 done
 
 REG="$HOME_R/hodd/identity/collaborators.yaml"
-STATE_DIR="$HOME_R/hodd/state/people"
+STATE_DIR="$HOME_R/state/people"
 SEEN="$STATE_DIR/inbox-seen.json"
 mkdir -p "$STATE_DIR" 2>/dev/null || true
 

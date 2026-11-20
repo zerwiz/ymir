@@ -35,7 +35,7 @@ export HOME="$T/home" XDG_STATE_HOME="$T/xdg"
 export BROKK_STATE_OVERRIDE="$T/state" BROKK_MACHINE_STATE_DIR="$T/xdg/ymir"
 export YMIR_STATE_DIR="$T/state" BROKK_SESSION_PID="$$"
 export YMIR_ARM_TREE=1   # plan 257 H6: test this tree's client, never the operator's pin
-mkdir -p "$T/xdg/ymir" "$T/state" "$T/home" "$T/ymirhome/hodd/state"
+mkdir -p "$T/xdg/ymir" "$T/state" "$T/home" "$T/ymirhome/state"
 
 # The real notify door, dry: its decision ledger is real, its desktop leg is never reached.
 cat > "$T/notify.sh" <<EOF

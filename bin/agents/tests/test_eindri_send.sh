@@ -39,6 +39,10 @@ S="${STUB_DIR:?}"
 case "${1:-} ${2:-}" in
   "agent --help") cat "$S/help.txt" ;;
   "agent get")
+    # A PANE ID ALWAYS CARRIES A COLON (w1:p1). A target without one is not a pane at all — that is
+    # what herdr answered on 2026-11-20 with `agent_not_found` when it was handed an errand id, and
+    # the stub says the same so the door's resolution can be proved.
+    case "${3:-}" in *:*) ;; *) printf '{"error":{"code":"agent_not_found","message":"no agent with that name"}}\n'; exit 1 ;; esac
     [ -f "$S/noagent" ] && { printf '{"error":{"message":"no agent in that pane"}}\n'; exit 1; }
     printf '{"result":{"agent":{"agent":"pi","agent_status":"%s","pane_id":"%s"}}}\n' \
       "$(cat "$S/status" 2>/dev/null || echo unknown)" "${3:-}" ;;
@@ -173,6 +177,43 @@ if [ ! -s "$T/stub/ssh.log" ]; then good 'and dials nothing at all'; else bad 'a
 reset; pi_box '' >"$T/stub/pane.txt"
 rc="$(send w39:p1V 'the brief')"
 if [ ! -s "$T/stub/ssh.log" ] && [ "$rc" = 0 ]; then good 'a pane id with one colon never rides ssh'; else bad 'a pane id with one colon never rides ssh' "rc=$rc ssh=$(cat "$T/stub/ssh.log")"; fi
+
+# ── 11. an ERRAND ID is not a pane: it is resolved to the seat its own record names ──
+# Measured 2026-11-20: `eindri-send.sh house-doors-small "…"` answered "no agent stands in
+# house-doors-small" (herdr: agent_not_found) while `state/house-doors-small.meta` said
+# `seat_pane=w1D:p1` and that pane held the working agent. The record is the address.
+reset; pi_box '' >"$T/stub/pane.txt"
+mkdir -p "$HOME/state"
+printf 'id=an-errand\nwindow=w7:p2\nseat_pane=w7:p2\nbackend=herdr\nharness=pi\n' >"$HOME/state/an-errand.meta"
+rc="$(send an-errand 'the brief')"
+if [ "$rc" = 0 ]; then good 'an errand id is resolved to its recorded pane and the brief lands'
+else bad 'an errand id is resolved to its recorded pane and the brief lands' "rc=$rc $(head -3 "$T/err")"; fi
+grep -q '"an-errand","this machine","w7:p2"' "$T/out" \
+  && good 'the row names the resolved pane, so the record and the send agree' \
+  || bad 'the row names the resolved pane, so the record and the send agree' "$(cat "$T/out")"
+grep -q 'is an errand, not a pane' "$T/err" && good 'the resolution is SAID, not silent' || bad 'the resolution is SAID, not silent' "$(head -3 "$T/err")"
+
+# an errand whose record names a pane with no agent is refused, and named
+reset; : >"$T/stub/noagent"
+printf 'id=dead-errand\nseat_pane=w7:p9\n' >"$HOME/state/dead-errand.meta"
+rc="$(send dead-errand 'the brief')"
+if [ "$rc" = 3 ] && [ ! -s "$T/stub/sent.log" ]; then good 'an errand whose recorded seat is empty is refused, and nothing is typed'
+else bad 'an errand whose recorded seat is empty is refused, and nothing is typed' "rc=$rc $(head -2 "$T/err")"; fi
+rm -f "$T/stub/noagent"
+
+# ── 12. --resolve answers "which pane does this mean?" with no herdr and no send ─────
+reset
+env PATH="$T/bin:$PATH" YMIR_FLEET_REGISTRY="$HOME/hodd/data/fleet.json" \
+    bash "$DOOR" --resolve an-errand >"$T/out" 2>"$T/err"
+grep -q '"an-errand","w7:p2","state/an-errand.meta"' "$T/out" \
+  && good '--resolve names the pane and the record it came from' \
+  || bad '--resolve names the pane and the record it came from' "$(cat "$T/out")"
+[ ! -s "$T/stub/sent.log" ] && good '--resolve types nothing' || bad '--resolve types nothing' "$(cat "$T/stub/sent.log")"
+env PATH="$T/bin:$PATH" YMIR_FLEET_REGISTRY="$HOME/hodd/data/fleet.json" \
+    bash "$DOOR" --resolve w1:p1 >"$T/out" 2>&1
+grep -q '"w1:p1","w1:p1","no errand record' "$T/out" \
+  && good 'a real pane id resolves to itself' \
+  || bad 'a real pane id resolves to itself' "$(cat "$T/out")"
 
 printf '\neindri-send: %s ok, %s failed\n' "$ok" "$fail"
 [ "$fail" = 0 ]

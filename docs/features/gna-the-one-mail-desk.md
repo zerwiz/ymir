@@ -7,8 +7,13 @@ word** that gave it. **Gná** is the messenger who carries word and brings it ba
 never speaks for the Allfather.
 
 **What you need.** A scoped account in the vault (the Gmail grant), and the desk service raised. The
-store lives in the home (`hodd/memory/mail/`), never the repo — and the message bodies themselves are
-git-ignored: schema, scope and retention travel, raw mail does not.
+store lives in the home (`hodd/memory/mail/`), never the repo — and the message spine **does** travel
+with the home, **redacted on commit**: `.gitattributes` marks it `filter=gna-redact` and
+`hodd/bin/mail-redact.py` replaces credential values with `[redacted]` in the committed blob while
+your working copy keeps the letter whole. Git config does not travel with a clone, so seat the filter
+once per home: `bin/vault/home-sync.sh setup` (the hourly clock does it too), and
+`bin/vault/home-sync.sh filter-check hodd/memory/mail/messages.jsonl` answers whether this seat
+redacts. `home-sync.sh ship` refuses the spine where it is not seated.
 
 **The commands**
 
@@ -19,21 +24,21 @@ python3 gna_import.py --account <the scoped account> --dry-run   # read since th
 python3 gna_import.py --account <the scoped account>            # fill the store
 python3 gna_import.py --account <the scoped account> --days 30   # a backfill: ignore the mark
 
-python3 gna_desk.py            # the desk on 127.0.0.1:8494 (token: hodd/state/gna-desk.token)
+python3 gna_desk.py            # the desk on 127.0.0.1:8494 (token: state/gna-desk.token)
 python3 gna_desk.py --print-token
 
 python3 tests/test_gna.py      # 49 proofs, including "no file here can send"
 ```
 
 **The window is a mark, not a number of days.** Each account keeps a high-water mark of the newest
-message the desk has read (`hodd/state/gna-mail-watermark.json`), and every run asks the mailbox
+message the desk has read (`state/gna-mail-watermark.json`), and every run asks the mailbox
 for **everything since it** — so a run after a week of downtime reads the whole week, and nothing
 that arrived while the desk was down is silently outside the question. `--days` is still there, as an
 override for a deliberate backfill.
 
 **When the desk was blind, the run says so.** Before it reads, the clock measures the silence. When
 that silence is wider than the run interval (`GNA_RUN_INTERVAL_HOURS`, default 24) it is named in
-days, with both ends, in the run's output and in `hodd/state/gna-mail-last-run.json`:
+days, with both ends, in the run's output and in `state/gna-mail-last-run.json`:
 
 ```
 gna-mail[import] GAP the desk was blind for 7 days — from 2026-11-09T18:19:50+00:00 to
@@ -221,3 +226,4 @@ conversations that happen to share a subject stay apart.
   `docs/fixes/mail/2026-11-06-the-mail-desk-claims-its-own-port.md`): it listens on **8494**, and 8490 now belongs to
   nobody — the share door beside it took 8488 instead. A stale number in a symptom table teaches a person to look at
   a port that will never answer.
+- **2026-11-20** — the line above said the message bodies are git-ignored and raw mail does not travel. Both are false: the spine travels with the home and is redacted on commit by `filter.gna-redact` (`hodd/bin/mail-redact.py`, plan 116 §18), seated by `bin/vault/home-sync.sh setup` and by the hourly clock, and `ship` refuses the spine on a seat without it. Proof: `bin/vault/tests/test_home_redaction_filter.sh`; the fix note is `docs/fixes/vault/2026-11-20-the-redaction-filter-is-seated.md`.

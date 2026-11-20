@@ -96,7 +96,7 @@ bin/mail/draft-age.sh --weekly       # the week: every draft, the trend, one lin
 unfinished correspondence by Friday. The brief lists only the offenders; the sweep lists the week,
 oldest first, numbered, each with its age.
 
-**It keeps the trend.** Every run appends one row to `hodd/state/draft-trend.jsonl` — `{at, drafts,
+**It keeps the trend.** Every run appends one row to `state/draft-trend.jsonl` — `{at, drafts,
 aged, oldest_days}`. Nothing is ever rewritten, so a habit is visible across weeks in a way a single
 morning can never show.
 
@@ -113,7 +113,7 @@ sweep looked. A nag gets muted, and a muted door is a dead one.
 flowchart TD
     row[Nornir · @heart Mon 09:15] --> door[bin/mail/draft-age.sh --weekly]
     door --> drafts[(Gmail drafts)]
-    door -->|every run| trend[(hodd/state/draft-trend.jsonl<br/>append-only)]
+    door -->|every run| trend[(state/draft-trend.jsonl<br/>append-only)]
     door -->|a week with no drafts| rune[one no-op Rune · nothing on the phone]
     door -->|a week with any draft| line[ONE line via bin/notify/send.sh]
     line -->|send / edit / discard per draft| phone[the phone]
@@ -125,7 +125,7 @@ A skip and an unread mailbox are **not** a quiet week: with no grant the door pr
 and writes **no** trend row, and an unreadable mailbox stops the sweep with `UNABLE` (exit 3). Only a
 week it really read, and really found empty, is silent.
 
-The trend lives in your **home**, never in this repository — `hodd/state/draft-trend.jsonl`.
+The trend lives in your **home**, never in this repository — `state/draft-trend.jsonl`.
 
 The row is in `config/cron.yaml.example` and is seated into an existing home by migration
 `0025-the-weekly-draft-sweep`:

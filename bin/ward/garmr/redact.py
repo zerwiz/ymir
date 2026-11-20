@@ -42,7 +42,7 @@ BEARER_HEADER = re.compile(r"(?i)(bearer\s+)([^\s\"']+)")
 SENSITIVE_MARKERS = (
     "hodd/data/snotra",
     "hodd/evidence",
-    "hodd/life/meetings",
+    "life/meetings",
     "hodd/memory/snotra",
     "hodd/secrets",
     "hnitbjorg",

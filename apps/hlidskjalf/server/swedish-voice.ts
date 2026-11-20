@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 /** The private installer records the verified PowerShell 7 executable. No
  * account-specific/package path belongs in public code, and 5.1 is no fallback. */
 export function swedishVoice(home: string) {
-  const directory = process.env.SKIRNIR_SWEDISH_DIR ?? join(home, 'hodd/state/runtime/skirnir-swedish');
+  const directory = process.env.SKIRNIR_SWEDISH_DIR ?? join(home, 'state/runtime/skirnir-swedish');
   let manifest: { executable?: string; arguments?: string[]; script_sha256?: string } = {};
   try { manifest = JSON.parse(readFileSync(join(directory, 'installation.json'), 'utf8')); } catch { /* unavailable */ }
   const executable = process.env.SKIRNIR_SWEDISH_PWSH ?? manifest.executable ?? '';

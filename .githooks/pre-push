@@ -8,16 +8,24 @@
 # the push ADDS, concurrently, inside a hard budget, and it never refuses a push for a
 # fault in a file the push did not touch (plan 243 §3, parts B/C/D).
 #
-# One home for this text: the install step (`bin/seat/...`, `bin/engine/ymir-install.sh`)
-# seats it with `git config core.hooksPath .githooks`, and
-# `bin/gates/guards/fixes-guard.sh --install` copies THIS file into .git/hooks/pre-push for
-# a checkout that has no hooksPath. Two hand-written hook bodies was two gates that could
-# disagree; measured 2026-11-11, one of them ran the tree wards only.
+# One home for this text: the install step (`bin/seat/...`, `bin/engine/ymir-install.sh`) and
+# `bin/gates/guards/fixes-guard.sh --install` seat it with `git config core.hooksPath .githooks`.
+# A RELATIVE hooksPath is resolved against the worktree that is PUSHING (git runs a hook with cwd
+# = that worktree's top level, measured 2026-11-20), so a Yggdrasil worktree runs ITS OWN
+# .githooks/pre-push and never the main tree's. Two hand-written hook bodies was two gates that
+# could disagree; measured 2026-11-11, one of them ran the tree wards only.
+#
+# THE ROOT IS RESOLVED, NEVER ASSUMED (2026-11-20). `dirname ${BASH_SOURCE[0]}/..` is right only
+# while this file sits in `.githooks`; copied into `<git-dir>/hooks` it answers `.git`, which holds
+# no `bin/gates/guards.sh` — so the copy skipped EVERY ward, in silence, for weeks. `git rev-parse
+# --show-toplevel` answers the pushing worktree from either seat; the source-relative answer is the
+# fallback for a tree git cannot read.
 #
 #   YMIR_PREPUSH_BUDGET   seconds the wards may spend (default 60)
 #   YMIR_SKIP_FIXES_GUARD=1  the loud override for the fix-note requirement
 set -u
-root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+[ -n "$root" ] || root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root" || exit 0
 
 if [ ! -r bin/gates/guards.sh ]; then

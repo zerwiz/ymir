@@ -10,7 +10,7 @@
 #   bash systems/snotra/services/approve/snotra-approve.sh approve <draft-id>
 #   systems/snotra/services/letters/mail-send.sh send <draft-id>
 #
-# The rendered letter is kept in the hoard (`hodd/state/collab/letters/`) so the record of what was asked
+# The rendered letter is kept in the hoard (`state/collab/letters/`) so the record of what was asked
 # survives the draft.
 #
 # Exit: 0 drafted (or rendered) · 1 a required input is missing or the gate refused · 2 usage.
@@ -44,7 +44,7 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then . "$ROOT/bin/vault/hoard-lib.sh" 2>
 home="${YMIR_HOME:-}"
 [ -n "$home" ] || ymir_home_root home 2>/dev/null || true
 [ -n "$home" ] || { printf 'letter: no hoard — run bin/engine/ymir-install.sh, or set YMIR_HOME\n' >&2; exit 1; }
-outdir="$home/hodd/state/collab/letters"
+outdir="$home/state/collab/letters"
 mkdir -p "$outdir"
 
 first="${person%% *}"

@@ -85,7 +85,7 @@ def brief(home, where):
     else:
         out.append('home folder: none — add `seat:` to its registry entry')
     # the operator's own file: named for what it is, not for the vocabulary the mocks scan watches
-    his_file = os.path.join(home, 'hodd', 'life', 'personal', 'me', 'todo.md')
+    his_file = os.path.join(home, 'life', 'personal', 'me', 'todo.md')
     open_lines = [l for l in head(his_file, 10_000) if l.lstrip().startswith('- [ ]')]
     hits = mentions(open_lines, words)[:TODO_LINES]
     out.append(f'--- open to-do lines naming it: {len(hits)}')
@@ -102,7 +102,7 @@ def self_test():
     ok = True
     with tempfile.TemporaryDirectory() as t:
         home = os.path.join(t, 'home'); repo = os.path.join(t, 'code', 'demo')
-        os.makedirs(os.path.join(home, 'hodd', 'identity')); os.makedirs(os.path.join(home, 'hodd', 'life', 'personal', 'me'))
+        os.makedirs(os.path.join(home, 'hodd', 'identity')); os.makedirs(os.path.join(home, 'life', 'personal', 'me'))
         os.makedirs(os.path.join(home, 'hodd', 'memory', 'daily')); os.makedirs(os.path.join(home, 'realm', 'demo'))
         os.makedirs(repo)
         subprocess.run(['git', 'init', '-q', repo]); subprocess.run(['git', '-C', repo, 'remote', 'add', 'origin', 'git@github.com:Acme/Demo-App.git'])
@@ -110,7 +110,7 @@ def self_test():
             '- id: demo-app\n  name: Demo-App\n  company: acme\n  repo: Acme/Demo-App\n  seat: realm/demo\n  aliases: [Widget]\n'
             '- id: other\n  name: Other\n  repo: Acme/Other\n')
         open(os.path.join(home, 'realm', 'demo', 'NOW.md'), 'w').write('# Demo — where we are\nthe gate is waiting on review\n')
-        open(os.path.join(home, 'hodd', 'life', 'personal', 'me', 'todo.md'), 'w').write(
+        open(os.path.join(home, 'life', 'personal', 'me', 'todo.md'), 'w').write(
             '- [ ] send the demo letter\n- [ ] ship the Widget\n- [x] done demo thing\n- [ ] unrelated task\n')
         open(os.path.join(home, 'hodd', 'memory', 'daily', '2026-01-02.md'), 'w').write('worked on Demo-App all day\nlunch\n')
         b = brief(home, repo)

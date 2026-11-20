@@ -53,10 +53,10 @@ SHELVES = [
     ("hodd/docs/audits/", r"audit|review|scan"),
     ("hodd/docs/devtools/", r"devtool|editor|terminal|nvim|shell"),
     ("hodd/docs/", r"doc|guide|manual|reference"),
-    ("hodd/life/marketing/", r"postiz|social|campaign|marketing|brand|content|seo"),
-    ("hodd/life/meetings/", r"meeting|minute|standup|1:1|transcript"),
-    ("hodd/life/personal/", r"journal|diary|personal|schedule"),
-    ("hodd/life/work/", r"client|contract|paid|invoice"),
+    ("life/marketing/", r"postiz|social|campaign|marketing|brand|content|seo"),
+    ("life/meetings/", r"meeting|minute|standup|1:1|transcript"),
+    ("life/personal/", r"journal|diary|personal|schedule"),
+    ("life/work/", r"client|contract|paid|invoice"),
     ("hodd/plans/", r"plan|roadmap|proposal|strategy"),
     ("hodd/data/", r"registry|inventory|register|operator|fleet"),
     ("hodd/identity/", r"identity|roster|company|seat"),
@@ -75,11 +75,11 @@ def classify(rel: str) -> tuple[bool, str, str]:
         return True, "hodd/secrets/", "a credential — the one place values may live (never a document)"
     for shelf, _ in SHELVES:
         if rel.startswith(shelf):
-            if fnmatch.fnmatch(rel, "hodd/life/*/README.md") or rel.endswith(".md"):
+            if rel.endswith(".md"):
                 return True, shelf, f"a home document that belongs on {shelf}"
     if re.match(r"^svartalfaheim/[a-z0-9-]+/(projects|workspace)/[a-z0-9-]+/", rel):
         return True, "svartalfaheim/", "realm + project scoped material"
-    return False, "", ("it is inside the home but on no legal shelf — file it under hodd/docs · hodd/life/<domain> · "
+    return False, "", ("it is inside the home but on no legal shelf — file it under hodd/docs · life/<domain> · "
                        "hodd/plans · hodd/data · hodd/identity · hodd/memory · hodd/reference")
 
 

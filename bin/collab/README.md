@@ -48,7 +48,7 @@ what it leaves alone, commits, merges into the base branch and pushes.
 ## Where the state lives
 
 - the register — `$YMIR_HOME/hodd/data/collaboration.yaml` (private; no name is hardcoded in the doors)
-- rendered letters — `$YMIR_HOME/hodd/state/collab/letters/`
+- rendered letters — `$YMIR_HOME/state/collab/letters/`
 - the plan and the audit record — plan 154, and `products/gimle/internal/open-items.md`
 
 ## Laws it obeys

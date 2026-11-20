@@ -31,7 +31,7 @@ exec python3 - "$ROOT" "$HOME_R" "$WHAT" <<'PY'
 import json, os, re, sys
 
 root, home, what = sys.argv[1], sys.argv[2], sys.argv[3]
-digest = os.path.join(home, "hodd", "state", "assistant", "digest.jsonl")
+digest = os.path.join(home, "state", "assistant", "digest.jsonl")
 
 if what == "names":
     # the SAME reader the people-guard uses, so the ward and the test cannot disagree

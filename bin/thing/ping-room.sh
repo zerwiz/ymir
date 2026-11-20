@@ -17,7 +17,7 @@
 #   PING_MIROTALK_DIR     a MiroTalk checkout (default: ~/thing/mirotalk if present)
 #   PING_CMD              override the room command (tests); PORT is exported
 #   PING_IMAGE            docker image to run when no checkout exists
-#   PING_STATE            state file (default <home>/hodd/state/thing/room.json)
+#   PING_STATE            state file (default <home>/state/thing/room.json)
 #   PING_ROOM_HOST        the PUBLIC hostname your tunnel serves the room on (required by `claim`)
 #
 # Exit: 0 ok · 1 error · 2 usage · 3 refused (already raised / claim held)
@@ -36,7 +36,7 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
 fi
 ymir_home_root YMIR_HOME 2>/dev/null || true
 YMIR_HOME="${YMIR_HOME:?YMIR_HOME unresolved}"
-STATE="${PING_STATE:-$YMIR_HOME/hodd/state/thing/room.json}"
+STATE="${PING_STATE:-$YMIR_HOME/state/thing/room.json}"
 mkdir -p "$(dirname "$STATE")"
 ROOM_DIR="${PING_MIROTALK_DIR:-$HOME/thing/mirotalk}"
 PORT="${PING_PORT:-3010}"
@@ -76,7 +76,7 @@ cmd_start(){
   elif [ -d "$ROOM_DIR" ]; then cmd="node $ROOM_DIR/app/src/server.js"
   elif [ -n "${PING_IMAGE:-}" ] && command -v docker >/dev/null; then cmd="docker run --rm -p 127.0.0.1:$PORT:3000 -e PORT=3000 $PING_IMAGE"
   else die "no MiroTalk: set PING_MIROTALK_DIR, PING_IMAGE, or PING_CMD"; fi
-  local log="$YMIR_HOME/hodd/state/thing/room.log"
+  local log="$YMIR_HOME/state/thing/room.log"
   ( export PORT HOST=127.0.0.1 NODE_ENV=production; exec $cmd ) >>"$log" 2>&1 &
   local pid=$!
   sleep 2
@@ -114,15 +114,15 @@ cmd_url(){ alive && json "$STATE" get url || { printf 'room down\n' >&2; exit 1;
 cmd_claim(){
   alive || die "raise the room first"
   command -v cloudflared >/dev/null || die "cloudflared not installed"
-  if [ -f "$YMIR_HOME/hodd/state/thing/claim.json" ]; then
-    local h; h="$(python3 -c "import json;print(json.load(open('$YMIR_HOME/hodd/state/thing/claim.json')).get('host',''))" 2>/dev/null || true)"
+  if [ -f "$YMIR_HOME/state/thing/claim.json" ]; then
+    local h; h="$(python3 -c "import json;print(json.load(open('$YMIR_HOME/state/thing/claim.json')).get('host',''))" 2>/dev/null || true)"
     [ "$h" = "$(hostname)" ] || { printf 'refused\tclaim held by %s\n' "$h"; exit 3; }
   fi
   [ -n "${PING_ROOM_HOST:-}" ] || die "no public name — set PING_ROOM_HOST to the hostname your tunnel serves the room on"
-  printf '{"host":"%s","since":"%s","url":"https://%s"}\n' "$(hostname)" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$PING_ROOM_HOST" > "$YMIR_HOME/hodd/state/thing/claim.json"
+  printf '{"host":"%s","since":"%s","url":"https://%s"}\n' "$(hostname)" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$PING_ROOM_HOST" > "$YMIR_HOME/state/thing/claim.json"
   printf 'claimed\t%s\t%s\n' "$PING_ROOM_HOST" "$(hostname)"
 }
-cmd_release(){ rm -f "$YMIR_HOME/hodd/state/thing/claim.json"; printf 'released\t%s\n' "${PING_ROOM_HOST:-the claim}"; }
+cmd_release(){ rm -f "$YMIR_HOME/state/thing/claim.json"; printf 'released\t%s\n' "${PING_ROOM_HOST:-the claim}"; }
 
 case "$ACTION" in
   start) shift; cmd_start "$@" ;;

@@ -17,7 +17,7 @@
 #   nornir-job-week-pin.sh --rc N           the exit code that captured answer carries
 #   nornir-job-week-pin.sh --now ISO        the instant the row carries (a fixture)
 #
-# WHAT IT WRITES: one row in <home>/hodd/state/pin-week.jsonl — {at,value,detail} — where `value` is
+# WHAT IT WRITES: one row in <home>/state/pin-week.jsonl — {at,value,detail} — where `value` is
 # the distance in commits behind main, and `null` when there is no pin to measure. Appended, never
 # rewritten (bin/time/week-pass-lib.sh owns that law for all three weekly passes).
 #

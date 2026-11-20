@@ -35,9 +35,9 @@ seat on 2026-11-16: the wake queue held 106 lock-asks in two days, and not one b
 Only two paths, and nothing else:
 
 ```
-hodd/life/personal/me/todo.md            a proposal block between two markers, inside the
+life/personal/me/todo.md            a proposal block between two markers, inside the
                                          house-kept half. His own half is never touched.
-hodd/state/dispatch/runs.jsonl           append-only: one row per proposal, refusal or failure,
+state/dispatch/runs.jsonl           append-only: one row per proposal, refusal or failure,
                                          and one row per run saying `work` or `no-op` and why.
 ```
 
@@ -118,7 +118,7 @@ bin/engine/units.sh check                 # is every installed unit on the pin a
 | no block in the to-do | nothing is owed yet — the first proposal opens the block |
 | `bin/engine/units.sh check` complains | the timer is in the register but not on this machine's pin yet: run the install, or `units.sh write dispatch` |
 
-The record is `hodd/state/dispatch/runs.jsonl` — one line per event, one line per run. Read the last
+The record is `state/dispatch/runs.jsonl` — one line per event, one line per run. Read the last
 run row first: it says the verdict, the counts and every reason, including `no-candidates`.
 
 ## CHANGE LOG

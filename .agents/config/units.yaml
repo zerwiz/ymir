@@ -151,7 +151,7 @@ units:
     mode: render
     kind: timer
     roles: [heart, forge, dev]
-    description: "dispatcher — incoming work becomes a bounded errand or a line on his list: the desk's needs-you queue and the wake queue, proposed under the INBOX markers, every run in hodd/state/dispatch/runs.jsonl (plan 304 §4.3)"
+    description: "dispatcher — incoming work becomes a bounded errand or a line on his list: the desk's needs-you queue and the wake queue, proposed under the INBOX markers, every run in state/dispatch/runs.jsonl (plan 304 §4.3)"
     workdir: "."
     exec: "/usr/bin/env bash bin/time/nornir-job-dispatch.sh"
     timer: { description: "dispatcher — every 10 minutes: read the queues, propose at most DISPATCH_MAX, record the run", boot: 6min, every: 10min, accuracy: 30s }

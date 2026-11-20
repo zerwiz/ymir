@@ -23,7 +23,7 @@ while [ $# -gt 0 ]; do
     *) shift ;;
   esac
 done
-DB="$HOME_R/hodd/state/assistant/assistant.db"
+DB="$HOME_R/state/assistant/assistant.db"
 [ -f "$DB" ] || { printf 'prune: no ledger\n'; exit 0; }
 python3 - "$DB" "$DAYS" "$APPLY" <<'PY'
 import sqlite3, sys, time

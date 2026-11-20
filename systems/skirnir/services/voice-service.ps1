@@ -12,7 +12,7 @@ function Setting([string]$Name, [string]$Default) {
     if ($value) { return $value }; return $Default
 }
 $homeRoot = Setting 'YMIR_HOME' (Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'ymirhome')
-$runtime = Setting 'YMIR_VOICE_RUNTIME' (Join-Path $homeRoot 'hodd/state/runtime')
+$runtime = Setting 'YMIR_VOICE_RUNTIME' (Join-Path $homeRoot 'state/runtime')
 function Definition([string]$Name) {
     if ($Name -eq 'kokoro') {
         $dir = Join-Path $runtime 'kokoro'

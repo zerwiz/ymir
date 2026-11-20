@@ -22,7 +22,7 @@
 # Classification, by evidence, in this order: a path naming a known project in
 # hodd/identity/projects.yaml → that project's shelf; a plan-shaped or numbered-plan
 # document → the plan ledger, PROPOSED only; a note carrying a known domain
-# (marketing · personal · work · meetings) → hodd/life/<domain>/; anything else is
+# (marketing · personal · work · meetings) → life/<domain>/ (plan 331); anything else is
 # reported as UNPLACEABLE, with the reason it could not be placed. An unplaceable file
 # is never dumped into docs/.
 #
@@ -179,7 +179,7 @@ classify() {  # <abs-path>
 
   # the vault's own machine shelves are never swept
   case "$p" in
-    "$HOARD"/secrets|"$HOARD"/secrets/*|"$HOARD"/state|"$HOARD"/state/*|"$HOARD"/data|"$HOARD"/data/*|"$YMIR_HOME"/state|"$YMIR_HOME"/state/*|"$YMIR_HOME"/.git|"$YMIR_HOME"/.git/*)
+    "$HOARD"/secrets|"$HOARD"/secrets/*|"$HOARD"/data|"$HOARD"/data/*|"$YMIR_HOME"/state|"$YMIR_HOME"/state/*|"$YMIR_HOME"/.git|"$YMIR_HOME"/.git/*)
       set_class report "" "a machine record under the vault's own shelf — reported, never swept"; return ;;
     "$YMIR_HOME"/.git|"$YMIR_HOME"/.git/*)
       set_class report "" "the vault's own git — reported, never swept"; return ;;
@@ -243,11 +243,11 @@ classify() {  # <abs-path>
     set_class propose "$ledger_default/$base" "plan-shaped by name — a machine PROPOSES the ledger, never files into it"; return
   fi
 
-  # ── 3. a note carrying a KNOWN DOMAIN → hodd/life/<domain>/
+  # ── 3. a note carrying a KNOWN DOMAIN → life/<domain>/
   toks="$(tokens_of "$p")"
   for domain in marketing personal work meetings; do
     if printf '%s\n' "$toks" | grep -qx -- "$domain"; then
-      set_class move "$YMIR_HOME/hodd/life/$domain/$base" "carries the known domain '$domain' → hodd/life/$domain/"
+      set_class move "$(hoard_life)/$domain/$base" "carries the known domain '$domain' → life/$domain/"
       return
     fi
   done

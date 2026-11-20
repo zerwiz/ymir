@@ -84,7 +84,7 @@ def state_dir() -> str:
     env = os.environ.get("GARMR_STATE_DIR")
     if env:
         return os.path.expanduser(env)
-    return os.path.join(ymir_home(), "hodd", "state", "garmr")
+    return os.path.join(ymir_home(), "state", "garmr")
 
 
 def pause_marker() -> str:

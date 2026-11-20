@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # meeting-record-guard.sh — a meeting record is a record: if one is missing, put it back.
 #
-#   meeting-record-guard.sh check   # what is tracked under hodd/life/meetings and missing on disk
+#   meeting-record-guard.sh check   # what is tracked under life/meetings and missing on disk
 #   meeting-record-guard.sh fix     # restore the missing ones from git, and carve a rune for each
 #
-# WHY (2026-10-23): a tracked transcript — a meeting folder under `hodd/life/meetings/`, named by his calendar —
+# WHY (2026-10-23): a tracked transcript — a meeting folder under `life/meetings/` (plan 331), named by his calendar —
 # was found DELETED on disk; the commit guard refused the deletion (Rule 11) and it was restored by hand.
 # The cause was not provable from the logs, and this door exists because "who deleted it" is the wrong first
 # question: the record must not be able to go missing while a meeting is being processed.
@@ -20,7 +20,7 @@ ACTION="${1:-check}"
 [ -d "$H/.git" ] || { printf 'meeting-record-guard: %s is not a git repo — nothing to compare\n' "$H" >&2; exit 3; }
 cd "$H" || exit 3
 
-TRACKED="$(git ls-files 'hodd/life/meetings/**' 2>/dev/null | grep -E '\.(md|txt|json|jsonl)$' || true)"
+TRACKED="$(git ls-files 'life/meetings/**' 2>/dev/null | grep -E '\.(md|txt|json|jsonl)$' || true)"
 [ -n "$TRACKED" ] || { printf 'meeting_record_guard[1]{tracked,missing}: "0","0"\n'; exit 0; }
 TOTAL=$(printf '%s\n' "$TRACKED" | wc -l)
 MISSING=""

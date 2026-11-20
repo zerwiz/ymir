@@ -22,11 +22,11 @@ The installer runs `apply` as part of the `snotra` step, and the versioned migra
 
 | Path | When |
 |---|---|
-| `hodd/life/meetings/` | always, if absent |
+| `life/meetings/` | always, if absent |
 | `hodd/identity/operator.yaml` | only if absent — a blank template to fill in |
 | `hodd/identity/confidential.yaml` | only if absent — empty protected list, markers, deny-by-default surfaces |
-| `hodd/life/meetings/meeting-framework.md` | only if absent — the agnostic Þing framework |
-| `hodd/life/meetings/templates/` | agenda, decision and sign-off templates |
+| `life/meetings/meeting-framework.md` | only if absent — the agnostic Þing framework |
+| `life/meetings/templates/` | agenda, decision and sign-off templates |
 | `config/cron.yaml` Snotra block | only if the marker is absent |
 | `hodd/identity/trello.yaml` | only if absent — board name, lists, label colours |
 | `hodd/identity/cadence.yaml` | only if absent — weekly/monthly/quarterly day and time |

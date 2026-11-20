@@ -47,7 +47,7 @@ KOKORO = os.environ.get("KOKORO_URL", "http://127.0.0.1:8765").rstrip("/")
 BASE = os.environ.get("SNOTRA_TALK_BASE", "http://127.0.0.1:8080/v1").rstrip("/")
 MODEL = os.environ.get("SNOTRA_TALK_MODEL", "qwen3.5-9b@q4_k_s-summarizer")
 STATE = os.path.join(os.environ.get("YMIR_HOME", os.path.expanduser("~")),
-                     "hodd", "state", "snotra")
+                     "state", "snotra")
 
 DIGEST = (
     "You are Skirnir, the Allfather's assistant, speaking aloud in a meeting beside "
@@ -243,7 +243,7 @@ def _ensure_vram(key: str) -> bool:
 
 
 MUTE = os.path.join(os.environ.get("YMIR_HOME", os.path.expanduser("~")),
-                    "hodd", "state", "snotra", "voice-muted")
+                    "state", "snotra", "voice-muted")
 
 
 def muted() -> bool:
@@ -251,7 +251,7 @@ def muted() -> bool:
 
 
 DIGEST_JSONL = os.path.join(os.environ.get("YMIR_HOME", os.path.expanduser("~")),
-                            "hodd", "state", "assistant", "digest.jsonl")
+                            "state", "assistant", "digest.jsonl")
 _STOP = {"the","a","an","is","are","was","were","what","who","why","how","does","do","did",
          "you","your","i","my","me","we","it","its","of","in","on","to","for","and","or",
          "about","that","this","there","tell","know","have","has","holds","hold","can","could",
@@ -698,7 +698,7 @@ class Voice:
         try:
             import glob
             for path in glob.glob(os.path.join(os.environ.get("YMIR_HOME", ""),
-                                               "hodd", "state", "snotra", "meetings", "*",
+                                               "state", "snotra", "meetings", "*",
                                                ".classification")):
                 if "restricted" in open(path, encoding="utf-8").read().lower():
                     return True

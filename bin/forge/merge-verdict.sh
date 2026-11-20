@@ -46,7 +46,7 @@ if [ -z "$_h" ]; then
   declare -f ymir_home_root >/dev/null 2>&1 && ymir_home_root _h 2>/dev/null
 fi
 [ -n "$_h" ] || { printf '%s: no Ymir home resolves (bin/vault/hoard-lib.sh)\n' "$(basename "$0")" >&2; exit 2; }
-store="$_h/hodd/state/gate-verdicts"
+store="$_h/state/gate-verdicts"
 mkdir -p "$store"
 if grep -qs "$head" "$store"/*.txt 2>/dev/null; then
   v=$(grep -h "$head" "$store"/*.txt 2>/dev/null | tail -1)

@@ -2001,3 +2001,76 @@ queue in arrival order. Each door that files a wake names its **class** as a tra
 | `ack` | unchanged: a multiset diff of exactly what the last drain presented |
 
 The proof is `.agents/tests/saga-wake-drain-classes.test.sh`.
+
+## 2026-11-20 — a borrowed dependency closure is the WHOLE closure, or it is not borrowed
+
+Appended; the release model above stands. The economy in `release.sh build` — when the new release's
+lockfiles match the running release's, hard-link its `node_modules` instead of installing again — was
+one directory short, and that one directory stopped `main` from building.
+
+npm **hoists** most packages to the root `node_modules`, but it **nests** a package inside the
+workspace that owns it whenever it cannot hoist it. Measured: `@xterm/xterm` 6 lives at
+`apps/hlidskjalf/node_modules/@xterm/xterm` and nowhere else. The borrow copied `$prev/node_modules`
+only, so every release built after a matching lockfile had no app-local modules at all — Hlidskjalf's
+`tsc --noEmit` failed with `TS2307: Cannot find module '@xterm/xterm'`, and the release still reported
+that it had borrowed a proved closure.
+
+```
+release_borrow[4]{step,rule,why}:
+  "the completeness check","every workspace whose packages the destination's lock nests inside it must exist in the source","a borrow that cannot deliver what the lock declares is refused BEFORE anything is copied"
+  "the refusal","the door falls back to npm ci and exits 13 on its failure","an incomplete closure is a broken release, never a cheap one"
+  "what is copied","the root node_modules AND every nested node_modules found under the source's tree, hard-linked","the app-local package is inside the app's folder, not inside the root one"
+  "the test","bin/engine/tests/test_release_borrow_closure.sh (8 assertions)","the economy must be proved whole, not assumed"
+```
+
+The same rule holds for any future shelf of nested modules (`packages/`, `systems/`, `tools/`, `src/`):
+the lockfile decides what a complete closure is, and `borrow_closure` reads it rather than guessing.
+Fix note: `docs/fixes/hlidskjalf/2026-11-20-a-release-borrowed-a-closure-that-was-not-whole.md`.
+
+## 2026-11-20 — three Eir rows that lied, and the install that made them lie
+
+Appended; the sections above stand. Eir (`bin/agents/eir-doctor.sh`) is only worth its verdict if
+each red row is a real fault and each `fix` clears the row it named. Three rows failed that on the
+night of 2026-11-19, and all three were mended in one change.
+
+**`gates` — a false red, and a hook that ran nothing.** The install copied `.githooks/pre-push`
+into `<git-dir>/hooks/pre-push`, where the hook's own `dirname ${BASH_SOURCE[0]}/..` answered
+`.git` — a directory with no `bin/gates/guards.sh` — so the seated hook skipped **every** ward and
+said nothing, while the row asked whether the copy contained a string the shipped hook had since
+dropped and stayed red for ever. The stones now lie as they should:
+
+- the install is `git config core.hooksPath .githooks`, which is what the hook's own header names.
+  A **relative** `hooksPath` is resolved against the worktree that is *pushing* (git runs a hook
+  with cwd = that worktree's top level), so a Yggdrasil worktree runs its own hook and never the
+  main tree's — the fault the 2026-10-20 fix chased;
+- the copy road survives only where the config cannot be written, and it is correct there too,
+  because every shipped hook resolves its root with `git rev-parse --show-toplevel` and keeps the
+  source-relative answer as its fallback;
+- `s_gates` judges the install: `core.hooksPath` (asked through `git rev-parse --git-path hooks`)
+  must seat a pre-push that **is** the shipped text, or a hook in another directory that still
+  judges the pushing worktree, calls `bin/gates/guards.sh` and gates the branch. A copy that has
+  drifted from `.githooks/pre-push` is a stale gate, not a pass.
+- `secret-guard.sh --install` writes the same one file instead of generating a second pre-commit
+  body, and writes nothing when `hooksPath` already names `.githooks` (that write would have
+  overwritten a **tracked** hook in the working tree). `.githooks/pre-commit` now also carries the
+  weaver and the five staged wards the generated body used to run, so seating the hooks by
+  `hooksPath` loses no refusal.
+
+**`runtimepin` — Eir did not know the apps home.** `ymir-rodd.service` runs
+`~/.local/share/ymir-apps/rodd/current/start.sh`, the home `bin/apps/app-path.sh` gives every app
+that left this tree. Because the unit also names the pin (`Environment=YMIR_RUNTIME_DIR`), it was
+reported `UNREGISTERED — names a Ymir tree but is not in config/units.yaml`, and `units.sh write`
+would have **retargeted** it into a pin that no longer carries `apps/rodd`. A unit or launcher whose
+paths live under the apps home — read from `bin/apps/app-path.sh --list`, never a hardcoded path —
+is the app's own: judged `ok` with its reason, and never retargeted. The row's detail also names the
+pin's verdict now, instead of saying every unit is on the pin beside a red row.
+
+**`agentroad` — a mend that could not clear its own row.** The fault text said
+`bin/engine/units.sh write ratatoskr-relay`, which only writes the unit file: the row stayed red
+until someone enabled it. The `safe` mend writes the unit **and** enables and starts it
+(`systemctl --user enable --now ratatoskr-relay`), and the fault text names both commands.
+
+The proofs are in `bin/agents/tests/test_eir_true_mends.sh`: a throwaway repository pushes from a
+worktree and the wards' own words appear; a copied hook does the same; `s_gates` accepts and refuses
+the three install shapes; a fake unit under a temp apps home stays the app's own through `check` and
+`write --dry-run`; and the agentroad mend is watched through stub doors.
