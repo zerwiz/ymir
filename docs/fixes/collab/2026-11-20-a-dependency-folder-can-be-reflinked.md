@@ -24,3 +24,7 @@ btrfs filesystem du -s <worktree>                                  → 310 MiB e
 python3 bin/collab/tests/test_kit.py -k K03                        → OK
 python3 bin/collab/tests/test_work.py                              → Ran 13 tests … OK
 ```
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #841
