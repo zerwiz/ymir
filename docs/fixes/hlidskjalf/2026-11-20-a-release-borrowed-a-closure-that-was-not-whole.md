@@ -132,3 +132,7 @@ built and proved
 - `apps/hlidskjalf/src/components/Terminal.tsx` — `onData((d: string) => …)`
 - `.agents/skills/galdr-ymirsystem/assets/brokk-distro-runtime.md` — the borrow rule appended to the
   release model's book
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #842
