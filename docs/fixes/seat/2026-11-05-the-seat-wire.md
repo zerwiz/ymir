@@ -35,8 +35,8 @@ seat · text carrying control sequences or over 4000 characters.
 - `seat-wire.sh who heimdall` from nidavellir → `heimdall · Hœnir · w39:p5 · <session id>`.
 - `seat-wire.sh say heimdall "…"` → `say[1]{to,pane,road,recorded}: "heimdall","w39:p5","pane","the-fleet"`, and the far
   seat reported the line arriving **intact with its attribution prefix**.
-- `seat-wire.sh seats` resolves both seats to their tailnet addresses (`ssh heimdall@100.69.101.57`,
-  `ssh zerwizomar@100.110.19.71`) with reachability `up`.
+- `seat-wire.sh seats` resolves both seats to their tailnet addresses (an `ssh <user>@<tailnet-ip>` per seat, taken
+  from the private registry at call time — no address is written here, Rule 39) with reachability `up`.
 
 ## Left open (plan 189)
 
