@@ -26,3 +26,7 @@ outside four English prefixes back to `af_nicole`. The voice she answered in cou
 - `bin/voice/tests/test_voices.sh`: 19 passed, 0 failed (10 new).
 - `set_voice eric` returned `am_eric`. `set_voice santa` was refused with all three ids. `set_voice nobody` was
   refused by name.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #840
