@@ -8,3 +8,7 @@ The secret scan reads the history of every branch. A research errand's salvage b
 branch turned the scan red on `main` and on every pull request. `.scout/raw/*.html` joins the third-party allowlist
 beside lockfiles and bundles. The branch itself is kept (nothing deleted); whether it is reviewed or retired is the
 operator's call.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #853
