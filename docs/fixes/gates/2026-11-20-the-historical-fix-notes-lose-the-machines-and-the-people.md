@@ -75,3 +75,7 @@ judge the filename of a note that already existed.
 - `bin/gates/agnostic-audit.sh` — read, not changed: it was already right, and its findings were real.
 - `docs/fixes/**` — 122 notes redacted, each carrying its dated correction.
 - This note.
+
+## CHANGE LOG
+
+- 2026-11-19 — review-mend: added missing heading for #835
