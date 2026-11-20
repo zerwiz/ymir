@@ -48,3 +48,7 @@ it rode the voice so hard.
 
 A person speaking for ten seconds into the live window, with the check showing one band. A worker at night does
 not speak into the room. The input volume at 26 % is his to raise; the level line now says when it is too quiet.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #840
