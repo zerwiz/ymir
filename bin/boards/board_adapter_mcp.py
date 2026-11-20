@@ -21,9 +21,11 @@ answer's `diagrams` names what it could not. A card may carry `[stamp: <word>]` 
 own fingerprint — and listings return it, so a writer can tell what it last wrote without reading every card.
 Never prints or stores a token.
 """
+import http.client
 import json
 import os
 import re
+import shlex
 import subprocess
 import time
 import urllib.error
@@ -33,7 +35,7 @@ GROUPS = ("backlog", "unstarted", "started", "review", "done", "cancelled")
 _ENGINE_GROUP = {"completed": "done", "canceled": "cancelled"}  # a board's own spelling → the contract's
 PAGE = 200  # the largest page a board lists
 VISIBLE = 100  # measured 2026-11-20: a board may show only its newest 100 cards of a place, so a full list proves nothing
-PACE = float(os.environ.get("YMIR_BOARD_PACE", "1.0"))  # seconds between writes: a board's own API may allow ~60 calls a minute
+PACE = float(os.environ.get("YMIR_BOARD_PACE", "2.5"))  # seconds between writes: a board API may allow ~60 calls a minute, shared by everyone on its key
 WRITE_TIMEOUT = 300  # a write that draws diagrams on the board's side may take a while
 
 
@@ -57,6 +59,14 @@ def resolve_token(ref, home, root):
         except (OSError, ValueError):
             srv = {}
         v = next((x for k, x in (srv.get("headers") or {}).items() if k.lower() == "authorization"), "")
+        if not v and srv.get("headersHelper"):
+            # the harness's own helper prints the headers as JSON (an enrolled seat keeps its token in a 0600 file,
+            # never in the config); asked the same way the harness asks it
+            try:
+                out = subprocess.run(shlex.split(srv["headersHelper"]), capture_output=True, text=True, timeout=30).stdout
+                v = next((x for k, x in (json.loads(out or "{}") or {}).items() if k.lower() == "authorization"), "")
+            except (OSError, ValueError, subprocess.SubprocessError):
+                v = ""
         v = re.sub(r"^Bearer\s+", "", v, flags=re.I)
     else:
         raise BoardRefusal(f"token_from '{ref}' is not env:, vault: or claude-mcp:")
@@ -89,11 +99,12 @@ class McpBoard:
                 raw = urllib.request.urlopen(urllib.request.Request(self.url, body, hdr), timeout=timeout).read().decode()
             except urllib.error.HTTPError as e:
                 last = f"HTTP {e.code}"
-                if e.code not in (429, 500, 502, 503, 504):
+                if e.code not in (429, 500, 502, 503, 504, 520, 521, 522, 523, 524, 530):  # 52x/530: the tunnel in front blinked
                     raise BoardRefusal(f"{tool}: {last}")
                 time.sleep(wait)
                 continue
-            except (urllib.error.URLError, TimeoutError) as e:
+            except (urllib.error.URLError, TimeoutError, http.client.HTTPException, ConnectionError) as e:
+                # a page cut short on the way (IncompleteRead through a tunnel) is a hiccup: ask again
                 last = str(e)
                 time.sleep(wait)
                 continue

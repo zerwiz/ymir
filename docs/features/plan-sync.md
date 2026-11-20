@@ -108,7 +108,7 @@ in `unstarted`, or in `done`/`cancelled` when the whole plan is.
 - **A board that cannot list a place to its end stops the run.** The board must answer `offset` when listing; one that
   shows only a window would let a second pass create cards again. `--dry-run` still works.
 - A board that answers *too many requests* is waited out and retried; writes are paced (`YMIR_BOARD_PACE`, seconds,
-  default 1.0), because a board's own API may allow only about 60 calls a minute.
+  default 2.5), because a board's own API may allow only about 60 calls a minute, shared by everyone on its key.
 
 ## What it does not do
 
@@ -121,7 +121,7 @@ is refused by name.
 | You see | It means |
 |---|---|
 | `has no board: block` | the project's registry row names no board |
-| `no road to the board — the token named by '…' is not there` | no reference resolves on this seat; the value is never printed |
+| `no road to the board — the token named by '…' is not there` | no reference resolves on this seat (a `claude-mcp:` reference reads the harness's fixed header, or asks its `headersHelper`); the value is never printed |
 | `HTTP 403` / a Cloudflare 1010 | the request lacked a User-Agent or the token is not allowed in that place |
 | `cannot list a place to its end` | the board's door is older than the contract; bring it up to date |
 | `no state in the group` | the board has no state for that group; add one on the board |
