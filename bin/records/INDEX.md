@@ -60,7 +60,7 @@ bin[40]{file,does,kind,verdict,disposition,callers,lines}:
   "where.sh","where.sh — 'which book do I read before touching this path?'","tool","wired","keep",1,101
   "workspace-rag.sh","workspace-rag.sh — memory over the realm workspaces (W0038).","tool","wired","keep",0,165
   "wyrd-db.sh","wyrd-db.sh — the database layer (W0040).","tool","wired","keep",0,49
-  "ymir-state.sh","ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runtime/state/`).","tool","wired","keep",9,44
+  "ymir-state.sh","ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runtime/state/`).","tool","wired","keep",10,44
 
 **Tally.** verdict: wired=32, tested=8
 
