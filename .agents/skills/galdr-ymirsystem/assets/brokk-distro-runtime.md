@@ -2001,3 +2001,28 @@ queue in arrival order. Each door that files a wake names its **class** as a tra
 | `ack` | unchanged: a multiset diff of exactly what the last drain presented |
 
 The proof is `.agents/tests/saga-wake-drain-classes.test.sh`.
+
+## 2026-11-20 — a borrowed dependency closure is the WHOLE closure, or it is not borrowed
+
+Appended; the release model above stands. The economy in `release.sh build` — when the new release's
+lockfiles match the running release's, hard-link its `node_modules` instead of installing again — was
+one directory short, and that one directory stopped `main` from building.
+
+npm **hoists** most packages to the root `node_modules`, but it **nests** a package inside the
+workspace that owns it whenever it cannot hoist it. Measured: `@xterm/xterm` 6 lives at
+`apps/hlidskjalf/node_modules/@xterm/xterm` and nowhere else. The borrow copied `$prev/node_modules`
+only, so every release built after a matching lockfile had no app-local modules at all — Hlidskjalf's
+`tsc --noEmit` failed with `TS2307: Cannot find module '@xterm/xterm'`, and the release still reported
+that it had borrowed a proved closure.
+
+```
+release_borrow[4]{step,rule,why}:
+  "the completeness check","every workspace whose packages the destination's lock nests inside it must exist in the source","a borrow that cannot deliver what the lock declares is refused BEFORE anything is copied"
+  "the refusal","the door falls back to npm ci and exits 13 on its failure","an incomplete closure is a broken release, never a cheap one"
+  "what is copied","the root node_modules AND every nested node_modules found under the source's tree, hard-linked","the app-local package is inside the app's folder, not inside the root one"
+  "the test","bin/engine/tests/test_release_borrow_closure.sh (8 assertions)","the economy must be proved whole, not assumed"
+```
+
+The same rule holds for any future shelf of nested modules (`packages/`, `systems/`, `tools/`, `src/`):
+the lockfile decides what a complete closure is, and `borrow_closure` reads it rather than guessing.
+Fix note: `docs/fixes/hlidskjalf/2026-11-20-a-release-borrowed-a-closure-that-was-not-whole.md`.
