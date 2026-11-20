@@ -21,3 +21,7 @@ hours after the engine it served had stopped.
 
 Two throwaway units, the helper raised first with `PartOf` the other: both active, then both inactive one second
 after only the owner was stopped.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #840
