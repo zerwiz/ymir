@@ -25,3 +25,7 @@ excuse it already had:
 
 `.agents/tests/mocks-scan.test.sh` still proves a lone `todo`, a look-alike door and a stub beside a declared
 file are caught, and the shipped tree passes its own scan.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #853
