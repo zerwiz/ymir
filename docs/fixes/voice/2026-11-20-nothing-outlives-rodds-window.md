@@ -31,3 +31,7 @@ Rödd raised from the branch under a test unit, a live session held, then only t
 | microphone streams | 1 (`ymir-rodd`, electron) | 0 |
 | the engine on the GPU | 2,762–3,036 MiB | gone; only voxtype and the model rail remain, neither Rödd's |
 | units: Rödd · engine · proxy · watcher | active | inactive |
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #840
