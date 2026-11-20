@@ -1,0 +1,2 @@
+[{"id":0,"name":"eDP-1","description":"Example panel","width":1920,"height":1080,"refreshRate":60.0,"x":0,"y":0,"activeWorkspace":{"id":1,"name":"1"},"scale":1.25,"focused":true},
+ {"id":1,"name":"HDMI-A-1","description":"Example display","width":3840,"height":2160,"refreshRate":60.0,"x":1536,"y":0,"activeWorkspace":{"id":4,"name":"4"},"scale":1.5,"focused":false}]

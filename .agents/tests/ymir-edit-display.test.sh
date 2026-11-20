@@ -102,7 +102,7 @@ printf '%s' "$out" | grep -q '"DP-3"' && ok "a monitor named directly passes thr
 # 8 — a numbered desktop still works, and it too speaks the right dialect
 printf '[]' >"$CLIENTS"; : >"$DISPATCH"
 bash "$EDIT" --desktop 8 "$DOC" >/dev/null 2>&1
-grep -q 'workspace = 8' "$DISPATCH" && ok "a numbered desktop is placed with the Lua dispatcher" \
+grep -q 'workspace = "8", follow = false' "$DISPATCH" && ok "a numbered desktop is placed with the Lua dispatcher, silently (plan 341)" \
   || bad "desktop move: $(cat "$DISPATCH")"
 
 # 9 — no window manager: the file still opens and nothing is claimed

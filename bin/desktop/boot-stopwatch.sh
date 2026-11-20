@@ -102,8 +102,8 @@ window_state() {  # <class> [loose-suffix] → address<TAB>workspace<TAB>the win
   # name is still found — and its real class is returned, so a misnamed window is NAMED in the report instead of
   # silently making an app invisible (Rödd presented `zerwiz-rodd` from its package name until 2026-11-14, which
   # is exactly how a routing table and a window come to disagree without anyone noticing).
-  command -v hyprctl >/dev/null 2>&1 || return 0
-  hyprctl clients -j 2>/dev/null | CLS="${1-}" LOOSE="${2-}" python3 -c '
+  # the windows come through the one Hyprland door (plan 341.2); off Hyprland it refuses and this answers nothing
+  bash "$HERE/hypr.sh" windows --json 2>/dev/null | CLS="${1-}" LOOSE="${2-}" python3 -c '
 import json, os, sys
 try:
     ws = json.load(sys.stdin)

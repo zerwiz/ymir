@@ -14,9 +14,10 @@
 #   into ~/.config/hypr/ymir-desktops.lua and reloading is strictly better than
 #   moving a window after it has already appeared.
 #
-# (The runtime dispatch form — `hyprctl dispatch movetoworkspacesilent 5,class:...`
+# (The classic runtime dispatcher string — `movetoworkspacesilent 5,class:...` —
 # does NOT work on this Hyprland 0.56, which replaced it with a Lua API. The rule
-# file is the road that holds.)
+# file is the road that holds. Any runtime act goes through bin/desktop/hypr.sh,
+# which knows both dialects — plan 341.)
 #
 # Usage:
 #   bin/desktop/editor-place.sh plan             # which desktop the editor would take
@@ -60,19 +61,11 @@ editor_class() {
   esac
 }
 
+HYPR="$SCRIPT_DIR/hypr.sh"   # the one Hyprland door (plan 341.2)
+
 free_desktop() {
   have hyprctl || return 1
-  hyprctl workspaces -j 2>/dev/null | python3 -c '
-import json,sys
-try:
-    d=json.load(sys.stdin)
-except Exception:
-    sys.exit(0)
-used={w.get("id") for w in d if w.get("windows",0)>0}
-for n in range(1,11):
-    if n not in used:
-        print(n); break
-' 2>/dev/null
+  bash "$HYPR" workspace-free 10 2>/dev/null
 }
 
 # Read the desktops already claimed in the rule file, so we do not collide with
@@ -97,11 +90,11 @@ plan_desktop() {
       [ "$collides" = 0 ] && { printf '%s' "$existing"; return 0; }
     fi
   fi
-  python3 - "$app_claims" <<'PY'
+  python3 - "$app_claims" "$HYPR" <<'PY'
 import sys, subprocess, json
 used = {int(x) for x in sys.argv[1].split() if x.isdigit()}
 try:
-    d = json.loads(subprocess.run(["hyprctl","workspaces","-j"],capture_output=True,text=True).stdout)
+    d = json.loads(subprocess.run(["bash", sys.argv[2], "workspaces", "--json"],capture_output=True,text=True).stdout)
     for w in d:
         if w.get("windows",0) > 0:
             used.add(w.get("id"))
@@ -190,9 +183,13 @@ case "$ACTION" in
     write_rule "$d"
     include_rule_file
     if [ "$DRY" != 1 ]; then
-      # Validate, per the Omarchy guide: reload then check for config errors.
-      hyprctl reload >/dev/null 2>&1 || true
-      errs="$(hyprctl configerrors 2>&1 | head -3)"
+      # Validate, per the Omarchy guide: reload then check for config errors — through the one door,
+      # which names the broken file and line instead of throwing the answer away (plan 341.3).
+      errs=""
+      if ! verdict="$(bash "$HYPR" config reload 2>&1)"; then
+        errs="$(printf '%s\n' "$verdict" | sed -n '2,4p')"
+        [ -n "$errs" ] || errs="$verdict"
+      fi
       if [ -n "$errs" ]; then
         printf 'editor-place[1]{state,desktop,configerrors}:\n  "written, but Hyprland reported errors","%s","%s"\n' "$d" "$(printf '%s' "$errs" | tr '\n' ' ')"
         exit 1

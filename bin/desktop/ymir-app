@@ -49,12 +49,13 @@ for w in ws:
         print(w["address"], w["workspace"]["id"]); break' 2>/dev/null)"
     if [ -n "$at" ]; then
       addr="${at% *}" ws="${at#* }"
-      if [ "$ws" != "$here" ]; then
-        hyprctl dispatch "hl.dsp.window.move({ window = \"address:$addr\", workspace = $here })" 2>/dev/null | grep -qx ok \
-          || hyprctl dispatch movetoworkspacesilent "$here,address:$addr" >/dev/null 2>&1
-      fi
-      hyprctl dispatch "hl.dsp.focus({ window = \"address:$addr\" })" 2>/dev/null | grep -qx ok \
-        || hyprctl dispatch focuswindow "address:$addr" >/dev/null 2>&1
+      # The act goes through the PINNED runtime's display-lib.sh, the one owner of the Hyprland dialect (plan
+      # 341.2) — this file is copied to ~/.local/bin, so it cannot reach a sibling, and every pin since 2026-10-18
+      # carries the lib. It used to try the Lua form and fall back to the classic one by hand, here.
+      # shellcheck disable=SC1091
+      [ -r "$pin/bin/desktop/display-lib.sh" ] && . "$pin/bin/desktop/display-lib.sh" || return 0
+      [ "$ws" != "$here" ] && window_to_desktop "$addr" "$here"
+      window_focus "$addr"
       return 0
     fi
     sleep 0.25; i=$((i+1))

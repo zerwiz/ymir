@@ -90,7 +90,7 @@ declared_why() {  # <port> -> the operator's reason, or empty
 AUTHZ="$(src authz.out cat "$HOME/.ssh/authorized_keys")"
 DOCKER_PS="$(src docker.out docker ps --format '{{.Names}}|{{.Ports}}')"
 CFG_DIR="${FIXTURES:+$FIXTURES/cloudflared}"; [ -n "$CFG_DIR" ] || CFG_DIR="$HOME/.cloudflared"
-CLIENTS="$(src clients.out hyprctl clients -j)"
+CLIENTS="$(src clients.out bash "$SCRIPT_DIR/../desktop/hypr.sh" windows --json)"   # the one Hyprland door (plan 341.2)
 
 findings=0 crit=0 high=0
 NOTES=()
