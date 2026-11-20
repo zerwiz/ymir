@@ -31,6 +31,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 # shellcheck disable=SC1091
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
+# WHICH KEY OPENS THE VAULT (plan 342): this seat's own SSH identity, the retiring
+# `age.key` only as the last fallback. One library answers it for every door.
+# shellcheck disable=SC1091
+. "$ROOT/bin/vault/vault-identity-lib.sh" 2>/dev/null || true
 HOARD=""
 ymir_home_root YMIR_HOME_R 2>/dev/null || true
 [ -n "${YMIR_HOME_R:-}" ] || { printf 'error: the home is unresolved\n' >&2; exit 1; }
@@ -59,12 +63,38 @@ work="$(mktemp -d)"; chmod 700 "$work"
 cleanup() { shred -u "$work"/* 2>/dev/null || rm -f "$work"/*; rmdir "$work" 2>/dev/null; }
 trap cleanup EXIT
 
+# ── which key opens the vault, and to whom it is re-encrypted (plan 342) ───────────
+# Both walk ONE resolver (bin/vault/vault-identity-lib.sh): the SSH identity this seat
+# holds, then the retiring `age.key` while it still exists. The lock is the declared
+# GitHub keys once `age.key` is gone, so the recipient is the declaration, read through
+# the re-lock door — never a second copy of the rules in this script.
+decrypt_vault() {  # <age-file> <out-file>
+  local src=$1 out=$2 id
+  while IFS= read -r id; do
+    [ -n "$id" ] || continue
+    age -d -i "$id" "$src" >"$out" 2>/dev/null && return 0
+  done < <(vault_identity_candidates 2>/dev/null)
+  return 1
+}
+reencrypt() {  # <plaintext> <out.age>
+  local src=$1 out=$2 recipient=""
+  if [ -r "$HOARD/secrets/age.key" ]; then
+    recipient="$(age-keygen -y "$HOARD/secrets/age.key" 2>/dev/null || true)"
+    [ -n "$recipient" ] || { printf 'could not read the recipient from age.key' >&2; return 1; }
+    age -e -r "$recipient" -o "$out" "$src" 2>"$work/err"
+    return $?
+  fi
+  "$ROOT/bin/vault/vault-relock.sh" --recipients > "$work/recipients" 2>"$work/err" \
+    || { printf 'the declared recipients could not be read — %s' "$(head -c 200 "$work/err")" >&2; return 1; }
+  age -e -R "$work/recipients" -o "$out" "$src" 2>"$work/err"
+}
+
 # ── guard 1: the plaintext must be real ────────────────────────────────────────────
 if [ -s "$plain" ]; then
   cp "$plain" "$work/current"
 else
-  age -d -i "$HOARD/secrets/age.key" "$secret" > "$work/current" 2>"$work/err" \
-    || { printf 'error: cannot decrypt %s — %s\n' "$secret" "$(head -c 200 "$work/err")" >&2; exit 1; }
+  decrypt_vault "$secret" "$work/current" \
+    || { printf 'error: cannot decrypt %s — this seat holds no key that opens it (%s)\nhelp: bin/vault/vault-relock.sh --check\n' "$secret" "$(head -c 200 "$work/err")" >&2; exit 1; }
 fi
 [ -s "$work/current" ] || { printf 'error: %s decrypted to NOTHING — refusing to touch it\n' "$secret" >&2; exit 1; }
 keys_before="$(grep -cE '^[A-Za-z_][A-Za-z0-9_]*=' "$work/current" || true)"
@@ -117,11 +147,9 @@ else
 fi
 
 # ── guard 2 and 3: re-encrypt, decrypt again, compare; keep the old ───────────────
-recipient="$(age-keygen -y "$HOARD/secrets/age.key" 2>/dev/null || true)"
-[ -n "$recipient" ] || { printf 'error: could not read the recipient from age.key\n' >&2; exit 1; }
-age -e -r "$recipient" -o "$work/next.age" "$work/next" 2>"$work/err" \
+reencrypt "$work/next" "$work/next.age" \
   || { printf 'error: re-encryption failed — %s\n' "$(head -c 200 "$work/err")" >&2; exit 1; }
-age -d -i "$HOARD/secrets/age.key" "$work/next.age" > "$work/verify" 2>/dev/null \
+decrypt_vault "$work/next.age" "$work/verify" \
   || { printf 'error: the re-encrypted file does not decrypt — nothing written\n' >&2; exit 1; }
 cmp -s "$work/next" "$work/verify" \
   || { printf 'error: the round-trip does not match — nothing written\n' >&2; exit 1; }

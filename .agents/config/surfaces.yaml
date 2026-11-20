@@ -56,6 +56,7 @@ surfaces:
   - { name: hoard,       risk: ask,   roles: all, why: "moves and removes directories in the home" }
   - { name: autoboot,    risk: ask,   roles: all, why: "re-materialises and re-enables the boot units of every program the role owes" }
   - { name: vault,       risk: ask,   roles: [heart, forge, dev], why: "installs disk-encryption tooling as root" }
+  - { name: vaultkeys,   risk: never, roles: all, why: "reports whether this seat opens the secrets vault and whether its declared GitHub keys still match; a re-lock changes who may read the vault, so it is the operator's step (bin/vault/vault-relock.sh)" }
   - { name: ward,        risk: ask,   roles: all, why: "hardens the machine; may need root" }
   - { name: seats,       risk: safe,  roles: all, why: "applies the seat migration and seats the sweep hook" }
   - { name: seatreap,    risk: ask,   roles: all, why: "closes finished worker seats; a person may still be reading one" }

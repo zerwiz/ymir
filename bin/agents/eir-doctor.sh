@@ -155,7 +155,7 @@ surface_detail_skip() {
 }
 
 # Each surface: `s_<name>` = healthy? (exit 0), `f_<name>` = the repair.
-SURFACES=(floors seatpaths hooks packaging herdr a2abridge agentroad hermes snotra voice council sessrumnir bilskirnir apps hnoss shells graphics well memory mail unitdrift mcp harness pidoor pirun claudehooks opencode arm armpin runtimepin roddhelm lock gates migrations hoard autoboot vault ward seats seatreap models)
+SURFACES=(floors seatpaths hooks packaging herdr a2abridge agentroad hermes snotra voice council sessrumnir bilskirnir apps hnoss shells graphics well memory mail unitdrift mcp harness pidoor pirun claudehooks opencode arm armpin runtimepin roddhelm lock gates migrations hoard autoboot vault vaultkeys ward seats seatreap models)
 
 # ── the register (plan 278): config/surfaces.yaml names the surfaces, their roles and their risk class ──
 # The array above is the FALLBACK, kept until every seat carries the register. Without the register every
@@ -452,6 +452,20 @@ s_vault()     { [ -x "$SCRIPT_DIR/../vault/hnitbjorg-ensure.sh" ] && "$SCRIPT_DI
 s_ward()      { [ -x "$SCRIPT_DIR/../ward/security-audit.sh" ] && "$SCRIPT_DIR/../ward/security-audit.sh" check --quiet >/dev/null 2>&1; }
 f_ward()      { "$SCRIPT_DIR/../ward/harden.sh" apply --ssh-keys-perm >/dev/null 2>&1; }
 f_vault()     { "$SCRIPT_DIR/../vault/hnitbjorg-ensure.sh" ensure --install >/dev/null 2>&1; }
+# The vault's KEYS (plan 342): the secrets vault is locked to the owner's GitHub SSH
+# keys, so the question is not "does the tooling stand" but "does THIS seat open it".
+# Healthy means three things the re-lock door answers in one command: the vault opens
+# with this seat's own SSH key, the declarations match what GitHub lists, and nothing in
+# the clear is tracked under hodd/secrets. A seat with no vault at all is a clean pass —
+# there is nothing here to lock. A legacy age.key or a plain .env is REPORTED in the
+# detail line, never changed: retiring them is the operator's step, not a mend.
+s_vaultkeys() {
+  local r; r="$SCRIPT_DIR/../vault/vault-relock.sh"
+  [ -x "$r" ] || return 0
+  local h; h=""; ymir_home_root h 2>/dev/null || return 0
+  [ -r "$h/hodd/secrets/platform.env.age" ] || return 0
+  "$r" --check --quiet >/dev/null 2>&1
+}
 # ── Gná — the mail desk (:8494, plan 193 §14) ────────────────────────────────
 # Three named truths, and none of them may masquerade as another:
 #   ok            the desk answers /health AND declares an account
@@ -1083,6 +1097,7 @@ detail() { # <name> -> the command that prints one short fact
     snotra)    printf '%s\n' "door_reason $SCRIPT_DIR/../../systems/snotra/services/ear/snotra-ensure.sh status" ;;
     council)   printf '%s\n' "door_reason $SCRIPT_DIR/../pi/logretta-ensure.sh status" ;;
     vault)     printf '%s\n' "door_reason $SCRIPT_DIR/../vault/hnitbjorg-ensure.sh status" ;;
+    vaultkeys) printf '%s\n' "$SCRIPT_DIR/../vault/vault-relock.sh --check 2>&1 | grep -E '\"(opens|identity|declared|undeclared|plain-text tracked|legacy key tracked)\"' | sed -E 's/^ *\"([^\"]*)\",\"([^\"]*)\".*/\\1: \\2/' | paste -sd';' - | cut -c1-240" ;;
     ward)      printf '%s\n' "door_reason $SCRIPT_DIR/../ward/security-audit.sh check" ;;
     hermes)    printf '%s\n' "have hermes && echo present || echo absent" ;;
     sessrumnir)printf '%s\n' "[ -d $APP_SESSRUMNIR/out ] && echo built || echo 'not built'" ;;
@@ -1125,6 +1140,7 @@ ok_text() {
     snotra)  printf 'the meeting ear has an engine' ;;
     council) printf 'the council roster stands' ;;
     vault)   printf 'the vault tooling stands (a sealed vault is healthy)' ;;
+    vaultkeys) printf "the vault opens with this seat's SSH key, and the declarations match GitHub" ;;
     ward)    printf 'no door above the floor' ;;
   esac
 }

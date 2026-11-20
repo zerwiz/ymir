@@ -88,6 +88,7 @@
 | runtime-guard.sh | (no header line) | tested | keep (a human or a cron row must run it) |
 | runtime-pinned-guard.sh | runtime-pinned-guard.sh — a unit that executes from a WORKING tree is  | tested+named | keep (a human or a cron row must run it) |
 | secret-guard.sh | secret-guard.sh — refuse to commit obvious secrets or private env file | tested+named | keep (a human or a cron row must run it) |
+| secrets-plaintext-guard.sh | secrets-plaintext-guard.sh — the ward for the vault's own shelf (plan  | tested+named | keep (a human or a cron row must run it) |
 | sensitive-gate.sh | sensitive-gate.sh — one gate for every external surface of a sensitive | tested | keep (a human or a cron row must run it) |
 | skills-share-guard.sh | skills-share-guard.sh — nothing private crosses the skills door. | tested | keep (a human or a cron row must run it) |
 | ssh-roads-guard.sh | The home is RESOLVED, never guessed (Rule 07) — the same door every ot | tested | keep (a human or a cron row must run it) |
