@@ -43,12 +43,12 @@
   name: Óðrerir
   repo: apps/odrerir
   posture: direct-PR
-  git: { host: github.com, owner: zerwiz, repo: odrerir, remote: origin, default_branch: split/from-ymir, auth: gh }
+  git: { host: github.com, owner: zerwiz, repo: odrerir, remote: origin, default_branch: main, auth: gh }
   home: odrerir
   kind: electron
   contract: 1
-  # main on GitHub is protected and still holds the September head (tagged pre-split-2026-09); the history cut
-  # from Ymir is on split/from-ymir until the Allfather makes it main (lift the protection, or switch the default).
+  # main carries the split: one merge commit joins the old main (tagged pre-split-2026-09) and the history cut from
+  # Ymir (split/from-ymir), with the split's tree — nothing rewritten, both histories reachable (2026-11-19).
   moved: zerwiz/odrerir@e01d8eb23c4e   # left Ymir with its history, 2026-11-19 (split, not retired: the Allfather's word)
   install_default: dev   # the seats with a desk, where the Live Hall's window opens
 
@@ -56,12 +56,12 @@
   name: Sessrúmnir
   repo: apps/sessrumnir
   posture: direct-PR
-  git: { host: github.com, owner: zerwiz, repo: sessrumnir, remote: origin, default_branch: split/from-ymir, auth: gh }
+  git: { host: github.com, owner: zerwiz, repo: sessrumnir, remote: origin, default_branch: main, auth: gh }
   home: sessrumnir
   kind: electron
   contract: 1
-  # main on GitHub is protected and still holds the September head (tagged pre-split-2026-09); the history cut
-  # from Ymir is on split/from-ymir until the Allfather makes it main (lift the protection, or switch the default).
+  # main carries the split: one merge commit joins the old main (tagged pre-split-2026-09) and the history cut from
+  # Ymir (split/from-ymir), with the split's tree — nothing rewritten, both histories reachable (2026-11-19).
   moved: zerwiz/sessrumnir@133a42991a0c   # left Ymir with its history, 2026-11-19; the fork's upstream is FaqFirebase/pi-desktop
   install_default: dev   # the seats with a desk: it is the desktop seat over the coding agents
 
@@ -69,12 +69,12 @@
   name: Smíðja factory
   repo: apps/smidja-factory
   posture: direct-PR
-  git: { host: github.com, owner: zerwiz, repo: smidja, remote: origin, default_branch: split/from-ymir, auth: gh }
+  git: { host: github.com, owner: zerwiz, repo: smidja, remote: origin, default_branch: main, auth: gh }
   home: smidja
   kind: electron
   contract: 1
-  # main on GitHub is protected and still holds the September head (tagged pre-split-2026-09); the history cut
-  # from Ymir is on split/from-ymir until the Allfather makes it main (lift the protection, or switch the default).
+  # main carries the split: one merge commit joins the old main (tagged pre-split-2026-09) and the history cut from
+  # Ymir (split/from-ymir), with the split's tree — nothing rewritten, both histories reachable (2026-11-19).
   moved: zerwiz/smidja@a78eabb0e472   # left Ymir with its history, 2026-11-19: the factory at the root, the engine at engine/
   moved_also: apps/smidja, .agents/skills/smidja-factory   # the engine's folder, and the skill shelf's link into the app
   install_default: true   # every seat carried it in the tree: Gróa's update installs it where it is missing

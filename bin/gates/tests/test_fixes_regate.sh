@@ -66,5 +66,20 @@ else
   bad "a correct note was refused (rc=$rc): $out"
 fi
 
+# 4 — an apps note covers the app registry (2026-11-21, PR 871)
+git checkout -q main
+git checkout -q -b eindri/app-registry
+mkdir -p .agents/config docs/fixes/apps
+printf 'apps: []\n' > .agents/config/app-repos.yaml
+printf '## apps · 2026-11-21 — the registry row\n\nA real sentence.\n' > docs/fixes/apps/2026-11-21-the-registry-row.md
+git add .agents/config/app-repos.yaml docs/fixes/apps/2026-11-21-the-registry-row.md
+git commit -qm "apps: a registry row, with its note"
+out="$(J)"; rc=$?
+if [ "$rc" = 0 ] && printf '%s' "$out" | grep -q 'speaks to the change'; then
+  ok "an apps note covers .agents/config/app-repos.yaml"
+else
+  bad "an apps note did not cover the app registry (rc=$rc): $out"
+fi
+
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]
