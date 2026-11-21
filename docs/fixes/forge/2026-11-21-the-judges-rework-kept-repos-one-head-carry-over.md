@@ -28,3 +28,25 @@ findings of its own. This note records that rework. The full table of faults and
 
 - `bash bin/forge/tests/test_judge_merge.sh` → `judge-merge: 53 passed, 0 failed`
 - `bash .agents/tests/eindri-review-spine.test.sh` → `ALL PASS`
+
+## Addendum — the second rework (judge's review at head `be433e6632fd`)
+
+### 1 · a change log can no longer carry text the judge never read
+
+The judge found that `bin/forge/judge-carry.py` accepted a `## CHANGE LOG` heading added after the approval, and a
+whole new Markdown file. Either let unjudged text ride the approval to a merge. The probes were a line asking the
+judge to approve, appended under a new heading in `.agents/assets/templates/review-brief.template.md`, and a new
+`sub/CLAUDE.md`. Both printed `carries`.
+
+A change-log commit now carries only when every file it touches:
+
+- is modified, never added or deleted;
+- already had a `## CHANGE LOG` heading in the approved head's copy;
+- loses no non-blank line and gains no `## ` heading line;
+- gains non-blank lines only below that heading.
+
+> [!NOTE]
+> An automation that adds the first `## CHANGE LOG` section to a file now needs a new judgement. That is the
+> intended price: a section the judge never saw cannot be opened after the approval.
+
+Proof: `bash bin/forge/tests/test_judge_merge.sh` adds cases (f) to (i), both probes among them.

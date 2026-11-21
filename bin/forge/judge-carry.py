@@ -13,8 +13,15 @@ between them (those not already on the base branch) is one of:
   (a) a MERGE of the base branch: two parents, the second already on the base, and the merge's tree
       is EXACTLY the tree git computes for merging those two parents (git merge-tree --write-tree).
       Approved tree + the base's changes, nothing hand-edited inside the merge.
-  (b) a CHANGE-LOG commit: every file it touches is Markdown, and every line it adds or removes is
-      blank or lies inside a `## CHANGE LOG` section (from that heading to the next `## ` heading).
+  (b) a CHANGE-LOG commit: every file it touches is an EXISTING Markdown file (modified, never added
+      or deleted) whose copy in the APPROVED head already carries a `## CHANGE LOG` heading; it removes
+      no non-blank line, adds no `## ` heading line of any kind, and every non-blank line it adds lies
+      below that heading (inside the section, up to the next `## ` heading).
+
+      Review of #863 (2026-11-21): the first form of this rule accepted a `## CHANGE LOG` heading added
+      in the same commit, and whole new Markdown files, so any unjudged text could be dressed as a
+      change log and carry the approval to a merge with no judge. A section the judge never saw cannot
+      be opened after the approval.
 
 Anything else — a line of code, a line of prose outside a CHANGE LOG section, a merge with a manual
 resolution, a merge of a branch that is not the base — needs a new judgement. A history that cannot
@@ -66,17 +73,22 @@ def show(clone: str, rev: str, path: str) -> str:
     return p.stdout if p.returncode == 0 else ""
 
 
-def changelog_only(clone: str, commit: str, parent: str) -> tuple[bool, str]:
+def changelog_only(clone: str, commit: str, parent: str, approved: str) -> tuple[bool, str]:
     names = git(clone, "diff", "--name-status", "--no-renames", parent, commit).splitlines()
     if not names:
         return True, "an empty commit"
     for row in names:
         status, path = row.split("\t", 1)
+        if status != "M":
+            kind = {"A": "added", "D": "deleted"}.get(status[:1], f"status {status}")
+            return False, f"{path} is {kind}, not an existing file's change log"
         if not path.lower().endswith(".md"):
             return False, f"{path} is not Markdown"
-        old_txt, new_txt = show(clone, parent, path), show(clone, commit, path)
-        old_ok, new_ok = changelog_lines(old_txt), changelog_lines(new_txt)
-        old_lines, new_lines = old_txt.splitlines(), new_txt.splitlines()
+        if not any(HEADING.match(l) for l in show(clone, approved, path).splitlines()):
+            return False, f"{path} had no CHANGE LOG heading in the approved head"
+        old_lines = show(clone, parent, path).splitlines()
+        new_txt = show(clone, commit, path)
+        new_ok, new_lines = changelog_lines(new_txt), new_txt.splitlines()
         diff = git(clone, "diff", "-U0", "--no-renames", parent, commit, "--", path)
         for line in diff.splitlines():
             m = HUNK.match(line)
@@ -85,11 +97,17 @@ def changelog_only(clone: str, commit: str, parent: str) -> tuple[bool, str]:
             o, oc = int(m.group(1)), int(m.group(2) if m.group(2) is not None else 1)
             n, nc = int(m.group(3)), int(m.group(4) if m.group(4) is not None else 1)
             for k in range(o, o + oc):
-                if old_lines[k - 1].strip() and k not in old_ok:
-                    return False, f"{path}:{k} (removed) lies outside a CHANGE LOG section"
+                if old_lines[k - 1].strip():
+                    return False, f"{path}:{k} removes a line (a change log only adds)"
             for k in range(n, n + nc):
-                if new_lines[k - 1].strip() and k not in new_ok:
-                    return False, f"{path}:{k} lies outside a CHANGE LOG section"
+                text = new_lines[k - 1]
+                if not text.strip():
+                    continue
+                if NEXT.match(text):
+                    return False, f"{path}:{k} adds a heading ({text.strip()[:40]})"
+                if k in new_ok:
+                    continue
+                return False, f"{path}:{k} lies outside the CHANGE LOG section"
     return True, "change-log lines only"
 
 
@@ -133,7 +151,7 @@ def main(argv: list[str]) -> int:
                 if ok and parents[0] not in allowed:
                     ok, why = False, "its first parent is not the approved line"
             elif len(parents) == 1:
-                ok, why = changelog_only(clone, c, parents[0])
+                ok, why = changelog_only(clone, c, parents[0], approved)
             else:
                 ok, why = False, "a root commit"
             rows.append((c[:12], "ok" if ok else "new work", why))
