@@ -11,13 +11,18 @@ gathers from the home and from GitHub, across every seat:
   PRs merged            every repository the project registry names, plus `--repo` extras
   PRs open, and why     red gate · gate running · conflict · rework asked · draft · on hold · green
   alarms and mends      the Runes ledger: notify rows at HIGH/CRITICAL, and every `mend` row
-  waiting on him        the open items of his half of life/personal/me/todo.md, oldest first,
-                        the open `decision` cards on the boards, and the voice ledger's open items
+  waiting on him        the open cards of his half of his to-do (the board, through
+                        bin/records/todo.sh), oldest first, the open `decision` cards on the
+                        project boards, and the voice ledger's open items
 
-It ticks his list where the work is PROVEN done: an open item that names exactly one PR, and that PR
-merged — or exactly one errand, and that errand ended `done` with its PR merged (or with no PR named) —
-is marked `- [x]` and a dated `(done: …)` note is APPENDED to its last line. The item's words are
-never rewritten. Every line of the report names its source.
+His to-do lives on the board since 2026-11-20, and `bin/records/todo.sh` is the ONE door to it.
+The report reads it with `todo.sh list --json` and closes a card where the work is PROVEN done:
+an open card whose subject names exactly one PR, and that PR merged — or exactly one errand, and
+that errand ended `done` with its PR merged (or with no PR named) — is moved with
+`todo.sh move <card> Done`, and the dated proof is written in the report. A card's words are never
+rewritten. When the board is not configured on this seat, the retired file
+life/personal/me/todo.md is READ (never written) and nothing is closed; the report says so.
+Every line of the report names its source.
 
 Without --dry-run it writes hodd/docs/status/YYYY-MM-DD-night-report.md (a second run the same day
 appends a section), appends one line to the daily log, ships the paths through
@@ -44,7 +49,9 @@ sys.path.insert(0, str(HERE))
 import night_seat  # noqa: E402
 
 REPORT_DIR = Path("hodd/docs/status")
-TODO = Path("life/personal/me/todo.md")
+TODO = Path("life/personal/me/todo.md")  # retired 2026-11-20: read as a fallback, never written
+TODO_DOOR = ROOT / "bin/records/todo.sh"
+CLOSED_STATES = ("done", "cancelled", "canceled", "completed")
 RUNES = Path("hodd/memory/runes_audit.md")
 DAILY = Path("hodd/memory/daily")
 LAST = Path("state/night-report.last")
@@ -340,7 +347,95 @@ def gather_alarms(home, since, now):
     return by_time(rang), by_time(mended), ""
 
 
-# ── his list ──────────────────────────────────────────────────────────────────────────────────
+# ── his list: the board, through bin/records/todo.sh ──────────────────────────────────────────
+
+class TodoDoor:
+    """`bin/records/todo.sh`, or a fixture standing in for it (tests). The ONE door to his to-do."""
+
+    def __init__(self, fixture=None):
+        self.fx = Path(fixture) if fixture else None
+
+    def list(self):
+        """(cards, why): cards is None when the board cannot be read, and why says so."""
+        if self.fx is not None:
+            out, rc = json.loads(self.fx.read_text()), 0
+        else:
+            rc, raw = sh(["bash", str(TODO_DOOR), "list", "--json"], timeout=120)
+            try:
+                out = json.loads(raw) if rc == 0 else {}
+            except ValueError:
+                return None, f"`todo.sh list` answered no JSON: {clip(raw, 90)}"
+            if rc != 0:
+                return None, f"`todo.sh list` failed (exit {rc}): {clip(raw, 90)}"
+        if out.get("verdict") == "skip":
+            return None, f"the board is not configured on this seat ({clip(out.get('why', ''), 80)})"
+        cards = out.get("cards")
+        if not isinstance(cards, list):
+            return None, "`todo.sh list` answered without cards"
+        return cards, ""
+
+    def date_of(self, card):
+        """The date the card's item was written, from its description (the migration kept the item's own
+        line and section there). Read-only, through the door's own module; None when it cannot be told."""
+        if self.fx is not None:
+            for c in json.loads(self.fx.read_text()).get("cards") or []:
+                if str(c.get("card")) == str(card):
+                    m = DATE_RE.search(str(c.get("description") or ""))
+                    return m.group(1) if m else None
+            return None
+        try:
+            sys.path.insert(0, str(TODO_DOOR.parent))
+            import todo_board  # noqa: PLC0415
+            desc = str(todo_board.Board(todo_board.config()).call("get_card", card=str(card)).get("description") or "")
+        except Exception:  # noqa: BLE001 — an unreadable card is an undated card, never a crash
+            return None
+        m = DATE_RE.search(desc)
+        return m.group(1) if m else None
+
+    def move(self, card, lane):
+        """(ok, said). In the fixture the card's state changes, so a second run sees it closed."""
+        if self.fx is not None:
+            out = json.loads(self.fx.read_text())
+            for c in out.get("cards") or []:
+                if str(c.get("card")) == str(card):
+                    c["state"] = lane
+                    out.setdefault("moves", []).append([c["card"], lane])
+                    self.fx.write_text(json.dumps(out))
+                    return True, f"moved #{card} to {lane}"
+            return False, f"no card #{card}"
+        rc, raw = sh(["bash", str(TODO_DOOR), "move", str(card), lane], timeout=120)
+        return rc == 0, clip(raw, 120)
+
+
+HALF_OF_LABEL = {"his": "his", "derived": "derived", "house-kept": "kept"}
+
+
+def card_items(cards):
+    """One item per card, in the shape todo_items() gives a file line; `raw` is the card's title."""
+    items = []
+    for c in cards:
+        title = str(c.get("title") or "")
+        labels = [str(l) for l in (c.get("labels") or [])]
+        state = str(c.get("state") or "")
+        d = DATE_RE.search(title)
+        half = next((HALF_OF_LABEL[l] for l in labels if l in HALF_OF_LABEL), "other")
+        held = "Someday" in labels or state.casefold() == "someday"
+        items.append({
+            "id": f"card-{c.get('card')}", "card": c.get("card"), "line": None, "end": None,
+            "open": state.casefold() not in CLOSED_STATES, "text": plain(title), "raw": title,
+            "section": "Held" if held else (state or "board"), "half": half,
+            "date": d.group(1) if d else None,
+        })
+    return items
+
+
+def item_source(t):
+    if t.get("card") is not None:
+        return f"the to-do board, card #{t['card']}"
+    return f"{TODO} line {t['line'] + 1}, read-only"
+
+
+# ── his list: the retired file, read as a fallback ─────────────────────────────────────────────────────────────────────────────────────
 
 HALVES = (("His half", "his"), ("The derived half", "derived"), ("The house-kept half", "kept"))
 
@@ -368,13 +463,15 @@ def todo_items(lines):
             "id": "t" + hashlib.sha1(m.group(2).encode()).hexdigest()[:5],
             "line": n, "end": k - 1, "open": m.group(1) == " ", "text": plain(text),
             "section": section, "half": half, "date": d.group(1) if d else section_date,
+            "raw": "\n".join(lines[n:k]),
         })
     return items
 
 
 def waiting_on_him(items):
     mine = [t for t in items if t["open"] and t["half"] == "his" and not t["section"].startswith("Held")]
-    return sorted(mine, key=lambda t: (t["date"] or "9999-99-99", t["line"]))
+    return sorted(mine, key=lambda t: (t["date"] or "9999-99-99", t["line"] if t["line"] is not None else 0,
+                                       t.get("card") or 0))
 
 
 def voice_open(home):
@@ -407,6 +504,7 @@ PR_REFS = (
     re.compile(r"(?<![\w/])([\w.-]+/[\w.-]+)#(\d+)\b"),
 )
 BARE_PR = (re.compile(r"\bPRs?\s+#?(\d{1,6})\b"), re.compile(r"(?<![\w&])#(\d{1,6})\b"))
+ERRAND_WORD = re.compile(r"(?<![\w/.-])([a-z0-9]+(?:-[a-z0-9]+)+)(?![\w/.-])")
 TICKED = re.compile(r"\(done: \d{4}-\d\d-\d\d")
 
 
@@ -441,20 +539,22 @@ def refs_of(item_text, raw, default_repo, known_errands):
         for n in rx.findall(item_text):
             if int(n) not in named:
                 refs.add(("pr", default_repo or "?", int(n)))
-    for tok in re.findall(r"`([a-z0-9][a-z0-9-]{2,})`", raw):
+    # an errand is named in `backticks` on the file; a board card's title has lost its backticks, so a bare
+    # hyphenated word counts too — but only when it IS an errand this house knows
+    for tok in set(re.findall(r"`([a-z0-9][a-z0-9-]{2,})`", raw)) | set(ERRAND_WORD.findall(raw)):
         if tok in known_errands:
             refs.add(("errand", tok))
     return refs
 
 
-def proofs(items, lines, gh, default_repo, errand_lookup, now):
+def proofs(items, gh, default_repo, errand_lookup, now, date_of=None):
     """[(item, note)] for every open item proven done by exactly one closed PR or errand."""
     out = []
     known = set(errand_lookup)
     for t in items:
         if not t["open"]:
             continue
-        raw = "\n".join(lines[t["line"]: t["end"] + 1])
+        raw = t["raw"]
         if TICKED.search(raw):
             continue
         refs = refs_of(t["text"], raw, default_repo, known)
@@ -468,6 +568,8 @@ def proofs(items, lines, gh, default_repo, errand_lookup, now):
                 continue
             st = gh.state(repo, n) or {}
             when = (st.get("mergedAt") or "")[:10]
+            if st.get("state") == "MERGED" and not t["date"] and t.get("card") is not None and date_of:
+                t["date"] = date_of(t["card"])  # an undated title: the card's description knows when
             # a PR merged BEFORE the item was written is not its proof: the item means another PR
             if st.get("state") == "MERGED" and not (t["date"] and when and when < t["date"]):
                 out.append((t, f"(done: {stamp} — {repo}#{n} merged {when}; ticked by the night report)"))
@@ -486,17 +588,6 @@ def proofs(items, lines, gh, default_repo, errand_lookup, now):
                 note = f"errand `{ref[1]}` reported done on {e.get('machine', 'a seat')}"
             out.append((t, f"(done: {stamp} — {note}; ticked by the night report)"))
     return out
-
-
-def apply_ticks(lines, ticks):
-    """Mark each proven item `- [x]` and APPEND its note; the item's own words stay as they were."""
-    new = list(lines)
-    for t, note in ticks:
-        head = new[t["line"]]
-        if head.startswith("- [ ] "):
-            new[t["line"]] = "- [x] " + head[len("- [ ] "):]
-        new[t["end"]] = new[t["end"]].rstrip() + " " + note
-    return new
 
 
 # ── the boards ────────────────────────────────────────────────────────────────────────────────
@@ -612,17 +703,18 @@ def build(data):
             out.append(f"- and {len(d['mended']) - 12} more mends *(source: Runes)*")
         out.append("")
     if d["ticks"]:
-        out += [f"## Ticked on your list ({len(d['ticks'])})", ""]
+        out += [f"## Closed on your to-do ({len(d['ticks'])})", ""]
         for t, note in d["ticks"]:
-            out.append(f"- {clip(t['text'], 110)} — {note.strip('()')} *(source: {TODO} line {t['line'] + 1})*")
+            out.append(f"- {clip(t['text'], 110)} — {note.strip('()')} *(source: {item_source(t)})*")
         out.append("")
     his = d["his"]
     out += [f"## Waiting on you ({len(his)} open in your half, oldest first)", ""]
     for t in his[:12]:
         since_txt = f"since {t['date']}" if t["date"] else "undated"
-        out.append(f"- {clip(t['text'], 120)} — {since_txt} *(source: {TODO} line {t['line'] + 1})*")
+        out.append(f"- {clip(t['text'], 120)} — {since_txt} *(source: {item_source(t)})*")
     if len(his) > 12:
-        out.append(f"- and {len(his) - 12} more in {TODO} *(source: {TODO})*")
+        where = d.get("todo_source") or "the to-do board"
+        out.append(f"- and {len(his) - 12} more on {where} *(source: {where})*")
     for c in d["cards"]:
         out.append(f"- decision card {c['card']} on {c['place']}: {clip(c['title'], 110)} *(source: the board)*")
     for v in d["voice"]:
@@ -682,19 +774,6 @@ def write_report(home, rel, text, now):
         path.write_text(text, encoding="utf-8")
 
 
-def write_todo(home, lines):
-    path = home / TODO
-    tmp = path.with_name(f"{path.name}.{os.getpid()}.{os.urandom(4).hex()}.tmp")
-    try:
-        tmp.write_text("\n".join(lines) + "\n", encoding="utf-8")
-        tmp.replace(path)
-    finally:
-        try:
-            tmp.unlink()
-        except OSError:
-            pass
-
-
 def append_daily(home, now, rel, counts):
     path = home / DAILY / f"{local(now).strftime('%Y-%m-%d')}.md"
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -721,33 +800,47 @@ def collect(a, home, now, since):
     rang, mended, err = gather_alarms(home, since, now)
     if err:
         problems.append(err)
-    try:
-        lines = (home / TODO).read_text(encoding="utf-8").splitlines()
-    except OSError:
-        lines = []
-        problems.append(f"{TODO} could not be read — nothing was ticked")
-    items = todo_items(lines)
+    door = TodoDoor(getattr(a, "todo_fixture", None))
+    cards, why = door.list()
+    if cards is not None:
+        items, todo_source = card_items(cards), "the to-do board"
+    else:
+        # the board cannot be read: the retired file is READ so he still sees what waits, and nothing closes
+        todo_source = f"{TODO} (read-only)"
+        try:
+            items = todo_items((home / TODO).read_text(encoding="utf-8").splitlines())
+            problems.append(f"his to-do was read from the file — {why}; nothing was closed")
+        except OSError:
+            items = []
+            problems.append(f"his to-do could not be read — {why}, and {TODO} is not there; nothing was closed")
     his = waiting_on_him(items)
-    cards = []
+    decisions = []
     if not a.no_board:
-        cards, errs = board_decisions(rows, home)
+        decisions, errs = board_decisions(rows, home)
         problems += errs
     # every errand any seat named tonight, plus this seat's own record of any errand his list names
     lookup = {e["id"]: e for e in errands}
-    for tok in set(re.findall(r"`([a-z0-9][a-z0-9-]{2,})`", "\n".join(lines))):
+    words = set()
+    for t in items:
+        if t["open"]:
+            head = head_of(t["raw"])
+            words |= set(re.findall(r"`([a-z0-9][a-z0-9-]{2,})`", head)) | set(ERRAND_WORD.findall(head))
+    for tok in words:
         if tok not in lookup:
             e = night_seat.errand_state(home, tok)
             if e:
                 e["machine"] = me()
                 lookup[tok] = e
-    ticks = [] if a.no_github else proofs(items, lines, gh, default_repo, lookup, now)
+    # only a card is closed: the file is retired and is never written
+    ticks = [] if a.no_github or cards is None else proofs(items, gh, default_repo, lookup, now, door.date_of)
     data = {"since": since, "now": now, "errands": errands, "seats": seats, "unheard": unheard,
             "merged": merged, "open": opened, "rang": rang, "mended": mended, "his": his,
-            "cards": cards, "voice": voice_open(home), "ticks": ticks, "problems": problems}
+            "cards": decisions, "voice": voice_open(home), "ticks": ticks, "problems": problems,
+            "todo_source": todo_source}
     closed = {t["id"] for t, _ in ticks}
     data["his"] = his = [t for t in his if t["id"] not in closed]
-    data["needs"] = needs_him(errands, cards, his)
-    return data, lines
+    data["needs"] = needs_him(errands, decisions, his)
+    return data, door
 
 
 def main(argv=None):
@@ -767,6 +860,7 @@ def main(argv=None):
     ap.add_argument("--no-send", action="store_true", help="write the report, send no message")
     ap.add_argument("--no-sync", action="store_true", help="do not pull or ship the home (tests)")
     ap.add_argument("--github-fixture", help=argparse.SUPPRESS)
+    ap.add_argument("--todo-fixture", help=argparse.SUPPRESS)
     a = ap.parse_args(argv)
 
     home = night_seat.resolve_home(a.home)
@@ -790,26 +884,34 @@ def main(argv=None):
         return 0
 
     since = parse_when(a.since, now) or default_since(now, home)
-    data, lines = collect(a, home, now, since)
+    data, door = collect(a, home, now, since)
     text = build(data)
     tg = telegram_lines(data)
 
     if a.dry_run:
         if a.json:
-            safe = dict(data, ticks=[{"item": t["text"], "line": t["line"] + 1, "note": n} for t, n in data["ticks"]])
+            safe = dict(data, ticks=[{"item": t["text"], "card": t.get("card"), "note": n} for t, n in data["ticks"]])
             print(json.dumps(safe, indent=1, default=str))
         else:
             print(text)
             print("── the Telegram message (not sent) ──")
             print("\n".join(tg))
             for t, note in data["ticks"]:
-                print(f"── would tick {TODO} line {t['line'] + 1}: {note}")
+                print(f"── would move card #{t['card']} to Done: {note}")
         return 0
 
     paths = []
-    if data["ticks"]:
-        write_todo(home, apply_ticks(lines, data["ticks"]))
-        paths.append(str(TODO))
+    closed = []
+    for t, note in data["ticks"]:
+        ok, said = door.move(t["card"], "Done")
+        if ok:
+            closed.append((t, note))
+        else:
+            data["problems"].append(f"card #{t['card']} could not be closed through todo.sh — {said}")
+    if len(closed) != len(data["ticks"]):
+        data["ticks"] = closed
+        text = build(data)
+        tg = telegram_lines(data)
     write_report(home, rel, text, now)
     paths.append(str(rel))
     done = sum(1 for e in data["errands"] if e["outcome"] == "done")

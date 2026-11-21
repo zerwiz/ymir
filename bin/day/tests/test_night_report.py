@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """test_night_report — the night report on a fixture home (no network, no ssh, no board, no send).
 
-Proves: done, not done, merged and waiting are counted right; a ticked item is appended to, never
-rewritten; an item whose PR merged before it was written, or whose subject names several PRs, is not
-ticked; an empty night says so in one line; a written run appends a second section, never replaces.
+Proves: done, not done, merged and waiting are counted right; his to-do is read from the board door
+(a fixture stands in for bin/records/todo.sh) and a proven card is closed with `move <card> Done`;
+the retired file is never written, not even when it is the fallback; a card whose PR merged before it
+was written, or whose subject names several PRs, is not closed; an empty night says so in one line;
+a written run appends a second section, never replaces.
 
 Run: python3 bin/day/tests/test_night_report.py
 """
@@ -51,6 +53,20 @@ TODO_MD = """# A day — invented for the test
 - [ ] **Read the roof letter** — kept by the house.
 """
 
+# the same list as the board holds it after the migration: titles lost their bold and backticks
+CARDS = {"place": "home", "count": 9, "shown": 9, "cards": [
+    {"card": 1, "title": "Merge PR #41 (the roof door)", "state": "Todo", "labels": ["Today", "his"]},
+    {"card": 2, "title": "Triage Ada's PRs #50/#51", "state": "Todo", "labels": ["Today", "his"]},
+    {"card": 3, "title": "Main is red on roof-test", "state": "Todo", "labels": ["Today", "his"]},
+    {"card": 4, "title": "Answer Ada about the shed", "state": "Todo", "labels": ["Today", "his"]},
+    {"card": 5, "title": "Finish paint-shed", "state": "Todo", "labels": ["Inbox", "his"]},
+    {"card": 6, "title": "Decide PR 7", "state": "Todo", "labels": ["Inbox", "his"],
+     "description": "- [ ] **Decide PR 7** — an old number.\n\nsource: todo.md · Set at his word, 2026-11-30"},
+    {"card": 7, "title": "Send the invoice", "state": "Done", "labels": ["his"]},
+    {"card": 8, "title": "The boat", "state": "Backlog", "labels": ["Someday", "his"]},
+    {"card": 9, "title": "Read the roof letter", "state": "Todo", "labels": ["Inbox", "house-kept"]},
+]}
+
 FIXTURE = {
     "repos": {
         "example/house": {
@@ -93,6 +109,8 @@ class NightReport(unittest.TestCase):
         (self.home / "life/personal/me/todo.md").write_text(TODO_MD)
         self.fx = self.home / "gh.json"
         self.fx.write_text(json.dumps(FIXTURE))
+        self.board = self.home / "board.json"
+        self.board.write_text(json.dumps(CARDS))
         os.environ["YMIR_NIGHT_MACHINE"] = "host-a"
 
     def tearDown(self):
@@ -123,6 +141,7 @@ class NightReport(unittest.TestCase):
     def run_main(self, *extra):
         argv = ["--home", str(self.home), "--since", str(SINCE), "--now", str(NOW), "--no-fleet", "--no-board",
                 "--no-sync", "--no-send", "--github-fixture", str(self.fx), "--default-repo", "example/house",
+                "--todo-fixture", str(self.board),
                 *extra]
         return nr.main(argv)
 
@@ -131,6 +150,7 @@ class NightReport(unittest.TestCase):
             no_fleet = no_board = True
             no_github = False
             github_fixture = str(self.fx)
+            todo_fixture = str(self.board)
             default_repo = "example/house"
             repo = None
         return nr.collect(A, self.home, NOW, SINCE)
@@ -154,46 +174,49 @@ class NightReport(unittest.TestCase):
         self.assertEqual(len(data["mended"]), 1)
         # waiting: his half only, held excluded, oldest first (the dated section leads)
         texts = [t["text"] for t in data["his"]]
-        self.assertTrue(texts[0].startswith("Decide PR 7"))
+        self.assertIn("Decide PR 7", texts)
         self.assertFalse(any("boat" in t for t in texts))
         self.assertFalse(any("roof letter" in t for t in texts))
         self.assertEqual(data["needs"][0], "decide `ask-ada`: blue or red?")
-        # an item proven done tonight is ticked, so it no longer waits on him
-        self.assertEqual(len(data["ticks"]), 2)
+        # a card proven done tonight is closed, so it no longer waits on him
+        self.assertEqual(sorted(t["card"] for t, _ in data["ticks"]), [1, 5])
         self.assertFalse(any(t["text"].startswith(("Merge PR #41", "Finish paint-shed")) for t in data["his"]))
+        self.assertEqual(data["todo_source"], "the to-do board")
 
-    def test_ticks_are_appended_not_rewritten(self):
+    def test_proven_cards_close_through_the_door_and_the_file_is_never_written(self):
         self.night()
-        before = (self.home / "life/personal/me/todo.md").read_text().splitlines()
+        before = (self.home / "life/personal/me/todo.md").read_text()
         self.assertEqual(self.run_main(), 0)
-        after = (self.home / "life/personal/me/todo.md").read_text().splitlines()
-        self.assertEqual(len(before), len(after))
-        changed = [(b, a) for b, a in zip(before, after) if b != a]
-        ticked = {b for b, _ in changed if b.startswith("- [ ]")}
+        board = json.loads(self.board.read_text())
         # PR #41 merged in the window; errand paint-shed is done and its PR #99 merged
-        self.assertIn("- [ ] **Merge PR #41 (the roof door)** — the gate was green. *(priority high)*", ticked)
-        self.assertIn("- [ ] **Finish `paint-shed`** — the errand that paints it.", ticked)
-        for b, a in changed:
-            body = b[len("- [ ] "):] if b.startswith("- [ ] ") else b
-            self.assertTrue(a.replace("- [x] ", "", 1).startswith(body), f"rewritten: {b!r} → {a!r}")
-            if "(done:" in a:
-                self.assertRegex(a, r"\(done: 2026-12-02 06:30 — .*ticked by the night report\)$")
-        self.assertEqual(sum("(done: 2026-12-02" in a for _, a in changed), 2)
-        # the multi-line item: the mark on its first line, the note on its last
-        i = before.index("- [ ] **Merge PR #41 (the roof door)** — the gate was green. *(priority high)*")
-        self.assertTrue(after[i].startswith("- [x] **Merge PR #41"))
-        self.assertTrue(after[i + 1].endswith("example/house#41 merged 2026-12-01; ticked by the night report)"))
-        text = "\n".join(after)
-        self.assertIn("- [ ] **Triage Ada's PRs #50/#51**", text)  # two PRs in its subject
-        self.assertIn("- [ ] **Main is red on `roof-test`**", text)  # #41 is only its reason
-        self.assertIn("- [ ] **Decide PR 7**", text)  # merged before the item was written
-        # a second run ticks nothing again, and the report gains a section instead of being replaced
+        self.assertEqual(board["moves"], [[1, "Done"], [5, "Done"]])
+        state = {c["card"]: c["state"] for c in board["cards"]}
+        self.assertEqual(state[2], "Todo")  # two PRs in its subject
+        self.assertEqual(state[3], "Todo")  # names no PR of its own
+        self.assertEqual(state[6], "Todo")  # PR 7 merged before the card's item was written (its description)
+        self.assertEqual(before, (self.home / "life/personal/me/todo.md").read_text())  # retired: never written
+        report = (self.home / "hodd/docs/status/2026-12-02-night-report.md").read_text()
+        self.assertIn("## Closed on your to-do (2)", report)
+        self.assertIn("source: the to-do board, card #1", report)
+        self.assertRegex(report, r"done: 2026-12-02 06:30 — example/house#41 merged 2026-12-01; ticked by the night report")
+        # a second run closes nothing again, and the report gains a section instead of being replaced
         self.assertEqual(self.run_main(), 0)
-        self.assertEqual(after, (self.home / "life/personal/me/todo.md").read_text().splitlines())
+        self.assertEqual(json.loads(self.board.read_text())["moves"], [[1, "Done"], [5, "Done"]])
         report = (self.home / "hodd/docs/status/2026-12-02-night-report.md").read_text()
         self.assertEqual(report.count("# Night report — 2026-12-02"), 1)
         self.assertIn("## A later run, 06:30", report)
         self.assertIn("night report written on host-a", (self.home / "hodd/memory/daily/2026-12-02.md").read_text())
+
+    def test_no_board_reads_the_file_and_closes_nothing(self):
+        self.night()
+        self.board.write_text(json.dumps({"verdict": "skip", "why": "no board configured"}))
+        before = (self.home / "life/personal/me/todo.md").read_text()
+        data, _ = self.collect()
+        self.assertEqual(data["ticks"], [])
+        self.assertTrue(data["his"])  # he still sees what waits
+        self.assertTrue(any("read from the file" in p and "not configured" in p for p in data["problems"]))
+        self.assertEqual(self.run_main(), 0)
+        self.assertEqual(before, (self.home / "life/personal/me/todo.md").read_text())
 
     def test_every_line_names_its_source(self):
         self.night()
@@ -222,9 +245,9 @@ class NightReport(unittest.TestCase):
 
     def test_dry_run_writes_nothing(self):
         self.night()
-        before = (self.home / "life/personal/me/todo.md").read_text()
+        before = self.board.read_text()
         self.assertEqual(self.run_main("--dry-run"), 0)
-        self.assertEqual(before, (self.home / "life/personal/me/todo.md").read_text())
+        self.assertEqual(before, self.board.read_text())  # no card moved
         self.assertFalse((self.home / "hodd/docs/status").exists())
         self.assertFalse((self.home / "state/night-report.last").exists())
 

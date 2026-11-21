@@ -61,3 +61,29 @@ row for a script that does not ship yet.
 ## CHANGE LOG
 
 - 2026-11-20 — review-mend: added missing heading for #867
+
+## Addendum, 2026-11-21 — his to-do is the board, so the report reads and closes it there
+
+The judge's review of PR #867 found that the report read and ticked `life/personal/me/todo.md`. The home
+froze that file on 2026-11-20: his to-do moved to the board, and `bin/records/todo.sh` is the one door
+the house writes it through. Ticking the file gave two truths for one item, and *Waiting on you* was
+read from a mirror that no longer follows the board.
+
+Now the report reads his to-do with `todo.sh list --json` and closes a proven card with
+`todo.sh move <card> Done`. The proof is written in the report, under *Closed on your to-do*. The file is
+never written. When the board is not configured, or does not answer, the file is read so he still sees
+what waits, nothing is closed, and the report says why under *What could not be read*.
+
+A card's title lost its date in the migration, so the guard "a PR merged before the item was written does
+not count" reads the date from the card's description instead. Without that, a live dry run would have
+closed *Ask … to merge Foreman PR #20*, because `#20` in this repository merged in September. With it,
+the same dry run closes exactly the four cards the judge checked by hand (#831, #771, #810, #800), plus
+the card for #858, which merged tonight.
+
+Item 3 of the review (the whole file rewritten from an old snapshot) goes away with this: each close is
+one card, moved through the door, and nothing is rewritten.
+
+Proof: `python3 bin/day/tests/test_night_report.py` now runs 6 tests, and all pass. A fixture stands in
+for the door. The tests show that a proven card is moved to Done, the file stays byte-for-byte the same
+(also when the board is not configured), and a second run moves nothing again.
+
