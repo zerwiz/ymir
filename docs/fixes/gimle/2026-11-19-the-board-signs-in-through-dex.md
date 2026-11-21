@@ -62,3 +62,39 @@ Aliases apply only to verified addresses.
 ## CHANGE LOG
 
 - 2026-11-20 — review-mend: added missing heading for #872
+
+## Appended 2026-11-21 — superseded on 2026-11-20 by the board door
+
+Everything above describes the adapter as it stood on the night of 2026-11-19. It stays as the record of what was
+built. It is no longer how the board signs in.
+
+**What replaced it.** On 2026-11-20 the Gitea-shaped adapter `board-sso` was retired (plan 326, the section
+appended 2026-11-20 night). A person had seen three pages that were not Gimlé's: the board's login, a button
+labelled "Sign in with Gitea", and the issuer's default page. The house runs no Gitea.
+
+The board now signs in through **the board door**, `systems/login/board_door.py` in the hall's repository (`zerwiz/gimle`), used by the
+login bridge. Every board page load asks the bridge's `/board/door`:
+
+- An unsigned visitor gets the hall's own sign-in page, which names the board as the destination.
+- A signed-in person gets a board session, made by the bridge with the board's own code.
+- A new verified person joins at the least role, with one audit line per provision or refusal.
+
+The rules the adapter carried moved into the door: verified email only, least role, Admin refused at start, an
+audit line, and the kill switch `OIDC_BOARD_JIT=off`. The door's own page is `systems/login/board-door/README.md` there.
+
+**What was taken down.** The adapter's unit is stopped and disabled. Its folder and unit moved on the heart to the
+hall's retired shelf, with a roll-back note. The Dex client `gimle-board` is removed, and the board's
+`IS_GITEA_ENABLED` is 0. The adapter's source is kept for reference in the hall's repository at `docs/reference/retired/board-sso/`.
+
+**The three Owed lines above, closed:**
+
+| Owed on 2026-11-19 | State on 2026-11-20 |
+|---|---|
+| one real browser sign-in by the operator | superseded: the door was proved in headless Chromium at desktop and phone width (signed out, signed in, signed out again); the adapter it would have tested no longer runs |
+| the button reads "Continue with Gitea" | closed: the Gitea provider is off, and no sign-in step names Plane, Gitea or Dex |
+| the adapter's source belongs in the hall's repository | closed: the adapter is retired, and its source sits on the hall's retired reference shelf |
+
+**Where this note belongs.** It records the hall's deployment and touches no path in Ymir. At the Allfather's
+standing word, *"all gimle things in gimle"*, the same note with this section now lives in the hall's repository at
+`docs/fixes/login/2026-11-19-the-board-signs-in-through-dex.md` (zerwiz/gimle#21). This copy is the record of where
+it was first written.
