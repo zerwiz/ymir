@@ -12,7 +12,7 @@
 #   <errand>                  an errand id on THIS machine
 #   <machine>:<errand>        an errand id on that machine
 #   <pane>                    a herdr pane id on this machine (wXX:pY)
-#   <machine>:<pane>          a pane on that machine (heimdall:wBA:p1)
+#   <machine>:<pane>          a pane on that machine (host-a:wBA:p1)
 #
 # VERBS: tell (default) hands one line · --steer hands a steering line to a worker · --answer answers a
 # worker's open question (speak and record, or --record-only) · --stop asks a worker to stop at a safe point.
@@ -28,19 +28,27 @@
 #   fleet-tell[N]{machine,target,verb,holder,arm,pane,typed,why}:
 #     arm   = handed | refused | no-answer | -        (the wire; "-" when it was not tried)
 #     pane  = <id> | not-found | -
-#     typed = yes | no
+#     typed = yes | sent-unconfirmed | no   (sent-unconfirmed: the line was typed, but the wait for proof
+#             that the agent started working ran out — exit 124 or 5 after a send)
 #   When the arm was refused and the pane was typed, a wake is raised on the SENDER's own queue:
-#   "<machine>'s arm is not held — re-arm needed".
+#   "<machine>'s arm is not held — re-arm needed"; the row says wake=raised, or wake=not-raised(why) when the
+#   sender's own arm refused it too and the durable queue could not take it either.
+#   A door missing on a far runtime (exit 127) is reported as "door missing on <machine>'s runtime".
 #
 # Nothing hangs: every ssh and every remote command runs under `timeout`. A tell is HANDED, not done,
-# until the agent answers (RULES/49). Exit: 0 every target reached (handed or typed) · 1 one or more not · 2 usage.
+# until the agent answers (RULES/49). Exit: 0 every target reached (handed or typed) or a dry run · 1 one or more not · 2 usage.
 set -u
 ROOT="$(CDPATH='' cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 . "$ROOT/bin/vault/hoard-lib.sh" 2>/dev/null || true
 HOME_DIR=""; declare -f ymir_home_root >/dev/null 2>&1 && ymir_home_root HOME_DIR 2>/dev/null
 REG="${FLEET_TELL_REGISTRY:-$HOME_DIR/hodd/data/fleet.json}"
 ME="${FLEET_TELL_ME:-$(hostname -s)}"
-LIMIT="${FLEET_TELL_TIMEOUT:-25}"
+LIMIT="${FLEET_TELL_TIMEOUT:-25}"            # a probe (who, tell.sh, ssh reach): short
+# A send waits for the line to land: eindri-send.sh sleeps EINDRI_SEND_WAIT after typing and again on a re-send,
+# so its limit is twice that wait plus a margin, never the probe limit.
+SEND_WAIT="${EINDRI_SEND_WAIT:-20}"
+SEND_LIMIT="${FLEET_TELL_SEND_TIMEOUT:-$((2 * SEND_WAIT + 30))}"
+PANE_LIMIT="${FLEET_TELL_PANE_TIMEOUT:-$((LIMIT + 25))}"   # arm-holder-pane.sh holds its own inner limits (20 + 10)
 seat="$(sed -n 's/^primary=//p' "$HOME/.pi/agent/extensions/.ymir-seat" 2>/dev/null | head -1)"
 SEAT="${YMIR_SEAT_NAME:-${seat:-$ME}}"
 SIGN=""
@@ -94,7 +102,9 @@ is_machine() { reg machines | grep -qx -- "$1"; }
 sq() { printf "'%s'" "${1//\'/\'\\\'\'}"; }
 
 # the far side's runtime: the pin when it has this door's elders, else the checkout
-PRE='d=${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}; [ -f "$d/bin/agents/tell.sh" ] || d=$HOME/ymir; cd "$d" || exit 126; '
+# A non-interactive login shell on the far side has neither herdr's socket nor ~/.local/bin on PATH, so both are
+# set here before any door runs; a missing door exits 127 and is named as such (never as "no agent pane").
+PRE='export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"; [ -n "${HERDR_SOCKET_PATH:-}" ] || { hs="${XDG_CONFIG_HOME:-$HOME/.config}/herdr/herdr.sock"; [ -S "$hs" ] && export HERDR_SOCKET_PATH="$hs"; }; d=${YMIR_RUNTIME_DIR:-$HOME/ymir-runtime}; [ -f "$d/bin/agents/tell.sh" ] || d=$HOME/ymir; cd "$d" || exit 126; '
 
 # rexec <machine> <command…> — run an argv on that machine's runtime. Output on stdout, rc is the command's;
 # 255 = ssh could not reach it, 124 = the limit ran out.
@@ -102,11 +112,11 @@ rexec() {
   local m="$1"; shift
   local cmd="" a; for a in "$@"; do cmd="$cmd $(sq "$a")"; done
   if [ "$m" = "$ME" ]; then
-    timeout "$LIMIT" bash -c "$PRE$cmd" 2>&1
+    timeout "${RLIMIT:-$LIMIT}" bash -c "$PRE$cmd" 2>&1
   else
     local r; r="$(reg road "$m")"
     [ -n "$r" ] || { printf 'no road to %s in the fleet registry\n' "$m"; return 255; }
-    timeout "$LIMIT" ssh -o BatchMode=yes -o ConnectTimeout=6 "$r" "bash -lc $(sq "$PRE$cmd")" 2>&1
+    timeout "${RLIMIT:-$LIMIT}" ssh -o BatchMode=yes -o ConnectTimeout=6 "$r" "bash -lc $(sq "$PRE$cmd")" 2>&1
   fi
 }
 
@@ -114,24 +124,43 @@ ROWS=(); FAILED=0
 row() {  # machine target holder arm pane typed why
   local why="${7//\"/\'}"
   ROWS+=("$(printf '  "%s","%s","%s","%s","%s","%s","%s","%s"' "$1" "$2" "$VERB" "$3" "$4" "$5" "$6" "$why")")
-  case "$6/$4" in yes/*|*/handed) ;; *) FAILED=1 ;; esac
+  case "$6/$4" in yes/*|sent-unconfirmed/*|*/handed|*/dry-run) ;; *) FAILED=1 ;; esac
 }
-wake_self() {  # a refused arm that was typed past: tell the sender's own arm
-  local text="$1"
-  if [ -n "${FLEET_TELL_WAKE_CMD:-}" ]; then bash -c "$FLEET_TELL_WAKE_CMD" _ "$text" >/dev/null 2>&1
-  else timeout 20 bash "$ROOT/bin/voice/rodd-arm.sh" tell --from "fleet-tell" "$text" >/dev/null 2>&1; fi
+wake_self() {  # a refused arm that was typed past: tell the sender's own arm; else the durable queue. Sets WAKE_STATE.
+  local text="$1" q rc
+  WAKE_STATE="not-raised"
+  if [ -n "${FLEET_TELL_WAKE_CMD:-}" ]; then
+    bash -c "$FLEET_TELL_WAKE_CMD" _ "$text" >/dev/null 2>&1; rc=$?
+  else
+    timeout 20 bash "$ROOT/bin/voice/rodd-arm.sh" tell --from "fleet-tell" "$text" >/dev/null 2>&1; rc=$?
+  fi
+  if [ "$rc" -eq 0 ]; then WAKE_STATE="raised"; return 0; fi
+  # the sender's own arm refused (it is not held here either): the durable wake queue is read by the next holder
+  q="${FLEET_TELL_QUEUE:-$HOME_DIR/state/.wake-queue}"
+  if [ -n "$HOME_DIR" ] || [ -n "${FLEET_TELL_QUEUE:-}" ]; then
+    if mkdir -p "$(dirname "$q")" 2>/dev/null && printf 'from=fleet-tell to=helm at=%s msg=%s\n' "$(date +%s)" "$text" >>"$q" 2>/dev/null; then
+      WAKE_STATE="raised"; return 0
+    fi
+  fi
+  WAKE_STATE="not-raised(the sender's arm refused rc=$rc and the wake queue could not be written)"; return 1
 }
 
 wire_state() {  # <rc> → handed | refused | no-answer
   case "$1" in 0) echo handed ;; 255|124) echo no-answer ;; *) echo refused ;; esac
 }
 
-# type <machine> <pane-or-errand> <line> → 0 typed
+# type_pane <machine> <pane-or-errand> <line> → 0 typed · 2 sent-unconfirmed (the line went in; the wait was
+# cut short or eindri-send could not see it work) · 3 the door is missing · 1 refused.  Sets TYPED_WHY.
 type_pane() {
-  local m="$1" p="$2" l="$3" out
-  out="$(rexec "$m" bash bin/agents/eindri-send.sh --from "$SIGN" "$p" "$l")"; local rc=$?
+  local m="$1" p="$2" l="$3" out rc
+  out="$(RLIMIT="$SEND_LIMIT" rexec "$m" bash bin/agents/eindri-send.sh --from "$SIGN" "$p" "$l")"; rc=$?
   TYPED_WHY="$(printf '%s' "$out" | tail -1 | cut -c1-90)"
-  return "$rc"
+  case "$rc" in
+    0) return 0 ;;
+    124|5) TYPED_WHY="sent, not confirmed (exit $rc): ${TYPED_WHY:-no output}"; return 2 ;;
+    127) TYPED_WHY="door missing on $m's runtime (bin/agents/eindri-send.sh)"; return 3 ;;
+    *) return 1 ;;
+  esac
 }
 
 # ── per-target work ───────────────────────────────────────────────────────────
@@ -157,17 +186,26 @@ tell_arm() {  # machine
     why="$(printf '%s' "$out" | tail -1 | cut -c1-90)"
   fi
   if [ "$MODE" != arm ]; then
-    out="$(rexec "$m" bash bin/fleet/arm-holder-pane.sh)"; rc=$?
+    out="$(RLIMIT="$PANE_LIMIT" rexec "$m" bash bin/fleet/arm-holder-pane.sh)"; rc=$?
     pane="$(printf '%s' "$out" | tail -1 | tr -dc '[:alnum:]:._-')"
     if [ "$rc" -eq 0 ] && [ -n "$pane" ] && [ "$pane" != "not-found" ]; then
-      if type_pane "$m" "$pane" "$text"; then typed=yes; else why="the pane $pane refused: $TYPED_WHY"; fi
+      type_pane "$m" "$pane" "$text"; rc=$?
+      case "$rc" in
+        0) typed=yes ;;
+        2) typed=sent-unconfirmed; why="the line was typed into pane $pane but not confirmed: $TYPED_WHY" ;;
+        *) why="the pane $pane refused: $TYPED_WHY" ;;
+      esac
+    elif [ "$rc" -eq 127 ]; then
+      pane="not-found"; why="${why:+$why · }door missing on $m's runtime (bin/fleet/arm-holder-pane.sh)"
+    elif [ "$rc" -eq 124 ] || [ "$rc" -eq 255 ]; then
+      pane="not-found"; why="${why:+$why · }$m did not answer the pane lookup (exit $rc)"
     else
       pane="not-found"; why="${why:+$why · }no agent pane for the arm holder on $m"
     fi
   fi
-  if [ "$arm" = refused ] && [ "$typed" = yes ]; then
-    why="the arm is not held; the line was typed into pane $pane · a wake is raised: re-arm needed"
+  if [ "$arm" = refused ] && { [ "$typed" = yes ] || [ "$typed" = sent-unconfirmed ]; }; then
     wake_self "$m's arm is not held — re-arm needed"
+    why="the arm is not held; the line was typed into pane $pane · wake=$WAKE_STATE: re-arm needed"
   fi
   [ -z "$why" ] && why="ok"
   row "$m" "arm holder" "$holder" "$arm" "$pane" "$typed" "$why"
@@ -184,8 +222,9 @@ tell_who() {  # machine who   (an errand id or a pane id)
     if [ "$rc" -eq 3 ]; then row "$m" "$who" "-" refused "-" no "no open question for $who on $m"; return; fi
     if [ "$arm" = refused ] && [ "$RECORD" != 1 ] && [ "$MODE" != arm ]; then
       # the speak half failed (the pane road): type the answer by the pane road, then record it
-      if type_pane "$m" "$who" "answer: $LINE"; then
-        typed=yes; pane="$who"
+      type_pane "$m" "$who" "answer: $LINE"; rc=$?
+      if [ "$rc" -eq 0 ] || [ "$rc" -eq 2 ]; then
+        typed=yes; [ "$rc" -eq 2 ] && typed=sent-unconfirmed; pane="$who"
         rexec "$m" bash bin/agents/eindri-answer.sh --from "$SIGN" --record-only "$who" "$LINE" >/dev/null
         why="the answer was typed into the pane and recorded"
       else why="answer refused: $why · pane: $TYPED_WHY"; fi
@@ -195,13 +234,17 @@ tell_who() {  # machine who   (an errand id or a pane id)
   if [ "$MODE" != pane ]; then
     out="$(rexec "$m" bash bin/agents/tell.sh --from "$SIGN" "$who" "$line")"; rc=$?
     arm="$(wire_state "$rc")"; why="$(printf '%s' "$out" | tail -1 | cut -c1-90)"
-    if [ "$arm" = no-answer ]; then
+    if [ "$arm" = no-answer ] && [ "$rc" -eq 255 ]; then
       row "$m" "$who" "-" no-answer "-" no "$m did not answer (exit $rc) within ${LIMIT}s"; return
     fi
   fi
   if [ "$arm" != handed ] && [ "$MODE" != arm ]; then
-    if type_pane "$m" "$who" "$line"; then typed=yes; pane="$who"; why="the wire refused; typed into $who"
-    else pane="not-found"; why="${why:+$why · }pane: $TYPED_WHY"; fi
+    type_pane "$m" "$who" "$line"; rc=$?
+    case "$rc" in
+      0) typed=yes; pane="$who"; why="the wire did not hand it; typed into $who" ;;
+      2) typed=sent-unconfirmed; pane="$who"; why="the wire did not hand it; typed into $who, not confirmed: $TYPED_WHY" ;;
+      *) pane="not-found"; why="${why:+$why · }pane: $TYPED_WHY" ;;
+    esac
   elif [ "$arm" = handed ]; then pane="$who"; fi
   row "$m" "$who" "-" "$arm" "$pane" "$typed" "${why:-ok}"
 }

@@ -51,21 +51,21 @@ fleet-tell[1]{machine,target,verb,holder,arm,pane,typed,why}:
   "far","arm holder","tell","Ada,counsellor","refused","w1:p1","yes","the arm is not held; …"
 ```
 
-`arm` is `handed`, `refused` or `no-answer`. `pane` is the pane id or `not-found`. `typed` says whether a line went into a pane. A tell is **handed, not done**, until the agent answers.
+`arm` is `handed`, `refused` or `no-answer`. `pane` is the pane id or `not-found`. `typed` is `yes`, `no`, or `sent-unconfirmed` (the line was typed, but the wait for proof that the agent started ran out). A tell is **handed, not done**, until the agent answers.
 
 ## How it chooses a road
 
 1. On the target machine it runs that machine's own `bin/agents/tell.sh`, over ssh when the machine is not this one.
 2. An arm holder is also typed into directly, because a wake in the queue is read at the holder's next turn and a typed line is read now.
 3. When the wire refuses, the line is typed into the agent's herdr pane with `eindri-send.sh`, which refuses a pane that is not an agent pane. The pane of an arm holder is found by the machine itself (`bin/fleet/arm-holder-pane.sh`), never from a remembered id.
-4. When the arm was refused and the pane was typed, a wake is raised on the sender's own queue: `<machine>'s arm is not held — re-arm needed`.
+4. When the arm was refused and the pane was typed, a wake is raised on the sender's own arm, or in the durable wake queue when that arm refuses too: `<machine>'s arm is not held — re-arm needed`. The row says `wake=raised` or `wake=not-raised(why)`.
 
 Every line is signed `<seat> (<machine>)`.
 
 ## Limits
 
 - One line only. A long message goes in a letter file and the line names it.
-- Every ssh and remote command has a time limit (25 seconds, `FLEET_TELL_TIMEOUT`); a machine that does not answer is reported as `no-answer`.
+- Every ssh and remote command has a time limit (25 seconds for a probe, `FLEET_TELL_TIMEOUT`; a send waits for its own limit, `FLEET_TELL_SEND_TIMEOUT`, by default twice `EINDRI_SEND_WAIT` plus 30 seconds); a machine that does not answer is reported as `no-answer`.
 - `--answer` needs an errand with an open question on that machine.
 
 ## If it does not work

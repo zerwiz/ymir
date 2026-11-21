@@ -14,7 +14,7 @@ export YMIR_RUNTIME_DIR="$T/rt" FLEET_TELL_ME=here FLEET_TELL_TIMEOUT=5 YMIR_SEA
 cat >"$T/fleet.json" <<'J'
 {"hosts":{"here":{"user":"u","tailnet":"here.example"},"far":{"user":"u","tailnet":"far.example"},"dead":{"user":"u","tailnet":"dead.example"}}}
 J
-export FLEET_TELL_REGISTRY="$T/fleet.json"
+export FLEET_TELL_REGISTRY="$T/fleet.json" FLEET_TELL_QUEUE="$T/state/.wake-queue"
 export FLEET_TELL_WAKE_CMD='printf "WAKE %s\n" "$1" >>"$LOG"'
 # fake ssh: logs, fails for the dead host, otherwise runs the remote command here
 cat >"$T/bin/ssh" <<'S'
@@ -32,7 +32,7 @@ printf 'tell %s\n' "$*" >>"$LOG"; [ "${ARM_HELD:-1}" = 1 ] || { echo "no arm is 
 S
 cat >"$T/rt/bin/agents/eindri-send.sh" <<'S'
 #!/usr/bin/env bash
-printf 'send %s\n' "$*" >>"$LOG"; echo sent
+printf 'send %s\n' "$*" >>"$LOG"; sleep "${SEND_SLEEP:-0}"; echo sent; exit "${SEND_RC:-0}"
 S
 cat >"$T/rt/bin/agents/eindri-answer.sh" <<'S'
 #!/usr/bin/env bash
@@ -99,4 +99,28 @@ for p in w9:p9 w2:p2 w7:p7; do
   case "$p" in w2:p2) [ "$r" = w2:p2 ] && good "the resolver returns an agent pane" || bad "agent pane" "$r" ;;
                *) [ "$r" = not-found ] && good "the resolver refuses $p (not an agent pane)" || bad "refuse $p" "$r" ;; esac
 done
+
+# a send that outlasts the short probe limit is still delivered (its own, longer limit)
+o="$(SEND_SLEEP=3 FLEET_TELL_TIMEOUT=1 FLEET_TELL_PANE_TIMEOUT=5 FLEET_TELL_SEND_TIMEOUT=10 run --to far "slow")"
+grep -q '"handed","w1:p1","yes"' <<<"$o" && good "a send that outlasts the probe limit is typed, not killed" || bad "slow send" "$o"
+# the send cut short after the line went in is sent-unconfirmed, not no
+o="$(SEND_RC=5 run --to far "hi")"; rc=$?
+grep -q '"sent-unconfirmed"' <<<"$o" && good "eindri-send exit 5 is reported sent-unconfirmed" || bad "exit 5" "$o"
+o="$(SEND_SLEEP=3 FLEET_TELL_SEND_TIMEOUT=1 run --to far "hi")"
+grep -q '"sent-unconfirmed"' <<<"$o" && good "a send cut by the limit (124) is sent-unconfirmed" || bad "exit 124" "$o"
+# the wake: the sender's arm refuses, the durable queue takes it
+export FLEET_TELL_WAKE_CMD='exit 3'; rm -rf "$T/state"
+o="$(ARM_HELD=0 run --to far "hello")"
+grep -q 'wake=raised' <<<"$o" && grep -q "far's arm is not held" "$T/state/.wake-queue" && good "a refused wake falls back to the durable queue and says raised" || bad "wake fallback" "$o"
+export FLEET_TELL_WAKE_CMD='exit 3'; export FLEET_TELL_QUEUE=/proc/nope/q
+o="$(ARM_HELD=0 run --to far "hello")"
+grep -q 'wake=not-raised' <<<"$o" && good "an unraisable wake is reported not-raised" || bad "wake not-raised" "$o"
+export FLEET_TELL_WAKE_CMD='printf "WAKE %s\n" "$1" >>"$LOG"'; export FLEET_TELL_QUEUE="$T/state/.wake-queue"
+# a missing door on the far runtime is named
+o="$(HOLDER_PANE=x run --to far "hi")"
+rm -f "$T/rt/bin/fleet/arm-holder-pane.sh"; o="$(run --to far "hi")"
+grep -q "door missing on far's runtime" <<<"$o" && good "a missing door (127) is named, not 'no agent pane'" || bad "127" "$o"
+# a dry run exits 0
+: >"$LOG"; "$DOOR" --dry-run --to far --to dead "x" >/dev/null 2>&1; [ $? = 0 ] && good "--dry-run exits 0" || bad "dry-run exit"
+
 printf '\n%s passed, %s failed\n' "$ok" "$fail"; [ "$fail" = 0 ]
