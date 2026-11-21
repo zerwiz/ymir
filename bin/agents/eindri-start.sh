@@ -113,10 +113,15 @@ MODEL_SOURCE=""; MODEL_NOTE=""
 if [ "$KIND" = claude ] && [ -z "$MODEL" ]; then
   MODEL_SOURCE="errand weight (the engine picks sonnet or opus)"
 elif [ -z "$MODEL" ] && [ -x "$SCRIPT_DIR/../model/agent-model.sh" ]; then
-  resolved="$("$SCRIPT_DIR/../model/agent-model.sh" "$ROLE" --json 2>/dev/null || true)"
+  # A --kind named here is the harness the model is judged against; with none, the role's own
+  # row decides — and a row that runs on Claude (the judge: forseti { model: opus, harness: claude })
+  # seats Claude with the name the CLI takes, never a pi model on a Claude seat (2026-11-21).
+  resolved="$("$SCRIPT_DIR/../model/agent-model.sh" "$ROLE" --json ${KIND_EXPLICIT:+--harness "$KIND_EXPLICIT"} 2>/dev/null || true)"
   if [ -n "$resolved" ]; then
     MODEL="$(printf '%s' "$resolved" | sed -n 's/.*"model"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)"
     MODEL_SOURCE="$(printf '%s' "$resolved" | sed -n 's/.*"source"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)"
+    row_harness="$(printf '%s' "$resolved" | sed -n 's/.*"harness"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)"
+    if [ -z "$KIND_EXPLICIT" ] && [ "$row_harness" = claude ]; then KIND=claude; KIND_EXPLICIT=claude; fi
   fi
 fi
 [ -n "$MODEL_SOURCE" ] || { [ -n "$MODEL" ] && MODEL_SOURCE="explicit --model" || MODEL_SOURCE="unresolved"; }
