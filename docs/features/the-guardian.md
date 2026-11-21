@@ -121,3 +121,11 @@ heartbeat is stale, restart it (`sudo systemctl restart garmr-hound.service`) an
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-20** — the heartbeat is the hound's own pulse now. It is written on every tick of the audit
+  follow loop (on its own clock, `hound.heartbeat_seconds`, default 60), not only when a finding is
+  written, and the listener snapshot runs on its own `poll_seconds` clock inside the same loop. A fresh
+  heartbeat means the hound is alive; it does not mean auditd is writing. If the heartbeat is fresh but
+  `findings.jsonl` has not moved for a long time, check that auditd is still logging:
+  `journalctl -u auditd -b | grep -i suspend`. auditd **suspends logging when its partition fills and
+  does not resume by itself** when space comes back. Resume it with `sudo auditctl --signal resume`
+  (or `sudo kill -USR2 $(pidof auditd)`), then `sudo auditctl -s` should show it enabled.
