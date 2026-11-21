@@ -24,7 +24,7 @@ piece, what it does, its tests and its callers.
 
 | Piece | Code | What it does | Tests | Called by |
 |---|---|---|---|---|
-| **The kit** (2.0.0) | `bin/collab/kit/` — `scripts/kit.py` + `scripts/kitlib/` (13 modules) behind 14 thin `scripts/*.sh` doors; 10 RULES (15–24); `.githooks/`; `docs/`, `areas/`, `plans/tickets/` | What a repository receives: the delivery rules, hooks, worktree and work commands, areas and keepers, leftovers, stack and deploy doors | `bin/collab/tests/test_kit.py` (40), `test_work.py` (13) | `standardise.sh --apply` copies it into a repository |
+| **The kit** (2.0.0) | `bin/collab/kit/` — `scripts/kit.py` + `scripts/kitlib/` (13 modules) behind 19 thin `scripts/*.sh` doors; 9 RULES (15–24, no 21); `.githooks/`; `docs/`, `areas/`, `plans/tickets/` | What a repository receives: the delivery rules, hooks, worktree and work commands, areas and keepers, leftovers, stack and deploy doors | `bin/collab/tests/test_kit.py` (40), `test_work.py` (13) | `standardise.sh --apply` copies it into a repository |
 | **The installer** | `bin/collab/standardise.py` + `.sh`, `profiles/*.yaml` (6 stack profiles), `kit-history.sh` + `kit-history.tsv`, `registers/house.tsv` | Puts the kit into a repository, sorts every file into missing · older · local, upgrades only what was never changed locally, writes `.collab-kit.json` | `test_kit.py` | the operator or an agent, by hand |
 | **The baton shelf** | `bin/collab/init.sh`, `templates/handoff-*.{md,py,sh}` | Installs `handoff/` (README, TEMPLATE, CURRENT, log, check) | `bin/collab/tests/test_collab.sh` (31) | by hand; `standardise.py` only *prints a note* when it is missing |
 | **The roll** | `bin/collab/who.py` | Who is declared, on which surface, measured over ssh on the register's host | `test_collab.sh` | `collab.sh who` |
@@ -33,7 +33,7 @@ piece, what it does, its tests and its callers.
 | **The card door** | `bin/boards/cardlib.py` (632 lines), `card.py`, `card.sh`, `card_audit.py`, `report.py` | One contract for a card (title rules, owner, evidence), a ledger in the home, and **direct REST adapters for Plane, Trello and GitHub** | `bin/gates/tests/test_card_door.sh` | no caller outside `bin/boards/` |
 | **The `mcp` board adapter** | `bin/boards/board_adapter_mcp.py` (`McpBoard`) | Reaches any board that speaks the board contract over MCP; resolves `token_from` (env · vault · claude-mcp) | through plan-sync's tests | `plan_sync.py`, `publish.py` |
 | **Plan sync** | `bin/boards/plan_sync.py` (709), `plan-sync.sh`, `plan-card-after.sh` | Plan ledger (home or repo) → one card per plan with its phases as sub-cards, idempotent | `bin/boards/tests/test_plan_sync_repo.py` | `bin/records/plan.sh`, `note.sh`, `bin/vault/home-sync.sh` (through `plan-card-after.sh`) |
-| **Arm members** | `bin/boards/arm_members.py` + `.sh` | Every arm holder is a board member | `test_arm_members.py` | by hand |
+| **Arm members** | `bin/boards/arm_members.py` + `bin/boards/arm-members.sh` | Every arm holder is a board member | `test_arm_members.py` | by hand |
 | **The to-do board** | `bin/records/todo_board.py` (795), `todo.sh`, `todos.sh` | The operator's to-do list on a board, with a cache and a queue for when the board is dark — **with its own MCP client** | `bin/records/tests/test_todo_board.py` | `ymir_todo_board` in `bin/mcp/ymir-mcp.py`, `todos.sh`, Sága |
 | **Where a project lives** | `bin/agents/project-target.sh` (295) | Resolves a project id to this machine's clone, makes a worktree in it | `bin/agents/tests/test_project_target.sh` (20) | `eindri-start.sh`, briefs |
 | **The batch road** | `bin/forge/gather.sh`, `gather-notice.sh`, `merge-method.sh` | Gathers finished errands into one worktree, one gate run, one PR | `.agents/tests/gather.test.sh`, `test_gather_notice.sh` (12), `test_gather_orders_by_base.sh`, `test_merge_method.sh` | the helm |
@@ -137,7 +137,7 @@ flowchart LR
 | **Reading the project registry** | **34 files** read `projects.yaml` directly (shell and Python). `registry-lib.sh` says it is "the ONE reader", but only for the realm key | No schema, so each reader guesses at the shape |
 | **The delivery road** | `bin/forge/ship.sh` and `ship-watch.sh` read the **old top-level** `delivery:` key (`reviewer-merges` / `operator-merges`). The registry now carries `handling.delivery.road` (`judge-merges` 64, `operator-merges` 8, `no-pr-road` 4, `person-merges` 3, …) | Two vocabularies for one fact; only one row still has the old key |
 | **The handoff baton** | `templates/handoff-check.py` checks it, `publish.py` `section()` parses it again for cards | Two parsers of one file shape; plan 346.15 would make a third |
-| **YAML parsing** | the house uses PyYAML; the kit carries `kitlib/miniyaml.py` (144 lines) | Acceptable: the kit must run in a repository with no PyYAML. Keep it, but keep it the kit's only parser |
+| **YAML parsing** | the house uses PyYAML; the kit carries `kitlib/miniyaml.py` (169 lines) | Acceptable: the kit must run in a repository with no PyYAML. Keep it, but keep it the kit's only parser |
 | **Two doors named `ship.sh`** | `bin/collab/ship.sh` (commit, merge to base, push) and `bin/forge/ship.sh` (reviewer merge) | Same name, opposite jobs |
 
 ### Pieces that bypass the board contract or the delivery gate
@@ -268,7 +268,7 @@ or more.
 | 0003.1 · inventory and fit, signed by the host keeper | Decision | S | the plan's own table is the draft | — |
 | 0003.2 · one code base, two looks | Code | L | Gimlé. Only the login is themed today (`systems/login/dex-theme/`); the board, the hall and the desk are not | the designer's tokens |
 | 0003.3 · **many identity roads, one session** | Code | M | Gimlé `systems/login/oidc_bridge.py` and `board_door.py`: several sign-in roads (the house's road stays one, the company's identity is another), one Gimlé session, and the board door decides membership **from the registry**, never from which road was used | 345.3 (membership from the registry) |
-| 0003.4 · the board contract on the company's MCP, per-seat tokens | Config | S | point Gimlé's MCP at the company's Plane; `bin/mcp-enrol.py` already enrols tokens | 0003.3 |
+| 0003.4 · the board contract on the company's MCP, per-seat tokens | Config | S | point Gimlé's MCP at the company's Plane; Gimlé's `bin/mcp-enrol.py` already enrols tokens | 0003.3 |
 | 0003.5 · move the projects with their history | Code | M | a card migration tool over the contract (read from one place, write to another, keep links and comments) | slice 2 |
 | 0003.6 · the homepage and the doors | Config | M | DNS, tunnels and certificates in the registry (346.8) | 0003.2 |
 | 0003.7 · backups and the ward | Config | S | the host's backup units; the trouble panel reads the host | — |
