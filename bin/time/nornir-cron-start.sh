@@ -244,10 +244,26 @@ scheduler='
   # "the job broke" and "the job was never found" came to read identically (plan 292).
   run_row() {
     cd "$home" 2>/dev/null || true
-    bash -lc "$cmd" >>"$log" 2>&1
-    _rc=$?
-    [ "$_rc" -eq 0 ] && return 0
-    _tail="$(tail -n 4 "$log" 2>/dev/null | grep -v '^$' | tail -n 1 | cut -c1-160)"
+    # THE ROW SPEAKS FOR ITSELF (2026-11-21). The tail used to be read from the SHARED log, so a row
+    # that failed was described by whatever line another row wrote last, or by nothing ("no output").
+    # The row now writes its own stdout and stderr to its own files; both are appended to the log, and
+    # a failure is described by its OWN last stderr lines (its stdout when stderr is empty).
+    _out="$(mktemp "${TMPDIR:-/tmp}/nornir-row.XXXXXX")"; _err="$(mktemp "${TMPDIR:-/tmp}/nornir-row.XXXXXX")"
+    if [ -n "$_out" ] && [ -n "$_err" ]; then
+      bash -lc "$cmd" >"$_out" 2>"$_err"
+      _rc=$?
+      cat "$_out" "$_err" >>"$log" 2>/dev/null
+    else
+      bash -lc "$cmd" >>"$log" 2>&1
+      _rc=$?
+    fi
+    if [ "$_rc" -eq 0 ]; then rm -f "$_out" "$_err"; return 0; fi
+    if declare -f cron_row_tail >/dev/null 2>&1; then
+      _tail="$(cron_row_tail "$_err" "$_out")"
+    else
+      _tail="$(tail -n 4 "$_err" "$_out" 2>/dev/null | grep -v "^$" | grep -v "^==>" | tail -n 1 | cut -c1-160)"
+    fi
+    rm -f "$_out" "$_err"
     _why=""
     if declare -f cron_fail_detail >/dev/null 2>&1; then
       _why="$(cron_fail_detail "$home" "$cmd" "$_rc" "$_tail" 2>/dev/null)"
