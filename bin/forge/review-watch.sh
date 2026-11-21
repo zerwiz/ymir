@@ -301,10 +301,21 @@ for row in doc.get("projects") or []:
                 print(p); sys.exit(0)
 PY
   }
+  # the operator's own GitHub logins, read once from the home (the same rule as pr-seal.sh's merge hand)
+  operator_logins=" $(python3 "$ROOT/bin/forge/warden-policy.py" operator-logins 2>/dev/null | tr 'A-Z' 'a-z' | tr '\n' ' ') "
   judged_on_pr() {  # <owner/repo> <n> <head> — does the PR carry the judge's comment naming this head?
     # judge-merge.sh writes 'The judge approved head `<12>`' or 'The judge asks for rework on head `<12>`'
-    gh pr view "$2" -R "$1" --json comments -q '.comments[].body' 2>/dev/null \
-      | grep -qE "^The judge (approved|asks for rework on) head \`${3:0:12}\`"
+    # under the operator's own login. This is a public repository: anyone may comment, so a match
+    # counts ONLY when its author is one of the operator's logins — a stranger's comment that copies
+    # the judge's words must never take a head out of review (review of #863, third rework).
+    local login body
+    while IFS=$'\t' read -r login body; do
+      login="$(printf '%s' "$login" | tr 'A-Z' 'a-z')"
+      [ -n "$login" ] || continue
+      case "$operator_logins" in *" $login "*) ;; *) continue ;; esac
+      printf '%s\n' "$body" | grep -qE "^The judge (approved|asks for rework on) head \`${3:0:12}\`" && return 0
+    done < <(gh pr view "$2" -R "$1" --json comments -q '.comments[] | [.author.login, .body] | @tsv' 2>/dev/null)
+    return 1
   }
   if [ "$seat_here" = 1 ]; then handed_max="${YMIR_REVIEW_HANDOFF_MAX:-1}"; else handed_max="${YMIR_REVIEW_HANDOFF_MAX:-3}"; fi
   handed=0; spawned=0; waiting=0; SEEN=0

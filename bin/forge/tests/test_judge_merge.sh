@@ -409,16 +409,31 @@ rm -f "$WAKELOG".*; touch -d '-2 hours' "$HM"; out="$(keeper_pass)"
 rm -f "$T/home/state/.reviewed/rehanded-"* "$T/home/state/.reviewed/rehand-woke-"* "$WAKELOG".*
 touch -d '-2 hours' "$HM"
 cp "$T/bin/gh" "$T/gh.keeper"
+# the fake answers the author-and-body query the keeper must send ('.comments[] | [.author.login, .body]');
+# any other query gets nothing, so a keeper that reads bodies without authors fails here
 cat >"$T/bin/gh" <<GH
 #!/usr/bin/env bash
-if [ "\$1 \$2" = "pr view" ]; then printf 'The judge asks for rework on head \`%s\` (2 item(s)); nothing is merged.\n' "${HEAD_A:0:12}"; exit 0; fi
+if [ "\$1 \$2" = "pr view" ]; then
+  case "\$*" in *'.author.login'*) ;; *) exit 0 ;; esac
+  printf '%s\tThe judge asks for rework on head \`%s\` (2 item(s)); nothing is merged.\n' "\$(cat "$T/comment-author")" "${HEAD_A:0:12}"; exit 0
+fi
 exec "$T/gh.keeper" "\$@"
 GH
 chmod +x "$T/bin/gh"
+printf 'acme\n' >"$T/comment-author"
 out="$(keeper_pass)"
 ! grep -q 'pull/7 ' "$WAKELOG.armsend" 2>/dev/null && printf '%s\n' "$out" | grep -q '"acme/widget#7".*already commented' \
   && [ -e "$T/home/state/.reviewed/pr-acme--widget-7.$HEAD_A" ] \
-  && ok "a head the judge already commented on is never handed again" || bad "judge comment read" "$out"
+  && ok "a head the judge already commented on (under the operator's login) is never handed again" || bad "judge comment read" "$out"
+# 15d · review of #863, third rework: the same words from a stranger's login are ignored — the head is
+#       re-handed, and no judged marker is written (anyone may comment on a public repository)
+rm -f "$T/home/state/.reviewed/pr-acme--widget-7.$HEAD_A" "$T/home/state/.reviewed/rehanded-"* "$WAKELOG".*
+touch -d '-2 hours' "$HM"
+printf 'stranger\n' >"$T/comment-author"
+out="$(keeper_pass)"
+grep -q 'pull/7 ' "$WAKELOG.armsend" 2>/dev/null && ! printf '%s\n' "$out" | grep -q '"acme/widget#7".*already commented' \
+  && [ ! -e "$T/home/state/.reviewed/pr-acme--widget-7.$HEAD_A" ] \
+  && ok "a stranger's comment copying the judge's words is ignored; the head is handed on again" || bad "stranger's judge comment" "$out $(cat "$WAKELOG.armsend" 2>/dev/null)"
 cp "$T/gh.keeper" "$T/bin/gh"
 
 # 16 · the same PR number in two repositories is two PRs
