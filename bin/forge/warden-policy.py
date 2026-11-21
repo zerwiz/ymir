@@ -43,6 +43,7 @@ gated (the door still keeps every other law of the house).
     warden-policy.py owns <owner/repo>       # exit 0 when the operator's registry lists it
     warden-policy.py repos                   # every repository the operator's registry claims
     warden-policy.py operator-logins         # the GitHub logins the home records as the operator's own
+    warden-policy.py trusted-authors         # operator logins + named collaborators: whose PRs may merge at once
     warden-policy.py kept                    # the repositories the keeper may judge, comment on and merge
     warden-policy.py keeps <owner/repo>      # exit 0 when the keeper may act on that repository
 
@@ -287,6 +288,25 @@ def operator_logins(home: Path) -> list[str]:
     return [v.lower() for v in _as_list(doc.get("aliases"))]
 
 
+def trusted_authors(home: Path) -> list[str]:
+    """The PR authors whose approved PR may merge at once: the operator's logins, plus the
+    collaborators the home names (YMIR_COLLABORATOR_GITHUB, else operator.yaml `collaborators`).
+    A public repository takes a PR from anyone; nobody else's PR is merged by the judge's road."""
+    names = list(operator_logins(home))
+    env = os.environ.get("YMIR_COLLABORATOR_GITHUB", "").strip()
+    if env:
+        names += [v.lower() for v in _as_list(env)]
+    else:
+        path = Path(os.environ.get("YMIR_OPERATOR_FILE") or home / "hodd" / "identity" / "operator.yaml")
+        try:
+            doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        except (OSError, yaml.YAMLError):
+            doc = {}
+        if isinstance(doc, dict):
+            names += [v.lower() for v in _as_list(doc.get("collaborators"))]
+    return sorted(set(names))
+
+
 def kept_repos(home: Path) -> list[str]:
     logins = set(operator_logins(home))
     path = registry_path(home)
@@ -416,6 +436,12 @@ def main(argv: list[str]) -> int:
 
     if verb == "operator-logins":
         names = operator_logins(home)
+        for n in names:
+            print(n)
+        return 0 if names else 1
+
+    if verb == "trusted-authors":
+        names = trusted_authors(home)
         for n in names:
             print(n)
         return 0 if names else 1

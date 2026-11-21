@@ -388,7 +388,7 @@ seal_judged() {
   # 3 · the PR, read now
   tmp="$(mktemp)"
   if ! timeout 60 "$GH" pr view "$n" -R "$repo" \
-      --json number,headRefName,headRefOid,title,url,mergeable,mergeStateStatus,statusCheckRollup,isDraft,labels,state >"$tmp" 2>/dev/null; then
+      --json number,headRefName,headRefOid,title,url,mergeable,mergeStateStatus,statusCheckRollup,isDraft,labels,state,author >"$tmp" 2>/dev/null; then
     rm -f "$tmp"; judged_refuse "$n" "unreadable" "gh pr view failed for $repo — nothing was merged" 4; return
   fi
   row="$(python3 - "$tmp" <<'PY'
@@ -417,14 +417,22 @@ m = p.get("mergeable") or "UNKNOWN"; s = p.get("mergeStateStatus") or "UNKNOWN"
 print("\t".join([str(p.get("number") or ""), p.get("headRefName") or "", p.get("headRefOid") or "",
                  (p.get("title") or "").replace("\t", " "), ci, det.replace("\t", " "), f"{m}/{s}",
                  "true" if p.get("isDraft") else "false", "true" if "hold" in labels else "false",
-                 p.get("url") or "", p.get("state") or "OPEN"]))
+                 p.get("url") or "", p.get("state") or "OPEN",
+                 ((p.get("author") or {}).get("login") or "").lower() or "-"]))
 PY
 )"
   rm -f "$tmp"
-  local prstate
-  IFS=$'\t' read -r num branch sha title ci ci_detail mstate draft held url prstate <<<"$row"
+  local prstate author trusted
+  IFS=$'\t' read -r num branch sha title ci ci_detail mstate draft held url prstate author <<<"$row"
   [ -n "$num" ] || { judged_refuse "$n" "unreadable" "the PR record could not be judged" 4; return; }
   [ "$prstate" = "OPEN" ] || { judged_refuse "$n" "not open" "the PR is $prstate" 1; return; }
+  # 3b · the author is the operator or a named collaborator (RULES/39): a public repository takes a PR
+  #      from anyone, and an approval is not a licence to merge a stranger's work. The Allfather seals
+  #      any other author's PR by his own hand.
+  trusted=" $(python3 "$WARDEN_POLICY" trusted-authors 2>/dev/null | tr 'A-Z' 'a-z' | tr '\n' ' ') "
+  case "$trusted" in *" $author "*) ;; *)
+    judged_refuse "$n" "author not trusted" "the PR author '${author:--}' is neither the operator nor a named collaborator — the Allfather seals this one" 1; return ;;
+  esac
   # 4 · the head is the head the judge approved — a moved head is new work, judged again
   if [ "$sha" != "$want" ]; then
     judged_refuse "$n" "head moved" "approved ${want:0:12}, the PR is now at ${sha:0:12} — the new head is reviewed again" 1; return

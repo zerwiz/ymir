@@ -303,6 +303,7 @@ PY
   }
   # the operator's own GitHub logins, read once from the home (the same rule as pr-seal.sh's merge hand)
   operator_logins=" $(python3 "$ROOT/bin/forge/warden-policy.py" operator-logins 2>/dev/null | tr 'A-Z' 'a-z' | tr '\n' ' ') "
+  trusted_authors=" $(python3 "$ROOT/bin/forge/warden-policy.py" trusted-authors 2>/dev/null | tr 'A-Z' 'a-z' | tr '\n' ' ') "
   judged_on_pr() {  # <owner/repo> <n> <head> — does the PR carry the judge's comment naming this head?
     # judge-merge.sh writes 'The judge approved head `<12>`' or 'The judge asks for rework on head `<12>`'
     # under the operator's own login. This is a public repository: anyone may comment, so a match
@@ -323,11 +324,20 @@ PY
     "$([ "$seat_here" = 1 ] && echo "yes ($judge_h)" || echo "no — no $judge_h CLI here")" "${dev_hosts[*]:-none}"
   for repo in "${REPOS[@]}"; do
     [ -n "$repo" ] || continue
-    prs="$(timeout 60 gh pr list -R "$repo" --state open --limit 100 --json number,headRefOid,isDraft,url 2>/dev/null)" \
+    prs="$(timeout 60 gh pr list -R "$repo" --state open --limit 100 --json number,headRefOid,isDraft,url,author 2>/dev/null)" \
       || { printf 'review-watch: gh pr list failed for %s — skipped this pass, not called empty\n' "$repo" >&2; continue; }
-    while IFS=$'\t' read -r num head url; do
+    while IFS=$'\t' read -r num head url author; do
       [ -n "$num" ] || continue
       SEEN=$((SEEN + 1))
+      # a public repository takes a PR from anyone (RULES/39): the judge's road, which merges an
+      # approval at once, serves only the operator's logins and the collaborators the home names.
+      # Any other author's PR is left to the Allfather: no judge seated, no comment, no merge.
+      # (the list ends in a space, so an empty author would match: it is refused by name first)
+      if [ -z "$author" ]; then trusted_here=0; else case "$trusted_authors" in *" $author "*) trusted_here=1 ;; *) trusted_here=0 ;; esac; fi
+      if [ "$trusted_here" != 1 ]; then
+        printf '  "%s#%s","%s","author %s is not the operator or a named collaborator — left to the Allfather, no judge seated"\n' "$repo" "$num" "${head:0:12}" "${author:-unknown}"
+        continue
+      fi
       # the PR's one name on the review shelf carries its repository (pr-<owner>--<repo>-<n>), the
       # same key bin/agents/eindri-review-spawn.sh writes — PR #7 of two repositories is two PRs
       key="$(pr_key "$repo" "$num")"
@@ -410,7 +420,8 @@ try: prs = json.load(sys.stdin)
 except Exception: prs = []
 for p in sorted(prs, key=lambda p: p.get("number") or 0):
     if p.get("isDraft"): continue
-    print("\t".join([str(p.get("number")), p.get("headRefOid") or "", p.get("url") or ""]))
+    print("\t".join([str(p.get("number")), p.get("headRefOid") or "", p.get("url") or "",
+                     ((p.get("author") or {}).get("login") or "").lower()]))
 ')
   done
   printf 'review-watch[keeper-pass]{seen,seated,handed,waiting}:\n  "%s","%s","%s","%s"\n' "$SEEN" "$spawned" "$handed" "$waiting"

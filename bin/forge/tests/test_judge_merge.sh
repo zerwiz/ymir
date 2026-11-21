@@ -86,7 +86,7 @@ pr_json() {  # <head> <ci: green|red|pending> [draft] [labels-json] [branch]
   cat >"$FIX/pr.json" <<JSON
 {"number":7,"headRefName":"$branch","headRefOid":"$head","title":"widget: mend the hinge","url":"https://github.com/acme/widget/pull/7",
  "mergeable":"MERGEABLE","mergeStateStatus":"CLEAN","statusCheckRollup":$roll,"isDraft":$draft,"labels":$labels,
- "state":"OPEN","body":"The hinge is mended.\nArm: here-only","author":{"login":"acme"}}
+ "state":"OPEN","body":"The hinge is mended.\nArm: here-only","author":{"login":"${PR_AUTHOR:-acme}"}}
 JSON
 }
 
@@ -235,6 +235,16 @@ fresh "$REWORK"; pr_json "$HEAD_A" green; printf 'READ\n' >"$FIX/perm"
 "$JM" act pr-7-review >/dev/null 2>&1
 [ "$(comments)" = 0 ] && ok "a repository this hand cannot write is never commented on" || bad "read-only hand commented" "$(cat "$GHLOG" 2>/dev/null)"
 
+# 11c · a stranger's PR: an approval is never a licence to merge it (RULES/39). A named collaborator's is.
+fresh "$APPROVE"; PR_AUTHOR=stranger pr_json "$HEAD_A" green
+out="$("$JM" act pr-7-review 2>&1)"
+[ "$(merges)" = 0 ] && ok "an approved PR from a stranger is not merged" || bad "stranger merged" "$(cat "$GHLOG" 2>/dev/null) $out"
+fresh "$APPROVE"; PR_AUTHOR=friend pr_json "$HEAD_A" green
+YMIR_COLLABORATOR_GITHUB=friend "$JM" act pr-7-review >/dev/null 2>&1
+[ "$(merges)" = 1 ] && ok "an approved PR from a named collaborator is merged" || bad "collaborator not merged" "$(cat "$GHLOG" 2>/dev/null)"
+trusted="$(python3 "$ROOT/bin/forge/warden-policy.py" trusted-authors 2>/dev/null | tr '\n' ' ')"
+[ "$trusted" = "acme " ] && ok "trusted-authors is the operator's logins and nobody else by default" || bad "trusted-authors" "$trusted"
+
 # 12 · the template's placeholder is not a verdict
 fresh '"APPROVE or NEEDS-REWORK","the count","list","seal"'; pr_json "$HEAD_A" green
 "$JM" act pr-7-review >/dev/null 2>&1
@@ -359,9 +369,11 @@ rm -rf "$T/home/state" "$GHLOG"; mkdir -p "$T/home/state/.reviewed" "$FIX"; prin
 printf 'review-watch:\n  enabled: on\n' >"$T/wardens.yaml"
 printf '{"heart":"nobody","hosts":{"devbox":{"roles":["dev"]}}}\n' >"$T/fleet.json"
 cat >"$FIX/list.json" <<JSON
-[{"number":8,"headRefOid":"$HEAD_B","isDraft":false,"url":"https://github.com/acme/widget/pull/8"},
- {"number":7,"headRefOid":"$HEAD_A","isDraft":false,"url":"https://github.com/acme/widget/pull/7"},
- {"number":9,"headRefOid":"3333333333333333333333333333333333333333","isDraft":true,"url":"https://github.com/acme/widget/pull/9"}]
+[{"number":8,"headRefOid":"$HEAD_B","isDraft":false,"author":{"login":"acme"},"url":"https://github.com/acme/widget/pull/8"},
+ {"number":7,"headRefOid":"$HEAD_A","isDraft":false,"author":{"login":"acme"},"url":"https://github.com/acme/widget/pull/7"},
+ {"number":9,"headRefOid":"3333333333333333333333333333333333333333","isDraft":true,"author":{"login":"acme"},"url":"https://github.com/acme/widget/pull/9"},
+ {"number":10,"headRefOid":"4444444444444444444444444444444444444444","isDraft":false,"author":{"login":"stranger"},"url":"https://github.com/acme/widget/pull/10"},
+ {"number":11,"headRefOid":"5555555555555555555555555555555555555555","isDraft":false,"url":"https://github.com/acme/widget/pull/11"}]
 JSON
 cat >"$T/bin/gh" <<'GH'
 #!/usr/bin/env bash
@@ -379,6 +391,8 @@ out="$(YMIR_WARDENS_FILE="$T/wardens.yaml" YMIR_FLEET_REGISTRY="$T/fleet.json" Y
   timeout 120 bash "$ROOT/bin/forge/review-watch.sh" --keeper --dry-run 2>&1)"
 printf '%s\n' "$out" | grep -q "\"acme/widget#7\".*would seat the judge.*--project $T/clone" && ok "the oldest open PR gets the judge, in its own clone" || bad "the oldest open PR gets the judge" "$out"
 printf '%s\n' "$out" | grep -q '"acme/widget#8".*would hand to devbox' && ok "the next PR is handed to a developer seat" || bad "hand-off to a developer seat" "$out"
+printf '%s\n' "$out" | grep -q 'would \(seat\|hand\).*' && printf '%s\n' "$out" | grep -E '"acme/widget#1[01]".*(would|judge is seated|handed to)' >/dev/null \
+  && bad "a stranger's or an unnamed author's PR is never judged" "$out" || ok "a PR whose author is not the operator or a collaborator is left to the Allfather"
 printf '%s\n' "$out" | grep -q 'widget#9' && bad "a draft is never offered" "$out" || ok "a draft is never offered"
 printf '%s\n' "$out" | grep -q 'upstream/agent' && bad "the keeper never watches an upstream" "$out" || ok "the keeper never watches an upstream it does not own"
 printf '%s\n' "$out" | grep -q 'acme-org/kept' && ok "a repository marked git.keep: true is watched" || bad "git.keep: true watched" "$out"
@@ -469,8 +483,8 @@ cp "$T/gh.keeper" "$T/bin/gh"
 # 16 · the same PR number in two repositories is two PRs
 rm -rf "$T/home/state" "$WAKELOG".*; mkdir -p "$T/home/state/.reviewed"
 printf '{"heart":"nobody","hosts":{"devbox":{"roles":["dev"]}}}\n' >"$T/fleet.json"
-printf '[{"number":7,"headRefOid":"4444444444444444444444444444444444444444","isDraft":false,"url":"https://github.com/acme-org/kept/pull/7"}]\n' >"$FIX/list2.json"
-printf '[{"number":7,"headRefOid":"%s","isDraft":false,"url":"https://github.com/acme/widget/pull/7"}]\n' "$HEAD_A" >"$FIX/list.json"
+printf '[{"number":7,"headRefOid":"4444444444444444444444444444444444444444","isDraft":false,"author":{"login":"acme"},"url":"https://github.com/acme-org/kept/pull/7"}]\n' >"$FIX/list2.json"
+printf '[{"number":7,"headRefOid":"%s","isDraft":false,"author":{"login":"acme"},"url":"https://github.com/acme/widget/pull/7"}]\n' "$HEAD_A" >"$FIX/list.json"
 : >"$T/home/state/.reviewed/pr-acme--widget-7.$HEAD_A"
 out="$(YMIR_WARDENS_FILE="$T/wardens.yaml" YMIR_FLEET_REGISTRY="$T/fleet.json" YMIR_REVIEW_KEEPER=1 YMIR_REVIEW_SEAT_HERE=0 \
   timeout 120 bash "$ROOT/bin/forge/review-watch.sh" --keeper --dry-run 2>&1)"
