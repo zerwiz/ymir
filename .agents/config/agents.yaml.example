@@ -77,5 +77,37 @@ agents:
   # a door call from another system. Headless by design; he is never a window.
   skirnir: { model: opencode-go/deepseek-v4.1-flash }
 
+# ── ROLES: which harness and model each JOB runs, and whether its seat runs unattended ───────────────
+# (2026-11-21 — "we also want to be able to run more types of models for judges and coders. That must
+# be able to tune for the users.") A role is a job, not a person: judge · coder · scout · helm.
+# Each role is an ORDERED list of harness:model choices. The FIRST choice this machine can serve wins:
+#   claude:<model>        Claude's allow-list (bin/model/model-allow.sh) — aliases opus · sonnet · haiku
+#   pi:<provider/model>   this seat's catalogue (bin/model/catalog.sh) — local or hosted models through pi
+#   opencode:<provider/model>   opencode's own hosted models, judged by the operator's allow-list
+# A choice this machine cannot serve is SKIPPED AND NAMED (bin/model/role-model.sh <role> --explain),
+# never silently replaced; a role with no servable choice is refused. `--harness/--model` on a command
+# still wins over the list. A per-machine file, config/agents.<hostname>.yaml, replaces a role's list
+# (and its yolo) for that machine only; roles it does not name keep this file's.
+#
+# `yolo` decides whether the role's worker runs UNATTENDED with no permission prompts:
+#   on  — Claude runs in permission mode bypassPermissions (every DENY rule in the profile still holds:
+#         no merging, no push to main, no token leaving); pi and opencode run allow-all (their only mode).
+#   off — Claude runs in dontAsk: the profile's allow list holds and an unlisted tool is denied.
+# The house default is ON for coder (RULES/08: the judge merges, so the coder works freely) and OFF for
+# every other role. `yolo: { default: on|off }` below changes the default for roles that name none.
+#
+# Three shapes — keep the one that matches this machine's models (more in docs/reference/role-models.md):
+roles:
+  judge: [claude:opus, pi:opencode-go/deepseek-v4.1-flash]                       # hosted + a fallback
+  coder:
+    choose: [claude:sonnet, pi:opencode-go/deepseek-v4.1-flash]
+    yolo: on
+  scout: [pi:opencode-go/deepseek-v4.1-flash]
+  helm:  [claude:opus, pi:opencode-go/deepseek-v4.1-flash]
+  # only local models: judge: [pi:llamacpp-host/<model>]   coder: [pi:llamacpp-host/<model>]
+  # both: put the hosted choice first and a local one after it, so a machine without a key still works.
+# yolo:
+#   default: off
+
 # How many LOCAL models this machine may run at once (most boxes: 1).
 local_concurrency: 1

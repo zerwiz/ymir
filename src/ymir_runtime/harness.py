@@ -267,6 +267,8 @@ def build_launch_command(
     launch_cwd: str | Path | None = None,
     *,
     runner: proc.Runner = proc.run,
+    yolo: bool = False,
+    role: str = "",
 ) -> str:
     """The exact worker line — composed by the ONE generator, never here.
 
@@ -337,7 +339,10 @@ def build_launch_command(
         # list (any MCP tool) opened a permission dialog nobody answers. Under dontAsk it is denied
         # and the worker carries on; the deny list and every hook still apply. The profile is
         # widened by one allow per configured MCP server, written beside the brief.
-        profile = claude_worker_profile(launch_cwd)
+        profile = claude_worker_profile(launch_cwd, role)
+        from . import role_config
+
+        mode = role_config.claude_permission_mode(yolo)
         try:
             from . import claude_seat  # type: ignore[import-not-found]
 
@@ -346,14 +351,16 @@ def build_launch_command(
                 import json as _json
 
                 merged.write_text(
-                    _json.dumps(claude_seat.settings(profile, launch_cwd or Path.cwd()), indent=2) + "\n",
+                    _json.dumps(claude_seat.settings(profile, launch_cwd or Path.cwd(), mode=mode), indent=2) + "\n",
                     encoding="utf-8",
                 )
                 profile = merged
         except (ImportError, OSError, ValueError):
             pass
+        # YOLO is real (2026-11-21): on = bypassPermissions (no prompts; the profile's DENY rules
+        # still hold and still fence merging, pushing to main and leaking a token); off = dontAsk.
         return (
-            f"claude --permission-mode dontAsk --settings {proc.shell_quote(str(profile))} "
+            f"claude --permission-mode {mode} --settings {proc.shell_quote(str(profile))} "
             f'{model_flag}"$(cat {proc.shell_quote(brief_ref)})"'
         )
     raise ValueError(f"no launch shape for harness '{selection.name}'")

@@ -25,6 +25,7 @@
 # Usage:
 #   erindi-brief.sh <task-id> <repo-name> --mode <no-mistakes|direct-PR|local-only|batch>
 #   erindi-brief.sh <task-id> <repo-name> --scout
+#   erindi-brief.sh <task-id> <repo-name> --mode <m> --paths "bin/a.sh src/b.py"   (paths the task names: the Read first section lists their books)
 #   erindi-brief.sh <task-id> --relaunch
 #
 # --scout writes the scout contract: the deliverable is a report at
@@ -86,6 +87,7 @@ SCOUT=0
 RELAUNCH=0
 MODE=
 MODE_SET=0
+PATHS_NAMED=""
 POS=()
 want_value=
 for a in "$@"; do
@@ -95,6 +97,7 @@ for a in "$@"; do
     esac
     case "$want_value" in
       mode) MODE=$a; MODE_SET=1 ;;
+      paths) PATHS_NAMED=$a ;;
       *) echo "error: internal parser state for --$want_value" >&2; exit 1 ;;
     esac
     want_value=
@@ -104,6 +107,8 @@ for a in "$@"; do
     --scout) SCOUT=1 ;;
     --relaunch) RELAUNCH=1 ;;
     --mode) want_value=mode ;;
+    --paths) want_value=paths ;;
+    --paths=*) PATHS_NAMED=${a#--paths=} ;;
     --mode=*) MODE=${a#--mode=}; MODE_SET=1 ;;
     --yolo|--yolo=*) echo "error: --yolo is not a brief input; pass it to bin/agents/einherjar-spawn.sh, which records the task's merge posture" >&2; exit 1 ;;
     *) POS+=("$a") ;;
@@ -217,7 +222,23 @@ if [ -z "${YMIR_CMD_LIMIT_LIB_LOADED:-}" ]; then
   [ -r "$SCRIPT_DIR/cmd-limit-lib.sh" ] && { . "$SCRIPT_DIR/cmd-limit-lib.sh"; YMIR_CMD_LIMIT_LIB_LOADED=1; }
 fi
 LIMIT_RULES=""
-declare -f cmd_limit_rule_lines >/dev/null 2>&1 && LIMIT_RULES="$(cmd_limit_rule_lines)"
+# rules 7-10: the command limit, the ssh rule, the one door for talking, the stall watch (worker_rule_lines)
+if declare -f worker_rule_lines >/dev/null 2>&1; then LIMIT_RULES="$(worker_rule_lines)"
+elif declare -f cmd_limit_rule_lines >/dev/null 2>&1; then LIMIT_RULES="$(cmd_limit_rule_lines)"; fi
+# THE READ-FIRST SECTION (2026-11-21): the house's own books for the paths the task names. With
+# --paths the scaffold asks bin/records/where.sh now (bin/agents/read-first.sh); without, it says the
+# seat's opening will list them, because the task text is written after the scaffold. Paths, never
+# pasted text.
+READ_FIRST=""
+if [ -n "$PATHS_NAMED" ] && [ -x "$SCRIPT_DIR/read-first.sh" ]; then
+  # shellcheck disable=SC2086
+  READ_FIRST="$(bash "$SCRIPT_DIR/read-first.sh" $PATHS_NAMED 2>/dev/null || true)"
+fi
+if [ -z "$READ_FIRST" ]; then
+  READ_FIRST="# Read first
+
+The seat's opening lists the skill, canonical doc and books that own the paths this task names (\`bin/agents/read-first.sh\`, from \`bin/records/where.sh\`). For any path you touch that is not listed, ask \`bin/records/where.sh <path>\` BEFORE you edit it, and open the entry skill it names."
+fi
 
 INBOX_SECTION=$(cat <<EOF
 # Brokk instruction inbox
@@ -327,6 +348,8 @@ You are an Eindri: an autonomous worker agent managed by Brokk. Work on your own
 # Task
 {TASK}
 
+$READ_FIRST
+
 # Delivery contract
 Delivery contract: mode=scout
 
@@ -371,7 +394,7 @@ fi
 
 case "$MODE" in
   direct-PR)
-    RULE1='Never push to the default branch (push only your `eindri/'"$ID"'` branch). Never merge a PR; the Glitnir human gate owns the merge.'
+    RULE1='Never push to the default branch (push only your `eindri/'"$ID"'` branch). Never merge a PR, by any road. The judge reviews every PR; an approval on green gates merges at once (RULES/08, 2026-11-21); a NEEDS-REWORK comes back to this seat as a message, so keep the pane open, fix it on the same branch, push again, and stop at the PR.'
     DOD_BODY=$(cat <<EOF
 # Definition of done — every gate is a COMMAND; run it and record its output
 $EXEC_STEP
@@ -384,7 +407,7 @@ $WELL_STEP
 - Run the terminal act — one command; it writes the status line, files the report shelf, and appends the durable wake:
      \`bin/agents/eindri-acclaim.sh $ID --terminal done --line "opened PR <url>"\`
 - \`grep -c "$ID" $WAKE_QUEUE\` prints at least 1 (your wake is in the durable queue; Brokk is woken with no arm and no sweep).
-- Stop. Brokk routes the PR to the Glitnir human gate; you never merge.
+- Stop at the PR; you never merge. The judge reviews it and merges on approval; a NEEDS-REWORK comes back to this seat — fix it on the same branch and push again.
 EOF
 )
     ;;
@@ -392,7 +415,7 @@ EOF
     # RULES/08, appended 2026-11-12: errands dispatched TOGETHER commit on their own
     # branches and never push; the helm merges them in one integration worktree and
     # ships ONE push and ONE PR through the gates.
-    RULE1="Never push to any remote and never open a PR. Commit only on your \`eindri/$ID\` branch; this errand is one of a batch, and the helm merges every branch of the batch locally and ships them in ONE push and ONE PR (RULES/08, the batch road)."
+    RULE1="Never push to any remote and never open a PR. Commit only on your \`eindri/$ID\` branch; this errand is one of a batch, and the helm merges every branch of the batch locally and ships them in ONE push and ONE PR, which the judge reviews and merges on approval (RULES/08, the batch road)."
     DOD_BODY=$(cat <<EOF
 # Definition of done — every gate is a COMMAND; run it and record its output
 - \`git branch --show-current\` prints \`eindri/$ID\` (you are on the right branch).
@@ -424,7 +447,7 @@ EOF
 )
     ;;
   *)  # no-mistakes
-    RULE1='Never push to the default branch. Never merge a PR; the Glitnir human gate owns the merge.'
+    RULE1='Never push to the default branch. Never merge a PR, by any road. The judge reviews every PR; an approval on green gates merges at once (RULES/08, 2026-11-21); a NEEDS-REWORK comes back to this seat as a message, so fix it on the same branch and stop at the PR.'
     DOD_BODY=$(cat <<EOF
 # Definition of done — every gate is a COMMAND; run it and record its output
 - \`no-mistakes doctor\` reports the repo is initialized here (run \`no-mistakes init\` first if not).
@@ -435,7 +458,7 @@ $WELL_STEP
 - Run the terminal act — one command; it writes the status line, files the report shelf, and appends the durable wake:
      \`bin/agents/eindri-acclaim.sh $ID --terminal done --line "<PR url> (pipeline <status>)"\`
 - \`grep -c "$ID" $WAKE_QUEUE\` prints at least 1 (your wake is in the durable queue).
-- Stop. Brokk routes the PR to the Glitnir human gate; you never merge.
+- Stop at the PR; you never merge. The judge reviews it and merges on approval; a NEEDS-REWORK comes back to this seat — fix it on the same branch and push again.
 EOF
 )
     ;;
@@ -453,6 +476,8 @@ You are an Eindri: an autonomous worker agent managed by Brokk. Work on your own
 
 # Task
 {TASK}
+
+$READ_FIRST
 
 # Delivery contract
 Delivery contract: mode=$MODE

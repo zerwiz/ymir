@@ -299,3 +299,20 @@ own: **every PR in the house's repositories is reviewed by the judge, and the ju
 | **NEEDS-REWORK** | no merge; the verdict's items go back to the PR's author (the errand's seat, or the collaborator) as one line each |
 | **A red or pending gate** | no merge, even on approval; the judge names the failing row and waits for the next head |
 | **The operator** | may still merge anything from his hall with an explicit second click |
+
+## 2026-11-21 — what the judge and the coder are handed, and how their models and posture are chosen
+
+At the Allfather's word, 2026-11-21, after asking what the judge and the coder are given: *"we also want to be able to run
+more types of models for judges and coders. That must be able to tune for the users."* And of the permission posture:
+*"make yolo REAL and tunable per user."* This adds to the two sections above and removes nothing from them.
+
+| Matter | The rule |
+|---|---|
+| **The coder's rule** | the coder never merges, by any road. The judge reviews every PR; an approval on green gates merges at once; a NEEDS-REWORK comes back to the coder's seat, which fixes it on the same branch and pushes again |
+| **The same kit** | the judge and the coder are each handed their figure's card as the opening of the seat's prompt, on every harness; the books for the paths in play (`bin/agents/read-first.sh`, from `bin/records/where.sh`); and rules 7 to 10 (command limit, ssh, `bin/agents/tell.sh`, stall watch) |
+| **The judge sees the plan** | the review brief names the plan files the PR claims (PR body, the branch's fix note, the errand brief) and tells the judge to judge against them, and to run `compliance-check.sh` |
+| **Models per role** | the home's `config/agents.yaml` lists, per role (`judge`, `coder`, `scout`, `helm`), ordered `harness:model` choices; the first one the seat can serve wins; a skipped choice is named; none servable is a refusal; an explicit `--harness/--model` wins. A per-machine file overrides a role. One resolver: `bin/model/role-model.sh` |
+| **Yolo is real** | `yolo on` runs the worker with no permission prompts: Claude in `bypassPermissions` with every deny rule of the profile still in force (merging, a push to main, a token leaving), pi and opencode allow-all. `yolo off` is Claude's `dontAsk` allow list. The default comes from the home (per role, per machine); the house default is ON for the coder and OFF for the rest. Each spawn prints the posture that took effect |
+
+The how-to is `docs/features/choose-the-models-your-judges-and-coders-run.md`. Fix notes: `docs/fixes/model/2026-11-21-models-are-chosen-per-role.md`,
+`docs/fixes/seat/2026-11-21-yolo-is-real.md`, `docs/fixes/seat/2026-11-21-judge-and-coder-get-the-same-kit.md`.

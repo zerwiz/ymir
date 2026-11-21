@@ -156,6 +156,19 @@ HARNESS="${YMIR_REVIEW_HARNESS:-}"
 # A Claude judge is resolved against Claude's allow-list, not pi's catalogue, and comes back as the
 # name the Claude CLI takes (claude-opus-5-5) — the harness is handed on, so model and harness
 # agree (#865). YMIR_REVIEW_MODEL stays the one deliberate per-run override.
+# THE ROLE'S LIST COMES FIRST (2026-11-21): when the home declares `roles.judge` (an ordered list of
+# harness:model choices, config/agents.yaml), bin/model/role-model.sh gives the first choice this seat
+# can serve and names every one it skipped. A list with no servable choice is a refusal, never a quiet
+# fallback. An explicit YMIR_REVIEW_HARNESS / YMIR_REVIEW_MODEL still wins; a home that declares no
+# `roles.judge` leaves the forseti row below in charge, unchanged.
+_role_model=""
+if [ -z "$HARNESS" ] && [ -z "${YMIR_REVIEW_MODEL:-}" ] && [ -x "$SCRIPT_DIR/../model/role-model.sh" ] \
+   && PYTHONPATH="$ROOT/src${PYTHONPATH:+:$PYTHONPATH}" python3 "$ROOT/src/ymir_runtime/role_config.py" choices judge >/dev/null 2>&1; then
+  _rm="$("$SCRIPT_DIR/../model/role-model.sh" judge)" || {
+    printf 'error: no choice for the judge can be served on this seat\nhelp: bin/model/role-model.sh judge --explain (each choice, and why it was skipped)\n' >&2; exit 1; }
+  HARNESS="$(printf '%s' "$_rm" | cut -f1)"; _role_model="$(printf '%s' "$_rm" | cut -f2)"
+  unset _rm
+fi
 if [ -z "$HARNESS" ] && [ -x "$SCRIPT_DIR/../fleet/agents-config.sh" ]; then
   HARNESS="$("$SCRIPT_DIR/../fleet/agents-config.sh" get forseti harness 2>/dev/null | head -n1 || true)"
 fi
@@ -166,8 +179,8 @@ _cfg_model=""
 _unpin=(env)
 [ -n "$_cfg_model" ] && _unpin=(env -u YMIR_FORSETI_MODEL)
 _model_err="$(mktemp)"
-MODEL="${YMIR_REVIEW_MODEL:-$("${_unpin[@]}" bash "$ROOT/bin/model/agent-model.sh" forseti --plain --harness "$HARNESS" 2>"$_model_err" || true)}"
-unset _cfg_model _unpin
+MODEL="${YMIR_REVIEW_MODEL:-${_role_model:-$("${_unpin[@]}" bash "$ROOT/bin/model/agent-model.sh" forseti --plain --harness "$HARNESS" 2>"$_model_err" || true)}}"
+unset _cfg_model _unpin _role_model
 [ -n "$MODEL" ] || { printf 'error: no model resolved for the judge on this seat\n' >&2; grep 'REFUSED' "$_model_err" >&2; rm -f "$_model_err"; printf 'help: bin/model/agent-model.sh forseti --explain (a model this seat cannot serve is a refusal, not a fallback)\n' >&2; exit 1; }
 rm -f "$_model_err"
 EFFORT="${YMIR_REVIEW_EFFORT:-high}"
@@ -364,6 +377,36 @@ brief=${brief//'{{INBOX_DIR}}'/$INBOX_DIR}
 brief=${brief//'{{WAKE_QUEUE}}'/$WAKE_QUEUE}
 brief=${brief//'{{TASK_BRIEF}}'/$TASK_BRIEF}
 brief=${brief//'{{TASK_STATUS}}'/$TASK_STATUS}
+
+# ── what the judge is handed besides the diff (2026-11-21) ───────────────────────────────────
+# (1) the plans the PR claims — from the PR body, the fix note the branch adds, and the errand's brief;
+# (2) the house's books for the paths the PR changes, plus the compliance gate; (3) rules 7-10.
+_work="$(mktemp -d)"
+{
+  [ -f "$TASK_BRIEF" ] && cat "$TASK_BRIEF"
+  if [ -n "${_slug:-$(printf '%s' "$PR_URL" | sed -nE 's#^https://github\.com/([^/]+/[^/]+)/pull/[0-9]+.*#\1#p')}" ] && [ "$PR_NUMBER" != "?" ] && command -v gh >/dev/null 2>&1; then
+    _s="$(printf '%s' "$PR_URL" | sed -nE 's#^https://github\.com/([^/]+/[^/]+)/pull/[0-9]+.*#\1#p')"
+    gh pr view "$PR_NUMBER" -R "$_s" --json title,body -q '.title + "\n" + .body' 2>/dev/null || true
+    gh pr view "$PR_NUMBER" -R "$_s" --json files -q '.files[].path' 2>/dev/null | grep '^docs/fixes/' | while IFS= read -r _f; do
+      gh api "repos/$_s/contents/$_f?ref=$BRANCH" -H 'Accept: application/vnd.github.raw' 2>/dev/null || true
+    done
+  fi
+} >"$_work/claims.txt" 2>/dev/null
+PLAN_CLAIMS="$(python3 "$SCRIPT_DIR/plan-claims.py" "$_work/claims.txt" 2>/dev/null | sed 's/^/`/; s/$/`/' | paste -sd' ' -)"
+[ -n "$PLAN_CLAIMS" ] || PLAN_CLAIMS="no plan is named in the PR body, the branch's fix note or the errand brief"
+_changed=()
+if [ "$PR_NUMBER" != "?" ] && command -v gh >/dev/null 2>&1; then
+  _s2="$(printf '%s' "$PR_URL" | sed -nE 's#^https://github\.com/([^/]+/[^/]+)/pull/[0-9]+.*#\1#p')"
+  while IFS= read -r _p; do [ -n "$_p" ] && _changed+=("$_p"); done < <(gh pr view "$PR_NUMBER" -R "$_s2" --json files -q '.files[].path' 2>/dev/null | head -80)
+fi
+READ_FIRST="$(bash "$SCRIPT_DIR/read-first.sh" --judge ${_changed[@]+"${_changed[@]}"} 2>/dev/null)"
+[ -n "$READ_FIRST" ] || READ_FIRST="# Read first
+Run the house compliance gate on the PR head and put its output in your report: \`bash .agents/skills/galdr-ymirsystem/scripts/compliance-check.sh\`"
+WORKER_RULES="$( . "$SCRIPT_DIR/cmd-limit-lib.sh" 2>/dev/null && worker_rule_lines 2>/dev/null )"
+rm -rf "$_work"
+brief=${brief//'{{PLAN_CLAIMS}}'/$PLAN_CLAIMS}
+brief=${brief//'{{READ_FIRST}}'/$READ_FIRST}
+brief=${brief//'{{WORKER_RULES}}'/$WORKER_RULES}
 mkdir -p "$SHARED_DATA/$REVIEW_ID" || true
 printf '%s\n' "$brief" >"$BRIEF" || {
   release_claim

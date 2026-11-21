@@ -196,6 +196,7 @@ RELAUNCH=0
 MODE=
 MODE_SET=0
 YOLO=off
+YOLO_SET=0
 HARNESS_ARG=
 MODEL=
 MODEL_SET=0
@@ -218,7 +219,7 @@ for a in "$@"; do
     esac
     case "$want_value" in
       mode) MODE=$a; MODE_SET=1 ;;
-      yolo) YOLO=$a ;;
+      yolo) YOLO=$a; YOLO_SET=1 ;;
       harness) HARNESS_ARG=$a ;;
       model) MODEL=$a; MODEL_SET=1 ;;
       effort) EFFORT=$a; EFFORT_SET=1 ;;
@@ -236,7 +237,7 @@ for a in "$@"; do
     --mode) want_value=mode ;;
     --mode=*) MODE=${a#--mode=}; MODE_SET=1 ;;
     --yolo) want_value=yolo ;;
-    --yolo=*) YOLO=${a#--yolo=} ;;
+    --yolo=*) YOLO=${a#--yolo=}; YOLO_SET=1 ;;
     --harness) want_value=harness ;;
     --harness=*) HARNESS_ARG=${a#--harness=} ;;
     --model) want_value=model ;;
@@ -264,6 +265,7 @@ case "$ID" in
 esac
 
 case "$YOLO" in on|off) ;; *) echo "error: --yolo must be on or off (got '$YOLO')" >&2; exit 1 ;; esac
+
 case "$ISOLATION" in on|off|auto) ;; *) echo "error: --isolation must be on, off, or auto (got '$ISOLATION')" >&2; exit 1 ;; esac
 if [ -n "$EFFORT" ]; then
   case "$EFFORT" in low|medium|high|xhigh|max) ;; *) echo "error: --effort must be one of low, medium, high, xhigh, max (got '$EFFORT')" >&2; exit 1 ;; esac
@@ -293,6 +295,34 @@ if [ "$SCOUT" -eq 1 ]; then
   KIND=scout
 fi
 
+# --- the ROLE this errand serves, its models and its posture (2026-11-21) ---------------------
+# The home declares, per role, an ordered list of harness:model choices and the role's yolo
+# (config/agents.yaml `roles:`; a per-machine overlay wins). One resolver — bin/model/role-model.sh —
+# answers every spawn, so the review spine, the errand door and both loops agree. An explicit
+# --harness/--model still wins; a home that declares nothing for the role leaves the older chain.
+FIGURE=$SEAT_ROLE
+SPAWN_ROLE=coder
+case "$SEAT_ROLE" in forseti) SPAWN_ROLE=judge ;; esac
+[ "$KIND" = scout ] && [ "$SPAWN_ROLE" = coder ] && SPAWN_ROLE=scout
+ROLE_MODEL="$SCRIPT_DIR/../model/role-model.sh"
+ROLE_PROV=
+if [ "$RELAUNCH" -eq 0 ] && [ -x "$ROLE_MODEL" ] && [ -z "$HARNESS_ARG" ] && [ "$MODEL_SET" -eq 0 ] \
+   && PYTHONPATH="$SCRIPT_DIR/../../src${PYTHONPATH:+:$PYTHONPATH}" python3 "$SCRIPT_DIR/../../src/ymir_runtime/role_config.py" choices "$SPAWN_ROLE" >/dev/null 2>&1; then
+  _rm=$("$ROLE_MODEL" "$SPAWN_ROLE" --explain) || { echo "error: no choice for role '$SPAWN_ROLE' can be served on this seat — bin/model/role-model.sh $SPAWN_ROLE --explain names each one and why" >&2; exit 1; }
+  _row=$(printf '%s\n' "$_rm" | sed -n '2p')
+  HARNESS_ARG=$(printf '%s' "$_row" | cut -d'"' -f4)
+  MODEL=$(printf '%s' "$_row" | cut -d'"' -f6)
+  _choice=$(printf '%s' "$_row" | cut -d'"' -f8)
+  MODEL_SET=1
+  ROLE_PROV="role $SPAWN_ROLE: choice $_choice of the home's list ($HARNESS_ARG:$MODEL)"
+  unset _rm _row _choice
+fi
+# The posture: --yolo wins, then the role's row in the home (overlay over fleet), then the house default.
+YOLO_PROV="explicit flag (--yolo)"
+if [ "$YOLO_SET" -eq 0 ] && [ "$RELAUNCH" -eq 0 ] && [ -x "$ROLE_MODEL" ]; then
+  _y=$("$ROLE_MODEL" yolo "$SPAWN_ROLE" 2>/dev/null) && { YOLO=$(printf '%s' "$_y" | cut -f1); YOLO_PROV=$(printf '%s' "$_y" | cut -f2); }
+  unset _y
+fi
 # --- explicit harness -------------------------------------------------------
 RAW_LAUNCH=
 HARNESS=
@@ -751,6 +781,8 @@ if [ -n "$RAW_LAUNCH" ]; then
   echo "warning: launching a raw command as harness '$HARNESS' (not on the verified adapter set)" >&2
 else
   resolve_harness_model
+  # the home's role list chose them (2026-11-21): say so, never 'explicit flag'
+  if [ -n "${ROLE_PROV:-}" ]; then HARNESS_PROV=$ROLE_PROV; MODEL_PROV=$ROLE_PROV; fi
   verified=0
   for v in $VERIFIED_HARNESSES; do
     if [ "$HARNESS" = "$v" ]; then verified=1; break; fi
@@ -900,6 +932,14 @@ if [ "$MODEL_LOCAL" = yes ] && [ -x "$SCRIPT_DIR/../model/local-model-lock.sh" ]
   esac
 fi
 
+# --- which posture took effect (2026-11-21): printed BEFORE the seat is cut, whichever road cuts it ---
+if [ -x "$ROLE_MODEL" ]; then
+  _post=$("$ROLE_MODEL" posture "$SPAWN_ROLE" "$HARNESS" "$YOLO" 2>/dev/null) || _post="yolo $YOLO (posture line unavailable)"
+  printf 'posture %s role=%s harness=%s model=%s: %s%s\n' "$ID" "$SPAWN_ROLE" "$HARNESS" "${MODEL:-default}" "${_post%% — from *}" \
+    "${ROLE_PROV:+ · $ROLE_PROV}"
+  unset _post
+fi
+
 # --- engine-first (plan 58, Phase 1): the strangler's hinge -------------------
 # The engine (`src/ymir_runtime/`) owns an errand end to end — worktree, harness,
 # backend, record, heartbeat. When it says it CANNOT (exit 4: a sandbox seat, an
@@ -911,6 +951,7 @@ if [ "$DRY" -eq 0 ] && [ "${YMIR_ENGINE:-auto}" != "off" ] && [ -x "$SCRIPT_DIR/
                --backend "$RESOLVED_BACKEND" --harness "${RAW_LAUNCH:-$HARNESS}"
                --worth-a-smith "$WORTH_VERDICT" --worth-why "$WORTH_WHY")
   if [ -n "${MODEL:-}" ]; then engine_args+=(--model "$MODEL"); fi
+  engine_args+=(--figure "${FIGURE:-}")
   if [ -n "${EFFORT:-}" ]; then engine_args+=(--effort "$EFFORT"); fi
   if [ -f "$BRIEF" ]; then engine_args+=(--brief "$BRIEF"); fi
   if [ "$ISOLATION_EFFECTIVE" = on ]; then
@@ -1058,6 +1099,16 @@ TITLE=$(grep -m1 -E '^#|title' "$BRIEF" 2>/dev/null | sed 's/^#* *//' || true)
 "$SCRIPT_DIR/../records/mimir.sh" recall "${TITLE:-$ID}" --k 4 >"$CTX" 2>/dev/null || : >"$CTX"
 PROMPT="$DATA/$ID/prompt.md"
 {
+  # The figure's card OPENS the prompt (2026-11-21): the one door, bin/seat/figure-card.sh.
+  if [ -x "$SCRIPT_DIR/../seat/figure-card.sh" ]; then
+    _card=$(bash "$SCRIPT_DIR/../seat/figure-card.sh" "${FIGURE:-$SPAWN_ROLE}" 2>/dev/null || true)
+    [ -n "$_card" ] && printf '%s\n\n---\n\n' "$_card"
+  fi
+  # The house's books for the paths the task names (bin/agents/read-first.sh, from where.sh): paths, not text.
+  if [ -x "$SCRIPT_DIR/read-first.sh" ]; then
+    _rf=$(bash "$SCRIPT_DIR/read-first.sh" --text "$BRIEF" 2>/dev/null || true)
+    [ -n "$_rf" ] && printf '%s\n\n---\n\n' "$_rf"
+  fi
   cat "$BRIEF"
   printf '\n\n---\n\n## Recalled context (the well — Mimirsbrunn)\n\n'
   cat "$CTX"
@@ -1127,8 +1178,13 @@ build_launch_command() {  # prints the worker command WITHOUT the leading exec
         echo "error: the Claude permission profile for role '${SEAT_ROLE:-worker}' is missing under $ROOT/.agents/harnesses — a Claude seat without it stops at its first permission prompt (plan 239 P5c)" >&2
         return 1
       fi
-      printf 'claude --permission-mode acceptEdits --settings %s %s"$(cat %s)"' \
-        "$(shell_quote "$profile")" "$model_flag" "$(shell_quote "$brief_ref")"
+      # YOLO is real (2026-11-21): on = bypassPermissions (the profile's deny rules still hold);
+      # off = dontAsk (the allow list holds). It was acceptEdits, which opened a dialog on any
+      # tool outside the list that nobody answers. One mode table: src/ymir_runtime/role_config.py.
+      local cmode
+      cmode="$(PYTHONPATH="$ROOT/src${PYTHONPATH:+:$PYTHONPATH}" python3 -c 'import sys; from ymir_runtime import role_config as r; print(r.claude_permission_mode(sys.argv[1]=="on"))' "$YOLO")" || cmode=dontAsk
+      printf 'claude --permission-mode %s --settings %s %s"$(cat %s)"' \
+        "$cmode" "$(shell_quote "$profile")" "$model_flag" "$(shell_quote "$brief_ref")"
       ;;
     pi|pi-signed)
       # `-ne` plus every extension named ONCE from the worktree — the door's shape, never ours.

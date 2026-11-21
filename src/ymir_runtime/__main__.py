@@ -60,6 +60,7 @@ def _add_errand_flags(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--backend", default="", choices=("", "tmux", "herdr"))
     parser.add_argument("--isolation", default="auto", choices=("auto", "herdr", "utgard", "on", "off"))
     parser.add_argument("--role", default="")
+    parser.add_argument("--figure", default="", help="the figure whose card opens the seat's prompt")
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--worth-a-smith", default="unknown")
     parser.add_argument("--worth-why", default="not consulted by the engine")
@@ -324,6 +325,7 @@ def main(
             lock=args.lock,
             force=args.force,
             role=args.role,
+            figure=args.figure,
             worth_a_smith=args.worth_a_smith,
             worth_why=args.worth_why,
         )

@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from . import backend as backend_mod
-from . import allow, container, harness, heartbeat, paths, proc, worktree as worktree_mod
+from . import allow, container, figure_card, harness, heartbeat, paths, proc, role_config, worktree as worktree_mod
 from .errors import EngineError, EngineRefusal, NoHelm
 
 SAFE_ID = re.compile(r"^[A-Za-z0-9._-]+$")
@@ -104,6 +104,7 @@ class Errand:
     lock: str = ""
     force: bool = False
     role: str = ""
+    figure: str = ""   # the figure whose card opens the prompt (forseti, sindri, …); "" = by kind
     worth_a_smith: str = "unknown"
     worth_why: str = "not consulted by the engine"
     extra: Mapping[str, str] = field(default_factory=dict)
@@ -143,6 +144,11 @@ def _bearings(roots: paths.Roots, project_dir: str, *, runner: proc.Runner) -> s
     return out.strip()
 
 
+def _default_figure(errand: "Errand") -> str:
+    """The figure for an errand that names none: a scout is Kvasir, a ship errand is Sindri."""
+    return "kvasir" if errand.kind == "scout" else "sindri"
+
+
 def _prompt_for(
     roots: paths.Roots,
     errand: Errand,
@@ -173,6 +179,16 @@ def _prompt_for(
         body = _bearings(roots, str(errand.project_dir or roots.root), runner=runner) + "\n\n---\n\n" + body
     if recalled:
         body += "\n\n---\n\n## Recalled context (the well — Mimirsbrunn)\n\n" + recalled + "\n"
+    # The figure's card OPENS the prompt (2026-11-21): every harness reads this file as the seat's
+    # first turn, so one prepend reaches Claude, pi and opencode alike.
+    # The house's books for the paths the task names (bin/agents/read-first.sh, from where.sh).
+    read_first = roots.root / "bin" / "agents" / "read-first.sh"
+    if read_first.is_file() and errand.brief:
+        rf = runner(["bash", str(read_first), "--text", errand.brief])
+        listed = (rf.stdout or "").strip() if proc.ok(rf) else ""
+        if listed and listed not in body:
+            body = listed + "\n\n---\n\n" + body
+    body = figure_card.with_card(roots.root, errand.figure or _default_figure(errand), body)
     prompt.write_text(body, encoding="utf-8")
     return prompt, body
 
@@ -596,7 +612,10 @@ def seat(
             claude_seat.trust(tree.path, environ)
         except (ImportError, OSError, ValueError, TimeoutError):
             pass
-    launch_cmd = harness.build_launch_command(selection, str(prompt_path), launch_cwd=pins_root, runner=runner)
+    launch_cmd = harness.build_launch_command(
+        selection, str(prompt_path), launch_cwd=pins_root, runner=runner,
+        yolo=(errand.yolo == "on"), role=errand.figure or "",
+    )
     script = _launch_script(roots, seat_id, tree.path, launch_cmd, lock=errand.lock)
     pane_cmd = f"bash {proc.shell_quote(str(script))}"
 
@@ -642,6 +661,7 @@ def seat(
     if errand.kind == "ship":
         record["mode"] = errand.mode
         record["yolo"] = errand.yolo
+        record["permission_mode"] = role_config.claude_permission_mode(errand.yolo == "on") if selection.name == "claude" else "allow-all"
     record.update(
         {
             "harness": selection.name,

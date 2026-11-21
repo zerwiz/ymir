@@ -201,8 +201,12 @@ def profile_for(tree: str | Path, role: str | None = None, env: Mapping[str, str
     return path
 
 
-def settings(profile: str | Path, seat_cwd: str | Path, env: Mapping[str, str] | None = None) -> dict:
-    """The shipped worker profile, plus an allow entry for each configured MCP server."""
+def settings(profile: str | Path, seat_cwd: str | Path, env: Mapping[str, str] | None = None,
+             mode: str = "dontAsk") -> dict:
+    """The role profile, plus an allow entry for each configured MCP server.
+
+    `mode` is the permission mode the seat runs in: `dontAsk` (the allow list holds) or, for a yolo
+    seat, `bypassPermissions` (no prompts). The profile's DENY rules are never touched either way."""
     base = json.loads(Path(profile).read_text(encoding="utf-8"))
     perms = base.setdefault("permissions", {})
     allow = list(perms.get("allow") or [])
@@ -211,7 +215,7 @@ def settings(profile: str | Path, seat_cwd: str | Path, env: Mapping[str, str] |
         if rule not in allow:
             allow.append(rule)
     perms["allow"] = allow
-    perms["defaultMode"] = "dontAsk"
+    perms["defaultMode"] = mode
     return base
 
 

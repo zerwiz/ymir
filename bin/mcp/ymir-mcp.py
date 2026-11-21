@@ -272,13 +272,21 @@ def ymir_studio(action: str = "status") -> str:
 
 @mcp.tool()
 def ymir_errand(action: str, id: str, project: str = "", mode: str = "direct-PR",
-                harness: str = "pi", model: str = "", note: str = "", terminal: str = "done") -> str:
-    """An errand: start an Eindri worker (the one spawn path), read its seat, or close it."""
+                harness: str = "", model: str = "", note: str = "", terminal: str = "done",
+                yolo: str = "") -> str:
+    """An errand: start an Eindri worker (the one spawn path), read its seat, or close it.
+
+    Leave harness and model empty and the home's `roles.coder` list picks them (the first choice this
+    seat can serve); name either and your word wins. `yolo` on|off overrides the role's posture."""
     if action == "start":
         if not project:
             return "start needs project — the repo root the errand works in"
         argv = ["bash", str(ROOT / "bin" / "agents" / "einherjar-spawn.sh"), id, project,
-                "--mode", mode, "--harness", harness]
+                "--mode", mode]
+        if harness:
+            argv += ["--harness", harness]
+        if yolo in ("on", "off"):
+            argv += ["--yolo", yolo]
         if model:
             argv += ["--model", model]
         return _run(argv, 300)

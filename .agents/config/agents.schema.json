@@ -2,10 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/zerwiz/ymir/config/agents.schema.json",
   "title": "config/agents.yaml",
-  "description": "The operator's harness/model map (plan 58, Phase 7). This is the shape bin/fleet/agents-config.sh, bin/fleet/dispatch-profile.sh, bin/model/local-model-lock.sh and bin/agents/einherjar-spawn.sh resolve at boot; a shape fault is refused loudly, naming the key and the file. Model and provider ids are NOT enumerated here — they are the operator's own and resolve from the hoard (Rule 07).",
+  "description": "The operator's harness/model map (plan 58, Phase 7). This is the shape bin/fleet/agents-config.sh, bin/fleet/dispatch-profile.sh, bin/model/local-model-lock.sh and bin/agents/einherjar-spawn.sh resolve at boot; a shape fault is refused loudly, naming the key and the file. Model and provider ids are NOT enumerated here \u2014 they are the operator's own and resolve from the hoard (Rule 07).",
   "type": "object",
   "additionalProperties": false,
-  "required": ["agents"],
+  "required": [
+    "agents"
+  ],
   "properties": {
     "version": {
       "type": "integer",
@@ -17,11 +19,20 @@
       "additionalProperties": false,
       "description": "the local/online rule: which harness owns a model by where it lives",
       "properties": {
-        "local": { "type": "string", "minLength": 1 },
-        "online": { "type": "string", "minLength": 1 },
+        "local": {
+          "type": "string",
+          "minLength": 1
+        },
+        "online": {
+          "type": "string",
+          "minLength": 1
+        },
         "local_providers": {
           "type": "array",
-          "items": { "type": "string", "minLength": 1 },
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
           "uniqueItems": true
         },
         "providers": {
@@ -29,7 +40,10 @@
           "description": "provider rename per harness, e.g. { llama.cpp: { pi: llama-cpp } }",
           "additionalProperties": {
             "type": "object",
-            "additionalProperties": { "type": "string", "minLength": 1 }
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         }
       }
@@ -56,12 +70,22 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "npm": { "type": "string" },
-          "name": { "type": "string" },
-          "base_url": { "type": "string", "pattern": "^https?://" },
+          "npm": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "base_url": {
+            "type": "string",
+            "pattern": "^https?://"
+          },
           "models": {
             "type": "array",
-            "items": { "type": "string", "minLength": 1 }
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         }
       }
@@ -72,18 +96,81 @@
       "description": "agent name -> model string, or { model, harness?, primary? }",
       "additionalProperties": {
         "oneOf": [
-          { "type": "string", "minLength": 1 },
+          {
+            "type": "string",
+            "minLength": 1
+          },
           {
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "model": { "type": "string", "minLength": 1 },
-              "harness": { "type": "string", "minLength": 1 },
-              "primary": { "type": "boolean" }
+              "model": {
+                "type": "string",
+                "minLength": 1
+              },
+              "harness": {
+                "type": "string",
+                "minLength": 1
+              },
+              "primary": {
+                "type": "boolean"
+              }
             }
           }
         ]
       }
+    },
+    "roles": {
+      "type": "object",
+      "description": "role -> an ordered list of harness:model choices, or {choose:[\u2026], yolo: on|off}. The first choice the machine can serve wins (bin/model/role-model.sh).",
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(claude|pi|opencode):.+"
+            },
+            "minItems": 1
+          },
+          {
+            "type": "object",
+            "properties": {
+              "choose": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^(claude|pi|opencode):.+"
+                },
+                "minItems": 1
+              },
+              "yolo": {
+                "enum": [
+                  "on",
+                  "off",
+                  true,
+                  false
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "yolo": {
+      "type": "object",
+      "properties": {
+        "default": {
+          "enum": [
+            "on",
+            "off",
+            true,
+            false
+          ]
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

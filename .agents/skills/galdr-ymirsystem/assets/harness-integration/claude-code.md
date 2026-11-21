@@ -228,3 +228,8 @@ Ymir's craft. Claude now lists exactly one Ymir skill from its **root**: `~/.cla
 `~/.local/share/ymir/skills`. `bin/agents/skill-index.sh --root` seats it (install, update, session start), and
 `valknut-load.sh` no longer binds the repo link and removes a leftover of that exact shape. The whole design is in this
 directory's `README.md` (section of the same date). How-to: `docs/features/one-ymir-skill.md`.
+- **Appended 2026-11-21:** the permission mode is the seat's **yolo posture**, no longer a constant. `yolo on` launches
+  `claude --permission-mode bypassPermissions` (no prompts; every deny rule in the profile still holds), `yolo off`
+  launches `--permission-mode dontAsk` (the allow list holds). The line above that says `acceptEdits` is the record of
+  what was believed on 2026-11-11. The posture and the model come from `roles:` in the home (`bin/model/role-model.sh`);
+  the seat's prompt opens with the figure's card (`bin/seat/figure-card.sh`).
