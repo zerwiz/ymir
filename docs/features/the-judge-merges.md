@@ -10,9 +10,13 @@ The law is RULES/08, its two sections appended 2026-11-21.
 
 ## What you need
 
-- `gh` signed in as the owner of the repositories (the registry's `git.owner`). Any other login is refused.
+- `gh` signed in as one of your own logins: `github:` in `hodd/identity/operator.yaml`, else its `aliases`
+  (`bin/forge/warden-policy.py operator-logins` prints them). Any other login is refused.
 - Your repositories listed with a `git:` block in `hodd/identity/projects.yaml`, and a local clone named by
   `local_clone` or `repo` for each one the judge should read.
+- Only **kept** repositories are judged: one owned by your login, or one marked `keep: true` in its `git:` block
+  (an organisation's repository). `keep: false` leaves even your own alone. An upstream you only track is
+  never judged, commented on or merged. `bin/forge/warden-policy.py kept` lists them.
 - The judge's harness CLI on at least one developer seat. The machine that keeps the watch may lack it; it
   then hands each review to a developer seat.
 
@@ -22,12 +26,13 @@ The law is RULES/08, its two sections appended 2026-11-21.
 bin/forge/review-watch.sh --keeper --dry-run   # what the keeper would seat or hand off now
 bin/forge/review-watch.sh --keeper             # one pass: carry out verdicts, seat or hand off judges
 bin/forge/judge-merge.sh sweep --dry-run       # what each written verdict would do
-bin/forge/judge-merge.sh act pr-42-review      # carry out one review's verdict
+bin/forge/judge-merge.sh act pr-owner--repo-42-review   # carry out one review's verdict
+bin/forge/judge-carry.py <clone> <approved> <head> <base> # may an approval carry to a newer head
 bin/agents/pr-seal.sh seal 42 --repo owner/repo --head <sha>   # the one merge door the judge uses
 bin/model/agent-model.sh forseti --explain     # which model the judge gets on this seat
 ```
 
-The keeper runs on the review clock (`review-watch` in `config/units.yaml`, every 3 minutes). On the heart
+The keeper runs on the review clock (`review-watch` in `.agents/config/units.yaml`, every 3 minutes). On the heart
 it is the default road; elsewhere set `YMIR_REVIEW_KEEPER=1`.
 
 ## What happens to a verdict
@@ -37,23 +42,30 @@ it is the default road; elsewhere set `YMIR_REVIEW_KEEPER=1`.
 | APPROVE | all green | merged at once: squash with a written body (a gathered batch takes a merge commit), pinned to the approved head, one Rune |
 | APPROVE | red | no merge; one comment names the failing check; the next head is reviewed again |
 | APPROVE | pending | no merge yet; one comment; the same approval merges when the gate turns green |
-| APPROVE | head moved | no merge; the new head is reviewed |
+| APPROVE | head moved, only a clean merge of the base branch or `## CHANGE LOG` lines since | the approval carries: the new head merges when its gates are green |
+| APPROVE | head moved, anything else | no merge; the new head is reviewed |
+| APPROVE | no `judged-head:` line in the report | no merge; an approval must name the head it read |
 | NEEDS-REWORK | any | one comment with the items; the opener's arm holder is told (arm wire and its pane) to start a coder errand |
 
 ## Limits
 
 - `state/.seal-hold`, a `hold` label or a draft stops every merge.
 - One judge runs at a time on a machine; the rest are handed to developer seats.
+- One head gets one judge: every road (an errand's `done`, the keeper) shares the marker
+  `state/.reviewed/pr-<owner>--<repo>-<n>.<head>`.
+- A hand-off nobody acts on expires after `YMIR_REVIEW_HANDOFF_TTL` seconds (default one hour) and is handed on again.
 - You can still merge anything from your hall yourself.
 
 ## If it does not work
 
-- `wrong identity` — `gh api user` is not the repository's owner. Sign in as the owner, or set
-  `YMIR_MERGE_IDENTITY` for an organisation repository.
+- `wrong identity` — `gh api user` is not one of your logins. Sign in as yourself, or add `github: <login>` to
+  `operator.yaml`. The refusal is settled quietly; nothing is said on the PR.
+- An organisation's PR is never judged — mark its row `keep: true` in `projects.yaml`.
 - `no local clone … is named in the registry` — add `local_clone:` to that project's row.
 - The judge never starts on a machine — `command -v claude` is empty there; the keeper hands off instead. Check
   `bin/fleet/arm-send.sh --who` for a developer seat holding the arm.
 
 ## CHANGE LOG
 
+- 2026-11-21 — kept repositories, the operator's own login, one head one judge, and the approval that carries over a base merge or change-log lines.
 - 2026-11-21 — first written: the judge reviews every PR head, and an approval on green merges at once (RULES/08).
