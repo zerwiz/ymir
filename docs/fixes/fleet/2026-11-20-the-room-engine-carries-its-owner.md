@@ -28,3 +28,7 @@ wrong for a house service.
 
 The stray `gladsheim-engine` and `gladsheim-element` on the second machine were not removed. They are
 named in the errand's report for the operator to decide.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #873
