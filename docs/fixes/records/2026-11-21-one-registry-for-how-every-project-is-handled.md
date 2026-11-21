@@ -47,3 +47,7 @@ visibility, plans or delivery**, and 0 schema findings.
 
 The doors that should read the registry are plan 345.3, 345.4 and 346.8–14. They are the judge, plan-sync, the board
 doors, the vault seed and the wards. They are separate errands.
+
+## CHANGE LOG
+
+- 2026-11-21 — written with the change (plan 345.1).

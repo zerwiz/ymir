@@ -50,3 +50,7 @@ bin/records/project.sh --registry ./fixture.yaml --audit   # any other registry
 - *"the home could not be resolved"*: set `YMIR_HOME`, or pass `--registry PATH`.
 - *"no project …"*: run `project.sh --list` for the ids. A row's `name` and `aliases` are also accepted.
 - *A schema finding*: the line names the row and the field. Fix the value in the registry, then audit again.
+
+## CHANGE LOG
+
+- **2026-11-21** — the page was written (plan 345): one door reads how every project is handled, audits the rows and renders the page.
