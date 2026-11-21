@@ -58,11 +58,29 @@ while true; do
     continue
   fi
   started=$(date +%s)
-  raw="$(timeout 310 redis-cli --raw blpop "$Q" 300 2>&1)"; rc=$?
-  if [ "$rc" -ne 0 ] || printf '%s' "$raw" | grep -qiE '^(ERR|Could not connect|.*Connection refused)'; then
+  # Stderr is captured separately from the reply (finding 2): a warning redis-cli prints before its answer
+  # must not shift the job off line 2 of the read.
+  stderr_file="${TMPDIR:-/tmp}/mill-worker-stderr.$$"
+  raw="$(timeout 310 redis-cli --raw blpop "$Q" 300 2>"$stderr_file")"; rc=$?
+  err="$(cat "$stderr_file" 2>/dev/null)"; rm -f "$stderr_file"
+  first_line="$(printf '%s\n' "$raw" | sed -n 1p)"
+  # An unreadable queue is one of three things:
+  #   1. redis-cli exited non-zero (connection refused, auth failure on some builds);
+  #   2. the first line is a redis error reply (NOAUTH, WRONGTYPE, ERR ...) — these are not the queue's key;
+  #   3. the first line is a known connection message (older redis-cli print it and exit 0).
+  # The grep is anchored to the FIRST LINE ONLY (finding 1): a job whose JSON carries the phrase must not
+  # be treated as a failure, because blpop has already popped it and there is no second chance.
+  unreadable=0
+  if [ "$rc" -ne 0 ]; then unreadable=1
+  elif [ -n "$first_line" ] && [ "$first_line" != "$Q" ]; then unreadable=1
+  elif printf '%s' "$first_line" | grep -qiE '^(ERR|Could not connect|.*Connection refused)'; then unreadable=1
+  fi
+  if [ "$unreadable" = 1 ]; then
     # A blpop that fails fast is an unreachable redis, not an empty queue.
     if [ $(( $(date +%s) - started )) -lt 5 ]; then
-      queue_unreadable "redis-cli failed: $(printf '%s' "$raw" | head -1 | cut -c1-80)"
+      reason="$(printf '%s\n%s\n' "$first_line" "$err" | sed '/^$/d' | head -1 | cut -c1-80)"
+      [ -n "$reason" ] || reason="redis-cli failed with no reply"
+      queue_unreadable "redis-cli failed: $reason"
     fi
     continue
   fi

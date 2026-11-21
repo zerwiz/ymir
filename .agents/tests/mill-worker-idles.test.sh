@@ -55,4 +55,38 @@ printf '#!/bin/sh\n/bin/sleep 1\nprintf "mill:jobs\\n{\\"class\\":\\"nosuch\\"}\
 run_for 3
 grep -q 'unknown job class: nosuch' "$TMP/out" && ok "a job is still dispatched" || bad "a job was not dispatched"
 
+# 4. a job whose JSON carries "Connection refused" is dispatched, not lost (finding 1)
+cat >"$TMP/bin/redis-cli" <<'RCEOF'
+#!/bin/sh
+/bin/sleep 1
+printf '%s\n' 'mill:jobs'
+printf '%s\n' '{"class":"nosuch","q":"why Connection refused on the well"}'
+RCEOF
+chmod +x "$TMP/bin/redis-cli"
+run_for 3
+grep -q 'unknown job class: nosuch' "$TMP/out" && ok "a job carrying the phrase is dispatched, not lost" || bad "a job carrying the phrase was lost"
+! grep -q 'unreadable' "$TMP/out" && ok "no unreadable line for a payload that carries the phrase" || bad "the payload was mistaken for a failure"
+
+# 5. an error reply that exits 0 (NOAUTH, WRONGTYPE) is treated as unreadable (finding 3)
+printf '#!/bin/sh\nprintf "NOAUTH Authentication required.\\n"\nexit 0\n' >"$TMP/bin/redis-cli"
+chmod +x "$TMP/bin/redis-cli"
+run_for 4
+said="$(grep -c 'unreadable' "$TMP/out")"
+[ "$said" = 1 ] && ok "NOAUTH reply (rc 0) is unreadable, said once" || bad "NOAUTH reply: said $said times"
+turns="$(wc -l <"$TMP/sleeps")"
+[ "$turns" -ge 2 ] && [ "$turns" -le 6 ] && ok "NOAUTH reply: waits ($turns turns)" || bad "NOAUTH reply: $turns turns (spinning or never waiting)"
+
+# 6. stderr does not shift the job off line 2 (finding 2)
+cat >"$TMP/bin/redis-cli" <<'RCEOF'
+#!/bin/sh
+printf 'warning: something
+' >&2
+/bin/sleep 1
+printf '%s\n' 'mill:jobs'
+printf '%s\n' '{"class":"nosuch"}'
+RCEOF
+chmod +x "$TMP/bin/redis-cli"
+run_for 3
+grep -q 'unknown job class: nosuch' "$TMP/out" && ok "a stderr line before the reply does not hide the job" || bad "the job was hidden by stderr"
+
 exit "$fail"
