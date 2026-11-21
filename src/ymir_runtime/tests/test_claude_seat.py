@@ -85,6 +85,17 @@ class ProfileByRoleTest(unittest.TestCase):
         self.assertIn("Bash(bin/forge/judge-merge.sh:*)", worker["permissions"]["deny"])
         self.assertIn("Bash(gh pr merge:*)", worker["permissions"]["deny"])
 
+    def test_a_worker_may_git_merge_to_bring_its_branch_current(self) -> None:
+        # 2026-11-21 (#875): `git merge origin/main` merges nothing on GitHub; only the PR roads stay shut
+        tree = harness.claude_worker_profile(None).parents[2]
+        raw = claude_seat.profile_for(tree, "sindri", {}).read_text(encoding="utf-8")
+        worker = json.loads(raw)
+        self.assertNotIn("Bash(git merge:*)", worker["permissions"]["deny"])
+        for road in ("Bash(gh pr merge:*)", "Bash(bin/forge/judge-merge.sh:*)"):
+            self.assertIn(road, worker["permissions"]["deny"])
+        self.assertIn("`git merge` is ALLOWED", worker["$comment"])
+        self.assertNotIn("\\u", raw, "the profile is written with ensure_ascii off")
+
     def test_a_judge_without_its_profile_is_refused(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             with self.assertRaises(ValueError):

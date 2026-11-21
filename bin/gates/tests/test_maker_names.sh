@@ -83,6 +83,27 @@ head2="$(git -C "$R" rev-parse HEAD)"
 (GIT_DIR="$R/.git" bash "$G" push <<<"refs/heads/x $head2 refs/heads/x $base" >/dev/null 2>&1) && bad "pre-push dirty range" || ok "pre-push refuses a new commit naming a harness"
 (GIT_DIR="$R/.git" bash "$G" range "$base" "$head2" >/dev/null 2>&1) && bad "kit range mode" || ok "the kit's range mode refuses the same commit"
 
+# 2026-11-21 (#875): a branch that merged main pushes only its own commits — main's messages are not judged again
+R2="$T/repo2"; git init -q -b main "$R2"; git -C "$R2" config user.email t@example.org; git -C "$R2" config user.name t
+git -C "$R2" commit -q --allow-empty -m "a clean root"
+git -C "$R2" checkout -q -b x
+git -C "$R2" commit -q --allow-empty -m "clean branch work"
+pushed="$(git -C "$R2" rev-parse HEAD)"
+git -C "$R2" checkout -q main
+git -C "$R2" commit -q --allow-empty -m "main's own history that says Claude"
+git -C "$R2" update-ref refs/remotes/origin/main "$(git -C "$R2" rev-parse main)"
+git -C "$R2" checkout -q x
+git -C "$R2" merge -q --no-edit origin/main
+merged="$(git -C "$R2" rev-parse HEAD)"
+for ward in "$G" "$ROOT/bin/collab/kit/scripts/gates/maker-guard.sh"; do
+  (GIT_DIR="$R2/.git" bash "$ward" push <<<"refs/heads/x $merged refs/heads/x $pushed" >/dev/null 2>&1) \
+    && ok "pre-push after merging main skips main's commits ($ward)" || bad "pre-push after merging main ($ward)"
+done
+git -C "$R2" commit -q --allow-empty -m "then opencode is named on the branch"
+dirty="$(git -C "$R2" rev-parse HEAD)"
+(GIT_DIR="$R2/.git" bash "$G" push <<<"refs/heads/x $dirty refs/heads/x $pushed" >/dev/null 2>&1) \
+  && bad "pre-push after merging main still judges the branch" || ok "pre-push after merging main still refuses the branch's own commit"
+
 # the PR door: title and body, before gh pr create
 printf 'house: h\nfleet: f\nagent: r (role: ship, errand: r)\nauthority: a\nproves: p\nnever: n\n\nbody with Codex in it\n' >"$T/body"
 out="$(bash "$ROOT/bin/forge/pr-open.sh" --role r --house h --fleet f --errand r --authority a --proves p --title t --body-file "$T/body" --dry-run 2>&1)"; rc=$?
