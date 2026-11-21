@@ -63,6 +63,23 @@ def _door(line: str, severity: str, source: str = "garmr", key: str = "") -> dic
     return None
 
 
+def _event(verdict: dict, finding: dict) -> None:
+    """One row in the events store (plan 333). Best-effort: the store never blocks a verdict."""
+    door = os.path.join(common.repo_root(), "bin", "records", "events-append.sh")
+    if not os.path.isfile(door):
+        return
+    keep = ("ts", "kind", "comm", "pid", "target", "peer", "addr")
+    try:
+        subprocess.run(
+            ["bash", door, "--source", "garmr", "--kind", "finding",
+             "--severity", str(verdict["severity"]), "--subject", str(verdict["line"])[:200],
+             "--key", f"garmr:{verdict['title']}:{finding.get('pid', '')}:{str(finding.get('ts', ''))[:10]}",
+             "--body", common.emit({k: finding[k] for k in keep if finding.get(k) is not None})[:4000]],
+            capture_output=True, timeout=10)
+    except Exception:
+        pass
+
+
 def _speak(line: str, cfg: dict) -> None:
     if not cfg.get("alert", {}).get("desktop", True):
         return
@@ -153,6 +170,7 @@ def judge(rows: list[dict], cfg: dict, dry_run: bool = False,
                 record["reasoning"] = answer
         out.append(record)
         if not dry_run:
+            _event(verdict, finding)
             said = _door(verdict["line"], verdict["severity"], "garmr",
                          key=f"garmr:{verdict['title']}:{finding.get('pid','')}")
             if said:
