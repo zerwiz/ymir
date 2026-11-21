@@ -313,9 +313,18 @@ if [ -z "$dirty" ] || [ "$dirty" = 0 ]; then
   exit 0
 fi
 msg="skirnir: the home map, regenerated ($WRITTEN written, $RETIRED retired)"
-if ! bash "$ROOT/bin/vault/home-sync.sh" ship "$msg" "$SHELF"; then
-  printf 'learn-home{ship,status,reason}:"failed","the home did not ship $SHELF — see home-sync above"\n' >&2
+# home-sync's own words ARE the reason (2026-11-21): they are captured, passed through, and their last
+# line is named in the failure row. The old row said "see home-sync above" inside single quotes, so the
+# shelf printed as a literal $SHELF, and the scheduler's notice read "no output".
+_sync_log="$(mktemp "${TMPDIR:-/tmp}/learn-home-sync.XXXXXX")"
+if ! bash "$ROOT/bin/vault/home-sync.sh" ship "$msg" "$SHELF" >"$_sync_log" 2>&1; then
+  cat "$_sync_log" >&2
+  _why="$(grep -v '^[[:space:]]*$' "$_sync_log" | tail -n 1 | tr -d '"' | cut -c1-160)"
+  rm -f "$_sync_log"
+  printf 'learn-home{ship,status,reason}:"failed","the home did not ship %s — %s"\n' \
+    "$SHELF" "${_why:-home-sync exited non-zero and said nothing}" >&2
   exit 4
 fi
+cat "$_sync_log"; rm -f "$_sync_log"
 printf 'learn-home{ship,status,path,written,retired}:"shipped","%s",%s,%s\n' \
   "$SHELF" "$WRITTEN" "$RETIRED"
