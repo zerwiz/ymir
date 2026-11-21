@@ -9,8 +9,10 @@
 - `bin/model/agent-model.sh` — a claude-harness agent's Claude name is honoured; a provider/model pin yields to it
 - `bin/agents/eindri-acclaim.sh` — a review errand's `done` hands its verdict to `judge-merge.sh act`
 - `.agents/assets/templates/review-brief.template.md` — the judge names the head it judged and knows an APPROVE merges
-- `config/units.yaml` — the review clock runs every 3 minutes
-- `bin/forge/tests/test_judge_merge.sh` — 34 fenced cases with a fake gh and a fake verdict
+- `.agents/config/units.yaml` — the review clock runs every 3 minutes
+- `bin/forge/judge-carry.py` — new: may an approval carry to a newer head (addendum)
+- `bin/forge/warden-policy.py` — `operator-logins`, `kept`, `keeps` (addendum)
+- `bin/forge/tests/test_judge_merge.sh` — 34 fenced cases (53 after the addendum) with a fake gh and a fake verdict
 - `.agents/tests/eindri-review-spine.test.sh` — the spawn-line case pins its harness and model per run
 
 ## Why
@@ -61,6 +63,32 @@ older than it, or naming a different `judged-head:`, is never read as approval.
 - `eindri-review-spawn.sh --pr <url> --dry-run` under the same pin → `--backend herdr --harness claude --model opus`
 - `.agents/tests/eindri-review-spine.test.sh`: the spawn-line case passes; five brief cases fail exactly as they do on `main` (the data shelf moved on 2026-11-20) and are not this change's.
 
+## Addendum — the rework the judge asked for (2026-11-21)
+
+The judge returned NEEDS-REWORK twice on this PR, and the helm added three findings. Each was fixed in its own commit.
+
+| Fault | Where | Fix |
+|---|---|---|
+| The keeper watched every registry repository, an upstream it only tracks among them, and commented there | `bin/forge/review-watch.sh`, `bin/forge/judge-merge.sh` | The keeper watches only **kept** repositories: owned by one of the operator's logins, or marked `git.keep: true` in the registry (`warden-policy.py kept` / `keeps`). `judge-merge.sh` says nothing, wakes nobody and merges nothing where the repository is not kept or this hand cannot write it. |
+| The merge identity was compared with the repo slug's owner, so an organisation's repository could never merge and got a wrong-identity comment on every head | `bin/agents/pr-seal.sh` | The hand is compared with the operator's logins from the home (`warden-policy.py operator-logins`: `github` in `operator.yaml`, else its `aliases`). A wrong hand settles with no comment. |
+| An APPROVE with no `judged-head:` line merged | `bin/forge/judge-merge.sh` | Refused. The verdict fields are now split on `\x1f`: a tab is shell whitespace, so an empty list folded and shifted the head into the wrong field. |
+| The rework wake was a bare line | `bin/forge/judge-merge.sh` | Written as `<sol stamp> — judge <text>`, a tab, `class=report`. |
+| The PR-only review id was `pr-<n>-review`, so PR #7 of two repositories was one review | `bin/agents/eindri-review-spawn.sh`, `bin/forge/review-watch.sh` | The id and every keeper marker carry the repository: `pr-<owner>--<repo>-<n>`. |
+| The errand road and the keeper could seat two judges for one head | `bin/agents/eindri-review-spawn.sh` | Every road writes and honours one per-head marker in the home's state, with one claim beside it. |
+| A hand-off nobody acted on left the head unjudged forever | `bin/forge/review-watch.sh` | The hand-off marker expires after `YMIR_REVIEW_HANDOFF_TTL` seconds (default 3600) with no judge seated, and the head is handed on again. The hand-off line names the repository and `--project <its clone>`. |
+| The review-spine suite typed into the real helm's pane, and wrote its brief into the operator's data shelf | `.agents/tests/eindri-review-spine.test.sh` | `YMIR_NO_INJECT=1`, a fake `herdr` on `PATH` and a temp home. The keeper's and the judge's ssh roads honour `YMIR_NO_INJECT` too. |
+| Approvals died when an automation pushed a base merge or a change-log commit after the approval | `bin/forge/judge-carry.py`, `bin/forge/judge-merge.sh` | The approval carries to the new head only when every commit since is a clean merge of the base (its tree equals `git merge-tree --write-tree` of its parents) or touches only blank lines and `## CHANGE LOG` sections of Markdown files. Anything else is judged again. A carried head whose gates are still running waits, unsettled. |
+
+> [!IMPORTANT]
+> An organisation's repository is kept only when the home marks it `git.keep: true` in `projects.yaml`. None is marked yet, so the keeper leaves them alone until the operator says which ones it keeps.
+
+### Proof of the rework
+
+- `bash bin/forge/tests/test_judge_merge.sh` → `judge-merge: 53 passed, 0 failed` (upstream never commented, organisation merge under the operator's login, no judged-head, wake format, same PR number in two repos, hand-off expiry, five carry-over cases)
+- `bash .agents/tests/eindri-review-spine.test.sh` → `ALL PASS` (the five brief cases that failed on `main` pass under the temp home)
+- `python3 bin/forge/judge-carry.py . <approved> <head> origin/main` carries for #863, #865 and #860, the three heads the helm measured.
+
 ## CHANGE LOG
 
 - 2026-11-20 — review-mend: added missing heading for #863
+- 2026-11-21 — rework: the eleven findings of the judge and the helm (addendum above)

@@ -44,7 +44,7 @@ case "${1-}" in
       [ -n "${lsha:-}" ] && [ "$lsha" != "$Z" ] || continue
       if [ "$rsha" = "$Z" ]; then
         if git rev-parse -q --verify origin/main >/dev/null 2>&1; then range="$lsha --not origin/main"; else range="$lsha --not --remotes"; fi
-      else range="$rsha..$lsha"; fi
+      else range="$rsha..$lsha"; git rev-parse -q --verify origin/main >/dev/null 2>&1 && range="$range --not origin/main"; fi
       # shellcheck disable=SC2086
       for c in $(git rev-list --no-merges $range 2>/dev/null); do
         t="$(mktemp)"; git log -1 --format=%B "$c" >"$t"

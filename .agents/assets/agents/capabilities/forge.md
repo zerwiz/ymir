@@ -50,6 +50,8 @@
 | test_gjallarhorn_no_hall.sh | test_gjallarhorn_no_hall.sh — a tunnel never publishes a hall. | tested | keep (a human or a cron row must run it) |
 | test_judge_merge.sh | test_judge_merge.sh — the judge's verdict is the seal (RULES/08, its s | tested+named | keep (a human or a cron row must run it) |
 | test_review_seat_keeper.sh | test_review_seat_keeper.sh — the keeper: the reviewer's seat says WHY  | tested | keep (a human or a cron row must run it) |
+| test_smith_gh.sh | test_smith_gh.sh — the smith's gh refuses every road to a merge, and l | tested | keep (a human or a cron row must run it) |
+| test_yggdrasil_slim.sh | test_yggdrasil_slim.sh — the slimmer worktree is opt-in, and the defau | tested | keep (a human or a cron row must run it) |
 | utgard-box.sh | utgard-box.sh — a whole computer for one run, outside the wall. | tested+named | keep (a human or a cron row must run it) |
 | utgard-lane.sh | utgard-lane.sh — best of N: one brief, many boxes, one board. | tested+named | keep (a human or a cron row must run it) |
 | utgard.sh | utgard.sh — the sealed execution barrier (Utgard, the realm outside th | tested+named | keep (a human or a cron row must run it) |
