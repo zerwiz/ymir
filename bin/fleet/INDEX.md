@@ -22,8 +22,8 @@ The tree replaced a single register on 2026-11-06 (plan 211) so that a change in
 folder rewrites one file instead of colliding on every branch.
 
 bin[18]{file,does,kind,verdict,disposition,callers,lines}:
-  "agents-config.sh","agents-config.sh — one YAML for the Allfather's agent/harness/model combination.","tool","wired","keep",16,310
-  "arm-send.sh","arm-send.sh — the wire between the fleet's arm holders (plan 253 phase 3 'the wire'; plan 234; RULES/49).","tool","wired","keep",6,64
+  "agents-config.sh","agents-config.sh — one YAML for the Allfather's agent/harness/model combination.","tool","wired","keep",15,310
+  "arm-send.sh","arm-send.sh — the wire between the fleet's arm holders (plan 253 phase 3 'the wire'; plan 234; RULES/49).","tool","wired","keep",4,64
   "dispatch-profile.sh","dispatch-profile.sh — decide which Eindri dispatch profile is ACTIVE, and","tool","tested","keep",2,277
   "fleet-apply.sh","fleet-apply.sh — apply fleet-wide preferences to every registered Eindri-home.","tool","wired","keep",1,83
   "fleet-deploy.sh","fleet-deploy.sh — refresh the machine's fleet services from THIS package.","tool","wired","keep",0,113

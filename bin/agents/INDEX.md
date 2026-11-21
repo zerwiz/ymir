@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[81]{file,does,kind,verdict,disposition,callers,lines}:
+bin[80]{file,does,kind,verdict,disposition,callers,lines}:
   "README.md","Gróa — the updater, one per install","data","tested","keep",68,-
   "agent-census.sh","agent-census.sh — how many agents are running on THIS machine, and which of them are stale.","tool","wired","keep",1,163
   "agent-run.sh","agent-run.sh — run one agent's errand through the harness the Allfather chose.","tool","wired","keep",2,62
@@ -37,18 +37,18 @@ bin[81]{file,does,kind,verdict,disposition,callers,lines}:
   "cmd-limit-lib.sh","cmd-limit-lib.sh — ONE number for how long a worker's single shell call may run.","lib","wired","keep",3,80
   "domain.sh","domain.sh — the ONE door that starts, reports and stops a domain's keeper.","tool","wired","keep",2,218
   "eindri-acclaim-silent.sh","eindri-acclaim-silent.sh — action half of the Eindri silence bridge.","tool","wired","keep",1,57
-  "eindri-acclaim.sh","eindri-acclaim.sh — action half of the Eindri→Brokk wake bridge.","tool","tested","keep",12,358
+  "eindri-acclaim.sh","eindri-acclaim.sh — action half of the Eindri→Brokk wake bridge.","tool","tested","keep",12,347
   "eindri-answer.sh","eindri-answer.sh — answer a worker's question in ONE act: speak it into the pane, record it, close it.","tool","wired","keep",0,86
   "eindri-arm.sh","eindri-arm.sh — the Eindri's own arm (plan 42, the automation law).","tool","wired","keep",3,217
   "eindri-bearings.sh","eindri-bearings.sh — the Bearings every errand's brief carries: the fixed core, the project's","tool","wired","keep",2,184
   "eindri-checkpoint.sh","eindri-checkpoint.sh — a herdr worker's durable checkpoint, so a dead pane resumes.","tool","wired","keep",4,105
   "eindri-control.sh","eindri-control.sh — the CONTROL plane: allowlisted lifecycle verbs for a","tool","wired","keep",2,40
-  "eindri-dispatch.sh","eindri-dispatch.sh — the errand loop: ONE command per errand (plan 42","tool","wired","keep",4,517
+  "eindri-dispatch.sh","eindri-dispatch.sh — the errand loop: ONE command per errand (plan 42","tool","wired","keep",4,513
   "eindri-handoff.sh","eindri-handoff.sh — the handoff failsafe.","tool","wired","keep",6,242
   "eindri-heartbeat.sh","eindri-heartbeat.sh — condition half of the Eindri silence bridge.","tool","wired","keep",3,106
   "eindri-liveness.sh","eindri-liveness.sh — the sweep's second question: is the pane still a worker?","tool","wired","keep",6,262
-  "eindri-notify.sh","eindri-notify.sh — the ARM-HOLDER'S INBOX: inject one line into the session that holds the lock.","tool","wired","keep",16,156
-  "eindri-review-spawn.sh","eindri-review-spawn.sh — the review spine.","tool","tested","keep",5,435
+  "eindri-notify.sh","eindri-notify.sh — the ARM-HOLDER'S INBOX: inject one line into the session that holds the lock.","tool","wired","keep",14,156
+  "eindri-review-spawn.sh","eindri-review-spawn.sh — the review spine.","tool","tested","keep",3,387
   "eindri-role.sh","eindri-role.sh — the right smith for the right metal.","tool","wired","keep",2,117
   "eindri-route.sh","eindri-route.sh — which machine should host an errand, by its nature?","tool","tested","keep",0,108
   "eindri-seat.sh","eindri-seat.sh — seat a worker and PROVE it, in one move.","tool","wired","keep",1,85
@@ -62,14 +62,14 @@ bin[81]{file,does,kind,verdict,disposition,callers,lines}:
   "eir-doctor.sh","eir-doctor.sh — Eir, the healer: diagnose the running system, then mend it.","tool","wired","keep",17,1237
   "erindi-brief.sh","erindi-brief.sh - scaffold an Eindri worker brief at data/<task-id>/brief.md.","tool","tested","keep",8,484
   "groa-agent.sh","groa-agent.sh — Gróa's body on a schedule: the updater, leashed, one per install.","tool","wired","keep",2,188
-  "groa-update.sh","groa-update.sh — Gróa, the völva who renews.","tool","wired","keep",20,585
+  "groa-update.sh","groa-update.sh — Gróa, the völva who renews.","tool","wired","keep",19,555
   "groa-verdict-lib.sh","groa-verdict-lib.sh — how Gróa's update ends: whole, or owed, and never 'done' when it is not (plan 278).","lib","wired","keep",2,79
   "hall.sh","hall.sh — the whole house in ONE read: the seat, the doors, the queue, the last runes.","tool","wired","keep",3,16
   "hermes-tell.sh","hermes-tell.sh — hand one line to Hermes through its gateway's API, and print the answer.","tool","wired","keep",3,349
   "msg-log.sh","msg-log.sh — the record of every word sent between agents (2026-11-14, plan 275 item 8).","tool","wired","keep",2,126
   "msg-origin.sh","msg-origin.sh — the stamp that says where a message to an agent came from (2026-11-14).","tool","wired","keep",6,177
   "name-registry.sh","name-registry.sh — the collision system for Ymir's names.","tool","wired","keep",3,183
-  "pr-seal.sh","pr-seal.sh — the seat's own PR is sealed by the seat, and the word arrives through Gná.","tool","wired","keep",4,467
+  "pr-seal.sh","pr-seal.sh — the seat's own PR is sealed by the seat, and the word arrives through Gná.","tool","wired","keep",2,324
   "profile.sh","profile.sh — what THIS user's machine actually is, probed not assumed.","tool","tested","keep",4,97
   "project-git.sh","project-git.sh — resolve a project's GitHub block from the master registry","tool","tested","keep",8,317
   "project-target.sh","project-target.sh — WHERE an errand's project IS on this machine, what its records are, and the","tool","wired","keep",3,296
@@ -95,7 +95,6 @@ bin[81]{file,does,kind,verdict,disposition,callers,lines}:
   "test_eir_register.sh","test_eir_register.sh — plan 278: Eir reads one register, mends by risk class, and never leaves a broken","tool","wired","keep",1,95
   "test_eir_true_mends.sh","test_eir_true_mends.sh — the three Eir rows that lied or could not mend themselves (2026-11-20).","tool","wired","keep",0,145
   "test_errand_doors_find_the_seat.sh","test_errand_doors_find_the_seat.sh — an errand is found by the RECORD, not by a guess.","tool","wired","keep",0,109
-  "test_groa_release_pin.sh","test_groa_release_pin.sh — a pin that is a link to a release is measured, never merged in place (2026-11-20).","tool","wired","keep",0,48
   "test_groa_verdict.sh","test_groa_verdict.sh — plan 278: the last line of an update tells the truth.","tool","wired","keep",1,68
   "test_project_target.sh","test_project_target.sh — a worker for another project starts in THAT project's folder","tool","wired","keep",0,135
   "test_tell_doors.sh","test_tell_doors.sh — the one door to every agent (plan 340): hermes-tell.sh and tell.sh.","tool","wired","keep",0,126
@@ -104,6 +103,6 @@ bin[81]{file,does,kind,verdict,disposition,callers,lines}:
   "workspace-provision.sh","workspace-provision.sh — carve one workspace for the operator.","tool","wired","keep",0,82
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
 
-**Tally.** verdict: wired=65, tested=16
+**Tally.** verdict: wired=64, tested=16
 
-**Tally.** disposition: keep=79, migrate → src/ymir_runtime/send.py=1, migrate → src/ymir_runtime/hermes/seat.py=1
+**Tally.** disposition: keep=78, migrate → src/ymir_runtime/send.py=1, migrate → src/ymir_runtime/hermes/seat.py=1

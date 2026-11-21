@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[58]{file,does,kind,verdict,disposition,callers,lines}:
+bin[57]{file,does,kind,verdict,disposition,callers,lines}:
   "conflict-errand.md","conflict-errand.md — the brief a SMITH is handed when a PR cannot merge (plan 203 + 206 §12).","data","wired","keep",1,56
   "essence-fetch.sh","essence-fetch.sh — the npm world's self-heal: npm's packer refuses dotfolders","tool","wired","keep",2,18
   "exec-bits.sh","exec-bits.sh — a new door leaves the errand executable, or the errand says so before the push.","tool","wired","keep",2,62
@@ -29,7 +29,7 @@ bin[58]{file,does,kind,verdict,disposition,callers,lines}:
   "finding-tally.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",1,143
   "gather-notice.sh","gather-notice.sh — when the LAST errand of a batch finishes, the helm is told to gather it.","tool","wired","keep",3,186
   "gather.sh","gather.sh — gather a batch of errand branches into ONE push and ONE PR.","tool","tested","keep",12,362
-  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",640,101
+  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",639,101
   "github-deploy.sh","github-deploy.sh — zero-trust deploys (W0035).","tool","wired","keep",0,96
   "gjallarhorn-expose.sh","gjallarhorn-expose.sh — put EVERY app on its own public hostname (Gjallarhorn).","tool","wired","keep",0,152
   "gjallarhorn-notify.sh","gjallarhorn-notify.sh — the horn (W0036).","tool","wired","keep",1,73
@@ -39,9 +39,8 @@ bin[58]{file,does,kind,verdict,disposition,callers,lines}:
   "housekeeping.sh","housekeeping.sh — what the worktrees cost, what is already safe to forget, and what has","tool","tested","keep",5,406
   "intake.py","'''intake.py — read every registered repo once, and say honestly what could not be read.","tool","wired","keep",2,433
   "issue-watch.sh","issue-watch.sh — READ THE ISSUES, and close the ones that are already solved.","tool","wired","keep",0,106
-  "judge-merge.sh","judge-merge.sh — the judge's verdict is the seal: APPROVE merges at once, NEEDS-REWORK goes home.","tool","wired","keep",4,228
   "maker-names.py","'''maker-names.py — the ONE matcher for model, model-maker and agent-harness names in prose (RULES/53).","tool","wired","keep",11,155
-  "merge-method.sh","merge-method.sh — which `gh pr merge` flag a pull request takes (RULES/08, batch road).","tool","wired","keep",6,58
+  "merge-method.sh","merge-method.sh — which `gh pr merge` flag a pull request takes (RULES/08, batch road).","tool","wired","keep",5,58
   "merge-verdict.sh","merge-verdict.sh — may this PR be merged right now?","tool","wired","keep",5,75
   "mjollnir-webhook.sh","mjollnir-webhook.sh — HMAC-verified GitHub webhook → Mjollnir (W0018).","tool","wired","keep",0,74
   "mjollnir.sh","mjollnir.sh — the hammer (W0018).","tool","wired","keep",4,215
@@ -61,7 +60,7 @@ bin[58]{file,does,kind,verdict,disposition,callers,lines}:
   "review-seat.sh","review-seat.sh — the reviewer's SEAT: pi in a herdr pane, on the heart, on a loop.","tool","wired","keep",3,498
   "review-shelf.sh","review-shelf.sh — where a packet LANDS, and the waiting rule that keeps it honest.","tool","wired","keep",1,159
   "review-verdict.sh","review-verdict.sh — the judge's ONE act of writing: its verdict, and nothing else.","tool","wired","keep",2,182
-  "review-watch.sh","review-watch.sh — the missing trigger: a PR that arrives is a question the owner is asked.","tool","wired","keep",3,468
+  "review-watch.sh","review-watch.sh — the missing trigger: a PR that arrives is a question the owner is asked.","tool","wired","keep",2,291
   "ship-watch.sh","ship-watch.sh — the delivery loop: settle branches, then ship proved PRs.","tool","wired","keep",1,131
   "ship.sh","ship.sh — the reviewer's merge: the one door that puts a judged PR on main.","tool","wired","keep",6,206
   "skillopt-setup.sh","skillopt-setup.sh — one-time SkillOpt installation for Ymir.","tool","wired","keep",1,77
@@ -69,18 +68,18 @@ bin[58]{file,does,kind,verdict,disposition,callers,lines}:
   "smith-seat.sh","smith-seat.sh — seat ANY figure in its own herdr workspace, the same way every time.","tool","wired","keep",2,177
   "test_gather_notice.sh","test_gather_notice.sh — the LAST errand of a batch calls the gather.","tool","wired","keep",1,136
   "test_gjallarhorn_no_hall.sh","test_gjallarhorn_no_hall.sh — a tunnel never publishes a hall.","tool","wired","keep",1,80
-  "test_judge_merge.sh","test_judge_merge.sh — the judge's verdict is the seal (RULES/08, its sections appended 2026-11-21).","tool","wired","keep",0,247
   "test_review_seat_keeper.sh","test_review_seat_keeper.sh — the keeper: the reviewer's seat says WHY it refuses, and a dead seat","tool","wired","keep",1,221
+  "test_yggdrasil_slim.sh","test_yggdrasil_slim.sh — the slimmer worktree is opt-in, and the default is unchanged.","tool","wired","keep",0,81
   "utgard-box-door.py","'''utgard-box-door.py — the one road out of a box.","tool","wired","keep",1,369
   "utgard-box.sh","utgard-box.sh — a whole computer for one run, outside the wall.","tool","wired","keep",2,937
   "utgard-lane.sh","utgard-lane.sh — best of N: one brief, many boxes, one board.","tool","wired","keep",1,227
   "utgard.sh","utgard.sh — the sealed execution barrier (Utgard, the realm outside the wall).","tool","wired","keep",4,128
   "verdict-watch.sh","verdict-watch.sh — EVERY report is delivered, because the ARTEFACT is watched, not the agent.","tool","wired","keep",2,105
   "warden-lib.sh","warden-lib.sh — the shared law every outward warden keeps (plan 290 §3; the Allfather, 2026-11-14).","lib","wired","keep",13,244
-  "warden-policy.py","'''warden-policy.py — the ONE reader of a machine's wardens.yaml, and of what a warden may touch.","tool","wired","keep",9,356
+  "warden-policy.py","'''warden-policy.py — the ONE reader of a machine's wardens.yaml, and of what a warden may touch.","tool","wired","keep",7,356
   "worktree-reap.py","'''worktree-reap.py — the road that made a worktree is the road that reaps it (plan 339.4).","tool","wired","keep",6,550
-  "yggdrasil.sh","yggdrasil.sh — the worktree manager (Yggdrasil, the world-tree).","tool","tested","keep",8,191
+  "yggdrasil.sh","yggdrasil.sh — the worktree manager (Yggdrasil, the world-tree).","tool","tested","keep",9,233
 
-**Tally.** verdict: wired=53, tested=5
+**Tally.** verdict: wired=52, tested=5
 
-**Tally.** disposition: keep=58
+**Tally.** disposition: keep=57

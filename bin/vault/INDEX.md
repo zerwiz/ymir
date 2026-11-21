@@ -28,7 +28,7 @@ bin[19]{file,does,kind,verdict,disposition,callers,lines}:
   "gleipnir-lock-lib.sh","gleipnir-lock-lib.sh — the session lock (Gleipnir), a THIN SHIM.","lib","tested","keep",8,164
   "hnitbjorg-ensure.sh","hnitbjorg-ensure.sh — ensure the vault's tooling stands and its path is sound.","tool","wired","keep",2,111
   "hnitbjorg.sh","hnitbjorg.sh — Hnitbjörg: the encrypted document vault.","tool","wired","keep",3,250
-  "hoard-lib.sh","hoard-lib.sh — where the operator's HOME lives, and the two roots beneath it.","lib","tested","keep",355,251
+  "hoard-lib.sh","hoard-lib.sh — where the operator's HOME lives, and the two roots beneath it.","lib","tested","keep",354,251
   "hodd-set.sh","hodd-set.sh — set, replace or remove ONE key in an age-encrypted secret file.","tool","wired","keep",10,224
   "hodd.sh","hodd.sh — the Allfather's private hoard: path, init, ls, load, emit, get, names, tenant.","tool","tested","keep",59,174
   "home-sync-clock.sh","home-sync-clock.sh — the home pulls and pushes itself, hourly, without a hand.","tool","wired","keep",2,97
