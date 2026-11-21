@@ -151,7 +151,10 @@ PY
 # the old `agent_in_workspace → keep` could not tell real work from a finished
 # seat. These readers ask the ONE door (herdr-agents.py) for the agent's STATE,
 # and the sweep calls discriminate() for a named verdict instead of a blanket keep.
-IDLE_GRACE="${SEAT_REAP_IDLE_GRACE:-600}"      # idle-for-grace seconds → RETIRE
+# 2026-11-21: a finished seat is closed on the FIRST sweep that sees it idle (the work loop sweeps every
+# 2 minutes). The old grace of 600s let judges and coders whose work had landed pile up by the dozen.
+# The worktree guard below still refuses a seat with uncommitted or unpushed work, and names it.
+IDLE_GRACE="${SEAT_REAP_IDLE_GRACE:-0}"        # idle-for-grace seconds → RETIRE (0 = at once)
 EXIT_WAIT="${SEAT_REAP_EXIT_WAIT:-20}"         # bounded wait for the agent to leave
 
 # agent_status <ws> <wt> -> the agent's `agent_status` on stdout; rc 1 when no
@@ -234,7 +237,8 @@ terminal_errand() {
   f="$(record "$id" status)" || return 1
   [ -n "$f" ] || return 1
   st="$(tail -n1 "$f" 2>/dev/null | awk '{print $1}' | tr -d ':')"
-  case "$st" in done|failed|accepted|returned|closed) return 0 ;; esac
+  # `resolved` is the line that answers a needs-decision: the question is closed, the seat has no more work
+  case "$st" in done|failed|accepted|returned|closed|resolved) return 0 ;; esac
   return 1
 }
 
@@ -288,6 +292,10 @@ discriminate() {
       if terminal_errand "$id"; then
         now="$(date +%s)"
         since="$(idle_since "$id" 2>/dev/null || true)"
+        if [ "${IDLE_GRACE:-0}" -le 0 ] 2>/dev/null; then
+          VERDICT="finished"; REASON="finished-idle — terminal record, retiring at once"
+          return 1
+        fi
         if [ -z "$since" ]; then
           [ "${SEAT_REAP_DRY:-0}" = 0 ] && mark_idle "$id"
           VERDICT="undecided"; REASON="finished-idle — grace not yet elapsed (just observed)"

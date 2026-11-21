@@ -344,5 +344,49 @@ JSON
 t "grace not elapsed kept (named, not retired)" disc_grep '"g","wG","wG:p1","undecided — finished-idle — grace not yet elapsed' --sweep
 t "grace seat never closed" bash -c "! grep -qx wG $STUB_DIR/closed"
 
+# ── 16. 2026-11-21 · a finished seat is closed on the FIRST sweep (no grace by default) ──────────
+# No SEAT_REAP_IDLE_GRACE here: the default is 0, so a terminal errand that is idle is retired with no
+# earlier observation. Each seat is swept alone (the stub empties the whole agent list on a harness exit):
+# done (closed), a judge with a filed verdict (closed), a needs-decision answered by a `resolved` line
+# (closed), and a seat with uncommitted work (kept, and named).
+disc0() { env -u SEAT_REAP_IDLE_GRACE PATH="$T/bin:$PATH" HOME="$T/home" BROKK_HOME="$T/repo" \
+             BROKK_STATE_OVERRIDE="$DISC/state" BROKK_DATA_OVERRIDE="$DISC/state/data" SEAT_REAP_EXIT_WAIT=2 \
+             bash "$root/bin/seat/seat-reap.sh" "$@"; }
+seat_alone() { # <id> <ws> <cwd> <status-text> — one idle seat standing in <cwd>, swept with --sweep; output kept
+  local id=$1 ws=$2 cwd=$3
+  printf 'id=%s\nworkspace=%s\nseat_pane=%s:p1\nworktree=%s\n' "$id" "$ws" "$ws" "$cwd" >"$DISC/state/$id.meta"
+  printf '%s\n' "$4" >"$DISC/state/$id.status"
+  printf '{"result":{"agents":[{"agent":"claude","agent_status":"idle","pane_id":"%s:p1","workspace_id":"%s","cwd":"%s","foreground_cwd":"%s"}]}}' "$ws" "$ws" "$cwd" "$cwd" >"$STUB_DIR/agents.json"
+  printf '{"result":{"workspaces":[{"workspace_id":"%s","label":"eindri-%s","agent_status":"idle"}]}}' "$ws" "$id" >"$STUB_DIR/workspaces.json"
+  rm -f "$STUB_DIR/closed"
+}
+git -C "$DISC/gitrepo" worktree add -q -b dirty2-branch "$DISC/gitrepo/.yggdrasil/dirty2" main >/dev/null 2>&1
+echo dirt >> "$DISC/gitrepo/.yggdrasil/dirty2/.pi/x"
+
+seat_alone now1 wN1 "$DISC/wt/now1" 'done: landed'
+disc0 --list >"$T/l.out" 2>&1
+t "the dry run names the seat it would retire on first sight" grep -q '"now1","wN1","wN1:p1","finished' "$T/l.out"
+t "the dry run closed nothing" bash -c "! test -s $STUB_DIR/closed"
+disc0 --sweep >"$T/s.out" 2>&1
+t "the first sweep retires a done seat, no earlier stamp" grep -qx wN1 "$STUB_DIR/closed"
+
+seat_alone rv1 wRV "$DISC/wt/rv1" 'working: reviewing'
+printf 'verdict=pass\n' >"$DISC/state/rv1.review"
+disc0 --sweep >"$T/s.out" 2>&1
+t "a filed review verdict closes the judge seat at once" grep -qx wRV "$STUB_DIR/closed"
+
+seat_alone nd1 wND1 "$DISC/wt/nd1" "$(printf 'needs-decision: which road?\nresolved: which road? - answered')"
+disc0 --sweep >"$T/s.out" 2>&1
+t "an answered needs-decision (resolved line) closes the seat" grep -qx wND1 "$STUB_DIR/closed"
+
+seat_alone nd2 wND2 "$DISC/wt/nd2" 'needs-decision: which road?'
+disc0 --sweep >"$T/s.out" 2>&1
+t "a needs-decision still waiting is never closed" bash -c "! grep -qx wND2 $STUB_DIR/closed"
+
+seat_alone dt1 wDT1 "$DISC/gitrepo/.yggdrasil/dirty2" 'done: finished'
+disc0 --sweep >"$T/s.out" 2>&1
+t "uncommitted work is never closed" bash -c "! grep -qx wDT1 $STUB_DIR/closed"
+t "uncommitted work is named in the sweep" grep -q '"dt1","wDT1","wDT1:p1","refused: dirty worktree' "$T/s.out"
+
 printf 'seat reap: %s ok / %s fail\n' "$ok" "$fail"
 [ "$fail" = 0 ]
