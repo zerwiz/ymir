@@ -92,8 +92,37 @@ Proof: `bash bin/forge/tests/test_smith_gh.sh` gives `29 passed, 0 failed`; on t
 `bash bin/forge/tests/test_judge_merge.sh` gives `36 passed, 0 failed`. A real judge seat refuses
 `gh pr -R zerwiz/ymir merge --help` and `gh alias set zz 'pr merge'`, and still reads `--json mergeable`.
 
+## The third review: stopgaps, and the fence that belongs to the operator
+
+The third review (`89f1b6677`) confirmed every earlier item and named three roads a worker seat could still take:
+
+- **A. A push straight to main.** The deny list named only `git push origin main:*`, so `HEAD:main`,
+  `<branch>:main` and `refs/heads/main` passed. `--no-verify` skips the local pre-push guard. On GitHub, main asks only
+  for one check, with `enforce_admins` off and no pull request required, and the seat's token is the owner's admin
+  token.
+- **B. The token leaves gh.** `gh auth token` printed it, and `curl` or Python then merged through the REST API.
+- **C. The real gh by an absolute path with its name quoted** (`…/g''h pr merge 5`) matched no `*gh*` pattern and
+  never met the shim.
+
+**What this PR adds, as stopgaps.** Both profiles deny a push to main or master by any refspec, `--no-verify`,
+`auth token`, `--show-token`, `GH_TOKEN`, `GITHUB_TOKEN`, gh's `hosts.yml`, `api.github.com`, any `…/pulls/<n>/merge`,
+and the text `pr merge` itself, which also catches road C. The shim refuses `gh auth token` and
+`gh auth status --show-token` for a smith.
+
+> [!IMPORTANT]
+> **These are not the fence.** Every pattern has another spelling. The fence is on the server and in the credential,
+> and both are the operator's settings:
+> 1. a worker seat holds a read-only token, so only the judge's seat can merge;
+> 2. main requires a pull request with `enforce_admins` on, or a ruleset whose only bypass actor is the judge.
+
+Proof: `bin/forge/tests/test_smith_gh.sh` gives `34 passed, 0 failed`, and `tests/test_claude_seat_roles.sh`
+gives `33 passed, 0 failed`; its decision table carries every A, B and C form. A real worker seat refuses
+`git push --dry-run --no-verify origin HEAD:main`, `gh auth token`, the quoted absolute-path gh, and `curl` to
+api.github.com.
+
 ## CHANGE LOG
 
 - 2026-11-21 — filed with the errand `judge-permissions`.
 - 2026-11-21 — appended the rework after the judge's first review (#870: guessed role, the shim, raw merge forms).
 - 2026-11-21 — appended the second rework (the judge's re-review: the upstream guess, `gh pr -R … merge`, aliases and API paths).
+- 2026-11-21 — appended the third review: stopgaps for a push to main, the token leaving gh and the quoted absolute path; the fence is named as the operator's.

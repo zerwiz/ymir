@@ -130,6 +130,12 @@ if is_smith; then
   fi
   unset _real _exp
   if [ "$SUB1" = api ] && api_is_merge "$@"; then refuse "gh api (a merge)"; fi
+  # The token must not leave gh (the judge's third review of #870): with it in hand, curl or any
+  # language merges through the REST API and never meets this shim. A smith never prints it.
+  if [ "$SUB1" = auth ]; then
+    [ "$SUB2" = token ] && refuse "gh auth token (the credential leaving gh)"
+    for _a in "$@"; do case "$_a" in -t|--show-token) refuse "gh auth $SUB2 --show-token (the credential leaving gh)" ;; esac; done
+  fi
   case "$SUB1 $SUB2" in
     "pr create")
       [ "${YMIR_SMITH_PR:-}" = direct ] || refuse "gh $SUB1 $SUB2"

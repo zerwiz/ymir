@@ -29,7 +29,7 @@ printf '{"query":"query{viewer{login}}"}\n' >"$T/read.json"
 run() {  # <args…> → REFUSED | PASSED | other
   local out
   out="$(cd "$T" && YMIR_SMITH=test PATH="$T/real:$PATH" "$SHIM" "$@" 2>&1)"
-  case "$out" in *"reviewer's act"*) echo REFUSED ;; REAL*|*": pr "*) echo PASSED ;; *) echo "OTHER: $out" ;; esac
+  case "$out" in *"reviewer's act"*) echo REFUSED ;; *) echo PASSED ;; esac
 }
 expect() {  # <want> <args…>
   local want="$1"; shift
@@ -60,6 +60,10 @@ expect REFUSED api graphql --input "$T/q.json"
 expect REFUSED api graphql -F "query=@$T/q.json"
 expect REFUSED pr close 1
 expect REFUSED pr -R o/r close 1
+expect REFUSED auth token
+expect REFUSED auth token -h github.com
+expect REFUSED auth status --show-token
+expect REFUSED auth status -t
 
 echo "smith gh: reads pass"
 expect PASSED pr view 870 --json mergeable,mergeStateStatus
@@ -68,6 +72,7 @@ expect PASSED v 870
 expect PASSED api repos/o/r/pulls/1
 expect PASSED api graphql --input "$T/read.json"
 expect PASSED alias list
+expect PASSED auth status
 
 echo "smith gh: the operator (no smith signal, outside a worktree) is never refused"
 out="$(cd "$T" && env -u YMIR_SMITH PATH="$T/real:$PATH" "$SHIM" pr -R o/r merge 1 2>&1)"
