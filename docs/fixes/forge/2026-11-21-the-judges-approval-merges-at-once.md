@@ -9,10 +9,8 @@
 - `bin/model/agent-model.sh` — a claude-harness agent's Claude name is honoured; a provider/model pin yields to it
 - `bin/agents/eindri-acclaim.sh` — a review errand's `done` hands its verdict to `judge-merge.sh act`
 - `.agents/assets/templates/review-brief.template.md` — the judge names the head it judged and knows an APPROVE merges
-- `.agents/config/units.yaml` — the review clock runs every 3 minutes
-- `bin/forge/judge-carry.py` — new: may an approval carry to a newer head (addendum)
-- `bin/forge/warden-policy.py` — `operator-logins`, `kept`, `keeps` (addendum)
-- `bin/forge/tests/test_judge_merge.sh` — 34 fenced cases (53 after the addendum) with a fake gh and a fake verdict
+- `config/units.yaml` — the review clock runs every 3 minutes
+- `bin/forge/tests/test_judge_merge.sh` — 34 fenced cases with a fake gh and a fake verdict
 - `.agents/tests/eindri-review-spine.test.sh` — the spawn-line case pins its harness and model per run
 
 ## Why
@@ -88,7 +86,16 @@ The judge returned NEEDS-REWORK twice on this PR, and the helm added three findi
 - `bash .agents/tests/eindri-review-spine.test.sh` → `ALL PASS` (the five brief cases that failed on `main` pass under the temp home)
 - `python3 bin/forge/judge-carry.py . <approved> <head> origin/main` carries for #863, #865 and #860, the three heads the helm measured.
 
+## Addendum — the two file-list lines restored (2026-11-21)
+
+The rework had edited two lines of the file list above in place, which RULES/06 forbids: the list is the record of what was believed. They are restored as first written. The corrections belong here instead:
+
+- the review clock lives at `.agents/config/units.yaml`, not `config/units.yaml`;
+- the test file holds 53 cases after the rework, not 34;
+- the rework also added `bin/forge/judge-carry.py` and, in `bin/forge/warden-policy.py`, `operator-logins`, `kept` and `keeps`.
+
 ## CHANGE LOG
 
 - 2026-11-20 — review-mend: added missing heading for #863
 - 2026-11-21 — rework: the eleven findings of the judge and the helm (addendum above)
+- 2026-11-21 — rework: two file-list lines restored, correction stated in an addendum (RULES/06)
