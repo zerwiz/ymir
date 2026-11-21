@@ -556,7 +556,8 @@ class Sync:
         """The card with exactly this title (top-level, or under `parent`), asked for by name; None when none answers."""
         for c in self.board.find_cards(None if parent is not None else LABEL, title[:60]):
             # the parent must be THIS card (or none, for a plan card): a same-titled step under another card is not ours
-            if c.get("title") == title and str(c.get("parent")) == str(parent) and in_scope(c, self.row, self.owned):
+            if c.get("title") == title and str(c.get("parent")) == str(parent) \
+                    and (parent is not None or in_scope(c, self.row, self.owned)):  # steps carry no label: the parent scopes them
                 return c.get("card")
         return None
 

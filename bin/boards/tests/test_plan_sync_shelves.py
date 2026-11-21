@@ -74,6 +74,20 @@ with tempfile.TemporaryDirectory() as home:
     check("a shelf sees only its own cards", seen(a) == ["mine"], seen(a))
     check("a project sees no shelf's card", seen(p) == ["project"], seen(p))
 
+    class FakeBoard:
+        def find_cards(self, label, text):
+            return [{"card": 99, "title": "STEP", "parent": 7, "labels": []},
+                    {"card": 5, "title": "TOP", "parent": None, "labels": ["plan"]}]
+
+    for row, word in ((a, "shelf"), (p, "project")):
+        sy = ps.Sync(home, row, "acme/Demo", FakeBoard(), True)
+        sy.owned = owned
+        check(f"a {word} finds its unlabelled step by name under its parent", sy.found_by_title("STEP", parent=7) == 99,
+              sy.found_by_title("STEP", parent=7))
+    sy = ps.Sync(home, a, "acme/Demo", FakeBoard(), True)
+    sy.owned = owned
+    check("a shelf still does not see a top-level card without its labels", sy.found_by_title("TOP") is None)
+
 if fails:
     print(f"FAIL: {len(fails)} failed")
     sys.exit(1)
