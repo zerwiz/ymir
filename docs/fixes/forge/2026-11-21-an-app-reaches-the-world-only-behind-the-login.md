@@ -36,3 +36,7 @@ Gimlé side is a separate change (zerwiz/gimle#22).
 ## What is not done
 
 Applying it on a machine is the operator's step, because it restarts that machine's tunnel.
+
+## CHANGE LOG
+
+- 2026-11-21 — review-mend: added missing heading for #882
