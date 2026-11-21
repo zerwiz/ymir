@@ -47,3 +47,7 @@ every 2 seconds.
 
 The live service runs as root, so it needs `sudo systemctl restart garmr-hound.service` after the
 release carrying this is flipped.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #860
