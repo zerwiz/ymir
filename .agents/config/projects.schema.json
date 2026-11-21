@@ -1,0 +1,554 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zerwiz/ymir/config/projects.schema.json",
+  "title": "hodd/identity/projects.yaml — how every project is handled (the `handling:` block)",
+  "description": "The shape of the `handling:` block a row of the project registry carries (plan 345). One row answers, in one read: is it public, where do its plans live, which board, who works on it, is it private to the operator, who merges and under what rule, where and how it deploys, and which vault keys it uses (names only). The block sits UNDER `handling:` so the older top-level keys (`board:` read by plan-sync, `delivery:` read by the shipper) keep their meaning untouched. Every measured value carries `source:` — where it was read. A value nobody could measure is the string `unmeasured` (or an object with `status: unmeasured`), never a guess. The reader is `bin/records/project.sh`; `--audit` judges every row against this file.",
+  "type": "object",
+  "required": [
+    "projects"
+  ],
+  "properties": {
+    "projects": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/row"
+      }
+    }
+  },
+  "$defs": {
+    "unmeasured": {
+      "description": "a value nobody could measure: the bare word, or an object that says why",
+      "oneOf": [
+        {
+          "const": "unmeasured"
+        },
+        {
+          "type": "object",
+          "required": [
+            "status"
+          ],
+          "properties": {
+            "status": {
+              "const": "unmeasured"
+            },
+            "source": {
+              "type": "string"
+            },
+            "why": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "owed": {
+      "description": "a value only the operator may give; the field stays open until he does",
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "const": "OWED"
+        },
+        "owed_by": {
+          "type": "string"
+        },
+        "why": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "string",
+          "description": "what the record already says, for the operator to confirm — never taken as his answer"
+        },
+        "suggestion": {
+          "type": "string"
+        }
+      }
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1,
+      "description": "where the value was read: a command, a file, a URL or a rule"
+    },
+    "row": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "handling": {
+          "$ref": "#/$defs/handling"
+        }
+      }
+    },
+    "handling": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "measured": {
+          "type": "string",
+          "description": "the date the block was last measured"
+        },
+        "visibility": {
+          "description": "measured from the forge (`gh repo view`), never typed",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/unmeasured"
+            },
+            {
+              "type": "object",
+              "required": [
+                "value",
+                "source"
+              ],
+              "properties": {
+                "value": {
+                  "enum": [
+                    "public",
+                    "private",
+                    "internal",
+                    "no-remote"
+                  ]
+                },
+                "remote": {
+                  "type": "string"
+                },
+                "source": {
+                  "$ref": "#/$defs/source"
+                }
+              }
+            }
+          ]
+        },
+        "plans": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/unmeasured"
+            },
+            {
+              "type": "object",
+              "required": [
+                "where",
+                "source"
+              ],
+              "properties": {
+                "where": {
+                  "enum": [
+                    "home",
+                    "repo",
+                    "plane",
+                    "trello",
+                    "none"
+                  ]
+                },
+                "path": {
+                  "type": "string"
+                },
+                "also": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "where": {
+                        "enum": [
+                          "home",
+                          "repo",
+                          "plane",
+                          "trello"
+                        ]
+                      },
+                      "path": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "source": {
+                  "$ref": "#/$defs/source"
+                }
+              }
+            }
+          ]
+        },
+        "board": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/unmeasured"
+            },
+            {
+              "type": "object",
+              "required": [
+                "engine",
+                "source"
+              ],
+              "properties": {
+                "engine": {
+                  "enum": [
+                    "plane",
+                    "trello",
+                    "github",
+                    "file",
+                    "none"
+                  ]
+                },
+                "place": {
+                  "type": "string"
+                },
+                "write": {
+                  "enum": [
+                    "house",
+                    "owner-only",
+                    "read-only"
+                  ]
+                },
+                "also": {
+                  "type": "array"
+                },
+                "source": {
+                  "$ref": "#/$defs/source"
+                }
+              }
+            }
+          ]
+        },
+        "people": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/unmeasured"
+            },
+            {
+              "type": "object",
+              "required": [
+                "members",
+                "source"
+              ],
+              "properties": {
+                "members": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "role"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "a collaborator id from collaborators.yaml, or `operator`"
+                      },
+                      "account": {
+                        "type": "string",
+                        "description": "a forge account when no collaborator id is known"
+                      },
+                      "role": {
+                        "enum": [
+                          "owner",
+                          "developer",
+                          "reviewer",
+                          "reader",
+                          "unmeasured"
+                        ]
+                      },
+                      "forge_permission": {
+                        "type": "string"
+                      },
+                      "kind": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "source": {
+                  "$ref": "#/$defs/source"
+                }
+              }
+            }
+          ]
+        },
+        "private_to": {
+          "description": "the operator's id when only he may see the project; empty otherwise. Only the operator says which — until he does it is OWED. (plan 345)",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/owed"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "delivery": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/unmeasured"
+            },
+            {
+              "type": "object",
+              "required": [
+                "road",
+                "source"
+              ],
+              "properties": {
+                "road": {
+                  "enum": [
+                    "judge-merges",
+                    "person-merges",
+                    "operator-merges",
+                    "upstream-merges",
+                    "direct-push",
+                    "docs-to-main",
+                    "no-pr-road"
+                  ]
+                },
+                "merge_account": {
+                  "type": "string"
+                },
+                "ci": {
+                  "enum": [
+                    "yes",
+                    "no",
+                    "unmeasured"
+                  ]
+                },
+                "required_checks": {
+                  "oneOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    {
+                      "const": "unmeasured"
+                    }
+                  ]
+                },
+                "extra_rules": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "merged_by_seen": {
+                  "type": "object",
+                  "description": "who merged the last PRs, measured — practice, beside the rule"
+                },
+                "conflict": {
+                  "type": "string",
+                  "description": "where the repo's own rule and the house's rule disagree — a question for the operator, never resolved by a worker"
+                },
+                "source": {
+                  "$ref": "#/$defs/source"
+                }
+              }
+            }
+          ]
+        },
+        "deploy": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/unmeasured"
+            },
+            {
+              "type": "object",
+              "required": [
+                "source"
+              ],
+              "properties": {
+                "where": {
+                  "type": "string"
+                },
+                "how": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  ]
+                },
+                "needs_word": {
+                  "enum": [
+                    "yes",
+                    "no"
+                  ]
+                },
+                "source": {
+                  "$ref": "#/$defs/source"
+                }
+              }
+            }
+          ]
+        },
+        "secrets": {
+          "description": "vault key NAMES only — never a value",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/unmeasured"
+            },
+            {
+              "type": "object",
+              "required": [
+                "keys",
+                "source"
+              ],
+              "properties": {
+                "keys": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                  }
+                },
+                "source": {
+                  "$ref": "#/$defs/source"
+                }
+              }
+            }
+          ]
+        },
+        "repos": {
+          "description": "plan 346.1 — every repository the project has (room left; filled by the repo map)",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "remote"
+            ],
+            "properties": {
+              "remote": {
+                "type": "string"
+              },
+              "role": {
+                "enum": [
+                  "app",
+                  "docs",
+                  "infra",
+                  "fork-upstream"
+                ]
+              },
+              "default_branch": {
+                "type": "string"
+              },
+              "visibility": {
+                "enum": [
+                  "public",
+                  "private",
+                  "internal"
+                ]
+              }
+            }
+          }
+        },
+        "placement": {
+          "description": "plan 346.2 — per machine (by name or role from fleet.json): does it hold a clone",
+          "type": "object",
+          "additionalProperties": {
+            "enum": [
+              "clone",
+              "on-demand",
+              "never"
+            ]
+          }
+        },
+        "environments": {
+          "description": "plan 346 #1 — value: [{name: dev|staging|prod, url, runs_on, deploy}]; from deploy scripts, units, tunnels, Caddy",
+          "$ref": "#/$defs/measured"
+        },
+        "domains": {
+          "description": "#2 — value: [{name, zone, tunnel, cert_expires}]; from the tunnels' configs and a TLS probe",
+          "$ref": "#/$defs/measured"
+        },
+        "data_class": {
+          "description": "#3 — public | internal | client | nda; the operator's word (OWED until given)",
+          "$ref": "#/$defs/measured"
+        },
+        "models_allowed": {
+          "description": "#3 — local-only | named-hosted | any; the operator's word (OWED until given)",
+          "$ref": "#/$defs/measured"
+        },
+        "licence": {
+          "description": "#4 — value: SPDX id or none; from the forge's licence detection and the LICENSE file",
+          "$ref": "#/$defs/measured"
+        },
+        "upstream": {
+          "description": "#4 — value: {remote, sync} for a fork, or none; from the fork parent on the forge",
+          "$ref": "#/$defs/measured"
+        },
+        "scanning": {
+          "description": "#5 — value: {dependabot, audit, gitleaks}; from the repo's workflows and forge settings",
+          "$ref": "#/$defs/measured"
+        },
+        "backups": {
+          "description": "#6 — value: [{data, where, schedule, last_restore_test}]",
+          "$ref": "#/$defs/measured"
+        },
+        "costs": {
+          "description": "#7 — value: {hosting, domains, ai_usage} per month",
+          "$ref": "#/$defs/measured"
+        },
+        "clients": {
+          "description": "#8 — value: [{who, contract, dpa: signed|owed, contact}]",
+          "$ref": "#/$defs/measured"
+        },
+        "access": {
+          "description": "#9 — value: [{person, github, board, gimle, vault, granted, by}]",
+          "$ref": "#/$defs/measured"
+        },
+        "keepers": {
+          "description": "#10 — value: [{area, person, paths}]; from areas/ and CODEOWNERS",
+          "$ref": "#/$defs/measured"
+        },
+        "lifecycle": {
+          "description": "#11 — active | maintenance | archived | retired; the operator's word (OWED until given)",
+          "$ref": "#/$defs/measured"
+        },
+        "merge_account": {
+          "description": "#12 — value: the forge account every merge must carry (default the operator's)",
+          "$ref": "#/$defs/measured"
+        },
+        "toolchain": {
+          "description": "#13 — value: {languages, runtimes, package_manager, versions}; from the repo's manifests",
+          "$ref": "#/$defs/measured"
+        },
+        "monitoring": {
+          "description": "#14 — value: [{url, check, alert_to}]; from the uptime checks that exist",
+          "$ref": "#/$defs/measured"
+        }
+      }
+    },
+    "measured": {
+      "description": "a measured value: `{value, source}` — the value in the shape the field names, and where it was read; or `unmeasured`; or `OWED` when only the operator may give it",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/unmeasured"
+        },
+        {
+          "$ref": "#/$defs/owed"
+        },
+        {
+          "type": "object",
+          "required": [
+            "value",
+            "source"
+          ],
+          "properties": {
+            "value": {},
+            "source": {
+              "$ref": "#/$defs/source"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
