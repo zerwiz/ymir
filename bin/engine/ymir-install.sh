@@ -602,9 +602,9 @@ step_engines() {
 }
 
 # ── 3a2. the Pi agent + local models ────────────────────────────────────────
-# Ensure pi and the Pi packages Ymir needs (pi-mcp-adapter, pi-web-access,
-# pi-lmstudio — Pi has no native MCP/web/local-model support), detect the LOCAL
-# model runtimes actually here (never assume llama.cpp), and seed
+# Ensure pi and the Pi packages Ymir needs (pi-mcp-adapter, pi-web-access —
+# Pi has no native MCP/web support), detect the local llama.cpp rail actually
+# here (never assume one), and seed
 # ~/.pi/agent/models.json only when the operator has none.
 step_models() {
   role_gate models forge,dev "the harness (pi) and its local models" || return 0

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Opt-in development evaluation for the harness-adapters routing instructions.
 # It sends the directly loaded router and a complete scenario set
-# to a local Ollama model, then compares the generated routing plan as normalized
+# to a local llama.cpp model (the rail's OpenAI-compatible API), then compares the generated routing plan as normalized
 # JSON.
 # It makes no external-provider or remote CI call and does not claim that an absent or
 # unconfigured native harness loaded the references itself.
@@ -23,13 +23,15 @@ RESPONSE_JSON="$TMP_ROOT/response.json"
 
 command -v curl >/dev/null 2>&1 || fail "curl is required for the local instruction evaluation"
 command -v jq >/dev/null 2>&1 || fail "jq is required for the local instruction evaluation"
-curl -fsS --max-time 2 http://127.0.0.1:11434/api/tags > "$TMP_ROOT/tags.json" \
-  || fail "local Ollama is unavailable at 127.0.0.1:11434; no remote provider fallback is allowed"
+# Only llama.cpp is a local road (2026-11-21): the rail's base URL, default the local router.
+RAIL=${FM_HARNESS_ADAPTER_RAIL_URL:-http://127.0.0.1:8080/v1}
+curl -fsS --max-time 2 "$RAIL/models" > "$TMP_ROOT/tags.json" \
+  || fail "the local llama.cpp rail is unavailable at $RAIL; no remote provider fallback is allowed"
 
 MODEL=${FM_HARNESS_ADAPTER_LOCAL_MODEL:-}
 [ -n "$MODEL" ] || fail "FM_HARNESS_ADAPTER_LOCAL_MODEL must name an explicit local evaluator"
-jq -e --arg model "$MODEL" '.models | any(.name == $model)' "$TMP_ROOT/tags.json" >/dev/null \
-  || fail "requested local Ollama model is unavailable: $MODEL"
+jq -e --arg model "$MODEL" '.data | any(.id == $model)' "$TMP_ROOT/tags.json" >/dev/null \
+  || fail "requested local llama.cpp model is unavailable: $MODEL"
 
 cat > "$EXPECTED_JSON" <<'JSON'
 {
@@ -83,11 +85,11 @@ JSON
 PAYLOAD=$(jq -n \
   --arg model "$MODEL" \
   --rawfile prompt "$PROMPT_FILE" \
-  '{model:$model,prompt:$prompt,stream:false,format:"json",options:{temperature:0,num_predict:4096}}')
+  '{model:$model,messages:[{role:"user",content:$prompt}],stream:false,response_format:{type:"json_object"},temperature:0,max_tokens:4096}')
 curl -fsS --max-time "${FM_HARNESS_ADAPTER_EVAL_TIMEOUT_SECONDS:-120}" \
   -H 'Content-Type: application/json' \
-  -d "$PAYLOAD" http://127.0.0.1:11434/api/generate \
-  | jq -er '.response | fromjson' > "$RESPONSE_JSON" \
+  -d "$PAYLOAD" "$RAIL/chat/completions" \
+  | jq -er '.choices[0].message.content | fromjson' > "$RESPONSE_JSON" \
   || fail "local model $MODEL did not return parseable routing JSON"
 jq '(.cases[]?.id) |= split(" ")[0]' "$RESPONSE_JSON" > "$TMP_ROOT/normalized-response.json" \
   || fail "local model $MODEL returned an invalid routing case shape"

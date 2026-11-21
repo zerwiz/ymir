@@ -86,7 +86,7 @@ for _a, _s in (cfg.get("agents") or {}).items():
     _m = _s.get("model") if isinstance(_s, dict) else _s
     if _m and "/" in _m:
         _p = _m.split("/", 1)[0]
-        if _p not in LOCAL_PROVIDERS and "llama" not in _p and _p not in ("lmstudio",):
+        if _p not in LOCAL_PROVIDERS and "llama" not in _p:
             online_models.add(_m)
 
 def pi_catalog():
@@ -104,7 +104,7 @@ def pi_catalog():
 catalog = pi_catalog()  # (provider, model) locally servable
 # local providers: from config + names that look local
 def is_local_provider(p):
-    return p in LOCAL_PROVIDERS or p.startswith("llama") or p in ("lmstudio",) or "llama" in p or p.startswith("llamacpp")
+    return p in LOCAL_PROVIDERS or p.startswith("llama") or "llama" in p or p.startswith("llamacpp")
 
 QUANT_ALIAS = {"iq2":"q2_k_xl","iq-2":"q2_k_xl","q2":"q2_k_xl","iq1":"q2_k_xl",
                "iq3":"iq3_s","q3":"iq3_s","q4":"q4_k_s","q5":"q5_k_m","q6":"q6_k","q8":"q8_0"}

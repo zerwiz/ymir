@@ -37,7 +37,7 @@ bin[22]{file,does,kind,verdict,disposition,callers,lines}:
   "model-register.sh","model-register.sh — register the chosen model with Ymir, in the hoard.","tool","wired","keep",1,96
   "model-resolve.sh","model-resolve.sh — resolve a human model request to a concrete harness+model.","tool","tested","keep",3,208
   "model-tune.sh","model-tune.sh — tune the chosen model for THIS host, with measured numbers.","tool","wired","keep",1,150
-  "models-detect.sh","models-detect.sh — detect the LOCAL model runtimes present on this machine and","tool","wired","keep",3,168
+  "models-detect.sh","models-detect.sh — detect the LOCAL model runtimes present on this machine and","tool","wired","keep",3,150
   "models-report.sh","models-report — the user's OWN models, read from the ROOT pi home.","tool","wired","keep",1,29
   "providers-catalog.sh","providers-catalog.sh — the open catalog of AI providers (models.dev), cached once per machine (plan 275).","tool","wired","keep",0,48
   "rail-resolve.sh","rail-resolve.sh — the DOOR to the living rail resolver (plan 51, Parts 9a/9b/9c).","tool","tested","keep",6,72

@@ -15,11 +15,15 @@ misbehaving. If every model in the setup is hosted, this asset does not apply.
 
 ## 1. The engines galdr must recognise
 
+> [!IMPORTANT]
+> **Only llama.cpp is a local road in this house** (the operator's word, 2026-11-21: *"only use
+> llama. no ollama or lm studio"*). The other engines below are named so galdr can recognise a
+> server it finds; a desktop model server (LM Studio) or a model daemon (ollama) found on a seat is
+> reported for removal, never wired in.
+
 | Engine | Endpoint it usually holds | How to recognise it | What it hides |
 |---|---|---|---|
 | **llama.cpp** (`llama-server`) | `:8080` (or per-model ports) | `llama-server` in the process list; a `--models-preset`/`--models-dir` flag means **router mode** (many models, one endpoint) | nothing — but you own every flag. The reference for GGUF. |
-| **LM Studio** | `:1234` (its HTTP server) | `lm-studio` process; `~/.lmstudio/` on disk; its own model folder | bundles an **older** llama.cpp than upstream, and its defaults are conservative — they can push work onto the CPU |
-| **Ollama** | `:11434` | `ollama` process; models under `~/.ollama/models` | hides the MoE expert-offload knobs; a plain model loads at a **low default context** unless `num_ctx` is set |
 | **vLLM / SGLang** | `:8000` | `vllm` process | needs fp8/bf16 rather than GGUF, and a large device — the wrong shape for a single-user desktop |
 | **ExLlama (TabbyAPI)** | `:5000` | `tabbyAPI` process | EXL2/EXL3 only; **cannot read GGUF** |
 
@@ -27,11 +31,9 @@ Detection, in one line each:
 
 ```bash
 curl -s http://127.0.0.1:8080/v1/models   # llama.cpp (router or single)
-curl -s http://127.0.0.1:1234/v1/models   # LM Studio
-curl -s http://127.0.0.1:11434/v1/models  # Ollama
 ```
 
-All three answer the same OpenAI-shaped `/v1` API, which is why the harness does
+Each answers the same OpenAI-shaped `/v1` API, which is why the harness does
 not care which one is behind the URL — and why a wrong assumption about *which*
 one is behind it is easy to make and expensive to debug.
 
@@ -56,8 +58,6 @@ advertisement is not a contract.
 
 - **GGUF work → llama.cpp.** Everything tunable, and router mode gives one
   endpoint for many models.
-- **Convenience → LM Studio or Ollama.** Good download and run experience; accept
-  that you must verify the engine version, the defaults, and the context.
 - **Throughput serving for many users → vLLM/SGLang**; **maximum speed on one
   consumer GPU → ExLlama**, at the cost of GGUF.
 
@@ -207,24 +207,17 @@ rather than recalling a flag from memory.
 | Engine | Documentation | Server / API reference |
 |---|---|---|
 | **llama.cpp** | <https://github.com/ggml-org/llama.cpp> | server: <https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md> · build & backends (CUDA/Vulkan/ROCm/Metal): `…/docs/build.md` |
-| **LM Studio** | <https://lmstudio.ai/docs> | developer/API: <https://lmstudio.ai/docs/developer> · REST: <https://lmstudio.ai/docs/developer/rest> · CLI: <https://lmstudio.ai/docs/cli> |
-| **Ollama** | <https://docs.ollama.com> | Modelfile: <https://docs.ollama.com/modelfile> · **machine-readable index: <https://docs.ollama.com/llms.txt>** |
 | **vLLM** | <https://docs.vllm.ai> | — |
 | **SGLang** | <https://docs.sglang.ai> | — |
 | **ExLlamaV2 / TabbyAPI** | <https://github.com/theroyallab/tabbyAPI> | — |
 | **llama-swap** (external router) | <https://github.com/mostlygeek/llama-swap> | — |
 
-Read this table with four facts in mind:
+Read this table with three facts in mind:
 
 - **llama.cpp has no separate documentation site — the repository *is* the
   documentation.** The server flags live in `tools/server/README.md`, the
   backends in `docs/build.md`, and the router/preset behaviour there plus the
   server README. When a flag's meaning matters, read it at the source.
-- **Ollama publishes a machine-readable page index** at `/llms.txt`. Fetch it to
-  discover the current page instead of guessing a path that has moved.
-- **LM Studio's docs are per-page, not per-release**, and it bundles its own
-  llama.cpp build. Check the *bundled engine version* separately from the app
-  version; an old engine explains most "impossible" numbers from that backend.
 - **Release notes and issue trackers are documentation.** For llama.cpp
   especially, a behaviour that surprises you is usually an open issue with the
   root cause already written down — including the silent ones.

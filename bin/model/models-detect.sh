@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # models-detect.sh — detect the LOCAL model runtimes present on this machine and
-# emit a Pi models.json provider fragment. It never assumes llama.cpp: it reports
-# what IS here (a llama.cpp/llama-swap server, an LM Studio GGUF tree, Ollama).
+# emit a Pi models.json provider fragment. It reports the llama.cpp server that IS
+# here (llama-server / llama-router) and the Apodex seat; only llama.cpp is a local road.
 #
 # Coding wants a wide window: detected models are suggested at >= 80000 context.
 #
@@ -47,12 +47,11 @@ for m in d.get("data", []) or []:
 ' 2>/dev/null
 }
 
-LLAMACPP_URL=""; OLLAMA=0; LMSTUDIO_TREE=0
+LLAMACPP_URL=""
 for u in http://127.0.0.1:8080/v1/models http://127.0.0.1:8090/v1/models; do
   ids="$(http_ids "$u")" && [ -n "$ids" ] && { LLAMACPP_URL="${u%/models}"; break; }
 done
-[ -d "$HOME/.lmstudio/models" ] && LMSTUDIO_TREE=1
-have ollama && OLLAMA=1
+# Only llama.cpp is a local road (2026-11-21): no LM Studio tree, no ollama is detected.
 
 # Apodex — the research/planning lodge (same machine, separate seat).
 # Reads APODEX_BASE_URL or falls back to http://127.0.0.1:${APODEX_PORT:-1234}/v1.
@@ -61,7 +60,7 @@ http_ids "$APODEX_URL/models" >/dev/null 2>&1 && APODEX_URL="${APODEX_URL%/}" ||
 
 # ── fragment ──────────────────────────────────────────────────────────────────
 FRAGMENT="$(MODELS_JSON="$MODELS_JSON" CODING_CTX="$CODING_CTX" \
-  LLAMACPP_URL="${LLAMACPP_URL:-http://127.0.0.1:8080/v1}" LMSTUDIO_TREE="$LMSTUDIO_TREE" OLLAMA="$OLLAMA" \
+  LLAMACPP_URL="${LLAMACPP_URL:-http://127.0.0.1:8080/v1}" \
   APODEX_URL="$APODEX_URL" \
   python3 <<'PY'
 import json, os, subprocess
@@ -70,8 +69,6 @@ ctx = int(os.environ.get("CODING_CTX", "80000"))
 providers = {}
 
 llama_url = os.environ.get("LLAMACPP_URL", "")
-lm_tree = os.environ.get("LMSTUDIO_TREE") == "1"
-ollama = os.environ.get("OLLAMA") == "1"
 apodex_url = os.environ.get("APODEX_URL", "")
 
 def served(url):
@@ -83,7 +80,7 @@ def served(url):
         return []
 
 ids = served(llama_url) if llama_url else []
-if ids or lm_tree:
+if ids:
     models = [{
         "id": i, "name": i, "contextWindow": ctx, "maxTokens": 16384,
         "reasoning": False, "samplingParams": {"temperature": 0.7, "top_p": 0.95},
@@ -94,19 +91,6 @@ if ids or lm_tree:
         "api": "openai-completions", "apiKey": "sk-not-key-required",
         "compat": {"supportsDeveloperRole": False, "supportsReasoningEffort": False},
         "models": models,
-    }
-
-if ollama:
-    try:
-        out = subprocess.run(["curl", "-fsS", "--max-time", "3", "http://127.0.0.1:11434/api/tags"],
-                             capture_output=True, text=True).stdout
-        names = [m["name"] for m in json.loads(out).get("models", []) if m.get("name")]
-    except Exception:
-        names = []
-    providers["ollama"] = {
-        "baseUrl": "http://127.0.0.1:11434/v1",
-        "api": "openai-completions", "apiKey": "sk-not-key-required",
-        "models": [{"id": n, "name": n, "contextWindow": ctx, "maxTokens": 16384} for n in names],
     }
 
 if apodex_url:
@@ -156,12 +140,10 @@ if [ "$MODE" = "json" ]; then printf '%s\n' "$FRAGMENT"; exit 0; fi
 
 runtimes=""
 [ -n "$LLAMACPP_URL" ] && runtimes="$runtimes llama.cpp@${LLAMACPP_URL#http://}"
-[ "$LMSTUDIO_TREE" = 1 ] && runtimes="$runtimes lmstudio-tree"
-[ "$OLLAMA" = 1 ] && runtimes="$runtimes ollama"
 [ -n "$APODEX_URL" ] && runtimes="$runtimes apodex@${APODEX_URL#http://}"
 printf 'models-detect[1]{runtimes,coding_ctx,models_json}:\n  "%s","%s","%s"\n' "${runtimes:- none}" "$CODING_CTX" "$MODELS_JSON"
 printf '%s\n' "$FRAGMENT"
 if [ -z "$runtimes" ]; then
-  printf 'note: no local runtime detected — install one (llama.cpp / LM Studio / Ollama) and re-run.\n' >&2
+  printf 'note: no local runtime detected — install llama.cpp (llama-server / llama-router) and re-run.\n' >&2
   printf 'note: llama.cpp (llama-server / llama-swap) is fastest on the GPU; for coding use >= %s context.\n' "$CODING_CTX" >&2
 fi
