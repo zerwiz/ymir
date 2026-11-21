@@ -375,7 +375,7 @@ seal_judged() {
   # 2 · the hand is the operator's: gh must act as one of the operator's own logins, read from the
   #     home (warden-policy.py operator-logins). Never the repo slug's owner — an organisation owns
   #     its repositories, and the operator merges there under his own login (review of #863).
-  owner="${YMIR_MERGE_IDENTITY:-$(python3 "$WARDEN_POLICY" operator-logins 2>/dev/null | tr '\n' ' ')}"
+  owner="$(python3 "$WARDEN_POLICY" operator-logins 2>/dev/null | tr '\n' ' ')"
   login="$(timeout 60 "$GH" api user --jq .login 2>/dev/null | tr -d '[:space:]')"
   local _lc_login _match=0 _o
   _lc_login="$(printf '%s' "$login" | tr 'A-Z' 'a-z')"

@@ -62,7 +62,7 @@ bin[61]{file,does,kind,verdict,disposition,callers,lines}:
   "review-seat.sh","review-seat.sh — the reviewer's SEAT: pi in a herdr pane, on the heart, on a loop.","tool","wired","keep",3,502
   "review-shelf.sh","review-shelf.sh — where a packet LANDS, and the waiting rule that keeps it honest.","tool","wired","keep",1,159
   "review-verdict.sh","review-verdict.sh — the judge's ONE act of writing: its verdict, and nothing else.","tool","wired","keep",2,182
-  "review-watch.sh","review-watch.sh — the missing trigger: a PR that arrives is a question the owner is asked.","tool","wired","keep",4,549
+  "review-watch.sh","review-watch.sh — the missing trigger: a PR that arrives is a question the owner is asked.","tool","wired","keep",4,560
   "ship-watch.sh","ship-watch.sh — the delivery loop: settle branches, then ship proved PRs.","tool","wired","keep",1,131
   "ship.sh","ship.sh — the reviewer's merge: the one door that puts a judged PR on main.","tool","wired","keep",6,206
   "skillopt-setup.sh","skillopt-setup.sh — one-time SkillOpt installation for Ymir.","tool","wired","keep",1,77
@@ -70,7 +70,7 @@ bin[61]{file,does,kind,verdict,disposition,callers,lines}:
   "smith-seat.sh","smith-seat.sh — seat ANY figure in its own herdr workspace, the same way every time.","tool","wired","keep",2,177
   "test_gather_notice.sh","test_gather_notice.sh — the LAST errand of a batch calls the gather.","tool","wired","keep",1,136
   "test_gjallarhorn_no_hall.sh","test_gjallarhorn_no_hall.sh — a tunnel never publishes a hall.","tool","wired","keep",1,80
-  "test_judge_merge.sh","test_judge_merge.sh — the judge's verdict is the seal (RULES/08, its sections appended 2026-11-21).","tool","wired","keep",0,483
+  "test_judge_merge.sh","test_judge_merge.sh — the judge's verdict is the seal (RULES/08, its sections appended 2026-11-21).","tool","wired","keep",0,497
   "test_review_seat_keeper.sh","test_review_seat_keeper.sh — the keeper: the reviewer's seat says WHY it refuses, and a dead seat","tool","wired","keep",1,221
   "test_smith_gh.sh","test_smith_gh.sh — the smith's gh refuses every road to a merge, and lets every read through.","tool","wired","keep",0,83
   "test_yggdrasil_slim.sh","test_yggdrasil_slim.sh — the slimmer worktree is opt-in, and the default is unchanged.","tool","wired","keep",1,81
@@ -80,7 +80,7 @@ bin[61]{file,does,kind,verdict,disposition,callers,lines}:
   "utgard.sh","utgard.sh — the sealed execution barrier (Utgard, the realm outside the wall).","tool","wired","keep",4,128
   "verdict-watch.sh","verdict-watch.sh — EVERY report is delivered, because the ARTEFACT is watched, not the agent.","tool","wired","keep",2,105
   "warden-lib.sh","warden-lib.sh — the shared law every outward warden keeps (plan 290 §3; the Allfather, 2026-11-14).","lib","wired","keep",13,244
-  "warden-policy.py","'''warden-policy.py — the ONE reader of a machine's wardens.yaml, and of what a warden may touch.","tool","wired","keep",10,446
+  "warden-policy.py","'''warden-policy.py — the ONE reader of a machine's wardens.yaml, and of what a warden may touch.","tool","wired","keep",11,472
   "worktree-reap.py","'''worktree-reap.py — the road that made a worktree is the road that reaps it (plan 339.4).","tool","wired","keep",6,550
   "yggdrasil.sh","yggdrasil.sh — the worktree manager (Yggdrasil, the world-tree).","tool","tested","keep",10,233
 
