@@ -58,3 +58,7 @@ Aliases apply only to verified addresses.
 - Owed: one real browser sign-in by the operator.
 - Owed: the button reads "Continue with Gitea", because that label is fixed in the board's bundle.
 - Owed: the adapter's source belongs in the hall's own repository, beside its OIDC bridge.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #872
