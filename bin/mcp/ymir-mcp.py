@@ -117,6 +117,44 @@ def ymir_find(what: str, content: bool = True) -> str:
     return "\n".join(dict.fromkeys(found)) or f"nothing named or saying {what!r}"
 
 @mcp.tool()
+def ymir_recall(query: str, k: int = 5) -> str:
+    """Drink from the well before acting: Ymir's memory of what was learned."""
+    return _run(["bash", str(ROOT / "bin" / "records" / "mimir.sh"), "recall", query, "--k", str(k)], 90)
+
+@mcp.tool()
+def ymir_todo_board(action: str = "list", title: str = "", lane: str = "", due: str = "", owner: str = "",
+                    priority: str = "", note: str = "", card: str = "", source: str = "") -> str:
+    """The operator's own to-do, as cards on his private board (plan 327) — the ONE door the house writes it
+    through, never the old todo.md. action: add (title, lane Inbox|Today|This week|Waiting|Someday|Done, due
+    YYYY-MM-DD, owner, priority, note) · list (lane) · move (card, lane) · lanes · flush · status."""
+    door = str(ROOT / "bin" / "records" / "todo.sh")
+    if action == "add":
+        if not title.strip():
+            return "todo: add needs a title"
+        argv = [door, "add", title, "--lane", lane or "Inbox", "--source", source or "an agent, over MCP"]
+        for flag, val in (("--due", due), ("--owner", owner), ("--priority", priority), ("--note", note)):
+            if val:
+                argv += [flag, val]
+        return _run(argv, 60)
+    if action == "list":
+        return _run([door, "list"] + (["--lane", lane] if lane else []), 60)
+    if action == "move":
+        if not card or not lane:
+            return "todo: move needs a card and a lane"
+        return _run([door, "move", card, lane], 60)
+    if action in ("lanes", "flush", "status"):
+        return _run([door, action], 60)
+    return f"todo: no action {action!r} (add · list · move · lanes · flush · status)"
+
+@mcp.tool()
+def ymir_remember(lesson: str, tags: str = "") -> str:
+    """Water the well after: record what was learned, so the next hand starts ahead."""
+    argv = ["bash", str(ROOT / "bin" / "records" / "mimir.sh"), "observe", lesson]
+    if tags:
+        argv += ["--tags", tags]
+    return _run(argv, 90)
+
+@mcp.tool()
 def ymir_daily(note: str = "") -> str:
     """Today's log line in the home's daily record: append a note, or read the day."""
     day = _dt.date.today().isoformat()
@@ -181,6 +219,14 @@ def ymir_hermes_recover(session: str, yes: bool = False) -> str:
     argv = ["bash", str(ROOT / "bin" / "seat" / "backend.sh"), "recover",
             "hermes:%s" % session] + (["--yes"] if yes else [])
     return _run(argv, 300)
+
+@mcp.tool()
+def ymir_context(json_output: bool = False) -> str:
+    """What THIS agent's context actually holds: used, window, remaining, the compaction
+    thresholds, and whether a compaction already fired. Read it before deciding the
+    context is out — the number is on disk, and guessing it costs work."""
+    out = _run(["bash", str(ROOT / "bin" / "seat" / "context.sh")] + (["--json"] if json_output else []), 60)
+    return out
 
 @mcp.tool()
 def ymir_core_four() -> str:
