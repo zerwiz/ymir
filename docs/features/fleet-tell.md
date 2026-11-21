@@ -72,3 +72,7 @@ Every line is signed `<seat> (<machine>)`.
 
 - `no-answer`: the machine is off or its ssh road is down. Check `bin/fleet/roads.sh`.
 - `refused` and `pane not-found`: nobody holds the arm there and no agent pane could be proved. Re-arm the machine.
+
+## CHANGE LOG
+
+- 2026-11-21 — added: one road to talk to and steer any agent (errand fleet-tell).
