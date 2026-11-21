@@ -366,7 +366,8 @@ class Sync:
     def found_by_title(self, title, parent=None):
         """The card with exactly this title (top-level, or under `parent`), asked for by name; None when none answers."""
         for c in self.board.find_cards(None if parent is not None else LABEL, title[:60]):
-            if c.get("title") == title and (c.get("parent") is None) == (parent is None):
+            # the parent must be THIS card (or none, for a plan card): a same-titled step under another card is not ours
+            if c.get("title") == title and str(c.get("parent")) == str(parent):
                 return c.get("card")
         return None
 
