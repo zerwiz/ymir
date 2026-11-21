@@ -304,7 +304,15 @@ if key:
     group = key if is_record else ":".join(
         s for s in ISO.sub("", key).split(":") if s and not STAMP.match(s))
 else:
-    folded = re.sub(r"\d+", "#", message)
+    # Only MEASUREMENTS fold (rework of PR #861): a stamp or clock time, a number with a unit
+    # ("25895s", "3 min", "91%", "2.1 GB"), or a number after age/old/rc/exit/took. A bare number is an
+    # identity — "PR #857" and "PR #858" are two notices, and folding them hid the second for an hour.
+    folded = ISO.sub("#", message)
+    folded = re.sub(r"\b\d{1,2}:\d{2}(:\d{2})?\b", "#", folded)
+    folded = re.sub(r"\b\d+(\.\d+)?\s*(ms|s|secs?|seconds?|m|mins?|minutes?|h|hrs?|hours?|d|days?"
+                    r"|[KMGT]i?B|B|%)(?![A-Za-z0-9])", "#", folded)
+    folded = re.sub(r"\b(age|old|rc|exit|took)(\s*[=:]\s*|\s+)\d+(\.\d+)?", r"\1 #", folded,
+                    flags=re.IGNORECASE)
     group = source + ":" + hashlib.sha256(f"{source}|{folded}".encode()).hexdigest()[:16]
 group = f"{host}/{group}"
 seen = {k: v for k, v in (state.get("seen") or {}).items() if now - float(v) < 7 * 86400}

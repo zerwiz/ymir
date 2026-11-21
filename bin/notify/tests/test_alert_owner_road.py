@@ -220,6 +220,20 @@ class Flood(Case):
         self.alert("heartbeat 1000s old", YMIR_NOTIFY_OWNER_ROAD="0")
         self.assertEqual(len(self.calls), 1)
 
+    def test_an_auto_key_keeps_a_number_that_names_the_thing(self):
+        # A review seat sends "--message '<PR #, verdict…>'" with no key: two PRs are two notices.
+        self.alert("new PR #857 opened — CI blocked", YMIR_NOTIFY_OWNER_ROAD="0")
+        r = self.alert("new PR #858 opened — CI blocked", YMIR_NOTIFY_OWNER_ROAD="0")
+        self.assertNotIn('"duplicate"', r.stdout)
+        self.alert("port 8080 refused", YMIR_NOTIFY_OWNER_ROAD="0")
+        self.alert("port 8081 refused", YMIR_NOTIFY_OWNER_ROAD="0")
+        self.assertEqual(len(self.calls), 4)
+
+    def test_an_auto_key_folds_measurements(self):
+        for msg in ("disk at 91% after 3 min (rc=1) at 03:10", "disk at 92% after 4 min (rc=2) at 03:25"):
+            self.alert(msg, YMIR_NOTIFY_OWNER_ROAD="0")
+        self.assertEqual(len(self.calls), 1)
+
     def test_a_repeat_is_not_a_second_turn_for_the_agent(self):
         self.alert("same thing", key="k:1")
         self.alert("same thing", key="k:1")

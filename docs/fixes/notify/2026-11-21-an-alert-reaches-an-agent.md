@@ -80,3 +80,13 @@ Now only real stamp shapes fold: `20YYMMDD` with an optional hour, minute and se
 date or time. The ISO stamp is lifted from the whole key before the key is split on `:`, because its colons used to
 break it into pieces that did not fold. New tests: two pids in a key stay two lines, and an epoch or ISO stamp still
 folds.
+
+## Addendum: a number that names a thing is not folded (rework of PR #861)
+
+An alert with no `--key` was grouped by its message with every digit folded. So `new PR #857 opened` and
+`new PR #858 opened` became one group, and the second notice was hidden for an hour. Review seats send exactly that
+kind of unkeyed notice.
+
+Now only measurements fold: an ISO stamp or a clock time, a number with a unit (`25895s`, `3 min`, `91%`, `2 GB`),
+and a number after `age`, `old`, `rc`, `exit` or `took`. Any other number is kept as an identity. New tests: two
+PR numbers and two ports stay two lines each, and changing measurements still fold into one.
