@@ -118,12 +118,27 @@ class McpBoard:
                 if re.search(r"\b(429|50[0-4])\b", last):  # the board's own rate limit or a hiccup: wait and retry
                     time.sleep(wait)
                     continue
+                if self._place_lookup_blinked(last):
+                    # "no such place: X" while the same answer lists X: the door's place lookup was rate-limited
+                    # (it swallows the board's 429 into "no such place"). Wait and ask again; never a refusal.
+                    time.sleep(wait)
+                    continue
                 raise BoardRefusal(f"{tool}: {last}")
             try:
                 return json.loads(text) if text else {}
             except ValueError:
                 return {"text": text}
         raise BoardRefusal(f"{tool}: {last}")
+
+    def _place_lookup_blinked(self, text):
+        """True when the door said `no such place` for THIS place while naming it among the places it has."""
+        if "no such place" not in (text or ""):
+            return False
+        try:
+            places = json.loads(text).get("places") or []
+        except (ValueError, AttributeError):
+            return False
+        return self.place in places
 
     def _write(self, tool, args):
         gap = PACE - (time.time() - self._wrote)

@@ -131,3 +131,45 @@ is refused by name.
 
 - 2026-11-20 — opened with plan-sync (plan 335, phase 3): one card per plan, through the board contract and the `mcp` adapter.
 - 2026-11-20 — whole cards (plan 335, 3b): the full text as Markdown, phases as sub-items, a link, diagrams drawn by the board, a stamp for idempotence; `--plan`, `--file`, `--road`; the plan tools sync a plan's card after every change.
+- 2026-11-21 — a ledger in the project's own repository (`board.plans_repo`), index rows with no link, and a ledger's own status words and phase columns (`board.status_map`, `board.phase_heads`).
+
+## 2026-11-21 — when the plans live in the project's own repository
+
+Some projects keep their plan ledger inside their own code repository, not in the home. Plan-sync can now read that
+ledger. Name it in the `board:` block:
+
+```yaml
+board:
+  adapter: mcp
+  place: <the board's address for this project>
+  mcp: { url: https://<the board's MCP>/mcp, token_from: claude-mcp:<server> }
+  plans_repo:
+    clone: <path>          # absolute, or relative to your home folder; default the row's local_clone, then repo
+    ref: origin/master     # the git ref that is read; default origin/<git.default_branch>
+    dir: plans             # the ledger's folder in the repository; default plans
+    fetch: true            # fetch the remote first; default false
+  status_map:              # optional: this ledger's own status words
+    record: done
+  phase_heads:             # optional: this ledger's own phase-table column words
+    id: [n, slice]
+    name: [slice, task, work]
+```
+
+| Behaviour | Why |
+|---|---|
+| The ledger is read **at the ref**, never from the checkout | a clone that is behind, or on a branch, or holds a draft, cannot put a stale or unfinished plan on the board |
+| `fetch: true` moves only remote-tracking refs | your checkout and your branches are never touched |
+| The card says the file is *in the repository* and links to it | the link is built from the row's `git:` block (`host`, `owner`, `repo`, `default_branch`) unless `file_url` names one |
+| An index row with no link is read | a README table with a `Status` column and rows like `\| 07 \| Title \| partial \| … \|` is matched to the one file starting `07-` |
+| `status_map` is tried before the built-in words | a ledger that marks history as `record` can say that means `done` |
+| `phase_heads` adds column words, it never removes the built-in ones | a ledger that calls its phases *slices* and numbers them `N` gets its sub-items; other ledgers read exactly as before |
+
+`--file` finds a repository ledger too: a file inside the clone's ledger folder belongs to that project.
+
+| You see | It means |
+|---|---|
+| `no git clone at …` | `plans_repo.clone` (or the row's `local_clone`) is not a git checkout on this seat |
+| `cannot read plans/ at <ref>` | the ref does not exist in that clone; check `ref`, or set `fetch: true` |
+
+The board door can also answer "no such place" for a place it lists in the same answer, when its own lookup is
+rate-limited. The adapter now waits and asks again in that case, as it does for a 429.
