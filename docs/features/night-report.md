@@ -89,3 +89,7 @@ while of its own, pulls the home, and stands down when today's report already ex
 
 The logic is `bin/day/night_report.py` and `bin/day/night_seat.py`. The tests are
 `bin/day/tests/test_night_report.py`.
+
+## CHANGE LOG
+
+- **2026-11-21** — written with the change it describes.
