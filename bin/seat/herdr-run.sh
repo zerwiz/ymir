@@ -20,7 +20,7 @@
 # Usage:
 #   bin/seat/herdr-run.sh available                      # can we use herdr right now?
 #   bin/seat/herdr-run.sh worth-a-smith "<errand>"       # is this an errand at all?
-#   bin/seat/herdr-run.sh eindri [NAME] [--role R] [--kind K] [--model M] [--space] -- "<task>"
+#   bin/seat/herdr-run.sh eindri [NAME] [--role R | --role-guess R] [--kind K] [--model M] [--space] -- "<task>"
 #       --kind pi|opencode|claude WINS over config/agents.yaml and the model's provider (plan 262)
 #   bin/seat/herdr-run.sh run <name> -- <command...>     # a command in a pane
 #   bin/seat/herdr-run.sh agent-status                   # who stands, and in what state
@@ -340,11 +340,14 @@ case "$ACTION" in
     printf 'herdr-run[1]{tab,pane,step,exit}:\n  "%s","%s","%s",%s\n' "$tab" "$pane" "$NAME" "$rc"
     exit "$rc" ;;
   agent|eindri)
-    NAME=""; ROLE=""; SPACE=0; TAB=0; MODEL_REQ=""; MAIN=0; KIND_EXPLICIT=""
+    NAME=""; ROLE=""; ROLE_EXPLICIT=""; SPACE=0; TAB=0; MODEL_REQ=""; MAIN=0; KIND_EXPLICIT=""
     while [ $# -gt 0 ]; do
       case "$1" in
-        --role) ROLE=${2-}; shift 2 ;;
-        --role=*) ROLE=${1#--role=}; shift ;;
+        --role) ROLE=${2-}; ROLE_EXPLICIT=${2-}; shift 2 ;;
+        --role=*) ROLE=${1#--role=}; ROLE_EXPLICIT=${1#--role=}; shift ;;
+        # a role GUESSED upstream (eindri-start.sh): it picks the role file, never the profile
+        --role-guess) ROLE=${2-}; shift 2 ;;
+        --role-guess=*) ROLE=${1#--role-guess=}; shift ;;
         --kind) KIND_EXPLICIT=${2-}; shift 2 ;;
         --kind=*) KIND_EXPLICIT=${1#--kind=}; shift ;;
         --model) MODEL_REQ=${2-}; shift 2 ;;
@@ -648,7 +651,12 @@ $_coretext"
         else
           printf 'herdr-run[1]{claude,trust}:\n  "%s","not marked — %s"\n' "$SEAT_CWD" "$_trust" >&2
         fi
-        if ! mapfile -t _cargs < <("$SCRIPT_DIR/claude-seat.sh" args "$SEAT_CWD" "$CLAUDE_MODEL" "$brief_dir/$NAME.claude-settings.json") \
+        # The profile is chosen by ROLE (RULES/08, 2026-11-21): the judge (forseti) gets the one
+        # merge door; every other role is the worker profile, which refuses every merge road.
+        # ONLY an explicit --role chooses it: the role GUESSED from the brief (eindri-role.sh
+        # choose) maps words like "check", "ship" and "pr" to forseti, and a guess must never open
+        # the merge door to a coder. The guess still picks the pi role file, and nothing else.
+        if ! mapfile -t _cargs < <("$SCRIPT_DIR/claude-seat.sh" args "$SEAT_CWD" "$CLAUDE_MODEL" "$brief_dir/$NAME.claude-settings.json" "${ROLE_EXPLICIT:-}") \
            || [ ${#_cargs[@]} -eq 0 ]; then
           printf 'error: the Claude worker profile could not be written — a Claude seat without it stops at its first permission dialog\n' >&2
           exit 1

@@ -24,6 +24,13 @@
 #   review-watch.sh --status                             # what the watch sees, and what it raised
 #   review-watch.sh --install-timer [--interval 10min]    # the clock: a user timer, every 10 minutes
 #   review-watch.sh --timer-status | --uninstall-timer
+#   review-watch.sh --keeper [--repo owner/repo ...] [--dry-run]
+#        THE KEEPER'S ROAD (RULES/08, 2026-11-21): every open PR in the house's repositories (the
+#        registry's git{} blocks) with no verdict for its CURRENT head gets the judge — ONE judge at a
+#        time on this machine (the fleet runbook: the heart runs one Eindri); while a judge is in
+#        flight the next PR is handed to a developer seat over the arm wire. Each pass first carries
+#        out the verdicts already written (bin/forge/judge-merge.sh sweep): APPROVE merges at once.
+#        On the heart the keeper is the default road (YMIR_REVIEW_KEEPER=auto|1|0).
 #
 # Exit: 0 judged · 1 a fault (named) · 2 usage · 3 refused (no identity / no owner).
 set -u
@@ -57,8 +64,8 @@ die()    { printf 'review-watch: %s\n' "$*" >&2; exit 1; }
 usage()  { printf 'review-watch: %s\n' "$*" >&2; exit 2; }
 refuse() { printf 'review-watch: REFUSED — %s\n' "$*" >&2; exit 3; }
 
-REPOS=(); DRY=0 JSON=0 ALL=0 JUDGE=""; STATUS_ONLY=0
-TIMER_ACTION=""; TIMER_INTERVAL="10min"
+REPOS=(); DRY=0 JSON=0 ALL=0 JUDGE=""; STATUS_ONLY=0; KEEPER_FLAG=0
+TIMER_ACTION=""; TIMER_INTERVAL="3min"
 while [ $# -gt 0 ]; do
   case "$1" in
     --repo) REPOS+=("${2:-}"); shift 2 ;;
@@ -68,6 +75,7 @@ while [ $# -gt 0 ]; do
     --dry-run) DRY=1; shift ;;
     --json) JSON=1; shift ;;
     --all) ALL=1; shift ;;
+    --keeper) KEEPER_FLAG=1; shift ;;
     --status) STATUS_ONLY=1; shift ;;
     --install-timer) TIMER_ACTION=install; shift ;;
     --uninstall-timer) TIMER_ACTION=uninstall; shift ;;
@@ -78,6 +86,26 @@ while [ $# -gt 0 ]; do
     *) usage "unexpected argument $1" ;;
   esac
 done
+# ── is this pass the keeper's? (RULES/08, 2026-11-21) ───────────────────────────────────────────
+machine_roles() {
+  bash "$ROOT/bin/fleet/topology.sh" --json 2>/dev/null | python3 -c 'import json,sys
+try: d=json.load(sys.stdin)
+except Exception: d={}
+print(",".join(d.get("roles") or []))' 2>/dev/null || true
+}
+KEEPER=0
+case "${YMIR_REVIEW_KEEPER:-auto}" in
+  1|on) KEEPER=1 ;;
+  0|off) KEEPER=0 ;;
+  *) case ",$(machine_roles)," in *,heart,*) KEEPER=1 ;; esac ;;
+esac
+[ "$KEEPER_FLAG" = 1 ] && KEEPER=1
+[ -n "$JUDGE" ] || [ -n "$TIMER_ACTION" ] && KEEPER=0
+if [ "${#REPOS[@]}" -eq 0 ] && [ "$KEEPER" = 1 ] && [ -z "${YMIR_REVIEW_REPOS:-}" ]; then
+  # the keeper watches every repository the registry's git{} blocks name — never a guessed list
+  mapfile -t REPOS < <(python3 "$ROOT/bin/forge/warden-policy.py" repos 2>/dev/null | sed -n 's/^  "\(.*\)"$/\1/p')
+  [ "${#REPOS[@]}" -gt 0 ] || die "the registry names no repository (warden-policy.py repos) — the keeper has nothing it may watch"
+fi
 if [ "${#REPOS[@]}" -eq 0 ]; then
   # shellcheck disable=SC2206
   IFS=', ' read -r -a REPOS <<<"$DEFAULT_REPOS"
@@ -157,6 +185,155 @@ if [ -n "$JUDGE" ]; then
     exec "$SEAT" ask "$JUDGE" --wait
   fi
   exec "$SPINE" --pr "$url"
+fi
+
+# ── the keeper's pass: a judge for every head, one at a time, and the verdicts carried out ─────
+if [ "$KEEPER" = 1 ]; then
+  JM="$ROOT/bin/forge/judge-merge.sh"
+  [ -x "$JM" ] && { "$JM" sweep $([ "$DRY" = 1 ] && echo --dry-run) || printf 'review-watch: the verdict sweep faulted — read judge-merge.sh sweep\n' >&2; }
+  mkdir -p "$STATE/.reviewed" 2>/dev/null || true
+  max_age="${YMIR_JUDGE_MAX_AGE:-7200}"
+  # how many judges are in flight HERE: a judged record younger than max_age whose review has
+  # not written a terminal line since it was seated
+  inflight="$(python3 - "$STATE" "$max_age" <<'PY'
+import os, sys, time, glob
+state, max_age = sys.argv[1], int(sys.argv[2])
+n = 0
+for side in glob.glob(os.path.join(state, ".reviewed", "*.judged")):
+    try: seated = os.stat(side).st_mtime
+    except OSError: continue
+    if time.time() - seated > max_age: continue
+    rid = os.path.basename(side)[:-len(".judged")]
+    st = os.path.join(state, rid + ".status")
+    done = False
+    if os.path.exists(st) and os.stat(st).st_mtime >= seated:
+        lines = [l for l in open(st, errors="replace").read().splitlines() if l.strip()]
+        done = bool(lines) and lines[-1].split(":", 1)[0].strip() in ("done", "failed", "needs-decision")
+    if not done: n += 1
+print(n)
+PY
+)"
+  _fleet=""; _fleet_home=""; ymir_home_root _fleet_home 2>/dev/null || true
+  _fleet="${YMIR_FLEET_REGISTRY:-$_fleet_home/hodd/data/fleet.json}"
+  # the developer seats a review may be handed to: the named one, else every `dev` host but this one
+  if [ -n "${YMIR_REVIEW_HANDOFF_HOST:-}" ]; then
+    IFS=', ' read -r -a dev_hosts <<<"$YMIR_REVIEW_HANDOFF_HOST"
+  else
+    mapfile -t dev_hosts < <(python3 - "$_fleet" "$(hostname -s 2>/dev/null)" <<'PY' 2>/dev/null
+import json, sys
+try: d = json.load(open(sys.argv[1]))
+except Exception: d = {}
+for name, h in (d.get("hosts") or {}).items():
+    if name != sys.argv[2] and "dev" in (h.get("roles") or []):
+        print(name)
+PY
+)
+  fi
+  handoff_host="${dev_hosts[0]:-}"
+  # can the judge sit HERE? The home names its harness (forseti: harness claude); a machine with no
+  # such CLI (the heart has none) seats no judge and hands every review to a developer seat.
+  judge_h="$(bash "$ROOT/bin/fleet/agents-config.sh" get forseti harness 2>/dev/null | head -n1)"
+  judge_h="${YMIR_REVIEW_HARNESS:-${judge_h:-pi}}"
+  seat_here=1
+  command -v "$judge_h" >/dev/null 2>&1 || seat_here=0
+  [ "${YMIR_REVIEW_SEAT_HERE:-auto}" = 0 ] && seat_here=0
+  [ "${YMIR_REVIEW_SEAT_HERE:-auto}" = 1 ] && seat_here=1
+  hand_to() {  # <host> <line> — the arm wire AND a turn typed into the holder's herdr pane
+    local h="$1" l="$2" road okw=0
+    timeout 60 bash "${YMIR_ARM_SEND_DOOR:-$ROOT/bin/fleet/arm-send.sh}" "$h" "$l" >/dev/null 2>&1 && okw=1
+    road="$(python3 - "$_fleet" "$h" <<'PY' 2>/dev/null
+import json, sys
+try: x = (json.load(open(sys.argv[1])).get("hosts") or {}).get(sys.argv[2]) or {}
+except Exception: x = {}
+if x.get("user") and x.get("tailnet"): print(f"{x['user']}@{x['tailnet']}")
+PY
+)"
+    if [ -n "$road" ] && timeout 60 ssh -o BatchMode=yes -o ConnectTimeout=6 "$road" \
+        "d=\${YMIR_RUNTIME_DIR:-\$HOME/ymir-runtime}; [ -f \$d/bin/agents/eindri-notify.sh ] || d=\$HOME/ymir; cd \$d && bash bin/agents/eindri-notify.sh --from review-watch -- $(printf '%q' "$l")" \
+        </dev/null >/dev/null 2>&1; then okw=1; fi
+    [ "$okw" = 1 ]
+  }
+  clone_of() {  # <owner/repo> → the local clone the registry names for it (this tree for its own origin)
+    local r="$1" mine
+    mine="$(git -C "$ROOT" remote get-url origin 2>/dev/null | sed -E 's#\.git$##; s#^.*github\.com[:/]##' | tr 'A-Z' 'a-z')"
+    if [ "$mine" = "$(printf '%s' "$r" | tr 'A-Z' 'a-z')" ]; then printf '%s\n' "${YMIR_REVIEW_PROJECT:-$ROOT}"; return; fi
+    python3 - "${PROJECTS_YAML:-$_fleet_home/hodd/identity/projects.yaml}" "$r" "$_fleet_home" <<'PY' 2>/dev/null
+import os, sys, yaml
+path, want, home = sys.argv[1], sys.argv[2].lower(), sys.argv[3]
+try: doc = yaml.safe_load(open(path)) or {}
+except Exception: doc = {}
+for row in doc.get("projects") or []:
+    if not isinstance(row, dict): continue
+    g = row.get("git") or {}
+    if f"{g.get('owner','')}/{g.get('repo','')}".lower() != want: continue
+    for key in ("local_clone", "repo"):
+        v = row.get(key)
+        if isinstance(v, str) and v:
+            p = os.path.expanduser(os.path.expandvars(v.replace("$YMIR_HOME", home)))
+            if os.path.isdir(os.path.join(p, ".git")) or os.path.isfile(os.path.join(p, ".git")):
+                print(p); sys.exit(0)
+PY
+  }
+  if [ "$seat_here" = 1 ]; then handed_max="${YMIR_REVIEW_HANDOFF_MAX:-1}"; else handed_max="${YMIR_REVIEW_HANDOFF_MAX:-3}"; fi
+  handed=0; spawned=0; waiting=0; SEEN=0
+  printf 'review-watch[keeper]{repos,inflight,judge_here,handoff}:\n  "%s","%s","%s","%s"\n' "${REPOS[*]}" "$inflight" \
+    "$([ "$seat_here" = 1 ] && echo "yes ($judge_h)" || echo "no — no $judge_h CLI here")" "${dev_hosts[*]:-none}"
+  for repo in "${REPOS[@]}"; do
+    [ -n "$repo" ] || continue
+    prs="$(gh pr list -R "$repo" --state open --limit 100 --json number,headRefOid,isDraft,url 2>/dev/null)" \
+      || { printf 'review-watch: gh pr list failed for %s — skipped this pass, not called empty\n' "$repo" >&2; continue; }
+    while IFS=$'\t' read -r num head url; do
+      [ -n "$num" ] || continue
+      SEEN=$((SEEN + 1))
+      # a verdict exists — or is coming — for this head: the spine's marker, any judged record, a handoff
+      if [ -e "$STATE/.reviewed/pr-$num.$head" ] || [ -e "$STATE/.reviewed/handed-pr-$num.$head" ] \
+         || grep -lqs "^head=$head\$" "$STATE/.reviewed/"*.judged; then
+        continue
+      fi
+      if [ "$seat_here" = 1 ] && [ "$inflight" -eq 0 ] && [ "$spawned" -eq 0 ]; then
+        # the judge sits in a worktree of THAT repository's clone, never this one's (a judge of
+        # another repo inside ymir's tree would fetch the wrong origin)
+        proj="$(clone_of "$repo")"
+        if [ -z "$proj" ]; then
+          printf '  "%s#%s","%s","no local clone of %s is named in the registry (local_clone or repo) — cannot seat a judge here"\n' \
+            "$repo" "$num" "${head:0:12}" "$repo"
+          waiting=$((waiting + 1)); continue
+        fi
+        if [ "$DRY" = 1 ]; then
+          printf '  "%s#%s","%s","would seat the judge: %s --pr %s --project %s"\n' "$repo" "$num" "${head:0:12}" "$SPINE" "$url" "$proj"
+        elif "$SPINE" --pr "$url" --project "$proj" >/dev/null 2>&1; then
+          printf '  "%s#%s","%s","the judge is seated"\n' "$repo" "$num" "${head:0:12}"
+          warden_runes judge "seated the judge for $repo PR #$num at $head" >/dev/null 2>&1 || true
+        else
+          printf 'review-watch: the judge could not be seated for %s#%s — the next pass tries again\n' "$repo" "$num" >&2
+        fi
+        spawned=1; continue
+      fi
+      if [ "${#dev_hosts[@]}" -gt 0 ] && [ "$handed" -lt "$handed_max" ]; then
+        handoff_host="${dev_hosts[$((handed % ${#dev_hosts[@]}))]}"
+        line="review PR $url at head ${head:0:12} with the judge (harness $judge_h) in a herdr pane on your seat — $([ "$seat_here" = 1 ] && echo "the keeper's judge is busy" || echo "the keeper has no $judge_h CLI"): bin/agents/eindri-review-spawn.sh --pr $url"
+        if [ "$DRY" = 1 ]; then
+          printf '  "%s#%s","%s","would hand to %s"\n' "$repo" "$num" "${head:0:12}" "$handoff_host"
+        elif hand_to "$handoff_host" "$line"; then
+          printf 'handed to %s at %s\n' "$handoff_host" "$(date -u +%FT%TZ)" >"$STATE/.reviewed/handed-pr-$num.$head"
+          printf '  "%s#%s","%s","handed to %s (arm wire and pane)"\n' "$repo" "$num" "${head:0:12}" "$handoff_host"
+        else
+          printf 'review-watch: the hand-off of %s#%s to %s did not land — it waits for the next pass\n' "$repo" "$num" "$handoff_host" >&2
+        fi
+        handed=$((handed + 1)); continue
+      fi
+      waiting=$((waiting + 1))
+    done < <(printf '%s' "$prs" | python3 -c '
+import json, sys
+try: prs = json.load(sys.stdin)
+except Exception: prs = []
+for p in sorted(prs, key=lambda p: p.get("number") or 0):
+    if p.get("isDraft"): continue
+    print("\t".join([str(p.get("number")), p.get("headRefOid") or "", p.get("url") or ""]))
+')
+  done
+  printf 'review-watch[keeper-pass]{seen,seated,handed,waiting}:\n  "%s","%s","%s","%s"\n' "$SEEN" "$spawned" "$handed" "$waiting"
+  exit 0
 fi
 
 # ── one pass ──────────────────────────────────────────────────────────────────────────────────

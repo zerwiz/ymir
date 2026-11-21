@@ -25,9 +25,21 @@
 #   pr-seal.sh seal <n>          re-check all six IMMEDIATELY, then
 #                                gh pr merge <n> --squash --delete-branch,
 #                                carve one Runes entry, print the merge commit
+#   pr-seal.sh seal <n> --repo <owner/repo> --head <sha> [--review <id>]
+#                                THE JUDGE'S ROAD (RULES/08, 2026-11-21): any PR in the
+#                                house's repositories whose head the judge APPROVED.
+#                                Ownership and the one-open-PR count do not apply; in
+#                                their place, at the instant of the merge: the repo is
+#                                the registry's, gh acts as its owner, the head is the
+#                                approved head, every check SUCCESS and none pending,
+#                                mergeable, no draft, no `hold` label, no .seal-hold.
+#                                Method from bin/forge/merge-method.sh, a written body
+#                                (never GitHub's default trailers), --match-head-commit.
 #
 # Exit: 0 judged / sealed · 1 a condition failed or gh failed (the finding is
-# printed and named) · 2 usage · 3 something is ready and the seat must act.
+# printed and named) · 2 usage · 3 something is ready and the seat must act ·
+# 4 (judge's road only) not now — pending, held or unreadable; the same approval
+# may be tried again on the same head.
 #
 # It never retries blindly: a refusal names the failing condition and stops. The
 # wake is idempotent per (PR, head sha) — the flood brake this house already paid
@@ -51,7 +63,8 @@ ROOT="${BROKK_ROOT_OVERRIDE:-$(CDPATH='' cd "$SCRIPT_DIR" && while [ ! -e "$PWD/
 HOLD="$STATE/.seal-hold"
 QUEUE="$STATE/.wake-queue"
 SEEN_DIR="$STATE/pr-seal-seen"
-RUNES="$SCRIPT_DIR/../records/runes-append.sh"
+RUNES="${YMIR_RUNES_DOOR:-$SCRIPT_DIR/../records/runes-append.sh}"
+WARDEN_POLICY="$SCRIPT_DIR/../forge/warden-policy.py"
 
 case "${1-}" in
   -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;;
@@ -315,9 +328,158 @@ seal() {
   return 0
 }
 
+# --- the judge's road (RULES/08, its sections appended 2026-11-21) -----------
+# Any PR in the house's repositories, merged at once on the judge's APPROVE. Every
+# condition is re-read HERE, at the instant of the merge; an approval an hour old is
+# evidence of the judgement, never of the gates.
+judged_refuse() {  # <n> <condition> <detail> <rc>
+  printf 'seal-refused[1]{pr,condition,detail}:\n  "#%s","%s","%s"\n' "$1" "$2" "$3"
+  return "$4"
+}
+
+# The REAL gh, past the smith shim (2026-11-21, the judge's review of #870). The judge is seated
+# like any worker: YMIR_SMITH set, bin/forge/smith-bin first on PATH, the cwd under .yggdrasil/.
+# The shim refuses `pr merge` there — rightly, for a hand — so this door, whose own checks above
+# ARE the guard on this road, calls the gh behind it. Any tree's shim is skipped (the pin's, a
+# worktree's), never a different gh: a test's fake gh ahead of the shim is still the one used.
+door_gh() {
+  local d cand real
+  IFS=: read -ra _gh_dirs <<<"${PATH:-}"
+  for d in "${_gh_dirs[@]}"; do
+    [ -n "$d" ] && [ -x "$d/gh" ] || continue
+    cand="$d/gh"
+    real="$(readlink -f "$cand" 2>/dev/null || printf '%s' "$cand")"
+    case "$real" in */bin/forge/smith-bin/gh|*/bin/forge/smith-gh) continue ;; esac
+    printf '%s' "$cand"; return 0
+  done
+  return 1
+}
+
+seal_judged() {
+  local n="${1-}" repo="${2-}" want="${3-}" review="${4-}" tmp login owner row
+  local num head sha title ci ci_detail mstate draft held url branch
+  [ -n "$n" ] || { printf 'error: seal needs a PR number\n' >&2; return 2; }
+  case "$n" in *[!0-9]*) printf 'error: <%s> is not a PR number\n' "$n" >&2; return 2 ;; esac
+  [ -n "$repo" ] || { printf 'error: the judge'"'"'s road needs --repo <owner/repo>\n' >&2; return 2; }
+  case "$want" in ''|*[!0-9a-f]*) printf 'error: the judge'"'"'s road needs --head <the approved sha>\n' >&2; return 2 ;; esac
+  local GH
+  GH="$(door_gh)" || { judged_refuse "$n" "no gh" "gh is not installed (past the smith shim) — nothing can be read or merged" 4; return; }
+
+  if hold="$(hold_reason)"; then
+    judged_refuse "$n" "the brake" "state/.seal-hold is present: $hold" 4; return
+  fi
+  # 1 · the repository is the house's — the registry's git{} blocks, never a guess
+  if ! python3 "$WARDEN_POLICY" owns "$repo" >/dev/null 2>&1; then
+    judged_refuse "$n" "not the house's" "$repo is not in the registry's git blocks — no merge outside the house" 1; return
+  fi
+  # 2 · the hand is the operator's: gh must act as the registry's owner of this repository
+  owner="${YMIR_MERGE_IDENTITY:-${repo%%/*}}"
+  login="$("$GH" api user --jq .login 2>/dev/null | tr -d '[:space:]')"
+  if [ -z "$login" ] || [ "$(printf '%s' "$login" | tr 'A-Z' 'a-z')" != "$(printf '%s' "$owner" | tr 'A-Z' 'a-z')" ]; then
+    judged_refuse "$n" "wrong identity" "gh acts as '${login:-nobody}', the registry names '$owner' — no merge under another hand" 1; return
+  fi
+  # 3 · the PR, read now
+  tmp="$(mktemp)"
+  if ! "$GH" pr view "$n" -R "$repo" \
+      --json number,headRefName,headRefOid,title,url,mergeable,mergeStateStatus,statusCheckRollup,isDraft,labels,state >"$tmp" 2>/dev/null; then
+    rm -f "$tmp"; judged_refuse "$n" "unreadable" "gh pr view failed for $repo — nothing was merged" 4; return
+  fi
+  row="$(python3 - "$tmp" <<'PY'
+import json, sys
+p = json.load(open(sys.argv[1]))
+OK = {"SUCCESS", "NEUTRAL", "SKIPPED"}
+roll = p.get("statusCheckRollup") or []
+red, pend, names = [], [], []
+for c in roll:
+    name = c.get("name") or c.get("context") or "?"
+    names.append(name)
+    if c.get("__typename") == "StatusContext" or ("state" in c and "status" not in c):
+        st = (c.get("state") or "").upper()
+        if st == "SUCCESS": continue
+        (pend if st in ("PENDING", "EXPECTED", "") else red).append(f"{name}={st.lower() or 'pending'}")
+    else:
+        st = (c.get("status") or "").upper(); con = (c.get("conclusion") or "").upper()
+        if st != "COMPLETED": pend.append(f"{name}={st.lower() or 'pending'}")
+        elif con not in OK: red.append(f"{name}={con.lower()}")
+if not roll: ci, det = "pending", "no checks reported yet"
+elif red: ci, det = "red", ", ".join(red)
+elif pend: ci, det = "pending", ", ".join(pend)
+else: ci, det = "green", ", ".join(names)
+labels = [(l.get("name") or "").lower() for l in (p.get("labels") or [])]
+m = p.get("mergeable") or "UNKNOWN"; s = p.get("mergeStateStatus") or "UNKNOWN"
+print("\t".join([str(p.get("number") or ""), p.get("headRefName") or "", p.get("headRefOid") or "",
+                 (p.get("title") or "").replace("\t", " "), ci, det.replace("\t", " "), f"{m}/{s}",
+                 "true" if p.get("isDraft") else "false", "true" if "hold" in labels else "false",
+                 p.get("url") or "", p.get("state") or "OPEN"]))
+PY
+)"
+  rm -f "$tmp"
+  local prstate
+  IFS=$'\t' read -r num branch sha title ci ci_detail mstate draft held url prstate <<<"$row"
+  [ -n "$num" ] || { judged_refuse "$n" "unreadable" "the PR record could not be judged" 4; return; }
+  [ "$prstate" = "OPEN" ] || { judged_refuse "$n" "not open" "the PR is $prstate" 1; return; }
+  # 4 · the head is the head the judge approved — a moved head is new work, judged again
+  if [ "$sha" != "$want" ]; then
+    judged_refuse "$n" "head moved" "approved ${want:0:12}, the PR is now at ${sha:0:12} — the new head is reviewed again" 1; return
+  fi
+  [ "$draft" = true ] && { judged_refuse "$n" "draft" "a draft is never merged" 4; return; }
+  [ "$held" = true ] && { judged_refuse "$n" "hold label" "the PR carries the hold label" 4; return; }
+  case "$ci" in
+    red) judged_refuse "$n" "red gate" "$ci_detail" 1; return ;;
+    pending) judged_refuse "$n" "pending gate" "$ci_detail" 4; return ;;
+  esac
+  case "$mstate" in
+    CONFLICTING/*|*/DIRTY) judged_refuse "$n" "conflicts" "$mstate" 1; return ;;
+    */BLOCKED|*/DRAFT|UNKNOWN/*|*/UNKNOWN) judged_refuse "$n" "not mergeable yet" "$mstate" 4; return ;;
+  esac
+
+  # 5 · the method, and a written body: never GitHub's default squash text, whose trailers
+  #     publish every co-author's mailbox
+  local flag subject body
+  flag="$(. "$ROOT/bin/forge/merge-method.sh"; merge_flag_for_pr "$n" "$repo")"
+  if ! (. "$ROOT/bin/forge/merge-method.sh"; refuse_squash_of_gather "$n" "$flag" "$repo"); then
+    judged_refuse "$n" "method" "a gathered batch would be squashed" 1; return
+  fi
+  if [ "$flag" = --merge ]; then subject="Merge pull request #$n from $branch"; else subject="$title (#$n)"; fi
+  body="$(printf '%s\n\nApproved by the judge at head %s%s and merged at once by the judge'"'"'s road (RULES/08, 2026-11-21): every required check green, mergeable, no hold.\n' \
+    "$title" "$sha" "${review:+ (review $review)}")"
+  printf 'sealing[1]{pr,repo,head,method,checks}:\n  "#%s","%s","%s","%s","%s"\n' "$n" "$repo" "${sha:0:12}" "${flag#--}" "$ci_detail"
+  if ! "$GH" pr merge "$n" -R "$repo" "$flag" --subject "$subject" --body "$body" \
+        --match-head-commit "$sha" --delete-branch >/dev/null 2>&1; then
+    judged_refuse "$n" "merge failed" "gh pr merge did not succeed — nothing is claimed; the next pass re-checks" 4; return
+  fi
+  local merge_commit
+  merge_commit="$("$GH" pr view "$n" -R "$repo" --json mergeCommit -q '.mergeCommit.oid' 2>/dev/null | tr -d '[:space:]')"
+  [ -n "$merge_commit" ] || merge_commit=unknown
+  if [ -x "$RUNES" ]; then
+    "$RUNES" "$SEAT_PRIMARY@$SEAT_HOST" pr-seal --message \
+      "the judge approved $repo PR #$n at head $sha; merged ${flag#--} -> $merge_commit${review:+ (review $review)}" >/dev/null \
+      || printf 'warn: PR #%s merged, but the Runes entry could not be carved — record it by hand\n' "$n" >&2
+  else
+    printf 'warn: PR #%s merged, but the ledger door %s is missing — record it by hand\n' "$n" "$RUNES" >&2
+  fi
+  printf 'sealed[1]{pr,repo,head,method,merge_commit}:\n  "#%s","%s","%s","%s","%s"\n' "$n" "$repo" "${sha:0:12}" "${flag#--}" "$merge_commit"
+  return 0
+}
+
 case "$ACTION" in
   watch) watch "$@" ;;
-  seal) seal "${1-}" ;;
+  seal)
+    _n="${1-}"; shift || true
+    _repo=""; _head=""; _review=""
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --repo) _repo="${2-}"; shift 2 ;;
+        --head) _head="${2-}"; shift 2 ;;
+        --review) _review="${2-}"; shift 2 ;;
+        *) printf 'error: unknown seal flag %s\n' "$1" >&2; exit 2 ;;
+      esac
+    done
+    if [ -n "$_head" ] || [ -n "$_repo" ]; then
+      seal_judged "$_n" "$_repo" "$_head" "$_review"
+    else
+      seal "$_n"
+    fi ;;
   *) printf 'error: unknown action %s (watch|seal)\nhelp: pr-seal.sh watch | pr-seal.sh seal <n>\n' "$ACTION" >&2; exit 2 ;;
 esac
 exit $?
