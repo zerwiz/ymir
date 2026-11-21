@@ -85,7 +85,7 @@ assets[29]{path,load_when}:
   "assets/norse-naming.md","naming any component; the naming law + component map"
   "assets/brokk-distro-runtime.md","the runtime spec (home, digest, lock, supervision, cron, and THE ENGINE — src/ymir_runtime's four verbs)"
   "assets/runtime-components.md","every runtime component, interface, and env var"
-  "assets/local-models.md","Vog — local models: engines (llama.cpp, LM Studio, Ollama), detection, harness wiring, honest measurement"
+  "assets/local-models.md","Vog — local models: engines (llama.cpp only as a local road; others recognised to report), detection, harness wiring, honest measurement"
   "assets/runtime-compliance.md","runtime acceptance gates + runnable checklist"
   "assets/memory-well.md","Mimirsbrunn/engram: the well, bridge, MCP, harness wiring, laws"
   "assets/vault.md","Hnitbjörg — the encrypted document vault: the LUKS container, the sealed-by-default law, fleet sync, FIDO2"

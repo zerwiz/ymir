@@ -640,7 +640,7 @@ turn-end guard, the Ró presentation preference, the agent-state surface).
 prompt templates, and themes. Ymir can **ship its own**, so a Ymir capability can
 be distributed and installed like any pi package, not only as a shell script.
 - **Model providers** — pi resolves models from `~/.pi/agent/models.json`, whose
-shape is `{"providers": {...}}`. Local servers (LM Studio, Ollama, vLLM) and the
+shape is `{"providers": {...}}`. The local llama.cpp rail and the
 Bifrost bridge are configured the same way, so the fleet runs on local or cloud
 models by the operator's choice.
 
@@ -826,7 +826,7 @@ non-Omarchy host loses only the Omarchy-specific hook, never the logic.
 platform_gifts[3]{platform,what_the_install_does,what_you_gain}:
   "Omarchy","detects the host, reads hyprctl monitors+scale, writes o.window desktop rules, snapshots the setup, installs the post-update hook","your dashboards land on their own numbered desktops; Ymir knows THIS machine and relearns it when Omarchy moves"
   "herdr (Þjazi)","bin/seat/herdr-ensure.sh verifies the version against the floors and installs via the pinned, SHA-verified installer; tmux is the accepted reference","every Eindri worker gets a real pane in a real terminal; presentation spaces at 0.8.0+, panes at protocol 14+"
-  "pi","registers the harness surfaces, the MCP servers, and the model providers (local LM Studio / Ollama or the Bifrost bridge)","extensions, skills, prompt templates, themes, and pi PACKAGES are all live — a new Ymir capability can ship as an installable pi package"
+  "pi","registers the harness surfaces, the MCP servers, and the model providers (the local llama.cpp rail or the Bifrost bridge)","extensions, skills, prompt templates, themes, and pi PACKAGES are all live — a new Ymir capability can ship as an installable pi package"
 ```
 
 A new capability therefore has three possible homes — a shell script, a skill, or

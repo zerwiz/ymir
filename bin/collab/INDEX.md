@@ -69,7 +69,7 @@ bin[122]{file,does,kind,verdict,disposition,callers,lines}:
   "decision-minimal.md","{short title, representative of solved problem and found solution}","data","wired","keep",1,30
   "decision.md","---","data","wired","keep",1,80
   "deploy.py","'''deploy — the door for a project that ships images: one builder, labelled, shipped, verified, two tags kept.","tool","wired","keep",1,182
-  "deploy.sh","deploy.sh — build, label, ship and verify a release; keep the current and the previous tag (RULES/23).","tool","wired","keep",18,9
+  "deploy.sh","deploy.sh — build, label, ship and verify a release; keep the current and the previous tag (RULES/23).","tool","wired","keep",19,9
   "elixir-umbrella.yaml","project.yaml — the one file every collaboration-kit tool reads (kit {{kit}}).","data","wired","keep",0,63
   "elixir.yaml","project.yaml — the one file every collaboration-kit tool reads (kit {{kit}}).","data","wired","keep",0,55
   "fixes-components.sh","The components of this product — one directory of notes each, and no invented names.","tool","wired","keep",2,4
