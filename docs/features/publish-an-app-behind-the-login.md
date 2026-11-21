@@ -92,3 +92,7 @@ bin/forge/gjallarhorn-publish.sh status
 | `the guard did not hold` | The edge answered something other than a sign-in. The hall address is wrong or the hall is down. Nothing was published. |
 | A signed-in person sees the private page | Their address is not in the hall's rules file for that name. Re-render and copy the file. |
 | `no publish config` | The file is missing for this machine's name. |
+
+## CHANGE LOG
+
+- 2026-11-21 — first written: the door that publishes an app behind the hall login, with the Smíðja visualizer as the first app.
