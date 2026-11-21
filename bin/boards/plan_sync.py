@@ -37,6 +37,16 @@ The `board:` block (in the project's registry row):
         token_from: claude-mcp:<server> | env:<NAME> | vault:<NAME>   # a REFERENCE (or a list, tried in order)
       plans: <home-relative ledger path>    # optional; default records.in_home.plans, then the realm layout
       file_url: https://…/blob/main/{path}  # optional; default derived from the home's git remote
+      plans_repo:                           # optional: the ledger lives in the PROJECT'S OWN repository
+        clone: <path>                       #   absolute, or relative to $HOME; default the row's local_clone, then ~/<repo>
+        ref: origin/main                    #   the git ref read (never the working tree); default origin/<git.default_branch>
+        dir: plans                          #   the ledger's folder inside the repository; default plans
+        fetch: true                         #   fetch the remote first (only remote-tracking refs move); default false
+      status_map: {record: done}            # optional: this ledger's own status words → a state group
+      phase_heads: {id: [n], name: [slice]} # optional: this ledger's own phase-table column words (id/name/accept)
+
+A repository ledger is read from the ref, never the checkout, so a clone that is behind or mid-branch cannot put a
+stale plan on the board; the link to each file is built from the row's `git:` block unless `file_url` names one.
 
 Exit: 0 ok · 1 refused, or a plan could not be synced (named) · 2 usage.
 """
@@ -44,8 +54,10 @@ import argparse
 import hashlib
 import os
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from board_adapter_mcp import BoardRefusal, McpBoard, resolve_token  # noqa: E402
@@ -96,8 +108,67 @@ def load_project(home, wanted):
     raise Refusal(f"the registry has no project '{wanted}'")
 
 
+class Ledger(str):
+    """The ledger's display path; `.where` says whose it is ("home" or "repository"), `.label` names it on a link."""
+    where = "home"
+
+
+def repo_spec(row):
+    """The row's repository ledger, or None. -> dict(clone, ref, dir, fetch)."""
+    rp = (row.get("board") or {}).get("plans_repo")
+    if not rp:
+        return None
+    rp = rp if isinstance(rp, dict) else {}
+    git = row.get("git") or {}
+    clone = rp.get("clone") or row.get("local_clone") or row.get("repo")
+    if not clone:
+        raise Refusal("board.plans_repo names no clone, and the row has neither local_clone nor repo")
+    clone = os.path.expanduser(str(clone))
+    if not os.path.isabs(clone):
+        clone = os.path.join(os.path.expanduser("~"), clone)
+    ref = rp.get("ref") or f"{git.get('remote') or 'origin'}/{git.get('default_branch') or 'main'}"
+    return {"clone": clone, "ref": str(ref), "dir": str(rp.get("dir") or "plans").strip("/"),
+            "fetch": bool(rp.get("fetch"))}
+
+
+_TMP = []
+
+
+def repo_ledger(row):
+    """Materialise the repository ledger AT ITS REF into a private temp folder (the checkout is never read or moved)."""
+    spec = repo_spec(row)
+    if not os.path.isdir(os.path.join(spec["clone"], ".git")) and not os.path.isfile(os.path.join(spec["clone"], ".git")):
+        raise Refusal(f"no git clone at {spec['clone']} (board.plans_repo.clone)")
+    if spec["fetch"]:
+        remote = spec["ref"].split("/", 1)[0]
+        subprocess.run(["git", "-C", spec["clone"], "fetch", "-q", remote], capture_output=True, timeout=120)
+    tmp = tempfile.mkdtemp(prefix="plan-sync-")
+    _TMP.append(tmp)
+    arch = subprocess.run(["git", "-C", spec["clone"], "archive", "--format=tar", spec["ref"], "--", spec["dir"]],
+                          capture_output=True, timeout=120)
+    if arch.returncode != 0:
+        raise Refusal(f"cannot read {spec['dir']}/ at {spec['ref']} in {spec['clone']}: "
+                      f"{arch.stderr.decode(errors='replace').strip()[:200]}")
+    tar = subprocess.run(["tar", "-x", "-C", tmp], input=arch.stdout, capture_output=True, timeout=120)
+    if tar.returncode != 0:
+        raise Refusal(f"cannot unpack the ledger: {tar.stderr.decode(errors='replace').strip()[:200]}")
+    path = os.path.join(tmp, spec["dir"])
+    if not os.path.isdir(path):
+        raise Refusal(f"no plan ledger at {spec['dir']}/ on {spec['ref']}")
+    rel = Ledger(spec["dir"])
+    rel.where = "repository"
+    return rel, path
+
+
+def cleanup():
+    for t in _TMP:
+        shutil.rmtree(t, ignore_errors=True)
+
+
 def ledger_dir(home, row):
     board = row.get("board") or {}
+    if board.get("plans_repo"):
+        return repo_ledger(row)
     rel = board.get("plans") or ((row.get("records") or {}).get("in_home") or {}).get("plans")
     if not rel:
         realm = row.get("realm") or row.get("company")
@@ -109,7 +180,7 @@ def ledger_dir(home, row):
     path = os.path.join(home, rel)
     if not os.path.isdir(path):
         raise Refusal(f"no plan ledger at {path}")
-    return rel.rstrip("/"), path
+    return Ledger(rel.rstrip("/")), path
 
 
 def project_for_file(home, path):
@@ -119,7 +190,11 @@ def project_for_file(home, path):
         if not r.get("board"):
             continue
         try:
-            _, led = ledger_dir(home, r)
+            if r["board"].get("plans_repo"):  # a repository ledger: the file lies in the clone's ledger folder
+                spec = repo_spec(r)
+                led = os.path.join(spec["clone"], spec["dir"])
+            else:
+                _, led = ledger_dir(home, r)
         except Refusal:
             continue
         if os.path.dirname(target) == os.path.realpath(led):
@@ -129,10 +204,16 @@ def project_for_file(home, path):
 
 # ── the plans ────────────────────────────────────────────────────────────────────────────────
 
-def status_group(text):
-    """Map a ledger status phrase onto a state GROUP of the board contract."""
+GROUPS = ("backlog", "unstarted", "started", "review", "done", "cancelled")
+
+
+def status_group(text, status_map=None):
+    """Map a ledger status phrase onto a state GROUP of the board contract (a ledger's own status_map first)."""
     t = (text or "").strip().lower().lstrip("`*_ ")
     head = re.split(r"\s[—–·(-]\s|\s*\(", t, maxsplit=1)[0]
+    for word, group in (status_map or {}).items():
+        if group in GROUPS and re.match(rf"{re.escape(str(word).lower())}\b", head):
+            return group
     if re.match(r"(superseded|retired|withdrawn|rejected|abandoned|cancel|dropped|obsolete|merged into)", head):
         return "cancelled"
     if re.match(r"(built|done|landed|shipped|complete|closed|live|fixed|merged|delivered)", head):
@@ -173,16 +254,33 @@ def file_title(path):
     return ""
 
 
-def read_plans(ledger_rel, ledger_abs, include_old=False):
+def read_plans(ledger_rel, ledger_abs, include_old=False, status_map=None):
     """-> list of dicts (num, title, rel, abs, status, group) sorted by number then path."""
     found = {}  # rel path inside the ledger -> {title, status}
     readme = os.path.join(ledger_abs, "README.md")
+    root_files = sorted(os.listdir(ledger_abs))
     if os.path.isfile(readme):
-        for ln in open(readme, encoding="utf-8", errors="replace"):
+        rlines = open(readme, encoding="utf-8", errors="replace").read().splitlines()
+        status_col = None  # the `Status` column of the table being read, for rows that carry no link
+        for k, ln in enumerate(rlines):
             if not ln.startswith("|"):
+                status_col = None
+                continue
+            nxt = _cells(rlines[k + 1]) if k + 1 < len(rlines) else None
+            if nxt and all(re.match(r"^:?-{2,}:?$", c) for c in nxt if c):  # a header row
+                hb = [_bare(h).lower() for h in (_cells(ln) or [])]
+                status_col = hb.index("status") if "status" in hb else None
                 continue
             m = re.match(r"\|\s*(\d+)\s*\|\s*\[([^\]]+)\]\(([^)#]+\.md)\)(.*)$", ln.rstrip())
             if not m:
+                cells = _cells(ln) or []
+                if status_col is None or len(cells) <= status_col or not re.match(r"^\d+$", cells[0]) \
+                        or len(cells) < 2 or not cells[1]:
+                    continue
+                n = int(cells[0])  # an index row with no link: the file is the one ledger file of that number
+                files = [f for f in root_files if re.match(rf"0*{n}[-_].*\.md$", f)]
+                if len(files) == 1:
+                    found[files[0]] = {"title": clean_title(cells[1]), "status": cells[status_col]}
                 continue
             link = m.group(3)
             if not os.path.isfile(os.path.join(ledger_abs, link)):
@@ -191,7 +289,7 @@ def read_plans(ledger_rel, ledger_abs, include_old=False):
             cells = [c for c in cells if c != ""]
             status = cells[-1] if cells else ""
             found[link] = {"title": clean_title(m.group(2)), "status": status}  # a later row wins
-    for fn in sorted(os.listdir(ledger_abs)):  # plans at the ledger's root that the index lacks
+    for fn in root_files:  # plans at the ledger's root that the index lacks
         if re.match(r"\d+[-_].*\.md$", fn) and fn not in found:
             found[fn] = {"title": "", "status": None}
     plans = []
@@ -208,7 +306,8 @@ def read_plans(ledger_rel, ledger_abs, include_old=False):
         if status is None or not status.strip():
             status = header_status(absf)
         plans.append({"num": int(m.group(1)), "title": title, "rel": f"{ledger_rel}/{rel}", "abs": absf,
-                      "status": status or "", "group": status_group(status)})
+                      "where": getattr(ledger_rel, "where", "home"),
+                      "status": status or "", "group": status_group(status, status_map)})
     plans.sort(key=lambda p: (p["num"], p["rel"]))
     return plans
 
@@ -244,8 +343,34 @@ def _bare(text):
     return re.sub(r"\s+", " ", t)
 
 
-def read_phases(text):
+class _Heads:
+    """A column matcher: the built-in pattern, or one of a ledger's own words (whole header, any case)."""
+
+    def __init__(self, base, words, whole=True):
+        self.base, self.whole = base, whole
+        self.words = [str(w).strip().lower() for w in (words or []) if str(w).strip()]
+
+    def _hit(self, h):
+        h = h.lower()
+        return any(h == w for w in self.words) if self.whole else any(w in h for w in self.words)
+
+    def match(self, h):
+        return self.base.match(h) or self._hit(h)
+
+    def search(self, h):
+        return self.base.search(h) or self._hit(h)
+
+
+def phase_heads(extra=None):
+    """The three column matchers, widened by a ledger's own words (board.phase_heads: {id, name, accept} lists)."""
+    extra = extra or {}
+    return (_Heads(_ID_HEAD, extra.get("id")), _Heads(_NAME_HEAD, extra.get("name")),
+            _Heads(_DONE_HEAD, extra.get("accept"), whole=False))
+
+
+def read_phases(text, heads=None):
     """Every phase row of every phase table in the plan → [(id, name, accept)], first appearance order, last word wins."""
+    id_head, name_head, done_head = heads or (_ID_HEAD, _NAME_HEAD, _DONE_HEAD)
     lines = text.splitlines()
     order, rows = [], {}
     in_code = False
@@ -257,9 +382,9 @@ def read_phases(text):
         sep = _cells(lines[i + 1]) if head and i + 1 < len(lines) else None
         if head and sep and all(re.match(r"^:?-{2,}:?$", c) for c in sep if c):
             hb = [_bare(h) for h in head]
-            idc = next((k for k, h in enumerate(hb) if _ID_HEAD.match(h)), None)
-            namec = next((k for k, h in enumerate(hb) if _NAME_HEAD.match(h) and k != idc), None)
-            donec = next((k for k, h in enumerate(hb) if _DONE_HEAD.search(h) and k not in (idc, namec)), None)
+            idc = next((k for k, h in enumerate(hb) if id_head.match(h)), None)
+            namec = next((k for k, h in enumerate(hb) if name_head.match(h) and k != idc), None)
+            donec = next((k for k, h in enumerate(hb) if done_head.search(h) and k not in (idc, namec)), None)
             i += 2
             while i < len(lines) and _cells(lines[i]) is not None:
                 row = _cells(lines[i])
@@ -287,6 +412,11 @@ def file_url(home, row, rel):
     tmpl = (row.get("board") or {}).get("file_url")
     if tmpl:
         return tmpl.replace("{path}", rel)
+    if (row.get("board") or {}).get("plans_repo"):  # the project's own repository, from its git: block
+        git = row.get("git") or {}
+        if not (git.get("host") and git.get("owner") and git.get("repo")):
+            return None
+        return f"https://{git['host']}/{git['owner']}/{git['repo']}/blob/{git.get('default_branch') or 'main'}/{rel}"
     try:
         url = subprocess.run(["git", "-C", home, "remote", "get-url", "origin"], capture_output=True, text=True,
                              timeout=10).stdout.strip()
@@ -309,7 +439,7 @@ def plan_body(p):
 
 
 def card_markdown(p, text, cut):
-    head = f"{LOCK} · `{p['rel']}` in the home."
+    head = f"{LOCK} · `{p['rel']}` in the {p.get('where', 'home')}."
     tail = "\n\n*(The plan is longer than a card holds; the rest is in the file.)*" if cut else ""
     return f"{head}\n\n---\n\n{text.rstrip()}{tail}\n"
 
@@ -358,6 +488,7 @@ class Sync:
         self.home, self.row, self.place, self.board, self.dry = home, row, place, board, dry
         self.n = {"created": 0, "upgraded": 0, "updated": 0, "unchanged": 0, "steps": 0, "found": 0, "failed": 0}
         self.failed, self.undrawn = [], []
+        self.heads = phase_heads((row.get("board") or {}).get("phase_heads"))
 
     def note_diagrams(self, p, out):
         for f in ((out or {}).get("diagrams") or {}).get("failed") or []:
@@ -377,7 +508,7 @@ class Sync:
         stamp = f"{p['group']}.{short(card_title(p) + md)}"
         desc = with_stamp(md, p, stamp)
         title = card_title(p)
-        phases = read_phases(text)
+        phases = read_phases(text, self.heads)
         source = f"{p['rel']}#plan-{p['num']}"
 
         if card is None:
@@ -444,7 +575,7 @@ class Sync:
             if any(l.get("url") == url for l in self.board.get_card(num).get("links") or []):
                 return
         try:
-            self.board.add_link(num, url, "Plan file in the home")
+            self.board.add_link(num, url, f"Plan file in the {p.get('where', 'home')}")
         except BoardRefusal as e:
             # Plane says the link is there when its listing spelled it otherwise (plan 111, 2026-11-21): it stands
             if "already exists" not in str(e):
@@ -482,7 +613,7 @@ class Sync:
 def run_project(home, row, args, only=None):
     place, board = build_board(home, row)
     ledger_rel, ledger_abs = ledger_dir(home, row)
-    plans = read_plans(ledger_rel, ledger_abs, args.include_old)
+    plans = read_plans(ledger_rel, ledger_abs, args.include_old, (row.get("board") or {}).get("status_map"))
     plans_by_num = {}
     for p in plans:
         plans_by_num.setdefault(p["num"], []).append(p)
@@ -570,6 +701,8 @@ def main(argv):
     except BoardRefusal as e:
         print(f"plan-sync: refused — {e}", file=sys.stderr)
         return 1
+    finally:
+        cleanup()
 
 
 if __name__ == "__main__":
