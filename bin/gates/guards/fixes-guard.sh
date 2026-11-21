@@ -213,6 +213,9 @@ path_component() {  # <path> -> the component it belongs to, or empty
     # fixed. (Found 2026-11-20 shipping the mend of the writer that lost 16 secrets.)
     bin/vault/*) echo hoard ;;
     bin/notify/*) echo notify ;;
+    # The app registry and its doors (RULES/23). Before this row they mapped to NO component, so a
+    # correct `apps/` note could never cover `.agents/config/app-repos.yaml` (found 2026-11-21 on PR 871).
+    .agents/config/app-repos.yaml|bin/apps/*) echo apps ;;
   esac
 }
 covered=0
