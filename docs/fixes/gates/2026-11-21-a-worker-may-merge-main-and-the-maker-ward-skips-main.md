@@ -14,3 +14,7 @@
 
 - `.agents/harnesses/claude-worker.settings.json`
 - `bin/gates/guards/maker-guard.sh`
+
+## CHANGE LOG
+
+- 2026-11-21 — review-mend: added missing heading for #875
