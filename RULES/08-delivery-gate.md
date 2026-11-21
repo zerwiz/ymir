@@ -282,3 +282,20 @@ operator decides: fix it, or merge anyway from his hall with an explicit second 
 What this replaces, in plain words: *"an agent opens the PR and stops"* and *"the Allfather alone seals merges"*
 are retired for green PRs. Production deploys follow their own repository's road (Skíðblaðnir on the heart) after
 the merge.
+
+## 2026-11-21 — every PR is reviewed by Claude Opus, and an approval merges at once
+
+At the Allfather's word, 2026-11-21: *"We need to have a claude opus review every pr. If its OK. He merges instantly."*
+
+This sharpens the section above ("if it passes the gates, it merges"). Green gates are no longer enough on their
+own: **every PR in the house's repositories is reviewed by the judge, and the judge is Claude Opus** (the figure
+`forseti` in the home's `config/agents.yaml`: harness `claude`, model `opus`). The verdict is the seal.
+
+| Step | The rule |
+|---|---|
+| **Who reviews** | the judge, spawned for every PR the moment it opens or changes head: by the seat that opened it, or by the heart's keeper for a PR no seat has claimed (a collaborator's included) |
+| **What it judges** | the brief the PR answers, the diff, the house's rules floor, the gates' state, and the PR's identity and private-data wards |
+| **APPROVE** | the judge merges **at once**, after re-checking at that instant that every required gate is green, the PR is mergeable, it is not on hold and its head is the head it approved. Merge method from `bin/forge/merge-method.sh`; a squash carries a written body; the merge is made under the operator's account; one Rune per merge |
+| **NEEDS-REWORK** | no merge; the verdict's items go back to the PR's author (the errand's seat, or the collaborator) as one line each |
+| **A red or pending gate** | no merge, even on approval; the judge names the failing row and waits for the next head |
+| **The operator** | may still merge anything from his hall with an explicit second click |
