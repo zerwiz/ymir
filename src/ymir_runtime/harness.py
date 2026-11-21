@@ -23,7 +23,7 @@ from . import paths, proc
 
 VERIFIED = ("claude", "opencode", "pi", "pi-signed")
 
-LOCAL_PROVIDER_HINTS = ("llama", "lmstudio", "apodex")
+LOCAL_PROVIDER_HINTS = ("llama", "apodex")
 
 Catalog = Callable[[], Iterable[str]]
 Probe = Callable[[str], str]

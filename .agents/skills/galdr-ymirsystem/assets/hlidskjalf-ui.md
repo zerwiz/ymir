@@ -352,7 +352,7 @@ month navigation and a `⟨ Today ⟩` return, and four lane toggles.
   modal (title · span · attendees · source id · Open in Google Calendar).
 
 `POST /api/chat` resolves the chosen model against the operator's Pi catalog and
-tries **every** engine that advertises it (LM Studio `:1234`, the llama.cpp
+tries **every** engine that advertises it (the llama.cpp
 router `:8080`, Bifrost `:4603`), never only the first — a dead engine falls
 through to a live one. Recall reads `.agents/memory/well/episodes.jsonl`
 directly, so restoring that file revives the chat's memory without a restart.

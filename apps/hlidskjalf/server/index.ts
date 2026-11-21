@@ -1996,7 +1996,7 @@ const CHAT_WINDOW = 40; // rolling context — the last 40 messages
 const SAFE_SESSION = /^[A-Za-z0-9._-]+$/;
 // Völundr speaks through the models the operator actually connected. The root Pi
 // catalog (`~/.pi/agent/models.json`) is the source of truth for the llama.cpp
-// router (`:8080`) and LM Studio; the Bifrost bridge (`:4603`) is the online
+// router (`:8080`); the Bifrost bridge (`:4603`) is the online
 // fallback. We never guess a llama.cpp model id — we read the one `.pi` uses.
 const PI_MODELS_PATH = join(homedir(), '.pi/agent/models.json');
 const PI_SETTINGS_PATH = join(homedir(), '.pi/agent/settings.json');
@@ -2100,10 +2100,10 @@ async function resolveModel(base: string): Promise<string> {
 function resolveChatTarget(model?: string): ChatTarget[] {
   const cat = piCatalog();
   if (model) {
-    // One model name can be advertised by several engines (LM Studio :1234,
-    // the llama.cpp router :8080, Bifrost :4603). Return EVERY match — a dead
+    // One model name can be advertised by several engines (the llama.cpp
+    // router :8080, Bifrost :4603). Return EVERY match — a dead
     // engine then falls through to a live one instead of failing the chat.
-    // A provider-prefixed id (e.g. lmstudio/<m>) maps to the bare model name.
+    // A provider-prefixed id (e.g. llama-cpp/<m>) maps to the bare model name.
     const bare = model.includes('/') ? model.slice(model.indexOf('/') + 1) : model;
     const matches = cat.filter((e) => e.id === model || e.name === model || e.model === bare);
     if (matches.length) {
