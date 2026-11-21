@@ -143,5 +143,20 @@ esac
   || bad "the retirement deleted a tracked path: $(git -C "$home" diff --diff-filter=D --name-only HEAD~1 HEAD)"
 [ "$(count)" -eq "$((before + 1))" ] && ok "the retirement ships as one commit" || bad "the retirement shipped $(( $(count) - before )) commits"
 
+# ── (f) a ship that fails says WHY: home-sync's own last line, never "no output" (2026-11-21) ─
+git -C "$home" remote set-url origin "$T/no-such-remote.git"
+mkdir -p "$home/hodd/docs"
+printf '# Another Document\n\nA body that must ship.\n' > "$home/hodd/docs/another-document.md"
+git -C "$home" add hodd/docs/another-document.md && git -C "$home" commit -qm "a new source"
+YMIR_HOME="$home" bash "$LEARN" >"$T/f.out" 2>"$T/f.err"; rc=$?
+[ "$rc" = 4 ] && ok "a failed ship exits 4" || bad "a failed ship exited $rc, not 4"
+fail_row="$(grep 'learn-home{ship,status,reason}' "$T/f.err" | tail -1)"
+case "$fail_row" in
+  *'$SHELF'*|"") bad "the failure row does not name the shelf and the reason: ${fail_row:-<none>}" ;;
+  *"hodd/identity/assistant/approved — "?*) ok "the failure row names the shelf and home-sync's reason" ;;
+  *) bad "the failure row carries no reason: $fail_row" ;;
+esac
+grep -q 'home-sync' "$T/f.err" && ok "home-sync's own words reach stderr" || bad "home-sync's words were swallowed"
+
 printf 'test_learn_home_ship: %s passed, %s failed\n' "$pass" "$fail"
 [ "$fail" = 0 ]

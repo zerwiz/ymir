@@ -2145,3 +2145,37 @@ clock and steers it. That is said plainly because a limit that is claimed and no
 Gates: `the-stall-test` (`bin/gates/checks.d/0392-the-stall-test.sh` → `bin/agents/tests/test_eindri_stall.sh`,
 28 assertions over fake panes and a simulated clock). Fix note:
 `docs/fixes/agents/2026-11-20-the-arm-watches-for-a-stall.md`. How-to: `docs/features/the-stall-test.md`.
+
+### The hotline hands an alert to an agent (appended 2026-11-21)
+
+At the operator's word: *"The cron are still not triggering the chat … We must be sending in to the chat wrong."*
+Measured: `bin/notify/send.sh` posted HIGH and CRITICAL lines straight through the Bot API, and a bot's own post never
+reaches any session as a turn. Its arm leg wrote only to the local machine's `.wake-queue`, so a dev machine's alert
+woke a dev machine's arm, which was dead for three hours. Nothing reached an agent that could act.
+
+**The owner road.** For HIGH and CRITICAL (not `--ask`, which is the operator's own question), the door now hands the
+line to the arm holder that owns the source, through `bin/fleet/arm-send.sh`, so it arrives as that agent's turn:
+
+| step | what happens |
+|---|---|
+| the owner | the machine named in the line, or the home's `config/notify-owners.conf` (`<source> <machine>`, `*` for the rest, `self`, `off`) |
+| owner's arm dead | the heart's arm holder (`heart` in `hodd/data/fleet.json`) gets it, and the line says *handed to the heart* |
+| no arm anywhere | the raw line is posted to Telegram at once, as before |
+| the raw post | held for `YMIR_NOTIFY_ANSWER_MIN` minutes (default 10) in `<home>/state/notify/pending/`, then posted unless an agent ran `--answered` |
+
+**What the arm holder does with the turn.** The turn names the alert id and asks for ONE `telegram_message` to the
+operator: what was found, and three buttons — look, fix, and silence for a day. The silence button runs
+`bin/notify/send.sh --silence '<group>' --on <machine>`; closing it runs `bin/notify/send.sh --answered <id> --on
+<machine>`. Both run on the machine that raised the alert, over the fleet's own road.
+
+**Dedupe that holds.** One line per group (source, key with stamps folded, machine) per hour — CRITICAL included. The
+next line carries `(repeated N× since the last line)`. A stamp segment in `--key` (an hour, a date, an epoch) and the
+digits of an auto-keyed message are folded, so a key never carries a changing number. The hound's CRITICAL used to
+skip dedupe entirely, which is how one silent watcher said the same line every 15 minutes for 9 hours.
+
+**A failing cron row says why.** The scheduler (`bin/time/nornir-cron-start.sh`) captures each row's own stdout and
+stderr, and `cron_row_tail` (`bin/time/cron-fail-lib.sh`) puts the last three stderr lines into the notice instead of
+the tail of the shared log.
+
+Proofs: `bin/notify/tests/test_alert_owner_road.py` (15 cases, a fake Telegram and a fake arm wire). Fix note:
+`docs/fixes/notify/2026-11-21-an-alert-reaches-an-agent.md`.

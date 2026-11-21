@@ -1,0 +1,13 @@
+# notify-owners.conf — which machine's arm holder OWNS an alert from a source (bin/notify/send.sh, the owner road).
+#
+# Copy to <home>/config/notify-owners.conf. One rule per line: <source> <machine>.
+#   self   the machine named in the alert line (the default when no rule matches)
+#   off    no owner road for this source: the raw line goes to the chat at once
+#   *      the rule for every source not named above it
+# When the owner's arm does not answer, the heart's arm holder (fleet.json "heart") takes the alert.
+#
+# cron   self
+# ward   self
+# garmr  host-a
+# trello off
+*        self

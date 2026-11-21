@@ -39,6 +39,30 @@ one at five). A cron failure, a Trello due date and the rest follow in plan 100.
 leg did not answer. If everything is `0`, the message was still written to Runes — the door fails
 loudly rather than silently.
 
+## An alert reaches an agent (2026-11-21)
+
+A HIGH or CRITICAL line is no longer only a bot post. The door hands it to the **arm holder that owns it**, as that
+agent's turn, and the agent answers you in the chat with one message and three buttons: look, fix, and silence for
+a day.
+
+- **Who owns it.** The machine named in the line. Override per source in `<home>/config/notify-owners.conf` (copy
+  `config/notify-owners.conf.example`).
+- **When the owner's arm is dead.** The heart's arm holder takes it, and the line says *handed to the heart*.
+- **When no agent answers.** The raw line is posted after 10 minutes (`YMIR_NOTIFY_ANSWER_MIN`), marked *no agent
+  answered*. With no arm anywhere it is posted at once.
+- **One line an hour.** The same alarm says one line per hour per machine, CRITICAL too, and the next line counts the
+  repeats: `(repeated 3× since the last line)`.
+- **A failing cron row says why.** The notice carries the row's own last stderr lines, not `no output`.
+
+The commands an agent (or you) can run:
+
+```
+bin/notify/send.sh --answered <alert-id> --on <machine>          # an agent answered: withdraw the raw post
+bin/notify/send.sh --silence '<group>' --hours 24 --on <machine> # no line from this alarm for a day
+bin/notify/send.sh --flush-due                                   # post every held line whose wait is over
+```
+
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-21** — the owner road: an alert reaches an agent as a turn; one line an hour with a count; a cron row says why it failed.
