@@ -66,7 +66,7 @@ SESSION="${YMIR_HERDR_SESSION:-brokk}"
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,34p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 
-REQ=""; ROLE=""; ROLE_GIVEN=""; SEAT=""; MODEL=""; EFFORT=""; KIND="${YMIR_HERDR_KIND:-pi}"; MAIN=""; TASK_ID=""; PROJECT_DIR=""; PROJECT_EXPLICIT=""; DRY=0; KIND_EXPLICIT=""; MODEL_EXPLICIT=""
+REQ=""; ROLE=""; ROLE_GIVEN=""; SEAT=""; MODEL=""; EFFORT=""; KIND="${YMIR_HERDR_KIND:-pi}"; MAIN=""; TASK_ID=""; PROJECT_DIR=""; PROJECT_EXPLICIT=""; DRY=0; KIND_EXPLICIT=""; MODEL_EXPLICIT=""; CLAIM_PR=""; CLAIM_PLAN=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --role) ROLE=${2-}; ROLE_GIVEN=${2-}; shift 2 ;;
@@ -75,12 +75,14 @@ while [ $# -gt 0 ]; do
     --effort) EFFORT=${2-}; shift 2 ;;
     --id) TASK_ID=${2-}; shift 2 ;;
     --project) PROJECT_DIR=${2-}; PROJECT_EXPLICIT=1; shift 2 ;;
+    --pr) CLAIM_PR=${2-}; shift 2 ;;
+    --plan) CLAIM_PLAN=${2-}; shift 2 ;;
     --dry-run) DRY=1; shift ;;
     --main) MAIN="--main"; shift ;;
     --space) SEAT="--space"; shift ;;
     --tab) SEAT="--tab"; shift ;;
     --pane) SEAT="--pane"; shift ;;
-    -*) printf 'error: unknown flag %s\nhelp: bin/agents/eindri-start.sh "<request>" [--id <task-id>] [--role <name>] [--pane|--tab|--space] [--kind pi|opencode|claude] [--model M|free] [--effort low..max]\n' "$1" >&2; exit 2 ;;
+    -*) printf 'error: unknown flag %s\nhelp: bin/agents/eindri-start.sh "<request>" [--id <task-id>] [--role <name>] [--pane|--tab|--space] [--kind pi|opencode|claude] [--model M|free] [--effort low..max] [--pr <url|owner/repo#n>] [--plan <n.step>]\n' "$1" >&2; exit 2 ;;
     *) [ -z "$REQ" ] && REQ="$1" || REQ="$REQ $1"; shift ;;
   esac
 done
@@ -233,6 +235,53 @@ if [ "$DRY" = 1 ]; then
   exit 0
 fi
 
+# 2g. CLAIM BEFORE SEATING (plan 343.12). Every task is held by one seat at a time, and the claim is
+#     a tracked file in the home, so every seat sees it (bin/agents/claim.sh). The keys are the task's
+#     own names: --pr <url|owner/repo#n> → pr:…, --plan <n.step> → plan:…, and the errand's branch →
+#     branch:<owner>/<repo>:<name> (what the push ward, claim-guard, reads). A task another seat holds
+#     is refused here, naming the holder, before a worktree or a pane is made. A judge (forseti) holds
+#     the PR as `judge`; everyone else as `coder`. A claim taken here is let go if the seat fails.
+CLAIM_SH="$SCRIPT_DIR/claim.sh"; CLAIMED=()
+CLAIM_ROLE=coder; [ "$ROLE" = forseti ] && CLAIM_ROLE=judge
+CLAIM_ERRAND="${TASK_ID:-$LABEL}"
+claims_unwind() { # release what this door took, unless the seat stood
+  [ "${SEATED_OK:-0}" = 1 ] && return 0
+  local k; for k in "${CLAIMED[@]:-}"; do [ -n "$k" ] && "$CLAIM_SH" release "$k" --role "$CLAIM_ROLE" >/dev/null 2>&1; done
+}
+claim_take() { # <key> — take it, or stop the errand with the holder's name
+  local out rc=0
+  out="$("$CLAIM_SH" take "$1" --role "$CLAIM_ROLE" --errand "$CLAIM_ERRAND" 2>&1)" || rc=$?
+  if [ "$rc" = 0 ]; then CLAIMED+=("$1"); return 0; fi
+  printf '%s\n' "$out" >&2
+  if [ "$rc" = 1 ]; then printf 'error: %s is another seat'"'"'s task — no errand was seated\n' "$1" >&2; exit 1; fi
+  printf 'eindri-start: the claims ledger could not be used (claim.sh exit %s) — seating without a claim\n' "$rc" >&2
+}
+if [ "$DRY" = 0 ] && [ -x "$CLAIM_SH" ] && [ "${YMIR_CLAIMS:-on}" != off ]; then
+  trap claims_unwind EXIT
+  slug_of() { git -C "${PROJECT_PATH:-$PWD}" remote get-url origin 2>/dev/null \
+      | sed -nE 's#^(https://|git@|ssh://git@)?github\.com[:/]([^/]+/[^/.]+)(\.git)?/?$#\2#p'; }
+  if [ -n "$CLAIM_PR" ]; then
+    case "$CLAIM_PR" in
+      http*://github.com/*/pull/*) _s="$(printf '%s' "$CLAIM_PR" | sed -nE 's#^https://github\.com/([^/]+/[^/]+)/pull/([0-9]+).*#\1#p')"; _n="$(printf '%s' "$CLAIM_PR" | sed -nE 's#.*/pull/([0-9]+).*#\1#p')" ;;
+      */*#*) _s="${CLAIM_PR%%#*}"; _n="${CLAIM_PR##*#}" ;;
+      *) _s="$(slug_of)"; _n="${CLAIM_PR#\#}" ;;
+    esac
+    [ -n "${_s:-}" ] && [ -n "${_n:-}" ] || { printf 'error: --pr wants a PR url or owner/repo#n (got %s)\n' "$CLAIM_PR" >&2; exit 2; }
+    claim_take "pr:$_s#$_n"
+    # the PR's head branch is the one a rework pushes to: claim it too, so the push ward sees it
+    if [ "$CLAIM_ROLE" = coder ] && command -v gh >/dev/null 2>&1; then
+      _hb="$(gh pr view "$_n" -R "$_s" --json headRefName -q .headRefName 2>/dev/null || true)"
+      [ -n "$_hb" ] && claim_take "branch:$_s:$_hb"
+    fi
+  fi
+  [ -n "$CLAIM_PLAN" ] && claim_take "plan:$CLAIM_PLAN"
+  if [ "$CLAIM_ROLE" = coder ]; then
+    _wb="${WORK_BRANCH:-${TASK_ID:+eindri/$TASK_ID}}"; _ws="$(slug_of)"
+    [ -n "$_wb" ] && [ -n "$_ws" ] && claim_take "branch:$_ws:$_wb"
+  fi
+  unset _s _n _hb _wb _ws
+fi
+
 # 3. The engine owns the errand when the caller names one (plan 58, Phase 1).
 #    With --id an errand is a real seat — worktree, harness, record, heartbeat.
 #    A seat hint (--pane/--tab/--space/--main) is the old road's grain, so those
@@ -247,6 +296,7 @@ if [ -n "$TASK_ID" ] && [ -z "$SEAT" ] && [ -z "$MAIN" ] \
   engine_rc=0
   engine_out="$("$SCRIPT_DIR/../engine/ymir-engine.sh" "${engine_args[@]}")" || engine_rc=$?
   if [ "$engine_rc" -eq 0 ]; then
+    SEATED_OK=1
     printf '%s' "$engine_out"
     printf 'eindri-start[1]{role,seat,a2a,request,label}:\n  "%s","engine","none","%s","%s"\n' "$ROLE" "$REQ" "$LABEL"
     exit 0
@@ -326,6 +376,7 @@ else
 fi
 [ "$refuse" = 1 ] && { printf 'eindri-start[1]{role,seat,verdict}:\n  "%s","none","too brief — answer it in hand"\n' "$ROLE"; exit 0; }
 [ "$seat" != "none" ] || { printf 'error: could not seat %s\n' "$ROLE" >&2; exit 1; }
+SEATED_OK=1   # the seat stands: its claims stay held (claim.sh releases them when the errand closes or goes stale)
 
 # 4. Serve the Eindri over A2A (best effort): its tasks are delivered by
 #    injection into the seated agent's chat; reachable at A2A_URL.

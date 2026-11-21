@@ -270,6 +270,10 @@ scheduler='
     fi
     [ -n "$_why" ] || _why="${_tail:-no output}"
     printf "%s cron FAIL rc=%s %s :: %s\n" "$ts" "$_rc" "$cmd" "$_why" >>"$log"
+    # The events store (plan 333): one row per failed job, deduped by the same key the hotline uses.
+    [ -x "$ROOT/bin/records/events-append.sh" ] && bash "$ROOT/bin/records/events-append.sh" --source cron \
+      --kind job-failed --severity HIGH --key "cron-fail:$key:$today" --subject "job failed (rc=$_rc): $cmd" \
+      --body "$_why" >/dev/null 2>&1 || true
     [ -x "$ROOT/bin/notify/send.sh" ] && bash "$ROOT/bin/notify/send.sh" --source cron --severity HIGH \
       --key "cron-fail:$key:$today" --message "job failed (rc=$_rc): $cmd — $_why" >/dev/null 2>&1 || true
     return 0

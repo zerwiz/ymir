@@ -130,6 +130,9 @@ stage branch-guard sh -c 'bash bin/gates/guards/branch-guard.sh <"$1"' _ "$refs"
 stage branch-current bash bin/gates/branch-current.sh check \
   || refuse "pre-push: the base is stale — rebase (or let bin/forge/gather.sh catch the batch up) and push again"
 stage fixes-guard sh -c 'bash bin/gates/guards/fixes-guard.sh <"$1"' _ "$refs" || refuse "pre-push: fixes-guard refused"
+# Plan 343.14 — a branch another seat holds as coder is not pushed from here (bin/agents/claim.sh).
+stage claim-guard sh -c 'bash bin/gates/guards/claim-guard.sh "$2" "$3" <"$1"' _ "$refs" "${1:-origin}" "${2:-}" \
+  || refuse "pre-push: claim-guard refused — another seat holds this branch"
 if git rev-parse -q --verify origin/main >/dev/null 2>&1; then
   # Rule 11 — a tracked file is MOVED, never deleted.
   stage no-delete bash bin/no-delete-guard.sh --base origin/main || refuse "pre-push: no-delete-guard refused"

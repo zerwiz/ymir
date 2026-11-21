@@ -396,6 +396,26 @@ printf '%s\n' "$brief" >"$BRIEF" || {
   exit 1
 }
 
+# ── the claim: one judge per PR head, across the fleet (plan 343.12) ─────────
+# A judge and a coder may hold the same PR in different roles, but two JUDGES on one head may not:
+# a seat that finds another seat's judge already on this head stands down and says whose it is
+# (the collisions of 2026-11-21: #858 and #868 merged while this seat's judges were still reviewing).
+# A moved head is a new judgement and may be claimed. Dry-run only asks; a ledger that cannot be
+# used never stops a judgement (stated, Rule 25).
+CLAIM_SH="$SCRIPT_DIR/claim.sh"; PR_CLAIM_KEY=""
+if [ -x "$CLAIM_SH" ] && [ "${YMIR_CLAIMS:-on}" != off ] && [ -n "$_slug" ] && [ "$PR_NUMBER" != "?" ]; then
+  PR_CLAIM_KEY="pr:$_slug#$PR_NUMBER"
+  if [ "$DRY" -eq 1 ]; then
+    _co="$("$CLAIM_SH" check "$PR_CLAIM_KEY" --role judge 2>&1)" || { release_claim; skip "another seat already holds this PR as judge — ${_co#claim: }"; }
+  else
+    _co="$("$CLAIM_SH" take "$PR_CLAIM_KEY" --role judge --errand "$REVIEW_ID" ${HEAD_SHA:+--head "$HEAD_SHA"} 2>&1)"; _crc=$?
+    if [ "$_crc" = 1 ]; then release_claim; skip "another seat already holds this PR as judge — ${_co#claim: }"; fi
+    [ "$_crc" = 0 ] || printf 'review-spawn: the claims ledger could not be used (claim.sh exit %s) — judging without a claim\n' "$_crc" >&2
+    [ "$_crc" = 0 ] || PR_CLAIM_KEY=""
+  fi
+  unset _co _crc
+fi
+
 # ── the spawn line (printed whole on --dry-run) ──────────────────────────────
 spawn=( "$SCRIPT_DIR/einherjar-spawn.sh" "$REVIEW_ID" "$PROJECT" --scout
         --backend "$BACKEND" --harness "$HARNESS" --model "$MODEL" --effort "$EFFORT" --role forseti )
@@ -450,6 +470,7 @@ else
   _rc=$?
   release_claim
   rm -f "$JUDGED" 2>/dev/null || true
+  [ -n "$PR_CLAIM_KEY" ] && "$CLAIM_SH" release "$PR_CLAIM_KEY" --role judge >/dev/null 2>&1
   printf 'error: the review spawn failed (exit %s) for %s — NO judge is seated; retry with bin/agents/eindri-review-spawn.sh %s --force\n' \
     "$_rc" "$ID" "$ID" >&2
   exit 1
