@@ -209,6 +209,8 @@ out="$(cd "$T/seat/.yggdrasil/pr-7-review" && YMIR_SMITH=pr-7-review PATH="$SHIM
   || bad "the door's merge inside the judge's seat" "$out"
 fresh "$APPROVE"; pr_json "$HEAD_A" green
 for raw in "pr merge 7 --squash" "-R acme/widget pr merge 7 --squash" "--repo=acme/widget pr merge 7" \
+           "pr -R acme/widget merge 7 --squash" "pr --repo acme/widget merge 7" "alias set m pr\ merge" \
+           "api -X PUT repos/acme/widget/pulls/7/merge/" "api -X PUT repos/acme/widget/pulls/7/MERGE" \
            "api graphql -f query=mutation{mergePullRequest(input:{pullRequestId:\"x\"}){clientMutationId}}" \
            "api -X PUT repos/acme/widget/pulls/7/merge"; do
   # shellcheck disable=SC2086

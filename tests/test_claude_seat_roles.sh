@@ -96,13 +96,22 @@ raw = [
     "gh -R owner/repo pr merge 12 --squash",
     "gh --repo owner/repo pr merge 12",
     "gh --repo=owner/repo pr merge 12",
+    "gh pr -R owner/repo merge 12 --squash",
+    "gh pr --repo owner/repo merge 12",
+    "gh pr --repo=owner/repo merge",
+    "gh alias set m 'pr merge'",
+    "gh alias import aliases.yml",
+    "gh api -X PUT repos/owner/repo/pulls/12/merge/",
+    "gh api -X PUT repos/owner/repo/pulls/12/MERGE",
+    "gh api -X POST repos/owner/repo/merges -f base=main -f head=x",
     "gh api graphql -f query='mutation{mergePullRequest(input:{pullRequestId:\"x\"}){clientMutationId}}'",
     "gh api graphql -f query='mutation{mergeBranch(input:{}){clientMutationId}}'",
     "git merge origin/feature",
     "git push origin main",
     "git push --force origin eindri/x",
 ]
-plain = ["git status --short", "gh pr view 12 --json state", "git diff origin/main...HEAD"]
+plain = ["git status --short", "gh pr view 12 --json state", "git diff origin/main...HEAD",
+         "gh pr view 12 --json mergeable,mergeStateStatus", "gh pr -R owner/repo view 12", "gh alias list"]
 fails = 0
 def expect(name, profile, cmds, want):
     global fails
@@ -156,6 +165,21 @@ elif [ "$guess" != forseti ]; then
 else
   bad "no explicit role gave $got"
 fi
+# eindri-start.sh guesses a role too (eindri-role.sh choose); it must reach herdr-run as --role-guess,
+# never as --role, and its dry run must name the worker profile (the judge's re-review of #870).
+for req in "verify the release" "review the pr" "audit the gate checks"; do
+  line="$("$ROOT/bin/agents/eindri-start.sh" --dry-run --kind claude "$req" 2>/dev/null | grep -A1 '^seat_profile' | tail -1)"
+  case "$line" in
+    *'"none",'*'"claude-worker.settings.json"'*) ok "eindri-start.sh '$req' with no --role: guessed $(printf '%s' "$line" | cut -d'"' -f4), seated with the worker profile" ;;
+    *) bad "eindri-start.sh '$req' with no --role: $line" ;;
+  esac
+done
+line="$("$ROOT/bin/agents/eindri-start.sh" --dry-run --kind claude --role forseti "review the pr" 2>/dev/null | grep -A1 '^seat_profile' | tail -1)"
+case "$line" in *'"claude-judge.settings.json"'*) ok "eindri-start.sh --role forseti: the judge's profile" ;; *) bad "eindri-start.sh --role forseti: $line" ;; esac
+grep -q 'if \[ -n "$ROLE_GIVEN" \]; then _role_arg=(--role "$ROLE"); else _role_arg=(--role-guess "$ROLE"); fi' "$ROOT/bin/agents/eindri-start.sh" \
+  && grep -q -- '--role-guess) ROLE=${2-}; shift 2 ;;' "$ROOT/bin/seat/herdr-run.sh" \
+  && ok "eindri-start.sh hands a guessed role to herdr-run as --role-guess (role file only), never as --role" \
+  || bad "eindri-start.sh still hands a guess as --role"
 grep -q -- '--effort "$EFFORT" --role forseti )' "$ROOT/bin/agents/eindri-review-spawn.sh" \
   && grep -q -- '--effort $EFFORT --role forseti"' "$ROOT/bin/agents/eindri-review-spawn.sh" \
   && ok "the review spawn seats the judge as role forseti (the spawn and its printed line agree)" || bad "review spawn lacks --role forseti"
@@ -189,6 +213,12 @@ if [ -f "$DOOR_SUITE" ]; then
   fi
 else
   printf 'note the door (bin/forge/judge-merge.sh + pr-seal.sh seal --repo --head) is built by errand judge-merges (#863); its refusals are proven by %s once it lands\n' "${DOOR_SUITE#$ROOT/}"
+fi
+
+if sout="$(timeout 300 bash "$ROOT/bin/forge/tests/test_smith_gh.sh" 2>&1)"; then
+  ok "the smith gh refuses every road to a merge and lets reads through ($(printf '%s' "$sout" | tail -1))"
+else
+  bad "the smith gh suite failed: $(printf '%s' "$sout" | grep FAIL | head -5)"
 fi
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"

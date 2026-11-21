@@ -66,10 +66,10 @@ SESSION="${YMIR_HERDR_SESSION:-brokk}"
 
 case "${1-}" in -v|-V|--version) printf '%s\n' "$VERSION"; exit 0 ;; -h|--help|"") sed -n '2,34p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;; esac
 
-REQ=""; ROLE=""; SEAT=""; MODEL=""; EFFORT=""; KIND="${YMIR_HERDR_KIND:-pi}"; MAIN=""; TASK_ID=""; PROJECT_DIR=""; PROJECT_EXPLICIT=""; DRY=0; KIND_EXPLICIT=""; MODEL_EXPLICIT=""
+REQ=""; ROLE=""; ROLE_GIVEN=""; SEAT=""; MODEL=""; EFFORT=""; KIND="${YMIR_HERDR_KIND:-pi}"; MAIN=""; TASK_ID=""; PROJECT_DIR=""; PROJECT_EXPLICIT=""; DRY=0; KIND_EXPLICIT=""; MODEL_EXPLICIT=""
 while [ $# -gt 0 ]; do
   case "$1" in
-    --role) ROLE=${2-}; shift 2 ;;
+    --role) ROLE=${2-}; ROLE_GIVEN=${2-}; shift 2 ;;
     --kind) KIND=${2-}; KIND_EXPLICIT=$KIND; shift 2 ;;
     --model) MODEL=${2-}; MODEL_EXPLICIT=$MODEL; shift 2 ;;
     --effort) EFFORT=${2-}; shift 2 ;;
@@ -218,6 +218,10 @@ if [ "$DRY" = 1 ]; then
     "$ROLE" "${PROJECT_ID:-unregistered}" "$PROJECT_KIND" "$PROJECT_PATH" "${WORKTREE:-}" \
     "${WORK_BRANCH:-}" "${WORK_MADE:-}" "${WORKTREE:-$PWD}" "$KIND" "${MODEL:-default}" \
     "$([ "$PROJECT_KIND" = other ] && echo "a worktree in the project's own repository" || echo "this tree's own road")"
+  # The Claude permission profile this seat would carry: chosen by the GIVEN role only, never the guess.
+  printf 'seat_profile[1]{role_given,role_guessed,profile}:\n  "%s","%s","%s"\n' \
+    "${ROLE_GIVEN:-none}" "$([ -n "$ROLE_GIVEN" ] && echo none || echo "$ROLE")" \
+    "$(basename "$("$SCRIPT_DIR/../seat/claude-seat.sh" profile "$ROLE_GIVEN" 2>/dev/null || echo unknown)")"
   printf 'bearings[1]{marker,core_carried}:\n  "%s","%s"\n' \
     "$("$SCRIPT_DIR/eindri-bearings.sh" --marker 2>/dev/null || echo none)" \
     "$(case "$REQ" in *eindri-bearings*) echo yes;; *) echo no;; esac)"
@@ -279,7 +283,12 @@ unset HERDR_PANE_ID HERDR_TAB_ID
 SEAT_NAME="${TASK_ID:-$LABEL}"
 herdr_err="$STATE/eindri-briefs/$SEAT_NAME.herdr-seat.err"; mkdir -p "$STATE/eindri-briefs"
 if [ -x "$SCRIPT_DIR/../seat/herdr-run.sh" ] && [ "$HERDR_INSTALLED" = 1 ]; then
-  "$SCRIPT_DIR/../seat/herdr-run.sh" eindri $SEAT $SEAT_MAIN ${KIND_EXPLICIT:+--kind "$KIND_EXPLICIT"} ${MODEL:+--model "$MODEL"} --role "$ROLE" "$SEAT_NAME" -- "$REQ" >/dev/null 2>"$herdr_err" || rc=$?
+  # The role reaches herdr-run as --role ONLY when the caller gave one (RULES/08, 2026-11-21, the
+  # judge's re-review of #870). A role GUESSED above (eindri-role.sh choose: "review the pr",
+  # "verify the release" -> forseti) travels as --role-guess: it picks the pi role file and the
+  # seat's name, and never the Claude permission profile — a guess must not open the merge door.
+  if [ -n "$ROLE_GIVEN" ]; then _role_arg=(--role "$ROLE"); else _role_arg=(--role-guess "$ROLE"); fi
+  "$SCRIPT_DIR/../seat/herdr-run.sh" eindri $SEAT $SEAT_MAIN ${KIND_EXPLICIT:+--kind "$KIND_EXPLICIT"} ${MODEL:+--model "$MODEL"} "${_role_arg[@]}" "$SEAT_NAME" -- "$REQ" >/dev/null 2>"$herdr_err" || rc=$?
 fi
 if [ "$HERDR_INSTALLED" = 1 ] && [ "$rc" != 0 ] && [ "$rc" != 3 ]; then
   printf 'eindri-start[1]{role,seat,errand}:\n  "%s","none","%s"\n' "$ROLE" "$SEAT_NAME"

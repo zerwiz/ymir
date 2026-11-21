@@ -68,31 +68,68 @@ case "${1:-}" in
   --version-shim) printf '1.0.0\n'; exit 0 ;;
 esac
 
-# The subcommand, read PAST gh's global flags (2026-11-21, the judge's review of #870): `gh -R
-# <repo> pr merge` put `-R` in $1, so a check on "$1 $2" never saw `pr merge`. -R/--repo take a
-# value; --help/--version stand alone. What remains is the subcommand pair.
-SUB1=""; SUB2=""
-_rest=("$@"); _k=0
-while [ "$_k" -lt "${#_rest[@]}" ]; do
-  case "${_rest[$_k]}" in
-    -R|--repo) _k=$((_k + 2)) ;;
-    -R*|--repo=*) _k=$((_k + 1)) ;;
-    *) break ;;
-  esac
-done
-SUB1="${_rest[$_k]:-}"; SUB2="${_rest[$((_k + 1))]:-}"
-unset _rest _k
+# The subcommand, read PAST every flag (2026-11-21, the judge's reviews of #870). `gh -R <repo> pr
+# merge` put `-R` in $1, and gh ALSO takes `-R/--repo` between `pr` and `merge` (`gh pr -R <repo>
+# merge`), so a check on "$1 $2" saw neither. The pair is the first two words that are not a flag,
+# skipping each -R/--repo value wherever it stands.
+sub_pair() {  # <args…> → "SUB1 SUB2"
+  local w=() skip=0 a
+  for a in "$@"; do
+    if [ "$skip" = 1 ]; then skip=0; continue; fi
+    case "$a" in
+      -R|--repo) skip=1 ;;
+      -*) ;;
+      *) w+=("$a"); [ "${#w[@]}" -ge 2 ] && break ;;
+    esac
+  done
+  printf '%s %s' "${w[0]:-}" "${w[1]:-}"
+}
+read -r SUB1 SUB2 <<<"$(sub_pair "$@")"
+
+# The merge API is the same act by another name. Matched without case, with or without a trailing
+# slash or query: REST PUT …/pulls/<n>/merge, POST …/merges (a branch merged into another), and
+# the GraphQL mergePullRequest / mergeBranch mutations — also when the query is read from a file
+# (`--input <f>`, `-F query=@<f>`).
+api_is_merge() {  # <args…>
+  local a l f prev=""
+  for a in "$@"; do
+    l="$(printf '%s' "$a" | tr 'A-Z' 'a-z')"
+    case "$l" in
+      *mergepullrequest*|*mergebranch*) return 0 ;;
+      */pulls/*/merge|*/pulls/*/merge/|*/pulls/*/merge\?*|*/pulls/*/merge/\?*) return 0 ;;
+      repos/*/merges|/repos/*/merges|repos/*/merges/|/repos/*/merges/|*/merges\?*) return 0 ;;
+    esac
+    f=""
+    case "$a" in *=@*) f="${a#*=@}" ;; esac
+    [ "$prev" = --input ] && f="$a"
+    if [ -n "$f" ] && [ -r "$f" ] && grep -qiE 'mergePullRequest|mergeBranch' "$f" 2>/dev/null; then return 0; fi
+    prev="$a"
+  done
+  return 1
+}
 
 if is_smith; then
-  # The merge API is the same act by another name: a REST PUT …/pulls/<n>/merge or the GraphQL
-  # mergePullRequest / mergeBranch mutation.
-  if [ "$SUB1" = api ]; then
-    for _a in "$@"; do
-      case "$_a" in
-        *mergePullRequest*|*mergeBranch*|*/pulls/*/merge|*/pulls/*/merge\?*) refuse "gh api (a merge)" ;;
-      esac
-    done
+  # An alias is a merge by another name (`gh alias set m 'pr merge'`, then `gh m 7`): a smith may
+  # not define one, and a call through an existing alias is judged on what it expands to.
+  if [ "$SUB1" = alias ]; then
+    case "$SUB2" in set|import) refuse "gh alias $SUB2 (an alias can hide a ship act)" ;; esac
   fi
+  _real="$(real_gh || true)"
+  case "$SUB1" in  # gh refuses an alias that shadows one of its own commands, so these never expand
+    ""|pr|api|repo|issue|run|workflow|auth|alias|browse|gist|release|search|secret|variable|label|cache|codespace|org|project|ruleset|status|config|extension|gpg-key|ssh-key|completion|help|attestation|agent-task) _real="" ;;
+  esac
+  if [ -n "$_real" ] && [ -n "$SUB1" ]; then
+    _exp="$("$_real" alias list 2>/dev/null | sed -n "s/^$(printf '%s' "$SUB1" | sed 's/[][\\.*^$/]/\\&/g'):[[:space:]]*//p" | head -1)"
+    if [ -n "$_exp" ]; then
+      case "$_exp" in '!'*) refuse "gh $SUB1 (a shell alias)" ;; esac
+      # shellcheck disable=SC2086
+      read -r SUB1 SUB2 <<<"$(sub_pair $_exp "${@:2}")"
+      # shellcheck disable=SC2086
+      if [ "$SUB1" = api ] && api_is_merge $_exp "${@:2}"; then refuse "gh api (a merge, through an alias)"; fi
+    fi
+  fi
+  unset _real _exp
+  if [ "$SUB1" = api ] && api_is_merge "$@"; then refuse "gh api (a merge)"; fi
   case "$SUB1 $SUB2" in
     "pr create")
       [ "${YMIR_SMITH_PR:-}" = direct ] || refuse "gh $SUB1 $SUB2"

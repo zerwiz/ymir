@@ -20,7 +20,7 @@
 # Usage:
 #   bin/seat/herdr-run.sh available                      # can we use herdr right now?
 #   bin/seat/herdr-run.sh worth-a-smith "<errand>"       # is this an errand at all?
-#   bin/seat/herdr-run.sh eindri [NAME] [--role R] [--kind K] [--model M] [--space] -- "<task>"
+#   bin/seat/herdr-run.sh eindri [NAME] [--role R | --role-guess R] [--kind K] [--model M] [--space] -- "<task>"
 #       --kind pi|opencode|claude WINS over config/agents.yaml and the model's provider (plan 262)
 #   bin/seat/herdr-run.sh run <name> -- <command...>     # a command in a pane
 #   bin/seat/herdr-run.sh agent-status                   # who stands, and in what state
@@ -345,6 +345,9 @@ case "$ACTION" in
       case "$1" in
         --role) ROLE=${2-}; ROLE_EXPLICIT=${2-}; shift 2 ;;
         --role=*) ROLE=${1#--role=}; ROLE_EXPLICIT=${1#--role=}; shift ;;
+        # a role GUESSED upstream (eindri-start.sh): it picks the role file, never the profile
+        --role-guess) ROLE=${2-}; shift 2 ;;
+        --role-guess=*) ROLE=${1#--role-guess=}; shift ;;
         --kind) KIND_EXPLICIT=${2-}; shift 2 ;;
         --kind=*) KIND_EXPLICIT=${1#--kind=}; shift ;;
         --model) MODEL_REQ=${2-}; shift 2 ;;
