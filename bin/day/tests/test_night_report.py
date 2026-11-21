@@ -253,6 +253,51 @@ class NightReport(unittest.TestCase):
         self.assertFalse((self.home / "hodd/docs/status").exists())
         self.assertFalse((self.home / "state/night-report.last").exists())
 
+    def test_silent_failures_are_named(self):
+        """No default repository, and a PR whose state cannot be read, are named under problems."""
+        self.night()
+
+        class A:
+            no_fleet = no_board = True
+            no_github = False
+            github_fixture = str(self.fx)
+            todo_fixture = str(self.board)
+            default_repo = ""
+            repo = None
+        orig = nr.origin_repo
+        nr.origin_repo = lambda: ""
+        try:
+            data, _ = nr.collect(A, self.home, NOW, SINCE)
+        finally:
+            nr.origin_repo = orig
+        self.assertTrue(any(p.startswith("no default repository") for p in data["problems"]), data["problems"])
+        self.assertNotIn(1, [t["card"] for t, _ in data["ticks"]])  # bare #41 cannot be told without a repo
+
+        gh = nr.GitHub()
+        gh._gh = lambda args, tries=3: (_ for _ in ()).throw(RuntimeError("network down"))
+        self.assertIsNone(gh.state("example/house", 41))
+        self.assertEqual(gh.unread, [("example/house#41", "network down")])
+
+    def test_a_failed_ship_is_not_green(self):
+        self.night()
+        calls = []
+
+        def fake_sh(args, timeout=300):
+            calls.append(args)
+            return (1, "push refused") if "ship" in args else (0, "")
+        orig = nr.sh
+        nr.sh = fake_sh
+        try:
+            argv = ["--home", str(self.home), "--since", str(SINCE), "--now", str(NOW), "--no-fleet",
+                    "--no-board", "--github-fixture", str(self.fx), "--default-repo", "example/house",
+                    "--todo-fixture", str(self.board)]
+            self.assertEqual(nr.main(argv), 1)
+        finally:
+            nr.sh = orig
+        sent = next(c for c in calls if any("send.sh" in x for x in c))
+        msg = sent[sent.index("--message") + 1]
+        self.assertIn("NOT shipped, only on host-a", msg.splitlines()[0])
+
     def test_buttons_fit_and_render_unclipped(self):
         """Every prompt fits Telegram's 64 bytes, so the rendered callback_data IS the prompt."""
         btns = nr.buttons("2026-12-02")

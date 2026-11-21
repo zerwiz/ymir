@@ -181,6 +181,7 @@ class GitHub:
 
     def __init__(self, fixture=None):
         self.fx = json.loads(Path(fixture).read_text()) if fixture else None
+        self.unread = []  # (repo#n, why) for every PR whose state could not be read
 
     def _gh(self, args, tries=3):
         err = ""
@@ -223,7 +224,8 @@ class GitHub:
             return (self.fx.get("pr_state") or {}).get(f"{repo}#{number}")
         try:
             return self._gh(["pr", "view", str(number), "--repo", repo, "--json", "state,mergedAt,url"])
-        except (RuntimeError, ValueError, subprocess.TimeoutExpired):
+        except (RuntimeError, ValueError, subprocess.TimeoutExpired) as e:
+            self.unread.append((f"{repo}#{number}", clip(str(e), 80)))  # named in the report, never silent
             return None
 
 
@@ -806,6 +808,9 @@ def collect(a, home, now, since):
     rows = registry(home)
     gh = GitHub(a.github_fixture)
     default_repo = a.default_repo or origin_repo()
+    if not default_repo and not a.no_github:
+        problems.append("no default repository (this checkout's origin is not on GitHub): a bare 'PR 810' on his "
+                        "list was not read and closes nothing — pass --default-repo owner/name")
     merged, opened = [], []
     if not a.no_github:
         repos = list(dict.fromkeys(([default_repo] if default_repo else []) + registry_repos(rows) + (a.repo or [])))
@@ -847,6 +852,9 @@ def collect(a, home, now, since):
                 lookup[tok] = e
     # only a card is closed: the file is retired and is never written
     ticks = [] if a.no_github or cards is None else proofs(items, gh, default_repo, lookup, now, door.date_of)
+    if gh.unread:
+        problems.append(f"GitHub could not tell the state of {len(gh.unread)} PR(s), so their items stay open: "
+                        + "; ".join(f"{r} ({why})" for r, why in gh.unread[:5]))
     data = {"since": since, "now": now, "errands": errands, "seats": seats, "unheard": unheard,
             "merged": merged, "open": opened, "rang": rang, "mended": mended, "his": his,
             "cards": decisions, "voice": voice_open(home), "ticks": ticks, "problems": problems,
@@ -936,9 +944,15 @@ def main(argv=None):
     (home / LAST).write_text(f"{int(now)}\n")
     print(f"night-report: written {rel}")
 
+    shipped = True
     if not a.no_sync:
         rc, out = sh(["bash", str(ROOT / "bin/vault/home-sync.sh"), "ship", f"night report {date}"] + paths)
-        print(f"night-report: ship {'ok' if rc == 0 else 'FAILED'} — {clip(out, 200)}")
+        shipped = rc == 0
+        print(f"night-report: ship {'ok' if shipped else 'FAILED'} — {clip(out, 200)}",
+              file=sys.stdout if shipped else sys.stderr)
+        if not shipped:
+            # the report is on this seat only: the message says so, and the run is not green
+            tg[0] += f" — NOT shipped, only on {me()}"
     if not a.no_send:
         args = ["bash", str(ROOT / "bin/notify/send.sh"), "--source", "cron", "--severity", "INFO", "--ask",
                 "--key", f"report:night-{date}", "--target", f"file:{home / rel}", "--message", "\n".join(tg)]
@@ -946,7 +960,7 @@ def main(argv=None):
             args += ["--button", b]
         rc, out = sh(args, timeout=60)
         print(f"night-report: message {'sent' if rc == 0 else 'NOT sent'} — {clip(out, 200)}")
-    return 0
+    return 0 if shipped else 1
 
 
 if __name__ == "__main__":

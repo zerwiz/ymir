@@ -103,3 +103,15 @@ such as *"Merge the green PRs in the 2026-11-21 night report"*. A test renders t
 
 No gate ran `bin/day/tests/test_night_report.py`, so the tests guarded nothing after the merge.
 `bin/gates/checks.d/0545-night-report.sh` now runs them in every gate run.
+
+## Addendum, 2026-11-21 — three failures are no longer silent
+
+- **No default repository.** When this checkout's origin is not on GitHub and no `--default-repo` is
+  given, a bare `PR 810` cannot be read. The report now says so under *What could not be read*.
+- **A PR whose state cannot be read.** `gh` errors were swallowed, so a network failure closed nothing
+  and said nothing. The report now names each such PR, with the error.
+- **A failed ship.** When `home-sync.sh ship` fails, the report exists on one seat only. The run now
+  exits 1, so Nornir records it red, and the Telegram message's first line says *NOT shipped, only on
+  <seat>*.
+
+Each of the three has a test.
