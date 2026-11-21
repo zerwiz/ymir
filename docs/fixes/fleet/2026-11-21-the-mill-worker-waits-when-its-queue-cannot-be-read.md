@@ -40,3 +40,7 @@ A redis that refuses the connection spins the same way, because `redis-cli` exit
 
 Nothing in this tree feeds `mill:jobs` today, so the worker idles by design until a queue is given to it. Whether the
 heart should carry `redis-cli`, or the mill should use the house's own queue door, is a separate choice.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #869
