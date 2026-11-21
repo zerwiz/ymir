@@ -203,7 +203,9 @@ EFFORT=
 EFFORT_SET=0
 BACKEND=
 BACKEND_SET=0
-SEAT_ROLE="${YMIR_SEAT_ROLE:-}"
+# The role comes ONLY from --role or the task record (on --relaunch), never from an inherited
+# YMIR_SEAT_ROLE: a spawn run inside a judge's environment must not seat its child as the judge.
+SEAT_ROLE=
 ISOLATION=auto
 FORCE=0
 DRY=0
@@ -1093,9 +1095,6 @@ fi
 # worker, so the shape lives in bin/seat/pi-launcher.sh and this spawner only CALLS it.
 PI_LAUNCHER="$SCRIPT_DIR/../seat/pi-launcher.sh"
 
-# The seat's role travels with it, so every road that chooses a Claude profile chooses the same one.
-if [ -n "$SEAT_ROLE" ]; then export YMIR_SEAT_ROLE="$SEAT_ROLE"; fi
-
 build_launch_command() {  # prints the worker command WITHOUT the leading exec
   local brief_ref=$1 model_flag=
   if [ -n "$MODEL" ] && [ "$MODEL" != default ]; then
@@ -1121,8 +1120,8 @@ build_launch_command() {  # prints the worker command WITHOUT the leading exec
       # Allfather's moves. A missing profile is a refusal, never a bare `claude`.
       # The profile is chosen by ROLE (RULES/08, appended 2026-11-21): `--role forseti` (the
       # judge, from eindri-review-spawn.sh) gets claude-judge.settings.json — the one merge door
-      # and still no raw `gh pr merge`; every other role gets the worker profile. The role goes to
-      # the seat as YMIR_SEAT_ROLE too, so harness.py chooses the same profile.
+      # and still no raw `gh pr merge`; every other role gets the worker profile. The role is never
+      # exported into the seat: an inherited role would let the judge's children open the door.
       local profile
       if ! profile="$(python3 "$ROOT/src/ymir_runtime/claude_seat.py" profile "$ROOT" "$SEAT_ROLE" 2>/dev/null)" || [ ! -f "$profile" ]; then
         echo "error: the Claude permission profile for role '${SEAT_ROLE:-worker}' is missing under $ROOT/.agents/harnesses — a Claude seat without it stops at its first permission prompt (plan 239 P5c)" >&2

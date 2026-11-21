@@ -68,10 +68,34 @@ case "${1:-}" in
   --version-shim) printf '1.0.0\n'; exit 0 ;;
 esac
 
+# The subcommand, read PAST gh's global flags (2026-11-21, the judge's review of #870): `gh -R
+# <repo> pr merge` put `-R` in $1, so a check on "$1 $2" never saw `pr merge`. -R/--repo take a
+# value; --help/--version stand alone. What remains is the subcommand pair.
+SUB1=""; SUB2=""
+_rest=("$@"); _k=0
+while [ "$_k" -lt "${#_rest[@]}" ]; do
+  case "${_rest[$_k]}" in
+    -R|--repo) _k=$((_k + 2)) ;;
+    -R*|--repo=*) _k=$((_k + 1)) ;;
+    *) break ;;
+  esac
+done
+SUB1="${_rest[$_k]:-}"; SUB2="${_rest[$((_k + 1))]:-}"
+unset _rest _k
+
 if is_smith; then
-  case "${1:-} ${2:-}" in
+  # The merge API is the same act by another name: a REST PUT …/pulls/<n>/merge or the GraphQL
+  # mergePullRequest / mergeBranch mutation.
+  if [ "$SUB1" = api ]; then
+    for _a in "$@"; do
+      case "$_a" in
+        *mergePullRequest*|*mergeBranch*|*/pulls/*/merge|*/pulls/*/merge\?*) refuse "gh api (a merge)" ;;
+      esac
+    done
+  fi
+  case "$SUB1 $SUB2" in
     "pr create")
-      [ "${YMIR_SMITH_PR:-}" = direct ] || refuse "gh $1 $2"
+      [ "${YMIR_SMITH_PR:-}" = direct ] || refuse "gh $SUB1 $SUB2"
       # the maker ward (RULES/53): a PR title or body that names a model, a maker or an agent harness is refused
       # BEFORE it is opened. The ward is found beside the worktree's own bin/, never assumed.
       _guard="$(git rev-parse --show-toplevel 2>/dev/null)/bin/gates/guards/maker-guard.sh"
@@ -91,7 +115,7 @@ if is_smith; then
         [ -z "$_t" ] || rm -f "$_t" "$_t.title" "$_t.body"
       fi ;;
     "pr merge"|"pr close"|"pr reopen"|"repo delete"|"release create"|"release delete")
-      refuse "gh $1 $2" ;;
+      refuse "gh $SUB1 $SUB2" ;;
   esac
 fi
 

@@ -370,7 +370,7 @@ def claude_worker_profile(root: str | Path | None, role: str | None = None) -> P
 
     A Claude seat launched without it stops at its first permission prompt and
     nobody is watching — so a missing profile is a refusal, never a bare `claude`.
-    The role (the argument, else YMIR_SEAT_ROLE) chooses it (RULES/08, 2026-11-21):
+    The role (the argument only, never an inherited environment) chooses it (RULES/08, 2026-11-21):
     the judge (forseti) gets the profile that opens the one merge door; every other
     role gets the worker profile, which refuses every merge road.
     """

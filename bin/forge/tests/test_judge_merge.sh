@@ -198,6 +198,25 @@ fresh '"APPROVE or NEEDS-REWORK","the count","list","seal"'; pr_json "$HEAD_A" g
 "$JM" act pr-7-review >/dev/null 2>&1
 [ "$(merges)" = 0 ] && [ "$(comments)" = 0 ] && ok "an unfilled verdict does nothing" || bad "an unfilled verdict does nothing"
 
+# 12b · INSIDE THE JUDGE'S OWN SEAT (the judge's review of #870): the seat has YMIR_SMITH set, the
+#       smith gh shim first on PATH and its cwd under .yggdrasil/. The shim refuses a raw merge —
+#       every form — but the door's merge goes through, because the door calls the gh behind it.
+SHIM_ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
+mkdir -p "$T/seat/.yggdrasil/pr-7-review"
+fresh "$APPROVE"; pr_json "$HEAD_A" green
+out="$(cd "$T/seat/.yggdrasil/pr-7-review" && YMIR_SMITH=pr-7-review PATH="$SHIM_ROOT/bin/forge/smith-bin:$PATH" "$JM" act pr-7-review 2>&1)"
+[ "$(merges)" = 1 ] && ok "inside a judge's seat (YMIR_SMITH, the shim first on PATH) the door still merges once" \
+  || bad "the door's merge inside the judge's seat" "$out"
+fresh "$APPROVE"; pr_json "$HEAD_A" green
+for raw in "pr merge 7 --squash" "-R acme/widget pr merge 7 --squash" "--repo=acme/widget pr merge 7" \
+           "api graphql -f query=mutation{mergePullRequest(input:{pullRequestId:\"x\"}){clientMutationId}}" \
+           "api -X PUT repos/acme/widget/pulls/7/merge"; do
+  # shellcheck disable=SC2086
+  (cd "$T/seat/.yggdrasil/pr-7-review" && YMIR_SMITH=pr-7-review PATH="$SHIM_ROOT/bin/forge/smith-bin:$PATH" gh $raw >/dev/null 2>&1)
+done
+[ "$(merges)" = 0 ] && ok "in the same seat the shim refuses every raw merge (pr merge, -R/--repo, the merge API, graphql)" \
+  || bad "a raw merge got past the shim" "$(cat "$GHLOG" 2>/dev/null)"
+
 # 13 · the keeper: one judge at a time; a second PR is handed to a developer seat
 echo "review-watch --keeper: a judge for every head, one at a time"
 rm -rf "$T/home/state" "$GHLOG"; mkdir -p "$T/home/state/.reviewed" "$FIX"; printf 'acme\n' >"$FIX/login"

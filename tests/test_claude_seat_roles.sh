@@ -33,7 +33,7 @@ for pair in "forseti:$JUDGE" "FORSETI:$JUDGE" "sindri:$WORKER" ":$WORKER" "bragi
   [ "$got" = "$want" ] && ok "claude-seat.sh: role '${role:-none}' -> $(basename "$want")" || bad "claude-seat.sh role '$role' gave $got"
 done
 got="$(YMIR_SEAT_ROLE=forseti "$ROOT/bin/seat/claude-seat.sh" profile)"
-[ "$got" = "$JUDGE" ] && ok "YMIR_SEAT_ROLE=forseti chooses the judge's profile" || bad "env role gave $got"
+[ "$got" = "$WORKER" ] && ok "an inherited YMIR_SEAT_ROLE=forseti never chooses the judge's profile" || bad "env role gave $got"
 
 "$ROOT/bin/seat/claude-seat.sh" settings "$TMP" "$TMP/judge.json" forseti >/dev/null 2>&1 \
   && grep -q 'judge-merge.sh' "$TMP/judge.json" && ok "settings <cwd> <out> forseti writes the judge's door into the seat" \
@@ -93,6 +93,11 @@ raw = [
     "gh pr merge 12 -R owner/repo --merge --admin",
     "cd x && gh pr merge 12",
     "gh api -X PUT repos/owner/repo/pulls/12/merge",
+    "gh -R owner/repo pr merge 12 --squash",
+    "gh --repo owner/repo pr merge 12",
+    "gh --repo=owner/repo pr merge 12",
+    "gh api graphql -f query='mutation{mergePullRequest(input:{pullRequestId:\"x\"}){clientMutationId}}'",
+    "gh api graphql -f query='mutation{mergeBranch(input:{}){clientMutationId}}'",
     "git merge origin/feature",
     "git push origin main",
     "git push --force origin eindri/x",
@@ -135,8 +140,22 @@ sys.exit(1 if fails else 0)
 PY
 
 # ── 4. the wiring ──────────────────────────────────────────────────────────────────────────────
-grep -q 'claude-seat.sh" args "$SEAT_CWD" "$CLAUDE_MODEL" "$brief_dir/$NAME.claude-settings.json" "${ROLE:-}"' "$ROOT/bin/seat/herdr-run.sh" \
-  && ok "herdr-run.sh hands the seat's role to the profile chooser" || bad "herdr-run.sh does not pass the role"
+# herdr-run.sh: ONLY an explicit --role chooses the profile. The role guessed from the brief maps
+# "check", "ship" and "pr" to forseti (the judge's review of #870), and must never open the door.
+grep -q 'claude-seat.sh" args "$SEAT_CWD" "$CLAUDE_MODEL" "$brief_dir/$NAME.claude-settings.json" "${ROLE_EXPLICIT:-}"' "$ROOT/bin/seat/herdr-run.sh" \
+  && ok "herdr-run.sh hands only the EXPLICIT role to the profile chooser" || bad "herdr-run.sh does not pass the explicit role"
+n_set="$(grep -c 'ROLE_EXPLICIT=\${' "$ROOT/bin/seat/herdr-run.sh")"
+[ "$n_set" = 2 ] && grep -q -- '--role) ROLE=${2-}; ROLE_EXPLICIT=${2-}' "$ROOT/bin/seat/herdr-run.sh" \
+  && ok "ROLE_EXPLICIT is set only by --role / --role= (the guess never writes it)" || bad "ROLE_EXPLICIT is written $n_set times"
+guess="$("$ROOT/bin/agents/eindri-role.sh" choose "fix the broken gate check and ship the PR" 2>/dev/null | sed -n '2p' | sed -E 's/^ *"([^"]+)".*/\1/')"
+got="$("$ROOT/bin/seat/claude-seat.sh" profile "")"
+if [ "$guess" = forseti ] && [ "$got" = "$WORKER" ]; then
+  ok "a coder brief guessed as '$guess' with no --role is seated with the worker profile"
+elif [ "$guess" != forseti ]; then
+  ok "the brief guessed '$guess'; with no --role the seat is the worker profile either way"
+else
+  bad "no explicit role gave $got"
+fi
 grep -q -- '--effort "$EFFORT" --role forseti )' "$ROOT/bin/agents/eindri-review-spawn.sh" \
   && grep -q -- '--effort $EFFORT --role forseti"' "$ROOT/bin/agents/eindri-review-spawn.sh" \
   && ok "the review spawn seats the judge as role forseti (the spawn and its printed line agree)" || bad "review spawn lacks --role forseti"
@@ -152,6 +171,8 @@ printf '%s' "$shape" | grep -q 'claude-judge.settings.json' \
 shape="$(ROOT="$ROOT" HARNESS=claude MODEL=opus SEAT_ROLE= bash -c "shell_quote() { printf \"'%s'\" \"\$1\"; }; $fn; build_launch_command /d/brief.md" 2>&1)"
 printf '%s' "$shape" | grep -q 'claude-worker.settings.json' \
   && ok "einherjar-spawn.sh's claude launch carries the worker's profile with no role" || bad "einherjar claude shape: $shape"
+grep -q '^SEAT_ROLE=$' "$ROOT/bin/agents/einherjar-spawn.sh" && ! grep -q 'export YMIR_SEAT_ROLE' "$ROOT/bin/agents/einherjar-spawn.sh" \
+  && ok "einherjar-spawn.sh neither inherits nor exports a role" || bad "einherjar-spawn.sh inherits or exports YMIR_SEAT_ROLE"
 grep -q "printf 'role=%s" "$ROOT/bin/agents/einherjar-spawn.sh" && grep -q 'SEAT_ROLE=$(meta_value "$META" role)' "$ROOT/bin/agents/einherjar-spawn.sh" \
   && ok "the role is recorded in the task record and a relaunch keeps it" || bad "role not recorded / not read on relaunch"
 grep -q 'bin/forge/judge-merge.sh act {{REVIEW_ID}}' "$ROOT/.agents/assets/templates/review-brief.template.md" \
@@ -162,7 +183,7 @@ grep -q 'bin/forge/judge-merge.sh act {{REVIEW_ID}}' "$ROOT/.agents/assets/templ
 DOOR_SUITE="$ROOT/bin/forge/tests/test_judge_merge.sh"
 if [ -f "$DOOR_SUITE" ]; then
   if dout="$(timeout 600 bash "$DOOR_SUITE" 2>&1)"; then
-    ok "the door refuses red, pending, moved head and hold ($(printf '%s' "$dout" | tail -1))"
+    ok "the door refuses red, pending, moved head and hold, and merges inside the judge's own seat ($(printf '%s' "$dout" | tail -1))"
   else
     bad "the door's suite failed: $(printf '%s' "$dout" | tail -5)"
   fi

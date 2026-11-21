@@ -67,8 +67,10 @@ class ProfileByRoleTest(unittest.TestCase):
     def test_the_judge_and_the_worker_get_their_own_profiles(self) -> None:
         tree = harness.claude_worker_profile(None).parents[2]
         self.assertEqual(claude_seat.profile_for(tree, "forseti", {}).name, "claude-judge.settings.json")
-        self.assertEqual(claude_seat.profile_for(tree, None, {"YMIR_SEAT_ROLE": "Forseti"}).name,
-                         "claude-judge.settings.json")
+        self.assertEqual(claude_seat.profile_for(tree, "Forseti", {}).name, "claude-judge.settings.json")
+        # an inherited environment never chooses the judge's profile
+        self.assertEqual(claude_seat.profile_for(tree, None, {"YMIR_SEAT_ROLE": "forseti"}).name,
+                         "claude-worker.settings.json")
         for role in ("sindri", "", None):
             with self.subTest(role=role):
                 self.assertEqual(claude_seat.profile_for(tree, role, {}).name, "claude-worker.settings.json")

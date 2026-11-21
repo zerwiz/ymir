@@ -177,9 +177,13 @@ JUDGE_ROLES = frozenset({"forseti"})
 
 
 def role_of(role: str | None, env: Mapping[str, str] | None = None) -> str:
-    """The seat's role: the one named, else YMIR_SEAT_ROLE, lower-cased; '' when none."""
-    env = os.environ if env is None else env
-    return (role or env.get("YMIR_SEAT_ROLE") or "").strip().lower()
+    """The seat's role, lower-cased; '' when none.
+
+    ONLY the role a caller names explicitly. Never an environment variable: an environment is
+    inherited, and a spawn run inside the judge's seat must not seat its child as the judge.
+    `env` is accepted for call-shape stability and ignored.
+    """
+    return (role or "").strip().lower()
 
 
 def profile_for(tree: str | Path, role: str | None = None, env: Mapping[str, str] | None = None) -> Path:

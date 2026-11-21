@@ -340,11 +340,11 @@ case "$ACTION" in
     printf 'herdr-run[1]{tab,pane,step,exit}:\n  "%s","%s","%s",%s\n' "$tab" "$pane" "$NAME" "$rc"
     exit "$rc" ;;
   agent|eindri)
-    NAME=""; ROLE=""; SPACE=0; TAB=0; MODEL_REQ=""; MAIN=0; KIND_EXPLICIT=""
+    NAME=""; ROLE=""; ROLE_EXPLICIT=""; SPACE=0; TAB=0; MODEL_REQ=""; MAIN=0; KIND_EXPLICIT=""
     while [ $# -gt 0 ]; do
       case "$1" in
-        --role) ROLE=${2-}; shift 2 ;;
-        --role=*) ROLE=${1#--role=}; shift ;;
+        --role) ROLE=${2-}; ROLE_EXPLICIT=${2-}; shift 2 ;;
+        --role=*) ROLE=${1#--role=}; ROLE_EXPLICIT=${1#--role=}; shift ;;
         --kind) KIND_EXPLICIT=${2-}; shift 2 ;;
         --kind=*) KIND_EXPLICIT=${1#--kind=}; shift ;;
         --model) MODEL_REQ=${2-}; shift 2 ;;
@@ -650,7 +650,10 @@ $_coretext"
         fi
         # The profile is chosen by ROLE (RULES/08, 2026-11-21): the judge (forseti) gets the one
         # merge door; every other role is the worker profile, which refuses every merge road.
-        if ! mapfile -t _cargs < <("$SCRIPT_DIR/claude-seat.sh" args "$SEAT_CWD" "$CLAUDE_MODEL" "$brief_dir/$NAME.claude-settings.json" "${ROLE:-}") \
+        # ONLY an explicit --role chooses it: the role GUESSED from the brief (eindri-role.sh
+        # choose) maps words like "check", "ship" and "pr" to forseti, and a guess must never open
+        # the merge door to a coder. The guess still picks the pi role file, and nothing else.
+        if ! mapfile -t _cargs < <("$SCRIPT_DIR/claude-seat.sh" args "$SEAT_CWD" "$CLAUDE_MODEL" "$brief_dir/$NAME.claude-settings.json" "${ROLE_EXPLICIT:-}") \
            || [ ${#_cargs[@]} -eq 0 ]; then
           printf 'error: the Claude worker profile could not be written — a Claude seat without it stops at its first permission dialog\n' >&2
           exit 1

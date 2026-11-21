@@ -21,7 +21,7 @@
 # seated with .agents/harnesses/claude-judge.settings.json, which allows the merge door
 # (bin/forge/judge-merge.sh, bin/agents/pr-seal.sh seal) and still denies raw `gh pr merge`;
 # every other role gets claude-worker.settings.json, which denies both. The role is the
-# argument, else YMIR_SEAT_ROLE. Measured 2026-11-21: three judges approved and were refused
+# argument only, never an inherited environment variable. Measured 2026-11-21: three judges approved and were refused
 # at the merge, because every Claude seat carried the worker profile.
 #
 # Exit: 0 ok · 1 fault · 2 usage · 3 refused (or, for check, a stuck seat).
@@ -62,7 +62,7 @@ case "$cmd" in
     ;;
   settings)
     [ $# -eq 2 ] || [ $# -eq 3 ] || { printf 'usage: claude-seat.sh settings <seat-cwd> <out.json> [role]\n' >&2; exit 2; }
-    PROFILE="$(role_profile "${3:-}")" || { printf 'error: no Claude permission profile for role %s\n' "${3:-${YMIR_SEAT_ROLE:-worker}}" >&2; exit 1; }
+    PROFILE="$(role_profile "${3:-}")" || { printf 'error: no Claude permission profile for role %s\n' "${3:-worker}" >&2; exit 1; }
     exec python3 "$CORE" settings "$PROFILE" "$1" "$2"
     ;;
   args)
