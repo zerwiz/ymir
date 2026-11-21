@@ -146,7 +146,7 @@ def lost_answer(req, timeout=0):
 real_open, real_sleep = bam.urllib.request.urlopen, bam.time.sleep
 bam.urllib.request.urlopen, bam.time.sleep = lost_answer, (lambda s: None)
 try:
-    b.url, b.token, b.n, b._schemas, b._wrote = "http://board.invalid", "t", 0, {}, 0
+    b.url, b.token, b.n, b._schemas, b._wrote = "https://board.example.org/mcp", "t", 0, {}, 0
     b.find_cards = lambda label, text: [{"card": 7, "title": "001 · A", "parent": None}]
     got = b.create_card("001 · A", "d", "backlog", ["plan"])
     check("a create that landed is found, not written again", got["card"] == 7 and len(posts) == 1, (got, len(posts)))
