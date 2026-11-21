@@ -44,6 +44,8 @@ esac
 if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   . "$ROOT/bin/vault/hoard-lib.sh"; YMIR_HOARD_LIB_LOADED=1
 fi
+[ -r "$ROOT/bin/time/sol-lib.sh" ] && . "$ROOT/bin/time/sol-lib.sh"
+command -v sol_stamped >/dev/null 2>&1 || sol_stamped() { printf '%s — %s' "$(date '+%Y-%m-%d %H:%M %Z')" "$*"; }
 STATE=""; hoard_state_dir STATE
 [ -n "$STATE" ] || { printf 'judge-merge: the state dir is unresolved\n' >&2; exit 1; }
 REVIEWED="$STATE/.reviewed"
@@ -123,7 +125,9 @@ except Exception: pass' 2>/dev/null)"
   [ -n "$host" ] || host="$ME"
   line="PR #$n ($repo) NEEDS-REWORK from the judge at head ${head:0:12}: $items — start a coder errand on branch ${branch:-the branch of the PR} to fix these items and push to that same branch; the judge reviews the new head and an APPROVE on green merges at once."
   if [ "$DRY" = 1 ]; then say "  would hand the rework to the arm holder on $host: $line"; return 0; fi
-  printf '%s\n' "$line" >>"$QUEUE" 2>/dev/null || true
+  # the house wake format: '<sol stamp> — <text>\tclass=<kind>' (bin/agents/eindri-wake-lib.sh); a
+  # rework is a report the arm holder acts on
+  printf '%s\tclass=report\n' "$(sol_stamped "judge $line")" >>"$QUEUE" 2>/dev/null || true
   if [ "$host" = "$ME" ]; then
     timeout 30 bash "$RODD" tell --from judge "$line" >/dev/null 2>&1 \
       || printf 'judge-merge: the arm wire did not take the rework for %s#%s here\n' "$repo" "$n" >&2

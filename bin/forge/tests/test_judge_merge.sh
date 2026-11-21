@@ -155,6 +155,8 @@ fresh "$REWORK"; pr_json "$HEAD_A" green
 [ "$(merges)" = 0 ] && ok "NEEDS-REWORK merges nothing" || bad "NEEDS-REWORK merges nothing"
 [ "$(comments)" = 1 ] && grep -q 'fix note is missing' "$GHLOG" && ok "NEEDS-REWORK posts the items as one comment" || bad "rework comment" "$(cat "$GHLOG" 2>/dev/null)"
 grep -q 'NEEDS-REWORK' "$T/home/state/.wake-queue" 2>/dev/null && ok "NEEDS-REWORK wakes the author's seat" || bad "rework wake"
+grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}.* — judge PR #7 .*NEEDS-REWORK.*'$'\t''class=report$' "$T/home/state/.wake-queue" 2>/dev/null \
+  && ok "the rework wake is in the house format (sol stamp — text, tab, class)" || bad "wake format" "$(cat -A "$T/home/state/.wake-queue" 2>/dev/null)"
 grep -q '^here-only .*start a coder errand on branch eindri/widget-fix' "$WAKELOG.armsend" 2>/dev/null \
   && ok "the opener's arm holder (Arm: here-only) is handed a coder errand over the arm wire" || bad "arm wire to the opener" "$(cat "$WAKELOG".* 2>/dev/null)"
 # the opener is this seat (no Arm line): both local roads — the arm wire AND a turn typed into the pane
