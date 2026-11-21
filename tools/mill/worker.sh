@@ -37,8 +37,37 @@ except Exception as ex:
     print('', file=sys.stderr)" "$1" 2>/dev/null
 }
 
+# The queue read must WAIT when it cannot read. Before 2026-11-21 a missing
+# redis-cli (or a redis that refused at once) made the loop `continue` with no
+# pause, and the worker burned a whole core on the heart for days. Now an
+# unreadable queue is said ONCE, then the worker sleeps MILL_IDLE_SECONDS and
+# tries again; when the queue comes back, that is said once too.
+MILL_IDLE_SECONDS="${MILL_IDLE_SECONDS:-60}"
+queue_down=""
+queue_unreadable() { # <reason>
+  if [ "$queue_down" != "$1" ]; then
+    log "queue $Q unreadable ($1) — waiting ${MILL_IDLE_SECONDS}s between tries; said once"
+    queue_down="$1"
+  fi
+  sleep "$MILL_IDLE_SECONDS"
+}
+
 while true; do
-  job="$(command -v redis-cli >/dev/null && timeout 300 redis-cli --raw blpop "$Q" 300 2>/dev/null | sed -n 2p || true)"
+  if ! command -v redis-cli >/dev/null 2>&1; then
+    queue_unreadable "no redis-cli on this machine"
+    continue
+  fi
+  started=$(date +%s)
+  raw="$(timeout 310 redis-cli --raw blpop "$Q" 300 2>&1)"; rc=$?
+  if [ "$rc" -ne 0 ] || printf '%s' "$raw" | grep -qiE '^(ERR|Could not connect|.*Connection refused)'; then
+    # A blpop that fails fast is an unreachable redis, not an empty queue.
+    if [ $(( $(date +%s) - started )) -lt 5 ]; then
+      queue_unreadable "redis-cli failed: $(printf '%s' "$raw" | head -1 | cut -c1-80)"
+    fi
+    continue
+  fi
+  if [ -n "$queue_down" ]; then log "queue $Q readable again"; queue_down=""; fi
+  job="$(printf '%s\n' "$raw" | sed -n 2p)"
   [ -n "${job:-}" ] || continue
   class="$(python3 -c "import sys,json
 try: print(json.loads(sys.stdin.read()).get('class',''))
