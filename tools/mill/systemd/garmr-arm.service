@@ -14,7 +14,7 @@ Type=oneshot
 RemainAfterExit=yes
 # auditctl -R aborts on the first rule that already exists, so each line is loaded
 # on its own; "rule exists" is the expected, healthy outcome.
-ExecStart=/bin/sh -c 'test -s /etc/audit/rules.d/ymir.rules || exit 0; while IFS= read -r line; do case "$line" in ""|\#*) continue;; esac; auditctl $line >/dev/null 2>&1 || true; done < /etc/audit/rules.d/ymir.rules'
+ExecStart=/bin/sh -c 'test -s /etc/audit/rules.d/ymir.rules || exit 0; while IFS= read -r line; do case "$line" in ""|#*) continue;; esac; auditctl $line >/dev/null 2>&1 || true; done < /etc/audit/rules.d/ymir.rules'
 ExecStartPost=/bin/sh -c 'auditctl -l 2>/dev/null | grep -q ymir-exec'
 
 [Install]
