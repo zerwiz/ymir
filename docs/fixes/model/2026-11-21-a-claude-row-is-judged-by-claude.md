@@ -71,3 +71,29 @@ bin/agents/eindri-review-spawn.sh --pr https://github.com/zerwiz/ymir/pull/860 -
 ## CHANGE LOG
 
 - 2026-11-20 — review-mend: added missing heading for #865
+
+## Appended 2026-11-21 — the judge's rework (PR #865, three items)
+
+The Opus judge returned NEEDS-REWORK. Its findings and what was done about each:
+
+1. **`--tier` was silently dropped on a Claude row.** The pi callers of the forseti row
+   (`bin/ward/vidarr-agent.sh`, `bin/ward/garmr-bite.sh`, `bin/ward/garmr/escalate.py`) ask for
+   `--tier strong` and run `pi`. They would have been handed a Claude name. Two changes:
+   - those callers now pass `--harness pi`;
+   - `--tier` on a Claude row without `--harness` is refused by name (exit 3).
+2. **`bin/forge/review-seat.sh` seats the reviewer on pi** (`herdr agent start reviewer --kind pi`)
+   but asked for forseti without naming a harness. It now passes `--harness pi` on purpose. The
+   per-PR Claude judge is still seated by `eindri-review-spawn.sh`, which reads the row's harness.
+   The other pi seats that resolve a role (`bin/forge/smith-seat.sh`, `bin/agents/syn-judge.sh`)
+   pass `--harness pi` too.
+3. **Tests.** `tests/test_agent_model_claude.sh` now has 17 cases. The new ones cover
+   `--harness pi` on a Claude row, `--tier` with and without `--harness` on a Claude row, and a
+   check that each pi caller of forseti names its harness.
+
+> [!IMPORTANT]
+> **A correction to "What is still owed on the heart" above.** The heart's
+> `review-seat.service.d/30-approved-model.conf` pins `YMIR_FORSETI_MODEL` to a pi model, and it
+> sits on the **pi** review seat. With `--harness pi` that pin is right and must stay. Setting it to
+> a Claude model would make the pi seat refuse to start. The heart still owes two things for the
+> Claude judge: its overlay's `forseti` row (a pi model under the fleet's `harness: claude`), and a
+> `claude` CLI.

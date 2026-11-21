@@ -212,7 +212,7 @@ advise() {
   # last resort when the resolver itself cannot answer.
   _am="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/bin/model/agent-model.sh"
   _resolved=""
-  [ -x "$_am" ] && _resolved="$(bash "$_am" forseti --tier strong --plain 2>/dev/null || true)"
+  [ -x "$_am" ] && _resolved="$(bash "$_am" forseti --harness pi --tier strong --plain 2>/dev/null || true)"
   primary="${GARMR_ADVISOR_MODEL_NAME:-$(advise_cfg model_name "${_resolved:-opencode-go/deepseek-v4.1-flash}")}"
   fallback="${GARMR_ADVISOR_MODEL_FALLBACK:-$(advise_cfg model_fallback llama-swap/qwen3.6-35b-a3b@q4_k_xl-mtp)}"
   online="${GARMR_ADVISOR_ONLINE:-$(advise_cfg advisor_online false)}"

@@ -34,7 +34,8 @@
 # sonnet · haiku) and prints the name the Claude CLI accepts (`claude-opus-5-5`), never a
 # provider/model token. A Claude row naming a pi model is REFUSED by name, never a fall-through;
 # a row with no model takes the allow-list's Claude default. Pi and opencode rows still answer to
-# pi's catalogue, unchanged.
+# pi's catalogue, unchanged. A caller that runs pi on a Claude row's agent says `--harness pi`
+# (the row is then judged by pi's catalogue); `--tier` on a Claude row without it is a refusal.
 #
 # Usage:
 #   agent-model.sh <agent>                    # provider/model for that agent on this seat
@@ -276,6 +277,10 @@ resolve_one() {  # <agent> → prints "model<TAB>source<TAB>why"; exit 3 when re
   envval="$(printenv "$envkey" 2>/dev/null || true)"
 
   if [ "$(agent_harness "$agent")" = claude ]; then
+    # A tier is a pi-catalogue capability; Claude's list has no tiers. A caller that asks a Claude
+    # row for a tier is a pi consumer that forgot to say so — refused, never a silent drop of the
+    # tier (a Claude name handed to `pi --model` would fail later and further away).
+    [ -z "$TIER" ] || refuse "agent '$agent' runs on harness 'claude', and --tier '$TIER' is a pi-catalogue capability — a pi caller passes --harness pi (agent-model.sh $agent --harness pi --tier $TIER)"
     resolve_claude "$agent" "$envkey" "$envval"
     return $?
   fi

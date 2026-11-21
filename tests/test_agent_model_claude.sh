@@ -18,6 +18,12 @@
 #   · a pi row still validates against the catalogue: listed resolves, unlisted falls through;
 #   · --json carries the harness.
 #
+# Added after the judge's rework (PR #865): a pi caller of a Claude row's agent says so.
+#   · --harness pi on a Claude row is judged by pi's catalogue, never handed a Claude name;
+#   · --harness pi --tier strong on a Claude row resolves a pi model;
+#   · --tier on a Claude row WITHOUT --harness is refused by name, never a silent drop;
+#   · the pi callers of forseti (vidarr, garmr-bite, garmr/escalate, review-seat) pass --harness pi.
+#
 # Exit: 0 every case held · 1 a case failed.
 
 set -u
@@ -110,6 +116,28 @@ out="$(bash "$AM" ghost --plain 2>"$TMP/ghost.err")"; rc=$?
 out="$(bash "$AM" plain --plain 2>"$TMP/plain.err")"; rc=$?
 [ "$out" = opencode-go/deepseek-v4.1-flash ] && grep -q 'FINDING' "$TMP/plain.err" \
   && ok "'opus' on a pi row is still judged by pi's catalogue" || bad "a pi row skipped the catalogue (rc=$rc)" "$out"
+
+out="$(bash "$AM" forseti --harness pi --plain 2>"$TMP/hpi.err")"; rc=$?
+[ "$rc" -eq 0 ] && [ "$out" = opencode-go/deepseek-v4.1-flash ] && grep -q 'FINDING' "$TMP/hpi.err" \
+  && ok "--harness pi on a claude row is judged by pi's catalogue, never a Claude name" || bad "--harness pi on a claude row (rc=$rc)" "$out $(cat "$TMP/hpi.err")"
+
+out="$(bash "$AM" forseti --harness pi --tier strong --plain 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && printf '%s' "$out" | grep -q '^opencode-go/' \
+  && ok "--harness pi --tier strong on a claude row resolves a pi model" || bad "--harness pi --tier strong (rc=$rc)" "$out"
+
+out="$(bash "$AM" forseti --tier strong --plain 2>&1)"; rc=$?
+[ "$rc" -eq 3 ] && printf '%s' "$out" | grep -q "REFUSED.*harness 'claude'.*--harness pi" \
+  && ok "--tier on a claude row without --harness is refused by name" || bad "--tier on a claude row was not refused (rc=$rc)" "$out"
+
+# The pi callers of the forseti row name their harness, so none of them can be handed a Claude name.
+for f in bin/ward/vidarr-agent.sh bin/ward/garmr-bite.sh bin/ward/garmr/escalate.py bin/forge/review-seat.sh; do
+  calls="$(grep -n 'forseti' "$ROOT/$f" | grep -v '^[0-9]*:[[:space:]]*#' | grep -- 'plain')"
+  if [ -n "$calls" ] && ! printf '%s\n' "$calls" | grep -vqE -- '--harness"?,? "?pi'; then
+    ok "$f asks for forseti with --harness pi"
+  else
+    bad "$f asks for forseti without --harness pi" "${calls:-no forseti call found}"
+  fi
+done
 
 out="$(bash "$AM" forseti --json 2>&1)"
 printf '%s' "$out" | grep -q '"harness":"claude"' && printf '%s' "$out" | grep -q '"model":"claude-opus-5-5"' \
