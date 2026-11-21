@@ -35,6 +35,9 @@ printf 'working: x\ndone: opened PR https://github.com/zerwiz/ymir/pull/999\n' >
 mkdir -p "$TMP/bin"
 printf '#!/usr/bin/env bash\nprintf "fake herdr: %%s\\n" "$*" >>"%s/herdr.log"\nexit 1\n' "$TMP" >"$TMP/bin/herdr"
 chmod +x "$TMP/bin/herdr"
+# a fake gh too: the acclaim done road reads the PR head, and the real gh would reach GitHub (or hang) from a test
+printf '#!/usr/bin/env bash\nprintf "fake gh: %%s\\n" "$*" >>"%s/gh.log"\nexit 1\n' "$TMP" >"$TMP/bin/gh"
+chmod +x "$TMP/bin/gh"
 # and a temp home, so the spine's brief lands in this suite's tree and never in the operator's data shelf
 mkdir -p "$TMP/home/hodd/data" "$TMP/home/state"
 export PATH="$TMP/bin:$PATH" YMIR_NO_INJECT=1 YMIR_HOME="$TMP/home"
