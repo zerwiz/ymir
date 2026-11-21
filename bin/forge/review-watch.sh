@@ -52,6 +52,8 @@ if [ -z "${YMIR_HOARD_LIB_LOADED:-}" ]; then
   done
   unset _c
 fi
+[ -r "$ROOT/bin/time/sol-lib.sh" ] && . "$ROOT/bin/time/sol-lib.sh"
+command -v sol_stamped >/dev/null 2>&1 || sol_stamped() { printf '%s — %s' "$(date '+%Y-%m-%d %H:%M %Z')" "$*"; }
 STATE=""; hoard_state_dir STATE 2>/dev/null || true
 [ -n "$STATE" ] || { printf 'review-watch: the state dir is unresolved\n' >&2; exit 1; }
 
@@ -299,6 +301,11 @@ for row in doc.get("projects") or []:
                 print(p); sys.exit(0)
 PY
   }
+  judged_on_pr() {  # <owner/repo> <n> <head> — does the PR carry the judge's comment naming this head?
+    # judge-merge.sh writes 'The judge approved head `<12>`' or 'The judge asks for rework on head `<12>`'
+    gh pr view "$2" -R "$1" --json comments -q '.comments[].body' 2>/dev/null \
+      | grep -qE "^The judge (approved|asks for rework on) head \`${3:0:12}\`"
+  }
   if [ "$seat_here" = 1 ]; then handed_max="${YMIR_REVIEW_HANDOFF_MAX:-1}"; else handed_max="${YMIR_REVIEW_HANDOFF_MAX:-3}"; fi
   handed=0; spawned=0; waiting=0; SEEN=0
   printf 'review-watch[keeper]{repos,inflight,judge_here,handoff}:\n  "%s","%s","%s","%s"\n' "${REPOS[*]}" "$inflight" \
@@ -317,9 +324,31 @@ PY
       # a hand-off nobody acted on EXPIRES (review of #863): after YMIR_REVIEW_HANDOFF_TTL seconds
       # (default 1h) with no judge seated for the head, the marker is dropped and the head handed on
       # again — an unacted hand-off must never leave a head unjudged forever
+      #
+      # The home's state/ is not shared between machines (it is gitignored), so the seat that judged a
+      # handed head leaves no marker HERE. Before handing on, the PR itself is asked: a judge's comment
+      # naming this head means a verdict exists. And a head is re-handed at most
+      # YMIR_REVIEW_REHAND_MAX times (default 2); after that ONE wake is raised for the helm instead of
+      # typing the same line into a seat's pane every hour, forever (review of #863, second rework).
       if [ -e "$handed_mark" ] && [ ! -e "$STATE/.reviewed/$key.$head" ] \
          && [ $(( $(date +%s) - $(stat -c %Y "$handed_mark" 2>/dev/null || echo 0) )) -ge "${YMIR_REVIEW_HANDOFF_TTL:-3600}" ]; then
-        [ "$DRY" = 1 ] || rm -f "$handed_mark"
+        rehand_file="$STATE/.reviewed/rehanded-$key.$head"
+        rehands="$(cat "$rehand_file" 2>/dev/null)"; case "$rehands" in ''|*[!0-9]*) rehands=0 ;; esac
+        if judged_on_pr "$repo" "$num" "$head"; then
+          [ "$DRY" = 1 ] || printf 'judged elsewhere: the judge commented on %s#%s at %s\n' "$repo" "$num" "$head" >"$STATE/.reviewed/$key.$head"
+          printf '  "%s#%s","%s","the judge already commented on this head (another seat judged it) — not handed again"\n' "$repo" "$num" "${head:0:12}"
+          continue
+        fi
+        if [ "$rehands" -ge "${YMIR_REVIEW_REHAND_MAX:-2}" ]; then
+          woke="$STATE/.reviewed/rehand-woke-$key.$head"
+          if [ ! -e "$woke" ] && [ "$DRY" != 1 ]; then
+            printf '%s\tclass=report\n' "$(sol_stamped "review-watch: $repo PR #$num head ${head:0:12} was handed $((rehands + 1)) times and no judge's verdict reached the PR — seat a judge for it by hand: bin/agents/eindri-review-spawn.sh --pr $url")" \
+              >>"$STATE/.wake-queue" 2>/dev/null && : >"$woke"
+          fi
+          printf '  "%s#%s","%s","handed %s times with no verdict on the PR — one wake raised for the helm, not handed again"\n' "$repo" "$num" "${head:0:12}" "$((rehands + 1))"
+          continue
+        fi
+        if [ "$DRY" != 1 ]; then rm -f "$handed_mark"; printf '%s\n' "$((rehands + 1))" >"$rehand_file"; fi
         printf '  "%s#%s","%s","the hand-off expired with no judge seated — handed on again"\n' "$repo" "$num" "${head:0:12}"
         [ "$DRY" = 1 ] && handed_mark="$handed_mark.expired-dry"
       fi

@@ -391,6 +391,36 @@ printf '%s\n' "$out" | grep -q '"acme/widget#7".*expired' && grep -q 'pull/7 ' "
 [ "$(find "$T/home/state/.reviewed/handed-pr-acme--widget-7.$HEAD_A" -mmin -5 2>/dev/null)" ] \
   && ok "the new hand-off is marked afresh" || bad "fresh hand-off marker"
 
+# 15b · review of #863, item 3: a head is re-handed at most twice, then ONE wake replaces the hand-off
+keeper_pass() { YMIR_WARDENS_FILE="$T/wardens.yaml" YMIR_FLEET_REGISTRY="$T/fleet.json" YMIR_REVIEW_KEEPER=1 YMIR_REVIEW_SEAT_HERE=0 \
+  YMIR_SEAL_DOOR=/bin/false timeout 120 bash "$ROOT/bin/forge/review-watch.sh" --keeper 2>&1; }
+HM="$T/home/state/.reviewed/handed-pr-acme--widget-7.$HEAD_A"
+rm -f "$WAKELOG".*; touch -d '-2 hours' "$HM"; out="$(keeper_pass)"
+grep -q 'pull/7 ' "$WAKELOG.armsend" 2>/dev/null && ok "a second expiry re-hands the head (re-hand 2 of 2)" || bad "second re-hand" "$out"
+rm -f "$WAKELOG".*; : >"$T/home/state/.wake-queue"; touch -d '-2 hours' "$HM"; out="$(keeper_pass)"
+! grep -q 'pull/7 ' "$WAKELOG.armsend" 2>/dev/null && printf '%s\n' "$out" | grep -q '"acme/widget#7".*one wake raised' \
+  && [ "$(grep -c 'PR #7 head' "$T/home/state/.wake-queue")" = 1 ] \
+  && ok "after two re-hands the head is not typed into a pane again; one wake is raised" || bad "re-hand cap" "$out $(cat "$WAKELOG.armsend" 2>/dev/null)"
+rm -f "$WAKELOG".*; touch -d '-2 hours' "$HM"; out="$(keeper_pass)"
+[ "$(grep -c 'PR #7 head' "$T/home/state/.wake-queue")" = 1 ] && ! grep -q 'pull/7 ' "$WAKELOG.armsend" 2>/dev/null \
+  && ok "the capped head raises its wake once, never every hour" || bad "wake once" "$(cat "$T/home/state/.wake-queue")"
+
+# 15c · the seat that judged a handed head left no marker here: the judge's comment on the PR is read
+rm -f "$T/home/state/.reviewed/rehanded-"* "$T/home/state/.reviewed/rehand-woke-"* "$WAKELOG".*
+touch -d '-2 hours' "$HM"
+cp "$T/bin/gh" "$T/gh.keeper"
+cat >"$T/bin/gh" <<GH
+#!/usr/bin/env bash
+if [ "\$1 \$2" = "pr view" ]; then printf 'The judge asks for rework on head \`%s\` (2 item(s)); nothing is merged.\n' "${HEAD_A:0:12}"; exit 0; fi
+exec "$T/gh.keeper" "\$@"
+GH
+chmod +x "$T/bin/gh"
+out="$(keeper_pass)"
+! grep -q 'pull/7 ' "$WAKELOG.armsend" 2>/dev/null && printf '%s\n' "$out" | grep -q '"acme/widget#7".*already commented' \
+  && [ -e "$T/home/state/.reviewed/pr-acme--widget-7.$HEAD_A" ] \
+  && ok "a head the judge already commented on is never handed again" || bad "judge comment read" "$out"
+cp "$T/gh.keeper" "$T/bin/gh"
+
 # 16 · the same PR number in two repositories is two PRs
 rm -rf "$T/home/state" "$WAKELOG".*; mkdir -p "$T/home/state/.reviewed"
 printf '{"heart":"nobody","hosts":{"devbox":{"roles":["dev"]}}}\n' >"$T/fleet.json"

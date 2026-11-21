@@ -58,3 +58,16 @@ still empty. It then exited with `no kept repository is left to watch`, rc 1, ev
 is now filled from `YMIR_REVIEW_REPOS` before the filter, and a repository that is not kept is still dropped by name.
 
 Proof: `bash bin/forge/tests/test_judge_merge.sh` case 13b, one kept and one upstream repository.
+
+### 3 · an expired hand-off asks the PR first, and stops after two re-hands
+
+The hand-off expiry in `bin/forge/review-watch.sh` read only this machine's state. The home's `state/` is
+gitignored, so the heart never saw the developer seat's marker or verdict. It typed every unmerged handed head into
+that seat's pane again each hour, forever.
+
+Before handing a head on again, the keeper now reads the PR's comments (`gh pr view --json comments`). A comment from
+`bin/forge/judge-merge.sh` that names the head means a verdict exists: the head is marked judged and not handed
+again. A head is re-handed at most `YMIR_REVIEW_REHAND_MAX` times (default 2). After that the keeper raises one wake
+for the helm, naming the command to seat a judge by hand, and does not type into a pane again.
+
+Proof: `bash bin/forge/tests/test_judge_merge.sh` cases 15b and 15c → `judge-merge: 64 passed, 0 failed`.
