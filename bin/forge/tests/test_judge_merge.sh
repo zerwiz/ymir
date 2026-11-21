@@ -37,6 +37,10 @@ projects:
   - id: widget
     local_clone: CLONE_PATH
     git: {host: github.com, owner: acme, repo: widget, default_branch: main}
+  - id: upstream-agent
+    git: {host: github.com, owner: upstream, repo: agent, default_branch: main}
+  - id: org-kept
+    git: {host: github.com, owner: acme-org, repo: kept, default_branch: main, keep: true}
 YAML
 mkdir -p "$T/clone/.git"; sed -i "s|CLONE_PATH|$T/clone|" "$T/home/hodd/identity/projects.yaml"
 
@@ -46,6 +50,7 @@ cat >"$T/bin/gh" <<'GH'
 F="${FIX:?}"
 case "$1 $2" in
   "api user") cat "$F/login" ;;
+  "repo view") cat "$F/perm" 2>/dev/null || echo WRITE ;;
   "pr view")
     case " $* " in
       *" mergeCommit "*) echo "feedbeef00000000000000000000000000000000" ;;
@@ -68,7 +73,7 @@ export PATH="$T/bin:$PATH" HOME="$T/user" YMIR_HOME="$T/home" YMIR_STATE_DIR="$T
   PROJECTS_YAML="$T/home/hodd/identity/projects.yaml" YMIR_RUNES_DOOR="$T/bin/runes" \
   FIX="$T/fix" GHLOG="$T/gh.log" RUNELOG="$T/runes.log" WAKELOG="$T/wake" \
   YMIR_RODD_DOOR="$T/bin/rodd" YMIR_NOTIFY_DOOR="$T/bin/notify" YMIR_ARM_SEND_DOOR="$T/bin/armsend" \
-  YMIR_FLEET_REGISTRY="$T/no-fleet.json"
+  YMIR_FLEET_REGISTRY="$T/no-fleet.json" YMIR_OPERATOR_GITHUB=acme YMIR_NO_INJECT=1
 unset YMIR_MERGE_IDENTITY YMIR_HOARD_LIB_LOADED
 
 pr_json() {  # <head> <ci: green|red|pending> [draft] [labels-json] [branch]
@@ -193,6 +198,19 @@ fresh "$APPROVE" stranger/thing; pr_json "$HEAD_A" green
 "$JM" act pr-7-review >/dev/null 2>&1
 [ "$(merges)" = 0 ] && ok "a repository outside the registry merges nothing" || bad "outside the registry"
 
+# 11b · an upstream the registry tracks but the operator does not own: no comment, no wake, no merge
+fresh "$REWORK" upstream/agent; pr_json "$HEAD_A" green
+out="$("$JM" act pr-7-review 2>&1)"
+[ "$(merges)" = 0 ] && [ "$(comments)" = 0 ] && [ ! -s "$T/home/state/.wake-queue" ] \
+  && ok "an upstream repository is never commented on, woken or merged" || bad "upstream left alone" "$(cat "$GHLOG" 2>/dev/null) $out"
+fresh "$APPROVE" upstream/agent; pr_json "$HEAD_A" green
+"$JM" act pr-7-review >/dev/null 2>&1
+[ "$(merges)" = 0 ] && [ "$(comments)" = 0 ] && ok "an upstream APPROVE merges and says nothing" || bad "upstream approve" "$(cat "$GHLOG" 2>/dev/null)"
+# a kept repository where this hand only reads: nothing said
+fresh "$REWORK"; pr_json "$HEAD_A" green; printf 'READ\n' >"$FIX/perm"
+"$JM" act pr-7-review >/dev/null 2>&1
+[ "$(comments)" = 0 ] && ok "a repository this hand cannot write is never commented on" || bad "read-only hand commented" "$(cat "$GHLOG" 2>/dev/null)"
+
 # 12 · the template's placeholder is not a verdict
 fresh '"APPROVE or NEEDS-REWORK","the count","list","seal"'; pr_json "$HEAD_A" green
 "$JM" act pr-7-review >/dev/null 2>&1
@@ -214,7 +232,8 @@ F="${FIX:?}"
 case "$1 $2" in
   "api user") cat "$F/login" ;;
   "auth status") exit 0 ;;
-  "pr list") cat "$F/list.json" ;;
+  "repo view") echo WRITE ;;
+  "pr list") case " $* " in *" acme/widget "*) cat "$F/list.json" ;; *) echo "[]" ;; esac ;;
   *) echo "fake gh: unhandled $*" >&2; exit 1 ;;
 esac
 GH
@@ -224,6 +243,8 @@ out="$(YMIR_WARDENS_FILE="$T/wardens.yaml" YMIR_FLEET_REGISTRY="$T/fleet.json" Y
 printf '%s\n' "$out" | grep -q "\"acme/widget#7\".*would seat the judge.*--project $T/clone" && ok "the oldest open PR gets the judge, in its own clone" || bad "the oldest open PR gets the judge" "$out"
 printf '%s\n' "$out" | grep -q '"acme/widget#8".*would hand to devbox' && ok "the next PR is handed to a developer seat" || bad "hand-off to a developer seat" "$out"
 printf '%s\n' "$out" | grep -q 'widget#9' && bad "a draft is never offered" "$out" || ok "a draft is never offered"
+printf '%s\n' "$out" | grep -q 'upstream/agent' && bad "the keeper never watches an upstream" "$out" || ok "the keeper never watches an upstream it does not own"
+printf '%s\n' "$out" | grep -q 'acme-org/kept' && ok "a repository marked git.keep: true is watched" || bad "git.keep: true watched" "$out"
 printf 'review=pr-7-review\nrepo=acme/widget\npr=7\nhead=%s\n' "$HEAD_A" >"$T/home/state/.reviewed/pr-7-review.judged"
 out="$(YMIR_WARDENS_FILE="$T/wardens.yaml" YMIR_FLEET_REGISTRY="$T/fleet.json" YMIR_REVIEW_KEEPER=1 YMIR_REVIEW_SEAT_HERE=1 \
   timeout 120 bash "$ROOT/bin/forge/review-watch.sh" --keeper --dry-run 2>&1)"

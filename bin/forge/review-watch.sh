@@ -102,9 +102,23 @@ esac
 [ "$KEEPER_FLAG" = 1 ] && KEEPER=1
 [ -n "$JUDGE" ] || [ -n "$TIMER_ACTION" ] && KEEPER=0
 if [ "${#REPOS[@]}" -eq 0 ] && [ "$KEEPER" = 1 ] && [ -z "${YMIR_REVIEW_REPOS:-}" ]; then
-  # the keeper watches every repository the registry's git{} blocks name — never a guessed list
-  mapfile -t REPOS < <(python3 "$ROOT/bin/forge/warden-policy.py" repos 2>/dev/null | sed -n 's/^  "\(.*\)"$/\1/p')
-  [ "${#REPOS[@]}" -gt 0 ] || die "the registry names no repository (warden-policy.py repos) — the keeper has nothing it may watch"
+  # the keeper watches only the KEPT repositories: owned by the operator's own login (read from the
+  # home), or marked `git.keep: true` in the registry. A registry row may name an upstream the house
+  # merely tracks; the keeper never judges, comments or merges there (review of #863, 2026-11-21).
+  mapfile -t REPOS < <(python3 "$ROOT/bin/forge/warden-policy.py" kept 2>/dev/null | sed -n 's/^  "\(.*\)"$/\1/p')
+  [ "${#REPOS[@]}" -gt 0 ] || die "no repository is kept (warden-policy.py kept: none owned by the operator's login, none marked git.keep: true) — the keeper has nothing it may watch"
+fi
+if [ "$KEEPER" = 1 ]; then
+  # an explicit --repo or YMIR_REVIEW_REPOS is filtered by the same law: a repository that is not kept
+  # is dropped by name, never watched
+  _kept=()
+  for _r in "${REPOS[@]}"; do
+    [ -n "$_r" ] || continue
+    if python3 "$ROOT/bin/forge/warden-policy.py" keeps "$_r" >/dev/null 2>&1; then _kept+=("$_r")
+    else printf 'review-watch: %s is not kept (not the operator'"'"'s own, not git.keep: true) — the keeper leaves it alone\n' "$_r" >&2; fi
+  done
+  REPOS=("${_kept[@]}"); unset _kept _r
+  [ "${#REPOS[@]}" -gt 0 ] || die "no kept repository is left to watch"
 fi
 if [ "${#REPOS[@]}" -eq 0 ]; then
   # shellcheck disable=SC2206

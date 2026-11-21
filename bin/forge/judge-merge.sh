@@ -148,6 +148,19 @@ PY
   fi
 }
 
+may_act() {  # <owner/repo> → 0 when the repository is kept AND this gh hand can write it
+  MAY_WHY=""
+  if ! python3 "$ROOT/bin/forge/warden-policy.py" keeps "$1" >/dev/null 2>&1; then
+    MAY_WHY="not kept: not owned by the operator's login and not marked git.keep: true"; return 1
+  fi
+  local perm
+  perm="$(gh repo view "$1" --json viewerPermission -q .viewerPermission 2>/dev/null | tr -d '[:space:]')"
+  case "$perm" in
+    ADMIN|MAINTAIN|WRITE) return 0 ;;
+    *) MAY_WHY="this hand holds ${perm:-no readable} permission there, not write"; return 1 ;;
+  esac
+}
+
 act() {  # <review-id>
   local rid="$1" side report v result count items named repo n head task settled out rc cond detail
   side="$REVIEWED/$rid.judged"
@@ -166,6 +179,14 @@ act() {  # <review-id>
   fi
   settled="$REVIEWED/$rid.$head.acted"
   [ -e "$settled" ] && { say "judge-merge: $rid — already settled for ${head:0:12}"; return 0; }
+  # THE KEEPER ACTS ONLY WHERE IT MAY MERGE (review of #863, 2026-11-21). A repository that is not
+  # kept (not the operator's own login, not git.keep: true — an upstream the house only tracks), or
+  # one this hand cannot write, gets no comment, no wake and no merge: settled in silence.
+  if ! may_act "$repo"; then
+    say "judge-merge: $rid — $repo is not a repository this hand may merge ($MAY_WHY); settled with nothing said"
+    [ "$DRY" = 1 ] || printf 'not kept: %s\n' "$MAY_WHY" >"$settled"
+    return 0
+  fi
 
   v="$(parse_verdict "$report")"
   IFS=$'\t' read -r result count items named <<<"$v"
