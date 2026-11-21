@@ -14,6 +14,8 @@ from __future__ import annotations
 import datetime as dt
 import json
 import os
+import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -250,6 +252,26 @@ class NightReport(unittest.TestCase):
         self.assertEqual(before, self.board.read_text())  # no card moved
         self.assertFalse((self.home / "hodd/docs/status").exists())
         self.assertFalse((self.home / "state/night-report.last").exists())
+
+    def test_buttons_fit_and_render_unclipped(self):
+        """Every prompt fits Telegram's 64 bytes, so the rendered callback_data IS the prompt."""
+        btns = nr.buttons("2026-12-02")
+        self.assertEqual(len(btns), 3)
+        for b in btns:
+            label, prompt = b.split("|", 1)
+            self.assertLessEqual(len(prompt.encode()), nr.CALLBACK_MAX_BYTES, prompt)
+            self.assertIn("2026-12-02 night report", prompt)
+        tool = nr.ROOT / "bin/notify/telegram-buttons.sh"
+        if not shutil.which("node"):
+            self.skipTest("node is not on this seat: the render is not run")
+        args = ["bash", str(tool), "emit", "--format", "reply-markup"]
+        for b in btns:
+            args += ["--button", b]
+        p = subprocess.run(args, capture_output=True, text=True, timeout=60)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        markup = json.loads(p.stdout)
+        got = [k["callback_data"] for row in markup["inline_keyboard"] for k in row]
+        self.assertEqual(got, [b.split("|", 1)[1] for b in btns])
 
 
 if __name__ == "__main__":

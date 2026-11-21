@@ -87,3 +87,14 @@ Proof: `python3 bin/day/tests/test_night_report.py` now runs 6 tests, and all pa
 for the door. The tests show that a proven card is moved to Done, the file stays byte-for-byte the same
 (also when the board is not configured), and a second run moves nothing again.
 
+
+## Addendum, 2026-11-21 — the buttons' prompts fit in 64 bytes
+
+Telegram caps a button's `callback_data` at 64 bytes, and `bin/notify/telegram-buttons.mjs` clips a
+longer prompt at a word boundary. Two of the three prompts were longer, so a tap arrived as
+*"Take the PRs listed green in hodd/docs/status/…-night-r"* (the merge was lost) and
+*"Read the 'Errands not done' section of"* (the object was lost).
+
+Each prompt is now one short sentence that keeps its verb and its object and names the report by date,
+such as *"Merge the green PRs in the 2026-11-21 night report"*. A test renders the three buttons through
+`telegram-buttons.sh emit --format reply-markup` and asserts that each `callback_data` equals its prompt.

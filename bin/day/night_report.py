@@ -754,6 +754,20 @@ def telegram_lines(data):
     return lines[:6]
 
 
+CALLBACK_MAX_BYTES = 64  # Telegram's cap on callback_data; bin/notify/telegram-buttons.mjs clips anything longer
+
+
+def buttons(date):
+    """The message's three buttons. A tap sends its prompt back as callback_data, which Telegram caps at
+    64 bytes and the button tool clips at a word boundary — so each prompt keeps its verb and its object
+    inside 64 bytes, and names the report by its date (a tap a day later still means that report)."""
+    return [
+        f"📄 Open the night report|Read me the {date} night report, needs first",
+        f"✅ Merge the green PRs|Merge the green PRs in the {date} night report",
+        f"🧱 Show what is stuck|Show the stuck errands in the {date} night report",
+    ]
+
+
 # ── writing ───────────────────────────────────────────────────────────────────────────────────
 
 def sh(args, timeout=300):
@@ -926,16 +940,9 @@ def main(argv=None):
         rc, out = sh(["bash", str(ROOT / "bin/vault/home-sync.sh"), "ship", f"night report {date}"] + paths)
         print(f"night-report: ship {'ok' if rc == 0 else 'FAILED'} — {clip(out, 200)}")
     if not a.no_send:
-        buttons = [
-            f"📄 Open the night report|Open {rel} in the home and read me its sections, needs first",
-            f"✅ Merge the green PRs|Take the PRs listed green in {rel}, check each is still green and approved, and "
-            "merge each through the reviewer road (RULES/08); tell me each merge",
-            f"🧱 Show what is stuck|Read the 'Errands not done' section of {rel} and show each errand's last status "
-            "line and what it needs from me",
-        ]
         args = ["bash", str(ROOT / "bin/notify/send.sh"), "--source", "cron", "--severity", "INFO", "--ask",
                 "--key", f"report:night-{date}", "--target", f"file:{home / rel}", "--message", "\n".join(tg)]
-        for b in buttons:
+        for b in buttons(date):
             args += ["--button", b]
         rc, out = sh(args, timeout=60)
         print(f"night-report: message {'sent' if rc == 0 else 'NOT sent'} — {clip(out, 200)}")
