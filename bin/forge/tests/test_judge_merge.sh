@@ -231,6 +231,74 @@ fresh '"APPROVE or NEEDS-REWORK","the count","list","seal"'; pr_json "$HEAD_A" g
 "$JM" act pr-7-review >/dev/null 2>&1
 [ "$(merges)" = 0 ] && [ "$(comments)" = 0 ] && ok "an unfilled verdict does nothing" || bad "an unfilled verdict does nothing"
 
+# 12b · THE APPROVAL CARRIES over a base merge and change-log lines — and over nothing else
+echo "judge-merge: an approval carries only over a base merge or change-log lines"
+rm -rf "$T/clone"; mkdir -p "$T/clone"
+G() { git -C "$T/clone" -c user.name=t -c user.email=t@example.org -c commit.gpgsign=false "$@" >/dev/null 2>&1; }
+G init -q -b main
+mkdir -p "$T/clone/docs/fixes"
+printf 'echo one\n' >"$T/clone/code.sh"; printf '# a fix\n\nThe hinge.\n' >"$T/clone/docs/fixes/hinge.md"
+G add -A; G commit -qm base
+G checkout -q -b eindri/widget-fix
+printf 'echo two\n' >"$T/clone/code.sh"; G commit -qam "the fix"
+APPROVED="$(git -C "$T/clone" rev-parse HEAD)"
+G checkout -q main; printf 'other\n' >"$T/clone/other.txt"; G add other.txt; G commit -qm "main moves on"
+BASE="$(git -C "$T/clone" rev-parse main)"
+G checkout -q eindri/widget-fix
+carry_case() {  # <new head> — a judged record for APPROVED, the PR now at <new head>
+  fresh "$APPROVE"
+  printf 'review=pr-7-review\ntask=pr-7\nrepo=acme/widget\npr=7\nhead=%s\nurl=https://github.com/acme/widget/pull/7\n' \
+    "$APPROVED" >"$T/home/state/.reviewed/pr-7-review.judged"
+  touch -d '-1 minute' "$T/home/state/.reviewed/pr-7-review.judged"
+  printf '# review of #7\n\njudged-head: %s\n\nverdict[1]{result,count,list,seal}:\n  %s\n' "$APPROVED" "$APPROVE" \
+    >"$T/home/state/eindri-reports/pr-7-review.md"
+  pr_json "$1" green
+  python3 - "$FIX/pr.json" "$BASE" <<'PY'
+import json, sys; p = json.load(open(sys.argv[1])); p["baseRefOid"] = sys.argv[2]; p["baseRefName"] = "main"
+json.dump(p, open(sys.argv[1], "w"))
+PY
+}
+# (a) a clean merge of main into the branch
+G merge -q --no-ff -m "Merge remote-tracking branch 'origin/main' into eindri/widget-fix" main
+MERGED="$(git -C "$T/clone" rev-parse HEAD)"
+carry_case "$MERGED"
+out="$("$JM" act pr-7-review 2>&1)"
+[ "$(merges)" = 1 ] && grep -A1 -x -- '--match-head-commit' "$GHLOG.lastargs" | grep -qx "$MERGED" \
+  && ok "(a) an approval carries over a clean merge of the base, and merges the new head" || bad "(a) base merge carries" "$out"
+# (b) a change-log commit after that merge
+printf '\n## CHANGE LOG\n\n- 2026-11-21 — review-mend\n' >>"$T/clone/docs/fixes/hinge.md"; G commit -qam "judge: change-log for #7"
+LOGGED="$(git -C "$T/clone" rev-parse HEAD)"
+carry_case "$LOGGED"
+out="$("$JM" act pr-7-review 2>&1)"
+[ "$(merges)" = 1 ] && grep -A1 -x -- '--match-head-commit' "$GHLOG.lastargs" | grep -qx "$LOGGED" \
+  && ok "(b) an approval carries over change-log lines in a fix note" || bad "(b) change-log carries" "$out"
+# a carried head whose own gate is still pending waits, unsettled
+carry_case "$LOGGED"; pr_json "$LOGGED" pending
+python3 - "$FIX/pr.json" "$BASE" <<'PY'
+import json, sys; p = json.load(open(sys.argv[1])); p["baseRefOid"] = sys.argv[2]; json.dump(p, open(sys.argv[1], "w"))
+PY
+"$JM" act pr-7-review >/dev/null 2>&1
+[ "$(merges)" = 0 ] && [ ! -e "$T/home/state/.reviewed/pr-7-review.$APPROVED.acted" ] \
+  && ok "a carried head with a pending gate waits, unsettled" || bad "carried + pending"
+# (c) a real code change after the approval: no carry-over
+printf 'echo three\n' >"$T/clone/code.sh"; G commit -qam "a real change"
+CODE="$(git -C "$T/clone" rev-parse HEAD)"
+carry_case "$CODE"
+out="$("$JM" act pr-7-review 2>&1)"
+[ "$(merges)" = 0 ] && printf '%s' "$out" | grep -q 'new work' \
+  && ok "(c) a code change after the approval does not carry — a new judgement" || bad "(c) code change refused" "$out"
+# (d) prose outside a CHANGE LOG section does not carry
+G reset -q --hard "$LOGGED"; sed -i 's/^The hinge.$/The hinge, and more prose./' "$T/clone/docs/fixes/hinge.md"; G commit -qam "prose"
+carry_case "$(git -C "$T/clone" rev-parse HEAD)"
+"$JM" act pr-7-review >/dev/null 2>&1
+[ "$(merges)" = 0 ] && ok "(d) a line outside a CHANGE LOG section does not carry" || bad "(d) prose carried"
+# (e) a merge edited by hand does not carry
+G reset -q --hard "$APPROVED"; G merge -q --no-ff --no-commit main; printf 'echo sneaked\n' >"$T/clone/code.sh"; G add code.sh
+G commit -qm "Merge remote-tracking branch 'origin/main' into eindri/widget-fix"
+carry_case "$(git -C "$T/clone" rev-parse HEAD)"
+"$JM" act pr-7-review >/dev/null 2>&1
+[ "$(merges)" = 0 ] && ok "(e) a merge edited by hand does not carry" || bad "(e) edited merge carried"
+
 # 13 · the keeper: one judge at a time; a second PR is handed to a developer seat
 echo "review-watch --keeper: a judge for every head, one at a time"
 rm -rf "$T/home/state" "$GHLOG"; mkdir -p "$T/home/state/.reviewed" "$FIX"; printf 'acme\n' >"$FIX/login"

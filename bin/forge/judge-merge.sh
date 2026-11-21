@@ -155,6 +155,64 @@ PY
   fi
 }
 
+clone_of() {  # <owner/repo> → the local clone the registry names (this tree for its own origin)
+  local r="$1" mine
+  mine="$(git -C "$ROOT" remote get-url origin 2>/dev/null | sed -E 's#\.git$##; s#^.*github\.com[:/]##' | tr 'A-Z' 'a-z')"
+  if [ -n "$mine" ] && [ "$mine" = "$(printf '%s' "$r" | tr 'A-Z' 'a-z')" ]; then printf '%s\n' "$ROOT"; return; fi
+  python3 - "${PROJECTS_YAML:-$FLEET_HOME/hodd/identity/projects.yaml}" "$r" "$FLEET_HOME" <<'PY' 2>/dev/null
+import os, sys, yaml
+path, want, home = sys.argv[1], sys.argv[2].lower(), sys.argv[3]
+try: doc = yaml.safe_load(open(path)) or {}
+except Exception: doc = {}
+for row in doc.get("projects") or []:
+    if not isinstance(row, dict): continue
+    g = row.get("git") or {}
+    if f"{g.get('owner','')}/{g.get('repo','')}".lower() != want: continue
+    for key in ("local_clone", "repo"):
+        v = row.get(key)
+        if isinstance(v, str) and v:
+            p = os.path.expanduser(os.path.expandvars(v.replace("$YMIR_HOME", home)))
+            if os.path.exists(os.path.join(p, ".git")):
+                print(p); sys.exit(0)
+PY
+}
+
+pr_field() {  # <json> <key> [default]
+  printf '%s' "$1" | python3 -c 'import json,sys
+try: print(json.load(sys.stdin).get(sys.argv[1]) or sys.argv[2])
+except Exception: print(sys.argv[2])' "$2" "${3:-}" 2>/dev/null
+}
+
+carry_over() {  # <repo> <n> <approved> <rid> → 0 when the approval carried to the new head and merged
+  local repo="$1" n="$2" approved="$3" rid="$4" json cur base basename clone out rc
+  json="$(gh pr view "$n" -R "$repo" --json headRefOid,baseRefOid,baseRefName 2>/dev/null || true)"
+  cur="$(pr_field "$json" headRefOid)"; base="$(pr_field "$json" baseRefOid)"; basename="$(pr_field "$json" baseRefName main)"
+  [ -n "$cur" ] && [ -n "$base" ] || { say "judge-merge: $rid — the new head cannot be read; the approval does not carry"; return 1; }
+  clone="$(clone_of "$repo")"
+  [ -n "$clone" ] || { say "judge-merge: $rid — no local clone of $repo is named; the approval does not carry"; return 1; }
+  if ! git -C "$clone" cat-file -e "$cur^{commit}" 2>/dev/null || ! git -C "$clone" cat-file -e "$base^{commit}" 2>/dev/null \
+     || ! git -C "$clone" cat-file -e "$approved^{commit}" 2>/dev/null; then
+    timeout 120 git -C "$clone" fetch -q origin "refs/pull/$n/head" "$basename" >/dev/null 2>&1 || true
+  fi
+  out="$(python3 "$ROOT/bin/forge/judge-carry.py" "$clone" "$approved" "$cur" "$base" 2>&1)"; rc=$?
+  printf '%s\n' "$out"
+  [ "$rc" = 0 ] || return 1
+  say "judge-merge: $rid — the approval of ${approved:0:12} carries to ${cur:0:12} (only base merges and change-log lines since)"
+  if [ "$DRY" = 1 ]; then say "  would run: $SEAL seal $n --repo $repo --head $cur --review $rid"; return 0; fi
+  out="$("$SEAL" seal "$n" --repo "$repo" --head "$cur" --review "$rid" 2>&1)"; rc=$?
+  printf '%s\n' "$out"
+  if [ "$rc" != 0 ]; then
+    # the carried head's own gates are still turning (the base merge re-ran CI), or it moved again:
+    # not settled — the next pass carries the same approval again
+    case "$(printf '%s\n' "$out" | sed -n 's/^  "#[0-9]*","\([^"]*\)",.*/\1/p' | head -1)" in
+      "pending gate"|"not mergeable yet"|"head moved"|"the brake"|"hold label"|"draft") return 3 ;;
+    esac
+    return 1
+  fi
+  printf 'merged %s#%s at %s (approval of %s carried)\n' "$repo" "$n" "$cur" "$approved" >"$REVIEWED/$rid.$approved.acted"
+  return 0
+}
+
 may_act() {  # <owner/repo> → 0 when the repository is kept AND this gh hand can write it
   MAY_WHY=""
   if ! python3 "$ROOT/bin/forge/warden-policy.py" keeps "$1" >/dev/null 2>&1; then
@@ -224,7 +282,14 @@ act() {  # <review-id>
           say_once "$REVIEWED/$rid.$head.said-red" "$repo" "$n" \
             "The judge approved head \`${head:0:12}\`, but it is **not merged**: a required gate is red — $detail. Push a fix; the new head is reviewed again."
           printf 'red: %s\n' "$detail" >"$settled" ;;
-        "head moved"|"not open"|"conflicts")
+        "head moved")
+          # THE APPROVAL CARRIES when every commit since it is a clean merge of the base branch or
+          # change-log lines only (bin/forge/judge-carry.py); anything else is new work, judged again
+          carry_over "$repo" "$n" "$head" "$rid"; rc=$?
+          [ "$rc" = 0 ] && return 0
+          [ "$rc" = 3 ] && { say "judge-merge: $rid — the approval carries; the new head's merge waits for its gates"; return 0; }
+          printf '%s: %s\n' "$cond" "$detail" >"$settled" ;;
+        "not open"|"conflicts")
           printf '%s: %s\n' "$cond" "$detail" >"$settled" ;;
         "wrong identity"|"not the house's")
           # a fault of THIS hand, not of the PR: settled without a word on GitHub — a comment per head
