@@ -124,7 +124,43 @@ Appended, not rewritten; the clauses above stand. **By the Allfather's word:** *
 Applies to every agent and every LLM tool on every machine: Claude Code, pi, opencode, Codex,
 Gemini, and Eindri workers alike.
 
+## Amendment — no person or machine is built into how a system runs (2026-11-20)
+
+Appended, not rewritten; the clauses above stand. **By the CTO's word** (Craig Martin, owner of architecture, security,
+build and operations): *"I do not want our overall engineering and devops practices to be fragile. So no hardcoded
+dev names for ops"* — and *"this way we can audit deployment accountabilities."*
+
+### D. Names are given, never built in
+
+- **No person, account or machine as a value.** A person's name, login, persona or person id, and a machine's name,
+  never appear as a default, a fallback, a setting or a runnable example in code, configuration, scripts, deploy
+  kits, CI or a runbook's commands. `ATLAS_OWNER=josef` written by a deploy script, `get_env(:owner, "josef")`,
+  `${SPACE:-home:josef}`, a model prompt that says "like home:josef" — each makes the system depend on one person
+  and one machine, and is refused.
+- **What identifies an owner is given and has no default.** It comes from the environment or a file outside git;
+  when it is missing, the program refuses to start and says which setting it needs. A silent fallback to someone
+  is the fragility this clause removes.
+- **Examples use placeholders** — `home:<id>`, `<account>`, `<folder>@<machine>`, `company:<org>`.
+- **Operations documents name roles, not people** — "the security owner", "the vault's account", "the Allfather".
+  Who currently holds a role, or runs which host, is state: it lives in the handoff, not in the kit.
+- **Each person deploys as their own account** — never as root and never as someone else's. Every change a deploy
+  kit makes is recorded where it ran (when, which account, which commit, which command; a setting's key, never its
+  value), and every image it builds is labelled with its builder. That is how a deploy is accounted for.
+- **A client's name is not in code either.** A guard that must know clients' names reads a list kept outside git and
+  fails closed without it.
+- **Not judged:** a record of who did something (a decision's author, a label's drafter, a commit's history), the
+  papers, and named test fixtures (`config/test.exs`, `test/`) — they record, they do not configure.
+
+### Enforcement
+
+Each repository that deploys carries a gate that refuses such a value in its required CI check — atlas-vault's is
+`scripts/gates/ops-names.sh` (the word list beside it; exceptions only with a written reason). Names already in
+service are removed when the gate first runs, not left for later: a gate that passes over known faults is not a gate.
+
+Applies to every agent and every LLM tool on every machine, Eindri included.
+
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
 - **2026-11-12** — amendment C appended: a new port is a random five-digit number in 10000–32767 (fix note `docs/fixes/rules/2026-11-12-rule-07-random-five-digit-ports.md`).
+- **2026-11-20** — amendment D appended: no person or machine is built into how a system runs; names are given, deploys are by person and recorded (fix note `docs/fixes/rules/2026-11-20-rule-07-no-names-in-ops.md`).
