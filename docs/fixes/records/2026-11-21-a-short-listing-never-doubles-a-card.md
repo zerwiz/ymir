@@ -27,3 +27,7 @@ Nothing here deletes a duplicate. Which copy to keep is a choice made on the boa
 
 `python3 -m unittest tests.test_plan_sync` — 9 OK. The new test hides every card from the full listing; the next run
 writes no card and reports `found=3`, and the run after it changes nothing.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #862
