@@ -40,7 +40,7 @@ bin[59]{file,does,kind,verdict,disposition,callers,lines}:
   "intake.py","'''intake.py — read every registered repo once, and say honestly what could not be read.","tool","wired","keep",2,433
   "issue-watch.sh","issue-watch.sh — READ THE ISSUES, and close the ones that are already solved.","tool","wired","keep",0,106
   "judge-carry.py","'''judge-carry.py — may the judge's approval of one head carry over to a newer head?","tool","wired","keep",2,173
-  "judge-merge.sh","judge-merge.sh — the judge's verdict is the seal: APPROVE merges at once, NEEDS-REWORK goes home.","tool","wired","keep",4,330
+  "judge-merge.sh","judge-merge.sh — the judge's verdict is the seal: APPROVE merges at once, NEEDS-REWORK goes home.","tool","wired","keep",4,343
   "maker-names.py","'''maker-names.py — the ONE matcher for model, model-maker and agent-harness names in prose (RULES/53).","tool","wired","keep",11,155
   "merge-method.sh","merge-method.sh — which `gh pr merge` flag a pull request takes (RULES/08, batch road).","tool","wired","keep",6,58
   "merge-verdict.sh","merge-verdict.sh — may this PR be merged right now?","tool","wired","keep",5,75
@@ -62,7 +62,7 @@ bin[59]{file,does,kind,verdict,disposition,callers,lines}:
   "review-seat.sh","review-seat.sh — the reviewer's SEAT: pi in a herdr pane, on the heart, on a loop.","tool","wired","keep",3,498
   "review-shelf.sh","review-shelf.sh — where a packet LANDS, and the waiting rule that keeps it honest.","tool","wired","keep",1,159
   "review-verdict.sh","review-verdict.sh — the judge's ONE act of writing: its verdict, and nothing else.","tool","wired","keep",2,182
-  "review-watch.sh","review-watch.sh — the missing trigger: a PR that arrives is a question the owner is asked.","tool","wired","keep",4,538
+  "review-watch.sh","review-watch.sh — the missing trigger: a PR that arrives is a question the owner is asked.","tool","wired","keep",4,549
   "ship-watch.sh","ship-watch.sh — the delivery loop: settle branches, then ship proved PRs.","tool","wired","keep",1,131
   "ship.sh","ship.sh — the reviewer's merge: the one door that puts a judged PR on main.","tool","wired","keep",6,206
   "skillopt-setup.sh","skillopt-setup.sh — one-time SkillOpt installation for Ymir.","tool","wired","keep",1,77
@@ -70,7 +70,7 @@ bin[59]{file,does,kind,verdict,disposition,callers,lines}:
   "smith-seat.sh","smith-seat.sh — seat ANY figure in its own herdr workspace, the same way every time.","tool","wired","keep",2,177
   "test_gather_notice.sh","test_gather_notice.sh — the LAST errand of a batch calls the gather.","tool","wired","keep",1,136
   "test_gjallarhorn_no_hall.sh","test_gjallarhorn_no_hall.sh — a tunnel never publishes a hall.","tool","wired","keep",1,80
-  "test_judge_merge.sh","test_judge_merge.sh — the judge's verdict is the seal (RULES/08, its sections appended 2026-11-21).","tool","wired","keep",0,438
+  "test_judge_merge.sh","test_judge_merge.sh — the judge's verdict is the seal (RULES/08, its sections appended 2026-11-21).","tool","wired","keep",0,462
   "test_review_seat_keeper.sh","test_review_seat_keeper.sh — the keeper: the reviewer's seat says WHY it refuses, and a dead seat","tool","wired","keep",1,221
   "utgard-box-door.py","'''utgard-box-door.py — the one road out of a box.","tool","wired","keep",1,369
   "utgard-box.sh","utgard-box.sh — a whole computer for one run, outside the wall.","tool","wired","keep",2,937

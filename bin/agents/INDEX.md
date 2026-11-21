@@ -69,7 +69,7 @@ bin[81]{file,does,kind,verdict,disposition,callers,lines}:
   "msg-log.sh","msg-log.sh — the record of every word sent between agents (2026-11-14, plan 275 item 8).","tool","wired","keep",2,126
   "msg-origin.sh","msg-origin.sh — the stamp that says where a message to an agent came from (2026-11-14).","tool","wired","keep",6,177
   "name-registry.sh","name-registry.sh — the collision system for Ymir's names.","tool","wired","keep",3,183
-  "pr-seal.sh","pr-seal.sh — the seat's own PR is sealed by the seat, and the word arrives through Gná.","tool","wired","keep",4,474
+  "pr-seal.sh","pr-seal.sh — the seat's own PR is sealed by the seat, and the word arrives through Gná.","tool","wired","keep",5,474
   "profile.sh","profile.sh — what THIS user's machine actually is, probed not assumed.","tool","tested","keep",4,97
   "project-git.sh","project-git.sh — resolve a project's GitHub block from the master registry","tool","tested","keep",8,317
   "project-target.sh","project-target.sh — WHERE an errand's project IS on this machine, what its records are, and the","tool","wired","keep",3,296
