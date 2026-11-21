@@ -47,8 +47,8 @@ bin[81]{file,does,kind,verdict,disposition,callers,lines}:
   "eindri-handoff.sh","eindri-handoff.sh — the handoff failsafe.","tool","wired","keep",6,242
   "eindri-heartbeat.sh","eindri-heartbeat.sh — condition half of the Eindri silence bridge.","tool","wired","keep",3,106
   "eindri-liveness.sh","eindri-liveness.sh — the sweep's second question: is the pane still a worker?","tool","wired","keep",6,262
-  "eindri-notify.sh","eindri-notify.sh — the ARM-HOLDER'S INBOX: inject one line into the session that holds the lock.","tool","wired","keep",16,156
-  "eindri-review-spawn.sh","eindri-review-spawn.sh — the review spine.","tool","tested","keep",5,435
+  "eindri-notify.sh","eindri-notify.sh — the ARM-HOLDER'S INBOX: inject one line into the session that holds the lock.","tool","tested","keep",16,156
+  "eindri-review-spawn.sh","eindri-review-spawn.sh — the review spine.","tool","tested","keep",5,461
   "eindri-role.sh","eindri-role.sh — the right smith for the right metal.","tool","wired","keep",2,117
   "eindri-route.sh","eindri-route.sh — which machine should host an errand, by its nature?","tool","tested","keep",0,108
   "eindri-seat.sh","eindri-seat.sh — seat a worker and PROVE it, in one move.","tool","wired","keep",1,85
@@ -56,7 +56,7 @@ bin[81]{file,does,kind,verdict,disposition,callers,lines}:
   "eindri-send.sh","eindri-send.sh — the DATA plane: hand a seated worker one attributed line, safely.","tool","tested","keep",19,329
   "eindri-stall.sh","eindri-stall.sh — the arm's stall test: is a WORKING errand still MOVING?","tool","wired","keep",5,393
   "eindri-start.sh","eindri-start.sh — start an Eindri as the Allfather asks.","tool","wired","keep",4,333
-  "eindri-wake-lib.sh","eindri-wake-lib.sh — the ONE delivery ledger behind the Eindri push path.","lib","tested","keep",14,75
+  "eindri-wake-lib.sh","eindri-wake-lib.sh — the ONE delivery ledger behind the Eindri push path.","lib","tested","keep",15,75
   "eindri-watch.sh","eindri-watch.sh — the control door on the Eindri→Brokk wake bridge.","tool","wired","keep",6,131
   "einherjar-spawn.sh","einherjar-spawn.sh - gather an Eindri worker (Einherjar = the chosen who are","tool","tested","keep",24,1499
   "eir-doctor.sh","eir-doctor.sh — Eir, the healer: diagnose the running system, then mend it.","tool","wired","keep",17,1237
@@ -69,7 +69,7 @@ bin[81]{file,does,kind,verdict,disposition,callers,lines}:
   "msg-log.sh","msg-log.sh — the record of every word sent between agents (2026-11-14, plan 275 item 8).","tool","wired","keep",2,126
   "msg-origin.sh","msg-origin.sh — the stamp that says where a message to an agent came from (2026-11-14).","tool","wired","keep",6,177
   "name-registry.sh","name-registry.sh — the collision system for Ymir's names.","tool","wired","keep",3,183
-  "pr-seal.sh","pr-seal.sh — the seat's own PR is sealed by the seat, and the word arrives through Gná.","tool","wired","keep",4,467
+  "pr-seal.sh","pr-seal.sh — the seat's own PR is sealed by the seat, and the word arrives through Gná.","tool","wired","keep",4,474
   "profile.sh","profile.sh — what THIS user's machine actually is, probed not assumed.","tool","tested","keep",4,97
   "project-git.sh","project-git.sh — resolve a project's GitHub block from the master registry","tool","tested","keep",8,317
   "project-target.sh","project-target.sh — WHERE an errand's project IS on this machine, what its records are, and the","tool","wired","keep",3,296
@@ -104,6 +104,6 @@ bin[81]{file,does,kind,verdict,disposition,callers,lines}:
   "workspace-provision.sh","workspace-provision.sh — carve one workspace for the operator.","tool","wired","keep",0,82
   "yt-transcript.sh","yt-transcript.sh — read a video: metadata, description, and transcript.","tool","wired","keep",0,85
 
-**Tally.** verdict: wired=65, tested=16
+**Tally.** verdict: wired=64, tested=17
 
 **Tally.** disposition: keep=79, migrate → src/ymir_runtime/send.py=1, migrate → src/ymir_runtime/hermes/seat.py=1
