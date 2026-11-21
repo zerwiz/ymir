@@ -43,7 +43,7 @@ refuse() { printf 'syn-judge: REFUSED — %s\n' "$*" >&2; exit 3; }
 
 AGENT="${SYN_JUDGE_AGENT:-syn}"
 TIMEOUT="${SYN_JUDGE_TIMEOUT:-300}"
-bin_model_reason() { "$ROOT/bin/model/agent-model.sh" "$AGENT" "${MODEL_ARGS[@]}" 2>&1 | tail -1; }
+bin_model_reason() { "$ROOT/bin/model/agent-model.sh" "$AGENT" --harness pi "${MODEL_ARGS[@]}" 2>&1 | tail -1; }
 
 # The prompt comes on stdin: a judgement is about the measurement handed to it.
 PROMPT="$(cat)"
@@ -52,7 +52,7 @@ PROMPT="$(cat)"
 # 1 · WHICH MODEL. The one resolver; a refusal is the resolver's, by name.
 MODEL_ARGS=()
 [ -n "${SYN_JUDGE_MODEL:-}" ] && MODEL_ARGS=(--model "$SYN_JUDGE_MODEL")
-MODEL="$("$ROOT/bin/model/agent-model.sh" "$AGENT" --plain "${MODEL_ARGS[@]}" 2>/dev/null)"
+MODEL="$("$ROOT/bin/model/agent-model.sh" "$AGENT" --harness pi --plain "${MODEL_ARGS[@]}" 2>/dev/null)"
 rc=$?
 case "$rc" in
   0) [ -n "$MODEL" ] || die "the resolver returned no model for agent '$AGENT'" ;;
