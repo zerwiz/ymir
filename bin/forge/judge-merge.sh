@@ -213,12 +213,15 @@ act() {  # <review-id>
           printf 'red: %s\n' "$detail" >"$settled" ;;
         "head moved"|"not open"|"conflicts")
           printf '%s: %s\n' "$cond" "$detail" >"$settled" ;;
+        "wrong identity"|"not the house's")
+          # a fault of THIS hand, not of the PR: settled without a word on GitHub — a comment per head
+          # would repeat the same refusal on every push (review of #863, 2026-11-21)
+          printf 'judge-merge: %s#%s approved but REFUSED: %s — %s\n' "$repo" "$n" "$cond" "$detail" >&2
+          printf '%s: %s\n' "$cond" "$detail" >"$settled" ;;
         *)
           # pending, held, draft, not yet mergeable, a hand that is not the operator's: not now
           say_once "$REVIEWED/$rid.$head.said-$(printf '%s' "${cond:-unknown}" | tr -c 'a-z0-9' '-')" "$repo" "$n" \
             "The judge approved head \`${head:0:12}\`; the merge waits — ${cond:-not ready}: $detail. It is tried again on the next pass."
-          [ "$cond" = "wrong identity" ] || [ "$cond" = "not the house's" ] && \
-            printf 'judge-merge: %s#%s approved but REFUSED: %s — %s\n' "$repo" "$n" "$cond" "$detail" >&2
           ;;
       esac
       return 0 ;;

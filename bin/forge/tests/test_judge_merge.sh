@@ -187,6 +187,13 @@ out="$("$JM" act pr-7-review 2>&1)"
 [ "$(merges)" = 0 ] && printf '%s' "$out" | grep -q 'wrong identity' \
   && ok "a gh identity that is not the registry's owner is refused" || bad "wrong identity refused" "$out"
 
+[ "$(comments)" = 0 ] && [ -e "$T/home/state/.reviewed/pr-7-review.$HEAD_A.acted" ] \
+  && ok "a wrong identity settles without a comment" || bad "wrong identity commented" "$(cat "$GHLOG" 2>/dev/null)"
+# an organisation's repository, kept, merged under the operator's OWN login (not the slug's owner)
+fresh "$APPROVE" acme-org/kept; pr_json "$HEAD_A" green
+"$JM" act pr-7-review >/dev/null 2>&1
+[ "$(merges)" = 1 ] && ok "an organisation's kept repository merges under the operator's login" || bad "org repo merge" "$(cat "$GHLOG" 2>/dev/null)"
+
 # 10 · a report older than the judged record is an earlier head's verdict
 fresh "$APPROVE"; pr_json "$HEAD_A" green
 touch -d '-1 hour' "$T/home/state/eindri-reports/pr-7-review.md"

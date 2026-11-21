@@ -353,11 +353,18 @@ seal_judged() {
   if ! python3 "$WARDEN_POLICY" owns "$repo" >/dev/null 2>&1; then
     judged_refuse "$n" "not the house's" "$repo is not in the registry's git blocks — no merge outside the house" 1; return
   fi
-  # 2 · the hand is the operator's: gh must act as the registry's owner of this repository
-  owner="${YMIR_MERGE_IDENTITY:-${repo%%/*}}"
+  # 2 · the hand is the operator's: gh must act as one of the operator's own logins, read from the
+  #     home (warden-policy.py operator-logins). Never the repo slug's owner — an organisation owns
+  #     its repositories, and the operator merges there under his own login (review of #863).
+  owner="${YMIR_MERGE_IDENTITY:-$(python3 "$WARDEN_POLICY" operator-logins 2>/dev/null | tr '\n' ' ')}"
   login="$(gh api user --jq .login 2>/dev/null | tr -d '[:space:]')"
-  if [ -z "$login" ] || [ "$(printf '%s' "$login" | tr 'A-Z' 'a-z')" != "$(printf '%s' "$owner" | tr 'A-Z' 'a-z')" ]; then
-    judged_refuse "$n" "wrong identity" "gh acts as '${login:-nobody}', the registry names '$owner' — no merge under another hand" 1; return
+  local _lc_login _match=0 _o
+  _lc_login="$(printf '%s' "$login" | tr 'A-Z' 'a-z')"
+  for _o in $owner; do
+    [ -n "$_lc_login" ] && [ "$_lc_login" = "$(printf '%s' "$_o" | tr 'A-Z' 'a-z')" ] && _match=1
+  done
+  if [ "$_match" != 1 ]; then
+    judged_refuse "$n" "wrong identity" "gh acts as '${login:-nobody}', the home names the operator as '${owner:-nobody}' — no merge under another hand" 1; return
   fi
   # 3 · the PR, read now
   tmp="$(mktemp)"
