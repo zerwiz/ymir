@@ -180,6 +180,45 @@ Gimlé is the suite record: places, tasks owed, meetings, plans, documents, shar
 
 ---
 
+
+
+---
+
+## Other MCP servers
+
+### Bolthorn (local, :8316)
+| Tool | What it does |
+|---|---|
+| `bolthorn_sync` | Push body's write journal to heart |
+| `bolthorn_load_skill` | Return a Ymir skill's SKILL.md |
+
+### Firecrawl (web scraping/search)
+31 tools including: `firecrawl_scrape`, `firecrawl_search`, `firecrawl_crawl`, `firecrawl_map`, `firecrawl_agent`, `firecrawl_interact`, `firecrawl_monitor_*`, `firecrawl_research_*`, etc.
+
+### Skuld (tickets & plans)
+17 tools: `skuld_tickets_create/list/get/update`, `skuld_plans_create/list/get/update/pending`, `skuld_namespaces_list/create`, `skuld_comments_list/post`, `skuld_blocks_status/clear`, `skuld_sync/snapshot`
+
+### Snotra (meeting minutes)
+5 tools: `snotra_list`, `snotra_read`, `snotra_search`, `snotra_summary`, `snotra_read_the_ear`
+
+### Well (Notion memory)
+10 tools: `well_sync`, `well_remember_fact`, `well_create_page`, `well_update_page`, `well_log_to_notion`, `well_list_sub_pages`, `well_read_page_content`, `well_send_alert`, `well_search_memory`, `well_get_recent_memories`
+
+### Hnoss (Open Design)
+10 tools: `hnoss_od_list_projects`, `hnoss_od_get_project`, `hnoss_od_create_project`, `hnoss_od_update_project`, `hnoss_od_delete_project`, `hnoss_od_save_artifact`, `hnoss_od_lint_artifact`, `hnoss_od_compose_brief`, `hnoss_od_generate_design`, `hnoss_od_save_project_file`
+
+### Smidja (smithy)
+18 tools: `smidja_doctor`, `smidja_up`, `smidja_chains`, `smidja_rosters`, `smidja_run`, `smidja_sessions`, `smidja_record`, `smidja_phases`, `smidja_events`, `smidja_gates`, `smidja_envelopes`, `smidja_control`, `smidja_emergency_stop`, `smidja_resume`, `smidja_decide`, `smidja_judge`, `smidja_memory`, `smidja_volundr`
+
+### Atlas Vault (documents)
+12 tools: `atlas-vault_ask_librarian`, `atlas-vault_search_vault`, `atlas-vault_find_in_document`, `atlas-vault_check_answer`, `atlas-vault_list_folder`, `atlas-vault_list_my_documents`, `atlas-vault_get_document`, `atlas-vault_get_versions`, `atlas-vault_vault_stats`, `atlas-vault_get_document_card`, `atlas-vault_get_rendition_url`, `atlas-vault_read_kontering`
+
+### Trello (action register)
+15 tools: `trello_trelloReadCard`, `trello_trelloReadBoard`, `trello_trelloReadChecklist`, `trello_trelloReadInbox`, `trello_trelloReadList`, `trello_trelloReadMember`, `trello_trelloReadPlanner`, `trello_trelloReadWorkspace`, `trello_trelloWriteBoard`, `trello_trelloWriteCard`, `trello_trelloWriteChecklist`, `trello_trelloWriteInbox`, `trello_trelloWriteList`, `trello_trelloSearch`, `trello_trelloWritePlanner`
+
+### A2A Bridge (mesh)
+1 tool: `a2abridge` (bridge binary, not MCP tool)
+
 ## Updated summary
 
 | Home | Count | Available to |
@@ -380,6 +419,45 @@ Gimlé is the suite record: places, tasks owed, meetings, plans, documents, shar
 | `gimle_board_contract` | The board contract this door implements |
 
 ---
+
+
+
+---
+
+## Other MCP servers
+
+### Bolthorn (local, :8316)
+| Tool | What it does |
+|---|---|
+| `bolthorn_sync` | Push body's write journal to heart |
+| `bolthorn_load_skill` | Return a Ymir skill's SKILL.md |
+
+### Firecrawl (web scraping/search)
+31 tools including: `firecrawl_scrape`, `firecrawl_search`, `firecrawl_crawl`, `firecrawl_map`, `firecrawl_agent`, `firecrawl_interact`, `firecrawl_monitor_*`, `firecrawl_research_*`, etc.
+
+### Skuld (tickets & plans)
+17 tools: `skuld_tickets_create/list/get/update`, `skuld_plans_create/list/get/update/pending`, `skuld_namespaces_list/create`, `skuld_comments_list/post`, `skuld_blocks_status/clear`, `skuld_sync/snapshot`
+
+### Snotra (meeting minutes)
+5 tools: `snotra_list`, `snotra_read`, `snotra_search`, `snotra_summary`, `snotra_read_the_ear`
+
+### Well (Notion memory)
+10 tools: `well_sync`, `well_remember_fact`, `well_create_page`, `well_update_page`, `well_log_to_notion`, `well_list_sub_pages`, `well_read_page_content`, `well_send_alert`, `well_search_memory`, `well_get_recent_memories`
+
+### Hnoss (Open Design)
+10 tools: `hnoss_od_list_projects`, `hnoss_od_get_project`, `hnoss_od_create_project`, `hnoss_od_update_project`, `hnoss_od_delete_project`, `hnoss_od_save_artifact`, `hnoss_od_lint_artifact`, `hnoss_od_compose_brief`, `hnoss_od_generate_design`, `hnoss_od_save_project_file`
+
+### Smidja (smithy)
+18 tools: `smidja_doctor`, `smidja_up`, `smidja_chains`, `smidja_rosters`, `smidja_run`, `smidja_sessions`, `smidja_record`, `smidja_phases`, `smidja_events`, `smidja_gates`, `smidja_envelopes`, `smidja_control`, `smidja_emergency_stop`, `smidja_resume`, `smidja_decide`, `smidja_judge`, `smidja_memory`, `smidja_volundr`
+
+### Atlas Vault (documents)
+12 tools: `atlas-vault_ask_librarian`, `atlas-vault_search_vault`, `atlas-vault_find_in_document`, `atlas-vault_check_answer`, `atlas-vault_list_folder`, `atlas-vault_list_my_documents`, `atlas-vault_get_document`, `atlas-vault_get_versions`, `atlas-vault_vault_stats`, `atlas-vault_get_document_card`, `atlas-vault_get_rendition_url`, `atlas-vault_read_kontering`
+
+### Trello (action register)
+15 tools: `trello_trelloReadCard`, `trello_trelloReadBoard`, `trello_trelloReadChecklist`, `trello_trelloReadInbox`, `trello_trelloReadList`, `trello_trelloReadMember`, `trello_trelloReadPlanner`, `trello_trelloReadWorkspace`, `trello_trelloWriteBoard`, `trello_trelloWriteCard`, `trello_trelloWriteChecklist`, `trello_trelloWriteInbox`, `trello_trelloWriteList`, `trello_trelloSearch`, `trello_trelloWritePlanner`
+
+### A2A Bridge (mesh)
+1 tool: `a2abridge` (bridge binary, not MCP tool)
 
 ## Updated summary
 
