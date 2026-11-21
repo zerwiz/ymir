@@ -69,3 +69,14 @@ cases for the exit-4 path (23 pass). The neighbours still pass: `test_send_butto
 ## CHANGE LOG
 
 - 2026-11-21 — written the morning after nine hours of one unanswered hound line.
+
+## Addendum: a pid is not a stamp (rework of PR #861)
+
+The review found that the key fold treated any segment of six or more digits as a stamp. The ward watcher keys each
+alert per process (`garmr:{title}:{pid}`), so a second process with a 7-digit pid came back `duplicate` and was
+silenced for an hour. Machines with short pids behaved differently.
+
+Now only real stamp shapes fold: `20YYMMDD` with an optional hour, minute and second, a 10-digit epoch, and an ISO
+date or time. The ISO stamp is lifted from the whole key before the key is split on `:`, because its colons used to
+break it into pieces that did not fold. New tests: two pids in a key stay two lines, and an epoch or ISO stamp still
+folds.
