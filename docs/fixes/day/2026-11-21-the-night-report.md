@@ -98,3 +98,8 @@ longer prompt at a word boundary. Two of the three prompts were longer, so a tap
 Each prompt is now one short sentence that keeps its verb and its object and names the report by date,
 such as *"Merge the green PRs in the 2026-11-21 night report"*. A test renders the three buttons through
 `telegram-buttons.sh emit --format reply-markup` and asserts that each `callback_data` equals its prompt.
+
+## Addendum, 2026-11-21 — the tests are a gate
+
+No gate ran `bin/day/tests/test_night_report.py`, so the tests guarded nothing after the merge.
+`bin/gates/checks.d/0545-night-report.sh` now runs them in every gate run.
