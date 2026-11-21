@@ -37,6 +37,23 @@ board:
   file_url: https://<host>/<repo>/blob/main/{path}   # optional; default from the home's git remote
 ```
 
+## A shelf of plans that is not a project
+
+A machine's own plans, or a company's ledger, are no project's. Name them in the registry's top-level `plan_shelves:`
+list, beside `projects:`:
+
+```yaml
+plan_shelves:
+  - id: machine-<name>
+    plans: <home-relative folder of the numbered plans>
+    labels: [machine:<name>]       # carried by every card of this shelf, besides `plan`
+    board: {adapter: mcp, place: <place>, mcp: {url: https://<board>/mcp, token_from: env:<NAME>}}
+```
+
+Plan numbers repeat from shelf to shelf, so a shelf's cards are told apart by its `labels`. A sync of one shelf sees
+only the cards that carry all of them. A sync of a project ignores every card that carries a label some shelf owns.
+The commands below take a shelf's `id` as `--project`, and `--file` finds a shelf from the folder a plan lies in.
+
 ## The commands
 
 ```bash
@@ -121,6 +138,7 @@ is refused by name.
 | You see | It means |
 |---|---|
 | `has no board: block` | the project's registry row names no board |
+| `the plan shelf '…' (…) has no board: block in the registry` | the shelf is listed in `plan_shelves:` but names no board; add its `board:` block |
 | `no road to the board — the token named by '…' is not there` | no reference resolves on this seat (a `claude-mcp:` reference reads the harness's fixed header, or asks its `headersHelper`); the value is never printed |
 | `HTTP 403` / a Cloudflare 1010 | the request lacked a User-Agent or the token is not allowed in that place |
 | `cannot list a place to its end` | the board's door is older than the contract; bring it up to date |
@@ -174,3 +192,4 @@ board:
 The board door can also answer "no such place" for a place it lists in the same answer, or "no such state" for a state
 the place has already listed, when its own lookup is rate-limited. The adapter now waits and asks again in those cases,
 as it does for a 429. A state the place truly lacks is still refused by name.
+- 2026-11-21 — a registry `plan_shelves:` list lets a machine's own plan folder reach a board, its cards told apart by labels.
