@@ -40,3 +40,7 @@ provider, and several helpers still recognised LM Studio or ollama as a local ro
 - `bin/bridge/tests/test_bifrost_provider.sh` (10 ok) and `.agents/tests/hnoss-model-door.test.sh`
   (PASS), both retargeted off LM Studio.
 - The inventory of every caller is `docs/reference/ai-callers.md`; the named half is in the home.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #864
