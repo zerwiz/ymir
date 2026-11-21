@@ -17,3 +17,7 @@ Reaching the agents of the fleet was done by hand. The helm sent a line over the
 ## Proof
 
 `bin/fleet/tests/test_fleet_tell.sh` uses a fake ssh and a fake herdr: arm handed with pane typed, arm refused with pane typed and a wake raised, a machine with no answer, `--dry-run`, the steer, answer and stop verbs, and a resolver that never returns a pane that is not an agent pane.
+
+## CHANGE LOG
+
+- 2026-11-21 — review-mend: added missing heading for #879
