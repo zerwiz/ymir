@@ -28,7 +28,18 @@ brief=$PROJ/data/litmus-ship/brief.md
 EOF
 printf 'working: x\ndone: opened PR https://github.com/zerwiz/ymir/pull/999\n' >"$PROJ/state/litmus-ship.status"
 
-RUN=(env "BROKK_STATE_OVERRIDE=$PROJ/state")
+# THE FENCE (2026-11-21): this suite once reached the REAL helm pane four times — the acclaim done
+# path ends in eindri-notify.sh, which types into whichever session holds the arm. A test pages nobody:
+# YMIR_NO_INJECT=1 is the switch the notify road honours, and a fake herdr on PATH answers every pane
+# lookup with nothing, so even a road that forgot the switch finds no pane to type into.
+mkdir -p "$TMP/bin"
+printf '#!/usr/bin/env bash\nprintf "fake herdr: %%s\\n" "$*" >>"%s/herdr.log"\nexit 1\n' "$TMP" >"$TMP/bin/herdr"
+chmod +x "$TMP/bin/herdr"
+# and a temp home, so the spine's brief lands in this suite's tree and never in the operator's data shelf
+mkdir -p "$TMP/home/hodd/data" "$TMP/home/state"
+export PATH="$TMP/bin:$PATH" YMIR_NO_INJECT=1 YMIR_HOME="$TMP/home"
+unset YMIR_HOARD_LIB_LOADED
+RUN=(env "BROKK_STATE_OVERRIDE=$PROJ/state" YMIR_REVIEW_HARNESS=pi YMIR_REVIEW_MODEL=litmus/judge "BROKK_DATA_OVERRIDE=$TMP/home/hodd/data" "YMIR_HOME=$TMP/home" YMIR_NO_INJECT=1 "PATH=$PATH")
 
 # 1. the sync contract: bash -n clean
 bash -n "$SPAWN" 2>/dev/null && ok "eindri-review-spawn.sh is syntactically clean" || bad "bash -n eindri-review-spawn.sh"
@@ -43,7 +54,7 @@ printf '%s' "$out" | grep -q 'pull/999' && ok "the PR is read from the task stat
 printf '%s' "$out" | grep -q 'litmus-ship-review' && ok "the review id is <task>-review" || bad "review id: $out"
 
 # 3. the brief is filled for THIS task
-brief="$PROJ/data/litmus-ship-review/brief.md"
+brief="$TMP/home/hodd/data/litmus-ship-review/brief.md"
 [ -s "$brief" ] && ok "the fierce brief is written" || bad "brief missing"
 grep -q 'pull/999' "$brief" && ok "brief names the PR" || bad "brief PR"
 grep -q 'BROKK_STATE_OVERRIDE='"$PROJ"'/state bin/agents/eindri-acclaim.sh litmus-ship-review' "$brief" \
@@ -72,6 +83,13 @@ printf '%s' "$out" | grep -q 'kind=scout' && ok "a scout is not reviewed" || bad
 out="$("${RUN[@]}" YMIR_REVIEW_DRY=1 "$ACCLAIM" litmus-ship --terminal done --line 'done: opened PR https://github.com/zerwiz/ymir/pull/999' 2>&1)"
 printf '%s' "$out" | grep -q 'review-spawn\[1\]' && ok "the terminal done auto-sends the judge" || bad "hook: $out"
 printf '%s' "$out" | grep -q 'litmus-ship-review' && ok "the hook names the review errand" || bad "hook id: $out"
+
+# 8. the fence held: no line of this suite was typed into a live pane
+if grep -qE 'agent (prompt|send|run)|pane (send|run|write)' "$TMP/herdr.log" 2>/dev/null; then
+  bad "the acclaim typed into a pane: $(cat "$TMP/herdr.log")"
+else
+  ok "the acclaim road paged nobody (YMIR_NO_INJECT, fake herdr)"
+fi
 
 [ "$fail" = 0 ] && echo "ALL PASS" || echo "FAILURES"
 exit "$fail"
