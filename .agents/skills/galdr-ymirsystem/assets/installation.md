@@ -534,7 +534,6 @@ bash bin/engine/ymir-install.sh --check | grep -cE '^  "'   # the honest count, 
 ```
 npm:pi-mcp-adapter   MCP servers (from mcp.json: a2abridge, engram)
 npm:pi-web-access    web fetch/search tools
-npm:pi-lmstudio      LM Studio / local model bridge
 ```
 
 The Pi **binary** belongs to the operator, on whatever channel the operator
