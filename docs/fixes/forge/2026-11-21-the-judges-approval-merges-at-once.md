@@ -60,3 +60,7 @@ older than it, or naming a different `judged-head:`, is never read as approval.
 - `YMIR_FORSETI_MODEL=opencode-go/deepseek-v4.1-flash bin/model/agent-model.sh forseti --json` → `"model":"opus","source":"agents row (harness claude)"`
 - `eindri-review-spawn.sh --pr <url> --dry-run` under the same pin → `--backend herdr --harness claude --model opus`
 - `.agents/tests/eindri-review-spine.test.sh`: the spawn-line case passes; five brief cases fail exactly as they do on `main` (the data shelf moved on 2026-11-20) and are not this change's.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #863
