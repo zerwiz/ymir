@@ -819,7 +819,7 @@ def collect(a, home, now, since):
     rang, mended, err = gather_alarms(home, since, now)
     if err:
         problems.append(err)
-    door = TodoDoor(getattr(a, "todo_fixture", None))
+    door = TodoDoor(getattr(a, "board_fixture", None))
     cards, why = door.list()
     if cards is not None:
         items, todo_source = card_items(cards), "the to-do board"
@@ -882,7 +882,7 @@ def main(argv=None):
     ap.add_argument("--no-send", action="store_true", help="write the report, send no message")
     ap.add_argument("--no-sync", action="store_true", help="do not pull or ship the home (tests)")
     ap.add_argument("--github-fixture", help=argparse.SUPPRESS)
-    ap.add_argument("--todo-fixture", help=argparse.SUPPRESS)
+    ap.add_argument("--board-fixture", help=argparse.SUPPRESS)
     a = ap.parse_args(argv)
 
     home = night_seat.resolve_home(a.home)

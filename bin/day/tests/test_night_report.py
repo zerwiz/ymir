@@ -143,7 +143,7 @@ class NightReport(unittest.TestCase):
     def run_main(self, *extra):
         argv = ["--home", str(self.home), "--since", str(SINCE), "--now", str(NOW), "--no-fleet", "--no-board",
                 "--no-sync", "--no-send", "--github-fixture", str(self.fx), "--default-repo", "example/house",
-                "--todo-fixture", str(self.board),
+                "--board-fixture", str(self.board),
                 *extra]
         return nr.main(argv)
 
@@ -152,7 +152,7 @@ class NightReport(unittest.TestCase):
             no_fleet = no_board = True
             no_github = False
             github_fixture = str(self.fx)
-            todo_fixture = str(self.board)
+            board_fixture = str(self.board)
             default_repo = "example/house"
             repo = None
         return nr.collect(A, self.home, NOW, SINCE)
@@ -261,7 +261,7 @@ class NightReport(unittest.TestCase):
             no_fleet = no_board = True
             no_github = False
             github_fixture = str(self.fx)
-            todo_fixture = str(self.board)
+            board_fixture = str(self.board)
             default_repo = ""
             repo = None
         orig = nr.origin_repo
@@ -290,7 +290,7 @@ class NightReport(unittest.TestCase):
         try:
             argv = ["--home", str(self.home), "--since", str(SINCE), "--now", str(NOW), "--no-fleet",
                     "--no-board", "--github-fixture", str(self.fx), "--default-repo", "example/house",
-                    "--todo-fixture", str(self.board)]
+                    "--board-fixture", str(self.board)]
             self.assertEqual(nr.main(argv), 1)
         finally:
             nr.sh = orig
