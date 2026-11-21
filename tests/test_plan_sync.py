@@ -21,6 +21,7 @@ class Board:
         self.cards, self.labels, self.calls, self.seq = [], [], [], 0
         self.agents = []
         self.pages = True  # the board answers `offset` (the contract); False plays an older door
+        self.blink = set()  # cards a full listing misses while the door reloads; a search by name still finds them
 
     def schemas(self):
         props = {"list_cards": ["place", "label", "state", "query", "limit"] + (["offset"] if self.pages else []),
@@ -48,7 +49,8 @@ class Board:
         if name == "list_cards":
             out = [c for c in self.cards if (not a.get("label") or a["label"] in c["labels"])
                    and (not a.get("state") or a["state"] == c["state"])
-                   and (not a.get("query") or a["query"] in c["title"])]
+                   and (not a.get("query") or a["query"] in c["title"])
+                   and (a.get("query") or c["card"] not in self.blink)]
             out.sort(key=lambda c: -c["card"])
             rows = [dict({k: c.get(k) for k in ("card", "title", "state", "labels", "parent")}, stamp=self.stamp(c))
                     for c in out]
@@ -151,7 +153,7 @@ class PlanSync(unittest.TestCase):
 
     def test_first_run_makes_whole_cards_second_changes_nothing_flip_moves_one(self):
         out = self.sync()
-        self.assertIn("created=3 upgraded=0 updated=0 unchanged=0 steps=2 failed=0", out)
+        self.assertIn("created=3 upgraded=0 updated=0 unchanged=0 steps=2 found=0 failed=0", out)
         self.assertIn("count acme/Demo: ledger=3 plans · board=3 plan cards", out)
         cards = self.plan_cards()
         self.assertEqual({t: c["state"] for t, c in cards.items()},
@@ -176,6 +178,19 @@ class PlanSync(unittest.TestCase):
         self.write_readme({1: "opened", 2: "built", 3: "built (v0)"})
         self.assertIn("created=0 upgraded=0 updated=1 unchanged=2", self.sync())
         self.assertEqual(self.plan_cards()["002 · Title two"]["state"], "Shipped")
+
+    def test_a_short_listing_never_doubles_a_card(self):
+        # 2026-11-21: while the board's door reloaded, the listing came back short and two runs left four cards for
+        # one plan. A plan the listing misses is asked for by name before it is made.
+        self.sync()
+        n = len(self.board.cards)
+        self.board.blink = {c["card"] for c in self.board.cards}
+        out = self.sync()
+        self.assertIn("created=0", out)
+        self.assertIn("found=3", out)
+        self.assertEqual(len(self.board.cards), n)
+        self.board.blink = set()
+        self.assertIn("created=0 upgraded=0 updated=0 unchanged=3 steps=0", self.sync())
 
     def test_a_short_card_of_the_first_pass_is_upgraded_in_place(self):
         self.board.labels.append("plan")
