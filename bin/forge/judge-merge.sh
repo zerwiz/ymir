@@ -113,15 +113,28 @@ wake_author() {  # <repo> <n> <task> <items> <head>
   # either may be down (the arm wire failed on 2026-11-21): the arm wire (rodd-arm tell / arm-send)
   # AND a turn typed into the holder's herdr pane (eindri-notify). The holder starts a coder errand
   # on the PR's branch; when the coder's new head lands, review-watch seats the judge for it again.
-  local repo="$1" n="$2" task="$3" items="$4" head="$5" json body branch host line road
-  json="$(gh pr view "$n" -R "$repo" --json body,headRefName 2>/dev/null || true)"
+  local repo="$1" n="$2" task="$3" items="$4" head="$5" json body branch host line road author ops
+  json="$(gh pr view "$n" -R "$repo" --json body,headRefName,author 2>/dev/null || true)"
   body="$(printf '%s' "$json" | python3 -c 'import json,sys
 try: print(json.load(sys.stdin).get("body") or "")
 except Exception: pass' 2>/dev/null)"
   branch="$(printf '%s' "$json" | python3 -c 'import json,sys
 try: print(json.load(sys.stdin).get("headRefName") or "")
+except Exception: pass' 2>/dev/null | tr -cd 'A-Za-z0-9._/-')"
+  author="$(printf '%s' "$json" | python3 -c 'import json,sys
+try: print(((json.load(sys.stdin).get("author") or {}).get("login") or "").lower())
 except Exception: pass' 2>/dev/null)"
-  host="$(printf '%s\n' "$body" | sed -nE 's/^[[:space:]]*Arm:[[:space:]]*([^@[:space:]]+@)?([A-Za-z0-9._-]+)[[:space:]]*$/\2/p' | head -1)"
+  # The 'Arm: <host>' line in the PR body names the seat that opened it. This is a public repository:
+  # anyone may open a PR and write any body, so the line is believed ONLY when the PR's author is one
+  # of the operator's own logins (warden-policy.py operator-logins, the rule pr-seal.sh uses); from
+  # anyone else the rework goes to this machine's arm holder (review of #863, third rework).
+  ops=" $(python3 "$ROOT/bin/forge/warden-policy.py" operator-logins 2>/dev/null | tr 'A-Z' 'a-z' | tr '\n' ' ') "
+  host=""
+  if [ -n "$author" ]; then
+    case "$ops" in *" $author "*)
+      host="$(printf '%s\n' "$body" | sed -nE 's/^[[:space:]]*Arm:[[:space:]]*([^@[:space:]]+@)?([A-Za-z0-9._-]+)[[:space:]]*$/\2/p' | head -1)" ;;
+    esac
+  fi
   [ -n "$host" ] || host="$ME"
   line="PR #$n ($repo) NEEDS-REWORK from the judge at head ${head:0:12}: $items — start a coder errand on branch ${branch:-the branch of the PR} to fix these items and push to that same branch; the judge reviews the new head and an APPROVE on green merges at once."
   if [ "$DRY" = 1 ]; then say "  would hand the rework to the arm holder on $host: $line"; return 0; fi

@@ -86,7 +86,7 @@ pr_json() {  # <head> <ci: green|red|pending> [draft] [labels-json] [branch]
   cat >"$FIX/pr.json" <<JSON
 {"number":7,"headRefName":"$branch","headRefOid":"$head","title":"widget: mend the hinge","url":"https://github.com/acme/widget/pull/7",
  "mergeable":"MERGEABLE","mergeStateStatus":"CLEAN","statusCheckRollup":$roll,"isDraft":$draft,"labels":$labels,
- "state":"OPEN","body":"The hinge is mended.\nArm: here-only"}
+ "state":"OPEN","body":"The hinge is mended.\nArm: here-only","author":{"login":"acme"}}
 JSON
 }
 
@@ -159,6 +159,15 @@ grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}.* — judge PR #7 .*NEED
   && ok "the rework wake is in the house format (sol stamp — text, tab, class)" || bad "wake format" "$(cat -A "$T/home/state/.wake-queue" 2>/dev/null)"
 grep -q '^here-only .*start a coder errand on branch eindri/widget-fix' "$WAKELOG.armsend" 2>/dev/null \
   && ok "the opener's arm holder (Arm: here-only) is handed a coder errand over the arm wire" || bad "arm wire to the opener" "$(cat "$WAKELOG".* 2>/dev/null)"
+# review of #863, third rework: a PR opened by a stranger (not an operator login) may write any body —
+# its 'Arm:' line is ignored and the rework stays with this machine's arm holder
+fresh "$REWORK"; pr_json "$HEAD_A" green
+python3 - "$FIX/pr.json" <<'PY2'
+import json, sys; p = json.load(open(sys.argv[1])); p["author"] = {"login": "stranger"}; json.dump(p, open(sys.argv[1], "w"))
+PY2
+"$JM" act pr-7-review >/dev/null 2>&1
+! grep -q '^here-only ' "$WAKELOG.armsend" 2>/dev/null && grep -q 'coder errand' "$WAKELOG.rodd" 2>/dev/null \
+  && ok "a stranger's PR body cannot steer the rework to another seat (Arm: ignored)" || bad "stranger's Arm line" "$(cat "$WAKELOG".* 2>/dev/null)"
 # the opener is this seat (no Arm line): both local roads — the arm wire AND a turn typed into the pane
 fresh "$REWORK"; pr_json "$HEAD_A" green
 python3 - "$FIX/pr.json" <<'PY'
