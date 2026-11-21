@@ -47,3 +47,7 @@ by going stale; closing it on merge belongs to the shipper.
 - `.githooks/pre-push`
 - `tests/test_claims_ledger.sh`
 - `docs/features/the-claims-ledger.md`
+
+## CHANGE LOG
+
+- 2026-11-21 — review-mend: added missing heading for #881
