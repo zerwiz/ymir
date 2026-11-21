@@ -22,7 +22,7 @@ The tree replaced a single register on 2026-11-06 (plan 211) so that a change in
 folder rewrites one file instead of colliding on every branch.
 
 bin[5]{file,does,kind,verdict,disposition,callers,lines}:
-  "README.md","<!-- allow-superseded-path: a generated index must name the folder or the script it indexes, by construction -->","data","tested","keep",68,-
+  "README.md","<!-- allow-superseded-path: a generated index must name the folder or the script it indexes, by construction -->","data","tested","keep",69,-
   "bitrate-gate.sh","bitrate-gate.sh — a diffusion clip that 'completes' is not a clip that worked.","tool","wired","keep",0,82
   "brokk","brokk — the primary agent's CLI (Brokk, the bellows-smith).","tool","tested","keep",61,74
   "heavy-slot.sh","heavy-slot.sh — this machine's HEAVY LANES: a counted number of heavy jobs at once, and a","tool","wired","keep",5,457

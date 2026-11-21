@@ -32,7 +32,7 @@ bin[81]{file,does,kind,verdict,disposition,callers,lines}:
   "base.py","'''The six verbs a backend answers, and the one resolver that picks a backend.","tool","wired","keep",0,57
   "broken.sh","broken.sh — the register of broken things (RULES/50).","tool","tested","keep",2,165
   "claims.sh","claims.sh — a seat declares what it is building (plan number, branch, errand id, host).","tool","wired","keep",4,95
-  "claude-seat.sh","claude-seat.sh — what a Claude Code worker needs to start with no human click.","tool","wired","migrate → src/ymir_runtime/claude_seat.py",1,104
+  "claude-seat.sh","claude-seat.sh — what a Claude Code worker needs to start with no human click.","tool","wired","migrate → src/ymir_runtime/claude_seat.py",3,118
   "clocks.sh","bin/seat/clocks.sh — seat the three loops: plan-watch, ship-watch, update-loop.","tool","wired","keep",0,116
   "codex-plugin-install.mjs","// Valknut's Codex door.","data","wired","keep",3,125
   "context.sh","context.sh — what the agent's context ACTUALLY holds, right now.","tool","tested","keep",3,163
@@ -49,7 +49,7 @@ bin[81]{file,does,kind,verdict,disposition,callers,lines}:
   "herdr-agents.py","'''herdr-agents.py — list the agents standing in this herdr session, as TOON.","tool","wired","keep",16,259
   "herdr-editor.py","'''herdr-editor.py — read the INPUT BOX of an agent's pane, and say what is in it.","tool","wired","keep",3,133
   "herdr-ensure.sh","herdr-ensure.sh — Þjazi: guarantee the terminal backend Ymir needs.","tool","wired","keep",4,106
-  "herdr-run.sh","herdr-run.sh — raise an Eindri in herdr, by the grain that fits the errand.","tool","tested","keep",20,832
+  "herdr-run.sh","herdr-run.sh — raise an Eindri in herdr, by the grain that fits the errand.","tool","tested","keep",20,840
   "herdr.py","'''herdr as a backend — the first one, and the shape the second is measured against.'''","tool","wired","keep",0,111
   "hermes-seat.sh","hermes-seat.sh — a one-line launcher: the Hermes seat is src/ymir_runtime/hermes/seat.py (plan 317 slices 2–3).","tool","wired","keep",3,5
   "hermes-session-hook.sh","hermes-session-hook.sh — a one-line launcher: Hermes' session side (the Sága digest on the first turn, in any cwd)","tool","wired","keep",1,5
