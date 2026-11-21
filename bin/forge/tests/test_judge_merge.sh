@@ -248,7 +248,7 @@ case "$1 $2" in
   "api user") cat "$F/login" ;;
   "auth status") exit 0 ;;
   "repo view") echo WRITE ;;
-  "pr list") case " $* " in *" acme/widget "*) cat "$F/list.json" ;; *) echo "[]" ;; esac ;;
+  "pr list") case " $* " in *" acme/widget "*) cat "$F/list.json" ;; *" acme-org/kept "*) cat "$F/list2.json" 2>/dev/null || echo "[]" ;; *) echo "[]" ;; esac ;;
   *) echo "fake gh: unhandled $*" >&2; exit 1 ;;
 esac
 GH
@@ -276,7 +276,31 @@ printf '%s\n' "$out" | grep -q 'would seat\|judge is seated' && bad "a keeper wi
 [ "$(grep -c 'eindri-review-spawn.sh --pr' "$WAKELOG.armsend" 2>/dev/null)" = 2 ] \
   && grep -q '^devbox ' "$WAKELOG.armsend" && grep -q '^devtwo ' "$WAKELOG.armsend" \
   && ok "every open head is handed to the developer seats in turn" || bad "hand-off of every head" "$(cat "$WAKELOG.armsend" 2>/dev/null) $out"
-[ -e "$T/home/state/.reviewed/handed-pr-7.$HEAD_A" ] && ok "a handed head is marked, so it is handed once" || bad "handed marker"
+[ -e "$T/home/state/.reviewed/handed-pr-acme--widget-7.$HEAD_A" ] && ok "a handed head is marked (repo in the key), so it is handed once" || bad "handed marker" "$(ls "$T/home/state/.reviewed")"
+grep -q -- "--project $T/clone" "$WAKELOG.armsend" 2>/dev/null && grep -q '(acme/widget)' "$WAKELOG.armsend" \
+  && ok "the hand-off names the repository and its clone (--project)" || bad "hand-off --project" "$(cat "$WAKELOG.armsend" 2>/dev/null)"
+
+# 15 · an unacted hand-off expires and the head is handed on again
+rm -f "$WAKELOG".*
+touch -d '-2 hours' "$T/home/state/.reviewed/handed-pr-acme--widget-7.$HEAD_A"
+out="$(YMIR_WARDENS_FILE="$T/wardens.yaml" YMIR_FLEET_REGISTRY="$T/fleet.json" YMIR_REVIEW_KEEPER=1 YMIR_REVIEW_SEAT_HERE=0 \
+  YMIR_SEAL_DOOR=/bin/false timeout 120 bash "$ROOT/bin/forge/review-watch.sh" --keeper 2>&1)"
+printf '%s\n' "$out" | grep -q '"acme/widget#7".*expired' && grep -q 'pull/7 ' "$WAKELOG.armsend" 2>/dev/null \
+  && ok "an expired hand-off is handed on again" || bad "hand-off expiry" "$out $(cat "$WAKELOG.armsend" 2>/dev/null)"
+[ "$(find "$T/home/state/.reviewed/handed-pr-acme--widget-7.$HEAD_A" -mmin -5 2>/dev/null)" ] \
+  && ok "the new hand-off is marked afresh" || bad "fresh hand-off marker"
+
+# 16 · the same PR number in two repositories is two PRs
+rm -rf "$T/home/state" "$WAKELOG".*; mkdir -p "$T/home/state/.reviewed"
+printf '{"heart":"nobody","hosts":{"devbox":{"roles":["dev"]}}}\n' >"$T/fleet.json"
+printf '[{"number":7,"headRefOid":"4444444444444444444444444444444444444444","isDraft":false,"url":"https://github.com/acme-org/kept/pull/7"}]\n' >"$FIX/list2.json"
+printf '[{"number":7,"headRefOid":"%s","isDraft":false,"url":"https://github.com/acme/widget/pull/7"}]\n' "$HEAD_A" >"$FIX/list.json"
+: >"$T/home/state/.reviewed/pr-acme--widget-7.$HEAD_A"
+out="$(YMIR_WARDENS_FILE="$T/wardens.yaml" YMIR_FLEET_REGISTRY="$T/fleet.json" YMIR_REVIEW_KEEPER=1 YMIR_REVIEW_SEAT_HERE=0 \
+  timeout 120 bash "$ROOT/bin/forge/review-watch.sh" --keeper --dry-run 2>&1)"
+printf '%s\n' "$out" | grep -q '"acme-org/kept#7".*would hand' && ! printf '%s\n' "$out" | grep -q '"acme/widget#7"' \
+  && ok "PR #7 judged in one repository leaves PR #7 of another unjudged no longer" || bad "same number, two repos" "$out"
+rm -f "$FIX/list2.json"
 
 printf 'judge-merge: %s passed, %s failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

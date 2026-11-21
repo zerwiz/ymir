@@ -252,6 +252,10 @@ PY
   command -v "$judge_h" >/dev/null 2>&1 || seat_here=0
   [ "${YMIR_REVIEW_SEAT_HERE:-auto}" = 0 ] && seat_here=0
   [ "${YMIR_REVIEW_SEAT_HERE:-auto}" = 1 ] && seat_here=1
+  pr_key() {  # <owner/repo> <n> → pr-<owner>--<repo>-<n> (the spine's key, bin/agents/eindri-review-spawn.sh)
+    local slug; slug="$(printf '%s' "$1" | tr 'A-Z' 'a-z')"
+    printf 'pr-%s--%s-%s' "${slug%%/*}" "${slug#*/}" "$2"
+  }
   hand_to() {  # <host> <line> — the arm wire AND a turn typed into the holder's herdr pane
     local h="$1" l="$2" road okw=0
     timeout 60 bash "${YMIR_ARM_SEND_DOOR:-$ROOT/bin/fleet/arm-send.sh}" "$h" "$l" >/dev/null 2>&1 && okw=1
@@ -262,6 +266,7 @@ except Exception: x = {}
 if x.get("user") and x.get("tailnet"): print(f"{x['user']}@{x['tailnet']}")
 PY
 )"
+    [ "${YMIR_NO_INJECT:-0}" = 1 ] && road=""   # a test types into nobody's pane
     if [ -n "$road" ] && timeout 60 ssh -o BatchMode=yes -o ConnectTimeout=6 "$road" \
         "d=\${YMIR_RUNTIME_DIR:-\$HOME/ymir-runtime}; [ -f \$d/bin/agents/eindri-notify.sh ] || d=\$HOME/ymir; cd \$d && bash bin/agents/eindri-notify.sh --from review-watch -- $(printf '%q' "$l")" \
         </dev/null >/dev/null 2>&1; then okw=1; fi
@@ -299,8 +304,21 @@ PY
     while IFS=$'\t' read -r num head url; do
       [ -n "$num" ] || continue
       SEEN=$((SEEN + 1))
+      # the PR's one name on the review shelf carries its repository (pr-<owner>--<repo>-<n>), the
+      # same key bin/agents/eindri-review-spawn.sh writes — PR #7 of two repositories is two PRs
+      key="$(pr_key "$repo" "$num")"
+      handed_mark="$STATE/.reviewed/handed-$key.$head"
+      # a hand-off nobody acted on EXPIRES (review of #863): after YMIR_REVIEW_HANDOFF_TTL seconds
+      # (default 1h) with no judge seated for the head, the marker is dropped and the head handed on
+      # again — an unacted hand-off must never leave a head unjudged forever
+      if [ -e "$handed_mark" ] && [ ! -e "$STATE/.reviewed/$key.$head" ] \
+         && [ $(( $(date +%s) - $(stat -c %Y "$handed_mark" 2>/dev/null || echo 0) )) -ge "${YMIR_REVIEW_HANDOFF_TTL:-3600}" ]; then
+        [ "$DRY" = 1 ] || rm -f "$handed_mark"
+        printf '  "%s#%s","%s","the hand-off expired with no judge seated — handed on again"\n' "$repo" "$num" "${head:0:12}"
+        [ "$DRY" = 1 ] && handed_mark="$handed_mark.expired-dry"
+      fi
       # a verdict exists — or is coming — for this head: the spine's marker, any judged record, a handoff
-      if [ -e "$STATE/.reviewed/pr-$num.$head" ] || [ -e "$STATE/.reviewed/handed-pr-$num.$head" ] \
+      if [ -e "$STATE/.reviewed/$key.$head" ] || [ -e "$handed_mark" ] \
          || grep -lqs "^head=$head\$" "$STATE/.reviewed/"*.judged; then
         continue
       fi
@@ -325,11 +343,14 @@ PY
       fi
       if [ "${#dev_hosts[@]}" -gt 0 ] && [ "$handed" -lt "$handed_max" ]; then
         handoff_host="${dev_hosts[$((handed % ${#dev_hosts[@]}))]}"
-        line="review PR $url at head ${head:0:12} with the judge (harness $judge_h) in a herdr pane on your seat — $([ "$seat_here" = 1 ] && echo "the keeper's judge is busy" || echo "the keeper has no $judge_h CLI"): bin/agents/eindri-review-spawn.sh --pr $url"
+        # the line carries the repository and its clone, resolved from the registry (the home is the
+        # fleet's, so the path is the receiving seat's too): a judge must sit in THAT repo's clone
+        hproj="$(clone_of "$repo")"
+        line="review PR $url ($repo) at head ${head:0:12} with the judge (harness $judge_h) in a herdr pane on your seat — $([ "$seat_here" = 1 ] && echo "the keeper's judge is busy" || echo "the keeper has no $judge_h CLI"): bin/agents/eindri-review-spawn.sh --pr $url${hproj:+ --project $hproj}"
         if [ "$DRY" = 1 ]; then
           printf '  "%s#%s","%s","would hand to %s"\n' "$repo" "$num" "${head:0:12}" "$handoff_host"
         elif hand_to "$handoff_host" "$line"; then
-          printf 'handed to %s at %s\n' "$handoff_host" "$(date -u +%FT%TZ)" >"$STATE/.reviewed/handed-pr-$num.$head"
+          printf 'handed to %s at %s\n' "$handoff_host" "$(date -u +%FT%TZ)" >"$handed_mark"
           printf '  "%s#%s","%s","handed to %s (arm wire and pane)"\n' "$repo" "$num" "${head:0:12}" "$handoff_host"
         else
           printf 'review-watch: the hand-off of %s#%s to %s did not land — it waits for the next pass\n' "$repo" "$num" "$handoff_host" >&2

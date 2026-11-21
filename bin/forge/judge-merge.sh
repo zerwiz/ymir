@@ -144,6 +144,7 @@ except Exception: h = {}
 if h.get("user") and h.get("tailnet"): print(f"{h['user']}@{h['tailnet']}")
 PY
 )"
+  [ "${YMIR_NO_INJECT:-0}" = 1 ] && road=""   # a test types into nobody's pane
   if [ -n "$road" ]; then
     timeout 60 ssh -o BatchMode=yes -o ConnectTimeout=6 "$road" \
       "d=\${YMIR_RUNTIME_DIR:-\$HOME/ymir-runtime}; [ -f \$d/bin/agents/eindri-notify.sh ] || d=\$HOME/ymir; cd \$d && bash bin/agents/eindri-notify.sh --from judge -- $(printf '%q' "$line")" \
