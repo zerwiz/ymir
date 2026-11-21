@@ -255,3 +255,30 @@ of what the warden used to do, and why it stopped, is
 This also restates an older law it had been quietly breaking: **an agent opens the PR and stops.** A
 laptop's clock merging into `main` under the operator's own GitHub login was never a delivery — it was
 a decision nobody made.
+
+## 2026-11-21 — if it passes the gates, it merges
+
+At the Allfather's word, 2026-11-21: *"If it pass the gates. We merge. We need to update the rules."* And,
+the same night, of his command hall: *"Everything merges!"*
+
+This amends the sections above. It does not erase them (RULES/06). **A pull request whose gates are green is
+merged.** No human seal is waited for. The gates are the seal. The narrow 2026-11-05 case (a seat seals its own
+PR) widens to every PR in the house's repositories that meets the conditions below, whoever's agent opened it.
+
+| Condition | The rule |
+|---|---|
+| **The gates** | every required check concluded SUCCESS (today `whole-tree`), no check is pending, and GitHub reports the PR `MERGEABLE` with no conflict |
+| **The re-check** | the merger re-reads all of the above at the instant of the merge; a green from an hour ago is not evidence |
+| **Who merges** | the heart's keeper (the merge door on the always-up machine), or an arm holder for its own PR, or the operator from his hall; never a worker merging its own branch |
+| **Whose name** | the merge is made under the operator's own account; a merger that would merge under any other person's git identity refuses and says so |
+| **The method** | a gathered batch takes a merge commit and every other PR a squash, as `bin/forge/merge-method.sh` decides; a squash carries a written body, so no co-author trailer publishes a private mailbox |
+| **The record** | one Runes entry per merge, naming the PR, its head sha and its merge commit |
+| **The brake** | `state/.seal-hold` on the merging machine stops every merge and says why; a PR labelled `hold` or marked draft is never merged |
+| **Still never** | no merge on red, pending or conflicted, under any flag; no force-push; no local merge into `main` |
+
+A red gate is the only human question that remains. On a red PR, the merger names the failing row, and the
+operator decides: fix it, or merge anyway from his hall with an explicit second click.
+
+What this replaces, in plain words: *"an agent opens the PR and stops"* and *"the Allfather alone seals merges"*
+are retired for green PRs. Production deploys follow their own repository's road (Skíðblaðnir on the heart) after
+the merge.
