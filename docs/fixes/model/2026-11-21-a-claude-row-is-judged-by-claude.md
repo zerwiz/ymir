@@ -67,3 +67,7 @@ bin/agents/eindri-review-spawn.sh --pr https://github.com/zerwiz/ymir/pull/860 -
 >
 > The heart also has no `claude` CLI on its PATH. Until one is installed, a Claude judge cannot be
 > seated there, whatever the config says.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #865
