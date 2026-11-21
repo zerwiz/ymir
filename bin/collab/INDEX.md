@@ -115,7 +115,7 @@ bin[122]{file,does,kind,verdict,disposition,callers,lines}:
   "pr-guard.sh","pr-guard — a branch that exists on the remote must have a pull request.","tool","wired","keep",2,35
   "private-data.sh","private-data — the repository is public; the operator's machine is not.","tool","wired","keep",2,41
   "prune.sh","prune.sh — every leftover a development task makes, each class declared in project.yaml (RULES/24).","tool","wired","keep",11,11
-  "publish.py","'''publish.py — the baton on the board: what is next and what is blocked become cards.","tool","wired","keep",2,140
+  "publish.py","'''publish.py — the baton on the board: what is next and what is blocked become cards.","tool","wired","keep",4,140
   "python.yaml","project.yaml — the one file every collaboration-kit tool reads (kit {{kit}}).","data","wired","keep",0,55
   "quickstart.md","Title","data","wired","keep",1,98
   "readme.md","README template","data","wired","keep",3,158
