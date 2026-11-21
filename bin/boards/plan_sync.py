@@ -486,13 +486,21 @@ def build_board(home, row):
 class Sync:
     def __init__(self, home, row, place, board, dry):
         self.home, self.row, self.place, self.board, self.dry = home, row, place, board, dry
-        self.n = {"created": 0, "upgraded": 0, "updated": 0, "unchanged": 0, "steps": 0, "failed": 0}
+        self.n = {"created": 0, "upgraded": 0, "updated": 0, "unchanged": 0, "steps": 0, "found": 0, "failed": 0}
         self.failed, self.undrawn = [], []
         self.heads = phase_heads((row.get("board") or {}).get("phase_heads"))
 
     def note_diagrams(self, p, out):
         for f in ((out or {}).get("diagrams") or {}).get("failed") or []:
             self.undrawn.append(f"plan {p['num']} diagram {f.get('block')}: {f.get('why')}")
+
+    def found_by_title(self, title, parent=None):
+        """The card with exactly this title (top-level, or under `parent`), asked for by name; None when none answers."""
+        for c in self.board.find_cards(None if parent is not None else LABEL, title[:60]):
+            # the parent must be THIS card (or none, for a plan card): a same-titled step under another card is not ours
+            if c.get("title") == title and str(c.get("parent")) == str(parent):
+                return c.get("card")
+        return None
 
     def one(self, p, card, children):
         text, cut = plan_body(p)
@@ -504,6 +512,16 @@ class Sync:
         source = f"{p['rel']}#plan-{p['num']}"
 
         if card is None:
+            if not self.dry:
+                # A SHORT LISTING IS NOT AN EMPTY BOARD (2026-11-21). While the board's door reloads (a restart meets
+                # Plane's 429), list_all can come back without cards that exist, and a plan looked new: two runs that
+                # night left four cards for plan 340 and two for 343. So the title is asked for once more, by name,
+                # just before a create; a card that answers is left for the next run's full listing, never doubled.
+                twin = self.found_by_title(title)
+                if twin is not None:
+                    print(f"found   {title}  as #{twin} — the listing missed it; the next run carries it")
+                    self.n["found"] += 1
+                    return
             print(f"create  {title}  [{p['group']}] phases={len(phases)}")
             if self.dry:
                 self.n["created"] += 1
@@ -556,7 +574,12 @@ class Sync:
         if not fresh:
             if any(l.get("url") == url for l in self.board.get_card(num).get("links") or []):
                 return
-        self.board.add_link(num, url, f"Plan file in the {p.get('where', 'home')}")
+        try:
+            self.board.add_link(num, url, f"Plan file in the {p.get('where', 'home')}")
+        except BoardRefusal as e:
+            # Plane says the link is there when its listing spelled it otherwise (plan 111, 2026-11-21): it stands
+            if "already exists" not in str(e):
+                raise
 
     def steps_whole(self, p, phases, children):
         for pid, name, accept in phases:
@@ -575,6 +598,8 @@ class Sync:
             want, prefix = phase_title(p["num"], pid, name)
             stamp = f"step.{short(want + accept)}"
             c = next((c for c in kids if c["title"].startswith(prefix)), None)
+            if c is None and not fresh and self.found_by_title(want, parent=num) is not None:
+                continue   # a short listing hid this step; asked by name, it is there — never doubled
             if c is None:
                 self.board.create_card(want, phase_markdown(accept, stamp), start, [], parent=num, fmt="markdown",
                                        source=f"{p['rel']}#phase-{pid}")
@@ -628,7 +653,7 @@ def run_project(home, row, args, only=None):
     mode = "dry-run " if args.dry_run else ""
     n = s.n
     print(f"plan-sync {mode}{place}: plans={len(plans)} created={n['created']} upgraded={n['upgraded']} "
-          f"updated={n['updated']} unchanged={n['unchanged']} steps={n['steps']} failed={n['failed']}")
+          f"updated={n['updated']} unchanged={n['unchanged']} steps={n['steps']} found={n['found']} failed={n['failed']}")
     if only is None and not args.dry_run:
         after = [c for c in board.list_all() if TITLE_RE.match(c["title"]) and LABEL in c["labels"]
                  and c.get("parent") is None]
