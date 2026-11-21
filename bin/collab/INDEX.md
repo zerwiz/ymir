@@ -34,10 +34,10 @@ bin[122]{file,does,kind,verdict,disposition,callers,lines}:
   "LICENSE","MIT No Attribution License","data","wired","keep",3,8
   "LICENSE.MIT","MIT License","data","wired","keep",1,22
   "LICENSE.txt","The arc42 template and documentation is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License.","data","wired","keep",1,19
-  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",68,-
-  "README.md","The collaboration kit — the same discipline in every repository, and nothing left behind","data","tested","keep",68,-
-  "README.md","areas/ — what this repository answers for","data","tested","keep",68,-
-  "README.md","plans/tickets/ — the units of work under a validated plan","data","tested","keep",68,-
+  "README.md","collab — Vingólf, the assembly hall","data","tested","keep",69,-
+  "README.md","The collaboration kit — the same discipline in every repository, and nothing left behind","data","tested","keep",69,-
+  "README.md","areas/ — what this repository answers for","data","tested","keep",69,-
+  "README.md","plans/tickets/ — the units of work under a validated plan","data","tested","keep",69,-
   "TEMPLATE.md","---","data","wired","keep",5,48
   "TEMPLATE.yaml","areas/TEMPLATE.yaml — what one area's declaration looks like.","data","wired","keep",2,44
   "__init__.py","'''kitlib — the collaboration kit's modules, imported by scripts/kit.py.'''","tool","tested","migrate → src/ymir_runtime/tests/__init__.py",2,3

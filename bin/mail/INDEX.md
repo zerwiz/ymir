@@ -22,7 +22,7 @@ The tree replaced a single register on 2026-11-06 (plan 211) so that a change in
 folder rewrites one file instead of colliding on every branch.
 
 bin[20]{file,does,kind,verdict,disposition,callers,lines}:
-  "README.md","Gná — the one mail desk (production)","data","tested","keep",68,-
+  "README.md","Gná — the one mail desk (production)","data","tested","keep",69,-
   "addresses.sh","addresses.sh — THE register of the mail addresses the house uses, and whether mail can reach them.","tool","wired","keep",5,61
   "connect.sh","connect.sh — THE connect door: one button to a signed-in mailbox, and the honest line per account.","tool","wired","keep",5,71
   "draft-age.sh","draft-age.sh — a draft cannot grow old quietly.","tool","wired","keep",4,501

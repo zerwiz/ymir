@@ -22,7 +22,7 @@ The tree replaced a single register on 2026-11-06 (plan 211) so that a change in
 folder rewrites one file instead of colliding on every branch.
 
 bin[81]{file,does,kind,verdict,disposition,callers,lines}:
-  "README.md","Gróa — the updater, one per install","data","tested","keep",68,-
+  "README.md","Gróa — the updater, one per install","data","tested","keep",69,-
   "agent-census.sh","agent-census.sh — how many agents are running on THIS machine, and which of them are stale.","tool","wired","keep",1,163
   "agent-run.sh","agent-run.sh — run one agent's errand through the harness the Allfather chose.","tool","wired","keep",2,62
   "areas.sh","areas.sh — the estate door: a project's areas, their keepers, and the seam to the seat.","tool","wired","keep",12,393

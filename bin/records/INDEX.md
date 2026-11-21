@@ -25,7 +25,7 @@ bin[63]{file,does,kind,verdict,disposition,callers,lines}:
   "agents-status.sh","agents-status.sh — which agents are running, where, on what work, and which are idle.","tool","wired","keep",1,48
   "audit-apply.sh","audit-apply.sh — turn an audit into work, in one door.","tool","wired","keep",0,96
   "behind.sh","behind.sh — the arithmetic of being behind: opened/closed this week, net, stale-30d, unbuilt phases.","tool","wired","keep",0,46
-  "comms.py","'''comms.py — every communication, in, out and owed, and the to-do they move (plan 261).","tool","tested","keep",4,1175
+  "comms.py","'''comms.py — every communication, in, out and owed, and the to-do they move (plan 261).","tool","tested","keep",5,1175
   "comms.sh","comms.sh — the one read door over every communication: in, out and owed (plan 261).","tool","wired","keep",3,19
   "cron-registry.sh","cron-registry.sh — every scheduled thing on this machine: the Nornir rows, the system timers, the user timers.","tool","wired","keep",1,66
   "daily-log.sh","daily-log.sh — the day's work, recorded where the contract says it lives.","tool","wired","keep",6,104
@@ -60,7 +60,7 @@ bin[63]{file,does,kind,verdict,disposition,callers,lines}:
   "regenerate-on-merge.sh","regenerate-on-merge.sh — the merge driver for WOVEN documents (Þættir, plan 174).","tool","wired","keep",3,36
   "registries-refresh.sh","registries-refresh.sh — write the four measured registries for this host into the home.","tool","wired","keep",0,33
   "registry-audit.sh","registry-audit.sh — does the registry answer for every service, and does every row tell the truth?","tool","wired","keep",0,435
-  "runes-append.sh","runes-append.sh — the append-only Runes ledger, a THIN SHIM.","tool","tested","keep",42,117
+  "runes-append.sh","runes-append.sh — the append-only Runes ledger, a THIN SHIM.","tool","tested","keep",43,117
   "runes-project.sh","runes-project.sh — the DAG projector, regenerates runes_audit.md from events.","tool","wired","keep",0,65
   "running-inventory.sh","running-inventory.sh — what is actually running on this machine, generated rather than remembered, with the restart count of every containe…","tool","wired","keep",1,159
   "snotra-ladder.sh","snotra-ladder.sh — the meeting ladder: transcript → minutes → promises → todos, and a stop that says so.","tool","wired","keep",0,616
