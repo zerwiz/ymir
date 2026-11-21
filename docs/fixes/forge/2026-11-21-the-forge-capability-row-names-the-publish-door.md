@@ -14,3 +14,7 @@ The woven row for `bin/forge/gjallarhorn-publish.sh` was added by the weave step
 ## How it was proved
 
 The weave step ran from the pre-commit hook and staged the file; the test file for the door still passes.
+
+## CHANGE LOG
+
+- 2026-11-21 — review-mend: added missing heading for #882
