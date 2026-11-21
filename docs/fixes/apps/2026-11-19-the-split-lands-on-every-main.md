@@ -40,3 +40,8 @@ history cut from Ymir sat on `split/from-ymir`. GitHub refused a pull request be
 ## CHANGE LOG
 
 - 2026-11-19 — first entry.
+- 2026-11-21 — correction: the registry this change edits is `.agents/config/app-repos.yaml`, not
+  `config/app-repos.yaml`. That wrong path appears twice above, under **What changed** and **Files**. Those lines
+  stay as the record. The file this range touches is `.agents/config/app-repos.yaml` (the default branch for three
+  rows, and their comment). The three join pull requests (Smíðja #8, Óðrerir #4, Sessrúmnir #6) are merged, so each
+  `main` now carries the split, as the **Order** callout requires.
