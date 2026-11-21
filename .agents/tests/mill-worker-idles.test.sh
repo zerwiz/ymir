@@ -55,4 +55,23 @@ printf '#!/bin/sh\n/bin/sleep 1\nprintf "mill:jobs\\n{\\"class\\":\\"nosuch\\"}\
 run_for 3
 grep -q 'unknown job class: nosuch' "$TMP/out" && ok "a job is still dispatched" || bad "a job was not dispatched"
 
+# 4. a job whose own text says "Connection refused" is a job, not a down redis (PR 869 review,
+#    item 1): the error check reads redis's reply line, never the payload blpop already popped
+printf '#!/bin/sh\n/bin/sleep 1\nprintf "mill:jobs\\n{\\"class\\":\\"nosuch\\",\\"q\\":\\"why Connection refused on the well\\"}\\n"\n' >"$TMP/bin/redis-cli"
+run_for 3
+if grep -q 'unknown job class: nosuch' "$TMP/out" && ! grep -q 'unreadable' "$TMP/out"; then
+  ok "a job that says 'Connection refused' is dispatched, not lost"
+else
+  bad "a job that says 'Connection refused' was taken for a down redis: $(head -1 "$TMP/out")"
+fi
+
+# 5. an error reply that exits 0 (an older redis-cli) is still an error: said once, waits
+printf '#!/bin/sh\necho "NOAUTH Authentication required."\nexit 0\n' >"$TMP/bin/redis-cli"
+run_for 4
+said="$(grep -c 'unreadable (redis-cli failed: NOAUTH' "$TMP/out")"
+turns="$(wc -l <"$TMP/sleeps")"
+[ "$said" = 1 ] && ok "error reply with exit 0: said once" || bad "error reply with exit 0: said $said times"
+[ "$turns" -ge 2 ] && [ "$turns" -le 6 ] && ok "error reply with exit 0: waits ($turns turns in 4 s)" \
+  || bad "error reply with exit 0: $turns loop turns in 4 s"
+
 exit "$fail"

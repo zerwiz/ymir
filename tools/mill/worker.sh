@@ -59,10 +59,16 @@ while true; do
   fi
   started=$(date +%s)
   raw="$(timeout 310 redis-cli --raw blpop "$Q" 300 2>&1)"; rc=$?
-  if [ "$rc" -ne 0 ] || printf '%s' "$raw" | grep -qiE '^(ERR|Could not connect|.*Connection refused)'; then
+  # Judge the read by redis's own reply only: the exit code, and the FIRST line, which is
+  # the queue's key when a job was popped. Never the job payload on line 2 — blpop has
+  # already removed the job, so a payload that happens to say "Connection refused" must be
+  # dispatched, not mistaken for a down redis and lost. A first line that is neither empty
+  # (the 300 s wait ran out) nor the key is an error reply, even when redis-cli exits 0.
+  first="$(printf '%s\n' "$raw" | head -1)"
+  if [ "$rc" -ne 0 ] || { [ -n "$first" ] && [ "$first" != "$Q" ]; }; then
     # A blpop that fails fast is an unreachable redis, not an empty queue.
     if [ $(( $(date +%s) - started )) -lt 5 ]; then
-      queue_unreadable "redis-cli failed: $(printf '%s' "$raw" | head -1 | cut -c1-80)"
+      queue_unreadable "redis-cli failed: $(printf '%s' "$first" | cut -c1-80)"
     fi
     continue
   fi
