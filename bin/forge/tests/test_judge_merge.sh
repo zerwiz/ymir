@@ -74,7 +74,7 @@ export PATH="$T/bin:$PATH" HOME="$T/user" YMIR_HOME="$T/home" YMIR_STATE_DIR="$T
   FIX="$T/fix" GHLOG="$T/gh.log" RUNELOG="$T/runes.log" WAKELOG="$T/wake" \
   YMIR_RODD_DOOR="$T/bin/rodd" YMIR_NOTIFY_DOOR="$T/bin/notify" YMIR_ARM_SEND_DOOR="$T/bin/armsend" \
   YMIR_FLEET_REGISTRY="$T/no-fleet.json" YMIR_OPERATOR_GITHUB=acme YMIR_NO_INJECT=1
-unset YMIR_MERGE_IDENTITY YMIR_HOARD_LIB_LOADED
+unset YMIR_HOARD_LIB_LOADED
 
 pr_json() {  # <head> <ci: green|red|pending> [draft] [labels-json] [branch]
   local head="$1" ci="$2" draft="${3:-false}" labels="${4:-[]}" branch="${5:-eindri/widget-fix}" roll
@@ -229,7 +229,7 @@ out="$("$JM" act pr-7-review 2>&1)"
   && ok "an upstream repository is never commented on, woken or merged" || bad "upstream left alone" "$(cat "$GHLOG" 2>/dev/null) $out"
 fresh "$APPROVE" upstream/agent; pr_json "$HEAD_A" green
 "$JM" act pr-7-review >/dev/null 2>&1
-[ "$(merges)" = 0 ] && [ "$(comments)" = 0 ] && ok "an upstream APPROVE merges and says nothing" || bad "upstream approve" "$(cat "$GHLOG" 2>/dev/null)"
+[ "$(merges)" = 0 ] && [ "$(comments)" = 0 ] && ok "an upstream APPROVE is neither merged nor commented on" || bad "upstream approve" "$(cat "$GHLOG" 2>/dev/null)"
 # a kept repository where this hand only reads: nothing said
 fresh "$REWORK"; pr_json "$HEAD_A" green; printf 'READ\n' >"$FIX/perm"
 "$JM" act pr-7-review >/dev/null 2>&1
