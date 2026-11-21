@@ -44,3 +44,7 @@ A claim also has a role: `coder`, `judge` or `shipper`. A judge and a coder may 
 - *"is held — seat X, errand Y"*: another seat has the task. Ask them, or wait for the claim to go stale.
 - *"claimed here but NOT shared"*: the home could not be pushed. Run `bin/vault/home-sync.sh ship` once the network is back.
 - To skip the ledger for one errand, set `YMIR_CLAIMS=off`.
+
+## CHANGE LOG
+
+- 2026-11-21 — written with the change it describes (plan 343.12 and 343.14).
