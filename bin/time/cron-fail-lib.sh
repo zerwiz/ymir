@@ -22,6 +22,17 @@
 # Read-only. No writes, no network, no state. Safe to source from the scheduler's own subshell.
 set -u 2>/dev/null || true
 
+# cron_row_tail <stderr-file> <stdout-file> — the row's OWN last words (2026-11-21).
+# The last three non-empty stderr lines, joined on one line; the last stdout line when stderr is empty.
+# The scheduler used to read the tail of the SHARED log, so a failing row was described by another
+# row's line, or by "no output" (learn-home exited 4 and nsr-compliance exited 1, and both said nothing).
+cron_row_tail() {
+  local err="${1-}" out="${2-}" t=""
+  [ -r "$err" ] && t="$(grep -v '^[[:space:]]*$' "$err" 2>/dev/null | tail -n 3 | tr '\n' ' ' | sed 's/ *$//')"
+  [ -n "$t" ] || { [ -r "$out" ] && t="$(grep -v '^[[:space:]]*$' "$out" 2>/dev/null | tail -n 1)"; }
+  printf '%s' "$t" | cut -c1-200
+}
+
 cron_fail_detail() {
   local home="${1-}" cmd="${2-}" rc="${3-}" tail="${4-}" word path out
 
