@@ -45,6 +45,19 @@ The `board:` block (in the project's registry row):
       status_map: {record: done}            # optional: this ledger's own status words → a state group
       phase_heads: {id: [n], name: [slice]} # optional: this ledger's own phase-table column words (id/name/accept)
 
+A SHELF OF PLANS THAT IS NOT A PROJECT (a machine's own plans, a company's ledger) is named in the registry's
+top-level `plan_shelves:` list, beside `projects:`:
+
+    plan_shelves:
+      - id: machine-<name>
+        plans: <home-relative folder holding the numbered plans>
+        labels: [machine:<name>]            # carried by every card of this shelf, besides `plan`
+        board: {adapter: mcp, place: …, mcp: {…}}   # the same block a project has
+
+Plan numbers repeat from shelf to shelf, so a shelf's cards are told apart by its `labels`: a sync of one shelf sees
+only the cards that carry all of them, and a sync of a project (or of a shelf with no labels) ignores every card that
+carries a label some shelf owns. A shelf with no `board:` block is refused by name, never given a guessed one.
+
 A repository ledger is read from the ref, never the checkout, so a clone that is behind or mid-branch cannot put a
 stale plan on the board; the link to each file is built from the row's `git:` block unless `file_url` names one.
 
@@ -96,8 +109,44 @@ def registry_rows(home):
     return rows or []
 
 
+def registry_shelves(home):
+    """The registry's `plan_shelves:` as rows shaped like a project's (board.plans = the shelf's folder)."""
+    try:
+        import yaml
+    except ImportError:
+        raise Refusal("PyYAML is not installed — the registry cannot be read")
+    reg = os.path.join(home, "hodd", "identity", "projects.yaml")
+    if not os.path.isfile(reg):
+        return []
+    data = yaml.safe_load(open(reg)) or {}
+    out = []
+    for sh in (data.get("plan_shelves") if isinstance(data, dict) else None) or []:
+        if not isinstance(sh, dict) or not sh.get("plans") or not sh.get("id"):
+            continue
+        row = dict(sh)
+        row["board"] = dict(sh.get("board") or {})
+        if row["board"]:
+            row["board"]["plans"] = sh["plans"]
+        row["scope_labels"] = [str(x) for x in (sh.get("labels") or [])]
+        row["shelf"] = True
+        out.append(row)
+    return out
+
+
+def shelf_labels(home):
+    """Every label some shelf owns — a card bearing one is no project's."""
+    return {l for r in registry_shelves(home) for l in r["scope_labels"]}
+
+
+def in_scope(card, row, owned):
+    """Is this card one this row's sync may see? A shelf sees its own labels; everything else sees none of them."""
+    have = set(card.get("labels") or [])
+    mine = set(row.get("scope_labels") or [])
+    return mine <= have if mine else not (have & owned)
+
+
 def load_project(home, wanted):
-    rows = registry_rows(home)
+    rows = registry_rows(home) + registry_shelves(home)
     w = wanted.lower()
     for r in rows:
         if str(r.get("id", "")).lower() == w:
@@ -198,6 +247,13 @@ def project_for_file(home, path):
         except Refusal:
             continue
         if os.path.dirname(target) == os.path.realpath(led):
+            return r
+    for r in registry_shelves(home):  # a shelf of plans that is no project's (a machine, a company)
+        led = os.path.realpath(os.path.join(home, str(r["plans"])))
+        if os.path.dirname(target) == led:
+            if not r.get("board"):
+                raise Refusal(f"the plan shelf '{r['id']}' ({r['plans']}) has no board: block in the registry — "
+                              f"its plans are not on any board yet")
             return r
     raise Refusal(f"no project with a board: block keeps its plans where {path} lies")
 
@@ -488,7 +544,9 @@ class Sync:
         self.home, self.row, self.place, self.board, self.dry = home, row, place, board, dry
         self.n = {"created": 0, "upgraded": 0, "updated": 0, "unchanged": 0, "steps": 0, "found": 0, "failed": 0}
         self.failed, self.undrawn = [], []
+        self.owned = set()
         self.heads = phase_heads((row.get("board") or {}).get("phase_heads"))
+        self.labels = [LABEL] + [l for l in row.get("scope_labels") or [] if l != LABEL]
 
     def note_diagrams(self, p, out):
         for f in ((out or {}).get("diagrams") or {}).get("failed") or []:
@@ -498,7 +556,7 @@ class Sync:
         """The card with exactly this title (top-level, or under `parent`), asked for by name; None when none answers."""
         for c in self.board.find_cards(None if parent is not None else LABEL, title[:60]):
             # the parent must be THIS card (or none, for a plan card): a same-titled step under another card is not ours
-            if c.get("title") == title and str(c.get("parent")) == str(parent):
+            if c.get("title") == title and str(c.get("parent")) == str(parent) and in_scope(c, self.row, self.owned):
                 return c.get("card")
         return None
 
@@ -526,11 +584,12 @@ class Sync:
             if self.dry:
                 self.n["created"] += 1
                 return
-            out = self.board.create_card(title, desc, p["group"], [LABEL], fmt="markdown", source=source)
+            out = self.board.create_card(title, desc, p["group"], self.labels, fmt="markdown", source=source)
             self.note_diagrams(p, out)
             num = out.get("card")
             if num is None:  # an older board names no number: find the card it just made
-                num = next((c["card"] for c in self.board.find_cards(LABEL, title[:40]) if c["title"] == title), None)
+                num = next((c["card"] for c in self.board.find_cards(LABEL, title[:40])
+                            if c["title"] == title and in_scope(c, self.row, self.owned)), None)
             self.link(p, num, fresh=True)
             self.steps(p, num, phases, {}, fresh=True)
             self.n["created"] += 1
@@ -622,9 +681,12 @@ def run_project(home, row, args, only=None):
         if not plans:
             raise Refusal(f"no plan {sorted(map(str, only))} in the ledger {ledger_rel}")
 
-    if board.ensure_label(LABEL, dry=args.dry_run):
-        print(f"label '{LABEL}': {'would create' if args.dry_run else 'created'} in {place}")
+    owned = shelf_labels(home)
+    for lab in [LABEL] + [l for l in row.get("scope_labels") or [] if l != LABEL]:
+        if board.ensure_label(lab, dry=args.dry_run):
+            print(f"label '{lab}': {'would create' if args.dry_run else 'created'} in {place}")
     every = board.list_all()
+    every = [c for c in every if c.get("parent") is not None or in_scope(c, row, owned)]
     if board.saturated and not args.dry_run:
         raise Refusal("the board cannot list a place to its end (it answers no `offset`), so older cards may be hidden "
                       "and a second pass would create them again. Nothing was written; run with --dry-run, or bring "
@@ -638,6 +700,7 @@ def run_project(home, row, args, only=None):
             by_num.setdefault(int(m.group(1)), []).append(c)
 
     s = Sync(home, row, place, board, args.dry_run)
+    s.owned = owned
     for p in plans:
         cands, want = by_num.get(p["num"], []), card_title(p)
         card = next((c for c in cands if c["title"] == want), None)
@@ -656,7 +719,7 @@ def run_project(home, row, args, only=None):
           f"updated={n['updated']} unchanged={n['unchanged']} steps={n['steps']} found={n['found']} failed={n['failed']}")
     if only is None and not args.dry_run:
         after = [c for c in board.list_all() if TITLE_RE.match(c["title"]) and LABEL in c["labels"]
-                 and c.get("parent") is None]
+                 and c.get("parent") is None and in_scope(c, row, owned)]
         nums = {int(TITLE_RE.match(c["title"]).group(1)) for c in after}
         missing = sorted({p["num"] for p in plans} - nums)
         print(f"count {place}: ledger={len({p['num'] for p in plans})} plans · board={len(nums)} plan cards"
