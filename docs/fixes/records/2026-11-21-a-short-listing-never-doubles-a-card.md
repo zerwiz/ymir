@@ -31,3 +31,22 @@ writes no card and reports `found=3`, and the run after it changes nothing.
 ## CHANGE LOG
 
 - 2026-11-20 — review-mend: added missing heading for #862
+
+## Addendum — the review's two items (same day)
+
+The judge found two faults in the change above, and both are mended on the same branch.
+
+**The step guard matched any parent.** `found_by_title` compared only whether a parent existed, so a same-titled
+step under ANY card (a duplicate plan card, say) stood in for this card's step. The step was never made, and the
+plan stayed `updated` on every run. It now compares the parent itself: `str(c["parent"]) == str(parent)`.
+
+**The test stopped before the new roads.** Three tests are added:
+
+- a step the listing hides, under this card, is found by name and not made again;
+- a same-titled step under another card does not stand for ours — the step is made, and the next run is quiet;
+- an `add_link` refused as `already exists` is not a failure.
+
+The fake board now answers a refusal as an `isError` result, and the project gives a `file_url`, so the link road
+runs. Each test was checked against the broken code: it fails there and passes on the fix.
+
+`python3 -m unittest tests.test_plan_sync` — 12 OK.
