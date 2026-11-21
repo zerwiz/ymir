@@ -23,7 +23,7 @@ home-sync's words instead of carrying them.
 
 **The owner road.** A HIGH or CRITICAL line (not `--ask`) is handed to the arm holder that owns its source, through
 `bin/fleet/arm-send.sh`, so it arrives as that agent's turn. The owner is the machine named in the line, or the rule in
-the home's `config/notify-owners.conf` (template: `config/notify-owners.conf.example`). When the owner's arm does not
+the home's `config/notify-owners.conf` (template: `.agents/config/notify-owners.conf.example`). When the owner's arm does not
 answer, the heart's arm holder takes it and the line says so.
 
 **The agent answers the operator.** The turn asks for ONE `telegram_message` with what was found and three buttons:
@@ -69,3 +69,29 @@ cases for the exit-4 path (23 pass). The neighbours still pass: `test_send_butto
 ## CHANGE LOG
 
 - 2026-11-21 — written the morning after nine hours of one unanswered hound line.
+
+## Addendum: a pid is not a stamp (rework of PR #861)
+
+The review found that the key fold treated any segment of six or more digits as a stamp. The ward watcher keys each
+alert per process (`garmr:{title}:{pid}`), so a second process with a 7-digit pid came back `duplicate` and was
+silenced for an hour. Machines with short pids behaved differently.
+
+Now only real stamp shapes fold: `20YYMMDD` with an optional hour, minute and second, a 10-digit epoch, and an ISO
+date or time. The ISO stamp is lifted from the whole key before the key is split on `:`, because its colons used to
+break it into pieces that did not fold. New tests: two pids in a key stay two lines, and an epoch or ISO stamp still
+folds.
+
+## Addendum: a number that names a thing is not folded (rework of PR #861)
+
+An alert with no `--key` was grouped by its message with every digit folded. So `new PR #857 opened` and
+`new PR #858 opened` became one group, and the second notice was hidden for an hour. Review seats send exactly that
+kind of unkeyed notice.
+
+Now only measurements fold: an ISO stamp or a clock time, a number with a unit (`25895s`, `3 min`, `91%`, `2 GB`),
+and a number after `age`, `old`, `rc`, `exit` or `took`. Any other number is kept as an identity. New tests: two
+PR numbers and two ports stay two lines each, and changing measurements still fold into one.
+
+## Addendum: the template path (rework of PR #861)
+
+This note and `docs/features/the-hotline.md` named the owner template as `config/notify-owners.conf.example`. The
+file is `.agents/config/notify-owners.conf.example`; both pages now say so.
