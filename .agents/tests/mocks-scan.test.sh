@@ -102,6 +102,21 @@ else
   ok "the vocabulary excuse stays narrow: a stub beside the declared file is still caught"
 fi
 
+# ── the board door's callers name it by filename, and that is excused ───────────────────────────
+mkdir -p "$TMP/board/bin/day"
+printf 'TODO_DOOR = ROOT / "bin/records/todo.sh"\nsaid = "`todo.sh list` failed"\n' > "$TMP/board/bin/day/report.py"
+if bash "$SCAN" "$TMP/board" >/dev/null 2>&1; then
+  ok "a caller naming the board door (todo.sh) by its filename is excused"
+else
+  bad "the board door's filename was reported: $(bash "$SCAN" "$TMP/board" 2>&1 | head -n1)"
+fi
+printf 'x = "todo"  # not built yet\ntodos = "todo shell"\n' > "$TMP/board/bin/day/lone.py"
+if [ "$(bash "$SCAN" "$TMP/board" 2>/dev/null | wc -l | tr -d ' ')" = "2" ]; then
+  ok "the board-door excuse stays narrow: a lone todo beside it is still caught"
+else
+  bad "the board-door excuse leaked: a lone todo beside it was NOT caught"
+fi
+
 # ── the excuses are narrow ──────────────────────────────────────────────────────────────────────
 printf 'x = "todo"\n' > "$TMP/narrow/bin/door/lone.py"
 printf 'def todo(action="list"):\n    pass\n' > "$TMP/narrow/bin/seat/ymir-mcp-extra.py"

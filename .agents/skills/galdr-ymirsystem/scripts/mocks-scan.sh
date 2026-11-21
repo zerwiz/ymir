@@ -51,6 +51,10 @@
 #     class as `todo.md`): matched on the filename only, so a stub on that line's neighbours is caught.
 #     The board's door FILENAMES, `todo.sh` and `todo_board.py`, are the same class wherever a generated index
 #     names them (bin/records/INDEX.md).
+#   · the board door's CALLERS — any line that names `todo.sh` by its filename (`bin/records/todo.sh`,
+#     `todo.sh list --json`, `todo.sh move <card> Done`). The night report (`bin/day/night_report.py`) and
+#     its gate row read and close cards ONLY through that door, so they must name it. A FILENAME, the same
+#     class as `todo-board.yaml`: matched on `todo.sh` only, so a lone `todo` or a stub elsewhere is caught.
 #   · `bin/boards/cardlib.py` lines that quote `"todo"` — a board's own LANE NAME in the lane synonym
 #     table (Plane and Trello both ship a list called "Todo"). Data, matched on the quoted word only.
 #   · `bin/voice/voice_tools.py` — the voice fills the operator's letter templates (`placeholder` is the
@@ -80,7 +84,7 @@ hits="$(grep -rnE '\b(mock|stub|placeholder|todo)\b' "$ROOT/bin" 2>/dev/null \
   | grep -vE '^[^:]*bin/voice/voice_tools\.py:[0-9]+:' \
   | grep -vE '^[^:]*bin/records/todo_board\.py:[0-9]+:' \
   | grep -vE 'todo-board\.yaml' \
-  | grep -vE '"todo\.sh"|todo\.sh —|todo_board\.py' \
+  | grep -vE '\btodo\.sh\b|todo_board\.py' \
   | grep -vE '^[^:]*bin/boards/cardlib\.py:[0-9]+:.*"todo"' || true)"
 
 
