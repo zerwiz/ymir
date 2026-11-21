@@ -67,10 +67,10 @@ bin[63]{file,does,kind,verdict,disposition,callers,lines}:
   "snotra-what.sh","snotra-what.sh — Snotra's own voice: what the ear is doing, said in one sentence.","tool","wired","keep",1,640
   "test_comms.py","'''The proofs plan 261 asks for: the record, the owed list, the to-do proposals, the brief,","tool","wired","keep",0,508
   "test_mimir_bridge_health.py","﻿import importlib.util,json,subprocess,sys,tempfile,threading,unittest","tool","wired","keep",0,30
-  "test_todo_board.py","'''test_todo_board — the to-do board door, against a fake board (no network, a fenced home).","tool","wired","keep",0,194
+  "test_todo_board.py","'''test_todo_board — the to-do board door, against a fake board (no network, a fenced home).","tool","wired","keep",0,208
   "test_tunnel_patience.sh","test_tunnel_patience.sh — a slow origin is not an absent one, and a silent one still fails.","tool","wired","keep",1,46
-  "todo.sh","todo.sh — the operator's to-do, as cards on the board.","tool","wired","keep",3,14
-  "todo_board.py","'''todo_board — the operator's to-do lives on a board, and this is the one door that writes it.","tool","wired","keep",2,773
+  "todo.sh","todo.sh — the operator's to-do, as cards on the board.","tool","wired","keep",4,14
+  "todo_board.py","'''todo_board — the operator's to-do lives on a board, and this is the one door that writes it.","tool","wired","keep",2,796
   "todos.sh","todos.sh — THE task board of the house, one writer for one file.","tool","wired","keep",8,184
   "tunnels-registry.sh","tunnels-registry.sh — emit the registry's `tunnels:` block from the cloudflared configs that actually exist.","tool","wired","keep",0,70
   "tunnels-status.sh","tunnels-status.sh — every public name this machine publishes, whether its tunnel is up, and whether its upstream answers.","tool","wired","keep",2,44
