@@ -73,6 +73,9 @@ class FakeBoard:
             self.labels.add(args["name"])
             return {"label": args["name"]}
         if name == "create_card":
+            # the real door (Gimlé's create_card) refuses a card without `source: <path>#<id>`
+            if not tb.SOURCE_SHAPE.match(str(args.get("source") or "")):
+                raise tb.BoardError("a card made by an agent needs `source: <path>#<id>` — the record it came from")
             for l in args.get("labels") or []:
                 if l not in self.labels:
                     raise tb.BoardError(f"unknown label {l}")
@@ -117,6 +120,17 @@ def main() -> int:
         cfg = {"place": "house/private", "url": "https://fake.invalid", "token": "t", "owners": {"Ada": "ada"}}
         fake = FakeBoard()
         board = tb.Board(cfg, call=fake)
+
+        # 1b. every card carries the board's provenance shape, whatever prose its source was written in
+        for src, want in (("hodd/memory/mail/messages.jsonl#m-42", "hodd/memory/mail/messages.jsonl#m-42"),
+                          ("life/me/todo.md · line 12 · Today", "life/me/todo.md#L12"),
+                          ("the view (record hodd/state/voice/todos.jsonl, id t1)", "hodd/state/voice/todos.jsonl#t1")):
+            got = tb.card_source({"title": "x", "source": src})
+            check(f"source shaped: {src[:30]}", got == want, got)
+        got = tb.card_source({"title": "x", "source": "the command line", "key": "todo-abc"})
+        check("prose source falls back to the to-do door and the key", got == "bin/records/todo.sh#todo-abc", got)
+        check("every shaped source is one token each side", all(tb.SOURCE_SHAPE.match(tb.card_source({"title": "t", "source": s}))
+              for s in ("", "a b c", "x#y z", "the command line")))
 
         # 2. parsing: every checkbox one item, continuation kept verbatim, lanes from headings
         items = tb.read_items()
