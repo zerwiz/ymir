@@ -51,8 +51,8 @@ out="$(bash "$DOOR" "${R[@]}" 'Alpha App' --field visibility.value)"
 t "a project is found by its name too"                    [ "$out" = "public" ]
 out="$(bash "$DOOR" "${R[@]}" alpha --field private_to --json)"
 t "OWED reads as OWED, never as an answer"                bash -c "grep -q '\"OWED\"' <<<\"\$0\"" "$out"
-out="$(bash "$DOOR" "${R[@]}" alpha --field name)"
-t "a top-level key answers when handling lacks it"        [ "$out" = "Alpha App" ]
+out="$(bash "$DOOR" "${R[@]}" alpha --field name 2>&1)"; rc=$?
+t "a top-level key never answers; handling: is the only source" [ "$rc" -eq 1 ] && [ "$out" != "Alpha App" ]
 bash "$DOOR" "${R[@]}" alpha --field nothing-here >/dev/null 2>&1; rc=$?
 t "a missing field exits 1"                               [ "$rc" -eq 1 ]
 bash "$DOOR" "${R[@]}" nobody >/dev/null 2>&1; rc=$?
