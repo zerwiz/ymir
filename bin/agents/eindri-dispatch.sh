@@ -59,7 +59,11 @@ fi
 STATE="${BROKK_STATE_OVERRIDE:-$BROKK_HOME/state}"
 WAVES="${BROKK_WAVES_OVERRIDE:-$DATA/waves.yaml}"
 BACKLOG="$DATA/backlog.md"
-LOCK="$DATA/backlog.lock"
+# THE LOCK IS RUNTIME, NOT RECORD (plan 331, 2026-11-21): it lived beside the backlog in hodd/data, and Eir's hoard
+# surface named it on every seat ("a runtime artefact inside the record"). It now lives on the home's state shelf;
+# a test that overrides the data shelf keeps its lock there, so it never touches a real home.
+if [ -n "${BROKK_DATA_OVERRIDE:-}" ]; then LOCK="$DATA/backlog.lock"
+else LOCK="${YMIR_HOME%/}/state/eindri/backlog.lock"; mkdir -p "${LOCK%/*}" 2>/dev/null || LOCK="$DATA/backlog.lock"; fi
 
 say() { printf '%s\n' "$*"; }
 

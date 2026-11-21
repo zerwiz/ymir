@@ -74,6 +74,13 @@ link_shared() {  # <release-dir>
     case "$p" in .run|state|.a2a|.yggdrasil) mkdir -p "$SHARED/$p" ;; esac   # the folders; the rest are files
     [ -L "$d/$p" ] || ln -s "$SHARED/$p" "$d/$p"
   done
+  # the links and the release's own stamps are the release's, not edits: git is told so, so a release's
+  # `git status` stays empty and no reader mistakes them for local changes ("dirty (4)", 2026-11-20)
+  if [ -d "$d/.git" ] && mkdir -p "$d/.git/info" 2>/dev/null; then
+    for p in $SHARED_PATHS .release-proved .release-adopted; do
+      grep -qxF "/$p" "$d/.git/info/exclude" 2>/dev/null || printf '/%s\n' "$p" >> "$d/.git/info/exclude"
+    done
+  fi
 }
 
 # ── the proof: every app, judged on fit, not presence ──────────────────────────────────────────────────────────

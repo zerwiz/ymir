@@ -141,10 +141,41 @@ ff_home() { # <path> <label>
   else FF_STATE="skipped"; FF_DETAIL="fast-forward failed"; fi
 }
 
+# A pin that is a LINK to a release (plan 275 S9) is never fast-forwarded in place. A release is a proved copy named
+# for its sha; a merge inside it would run code its proof never saw. Its runtime links (.run, .a2a, .yggdrasil) and
+# its .release-proved stamp are not dirt either — they made every seat read "dirty (4)" and hold its pin
+# (2026-11-20). Gróa only measures the release against the remote here; when it is behind, an apply hands the move
+# to runtime-deploy.sh, which builds a new release beside it, proves it and flips. Sets FF_STATE/FF_DETAIL.
+release_pin_state() { # <pin-link>
+  local p="$1" local_h target n
+  if ! git -C "$p" rev-parse --is-inside-work-tree >/dev/null 2>&1; then FF_STATE="skipped"; FF_DETAIL="the release is not a git checkout"; return; fi
+  git -C "$p" fetch --quiet --prune "$REMOTE" 2>/dev/null || { FF_STATE="skipped"; FF_DETAIL="offline ($REMOTE)"; return; }
+  local_h="$(git -C "$p" rev-parse HEAD)"
+  target="$(git -C "$p" rev-parse "$REMOTE/$BRANCH" 2>/dev/null)" || { FF_STATE="skipped"; FF_DETAIL="$REMOTE/$BRANCH missing"; return; }
+  local named; named="$(basename "$(cd "$p" 2>/dev/null && pwd -P)")"
+  case "$named" in
+    [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]*) case "$local_h" in "$named"*) ;; *)
+      # a release whose code is not the sha it is named for was moved in place; only a new build is honest
+      FF_STATE="$([ "$CHECK" = 1 ] && echo behind || echo rebuild)"
+      FF_DETAIL="release $named carries ${local_h:0:12} — moved in place; a new release is built and flipped"; return ;; esac ;;
+  esac
+  if [ "$local_h" = "$target" ]; then FF_STATE="current"; FF_DETAIL="release ${local_h:0:12}"; return; fi
+  n="$(git -C "$p" rev-list --count "$local_h..$target" 2>/dev/null || echo '?')"
+  if [ "$CHECK" = 1 ]; then FF_STATE="behind"; FF_DETAIL="release ${local_h:0:12}, $n behind — an update builds and flips a new release"; return; fi
+  FF_STATE="rebuild"; FF_DETAIL="release ${local_h:0:12}, $n behind — a new release of ${target:0:12} is built and flipped"
+}
+
 add_row() { ROWS+=("$1"); }
 
-# 1. This home.
-ff_home "$ROOT" "$ROOT"
+# 1. This home. Gróa run from the pin itself (a release, as on a heart with no working tree) measures the release
+#    and never merges inside it; the move is the release door's, below.
+PIN_MOVED=0
+if [ -f "$ROOT/.release-proved" ] || [ -f "$ROOT/.release-adopted" ]; then
+  release_pin_state "$ROOT"
+  [ "$FF_STATE" = rebuild ] && PIN_MOVED=1
+else
+  ff_home "$ROOT" "$ROOT"
+fi
 add_row "  \"$ROOT\",\"this Brokk home\",\"$FF_STATE\",\"$FF_DETAIL\""
 
 # 1b. The PINNED runtime (plan 257 H6/H8). "Pinned" must not mean "frozen on the day the
@@ -152,7 +183,6 @@ add_row "  \"$ROOT\",\"this Brokk home\",\"$FF_STATE\",\"$FF_DETAIL\""
 #     Rödd execute (RULES/02 §7), so Gróa carries it forward with the homes — by the same
 #     guarded fast-forward (never forced; a dirty or off-branch pin is skipped and named).
 #     YMIR_GROA_PIN=off leaves it where it stands.
-PIN_MOVED=0
 if [ "${YMIR_GROA_PIN:-on}" != off ] && [ -r "$SCRIPT_DIR/../pi/arm-pin-lib.sh" ]; then
   . "$SCRIPT_DIR/../pi/arm-pin-lib.sh"
   PIN_DIR=""; arm_pin_dir PIN_DIR
@@ -161,10 +191,10 @@ if [ "${YMIR_GROA_PIN:-on}" != off ] && [ -r "$SCRIPT_DIR/../pi/arm-pin-lib.sh" 
       add_row "  \"pin\",\"$PIN_DIR\",\"current\",\"the pin IS this home — carried above\""
     else
       _home_branch="$BRANCH"; arm_pin_branch BRANCH
-      ff_home "$PIN_DIR" "pin"
+      if [ -L "$PIN_DIR" ]; then release_pin_state "$PIN_DIR"; else ff_home "$PIN_DIR" "pin"; fi
       BRANCH="$_home_branch"; unset _home_branch
       add_row "  \"pin\",\"$PIN_DIR\",\"$FF_STATE\",\"$FF_DETAIL\""
-      [ "$FF_STATE" = updated ] && PIN_MOVED=1
+      case "$FF_STATE" in updated|rebuild) PIN_MOVED=1 ;; esac
     fi
   elif [ "$CHECK" = 1 ]; then
     add_row "  \"pin\",\"runtime.env\",\"absent\",\"no pinned runtime is seated — an update seats it (bin/engine/runtime-seat.sh)\""

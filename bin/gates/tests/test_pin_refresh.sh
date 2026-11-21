@@ -115,5 +115,20 @@ case "$out" in *"boom: the well is dry"*) check 0 "a real failure keeps the log'
 out="$(cron_fail_detail "$W/home" "bin/time/x.sh" 9 "")"
 case "$out" in *"no output"*"exited 9"*) check 0 "silent failure names the exit code instead of claiming 'no output'" ;; *) check 1 "silent: $out" ;; esac
 
+# 9 · A PIN THAT IS A LINK TO A RELEASE IS NEVER MERGED IN PLACE (2026-11-20): the dev machine's releases/abefc4f06932 was
+# fast-forwarded to 149f38ebd by this door, so the seat ran code its proof never saw under a name that lied.
+( cd "$W/seed" && printf 'r\n' >>f.txt && git commit -qam r && git push -q origin HEAD:main )
+rsha="$(git --git-dir="$W/origin.git" rev-parse main)"
+git clone -q "$W/origin.git" "$W/rel/${rsha:0:12}" 2>/dev/null
+ln -s "$W/rel/${rsha:0:12}" "$W/relpin"
+printf 'YMIR_RUNTIME_DIR="%s"\nYMIR_RUNTIME_BRANCH="main"\n' "$W/relpin" >"$YMIR_HOME/config/runtime.env"
+( cd "$W/seed" && printf 's\n' >>f.txt && git commit -qam s && git push -q origin HEAD:main )
+out="$("$W/tree/bin/engine/pin-refresh.sh" --quiet 2>&1)"; rc=$?
+[ "$rc" = 6 ]; check $? "a release pin behind main is refused the in-place merge (rc=$rc: $out)"
+[ "$(git -C "$W/relpin" rev-parse HEAD)" = "$rsha" ]; check $? "the release still carries the sha it is named for"
+git -C "$W/relpin" merge -q --ff-only origin/main
+out="$("$W/tree/bin/engine/pin-refresh.sh" --check --quiet 2>&1)"; rc=$?
+case "$rc:$out" in 3:*moved-in-place*) check 0 "a release carrying code it is not named for is named moved-in-place" ;; *) check 1 "moved in place: rc=$rc $out" ;; esac
+
 printf 'pin-refresh tests: %d pass, %d fail\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]
