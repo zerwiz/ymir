@@ -147,8 +147,13 @@ HARNESS="${YMIR_REVIEW_HARNESS:-}"
 # computers have different models and capabilities"). The code names no model id: the fleet
 # declares its choice in the private home, the seat's own catalogue says whether it can serve
 # it, and a seat that cannot says so instead of quietly borrowing a neighbour's promise.
-MODEL="${YMIR_REVIEW_MODEL:-$(bash "$ROOT/bin/model/agent-model.sh" forseti --plain 2>/dev/null || true)}"
-[ -n "$MODEL" ] || { printf 'error: no model resolved for the judge on this seat\nhelp: bin/model/agent-model.sh forseti --explain (a model this seat cannot serve is a refusal, not a fallback)\n' >&2; exit 1; }
+# A Claude judge (forseti: { model: opus, harness: claude }) is resolved against Claude's allow-list,
+# not pi's catalogue, and comes back as the name the Claude CLI takes (claude-opus-5-5) — 2026-11-21.
+# A harness named for this run (YMIR_REVIEW_HARNESS) is handed on, so model and harness agree.
+_model_err="$(mktemp)"
+MODEL="${YMIR_REVIEW_MODEL:-$(bash "$ROOT/bin/model/agent-model.sh" forseti --plain ${HARNESS:+--harness "$HARNESS"} 2>"$_model_err" || true)}"
+[ -n "$MODEL" ] || { printf 'error: no model resolved for the judge on this seat\n' >&2; grep 'REFUSED' "$_model_err" >&2; rm -f "$_model_err"; printf 'help: bin/model/agent-model.sh forseti --explain (a model this seat cannot serve is a refusal, not a fallback)\n' >&2; exit 1; }
+rm -f "$_model_err"
 EFFORT="${YMIR_REVIEW_EFFORT:-high}"
 BACKEND="${YMIR_REVIEW_BACKEND:-herdr}"
 # YMIR_REVIEW_DRY=1 behaves exactly as --dry-run: resolve and print the spawn

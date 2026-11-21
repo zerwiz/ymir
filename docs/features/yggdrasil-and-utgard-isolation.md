@@ -32,6 +32,18 @@ bin/forge/yggdrasil.sh merge  <id>            # explicit, never automatic
 bin/forge/yggdrasil.sh cleanup <id>           # remove it when done
 ```
 
+**A slimmer worktree (opt-in).** A repository that tracks a large folder an errand never edits (a
+vendored `base/`, a `vendor/`) pays for it again in every worktree. Leave it out:
+
+```bash
+bin/forge/yggdrasil.sh create <id> --skip base      # one folder; repeat --skip for more
+bin/forge/yggdrasil.sh create <id> --slim           # every folder listed in the project's .worktree-slim
+```
+
+`.worktree-slim` holds one folder per line (`#` starts a comment). The folders are left out by git's
+own sparse-checkout, so the worktree reads clean and the files are still in every commit. Without a
+flag, nothing changes. `--slim` refuses when the project has no `.worktree-slim`.
+
 **Utgard — a sealed run:**
 
 ```bash
@@ -124,3 +136,4 @@ Full page: [utgard-boxes.md](utgard-boxes.md).
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-20** — the slimmer worktree: `create --skip <dir>` and `--slim` (opt-in; the default is unchanged).
