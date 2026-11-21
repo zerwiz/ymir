@@ -84,6 +84,28 @@ out="$("${RUN[@]}" YMIR_REVIEW_DRY=1 "$ACCLAIM" litmus-ship --terminal done --li
 printf '%s' "$out" | grep -q 'review-spawn\[1\]' && ok "the terminal done auto-sends the judge" || bad "hook: $out"
 printf '%s' "$out" | grep -q 'litmus-ship-review' && ok "the hook names the review errand" || bad "hook id: $out"
 
+# 9. ONE HEAD, ONE JUDGE: the errand road and the keeper's PR-only road share the per-head marker,
+#    and the PR-only id carries the repository (review of #863, 2026-11-21)
+H=abcdefabcdefabcdefabcdefabcdefabcdefabcd
+cat >"$TMP/bin/gh" <<GH
+#!/usr/bin/env bash
+case " \$* " in
+  *" -q "*) echo $H ;;
+  *" pr view "*) printf '{"headRefOid":"$H","headRefName":"eindri/litmus-ship","mergeable":"MERGEABLE"}\\n' ;;
+  *) exit 1 ;;
+esac
+GH
+chmod +x "$TMP/bin/gh"
+out="$("${RUN[@]}" YMIR_REVIEW_DRY=1 "$SPAWN" --pr https://github.com/zerwiz/ymir/pull/999 --project "$PROJ" 2>&1)"
+printf '%s' "$out" | grep -q 'pr-zerwiz--ymir-999-review' && ok "the PR-only review id carries the repository" || bad "repo in id: $out"
+mkdir -p "$TMP/home/state/.reviewed"
+: >"$TMP/home/state/.reviewed/pr-zerwiz--ymir-999.$H"
+out="$("${RUN[@]}" YMIR_REVIEW_DRY=1 "$SPAWN" litmus-ship 2>&1)"
+printf '%s' "$out" | grep -q 'one head, one judge' && ok "the errand road seats no second judge for a head the keeper judged" || bad "one head one judge (task): $out"
+out="$("${RUN[@]}" YMIR_REVIEW_DRY=1 "$SPAWN" --pr https://github.com/zerwiz/ymir/pull/999 --project "$PROJ" 2>&1)"
+printf '%s' "$out" | grep -q 'already reviewed' && ok "the PR-only road seats no second judge for the same head" || bad "one head one judge (pr): $out"
+rm -f "$TMP/home/state/.reviewed/pr-zerwiz--ymir-999.$H"
+
 # 8. the fence held: no line of this suite was typed into a live pane
 if grep -qE 'agent (prompt|send|run)|pane (send|run|write)' "$TMP/herdr.log" 2>/dev/null; then
   bad "the acclaim typed into a pane: $(cat "$TMP/herdr.log")"

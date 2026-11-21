@@ -261,6 +261,13 @@ fi
 PR_NUMBER="$(printf '%s' "$PR_URL" | grep -oE '/pull/[0-9]+' | grep -oE '[0-9]+' | tail -1 || true)"
 [ -n "$PR_NUMBER" ] || PR_NUMBER="?"
 
+# pr_key <owner/repo> <n> → pr-<owner>--<repo>-<n>, lowercased: the one name a PR has in the
+# review shelf, shared by the spine, the keeper (bin/forge/review-watch.sh) and the interim loop
+pr_key() {
+  local slug; slug="$(printf '%s' "$1" | tr 'A-Z' 'a-z')"
+  printf 'pr-%s--%s-%s' "${slug%%/*}" "${slug#*/}" "$2"
+}
+
 # ── PR-ONLY mode: the PR is the record, and its HEAD is the marker (plan 206 §10.3a) ──
 HEAD_SHA=""
 if [ "$PR_ONLY" = 1 ]; then
@@ -281,7 +288,9 @@ if [ "$PR_ONLY" = 1 ]; then
   fi
   unset _pr_json
   if [ "$NO_TASK" = 1 ]; then
-    ID="pr-$PR_NUMBER"
+    # the id carries the REPOSITORY: PR #7 of two repositories is two reviews, never one
+    # (review of #863, 2026-11-21) — pr-<owner>--<repo>-<n> (an owner never holds "--")
+    ID="$(pr_key "$SLUG" "$PR_NUMBER")"
     REVIEW_ID="$ID-review"
     PROJECT="${PROJECT_ARG:-$ROOT}"
     SHARED_ROOT="$PROJECT"
@@ -301,19 +310,41 @@ if [ -z "$BRANCH" ] && [ -n "$WORKTREE" ] && [ -d "$WORKTREE" ]; then
 fi
 [ -n "$BRANCH" ] || BRANCH="eindri/$ID"
 
+# ── the head the judge is seated for (task mode reads it now; PR-only mode already has it) ──
+_slug="$(printf '%s' "$PR_URL" | sed -nE 's#^https://github\.com/([^/]+/[^/]+)/pull/[0-9]+.*#\1#p')"
+if [ -z "$HEAD_SHA" ] && [ -n "$_slug" ] && [ "$PR_NUMBER" != "?" ] && command -v gh >/dev/null 2>&1; then
+  HEAD_SHA="$(gh pr view "$PR_NUMBER" -R "$_slug" --json headRefOid -q .headRefOid 2>/dev/null | tr -d '[:space:]' || true)"
+fi
+
 # ── the anti-double marker ───────────────────────────────────────────────────
 REVIEWED_DIR="$SHARED_STATE/.reviewed"
+# ONE HEAD, ONE JUDGE (review of #863, 2026-11-21). Every road into this spine — an errand's terminal
+# done (task mode), the keeper and the interim loop (PR-only mode) — shares ONE per-head marker,
+# .reviewed/pr-<owner>--<repo>-<n>.<head>, and one claim beside it. Before, the errand road marked only
+# the task id, so the keeper seated a second judge for a head the errand's judge already had.
+# The per-head marker lives in the HOME's state (YMIR_STATE_DIR — where the keeper's hoard_state_dir
+# reads), never a task's own state dir: two roads that keep two shelves never see each other's mark.
+HEAD_MARKER=""
+HEAD_DIR="${YMIR_STATE_DIR:-$SHARED_STATE}/.reviewed"
+if [ -n "$_slug" ] && [ "$PR_NUMBER" != "?" ] && [ -n "$HEAD_SHA" ]; then
+  HEAD_MARKER="$HEAD_DIR/$(pr_key "$_slug" "$PR_NUMBER").$HEAD_SHA"
+  mkdir -p "$HEAD_DIR" 2>/dev/null || true
+fi
 if [ "$NO_TASK" = 1 ]; then
   # Plan 206 §10.3 — a PR is judged once per HEAD. A moved head is new work and earns a
   # fresh judgement; the same head twice in a minute earns nothing (the flood brake).
-  MARKER="$REVIEWED_DIR/pr-$PR_NUMBER.${HEAD_SHA:-unknown}"
+  MARKER="${HEAD_MARKER:-$REVIEWED_DIR/$ID.unknown}"
   REVIEW_SPAWNED="$MARKER.spawning"
 else
   MARKER="$REVIEWED_DIR/$ID"
-  REVIEW_SPAWNED="$REVIEWED_DIR/$ID.spawning"
+  REVIEW_SPAWNED="${HEAD_MARKER:+$HEAD_MARKER.spawning}"
+  REVIEW_SPAWNED="${REVIEW_SPAWNED:-$REVIEWED_DIR/$ID.spawning}"
 fi
 if [ -f "$MARKER" ] && [ "$FORCE" -ne 1 ]; then
   skip "already reviewed ($MARKER exists) — a re-done never re-reviews"
+fi
+if [ -n "$HEAD_MARKER" ] && [ -f "$HEAD_MARKER" ] && [ "$FORCE" -ne 1 ]; then
+  skip "this head already has a judge ($HEAD_MARKER) — one head, one judge"
 fi
 if [ -f "$MARKER" ] && [ "$FORCE" -eq 1 ]; then
   printf 'review-spawn: --force overrides the anti-double marker (%s) — a deliberate re-review\n' "$MARKER"
@@ -334,12 +365,6 @@ fi
 
 
 # ── the judge's seat: the harness was resolved with the model, above ────────
-
-# ── the head the judge is seated for (task mode reads it now; PR-only mode already has it) ──
-_slug="$(printf '%s' "$PR_URL" | sed -nE 's#^https://github\.com/([^/]+/[^/]+)/pull/[0-9]+.*#\1#p')"
-if [ -z "$HEAD_SHA" ] && [ -n "$_slug" ] && [ "$PR_NUMBER" != "?" ] && command -v gh >/dev/null 2>&1; then
-  HEAD_SHA="$(gh pr view "$PR_NUMBER" -R "$_slug" --json headRefOid -q .headRefOid 2>/dev/null | tr -d '[:space:]' || true)"
-fi
 
 # ── fill the fierce brief for THIS task ──────────────────────────────────────
 BRIEF="$SHARED_DATA/$REVIEW_ID/brief.md"
@@ -420,6 +445,7 @@ if env -u BROKK_STATE_OVERRIDE -u BROKK_DATA_OVERRIDE \
     printf 'report=%s\n' "$REPORT_PATH"
     printf 'at=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   } >"$MARKER" 2>/dev/null || true
+  [ -n "$HEAD_MARKER" ] && [ "$HEAD_MARKER" != "$MARKER" ] && cp "$MARKER" "$HEAD_MARKER" 2>/dev/null
   release_claim
   printf 'review-spawn[1]{task,review,pr,branch,brief,report,state}:\n'
   printf '  "%s","%s","%s","%s","%s","%s","seated"\n' \
