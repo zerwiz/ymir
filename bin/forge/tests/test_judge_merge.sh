@@ -200,6 +200,12 @@ touch -d '-1 hour' "$T/home/state/eindri-reports/pr-7-review.md"
 "$JM" act pr-7-review >/dev/null 2>&1
 [ "$(merges)" = 0 ] && ok "a stale report is never read as approval" || bad "a stale report is never read as approval"
 
+# 10b · an APPROVE with no judged-head line merges nothing
+fresh "$APPROVE"; pr_json "$HEAD_A" green
+printf '# review of #7\n\nverdict[1]{result,count,list,seal}:\n  %s\n' "$APPROVE" >"$T/home/state/eindri-reports/pr-7-review.md"
+"$JM" act pr-7-review >/dev/null 2>&1
+[ "$(merges)" = 0 ] && ok "an APPROVE with no judged-head merges nothing" || bad "APPROVE without judged-head merged"
+
 # 11 · a repository the registry does not name
 fresh "$APPROVE" stranger/thing; pr_json "$HEAD_A" green
 "$JM" act pr-7-review >/dev/null 2>&1

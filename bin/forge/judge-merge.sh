@@ -64,7 +64,7 @@ for a in "$@"; do case "$a" in --dry-run) DRY=1 ;; *) ARGS+=("$a") ;; esac; done
 say() { printf '%s\n' "$*"; }
 
 # ── the verdict block, read from the report's tail ─────────────────────────────────────────────
-parse_verdict() {  # <report> → result<TAB>count<TAB>list<TAB>judged-head
+parse_verdict() {  # <report> → result<US>count<US>list<US>judged-head (US = \x1f)
   python3 - "$1" <<'PY'
 import csv, io, re, sys
 text = open(sys.argv[1], encoding="utf-8", errors="replace").read()
@@ -85,7 +85,9 @@ for i in range(len(lines) - 1, -1, -1):
         items = row[2].strip() if len(row) > 2 else ""
         break
 m = re.findall(r"judged-head:\s*([0-9a-f]{40})", text)
-print("\t".join([result, count.replace("\t", " "), items.replace("\t", " ").replace("\n", " "), m[-1] if m else ""]))
+# \x1f, not a tab: a tab is IFS whitespace, so an empty field (an APPROVE with no list) would fold
+# and shift the judged-head into the list
+print("\x1f".join([result, count.replace("\x1f", " "), items.replace("\x1f", " ").replace("\n", " "), m[-1] if m else ""]))
 PY
 }
 
@@ -189,7 +191,7 @@ act() {  # <review-id>
   fi
 
   v="$(parse_verdict "$report")"
-  IFS=$'\t' read -r result count items named <<<"$v"
+  IFS=$'\x1f' read -r result count items named <<<"$v"
   if [ -n "$named" ] && [ "$named" != "$head" ]; then
     say "judge-merge: $rid — the report judged ${named:0:12} but the spine seated it for ${head:0:12}; refused"
     return 0
@@ -197,6 +199,12 @@ act() {  # <review-id>
 
   case "$result" in
     APPROVE)
+      # an approval must NAME the head it judged: a report with no `judged-head:` line cannot prove
+      # which head it read, so it merges nothing (review of #863, 2026-11-21)
+      if [ "$named" != "$head" ]; then
+        say "judge-merge: $rid — APPROVE names no judged-head (want ${head:0:12}); nothing merges on an approval that cannot say what it read"
+        return 0
+      fi
       if [ "$DRY" = 1 ]; then say "judge-merge: $rid — APPROVE; would run: $SEAL seal $n --repo $repo --head $head --review $rid"; return 0; fi
       out="$("$SEAL" seal "$n" --repo "$repo" --head "$head" --review "$rid" 2>&1)"; rc=$?
       printf '%s\n' "$out"
@@ -239,7 +247,7 @@ act() {  # <review-id>
 }
 
 case "$ACTION" in
-  verdict) [ -n "${ARGS[0]:-}" ] || { printf 'usage: judge-merge.sh verdict <report>\n' >&2; exit 2; }; parse_verdict "${ARGS[0]}" ;;
+  verdict) [ -n "${ARGS[0]:-}" ] || { printf 'usage: judge-merge.sh verdict <report>\n' >&2; exit 2; }; parse_verdict "${ARGS[0]}" | tr '\037' '\t' ;;
   act)     [ -n "${ARGS[0]:-}" ] || { printf 'usage: judge-merge.sh act <review-id>\n' >&2; exit 2; }; act "${ARGS[0]}" ;;
   sweep)
     command -v gh >/dev/null 2>&1 || { printf 'judge-merge: gh is not on PATH — no verdict can be carried out here\n' >&2; exit 1; }
