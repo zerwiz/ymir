@@ -19,7 +19,7 @@ mkdir -p "$TMP/bin"
 # A PATH with the tools the loop needs and, by default, no redis-cli.
 # (`sleep` is NOT linked: run_for writes its own counting `sleep` here, and writing through a link
 # would write the system's binary.)
-for t in bash date sed grep head cut printf timeout python3 dirname; do
+for t in bash date sed grep head cut printf timeout python3 dirname rm; do
   p="$(command -v "$t")" && ln -sf "$p" "$TMP/bin/$t"
 done
 
@@ -41,10 +41,10 @@ turns="$(wc -l <"$TMP/sleeps")"
   || bad "no redis-cli: $turns loop turns in 4 s (spinning, or never waiting)"
 
 # 2. redis-cli that refuses at once: said once, waits
-printf '#!/bin/sh\necho "Could not connect to Redis at 127.0.0.1:6379: Connection refused"\nexit 1\n' >"$TMP/bin/redis-cli"
+printf '#!/bin/sh\necho "Could not connect to Redis at 127.0.0.1:6379: Connection refused" >&2\nexit 1\n' >"$TMP/bin/redis-cli"
 chmod +x "$TMP/bin/redis-cli"
 run_for 4
-said="$(grep -c 'unreadable (redis-cli failed' "$TMP/out")"
+said="$(grep -c 'unreadable (redis-cli failed: Could not connect' "$TMP/out")"
 turns="$(wc -l <"$TMP/sleeps")"
 [ "$said" = 1 ] && ok "refusing redis: said once" || bad "refusing redis: said $said times"
 [ "$turns" -ge 2 ] && [ "$turns" -le 6 ] && ok "refusing redis: waits ($turns turns in 4 s)" \
@@ -73,5 +73,14 @@ turns="$(wc -l <"$TMP/sleeps")"
 [ "$said" = 1 ] && ok "error reply with exit 0: said once" || bad "error reply with exit 0: said $said times"
 [ "$turns" -ge 2 ] && [ "$turns" -le 6 ] && ok "error reply with exit 0: waits ($turns turns in 4 s)" \
   || bad "error reply with exit 0: $turns loop turns in 4 s"
+
+# 6. a warning on stderr is kept out of the reply the job is read from (PR 869 review, item 2)
+printf '#!/bin/sh\n/bin/sleep 1\necho "Warning: Using a password with -a may not be safe." >&2\nprintf "mill:jobs\\n{\\"class\\":\\"nosuch\\"}\\n"\n' >"$TMP/bin/redis-cli"
+run_for 3
+if grep -q 'unknown job class: nosuch' "$TMP/out" && ! grep -qE 'unreadable|unknown job class: *$' "$TMP/out"; then
+  ok "a stderr warning does not shift the job"
+else
+  bad "a stderr warning shifted the job: $(head -1 "$TMP/out")"
+fi
 
 exit "$fail"

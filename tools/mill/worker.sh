@@ -52,13 +52,19 @@ queue_unreadable() { # <reason>
   sleep "$MILL_IDLE_SECONDS"
 }
 
+# redis-cli's stderr is kept APART from its reply: the job is read from the reply's second
+# line, so a warning on stderr merged into it would shift the job off that line. The error
+# text is only for the journal line.
+QUEUE_ERR="${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/mill-worker-$$.err"
+trap 'rm -f "$QUEUE_ERR"' EXIT
+
 while true; do
   if ! command -v redis-cli >/dev/null 2>&1; then
     queue_unreadable "no redis-cli on this machine"
     continue
   fi
   started=$(date +%s)
-  raw="$(timeout 310 redis-cli --raw blpop "$Q" 300 2>&1)"; rc=$?
+  raw="$(timeout 310 redis-cli --raw blpop "$Q" 300 2>"$QUEUE_ERR")"; rc=$?
   # Judge the read by redis's own reply only: the exit code, and the FIRST line, which is
   # the queue's key when a job was popped. Never the job payload on line 2 — blpop has
   # already removed the job, so a payload that happens to say "Connection refused" must be
@@ -68,7 +74,10 @@ while true; do
   if [ "$rc" -ne 0 ] || { [ -n "$first" ] && [ "$first" != "$Q" ]; }; then
     # A blpop that fails fast is an unreachable redis, not an empty queue.
     if [ $(( $(date +%s) - started )) -lt 5 ]; then
-      queue_unreadable "redis-cli failed: $(printf '%s' "$first" | cut -c1-80)"
+      why="$first"
+      [ -n "$why" ] || why="$(head -1 "$QUEUE_ERR" 2>/dev/null)"
+      [ -n "$why" ] || why="exit $rc"
+      queue_unreadable "redis-cli failed: $(printf '%s' "$why" | cut -c1-80)"
     fi
     continue
   fi
