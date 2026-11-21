@@ -349,6 +349,29 @@ def make_key(title: str, source: str = "") -> str:
     return "todo-" + hashlib.sha1(f"{source}\n{title}".encode()).hexdigest()[:12]
 
 
+# The board's provenance shape (Gimlé's create_card: `source: <path>#<id>`, one token each side, no spaces). A to-do's
+# own `source` is often prose ("the command line", "<file> · line 12 · <trail>"), so the anchor is derived from it:
+# the shape as given, else "<file>#L<line>", else "<record>#<id>", else the to-do door with the card's key.
+SOURCE_SHAPE = re.compile(r"^[^\s#]+#[^\s#]+$")
+
+
+def card_source(item: dict) -> str:
+    src = str(item.get("source") or "").strip()
+    key = item.get("key") or make_key(str(item.get("title", "")), src)
+    if SOURCE_SHAPE.match(src):
+        return src
+    m = re.match(r"^(\S+) · line (\d+)\b", src)
+    if m and "#" not in m.group(1):
+        return f"{m.group(1)}#L{m.group(2)}"
+    m = re.search(r"record (\S+), id ([^\s#)]+)\)", src)
+    if m and "#" not in m.group(1):
+        return f"{m.group(1)}#{m.group(2)}"
+    first = src.split()[0] if src else ""
+    if first and "#" not in first and ("/" in first or "." in first):
+        return f"{first}#{key}"
+    return f"bin/records/todo.sh#{key}"
+
+
 def describe(item: dict) -> str:
     parts = []
     if item.get("note"):
@@ -377,7 +400,7 @@ def file_card(board: Board, item: dict) -> dict:
         labels.append(lane)
     for name in labels:
         board.ensure_label(name)
-    args = {"title": item["title"][:250], "description": describe(item)}
+    args = {"title": item["title"][:250], "description": describe(item), "source": card_source(item)}
     if state:
         args["state"] = state
     if labels:
