@@ -64,7 +64,7 @@ bin[54]{file,does,kind,verdict,disposition,callers,lines}:
   "saga-session-start.sh","saga-session-start.sh — Sága: the SHORT HEAD at session start, everything else on demand.","tool","tested","keep",12,597
   "saga-sessionstart-run.sh","saga-sessionstart-run.sh - session-open entry point for run-tier harnesses.","tool","wired","keep",1,117
   "saga-wake-drain.sh","saga-wake-drain.sh - present durable Brokk wakes, or acknowledge them.","tool","tested","keep",10,337
-  "sol-lib.sh","sol-lib.sh — Sól's stamp for shell roads.","lib","wired","keep",10,44
+  "sol-lib.sh","sol-lib.sh — Sól's stamp for shell roads.","lib","wired","keep",11,44
   "sol.sh","sol.sh — Sól, the sun's wheel: THE clock and date door.","tool","tested","keep",6,248
   "test_ack_holder.sh","test_ack_holder.sh — the arm's ack door answers its own holder and still refuses a stranger (plan 325 step 3).","tool","wired","keep",0,43
   "test_brief_watch.sh","test_brief_watch.sh — the morning brief is judged, not just run.","tool","wired","keep",0,198
