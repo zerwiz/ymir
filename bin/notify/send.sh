@@ -294,11 +294,25 @@ is_record = key.startswith("report:") or key.startswith("review:")
 # THE GROUP NEVER CARRIES A CHANGING NUMBER (2026-11-21). A stamp segment in an explicit key (an hour
 # 2026112019, a date 2026-11-21, an epoch) is folded away; an auto key hashes the message with its
 # digits folded, so "heartbeat 25895s old" and "heartbeat 26795s old" are the same alarm.
-STAMP = re.compile(r"^(\d{6,}|\d{4}-\d{2}-\d{2}([T ][0-9:]+Z?)?)$")
+# Only a REAL stamp shape folds (rework of PR #861): 20YYMMDD with an optional HH, MM, SS; a 10-digit
+# epoch; an ISO date or time. A bare run of digits is an identity — garmr keys each alert per process as
+# `garmr:{title}:{pid}`, and a 7-digit pid folded as a "stamp" silenced a second process for an hour.
+# An ISO stamp carries colons, so it is lifted from the whole key before the key is split on ":".
+STAMP = re.compile(r"^(20\d{2}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])(\d{2}){0,3}|1\d{9})$")
+ISO = re.compile(r"\d{4}-\d{2}-\d{2}([T ]\d{2}(:\d{2}){0,2}(\.\d+)?(Z|[+-]\d{2}:?\d{2})?)?")
 if key:
-    group = key if is_record else ":".join(s for s in key.split(":") if not STAMP.match(s))
+    group = key if is_record else ":".join(
+        s for s in ISO.sub("", key).split(":") if s and not STAMP.match(s))
 else:
-    folded = re.sub(r"\d+", "#", message)
+    # Only MEASUREMENTS fold (rework of PR #861): a stamp or clock time, a number with a unit
+    # ("25895s", "3 min", "91%", "2.1 GB"), or a number after age/old/rc/exit/took. A bare number is an
+    # identity — "PR #857" and "PR #858" are two notices, and folding them hid the second for an hour.
+    folded = ISO.sub("#", message)
+    folded = re.sub(r"\b\d{1,2}:\d{2}(:\d{2})?\b", "#", folded)
+    folded = re.sub(r"\b\d+(\.\d+)?\s*(ms|s|secs?|seconds?|m|mins?|minutes?|h|hrs?|hours?|d|days?"
+                    r"|[KMGT]i?B|B|%)(?![A-Za-z0-9])", "#", folded)
+    folded = re.sub(r"\b(age|old|rc|exit|took)(\s*[=:]\s*|\s+)\d+(\.\d+)?", r"\1 #", folded,
+                    flags=re.IGNORECASE)
     group = source + ":" + hashlib.sha256(f"{source}|{folded}".encode()).hexdigest()[:16]
 group = f"{host}/{group}"
 seen = {k: v for k, v in (state.get("seen") or {}).items() if now - float(v) < 7 * 86400}
