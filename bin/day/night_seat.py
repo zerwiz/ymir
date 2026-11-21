@@ -52,6 +52,8 @@ def _state_line(line):
 
 def _clip(text, n=180):
     text = " ".join((text or "").split())
+    # a status line often opens with its own stamp; the report already says when, so the stamp goes
+    text = re.sub(r"^\d{4}-\d\d-\d\d[ T]\d\d:\d\d(?::\d\d)?(?: ?[A-Z]{2,5}|Z)?\s*[—-]+\s*", "", text)
     return text if len(text) <= n else text[: n - 1].rstrip() + "…"
 
 

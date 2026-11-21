@@ -561,7 +561,8 @@ def build(data):
     else:
         out += [f"{len(done)} errands done, {len(notdone)} not done, {len(running)} still running. "
                 f"{len(d['merged'])} PRs merged, {len(d['open'])} open ({len(green)} green). "
-                f"{len(d['rang'])} alarms rang, the house made {len(d['mended'])} mends, "
+                f"{len(d['rang'])} alarm{'' if len(d['rang']) == 1 else 's'} rang, the house made {len(d['mended'])} "
+                f"mend{'' if len(d['mended']) == 1 else 's'}, "
                 f"and {len(d['ticks'])} items on your list were ticked.", ""]
     top = d["needs"][:3]
     if top:
