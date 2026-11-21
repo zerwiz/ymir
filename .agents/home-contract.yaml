@@ -280,6 +280,12 @@ contract:
     door: "-"
     required: false
     why: "the warden's bite rules; absent, the shipped default applies"
+  - path: config/notify-owners.conf
+    kind: defaulted
+    template: .agents/config/notify-owners.conf.example
+    door: "-"
+    required: false
+    why: "which machine's arm owns an alert from a source; absent, the machine named in the line owns it"
   - path: config/soak.yaml
     kind: defaulted
     template: .agents/config/soak.example.yaml
