@@ -48,6 +48,12 @@
 # is not clean: the reason in plain words and one drafted next act. A clean day is silent; a row that
 # never fired is not, because silence is exactly what a clean morning sounds like.
 @heart 07:05 bin/time/nornir-job-brief-watch.sh
+# THE NIGHT REPORT (2026-11-21): what the fleet did overnight — done, not done, merged, open, alarms,
+# and what waits on the operator — written to hodd/docs/status/ in the home, his list ticked where the
+# work is proven done, one Telegram message. The heart writes it; a dev seat stands in when the heart
+# is down (--fallback stands down when today's report already exists). docs/features/night-report.md
+@heart 06:30 bin/day/night-report.sh
+@dev 06:50 bin/day/night-report.sh --fallback
 @heart 06:00 bin/time/nornir-job-observer.sh
 @heart 08:00 bin/time/nornir-job-hall-snapshot.sh
 @heart 02:30 bin/time/nornir-job-nsr-compliance.sh

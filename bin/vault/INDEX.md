@@ -28,11 +28,11 @@ bin[19]{file,does,kind,verdict,disposition,callers,lines}:
   "gleipnir-lock-lib.sh","gleipnir-lock-lib.sh — the session lock (Gleipnir), a THIN SHIM.","lib","tested","keep",8,164
   "hnitbjorg-ensure.sh","hnitbjorg-ensure.sh — ensure the vault's tooling stands and its path is sound.","tool","wired","keep",2,111
   "hnitbjorg.sh","hnitbjorg.sh — Hnitbjörg: the encrypted document vault.","tool","wired","keep",3,250
-  "hoard-lib.sh","hoard-lib.sh — where the operator's HOME lives, and the two roots beneath it.","lib","tested","keep",356,251
+  "hoard-lib.sh","hoard-lib.sh — where the operator's HOME lives, and the two roots beneath it.","lib","tested","keep",358,251
   "hodd-set.sh","hodd-set.sh — set, replace or remove ONE key in an age-encrypted secret file.","tool","wired","keep",10,224
   "hodd.sh","hodd.sh — the Allfather's private hoard: path, init, ls, load, emit, get, names, tenant.","tool","tested","keep",60,174
   "home-sync-clock.sh","home-sync-clock.sh — the home pulls and pushes itself, hourly, without a hand.","tool","wired","keep",2,97
-  "home-sync.sh","home-sync.sh — the one door for editing the home: pull first, ship right after (RULES/50).","tool","wired","keep",7,193
+  "home-sync.sh","home-sync.sh — the one door for editing the home: pull first, ship right after (RULES/50).","tool","wired","keep",9,193
   "phone-lib.sh","phone-lib.sh — reach the operator's phone storage for the vault's phone key.","lib","wired","keep",1,69
   "push.sh","push.sh — commit and push NAMED paths in the home (never `git add -A`).","tool","tested","keep",7,19
   "test_hodd_set_entries.sh","test_hodd_set_entries.sh — the vault's writer reads WHOLE ENTRIES and proves what it","tool","wired","keep",0,206

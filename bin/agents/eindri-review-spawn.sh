@@ -149,16 +149,13 @@ HARNESS="${YMIR_REVIEW_HARNESS:-}"
 # it, and a seat that cannot says so instead of quietly borrowing a neighbour's promise.
 #
 # THE HOME'S ROW WINS (RULES/08, 2026-11-21). The fleet names the judge in config/agents.yaml
-# (forseti: harness claude, model opus). Two faults kept that row from ever seating:
-#   · the heart's review-watch drop-in pinned YMIR_FORSETI_MODEL to a pi model, and the resolver
-#     honours an environment override above the home — so a harness-wide pin overruled the
-#     operator's declared judge, and the claude harness refused the provider/model token;
-#   · the resolver checks pi's catalogue, which never lists a Claude alias, so `opus` fell through
-#     to the fleet default.
-# So: when the home names the judge's harness and model, the spine takes the row as written and
-# the YMIR_FORSETI_MODEL pin yields to it. For a non-pi harness the harness's own catalogue judges
-# the name (einherjar-spawn.sh refuses what that harness cannot serve). YMIR_REVIEW_MODEL stays the
-# one deliberate per-run override.
+# (forseti: harness claude, model opus). The heart's review-watch drop-in pinned YMIR_FORSETI_MODEL
+# to a pi model, and the resolver honours an environment override above the home, so a
+# harness-wide pin overruled the operator's declared judge. So: the judge's harness is read from
+# the home row first, and when the home names the judge's model the YMIR_FORSETI_MODEL pin yields.
+# A Claude judge is resolved against Claude's allow-list, not pi's catalogue, and comes back as the
+# name the Claude CLI takes (claude-opus-5-5) — the harness is handed on, so model and harness
+# agree (#865). YMIR_REVIEW_MODEL stays the one deliberate per-run override.
 if [ -z "$HARNESS" ] && [ -x "$SCRIPT_DIR/../fleet/agents-config.sh" ]; then
   HARNESS="$("$SCRIPT_DIR/../fleet/agents-config.sh" get forseti harness 2>/dev/null | head -n1 || true)"
 fi
@@ -166,17 +163,13 @@ HARNESS="${HARNESS:-pi}"
 _cfg_model=""
 [ -x "$SCRIPT_DIR/../fleet/agents-config.sh" ] && \
   _cfg_model="$("$SCRIPT_DIR/../fleet/agents-config.sh" get forseti model 2>/dev/null | head -n1 || true)"
-if [ -n "${YMIR_REVIEW_MODEL:-}" ]; then
-  MODEL="$YMIR_REVIEW_MODEL"
-elif [ -n "$_cfg_model" ] && [ "$HARNESS" != pi ]; then
-  MODEL="$_cfg_model"
-elif [ -n "$_cfg_model" ]; then
-  MODEL="$(env -u YMIR_FORSETI_MODEL bash "$ROOT/bin/model/agent-model.sh" forseti --plain 2>/dev/null || true)"
-else
-  MODEL="$(bash "$ROOT/bin/model/agent-model.sh" forseti --plain 2>/dev/null || true)"
-fi
-unset _cfg_model
-[ -n "$MODEL" ] || { printf 'error: no model resolved for the judge on this seat\nhelp: bin/model/agent-model.sh forseti --explain (a model this seat cannot serve is a refusal, not a fallback)\n' >&2; exit 1; }
+_unpin=(env)
+[ -n "$_cfg_model" ] && _unpin=(env -u YMIR_FORSETI_MODEL)
+_model_err="$(mktemp)"
+MODEL="${YMIR_REVIEW_MODEL:-$("${_unpin[@]}" bash "$ROOT/bin/model/agent-model.sh" forseti --plain --harness "$HARNESS" 2>"$_model_err" || true)}"
+unset _cfg_model _unpin
+[ -n "$MODEL" ] || { printf 'error: no model resolved for the judge on this seat\n' >&2; grep 'REFUSED' "$_model_err" >&2; rm -f "$_model_err"; printf 'help: bin/model/agent-model.sh forseti --explain (a model this seat cannot serve is a refusal, not a fallback)\n' >&2; exit 1; }
+rm -f "$_model_err"
 EFFORT="${YMIR_REVIEW_EFFORT:-high}"
 BACKEND="${YMIR_REVIEW_BACKEND:-herdr}"
 # YMIR_REVIEW_DRY=1 behaves exactly as --dry-run: resolve and print the spawn
@@ -405,8 +398,11 @@ printf '%s\n' "$brief" >"$BRIEF" || {
 
 # ── the spawn line (printed whole on --dry-run) ──────────────────────────────
 spawn=( "$SCRIPT_DIR/einherjar-spawn.sh" "$REVIEW_ID" "$PROJECT" --scout
-        --backend "$BACKEND" --harness "$HARNESS" --model "$MODEL" --effort "$EFFORT" )
-spawn_line="$SCRIPT_DIR/einherjar-spawn.sh $REVIEW_ID $(printf '%q' "$PROJECT") --scout --backend $BACKEND --harness $HARNESS --model $MODEL --effort $EFFORT"
+        --backend "$BACKEND" --harness "$HARNESS" --model "$MODEL" --effort "$EFFORT" --role forseti )
+# `--role forseti` seats the judge with ITS permission profile (RULES/08, 2026-11-21): the one
+# merge door (bin/forge/judge-merge.sh, bin/agents/pr-seal.sh seal) is open and raw `gh pr merge`
+# stays denied. Without it the judge carried the worker profile and was refused at the merge.
+spawn_line="$SCRIPT_DIR/einherjar-spawn.sh $REVIEW_ID $(printf '%q' "$PROJECT") --scout --backend $BACKEND --harness $HARNESS --model $MODEL --effort $EFFORT --role forseti"
 
 if [ "$DRY" -eq 1 ]; then
   release_claim

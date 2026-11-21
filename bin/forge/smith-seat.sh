@@ -101,7 +101,7 @@ if [ -d "$CWD/.pi/extensions" ]; then
     && say "smith-seat: the seat's own extensions moved OUT of the tree ($stash_dir) — settings.json already loads the primary's"
 fi
 
-MODEL="$(bash "$ROOT/bin/model/agent-model.sh" "$ROLE" --plain 2>/dev/null || true)"
+MODEL="$(bash "$ROOT/bin/model/agent-model.sh" "$ROLE" --harness pi --plain 2>/dev/null || true)"
 [ -n "$MODEL" ] || refuse "no model resolved for '$ROLE' — bin/model/agent-model.sh $ROLE --explain"
 
 # THE SEATS HAVE A ROOM OF THEIR OWN, together — never split beside the primary, and never in a

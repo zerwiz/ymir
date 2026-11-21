@@ -6,7 +6,7 @@
 # TOON output, structured errors, no prompts, --version fast path.
 #
 # Usage:
-#   yggdrasil.sh create <id> [--repo <path>] [--base <branch>]
+#   yggdrasil.sh create <id> [--repo <path>] [--base <branch>] [--skip <dir>]… [--slim]
 #   yggdrasil.sh list   [--repo <path>]
 #   yggdrasil.sh status <id> [--repo <path>]
 #   yggdrasil.sh merge  <id> [--repo <path>] [--into <branch>] [--no-ff]
@@ -21,6 +21,12 @@
 # it is excluded by a per-worktree sparse-checkout, so a seat inside it loads ONE
 # extension tree, never two (RULES/13).
 #
+# A slimmer worktree (opt-in, default unchanged): `--skip <dir>` leaves a tracked
+# top-level folder out of the new worktree by the same sparse-checkout (repeatable);
+# `--slim` skips every folder the project lists in `<repo>/.worktree-slim` (one per
+# line, `#` comments). For a repository that vendors a large tree it never edits in
+# an errand (a `base/`, a `vendor/`), so each worktree stops paying for it again.
+#
 # Exit: 0 ok, 1 error, 2 usage.
 set -u
 
@@ -30,7 +36,7 @@ REPO="${YGGDRASIL_REPO:-$(pwd)}"
 WT=".yggdrasil"
 PREFIX="yggdrasil"
 
-usage() { sed -n '2,24p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'; }
 
 CMD="${1-}"; shift || true
 case "$CMD" in
@@ -49,6 +55,8 @@ BASE=""
 INTO=""
 FORCE=0
 NOFF=0
+SKIPS=()
+SLIM=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --repo) REPO=${2-}; shift 2 ;;
@@ -56,6 +64,8 @@ while [ $# -gt 0 ]; do
     --into) INTO=${2-}; shift 2 ;;
     --force) FORCE=1; shift ;;
     --no-ff) NOFF=1; shift ;;
+    --skip) SKIPS+=("${2-}"); shift 2 ;;
+    --slim) SLIM=1; shift ;;
     -*) printf 'error: unknown flag %s\nhelp: bin/forge/yggdrasil.sh %s [--repo <p>]\n' "$1" "$CMD" >&2; exit 2 ;;
     *) ID=$1; shift ;;
   esac
@@ -105,10 +115,42 @@ case "$CMD" in
     # exclusion — never a symlink: a symlink shows as deleted tracked files and must
     # not ship. The pattern file and `core.sparseCheckout` land in THIS worktree's
     # own gitdir (`config.worktree`), so no existing checkout or worktree changes.
-    if ! git -C "$WTPATH" sparse-checkout set --no-cone '/*' '!/.pi/extensions/' >/dev/null 2>&1; then
+    # The slim road (opt-in): read the project's list, then validate every folder before it becomes a pattern.
+    if [ "$SLIM" = 1 ]; then
+      if [ ! -f "$WTPATH/.worktree-slim" ]; then
+        git -C "$REPO" worktree remove "$WTPATH" >/dev/null 2>&1; git -C "$REPO" branch -D "$BRANCH" >/dev/null 2>&1
+        printf 'error: --slim needs a .worktree-slim file in the project (one folder per line)\nhelp: name the folders with --skip <dir>, or commit .worktree-slim\n' >&2; exit 1
+      fi
+      while IFS= read -r line || [ -n "$line" ]; do
+        line="${line%%#*}"; line="$(printf '%s' "$line" | tr -d '[:space:]')"
+        [ -n "$line" ] && SKIPS+=("$line")
+      done < "$WTPATH/.worktree-slim"
+    fi
+    PATTERNS=('/*' '!/.pi/extensions/')
+    SKIPPED=()
+    for d in "${SKIPS[@]+"${SKIPS[@]}"}"; do
+      d="${d#/}"; d="${d%/}"
+      case "$d" in ""|*..*|.git|.git/*|*[!A-Za-z0-9._/-]*)
+        git -C "$REPO" worktree remove --force "$WTPATH" >/dev/null 2>&1; git -C "$REPO" branch -D "$BRANCH" >/dev/null 2>&1
+        printf 'error: unsafe --skip folder: %s\nhelp: name a tracked folder inside the repository, e.g. --skip base\n' "$d" >&2; exit 2 ;;
+      esac
+      PATTERNS+=("!/$d/"); SKIPPED+=("$d")
+    done
+    if ! git -C "$WTPATH" sparse-checkout set --no-cone "${PATTERNS[@]}" >/dev/null 2>&1; then
       printf 'error: created %s but could not exclude .pi/extensions from it\nhelp: git -C %s sparse-checkout set --no-cone %s %s   (then bin/forge/yggdrasil.sh cleanup %s)\n' \
         "$BRANCH" "$WTPATH" "'/*'" "'!/.pi/extensions/'" "$ID" >&2
       exit 1
+    fi
+    for d in "${SKIPPED[@]+"${SKIPPED[@]}"}"; do
+      if [ -e "$WTPATH/$d" ]; then
+        # A file, not a folder (or a path sparse-checkout cannot drop): refuse, and leave nothing behind.
+        git -C "$REPO" worktree remove --force "$WTPATH" >/dev/null 2>&1; git -C "$REPO" branch -D "$BRANCH" >/dev/null 2>&1
+        printf 'error: %s is not a folder --skip can leave out (it would still be checked out)\nhelp: name a tracked folder, e.g. --skip base\n' "$d" >&2; exit 1
+      fi
+    done
+    if [ "${#SKIPPED[@]}" -gt 0 ]; then
+      printf 'slim[%s]{skipped,state}:\n' "${#SKIPPED[@]}"
+      for d in "${SKIPPED[@]}"; do printf '  "%s","not checked out (--skip)"\n' "$d"; done
     fi
     if [ -e "$WTPATH/.pi/extensions" ] && [ ! -L "$WTPATH/.pi/extensions" ]; then
       printf 'error: %s still carries its own .pi/extensions — two load paths, no seat\nhelp: git -C %s sparse-checkout set --no-cone %s %s\n' \

@@ -194,11 +194,15 @@ PY
     write_config
     if [ "$INSTALL" = 1 ]; then docker pull -q "$IMAGE" >/dev/null 2>&1 || true; fi
     docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+    # The owner labels: ymir.owner is the machine's container law (a lone `docker run` names its
+    # owner); project is the collaboration kit's label (bin/collab/kit/RULES/23), the one its
+    # reader filters on (bin/collab/kit/scripts/kitlib/containers.py, label=project=<project>).
     # BOTH loopback and the tailnet: loopback so the host's own tools (and a local tunnel)
     # reach it; the tailnet so the fleet does; NEVER 0.0.0.0, so the LAN is not a door.
     if docker run -d --name "$CONTAINER" -p "127.0.0.1:$PORT:$PORT" -p "$BIND:$PORT:$PORT" \
         -v "$STATE_DIR/conduwuit.toml:/etc/conduwuit/conduwuit.toml:ro" \
         -v "$STATE_DIR/data:/var/lib/conduwuit" \
+        --label ymir.owner=gladsheim --label project=gladsheim \
         --restart unless-stopped "$IMAGE" /sbin/conduwuit -c /etc/conduwuit/conduwuit.toml >/dev/null 2>&1; then
       sleep 4; engine_up && st="up" || st="starting"
       printf 'gladsheim-ensure[3]{fact,result}:\n'

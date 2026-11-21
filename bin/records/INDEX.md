@@ -69,7 +69,7 @@ bin[63]{file,does,kind,verdict,disposition,callers,lines}:
   "test_mimir_bridge_health.py","﻿import importlib.util,json,subprocess,sys,tempfile,threading,unittest","tool","wired","keep",0,30
   "test_todo_board.py","'''test_todo_board — the to-do board door, against a fake board (no network, a fenced home).","tool","wired","keep",0,208
   "test_tunnel_patience.sh","test_tunnel_patience.sh — a slow origin is not an absent one, and a silent one still fails.","tool","wired","keep",1,46
-  "todo.sh","todo.sh — the operator's to-do, as cards on the board.","tool","wired","keep",4,14
+  "todo.sh","todo.sh — the operator's to-do, as cards on the board.","tool","tested","keep",7,14
   "todo_board.py","'''todo_board — the operator's to-do lives on a board, and this is the one door that writes it.","tool","wired","keep",2,796
   "todos.sh","todos.sh — THE task board of the house, one writer for one file.","tool","wired","keep",8,184
   "tunnels-registry.sh","tunnels-registry.sh — emit the registry's `tunnels:` block from the cloudflared configs that actually exist.","tool","wired","keep",0,70
@@ -86,6 +86,6 @@ bin[63]{file,does,kind,verdict,disposition,callers,lines}:
   "wyrd-db.sh","wyrd-db.sh — the database layer (W0040).","tool","wired","keep",0,49
   "ymir-state.sh","ymir-state.sh — the DOOR to the engine's STATE module (`src/ymir_runtime/state/`).","tool","tested","keep",12,44
 
-**Tally.** verdict: wired=53, tested=10
+**Tally.** verdict: wired=52, tested=11
 
 **Tally.** disposition: keep=62, migrate → src/ymir_runtime/library.py=1

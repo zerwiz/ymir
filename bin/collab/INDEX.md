@@ -64,7 +64,7 @@ bin[122]{file,does,kind,verdict,disposition,callers,lines}:
   "collaborator-door.md","---","data","wired","keep",3,101
   "concept.md","Concept template","data","wired","keep",1,116
   "config.py","'''config — one file, project.yaml, read by every kit tool; defaults for everything it leaves out.","tool","wired","keep",1,255
-  "containers.py","'''containers — the door every container and image command of a project goes through.","tool","wired","keep",2,185
+  "containers.py","'''containers — the door every container and image command of a project goes through.","tool","wired","keep",3,185
   "containers.sh","containers.sh — the container door (RULES/23): builds here, never removes on a product host.","tool","wired","keep",3,9
   "decision-minimal.md","{short title, representative of solved problem and found solution}","data","wired","keep",1,30
   "decision.md","---","data","wired","keep",1,80

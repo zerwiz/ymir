@@ -27,7 +27,7 @@ bin[40]{file,does,kind,verdict,disposition,callers,lines}:
   "home-seed.sh","home-seed.sh — make a home that a fresh user can understand, and offer to keep it in git.","tool","tested","keep",10,270
   "launchd-ensure.sh","launchd-ensure.sh — seat the macOS service layer: `systemctl --user` answered by launchd.","tool","wired","keep",3,69
   "launchd-user.py","'''launchd-user.py — `systemctl --user` on a Mac: Ymir's systemd user units, run by launchd.","tool","wired","keep",7,649
-  "pin-refresh.sh","pin-refresh.sh — bring the PINNED runtime to main, from a tree that is NOT the pin.","tool","wired","keep",7,227
+  "pin-refresh.sh","pin-refresh.sh — bring the PINNED runtime to main, from a tree that is NOT the pin.","tool","wired","keep",8,227
   "prereq-ensure.sh","prereq-ensure.sh — self-healing prerequisite engine for Ymir.","tool","wired","keep",14,354
   "prove-install.sh","prove-install.sh — THE INSTALL CLAUSE, proven or NAMED as a gap.","tool","wired","keep",0,166
   "release-build.sh","release-build.sh — forge an IMMUTABLE release from one commit (plan 221, P0).","tool","wired","keep",5,332
@@ -57,7 +57,7 @@ bin[40]{file,does,kind,verdict,disposition,callers,lines}:
   "ymir-edit.sh","ymir-edit.sh — open a file in the Allfather's editor, on its own desktop.","tool","tested","keep",0,170
   "ymir-engine-ensure.sh","ymir-engine-ensure.sh — materialize the engine's private python home.","tool","tested","keep",2,74
   "ymir-engine.sh","ymir-engine.sh — the DOOR to the engine (`src/ymir_runtime/`).","tool","wired","keep",7,63
-  "ymir-install.sh","ymir-install.sh — THE FIRST SETUP.","tool","tested","keep",40,2031
+  "ymir-install.sh","ymir-install.sh — THE FIRST SETUP.","tool","tested","keep",41,2031
   "ymir-isolation.sh","ymir-isolation.sh — capability-probed confinement for a single agent command.","tool","wired","keep",0,89
   "ymir-migrate.sh","ymir-migrate.sh — versioned STRUCTURE migrations for existing Ymir homes.","tool","tested","keep",9,94
   "ymir-validate.sh","ymir-validate.sh — verify the installation actually works.","tool","wired","keep",4,332

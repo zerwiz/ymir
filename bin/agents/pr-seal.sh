@@ -337,6 +337,24 @@ judged_refuse() {  # <n> <condition> <detail> <rc>
   return "$4"
 }
 
+# The REAL gh, past the smith shim (2026-11-21, the judge's review of #870). The judge is seated
+# like any worker: YMIR_SMITH set, bin/forge/smith-bin first on PATH, the cwd under .yggdrasil/.
+# The shim refuses `pr merge` there — rightly, for a hand — so this door, whose own checks above
+# ARE the guard on this road, calls the gh behind it. Any tree's shim is skipped (the pin's, a
+# worktree's), never a different gh: a test's fake gh ahead of the shim is still the one used.
+door_gh() {
+  local d cand real
+  IFS=: read -ra _gh_dirs <<<"${PATH:-}"
+  for d in "${_gh_dirs[@]}"; do
+    [ -n "$d" ] && [ -x "$d/gh" ] || continue
+    cand="$d/gh"
+    real="$(readlink -f "$cand" 2>/dev/null || printf '%s' "$cand")"
+    case "$real" in */bin/forge/smith-bin/gh|*/bin/forge/smith-gh) continue ;; esac
+    printf '%s' "$cand"; return 0
+  done
+  return 1
+}
+
 seal_judged() {
   local n="${1-}" repo="${2-}" want="${3-}" review="${4-}" tmp login owner row
   local num head sha title ci ci_detail mstate draft held url branch
@@ -344,7 +362,8 @@ seal_judged() {
   case "$n" in *[!0-9]*) printf 'error: <%s> is not a PR number\n' "$n" >&2; return 2 ;; esac
   [ -n "$repo" ] || { printf 'error: the judge'"'"'s road needs --repo <owner/repo>\n' >&2; return 2; }
   case "$want" in ''|*[!0-9a-f]*) printf 'error: the judge'"'"'s road needs --head <the approved sha>\n' >&2; return 2 ;; esac
-  command -v gh >/dev/null 2>&1 || { judged_refuse "$n" "no gh" "gh is not installed — nothing can be read or merged" 4; return; }
+  local GH
+  GH="$(door_gh)" || { judged_refuse "$n" "no gh" "gh is not installed (past the smith shim) — nothing can be read or merged" 4; return; }
 
   if hold="$(hold_reason)"; then
     judged_refuse "$n" "the brake" "state/.seal-hold is present: $hold" 4; return
@@ -357,7 +376,7 @@ seal_judged() {
   #     home (warden-policy.py operator-logins). Never the repo slug's owner — an organisation owns
   #     its repositories, and the operator merges there under his own login (review of #863).
   owner="${YMIR_MERGE_IDENTITY:-$(python3 "$WARDEN_POLICY" operator-logins 2>/dev/null | tr '\n' ' ')}"
-  login="$(gh api user --jq .login 2>/dev/null | tr -d '[:space:]')"
+  login="$("$GH" api user --jq .login 2>/dev/null | tr -d '[:space:]')"
   local _lc_login _match=0 _o
   _lc_login="$(printf '%s' "$login" | tr 'A-Z' 'a-z')"
   for _o in $owner; do
@@ -368,7 +387,7 @@ seal_judged() {
   fi
   # 3 · the PR, read now
   tmp="$(mktemp)"
-  if ! gh pr view "$n" -R "$repo" \
+  if ! "$GH" pr view "$n" -R "$repo" \
       --json number,headRefName,headRefOid,title,url,mergeable,mergeStateStatus,statusCheckRollup,isDraft,labels,state >"$tmp" 2>/dev/null; then
     rm -f "$tmp"; judged_refuse "$n" "unreadable" "gh pr view failed for $repo — nothing was merged" 4; return
   fi
@@ -432,12 +451,12 @@ PY
   body="$(printf '%s\n\nApproved by the judge at head %s%s and merged at once by the judge'"'"'s road (RULES/08, 2026-11-21): every required check green, mergeable, no hold.\n' \
     "$title" "$sha" "${review:+ (review $review)}")"
   printf 'sealing[1]{pr,repo,head,method,checks}:\n  "#%s","%s","%s","%s","%s"\n' "$n" "$repo" "${sha:0:12}" "${flag#--}" "$ci_detail"
-  if ! gh pr merge "$n" -R "$repo" "$flag" --subject "$subject" --body "$body" \
+  if ! "$GH" pr merge "$n" -R "$repo" "$flag" --subject "$subject" --body "$body" \
         --match-head-commit "$sha" --delete-branch >/dev/null 2>&1; then
     judged_refuse "$n" "merge failed" "gh pr merge did not succeed — nothing is claimed; the next pass re-checks" 4; return
   fi
   local merge_commit
-  merge_commit="$(gh pr view "$n" -R "$repo" --json mergeCommit -q '.mergeCommit.oid' 2>/dev/null | tr -d '[:space:]')"
+  merge_commit="$("$GH" pr view "$n" -R "$repo" --json mergeCommit -q '.mergeCommit.oid' 2>/dev/null | tr -d '[:space:]')"
   [ -n "$merge_commit" ] || merge_commit=unknown
   if [ -x "$RUNES" ]; then
     "$RUNES" "$SEAT_PRIMARY@$SEAT_HOST" pr-seal --message \

@@ -20,7 +20,17 @@
 #   nidhogg.sh scan [--threshold N] [<agent>...]   # all seated agents if none named
 #   nidhogg.sh break <agent> [--message "…"]       # rung 1: interrupt + steer
 #   nidhogg.sh watch [--interval N] [--break]      # scan on a cycle
+#   nidhogg.sh commits [--repo DIR]... [--window S] [--max N] [--json]
+#                                                  # a writer looping on a BRANCH (plan 339, 2026-11-20)
 #   nidhogg.sh --version
+#
+# `commits` is the same question asked of git instead of a pane: one branch that received the
+# same commit subject more than --max times (default 2) inside --window seconds (default 3600).
+# PR #840's branch took ten identical `judge: change-log for #840` commits in minutes and its
+# gatherer's push was refused "fetch first". It reads local and remote-tracking refs, never
+# fetches, never writes; merges are not counted. One loop carried onto several branches (a gather, a
+# remote copy, main after a merge) is ONE row naming every branch, keyed by its first commit.
+# Exit 3 when a loop is found.
 #
 # Exit: 0 clean, 3 a loop was found, 1 error, 2 usage. (3 is the trip signal,
 # the same convention eindri-seen uses for its condition half.)
@@ -221,9 +231,73 @@ cmd_watch() {
   done
 }
 
+# A writer looping on a branch: the same subject, again and again, inside one window.
+cmd_commits() {
+  local repos=() window="${LOOP_COMMIT_WINDOW:-3600}" max="${LOOP_COMMIT_MAX:-2}" json=0
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --repo) repos+=("${2:-}"); shift 2 ;;
+      --window) window="${2:-3600}"; shift 2 ;;
+      --max) max="${2:-2}"; shift 2 ;;
+      --json) json=1; shift ;;
+      *) printf 'error: unknown flag %s\n' "$1" >&2; return 2 ;;
+    esac
+  done
+  [ ${#repos[@]} -gt 0 ] || repos=("$ROOT")
+  python3 - "$window" "$max" "$json" "${repos[@]}" <<'PY'
+import collections, json, subprocess, sys, time
+window, most, as_json, repos = int(sys.argv[1]), int(sys.argv[2]), sys.argv[3] == "1", sys.argv[4:]
+since = int(time.time()) - window
+
+def git(repo, *args):
+    try:
+        done = subprocess.run(["git", "-C", repo, *args], capture_output=True, text=True, timeout=30)
+    except Exception:
+        return ""
+    return done.stdout if done.returncode == 0 else ""
+
+loops, seen = [], {}
+for repo in repos:
+    refs = git(repo, "for-each-ref", "--format=%(committerdate:unix) %(refname)", "refs/heads", "refs/remotes")
+    for line in refs.splitlines():
+        stamp, _, ref = line.partition(" ")
+        if not stamp.isdigit() or int(stamp) < since or ref.endswith("/HEAD"):
+            continue
+        short = ref.split("/", 3)[-1] if ref.startswith("refs/remotes/") else ref[len("refs/heads/"):]
+        shas = collections.defaultdict(list)
+        for row in git(repo, "log", "--no-merges", f"--since=@{since}", "--format=%H %s", ref).splitlines():
+            sha, _, subject = row.partition(" ")
+            if subject.strip():
+                shas[subject].append(sha)
+        for subject, found in shas.items():
+            # one loop is one loop wherever it travelled: a branch that merged it, the remote copy of the
+            # branch, main after a merge — all carry the SAME first commit, so that commit is the key
+            key = (repo, subject, found[-1])
+            if len(found) <= most:
+                continue
+            if key in seen:
+                if short not in seen[key]["branches"]:
+                    seen[key]["branches"].append(short)
+                seen[key]["count"] = max(seen[key]["count"], len(found))
+                continue
+            seen[key] = {"repo": repo, "branch": short, "branches": [short], "subject": subject, "count": len(found)}
+            loops.append(seen[key])
+loops.sort(key=lambda row: -row["count"])
+if as_json:
+    print(json.dumps({"window": window, "max": most, "loops": loops}))
+else:
+    print(f"nidhogg-commits[{len(loops)}]{{branch,count,subject,repo}}:")
+    for row in loops:
+        subject = row["subject"].replace('"', "'")
+        print(f'  "{" ".join(row["branches"])}",{row["count"]},"{subject}","{row["repo"]}"')
+sys.exit(3 if loops else 0)
+PY
+}
+
 case "$ACTION" in
   scan)  cmd_scan "$@" ;;
   break) cmd_break "$@" ;;
   watch) cmd_watch "$@" ;;
-  *) printf 'error: unknown action %s (scan|break|watch)\n' "$ACTION" >&2; exit 2 ;;
+  commits) cmd_commits "$@" ;;
+  *) printf 'error: unknown action %s (scan|break|watch|commits)\n' "$ACTION" >&2; exit 2 ;;
 esac
