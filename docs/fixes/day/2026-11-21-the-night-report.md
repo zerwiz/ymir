@@ -115,3 +115,13 @@ No gate ran `bin/day/tests/test_night_report.py`, so the tests guarded nothing a
   <seat>*.
 
 Each of the three has a test.
+
+## Addendum, 2026-11-21 — which dry run the numbers above come from
+
+The *Proof* section above says the dry run listed 42 PRs merged and 38 open. The PR body says 43 merged
+and 44 open. Both are true, because they are two different dry runs taken some minutes apart, while PRs
+were merging and opening. The PR body shows the later run, and that is the one to quote: 43 merged,
+44 open (3 green), four items proven done. The judge's own re-run gave 44 merged and 46 open, later still.
+
+After the rework, the live dry run of 2026-11-21 05:22 on the dev seat would close five cards through
+`todo.sh`: the four above (#831, #771, #810, #800) and #858, which merged that night.
