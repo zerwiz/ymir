@@ -162,7 +162,7 @@ bin[189]{file,does,kind,verdict,disposition,callers,lines}:
   "test_home_sync_clock.sh","test_home_sync_clock.sh — the clock commits the records the house writes itself, and holds on anything else.","tool","wired","keep",0,28
   "test_hypr_door_guard.sh","test_hypr_door_guard.sh — the ward that keeps every Hyprland act in display-lib.sh (plan 341.2).","tool","wired","keep",1,58
   "test_main_red.sh","test_main_red.sh — the alarm BITES, and it stays quiet where it must.","tool","wired","keep",1,164
-  "test_maker_names.sh","test_maker_names.sh — RULES/53: the maker ward refuses a model, a maker or an agent harness in prose,","tool","wired","keep",1,113
+  "test_maker_names.sh","test_maker_names.sh — RULES/53: the maker ward refuses a model, a maker or an agent harness in prose,","tool","wired","keep",1,134
   "test_merge_method.sh","test_merge_method.sh — the merge flag follows the PR's kind (RULES/08, batch road).","tool","wired","keep",0,29
   "test_mjollnir_clone.sh","test_mjollnir_clone.sh — the door that turns a FAR repo into a workable one (plan 210 P3).","tool","wired","keep",0,110
   "test_mjollnir_intake.sh","test_mjollnir_intake.sh — the forge's senses (plan 210 P0/P1), proved without a network.","tool","wired","keep",0,179

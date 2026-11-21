@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[61]{file,does,kind,verdict,disposition,callers,lines}:
+bin[64]{file,does,kind,verdict,disposition,callers,lines}:
   "conflict-errand.md","conflict-errand.md — the brief a SMITH is handed when a PR cannot merge (plan 203 + 206 §12).","data","wired","keep",1,56
   "essence-fetch.sh","essence-fetch.sh — the npm world's self-heal: npm's packer refuses dotfolders","tool","wired","keep",2,18
   "exec-bits.sh","exec-bits.sh — a new door leaves the errand executable, or the errand says so before the push.","tool","wired","keep",2,62
@@ -33,6 +33,8 @@ bin[61]{file,does,kind,verdict,disposition,callers,lines}:
   "github-deploy.sh","github-deploy.sh — zero-trust deploys (W0035).","tool","wired","keep",0,96
   "gjallarhorn-expose.sh","gjallarhorn-expose.sh — put EVERY app on its own public hostname (Gjallarhorn).","tool","wired","keep",0,152
   "gjallarhorn-notify.sh","gjallarhorn-notify.sh — the horn (W0036).","tool","wired","keep",1,73
+  "gjallarhorn-publish.py","'''gjallarhorn-publish — put an app on a public name BEHIND the hall's login, by config alone.","tool","wired","keep",2,340
+  "gjallarhorn-publish.sh","gjallarhorn-publish.sh — put an app on a public name BEHIND the hall's login, by config alone.","tool","wired","keep",2,22
   "gjallarhorn-purge.sh","gjallarhorn-purge.sh — purge the Cloudflare edge cache for a hostname.","tool","wired","keep",1,69
   "gjallarhorn-tunnel.sh","gjallarhorn-tunnel.sh — raise/lower the `ymir` Cloudflare tunnel (Gjallarhorn).","tool","wired","keep",1,185
   "handoff-packet.py","'''handoff-packet.py — the door to the one artefact that crosses from a smith to the reviewer.","tool","wired","keep",3,481
@@ -70,6 +72,7 @@ bin[61]{file,does,kind,verdict,disposition,callers,lines}:
   "smith-seat.sh","smith-seat.sh — seat ANY figure in its own herdr workspace, the same way every time.","tool","wired","keep",2,177
   "test_gather_notice.sh","test_gather_notice.sh — the LAST errand of a batch calls the gather.","tool","wired","keep",1,136
   "test_gjallarhorn_no_hall.sh","test_gjallarhorn_no_hall.sh — a tunnel never publishes a hall.","tool","wired","keep",1,80
+  "test_gjallarhorn_publish.sh","test_gjallarhorn_publish.sh — an app is published only behind the hall's login.","tool","wired","keep",0,99
   "test_judge_merge.sh","test_judge_merge.sh — the judge's verdict is the seal (RULES/08, its sections appended 2026-11-21).","tool","wired","keep",0,483
   "test_review_seat_keeper.sh","test_review_seat_keeper.sh — the keeper: the reviewer's seat says WHY it refuses, and a dead seat","tool","wired","keep",1,221
   "test_smith_gh.sh","test_smith_gh.sh — the smith's gh refuses every road to a merge, and lets every read through.","tool","wired","keep",0,83
@@ -84,6 +87,6 @@ bin[61]{file,does,kind,verdict,disposition,callers,lines}:
   "worktree-reap.py","'''worktree-reap.py — the road that made a worktree is the road that reaps it (plan 339.4).","tool","wired","keep",6,550
   "yggdrasil.sh","yggdrasil.sh — the worktree manager (Yggdrasil, the world-tree).","tool","tested","keep",10,233
 
-**Tally.** verdict: wired=55, tested=6
+**Tally.** verdict: wired=58, tested=6
 
-**Tally.** disposition: keep=61
+**Tally.** disposition: keep=64

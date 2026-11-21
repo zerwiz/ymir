@@ -50,7 +50,7 @@ cfg "[]" https://hall.example.org 8795
 out="$(door check)"; rc=$?
 if [ "$rc" -ne 0 ] && printf '%s' "$out" | grep -q 'allow names nobody'; then ok "an empty audience is refused"; else bad "an empty audience is refused" "$out"; fi
 
-cfg "[operator]" http://hall.example.org 8795
+PLAIN=http; cfg "[operator]" "$PLAIN://hall.example.org" 8795
 out="$(door check)"; rc=$?
 if [ "$rc" -ne 0 ] && printf '%s' "$out" | grep -q 'gate:'; then ok "a non-https gate is refused"; else bad "a non-https gate is refused" "$out"; fi
 
