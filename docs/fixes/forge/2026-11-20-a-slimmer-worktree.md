@@ -31,3 +31,7 @@ as before, which the test proves.
 
 The collaboration kit's own `scripts/worktree.sh` has no such flag yet. The kit was being
 rewritten in an open pull request at the time, so the flag was kept to the house's own road.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #873
