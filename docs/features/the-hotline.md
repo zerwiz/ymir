@@ -46,7 +46,7 @@ agent's turn, and the agent answers you in the chat with one message and three b
 a day.
 
 - **Who owns it.** The machine named in the line. Override per source in `<home>/config/notify-owners.conf` (copy
-  `config/notify-owners.conf.example`).
+  `.agents/config/notify-owners.conf.example`).
 - **When the owner's arm is dead.** The heart's arm holder takes it, and the line says *handed to the heart*.
 - **When no agent answers.** The raw line is posted after 10 minutes (`YMIR_NOTIFY_ANSWER_MIN`), marked *no agent
   answered*. With no arm anywhere it is posted at once.
