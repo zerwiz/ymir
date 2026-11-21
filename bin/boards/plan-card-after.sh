@@ -39,7 +39,7 @@ for f in "${files[@]}"; do
   if ! road="$("$HERE/plan-sync.sh" --file "$f" --road 2>&1)"; then
     why="$(printf '%s' "$road" | sed -n 's/^plan-sync: refused — //p' | head -1)"
     case "$why" in
-      "no project with a board"*) echo "plan-card: $(basename "$f"): ${why}" ;;
+      "no project with a board"*|"the plan shelf"*) echo "plan-card: $(basename "$f"): ${why}" ;;
       *) echo "plan-card: plan ${n:-?}: no road to the board on this seat — ${why:-$road}" ;;
     esac
     continue
