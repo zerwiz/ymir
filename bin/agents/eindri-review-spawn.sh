@@ -349,8 +349,11 @@ printf '%s\n' "$brief" >"$BRIEF" || {
 
 # ── the spawn line (printed whole on --dry-run) ──────────────────────────────
 spawn=( "$SCRIPT_DIR/einherjar-spawn.sh" "$REVIEW_ID" "$PROJECT" --scout
-        --backend "$BACKEND" --harness "$HARNESS" --model "$MODEL" --effort "$EFFORT" )
-spawn_line="$SCRIPT_DIR/einherjar-spawn.sh $REVIEW_ID $(printf '%q' "$PROJECT") --scout --backend $BACKEND --harness $HARNESS --model $MODEL --effort $EFFORT"
+        --backend "$BACKEND" --harness "$HARNESS" --model "$MODEL" --effort "$EFFORT" --role forseti )
+# `--role forseti` seats the judge with ITS permission profile (RULES/08, 2026-11-21): the one
+# merge door (bin/forge/judge-merge.sh, bin/agents/pr-seal.sh seal) is open and raw `gh pr merge`
+# stays denied. Without it the judge carried the worker profile and was refused at the merge.
+spawn_line="$SCRIPT_DIR/einherjar-spawn.sh $REVIEW_ID $(printf '%q' "$PROJECT") --scout --backend $BACKEND --harness $HARNESS --model $MODEL --effort $EFFORT --role forseti"
 
 if [ "$DRY" -eq 1 ]; then
   release_claim

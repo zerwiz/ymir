@@ -203,6 +203,7 @@ EFFORT=
 EFFORT_SET=0
 BACKEND=
 BACKEND_SET=0
+SEAT_ROLE="${YMIR_SEAT_ROLE:-}"
 ISOLATION=auto
 FORCE=0
 DRY=0
@@ -221,6 +222,7 @@ for a in "$@"; do
       effort) EFFORT=$a; EFFORT_SET=1 ;;
       backend) BACKEND=$a; BACKEND_SET=1 ;;
       isolation) ISOLATION=$a ;;
+      role) SEAT_ROLE=$a ;;
       *) echo "error: internal parser state for --$want_value" >&2; exit 1 ;;
     esac
     want_value=
@@ -243,12 +245,15 @@ for a in "$@"; do
     --backend=*) BACKEND=${a#--backend=}; BACKEND_SET=1 ;;
     --isolation) want_value=isolation ;;
     --isolation=*) ISOLATION=${a#--isolation=} ;;
+    --role) want_value=role ;;
+    --role=*) SEAT_ROLE=${a#--role=} ;;
     --force) FORCE=1 ;;
     --dry-run) DRY=1 ;;
     *) POS+=("$a") ;;
   esac
 done
 [ -z "$want_value" ] || { echo "error: --$want_value requires a value" >&2; exit 1; }
+case "$SEAT_ROLE" in *[!A-Za-z0-9_-]*) echo "error: --role takes a figure name (got '$SEAT_ROLE')" >&2; exit 1 ;; esac
 
 ID=${POS[0]:-}
 [ -n "$ID" ] || { echo "error: task-id is required" >&2; exit 2; }
@@ -378,6 +383,8 @@ if [ "$RELAUNCH" -eq 1 ]; then
   KIND=$(meta_value "$META" kind); KIND=${KIND:-ship}
   WT=$(meta_value "$META" worktree)
   PROJECT_DIR=$(meta_value "$META" project)
+  # a relaunched judge stays the judge: the recorded role chooses the same permission profile
+  [ -n "$SEAT_ROLE" ] || SEAT_ROLE=$(meta_value "$META" role)
   [ -n "$WT" ] || { echo "error: task record $META records no worktree" >&2; exit 1; }
   [ -d "$WT" ] || { echo "error: recorded worktree $WT no longer exists; recover it before relaunching" >&2; exit 1; }
   if [ "$KIND" = ship ] && [ "$MODE_SET" -eq 0 ]; then
@@ -1086,6 +1093,9 @@ fi
 # worker, so the shape lives in bin/seat/pi-launcher.sh and this spawner only CALLS it.
 PI_LAUNCHER="$SCRIPT_DIR/../seat/pi-launcher.sh"
 
+# The seat's role travels with it, so every road that chooses a Claude profile chooses the same one.
+if [ -n "$SEAT_ROLE" ]; then export YMIR_SEAT_ROLE="$SEAT_ROLE"; fi
+
 build_launch_command() {  # prints the worker command WITHOUT the leading exec
   local brief_ref=$1 model_flag=
   if [ -n "$MODEL" ] && [ "$MODEL" != default ]; then
@@ -1109,9 +1119,13 @@ build_launch_command() {  # prints the worker command WITHOUT the leading exec
       # callers; the parity test holds it). Interactive, so the seat stays steerable; the
       # shipped worker profile lets it edit and run without a prompt and denies the
       # Allfather's moves. A missing profile is a refusal, never a bare `claude`.
-      local profile="$ROOT/.agents/harnesses/claude-worker.settings.json"
-      if [ ! -f "$profile" ]; then
-        echo "error: the Claude worker profile is missing at $profile — a Claude seat without it stops at its first permission prompt (plan 239 P5c)" >&2
+      # The profile is chosen by ROLE (RULES/08, appended 2026-11-21): `--role forseti` (the
+      # judge, from eindri-review-spawn.sh) gets claude-judge.settings.json — the one merge door
+      # and still no raw `gh pr merge`; every other role gets the worker profile. The role goes to
+      # the seat as YMIR_SEAT_ROLE too, so harness.py chooses the same profile.
+      local profile
+      if ! profile="$(python3 "$ROOT/src/ymir_runtime/claude_seat.py" profile "$ROOT" "$SEAT_ROLE" 2>/dev/null)" || [ ! -f "$profile" ]; then
+        echo "error: the Claude permission profile for role '${SEAT_ROLE:-worker}' is missing under $ROOT/.agents/harnesses — a Claude seat without it stops at its first permission prompt (plan 239 P5c)" >&2
         return 1
       fi
       printf 'claude --permission-mode acceptEdits --settings %s %s"$(cat %s)"' \
@@ -1414,6 +1428,7 @@ META_TMP="$STATE/.$ID.meta.${BASHPID:-$$}"
     printf 'yolo=%s\n' "$YOLO"
   fi
   printf 'harness=%s\n' "$HARNESS"
+  if [ -n "$SEAT_ROLE" ]; then printf 'role=%s\n' "$SEAT_ROLE"; fi
   printf 'raw_launch=%s\n' "$RAW_LAUNCH"
   printf 'harness_provenance=%s\n' "${HARNESS_PROV:-}"
   printf 'model=%s\n' "$MODEL"

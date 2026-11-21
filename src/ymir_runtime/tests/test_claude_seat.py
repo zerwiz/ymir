@@ -61,6 +61,34 @@ class SettingsTest(unittest.TestCase):
             self.assertEqual(data["permissions"]["defaultMode"], "dontAsk")
 
 
+class ProfileByRoleTest(unittest.TestCase):
+    """RULES/08, 2026-11-21: the judge gets the one merge door; every other role refuses it."""
+
+    def test_the_judge_and_the_worker_get_their_own_profiles(self) -> None:
+        tree = harness.claude_worker_profile(None).parents[2]
+        self.assertEqual(claude_seat.profile_for(tree, "forseti", {}).name, "claude-judge.settings.json")
+        self.assertEqual(claude_seat.profile_for(tree, None, {"YMIR_SEAT_ROLE": "Forseti"}).name,
+                         "claude-judge.settings.json")
+        for role in ("sindri", "", None):
+            with self.subTest(role=role):
+                self.assertEqual(claude_seat.profile_for(tree, role, {}).name, "claude-worker.settings.json")
+
+    def test_the_judge_may_use_the_door_and_never_raw_merge(self) -> None:
+        tree = harness.claude_worker_profile(None).parents[2]
+        judge = json.loads(claude_seat.profile_for(tree, "forseti", {}).read_text(encoding="utf-8"))
+        worker = json.loads(claude_seat.profile_for(tree, "sindri", {}).read_text(encoding="utf-8"))
+        self.assertIn("Bash(bin/forge/judge-merge.sh:*)", judge["permissions"]["allow"])
+        self.assertIn("Bash(gh pr merge:*)", judge["permissions"]["deny"])
+        self.assertIn("Bash(git merge:*)", judge["permissions"]["deny"])
+        self.assertIn("Bash(bin/forge/judge-merge.sh:*)", worker["permissions"]["deny"])
+        self.assertIn("Bash(gh pr merge:*)", worker["permissions"]["deny"])
+
+    def test_a_judge_without_its_profile_is_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(ValueError):
+                claude_seat.profile_for(tmp, "forseti", {})
+
+
 class ClassifyTest(unittest.TestCase):
     def test_a_brief_that_quotes_the_faults_is_not_a_fault(self) -> None:
         brief = "> Fix it: Claude asks 'Yes, I trust this folder' and 'Yes, switch to Opus'\n  There's an issue with the selected model\n"

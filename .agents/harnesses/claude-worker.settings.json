@@ -1,5 +1,5 @@
 {
-  "$comment": "The permission profile every Claude Eindri is launched with (plan 239 P5c). A worker runs unattended in its own Yggdrasil worktree, so it may edit and run commands without a prompt (the same latitude opencode workers get from OPENCODE_CONFIG_CONTENT permission *:allow), while the moves that only the Allfather makes, or that destroy unrecorded work, are denied. Deny rules win over allow rules. Appended 2026-11-20: the seat runs in dontAsk mode, so a tool outside this allow list is denied, never asked about; bin/seat/claude-seat.sh adds one allow per configured MCP server at launch. THE COMMAND TIME LIMIT (2026-11-20, \"yes not to small tho\"): a Bash call defaults to 2 minutes and may declare at most 10, which is short enough that a real build is killed and long enough that a hung ssh hides for hours. 30 minutes by default, 2 hours when a build or a gate suite declares it, never unlimited — the same numbers as bin/agents/cmd-limit-lib.sh, which is where the brief rule and the arm's judgement read them.",
+  "$comment": "The permission profile every Claude Eindri is launched with (plan 239 P5c). A worker runs unattended in its own Yggdrasil worktree, so it may edit and run commands without a prompt (the same latitude opencode workers get from OPENCODE_CONFIG_CONTENT permission *:allow), while the moves that only the Allfather makes, or that destroy unrecorded work, are denied. Deny rules win over allow rules. Appended 2026-11-20: the seat runs in dontAsk mode, so a tool outside this allow list is denied, never asked about; bin/seat/claude-seat.sh adds one allow per configured MCP server at launch. THE COMMAND TIME LIMIT (2026-11-20, \"yes not to small tho\"): a Bash call defaults to 2 minutes and may declare at most 10, which is short enough that a real build is killed and long enough that a hung ssh hides for hours. 30 minutes by default, 2 hours when a build or a gate suite declares it, never unlimited — the same numbers as bin/agents/cmd-limit-lib.sh, which is where the brief rule and the arm's judgement read them. Appended 2026-11-21 (RULES/08, every PR is reviewed by the judge and an approval merges at once): THE PROFILE IS CHOSEN BY ROLE (src/ymir_runtime/claude_seat.py profile_for). This is the WORKER profile: a worker never merges by any road, so besides raw `gh pr merge` and `git merge` it also refuses the judge's merge door (bin/forge/judge-merge.sh, bin/agents/pr-seal.sh seal) and the raw merge API. The judge (role forseti) is seated with claude-judge.settings.json instead, which opens the door and nothing else.",
   "env": {
     "BASH_DEFAULT_TIMEOUT_MS": "1800000",
     "BASH_MAX_TIMEOUT_MS": "7200000"
@@ -25,6 +25,17 @@
       "Bash(git push --force:*)",
       "Bash(git push origin +*)",
       "Bash(gh pr merge:*)",
+      "Bash(*gh pr merge*)",
+      "Bash(gh api *pulls/*/merge*)",
+      "Bash(*gh api*/merge*)",
+      "Bash(bin/forge/judge-merge.sh:*)",
+      "Bash(./bin/forge/judge-merge.sh:*)",
+      "Bash(bash bin/forge/judge-merge.sh:*)",
+      "Bash(*judge-merge.sh*)",
+      "Bash(bin/agents/pr-seal.sh seal:*)",
+      "Bash(./bin/agents/pr-seal.sh seal:*)",
+      "Bash(bash bin/agents/pr-seal.sh seal:*)",
+      "Bash(*pr-seal.sh seal*)",
       "Bash(git merge:*)",
       "Bash(git add -A:*)",
       "Bash(git add .:*)",

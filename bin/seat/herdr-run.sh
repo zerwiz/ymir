@@ -648,7 +648,9 @@ $_coretext"
         else
           printf 'herdr-run[1]{claude,trust}:\n  "%s","not marked — %s"\n' "$SEAT_CWD" "$_trust" >&2
         fi
-        if ! mapfile -t _cargs < <("$SCRIPT_DIR/claude-seat.sh" args "$SEAT_CWD" "$CLAUDE_MODEL" "$brief_dir/$NAME.claude-settings.json") \
+        # The profile is chosen by ROLE (RULES/08, 2026-11-21): the judge (forseti) gets the one
+        # merge door; every other role is the worker profile, which refuses every merge road.
+        if ! mapfile -t _cargs < <("$SCRIPT_DIR/claude-seat.sh" args "$SEAT_CWD" "$CLAUDE_MODEL" "$brief_dir/$NAME.claude-settings.json" "${ROLE:-}") \
            || [ ${#_cargs[@]} -eq 0 ]; then
           printf 'error: the Claude worker profile could not be written — a Claude seat without it stops at its first permission dialog\n' >&2
           exit 1

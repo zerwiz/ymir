@@ -19,6 +19,8 @@ verdict[1]{result,count,list,seal}:
 
 REPORT: write your full verdict to the report shelf {{REPORT_PATH}}, and append one status line to {{STATUS_PATH}} (state: done with the verdict in one short line). READ-ONLY absolutely: no edits, no commits, no pushes, no branch changes. Prose may carry the house voice; paths, commands, and verdicts stay literal.
 
+THE MERGE GOES THROUGH THE DOOR, NEVER BY HAND (RULES/08, appended 2026-11-21): you are seated with the judge's permission profile, which opens ONE merge road and denies raw `gh pr merge`, the raw merge API and `git merge`. Do not try them; they are refused. Your APPROVE is carried out by the terminal act below, which runs `bin/forge/judge-merge.sh act {{REVIEW_ID}}`; that door re-checks at that instant (every check SUCCESS and none pending, mergeable, not a draft, no `hold` label, no `state/.seal-hold`, the head is the head you judged) and merges as the operator with the method `bin/forge/merge-method.sh` names. If the terminal act says the merge could not be carried out and the reason is not a red or held gate, run `bin/forge/judge-merge.sh act {{REVIEW_ID}}` ONCE yourself and put its output in the report. A refusal from the door is a finding to report, never a gate to step around.
+
 # Delivery contract
 Delivery contract: mode=scout
 
@@ -96,3 +98,4 @@ The move IS the acknowledgement: without it Brokk rings again and eventually tre
 ## CHANGE LOG
 
 - **2026-11-12** — this document gained a CHANGE LOG section so it carries its history (RULES/06). Its earlier history is its git log; entries are appended below, never rewritten.
+- **2026-11-21** — appended THE MERGE GOES THROUGH THE DOOR: the judge is seated with its own permission profile (role forseti), raw `gh pr merge` is refused, and an APPROVE is carried out by `bin/forge/judge-merge.sh act <review-id>` (RULES/08). Fix note: `docs/fixes/seat/2026-11-21-the-judges-seat-opens-the-merge-door.md`.

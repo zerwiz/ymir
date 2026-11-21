@@ -2179,3 +2179,7 @@ the tail of the shared log.
 
 Proofs: `bin/notify/tests/test_alert_owner_road.py` (15 cases, a fake Telegram and a fake arm wire). Fix note:
 `docs/fixes/notify/2026-11-21-an-alert-reaches-an-agent.md`.
+
+## 2026-11-21 — the Claude seat's permission profile is chosen by role
+
+The Claude seat's permission profile is chosen by ROLE (RULES/08). `einherjar-spawn.sh --role <figure>` (recorded as `role=` in the task record, kept on `--relaunch`, exported as `YMIR_SEAT_ROLE`) and `herdr-run.sh --role` choose it through `src/ymir_runtime/claude_seat.py profile_for`: the judge (`forseti`, seated by `eindri-review-spawn.sh --role forseti`) gets `.agents/harnesses/claude-judge.settings.json`, which allows the merge door (`bin/forge/judge-merge.sh`, `bin/agents/pr-seal.sh seal`) and still denies raw `gh pr merge`; every other role gets `claude-worker.settings.json`, which denies both. Fix note: `docs/fixes/seat/2026-11-21-the-judges-seat-opens-the-merge-door.md`.

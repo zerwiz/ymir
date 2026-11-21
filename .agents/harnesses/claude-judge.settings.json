@@ -1,0 +1,51 @@
+{
+  "$comment": "The permission profile the JUDGE is launched with (role forseti; RULES/08, appended 2026-11-21 at the Allfather's word: every PR is reviewed by the judge, and an approval merges at once). It is the worker profile (claude-worker.settings.json) with ONE road opened: the merge door. Measured 2026-11-21: three judges approved PRs and were refused at the merge, because every Claude seat carried the worker profile, which denies `gh pr merge`; the arm holder merged by hand. The door is bin/forge/judge-merge.sh (act <review-id>: reads the verdict, then calls) bin/agents/pr-seal.sh seal <n> --repo <owner/repo> --head <approved-sha>, which re-checks at that instant — every check SUCCESS and none pending, mergeable, not a draft, no hold label, no state/.seal-hold, the head is the approved head, gh acts as the registry's owner — then merges with bin/forge/merge-method.sh's method and a written body, and carves one Rune. Raw `gh pr merge`, the raw merge API, `git merge` and every push to main stay DENIED, so the door's checks cannot be skipped. Deny rules win over allow rules; the explicit allow entries name the one road. Keep the env and the rest of the lists in step with the worker profile (tests/test_claude_seat_roles.sh holds it).",
+  "env": {
+    "BASH_DEFAULT_TIMEOUT_MS": "1800000",
+    "BASH_MAX_TIMEOUT_MS": "7200000"
+  },
+  "permissions": {
+    "allow": [
+      "Read",
+      "Edit",
+      "Write",
+      "Glob",
+      "Grep",
+      "Bash",
+      "WebFetch",
+      "WebSearch",
+      "TodoWrite",
+      "Skill",
+      "NotebookEdit",
+      "Bash(bin/forge/judge-merge.sh:*)",
+      "Bash(./bin/forge/judge-merge.sh:*)",
+      "Bash(bash bin/forge/judge-merge.sh:*)",
+      "Bash(bin/agents/pr-seal.sh seal:*)",
+      "Bash(./bin/agents/pr-seal.sh seal:*)",
+      "Bash(bash bin/agents/pr-seal.sh seal:*)"
+    ],
+    "deny": [
+      "Bash(git push origin main:*)",
+      "Bash(git push origin master:*)",
+      "Bash(git push -f:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push origin +*)",
+      "Bash(gh pr merge:*)",
+      "Bash(*gh pr merge*)",
+      "Bash(gh api *pulls/*/merge*)",
+      "Bash(*gh api*/merge*)",
+      "Bash(git merge:*)",
+      "Bash(git add -A:*)",
+      "Bash(git add .:*)",
+      "Bash(git commit -a:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean -f:*)",
+      "Bash(git checkout -- :*)",
+      "Bash(git stash:*)",
+      "Bash(rm -rf:*)",
+      "Bash(sudo:*)",
+      "Agent",
+      "Task"
+    ]
+  }
+}

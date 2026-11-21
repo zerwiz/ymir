@@ -362,17 +362,26 @@ def build_launch_command(
 CLAUDE_WORKER_PROFILE = Path(".agents") / "harnesses" / "claude-worker.settings.json"
 
 
-def claude_worker_profile(root: str | Path | None) -> Path:
-    """The Claude worker's permission profile, from the Ymir tree; refuse when absent.
+CLAUDE_JUDGE_PROFILE = Path(".agents") / "harnesses" / "claude-judge.settings.json"
+
+
+def claude_worker_profile(root: str | Path | None, role: str | None = None) -> Path:
+    """The Claude seat's permission profile for its ROLE, from the Ymir tree; refuse when absent.
 
     A Claude seat launched without it stops at its first permission prompt and
     nobody is watching — so a missing profile is a refusal, never a bare `claude`.
+    The role (the argument, else YMIR_SEAT_ROLE) chooses it (RULES/08, 2026-11-21):
+    the judge (forseti) gets the profile that opens the one merge door; every other
+    role gets the worker profile, which refuses every merge road.
     """
+    from . import claude_seat  # the ONE role table: claude_seat.JUDGE_ROLES
+
     base = Path(root) if root else Path(__file__).resolve().parents[2]
-    profile = base / CLAUDE_WORKER_PROFILE
+    judge = claude_seat.role_of(role) in claude_seat.JUDGE_ROLES
+    profile = base / (CLAUDE_JUDGE_PROFILE if judge else CLAUDE_WORKER_PROFILE)
     if not profile.is_file():
         raise ValueError(
-            f"the Claude worker profile is missing at {profile} — a Claude seat without it "
+            f"the Claude {'judge' if judge else 'worker'} profile is missing at {profile} — a Claude seat without it "
             "stops at its first permission prompt (plan 239 P5c)"
         )
     return profile
