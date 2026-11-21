@@ -138,13 +138,13 @@ def matcher(host: str) -> str:
 def caddyfile(cfg: dict) -> str:
     gate = str(cfg["gate"]).rstrip("/")
     out = ["{", "\tadmin off", "\tauto_https off", "}", "",
-           f"http://127.0.0.1:{cfg['edge_port']} {{", "\tbind 127.0.0.1", ""]
+           f"http://:{cfg['edge_port']} {{", "\tbind 127.0.0.1", ""]
     for app in cfg["apps"]:
         host = app["host"].lower()
         out += [f"\t@{matcher(host)} host {host}",
                 f"\thandle @{matcher(host)} {{",
                 f"\t\tforward_auth {gate} {{",
-                "\t\t\turi /oidc/authz",
+                f"\t\t\turi /oidc/authz?app={host}",
                 "\t\t\theader_up X-Forwarded-Host {host}",
                 "\t\t\theader_up X-Forwarded-Proto https",
                 "\t\t\tcopy_headers Remote-User Remote-Email Remote-Name",
