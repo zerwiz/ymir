@@ -103,10 +103,10 @@ units:
     mode: render
     kind: timer
     roles: [heart, forge, dev]
-    description: "review-watch — ask the lock owner about every unjudged open PR (plan 206)"
+    description: "review-watch — the judge for every unjudged PR head on the heart (the keeper), an ask elsewhere (plan 206; RULES/08 2026-11-21)"
     workdir: "."
     exec: "/usr/bin/env bash bin/forge/review-watch.sh"
-    vars: { REVIEW_INTERVAL: "10min" }
+    vars: { REVIEW_INTERVAL: "3min" }
     timer: { description: "review-watch — the review loop's clock (every ${REVIEW_INTERVAL})", boot: 3min, every: "${REVIEW_INTERVAL}", accuracy: 30s }
 
   - name: ship-watch

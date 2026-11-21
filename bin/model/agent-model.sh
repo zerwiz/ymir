@@ -219,6 +219,26 @@ resolve_one() {  # <agent> → prints "model<TAB>source<TAB>why"; exit 3 when re
     printf '%s\t%s\t%s' "$EXPLICIT" "explicit --model" "the operator named it for this run"
     return 0
   fi
+  # A CLAUDE-HARNESS AGENT (RULES/08, 2026-11-21 — the judge is forseti: harness claude, model opus).
+  # The Claude harness serves Anthropic names from its own catalogue, which pi's catalogue never lists,
+  # so the row was refused and the fleet default (a pi model the claude harness refuses) won. For an
+  # agent whose row names harness claude, a Claude name in the row is honoured as written, and an
+  # environment pin naming a provider/model token yields to it (the claude harness cannot serve one).
+  local crow_h crow_m
+  crow_h="$(row_value "$OVERLAY" "$agent" harness || true)"; [ -n "$crow_h" ] || crow_h="$(row_value "$FLEET" "$agent" harness || true)"
+  if [ "$crow_h" = claude ]; then
+    crow_m="$(row_value "$OVERLAY" "$agent" model || true)"; [ -n "$crow_m" ] || crow_m="$(row_value "$FLEET" "$agent" model || true)"
+    if [ -n "$envval" ]; then
+      case "$envval" in
+        */*) printf 'agent-model: FINDING — %s names %s, a provider/model token the claude harness cannot serve; the row wins\n' "$envkey" "$envval" >&2 ;;
+        opus|sonnet|haiku|claude-*) printf '%s\t%s\t%s' "$envval" "$envkey" "an environment override, a Claude name for a claude-harness agent"; return 0 ;;
+      esac
+    fi
+    case "$crow_m" in
+      opus|sonnet|haiku|claude-*)
+        printf '%s\t%s\t%s' "$crow_m" "agents row (harness claude)" "a Claude name, served by the claude harness's own catalogue"; return 0 ;;
+    esac
+  fi
   if [ -n "$envval" ]; then
     if listed "$envval"; then printf '%s\t%s\t%s' "$envval" "$envkey" "an environment override, honoured because this seat lists it"
     else refuse "$envkey names '$envval', which this seat's catalogue does NOT list — correct the override or name a listed model"; fi

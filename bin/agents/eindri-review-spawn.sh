@@ -147,7 +147,35 @@ HARNESS="${YMIR_REVIEW_HARNESS:-}"
 # computers have different models and capabilities"). The code names no model id: the fleet
 # declares its choice in the private home, the seat's own catalogue says whether it can serve
 # it, and a seat that cannot says so instead of quietly borrowing a neighbour's promise.
-MODEL="${YMIR_REVIEW_MODEL:-$(bash "$ROOT/bin/model/agent-model.sh" forseti --plain 2>/dev/null || true)}"
+#
+# THE HOME'S ROW WINS (RULES/08, 2026-11-21). The fleet names the judge in config/agents.yaml
+# (forseti: harness claude, model opus). Two faults kept that row from ever seating:
+#   · the heart's review-watch drop-in pinned YMIR_FORSETI_MODEL to a pi model, and the resolver
+#     honours an environment override above the home — so a harness-wide pin overruled the
+#     operator's declared judge, and the claude harness refused the provider/model token;
+#   · the resolver checks pi's catalogue, which never lists a Claude alias, so `opus` fell through
+#     to the fleet default.
+# So: when the home names the judge's harness and model, the spine takes the row as written and
+# the YMIR_FORSETI_MODEL pin yields to it. For a non-pi harness the harness's own catalogue judges
+# the name (einherjar-spawn.sh refuses what that harness cannot serve). YMIR_REVIEW_MODEL stays the
+# one deliberate per-run override.
+if [ -z "$HARNESS" ] && [ -x "$SCRIPT_DIR/../fleet/agents-config.sh" ]; then
+  HARNESS="$("$SCRIPT_DIR/../fleet/agents-config.sh" get forseti harness 2>/dev/null | head -n1 || true)"
+fi
+HARNESS="${HARNESS:-pi}"
+_cfg_model=""
+[ -x "$SCRIPT_DIR/../fleet/agents-config.sh" ] && \
+  _cfg_model="$("$SCRIPT_DIR/../fleet/agents-config.sh" get forseti model 2>/dev/null | head -n1 || true)"
+if [ -n "${YMIR_REVIEW_MODEL:-}" ]; then
+  MODEL="$YMIR_REVIEW_MODEL"
+elif [ -n "$_cfg_model" ] && [ "$HARNESS" != pi ]; then
+  MODEL="$_cfg_model"
+elif [ -n "$_cfg_model" ]; then
+  MODEL="$(env -u YMIR_FORSETI_MODEL bash "$ROOT/bin/model/agent-model.sh" forseti --plain 2>/dev/null || true)"
+else
+  MODEL="$(bash "$ROOT/bin/model/agent-model.sh" forseti --plain 2>/dev/null || true)"
+fi
+unset _cfg_model
 [ -n "$MODEL" ] || { printf 'error: no model resolved for the judge on this seat\nhelp: bin/model/agent-model.sh forseti --explain (a model this seat cannot serve is a refusal, not a fallback)\n' >&2; exit 1; }
 EFFORT="${YMIR_REVIEW_EFFORT:-high}"
 BACKEND="${YMIR_REVIEW_BACKEND:-herdr}"
@@ -305,11 +333,13 @@ if [ "$DRY" -eq 0 ] && ! mkdir "$REVIEW_SPAWNED" 2>/dev/null; then
 fi
 
 
-# ── the judge's seat: the roster resolves the figure's harness ───────────────
-if [ -z "$HARNESS" ] && [ -x "$SCRIPT_DIR/../fleet/agents-config.sh" ]; then
-  HARNESS="$("$SCRIPT_DIR/../fleet/agents-config.sh" get forseti harness 2>/dev/null | head -n1 || true)"
+# ── the judge's seat: the harness was resolved with the model, above ────────
+
+# ── the head the judge is seated for (task mode reads it now; PR-only mode already has it) ──
+_slug="$(printf '%s' "$PR_URL" | sed -nE 's#^https://github\.com/([^/]+/[^/]+)/pull/[0-9]+.*#\1#p')"
+if [ -z "$HEAD_SHA" ] && [ -n "$_slug" ] && [ "$PR_NUMBER" != "?" ] && command -v gh >/dev/null 2>&1; then
+  HEAD_SHA="$(gh pr view "$PR_NUMBER" -R "$_slug" --json headRefOid -q .headRefOid 2>/dev/null | tr -d '[:space:]' || true)"
 fi
-HARNESS="${HARNESS:-pi}"
 
 # ── fill the fierce brief for THIS task ──────────────────────────────────────
 BRIEF="$SHARED_DATA/$REVIEW_ID/brief.md"
@@ -331,6 +361,7 @@ brief=${brief//'{{REVIEW_ID}}'/$REVIEW_ID}
 brief=${brief//'{{PR_URL}}'/$PR_URL}
 brief=${brief//'{{PR_NUMBER}}'/$PR_NUMBER}
 brief=${brief//'{{BRANCH}}'/$BRANCH}
+brief=${brief//'{{HEAD_SHA}}'/${HEAD_SHA:-the current head of the PR}}
 brief=${brief//'{{PROJECT}}'/$PROJECT}
 brief=${brief//'{{STATE_DIR}}'/$SHARED_STATE}
 brief=${brief//'{{DATA_DIR}}'/$SHARED_DATA}
@@ -360,6 +391,22 @@ if [ "$DRY" -eq 1 ]; then
   exit 0
 fi
 
+# ── the judged record: which repo, PR and HEAD this judge was seated for ─────
+# bin/forge/judge-merge.sh reads it when the verdict lands: an APPROVE merges THIS head and no
+# other (RULES/08, 2026-11-21). It is written BEFORE the judge starts, so a report older than it
+# belongs to an earlier head and is never read as this head's approval.
+JUDGED="$REVIEWED_DIR/$REVIEW_ID.judged"
+{
+  printf 'review=%s\n' "$REVIEW_ID"
+  printf 'task=%s\n' "$ID"
+  printf 'repo=%s\n' "$_slug"
+  printf 'pr=%s\n' "$PR_NUMBER"
+  printf 'head=%s\n' "$HEAD_SHA"
+  printf 'url=%s\n' "$PR_URL"
+  printf 'at=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+} >"$JUDGED" 2>/dev/null || true
+unset _slug
+
 # ── seat the judge through the einherjar road ────────────────────────────────
 # The review's records belong to the SHARED state, never the caller's seat: the
 # spawn is a Brokk-level act, and its meta/status must be read by supervision.
@@ -380,6 +427,7 @@ if env -u BROKK_STATE_OVERRIDE -u BROKK_DATA_OVERRIDE \
 else
   _rc=$?
   release_claim
+  rm -f "$JUDGED" 2>/dev/null || true
   printf 'error: the review spawn failed (exit %s) for %s — NO judge is seated; retry with bin/agents/eindri-review-spawn.sh %s --force\n' \
     "$_rc" "$ID" "$ID" >&2
   exit 1

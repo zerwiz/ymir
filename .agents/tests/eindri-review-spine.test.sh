@@ -35,7 +35,8 @@ bash -n "$SPAWN" 2>/dev/null && ok "eindri-review-spawn.sh is syntactically clea
 bash -n "$ACCLAIM" 2>/dev/null && ok "eindri-acclaim.sh is syntactically clean" || bad "bash -n eindri-acclaim.sh"
 
 # 2. the exact spawn line: scout, herdr, pi, the pinned judge model, high effort
-out="$("${RUN[@]}" YMIR_REVIEW_DRY=1 "$SPAWN" litmus-ship)"
+# the harness and model are pinned per run, so the line does not depend on the home's judge row
+out="$("${RUN[@]}" YMIR_REVIEW_DRY=1 YMIR_REVIEW_HARNESS=pi YMIR_REVIEW_MODEL=opencode-go/deepseek-v4.1-flash "$SPAWN" litmus-ship)"
 printf '%s' "$out" | grep -q -- '--scout --backend herdr --harness pi --model opencode-go/deepseek-v4.1-flash --effort high' \
   && ok "the spawn line is the exact einherjar review road" || bad "spawn line: $out"
 printf '%s' "$out" | grep -q 'pull/999' && ok "the PR is read from the task status" || bad "PR not resolved: $out"
