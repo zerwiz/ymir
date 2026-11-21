@@ -280,7 +280,7 @@ Expected: `2/2 phases passed`, a `smidja_id`, and the DB written. Then
 
 1. **`sqlite3` CLI is absent** — use `python3 -c` (the justfile already does).
 2. **Local models are served by the llama.cpp router `:8080`**, addressed as
-   `llama-cpp/<id>`; LM Studio `:1234` may be down. Confirm with `pi --list-models`.
+   `llama-cpp/<id>`; it is the only local road. Confirm with `pi --list-models`.
 3. **The visualizer's local `node_modules` may be a partial bun install** — the API
    still serves the prebuilt `dist/`, so open `:8437`, not `:8438`.
 4. **Never edit `apps/smidja/smidja_data/sessions/`** — it is the run record.

@@ -114,7 +114,7 @@ except Exception:
 hcfg = yaml_cfg.get("harness") or {}
 local_providers = set(hcfg.get("local_providers") or [])
 def looks_local(p):
-    return p in local_providers or p.startswith("llama") or "llama" in p or p in ("lmstudio",)
+    return p in local_providers or p.startswith("llama") or "llama" in p
 # 3. the servable catalog for local providers
 catalog = set()
 if listcmd:
@@ -215,7 +215,7 @@ online_harness = hcfg.get("online") or "opencode"
 local_providers = set(hcfg.get("local_providers") or [])
 default_model = cfg.get("default_model") or ""
 def looks_local(p):
-    return p in local_providers or p.startswith("llama") or "llama" in p or p in ("lmstudio",)
+    return p in local_providers or p.startswith("llama") or "llama" in p
 # the pi catalog — the machine's served truth
 catalog = []
 try:

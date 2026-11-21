@@ -14,7 +14,7 @@ version: 1
 harness:
   local: pi              # a model on a local provider runs through pi
   online: opencode       # a hosted model runs through opencode
-  local_providers: [llama.cpp, llama-cpp, lmstudio, apodex]
+  local_providers: [llama.cpp, llama-cpp, apodex]
   # The same local server is named differently per harness; translate on the way.
   providers:
     llama.cpp: { pi: llama-cpp }

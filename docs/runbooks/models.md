@@ -12,7 +12,7 @@ model.
 harness:
   local: pi
   online: opencode
-  local_providers: [llama.cpp, llama-cpp, lmstudio]
+  local_providers: [llama.cpp, llama-cpp]
   providers:
     llama.cpp: { pi: llama-cpp }      # same server, renamed per harness
 

@@ -8,7 +8,7 @@
 # bridge log said `curl: (7) Failed to connect to 127.0.0.1:1234`.
 #
 # The six claims this test holds:
-#   1. a NAMED provider wins — even lmstudio, which is otherwise never chosen;
+#   1. a NAMED provider wins;
 #   2. with no key anywhere and no rail, the door REFUSES and names both roads;
 #   3. a key in the vault serves opencode-go (read through `bin/vault/hodd.sh`);
 #   4. a key in pi's auth.json serves opencode-go, and pi is reported as the door;
@@ -69,10 +69,10 @@ run() {
 
 printf 'bifrost provider (plan 275 item 22)\n'
 
-# 1 — a NAMED provider wins, even the retired one
+# 1 — a NAMED provider wins
 out="$T/1"; run "$out" YMIR_VAULT_DOOR=/nonexistent YMIR_PI_AUTH=/nonexistent -- \
-  --resolve --port 4698 --provider lmstudio
-if grep -q '"lmstudio","named by the operator"' "$out"; then ok "a NAMED provider wins (even lmstudio)"
+  --resolve --port 4698 --provider openai-compatible
+if grep -q '"openai-compatible","named by the operator"' "$out"; then ok "a NAMED provider wins"
 else bad "a NAMED provider wins" "$(head -3 "$out")"; fi
 
 # 2 — no key, no rail: refuse, and name both roads
@@ -84,8 +84,8 @@ else
   if grep -q 'no provider to serve' "$out" && grep -q 'rail on :8080' "$out" && grep -q 'opencode-go' "$out"; then
     ok "no key and no rail is a refusal that names both roads"
   else bad "the refusal names both roads" "$(head -4 "$out")"; fi
-  if grep -q 'provider lmstudio\|"lmstudio"' "$out"; then bad "lmstudio is never the fallback" "$(cat "$out")"
-  else ok "lmstudio is never the fallback"; fi
+  if grep -qi 'lmstudio\|lm studio\|ollama' "$out"; then bad "only llama.cpp is a local road" "$(cat "$out")"
+  else ok "only llama.cpp is a local road (no lmstudio, no ollama)"; fi
 fi
 
 # 3 — the vault door serves opencode-go
