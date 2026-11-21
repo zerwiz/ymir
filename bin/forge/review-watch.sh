@@ -110,7 +110,13 @@ if [ "${#REPOS[@]}" -eq 0 ] && [ "$KEEPER" = 1 ] && [ -z "${YMIR_REVIEW_REPOS:-}
 fi
 if [ "$KEEPER" = 1 ]; then
   # an explicit --repo or YMIR_REVIEW_REPOS is filtered by the same law: a repository that is not kept
-  # is dropped by name, never watched
+  # is dropped by name, never watched. YMIR_REVIEW_REPOS is read HERE, before the filter (review of
+  # #863, second rework): read after it, REPOS was still empty and the keeper died with 'no kept
+  # repository is left to watch' even for a kept repository.
+  if [ "${#REPOS[@]}" -eq 0 ] && [ -n "${YMIR_REVIEW_REPOS:-}" ]; then
+    # shellcheck disable=SC2206
+    IFS=', ' read -r -a REPOS <<<"$YMIR_REVIEW_REPOS"
+  fi
   _kept=()
   for _r in "${REPOS[@]}"; do
     [ -n "$_r" ] || continue

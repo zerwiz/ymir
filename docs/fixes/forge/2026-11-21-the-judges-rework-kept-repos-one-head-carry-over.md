@@ -50,3 +50,11 @@ A change-log commit now carries only when every file it touches:
 > intended price: a section the judge never saw cannot be opened after the approval.
 
 Proof: `bash bin/forge/tests/test_judge_merge.sh` adds cases (f) to (i), both probes among them.
+
+### 2 · the keeper reads `YMIR_REVIEW_REPOS` before it filters
+
+With the keeper on and `YMIR_REVIEW_REPOS` set, `bin/forge/review-watch.sh` ran the keep filter while `REPOS` was
+still empty. It then exited with `no kept repository is left to watch`, rc 1, even for a kept repository. The list
+is now filled from `YMIR_REVIEW_REPOS` before the filter, and a repository that is not kept is still dropped by name.
+
+Proof: `bash bin/forge/tests/test_judge_merge.sh` case 13b, one kept and one upstream repository.

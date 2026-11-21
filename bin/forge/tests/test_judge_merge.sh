@@ -352,6 +352,15 @@ printf '%s\n' "$out" | grep -q '"acme/widget#8".*would hand to devbox' && ok "th
 printf '%s\n' "$out" | grep -q 'widget#9' && bad "a draft is never offered" "$out" || ok "a draft is never offered"
 printf '%s\n' "$out" | grep -q 'upstream/agent' && bad "the keeper never watches an upstream" "$out" || ok "the keeper never watches an upstream it does not own"
 printf '%s\n' "$out" | grep -q 'acme-org/kept' && ok "a repository marked git.keep: true is watched" || bad "git.keep: true watched" "$out"
+# 13b · review of #863, item 2: YMIR_REVIEW_REPOS names a kept repository → the keeper watches it
+out="$(YMIR_REVIEW_REPOS=acme/widget YMIR_WARDENS_FILE="$T/wardens.yaml" YMIR_FLEET_REGISTRY="$T/fleet.json" YMIR_REVIEW_KEEPER=1 \
+  YMIR_REVIEW_SEAT_HERE=1 timeout 120 bash "$ROOT/bin/forge/review-watch.sh" --keeper --dry-run 2>&1)"; rc=$?
+[ "$rc" = 0 ] && printf '%s\n' "$out" | grep -q '"acme/widget#7"' && ! printf '%s\n' "$out" | grep -q 'acme-org/kept' \
+  && ok "YMIR_REVIEW_REPOS naming a kept repository is watched (and only it)" || bad "YMIR_REVIEW_REPOS keeper" "rc=$rc $out"
+out="$(YMIR_REVIEW_REPOS=upstream/agent YMIR_WARDENS_FILE="$T/wardens.yaml" YMIR_FLEET_REGISTRY="$T/fleet.json" YMIR_REVIEW_KEEPER=1 \
+  YMIR_REVIEW_SEAT_HERE=1 timeout 120 bash "$ROOT/bin/forge/review-watch.sh" --keeper --dry-run 2>&1)"; rc=$?
+[ "$rc" = 1 ] && printf '%s\n' "$out" | grep -q 'upstream/agent is not kept' \
+  && ok "YMIR_REVIEW_REPOS naming an upstream is still dropped by name" || bad "YMIR_REVIEW_REPOS upstream" "rc=$rc $out"
 printf 'review=pr-7-review\nrepo=acme/widget\npr=7\nhead=%s\n' "$HEAD_A" >"$T/home/state/.reviewed/pr-7-review.judged"
 out="$(YMIR_WARDENS_FILE="$T/wardens.yaml" YMIR_FLEET_REGISTRY="$T/fleet.json" YMIR_REVIEW_KEEPER=1 YMIR_REVIEW_SEAT_HERE=1 \
   timeout 120 bash "$ROOT/bin/forge/review-watch.sh" --keeper --dry-run 2>&1)"
