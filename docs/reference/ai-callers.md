@@ -31,7 +31,10 @@ flowchart LR
 - **A step is passed over** when it is down, times out, or rate-limits (429). It is also passed
   over when it refuses its key (401/403), fails on its side (5xx), or answers 200 with an error and
   no answer. It is then marked down for 30 seconds (`YMIR_CHAIN_HEALTH_TTL`). A dead machine costs
-  one 3-second probe per window, not one per request.
+  one probe per window (`probe_timeout`, default 5 s), not one per request.
+- **A probe can be wrong**, for example a gateway whose model list is slow. So when the health
+  check skips every step, the door asks each one once more before it answers 503. The log calls
+  that pass `(last ditch)`.
 - **The door says which step answered.** Each reply carries the header `X-Ymir-Chain-Step`. The
   log has a line `[chain] answered step=<name> … passed=[<steps passed over and why>]`.
 - **The step's model replaces the caller's model.** A caller may keep asking for its old model

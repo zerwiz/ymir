@@ -15,6 +15,8 @@
 #   4. step 3 answers 200+error   -> step 4 answers (a refusal in a 200 is not an answer)
 #   5. all down                   -> 503 naming every step
 #   6. a step marked down is skipped from cache, without a second request to it
+#   9. when the health check skips every step, each is asked once more (a slow model list is
+#      not a dead gateway), and the one that answers is named as the last ditch
 #   7. a stream request is relayed with the answering step named
 #   8. no key appears in anything the door prints
 #
@@ -51,7 +53,7 @@ class H(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(b))); self.end_headers(); self.wfile.write(b)
     def do_GET(self):
         m = mode()
-        if m in ("429", "500"): return self._out(int(m), {"error": {"message": m}})
+        if m in ("429", "500", "probe500"): return self._out(500 if m == "probe500" else int(m), {"error": {"message": m}})
         self._out(200, {"object": "list", "data": [{"id": name}]})
     def do_POST(self):
         body = json.loads(self.rfile.read(int(self.headers.get("Content-Length") or 0)) or b"{}")
@@ -129,6 +131,10 @@ r=$(ask stream); case "$r" in "200 hosted "*'"content":"hosted"'*) ok "7. a stre
 echo 500 > "${MODE[hosted]}"; echo 500 > "${MODE[hosted2]}"; settle
 r=$(ask); case "$r" in "503 "*"no model step answered"*) ok "5. all down -> 503 naming every step";; *) bad "5. all down" "$r";; esac
 grep -q "NO STEP ANSWERED" "$T/bridge.log" && ok "   the log says no step answered" || bad "   log no-step" "$(tail -3 "$T/bridge.log")"
+
+echo probe500 > "${MODE[hosted2]}"; settle
+r=$(ask); case "$r" in "200 hosted2 "*) ok "9. every probe fails -> the last ditch asks again and hosted2 answers";; *) bad "9. last ditch" "$r";; esac
+grep -q "answered step=hosted2 (last ditch)" "$T/bridge.log" && ok "   the log names the last ditch" || bad "   log last ditch" "$(tail -2 "$T/bridge.log")"
 
 curl -s -m 10 "http://127.0.0.1:$BPORT/chain" > "$T/chain.json"
 python3 -c "import json,sys;d=json.load(open('$T/chain.json'));assert d['provider']=='chain' and len(d['steps'])==4" 2>/dev/null \

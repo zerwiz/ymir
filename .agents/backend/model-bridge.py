@@ -407,6 +407,7 @@ def load_chain(env: dict, path: str) -> list:
         base_spec = PROVIDERS.get(kind)
         step = {"name": raw.get("name") or f"step-{i + 1}", "provider": kind,
                 "model": raw.get("model") or "*", "timeout": int(raw.get("timeout", 120)),
+                "probe_timeout": int(raw.get("probe_timeout", 5)),
                 "base": "", "key": "", "key_where": "no key", "problem": ""}
         if not base_spec or kind == "chain":
             step["problem"] = f"unknown provider '{kind}'"
@@ -454,7 +455,8 @@ def _mark(step: dict, ok: bool, why: str) -> None:
 
 def step_healthy(step: dict) -> tuple[bool, str]:
     """(usable, why). Cached for health_ttl() seconds so a dead machine costs one probe per
-    window, not one per request. The probe is GET <base>/models, bounded to 3 s."""
+    window, not one per request. The probe is GET <base>/models, bounded by the step's
+    probe_timeout (default 5 s; a gateway with a long model list may need more)."""
     if step.get("problem"):
         return False, step["problem"]
     now = __import__("time").time()
@@ -464,7 +466,7 @@ def step_healthy(step: dict) -> tuple[bool, str]:
         return cached[1], cached[2] + " (cached)"
     try:
         req = urllib.request.Request(step["base"].rstrip("/") + "/models", headers=_step_headers(step))
-        r = _curl_open(req, timeout=3)
+        r = _curl_open(req, timeout=step.get("probe_timeout", 5))
         ok = 200 <= r.status < 300
         why = "probe ok" if ok else f"probe http {r.status}"
     except OSError as e:
@@ -602,11 +604,24 @@ class Handler(BaseHTTPRequestHandler):
         asked = req.get("model", "")
         passed = []
         last = None
-        for st in CHAIN:
-            ok, why = step_healthy(st)
-            if not ok:
-                passed.append(f"{st['name']}=skip({why})")
-                continue
+        # Two passes. The first trusts the health cache; the LAST-DITCH pass asks each step the
+        # health check skipped (never one with a config problem) once, because a probe can be
+        # wrong — a slow model list is not a dead gateway — and a 503 is the worst answer.
+        skipped = []
+        order = [(st, False) for st in CHAIN]
+        i = 0
+        while i < len(order):
+            st, last_ditch = order[i]
+            i += 1
+            if not last_ditch:
+                ok, why = step_healthy(st)
+                if not ok:
+                    passed.append(f"{st['name']}=skip({why})")
+                    if not st.get("problem"):
+                        skipped.append(st)
+                    if i == len(order) and skipped:
+                        order += [(s2, True) for s2 in skipped]
+                    continue
             r = dict(req)
             if st["model"] != "*":
                 r["model"] = st["model"]
@@ -620,20 +635,24 @@ class Handler(BaseHTTPRequestHandler):
             except OSError as e:
                 why = "unreachable or timed out: " + (str(e).strip().splitlines() or [""])[0][:80]
                 _mark(st, False, why)
-                passed.append(f"{st['name']}={why}")
+                passed.append(f"{st['name']}={why}{' (last ditch)' if last_ditch else ''}")
+                if i == len(order) and skipped and not last_ditch:
+                    order += [(s2, True) for s2 in skipped]
                 continue
             whole = resp.read()
             if 200 <= resp.status < 300 and not _is_error_body(whole, stream):
                 _mark(st, True, "answered")
-                print(f"[chain] answered step={st['name']} provider={st['provider']} model={r['model']} "
+                print(f"[chain] answered step={st['name']}{' (last ditch)' if last_ditch else ''} provider={st['provider']} model={r['model']} "
                       f"asked={asked or '-'} stream={stream} passed=[{'; '.join(passed)}]", flush=True)
                 self._relay(resp.status, whole, stream, st["name"])
                 return
             why = f"http {resp.status}" + (" refusal" if 200 <= resp.status < 300 else "")
             if resp.status in _STEP_DOWN or resp.status >= 500 or 200 <= resp.status < 300:
                 _mark(st, False, why)
-            passed.append(f"{st['name']}={why}")
+            passed.append(f"{st['name']}={why}{' (last ditch)' if last_ditch else ''}")
             last = (resp.status, whole)
+            if i == len(order) and skipped and not last_ditch:
+                order += [(s2, True) for s2 in skipped]
         print(f"[chain] NO STEP ANSWERED asked={asked or '-'} passed=[{'; '.join(passed)}]", flush=True)
         payload = {"error": {"message": "no model step answered", "passed": passed,
                              "last_status": last[0] if last else None}}

@@ -41,6 +41,16 @@ provider, and several helpers still recognised LM Studio or ollama as a local ro
   (PASS), both retargeted off LM Studio.
 - The inventory of every caller is `docs/reference/ai-callers.md`; the named half is in the home.
 
+## Measured on the real steps (same day)
+
+A throwaway door on a spare port read the home's chain, and steps were forced down by pointing them at a
+closed port. All up: **beam-free answered**. Step 1 down: **the first machine's rail answered**. Steps 1–2
+down: **the second machine's rail answered**. Steps 1–3 down: the second hosted gateway was at first
+*skipped*, because its model list took longer than the 3 s probe. So two things were added: a per-step
+`probe_timeout` (default 5 s), and a **last-ditch pass**. When the health check skips every step, each step
+is asked once more before the door answers 503, and the log names it `(last ditch)`. With both, the
+fourth step answered. The fake proof gained case 9 for the last ditch: 16 passed.
+
 ## CHANGE LOG
 
 - 2026-11-20 — review-mend: added missing heading for #864
