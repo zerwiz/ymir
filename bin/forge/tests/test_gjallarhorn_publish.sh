@@ -94,5 +94,29 @@ if printf '%s' "$rules" | grep -q '^notes-host-a.example.org: ada@example.org$' 
   ok "rules expands the operator from the home and lists each audience"
 else bad "rules render" "$rules"; fi
 
+# The rendered Caddyfile, adapted by Caddy itself: the site must not carry a host matcher for
+# the loopback address (that would shadow every per-app route), each app gets its own host
+# route, and each forward_auth names its app with ?app= so the gate judges that app's rule.
+cfg "[operator]" https://hall.example.org 8795
+door plan | sed -n '/^{/,/ymir-publish begin/p' | grep -v 'ymir-publish begin' > "$T/Caddyfile"
+CADDY=""; command -v caddy >/dev/null 2>&1 && CADDY="caddy adapt --config $T/Caddyfile"
+[ -z "$CADDY" ] && command -v docker >/dev/null 2>&1 && docker image inspect caddy:2-alpine >/dev/null 2>&1 \
+  && CADDY="docker run --rm -v $T/Caddyfile:/etc/caddy/Caddyfile:ro caddy:2-alpine caddy adapt --config /etc/caddy/Caddyfile"
+if [ -z "$CADDY" ]; then ok "caddy adapt (skipped: no caddy and no caddy:2-alpine image)"
+else
+  json="$(timeout 60 $CADDY 2>/dev/null)"
+  if printf '%s' "$json" | python3 -c '
+import json,sys
+d=json.load(sys.stdin); s=json.dumps(d)
+srv=list(d["apps"]["http"]["servers"].values())[0]
+top=[m for r in srv["routes"] for m in r.get("match",[])]
+assert not any("127.0.0.1" in h for m in top for h in m.get("host",[])), "loopback host matcher shadows the apps"
+for h in ("notes-host-a.example.org","wiki-host-a.example.org"):
+    assert h in s, h
+    assert "/oidc/authz?app="+h in s, "no ?app= for "+h
+'; then ok "caddy adapts it: per-app host routes match, each auth names its app"
+  else bad "caddy adapts it: per-app host routes match, each auth names its app" "$(printf '%s' "$json" | head -c 600)"; fi
+fi
+
 printf 'gjallarhorn publish: %s ok / %s fail\n' "$pass" "$fail"
 [ "$fail" = 0 ]
