@@ -22,6 +22,7 @@ class Board:
         self.agents = []
         self.pages = True  # the board answers `offset` (the contract); False plays an older door
         self.blink = set()  # cards a full listing misses while the door reloads; a search by name still finds them
+        self.link_exists = False  # add_link refused as 'already exists', as Plane does when its listing spelled it otherwise
 
     def schemas(self):
         props = {"list_cards": ["place", "label", "state", "query", "limit"] + (["offset"] if self.pages else []),
@@ -70,6 +71,8 @@ class Board:
                                    parent=int(a["parent"]) if a.get("parent") else None, source=a.get("source")))
             return {"created": {"card": self.seq}}
         if name == "add_link":
+            if self.link_exists:
+                raise Refused("a link with this url already exists on the card")
             c = next(c for c in self.cards if str(c["card"]) == a["card"])
             c.setdefault("links", []).append({"url": a["url"], "title": a["title"]})
             return {}
@@ -82,6 +85,10 @@ class Board:
         raise AssertionError(name)
 
 
+class Refused(Exception):
+    """A tool the board refuses: answered as an isError result, the way the door names a refusal."""
+
+
 def serve(board):
     class H(BaseHTTPRequestHandler):
         def do_POST(self):
@@ -92,7 +99,10 @@ def serve(board):
             if msg["method"] == "tools/list":
                 result = {"tools": board.schemas()}
             else:
-                result = {"content": [{"type": "text", "text": json.dumps(board.tool(p["name"], p["arguments"]))}]}
+                try:
+                    result = {"content": [{"type": "text", "text": json.dumps(board.tool(p["name"], p["arguments"]))}]}
+                except Refused as e:
+                    result = {"isError": True, "content": [{"type": "text", "text": str(e)}]}
             body = json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": result}).encode()
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -191,6 +201,49 @@ class PlanSync(unittest.TestCase):
         self.assertEqual(len(self.board.cards), n)
         self.board.blink = set()
         self.assertIn("created=0 upgraded=0 updated=0 unchanged=3 steps=0", self.sync())
+
+    def step_cards(self, parent):
+        return [c for c in self.board.cards if c.get("parent") == parent]
+
+    def test_a_hidden_step_under_this_card_is_not_made_again(self):
+        # the plan card shows, but the listing hides one of its steps: asked by name under this card, it stands
+        self.sync()
+        plan = self.plan_cards()["001 · Title one"]
+        steps = self.step_cards(plan["card"])
+        self.assertEqual(len(steps), 2)
+        self.board.blink = {steps[0]["card"]}
+        open(os.path.join(self.led, "001-one.md"), "a").write("\nmore text\n")  # the card is touched, so steps run
+        out = self.sync()
+        self.assertIn("created=0", out)
+        self.assertIn("steps=0", out)
+        self.assertEqual(len(self.step_cards(plan["card"])), 2)
+
+    def test_a_same_titled_step_under_another_card_does_not_stand_for_ours(self):
+        # a step of the same title under ANOTHER card (a double of the plan card) is not this card's step: it is made
+        self.sync()
+        plan = self.plan_cards()["001 · Title one"]
+        steps = self.step_cards(plan["card"])
+        self.board.seq += 1
+        twin = self.board.seq
+        self.board.cards.append(dict(card=twin, title="a card elsewhere", state="Todo", labels=[], description=""))
+        for s in steps:
+            s["parent"] = twin  # the steps now sit under another card; this plan card has none
+        open(os.path.join(self.led, "001-one.md"), "a").write("\nmore text\n")
+        out = self.sync()
+        self.assertIn("steps=2", out)
+        self.assertEqual(len(self.step_cards(plan["card"])), 2)
+        self.assertIn("unchanged=3", self.sync())  # and it settles: not 'updated' on every run
+
+    def test_a_link_refused_as_already_there_is_not_a_failure(self):
+        conf = os.path.join(self.home, "hodd", "identity", "projects.yaml")
+        open(conf, "a").write("    file_url: https://example.org/home/blob/main/{path}\n")  # so the link road runs
+        self.board.link_exists = True
+        out = self.sync()
+        self.assertIn("add_link", self.board.calls)  # the refusal was met, not stepped around
+        self.assertIn("created=3", out)
+        self.assertIn("failed=0", out)
+        self.assertIn("unchanged=0", out)
+        self.board.link_exists = False
 
     def test_a_short_card_of_the_first_pass_is_upgraded_in_place(self):
         self.board.labels.append("plan")
