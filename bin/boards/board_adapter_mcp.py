@@ -86,7 +86,10 @@ class McpBoard:
         self._schemas = None
 
     # ── transport ────────────────────────────────────────────────────────────────────────────
-    def _call(self, tool, args, timeout=60):
+    def _call(self, tool, args, timeout=60, before_retry=None):
+        """One door call, retried through the board's hiccups. A call that is not safe to repeat (a create) passes
+        `before_retry`: it runs before every second and later attempt and, when the first attempt landed after all
+        (its answer was lost to a timeout or a rate limit), returns that result instead of writing it again."""
         self.n += 1
         body = json.dumps({"jsonrpc": "2.0", "id": self.n, "method": "tools/call",
                            "params": {"name": tool, "arguments": args}}).encode()
@@ -95,6 +98,13 @@ class McpBoard:
         last = ""
         for attempt in range(8):
             wait = 4.0 * (attempt + 1)
+            if attempt and before_retry is not None:
+                try:
+                    landed = before_retry()
+                except BoardRefusal:
+                    landed = None
+                if landed is not None:
+                    return landed
             try:
                 raw = urllib.request.urlopen(urllib.request.Request(self.url, body, hdr), timeout=timeout).read().decode()
             except urllib.error.HTTPError as e:
@@ -118,6 +128,11 @@ class McpBoard:
                 if re.search(r"\b(429|50[0-4])\b", last):  # the board's own rate limit or a hiccup: wait and retry
                     time.sleep(wait)
                     continue
+                if self._place_lookup_blinked(last):
+                    # "no such place: X" while the same answer lists X: the door's place lookup was rate-limited
+                    # (it swallows the board's 429 into "no such place"). Wait and ask again; never a refusal.
+                    time.sleep(wait)
+                    continue
                 raise BoardRefusal(f"{tool}: {last}")
             try:
                 return json.loads(text) if text else {}
@@ -125,11 +140,25 @@ class McpBoard:
                 return {"text": text}
         raise BoardRefusal(f"{tool}: {last}")
 
-    def _write(self, tool, args):
+    def _place_lookup_blinked(self, text):
+        """True when the door said `no such place` for THIS place while naming it among the places it has, or `no such
+        state` for a state this place listed earlier: its own lookup was rate-limited, the place and state are there."""
+        m = re.search(r"no such state in .*: (.+?)\"?\s*}?\s*$", text or "")
+        if m and self._states and m.group(1).strip().strip('"') in {n for n, _ in self._states}:
+            return True
+        if "no such place" not in (text or ""):
+            return False
+        try:
+            places = json.loads(text).get("places") or []
+        except (ValueError, AttributeError):
+            return False
+        return self.place in places
+
+    def _write(self, tool, args, before_retry=None):
         gap = PACE - (time.time() - self._wrote)
         if gap > 0:
             time.sleep(gap)
-        out = self._call(tool, args, timeout=WRITE_TIMEOUT)
+        out = self._call(tool, args, timeout=WRITE_TIMEOUT, before_retry=before_retry)
         self._wrote = time.time()
         return out
 
@@ -231,9 +260,18 @@ class McpBoard:
             a["description_format"] = fmt
         if source and self._accepts("create_card", "source"):
             a["source"] = source
-        out = self._write("create_card", a)
+        out = self._write("create_card", a, before_retry=lambda: self._landed(title, parent))
         made = out.get("created") or {}
         return {"card": made.get("card"), "diagrams": out.get("diagrams")}
+
+    def _landed(self, title, parent):
+        """The card a create made although its answer was lost, as the door would have answered it; else None.
+        Without this a retried create writes the card twice (it did, 2026-11-21: three plans got a second card)."""
+        want = None if parent is None else str(parent)
+        for c in self.find_cards(None, title[:40]):
+            if c["title"] == title and (None if c.get("parent") is None else str(c["parent"])) == want:
+                return {"created": {"card": c["card"]}, "diagrams": None}
+        return None
 
     def update_card(self, card, title=None, description=None, group=None, fmt=None):
         a = {"place": self.place, "card": str(card)}

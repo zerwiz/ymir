@@ -20,8 +20,16 @@ that nobody was watching.
 `classify()` reads a pane and names what the worker is stuck on, so the seat check
 in bin/seat/herdr-run.sh can call a stuck seat FAILED with its reason.
 
+The profile is chosen by ROLE (RULES/08, appended 2026-11-21): `profile_for()` gives the
+judge (role forseti) `claude-judge.settings.json`, which opens exactly one merge road (the
+door, bin/forge/judge-merge.sh / bin/agents/pr-seal.sh seal) and still denies raw
+`gh pr merge`; every other role gets `claude-worker.settings.json`, which refuses both.
+Measured that night: three judges approved and were refused at the merge, because every
+Claude seat carried the worker profile.
+
 CLI (bin/seat/claude-seat.sh is its door):
   claude_seat.py trust <dir>
+  claude_seat.py profile <ymir-tree> [role]     -> the profile path for that role
   claude_seat.py settings <profile.json> <seat-cwd> <out.json>
   classify < pane-text            -> prints `<state>\t<reason>`
 """
@@ -158,6 +166,41 @@ def mcp_servers(seat_cwd: str | Path, env: Mapping[str, str] | None = None) -> l
     return sorted(_SERVER_NAME.sub("_", n) for n in names if n)
 
 
+# ── the profile, by role ─────────────────────────────────────────────────────────
+
+HARNESS_DIR = Path(".agents") / "harnesses"
+WORKER_PROFILE = HARNESS_DIR / "claude-worker.settings.json"
+JUDGE_PROFILE = HARNESS_DIR / "claude-judge.settings.json"
+# The roles that may merge through the door. One today: the judge. A role is added here only
+# by a rule that names it (RULES/08); the name is the figure's, never a person's or a machine's.
+JUDGE_ROLES = frozenset({"forseti"})
+
+
+def role_of(role: str | None, env: Mapping[str, str] | None = None) -> str:
+    """The seat's role, lower-cased; '' when none.
+
+    ONLY the role a caller names explicitly. Never an environment variable: an environment is
+    inherited, and a spawn run inside the judge's seat must not seat its child as the judge.
+    `env` is accepted for call-shape stability and ignored.
+    """
+    return (role or "").strip().lower()
+
+
+def profile_for(tree: str | Path, role: str | None = None, env: Mapping[str, str] | None = None) -> Path:
+    """The permission profile for a role, from the Ymir tree; refuse when it is absent.
+
+    The judge gets the judge profile; every other role (and no role) the worker profile.
+    A judge whose profile is missing is REFUSED, never quietly given the worker's: a judge
+    seated without its door approves and then cannot merge, which is the fault this fixes.
+    """
+    name = role_of(role, env)
+    rel = JUDGE_PROFILE if name in JUDGE_ROLES else WORKER_PROFILE
+    path = Path(tree) / rel
+    if not path.is_file():
+        raise ValueError(f"the Claude permission profile for role '{name or 'worker'}' is missing at {path}")
+    return path
+
+
 def settings(profile: str | Path, seat_cwd: str | Path, env: Mapping[str, str] | None = None) -> dict:
     """The shipped worker profile, plus an allow entry for each configured MCP server."""
     base = json.loads(Path(profile).read_text(encoding="utf-8"))
@@ -240,6 +283,9 @@ def main(argv: list[str]) -> int:
             Path(rest[2]).write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
             print(rest[2])
             return EXIT_OK
+        if cmd == "profile" and 1 <= len(rest) <= 2:
+            print(profile_for(rest[0], rest[1] if len(rest) == 2 else None))
+            return EXIT_OK
         if cmd == "classify":
             state = rest[0] if rest else ""
             name, reason = classify(sys.stdin.read(), state)
@@ -251,7 +297,7 @@ def main(argv: list[str]) -> int:
     except (OSError, TimeoutError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return EXIT_FAULT
-    print("usage: claude_seat.py trust <dir> | settings <profile> <seat-cwd> <out> | classify [state] < text",
+    print("usage: claude_seat.py trust <dir> | profile <tree> [role] | settings <profile> <seat-cwd> <out> | classify [state] < text",
           file=sys.stderr)
     return EXIT_USAGE
 

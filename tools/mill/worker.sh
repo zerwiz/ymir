@@ -37,8 +37,52 @@ except Exception as ex:
     print('', file=sys.stderr)" "$1" 2>/dev/null
 }
 
+# The queue read must WAIT when it cannot read. Before 2026-11-21 a missing
+# redis-cli (or a redis that refused at once) made the loop `continue` with no
+# pause, and the worker burned a whole core on the heart for days. Now an
+# unreadable queue is said ONCE, then the worker sleeps MILL_IDLE_SECONDS and
+# tries again; when the queue comes back, that is said once too.
+MILL_IDLE_SECONDS="${MILL_IDLE_SECONDS:-60}"
+queue_down=""
+queue_unreadable() { # <reason>
+  if [ "$queue_down" != "$1" ]; then
+    log "queue $Q unreadable ($1) — waiting ${MILL_IDLE_SECONDS}s between tries; said once"
+    queue_down="$1"
+  fi
+  sleep "$MILL_IDLE_SECONDS"
+}
+
+# redis-cli's stderr is kept APART from its reply: the job is read from the reply's second
+# line, so a warning on stderr merged into it would shift the job off that line. The error
+# text is only for the journal line.
+QUEUE_ERR="${XDG_RUNTIME_DIR:-${TMPDIR:-/tmp}}/mill-worker-$$.err"
+trap 'rm -f "$QUEUE_ERR"' EXIT
+
 while true; do
-  job="$(command -v redis-cli >/dev/null && timeout 300 redis-cli --raw blpop "$Q" 300 2>/dev/null | sed -n 2p || true)"
+  if ! command -v redis-cli >/dev/null 2>&1; then
+    queue_unreadable "no redis-cli on this machine"
+    continue
+  fi
+  started=$(date +%s)
+  raw="$(timeout 310 redis-cli --raw blpop "$Q" 300 2>"$QUEUE_ERR")"; rc=$?
+  # Judge the read by redis's own reply only: the exit code, and the FIRST line, which is
+  # the queue's key when a job was popped. Never the job payload on line 2 — blpop has
+  # already removed the job, so a payload that happens to say "Connection refused" must be
+  # dispatched, not mistaken for a down redis and lost. A first line that is neither empty
+  # (the 300 s wait ran out) nor the key is an error reply, even when redis-cli exits 0.
+  first="$(printf '%s\n' "$raw" | head -1)"
+  if [ "$rc" -ne 0 ] || { [ -n "$first" ] && [ "$first" != "$Q" ]; }; then
+    # A blpop that fails fast is an unreachable redis, not an empty queue.
+    if [ $(( $(date +%s) - started )) -lt 5 ]; then
+      why="$first"
+      [ -n "$why" ] || why="$(head -1 "$QUEUE_ERR" 2>/dev/null)"
+      [ -n "$why" ] || why="exit $rc"
+      queue_unreadable "redis-cli failed: $(printf '%s' "$why" | cut -c1-80)"
+    fi
+    continue
+  fi
+  if [ -n "$queue_down" ]; then log "queue $Q readable again"; queue_down=""; fi
+  job="$(printf '%s\n' "$raw" | sed -n 2p)"
   [ -n "${job:-}" ] || continue
   class="$(python3 -c "import sys,json
 try: print(json.loads(sys.stdin.read()).get('class',''))

@@ -1,0 +1,130 @@
+# The judge's seat opens the merge door, and only the door
+
+**Date:** 2026-11-21 · **Component:** seat · **Doors:** `.agents/harnesses/claude-judge.settings.json` (new),
+`.agents/harnesses/claude-worker.settings.json`, `src/ymir_runtime/claude_seat.py`, `src/ymir_runtime/harness.py`,
+`bin/seat/claude-seat.sh`, `bin/seat/herdr-run.sh`, `bin/agents/einherjar-spawn.sh`, `bin/agents/eindri-review-spawn.sh`,
+`.agents/assets/templates/review-brief.template.md`, `bin/agents/pr-seal.sh`, `bin/forge/smith-bin/gh`, `bin/agents/eindri-start.sh` · **Tests:** `tests/test_claude_seat_roles.sh`,
+`src/ymir_runtime/tests/test_claude_seat.py`, `bin/forge/tests/test_judge_merge.sh`, `bin/forge/tests/test_smith_gh.sh`
+
+## What was wrong
+
+RULES/08 was amended on 2026-11-21: every PR is reviewed by the judge, and an approval merges at once. Measured that night
+on the dev machine, three judges (figure `forseti`) approved PRs and were refused at the merge. Every Claude seat was
+launched with the one worker profile, which denies `Bash(gh pr merge:*)` for every worker, the judge included. The arm
+holder had to merge by hand.
+
+## What changed
+
+- **The profile is chosen by role.** `claude_seat.profile_for(tree, role)` is the one table: role `forseti` gets
+  `claude-judge.settings.json`, every other role (and no role) gets `claude-worker.settings.json`. The role is the
+  argument only (see the rework below). A judge whose profile is missing is refused, never quietly seated as a worker.
+- **The judge's profile opens exactly one road.** It allows `bin/forge/judge-merge.sh` and `bin/agents/pr-seal.sh seal`
+  (the door built by errand judge-merges, #863, which re-checks checks, mergeability, draft, hold label, `.seal-hold`
+  and the approved head at the moment of the merge). It still denies raw `gh pr merge`, the raw merge API
+  (`gh api …/merge`), `git merge` and every push to main, so the door's checks cannot be skipped.
+- **The worker profile refuses every merge road.** Besides raw merge it now also denies the door and the raw merge API.
+- **Wiring.** `claude-seat.sh settings|args` take an optional role, and `claude-seat.sh profile [role]` prints the
+  path. `herdr-run.sh` passes `$ROLE`. `einherjar-spawn.sh` takes `--role <figure>`, records `role=` in the task record,
+  keeps it on `--relaunch`, and never inherits or exports a role. `harness.py` reads the same table. `eindri-review-spawn.sh`
+  seats the judge with `--role forseti`.
+- **The review brief teaches the door.** It says raw merge is refused, the terminal act runs
+  `bin/forge/judge-merge.sh act <review-id>`, and the judge runs it once by hand only if the act could not.
+
+## Proof
+
+- `bash tests/test_claude_seat_roles.sh`: `23 passed, 0 failed` on this branch. With #863 merged into a scratch tree:
+  `24 passed, 0 failed`, including the door's own suite (`judge-merge: 34 passed, 0 failed`: red, pending, moved head
+  and hold never merge).
+- `python3 -m unittest ymir_runtime.tests.test_claude_seat ymir_runtime.tests.test_harness`: 42 tests, OK.
+- Real Claude Code in `dontAsk`, one call per row on the scratch tree: judge profile runs
+  `bin/forge/judge-merge.sh --help` and is refused `gh pr merge --help`. Worker profile is refused
+  `bin/forge/judge-merge.sh --help`, `bin/agents/pr-seal.sh seal --help` and `gh pr merge --help`.
+
+## The rework after the judge's first review
+
+The judge returned NEEDS-REWORK on the first head with three items, and all three were real.
+
+1. **A guessed role opened the door to a coder.** `herdr-run.sh` fills an empty role from
+   `eindri-role.sh choose`, and words like "check", "ship" and "pr" map to `forseti`. A coder's brief such as "fix the
+   broken gate check and ship the PR" was therefore seated with the judge's profile. Now only an explicit `--role`
+   (`ROLE_EXPLICIT`) reaches `claude-seat.sh`; the guess still picks the pi role file and nothing else. For the same
+   reason the role is never read from the environment (`YMIR_SEAT_ROLE`) and `einherjar-spawn.sh` no longer exports
+   it, so a spawn made inside a judge's seat cannot seat its child as the judge.
+2. **The door was refused inside the judge's own seat.** The judge is seated like any worker: `YMIR_SMITH` set,
+   `bin/forge/smith-bin` first on `PATH`, the cwd under `.yggdrasil/`. The smith shim refuses `pr merge` there, so the
+   door's merge failed at its last step. `pr-seal.sh seal_judged` now resolves the real `gh` past any tree's shim
+   (`door_gh`); the door's own checks are the guard on that road.
+3. **Raw merge slipped the deny list.** `gh -R <repo> pr merge` and the GraphQL `mergePullRequest` / `mergeBranch`
+   mutations matched no pattern. Both profiles now deny them, and the shim reads past `-R` / `--repo` before it reads
+   the subcommand and refuses the merge API (REST `…/pulls/<n>/merge` and the GraphQL mutations).
+
+The two PRs land as one batch: this branch carries #863.
+
+Proof after the rework: `bash tests/test_claude_seat_roles.sh` gives `27 passed, 0 failed`, and
+`bash bin/forge/tests/test_judge_merge.sh` gives `36 passed, 0 failed`. Its new seat case fails on the old
+`pr-seal.sh` (`35 passed, 1 failed`) and passes on the new one. A real judge seat refuses
+`gh -R zerwiz/ymir pr merge --help` and the GraphQL mutation, and still runs `bin/forge/judge-merge.sh --help`.
+
+## The second rework (the judge's re-review at `0870fd23d`)
+
+The re-review confirmed the door fix and the role inheritance fix, and found three more roads.
+
+1. **A guess made upstream still reached the profile.** `eindri-start.sh` guesses a role with `eindri-role.sh choose`
+   ("review the pr", "verify the release" and "audit the gate checks" all guess `forseti`) and handed it to
+   `herdr-run.sh` as `--role`, which counts as explicit. Now `eindri-start.sh` passes `--role` only when its own caller
+   gave one; a guess travels as `--role-guess`, which picks the role file and the seat's name and never the profile.
+   Its `--dry-run` prints `seat_profile[1]{role_given,role_guessed,profile}`, so the choice can be seen before a seat
+   is raised.
+2. **`gh pr -R <repo> merge <n>`.** gh takes `-R/--repo` between `pr` and its subcommand too. The shim now takes the
+   first two words that are not a flag, wherever `-R/--repo` stands, and both profiles deny `*gh*pr*merge *` and
+   `*gh*pr*merge` (a `--json mergeable` read still passes).
+3. **Aliases and variant API paths.** In smith mode the shim refuses `gh alias set` and `gh alias import`, judges a
+   call through an existing alias by its expansion (a shell alias is refused), and matches the merge API without
+   case and with an optional trailing slash or query, including `POST …/merges` and a GraphQL query read from a file
+   (`--input`, `-F query=@file`). Both profiles deny `gh alias set|import` and the upper-case API paths.
+
+Not closed here, and recorded by the judge as pre-existing: with `Bash` open, a pattern list cannot fence the token
+(`curl … -H "Authorization: token $(gh auth token)"` reaches the API without gh). The lasting fence is a judge-only
+token, kept out of reach of every worker seat.
+
+Proof: `bash bin/forge/tests/test_smith_gh.sh` gives `29 passed, 0 failed`; on the previous shim it gives
+`15 passed, 14 failed`. `bash tests/test_claude_seat_roles.sh` gives `33 passed, 0 failed`, and
+`bash bin/forge/tests/test_judge_merge.sh` gives `36 passed, 0 failed`. A real judge seat refuses
+`gh pr -R zerwiz/ymir merge --help` and `gh alias set zz 'pr merge'`, and still reads `--json mergeable`.
+
+## The third review: stopgaps, and the fence that belongs to the operator
+
+The third review (`89f1b6677`) confirmed every earlier item and named three roads a worker seat could still take:
+
+- **A. A push straight to main.** The deny list named only `git push origin main:*`, so `HEAD:main`,
+  `<branch>:main` and `refs/heads/main` passed. `--no-verify` skips the local pre-push guard. On GitHub, main asks only
+  for one check, with `enforce_admins` off and no pull request required, and the seat's token is the owner's admin
+  token.
+- **B. The token leaves gh.** `gh auth token` printed it, and `curl` or Python then merged through the REST API.
+- **C. The real gh by an absolute path with its name quoted** (`…/g''h pr merge 5`) matched no `*gh*` pattern and
+  never met the shim.
+
+**What this PR adds, as stopgaps.** Both profiles deny a push to main or master by any refspec or remote
+(`HEAD:main`, `refs/heads/main`, `+main`, `upstream main`, `--all`, `--mirror`), `--no-verify`,
+`auth token`, `--show-token`, `GH_TOKEN`, `GITHUB_TOKEN`, gh's `hosts.yml`, `api.github.com`, any `…/pulls/<n>/merge`,
+and the text `pr merge` itself, which also catches road C. The shim refuses `gh auth token` and
+`gh auth status --show-token` for a smith.
+
+> [!IMPORTANT]
+> **These are not the fence.** Every pattern has another spelling. The fence is on the server and in the credential,
+> and both are the operator's settings:
+> 1. a worker seat holds a read-only token, so only the judge's seat can merge;
+> 2. main requires a pull request with `enforce_admins` on, or a ruleset whose only bypass actor is the judge.
+
+Proof: `bin/forge/tests/test_smith_gh.sh` gives `34 passed, 0 failed`, and `tests/test_claude_seat_roles.sh`
+gives `33 passed, 0 failed`; its decision table carries every A, B and C form. A real worker seat refuses
+`git push --dry-run --no-verify origin HEAD:main`, `gh auth token`, the quoted absolute-path gh, and `curl` to
+api.github.com.
+
+## CHANGE LOG
+
+- 2026-11-21 — filed with the errand `judge-permissions`.
+- 2026-11-21 — appended the rework after the judge's first review (#870: guessed role, the shim, raw merge forms).
+- 2026-11-21 — appended the second rework (the judge's re-review: the upstream guess, `gh pr -R … merge`, aliases and API paths).
+- 2026-11-21 — appended the third review: stopgaps for a push to main, the token leaving gh and the quoted absolute path; the fence is named as the operator's.
+- 2026-11-21 — the push stopgaps also cover another remote, a bare `refs/heads/main`, `--all` and `--mirror`; a worker's own branch push still passes.

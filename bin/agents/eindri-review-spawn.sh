@@ -147,8 +147,29 @@ HARNESS="${YMIR_REVIEW_HARNESS:-}"
 # computers have different models and capabilities"). The code names no model id: the fleet
 # declares its choice in the private home, the seat's own catalogue says whether it can serve
 # it, and a seat that cannot says so instead of quietly borrowing a neighbour's promise.
-MODEL="${YMIR_REVIEW_MODEL:-$(bash "$ROOT/bin/model/agent-model.sh" forseti --plain 2>/dev/null || true)}"
-[ -n "$MODEL" ] || { printf 'error: no model resolved for the judge on this seat\nhelp: bin/model/agent-model.sh forseti --explain (a model this seat cannot serve is a refusal, not a fallback)\n' >&2; exit 1; }
+#
+# THE HOME'S ROW WINS (RULES/08, 2026-11-21). The fleet names the judge in config/agents.yaml
+# (forseti: harness claude, model opus). The heart's review-watch drop-in pinned YMIR_FORSETI_MODEL
+# to a pi model, and the resolver honours an environment override above the home, so a
+# harness-wide pin overruled the operator's declared judge. So: the judge's harness is read from
+# the home row first, and when the home names the judge's model the YMIR_FORSETI_MODEL pin yields.
+# A Claude judge is resolved against Claude's allow-list, not pi's catalogue, and comes back as the
+# name the Claude CLI takes (claude-opus-5-5) — the harness is handed on, so model and harness
+# agree (#865). YMIR_REVIEW_MODEL stays the one deliberate per-run override.
+if [ -z "$HARNESS" ] && [ -x "$SCRIPT_DIR/../fleet/agents-config.sh" ]; then
+  HARNESS="$("$SCRIPT_DIR/../fleet/agents-config.sh" get forseti harness 2>/dev/null | head -n1 || true)"
+fi
+HARNESS="${HARNESS:-pi}"
+_cfg_model=""
+[ -x "$SCRIPT_DIR/../fleet/agents-config.sh" ] && \
+  _cfg_model="$("$SCRIPT_DIR/../fleet/agents-config.sh" get forseti model 2>/dev/null | head -n1 || true)"
+_unpin=(env)
+[ -n "$_cfg_model" ] && _unpin=(env -u YMIR_FORSETI_MODEL)
+_model_err="$(mktemp)"
+MODEL="${YMIR_REVIEW_MODEL:-$("${_unpin[@]}" bash "$ROOT/bin/model/agent-model.sh" forseti --plain --harness "$HARNESS" 2>"$_model_err" || true)}"
+unset _cfg_model _unpin
+[ -n "$MODEL" ] || { printf 'error: no model resolved for the judge on this seat\n' >&2; grep 'REFUSED' "$_model_err" >&2; rm -f "$_model_err"; printf 'help: bin/model/agent-model.sh forseti --explain (a model this seat cannot serve is a refusal, not a fallback)\n' >&2; exit 1; }
+rm -f "$_model_err"
 EFFORT="${YMIR_REVIEW_EFFORT:-high}"
 BACKEND="${YMIR_REVIEW_BACKEND:-herdr}"
 # YMIR_REVIEW_DRY=1 behaves exactly as --dry-run: resolve and print the spawn
@@ -305,11 +326,13 @@ if [ "$DRY" -eq 0 ] && ! mkdir "$REVIEW_SPAWNED" 2>/dev/null; then
 fi
 
 
-# ── the judge's seat: the roster resolves the figure's harness ───────────────
-if [ -z "$HARNESS" ] && [ -x "$SCRIPT_DIR/../fleet/agents-config.sh" ]; then
-  HARNESS="$("$SCRIPT_DIR/../fleet/agents-config.sh" get forseti harness 2>/dev/null | head -n1 || true)"
+# ── the judge's seat: the harness was resolved with the model, above ────────
+
+# ── the head the judge is seated for (task mode reads it now; PR-only mode already has it) ──
+_slug="$(printf '%s' "$PR_URL" | sed -nE 's#^https://github\.com/([^/]+/[^/]+)/pull/[0-9]+.*#\1#p')"
+if [ -z "$HEAD_SHA" ] && [ -n "$_slug" ] && [ "$PR_NUMBER" != "?" ] && command -v gh >/dev/null 2>&1; then
+  HEAD_SHA="$(gh pr view "$PR_NUMBER" -R "$_slug" --json headRefOid -q .headRefOid 2>/dev/null | tr -d '[:space:]' || true)"
 fi
-HARNESS="${HARNESS:-pi}"
 
 # ── fill the fierce brief for THIS task ──────────────────────────────────────
 BRIEF="$SHARED_DATA/$REVIEW_ID/brief.md"
@@ -331,6 +354,7 @@ brief=${brief//'{{REVIEW_ID}}'/$REVIEW_ID}
 brief=${brief//'{{PR_URL}}'/$PR_URL}
 brief=${brief//'{{PR_NUMBER}}'/$PR_NUMBER}
 brief=${brief//'{{BRANCH}}'/$BRANCH}
+brief=${brief//'{{HEAD_SHA}}'/${HEAD_SHA:-the current head of the PR}}
 brief=${brief//'{{PROJECT}}'/$PROJECT}
 brief=${brief//'{{STATE_DIR}}'/$SHARED_STATE}
 brief=${brief//'{{DATA_DIR}}'/$SHARED_DATA}
@@ -349,8 +373,11 @@ printf '%s\n' "$brief" >"$BRIEF" || {
 
 # ── the spawn line (printed whole on --dry-run) ──────────────────────────────
 spawn=( "$SCRIPT_DIR/einherjar-spawn.sh" "$REVIEW_ID" "$PROJECT" --scout
-        --backend "$BACKEND" --harness "$HARNESS" --model "$MODEL" --effort "$EFFORT" )
-spawn_line="$SCRIPT_DIR/einherjar-spawn.sh $REVIEW_ID $(printf '%q' "$PROJECT") --scout --backend $BACKEND --harness $HARNESS --model $MODEL --effort $EFFORT"
+        --backend "$BACKEND" --harness "$HARNESS" --model "$MODEL" --effort "$EFFORT" --role forseti )
+# `--role forseti` seats the judge with ITS permission profile (RULES/08, 2026-11-21): the one
+# merge door (bin/forge/judge-merge.sh, bin/agents/pr-seal.sh seal) is open and raw `gh pr merge`
+# stays denied. Without it the judge carried the worker profile and was refused at the merge.
+spawn_line="$SCRIPT_DIR/einherjar-spawn.sh $REVIEW_ID $(printf '%q' "$PROJECT") --scout --backend $BACKEND --harness $HARNESS --model $MODEL --effort $EFFORT --role forseti"
 
 if [ "$DRY" -eq 1 ]; then
   release_claim
@@ -359,6 +386,22 @@ if [ "$DRY" -eq 1 ]; then
     "$ID" "$REVIEW_ID" "$PR_URL" "$BRANCH" "${HEAD_SHA:-none}" "$MARKER" "$BRIEF" "$REPORT_PATH" "$spawn_line"
   exit 0
 fi
+
+# ── the judged record: which repo, PR and HEAD this judge was seated for ─────
+# bin/forge/judge-merge.sh reads it when the verdict lands: an APPROVE merges THIS head and no
+# other (RULES/08, 2026-11-21). It is written BEFORE the judge starts, so a report older than it
+# belongs to an earlier head and is never read as this head's approval.
+JUDGED="$REVIEWED_DIR/$REVIEW_ID.judged"
+{
+  printf 'review=%s\n' "$REVIEW_ID"
+  printf 'task=%s\n' "$ID"
+  printf 'repo=%s\n' "$_slug"
+  printf 'pr=%s\n' "$PR_NUMBER"
+  printf 'head=%s\n' "$HEAD_SHA"
+  printf 'url=%s\n' "$PR_URL"
+  printf 'at=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+} >"$JUDGED" 2>/dev/null || true
+unset _slug
 
 # ── seat the judge through the einherjar road ────────────────────────────────
 # The review's records belong to the SHARED state, never the caller's seat: the
@@ -380,6 +423,7 @@ if env -u BROKK_STATE_OVERRIDE -u BROKK_DATA_OVERRIDE \
 else
   _rc=$?
   release_claim
+  rm -f "$JUDGED" 2>/dev/null || true
   printf 'error: the review spawn failed (exit %s) for %s — NO judge is seated; retry with bin/agents/eindri-review-spawn.sh %s --force\n' \
     "$_rc" "$ID" "$ID" >&2
   exit 1
