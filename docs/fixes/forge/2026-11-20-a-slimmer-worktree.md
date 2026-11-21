@@ -35,3 +35,7 @@ rewritten in an open pull request at the time, so the flag was kept to the house
 ## CHANGE LOG
 
 - 2026-11-20 — review-mend: added missing heading for #873
+- 2026-11-21 — rework for #873: a `--skip` that names a file (`--skip README`) used to refuse with exit 1
+  and leave the worktree and branch behind; it now removes both, as the other refusals do, and the test
+  proves it. The usage text no longer prints the `set -u` line under the help. The test is wired as the
+  gate `yggdrasil-slim` (`bin/gates/checks.d/0550-yggdrasil-slim.sh`).

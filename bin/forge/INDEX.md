@@ -21,7 +21,7 @@ Every run rewrites this file from the tree; there is no hand-kept content here.
 The tree replaced a single register on 2026-11-06 (plan 211) so that a change in one
 folder rewrites one file instead of colliding on every branch.
 
-bin[56]{file,does,kind,verdict,disposition,callers,lines}:
+bin[57]{file,does,kind,verdict,disposition,callers,lines}:
   "conflict-errand.md","conflict-errand.md — the brief a SMITH is handed when a PR cannot merge (plan 203 + 206 §12).","data","wired","keep",1,56
   "essence-fetch.sh","essence-fetch.sh — the npm world's self-heal: npm's packer refuses dotfolders","tool","wired","keep",2,18
   "exec-bits.sh","exec-bits.sh — a new door leaves the errand executable, or the errand says so before the push.","tool","wired","keep",2,62
@@ -29,7 +29,7 @@ bin[56]{file,does,kind,verdict,disposition,callers,lines}:
   "finding-tally.sh","SCRIPT_DIR='$(cd '$(dirname '${BASH_SOURCE[0]}')' && pwd)'","tool","wired","keep",1,143
   "gather-notice.sh","gather-notice.sh — when the LAST errand of a batch finishes, the helm is told to gather it.","tool","wired","keep",3,186
   "gather.sh","gather.sh — gather a batch of errand branches into ONE push and ONE PR.","tool","tested","keep",12,362
-  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",637,101
+  "gh","smith-gh — the `gh` a SMITH sees: everything reads, and nothing ships.","tool","tested","keep",639,101
   "github-deploy.sh","github-deploy.sh — zero-trust deploys (W0035).","tool","wired","keep",0,96
   "gjallarhorn-expose.sh","gjallarhorn-expose.sh — put EVERY app on its own public hostname (Gjallarhorn).","tool","wired","keep",0,152
   "gjallarhorn-notify.sh","gjallarhorn-notify.sh — the horn (W0036).","tool","wired","keep",1,73
@@ -69,6 +69,7 @@ bin[56]{file,does,kind,verdict,disposition,callers,lines}:
   "test_gather_notice.sh","test_gather_notice.sh — the LAST errand of a batch calls the gather.","tool","wired","keep",1,136
   "test_gjallarhorn_no_hall.sh","test_gjallarhorn_no_hall.sh — a tunnel never publishes a hall.","tool","wired","keep",1,80
   "test_review_seat_keeper.sh","test_review_seat_keeper.sh — the keeper: the reviewer's seat says WHY it refuses, and a dead seat","tool","wired","keep",1,221
+  "test_yggdrasil_slim.sh","test_yggdrasil_slim.sh — the slimmer worktree is opt-in, and the default is unchanged.","tool","wired","keep",0,81
   "utgard-box-door.py","'''utgard-box-door.py — the one road out of a box.","tool","wired","keep",1,369
   "utgard-box.sh","utgard-box.sh — a whole computer for one run, outside the wall.","tool","wired","keep",2,937
   "utgard-lane.sh","utgard-lane.sh — best of N: one brief, many boxes, one board.","tool","wired","keep",1,227
@@ -77,8 +78,8 @@ bin[56]{file,does,kind,verdict,disposition,callers,lines}:
   "warden-lib.sh","warden-lib.sh — the shared law every outward warden keeps (plan 290 §3; the Allfather, 2026-11-14).","lib","wired","keep",13,244
   "warden-policy.py","'''warden-policy.py — the ONE reader of a machine's wardens.yaml, and of what a warden may touch.","tool","wired","keep",7,356
   "worktree-reap.py","'''worktree-reap.py — the road that made a worktree is the road that reaps it (plan 339.4).","tool","wired","keep",6,550
-  "yggdrasil.sh","yggdrasil.sh — the worktree manager (Yggdrasil, the world-tree).","tool","tested","keep",8,191
+  "yggdrasil.sh","yggdrasil.sh — the worktree manager (Yggdrasil, the world-tree).","tool","tested","keep",9,233
 
-**Tally.** verdict: wired=51, tested=5
+**Tally.** verdict: wired=52, tested=5
 
-**Tally.** disposition: keep=56
+**Tally.** disposition: keep=57

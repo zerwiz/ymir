@@ -36,7 +36,7 @@ REPO="${YGGDRASIL_REPO:-$(pwd)}"
 WT=".yggdrasil"
 PREFIX="yggdrasil"
 
-usage() { sed -n '2,31p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'; }
 
 CMD="${1-}"; shift || true
 case "$CMD" in
@@ -143,7 +143,9 @@ case "$CMD" in
     fi
     for d in "${SKIPPED[@]+"${SKIPPED[@]}"}"; do
       if [ -e "$WTPATH/$d" ]; then
-        printf 'error: %s still carries %s after --skip\nhelp: git -C %s sparse-checkout list\n' "$BRANCH" "$d" "$WTPATH" >&2; exit 1
+        # A file, not a folder (or a path sparse-checkout cannot drop): refuse, and leave nothing behind.
+        git -C "$REPO" worktree remove --force "$WTPATH" >/dev/null 2>&1; git -C "$REPO" branch -D "$BRANCH" >/dev/null 2>&1
+        printf 'error: %s is not a folder --skip can leave out (it would still be checked out)\nhelp: name a tracked folder, e.g. --skip base\n' "$d" >&2; exit 1
       fi
     done
     if [ "${#SKIPPED[@]}" -gt 0 ]; then

@@ -10,6 +10,7 @@
 #   · --slim reads .worktree-slim (comments and blanks ignored)
 #   · --slim without .worktree-slim refuses and leaves no worktree or branch behind
 #   · an unsafe --skip (`..`) refuses and leaves nothing behind
+#   · a --skip that names a file (it would still be checked out) refuses and leaves nothing behind
 #
 # Usage: test_yggdrasil_slim.sh
 # Exit: 0 all pass · 1 a failure.
@@ -66,5 +67,14 @@ if [ ! -e "$R2/.yggdrasil/nolist" ] && ! git -C "$R2" show-ref --quiet refs/head
 # 5. unsafe skip
 if "$YGG" create evil --repo "$R2" --skip ../etc >/dev/null 2>&1; then bad "unsafe --skip accepted"; else ok "unsafe --skip refused"; fi
 if [ ! -e "$R2/.yggdrasil/evil" ] && ! git -C "$R2" show-ref --quiet refs/heads/yggdrasil/evil; then ok "unsafe refusal leaves nothing"; else bad "unsafe refusal left debris"; fi
+
+# 6. a --skip that names a file, not a folder, refuses and leaves nothing
+echo top > "$R2/README"; git -C "$R2" add README && git -C "$R2" commit -qm readme
+if "$YGG" create afile --repo "$R2" --skip README >/dev/null 2>&1; then bad "--skip README accepted"; else ok "--skip of a file refused"; fi
+if [ ! -e "$R2/.yggdrasil/afile" ] && ! git -C "$R2" show-ref --quiet refs/heads/yggdrasil/afile; then ok "file refusal leaves no worktree or branch"; else bad "file refusal left debris"; fi
+
+# 7. the usage text ends at the exit line, before the code
+help=$("$YGG" --help)
+case "$help" in *"set -u"*) bad "usage prints code (set -u)" ;; *"Exit: 0 ok"*) ok "usage ends at the exit line" ;; *) bad "usage lost its exit line" ;; esac
 
 exit $fail
