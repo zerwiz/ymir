@@ -36,11 +36,11 @@ bin/ward/trouble.sh                          # this machine's reading; exit 1 wh
 bin/ward/trouble.sh read --json --only disk,questions
 bin/ward/trouble.sh check --notify           # keep the reading, notify each signal that TURNED red
 bin/ward/trouble.sh check --notify --dry-run # the same, the hotline told not to deliver
-bin/ward/trouble.sh fleet                    # a row per heart, forge and dev machine in fleet.json
+bin/ward/trouble.sh fleet                    # a row per machine in fleet.json, a hand included
 bin/gates/nidhogg.sh commits --repo ~/ymir   # the commit-loop verdict on its own
 ```
 
-The timer `trouble-panel` (in `.agents/config/units.yaml`, every five minutes, roles heart, forge and dev)
+The timer `trouble-panel` (in `.agents/config/units.yaml`, every five minutes, on every role: `roles: all`)
 runs `check --notify`. `bin/engine/units.sh write trouble-panel` seats it on a machine.
 
 ## What a notice looks like
@@ -48,7 +48,12 @@ runs `check --notify`. `bin/engine/units.sh write trouble-panel` seats it on a m
 One line at HIGH, naming the machine: *"host-a is in trouble — disk: / is 90.5% used (90.7 GiB free)"*, with
 a button that does the next thing (*🧹 Show what fills the disk*) and *📋 Show every trouble row*. If more
 than two signals turn red in one check (a first run, a machine back from the dark), they arrive as **one**
-line that counts them. A signal that stays red is not said again; one that turns green and red again is news.
+line that counts them. A signal that stays red is not said again; one that turns green and red again is news,
+even inside one hour, because each turn to red carries its own key.
+
+A notice counts as said only when `send.sh` decided `send` and exited 0. A failed delivery, a `duplicate` or a
+`silenced` answer leaves the turn owed, and the next check tries it again with the same key. Each turn is kept
+in `state/trouble/<host>.announced.json`, apart from the reading.
 
 ## Where the reading lives
 

@@ -2,8 +2,8 @@
 # trouble.sh — the trouble panel: the house says it is in trouble before it is asked (plan 339.5).
 #
 #   bin/ward/trouble.sh [read] [--json] [--only disk,guardian,…]   this machine's reading
-#   bin/ward/trouble.sh check [--notify] [--dry-run] [--only …]   keep the reading; a notice per signal turned red
-#   bin/ward/trouble.sh fleet [--json]                             a row per machine (heart, forge, dev), each
+#   bin/ward/trouble.sh check [--notify] [--dry-run] [--only …]   keep the reading; a notice per turn to red, retried until sent
+#   bin/ward/trouble.sh fleet [--json]                             a row per machine in fleet.json (every role), each
 #                                                                  read on that machine over its fleet road
 #   bin/ward/trouble.sh --version
 #

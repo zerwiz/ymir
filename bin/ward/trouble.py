@@ -22,13 +22,15 @@ One reading per machine, of the nine things that failed silently on 2026-11-20 �
 Verbs (bin/ward/trouble.sh is the door; it resolves the home and passes it in):
 
     read [--json] [--only a,b]      this machine's reading; exit 1 when any signal is red
-    check [--notify] [--only a,b]   read, keep the reading, and push ONE notice per signal that
-                                    turned red since the last check (quiet otherwise)
+    check [--notify] [--only a,b]   read, keep the reading, and push ONE notice per turn to red;
+                                    a turn is marked said only when send.sh decided `send`, so a
+                                    failed or duplicate notice is tried again on the next check
     fleet [--json]                  a row per machine in fleet.json, each read ON that machine
 
 It is read-only on the machine. What it writes: <state>/trouble/<host>.json (the last reading, what a
 hall renders), <state>/trouble/<host>.disk.jsonl (disk samples for the growth rate) and
-<state>/trouble/<host>.since.json (when a slow signal first went bad).
+<state>/trouble/<host>.since.json (when a slow signal first went bad) and
+<state>/trouble/<host>.announced.json (each red turn: when it began and whether it was said).
 A signal that cannot be measured here is SKIP with its reason, never a guess and never a red.
 """
 from __future__ import annotations
@@ -539,18 +541,39 @@ BUTTONS = {
 }
 
 
-def notify(c: Ctx, turned: list[dict], dry: bool) -> list[str]:
-    sent = []
+def _sent(done) -> bool:
+    """True only when send.sh decided `send` and exited 0. A refusal, a delivery nobody heard (exit 1), a
+    `duplicate` or a `silenced` is NOT a notice the operator received, so the turn stays owed."""
+    decision = ""
+    lines = (done.stdout or "").splitlines()
+    for i, x in enumerate(lines):
+        if x.startswith("notify[") and i + 1 < len(lines):
+            decision = lines[i + 1].strip().split(",")[0].strip().strip('"')
+            break
+    return done.returncode == 0 and decision == "send"
+
+
+def notify(c: Ctx, owed: list[dict], turns: dict, dry: bool) -> tuple[list[str], list[str]]:
+    """Say each owed turn to red. Returns (what send.sh answered, the signals now announced).
+
+    The key is per TURN to red (`t<epoch the signal turned red>`), never per hour: a red that goes green
+    and red again inside one hour is a new turn and news again, and a retry of the same turn carries the
+    same key. The `t` prefix keeps send.sh from folding the epoch away as a stamp."""
+    sent, announced = [], []
     door = os.environ.get("TROUBLE_SEND", "") or str(Path(c.root) / "bin/notify/send.sh")  # a test seam
     most = env_int("TROUBLE_NOTICE_MAX", 2)
-    if len(turned) > most:
+    batches = [([r["signal"]], r) for r in owed]
+    if len(owed) > most:
         # many at once (a first check, a machine back from the dark) is ONE line, never a burst
-        names = ", ".join(r["signal"] for r in turned)
-        turned = [{"signal": "several", "note": f"{len(turned)} signals turned red: {names}"}]
-    for r in turned:
+        names = ", ".join(r["signal"] for r in owed)
+        newest = max(int(turns[r["signal"]]["turn"]) for r in owed)
+        batches = [([r["signal"] for r in owed],
+                    {"signal": "several", "note": f"{len(owed)} signals turned red: {names}", "turn": newest})]
+    for signals, r in batches:
+        turn = int(r.get("turn") or turns[r["signal"]]["turn"])
         line = f"{c.host} is in trouble — {r['signal']}: {r['note']}"[:400]
         args = ["bash", door, "--source", "ward", "--severity", "HIGH", "--message", line,
-                "--key", f"trouble:{c.host}:{r['signal']}:{int(c.now // 3600)}" + (":dry" if dry else "")]
+                "--key", f"trouble:{c.host}:{r['signal']}:t{turn}" + (":dry" if dry else "")]
         for spec in BUTTONS.get(r["signal"], []):
             args += ["--button", spec.format(host=c.host)]
         args += ["--button", f"📋 Show every trouble row|Run bin/ward/trouble.sh fleet and show every machine's trouble rows, red first"]
@@ -558,20 +581,50 @@ def notify(c: Ctx, turned: list[dict], dry: bool) -> list[str]:
             args.append("--dry-run")
         done = run(args, timeout=60)
         decision = next((x.strip() for x in (done.stdout or "").splitlines()[1:2]), "")
-        sent.append(f"{r['signal']}: send.sh exit {done.returncode} {decision}".strip())
-    return sent
+        ok = (not dry) and _sent(done)
+        if ok:
+            announced += signals
+        sent.append(f"{r['signal']}: send.sh exit {done.returncode} {decision}".strip()
+                    + ("" if ok or dry else " (not delivered: retried on the next check)"))
+    return sent, announced
 
 
 def check(c: Ctx, only: list[str], do_notify: bool, dry: bool) -> dict:
     last_path = c.dir / f"{c.host}.json"
+    # what was SAID is kept apart from what was READ: a reading is stored whatever happens, a turn is
+    # marked announced only when send.sh decided `send` — so a failed or duplicate notice is retried
+    turns_path = c.dir / f"{c.host}.announced.json"
     try:
         last = {r["signal"]: r["state"] for r in json.loads(last_path.read_text()).get("rows", [])}
     except (OSError, ValueError):
         last = {}
+    try:
+        turns = json.loads(turns_path.read_text())
+        if not isinstance(turns, dict):
+            turns = {}
+    except (OSError, ValueError):
+        turns = {}
     now = reading(c, only)
-    turned = [r for r in now["rows"] if r["state"] == "RED" and last.get(r["signal"]) != "RED"]
-    now["turned_red"] = [r["signal"] for r in turned]
-    now["notices"] = notify(c, turned, dry) if (do_notify and turned) else []
+    turned = []
+    for r in now["rows"]:
+        sig = r["signal"]
+        if r["state"] != "RED":
+            turns.pop(sig, None)  # the turn is over; the next red is a new one
+            continue
+        if sig not in turns or last.get(sig) != "RED":
+            turns[sig] = {"turn": int(c.now), "announced": False, "tries": 0}
+            turned.append(sig)
+    owed = [r for r in now["rows"] if r["state"] == "RED" and not turns.get(r["signal"], {}).get("announced")]
+    now["turned_red"] = turned
+    now["owed"] = [r["signal"] for r in owed]
+    now["notices"] = []
+    if do_notify and owed:
+        now["notices"], announced = notify(c, owed, turns, dry)
+        for r in owed:
+            t = turns[r["signal"]]
+            t["tries"] = int(t.get("tries", 0)) + (0 if dry else 1)
+            if r["signal"] in announced:
+                t["announced"], t["said_at"] = True, int(c.now)
     # a partial check (--only) keeps the other rows of the last reading, so it cannot erase them
     if only != list(SIGNALS) and last_path.exists():
         try:
@@ -581,9 +634,10 @@ def check(c: Ctx, only: list[str], do_notify: bool, dry: bool) -> dict:
             now["red"] = sum(r["state"] == "RED" for r in now["rows"])
         except (OSError, ValueError):
             pass
-    tmp = last_path.with_suffix(f".tmp.{os.getpid()}")
-    tmp.write_text(json.dumps(now, sort_keys=True))
-    tmp.replace(last_path)
+    for path, body in ((last_path, now), (turns_path, turns)):
+        tmp = path.with_suffix(f".tmp.{os.getpid()}")
+        tmp.write_text(json.dumps(body, sort_keys=True))
+        tmp.replace(path)
     return now
 
 
@@ -595,11 +649,12 @@ def fleet(c: Ctx) -> list[dict]:
         hosts = (json.loads(reg.read_text()).get("hosts") or {})
     except (OSError, ValueError):
         return [{"host": c.host, "error": f"no fleet registry at {reg}"}]
-    owed = set((os.environ.get("TROUBLE_ROLES", "") or "heart,forge,dev").split(","))
+    # plan 339.6: every machine in fleet.json owes the panel, a hand included; TROUBLE_ROLES only narrows
+    owed = {x for x in os.environ.get("TROUBLE_ROLES", "").split(",") if x}
     out = []
     for name, h in hosts.items():
         roles = set(h.get("roles") or [])
-        if not roles & owed:
+        if owed and not roles & owed:
             continue
         if name == c.host:
             out.append(reading(c, list(SIGNALS)))
@@ -675,8 +730,9 @@ def main(argv: list[str]) -> int:
             print(json.dumps(r))
         else:
             print(toon(r) + "\n" + sentence(r))
-            if r["turned_red"]:
-                print(f"turned red: {', '.join(r['turned_red'])}" + (f" · {'; '.join(r['notices'])}" if r["notices"] else " · (no notice: --notify not given)"))
+            if r["owed"]:
+                print(f"owed a notice: {', '.join(r['owed'])}" + (f" · turned red now: {', '.join(r['turned_red'])}" if r["turned_red"] else "")
+                      + (f" · {'; '.join(r['notices'])}" if r["notices"] else " · (no notice: --notify not given)"))
         return 1 if r["red"] else 0
     if verb == "fleet":
         rs = fleet(c)
