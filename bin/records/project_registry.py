@@ -71,21 +71,15 @@ def is_owed(v) -> bool:
 
 
 def get_field(row: dict, dotted: str):
-    """A field is read from `handling:` first; a dotted path walks into it. A top-level key of the row
-    (name, repo, realm …) answers when handling does not carry it."""
-    h = row.get("handling") or {}
-    parts = dotted.split(".")
-    for base in (h, row):
-        cur, ok = base, True
-        for p in parts:
-            if isinstance(cur, dict) and p in cur:
-                cur = cur[p]
-            else:
-                ok = False
-                break
-        if ok:
-            return True, cur
-    return False, None
+    """A field is read from `handling:` only; a dotted path walks into it. The row's own top-level keys
+    (delivery:, board: …) are older, different things and never answer a handling question."""
+    cur = row.get("handling") or {}
+    for p in dotted.split("."):
+        if isinstance(cur, dict) and p in cur:
+            cur = cur[p]
+        else:
+            return False, None
+    return True, cur
 
 
 def emit(value, as_json: bool) -> None:
@@ -161,10 +155,25 @@ def short(row: dict, q: str) -> str:
     return str(v)
 
 
+def _items(val: list) -> list[dict]:
+    """List items as dicts: a bare string becomes {name/url/person/who: string}, so a schema-valid
+    list of strings never crashes a cell."""
+    out = []
+    for e in val:
+        if isinstance(e, dict):
+            out.append(e)
+        else:
+            t = str(e)
+            out.append({"name": t, "url": t, "area": t, "person": None, "github": "?", "who": t, "where": t})
+    return out
+
+
 def brief(q: str, val) -> str:
     """One cell for one of the fourteen."""
     if val in (None, [], {}, ""):
         return "none"
+    if isinstance(val, list):
+        val = _items(val)
     if q in ("environments",) and isinstance(val, list):
         return ", ".join(f"{e.get('name')}: {e.get('url')}" + (f" ({e['runs_on']})" if e.get("runs_on") else "") for e in val)
     if q == "domains" and isinstance(val, list):
@@ -370,7 +379,7 @@ def main(argv: list[str]) -> int:
     if field:
         ok, val = get_field(row, field)
         if not ok:
-            print(f"project.sh: {row['id']}: no field {field!r} (in handling: or the row)", file=sys.stderr)
+            print(f"project.sh: {row['id']}: no field {field!r} (handling: does not carry it)", file=sys.stderr)
             return 1
         emit(val, as_json)
         return 0
