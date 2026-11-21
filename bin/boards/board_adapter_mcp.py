@@ -131,7 +131,11 @@ class McpBoard:
         raise BoardRefusal(f"{tool}: {last}")
 
     def _place_lookup_blinked(self, text):
-        """True when the door said `no such place` for THIS place while naming it among the places it has."""
+        """True when the door said `no such place` for THIS place while naming it among the places it has, or `no such
+        state` for a state this place listed earlier: its own lookup was rate-limited, the place and state are there."""
+        m = re.search(r"no such state in .*: (.+?)\"?\s*}?\s*$", text or "")
+        if m and self._states and m.group(1).strip().strip('"') in {n for n, _ in self._states}:
+            return True
         if "no such place" not in (text or ""):
             return False
         try:

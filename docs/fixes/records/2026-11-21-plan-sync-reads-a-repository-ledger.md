@@ -18,12 +18,15 @@ same answer, because its own lookup had been rate-limited.
   `Status` column. Linked rows read exactly as before.
 - `board.status_map` maps a ledger's own status words onto state groups before the built-in words.
 - `board.phase_heads` adds a ledger's own column words for phase tables. It never removes the built-in ones.
-- `board_adapter_mcp.py` waits and retries when the door says "no such place" for a place it lists in the same answer.
+- `board_adapter_mcp.py` waits and retries when the door says "no such place" for a place it lists in the same answer,
+  or "no such state" for a state the place has already listed. The second run of the night failed 32 plans on
+  exactly that (`no such state …: Backlog`, a state the place has). A state the place truly lacks is still a refusal.
 
 ### Proof
 
-- `bin/boards/tests/test_plan_sync_repo.py`: 17 checks, all ok. They cover reading at the ref (not the checkout),
-  unlinked rows, the maps, the link, a refusal for an unknown ref, cleanup, and a home ledger unchanged.
+- `bin/boards/tests/test_plan_sync_repo.py`: 21 checks, all ok. They cover reading at the ref (not the checkout),
+  unlinked rows, the maps, the link, a refusal for an unknown ref, cleanup, and a home ledger unchanged, and
+  which door answers are retried and which still refuse.
 - The old and new readers were compared on the two home ledgers that have boards today. Both gave the same plans and
   the same card text, with no phase differences. So their stamps are unchanged, and a sync of those boards writes nothing.
 

@@ -171,5 +171,6 @@ board:
 | `no git clone at …` | `plans_repo.clone` (or the row's `local_clone`) is not a git checkout on this seat |
 | `cannot read plans/ at <ref>` | the ref does not exist in that clone; check `ref`, or set `fetch: true` |
 
-The board door can also answer "no such place" for a place it lists in the same answer, when its own lookup is
-rate-limited. The adapter now waits and asks again in that case, as it does for a 429.
+The board door can also answer "no such place" for a place it lists in the same answer, or "no such state" for a state
+the place has already listed, when its own lookup is rate-limited. The adapter now waits and asks again in those cases,
+as it does for a 429. A state the place truly lacks is still refused by name.

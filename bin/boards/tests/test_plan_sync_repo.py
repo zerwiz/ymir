@@ -120,5 +120,17 @@ with tempfile.TemporaryDirectory() as home:
           [(p["num"], p["group"], p["where"]) for p in plans])
     check("a home card still says 'in the home'", "in the home." in ps.card_markdown(plans[0], "x", False))
 
+# the door swallows its own rate limit into "no such place/state": a lookup that blinked is retried, a real lack is not
+from board_adapter_mcp import McpBoard  # noqa: E402
+b = McpBoard.__new__(McpBoard)
+b.place, b._states = "acme/Demo", [("Backlog", "backlog"), ("Todo", "unstarted")]
+check("a state the place listed, reported missing, is a blink",
+      b._place_lookup_blinked('{\n "error": "no such state in acme/Demo: Todo"\n}'))
+check("a state the place never had is a refusal", not b._place_lookup_blinked('{"error": "no such state in acme/Demo: Review"}'))
+check("the place reported missing while listed is a blink",
+      b._place_lookup_blinked('{"error": "no such place on the board: acme/Demo", "places": ["acme/Demo"]}'))
+check("a place truly absent is a refusal",
+      not b._place_lookup_blinked('{"error": "no such place on the board: acme/Demo", "places": ["acme/Other"]}'))
+
 print(f"{'FAIL' if fails else 'ok'}: {len(fails)} failed")
 sys.exit(1 if fails else 0)
