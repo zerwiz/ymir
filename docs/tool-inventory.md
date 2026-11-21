@@ -105,12 +105,97 @@ These are TypeScript modules loaded by pi directly. They have no `bin/` script e
 
 ---
 
+
+
+---
+
+## Gimlé MCP tools (hosted, available to all harnesses via MCP)
+
+Gimlé is the suite record: places, tasks owed, meetings, plans, documents, shared whiteboard scenes. Available at `https://mcp.zerwiz.org/mcp`.
+
+### Identity & places
+| Tool | What it does |
+|---|---|
+| `gimle_who_am_i` | Who the caller is and which places they may touch |
+| `gimle_list_places` | Places this caller belongs to, with counts |
+| `gimle_list_members` | People in a place's workspace |
+| `gimle_list_states` | A place's states in board order |
+| `gimle_list_labels` | A place's labels |
+| `gimle_create_label` | Make a label in a place |
+
+### Work items (cards)
+| Tool | What it does |
+|---|---|
+| `gimle_create_card` | File a work item into one place |
+| `gimle_update_card` | Change a work item: title, state, assignees, labels, etc. |
+| `gimle_get_card` | One work item in full |
+| `gimle_list_cards` | Work items in one place, filtered |
+| `gimle_search_cards` | Find work items by title across places |
+| `gimle_delete_card` | Delete a work item permanently |
+| `gimle_add_comment` | Comment on a work item, optionally tag people |
+| `gimle_add_link` | Attach a link to a work item |
+
+### Board & cycles
+| Tool | What it does |
+|---|---|
+| `gimle_place_board` | One place's open work: actions and questions |
+| `gimle_my_tasks` | Actions owed by the caller |
+| `gimle_who_owes_what` | Register across caller's places |
+| `gimle_list_cycles` | A place's cycles (sprints) with dates |
+| `gimle_create_cycle` | Start a cycle in a place |
+| `gimle_add_to_cycle` | Put work items into a cycle |
+| `gimle_list_modules` | A place's modules (features/epics) |
+| `gimle_create_module` | Make a module |
+| `gimle_add_to_module` | Put work items into a module |
+
+### Meetings & plans
+| Tool | What it does |
+|---|---|
+| `gimle_meeting_record` | Decisions, questions, actions of one meeting |
+| `gimle_list_plans` | Plans the hall mirrors for a project |
+| `gimle_read_plan` | Read one mirrored plan document |
+
+### Documents
+| Tool | What it does |
+|---|---|
+| `gimle_find_doc` | Search AFFiNE documents by title/content |
+
+### Whiteboard
+| Tool | What it does |
+|---|---|
+| `gimle_read_canvas` | Read a whiteboard room's elements as data |
+| `gimle_add_elements` | Place nodes and edges on a granted room |
+| `gimle_update_elements` | Move, relabel, recolour elements |
+| `gimle_validate_diagram` | Check a diagram before offering it |
+| `gimle_focus` | Frame or highlight a region of a room |
+| `gimle_save_room` | Save a granted room's scene |
+| `gimle_share_room` | Produce a granted room's invite link |
+| `gimle_snapshot` | Write a room's scene to disk |
+| `gimle_shortcuts` | Look up whiteboard keyboard shortcuts |
+
+### Contract
+| Tool | What it does |
+|---|---|
+| `gimle_board_contract` | The board contract this door implements |
+
+---
+
+## Updated summary
+
+| Home | Count | Available to |
+|---|---|---|
+| Harness-native | ~29 | All harnesses (built in) |
+| Ymir MCP | 33 | All harnesses (via MCP) |
+| Gimlé MCP | 37 | All harnesses (via MCP) |
+| Harness extension | 6 | Pi only |
+
 ## Summary
 
 | Home | Count | Available to |
 |---|---|---|
 | Harness-native | ~29 | All harnesses (built in) |
 | Ymir MCP | 33 | All harnesses (via MCP) |
+| Gimlé MCP | 37 | All harnesses (via MCP) |
 | Harness extension | 6 | Pi only |
 EOF
 cat > /home/heimdall/ymir/docs/tool-inventory.md << 'EOF'
@@ -221,12 +306,97 @@ These are TypeScript modules loaded by pi directly. They have no `bin/` script e
 
 ---
 
+
+
+---
+
+## Gimlé MCP tools (hosted, available to all harnesses via MCP)
+
+Gimlé is the suite record: places, tasks owed, meetings, plans, documents, shared whiteboard scenes. Available at `https://mcp.zerwiz.org/mcp`.
+
+### Identity & places
+| Tool | What it does |
+|---|---|
+| `gimle_who_am_i` | Who the caller is and which places they may touch |
+| `gimle_list_places` | Places this caller belongs to, with counts |
+| `gimle_list_members` | People in a place's workspace |
+| `gimle_list_states` | A place's states in board order |
+| `gimle_list_labels` | A place's labels |
+| `gimle_create_label` | Make a label in a place |
+
+### Work items (cards)
+| Tool | What it does |
+|---|---|
+| `gimle_create_card` | File a work item into one place |
+| `gimle_update_card` | Change a work item: title, state, assignees, labels, etc. |
+| `gimle_get_card` | One work item in full |
+| `gimle_list_cards` | Work items in one place, filtered |
+| `gimle_search_cards` | Find work items by title across places |
+| `gimle_delete_card` | Delete a work item permanently |
+| `gimle_add_comment` | Comment on a work item, optionally tag people |
+| `gimle_add_link` | Attach a link to a work item |
+
+### Board & cycles
+| Tool | What it does |
+|---|---|
+| `gimle_place_board` | One place's open work: actions and questions |
+| `gimle_my_tasks` | Actions owed by the caller |
+| `gimle_who_owes_what` | Register across caller's places |
+| `gimle_list_cycles` | A place's cycles (sprints) with dates |
+| `gimle_create_cycle` | Start a cycle in a place |
+| `gimle_add_to_cycle` | Put work items into a cycle |
+| `gimle_list_modules` | A place's modules (features/epics) |
+| `gimle_create_module` | Make a module |
+| `gimle_add_to_module` | Put work items into a module |
+
+### Meetings & plans
+| Tool | What it does |
+|---|---|
+| `gimle_meeting_record` | Decisions, questions, actions of one meeting |
+| `gimle_list_plans` | Plans the hall mirrors for a project |
+| `gimle_read_plan` | Read one mirrored plan document |
+
+### Documents
+| Tool | What it does |
+|---|---|
+| `gimle_find_doc` | Search AFFiNE documents by title/content |
+
+### Whiteboard
+| Tool | What it does |
+|---|---|
+| `gimle_read_canvas` | Read a whiteboard room's elements as data |
+| `gimle_add_elements` | Place nodes and edges on a granted room |
+| `gimle_update_elements` | Move, relabel, recolour elements |
+| `gimle_validate_diagram` | Check a diagram before offering it |
+| `gimle_focus` | Frame or highlight a region of a room |
+| `gimle_save_room` | Save a granted room's scene |
+| `gimle_share_room` | Produce a granted room's invite link |
+| `gimle_snapshot` | Write a room's scene to disk |
+| `gimle_shortcuts` | Look up whiteboard keyboard shortcuts |
+
+### Contract
+| Tool | What it does |
+|---|---|
+| `gimle_board_contract` | The board contract this door implements |
+
+---
+
+## Updated summary
+
+| Home | Count | Available to |
+|---|---|---|
+| Harness-native | ~29 | All harnesses (built in) |
+| Ymir MCP | 33 | All harnesses (via MCP) |
+| Gimlé MCP | 37 | All harnesses (via MCP) |
+| Harness extension | 6 | Pi only |
+
 ## Summary
 
 | Home | Count | Available to |
 |---|---|---|
 | Harness-native | ~29 | All harnesses (built in) |
 | Ymir MCP | 33 | All harnesses (via MCP) |
+| Gimlé MCP | 37 | All harnesses (via MCP) |
 | Harness extension | 6 | Pi only |
 EOF
 echo "written"
