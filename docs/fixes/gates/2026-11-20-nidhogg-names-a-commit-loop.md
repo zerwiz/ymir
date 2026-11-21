@@ -35,3 +35,7 @@ nidhogg-commits[4]{branch,count,subject,repo}:
 
 The #842 loop had already reached `main`. `bin/ward/tests/test_trouble.sh` §6 proves three identical
 commits trip the default line, and a line of three does not trip on three.
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #874
