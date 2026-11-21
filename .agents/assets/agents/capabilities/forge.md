@@ -16,6 +16,7 @@
 | github-deploy.sh | github-deploy.sh — zero-trust deploys (W0035). Sync secrets from the l | tested+named | keep (a human or a cron row must run it) |
 | gjallarhorn-expose.sh | gjallarhorn-expose.sh — put EVERY app on its own public hostname (Gjal | tested+named | keep (a human or a cron row must run it) |
 | gjallarhorn-notify.sh | gjallarhorn-notify.sh — the horn (W0036). Unified push: Telegram + a w | tested+named | keep (a human or a cron row must run it) |
+| gjallarhorn-publish.sh | gjallarhorn-publish.sh — put an app on a public name BEHIND the hall's | tested | keep (a human or a cron row must run it) |
 | gjallarhorn-purge.sh | gjallarhorn-purge.sh — purge the Cloudflare edge cache for a hostname. | tested+named | keep (a human or a cron row must run it) |
 | gjallarhorn-tunnel.sh | gjallarhorn-tunnel.sh — raise/lower the `ymir` Cloudflare tunnel (Gjal | tested+named | keep (a human or a cron row must run it) |
 | housekeeping.sh | housekeeping.sh — what the worktrees cost, what is already safe to for | tested+named | keep (a human or a cron row must run it) |
@@ -48,6 +49,7 @@
 | smith-seat.sh | smith-seat.sh — seat ANY figure in its own herdr workspace, the same w | tested | keep (a human or a cron row must run it) |
 | test_gather_notice.sh | test_gather_notice.sh — the LAST errand of a batch calls the gather. | tested+named | keep (a human or a cron row must run it) |
 | test_gjallarhorn_no_hall.sh | test_gjallarhorn_no_hall.sh — a tunnel never publishes a hall. | tested | keep (a human or a cron row must run it) |
+| test_gjallarhorn_publish.sh | test_gjallarhorn_publish.sh — an app is published only behind the hall | tested | keep (a human or a cron row must run it) |
 | test_judge_merge.sh | test_judge_merge.sh — the judge's verdict is the seal (RULES/08, its s | tested+named | keep (a human or a cron row must run it) |
 | test_review_seat_keeper.sh | test_review_seat_keeper.sh — the keeper: the reviewer's seat says WHY  | tested | keep (a human or a cron row must run it) |
 | test_smith_gh.sh | test_smith_gh.sh — the smith's gh refuses every road to a merge, and l | tested | keep (a human or a cron row must run it) |
