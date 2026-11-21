@@ -39,3 +39,7 @@ same answer, because its own lookup had been rate-limited.
 - `bin/boards/plan_sync.py`, `bin/boards/board_adapter_mcp.py`
 - `bin/boards/tests/test_plan_sync_repo.py` (new)
 - `docs/features/plan-sync.md` (appended section)
+
+## CHANGE LOG
+
+- 2026-11-20 — review-mend: added missing heading for #868
