@@ -69,7 +69,7 @@ bin[122]{file,does,kind,verdict,disposition,callers,lines}:
   "decision-minimal.md","{short title, representative of solved problem and found solution}","data","wired","keep",1,30
   "decision.md","---","data","wired","keep",1,80
   "deploy.py","'''deploy — the door for a project that ships images: one builder, labelled, shipped, verified, two tags kept.","tool","wired","keep",1,182
-  "deploy.sh","deploy.sh — build, label, ship and verify a release; keep the current and the previous tag (RULES/23).","tool","wired","keep",18,9
+  "deploy.sh","deploy.sh — build, label, ship and verify a release; keep the current and the previous tag (RULES/23).","tool","wired","keep",19,9
   "elixir-umbrella.yaml","project.yaml — the one file every collaboration-kit tool reads (kit {{kit}}).","data","wired","keep",0,63
   "elixir.yaml","project.yaml — the one file every collaboration-kit tool reads (kit {{kit}}).","data","wired","keep",0,55
   "fixes-components.sh","The components of this product — one directory of notes each, and no invented names.","tool","wired","keep",2,4
@@ -108,7 +108,7 @@ bin[122]{file,does,kind,verdict,disposition,callers,lines}:
   "new-module-test.sh","new-module-test.sh — a new module arrives with a test, or with a reason it does not need one.","tool","wired","keep",2,31
   "node.yaml","project.yaml — the one file every collaboration-kit tool reads (kit {{kit}}).","data","wired","keep",0,55
   "notices.md","---","data","wired","keep",1,52
-  "notify.sh","notify.sh — hand a gate's refusal to whoever should hear it, not only to the terminal that typed the command.","tool","tested","keep",29,38
+  "notify.sh","notify.sh — hand a gate's refusal to whoever should hear it, not only to the terminal that typed the command.","tool","tested","keep",31,38
   "plan.md","---","data","tested","keep",11,58
   "platform.py","'''platform — the one place the kit asks the operating system to stop a process.","tool","wired","keep",1,33
   "pr-check.sh","pr-check — is every commit that exists proposed for review?","tool","tested","keep",7,26

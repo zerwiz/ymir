@@ -33,7 +33,7 @@ bin[189]{file,does,kind,verdict,disposition,callers,lines}:
   "board-engine-guard.sh","board-engine-guard.sh — a NEW file in Ymir may not carry one board engine's code (plan 335, the split).","tool","wired","keep",2,123
   "branch-current.sh","branch-current.sh — a branch is based on CURRENT main before it is offered.","tool","tested","keep",2,82
   "branch-guard.sh","branch-guard.sh — Rule 08: no push may land on a protected branch.","tool","tested","keep",3,149
-  "capabilities.sh","A GENERATED FILE MUST BE A FUNCTION OF CONTENT ALONE (0.1.94/0.1.95/0.1.97 — three","tool","wired","keep",12,325
+  "capabilities.sh","A GENERATED FILE MUST BE A FUNCTION OF CONTENT ALONE (0.1.94/0.1.95/0.1.97 — three","tool","wired","keep",12,329
   "cdp.mjs","// cdp.mjs — the DevTools driver behind bin/gates/soak.sh (plan 286 P1, P2, P5).","data","wired","keep",2,940
   "check-row.md","One measured row","data","wired","keep",2,14
   "ci-verify.sh","ci-verify.sh — what CI must prove, in one command, for BOTH hosts.","tool","tested","keep",16,122
@@ -105,7 +105,7 @@ bin[189]{file,does,kind,verdict,disposition,callers,lines}:
   "public-data-ward.test.sh","public-data-ward.test.sh — prove the RULES/04 ward BITES.","tool","wired","keep",2,132
   "public-guard.py","'''public-guard.py — the public tree carries TEMPLATES and LOGIC, and nothing private.","tool","wired","keep",5,463
   "public-guard.sh","public-guard.sh — the OLDER door to RULES/04's judgement: templates and logic, nothing private.","tool","wired","keep",1,34
-  "push-road.test.sh","push-road.test.sh — prove the push road mends of plan 339.1, in a THROWAWAY CLONE.","tool","wired","keep",1,169
+  "push-road.test.sh","push-road.test.sh — prove the push road mends of plan 339.1, in a THROWAWAY CLONE.","tool","wired","keep",1,172
   "queue.sh","queue.sh — THE work queue, and it is DERIVED, never authored.","tool","wired","migrate → src/ymir_runtime/state/queue.py",8,195
   "readme-claims.sh","readme-claims.sh — the user-facing documents must not claim what the tree does not hold.","tool","wired","keep",1,106
   "registers-guard.sh","registers-guard.sh — every generated register is current.","tool","wired","keep",3,17
@@ -173,7 +173,7 @@ bin[189]{file,does,kind,verdict,disposition,callers,lines}:
   "test_notify_stale_pane.sh","test_notify_stale_pane.sh — a remembered pane is proved before it is spoken to (2026-11-16).","tool","wired","keep",0,55
   "test_opencode_launcher.sh","test_opencode_launcher.sh — plan 262: an OpenCode worker actually starts, and every door","tool","wired","keep",1,155
   "test_people_guard_people.sh","test_people_guard_people.sh — plan 272 fault 11: the people ward reads handles and rosters, not only names.","tool","wired","keep",0,25
-  "test_pin_refresh.sh","test_pin_refresh.sh — the pin refresher, and the sentence a failed row gets (plan 292).","tool","wired","keep",0,120
+  "test_pin_refresh.sh","test_pin_refresh.sh — the pin refresher, and the sentence a failed row gets (plan 292).","tool","wired","keep",0,135
   "test_plan_state.sh","ROOT='$(cd '$(dirname '${BASH_SOURCE[0]}')/../..' && pwd)'; ROOT='$(cd '$ROOT/..' && pwd)'","tool","wired","keep",0,22
   "test_plan_watch.sh","ROOT='$(cd '$(dirname '$0')/../../..' && pwd)'","tool","wired","keep",0,23
   "test_pr_identity.sh","test_pr_identity.sh — the ward that judges a pull request: the signature is BUILT, the leaks still refuse.","tool","wired","keep",1,126

@@ -320,6 +320,17 @@ if [ "$TERMINAL" = done ] && [ -x "$SCRIPT_DIR/eindri-review-spawn.sh" ]; then
     fi
   fi
 fi
+# 5. The judge's verdict is the seal (RULES/08, 2026-11-21). A REVIEW errand that reached `done`
+#    hands its verdict to the one merge road: APPROVE merges at once (every gate re-checked at that
+#    instant), NEEDS-REWORK goes back to the author's seat as one PR comment. review-watch sweeps the
+#    same road every pass, so a judge that never ran this act is still carried out.
+case "$AGENT" in
+  *-review)
+    if [ "$TERMINAL" = done ] && [ -x "$SCRIPT_DIR/../forge/judge-merge.sh" ]; then
+      timeout 300 "$SCRIPT_DIR/../forge/judge-merge.sh" act "$AGENT" 2>&1 || \
+        printf 'judge-merge: the verdict of %s could not be carried out now — review-watch sweeps it again\n' "$AGENT" >&2
+    fi ;;
+esac
 # ── THE LAST LINK: SPEAK IT INTO THE ARM HOLDER'S PANE ─────────────────────────────────────────────
 # The Allfather, 2026-11-08 and again 2026-11-09: *"why arent they injecting into your session chat? we
 # have built that and its not getting used. they are writing handoff in files now instead"* … *"no

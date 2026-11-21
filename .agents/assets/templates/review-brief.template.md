@@ -13,6 +13,10 @@ THE AUDIT CONTRACT (fierce by law):
 5. Append-only respected (no ledger/changelog rewrite; a correction is a new entry).
 6. `bash -n` clean on every changed shell script; a changed extension loads without the tool-name conflict that seats no agent.
 
+THE HEAD YOU JUDGE: `{{HEAD_SHA}}`. Judge that head and no other; if the branch has moved past it, say so and give NEEDS-REWORK. Write one line `judged-head: <the 40-character sha you judged>` above the verdict block.
+
+THE VERDICT IS THE SEAL (RULES/08, 2026-11-21): an APPROVE is merged AT ONCE by `bin/forge/judge-merge.sh` — no human looks again before main moves. Approve only what you would merge yourself. NEEDS-REWORK posts your list on the PR as one comment, so write each item so the author can act on it without asking.
+
 VERDICT (mandatory tail of your report, in TOON):
 verdict[1]{result,count,list,seal}:
   "APPROVE or NEEDS-REWORK","the count","line-numbered rework list (0 items for approve)", "'seal-ready' only on APPROVE with every gate green, else 'holds seal'"

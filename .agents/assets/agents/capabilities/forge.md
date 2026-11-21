@@ -20,7 +20,8 @@
 | gjallarhorn-tunnel.sh | gjallarhorn-tunnel.sh — raise/lower the `ymir` Cloudflare tunnel (Gjal | tested+named | keep (a human or a cron row must run it) |
 | housekeeping.sh | housekeeping.sh — what the worktrees cost, what is already safe to for | tested+named | keep (a human or a cron row must run it) |
 | issue-watch.sh | issue-watch.sh — READ THE ISSUES, and close the ones that are already  | tested | keep (a human or a cron row must run it) |
-| merge-method.sh | merge-method.sh — which `gh pr merge` flag a pull request takes (RULES | tested | keep (a human or a cron row must run it) |
+| judge-merge.sh | judge-merge.sh — the judge's verdict is the seal: APPROVE merges at on | tested+named | keep (a human or a cron row must run it) |
+| merge-method.sh | merge-method.sh — which `gh pr merge` flag a pull request takes (RULES | tested+named | keep (a human or a cron row must run it) |
 | merge-verdict.sh | merge-verdict.sh — may this PR be merged right now? One question, one  | tested+named | keep (a human or a cron row must run it) |
 | mjollnir-webhook.sh | mjollnir-webhook.sh — HMAC-verified GitHub webhook → Mjollnir (W0018 | tested+named | keep (a human or a cron row must run it) |
 | mjollnir.sh | mjollnir.sh — the hammer (W0018). An issue becomes a PR: read the issu | tested+named | keep (a human or a cron row must run it) |
@@ -40,13 +41,14 @@
 | review-seat.sh | review-seat.sh — the reviewer's SEAT: pi in a herdr pane, on the heart | tested | keep (a human or a cron row must run it) |
 | review-shelf.sh | review-shelf.sh — where a packet LANDS, and the waiting rule that keep | tested+named | keep (a human or a cron row must run it) |
 | review-verdict.sh | review-verdict.sh — the judge's ONE act of writing: its verdict, and n | tested | keep (a human or a cron row must run it) |
-| review-watch.sh | review-watch.sh — the missing trigger: a PR that arrives is a question | tested | keep (a human or a cron row must run it) |
+| review-watch.sh | review-watch.sh — the missing trigger: a PR that arrives is a question | tested+named | keep (a human or a cron row must run it) |
 | ship-watch.sh | ship-watch.sh — the delivery loop: settle branches, then ship proved P | tested | keep (a human or a cron row must run it) |
 | ship.sh | ship.sh — the reviewer's merge: the one door that puts a judged PR on  | tested | keep (a human or a cron row must run it) |
 | skillopt-setup.sh | skillopt-setup.sh — one-time SkillOpt installation for Ymir. | tested | keep (a human or a cron row must run it) |
 | smith-seat.sh | smith-seat.sh — seat ANY figure in its own herdr workspace, the same w | tested | keep (a human or a cron row must run it) |
 | test_gather_notice.sh | test_gather_notice.sh — the LAST errand of a batch calls the gather. | tested+named | keep (a human or a cron row must run it) |
 | test_gjallarhorn_no_hall.sh | test_gjallarhorn_no_hall.sh — a tunnel never publishes a hall. | tested | keep (a human or a cron row must run it) |
+| test_judge_merge.sh | test_judge_merge.sh — the judge's verdict is the seal (RULES/08, its s | tested+named | keep (a human or a cron row must run it) |
 | test_review_seat_keeper.sh | test_review_seat_keeper.sh — the keeper: the reviewer's seat says WHY  | tested | keep (a human or a cron row must run it) |
 | utgard-box.sh | utgard-box.sh — a whole computer for one run, outside the wall. | tested+named | keep (a human or a cron row must run it) |
 | utgard-lane.sh | utgard-lane.sh — best of N: one brief, many boxes, one board. | tested+named | keep (a human or a cron row must run it) |
