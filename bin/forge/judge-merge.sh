@@ -101,7 +101,7 @@ say_once() {  # <marker> <repo> <n> <text> — one PR comment per marker
   local marker="$1" repo="$2" n="$3" text="$4"
   [ -e "$marker" ] && return 0
   if [ "$DRY" = 1 ]; then say "  would comment on $repo#$n: $text"; return 0; fi
-  if gh pr comment "$n" -R "$repo" --body "$text" >/dev/null 2>&1; then
+  if timeout 60 gh pr comment "$n" -R "$repo" --body "$text" >/dev/null 2>&1; then
     printf '%s\n' "$text" >"$marker" 2>/dev/null || true
   else
     printf 'judge-merge: the comment on %s#%s did not land\n' "$repo" "$n" >&2
@@ -114,7 +114,7 @@ wake_author() {  # <repo> <n> <task> <items> <head>
   # AND a turn typed into the holder's herdr pane (eindri-notify). The holder starts a coder errand
   # on the PR's branch; when the coder's new head lands, review-watch seats the judge for it again.
   local repo="$1" n="$2" task="$3" items="$4" head="$5" json body branch host line road author ops
-  json="$(gh pr view "$n" -R "$repo" --json body,headRefName,author 2>/dev/null || true)"
+  json="$(timeout 60 gh pr view "$n" -R "$repo" --json body,headRefName,author 2>/dev/null || true)"
   body="$(printf '%s' "$json" | python3 -c 'import json,sys
 try: print(json.load(sys.stdin).get("body") or "")
 except Exception: pass' 2>/dev/null)"
@@ -198,7 +198,7 @@ except Exception: print(sys.argv[2])' "$2" "${3:-}" 2>/dev/null
 
 carry_over() {  # <repo> <n> <approved> <rid> → 0 when the approval carried to the new head and merged
   local repo="$1" n="$2" approved="$3" rid="$4" json cur base basename clone out rc
-  json="$(gh pr view "$n" -R "$repo" --json headRefOid,baseRefOid,baseRefName 2>/dev/null || true)"
+  json="$(timeout 60 gh pr view "$n" -R "$repo" --json headRefOid,baseRefOid,baseRefName 2>/dev/null || true)"
   cur="$(pr_field "$json" headRefOid)"; base="$(pr_field "$json" baseRefOid)"; basename="$(pr_field "$json" baseRefName main)"
   [ -n "$cur" ] && [ -n "$base" ] || { say "judge-merge: $rid — the new head cannot be read; the approval does not carry"; return 1; }
   clone="$(clone_of "$repo")"
@@ -232,7 +232,7 @@ may_act() {  # <owner/repo> → 0 when the repository is kept AND this gh hand c
     MAY_WHY="not kept: not owned by the operator's login and not marked git.keep: true"; return 1
   fi
   local perm
-  perm="$(gh repo view "$1" --json viewerPermission -q .viewerPermission 2>/dev/null | tr -d '[:space:]')"
+  perm="$(timeout 60 gh repo view "$1" --json viewerPermission -q .viewerPermission 2>/dev/null | tr -d '[:space:]')"
   case "$perm" in
     ADMIN|MAINTAIN|WRITE) return 0 ;;
     *) MAY_WHY="this hand holds ${perm:-no readable} permission there, not write"; return 1 ;;

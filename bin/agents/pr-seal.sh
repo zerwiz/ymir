@@ -203,7 +203,7 @@ watch() {
   for a in "$@"; do [ "$a" = "--quiet" ] && quiet=1; done
   command -v gh >/dev/null 2>&1 || { printf 'error: gh is not installed — the PR list cannot be read\n' >&2; return 1; }
   tmp="$(mktemp)"; trap 'rm -f "$tmp"' RETURN
-  if ! (cd "$ROOT" && gh pr list --author @me --state open \
+  if ! (cd "$ROOT" && timeout 60 gh pr list --author @me --state open \
       --json number,headRefName,headRefOid,title,url,mergeable,mergeStateStatus,statusCheckRollup,body >"$tmp" 2>/dev/null); then
     printf 'error: could not read the open PRs (gh pr list failed)\n' >&2
     return 1
@@ -276,7 +276,7 @@ seal() {
   fi
 
   tmp="$(mktemp)"; trap 'rm -f "$tmp"' RETURN
-  if ! (cd "$ROOT" && gh pr view "$n" \
+  if ! (cd "$ROOT" && timeout 60 gh pr view "$n" \
       --json number,headRefName,headRefOid,title,url,mergeable,mergeStateStatus,statusCheckRollup,body >"$tmp" 2>/dev/null); then
     printf 'seal-refused[1]{pr,condition,detail}:\n  "#%s","unknown PR","gh pr view failed — nothing was merged"\n' "$n"
     return 1
@@ -293,7 +293,7 @@ seal() {
 
   # the one-open-PR rule, counted at the same instant as the seal
   own_tmp="$(mktemp)"
-  (cd "$ROOT" && gh pr list --author @me --state open --json number,headRefName,body >"$own_tmp" 2>/dev/null) || true
+  (cd "$ROOT" && timeout 60 gh pr list --author @me --state open --json number,headRefName,body >"$own_tmp" 2>/dev/null) || true
   own_count="$(judge_py "$own_tmp" | awk -F'\t' '$4 ~ /^own:/ {n++} END{print n+0}')"
   rm -f "$own_tmp"
   if [ "${own_count:-0}" -gt 1 ]; then
@@ -320,7 +320,7 @@ seal() {
     return 1
   fi
   local merge_commit=""
-  merge_commit="$(cd "$ROOT" && gh pr view "$n" --json mergeCommit -q '.mergeCommit.oid' 2>/dev/null | tr -d '[:space:]')"
+  merge_commit="$(cd "$ROOT" && timeout 60 gh pr view "$n" --json mergeCommit -q '.mergeCommit.oid' 2>/dev/null | tr -d '[:space:]')"
   [ -n "$merge_commit" ] || merge_commit=unknown
   carve_runes "$n" "$head" "$sha" "$merge_commit" || printf 'warn: PR #%s merged, but the Runes entry could not be carved — record it by hand\n' "$n" >&2
   printf 'sealed[1]{pr,head,merge_commit}:\n  "#%s","%s","%s"\n' "$n" "$head" "$merge_commit"
@@ -376,7 +376,7 @@ seal_judged() {
   #     home (warden-policy.py operator-logins). Never the repo slug's owner — an organisation owns
   #     its repositories, and the operator merges there under his own login (review of #863).
   owner="${YMIR_MERGE_IDENTITY:-$(python3 "$WARDEN_POLICY" operator-logins 2>/dev/null | tr '\n' ' ')}"
-  login="$("$GH" api user --jq .login 2>/dev/null | tr -d '[:space:]')"
+  login="$(timeout 60 "$GH" api user --jq .login 2>/dev/null | tr -d '[:space:]')"
   local _lc_login _match=0 _o
   _lc_login="$(printf '%s' "$login" | tr 'A-Z' 'a-z')"
   for _o in $owner; do
@@ -387,7 +387,7 @@ seal_judged() {
   fi
   # 3 · the PR, read now
   tmp="$(mktemp)"
-  if ! "$GH" pr view "$n" -R "$repo" \
+  if ! timeout 60 "$GH" pr view "$n" -R "$repo" \
       --json number,headRefName,headRefOid,title,url,mergeable,mergeStateStatus,statusCheckRollup,isDraft,labels,state >"$tmp" 2>/dev/null; then
     rm -f "$tmp"; judged_refuse "$n" "unreadable" "gh pr view failed for $repo — nothing was merged" 4; return
   fi
@@ -451,12 +451,12 @@ PY
   body="$(printf '%s\n\nApproved by the judge at head %s%s and merged at once by the judge'"'"'s road (RULES/08, 2026-11-21): every required check green, mergeable, no hold.\n' \
     "$title" "$sha" "${review:+ (review $review)}")"
   printf 'sealing[1]{pr,repo,head,method,checks}:\n  "#%s","%s","%s","%s","%s"\n' "$n" "$repo" "${sha:0:12}" "${flag#--}" "$ci_detail"
-  if ! "$GH" pr merge "$n" -R "$repo" "$flag" --subject "$subject" --body "$body" \
+  if ! timeout 120 "$GH" pr merge "$n" -R "$repo" "$flag" --subject "$subject" --body "$body" \
         --match-head-commit "$sha" --delete-branch >/dev/null 2>&1; then
     judged_refuse "$n" "merge failed" "gh pr merge did not succeed — nothing is claimed; the next pass re-checks" 4; return
   fi
   local merge_commit
-  merge_commit="$("$GH" pr view "$n" -R "$repo" --json mergeCommit -q '.mergeCommit.oid' 2>/dev/null | tr -d '[:space:]')"
+  merge_commit="$(timeout 60 "$GH" pr view "$n" -R "$repo" --json mergeCommit -q '.mergeCommit.oid' 2>/dev/null | tr -d '[:space:]')"
   [ -n "$merge_commit" ] || merge_commit=unknown
   if [ -x "$RUNES" ]; then
     "$RUNES" "$SEAT_PRIMARY@$SEAT_HOST" pr-seal --message \

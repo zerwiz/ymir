@@ -270,7 +270,7 @@ if [ "$PR_ONLY" = 1 ]; then
   }
   SLUG="$(printf '%s' "$PR_URL" | sed -nE 's#^https://github\.com/([^/]+/[^/]+)/pull/([0-9]+).*#\1#p')"
   [ -n "$SLUG" ] || { printf 'error: cannot read owner/repo from the PR url %s\n' "$PR_URL" >&2; exit 1; }
-  _pr_json="$(gh pr view "$PR_NUMBER" -R "$SLUG" --json headRefOid,headRefName,mergeable 2>/dev/null || true)"
+  _pr_json="$(timeout 60 gh pr view "$PR_NUMBER" -R "$SLUG" --json headRefOid,headRefName,mergeable 2>/dev/null || true)"
   HEAD_SHA="$(printf '%s' "$_pr_json" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("headRefOid",""))' 2>/dev/null || true)"
   [ -n "$HEAD_SHA" ] || {
     printf 'error: could not read PR #%s from %s — no head sha, so no marker and no honest judgement\nhelp: check the GitHub identity on this seat (gh auth status)\n' "$PR_NUMBER" "$SLUG" >&2
@@ -306,7 +306,7 @@ fi
 # ── the head the judge is seated for (task mode reads it now; PR-only mode already has it) ──
 _slug="$(printf '%s' "$PR_URL" | sed -nE 's#^https://github\.com/([^/]+/[^/]+)/pull/[0-9]+.*#\1#p')"
 if [ -z "$HEAD_SHA" ] && [ -n "$_slug" ] && [ "$PR_NUMBER" != "?" ] && command -v gh >/dev/null 2>&1; then
-  HEAD_SHA="$(gh pr view "$PR_NUMBER" -R "$_slug" --json headRefOid -q .headRefOid 2>/dev/null | tr -d '[:space:]' || true)"
+  HEAD_SHA="$(timeout 60 gh pr view "$PR_NUMBER" -R "$_slug" --json headRefOid -q .headRefOid 2>/dev/null | tr -d '[:space:]' || true)"
 fi
 
 # ── the anti-double marker ───────────────────────────────────────────────────

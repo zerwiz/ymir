@@ -142,7 +142,7 @@ warden_require_door || exit 3
 WARDEN_REPOS="${REPOS[*]}"
 warden_require_repos "${REPOS[@]}" || exit 3
 warden_require_identity || exit 3
-if ! gh auth status >/dev/null 2>&1; then
+if ! timeout 60 gh auth status >/dev/null 2>&1; then
   refuse "this seat has NO working GitHub identity (gh auth status failed) — the watch cannot read a PR, so it refuses rather than reporting an empty repository"
 fi
 
@@ -187,7 +187,7 @@ if [ -n "$JUDGE" ]; then
   url=""
   for r in "${REPOS[@]}"; do
     [ -n "$r" ] || continue
-    if gh pr view "$JUDGE" -R "$r" --json number >/dev/null 2>&1; then
+    if timeout 60 gh pr view "$JUDGE" -R "$r" --json number >/dev/null 2>&1; then
       url="https://github.com/$r/pull/$JUDGE"; break
     fi
   done
@@ -314,7 +314,7 @@ PY
       [ -n "$login" ] || continue
       case "$operator_logins" in *" $login "*) ;; *) continue ;; esac
       printf '%s\n' "$body" | grep -qE "^The judge (approved|asks for rework on) head \`${3:0:12}\`" && return 0
-    done < <(gh pr view "$2" -R "$1" --json comments -q '.comments[] | [.author.login, .body] | @tsv' 2>/dev/null)
+    done < <(timeout 60 gh pr view "$2" -R "$1" --json comments -q '.comments[] | [.author.login, .body] | @tsv' 2>/dev/null)
     return 1
   }
   if [ "$seat_here" = 1 ]; then handed_max="${YMIR_REVIEW_HANDOFF_MAX:-1}"; else handed_max="${YMIR_REVIEW_HANDOFF_MAX:-3}"; fi
@@ -323,7 +323,7 @@ PY
     "$([ "$seat_here" = 1 ] && echo "yes ($judge_h)" || echo "no — no $judge_h CLI here")" "${dev_hosts[*]:-none}"
   for repo in "${REPOS[@]}"; do
     [ -n "$repo" ] || continue
-    prs="$(gh pr list -R "$repo" --state open --limit 100 --json number,headRefOid,isDraft,url 2>/dev/null)" \
+    prs="$(timeout 60 gh pr list -R "$repo" --state open --limit 100 --json number,headRefOid,isDraft,url 2>/dev/null)" \
       || { printf 'review-watch: gh pr list failed for %s — skipped this pass, not called empty\n' "$repo" >&2; continue; }
     while IFS=$'\t' read -r num head url; do
       [ -n "$num" ] || continue
@@ -422,7 +422,7 @@ RAISED=0; SEEN=0; SKIPPED=0
 rows=()
 for repo in "${REPOS[@]}"; do
   [ -n "$repo" ] || continue
-  prs="$(gh pr list -R "$repo" --state open --limit 100 \
+  prs="$(timeout 60 gh pr list -R "$repo" --state open --limit 100 \
           --json number,title,headRefOid,mergeable,headRefName,isDraft,statusCheckRollup,author 2>/dev/null)" \
     || die "gh pr list failed for $repo — no PR list, no watch (a refusal, not an empty repo)"
   [ -n "$prs" ] || prs="[]"
